@@ -1,0 +1,337 @@
+#include "FeaturePropertiesPanel.hpp"
+#include "MeasurementInput.hpp"
+
+#include <QComboBox>
+#include <QDoubleSpinBox>
+#include <QFormLayout>
+#include <QLabel>
+#include <QSignalBlocker>
+#include <QWidget>
+
+#include <utility>
+
+namespace voelund::desktop {
+namespace {
+
+constexpr const char* moveLabels[] = {"Move X", "Move Y", "Move Z"};
+constexpr const char* rotationLabels[] = {"Rotate X", "Rotate Y", "Rotate Z"};
+
+int resultModeIndex(document::CylinderResultMode mode)
+{
+    switch (mode) {
+    case document::CylinderResultMode::join:
+        return 0;
+    case document::CylinderResultMode::cut:
+        return 1;
+    case document::CylinderResultMode::intersect:
+        return 2;
+    case document::CylinderResultMode::separate:
+        return 3;
+    }
+    return 0;
+}
+
+document::CylinderResultMode resultModeFromIndex(int index)
+{
+    switch (index) {
+    case 1:
+        return document::CylinderResultMode::cut;
+    case 2:
+        return document::CylinderResultMode::intersect;
+    case 3:
+        return document::CylinderResultMode::separate;
+    default:
+        return document::CylinderResultMode::join;
+    }
+}
+
+} // namespace
+
+FeaturePropertiesPanel::FeaturePropertiesPanel(QWidget* parent)
+    : QStackedWidget(parent)
+{
+    createBoxPanel();
+    createCylinderPanel();
+    createExtrusionPanel();
+    emptyPanel_ = new QLabel(tr("No feature selected"), this);
+    addWidget(boxPanel_);
+    addWidget(cylinderPanel_);
+    addWidget(extrusionPanel_);
+    addWidget(emptyPanel_);
+    connectEditors();
+}
+
+void FeaturePropertiesPanel::createExtrusionPanel()
+{
+    extrusionPanel_ = new QWidget(this);
+    auto* layout = new QFormLayout(extrusionPanel_);
+    extrusionDistanceInput_ = makeLengthInput(extrusionPanel_);
+    extrusionDistanceInput_->setMinimum(0.001);
+    extrusionErrorLabel_ = new QLabel(extrusionPanel_);
+    extrusionErrorLabel_->setWordWrap(true);
+    extrusionErrorLabel_->setStyleSheet(QStringLiteral(
+        "QLabel { color: #ffb4ab; background: #4b2024; border: 1px solid #b94a55; "
+        "border-radius: 3px; padding: 6px; }"));
+    layout->addRow(tr("Distance"), extrusionDistanceInput_);
+    layout->addRow(extrusionErrorLabel_);
+}
+
+void FeaturePropertiesPanel::createBoxPanel()
+{
+    boxPanel_ = new QWidget(this);
+    auto* boxLayout = new QFormLayout(boxPanel_);
+    lengthInput_ = makeLengthInput(boxPanel_);
+    widthInput_ = makeLengthInput(boxPanel_);
+    boxHeightInput_ = makeLengthInput(boxPanel_);
+    for (QDoubleSpinBox*& input : boxTranslationInputs_) {
+        input = makeLengthInput(boxPanel_, true);
+    }
+    for (QDoubleSpinBox*& input : boxRotationInputs_) {
+        input = makeAngleInput(boxPanel_);
+    }
+    boxLayout->addRow(tr("Length"), lengthInput_);
+    boxLayout->addRow(tr("Width"), widthInput_);
+    boxLayout->addRow(tr("Height"), boxHeightInput_);
+    for (int index = 0; index < 3; ++index) {
+        boxLayout->addRow(tr(moveLabels[index]), boxTranslationInputs_[index]);
+    }
+    for (int index = 0; index < 3; ++index) {
+        boxLayout->addRow(tr(rotationLabels[index]), boxRotationInputs_[index]);
+    }
+}
+
+void FeaturePropertiesPanel::createCylinderPanel()
+{
+    cylinderPanel_ = new QWidget(this);
+    auto* cylinderLayout = new QFormLayout(cylinderPanel_);
+    radiusInput_ = makeLengthInput(cylinderPanel_);
+    cylinderHeightInput_ = makeLengthInput(cylinderPanel_);
+    for (QDoubleSpinBox*& input : translationInputs_) {
+        input = makeLengthInput(cylinderPanel_, true);
+    }
+    for (QDoubleSpinBox*& input : rotationInputs_) {
+        input = makeAngleInput(cylinderPanel_);
+    }
+    resultModeInput_ = new QComboBox(cylinderPanel_);
+    resultModeInput_->addItems({tr("Join"), tr("Cut"), tr("Intersect"), tr("Separate")});
+    errorLabel_ = new QLabel(cylinderPanel_);
+    errorLabel_->setWordWrap(true);
+    errorLabel_->setStyleSheet(QStringLiteral(
+        "QLabel { color: #ffb4ab; background: #4b2024; border: 1px solid #b94a55; "
+        "border-radius: 3px; padding: 6px; }"));
+
+    cylinderLayout->addRow(tr("Radius"), radiusInput_);
+    cylinderLayout->addRow(tr("Height"), cylinderHeightInput_);
+    for (int index = 0; index < 3; ++index) {
+        cylinderLayout->addRow(tr(moveLabels[index]), translationInputs_[index]);
+    }
+    for (int index = 0; index < 3; ++index) {
+        cylinderLayout->addRow(tr(rotationLabels[index]), rotationInputs_[index]);
+    }
+    cylinderLayout->addRow(tr("Result"), resultModeInput_);
+    cylinderLayout->addRow(errorLabel_);
+}
+
+void FeaturePropertiesPanel::connectEditors()
+{
+    for (QDoubleSpinBox* input : {
+             lengthInput_, widthInput_, boxHeightInput_,
+             boxTranslationInputs_[0], boxTranslationInputs_[1], boxTranslationInputs_[2],
+             boxRotationInputs_[0], boxRotationInputs_[1], boxRotationInputs_[2]}) {
+        connect(input, &QDoubleSpinBox::editingFinished, this, [this]() {
+            if (boxChangeHandler_) {
+                boxChangeHandler_();
+            }
+        });
+    }
+    for (QDoubleSpinBox* input : {radiusInput_, cylinderHeightInput_,
+                                  translationInputs_[0], translationInputs_[1],
+                                  translationInputs_[2], rotationInputs_[0],
+                                  rotationInputs_[1], rotationInputs_[2]}) {
+        connect(input, &QDoubleSpinBox::editingFinished, this, [this]() {
+            if (cylinderChangeHandler_) {
+                cylinderChangeHandler_();
+            }
+        });
+    }
+    connect(resultModeInput_, &QComboBox::currentIndexChanged, this, [this](int) {
+        if (cylinderChangeHandler_) {
+            cylinderChangeHandler_();
+        }
+    });
+    connect(extrusionDistanceInput_, &QDoubleSpinBox::editingFinished, this, [this]() {
+        if (extrusionChangeHandler_) {
+            extrusionChangeHandler_();
+        }
+    });
+}
+
+void FeaturePropertiesPanel::setBoxChangeHandler(std::function<void()> handler)
+{
+    boxChangeHandler_ = std::move(handler);
+}
+
+void FeaturePropertiesPanel::setCylinderChangeHandler(std::function<void()> handler)
+{
+    cylinderChangeHandler_ = std::move(handler);
+}
+
+void FeaturePropertiesPanel::setExtrusionChangeHandler(std::function<void()> handler)
+{
+    extrusionChangeHandler_ = std::move(handler);
+}
+
+void FeaturePropertiesPanel::showNone()
+{
+    emptyPanel_->setText(tr("No feature selected"));
+    emptyPanel_->setStyleSheet({});
+    setCurrentWidget(emptyPanel_);
+}
+
+void FeaturePropertiesPanel::showFeatureInfo(
+    const QString& title,
+    const QString& errorText)
+{
+    emptyPanel_->setText(
+        errorText.isEmpty() ? title : title + QStringLiteral("\n\n") + errorText);
+    emptyPanel_->setWordWrap(true);
+    emptyPanel_->setStyleSheet(errorText.isEmpty()
+            ? QString{}
+            : QStringLiteral(
+                "QLabel { color: #ffb4ab; background: #4b2024; "
+                "border: 1px solid #b94a55; padding: 6px; }"));
+    setCurrentWidget(emptyPanel_);
+}
+
+void FeaturePropertiesPanel::showBox(const document::BoxParameters& parameters)
+{
+    setCurrentWidget(boxPanel_);
+    const QSignalBlocker blockers[] = {
+        QSignalBlocker(lengthInput_), QSignalBlocker(widthInput_),
+        QSignalBlocker(boxHeightInput_), QSignalBlocker(boxTranslationInputs_[0]),
+        QSignalBlocker(boxTranslationInputs_[1]), QSignalBlocker(boxTranslationInputs_[2]),
+        QSignalBlocker(boxRotationInputs_[0]), QSignalBlocker(boxRotationInputs_[1]),
+        QSignalBlocker(boxRotationInputs_[2])};
+    lengthInput_->setValue(parameters.dimensions.width);
+    widthInput_->setValue(parameters.dimensions.depth);
+    boxHeightInput_->setValue(parameters.dimensions.height);
+    const double translations[] = {
+        parameters.placement.translationX,
+        parameters.placement.translationY,
+        parameters.placement.translationZ};
+    const double rotations[] = {
+        parameters.placement.rotationX,
+        parameters.placement.rotationY,
+        parameters.placement.rotationZ};
+    for (int index = 0; index < 3; ++index) {
+        boxTranslationInputs_[index]->setValue(translations[index]);
+        boxRotationInputs_[index]->setValue(rotations[index]);
+    }
+    static_cast<void>(blockers);
+}
+
+void FeaturePropertiesPanel::showCylinder(
+    const document::CylinderParameters& parameters,
+    const QString& errorText)
+{
+    setCurrentWidget(cylinderPanel_);
+    const QSignalBlocker blockers[] = {
+        QSignalBlocker(radiusInput_), QSignalBlocker(cylinderHeightInput_),
+        QSignalBlocker(translationInputs_[0]), QSignalBlocker(translationInputs_[1]),
+        QSignalBlocker(translationInputs_[2]), QSignalBlocker(rotationInputs_[0]),
+        QSignalBlocker(rotationInputs_[1]), QSignalBlocker(rotationInputs_[2]),
+        QSignalBlocker(resultModeInput_)};
+    radiusInput_->setValue(parameters.radius);
+    cylinderHeightInput_->setValue(parameters.height);
+    const double translations[] = {
+        parameters.placement.translationX,
+        parameters.placement.translationY,
+        parameters.placement.translationZ};
+    const double rotations[] = {
+        parameters.placement.rotationX,
+        parameters.placement.rotationY,
+        parameters.placement.rotationZ};
+    for (int index = 0; index < 3; ++index) {
+        translationInputs_[index]->setValue(translations[index]);
+        rotationInputs_[index]->setValue(rotations[index]);
+    }
+    resultModeInput_->setCurrentIndex(resultModeIndex(parameters.resultMode));
+    errorLabel_->setText(errorText);
+    errorLabel_->setVisible(!errorText.isEmpty());
+    static_cast<void>(blockers);
+}
+
+void FeaturePropertiesPanel::showExtrusion(
+    const document::ExtrusionParameters& parameters,
+    const QString& errorText)
+{
+    setCurrentWidget(extrusionPanel_);
+    const QSignalBlocker blocker(extrusionDistanceInput_);
+    extrusionDistanceInput_->setValue(parameters.distance);
+    extrusionErrorLabel_->setText(errorText);
+    extrusionErrorLabel_->setVisible(!errorText.isEmpty());
+}
+
+document::BoxParameters FeaturePropertiesPanel::boxParameters() const
+{
+    return {
+        kernel::BoxDimensions{
+            lengthInput_->value(), widthInput_->value(), boxHeightInput_->value()},
+        kernel::RigidTransform{
+            boxTranslationInputs_[0]->value(), boxTranslationInputs_[1]->value(),
+            boxTranslationInputs_[2]->value(), boxRotationInputs_[0]->value(),
+            boxRotationInputs_[1]->value(), boxRotationInputs_[2]->value()}};
+}
+
+document::CylinderParameters FeaturePropertiesPanel::cylinderParameters() const
+{
+    return {
+        radiusInput_->value(), cylinderHeightInput_->value(),
+        kernel::RigidTransform{
+            translationInputs_[0]->value(), translationInputs_[1]->value(),
+            translationInputs_[2]->value(), rotationInputs_[0]->value(),
+            rotationInputs_[1]->value(), rotationInputs_[2]->value()},
+        resultModeFromIndex(resultModeInput_->currentIndex())};
+}
+
+document::ExtrusionParameters FeaturePropertiesPanel::extrusionParameters() const
+{
+    return {extrusionDistanceInput_->value()};
+}
+
+void FeaturePropertiesPanel::previewMove(
+    const kernel::RigidTransform& base,
+    double deltaX,
+    double deltaY,
+    double deltaZ)
+{
+    const double values[] = {
+        base.translationX + deltaX,
+        base.translationY + deltaY,
+        base.translationZ + deltaZ};
+    QDoubleSpinBox** inputs = currentWidget() == boxPanel_
+        ? boxTranslationInputs_
+        : translationInputs_;
+    for (int index = 0; index < 3; ++index) {
+        const QSignalBlocker blocker(inputs[index]);
+        inputs[index]->setValue(values[index]);
+    }
+}
+
+void FeaturePropertiesPanel::previewRotation(
+    const kernel::RigidTransform& base,
+    int axisIndex,
+    double angleDegrees)
+{
+    if (axisIndex < 0 || axisIndex > 2) {
+        return;
+    }
+    const double values[] = {base.rotationX, base.rotationY, base.rotationZ};
+    QDoubleSpinBox** inputs = currentWidget() == boxPanel_
+        ? boxRotationInputs_
+        : rotationInputs_;
+    const QSignalBlocker blocker(inputs[axisIndex]);
+    inputs[axisIndex]->setValue(values[axisIndex] + angleDegrees);
+}
+
+} // namespace voelund::desktop

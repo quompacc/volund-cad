@@ -1,0 +1,47 @@
+add_executable(voelund_kernel_tests unit/ShapeFactoryTests.cpp)
+target_link_libraries(
+    voelund_kernel_tests
+    PRIVATE
+        voelund_project_options
+        Voelund::Kernel
+)
+
+add_test(NAME kernel.shape_factory COMMAND voelund_kernel_tests)
+
+add_executable(voelund_document_tests unit/ModelDocumentTests.cpp)
+target_link_libraries(
+    voelund_document_tests
+    PRIVATE
+        voelund_project_options
+        Voelund::Document
+)
+
+add_test(NAME document.history COMMAND voelund_document_tests)
+
+add_executable(voelund_application_tests integration/CadSessionTests.cpp)
+target_link_libraries(
+    voelund_application_tests
+    PRIVATE
+        voelund_project_options
+        Voelund::Application
+)
+
+add_test(NAME application.recompute_history COMMAND voelund_application_tests)
+
+add_executable(voelund_workspace_tests unit/CommandRegistryTests.cpp)
+target_link_libraries(
+    voelund_workspace_tests
+    PRIVATE
+        voelund_project_options
+        Voelund::ModuleSolid
+)
+
+add_test(NAME workspaces.module_registry COMMAND voelund_workspace_tests)
+
+add_test(
+    NAME architecture.source_limits
+    COMMAND
+        "${CMAKE_COMMAND}"
+        -DVOELUND_SOURCE_ROOT="${PROJECT_SOURCE_DIR}"
+        -P "${PROJECT_SOURCE_DIR}/tools/cmake/CheckSourceLimits.cmake"
+)

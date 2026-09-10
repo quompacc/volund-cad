@@ -1,0 +1,8 @@
+.tools/
+artifacts/
+build/
+__pycache__/
+*.pyc
+CMakeUserPresets.json
+*.docx
+/test.volund

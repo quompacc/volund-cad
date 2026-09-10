@@ -1,0 +1,15 @@
+Checks: >
+  -*,
+  bugprone-*,
+  clang-analyzer-*,
+  cppcoreguidelines-*,
+  modernize-*,
+  performance-*,
+  portability-*,
+  readability-*
+WarningsAsErrors: ''
+HeaderFilterRegex: '^(apps|include|src|tests)/'
+CheckOptions:
+  readability-function-size.LineThreshold: 80
+  readability-function-cognitive-complexity.Threshold: 10
+  readability-identifier-length.MinimumVariableNameLength: 2
