@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Völund CAD
+GenericName=Parametric CAD
+Comment=Create and edit parametric 3D models
+Exec=voelund-cad %F
+Icon=applications-engineering
+Terminal=false
+Categories=Graphics;Engineering;Science;
+MimeType=application/x-voelund;
+StartupNotify=true
+StartupWMClass=io.github.quompacc.Voelund

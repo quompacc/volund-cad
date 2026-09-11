@@ -4,6 +4,7 @@ Use one numbered Markdown file per accepted or rejected architecture decision. R
 
 Current decisions:
 
-- [0001: Wayland-first Linux viewport](0001-wayland-first-linux-viewport.md)
+- [0001: Wayland-first Linux viewport (platform priority superseded)](0001-wayland-first-linux-viewport.md)
 - [0002: Modular workspaces and command registry](0002-modular-workspaces-and-command-registry.md)
 - [0003: Generic active-tool lifecycle](0003-generic-tool-panel-lifecycle.md)
+- [0004: FreeBSD-first Meridian desktop integration](0004-freebsd-first-meridian-integration.md)

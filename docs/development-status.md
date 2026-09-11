@@ -1,11 +1,12 @@
-# Entwicklungsstand – 10. September 2026
+# Entwicklungsstand – 11. September 2026
 
 ## Verbindliches Produktziel
 
 Völund wird als natives parametrisches CAD in C++20 mit Qt 6 und OpenCASCADE
-Technology entwickelt. FreeCAD bleibt Referenz und Verhaltensorakel, ist aber keine
-Runtime-Abhängigkeit. Python, WebView und eine browserbasierte CAD-Oberfläche gehören
-nicht zum Produktpfad.
+Technology für FreeBSD mit Meridian entwickelt. Völund bleibt dabei eine
+eigenständige Wayland-Anwendung. FreeCAD bleibt Referenz und Verhaltensorakel, ist aber
+keine Runtime-Abhängigkeit. Python, WebView und eine browserbasierte CAD-Oberfläche
+gehören nicht zum Produktpfad.
 
 ## Heute bestätigter Funktionsstand
 
@@ -16,6 +17,13 @@ nicht zum Produktpfad.
   Raster sowie Live-Werte funktionieren.
 - Box und Zylinder sind parametrische Features. Der Zylinder unterstützt Join, Cut,
   Intersect und Separate.
+- Der Verbindungsmodus ist als globale, auswahlunabhängig bedienbare Toolbar sichtbar.
+  Er ändert die aktuelle letzte Zylinderoperation und ist zugleich die Vorgabe für
+  den nächsten Zylinder.
+- `Separate` löst die räumliche Abhängigkeit: Ein getrennter Zylinder behält seine
+  Weltposition, wenn sein früherer Eingabekörper verschoben wird. Bei `Join` bilden
+  Würfel und Zylinder dagegen einen gemeinsamen Transformationskörper; die Auswahl
+  jedes beitragenden Features aktiviert Move für dasselbe sichtbare Ergebnis.
 - Das Dokument besitzt stabile Feature-IDs, Undo/Redo und exakte Modified-Erkennung.
 - Neue, leere Dokumente sowie Open, Save und Save As im eigenen `.volund`-Format
   funktionieren einschließlich Speichern/Laden von Sketch und Extrusion.
@@ -48,15 +56,34 @@ dynamische Plug-in-ABI ist bewusst aufgeschoben.
 - Beide Windows-Backends durchlaufen denselben Funktions- und Regressionsteststand.
 - Sechs CTest-Tests prüfen Viewport-Start, Kernel, Dokumenthistorie,
   Anwendungs-Neuberechnung, Modulregistrierung und Quellgrößen.
+- Regressionstests sichern sowohl die unabhängige Bewegung getrennter Körper als auch
+  die gemeinsame Verschiebung eines Join-Ergebnisses einschließlich Undo.
 - Die harte Grenze von 600 Zeilen je gepflegter Quelldatei bleibt aktiv.
 - Der numerische Kontakt wiederholter Extrusionen wird mit einer ausschließlich nach
   innen liegenden OCCT-Überlappung von `0,0001 mm` stabilisiert; das Außenmaß bleibt
   unverändert.
 
-## Nächster Einstiegspunkt
+## Aktueller Einstiegspunkt: FreeBSD/Meridian-Integration
 
-Als nächstes folgt der vollständige parametrische Sketch-Modus auf Basis der bereits
-vorhandenen Modul-, Command- und Tool-Panel-Infrastruktur:
+Vor dem nächsten großen CAD-Slice wird der native Desktoppfad auf realer
+FreeBSD-Hardware belegt:
+
+1. Systembuild mit Clang, Qt 6 und einem schlanken OCCT-7.9.3-Profil;
+2. nativer Wayland-/EGL/GLES-Kontext ohne `DISPLAY` und ohne stillen XCB-Fallback;
+3. OCCT-Rendering, Picking, Resize, Skalierung und Fensterzustände;
+4. Meridian-SSD, Theme-Umschaltung, Portal-FileChooser und XDG-App-Identität;
+5. Zwischenprüfung auf einem ausgereiften FreeBSD-Wayland-Desktop und endgültige
+   Abnahme unter Meridian;
+6. Audit des FreeBSD-OCCT-Pakets auf Qt-5-/Xlib-Laufzeitkopplung.
+
+Die Sway-Kontrollprüfung und Punkt 6 sind abgeschlossen: Der echte Wayland-Smoke-Test
+bestand auf der Intel HD 620, und das projektlokale OCCT-Profil entfernt Xlib, TBB,
+VTK und Qt 5 aus OCCT. Offen bleibt die Abnahme derselben Prüfkette unter Meridian.
+Das FreeBSD-Qt6-Paket ist ein kombinierter Wayland/X11-Build und enthält deshalb trotz
+erzwungener Wayland-QPA weiterhin ruhende ELF-Kanten zu `libX11` und `libGLX`.
+
+Der vollständige parametrische Sketch-Modus ist der unmittelbar folgende CAD-Slice
+und wird am nächsten Entwicklungstag fortgesetzt:
 
 1. allgemeines Sketch-Datenmodell statt eines einzelnen Rechtecks;
 2. eigenständige Linien, Rechtecke und Kreise;
@@ -65,6 +92,6 @@ vorhandenen Modul-, Command- und Tool-Panel-Infrastruktur:
 5. Maße und geometrische Constraints;
 6. freie Auswahl eines oder mehrerer Profile für nachfolgende Extrusionen.
 
-Der direkte Push/Pull-Ablauf bleibt als schneller Weg erhalten. Er ist eine
+Der direkte Push/Pull-Ablauf bleibt dabei als schneller Weg erhalten. Er ist eine
 Bedienoberfläche über denselben parametrischen Sketch- und Extrusionsfeatures, kein
 Ersatz für den vollständigen Sketch-Editor.

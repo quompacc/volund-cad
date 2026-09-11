@@ -1,7 +1,7 @@
 # Völund CAD – Architektur- und Codevertrag
 
 **Status:** verbindlich
-**Version:** 1.0
+**Version:** 1.1
 **Beschlossen am:** 10. September 2026
 **Gültig für:** sämtlichen neu entstehenden Produktivcode, Build-Code und alle Architekturentscheidungen von Völund CAD
 
@@ -28,7 +28,7 @@ Der auszuliefernde CAD-Prozess wird nativ in **C++20** entwickelt.
 | Geometrie und Topologie | OpenCASCADE Technology (OCCT) |
 | Dokumentmodell, Transaktionen, Persistenz | OCAF und eigene, versionierte Völund-Dokumentstrukturen |
 | 3D-Ansicht und Interaktion | OCCT AIS/V3d auf OpenGL-Basis, gekapselt durch Völund-Schnittstellen |
-| Linux-Fenstersystem | Wayland nativ; Qt besitzt Oberfläche und Grafik-Kontext |
+| BSD-Desktopziel | FreeBSD mit Meridian; Wayland nativ, Qt besitzt Oberfläche und Grafik-Kontext |
 | Tests | CTest und native C++-Tests |
 
 Folgende Grenzen gelten verbindlich:
@@ -38,7 +38,19 @@ Folgende Grenzen gelten verbindlich:
 3. **WebView, Electron, Tauri oder eine browserbasierte Hauptoberfläche sind für den CAD-Arbeitsbereich ausgeschlossen.** Eingebettete Webinhalte dürfen später nur für klar isolierte Nebenfunktionen vorgeschlagen werden.
 4. **Rust ist nicht Teil des CAD-Prozesses oder seiner ABI.** Rust darf später für einen eigenständigen, prozessisolierten Dienst evaluiert werden, sofern die Kommunikation über ein stabiles, versioniertes Protokoll erfolgt und keine OCCT- oder Qt-Objekte die Prozessgrenze überschreiten.
 5. Neue Sprachen, UI-Frameworks oder Kernbibliotheken benötigen vor ihrer Einführung eine genehmigte Architekturentscheidung nach Abschnitt 11.
-6. **Wayland ist das verbindliche Linux-Produktziel.** X11 beziehungsweise XWayland darf nur als ausdrücklich markierter, zeitlich begrenzter Diagnoseweg eingesetzt werden und ist kein auszulieferndes Linux-Backend. Die Linux-Ansicht verwendet eine von Qt verwaltete Wayland-Oberfläche und einen von Qt verwalteten OpenGL-/EGL-Kontext; OCCT rendert über eine plattformneutrale Adaptergrenze in diesen Kontext.
+6. **FreeBSD mit Meridian ist das verbindliche Desktop-Produktziel.** Völund bleibt
+   dabei ein eigenständiger, nativer Wayland-Client. X11 beziehungsweise XWayland
+   darf nur als ausdrücklich markierter Diagnose- oder Kompatibilitätsweg eingesetzt
+   werden und erfüllt nicht die Produktabnahme. Qt verwaltet Wayland-Oberfläche und
+   OpenGL-/EGL-Kontext; OCCT rendert über eine plattformneutrale Adaptergrenze in
+   diesen Kontext.
+7. Windows bleibt Entwicklungs- und Regressionstestplattform. Linux/Wayland ist ein
+   nachrangiges Kompatibilitätsziel. Die frühere OpenBSD-Untersuchung bleibt
+   Machbarkeitsnachweis, bestimmt aber weder Produktpriorität noch Abnahme.
+8. Desktopintegration verwendet bevorzugt standardisierte Grenzen: Wayland,
+   `xdg-decoration`, XDG-Portale, Desktop-Dateien, MIME-Metadaten und XDG-Pfade.
+   Direkte Abhängigkeiten von privaten Meridian-Crates oder internem
+   Compositor-/Shell-IPC sind verboten.
 
 Die Python-Artefakte unter `spikes/phase-0-freecad/` sind eingefrorenes
 Beweismaterial. Sie dürfen ausgeführt oder gelesen, aber nicht zum Produkt ausgebaut,
@@ -131,6 +143,27 @@ Siehe ADR 0003.
 - Öffentliche Schnittstellen bleiben klein. Implementierungsdetails werden nicht aus Bequemlichkeit exportiert.
 - OCCT-Typen dürfen außerhalb von `kernel` und der definierten Viewport-Grenze nicht unkontrolliert durchs System gereicht werden.
 
+### 4.8 Körper-, Verbindungs- und Transformationssemantik
+
+- `Join`, `Cut` und `Intersect` erzeugen einen gemeinsamen sichtbaren Ergebniskörper.
+  Jedes im Modellbaum ausgewählte Feature, das zu diesem Körper beiträgt und denselben
+  Platzierungsinhaber besitzt, adressiert für direkte Transformation denselben
+  Viewport-Körper.
+- Die starre Bewegung eines verbundenen Ergebnisses verändert die Platzierung seines
+  Basiskörpers. Sie darf nicht als lokale Verschiebung des booleschen Werkzeugs
+  gespeichert werden.
+- `Separate` erzeugt einen eigenständig platzierbaren Körper. Seine Weltposition wird
+  beim Trennen erhalten und danach nicht erneut aus der transformierten Lage seines
+  früheren Eingabekörpers abgeleitet.
+- Der in der Desktop-Oberfläche dauerhaft sichtbare Verbindungsmodus ist unabhängig
+  von der Feature-Auswahl bedienbar. Er bearbeitet die aktuelle, zuletzt erzeugte
+  Zylinderoperation und dient ohne vorhandenen Zylinder als Vorgabe für die nächste.
+  Der tatsächlich verwendete Modus bleibt Bestandteil des jeweiligen parametrischen
+  Features und wird mit dem Dokument gespeichert.
+- `application` löst die Zuordnung zwischen ausgewähltem Feature, sichtbarem
+  Ergebniskörper und Platzierungsinhaber auf. `desktop` und `viewport` dürfen diese
+  Fachregel nicht über Widget-Sichtbarkeit oder Präsentations-IDs nachbilden.
+
 ## 5. Verzeichnisvertrag
 
 Die Zielstruktur lautet:
@@ -146,6 +179,7 @@ src/modules/            konkrete, voneinander getrennte Arbeitsbereichsmodule
 src/viewport/           AIS/V3d-Darstellung und Interaktion
 src/desktop/            Qt-Widgets und Desktop-Integration
 src/platform/           Betriebssystem- und Prozessadapter
+packaging/              Desktop-, MIME- und plattformspezifische Paketmetadaten
 include/voelund/        bewusst öffentliche C++-Schnittstellen
 tests/unit/             schnelle, isolierte Tests
 tests/integration/      Modul- und OCCT-Integration
@@ -222,7 +256,8 @@ starten oder laden dafür weder FreeCAD noch Python.
 
 Jede Integration muss automatisiert prüfen:
 
-1. Konfiguration und Build auf den unterstützten Plattformen;
+1. Konfiguration und Build auf Windows und FreeBSD sowie auf weiteren ausdrücklich
+   unterstützten Plattformen;
 2. Formatierung und statische Analyse;
 3. Compiler-Warnungen als Fehler für eigenen Code;
 4. alle Unit-, Integrations- und relevanten Regressionstests;

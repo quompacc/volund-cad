@@ -19,9 +19,16 @@ struct EvaluatedBody final {
     TopoDS_Shape shape;
 };
 
+struct EvaluatedFeature final {
+    document::FeatureId id;
+    TopoDS_Shape shape;
+    TopoDS_Shape referenceShape;
+};
+
 struct FeatureGraphResult final {
     TopoDS_Shape resultShape;
     std::vector<EvaluatedBody> bodies;
+    std::vector<EvaluatedFeature> features;
 };
 
 class FeatureEvaluationError final : public std::runtime_error {

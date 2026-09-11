@@ -7,7 +7,6 @@
 
 #include <functional>
 
-class QComboBox;
 class QDoubleSpinBox;
 class QLabel;
 
@@ -30,7 +29,8 @@ public:
         const document::ExtrusionParameters& parameters,
         const QString& errorText);
     [[nodiscard]] document::BoxParameters boxParameters() const;
-    [[nodiscard]] document::CylinderParameters cylinderParameters() const;
+    [[nodiscard]] document::CylinderParameters cylinderParameters(
+        document::CylinderResultMode resultMode) const;
     [[nodiscard]] document::ExtrusionParameters extrusionParameters() const;
     void previewMove(
         const kernel::RigidTransform& base,
@@ -61,7 +61,6 @@ private:
     QDoubleSpinBox* cylinderHeightInput_{nullptr};
     QDoubleSpinBox* translationInputs_[3]{};
     QDoubleSpinBox* rotationInputs_[3]{};
-    QComboBox* resultModeInput_{nullptr};
     QLabel* errorLabel_{nullptr};
     QDoubleSpinBox* extrusionDistanceInput_{nullptr};
     QLabel* extrusionErrorLabel_{nullptr};

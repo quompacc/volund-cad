@@ -6,8 +6,8 @@ Völund keeps its direct dependency surface deliberately small. A new direct or 
 
 | Dependency | Purpose | Enabled scope |
 |---|---|---|
-| OpenCASCADE Technology 8.0.1 | geometry, topology, OCAF, AIS/V3d | core only; FreeType, FreeImage, RapidJSON, TBB, VTK disabled |
-| Qt Base 6.11.1 | desktop window, widgets, event loop, OpenGL integration | official prebuilt Qt Base archive; only required runtime DLLs are packaged |
+| OpenCASCADE Technology 7.9.3 or 8.0.1 | geometry, topology, OCAF, AIS/V3d | 8.0.1 is pinned on Windows; the FreeBSD package is 7.9.3 and uses the compatibility header; FreeBSD port linkage must be audited |
+| Qt Base 6.11.1 | desktop window, widgets, event loop, OpenGL integration | official Windows archive or FreeBSD package; ship only required runtime components |
 
 The C++ standard library is used for general containers, strings, algorithms, errors, filesystem access, and concurrency. No separate convenience library is approved.
 
@@ -21,12 +21,15 @@ The C++ standard library is used for general containers, strings, algorithms, er
 | MSVC / GCC / Clang | compile and link | no |
 | CTest | discover and run native tests | no |
 
-On Windows, Qt Base is taken from Qt's official prebuilt archive instead of being built through vcpkg. This avoids vcpkg's large Qt host-tool dependency graph. On Linux, the distribution's Qt Base development package is preferred. Release packaging must derive its library list from the final executable dependency graph, never from a complete SDK directory.
+On Windows, Qt Base is taken from Qt's official prebuilt archive instead of being built through vcpkg. This avoids vcpkg's large Qt host-tool dependency graph. On FreeBSD, system packages are the initial build input; release packaging must derive its library list from the final executable dependency graph, never from a complete SDK directory. Linux uses distribution packages for its compatibility build.
 
-On Linux, Qt's native Wayland platform integration owns the surface and the OpenGL/EGL
-context. Völund does not add a direct X11 dependency, and OCCT's `Xw_Window` is not a
-product adapter. Direct Wayland protocol code is avoided unless the Qt-owned integration
-proves insufficient, in which case it requires a separate ADR.
+On FreeBSD, Qt's native Wayland platform integration owns the surface and the
+OpenGL/EGL context. Völund does not add a direct X11 dependency, and OCCT's `Xw_Window`
+is not a product adapter. The stock FreeBSD OCCT port currently enables Qt 5 and Xlib;
+it is acceptable for initial investigation but not approved for release until its
+runtime linkage is audited. A lean package flavor or project-owned OCCT build may be
+needed. Direct Wayland protocol code is avoided unless the Qt-owned integration proves
+insufficient, in which case it requires a separate ADR.
 
 ## Not currently required
 

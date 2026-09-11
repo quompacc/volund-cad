@@ -30,13 +30,22 @@ target_link_libraries(
         Voelund::Kernel
         Qt6::Widgets
         TKV3d
-        TKOpenGl
         TKService
 )
 
+if(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD" AND VOELUND_VIEWPORT_BACKEND STREQUAL "qt-opengl")
+    target_compile_definitions(voelund_viewport PUBLIC HAVE_GLES2=1 VOELUND_OCCT_GLES=1)
+    target_link_libraries(voelund_viewport PUBLIC TKOpenGles OpenGL::EGL)
+else()
+    target_link_libraries(voelund_viewport PUBLIC TKOpenGl)
+endif()
+
 if(VOELUND_VIEWPORT_BACKEND STREQUAL "qt-opengl")
     target_compile_definitions(voelund_viewport PUBLIC VOELUND_VIEWPORT_QT_OPENGL=1)
-    target_link_libraries(voelund_viewport PUBLIC Qt6::OpenGLWidgets OpenGL::GL)
+    target_link_libraries(voelund_viewport PUBLIC Qt6::OpenGLWidgets)
+    if(WIN32)
+        target_link_libraries(voelund_viewport PUBLIC OpenGL::GL)
+    endif()
 endif()
 
 add_library(Voelund::Viewport ALIAS voelund_viewport)

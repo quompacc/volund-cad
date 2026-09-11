@@ -1,5 +1,7 @@
 #pragma once
 
+#include <voelund/kernel/OcctCompatibility.hpp>
+
 #if defined(VOELUND_VIEWPORT_QT_OPENGL)
 #include <QOpenGLWidget>
 #else

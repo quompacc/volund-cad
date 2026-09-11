@@ -1,6 +1,6 @@
 # ADR 0001: Wayland-first Linux viewport
 
-**Status:** accepted
+**Status:** superseded in platform priority by ADR 0004
 **Date:** 10 September 2026
 **Owner:** Völund project
 
@@ -13,6 +13,10 @@ make X11 or XWayland an accidental architectural dependency.
 
 Völund intends to be a long-lived Linux desktop application. Wayland is consequently
 the product target, while the only currently available validation host is Windows.
+
+This original platform priority is no longer current. ADR 0004 makes FreeBSD with
+Meridian the primary desktop target. The Qt-owned native Wayland/OpenGL context
+decision remains valid and is carried forward unchanged.
 
 ## Considered options
 

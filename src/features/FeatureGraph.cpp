@@ -3,6 +3,7 @@
 #include <voelund/document/ModelDocument.hpp>
 #include <voelund/features/BoxFeature.hpp>
 #include <voelund/features/CylinderFeature.hpp>
+#include <voelund/kernel/ShapeFactory.hpp>
 #include <voelund/kernel/ShapeOperations.hpp>
 
 #include <BRepBuilderAPI_MakeFace.hxx>
@@ -21,20 +22,16 @@
 namespace voelund::features {
 namespace {
 
-struct EvaluatedFeature final {
-    document::FeatureId id;
-    TopoDS_Shape shape;
-};
-
 const TopoDS_Shape& findOutput(
     const std::vector<EvaluatedFeature>& outputs,
-    document::FeatureId featureId)
+    document::FeatureId featureId,
+    bool reference = false)
 {
     const auto match = std::ranges::find(outputs, featureId, &EvaluatedFeature::id);
     if (match == outputs.end()) {
         throw std::runtime_error("Feature input has not been evaluated");
     }
-    return match->shape;
+    return reference ? match->referenceShape : match->shape;
 }
 
 EvaluatedBody& findBody(
@@ -68,11 +65,15 @@ void evaluateBox(
     const document::ModelDocument& document,
     const document::FeatureDescriptor& descriptor,
     std::vector<EvaluatedFeature>& outputs,
-    std::vector<EvaluatedBody>& bodies)
+    std::vector<EvaluatedBody>& bodies,
+    std::vector<EvaluatedBody>& referenceBodies)
 {
     const TopoDS_Shape shape = BoxFeature(descriptor.id).evaluate(document);
-    outputs.push_back(EvaluatedFeature{descriptor.id, shape});
+    const TopoDS_Shape referenceShape =
+        kernel::ShapeFactory::makeBox(document.boxDimensions(descriptor.id));
+    outputs.push_back(EvaluatedFeature{descriptor.id, shape, referenceShape});
     bodies.push_back(EvaluatedBody{descriptor.id, shape});
+    referenceBodies.push_back(EvaluatedBody{descriptor.id, referenceShape});
 }
 
 TopoDS_Shape combineCylinder(
@@ -97,25 +98,37 @@ void evaluateCylinder(
     const document::ModelDocument& document,
     const document::FeatureDescriptor& descriptor,
     std::vector<EvaluatedFeature>& outputs,
-    std::vector<EvaluatedBody>& bodies)
+    std::vector<EvaluatedBody>& bodies,
+    std::vector<EvaluatedBody>& referenceBodies)
 {
     if (!descriptor.inputFeature.has_value()) {
         throw std::runtime_error("Cylinder feature requires an input feature");
     }
     const document::FeatureId inputId = *descriptor.inputFeature;
     const TopoDS_Shape& inputShape = findOutput(outputs, inputId);
-    const TopoDS_Shape tool = CylinderFeature(descriptor.id).evaluateTool(document, inputShape);
+    const TopoDS_Shape& referenceInputShape = findOutput(outputs, inputId, true);
+    const CylinderFeature cylinder(descriptor.id);
     const document::CylinderParameters& parameters = document.cylinderParameters(descriptor.id);
     if (parameters.resultMode == document::CylinderResultMode::separate) {
-        outputs.push_back(EvaluatedFeature{descriptor.id, tool});
+        const TopoDS_Shape tool = cylinder.evaluateTool(document, referenceInputShape);
+        const TopoDS_Shape referenceTool =
+            cylinder.evaluateTool(document, referenceInputShape, false);
+        outputs.push_back(EvaluatedFeature{descriptor.id, tool, referenceTool});
         bodies.push_back(EvaluatedBody{descriptor.id, tool});
+        referenceBodies.push_back(EvaluatedBody{descriptor.id, referenceTool});
         return;
     }
 
+    const TopoDS_Shape tool = cylinder.evaluateTool(document, inputShape);
+    const TopoDS_Shape referenceTool = cylinder.evaluateTool(document, referenceInputShape);
     const TopoDS_Shape result = combineCylinder(parameters.resultMode, inputShape, tool);
-    outputs.push_back(EvaluatedFeature{descriptor.id, result});
+    const TopoDS_Shape referenceResult =
+        combineCylinder(parameters.resultMode, referenceInputShape, referenceTool);
+    outputs.push_back(EvaluatedFeature{descriptor.id, result, referenceResult});
     EvaluatedBody& inputBody = findBody(bodies, inputId);
     inputBody = EvaluatedBody{descriptor.id, result};
+    EvaluatedBody& referenceInputBody = findBody(referenceBodies, inputId);
+    referenceInputBody = EvaluatedBody{descriptor.id, referenceResult};
 }
 
 gp_Pnt sketchPoint(
@@ -145,14 +158,15 @@ void evaluateSketch(
     polygon.Add(sketchPoint(parameters.plane, rectangle.firstX, rectangle.secondY));
     polygon.Close();
     const TopoDS_Shape face = BRepBuilderAPI_MakeFace(polygon.Wire()).Face();
-    outputs.push_back(EvaluatedFeature{descriptor.id, face});
+    outputs.push_back(EvaluatedFeature{descriptor.id, face, face});
 }
 
 void evaluateExtrusion(
     const document::ModelDocument& document,
     const document::FeatureDescriptor& descriptor,
     std::vector<EvaluatedFeature>& outputs,
-    std::vector<EvaluatedBody>& bodies)
+    std::vector<EvaluatedBody>& bodies,
+    std::vector<EvaluatedBody>& referenceBodies)
 {
     if (!descriptor.inputFeature.has_value()) {
         throw std::runtime_error("Extrusion requires a sketch input");
@@ -183,9 +197,13 @@ void evaluateExtrusion(
     }
     const document::FeatureId supportId = *sketchDescriptor->inputFeature;
     EvaluatedBody& supportBody = findBody(bodies, supportId);
+    EvaluatedBody& referenceSupportBody = findBody(referenceBodies, supportId);
     const TopoDS_Shape result = kernel::ShapeOperations::fuse(supportBody.shape, tool);
-    outputs.push_back(EvaluatedFeature{descriptor.id, result});
+    const TopoDS_Shape referenceResult =
+        kernel::ShapeOperations::fuse(referenceSupportBody.shape, tool);
+    outputs.push_back(EvaluatedFeature{descriptor.id, result, referenceResult});
     supportBody = EvaluatedBody{descriptor.id, result};
+    referenceSupportBody = EvaluatedBody{descriptor.id, referenceResult};
 }
 
 } // namespace
@@ -207,29 +225,32 @@ FeatureGraphResult FeatureGraph::evaluate(const document::ModelDocument& documen
 {
     std::vector<EvaluatedFeature> outputs;
     std::vector<EvaluatedBody> bodies;
+    std::vector<EvaluatedBody> referenceBodies;
     outputs.reserve(document.features().size());
     bodies.reserve(document.features().size());
+    referenceBodies.reserve(document.features().size());
     for (const document::FeatureDescriptor& descriptor : document.features()) {
         try {
             switch (descriptor.kind) {
             case document::FeatureKind::box:
-                evaluateBox(document, descriptor, outputs, bodies);
+                evaluateBox(document, descriptor, outputs, bodies, referenceBodies);
                 break;
             case document::FeatureKind::cylinder:
-                evaluateCylinder(document, descriptor, outputs, bodies);
+                evaluateCylinder(document, descriptor, outputs, bodies, referenceBodies);
                 break;
             case document::FeatureKind::sketch:
                 evaluateSketch(document, descriptor, outputs);
                 break;
             case document::FeatureKind::extrusion:
-                evaluateExtrusion(document, descriptor, outputs, bodies);
+                evaluateExtrusion(document, descriptor, outputs, bodies, referenceBodies);
                 break;
             }
         } catch (const std::exception& error) {
             throw FeatureEvaluationError(descriptor.id, error.what());
         }
     }
-    return FeatureGraphResult{createResultShape(bodies), std::move(bodies)};
+    return FeatureGraphResult{
+        createResultShape(bodies), std::move(bodies), std::move(outputs)};
 }
 
 } // namespace voelund::features

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <voelund/kernel/OcctCompatibility.hpp>
+
 #include <Aspect_Drawable.hxx>
 #include <V3d_View.hxx>
 

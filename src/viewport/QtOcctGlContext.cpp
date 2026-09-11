@@ -15,6 +15,11 @@
 #include <OpenGl_GraphicDriver.hxx>
 #include <OpenGl_View.hxx>
 #include <OpenGl_Window.hxx>
+#include <QDebug>
+
+#if defined(VOELUND_OCCT_GLES)
+#include <EGL/egl.h>
+#endif
 
 namespace voelund::viewport::qtgl {
 namespace {
@@ -74,8 +79,32 @@ bool attachCurrentContext(
     double devicePixelRatio)
 {
     const auto driver = occ::handle<OpenGl_GraphicDriver>::DownCast(view->Viewer()->Driver());
+#if defined(VOELUND_OCCT_GLES)
+    EGLDisplay eglDisplay = eglGetCurrentDisplay();
+    EGLContext eglContext = eglGetCurrentContext();
+    EGLint configId = 0;
+    EGLConfig eglConfig = nullptr;
+    EGLint configCount = 0;
+    const EGLint configAttributes[] = {EGL_CONFIG_ID, 0, EGL_NONE};
+    if (eglDisplay == EGL_NO_DISPLAY || eglContext == EGL_NO_CONTEXT
+        || eglQueryContext(eglDisplay, eglContext, EGL_CONFIG_ID, &configId) != EGL_TRUE) {
+        qWarning() << "Cannot inspect Qt's EGL context" << Qt::hex << eglGetError();
+        return false;
+    }
+    EGLint selectedConfigAttributes[] = {
+        configAttributes[0], configId, configAttributes[2]};
+    if (eglChooseConfig(
+            eglDisplay, selectedConfigAttributes, &eglConfig, 1, &configCount) != EGL_TRUE
+        || configCount != 1 || eglConfig == nullptr
+        || !driver->InitEglContext(eglDisplay, eglContext, eglConfig)) {
+        qWarning() << "Cannot initialize OCCT's EGL driver" << configId << configCount
+                   << Qt::hex << eglGetError();
+        return false;
+    }
+#endif
     occ::handle<OpenGl_Context> context = new OpenGl_Context();
     if (!context->Init(!driver->Options().contextCompatible)) {
+        qWarning() << "Cannot initialize OCCT from Qt's current GL context";
         return false;
     }
 

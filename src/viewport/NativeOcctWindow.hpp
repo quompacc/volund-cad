@@ -1,5 +1,7 @@
 #pragma once
 
+#include <voelund/kernel/OcctCompatibility.hpp>
+
 #include <Aspect_DisplayConnection.hxx>
 #include <Aspect_Window.hxx>
 

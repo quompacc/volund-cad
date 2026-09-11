@@ -13,11 +13,14 @@
 #include <Graphic3d_GraphicDriver.hxx>
 #include <NCollection_Vec2.hxx>
 #include <OpenGl_GraphicDriver.hxx>
+#include <QDebug>
 #include <QMouseEvent>
+#include <QOpenGLContext>
 #include <QWheelEvent>
 #include <Quantity_Color.hxx>
 #include <Quantity_TypeOfColor.hxx>
 #include <StdSelect_BRepOwner.hxx>
+#include <Standard_Failure.hxx>
 #include <TopAbs_ShapeEnum.hxx>
 #include <TopoDS_Shape.hxx>
 #include <V3d_TypeOfOrientation.hxx>
@@ -29,6 +32,19 @@
 #include <vector>
 
 namespace voelund::viewport {
+
+namespace {
+
+const char* failureMessage(const Standard_Failure& failure)
+{
+#if OCC_VERSION_MAJOR >= 8
+    return failure.what();
+#else
+    return failure.GetMessageString();
+#endif
+}
+
+} // namespace
 
 class CadViewport::Impl final {
 public:
@@ -259,14 +275,27 @@ bool CadViewport::isRenderingReady() const noexcept
 
 void CadViewport::initializeGL()
 {
-    const auto fallback = static_cast<std::uintptr_t>(effectiveWinId());
-    const Aspect_Drawable nativeWindow = qtgl::currentNativeWindow(fallback);
-    impl_->ready = qtgl::attachCurrentContext(
-        impl_->view,
-        nativeWindow,
-        width(),
-        height(),
-        devicePixelRatioF());
+    try {
+        const auto fallback = static_cast<std::uintptr_t>(effectiveWinId());
+        const Aspect_Drawable nativeWindow = qtgl::currentNativeWindow(fallback);
+        impl_->ready = qtgl::attachCurrentContext(
+            impl_->view,
+            nativeWindow,
+            width(),
+            height(),
+            devicePixelRatioF());
+    } catch (const Standard_Failure& failure) {
+        const QOpenGLContext* context = QOpenGLContext::currentContext();
+        const QSurfaceFormat format = context != nullptr ? context->format() : QSurfaceFormat{};
+        qWarning().noquote()
+            << "OCCT context attachment failed:"
+            << failureMessage(failure)
+            << "Qt context:"
+            << (context != nullptr ? (context->isOpenGLES() ? "OpenGL ES" : "desktop OpenGL")
+                                   : "none")
+            << format.majorVersion() << format.minorVersion();
+        impl_->ready = false;
+    }
     if (impl_->ready) {
         impl_->displayPendingBodies();
     }

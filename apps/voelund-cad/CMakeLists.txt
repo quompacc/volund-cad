@@ -40,7 +40,33 @@ if(WIN32)
     endif()
 endif()
 
-if(BUILD_TESTING AND WIN32)
-    add_test(NAME desktop.viewport_startup COMMAND voelund-cad --smoke-test)
-    set_tests_properties(desktop.viewport_startup PROPERTIES TIMEOUT 15)
+install(TARGETS voelund-cad RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+
+if(UNIX AND NOT APPLE)
+    install(
+        FILES "${PROJECT_SOURCE_DIR}/packaging/unix/io.github.quompacc.Voelund.desktop"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/applications"
+    )
+    install(
+        FILES "${PROJECT_SOURCE_DIR}/packaging/unix/io.github.quompacc.Voelund.xml"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/mime/packages"
+    )
+endif()
+
+if(BUILD_TESTING AND VOELUND_BUILD_DESKTOP)
+    if(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+        add_test(
+            NAME desktop.viewport_startup.native_wayland
+            COMMAND
+                /usr/bin/env -u DISPLAY QT_QPA_PLATFORM=wayland
+                $<TARGET_FILE:voelund-cad> --smoke-test
+        )
+        set_tests_properties(
+            desktop.viewport_startup.native_wayland
+            PROPERTIES TIMEOUT 20 LABELS "freebsd;wayland;desktop"
+        )
+    elseif(WIN32)
+        add_test(NAME desktop.viewport_startup COMMAND voelund-cad --smoke-test)
+        set_tests_properties(desktop.viewport_startup PROPERTIES TIMEOUT 15)
+    endif()
 endif()

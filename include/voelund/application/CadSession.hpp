@@ -29,7 +29,9 @@ public:
     [[nodiscard]] std::optional<document::FeatureId> selectedFeature() const noexcept;
     [[nodiscard]] bool selectFeature(document::FeatureId featureId) noexcept;
     [[nodiscard]] document::FeatureId addBoxFeature();
-    [[nodiscard]] document::FeatureId addCylinderFeature();
+    [[nodiscard]] document::FeatureId addCylinderFeature(
+        document::CylinderResultMode resultMode =
+            document::CylinderResultMode::separate);
     [[nodiscard]] document::FeatureId addSketchExtrusion(
         document::FeatureId supportFeature,
         const document::SketchPlane& plane,
@@ -37,13 +39,20 @@ public:
         double distance = 10.0);
     [[nodiscard]] bool canAddCylinder() const noexcept;
     [[nodiscard]] bool canTransformFeature(document::FeatureId featureId) const noexcept;
+    [[nodiscard]] std::optional<document::FeatureId> transformBodyForFeature(
+        document::FeatureId featureId) const noexcept;
     [[nodiscard]] const document::FeatureDescriptor& selectedFeatureDescriptor() const;
     [[nodiscard]] const kernel::BoxDimensions& selectedBoxDimensions() const;
     [[nodiscard]] const document::BoxParameters& selectedBoxParameters() const;
     [[nodiscard]] bool setSelectedBoxDimensions(const kernel::BoxDimensions& dimensions);
     [[nodiscard]] bool setSelectedBoxParameters(const document::BoxParameters& parameters);
     [[nodiscard]] const document::CylinderParameters& selectedCylinderParameters() const;
+    [[nodiscard]] const document::CylinderParameters& cylinderParameters(
+        document::FeatureId featureId) const;
     [[nodiscard]] bool setSelectedCylinderParameters(
+        const document::CylinderParameters& parameters);
+    [[nodiscard]] bool setCylinderParameters(
+        document::FeatureId featureId,
         const document::CylinderParameters& parameters);
     [[nodiscard]] const document::ExtrusionParameters& selectedExtrusionParameters() const;
     [[nodiscard]] bool setSelectedExtrusionParameters(
@@ -71,6 +80,7 @@ private:
     features::FeatureGraph featureGraph_;
     TopoDS_Shape currentShape_;
     std::vector<features::EvaluatedBody> currentBodies_;
+    std::vector<features::EvaluatedFeature> currentFeatures_;
     std::optional<document::FeatureId> selectedFeature_{document::ModelDocument::initialBoxId()};
     std::vector<FeatureRuntimeState> featureStates_;
     std::string cleanDocumentState_;

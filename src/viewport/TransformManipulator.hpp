@@ -1,5 +1,7 @@
 #pragma once
 
+#include <voelund/kernel/OcctCompatibility.hpp>
+
 #include <AIS_InteractiveObject.hxx>
 #include <AIS_Shape.hxx>
 #include <V3d_View.hxx>

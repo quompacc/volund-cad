@@ -18,7 +18,32 @@ CylinderFeature::CylinderFeature(document::FeatureId featureId) noexcept
 
 TopoDS_Shape CylinderFeature::evaluateTool(
     const document::ModelDocument& document,
-    const TopoDS_Shape& inputShape) const
+    const TopoDS_Shape& inputShape,
+    bool applyPlacement) const
+{
+    const document::CylinderParameters& cylinder = document.cylinderParameters(featureId_);
+    const gp_Pnt origin = attachmentOrigin(inputShape, cylinder.height);
+    const kernel::CylinderDefinition definition{
+        cylinder.radius,
+        cylinder.height,
+        origin.X(),
+        origin.Y(),
+        origin.Z()};
+    const TopoDS_Shape cylinderShape = kernel::ShapeFactory::makeCylinder(definition);
+    if (!applyPlacement) {
+        return cylinderShape;
+    }
+    return kernel::ShapeFactory::applyTransform(
+        cylinderShape,
+        origin.X(),
+        origin.Y(),
+        origin.Z() + cylinder.height * 0.5,
+        cylinder.placement);
+}
+
+gp_Pnt CylinderFeature::attachmentOrigin(
+    const TopoDS_Shape& inputShape,
+    double cylinderHeight)
 {
     Bnd_Box bounds;
     BRepBndLib::AddOptimal(inputShape, bounds, false, false);
@@ -32,24 +57,11 @@ TopoDS_Shape CylinderFeature::evaluateTool(
     double maximumY = 0.0;
     double maximumZ = 0.0;
     bounds.Get(minimumX, minimumY, minimumZ, maximumX, maximumY, maximumZ);
-    const document::CylinderParameters& cylinder = document.cylinderParameters(featureId_);
-    const double overlap = std::min(2.0, cylinder.height * 0.25);
+    const double overlap = std::min(2.0, cylinderHeight * 0.25);
     const double originX = (minimumX + maximumX) * 0.5;
     const double originY = (minimumY + maximumY) * 0.5;
     const double originZ = maximumZ - overlap;
-    const kernel::CylinderDefinition definition{
-        cylinder.radius,
-        cylinder.height,
-        originX,
-        originY,
-        originZ};
-    const TopoDS_Shape cylinderShape = kernel::ShapeFactory::makeCylinder(definition);
-    return kernel::ShapeFactory::applyTransform(
-        cylinderShape,
-        originX,
-        originY,
-        originZ + cylinder.height * 0.5,
-        cylinder.placement);
+    return gp_Pnt(originX, originY, originZ);
 }
 
 } // namespace voelund::features

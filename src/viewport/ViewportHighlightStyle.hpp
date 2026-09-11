@@ -1,5 +1,7 @@
 #pragma once
 
+#include <voelund/kernel/OcctCompatibility.hpp>
+
 #include <AIS_InteractiveContext.hxx>
 
 namespace voelund::viewport {

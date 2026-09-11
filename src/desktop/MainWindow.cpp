@@ -16,14 +16,17 @@
 
 #include <QAction>
 #include <QCloseEvent>
+#include <QComboBox>
 #include <QDockWidget>
 #include <QDoubleSpinBox>
 #include <QKeySequence>
+#include <QLabel>
 #include <QSignalBlocker>
 #include <QStatusBar>
 #include <QToolBar>
 #include <QWidget>
 
+#include <algorithm>
 #include <memory>
 #include <optional>
 #include <utility>
@@ -36,10 +39,8 @@ std::vector<viewport::SceneBody> makeSceneBodies(const application::CadSession& 
 {
     std::vector<viewport::SceneBody> bodies;
     bodies.reserve(session.currentBodies().size());
-    const bool hasSeparateBodies = session.currentBodies().size() > 1;
     for (const features::EvaluatedBody& body : session.currentBodies()) {
-        const bool isTransformableBody = hasSeparateBodies
-            && session.canTransformFeature(body.sourceFeature);
+        const bool isTransformableBody = session.canTransformFeature(body.sourceFeature);
         bodies.push_back(
             viewport::SceneBody{
                 body.sourceFeature.value(), body.shape, isTransformableBody});
@@ -58,6 +59,51 @@ QString featureErrorText(
         }
     }
     return {};
+}
+
+int resultModeIndex(document::CylinderResultMode mode)
+{
+    switch (mode) {
+    case document::CylinderResultMode::join: return 0;
+    case document::CylinderResultMode::cut: return 1;
+    case document::CylinderResultMode::intersect: return 2;
+    case document::CylinderResultMode::separate: return 3;
+    }
+    return 0;
+}
+
+document::CylinderResultMode resultModeFromIndex(int index)
+{
+    switch (index) {
+    case 1: return document::CylinderResultMode::cut;
+    case 2: return document::CylinderResultMode::intersect;
+    case 3: return document::CylinderResultMode::separate;
+    default: return document::CylinderResultMode::join;
+    }
+}
+
+std::optional<document::FeatureId> latestCylinderId(
+    const application::CadSession& session)
+{
+    const auto features = session.features();
+    const auto cylinder = std::ranges::find(
+        features.rbegin(), features.rend(), document::FeatureKind::cylinder,
+        &document::FeatureDescriptor::kind);
+    return cylinder == features.rend()
+        ? std::optional<document::FeatureId>{}
+        : std::optional<document::FeatureId>{cylinder->id};
+}
+
+bool selectTransformFeatureForBody(
+    application::CadSession& session,
+    document::FeatureId bodyId)
+{
+    const std::optional<document::FeatureId> selected = session.selectedFeature();
+    if (selected.has_value() && session.canTransformFeature(*selected)
+        && session.transformBodyForFeature(*selected) == bodyId) {
+        return true;
+    }
+    return session.selectFeature(bodyId) && session.canTransformFeature(bodyId);
 }
 
 } // namespace
@@ -84,6 +130,7 @@ public:
     QAction* snapAction{nullptr};
     QDoubleSpinBox* linearSnapInput{nullptr};
     QDoubleSpinBox* angularSnapInput{nullptr};
+    QComboBox* connectionModeInput{nullptr};
     std::optional<viewport::PlanarFaceSelection> selectedPlanarFace;
     workspaces::CommandRegistry commandRegistry;
     std::unique_ptr<WorkspaceToolbar> workspaceToolbar;
@@ -100,6 +147,7 @@ MainWindow::MainWindow(application::CadSession& session, QWidget* parent)
     createToolPanel();
     createHistoryToolbar();
     createWorkspaceToolbar();
+    createConnectionToolbar();
     createTransformSettingsToolbar();
     impl_->documentActions = std::make_unique<DocumentActions>(
         *this, impl_->session, [this]() { refreshScene(); });
@@ -144,7 +192,8 @@ void MainWindow::createWorkspaceToolbar()
         statusBar()->showMessage(tr("Box feature created"), 2000);
     };
     services.addCylinder = [this]() {
-        static_cast<void>(impl_->session.addCylinderFeature());
+        static_cast<void>(impl_->session.addCylinderFeature(
+            resultModeFromIndex(impl_->connectionModeInput->currentIndex())));
         refreshScene();
         statusBar()->showMessage(tr("Cylinder feature created"), 2000);
     };
@@ -211,6 +260,22 @@ void MainWindow::createHistoryToolbar()
     toolbar->addAction(impl_->redoAction);
 }
 
+void MainWindow::createConnectionToolbar()
+{
+    auto* toolbar = addToolBar(tr("Connection"));
+    toolbar->setObjectName(QStringLiteral("connectionToolbar"));
+    toolbar->addWidget(new QLabel(tr("Connection: "), toolbar));
+    impl_->connectionModeInput = new QComboBox(toolbar);
+    impl_->connectionModeInput->setObjectName(QStringLiteral("connectionModeInput"));
+    impl_->connectionModeInput->addItems(
+        {tr("Join"), tr("Cut"), tr("Intersect"), tr("Separate")});
+    impl_->connectionModeInput->setToolTip(
+        tr("Connection mode for the current and next cylinder operation"));
+    toolbar->addWidget(impl_->connectionModeInput);
+    connect(impl_->connectionModeInput, &QComboBox::currentIndexChanged,
+            this, [this](int) { applyCylinderResultMode(); });
+}
+
 void MainWindow::createTransformSettingsToolbar()
 {
     impl_->snapAction = new QAction(tr("Snap"), this);
@@ -258,8 +323,8 @@ void MainWindow::connectInteractions()
     });
     impl_->viewport->setBodyMoveHandler(
         [this](std::uint64_t id, double deltaX, double deltaY, double deltaZ) {
-            selectFeature(id);
-            if (!impl_->session.canTransformFeature(document::FeatureId{id})) {
+            if (!selectTransformFeatureForBody(
+                    impl_->session, document::FeatureId{id})) {
                 return;
             }
             kernel::RigidTransform placement = impl_->session.selectedFeaturePlacement();
@@ -290,8 +355,8 @@ void MainWindow::connectInteractions()
     updateSnapping();
     impl_->viewport->setBodyRotationHandler(
         [this](std::uint64_t id, int axisIndex, double angleDegrees) {
-            selectFeature(id);
-            if (!impl_->session.canTransformFeature(document::FeatureId{id})) {
+            if (!selectTransformFeatureForBody(
+                    impl_->session, document::FeatureId{id})) {
                 return;
             }
             kernel::RigidTransform placement = impl_->session.selectedFeaturePlacement();
@@ -333,6 +398,12 @@ void MainWindow::syncProperties()
 {
     const std::optional<document::FeatureId> selected = impl_->session.selectedFeature();
     impl_->workspaceToolbar->refreshEnabled();
+    if (const auto cylinderId = latestCylinderId(impl_->session)) {
+        const QSignalBlocker blocker(impl_->connectionModeInput);
+        impl_->connectionModeInput->setCurrentIndex(resultModeIndex(
+            impl_->session.cylinderParameters(*cylinderId).resultMode));
+    }
+    impl_->connectionModeInput->setEnabled(true);
     if (!selected.has_value()) {
         impl_->propertyPanel->showNone();
         impl_->undoAction->setEnabled(false);
@@ -377,8 +448,12 @@ void MainWindow::syncTransformTool()
     const std::optional<document::FeatureId> selected = impl_->session.selectedFeature();
     const bool canTransform =
         selected.has_value() && impl_->session.canTransformFeature(*selected);
-    impl_->viewport->setTransformTarget(
-        canTransform ? std::optional<std::uint64_t>{selected->value()} : std::nullopt);
+    const std::optional<document::FeatureId> body = canTransform
+        ? impl_->session.transformBodyForFeature(*selected)
+        : std::nullopt;
+    impl_->viewport->setTransformTarget(body.has_value()
+            ? std::optional<std::uint64_t>{body->value()}
+            : std::nullopt);
     if (!canTransform && impl_->transformAction->isChecked()) {
         const QSignalBlocker blocker(impl_->transformAction);
         impl_->transformAction->setChecked(false);
@@ -410,7 +485,8 @@ void MainWindow::applyBoxParameters()
 void MainWindow::applyCylinderParameters()
 {
     const document::CylinderParameters parameters =
-        impl_->propertyPanel->cylinderParameters();
+        impl_->propertyPanel->cylinderParameters(
+            impl_->session.selectedCylinderParameters().resultMode);
     if (impl_->session.setSelectedCylinderParameters(parameters)) {
         refreshScene();
         const QString errorText = featureErrorText(
@@ -418,6 +494,24 @@ void MainWindow::applyCylinderParameters()
             impl_->session.selectedFeature().value());
         statusBar()->showMessage(
             errorText.isEmpty() ? tr("Feature graph recomputed") : errorText,
+            errorText.isEmpty() ? 2000 : 5000);
+    }
+}
+
+void MainWindow::applyCylinderResultMode()
+{
+    const std::optional<document::FeatureId> cylinderId = latestCylinderId(impl_->session);
+    if (!cylinderId.has_value()) {
+        statusBar()->showMessage(tr("Connection mode set for the next cylinder"), 2000);
+        return;
+    }
+    document::CylinderParameters parameters = impl_->session.cylinderParameters(*cylinderId);
+    parameters.resultMode = resultModeFromIndex(impl_->connectionModeInput->currentIndex());
+    if (impl_->session.setCylinderParameters(*cylinderId, parameters)) {
+        refreshScene();
+        const QString errorText = featureErrorText(impl_->session, *cylinderId);
+        statusBar()->showMessage(
+            errorText.isEmpty() ? tr("Connection mode changed") : errorText,
             errorText.isEmpty() ? 2000 : 5000);
     }
 }
@@ -443,8 +537,7 @@ void MainWindow::previewBodyMove(
     double deltaZ)
 {
     const document::FeatureId featureId{id};
-    if (!impl_->session.selectFeature(featureId)
-        || !impl_->session.canTransformFeature(featureId)) {
+    if (!selectTransformFeatureForBody(impl_->session, featureId)) {
         return;
     }
     impl_->propertyPanel->previewMove(
@@ -457,8 +550,7 @@ void MainWindow::previewBodyRotation(
     double angleDegrees)
 {
     const document::FeatureId featureId{id};
-    if (!impl_->session.selectFeature(featureId)
-        || !impl_->session.canTransformFeature(featureId)
+    if (!selectTransformFeatureForBody(impl_->session, featureId)
         || axisIndex < 0 || axisIndex > 2) {
         return;
     }

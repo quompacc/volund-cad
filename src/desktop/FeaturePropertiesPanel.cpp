@@ -1,7 +1,6 @@
 #include "FeaturePropertiesPanel.hpp"
 #include "MeasurementInput.hpp"
 
-#include <QComboBox>
 #include <QDoubleSpinBox>
 #include <QFormLayout>
 #include <QLabel>
@@ -15,35 +14,6 @@ namespace {
 
 constexpr const char* moveLabels[] = {"Move X", "Move Y", "Move Z"};
 constexpr const char* rotationLabels[] = {"Rotate X", "Rotate Y", "Rotate Z"};
-
-int resultModeIndex(document::CylinderResultMode mode)
-{
-    switch (mode) {
-    case document::CylinderResultMode::join:
-        return 0;
-    case document::CylinderResultMode::cut:
-        return 1;
-    case document::CylinderResultMode::intersect:
-        return 2;
-    case document::CylinderResultMode::separate:
-        return 3;
-    }
-    return 0;
-}
-
-document::CylinderResultMode resultModeFromIndex(int index)
-{
-    switch (index) {
-    case 1:
-        return document::CylinderResultMode::cut;
-    case 2:
-        return document::CylinderResultMode::intersect;
-    case 3:
-        return document::CylinderResultMode::separate;
-    default:
-        return document::CylinderResultMode::join;
-    }
-}
 
 } // namespace
 
@@ -112,8 +82,6 @@ void FeaturePropertiesPanel::createCylinderPanel()
     for (QDoubleSpinBox*& input : rotationInputs_) {
         input = makeAngleInput(cylinderPanel_);
     }
-    resultModeInput_ = new QComboBox(cylinderPanel_);
-    resultModeInput_->addItems({tr("Join"), tr("Cut"), tr("Intersect"), tr("Separate")});
     errorLabel_ = new QLabel(cylinderPanel_);
     errorLabel_->setWordWrap(true);
     errorLabel_->setStyleSheet(QStringLiteral(
@@ -128,7 +96,6 @@ void FeaturePropertiesPanel::createCylinderPanel()
     for (int index = 0; index < 3; ++index) {
         cylinderLayout->addRow(tr(rotationLabels[index]), rotationInputs_[index]);
     }
-    cylinderLayout->addRow(tr("Result"), resultModeInput_);
     cylinderLayout->addRow(errorLabel_);
 }
 
@@ -154,11 +121,6 @@ void FeaturePropertiesPanel::connectEditors()
             }
         });
     }
-    connect(resultModeInput_, &QComboBox::currentIndexChanged, this, [this](int) {
-        if (cylinderChangeHandler_) {
-            cylinderChangeHandler_();
-        }
-    });
     connect(extrusionDistanceInput_, &QDoubleSpinBox::editingFinished, this, [this]() {
         if (extrusionChangeHandler_) {
             extrusionChangeHandler_();
@@ -239,8 +201,7 @@ void FeaturePropertiesPanel::showCylinder(
         QSignalBlocker(radiusInput_), QSignalBlocker(cylinderHeightInput_),
         QSignalBlocker(translationInputs_[0]), QSignalBlocker(translationInputs_[1]),
         QSignalBlocker(translationInputs_[2]), QSignalBlocker(rotationInputs_[0]),
-        QSignalBlocker(rotationInputs_[1]), QSignalBlocker(rotationInputs_[2]),
-        QSignalBlocker(resultModeInput_)};
+        QSignalBlocker(rotationInputs_[1]), QSignalBlocker(rotationInputs_[2])};
     radiusInput_->setValue(parameters.radius);
     cylinderHeightInput_->setValue(parameters.height);
     const double translations[] = {
@@ -255,7 +216,6 @@ void FeaturePropertiesPanel::showCylinder(
         translationInputs_[index]->setValue(translations[index]);
         rotationInputs_[index]->setValue(rotations[index]);
     }
-    resultModeInput_->setCurrentIndex(resultModeIndex(parameters.resultMode));
     errorLabel_->setText(errorText);
     errorLabel_->setVisible(!errorText.isEmpty());
     static_cast<void>(blockers);
@@ -283,7 +243,8 @@ document::BoxParameters FeaturePropertiesPanel::boxParameters() const
             boxRotationInputs_[1]->value(), boxRotationInputs_[2]->value()}};
 }
 
-document::CylinderParameters FeaturePropertiesPanel::cylinderParameters() const
+document::CylinderParameters FeaturePropertiesPanel::cylinderParameters(
+    document::CylinderResultMode resultMode) const
 {
     return {
         radiusInput_->value(), cylinderHeightInput_->value(),
@@ -291,7 +252,7 @@ document::CylinderParameters FeaturePropertiesPanel::cylinderParameters() const
             translationInputs_[0]->value(), translationInputs_[1]->value(),
             translationInputs_[2]->value(), rotationInputs_[0]->value(),
             rotationInputs_[1]->value(), rotationInputs_[2]->value()},
-        resultModeFromIndex(resultModeInput_->currentIndex())};
+        resultMode};
 }
 
 document::ExtrusionParameters FeaturePropertiesPanel::extrusionParameters() const

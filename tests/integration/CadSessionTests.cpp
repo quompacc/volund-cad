@@ -69,12 +69,11 @@ bool selectionUsesStableFeatureIdentity()
 bool cylinderCanProduceSeparateBodies()
 {
     voelund::application::CadSession session;
-    if (!session.selectFeature(voelund::document::ModelDocument::initialCylinderId())) {
-        return false;
-    }
-    voelund::document::CylinderParameters parameters = session.selectedCylinderParameters();
+    const voelund::document::FeatureId cylinderId =
+        voelund::document::ModelDocument::initialCylinderId();
+    voelund::document::CylinderParameters parameters = session.cylinderParameters(cylinderId);
     parameters.resultMode = voelund::document::CylinderResultMode::separate;
-    if (!session.setSelectedCylinderParameters(parameters)) {
+    if (!session.setCylinderParameters(cylinderId, parameters)) {
         return false;
     }
     const double expectedVolume = 24'000.0 + std::numbers::pi * 64.0 * 25.0;
@@ -82,7 +81,8 @@ bool cylinderCanProduceSeparateBodies()
         && session.currentBodies()[0].sourceFeature
             == voelund::document::ModelDocument::initialBoxId()
         && session.currentBodies()[1].sourceFeature
-            == voelund::document::ModelDocument::initialCylinderId()
+            == cylinderId
+        && session.selectedFeature() == voelund::document::ModelDocument::initialBoxId()
         && std::abs(volumeOf(session.currentShape()) - expectedVolume) < 1.0e-6;
 }
 
@@ -116,6 +116,75 @@ bool separateCylinderMovesIndependentlyAndSupportsUndo()
     return session.undo()
         && session.selectedCylinderParameters().placement.translationX == 0.0
         && std::abs(maximumXOf(session.currentBodies()[1].shape) - cylinderMaximumX) < 1.0e-9;
+}
+
+bool separateCylinderDoesNotFollowItsFormerInput()
+{
+    voelund::application::CadSession session;
+    if (!session.selectFeature(voelund::document::ModelDocument::initialBoxId())) {
+        return false;
+    }
+    voelund::document::BoxParameters box = session.selectedBoxParameters();
+    box.placement.translationX = 25.0;
+    if (!session.setSelectedBoxParameters(box)
+        || !session.selectFeature(voelund::document::ModelDocument::initialCylinderId())) {
+        return false;
+    }
+
+    voelund::document::CylinderParameters cylinder = session.selectedCylinderParameters();
+    cylinder.resultMode = voelund::document::CylinderResultMode::separate;
+    if (!session.setSelectedCylinderParameters(cylinder)
+        || session.currentBodies().size() != 2) {
+        return false;
+    }
+    const double detachedBoxMaximumX = maximumXOf(session.currentBodies()[0].shape);
+    const double detachedCylinderMaximumX = maximumXOf(session.currentBodies()[1].shape);
+
+    if (!session.selectFeature(voelund::document::ModelDocument::initialBoxId())) {
+        return false;
+    }
+    box = session.selectedBoxParameters();
+    box.placement.translationX = 45.0;
+    if (!session.setSelectedBoxParameters(box)) {
+        return false;
+    }
+    return std::abs(maximumXOf(session.currentBodies()[0].shape)
+                    - (detachedBoxMaximumX + 20.0)) < 1.0e-9
+        && std::abs(maximumXOf(session.currentBodies()[1].shape)
+                    - detachedCylinderMaximumX) < 1.0e-9;
+}
+
+bool joinedResultMovesAsOneBodyAndSupportsUndo()
+{
+    voelund::application::CadSession session;
+    const voelund::document::FeatureId boxId =
+        voelund::document::ModelDocument::initialBoxId();
+    const voelund::document::FeatureId cylinderId =
+        voelund::document::ModelDocument::initialCylinderId();
+    if (!session.canTransformFeature(boxId)
+        || !session.canTransformFeature(cylinderId)
+        || session.transformBodyForFeature(boxId) != cylinderId
+        || session.transformBodyForFeature(cylinderId) != cylinderId
+        || !session.selectFeature(boxId)) {
+        return false;
+    }
+    const double initialMaximumX = maximumXOf(session.currentShape());
+    const double initialVolume = volumeOf(session.currentShape());
+    voelund::kernel::RigidTransform placement = session.selectedFeaturePlacement();
+    placement.translationX = 35.0;
+    if (!session.setSelectedFeaturePlacement(placement)
+        || std::abs(maximumXOf(session.currentShape()) - (initialMaximumX + 35.0)) > 1.0e-9
+        || std::abs(volumeOf(session.currentShape()) - initialVolume) > 1.0e-6
+        || session.cylinderParameters(cylinderId).placement.translationX != 0.0
+        || session.selectedFeature() != boxId) {
+        return false;
+    }
+    if (session.selectedBoxParameters().placement.translationX != 35.0
+        || !session.undo()) {
+        return false;
+    }
+    return session.selectedBoxParameters().placement.translationX == 0.0
+        && std::abs(maximumXOf(session.currentShape()) - initialMaximumX) < 1.0e-9;
 }
 
 bool disconnectedJoinReportsAnErrorAndKeepsLastValidShape()
@@ -394,6 +463,14 @@ int main()
     }
     if (!separateCylinderMovesIndependentlyAndSupportsUndo()) {
         std::cerr << "Independent cylinder movement test failed\n";
+        return 1;
+    }
+    if (!separateCylinderDoesNotFollowItsFormerInput()) {
+        std::cerr << "Detached cylinder followed its former input\n";
+        return 1;
+    }
+    if (!joinedResultMovesAsOneBodyAndSupportsUndo()) {
+        std::cerr << "Joined result did not move as one body\n";
         return 1;
     }
     if (!disconnectedJoinReportsAnErrorAndKeepsLastValidShape()) {
