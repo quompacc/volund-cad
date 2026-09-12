@@ -44,6 +44,7 @@ class MainWindow::Impl final {
     viewport::CadViewport* viewport{nullptr};
     ModelTreePanel* modelTree{nullptr};
     FeaturePropertiesPanel* propertyPanel{nullptr};
+    QDockWidget* propertyDock{nullptr};
     ToolPanelHost* toolPanel{nullptr};
     std::unique_ptr<SketchEditorToolController> sketchEditorTool;
     std::unique_ptr<SketchExtrusionToolController> sketchExtrusionTool;
@@ -182,6 +183,8 @@ void MainWindow::createWorkspaceToolbar() {
 void MainWindow::createToolPanel() {
     impl_->toolPanel = new ToolPanelHost(this);
     addDockWidget(Qt::RightDockWidgetArea, impl_->toolPanel);
+    tabifyDockWidget(impl_->propertyDock, impl_->toolPanel);
+    impl_->propertyDock->raise();
     impl_->sketchEditorTool = std::make_unique<SketchEditorToolController>(
         impl_->session, *impl_->viewport, *impl_->toolPanel, [this]() { refreshScene(); },
         [this](const QString& message) { statusBar()->showMessage(message); });
@@ -195,7 +198,10 @@ void MainWindow::createPropertiesPanel() {
     auto* dock = new QDockWidget(tr("Properties"), this);
     dock->setObjectName(QStringLiteral("featurePropertiesDock"));
     dock->setWidget(impl_->propertyPanel);
+    dock->setMinimumWidth(270);
+    dock->setMaximumWidth(360);
     addDockWidget(Qt::RightDockWidgetArea, dock);
+    impl_->propertyDock = dock;
 }
 
 void MainWindow::createHistoryToolbar() {

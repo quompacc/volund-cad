@@ -11,7 +11,7 @@ class QComboBox;
 class QFormLayout;
 class QLabel;
 class QPushButton;
-class QToolBox;
+class QTabWidget;
 class QShortcut;
 
 namespace voelund::desktop {
@@ -61,6 +61,7 @@ class ToolPanelHost final : public QDockWidget {
     void setGuidance(const QString& guidance);
     void setLengthValue(const std::string& parameterId, double value);
     void setLengthEnabled(const std::string& parameterId, bool enabled);
+    void setLengthVisible(const std::string& parameterId, bool visible);
     void setActionEnabled(const std::string& actionId, bool enabled);
 
   private:
@@ -68,8 +69,9 @@ class ToolPanelHost final : public QDockWidget {
 
     QWidget* content_{nullptr};
     QLabel* guidance_{nullptr};
+    QWidget* parameterContainer_{nullptr};
     QFormLayout* parameterLayout_{nullptr};
-    QToolBox* actionToolBox_{nullptr};
+    QTabWidget* actionTabs_{nullptr};
     QPushButton* acceptButton_{nullptr};
     QPushButton* cancelButton_{nullptr};
     QShortcut* escapeShortcut_{nullptr};

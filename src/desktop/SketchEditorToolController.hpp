@@ -64,6 +64,7 @@ class SketchEditorToolController final {
     double patternCount_{3.0};
     double patternSpacing_{10.0};
     double patternAngle_{360.0};
+    int toolIndex_{1};
     bool editing_{false};
     std::optional<viewport::SketchAutomaticConstraint> previewAutomatic_;
 };

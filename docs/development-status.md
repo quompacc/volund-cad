@@ -158,6 +158,11 @@ gehören nicht zum Produktpfad.
 - Die Sketch-Relationen sind im Tool-Panel in die aufklappbaren Bereiche Linien,
   Punkte, Relationen, Bemaßungen und Bearbeiten gegliedert; dadurch bleibt jeweils
   nur eine kurze, kontextabhängig aktivierte Befehlsgruppe sichtbar.
+- Eigenschaften und aktives Werkzeug teilen sich ein kompaktes rechtes Tab-Dock,
+  statt den Viewport übereinander zu verengen. Sketch-Werkzeuge sind über eine
+  direkt anklickbare Schaltflächenmatrix erreichbar; Relationen, Bemaßungen und
+  Bearbeitungsbefehle liegen zweispaltig in kurzen Tabs. Zahlenfelder erscheinen
+  nur für das aktive Werkzeug beziehungsweise die aktuelle Auswahl.
 
 ## Modul- und Bedienarchitektur
 

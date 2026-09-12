@@ -122,6 +122,7 @@ bool SketchEditorToolController::beginSelectedSketch() {
 }
 
 void SketchEditorToolController::showPanel() {
+    toolIndex_ = 1;
     translationX_ = 0.0;
     translationY_ = 0.0;
     panel_.begin(ToolPanelDefinition{
@@ -301,7 +302,9 @@ void SketchEditorToolController::setTool(int index) {
     if (!editor_)
         return;
     editor_->setTool(applicationTool(index));
+    toolIndex_ = index;
     viewport_.setSketchEditorTool(viewportTool(index));
+    syncSelectedDimensionInputs();
     refreshPresentation();
     const QString guidance = index == 5
                                  ? QObject::tr("Center arc: center, radius point, end point")

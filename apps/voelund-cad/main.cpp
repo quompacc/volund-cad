@@ -8,6 +8,8 @@
 #include <QApplication>
 #include <QComboBox>
 #include <QCoreApplication>
+#include <QDockWidget>
+#include <QDebug>
 #include <QElapsedTimer>
 #include <QGuiApplication>
 #include <QMouseEvent>
@@ -103,7 +105,7 @@ int main(int argc, char* argv[]) {
                 auto* viewport =
                     dynamic_cast<voelund::viewport::CadViewport*>(mainWindow.centralWidget());
                 if (viewport == nullptr) {
-                    QCoreApplication::exit(1);
+                    QCoreApplication::exit(4);
                     return;
                 }
                 if (!viewport->isRenderingReady()) {
@@ -117,8 +119,29 @@ int main(int argc, char* argv[]) {
                     mainWindow.findChild<QAction*>(QStringLiteral("transformAction"));
                 QComboBox* connectionModeInput =
                     mainWindow.findChild<QComboBox*>(QStringLiteral("connectionModeInput"));
+                QDockWidget* properties =
+                    mainWindow.findChild<QDockWidget*>(QStringLiteral("featurePropertiesDock"));
+                QDockWidget* activeTool =
+                    mainWindow.findChild<QDockWidget*>(QStringLiteral("activeToolDock"));
                 if (transformAction == nullptr || connectionModeInput == nullptr ||
-                    !connectionModeInput->isVisible() || !connectionModeInput->isEnabled()) {
+                    properties == nullptr || activeTool == nullptr) {
+                    qCritical() << "Required desktop controls are missing";
+                    QCoreApplication::exit(5);
+                    return;
+                }
+                if (!mainWindow.tabifiedDockWidgets(properties).contains(activeTool)) {
+                    qCritical() << "Properties and active tool docks are not tabified";
+                    QCoreApplication::exit(6);
+                    return;
+                }
+                if (properties->maximumWidth() > 360 || activeTool->maximumWidth() > 360) {
+                    qCritical() << "Right dock exceeds compact width" << properties->maximumWidth()
+                                << activeTool->maximumWidth();
+                    QCoreApplication::exit(7);
+                    return;
+                }
+                if (!connectionModeInput->isVisible() || !connectionModeInput->isEnabled()) {
+                    qCritical() << "Connection control is unavailable";
                     QCoreApplication::exit(1);
                     return;
                 }
