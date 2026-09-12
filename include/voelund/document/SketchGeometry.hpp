@@ -122,7 +122,9 @@ enum class SketchConstraintKind {
     diameter,
     collinear,
     horizontalPoints,
-    verticalPoints
+    verticalPoints,
+    fixed,
+    pointLineDistance
 };
 
 struct SketchGeometryReference final {
@@ -139,14 +141,16 @@ struct SketchConstraint final {
     std::optional<SketchGeometryReference> second;
     double value{0.0};
     std::optional<SketchGeometryReference> third;
+    std::vector<double> auxiliaryValues;
 
     SketchConstraint(SketchConstraintId constraintId, SketchConstraintKind constraintKind,
                      SketchGeometryReference firstReference,
                      std::optional<SketchGeometryReference> secondReference,
                      double drivingValue = 0.0,
-                     std::optional<SketchGeometryReference> thirdReference = std::nullopt) noexcept
+                     std::optional<SketchGeometryReference> thirdReference = std::nullopt,
+                     std::vector<double> extraValues = {}) noexcept
         : id(constraintId), kind(constraintKind), first(firstReference), second(secondReference),
-          value(drivingValue), third(thirdReference) {}
+          value(drivingValue), third(thirdReference), auxiliaryValues(std::move(extraValues)) {}
 
     [[nodiscard]] bool operator==(const SketchConstraint&) const = default;
 };

@@ -46,16 +46,30 @@ double lineAngleDegrees(const document::SketchLine& first, const document::Sketc
            180.0 / std::numbers::pi;
 }
 
+double pointLineDistance(const document::SketchPoint& point, const document::SketchLine& line) {
+    const double x = line.end.x - line.start.x;
+    const double y = line.end.y - line.start.y;
+    return std::abs(x * (point.y - line.start.y) - y * (point.x - line.start.x)) / std::hypot(x, y);
+}
+
 } // namespace
 
 bool SketchEditorSession::canAddSelectedRelation(
     document::SketchConstraintKind kind) const noexcept {
     if (!active_)
         return false;
-    if (kind == document::SketchConstraintKind::diameter) {
+    if (kind == document::SketchConstraintKind::diameter ||
+        kind == document::SketchConstraintKind::fixed) {
         if (selectedReferences_.size() != 1)
             return false;
-        return circle(findElement(elements_, selectedReferences_.front().element));
+        const auto* element = findElement(elements_, selectedReferences_.front().element);
+        if (kind == document::SketchConstraintKind::diameter)
+            return circle(element);
+        return (line(element) || circle(element)) &&
+               std::ranges::none_of(constraints_.values, [&](const auto& constraint) {
+                   return constraint.kind == document::SketchConstraintKind::fixed &&
+                          constraint.first.element == element->id;
+               });
     }
     if (kind == document::SketchConstraintKind::symmetric) {
         if (selectedReferences_.size() != 3)
@@ -85,6 +99,13 @@ bool SketchEditorSession::canAddSelectedRelation(
         const auto secondPoint = referencePoint(elements_, second);
         return firstPoint.has_value() && secondPoint.has_value() &&
                std::hypot(secondPoint->x - firstPoint->x, secondPoint->y - firstPoint->y) > 1.0e-9;
+    }
+    if (kind == document::SketchConstraintKind::pointLineDistance) {
+        const auto firstPoint = referencePoint(elements_, first);
+        const auto* target = findElement(elements_, second.element);
+        return first.element != second.element && firstPoint.has_value() && line(target) &&
+               pointLineDistance(*firstPoint, std::get<document::SketchLine>(target->geometry)) >
+                   1.0e-9;
     }
     if (kind == document::SketchConstraintKind::coincident)
         return true;
@@ -126,18 +147,34 @@ bool SketchEditorSession::addSelectedRelation(document::SketchConstraintKind kin
     if (!canAddSelectedRelation(kind))
         return false;
     std::optional<document::SketchGeometryReference> secondReference;
-    if (kind != document::SketchConstraintKind::diameter)
+    if (kind != document::SketchConstraintKind::diameter &&
+        kind != document::SketchConstraintKind::fixed)
         secondReference = selectedReferences_[1];
     document::SketchConstraint constraint{document::SketchConstraintId{constraints_.nextId++}, kind,
                                           selectedReferences_[0], secondReference, 0.0};
     if (kind == document::SketchConstraintKind::diameter) {
         const auto* element = findElement(elements_, selectedReferences_[0].element);
         constraint.value = std::get<document::SketchCircle>(element->geometry).radius * 2.0;
+    } else if (kind == document::SketchConstraintKind::fixed) {
+        const auto* element = findElement(elements_, selectedReferences_[0].element);
+        if (const auto* geometry = std::get_if<document::SketchLine>(&element->geometry)) {
+            constraint.value = geometry->start.x;
+            constraint.auxiliaryValues = {geometry->start.y, geometry->end.x, geometry->end.y};
+        } else {
+            const auto& circleGeometry = std::get<document::SketchCircle>(element->geometry);
+            constraint.value = circleGeometry.center.x;
+            constraint.auxiliaryValues = {circleGeometry.center.y, circleGeometry.radius};
+        }
     }
     if (kind == document::SketchConstraintKind::pointDistance) {
         const auto first = referencePoint(elements_, selectedReferences_[0]);
         const auto second = referencePoint(elements_, selectedReferences_[1]);
         constraint.value = std::hypot(second->x - first->x, second->y - first->y);
+    } else if (kind == document::SketchConstraintKind::pointLineDistance) {
+        const auto source = referencePoint(elements_, selectedReferences_[0]);
+        const auto* target = findElement(elements_, selectedReferences_[1].element);
+        constraint.value =
+            pointLineDistance(*source, std::get<document::SketchLine>(target->geometry));
     } else if (kind == document::SketchConstraintKind::pointDistanceX ||
                kind == document::SketchConstraintKind::pointDistanceY) {
         const auto first = referencePoint(elements_, selectedReferences_[0]);

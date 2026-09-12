@@ -321,6 +321,19 @@ ParsedFeature readSketchFeature(FeatureId id, std::string name, std::istringstre
                     if (thirdElement != 0)
                         third = SketchGeometryReference{SketchElementId{thirdElement}, thirdPoint};
                 }
+                std::vector<double> auxiliaryValues;
+                if (context.version >= 14) {
+                    std::uint64_t valueCount = 0;
+                    if (!(constraintLine >> valueCount) || valueCount > 4)
+                        invalidDocument("invalid auxiliary sketch constraint value count");
+                    auxiliaryValues.reserve(static_cast<std::size_t>(valueCount));
+                    for (std::uint64_t valueIndex = 0; valueIndex < valueCount; ++valueIndex) {
+                        double auxiliaryValue = 0.0;
+                        if (!(constraintLine >> auxiliaryValue))
+                            invalidDocument("malformed auxiliary sketch constraint value");
+                        auxiliaryValues.push_back(auxiliaryValue);
+                    }
+                }
                 ensureLineComplete(constraintLine);
                 std::optional<SketchGeometryReference> second;
                 if (secondElement != 0)
@@ -328,7 +341,7 @@ ParsedFeature readSketchFeature(FeatureId id, std::string name, std::istringstre
                 sketch.constraints.values.push_back(
                     {SketchConstraintId{rawId}, kind,
                      SketchGeometryReference{SketchElementId{firstElement}, firstPoint}, second,
-                     value, third});
+                     value, third, std::move(auxiliaryValues)});
             }
         } else if (context.version >= 3) {
             for (const SketchElement& element : sketch.elements.values) {
@@ -422,7 +435,7 @@ ParsedFeature readFeature(const std::string& source,
 void DocumentSerializer::write(const ModelDocument& document, std::ostream& output) {
     output.imbue(std::locale::classic());
     output << std::setprecision(std::numeric_limits<double>::max_digits10);
-    output << "VOLUND 13\nNEXT_ID " << document.nextFeatureId_ << "\nFEATURES "
+    output << "VOLUND 14\nNEXT_ID " << document.nextFeatureId_ << "\nFEATURES "
            << document.features_.size() << '\n';
     for (std::size_t index = 0; index < document.features_.size(); ++index) {
         const FeatureDescriptor& feature = document.features_[index];
@@ -491,6 +504,9 @@ void DocumentSerializer::write(const ModelDocument& document, std::ostream& outp
                            << pointPositionName(constraint.third->point);
                 else
                     output << "0 START";
+                output << ' ' << constraint.auxiliaryValues.size();
+                for (double auxiliaryValue : constraint.auxiliaryValues)
+                    output << ' ' << auxiliaryValue;
                 output << '\n';
             }
             continue;
@@ -525,6 +541,7 @@ ModelDocument DocumentSerializer::read(std::istream& input) {
                                   : header == "VOLUND 11" ? 11
                                   : header == "VOLUND 12" ? 12
                                   : header == "VOLUND 13" ? 13
+                                  : header == "VOLUND 14" ? 14
                                                           : 0;
     if (version == 0) {
         invalidDocument("unsupported file header or version");

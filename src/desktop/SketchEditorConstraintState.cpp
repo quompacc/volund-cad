@@ -18,6 +18,8 @@ void SketchEditorToolController::syncConstraintState() {
     enable("collinear", document::SketchConstraintKind::collinear);
     enable("horizontal_points", document::SketchConstraintKind::horizontalPoints);
     enable("vertical_points", document::SketchConstraintKind::verticalPoints);
+    enable("fixed", document::SketchConstraintKind::fixed);
+    enable("point_line_distance", document::SketchConstraintKind::pointLineDistance);
     enable("equal", document::SketchConstraintKind::equal);
     enable("tangent", document::SketchConstraintKind::tangent);
     enable("symmetric", document::SketchConstraintKind::symmetric);

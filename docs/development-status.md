@@ -113,7 +113,10 @@ gehören nicht zum Produktpfad.
 - `Collinear` hält zwei Linien auf derselben Geraden. Zwei gewählte Punkte können als
   eigenständige Designabsicht horizontal oder vertikal ausgerichtet werden; die
   Viewport-Glyphen lauten `[CL]`, `[HP]` und `[VP]`.
-- Neue Dateien verwenden `VOLUND 13`; bestehende `VOLUND 1`-Rechtecksketches,
+- Linien und Kreise lassen sich mit einem einzelnen `[F]`-Constraint vollständig
+  fixieren. Die Sollkoordinaten bleiben separat gespeichert und widerstehen Dragging.
+  Ein Punkt-zu-Linie-Abstand ist als `PL … mm` direkt editierbar.
+- Neue Dateien verwenden `VOLUND 14`; bestehende `VOLUND 1`-Rechtecksketches,
   `VOLUND 2`-Linien, `VOLUND 3`-Richtungsconstraints und `VOLUND 4`-Extrusionen
   sowie `VOLUND 5`-Profilauswahlen werden beim Laden migriert. Alte Extrusionen
   behalten dabei ihre bisherige Semantik, alle geschlossenen Profile zu verwenden.
@@ -159,7 +162,7 @@ angefordert wird.
   schlanke FreeBSD-OCCT-Profil aktiviert FreeType für die nativen Constraint- und
   Bemaßungsglyphen, bleibt aber ohne Xlib, TBB, VTK und Qt 5.
 - Beide Windows-Backends durchlaufen denselben Funktions- und Regressionsteststand.
-- Dreizehn CTest-Tests prüfen zusätzlich den unveränderten PlaneGCS-Kern sowie den
+- Vierzehn CTest-Tests prüfen zusätzlich den unveränderten PlaneGCS-Kern sowie den
   Völund-Adapter einschließlich Freiheitsgraden und stabiler Konfliktzuordnung.
 - Regressionstests sichern sowohl die unabhängige Bewegung getrennter Körper als auch
   die gemeinsame Verschiebung eines Join-Ergebnisses einschließlich Undo.
@@ -192,7 +195,7 @@ beiden Windows-Backends und im nativen FreeBSD-Wayland-Controlpfad bestätigt. S
 Constraint-Glyphen, direkte Bemaßungsinteraktion, Punktsperren und Punkt-auf-Objekt
 sowie Tangential-, Gleichheits- und Symmetrierelationen sind umgesetzt. Mittelpunkt,
 Mittelsenkrechte, konzentrische Kreise, Durchmesserbemaßung, Linienflucht und
-Punktausrichtungen sind ebenfalls vollständig parametrisch.
+Punktausrichtungen sowie Fixierung und Punkt-Linien-Abstand sind vollständig parametrisch.
 
 Der direkte Push/Pull-Ablauf bleibt dabei als schneller Weg erhalten. Er ist eine
 Bedienoberfläche über denselben parametrischen Sketch- und Extrusionsfeatures, kein

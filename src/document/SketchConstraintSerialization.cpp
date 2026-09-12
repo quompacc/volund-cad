@@ -55,6 +55,10 @@ const char* sketchConstraintKindName(SketchConstraintKind kind) noexcept {
         return "HORIZONTAL_POINTS";
     case SketchConstraintKind::verticalPoints:
         return "VERTICAL_POINTS";
+    case SketchConstraintKind::fixed:
+        return "FIXED";
+    case SketchConstraintKind::pointLineDistance:
+        return "POINT_LINE_DISTANCE";
     }
     return "HORIZONTAL";
 }
@@ -111,6 +115,10 @@ SketchConstraintKind readSketchConstraintKind(std::istringstream& line) {
         return SketchConstraintKind::horizontalPoints;
     if (value == "VERTICAL_POINTS")
         return SketchConstraintKind::verticalPoints;
+    if (value == "FIXED")
+        return SketchConstraintKind::fixed;
+    if (value == "POINT_LINE_DISTANCE")
+        return SketchConstraintKind::pointLineDistance;
     throw std::runtime_error("Invalid Völund document: unknown sketch constraint kind");
 }
 

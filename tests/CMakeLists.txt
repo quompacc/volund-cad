@@ -98,6 +98,16 @@ target_link_libraries(
 
 add_test(NAME application.sketch_alignments COMMAND voelund_sketch_alignment_tests)
 
+add_executable(voelund_sketch_fix_distance_tests integration/SketchFixDistanceTests.cpp)
+target_link_libraries(
+    voelund_sketch_fix_distance_tests
+    PRIVATE
+        voelund_project_options
+        Voelund::Application
+)
+
+add_test(NAME application.sketch_fix_distance COMMAND voelund_sketch_fix_distance_tests)
+
 add_executable(voelund_workspace_tests unit/CommandRegistryTests.cpp)
 target_link_libraries(
     voelund_workspace_tests

@@ -25,6 +25,8 @@ std::string sketchConstraintLabel(const features::SketchConstraintAnnotation& an
         return "[HP]";
     if (annotation.kind == SketchConstraintKind::verticalPoints)
         return "[VP]";
+    if (annotation.kind == SketchConstraintKind::fixed)
+        return "[F]";
     if (annotation.kind == SketchConstraintKind::coordinateX)
         return "[X]";
     if (annotation.kind == SketchConstraintKind::coordinateY)
@@ -50,6 +52,8 @@ std::string sketchConstraintLabel(const features::SketchConstraintAnnotation& an
     }
     if (annotation.kind == SketchConstraintKind::pointDistance)
         label << "D ";
+    else if (annotation.kind == SketchConstraintKind::pointLineDistance)
+        label << "PL ";
     else if (annotation.kind == SketchConstraintKind::pointDistanceX)
         label << "DX ";
     else if (annotation.kind == SketchConstraintKind::pointDistanceY)

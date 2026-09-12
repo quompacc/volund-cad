@@ -108,11 +108,32 @@ void validateSketchConstraints(const SketchElements& elements,
         ids.push_back(constraint.id.value());
         if (!std::isfinite(constraint.value))
             throw std::invalid_argument("Sketch constraint value must be finite");
+        if (std::ranges::any_of(constraint.auxiliaryValues,
+                                [](double value) { return !std::isfinite(value); }))
+            throw std::invalid_argument("Sketch constraint auxiliary values must be finite");
+        if (constraint.kind != SketchConstraintKind::fixed && !constraint.auxiliaryValues.empty())
+            throw std::invalid_argument("Only fixed constraints accept auxiliary values");
         if (constraint.kind != SketchConstraintKind::symmetric && constraint.third.has_value())
             throw std::invalid_argument("Only symmetric constraints accept a third reference");
 
-        if (constraint.kind == SketchConstraintKind::coordinateX ||
-            constraint.kind == SketchConstraintKind::coordinateY) {
+        if (constraint.kind == SketchConstraintKind::fixed) {
+            const SketchGeometry& geometry = findElement(constraint.first.element).geometry;
+            const bool line = std::holds_alternative<SketchLine>(geometry);
+            const bool circle = std::holds_alternative<SketchCircle>(geometry);
+            const std::size_t expectedValues = line ? 3 : 2;
+            if ((!line && !circle) || constraint.second.has_value() ||
+                constraint.auxiliaryValues.size() != expectedValues)
+                throw std::invalid_argument(
+                    "Fixed constraint needs one line or circle and its complete coordinates");
+            if (line)
+                validateGeometry(
+                    SketchLine{{constraint.value, constraint.auxiliaryValues[0]},
+                               {constraint.auxiliaryValues[1], constraint.auxiliaryValues[2]}});
+            else
+                validateGeometry(SketchCircle{{constraint.value, constraint.auxiliaryValues[0]},
+                                              constraint.auxiliaryValues[1]});
+        } else if (constraint.kind == SketchConstraintKind::coordinateX ||
+                   constraint.kind == SketchConstraintKind::coordinateY) {
             requirePoint(constraint.first);
             if (constraint.second.has_value())
                 throw std::invalid_argument("Coordinate constraint must be unary");
@@ -144,6 +165,14 @@ void validateSketchConstraints(const SketchElements& elements,
                 if (constraint.first == *constraint.second || constraint.value <= minimumLength)
                     throw std::invalid_argument(
                         "Point distance constraint needs two points and a positive value");
+            } else if (constraint.kind == SketchConstraintKind::pointLineDistance) {
+                requirePoint(constraint.first);
+                requireLine(*constraint.second);
+                if (constraint.first.element == constraint.second->element ||
+                    constraint.value <= minimumLength)
+                    throw std::invalid_argument(
+                        "Point-line distance constraint needs a point, a different line and a "
+                        "positive value");
             } else if (constraint.kind == SketchConstraintKind::pointDistanceX ||
                        constraint.kind == SketchConstraintKind::pointDistanceY) {
                 requirePoint(constraint.first);

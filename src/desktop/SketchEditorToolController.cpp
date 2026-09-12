@@ -112,6 +112,7 @@ void SketchEditorToolController::showPanel() {
          {"collinear", QObject::tr("Make selected lines collinear")},
          {"horizontal_points", QObject::tr("Align selected points horizontally")},
          {"vertical_points", QObject::tr("Align selected points vertically")},
+         {"fixed", QObject::tr("Fix selected line or circle")},
          {"equal", QObject::tr("Make selected lengths or radii equal")},
          {"tangent", QObject::tr("Make selected objects tangent")},
          {"symmetric", QObject::tr("Mirror first two points about third selected line")},
@@ -120,6 +121,7 @@ void SketchEditorToolController::showPanel() {
          {"concentric", QObject::tr("Make selected circles concentric")},
          {"diameter", QObject::tr("Add diameter dimension to selected circle")},
          {"point_distance", QObject::tr("Dimension distance between selected points")},
+         {"point_line_distance", QObject::tr("Dimension first point from second line")},
          {"point_distance_x", QObject::tr("Dimension horizontal distance between points")},
          {"point_distance_y", QObject::tr("Dimension vertical distance between points")},
          {"angle", QObject::tr("Dimension angle between selected lines")},
@@ -158,6 +160,8 @@ void SketchEditorToolController::showPanel() {
                 applyRelation(document::SketchConstraintKind::horizontalPoints);
             } else if (id == "vertical_points") {
                 applyRelation(document::SketchConstraintKind::verticalPoints);
+            } else if (id == "fixed") {
+                applyRelation(document::SketchConstraintKind::fixed);
             } else if (id == "equal") {
                 applyRelation(document::SketchConstraintKind::equal);
             } else if (id == "tangent") {
@@ -174,6 +178,8 @@ void SketchEditorToolController::showPanel() {
                 applyRelation(document::SketchConstraintKind::diameter);
             } else if (id == "point_distance") {
                 applyRelation(document::SketchConstraintKind::pointDistance);
+            } else if (id == "point_line_distance") {
+                applyRelation(document::SketchConstraintKind::pointLineDistance);
             } else if (id == "point_distance_x") {
                 applyRelation(document::SketchConstraintKind::pointDistanceX);
             } else if (id == "point_distance_y") {
@@ -356,18 +362,20 @@ void SketchEditorToolController::applyRelation(document::SketchConstraintKind ki
         : kind == document::SketchConstraintKind::horizontalPoints
             ? "Horizontal point alignment added"
         : kind == document::SketchConstraintKind::verticalPoints ? "Vertical point alignment added"
+        : kind == document::SketchConstraintKind::fixed          ? "Geometry fixed"
         : kind == document::SketchConstraintKind::equal          ? "Equal constraint added"
         : kind == document::SketchConstraintKind::tangent        ? "Tangent constraint added"
         : kind == document::SketchConstraintKind::symmetric      ? "Symmetric constraint added"
         : kind == document::SketchConstraintKind::midpoint       ? "Midpoint constraint added"
         : kind == document::SketchConstraintKind::perpendicularBisector
             ? "Perpendicular bisector constraint added"
-        : kind == document::SketchConstraintKind::concentric     ? "Concentric constraint added"
-        : kind == document::SketchConstraintKind::diameter       ? "Diameter dimension added"
-        : kind == document::SketchConstraintKind::pointDistance  ? "Point distance added"
-        : kind == document::SketchConstraintKind::pointDistanceX ? "Horizontal distance added"
-        : kind == document::SketchConstraintKind::pointDistanceY ? "Vertical distance added"
-        : kind == document::SketchConstraintKind::angle          ? "Angle dimension added"
+        : kind == document::SketchConstraintKind::concentric        ? "Concentric constraint added"
+        : kind == document::SketchConstraintKind::diameter          ? "Diameter dimension added"
+        : kind == document::SketchConstraintKind::pointDistance     ? "Point distance added"
+        : kind == document::SketchConstraintKind::pointLineDistance ? "Point-to-line distance added"
+        : kind == document::SketchConstraintKind::pointDistanceX    ? "Horizontal distance added"
+        : kind == document::SketchConstraintKind::pointDistanceY    ? "Vertical distance added"
+        : kind == document::SketchConstraintKind::angle             ? "Angle dimension added"
                                                         : "Point-on-object constraint added";
     statusChanged_(QObject::tr(text));
 }
@@ -491,13 +499,15 @@ void SketchEditorToolController::refreshPresentation() {
     std::vector<viewport::SceneSketchConstraint> constraints;
     constraints.reserve(annotations.size());
     for (const features::SketchConstraintAnnotation& annotation : annotations) {
-        const bool editable = annotation.kind == document::SketchConstraintKind::distance ||
-                              annotation.kind == document::SketchConstraintKind::radius ||
-                              annotation.kind == document::SketchConstraintKind::diameter ||
-                              annotation.kind == document::SketchConstraintKind::pointDistance ||
-                              annotation.kind == document::SketchConstraintKind::pointDistanceX ||
-                              annotation.kind == document::SketchConstraintKind::pointDistanceY ||
-                              annotation.kind == document::SketchConstraintKind::angle;
+        const bool editable =
+            annotation.kind == document::SketchConstraintKind::distance ||
+            annotation.kind == document::SketchConstraintKind::radius ||
+            annotation.kind == document::SketchConstraintKind::diameter ||
+            annotation.kind == document::SketchConstraintKind::pointDistance ||
+            annotation.kind == document::SketchConstraintKind::pointLineDistance ||
+            annotation.kind == document::SketchConstraintKind::pointDistanceX ||
+            annotation.kind == document::SketchConstraintKind::pointDistanceY ||
+            annotation.kind == document::SketchConstraintKind::angle;
         constraints.push_back({annotation.id.value(), sketchConstraintLabel(annotation),
                                annotation.position.X(), annotation.position.Y(),
                                annotation.position.Z(),

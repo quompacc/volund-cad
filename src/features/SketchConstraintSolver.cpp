@@ -2,6 +2,7 @@
 
 #include <GCS.h>
 
+#include <array>
 #include <cstdint>
 #include <memory>
 #include <numbers>
@@ -108,6 +109,8 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
     GCS::System system;
     std::vector<double> values;
     values.reserve(sketch.constraints.values.size());
+    std::vector<std::array<double, 4>> fixedValues;
+    fixedValues.reserve(sketch.constraints.values.size());
     std::vector<document::SketchConstraintId> tags;
     tags.reserve(sketch.constraints.values.size());
     for (const document::SketchConstraint& constraint : sketch.constraints.values) {
@@ -152,6 +155,10 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
             static_cast<void>(system.addConstraintP2PDistance(
                 point(constraint.first, lines, circles), point(*constraint.second, lines, circles),
                 &values.back(), tag));
+        else if (constraint.kind == document::SketchConstraintKind::pointLineDistance)
+            static_cast<void>(system.addConstraintP2LDistance(
+                point(constraint.first, lines, circles),
+                lines.at(constraint.second->element.value())->line, &values.back(), tag));
         else if (constraint.kind == document::SketchConstraintKind::pointDistanceX ||
                  constraint.kind == document::SketchConstraintKind::pointDistanceY) {
             GCS::Point& firstPoint = point(constraint.first, lines, circles);
@@ -172,7 +179,27 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
             static_cast<void>(system.addConstraintP2PSymmetric(
                 point(constraint.first, lines, circles), point(*constraint.second, lines, circles),
                 lines.at(constraint.third->element.value())->line, tag));
-        else if (constraint.kind == document::SketchConstraintKind::coordinateX)
+        else if (constraint.kind == document::SketchConstraintKind::fixed) {
+            fixedValues.push_back(
+                {constraint.value, constraint.auxiliaryValues[0], constraint.auxiliaryValues[1],
+                 constraint.auxiliaryValues.size() == 3 ? constraint.auxiliaryValues[2] : 0.0});
+            auto& fixed = fixedValues.back();
+            if (firstLine) {
+                static_cast<void>(
+                    system.addConstraintCoordinateX(firstLine->first, &fixed[0], tag));
+                static_cast<void>(
+                    system.addConstraintCoordinateY(firstLine->first, &fixed[1], tag));
+                static_cast<void>(
+                    system.addConstraintCoordinateX(firstLine->second, &fixed[2], tag));
+                static_cast<void>(
+                    system.addConstraintCoordinateY(firstLine->second, &fixed[3], tag));
+            } else {
+                auto& circle = circles.at(constraint.first.element.value())->circle;
+                static_cast<void>(system.addConstraintCoordinateX(circle.center, &fixed[0], tag));
+                static_cast<void>(system.addConstraintCoordinateY(circle.center, &fixed[1], tag));
+                static_cast<void>(system.addConstraintCircleRadius(circle, &fixed[2], tag));
+            }
+        } else if (constraint.kind == document::SketchConstraintKind::coordinateX)
             static_cast<void>(system.addConstraintCoordinateX(
                 point(constraint.first, lines, circles), &values.back(), tag));
         else if (constraint.kind == document::SketchConstraintKind::coordinateY)

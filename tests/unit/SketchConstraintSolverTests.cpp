@@ -343,6 +343,47 @@ bool adapterConstrainsCollinearLinesAndPointAlignments() {
            close(third.end.x, fourth.end.x);
 }
 
+bool adapterFixesGeometryAndDrivesPointLineDistance() {
+    using namespace voelund::document;
+    SketchParameters sketch{plane(),
+                            {{{SketchElementId{1}, SketchLine{{9.0, 9.0}, {10.0, 10.0}}},
+                              {SketchElementId{2}, SketchCircle{{8.0, 8.0}, 1.0}},
+                              {SketchElementId{3}, SketchLine{{5.0, 6.0}, {6.0, 6.0}}},
+                              {SketchElementId{4}, SketchLine{{0.0, 0.0}, {10.0, 0.0}}}},
+                             5},
+                            {{{SketchConstraintId{1},
+                               SketchConstraintKind::fixed,
+                               lineRef(1),
+                               std::nullopt,
+                               1.0,
+                               std::nullopt,
+                               {2.0, 5.0, 3.0}},
+                              {SketchConstraintId{2},
+                               SketchConstraintKind::fixed,
+                               {SketchElementId{2}, SketchPointPosition::center},
+                               std::nullopt,
+                               3.0,
+                               std::nullopt,
+                               {4.0, 2.0}},
+                              {SketchConstraintId{3}, SketchConstraintKind::pointLineDistance,
+                               lineRef(3), lineRef(4), 7.0}},
+                             4}};
+
+    const auto result = voelund::features::solveSketchConstraints(sketch);
+    const auto& fixedLine = std::get<SketchLine>(sketch.elements.values[0].geometry);
+    const auto& fixedCircle = std::get<SketchCircle>(sketch.elements.values[1].geometry);
+    const auto& point = std::get<SketchLine>(sketch.elements.values[2].geometry).start;
+    const auto& target = std::get<SketchLine>(sketch.elements.values[3].geometry);
+    const double x = target.end.x - target.start.x;
+    const double y = target.end.y - target.start.y;
+    const double distance =
+        std::abs(x * (point.y - target.start.y) - y * (point.x - target.start.x)) /
+        std::hypot(x, y);
+    return result.status == voelund::features::SketchSolveStatus::success &&
+           fixedLine == SketchLine{{1.0, 2.0}, {5.0, 3.0}} &&
+           fixedCircle == SketchCircle{{3.0, 4.0}, 2.0} && close(distance, 7.0);
+}
+
 } // namespace
 
 int main() {
@@ -388,6 +429,10 @@ int main() {
     }
     if (!adapterConstrainsCollinearLinesAndPointAlignments()) {
         std::cerr << "Völund collinear or point alignment adapter failed\n";
+        return 1;
+    }
+    if (!adapterFixesGeometryAndDrivesPointLineDistance()) {
+        std::cerr << "Völund fixed geometry or point-line distance adapter failed\n";
         return 1;
     }
     return 0;
