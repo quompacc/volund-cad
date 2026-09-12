@@ -1,8 +1,8 @@
 # Völund CAD – Architektur- und Codevertrag
 
 **Status:** verbindlich
-**Version:** 1.1
-**Beschlossen am:** 10. September 2026
+**Version:** 1.2
+**Beschlossen am:** 12. September 2026
 **Gültig für:** sämtlichen neu entstehenden Produktivcode, Build-Code und alle Architekturentscheidungen von Völund CAD
 
 ## 1. Zweck und Verbindlichkeit
@@ -312,6 +312,23 @@ Eine Änderung ist erst fertig, wenn:
 - Persistenzänderungen eine Formatversion und Migration besitzen;
 - Fremdcode-Herkunft und Lizenz dokumentiert sind;
 - keine provisorische Spike-Abhängigkeit unbemerkt in das Produkt gelangt.
+
+Für grundlegende CAD-Bedienung gilt zusätzlich:
+
+- Der ausführende Entwicklungsagent verantwortet den vollständigen Ablauf aus
+  Implementierung, Regressionstest, Windows-Prüfung, FreeBSD-Build und nativer
+  Wayland-Prüfung. Diese Arbeit wird nicht zur schrittweisen Bedienkontrolle an den
+  Benutzer delegiert.
+- Auswahl, Preselection, Move, Rotate, Join, Cut, Intersect, Separate, Undo/Redo,
+  Viewport-Navigation und Werkzeugzustände werden als zusammenhängende Abläufe
+  geprüft. Eine isoliert funktionierende Schaltfläche genügt nicht.
+- Änderungen an Auswahl- oder Körpersemantik enthalten einen Regressionstest für
+  beide Richtungen der Beziehung, beispielsweise Kind bewegt Elternkörper und
+  Elternkörper bewegt beziehungsweise bewegt nicht den Kindkörper.
+- Der Entwicklungsagent startet den aktuellen FreeBSD-Build selbst und prüft die
+  technisch beobachtbaren Zustände. Eine manuelle Benutzerabnahme wird erst für
+  subjektive Ergonomie, Bediengefühl und visuelle Wirkung angefordert oder wenn eine
+  Hardwarewirkung nicht zuverlässig automatisiert beobachtet werden kann.
 
 ## 11. Änderungen und Ausnahmen
 

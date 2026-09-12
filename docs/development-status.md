@@ -1,4 +1,4 @@
-# Entwicklungsstand – 11. September 2026
+# Entwicklungsstand – 12. September 2026
 
 ## Verbindliches Produktziel
 
@@ -49,6 +49,21 @@ Aktuell wird ausschließlich `Solid` als Produktmodul entwickelt. Andere
 Arbeitsbereiche werden weder vorgetäuscht noch fest verdrahtet. Die Registry lehnt
 doppelte Modul- und Command-IDs ab. Module werden zunächst statisch gelinkt; eine
 dynamische Plug-in-ABI ist bewusst aufgeschoben.
+
+## Entwicklungs- und Abnahmeverantwortung
+
+Grundlegende CAD-Steuerung wird vom Entwicklungsagenten eigenständig als vollständiger
+Bedienablauf umgesetzt und geprüft. Dazu gehören insbesondere Auswahl und Preselection,
+Viewport-Navigation, Move/Rotate, Verbindungsmodi, Undo/Redo sowie Aktivierung und
+Synchronisierung der Werkzeuge. Der Agent baut und testet beide Windows-Profile,
+synchronisiert den Stand auf die FreeBSD-Testmaschine, führt dort die native
+Wayland-Prüfung aus und startet den geprüften Build selbst.
+
+Der Benutzer wird nicht als Ersatz für automatisierbare Funktions- oder
+Regressionstests eingesetzt. Seine manuelle Abnahme konzentriert sich auf subjektive
+Ergonomie, Bediengefühl und visuelle Wirkung. Nicht automatisierbare Hardware- oder
+Compositorbeobachtungen werden ausdrücklich benannt, bevor eine solche Abnahme
+angefordert wird.
 
 ## Technische Schutzmaßnahmen
 
