@@ -34,8 +34,14 @@ document::SketchPoint referencePoint(const document::SketchParameters& sketch,
 
 document::SketchPoint annotationPoint(const document::SketchParameters& sketch,
                                       const document::SketchConstraint& constraint) {
-    if (constraint.kind == document::SketchConstraintKind::pointOnObject)
+    if (constraint.kind == document::SketchConstraintKind::pointOnObject ||
+        constraint.kind == document::SketchConstraintKind::midpoint)
         return referencePoint(sketch, constraint.first);
+    if (constraint.kind == document::SketchConstraintKind::perpendicularBisector) {
+        const auto& axis =
+            std::get<document::SketchLine>(findElement(sketch, constraint.first.element).geometry);
+        return {(axis.start.x + axis.end.x) * 0.5, (axis.start.y + axis.end.y) * 0.5};
+    }
     const auto& geometry = findElement(sketch, constraint.first.element).geometry;
     if (!constraint.second.has_value()) {
         if (const auto* line = std::get_if<document::SketchLine>(&geometry))

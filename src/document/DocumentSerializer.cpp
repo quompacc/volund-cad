@@ -1,5 +1,5 @@
-#include <voelund/document/DocumentSerializer.hpp>
 #include "SketchConstraintSerialization.hpp"
+#include <voelund/document/DocumentSerializer.hpp>
 
 #include <voelund/document/ModelDocument.hpp>
 
@@ -136,47 +136,6 @@ const char* pointPositionName(SketchPointPosition position) {
     if (position == SketchPointPosition::center)
         return "CENTER";
     return "START";
-}
-
-SketchConstraintKind readConstraintKind(std::istringstream& line) {
-    std::string value;
-    if (!(line >> value))
-        invalidDocument("missing sketch constraint kind");
-    if (value == "HORIZONTAL")
-        return SketchConstraintKind::horizontal;
-    if (value == "VERTICAL")
-        return SketchConstraintKind::vertical;
-    if (value == "DISTANCE")
-        return SketchConstraintKind::distance;
-    if (value == "RADIUS")
-        return SketchConstraintKind::radius;
-    if (value == "COINCIDENT")
-        return SketchConstraintKind::coincident;
-    if (value == "PARALLEL")
-        return SketchConstraintKind::parallel;
-    if (value == "PERPENDICULAR")
-        return SketchConstraintKind::perpendicular;
-    if (value == "COORDINATE_X")
-        return SketchConstraintKind::coordinateX;
-    if (value == "COORDINATE_Y")
-        return SketchConstraintKind::coordinateY;
-    if (value == "POINT_ON_OBJECT")
-        return SketchConstraintKind::pointOnObject;
-    if (value == "EQUAL")
-        return SketchConstraintKind::equal;
-    if (value == "TANGENT")
-        return SketchConstraintKind::tangent;
-    if (value == "SYMMETRIC")
-        return SketchConstraintKind::symmetric;
-    if (value == "POINT_DISTANCE")
-        return SketchConstraintKind::pointDistance;
-    if (value == "ANGLE")
-        return SketchConstraintKind::angle;
-    if (value == "POINT_DISTANCE_X")
-        return SketchConstraintKind::pointDistanceX;
-    if (value == "POINT_DISTANCE_Y")
-        return SketchConstraintKind::pointDistanceY;
-    invalidDocument("unknown sketch constraint kind");
 }
 
 void writeTransform(std::ostream& output, const kernel::RigidTransform& transform) {
@@ -343,7 +302,7 @@ ParsedFeature readSketchFeature(FeatureId id, std::string name, std::istringstre
                 std::uint64_t secondElement = 0;
                 if (!(constraintLine >> marker >> rawId) || marker != "CONSTRAINT")
                     invalidDocument("malformed sketch constraint identity");
-                const SketchConstraintKind kind = readConstraintKind(constraintLine);
+                const SketchConstraintKind kind = readSketchConstraintKind(constraintLine);
                 if (!(constraintLine >> firstElement))
                     invalidDocument("malformed first sketch constraint reference");
                 const SketchPointPosition firstPoint = readPointPosition(constraintLine);
@@ -463,7 +422,7 @@ ParsedFeature readFeature(const std::string& source,
 void DocumentSerializer::write(const ModelDocument& document, std::ostream& output) {
     output.imbue(std::locale::classic());
     output << std::setprecision(std::numeric_limits<double>::max_digits10);
-    output << "VOLUND 10\nNEXT_ID " << document.nextFeatureId_ << "\nFEATURES "
+    output << "VOLUND 11\nNEXT_ID " << document.nextFeatureId_ << "\nFEATURES "
            << document.features_.size() << '\n';
     for (std::size_t index = 0; index < document.features_.size(); ++index) {
         const FeatureDescriptor& feature = document.features_[index];
@@ -563,6 +522,7 @@ ModelDocument DocumentSerializer::read(std::istream& input) {
                                   : header == "VOLUND 8"  ? 8
                                   : header == "VOLUND 9"  ? 9
                                   : header == "VOLUND 10" ? 10
+                                  : header == "VOLUND 11" ? 11
                                                           : 0;
     if (version == 0) {
         invalidDocument("unsupported file header or version");

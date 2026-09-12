@@ -103,7 +103,11 @@ gehören nicht zum Produktpfad.
   und akzeptieren negative Werte sowie null. Jedes Element kann in blaue
   Konstruktionsgeometrie umgeschaltet werden; Constraints bleiben aktiv, Profile und
   Extrusionen ignorieren das Element.
-- Neue Dateien verwenden `VOLUND 10`; bestehende `VOLUND 1`-Rechtecksketches,
+- `Midpoint` bindet einen gewählten Punkt an die Mitte einer Linie. `Perpendicular
+  bisector` macht die zuerst gewählte Linie zur parametrischen Mittelsenkrechten der
+  zweiten. Beide funktionieren auch mit Konstruktionslinien und erscheinen als `[M]`
+  beziehungsweise `[PB]`.
+- Neue Dateien verwenden `VOLUND 11`; bestehende `VOLUND 1`-Rechtecksketches,
   `VOLUND 2`-Linien, `VOLUND 3`-Richtungsconstraints und `VOLUND 4`-Extrusionen
   sowie `VOLUND 5`-Profilauswahlen werden beim Laden migriert. Alte Extrusionen
   behalten dabei ihre bisherige Semantik, alle geschlossenen Profile zu verwenden.

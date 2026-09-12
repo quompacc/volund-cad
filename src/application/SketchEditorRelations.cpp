@@ -84,8 +84,11 @@ bool SketchEditorSession::canAddSelectedRelation(
     const document::SketchElement* firstElement = findElement(elements_, first.element);
     const document::SketchElement* secondElement = findElement(elements_, second.element);
     if (kind == document::SketchConstraintKind::parallel ||
-        kind == document::SketchConstraintKind::perpendicular)
+        kind == document::SketchConstraintKind::perpendicular ||
+        kind == document::SketchConstraintKind::perpendicularBisector)
         return line(firstElement) && line(secondElement);
+    if (kind == document::SketchConstraintKind::midpoint)
+        return referencePoint(elements_, first).has_value() && line(secondElement);
     if (kind == document::SketchConstraintKind::angle) {
         if (!line(firstElement) || !line(secondElement))
             return false;

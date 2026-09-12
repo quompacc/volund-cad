@@ -248,6 +248,40 @@ bool adapterDrivesSignedHorizontalAndVerticalDistances() {
            close(second.x - first.x, -5.0) && close(fourth.y - third.y, 7.0);
 }
 
+bool adapterConstrainsMidpointsAndPerpendicularBisectors() {
+    using namespace voelund::document;
+    SketchParameters sketch{
+        plane(),
+        {{{SketchElementId{1}, SketchLine{{3.0, 2.0}, {4.0, 2.0}}},
+          {SketchElementId{2}, SketchLine{{0.0, 0.0}, {10.0, 0.0}}},
+          {SketchElementId{3}, SketchLine{{14.0, -4.0}, {14.0, 4.0}}, true},
+          {SketchElementId{4}, SketchLine{{10.0, 0.0}, {20.0, 2.0}}}},
+         5},
+        {{{SketchConstraintId{1}, SketchConstraintKind::midpoint, lineRef(1), lineRef(2), 0.0},
+          {SketchConstraintId{2}, SketchConstraintKind::perpendicularBisector, lineRef(3),
+           lineRef(4), 0.0}},
+         3}};
+
+    const auto result = voelund::features::solveSketchConstraints(sketch);
+    const auto& point = std::get<SketchLine>(sketch.elements.values[0].geometry).start;
+    const auto& target = std::get<SketchLine>(sketch.elements.values[1].geometry);
+    const auto& axis = std::get<SketchLine>(sketch.elements.values[2].geometry);
+    const auto& bisected = std::get<SketchLine>(sketch.elements.values[3].geometry);
+    const SketchPoint midpoint{(target.start.x + target.end.x) * 0.5,
+                               (target.start.y + target.end.y) * 0.5};
+    const double axisX = axis.end.x - axis.start.x;
+    const double axisY = axis.end.y - axis.start.y;
+    const double targetX = bisected.end.x - bisected.start.x;
+    const double targetY = bisected.end.y - bisected.start.y;
+    const double firstDistance =
+        std::hypot(axis.start.x - bisected.start.x, axis.start.y - bisected.start.y);
+    const double secondDistance =
+        std::hypot(axis.start.x - bisected.end.x, axis.start.y - bisected.end.y);
+    return result.status == voelund::features::SketchSolveStatus::success &&
+           close(point.x, midpoint.x) && close(point.y, midpoint.y) &&
+           close(axisX * targetX + axisY * targetY, 0.0) && close(firstDistance, secondDistance);
+}
+
 } // namespace
 
 int main() {
@@ -281,6 +315,10 @@ int main() {
     }
     if (!adapterDrivesSignedHorizontalAndVerticalDistances()) {
         std::cerr << "Völund directional point distance adapter failed\n";
+        return 1;
+    }
+    if (!adapterConstrainsMidpointsAndPerpendicularBisectors()) {
+        std::cerr << "Völund midpoint or perpendicular bisector adapter failed\n";
         return 1;
     }
     return 0;

@@ -57,6 +57,37 @@ bool directionalPointDimensionsAreSignedAndEditable() {
            std::abs(solvedSecond.y - solvedFirst.y) <= 1.0e-7;
 }
 
+bool midpointAndConstructionBisectorRemainParametric() {
+    using namespace voelund;
+    application::CadSession session;
+    session.newDocument();
+    application::SketchEditorSession editor(session, session.addBoxFeature(), plane);
+    if (!add(editor, {2.0, 3.0}, {3.0, 3.0}, 1) || !add(editor, {0.0, 0.0}, {10.0, 0.0}, 2) ||
+        !editor.selectNearestReference(document::SketchElementId{1}, {2.0, 3.0}, false) ||
+        !editor.selectNearestReference(document::SketchElementId{2}, {0.0, 0.0}, true) ||
+        !editor.addSelectedRelation(document::SketchConstraintKind::midpoint))
+        return false;
+    const auto midpoint = std::get<document::SketchLine>(editor.elements()[0].geometry).start;
+    const auto midpointTarget = std::get<document::SketchLine>(editor.elements()[1].geometry);
+    if (std::abs(midpoint.x - (midpointTarget.start.x + midpointTarget.end.x) * 0.5) > 1.0e-7 ||
+        std::abs(midpoint.y - (midpointTarget.start.y + midpointTarget.end.y) * 0.5) > 1.0e-7 ||
+        !add(editor, {14.0, -4.0}, {14.0, 4.0}, 3) || !add(editor, {10.0, 0.0}, {20.0, 2.0}, 4) ||
+        !editor.selectElement(document::SketchElementId{3}) ||
+        !editor.toggleSelectedConstruction() ||
+        !editor.selectNearestReference(document::SketchElementId{3}, {14.0, -4.0}, false) ||
+        !editor.selectNearestReference(document::SketchElementId{4}, {10.0, 0.0}, true) ||
+        !editor.addSelectedRelation(document::SketchConstraintKind::perpendicularBisector))
+        return false;
+    const auto& axis = std::get<document::SketchLine>(editor.elements()[2].geometry);
+    const auto& target = std::get<document::SketchLine>(editor.elements()[3].geometry);
+    const double dot = (axis.end.x - axis.start.x) * (target.end.x - target.start.x) +
+                       (axis.end.y - axis.start.y) * (target.end.y - target.start.y);
+    const double first = std::hypot(axis.start.x - target.start.x, axis.start.y - target.start.y);
+    const double second = std::hypot(axis.start.x - target.end.x, axis.start.y - target.end.y);
+    return std::abs(dot) <= 1.0e-7 && std::abs(first - second) <= 1.0e-7 &&
+           editor.elements()[2].construction;
+}
+
 } // namespace
 
 int main() {
@@ -66,6 +97,10 @@ int main() {
     }
     if (!directionalPointDimensionsAreSignedAndEditable()) {
         std::cerr << "Directional point dimension editing failed\n";
+        return 1;
+    }
+    if (!midpointAndConstructionBisectorRemainParametric()) {
+        std::cerr << "Midpoint or construction bisector relation failed\n";
         return 1;
     }
     return 0;

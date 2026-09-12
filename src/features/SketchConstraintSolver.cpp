@@ -172,6 +172,16 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
             else
                 static_cast<void>(
                     system.addConstraintPointOnCircle(source, circles.at(targetId)->circle, tag));
+        } else if (constraint.kind == document::SketchConstraintKind::midpoint) {
+            GCS::Point& source = point(constraint.first, lines, circles);
+            GCS::Line& target = lines.at(constraint.second->element.value())->line;
+            static_cast<void>(system.addConstraintPointOnLine(source, target, tag));
+            static_cast<void>(system.addConstraintPointOnPerpBisector(source, target, tag));
+        } else if (constraint.kind == document::SketchConstraintKind::perpendicularBisector) {
+            GCS::Line& target = lines.at(constraint.second->element.value())->line;
+            static_cast<void>(system.addConstraintPerpendicular(firstLine->line, target, tag));
+            static_cast<void>(
+                system.addConstraintPointOnPerpBisector(firstLine->first, target, tag));
         } else if (constraint.kind == document::SketchConstraintKind::equal) {
             const auto secondId = constraint.second->element.value();
             if (firstLine)

@@ -177,6 +177,18 @@ void validateSketchConstraints(const SketchElements& elements,
                      !std::holds_alternative<SketchCircle>(target)))
                     throw std::invalid_argument(
                         "Point-on-object constraint needs a different line or circle");
+            } else if (constraint.kind == SketchConstraintKind::midpoint) {
+                requirePoint(constraint.first);
+                requireLine(*constraint.second);
+                if (constraint.first.element == constraint.second->element)
+                    throw std::invalid_argument(
+                        "Midpoint constraint needs a point and a different line");
+            } else if (constraint.kind == SketchConstraintKind::perpendicularBisector) {
+                requireLine(constraint.first);
+                requireLine(*constraint.second);
+                if (constraint.first.element == constraint.second->element)
+                    throw std::invalid_argument(
+                        "Perpendicular bisector constraint needs two different lines");
             } else if (constraint.kind == SketchConstraintKind::equal) {
                 const SketchGeometry& first = findElement(constraint.first.element).geometry;
                 const SketchGeometry& second = findElement(constraint.second->element).geometry;

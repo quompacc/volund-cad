@@ -134,7 +134,7 @@ bool sketchElementsKeepStableIdsThroughHistoryAndSerialization() {
     }
     std::ostringstream output;
     voelund::document::DocumentSerializer::write(document, output);
-    if (!output.str().starts_with("VOLUND 10\n"))
+    if (!output.str().starts_with("VOLUND 11\n"))
         return false;
     std::istringstream input(output.str());
     const auto loaded = voelund::document::DocumentSerializer::read(input);
@@ -144,7 +144,7 @@ bool sketchElementsKeepStableIdsThroughHistoryAndSerialization() {
            std::holds_alternative<voelund::document::SketchCircle>(elements.values[1].geometry);
 }
 
-bool relationalConstraintsRoundtripInVersionTen() {
+bool relationalConstraintsRoundtripInVersionEleven() {
     using namespace voelund::document;
     ModelDocument document = ModelDocument::empty();
     const auto support = document.addBoxFeature("Support", {20.0, 20.0, 30.0});
@@ -205,8 +205,18 @@ bool relationalConstraintsRoundtripInVersionTen() {
            SketchConstraintKind::pointDistanceY,
            {SketchElementId{1}, SketchPointPosition::end},
            SketchGeometryReference{SketchElementId{2}, SketchPointPosition::end},
-           4.0}},
-         11}};
+           4.0},
+          {SketchConstraintId{11},
+           SketchConstraintKind::midpoint,
+           {SketchElementId{3}, SketchPointPosition::center},
+           SketchGeometryReference{SketchElementId{1}, SketchPointPosition::start},
+           0.0},
+          {SketchConstraintId{12},
+           SketchConstraintKind::perpendicularBisector,
+           {SketchElementId{4}, SketchPointPosition::start},
+           SketchGeometryReference{SketchElementId{2}, SketchPointPosition::start},
+           0.0}},
+         13}};
     const auto sketchId = document.addSketchFeature("Constrained", support, sketch);
     std::ostringstream output;
     DocumentSerializer::write(document, output);
@@ -214,7 +224,7 @@ bool relationalConstraintsRoundtripInVersionTen() {
     const auto loaded = DocumentSerializer::read(input);
     const auto& constraints = loaded.sketchParameters(sketchId).constraints;
     const auto& loadedSketch = loaded.sketchParameters(sketchId);
-    return output.str().starts_with("VOLUND 10\n") && constraints == sketch.constraints &&
+    return output.str().starts_with("VOLUND 11\n") && constraints == sketch.constraints &&
            loadedSketch.elements.values[3].construction;
 }
 
@@ -314,7 +324,7 @@ int main() {
         std::cerr << "Sketch element identity/history test failed\n";
         return 1;
     }
-    if (!relationalConstraintsRoundtripInVersionTen()) {
+    if (!relationalConstraintsRoundtripInVersionEleven()) {
         std::cerr << "Version-ten sketch data roundtrip failed\n";
         return 1;
     }

@@ -1,5 +1,6 @@
 #include "SketchEditorToolController.hpp"
 
+#include "SketchConstraintLabel.hpp"
 #include "SketchViewAdapter.hpp"
 #include "ToolPanelHost.hpp"
 
@@ -9,8 +10,6 @@
 #include <QObject>
 
 #include <algorithm>
-#include <iomanip>
-#include <sstream>
 #include <utility>
 #include <vector>
 
@@ -37,46 +36,6 @@ viewport::SketchElementTool viewportTool(int index) {
     if (index == 2)
         return viewport::SketchElementTool::circle;
     return viewport::SketchElementTool::line;
-}
-
-std::string constraintLabel(const features::SketchConstraintAnnotation& annotation) {
-    if (annotation.kind == document::SketchConstraintKind::horizontal)
-        return "[H]";
-    if (annotation.kind == document::SketchConstraintKind::vertical)
-        return "[V]";
-    if (annotation.kind == document::SketchConstraintKind::coincident)
-        return "[C]";
-    if (annotation.kind == document::SketchConstraintKind::parallel)
-        return "[||]";
-    if (annotation.kind == document::SketchConstraintKind::perpendicular)
-        return "[90]";
-    if (annotation.kind == document::SketchConstraintKind::coordinateX)
-        return "[X]";
-    if (annotation.kind == document::SketchConstraintKind::coordinateY)
-        return "[Y]";
-    if (annotation.kind == document::SketchConstraintKind::pointOnObject)
-        return "[O]";
-    if (annotation.kind == document::SketchConstraintKind::equal)
-        return "[=]";
-    if (annotation.kind == document::SketchConstraintKind::tangent)
-        return "[T]";
-    if (annotation.kind == document::SketchConstraintKind::symmetric)
-        return "[S]";
-    std::ostringstream label;
-    if (annotation.kind == document::SketchConstraintKind::angle) {
-        label << "A " << std::fixed << std::setprecision(3) << annotation.value << "°";
-        return label.str();
-    }
-    if (annotation.kind == document::SketchConstraintKind::pointDistance)
-        label << "D ";
-    else if (annotation.kind == document::SketchConstraintKind::pointDistanceX)
-        label << "DX ";
-    else if (annotation.kind == document::SketchConstraintKind::pointDistanceY)
-        label << "DY ";
-    else
-        label << (annotation.kind == document::SketchConstraintKind::radius ? "R " : "L ");
-    label << std::fixed << std::setprecision(3) << annotation.value << " mm";
-    return label.str();
 }
 
 } // namespace
@@ -153,6 +112,8 @@ void SketchEditorToolController::showPanel() {
          {"equal", QObject::tr("Make selected lengths or radii equal")},
          {"tangent", QObject::tr("Make selected objects tangent")},
          {"symmetric", QObject::tr("Mirror first two points about third selected line")},
+         {"midpoint", QObject::tr("Put first selected point at midpoint of selected line")},
+         {"perpendicular_bisector", QObject::tr("Make first line bisect second line")},
          {"point_distance", QObject::tr("Dimension distance between selected points")},
          {"point_distance_x", QObject::tr("Dimension horizontal distance between points")},
          {"point_distance_y", QObject::tr("Dimension vertical distance between points")},
@@ -192,6 +153,10 @@ void SketchEditorToolController::showPanel() {
                 applyRelation(document::SketchConstraintKind::tangent);
             } else if (id == "symmetric") {
                 applyRelation(document::SketchConstraintKind::symmetric);
+            } else if (id == "midpoint") {
+                applyRelation(document::SketchConstraintKind::midpoint);
+            } else if (id == "perpendicular_bisector") {
+                applyRelation(document::SketchConstraintKind::perpendicularBisector);
             } else if (id == "point_distance") {
                 applyRelation(document::SketchConstraintKind::pointDistance);
             } else if (id == "point_distance_x") {
@@ -369,12 +334,15 @@ void SketchEditorToolController::applyRelation(document::SketchConstraintKind ki
     syncConstraintState();
     refreshPresentation();
     const char* text =
-        kind == document::SketchConstraintKind::coincident       ? "Coincident constraint added"
-        : kind == document::SketchConstraintKind::parallel       ? "Parallel constraint added"
-        : kind == document::SketchConstraintKind::perpendicular  ? "Perpendicular constraint added"
-        : kind == document::SketchConstraintKind::equal          ? "Equal constraint added"
-        : kind == document::SketchConstraintKind::tangent        ? "Tangent constraint added"
-        : kind == document::SketchConstraintKind::symmetric      ? "Symmetric constraint added"
+        kind == document::SketchConstraintKind::coincident      ? "Coincident constraint added"
+        : kind == document::SketchConstraintKind::parallel      ? "Parallel constraint added"
+        : kind == document::SketchConstraintKind::perpendicular ? "Perpendicular constraint added"
+        : kind == document::SketchConstraintKind::equal         ? "Equal constraint added"
+        : kind == document::SketchConstraintKind::tangent       ? "Tangent constraint added"
+        : kind == document::SketchConstraintKind::symmetric     ? "Symmetric constraint added"
+        : kind == document::SketchConstraintKind::midpoint      ? "Midpoint constraint added"
+        : kind == document::SketchConstraintKind::perpendicularBisector
+            ? "Perpendicular bisector constraint added"
         : kind == document::SketchConstraintKind::pointDistance  ? "Point distance added"
         : kind == document::SketchConstraintKind::pointDistanceX ? "Horizontal distance added"
         : kind == document::SketchConstraintKind::pointDistanceY ? "Vertical distance added"
@@ -487,6 +455,11 @@ void SketchEditorToolController::syncConstraintState() {
         "tangent", editor_->canAddSelectedRelation(document::SketchConstraintKind::tangent));
     panel_.setActionEnabled(
         "symmetric", editor_->canAddSelectedRelation(document::SketchConstraintKind::symmetric));
+    panel_.setActionEnabled(
+        "midpoint", editor_->canAddSelectedRelation(document::SketchConstraintKind::midpoint));
+    panel_.setActionEnabled(
+        "perpendicular_bisector",
+        editor_->canAddSelectedRelation(document::SketchConstraintKind::perpendicularBisector));
     panel_.setActionEnabled("point_distance", editor_->canAddSelectedRelation(
                                                   document::SketchConstraintKind::pointDistance));
     panel_.setActionEnabled(
@@ -552,7 +525,7 @@ void SketchEditorToolController::refreshPresentation() {
                               annotation.kind == document::SketchConstraintKind::pointDistanceX ||
                               annotation.kind == document::SketchConstraintKind::pointDistanceY ||
                               annotation.kind == document::SketchConstraintKind::angle;
-        constraints.push_back({annotation.id.value(), constraintLabel(annotation),
+        constraints.push_back({annotation.id.value(), sketchConstraintLabel(annotation),
                                annotation.position.X(), annotation.position.Y(),
                                annotation.position.Z(),
                                editor_->isConstraintConflicting(annotation.id), editable});
