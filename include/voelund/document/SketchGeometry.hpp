@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <variant>
 #include <vector>
 
@@ -12,6 +13,17 @@ class SketchElementId final {
 
     [[nodiscard]] constexpr std::uint64_t value() const noexcept { return value_; }
     [[nodiscard]] constexpr bool operator==(const SketchElementId&) const noexcept = default;
+
+  private:
+    std::uint64_t value_;
+};
+
+class SketchConstraintId final {
+  public:
+    constexpr explicit SketchConstraintId(std::uint64_t value) noexcept : value_(value) {}
+
+    [[nodiscard]] constexpr std::uint64_t value() const noexcept { return value_; }
+    [[nodiscard]] constexpr bool operator==(const SketchConstraintId&) const noexcept = default;
 
   private:
     std::uint64_t value_;
@@ -68,6 +80,43 @@ struct SketchElements final {
     [[nodiscard]] bool operator==(const SketchElements&) const = default;
 };
 
+enum class SketchPointPosition { start, end, center };
+enum class SketchConstraintKind {
+    horizontal,
+    vertical,
+    distance,
+    radius,
+    coincident,
+    parallel,
+    perpendicular
+};
+
+struct SketchGeometryReference final {
+    SketchElementId element;
+    SketchPointPosition point{SketchPointPosition::start};
+
+    [[nodiscard]] bool operator==(const SketchGeometryReference&) const = default;
+};
+
+struct SketchConstraint final {
+    SketchConstraintId id;
+    SketchConstraintKind kind;
+    SketchGeometryReference first;
+    std::optional<SketchGeometryReference> second;
+    double value{0.0};
+
+    [[nodiscard]] bool operator==(const SketchConstraint&) const = default;
+};
+
+struct SketchConstraints final {
+    std::vector<SketchConstraint> values;
+    std::uint64_t nextId{1};
+
+    [[nodiscard]] bool operator==(const SketchConstraints&) const = default;
+};
+
 void validateSketchElements(const SketchElements& elements);
+void validateSketchConstraints(const SketchElements& elements,
+                               const SketchConstraints& constraints);
 
 } // namespace voelund::document

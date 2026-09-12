@@ -64,8 +64,14 @@ gehören nicht zum Produktpfad.
 - Ausgewählte Rechtecke bieten Breite und Höhe als getrennte positive Maße;
   ausgewählte Kreise bieten ihren Radius. Alle werkzeugeigenen Maße aktualisieren
   dieselbe temporäre Vorschau und werden erst mit OK als eine Transaktion übernommen.
-- Neue Dateien verwenden `VOLUND 3`; bestehende `VOLUND 1`-Rechtecksketches und
-  `VOLUND 2`-Linien ohne Constraintangabe werden beim Laden verlustfrei migriert.
+- Der Constraint-Kern ist FreeCAD PlaneGCS 1.1.1: als unveränderte, isolierte
+  LGPL-Komponente eingebunden und über eine Völund-eigene C++-Grenze angesprochen.
+  Längen, Radien sowie Horizontal/Vertikal besitzen stabile Constraint-IDs und
+  werden im Sketch-Editor tatsächlich gelöst. Der Adapter unterstützt außerdem
+  Koinzidenz, Parallelität und Rechtwinkligkeit, Freiheitsgrade und Konflikt-IDs;
+  die Mehrfachauswahl dafür folgt im nächsten Bedien-Slice.
+- Neue Dateien verwenden `VOLUND 4`; bestehende `VOLUND 1`-Rechtecksketches,
+  `VOLUND 2`-Linien und `VOLUND 3`-Richtungsconstraints werden beim Laden migriert.
 - Ein temporäres generisches Tool-Panel bietet Parameter, Live-Vorschau, OK und
   Cancel. Erst OK schreibt das Feature in das Dokument; Cancel oder Escape verwirft
   die Vorschau.
@@ -102,11 +108,12 @@ angefordert wird.
 
 ## Technische Schutzmaßnahmen
 
-- Keine neue Produktabhängigkeit wurde für diese Funktionen eingeführt.
+- PlaneGCS ist als gepinnte Solver-Komponente hinzugekommen; Eigen und Boost.Graph
+  sind ausschließlich seine Build-Abhängigkeiten. Herkunft, Lizenz und die
+  Release-Pflichten sind in ADR 0005 und der Provenienzakte dokumentiert.
 - Beide Windows-Backends durchlaufen denselben Funktions- und Regressionsteststand.
-- Acht CTest-Tests prüfen Viewport-Start, Kernel, Dokumenthistorie,
-  Sketch-Profilerkennung, Anwendungs-Neuberechnung, den vollständigen
-  Sketch-Editor-Ablauf, Modulregistrierung und Quellgrößen.
+- Zehn CTest-Tests prüfen zusätzlich den unveränderten PlaneGCS-Kern sowie den
+  Völund-Adapter einschließlich Freiheitsgraden und stabiler Konfliktzuordnung.
 - Regressionstests sichern sowohl die unabhängige Bewegung getrennter Körper als auch
   die gemeinsame Verschiebung eines Join-Ergebnisses einschließlich Undo.
 - Die harte Grenze von 600 Zeilen je gepflegter Quelldatei bleibt aktiv.

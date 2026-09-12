@@ -8,6 +8,8 @@ Völund keeps its direct dependency surface deliberately small. A new direct or 
 |---|---|---|
 | OpenCASCADE Technology 7.9.3 or 8.0.1 | geometry, topology, OCAF, AIS/V3d | 8.0.1 is pinned on Windows; the FreeBSD package is 7.9.3 and uses the compatibility header; FreeBSD port linkage must be audited |
 | Qt Base 6.11.1 | desktop window, widgets, event loop, OpenGL integration | official Windows archive or FreeBSD package; ship only required runtime components |
+| Eigen 3.4+ | PlaneGCS matrix decomposition and nonlinear solving | header-only, solver target only |
+| Boost.Graph 1.75+ | PlaneGCS constraint-system partitioning | solver target only; no Boost.Python |
 
 The C++ standard library is used for general containers, strings, algorithms, errors, filesystem access, and concurrency. No separate convenience library is approved.
 
@@ -35,7 +37,7 @@ insufficient, in which case it requires a separate ADR.
 
 - Python or a Python interpreter;
 - FreeCAD binaries, modules, or libraries;
-- Boost als pauschales Gesamtpaket; einzelne Module dürfen bei belegtem Nutzen geprüft werden;
+- weitere Boost-Module außerhalb des für PlaneGCS belegten Boost.Graph-Graphen;
 - TBB, VTK, FreeImage, or an additional rendering engine;
 - zusätzliche Test-, Logging-, Formatierungs-, Serialisierungs- oder Containerframeworks ohne konkreten Bedarf;
 - WebView, browser runtime, Electron, or Tauri.

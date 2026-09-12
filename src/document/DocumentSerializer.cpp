@@ -17,6 +17,7 @@ namespace {
 
 constexpr std::size_t maximumFeatureCount = 100'000;
 constexpr std::size_t maximumSketchElementCount = 1'000'000;
+constexpr std::size_t maximumSketchConstraintCount = 2'000'000;
 
 [[noreturn]] void invalidDocument(const std::string& reason) {
     throw std::runtime_error("Invalid Völund document: " + reason);
@@ -112,6 +113,68 @@ const char* lineConstraintName(SketchLineConstraint constraint) {
     if (constraint == SketchLineConstraint::vertical)
         return "VERTICAL";
     return "FREE";
+}
+
+SketchPointPosition readPointPosition(std::istringstream& line) {
+    std::string value;
+    if (!(line >> value))
+        invalidDocument("missing sketch point position");
+    if (value == "START")
+        return SketchPointPosition::start;
+    if (value == "END")
+        return SketchPointPosition::end;
+    if (value == "CENTER")
+        return SketchPointPosition::center;
+    invalidDocument("unknown sketch point position");
+}
+
+const char* pointPositionName(SketchPointPosition position) {
+    if (position == SketchPointPosition::end)
+        return "END";
+    if (position == SketchPointPosition::center)
+        return "CENTER";
+    return "START";
+}
+
+SketchConstraintKind readConstraintKind(std::istringstream& line) {
+    std::string value;
+    if (!(line >> value))
+        invalidDocument("missing sketch constraint kind");
+    if (value == "HORIZONTAL")
+        return SketchConstraintKind::horizontal;
+    if (value == "VERTICAL")
+        return SketchConstraintKind::vertical;
+    if (value == "DISTANCE")
+        return SketchConstraintKind::distance;
+    if (value == "RADIUS")
+        return SketchConstraintKind::radius;
+    if (value == "COINCIDENT")
+        return SketchConstraintKind::coincident;
+    if (value == "PARALLEL")
+        return SketchConstraintKind::parallel;
+    if (value == "PERPENDICULAR")
+        return SketchConstraintKind::perpendicular;
+    invalidDocument("unknown sketch constraint kind");
+}
+
+const char* constraintKindName(SketchConstraintKind kind) {
+    switch (kind) {
+    case SketchConstraintKind::horizontal:
+        return "HORIZONTAL";
+    case SketchConstraintKind::vertical:
+        return "VERTICAL";
+    case SketchConstraintKind::distance:
+        return "DISTANCE";
+    case SketchConstraintKind::radius:
+        return "RADIUS";
+    case SketchConstraintKind::coincident:
+        return "COINCIDENT";
+    case SketchConstraintKind::parallel:
+        return "PARALLEL";
+    case SketchConstraintKind::perpendicular:
+        return "PERPENDICULAR";
+    }
+    return "HORIZONTAL";
 }
 
 void writeTransform(std::ostream& output, const kernel::RigidTransform& transform) {
@@ -217,6 +280,10 @@ ParsedFeature readSketchFeature(FeatureId id, std::string name, std::istringstre
             elementCount > maximumSketchElementCount) {
             invalidDocument("invalid sketch element count");
         }
+        std::uint64_t constraintCount = 0;
+        if (context.version >= 4 && (!(line >> constraintCount >> sketch.constraints.nextId) ||
+                                     constraintCount > maximumSketchConstraintCount))
+            invalidDocument("invalid sketch constraint count");
         sketch.elements.values.reserve(static_cast<std::size_t>(elementCount));
         for (std::uint64_t index = 0; index < elementCount; ++index) {
             std::istringstream elementLine(requiredLine(context.input, "sketch element"));
@@ -253,6 +320,51 @@ ParsedFeature readSketchFeature(FeatureId id, std::string name, std::istringstre
             }
             ensureLineComplete(elementLine);
             sketch.elements.values.push_back(SketchElement{SketchElementId{rawId}, geometry});
+        }
+        if (context.version >= 4) {
+            sketch.constraints.values.reserve(static_cast<std::size_t>(constraintCount));
+            for (std::uint64_t index = 0; index < constraintCount; ++index) {
+                std::istringstream constraintLine(requiredLine(context.input, "sketch constraint"));
+                constraintLine.imbue(std::locale::classic());
+                std::string marker;
+                std::uint64_t rawId = 0;
+                std::uint64_t firstElement = 0;
+                std::uint64_t secondElement = 0;
+                if (!(constraintLine >> marker >> rawId) || marker != "CONSTRAINT")
+                    invalidDocument("malformed sketch constraint identity");
+                const SketchConstraintKind kind = readConstraintKind(constraintLine);
+                if (!(constraintLine >> firstElement))
+                    invalidDocument("malformed first sketch constraint reference");
+                const SketchPointPosition firstPoint = readPointPosition(constraintLine);
+                if (!(constraintLine >> secondElement))
+                    invalidDocument("malformed second sketch constraint reference");
+                const SketchPointPosition secondPoint = readPointPosition(constraintLine);
+                double value = 0.0;
+                if (!(constraintLine >> value))
+                    invalidDocument("malformed sketch constraint value");
+                ensureLineComplete(constraintLine);
+                std::optional<SketchGeometryReference> second;
+                if (secondElement != 0)
+                    second = SketchGeometryReference{SketchElementId{secondElement}, secondPoint};
+                sketch.constraints.values.push_back(
+                    {SketchConstraintId{rawId}, kind,
+                     SketchGeometryReference{SketchElementId{firstElement}, firstPoint}, second,
+                     value});
+            }
+        } else if (context.version >= 3) {
+            for (const SketchElement& element : sketch.elements.values) {
+                const auto* legacyLine = std::get_if<SketchLine>(&element.geometry);
+                if (legacyLine == nullptr || legacyLine->constraint == SketchLineConstraint::none)
+                    continue;
+                const SketchConstraintKind kind =
+                    legacyLine->constraint == SketchLineConstraint::horizontal
+                        ? SketchConstraintKind::horizontal
+                        : SketchConstraintKind::vertical;
+                sketch.constraints.values.push_back(
+                    {SketchConstraintId{sketch.constraints.nextId++}, kind,
+                     SketchGeometryReference{element.id, SketchPointPosition::start}, std::nullopt,
+                     0.0});
+            }
         }
     }
     ensureLineComplete(line);
@@ -315,7 +427,7 @@ ParsedFeature readFeature(const std::string& source,
 void DocumentSerializer::write(const ModelDocument& document, std::ostream& output) {
     output.imbue(std::locale::classic());
     output << std::setprecision(std::numeric_limits<double>::max_digits10);
-    output << "VOLUND 3\nNEXT_ID " << document.nextFeatureId_ << "\nFEATURES "
+    output << "VOLUND 4\nNEXT_ID " << document.nextFeatureId_ << "\nFEATURES "
            << document.features_.size() << '\n';
     for (std::size_t index = 0; index < document.features_.size(); ++index) {
         const FeatureDescriptor& feature = document.features_[index];
@@ -347,7 +459,8 @@ void DocumentSerializer::write(const ModelDocument& document, std::ostream& outp
                    << plane.originY << ' ' << plane.originZ << ' ' << plane.normalX << ' '
                    << plane.normalY << ' ' << plane.normalZ << ' ' << plane.xDirectionX << ' '
                    << plane.xDirectionY << ' ' << plane.xDirectionZ << ' '
-                   << sketch.elements.values.size() << ' ' << sketch.elements.nextId << '\n';
+                   << sketch.elements.values.size() << ' ' << sketch.elements.nextId << ' '
+                   << sketch.constraints.values.size() << ' ' << sketch.constraints.nextId << '\n';
             for (const SketchElement& element : sketch.elements.values) {
                 output << "ELEMENT ";
                 if (const auto* line = std::get_if<SketchLine>(&element.geometry)) {
@@ -365,6 +478,19 @@ void DocumentSerializer::write(const ModelDocument& document, std::ostream& outp
                            << circle.center.y << ' ' << circle.radius;
                 }
                 output << '\n';
+            }
+            for (const SketchConstraint& constraint : sketch.constraints.values) {
+                output << "CONSTRAINT " << constraint.id.value() << ' '
+                       << constraintKindName(constraint.kind) << ' '
+                       << constraint.first.element.value() << ' '
+                       << pointPositionName(constraint.first.point) << ' ';
+                if (constraint.second.has_value()) {
+                    output << constraint.second->element.value() << ' '
+                           << pointPositionName(constraint.second->point);
+                } else {
+                    output << "0 START";
+                }
+                output << ' ' << constraint.value << '\n';
             }
             continue;
         } else {
@@ -385,6 +511,7 @@ ModelDocument DocumentSerializer::read(std::istream& input) {
     const std::uint64_t version = header == "VOLUND 1"   ? 1
                                   : header == "VOLUND 2" ? 2
                                   : header == "VOLUND 3" ? 3
+                                  : header == "VOLUND 4" ? 4
                                                          : 0;
     if (version == 0) {
         invalidDocument("unsupported file header or version");

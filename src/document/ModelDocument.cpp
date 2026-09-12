@@ -45,6 +45,7 @@ void validateSketchParameters(const SketchParameters& parameters) {
         throw std::invalid_argument("Sketch plane directions must be perpendicular");
     }
     validateSketchElements(parameters.elements);
+    validateSketchConstraints(parameters.elements, parameters.constraints);
 }
 
 ModelDocument::ModelDocument() : ModelDocument(true) {}

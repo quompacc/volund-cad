@@ -9,6 +9,7 @@
 #include <optional>
 #include <span>
 #include <string>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -52,6 +53,13 @@ struct SketchPlane final {
 struct SketchParameters final {
     SketchPlane plane;
     SketchElements elements;
+    SketchConstraints constraints;
+
+    SketchParameters() = default;
+    SketchParameters(SketchPlane sketchPlane, SketchElements sketchElements,
+                     SketchConstraints sketchConstraints = {})
+        : plane(sketchPlane), elements(std::move(sketchElements)),
+          constraints(std::move(sketchConstraints)) {}
 
     [[nodiscard]] bool operator==(const SketchParameters&) const = default;
 };

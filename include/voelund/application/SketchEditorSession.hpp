@@ -1,6 +1,7 @@
 #pragma once
 
 #include <voelund/document/ModelDocument.hpp>
+#include <voelund/features/SketchConstraintSolver.hpp>
 #include <voelund/features/SketchEvaluation.hpp>
 
 #include <optional>
@@ -41,6 +42,8 @@ class SketchEditorSession final {
     [[nodiscard]] bool removeSelected();
     [[nodiscard]] std::optional<document::SketchElementId> selectedElement() const noexcept;
     [[nodiscard]] std::span<const document::SketchElement> elements() const noexcept;
+    [[nodiscard]] std::span<const document::SketchConstraint> constraints() const noexcept;
+    [[nodiscard]] const features::SketchSolveResult& lastSolveResult() const noexcept;
     [[nodiscard]] std::vector<features::EvaluatedSketchElement> evaluatedElements() const;
     [[nodiscard]] std::size_t closedProfileCount() const;
     [[nodiscard]] bool canAccept() const noexcept;
@@ -52,15 +55,18 @@ class SketchEditorSession final {
     [[nodiscard]] document::SketchGeometry geometry(document::SketchPoint first,
                                                     document::SketchPoint second) const;
     [[nodiscard]] document::SketchParameters parameters(bool includePreview) const;
+    [[nodiscard]] bool solveConstraints();
 
     CadSession& session_;
     document::FeatureId supportFeature_;
     document::SketchPlane plane_;
     document::SketchElements elements_;
+    document::SketchConstraints constraints_;
     std::optional<document::FeatureId> editingFeature_;
     SketchDrawingTool tool_{SketchDrawingTool::line};
     std::optional<document::SketchGeometry> preview_;
     std::optional<document::SketchElementId> selectedElement_;
+    features::SketchSolveResult lastSolveResult_{features::SketchSolveStatus::success, -1, {}};
     bool active_{true};
 };
 

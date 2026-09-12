@@ -1,6 +1,7 @@
 add_library(
     voelund_features STATIC
-    BoxFeature.cpp CylinderFeature.cpp FeatureGraph.cpp SketchEvaluation.cpp SketchProfiles.cpp)
+    BoxFeature.cpp CylinderFeature.cpp FeatureGraph.cpp SketchConstraintSolver.cpp
+    SketchEvaluation.cpp SketchProfiles.cpp)
 
 target_include_directories(
     voelund_features
@@ -13,6 +14,7 @@ target_link_libraries(
         voelund_project_options
         Voelund::Document
         Voelund::Kernel
+        Voelund::PlaneGCS
         TKTopAlgo
 )
 

@@ -8,3 +8,4 @@ Current decisions:
 - [0002: Modular workspaces and command registry](0002-modular-workspaces-and-command-registry.md)
 - [0003: Generic active-tool lifecycle](0003-generic-tool-panel-lifecycle.md)
 - [0004: FreeBSD-first Meridian desktop integration](0004-freebsd-first-meridian-integration.md)
+- [0005: PlaneGCS as the sketch constraint solver](0005-planegcs-sketch-solver.md)

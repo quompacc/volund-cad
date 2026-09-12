@@ -63,23 +63,25 @@ application editor. The preview presentation and the numeric X/Y translation fie
 stay synchronized. Releasing the pointer ends only the gesture; OK or Cancel still
 owns the document transaction boundary.
 
-## First dimension and constraint slice
+## Parametric constraint foundation
 
-A selected line exposes its exact length in the generic tool panel. Changing the
-length keeps the start point and current direction fixed and updates the temporary
-editor geometry immediately. Horizontal and vertical actions rotate the line about
-its start point while preserving that length. The resulting direction constraint is
-part of `SketchLine`, so later whole-element translation preserves it and OK commits
-the dimension and constraint together in one sketch transaction. Removing the
-direction constraint retains the current geometry.
+A selected line exposes its exact length in the generic tool panel. Line length,
+circle radius, horizontal and vertical are independent driving constraint records
+with stable sketch-local IDs. Editing one of these values runs the PlaneGCS adapter
+immediately, updates the temporary geometry and retains the constraint for later
+recomputation. Whole-element translation is solved against the same records, and OK
+commits geometry and constraints together in one transaction. The legacy direction
+field on `SketchLine` is temporarily mirrored for version-3 compatibility; it is no
+longer the parametric source of truth.
 
 Rectangles expose independent positive width and height values while preserving the
-sign of their original drawing directions. Circles expose their positive radius.
-These values update the same temporary editor geometry, participate in the single OK
-transaction and use the existing version-3 geometry records for persistence.
+sign of their original drawing directions. These remain direct macro-geometry values
+for now and participate in the same single OK transaction.
 
-Endpoint, coincident, parallel and perpendicular relationships remain future
-constraint-system work. Persistent profile selection also remains a later slice.
+The document and solver adapter already support endpoint coincidence, parallel and
+perpendicular relations, degrees-of-freedom reporting and stable conflict IDs. Their
+multi-selection UI remains the next Sketcher slice. Persistent profile selection also
+remains later work.
 
 Rectangles and circles each form a closed profile. Connected line chains form a
 profile when at least three non-degenerate elements close within the modeling
@@ -89,15 +91,16 @@ profiles in the sketch. Profile selection and persistent profile IDs are intenti
 reserved for a later editor slice; the stable element IDs and profile-to-element
 mapping are already suitable for those boundaries.
 
-## File format version 3
+## File format version 4
 
-New saves use `VOLUND 3`. A sketch feature line stores its support, plane, element
-count and next element ID. Exactly that many following `ELEMENT` records store
-`LINE`, `RECTANGLE` or `CIRCLE` geometry and its stable ID. Line records additionally
-store `FREE`, `HORIZONTAL` or `VERTICAL` as their direction constraint.
+New saves use `VOLUND 4`. A sketch feature line stores its support, plane, element
+count, next element ID, constraint count and next constraint ID. `ELEMENT` records
+store geometry and stable IDs; following `CONSTRAINT` records store their stable ID,
+kind, one or two geometry references and an optional driving value.
 
-The reader continues to accept `VOLUND 1` and `VOLUND 2`. A version-1 inline rectangle
+The reader continues to accept `VOLUND 1`, `VOLUND 2` and `VOLUND 3`. A version-1 inline rectangle
 is migrated in memory to a `RECTANGLE` element with ID 1 and next ID 2; version-2 lines
-are migrated with a free direction. Saving either loaded document writes version 3.
+are migrated with a free direction. Version-3 horizontal and vertical line fields
+are migrated to independent constraint records. Saving any loaded document writes version 4.
 Invalid, duplicate or zero element IDs, non-finite coordinates, degenerate elements,
 inconsistent next IDs and unsatisfied line constraints are rejected while loading.

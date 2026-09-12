@@ -73,4 +73,74 @@ void validateSketchElements(const SketchElements& elements) {
     }
 }
 
+void validateSketchConstraints(const SketchElements& elements,
+                               const SketchConstraints& constraints) {
+    std::uint64_t maximumId = 0;
+    std::vector<std::uint64_t> ids;
+    ids.reserve(constraints.values.size());
+    const auto findElement = [&elements](SketchElementId id) -> const SketchElement& {
+        const auto match = std::ranges::find(elements.values, id, &SketchElement::id);
+        if (match == elements.values.end())
+            throw std::invalid_argument("Sketch constraint references an unknown element");
+        return *match;
+    };
+    const auto requireLine = [&findElement](const SketchGeometryReference& reference) {
+        if (!std::holds_alternative<SketchLine>(findElement(reference.element).geometry))
+            throw std::invalid_argument("Sketch constraint requires a line");
+    };
+    const auto requirePoint = [&findElement](const SketchGeometryReference& reference) {
+        const SketchGeometry& geometry = findElement(reference.element).geometry;
+        if (std::holds_alternative<SketchLine>(geometry)) {
+            if (reference.point == SketchPointPosition::center)
+                throw std::invalid_argument("Sketch line has no center point");
+            return;
+        }
+        if (std::holds_alternative<SketchCircle>(geometry) &&
+            reference.point == SketchPointPosition::center)
+            return;
+        throw std::invalid_argument("Sketch constraint reference is not a supported point");
+    };
+
+    for (const SketchConstraint& constraint : constraints.values) {
+        if (constraint.id.value() == 0)
+            throw std::invalid_argument("Sketch constraint ID must not be zero");
+        maximumId = std::max(maximumId, constraint.id.value());
+        ids.push_back(constraint.id.value());
+        if (!std::isfinite(constraint.value))
+            throw std::invalid_argument("Sketch constraint value must be finite");
+
+        if (constraint.kind == SketchConstraintKind::horizontal ||
+            constraint.kind == SketchConstraintKind::vertical ||
+            constraint.kind == SketchConstraintKind::distance) {
+            requireLine(constraint.first);
+            if (constraint.second.has_value())
+                throw std::invalid_argument("Unary sketch constraint has a second reference");
+            if (constraint.kind == SketchConstraintKind::distance &&
+                constraint.value <= minimumLength)
+                throw std::invalid_argument("Sketch distance constraint must be positive");
+        } else if (constraint.kind == SketchConstraintKind::radius) {
+            if (!std::holds_alternative<SketchCircle>(
+                    findElement(constraint.first.element).geometry))
+                throw std::invalid_argument("Sketch radius constraint requires a circle");
+            if (constraint.second.has_value() || constraint.value <= minimumLength)
+                throw std::invalid_argument("Sketch radius constraint must be unary and positive");
+        } else {
+            if (!constraint.second.has_value())
+                throw std::invalid_argument("Binary sketch constraint needs a second reference");
+            if (constraint.kind == SketchConstraintKind::coincident) {
+                requirePoint(constraint.first);
+                requirePoint(*constraint.second);
+            } else {
+                requireLine(constraint.first);
+                requireLine(*constraint.second);
+            }
+        }
+    }
+    std::ranges::sort(ids);
+    if (std::ranges::adjacent_find(ids) != ids.end())
+        throw std::invalid_argument("Sketch constraint IDs must be unique");
+    if (constraints.nextId <= maximumId)
+        throw std::invalid_argument("Sketch next constraint ID must exceed existing IDs");
+}
+
 } // namespace voelund::document

@@ -242,7 +242,12 @@ bool lineDimensionAndConstraintPersistThroughEditing() {
     const auto& initialLine =
         std::get<voelund::document::SketchLine>(constrained.elements.values.front().geometry);
     if (initialLine.end != voelund::document::SketchPoint{10.0, 0.0} ||
-        initialLine.constraint != voelund::document::SketchLineConstraint::horizontal) {
+        initialLine.constraint != voelund::document::SketchLineConstraint::horizontal ||
+        constrained.constraints.values.size() != 2 ||
+        constrained.constraints.values[0].kind !=
+            voelund::document::SketchConstraintKind::distance ||
+        constrained.constraints.values[1].kind !=
+            voelund::document::SketchConstraintKind::horizontal) {
         return false;
     }
 
@@ -300,6 +305,9 @@ bool rectangleAndCircleDimensionsPersist() {
     const auto& circle =
         std::get<voelund::document::SketchCircle>(changed.elements.values[1].geometry);
     if (rectangle.second != voelund::document::SketchPoint{-5.0, -2.0} || circle.radius != 3.5 ||
+        changed.constraints.values.size() != 1 ||
+        changed.constraints.values.front().kind !=
+            voelund::document::SketchConstraintKind::radius ||
         !session.undo() || session.features().size() != 1 || !session.redo() ||
         session.sketchParameters(sketchId) != changed)
         return false;
@@ -312,6 +320,19 @@ bool rectangleAndCircleDimensionsPersist() {
     std::error_code error;
     std::filesystem::remove(path, error);
     return !error && loaded.sketchParameters(sketchId) == changed;
+}
+
+bool unchangedMeasurementCanBecomeDrivingConstraint() {
+    voelund::application::CadSession session;
+    session.newDocument();
+    const auto support = session.addBoxFeature();
+    voelund::application::SketchEditorSession editor(session, support, plane);
+    if (!add(editor, {0.0, 0.0}, {3.0, 4.0}, 1) ||
+        !editor.selectElement(voelund::document::SketchElementId{1}) ||
+        !editor.setSelectedLineLength(5.0) || editor.constraints().size() != 1 ||
+        editor.setSelectedLineLength(5.0))
+        return false;
+    return editor.lastSolveResult().status == voelund::features::SketchSolveStatus::success;
 }
 
 } // namespace
@@ -359,6 +380,10 @@ int main() {
     }
     if (!rectangleAndCircleDimensionsPersist()) {
         std::cerr << "Rectangle or circle dimensions did not persist\n";
+        return 1;
+    }
+    if (!unchangedMeasurementCanBecomeDrivingConstraint()) {
+        std::cerr << "Unchanged measurement did not become a driving constraint\n";
         return 1;
     }
     return 0;

@@ -28,6 +28,26 @@ target_link_libraries(
 
 add_test(NAME features.sketch_profiles COMMAND voelund_sketch_profile_tests)
 
+add_executable(voelund_planegcs_tests unit/PlaneGcsTests.cpp)
+target_link_libraries(
+    voelund_planegcs_tests
+    PRIVATE
+        voelund_project_options
+        Voelund::PlaneGCS
+)
+
+add_test(NAME features.planegcs_solver COMMAND voelund_planegcs_tests)
+
+add_executable(voelund_sketch_constraint_tests unit/SketchConstraintSolverTests.cpp)
+target_link_libraries(
+    voelund_sketch_constraint_tests
+    PRIVATE
+        voelund_project_options
+        Voelund::Features
+)
+
+add_test(NAME features.sketch_constraint_adapter COMMAND voelund_sketch_constraint_tests)
+
 add_executable(voelund_application_tests integration/CadSessionTests.cpp)
 target_link_libraries(
     voelund_application_tests

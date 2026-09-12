@@ -10,6 +10,28 @@
 #include <utility>
 
 namespace voelund::application {
+namespace {
+
+bool upsertUnaryConstraint(document::SketchConstraints& constraints,
+                           document::SketchElementId element, document::SketchConstraintKind kind,
+                           double value = 0.0) {
+    const auto match = std::ranges::find_if(constraints.values, [element, kind](const auto& item) {
+        return item.kind == kind && item.first.element == element && !item.second.has_value();
+    });
+    if (match != constraints.values.end()) {
+        if (match->value == value)
+            return false;
+        match->value = value;
+        return true;
+    }
+    constraints.values.push_back(
+        {document::SketchConstraintId{constraints.nextId++}, kind,
+         document::SketchGeometryReference{element, document::SketchPointPosition::start},
+         std::nullopt, value});
+    return true;
+}
+
+} // namespace
 
 SketchEditorSession::SketchEditorSession(CadSession& session, document::FeatureId supportFeature,
                                          document::SketchPlane plane)
@@ -19,8 +41,9 @@ SketchEditorSession::SketchEditorSession(CadSession& session, document::FeatureI
                                          document::FeatureId supportFeature,
                                          document::SketchParameters parameters)
     : session_(session), supportFeature_(supportFeature), plane_(parameters.plane),
-      elements_(std::move(parameters.elements)), editingFeature_(sketchFeature) {
-    document::validateSketchParameters({plane_, elements_});
+      elements_(std::move(parameters.elements)), constraints_(std::move(parameters.constraints)),
+      editingFeature_(sketchFeature) {
+    document::validateSketchParameters({plane_, elements_, constraints_});
 }
 
 void SketchEditorSession::setTool(SketchDrawingTool tool) noexcept {
@@ -89,6 +112,7 @@ bool SketchEditorSession::translateSelected(double deltaX, double deltaY) {
         std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);
     if (match == elements_.values.end())
         return false;
+    const document::SketchElements previousElements = elements_;
     std::visit(
         [deltaX, deltaY](auto& geometry) {
             using Geometry = std::decay_t<decltype(geometry)>;
@@ -109,7 +133,12 @@ bool SketchEditorSession::translateSelected(double deltaX, double deltaY) {
         },
         match->geometry);
     document::validateSketchElements(elements_);
-    return deltaX != 0.0 || deltaY != 0.0;
+    if (deltaX == 0.0 && deltaY == 0.0)
+        return false;
+    if (solveConstraints())
+        return true;
+    elements_ = previousElements;
+    return false;
 }
 
 std::optional<double> SketchEditorSession::selectedLineLength() const noexcept {
@@ -171,8 +200,17 @@ SketchEditorSession::selectedLineConstraint() const noexcept {
     if (match == elements_.values.end())
         return std::nullopt;
     const auto* line = std::get_if<document::SketchLine>(&match->geometry);
-    return line == nullptr ? std::nullopt
-                           : std::optional<document::SketchLineConstraint>{line->constraint};
+    if (line == nullptr)
+        return std::nullopt;
+    for (const document::SketchConstraint& constraint : constraints_.values) {
+        if (constraint.first.element != *selectedElement_)
+            continue;
+        if (constraint.kind == document::SketchConstraintKind::horizontal)
+            return document::SketchLineConstraint::horizontal;
+        if (constraint.kind == document::SketchConstraintKind::vertical)
+            return document::SketchLineConstraint::vertical;
+    }
+    return line->constraint;
 }
 
 bool SketchEditorSession::setSelectedLineLength(double length) {
@@ -185,12 +223,22 @@ bool SketchEditorSession::setSelectedLineLength(double length) {
     auto* line = std::get_if<document::SketchLine>(&match->geometry);
     if (line == nullptr)
         return false;
+    const document::SketchElements previousElements = elements_;
+    const document::SketchConstraints previousConstraints = constraints_;
     const double current = std::hypot(line->end.x - line->start.x, line->end.y - line->start.y);
     const double scale = length / current;
     line->end.x = line->start.x + (line->end.x - line->start.x) * scale;
     line->end.y = line->start.y + (line->end.y - line->start.y) * scale;
+    const bool constraintChanged = upsertUnaryConstraint(
+        constraints_, *selectedElement_, document::SketchConstraintKind::distance, length);
     document::validateSketchElements(elements_);
-    return length != current;
+    if (length == current && !constraintChanged)
+        return false;
+    if (solveConstraints())
+        return true;
+    elements_ = previousElements;
+    constraints_ = previousConstraints;
+    return false;
 }
 
 bool SketchEditorSession::setSelectedRectangleWidth(double width) {
@@ -237,10 +285,20 @@ bool SketchEditorSession::setSelectedCircleRadius(double radius) {
     auto* circle = std::get_if<document::SketchCircle>(&match->geometry);
     if (circle == nullptr)
         return false;
+    const document::SketchElements previousElements = elements_;
+    const document::SketchConstraints previousConstraints = constraints_;
     const double current = circle->radius;
     circle->radius = radius;
+    const bool constraintChanged = upsertUnaryConstraint(
+        constraints_, *selectedElement_, document::SketchConstraintKind::radius, radius);
     document::validateSketchElements(elements_);
-    return radius != current;
+    if (radius == current && !constraintChanged)
+        return false;
+    if (solveConstraints())
+        return true;
+    elements_ = previousElements;
+    constraints_ = previousConstraints;
+    return false;
 }
 
 bool SketchEditorSession::setSelectedLineConstraint(document::SketchLineConstraint constraint) {
@@ -251,8 +309,34 @@ bool SketchEditorSession::setSelectedLineConstraint(document::SketchLineConstrai
     if (match == elements_.values.end())
         return false;
     auto* line = std::get_if<document::SketchLine>(&match->geometry);
-    if (line == nullptr || line->constraint == constraint)
+    if (line == nullptr)
         return false;
+    std::size_t directionConstraintCount = 0;
+    bool hasRequestedConstraint = false;
+    for (const auto& item : constraints_.values) {
+        if (item.first.element != *selectedElement_ ||
+            (item.kind != document::SketchConstraintKind::horizontal &&
+             item.kind != document::SketchConstraintKind::vertical))
+            continue;
+        ++directionConstraintCount;
+        hasRequestedConstraint = hasRequestedConstraint ||
+                                 (constraint == document::SketchLineConstraint::horizontal &&
+                                  item.kind == document::SketchConstraintKind::horizontal) ||
+                                 (constraint == document::SketchLineConstraint::vertical &&
+                                  item.kind == document::SketchConstraintKind::vertical);
+    }
+    if (line->constraint == constraint &&
+        ((constraint == document::SketchLineConstraint::none && directionConstraintCount == 0) ||
+         (constraint != document::SketchLineConstraint::none && directionConstraintCount == 1 &&
+          hasRequestedConstraint)))
+        return false;
+    const document::SketchElements previousElements = elements_;
+    const document::SketchConstraints previousConstraints = constraints_;
+    std::erase_if(constraints_.values, [id = *selectedElement_](const auto& item) {
+        return item.first.element == id &&
+               (item.kind == document::SketchConstraintKind::horizontal ||
+                item.kind == document::SketchConstraintKind::vertical);
+    });
     const double length = std::hypot(line->end.x - line->start.x, line->end.y - line->start.y);
     if (constraint == document::SketchLineConstraint::horizontal) {
         const double direction = line->end.x < line->start.x ? -1.0 : 1.0;
@@ -262,8 +346,18 @@ bool SketchEditorSession::setSelectedLineConstraint(document::SketchLineConstrai
         line->end = {line->start.x, line->start.y + direction * length};
     }
     line->constraint = constraint;
+    if (constraint == document::SketchLineConstraint::horizontal)
+        static_cast<void>(upsertUnaryConstraint(constraints_, *selectedElement_,
+                                                document::SketchConstraintKind::horizontal));
+    else if (constraint == document::SketchLineConstraint::vertical)
+        static_cast<void>(upsertUnaryConstraint(constraints_, *selectedElement_,
+                                                document::SketchConstraintKind::vertical));
     document::validateSketchElements(elements_);
-    return true;
+    if (solveConstraints())
+        return true;
+    elements_ = previousElements;
+    constraints_ = previousConstraints;
+    return false;
 }
 
 bool SketchEditorSession::removeSelected() {
@@ -273,6 +367,10 @@ bool SketchEditorSession::removeSelected() {
         std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);
     if (match == elements_.values.end())
         return false;
+    std::erase_if(constraints_.values, [id = *selectedElement_](const auto& constraint) {
+        return constraint.first.element == id ||
+               (constraint.second.has_value() && constraint.second->element == id);
+    });
     elements_.values.erase(match);
     selectedElement_.reset();
     preview_.reset();
@@ -287,12 +385,29 @@ std::span<const document::SketchElement> SketchEditorSession::elements() const n
     return elements_.values;
 }
 
+std::span<const document::SketchConstraint> SketchEditorSession::constraints() const noexcept {
+    return constraints_.values;
+}
+
+const features::SketchSolveResult& SketchEditorSession::lastSolveResult() const noexcept {
+    return lastSolveResult_;
+}
+
 document::SketchParameters SketchEditorSession::parameters(bool includePreview) const {
     document::SketchElements result = elements_;
     if (includePreview && preview_.has_value()) {
         result.values.push_back({document::SketchElementId{result.nextId}, *preview_});
     }
-    return {plane_, std::move(result)};
+    return {plane_, std::move(result), constraints_};
+}
+
+bool SketchEditorSession::solveConstraints() {
+    document::SketchParameters sketch{plane_, elements_, constraints_};
+    lastSolveResult_ = features::solveSketchConstraints(sketch);
+    if (lastSolveResult_.status != features::SketchSolveStatus::success)
+        return false;
+    elements_ = std::move(sketch.elements);
+    return true;
 }
 
 std::vector<features::EvaluatedSketchElement> SketchEditorSession::evaluatedElements() const {

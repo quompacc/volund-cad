@@ -7,6 +7,8 @@
     {
       "name": "opencascade",
       "default-features": false
-    }
+    },
+    "boost-graph",
+    "eigen3"
   ]
 }
