@@ -129,18 +129,18 @@ document::FeatureId CadSession::addSketchExtrusion(document::FeatureId supportFe
         distance);
 }
 
-document::FeatureId CadSession::addSketchFeature(
-    document::FeatureId supportFeature,
-    const document::SketchParameters& sketch) {
+document::FeatureId CadSession::addSketchFeature(document::FeatureId supportFeature,
+                                                 const document::SketchParameters& sketch) {
     if (!document_.contains(supportFeature)) {
         throw std::invalid_argument("Sketch support is not in the document");
     }
     const std::size_t sequence =
         featureCount(document_.features(), document::FeatureKind::sketch) + 1;
-    const document::FeatureId id = document_.addSketchFeature(
-        "Sketch " + std::to_string(sequence), supportFeature, sketch);
+    const document::FeatureId id =
+        document_.addSketchFeature("Sketch " + std::to_string(sequence), supportFeature, sketch);
     selectedFeature_ = id;
     selectedSketchElement_.reset();
+    selectedSketchProfiles_.clear();
     static_cast<void>(recompute());
     return id;
 }
@@ -162,7 +162,7 @@ document::FeatureId CadSession::addSketchExtrusion(document::FeatureId supportFe
         featureCount(document_.features(), document::FeatureKind::extrusion) + 1;
     const document::FeatureId extrusionId =
         document_.addExtrusionFeature("Extrusion " + std::to_string(extrusionSequence), sketchId,
-                                      document::ExtrusionParameters{distance});
+                                      document::ExtrusionParameters{distance, {}});
     selectedFeature_ = extrusionId;
     static_cast<void>(recompute());
     return extrusionId;
@@ -190,6 +190,7 @@ bool CadSession::selectFeature(document::FeatureId featureId) noexcept {
     }
     if (selectedFeature_ != featureId) {
         selectedSketchElement_.reset();
+        selectedSketchProfiles_.clear();
     }
     selectedFeature_ = featureId;
     return true;
@@ -209,6 +210,7 @@ bool CadSession::selectSketchElement(document::SketchElementId elementId) noexce
         return false;
     }
     selectedSketchElement_ = elementId;
+    selectedSketchProfiles_.clear();
     return true;
 }
 
@@ -216,18 +218,19 @@ const document::SketchParameters& CadSession::selectedSketchParameters() const {
     return document_.sketchParameters(selectedFeature_.value());
 }
 
-const document::SketchParameters& CadSession::sketchParameters(
-    document::FeatureId featureId) const {
+const document::SketchParameters&
+CadSession::sketchParameters(document::FeatureId featureId) const {
     return document_.sketchParameters(featureId);
 }
 
-bool CadSession::setSketchParameters(
-    document::FeatureId featureId, const document::SketchParameters& parameters) {
+bool CadSession::setSketchParameters(document::FeatureId featureId,
+                                     const document::SketchParameters& parameters) {
     if (!document_.setSketchParameters(featureId, parameters)) {
         return false;
     }
     selectedFeature_ = featureId;
     selectedSketchElement_.reset();
+    selectedSketchProfiles_.clear();
     return recompute();
 }
 
@@ -413,6 +416,7 @@ void CadSession::newDocument() {
     currentFeatures_.clear();
     selectedFeature_.reset();
     selectedSketchElement_.reset();
+    selectedSketchProfiles_.clear();
     markFeaturesCurrent();
     cleanDocumentState_ = serializedDocument();
 }
@@ -450,6 +454,7 @@ void CadSession::loadDocument(const std::filesystem::path& path) {
     selectedFeature_ = document_.features().empty() ? std::optional<document::FeatureId>{}
                                                     : document_.features().back().id;
     selectedSketchElement_.reset();
+    selectedSketchProfiles_.clear();
     markFeaturesCurrent();
     cleanDocumentState_ = serializedDocument();
 }
@@ -512,16 +517,17 @@ void CadSession::normalizeSelection() noexcept {
         }
         if (isFeatureKind(document_, *selectedFeature_, document::FeatureKind::sketch)) {
             const auto& elements = document_.sketchParameters(*selectedFeature_).elements.values;
-            if (std::ranges::find(
-                    elements, *selectedSketchElement_, &document::SketchElement::id)
-                != elements.end()) {
+            if (std::ranges::find(elements, *selectedSketchElement_,
+                                  &document::SketchElement::id) != elements.end()) {
                 return;
             }
         }
         selectedSketchElement_.reset();
+        selectedSketchProfiles_.clear();
         return;
     }
     selectedSketchElement_.reset();
+    selectedSketchProfiles_.clear();
     selectedFeature_ = document_.features().empty() ? std::optional<document::FeatureId>{}
                                                     : document_.features().back().id;
 }

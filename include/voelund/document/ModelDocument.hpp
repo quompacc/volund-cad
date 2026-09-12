@@ -68,6 +68,7 @@ void validateSketchParameters(const SketchParameters& parameters);
 
 struct ExtrusionParameters final {
     double distance;
+    std::vector<SketchProfileId> profiles;
 
     [[nodiscard]] bool operator==(const ExtrusionParameters&) const = default;
 };

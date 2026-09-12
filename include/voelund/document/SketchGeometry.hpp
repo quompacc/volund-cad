@@ -29,6 +29,17 @@ class SketchConstraintId final {
     std::uint64_t value_;
 };
 
+class SketchProfileId final {
+  public:
+    constexpr explicit SketchProfileId(std::uint64_t value) noexcept : value_(value) {}
+
+    [[nodiscard]] constexpr std::uint64_t value() const noexcept { return value_; }
+    [[nodiscard]] constexpr bool operator==(const SketchProfileId&) const noexcept = default;
+
+  private:
+    std::uint64_t value_;
+};
+
 struct SketchPoint final {
     double x;
     double y;

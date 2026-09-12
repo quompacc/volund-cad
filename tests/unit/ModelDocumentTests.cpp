@@ -134,7 +134,7 @@ bool sketchElementsKeepStableIdsThroughHistoryAndSerialization() {
     }
     std::ostringstream output;
     voelund::document::DocumentSerializer::write(document, output);
-    if (!output.str().starts_with("VOLUND 4\n"))
+    if (!output.str().starts_with("VOLUND 5\n"))
         return false;
     std::istringstream input(output.str());
     const auto loaded = voelund::document::DocumentSerializer::read(input);
@@ -154,6 +154,16 @@ bool versionTwoLineMigratesWithoutConstraint() {
         loaded.sketchParameters(voelund::document::FeatureId{2}).elements.values.front().geometry;
     const auto& line = std::get<voelund::document::SketchLine>(geometry);
     return line.constraint == voelund::document::SketchLineConstraint::none;
+}
+
+bool versionFourExtrusionMigratesToAllProfiles() {
+    std::istringstream input("VOLUND 4\nNEXT_ID 4\nFEATURES 3\n"
+                             "BOX 1 \"Support\" 20 20 30 0 0 0 0 0 0\n"
+                             "SKETCH 2 \"Sketch\" 1 0 0 30 0 0 1 1 0 0 1 2 0 1\n"
+                             "ELEMENT RECTANGLE 1 1 1 4 4\n"
+                             "EXTRUSION 3 \"Extrusion\" 2 5\n");
+    const auto loaded = voelund::document::DocumentSerializer::read(input);
+    return loaded.extrusionParameters(voelund::document::FeatureId{3}).profiles.empty();
 }
 
 bool unsatisfiedLineConstraintIsRejected() {
@@ -236,6 +246,10 @@ int main() {
     }
     if (!versionTwoLineMigratesWithoutConstraint()) {
         std::cerr << "Version two sketch constraint migration failed\n";
+        return 1;
+    }
+    if (!versionFourExtrusionMigratesToAllProfiles()) {
+        std::cerr << "Version-four extrusion migration failed\n";
         return 1;
     }
     if (!unsatisfiedLineConstraintIsRejected()) {

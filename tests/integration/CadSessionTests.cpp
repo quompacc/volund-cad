@@ -395,7 +395,7 @@ bool repeatedSketchExtrusionsRemainConnected() {
         session.featureStates().back().status ==
             voelund::application::FeatureRuntimeStatus::current &&
         std::abs(volumeOf(session.currentShape()) - expectedVolume) < 1.0e-4;
-    if (!initialChainIsValid || !session.setSelectedExtrusionParameters({20.0})) {
+    if (!initialChainIsValid || !session.setSelectedExtrusionParameters({20.0, {}})) {
         return false;
     }
     const double editedVolume = boxVolume + 360.0 + 320.0;
@@ -435,15 +435,13 @@ bool multipleSketchElementsExtrudeAllClosedProfiles() {
         return false;
     }
     const auto evaluatedElements = session.selectedSketchElements();
-    if (evaluatedElements.size() != elements.size()
-        || std::ranges::any_of(
-            evaluatedElements,
-            [](const auto& element) { return element.shape.IsNull(); })
-        || !session.selectSketchElement(voelund::document::SketchElementId{4})
-        || session.selectedSketchElement() != voelund::document::SketchElementId{4}
-        || session.selectSketchElement(voelund::document::SketchElementId{99})
-        || !session.selectFeature(extrusionId)
-        || session.selectedSketchElement().has_value()) {
+    if (evaluatedElements.size() != elements.size() ||
+        std::ranges::any_of(evaluatedElements,
+                            [](const auto& element) { return element.shape.IsNull(); }) ||
+        !session.selectSketchElement(voelund::document::SketchElementId{4}) ||
+        session.selectedSketchElement() != voelund::document::SketchElementId{4} ||
+        session.selectSketchElement(voelund::document::SketchElementId{99}) ||
+        !session.selectFeature(extrusionId) || session.selectedSketchElement().has_value()) {
         return false;
     }
     const std::filesystem::path path =
@@ -454,6 +452,52 @@ bool multipleSketchElementsExtrudeAllClosedProfiles() {
     std::error_code error;
     std::filesystem::remove(path, error);
     return !error && loaded.features().size() == 3 &&
+           std::abs(volumeOf(loaded.currentShape()) - expected) < 1.0e-4;
+}
+
+bool selectedSketchProfilesExtrudeAndRoundtrip() {
+    using namespace voelund;
+    application::CadSession session;
+    session.newDocument();
+    const auto boxId = session.addBoxFeature();
+    const double boxVolume = volumeOf(session.currentShape());
+    const document::SketchPlane plane{0.0, 0.0, 40.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0};
+    const std::vector<document::SketchElement> elements{
+        {document::SketchElementId{1}, document::SketchRectangle{2.0, 3.0, 8.0, 9.0}},
+        {document::SketchElementId{2}, document::SketchCircle{{14.0, 8.0}, 2.0}},
+        {document::SketchElementId{3}, document::SketchLine{{10.0, 15.0}, {14.0, 15.0}}},
+        {document::SketchElementId{4}, document::SketchLine{{14.0, 15.0}, {10.0, 19.0}}},
+        {document::SketchElementId{5}, document::SketchLine{{10.0, 19.0}, {10.0, 15.0}}},
+        {document::SketchElementId{6}, document::SketchLine{{17.0, 17.0}, {19.0, 17.0}}}};
+    const auto sketchId = session.addSketchFeature(
+        boxId, document::SketchParameters{plane, document::SketchElements{elements, 7}});
+    if (!session.selectSketchProfileByElement(document::SketchElementId{4}, false) ||
+        !session.selectSketchProfileByElement(document::SketchElementId{2}, true) ||
+        session.selectSketchProfileByElement(document::SketchElementId{6}, true) ||
+        session.selectedSketchProfiles().size() != 2 ||
+        session.selectedSketchProfileElements().size() != 4 ||
+        !session.canExtrudeSelectedSketchProfiles())
+        return false;
+
+    const std::vector<document::SketchProfileId> selected(session.selectedSketchProfiles().begin(),
+                                                          session.selectedSketchProfiles().end());
+    const auto extrusionId = session.addSketchProfileExtrusion(sketchId, selected, 10.0);
+    const double expected = boxVolume + (8.0 + std::numbers::pi * 4.0) * 10.0;
+    if (session.selectedFeature() != extrusionId ||
+        session.selectedExtrusionParameters().profiles != selected ||
+        std::abs(volumeOf(session.currentShape()) - expected) >= 1.0e-4 || !session.undo() ||
+        std::abs(volumeOf(session.currentShape()) - boxVolume) >= 1.0e-4 || !session.redo() ||
+        std::abs(volumeOf(session.currentShape()) - expected) >= 1.0e-4)
+        return false;
+
+    const std::filesystem::path path =
+        std::filesystem::current_path() / "voelund-selected-profiles-roundtrip.volund";
+    session.saveDocument(path);
+    application::CadSession loaded;
+    loaded.loadDocument(path);
+    std::error_code error;
+    std::filesystem::remove(path, error);
+    return !error && loaded.selectedExtrusionParameters().profiles == selected &&
            std::abs(volumeOf(loaded.currentShape()) - expected) < 1.0e-4;
 }
 
@@ -530,6 +574,10 @@ int main() {
     }
     if (!multipleSketchElementsExtrudeAllClosedProfiles()) {
         std::cerr << "Multiple sketch profile extrusion test failed\n";
+        return 1;
+    }
+    if (!selectedSketchProfilesExtrudeAndRoundtrip()) {
+        std::cerr << "Selected sketch profile extrusion test failed\n";
         return 1;
     }
     return 0;

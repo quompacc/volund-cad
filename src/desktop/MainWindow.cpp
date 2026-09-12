@@ -142,6 +142,13 @@ void MainWindow::createWorkspaceToolbar() {
         }
         static_cast<void>(impl_->sketchEditorTool->beginSelectedSketch());
     };
+    services.extrudeProfiles = [this]() {
+        if (impl_->sketchEditorTool->isActive())
+            impl_->sketchEditorTool->cancel();
+        if (impl_->sketchExtrusionTool->isActive())
+            impl_->sketchExtrusionTool->cancel();
+        impl_->sketchExtrusionTool->beginSelectedProfiles();
+    };
     services.transform = [this](bool enabled) {
         impl_->viewport->setTransformToolEnabled(enabled);
     };
@@ -152,6 +159,9 @@ void MainWindow::createWorkspaceToolbar() {
         const auto selected = impl_->session.selectedFeature();
         return selected.has_value() &&
                impl_->session.selectedFeatureDescriptor().kind == document::FeatureKind::sketch;
+    };
+    services.canExtrudeProfiles = [this]() {
+        return impl_->session.canExtrudeSelectedSketchProfiles();
     };
     services.canTransform = [this]() {
         const auto selected = impl_->session.selectedFeature();
@@ -272,7 +282,21 @@ void MainWindow::connectInteractions() {
                 return;
             }
             const std::uint64_t id = intent.elementId;
-            if (impl_->session.selectSketchElement(document::SketchElementId{id})) {
+            if (impl_->session.selectSketchProfileByElement(document::SketchElementId{id},
+                                                            intent.additive)) {
+                const auto selectedElements = impl_->session.selectedSketchProfileElements();
+                std::vector<std::uint64_t> selectedIds;
+                selectedIds.reserve(selectedElements.size());
+                for (document::SketchElementId selected : selectedElements)
+                    selectedIds.push_back(selected.value());
+                impl_->viewport->setSelectedSketchElements(selectedIds);
+                syncProperties();
+                impl_->workspaceToolbar->refreshEnabled();
+                statusBar()->showMessage(tr("Sketch profile selected"), 2000);
+                return;
+            }
+            if (!intent.additive &&
+                impl_->session.selectSketchElement(document::SketchElementId{id})) {
                 impl_->viewport->setSelectedSketchElement(id);
                 syncProperties();
                 statusBar()->showMessage(tr("Sketch element selected"), 2000);
@@ -391,10 +415,18 @@ void MainWindow::syncTreeStatus() {
 void MainWindow::syncSketchPresentation() {
     const std::vector<viewport::SceneSketchElement> elements =
         makeSceneSketchElements(impl_->session);
-    const auto selected = impl_->session.selectedSketchElement();
-    impl_->viewport->setSketchElements(
-        elements,
-        selected.has_value() ? std::optional<std::uint64_t>{selected->value()} : std::nullopt);
+    impl_->viewport->setSketchElements(elements);
+    const auto profileElements = impl_->session.selectedSketchProfileElements();
+    std::vector<std::uint64_t> selectedIds;
+    selectedIds.reserve(profileElements.size());
+    for (document::SketchElementId selected : profileElements)
+        selectedIds.push_back(selected.value());
+    if (selectedIds.empty()) {
+        const auto selected = impl_->session.selectedSketchElement();
+        if (selected.has_value())
+            selectedIds.push_back(selected->value());
+    }
+    impl_->viewport->setSelectedSketchElements(selectedIds);
 }
 
 void MainWindow::syncTransformTool() {

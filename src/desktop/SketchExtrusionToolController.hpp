@@ -1,9 +1,11 @@
 #pragma once
 
+#include <voelund/document/ModelDocument.hpp>
 #include <voelund/viewport/CadViewport.hpp>
 
 #include <functional>
 #include <optional>
+#include <vector>
 
 namespace voelund::application {
 class CadSession;
@@ -14,21 +16,19 @@ namespace voelund::desktop {
 class ToolPanelHost;
 
 class SketchExtrusionToolController final {
-public:
-    SketchExtrusionToolController(
-        application::CadSession& session,
-        viewport::CadViewport& viewport,
-        ToolPanelHost& panel,
-        std::function<void()> sceneChanged,
-        std::function<void(const QString&)> statusChanged);
+  public:
+    SketchExtrusionToolController(application::CadSession& session, viewport::CadViewport& viewport,
+                                  ToolPanelHost& panel, std::function<void()> sceneChanged,
+                                  std::function<void(const QString&)> statusChanged);
 
     void begin(const viewport::PlanarFaceSelection& support);
+    void beginSelectedProfiles();
     void updateDistancePreview(double distance);
     void setResult(const viewport::SketchRectangleResult& result);
     [[nodiscard]] bool isActive() const noexcept;
     void cancel();
 
-private:
+  private:
     void setDistance(double distance);
     void accept();
 
@@ -38,6 +38,8 @@ private:
     std::function<void()> sceneChanged_;
     std::function<void(const QString&)> statusChanged_;
     std::optional<viewport::SketchRectangleResult> result_;
+    std::optional<document::FeatureId> profileSketch_;
+    std::vector<document::SketchProfileId> profileIds_;
     double distance_{1.0};
     bool active_{false};
 };

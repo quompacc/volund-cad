@@ -13,22 +13,24 @@ struct SolidCommandServices final {
     std::function<void()> sketchEditor;
     std::function<void()> sketchRectangle;
     std::function<void()> editSketch;
+    std::function<void()> extrudeProfiles;
     std::function<void(bool)> transform;
     std::function<bool()> canAddCylinder;
     std::function<bool()> canEditSketch;
     std::function<bool()> canSketch;
     std::function<bool()> canEditExistingSketch;
+    std::function<bool()> canExtrudeProfiles;
     std::function<bool()> canTransform;
 };
 
 class SolidWorkspaceModule final : public workspaces::WorkspaceModule {
-public:
+  public:
     explicit SolidWorkspaceModule(SolidCommandServices services);
     [[nodiscard]] std::string id() const override;
     [[nodiscard]] std::string title() const override;
     [[nodiscard]] std::span<const workspaces::CommandDescriptor> commands() const override;
 
-private:
+  private:
     std::vector<workspaces::CommandDescriptor> commands_;
 };
 

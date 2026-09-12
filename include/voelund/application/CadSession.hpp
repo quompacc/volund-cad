@@ -29,16 +29,20 @@ class CadSession final {
     [[nodiscard]] std::span<const document::FeatureDescriptor> features() const noexcept;
     [[nodiscard]] std::optional<document::FeatureId> selectedFeature() const noexcept;
     [[nodiscard]] bool selectFeature(document::FeatureId featureId) noexcept;
-    [[nodiscard]] std::optional<document::SketchElementId>
-    selectedSketchElement() const noexcept;
+    [[nodiscard]] std::optional<document::SketchElementId> selectedSketchElement() const noexcept;
     [[nodiscard]] bool selectSketchElement(document::SketchElementId elementId) noexcept;
+    [[nodiscard]] std::span<const document::SketchProfileId>
+    selectedSketchProfiles() const noexcept;
+    [[nodiscard]] bool selectSketchProfileByElement(document::SketchElementId elementId,
+                                                    bool additive);
+    [[nodiscard]] std::vector<document::SketchElementId> selectedSketchProfileElements() const;
+    [[nodiscard]] bool canExtrudeSelectedSketchProfiles() const noexcept;
     [[nodiscard]] const document::SketchParameters& selectedSketchParameters() const;
     [[nodiscard]] const document::SketchParameters&
     sketchParameters(document::FeatureId featureId) const;
-    [[nodiscard]] bool setSketchParameters(
-        document::FeatureId featureId, const document::SketchParameters& parameters);
-    [[nodiscard]] std::vector<features::EvaluatedSketchElement>
-    selectedSketchElements() const;
+    [[nodiscard]] bool setSketchParameters(document::FeatureId featureId,
+                                           const document::SketchParameters& parameters);
+    [[nodiscard]] std::vector<features::EvaluatedSketchElement> selectedSketchElements() const;
     [[nodiscard]] document::FeatureId addBoxFeature();
     [[nodiscard]] document::FeatureId addCylinderFeature(
         document::CylinderResultMode resultMode = document::CylinderResultMode::separate);
@@ -46,12 +50,15 @@ class CadSession final {
                                                          const document::SketchPlane& plane,
                                                          const document::SketchRectangle& rectangle,
                                                          double distance = 10.0);
-    [[nodiscard]] document::FeatureId addSketchFeature(
-        document::FeatureId supportFeature,
-        const document::SketchParameters& sketch);
+    [[nodiscard]] document::FeatureId addSketchFeature(document::FeatureId supportFeature,
+                                                       const document::SketchParameters& sketch);
     [[nodiscard]] document::FeatureId addSketchExtrusion(document::FeatureId supportFeature,
                                                          const document::SketchParameters& sketch,
                                                          double distance = 10.0);
+    [[nodiscard]] document::FeatureId
+    addSketchProfileExtrusion(document::FeatureId sketchFeature,
+                              std::span<const document::SketchProfileId> profileIds,
+                              double distance = 10.0);
     [[nodiscard]] bool canAddCylinder() const noexcept;
     [[nodiscard]] bool canTransformFeature(document::FeatureId featureId) const noexcept;
     [[nodiscard]] std::optional<document::FeatureId>
@@ -97,6 +104,7 @@ class CadSession final {
     std::vector<features::EvaluatedFeature> currentFeatures_;
     std::optional<document::FeatureId> selectedFeature_{document::ModelDocument::initialBoxId()};
     std::optional<document::SketchElementId> selectedSketchElement_;
+    std::vector<document::SketchProfileId> selectedSketchProfiles_;
     std::vector<FeatureRuntimeState> featureStates_;
     std::string cleanDocumentState_;
 };

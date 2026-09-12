@@ -75,8 +75,14 @@ gehören nicht zum Produktpfad.
   drei Relationsbefehle kontextabhängig, zeigt Freiheitsgrade an und markiert
   widersprüchliche Geometrie rot; der letzte Constraint kann zur Wiederherstellung
   entfernt werden.
-- Neue Dateien verwenden `VOLUND 4`; bestehende `VOLUND 1`-Rechtecksketches,
-  `VOLUND 2`-Linien und `VOLUND 3`-Richtungsconstraints werden beim Laden migriert.
+- Geschlossene Profile besitzen eine aus ihrer kleinsten stabilen Element-ID
+  abgeleitete Profil-ID. Ein Klick auf eine Profilkante wählt die ganze Kontur;
+  Strg-Klick erweitert oder reduziert die Auswahl. `Extrude Profiles` speichert
+  genau diese Profil-IDs und extrudiert nur die ausgewählten Konturen.
+- Neue Dateien verwenden `VOLUND 5`; bestehende `VOLUND 1`-Rechtecksketches,
+  `VOLUND 2`-Linien, `VOLUND 3`-Richtungsconstraints und `VOLUND 4`-Extrusionen
+  werden beim Laden migriert. Alte Extrusionen behalten dabei ihre bisherige
+  Semantik, alle geschlossenen Profile zu verwenden.
 - Ein temporäres generisches Tool-Panel bietet Parameter, Live-Vorschau, OK und
   Cancel. Erst OK schreibt das Feature in das Dokument; Cancel oder Escape verwirft
   die Vorschau.
@@ -147,8 +153,8 @@ erzwungener Wayland-QPA weiterhin ruhende ELF-Kanten zu `libX11` und `libGLX`.
 
 Die ersten vollständigen Mehrfach-Element-Erzeugungs- und Bearbeitungs-Slices sind auf
 beiden Windows-Backends und im nativen FreeBSD-Wayland-Controlpfad bestätigt. Der
-parametrische Sketch-Modus wird als Nächstes mit stabilen Profilidentitäten und der
-freien Auswahl eines oder mehrerer Profile für nachfolgende Extrusionen fortgesetzt.
+parametrische Sketch-Modus wird als Nächstes um sichtbare Constraint-Glyphen und die
+Bemaßungsinteraktion direkt im Viewport erweitert.
 
 Der direkte Push/Pull-Ablauf bleibt dabei als schneller Weg erhalten. Er ist eine
 Bedienoberfläche über denselben parametrischen Sketch- und Extrusionsfeatures, kein

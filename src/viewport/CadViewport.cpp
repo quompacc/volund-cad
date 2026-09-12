@@ -441,7 +441,8 @@ void CadViewport::mousePressEvent(QMouseEvent* event) {
         }
         if (const auto elementId = impl_->sketchPresentation.detectedElement(detected)) {
             if (impl_->sketchElementSelectionHandler) {
-                impl_->sketchElementSelectionHandler({*elementId, 0.0, 0.0, false});
+                impl_->sketchElementSelectionHandler(
+                    {*elementId, 0.0, 0.0, event->modifiers().testFlag(Qt::ControlModifier)});
             }
             impl_->view->Redraw();
             return;

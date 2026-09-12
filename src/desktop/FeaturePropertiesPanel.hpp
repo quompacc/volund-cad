@@ -6,6 +6,7 @@
 #include <QStackedWidget>
 
 #include <functional>
+#include <vector>
 
 class QDoubleSpinBox;
 class QLabel;
@@ -13,7 +14,7 @@ class QLabel;
 namespace voelund::desktop {
 
 class FeaturePropertiesPanel final : public QStackedWidget {
-public:
+  public:
     explicit FeaturePropertiesPanel(QWidget* parent = nullptr);
 
     void setBoxChangeHandler(std::function<void()> handler);
@@ -22,27 +23,17 @@ public:
     void showNone();
     void showFeatureInfo(const QString& title, const QString& errorText);
     void showBox(const document::BoxParameters& parameters);
-    void showCylinder(
-        const document::CylinderParameters& parameters,
-        const QString& errorText);
-    void showExtrusion(
-        const document::ExtrusionParameters& parameters,
-        const QString& errorText);
+    void showCylinder(const document::CylinderParameters& parameters, const QString& errorText);
+    void showExtrusion(const document::ExtrusionParameters& parameters, const QString& errorText);
     [[nodiscard]] document::BoxParameters boxParameters() const;
-    [[nodiscard]] document::CylinderParameters cylinderParameters(
-        document::CylinderResultMode resultMode) const;
+    [[nodiscard]] document::CylinderParameters
+    cylinderParameters(document::CylinderResultMode resultMode) const;
     [[nodiscard]] document::ExtrusionParameters extrusionParameters() const;
-    void previewMove(
-        const kernel::RigidTransform& base,
-        double deltaX,
-        double deltaY,
-        double deltaZ);
-    void previewRotation(
-        const kernel::RigidTransform& base,
-        int axisIndex,
-        double angleDegrees);
+    void previewMove(const kernel::RigidTransform& base, double deltaX, double deltaY,
+                     double deltaZ);
+    void previewRotation(const kernel::RigidTransform& base, int axisIndex, double angleDegrees);
 
-private:
+  private:
     void createBoxPanel();
     void createCylinderPanel();
     void createExtrusionPanel();
@@ -64,6 +55,7 @@ private:
     QLabel* errorLabel_{nullptr};
     QDoubleSpinBox* extrusionDistanceInput_{nullptr};
     QLabel* extrusionErrorLabel_{nullptr};
+    std::vector<document::SketchProfileId> extrusionProfiles_;
     std::function<void()> boxChangeHandler_;
     std::function<void()> cylinderChangeHandler_;
     std::function<void()> extrusionChangeHandler_;

@@ -5,66 +5,82 @@
 namespace voelund::modules::solid {
 namespace {
 
-std::function<void(bool)> simpleCommand(std::function<void()> command)
-{
+std::function<void(bool)> simpleCommand(std::function<void()> command) {
     return [command = std::move(command)](bool) { command(); };
 }
 
-std::function<bool()> alwaysEnabled()
-{
+std::function<bool()> alwaysEnabled() {
     return []() { return true; };
 }
 
 } // namespace
 
-SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services)
-{
-    commands_.push_back({
-        "solid.create.box", "Box", "Create a parametric box", {},
-        workspaces::CommandGroup::create, true, false,
-        simpleCommand(std::move(services.addBox)), alwaysEnabled()});
-    commands_.push_back({
-        "solid.create.cylinder", "Cylinder", "Create a parametric cylinder", {},
-        workspaces::CommandGroup::create, true, false,
-        simpleCommand(std::move(services.addCylinder)),
-        std::move(services.canAddCylinder)});
-    commands_.push_back({
-        "solid.create.sketch", "Sketch",
-        "Create a multi-element sketch on a planar face", {},
-        workspaces::CommandGroup::create, true, false,
-        simpleCommand(std::move(services.sketchEditor)),
-        std::move(services.canEditSketch)});
-    commands_.push_back({
-        "solid.create.sketch_rectangle", "Sketch Rectangle",
-        "Create a rectangle sketch and pull it into a solid", {},
-        workspaces::CommandGroup::create, true, false,
-        simpleCommand(std::move(services.sketchRectangle)),
-        std::move(services.canSketch)});
-    commands_.push_back({
-        "solid.modify.transform", "Move / Rotate",
-        "Move or rotate the selected separate body", "M",
-        workspaces::CommandGroup::modify, true, true,
-        std::move(services.transform), std::move(services.canTransform)});
-    commands_.push_back({
-        "solid.modify.edit_sketch", "Edit Sketch",
-        "Edit the selected sketch geometry", {},
-        workspaces::CommandGroup::modify, true, false,
-        simpleCommand(std::move(services.editSketch)),
-        std::move(services.canEditExistingSketch)});
+SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
+    commands_.push_back({"solid.create.box",
+                         "Box",
+                         "Create a parametric box",
+                         {},
+                         workspaces::CommandGroup::create,
+                         true,
+                         false,
+                         simpleCommand(std::move(services.addBox)),
+                         alwaysEnabled()});
+    commands_.push_back({"solid.create.cylinder",
+                         "Cylinder",
+                         "Create a parametric cylinder",
+                         {},
+                         workspaces::CommandGroup::create,
+                         true,
+                         false,
+                         simpleCommand(std::move(services.addCylinder)),
+                         std::move(services.canAddCylinder)});
+    commands_.push_back({"solid.create.sketch",
+                         "Sketch",
+                         "Create a multi-element sketch on a planar face",
+                         {},
+                         workspaces::CommandGroup::create,
+                         true,
+                         false,
+                         simpleCommand(std::move(services.sketchEditor)),
+                         std::move(services.canEditSketch)});
+    commands_.push_back({"solid.create.sketch_rectangle",
+                         "Sketch Rectangle",
+                         "Create a rectangle sketch and pull it into a solid",
+                         {},
+                         workspaces::CommandGroup::create,
+                         true,
+                         false,
+                         simpleCommand(std::move(services.sketchRectangle)),
+                         std::move(services.canSketch)});
+    commands_.push_back({"solid.create.extrude_profiles",
+                         "Extrude Profiles",
+                         "Extrude the selected sketch profiles",
+                         {},
+                         workspaces::CommandGroup::create,
+                         true,
+                         false,
+                         simpleCommand(std::move(services.extrudeProfiles)),
+                         std::move(services.canExtrudeProfiles)});
+    commands_.push_back({"solid.modify.transform", "Move / Rotate",
+                         "Move or rotate the selected separate body", "M",
+                         workspaces::CommandGroup::modify, true, true,
+                         std::move(services.transform), std::move(services.canTransform)});
+    commands_.push_back({"solid.modify.edit_sketch",
+                         "Edit Sketch",
+                         "Edit the selected sketch geometry",
+                         {},
+                         workspaces::CommandGroup::modify,
+                         true,
+                         false,
+                         simpleCommand(std::move(services.editSketch)),
+                         std::move(services.canEditExistingSketch)});
 }
 
-std::string SolidWorkspaceModule::id() const
-{
-    return "solid";
-}
+std::string SolidWorkspaceModule::id() const { return "solid"; }
 
-std::string SolidWorkspaceModule::title() const
-{
-    return "Solid";
-}
+std::string SolidWorkspaceModule::title() const { return "Solid"; }
 
-std::span<const workspaces::CommandDescriptor> SolidWorkspaceModule::commands() const
-{
+std::span<const workspaces::CommandDescriptor> SolidWorkspaceModule::commands() const {
     return commands_;
 }
 

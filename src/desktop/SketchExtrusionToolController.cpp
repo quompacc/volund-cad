@@ -12,24 +12,16 @@
 namespace voelund::desktop {
 
 SketchExtrusionToolController::SketchExtrusionToolController(
-    application::CadSession& session,
-    viewport::CadViewport& viewport,
-    ToolPanelHost& panel,
-    std::function<void()> sceneChanged,
-    std::function<void(const QString&)> statusChanged)
-    : session_(session)
-    , viewport_(viewport)
-    , panel_(panel)
-    , sceneChanged_(std::move(sceneChanged))
-    , statusChanged_(std::move(statusChanged))
-{
-}
+    application::CadSession& session, viewport::CadViewport& viewport, ToolPanelHost& panel,
+    std::function<void()> sceneChanged, std::function<void(const QString&)> statusChanged)
+    : session_(session), viewport_(viewport), panel_(panel), sceneChanged_(std::move(sceneChanged)),
+      statusChanged_(std::move(statusChanged)) {}
 
-void SketchExtrusionToolController::begin(
-    const viewport::PlanarFaceSelection& support)
-{
+void SketchExtrusionToolController::begin(const viewport::PlanarFaceSelection& support) {
     active_ = true;
     result_.reset();
+    profileSketch_.reset();
+    profileIds_.clear();
     distance_ = 1.0;
     panel_.begin(ToolPanelDefinition{
         QObject::tr("Sketch / Extrusion"),
@@ -38,7 +30,8 @@ void SketchExtrusionToolController::begin(
         {},
         {},
         [this](const std::string& id, double value) {
-            if (id == "distance") setDistance(value);
+            if (id == "distance")
+                setDistance(value);
         },
         {},
         {},
@@ -48,16 +41,40 @@ void SketchExtrusionToolController::begin(
     statusChanged_(QObject::tr("Sketch: set two rectangle corners"));
 }
 
-void SketchExtrusionToolController::updateDistancePreview(double distance)
-{
+void SketchExtrusionToolController::beginSelectedProfiles() {
+    if (!session_.canExtrudeSelectedSketchProfiles())
+        return;
+    active_ = true;
+    result_.reset();
+    profileSketch_ = session_.selectedFeature();
+    const auto selected = session_.selectedSketchProfiles();
+    profileIds_.assign(selected.begin(), selected.end());
+    distance_ = 10.0;
+    panel_.begin(ToolPanelDefinition{
+        QObject::tr("Extrude Profiles"),
+        QObject::tr("Extrude %1 selected sketch profile(s).").arg(profileIds_.size()),
+        {{"distance", QObject::tr("Distance"), distance_, 0.001, 1'000'000.0}},
+        {},
+        {},
+        [this](const std::string& id, double value) {
+            if (id == "distance")
+                setDistance(value);
+        },
+        {},
+        {},
+        [this]() { accept(); },
+        [this]() { cancel(); }});
+    panel_.setAcceptEnabled(true);
+    statusChanged_(QObject::tr("Extrusion ready: %1 profile(s)").arg(profileIds_.size()));
+}
+
+void SketchExtrusionToolController::updateDistancePreview(double distance) {
     distance_ = distance;
     panel_.setLengthValue("distance", distance);
     statusChanged_(QObject::tr("Extrusion: %1 mm").arg(distance, 0, 'f', 3));
 }
 
-void SketchExtrusionToolController::setResult(
-    const viewport::SketchRectangleResult& result)
-{
+void SketchExtrusionToolController::setResult(const viewport::SketchRectangleResult& result) {
     result_ = result;
     distance_ = result.distance;
     panel_.setLengthValue("distance", distance_);
@@ -65,39 +82,51 @@ void SketchExtrusionToolController::setResult(
     statusChanged_(QObject::tr("Preview ready — confirm with OK or cancel"));
 }
 
-void SketchExtrusionToolController::setDistance(double distance)
-{
+void SketchExtrusionToolController::setDistance(double distance) {
     distance_ = distance;
-    viewport_.updateSketchExtrusionPreview(distance);
     if (result_.has_value()) {
+        viewport_.updateSketchExtrusionPreview(distance);
         result_->distance = distance;
     }
 }
 
-void SketchExtrusionToolController::accept()
-{
+void SketchExtrusionToolController::accept() {
+    if (profileSketch_.has_value()) {
+        static_cast<void>(
+            session_.addSketchProfileExtrusion(*profileSketch_, profileIds_, distance_));
+        panel_.end();
+        profileSketch_.reset();
+        profileIds_.clear();
+        active_ = false;
+        sceneChanged_();
+        statusChanged_(QObject::tr("Selected profiles extruded"));
+        return;
+    }
     if (!result_.has_value()) {
         return;
     }
     const viewport::PlanarFaceSelection& support = result_->support;
     const document::SketchPlane plane{
-        support.originX, support.originY, support.originZ,
-        support.normalX, support.normalY, support.normalZ,
+        support.originX,     support.originY,     support.originZ,
+        support.normalX,     support.normalY,     support.normalZ,
         support.xDirectionX, support.xDirectionY, support.xDirectionZ};
-    const document::SketchRectangle rectangle{
-        result_->firstX, result_->firstY, result_->secondX, result_->secondY};
-    static_cast<void>(session_.addSketchExtrusion(
-        document::FeatureId{support.bodyId}, plane, rectangle, distance_));
+    const document::SketchRectangle rectangle{result_->firstX, result_->firstY, result_->secondX,
+                                              result_->secondY};
+    static_cast<void>(session_.addSketchExtrusion(document::FeatureId{support.bodyId}, plane,
+                                                  rectangle, distance_));
     viewport_.cancelSketch();
     panel_.end();
     result_.reset();
+    profileSketch_.reset();
+    profileIds_.clear();
+    profileSketch_.reset();
+    profileIds_.clear();
     active_ = false;
     sceneChanged_();
     statusChanged_(QObject::tr("Sketch and extrusion created"));
 }
 
-void SketchExtrusionToolController::cancel()
-{
+void SketchExtrusionToolController::cancel() {
     viewport_.cancelSketch();
     panel_.end();
     result_.reset();

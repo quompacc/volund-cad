@@ -51,7 +51,8 @@ std::optional<SketchProfile> lineProfile(std::size_t firstIndex,
                                          std::vector<bool>& used) {
     std::vector<bool> candidateUsed = used;
     const auto& first = std::get<document::SketchLine>(elements[firstIndex].geometry);
-    SketchProfile profile{{elements[firstIndex].id}};
+    SketchProfile profile{document::SketchProfileId{elements[firstIndex].id.value()},
+                          {elements[firstIndex].id}};
     document::SketchPoint current = first.end;
     while (!connected(current, first.start)) {
         const std::optional<OrientedLine> next = connectingLine(current, elements, candidateUsed);
@@ -59,6 +60,8 @@ std::optional<SketchProfile> lineProfile(std::size_t firstIndex,
             return std::nullopt;
         const std::size_t index = indexOf(elements, next->id);
         profile.elementIds.push_back(next->id);
+        if (next->id.value() < profile.id.value())
+            profile.id = document::SketchProfileId{next->id.value()};
         candidateUsed[index] = true;
         current = next->end;
     }
@@ -76,7 +79,8 @@ std::vector<SketchProfile> detectClosedProfiles(std::span<const document::Sketch
     for (std::size_t index = 0; index < elements.size(); ++index) {
         if (std::holds_alternative<document::SketchRectangle>(elements[index].geometry) ||
             std::holds_alternative<document::SketchCircle>(elements[index].geometry)) {
-            profiles.push_back(SketchProfile{{elements[index].id}});
+            profiles.push_back(SketchProfile{document::SketchProfileId{elements[index].id.value()},
+                                             {elements[index].id}});
             used[index] = true;
         }
     }

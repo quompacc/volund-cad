@@ -86,25 +86,28 @@ The editor exposes endpoint coincidence plus line parallel and perpendicular
 relations for two Ctrl-selected references. The PlaneGCS result reports remaining
 degrees of freedom and stable conflicting constraint IDs. Conflicting elements are
 presented in red, OK stays disabled until the conflict is resolved, and the most
-recent constraint can be removed from the tool panel. Persistent profile selection
-remains later work.
+recent constraint can be removed from the tool panel.
 
 Rectangles and circles each form a closed profile. Connected line chains form a
 profile when at least three non-degenerate elements close within the modeling
 tolerance. Open elements remain valid sketch geometry but are ignored by extrusion.
-An extrusion requires at least one closed profile and currently consumes all closed
-profiles in the sketch. Profile selection and persistent profile IDs are intentionally
-reserved for a later editor slice; the stable element IDs and profile-to-element
-mapping are already suitable for those boundaries.
+Every detected profile receives a deterministic stable identity equal to the smallest
+stable element ID in its boundary. Clicking any boundary element selects the complete
+profile; Ctrl-click toggles additional profiles. A new profile extrusion stores the
+explicit profile IDs and consumes only those faces. An empty selection remains the
+legacy meaning of "all closed profiles", so older direct Push/Pull operations retain
+their behavior.
 
-## File format version 4
+## File format version 5
 
-New saves use `VOLUND 4`. A sketch feature line stores its support, plane, element
+New saves use `VOLUND 5`. A sketch feature line stores its support, plane, element
 count, next element ID, constraint count and next constraint ID. `ELEMENT` records
 store geometry and stable IDs; following `CONSTRAINT` records store their stable ID,
 kind, one or two geometry references and an optional driving value.
 
-The reader continues to accept `VOLUND 1`, `VOLUND 2` and `VOLUND 3`. A version-1 inline rectangle
+An extrusion record now appends a profile count and its stable profile IDs. The reader
+continues to accept `VOLUND 1` through `VOLUND 4`; older extrusion records migrate to
+an empty profile list, which preserves their previous all-profiles behavior. A version-1 inline rectangle
 is migrated in memory to a `RECTANGLE` element with ID 1 and next ID 2; version-2 lines
 are migrated with a free direction. Version-3 horizontal and vertical line fields
 are migrated to independent constraint records. Saving any loaded document writes version 4.

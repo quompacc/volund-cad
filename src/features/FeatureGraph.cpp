@@ -136,8 +136,8 @@ void evaluateExtrusion(const document::ModelDocument& document,
     }
     const document::FeatureId sketchId = *descriptor.inputFeature;
     const document::SketchParameters& sketch = document.sketchParameters(sketchId);
-    const TopoDS_Shape sketchFace = evaluateSketchProfileFaces(sketch);
     const document::ExtrusionParameters& parameters = document.extrusionParameters(descriptor.id);
+    const TopoDS_Shape sketchFace = evaluateSketchProfileFaces(sketch, parameters.profiles);
     // Start just inside the support body. Repeated OCCT booleans can otherwise leave
     // microscopic gaps at a face that is mathematically coincident with the sketch.
     constexpr double joinOverlap = 1.0e-4;

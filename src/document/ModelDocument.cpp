@@ -19,6 +19,19 @@ void validateCylinder(const CylinderParameters& parameters) {
     }
 }
 
+void validateExtrusion(const ExtrusionParameters& parameters) {
+    if (!std::isfinite(parameters.distance) || parameters.distance <= 0.0)
+        throw std::invalid_argument("Extrusion distance must be positive and finite");
+    for (std::size_t index = 0; index < parameters.profiles.size(); ++index) {
+        if (parameters.profiles[index].value() == 0)
+            throw std::invalid_argument("Extrusion profile IDs must be non-zero");
+        for (std::size_t prior = 0; prior < index; ++prior) {
+            if (parameters.profiles[prior] == parameters.profiles[index])
+                throw std::invalid_argument("Extrusion profile IDs must be unique");
+        }
+    }
+}
+
 } // namespace
 
 void validateSketchParameters(const SketchParameters& parameters) {
@@ -117,10 +130,9 @@ FeatureId ModelDocument::addSketchFeature(std::string name, FeatureId supportFea
 
 FeatureId ModelDocument::addExtrusionFeature(std::string name, FeatureId sketchFeature,
                                              const ExtrusionParameters& parameters) {
-    if (!contains(sketchFeature) || !std::isfinite(parameters.distance) ||
-        parameters.distance <= 0.0) {
-        throw std::invalid_argument("Extrusion requires a sketch and a positive distance");
-    }
+    if (!contains(sketchFeature))
+        throw std::invalid_argument("Extrusion requires an existing sketch");
+    validateExtrusion(parameters);
     if (features_.at(featureIndex(sketchFeature)).kind != FeatureKind::sketch) {
         throw std::invalid_argument("Extrusion input feature must be a sketch");
     }
@@ -232,9 +244,7 @@ const ExtrusionParameters& ModelDocument::extrusionParameters(FeatureId featureI
 
 bool ModelDocument::setExtrusionParameters(FeatureId featureId,
                                            const ExtrusionParameters& parameters) {
-    if (!std::isfinite(parameters.distance) || parameters.distance <= 0.0) {
-        throw std::invalid_argument("Extrusion distance must be positive and finite");
-    }
+    validateExtrusion(parameters);
     const std::size_t index = featureIndex(featureId);
     auto* current = std::get_if<ExtrusionParameters>(&parameters_.at(index));
     if (current == nullptr) {

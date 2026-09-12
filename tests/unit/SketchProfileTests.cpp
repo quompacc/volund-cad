@@ -21,8 +21,8 @@ bool detectsPrimitiveAndLineProfiles() {
         line(23, 0.0, 6.0, 0.0, 9.0),
         line(30, 10.0, 10.0, 12.0, 10.0)};
     const auto profiles = voelund::features::detectClosedProfiles(elements);
-    return profiles.size() == 3 && profiles[0].elementIds.front().value() == 10 &&
-           profiles[1].elementIds.front().value() == 11 && profiles[2].elementIds.size() == 4;
+    return profiles.size() == 3 && profiles[0].id.value() == 10 && profiles[1].id.value() == 11 &&
+           profiles[2].id.value() == 20 && profiles[2].elementIds.size() == 4;
 }
 
 bool openLinesDoNotFormAProfile() {

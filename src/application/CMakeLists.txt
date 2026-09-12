@@ -1,5 +1,6 @@
 add_library(voelund_application STATIC
     CadSession.cpp
+    CadSessionSketchProfiles.cpp
     SketchEditorRectangle.cpp
     SketchEditorSession.cpp
 )

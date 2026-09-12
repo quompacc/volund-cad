@@ -6,13 +6,12 @@
 
 namespace voelund::desktop {
 
-std::vector<viewport::SceneSketchElement> makeSceneSketchElements(
-    const application::CadSession& session)
-{
+std::vector<viewport::SceneSketchElement>
+makeSceneSketchElements(const application::CadSession& session) {
     std::vector<viewport::SceneSketchElement> result;
     const auto selected = session.selectedFeature();
-    if (!selected.has_value()
-        || session.selectedFeatureDescriptor().kind != document::FeatureKind::sketch) {
+    if (!selected.has_value() ||
+        session.selectedFeatureDescriptor().kind != document::FeatureKind::sketch) {
         return result;
     }
     const auto evaluated = session.selectedSketchElements();
@@ -23,12 +22,22 @@ std::vector<viewport::SceneSketchElement> makeSceneSketchElements(
     return result;
 }
 
-QString sketchSelectionSummary(const application::CadSession& session)
-{
+QString sketchSelectionSummary(const application::CadSession& session) {
     const auto& sketch = session.selectedSketchParameters();
     const auto selectedId = session.selectedSketchElement();
-    QString summary = QObject::tr("Sketch — %1 elements")
-        .arg(sketch.elements.values.size());
+    QString summary = QObject::tr("Sketch — %1 elements").arg(sketch.elements.values.size());
+    const auto profiles = session.selectedSketchProfiles();
+    if (!profiles.empty()) {
+        QString ids;
+        for (document::SketchProfileId profile : profiles) {
+            if (!ids.isEmpty())
+                ids += QStringLiteral(", ");
+            ids += QString::number(profile.value());
+        }
+        return summary + QObject::tr("\n\nSelected profiles: %1\nStable IDs: %2")
+                             .arg(profiles.size())
+                             .arg(ids);
+    }
     if (!selectedId.has_value()) {
         return summary;
     }
@@ -42,9 +51,7 @@ QString sketchSelectionSummary(const application::CadSession& session)
         } else if (std::holds_alternative<document::SketchRectangle>(element.geometry)) {
             kind = QObject::tr("Rectangle");
         }
-        return summary + QObject::tr("\n\nSelected: %1 #%2")
-            .arg(kind)
-            .arg(element.id.value());
+        return summary + QObject::tr("\n\nSelected: %1 #%2").arg(kind).arg(element.id.value());
     }
     return summary;
 }

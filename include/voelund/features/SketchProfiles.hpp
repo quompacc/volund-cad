@@ -8,6 +8,7 @@
 namespace voelund::features {
 
 struct SketchProfile final {
+    document::SketchProfileId id;
     std::vector<document::SketchElementId> elementIds;
 };
 

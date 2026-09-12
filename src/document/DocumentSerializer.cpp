@@ -18,6 +18,7 @@ namespace {
 constexpr std::size_t maximumFeatureCount = 100'000;
 constexpr std::size_t maximumSketchElementCount = 1'000'000;
 constexpr std::size_t maximumSketchConstraintCount = 2'000'000;
+constexpr std::size_t maximumExtrusionProfileCount = 1'000'000;
 
 [[noreturn]] void invalidDocument(const std::string& reason) {
     throw std::runtime_error("Invalid Völund document: " + reason);
@@ -377,7 +378,8 @@ ParsedFeature readSketchFeature(FeatureId id, std::string name, std::istringstre
 }
 
 ParsedFeature readExtrusionFeature(FeatureId id, std::string name, std::istringstream& line,
-                                   const std::vector<FeatureDescriptor>& previousFeatures) {
+                                   const std::vector<FeatureDescriptor>& previousFeatures,
+                                   std::uint64_t version) {
     std::uint64_t rawSketchId = 0;
     ExtrusionParameters extrusion{};
     if (!(line >> rawSketchId >> extrusion.distance) || !positiveFinite(extrusion.distance)) {
@@ -386,6 +388,21 @@ ParsedFeature readExtrusionFeature(FeatureId id, std::string name, std::istrings
     const FeatureId sketchId{rawSketchId};
     if (!containsFeatureKind(previousFeatures, sketchId, FeatureKind::sketch)) {
         invalidDocument("extrusion input must reference an earlier sketch");
+    }
+    if (version >= 5) {
+        std::uint64_t profileCount = 0;
+        if (!(line >> profileCount) || profileCount > maximumExtrusionProfileCount)
+            invalidDocument("invalid extrusion profile count");
+        extrusion.profiles.reserve(static_cast<std::size_t>(profileCount));
+        for (std::uint64_t index = 0; index < profileCount; ++index) {
+            std::uint64_t rawProfileId = 0;
+            if (!(line >> rawProfileId) || rawProfileId == 0)
+                invalidDocument("malformed extrusion profile ID");
+            const SketchProfileId profileId{rawProfileId};
+            if (std::ranges::find(extrusion.profiles, profileId) != extrusion.profiles.end())
+                invalidDocument("duplicate extrusion profile ID");
+            extrusion.profiles.push_back(profileId);
+        }
     }
     ensureLineComplete(line);
     return {{id, FeatureKind::extrusion, std::move(name), sketchId}, extrusion};
@@ -417,7 +434,7 @@ ParsedFeature readFeature(const std::string& source,
                                  SketchReadContext{previousFeatures, input, version});
     }
     if (kind == "EXTRUSION") {
-        return readExtrusionFeature(id, std::move(name), line, previousFeatures);
+        return readExtrusionFeature(id, std::move(name), line, previousFeatures, version);
     }
     invalidDocument("unknown feature kind");
 }
@@ -427,7 +444,7 @@ ParsedFeature readFeature(const std::string& source,
 void DocumentSerializer::write(const ModelDocument& document, std::ostream& output) {
     output.imbue(std::locale::classic());
     output << std::setprecision(std::numeric_limits<double>::max_digits10);
-    output << "VOLUND 4\nNEXT_ID " << document.nextFeatureId_ << "\nFEATURES "
+    output << "VOLUND 5\nNEXT_ID " << document.nextFeatureId_ << "\nFEATURES "
            << document.features_.size() << '\n';
     for (std::size_t index = 0; index < document.features_.size(); ++index) {
         const FeatureDescriptor& feature = document.features_[index];
@@ -496,7 +513,10 @@ void DocumentSerializer::write(const ModelDocument& document, std::ostream& outp
         } else {
             const ExtrusionParameters& extrusion =
                 std::get<ExtrusionParameters>(document.parameters_[index]);
-            output << ' ' << feature.inputFeature->value() << ' ' << extrusion.distance;
+            output << ' ' << feature.inputFeature->value() << ' ' << extrusion.distance << ' '
+                   << extrusion.profiles.size();
+            for (SketchProfileId profile : extrusion.profiles)
+                output << ' ' << profile.value();
         }
         output << '\n';
     }
@@ -512,6 +532,7 @@ ModelDocument DocumentSerializer::read(std::istream& input) {
                                   : header == "VOLUND 2" ? 2
                                   : header == "VOLUND 3" ? 3
                                   : header == "VOLUND 4" ? 4
+                                  : header == "VOLUND 5" ? 5
                                                          : 0;
     if (version == 0) {
         invalidDocument("unsupported file header or version");
