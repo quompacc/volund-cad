@@ -4,6 +4,8 @@
 #include <voelund/features/BoxFeature.hpp>
 #include <voelund/features/CylinderFeature.hpp>
 #include <voelund/features/SketchEvaluation.hpp>
+#include <voelund/features/SketchConstraintSolver.hpp>
+#include <voelund/features/SketchSupportResolver.hpp>
 #include <voelund/kernel/ShapeFactory.hpp>
 #include <voelund/kernel/ShapeOperations.hpp>
 
@@ -117,7 +119,14 @@ void evaluateCylinder(const document::ModelDocument& document,
 void evaluateSketch(const document::ModelDocument& document,
                     const document::FeatureDescriptor& descriptor,
                     std::vector<EvaluatedFeature>& outputs) {
-    const document::SketchParameters& parameters = document.sketchParameters(descriptor.id);
+    document::SketchParameters parameters = document.sketchParameters(descriptor.id);
+    if (descriptor.inputFeature.has_value()) {
+        if (!updateSketchSupportReferences(parameters,
+                                           findOutput(outputs, *descriptor.inputFeature)))
+            throw std::runtime_error("Sketch support face is no longer available");
+        if (solveSketchConstraints(parameters).status != SketchSolveStatus::success)
+            throw std::runtime_error("Sketch support references cannot be solved");
+    }
     TopoDS_Compound geometry;
     BRep_Builder builder;
     builder.MakeCompound(geometry);
@@ -135,8 +144,18 @@ void evaluateExtrusion(const document::ModelDocument& document,
         throw std::runtime_error("Extrusion requires a sketch input");
     }
     const document::FeatureId sketchId = *descriptor.inputFeature;
-    const document::SketchParameters& sketch = document.sketchParameters(sketchId);
+    document::SketchParameters sketch = document.sketchParameters(sketchId);
     const document::ExtrusionParameters& parameters = document.extrusionParameters(descriptor.id);
+    const auto descriptors = document.features();
+    const auto sketchDescriptor =
+        std::ranges::find(descriptors, sketchId, &document::FeatureDescriptor::id);
+    if (sketchDescriptor == descriptors.end() || !sketchDescriptor->inputFeature.has_value())
+        throw std::runtime_error("Sketch support feature is missing");
+    const document::FeatureId supportId = *sketchDescriptor->inputFeature;
+    if (!updateSketchSupportReferences(sketch, findOutput(outputs, supportId)))
+        throw std::runtime_error("Sketch support face is no longer available");
+    if (solveSketchConstraints(sketch).status != SketchSolveStatus::success)
+        throw std::runtime_error("Sketch support references cannot be solved");
     const TopoDS_Shape sketchFace = evaluateSketchProfileFaces(sketch, parameters.profiles);
     // Start just inside the support body. Repeated OCCT booleans can otherwise leave
     // microscopic gaps at a face that is mathematically coincident with the sketch.
@@ -149,13 +168,6 @@ void evaluateExtrusion(const document::ModelDocument& document,
     const gp_Vec direction = outward * (parameters.distance + joinOverlap);
     const TopoDS_Shape tool = BRepPrimAPI_MakePrism(overlappingFace, direction).Shape();
 
-    const auto descriptors = document.features();
-    const auto sketchDescriptor =
-        std::ranges::find(descriptors, sketchId, &document::FeatureDescriptor::id);
-    if (sketchDescriptor == descriptors.end() || !sketchDescriptor->inputFeature.has_value()) {
-        throw std::runtime_error("Sketch support feature is missing");
-    }
-    const document::FeatureId supportId = *sketchDescriptor->inputFeature;
     EvaluatedBody& supportBody = findBody(bodies, supportId);
     EvaluatedBody& referenceSupportBody = findBody(referenceBodies, supportId);
     const TopoDS_Shape result = kernel::ShapeOperations::fuse(supportBody.shape, tool);

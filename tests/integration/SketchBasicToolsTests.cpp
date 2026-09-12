@@ -150,11 +150,48 @@ bool remainingOperationsAndReferencesWork() {
 
     SketchEditorSession fixed(session, support, plane);
     if (!addLine(fixed, {0.0, 0.0}, {5.0, 0.0}) ||
-        !fixed.addFixedReference({SketchElementId{1},
-                                  voelund::document::SketchPointPosition::end},
-                                 {5.0, 0.0}))
+        !fixed.addSupportReference({SketchElementId{1},
+                                    voelund::document::SketchPointPosition::end},
+                                   {5.0, 0.0}, 3, 0.5))
         return false;
-    return fixed.constraints().size() == 2;
+    return fixed.constraints().size() == 2 &&
+           fixed.constraints()[0].auxiliaryValues == std::vector<double>({3.0, 0.5}) &&
+           fixed.constraints()[1].auxiliaryValues == std::vector<double>({3.0, 0.5});
+}
+
+bool automaticRelationsWork() {
+    CadSession session;
+    session.newDocument();
+    const auto support = session.addBoxFeature();
+    SketchEditorSession editor(session, support, plane);
+    if (!addLine(editor, {0.0, 0.0}, {10.0, 10.0}) ||
+        !addLine(editor, {0.0, 5.0}, {10.0, 15.5}))
+        return false;
+    const auto parallel = editor.addAutomaticLineRelation(SketchElementId{2});
+    if (parallel != voelund::document::SketchConstraintKind::parallel)
+        return false;
+    if (!addLine(editor, {3.0, 2.0}, {-7.2, 12.0}))
+        return false;
+    const auto perpendicular = editor.addAutomaticLineRelation(SketchElementId{3});
+    if (perpendicular != voelund::document::SketchConstraintKind::perpendicular)
+        return false;
+    if (!addLine(editor, {5.0, 5.0}, {8.0, 9.0}) ||
+        !editor.addPointOnObjectReference(
+            {SketchElementId{4}, voelund::document::SketchPointPosition::start},
+            SketchElementId{1}))
+        return false;
+    if (editor.constraints().size() != 3)
+        return false;
+
+    SketchEditorSession tangent(session, support, plane);
+    if (!addLine(tangent, {0.0, 0.0}, {10.0, 0.0}))
+        return false;
+    tangent.setTool(SketchDrawingTool::circle);
+    if (!tangent.setPreview({5.0, 5.0}, {5.0, 0.0}) ||
+        !tangent.confirmPreview().has_value() ||
+        !tangent.addTangencyReference(SketchElementId{2}, SketchElementId{1}))
+        return false;
+    return tangent.constraints().size() == 1;
 }
 
 } // namespace
@@ -174,6 +211,10 @@ int main() {
     }
     if (!remainingOperationsAndReferencesWork()) {
         std::cerr << "Remaining sketch operations or references failed\n";
+        return 1;
+    }
+    if (!automaticRelationsWork()) {
+        std::cerr << "Automatic sketch relations failed\n";
         return 1;
     }
     return 0;

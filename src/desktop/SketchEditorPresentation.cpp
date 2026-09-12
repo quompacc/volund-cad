@@ -113,9 +113,19 @@ void SketchEditorToolController::refreshPresentation() {
         evaluated.back().points.size() >= 2) {
         const auto& first = evaluated.back().points[0].world;
         const auto& second = evaluated.back().points[1].world;
+        const auto previewLabel = *previewAutomatic_ == viewport::SketchAutomaticConstraint::horizontal
+                                      ? "[H?]"
+                                  : *previewAutomatic_ == viewport::SketchAutomaticConstraint::vertical
+                                      ? "[V?]"
+                                  : *previewAutomatic_ == viewport::SketchAutomaticConstraint::parallel
+                                      ? "[P?]"
+                                  : *previewAutomatic_ == viewport::SketchAutomaticConstraint::perpendicular
+                                      ? "[⊥?]"
+                                  : *previewAutomatic_ == viewport::SketchAutomaticConstraint::tangent
+                                      ? "[T?]"
+                                      : "[O?]";
         constraints.push_back(
-            {0,
-             *previewAutomatic_ == viewport::SketchAutomaticConstraint::horizontal ? "[H?]" : "[V?]",
+            {0, previewLabel,
              (first.X() + second.X()) * 0.5, (first.Y() + second.Y()) * 0.5,
              (first.Z() + second.Z()) * 0.5, false, false});
     }

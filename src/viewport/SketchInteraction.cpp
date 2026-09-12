@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <utility>
 
 namespace voelund::viewport {
@@ -70,13 +71,65 @@ std::optional<PlanarFaceSelection> planarFaceSelection(std::uint64_t bodyId,
                                   secondOffset.Dot(gp_Vec(xDirection)),
                                   secondOffset.Dot(gp_Vec(yDirection)),
                                   first.X(), first.Y(), first.Z(), second.X(), second.Y(),
-                                  second.Z()});
+                                  second.Z(), references.size() + 1});
             first = second;
         }
     }
     return PlanarFaceSelection{bodyId,         origin.X(),    origin.Y(), origin.Z(),
                                normal.X(),     normal.Y(),    normal.Z(), xDirection.X(),
                                xDirection.Y(), xDirection.Z(), std::move(references)};
+}
+
+std::optional<PlanarFaceSelection>
+resolvePlanarFaceSelection(const PlanarFaceSelection& previous,
+                           const TopoDS_Shape& supportShape) {
+    std::optional<PlanarFaceSelection> best;
+    double bestDistance = std::numeric_limits<double>::max();
+    const gp_Vec previousNormal(previous.normalX, previous.normalY, previous.normalZ);
+    const gp_Pnt previousOrigin(previous.originX, previous.originY, previous.originZ);
+    for (TopExp_Explorer explorer(supportShape, TopAbs_FACE); explorer.More(); explorer.Next()) {
+        const auto candidate = planarFaceSelection(previous.bodyId, explorer.Current());
+        if (!candidate.has_value())
+            continue;
+        const gp_Vec candidateNormal(candidate->normalX, candidate->normalY, candidate->normalZ);
+        if (previousNormal.Dot(candidateNormal) < 0.999)
+            continue;
+        const gp_Pnt candidateOrigin(candidate->originX, candidate->originY, candidate->originZ);
+        const double signedDistance =
+            gp_Vec(previousOrigin, candidateOrigin).Dot(previousNormal);
+        const double distance = std::abs(signedDistance);
+        if (distance < bestDistance) {
+            bestDistance = distance;
+            best = candidate;
+            const gp_Pnt attachedOrigin =
+                previousOrigin.Translated(previousNormal * signedDistance);
+            best->originX = attachedOrigin.X();
+            best->originY = attachedOrigin.Y();
+            best->originZ = attachedOrigin.Z();
+            best->normalX = previous.normalX;
+            best->normalY = previous.normalY;
+            best->normalZ = previous.normalZ;
+            best->xDirectionX = previous.xDirectionX;
+            best->xDirectionY = previous.xDirectionY;
+            best->xDirectionZ = previous.xDirectionZ;
+            const gp_Vec xDirection(previous.xDirectionX, previous.xDirectionY,
+                                    previous.xDirectionZ);
+            const gp_Vec yDirection = previousNormal.Crossed(xDirection);
+            for (auto& segment : best->referenceSegments) {
+                const gp_Vec firstOffset(
+                    attachedOrigin,
+                    gp_Pnt(segment.firstWorldX, segment.firstWorldY, segment.firstWorldZ));
+                const gp_Vec secondOffset(
+                    attachedOrigin,
+                    gp_Pnt(segment.secondWorldX, segment.secondWorldY, segment.secondWorldZ));
+                segment.firstX = firstOffset.Dot(xDirection);
+                segment.firstY = firstOffset.Dot(yDirection);
+                segment.secondX = secondOffset.Dot(xDirection);
+                segment.secondY = secondOffset.Dot(yDirection);
+            }
+        }
+    }
+    return best;
 }
 
 void SketchInteraction::begin(const PlanarFaceSelection& support,

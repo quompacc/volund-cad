@@ -5,6 +5,7 @@
 #include "ToolPanelHost.hpp"
 
 #include <voelund/application/CadSession.hpp>
+#include <voelund/features/SketchSupportResolver.hpp>
 
 #include <QInputDialog>
 #include <QObject>
@@ -93,21 +94,25 @@ bool SketchEditorToolController::beginSelectedSketch() {
     const document::FeatureDescriptor& descriptor = session_.selectedFeatureDescriptor();
     if (descriptor.kind != document::FeatureKind::sketch || !descriptor.inputFeature.has_value())
         return false;
-    const document::SketchParameters parameters = session_.sketchParameters(*selected);
+    document::SketchParameters parameters = session_.sketchParameters(*selected);
+    const auto& persistedPlane = parameters.plane;
+    const viewport::PlanarFaceSelection persistedSupport{
+        descriptor.inputFeature->value(), persistedPlane.originX, persistedPlane.originY,
+        persistedPlane.originZ, persistedPlane.normalX, persistedPlane.normalY,
+        persistedPlane.normalZ, persistedPlane.xDirectionX, persistedPlane.xDirectionY,
+        persistedPlane.xDirectionZ};
+    viewport::PlanarFaceSelection support = persistedSupport;
+    if (const auto shape = session_.featureShape(*descriptor.inputFeature); shape.has_value()) {
+        if (const auto resolved = viewport::resolvePlanarFaceSelection(persistedSupport, *shape);
+            resolved.has_value())
+            support = *resolved;
+        if (features::updateSketchSupportReferences(parameters, *shape))
+            static_cast<void>(features::solveSketchConstraints(parameters));
+    }
+    parameters.plane = sketchPlane(support);
     editing_ = true;
     editor_ = std::make_unique<application::SketchEditorSession>(
         session_, *selected, *descriptor.inputFeature, parameters);
-    const auto& plane = parameters.plane;
-    const viewport::PlanarFaceSelection support{descriptor.inputFeature->value(),
-                                                plane.originX,
-                                                plane.originY,
-                                                plane.originZ,
-                                                plane.normalX,
-                                                plane.normalY,
-                                                plane.normalZ,
-                                                plane.xDirectionX,
-                                                plane.xDirectionY,
-                                                plane.xDirectionZ};
     showPanel();
     panel_.setAcceptEnabled(editor_->canAccept());
     viewport_.beginSketchEditor(support, viewport::SketchElementTool::line);

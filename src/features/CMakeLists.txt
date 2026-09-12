@@ -1,7 +1,7 @@
 add_library(
     voelund_features STATIC
     BoxFeature.cpp CylinderFeature.cpp FeatureGraph.cpp SketchConstraintAnnotations.cpp
-    SketchConstraintSolver.cpp SketchEvaluation.cpp SketchProfiles.cpp)
+    SketchConstraintSolver.cpp SketchEvaluation.cpp SketchProfiles.cpp SketchSupportResolver.cpp)
 
 target_include_directories(
     voelund_features

@@ -85,7 +85,11 @@ and confirmation adds a persistent PlaneGCS coincidence relation automatically; 
 snapping remains the fallback away from reference points. The sketch origin and local
 axes are explicit snap targets. Boundary edges of a newly selected planar support
 face are projected into the editor, displayed in violet and provide fixed endpoint
-and midpoint references for new geometry.
+and midpoint references for new geometry. A confirmed projected reference stores the
+support-edge segment identity and its normalized position, not merely the current X/Y
+coordinates. Recompute resolves the supporting planar face again, moves the sketch
+plane along its retained normal and updates those driving coordinates from the current
+edge geometry before PlaneGCS solves the sketch.
 
 ## Parametric constraint foundation
 
@@ -110,6 +114,13 @@ relations for two Ctrl-selected references. The PlaneGCS result reports remainin
 degrees of freedom and stable conflicting constraint IDs. Conflicting elements are
 presented in red, OK stays disabled until the conflict is resolved, and the most
 recent constraint can be removed from the tool panel.
+
+While drawing, the same relations are inferred within a screen-space tolerance.
+Endpoints, midpoints and points on existing lines create coincidence, midpoint or
+point-on-object relations; nearly horizontal, vertical, parallel or perpendicular
+lines are snapped exactly and constrained. A circle or center arc placed tangentially
+on a referenced line receives a persistent tangency relation. Preview glyphs expose
+the pending inference before confirmation.
 
 Every constraint is evaluated into a presentation annotation in sketch-local space
 and transformed onto the supporting plane. The viewport renders direction and

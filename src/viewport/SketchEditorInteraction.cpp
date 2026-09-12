@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <tuple>
 
 namespace voelund::viewport {
 namespace {
@@ -92,16 +93,16 @@ void SketchEditorInteraction::setSnapPoints(std::span<const SceneSketchPoint> po
         for (const PlanarReferenceSegment& segment : support_.referenceSegments) {
             snapPoints_.push_back({0, SketchPointKind::projected, segment.firstX, segment.firstY,
                                    segment.firstWorldX, segment.firstWorldY,
-                                   segment.firstWorldZ});
+                                   segment.firstWorldZ, segment.referenceId, 0.0});
             snapPoints_.push_back({0, SketchPointKind::projected, segment.secondX,
                                    segment.secondY, segment.secondWorldX, segment.secondWorldY,
-                                   segment.secondWorldZ});
+                                   segment.secondWorldZ, segment.referenceId, 1.0});
             snapPoints_.push_back(
                 {0, SketchPointKind::projected, (segment.firstX + segment.secondX) * 0.5,
                  (segment.firstY + segment.secondY) * 0.5,
                  (segment.firstWorldX + segment.secondWorldX) * 0.5,
                  (segment.firstWorldY + segment.secondWorldY) * 0.5,
-                 (segment.firstWorldZ + segment.secondWorldZ) * 0.5});
+                 (segment.firstWorldZ + segment.secondWorldZ) * 0.5, segment.referenceId, 0.5});
         }
     }
 }
@@ -176,10 +177,131 @@ SketchEditorInteraction::interactionPoint(int x, int y) const {
             return InteractionPoint{{0.0, projected->second},
                                     SketchPointReferenceIntent{0, SketchPointKind::yAxis}};
     }
+    if (nearest == nullptr) {
+        constexpr double lineSnapRadius = 8.0;
+        const SceneSketchPoint* bestStart = nullptr;
+        const SceneSketchPoint* bestEnd = nullptr;
+        double bestDistance = lineSnapRadius;
+        for (const SceneSketchPoint& start : snapPoints_) {
+            if (start.elementId == 0 || start.kind != SketchPointKind::start)
+                continue;
+            const auto end = std::ranges::find_if(snapPoints_, [&](const auto& candidate) {
+                return candidate.elementId == start.elementId &&
+                       candidate.kind == SketchPointKind::end;
+            });
+            if (end == snapPoints_.end())
+                continue;
+            int startX = 0;
+            int startY = 0;
+            int endX = 0;
+            int endY = 0;
+            view_->Convert(start.worldX, start.worldY, start.worldZ, startX, startY);
+            view_->Convert(end->worldX, end->worldY, end->worldZ, endX, endY);
+            const double dx = static_cast<double>(endX - startX);
+            const double dy = static_cast<double>(endY - startY);
+            const double squaredLength = dx * dx + dy * dy;
+            if (squaredLength <= 1.0e-9)
+                continue;
+            const double parameter = std::clamp(
+                ((x - startX) * dx + (y - startY) * dy) / squaredLength, 0.0, 1.0);
+            const double distance = std::hypot(startX + dx * parameter - x,
+                                               startY + dy * parameter - y);
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                bestStart = &start;
+                bestEnd = &*end;
+            }
+        }
+        if (bestStart != nullptr) {
+            const double dx = bestEnd->localX - bestStart->localX;
+            const double dy = bestEnd->localY - bestStart->localY;
+            const double squaredLength = dx * dx + dy * dy;
+            const double parameter = std::clamp(
+                ((projected->first - bestStart->localX) * dx +
+                 (projected->second - bestStart->localY) * dy) /
+                    squaredLength,
+                0.0, 1.0);
+            return InteractionPoint{{bestStart->localX + dx * parameter,
+                                     bestStart->localY + dy * parameter},
+                                    SketchPointReferenceIntent{bestStart->elementId,
+                                                               SketchPointKind::onObject}};
+        }
+    }
     if (nearest == nullptr)
         return InteractionPoint{*projected, std::nullopt};
     return InteractionPoint{{nearest->localX, nearest->localY},
-                            SketchPointReferenceIntent{nearest->elementId, nearest->kind}};
+                            SketchPointReferenceIntent{nearest->elementId, nearest->kind,
+                                                       nearest->supportReferenceId,
+                                                       nearest->supportReferenceParameter}};
+}
+
+std::pair<std::pair<double, double>, std::optional<SketchAutomaticConstraint>>
+SketchEditorInteraction::relatedLineEnd(std::pair<double, double> first,
+                                        std::pair<double, double> second) const {
+    if (tool_ != SketchElementTool::line && tool_ != SketchElementTool::polyline)
+        return {second, std::nullopt};
+    const double rawX = second.first - first.first;
+    const double rawY = second.second - first.second;
+    const double length = std::hypot(rawX, rawY);
+    double best = 0.08;
+    std::pair<double, double> adjusted = second;
+    std::optional<SketchAutomaticConstraint> relation;
+    for (const SceneSketchPoint& start : snapPoints_) {
+        if (start.elementId == 0 || start.kind != SketchPointKind::start)
+            continue;
+        const auto end = std::ranges::find_if(snapPoints_, [&](const auto& candidate) {
+            return candidate.elementId == start.elementId && candidate.kind == SketchPointKind::end;
+        });
+        if (end == snapPoints_.end())
+            continue;
+        const double targetX = end->localX - start.localX;
+        const double targetY = end->localY - start.localY;
+        const double targetLength = std::hypot(targetX, targetY);
+        if (length <= 1.0e-9 || targetLength <= 1.0e-9)
+            continue;
+        const double ux = targetX / targetLength;
+        const double uy = targetY / targetLength;
+        const double parallelError = std::abs(rawX * uy - rawY * ux) / length;
+        if (parallelError < best) {
+            best = parallelError;
+            const double sign = rawX * ux + rawY * uy >= 0.0 ? 1.0 : -1.0;
+            adjusted = {first.first + sign * ux * length, first.second + sign * uy * length};
+            relation = SketchAutomaticConstraint::parallel;
+        }
+        const double perpendicularError = std::abs(rawX * ux + rawY * uy) / length;
+        if (perpendicularError < best) {
+            best = perpendicularError;
+            const double nx = -uy;
+            const double ny = ux;
+            const double sign = rawX * nx + rawY * ny >= 0.0 ? 1.0 : -1.0;
+            adjusted = {first.first + sign * nx * length, first.second + sign * ny * length};
+            relation = SketchAutomaticConstraint::perpendicular;
+        }
+    }
+    return {adjusted, relation};
+}
+
+bool SketchEditorInteraction::tangentToReferencedLine(
+    std::pair<double, double> center, std::pair<double, double> radialPoint,
+    const std::optional<SketchPointReferenceIntent>& reference) const {
+    if (!reference.has_value() || reference->point != SketchPointKind::onObject)
+        return false;
+    const auto start = std::ranges::find_if(snapPoints_, [&](const auto& candidate) {
+        return candidate.elementId == reference->elementId &&
+               candidate.kind == SketchPointKind::start;
+    });
+    const auto end = std::ranges::find_if(snapPoints_, [&](const auto& candidate) {
+        return candidate.elementId == reference->elementId &&
+               candidate.kind == SketchPointKind::end;
+    });
+    if (start == snapPoints_.end() || end == snapPoints_.end())
+        return false;
+    const double radiusX = radialPoint.first - center.first;
+    const double radiusY = radialPoint.second - center.second;
+    const double lineX = end->localX - start->localX;
+    const double lineY = end->localY - start->localY;
+    const double scale = std::hypot(radiusX, radiusY) * std::hypot(lineX, lineY);
+    return scale > 1.0e-9 && std::abs(radiusX * lineX + radiusY * lineY) / scale <= 0.08;
 }
 
 bool SketchEditorInteraction::valid(const SketchElementIntent& intent) const noexcept {
@@ -210,6 +332,17 @@ std::optional<SketchElementIntent> SketchEditorInteraction::move(int x, int y) c
         return std::nullopt;
     auto [point, reference] = *resolved;
     auto [adjustedPoint, automaticConstraint] = constrainedLineEnd(tool_, *firstPoint_, point);
+    if (!automaticConstraint.has_value())
+        std::tie(adjustedPoint, automaticConstraint) = relatedLineEnd(*firstPoint_, point);
+    if (!automaticConstraint.has_value() && reference.has_value() &&
+        reference->point == SketchPointKind::onObject)
+        automaticConstraint = SketchAutomaticConstraint::pointOnObject;
+    if (tool_ == SketchElementTool::circle &&
+        tangentToReferencedLine(*firstPoint_, point, reference))
+        automaticConstraint = SketchAutomaticConstraint::tangent;
+    if (tool_ == SketchElementTool::arc && secondPoint_.has_value() &&
+        tangentToReferencedLine(*firstPoint_, point, reference))
+        automaticConstraint = SketchAutomaticConstraint::tangent;
     point = adjustedPoint;
     const SketchElementIntent intent{firstPoint_->first,
                                      firstPoint_->second,
@@ -244,6 +377,17 @@ std::optional<SketchElementIntent> SketchEditorInteraction::click(int x, int y) 
         return std::nullopt;
     }
     auto [adjustedPoint, automaticConstraint] = constrainedLineEnd(tool_, *firstPoint_, point);
+    if (!automaticConstraint.has_value())
+        std::tie(adjustedPoint, automaticConstraint) = relatedLineEnd(*firstPoint_, point);
+    if (!automaticConstraint.has_value() && reference.has_value() &&
+        reference->point == SketchPointKind::onObject)
+        automaticConstraint = SketchAutomaticConstraint::pointOnObject;
+    if (tool_ == SketchElementTool::circle &&
+        tangentToReferencedLine(*firstPoint_, point, reference))
+        automaticConstraint = SketchAutomaticConstraint::tangent;
+    if (tool_ == SketchElementTool::arc && secondPoint_.has_value() &&
+        tangentToReferencedLine(*firstPoint_, point, reference))
+        automaticConstraint = SketchAutomaticConstraint::tangent;
     point = adjustedPoint;
     const SketchElementIntent intent{firstPoint_->first,
                                      firstPoint_->second,

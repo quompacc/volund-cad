@@ -13,6 +13,8 @@ namespace voelund::viewport {
 [[nodiscard]] std::optional<PlanarFaceSelection> planarFaceSelection(
     std::uint64_t bodyId,
     const TopoDS_Shape& detectedShape);
+[[nodiscard]] std::optional<PlanarFaceSelection>
+resolvePlanarFaceSelection(const PlanarFaceSelection& previous, const TopoDS_Shape& supportShape);
 
 class SketchInteraction final {
 public:

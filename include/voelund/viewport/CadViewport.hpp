@@ -34,7 +34,17 @@ struct SceneBody final {
     bool transformable;
 };
 
-enum class SketchPointKind { start, end, center, midpoint, origin, xAxis, yAxis, projected };
+enum class SketchPointKind {
+    start,
+    end,
+    center,
+    midpoint,
+    origin,
+    xAxis,
+    yAxis,
+    projected,
+    onObject
+};
 
 struct SceneSketchPoint final {
     std::uint64_t elementId;
@@ -44,6 +54,8 @@ struct SceneSketchPoint final {
     double worldX;
     double worldY;
     double worldZ;
+    std::uint64_t supportReferenceId{0};
+    double supportReferenceParameter{0.0};
 };
 
 struct SceneSketchElement final {
@@ -62,6 +74,8 @@ struct SceneSketchElement final {
 struct SketchPointReferenceIntent final {
     std::uint64_t elementId;
     SketchPointKind point;
+    std::uint64_t supportReferenceId{0};
+    double supportReferenceParameter{0.0};
 };
 
 struct SketchSelectionIntent final {
@@ -92,6 +106,7 @@ struct PlanarReferenceSegment final {
     double secondWorldX;
     double secondWorldY;
     double secondWorldZ;
+    std::uint64_t referenceId{0};
 };
 
 struct PlanarFaceSelection final {
@@ -107,6 +122,9 @@ struct PlanarFaceSelection final {
     double xDirectionZ;
     std::vector<PlanarReferenceSegment> referenceSegments{};
 };
+
+[[nodiscard]] std::optional<PlanarFaceSelection>
+resolvePlanarFaceSelection(const PlanarFaceSelection& previous, const TopoDS_Shape& supportShape);
 
 struct SketchRectangleResult final {
     PlanarFaceSelection support;
@@ -130,7 +148,14 @@ enum class SketchElementTool {
     polygon
 };
 
-enum class SketchAutomaticConstraint { horizontal, vertical };
+enum class SketchAutomaticConstraint {
+    horizontal,
+    vertical,
+    parallel,
+    perpendicular,
+    pointOnObject,
+    tangent
+};
 
 struct SketchElementIntent final {
     double firstX;

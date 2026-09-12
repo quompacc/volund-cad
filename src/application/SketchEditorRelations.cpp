@@ -314,4 +314,125 @@ bool SketchEditorSession::addFixedReference(document::SketchGeometryReference re
     return false;
 }
 
+bool SketchEditorSession::addSupportReference(document::SketchGeometryReference reference,
+                                              document::SketchPoint point,
+                                              std::uint64_t supportReferenceId,
+                                              double supportReferenceParameter) {
+    if (!active_ || reference.element.value() == 0 || supportReferenceId == 0 ||
+        !std::isfinite(supportReferenceParameter))
+        return false;
+    const auto previousElements = elements_;
+    const auto previousConstraints = constraints_;
+    const std::vector<double> attachment{static_cast<double>(supportReferenceId),
+                                         std::clamp(supportReferenceParameter, 0.0, 1.0)};
+    constraints_.values.push_back({document::SketchConstraintId{constraints_.nextId++},
+                                   document::SketchConstraintKind::coordinateX, reference,
+                                   std::nullopt, point.x, std::nullopt, attachment});
+    constraints_.values.push_back({document::SketchConstraintId{constraints_.nextId++},
+                                   document::SketchConstraintKind::coordinateY, reference,
+                                   std::nullopt, point.y, std::nullopt, attachment});
+    if (solveConstraints())
+        return true;
+    elements_ = previousElements;
+    constraints_ = previousConstraints;
+    static_cast<void>(solveConstraints());
+    return false;
+}
+
+bool SketchEditorSession::addPointOnObjectReference(
+    document::SketchGeometryReference reference, document::SketchElementId object) {
+    if (!active_ || reference.element == object || !referencePoint(elements_, reference).has_value() ||
+        !line(findElement(elements_, object)))
+        return false;
+    const document::SketchGeometryReference target{object,
+                                                    document::SketchPointPosition::start};
+    if (std::ranges::any_of(constraints_.values, [&](const auto& constraint) {
+            return constraint.kind == document::SketchConstraintKind::pointOnObject &&
+                   constraint.first == reference && constraint.second == target;
+        }))
+        return true;
+    const auto previousElements = elements_;
+    const auto previousConstraints = constraints_;
+    constraints_.values.push_back({document::SketchConstraintId{constraints_.nextId++},
+                                   document::SketchConstraintKind::pointOnObject, reference,
+                                   target});
+    if (solveConstraints())
+        return true;
+    elements_ = previousElements;
+    constraints_ = previousConstraints;
+    static_cast<void>(solveConstraints());
+    return false;
+}
+
+std::optional<document::SketchConstraintKind>
+SketchEditorSession::addAutomaticLineRelation(document::SketchElementId lineId) {
+    const auto* createdElement = findElement(elements_, lineId);
+    if (!active_ || !line(createdElement))
+        return std::nullopt;
+    const auto& created = std::get<document::SketchLine>(createdElement->geometry);
+    const double createdX = created.end.x - created.start.x;
+    const double createdY = created.end.y - created.start.y;
+    const double createdLength = std::hypot(createdX, createdY);
+    document::SketchElementId targetId{0};
+    document::SketchConstraintKind relation = document::SketchConstraintKind::parallel;
+    double best = 0.08;
+    for (const auto& candidate : elements_.values) {
+        const auto* target = std::get_if<document::SketchLine>(&candidate.geometry);
+        if (candidate.id == lineId || target == nullptr)
+            continue;
+        const double targetX = target->end.x - target->start.x;
+        const double targetY = target->end.y - target->start.y;
+        const double scale = createdLength * std::hypot(targetX, targetY);
+        if (scale <= 1.0e-12)
+            continue;
+        const double parallelError = std::abs(createdX * targetY - createdY * targetX) / scale;
+        const double perpendicularError = std::abs(createdX * targetX + createdY * targetY) / scale;
+        if (parallelError < best) {
+            best = parallelError;
+            targetId = candidate.id;
+            relation = document::SketchConstraintKind::parallel;
+        }
+        if (perpendicularError < best) {
+            best = perpendicularError;
+            targetId = candidate.id;
+            relation = document::SketchConstraintKind::perpendicular;
+        }
+    }
+    if (targetId.value() == 0)
+        return std::nullopt;
+    const auto previousElements = elements_;
+    const auto previousConstraints = constraints_;
+    constraints_.values.push_back({document::SketchConstraintId{constraints_.nextId++}, relation,
+                                   {lineId, document::SketchPointPosition::start},
+                                   document::SketchGeometryReference{
+                                       targetId, document::SketchPointPosition::start}});
+    if (solveConstraints())
+        return relation;
+    elements_ = previousElements;
+    constraints_ = previousConstraints;
+    static_cast<void>(solveConstraints());
+    return std::nullopt;
+}
+
+bool SketchEditorSession::addTangencyReference(document::SketchElementId radialId,
+                                               document::SketchElementId targetId) {
+    const auto* radialElement = findElement(elements_, radialId);
+    const auto* targetElement = findElement(elements_, targetId);
+    if (!active_ || !radial(radialElement) || !line(targetElement))
+        return false;
+    const auto previousElements = elements_;
+    const auto previousConstraints = constraints_;
+    constraints_.values.push_back({document::SketchConstraintId{constraints_.nextId++},
+                                   document::SketchConstraintKind::tangent,
+                                   {radialId, document::SketchPointPosition::start},
+                                   document::SketchGeometryReference{
+                                       targetId, document::SketchPointPosition::start}});
+    if (solveConstraints())
+        return true;
+    elements_ = previousElements;
+    constraints_ = previousConstraints;
+    static_cast<void>(solveConstraints());
+    return false;
+}
+
 } // namespace voelund::application

@@ -29,9 +29,16 @@ void addAutomaticCoincidence(application::SketchEditorSession& editor,
             created, document::SketchElementId{target->elementId}));
         return;
     }
+    if (target->point == viewport::SketchPointKind::onObject) {
+        static_cast<void>(editor.addPointOnObjectReference(
+            created, document::SketchElementId{target->elementId}));
+        return;
+    }
     if (target->elementId == 0) {
         if (target->point == viewport::SketchPointKind::projected) {
-            static_cast<void>(editor.addFixedReference(created, targetPoint));
+            static_cast<void>(editor.addSupportReference(
+                created, targetPoint, target->supportReferenceId,
+                target->supportReferenceParameter));
             return;
         }
         const auto axis = target->point == viewport::SketchPointKind::origin
@@ -66,15 +73,26 @@ void SketchEditorToolController::confirmElement(const viewport::SketchElementInt
                                     intent.firstReference, {intent.firstX, intent.firstY});
             addAutomaticCoincidence(*editor_, {*id, document::SketchPointPosition::end},
                                     intent.secondReference, {intent.secondX, intent.secondY});
-            if (intent.automaticConstraint.has_value())
+            if (intent.automaticConstraint == viewport::SketchAutomaticConstraint::horizontal ||
+                intent.automaticConstraint == viewport::SketchAutomaticConstraint::vertical)
                 static_cast<void>(editor_->setSelectedLineConstraint(
                     *intent.automaticConstraint == viewport::SketchAutomaticConstraint::horizontal
                         ? document::SketchLineConstraint::horizontal
                         : document::SketchLineConstraint::vertical));
+            else if (intent.automaticConstraint == viewport::SketchAutomaticConstraint::parallel ||
+                     intent.automaticConstraint ==
+                         viewport::SketchAutomaticConstraint::perpendicular ||
+                     !intent.automaticConstraint.has_value())
+                static_cast<void>(editor_->addAutomaticLineRelation(*id));
         } else if (tool == application::SketchDrawingTool::circle ||
                    tool == application::SketchDrawingTool::ellipse) {
             addAutomaticCoincidence(*editor_, {*id, document::SketchPointPosition::center},
                                     intent.firstReference, {intent.firstX, intent.firstY});
+            if (tool == application::SketchDrawingTool::circle &&
+                intent.automaticConstraint == viewport::SketchAutomaticConstraint::tangent &&
+                intent.secondReference.has_value())
+                static_cast<void>(editor_->addTangencyReference(
+                    *id, document::SketchElementId{intent.secondReference->elementId}));
         } else if (tool == application::SketchDrawingTool::arc) {
             addAutomaticCoincidence(*editor_, {*id, document::SketchPointPosition::center},
                                     intent.firstReference, {intent.firstX, intent.firstY});
@@ -82,6 +100,10 @@ void SketchEditorToolController::confirmElement(const viewport::SketchElementInt
                                     intent.secondReference, {intent.secondX, intent.secondY});
             addAutomaticCoincidence(*editor_, {*id, document::SketchPointPosition::end},
                                     intent.thirdReference, {intent.third->first, intent.third->second});
+            if (intent.automaticConstraint == viewport::SketchAutomaticConstraint::tangent &&
+                intent.thirdReference.has_value())
+                static_cast<void>(editor_->addTangencyReference(
+                    *id, document::SketchElementId{intent.thirdReference->elementId}));
         } else if (tool == application::SketchDrawingTool::threePointArc) {
             const auto match =
                 std::ranges::find(editor_->elements(), *id, &document::SketchElement::id);

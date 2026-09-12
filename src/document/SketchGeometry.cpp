@@ -133,8 +133,14 @@ void validateSketchConstraints(const SketchElements& elements,
         if (std::ranges::any_of(constraint.auxiliaryValues,
                                 [](double value) { return !std::isfinite(value); }))
             throw std::invalid_argument("Sketch constraint auxiliary values must be finite");
-        if (constraint.kind != SketchConstraintKind::fixed && !constraint.auxiliaryValues.empty())
-            throw std::invalid_argument("Only fixed constraints accept auxiliary values");
+        const bool supportCoordinate =
+            (constraint.kind == SketchConstraintKind::coordinateX ||
+             constraint.kind == SketchConstraintKind::coordinateY) &&
+            constraint.auxiliaryValues.size() == 2;
+        if (constraint.kind != SketchConstraintKind::fixed && !supportCoordinate &&
+            !constraint.auxiliaryValues.empty())
+            throw std::invalid_argument(
+                "Only fixed and support-coordinate constraints accept auxiliary values");
         if (constraint.kind != SketchConstraintKind::symmetric && constraint.third.has_value())
             throw std::invalid_argument("Only symmetric constraints accept a third reference");
 
@@ -159,6 +165,11 @@ void validateSketchConstraints(const SketchElements& elements,
             requirePoint(constraint.first);
             if (constraint.second.has_value())
                 throw std::invalid_argument("Coordinate constraint must be unary");
+            if (supportCoordinate &&
+                (constraint.auxiliaryValues[0] < 1.0 ||
+                 std::floor(constraint.auxiliaryValues[0]) != constraint.auxiliaryValues[0] ||
+                 constraint.auxiliaryValues[1] < 0.0 || constraint.auxiliaryValues[1] > 1.0))
+                throw std::invalid_argument("Support-coordinate attachment is invalid");
         } else if (constraint.kind == SketchConstraintKind::horizontal ||
                    constraint.kind == SketchConstraintKind::vertical ||
                    constraint.kind == SketchConstraintKind::distance) {

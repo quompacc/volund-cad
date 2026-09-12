@@ -25,6 +25,8 @@ class CadSession final {
     CadSession();
 
     [[nodiscard]] TopoDS_Shape currentShape() const;
+    [[nodiscard]] std::optional<TopoDS_Shape>
+    featureShape(document::FeatureId featureId) const;
     [[nodiscard]] std::span<const features::EvaluatedBody> currentBodies() const noexcept;
     [[nodiscard]] std::span<const document::FeatureDescriptor> features() const noexcept;
     [[nodiscard]] std::optional<document::FeatureId> selectedFeature() const noexcept;

@@ -45,6 +45,30 @@ int main(int argc, char* argv[]) {
         parameters.resultMode = voelund::document::CylinderResultMode::separate;
         static_cast<void>(session.setSelectedCylinderParameters(parameters));
         static_cast<void>(session.selectFeature(voelund::document::ModelDocument::initialBoxId()));
+        const voelund::viewport::PlanarFaceSelection previousTop{
+            voelund::document::ModelDocument::initialBoxId().value(), 0.0, 0.0, 20.0, 0.0,
+            0.0, 1.0, 1.0, 0.0, 0.0};
+        const auto boxShape =
+            session.featureShape(voelund::document::ModelDocument::initialBoxId());
+        const auto resolvedTop = boxShape.has_value()
+                                     ? voelund::viewport::resolvePlanarFaceSelection(previousTop,
+                                                                                    *boxShape)
+                                     : std::nullopt;
+        if (!resolvedTop.has_value() || resolvedTop->referenceSegments.empty() ||
+            std::abs(resolvedTop->originZ - 20.0) > 1.0e-6)
+            return 3;
+        auto changedBox = session.selectedBoxParameters();
+        changedBox.dimensions.height = 27.0;
+        if (!session.setSelectedBoxParameters(changedBox))
+            return 3;
+        const auto changedShape =
+            session.featureShape(voelund::document::ModelDocument::initialBoxId());
+        const auto movedTop = changedShape.has_value()
+                                  ? voelund::viewport::resolvePlanarFaceSelection(previousTop,
+                                                                                 *changedShape)
+                                  : std::nullopt;
+        if (!movedTop.has_value() || std::abs(movedTop->originZ - 27.0) > 1.0e-6)
+            return 3;
     }
     std::vector<voelund::viewport::SceneSketchElement> smokeSketchElements;
     std::vector<voelund::viewport::SceneSketchConstraint> smokeSketchConstraints;

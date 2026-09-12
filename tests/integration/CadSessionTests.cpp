@@ -1,5 +1,7 @@
 #include <voelund/application/CadSession.hpp>
 #include <voelund/features/FeatureGraph.hpp>
+#include <voelund/features/SketchSupportResolver.hpp>
+#include <voelund/kernel/ShapeFactory.hpp>
 
 #include <BRepBndLib.hxx>
 #include <BRepGProp.hxx>
@@ -31,6 +33,19 @@ double maximumXOf(const TopoDS_Shape& shape) {
     double maximumZ = 0.0;
     bounds.Get(minimumX, minimumY, minimumZ, maximumX, maximumY, maximumZ);
     return maximumX;
+}
+
+double maximumZOf(const TopoDS_Shape& shape) {
+    Bnd_Box bounds;
+    BRepBndLib::Add(shape, bounds);
+    double minimumX = 0.0;
+    double minimumY = 0.0;
+    double minimumZ = 0.0;
+    double maximumX = 0.0;
+    double maximumY = 0.0;
+    double maximumZ = 0.0;
+    bounds.Get(minimumX, minimumY, minimumZ, maximumX, maximumY, maximumZ);
+    return maximumZ;
 }
 
 bool recomputeTracksDocumentHistory() {
@@ -403,6 +418,57 @@ bool repeatedSketchExtrusionsRemainConnected() {
            std::abs(volumeOf(session.currentShape()) - expectedVolume) < 1.0e-4;
 }
 
+bool sketchSupportFollowsChangedFace() {
+    voelund::application::CadSession session;
+    session.newDocument();
+    const auto boxId = session.addBoxFeature();
+    const voelund::document::SketchPlane topPlane{0.0, 0.0, 40.0, 0.0, 0.0, 1.0,
+                                                   1.0, 0.0, 0.0};
+    static_cast<void>(session.addSketchExtrusion(
+        boxId, topPlane, voelund::document::SketchRectangle{2.0, 3.0, 8.0, 9.0}, 10.0));
+    if (!session.featureShape(boxId).has_value() ||
+        std::abs(maximumZOf(session.currentShape()) - 50.0) > 1.0e-6)
+        return false;
+    if (!session.selectFeature(boxId))
+        return false;
+    auto changed = session.selectedBoxParameters();
+    changed.dimensions.height = 47.0;
+    return session.setSelectedBoxParameters(changed) &&
+           std::abs(maximumZOf(session.currentShape()) - 57.0) < 1.0e-6;
+}
+
+bool projectedSupportPointsFollowChangedEdges() {
+    using namespace voelund::document;
+    SketchParameters sketch{{0.0, 0.0, 20.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0},
+                            {{{SketchElementId{1}, SketchLine{{1.0, 1.0}, {2.0, 2.0}}}}, 2}};
+    for (std::uint64_t referenceId = 1; referenceId <= 4; ++referenceId) {
+        const auto attachment = std::vector<double>{static_cast<double>(referenceId), 1.0};
+        sketch.constraints.values.push_back(
+            {SketchConstraintId{sketch.constraints.nextId++}, SketchConstraintKind::coordinateX,
+             {SketchElementId{1}, SketchPointPosition::start}, std::nullopt, 0.0, std::nullopt,
+             attachment});
+        sketch.constraints.values.push_back(
+            {SketchConstraintId{sketch.constraints.nextId++}, SketchConstraintKind::coordinateY,
+             {SketchElementId{1}, SketchPointPosition::start}, std::nullopt, 0.0, std::nullopt,
+             attachment});
+    }
+    const auto original = voelund::kernel::ShapeFactory::makeBox({40.0, 30.0, 20.0});
+    if (!voelund::features::updateSketchSupportReferences(sketch, original))
+        return false;
+    std::vector<double> originalValues;
+    for (const auto& constraint : sketch.constraints.values)
+        originalValues.push_back(constraint.value);
+    const auto changed = voelund::kernel::ShapeFactory::makeBox({55.0, 36.0, 27.0});
+    if (!voelund::features::updateSketchSupportReferences(sketch, changed) ||
+        std::abs(sketch.plane.originZ - 27.0) > 1.0e-9)
+        return false;
+    for (std::size_t index = 0; index < originalValues.size(); ++index) {
+        if (std::abs(originalValues[index] - sketch.constraints.values[index].value) > 1.0e-9)
+            return true;
+    }
+    return false;
+}
+
 bool multipleSketchElementsExtrudeAllClosedProfiles() {
     voelund::application::CadSession session;
     session.newDocument();
@@ -570,6 +636,14 @@ int main() {
     }
     if (!repeatedSketchExtrusionsRemainConnected()) {
         std::cerr << "Repeated sketch extrusion test failed\n";
+        return 1;
+    }
+    if (!sketchSupportFollowsChangedFace()) {
+        std::cerr << "Associative sketch support test failed\n";
+        return 1;
+    }
+    if (!projectedSupportPointsFollowChangedEdges()) {
+        std::cerr << "Projected sketch support reference test failed\n";
         return 1;
     }
     if (!multipleSketchElementsExtrudeAllClosedProfiles()) {

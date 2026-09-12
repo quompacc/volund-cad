@@ -172,6 +172,13 @@ bool CadSession::canAddCylinder() const noexcept { return !document_.features().
 
 TopoDS_Shape CadSession::currentShape() const { return currentShape_; }
 
+std::optional<TopoDS_Shape> CadSession::featureShape(document::FeatureId featureId) const {
+    const auto match = std::ranges::find(currentFeatures_, featureId,
+                                         &features::EvaluatedFeature::id);
+    return match == currentFeatures_.end() ? std::nullopt
+                                           : std::optional<TopoDS_Shape>{match->shape};
+}
+
 std::span<const features::EvaluatedBody> CadSession::currentBodies() const noexcept {
     return currentBodies_;
 }

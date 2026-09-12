@@ -66,6 +66,16 @@ class SketchEditorSession final {
                                             document::SketchElementId line);
     [[nodiscard]] bool addFixedReference(document::SketchGeometryReference reference,
                                          document::SketchPoint point);
+    [[nodiscard]] bool addSupportReference(document::SketchGeometryReference reference,
+                                           document::SketchPoint point,
+                                           std::uint64_t supportReferenceId,
+                                           double supportReferenceParameter);
+    [[nodiscard]] bool addPointOnObjectReference(document::SketchGeometryReference reference,
+                                                 document::SketchElementId object);
+    [[nodiscard]] std::optional<document::SketchConstraintKind>
+    addAutomaticLineRelation(document::SketchElementId line);
+    [[nodiscard]] bool addTangencyReference(document::SketchElementId radial,
+                                            document::SketchElementId target);
     [[nodiscard]] bool isSelectedConstruction() const noexcept;
     [[nodiscard]] bool toggleSelectedConstruction();
     [[nodiscard]] bool canLockSelectedReference() const noexcept;

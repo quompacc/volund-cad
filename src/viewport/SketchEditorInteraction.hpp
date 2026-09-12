@@ -37,6 +37,12 @@ class SketchEditorInteraction final {
 
     [[nodiscard]] bool valid(const SketchElementIntent& intent) const noexcept;
     [[nodiscard]] std::optional<InteractionPoint> interactionPoint(int x, int y) const;
+    [[nodiscard]] std::pair<std::pair<double, double>,
+                            std::optional<SketchAutomaticConstraint>>
+    relatedLineEnd(std::pair<double, double> first, std::pair<double, double> second) const;
+    [[nodiscard]] bool tangentToReferencedLine(
+        std::pair<double, double> center, std::pair<double, double> radialPoint,
+        const std::optional<SketchPointReferenceIntent>& reference) const;
 
     PlanarFaceSelection support_{};
     SketchElementTool tool_{SketchElementTool::line};

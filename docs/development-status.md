@@ -136,7 +136,14 @@ gehören nicht zum Produktpfad.
   schrittweises Escape und lokales Strg-Z/Strg-Y vervollständigen den Bedienablauf.
 - Sketch-Ursprung und lokale Achsen sind sichtbare Fangreferenzen. Kanten einer neu
   gewählten planaren Fläche werden violett projiziert; ihre End- und Mittelpunkte
-  können neue Geometrie über persistente Koordinatenconstraints binden.
+  können neue Geometrie über persistente Koordinatenconstraints binden. Diese
+  Constraints speichern Kantenabschnitt und relative Position; nach Änderungen des
+  Stützfeatures werden Fläche, Skizzenebene und gebundene Punkte vor dem PlaneGCS-Lauf
+  neu aufgelöst.
+- Beim Zeichnen werden Koinzidenz, Mittelpunkt, Punkt-auf-Linie, Horizontal,
+  Vertikal, Parallel, Rechtwinkligkeit und Linie-Kreis-Tangentialität automatisch
+  erkannt, exakt eingerastet und als dauerhafte Relation übernommen. Die Vorschau
+  zeigt die bevorstehende Relation bereits vor dem Bestätigen.
 - Neue Dateien verwenden `VOLUND 16`; bestehende `VOLUND 1`-Rechtecksketches,
   `VOLUND 2`-Linien, `VOLUND 3`-Richtungsconstraints und `VOLUND 4`-Extrusionen
   sowie `VOLUND 5`-Profilauswahlen werden beim Laden migriert. Alte Extrusionen
