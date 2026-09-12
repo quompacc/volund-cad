@@ -34,6 +34,8 @@ document::SketchPoint referencePoint(const document::SketchParameters& sketch,
         return {arc->center.x + arc->radius * std::cos(angle),
                 arc->center.y + arc->radius * std::sin(angle)};
     }
+    if (const auto* ellipse = std::get_if<document::SketchEllipse>(&geometry))
+        return ellipse->center;
     const auto& rectangle = std::get<document::SketchRectangle>(geometry);
     if (reference.point == document::SketchPointPosition::center)
         return {(rectangle.first.x + rectangle.second.x) * 0.5,

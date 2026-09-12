@@ -1,14 +1,20 @@
 #include "SketchPresentation.hpp"
 
 #include <Aspect_TypeOfMarker.hxx>
+#include <BRepBuilderAPI_MakeEdge.hxx>
 #include <Geom_CartesianPoint.hxx>
 #include <Graphic3d_ZLayerId.hxx>
 #include <Prs3d_PointAspect.hxx>
 #include <Quantity_Color.hxx>
 #include <Quantity_TypeOfColor.hxx>
 #include <TopAbs_ShapeEnum.hxx>
+#include <TopoDS_Edge.hxx>
+#include <gp_Dir.hxx>
+#include <gp_Pnt.hxx>
+#include <gp_Vec.hxx>
 
 #include <algorithm>
+#include <array>
 
 namespace voelund::viewport {
 namespace {
@@ -74,6 +80,61 @@ void SketchPresentation::clear(const occ::handle<AIS_InteractiveContext>& contex
         }
     }
     elements_.clear();
+}
+
+void SketchPresentation::setReferences(const occ::handle<AIS_InteractiveContext>& context,
+                                       const PlanarFaceSelection& support, bool visible) {
+    if (!context.IsNull()) {
+        for (const auto& axis : referenceAxes_)
+            context->Remove(axis, false);
+        for (const auto& edge : projectedEdges_)
+            context->Remove(edge, false);
+        if (!origin_.IsNull())
+            context->Remove(origin_, false);
+    }
+    referenceAxes_.clear();
+    projectedEdges_.clear();
+    origin_.Nullify();
+    if (!visible || context.IsNull())
+        return;
+    const gp_Pnt origin(support.originX, support.originY, support.originZ);
+    const gp_Dir normal(support.normalX, support.normalY, support.normalZ);
+    const gp_Dir xDirection(support.xDirectionX, support.xDirectionY, support.xDirectionZ);
+    const gp_Dir yDirection = normal.Crossed(xDirection);
+    constexpr double extent = 1000.0;
+    const std::array directions{xDirection, yDirection};
+    const std::array colors{Quantity_Color(0.95, 0.25, 0.2, Quantity_TOC_RGB),
+                            Quantity_Color(0.2, 0.65, 1.0, Quantity_TOC_RGB)};
+    for (std::size_t index = 0; index < directions.size(); ++index) {
+        const gp_Vec offset(directions[index]);
+        occ::handle<AIS_Shape> axis = new AIS_Shape(
+            BRepBuilderAPI_MakeEdge(origin.Translated(offset * -extent),
+                                    origin.Translated(offset * extent))
+                .Edge());
+        axis->SetColor(colors[index]);
+        axis->SetWidth(1.5);
+        axis->SetZLayer(Graphic3d_ZLayerId_Topmost);
+        context->Display(axis, false);
+        referenceAxes_.push_back(axis);
+    }
+    for (const PlanarReferenceSegment& segment : support.referenceSegments) {
+        occ::handle<AIS_Shape> edge = new AIS_Shape(
+            BRepBuilderAPI_MakeEdge(gp_Pnt(segment.firstWorldX, segment.firstWorldY,
+                                          segment.firstWorldZ),
+                                    gp_Pnt(segment.secondWorldX, segment.secondWorldY,
+                                          segment.secondWorldZ))
+                .Edge());
+        edge->SetColor(Quantity_Color(0.75, 0.45, 1.0, Quantity_TOC_RGB));
+        edge->SetWidth(2.0);
+        edge->SetZLayer(Graphic3d_ZLayerId_Topmost);
+        context->Display(edge, false);
+        projectedEdges_.push_back(edge);
+    }
+    origin_ = new AIS_Point(new Geom_CartesianPoint(origin));
+    origin_->Attributes()->SetPointAspect(
+        new Prs3d_PointAspect(Aspect_TOM_PLUS, selectedColor, 7.0));
+    origin_->SetZLayer(Graphic3d_ZLayerId_Topmost);
+    context->Display(origin_, false);
 }
 
 void SketchPresentation::select(const occ::handle<AIS_InteractiveContext>& context,

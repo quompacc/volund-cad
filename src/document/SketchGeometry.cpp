@@ -48,6 +48,14 @@ void validateGeometry(const SketchGeometry& geometry) {
             throw std::invalid_argument("Sketch circle must have a finite positive radius");
         return;
     }
+    if (const auto* ellipse = std::get_if<SketchEllipse>(&geometry)) {
+        if (!finite(ellipse->center) || !std::isfinite(ellipse->majorRadius) ||
+            !std::isfinite(ellipse->minorRadius) || !std::isfinite(ellipse->rotation) ||
+            ellipse->majorRadius <= minimumLength || ellipse->minorRadius <= minimumLength ||
+            ellipse->minorRadius > ellipse->majorRadius)
+            throw std::invalid_argument("Sketch ellipse must have finite positive radii");
+        return;
+    }
     const SketchArc& arc = std::get<SketchArc>(geometry);
     const double sweep = arc.endAngle - arc.startAngle;
     if (!finite(arc.center) || !std::isfinite(arc.radius) || arc.radius <= minimumLength ||
@@ -105,6 +113,9 @@ void validateSketchConstraints(const SketchElements& elements,
             return;
         }
         if (std::holds_alternative<SketchCircle>(geometry) &&
+            reference.point == SketchPointPosition::center)
+            return;
+        if (std::holds_alternative<SketchEllipse>(geometry) &&
             reference.point == SketchPointPosition::center)
             return;
         if (std::holds_alternative<SketchArc>(geometry))
@@ -247,17 +258,22 @@ void validateSketchConstraints(const SketchElements& elements,
                 const SketchGeometry& first = findElement(constraint.first.element).geometry;
                 const SketchGeometry& second = findElement(constraint.second->element).geometry;
                 if (constraint.first.element == constraint.second->element ||
-                    !std::holds_alternative<SketchCircle>(first) ||
-                    !std::holds_alternative<SketchCircle>(second))
+                    (!std::holds_alternative<SketchCircle>(first) &&
+                     !std::holds_alternative<SketchArc>(first)) ||
+                    (!std::holds_alternative<SketchCircle>(second) &&
+                     !std::holds_alternative<SketchArc>(second)))
                     throw std::invalid_argument(
                         "Concentric constraint needs two different circles");
             } else if (constraint.kind == SketchConstraintKind::equal) {
                 const SketchGeometry& first = findElement(constraint.first.element).geometry;
                 const SketchGeometry& second = findElement(constraint.second->element).geometry;
                 if (constraint.first.element == constraint.second->element ||
-                    first.index() != second.index() ||
-                    (!std::holds_alternative<SketchLine>(first) &&
-                     !std::holds_alternative<SketchCircle>(first)))
+                    !((std::holds_alternative<SketchLine>(first) &&
+                       std::holds_alternative<SketchLine>(second)) ||
+                      ((std::holds_alternative<SketchCircle>(first) ||
+                        std::holds_alternative<SketchArc>(first)) &&
+                       (std::holds_alternative<SketchCircle>(second) ||
+                        std::holds_alternative<SketchArc>(second)))))
                     throw std::invalid_argument(
                         "Equal constraint needs two different lines or two different circles");
             } else if (constraint.kind == SketchConstraintKind::tangent) {
@@ -267,9 +283,12 @@ void validateSketchConstraints(const SketchElements& elements,
                 const bool secondLine = std::holds_alternative<SketchLine>(second);
                 const bool firstCircle = std::holds_alternative<SketchCircle>(first);
                 const bool secondCircle = std::holds_alternative<SketchCircle>(second);
+                const bool firstArc = std::holds_alternative<SketchArc>(first);
+                const bool secondArc = std::holds_alternative<SketchArc>(second);
                 if (constraint.first.element == constraint.second->element ||
-                    !((firstLine && secondCircle) || (firstCircle && secondLine) ||
-                      (firstCircle && secondCircle)))
+                    !((firstLine && (secondCircle || secondArc)) ||
+                      (secondLine && (firstCircle || firstArc)) ||
+                      ((firstCircle || firstArc) && (secondCircle || secondArc))))
                     throw std::invalid_argument(
                         "Tangent constraint needs a line and circle or two circles");
             } else {

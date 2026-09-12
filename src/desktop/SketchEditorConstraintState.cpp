@@ -35,7 +35,18 @@ void SketchEditorToolController::syncConstraintState() {
     panel_.setActionEnabled("lock_point", editor_->canLockSelectedReference());
     panel_.setActionEnabled("unlock_point", editor_->isSelectedReferenceLocked());
     panel_.setActionEnabled("construction", editor_->selectedElement().has_value());
+    const bool hasSelection = editor_->selectedElement().has_value();
+    panel_.setActionEnabled("trim", hasSelection);
+    panel_.setActionEnabled("extend", hasSelection);
+    panel_.setActionEnabled("split", hasSelection);
+    panel_.setActionEnabled("offset", hasSelection);
+    panel_.setActionEnabled("linear_pattern", hasSelection);
+    panel_.setActionEnabled("circular_pattern", hasSelection);
+    panel_.setActionEnabled("fillet", editor_->selectedReferences().size() >= 2);
+    panel_.setActionEnabled("mirror", editor_->selectedReferences().size() >= 2);
     panel_.setActionEnabled("remove_constraint", !editor_->constraints().empty());
+    panel_.setActionEnabled("undo_sketch", editor_->canUndo());
+    panel_.setActionEnabled("redo_sketch", editor_->canRedo());
     panel_.setAcceptEnabled(editor_->canAccept());
     const auto& result = editor_->lastSolveResult();
     if (result.status == features::SketchSolveStatus::conflicting) {

@@ -34,7 +34,7 @@ struct SceneBody final {
     bool transformable;
 };
 
-enum class SketchPointKind { start, end, center };
+enum class SketchPointKind { start, end, center, midpoint, origin, xAxis, yAxis, projected };
 
 struct SceneSketchPoint final {
     std::uint64_t elementId;
@@ -81,6 +81,19 @@ struct SceneSketchConstraint final {
     bool editable;
 };
 
+struct PlanarReferenceSegment final {
+    double firstX;
+    double firstY;
+    double secondX;
+    double secondY;
+    double firstWorldX;
+    double firstWorldY;
+    double firstWorldZ;
+    double secondWorldX;
+    double secondWorldY;
+    double secondWorldZ;
+};
+
 struct PlanarFaceSelection final {
     std::uint64_t bodyId;
     double originX;
@@ -92,6 +105,7 @@ struct PlanarFaceSelection final {
     double xDirectionX;
     double xDirectionY;
     double xDirectionZ;
+    std::vector<PlanarReferenceSegment> referenceSegments{};
 };
 
 struct SketchRectangleResult final {
@@ -103,7 +117,20 @@ struct SketchRectangleResult final {
     double distance;
 };
 
-enum class SketchElementTool { select, line, rectangle, circle, arc };
+enum class SketchElementTool {
+    select,
+    line,
+    polyline,
+    rectangle,
+    circle,
+    arc,
+    threePointArc,
+    ellipse,
+    slot,
+    polygon
+};
+
+enum class SketchAutomaticConstraint { horizontal, vertical };
 
 struct SketchElementIntent final {
     double firstX;
@@ -114,6 +141,7 @@ struct SketchElementIntent final {
     std::optional<SketchPointReferenceIntent> firstReference;
     std::optional<SketchPointReferenceIntent> secondReference;
     std::optional<SketchPointReferenceIntent> thirdReference;
+    std::optional<SketchAutomaticConstraint> automaticConstraint;
 };
 
 #if defined(VOELUND_VIEWPORT_QT_OPENGL)
@@ -148,6 +176,8 @@ class CadViewport final : public CadViewportBase {
     void beginRectangleSketch(const PlanarFaceSelection& support);
     void beginSketchEditor(const PlanarFaceSelection& support, SketchElementTool tool);
     void setSketchEditorTool(SketchElementTool tool);
+    void continueSketchPolyline(double x, double y, std::uint64_t elementId);
+    [[nodiscard]] bool cancelSketchEditorStep();
     void updateSketchExtrusionPreview(double distance);
     void cancelSketch();
     void setBodyMoveHandler(std::function<void(std::uint64_t, double, double, double)> handler);

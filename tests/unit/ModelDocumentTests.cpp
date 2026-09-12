@@ -134,18 +134,21 @@ bool sketchElementsKeepStableIdsThroughHistoryAndSerialization() {
     }
     const auto arcId = document.addSketchElement(
         sketchId, voelund::document::SketchArc{{4.0, 4.0}, 3.0, 0.0, 1.5707963267948966});
+    const auto ellipseId = document.addSketchElement(
+        sketchId, voelund::document::SketchEllipse{{8.0, 7.0}, 4.0, 2.0, 0.25});
     std::ostringstream output;
     voelund::document::DocumentSerializer::write(document, output);
-    if (!output.str().starts_with("VOLUND 15\n"))
+    if (!output.str().starts_with("VOLUND 16\n"))
         return false;
     std::istringstream input(output.str());
     const auto loaded = voelund::document::DocumentSerializer::read(input);
     const auto& elements = loaded.sketchParameters(sketchId).elements;
-    return elements.values.size() == 3 && elements.values[0].id.value() == 7 &&
+    return elements.values.size() == 4 && elements.values[0].id.value() == 7 &&
            elements.values[1].id == circleId && elements.values[2].id == arcId &&
-           elements.nextId == 10 &&
+           elements.values[3].id == ellipseId && elements.nextId == 11 &&
            std::holds_alternative<voelund::document::SketchCircle>(elements.values[1].geometry) &&
-           std::holds_alternative<voelund::document::SketchArc>(elements.values[2].geometry);
+           std::holds_alternative<voelund::document::SketchArc>(elements.values[2].geometry) &&
+           std::holds_alternative<voelund::document::SketchEllipse>(elements.values[3].geometry);
 }
 
 bool relationalConstraintsRoundtripInCurrentVersion() {
@@ -266,7 +269,7 @@ bool relationalConstraintsRoundtripInCurrentVersion() {
     const auto loaded = DocumentSerializer::read(input);
     const auto& constraints = loaded.sketchParameters(sketchId).constraints;
     const auto& loadedSketch = loaded.sketchParameters(sketchId);
-    return output.str().starts_with("VOLUND 15\n") && constraints == sketch.constraints &&
+    return output.str().starts_with("VOLUND 16\n") && constraints == sketch.constraints &&
            loadedSketch.elements.values[3].construction;
 }
 

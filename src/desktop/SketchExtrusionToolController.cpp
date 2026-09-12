@@ -36,7 +36,8 @@ void SketchExtrusionToolController::begin(const viewport::PlanarFaceSelection& s
         {},
         {},
         [this]() { accept(); },
-        [this]() { cancel(); }});
+        [this]() { cancel(); },
+        {}});
     viewport_.beginRectangleSketch(support);
     statusChanged_(QObject::tr("Sketch: set two rectangle corners"));
 }
@@ -63,7 +64,8 @@ void SketchExtrusionToolController::beginSelectedProfiles() {
         {},
         {},
         [this]() { accept(); },
-        [this]() { cancel(); }});
+        [this]() { cancel(); },
+        {}});
     panel_.setAcceptEnabled(true);
     statusChanged_(QObject::tr("Extrusion ready: %1 profile(s)").arg(profileIds_.size()));
 }

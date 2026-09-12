@@ -42,12 +42,14 @@ class SketchEditorToolController final {
     void unlockSelectedReference();
     void removeSelected();
     void removeLastConstraint();
+    void applyEditOperation(const std::string& id);
     void resetTranslationInputs();
     void syncSelectedDimensionInputs();
     void syncConstraintState();
     void showPanel();
     void refreshPresentation();
     void accept();
+    void stepBack();
 
     application::CadSession& session_;
     viewport::CadViewport& viewport_;
@@ -57,7 +59,13 @@ class SketchEditorToolController final {
     std::unique_ptr<application::SketchEditorSession> editor_;
     double translationX_{0.0};
     double translationY_{0.0};
+    double filletRadius_{2.0};
+    double offsetDistance_{1.0};
+    double patternCount_{3.0};
+    double patternSpacing_{10.0};
+    double patternAngle_{360.0};
     bool editing_{false};
+    std::optional<viewport::SketchAutomaticConstraint> previewAutomatic_;
 };
 
 } // namespace voelund::desktop

@@ -150,13 +150,13 @@ bool SketchEditorSession::canAddSelectedRelation(
                (line(secondElement) || circle(secondElement));
     if (kind == document::SketchConstraintKind::equal)
         return (line(firstElement) && line(secondElement)) ||
-               (circle(firstElement) && circle(secondElement));
+               (radial(firstElement) && radial(secondElement));
     if (kind == document::SketchConstraintKind::tangent)
-        return (line(firstElement) && circle(secondElement)) ||
-               (circle(firstElement) && line(secondElement)) ||
-               (circle(firstElement) && circle(secondElement));
+        return (line(firstElement) && radial(secondElement)) ||
+               (radial(firstElement) && line(secondElement)) ||
+               (radial(firstElement) && radial(secondElement));
     if (kind == document::SketchConstraintKind::concentric)
-        return circle(firstElement) && circle(secondElement);
+        return radial(firstElement) && radial(secondElement);
     return false;
 }
 
@@ -246,6 +246,71 @@ bool SketchEditorSession::addCoincidentReferences(document::SketchGeometryRefere
     lastSolveResult_ = previousSolve;
     constraints_.values.pop_back();
     --constraints_.nextId;
+    return false;
+}
+
+bool SketchEditorSession::addAxisReference(document::SketchGeometryReference reference,
+                                           SketchAxisReference axis) {
+    if (!active_ || reference.element.value() == 0)
+        return false;
+    const auto previousElements = elements_;
+    const auto previousConstraints = constraints_;
+    const auto addCoordinate = [this, reference](document::SketchConstraintKind kind) {
+        const auto duplicate = std::ranges::find_if(constraints_.values, [&](const auto& item) {
+            return item.kind == kind && item.first == reference && !item.second.has_value() &&
+                   item.value == 0.0;
+        });
+        if (duplicate == constraints_.values.end())
+            constraints_.values.push_back({document::SketchConstraintId{constraints_.nextId++},
+                                           kind, reference, std::nullopt, 0.0});
+    };
+    if (axis == SketchAxisReference::origin || axis == SketchAxisReference::yAxis)
+        addCoordinate(document::SketchConstraintKind::coordinateX);
+    if (axis == SketchAxisReference::origin || axis == SketchAxisReference::xAxis)
+        addCoordinate(document::SketchConstraintKind::coordinateY);
+    if (solveConstraints())
+        return true;
+    elements_ = previousElements;
+    constraints_ = previousConstraints;
+    static_cast<void>(solveConstraints());
+    return false;
+}
+
+bool SketchEditorSession::addMidpointReference(document::SketchGeometryReference reference,
+                                               document::SketchElementId line) {
+    if (!active_ || reference.element == line)
+        return false;
+    const auto previousElements = elements_;
+    const auto previousConstraints = constraints_;
+    constraints_.values.push_back(
+        {document::SketchConstraintId{constraints_.nextId++},
+         document::SketchConstraintKind::midpoint, reference,
+         document::SketchGeometryReference{line, document::SketchPointPosition::start}});
+    if (solveConstraints())
+        return true;
+    elements_ = previousElements;
+    constraints_ = previousConstraints;
+    static_cast<void>(solveConstraints());
+    return false;
+}
+
+bool SketchEditorSession::addFixedReference(document::SketchGeometryReference reference,
+                                            document::SketchPoint point) {
+    if (!active_ || reference.element.value() == 0)
+        return false;
+    const auto previousElements = elements_;
+    const auto previousConstraints = constraints_;
+    constraints_.values.push_back({document::SketchConstraintId{constraints_.nextId++},
+                                   document::SketchConstraintKind::coordinateX, reference,
+                                   std::nullopt, point.x});
+    constraints_.values.push_back({document::SketchConstraintId{constraints_.nextId++},
+                                   document::SketchConstraintKind::coordinateY, reference,
+                                   std::nullopt, point.y});
+    if (solveConstraints())
+        return true;
+    elements_ = previousElements;
+    constraints_ = previousConstraints;
+    static_cast<void>(solveConstraints());
     return false;
 }
 

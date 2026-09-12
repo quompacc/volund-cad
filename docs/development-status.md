@@ -32,7 +32,7 @@ gehören nicht zum Produktpfad.
 - Sketch und Extrusion sind intern getrennte parametrische Features. Die
   Extrusionsdistanz kann nachträglich editiert und neu berechnet werden.
 - Sketches besitzen ein allgemeines parametrisches Datenmodell mit stabilen lokalen
-  IDs für Linien, Rechtecke, Kreise und Kreisbögen. Mehrere Elemente und mehrere geschlossene
+  IDs für Linien, Rechtecke, Kreise, Kreisbögen und Ellipsen. Mehrere Elemente und mehrere geschlossene
   Profile werden erkannt und gemeinsam extrudiert; offene Elemente bleiben erhalten.
 - Wird ein Sketch im Modellbaum ausgewählt, stellt der Viewport alle enthaltenen
   Elemente als getrennte OCCT-Präsentationen dar. Linien, Rechtecke, Kreise und Bögen sind
@@ -128,7 +128,16 @@ gehören nicht zum Produktpfad.
 - Das Mittelpunktbogen-Werkzeug verwendet drei Klicks für Mittelpunkt, Radiuspunkt
   und Endpunkt. PlaneGCS koppelt Radius, Winkel und beide Endpunkte über seine nativen
   Arc-Regeln. Gemischte geschlossene Linien-Bogen-Konturen sind als Profile extrudierbar.
-- Neue Dateien verwenden `VOLUND 15`; bestehende `VOLUND 1`-Rechtecksketches,
+- Polylinien, Dreipunktbögen, Ellipsen, Langlöcher und regelmäßige Polygone ergänzen
+  die Zeichenwerkzeuge. Langlöcher und Polygone werden in einzeln bearbeitbare Linien
+  und Bögen mit parametrischen Binnenrelationen zerlegt.
+- Trimmen, Verlängern, Teilen, Verrunden, Versetzen, Spiegeln sowie lineare und
+  kreisförmige Muster arbeiten im temporären Editor. Eine sichtbare Rahmenauswahl,
+  schrittweises Escape und lokales Strg-Z/Strg-Y vervollständigen den Bedienablauf.
+- Sketch-Ursprung und lokale Achsen sind sichtbare Fangreferenzen. Kanten einer neu
+  gewählten planaren Fläche werden violett projiziert; ihre End- und Mittelpunkte
+  können neue Geometrie über persistente Koordinatenconstraints binden.
+- Neue Dateien verwenden `VOLUND 16`; bestehende `VOLUND 1`-Rechtecksketches,
   `VOLUND 2`-Linien, `VOLUND 3`-Richtungsconstraints und `VOLUND 4`-Extrusionen
   sowie `VOLUND 5`-Profilauswahlen werden beim Laden migriert. Alte Extrusionen
   behalten dabei ihre bisherige Semantik, alle geschlossenen Profile zu verwenden.
@@ -177,7 +186,7 @@ angefordert wird.
   schlanke FreeBSD-OCCT-Profil aktiviert FreeType für die nativen Constraint- und
   Bemaßungsglyphen, bleibt aber ohne Xlib, TBB, VTK und Qt 5.
 - Beide Windows-Backends durchlaufen denselben Funktions- und Regressionsteststand.
-- Vierzehn CTest-Tests prüfen zusätzlich den unveränderten PlaneGCS-Kern sowie den
+- Fünfzehn CTest-Tests prüfen zusätzlich den unveränderten PlaneGCS-Kern sowie den
   Völund-Adapter einschließlich Freiheitsgraden und stabiler Konfliktzuordnung.
 - Regressionstests sichern sowohl die unabhängige Bewegung getrennter Körper als auch
   die gemeinsame Verschiebung eines Join-Ergebnisses einschließlich Undo.

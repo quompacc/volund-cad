@@ -85,7 +85,17 @@ struct SketchArc final {
     [[nodiscard]] bool operator==(const SketchArc&) const = default;
 };
 
-using SketchGeometry = std::variant<SketchLine, SketchRectangle, SketchCircle, SketchArc>;
+struct SketchEllipse final {
+    SketchPoint center;
+    double majorRadius;
+    double minorRadius;
+    double rotation;
+
+    [[nodiscard]] bool operator==(const SketchEllipse&) const = default;
+};
+
+using SketchGeometry =
+    std::variant<SketchLine, SketchRectangle, SketchCircle, SketchArc, SketchEllipse>;
 
 struct SketchElement final {
     SketchElementId id;

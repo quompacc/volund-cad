@@ -108,6 +108,16 @@ target_link_libraries(
 
 add_test(NAME application.sketch_fix_distance COMMAND voelund_sketch_fix_distance_tests)
 
+add_executable(voelund_sketch_basic_tools_tests integration/SketchBasicToolsTests.cpp)
+target_link_libraries(
+    voelund_sketch_basic_tools_tests
+    PRIVATE
+        voelund_project_options
+        Voelund::Application
+)
+
+add_test(NAME application.sketch_basic_tools COMMAND voelund_sketch_basic_tools_tests)
+
 add_executable(voelund_workspace_tests unit/CommandRegistryTests.cpp)
 target_link_libraries(
     voelund_workspace_tests

@@ -20,7 +20,7 @@ class SketchConstraintPresentation final {
     void clear(const occ::handle<AIS_InteractiveContext>& context);
     [[nodiscard]] std::size_t size() const noexcept;
     [[nodiscard]] std::optional<std::uint64_t>
-    detectedEditableConstraint(const occ::handle<AIS_InteractiveObject>& detected) const noexcept;
+    detectedConstraint(const occ::handle<AIS_InteractiveObject>& detected) const noexcept;
 
   private:
     struct ConstraintPresentation final {

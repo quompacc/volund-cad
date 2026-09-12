@@ -43,10 +43,10 @@ void SketchConstraintPresentation::clear(const occ::handle<AIS_InteractiveContex
 
 std::size_t SketchConstraintPresentation::size() const noexcept { return constraints_.size(); }
 
-std::optional<std::uint64_t> SketchConstraintPresentation::detectedEditableConstraint(
+std::optional<std::uint64_t> SketchConstraintPresentation::detectedConstraint(
     const occ::handle<AIS_InteractiveObject>& detected) const noexcept {
     for (const ConstraintPresentation& constraint : constraints_) {
-        if (constraint.editable && constraint.label == detected)
+        if (constraint.label == detected)
             return constraint.id;
     }
     return std::nullopt;

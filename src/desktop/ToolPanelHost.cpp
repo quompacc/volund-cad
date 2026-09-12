@@ -9,6 +9,7 @@
 #include <QKeySequence>
 #include <QLabel>
 #include <QPushButton>
+#include <QShortcut>
 #include <QSignalBlocker>
 #include <QToolBox>
 #include <QVBoxLayout>
@@ -32,7 +33,24 @@ ToolPanelHost::ToolPanelHost(QWidget* parent) : QDockWidget(parent) {
     auto* buttons = new QHBoxLayout();
     acceptButton_ = new QPushButton(tr("OK"), content_);
     cancelButton_ = new QPushButton(tr("Cancel"), content_);
-    cancelButton_->setShortcut(QKeySequence(Qt::Key_Escape));
+    escapeShortcut_ = new QShortcut(QKeySequence(Qt::Key_Escape), this);
+    undoShortcut_ = new QShortcut(QKeySequence::Undo, this);
+    redoShortcut_ = new QShortcut(QKeySequence::Redo, this);
+    connect(escapeShortcut_, &QShortcut::activated, this, [this]() {
+        if (definition_.stepBack)
+            definition_.stepBack();
+        else if (definition_.cancel)
+            definition_.cancel();
+    });
+    const auto triggerAction = [this](const std::string& id) {
+        const auto match = std::ranges::find(actionInputs_, id, &decltype(actionInputs_)::value_type::first);
+        if (match != actionInputs_.end() && match->second->isEnabled())
+            match->second->click();
+    };
+    connect(undoShortcut_, &QShortcut::activated, this,
+            [triggerAction]() { triggerAction("undo_sketch"); });
+    connect(redoShortcut_, &QShortcut::activated, this,
+            [triggerAction]() { triggerAction("redo_sketch"); });
     acceptButton_->setDefault(true);
     buttons->addStretch();
     buttons->addWidget(acceptButton_);

@@ -25,6 +25,16 @@ viewport::SceneSketchElement makeSceneSketchElement(const features::EvaluatedSke
         points.push_back({element.id.value(), pointKind(point.kind), point.local.x, point.local.y,
                           point.world.X(), point.world.Y(), point.world.Z()});
     }
+    if (element.points.size() == 2) {
+        const auto& first = element.points[0];
+        const auto& second = element.points[1];
+        points.push_back({element.id.value(), viewport::SketchPointKind::midpoint,
+                          (first.local.x + second.local.x) * 0.5,
+                          (first.local.y + second.local.y) * 0.5,
+                          (first.world.X() + second.world.X()) * 0.5,
+                          (first.world.Y() + second.world.Y()) * 0.5,
+                          (first.world.Z() + second.world.Z()) * 0.5});
+    }
     return {element.id.value(), element.shape, conflicting, element.construction,
             std::move(points)};
 }
@@ -75,6 +85,8 @@ QString sketchSelectionSummary(const application::CadSession& session) {
             kind = QObject::tr("Rectangle");
         } else if (std::holds_alternative<document::SketchArc>(element.geometry)) {
             kind = QObject::tr("Arc");
+        } else if (std::holds_alternative<document::SketchEllipse>(element.geometry)) {
+            kind = QObject::tr("Ellipse");
         }
         return summary + QObject::tr("\n\nSelected: %1 #%2").arg(kind).arg(element.id.value());
     }

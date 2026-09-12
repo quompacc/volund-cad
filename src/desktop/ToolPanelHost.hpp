@@ -12,6 +12,7 @@ class QFormLayout;
 class QLabel;
 class QPushButton;
 class QToolBox;
+class QShortcut;
 
 namespace voelund::desktop {
 
@@ -47,6 +48,7 @@ struct ToolPanelDefinition final {
     std::function<void(const std::string&)> actionTriggered;
     std::function<void()> accept;
     std::function<void()> cancel;
+    std::function<void()> stepBack;
 };
 
 class ToolPanelHost final : public QDockWidget {
@@ -70,6 +72,9 @@ class ToolPanelHost final : public QDockWidget {
     QToolBox* actionToolBox_{nullptr};
     QPushButton* acceptButton_{nullptr};
     QPushButton* cancelButton_{nullptr};
+    QShortcut* escapeShortcut_{nullptr};
+    QShortcut* undoShortcut_{nullptr};
+    QShortcut* redoShortcut_{nullptr};
     std::vector<std::pair<std::string, QDoubleSpinBox*>> lengthInputs_;
     std::vector<std::pair<std::string, QComboBox*>> choiceInputs_;
     std::vector<std::pair<std::string, QPushButton*>> actionInputs_;

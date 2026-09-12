@@ -2,6 +2,7 @@
 #include "SketchViewOrientation.hpp"
 
 #include <BRepAdaptor_Surface.hxx>
+#include <BRepAdaptor_Curve.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepBuilderAPI_MakePolygon.hxx>
 #include <BRepPrimAPI_MakePrism.hxx>
@@ -9,6 +10,7 @@
 #include <Quantity_Color.hxx>
 #include <Quantity_TypeOfColor.hxx>
 #include <TopAbs_Orientation.hxx>
+#include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
 #include <TopoDS_Wire.hxx>
 #include <gp_Dir.hxx>
@@ -50,9 +52,31 @@ std::optional<PlanarFaceSelection> planarFaceSelection(std::uint64_t bodyId,
     }
     const gp_Pnt origin = plane.Location();
     const gp_Dir xDirection = plane.XAxis().Direction();
+    const gp_Dir yDirection = normal.Crossed(xDirection);
+    std::vector<PlanarReferenceSegment> references;
+    for (TopExp_Explorer explorer(face, TopAbs_EDGE); explorer.More(); explorer.Next()) {
+        const BRepAdaptor_Curve curve(TopoDS::Edge(explorer.Current()));
+        const int divisions = curve.GetType() == GeomAbs_Line ? 1 : 12;
+        const double firstParameter = curve.FirstParameter();
+        const double lastParameter = curve.LastParameter();
+        gp_Pnt first = curve.Value(firstParameter);
+        for (int index = 1; index <= divisions; ++index) {
+            const gp_Pnt second = curve.Value(firstParameter +
+                                              (lastParameter - firstParameter) * index / divisions);
+            const gp_Vec firstOffset(origin, first);
+            const gp_Vec secondOffset(origin, second);
+            references.push_back({firstOffset.Dot(gp_Vec(xDirection)),
+                                  firstOffset.Dot(gp_Vec(yDirection)),
+                                  secondOffset.Dot(gp_Vec(xDirection)),
+                                  secondOffset.Dot(gp_Vec(yDirection)),
+                                  first.X(), first.Y(), first.Z(), second.X(), second.Y(),
+                                  second.Z()});
+            first = second;
+        }
+    }
     return PlanarFaceSelection{bodyId,         origin.X(),    origin.Y(), origin.Z(),
                                normal.X(),     normal.Y(),    normal.Z(), xDirection.X(),
-                               xDirection.Y(), xDirection.Z()};
+                               xDirection.Y(), xDirection.Z(), std::move(references)};
 }
 
 void SketchInteraction::begin(const PlanarFaceSelection& support,

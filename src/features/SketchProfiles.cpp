@@ -94,7 +94,8 @@ std::vector<SketchProfile> detectClosedProfiles(std::span<const document::Sketch
     for (std::size_t index = 0; index < elements.size(); ++index) {
         if (!elements[index].construction &&
             (std::holds_alternative<document::SketchRectangle>(elements[index].geometry) ||
-             std::holds_alternative<document::SketchCircle>(elements[index].geometry))) {
+             std::holds_alternative<document::SketchCircle>(elements[index].geometry) ||
+             std::holds_alternative<document::SketchEllipse>(elements[index].geometry))) {
             profiles.push_back(SketchProfile{document::SketchProfileId{elements[index].id.value()},
                                              {elements[index].id}});
             used[index] = true;

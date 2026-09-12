@@ -10,6 +10,7 @@
 #include <QObject>
 
 #include <algorithm>
+#include <cmath>
 #include <utility>
 #include <vector>
 
@@ -26,11 +27,21 @@ application::SketchDrawingTool applicationTool(int index) {
     if (index == 1)
         return application::SketchDrawingTool::line;
     if (index == 2)
-        return application::SketchDrawingTool::rectangle;
+        return application::SketchDrawingTool::polyline;
     if (index == 3)
-        return application::SketchDrawingTool::circle;
+        return application::SketchDrawingTool::rectangle;
     if (index == 4)
+        return application::SketchDrawingTool::circle;
+    if (index == 5)
         return application::SketchDrawingTool::arc;
+    if (index == 6)
+        return application::SketchDrawingTool::threePointArc;
+    if (index == 7)
+        return application::SketchDrawingTool::ellipse;
+    if (index == 8)
+        return application::SketchDrawingTool::slot;
+    if (index == 9)
+        return application::SketchDrawingTool::polygon;
     return application::SketchDrawingTool::select;
 }
 
@@ -38,11 +49,21 @@ viewport::SketchElementTool viewportTool(int index) {
     if (index == 1)
         return viewport::SketchElementTool::line;
     if (index == 2)
-        return viewport::SketchElementTool::rectangle;
+        return viewport::SketchElementTool::polyline;
     if (index == 3)
-        return viewport::SketchElementTool::circle;
+        return viewport::SketchElementTool::rectangle;
     if (index == 4)
+        return viewport::SketchElementTool::circle;
+    if (index == 5)
         return viewport::SketchElementTool::arc;
+    if (index == 6)
+        return viewport::SketchElementTool::threePointArc;
+    if (index == 7)
+        return viewport::SketchElementTool::ellipse;
+    if (index == 8)
+        return viewport::SketchElementTool::slot;
+    if (index == 9)
+        return viewport::SketchElementTool::polygon;
     return viewport::SketchElementTool::select;
 }
 
@@ -106,11 +127,19 @@ void SketchEditorToolController::showPanel() {
          {"line_length", QObject::tr("Line length"), 1.0, 0.001, 1'000'000.0},
          {"rectangle_width", QObject::tr("Rectangle width"), 1.0, 0.001, 1'000'000.0},
          {"rectangle_height", QObject::tr("Rectangle height"), 1.0, 0.001, 1'000'000.0},
-         {"circle_radius", QObject::tr("Circle / arc radius"), 1.0, 0.001, 1'000'000.0}},
+         {"circle_radius", QObject::tr("Circle / arc radius"), 1.0, 0.001, 1'000'000.0},
+         {"polygon_sides", QObject::tr("Polygon sides"), 6.0, 3.0, 64.0},
+         {"fillet_radius", QObject::tr("Fillet radius"), 2.0, 0.001, 1'000'000.0},
+         {"offset_distance", QObject::tr("Offset distance"), 1.0, -1'000'000.0, 1'000'000.0},
+         {"pattern_count", QObject::tr("Pattern count"), 3.0, 2.0, 1000.0},
+         {"pattern_spacing", QObject::tr("Linear spacing"), 10.0, -1'000'000.0, 1'000'000.0},
+         {"pattern_angle", QObject::tr("Circular angle"), 360.0, -3600.0, 3600.0}},
         {{"tool",
           QObject::tr("Tool"),
-          {QObject::tr("Select"), QObject::tr("Line"), QObject::tr("Rectangle"),
-           QObject::tr("Circle"), QObject::tr("Center arc")},
+          {QObject::tr("Select"), QObject::tr("Line"), QObject::tr("Polyline"),
+           QObject::tr("Rectangle"), QObject::tr("Circle"), QObject::tr("Center arc"),
+           QObject::tr("Three-point arc"), QObject::tr("Ellipse"), QObject::tr("Slot"),
+           QObject::tr("Regular polygon")},
           1}},
         {{"horizontal", QObject::tr("Constrain line horizontally"), QObject::tr("Lines")},
          {"vertical", QObject::tr("Constrain line vertically"), QObject::tr("Lines")},
@@ -152,10 +181,35 @@ void SketchEditorToolController::showPanel() {
          {"lock_point", QObject::tr("Lock selected point"), QObject::tr("Edit")},
          {"unlock_point", QObject::tr("Unlock selected point"), QObject::tr("Edit")},
          {"remove_constraint", QObject::tr("Remove last constraint"), QObject::tr("Edit")},
+         {"undo_sketch", QObject::tr("Undo sketch operation"), QObject::tr("Edit")},
+         {"redo_sketch", QObject::tr("Redo sketch operation"), QObject::tr("Edit")},
+         {"trim", QObject::tr("Trim selected line at nearest intersection"), QObject::tr("Edit")},
+         {"extend", QObject::tr("Extend selected line to nearest intersection"),
+          QObject::tr("Edit")},
+         {"split", QObject::tr("Split selected line at picked position"), QObject::tr("Edit")},
+         {"fillet", QObject::tr("Fillet two selected lines"), QObject::tr("Edit")},
+         {"offset", QObject::tr("Offset selected geometry"), QObject::tr("Edit")},
+         {"mirror", QObject::tr("Mirror selections about last selected line"),
+          QObject::tr("Edit")},
+         {"linear_pattern", QObject::tr("Create linear pattern"), QObject::tr("Edit")},
+         {"circular_pattern", QObject::tr("Create circular pattern about origin"),
+          QObject::tr("Edit")},
          {"delete", QObject::tr("Delete selected element"), QObject::tr("Edit")}},
         [this](const std::string& id, double value) {
             if (id == "translation_x" || id == "translation_y")
                 applyTranslation(id, value);
+            else if (id == "polygon_sides")
+                editor_->setPolygonSides(static_cast<int>(std::lround(value)));
+            else if (id == "fillet_radius")
+                filletRadius_ = value;
+            else if (id == "offset_distance")
+                offsetDistance_ = value;
+            else if (id == "pattern_count")
+                patternCount_ = value;
+            else if (id == "pattern_spacing")
+                patternSpacing_ = value;
+            else if (id == "pattern_angle")
+                patternAngle_ = value;
             else
                 applyElementDimension(id, value);
         },
@@ -218,11 +272,22 @@ void SketchEditorToolController::showPanel() {
                 unlockSelectedReference();
             } else if (id == "remove_constraint") {
                 removeLastConstraint();
+            } else if (id == "undo_sketch") {
+                if (editor_->undo())
+                    refreshPresentation();
+            } else if (id == "redo_sketch") {
+                if (editor_->redo())
+                    refreshPresentation();
+            } else if (id == "trim" || id == "extend" || id == "split" || id == "fillet" ||
+                       id == "offset" || id == "mirror" || id == "linear_pattern" ||
+                       id == "circular_pattern") {
+                applyEditOperation(id);
             } else if (id == "delete")
                 removeSelected();
         },
         [this]() { accept(); },
-        [this]() { cancel(); }});
+        [this]() { cancel(); },
+        [this]() { stepBack(); }});
     syncSelectedDimensionInputs();
     syncConstraintState();
 }
@@ -233,8 +298,29 @@ void SketchEditorToolController::setTool(int index) {
     editor_->setTool(applicationTool(index));
     viewport_.setSketchEditorTool(viewportTool(index));
     refreshPresentation();
-    statusChanged_(index == 4 ? QObject::tr("Center arc: set center, radius point and end point")
-                              : QObject::tr("Sketch tool changed"));
+    const QString guidance = index == 5
+                                 ? QObject::tr("Center arc: center, radius point, end point")
+                             : index == 6
+                                 ? QObject::tr("Three-point arc: start, point on arc, end")
+                             : index == 7
+                                 ? QObject::tr("Ellipse: center, major radius, minor radius")
+                             : index == 8
+                                 ? QObject::tr("Slot: centerline start, centerline end, width")
+                             : index == 9 ? QObject::tr("Polygon: center and first vertex")
+                                          : QObject::tr("Sketch tool changed");
+    statusChanged_(guidance);
+}
+
+void SketchEditorToolController::stepBack() {
+    if (!editor_)
+        return;
+    if (viewport_.cancelSketchEditorStep()) {
+        editor_->clearPreview();
+        refreshPresentation();
+        statusChanged_(QObject::tr("Current sketch step cancelled"));
+        return;
+    }
+    cancel();
 }
 
 void SketchEditorToolController::updatePreview(
@@ -242,6 +328,7 @@ void SketchEditorToolController::updatePreview(
     if (!editor_)
         return;
     if (intent.has_value()) {
+        previewAutomatic_ = intent->automaticConstraint;
         const auto third =
             intent->third.has_value()
                 ? std::optional{document::SketchPoint{intent->third->first, intent->third->second}}
@@ -249,6 +336,7 @@ void SketchEditorToolController::updatePreview(
         static_cast<void>(editor_->setPreview({intent->firstX, intent->firstY},
                                               {intent->secondX, intent->secondY}, third));
     } else {
+        previewAutomatic_.reset();
         editor_->clearPreview();
     }
     refreshPresentation();
@@ -294,8 +382,14 @@ void SketchEditorToolController::editConstraint(std::uint64_t constraintId) {
         return;
     const document::SketchConstraintId id{constraintId};
     const auto current = editor_->constraintValue(id);
-    if (!current.has_value())
+    if (!current.has_value()) {
+        if (editor_->removeConstraint(id)) {
+            syncConstraintState();
+            refreshPresentation();
+            statusChanged_(QObject::tr("Sketch constraint removed"));
+        }
         return;
+    }
     const auto annotations = editor_->evaluatedConstraints();
     const auto annotation =
         std::ranges::find(annotations, id, &features::SketchConstraintAnnotation::id);
@@ -455,81 +549,6 @@ void SketchEditorToolController::removeLastConstraint() {
     syncConstraintState();
     refreshPresentation();
     statusChanged_(QObject::tr("Last sketch constraint removed"));
-}
-
-void SketchEditorToolController::syncSelectedDimensionInputs() {
-    if (!editor_)
-        return;
-    const auto length = editor_->selectedLineLength();
-    const auto width = editor_->selectedRectangleWidth();
-    const auto height = editor_->selectedRectangleHeight();
-    const auto radius = editor_->selectedCircleRadius();
-    panel_.setLengthEnabled("line_length", length.has_value());
-    panel_.setLengthEnabled("rectangle_width", width.has_value());
-    panel_.setLengthEnabled("rectangle_height", height.has_value());
-    panel_.setLengthEnabled("circle_radius", radius.has_value());
-    panel_.setActionEnabled("horizontal", length.has_value());
-    panel_.setActionEnabled("vertical", length.has_value());
-    panel_.setActionEnabled("free", length.has_value());
-    if (length.has_value())
-        panel_.setLengthValue("line_length", *length);
-    if (width.has_value())
-        panel_.setLengthValue("rectangle_width", *width);
-    if (height.has_value())
-        panel_.setLengthValue("rectangle_height", *height);
-    if (radius.has_value())
-        panel_.setLengthValue("circle_radius", *radius);
-}
-
-void SketchEditorToolController::resetTranslationInputs() {
-    translationX_ = 0.0;
-    translationY_ = 0.0;
-    panel_.setLengthValue("translation_x", 0.0);
-    panel_.setLengthValue("translation_y", 0.0);
-}
-
-void SketchEditorToolController::refreshPresentation() {
-    if (!editor_)
-        return;
-    const auto evaluated = editor_->evaluatedElements();
-    std::vector<viewport::SceneSketchElement> elements;
-    elements.reserve(evaluated.size());
-    for (const features::EvaluatedSketchElement& element : evaluated) {
-        auto presentation =
-            makeSceneSketchElement(element, editor_->isElementConflicting(element.id));
-        if (std::ranges::find(editor_->elements(), element.id, &document::SketchElement::id) ==
-            editor_->elements().end())
-            presentation.points.clear();
-        elements.push_back(std::move(presentation));
-    }
-    viewport_.setSketchElements(elements);
-    std::vector<std::uint64_t> selectedIds;
-    for (const auto& reference : editor_->selectedReferences()) {
-        if (std::ranges::find(selectedIds, reference.element.value()) == selectedIds.end())
-            selectedIds.push_back(reference.element.value());
-    }
-    if (selectedIds.empty() && editor_->selectedElement().has_value())
-        selectedIds.push_back(editor_->selectedElement()->value());
-    viewport_.setSelectedSketchElements(selectedIds);
-    const auto annotations = editor_->evaluatedConstraints();
-    std::vector<viewport::SceneSketchConstraint> constraints;
-    constraints.reserve(annotations.size());
-    for (const features::SketchConstraintAnnotation& annotation : annotations) {
-        const bool editable =
-            annotation.kind == document::SketchConstraintKind::distance ||
-            annotation.kind == document::SketchConstraintKind::radius ||
-            annotation.kind == document::SketchConstraintKind::diameter ||
-            annotation.kind == document::SketchConstraintKind::pointDistance ||
-            annotation.kind == document::SketchConstraintKind::pointLineDistance ||
-            annotation.kind == document::SketchConstraintKind::pointDistanceX ||
-            annotation.kind == document::SketchConstraintKind::pointDistanceY ||
-            annotation.kind == document::SketchConstraintKind::angle;
-        constraints.push_back({annotation.id.value(), sketchConstraintLabel(annotation),
-                               annotation.position.X(), annotation.position.Y(),
-                               annotation.position.Z(),
-                               editor_->isConstraintConflicting(annotation.id), editable});
-    }
-    viewport_.setSketchConstraints(constraints);
 }
 
 void SketchEditorToolController::accept() {

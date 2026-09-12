@@ -9,6 +9,7 @@
 #include <BRep_Builder.hxx>
 #include <GC_MakeCircle.hxx>
 #include <Geom_Circle.hxx>
+#include <Geom_Ellipse.hxx>
 #include <TopoDS_Compound.hxx>
 #include <gp_Circ.hxx>
 #include <gp_Dir.hxx>
@@ -47,6 +48,8 @@ std::vector<EvaluatedSketchPoint> elementPoints(const document::SketchParameters
             {document::SketchPointPosition::start, {rectangle->first.x, rectangle->second.y}}};
     } else if (const auto* circle = std::get_if<document::SketchCircle>(&geometry)) {
         points = {{document::SketchPointPosition::center, circle->center}};
+    } else if (const auto* ellipse = std::get_if<document::SketchEllipse>(&geometry)) {
+        points = {{document::SketchPointPosition::center, ellipse->center}};
     } else {
         const auto& arc = std::get<document::SketchArc>(geometry);
         points = {{document::SketchPointPosition::center, arc.center},
@@ -91,6 +94,20 @@ TopoDS_Edge arcEdge(const document::SketchParameters& sketch, const document::Sk
     const Handle(Geom_Circle) curve =
         new Geom_Circle(gp_Ax2(center, normal, xDirection), arc.radius);
     return BRepBuilderAPI_MakeEdge(curve, arc.startAngle, arc.endAngle).Edge();
+}
+
+TopoDS_Edge ellipseEdge(const document::SketchParameters& sketch,
+                        const document::SketchEllipse& ellipse) {
+    const gp_Pnt center = worldPoint(sketch.plane, ellipse.center);
+    const gp_Dir normal(sketch.plane.normalX, sketch.plane.normalY, sketch.plane.normalZ);
+    const gp_Dir planeX(sketch.plane.xDirectionX, sketch.plane.xDirectionY,
+                        sketch.plane.xDirectionZ);
+    const gp_Dir planeY = normal.Crossed(planeX);
+    const gp_Dir majorDirection(gp_Vec(planeX) * std::cos(ellipse.rotation) +
+                                gp_Vec(planeY) * std::sin(ellipse.rotation));
+    const Handle(Geom_Ellipse) curve = new Geom_Ellipse(
+        gp_Ax2(center, normal, majorDirection), ellipse.majorRadius, ellipse.minorRadius);
+    return BRepBuilderAPI_MakeEdge(curve).Edge();
 }
 
 const document::SketchElement& findElement(const document::SketchParameters& sketch,
@@ -169,6 +186,10 @@ TopoDS_Face profileFace(const document::SketchParameters& sketch, const SketchPr
         return BRepBuilderAPI_MakeFace(BRepBuilderAPI_MakeWire(circleEdge(sketch, *circle)).Wire())
             .Face();
     }
+    if (const auto* ellipse = std::get_if<document::SketchEllipse>(&first)) {
+        return BRepBuilderAPI_MakeFace(BRepBuilderAPI_MakeWire(ellipseEdge(sketch, *ellipse)).Wire())
+            .Face();
+    }
     if (std::ranges::any_of(profile.elementIds, [&sketch](document::SketchElementId id) {
             return std::holds_alternative<document::SketchArc>(findElement(sketch, id).geometry);
         }))
@@ -188,7 +209,9 @@ TopoDS_Shape elementShape(const document::SketchParameters& sketch,
     }
     if (const auto* circle = std::get_if<document::SketchCircle>(&geometry))
         return circleEdge(sketch, *circle);
-    return arcEdge(sketch, std::get<document::SketchArc>(geometry));
+    if (const auto* arc = std::get_if<document::SketchArc>(&geometry))
+        return arcEdge(sketch, *arc);
+    return ellipseEdge(sketch, std::get<document::SketchEllipse>(geometry));
 }
 
 } // namespace

@@ -2,6 +2,7 @@
 
 #include "NativeOcctWindow.hpp"
 #include "SketchConstraintPresentation.hpp"
+#include "SketchBoxSelection.hpp"
 #include "SketchEditorInteraction.hpp"
 #include "SketchInteraction.hpp"
 #include "SketchPresentation.hpp"
@@ -20,6 +21,7 @@
 #include <QMouseEvent>
 #include <QPaintEvent>
 #include <QResizeEvent>
+#include <QRubberBand>
 #include <QShowEvent>
 #include <QWheelEvent>
 #include <Quantity_Color.hxx>
@@ -39,7 +41,7 @@ namespace voelund::viewport {
 
 class CadViewport::Impl final {
   public:
-    enum class Gesture { none, pan, rotate, moveAxis };
+    enum class Gesture { none, pan, rotate, moveAxis, selectBox };
 
     struct BodyPresentation final {
         std::uint64_t id;
@@ -158,6 +160,7 @@ class CadViewport::Impl final {
     QPoint gestureOrigin;
     Gesture gesture{Gesture::none};
     bool sketchElementPressed{false};
+    QRubberBand* selectionBand{nullptr};
 };
 
 CadViewport::CadViewport(QWidget* parent)
@@ -169,6 +172,7 @@ CadViewport::CadViewport(QWidget* parent)
     setFocusPolicy(Qt::StrongFocus);
     setMouseTracking(true);
     setMinimumSize(640, 480);
+    impl_->selectionBand = new QRubberBand(QRubberBand::Rectangle, this);
 }
 
 CadViewport::~CadViewport() = default;
@@ -300,6 +304,7 @@ void CadViewport::beginSketchEditor(const PlanarFaceSelection& support, SketchEl
     impl_->manipulator.setEnabled(false);
     impl_->manipulator.detach();
     impl_->sketchEditor.begin(support, tool, impl_->view);
+    impl_->sketchPresentation.setReferences(impl_->context, support, true);
     if (!impl_->view.IsNull()) {
         impl_->view->Redraw();
     }
@@ -312,6 +317,12 @@ void CadViewport::setSketchEditorTool(SketchElementTool tool) {
     }
 }
 
+void CadViewport::continueSketchPolyline(double x, double y, std::uint64_t elementId) {
+    impl_->sketchEditor.continuePolyline(x, y, elementId);
+}
+
+bool CadViewport::cancelSketchEditorStep() { return impl_->sketchEditor.cancelStep(); }
+
 void CadViewport::updateSketchExtrusionPreview(double distance) {
     impl_->sketch.updateDistance(distance);
     if (!impl_->view.IsNull()) {
@@ -322,6 +333,7 @@ void CadViewport::updateSketchExtrusionPreview(double distance) {
 void CadViewport::cancelSketch() {
     impl_->sketch.cancel();
     impl_->sketchEditor.cancel();
+    impl_->sketchPresentation.setReferences(impl_->context, {}, false);
     if (!impl_->view.IsNull()) {
         impl_->view->Redraw();
     }
@@ -387,6 +399,10 @@ void CadViewport::mouseMoveEvent(QMouseEvent* event) {
     }
 
     const QPoint position = event->position().toPoint();
+    if (impl_->gesture == Impl::Gesture::selectBox) {
+        impl_->selectionBand->setGeometry(QRect(impl_->gestureOrigin, position).normalized());
+        return;
+    }
     if (impl_->sketchEditor.isElementDragging() && event->buttons().testFlag(Qt::LeftButton)) {
         const auto delta = impl_->sketchEditor.dragElement(position.x(), position.y());
         if (delta.has_value() && impl_->sketchEditorTranslationHandler) {
@@ -415,7 +431,7 @@ void CadViewport::mouseMoveEvent(QMouseEvent* event) {
     } else if (impl_->gesture == Impl::Gesture::moveAxis) {
         impl_->manipulator.update(position.x(), position.y(), impl_->view,
                                   event->modifiers().testFlag(Qt::ControlModifier));
-    } else {
+    } else if (impl_->gesture != Impl::Gesture::selectBox) {
         impl_->context->MoveTo(position.x(), position.y(), impl_->view, true);
     }
 }
@@ -446,7 +462,7 @@ void CadViewport::mousePressEvent(QMouseEvent* event) {
                 return;
             if (impl_->context->HasDetected()) {
                 const auto detected = impl_->context->DetectedInteractive();
-                if (impl_->sketchConstraintPresentation.detectedEditableConstraint(detected))
+                if (impl_->sketchConstraintPresentation.detectedConstraint(detected))
                     return;
                 if (const auto id = impl_->sketchPresentation.detectedElement(detected)) {
                     const bool additive = event->modifiers().testFlag(Qt::ControlModifier);
@@ -463,6 +479,10 @@ void CadViewport::mousePressEvent(QMouseEvent* event) {
                     }
                     impl_->view->Redraw();
                 }
+            } else {
+                impl_->gesture = Impl::Gesture::selectBox;
+                impl_->selectionBand->setGeometry(QRect(impl_->gestureOrigin, QSize{}));
+                impl_->selectionBand->show();
             }
             return;
         }
@@ -503,7 +523,7 @@ void CadViewport::mouseDoubleClickEvent(QMouseEvent* event) {
     impl_->context->MoveTo(position.x(), position.y(), impl_->view, false);
     if (!impl_->context->HasDetected())
         return;
-    const auto id = impl_->sketchConstraintPresentation.detectedEditableConstraint(
+    const auto id = impl_->sketchConstraintPresentation.detectedConstraint(
         impl_->context->DetectedInteractive());
     if (id.has_value() && impl_->sketchConstraintEditHandler)
         impl_->sketchConstraintEditHandler(*id);
@@ -529,6 +549,17 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
             return;
         }
         if (impl_->sketchEditor.isActive()) {
+            if (impl_->gesture == Impl::Gesture::selectBox) {
+                const QRect rectangle(impl_->gestureOrigin, position);
+                impl_->gesture = Impl::Gesture::none;
+                impl_->selectionBand->hide();
+                if (impl_->sketchElementSelectionHandler)
+                    for (const auto& selection : boxSelectionIntents(
+                             impl_->pendingSketchElements, impl_->view, rectangle.normalized()))
+                        impl_->sketchElementSelectionHandler(selection);
+                impl_->view->Redraw();
+                return;
+            }
             if (impl_->sketchElementPressed) {
                 impl_->sketchElementPressed = false;
                 impl_->sketchEditor.finishElementDrag();

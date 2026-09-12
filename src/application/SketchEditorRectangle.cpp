@@ -40,7 +40,7 @@ SketchEditorSession::confirmRectangle(const document::SketchRectangle& rectangle
              0.0});
     }
 
-    preview_.reset();
+    preview_.clear();
     selectedElement_ = ids.front();
     selectedReferences_.clear();
     static_cast<void>(solveConstraints());

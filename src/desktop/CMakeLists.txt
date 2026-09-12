@@ -9,6 +9,7 @@ add_library(
     SketchConstraintLabel.cpp
     SketchEditorConstraintState.cpp
     SketchEditorCreation.cpp
+    SketchEditorPresentation.cpp
     SketchEditorToolController.cpp
     SketchExtrusionToolController.cpp
     SketchViewAdapter.cpp

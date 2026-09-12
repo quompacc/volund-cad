@@ -282,6 +282,12 @@ ParsedFeature readSketchFeature(FeatureId id, std::string name, std::istringstre
                       value.startAngle >> value.endAngle))
                     invalidDocument("malformed sketch arc");
                 geometry = value;
+            } else if (kind == "ELLIPSE" && context.version >= 16) {
+                SketchEllipse value{};
+                if (!(elementLine >> value.center.x >> value.center.y >> value.majorRadius >>
+                      value.minorRadius >> value.rotation))
+                    invalidDocument("malformed sketch ellipse");
+                geometry = value;
             } else {
                 invalidDocument("unknown sketch element kind");
             }
@@ -441,7 +447,7 @@ ParsedFeature readFeature(const std::string& source,
 void DocumentSerializer::write(const ModelDocument& document, std::ostream& output) {
     output.imbue(std::locale::classic());
     output << std::setprecision(std::numeric_limits<double>::max_digits10);
-    output << "VOLUND 15\nNEXT_ID " << document.nextFeatureId_ << "\nFEATURES "
+    output << "VOLUND 16\nNEXT_ID " << document.nextFeatureId_ << "\nFEATURES "
            << document.features_.size() << '\n';
     for (std::size_t index = 0; index < document.features_.size(); ++index) {
         const FeatureDescriptor& feature = document.features_[index];
@@ -489,11 +495,15 @@ void DocumentSerializer::write(const ModelDocument& document, std::ostream& outp
                 } else if (const auto* circle = std::get_if<SketchCircle>(&element.geometry)) {
                     output << "CIRCLE " << element.id.value() << ' ' << circle->center.x << ' '
                            << circle->center.y << ' ' << circle->radius;
+                } else if (const auto* arc = std::get_if<SketchArc>(&element.geometry)) {
+                    output << "ARC " << element.id.value() << ' ' << arc->center.x << ' '
+                           << arc->center.y << ' ' << arc->radius << ' ' << arc->startAngle << ' '
+                           << arc->endAngle;
                 } else {
-                    const SketchArc& arc = std::get<SketchArc>(element.geometry);
-                    output << "ARC " << element.id.value() << ' ' << arc.center.x << ' '
-                           << arc.center.y << ' ' << arc.radius << ' ' << arc.startAngle << ' '
-                           << arc.endAngle;
+                    const SketchEllipse& ellipse = std::get<SketchEllipse>(element.geometry);
+                    output << "ELLIPSE " << element.id.value() << ' ' << ellipse.center.x << ' '
+                           << ellipse.center.y << ' ' << ellipse.majorRadius << ' '
+                           << ellipse.minorRadius << ' ' << ellipse.rotation;
                 }
                 output << ' ' << (element.construction ? 1 : 0) << '\n';
             }
@@ -552,6 +562,7 @@ ModelDocument DocumentSerializer::read(std::istream& input) {
                                   : header == "VOLUND 12" ? 12
                                   : header == "VOLUND 13" ? 13
                                   : header == "VOLUND 15" ? 15
+                                  : header == "VOLUND 16" ? 16
                                   : header == "VOLUND 14" ? 14
                                                           : 0;
     if (version == 0) {

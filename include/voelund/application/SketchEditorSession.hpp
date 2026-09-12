@@ -13,7 +13,19 @@ namespace voelund::application {
 
 class CadSession;
 
-enum class SketchDrawingTool { select, line, rectangle, circle, arc };
+enum class SketchDrawingTool {
+    select,
+    line,
+    polyline,
+    rectangle,
+    circle,
+    arc,
+    threePointArc,
+    ellipse,
+    slot,
+    polygon
+};
+enum class SketchAxisReference { origin, xAxis, yAxis };
 
 class SketchEditorSession final {
   public:
@@ -48,6 +60,12 @@ class SketchEditorSession final {
     [[nodiscard]] bool addSelectedRelation(document::SketchConstraintKind kind);
     [[nodiscard]] bool addCoincidentReferences(document::SketchGeometryReference first,
                                                document::SketchGeometryReference second);
+    [[nodiscard]] bool addAxisReference(document::SketchGeometryReference reference,
+                                        SketchAxisReference axis);
+    [[nodiscard]] bool addMidpointReference(document::SketchGeometryReference reference,
+                                            document::SketchElementId line);
+    [[nodiscard]] bool addFixedReference(document::SketchGeometryReference reference,
+                                         document::SketchPoint point);
     [[nodiscard]] bool isSelectedConstruction() const noexcept;
     [[nodiscard]] bool toggleSelectedConstruction();
     [[nodiscard]] bool canLockSelectedReference() const noexcept;
@@ -55,7 +73,22 @@ class SketchEditorSession final {
     [[nodiscard]] bool lockSelectedReference();
     [[nodiscard]] bool unlockSelectedReference();
     [[nodiscard]] bool removeLastConstraint();
+    [[nodiscard]] bool removeConstraint(document::SketchConstraintId id);
     [[nodiscard]] bool removeSelected();
+    [[nodiscard]] bool trimSelected();
+    [[nodiscard]] bool extendSelected();
+    [[nodiscard]] bool splitSelected();
+    [[nodiscard]] bool filletSelected(double radius);
+    [[nodiscard]] bool offsetSelected(double distance);
+    [[nodiscard]] bool mirrorSelected();
+    [[nodiscard]] bool linearPatternSelected(int count, double spacing);
+    [[nodiscard]] bool circularPatternSelected(int count, double angleDegrees);
+    void commitHistory();
+    [[nodiscard]] bool canUndo() const noexcept;
+    [[nodiscard]] bool canRedo() const noexcept;
+    [[nodiscard]] bool undo();
+    [[nodiscard]] bool redo();
+    void setPolygonSides(int sides) noexcept;
     [[nodiscard]] std::optional<document::SketchElementId> selectedElement() const noexcept;
     [[nodiscard]] std::span<const document::SketchGeometryReference>
     selectedReferences() const noexcept;
@@ -77,9 +110,13 @@ class SketchEditorSession final {
     [[nodiscard]] bool isActive() const noexcept;
 
   private:
+    struct HistoryState final {
+        document::SketchElements elements;
+        document::SketchConstraints constraints;
+    };
     [[nodiscard]] document::SketchElementId
     confirmRectangle(const document::SketchRectangle& rectangle);
-    [[nodiscard]] document::SketchGeometry
+    [[nodiscard]] std::vector<document::SketchGeometry>
     geometry(document::SketchPoint first, document::SketchPoint second,
              std::optional<document::SketchPoint> third) const;
     [[nodiscard]] document::SketchParameters parameters(bool includePreview) const;
@@ -92,10 +129,14 @@ class SketchEditorSession final {
     document::SketchConstraints constraints_;
     std::optional<document::FeatureId> editingFeature_;
     SketchDrawingTool tool_{SketchDrawingTool::line};
-    std::optional<document::SketchGeometry> preview_;
+    std::vector<document::SketchGeometry> preview_;
     std::optional<document::SketchElementId> selectedElement_;
     std::vector<document::SketchGeometryReference> selectedReferences_;
+    std::optional<document::SketchPoint> selectionPoint_;
     features::SketchSolveResult lastSolveResult_{features::SketchSolveStatus::success, -1, {}};
+    int polygonSides_{6};
+    std::vector<HistoryState> history_;
+    std::size_t historyIndex_{0};
     bool active_{true};
 };
 

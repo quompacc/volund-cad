@@ -20,6 +20,8 @@ class SketchPresentation final {
                      std::span<const SceneSketchElement> elements,
                      std::span<const std::uint64_t> selectedIds, bool showPoints);
     void clear(const occ::handle<AIS_InteractiveContext>& context);
+    void setReferences(const occ::handle<AIS_InteractiveContext>& context,
+                       const PlanarFaceSelection& support, bool visible);
     void select(const occ::handle<AIS_InteractiveContext>& context,
                 std::span<const std::uint64_t> selectedIds);
     [[nodiscard]] std::optional<std::uint64_t>
@@ -36,6 +38,9 @@ class SketchPresentation final {
     };
 
     std::vector<ElementPresentation> elements_;
+    std::vector<occ::handle<AIS_Shape>> referenceAxes_;
+    std::vector<occ::handle<AIS_Shape>> projectedEdges_;
+    occ::handle<AIS_Point> origin_;
 };
 
 } // namespace voelund::viewport

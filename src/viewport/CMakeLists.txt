@@ -15,6 +15,7 @@ list(APPEND voelund_viewport_sources
     SketchInteraction.cpp
     SketchViewOrientation.cpp
     SketchConstraintPresentation.cpp
+    SketchBoxSelection.cpp
     SketchPresentation.cpp
     TransformManipulator.cpp
     ViewportHighlightStyle.cpp

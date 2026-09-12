@@ -15,6 +15,7 @@ rectangle with an ordered collection of independently identified elements:
 - `SketchRectangle` stores two opposite planar corners;
 - `SketchCircle` stores a planar center and radius;
 - `SketchArc` stores a planar center, radius and counter-clockwise start/end angles;
+- `SketchEllipse` stores its center, major/minor radii and major-axis rotation;
 - every `SketchElement` owns a non-zero, sketch-local `SketchElementId`;
 - `SketchElements::nextId` preserves deterministic ID allocation through edits,
   Undo/Redo and Save/Load.
@@ -42,6 +43,13 @@ confirmed elements, and allocate deterministic sketch-local IDs as each element 
 confirmed. The viewport reports only snapped planar point intents and picking results;
 the application session owns temporary geometry, selection, profile recomputation and
 OCCT evaluation through `SketchEvaluation` and `SketchProfiles`.
+
+The drawing set additionally contains continuous polylines, three-point arcs,
+ellipses, obround slots and regular polygons. Compound tools decompose into ordinary
+lines and arcs with stable IDs and persistent internal relations. Trim, extend,
+split, fillet, offset, mirror and linear/circular patterns operate on those ordinary
+elements. Local Undo/Redo, stepwise Escape and visible box selection keep these edits
+inside the temporary session.
 
 OK writes the complete element collection as one sketch-feature transaction. Cancel
 or Escape discards the editor session without adding a feature or history entry.
@@ -74,7 +82,10 @@ Select mode so selection and dragging cannot steal clicks from an active drawing
 Confirmed line endpoints, circle centers and arc centers/endpoints are rendered as
 zoom-independent point markers. Drawing within 12 screen pixels snaps to such a marker
 and confirmation adds a persistent PlaneGCS coincidence relation automatically; grid
-snapping remains the fallback away from reference points.
+snapping remains the fallback away from reference points. The sketch origin and local
+axes are explicit snap targets. Boundary edges of a newly selected planar support
+face are projected into the editor, displayed in violet and provide fixed endpoint
+and midpoint references for new geometry.
 
 ## Parametric constraint foundation
 
@@ -161,15 +172,15 @@ explicit profile IDs and consumes only those faces. An empty selection remains t
 legacy meaning of "all closed profiles", so older direct Push/Pull operations retain
 their behavior.
 
-## File format version 15
+## File format version 16
 
-New saves use `VOLUND 15`. A sketch feature line stores its support, plane, element
+New saves use `VOLUND 16`. A sketch feature line stores its support, plane, element
 count, next element ID, constraint count and next constraint ID. `ELEMENT` records
 store geometry and stable IDs; following `CONSTRAINT` records store their stable ID,
 kind, one or two geometry references and an optional driving value.
 
 An extrusion record appends a profile count and its stable profile IDs. The reader
-continues to accept `VOLUND 1` through `VOLUND 14`; older extrusion records migrate to
+continues to accept `VOLUND 1` through `VOLUND 15`; older extrusion records migrate to
 an empty profile list, which preserves their previous all-profiles behavior. A version-1 inline rectangle
 is migrated in memory to a `RECTANGLE` element with ID 1 and next ID 2; version-2 lines
 are migrated with a free direction. Version-3 horizontal and vertical line fields
@@ -183,6 +194,7 @@ concentric relations and driving circle diameters.
 Version 13 adds collinear lines and horizontal/vertical point alignment relations.
 Version 14 appends auxiliary values to constraint records and adds fixed geometry plus
 point-to-line distances. Version 15 adds persistent center arcs with radius and
-start/end angles. Saving any loaded document writes version 15.
+start/end angles. Version 16 adds persistent rotated ellipses. Saving any loaded
+document writes version 16.
 Invalid, duplicate or zero element IDs, non-finite coordinates, degenerate elements,
 inconsistent next IDs and unsatisfied line constraints are rejected while loading.

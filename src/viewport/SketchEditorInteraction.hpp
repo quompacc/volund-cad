@@ -15,6 +15,7 @@ class SketchEditorInteraction final {
                const occ::handle<V3d_View>& view);
     void cancel() noexcept;
     void setTool(SketchElementTool tool) noexcept;
+    void continuePolyline(double x, double y, std::uint64_t elementId) noexcept;
     void setSnapping(bool enabled, double linearStep) noexcept;
     void setSnapPoints(std::span<const SceneSketchPoint> points);
     [[nodiscard]] bool isActive() const noexcept;
@@ -25,6 +26,7 @@ class SketchEditorInteraction final {
     [[nodiscard]] bool beginElementDrag(int x, int y);
     [[nodiscard]] std::optional<std::pair<double, double>> dragElement(int x, int y);
     void finishElementDrag() noexcept;
+    [[nodiscard]] bool cancelStep() noexcept;
     [[nodiscard]] bool isElementDragging() const noexcept;
 
   private:

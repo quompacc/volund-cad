@@ -8,6 +8,35 @@
 #include <cmath>
 
 namespace voelund::viewport {
+namespace {
+
+bool needsThirdPoint(SketchElementTool tool) {
+    return tool == SketchElementTool::arc || tool == SketchElementTool::threePointArc ||
+           tool == SketchElementTool::ellipse || tool == SketchElementTool::slot;
+}
+
+std::pair<std::pair<double, double>, std::optional<SketchAutomaticConstraint>> constrainedLineEnd(
+    SketchElementTool tool, const std::pair<double, double>& first,
+    std::pair<double, double> second) {
+    if (tool != SketchElementTool::line && tool != SketchElementTool::polyline)
+        return {second, std::nullopt};
+    const double dx = second.first - first.first;
+    const double dy = second.second - first.second;
+    const double length = std::hypot(dx, dy);
+    if (length <= 1.0e-9)
+        return {second, std::nullopt};
+    if (std::abs(dy) / length <= 0.08) {
+        second.second = first.second;
+        return {second, SketchAutomaticConstraint::horizontal};
+    }
+    if (std::abs(dx) / length <= 0.08) {
+        second.first = first.first;
+        return {second, SketchAutomaticConstraint::vertical};
+    }
+    return {second, std::nullopt};
+}
+
+} // namespace
 
 void SketchEditorInteraction::begin(const PlanarFaceSelection& support, SketchElementTool tool,
                                     const occ::handle<V3d_View>& view) {
@@ -42,6 +71,14 @@ void SketchEditorInteraction::setTool(SketchElementTool tool) noexcept {
     dragPoint_.reset();
 }
 
+void SketchEditorInteraction::continuePolyline(double x, double y,
+                                               std::uint64_t elementId) noexcept {
+    if (active_ && tool_ == SketchElementTool::polyline) {
+        firstPoint_ = std::pair{x, y};
+        firstReference_ = SketchPointReferenceIntent{elementId, SketchPointKind::end};
+    }
+}
+
 void SketchEditorInteraction::setSnapping(bool enabled, double linearStep) noexcept {
     snapping_ = enabled;
     linearStep_ = std::max(0.001, linearStep);
@@ -49,6 +86,24 @@ void SketchEditorInteraction::setSnapping(bool enabled, double linearStep) noexc
 
 void SketchEditorInteraction::setSnapPoints(std::span<const SceneSketchPoint> points) {
     snapPoints_.assign(points.begin(), points.end());
+    if (active_) {
+        snapPoints_.push_back({0, SketchPointKind::origin, 0.0, 0.0, support_.originX,
+                               support_.originY, support_.originZ});
+        for (const PlanarReferenceSegment& segment : support_.referenceSegments) {
+            snapPoints_.push_back({0, SketchPointKind::projected, segment.firstX, segment.firstY,
+                                   segment.firstWorldX, segment.firstWorldY,
+                                   segment.firstWorldZ});
+            snapPoints_.push_back({0, SketchPointKind::projected, segment.secondX,
+                                   segment.secondY, segment.secondWorldX, segment.secondWorldY,
+                                   segment.secondWorldZ});
+            snapPoints_.push_back(
+                {0, SketchPointKind::projected, (segment.firstX + segment.secondX) * 0.5,
+                 (segment.firstY + segment.secondY) * 0.5,
+                 (segment.firstWorldX + segment.secondWorldX) * 0.5,
+                 (segment.firstWorldY + segment.secondWorldY) * 0.5,
+                 (segment.firstWorldZ + segment.secondWorldZ) * 0.5});
+        }
+    }
 }
 
 bool SketchEditorInteraction::isActive() const noexcept { return active_; }
@@ -109,6 +164,18 @@ SketchEditorInteraction::interactionPoint(int x, int y) const {
             nearestDistance = distance;
         }
     }
+    if (nearest == nullptr && snapping_) {
+        constexpr double axisTolerance = 1.0e-9;
+        if (std::abs(projected->first) <= axisTolerance &&
+            std::abs(projected->second) <= axisTolerance)
+            return InteractionPoint{{0.0, 0.0}, SketchPointReferenceIntent{0, SketchPointKind::origin}};
+        if (std::abs(projected->second) <= axisTolerance)
+            return InteractionPoint{{projected->first, 0.0},
+                                    SketchPointReferenceIntent{0, SketchPointKind::xAxis}};
+        if (std::abs(projected->first) <= axisTolerance)
+            return InteractionPoint{{0.0, projected->second},
+                                    SketchPointReferenceIntent{0, SketchPointKind::yAxis}};
+    }
     if (nearest == nullptr)
         return InteractionPoint{*projected, std::nullopt};
     return InteractionPoint{{nearest->localX, nearest->localY},
@@ -122,7 +189,7 @@ bool SketchEditorInteraction::valid(const SketchElementIntent& intent) const noe
     if (tool_ == SketchElementTool::rectangle) {
         return std::abs(deltaX) >= minimumSize && std::abs(deltaY) >= minimumSize;
     }
-    if (tool_ == SketchElementTool::arc && intent.third.has_value()) {
+    if (needsThirdPoint(tool_) && intent.third.has_value()) {
         const double radius = std::hypot(deltaX, deltaY);
         const double endRadius =
             std::hypot(intent.third->first - intent.firstX, intent.third->second - intent.firstY);
@@ -141,7 +208,9 @@ std::optional<SketchElementIntent> SketchEditorInteraction::move(int x, int y) c
     const auto resolved = interactionPoint(x, y);
     if (!resolved.has_value())
         return std::nullopt;
-    const auto& [point, reference] = *resolved;
+    auto [point, reference] = *resolved;
+    auto [adjustedPoint, automaticConstraint] = constrainedLineEnd(tool_, *firstPoint_, point);
+    point = adjustedPoint;
     const SketchElementIntent intent{firstPoint_->first,
                                      firstPoint_->second,
                                      secondPoint_.has_value() ? secondPoint_->first : point.first,
@@ -149,7 +218,8 @@ std::optional<SketchElementIntent> SketchEditorInteraction::move(int x, int y) c
                                      secondPoint_.has_value() ? std::optional{point} : std::nullopt,
                                      firstReference_,
                                      secondReference_,
-                                     secondPoint_.has_value() ? reference : std::nullopt};
+                                     secondPoint_.has_value() ? reference : std::nullopt,
+                                     automaticConstraint};
     return valid(intent) ? std::optional{intent} : std::nullopt;
 }
 
@@ -157,22 +227,24 @@ std::optional<SketchElementIntent> SketchEditorInteraction::click(int x, int y) 
     const auto resolved = interactionPoint(x, y);
     if (!resolved.has_value())
         return std::nullopt;
-    const auto& [point, reference] = *resolved;
+    auto [point, reference] = *resolved;
     if (!firstPoint_.has_value()) {
         firstPoint_ = point;
         firstReference_ = reference;
         return std::nullopt;
     }
-    if (tool_ == SketchElementTool::arc && !secondPoint_.has_value()) {
+    if (needsThirdPoint(tool_) && !secondPoint_.has_value()) {
         const SketchElementIntent radiusIntent{firstPoint_->first, firstPoint_->second, point.first,
                                                point.second, std::nullopt, std::nullopt,
-                                               std::nullopt, std::nullopt};
+                                               std::nullopt, std::nullopt, std::nullopt};
         if (!valid(radiusIntent))
             return std::nullopt;
         secondPoint_ = point;
         secondReference_ = reference;
         return std::nullopt;
     }
+    auto [adjustedPoint, automaticConstraint] = constrainedLineEnd(tool_, *firstPoint_, point);
+    point = adjustedPoint;
     const SketchElementIntent intent{firstPoint_->first,
                                      firstPoint_->second,
                                      secondPoint_.has_value() ? secondPoint_->first : point.first,
@@ -180,7 +252,8 @@ std::optional<SketchElementIntent> SketchEditorInteraction::click(int x, int y) 
                                      secondPoint_.has_value() ? std::optional{point} : std::nullopt,
                                      firstReference_,
                                      secondReference_,
-                                     secondPoint_.has_value() ? reference : std::nullopt};
+                                     secondPoint_.has_value() ? reference : std::nullopt,
+                                     automaticConstraint};
     if (!valid(intent)) {
         return std::nullopt;
     }
@@ -210,6 +283,20 @@ std::optional<std::pair<double, double>> SketchEditorInteraction::dragElement(in
 }
 
 void SketchEditorInteraction::finishElementDrag() noexcept { dragPoint_.reset(); }
+
+bool SketchEditorInteraction::cancelStep() noexcept {
+    if (secondPoint_.has_value()) {
+        secondPoint_.reset();
+        secondReference_.reset();
+        return true;
+    }
+    if (firstPoint_.has_value()) {
+        firstPoint_.reset();
+        firstReference_.reset();
+        return true;
+    }
+    return false;
+}
 
 bool SketchEditorInteraction::isElementDragging() const noexcept { return dragPoint_.has_value(); }
 
