@@ -51,6 +51,7 @@ private:
     void enterSketch();
     void finishSketch();
     void activateExtrude();
+    void closeActiveTool();
     void activateSketchTool(int tool, QToolButton* button);
     void setWorkspaceTab(const QString& activeName);
     void refreshBrowser();
@@ -73,6 +74,7 @@ private:
     QPushButton* sketchWorkspaceTab_{nullptr};
     QList<QPushButton*> workspaceTabs_;
     QList<QToolButton*> sketchToolButtons_;
+    QToolButton* extrudeButton_{nullptr};
 };
 
 } // namespace voelund::preview

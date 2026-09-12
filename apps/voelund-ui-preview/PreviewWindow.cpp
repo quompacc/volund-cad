@@ -116,6 +116,7 @@ PreviewWindow::PreviewWindow(application::CadSession& session, QWidget* parent)
     inspectorStack_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Maximum);
     inspectorStack_->addWidget(createSolidInspector());
     inspectorStack_->addWidget(createSketchInspector());
+    inspectorStack_->hide();
     viewCube_ = new ViewCube;
     viewCube_->setCameraHandler([this](viewport::CameraView view) {
         cadViewport_->setCameraView(view);
@@ -131,11 +132,11 @@ PreviewWindow::PreviewWindow(application::CadSession& session, QWidget* parent)
                                          : QStringLiteral("Orthographic camera"));
     });
     auto* overlayTools = new QWidget;
-    overlayTools->setAttribute(Qt::WA_TranslucentBackground);
-    auto* overlayToolsLayout = new QHBoxLayout(overlayTools);
-    overlayToolsLayout->setContentsMargins(0, 0, 0, 0);
-    overlayToolsLayout->setSpacing(8);
-    overlayToolsLayout->addWidget(viewCube_, 0, Qt::AlignTop);
+    overlayTools->setObjectName(QStringLiteral("cameraRail"));
+    auto* overlayToolsLayout = new QVBoxLayout(overlayTools);
+    overlayToolsLayout->setContentsMargins(8, 8, 8, 8);
+    overlayToolsLayout->setSpacing(6);
+    overlayToolsLayout->addWidget(viewCube_, 0, Qt::AlignHCenter);
     overlayToolsLayout->addWidget(inspectorStack_, 0, Qt::AlignTop);
     overlayLayout->addWidget(overlayTools, 0, 0, Qt::AlignTop | Qt::AlignRight);
     overlayLayout->setContentsMargins(0, 0, 14, 0);
@@ -268,10 +269,9 @@ QWidget* PreviewWindow::createSolidRibbon()
 
     auto* sketch = toolButton(QStringLiteral("Sketch"), Icon::Sketch, QStringLiteral("Create sketch"));
     connect(sketch, &QToolButton::clicked, this, &PreviewWindow::enterSketch);
-    auto* extrude = toolButton(QStringLiteral("Extrude"), Icon::Extrude, QStringLiteral("Extrude selected profile"));
-    extrude->setProperty("active", true);
-    connect(extrude, &QToolButton::clicked, this, &PreviewWindow::activateExtrude);
-    layout->addWidget(createRibbonGroup(QStringLiteral("CREATE"), {sketch, extrude,
+    extrudeButton_ = toolButton(QStringLiteral("Extrude"), Icon::Extrude, QStringLiteral("Extrude selected profile"));
+    connect(extrudeButton_, &QToolButton::clicked, this, &PreviewWindow::activateExtrude);
+    layout->addWidget(createRibbonGroup(QStringLiteral("CREATE"), {sketch, extrudeButton_,
         toolButton(QStringLiteral("Revolve"), Icon::Revolve), toolButton(QStringLiteral("Hole"), Icon::Hole)}));
     layout->addWidget(createRibbonGroup(QStringLiteral("MODIFY"), {
         toolButton(QStringLiteral("Fillet"), Icon::Fillet), toolButton(QStringLiteral("Chamfer"), Icon::Chamfer),
@@ -369,6 +369,8 @@ QWidget* PreviewWindow::createSolidInspector()
     auto* buttons = new QWidget; auto* buttonsLayout = new QHBoxLayout(buttons); buttonsLayout->setContentsMargins(0, 6, 0, 0);
     auto* cancel = new QPushButton(QStringLiteral("Cancel")); cancel->setProperty("class", QStringLiteral("secondary"));
     auto* okay = new QPushButton(QStringLiteral("OK")); okay->setProperty("class", QStringLiteral("primary"));
+    connect(cancel, &QPushButton::clicked, this, &PreviewWindow::closeActiveTool);
+    connect(okay, &QPushButton::clicked, this, &PreviewWindow::closeActiveTool);
     buttonsLayout->addWidget(cancel); buttonsLayout->addWidget(okay); layout->addWidget(buttons);
     return page;
 }
@@ -481,6 +483,7 @@ void PreviewWindow::enterSketch()
     canvas_->resetSketch();
     ribbonStack_->setCurrentIndex(1);
     inspectorStack_->setCurrentIndex(1);
+    inspectorStack_->show();
     canvas_->setMode(PreviewCanvas::Mode::Sketch);
     canvasStack_->setCurrentWidget(canvas_);
     viewCube_->hide();
@@ -497,6 +500,7 @@ void PreviewWindow::finishSketch()
     }
     ribbonStack_->setCurrentIndex(0);
     inspectorStack_->setCurrentIndex(0);
+    inspectorStack_->hide();
     canvas_->setMode(PreviewCanvas::Mode::Solid);
     canvasStack_->setCurrentWidget(cadViewport_);
     viewCube_->show();
@@ -512,7 +516,19 @@ void PreviewWindow::activateExtrude()
 {
     finishSketch();
     inspectorStack_->show();
+    extrudeButton_->setProperty("active", true);
+    refreshStyle(extrudeButton_);
     statusText_->setText(QStringLiteral("Extrude  ·  Select a profile or face"));
+}
+
+void PreviewWindow::closeActiveTool()
+{
+    inspectorStack_->hide();
+    if (extrudeButton_ != nullptr) {
+        extrudeButton_->setProperty("active", false);
+        refreshStyle(extrudeButton_);
+    }
+    statusText_->setText(QStringLiteral("Ready"));
 }
 
 void PreviewWindow::activateSketchTool(int tool, QToolButton* button)

@@ -35,10 +35,6 @@ void ViewCube::paintEvent(QPaintEvent*)
 {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
-    painter.setPen(Qt::NoPen);
-    painter.setBrush(QColor(8, 13, 9, 220));
-    painter.drawRoundedRect(rect().adjusted(0, 0, -1, -1), 7, 7);
-
     const QPolygonF top{{18, 34}, {62, 10}, {106, 34}, {62, 58}};
     const QPolygonF front{{18, 34}, {62, 58}, {62, 100}, {18, 76}};
     const QPolygonF right{{62, 58}, {106, 34}, {106, 76}, {62, 100}};
