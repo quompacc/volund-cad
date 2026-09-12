@@ -22,7 +22,7 @@ std::optional<OrientedLine> connectingLine(const document::SketchPoint& point,
                                            std::span<const document::SketchElement> elements,
                                            const std::vector<bool>& used) {
     for (std::size_t index = 0; index < elements.size(); ++index) {
-        if (used[index])
+        if (used[index] || elements[index].construction)
             continue;
         const auto* line = std::get_if<document::SketchLine>(&elements[index].geometry);
         if (line == nullptr)
@@ -77,15 +77,16 @@ std::vector<SketchProfile> detectClosedProfiles(std::span<const document::Sketch
     std::vector<SketchProfile> profiles;
     std::vector<bool> used(elements.size(), false);
     for (std::size_t index = 0; index < elements.size(); ++index) {
-        if (std::holds_alternative<document::SketchRectangle>(elements[index].geometry) ||
-            std::holds_alternative<document::SketchCircle>(elements[index].geometry)) {
+        if (!elements[index].construction &&
+            (std::holds_alternative<document::SketchRectangle>(elements[index].geometry) ||
+             std::holds_alternative<document::SketchCircle>(elements[index].geometry))) {
             profiles.push_back(SketchProfile{document::SketchProfileId{elements[index].id.value()},
                                              {elements[index].id}});
             used[index] = true;
         }
     }
     for (std::size_t index = 0; index < elements.size(); ++index) {
-        if (used[index] ||
+        if (used[index] || elements[index].construction ||
             !std::holds_alternative<document::SketchLine>(elements[index].geometry)) {
             continue;
         }

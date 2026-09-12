@@ -12,6 +12,7 @@ namespace voelund::features {
 struct EvaluatedSketchElement final {
     document::SketchElementId id;
     TopoDS_Shape shape;
+    bool construction;
 };
 
 [[nodiscard]] std::vector<EvaluatedSketchElement>

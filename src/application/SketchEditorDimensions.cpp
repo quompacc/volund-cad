@@ -19,6 +19,8 @@ SketchEditorSession::constraintValue(document::SketchConstraintId constraintId) 
         (match->kind != document::SketchConstraintKind::distance &&
          match->kind != document::SketchConstraintKind::radius &&
          match->kind != document::SketchConstraintKind::pointDistance &&
+         match->kind != document::SketchConstraintKind::pointDistanceX &&
+         match->kind != document::SketchConstraintKind::pointDistanceY &&
          match->kind != document::SketchConstraintKind::angle))
         return std::nullopt;
     return match->value;
@@ -33,11 +35,16 @@ bool SketchEditorSession::setConstraintValue(document::SketchConstraintId constr
     if (match == constraints_.values.end())
         return false;
     const bool angle = match->kind == document::SketchConstraintKind::angle;
+    const bool directional = match->kind == document::SketchConstraintKind::pointDistanceX ||
+                             match->kind == document::SketchConstraintKind::pointDistanceY;
     const bool dimensional = match->kind == document::SketchConstraintKind::distance ||
                              match->kind == document::SketchConstraintKind::radius ||
-                             match->kind == document::SketchConstraintKind::pointDistance || angle;
+                             match->kind == document::SketchConstraintKind::pointDistance ||
+                             directional || angle;
     if (!dimensional ||
-        (angle ? std::abs(value) <= 1.0e-9 || std::abs(value) >= 180.0 : value <= 0.0) ||
+        (angle         ? std::abs(value) <= 1.0e-9 || std::abs(value) >= 180.0
+         : directional ? false
+                       : value <= 0.0) ||
         match->value == value)
         return false;
     const document::SketchElements originalElements = elements_;

@@ -1,5 +1,4 @@
 #include <voelund/document/DocumentSerializer.hpp>
-
 #include "SketchConstraintSerialization.hpp"
 
 #include <voelund/document/ModelDocument.hpp>
@@ -173,6 +172,10 @@ SketchConstraintKind readConstraintKind(std::istringstream& line) {
         return SketchConstraintKind::pointDistance;
     if (value == "ANGLE")
         return SketchConstraintKind::angle;
+    if (value == "POINT_DISTANCE_X")
+        return SketchConstraintKind::pointDistanceX;
+    if (value == "POINT_DISTANCE_Y")
+        return SketchConstraintKind::pointDistanceY;
     invalidDocument("unknown sketch constraint kind");
 }
 
@@ -317,8 +320,17 @@ ParsedFeature readSketchFeature(FeatureId id, std::string name, std::istringstre
             } else {
                 invalidDocument("unknown sketch element kind");
             }
+            bool construction = false;
+            if (context.version >= 10) {
+                int rawConstruction = 0;
+                if (!(elementLine >> rawConstruction) ||
+                    (rawConstruction != 0 && rawConstruction != 1))
+                    invalidDocument("invalid sketch construction flag");
+                construction = rawConstruction != 0;
+            }
             ensureLineComplete(elementLine);
-            sketch.elements.values.push_back(SketchElement{SketchElementId{rawId}, geometry});
+            sketch.elements.values.push_back(
+                SketchElement{SketchElementId{rawId}, geometry, construction});
         }
         if (context.version >= 4) {
             sketch.constraints.values.reserve(static_cast<std::size_t>(constraintCount));
@@ -451,7 +463,7 @@ ParsedFeature readFeature(const std::string& source,
 void DocumentSerializer::write(const ModelDocument& document, std::ostream& output) {
     output.imbue(std::locale::classic());
     output << std::setprecision(std::numeric_limits<double>::max_digits10);
-    output << "VOLUND 9\nNEXT_ID " << document.nextFeatureId_ << "\nFEATURES "
+    output << "VOLUND 10\nNEXT_ID " << document.nextFeatureId_ << "\nFEATURES "
            << document.features_.size() << '\n';
     for (std::size_t index = 0; index < document.features_.size(); ++index) {
         const FeatureDescriptor& feature = document.features_[index];
@@ -501,7 +513,7 @@ void DocumentSerializer::write(const ModelDocument& document, std::ostream& outp
                     output << "CIRCLE " << element.id.value() << ' ' << circle.center.x << ' '
                            << circle.center.y << ' ' << circle.radius;
                 }
-                output << '\n';
+                output << ' ' << (element.construction ? 1 : 0) << '\n';
             }
             for (const SketchConstraint& constraint : sketch.constraints.values) {
                 output << "CONSTRAINT " << constraint.id.value() << ' '
@@ -541,16 +553,17 @@ void DocumentSerializer::write(const ModelDocument& document, std::ostream& outp
 ModelDocument DocumentSerializer::read(std::istream& input) {
     input.imbue(std::locale::classic());
     const std::string header = requiredLine(input, "file header");
-    const std::uint64_t version = header == "VOLUND 1"   ? 1
-                                  : header == "VOLUND 2" ? 2
-                                  : header == "VOLUND 3" ? 3
-                                  : header == "VOLUND 4" ? 4
-                                  : header == "VOLUND 5" ? 5
-                                  : header == "VOLUND 6" ? 6
-                                  : header == "VOLUND 7" ? 7
-                                  : header == "VOLUND 8" ? 8
-                                  : header == "VOLUND 9" ? 9
-                                                         : 0;
+    const std::uint64_t version = header == "VOLUND 1"    ? 1
+                                  : header == "VOLUND 2"  ? 2
+                                  : header == "VOLUND 3"  ? 3
+                                  : header == "VOLUND 4"  ? 4
+                                  : header == "VOLUND 5"  ? 5
+                                  : header == "VOLUND 6"  ? 6
+                                  : header == "VOLUND 7"  ? 7
+                                  : header == "VOLUND 8"  ? 8
+                                  : header == "VOLUND 9"  ? 9
+                                  : header == "VOLUND 10" ? 10
+                                                          : 0;
     if (version == 0) {
         invalidDocument("unsupported file header or version");
     }

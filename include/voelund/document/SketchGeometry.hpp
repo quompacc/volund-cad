@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <optional>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -80,6 +81,11 @@ using SketchGeometry = std::variant<SketchLine, SketchRectangle, SketchCircle>;
 struct SketchElement final {
     SketchElementId id;
     SketchGeometry geometry;
+    bool construction{false};
+
+    SketchElement(SketchElementId elementId, SketchGeometry elementGeometry,
+                  bool isConstruction = false) noexcept
+        : id(elementId), geometry(std::move(elementGeometry)), construction(isConstruction) {}
 
     [[nodiscard]] bool operator==(const SketchElement&) const = default;
 };
@@ -107,7 +113,9 @@ enum class SketchConstraintKind {
     tangent,
     symmetric,
     pointDistance,
-    angle
+    angle,
+    pointDistanceX,
+    pointDistanceY
 };
 
 struct SketchGeometryReference final {

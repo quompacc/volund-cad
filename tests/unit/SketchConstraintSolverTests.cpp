@@ -225,6 +225,29 @@ bool adapterDrivesPointDistanceAndLineAngle() {
            close(angle, 60.0);
 }
 
+bool adapterDrivesSignedHorizontalAndVerticalDistances() {
+    using namespace voelund::document;
+    SketchParameters sketch{plane(),
+                            {{{SketchElementId{1}, SketchLine{{0.0, 0.0}, {1.0, 0.0}}},
+                              {SketchElementId{2}, SketchLine{{3.0, 4.0}, {4.0, 4.0}}},
+                              {SketchElementId{3}, SketchLine{{10.0, 1.0}, {11.0, 1.0}}},
+                              {SketchElementId{4}, SketchLine{{12.0, 5.0}, {13.0, 5.0}}}},
+                             5},
+                            {{{SketchConstraintId{1}, SketchConstraintKind::pointDistanceX,
+                               lineRef(1), lineRef(2), -5.0},
+                              {SketchConstraintId{2}, SketchConstraintKind::pointDistanceY,
+                               lineRef(3), lineRef(4), 7.0}},
+                             3}};
+
+    const auto result = voelund::features::solveSketchConstraints(sketch);
+    const auto& first = std::get<SketchLine>(sketch.elements.values[0].geometry).start;
+    const auto& second = std::get<SketchLine>(sketch.elements.values[1].geometry).start;
+    const auto& third = std::get<SketchLine>(sketch.elements.values[2].geometry).start;
+    const auto& fourth = std::get<SketchLine>(sketch.elements.values[3].geometry).start;
+    return result.status == voelund::features::SketchSolveStatus::success &&
+           close(second.x - first.x, -5.0) && close(fourth.y - third.y, 7.0);
+}
+
 } // namespace
 
 int main() {
@@ -254,6 +277,10 @@ int main() {
     }
     if (!adapterDrivesPointDistanceAndLineAngle()) {
         std::cerr << "Völund point distance or angle adapter failed\n";
+        return 1;
+    }
+    if (!adapterDrivesSignedHorizontalAndVerticalDistances()) {
+        std::cerr << "Völund directional point distance adapter failed\n";
         return 1;
     }
     return 0;

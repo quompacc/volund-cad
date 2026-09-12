@@ -30,6 +30,7 @@ class SketchPresentation final {
         std::uint64_t id;
         occ::handle<AIS_Shape> shape;
         bool conflicting;
+        bool construction;
     };
 
     std::vector<ElementPresentation> elements_;

@@ -34,6 +34,10 @@ const char* sketchConstraintKindName(SketchConstraintKind kind) noexcept {
         return "POINT_DISTANCE";
     case SketchConstraintKind::angle:
         return "ANGLE";
+    case SketchConstraintKind::pointDistanceX:
+        return "POINT_DISTANCE_X";
+    case SketchConstraintKind::pointDistanceY:
+        return "POINT_DISTANCE_Y";
     }
     return "HORIZONTAL";
 }

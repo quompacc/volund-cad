@@ -12,6 +12,7 @@ namespace {
 const Quantity_Color regularColor(0.15, 0.9, 0.4, Quantity_TOC_RGB);
 const Quantity_Color selectedColor(1.0, 0.65, 0.1, Quantity_TOC_RGB);
 const Quantity_Color conflictingColor(1.0, 0.15, 0.12, Quantity_TOC_RGB);
+const Quantity_Color constructionColor(0.2, 0.65, 1.0, Quantity_TOC_RGB);
 
 bool selected(std::span<const std::uint64_t> selectedIds, std::uint64_t id) {
     return std::ranges::find(selectedIds, id) != selectedIds.end();
@@ -30,13 +31,17 @@ void SketchPresentation::setElements(const occ::handle<AIS_InteractiveContext>& 
     for (const SceneSketchElement& element : elements) {
         occ::handle<AIS_Shape> presentation = new AIS_Shape(element.shape);
         const bool isSelected = selected(selectedIds, element.id);
-        presentation->SetColor(element.conflicting ? conflictingColor
-                               : isSelected        ? selectedColor
-                                                   : regularColor);
-        presentation->SetWidth(isSelected || element.conflicting ? 5.0 : 3.0);
+        presentation->SetColor(element.conflicting    ? conflictingColor
+                               : isSelected           ? selectedColor
+                               : element.construction ? constructionColor
+                                                      : regularColor);
+        presentation->SetWidth(isSelected || element.conflicting ? 5.0
+                               : element.construction            ? 2.0
+                                                                 : 3.0);
         context->Display(presentation, false);
         context->Activate(presentation, AIS_Shape::SelectionMode(TopAbs_EDGE));
-        elements_.push_back(ElementPresentation{element.id, presentation, element.conflicting});
+        elements_.push_back(ElementPresentation{element.id, presentation, element.conflicting,
+                                                element.construction});
     }
 }
 
@@ -56,10 +61,13 @@ void SketchPresentation::select(const occ::handle<AIS_InteractiveContext>& conte
     }
     for (const ElementPresentation& element : elements_) {
         const bool isSelected = selected(selectedIds, element.id);
-        element.shape->SetColor(element.conflicting ? conflictingColor
-                                : isSelected        ? selectedColor
-                                                    : regularColor);
-        element.shape->SetWidth(isSelected || element.conflicting ? 5.0 : 3.0);
+        element.shape->SetColor(element.conflicting    ? conflictingColor
+                                : isSelected           ? selectedColor
+                                : element.construction ? constructionColor
+                                                       : regularColor);
+        element.shape->SetWidth(isSelected || element.conflicting ? 5.0
+                                : element.construction            ? 2.0
+                                                                  : 3.0);
         context->Redisplay(element.shape, false);
     }
 }

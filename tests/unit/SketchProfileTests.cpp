@@ -31,6 +31,20 @@ bool openLinesDoNotFormAProfile() {
     return voelund::features::detectClosedProfiles(elements).empty();
 }
 
+bool constructionGeometryDoesNotFormProfiles() {
+    const std::vector<voelund::document::SketchElement> elements{
+        {voelund::document::SketchElementId{1},
+         voelund::document::SketchRectangle{0.0, 0.0, 4.0, 3.0}, true},
+        {voelund::document::SketchElementId{2}, voelund::document::SketchCircle{{8.0, 2.0}, 1.5},
+         true},
+        {voelund::document::SketchElementId{3},
+         voelund::document::SketchLine{{0.0, 6.0}, {3.0, 6.0}}, true},
+        line(4, 3.0, 6.0, 3.0, 9.0),
+        line(5, 3.0, 9.0, 0.0, 9.0),
+        line(6, 0.0, 9.0, 0.0, 6.0)};
+    return voelund::features::detectClosedProfiles(elements).empty();
+}
+
 } // namespace
 
 int main() {
@@ -40,6 +54,10 @@ int main() {
     }
     if (!openLinesDoNotFormAProfile()) {
         std::cerr << "Open sketch line validation failed\n";
+        return 1;
+    }
+    if (!constructionGeometryDoesNotFormProfiles()) {
+        std::cerr << "Construction geometry formed a sketch profile\n";
         return 1;
     }
     return 0;

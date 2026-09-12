@@ -117,8 +117,8 @@ evaluateSketchElements(const document::SketchParameters& sketch) {
     std::vector<EvaluatedSketchElement> result;
     result.reserve(sketch.elements.values.size());
     for (const document::SketchElement& element : sketch.elements.values) {
-        result.push_back(
-            EvaluatedSketchElement{element.id, elementShape(sketch, element.geometry)});
+        result.push_back(EvaluatedSketchElement{element.id, elementShape(sketch, element.geometry),
+                                                element.construction});
     }
     return result;
 }

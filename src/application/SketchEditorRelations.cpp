@@ -67,6 +67,10 @@ bool SketchEditorSession::canAddSelectedRelation(
     const auto& second = selectedReferences_[1];
     if (first == second)
         return false;
+    if (kind == document::SketchConstraintKind::pointDistanceX ||
+        kind == document::SketchConstraintKind::pointDistanceY)
+        return referencePoint(elements_, first).has_value() &&
+               referencePoint(elements_, second).has_value();
     if (kind == document::SketchConstraintKind::pointDistance) {
         const auto firstPoint = referencePoint(elements_, first);
         const auto secondPoint = referencePoint(elements_, second);
@@ -112,6 +116,13 @@ bool SketchEditorSession::addSelectedRelation(document::SketchConstraintKind kin
         const auto first = referencePoint(elements_, selectedReferences_[0]);
         const auto second = referencePoint(elements_, selectedReferences_[1]);
         constraint.value = std::hypot(second->x - first->x, second->y - first->y);
+    } else if (kind == document::SketchConstraintKind::pointDistanceX ||
+               kind == document::SketchConstraintKind::pointDistanceY) {
+        const auto first = referencePoint(elements_, selectedReferences_[0]);
+        const auto second = referencePoint(elements_, selectedReferences_[1]);
+        constraint.value = kind == document::SketchConstraintKind::pointDistanceX
+                               ? second->x - first->x
+                               : second->y - first->y;
     } else if (kind == document::SketchConstraintKind::angle) {
         const auto* first = findElement(elements_, selectedReferences_[0].element);
         const auto* second = findElement(elements_, selectedReferences_[1].element);

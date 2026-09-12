@@ -17,7 +17,8 @@ makeSceneSketchElements(const application::CadSession& session) {
     const auto evaluated = session.selectedSketchElements();
     result.reserve(evaluated.size());
     for (const features::EvaluatedSketchElement& element : evaluated) {
-        result.push_back(viewport::SceneSketchElement{element.id.value(), element.shape});
+        result.push_back(viewport::SceneSketchElement{element.id.value(), element.shape, false,
+                                                      element.construction});
     }
     return result;
 }

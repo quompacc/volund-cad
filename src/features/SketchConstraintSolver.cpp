@@ -137,7 +137,19 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
             static_cast<void>(system.addConstraintP2PDistance(
                 point(constraint.first, lines, circles), point(*constraint.second, lines, circles),
                 &values.back(), tag));
-        else if (constraint.kind == document::SketchConstraintKind::angle)
+        else if (constraint.kind == document::SketchConstraintKind::pointDistanceX ||
+                 constraint.kind == document::SketchConstraintKind::pointDistanceY) {
+            GCS::Point& firstPoint = point(constraint.first, lines, circles);
+            GCS::Point& secondPoint = point(*constraint.second, lines, circles);
+            double* firstCoordinate =
+                constraint.kind == document::SketchConstraintKind::pointDistanceX ? firstPoint.x
+                                                                                  : firstPoint.y;
+            double* secondCoordinate =
+                constraint.kind == document::SketchConstraintKind::pointDistanceX ? secondPoint.x
+                                                                                  : secondPoint.y;
+            static_cast<void>(system.addConstraintDifference(firstCoordinate, secondCoordinate,
+                                                             &values.back(), tag));
+        } else if (constraint.kind == document::SketchConstraintKind::angle)
             static_cast<void>(system.addConstraintL2LAngle(
                 firstLine->line, lines.at(constraint.second->element.value())->line, &values.back(),
                 tag));

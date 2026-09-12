@@ -143,6 +143,13 @@ void validateSketchConstraints(const SketchElements& elements,
                 if (constraint.first == *constraint.second || constraint.value <= minimumLength)
                     throw std::invalid_argument(
                         "Point distance constraint needs two points and a positive value");
+            } else if (constraint.kind == SketchConstraintKind::pointDistanceX ||
+                       constraint.kind == SketchConstraintKind::pointDistanceY) {
+                requirePoint(constraint.first);
+                requirePoint(*constraint.second);
+                if (constraint.first == *constraint.second)
+                    throw std::invalid_argument(
+                        "Directional point distance constraint needs two points");
             } else if (constraint.kind == SketchConstraintKind::angle) {
                 requireLine(constraint.first);
                 requireLine(*constraint.second);

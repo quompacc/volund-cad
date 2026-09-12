@@ -38,9 +38,12 @@ struct SceneSketchElement final {
     std::uint64_t id;
     TopoDS_Shape shape;
     bool conflicting;
+    bool construction;
 
-    SceneSketchElement(std::uint64_t elementId, TopoDS_Shape elementShape, bool hasConflict = false)
-        : id(elementId), shape(std::move(elementShape)), conflicting(hasConflict) {}
+    SceneSketchElement(std::uint64_t elementId, TopoDS_Shape elementShape, bool hasConflict = false,
+                       bool isConstruction = false)
+        : id(elementId), shape(std::move(elementShape)), conflicting(hasConflict),
+          construction(isConstruction) {}
 };
 
 struct SketchSelectionIntent final {

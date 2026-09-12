@@ -69,6 +69,10 @@ std::string constraintLabel(const features::SketchConstraintAnnotation& annotati
     }
     if (annotation.kind == document::SketchConstraintKind::pointDistance)
         label << "D ";
+    else if (annotation.kind == document::SketchConstraintKind::pointDistanceX)
+        label << "DX ";
+    else if (annotation.kind == document::SketchConstraintKind::pointDistanceY)
+        label << "DY ";
     else
         label << (annotation.kind == document::SketchConstraintKind::radius ? "R " : "L ");
     label << std::fixed << std::setprecision(3) << annotation.value << " mm";
@@ -150,7 +154,10 @@ void SketchEditorToolController::showPanel() {
          {"tangent", QObject::tr("Make selected objects tangent")},
          {"symmetric", QObject::tr("Mirror first two points about third selected line")},
          {"point_distance", QObject::tr("Dimension distance between selected points")},
+         {"point_distance_x", QObject::tr("Dimension horizontal distance between points")},
+         {"point_distance_y", QObject::tr("Dimension vertical distance between points")},
          {"angle", QObject::tr("Dimension angle between selected lines")},
+         {"construction", QObject::tr("Toggle selected construction geometry")},
          {"point_on_object", QObject::tr("Put first selected point on second object")},
          {"lock_point", QObject::tr("Lock selected point")},
          {"unlock_point", QObject::tr("Unlock selected point")},
@@ -187,8 +194,14 @@ void SketchEditorToolController::showPanel() {
                 applyRelation(document::SketchConstraintKind::symmetric);
             } else if (id == "point_distance") {
                 applyRelation(document::SketchConstraintKind::pointDistance);
+            } else if (id == "point_distance_x") {
+                applyRelation(document::SketchConstraintKind::pointDistanceX);
+            } else if (id == "point_distance_y") {
+                applyRelation(document::SketchConstraintKind::pointDistanceY);
             } else if (id == "angle") {
                 applyRelation(document::SketchConstraintKind::angle);
+            } else if (id == "construction") {
+                toggleConstruction();
             } else if (id == "point_on_object") {
                 applyRelation(document::SketchConstraintKind::pointOnObject);
             } else if (id == "lock_point") {
@@ -290,11 +303,17 @@ void SketchEditorToolController::editConstraint(std::uint64_t constraintId) {
         std::ranges::find(annotations, id, &features::SketchConstraintAnnotation::id);
     const bool angle = annotation != annotations.end() &&
                        annotation->kind == document::SketchConstraintKind::angle;
+    const bool directional = annotation != annotations.end() &&
+                             (annotation->kind == document::SketchConstraintKind::pointDistanceX ||
+                              annotation->kind == document::SketchConstraintKind::pointDistanceY);
     bool accepted = false;
     const double value = QInputDialog::getDouble(
         &panel_, QObject::tr("Edit sketch dimension"),
         angle ? QObject::tr("Angle (degrees)") : QObject::tr("Value (mm)"), *current,
-        angle ? -179.999 : 0.001, angle ? 179.999 : 1'000'000.0, 3, &accepted);
+        angle         ? -179.999
+        : directional ? -1'000'000.0
+                      : 0.001,
+        angle ? 179.999 : 1'000'000.0, 3, &accepted);
     if (!accepted || !editor_->setConstraintValue(id, value))
         return;
     syncSelectedDimensionInputs();
@@ -350,16 +369,28 @@ void SketchEditorToolController::applyRelation(document::SketchConstraintKind ki
     syncConstraintState();
     refreshPresentation();
     const char* text =
-        kind == document::SketchConstraintKind::coincident      ? "Coincident constraint added"
-        : kind == document::SketchConstraintKind::parallel      ? "Parallel constraint added"
-        : kind == document::SketchConstraintKind::perpendicular ? "Perpendicular constraint added"
-        : kind == document::SketchConstraintKind::equal         ? "Equal constraint added"
-        : kind == document::SketchConstraintKind::tangent       ? "Tangent constraint added"
-        : kind == document::SketchConstraintKind::symmetric     ? "Symmetric constraint added"
-        : kind == document::SketchConstraintKind::pointDistance ? "Point distance added"
-        : kind == document::SketchConstraintKind::angle         ? "Angle dimension added"
+        kind == document::SketchConstraintKind::coincident       ? "Coincident constraint added"
+        : kind == document::SketchConstraintKind::parallel       ? "Parallel constraint added"
+        : kind == document::SketchConstraintKind::perpendicular  ? "Perpendicular constraint added"
+        : kind == document::SketchConstraintKind::equal          ? "Equal constraint added"
+        : kind == document::SketchConstraintKind::tangent        ? "Tangent constraint added"
+        : kind == document::SketchConstraintKind::symmetric      ? "Symmetric constraint added"
+        : kind == document::SketchConstraintKind::pointDistance  ? "Point distance added"
+        : kind == document::SketchConstraintKind::pointDistanceX ? "Horizontal distance added"
+        : kind == document::SketchConstraintKind::pointDistanceY ? "Vertical distance added"
+        : kind == document::SketchConstraintKind::angle          ? "Angle dimension added"
                                                         : "Point-on-object constraint added";
     statusChanged_(QObject::tr(text));
+}
+
+void SketchEditorToolController::toggleConstruction() {
+    if (!editor_ || !editor_->toggleSelectedConstruction())
+        return;
+    syncConstraintState();
+    refreshPresentation();
+    statusChanged_(editor_->isSelectedConstruction()
+                       ? QObject::tr("Construction geometry enabled")
+                       : QObject::tr("Construction geometry disabled"));
 }
 
 void SketchEditorToolController::lockSelectedReference() {
@@ -458,12 +489,19 @@ void SketchEditorToolController::syncConstraintState() {
         "symmetric", editor_->canAddSelectedRelation(document::SketchConstraintKind::symmetric));
     panel_.setActionEnabled("point_distance", editor_->canAddSelectedRelation(
                                                   document::SketchConstraintKind::pointDistance));
+    panel_.setActionEnabled(
+        "point_distance_x",
+        editor_->canAddSelectedRelation(document::SketchConstraintKind::pointDistanceX));
+    panel_.setActionEnabled(
+        "point_distance_y",
+        editor_->canAddSelectedRelation(document::SketchConstraintKind::pointDistanceY));
     panel_.setActionEnabled("angle",
                             editor_->canAddSelectedRelation(document::SketchConstraintKind::angle));
     panel_.setActionEnabled("point_on_object", editor_->canAddSelectedRelation(
                                                    document::SketchConstraintKind::pointOnObject));
     panel_.setActionEnabled("lock_point", editor_->canLockSelectedReference());
     panel_.setActionEnabled("unlock_point", editor_->isSelectedReferenceLocked());
+    panel_.setActionEnabled("construction", editor_->selectedElement().has_value());
     panel_.setActionEnabled("remove_constraint", !editor_->constraints().empty());
     panel_.setAcceptEnabled(editor_->canAccept());
     const auto& result = editor_->lastSolveResult();
@@ -492,8 +530,8 @@ void SketchEditorToolController::refreshPresentation() {
     std::vector<viewport::SceneSketchElement> elements;
     elements.reserve(evaluated.size());
     for (const features::EvaluatedSketchElement& element : evaluated) {
-        elements.push_back(
-            {element.id.value(), element.shape, editor_->isElementConflicting(element.id)});
+        elements.push_back({element.id.value(), element.shape,
+                            editor_->isElementConflicting(element.id), element.construction});
     }
     viewport_.setSketchElements(elements);
     std::vector<std::uint64_t> selectedIds;
@@ -511,6 +549,8 @@ void SketchEditorToolController::refreshPresentation() {
         const bool editable = annotation.kind == document::SketchConstraintKind::distance ||
                               annotation.kind == document::SketchConstraintKind::radius ||
                               annotation.kind == document::SketchConstraintKind::pointDistance ||
+                              annotation.kind == document::SketchConstraintKind::pointDistanceX ||
+                              annotation.kind == document::SketchConstraintKind::pointDistanceY ||
                               annotation.kind == document::SketchConstraintKind::angle;
         constraints.push_back({annotation.id.value(), constraintLabel(annotation),
                                annotation.position.X(), annotation.position.Y(),

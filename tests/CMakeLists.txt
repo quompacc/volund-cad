@@ -68,6 +68,16 @@ target_link_libraries(
 
 add_test(NAME application.sketch_editor_flow COMMAND voelund_sketch_editor_tests)
 
+add_executable(voelund_sketch_construction_tests integration/SketchConstructionTests.cpp)
+target_link_libraries(
+    voelund_sketch_construction_tests
+    PRIVATE
+        voelund_project_options
+        Voelund::Application
+)
+
+add_test(NAME application.sketch_construction COMMAND voelund_sketch_construction_tests)
+
 add_executable(voelund_workspace_tests unit/CommandRegistryTests.cpp)
 target_link_libraries(
     voelund_workspace_tests
