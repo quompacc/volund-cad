@@ -134,7 +134,7 @@ bool sketchElementsKeepStableIdsThroughHistoryAndSerialization() {
     }
     std::ostringstream output;
     voelund::document::DocumentSerializer::write(document, output);
-    if (!output.str().starts_with("VOLUND 8\n"))
+    if (!output.str().starts_with("VOLUND 9\n"))
         return false;
     std::istringstream input(output.str());
     const auto loaded = voelund::document::DocumentSerializer::read(input);
@@ -144,7 +144,7 @@ bool sketchElementsKeepStableIdsThroughHistoryAndSerialization() {
            std::holds_alternative<voelund::document::SketchCircle>(elements.values[1].geometry);
 }
 
-bool relationalConstraintsRoundtripInVersionEight() {
+bool relationalConstraintsRoundtripInVersionNine() {
     using namespace voelund::document;
     ModelDocument document = ModelDocument::empty();
     const auto support = document.addBoxFeature("Support", {20.0, 20.0, 30.0});
@@ -185,15 +185,25 @@ bool relationalConstraintsRoundtripInVersionEight() {
            {SketchElementId{1}, SketchPointPosition::start},
            SketchGeometryReference{SketchElementId{2}, SketchPointPosition::start},
            0.0,
-           SketchGeometryReference{SketchElementId{4}, SketchPointPosition::start}}},
-         7}};
+           SketchGeometryReference{SketchElementId{4}, SketchPointPosition::start}},
+          {SketchConstraintId{7},
+           SketchConstraintKind::pointDistance,
+           {SketchElementId{1}, SketchPointPosition::end},
+           SketchGeometryReference{SketchElementId{2}, SketchPointPosition::end},
+           5.0},
+          {SketchConstraintId{8},
+           SketchConstraintKind::angle,
+           {SketchElementId{1}, SketchPointPosition::start},
+           SketchGeometryReference{SketchElementId{2}, SketchPointPosition::start},
+           45.0}},
+         9}};
     const auto sketchId = document.addSketchFeature("Constrained", support, sketch);
     std::ostringstream output;
     DocumentSerializer::write(document, output);
     std::istringstream input(output.str());
     const auto loaded = DocumentSerializer::read(input);
     const auto& constraints = loaded.sketchParameters(sketchId).constraints;
-    return output.str().starts_with("VOLUND 8\n") && constraints == sketch.constraints;
+    return output.str().starts_with("VOLUND 9\n") && constraints == sketch.constraints;
 }
 
 bool versionTwoLineMigratesWithoutConstraint() {
@@ -292,8 +302,8 @@ int main() {
         std::cerr << "Sketch element identity/history test failed\n";
         return 1;
     }
-    if (!relationalConstraintsRoundtripInVersionEight()) {
-        std::cerr << "Version-eight relational constraint roundtrip failed\n";
+    if (!relationalConstraintsRoundtripInVersionNine()) {
+        std::cerr << "Version-nine relational constraint roundtrip failed\n";
         return 1;
     }
     if (!legacySketchMigratesToStableRectangleElement()) {

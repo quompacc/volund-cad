@@ -30,6 +30,10 @@ const char* sketchConstraintKindName(SketchConstraintKind kind) noexcept {
         return "TANGENT";
     case SketchConstraintKind::symmetric:
         return "SYMMETRIC";
+    case SketchConstraintKind::pointDistance:
+        return "POINT_DISTANCE";
+    case SketchConstraintKind::angle:
+        return "ANGLE";
     }
     return "HORIZONTAL";
 }

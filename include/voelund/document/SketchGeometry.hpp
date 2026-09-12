@@ -105,7 +105,9 @@ enum class SketchConstraintKind {
     pointOnObject,
     equal,
     tangent,
-    symmetric
+    symmetric,
+    pointDistance,
+    angle
 };
 
 struct SketchGeometryReference final {

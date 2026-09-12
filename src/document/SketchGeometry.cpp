@@ -137,6 +137,20 @@ void validateSketchConstraints(const SketchElements& elements,
             if (constraint.kind == SketchConstraintKind::coincident) {
                 requirePoint(constraint.first);
                 requirePoint(*constraint.second);
+            } else if (constraint.kind == SketchConstraintKind::pointDistance) {
+                requirePoint(constraint.first);
+                requirePoint(*constraint.second);
+                if (constraint.first == *constraint.second || constraint.value <= minimumLength)
+                    throw std::invalid_argument(
+                        "Point distance constraint needs two points and a positive value");
+            } else if (constraint.kind == SketchConstraintKind::angle) {
+                requireLine(constraint.first);
+                requireLine(*constraint.second);
+                if (constraint.first.element == constraint.second->element ||
+                    std::abs(constraint.value) <= minimumLength ||
+                    std::abs(constraint.value) >= 180.0)
+                    throw std::invalid_argument("Angle constraint needs two different lines and an "
+                                                "angle below 180 degrees");
             } else if (constraint.kind == SketchConstraintKind::symmetric) {
                 if (!constraint.third.has_value())
                     throw std::invalid_argument("Symmetric constraint needs an axis reference");

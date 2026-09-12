@@ -3,19 +3,16 @@
 
 #include <filesystem>
 #include <iostream>
+#include <numbers>
 #include <string>
 #include <variant>
-
 namespace {
-
 constexpr voelund::document::SketchPlane plane{0.0, 0.0, 40.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0};
-
 bool add(voelund::application::SketchEditorSession& editor, voelund::document::SketchPoint first,
          voelund::document::SketchPoint second, std::uint64_t expectedId) {
     return editor.setPreview(first, second) &&
            editor.confirmPreview() == voelund::document::SketchElementId{expectedId};
 }
-
 bool completeEditorFlowIsOneDocumentTransaction() {
     voelund::application::CadSession session;
     session.newDocument();
@@ -42,7 +39,6 @@ bool completeEditorFlowIsOneDocumentTransaction() {
         return false;
     return session.redo() && session.features().size() == 2;
 }
-
 bool cancelLeavesNoFeatureOrUndoEntry() {
     voelund::application::CadSession session;
     session.newDocument();
@@ -55,7 +51,6 @@ bool cancelLeavesNoFeatureOrUndoEntry() {
         return false;
     return session.undo() && session.features().empty();
 }
-
 bool toolChangesClearOnlyPreviewAndKeepStableIds() {
     voelund::application::CadSession session;
     session.newDocument();
@@ -72,7 +67,6 @@ bool toolChangesClearOnlyPreviewAndKeepStableIds() {
     return add(editor, {0.0, 0.0}, {2.0, 0.0}, 2) &&
            editor.elements().front().id == voelund::document::SketchElementId{1};
 }
-
 bool lineClosureRecomputesProfilesAndOpenSketchRoundtrips() {
     voelund::application::CadSession session;
     session.newDocument();
@@ -97,7 +91,6 @@ bool lineClosureRecomputesProfilesAndOpenSketchRoundtrips() {
     return loaded.selectFeature(sketchId) &&
            loaded.selectedSketchParameters().elements.values.size() == 3;
 }
-
 bool exclusivelyOpenGeometryIsAValidSketch() {
     voelund::application::CadSession session;
     session.newDocument();
@@ -485,6 +478,52 @@ bool symmetricRelationUsesTwoPointsAndAnAxis() {
            std::abs(cross) <= 1.0e-6 && std::abs(dot) <= 1.0e-6;
 }
 
+bool pointDistanceAndAngleDimensionsRemainEditable() {
+    using namespace voelund;
+    application::CadSession session;
+    session.newDocument();
+    const auto support = session.addBoxFeature();
+    application::SketchEditorSession editor(session, support, plane);
+    if (!add(editor, {0.0, 0.0}, {1.0, 0.0}, 1) || !add(editor, {3.0, 4.0}, {4.0, 4.0}, 2) ||
+        !add(editor, {10.0, 0.0}, {14.0, 0.0}, 3) || !add(editor, {10.0, 3.0}, {13.0, 4.0}, 4) ||
+        !editor.selectNearestReference(document::SketchElementId{1}, {0.0, 0.0}, false) ||
+        !editor.selectNearestReference(document::SketchElementId{2}, {3.0, 4.0}, true) ||
+        !editor.canAddSelectedRelation(document::SketchConstraintKind::pointDistance) ||
+        !editor.addSelectedRelation(document::SketchConstraintKind::pointDistance))
+        return false;
+    const auto distanceId = editor.constraints().back().id;
+    if (editor.constraintValue(distanceId) != std::optional<double>{5.0} ||
+        !editor.setConstraintValue(distanceId, 8.0))
+        return false;
+    const auto firstPoint = std::get<document::SketchLine>(editor.elements()[0].geometry).start;
+    const auto secondPoint = std::get<document::SketchLine>(editor.elements()[1].geometry).start;
+    if (std::abs(std::hypot(secondPoint.x - firstPoint.x, secondPoint.y - firstPoint.y) - 8.0) >
+        1.0e-7)
+        return false;
+
+    const auto thirdPoint = std::get<document::SketchLine>(editor.elements()[2].geometry).start;
+    const auto fourthPoint = std::get<document::SketchLine>(editor.elements()[3].geometry).start;
+    if (!editor.selectNearestReference(document::SketchElementId{3}, thirdPoint, false) ||
+        !editor.selectNearestReference(document::SketchElementId{4}, fourthPoint, true) ||
+        !editor.canAddSelectedRelation(document::SketchConstraintKind::angle) ||
+        !editor.addSelectedRelation(document::SketchConstraintKind::angle))
+        return false;
+    const auto angleId = editor.constraints().back().id;
+    if (!editor.setConstraintValue(angleId, 60.0))
+        return false;
+    const auto& firstLine = std::get<document::SketchLine>(editor.elements()[2].geometry);
+    const auto& secondLine = std::get<document::SketchLine>(editor.elements()[3].geometry);
+    const double firstX = firstLine.end.x - firstLine.start.x;
+    const double firstY = firstLine.end.y - firstLine.start.y;
+    const double secondX = secondLine.end.x - secondLine.start.x;
+    const double secondY = secondLine.end.y - secondLine.start.y;
+    const double angle =
+        std::atan2(firstX * secondY - firstY * secondX, firstX * secondX + firstY * secondY) *
+        180.0 / std::numbers::pi;
+    return editor.constraintValue(angleId) == std::optional<double>{60.0} &&
+           std::abs(angle - 60.0) <= 1.0e-7;
+}
+
 } // namespace
 
 int main() {
@@ -550,6 +589,10 @@ int main() {
     }
     if (!symmetricRelationUsesTwoPointsAndAnAxis()) {
         std::cerr << "Symmetric editor relation failed\n";
+        return 1;
+    }
+    if (!pointDistanceAndAngleDimensionsRemainEditable()) {
+        std::cerr << "Point distance or angle editing failed\n";
         return 1;
     }
     return 0;

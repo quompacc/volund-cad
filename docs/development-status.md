@@ -96,7 +96,10 @@ gehören nicht zum Produktpfad.
 - `Symmetric` verwendet zwei zuerst gewählte Punkte und eine als dritte Referenz
   gewählte Achslinie. PlaneGCS hält den Mittelpunkt auf der Achse und die Verbindung
   rechtwinklig dazu; die Relation erscheint als `[S]`.
-- Neue Dateien verwenden `VOLUND 8`; bestehende `VOLUND 1`-Rechtecksketches,
+- Zwei ausgewählte Punkte können mit einem treibenden Abstand bemaßt werden; zwei
+  ausgewählte Linien mit einem gerichteten Winkel in Grad. Beide Werte sind über
+  ihre `D … mm`- beziehungsweise `A …°`-Beschriftung direkt editierbar.
+- Neue Dateien verwenden `VOLUND 9`; bestehende `VOLUND 1`-Rechtecksketches,
   `VOLUND 2`-Linien, `VOLUND 3`-Richtungsconstraints und `VOLUND 4`-Extrusionen
   sowie `VOLUND 5`-Profilauswahlen werden beim Laden migriert. Alte Extrusionen
   behalten dabei ihre bisherige Semantik, alle geschlossenen Profile zu verwenden.
@@ -174,7 +177,8 @@ Die ersten vollständigen Mehrfach-Element-Erzeugungs- und Bearbeitungs-Slices s
 beiden Windows-Backends und im nativen FreeBSD-Wayland-Controlpfad bestätigt. Sichtbare
 Constraint-Glyphen, direkte Bemaßungsinteraktion, Punktsperren und Punkt-auf-Objekt
 sowie Tangential-, Gleichheits- und Symmetrierelationen sind umgesetzt. Als nächste
-parametrische Ausbaustufe folgen Punkt-zu-Punkt-Abstände und Winkelbemaßungen.
+parametrische Ausbaustufe folgen horizontale/vertikale Punktabstände und weitere
+Konstruktionsgeometrie.
 
 Der direkte Push/Pull-Ablauf bleibt dabei als schneller Weg erhalten. Er ist eine
 Bedienoberfläche über denselben parametrischen Sketch- und Extrusionsfeatures, kein

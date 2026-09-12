@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <numbers>
 
 namespace {
 
@@ -193,6 +194,37 @@ bool adapterMakesPointsSymmetricAboutLine() {
            close(midpointCross, 0.0) && close(connectingDot, 0.0);
 }
 
+bool adapterDrivesPointDistanceAndLineAngle() {
+    using namespace voelund::document;
+    SketchParameters sketch{
+        plane(),
+        {{{SketchElementId{1}, SketchLine{{0.0, 0.0}, {1.0, 0.0}}},
+          {SketchElementId{2}, SketchLine{{3.0, 4.0}, {4.0, 4.0}}},
+          {SketchElementId{3}, SketchLine{{10.0, 0.0}, {14.0, 0.0}}},
+          {SketchElementId{4}, SketchLine{{10.0, 3.0}, {13.0, 4.0}}}},
+         5},
+        {{{SketchConstraintId{1}, SketchConstraintKind::pointDistance, lineRef(1), lineRef(2),
+           10.0},
+          {SketchConstraintId{2}, SketchConstraintKind::angle, lineRef(3), lineRef(4), 60.0}},
+         3}};
+
+    const auto result = voelund::features::solveSketchConstraints(sketch);
+    const auto& firstPoint = std::get<SketchLine>(sketch.elements.values[0].geometry).start;
+    const auto& secondPoint = std::get<SketchLine>(sketch.elements.values[1].geometry).start;
+    const auto& firstLine = std::get<SketchLine>(sketch.elements.values[2].geometry);
+    const auto& secondLine = std::get<SketchLine>(sketch.elements.values[3].geometry);
+    const double firstX = firstLine.end.x - firstLine.start.x;
+    const double firstY = firstLine.end.y - firstLine.start.y;
+    const double secondX = secondLine.end.x - secondLine.start.x;
+    const double secondY = secondLine.end.y - secondLine.start.y;
+    const double angle =
+        std::atan2(firstX * secondY - firstY * secondX, firstX * secondX + firstY * secondY) *
+        180.0 / std::numbers::pi;
+    return result.status == voelund::features::SketchSolveStatus::success &&
+           close(std::hypot(secondPoint.x - firstPoint.x, secondPoint.y - firstPoint.y), 10.0) &&
+           close(angle, 60.0);
+}
+
 } // namespace
 
 int main() {
@@ -218,6 +250,10 @@ int main() {
     }
     if (!adapterMakesPointsSymmetricAboutLine()) {
         std::cerr << "Völund symmetric constraint adapter failed\n";
+        return 1;
+    }
+    if (!adapterDrivesPointDistanceAndLineAngle()) {
+        std::cerr << "Völund point distance or angle adapter failed\n";
         return 1;
     }
     return 0;

@@ -169,6 +169,10 @@ SketchConstraintKind readConstraintKind(std::istringstream& line) {
         return SketchConstraintKind::tangent;
     if (value == "SYMMETRIC")
         return SketchConstraintKind::symmetric;
+    if (value == "POINT_DISTANCE")
+        return SketchConstraintKind::pointDistance;
+    if (value == "ANGLE")
+        return SketchConstraintKind::angle;
     invalidDocument("unknown sketch constraint kind");
 }
 
@@ -447,7 +451,7 @@ ParsedFeature readFeature(const std::string& source,
 void DocumentSerializer::write(const ModelDocument& document, std::ostream& output) {
     output.imbue(std::locale::classic());
     output << std::setprecision(std::numeric_limits<double>::max_digits10);
-    output << "VOLUND 8\nNEXT_ID " << document.nextFeatureId_ << "\nFEATURES "
+    output << "VOLUND 9\nNEXT_ID " << document.nextFeatureId_ << "\nFEATURES "
            << document.features_.size() << '\n';
     for (std::size_t index = 0; index < document.features_.size(); ++index) {
         const FeatureDescriptor& feature = document.features_[index];
@@ -545,6 +549,7 @@ ModelDocument DocumentSerializer::read(std::istream& input) {
                                   : header == "VOLUND 6" ? 6
                                   : header == "VOLUND 7" ? 7
                                   : header == "VOLUND 8" ? 8
+                                  : header == "VOLUND 9" ? 9
                                                          : 0;
     if (version == 0) {
         invalidDocument("unsupported file header or version");

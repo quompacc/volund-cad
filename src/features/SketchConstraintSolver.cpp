@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <numbers>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
@@ -110,7 +111,9 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
     std::vector<document::SketchConstraintId> tags;
     tags.reserve(sketch.constraints.values.size());
     for (const document::SketchConstraint& constraint : sketch.constraints.values) {
-        values.push_back(constraint.value);
+        values.push_back(constraint.kind == document::SketchConstraintKind::angle
+                             ? constraint.value * std::numbers::pi / 180.0
+                             : constraint.value);
         tags.push_back(constraint.id);
         const int tag = static_cast<int>(tags.size());
         LineState* firstLine = lines.contains(constraint.first.element.value())
@@ -130,6 +133,14 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
             static_cast<void>(
                 system.addConstraintP2PCoincident(point(constraint.first, lines, circles),
                                                   point(*constraint.second, lines, circles), tag));
+        else if (constraint.kind == document::SketchConstraintKind::pointDistance)
+            static_cast<void>(system.addConstraintP2PDistance(
+                point(constraint.first, lines, circles), point(*constraint.second, lines, circles),
+                &values.back(), tag));
+        else if (constraint.kind == document::SketchConstraintKind::angle)
+            static_cast<void>(system.addConstraintL2LAngle(
+                firstLine->line, lines.at(constraint.second->element.value())->line, &values.back(),
+                tag));
         else if (constraint.kind == document::SketchConstraintKind::symmetric)
             static_cast<void>(system.addConstraintP2PSymmetric(
                 point(constraint.first, lines, circles), point(*constraint.second, lines, circles),

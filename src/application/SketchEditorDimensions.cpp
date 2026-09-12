@@ -17,20 +17,27 @@ SketchEditorSession::constraintValue(document::SketchConstraintId constraintId) 
         std::ranges::find(constraints_.values, constraintId, &document::SketchConstraint::id);
     if (match == constraints_.values.end() ||
         (match->kind != document::SketchConstraintKind::distance &&
-         match->kind != document::SketchConstraintKind::radius))
+         match->kind != document::SketchConstraintKind::radius &&
+         match->kind != document::SketchConstraintKind::pointDistance &&
+         match->kind != document::SketchConstraintKind::angle))
         return std::nullopt;
     return match->value;
 }
 
 bool SketchEditorSession::setConstraintValue(document::SketchConstraintId constraintId,
                                              double value) {
-    if (!active_ || !std::isfinite(value) || value <= 0.0)
+    if (!active_ || !std::isfinite(value))
         return false;
     const auto match =
         std::ranges::find(constraints_.values, constraintId, &document::SketchConstraint::id);
-    if (match == constraints_.values.end() ||
-        (match->kind != document::SketchConstraintKind::distance &&
-         match->kind != document::SketchConstraintKind::radius) ||
+    if (match == constraints_.values.end())
+        return false;
+    const bool angle = match->kind == document::SketchConstraintKind::angle;
+    const bool dimensional = match->kind == document::SketchConstraintKind::distance ||
+                             match->kind == document::SketchConstraintKind::radius ||
+                             match->kind == document::SketchConstraintKind::pointDistance || angle;
+    if (!dimensional ||
+        (angle ? std::abs(value) <= 1.0e-9 || std::abs(value) >= 180.0 : value <= 0.0) ||
         match->value == value)
         return false;
     const document::SketchElements originalElements = elements_;
