@@ -38,6 +38,15 @@ gehören nicht zum Produktpfad.
   Elemente als getrennte OCCT-Präsentationen dar. Linien, Rechtecke und Kreise sind
   über ihre stabilen Element-IDs einzeln pickbar; die Auswahl wird farblich und im
   Eigenschaftenbereich angezeigt.
+- Der eigenständige Sketch-Editor startet auf einer ausgewählten planaren Fläche und
+  erzeugt nacheinander Linien, Rechtecke und Kreise im selben temporären Sketch.
+  Werkzeugwechsel erhalten bestätigte Elemente; lineares Snapping und Live-Preview
+  gelten für alle drei Werkzeuge. Elemente sind bereits während des Editorlaufs über
+  ihre stabilen IDs einzeln auswählbar.
+- OK übernimmt den vollständigen Sketch als genau eine Dokumenttransaktion. Cancel
+  und Escape hinterlassen weder Feature noch Undo-Eintrag. Rein offene
+  Liniengeometrie ist ein gültiger speicherbarer Sketch; erst die Extrusion verlangt
+  mindestens ein geschlossenes Profil.
 - Neue Dateien verwenden `VOLUND 2`; bestehende `VOLUND 1`-Rechtecksketches werden
   beim Laden verlustfrei auf das neue Elementmodell migriert.
 - Ein temporäres generisches Tool-Panel bietet Parameter, Live-Vorschau, OK und
@@ -78,8 +87,9 @@ angefordert wird.
 
 - Keine neue Produktabhängigkeit wurde für diese Funktionen eingeführt.
 - Beide Windows-Backends durchlaufen denselben Funktions- und Regressionsteststand.
-- Sieben CTest-Tests prüfen Viewport-Start, Kernel, Dokumenthistorie,
-  Sketch-Profilerkennung, Anwendungs-Neuberechnung, Modulregistrierung und Quellgrößen.
+- Acht CTest-Tests prüfen Viewport-Start, Kernel, Dokumenthistorie,
+  Sketch-Profilerkennung, Anwendungs-Neuberechnung, den vollständigen
+  Sketch-Editor-Ablauf, Modulregistrierung und Quellgrößen.
 - Regressionstests sichern sowohl die unabhängige Bewegung getrennter Körper als auch
   die gemeinsame Verschiebung eines Join-Ergebnisses einschließlich Undo.
 - Die harte Grenze von 600 Zeilen je gepflegter Quelldatei bleibt aktiv.
@@ -106,12 +116,13 @@ VTK und Qt 5 aus OCCT. Offen bleibt die Abnahme derselben Prüfkette unter Merid
 Das FreeBSD-Qt6-Paket ist ein kombinierter Wayland/X11-Build und enthält deshalb trotz
 erzwungener Wayland-QPA weiterhin ruhende ELF-Kanten zu `libX11` und `libGLX`.
 
-Der vollständige parametrische Sketch-Modus wird mit dem nächsten Editor-Slice
-fortgesetzt:
+Der erste vollständige Mehrfach-Element-Editor-Slice ist auf beiden Windows-Backends
+und im nativen FreeBSD-Wayland-Controlpfad bestätigt. Der parametrische Sketch-Modus
+wird als Nächstes fortgesetzt mit:
 
-1. Erzeugen und Bearbeiten von Linien, Rechtecken und Kreisen im Sketch-Editor;
-2. Maße und geometrische Constraints;
-3. stabile Profilidentitäten und freie Auswahl eines oder mehrerer Profile für
+1. Bearbeiten bereits bestätigter Linien, Rechtecke und Kreise;
+2. Maßen und geometrischen Constraints;
+3. stabilen Profilidentitäten und freier Auswahl eines oder mehrerer Profile für
    nachfolgende Extrusionen.
 
 Der direkte Push/Pull-Ablauf bleibt dabei als schneller Weg erhalten. Er ist eine

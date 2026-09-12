@@ -9,6 +9,8 @@
 
 #include <BRepBuilderAPI_Transform.hxx>
 #include <BRepPrimAPI_MakePrism.hxx>
+#include <BRep_Builder.hxx>
+#include <TopoDS_Compound.hxx>
 #include <algorithm>
 #include <gp_Trsf.hxx>
 #include <gp_Vec.hxx>
@@ -116,8 +118,13 @@ void evaluateSketch(const document::ModelDocument& document,
                     const document::FeatureDescriptor& descriptor,
                     std::vector<EvaluatedFeature>& outputs) {
     const document::SketchParameters& parameters = document.sketchParameters(descriptor.id);
-    const TopoDS_Shape faces = evaluateSketchProfileFaces(parameters);
-    outputs.push_back(EvaluatedFeature{descriptor.id, faces, faces});
+    TopoDS_Compound geometry;
+    BRep_Builder builder;
+    builder.MakeCompound(geometry);
+    for (const EvaluatedSketchElement& element : evaluateSketchElements(parameters)) {
+        builder.Add(geometry, element.shape);
+    }
+    outputs.push_back(EvaluatedFeature{descriptor.id, geometry, geometry});
 }
 
 void evaluateExtrusion(const document::ModelDocument& document,
@@ -128,8 +135,8 @@ void evaluateExtrusion(const document::ModelDocument& document,
         throw std::runtime_error("Extrusion requires a sketch input");
     }
     const document::FeatureId sketchId = *descriptor.inputFeature;
-    const TopoDS_Shape& sketchFace = findOutput(outputs, sketchId);
     const document::SketchParameters& sketch = document.sketchParameters(sketchId);
+    const TopoDS_Shape sketchFace = evaluateSketchProfileFaces(sketch);
     const document::ExtrusionParameters& parameters = document.extrusionParameters(descriptor.id);
     // Start just inside the support body. Repeated OCCT booleans can otherwise leave
     // microscopic gaps at a face that is mathematically coincident with the sketch.

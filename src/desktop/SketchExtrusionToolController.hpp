@@ -25,6 +25,7 @@ public:
     void begin(const viewport::PlanarFaceSelection& support);
     void updateDistancePreview(double distance);
     void setResult(const viewport::SketchRectangleResult& result);
+    [[nodiscard]] bool isActive() const noexcept;
     void cancel();
 
 private:
@@ -38,6 +39,7 @@ private:
     std::function<void(const QString&)> statusChanged_;
     std::optional<viewport::SketchRectangleResult> result_;
     double distance_{1.0};
+    bool active_{false};
 };
 
 } // namespace voelund::desktop

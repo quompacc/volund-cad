@@ -11,6 +11,7 @@ else()
 endif()
 
 list(APPEND voelund_viewport_sources
+    SketchEditorInteraction.cpp
     SketchInteraction.cpp
     SketchPresentation.cpp
     TransformManipulator.cpp

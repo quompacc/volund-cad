@@ -10,9 +10,11 @@ namespace voelund::modules::solid {
 struct SolidCommandServices final {
     std::function<void()> addBox;
     std::function<void()> addCylinder;
+    std::function<void()> sketchEditor;
     std::function<void()> sketchRectangle;
     std::function<void(bool)> transform;
     std::function<bool()> canAddCylinder;
+    std::function<bool()> canEditSketch;
     std::function<bool()> canSketch;
     std::function<bool()> canTransform;
 };

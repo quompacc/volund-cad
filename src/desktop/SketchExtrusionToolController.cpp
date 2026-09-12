@@ -28,15 +28,18 @@ SketchExtrusionToolController::SketchExtrusionToolController(
 void SketchExtrusionToolController::begin(
     const viewport::PlanarFaceSelection& support)
 {
+    active_ = true;
     result_.reset();
     distance_ = 1.0;
     panel_.begin(ToolPanelDefinition{
         QObject::tr("Sketch / Extrusion"),
         QObject::tr("Set two rectangle corners, pull the preview, then confirm."),
         {{"distance", QObject::tr("Distance"), distance_, 0.001, 1'000'000.0}},
+        {},
         [this](const std::string& id, double value) {
             if (id == "distance") setDistance(value);
         },
+        {},
         [this]() { accept(); },
         [this]() { cancel(); }});
     viewport_.beginRectangleSketch(support);
@@ -86,6 +89,7 @@ void SketchExtrusionToolController::accept()
     viewport_.cancelSketch();
     panel_.end();
     result_.reset();
+    active_ = false;
     sceneChanged_();
     statusChanged_(QObject::tr("Sketch and extrusion created"));
 }
@@ -95,7 +99,10 @@ void SketchExtrusionToolController::cancel()
     viewport_.cancelSketch();
     panel_.end();
     result_.reset();
+    active_ = false;
     statusChanged_(QObject::tr("Tool cancelled"));
 }
+
+bool SketchExtrusionToolController::isActive() const noexcept { return active_; }
 
 } // namespace voelund::desktop

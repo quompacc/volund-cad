@@ -3,6 +3,7 @@
 #include "MeasurementInput.hpp"
 
 #include <QDoubleSpinBox>
+#include <QComboBox>
 #include <QFormLayout>
 #include <QHBoxLayout>
 #include <QKeySequence>
@@ -73,6 +74,22 @@ void ToolPanelHost::begin(ToolPanelDefinition definition)
         parameterLayout_->addRow(parameter.label, input);
         lengthInputs_.emplace_back(parameter.id, input);
     }
+    for (const ToolChoiceParameter& parameter : definition_.choiceParameters) {
+        auto* input = new QComboBox(content_);
+        for (const QString& choice : parameter.choices) {
+            input->addItem(choice);
+        }
+        input->setCurrentIndex(parameter.currentIndex);
+        const std::string parameterId = parameter.id;
+        connect(input, &QComboBox::currentIndexChanged, this,
+            [this, parameterId](int index) {
+                if (definition_.choiceChanged) {
+                    definition_.choiceChanged(parameterId, index);
+                }
+            });
+        parameterLayout_->addRow(parameter.label, input);
+        choiceInputs_.emplace_back(parameter.id, input);
+    }
     acceptButton_->setEnabled(false);
     show();
     raise();
@@ -110,6 +127,7 @@ void ToolPanelHost::clearParameters()
         delete item;
     }
     lengthInputs_.clear();
+    choiceInputs_.clear();
 }
 
 } // namespace voelund::desktop

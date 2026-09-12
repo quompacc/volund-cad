@@ -31,6 +31,25 @@ element is highlighted independently of the supporting body and identified in th
 properties area. Both Windows viewport backends and the FreeBSD Wayland backend use
 the same presentation component.
 
+## Multi-element editor slice
+
+The general Sketch command opens a dedicated editor on the selected planar face. Its
+temporary `SketchEditorSession` belongs to the application layer and is independent
+of the retained direct rectangle/Push-Pull interaction. Line, rectangle and circle
+tools share the viewport's linear snapping, may be switched without discarding
+confirmed elements, and allocate deterministic sketch-local IDs as each element is
+confirmed. The viewport reports only snapped planar point intents and picking results;
+the application session owns temporary geometry, selection, profile recomputation and
+OCCT evaluation through `SketchEvaluation` and `SketchProfiles`.
+
+OK writes the complete element collection as one sketch-feature transaction. Cancel
+or Escape discards the editor session without adding a feature or history entry.
+Sketches containing only open geometry are valid document features and survive
+Save/Load. The feature graph evaluates their element geometry without requiring a
+face; only an extrusion evaluates profile faces and reports an error when no closed
+profile exists. Editing already committed elements, dimensions, constraints and
+persistent profile selection remain later slices.
+
 Rectangles and circles each form a closed profile. Connected line chains form a
 profile when at least three non-degenerate elements close within the modeling
 tolerance. Open elements remain valid sketch geometry but are ignored by extrusion.

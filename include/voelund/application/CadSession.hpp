@@ -42,6 +42,9 @@ class CadSession final {
                                                          const document::SketchPlane& plane,
                                                          const document::SketchRectangle& rectangle,
                                                          double distance = 10.0);
+    [[nodiscard]] document::FeatureId addSketchFeature(
+        document::FeatureId supportFeature,
+        const document::SketchParameters& sketch);
     [[nodiscard]] document::FeatureId addSketchExtrusion(document::FeatureId supportFeature,
                                                          const document::SketchParameters& sketch,
                                                          double distance = 10.0);

@@ -3,7 +3,9 @@
 #include "DocumentActions.hpp"
 #include "FeaturePropertiesPanel.hpp"
 #include "MeasurementInput.hpp"
+#include "MainWindowSupport.hpp"
 #include "ModelTreePanel.hpp"
+#include "SketchEditorToolController.hpp"
 #include "SketchExtrusionToolController.hpp"
 #include "SketchViewAdapter.hpp"
 #include "ToolPanelHost.hpp"
@@ -27,87 +29,12 @@
 #include <QToolBar>
 #include <QWidget>
 
-#include <algorithm>
 #include <memory>
 #include <optional>
 #include <utility>
 #include <vector>
 
 namespace voelund::desktop {
-namespace {
-
-std::vector<viewport::SceneBody> makeSceneBodies(const application::CadSession& session)
-{
-    std::vector<viewport::SceneBody> bodies;
-    bodies.reserve(session.currentBodies().size());
-    for (const features::EvaluatedBody& body : session.currentBodies()) {
-        const bool isTransformableBody = session.canTransformFeature(body.sourceFeature);
-        bodies.push_back(
-            viewport::SceneBody{
-                body.sourceFeature.value(), body.shape, isTransformableBody});
-    }
-    return bodies;
-}
-
-QString featureErrorText(
-    const application::CadSession& session,
-    document::FeatureId featureId)
-{
-    for (const application::FeatureRuntimeState& state : session.featureStates()) {
-        if (state.id == featureId
-            && state.status == application::FeatureRuntimeStatus::error) {
-            return QString::fromStdString(state.message);
-        }
-    }
-    return {};
-}
-
-int resultModeIndex(document::CylinderResultMode mode)
-{
-    switch (mode) {
-    case document::CylinderResultMode::join: return 0;
-    case document::CylinderResultMode::cut: return 1;
-    case document::CylinderResultMode::intersect: return 2;
-    case document::CylinderResultMode::separate: return 3;
-    }
-    return 0;
-}
-
-document::CylinderResultMode resultModeFromIndex(int index)
-{
-    switch (index) {
-    case 1: return document::CylinderResultMode::cut;
-    case 2: return document::CylinderResultMode::intersect;
-    case 3: return document::CylinderResultMode::separate;
-    default: return document::CylinderResultMode::join;
-    }
-}
-
-std::optional<document::FeatureId> latestCylinderId(
-    const application::CadSession& session)
-{
-    const auto features = session.features();
-    const auto cylinder = std::ranges::find(
-        features.rbegin(), features.rend(), document::FeatureKind::cylinder,
-        &document::FeatureDescriptor::kind);
-    return cylinder == features.rend()
-        ? std::optional<document::FeatureId>{}
-        : std::optional<document::FeatureId>{cylinder->id};
-}
-
-bool selectTransformFeatureForBody(
-    application::CadSession& session,
-    document::FeatureId bodyId)
-{
-    const std::optional<document::FeatureId> selected = session.selectedFeature();
-    if (selected.has_value() && session.canTransformFeature(*selected)
-        && session.transformBodyForFeature(*selected) == bodyId) {
-        return true;
-    }
-    return session.selectFeature(bodyId) && session.canTransformFeature(bodyId);
-}
-
-} // namespace
 
 class MainWindow::Impl final {
 public:
@@ -121,11 +48,13 @@ public:
     ModelTreePanel* modelTree{nullptr};
     FeaturePropertiesPanel* propertyPanel{nullptr};
     ToolPanelHost* toolPanel{nullptr};
+    std::unique_ptr<SketchEditorToolController> sketchEditorTool;
     std::unique_ptr<SketchExtrusionToolController> sketchExtrusionTool;
     QAction* undoAction{nullptr};
     QAction* redoAction{nullptr};
     QAction* addBoxAction{nullptr};
     QAction* addCylinderAction{nullptr};
+    QAction* sketchEditorAction{nullptr};
     QAction* createSketchAction{nullptr};
     QAction* transformAction{nullptr};
     QAction* snapAction{nullptr};
@@ -199,17 +128,28 @@ void MainWindow::createWorkspaceToolbar()
         refreshScene();
         statusBar()->showMessage(tr("Cylinder feature created"), 2000);
     };
+    services.sketchEditor = [this]() {
+        if (impl_->selectedPlanarFace.has_value()) {
+            if (impl_->sketchExtrusionTool->isActive()) {
+                impl_->sketchExtrusionTool->cancel();
+            }
+            impl_->sketchEditorTool->begin(*impl_->selectedPlanarFace);
+        }
+    };
     services.sketchRectangle = [this]() {
         if (!impl_->selectedPlanarFace.has_value()) {
             return;
         }
+        if (impl_->sketchEditorTool->isActive()) {
+            impl_->sketchEditorTool->cancel();
+        }
         impl_->sketchExtrusionTool->begin(*impl_->selectedPlanarFace);
-        impl_->createSketchAction->setEnabled(false);
     };
     services.transform = [this](bool enabled) {
         impl_->viewport->setTransformToolEnabled(enabled);
     };
     services.canAddCylinder = [this]() { return impl_->session.canAddCylinder(); };
+    services.canEditSketch = [this]() { return impl_->selectedPlanarFace.has_value(); };
     services.canSketch = [this]() { return impl_->selectedPlanarFace.has_value(); };
     services.canTransform = [this]() {
         const auto selected = impl_->session.selectedFeature();
@@ -221,6 +161,7 @@ void MainWindow::createWorkspaceToolbar()
         *this, impl_->commandRegistry.module("solid"));
     impl_->addBoxAction = impl_->workspaceToolbar->action("solid.create.box");
     impl_->addCylinderAction = impl_->workspaceToolbar->action("solid.create.cylinder");
+    impl_->sketchEditorAction = impl_->workspaceToolbar->action("solid.create.sketch");
     impl_->createSketchAction =
         impl_->workspaceToolbar->action("solid.create.sketch_rectangle");
     impl_->transformAction =
@@ -232,6 +173,10 @@ void MainWindow::createToolPanel()
 {
     impl_->toolPanel = new ToolPanelHost(this);
     addDockWidget(Qt::RightDockWidgetArea, impl_->toolPanel);
+    impl_->sketchEditorTool = std::make_unique<SketchEditorToolController>(
+        impl_->session, *impl_->viewport, *impl_->toolPanel,
+        [this]() { refreshScene(); },
+        [this](const QString& message) { statusBar()->showMessage(message); });
     impl_->sketchExtrusionTool = std::make_unique<SketchExtrusionToolController>(
         impl_->session,
         *impl_->viewport,
@@ -323,7 +268,19 @@ void MainWindow::connectInteractions()
     impl_->viewport->setSketchExtrusionPreviewHandler([this](double distance) {
         impl_->sketchExtrusionTool->updateDistancePreview(distance);
     });
+    impl_->viewport->setSketchEditorPreviewHandler(
+        [this](const std::optional<viewport::SketchElementIntent>& intent) {
+            impl_->sketchEditorTool->updatePreview(intent);
+        });
+    impl_->viewport->setSketchEditorElementHandler(
+        [this](const viewport::SketchElementIntent& intent) {
+            impl_->sketchEditorTool->confirmElement(intent);
+        });
     impl_->viewport->setSketchElementSelectionHandler([this](std::uint64_t id) {
+        if (impl_->sketchEditorTool->isActive()) {
+            static_cast<void>(impl_->sketchEditorTool->selectElement(id));
+            return;
+        }
         if (impl_->session.selectSketchElement(document::SketchElementId{id})) {
             impl_->viewport->setSelectedSketchElement(id);
             syncProperties();
@@ -485,6 +442,9 @@ void MainWindow::syncTransformTool()
 
 void MainWindow::refreshScene()
 {
+    if (impl_->sketchEditorTool->isActive()) {
+        impl_->sketchEditorTool->cancel();
+    }
     impl_->selectedPlanarFace.reset();
     impl_->viewport->cancelSketch();
     impl_->toolPanel->end();

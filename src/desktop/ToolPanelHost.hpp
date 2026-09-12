@@ -7,6 +7,7 @@
 #include <vector>
 
 class QDoubleSpinBox;
+class QComboBox;
 class QFormLayout;
 class QLabel;
 class QPushButton;
@@ -21,11 +22,20 @@ struct ToolLengthParameter final {
     double maximum;
 };
 
+struct ToolChoiceParameter final {
+    std::string id;
+    QString label;
+    std::vector<QString> choices;
+    int currentIndex;
+};
+
 struct ToolPanelDefinition final {
     QString title;
     QString guidance;
     std::vector<ToolLengthParameter> lengthParameters;
+    std::vector<ToolChoiceParameter> choiceParameters;
     std::function<void(const std::string&, double)> parameterChanged;
+    std::function<void(const std::string&, int)> choiceChanged;
     std::function<void()> accept;
     std::function<void()> cancel;
 };
@@ -48,6 +58,7 @@ private:
     QPushButton* acceptButton_{nullptr};
     QPushButton* cancelButton_{nullptr};
     std::vector<std::pair<std::string, QDoubleSpinBox*>> lengthInputs_;
+    std::vector<std::pair<std::string, QComboBox*>> choiceInputs_;
     ToolPanelDefinition definition_;
 };
 

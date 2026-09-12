@@ -59,6 +59,15 @@ struct SketchRectangleResult final {
     double distance;
 };
 
+enum class SketchElementTool { line, rectangle, circle };
+
+struct SketchElementIntent final {
+    double firstX;
+    double firstY;
+    double secondX;
+    double secondY;
+};
+
 #if defined(VOELUND_VIEWPORT_QT_OPENGL)
 using CadViewportBase = QOpenGLWidget;
 #else
@@ -84,7 +93,13 @@ public:
     void setSketchRectangleHandler(
         std::function<void(const SketchRectangleResult&)> handler);
     void setSketchExtrusionPreviewHandler(std::function<void(double)> handler);
+    void setSketchEditorPreviewHandler(
+        std::function<void(const std::optional<SketchElementIntent>&)> handler);
+    void setSketchEditorElementHandler(
+        std::function<void(const SketchElementIntent&)> handler);
     void beginRectangleSketch(const PlanarFaceSelection& support);
+    void beginSketchEditor(const PlanarFaceSelection& support, SketchElementTool tool);
+    void setSketchEditorTool(SketchElementTool tool);
     void updateSketchExtrusionPreview(double distance);
     void cancelSketch();
     void setBodyMoveHandler(

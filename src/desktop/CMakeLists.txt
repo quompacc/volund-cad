@@ -3,8 +3,10 @@ add_library(
     FeaturePropertiesPanel.cpp
     DocumentActions.cpp
     MainWindow.cpp
+    MainWindowSupport.cpp
     MeasurementInput.cpp
     ModelTreePanel.cpp
+    SketchEditorToolController.cpp
     SketchExtrusionToolController.cpp
     SketchViewAdapter.cpp
     ToolPanelHost.cpp

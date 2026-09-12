@@ -1,6 +1,7 @@
 #include <voelund/viewport/CadViewport.hpp>
 
 #include "NativeOcctWindow.hpp"
+#include "SketchEditorInteraction.hpp"
 #include "SketchInteraction.hpp"
 #include "SketchPresentation.hpp"
 #include "TransformManipulator.hpp"
@@ -137,6 +138,7 @@ public:
     occ::handle<V3d_View> view;
     TransformManipulator manipulator;
     SketchInteraction sketch;
+    SketchEditorInteraction sketchEditor;
     SketchPresentation sketchPresentation;
     occ::handle<Aspect_Window> window;
     std::vector<BodyPresentation> presentations;
@@ -146,10 +148,13 @@ public:
     std::function<void(std::uint64_t)> bodySelectionHandler;
     std::function<void(const PlanarFaceSelection&)> planarFaceSelectionHandler;
     std::function<void(const SketchRectangleResult&)> sketchRectangleHandler;
+    std::function<void(const std::optional<SketchElementIntent>&)> sketchEditorPreviewHandler;
+    std::function<void(const SketchElementIntent&)> sketchEditorElementHandler;
     std::function<void(std::uint64_t)> sketchElementSelectionHandler;
     std::optional<std::uint64_t> transformTarget;
     QPoint gestureOrigin;
     Gesture gesture{Gesture::none};
+    bool sketchElementPressed{false};
 };
 
 CadViewport::CadViewport(QWidget* parent)
@@ -245,13 +250,43 @@ void CadViewport::setSketchExtrusionPreviewHandler(std::function<void(double)> h
     impl_->sketch.setDistancePreviewHandler(std::move(handler));
 }
 
+void CadViewport::setSketchEditorPreviewHandler(
+    std::function<void(const std::optional<SketchElementIntent>&)> handler)
+{
+    impl_->sketchEditorPreviewHandler = std::move(handler);
+}
+
+void CadViewport::setSketchEditorElementHandler(
+    std::function<void(const SketchElementIntent&)> handler)
+{
+    impl_->sketchEditorElementHandler = std::move(handler);
+}
+
 void CadViewport::beginRectangleSketch(const PlanarFaceSelection& support)
 {
+    impl_->sketchEditor.cancel();
     impl_->manipulator.setEnabled(false);
     impl_->manipulator.detach();
     impl_->sketch.begin(support, impl_->context, impl_->view);
     if (!impl_->view.IsNull()) {
         impl_->view->Redraw();
+    }
+}
+
+void CadViewport::beginSketchEditor(
+    const PlanarFaceSelection& support, SketchElementTool tool)
+{
+    impl_->sketch.cancel();
+    impl_->manipulator.setEnabled(false);
+    impl_->manipulator.detach();
+    impl_->sketchEditor.begin(support, tool, impl_->view);
+}
+
+void CadViewport::setSketchEditorTool(SketchElementTool tool)
+{
+    impl_->sketchEditor.setTool(tool);
+    if (impl_->sketchEditorPreviewHandler) {
+        impl_->sketchEditorPreviewHandler(std::nullopt);
     }
 }
 
@@ -266,6 +301,7 @@ void CadViewport::updateSketchExtrusionPreview(double distance)
 void CadViewport::cancelSketch()
 {
     impl_->sketch.cancel();
+    impl_->sketchEditor.cancel();
     if (!impl_->view.IsNull()) {
         impl_->view->Redraw();
     }
@@ -311,6 +347,7 @@ void CadViewport::setTransformSnapping(
 {
     impl_->manipulator.setSnapping(enabled, linearStep, angularStep);
     impl_->sketch.setSnapping(enabled, linearStep);
+    impl_->sketchEditor.setSnapping(enabled, linearStep);
 }
 
 QPaintEngine* CadViewport::paintEngine() const
@@ -352,6 +389,14 @@ void CadViewport::mouseMoveEvent(QMouseEvent* event)
         impl_->view->Redraw();
         return;
     }
+    if (impl_->sketchEditor.isActive() && event->buttons() == Qt::NoButton) {
+        if (impl_->sketchEditorPreviewHandler) {
+            impl_->sketchEditorPreviewHandler(
+                impl_->sketchEditor.move(position.x(), position.y()));
+        }
+        impl_->view->Redraw();
+        return;
+    }
     if (impl_->gesture == Impl::Gesture::rotate) {
         impl_->view->Rotation(position.x(), position.y());
     } else if (impl_->gesture == Impl::Gesture::pan) {
@@ -389,6 +434,21 @@ void CadViewport::mousePressEvent(QMouseEvent* event)
         }
         const QPoint position = event->position().toPoint();
         impl_->context->MoveTo(position.x(), position.y(), impl_->view, false);
+        if (impl_->sketchEditor.isActive()) {
+            impl_->sketchElementPressed = false;
+            if (impl_->context->HasDetected()) {
+                const auto detected = impl_->context->DetectedInteractive();
+                if (const auto id = impl_->sketchPresentation.detectedElement(detected)) {
+                    impl_->sketchElementPressed = true;
+                    impl_->sketchPresentation.select(impl_->context, id);
+                    if (impl_->sketchElementSelectionHandler) {
+                        impl_->sketchElementSelectionHandler(*id);
+                    }
+                    impl_->view->Redraw();
+                }
+            }
+            return;
+        }
         if (!impl_->context->HasDetected()) {
             return;
         }
@@ -436,6 +496,21 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event)
             const auto rectangle = impl_->sketch.click(position.x(), position.y());
             if (rectangle.has_value() && impl_->sketchRectangleHandler) {
                 impl_->sketchRectangleHandler(*rectangle);
+            }
+            impl_->view->Redraw();
+            return;
+        }
+        if (impl_->sketchEditor.isActive()) {
+            if (impl_->sketchElementPressed) {
+                impl_->sketchElementPressed = false;
+                return;
+            }
+            const auto intent = impl_->sketchEditor.click(position.x(), position.y());
+            if (intent.has_value() && impl_->sketchEditorElementHandler) {
+                impl_->sketchEditorElementHandler(*intent);
+            }
+            if (impl_->sketchEditorPreviewHandler) {
+                impl_->sketchEditorPreviewHandler(std::nullopt);
             }
             impl_->view->Redraw();
             return;

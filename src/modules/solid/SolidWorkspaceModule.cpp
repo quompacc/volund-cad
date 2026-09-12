@@ -29,6 +29,12 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services)
         simpleCommand(std::move(services.addCylinder)),
         std::move(services.canAddCylinder)});
     commands_.push_back({
+        "solid.create.sketch", "Sketch",
+        "Create a multi-element sketch on a planar face", {},
+        workspaces::CommandGroup::create, true, false,
+        simpleCommand(std::move(services.sketchEditor)),
+        std::move(services.canEditSketch)});
+    commands_.push_back({
         "solid.create.sketch_rectangle", "Sketch Rectangle",
         "Create a rectangle sketch and pull it into a solid", {},
         workspaces::CommandGroup::create, true, false,

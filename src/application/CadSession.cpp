@@ -129,6 +129,22 @@ document::FeatureId CadSession::addSketchExtrusion(document::FeatureId supportFe
         distance);
 }
 
+document::FeatureId CadSession::addSketchFeature(
+    document::FeatureId supportFeature,
+    const document::SketchParameters& sketch) {
+    if (!document_.contains(supportFeature)) {
+        throw std::invalid_argument("Sketch support is not in the document");
+    }
+    const std::size_t sequence =
+        featureCount(document_.features(), document::FeatureKind::sketch) + 1;
+    const document::FeatureId id = document_.addSketchFeature(
+        "Sketch " + std::to_string(sequence), supportFeature, sketch);
+    selectedFeature_ = id;
+    selectedSketchElement_.reset();
+    static_cast<void>(recompute());
+    return id;
+}
+
 document::FeatureId CadSession::addSketchExtrusion(document::FeatureId supportFeature,
                                                    const document::SketchParameters& sketch,
                                                    double distance) {
