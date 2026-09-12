@@ -86,24 +86,58 @@ void SketchEditorToolController::confirmElement(const viewport::SketchElementInt
                 static_cast<void>(editor_->addAutomaticLineRelation(*id));
         } else if (tool == application::SketchDrawingTool::circle ||
                    tool == application::SketchDrawingTool::ellipse) {
-            addAutomaticCoincidence(*editor_, {*id, document::SketchPointPosition::center},
-                                    intent.firstReference, {intent.firstX, intent.firstY});
+            bool centerRelated = false;
             if (tool == application::SketchDrawingTool::circle &&
-                intent.automaticConstraint == viewport::SketchAutomaticConstraint::tangent &&
-                intent.secondReference.has_value())
-                static_cast<void>(editor_->addTangencyReference(
-                    *id, document::SketchElementId{intent.secondReference->elementId}));
+                intent.automaticConstraint == viewport::SketchAutomaticConstraint::concentric &&
+                intent.automaticTargetId.has_value())
+                centerRelated = editor_->addAutomaticRadialRelation(
+                    *id, document::SketchElementId{*intent.automaticTargetId},
+                    document::SketchConstraintKind::concentric);
+            if (!centerRelated)
+                addAutomaticCoincidence(*editor_, {*id, document::SketchPointPosition::center},
+                                        intent.firstReference, {intent.firstX, intent.firstY});
+            if (tool == application::SketchDrawingTool::circle &&
+                intent.automaticConstraint == viewport::SketchAutomaticConstraint::tangent) {
+                if (intent.automaticTargetId.has_value())
+                    static_cast<void>(editor_->addAutomaticRadialRelation(
+                        *id, document::SketchElementId{*intent.automaticTargetId},
+                        document::SketchConstraintKind::tangent));
+                else if (intent.secondReference.has_value())
+                    static_cast<void>(editor_->addTangencyReference(
+                        *id, document::SketchElementId{intent.secondReference->elementId}));
+            } else if (tool == application::SketchDrawingTool::circle &&
+                       intent.automaticConstraint == viewport::SketchAutomaticConstraint::equal &&
+                       intent.automaticTargetId.has_value())
+                static_cast<void>(editor_->addAutomaticRadialRelation(
+                    *id, document::SketchElementId{*intent.automaticTargetId},
+                    document::SketchConstraintKind::equal));
         } else if (tool == application::SketchDrawingTool::arc) {
-            addAutomaticCoincidence(*editor_, {*id, document::SketchPointPosition::center},
-                                    intent.firstReference, {intent.firstX, intent.firstY});
+            bool centerRelated = false;
+            if (intent.automaticConstraint == viewport::SketchAutomaticConstraint::concentric &&
+                intent.automaticTargetId.has_value())
+                centerRelated = editor_->addAutomaticRadialRelation(
+                    *id, document::SketchElementId{*intent.automaticTargetId},
+                    document::SketchConstraintKind::concentric);
+            if (!centerRelated)
+                addAutomaticCoincidence(*editor_, {*id, document::SketchPointPosition::center},
+                                        intent.firstReference, {intent.firstX, intent.firstY});
             addAutomaticCoincidence(*editor_, {*id, document::SketchPointPosition::start},
                                     intent.secondReference, {intent.secondX, intent.secondY});
             addAutomaticCoincidence(*editor_, {*id, document::SketchPointPosition::end},
                                     intent.thirdReference, {intent.third->first, intent.third->second});
-            if (intent.automaticConstraint == viewport::SketchAutomaticConstraint::tangent &&
-                intent.thirdReference.has_value())
-                static_cast<void>(editor_->addTangencyReference(
-                    *id, document::SketchElementId{intent.thirdReference->elementId}));
+            if (intent.automaticConstraint == viewport::SketchAutomaticConstraint::tangent) {
+                if (intent.automaticTargetId.has_value())
+                    static_cast<void>(editor_->addAutomaticRadialRelation(
+                        *id, document::SketchElementId{*intent.automaticTargetId},
+                        document::SketchConstraintKind::tangent));
+                else if (intent.thirdReference.has_value())
+                    static_cast<void>(editor_->addTangencyReference(
+                        *id, document::SketchElementId{intent.thirdReference->elementId}));
+            } else if (intent.automaticConstraint == viewport::SketchAutomaticConstraint::equal &&
+                       intent.automaticTargetId.has_value())
+                static_cast<void>(editor_->addAutomaticRadialRelation(
+                    *id, document::SketchElementId{*intent.automaticTargetId},
+                    document::SketchConstraintKind::equal));
         } else if (tool == application::SketchDrawingTool::threePointArc) {
             const auto match =
                 std::ranges::find(editor_->elements(), *id, &document::SketchElement::id);

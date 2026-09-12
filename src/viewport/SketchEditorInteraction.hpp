@@ -5,6 +5,7 @@
 #include <V3d_View.hxx>
 
 #include <optional>
+#include <tuple>
 #include <utility>
 
 namespace voelund::viewport {
@@ -42,6 +43,13 @@ class SketchEditorInteraction final {
     relatedLineEnd(std::pair<double, double> first, std::pair<double, double> second) const;
     [[nodiscard]] bool tangentToReferencedLine(
         std::pair<double, double> center, std::pair<double, double> radialPoint,
+        const std::optional<SketchPointReferenceIntent>& reference) const;
+    [[nodiscard]] std::tuple<std::pair<double, double>,
+                             std::optional<SketchAutomaticConstraint>,
+                             std::optional<std::uint64_t>>
+    relatedRadialPoint(std::pair<double, double> center,
+                       std::pair<double, double> radialPoint) const;
+    [[nodiscard]] bool isRadialCenterReference(
         const std::optional<SketchPointReferenceIntent>& reference) const;
 
     PlanarFaceSelection support_{};

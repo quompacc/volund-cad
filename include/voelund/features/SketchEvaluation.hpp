@@ -6,6 +6,7 @@
 #include <gp_Pnt.hxx>
 
 #include <span>
+#include <optional>
 #include <vector>
 
 namespace voelund::features {
@@ -21,6 +22,8 @@ struct EvaluatedSketchElement final {
     TopoDS_Shape shape;
     bool construction;
     std::vector<EvaluatedSketchPoint> points;
+    double radialRadius{0.0};
+    std::optional<gp_Pnt> radialAnchor;
 };
 
 [[nodiscard]] std::vector<EvaluatedSketchElement>

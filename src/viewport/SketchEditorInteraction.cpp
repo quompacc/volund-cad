@@ -304,6 +304,62 @@ bool SketchEditorInteraction::tangentToReferencedLine(
     return scale > 1.0e-9 && std::abs(radiusX * lineX + radiusY * lineY) / scale <= 0.08;
 }
 
+std::tuple<std::pair<double, double>, std::optional<SketchAutomaticConstraint>,
+           std::optional<std::uint64_t>>
+SketchEditorInteraction::relatedRadialPoint(std::pair<double, double> center,
+                                            std::pair<double, double> radialPoint) const {
+    const double dx = radialPoint.first - center.first;
+    const double dy = radialPoint.second - center.second;
+    const double radius = std::hypot(dx, dy);
+    if (radius <= 1.0e-9)
+        return {radialPoint, std::nullopt, std::nullopt};
+    double bestError = 0.08;
+    double bestRadius = radius;
+    std::optional<SketchAutomaticConstraint> relation;
+    std::optional<std::uint64_t> targetId;
+    for (const SceneSketchPoint& target : snapPoints_) {
+        if (target.kind != SketchPointKind::center || target.elementId == 0 ||
+            target.radialRadius <= 1.0e-9)
+            continue;
+        const double centerDistance =
+            std::hypot(center.first - target.localX, center.second - target.localY);
+        const auto consider = [&](double candidateRadius, SketchAutomaticConstraint candidate) {
+            if (candidateRadius <= 1.0e-9)
+                return;
+            const double error = std::abs(radius - candidateRadius) /
+                                 std::max(radius, candidateRadius);
+            if (error < bestError ||
+                (candidate == SketchAutomaticConstraint::tangent &&
+                 error <= bestError + 1.0e-12)) {
+                bestError = error;
+                bestRadius = candidateRadius;
+                relation = candidate;
+                targetId = target.elementId;
+            }
+        };
+        consider(target.radialRadius, SketchAutomaticConstraint::equal);
+        consider(centerDistance - target.radialRadius, SketchAutomaticConstraint::tangent);
+        consider(std::abs(target.radialRadius - centerDistance),
+                 SketchAutomaticConstraint::tangent);
+        consider(centerDistance + target.radialRadius, SketchAutomaticConstraint::tangent);
+    }
+    if (!relation.has_value())
+        return {radialPoint, std::nullopt, std::nullopt};
+    return {{center.first + dx * bestRadius / radius, center.second + dy * bestRadius / radius},
+            relation, targetId};
+}
+
+bool SketchEditorInteraction::isRadialCenterReference(
+    const std::optional<SketchPointReferenceIntent>& reference) const {
+    if (!reference.has_value() || reference->elementId == 0 ||
+        reference->point != SketchPointKind::center)
+        return false;
+    return std::ranges::any_of(snapPoints_, [&](const SceneSketchPoint& point) {
+        return point.elementId == reference->elementId && point.kind == SketchPointKind::center &&
+               point.radialRadius > 1.0e-9;
+    });
+}
+
 bool SketchEditorInteraction::valid(const SketchElementIntent& intent) const noexcept {
     constexpr double minimumSize = 1.0e-6;
     const double deltaX = intent.secondX - intent.firstX;
@@ -332,6 +388,7 @@ std::optional<SketchElementIntent> SketchEditorInteraction::move(int x, int y) c
         return std::nullopt;
     auto [point, reference] = *resolved;
     auto [adjustedPoint, automaticConstraint] = constrainedLineEnd(tool_, *firstPoint_, point);
+    std::optional<std::uint64_t> automaticTargetId;
     if (!automaticConstraint.has_value())
         std::tie(adjustedPoint, automaticConstraint) = relatedLineEnd(*firstPoint_, point);
     if (!automaticConstraint.has_value() && reference.has_value() &&
@@ -340,19 +397,37 @@ std::optional<SketchElementIntent> SketchEditorInteraction::move(int x, int y) c
     if (tool_ == SketchElementTool::circle &&
         tangentToReferencedLine(*firstPoint_, point, reference))
         automaticConstraint = SketchAutomaticConstraint::tangent;
+    else if (tool_ == SketchElementTool::circle && isRadialCenterReference(firstReference_)) {
+        automaticConstraint = SketchAutomaticConstraint::concentric;
+        automaticTargetId = firstReference_->elementId;
+    } else if (tool_ == SketchElementTool::circle)
+        std::tie(adjustedPoint, automaticConstraint, automaticTargetId) =
+            relatedRadialPoint(*firstPoint_, point);
     if (tool_ == SketchElementTool::arc && secondPoint_.has_value() &&
         tangentToReferencedLine(*firstPoint_, point, reference))
         automaticConstraint = SketchAutomaticConstraint::tangent;
+    std::pair<double, double> intentSecond =
+        secondPoint_.has_value() ? *secondPoint_ : adjustedPoint;
+    if (tool_ == SketchElementTool::arc && secondPoint_.has_value() &&
+        automaticConstraint != SketchAutomaticConstraint::tangent) {
+        if (isRadialCenterReference(firstReference_)) {
+            automaticConstraint = SketchAutomaticConstraint::concentric;
+            automaticTargetId = firstReference_->elementId;
+        } else
+            std::tie(intentSecond, automaticConstraint, automaticTargetId) =
+                relatedRadialPoint(*firstPoint_, *secondPoint_);
+    }
     point = adjustedPoint;
     const SketchElementIntent intent{firstPoint_->first,
                                      firstPoint_->second,
-                                     secondPoint_.has_value() ? secondPoint_->first : point.first,
-                                     secondPoint_.has_value() ? secondPoint_->second : point.second,
+                                     intentSecond.first,
+                                     intentSecond.second,
                                      secondPoint_.has_value() ? std::optional{point} : std::nullopt,
                                      firstReference_,
                                      secondReference_,
                                      secondPoint_.has_value() ? reference : std::nullopt,
-                                     automaticConstraint};
+                                     automaticConstraint,
+                                     automaticTargetId};
     return valid(intent) ? std::optional{intent} : std::nullopt;
 }
 
@@ -369,7 +444,8 @@ std::optional<SketchElementIntent> SketchEditorInteraction::click(int x, int y) 
     if (needsThirdPoint(tool_) && !secondPoint_.has_value()) {
         const SketchElementIntent radiusIntent{firstPoint_->first, firstPoint_->second, point.first,
                                                point.second, std::nullopt, std::nullopt,
-                                               std::nullopt, std::nullopt, std::nullopt};
+                                               std::nullopt, std::nullopt, std::nullopt,
+                                               std::nullopt};
         if (!valid(radiusIntent))
             return std::nullopt;
         secondPoint_ = point;
@@ -377,6 +453,7 @@ std::optional<SketchElementIntent> SketchEditorInteraction::click(int x, int y) 
         return std::nullopt;
     }
     auto [adjustedPoint, automaticConstraint] = constrainedLineEnd(tool_, *firstPoint_, point);
+    std::optional<std::uint64_t> automaticTargetId;
     if (!automaticConstraint.has_value())
         std::tie(adjustedPoint, automaticConstraint) = relatedLineEnd(*firstPoint_, point);
     if (!automaticConstraint.has_value() && reference.has_value() &&
@@ -385,19 +462,37 @@ std::optional<SketchElementIntent> SketchEditorInteraction::click(int x, int y) 
     if (tool_ == SketchElementTool::circle &&
         tangentToReferencedLine(*firstPoint_, point, reference))
         automaticConstraint = SketchAutomaticConstraint::tangent;
+    else if (tool_ == SketchElementTool::circle && isRadialCenterReference(firstReference_)) {
+        automaticConstraint = SketchAutomaticConstraint::concentric;
+        automaticTargetId = firstReference_->elementId;
+    } else if (tool_ == SketchElementTool::circle)
+        std::tie(adjustedPoint, automaticConstraint, automaticTargetId) =
+            relatedRadialPoint(*firstPoint_, point);
     if (tool_ == SketchElementTool::arc && secondPoint_.has_value() &&
         tangentToReferencedLine(*firstPoint_, point, reference))
         automaticConstraint = SketchAutomaticConstraint::tangent;
+    std::pair<double, double> intentSecond =
+        secondPoint_.has_value() ? *secondPoint_ : adjustedPoint;
+    if (tool_ == SketchElementTool::arc && secondPoint_.has_value() &&
+        automaticConstraint != SketchAutomaticConstraint::tangent) {
+        if (isRadialCenterReference(firstReference_)) {
+            automaticConstraint = SketchAutomaticConstraint::concentric;
+            automaticTargetId = firstReference_->elementId;
+        } else
+            std::tie(intentSecond, automaticConstraint, automaticTargetId) =
+                relatedRadialPoint(*firstPoint_, *secondPoint_);
+    }
     point = adjustedPoint;
     const SketchElementIntent intent{firstPoint_->first,
                                      firstPoint_->second,
-                                     secondPoint_.has_value() ? secondPoint_->first : point.first,
-                                     secondPoint_.has_value() ? secondPoint_->second : point.second,
+                                     intentSecond.first,
+                                     intentSecond.second,
                                      secondPoint_.has_value() ? std::optional{point} : std::nullopt,
                                      firstReference_,
                                      secondReference_,
                                      secondPoint_.has_value() ? reference : std::nullopt,
-                                     automaticConstraint};
+                                     automaticConstraint,
+                                     automaticTargetId};
     if (!valid(intent)) {
         return std::nullopt;
     }

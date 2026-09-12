@@ -24,6 +24,8 @@ viewport::SceneSketchElement makeSceneSketchElement(const features::EvaluatedSke
     for (const auto& point : element.points) {
         points.push_back({element.id.value(), pointKind(point.kind), point.local.x, point.local.y,
                           point.world.X(), point.world.Y(), point.world.Z()});
+        if (point.kind == document::SketchPointPosition::center)
+            points.back().radialRadius = element.radialRadius;
     }
     if (element.points.size() == 2) {
         const auto& first = element.points[0];

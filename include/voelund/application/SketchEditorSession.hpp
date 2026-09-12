@@ -76,6 +76,9 @@ class SketchEditorSession final {
     addAutomaticLineRelation(document::SketchElementId line);
     [[nodiscard]] bool addTangencyReference(document::SketchElementId radial,
                                             document::SketchElementId target);
+    [[nodiscard]] bool addAutomaticRadialRelation(document::SketchElementId radial,
+                                                  document::SketchElementId target,
+                                                  document::SketchConstraintKind kind);
     [[nodiscard]] bool isSelectedConstruction() const noexcept;
     [[nodiscard]] bool toggleSelectedConstruction();
     [[nodiscard]] bool canLockSelectedReference() const noexcept;

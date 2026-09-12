@@ -67,6 +67,21 @@ std::vector<EvaluatedSketchPoint> elementPoints(const document::SketchParameters
     return result;
 }
 
+double radialRadius(const document::SketchGeometry& geometry) {
+    if (const auto* circle = std::get_if<document::SketchCircle>(&geometry))
+        return circle->radius;
+    if (const auto* arc = std::get_if<document::SketchArc>(&geometry))
+        return arc->radius;
+    return 0.0;
+}
+
+std::optional<gp_Pnt> radialAnchor(const document::SketchParameters& sketch,
+                                   const document::SketchGeometry& geometry) {
+    if (const auto* circle = std::get_if<document::SketchCircle>(&geometry))
+        return worldPoint(sketch.plane, {circle->center.x + circle->radius, circle->center.y});
+    return std::nullopt;
+}
+
 TopoDS_Wire rectangleWire(const document::SketchParameters& sketch,
                           const document::SketchRectangle& rectangle) {
     BRepBuilderAPI_MakePolygon polygon;
@@ -221,9 +236,10 @@ evaluateSketchElements(const document::SketchParameters& sketch) {
     std::vector<EvaluatedSketchElement> result;
     result.reserve(sketch.elements.values.size());
     for (const document::SketchElement& element : sketch.elements.values) {
-        result.push_back(EvaluatedSketchElement{element.id, elementShape(sketch, element.geometry),
-                                                element.construction,
-                                                elementPoints(sketch, element.geometry)});
+        result.push_back(EvaluatedSketchElement{
+            element.id, elementShape(sketch, element.geometry), element.construction,
+            elementPoints(sketch, element.geometry), radialRadius(element.geometry),
+            radialAnchor(sketch, element.geometry)});
     }
     return result;
 }

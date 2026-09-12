@@ -22,6 +22,11 @@ bool addLine(SketchEditorSession& editor, SketchPoint first, SketchPoint second)
     return editor.setPreview(first, second) && editor.confirmPreview().has_value();
 }
 
+bool addCircle(SketchEditorSession& editor, SketchPoint center, SketchPoint radialPoint) {
+    editor.setTool(SketchDrawingTool::circle);
+    return editor.setPreview(center, radialPoint) && editor.confirmPreview().has_value();
+}
+
 bool compoundDrawingToolsCreateProfiles() {
     CadSession session;
     session.newDocument();
@@ -191,7 +196,46 @@ bool automaticRelationsWork() {
         !tangent.confirmPreview().has_value() ||
         !tangent.addTangencyReference(SketchElementId{2}, SketchElementId{1}))
         return false;
-    return tangent.constraints().size() == 1;
+    if (tangent.constraints().size() != 1)
+        return false;
+
+    SketchEditorSession equal(session, support, plane);
+    if (!addCircle(equal, {0.0, 0.0}, {5.0, 0.0}) ||
+        !addCircle(equal, {15.0, 0.0}, {20.1, 0.0}) ||
+        !equal.addAutomaticRadialRelation(SketchElementId{2}, SketchElementId{1},
+                                          voelund::document::SketchConstraintKind::equal)) {
+        std::cerr << "Automatic equal-radius relation failed\n";
+        return false;
+    }
+    const auto& firstEqualCircle =
+        std::get<voelund::document::SketchCircle>(equal.elements()[0].geometry);
+    const auto& equalCircle =
+        std::get<voelund::document::SketchCircle>(equal.elements()[1].geometry);
+    if (std::abs(equalCircle.radius - firstEqualCircle.radius) > 1.0e-6) {
+        std::cerr << "Automatic equal-radius solve failed\n";
+        return false;
+    }
+
+    SketchEditorSession concentric(session, support, plane);
+    if (!addCircle(concentric, {0.0, 0.0}, {5.0, 0.0}) ||
+        !addCircle(concentric, {0.2, -0.1}, {3.2, -0.1}) ||
+        !concentric.addAutomaticRadialRelation(
+            SketchElementId{2}, SketchElementId{1},
+            voelund::document::SketchConstraintKind::concentric)) {
+        std::cerr << "Automatic concentric relation failed\n";
+        return false;
+    }
+
+    SketchEditorSession circleTangent(session, support, plane);
+    const bool circleTangency =
+        addCircle(circleTangent, {0.0, 0.0}, {5.0, 0.0}) &&
+        addCircle(circleTangent, {10.0, 0.0}, {15.0, 0.0}) &&
+        circleTangent.addAutomaticRadialRelation(
+            SketchElementId{2}, SketchElementId{1},
+            voelund::document::SketchConstraintKind::tangent);
+    if (!circleTangency)
+        std::cerr << "Automatic circle tangency failed\n";
+    return circleTangency;
 }
 
 } // namespace

@@ -144,6 +144,10 @@ gehören nicht zum Produktpfad.
   Vertikal, Parallel, Rechtwinkligkeit und Linie-Kreis-Tangentialität automatisch
   erkannt, exakt eingerastet und als dauerhafte Relation übernommen. Die Vorschau
   zeigt die bevorstehende Relation bereits vor dem Bestätigen.
+- Kreise und Mittelpunktbögen erkennen außerdem gleichen Radius, konzentrische
+  Mittelpunkte sowie innere und äußere Berührung mit vorhandenen Kreisen und Bögen.
+  Der Radius rastet auf den exakten Solverwert ein; `[=?]`, `[CC?]` und `[T?]`
+  machen die Designabsicht vor dem Bestätigen sichtbar.
 - Neue Dateien verwenden `VOLUND 16`; bestehende `VOLUND 1`-Rechtecksketches,
   `VOLUND 2`-Linien, `VOLUND 3`-Richtungsconstraints und `VOLUND 4`-Extrusionen
   sowie `VOLUND 5`-Profilauswahlen werden beim Laden migriert. Alte Extrusionen

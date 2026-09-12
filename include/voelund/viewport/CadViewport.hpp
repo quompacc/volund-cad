@@ -56,6 +56,7 @@ struct SceneSketchPoint final {
     double worldZ;
     std::uint64_t supportReferenceId{0};
     double supportReferenceParameter{0.0};
+    double radialRadius{0.0};
 };
 
 struct SceneSketchElement final {
@@ -154,7 +155,9 @@ enum class SketchAutomaticConstraint {
     parallel,
     perpendicular,
     pointOnObject,
-    tangent
+    tangent,
+    equal,
+    concentric
 };
 
 struct SketchElementIntent final {
@@ -167,6 +170,7 @@ struct SketchElementIntent final {
     std::optional<SketchPointReferenceIntent> secondReference;
     std::optional<SketchPointReferenceIntent> thirdReference;
     std::optional<SketchAutomaticConstraint> automaticConstraint;
+    std::optional<std::uint64_t> automaticTargetId;
 };
 
 #if defined(VOELUND_VIEWPORT_QT_OPENGL)

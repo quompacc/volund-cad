@@ -110,9 +110,11 @@ void SketchEditorToolController::refreshPresentation() {
                                editor_->isConstraintConflicting(annotation.id), editable});
     }
     if (previewAutomatic_.has_value() && evaluated.size() > editor_->elements().size() &&
-        evaluated.back().points.size() >= 2) {
+        !evaluated.back().points.empty()) {
         const auto& first = evaluated.back().points[0].world;
-        const auto& second = evaluated.back().points[1].world;
+        const gp_Pnt second = evaluated.back().points.size() >= 2
+                                  ? evaluated.back().points[1].world
+                                  : evaluated.back().radialAnchor.value_or(first);
         const auto previewLabel = *previewAutomatic_ == viewport::SketchAutomaticConstraint::horizontal
                                       ? "[H?]"
                                   : *previewAutomatic_ == viewport::SketchAutomaticConstraint::vertical
@@ -123,6 +125,10 @@ void SketchEditorToolController::refreshPresentation() {
                                       ? "[⊥?]"
                                   : *previewAutomatic_ == viewport::SketchAutomaticConstraint::tangent
                                       ? "[T?]"
+                                  : *previewAutomatic_ == viewport::SketchAutomaticConstraint::equal
+                                      ? "[=?]"
+                                  : *previewAutomatic_ == viewport::SketchAutomaticConstraint::concentric
+                                      ? "[CC?]"
                                       : "[O?]";
         constraints.push_back(
             {0, previewLabel,

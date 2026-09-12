@@ -418,7 +418,8 @@ bool SketchEditorSession::addTangencyReference(document::SketchElementId radialI
                                                document::SketchElementId targetId) {
     const auto* radialElement = findElement(elements_, radialId);
     const auto* targetElement = findElement(elements_, targetId);
-    if (!active_ || !radial(radialElement) || !line(targetElement))
+    if (!active_ || !radial(radialElement) ||
+        (!line(targetElement) && !radial(targetElement)) || radialId == targetId)
         return false;
     const auto previousElements = elements_;
     const auto previousConstraints = constraints_;
@@ -427,6 +428,36 @@ bool SketchEditorSession::addTangencyReference(document::SketchElementId radialI
                                    {radialId, document::SketchPointPosition::start},
                                    document::SketchGeometryReference{
                                        targetId, document::SketchPointPosition::start}});
+    if (solveConstraints())
+        return true;
+    elements_ = previousElements;
+    constraints_ = previousConstraints;
+    static_cast<void>(solveConstraints());
+    return false;
+}
+
+bool SketchEditorSession::addAutomaticRadialRelation(document::SketchElementId radialId,
+                                                     document::SketchElementId targetId,
+                                                     document::SketchConstraintKind kind) {
+    if (kind != document::SketchConstraintKind::equal &&
+        kind != document::SketchConstraintKind::concentric &&
+        kind != document::SketchConstraintKind::tangent)
+        return false;
+    const auto* radialElement = findElement(elements_, radialId);
+    const auto* targetElement = findElement(elements_, targetId);
+    if (!active_ || radialId == targetId || !radial(radialElement) || !radial(targetElement))
+        return false;
+    if (std::ranges::any_of(constraints_.values, [&](const auto& constraint) {
+            return constraint.kind == kind && constraint.first.element == radialId &&
+                   constraint.second.has_value() && constraint.second->element == targetId;
+        }))
+        return true;
+    const auto previousElements = elements_;
+    const auto previousConstraints = constraints_;
+    constraints_.values.push_back({document::SketchConstraintId{constraints_.nextId++}, kind,
+                                   {radialId, document::SketchPointPosition::center},
+                                   document::SketchGeometryReference{
+                                       targetId, document::SketchPointPosition::center}});
     if (solveConstraints())
         return true;
     elements_ = previousElements;

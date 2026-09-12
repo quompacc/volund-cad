@@ -122,6 +122,12 @@ lines are snapped exactly and constrained. A circle or center arc placed tangent
 on a referenced line receives a persistent tangency relation. Preview glyphs expose
 the pending inference before confirmation.
 
+Circle and center-arc creation also compares the live radius and center placement
+with existing radial geometry. Matching radii snap to an equal-radius relation,
+matching centers create a concentric relation, and external or internal contact
+creates circle-circle or arc-circle tangency. Ambiguous equal-and-tangent placement
+prefers tangency, while `[=?]`, `[CC?]` and `[T?]` identify the pending relation.
+
 Every constraint is evaluated into a presentation annotation in sketch-local space
 and transformed onto the supporting plane. The viewport renders direction and
 relation constraints as compact text glyphs and dimensions as millimetre values.
