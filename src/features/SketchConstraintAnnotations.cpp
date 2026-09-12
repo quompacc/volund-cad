@@ -1,6 +1,7 @@
 #include <voelund/features/SketchConstraintAnnotations.hpp>
 
 #include <algorithm>
+#include <cmath>
 #include <stdexcept>
 
 #include <gp_Dir.hxx>
@@ -24,6 +25,15 @@ document::SketchPoint referencePoint(const document::SketchParameters& sketch,
         return reference.point == document::SketchPointPosition::end ? line->end : line->start;
     if (const auto* circle = std::get_if<document::SketchCircle>(&geometry))
         return circle->center;
+    if (const auto* arc = std::get_if<document::SketchArc>(&geometry)) {
+        if (reference.point == document::SketchPointPosition::center)
+            return arc->center;
+        const double angle = reference.point == document::SketchPointPosition::start
+                                 ? arc->startAngle
+                                 : arc->endAngle;
+        return {arc->center.x + arc->radius * std::cos(angle),
+                arc->center.y + arc->radius * std::sin(angle)};
+    }
     const auto& rectangle = std::get<document::SketchRectangle>(geometry);
     if (reference.point == document::SketchPointPosition::center)
         return {(rectangle.first.x + rectangle.second.x) * 0.5,
@@ -48,6 +58,9 @@ document::SketchPoint annotationPoint(const document::SketchParameters& sketch,
             return {(line->start.x + line->end.x) * 0.5, (line->start.y + line->end.y) * 0.5};
         if (const auto* circle = std::get_if<document::SketchCircle>(&geometry))
             return {circle->center.x + circle->radius, circle->center.y};
+        if (const auto* arc = std::get_if<document::SketchArc>(&geometry))
+            return {arc->center.x + arc->radius * std::cos(arc->startAngle),
+                    arc->center.y + arc->radius * std::sin(arc->startAngle)};
     }
     const document::SketchPoint first = referencePoint(sketch, constraint.first);
     if (!constraint.second.has_value())

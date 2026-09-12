@@ -1,6 +1,7 @@
 #include <voelund/application/SketchEditorSession.hpp>
 
 #include <algorithm>
+#include <cmath>
 #include <optional>
 
 namespace voelund::application {
@@ -20,6 +21,15 @@ referencePoint(std::span<const document::SketchElement> elements,
     if (const auto* circle = std::get_if<document::SketchCircle>(&match->geometry)) {
         if (reference.point == document::SketchPointPosition::center)
             return circle->center;
+    }
+    if (const auto* arc = std::get_if<document::SketchArc>(&match->geometry)) {
+        if (reference.point == document::SketchPointPosition::center)
+            return arc->center;
+        const double angle = reference.point == document::SketchPointPosition::start
+                                 ? arc->startAngle
+                                 : arc->endAngle;
+        return document::SketchPoint{arc->center.x + arc->radius * std::cos(angle),
+                                     arc->center.y + arc->radius * std::sin(angle)};
     }
     return std::nullopt;
 }

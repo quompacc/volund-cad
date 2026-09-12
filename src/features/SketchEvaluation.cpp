@@ -8,6 +8,7 @@
 #include <BRepBuilderAPI_MakeWire.hxx>
 #include <BRep_Builder.hxx>
 #include <GC_MakeCircle.hxx>
+#include <Geom_Circle.hxx>
 #include <TopoDS_Compound.hxx>
 #include <gp_Circ.hxx>
 #include <gp_Dir.hxx>
@@ -51,6 +52,16 @@ TopoDS_Edge circleEdge(const document::SketchParameters& sketch,
     return BRepBuilderAPI_MakeEdge(curve).Edge();
 }
 
+TopoDS_Edge arcEdge(const document::SketchParameters& sketch, const document::SketchArc& arc) {
+    const gp_Pnt center = worldPoint(sketch.plane, arc.center);
+    const gp_Dir normal(sketch.plane.normalX, sketch.plane.normalY, sketch.plane.normalZ);
+    const gp_Dir xDirection(sketch.plane.xDirectionX, sketch.plane.xDirectionY,
+                            sketch.plane.xDirectionZ);
+    const Handle(Geom_Circle) curve =
+        new Geom_Circle(gp_Ax2(center, normal, xDirection), arc.radius);
+    return BRepBuilderAPI_MakeEdge(curve, arc.startAngle, arc.endAngle).Edge();
+}
+
 const document::SketchElement& findElement(const document::SketchParameters& sketch,
                                            document::SketchElementId id) {
     const auto match = std::ranges::find(sketch.elements.values, id, &document::SketchElement::id);
@@ -84,6 +95,39 @@ TopoDS_Face lineProfileFace(const document::SketchParameters& sketch,
     return BRepBuilderAPI_MakeFace(polygon.Wire()).Face();
 }
 
+std::pair<document::SketchPoint, document::SketchPoint>
+curveEndpoints(const document::SketchGeometry& geometry) {
+    if (const auto* line = std::get_if<document::SketchLine>(&geometry))
+        return {line->start, line->end};
+    const auto& arc = std::get<document::SketchArc>(geometry);
+    return {{arc.center.x + arc.radius * std::cos(arc.startAngle),
+             arc.center.y + arc.radius * std::sin(arc.startAngle)},
+            {arc.center.x + arc.radius * std::cos(arc.endAngle),
+             arc.center.y + arc.radius * std::sin(arc.endAngle)}};
+}
+
+TopoDS_Face curveProfileFace(const document::SketchParameters& sketch,
+                             const SketchProfile& profile) {
+    BRepBuilderAPI_MakeWire wire;
+    std::optional<document::SketchPoint> current;
+    for (document::SketchElementId id : profile.elementIds) {
+        const auto& geometry = findElement(sketch, id).geometry;
+        auto points = curveEndpoints(geometry);
+        TopoDS_Edge edge = std::holds_alternative<document::SketchLine>(geometry)
+                               ? BRepBuilderAPI_MakeEdge(worldPoint(sketch.plane, points.first),
+                                                         worldPoint(sketch.plane, points.second))
+                                     .Edge()
+                               : arcEdge(sketch, std::get<document::SketchArc>(geometry));
+        if (current.has_value() && connected(*current, points.second)) {
+            edge.Reverse();
+            std::swap(points.first, points.second);
+        }
+        wire.Add(edge);
+        current = points.second;
+    }
+    return BRepBuilderAPI_MakeFace(wire.Wire()).Face();
+}
+
 TopoDS_Face profileFace(const document::SketchParameters& sketch, const SketchProfile& profile) {
     const document::SketchGeometry& first =
         findElement(sketch, profile.elementIds.front()).geometry;
@@ -94,6 +138,10 @@ TopoDS_Face profileFace(const document::SketchParameters& sketch, const SketchPr
         return BRepBuilderAPI_MakeFace(BRepBuilderAPI_MakeWire(circleEdge(sketch, *circle)).Wire())
             .Face();
     }
+    if (std::ranges::any_of(profile.elementIds, [&sketch](document::SketchElementId id) {
+            return std::holds_alternative<document::SketchArc>(findElement(sketch, id).geometry);
+        }))
+        return curveProfileFace(sketch, profile);
     return lineProfileFace(sketch, profile);
 }
 
@@ -107,7 +155,9 @@ TopoDS_Shape elementShape(const document::SketchParameters& sketch,
     if (const auto* rectangle = std::get_if<document::SketchRectangle>(&geometry)) {
         return rectangleWire(sketch, *rectangle);
     }
-    return circleEdge(sketch, std::get<document::SketchCircle>(geometry));
+    if (const auto* circle = std::get_if<document::SketchCircle>(&geometry))
+        return circleEdge(sketch, *circle);
+    return arcEdge(sketch, std::get<document::SketchArc>(geometry));
 }
 
 } // namespace

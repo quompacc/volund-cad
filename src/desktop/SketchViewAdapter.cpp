@@ -51,6 +51,8 @@ QString sketchSelectionSummary(const application::CadSession& session) {
             kind = QObject::tr("Line");
         } else if (std::holds_alternative<document::SketchRectangle>(element.geometry)) {
             kind = QObject::tr("Rectangle");
+        } else if (std::holds_alternative<document::SketchArc>(element.geometry)) {
+            kind = QObject::tr("Arc");
         }
         return summary + QObject::tr("\n\nSelected: %1 #%2").arg(kind).arg(element.id.value());
     }

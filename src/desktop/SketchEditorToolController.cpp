@@ -27,6 +27,8 @@ application::SketchDrawingTool applicationTool(int index) {
         return application::SketchDrawingTool::rectangle;
     if (index == 2)
         return application::SketchDrawingTool::circle;
+    if (index == 3)
+        return application::SketchDrawingTool::arc;
     return application::SketchDrawingTool::line;
 }
 
@@ -35,6 +37,8 @@ viewport::SketchElementTool viewportTool(int index) {
         return viewport::SketchElementTool::rectangle;
     if (index == 2)
         return viewport::SketchElementTool::circle;
+    if (index == 3)
+        return viewport::SketchElementTool::arc;
     return viewport::SketchElementTool::line;
 }
 
@@ -92,16 +96,17 @@ void SketchEditorToolController::showPanel() {
     translationY_ = 0.0;
     panel_.begin(ToolPanelDefinition{
         QObject::tr("Sketch Editor"),
-        QObject::tr("Choose a tool and set two points. Add any number of elements, then confirm."),
+        QObject::tr("Choose a tool and set its points. Add any number of elements, then confirm."),
         {{"translation_x", QObject::tr("Selected ΔX"), 0.0, -1'000'000.0, 1'000'000.0},
          {"translation_y", QObject::tr("Selected ΔY"), 0.0, -1'000'000.0, 1'000'000.0},
          {"line_length", QObject::tr("Line length"), 1.0, 0.001, 1'000'000.0},
          {"rectangle_width", QObject::tr("Rectangle width"), 1.0, 0.001, 1'000'000.0},
          {"rectangle_height", QObject::tr("Rectangle height"), 1.0, 0.001, 1'000'000.0},
-         {"circle_radius", QObject::tr("Circle radius"), 1.0, 0.001, 1'000'000.0}},
+         {"circle_radius", QObject::tr("Circle / arc radius"), 1.0, 0.001, 1'000'000.0}},
         {{"tool",
           QObject::tr("Tool"),
-          {QObject::tr("Line"), QObject::tr("Rectangle"), QObject::tr("Circle")},
+          {QObject::tr("Line"), QObject::tr("Rectangle"), QObject::tr("Circle"),
+           QObject::tr("Center arc")},
           0}},
         {{"horizontal", QObject::tr("Constrain line horizontally")},
          {"vertical", QObject::tr("Constrain line vertically")},
@@ -211,7 +216,8 @@ void SketchEditorToolController::setTool(int index) {
     editor_->setTool(applicationTool(index));
     viewport_.setSketchEditorTool(viewportTool(index));
     refreshPresentation();
-    statusChanged_(QObject::tr("Sketch tool changed"));
+    statusChanged_(index == 3 ? QObject::tr("Center arc: set center, radius point and end point")
+                              : QObject::tr("Sketch tool changed"));
 }
 
 void SketchEditorToolController::updatePreview(
@@ -219,8 +225,12 @@ void SketchEditorToolController::updatePreview(
     if (!editor_)
         return;
     if (intent.has_value()) {
+        const auto third =
+            intent->third.has_value()
+                ? std::optional{document::SketchPoint{intent->third->first, intent->third->second}}
+                : std::nullopt;
         static_cast<void>(editor_->setPreview({intent->firstX, intent->firstY},
-                                              {intent->secondX, intent->secondY}));
+                                              {intent->secondX, intent->secondY}, third));
     } else {
         editor_->clearPreview();
     }
@@ -228,8 +238,12 @@ void SketchEditorToolController::updatePreview(
 }
 
 void SketchEditorToolController::confirmElement(const viewport::SketchElementIntent& intent) {
-    if (!editor_ ||
-        !editor_->setPreview({intent.firstX, intent.firstY}, {intent.secondX, intent.secondY}))
+    const auto third =
+        intent.third.has_value()
+            ? std::optional{document::SketchPoint{intent.third->first, intent.third->second}}
+            : std::nullopt;
+    if (!editor_ || !editor_->setPreview({intent.firstX, intent.firstY},
+                                         {intent.secondX, intent.secondY}, third))
         return;
     const auto id = editor_->confirmPreview();
     panel_.setAcceptEnabled(editor_->canAccept());
@@ -325,7 +339,7 @@ void SketchEditorToolController::applyElementDimension(const std::string& id, do
         label = QObject::tr("Rectangle height");
     } else if (id == "circle_radius") {
         changed = editor_->setSelectedCircleRadius(value);
-        label = QObject::tr("Circle radius");
+        label = QObject::tr("Circle / arc radius");
     }
     if (!changed)
         return;

@@ -3,6 +3,7 @@
 #include <GCS.h>
 
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <memory>
 #include <numbers>
@@ -71,14 +72,71 @@ struct CircleState final {
     }
 };
 
+struct ArcState final {
+    document::SketchElement* element;
+    double centerX;
+    double centerY;
+    double radius;
+    double startX;
+    double startY;
+    double endX;
+    double endY;
+    double startAngle;
+    double endAngle;
+    GCS::Arc arc;
+
+    explicit ArcState(document::SketchElement& source)
+        : element(&source), centerX(std::get<document::SketchArc>(source.geometry).center.x),
+          centerY(std::get<document::SketchArc>(source.geometry).center.y),
+          radius(std::get<document::SketchArc>(source.geometry).radius),
+          startAngle(std::get<document::SketchArc>(source.geometry).startAngle),
+          endAngle(std::get<document::SketchArc>(source.geometry).endAngle) {
+        startX = centerX + radius * std::cos(startAngle);
+        startY = centerY + radius * std::sin(startAngle);
+        endX = centerX + radius * std::cos(endAngle);
+        endY = centerY + radius * std::sin(endAngle);
+        arc.center = {&centerX, &centerY};
+        arc.rad = &radius;
+        arc.start = {&startX, &startY};
+        arc.end = {&endX, &endY};
+        arc.startAngle = &startAngle;
+        arc.endAngle = &endAngle;
+    }
+
+    void appendUnknowns(GCS::VEC_pD& unknowns) {
+        unknowns.insert(unknowns.end(), {&centerX, &centerY, &radius, &startX, &startY, &endX,
+                                         &endY, &startAngle, &endAngle});
+    }
+
+    void writeBack() const {
+        auto& target = std::get<document::SketchArc>(element->geometry);
+        target.center = {centerX, centerY};
+        target.radius = radius;
+        target.startAngle = std::remainder(startAngle, 2.0 * std::numbers::pi);
+        double sweep = std::fmod(endAngle - startAngle, 2.0 * std::numbers::pi);
+        if (sweep <= 1.0e-9)
+            sweep += 2.0 * std::numbers::pi;
+        target.endAngle = target.startAngle + sweep;
+    }
+};
+
 using LineMap = std::unordered_map<std::uint64_t, LineState*>;
 using CircleMap = std::unordered_map<std::uint64_t, CircleState*>;
+using ArcMap = std::unordered_map<std::uint64_t, ArcState*>;
 
 GCS::Point& point(const document::SketchGeometryReference& reference, const LineMap& lines,
-                  const CircleMap& circles) {
+                  const CircleMap& circles, const ArcMap& arcs) {
+    const auto id = reference.element.value();
+    if (arcs.contains(id)) {
+        ArcState& arc = *arcs.at(id);
+        if (reference.point == document::SketchPointPosition::center)
+            return arc.arc.center;
+        return reference.point == document::SketchPointPosition::start ? arc.arc.start
+                                                                       : arc.arc.end;
+    }
     if (reference.point == document::SketchPointPosition::center)
-        return circles.at(reference.element.value())->circle.center;
-    LineState& line = *lines.at(reference.element.value());
+        return circles.at(id)->circle.center;
+    LineState& line = *lines.at(id);
     return reference.point == document::SketchPointPosition::start ? line.first : line.second;
 }
 
@@ -89,8 +147,10 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
     const document::SketchElements originalElements = sketch.elements;
     std::vector<std::unique_ptr<LineState>> lineStates;
     std::vector<std::unique_ptr<CircleState>> circleStates;
+    std::vector<std::unique_ptr<ArcState>> arcStates;
     LineMap lines;
     CircleMap circles;
+    ArcMap arcs;
     GCS::VEC_pD unknowns;
     for (document::SketchElement& element : sketch.elements.values) {
         if (std::holds_alternative<document::SketchLine>(element.geometry)) {
@@ -103,10 +163,17 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
             state->appendUnknowns(unknowns);
             circles.emplace(element.id.value(), state.get());
             circleStates.push_back(std::move(state));
+        } else if (std::holds_alternative<document::SketchArc>(element.geometry)) {
+            auto state = std::make_unique<ArcState>(element);
+            state->appendUnknowns(unknowns);
+            arcs.emplace(element.id.value(), state.get());
+            arcStates.push_back(std::move(state));
         }
     }
 
     GCS::System system;
+    for (const auto& arc : arcStates)
+        static_cast<void>(system.addConstraintArcRules(arc->arc));
     std::vector<double> values;
     values.reserve(sketch.constraints.values.size());
     std::vector<std::array<double, 4>> fixedValues;
@@ -129,40 +196,50 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
         else if (constraint.kind == document::SketchConstraintKind::distance)
             static_cast<void>(system.addConstraintP2PDistance(firstLine->first, firstLine->second,
                                                               &values.back(), tag));
-        else if (constraint.kind == document::SketchConstraintKind::radius)
-            static_cast<void>(system.addConstraintCircleRadius(
-                circles.at(constraint.first.element.value())->circle, &values.back(), tag));
-        else if (constraint.kind == document::SketchConstraintKind::diameter)
-            static_cast<void>(system.addConstraintCircleDiameter(
-                circles.at(constraint.first.element.value())->circle, &values.back(), tag));
-        else if (constraint.kind == document::SketchConstraintKind::coincident)
-            static_cast<void>(
-                system.addConstraintP2PCoincident(point(constraint.first, lines, circles),
-                                                  point(*constraint.second, lines, circles), tag));
+        else if (constraint.kind == document::SketchConstraintKind::radius) {
+            const auto id = constraint.first.element.value();
+            if (arcs.contains(id))
+                static_cast<void>(
+                    system.addConstraintArcRadius(arcs.at(id)->arc, &values.back(), tag));
+            else
+                static_cast<void>(
+                    system.addConstraintCircleRadius(circles.at(id)->circle, &values.back(), tag));
+        } else if (constraint.kind == document::SketchConstraintKind::diameter) {
+            const auto id = constraint.first.element.value();
+            if (arcs.contains(id))
+                static_cast<void>(
+                    system.addConstraintArcDiameter(arcs.at(id)->arc, &values.back(), tag));
+            else
+                static_cast<void>(system.addConstraintCircleDiameter(circles.at(id)->circle,
+                                                                     &values.back(), tag));
+        } else if (constraint.kind == document::SketchConstraintKind::coincident)
+            static_cast<void>(system.addConstraintP2PCoincident(
+                point(constraint.first, lines, circles, arcs),
+                point(*constraint.second, lines, circles, arcs), tag));
         else if (constraint.kind == document::SketchConstraintKind::horizontalPoints)
-            static_cast<void>(
-                system.addConstraintHorizontal(point(constraint.first, lines, circles),
-                                               point(*constraint.second, lines, circles), tag));
+            static_cast<void>(system.addConstraintHorizontal(
+                point(constraint.first, lines, circles, arcs),
+                point(*constraint.second, lines, circles, arcs), tag));
         else if (constraint.kind == document::SketchConstraintKind::verticalPoints)
             static_cast<void>(
-                system.addConstraintVertical(point(constraint.first, lines, circles),
-                                             point(*constraint.second, lines, circles), tag));
+                system.addConstraintVertical(point(constraint.first, lines, circles, arcs),
+                                             point(*constraint.second, lines, circles, arcs), tag));
         else if (constraint.kind == document::SketchConstraintKind::concentric)
             static_cast<void>(system.addConstraintP2PCoincident(
                 circles.at(constraint.first.element.value())->circle.center,
                 circles.at(constraint.second->element.value())->circle.center, tag));
         else if (constraint.kind == document::SketchConstraintKind::pointDistance)
             static_cast<void>(system.addConstraintP2PDistance(
-                point(constraint.first, lines, circles), point(*constraint.second, lines, circles),
-                &values.back(), tag));
+                point(constraint.first, lines, circles, arcs),
+                point(*constraint.second, lines, circles, arcs), &values.back(), tag));
         else if (constraint.kind == document::SketchConstraintKind::pointLineDistance)
             static_cast<void>(system.addConstraintP2LDistance(
-                point(constraint.first, lines, circles),
+                point(constraint.first, lines, circles, arcs),
                 lines.at(constraint.second->element.value())->line, &values.back(), tag));
         else if (constraint.kind == document::SketchConstraintKind::pointDistanceX ||
                  constraint.kind == document::SketchConstraintKind::pointDistanceY) {
-            GCS::Point& firstPoint = point(constraint.first, lines, circles);
-            GCS::Point& secondPoint = point(*constraint.second, lines, circles);
+            GCS::Point& firstPoint = point(constraint.first, lines, circles, arcs);
+            GCS::Point& secondPoint = point(*constraint.second, lines, circles, arcs);
             double* firstCoordinate =
                 constraint.kind == document::SketchConstraintKind::pointDistanceX ? firstPoint.x
                                                                                   : firstPoint.y;
@@ -177,7 +254,8 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
                 tag));
         else if (constraint.kind == document::SketchConstraintKind::symmetric)
             static_cast<void>(system.addConstraintP2PSymmetric(
-                point(constraint.first, lines, circles), point(*constraint.second, lines, circles),
+                point(constraint.first, lines, circles, arcs),
+                point(*constraint.second, lines, circles, arcs),
                 lines.at(constraint.third->element.value())->line, tag));
         else if (constraint.kind == document::SketchConstraintKind::fixed) {
             fixedValues.push_back(
@@ -201,12 +279,12 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
             }
         } else if (constraint.kind == document::SketchConstraintKind::coordinateX)
             static_cast<void>(system.addConstraintCoordinateX(
-                point(constraint.first, lines, circles), &values.back(), tag));
+                point(constraint.first, lines, circles, arcs), &values.back(), tag));
         else if (constraint.kind == document::SketchConstraintKind::coordinateY)
             static_cast<void>(system.addConstraintCoordinateY(
-                point(constraint.first, lines, circles), &values.back(), tag));
+                point(constraint.first, lines, circles, arcs), &values.back(), tag));
         else if (constraint.kind == document::SketchConstraintKind::pointOnObject) {
-            GCS::Point& source = point(constraint.first, lines, circles);
+            GCS::Point& source = point(constraint.first, lines, circles, arcs);
             const auto targetId = constraint.second->element.value();
             if (lines.contains(targetId))
                 static_cast<void>(
@@ -215,7 +293,7 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
                 static_cast<void>(
                     system.addConstraintPointOnCircle(source, circles.at(targetId)->circle, tag));
         } else if (constraint.kind == document::SketchConstraintKind::midpoint) {
-            GCS::Point& source = point(constraint.first, lines, circles);
+            GCS::Point& source = point(constraint.first, lines, circles, arcs);
             GCS::Line& target = lines.at(constraint.second->element.value())->line;
             static_cast<void>(system.addConstraintPointOnLine(source, target, tag));
             static_cast<void>(system.addConstraintPointOnPerpBisector(source, target, tag));
@@ -283,6 +361,8 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
         line->writeBack();
     for (const auto& circle : circleStates)
         circle->writeBack();
+    for (const auto& arc : arcStates)
+        arc->writeBack();
     try {
         document::validateSketchParameters(sketch);
     } catch (const std::invalid_argument&) {

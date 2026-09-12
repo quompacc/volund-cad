@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numbers>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
@@ -53,22 +54,33 @@ void SketchEditorSession::setTool(SketchDrawingTool tool) noexcept {
 
 SketchDrawingTool SketchEditorSession::tool() const noexcept { return tool_; }
 
-document::SketchGeometry SketchEditorSession::geometry(document::SketchPoint first,
-                                                       document::SketchPoint second) const {
+document::SketchGeometry
+SketchEditorSession::geometry(document::SketchPoint first, document::SketchPoint second,
+                              std::optional<document::SketchPoint> third) const {
     if (tool_ == SketchDrawingTool::line) {
         return document::SketchLine{first, second};
     }
     if (tool_ == SketchDrawingTool::rectangle) {
         return document::SketchRectangle{first.x, first.y, second.x, second.y};
     }
-    return document::SketchCircle{first, std::hypot(second.x - first.x, second.y - first.y)};
+    const double radius = std::hypot(second.x - first.x, second.y - first.y);
+    if (tool_ == SketchDrawingTool::circle)
+        return document::SketchCircle{first, radius};
+    double startAngle = std::atan2(second.y - first.y, second.x - first.x);
+    double endAngle = std::atan2(third->y - first.y, third->x - first.x);
+    while (endAngle <= startAngle)
+        endAngle += 2.0 * std::numbers::pi;
+    return document::SketchArc{first, radius, startAngle, endAngle};
 }
 
-bool SketchEditorSession::setPreview(document::SketchPoint first, document::SketchPoint second) {
+bool SketchEditorSession::setPreview(document::SketchPoint first, document::SketchPoint second,
+                                     std::optional<document::SketchPoint> third) {
     if (!active_) {
         return false;
     }
-    const document::SketchGeometry candidate = geometry(first, second);
+    if (tool_ == SketchDrawingTool::arc && !third.has_value())
+        return false;
+    const document::SketchGeometry candidate = geometry(first, second, third);
     document::SketchElements validated = elements_;
     const document::SketchElementId candidateId{validated.nextId++};
     validated.values.push_back({candidateId, candidate});
@@ -125,6 +137,19 @@ bool SketchEditorSession::selectNearestReference(document::SketchElementId eleme
                                                        : document::SketchPointPosition::end;
     } else if (std::holds_alternative<document::SketchCircle>(match->geometry)) {
         reference.point = document::SketchPointPosition::center;
+    } else if (const auto* arc = std::get_if<document::SketchArc>(&match->geometry)) {
+        const document::SketchPoint start{arc->center.x + arc->radius * std::cos(arc->startAngle),
+                                          arc->center.y + arc->radius * std::sin(arc->startAngle)};
+        const document::SketchPoint end{arc->center.x + arc->radius * std::cos(arc->endAngle),
+                                        arc->center.y + arc->radius * std::sin(arc->endAngle)};
+        const double centerDistance =
+            std::hypot(position.x - arc->center.x, position.y - arc->center.y);
+        const double startDistance = std::hypot(position.x - start.x, position.y - start.y);
+        const double endDistance = std::hypot(position.x - end.x, position.y - end.y);
+        reference.point = centerDistance <= startDistance && centerDistance <= endDistance
+                              ? document::SketchPointPosition::center
+                          : startDistance <= endDistance ? document::SketchPointPosition::start
+                                                         : document::SketchPointPosition::end;
     } else {
         return selectElement(elementId);
     }
@@ -166,6 +191,25 @@ bool SketchEditorSession::translateSelected(double deltaX, double deltaY) {
         } else if (auto* circle = std::get_if<document::SketchCircle>(&match->geometry)) {
             circle->center.x += deltaX;
             circle->center.y += deltaY;
+        } else if (auto* arc = std::get_if<document::SketchArc>(&match->geometry)) {
+            if (reference.point == document::SketchPointPosition::center) {
+                arc->center.x += deltaX;
+                arc->center.y += deltaY;
+            } else {
+                double& angle = reference.point == document::SketchPointPosition::start
+                                    ? arc->startAngle
+                                    : arc->endAngle;
+                const double x = arc->center.x + arc->radius * std::cos(angle) + deltaX;
+                const double y = arc->center.y + arc->radius * std::sin(angle) + deltaY;
+                angle = std::atan2(y - arc->center.y, x - arc->center.x);
+                if (reference.point == document::SketchPointPosition::end) {
+                    while (angle <= arc->startAngle)
+                        angle += 2.0 * std::numbers::pi;
+                } else {
+                    while (arc->endAngle <= angle)
+                        angle -= 2.0 * std::numbers::pi;
+                }
+            }
         }
     } else {
         std::visit(
@@ -243,8 +287,10 @@ std::optional<double> SketchEditorSession::selectedCircleRadius() const noexcept
         std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);
     if (match == elements_.values.end())
         return std::nullopt;
-    const auto* circle = std::get_if<document::SketchCircle>(&match->geometry);
-    return circle == nullptr ? std::nullopt : std::optional<double>{circle->radius};
+    if (const auto* circle = std::get_if<document::SketchCircle>(&match->geometry))
+        return circle->radius;
+    const auto* arc = std::get_if<document::SketchArc>(&match->geometry);
+    return arc == nullptr ? std::nullopt : std::optional<double>{arc->radius};
 }
 
 std::optional<document::SketchLineConstraint>
@@ -339,12 +385,13 @@ bool SketchEditorSession::setSelectedCircleRadius(double radius) {
     if (match == elements_.values.end())
         return false;
     auto* circle = std::get_if<document::SketchCircle>(&match->geometry);
-    if (circle == nullptr)
+    auto* arc = std::get_if<document::SketchArc>(&match->geometry);
+    if (circle == nullptr && arc == nullptr)
         return false;
     const document::SketchElements previousElements = elements_;
     const document::SketchConstraints previousConstraints = constraints_;
-    const double current = circle->radius;
-    circle->radius = radius;
+    const double current = circle ? circle->radius : arc->radius;
+    (circle ? circle->radius : arc->radius) = radius;
     const bool constraintChanged = upsertUnaryConstraint(
         constraints_, *selectedElement_, document::SketchConstraintKind::radius, radius);
     document::validateSketchElements(elements_);

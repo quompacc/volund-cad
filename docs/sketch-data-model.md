@@ -14,6 +14,7 @@ rectangle with an ordered collection of independently identified elements:
 - `SketchLine` stores two planar endpoints;
 - `SketchRectangle` stores two opposite planar corners;
 - `SketchCircle` stores a planar center and radius;
+- `SketchArc` stores a planar center, radius and counter-clockwise start/end angles;
 - every `SketchElement` owns a non-zero, sketch-local `SketchElementId`;
 - `SketchElements::nextId` preserves deterministic ID allocation through edits,
   Undo/Redo and Save/Load.
@@ -35,8 +36,8 @@ the same presentation component.
 
 The general Sketch command opens a dedicated editor on the selected planar face. Its
 temporary `SketchEditorSession` belongs to the application layer and is independent
-of the retained direct rectangle/Push-Pull interaction. Line, rectangle and circle
-tools share the viewport's linear snapping, may be switched without discarding
+of the retained direct rectangle/Push-Pull interaction. Line, rectangle, circle and
+center-arc tools share the viewport's linear snapping, may be switched without discarding
 confirmed elements, and allocate deterministic sketch-local IDs as each element is
 confirmed. The viewport reports only snapped planar point intents and picking results;
 the application session owns temporary geometry, selection, profile recomputation and
@@ -56,8 +57,11 @@ one document transaction and recomputes downstream profiles and extrusions. Canc
 discards every temporary edit. Undo/Redo and Save/Load therefore preserve both the
 edited geometry and the monotonic ID allocation.
 
-Within an active edit session, clicking a line chooses its nearest endpoint and
-clicking a circle chooses its center. Ctrl-click toggles additional geometry
+The center-arc tool uses three clicks: center, radius point and end point. PlaneGCS
+owns the center, radius, endpoint and angle degrees of freedom and couples them with
+its native arc rules. Within an active edit session, clicking a line or arc chooses
+its nearest endpoint (or the arc center), while clicking a circle chooses its center.
+Ctrl-click toggles additional geometry
 references. Dragging one selected reference projects pointer movement back into
 sketch-local coordinates and lets PlaneGCS move the remaining constrained geometry;
 whole-element translation remains available through the numeric X/Y fields. Releasing
@@ -67,7 +71,7 @@ boundary.
 ## Parametric constraint foundation
 
 A selected line exposes its exact length in the generic tool panel. Line length,
-circle radius, horizontal and vertical are independent driving constraint records
+circle or arc radius, horizontal and vertical are independent driving constraint records
 with stable sketch-local IDs. Editing one of these values runs the PlaneGCS adapter
 immediately, updates the temporary geometry and retains the constraint for later
 recomputation. Whole-element translation is solved against the same records, and OK
@@ -138,9 +142,10 @@ for circles, radius are stored as auxiliary driving values so dragging cannot si
 redefine the fixed target. An ordered point and line can carry an editable perpendicular
 distance (`PL … mm`) solved directly by PlaneGCS.
 
-Rectangles and circles each form a closed profile. Connected line chains form a
-profile when at least three non-degenerate elements close within the modeling
-tolerance. Open elements remain valid sketch geometry but are ignored by extrusion.
+Rectangles and circles each form a closed profile. Connected line-and-arc chains form
+a profile when at least two non-degenerate elements close within the modeling
+tolerance; this includes a semicircle plus its diameter. Open elements remain valid
+sketch geometry but are ignored by extrusion.
 Every detected profile receives a deterministic stable identity equal to the smallest
 stable element ID in its boundary. Clicking any boundary element selects the complete
 profile; Ctrl-click toggles additional profiles. A new profile extrusion stores the
@@ -148,15 +153,15 @@ explicit profile IDs and consumes only those faces. An empty selection remains t
 legacy meaning of "all closed profiles", so older direct Push/Pull operations retain
 their behavior.
 
-## File format version 14
+## File format version 15
 
-New saves use `VOLUND 14`. A sketch feature line stores its support, plane, element
+New saves use `VOLUND 15`. A sketch feature line stores its support, plane, element
 count, next element ID, constraint count and next constraint ID. `ELEMENT` records
 store geometry and stable IDs; following `CONSTRAINT` records store their stable ID,
 kind, one or two geometry references and an optional driving value.
 
 An extrusion record appends a profile count and its stable profile IDs. The reader
-continues to accept `VOLUND 1` through `VOLUND 13`; older extrusion records migrate to
+continues to accept `VOLUND 1` through `VOLUND 14`; older extrusion records migrate to
 an empty profile list, which preserves their previous all-profiles behavior. A version-1 inline rectangle
 is migrated in memory to a `RECTANGLE` element with ID 1 and next ID 2; version-2 lines
 are migrated with a free direction. Version-3 horizontal and vertical line fields
@@ -169,6 +174,7 @@ Version 11 adds midpoint and perpendicular-bisector relation kinds. Version 12 a
 concentric relations and driving circle diameters.
 Version 13 adds collinear lines and horizontal/vertical point alignment relations.
 Version 14 appends auxiliary values to constraint records and adds fixed geometry plus
-point-to-line distances. Saving any loaded document writes version 14.
+point-to-line distances. Version 15 adds persistent center arcs with radius and
+start/end angles. Saving any loaded document writes version 15.
 Invalid, duplicate or zero element IDs, non-finite coordinates, degenerate elements,
 inconsistent next IDs and unsatisfied line constraints are rejected while loading.

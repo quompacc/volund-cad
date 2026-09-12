@@ -13,7 +13,7 @@ namespace voelund::application {
 
 class CadSession;
 
-enum class SketchDrawingTool { line, rectangle, circle };
+enum class SketchDrawingTool { line, rectangle, circle, arc };
 
 class SketchEditorSession final {
   public:
@@ -24,7 +24,8 @@ class SketchEditorSession final {
 
     void setTool(SketchDrawingTool tool) noexcept;
     [[nodiscard]] SketchDrawingTool tool() const noexcept;
-    [[nodiscard]] bool setPreview(document::SketchPoint first, document::SketchPoint second);
+    [[nodiscard]] bool setPreview(document::SketchPoint first, document::SketchPoint second,
+                                  std::optional<document::SketchPoint> third = std::nullopt);
     void clearPreview() noexcept;
     [[nodiscard]] std::optional<document::SketchElementId> confirmPreview();
     [[nodiscard]] bool selectElement(document::SketchElementId elementId) noexcept;
@@ -76,8 +77,9 @@ class SketchEditorSession final {
   private:
     [[nodiscard]] document::SketchElementId
     confirmRectangle(const document::SketchRectangle& rectangle);
-    [[nodiscard]] document::SketchGeometry geometry(document::SketchPoint first,
-                                                    document::SketchPoint second) const;
+    [[nodiscard]] document::SketchGeometry
+    geometry(document::SketchPoint first, document::SketchPoint second,
+             std::optional<document::SketchPoint> third) const;
     [[nodiscard]] document::SketchParameters parameters(bool includePreview) const;
     [[nodiscard]] bool solveConstraints();
 

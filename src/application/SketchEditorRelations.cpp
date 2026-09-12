@@ -23,6 +23,12 @@ bool circle(const document::SketchElement* element) {
     return element && std::holds_alternative<document::SketchCircle>(element->geometry);
 }
 
+bool arc(const document::SketchElement* element) {
+    return element && std::holds_alternative<document::SketchArc>(element->geometry);
+}
+
+bool radial(const document::SketchElement* element) { return circle(element) || arc(element); }
+
 std::optional<document::SketchPoint>
 referencePoint(const document::SketchElements& elements,
                const document::SketchGeometryReference& reference) {
@@ -34,6 +40,16 @@ referencePoint(const document::SketchElements& elements,
     }
     if (circle(element) && reference.point == document::SketchPointPosition::center)
         return std::get<document::SketchCircle>(element->geometry).center;
+    if (arc(element)) {
+        const auto& geometry = std::get<document::SketchArc>(element->geometry);
+        if (reference.point == document::SketchPointPosition::center)
+            return geometry.center;
+        const double angle = reference.point == document::SketchPointPosition::start
+                                 ? geometry.startAngle
+                                 : geometry.endAngle;
+        return document::SketchPoint{geometry.center.x + geometry.radius * std::cos(angle),
+                                     geometry.center.y + geometry.radius * std::sin(angle)};
+    }
     return std::nullopt;
 }
 
@@ -64,7 +80,7 @@ bool SketchEditorSession::canAddSelectedRelation(
             return false;
         const auto* element = findElement(elements_, selectedReferences_.front().element);
         if (kind == document::SketchConstraintKind::diameter)
-            return circle(element);
+            return radial(element);
         return (line(element) || circle(element)) &&
                std::ranges::none_of(constraints_.values, [&](const auto& constraint) {
                    return constraint.kind == document::SketchConstraintKind::fixed &&
@@ -154,7 +170,10 @@ bool SketchEditorSession::addSelectedRelation(document::SketchConstraintKind kin
                                           selectedReferences_[0], secondReference, 0.0};
     if (kind == document::SketchConstraintKind::diameter) {
         const auto* element = findElement(elements_, selectedReferences_[0].element);
-        constraint.value = std::get<document::SketchCircle>(element->geometry).radius * 2.0;
+        if (const auto* circleGeometry = std::get_if<document::SketchCircle>(&element->geometry))
+            constraint.value = circleGeometry->radius * 2.0;
+        else
+            constraint.value = std::get<document::SketchArc>(element->geometry).radius * 2.0;
     } else if (kind == document::SketchConstraintKind::fixed) {
         const auto* element = findElement(elements_, selectedReferences_[0].element);
         if (const auto* geometry = std::get_if<document::SketchLine>(&element->geometry)) {

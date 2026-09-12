@@ -32,14 +32,14 @@ gehören nicht zum Produktpfad.
 - Sketch und Extrusion sind intern getrennte parametrische Features. Die
   Extrusionsdistanz kann nachträglich editiert und neu berechnet werden.
 - Sketches besitzen ein allgemeines parametrisches Datenmodell mit stabilen lokalen
-  IDs für Linien, Rechtecke und Kreise. Mehrere Elemente und mehrere geschlossene
+  IDs für Linien, Rechtecke, Kreise und Kreisbögen. Mehrere Elemente und mehrere geschlossene
   Profile werden erkannt und gemeinsam extrudiert; offene Elemente bleiben erhalten.
 - Wird ein Sketch im Modellbaum ausgewählt, stellt der Viewport alle enthaltenen
-  Elemente als getrennte OCCT-Präsentationen dar. Linien, Rechtecke und Kreise sind
+  Elemente als getrennte OCCT-Präsentationen dar. Linien, Rechtecke, Kreise und Bögen sind
   über ihre stabilen Element-IDs einzeln pickbar; die Auswahl wird farblich und im
   Eigenschaftenbereich angezeigt.
 - Der eigenständige Sketch-Editor startet auf einer ausgewählten planaren Fläche und
-  erzeugt nacheinander Linien, Rechtecke und Kreise im selben temporären Sketch.
+  erzeugt nacheinander Linien, Rechtecke, Kreise und Mittelpunktbögen im selben temporären Sketch.
   Werkzeugwechsel erhalten bestätigte Elemente; lineares Snapping und Live-Preview
   gelten für alle drei Werkzeuge. Elemente sind bereits während des Editorlaufs über
   ihre stabilen IDs einzeln auswählbar.
@@ -116,7 +116,10 @@ gehören nicht zum Produktpfad.
 - Linien und Kreise lassen sich mit einem einzelnen `[F]`-Constraint vollständig
   fixieren. Die Sollkoordinaten bleiben separat gespeichert und widerstehen Dragging.
   Ein Punkt-zu-Linie-Abstand ist als `PL … mm` direkt editierbar.
-- Neue Dateien verwenden `VOLUND 14`; bestehende `VOLUND 1`-Rechtecksketches,
+- Das Mittelpunktbogen-Werkzeug verwendet drei Klicks für Mittelpunkt, Radiuspunkt
+  und Endpunkt. PlaneGCS koppelt Radius, Winkel und beide Endpunkte über seine nativen
+  Arc-Regeln. Gemischte geschlossene Linien-Bogen-Konturen sind als Profile extrudierbar.
+- Neue Dateien verwenden `VOLUND 15`; bestehende `VOLUND 1`-Rechtecksketches,
   `VOLUND 2`-Linien, `VOLUND 3`-Richtungsconstraints und `VOLUND 4`-Extrusionen
   sowie `VOLUND 5`-Profilauswahlen werden beim Laden migriert. Alte Extrusionen
   behalten dabei ihre bisherige Semantik, alle geschlossenen Profile zu verwenden.

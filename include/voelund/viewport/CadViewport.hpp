@@ -85,13 +85,14 @@ struct SketchRectangleResult final {
     double distance;
 };
 
-enum class SketchElementTool { line, rectangle, circle };
+enum class SketchElementTool { line, rectangle, circle, arc };
 
 struct SketchElementIntent final {
     double firstX;
     double firstY;
     double secondX;
     double secondY;
+    std::optional<std::pair<double, double>> third;
 };
 
 #if defined(VOELUND_VIEWPORT_QT_OPENGL)

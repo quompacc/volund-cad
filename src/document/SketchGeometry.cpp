@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numbers>
 #include <stdexcept>
 
 namespace voelund::document {
@@ -41,10 +42,18 @@ void validateGeometry(const SketchGeometry& geometry) {
         }
         return;
     }
-    const SketchCircle& circle = std::get<SketchCircle>(geometry);
-    if (!finite(circle.center) || !std::isfinite(circle.radius) || circle.radius <= minimumLength) {
-        throw std::invalid_argument("Sketch circle must have a finite positive radius");
+    if (const auto* circle = std::get_if<SketchCircle>(&geometry)) {
+        if (!finite(circle->center) || !std::isfinite(circle->radius) ||
+            circle->radius <= minimumLength)
+            throw std::invalid_argument("Sketch circle must have a finite positive radius");
+        return;
     }
+    const SketchArc& arc = std::get<SketchArc>(geometry);
+    const double sweep = arc.endAngle - arc.startAngle;
+    if (!finite(arc.center) || !std::isfinite(arc.radius) || arc.radius <= minimumLength ||
+        !std::isfinite(arc.startAngle) || !std::isfinite(arc.endAngle) || sweep <= minimumLength ||
+        sweep >= 2.0 * std::numbers::pi)
+        throw std::invalid_argument("Sketch arc must have a finite center, radius and sweep");
 }
 
 } // namespace
@@ -98,6 +107,8 @@ void validateSketchConstraints(const SketchElements& elements,
         if (std::holds_alternative<SketchCircle>(geometry) &&
             reference.point == SketchPointPosition::center)
             return;
+        if (std::holds_alternative<SketchArc>(geometry))
+            return;
         throw std::invalid_argument("Sketch constraint reference is not a supported point");
     };
 
@@ -148,9 +159,10 @@ void validateSketchConstraints(const SketchElements& elements,
                 throw std::invalid_argument("Sketch distance constraint must be positive");
         } else if (constraint.kind == SketchConstraintKind::radius ||
                    constraint.kind == SketchConstraintKind::diameter) {
-            if (!std::holds_alternative<SketchCircle>(
-                    findElement(constraint.first.element).geometry))
-                throw std::invalid_argument("Sketch radial constraint requires a circle");
+            const SketchGeometry& geometry = findElement(constraint.first.element).geometry;
+            if (!std::holds_alternative<SketchCircle>(geometry) &&
+                !std::holds_alternative<SketchArc>(geometry))
+                throw std::invalid_argument("Sketch radial constraint requires a circle or arc");
             if (constraint.second.has_value() || constraint.value <= minimumLength)
                 throw std::invalid_argument("Sketch radial constraint must be unary and positive");
         } else {

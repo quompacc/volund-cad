@@ -32,6 +32,7 @@ class SketchEditorInteraction final {
     SketchElementTool tool_{SketchElementTool::line};
     occ::handle<V3d_View> view_;
     std::optional<std::pair<double, double>> firstPoint_;
+    std::optional<std::pair<double, double>> secondPoint_;
     std::optional<std::pair<double, double>> dragPoint_;
     double linearStep_{1.0};
     bool snapping_{true};

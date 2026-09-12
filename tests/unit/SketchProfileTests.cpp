@@ -1,6 +1,8 @@
+#include <voelund/features/SketchEvaluation.hpp>
 #include <voelund/features/SketchProfiles.hpp>
 
 #include <iostream>
+#include <numbers>
 
 namespace {
 
@@ -45,6 +47,19 @@ bool constructionGeometryDoesNotFormProfiles() {
     return voelund::features::detectClosedProfiles(elements).empty();
 }
 
+bool arcAndLineFormAnEvaluatedProfile() {
+    using namespace voelund;
+    document::SketchParameters sketch{
+        {0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0},
+        {{{document::SketchElementId{1},
+           document::SketchArc{{0.0, 0.0}, 2.0, 0.0, std::numbers::pi}},
+          line(2, -2.0, 0.0, 2.0, 0.0)},
+         3}};
+    const auto profiles = features::detectClosedProfiles(sketch.elements.values);
+    return profiles.size() == 1 && profiles.front().elementIds.size() == 2 &&
+           !features::evaluateSketchProfileFaces(sketch).IsNull();
+}
+
 } // namespace
 
 int main() {
@@ -58,6 +73,10 @@ int main() {
     }
     if (!constructionGeometryDoesNotFormProfiles()) {
         std::cerr << "Construction geometry formed a sketch profile\n";
+        return 1;
+    }
+    if (!arcAndLineFormAnEvaluatedProfile()) {
+        std::cerr << "Arc and line profile evaluation failed\n";
         return 1;
     }
     return 0;

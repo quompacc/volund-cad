@@ -14,12 +14,14 @@ void SketchEditorInteraction::begin(const PlanarFaceSelection& support, SketchEl
     tool_ = tool;
     view_ = view;
     firstPoint_.reset();
+    secondPoint_.reset();
     active_ = true;
 }
 
 void SketchEditorInteraction::cancel() noexcept {
     view_.Nullify();
     firstPoint_.reset();
+    secondPoint_.reset();
     dragPoint_.reset();
     active_ = false;
 }
@@ -27,6 +29,7 @@ void SketchEditorInteraction::cancel() noexcept {
 void SketchEditorInteraction::setTool(SketchElementTool tool) noexcept {
     tool_ = tool;
     firstPoint_.reset();
+    secondPoint_.reset();
     dragPoint_.reset();
 }
 
@@ -76,6 +79,15 @@ bool SketchEditorInteraction::valid(const SketchElementIntent& intent) const noe
     if (tool_ == SketchElementTool::rectangle) {
         return std::abs(deltaX) >= minimumSize && std::abs(deltaY) >= minimumSize;
     }
+    if (tool_ == SketchElementTool::arc && intent.third.has_value()) {
+        const double radius = std::hypot(deltaX, deltaY);
+        const double endRadius =
+            std::hypot(intent.third->first - intent.firstX, intent.third->second - intent.firstY);
+        const double cross = deltaX * (intent.third->second - intent.firstY) -
+                             deltaY * (intent.third->first - intent.firstX);
+        return radius >= minimumSize && endRadius >= minimumSize &&
+               std::abs(cross) >= minimumSize * radius * endRadius;
+    }
     return std::hypot(deltaX, deltaY) >= minimumSize;
 }
 
@@ -87,8 +99,11 @@ std::optional<SketchElementIntent> SketchEditorInteraction::move(int x, int y) c
     if (!point.has_value()) {
         return std::nullopt;
     }
-    const SketchElementIntent intent{firstPoint_->first, firstPoint_->second, point->first,
-                                     point->second};
+    const SketchElementIntent intent{
+        firstPoint_->first, firstPoint_->second,
+        secondPoint_.has_value() ? secondPoint_->first : point->first,
+        secondPoint_.has_value() ? secondPoint_->second : point->second,
+        secondPoint_.has_value() ? std::optional{*point} : std::nullopt};
     return valid(intent) ? std::optional{intent} : std::nullopt;
 }
 
@@ -101,12 +116,24 @@ std::optional<SketchElementIntent> SketchEditorInteraction::click(int x, int y) 
         firstPoint_ = point;
         return std::nullopt;
     }
-    const SketchElementIntent intent{firstPoint_->first, firstPoint_->second, point->first,
-                                     point->second};
+    if (tool_ == SketchElementTool::arc && !secondPoint_.has_value()) {
+        const SketchElementIntent radiusIntent{firstPoint_->first, firstPoint_->second,
+                                               point->first, point->second, std::nullopt};
+        if (!valid(radiusIntent))
+            return std::nullopt;
+        secondPoint_ = point;
+        return std::nullopt;
+    }
+    const SketchElementIntent intent{
+        firstPoint_->first, firstPoint_->second,
+        secondPoint_.has_value() ? secondPoint_->first : point->first,
+        secondPoint_.has_value() ? secondPoint_->second : point->second,
+        secondPoint_.has_value() ? std::optional{*point} : std::nullopt};
     if (!valid(intent)) {
         return std::nullopt;
     }
     firstPoint_.reset();
+    secondPoint_.reset();
     return intent;
 }
 
