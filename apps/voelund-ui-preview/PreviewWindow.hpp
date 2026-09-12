@@ -2,6 +2,8 @@
 
 #include <QMainWindow>
 
+#include <memory>
+
 class QLabel;
 class QPushButton;
 class QStackedWidget;
@@ -12,12 +14,20 @@ class QWidget;
 namespace voelund::preview {
 
 class PreviewCanvas;
+class SketchBackend;
+
+}
+
+namespace voelund::application { class CadSession; }
+
+namespace voelund::preview {
 
 class PreviewWindow final : public QMainWindow {
     Q_OBJECT
 
 public:
-    explicit PreviewWindow(QWidget* parent = nullptr);
+    explicit PreviewWindow(application::CadSession& session, QWidget* parent = nullptr);
+    ~PreviewWindow() override;
     [[nodiscard]] bool smokeTestPassed() const;
 
 private:
@@ -39,14 +49,18 @@ private:
     void activateExtrude();
     void activateSketchTool(int tool, QToolButton* button);
     void setWorkspaceTab(const QString& activeName);
+    void refreshBrowser();
     void refreshStyle(QWidget* widget);
 
     PreviewCanvas* canvas_{nullptr};
+    application::CadSession& session_;
+    std::unique_ptr<SketchBackend> sketchBackend_;
     QStackedWidget* ribbonStack_{nullptr};
     QStackedWidget* inspectorStack_{nullptr};
     QTreeWidget* browserTree_{nullptr};
     QLabel* statusText_{nullptr};
     QLabel* selectionText_{nullptr};
+    QLabel* sketchStateLabel_{nullptr};
     QPushButton* sketchWorkspaceTab_{nullptr};
     QList<QPushButton*> workspaceTabs_;
     QList<QToolButton*> sketchToolButtons_;

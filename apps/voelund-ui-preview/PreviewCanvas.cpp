@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <utility>
 
 namespace voelund::preview {
 namespace {
@@ -45,11 +46,28 @@ void PreviewCanvas::setMode(Mode mode)
     sideSelected_ = false;
     pendingPoint_.reset();
     transientRelation_.clear();
-    if (mode == Mode::Sketch && entities_.isEmpty()) {
-        entities_.append({SketchEntity::Kind::Rectangle, {-62, -31}, {48, 29}, true, true});
-        entities_.append({SketchEntity::Kind::Circle, {-8, 0}, {12, 0}, false, false});
-    }
     update();
+}
+
+void PreviewCanvas::resetSketch()
+{
+    entities_.clear();
+    selectedEntity_ = -1;
+    pendingPoint_.reset();
+    transientRelation_.clear();
+    update();
+}
+
+void PreviewCanvas::setDegreesOfFreedom(int value)
+{
+    degreesOfFreedom_ = value;
+    update();
+}
+
+void PreviewCanvas::setSketchCreateHandler(
+    std::function<bool(SketchTool, const QPointF&, const QPointF&)> handler)
+{
+    sketchCreateHandler_ = std::move(handler);
 }
 
 void PreviewCanvas::setSketchTool(SketchTool tool)
@@ -260,7 +278,8 @@ void PreviewCanvas::paintSketch(QPainter& painter) const
     painter.drawText(QRect(24, 22, 340, 25), Qt::AlignLeft, QStringLiteral("SKETCH 01  ·  TOP FACE"));
     painter.setPen(QColor("#F0B44D"));
     QFont small = painter.font(); small.setPointSizeF(9); small.setWeight(QFont::Normal); painter.setFont(small);
-    painter.drawText(QRect(24, 44, 400, 24), Qt::AlignLeft, QStringLiteral("Under-constrained  ·  4 DOF"));
+    painter.drawText(QRect(24, 44, 400, 24), Qt::AlignLeft,
+                     QStringLiteral("Under-constrained  ·  %1 DOF").arg(degreesOfFreedom_));
 }
 
 QRectF PreviewCanvas::sketchPlane() const
@@ -368,6 +387,13 @@ void PreviewCanvas::handleSketchClick(const QPointF& screenPoint)
         else if (sketchTool_ == SketchTool::Arc) kind = SketchEntity::Kind::Arc;
         const bool constrained = relation == QStringLiteral("Coincident") || relation == QStringLiteral("Horizontal")
             || relation == QStringLiteral("Vertical");
+        if (sketchCreateHandler_ && !sketchCreateHandler_(sketchTool_, *pendingPoint_, point)) {
+            pendingPoint_.reset();
+            transientRelation_.clear();
+            emit sketchStatusChanged(QStringLiteral("Geometry rejected by parametric sketch core"));
+            update();
+            return;
+        }
         entities_.append({kind, *pendingPoint_, point, false, constrained});
         selectedEntity_ = static_cast<int>(entities_.size() - 1);
         pendingPoint_.reset();

@@ -5,6 +5,8 @@ add_executable(
     PreviewCanvas.hpp
     PreviewIcons.cpp
     PreviewIcons.hpp
+    SketchBackend.cpp
+    SketchBackend.hpp
     PreviewStyle.cpp
     PreviewStyle.hpp
     PreviewWindow.cpp
@@ -17,6 +19,7 @@ target_link_libraries(
     voelund-ui-preview
     PRIVATE
         voelund_project_options
+        Voelund::Application
         Qt6::Core
         Qt6::Gui
         Qt6::Widgets

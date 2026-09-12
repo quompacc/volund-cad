@@ -6,6 +6,7 @@
 #include <QWidget>
 
 #include <optional>
+#include <functional>
 
 namespace voelund::preview {
 
@@ -19,6 +20,10 @@ public:
     explicit PreviewCanvas(QWidget* parent = nullptr);
     void setMode(Mode mode);
     void setSketchTool(SketchTool tool);
+    void resetSketch();
+    void setDegreesOfFreedom(int value);
+    void setSketchCreateHandler(
+        std::function<bool(SketchTool, const QPointF&, const QPointF&)> handler);
     [[nodiscard]] Mode mode() const noexcept { return mode_; }
 
 signals:
@@ -58,7 +63,9 @@ private:
     std::optional<QPointF> pendingPoint_;
     QPointF hoverPoint_;
     int selectedEntity_{-1};
+    int degreesOfFreedom_{0};
     QString transientRelation_;
+    std::function<bool(SketchTool, const QPointF&, const QPointF&)> sketchCreateHandler_;
 };
 
 } // namespace voelund::preview

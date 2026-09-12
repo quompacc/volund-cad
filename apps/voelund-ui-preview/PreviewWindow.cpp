@@ -2,6 +2,10 @@
 
 #include "PreviewCanvas.hpp"
 #include "PreviewIcons.hpp"
+#include "SketchBackend.hpp"
+
+#include <voelund/application/CadSession.hpp>
+#include <voelund/document/ModelDocument.hpp>
 
 #include <QCheckBox>
 #include <QComboBox>
@@ -12,6 +16,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QSignalBlocker>
 #include <QScrollArea>
 #include <QSizePolicy>
 #include <QStackedWidget>
@@ -56,8 +61,8 @@ QFrame* separator()
 
 } // namespace
 
-PreviewWindow::PreviewWindow(QWidget* parent)
-    : QMainWindow(parent)
+PreviewWindow::PreviewWindow(application::CadSession& session, QWidget* parent)
+    : QMainWindow(parent), session_(session), sketchBackend_(std::make_unique<SketchBackend>(session))
 {
     setObjectName(QStringLiteral("uiPreviewWindow"));
     setWindowTitle(QStringLiteral("Völund — Design Preview"));
@@ -90,6 +95,12 @@ PreviewWindow::PreviewWindow(QWidget* parent)
     auto* overlayLayout = new QGridLayout(canvasLayer);
     overlayLayout->setContentsMargins(0, 0, 0, 0);
     canvas_ = new PreviewCanvas;
+    canvas_->setSketchCreateHandler([this](PreviewCanvas::SketchTool tool, const QPointF& first,
+                                           const QPointF& second) {
+        const bool added = sketchBackend_->add(tool, first, second);
+        statusText_->setText(sketchBackend_->lastMessage());
+        return added;
+    });
     overlayLayout->addWidget(canvas_, 0, 0);
 
     inspectorStack_ = new QStackedWidget;
@@ -111,10 +122,17 @@ PreviewWindow::PreviewWindow(QWidget* parent)
         statusText_->setText(QStringLiteral("Selected: %1").arg(selection));
     });
     connect(canvas_, &PreviewCanvas::sketchStatusChanged, this, [this](const QString& status) {
-        statusText_->setText(QStringLiteral("Sketch 01  ·  %1").arg(status));
+        const int freedom = sketchBackend_->degreesOfFreedom();
+        canvas_->setDegreesOfFreedom(freedom);
+        statusText_->setText(QStringLiteral("Sketch 01  ·  %1  ·  %2 DOF").arg(status).arg(freedom));
+        if (sketchStateLabel_ != nullptr)
+            sketchStateLabel_->setText(QStringLiteral("●  Under-constrained  ·  %1 DOF").arg(freedom));
     });
+    refreshBrowser();
     setWorkspaceTab(QStringLiteral("SOLID"));
 }
+
+PreviewWindow::~PreviewWindow() = default;
 
 bool PreviewWindow::smokeTestPassed() const
 {
@@ -274,16 +292,13 @@ QWidget* PreviewWindow::createBrowser()
     browserTree_ = new QTreeWidget;
     browserTree_->setObjectName(QStringLiteral("modelBrowser"));
     browserTree_->setHeaderHidden(true);
-    auto* root = new QTreeWidgetItem(browserTree_, {QStringLiteral("◉  Bracket Assembly")});
-    auto* settings = new QTreeWidgetItem(root, {QStringLiteral("⚙  Document Settings")});
-    auto* origin = new QTreeWidgetItem(root, {QStringLiteral("◇  Origin")});
-    auto* body = new QTreeWidgetItem(root, {QStringLiteral("▣  Body")});
-    new QTreeWidgetItem(body, {QStringLiteral("◇  Sketch 01")});
-    auto* pad = new QTreeWidgetItem(body, {QStringLiteral("▦  Pad 01")});
-    new QTreeWidgetItem(body, {QStringLiteral("◇  Sketch 02")});
-    new QTreeWidgetItem(body, {QStringLiteral("▦  Fillet 01")});
-    root->setExpanded(true); body->setExpanded(true); pad->setSelected(true);
-    settings->setForeground(0, QColor("#92998D")); origin->setForeground(0, QColor("#92998D"));
+    connect(browserTree_, &QTreeWidget::currentItemChanged, this,
+            [this](QTreeWidgetItem* item, QTreeWidgetItem*) {
+                if (item == nullptr || !item->data(0, Qt::UserRole).isValid()) return;
+                static_cast<void>(session_.selectFeature(
+                    document::FeatureId{item->data(0, Qt::UserRole).toULongLong()}));
+                statusText_->setText(QStringLiteral("Selected: %1").arg(item->text(0)));
+            });
     layout->addWidget(browserTree_, 1);
     auto* comments = new QPushButton(QStringLiteral("○  Comments")); comments->setProperty("class", QStringLiteral("secondary"));
     layout->addWidget(comments);
@@ -333,8 +348,9 @@ QWidget* PreviewWindow::createSketchInspector()
     auto* projected = new QCheckBox(QStringLiteral("Projected geometry")); projected->setChecked(true);
     layout->addWidget(autoConstraints); layout->addWidget(grid); layout->addWidget(dimensions); layout->addWidget(projected);
     layout->addWidget(separator());
-    auto* state = new QLabel(QStringLiteral("●  Under-constrained  ·  4 DOF"));
-    state->setStyleSheet(QStringLiteral("color:#F1B54D;font-weight:600;")); layout->addWidget(state);
+    sketchStateLabel_ = new QLabel(QStringLiteral("●  Under-constrained  ·  0 DOF"));
+    sketchStateLabel_->setStyleSheet(QStringLiteral("color:#F1B54D;font-weight:600;"));
+    layout->addWidget(sketchStateLabel_);
     auto* finish = new QPushButton(QStringLiteral("Finish Sketch")); finish->setProperty("class", QStringLiteral("primary"));
     connect(finish, &QPushButton::clicked, this, &PreviewWindow::finishSketch); layout->addWidget(finish);
     return page;
@@ -412,6 +428,11 @@ QWidget* PreviewWindow::createCard(const QString& title, const QList<QWidget*>& 
 
 void PreviewWindow::enterSketch()
 {
+    if (!sketchBackend_->begin()) {
+        statusText_->setText(sketchBackend_->lastMessage());
+        return;
+    }
+    canvas_->resetSketch();
     ribbonStack_->setCurrentIndex(1);
     inspectorStack_->setCurrentIndex(1);
     canvas_->setMode(PreviewCanvas::Mode::Sketch);
@@ -422,12 +443,18 @@ void PreviewWindow::enterSketch()
 
 void PreviewWindow::finishSketch()
 {
+    if (sketchBackend_->active() && !sketchBackend_->finish()) {
+        statusText_->setText(sketchBackend_->lastMessage());
+        return;
+    }
     ribbonStack_->setCurrentIndex(0);
     inspectorStack_->setCurrentIndex(0);
     canvas_->setMode(PreviewCanvas::Mode::Solid);
     sketchWorkspaceTab_->hide();
     setWorkspaceTab(QStringLiteral("SOLID"));
-    statusText_->setText(QStringLiteral("Sketch 01 finished  ·  Ready"));
+    refreshBrowser();
+    statusText_->setText(sketchBackend_->lastMessage().isEmpty()
+        ? QStringLiteral("Sketch finished  ·  Ready") : sketchBackend_->lastMessage());
 }
 
 void PreviewWindow::activateExtrude()
@@ -452,6 +479,32 @@ void PreviewWindow::setWorkspaceTab(const QString& activeName)
         tab->setProperty("active", tab->text() == activeName);
         refreshStyle(tab);
     }
+}
+
+void PreviewWindow::refreshBrowser()
+{
+    if (browserTree_ == nullptr) return;
+    const QSignalBlocker blocker(browserTree_);
+    browserTree_->clear();
+    auto* root = new QTreeWidgetItem(browserTree_, {QStringLiteral("◉  Völund Design")});
+    auto* settings = new QTreeWidgetItem(root, {QStringLiteral("⚙  Document Settings")});
+    auto* origin = new QTreeWidgetItem(root, {QStringLiteral("◇  Origin")});
+    auto* body = new QTreeWidgetItem(root, {QStringLiteral("▣  Body")});
+    settings->setForeground(0, QColor("#92998D"));
+    origin->setForeground(0, QColor("#92998D"));
+    const auto selected = session_.selectedFeature();
+    for (const auto& feature : session_.features()) {
+        QString icon = QStringLiteral("▦");
+        if (feature.kind == document::FeatureKind::sketch) icon = QStringLiteral("◇");
+        else if (feature.kind == document::FeatureKind::cylinder) icon = QStringLiteral("○");
+        else if (feature.kind == document::FeatureKind::extrusion) icon = QStringLiteral("▥");
+        auto* item = new QTreeWidgetItem(body, {
+            QStringLiteral("%1  %2").arg(icon, QString::fromStdString(feature.name))});
+        item->setData(0, Qt::UserRole, QVariant::fromValue<qulonglong>(feature.id.value()));
+        if (selected == feature.id) browserTree_->setCurrentItem(item);
+    }
+    root->setExpanded(true);
+    body->setExpanded(true);
 }
 
 void PreviewWindow::refreshStyle(QWidget* widget)
