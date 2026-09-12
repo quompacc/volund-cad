@@ -411,6 +411,51 @@ bool pointLockAndPointOnObjectDriveEditorGeometry() {
            std::abs(cross) <= 1.0e-7;
 }
 
+bool equalAndTangentRelationsDriveEditorGeometry() {
+    using namespace voelund;
+    application::CadSession session;
+    session.newDocument();
+    const auto support = session.addBoxFeature();
+    application::SketchEditorSession editor(session, support, plane);
+    if (!add(editor, {0.0, 0.0}, {4.0, 0.0}, 1) || !add(editor, {0.0, 5.0}, {2.0, 5.0}, 2) ||
+        !editor.selectNearestReference(document::SketchElementId{1}, {0.0, 0.0}, false) ||
+        !editor.selectNearestReference(document::SketchElementId{2}, {0.0, 5.0}, true) ||
+        !editor.canAddSelectedRelation(document::SketchConstraintKind::equal) ||
+        editor.canAddSelectedRelation(document::SketchConstraintKind::tangent) ||
+        !editor.addSelectedRelation(document::SketchConstraintKind::equal))
+        return false;
+    const auto& firstLine = std::get<document::SketchLine>(editor.elements()[0].geometry);
+    const auto& secondLine = std::get<document::SketchLine>(editor.elements()[1].geometry);
+    if (std::abs(
+            std::hypot(firstLine.end.x - firstLine.start.x, firstLine.end.y - firstLine.start.y) -
+            std::hypot(secondLine.end.x - secondLine.start.x,
+                       secondLine.end.y - secondLine.start.y)) > 1.0e-7)
+        return false;
+
+    editor.setTool(application::SketchDrawingTool::circle);
+    if (!add(editor, {8.0, 3.0}, {10.0, 3.0}, 3) || !add(editor, {14.0, 3.0}, {17.0, 3.0}, 4) ||
+        !editor.selectNearestReference(document::SketchElementId{3}, {8.0, 3.0}, false) ||
+        !editor.selectNearestReference(document::SketchElementId{4}, {14.0, 3.0}, true) ||
+        !editor.canAddSelectedRelation(document::SketchConstraintKind::equal) ||
+        !editor.canAddSelectedRelation(document::SketchConstraintKind::tangent) ||
+        !editor.addSelectedRelation(document::SketchConstraintKind::equal))
+        return false;
+    const auto& firstCircle = std::get<document::SketchCircle>(editor.elements()[2].geometry);
+    const auto& secondCircle = std::get<document::SketchCircle>(editor.elements()[3].geometry);
+    if (std::abs(firstCircle.radius - secondCircle.radius) > 1.0e-7)
+        return false;
+
+    const auto linePoint = std::get<document::SketchLine>(editor.elements()[0].geometry).start;
+    const auto circlePoint = std::get<document::SketchCircle>(editor.elements()[2].geometry).center;
+    if (!editor.selectNearestReference(document::SketchElementId{1}, linePoint, false) ||
+        !editor.selectNearestReference(document::SketchElementId{3}, circlePoint, true) ||
+        editor.canAddSelectedRelation(document::SketchConstraintKind::equal) ||
+        !editor.canAddSelectedRelation(document::SketchConstraintKind::tangent) ||
+        !editor.addSelectedRelation(document::SketchConstraintKind::tangent))
+        return false;
+    return editor.lastSolveResult().status == features::SketchSolveStatus::success;
+}
+
 } // namespace
 
 int main() {
@@ -468,6 +513,10 @@ int main() {
     }
     if (!pointLockAndPointOnObjectDriveEditorGeometry()) {
         std::cerr << "Point locking or point-on-object editor flow failed\n";
+        return 1;
+    }
+    if (!equalAndTangentRelationsDriveEditorGeometry()) {
+        std::cerr << "Equal or tangent editor relation failed\n";
         return 1;
     }
     return 0;

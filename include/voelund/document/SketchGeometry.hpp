@@ -102,7 +102,9 @@ enum class SketchConstraintKind {
     perpendicular,
     coordinateX,
     coordinateY,
-    pointOnObject
+    pointOnObject,
+    equal,
+    tangent
 };
 
 struct SketchGeometryReference final {

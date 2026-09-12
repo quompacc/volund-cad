@@ -102,6 +102,71 @@ bool adapterLocksPointsAndPlacesThemOnLinesAndCircles() {
            close(std::hypot(second.x - circle.center.x, second.y - circle.center.y), circle.radius);
 }
 
+bool adapterMakesLengthsAndRadiiEqual() {
+    using namespace voelund::document;
+    SketchParameters sketch{
+        plane(),
+        {{{SketchElementId{1}, SketchLine{{0.0, 0.0}, {5.0, 0.0}}},
+          {SketchElementId{2}, SketchLine{{0.0, 3.0}, {2.0, 3.0}}},
+          {SketchElementId{3}, SketchCircle{{10.0, 0.0}, 2.0}},
+          {SketchElementId{4}, SketchCircle{{15.0, 0.0}, 4.0}}},
+         5},
+        {{{SketchConstraintId{1}, SketchConstraintKind::equal, lineRef(1), lineRef(2), 0.0},
+          {SketchConstraintId{2},
+           SketchConstraintKind::equal,
+           {SketchElementId{3}, SketchPointPosition::center},
+           SketchGeometryReference{SketchElementId{4}, SketchPointPosition::center},
+           0.0}},
+         3}};
+
+    const auto result = voelund::features::solveSketchConstraints(sketch);
+    const auto& firstLine = std::get<SketchLine>(sketch.elements.values[0].geometry);
+    const auto& secondLine = std::get<SketchLine>(sketch.elements.values[1].geometry);
+    const auto& firstCircle = std::get<SketchCircle>(sketch.elements.values[2].geometry);
+    const auto& secondCircle = std::get<SketchCircle>(sketch.elements.values[3].geometry);
+    return result.status == voelund::features::SketchSolveStatus::success &&
+           close(
+               std::hypot(firstLine.end.x - firstLine.start.x, firstLine.end.y - firstLine.start.y),
+               std::hypot(secondLine.end.x - secondLine.start.x,
+                          secondLine.end.y - secondLine.start.y)) &&
+           close(firstCircle.radius, secondCircle.radius);
+}
+
+bool adapterMakesLinesAndCirclesTangent() {
+    using namespace voelund::document;
+    SketchParameters sketch{
+        plane(),
+        {{{SketchElementId{1}, SketchLine{{0.0, 0.0}, {10.0, 0.0}}},
+          {SketchElementId{2}, SketchCircle{{5.0, 3.0}, 2.0}},
+          {SketchElementId{3}, SketchCircle{{14.0, 0.0}, 2.0}},
+          {SketchElementId{4}, SketchCircle{{19.0, 0.0}, 1.0}}},
+         5},
+        {{{SketchConstraintId{1}, SketchConstraintKind::tangent, lineRef(1),
+           SketchGeometryReference{SketchElementId{2}, SketchPointPosition::center}, 0.0},
+          {SketchConstraintId{2},
+           SketchConstraintKind::tangent,
+           {SketchElementId{3}, SketchPointPosition::center},
+           SketchGeometryReference{SketchElementId{4}, SketchPointPosition::center},
+           0.0}},
+         3}};
+
+    const auto result = voelund::features::solveSketchConstraints(sketch);
+    const auto& line = std::get<SketchLine>(sketch.elements.values[0].geometry);
+    const auto& circle = std::get<SketchCircle>(sketch.elements.values[1].geometry);
+    const auto& firstCircle = std::get<SketchCircle>(sketch.elements.values[2].geometry);
+    const auto& secondCircle = std::get<SketchCircle>(sketch.elements.values[3].geometry);
+    const double lineX = line.end.x - line.start.x;
+    const double lineY = line.end.y - line.start.y;
+    const double cross =
+        lineX * (circle.center.y - line.start.y) - lineY * (circle.center.x - line.start.x);
+    const double lineDistance = std::abs(cross) / std::hypot(lineX, lineY);
+    const double centerDistance = std::hypot(secondCircle.center.x - firstCircle.center.x,
+                                             secondCircle.center.y - firstCircle.center.y);
+    return result.status == voelund::features::SketchSolveStatus::success &&
+           close(lineDistance, circle.radius) &&
+           close(centerDistance, firstCircle.radius + secondCircle.radius);
+}
+
 } // namespace
 
 int main() {
@@ -115,6 +180,14 @@ int main() {
     }
     if (!adapterLocksPointsAndPlacesThemOnLinesAndCircles()) {
         std::cerr << "Völund point constraint adapter failed\n";
+        return 1;
+    }
+    if (!adapterMakesLengthsAndRadiiEqual()) {
+        std::cerr << "Völund equal constraint adapter failed\n";
+        return 1;
+    }
+    if (!adapterMakesLinesAndCirclesTangent()) {
+        std::cerr << "Völund tangent constraint adapter failed\n";
         return 1;
     }
     return 0;

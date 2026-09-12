@@ -145,6 +145,27 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
             else
                 static_cast<void>(
                     system.addConstraintPointOnCircle(source, circles.at(targetId)->circle, tag));
+        } else if (constraint.kind == document::SketchConstraintKind::equal) {
+            const auto secondId = constraint.second->element.value();
+            if (firstLine)
+                static_cast<void>(system.addConstraintEqualLength(firstLine->line,
+                                                                  lines.at(secondId)->line, tag));
+            else
+                static_cast<void>(system.addConstraintEqualRadius(
+                    circles.at(constraint.first.element.value())->circle,
+                    circles.at(secondId)->circle, tag));
+        } else if (constraint.kind == document::SketchConstraintKind::tangent) {
+            const auto firstId = constraint.first.element.value();
+            const auto secondId = constraint.second->element.value();
+            if (lines.contains(firstId))
+                static_cast<void>(system.addConstraintTangent(lines.at(firstId)->line,
+                                                              circles.at(secondId)->circle, tag));
+            else if (lines.contains(secondId))
+                static_cast<void>(system.addConstraintTangent(lines.at(secondId)->line,
+                                                              circles.at(firstId)->circle, tag));
+            else
+                static_cast<void>(system.addConstraintTangent(circles.at(firstId)->circle,
+                                                              circles.at(secondId)->circle, tag));
         } else {
             LineState& secondLine = *lines.at(constraint.second->element.value());
             if (constraint.kind == document::SketchConstraintKind::parallel)

@@ -161,6 +161,10 @@ SketchConstraintKind readConstraintKind(std::istringstream& line) {
         return SketchConstraintKind::coordinateY;
     if (value == "POINT_ON_OBJECT")
         return SketchConstraintKind::pointOnObject;
+    if (value == "EQUAL")
+        return SketchConstraintKind::equal;
+    if (value == "TANGENT")
+        return SketchConstraintKind::tangent;
     invalidDocument("unknown sketch constraint kind");
 }
 
@@ -186,6 +190,10 @@ const char* constraintKindName(SketchConstraintKind kind) {
         return "COORDINATE_Y";
     case SketchConstraintKind::pointOnObject:
         return "POINT_ON_OBJECT";
+    case SketchConstraintKind::equal:
+        return "EQUAL";
+    case SketchConstraintKind::tangent:
+        return "TANGENT";
     }
     return "HORIZONTAL";
 }
@@ -456,7 +464,7 @@ ParsedFeature readFeature(const std::string& source,
 void DocumentSerializer::write(const ModelDocument& document, std::ostream& output) {
     output.imbue(std::locale::classic());
     output << std::setprecision(std::numeric_limits<double>::max_digits10);
-    output << "VOLUND 6\nNEXT_ID " << document.nextFeatureId_ << "\nFEATURES "
+    output << "VOLUND 7\nNEXT_ID " << document.nextFeatureId_ << "\nFEATURES "
            << document.features_.size() << '\n';
     for (std::size_t index = 0; index < document.features_.size(); ++index) {
         const FeatureDescriptor& feature = document.features_[index];
@@ -546,6 +554,7 @@ ModelDocument DocumentSerializer::read(std::istream& input) {
                                   : header == "VOLUND 4" ? 4
                                   : header == "VOLUND 5" ? 5
                                   : header == "VOLUND 6" ? 6
+                                  : header == "VOLUND 7" ? 7
                                                          : 0;
     if (version == 0) {
         invalidDocument("unsupported file header or version");

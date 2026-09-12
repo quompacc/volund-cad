@@ -55,6 +55,10 @@ std::string constraintLabel(const features::SketchConstraintAnnotation& annotati
         return "[Y]";
     if (annotation.kind == document::SketchConstraintKind::pointOnObject)
         return "[O]";
+    if (annotation.kind == document::SketchConstraintKind::equal)
+        return "[=]";
+    if (annotation.kind == document::SketchConstraintKind::tangent)
+        return "[T]";
     std::ostringstream label;
     label << (annotation.kind == document::SketchConstraintKind::radius ? "R " : "L ") << std::fixed
           << std::setprecision(3) << annotation.value << " mm";
@@ -132,6 +136,8 @@ void SketchEditorToolController::showPanel() {
          {"coincident", QObject::tr("Make selected endpoints coincident")},
          {"parallel", QObject::tr("Make selected lines parallel")},
          {"perpendicular", QObject::tr("Make selected lines perpendicular")},
+         {"equal", QObject::tr("Make selected lengths or radii equal")},
+         {"tangent", QObject::tr("Make selected objects tangent")},
          {"point_on_object", QObject::tr("Put first selected point on second object")},
          {"lock_point", QObject::tr("Lock selected point")},
          {"unlock_point", QObject::tr("Unlock selected point")},
@@ -160,6 +166,10 @@ void SketchEditorToolController::showPanel() {
                 applyRelation(document::SketchConstraintKind::parallel);
             } else if (id == "perpendicular") {
                 applyRelation(document::SketchConstraintKind::perpendicular);
+            } else if (id == "equal") {
+                applyRelation(document::SketchConstraintKind::equal);
+            } else if (id == "tangent") {
+                applyRelation(document::SketchConstraintKind::tangent);
             } else if (id == "point_on_object") {
                 applyRelation(document::SketchConstraintKind::pointOnObject);
             } else if (id == "lock_point") {
@@ -314,11 +324,12 @@ void SketchEditorToolController::applyRelation(document::SketchConstraintKind ki
     syncConstraintState();
     refreshPresentation();
     const char* text =
-        kind == document::SketchConstraintKind::coincident ? "Coincident constraint added"
-        : kind == document::SketchConstraintKind::parallel ? "Parallel constraint added"
-        : kind == document::SketchConstraintKind::perpendicular
-            ? "Perpendicular constraint added"
-            : "Point-on-object constraint added";
+        kind == document::SketchConstraintKind::coincident      ? "Coincident constraint added"
+        : kind == document::SketchConstraintKind::parallel      ? "Parallel constraint added"
+        : kind == document::SketchConstraintKind::perpendicular ? "Perpendicular constraint added"
+        : kind == document::SketchConstraintKind::equal         ? "Equal constraint added"
+        : kind == document::SketchConstraintKind::tangent       ? "Tangent constraint added"
+                                                          : "Point-on-object constraint added";
     statusChanged_(QObject::tr(text));
 }
 
@@ -410,6 +421,10 @@ void SketchEditorToolController::syncConstraintState() {
         "parallel", editor_->canAddSelectedRelation(document::SketchConstraintKind::parallel));
     panel_.setActionEnabled("perpendicular", editor_->canAddSelectedRelation(
                                                  document::SketchConstraintKind::perpendicular));
+    panel_.setActionEnabled("equal",
+                            editor_->canAddSelectedRelation(document::SketchConstraintKind::equal));
+    panel_.setActionEnabled(
+        "tangent", editor_->canAddSelectedRelation(document::SketchConstraintKind::tangent));
     panel_.setActionEnabled("point_on_object", editor_->canAddSelectedRelation(
                                                    document::SketchConstraintKind::pointOnObject));
     panel_.setActionEnabled("lock_point", editor_->canLockSelectedReference());

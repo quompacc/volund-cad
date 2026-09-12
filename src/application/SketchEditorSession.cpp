@@ -416,60 +416,6 @@ bool SketchEditorSession::setSelectedLineConstraint(document::SketchLineConstrai
     return false;
 }
 
-bool SketchEditorSession::canAddSelectedRelation(
-    document::SketchConstraintKind kind) const noexcept {
-    if (!active_ || selectedReferences_.size() != 2 ||
-        (kind != document::SketchConstraintKind::coincident &&
-         kind != document::SketchConstraintKind::parallel &&
-         kind != document::SketchConstraintKind::perpendicular &&
-         kind != document::SketchConstraintKind::pointOnObject))
-        return false;
-    const auto& first = selectedReferences_[0];
-    const auto& second = selectedReferences_[1];
-    if (first == second)
-        return false;
-    if (kind == document::SketchConstraintKind::pointOnObject) {
-        if (first.element == second.element)
-            return false;
-        const auto sourceElement =
-            std::ranges::find(elements_.values, first.element, &document::SketchElement::id);
-        const auto targetElement =
-            std::ranges::find(elements_.values, second.element, &document::SketchElement::id);
-        return sourceElement != elements_.values.end() && targetElement != elements_.values.end() &&
-               (std::holds_alternative<document::SketchLine>(sourceElement->geometry) ||
-                std::holds_alternative<document::SketchCircle>(sourceElement->geometry)) &&
-               (std::holds_alternative<document::SketchLine>(targetElement->geometry) ||
-                std::holds_alternative<document::SketchCircle>(targetElement->geometry));
-    }
-    if (kind != document::SketchConstraintKind::coincident) {
-        if (first.element == second.element)
-            return false;
-        const auto firstElement =
-            std::ranges::find(elements_.values, first.element, &document::SketchElement::id);
-        const auto secondElement =
-            std::ranges::find(elements_.values, second.element, &document::SketchElement::id);
-        if (firstElement == elements_.values.end() || secondElement == elements_.values.end() ||
-            !std::holds_alternative<document::SketchLine>(firstElement->geometry) ||
-            !std::holds_alternative<document::SketchLine>(secondElement->geometry))
-            return false;
-    }
-    return true;
-}
-
-bool SketchEditorSession::addSelectedRelation(document::SketchConstraintKind kind) {
-    if (!canAddSelectedRelation(kind))
-        return false;
-    const auto& first = selectedReferences_[0];
-    const auto& second = selectedReferences_[1];
-    constraints_.values.push_back(
-        {document::SketchConstraintId{constraints_.nextId++}, kind, first, second, 0.0});
-    document::SketchParameters sketch{plane_, elements_, constraints_};
-    lastSolveResult_ = features::solveSketchConstraints(sketch);
-    if (lastSolveResult_.status == features::SketchSolveStatus::success)
-        elements_ = std::move(sketch.elements);
-    return true;
-}
-
 bool SketchEditorSession::removeLastConstraint() {
     if (!active_ || constraints_.values.empty())
         return false;

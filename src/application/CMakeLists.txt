@@ -3,6 +3,7 @@ add_library(voelund_application STATIC
     CadSessionSketchProfiles.cpp
     SketchEditorDimensions.cpp
     SketchEditorPointConstraints.cpp
+    SketchEditorRelations.cpp
     SketchEditorRectangle.cpp
     SketchEditorSession.cpp
 )

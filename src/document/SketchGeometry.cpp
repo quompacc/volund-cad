@@ -143,6 +143,27 @@ void validateSketchConstraints(const SketchElements& elements,
                      !std::holds_alternative<SketchCircle>(target)))
                     throw std::invalid_argument(
                         "Point-on-object constraint needs a different line or circle");
+            } else if (constraint.kind == SketchConstraintKind::equal) {
+                const SketchGeometry& first = findElement(constraint.first.element).geometry;
+                const SketchGeometry& second = findElement(constraint.second->element).geometry;
+                if (constraint.first.element == constraint.second->element ||
+                    first.index() != second.index() ||
+                    (!std::holds_alternative<SketchLine>(first) &&
+                     !std::holds_alternative<SketchCircle>(first)))
+                    throw std::invalid_argument(
+                        "Equal constraint needs two different lines or two different circles");
+            } else if (constraint.kind == SketchConstraintKind::tangent) {
+                const SketchGeometry& first = findElement(constraint.first.element).geometry;
+                const SketchGeometry& second = findElement(constraint.second->element).geometry;
+                const bool firstLine = std::holds_alternative<SketchLine>(first);
+                const bool secondLine = std::holds_alternative<SketchLine>(second);
+                const bool firstCircle = std::holds_alternative<SketchCircle>(first);
+                const bool secondCircle = std::holds_alternative<SketchCircle>(second);
+                if (constraint.first.element == constraint.second->element ||
+                    !((firstLine && secondCircle) || (firstCircle && secondLine) ||
+                      (firstCircle && secondCircle)))
+                    throw std::invalid_argument(
+                        "Tangent constraint needs a line and circle or two circles");
             } else {
                 requireLine(constraint.first);
                 requireLine(*constraint.second);
