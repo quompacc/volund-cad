@@ -366,6 +366,15 @@ std::size_t CadViewport::displayedSketchConstraintCount() const noexcept {
     return impl_->sketchConstraintPresentation.size();
 }
 
+std::pair<int, int> CadViewport::renderingPixelSize() const noexcept {
+    if (!impl_->ready || impl_->view->Window().IsNull())
+        return {0, 0};
+    int width = 0;
+    int height = 0;
+    impl_->view->Window()->Size(width, height);
+    return {width, height};
+}
+
 void CadViewport::initializeGL() {
     try {
         const auto fallback = static_cast<std::uintptr_t>(effectiveWinId());
@@ -395,6 +404,15 @@ void CadViewport::paintGL() {
     qtgl::resetStateBeforeOcct(impl_->view);
     impl_->view->Redraw();
     qtgl::resetStateAfterOcct(impl_->view);
+}
+
+void CadViewport::resizeGL(int width, int height) {
+    static_cast<void>(width);
+    static_cast<void>(height);
+    if (impl_->ready) {
+        impl_->view->MustBeResized();
+        impl_->view->Invalidate();
+    }
 }
 
 void CadViewport::mouseMoveEvent(QMouseEvent* event) {

@@ -191,11 +191,13 @@ class CadViewport final : public CadViewportBase {
     [[nodiscard]] bool isRenderingReady() const noexcept;
     [[nodiscard]] std::size_t displayedSketchElementCount() const noexcept;
     [[nodiscard]] std::size_t displayedSketchConstraintCount() const noexcept;
+    [[nodiscard]] std::pair<int, int> renderingPixelSize() const noexcept;
 
   protected:
 #if defined(VOELUND_VIEWPORT_QT_OPENGL)
     void initializeGL() override;
     void paintGL() override;
+    void resizeGL(int width, int height) override;
 #else
     [[nodiscard]] QPaintEngine* paintEngine() const override;
     void paintEvent(QPaintEvent* event) override;

@@ -23,6 +23,7 @@
 #include <QResizeEvent>
 #include <QRubberBand>
 #include <QShowEvent>
+#include <QTimer>
 #include <QWheelEvent>
 #include <Quantity_Color.hxx>
 #include <Quantity_TypeOfColor.hxx>
@@ -113,6 +114,15 @@ class CadViewport::Impl final {
         attachTransformTarget();
     }
 
+    void resize() {
+        if (view.IsNull() || window.IsNull())
+            return;
+        window->DoResize();
+        view->MustBeResized();
+        view->Invalidate();
+        view->Redraw();
+    }
+
     void attachTransformTarget() {
         manipulator.detach();
         if (!manipulator.isEnabled() || !transformTarget.has_value()) {
@@ -185,6 +195,15 @@ std::size_t CadViewport::displayedSketchElementCount() const noexcept {
 
 std::size_t CadViewport::displayedSketchConstraintCount() const noexcept {
     return impl_->sketchConstraintPresentation.size();
+}
+
+std::pair<int, int> CadViewport::renderingPixelSize() const noexcept {
+    if (impl_->window.IsNull())
+        return {0, 0};
+    int width = 0;
+    int height = 0;
+    impl_->window->Size(width, height);
+    return {width, height};
 }
 
 void CadViewport::setShape(const TopoDS_Shape& shape) {
@@ -383,14 +402,14 @@ void CadViewport::paintEvent(QPaintEvent* event) {
 
 void CadViewport::resizeEvent(QResizeEvent* event) {
     QWidget::resizeEvent(event);
-    if (!impl_->view.IsNull()) {
-        impl_->view->MustBeResized();
-    }
+    impl_->resize();
 }
 
 void CadViewport::showEvent(QShowEvent* event) {
     QWidget::showEvent(event);
     impl_->initialize(static_cast<std::uintptr_t>(winId()));
+    impl_->resize();
+    QTimer::singleShot(0, this, [this]() { impl_->resize(); });
 }
 
 void CadViewport::mouseMoveEvent(QMouseEvent* event) {

@@ -14,6 +14,7 @@
 #include <QSurfaceFormat>
 #include <QTimer>
 
+#include <cmath>
 #include <vector>
 
 int main(int argc, char* argv[]) {
@@ -105,6 +106,19 @@ int main(int argc, char* argv[]) {
                 QCoreApplication::processEvents();
                 if (viewport->displayedSketchElementCount() != smokeSketchElements.size() ||
                     viewport->displayedSketchConstraintCount() != smokeSketchConstraints.size()) {
+                    QCoreApplication::exit(1);
+                    return;
+                }
+
+                mainWindow.resize(mainWindow.width() + 173, mainWindow.height() + 119);
+                QCoreApplication::processEvents();
+                const auto [renderWidth, renderHeight] = viewport->renderingPixelSize();
+                const int expectedWidth =
+                    static_cast<int>(std::lround(viewport->width() * viewport->devicePixelRatioF()));
+                const int expectedHeight = static_cast<int>(
+                    std::lround(viewport->height() * viewport->devicePixelRatioF()));
+                if (std::abs(renderWidth - expectedWidth) > 1 ||
+                    std::abs(renderHeight - expectedHeight) > 1) {
                     QCoreApplication::exit(1);
                     return;
                 }
