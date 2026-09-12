@@ -423,11 +423,27 @@ bool multipleSketchElementsExtrudeAllClosedProfiles() {
          voelund::document::SketchLine{{17.0, 17.0}, {19.0, 17.0}}}};
     const voelund::document::SketchParameters sketch{
         plane, voelund::document::SketchElements{elements, 7}};
-    static_cast<void>(session.addSketchExtrusion(boxId, sketch, 10.0));
+    const auto extrusionId = session.addSketchExtrusion(boxId, sketch, 10.0);
     const double expected = boxVolume + (36.0 + std::numbers::pi * 4.0 + 8.0) * 10.0;
     if (session.featureStates().back().status !=
             voelund::application::FeatureRuntimeStatus::current ||
         std::abs(volumeOf(session.currentShape()) - expected) >= 1.0e-4) {
+        return false;
+    }
+    const auto sketchId = session.features()[1].id;
+    if (!session.selectFeature(sketchId)) {
+        return false;
+    }
+    const auto evaluatedElements = session.selectedSketchElements();
+    if (evaluatedElements.size() != elements.size()
+        || std::ranges::any_of(
+            evaluatedElements,
+            [](const auto& element) { return element.shape.IsNull(); })
+        || !session.selectSketchElement(voelund::document::SketchElementId{4})
+        || session.selectedSketchElement() != voelund::document::SketchElementId{4}
+        || session.selectSketchElement(voelund::document::SketchElementId{99})
+        || !session.selectFeature(extrusionId)
+        || session.selectedSketchElement().has_value()) {
         return false;
     }
     const std::filesystem::path path =

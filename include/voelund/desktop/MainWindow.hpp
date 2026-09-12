@@ -34,6 +34,7 @@ private:
     void syncModelTree();
     void syncProperties();
     void syncTreeStatus();
+    void syncSketchPresentation();
     void syncTransformTool();
     void refreshScene();
     void applyBoxParameters();

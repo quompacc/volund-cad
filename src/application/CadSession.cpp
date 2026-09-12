@@ -72,6 +72,14 @@ std::optional<document::FeatureId> placementOwner(const document::ModelDocument&
     }
 }
 
+bool isFeatureKind(const document::ModelDocument& document, document::FeatureId featureId,
+                   document::FeatureKind kind) noexcept {
+    const auto descriptors = document.features();
+    const auto descriptor =
+        std::ranges::find(descriptors, featureId, &document::FeatureDescriptor::id);
+    return descriptor != descriptors.end() && descriptor->kind == kind;
+}
+
 } // namespace
 
 CadSession::CadSession() {
@@ -164,8 +172,36 @@ bool CadSession::selectFeature(document::FeatureId featureId) noexcept {
     if (!document_.contains(featureId)) {
         return false;
     }
+    if (selectedFeature_ != featureId) {
+        selectedSketchElement_.reset();
+    }
     selectedFeature_ = featureId;
     return true;
+}
+
+std::optional<document::SketchElementId> CadSession::selectedSketchElement() const noexcept {
+    return selectedSketchElement_;
+}
+
+bool CadSession::selectSketchElement(document::SketchElementId elementId) noexcept {
+    if (!selectedFeature_.has_value() ||
+        !isFeatureKind(document_, *selectedFeature_, document::FeatureKind::sketch)) {
+        return false;
+    }
+    const auto& elements = document_.sketchParameters(*selectedFeature_).elements.values;
+    if (std::ranges::find(elements, elementId, &document::SketchElement::id) == elements.end()) {
+        return false;
+    }
+    selectedSketchElement_ = elementId;
+    return true;
+}
+
+const document::SketchParameters& CadSession::selectedSketchParameters() const {
+    return document_.sketchParameters(selectedFeature_.value());
+}
+
+std::vector<features::EvaluatedSketchElement> CadSession::selectedSketchElements() const {
+    return features::evaluateSketchElements(selectedSketchParameters());
 }
 
 bool CadSession::canTransformFeature(document::FeatureId featureId) const noexcept {
@@ -345,6 +381,7 @@ void CadSession::newDocument() {
     currentBodies_.clear();
     currentFeatures_.clear();
     selectedFeature_.reset();
+    selectedSketchElement_.reset();
     markFeaturesCurrent();
     cleanDocumentState_ = serializedDocument();
 }
@@ -381,6 +418,7 @@ void CadSession::loadDocument(const std::filesystem::path& path) {
     currentFeatures_ = std::move(result.features);
     selectedFeature_ = document_.features().empty() ? std::optional<document::FeatureId>{}
                                                     : document_.features().back().id;
+    selectedSketchElement_.reset();
     markFeaturesCurrent();
     cleanDocumentState_ = serializedDocument();
 }
@@ -438,8 +476,21 @@ void CadSession::markFeatureError(document::FeatureId featureId, const std::stri
 
 void CadSession::normalizeSelection() noexcept {
     if (selectedFeature_.has_value() && document_.contains(*selectedFeature_)) {
+        if (!selectedSketchElement_.has_value()) {
+            return;
+        }
+        if (isFeatureKind(document_, *selectedFeature_, document::FeatureKind::sketch)) {
+            const auto& elements = document_.sketchParameters(*selectedFeature_).elements.values;
+            if (std::ranges::find(
+                    elements, *selectedSketchElement_, &document::SketchElement::id)
+                != elements.end()) {
+                return;
+            }
+        }
+        selectedSketchElement_.reset();
         return;
     }
+    selectedSketchElement_.reset();
     selectedFeature_ = document_.features().empty() ? std::optional<document::FeatureId>{}
                                                     : document_.features().back().id;
 }

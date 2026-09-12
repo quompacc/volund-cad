@@ -24,13 +24,20 @@ faces. The application layer offers both the retained rectangle convenience comm
 and the general multi-element command. Viewport and desktop continue to implement the
 tested two-click rectangle workflow without duplicating profile semantics.
 
+Selecting a sketch feature evaluates each element into a separate presentation shape.
+The viewport receives only the shape and stable element ID, owns the AIS presentation
+and picking lifecycle, and reports selection intent back to the application. A selected
+element is highlighted independently of the supporting body and identified in the
+properties area. Both Windows viewport backends and the FreeBSD Wayland backend use
+the same presentation component.
+
 Rectangles and circles each form a closed profile. Connected line chains form a
 profile when at least three non-degenerate elements close within the modeling
 tolerance. Open elements remain valid sketch geometry but are ignored by extrusion.
 An extrusion requires at least one closed profile and currently consumes all closed
-profiles in the sketch. Profile selection, persistent profile IDs, element rendering
-and element picking are intentionally reserved for the next editor slice; the stable
-element IDs and profile-to-element mapping are already suitable for those boundaries.
+profiles in the sketch. Profile selection and persistent profile IDs are intentionally
+reserved for a later editor slice; the stable element IDs and profile-to-element
+mapping are already suitable for those boundaries.
 
 ## File format version 2
 

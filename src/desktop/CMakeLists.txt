@@ -6,6 +6,7 @@ add_library(
     MeasurementInput.cpp
     ModelTreePanel.cpp
     SketchExtrusionToolController.cpp
+    SketchViewAdapter.cpp
     ToolPanelHost.cpp
     WorkspaceToolbar.cpp
 )

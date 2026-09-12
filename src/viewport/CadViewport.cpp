@@ -2,6 +2,7 @@
 
 #include "NativeOcctWindow.hpp"
 #include "SketchInteraction.hpp"
+#include "SketchPresentation.hpp"
 #include "TransformManipulator.hpp"
 #include "ViewportHighlightStyle.hpp"
 
@@ -78,6 +79,7 @@ public:
             return;
         }
         manipulator.detach();
+        sketchPresentation.clear(context);
 
         const bool isFirstShape = presentations.empty();
         for (const BodyPresentation& presentation : presentations) {
@@ -92,6 +94,7 @@ public:
             context->Activate(presentation, AIS_Shape::SelectionMode(TopAbs_FACE));
             presentations.push_back(BodyPresentation{body.id, presentation, body.transformable});
         }
+        sketchPresentation.setElements(context, pendingSketchElements, selectedSketchElement);
         attachTransformTarget();
         if (isFirstShape) {
             view->FitAll(0.08, false);
@@ -134,12 +137,16 @@ public:
     occ::handle<V3d_View> view;
     TransformManipulator manipulator;
     SketchInteraction sketch;
+    SketchPresentation sketchPresentation;
     occ::handle<Aspect_Window> window;
     std::vector<BodyPresentation> presentations;
     std::vector<SceneBody> pendingBodies;
+    std::vector<SceneSketchElement> pendingSketchElements;
+    std::optional<std::uint64_t> selectedSketchElement;
     std::function<void(std::uint64_t)> bodySelectionHandler;
     std::function<void(const PlanarFaceSelection&)> planarFaceSelectionHandler;
     std::function<void(const SketchRectangleResult&)> sketchRectangleHandler;
+    std::function<void(std::uint64_t)> sketchElementSelectionHandler;
     std::optional<std::uint64_t> transformTarget;
     QPoint gestureOrigin;
     Gesture gesture{Gesture::none};
@@ -165,6 +172,11 @@ bool CadViewport::isRenderingReady() const noexcept
     return !impl_->view.IsNull();
 }
 
+std::size_t CadViewport::displayedSketchElementCount() const noexcept
+{
+    return impl_->sketchPresentation.size();
+}
+
 void CadViewport::setShape(const TopoDS_Shape& shape)
 {
     const SceneBody body{0, shape, false};
@@ -175,6 +187,34 @@ void CadViewport::setBodies(std::span<const SceneBody> bodies)
 {
     impl_->pendingBodies.assign(bodies.begin(), bodies.end());
     impl_->displayPendingBodies();
+}
+
+void CadViewport::setSketchElements(
+    std::span<const SceneSketchElement> elements,
+    std::optional<std::uint64_t> selectedId)
+{
+    impl_->pendingSketchElements.assign(elements.begin(), elements.end());
+    impl_->selectedSketchElement = selectedId;
+    impl_->sketchPresentation.setElements(
+        impl_->context, impl_->pendingSketchElements, selectedId);
+    if (!impl_->view.IsNull()) {
+        impl_->view->Redraw();
+    }
+}
+
+void CadViewport::setSketchElementSelectionHandler(
+    std::function<void(std::uint64_t)> handler)
+{
+    impl_->sketchElementSelectionHandler = std::move(handler);
+}
+
+void CadViewport::setSelectedSketchElement(std::optional<std::uint64_t> elementId)
+{
+    impl_->selectedSketchElement = elementId;
+    impl_->sketchPresentation.select(impl_->context, elementId);
+    if (!impl_->view.IsNull()) {
+        impl_->view->Redraw();
+    }
 }
 
 void CadViewport::setTransformTarget(std::optional<std::uint64_t> bodyId)
@@ -360,6 +400,14 @@ void CadViewport::mousePressEvent(QMouseEvent* event)
             setCursor(Qt::ClosedHandCursor);
             return;
         }
+        if (const auto elementId = impl_->sketchPresentation.detectedElement(detected)) {
+            impl_->sketchPresentation.select(impl_->context, elementId);
+            if (impl_->sketchElementSelectionHandler) {
+                impl_->sketchElementSelectionHandler(*elementId);
+            }
+            impl_->view->Redraw();
+            return;
+        }
         for (const Impl::BodyPresentation& presentation : impl_->presentations) {
             if (presentation.shape != detected) {
                 continue;
@@ -396,6 +444,12 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event)
         if (impl_->context->HasDetected()) {
             const occ::handle<AIS_InteractiveObject> detected =
                 impl_->context->DetectedInteractive();
+            if (impl_->sketchPresentation.detectedElement(detected).has_value()) {
+                impl_->gesture = Impl::Gesture::none;
+                unsetCursor();
+                impl_->view->Redraw();
+                return;
+            }
             for (const Impl::BodyPresentation& presentation : impl_->presentations) {
                 if (presentation.shape == detected && impl_->bodySelectionHandler) {
                     impl_->bodySelectionHandler(presentation.id);

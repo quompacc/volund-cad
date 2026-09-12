@@ -10,6 +10,7 @@
 
 #include <TopoDS_Shape.hxx>
 
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -29,6 +30,11 @@ struct SceneBody final {
     std::uint64_t id;
     TopoDS_Shape shape;
     bool transformable;
+};
+
+struct SceneSketchElement final {
+    std::uint64_t id;
+    TopoDS_Shape shape;
 };
 
 struct PlanarFaceSelection final {
@@ -66,6 +72,12 @@ public:
 
     void setShape(const TopoDS_Shape& shape);
     void setBodies(std::span<const SceneBody> bodies);
+    void setSketchElements(
+        std::span<const SceneSketchElement> elements,
+        std::optional<std::uint64_t> selectedId = std::nullopt);
+    void setSketchElementSelectionHandler(
+        std::function<void(std::uint64_t)> handler);
+    void setSelectedSketchElement(std::optional<std::uint64_t> elementId);
     void setBodySelectionHandler(std::function<void(std::uint64_t)> handler);
     void setPlanarFaceSelectionHandler(
         std::function<void(const PlanarFaceSelection&)> handler);
@@ -87,6 +99,7 @@ public:
     void setTransformTarget(std::optional<std::uint64_t> bodyId);
     void setTransformSnapping(bool enabled, double linearStep, double angularStep);
     [[nodiscard]] bool isRenderingReady() const noexcept;
+    [[nodiscard]] std::size_t displayedSketchElementCount() const noexcept;
 
 protected:
 #if defined(VOELUND_VIEWPORT_QT_OPENGL)

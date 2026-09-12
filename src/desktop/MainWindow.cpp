@@ -5,6 +5,7 @@
 #include "MeasurementInput.hpp"
 #include "ModelTreePanel.hpp"
 #include "SketchExtrusionToolController.hpp"
+#include "SketchViewAdapter.hpp"
 #include "ToolPanelHost.hpp"
 #include "WorkspaceToolbar.hpp"
 
@@ -154,6 +155,7 @@ MainWindow::MainWindow(application::CadSession& session, QWidget* parent)
     connectInteractions();
     syncProperties();
     syncTreeStatus();
+    syncSketchPresentation();
     resize(1200, 800);
 }
 
@@ -321,6 +323,13 @@ void MainWindow::connectInteractions()
     impl_->viewport->setSketchExtrusionPreviewHandler([this](double distance) {
         impl_->sketchExtrusionTool->updateDistancePreview(distance);
     });
+    impl_->viewport->setSketchElementSelectionHandler([this](std::uint64_t id) {
+        if (impl_->session.selectSketchElement(document::SketchElementId{id})) {
+            impl_->viewport->setSelectedSketchElement(id);
+            syncProperties();
+            statusBar()->showMessage(tr("Sketch element selected"), 2000);
+        }
+    });
     impl_->viewport->setBodyMoveHandler(
         [this](std::uint64_t id, double deltaX, double deltaY, double deltaZ) {
             if (!selectTransformFeatureForBody(
@@ -427,7 +436,7 @@ void MainWindow::syncProperties()
             featureErrorText(impl_->session, feature.id));
     } else {
         const QString title = feature.kind == document::FeatureKind::sketch
-            ? tr("Sketch rectangle")
+            ? sketchSelectionSummary(impl_->session)
             : tr("Feature");
         impl_->propertyPanel->showFeatureInfo(
             title, featureErrorText(impl_->session, feature.id));
@@ -441,6 +450,18 @@ void MainWindow::syncProperties()
 void MainWindow::syncTreeStatus()
 {
     impl_->modelTree->showStatuses(impl_->session.featureStates());
+}
+
+void MainWindow::syncSketchPresentation()
+{
+    const std::vector<viewport::SceneSketchElement> elements =
+        makeSceneSketchElements(impl_->session);
+    const auto selected = impl_->session.selectedSketchElement();
+    impl_->viewport->setSketchElements(
+        elements,
+        selected.has_value()
+            ? std::optional<std::uint64_t>{selected->value()}
+            : std::nullopt);
 }
 
 void MainWindow::syncTransformTool()
@@ -472,6 +493,7 @@ void MainWindow::refreshScene()
     syncModelTree();
     syncProperties();
     syncTreeStatus();
+    syncSketchPresentation();
 }
 
 void MainWindow::applyBoxParameters()
@@ -566,6 +588,7 @@ void MainWindow::selectFeature(std::uint64_t rawId)
     }
     impl_->modelTree->selectFeature(id);
     syncProperties();
+    syncSketchPresentation();
 }
 
 } // namespace voelund::desktop

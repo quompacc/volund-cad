@@ -34,6 +34,10 @@ gehören nicht zum Produktpfad.
 - Sketches besitzen ein allgemeines parametrisches Datenmodell mit stabilen lokalen
   IDs für Linien, Rechtecke und Kreise. Mehrere Elemente und mehrere geschlossene
   Profile werden erkannt und gemeinsam extrudiert; offene Elemente bleiben erhalten.
+- Wird ein Sketch im Modellbaum ausgewählt, stellt der Viewport alle enthaltenen
+  Elemente als getrennte OCCT-Präsentationen dar. Linien, Rechtecke und Kreise sind
+  über ihre stabilen Element-IDs einzeln pickbar; die Auswahl wird farblich und im
+  Eigenschaftenbereich angezeigt.
 - Neue Dateien verwenden `VOLUND 2`; bestehende `VOLUND 1`-Rechtecksketches werden
   beim Laden verlustfrei auf das neue Elementmodell migriert.
 - Ein temporäres generisches Tool-Panel bietet Parameter, Live-Vorschau, OK und
@@ -105,10 +109,9 @@ erzwungener Wayland-QPA weiterhin ruhende ELF-Kanten zu `libX11` und `libGLX`.
 Der vollständige parametrische Sketch-Modus wird mit dem nächsten Editor-Slice
 fortgesetzt:
 
-1. Darstellung und Auswahl mehrerer Sketch-Elemente;
-2. Erzeugen und Bearbeiten von Linien, Rechtecken und Kreisen im Sketch-Editor;
-3. Maße und geometrische Constraints;
-4. stabile Profilidentitäten und freie Auswahl eines oder mehrerer Profile für
+1. Erzeugen und Bearbeiten von Linien, Rechtecken und Kreisen im Sketch-Editor;
+2. Maße und geometrische Constraints;
+3. stabile Profilidentitäten und freie Auswahl eines oder mehrerer Profile für
    nachfolgende Extrusionen.
 
 Der direkte Push/Pull-Ablauf bleibt dabei als schneller Weg erhalten. Er ist eine

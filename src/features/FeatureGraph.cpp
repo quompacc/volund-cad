@@ -3,23 +3,13 @@
 #include <voelund/document/ModelDocument.hpp>
 #include <voelund/features/BoxFeature.hpp>
 #include <voelund/features/CylinderFeature.hpp>
-#include <voelund/features/SketchProfiles.hpp>
+#include <voelund/features/SketchEvaluation.hpp>
 #include <voelund/kernel/ShapeFactory.hpp>
 #include <voelund/kernel/ShapeOperations.hpp>
 
-#include <BRepBuilderAPI_MakeEdge.hxx>
-#include <BRepBuilderAPI_MakeFace.hxx>
-#include <BRepBuilderAPI_MakePolygon.hxx>
-#include <BRepBuilderAPI_MakeWire.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
 #include <BRepPrimAPI_MakePrism.hxx>
-#include <BRep_Builder.hxx>
-#include <GC_MakeCircle.hxx>
-#include <TopoDS_Compound.hxx>
 #include <algorithm>
-#include <gp_Circ.hxx>
-#include <gp_Dir.hxx>
-#include <gp_Pnt.hxx>
 #include <gp_Trsf.hxx>
 #include <gp_Vec.hxx>
 #include <stdexcept>
@@ -122,89 +112,11 @@ void evaluateCylinder(const document::ModelDocument& document,
     referenceInputBody = EvaluatedBody{descriptor.id, referenceResult};
 }
 
-gp_Pnt sketchPoint(const document::SketchPlane& plane, double x, double y) {
-    const gp_Dir normal(plane.normalX, plane.normalY, plane.normalZ);
-    const gp_Dir xDirection(plane.xDirectionX, plane.xDirectionY, plane.xDirectionZ);
-    const gp_Dir yDirection = normal.Crossed(xDirection);
-    return gp_Pnt(plane.originX, plane.originY, plane.originZ)
-        .Translated(gp_Vec(xDirection) * x + gp_Vec(yDirection) * y);
-}
-
-const document::SketchElement& findElement(const document::SketchParameters& sketch,
-                                           document::SketchElementId id) {
-    const auto match = std::ranges::find(sketch.elements.values, id, &document::SketchElement::id);
-    if (match == sketch.elements.values.end()) {
-        throw std::runtime_error("Sketch profile references an unknown element");
-    }
-    return *match;
-}
-
-TopoDS_Face rectangleFace(const document::SketchParameters& sketch,
-                          const document::SketchRectangle& rectangle) {
-    BRepBuilderAPI_MakePolygon polygon;
-    polygon.Add(sketchPoint(sketch.plane, rectangle.first.x, rectangle.first.y));
-    polygon.Add(sketchPoint(sketch.plane, rectangle.second.x, rectangle.first.y));
-    polygon.Add(sketchPoint(sketch.plane, rectangle.second.x, rectangle.second.y));
-    polygon.Add(sketchPoint(sketch.plane, rectangle.first.x, rectangle.second.y));
-    polygon.Close();
-    return BRepBuilderAPI_MakeFace(polygon.Wire()).Face();
-}
-
-TopoDS_Face circleFace(const document::SketchParameters& sketch,
-                       const document::SketchCircle& circle) {
-    const gp_Pnt center = sketchPoint(sketch.plane, circle.center.x, circle.center.y);
-    const gp_Dir normal(sketch.plane.normalX, sketch.plane.normalY, sketch.plane.normalZ);
-    const gp_Circ curve = GC_MakeCircle(center, normal, circle.radius).Value()->Circ();
-    const TopoDS_Edge edge = BRepBuilderAPI_MakeEdge(curve).Edge();
-    return BRepBuilderAPI_MakeFace(BRepBuilderAPI_MakeWire(edge).Wire()).Face();
-}
-
-TopoDS_Face lineProfileFace(const document::SketchParameters& sketch,
-                            const SketchProfile& profile) {
-    BRepBuilderAPI_MakePolygon polygon;
-    std::optional<document::SketchPoint> current;
-    for (document::SketchElementId id : profile.elementIds) {
-        const auto& line = std::get<document::SketchLine>(findElement(sketch, id).geometry);
-        if (!current.has_value()) {
-            polygon.Add(sketchPoint(sketch.plane, line.start.x, line.start.y));
-            current = line.end;
-        } else if (std::hypot(current->x - line.start.x, current->y - line.start.y) < 1.0e-8) {
-            current = line.end;
-        } else {
-            current = line.start;
-        }
-        polygon.Add(sketchPoint(sketch.plane, current->x, current->y));
-    }
-    polygon.Close();
-    return BRepBuilderAPI_MakeFace(polygon.Wire()).Face();
-}
-
-TopoDS_Face profileFace(const document::SketchParameters& sketch, const SketchProfile& profile) {
-    const document::SketchGeometry& first =
-        findElement(sketch, profile.elementIds.front()).geometry;
-    if (const auto* rectangle = std::get_if<document::SketchRectangle>(&first)) {
-        return rectangleFace(sketch, *rectangle);
-    }
-    if (const auto* circle = std::get_if<document::SketchCircle>(&first)) {
-        return circleFace(sketch, *circle);
-    }
-    return lineProfileFace(sketch, profile);
-}
-
 void evaluateSketch(const document::ModelDocument& document,
                     const document::FeatureDescriptor& descriptor,
                     std::vector<EvaluatedFeature>& outputs) {
     const document::SketchParameters& parameters = document.sketchParameters(descriptor.id);
-    const std::vector<SketchProfile> profiles = detectClosedProfiles(parameters.elements.values);
-    if (profiles.empty()) {
-        throw std::runtime_error("Sketch does not contain a closed profile");
-    }
-    TopoDS_Compound faces;
-    BRep_Builder builder;
-    builder.MakeCompound(faces);
-    for (const SketchProfile& profile : profiles) {
-        builder.Add(faces, profileFace(parameters, profile));
-    }
+    const TopoDS_Shape faces = evaluateSketchProfileFaces(parameters);
     outputs.push_back(EvaluatedFeature{descriptor.id, faces, faces});
 }
 

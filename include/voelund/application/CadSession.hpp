@@ -2,6 +2,7 @@
 
 #include <voelund/document/ModelDocument.hpp>
 #include <voelund/features/FeatureGraph.hpp>
+#include <voelund/features/SketchEvaluation.hpp>
 
 #include <filesystem>
 #include <optional>
@@ -28,6 +29,12 @@ class CadSession final {
     [[nodiscard]] std::span<const document::FeatureDescriptor> features() const noexcept;
     [[nodiscard]] std::optional<document::FeatureId> selectedFeature() const noexcept;
     [[nodiscard]] bool selectFeature(document::FeatureId featureId) noexcept;
+    [[nodiscard]] std::optional<document::SketchElementId>
+    selectedSketchElement() const noexcept;
+    [[nodiscard]] bool selectSketchElement(document::SketchElementId elementId) noexcept;
+    [[nodiscard]] const document::SketchParameters& selectedSketchParameters() const;
+    [[nodiscard]] std::vector<features::EvaluatedSketchElement>
+    selectedSketchElements() const;
     [[nodiscard]] document::FeatureId addBoxFeature();
     [[nodiscard]] document::FeatureId addCylinderFeature(
         document::CylinderResultMode resultMode = document::CylinderResultMode::separate);
@@ -82,6 +89,7 @@ class CadSession final {
     std::vector<features::EvaluatedBody> currentBodies_;
     std::vector<features::EvaluatedFeature> currentFeatures_;
     std::optional<document::FeatureId> selectedFeature_{document::ModelDocument::initialBoxId()};
+    std::optional<document::SketchElementId> selectedSketchElement_;
     std::vector<FeatureRuntimeState> featureStates_;
     std::string cleanDocumentState_;
 };

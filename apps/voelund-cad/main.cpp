@@ -1,6 +1,7 @@
 #include <voelund/application/CadSession.hpp>
 #include <voelund/desktop/MainWindow.hpp>
 #include <voelund/document/ModelDocument.hpp>
+#include <voelund/features/SketchEvaluation.hpp>
 #include <voelund/viewport/CadViewport.hpp>
 
 #include <QApplication>
@@ -12,6 +13,8 @@
 #include <QMouseEvent>
 #include <QSurfaceFormat>
 #include <QTimer>
+
+#include <vector>
 
 int main(int argc, char* argv[])
 {
@@ -46,6 +49,21 @@ int main(int argc, char* argv[])
         static_cast<void>(session.selectFeature(
             voelund::document::ModelDocument::initialBoxId()));
     }
+    std::vector<voelund::viewport::SceneSketchElement> smokeSketchElements;
+    if (isSmokeTest) {
+        const voelund::document::SketchParameters sketch{
+            {0.0, 0.0, 25.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0},
+            {{{voelund::document::SketchElementId{1},
+               voelund::document::SketchRectangle{0.0, 0.0, 5.0, 4.0}},
+              {voelund::document::SketchElementId{2},
+               voelund::document::SketchCircle{{8.0, 2.0}, 1.5}},
+              {voelund::document::SketchElementId{3},
+               voelund::document::SketchLine{{0.0, 7.0}, {5.0, 7.0}}}},
+             4}};
+        for (const auto& element : voelund::features::evaluateSketchElements(sketch)) {
+            smokeSketchElements.push_back({element.id.value(), element.shape});
+        }
+    }
     voelund::desktop::MainWindow mainWindow(session);
     mainWindow.show();
 
@@ -55,7 +73,7 @@ int main(int argc, char* argv[])
         smokeElapsed.start();
         smokeTimer.setInterval(50);
         QObject::connect(&smokeTimer, &QTimer::timeout, &application,
-                         [&mainWindow, &smokeTimer, &smokeElapsed]() {
+                         [&mainWindow, &smokeTimer, &smokeElapsed, &smokeSketchElements]() {
             auto* viewport =
                 dynamic_cast<voelund::viewport::CadViewport*>(mainWindow.centralWidget());
             if (viewport == nullptr) {
@@ -82,6 +100,12 @@ int main(int argc, char* argv[])
             smokeTimer.stop();
             transformAction->trigger();
             QCoreApplication::processEvents();
+            viewport->setSketchElements(smokeSketchElements, 2);
+            QCoreApplication::processEvents();
+            if (viewport->displayedSketchElementCount() != smokeSketchElements.size()) {
+                QCoreApplication::exit(1);
+                return;
+            }
 
             // A click in empty space must be harmless even though OCCT has no detected owner.
             const QPointF localPosition(1.0, 1.0);
