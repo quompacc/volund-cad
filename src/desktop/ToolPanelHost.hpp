@@ -48,15 +48,17 @@ struct ToolPanelDefinition final {
 };
 
 class ToolPanelHost final : public QDockWidget {
-public:
+  public:
     explicit ToolPanelHost(QWidget* parent = nullptr);
 
     void begin(ToolPanelDefinition definition);
     void end();
     void setAcceptEnabled(bool enabled);
     void setLengthValue(const std::string& parameterId, double value);
+    void setLengthEnabled(const std::string& parameterId, bool enabled);
+    void setActionEnabled(const std::string& actionId, bool enabled);
 
-private:
+  private:
     void clearParameters();
 
     QWidget* content_{nullptr};
@@ -66,6 +68,7 @@ private:
     QPushButton* cancelButton_{nullptr};
     std::vector<std::pair<std::string, QDoubleSpinBox*>> lengthInputs_;
     std::vector<std::pair<std::string, QComboBox*>> choiceInputs_;
+    std::vector<std::pair<std::string, QPushButton*>> actionInputs_;
     ToolPanelDefinition definition_;
 };
 

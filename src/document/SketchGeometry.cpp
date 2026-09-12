@@ -23,6 +23,14 @@ void validateGeometry(const SketchGeometry& geometry) {
             squaredDistance(line->start, line->end) <= minimumLength * minimumLength) {
             throw std::invalid_argument("Sketch line must have finite, distinct endpoints");
         }
+        if (line->constraint == SketchLineConstraint::horizontal &&
+            std::abs(line->end.y - line->start.y) > minimumLength) {
+            throw std::invalid_argument("Horizontal sketch line constraint is not satisfied");
+        }
+        if (line->constraint == SketchLineConstraint::vertical &&
+            std::abs(line->end.x - line->start.x) > minimumLength) {
+            throw std::invalid_argument("Vertical sketch line constraint is not satisfied");
+        }
         return;
     }
     if (const auto* rectangle = std::get_if<SketchRectangle>(&geometry)) {

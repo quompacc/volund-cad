@@ -93,6 +93,27 @@ const char* resultModeName(CylinderResultMode mode) {
     return "JOIN";
 }
 
+SketchLineConstraint readLineConstraint(std::istringstream& line) {
+    std::string constraint;
+    if (!(line >> constraint))
+        invalidDocument("missing sketch line constraint");
+    if (constraint == "FREE")
+        return SketchLineConstraint::none;
+    if (constraint == "HORIZONTAL")
+        return SketchLineConstraint::horizontal;
+    if (constraint == "VERTICAL")
+        return SketchLineConstraint::vertical;
+    invalidDocument("unknown sketch line constraint");
+}
+
+const char* lineConstraintName(SketchLineConstraint constraint) {
+    if (constraint == SketchLineConstraint::horizontal)
+        return "HORIZONTAL";
+    if (constraint == SketchLineConstraint::vertical)
+        return "VERTICAL";
+    return "FREE";
+}
+
 void writeTransform(std::ostream& output, const kernel::RigidTransform& transform) {
     output << ' ' << transform.translationX << ' ' << transform.translationY << ' '
            << transform.translationZ << ' ' << transform.rotationX << ' ' << transform.rotationY
@@ -211,6 +232,8 @@ ParsedFeature readSketchFeature(FeatureId id, std::string name, std::istringstre
                 SketchLine value{};
                 if (!(elementLine >> value.start.x >> value.start.y >> value.end.x >> value.end.y))
                     invalidDocument("malformed sketch line");
+                if (context.version >= 3)
+                    value.constraint = readLineConstraint(elementLine);
                 geometry = value;
             } else if (kind == "RECTANGLE") {
                 SketchRectangle value{};
@@ -278,8 +301,8 @@ ParsedFeature readFeature(const std::string& source,
         return readCylinderFeature(id, std::move(name), line, previousFeatures);
     }
     if (kind == "SKETCH") {
-        return readSketchFeature(
-            id, std::move(name), line, SketchReadContext{previousFeatures, input, version});
+        return readSketchFeature(id, std::move(name), line,
+                                 SketchReadContext{previousFeatures, input, version});
     }
     if (kind == "EXTRUSION") {
         return readExtrusionFeature(id, std::move(name), line, previousFeatures);
@@ -292,7 +315,7 @@ ParsedFeature readFeature(const std::string& source,
 void DocumentSerializer::write(const ModelDocument& document, std::ostream& output) {
     output.imbue(std::locale::classic());
     output << std::setprecision(std::numeric_limits<double>::max_digits10);
-    output << "VOLUND 2\nNEXT_ID " << document.nextFeatureId_ << "\nFEATURES "
+    output << "VOLUND 3\nNEXT_ID " << document.nextFeatureId_ << "\nFEATURES "
            << document.features_.size() << '\n';
     for (std::size_t index = 0; index < document.features_.size(); ++index) {
         const FeatureDescriptor& feature = document.features_[index];
@@ -329,7 +352,8 @@ void DocumentSerializer::write(const ModelDocument& document, std::ostream& outp
                 output << "ELEMENT ";
                 if (const auto* line = std::get_if<SketchLine>(&element.geometry)) {
                     output << "LINE " << element.id.value() << ' ' << line->start.x << ' '
-                           << line->start.y << ' ' << line->end.x << ' ' << line->end.y;
+                           << line->start.y << ' ' << line->end.x << ' ' << line->end.y << ' '
+                           << lineConstraintName(line->constraint);
                 } else if (const auto* rectangle =
                                std::get_if<SketchRectangle>(&element.geometry)) {
                     output << "RECTANGLE " << element.id.value() << ' ' << rectangle->first.x << ' '
@@ -358,7 +382,10 @@ void DocumentSerializer::write(const ModelDocument& document, std::ostream& outp
 ModelDocument DocumentSerializer::read(std::istream& input) {
     input.imbue(std::locale::classic());
     const std::string header = requiredLine(input, "file header");
-    const std::uint64_t version = header == "VOLUND 1" ? 1 : header == "VOLUND 2" ? 2 : 0;
+    const std::uint64_t version = header == "VOLUND 1"   ? 1
+                                  : header == "VOLUND 2" ? 2
+                                  : header == "VOLUND 3" ? 3
+                                                         : 0;
     if (version == 0) {
         invalidDocument("unsupported file header or version");
     }

@@ -54,8 +54,7 @@ may be selected, translated in sketch-local X/Y coordinates or deleted; newly ad
 elements continue from the persisted `nextId`. OK replaces the sketch parameters as
 one document transaction and recomputes downstream profiles and extrusions. Cancel
 discards every temporary edit. Undo/Redo and Save/Load therefore preserve both the
-edited geometry and the monotonic ID allocation. Dimensions, constraints and
-persistent profile selection remain later slices.
+edited geometry and the monotonic ID allocation.
 
 Within an active edit session, the selected element itself acts as a viewport grip.
 Dragging it projects pointer movement back into sketch-local coordinates, applies the
@@ -63,6 +62,20 @@ configured linear snap and reports only incremental translation intent to the
 application editor. The preview presentation and the numeric X/Y translation fields
 stay synchronized. Releasing the pointer ends only the gesture; OK or Cancel still
 owns the document transaction boundary.
+
+## First dimension and constraint slice
+
+A selected line exposes its exact length in the generic tool panel. Changing the
+length keeps the start point and current direction fixed and updates the temporary
+editor geometry immediately. Horizontal and vertical actions rotate the line about
+its start point while preserving that length. The resulting direction constraint is
+part of `SketchLine`, so later whole-element translation preserves it and OK commits
+the dimension and constraint together in one sketch transaction. Removing the
+direction constraint retains the current geometry.
+
+Only line length and line direction are covered by this first slice. Endpoint,
+coincident, parallel, perpendicular, rectangle and circle dimensions remain future
+constraint-system work. Persistent profile selection also remains a later slice.
 
 Rectangles and circles each form a closed profile. Connected line chains form a
 profile when at least three non-degenerate elements close within the modeling
@@ -72,13 +85,15 @@ profiles in the sketch. Profile selection and persistent profile IDs are intenti
 reserved for a later editor slice; the stable element IDs and profile-to-element
 mapping are already suitable for those boundaries.
 
-## File format version 2
+## File format version 3
 
-New saves use `VOLUND 2`. A sketch feature line stores its support, plane, element
+New saves use `VOLUND 3`. A sketch feature line stores its support, plane, element
 count and next element ID. Exactly that many following `ELEMENT` records store
-`LINE`, `RECTANGLE` or `CIRCLE` geometry and its stable ID.
+`LINE`, `RECTANGLE` or `CIRCLE` geometry and its stable ID. Line records additionally
+store `FREE`, `HORIZONTAL` or `VERTICAL` as their direction constraint.
 
-The reader continues to accept `VOLUND 1`. Its single inline rectangle is migrated in
-memory to a `RECTANGLE` element with ID 1 and next ID 2. Saving the loaded document
-writes version 2. Invalid, duplicate or zero element IDs, non-finite coordinates,
-degenerate elements and inconsistent next IDs are rejected while loading.
+The reader continues to accept `VOLUND 1` and `VOLUND 2`. A version-1 inline rectangle
+is migrated in memory to a `RECTANGLE` element with ID 1 and next ID 2; version-2 lines
+are migrated with a free direction. Saving either loaded document writes version 3.
+Invalid, duplicate or zero element IDs, non-finite coordinates, degenerate elements,
+inconsistent next IDs and unsatisfied line constraints are rejected while loading.

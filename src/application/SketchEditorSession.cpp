@@ -11,13 +11,13 @@
 
 namespace voelund::application {
 
-SketchEditorSession::SketchEditorSession(
-    CadSession& session, document::FeatureId supportFeature, document::SketchPlane plane)
+SketchEditorSession::SketchEditorSession(CadSession& session, document::FeatureId supportFeature,
+                                         document::SketchPlane plane)
     : session_(session), supportFeature_(supportFeature), plane_(plane) {}
 
-SketchEditorSession::SketchEditorSession(
-    CadSession& session, document::FeatureId sketchFeature,
-    document::FeatureId supportFeature, document::SketchParameters parameters)
+SketchEditorSession::SketchEditorSession(CadSession& session, document::FeatureId sketchFeature,
+                                         document::FeatureId supportFeature,
+                                         document::SketchParameters parameters)
     : session_(session), supportFeature_(supportFeature), plane_(parameters.plane),
       elements_(std::move(parameters.elements)), editingFeature_(sketchFeature) {
     document::validateSketchParameters({plane_, elements_});
@@ -30,8 +30,8 @@ void SketchEditorSession::setTool(SketchDrawingTool tool) noexcept {
 
 SketchDrawingTool SketchEditorSession::tool() const noexcept { return tool_; }
 
-document::SketchGeometry SketchEditorSession::geometry(
-    document::SketchPoint first, document::SketchPoint second) const {
+document::SketchGeometry SketchEditorSession::geometry(document::SketchPoint first,
+                                                       document::SketchPoint second) const {
     if (tool_ == SketchDrawingTool::line) {
         return document::SketchLine{first, second};
     }
@@ -41,8 +41,7 @@ document::SketchGeometry SketchEditorSession::geometry(
     return document::SketchCircle{first, std::hypot(second.x - first.x, second.y - first.y)};
 }
 
-bool SketchEditorSession::setPreview(
-    document::SketchPoint first, document::SketchPoint second) {
+bool SketchEditorSession::setPreview(document::SketchPoint first, document::SketchPoint second) {
     if (!active_) {
         return false;
     }
@@ -83,32 +82,110 @@ bool SketchEditorSession::selectElement(document::SketchElementId elementId) noe
 }
 
 bool SketchEditorSession::translateSelected(double deltaX, double deltaY) {
-    if (!active_ || !selectedElement_.has_value()
-        || !std::isfinite(deltaX) || !std::isfinite(deltaY)) return false;
-    const auto match = std::ranges::find(
-        elements_.values, *selectedElement_, &document::SketchElement::id);
-    if (match == elements_.values.end()) return false;
-    std::visit([deltaX, deltaY](auto& geometry) {
-        using Geometry = std::decay_t<decltype(geometry)>;
-        if constexpr (std::is_same_v<Geometry, document::SketchLine>) {
-            geometry.start.x += deltaX; geometry.start.y += deltaY;
-            geometry.end.x += deltaX; geometry.end.y += deltaY;
-        } else if constexpr (std::is_same_v<Geometry, document::SketchRectangle>) {
-            geometry.first.x += deltaX; geometry.first.y += deltaY;
-            geometry.second.x += deltaX; geometry.second.y += deltaY;
-        } else {
-            geometry.center.x += deltaX; geometry.center.y += deltaY;
-        }
-    }, match->geometry);
+    if (!active_ || !selectedElement_.has_value() || !std::isfinite(deltaX) ||
+        !std::isfinite(deltaY))
+        return false;
+    const auto match =
+        std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);
+    if (match == elements_.values.end())
+        return false;
+    std::visit(
+        [deltaX, deltaY](auto& geometry) {
+            using Geometry = std::decay_t<decltype(geometry)>;
+            if constexpr (std::is_same_v<Geometry, document::SketchLine>) {
+                geometry.start.x += deltaX;
+                geometry.start.y += deltaY;
+                geometry.end.x += deltaX;
+                geometry.end.y += deltaY;
+            } else if constexpr (std::is_same_v<Geometry, document::SketchRectangle>) {
+                geometry.first.x += deltaX;
+                geometry.first.y += deltaY;
+                geometry.second.x += deltaX;
+                geometry.second.y += deltaY;
+            } else {
+                geometry.center.x += deltaX;
+                geometry.center.y += deltaY;
+            }
+        },
+        match->geometry);
     document::validateSketchElements(elements_);
     return deltaX != 0.0 || deltaY != 0.0;
 }
 
+std::optional<double> SketchEditorSession::selectedLineLength() const noexcept {
+    if (!selectedElement_.has_value())
+        return std::nullopt;
+    const auto match =
+        std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);
+    if (match == elements_.values.end())
+        return std::nullopt;
+    const auto* line = std::get_if<document::SketchLine>(&match->geometry);
+    if (line == nullptr)
+        return std::nullopt;
+    return std::hypot(line->end.x - line->start.x, line->end.y - line->start.y);
+}
+
+std::optional<document::SketchLineConstraint>
+SketchEditorSession::selectedLineConstraint() const noexcept {
+    if (!selectedElement_.has_value())
+        return std::nullopt;
+    const auto match =
+        std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);
+    if (match == elements_.values.end())
+        return std::nullopt;
+    const auto* line = std::get_if<document::SketchLine>(&match->geometry);
+    return line == nullptr ? std::nullopt
+                           : std::optional<document::SketchLineConstraint>{line->constraint};
+}
+
+bool SketchEditorSession::setSelectedLineLength(double length) {
+    if (!active_ || !std::isfinite(length) || length <= 1.0e-9 || !selectedElement_.has_value())
+        return false;
+    const auto match =
+        std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);
+    if (match == elements_.values.end())
+        return false;
+    auto* line = std::get_if<document::SketchLine>(&match->geometry);
+    if (line == nullptr)
+        return false;
+    const double current = std::hypot(line->end.x - line->start.x, line->end.y - line->start.y);
+    const double scale = length / current;
+    line->end.x = line->start.x + (line->end.x - line->start.x) * scale;
+    line->end.y = line->start.y + (line->end.y - line->start.y) * scale;
+    document::validateSketchElements(elements_);
+    return length != current;
+}
+
+bool SketchEditorSession::setSelectedLineConstraint(document::SketchLineConstraint constraint) {
+    if (!active_ || !selectedElement_.has_value())
+        return false;
+    const auto match =
+        std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);
+    if (match == elements_.values.end())
+        return false;
+    auto* line = std::get_if<document::SketchLine>(&match->geometry);
+    if (line == nullptr || line->constraint == constraint)
+        return false;
+    const double length = std::hypot(line->end.x - line->start.x, line->end.y - line->start.y);
+    if (constraint == document::SketchLineConstraint::horizontal) {
+        const double direction = line->end.x < line->start.x ? -1.0 : 1.0;
+        line->end = {line->start.x + direction * length, line->start.y};
+    } else if (constraint == document::SketchLineConstraint::vertical) {
+        const double direction = line->end.y < line->start.y ? -1.0 : 1.0;
+        line->end = {line->start.x, line->start.y + direction * length};
+    }
+    line->constraint = constraint;
+    document::validateSketchElements(elements_);
+    return true;
+}
+
 bool SketchEditorSession::removeSelected() {
-    if (!active_ || !selectedElement_.has_value()) return false;
-    const auto match = std::ranges::find(
-        elements_.values, *selectedElement_, &document::SketchElement::id);
-    if (match == elements_.values.end()) return false;
+    if (!active_ || !selectedElement_.has_value())
+        return false;
+    const auto match =
+        std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);
+    if (match == elements_.values.end())
+        return false;
     elements_.values.erase(match);
     selectedElement_.reset();
     preview_.reset();
@@ -150,8 +227,8 @@ document::FeatureId SketchEditorSession::accept() {
     preview_.reset();
     const document::SketchParameters result = parameters(false);
     const document::FeatureId id = editingFeature_.has_value()
-        ? *editingFeature_
-        : session_.addSketchFeature(supportFeature_, result);
+                                       ? *editingFeature_
+                                       : session_.addSketchFeature(supportFeature_, result);
     if (editingFeature_.has_value()) {
         static_cast<void>(session_.setSketchParameters(id, result));
     }

@@ -24,9 +24,12 @@ struct SketchPoint final {
     [[nodiscard]] bool operator==(const SketchPoint&) const = default;
 };
 
+enum class SketchLineConstraint { none, horizontal, vertical };
+
 struct SketchLine final {
     SketchPoint start;
     SketchPoint end;
+    SketchLineConstraint constraint{SketchLineConstraint::none};
 
     [[nodiscard]] bool operator==(const SketchLine&) const = default;
 };

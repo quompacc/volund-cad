@@ -14,12 +14,11 @@ class CadSession;
 enum class SketchDrawingTool { line, rectangle, circle };
 
 class SketchEditorSession final {
-public:
+  public:
     SketchEditorSession(CadSession& session, document::FeatureId supportFeature,
                         document::SketchPlane plane);
     SketchEditorSession(CadSession& session, document::FeatureId sketchFeature,
-                        document::FeatureId supportFeature,
-                        document::SketchParameters parameters);
+                        document::FeatureId supportFeature, document::SketchParameters parameters);
 
     void setTool(SketchDrawingTool tool) noexcept;
     [[nodiscard]] SketchDrawingTool tool() const noexcept;
@@ -28,6 +27,11 @@ public:
     [[nodiscard]] std::optional<document::SketchElementId> confirmPreview();
     [[nodiscard]] bool selectElement(document::SketchElementId elementId) noexcept;
     [[nodiscard]] bool translateSelected(double deltaX, double deltaY);
+    [[nodiscard]] std::optional<double> selectedLineLength() const noexcept;
+    [[nodiscard]] std::optional<document::SketchLineConstraint>
+    selectedLineConstraint() const noexcept;
+    [[nodiscard]] bool setSelectedLineLength(double length);
+    [[nodiscard]] bool setSelectedLineConstraint(document::SketchLineConstraint constraint);
     [[nodiscard]] bool removeSelected();
     [[nodiscard]] std::optional<document::SketchElementId> selectedElement() const noexcept;
     [[nodiscard]] std::span<const document::SketchElement> elements() const noexcept;
@@ -38,9 +42,9 @@ public:
     void cancel() noexcept;
     [[nodiscard]] bool isActive() const noexcept;
 
-private:
-    [[nodiscard]] document::SketchGeometry geometry(
-        document::SketchPoint first, document::SketchPoint second) const;
+  private:
+    [[nodiscard]] document::SketchGeometry geometry(document::SketchPoint first,
+                                                    document::SketchPoint second) const;
     [[nodiscard]] document::SketchParameters parameters(bool includePreview) const;
 
     CadSession& session_;

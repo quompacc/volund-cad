@@ -7,18 +7,19 @@
 #include <memory>
 #include <optional>
 
-namespace voelund::application { class CadSession; }
+namespace voelund::application {
+class CadSession;
+}
 
 namespace voelund::desktop {
 
 class ToolPanelHost;
 
 class SketchEditorToolController final {
-public:
-    SketchEditorToolController(application::CadSession& session,
-        viewport::CadViewport& viewport, ToolPanelHost& panel,
-        std::function<void()> sceneChanged,
-        std::function<void(const QString&)> statusChanged);
+  public:
+    SketchEditorToolController(application::CadSession& session, viewport::CadViewport& viewport,
+                               ToolPanelHost& panel, std::function<void()> sceneChanged,
+                               std::function<void(const QString&)> statusChanged);
 
     void begin(const viewport::PlanarFaceSelection& support);
     [[nodiscard]] bool beginSelectedSketch();
@@ -29,11 +30,14 @@ public:
     [[nodiscard]] bool isActive() const noexcept;
     void cancel();
 
-private:
+  private:
     void setTool(int index);
     void applyTranslation(const std::string& id, double value);
+    void applyLineLength(double value);
+    void applyLineConstraint(document::SketchLineConstraint constraint);
     void removeSelected();
     void resetTranslationInputs();
+    void syncSelectedLineInputs();
     void showPanel();
     void refreshPresentation();
     void accept();

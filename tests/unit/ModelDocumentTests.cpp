@@ -134,7 +134,7 @@ bool sketchElementsKeepStableIdsThroughHistoryAndSerialization() {
     }
     std::ostringstream output;
     voelund::document::DocumentSerializer::write(document, output);
-    if (!output.str().starts_with("VOLUND 2\n"))
+    if (!output.str().starts_with("VOLUND 3\n"))
         return false;
     std::istringstream input(output.str());
     const auto loaded = voelund::document::DocumentSerializer::read(input);
@@ -142,6 +142,31 @@ bool sketchElementsKeepStableIdsThroughHistoryAndSerialization() {
     return elements.values.size() == 2 && elements.values[0].id.value() == 7 &&
            elements.values[1].id == circleId && elements.nextId == 9 &&
            std::holds_alternative<voelund::document::SketchCircle>(elements.values[1].geometry);
+}
+
+bool versionTwoLineMigratesWithoutConstraint() {
+    std::istringstream input("VOLUND 2\nNEXT_ID 3\nFEATURES 2\n"
+                             "BOX 1 \"Support\" 20 20 30 0 0 0 0 0 0\n"
+                             "SKETCH 2 \"Sketch\" 1 0 0 30 0 0 1 1 0 0 1 2\n"
+                             "ELEMENT LINE 1 0 0 3 4\n");
+    const auto loaded = voelund::document::DocumentSerializer::read(input);
+    const auto& geometry =
+        loaded.sketchParameters(voelund::document::FeatureId{2}).elements.values.front().geometry;
+    const auto& line = std::get<voelund::document::SketchLine>(geometry);
+    return line.constraint == voelund::document::SketchLineConstraint::none;
+}
+
+bool unsatisfiedLineConstraintIsRejected() {
+    std::istringstream input("VOLUND 3\nNEXT_ID 3\nFEATURES 2\n"
+                             "BOX 1 \"Support\" 20 20 30 0 0 0 0 0 0\n"
+                             "SKETCH 2 \"Sketch\" 1 0 0 30 0 0 1 1 0 0 1 2\n"
+                             "ELEMENT LINE 1 0 0 3 4 HORIZONTAL\n");
+    try {
+        static_cast<void>(voelund::document::DocumentSerializer::read(input));
+    } catch (const std::runtime_error&) {
+        return true;
+    }
+    return false;
 }
 
 bool legacySketchMigratesToStableRectangleElement() {
@@ -207,6 +232,14 @@ int main() {
     }
     if (!legacySketchMigratesToStableRectangleElement()) {
         std::cerr << "Legacy sketch migration test failed\n";
+        return 1;
+    }
+    if (!versionTwoLineMigratesWithoutConstraint()) {
+        std::cerr << "Version two sketch constraint migration failed\n";
+        return 1;
+    }
+    if (!unsatisfiedLineConstraintIsRejected()) {
+        std::cerr << "Unsatisfied sketch line constraint was accepted\n";
         return 1;
     }
     if (!invalidSketchGeometryIsRejected()) {

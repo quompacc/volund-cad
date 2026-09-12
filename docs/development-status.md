@@ -57,8 +57,12 @@ gehören nicht zum Produktpfad.
   gezogen werden. Die Bewegung wird auf die Sketchebene projiziert, verwendet das
   lineare Raster und synchronisiert die X/Y-Livewerte. Der Drag verändert weiterhin
   nur den temporären Editorzustand; erst OK schreibt die Transaktion.
-- Neue Dateien verwenden `VOLUND 2`; bestehende `VOLUND 1`-Rechtecksketches werden
-  beim Laden verlustfrei auf das neue Elementmodell migriert.
+- Für ausgewählte Linien ist die exakte Länge im Tool-Panel editierbar. Horizontale
+  und vertikale Richtungsconstraints richten die Linie längenerhaltend um ihren
+  Startpunkt aus, bleiben beim Verschieben aktiv und werden mit Undo/Redo sowie
+  Save/Load erhalten.
+- Neue Dateien verwenden `VOLUND 3`; bestehende `VOLUND 1`-Rechtecksketches und
+  `VOLUND 2`-Linien ohne Constraintangabe werden beim Laden verlustfrei migriert.
 - Ein temporäres generisches Tool-Panel bietet Parameter, Live-Vorschau, OK und
   Cancel. Erst OK schreibt das Feature in das Dokument; Cancel oder Escape verwirft
   die Vorschau.
@@ -130,7 +134,7 @@ Die ersten vollständigen Mehrfach-Element-Erzeugungs- und Bearbeitungs-Slices s
 beiden Windows-Backends und im nativen FreeBSD-Wayland-Controlpfad bestätigt. Der
 parametrische Sketch-Modus wird als Nächstes fortgesetzt mit:
 
-1. Maßen und geometrischen Constraints;
+1. weiteren Maßen sowie Koinzidenz-, Parallel- und Rechtwinkligkeitsconstraints;
 2. stabilen Profilidentitäten und freier Auswahl eines oder mehrerer Profile für
    nachfolgende Extrusionen.
 

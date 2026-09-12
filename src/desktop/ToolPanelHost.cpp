@@ -2,8 +2,8 @@
 
 #include "MeasurementInput.hpp"
 
-#include <QDoubleSpinBox>
 #include <QComboBox>
+#include <QDoubleSpinBox>
 #include <QFormLayout>
 #include <QHBoxLayout>
 #include <QKeySequence>
@@ -17,9 +17,7 @@
 
 namespace voelund::desktop {
 
-ToolPanelHost::ToolPanelHost(QWidget* parent)
-    : QDockWidget(parent)
-{
+ToolPanelHost::ToolPanelHost(QWidget* parent) : QDockWidget(parent) {
     setObjectName(QStringLiteral("activeToolDock"));
     setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
@@ -54,8 +52,7 @@ ToolPanelHost::ToolPanelHost(QWidget* parent)
     hide();
 }
 
-void ToolPanelHost::begin(ToolPanelDefinition definition)
-{
+void ToolPanelHost::begin(ToolPanelDefinition definition) {
     clearParameters();
     definition_ = std::move(definition);
     setWindowTitle(definition_.title);
@@ -65,12 +62,11 @@ void ToolPanelHost::begin(ToolPanelDefinition definition)
         input->setRange(parameter.minimum, parameter.maximum);
         input->setValue(parameter.value);
         const std::string parameterId = parameter.id;
-        connect(input, &QDoubleSpinBox::valueChanged, this,
-            [this, parameterId](double value) {
-                if (definition_.parameterChanged) {
-                    definition_.parameterChanged(parameterId, value);
-                }
-            });
+        connect(input, &QDoubleSpinBox::valueChanged, this, [this, parameterId](double value) {
+            if (definition_.parameterChanged) {
+                definition_.parameterChanged(parameterId, value);
+            }
+        });
         parameterLayout_->addRow(parameter.label, input);
         lengthInputs_.emplace_back(parameter.id, input);
     }
@@ -81,12 +77,11 @@ void ToolPanelHost::begin(ToolPanelDefinition definition)
         }
         input->setCurrentIndex(parameter.currentIndex);
         const std::string parameterId = parameter.id;
-        connect(input, &QComboBox::currentIndexChanged, this,
-            [this, parameterId](int index) {
-                if (definition_.choiceChanged) {
-                    definition_.choiceChanged(parameterId, index);
-                }
-            });
+        connect(input, &QComboBox::currentIndexChanged, this, [this, parameterId](int index) {
+            if (definition_.choiceChanged) {
+                definition_.choiceChanged(parameterId, index);
+            }
+        });
         parameterLayout_->addRow(parameter.label, input);
         choiceInputs_.emplace_back(parameter.id, input);
     }
@@ -99,26 +94,22 @@ void ToolPanelHost::begin(ToolPanelDefinition definition)
             }
         });
         parameterLayout_->addRow(QString{}, button);
+        actionInputs_.emplace_back(action.id, button);
     }
     acceptButton_->setEnabled(false);
     show();
     raise();
 }
 
-void ToolPanelHost::end()
-{
+void ToolPanelHost::end() {
     hide();
     clearParameters();
     definition_ = {};
 }
 
-void ToolPanelHost::setAcceptEnabled(bool enabled)
-{
-    acceptButton_->setEnabled(enabled);
-}
+void ToolPanelHost::setAcceptEnabled(bool enabled) { acceptButton_->setEnabled(enabled); }
 
-void ToolPanelHost::setLengthValue(const std::string& parameterId, double value)
-{
+void ToolPanelHost::setLengthValue(const std::string& parameterId, double value) {
     for (const auto& [id, input] : lengthInputs_) {
         if (id == parameterId) {
             const QSignalBlocker blocker(input);
@@ -128,8 +119,25 @@ void ToolPanelHost::setLengthValue(const std::string& parameterId, double value)
     }
 }
 
-void ToolPanelHost::clearParameters()
-{
+void ToolPanelHost::setLengthEnabled(const std::string& parameterId, bool enabled) {
+    for (const auto& [id, input] : lengthInputs_) {
+        if (id == parameterId) {
+            input->setEnabled(enabled);
+            return;
+        }
+    }
+}
+
+void ToolPanelHost::setActionEnabled(const std::string& actionId, bool enabled) {
+    for (const auto& [id, input] : actionInputs_) {
+        if (id == actionId) {
+            input->setEnabled(enabled);
+            return;
+        }
+    }
+}
+
+void ToolPanelHost::clearParameters() {
     while (QLayoutItem* item = parameterLayout_->takeAt(0)) {
         if (QWidget* itemWidget = item->widget()) {
             itemWidget->deleteLater();
@@ -138,6 +146,7 @@ void ToolPanelHost::clearParameters()
     }
     lengthInputs_.clear();
     choiceInputs_.clear();
+    actionInputs_.clear();
 }
 
 } // namespace voelund::desktop
