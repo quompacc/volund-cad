@@ -28,9 +28,15 @@ class SketchEditorSession final {
     [[nodiscard]] bool selectElement(document::SketchElementId elementId) noexcept;
     [[nodiscard]] bool translateSelected(double deltaX, double deltaY);
     [[nodiscard]] std::optional<double> selectedLineLength() const noexcept;
+    [[nodiscard]] std::optional<double> selectedRectangleWidth() const noexcept;
+    [[nodiscard]] std::optional<double> selectedRectangleHeight() const noexcept;
+    [[nodiscard]] std::optional<double> selectedCircleRadius() const noexcept;
     [[nodiscard]] std::optional<document::SketchLineConstraint>
     selectedLineConstraint() const noexcept;
     [[nodiscard]] bool setSelectedLineLength(double length);
+    [[nodiscard]] bool setSelectedRectangleWidth(double width);
+    [[nodiscard]] bool setSelectedRectangleHeight(double height);
+    [[nodiscard]] bool setSelectedCircleRadius(double radius);
     [[nodiscard]] bool setSelectedLineConstraint(document::SketchLineConstraint constraint);
     [[nodiscard]] bool removeSelected();
     [[nodiscard]] std::optional<document::SketchElementId> selectedElement() const noexcept;

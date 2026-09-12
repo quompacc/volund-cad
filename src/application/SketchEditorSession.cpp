@@ -125,6 +125,43 @@ std::optional<double> SketchEditorSession::selectedLineLength() const noexcept {
     return std::hypot(line->end.x - line->start.x, line->end.y - line->start.y);
 }
 
+std::optional<double> SketchEditorSession::selectedRectangleWidth() const noexcept {
+    if (!selectedElement_.has_value())
+        return std::nullopt;
+    const auto match =
+        std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);
+    if (match == elements_.values.end())
+        return std::nullopt;
+    const auto* rectangle = std::get_if<document::SketchRectangle>(&match->geometry);
+    return rectangle == nullptr
+               ? std::nullopt
+               : std::optional<double>{std::abs(rectangle->second.x - rectangle->first.x)};
+}
+
+std::optional<double> SketchEditorSession::selectedRectangleHeight() const noexcept {
+    if (!selectedElement_.has_value())
+        return std::nullopt;
+    const auto match =
+        std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);
+    if (match == elements_.values.end())
+        return std::nullopt;
+    const auto* rectangle = std::get_if<document::SketchRectangle>(&match->geometry);
+    return rectangle == nullptr
+               ? std::nullopt
+               : std::optional<double>{std::abs(rectangle->second.y - rectangle->first.y)};
+}
+
+std::optional<double> SketchEditorSession::selectedCircleRadius() const noexcept {
+    if (!selectedElement_.has_value())
+        return std::nullopt;
+    const auto match =
+        std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);
+    if (match == elements_.values.end())
+        return std::nullopt;
+    const auto* circle = std::get_if<document::SketchCircle>(&match->geometry);
+    return circle == nullptr ? std::nullopt : std::optional<double>{circle->radius};
+}
+
 std::optional<document::SketchLineConstraint>
 SketchEditorSession::selectedLineConstraint() const noexcept {
     if (!selectedElement_.has_value())
@@ -154,6 +191,56 @@ bool SketchEditorSession::setSelectedLineLength(double length) {
     line->end.y = line->start.y + (line->end.y - line->start.y) * scale;
     document::validateSketchElements(elements_);
     return length != current;
+}
+
+bool SketchEditorSession::setSelectedRectangleWidth(double width) {
+    if (!active_ || !std::isfinite(width) || width <= 1.0e-9 || !selectedElement_.has_value())
+        return false;
+    const auto match =
+        std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);
+    if (match == elements_.values.end())
+        return false;
+    auto* rectangle = std::get_if<document::SketchRectangle>(&match->geometry);
+    if (rectangle == nullptr)
+        return false;
+    const double current = std::abs(rectangle->second.x - rectangle->first.x);
+    const double direction = rectangle->second.x < rectangle->first.x ? -1.0 : 1.0;
+    rectangle->second.x = rectangle->first.x + direction * width;
+    document::validateSketchElements(elements_);
+    return width != current;
+}
+
+bool SketchEditorSession::setSelectedRectangleHeight(double height) {
+    if (!active_ || !std::isfinite(height) || height <= 1.0e-9 || !selectedElement_.has_value())
+        return false;
+    const auto match =
+        std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);
+    if (match == elements_.values.end())
+        return false;
+    auto* rectangle = std::get_if<document::SketchRectangle>(&match->geometry);
+    if (rectangle == nullptr)
+        return false;
+    const double current = std::abs(rectangle->second.y - rectangle->first.y);
+    const double direction = rectangle->second.y < rectangle->first.y ? -1.0 : 1.0;
+    rectangle->second.y = rectangle->first.y + direction * height;
+    document::validateSketchElements(elements_);
+    return height != current;
+}
+
+bool SketchEditorSession::setSelectedCircleRadius(double radius) {
+    if (!active_ || !std::isfinite(radius) || radius <= 1.0e-9 || !selectedElement_.has_value())
+        return false;
+    const auto match =
+        std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);
+    if (match == elements_.values.end())
+        return false;
+    auto* circle = std::get_if<document::SketchCircle>(&match->geometry);
+    if (circle == nullptr)
+        return false;
+    const double current = circle->radius;
+    circle->radius = radius;
+    document::validateSketchElements(elements_);
+    return radius != current;
 }
 
 bool SketchEditorSession::setSelectedLineConstraint(document::SketchLineConstraint constraint) {

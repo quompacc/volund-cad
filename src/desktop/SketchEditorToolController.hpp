@@ -33,11 +33,11 @@ class SketchEditorToolController final {
   private:
     void setTool(int index);
     void applyTranslation(const std::string& id, double value);
-    void applyLineLength(double value);
+    void applyElementDimension(const std::string& id, double value);
     void applyLineConstraint(document::SketchLineConstraint constraint);
     void removeSelected();
     void resetTranslationInputs();
-    void syncSelectedLineInputs();
+    void syncSelectedDimensionInputs();
     void showPanel();
     void refreshPresentation();
     void accept();

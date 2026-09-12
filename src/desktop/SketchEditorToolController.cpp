@@ -92,7 +92,10 @@ void SketchEditorToolController::showPanel() {
         QObject::tr("Choose a tool and set two points. Add any number of elements, then confirm."),
         {{"translation_x", QObject::tr("Selected ΔX"), 0.0, -1'000'000.0, 1'000'000.0},
          {"translation_y", QObject::tr("Selected ΔY"), 0.0, -1'000'000.0, 1'000'000.0},
-         {"line_length", QObject::tr("Line length"), 1.0, 0.001, 1'000'000.0}},
+         {"line_length", QObject::tr("Line length"), 1.0, 0.001, 1'000'000.0},
+         {"rectangle_width", QObject::tr("Rectangle width"), 1.0, 0.001, 1'000'000.0},
+         {"rectangle_height", QObject::tr("Rectangle height"), 1.0, 0.001, 1'000'000.0},
+         {"circle_radius", QObject::tr("Circle radius"), 1.0, 0.001, 1'000'000.0}},
         {{"tool",
           QObject::tr("Tool"),
           {QObject::tr("Line"), QObject::tr("Rectangle"), QObject::tr("Circle")},
@@ -102,10 +105,10 @@ void SketchEditorToolController::showPanel() {
          {"free", QObject::tr("Remove line direction constraint")},
          {"delete", QObject::tr("Delete selected element")}},
         [this](const std::string& id, double value) {
-            if (id == "line_length")
-                applyLineLength(value);
-            else
+            if (id == "translation_x" || id == "translation_y")
                 applyTranslation(id, value);
+            else
+                applyElementDimension(id, value);
         },
         [this](const std::string& id, int index) {
             if (id == "tool")
@@ -123,7 +126,7 @@ void SketchEditorToolController::showPanel() {
         },
         [this]() { accept(); },
         [this]() { cancel(); }});
-    syncSelectedLineInputs();
+    syncSelectedDimensionInputs();
 }
 
 void SketchEditorToolController::setTool(int index) {
@@ -155,7 +158,7 @@ void SketchEditorToolController::confirmElement(const viewport::SketchElementInt
     const auto id = editor_->confirmPreview();
     panel_.setAcceptEnabled(editor_->canAccept());
     resetTranslationInputs();
-    syncSelectedLineInputs();
+    syncSelectedDimensionInputs();
     refreshPresentation();
     if (id.has_value()) {
         statusChanged_(QObject::tr("Sketch element #%1 added").arg(id->value()));
@@ -180,22 +183,39 @@ bool SketchEditorToolController::selectElement(std::uint64_t rawId) {
         return false;
     viewport_.setSelectedSketchElement(rawId);
     resetTranslationInputs();
-    syncSelectedLineInputs();
+    syncSelectedDimensionInputs();
     statusChanged_(QObject::tr("Sketch element #%1 selected").arg(rawId));
     return true;
 }
 
-void SketchEditorToolController::applyLineLength(double value) {
-    if (!editor_ || !editor_->setSelectedLineLength(value))
+void SketchEditorToolController::applyElementDimension(const std::string& id, double value) {
+    if (!editor_)
+        return;
+    bool changed = false;
+    QString label;
+    if (id == "line_length") {
+        changed = editor_->setSelectedLineLength(value);
+        label = QObject::tr("Line length");
+    } else if (id == "rectangle_width") {
+        changed = editor_->setSelectedRectangleWidth(value);
+        label = QObject::tr("Rectangle width");
+    } else if (id == "rectangle_height") {
+        changed = editor_->setSelectedRectangleHeight(value);
+        label = QObject::tr("Rectangle height");
+    } else if (id == "circle_radius") {
+        changed = editor_->setSelectedCircleRadius(value);
+        label = QObject::tr("Circle radius");
+    }
+    if (!changed)
         return;
     refreshPresentation();
-    statusChanged_(QObject::tr("Line length set to %1 mm").arg(value, 0, 'f', 3));
+    statusChanged_(QObject::tr("%1 set to %2 mm").arg(label).arg(value, 0, 'f', 3));
 }
 
 void SketchEditorToolController::applyLineConstraint(document::SketchLineConstraint constraint) {
     if (!editor_ || !editor_->setSelectedLineConstraint(constraint))
         return;
-    syncSelectedLineInputs();
+    syncSelectedDimensionInputs();
     refreshPresentation();
     const char* text = constraint == document::SketchLineConstraint::horizontal
                            ? "Line constrained horizontally"
@@ -227,22 +247,34 @@ void SketchEditorToolController::removeSelected() {
     if (!editor_ || !editor_->removeSelected())
         return;
     resetTranslationInputs();
-    syncSelectedLineInputs();
+    syncSelectedDimensionInputs();
     panel_.setAcceptEnabled(editor_->canAccept());
     refreshPresentation();
     statusChanged_(QObject::tr("Sketch element deleted"));
 }
 
-void SketchEditorToolController::syncSelectedLineInputs() {
+void SketchEditorToolController::syncSelectedDimensionInputs() {
     if (!editor_)
         return;
     const auto length = editor_->selectedLineLength();
+    const auto width = editor_->selectedRectangleWidth();
+    const auto height = editor_->selectedRectangleHeight();
+    const auto radius = editor_->selectedCircleRadius();
     panel_.setLengthEnabled("line_length", length.has_value());
+    panel_.setLengthEnabled("rectangle_width", width.has_value());
+    panel_.setLengthEnabled("rectangle_height", height.has_value());
+    panel_.setLengthEnabled("circle_radius", radius.has_value());
     panel_.setActionEnabled("horizontal", length.has_value());
     panel_.setActionEnabled("vertical", length.has_value());
     panel_.setActionEnabled("free", length.has_value());
     if (length.has_value())
         panel_.setLengthValue("line_length", *length);
+    if (width.has_value())
+        panel_.setLengthValue("rectangle_width", *width);
+    if (height.has_value())
+        panel_.setLengthValue("rectangle_height", *height);
+    if (radius.has_value())
+        panel_.setLengthValue("circle_radius", *radius);
 }
 
 void SketchEditorToolController::resetTranslationInputs() {

@@ -273,6 +273,47 @@ bool lineDimensionAndConstraintPersistThroughEditing() {
     return !error && loaded.sketchParameters(sketchId) == moved;
 }
 
+bool rectangleAndCircleDimensionsPersist() {
+    voelund::application::CadSession session;
+    session.newDocument();
+    const auto support = session.addBoxFeature();
+    voelund::application::SketchEditorSession editor(session, support, plane);
+    editor.setTool(voelund::application::SketchDrawingTool::rectangle);
+    if (!add(editor, {5.0, 5.0}, {1.0, 2.0}, 1) ||
+        !editor.selectElement(voelund::document::SketchElementId{1}) ||
+        editor.selectedLineLength().has_value() ||
+        editor.selectedRectangleWidth() != std::optional<double>{4.0} ||
+        editor.selectedRectangleHeight() != std::optional<double>{3.0} ||
+        !editor.setSelectedRectangleWidth(10.0) || !editor.setSelectedRectangleHeight(7.0))
+        return false;
+    editor.setTool(voelund::application::SketchDrawingTool::circle);
+    if (!add(editor, {12.0, 8.0}, {14.0, 8.0}, 2) ||
+        !editor.selectElement(voelund::document::SketchElementId{2}) ||
+        editor.selectedCircleRadius() != std::optional<double>{2.0} ||
+        editor.selectedRectangleWidth().has_value() || !editor.setSelectedCircleRadius(3.5))
+        return false;
+
+    const auto sketchId = editor.accept();
+    const auto changed = session.sketchParameters(sketchId);
+    const auto& rectangle =
+        std::get<voelund::document::SketchRectangle>(changed.elements.values[0].geometry);
+    const auto& circle =
+        std::get<voelund::document::SketchCircle>(changed.elements.values[1].geometry);
+    if (rectangle.second != voelund::document::SketchPoint{-5.0, -2.0} || circle.radius != 3.5 ||
+        !session.undo() || session.features().size() != 1 || !session.redo() ||
+        session.sketchParameters(sketchId) != changed)
+        return false;
+
+    const std::filesystem::path path =
+        std::filesystem::current_path() / "voelund-sized-sketch-roundtrip.volund";
+    session.saveDocument(path);
+    voelund::application::CadSession loaded;
+    loaded.loadDocument(path);
+    std::error_code error;
+    std::filesystem::remove(path, error);
+    return !error && loaded.sketchParameters(sketchId) == changed;
+}
+
 } // namespace
 
 int main() {
@@ -314,6 +355,10 @@ int main() {
     }
     if (!lineDimensionAndConstraintPersistThroughEditing()) {
         std::cerr << "Sketch line dimension or constraint did not persist\n";
+        return 1;
+    }
+    if (!rectangleAndCircleDimensionsPersist()) {
+        std::cerr << "Rectangle or circle dimensions did not persist\n";
         return 1;
     }
     return 0;

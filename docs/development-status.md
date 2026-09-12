@@ -61,6 +61,9 @@ gehören nicht zum Produktpfad.
   und vertikale Richtungsconstraints richten die Linie längenerhaltend um ihren
   Startpunkt aus, bleiben beim Verschieben aktiv und werden mit Undo/Redo sowie
   Save/Load erhalten.
+- Ausgewählte Rechtecke bieten Breite und Höhe als getrennte positive Maße;
+  ausgewählte Kreise bieten ihren Radius. Alle werkzeugeigenen Maße aktualisieren
+  dieselbe temporäre Vorschau und werden erst mit OK als eine Transaktion übernommen.
 - Neue Dateien verwenden `VOLUND 3`; bestehende `VOLUND 1`-Rechtecksketches und
   `VOLUND 2`-Linien ohne Constraintangabe werden beim Laden verlustfrei migriert.
 - Ein temporäres generisches Tool-Panel bietet Parameter, Live-Vorschau, OK und
@@ -134,7 +137,7 @@ Die ersten vollständigen Mehrfach-Element-Erzeugungs- und Bearbeitungs-Slices s
 beiden Windows-Backends und im nativen FreeBSD-Wayland-Controlpfad bestätigt. Der
 parametrische Sketch-Modus wird als Nächstes fortgesetzt mit:
 
-1. weiteren Maßen sowie Koinzidenz-, Parallel- und Rechtwinkligkeitsconstraints;
+1. Koinzidenz-, Parallel- und Rechtwinkligkeitsconstraints zwischen Elementen;
 2. stabilen Profilidentitäten und freier Auswahl eines oder mehrerer Profile für
    nachfolgende Extrusionen.
 

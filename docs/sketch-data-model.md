@@ -73,8 +73,12 @@ part of `SketchLine`, so later whole-element translation preserves it and OK com
 the dimension and constraint together in one sketch transaction. Removing the
 direction constraint retains the current geometry.
 
-Only line length and line direction are covered by this first slice. Endpoint,
-coincident, parallel, perpendicular, rectangle and circle dimensions remain future
+Rectangles expose independent positive width and height values while preserving the
+sign of their original drawing directions. Circles expose their positive radius.
+These values update the same temporary editor geometry, participate in the single OK
+transaction and use the existing version-3 geometry records for persistence.
+
+Endpoint, coincident, parallel and perpendicular relationships remain future
 constraint-system work. Persistent profile selection also remains a later slice.
 
 Rectangles and circles each form a closed profile. Connected line chains form a
