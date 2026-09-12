@@ -97,6 +97,8 @@ public:
         std::function<void(const std::optional<SketchElementIntent>&)> handler);
     void setSketchEditorElementHandler(
         std::function<void(const SketchElementIntent&)> handler);
+    void setSketchEditorTranslationHandler(
+        std::function<void(double, double)> handler);
     void beginRectangleSketch(const PlanarFaceSelection& support);
     void beginSketchEditor(const PlanarFaceSelection& support, SketchElementTool tool);
     void setSketchEditorTool(SketchElementTool tool);

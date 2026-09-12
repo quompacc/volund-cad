@@ -288,6 +288,10 @@ void MainWindow::connectInteractions()
         [this](const viewport::SketchElementIntent& intent) {
             impl_->sketchEditorTool->confirmElement(intent);
         });
+    impl_->viewport->setSketchEditorTranslationHandler(
+        [this](double deltaX, double deltaY) {
+            impl_->sketchEditorTool->translateFromViewport(deltaX, deltaY);
+        });
     impl_->viewport->setSketchElementSelectionHandler([this](std::uint64_t id) {
         if (impl_->sketchEditorTool->isActive()) {
             static_cast<void>(impl_->sketchEditorTool->selectElement(id));

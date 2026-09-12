@@ -144,6 +144,7 @@ public:
     std::function<void(const SketchRectangleResult&)> sketchRectangleHandler;
     std::function<void(const std::optional<SketchElementIntent>&)> sketchEditorPreviewHandler;
     std::function<void(const SketchElementIntent&)> sketchEditorElementHandler;
+    std::function<void(double, double)> sketchEditorTranslationHandler;
     std::function<void(std::uint64_t)> sketchElementSelectionHandler;
     std::optional<std::uint64_t> transformTarget;
     QPoint gestureOrigin;
@@ -254,6 +255,11 @@ void CadViewport::setSketchEditorElementHandler(
     std::function<void(const SketchElementIntent&)> handler)
 {
     impl_->sketchEditorElementHandler = std::move(handler);
+}
+
+void CadViewport::setSketchEditorTranslationHandler(std::function<void(double, double)> handler)
+{
+    impl_->sketchEditorTranslationHandler = std::move(handler);
 }
 
 void CadViewport::beginRectangleSketch(const PlanarFaceSelection& support)
@@ -394,6 +400,15 @@ void CadViewport::mouseMoveEvent(QMouseEvent* event)
         return;
     }
     const QPoint position = event->position().toPoint();
+    if (impl_->sketchEditor.isElementDragging()
+        && event->buttons().testFlag(Qt::LeftButton)) {
+        const auto delta = impl_->sketchEditor.dragElement(position.x(), position.y());
+        if (delta.has_value() && impl_->sketchEditorTranslationHandler) {
+            impl_->sketchEditorTranslationHandler(delta->first, delta->second);
+        }
+        update();
+        return;
+    }
     if (impl_->sketch.isActive() && event->buttons() == Qt::NoButton) {
         impl_->sketch.move(position.x(), position.y());
         update();
@@ -450,6 +465,8 @@ void CadViewport::mousePressEvent(QMouseEvent* event)
                 const auto detected = impl_->context->DetectedInteractive();
                 if (const auto id = impl_->sketchPresentation.detectedElement(detected)) {
                     impl_->sketchElementPressed = true;
+                    static_cast<void>(impl_->sketchEditor.beginElementDrag(
+                        position.x(), position.y()));
                     impl_->sketchPresentation.select(impl_->context, id);
                     if (impl_->sketchElementSelectionHandler) {
                         impl_->sketchElementSelectionHandler(*id);
@@ -513,6 +530,7 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event)
         if (impl_->sketchEditor.isActive()) {
             if (impl_->sketchElementPressed) {
                 impl_->sketchElementPressed = false;
+                impl_->sketchEditor.finishElementDrag();
                 return;
             }
             const auto intent = impl_->sketchEditor.click(position.x(), position.y());

@@ -53,6 +53,10 @@ gehören nicht zum Produktpfad.
   OK recomputiert abhängige Profile und Extrusionen in einer Transaktion, Cancel
   verwirft sämtliche temporären Änderungen. Undo/Redo und Save/Load sind für diesen
   vollständigen Bearbeitungsablauf automatisiert geprüft.
+- Im laufenden Bearbeitungsmodus kann ein ausgewähltes Element direkt im Viewport
+  gezogen werden. Die Bewegung wird auf die Sketchebene projiziert, verwendet das
+  lineare Raster und synchronisiert die X/Y-Livewerte. Der Drag verändert weiterhin
+  nur den temporären Editorzustand; erst OK schreibt die Transaktion.
 - Neue Dateien verwenden `VOLUND 2`; bestehende `VOLUND 1`-Rechtecksketches werden
   beim Laden verlustfrei auf das neue Elementmodell migriert.
 - Ein temporäres generisches Tool-Panel bietet Parameter, Live-Vorschau, OK und
@@ -126,9 +130,8 @@ Die ersten vollständigen Mehrfach-Element-Erzeugungs- und Bearbeitungs-Slices s
 beiden Windows-Backends und im nativen FreeBSD-Wayland-Controlpfad bestätigt. Der
 parametrische Sketch-Modus wird als Nächstes fortgesetzt mit:
 
-1. direkter Griffbearbeitung vorhandener Geometrie im Viewport;
-2. Maßen und geometrischen Constraints;
-3. stabilen Profilidentitäten und freier Auswahl eines oder mehrerer Profile für
+1. Maßen und geometrischen Constraints;
+2. stabilen Profilidentitäten und freier Auswahl eines oder mehrerer Profile für
    nachfolgende Extrusionen.
 
 Der direkte Push/Pull-Ablauf bleibt dabei als schneller Weg erhalten. Er ist eine

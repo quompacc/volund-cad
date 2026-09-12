@@ -24,6 +24,7 @@ public:
     [[nodiscard]] bool beginSelectedSketch();
     void updatePreview(const std::optional<viewport::SketchElementIntent>& intent);
     void confirmElement(const viewport::SketchElementIntent& intent);
+    void translateFromViewport(double deltaX, double deltaY);
     [[nodiscard]] bool selectElement(std::uint64_t rawId);
     [[nodiscard]] bool isActive() const noexcept;
     void cancel();

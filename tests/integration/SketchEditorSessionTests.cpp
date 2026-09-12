@@ -138,7 +138,8 @@ bool existingSketchCanBeEditedAsOneTransaction() {
         || !edit.selectElement(voelund::document::SketchElementId{2})
         || !edit.translateSelected(-1.0, 1.0)
         || !edit.selectElement(voelund::document::SketchElementId{3})
-        || !edit.translateSelected(2.0, 1.0)
+        || !edit.translateSelected(1.0, 0.0)
+        || !edit.translateSelected(1.0, 1.0)
         || !edit.removeSelected()) return false;
     edit.setTool(voelund::application::SketchDrawingTool::line);
     if (!add(edit, {12.0, 4.0}, {13.0, 4.0}, 4)

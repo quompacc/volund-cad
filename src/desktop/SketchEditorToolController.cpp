@@ -127,6 +127,17 @@ void SketchEditorToolController::confirmElement(const viewport::SketchElementInt
     }
 }
 
+void SketchEditorToolController::translateFromViewport(double deltaX, double deltaY) {
+    if (!editor_ || !editor_->translateSelected(deltaX, deltaY)) return;
+    translationX_ += deltaX;
+    translationY_ += deltaY;
+    panel_.setLengthValue("translation_x", translationX_);
+    panel_.setLengthValue("translation_y", translationY_);
+    refreshPresentation();
+    statusChanged_(QObject::tr("Sketch element moved: ΔX %1 mm, ΔY %2 mm")
+        .arg(translationX_, 0, 'f', 3).arg(translationY_, 0, 'f', 3));
+}
+
 bool SketchEditorToolController::selectElement(std::uint64_t rawId) {
     if (!editor_ || !editor_->selectElement(document::SketchElementId{rawId})) return false;
     viewport_.setSelectedSketchElement(rawId);

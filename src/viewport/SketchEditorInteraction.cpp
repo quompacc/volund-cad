@@ -21,12 +21,14 @@ void SketchEditorInteraction::begin(
 void SketchEditorInteraction::cancel() noexcept {
     view_.Nullify();
     firstPoint_.reset();
+    dragPoint_.reset();
     active_ = false;
 }
 
 void SketchEditorInteraction::setTool(SketchElementTool tool) noexcept {
     tool_ = tool;
     firstPoint_.reset();
+    dragPoint_.reset();
 }
 
 void SketchEditorInteraction::setSnapping(bool enabled, double linearStep) noexcept {
@@ -108,6 +110,28 @@ std::optional<SketchElementIntent> SketchEditorInteraction::click(int x, int y) 
     }
     firstPoint_.reset();
     return intent;
+}
+
+bool SketchEditorInteraction::beginElementDrag(int x, int y) {
+    dragPoint_ = project(x, y);
+    return dragPoint_.has_value();
+}
+
+std::optional<std::pair<double, double>> SketchEditorInteraction::dragElement(int x, int y) {
+    if (!dragPoint_.has_value()) return std::nullopt;
+    const auto point = project(x, y);
+    if (!point.has_value()) return std::nullopt;
+    const std::pair delta{
+        point->first - dragPoint_->first, point->second - dragPoint_->second};
+    dragPoint_ = point;
+    if (delta.first == 0.0 && delta.second == 0.0) return std::nullopt;
+    return delta;
+}
+
+void SketchEditorInteraction::finishElementDrag() noexcept { dragPoint_.reset(); }
+
+bool SketchEditorInteraction::isElementDragging() const noexcept {
+    return dragPoint_.has_value();
 }
 
 } // namespace voelund::viewport

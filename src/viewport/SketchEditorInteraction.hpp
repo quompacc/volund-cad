@@ -19,6 +19,10 @@ public:
     [[nodiscard]] bool isActive() const noexcept;
     [[nodiscard]] std::optional<SketchElementIntent> move(int x, int y) const;
     [[nodiscard]] std::optional<SketchElementIntent> click(int x, int y);
+    [[nodiscard]] bool beginElementDrag(int x, int y);
+    [[nodiscard]] std::optional<std::pair<double, double>> dragElement(int x, int y);
+    void finishElementDrag() noexcept;
+    [[nodiscard]] bool isElementDragging() const noexcept;
 
 private:
     [[nodiscard]] std::optional<std::pair<double, double>> project(int x, int y) const;
@@ -28,6 +32,7 @@ private:
     SketchElementTool tool_{SketchElementTool::line};
     occ::handle<V3d_View> view_;
     std::optional<std::pair<double, double>> firstPoint_;
+    std::optional<std::pair<double, double>> dragPoint_;
     double linearStep_{1.0};
     bool snapping_{true};
     bool active_{false};
