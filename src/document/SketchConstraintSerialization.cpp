@@ -49,6 +49,12 @@ const char* sketchConstraintKindName(SketchConstraintKind kind) noexcept {
         return "CONCENTRIC";
     case SketchConstraintKind::diameter:
         return "DIAMETER";
+    case SketchConstraintKind::collinear:
+        return "COLLINEAR";
+    case SketchConstraintKind::horizontalPoints:
+        return "HORIZONTAL_POINTS";
+    case SketchConstraintKind::verticalPoints:
+        return "VERTICAL_POINTS";
     }
     return "HORIZONTAL";
 }
@@ -99,6 +105,12 @@ SketchConstraintKind readSketchConstraintKind(std::istringstream& line) {
         return SketchConstraintKind::concentric;
     if (value == "DIAMETER")
         return SketchConstraintKind::diameter;
+    if (value == "COLLINEAR")
+        return SketchConstraintKind::collinear;
+    if (value == "HORIZONTAL_POINTS")
+        return SketchConstraintKind::horizontalPoints;
+    if (value == "VERTICAL_POINTS")
+        return SketchConstraintKind::verticalPoints;
     throw std::runtime_error("Invalid Völund document: unknown sketch constraint kind");
 }
 

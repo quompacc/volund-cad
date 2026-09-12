@@ -422,7 +422,7 @@ ParsedFeature readFeature(const std::string& source,
 void DocumentSerializer::write(const ModelDocument& document, std::ostream& output) {
     output.imbue(std::locale::classic());
     output << std::setprecision(std::numeric_limits<double>::max_digits10);
-    output << "VOLUND 12\nNEXT_ID " << document.nextFeatureId_ << "\nFEATURES "
+    output << "VOLUND 13\nNEXT_ID " << document.nextFeatureId_ << "\nFEATURES "
            << document.features_.size() << '\n';
     for (std::size_t index = 0; index < document.features_.size(); ++index) {
         const FeatureDescriptor& feature = document.features_[index];
@@ -524,6 +524,7 @@ ModelDocument DocumentSerializer::read(std::istream& input) {
                                   : header == "VOLUND 10" ? 10
                                   : header == "VOLUND 11" ? 11
                                   : header == "VOLUND 12" ? 12
+                                  : header == "VOLUND 13" ? 13
                                                           : 0;
     if (version == 0) {
         invalidDocument("unsupported file header or version");

@@ -7,6 +7,7 @@ add_library(
     MeasurementInput.cpp
     ModelTreePanel.cpp
     SketchConstraintLabel.cpp
+    SketchEditorConstraintState.cpp
     SketchEditorToolController.cpp
     SketchExtrusionToolController.cpp
     SketchViewAdapter.cpp

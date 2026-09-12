@@ -19,6 +19,12 @@ std::string sketchConstraintLabel(const features::SketchConstraintAnnotation& an
         return "[||]";
     if (annotation.kind == SketchConstraintKind::perpendicular)
         return "[90]";
+    if (annotation.kind == SketchConstraintKind::collinear)
+        return "[CL]";
+    if (annotation.kind == SketchConstraintKind::horizontalPoints)
+        return "[HP]";
+    if (annotation.kind == SketchConstraintKind::verticalPoints)
+        return "[VP]";
     if (annotation.kind == SketchConstraintKind::coordinateX)
         return "[X]";
     if (annotation.kind == SketchConstraintKind::coordinateY)

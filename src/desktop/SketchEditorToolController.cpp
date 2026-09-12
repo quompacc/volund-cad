@@ -109,6 +109,9 @@ void SketchEditorToolController::showPanel() {
          {"coincident", QObject::tr("Make selected endpoints coincident")},
          {"parallel", QObject::tr("Make selected lines parallel")},
          {"perpendicular", QObject::tr("Make selected lines perpendicular")},
+         {"collinear", QObject::tr("Make selected lines collinear")},
+         {"horizontal_points", QObject::tr("Align selected points horizontally")},
+         {"vertical_points", QObject::tr("Align selected points vertically")},
          {"equal", QObject::tr("Make selected lengths or radii equal")},
          {"tangent", QObject::tr("Make selected objects tangent")},
          {"symmetric", QObject::tr("Mirror first two points about third selected line")},
@@ -149,6 +152,12 @@ void SketchEditorToolController::showPanel() {
                 applyRelation(document::SketchConstraintKind::parallel);
             } else if (id == "perpendicular") {
                 applyRelation(document::SketchConstraintKind::perpendicular);
+            } else if (id == "collinear") {
+                applyRelation(document::SketchConstraintKind::collinear);
+            } else if (id == "horizontal_points") {
+                applyRelation(document::SketchConstraintKind::horizontalPoints);
+            } else if (id == "vertical_points") {
+                applyRelation(document::SketchConstraintKind::verticalPoints);
             } else if (id == "equal") {
                 applyRelation(document::SketchConstraintKind::equal);
             } else if (id == "tangent") {
@@ -343,10 +352,14 @@ void SketchEditorToolController::applyRelation(document::SketchConstraintKind ki
         kind == document::SketchConstraintKind::coincident      ? "Coincident constraint added"
         : kind == document::SketchConstraintKind::parallel      ? "Parallel constraint added"
         : kind == document::SketchConstraintKind::perpendicular ? "Perpendicular constraint added"
-        : kind == document::SketchConstraintKind::equal         ? "Equal constraint added"
-        : kind == document::SketchConstraintKind::tangent       ? "Tangent constraint added"
-        : kind == document::SketchConstraintKind::symmetric     ? "Symmetric constraint added"
-        : kind == document::SketchConstraintKind::midpoint      ? "Midpoint constraint added"
+        : kind == document::SketchConstraintKind::collinear     ? "Collinear constraint added"
+        : kind == document::SketchConstraintKind::horizontalPoints
+            ? "Horizontal point alignment added"
+        : kind == document::SketchConstraintKind::verticalPoints ? "Vertical point alignment added"
+        : kind == document::SketchConstraintKind::equal          ? "Equal constraint added"
+        : kind == document::SketchConstraintKind::tangent        ? "Tangent constraint added"
+        : kind == document::SketchConstraintKind::symmetric      ? "Symmetric constraint added"
+        : kind == document::SketchConstraintKind::midpoint       ? "Midpoint constraint added"
         : kind == document::SketchConstraintKind::perpendicularBisector
             ? "Perpendicular bisector constraint added"
         : kind == document::SketchConstraintKind::concentric     ? "Concentric constraint added"
@@ -446,59 +459,6 @@ void SketchEditorToolController::syncSelectedDimensionInputs() {
         panel_.setLengthValue("rectangle_height", *height);
     if (radius.has_value())
         panel_.setLengthValue("circle_radius", *radius);
-}
-
-void SketchEditorToolController::syncConstraintState() {
-    if (!editor_)
-        return;
-    panel_.setActionEnabled(
-        "coincident", editor_->canAddSelectedRelation(document::SketchConstraintKind::coincident));
-    panel_.setActionEnabled(
-        "parallel", editor_->canAddSelectedRelation(document::SketchConstraintKind::parallel));
-    panel_.setActionEnabled("perpendicular", editor_->canAddSelectedRelation(
-                                                 document::SketchConstraintKind::perpendicular));
-    panel_.setActionEnabled("equal",
-                            editor_->canAddSelectedRelation(document::SketchConstraintKind::equal));
-    panel_.setActionEnabled(
-        "tangent", editor_->canAddSelectedRelation(document::SketchConstraintKind::tangent));
-    panel_.setActionEnabled(
-        "symmetric", editor_->canAddSelectedRelation(document::SketchConstraintKind::symmetric));
-    panel_.setActionEnabled(
-        "midpoint", editor_->canAddSelectedRelation(document::SketchConstraintKind::midpoint));
-    panel_.setActionEnabled(
-        "perpendicular_bisector",
-        editor_->canAddSelectedRelation(document::SketchConstraintKind::perpendicularBisector));
-    panel_.setActionEnabled(
-        "concentric", editor_->canAddSelectedRelation(document::SketchConstraintKind::concentric));
-    panel_.setActionEnabled(
-        "diameter", editor_->canAddSelectedRelation(document::SketchConstraintKind::diameter));
-    panel_.setActionEnabled("point_distance", editor_->canAddSelectedRelation(
-                                                  document::SketchConstraintKind::pointDistance));
-    panel_.setActionEnabled(
-        "point_distance_x",
-        editor_->canAddSelectedRelation(document::SketchConstraintKind::pointDistanceX));
-    panel_.setActionEnabled(
-        "point_distance_y",
-        editor_->canAddSelectedRelation(document::SketchConstraintKind::pointDistanceY));
-    panel_.setActionEnabled("angle",
-                            editor_->canAddSelectedRelation(document::SketchConstraintKind::angle));
-    panel_.setActionEnabled("point_on_object", editor_->canAddSelectedRelation(
-                                                   document::SketchConstraintKind::pointOnObject));
-    panel_.setActionEnabled("lock_point", editor_->canLockSelectedReference());
-    panel_.setActionEnabled("unlock_point", editor_->isSelectedReferenceLocked());
-    panel_.setActionEnabled("construction", editor_->selectedElement().has_value());
-    panel_.setActionEnabled("remove_constraint", !editor_->constraints().empty());
-    panel_.setAcceptEnabled(editor_->canAccept());
-    const auto& result = editor_->lastSolveResult();
-    if (result.status == features::SketchSolveStatus::conflicting) {
-        panel_.setGuidance(QObject::tr("Conflicting sketch: %1 conflicting constraint(s).")
-                               .arg(result.conflictingConstraints.size()));
-    } else if (result.degreesOfFreedom >= 0) {
-        panel_.setGuidance(
-            QObject::tr(
-                "Sketch solver: %1 degree(s) of freedom. Ctrl-click adds relation references.")
-                .arg(result.degreesOfFreedom));
-    }
 }
 
 void SketchEditorToolController::resetTranslationInputs() {

@@ -151,6 +151,13 @@ void validateSketchConstraints(const SketchElements& elements,
                 if (constraint.first == *constraint.second)
                     throw std::invalid_argument(
                         "Directional point distance constraint needs two points");
+            } else if (constraint.kind == SketchConstraintKind::horizontalPoints ||
+                       constraint.kind == SketchConstraintKind::verticalPoints) {
+                requirePoint(constraint.first);
+                requirePoint(*constraint.second);
+                if (constraint.first == *constraint.second)
+                    throw std::invalid_argument(
+                        "Point alignment constraint needs two different points");
             } else if (constraint.kind == SketchConstraintKind::angle) {
                 requireLine(constraint.first);
                 requireLine(*constraint.second);
@@ -190,6 +197,11 @@ void validateSketchConstraints(const SketchElements& elements,
                 if (constraint.first.element == constraint.second->element)
                     throw std::invalid_argument(
                         "Perpendicular bisector constraint needs two different lines");
+            } else if (constraint.kind == SketchConstraintKind::collinear) {
+                requireLine(constraint.first);
+                requireLine(*constraint.second);
+                if (constraint.first.element == constraint.second->element)
+                    throw std::invalid_argument("Collinear constraint needs two different lines");
             } else if (constraint.kind == SketchConstraintKind::concentric) {
                 const SketchGeometry& first = findElement(constraint.first.element).geometry;
                 const SketchGeometry& second = findElement(constraint.second->element).geometry;

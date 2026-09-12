@@ -110,7 +110,10 @@ gehören nicht zum Produktpfad.
 - Zwei Kreise können mit `Concentric` über ihre Mittelpunkte gekoppelt werden, ohne
   ihre Radien gleichzusetzen. Eine treibende Durchmesserbemaßung wird direkt von
   PlaneGCS gelöst und als `Ø … mm` angezeigt und editiert.
-- Neue Dateien verwenden `VOLUND 12`; bestehende `VOLUND 1`-Rechtecksketches,
+- `Collinear` hält zwei Linien auf derselben Geraden. Zwei gewählte Punkte können als
+  eigenständige Designabsicht horizontal oder vertikal ausgerichtet werden; die
+  Viewport-Glyphen lauten `[CL]`, `[HP]` und `[VP]`.
+- Neue Dateien verwenden `VOLUND 13`; bestehende `VOLUND 1`-Rechtecksketches,
   `VOLUND 2`-Linien, `VOLUND 3`-Richtungsconstraints und `VOLUND 4`-Extrusionen
   sowie `VOLUND 5`-Profilauswahlen werden beim Laden migriert. Alte Extrusionen
   behalten dabei ihre bisherige Semantik, alle geschlossenen Profile zu verwenden.
@@ -156,7 +159,7 @@ angefordert wird.
   schlanke FreeBSD-OCCT-Profil aktiviert FreeType für die nativen Constraint- und
   Bemaßungsglyphen, bleibt aber ohne Xlib, TBB, VTK und Qt 5.
 - Beide Windows-Backends durchlaufen denselben Funktions- und Regressionsteststand.
-- Zwölf CTest-Tests prüfen zusätzlich den unveränderten PlaneGCS-Kern sowie den
+- Dreizehn CTest-Tests prüfen zusätzlich den unveränderten PlaneGCS-Kern sowie den
   Völund-Adapter einschließlich Freiheitsgraden und stabiler Konfliktzuordnung.
 - Regressionstests sichern sowohl die unabhängige Bewegung getrennter Körper als auch
   die gemeinsame Verschiebung eines Join-Ergebnisses einschließlich Undo.
@@ -188,8 +191,8 @@ Die ersten vollständigen Mehrfach-Element-Erzeugungs- und Bearbeitungs-Slices s
 beiden Windows-Backends und im nativen FreeBSD-Wayland-Controlpfad bestätigt. Sichtbare
 Constraint-Glyphen, direkte Bemaßungsinteraktion, Punktsperren und Punkt-auf-Objekt
 sowie Tangential-, Gleichheits- und Symmetrierelationen sind umgesetzt. Mittelpunkt,
-Mittelsenkrechte, konzentrische Kreise und Durchmesserbemaßung sind ebenfalls
-vollständig parametrisch; weitere Konstruktionsbeziehungen folgen.
+Mittelsenkrechte, konzentrische Kreise, Durchmesserbemaßung, Linienflucht und
+Punktausrichtungen sind ebenfalls vollständig parametrisch.
 
 Der direkte Push/Pull-Ablauf bleibt dabei als schneller Weg erhalten. Er ist eine
 Bedienoberfläche über denselben parametrischen Sketch- und Extrusionsfeatures, kein

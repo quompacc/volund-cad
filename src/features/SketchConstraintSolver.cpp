@@ -136,6 +136,14 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
             static_cast<void>(
                 system.addConstraintP2PCoincident(point(constraint.first, lines, circles),
                                                   point(*constraint.second, lines, circles), tag));
+        else if (constraint.kind == document::SketchConstraintKind::horizontalPoints)
+            static_cast<void>(
+                system.addConstraintHorizontal(point(constraint.first, lines, circles),
+                                               point(*constraint.second, lines, circles), tag));
+        else if (constraint.kind == document::SketchConstraintKind::verticalPoints)
+            static_cast<void>(
+                system.addConstraintVertical(point(constraint.first, lines, circles),
+                                             point(*constraint.second, lines, circles), tag));
         else if (constraint.kind == document::SketchConstraintKind::concentric)
             static_cast<void>(system.addConstraintP2PCoincident(
                 circles.at(constraint.first.element.value())->circle.center,
@@ -189,6 +197,10 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
             static_cast<void>(system.addConstraintPerpendicular(firstLine->line, target, tag));
             static_cast<void>(
                 system.addConstraintPointOnPerpBisector(firstLine->first, target, tag));
+        } else if (constraint.kind == document::SketchConstraintKind::collinear) {
+            GCS::Line& target = lines.at(constraint.second->element.value())->line;
+            static_cast<void>(system.addConstraintParallel(firstLine->line, target, tag));
+            static_cast<void>(system.addConstraintPointOnLine(firstLine->first, target, tag));
         } else if (constraint.kind == document::SketchConstraintKind::equal) {
             const auto secondId = constraint.second->element.value();
             if (firstLine)

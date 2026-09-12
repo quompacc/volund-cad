@@ -309,6 +309,40 @@ bool adapterConstrainsConcentricCirclesAndDiameter() {
            close(second.radius * 2.0, 12.0);
 }
 
+bool adapterConstrainsCollinearLinesAndPointAlignments() {
+    using namespace voelund::document;
+    SketchParameters sketch{
+        plane(),
+        {{{SketchElementId{1}, SketchLine{{0.0, 0.0}, {4.0, 1.0}}},
+          {SketchElementId{2}, SketchLine{{8.0, 3.0}, {12.0, 5.0}}},
+          {SketchElementId{3}, SketchLine{{0.0, 8.0}, {3.0, 10.0}}},
+          {SketchElementId{4}, SketchLine{{7.0, 12.0}, {11.0, 15.0}}}},
+         5},
+        {{{SketchConstraintId{1}, SketchConstraintKind::collinear, lineRef(1), lineRef(2), 0.0},
+          {SketchConstraintId{2}, SketchConstraintKind::horizontalPoints, lineRef(3), lineRef(4),
+           0.0},
+          {SketchConstraintId{3},
+           SketchConstraintKind::verticalPoints,
+           {SketchElementId{3}, SketchPointPosition::end},
+           SketchGeometryReference{SketchElementId{4}, SketchPointPosition::end},
+           0.0}},
+         4}};
+
+    const auto result = voelund::features::solveSketchConstraints(sketch);
+    const auto& first = std::get<SketchLine>(sketch.elements.values[0].geometry);
+    const auto& second = std::get<SketchLine>(sketch.elements.values[1].geometry);
+    const auto& third = std::get<SketchLine>(sketch.elements.values[2].geometry);
+    const auto& fourth = std::get<SketchLine>(sketch.elements.values[3].geometry);
+    const double x = second.end.x - second.start.x;
+    const double y = second.end.y - second.start.y;
+    const double startCross =
+        x * (first.start.y - second.start.y) - y * (first.start.x - second.start.x);
+    const double endCross = x * (first.end.y - second.start.y) - y * (first.end.x - second.start.x);
+    return result.status == voelund::features::SketchSolveStatus::success &&
+           close(startCross, 0.0) && close(endCross, 0.0) && close(third.start.y, fourth.start.y) &&
+           close(third.end.x, fourth.end.x);
+}
+
 } // namespace
 
 int main() {
@@ -350,6 +384,10 @@ int main() {
     }
     if (!adapterConstrainsConcentricCirclesAndDiameter()) {
         std::cerr << "Völund concentric or diameter adapter failed\n";
+        return 1;
+    }
+    if (!adapterConstrainsCollinearLinesAndPointAlignments()) {
+        std::cerr << "Völund collinear or point alignment adapter failed\n";
         return 1;
     }
     return 0;

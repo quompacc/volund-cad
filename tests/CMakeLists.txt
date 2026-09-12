@@ -88,6 +88,16 @@ target_link_libraries(
 
 add_test(NAME application.sketch_circle_constraints COMMAND voelund_sketch_circle_constraint_tests)
 
+add_executable(voelund_sketch_alignment_tests integration/SketchAlignmentTests.cpp)
+target_link_libraries(
+    voelund_sketch_alignment_tests
+    PRIVATE
+        voelund_project_options
+        Voelund::Application
+)
+
+add_test(NAME application.sketch_alignments COMMAND voelund_sketch_alignment_tests)
+
 add_executable(voelund_workspace_tests unit/CommandRegistryTests.cpp)
 target_link_libraries(
     voelund_workspace_tests

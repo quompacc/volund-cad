@@ -76,6 +76,10 @@ bool SketchEditorSession::canAddSelectedRelation(
         kind == document::SketchConstraintKind::pointDistanceY)
         return referencePoint(elements_, first).has_value() &&
                referencePoint(elements_, second).has_value();
+    if (kind == document::SketchConstraintKind::horizontalPoints ||
+        kind == document::SketchConstraintKind::verticalPoints)
+        return referencePoint(elements_, first).has_value() &&
+               referencePoint(elements_, second).has_value();
     if (kind == document::SketchConstraintKind::pointDistance) {
         const auto firstPoint = referencePoint(elements_, first);
         const auto secondPoint = referencePoint(elements_, second);
@@ -90,7 +94,8 @@ bool SketchEditorSession::canAddSelectedRelation(
     const document::SketchElement* secondElement = findElement(elements_, second.element);
     if (kind == document::SketchConstraintKind::parallel ||
         kind == document::SketchConstraintKind::perpendicular ||
-        kind == document::SketchConstraintKind::perpendicularBisector)
+        kind == document::SketchConstraintKind::perpendicularBisector ||
+        kind == document::SketchConstraintKind::collinear)
         return line(firstElement) && line(secondElement);
     if (kind == document::SketchConstraintKind::midpoint)
         return referencePoint(elements_, first).has_value() && line(secondElement);

@@ -134,7 +134,7 @@ bool sketchElementsKeepStableIdsThroughHistoryAndSerialization() {
     }
     std::ostringstream output;
     voelund::document::DocumentSerializer::write(document, output);
-    if (!output.str().starts_with("VOLUND 12\n"))
+    if (!output.str().starts_with("VOLUND 13\n"))
         return false;
     std::istringstream input(output.str());
     const auto loaded = voelund::document::DocumentSerializer::read(input);
@@ -144,7 +144,7 @@ bool sketchElementsKeepStableIdsThroughHistoryAndSerialization() {
            std::holds_alternative<voelund::document::SketchCircle>(elements.values[1].geometry);
 }
 
-bool relationalConstraintsRoundtripInVersionTwelve() {
+bool relationalConstraintsRoundtripInVersionThirteen() {
     using namespace voelund::document;
     ModelDocument document = ModelDocument::empty();
     const auto support = document.addBoxFeature("Support", {20.0, 20.0, 30.0});
@@ -226,8 +226,23 @@ bool relationalConstraintsRoundtripInVersionTwelve() {
            SketchConstraintKind::diameter,
            {SketchElementId{5}, SketchPointPosition::center},
            std::nullopt,
-           6.0}},
-         15}};
+           6.0},
+          {SketchConstraintId{15},
+           SketchConstraintKind::collinear,
+           {SketchElementId{1}, SketchPointPosition::start},
+           SketchGeometryReference{SketchElementId{2}, SketchPointPosition::start},
+           0.0},
+          {SketchConstraintId{16},
+           SketchConstraintKind::horizontalPoints,
+           {SketchElementId{1}, SketchPointPosition::start},
+           SketchGeometryReference{SketchElementId{2}, SketchPointPosition::end},
+           0.0},
+          {SketchConstraintId{17},
+           SketchConstraintKind::verticalPoints,
+           {SketchElementId{1}, SketchPointPosition::end},
+           SketchGeometryReference{SketchElementId{2}, SketchPointPosition::start},
+           0.0}},
+         18}};
     const auto sketchId = document.addSketchFeature("Constrained", support, sketch);
     std::ostringstream output;
     DocumentSerializer::write(document, output);
@@ -235,7 +250,7 @@ bool relationalConstraintsRoundtripInVersionTwelve() {
     const auto loaded = DocumentSerializer::read(input);
     const auto& constraints = loaded.sketchParameters(sketchId).constraints;
     const auto& loadedSketch = loaded.sketchParameters(sketchId);
-    return output.str().starts_with("VOLUND 12\n") && constraints == sketch.constraints &&
+    return output.str().starts_with("VOLUND 13\n") && constraints == sketch.constraints &&
            loadedSketch.elements.values[3].construction;
 }
 
@@ -335,7 +350,7 @@ int main() {
         std::cerr << "Sketch element identity/history test failed\n";
         return 1;
     }
-    if (!relationalConstraintsRoundtripInVersionTwelve()) {
+    if (!relationalConstraintsRoundtripInVersionThirteen()) {
         std::cerr << "Current sketch data roundtrip failed\n";
         return 1;
     }
