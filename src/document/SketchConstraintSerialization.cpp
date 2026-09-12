@@ -45,6 +45,10 @@ const char* sketchConstraintKindName(SketchConstraintKind kind) noexcept {
         return "MIDPOINT";
     case SketchConstraintKind::perpendicularBisector:
         return "PERPENDICULAR_BISECTOR";
+    case SketchConstraintKind::concentric:
+        return "CONCENTRIC";
+    case SketchConstraintKind::diameter:
+        return "DIAMETER";
     }
     return "HORIZONTAL";
 }
@@ -91,6 +95,10 @@ SketchConstraintKind readSketchConstraintKind(std::istringstream& line) {
         return SketchConstraintKind::midpoint;
     if (value == "PERPENDICULAR_BISECTOR")
         return SketchConstraintKind::perpendicularBisector;
+    if (value == "CONCENTRIC")
+        return SketchConstraintKind::concentric;
+    if (value == "DIAMETER")
+        return SketchConstraintKind::diameter;
     throw std::runtime_error("Invalid Völund document: unknown sketch constraint kind");
 }
 

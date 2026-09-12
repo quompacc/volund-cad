@@ -117,7 +117,9 @@ enum class SketchConstraintKind {
     pointDistanceX,
     pointDistanceY,
     midpoint,
-    perpendicularBisector
+    perpendicularBisector,
+    concentric,
+    diameter
 };
 
 struct SketchGeometryReference final {

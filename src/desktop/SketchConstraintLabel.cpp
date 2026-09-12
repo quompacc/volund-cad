@@ -35,6 +35,8 @@ std::string sketchConstraintLabel(const features::SketchConstraintAnnotation& an
         return "[M]";
     if (annotation.kind == SketchConstraintKind::perpendicularBisector)
         return "[PB]";
+    if (annotation.kind == SketchConstraintKind::concentric)
+        return "[CC]";
     std::ostringstream label;
     if (annotation.kind == SketchConstraintKind::angle) {
         label << "A " << std::fixed << std::setprecision(3) << annotation.value << "°";
@@ -46,6 +48,8 @@ std::string sketchConstraintLabel(const features::SketchConstraintAnnotation& an
         label << "DX ";
     else if (annotation.kind == SketchConstraintKind::pointDistanceY)
         label << "DY ";
+    else if (annotation.kind == SketchConstraintKind::diameter)
+        label << "Ø ";
     else
         label << (annotation.kind == SketchConstraintKind::radius ? "R " : "L ");
     label << std::fixed << std::setprecision(3) << annotation.value << " mm";

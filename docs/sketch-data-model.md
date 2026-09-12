@@ -125,6 +125,10 @@ can form a perpendicular bisector (`[PB]`): the first line is kept perpendicular
 the second and its first endpoint remains equidistant from the second line's endpoints.
 Both relations are expanded into native PlaneGCS equations and also work with
 construction geometry.
+Two circles can carry an explicit concentric relation (`[CC]`) that couples their
+centers while retaining independent radii. A circle can also carry an editable
+diameter dimension (`Ø … mm`); PlaneGCS stores and solves the diameter directly
+rather than converting the UI operation into a one-time radius edit.
 
 Rectangles and circles each form a closed profile. Connected line chains form a
 profile when at least three non-degenerate elements close within the modeling
@@ -136,15 +140,15 @@ explicit profile IDs and consumes only those faces. An empty selection remains t
 legacy meaning of "all closed profiles", so older direct Push/Pull operations retain
 their behavior.
 
-## File format version 11
+## File format version 12
 
-New saves use `VOLUND 11`. A sketch feature line stores its support, plane, element
+New saves use `VOLUND 12`. A sketch feature line stores its support, plane, element
 count, next element ID, constraint count and next constraint ID. `ELEMENT` records
 store geometry and stable IDs; following `CONSTRAINT` records store their stable ID,
 kind, one or two geometry references and an optional driving value.
 
 An extrusion record appends a profile count and its stable profile IDs. The reader
-continues to accept `VOLUND 1` through `VOLUND 10`; older extrusion records migrate to
+continues to accept `VOLUND 1` through `VOLUND 11`; older extrusion records migrate to
 an empty profile list, which preserves their previous all-profiles behavior. A version-1 inline rectangle
 is migrated in memory to a `RECTANGLE` element with ID 1 and next ID 2; version-2 lines
 are migrated with a free direction. Version-3 horizontal and vertical line fields
@@ -153,7 +157,8 @@ point-on-object constraint kinds. Version 7 adds equal and tangent relations. Ve
 8 appends an optional third reference for symmetric point-point-axis relations. Version
 9 adds point-distance and signed angle dimensions. Version 10 appends a construction
 flag to every element and adds signed horizontal and vertical point dimensions.
-Version 11 adds midpoint and perpendicular-bisector relation kinds.
-Saving any loaded document writes version 10.
+Version 11 adds midpoint and perpendicular-bisector relation kinds. Version 12 adds
+concentric relations and driving circle diameters.
+Saving any loaded document writes version 12.
 Invalid, duplicate or zero element IDs, non-finite coordinates, degenerate elements,
 inconsistent next IDs and unsatisfied line constraints are rejected while loading.

@@ -114,6 +114,8 @@ void SketchEditorToolController::showPanel() {
          {"symmetric", QObject::tr("Mirror first two points about third selected line")},
          {"midpoint", QObject::tr("Put first selected point at midpoint of selected line")},
          {"perpendicular_bisector", QObject::tr("Make first line bisect second line")},
+         {"concentric", QObject::tr("Make selected circles concentric")},
+         {"diameter", QObject::tr("Add diameter dimension to selected circle")},
          {"point_distance", QObject::tr("Dimension distance between selected points")},
          {"point_distance_x", QObject::tr("Dimension horizontal distance between points")},
          {"point_distance_y", QObject::tr("Dimension vertical distance between points")},
@@ -157,6 +159,10 @@ void SketchEditorToolController::showPanel() {
                 applyRelation(document::SketchConstraintKind::midpoint);
             } else if (id == "perpendicular_bisector") {
                 applyRelation(document::SketchConstraintKind::perpendicularBisector);
+            } else if (id == "concentric") {
+                applyRelation(document::SketchConstraintKind::concentric);
+            } else if (id == "diameter") {
+                applyRelation(document::SketchConstraintKind::diameter);
             } else if (id == "point_distance") {
                 applyRelation(document::SketchConstraintKind::pointDistance);
             } else if (id == "point_distance_x") {
@@ -343,6 +349,8 @@ void SketchEditorToolController::applyRelation(document::SketchConstraintKind ki
         : kind == document::SketchConstraintKind::midpoint      ? "Midpoint constraint added"
         : kind == document::SketchConstraintKind::perpendicularBisector
             ? "Perpendicular bisector constraint added"
+        : kind == document::SketchConstraintKind::concentric     ? "Concentric constraint added"
+        : kind == document::SketchConstraintKind::diameter       ? "Diameter dimension added"
         : kind == document::SketchConstraintKind::pointDistance  ? "Point distance added"
         : kind == document::SketchConstraintKind::pointDistanceX ? "Horizontal distance added"
         : kind == document::SketchConstraintKind::pointDistanceY ? "Vertical distance added"
@@ -460,6 +468,10 @@ void SketchEditorToolController::syncConstraintState() {
     panel_.setActionEnabled(
         "perpendicular_bisector",
         editor_->canAddSelectedRelation(document::SketchConstraintKind::perpendicularBisector));
+    panel_.setActionEnabled(
+        "concentric", editor_->canAddSelectedRelation(document::SketchConstraintKind::concentric));
+    panel_.setActionEnabled(
+        "diameter", editor_->canAddSelectedRelation(document::SketchConstraintKind::diameter));
     panel_.setActionEnabled("point_distance", editor_->canAddSelectedRelation(
                                                   document::SketchConstraintKind::pointDistance));
     panel_.setActionEnabled(
@@ -521,6 +533,7 @@ void SketchEditorToolController::refreshPresentation() {
     for (const features::SketchConstraintAnnotation& annotation : annotations) {
         const bool editable = annotation.kind == document::SketchConstraintKind::distance ||
                               annotation.kind == document::SketchConstraintKind::radius ||
+                              annotation.kind == document::SketchConstraintKind::diameter ||
                               annotation.kind == document::SketchConstraintKind::pointDistance ||
                               annotation.kind == document::SketchConstraintKind::pointDistanceX ||
                               annotation.kind == document::SketchConstraintKind::pointDistanceY ||

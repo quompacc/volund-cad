@@ -107,7 +107,10 @@ gehören nicht zum Produktpfad.
   bisector` macht die zuerst gewählte Linie zur parametrischen Mittelsenkrechten der
   zweiten. Beide funktionieren auch mit Konstruktionslinien und erscheinen als `[M]`
   beziehungsweise `[PB]`.
-- Neue Dateien verwenden `VOLUND 11`; bestehende `VOLUND 1`-Rechtecksketches,
+- Zwei Kreise können mit `Concentric` über ihre Mittelpunkte gekoppelt werden, ohne
+  ihre Radien gleichzusetzen. Eine treibende Durchmesserbemaßung wird direkt von
+  PlaneGCS gelöst und als `Ø … mm` angezeigt und editiert.
+- Neue Dateien verwenden `VOLUND 12`; bestehende `VOLUND 1`-Rechtecksketches,
   `VOLUND 2`-Linien, `VOLUND 3`-Richtungsconstraints und `VOLUND 4`-Extrusionen
   sowie `VOLUND 5`-Profilauswahlen werden beim Laden migriert. Alte Extrusionen
   behalten dabei ihre bisherige Semantik, alle geschlossenen Profile zu verwenden.
@@ -153,7 +156,7 @@ angefordert wird.
   schlanke FreeBSD-OCCT-Profil aktiviert FreeType für die nativen Constraint- und
   Bemaßungsglyphen, bleibt aber ohne Xlib, TBB, VTK und Qt 5.
 - Beide Windows-Backends durchlaufen denselben Funktions- und Regressionsteststand.
-- Zehn CTest-Tests prüfen zusätzlich den unveränderten PlaneGCS-Kern sowie den
+- Zwölf CTest-Tests prüfen zusätzlich den unveränderten PlaneGCS-Kern sowie den
   Völund-Adapter einschließlich Freiheitsgraden und stabiler Konfliktzuordnung.
 - Regressionstests sichern sowohl die unabhängige Bewegung getrennter Körper als auch
   die gemeinsame Verschiebung eines Join-Ergebnisses einschließlich Undo.
@@ -184,9 +187,9 @@ erzwungener Wayland-QPA weiterhin ruhende ELF-Kanten zu `libX11` und `libGLX`.
 Die ersten vollständigen Mehrfach-Element-Erzeugungs- und Bearbeitungs-Slices sind auf
 beiden Windows-Backends und im nativen FreeBSD-Wayland-Controlpfad bestätigt. Sichtbare
 Constraint-Glyphen, direkte Bemaßungsinteraktion, Punktsperren und Punkt-auf-Objekt
-sowie Tangential-, Gleichheits- und Symmetrierelationen sind umgesetzt. Als nächste
-parametrische Ausbaustufe folgen Mittelpunkt-, Bisektor- und weitere
-Konstruktionsbeziehungen.
+sowie Tangential-, Gleichheits- und Symmetrierelationen sind umgesetzt. Mittelpunkt,
+Mittelsenkrechte, konzentrische Kreise und Durchmesserbemaßung sind ebenfalls
+vollständig parametrisch; weitere Konstruktionsbeziehungen folgen.
 
 Der direkte Push/Pull-Ablauf bleibt dabei als schneller Weg erhalten. Er ist eine
 Bedienoberfläche über denselben parametrischen Sketch- und Extrusionsfeatures, kein

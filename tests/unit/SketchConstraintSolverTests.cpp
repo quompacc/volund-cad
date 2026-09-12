@@ -282,6 +282,33 @@ bool adapterConstrainsMidpointsAndPerpendicularBisectors() {
            close(axisX * targetX + axisY * targetY, 0.0) && close(firstDistance, secondDistance);
 }
 
+bool adapterConstrainsConcentricCirclesAndDiameter() {
+    using namespace voelund::document;
+    SketchParameters sketch{
+        plane(),
+        {{{SketchElementId{1}, SketchCircle{{0.0, 0.0}, 2.0}},
+          {SketchElementId{2}, SketchCircle{{8.0, 3.0}, 3.0}}},
+         3},
+        {{{SketchConstraintId{1},
+           SketchConstraintKind::concentric,
+           {SketchElementId{1}, SketchPointPosition::center},
+           SketchGeometryReference{SketchElementId{2}, SketchPointPosition::center},
+           0.0},
+          {SketchConstraintId{2},
+           SketchConstraintKind::diameter,
+           {SketchElementId{2}, SketchPointPosition::center},
+           std::nullopt,
+           12.0}},
+         3}};
+
+    const auto result = voelund::features::solveSketchConstraints(sketch);
+    const auto& first = std::get<SketchCircle>(sketch.elements.values[0].geometry);
+    const auto& second = std::get<SketchCircle>(sketch.elements.values[1].geometry);
+    return result.status == voelund::features::SketchSolveStatus::success &&
+           close(first.center.x, second.center.x) && close(first.center.y, second.center.y) &&
+           close(second.radius * 2.0, 12.0);
+}
+
 } // namespace
 
 int main() {
@@ -319,6 +346,10 @@ int main() {
     }
     if (!adapterConstrainsMidpointsAndPerpendicularBisectors()) {
         std::cerr << "Völund midpoint or perpendicular bisector adapter failed\n";
+        return 1;
+    }
+    if (!adapterConstrainsConcentricCirclesAndDiameter()) {
+        std::cerr << "Völund concentric or diameter adapter failed\n";
         return 1;
     }
     return 0;

@@ -18,6 +18,7 @@ SketchEditorSession::constraintValue(document::SketchConstraintId constraintId) 
     if (match == constraints_.values.end() ||
         (match->kind != document::SketchConstraintKind::distance &&
          match->kind != document::SketchConstraintKind::radius &&
+         match->kind != document::SketchConstraintKind::diameter &&
          match->kind != document::SketchConstraintKind::pointDistance &&
          match->kind != document::SketchConstraintKind::pointDistanceX &&
          match->kind != document::SketchConstraintKind::pointDistanceY &&
@@ -39,6 +40,7 @@ bool SketchEditorSession::setConstraintValue(document::SketchConstraintId constr
                              match->kind == document::SketchConstraintKind::pointDistanceY;
     const bool dimensional = match->kind == document::SketchConstraintKind::distance ||
                              match->kind == document::SketchConstraintKind::radius ||
+                             match->kind == document::SketchConstraintKind::diameter ||
                              match->kind == document::SketchConstraintKind::pointDistance ||
                              directional || angle;
     if (!dimensional ||

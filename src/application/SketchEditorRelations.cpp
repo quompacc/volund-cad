@@ -52,6 +52,11 @@ bool SketchEditorSession::canAddSelectedRelation(
     document::SketchConstraintKind kind) const noexcept {
     if (!active_)
         return false;
+    if (kind == document::SketchConstraintKind::diameter) {
+        if (selectedReferences_.size() != 1)
+            return false;
+        return circle(findElement(elements_, selectedReferences_.front().element));
+    }
     if (kind == document::SketchConstraintKind::symmetric) {
         if (selectedReferences_.size() != 3)
             return false;
@@ -107,14 +112,23 @@ bool SketchEditorSession::canAddSelectedRelation(
         return (line(firstElement) && circle(secondElement)) ||
                (circle(firstElement) && line(secondElement)) ||
                (circle(firstElement) && circle(secondElement));
+    if (kind == document::SketchConstraintKind::concentric)
+        return circle(firstElement) && circle(secondElement);
     return false;
 }
 
 bool SketchEditorSession::addSelectedRelation(document::SketchConstraintKind kind) {
     if (!canAddSelectedRelation(kind))
         return false;
+    std::optional<document::SketchGeometryReference> secondReference;
+    if (kind != document::SketchConstraintKind::diameter)
+        secondReference = selectedReferences_[1];
     document::SketchConstraint constraint{document::SketchConstraintId{constraints_.nextId++}, kind,
-                                          selectedReferences_[0], selectedReferences_[1], 0.0};
+                                          selectedReferences_[0], secondReference, 0.0};
+    if (kind == document::SketchConstraintKind::diameter) {
+        const auto* element = findElement(elements_, selectedReferences_[0].element);
+        constraint.value = std::get<document::SketchCircle>(element->geometry).radius * 2.0;
+    }
     if (kind == document::SketchConstraintKind::pointDistance) {
         const auto first = referencePoint(elements_, selectedReferences_[0]);
         const auto second = referencePoint(elements_, selectedReferences_[1]);

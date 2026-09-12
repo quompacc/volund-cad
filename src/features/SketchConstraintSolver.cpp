@@ -129,10 +129,17 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
         else if (constraint.kind == document::SketchConstraintKind::radius)
             static_cast<void>(system.addConstraintCircleRadius(
                 circles.at(constraint.first.element.value())->circle, &values.back(), tag));
+        else if (constraint.kind == document::SketchConstraintKind::diameter)
+            static_cast<void>(system.addConstraintCircleDiameter(
+                circles.at(constraint.first.element.value())->circle, &values.back(), tag));
         else if (constraint.kind == document::SketchConstraintKind::coincident)
             static_cast<void>(
                 system.addConstraintP2PCoincident(point(constraint.first, lines, circles),
                                                   point(*constraint.second, lines, circles), tag));
+        else if (constraint.kind == document::SketchConstraintKind::concentric)
+            static_cast<void>(system.addConstraintP2PCoincident(
+                circles.at(constraint.first.element.value())->circle.center,
+                circles.at(constraint.second->element.value())->circle.center, tag));
         else if (constraint.kind == document::SketchConstraintKind::pointDistance)
             static_cast<void>(system.addConstraintP2PDistance(
                 point(constraint.first, lines, circles), point(*constraint.second, lines, circles),

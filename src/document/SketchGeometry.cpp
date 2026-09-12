@@ -125,12 +125,13 @@ void validateSketchConstraints(const SketchElements& elements,
             if (constraint.kind == SketchConstraintKind::distance &&
                 constraint.value <= minimumLength)
                 throw std::invalid_argument("Sketch distance constraint must be positive");
-        } else if (constraint.kind == SketchConstraintKind::radius) {
+        } else if (constraint.kind == SketchConstraintKind::radius ||
+                   constraint.kind == SketchConstraintKind::diameter) {
             if (!std::holds_alternative<SketchCircle>(
                     findElement(constraint.first.element).geometry))
-                throw std::invalid_argument("Sketch radius constraint requires a circle");
+                throw std::invalid_argument("Sketch radial constraint requires a circle");
             if (constraint.second.has_value() || constraint.value <= minimumLength)
-                throw std::invalid_argument("Sketch radius constraint must be unary and positive");
+                throw std::invalid_argument("Sketch radial constraint must be unary and positive");
         } else {
             if (!constraint.second.has_value())
                 throw std::invalid_argument("Binary sketch constraint needs a second reference");
@@ -189,6 +190,14 @@ void validateSketchConstraints(const SketchElements& elements,
                 if (constraint.first.element == constraint.second->element)
                     throw std::invalid_argument(
                         "Perpendicular bisector constraint needs two different lines");
+            } else if (constraint.kind == SketchConstraintKind::concentric) {
+                const SketchGeometry& first = findElement(constraint.first.element).geometry;
+                const SketchGeometry& second = findElement(constraint.second->element).geometry;
+                if (constraint.first.element == constraint.second->element ||
+                    !std::holds_alternative<SketchCircle>(first) ||
+                    !std::holds_alternative<SketchCircle>(second))
+                    throw std::invalid_argument(
+                        "Concentric constraint needs two different circles");
             } else if (constraint.kind == SketchConstraintKind::equal) {
                 const SketchGeometry& first = findElement(constraint.first.element).geometry;
                 const SketchGeometry& second = findElement(constraint.second->element).geometry;
