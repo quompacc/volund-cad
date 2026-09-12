@@ -354,7 +354,7 @@ void PreviewCanvas::handleSketchClick(const QPointF& screenPoint)
         if (index >= 0) {
             auto copy = entities_.at(index);
             copy.first += QPointF(8, 8); copy.second += QPointF(8, 8); copy.dimensioned = false;
-            entities_.append(copy); selectedEntity_ = entities_.size() - 1;
+            entities_.append(copy); selectedEntity_ = static_cast<int>(entities_.size() - 1);
         }
         emit sketchStatusChanged(index >= 0 ? QStringLiteral("Offset preview created") : QStringLiteral("Select geometry to offset"));
     } else if (!pendingPoint_) {
@@ -369,7 +369,7 @@ void PreviewCanvas::handleSketchClick(const QPointF& screenPoint)
         const bool constrained = relation == QStringLiteral("Coincident") || relation == QStringLiteral("Horizontal")
             || relation == QStringLiteral("Vertical");
         entities_.append({kind, *pendingPoint_, point, false, constrained});
-        selectedEntity_ = entities_.size() - 1;
+        selectedEntity_ = static_cast<int>(entities_.size() - 1);
         pendingPoint_.reset();
         transientRelation_.clear();
         emit sketchStatusChanged(constrained ? QStringLiteral("Geometry added  ·  relation inferred")
