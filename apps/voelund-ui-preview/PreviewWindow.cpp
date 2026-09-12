@@ -25,6 +25,7 @@
 #include <QVBoxLayout>
 
 #include <array>
+#include <vector>
 
 namespace voelund::preview {
 namespace {
@@ -94,6 +95,8 @@ PreviewWindow::PreviewWindow(application::CadSession& session, QWidget* parent)
     auto* canvasLayer = new QWidget;
     auto* overlayLayout = new QGridLayout(canvasLayer);
     overlayLayout->setContentsMargins(0, 0, 0, 0);
+    canvasStack_ = new QStackedWidget;
+    cadViewport_ = new viewport::CadViewport;
     canvas_ = new PreviewCanvas;
     canvas_->setSketchCreateHandler([this](PreviewCanvas::SketchTool tool, const QPointF& first,
                                            const QPointF& second) {
@@ -101,7 +104,10 @@ PreviewWindow::PreviewWindow(application::CadSession& session, QWidget* parent)
         statusText_->setText(sketchBackend_->lastMessage());
         return added;
     });
-    overlayLayout->addWidget(canvas_, 0, 0);
+    canvasStack_->addWidget(cadViewport_);
+    canvasStack_->addWidget(canvas_);
+    canvasStack_->setCurrentWidget(cadViewport_);
+    overlayLayout->addWidget(canvasStack_, 0, 0);
 
     inspectorStack_ = new QStackedWidget;
     inspectorStack_->setObjectName(QStringLiteral("inspectorPanel"));
@@ -128,6 +134,20 @@ PreviewWindow::PreviewWindow(application::CadSession& session, QWidget* parent)
         if (sketchStateLabel_ != nullptr)
             sketchStateLabel_->setText(QStringLiteral("●  Under-constrained  ·  %1 DOF").arg(freedom));
     });
+    cadViewport_->setBodySelectionHandler([this](std::uint64_t id) {
+        static_cast<void>(session_.selectFeature(document::FeatureId{id}));
+        selectedPlanarFace_.reset();
+        refreshBrowser();
+        statusText_->setText(QStringLiteral("Body selected  ·  choose a planar face for Sketch"));
+    });
+    cadViewport_->setPlanarFaceSelectionHandler([this](const viewport::PlanarFaceSelection& face) {
+        selectedPlanarFace_ = face;
+        static_cast<void>(session_.selectFeature(document::FeatureId{face.bodyId}));
+        selectionText_->setText(QStringLiteral("Planar face"));
+        refreshBrowser();
+        statusText_->setText(QStringLiteral("Planar face selected  ·  Sketch is available"));
+    });
+    refreshScene();
     refreshBrowser();
     setWorkspaceTab(QStringLiteral("SOLID"));
 }
@@ -428,7 +448,11 @@ QWidget* PreviewWindow::createCard(const QString& title, const QList<QWidget*>& 
 
 void PreviewWindow::enterSketch()
 {
-    if (!sketchBackend_->begin()) {
+    if (!selectedPlanarFace_.has_value()) {
+        statusText_->setText(QStringLiteral("Select a planar model face before starting a sketch"));
+        return;
+    }
+    if (!sketchBackend_->begin(*selectedPlanarFace_)) {
         statusText_->setText(sketchBackend_->lastMessage());
         return;
     }
@@ -436,6 +460,7 @@ void PreviewWindow::enterSketch()
     ribbonStack_->setCurrentIndex(1);
     inspectorStack_->setCurrentIndex(1);
     canvas_->setMode(PreviewCanvas::Mode::Sketch);
+    canvasStack_->setCurrentWidget(canvas_);
     sketchWorkspaceTab_->show();
     setWorkspaceTab(QStringLiteral("SKETCH"));
     statusText_->setText(QStringLiteral("Editing Sketch 01  ·  Top face"));
@@ -450,9 +475,11 @@ void PreviewWindow::finishSketch()
     ribbonStack_->setCurrentIndex(0);
     inspectorStack_->setCurrentIndex(0);
     canvas_->setMode(PreviewCanvas::Mode::Solid);
+    canvasStack_->setCurrentWidget(cadViewport_);
     sketchWorkspaceTab_->hide();
     setWorkspaceTab(QStringLiteral("SOLID"));
     refreshBrowser();
+    refreshScene();
     statusText_->setText(sketchBackend_->lastMessage().isEmpty()
         ? QStringLiteral("Sketch finished  ·  Ready") : sketchBackend_->lastMessage());
 }
@@ -479,6 +506,18 @@ void PreviewWindow::setWorkspaceTab(const QString& activeName)
         tab->setProperty("active", tab->text() == activeName);
         refreshStyle(tab);
     }
+}
+
+void PreviewWindow::refreshScene()
+{
+    if (cadViewport_ == nullptr) return;
+    std::vector<viewport::SceneBody> bodies;
+    bodies.reserve(session_.currentBodies().size());
+    for (const auto& body : session_.currentBodies()) {
+        bodies.push_back({body.sourceFeature.value(), body.shape,
+                          session_.canTransformFeature(body.sourceFeature)});
+    }
+    cadViewport_->setBodies(bodies);
 }
 
 void PreviewWindow::refreshBrowser()

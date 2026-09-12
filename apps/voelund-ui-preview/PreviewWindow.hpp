@@ -1,8 +1,11 @@
 #pragma once
 
+#include <voelund/viewport/CadViewport.hpp>
+
 #include <QMainWindow>
 
 #include <memory>
+#include <optional>
 
 class QLabel;
 class QPushButton;
@@ -50,9 +53,13 @@ private:
     void activateSketchTool(int tool, QToolButton* button);
     void setWorkspaceTab(const QString& activeName);
     void refreshBrowser();
+    void refreshScene();
     void refreshStyle(QWidget* widget);
 
     PreviewCanvas* canvas_{nullptr};
+    viewport::CadViewport* cadViewport_{nullptr};
+    QStackedWidget* canvasStack_{nullptr};
+    std::optional<viewport::PlanarFaceSelection> selectedPlanarFace_;
     application::CadSession& session_;
     std::unique_ptr<SketchBackend> sketchBackend_;
     QStackedWidget* ribbonStack_{nullptr};

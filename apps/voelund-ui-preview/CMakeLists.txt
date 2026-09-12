@@ -20,6 +20,7 @@ target_link_libraries(
     PRIVATE
         voelund_project_options
         Voelund::Application
+        Voelund::Viewport
         Qt6::Core
         Qt6::Gui
         Qt6::Widgets

@@ -14,6 +14,7 @@ class SketchEditorSession;
 }
 
 namespace voelund::document { class FeatureId; }
+namespace voelund::viewport { struct PlanarFaceSelection; }
 
 namespace voelund::preview {
 
@@ -23,6 +24,7 @@ public:
     ~SketchBackend();
 
     bool begin();
+    bool begin(const viewport::PlanarFaceSelection& support);
     bool add(PreviewCanvas::SketchTool tool, const QPointF& first, const QPointF& second);
     bool finish();
     void cancel();

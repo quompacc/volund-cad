@@ -3,6 +3,7 @@
 #include <voelund/application/CadSession.hpp>
 #include <voelund/application/SketchEditorSession.hpp>
 #include <voelund/document/ModelDocument.hpp>
+#include <voelund/viewport/CadViewport.hpp>
 
 #include <cmath>
 
@@ -31,11 +32,19 @@ SketchBackend::~SketchBackend() = default;
 
 bool SketchBackend::begin()
 {
+    const viewport::PlanarFaceSelection top{document::ModelDocument::initialBoxId().value(),
+        0.0, 0.0, 20.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0};
+    return begin(top);
+}
+
+bool SketchBackend::begin(const viewport::PlanarFaceSelection& support)
+{
     if (editor_) return true;
-    const auto support = document::ModelDocument::initialBoxId();
-    const document::SketchPlane plane{0.0, 0.0, 20.0,
-                                      0.0, 0.0, 1.0, 1.0, 0.0, 0.0};
-    editor_ = std::make_unique<application::SketchEditorSession>(session_, support, plane);
+    const document::SketchPlane plane{support.originX, support.originY, support.originZ,
+        support.normalX, support.normalY, support.normalZ,
+        support.xDirectionX, support.xDirectionY, support.xDirectionZ};
+    editor_ = std::make_unique<application::SketchEditorSession>(
+        session_, document::FeatureId{support.bodyId}, plane);
     lastMessage_ = QStringLiteral("Parametric sketch session started on top face");
     return true;
 }

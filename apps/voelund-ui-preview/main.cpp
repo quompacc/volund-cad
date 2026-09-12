@@ -5,10 +5,19 @@
 #include <voelund/application/CadSession.hpp>
 
 #include <QApplication>
+#include <QSurfaceFormat>
 #include <QTimer>
 
 int main(int argc, char* argv[])
 {
+#if defined(VOELUND_OCCT_GLES)
+    QSurfaceFormat surfaceFormat;
+    surfaceFormat.setRenderableType(QSurfaceFormat::OpenGLES);
+    surfaceFormat.setVersion(3, 0);
+    surfaceFormat.setDepthBufferSize(24);
+    surfaceFormat.setStencilBufferSize(8);
+    QSurfaceFormat::setDefaultFormat(surfaceFormat);
+#endif
     QApplication application(argc, argv);
     application.setApplicationDisplayName(QStringLiteral("Völund UI Preview"));
     application.setOrganizationName(QStringLiteral("Völund"));
