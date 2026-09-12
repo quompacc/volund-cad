@@ -1,6 +1,7 @@
 #pragma once
 
 #include <voelund/document/FeatureId.hpp>
+#include <voelund/document/SketchGeometry.hpp>
 #include <voelund/kernel/ShapeFactory.hpp>
 
 #include <cstddef>
@@ -48,21 +49,14 @@ struct SketchPlane final {
     [[nodiscard]] bool operator==(const SketchPlane&) const = default;
 };
 
-struct SketchRectangle final {
-    double firstX;
-    double firstY;
-    double secondX;
-    double secondY;
-
-    [[nodiscard]] bool operator==(const SketchRectangle&) const = default;
-};
-
 struct SketchParameters final {
     SketchPlane plane;
-    SketchRectangle rectangle;
+    SketchElements elements;
 
     [[nodiscard]] bool operator==(const SketchParameters&) const = default;
 };
+
+void validateSketchParameters(const SketchParameters& parameters);
 
 struct ExtrusionParameters final {
     double distance;
@@ -81,7 +75,7 @@ using FeatureParameters =
     std::variant<BoxParameters, CylinderParameters, SketchParameters, ExtrusionParameters>;
 
 class ModelDocument final {
-public:
+  public:
     ModelDocument();
     [[nodiscard]] static ModelDocument empty();
 
@@ -89,48 +83,37 @@ public:
     [[nodiscard]] static constexpr FeatureId initialCylinderId() noexcept { return FeatureId{2}; }
     [[nodiscard]] std::span<const FeatureDescriptor> features() const noexcept;
     [[nodiscard]] bool contains(FeatureId featureId) const noexcept;
-    [[nodiscard]] FeatureId addBoxFeature(
-        std::string name,
-        const kernel::BoxDimensions& dimensions);
-    [[nodiscard]] FeatureId addCylinderFeature(
-        std::string name,
-        FeatureId inputFeature,
-        const CylinderParameters& parameters);
-    [[nodiscard]] FeatureId addSketchFeature(
-        std::string name,
-        FeatureId supportFeature,
-        const SketchParameters& parameters);
-    [[nodiscard]] FeatureId addExtrusionFeature(
-        std::string name,
-        FeatureId sketchFeature,
-        const ExtrusionParameters& parameters);
+    [[nodiscard]] FeatureId addBoxFeature(std::string name,
+                                          const kernel::BoxDimensions& dimensions);
+    [[nodiscard]] FeatureId addCylinderFeature(std::string name, FeatureId inputFeature,
+                                               const CylinderParameters& parameters);
+    [[nodiscard]] FeatureId addSketchFeature(std::string name, FeatureId supportFeature,
+                                             const SketchParameters& parameters);
+    [[nodiscard]] FeatureId addExtrusionFeature(std::string name, FeatureId sketchFeature,
+                                                const ExtrusionParameters& parameters);
     [[nodiscard]] const kernel::BoxDimensions& boxDimensions(FeatureId featureId) const;
     [[nodiscard]] const BoxParameters& boxParameters(FeatureId featureId) const;
-    [[nodiscard]] bool setBoxDimensions(
-        FeatureId featureId,
-        const kernel::BoxDimensions& dimensions);
-    [[nodiscard]] bool setBoxParameters(
-        FeatureId featureId,
-        const BoxParameters& parameters);
+    [[nodiscard]] bool setBoxDimensions(FeatureId featureId,
+                                        const kernel::BoxDimensions& dimensions);
+    [[nodiscard]] bool setBoxParameters(FeatureId featureId, const BoxParameters& parameters);
     [[nodiscard]] const CylinderParameters& cylinderParameters(FeatureId featureId) const;
-    [[nodiscard]] bool setCylinderParameters(
-        FeatureId featureId,
-        const CylinderParameters& parameters);
+    [[nodiscard]] bool setCylinderParameters(FeatureId featureId,
+                                             const CylinderParameters& parameters);
     [[nodiscard]] const SketchParameters& sketchParameters(FeatureId featureId) const;
+    [[nodiscard]] bool setSketchParameters(FeatureId featureId, const SketchParameters& parameters);
+    [[nodiscard]] SketchElementId addSketchElement(FeatureId featureId, SketchGeometry geometry);
     [[nodiscard]] const ExtrusionParameters& extrusionParameters(FeatureId featureId) const;
-    [[nodiscard]] bool setExtrusionParameters(
-        FeatureId featureId,
-        const ExtrusionParameters& parameters);
+    [[nodiscard]] bool setExtrusionParameters(FeatureId featureId,
+                                              const ExtrusionParameters& parameters);
     [[nodiscard]] const kernel::RigidTransform& featurePlacement(FeatureId featureId) const;
-    [[nodiscard]] bool setFeaturePlacement(
-        FeatureId featureId,
-        const kernel::RigidTransform& placement);
+    [[nodiscard]] bool setFeaturePlacement(FeatureId featureId,
+                                           const kernel::RigidTransform& placement);
     [[nodiscard]] bool canUndo() const noexcept;
     [[nodiscard]] bool canRedo() const noexcept;
     [[nodiscard]] bool undo() noexcept;
     [[nodiscard]] bool redo() noexcept;
 
-private:
+  private:
     friend class DocumentSerializer;
 
     explicit ModelDocument(bool createStarterFeatures);

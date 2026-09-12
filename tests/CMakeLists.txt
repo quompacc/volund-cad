@@ -18,6 +18,16 @@ target_link_libraries(
 
 add_test(NAME document.history COMMAND voelund_document_tests)
 
+add_executable(voelund_sketch_profile_tests unit/SketchProfileTests.cpp)
+target_link_libraries(
+    voelund_sketch_profile_tests
+    PRIVATE
+        voelund_project_options
+        Voelund::Features
+)
+
+add_test(NAME features.sketch_profiles COMMAND voelund_sketch_profile_tests)
+
 add_executable(voelund_application_tests integration/CadSessionTests.cpp)
 target_link_libraries(
     voelund_application_tests

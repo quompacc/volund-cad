@@ -1,4 +1,4 @@
-add_library(voelund_document STATIC DocumentSerializer.cpp ModelDocument.cpp)
+add_library(voelund_document STATIC DocumentSerializer.cpp ModelDocument.cpp SketchGeometry.cpp)
 
 target_include_directories(
     voelund_document

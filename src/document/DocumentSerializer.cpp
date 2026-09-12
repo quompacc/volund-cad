@@ -16,14 +16,13 @@ namespace voelund::document {
 namespace {
 
 constexpr std::size_t maximumFeatureCount = 100'000;
+constexpr std::size_t maximumSketchElementCount = 1'000'000;
 
-[[noreturn]] void invalidDocument(const std::string& reason)
-{
+[[noreturn]] void invalidDocument(const std::string& reason) {
     throw std::runtime_error("Invalid Völund document: " + reason);
 }
 
-std::string requiredLine(std::istream& input, const char* description)
-{
+std::string requiredLine(std::istream& input, const char* description) {
     std::string line;
     if (!std::getline(input, line)) {
         invalidDocument(std::string("missing ") + description);
@@ -31,8 +30,7 @@ std::string requiredLine(std::istream& input, const char* description)
     return line;
 }
 
-std::uint64_t headerValue(std::istream& input, const char* expectedName)
-{
+std::uint64_t headerValue(std::istream& input, const char* expectedName) {
     std::istringstream line(requiredLine(input, expectedName));
     line.imbue(std::locale::classic());
     std::string name;
@@ -44,22 +42,18 @@ std::uint64_t headerValue(std::istream& input, const char* expectedName)
     return value;
 }
 
-kernel::RigidTransform readTransform(std::istringstream& line)
-{
+kernel::RigidTransform readTransform(std::istringstream& line) {
     kernel::RigidTransform transform{};
-    if (!(line >> transform.translationX >> transform.translationY
-          >> transform.translationZ >> transform.rotationX
-          >> transform.rotationY >> transform.rotationZ)) {
+    if (!(line >> transform.translationX >> transform.translationY >> transform.translationZ >>
+          transform.rotationX >> transform.rotationY >> transform.rotationZ)) {
         invalidDocument("malformed feature placement");
     }
     return transform;
 }
 
-void validateTransform(const kernel::RigidTransform& transform)
-{
-    const double values[] = {
-        transform.translationX, transform.translationY, transform.translationZ,
-        transform.rotationX, transform.rotationY, transform.rotationZ};
+void validateTransform(const kernel::RigidTransform& transform) {
+    const double values[] = {transform.translationX, transform.translationY, transform.translationZ,
+                             transform.rotationX,    transform.rotationY,    transform.rotationZ};
     for (double value : values) {
         if (!std::isfinite(value)) {
             invalidDocument("placement contains a non-finite value");
@@ -67,46 +61,45 @@ void validateTransform(const kernel::RigidTransform& transform)
     }
 }
 
-bool positiveFinite(double value)
-{
-    return std::isfinite(value) && value > 0.0;
-}
+bool positiveFinite(double value) { return std::isfinite(value) && value > 0.0; }
 
-CylinderResultMode readResultMode(std::istringstream& line)
-{
+CylinderResultMode readResultMode(std::istringstream& line) {
     std::string mode;
     if (!(line >> mode)) {
         invalidDocument("missing cylinder result mode");
     }
-    if (mode == "JOIN") return CylinderResultMode::join;
-    if (mode == "CUT") return CylinderResultMode::cut;
-    if (mode == "INTERSECT") return CylinderResultMode::intersect;
-    if (mode == "SEPARATE") return CylinderResultMode::separate;
+    if (mode == "JOIN")
+        return CylinderResultMode::join;
+    if (mode == "CUT")
+        return CylinderResultMode::cut;
+    if (mode == "INTERSECT")
+        return CylinderResultMode::intersect;
+    if (mode == "SEPARATE")
+        return CylinderResultMode::separate;
     invalidDocument("unknown cylinder result mode");
 }
 
-const char* resultModeName(CylinderResultMode mode)
-{
+const char* resultModeName(CylinderResultMode mode) {
     switch (mode) {
-    case CylinderResultMode::join: return "JOIN";
-    case CylinderResultMode::cut: return "CUT";
-    case CylinderResultMode::intersect: return "INTERSECT";
-    case CylinderResultMode::separate: return "SEPARATE";
+    case CylinderResultMode::join:
+        return "JOIN";
+    case CylinderResultMode::cut:
+        return "CUT";
+    case CylinderResultMode::intersect:
+        return "INTERSECT";
+    case CylinderResultMode::separate:
+        return "SEPARATE";
     }
     return "JOIN";
 }
 
-void writeTransform(std::ostream& output, const kernel::RigidTransform& transform)
-{
-    output << ' ' << transform.translationX << ' ' << transform.translationY
-           << ' ' << transform.translationZ << ' ' << transform.rotationX
-           << ' ' << transform.rotationY << ' ' << transform.rotationZ;
+void writeTransform(std::ostream& output, const kernel::RigidTransform& transform) {
+    output << ' ' << transform.translationX << ' ' << transform.translationY << ' '
+           << transform.translationZ << ' ' << transform.rotationX << ' ' << transform.rotationY
+           << ' ' << transform.rotationZ;
 }
 
-bool containsFeature(
-    const std::vector<FeatureDescriptor>& features,
-    FeatureId featureId)
-{
+bool containsFeature(const std::vector<FeatureDescriptor>& features, FeatureId featureId) {
     for (const FeatureDescriptor& feature : features) {
         if (feature.id == featureId) {
             return true;
@@ -115,8 +108,13 @@ bool containsFeature(
     return false;
 }
 
-void ensureLineComplete(std::istringstream& line)
-{
+bool containsFeatureKind(const std::vector<FeatureDescriptor>& features, FeatureId featureId,
+                         FeatureKind kind) {
+    const auto feature = std::ranges::find(features, featureId, &FeatureDescriptor::id);
+    return feature != features.end() && feature->kind == kind;
+}
+
+void ensureLineComplete(std::istringstream& line) {
     std::string trailing;
     if (line >> trailing) {
         invalidDocument("unexpected data after feature");
@@ -128,19 +126,20 @@ struct ParsedFeature final {
     FeatureParameters parameters;
 };
 
-ParsedFeature readBoxFeature(
-    FeatureId id,
-    std::string name,
-    std::istringstream& line)
-{
+struct SketchReadContext final {
+    const std::vector<FeatureDescriptor>& previousFeatures;
+    std::istream& input;
+    std::uint64_t version;
+};
+
+ParsedFeature readBoxFeature(FeatureId id, std::string name, std::istringstream& line) {
     BoxParameters box{};
     if (!(line >> box.dimensions.width >> box.dimensions.depth >> box.dimensions.height)) {
         invalidDocument("malformed box dimensions");
     }
     box.placement = readTransform(line);
-    if (!positiveFinite(box.dimensions.width)
-        || !positiveFinite(box.dimensions.depth)
-        || !positiveFinite(box.dimensions.height)) {
+    if (!positiveFinite(box.dimensions.width) || !positiveFinite(box.dimensions.depth) ||
+        !positiveFinite(box.dimensions.height)) {
         invalidDocument("box dimensions must be positive and finite");
     }
     validateTransform(box.placement);
@@ -148,12 +147,8 @@ ParsedFeature readBoxFeature(
     return {{id, FeatureKind::box, std::move(name), std::nullopt}, box};
 }
 
-ParsedFeature readCylinderFeature(
-    FeatureId id,
-    std::string name,
-    std::istringstream& line,
-    const std::vector<FeatureDescriptor>& previousFeatures)
-{
+ParsedFeature readCylinderFeature(FeatureId id, std::string name, std::istringstream& line,
+                                  const std::vector<FeatureDescriptor>& previousFeatures) {
     std::uint64_t rawInputId = 0;
     CylinderParameters cylinder{};
     if (!(line >> rawInputId >> cylinder.radius >> cylinder.height)) {
@@ -173,56 +168,97 @@ ParsedFeature readCylinderFeature(
     return {{id, FeatureKind::cylinder, std::move(name), inputId}, cylinder};
 }
 
-ParsedFeature readSketchFeature(
-    FeatureId id,
-    std::string name,
-    std::istringstream& line,
-    const std::vector<FeatureDescriptor>& previousFeatures)
-{
+ParsedFeature readSketchFeature(FeatureId id, std::string name, std::istringstream& line,
+                                const SketchReadContext& context) {
     std::uint64_t rawSupportId = 0;
     SketchParameters sketch{};
     SketchPlane& plane = sketch.plane;
-    SketchRectangle& rectangle = sketch.rectangle;
-    if (!(line >> rawSupportId
-          >> plane.originX >> plane.originY >> plane.originZ
-          >> plane.normalX >> plane.normalY >> plane.normalZ
-          >> plane.xDirectionX >> plane.xDirectionY >> plane.xDirectionZ
-          >> rectangle.firstX >> rectangle.firstY
-          >> rectangle.secondX >> rectangle.secondY)) {
+    if (!(line >> rawSupportId >> plane.originX >> plane.originY >> plane.originZ >>
+          plane.normalX >> plane.normalY >> plane.normalZ >> plane.xDirectionX >>
+          plane.xDirectionY >> plane.xDirectionZ)) {
         invalidDocument("malformed sketch parameters");
     }
     const FeatureId supportId{rawSupportId};
-    if (!containsFeature(previousFeatures, supportId)) {
+    if (!containsFeature(context.previousFeatures, supportId)) {
         invalidDocument("sketch support must reference an earlier feature");
     }
+    if (context.version == 1) {
+        SketchRectangle rectangle{};
+        if (!(line >> rectangle.first.x >> rectangle.first.y >> rectangle.second.x >>
+              rectangle.second.y)) {
+            invalidDocument("malformed legacy sketch rectangle");
+        }
+        sketch.elements.values.push_back(SketchElement{SketchElementId{1}, rectangle});
+        sketch.elements.nextId = 2;
+    } else {
+        std::uint64_t elementCount = 0;
+        if (!(line >> elementCount >> sketch.elements.nextId) || elementCount == 0 ||
+            elementCount > maximumSketchElementCount) {
+            invalidDocument("invalid sketch element count");
+        }
+        sketch.elements.values.reserve(static_cast<std::size_t>(elementCount));
+        for (std::uint64_t index = 0; index < elementCount; ++index) {
+            std::istringstream elementLine(requiredLine(context.input, "sketch element"));
+            elementLine.imbue(std::locale::classic());
+            std::string marker;
+            std::string kind;
+            std::uint64_t rawId = 0;
+            if (!(elementLine >> marker >> kind >> rawId) || marker != "ELEMENT") {
+                invalidDocument("malformed sketch element identity");
+            }
+            SketchGeometry geometry;
+            if (kind == "LINE") {
+                SketchLine value{};
+                if (!(elementLine >> value.start.x >> value.start.y >> value.end.x >> value.end.y))
+                    invalidDocument("malformed sketch line");
+                geometry = value;
+            } else if (kind == "RECTANGLE") {
+                SketchRectangle value{};
+                if (!(elementLine >> value.first.x >> value.first.y >> value.second.x >>
+                      value.second.y)) {
+                    invalidDocument("malformed sketch rectangle");
+                }
+                geometry = value;
+            } else if (kind == "CIRCLE") {
+                SketchCircle value{};
+                if (!(elementLine >> value.center.x >> value.center.y >> value.radius)) {
+                    invalidDocument("malformed sketch circle");
+                }
+                geometry = value;
+            } else {
+                invalidDocument("unknown sketch element kind");
+            }
+            ensureLineComplete(elementLine);
+            sketch.elements.values.push_back(SketchElement{SketchElementId{rawId}, geometry});
+        }
+    }
     ensureLineComplete(line);
+    try {
+        validateSketchParameters(sketch);
+    } catch (const std::invalid_argument& error) {
+        invalidDocument(error.what());
+    }
     return {{id, FeatureKind::sketch, std::move(name), supportId}, sketch};
 }
 
-ParsedFeature readExtrusionFeature(
-    FeatureId id,
-    std::string name,
-    std::istringstream& line,
-    const std::vector<FeatureDescriptor>& previousFeatures)
-{
+ParsedFeature readExtrusionFeature(FeatureId id, std::string name, std::istringstream& line,
+                                   const std::vector<FeatureDescriptor>& previousFeatures) {
     std::uint64_t rawSketchId = 0;
     ExtrusionParameters extrusion{};
-    if (!(line >> rawSketchId >> extrusion.distance)
-        || !positiveFinite(extrusion.distance)) {
+    if (!(line >> rawSketchId >> extrusion.distance) || !positiveFinite(extrusion.distance)) {
         invalidDocument("malformed extrusion parameters");
     }
     const FeatureId sketchId{rawSketchId};
-    if (!containsFeature(previousFeatures, sketchId)) {
+    if (!containsFeatureKind(previousFeatures, sketchId, FeatureKind::sketch)) {
         invalidDocument("extrusion input must reference an earlier sketch");
     }
     ensureLineComplete(line);
     return {{id, FeatureKind::extrusion, std::move(name), sketchId}, extrusion};
 }
 
-ParsedFeature readFeature(
-    const std::string& source,
-    const std::vector<FeatureDescriptor>& previousFeatures)
-{
+ParsedFeature readFeature(const std::string& source,
+                          const std::vector<FeatureDescriptor>& previousFeatures,
+                          std::istream& input, std::uint64_t version) {
     std::istringstream line(source);
     line.imbue(std::locale::classic());
     std::string kind;
@@ -242,7 +278,8 @@ ParsedFeature readFeature(
         return readCylinderFeature(id, std::move(name), line, previousFeatures);
     }
     if (kind == "SKETCH") {
-        return readSketchFeature(id, std::move(name), line, previousFeatures);
+        return readSketchFeature(
+            id, std::move(name), line, SketchReadContext{previousFeatures, input, version});
     }
     if (kind == "EXTRUSION") {
         return readExtrusionFeature(id, std::move(name), line, previousFeatures);
@@ -252,43 +289,60 @@ ParsedFeature readFeature(
 
 } // namespace
 
-void DocumentSerializer::write(const ModelDocument& document, std::ostream& output)
-{
+void DocumentSerializer::write(const ModelDocument& document, std::ostream& output) {
     output.imbue(std::locale::classic());
     output << std::setprecision(std::numeric_limits<double>::max_digits10);
-    output << "VOLUND 1\nNEXT_ID " << document.nextFeatureId_ << "\nFEATURES "
+    output << "VOLUND 2\nNEXT_ID " << document.nextFeatureId_ << "\nFEATURES "
            << document.features_.size() << '\n';
     for (std::size_t index = 0; index < document.features_.size(); ++index) {
         const FeatureDescriptor& feature = document.features_[index];
         const char* kindName = "EXTRUSION ";
-        if (feature.kind == FeatureKind::box) kindName = "BOX ";
-        if (feature.kind == FeatureKind::cylinder) kindName = "CYLINDER ";
-        if (feature.kind == FeatureKind::sketch) kindName = "SKETCH ";
+        if (feature.kind == FeatureKind::box)
+            kindName = "BOX ";
+        if (feature.kind == FeatureKind::cylinder)
+            kindName = "CYLINDER ";
+        if (feature.kind == FeatureKind::sketch)
+            kindName = "SKETCH ";
         output << kindName << feature.id.value() << ' ' << std::quoted(feature.name);
         if (feature.kind == FeatureKind::box) {
             const BoxParameters& box = std::get<BoxParameters>(document.parameters_[index]);
-            output << ' ' << box.dimensions.width << ' ' << box.dimensions.depth
-                   << ' ' << box.dimensions.height;
+            output << ' ' << box.dimensions.width << ' ' << box.dimensions.depth << ' '
+                   << box.dimensions.height;
             writeTransform(output, box.placement);
         } else if (feature.kind == FeatureKind::cylinder) {
             const CylinderParameters& cylinder =
                 std::get<CylinderParameters>(document.parameters_[index]);
-            output << ' ' << feature.inputFeature->value() << ' ' << cylinder.radius
-                   << ' ' << cylinder.height;
+            output << ' ' << feature.inputFeature->value() << ' ' << cylinder.radius << ' '
+                   << cylinder.height;
             writeTransform(output, cylinder.placement);
             output << ' ' << resultModeName(cylinder.resultMode);
         } else if (feature.kind == FeatureKind::sketch) {
             const SketchParameters& sketch =
                 std::get<SketchParameters>(document.parameters_[index]);
             const SketchPlane& plane = sketch.plane;
-            const SketchRectangle& rectangle = sketch.rectangle;
-            output << ' ' << feature.inputFeature->value()
-                   << ' ' << plane.originX << ' ' << plane.originY << ' ' << plane.originZ
-                   << ' ' << plane.normalX << ' ' << plane.normalY << ' ' << plane.normalZ
-                   << ' ' << plane.xDirectionX << ' ' << plane.xDirectionY
-                   << ' ' << plane.xDirectionZ << ' ' << rectangle.firstX
-                   << ' ' << rectangle.firstY << ' ' << rectangle.secondX
-                   << ' ' << rectangle.secondY;
+            output << ' ' << feature.inputFeature->value() << ' ' << plane.originX << ' '
+                   << plane.originY << ' ' << plane.originZ << ' ' << plane.normalX << ' '
+                   << plane.normalY << ' ' << plane.normalZ << ' ' << plane.xDirectionX << ' '
+                   << plane.xDirectionY << ' ' << plane.xDirectionZ << ' '
+                   << sketch.elements.values.size() << ' ' << sketch.elements.nextId << '\n';
+            for (const SketchElement& element : sketch.elements.values) {
+                output << "ELEMENT ";
+                if (const auto* line = std::get_if<SketchLine>(&element.geometry)) {
+                    output << "LINE " << element.id.value() << ' ' << line->start.x << ' '
+                           << line->start.y << ' ' << line->end.x << ' ' << line->end.y;
+                } else if (const auto* rectangle =
+                               std::get_if<SketchRectangle>(&element.geometry)) {
+                    output << "RECTANGLE " << element.id.value() << ' ' << rectangle->first.x << ' '
+                           << rectangle->first.y << ' ' << rectangle->second.x << ' '
+                           << rectangle->second.y;
+                } else {
+                    const SketchCircle& circle = std::get<SketchCircle>(element.geometry);
+                    output << "CIRCLE " << element.id.value() << ' ' << circle.center.x << ' '
+                           << circle.center.y << ' ' << circle.radius;
+                }
+                output << '\n';
+            }
+            continue;
         } else {
             const ExtrusionParameters& extrusion =
                 std::get<ExtrusionParameters>(document.parameters_[index]);
@@ -301,10 +355,11 @@ void DocumentSerializer::write(const ModelDocument& document, std::ostream& outp
     }
 }
 
-ModelDocument DocumentSerializer::read(std::istream& input)
-{
+ModelDocument DocumentSerializer::read(std::istream& input) {
     input.imbue(std::locale::classic());
-    if (requiredLine(input, "file header") != "VOLUND 1") {
+    const std::string header = requiredLine(input, "file header");
+    const std::uint64_t version = header == "VOLUND 1" ? 1 : header == "VOLUND 2" ? 2 : 0;
+    if (version == 0) {
         invalidDocument("unsupported file header or version");
     }
     const std::uint64_t nextFeatureId = headerValue(input, "NEXT_ID");
@@ -316,8 +371,8 @@ ModelDocument DocumentSerializer::read(std::istream& input)
     ModelDocument document = ModelDocument::empty();
     std::uint64_t maximumId = 0;
     for (std::uint64_t index = 0; index < featureCount; ++index) {
-        ParsedFeature feature = readFeature(
-            requiredLine(input, "feature"), document.features_);
+        ParsedFeature feature =
+            readFeature(requiredLine(input, "feature"), document.features_, input, version);
         maximumId = std::max(maximumId, feature.descriptor.id.value());
         document.features_.push_back(std::move(feature.descriptor));
         document.parameters_.push_back(std::move(feature.parameters));

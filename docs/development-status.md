@@ -31,6 +31,11 @@ gehören nicht zum Produktpfad.
   extrudiert werden. Wiederholte Extrusionen bleiben numerisch verbunden.
 - Sketch und Extrusion sind intern getrennte parametrische Features. Die
   Extrusionsdistanz kann nachträglich editiert und neu berechnet werden.
+- Sketches besitzen ein allgemeines parametrisches Datenmodell mit stabilen lokalen
+  IDs für Linien, Rechtecke und Kreise. Mehrere Elemente und mehrere geschlossene
+  Profile werden erkannt und gemeinsam extrudiert; offene Elemente bleiben erhalten.
+- Neue Dateien verwenden `VOLUND 2`; bestehende `VOLUND 1`-Rechtecksketches werden
+  beim Laden verlustfrei auf das neue Elementmodell migriert.
 - Ein temporäres generisches Tool-Panel bietet Parameter, Live-Vorschau, OK und
   Cancel. Erst OK schreibt das Feature in das Dokument; Cancel oder Escape verwirft
   die Vorschau.
@@ -69,8 +74,8 @@ angefordert wird.
 
 - Keine neue Produktabhängigkeit wurde für diese Funktionen eingeführt.
 - Beide Windows-Backends durchlaufen denselben Funktions- und Regressionsteststand.
-- Sechs CTest-Tests prüfen Viewport-Start, Kernel, Dokumenthistorie,
-  Anwendungs-Neuberechnung, Modulregistrierung und Quellgrößen.
+- Sieben CTest-Tests prüfen Viewport-Start, Kernel, Dokumenthistorie,
+  Sketch-Profilerkennung, Anwendungs-Neuberechnung, Modulregistrierung und Quellgrößen.
 - Regressionstests sichern sowohl die unabhängige Bewegung getrennter Körper als auch
   die gemeinsame Verschiebung eines Join-Ergebnisses einschließlich Undo.
 - Die harte Grenze von 600 Zeilen je gepflegter Quelldatei bleibt aktiv.
@@ -97,15 +102,14 @@ VTK und Qt 5 aus OCCT. Offen bleibt die Abnahme derselben Prüfkette unter Merid
 Das FreeBSD-Qt6-Paket ist ein kombinierter Wayland/X11-Build und enthält deshalb trotz
 erzwungener Wayland-QPA weiterhin ruhende ELF-Kanten zu `libX11` und `libGLX`.
 
-Der vollständige parametrische Sketch-Modus ist der unmittelbar folgende CAD-Slice
-und wird am nächsten Entwicklungstag fortgesetzt:
+Der vollständige parametrische Sketch-Modus wird mit dem nächsten Editor-Slice
+fortgesetzt:
 
-1. allgemeines Sketch-Datenmodell statt eines einzelnen Rechtecks;
-2. eigenständige Linien, Rechtecke und Kreise;
-3. Darstellung und Auswahl mehrerer Sketch-Elemente;
-4. Erkennung geschlossener Profile;
-5. Maße und geometrische Constraints;
-6. freie Auswahl eines oder mehrerer Profile für nachfolgende Extrusionen.
+1. Darstellung und Auswahl mehrerer Sketch-Elemente;
+2. Erzeugen und Bearbeiten von Linien, Rechtecken und Kreisen im Sketch-Editor;
+3. Maße und geometrische Constraints;
+4. stabile Profilidentitäten und freie Auswahl eines oder mehrerer Profile für
+   nachfolgende Extrusionen.
 
 Der direkte Push/Pull-Ablauf bleibt dabei als schneller Weg erhalten. Er ist eine
 Bedienoberfläche über denselben parametrischen Sketch- und Extrusionsfeatures, kein

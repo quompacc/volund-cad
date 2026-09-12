@@ -1,4 +1,6 @@
-add_library(voelund_features STATIC BoxFeature.cpp CylinderFeature.cpp FeatureGraph.cpp)
+add_library(
+    voelund_features STATIC
+    BoxFeature.cpp CylinderFeature.cpp FeatureGraph.cpp SketchProfiles.cpp)
 
 target_include_directories(
     voelund_features

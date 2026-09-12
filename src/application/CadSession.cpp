@@ -4,6 +4,7 @@
 #include <voelund/features/CylinderFeature.hpp>
 
 #include <algorithm>
+#include <cmath>
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
@@ -13,10 +14,8 @@
 namespace voelund::application {
 namespace {
 
-std::size_t featureCount(
-    std::span<const document::FeatureDescriptor> features,
-    document::FeatureKind kind)
-{
+std::size_t featureCount(std::span<const document::FeatureDescriptor> features,
+                         document::FeatureKind kind) {
     std::size_t count = 0;
     for (const document::FeatureDescriptor& feature : features) {
         if (feature.kind == kind) {
@@ -26,10 +25,8 @@ std::size_t featureCount(
     return count;
 }
 
-const features::EvaluatedFeature& evaluatedFeature(
-    std::span<const features::EvaluatedFeature> features,
-    document::FeatureId id)
-{
+const features::EvaluatedFeature&
+evaluatedFeature(std::span<const features::EvaluatedFeature> features, document::FeatureId id) {
     const auto feature = std::ranges::find(features, id, &features::EvaluatedFeature::id);
     if (feature == features.end()) {
         throw std::logic_error("Cylinder input has not been evaluated");
@@ -37,11 +34,9 @@ const features::EvaluatedFeature& evaluatedFeature(
     return *feature;
 }
 
-void translateCylinderBetweenInputAndReference(
-    document::CylinderParameters& parameters,
-    const features::EvaluatedFeature& input,
-    double direction)
-{
+void translateCylinderBetweenInputAndReference(document::CylinderParameters& parameters,
+                                               const features::EvaluatedFeature& input,
+                                               double direction) {
     const gp_Pnt inputOrigin =
         features::CylinderFeature::attachmentOrigin(input.shape, parameters.height);
     const gp_Pnt referenceOrigin =
@@ -51,10 +46,8 @@ void translateCylinderBetweenInputAndReference(
     parameters.placement.translationZ += direction * (inputOrigin.Z() - referenceOrigin.Z());
 }
 
-std::optional<document::FeatureId> placementOwner(
-    const document::ModelDocument& document,
-    document::FeatureId featureId)
-{
+std::optional<document::FeatureId> placementOwner(const document::ModelDocument& document,
+                                                  document::FeatureId featureId) {
     while (true) {
         const auto descriptors = document.features();
         const auto descriptor =
@@ -68,8 +61,8 @@ std::optional<document::FeatureId> placementOwner(
         if (descriptor->kind != document::FeatureKind::cylinder) {
             return std::nullopt;
         }
-        if (document.cylinderParameters(featureId).resultMode
-            == document::CylinderResultMode::separate) {
+        if (document.cylinderParameters(featureId).resultMode ==
+            document::CylinderResultMode::separate) {
             return featureId;
         }
         if (!descriptor->inputFeature.has_value()) {
@@ -81,27 +74,23 @@ std::optional<document::FeatureId> placementOwner(
 
 } // namespace
 
-CadSession::CadSession()
-{
+CadSession::CadSession() {
     if (!recompute()) {
         throw std::runtime_error("Initial feature graph evaluation failed");
     }
     cleanDocumentState_ = serializedDocument();
 }
 
-document::FeatureId CadSession::addBoxFeature()
-{
+document::FeatureId CadSession::addBoxFeature() {
     const std::size_t sequence = featureCount(document_.features(), document::FeatureKind::box) + 1;
-    const document::FeatureId id = document_.addBoxFeature(
-        "Box " + std::to_string(sequence),
-        kernel::BoxDimensions{20.0, 20.0, 40.0});
+    const document::FeatureId id = document_.addBoxFeature("Box " + std::to_string(sequence),
+                                                           kernel::BoxDimensions{20.0, 20.0, 40.0});
     selectedFeature_ = id;
     static_cast<void>(recompute());
     return id;
 }
 
-document::FeatureId CadSession::addCylinderFeature(document::CylinderResultMode resultMode)
-{
+document::FeatureId CadSession::addCylinderFeature(document::CylinderResultMode resultMode) {
     if (!canAddCylinder()) {
         throw std::logic_error("A cylinder requires an input feature");
     }
@@ -109,9 +98,7 @@ document::FeatureId CadSession::addCylinderFeature(document::CylinderResultMode 
         featureCount(document_.features(), document::FeatureKind::cylinder) + 1;
     const document::FeatureId inputFeature = document_.features().back().id;
     document::CylinderParameters parameters{
-        8.0, 25.0,
-        kernel::RigidTransform{0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
-        resultMode};
+        8.0, 25.0, kernel::RigidTransform{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}, resultMode};
     if (resultMode == document::CylinderResultMode::separate) {
         translateCylinderBetweenInputAndReference(
             parameters, evaluatedFeature(currentFeatures_, inputFeature), 1.0);
@@ -123,59 +110,57 @@ document::FeatureId CadSession::addCylinderFeature(document::CylinderResultMode 
     return id;
 }
 
-document::FeatureId CadSession::addSketchExtrusion(
-    document::FeatureId supportFeature,
-    const document::SketchPlane& plane,
-    const document::SketchRectangle& rectangle,
-    double distance)
-{
+document::FeatureId CadSession::addSketchExtrusion(document::FeatureId supportFeature,
+                                                   const document::SketchPlane& plane,
+                                                   const document::SketchRectangle& rectangle,
+                                                   double distance) {
+    const document::SketchElement rectangleElement{document::SketchElementId{1}, rectangle};
+    return addSketchExtrusion(
+        supportFeature,
+        document::SketchParameters{plane, document::SketchElements{{rectangleElement}, 2}},
+        distance);
+}
+
+document::FeatureId CadSession::addSketchExtrusion(document::FeatureId supportFeature,
+                                                   const document::SketchParameters& sketch,
+                                                   double distance) {
     if (!document_.contains(supportFeature)) {
         throw std::invalid_argument("Sketch support is not in the document");
+    }
+    if (!std::isfinite(distance) || distance <= 0.0) {
+        throw std::invalid_argument("Sketch extrusion distance must be positive and finite");
     }
     const std::size_t sketchSequence =
         featureCount(document_.features(), document::FeatureKind::sketch) + 1;
     const document::FeatureId sketchId = document_.addSketchFeature(
-        "Sketch " + std::to_string(sketchSequence),
-        supportFeature,
-        document::SketchParameters{plane, rectangle});
+        "Sketch " + std::to_string(sketchSequence), supportFeature, sketch);
     const std::size_t extrusionSequence =
         featureCount(document_.features(), document::FeatureKind::extrusion) + 1;
-    const document::FeatureId extrusionId = document_.addExtrusionFeature(
-        "Extrusion " + std::to_string(extrusionSequence),
-        sketchId,
-        document::ExtrusionParameters{distance});
+    const document::FeatureId extrusionId =
+        document_.addExtrusionFeature("Extrusion " + std::to_string(extrusionSequence), sketchId,
+                                      document::ExtrusionParameters{distance});
     selectedFeature_ = extrusionId;
     static_cast<void>(recompute());
     return extrusionId;
 }
 
-bool CadSession::canAddCylinder() const noexcept
-{
-    return !document_.features().empty();
-}
+bool CadSession::canAddCylinder() const noexcept { return !document_.features().empty(); }
 
-TopoDS_Shape CadSession::currentShape() const
-{
-    return currentShape_;
-}
+TopoDS_Shape CadSession::currentShape() const { return currentShape_; }
 
-std::span<const features::EvaluatedBody> CadSession::currentBodies() const noexcept
-{
+std::span<const features::EvaluatedBody> CadSession::currentBodies() const noexcept {
     return currentBodies_;
 }
 
-std::span<const document::FeatureDescriptor> CadSession::features() const noexcept
-{
+std::span<const document::FeatureDescriptor> CadSession::features() const noexcept {
     return document_.features();
 }
 
-std::optional<document::FeatureId> CadSession::selectedFeature() const noexcept
-{
+std::optional<document::FeatureId> CadSession::selectedFeature() const noexcept {
     return selectedFeature_;
 }
 
-bool CadSession::selectFeature(document::FeatureId featureId) noexcept
-{
+bool CadSession::selectFeature(document::FeatureId featureId) noexcept {
     if (!document_.contains(featureId)) {
         return false;
     }
@@ -183,15 +168,15 @@ bool CadSession::selectFeature(document::FeatureId featureId) noexcept
     return true;
 }
 
-bool CadSession::canTransformFeature(document::FeatureId featureId) const noexcept
-{
+bool CadSession::canTransformFeature(document::FeatureId featureId) const noexcept {
     const auto descriptors = document_.features();
-    const auto feature = std::ranges::find(descriptors, featureId, &document::FeatureDescriptor::id);
+    const auto feature =
+        std::ranges::find(descriptors, featureId, &document::FeatureDescriptor::id);
     if (feature == descriptors.end()) {
         return false;
     }
-    if (feature->kind == document::FeatureKind::sketch
-        || feature->kind == document::FeatureKind::extrusion) {
+    if (feature->kind == document::FeatureKind::sketch ||
+        feature->kind == document::FeatureKind::extrusion) {
         return false;
     }
     if (!transformBodyForFeature(featureId).has_value()) {
@@ -205,9 +190,8 @@ bool CadSession::canTransformFeature(document::FeatureId featureId) const noexce
     return false;
 }
 
-std::optional<document::FeatureId> CadSession::transformBodyForFeature(
-    document::FeatureId featureId) const noexcept
-{
+std::optional<document::FeatureId>
+CadSession::transformBodyForFeature(document::FeatureId featureId) const noexcept {
     const std::optional<document::FeatureId> owner = placementOwner(document_, featureId);
     if (!owner.has_value()) {
         return std::nullopt;
@@ -220,8 +204,7 @@ std::optional<document::FeatureId> CadSession::transformBodyForFeature(
     return std::nullopt;
 }
 
-const document::FeatureDescriptor& CadSession::selectedFeatureDescriptor() const
-{
+const document::FeatureDescriptor& CadSession::selectedFeatureDescriptor() const {
     for (const document::FeatureDescriptor& feature : document_.features()) {
         if (feature.id == selectedFeature_.value()) {
             return feature;
@@ -230,18 +213,15 @@ const document::FeatureDescriptor& CadSession::selectedFeatureDescriptor() const
     throw std::logic_error("Selected feature is not in the document");
 }
 
-const kernel::BoxDimensions& CadSession::selectedBoxDimensions() const
-{
+const kernel::BoxDimensions& CadSession::selectedBoxDimensions() const {
     return document_.boxDimensions(selectedFeature_.value());
 }
 
-const document::BoxParameters& CadSession::selectedBoxParameters() const
-{
+const document::BoxParameters& CadSession::selectedBoxParameters() const {
     return document_.boxParameters(selectedFeature_.value());
 }
 
-bool CadSession::setSelectedBoxDimensions(const kernel::BoxDimensions& dimensions)
-{
+bool CadSession::setSelectedBoxDimensions(const kernel::BoxDimensions& dimensions) {
     if (!document_.setBoxDimensions(selectedFeature_.value(), dimensions)) {
         return false;
     }
@@ -249,8 +229,7 @@ bool CadSession::setSelectedBoxDimensions(const kernel::BoxDimensions& dimension
     return true;
 }
 
-bool CadSession::setSelectedBoxParameters(const document::BoxParameters& parameters)
-{
+bool CadSession::setSelectedBoxParameters(const document::BoxParameters& parameters) {
     if (!document_.setBoxParameters(selectedFeature_.value(), parameters)) {
         return false;
     }
@@ -258,26 +237,21 @@ bool CadSession::setSelectedBoxParameters(const document::BoxParameters& paramet
     return true;
 }
 
-const document::CylinderParameters& CadSession::selectedCylinderParameters() const
-{
+const document::CylinderParameters& CadSession::selectedCylinderParameters() const {
     return cylinderParameters(selectedFeature_.value());
 }
 
-const document::CylinderParameters& CadSession::cylinderParameters(
-    document::FeatureId featureId) const
-{
+const document::CylinderParameters&
+CadSession::cylinderParameters(document::FeatureId featureId) const {
     return document_.cylinderParameters(featureId);
 }
 
-bool CadSession::setSelectedCylinderParameters(const document::CylinderParameters& parameters)
-{
+bool CadSession::setSelectedCylinderParameters(const document::CylinderParameters& parameters) {
     return setCylinderParameters(selectedFeature_.value(), parameters);
 }
 
-bool CadSession::setCylinderParameters(
-    document::FeatureId featureId,
-    const document::CylinderParameters& parameters)
-{
+bool CadSession::setCylinderParameters(document::FeatureId featureId,
+                                       const document::CylinderParameters& parameters) {
     const auto descriptors = document_.features();
     const auto descriptor =
         std::ranges::find(descriptors, featureId, &document::FeatureDescriptor::id);
@@ -289,14 +263,11 @@ bool CadSession::setCylinderParameters(
     }
     const document::CylinderParameters& current = cylinderParameters(featureId);
     document::CylinderParameters adjusted = parameters;
-    const bool wasSeparate =
-        current.resultMode == document::CylinderResultMode::separate;
-    const bool becomesSeparate =
-        adjusted.resultMode == document::CylinderResultMode::separate;
+    const bool wasSeparate = current.resultMode == document::CylinderResultMode::separate;
+    const bool becomesSeparate = adjusted.resultMode == document::CylinderResultMode::separate;
     if (wasSeparate != becomesSeparate) {
         translateCylinderBetweenInputAndReference(
-            adjusted,
-            evaluatedFeature(currentFeatures_, *descriptor->inputFeature),
+            adjusted, evaluatedFeature(currentFeatures_, *descriptor->inputFeature),
             becomesSeparate ? 1.0 : -1.0);
     }
     if (!document_.setCylinderParameters(featureId, adjusted)) {
@@ -306,14 +277,11 @@ bool CadSession::setCylinderParameters(
     return true;
 }
 
-const document::ExtrusionParameters& CadSession::selectedExtrusionParameters() const
-{
+const document::ExtrusionParameters& CadSession::selectedExtrusionParameters() const {
     return document_.extrusionParameters(selectedFeature_.value());
 }
 
-bool CadSession::setSelectedExtrusionParameters(
-    const document::ExtrusionParameters& parameters)
-{
+bool CadSession::setSelectedExtrusionParameters(const document::ExtrusionParameters& parameters) {
     if (!document_.setExtrusionParameters(selectedFeature_.value(), parameters)) {
         return false;
     }
@@ -321,8 +289,7 @@ bool CadSession::setSelectedExtrusionParameters(
     return true;
 }
 
-const kernel::RigidTransform& CadSession::selectedFeaturePlacement() const
-{
+const kernel::RigidTransform& CadSession::selectedFeaturePlacement() const {
     const std::optional<document::FeatureId> owner =
         placementOwner(document_, selectedFeature_.value());
     if (!owner.has_value()) {
@@ -331,8 +298,7 @@ const kernel::RigidTransform& CadSession::selectedFeaturePlacement() const
     return document_.featurePlacement(*owner);
 }
 
-bool CadSession::setSelectedFeaturePlacement(const kernel::RigidTransform& placement)
-{
+bool CadSession::setSelectedFeaturePlacement(const kernel::RigidTransform& placement) {
     const std::optional<document::FeatureId> owner =
         placementOwner(document_, selectedFeature_.value());
     if (!owner.has_value()) {
@@ -345,23 +311,15 @@ bool CadSession::setSelectedFeaturePlacement(const kernel::RigidTransform& place
     return true;
 }
 
-std::span<const FeatureRuntimeState> CadSession::featureStates() const noexcept
-{
+std::span<const FeatureRuntimeState> CadSession::featureStates() const noexcept {
     return featureStates_;
 }
 
-bool CadSession::canUndo() const noexcept
-{
-    return document_.canUndo();
-}
+bool CadSession::canUndo() const noexcept { return document_.canUndo(); }
 
-bool CadSession::canRedo() const noexcept
-{
-    return document_.canRedo();
-}
+bool CadSession::canRedo() const noexcept { return document_.canRedo(); }
 
-bool CadSession::undo()
-{
+bool CadSession::undo() {
     if (!document_.undo()) {
         return false;
     }
@@ -370,8 +328,7 @@ bool CadSession::undo()
     return true;
 }
 
-bool CadSession::redo()
-{
+bool CadSession::redo() {
     if (!document_.redo()) {
         return false;
     }
@@ -380,13 +337,9 @@ bool CadSession::redo()
     return true;
 }
 
-bool CadSession::isModified() const
-{
-    return serializedDocument() != cleanDocumentState_;
-}
+bool CadSession::isModified() const { return serializedDocument() != cleanDocumentState_; }
 
-void CadSession::newDocument()
-{
+void CadSession::newDocument() {
     document_ = document::ModelDocument::empty();
     currentShape_.Nullify();
     currentBodies_.clear();
@@ -396,8 +349,7 @@ void CadSession::newDocument()
     cleanDocumentState_ = serializedDocument();
 }
 
-void CadSession::saveDocument(const std::filesystem::path& path)
-{
+void CadSession::saveDocument(const std::filesystem::path& path) {
     if (!document_.features().empty()) {
         static_cast<void>(featureGraph_.evaluate(document_));
     }
@@ -413,8 +365,7 @@ void CadSession::saveDocument(const std::filesystem::path& path)
     cleanDocumentState_ = contents;
 }
 
-void CadSession::loadDocument(const std::filesystem::path& path)
-{
+void CadSession::loadDocument(const std::filesystem::path& path) {
     std::ifstream input(path, std::ios::binary);
     if (!input) {
         throw std::runtime_error("Could not open the document for reading");
@@ -425,20 +376,16 @@ void CadSession::loadDocument(const std::filesystem::path& path)
         result = featureGraph_.evaluate(candidate);
     }
     document_ = std::move(candidate);
-    currentShape_ = document_.features().empty()
-        ? TopoDS_Shape{}
-        : std::move(result.resultShape);
+    currentShape_ = document_.features().empty() ? TopoDS_Shape{} : std::move(result.resultShape);
     currentBodies_ = std::move(result.bodies);
     currentFeatures_ = std::move(result.features);
-    selectedFeature_ = document_.features().empty()
-        ? std::optional<document::FeatureId>{}
-        : document_.features().back().id;
+    selectedFeature_ = document_.features().empty() ? std::optional<document::FeatureId>{}
+                                                    : document_.features().back().id;
     markFeaturesCurrent();
     cleanDocumentState_ = serializedDocument();
 }
 
-bool CadSession::recompute()
-{
+bool CadSession::recompute() {
     if (document_.features().empty()) {
         currentShape_.Nullify();
         currentBodies_.clear();
@@ -460,15 +407,13 @@ bool CadSession::recompute()
     }
 }
 
-std::string CadSession::serializedDocument() const
-{
+std::string CadSession::serializedDocument() const {
     std::ostringstream output;
     document::DocumentSerializer::write(document_, output);
     return output.str();
 }
 
-void CadSession::markFeaturesCurrent()
-{
+void CadSession::markFeaturesCurrent() {
     featureStates_.clear();
     featureStates_.reserve(document_.features().size());
     for (const document::FeatureDescriptor& feature : document_.features()) {
@@ -477,10 +422,7 @@ void CadSession::markFeaturesCurrent()
     }
 }
 
-void CadSession::markFeatureError(
-    document::FeatureId featureId,
-    const std::string& message)
-{
+void CadSession::markFeatureError(document::FeatureId featureId, const std::string& message) {
     bool failureReached = false;
     for (FeatureRuntimeState& state : featureStates_) {
         if (state.id == featureId) {
@@ -494,14 +436,12 @@ void CadSession::markFeatureError(
     }
 }
 
-void CadSession::normalizeSelection() noexcept
-{
+void CadSession::normalizeSelection() noexcept {
     if (selectedFeature_.has_value() && document_.contains(*selectedFeature_)) {
         return;
     }
-    selectedFeature_ = document_.features().empty()
-        ? std::optional<document::FeatureId>{}
-        : document_.features().back().id;
+    selectedFeature_ = document_.features().empty() ? std::optional<document::FeatureId>{}
+                                                    : document_.features().back().id;
 }
 
 } // namespace voelund::application

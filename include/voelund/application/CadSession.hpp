@@ -3,8 +3,8 @@
 #include <voelund/document/ModelDocument.hpp>
 #include <voelund/features/FeatureGraph.hpp>
 
-#include <optional>
 #include <filesystem>
+#include <optional>
 #include <span>
 #include <string>
 #include <vector>
@@ -20,7 +20,7 @@ struct FeatureRuntimeState final {
 };
 
 class CadSession final {
-public:
+  public:
     CadSession();
 
     [[nodiscard]] TopoDS_Shape currentShape() const;
@@ -30,33 +30,33 @@ public:
     [[nodiscard]] bool selectFeature(document::FeatureId featureId) noexcept;
     [[nodiscard]] document::FeatureId addBoxFeature();
     [[nodiscard]] document::FeatureId addCylinderFeature(
-        document::CylinderResultMode resultMode =
-            document::CylinderResultMode::separate);
-    [[nodiscard]] document::FeatureId addSketchExtrusion(
-        document::FeatureId supportFeature,
-        const document::SketchPlane& plane,
-        const document::SketchRectangle& rectangle,
-        double distance = 10.0);
+        document::CylinderResultMode resultMode = document::CylinderResultMode::separate);
+    [[nodiscard]] document::FeatureId addSketchExtrusion(document::FeatureId supportFeature,
+                                                         const document::SketchPlane& plane,
+                                                         const document::SketchRectangle& rectangle,
+                                                         double distance = 10.0);
+    [[nodiscard]] document::FeatureId addSketchExtrusion(document::FeatureId supportFeature,
+                                                         const document::SketchParameters& sketch,
+                                                         double distance = 10.0);
     [[nodiscard]] bool canAddCylinder() const noexcept;
     [[nodiscard]] bool canTransformFeature(document::FeatureId featureId) const noexcept;
-    [[nodiscard]] std::optional<document::FeatureId> transformBodyForFeature(
-        document::FeatureId featureId) const noexcept;
+    [[nodiscard]] std::optional<document::FeatureId>
+    transformBodyForFeature(document::FeatureId featureId) const noexcept;
     [[nodiscard]] const document::FeatureDescriptor& selectedFeatureDescriptor() const;
     [[nodiscard]] const kernel::BoxDimensions& selectedBoxDimensions() const;
     [[nodiscard]] const document::BoxParameters& selectedBoxParameters() const;
     [[nodiscard]] bool setSelectedBoxDimensions(const kernel::BoxDimensions& dimensions);
     [[nodiscard]] bool setSelectedBoxParameters(const document::BoxParameters& parameters);
     [[nodiscard]] const document::CylinderParameters& selectedCylinderParameters() const;
-    [[nodiscard]] const document::CylinderParameters& cylinderParameters(
-        document::FeatureId featureId) const;
-    [[nodiscard]] bool setSelectedCylinderParameters(
-        const document::CylinderParameters& parameters);
-    [[nodiscard]] bool setCylinderParameters(
-        document::FeatureId featureId,
-        const document::CylinderParameters& parameters);
+    [[nodiscard]] const document::CylinderParameters&
+    cylinderParameters(document::FeatureId featureId) const;
+    [[nodiscard]] bool
+    setSelectedCylinderParameters(const document::CylinderParameters& parameters);
+    [[nodiscard]] bool setCylinderParameters(document::FeatureId featureId,
+                                             const document::CylinderParameters& parameters);
     [[nodiscard]] const document::ExtrusionParameters& selectedExtrusionParameters() const;
-    [[nodiscard]] bool setSelectedExtrusionParameters(
-        const document::ExtrusionParameters& parameters);
+    [[nodiscard]] bool
+    setSelectedExtrusionParameters(const document::ExtrusionParameters& parameters);
     [[nodiscard]] const kernel::RigidTransform& selectedFeaturePlacement() const;
     [[nodiscard]] bool setSelectedFeaturePlacement(const kernel::RigidTransform& placement);
     [[nodiscard]] std::span<const FeatureRuntimeState> featureStates() const noexcept;
@@ -69,7 +69,7 @@ public:
     void saveDocument(const std::filesystem::path& path);
     void loadDocument(const std::filesystem::path& path);
 
-private:
+  private:
     [[nodiscard]] bool recompute();
     void markFeaturesCurrent();
     void markFeatureError(document::FeatureId featureId, const std::string& message);
