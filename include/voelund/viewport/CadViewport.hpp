@@ -16,6 +16,7 @@
 #include <memory>
 #include <optional>
 #include <span>
+#include <string>
 #include <utility>
 
 class QMouseEvent;
@@ -47,6 +48,16 @@ struct SketchSelectionIntent final {
     double localX;
     double localY;
     bool additive;
+};
+
+struct SceneSketchConstraint final {
+    std::uint64_t id;
+    std::string label;
+    double x;
+    double y;
+    double z;
+    bool conflicting;
+    bool editable;
 };
 
 struct PlanarFaceSelection final {
@@ -99,6 +110,8 @@ class CadViewport final : public CadViewportBase {
     setSketchElementSelectionHandler(std::function<void(const SketchSelectionIntent&)> handler);
     void setSelectedSketchElement(std::optional<std::uint64_t> elementId);
     void setSelectedSketchElements(std::span<const std::uint64_t> elementIds);
+    void setSketchConstraints(std::span<const SceneSketchConstraint> constraints);
+    void setSketchConstraintEditHandler(std::function<void(std::uint64_t)> handler);
     void setBodySelectionHandler(std::function<void(std::uint64_t)> handler);
     void setPlanarFaceSelectionHandler(std::function<void(const PlanarFaceSelection&)> handler);
     void setSketchRectangleHandler(std::function<void(const SketchRectangleResult&)> handler);
@@ -122,6 +135,7 @@ class CadViewport final : public CadViewportBase {
     void setTransformSnapping(bool enabled, double linearStep, double angularStep);
     [[nodiscard]] bool isRenderingReady() const noexcept;
     [[nodiscard]] std::size_t displayedSketchElementCount() const noexcept;
+    [[nodiscard]] std::size_t displayedSketchConstraintCount() const noexcept;
 
   protected:
 #if defined(VOELUND_VIEWPORT_QT_OPENGL)
@@ -134,6 +148,7 @@ class CadViewport final : public CadViewportBase {
     void showEvent(QShowEvent* event) override;
 #endif
     void mouseMoveEvent(QMouseEvent* event) override;
+    void mouseDoubleClickEvent(QMouseEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
     void mouseReleaseEvent(QMouseEvent* event) override;
     void wheelEvent(QWheelEvent* event) override;

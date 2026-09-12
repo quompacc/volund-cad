@@ -13,6 +13,7 @@ endif()
 list(APPEND voelund_viewport_sources
     SketchEditorInteraction.cpp
     SketchInteraction.cpp
+    SketchConstraintPresentation.cpp
     SketchPresentation.cpp
     TransformManipulator.cpp
     ViewportHighlightStyle.cpp

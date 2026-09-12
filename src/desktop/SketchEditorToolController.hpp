@@ -27,6 +27,7 @@ class SketchEditorToolController final {
     void confirmElement(const viewport::SketchElementIntent& intent);
     void translateFromViewport(double deltaX, double deltaY);
     [[nodiscard]] bool selectElement(const viewport::SketchSelectionIntent& intent);
+    void editConstraint(std::uint64_t constraintId);
     [[nodiscard]] bool isActive() const noexcept;
     void cancel();
 

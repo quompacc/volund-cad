@@ -1,6 +1,7 @@
 #pragma once
 
 #include <voelund/document/ModelDocument.hpp>
+#include <voelund/features/SketchConstraintAnnotations.hpp>
 #include <voelund/features/SketchConstraintSolver.hpp>
 #include <voelund/features/SketchEvaluation.hpp>
 
@@ -50,6 +51,12 @@ class SketchEditorSession final {
     [[nodiscard]] std::span<const document::SketchGeometryReference>
     selectedReferences() const noexcept;
     [[nodiscard]] bool isElementConflicting(document::SketchElementId elementId) const noexcept;
+    [[nodiscard]] bool
+    isConstraintConflicting(document::SketchConstraintId constraintId) const noexcept;
+    [[nodiscard]] std::optional<double>
+    constraintValue(document::SketchConstraintId constraintId) const noexcept;
+    [[nodiscard]] bool setConstraintValue(document::SketchConstraintId constraintId, double value);
+    [[nodiscard]] std::vector<features::SketchConstraintAnnotation> evaluatedConstraints() const;
     [[nodiscard]] std::span<const document::SketchElement> elements() const noexcept;
     [[nodiscard]] std::span<const document::SketchConstraint> constraints() const noexcept;
     [[nodiscard]] const features::SketchSolveResult& lastSolveResult() const noexcept;

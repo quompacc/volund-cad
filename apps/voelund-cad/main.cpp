@@ -4,10 +4,10 @@
 #include <voelund/features/SketchEvaluation.hpp>
 #include <voelund/viewport/CadViewport.hpp>
 
-#include <QApplication>
 #include <QAction>
-#include <QCoreApplication>
+#include <QApplication>
 #include <QComboBox>
+#include <QCoreApplication>
 #include <QElapsedTimer>
 #include <QGuiApplication>
 #include <QMouseEvent>
@@ -16,8 +16,7 @@
 
 #include <vector>
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
 #if defined(VOELUND_OCCT_GLES)
     QSurfaceFormat surfaceFormat;
     surfaceFormat.setRenderableType(QSurfaceFormat::OpenGLES);
@@ -34,22 +33,20 @@ int main(int argc, char* argv[])
     QApplication application(argc, argv);
     voelund::application::CadSession session;
     const bool isSmokeTest = QCoreApplication::arguments().contains("--smoke-test");
-    if (isSmokeTest
-        && qEnvironmentVariable("QT_QPA_PLATFORM") == QStringLiteral("wayland")
-        && !QGuiApplication::platformName().startsWith(QStringLiteral("wayland"))) {
+    if (isSmokeTest && qEnvironmentVariable("QT_QPA_PLATFORM") == QStringLiteral("wayland") &&
+        !QGuiApplication::platformName().startsWith(QStringLiteral("wayland"))) {
         return 2;
     }
     if (isSmokeTest) {
-        static_cast<void>(session.selectFeature(
-            voelund::document::ModelDocument::initialCylinderId()));
-        voelund::document::CylinderParameters parameters =
-            session.selectedCylinderParameters();
+        static_cast<void>(
+            session.selectFeature(voelund::document::ModelDocument::initialCylinderId()));
+        voelund::document::CylinderParameters parameters = session.selectedCylinderParameters();
         parameters.resultMode = voelund::document::CylinderResultMode::separate;
         static_cast<void>(session.setSelectedCylinderParameters(parameters));
-        static_cast<void>(session.selectFeature(
-            voelund::document::ModelDocument::initialBoxId()));
+        static_cast<void>(session.selectFeature(voelund::document::ModelDocument::initialBoxId()));
     }
     std::vector<voelund::viewport::SceneSketchElement> smokeSketchElements;
+    std::vector<voelund::viewport::SceneSketchConstraint> smokeSketchConstraints;
     if (isSmokeTest) {
         const voelund::document::SketchParameters sketch{
             {0.0, 0.0, 25.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0},
@@ -63,6 +60,8 @@ int main(int argc, char* argv[])
         for (const auto& element : voelund::features::evaluateSketchElements(sketch)) {
             smokeSketchElements.push_back({element.id.value(), element.shape});
         }
+        smokeSketchConstraints.push_back({1, "L 5.000 mm", 2.5, 0.0, 25.02, false, true});
+        smokeSketchConstraints.push_back({2, "[H]", 2.5, 7.0, 25.02, false, false});
     }
     voelund::desktop::MainWindow mainWindow(session);
     mainWindow.show();
@@ -72,54 +71,52 @@ int main(int argc, char* argv[])
     if (isSmokeTest) {
         smokeElapsed.start();
         smokeTimer.setInterval(50);
-        QObject::connect(&smokeTimer, &QTimer::timeout, &application,
-                         [&mainWindow, &smokeTimer, &smokeElapsed, &smokeSketchElements]() {
-            auto* viewport =
-                dynamic_cast<voelund::viewport::CadViewport*>(mainWindow.centralWidget());
-            if (viewport == nullptr) {
-                QCoreApplication::exit(1);
-                return;
-            }
-            if (!viewport->isRenderingReady()) {
-                if (smokeElapsed.elapsed() >= 10'000) {
+        QObject::connect(
+            &smokeTimer, &QTimer::timeout, &application,
+            [&mainWindow, &smokeTimer, &smokeElapsed, &smokeSketchElements,
+             &smokeSketchConstraints]() {
+                auto* viewport =
+                    dynamic_cast<voelund::viewport::CadViewport*>(mainWindow.centralWidget());
+                if (viewport == nullptr) {
                     QCoreApplication::exit(1);
+                    return;
                 }
-                return;
-            }
+                if (!viewport->isRenderingReady()) {
+                    if (smokeElapsed.elapsed() >= 10'000) {
+                        QCoreApplication::exit(1);
+                    }
+                    return;
+                }
 
-            QAction* transformAction =
-                mainWindow.findChild<QAction*>(QStringLiteral("transformAction"));
-            QComboBox* connectionModeInput =
-                mainWindow.findChild<QComboBox*>(QStringLiteral("connectionModeInput"));
-            if (transformAction == nullptr || connectionModeInput == nullptr
-                || !connectionModeInput->isVisible()
-                || !connectionModeInput->isEnabled()) {
-                QCoreApplication::exit(1);
-                return;
-            }
-            smokeTimer.stop();
-            transformAction->trigger();
-            QCoreApplication::processEvents();
-            viewport->setSketchElements(smokeSketchElements, 2);
-            QCoreApplication::processEvents();
-            if (viewport->displayedSketchElementCount() != smokeSketchElements.size()) {
-                QCoreApplication::exit(1);
-                return;
-            }
+                QAction* transformAction =
+                    mainWindow.findChild<QAction*>(QStringLiteral("transformAction"));
+                QComboBox* connectionModeInput =
+                    mainWindow.findChild<QComboBox*>(QStringLiteral("connectionModeInput"));
+                if (transformAction == nullptr || connectionModeInput == nullptr ||
+                    !connectionModeInput->isVisible() || !connectionModeInput->isEnabled()) {
+                    QCoreApplication::exit(1);
+                    return;
+                }
+                smokeTimer.stop();
+                transformAction->trigger();
+                QCoreApplication::processEvents();
+                viewport->setSketchElements(smokeSketchElements, 2);
+                viewport->setSketchConstraints(smokeSketchConstraints);
+                QCoreApplication::processEvents();
+                if (viewport->displayedSketchElementCount() != smokeSketchElements.size() ||
+                    viewport->displayedSketchConstraintCount() != smokeSketchConstraints.size()) {
+                    QCoreApplication::exit(1);
+                    return;
+                }
 
-            // A click in empty space must be harmless even though OCCT has no detected owner.
-            const QPointF localPosition(1.0, 1.0);
-            const QPointF globalPosition(viewport->mapToGlobal(localPosition.toPoint()));
-            QMouseEvent emptyClick(
-                QEvent::MouseButtonRelease,
-                localPosition,
-                globalPosition,
-                Qt::LeftButton,
-                Qt::NoButton,
-                Qt::NoModifier);
-            QCoreApplication::sendEvent(viewport, &emptyClick);
-            QCoreApplication::exit(0);
-        });
+                // A click in empty space must be harmless even though OCCT has no detected owner.
+                const QPointF localPosition(1.0, 1.0);
+                const QPointF globalPosition(viewport->mapToGlobal(localPosition.toPoint()));
+                QMouseEvent emptyClick(QEvent::MouseButtonRelease, localPosition, globalPosition,
+                                       Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
+                QCoreApplication::sendEvent(viewport, &emptyClick);
+                QCoreApplication::exit(0);
+            });
         smokeTimer.start();
     }
     return application.exec();

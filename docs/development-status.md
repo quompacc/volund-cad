@@ -79,6 +79,11 @@ gehören nicht zum Produktpfad.
   abgeleitete Profil-ID. Ein Klick auf eine Profilkante wählt die ganze Kontur;
   Strg-Klick erweitert oder reduziert die Auswahl. `Extrude Profiles` speichert
   genau diese Profil-IDs und extrudiert nur die ausgewählten Konturen.
+- Constraints werden im Sketch-Viewport als farbige Textglyphen an ihrer Geometrie
+  dargestellt. Richtungs- und Relationsconstraints erscheinen als kompakte Symbole;
+  Längen und Radien zeigen ihren Wert in Millimetern. Ein Doppelklick auf eine
+  Bemaßung öffnet die direkte Werteingabe und löst den Sketch sofort neu. Konflikte
+  färben sowohl die betroffene Geometrie als auch ihre Constraint-Glyphen rot.
 - Neue Dateien verwenden `VOLUND 5`; bestehende `VOLUND 1`-Rechtecksketches,
   `VOLUND 2`-Linien, `VOLUND 3`-Richtungsconstraints und `VOLUND 4`-Extrusionen
   werden beim Laden migriert. Alte Extrusionen behalten dabei ihre bisherige
@@ -121,7 +126,9 @@ angefordert wird.
 
 - PlaneGCS ist als gepinnte Solver-Komponente hinzugekommen; Eigen und Boost.Graph
   sind ausschließlich seine Build-Abhängigkeiten. Herkunft, Lizenz und die
-  Release-Pflichten sind in ADR 0005 und der Provenienzakte dokumentiert.
+  Release-Pflichten sind in ADR 0005 und der Provenienzakte dokumentiert. Das
+  schlanke FreeBSD-OCCT-Profil aktiviert FreeType für die nativen Constraint- und
+  Bemaßungsglyphen, bleibt aber ohne Xlib, TBB, VTK und Qt 5.
 - Beide Windows-Backends durchlaufen denselben Funktions- und Regressionsteststand.
 - Zehn CTest-Tests prüfen zusätzlich den unveränderten PlaneGCS-Kern sowie den
   Völund-Adapter einschließlich Freiheitsgraden und stabiler Konfliktzuordnung.
@@ -152,9 +159,10 @@ Das FreeBSD-Qt6-Paket ist ein kombinierter Wayland/X11-Build und enthält deshal
 erzwungener Wayland-QPA weiterhin ruhende ELF-Kanten zu `libX11` und `libGLX`.
 
 Die ersten vollständigen Mehrfach-Element-Erzeugungs- und Bearbeitungs-Slices sind auf
-beiden Windows-Backends und im nativen FreeBSD-Wayland-Controlpfad bestätigt. Der
-parametrische Sketch-Modus wird als Nächstes um sichtbare Constraint-Glyphen und die
-Bemaßungsinteraktion direkt im Viewport erweitert.
+beiden Windows-Backends und im nativen FreeBSD-Wayland-Controlpfad bestätigt. Sichtbare
+Constraint-Glyphen und die direkte Bemaßungsinteraktion sind umgesetzt. Als nächste
+parametrische Ausbaustufe folgen Fixierung, Punkt-auf-Objekt sowie Tangential-,
+Gleichheits- und Symmetrierelationen.
 
 Der direkte Push/Pull-Ablauf bleibt dabei als schneller Weg erhalten. Er ist eine
 Bedienoberfläche über denselben parametrischen Sketch- und Extrusionsfeatures, kein

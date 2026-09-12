@@ -51,7 +51,7 @@ cmake -S "$source_dir" -B "$build_dir" -G Ninja \
     -DUSE_TBB=OFF \
     -DUSE_TCL=OFF \
     -DUSE_TK=OFF \
-    -DUSE_FREETYPE=OFF \
+    -DUSE_FREETYPE=ON \
     -DUSE_FREEIMAGE=OFF \
     -DUSE_FFMPEG=OFF \
     -DUSE_RAPIDJSON=OFF \

@@ -325,7 +325,15 @@ bool unchangedMeasurementCanBecomeDrivingConstraint() {
         !editor.setSelectedLineLength(5.0) || editor.constraints().size() != 1 ||
         editor.setSelectedLineLength(5.0))
         return false;
-    return editor.lastSolveResult().status == voelund::features::SketchSolveStatus::success;
+    const auto constraintId = editor.constraints().front().id;
+    if (editor.constraintValue(constraintId) != std::optional<double>{5.0} ||
+        editor.evaluatedConstraints().size() != 1 || !editor.setConstraintValue(constraintId, 8.0))
+        return false;
+    const auto& line = std::get<voelund::document::SketchLine>(editor.elements().front().geometry);
+    return editor.lastSolveResult().status == voelund::features::SketchSolveStatus::success &&
+           editor.constraintValue(constraintId) == std::optional<double>{8.0} &&
+           std::abs(std::hypot(line.end.x - line.start.x, line.end.y - line.start.y) - 8.0) <
+               1.0e-8;
 }
 
 bool endpointRelationsDriveGeometryAndConflictsStayRecoverable() {

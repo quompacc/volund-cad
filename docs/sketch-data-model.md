@@ -88,6 +88,13 @@ degrees of freedom and stable conflicting constraint IDs. Conflicting elements a
 presented in red, OK stays disabled until the conflict is resolved, and the most
 recent constraint can be removed from the tool panel.
 
+Every constraint is evaluated into a presentation annotation in sketch-local space
+and transformed onto the supporting plane. The viewport renders direction and
+relation constraints as compact text glyphs and dimensions as millimetre values.
+Conflicting annotations are red. Distance and radius annotations are selectable;
+double-clicking one opens direct numeric input, updates its stable constraint record
+and immediately re-solves the temporary sketch.
+
 Rectangles and circles each form a closed profile. Connected line chains form a
 profile when at least three non-degenerate elements close within the modeling
 tolerance. Open elements remain valid sketch geometry but are ignored by extrusion.
@@ -110,6 +117,6 @@ continues to accept `VOLUND 1` through `VOLUND 4`; older extrusion records migra
 an empty profile list, which preserves their previous all-profiles behavior. A version-1 inline rectangle
 is migrated in memory to a `RECTANGLE` element with ID 1 and next ID 2; version-2 lines
 are migrated with a free direction. Version-3 horizontal and vertical line fields
-are migrated to independent constraint records. Saving any loaded document writes version 4.
+are migrated to independent constraint records. Saving any loaded document writes version 5.
 Invalid, duplicate or zero element IDs, non-finite coordinates, degenerate elements,
 inconsistent next IDs and unsatisfied line constraints are rejected while loading.

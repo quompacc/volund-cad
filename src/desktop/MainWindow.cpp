@@ -275,6 +275,8 @@ void MainWindow::connectInteractions() {
     impl_->viewport->setSketchEditorTranslationHandler([this](double deltaX, double deltaY) {
         impl_->sketchEditorTool->translateFromViewport(deltaX, deltaY);
     });
+    impl_->viewport->setSketchConstraintEditHandler(
+        [this](std::uint64_t id) { impl_->sketchEditorTool->editConstraint(id); });
     impl_->viewport->setSketchElementSelectionHandler(
         [this](const viewport::SketchSelectionIntent& intent) {
             if (impl_->sketchEditorTool->isActive()) {

@@ -1,6 +1,7 @@
 #include <voelund/viewport/CadViewport.hpp>
 
 #include "QtOcctGlContext.hpp"
+#include "SketchConstraintPresentation.hpp"
 #include "SketchEditorInteraction.hpp"
 #include "SketchInteraction.hpp"
 #include "SketchPresentation.hpp"
@@ -83,6 +84,7 @@ class CadViewport::Impl final {
         }
         manipulator.detach();
         sketchPresentation.clear(context);
+        sketchConstraintPresentation.clear(context);
         const bool isFirstShape = presentations.empty();
         for (const BodyPresentation& presentation : presentations) {
             context->Remove(presentation.shape, false);
@@ -97,6 +99,7 @@ class CadViewport::Impl final {
             presentations.push_back(BodyPresentation{body.id, presentation, body.transformable});
         }
         sketchPresentation.setElements(context, pendingSketchElements, selectedSketchElements);
+        sketchConstraintPresentation.setConstraints(context, pendingSketchConstraints);
         attachTransformTarget();
         if (isFirstShape) {
             view->FitAll(0.08, false);
@@ -130,9 +133,11 @@ class CadViewport::Impl final {
     SketchInteraction sketch;
     SketchEditorInteraction sketchEditor;
     SketchPresentation sketchPresentation;
+    SketchConstraintPresentation sketchConstraintPresentation;
     std::vector<BodyPresentation> presentations;
     std::vector<SceneBody> pendingBodies;
     std::vector<SceneSketchElement> pendingSketchElements;
+    std::vector<SceneSketchConstraint> pendingSketchConstraints;
     std::vector<std::uint64_t> selectedSketchElements;
     std::function<void(std::uint64_t)> bodySelectionHandler;
     std::function<void(const PlanarFaceSelection&)> planarFaceSelectionHandler;
@@ -141,6 +146,7 @@ class CadViewport::Impl final {
     std::function<void(const SketchElementIntent&)> sketchEditorElementHandler;
     std::function<void(double, double)> sketchEditorTranslationHandler;
     std::function<void(const SketchSelectionIntent&)> sketchElementSelectionHandler;
+    std::function<void(std::uint64_t)> sketchConstraintEditHandler;
     std::optional<std::uint64_t> transformTarget;
     QPoint gestureOrigin;
     Gesture gesture{Gesture::none};
@@ -183,6 +189,8 @@ void CadViewport::setBodies(std::span<const SceneBody> bodies) {
 void CadViewport::setSketchElements(std::span<const SceneSketchElement> elements,
                                     std::optional<std::uint64_t> selectedId) {
     impl_->pendingSketchElements.assign(elements.begin(), elements.end());
+    impl_->pendingSketchConstraints.clear();
+    impl_->sketchConstraintPresentation.clear(impl_->context);
     impl_->selectedSketchElements.clear();
     if (selectedId.has_value())
         impl_->selectedSketchElements.push_back(*selectedId);
@@ -191,6 +199,18 @@ void CadViewport::setSketchElements(std::span<const SceneSketchElement> elements
                                               impl_->selectedSketchElements);
     }
     update();
+}
+
+void CadViewport::setSketchConstraints(std::span<const SceneSketchConstraint> constraints) {
+    impl_->pendingSketchConstraints.assign(constraints.begin(), constraints.end());
+    if (impl_->ready)
+        impl_->sketchConstraintPresentation.setConstraints(impl_->context,
+                                                           impl_->pendingSketchConstraints);
+    update();
+}
+
+void CadViewport::setSketchConstraintEditHandler(std::function<void(std::uint64_t)> handler) {
+    impl_->sketchConstraintEditHandler = std::move(handler);
 }
 
 void CadViewport::setSketchElementSelectionHandler(
@@ -324,6 +344,10 @@ std::size_t CadViewport::displayedSketchElementCount() const noexcept {
     return impl_->sketchPresentation.size();
 }
 
+std::size_t CadViewport::displayedSketchConstraintCount() const noexcept {
+    return impl_->sketchConstraintPresentation.size();
+}
+
 void CadViewport::initializeGL() {
     try {
         const auto fallback = static_cast<std::uintptr_t>(effectiveWinId());
@@ -417,6 +441,8 @@ void CadViewport::mousePressEvent(QMouseEvent* event) {
             impl_->sketchElementPressed = false;
             if (impl_->context->HasDetected()) {
                 const auto detected = impl_->context->DetectedInteractive();
+                if (impl_->sketchConstraintPresentation.detectedEditableConstraint(detected))
+                    return;
                 if (const auto id = impl_->sketchPresentation.detectedElement(detected)) {
                     const bool additive = event->modifiers().testFlag(Qt::ControlModifier);
                     impl_->sketchElementPressed = !additive;
@@ -463,6 +489,20 @@ void CadViewport::mousePressEvent(QMouseEvent* event) {
             break;
         }
     }
+}
+
+void CadViewport::mouseDoubleClickEvent(QMouseEvent* event) {
+    if (!impl_->ready || event->button() != Qt::LeftButton)
+        return;
+    const QPoint position = event->position().toPoint();
+    impl_->context->MoveTo(position.x(), position.y(), impl_->view, false);
+    if (!impl_->context->HasDetected())
+        return;
+    const auto id = impl_->sketchConstraintPresentation.detectedEditableConstraint(
+        impl_->context->DetectedInteractive());
+    if (id.has_value() && impl_->sketchConstraintEditHandler)
+        impl_->sketchConstraintEditHandler(*id);
+    update();
 }
 
 void CadViewport::mouseReleaseEvent(QMouseEvent* event) {

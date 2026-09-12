@@ -5,8 +5,11 @@
 
 #include <voelund/application/CadSession.hpp>
 
+#include <QInputDialog>
 #include <QObject>
 
+#include <iomanip>
+#include <sstream>
 #include <utility>
 #include <vector>
 
@@ -33,6 +36,23 @@ viewport::SketchElementTool viewportTool(int index) {
     if (index == 2)
         return viewport::SketchElementTool::circle;
     return viewport::SketchElementTool::line;
+}
+
+std::string constraintLabel(const features::SketchConstraintAnnotation& annotation) {
+    if (annotation.kind == document::SketchConstraintKind::horizontal)
+        return "[H]";
+    if (annotation.kind == document::SketchConstraintKind::vertical)
+        return "[V]";
+    if (annotation.kind == document::SketchConstraintKind::coincident)
+        return "[C]";
+    if (annotation.kind == document::SketchConstraintKind::parallel)
+        return "[||]";
+    if (annotation.kind == document::SketchConstraintKind::perpendicular)
+        return "[90]";
+    std::ostringstream label;
+    label << (annotation.kind == document::SketchConstraintKind::radius ? "R " : "L ") << std::fixed
+          << std::setprecision(3) << annotation.value << " mm";
+    return label.str();
 }
 
 } // namespace
@@ -214,6 +234,25 @@ bool SketchEditorToolController::selectElement(const viewport::SketchSelectionIn
     return true;
 }
 
+void SketchEditorToolController::editConstraint(std::uint64_t constraintId) {
+    if (!editor_)
+        return;
+    const document::SketchConstraintId id{constraintId};
+    const auto current = editor_->constraintValue(id);
+    if (!current.has_value())
+        return;
+    bool accepted = false;
+    const double value = QInputDialog::getDouble(&panel_, QObject::tr("Edit sketch dimension"),
+                                                 QObject::tr("Value (mm)"), *current, 0.001,
+                                                 1'000'000.0, 3, &accepted);
+    if (!accepted || !editor_->setConstraintValue(id, value))
+        return;
+    syncSelectedDimensionInputs();
+    syncConstraintState();
+    refreshPresentation();
+    statusChanged_(QObject::tr("Sketch dimension set to %1 mm").arg(value, 0, 'f', 3));
+}
+
 void SketchEditorToolController::applyElementDimension(const std::string& id, double value) {
     if (!editor_)
         return;
@@ -378,6 +417,18 @@ void SketchEditorToolController::refreshPresentation() {
     if (selectedIds.empty() && editor_->selectedElement().has_value())
         selectedIds.push_back(editor_->selectedElement()->value());
     viewport_.setSelectedSketchElements(selectedIds);
+    const auto annotations = editor_->evaluatedConstraints();
+    std::vector<viewport::SceneSketchConstraint> constraints;
+    constraints.reserve(annotations.size());
+    for (const features::SketchConstraintAnnotation& annotation : annotations) {
+        const bool editable = annotation.kind == document::SketchConstraintKind::distance ||
+                              annotation.kind == document::SketchConstraintKind::radius;
+        constraints.push_back({annotation.id.value(), constraintLabel(annotation),
+                               annotation.position.X(), annotation.position.Y(),
+                               annotation.position.Z(),
+                               editor_->isConstraintConflicting(annotation.id), editable});
+    }
+    viewport_.setSketchConstraints(constraints);
 }
 
 void SketchEditorToolController::accept() {
