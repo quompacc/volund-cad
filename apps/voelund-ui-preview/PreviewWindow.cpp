@@ -132,7 +132,8 @@ PreviewWindow::PreviewWindow(application::CadSession& session, QWidget* parent)
                                          : QStringLiteral("Orthographic camera"));
     });
     auto* overlayTools = new QWidget;
-    overlayTools->setObjectName(QStringLiteral("cameraRail"));
+    overlayTools->setAttribute(Qt::WA_TranslucentBackground);
+    overlayTools->setAutoFillBackground(false);
     auto* overlayToolsLayout = new QVBoxLayout(overlayTools);
     overlayToolsLayout->setContentsMargins(8, 8, 8, 8);
     overlayToolsLayout->setSpacing(6);

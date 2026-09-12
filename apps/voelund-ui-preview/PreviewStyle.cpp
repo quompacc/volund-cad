@@ -28,7 +28,6 @@ QToolButton.command:pressed, QToolButton.command[active="true"] { background: #3
 QToolButton#finishSketch { background: #3D5E35; border: 1px solid #78915A; border-radius: 5px; padding: 8px 14px; font-weight: 600; }
 QToolButton#finishSketch:hover { background: #4C7041; }
 QWidget#workArea { background: #0E130F; }
-QWidget#cameraRail { background: #151B16; border-left: 1px solid #343D33; border-bottom: 1px solid #343D33; }
 QFrame#browserPanel, QFrame#inspectorPanel { background: #111711; border: 0; }
 QFrame#browserPanel { border-right: 1px solid #30372F; }
 QFrame#inspectorPanel { border-left: 1px solid #4A4328; }

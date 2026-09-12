@@ -45,6 +45,19 @@ if(WIN32)
         COMMENT "Deploying the Qt runtime for the UI preview"
         VERBATIM
     )
+
+    if(VOELUND_VIEWPORT_BACKEND STREQUAL "qt-opengl")
+        add_custom_command(
+            TARGET voelund-ui-preview
+            POST_BUILD
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                "$<TARGET_FILE:Qt6::OpenGL>"
+                "$<TARGET_FILE:Qt6::OpenGLWidgets>"
+                "$<TARGET_FILE_DIR:voelund-ui-preview>"
+            COMMENT "Deploying the Qt OpenGL runtime for the UI preview"
+            VERBATIM
+        )
+    endif()
 endif()
 
 if(BUILD_TESTING)

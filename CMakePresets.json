@@ -39,7 +39,9 @@
       },
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": "x64-windows-voelund",
-        "CMAKE_PREFIX_PATH": "${sourceDir}/.tools/qt"
+        "CMAKE_PREFIX_PATH": "${sourceDir}/.tools/qt",
+        "VOELUND_VIEWPORT_BACKEND": "qt-opengl",
+        "VCPKG_MANIFEST_MODE": "ON"
       }
     },
     {
