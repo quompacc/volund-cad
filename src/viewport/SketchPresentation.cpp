@@ -2,6 +2,7 @@
 
 #include <Aspect_TypeOfMarker.hxx>
 #include <Geom_CartesianPoint.hxx>
+#include <Graphic3d_ZLayerId.hxx>
 #include <Prs3d_PointAspect.hxx>
 #include <Quantity_Color.hxx>
 #include <Quantity_TypeOfColor.hxx>
@@ -41,6 +42,8 @@ void SketchPresentation::setElements(const occ::handle<AIS_InteractiveContext>& 
         presentation->SetWidth(isSelected || element.conflicting ? 5.0
                                : element.construction            ? 2.0
                                                                  : 3.0);
+        if (showPoints)
+            presentation->SetZLayer(Graphic3d_ZLayerId_Topmost);
         context->Display(presentation, false);
         context->Activate(presentation, AIS_Shape::SelectionMode(TopAbs_EDGE));
         std::vector<occ::handle<AIS_Point>> points;
@@ -51,7 +54,8 @@ void SketchPresentation::setElements(const occ::handle<AIS_InteractiveContext>& 
                     new Geom_CartesianPoint(point.worldX, point.worldY, point.worldZ);
                 occ::handle<AIS_Point> marker = new AIS_Point(geometry);
                 marker->Attributes()->SetPointAspect(
-                    new Prs3d_PointAspect(Aspect_TOM_O_POINT, selectedColor, 3.0));
+                    new Prs3d_PointAspect(Aspect_TOM_O_POINT, selectedColor, 5.0));
+                marker->SetZLayer(Graphic3d_ZLayerId_Topmost);
                 context->Display(marker, false);
                 points.push_back(marker);
             }

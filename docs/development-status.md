@@ -58,7 +58,10 @@ gehören nicht zum Produktpfad.
   Zeichenwerkzeugen. Sichtbare, zoomunabhängige Punktmarker kennzeichnen Linienenden,
   Kreismittelpunkte sowie Bogenmittel- und Endpunkte. Zeichenwerkzeuge fangen diese
   Referenzen in einem 12-Pixel-Radius und erzeugen beim Bestätigen automatisch eine
-  persistente PlaneGCS-Koinzidenz.
+  persistente PlaneGCS-Koinzidenz. Während der Bearbeitung liegen Sketch-Geometrie und
+  Fangpunkte in einer eigenen Vordergrundebene und bleiben auch auf hellen Flächen
+  kontrastreich. Auf Seitenflächen zeigt die globale Z-Richtung nach oben, auf
+  horizontalen Flächen die globale Y-Richtung, damit das Modell nicht um 90 Grad kippt.
 - Im laufenden Bearbeitungsmodus kann ein ausgewähltes Element direkt im Viewport
   gezogen werden. Die Bewegung wird auf die Sketchebene projiziert, verwendet das
   lineare Raster und synchronisiert die X/Y-Livewerte. Der Drag verändert weiterhin
