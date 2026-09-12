@@ -48,8 +48,9 @@ cmake --build --preset windows-msvc
 ctest --preset windows-msvc
 ```
 
-The Qt-owned OpenGL context backend can be built separately while the verified native
-Win32 backend remains the default:
+The Qt-owned OpenGL context backend is the Windows default. It keeps the OCCT scene
+and Qt overlays in one composition path, which is required for transparent camera and
+tool overlays. The explicit preset remains available as an isolated build directory:
 
 ```powershell
 cmake --preset windows-msvc-qt-opengl

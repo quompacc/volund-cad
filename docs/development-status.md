@@ -163,6 +163,21 @@ gehören nicht zum Produktpfad.
   direkt anklickbare Schaltflächenmatrix erreichbar; Relationen, Bemaßungen und
   Bearbeitungsbefehle liegen zweispaltig in kurzen Tabs. Zahlenfelder erscheinen
   nur für das aktive Werkzeug beziehungsweise die aktuelle Auswahl.
+- Die neue Völund-Oberflächenvorschau übernimmt die dunkle grün-goldene Gestaltung
+  des Völund Vault. Ribbon, Browser, Timeline und Statuszeile bilden ein ruhiges
+  Fusion-orientiertes Arbeitsgerüst; der OCCT-Viewport bleibt der echte interaktive
+  Viewer und kein statisches Mockup.
+- Der Viewer besitzt räumliches Raster, Tiefenwirkung, Achsentriedron sowie einen
+  eigenen Kamera-Würfel für Top, Front, Right, Isometric, Fit und den Wechsel zwischen
+  orthografischer und perspektivischer Projektion. Orbit, Pan und Zoom bleiben direkt
+  im Viewport bedienbar.
+- Beim Programmstart ist kein Modellierwerkzeug voraktiviert. Temporäre
+  Werkzeugparameter werden nur während des aktiven Befehls eingeblendet; OK und
+  Cancel beenden den Befehl und entfernen die Palette wieder.
+- Der Kamera-Würfel wird ohne rechteckige Trägerfläche transparent über dem
+  3D-Viewport komponiert. Windows verwendet deshalb wie FreeBSD standardmäßig den
+  Qt-eigenen OpenGL-Kontext. Die dafür benötigten Qt-OpenGL-Laufzeitbibliotheken
+  werden beim Windows-Build automatisch neben der Vorschau-Anwendung bereitgestellt.
 
 ## Modul- und Bedienarchitektur
 
@@ -202,7 +217,7 @@ angefordert wird.
   schlanke FreeBSD-OCCT-Profil aktiviert FreeType für die nativen Constraint- und
   Bemaßungsglyphen, bleibt aber ohne Xlib, TBB, VTK und Qt 5.
 - Beide Windows-Backends durchlaufen denselben Funktions- und Regressionsteststand.
-- Fünfzehn CTest-Tests prüfen zusätzlich den unveränderten PlaneGCS-Kern sowie den
+- Sechzehn CTest-Tests prüfen zusätzlich den unveränderten PlaneGCS-Kern sowie den
   Völund-Adapter einschließlich Freiheitsgraden und stabiler Konfliktzuordnung.
 - Regressionstests sichern sowohl die unabhängige Bewegung getrennter Körper als auch
   die gemeinsame Verschiebung eines Join-Ergebnisses einschließlich Undo.
@@ -240,3 +255,21 @@ Punktausrichtungen sowie Fixierung und Punkt-Linien-Abstand sind vollständig pa
 Der direkte Push/Pull-Ablauf bleibt dabei als schneller Weg erhalten. Er ist eine
 Bedienoberfläche über denselben parametrischen Sketch- und Extrusionsfeatures, kein
 Ersatz für den vollständigen Sketch-Editor.
+
+## Übergabe für den nächsten Arbeitstag
+
+Der visuelle Grundaufbau und die Viewer-Navigation sind abgenommen. Der nächste Slice
+beginnt nicht mit einer weiteren flächigen Umgestaltung, sondern bindet die
+Modellierbefehle schrittweise an das neue Bedienkonzept:
+
+1. Sketch als erster vollständiger Ribbon-zu-Viewport-zu-Toolpanel-Ablauf;
+2. kontextabhängige Sketchauswahl und saubere Bearbeitungsebene;
+3. Extrude/Push-Pull mit echter Profilwahl, Live-Vorschau, OK und Cancel;
+4. anschließend Fillet und weitere Solid-Werkzeuge nach demselben Lebenszyklus.
+
+Bekannt und bewusst noch offen sind die endgültige grafische Ausarbeitung des
+Kamera-Würfels, die vollständige funktionale Ribbon-Belegung und die Meridian-Abnahme
+auf dem Ziel-Desktop. Zwei irrtümlich beim SCP-Abgleich erzeugte Kopien
+`/home/eduard/src/voelund/PreviewWindow.cpp` und
+`/home/eduard/src/voelund/PreviewStyle.cpp` liegen auf der FreeBSD-Maschine außerhalb
+des Buildpfads; sie wurden mangels ausdrücklicher Löschfreigabe nicht entfernt.

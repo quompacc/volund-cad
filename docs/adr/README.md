@@ -9,3 +9,4 @@ Current decisions:
 - [0003: Generic active-tool lifecycle](0003-generic-tool-panel-lifecycle.md)
 - [0004: FreeBSD-first Meridian desktop integration](0004-freebsd-first-meridian-integration.md)
 - [0005: PlaneGCS as the sketch constraint solver](0005-planegcs-sketch-solver.md)
+- [0006: Qt-owned OpenGL viewport on all desktop targets](0006-qt-owned-opengl-viewport.md)
