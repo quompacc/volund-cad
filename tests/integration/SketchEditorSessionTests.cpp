@@ -117,6 +117,96 @@ bool extrusionStillRequiresAClosedProfile() {
         && session.featureStates().back().message.find("closed profile") != std::string::npos;
 }
 
+bool existingSketchCanBeEditedAsOneTransaction() {
+    voelund::application::CadSession session;
+    session.newDocument();
+    const auto support = session.addBoxFeature();
+    voelund::application::SketchEditorSession create(session, support, plane);
+    create.setTool(voelund::application::SketchDrawingTool::rectangle);
+    if (!add(create, {0.0, 0.0}, {4.0, 3.0}, 1)) return false;
+    create.setTool(voelund::application::SketchDrawingTool::circle);
+    if (!add(create, {8.0, 2.0}, {10.0, 2.0}, 2)) return false;
+    create.setTool(voelund::application::SketchDrawingTool::line);
+    if (!add(create, {0.0, 6.0}, {3.0, 6.0}, 3)) return false;
+    const auto sketchId = create.accept();
+    const auto original = session.sketchParameters(sketchId);
+
+    voelund::application::SketchEditorSession edit(
+        session, sketchId, support, session.sketchParameters(sketchId));
+    if (!edit.selectElement(voelund::document::SketchElementId{1})
+        || !edit.translateSelected(1.0, 0.0)
+        || !edit.selectElement(voelund::document::SketchElementId{2})
+        || !edit.translateSelected(-1.0, 1.0)
+        || !edit.selectElement(voelund::document::SketchElementId{3})
+        || !edit.translateSelected(2.0, 1.0)
+        || !edit.removeSelected()) return false;
+    edit.setTool(voelund::application::SketchDrawingTool::line);
+    if (!add(edit, {12.0, 4.0}, {13.0, 4.0}, 4)
+        || edit.closedProfileCount() != 2) return false;
+    static_cast<void>(edit.accept());
+
+    const auto changed = session.sketchParameters(sketchId);
+    if (changed.elements.values.size() != 3 || changed.elements.nextId != 5
+        || changed == original) return false;
+    const auto& movedRectangle = std::get<voelund::document::SketchRectangle>(
+        changed.elements.values[0].geometry);
+    const auto& movedCircle = std::get<voelund::document::SketchCircle>(
+        changed.elements.values[1].geometry);
+    if (movedRectangle.first != voelund::document::SketchPoint{1.0, 0.0}
+        || movedCircle.center != voelund::document::SketchPoint{7.0, 3.0}) return false;
+    if (!session.undo() || session.sketchParameters(sketchId) != original
+        || !session.redo() || session.sketchParameters(sketchId) != changed) return false;
+    const std::filesystem::path path =
+        std::filesystem::current_path() / "voelund-edited-sketch-roundtrip.volund";
+    session.saveDocument(path);
+    voelund::application::CadSession loaded;
+    loaded.loadDocument(path);
+    std::error_code error;
+    std::filesystem::remove(path, error);
+    return !error && loaded.selectFeature(sketchId)
+        && loaded.selectedSketchParameters() == changed;
+}
+
+bool cancellingExistingSketchEditLeavesHistoryUntouched() {
+    voelund::application::CadSession session;
+    session.newDocument();
+    const auto support = session.addBoxFeature();
+    voelund::application::SketchEditorSession create(session, support, plane);
+    if (!add(create, {0.0, 0.0}, {4.0, 0.0}, 1)) return false;
+    const auto sketchId = create.accept();
+    const auto original = session.sketchParameters(sketchId);
+    voelund::application::SketchEditorSession edit(
+        session, sketchId, support, original);
+    if (!edit.selectElement(voelund::document::SketchElementId{1})
+        || !edit.translateSelected(5.0, 5.0)) return false;
+    edit.cancel();
+    if (session.sketchParameters(sketchId) != original) return false;
+    return session.undo() && session.features().size() == 1;
+}
+
+bool editingClosedGeometryRecomputesDependentExtrusion() {
+    voelund::application::CadSession session;
+    session.newDocument();
+    const auto support = session.addBoxFeature();
+    const voelund::document::SketchParameters sketch{
+        plane, {{{voelund::document::SketchElementId{1},
+                  voelund::document::SketchRectangle{1.0, 1.0, 5.0, 4.0}}}, 2}};
+    static_cast<void>(session.addSketchExtrusion(support, sketch, 5.0));
+    const auto sketchId = session.features()[1].id;
+    const auto original = session.sketchParameters(sketchId);
+    voelund::application::SketchEditorSession edit(
+        session, sketchId, support, original);
+    if (!edit.selectElement(voelund::document::SketchElementId{1})
+        || !edit.translateSelected(2.0, 1.0)
+        || edit.closedProfileCount() != 1) return false;
+    static_cast<void>(edit.accept());
+    if (session.featureStates().back().status
+        != voelund::application::FeatureRuntimeStatus::current) return false;
+    return session.undo() && session.sketchParameters(sketchId) == original
+        && session.featureStates().back().status
+            == voelund::application::FeatureRuntimeStatus::current;
+}
+
 } // namespace
 
 int main() {
@@ -137,6 +227,15 @@ int main() {
     }
     if (!extrusionStillRequiresAClosedProfile()) {
         std::cerr << "Open sketch was incorrectly extruded\n"; return 1;
+    }
+    if (!existingSketchCanBeEditedAsOneTransaction()) {
+        std::cerr << "Existing sketch edit transaction failed\n"; return 1;
+    }
+    if (!cancellingExistingSketchEditLeavesHistoryUntouched()) {
+        std::cerr << "Cancelled existing sketch edit changed history\n"; return 1;
+    }
+    if (!editingClosedGeometryRecomputesDependentExtrusion()) {
+        std::cerr << "Edited sketch did not recompute its extrusion\n"; return 1;
     }
     return 0;
 }

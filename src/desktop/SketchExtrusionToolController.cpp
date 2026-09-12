@@ -36,9 +36,11 @@ void SketchExtrusionToolController::begin(
         QObject::tr("Set two rectangle corners, pull the preview, then confirm."),
         {{"distance", QObject::tr("Distance"), distance_, 0.001, 1'000'000.0}},
         {},
+        {},
         [this](const std::string& id, double value) {
             if (id == "distance") setDistance(value);
         },
+        {},
         {},
         [this]() { accept(); },
         [this]() { cancel(); }});

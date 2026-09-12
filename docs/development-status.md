@@ -47,6 +47,12 @@ gehören nicht zum Produktpfad.
   und Escape hinterlassen weder Feature noch Undo-Eintrag. Rein offene
   Liniengeometrie ist ein gültiger speicherbarer Sketch; erst die Extrusion verlangt
   mindestens ein geschlossenes Profil.
+- Ein ausgewählter Sketch kann über `Edit Sketch` erneut geöffnet werden. Vorhandene
+  Elemente behalten ihre IDs, lassen sich auswählen, in sketchlokalem X/Y
+  verschieben oder löschen; neue Elemente verwenden die fortgesetzte ID-Sequenz.
+  OK recomputiert abhängige Profile und Extrusionen in einer Transaktion, Cancel
+  verwirft sämtliche temporären Änderungen. Undo/Redo und Save/Load sind für diesen
+  vollständigen Bearbeitungsablauf automatisiert geprüft.
 - Neue Dateien verwenden `VOLUND 2`; bestehende `VOLUND 1`-Rechtecksketches werden
   beim Laden verlustfrei auf das neue Elementmodell migriert.
 - Ein temporäres generisches Tool-Panel bietet Parameter, Live-Vorschau, OK und
@@ -116,11 +122,11 @@ VTK und Qt 5 aus OCCT. Offen bleibt die Abnahme derselben Prüfkette unter Merid
 Das FreeBSD-Qt6-Paket ist ein kombinierter Wayland/X11-Build und enthält deshalb trotz
 erzwungener Wayland-QPA weiterhin ruhende ELF-Kanten zu `libX11` und `libGLX`.
 
-Der erste vollständige Mehrfach-Element-Editor-Slice ist auf beiden Windows-Backends
-und im nativen FreeBSD-Wayland-Controlpfad bestätigt. Der parametrische Sketch-Modus
-wird als Nächstes fortgesetzt mit:
+Die ersten vollständigen Mehrfach-Element-Erzeugungs- und Bearbeitungs-Slices sind auf
+beiden Windows-Backends und im nativen FreeBSD-Wayland-Controlpfad bestätigt. Der
+parametrische Sketch-Modus wird als Nächstes fortgesetzt mit:
 
-1. Bearbeiten bereits bestätigter Linien, Rechtecke und Kreise;
+1. direkter Griffbearbeitung vorhandener Geometrie im Viewport;
 2. Maßen und geometrischen Constraints;
 3. stabilen Profilidentitäten und freier Auswahl eines oder mehrerer Profile für
    nachfolgende Extrusionen.

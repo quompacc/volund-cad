@@ -33,6 +33,10 @@ class CadSession final {
     selectedSketchElement() const noexcept;
     [[nodiscard]] bool selectSketchElement(document::SketchElementId elementId) noexcept;
     [[nodiscard]] const document::SketchParameters& selectedSketchParameters() const;
+    [[nodiscard]] const document::SketchParameters&
+    sketchParameters(document::FeatureId featureId) const;
+    [[nodiscard]] bool setSketchParameters(
+        document::FeatureId featureId, const document::SketchParameters& parameters);
     [[nodiscard]] std::vector<features::EvaluatedSketchElement>
     selectedSketchElements() const;
     [[nodiscard]] document::FeatureId addBoxFeature();

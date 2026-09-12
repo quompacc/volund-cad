@@ -216,6 +216,21 @@ const document::SketchParameters& CadSession::selectedSketchParameters() const {
     return document_.sketchParameters(selectedFeature_.value());
 }
 
+const document::SketchParameters& CadSession::sketchParameters(
+    document::FeatureId featureId) const {
+    return document_.sketchParameters(featureId);
+}
+
+bool CadSession::setSketchParameters(
+    document::FeatureId featureId, const document::SketchParameters& parameters) {
+    if (!document_.setSketchParameters(featureId, parameters)) {
+        return false;
+    }
+    selectedFeature_ = featureId;
+    selectedSketchElement_.reset();
+    return recompute();
+}
+
 std::vector<features::EvaluatedSketchElement> CadSession::selectedSketchElements() const {
     return features::evaluateSketchElements(selectedSketchParameters());
 }

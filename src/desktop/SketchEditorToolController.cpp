@@ -1,5 +1,6 @@
 #include "SketchEditorToolController.hpp"
 
+#include "SketchViewAdapter.hpp"
 #include "ToolPanelHost.hpp"
 
 #include <voelund/application/CadSession.hpp>
@@ -40,20 +41,58 @@ SketchEditorToolController::SketchEditorToolController(
       sceneChanged_(std::move(sceneChanged)), statusChanged_(std::move(statusChanged)) {}
 
 void SketchEditorToolController::begin(const viewport::PlanarFaceSelection& support) {
+    editing_ = false;
     editor_ = std::make_unique<application::SketchEditorSession>(
         session_, document::FeatureId{support.bodyId}, sketchPlane(support));
-    panel_.begin(ToolPanelDefinition{
-        QObject::tr("Sketch Editor"),
-        QObject::tr("Choose a tool and set two points. Add any number of elements, then confirm."),
-        {}, {{"tool", QObject::tr("Tool"),
-             {QObject::tr("Line"), QObject::tr("Rectangle"), QObject::tr("Circle")}, 0}},
-        {}, [this](const std::string& id, int index) {
-            if (id == "tool") setTool(index);
-        },
-        [this]() { accept(); }, [this]() { cancel(); }});
+    showPanel();
+    panel_.setAcceptEnabled(editor_->canAccept());
     viewport_.beginSketchEditor(support, viewport::SketchElementTool::line);
     refreshPresentation();
     statusChanged_(QObject::tr("Sketch editor: set two points for a line"));
+}
+
+bool SketchEditorToolController::beginSelectedSketch() {
+    const auto selected = session_.selectedFeature();
+    if (!selected.has_value()) return false;
+    const document::FeatureDescriptor& descriptor = session_.selectedFeatureDescriptor();
+    if (descriptor.kind != document::FeatureKind::sketch
+        || !descriptor.inputFeature.has_value()) return false;
+    const document::SketchParameters parameters = session_.sketchParameters(*selected);
+    editing_ = true;
+    editor_ = std::make_unique<application::SketchEditorSession>(
+        session_, *selected, *descriptor.inputFeature, parameters);
+    const auto& plane = parameters.plane;
+    const viewport::PlanarFaceSelection support{
+        descriptor.inputFeature->value(), plane.originX, plane.originY, plane.originZ,
+        plane.normalX, plane.normalY, plane.normalZ,
+        plane.xDirectionX, plane.xDirectionY, plane.xDirectionZ};
+    showPanel();
+    panel_.setAcceptEnabled(editor_->canAccept());
+    viewport_.beginSketchEditor(support, viewport::SketchElementTool::line);
+    refreshPresentation();
+    statusChanged_(QObject::tr("Editing existing sketch"));
+    return true;
+}
+
+void SketchEditorToolController::showPanel() {
+    translationX_ = 0.0;
+    translationY_ = 0.0;
+    panel_.begin(ToolPanelDefinition{
+        QObject::tr("Sketch Editor"),
+        QObject::tr("Choose a tool and set two points. Add any number of elements, then confirm."),
+        {{"translation_x", QObject::tr("Selected ΔX"), 0.0, -1'000'000.0, 1'000'000.0},
+         {"translation_y", QObject::tr("Selected ΔY"), 0.0, -1'000'000.0, 1'000'000.0}},
+        {{"tool", QObject::tr("Tool"),
+             {QObject::tr("Line"), QObject::tr("Rectangle"), QObject::tr("Circle")}, 0}},
+        {{"delete", QObject::tr("Delete selected element")}},
+        [this](const std::string& id, double value) { applyTranslation(id, value); },
+        [this](const std::string& id, int index) {
+            if (id == "tool") setTool(index);
+        },
+        [this](const std::string& id) {
+            if (id == "delete") removeSelected();
+        },
+        [this]() { accept(); }, [this]() { cancel(); }});
 }
 
 void SketchEditorToolController::setTool(int index) {
@@ -81,6 +120,7 @@ void SketchEditorToolController::confirmElement(const viewport::SketchElementInt
             {intent.firstX, intent.firstY}, {intent.secondX, intent.secondY})) return;
     const auto id = editor_->confirmPreview();
     panel_.setAcceptEnabled(editor_->canAccept());
+    resetTranslationInputs();
     refreshPresentation();
     if (id.has_value()) {
         statusChanged_(QObject::tr("Sketch element #%1 added").arg(id->value()));
@@ -90,8 +130,40 @@ void SketchEditorToolController::confirmElement(const viewport::SketchElementInt
 bool SketchEditorToolController::selectElement(std::uint64_t rawId) {
     if (!editor_ || !editor_->selectElement(document::SketchElementId{rawId})) return false;
     viewport_.setSelectedSketchElement(rawId);
+    resetTranslationInputs();
     statusChanged_(QObject::tr("Sketch element #%1 selected").arg(rawId));
     return true;
+}
+
+void SketchEditorToolController::applyTranslation(const std::string& id, double value) {
+    if (!editor_ || !editor_->selectedElement().has_value()) return;
+    double deltaX = 0.0;
+    double deltaY = 0.0;
+    if (id == "translation_x") {
+        deltaX = value - translationX_;
+        translationX_ = value;
+    } else if (id == "translation_y") {
+        deltaY = value - translationY_;
+        translationY_ = value;
+    } else {
+        return;
+    }
+    if (editor_->translateSelected(deltaX, deltaY)) refreshPresentation();
+}
+
+void SketchEditorToolController::removeSelected() {
+    if (!editor_ || !editor_->removeSelected()) return;
+    resetTranslationInputs();
+    panel_.setAcceptEnabled(editor_->canAccept());
+    refreshPresentation();
+    statusChanged_(QObject::tr("Sketch element deleted"));
+}
+
+void SketchEditorToolController::resetTranslationInputs() {
+    translationX_ = 0.0;
+    translationY_ = 0.0;
+    panel_.setLengthValue("translation_x", 0.0);
+    panel_.setLengthValue("translation_y", 0.0);
 }
 
 void SketchEditorToolController::refreshPresentation() {
@@ -109,19 +181,25 @@ void SketchEditorToolController::refreshPresentation() {
 
 void SketchEditorToolController::accept() {
     if (!editor_ || !editor_->canAccept()) return;
+    const bool wasEditing = editing_;
     static_cast<void>(editor_->accept());
     editor_.reset();
+    editing_ = false;
     viewport_.cancelSketch();
     panel_.end();
     sceneChanged_();
-    statusChanged_(QObject::tr("Sketch created"));
+    statusChanged_(wasEditing ? QObject::tr("Sketch updated") : QObject::tr("Sketch created"));
 }
 
 void SketchEditorToolController::cancel() {
     if (editor_) editor_->cancel();
     editor_.reset();
+    editing_ = false;
     viewport_.cancelSketch();
-    viewport_.setSketchElements({});
+    const auto selected = session_.selectedSketchElement();
+    viewport_.setSketchElements(
+        makeSceneSketchElements(session_),
+        selected.has_value() ? std::optional<std::uint64_t>{selected->value()} : std::nullopt);
     panel_.end();
     statusChanged_(QObject::tr("Sketch editor cancelled"));
 }

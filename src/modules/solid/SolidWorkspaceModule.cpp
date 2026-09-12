@@ -45,6 +45,12 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services)
         "Move or rotate the selected separate body", "M",
         workspaces::CommandGroup::modify, true, true,
         std::move(services.transform), std::move(services.canTransform)});
+    commands_.push_back({
+        "solid.modify.edit_sketch", "Edit Sketch",
+        "Edit the selected sketch geometry", {},
+        workspaces::CommandGroup::modify, true, false,
+        simpleCommand(std::move(services.editSketch)),
+        std::move(services.canEditExistingSketch)});
 }
 
 std::string SolidWorkspaceModule::id() const

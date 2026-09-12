@@ -29,13 +29,20 @@ struct ToolChoiceParameter final {
     int currentIndex;
 };
 
+struct ToolAction final {
+    std::string id;
+    QString label;
+};
+
 struct ToolPanelDefinition final {
     QString title;
     QString guidance;
     std::vector<ToolLengthParameter> lengthParameters;
     std::vector<ToolChoiceParameter> choiceParameters;
+    std::vector<ToolAction> actions;
     std::function<void(const std::string&, double)> parameterChanged;
     std::function<void(const std::string&, int)> choiceChanged;
+    std::function<void(const std::string&)> actionTriggered;
     std::function<void()> accept;
     std::function<void()> cancel;
 };

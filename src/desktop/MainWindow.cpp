@@ -145,12 +145,24 @@ void MainWindow::createWorkspaceToolbar()
         }
         impl_->sketchExtrusionTool->begin(*impl_->selectedPlanarFace);
     };
+    services.editSketch = [this]() {
+        if (impl_->sketchExtrusionTool->isActive()) {
+            impl_->sketchExtrusionTool->cancel();
+        }
+        static_cast<void>(impl_->sketchEditorTool->beginSelectedSketch());
+    };
     services.transform = [this](bool enabled) {
         impl_->viewport->setTransformToolEnabled(enabled);
     };
     services.canAddCylinder = [this]() { return impl_->session.canAddCylinder(); };
     services.canEditSketch = [this]() { return impl_->selectedPlanarFace.has_value(); };
     services.canSketch = [this]() { return impl_->selectedPlanarFace.has_value(); };
+    services.canEditExistingSketch = [this]() {
+        const auto selected = impl_->session.selectedFeature();
+        return selected.has_value()
+            && impl_->session.selectedFeatureDescriptor().kind
+                == document::FeatureKind::sketch;
+    };
     services.canTransform = [this]() {
         const auto selected = impl_->session.selectedFeature();
         return selected.has_value() && impl_->session.canTransformFeature(*selected);

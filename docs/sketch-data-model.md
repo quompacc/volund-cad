@@ -47,8 +47,15 @@ or Escape discards the editor session without adding a feature or history entry.
 Sketches containing only open geometry are valid document features and survive
 Save/Load. The feature graph evaluates their element geometry without requiring a
 face; only an extrusion evaluates profile faces and reports an error when no closed
-profile exists. Editing already committed elements, dimensions, constraints and
-persistent profile selection remain later slices.
+profile exists.
+
+The editor can also reopen a selected sketch. Existing elements retain their IDs and
+may be selected, translated in sketch-local X/Y coordinates or deleted; newly added
+elements continue from the persisted `nextId`. OK replaces the sketch parameters as
+one document transaction and recomputes downstream profiles and extrusions. Cancel
+discards every temporary edit. Undo/Redo and Save/Load therefore preserve both the
+edited geometry and the monotonic ID allocation. Direct handle editing, dimensions,
+constraints and persistent profile selection remain later slices.
 
 Rectangles and circles each form a closed profile. Connected line chains form a
 profile when at least three non-degenerate elements close within the modeling

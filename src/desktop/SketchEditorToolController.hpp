@@ -21,6 +21,7 @@ public:
         std::function<void(const QString&)> statusChanged);
 
     void begin(const viewport::PlanarFaceSelection& support);
+    [[nodiscard]] bool beginSelectedSketch();
     void updatePreview(const std::optional<viewport::SketchElementIntent>& intent);
     void confirmElement(const viewport::SketchElementIntent& intent);
     [[nodiscard]] bool selectElement(std::uint64_t rawId);
@@ -29,6 +30,10 @@ public:
 
 private:
     void setTool(int index);
+    void applyTranslation(const std::string& id, double value);
+    void removeSelected();
+    void resetTranslationInputs();
+    void showPanel();
     void refreshPresentation();
     void accept();
 
@@ -38,6 +43,9 @@ private:
     std::function<void()> sceneChanged_;
     std::function<void(const QString&)> statusChanged_;
     std::unique_ptr<application::SketchEditorSession> editor_;
+    double translationX_{0.0};
+    double translationY_{0.0};
+    bool editing_{false};
 };
 
 } // namespace voelund::desktop

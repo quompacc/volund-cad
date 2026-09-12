@@ -90,6 +90,16 @@ void ToolPanelHost::begin(ToolPanelDefinition definition)
         parameterLayout_->addRow(parameter.label, input);
         choiceInputs_.emplace_back(parameter.id, input);
     }
+    for (const ToolAction& action : definition_.actions) {
+        auto* button = new QPushButton(action.label, content_);
+        const std::string actionId = action.id;
+        connect(button, &QPushButton::clicked, this, [this, actionId]() {
+            if (definition_.actionTriggered) {
+                definition_.actionTriggered(actionId);
+            }
+        });
+        parameterLayout_->addRow(QString{}, button);
+    }
     acceptButton_->setEnabled(false);
     show();
     raise();
