@@ -20,11 +20,8 @@ void drawIcon(QPainter& painter, Icon icon)
     switch (icon) {
     case Icon::Logo: {
         QPainterPath path;
-        path.moveTo(4, 5);
-        path.lineTo(9, 19);
-        path.lineTo(12, 11);
-        path.lineTo(15, 19);
-        path.lineTo(20, 5);
+        path.moveTo(12, 2); path.lineTo(22, 12); path.lineTo(12, 22); path.lineTo(2, 12); path.closeSubpath();
+        path.moveTo(8, 7); path.lineTo(11, 16); path.lineTo(13, 11); path.lineTo(16, 16); path.lineTo(18, 7);
         painter.drawPath(path);
         break;
     }

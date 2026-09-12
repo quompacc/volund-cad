@@ -50,7 +50,7 @@ QFrame* separator()
 {
     auto* line = new QFrame;
     line->setFrameShape(QFrame::HLine);
-    line->setStyleSheet(QStringLiteral("background:#37414A; max-height:1px; border:0;"));
+    line->setStyleSheet(QStringLiteral("background:#343B31; max-height:1px; border:0;"));
     return line;
 }
 
@@ -133,12 +133,16 @@ QWidget* PreviewWindow::createTopBar()
 
     auto* mark = new QToolButton;
     mark->setObjectName(QStringLiteral("topIcon"));
-    mark->setIcon(makeIcon(Icon::Logo, QColor("#44C5FF")));
+    mark->setIcon(makeIcon(Icon::Logo, QColor("#D3A52D")));
     mark->setIconSize(QSize(26, 26));
     layout->addWidget(mark);
-    auto* brand = new QLabel(QStringLiteral("VÖLUND"));
-    brand->setObjectName(QStringLiteral("brand"));
-    layout->addWidget(brand);
+    auto* brandBlock = new QWidget;
+    auto* brandLayout = new QVBoxLayout(brandBlock);
+    brandLayout->setContentsMargins(0, 3, 0, 3); brandLayout->setSpacing(-1);
+    auto* brand = new QLabel(QStringLiteral("VÖLUND")); brand->setObjectName(QStringLiteral("brand"));
+    auto* tagline = new QLabel(QStringLiteral("PARAMETRIC CAD")); tagline->setObjectName(QStringLiteral("brandTagline"));
+    brandLayout->addWidget(brand); brandLayout->addWidget(tagline);
+    layout->addWidget(brandBlock);
 
     auto* workspace = new QPushButton(QStringLiteral("DESIGN   ⌄"));
     workspace->setObjectName(QStringLiteral("workspaceSelector"));
@@ -165,7 +169,7 @@ QWidget* PreviewWindow::createTopBar()
     auto* avatar = new QLabel(QStringLiteral("EV"));
     avatar->setAlignment(Qt::AlignCenter);
     avatar->setFixedSize(29, 29);
-    avatar->setStyleSheet(QStringLiteral("background:#6754C8;color:white;border-radius:14px;font-weight:700;"));
+    avatar->setStyleSheet(QStringLiteral("background:#5C512B;color:#FFF3C7;border:1px solid #A98428;border-radius:14px;font-weight:700;"));
     layout->addWidget(avatar);
     return bar;
 }
@@ -279,7 +283,7 @@ QWidget* PreviewWindow::createBrowser()
     new QTreeWidgetItem(body, {QStringLiteral("◇  Sketch 02")});
     new QTreeWidgetItem(body, {QStringLiteral("▦  Fillet 01")});
     root->setExpanded(true); body->setExpanded(true); pad->setSelected(true);
-    settings->setForeground(0, QColor("#9AA6B2")); origin->setForeground(0, QColor("#9AA6B2"));
+    settings->setForeground(0, QColor("#92998D")); origin->setForeground(0, QColor("#92998D"));
     layout->addWidget(browserTree_, 1);
     auto* comments = new QPushButton(QStringLiteral("○  Comments")); comments->setProperty("class", QStringLiteral("secondary"));
     layout->addWidget(comments);

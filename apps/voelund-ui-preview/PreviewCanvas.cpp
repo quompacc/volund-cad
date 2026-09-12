@@ -25,7 +25,7 @@ QPolygonF polygon(std::initializer_list<QPointF> points)
 void drawEndpoint(QPainter& painter, const QPointF& point, bool constrained)
 {
     painter.setPen(QPen(constrained ? QColor("#67E4A6") : QColor("#F5B84B"), 1.4));
-    painter.setBrush(QColor("#203038"));
+    painter.setBrush(QColor("#273029"));
     painter.drawEllipse(point, 4.5, 4.5);
 }
 
@@ -115,8 +115,8 @@ void PreviewCanvas::mouseMoveEvent(QMouseEvent* event)
 void PreviewCanvas::paintBackground(QPainter& painter) const
 {
     QLinearGradient background(0, 0, 0, height());
-    background.setColorAt(0, QColor("#303943"));
-    background.setColorAt(1, QColor("#252D35"));
+    background.setColorAt(0, QColor("#29312B"));
+    background.setColorAt(1, QColor("#202721"));
     painter.fillRect(rect(), background);
 
     painter.setPen(QPen(QColor(255, 255, 255, 8), 1));
@@ -147,34 +147,34 @@ void PreviewCanvas::paintSolid(QPainter& painter) const
     const auto left = polygon({{-270, -25}, {35, 145}, {35, 260}, {-270, 84}});
     const auto right = polygon({{35, 145}, {290, 0}, {290, 115}, {35, 260}});
 
-    painter.setPen(QPen(QColor("#AFC0CD"), 1.2));
-    painter.setBrush(QColor("#CBD6DE")); painter.drawPolygon(top);
-    painter.setBrush(sideSelected_ ? QColor("#219DCC") : QColor("#8297A5")); painter.drawPolygon(left);
-    painter.setBrush(QColor("#A5B5C0")); painter.drawPolygon(right);
+    painter.setPen(QPen(QColor("#BDBCAF"), 1.2));
+    painter.setBrush(QColor("#D4D2C8")); painter.drawPolygon(top);
+    painter.setBrush(sideSelected_ ? QColor("#B88C24") : QColor("#858C83")); painter.drawPolygon(left);
+    painter.setBrush(QColor("#A9ADA4")); painter.drawPolygon(right);
 
     const auto towerTop = polygon({{-80, -90}, {15, -144}, {120, -86}, {23, -31}});
     const auto towerLeft = polygon({{-80, -90}, {23, -31}, {23, 85}, {-80, 26}});
     const auto towerRight = polygon({{23, -31}, {120, -86}, {120, 30}, {23, 85}});
-    painter.setBrush(QColor("#E2E9EE")); painter.drawPolygon(towerTop);
-    painter.setBrush(QColor("#9EB0BC")); painter.drawPolygon(towerLeft);
-    painter.setBrush(QColor("#BBC8D1")); painter.drawPolygon(towerRight);
+    painter.setBrush(QColor("#E6E3D9")); painter.drawPolygon(towerTop);
+    painter.setBrush(QColor("#A6AAA1")); painter.drawPolygon(towerLeft);
+    painter.setBrush(QColor("#C5C5BA")); painter.drawPolygon(towerRight);
 
     if (sideSelected_) {
-        painter.setPen(QPen(QColor("#65D7FF"), 2.2));
+        painter.setPen(QPen(QColor("#F0C14B"), 2.2));
         painter.setBrush(Qt::NoBrush);
         painter.drawPolygon(left);
     } else {
-        painter.setPen(QPen(QColor("#54C7F4"), 2.0));
+        painter.setPen(QPen(QColor("#E2B43D"), 2.0));
         painter.setBrush(Qt::NoBrush);
         painter.drawPolygon(top);
     }
 
     painter.restore();
 
-    painter.setPen(QColor("#DCE6ED"));
+    painter.setPen(QColor("#E7E2D6"));
     QFont caption = painter.font(); caption.setPointSizeF(10.5); caption.setWeight(QFont::DemiBold); painter.setFont(caption);
     painter.drawText(QRect(24, 22, 360, 25), Qt::AlignLeft, sideSelected_ ? QStringLiteral("SIDE FACE SELECTED") : QStringLiteral("BODY / PAD"));
-    painter.setPen(QColor("#91A0AD"));
+    painter.setPen(QColor("#939A8F"));
     QFont small = painter.font(); small.setPointSizeF(9); small.setWeight(QFont::Normal); painter.setFont(small);
     painter.drawText(QRect(24, 44, 400, 24), Qt::AlignLeft, QStringLiteral("Click canvas to change selection"));
 }
@@ -183,8 +183,8 @@ void PreviewCanvas::paintSketch(QPainter& painter) const
 {
     const QRectF plane = sketchPlane();
 
-    painter.setPen(QPen(QColor("#58BDE8"), 1.2));
-    painter.setBrush(QColor("#F3F5F3"));
+    painter.setPen(QPen(QColor("#C9A33F"), 1.2));
+    painter.setBrush(QColor("#E8E5DC"));
     painter.drawRoundedRect(plane, 2, 2);
 
     painter.save();
@@ -200,8 +200,8 @@ void PreviewCanvas::paintSketch(QPainter& painter) const
         const auto& entity = entities_.at(index);
         const QPointF first = toScreen(entity.first);
         const QPointF second = toScreen(entity.second);
-        const QColor geometryColor = entity.constrained ? QColor("#218A61") : QColor("#235D72");
-        painter.setPen(QPen(index == selectedEntity_ ? QColor("#E79525") : geometryColor,
+        const QColor geometryColor = entity.constrained ? QColor("#427A58") : QColor("#36443F");
+        painter.setPen(QPen(index == selectedEntity_ ? QColor("#D59C1C") : geometryColor,
                             index == selectedEntity_ ? 2.8 : 2.1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
         painter.setBrush(Qt::NoBrush);
         if (entity.kind == SketchEntity::Kind::Line) {
@@ -225,9 +225,9 @@ void PreviewCanvas::paintSketch(QPainter& painter) const
         if (entity.dimensioned) {
             const QPointF middle = (first + second) / 2.0;
             const qreal value = QLineF(entity.first, entity.second).length();
-            painter.setPen(Qt::NoPen); painter.setBrush(QColor("#F3F5F3"));
+            painter.setPen(Qt::NoPen); painter.setBrush(QColor("#E8E5DC"));
             painter.drawRoundedRect(QRectF(middle.x() - 35, middle.y() + 12, 70, 21), 4, 4);
-            painter.setPen(QColor("#235D72"));
+            painter.setPen(QColor("#3E493D"));
             painter.drawText(QRectF(middle.x() - 35, middle.y() + 12, 70, 21), Qt::AlignCenter,
                              QStringLiteral("%1 mm").arg(value, 0, 'f', 1));
         }
@@ -236,7 +236,7 @@ void PreviewCanvas::paintSketch(QPainter& painter) const
     if (pendingPoint_) {
         const QPointF first = toScreen(*pendingPoint_);
         const QPointF second = toScreen(hoverPoint_);
-        painter.setPen(QPen(QColor("#1EA8D7"), 1.7, Qt::DashLine));
+        painter.setPen(QPen(QColor("#C99620"), 1.7, Qt::DashLine));
         painter.setBrush(QColor(43, 167, 207, 18));
         if (sketchTool_ == SketchTool::Rectangle) painter.drawRect(QRectF(first, second).normalized());
         else if (sketchTool_ == SketchTool::Circle || sketchTool_ == SketchTool::Arc) {
@@ -255,7 +255,7 @@ void PreviewCanvas::paintSketch(QPainter& painter) const
         painter.drawText(QRectF(labelPoint, QSizeF(86, 21)), Qt::AlignCenter, transientRelation_);
     }
 
-    painter.setPen(QColor("#DCE6ED"));
+    painter.setPen(QColor("#E7E2D6"));
     QFont caption = painter.font(); caption.setPointSizeF(10.5); caption.setWeight(QFont::DemiBold); painter.setFont(caption);
     painter.drawText(QRect(24, 22, 340, 25), Qt::AlignLeft, QStringLiteral("SKETCH 01  ·  TOP FACE"));
     painter.setPen(QColor("#F0B44D"));
@@ -384,11 +384,11 @@ void PreviewCanvas::paintViewCube(QPainter& painter) const
     const auto top = polygon({{center.x() - 27, center.y() - 12}, {center.x(), center.y() - 28}, {center.x() + 27, center.y() - 12}, {center.x(), center.y() + 4}});
     const auto left = polygon({{center.x() - 27, center.y() - 12}, {center.x(), center.y() + 4}, {center.x(), center.y() + 34}, {center.x() - 27, center.y() + 18}});
     const auto right = polygon({{center.x(), center.y() + 4}, {center.x() + 27, center.y() - 12}, {center.x() + 27, center.y() + 18}, {center.x(), center.y() + 34}});
-    painter.setPen(QPen(QColor("#788895"), 1));
-    painter.setBrush(QColor("#D7E0E6")); painter.drawPolygon(top);
-    painter.setBrush(QColor("#718593")); painter.drawPolygon(left);
-    painter.setBrush(QColor("#9AACB8")); painter.drawPolygon(right);
-    painter.setPen(QColor("#27323A"));
+    painter.setPen(QPen(QColor("#777E73"), 1));
+    painter.setBrush(QColor("#D8D5C9")); painter.drawPolygon(top);
+    painter.setBrush(QColor("#747D73")); painter.drawPolygon(left);
+    painter.setBrush(QColor("#9CA297")); painter.drawPolygon(right);
+    painter.setPen(QColor("#293029"));
     QFont font = painter.font(); font.setPointSizeF(7.5); font.setWeight(QFont::DemiBold); painter.setFont(font);
     painter.drawText(QRectF(center.x() - 24, center.y() - 23, 48, 20), Qt::AlignCenter, QStringLiteral("TOP"));
 }
@@ -399,7 +399,7 @@ void PreviewCanvas::paintNavigation(QPainter& painter) const
     painter.setPen(QPen(QColor(255, 255, 255, 28), 1));
     painter.setBrush(QColor(18, 23, 28, 205));
     painter.drawRoundedRect(bar, 7, 7);
-    painter.setPen(QColor("#A9B5C0"));
+    painter.setPen(QColor("#AAAFA4"));
     QFont font = painter.font(); font.setPointSizeF(9); painter.setFont(font);
     painter.drawText(bar, Qt::AlignCenter, QStringLiteral("◉  Orbit     ▣  Pan     ⊕  Zoom     ⌂  Fit"));
 }

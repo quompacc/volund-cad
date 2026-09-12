@@ -32,6 +32,6 @@ enum class Icon {
     Select,
 };
 
-QIcon makeIcon(Icon icon, const QColor& color = QColor(QStringLiteral("#C7D0DB")));
+QIcon makeIcon(Icon icon, const QColor& color = QColor(QStringLiteral("#D3D0C4")));
 
 } // namespace voelund::preview
