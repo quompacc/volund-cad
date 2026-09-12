@@ -155,6 +155,12 @@ SketchConstraintKind readConstraintKind(std::istringstream& line) {
         return SketchConstraintKind::parallel;
     if (value == "PERPENDICULAR")
         return SketchConstraintKind::perpendicular;
+    if (value == "COORDINATE_X")
+        return SketchConstraintKind::coordinateX;
+    if (value == "COORDINATE_Y")
+        return SketchConstraintKind::coordinateY;
+    if (value == "POINT_ON_OBJECT")
+        return SketchConstraintKind::pointOnObject;
     invalidDocument("unknown sketch constraint kind");
 }
 
@@ -174,6 +180,12 @@ const char* constraintKindName(SketchConstraintKind kind) {
         return "PARALLEL";
     case SketchConstraintKind::perpendicular:
         return "PERPENDICULAR";
+    case SketchConstraintKind::coordinateX:
+        return "COORDINATE_X";
+    case SketchConstraintKind::coordinateY:
+        return "COORDINATE_Y";
+    case SketchConstraintKind::pointOnObject:
+        return "POINT_ON_OBJECT";
     }
     return "HORIZONTAL";
 }
@@ -444,7 +456,7 @@ ParsedFeature readFeature(const std::string& source,
 void DocumentSerializer::write(const ModelDocument& document, std::ostream& output) {
     output.imbue(std::locale::classic());
     output << std::setprecision(std::numeric_limits<double>::max_digits10);
-    output << "VOLUND 5\nNEXT_ID " << document.nextFeatureId_ << "\nFEATURES "
+    output << "VOLUND 6\nNEXT_ID " << document.nextFeatureId_ << "\nFEATURES "
            << document.features_.size() << '\n';
     for (std::size_t index = 0; index < document.features_.size(); ++index) {
         const FeatureDescriptor& feature = document.features_[index];
@@ -533,6 +545,7 @@ ModelDocument DocumentSerializer::read(std::istream& input) {
                                   : header == "VOLUND 3" ? 3
                                   : header == "VOLUND 4" ? 4
                                   : header == "VOLUND 5" ? 5
+                                  : header == "VOLUND 6" ? 6
                                                          : 0;
     if (version == 0) {
         invalidDocument("unsupported file header or version");

@@ -60,6 +60,48 @@ bool adapterMapsPlaneGcsConflictsBackToStableIds() {
            });
 }
 
+bool adapterLocksPointsAndPlacesThemOnLinesAndCircles() {
+    using namespace voelund::document;
+    const auto start = [](std::uint64_t id) {
+        return SketchGeometryReference{SketchElementId{id}, SketchPointPosition::start};
+    };
+    const auto center = [](std::uint64_t id) {
+        return SketchGeometryReference{SketchElementId{id}, SketchPointPosition::center};
+    };
+    SketchParameters sketch{
+        plane(),
+        {{{SketchElementId{1}, SketchLine{{2.0, 3.0}, {4.0, 3.0}}},
+          {SketchElementId{2}, SketchLine{{0.0, 0.0}, {10.0, 0.0}}},
+          {SketchElementId{3}, SketchLine{{8.0, 4.0}, {9.0, 4.0}}},
+          {SketchElementId{4}, SketchCircle{{8.0, 0.0}, 2.0}}},
+         5},
+        {{{SketchConstraintId{1}, SketchConstraintKind::coordinateX, start(2), std::nullopt, 0.0},
+          {SketchConstraintId{2}, SketchConstraintKind::coordinateY, start(2), std::nullopt, 0.0},
+          {SketchConstraintId{3},
+           SketchConstraintKind::coordinateX,
+           {SketchElementId{2}, SketchPointPosition::end},
+           std::nullopt,
+           10.0},
+          {SketchConstraintId{4},
+           SketchConstraintKind::coordinateY,
+           {SketchElementId{2}, SketchPointPosition::end},
+           std::nullopt,
+           0.0},
+          {SketchConstraintId{5}, SketchConstraintKind::pointOnObject, start(1), start(2), 0.0},
+          {SketchConstraintId{6}, SketchConstraintKind::coordinateX, center(4), std::nullopt, 8.0},
+          {SketchConstraintId{7}, SketchConstraintKind::coordinateY, center(4), std::nullopt, 0.0},
+          {SketchConstraintId{8}, SketchConstraintKind::radius, center(4), std::nullopt, 2.0},
+          {SketchConstraintId{9}, SketchConstraintKind::pointOnObject, start(3), center(4), 0.0}},
+         10}};
+
+    const auto result = voelund::features::solveSketchConstraints(sketch);
+    const auto& first = std::get<SketchLine>(sketch.elements.values[0].geometry).start;
+    const auto& second = std::get<SketchLine>(sketch.elements.values[2].geometry).start;
+    const auto& circle = std::get<SketchCircle>(sketch.elements.values[3].geometry);
+    return result.status == voelund::features::SketchSolveStatus::success && close(first.y, 0.0) &&
+           close(std::hypot(second.x - circle.center.x, second.y - circle.center.y), circle.radius);
+}
+
 } // namespace
 
 int main() {
@@ -69,6 +111,10 @@ int main() {
     }
     if (!adapterMapsPlaneGcsConflictsBackToStableIds()) {
         std::cerr << "Völund PlaneGCS adapter conflict mapping failed\n";
+        return 1;
+    }
+    if (!adapterLocksPointsAndPlacesThemOnLinesAndCircles()) {
+        std::cerr << "Völund point constraint adapter failed\n";
         return 1;
     }
     return 0;

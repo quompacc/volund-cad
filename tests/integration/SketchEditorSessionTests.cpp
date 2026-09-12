@@ -380,6 +380,37 @@ bool endpointRelationsDriveGeometryAndConflictsStayRecoverable() {
            std::hypot(draggedFirst.x - draggedSecond.x, draggedFirst.y - draggedSecond.y) <= 1.0e-7;
 }
 
+bool pointLockAndPointOnObjectDriveEditorGeometry() {
+    using namespace voelund;
+    application::CadSession session;
+    session.newDocument();
+    const auto support = session.addBoxFeature();
+    application::SketchEditorSession editor(session, support, plane);
+    if (!add(editor, {1.0, 2.0}, {3.0, 4.0}, 1) ||
+        !editor.selectNearestReference(document::SketchElementId{1}, {1.0, 2.0}, false) ||
+        !editor.canLockSelectedReference() || !editor.lockSelectedReference() ||
+        !editor.isSelectedReferenceLocked() || editor.constraints().size() != 2 ||
+        !editor.translateSelected(5.0, 5.0))
+        return false;
+    const auto& locked = std::get<document::SketchLine>(editor.elements()[0].geometry).start;
+    if (std::hypot(locked.x - 1.0, locked.y - 2.0) > 1.0e-7 || !editor.unlockSelectedReference() ||
+        editor.isSelectedReferenceLocked() || !editor.translateSelected(5.0, 5.0) ||
+        !add(editor, {0.0, 0.0}, {10.0, 0.0}, 2))
+        return false;
+    const auto source = std::get<document::SketchLine>(editor.elements()[0].geometry).start;
+    if (!editor.selectNearestReference(document::SketchElementId{1}, source, false) ||
+        !editor.selectNearestReference(document::SketchElementId{2}, {0.0, 0.0}, true) ||
+        !editor.canAddSelectedRelation(document::SketchConstraintKind::pointOnObject) ||
+        !editor.addSelectedRelation(document::SketchConstraintKind::pointOnObject))
+        return false;
+    const auto constrained = std::get<document::SketchLine>(editor.elements()[0].geometry).start;
+    const auto& target = std::get<document::SketchLine>(editor.elements()[1].geometry);
+    const double cross = (constrained.x - target.start.x) * (target.end.y - target.start.y) -
+                         (constrained.y - target.start.y) * (target.end.x - target.start.x);
+    return editor.lastSolveResult().status == features::SketchSolveStatus::success &&
+           std::abs(cross) <= 1.0e-7;
+}
+
 } // namespace
 
 int main() {
@@ -433,6 +464,10 @@ int main() {
     }
     if (!endpointRelationsDriveGeometryAndConflictsStayRecoverable()) {
         std::cerr << "Endpoint relations or conflict recovery failed\n";
+        return 1;
+    }
+    if (!pointLockAndPointOnObjectDriveEditorGeometry()) {
+        std::cerr << "Point locking or point-on-object editor flow failed\n";
         return 1;
     }
     return 0;

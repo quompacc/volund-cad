@@ -49,6 +49,12 @@ std::string constraintLabel(const features::SketchConstraintAnnotation& annotati
         return "[||]";
     if (annotation.kind == document::SketchConstraintKind::perpendicular)
         return "[90]";
+    if (annotation.kind == document::SketchConstraintKind::coordinateX)
+        return "[X]";
+    if (annotation.kind == document::SketchConstraintKind::coordinateY)
+        return "[Y]";
+    if (annotation.kind == document::SketchConstraintKind::pointOnObject)
+        return "[O]";
     std::ostringstream label;
     label << (annotation.kind == document::SketchConstraintKind::radius ? "R " : "L ") << std::fixed
           << std::setprecision(3) << annotation.value << " mm";
@@ -126,6 +132,9 @@ void SketchEditorToolController::showPanel() {
          {"coincident", QObject::tr("Make selected endpoints coincident")},
          {"parallel", QObject::tr("Make selected lines parallel")},
          {"perpendicular", QObject::tr("Make selected lines perpendicular")},
+         {"point_on_object", QObject::tr("Put first selected point on second object")},
+         {"lock_point", QObject::tr("Lock selected point")},
+         {"unlock_point", QObject::tr("Unlock selected point")},
          {"remove_constraint", QObject::tr("Remove last constraint")},
          {"delete", QObject::tr("Delete selected element")}},
         [this](const std::string& id, double value) {
@@ -151,6 +160,12 @@ void SketchEditorToolController::showPanel() {
                 applyRelation(document::SketchConstraintKind::parallel);
             } else if (id == "perpendicular") {
                 applyRelation(document::SketchConstraintKind::perpendicular);
+            } else if (id == "point_on_object") {
+                applyRelation(document::SketchConstraintKind::pointOnObject);
+            } else if (id == "lock_point") {
+                lockSelectedReference();
+            } else if (id == "unlock_point") {
+                unlockSelectedReference();
             } else if (id == "remove_constraint") {
                 removeLastConstraint();
             } else if (id == "delete")
@@ -301,8 +316,26 @@ void SketchEditorToolController::applyRelation(document::SketchConstraintKind ki
     const char* text =
         kind == document::SketchConstraintKind::coincident ? "Coincident constraint added"
         : kind == document::SketchConstraintKind::parallel ? "Parallel constraint added"
-                                                           : "Perpendicular constraint added";
+        : kind == document::SketchConstraintKind::perpendicular
+            ? "Perpendicular constraint added"
+            : "Point-on-object constraint added";
     statusChanged_(QObject::tr(text));
+}
+
+void SketchEditorToolController::lockSelectedReference() {
+    if (!editor_ || !editor_->lockSelectedReference())
+        return;
+    syncConstraintState();
+    refreshPresentation();
+    statusChanged_(QObject::tr("Selected sketch point locked"));
+}
+
+void SketchEditorToolController::unlockSelectedReference() {
+    if (!editor_ || !editor_->unlockSelectedReference())
+        return;
+    syncConstraintState();
+    refreshPresentation();
+    statusChanged_(QObject::tr("Selected sketch point unlocked"));
 }
 
 void SketchEditorToolController::applyTranslation(const std::string& id, double value) {
@@ -377,6 +410,10 @@ void SketchEditorToolController::syncConstraintState() {
         "parallel", editor_->canAddSelectedRelation(document::SketchConstraintKind::parallel));
     panel_.setActionEnabled("perpendicular", editor_->canAddSelectedRelation(
                                                  document::SketchConstraintKind::perpendicular));
+    panel_.setActionEnabled("point_on_object", editor_->canAddSelectedRelation(
+                                                   document::SketchConstraintKind::pointOnObject));
+    panel_.setActionEnabled("lock_point", editor_->canLockSelectedReference());
+    panel_.setActionEnabled("unlock_point", editor_->isSelectedReferenceLocked());
     panel_.setActionEnabled("remove_constraint", !editor_->constraints().empty());
     panel_.setAcceptEnabled(editor_->canAccept());
     const auto& result = editor_->lastSolveResult();

@@ -45,6 +45,10 @@ class SketchEditorSession final {
     [[nodiscard]] bool setSelectedLineConstraint(document::SketchLineConstraint constraint);
     [[nodiscard]] bool canAddSelectedRelation(document::SketchConstraintKind kind) const noexcept;
     [[nodiscard]] bool addSelectedRelation(document::SketchConstraintKind kind);
+    [[nodiscard]] bool canLockSelectedReference() const noexcept;
+    [[nodiscard]] bool isSelectedReferenceLocked() const noexcept;
+    [[nodiscard]] bool lockSelectedReference();
+    [[nodiscard]] bool unlockSelectedReference();
     [[nodiscard]] bool removeLastConstraint();
     [[nodiscard]] bool removeSelected();
     [[nodiscard]] std::optional<document::SketchElementId> selectedElement() const noexcept;

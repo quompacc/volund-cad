@@ -109,9 +109,14 @@ void validateSketchConstraints(const SketchElements& elements,
         if (!std::isfinite(constraint.value))
             throw std::invalid_argument("Sketch constraint value must be finite");
 
-        if (constraint.kind == SketchConstraintKind::horizontal ||
-            constraint.kind == SketchConstraintKind::vertical ||
-            constraint.kind == SketchConstraintKind::distance) {
+        if (constraint.kind == SketchConstraintKind::coordinateX ||
+            constraint.kind == SketchConstraintKind::coordinateY) {
+            requirePoint(constraint.first);
+            if (constraint.second.has_value())
+                throw std::invalid_argument("Coordinate constraint must be unary");
+        } else if (constraint.kind == SketchConstraintKind::horizontal ||
+                   constraint.kind == SketchConstraintKind::vertical ||
+                   constraint.kind == SketchConstraintKind::distance) {
             requireLine(constraint.first);
             if (constraint.second.has_value())
                 throw std::invalid_argument("Unary sketch constraint has a second reference");
@@ -130,6 +135,14 @@ void validateSketchConstraints(const SketchElements& elements,
             if (constraint.kind == SketchConstraintKind::coincident) {
                 requirePoint(constraint.first);
                 requirePoint(*constraint.second);
+            } else if (constraint.kind == SketchConstraintKind::pointOnObject) {
+                requirePoint(constraint.first);
+                const SketchGeometry& target = findElement(constraint.second->element).geometry;
+                if (constraint.first.element == constraint.second->element ||
+                    (!std::holds_alternative<SketchLine>(target) &&
+                     !std::holds_alternative<SketchCircle>(target)))
+                    throw std::invalid_argument(
+                        "Point-on-object constraint needs a different line or circle");
             } else {
                 requireLine(constraint.first);
                 requireLine(*constraint.second);

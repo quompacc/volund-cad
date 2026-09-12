@@ -84,10 +84,15 @@ gehören nicht zum Produktpfad.
   Längen und Radien zeigen ihren Wert in Millimetern. Ein Doppelklick auf eine
   Bemaßung öffnet die direkte Werteingabe und löst den Sketch sofort neu. Konflikte
   färben sowohl die betroffene Geometrie als auch ihre Constraint-Glyphen rot.
-- Neue Dateien verwenden `VOLUND 5`; bestehende `VOLUND 1`-Rechtecksketches,
+- Ein einzelner ausgewählter Linienendpunkt oder Kreismittelpunkt kann über zwei
+  echte Koordinatenconstraints gesperrt und wieder entsperrt werden. Mit zwei
+  Strg-ausgewählten Referenzen setzt `Point on object` den zuerst gewählten Punkt
+  parametrisch auf die zweite Linie oder den zweiten Kreis; beide Varianten werden
+  unmittelbar von PlaneGCS gelöst und als `[O]` im Viewport angezeigt.
+- Neue Dateien verwenden `VOLUND 6`; bestehende `VOLUND 1`-Rechtecksketches,
   `VOLUND 2`-Linien, `VOLUND 3`-Richtungsconstraints und `VOLUND 4`-Extrusionen
-  werden beim Laden migriert. Alte Extrusionen behalten dabei ihre bisherige
-  Semantik, alle geschlossenen Profile zu verwenden.
+  sowie `VOLUND 5`-Profilauswahlen werden beim Laden migriert. Alte Extrusionen
+  behalten dabei ihre bisherige Semantik, alle geschlossenen Profile zu verwenden.
 - Ein temporäres generisches Tool-Panel bietet Parameter, Live-Vorschau, OK und
   Cancel. Erst OK schreibt das Feature in das Dokument; Cancel oder Escape verwirft
   die Vorschau.
@@ -160,9 +165,9 @@ erzwungener Wayland-QPA weiterhin ruhende ELF-Kanten zu `libX11` und `libGLX`.
 
 Die ersten vollständigen Mehrfach-Element-Erzeugungs- und Bearbeitungs-Slices sind auf
 beiden Windows-Backends und im nativen FreeBSD-Wayland-Controlpfad bestätigt. Sichtbare
-Constraint-Glyphen und die direkte Bemaßungsinteraktion sind umgesetzt. Als nächste
-parametrische Ausbaustufe folgen Fixierung, Punkt-auf-Objekt sowie Tangential-,
-Gleichheits- und Symmetrierelationen.
+Constraint-Glyphen, direkte Bemaßungsinteraktion, Punktsperren und Punkt-auf-Objekt
+sind umgesetzt. Als nächste parametrische Ausbaustufe folgen Tangential-, Gleichheits-
+und Symmetrierelationen.
 
 Der direkte Push/Pull-Ablauf bleibt dabei als schneller Weg erhalten. Er ist eine
 Bedienoberfläche über denselben parametrischen Sketch- und Extrusionsfeatures, kein

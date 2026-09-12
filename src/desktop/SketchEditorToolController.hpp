@@ -37,6 +37,8 @@ class SketchEditorToolController final {
     void applyElementDimension(const std::string& id, double value);
     void applyLineConstraint(document::SketchLineConstraint constraint);
     void applyRelation(document::SketchConstraintKind kind);
+    void lockSelectedReference();
+    void unlockSelectedReference();
     void removeSelected();
     void removeLastConstraint();
     void resetTranslationInputs();

@@ -34,6 +34,8 @@ document::SketchPoint referencePoint(const document::SketchParameters& sketch,
 
 document::SketchPoint annotationPoint(const document::SketchParameters& sketch,
                                       const document::SketchConstraint& constraint) {
+    if (constraint.kind == document::SketchConstraintKind::pointOnObject)
+        return referencePoint(sketch, constraint.first);
     const auto& geometry = findElement(sketch, constraint.first.element).geometry;
     if (!constraint.second.has_value()) {
         if (const auto* line = std::get_if<document::SketchLine>(&geometry))

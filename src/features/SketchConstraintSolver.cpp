@@ -130,7 +130,22 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
             static_cast<void>(
                 system.addConstraintP2PCoincident(point(constraint.first, lines, circles),
                                                   point(*constraint.second, lines, circles), tag));
-        else {
+        else if (constraint.kind == document::SketchConstraintKind::coordinateX)
+            static_cast<void>(system.addConstraintCoordinateX(
+                point(constraint.first, lines, circles), &values.back(), tag));
+        else if (constraint.kind == document::SketchConstraintKind::coordinateY)
+            static_cast<void>(system.addConstraintCoordinateY(
+                point(constraint.first, lines, circles), &values.back(), tag));
+        else if (constraint.kind == document::SketchConstraintKind::pointOnObject) {
+            GCS::Point& source = point(constraint.first, lines, circles);
+            const auto targetId = constraint.second->element.value();
+            if (lines.contains(targetId))
+                static_cast<void>(
+                    system.addConstraintPointOnLine(source, lines.at(targetId)->line, tag));
+            else
+                static_cast<void>(
+                    system.addConstraintPointOnCircle(source, circles.at(targetId)->circle, tag));
+        } else {
             LineState& secondLine = *lines.at(constraint.second->element.value());
             if (constraint.kind == document::SketchConstraintKind::parallel)
                 static_cast<void>(

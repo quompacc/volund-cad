@@ -99,7 +99,10 @@ enum class SketchConstraintKind {
     radius,
     coincident,
     parallel,
-    perpendicular
+    perpendicular,
+    coordinateX,
+    coordinateY,
+    pointOnObject
 };
 
 struct SketchGeometryReference final {
