@@ -63,6 +63,7 @@ if(VOELUND_BUILD_DESKTOP)
     add_subdirectory(src/viewport)
     add_subdirectory(src/desktop)
     add_subdirectory(apps/voelund-cad)
+    add_subdirectory(apps/voelund-ui-preview)
 endif()
 
 if(BUILD_TESTING)
