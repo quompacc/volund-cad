@@ -10,9 +10,11 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QSignalBlocker>
+#include <QToolBox>
 #include <QVBoxLayout>
 #include <QWidget>
 
+#include <algorithm>
 #include <utility>
 
 namespace voelund::desktop {
@@ -26,6 +28,7 @@ ToolPanelHost::ToolPanelHost(QWidget* parent) : QDockWidget(parent) {
     guidance_ = new QLabel(content_);
     guidance_->setWordWrap(true);
     parameterLayout_ = new QFormLayout();
+    actionToolBox_ = new QToolBox(content_);
     auto* buttons = new QHBoxLayout();
     acceptButton_ = new QPushButton(tr("OK"), content_);
     cancelButton_ = new QPushButton(tr("Cancel"), content_);
@@ -36,6 +39,7 @@ ToolPanelHost::ToolPanelHost(QWidget* parent) : QDockWidget(parent) {
     buttons->addWidget(cancelButton_);
     layout->addWidget(guidance_);
     layout->addLayout(parameterLayout_);
+    layout->addWidget(actionToolBox_);
     layout->addStretch();
     layout->addLayout(buttons);
     setWidget(content_);
@@ -85,17 +89,29 @@ void ToolPanelHost::begin(ToolPanelDefinition definition) {
         parameterLayout_->addRow(parameter.label, input);
         choiceInputs_.emplace_back(parameter.id, input);
     }
+    std::vector<std::pair<QString, QVBoxLayout*>> actionGroups;
     for (const ToolAction& action : definition_.actions) {
+        const QString group = action.group.isEmpty() ? tr("Actions") : action.group;
+        auto match = std::ranges::find_if(
+            actionGroups, [&group](const auto& item) { return item.first == group; });
+        if (match == actionGroups.end()) {
+            auto* page = new QWidget(actionToolBox_);
+            auto* pageLayout = new QVBoxLayout(page);
+            pageLayout->setContentsMargins(4, 4, 4, 4);
+            actionToolBox_->addItem(page, group);
+            actionGroups.emplace_back(group, pageLayout);
+            match = std::prev(actionGroups.end());
+        }
         auto* button = new QPushButton(action.label, content_);
         const std::string actionId = action.id;
         connect(button, &QPushButton::clicked, this, [this, actionId]() {
-            if (definition_.actionTriggered) {
+            if (definition_.actionTriggered)
                 definition_.actionTriggered(actionId);
-            }
         });
-        parameterLayout_->addRow(QString{}, button);
+        match->second->addWidget(button);
         actionInputs_.emplace_back(action.id, button);
     }
+    actionToolBox_->setVisible(!definition_.actions.empty());
     acceptButton_->setEnabled(false);
     show();
     raise();
@@ -149,6 +165,11 @@ void ToolPanelHost::clearParameters() {
     lengthInputs_.clear();
     choiceInputs_.clear();
     actionInputs_.clear();
+    while (actionToolBox_->count() > 0) {
+        QWidget* page = actionToolBox_->widget(0);
+        actionToolBox_->removeItem(0);
+        page->deleteLater();
+    }
 }
 
 } // namespace voelund::desktop

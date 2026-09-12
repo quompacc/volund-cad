@@ -41,7 +41,7 @@ gehören nicht zum Produktpfad.
 - Der eigenständige Sketch-Editor startet auf einer ausgewählten planaren Fläche und
   erzeugt nacheinander Linien, Rechtecke, Kreise und Mittelpunktbögen im selben temporären Sketch.
   Werkzeugwechsel erhalten bestätigte Elemente; lineares Snapping und Live-Preview
-  gelten für alle drei Werkzeuge. Elemente sind bereits während des Editorlaufs über
+  gelten für alle Zeichenwerkzeuge. Elemente sind bereits während des Editorlaufs über
   ihre stabilen IDs einzeln auswählbar.
 - OK übernimmt den vollständigen Sketch als genau eine Dokumenttransaktion. Cancel
   und Escape hinterlassen weder Feature noch Undo-Eintrag. Rein offene
@@ -53,6 +53,12 @@ gehören nicht zum Produktpfad.
   OK recomputiert abhängige Profile und Extrusionen in einer Transaktion, Cancel
   verwirft sämtliche temporären Änderungen. Undo/Redo und Save/Load sind für diesen
   vollständigen Bearbeitungsablauf automatisiert geprüft.
+- Beim Öffnen eines Sketches wird die Kamera senkrecht auf die gewählte Arbeitsfläche
+  ausgerichtet. Ein eigener Auswahlmodus trennt Selektieren/Dragging von aktiven
+  Zeichenwerkzeugen. Sichtbare, zoomunabhängige Punktmarker kennzeichnen Linienenden,
+  Kreismittelpunkte sowie Bogenmittel- und Endpunkte. Zeichenwerkzeuge fangen diese
+  Referenzen in einem 12-Pixel-Radius und erzeugen beim Bestätigen automatisch eine
+  persistente PlaneGCS-Koinzidenz.
 - Im laufenden Bearbeitungsmodus kann ein ausgewähltes Element direkt im Viewport
   gezogen werden. Die Bewegung wird auf die Sketchebene projiziert, verwendet das
   lineare Raster und synchronisiert die X/Y-Livewerte. Der Drag verändert weiterhin
@@ -126,6 +132,9 @@ gehören nicht zum Produktpfad.
 - Ein temporäres generisches Tool-Panel bietet Parameter, Live-Vorschau, OK und
   Cancel. Erst OK schreibt das Feature in das Dokument; Cancel oder Escape verwirft
   die Vorschau.
+- Die Sketch-Relationen sind im Tool-Panel in die aufklappbaren Bereiche Linien,
+  Punkte, Relationen, Bemaßungen und Bearbeiten gegliedert; dadurch bleibt jeweils
+  nur eine kurze, kontextabhängig aktivierte Befehlsgruppe sichtbar.
 
 ## Modul- und Bedienarchitektur
 

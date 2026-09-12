@@ -68,6 +68,14 @@ whole-element translation remains available through the numeric X/Y fields. Rele
 the pointer ends only the gesture; OK or Cancel still owns the document transaction
 boundary.
 
+Opening either sketch workflow aligns the camera normal to the selected support face
+and uses the sketch plane's Y direction as view-up. The editor exposes a distinct
+Select mode so selection and dragging cannot steal clicks from an active drawing tool.
+Confirmed line endpoints, circle centers and arc centers/endpoints are rendered as
+zoom-independent point markers. Drawing within 12 screen pixels snaps to such a marker
+and confirmation adds a persistent PlaneGCS coincidence relation automatically; grid
+snapping remains the fallback away from reference points.
+
 ## Parametric constraint foundation
 
 A selected line exposes its exact length in the generic tool panel. Line length,

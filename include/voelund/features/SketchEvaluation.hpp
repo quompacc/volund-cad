@@ -3,16 +3,24 @@
 #include <voelund/document/ModelDocument.hpp>
 
 #include <TopoDS_Shape.hxx>
+#include <gp_Pnt.hxx>
 
 #include <span>
 #include <vector>
 
 namespace voelund::features {
 
+struct EvaluatedSketchPoint final {
+    document::SketchPointPosition kind;
+    document::SketchPoint local;
+    gp_Pnt world;
+};
+
 struct EvaluatedSketchElement final {
     document::SketchElementId id;
     TopoDS_Shape shape;
     bool construction;
+    std::vector<EvaluatedSketchPoint> points;
 };
 
 [[nodiscard]] std::vector<EvaluatedSketchElement>

@@ -5,6 +5,7 @@
 
 #include <AIS_InteractiveContext.hxx>
 #include <AIS_InteractiveObject.hxx>
+#include <AIS_Point.hxx>
 #include <AIS_Shape.hxx>
 
 #include <optional>
@@ -17,7 +18,7 @@ class SketchPresentation final {
   public:
     void setElements(const occ::handle<AIS_InteractiveContext>& context,
                      std::span<const SceneSketchElement> elements,
-                     std::span<const std::uint64_t> selectedIds);
+                     std::span<const std::uint64_t> selectedIds, bool showPoints);
     void clear(const occ::handle<AIS_InteractiveContext>& context);
     void select(const occ::handle<AIS_InteractiveContext>& context,
                 std::span<const std::uint64_t> selectedIds);
@@ -29,6 +30,7 @@ class SketchPresentation final {
     struct ElementPresentation final {
         std::uint64_t id;
         occ::handle<AIS_Shape> shape;
+        std::vector<occ::handle<AIS_Point>> points;
         bool conflicting;
         bool construction;
     };

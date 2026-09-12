@@ -58,11 +58,32 @@ bool lineAndPointAlignmentsRemainParametric() {
            std::abs(third.end.x - fourth.end.x) <= 1.0e-7;
 }
 
+bool automaticCoincidenceUsesTheSolver() {
+    using namespace voelund;
+    application::CadSession session;
+    session.newDocument();
+    application::SketchEditorSession editor(session, session.addBoxFeature(), plane);
+    if (!addLine(editor, {0.0, 0.0}, {4.0, 0.0}, 1) ||
+        !addLine(editor, {7.0, 2.0}, {10.0, 2.0}, 2) ||
+        !editor.addCoincidentReferences(
+            {document::SketchElementId{2}, document::SketchPointPosition::start},
+            {document::SketchElementId{1}, document::SketchPointPosition::end}))
+        return false;
+    const auto first = std::get<document::SketchLine>(editor.elements()[0].geometry);
+    const auto second = std::get<document::SketchLine>(editor.elements()[1].geometry);
+    return std::hypot(second.start.x - first.end.x, second.start.y - first.end.y) <= 1.0e-7 &&
+           editor.constraints().back().kind == document::SketchConstraintKind::coincident;
+}
+
 } // namespace
 
 int main() {
     if (!lineAndPointAlignmentsRemainParametric()) {
         std::cerr << "Collinear or point alignment relation failed\n";
+        return 1;
+    }
+    if (!automaticCoincidenceUsesTheSolver()) {
+        std::cerr << "Automatic coincidence relation failed\n";
         return 1;
     }
     return 0;

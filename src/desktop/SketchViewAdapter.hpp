@@ -1,5 +1,6 @@
 #pragma once
 
+#include <voelund/features/SketchEvaluation.hpp>
 #include <voelund/viewport/CadViewport.hpp>
 
 #include <QString>
@@ -12,8 +13,10 @@ class CadSession;
 
 namespace voelund::desktop {
 
-[[nodiscard]] std::vector<viewport::SceneSketchElement> makeSceneSketchElements(
-    const application::CadSession& session);
+[[nodiscard]] viewport::SceneSketchElement
+makeSceneSketchElement(const features::EvaluatedSketchElement& element, bool conflicting = false);
+[[nodiscard]] std::vector<viewport::SceneSketchElement>
+makeSceneSketchElements(const application::CadSession& session);
 [[nodiscard]] QString sketchSelectionSummary(const application::CadSession& session);
 
 } // namespace voelund::desktop

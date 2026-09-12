@@ -1,5 +1,8 @@
 #include "SketchPresentation.hpp"
 
+#include <Aspect_TypeOfMarker.hxx>
+#include <Geom_CartesianPoint.hxx>
+#include <Prs3d_PointAspect.hxx>
 #include <Quantity_Color.hxx>
 #include <Quantity_TypeOfColor.hxx>
 #include <TopAbs_ShapeEnum.hxx>
@@ -22,7 +25,7 @@ bool selected(std::span<const std::uint64_t> selectedIds, std::uint64_t id) {
 
 void SketchPresentation::setElements(const occ::handle<AIS_InteractiveContext>& context,
                                      std::span<const SceneSketchElement> elements,
-                                     std::span<const std::uint64_t> selectedIds) {
+                                     std::span<const std::uint64_t> selectedIds, bool showPoints) {
     clear(context);
     if (context.IsNull()) {
         return;
@@ -40,8 +43,21 @@ void SketchPresentation::setElements(const occ::handle<AIS_InteractiveContext>& 
                                                                  : 3.0);
         context->Display(presentation, false);
         context->Activate(presentation, AIS_Shape::SelectionMode(TopAbs_EDGE));
-        elements_.push_back(ElementPresentation{element.id, presentation, element.conflicting,
-                                                element.construction});
+        std::vector<occ::handle<AIS_Point>> points;
+        if (showPoints) {
+            points.reserve(element.points.size());
+            for (const SceneSketchPoint& point : element.points) {
+                occ::handle<Geom_CartesianPoint> geometry =
+                    new Geom_CartesianPoint(point.worldX, point.worldY, point.worldZ);
+                occ::handle<AIS_Point> marker = new AIS_Point(geometry);
+                marker->Attributes()->SetPointAspect(
+                    new Prs3d_PointAspect(Aspect_TOM_O_POINT, selectedColor, 3.0));
+                context->Display(marker, false);
+                points.push_back(marker);
+            }
+        }
+        elements_.push_back(ElementPresentation{element.id, presentation, std::move(points),
+                                                element.conflicting, element.construction});
     }
 }
 
@@ -49,6 +65,8 @@ void SketchPresentation::clear(const occ::handle<AIS_InteractiveContext>& contex
     if (!context.IsNull()) {
         for (const ElementPresentation& element : elements_) {
             context->Remove(element.shape, false);
+            for (const auto& point : element.points)
+                context->Remove(point, false);
         }
     }
     elements_.clear();
@@ -78,6 +96,8 @@ std::optional<std::uint64_t> SketchPresentation::detectedElement(
         if (element.shape == detected) {
             return element.id;
         }
+        if (std::ranges::find(element.points, detected) != element.points.end())
+            return element.id;
     }
     return std::nullopt;
 }

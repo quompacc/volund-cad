@@ -78,6 +78,8 @@ bool SketchEditorSession::setPreview(document::SketchPoint first, document::Sket
     if (!active_) {
         return false;
     }
+    if (tool_ == SketchDrawingTool::select)
+        return false;
     if (tool_ == SketchDrawingTool::arc && !third.has_value())
         return false;
     const document::SketchGeometry candidate = geometry(first, second, third);

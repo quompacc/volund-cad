@@ -8,6 +8,7 @@ add_library(
     ModelTreePanel.cpp
     SketchConstraintLabel.cpp
     SketchEditorConstraintState.cpp
+    SketchEditorCreation.cpp
     SketchEditorToolController.cpp
     SketchExtrusionToolController.cpp
     SketchViewAdapter.cpp

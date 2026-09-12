@@ -13,7 +13,7 @@ namespace voelund::application {
 
 class CadSession;
 
-enum class SketchDrawingTool { line, rectangle, circle, arc };
+enum class SketchDrawingTool { select, line, rectangle, circle, arc };
 
 class SketchEditorSession final {
   public:
@@ -46,6 +46,8 @@ class SketchEditorSession final {
     [[nodiscard]] bool setSelectedLineConstraint(document::SketchLineConstraint constraint);
     [[nodiscard]] bool canAddSelectedRelation(document::SketchConstraintKind kind) const noexcept;
     [[nodiscard]] bool addSelectedRelation(document::SketchConstraintKind kind);
+    [[nodiscard]] bool addCoincidentReferences(document::SketchGeometryReference first,
+                                               document::SketchGeometryReference second);
     [[nodiscard]] bool isSelectedConstruction() const noexcept;
     [[nodiscard]] bool toggleSelectedConstruction();
     [[nodiscard]] bool canLockSelectedReference() const noexcept;

@@ -11,6 +11,7 @@ class QComboBox;
 class QFormLayout;
 class QLabel;
 class QPushButton;
+class QToolBox;
 
 namespace voelund::desktop {
 
@@ -32,6 +33,7 @@ struct ToolChoiceParameter final {
 struct ToolAction final {
     std::string id;
     QString label;
+    QString group;
 };
 
 struct ToolPanelDefinition final {
@@ -65,6 +67,7 @@ class ToolPanelHost final : public QDockWidget {
     QWidget* content_{nullptr};
     QLabel* guidance_{nullptr};
     QFormLayout* parameterLayout_{nullptr};
+    QToolBox* actionToolBox_{nullptr};
     QPushButton* acceptButton_{nullptr};
     QPushButton* cancelButton_{nullptr};
     std::vector<std::pair<std::string, QDoubleSpinBox*>> lengthInputs_;

@@ -33,6 +33,37 @@ gp_Pnt worldPoint(const document::SketchPlane& plane, const document::SketchPoin
         .Translated(gp_Vec(xDirection) * point.x + gp_Vec(yDirection) * point.y);
 }
 
+std::vector<EvaluatedSketchPoint> elementPoints(const document::SketchParameters& sketch,
+                                                const document::SketchGeometry& geometry) {
+    std::vector<std::pair<document::SketchPointPosition, document::SketchPoint>> points;
+    if (const auto* line = std::get_if<document::SketchLine>(&geometry)) {
+        points = {{document::SketchPointPosition::start, line->start},
+                  {document::SketchPointPosition::end, line->end}};
+    } else if (const auto* rectangle = std::get_if<document::SketchRectangle>(&geometry)) {
+        points = {
+            {document::SketchPointPosition::start, rectangle->first},
+            {document::SketchPointPosition::end, {rectangle->second.x, rectangle->first.y}},
+            {document::SketchPointPosition::end, rectangle->second},
+            {document::SketchPointPosition::start, {rectangle->first.x, rectangle->second.y}}};
+    } else if (const auto* circle = std::get_if<document::SketchCircle>(&geometry)) {
+        points = {{document::SketchPointPosition::center, circle->center}};
+    } else {
+        const auto& arc = std::get<document::SketchArc>(geometry);
+        points = {{document::SketchPointPosition::center, arc.center},
+                  {document::SketchPointPosition::start,
+                   {arc.center.x + arc.radius * std::cos(arc.startAngle),
+                    arc.center.y + arc.radius * std::sin(arc.startAngle)}},
+                  {document::SketchPointPosition::end,
+                   {arc.center.x + arc.radius * std::cos(arc.endAngle),
+                    arc.center.y + arc.radius * std::sin(arc.endAngle)}}};
+    }
+    std::vector<EvaluatedSketchPoint> result;
+    result.reserve(points.size());
+    for (const auto& [kind, local] : points)
+        result.push_back({kind, local, worldPoint(sketch.plane, local)});
+    return result;
+}
+
 TopoDS_Wire rectangleWire(const document::SketchParameters& sketch,
                           const document::SketchRectangle& rectangle) {
     BRepBuilderAPI_MakePolygon polygon;
@@ -168,7 +199,8 @@ evaluateSketchElements(const document::SketchParameters& sketch) {
     result.reserve(sketch.elements.values.size());
     for (const document::SketchElement& element : sketch.elements.values) {
         result.push_back(EvaluatedSketchElement{element.id, elementShape(sketch, element.geometry),
-                                                element.construction});
+                                                element.construction,
+                                                elementPoints(sketch, element.geometry)});
     }
     return result;
 }

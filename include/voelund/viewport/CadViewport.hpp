@@ -34,16 +34,34 @@ struct SceneBody final {
     bool transformable;
 };
 
+enum class SketchPointKind { start, end, center };
+
+struct SceneSketchPoint final {
+    std::uint64_t elementId;
+    SketchPointKind kind;
+    double localX;
+    double localY;
+    double worldX;
+    double worldY;
+    double worldZ;
+};
+
 struct SceneSketchElement final {
     std::uint64_t id;
     TopoDS_Shape shape;
     bool conflicting;
     bool construction;
+    std::vector<SceneSketchPoint> points;
 
     SceneSketchElement(std::uint64_t elementId, TopoDS_Shape elementShape, bool hasConflict = false,
-                       bool isConstruction = false)
+                       bool isConstruction = false, std::vector<SceneSketchPoint> snapPoints = {})
         : id(elementId), shape(std::move(elementShape)), conflicting(hasConflict),
-          construction(isConstruction) {}
+          construction(isConstruction), points(std::move(snapPoints)) {}
+};
+
+struct SketchPointReferenceIntent final {
+    std::uint64_t elementId;
+    SketchPointKind point;
 };
 
 struct SketchSelectionIntent final {
@@ -85,7 +103,7 @@ struct SketchRectangleResult final {
     double distance;
 };
 
-enum class SketchElementTool { line, rectangle, circle, arc };
+enum class SketchElementTool { select, line, rectangle, circle, arc };
 
 struct SketchElementIntent final {
     double firstX;
@@ -93,6 +111,9 @@ struct SketchElementIntent final {
     double secondX;
     double secondY;
     std::optional<std::pair<double, double>> third;
+    std::optional<SketchPointReferenceIntent> firstReference;
+    std::optional<SketchPointReferenceIntent> secondReference;
+    std::optional<SketchPointReferenceIntent> thirdReference;
 };
 
 #if defined(VOELUND_VIEWPORT_QT_OPENGL)

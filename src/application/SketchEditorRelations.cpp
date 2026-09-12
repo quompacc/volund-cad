@@ -4,6 +4,7 @@
 #include <cmath>
 #include <numbers>
 #include <optional>
+#include <stdexcept>
 #include <utility>
 
 namespace voelund::application {
@@ -215,6 +216,37 @@ bool SketchEditorSession::addSelectedRelation(document::SketchConstraintKind kin
     if (lastSolveResult_.status == features::SketchSolveStatus::success)
         elements_ = std::move(sketch.elements);
     return true;
+}
+
+bool SketchEditorSession::addCoincidentReferences(document::SketchGeometryReference first,
+                                                  document::SketchGeometryReference second) {
+    if (!active_ || first == second)
+        return false;
+    if (std::ranges::any_of(constraints_.values, [first, second](const auto& constraint) {
+            return constraint.kind == document::SketchConstraintKind::coincident &&
+                   constraint.second.has_value() &&
+                   ((constraint.first == first && *constraint.second == second) ||
+                    (constraint.first == second && *constraint.second == first));
+        }))
+        return false;
+    const document::SketchElements previousElements = elements_;
+    const features::SketchSolveResult previousSolve = lastSolveResult_;
+    constraints_.values.push_back({document::SketchConstraintId{constraints_.nextId++},
+                                   document::SketchConstraintKind::coincident, first, second, 0.0});
+    try {
+        document::validateSketchConstraints(elements_, constraints_);
+    } catch (const std::invalid_argument&) {
+        constraints_.values.pop_back();
+        --constraints_.nextId;
+        return false;
+    }
+    if (solveConstraints())
+        return true;
+    elements_ = previousElements;
+    lastSolveResult_ = previousSolve;
+    constraints_.values.pop_back();
+    --constraints_.nextId;
+    return false;
 }
 
 } // namespace voelund::application

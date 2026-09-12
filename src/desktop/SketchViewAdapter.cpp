@@ -5,6 +5,29 @@
 #include <QObject>
 
 namespace voelund::desktop {
+namespace {
+
+viewport::SketchPointKind pointKind(document::SketchPointPosition kind) {
+    if (kind == document::SketchPointPosition::end)
+        return viewport::SketchPointKind::end;
+    if (kind == document::SketchPointPosition::center)
+        return viewport::SketchPointKind::center;
+    return viewport::SketchPointKind::start;
+}
+
+} // namespace
+
+viewport::SceneSketchElement makeSceneSketchElement(const features::EvaluatedSketchElement& element,
+                                                    bool conflicting) {
+    std::vector<viewport::SceneSketchPoint> points;
+    points.reserve(element.points.size());
+    for (const auto& point : element.points) {
+        points.push_back({element.id.value(), pointKind(point.kind), point.local.x, point.local.y,
+                          point.world.X(), point.world.Y(), point.world.Z()});
+    }
+    return {element.id.value(), element.shape, conflicting, element.construction,
+            std::move(points)};
+}
 
 std::vector<viewport::SceneSketchElement>
 makeSceneSketchElements(const application::CadSession& session) {
@@ -17,8 +40,7 @@ makeSceneSketchElements(const application::CadSession& session) {
     const auto evaluated = session.selectedSketchElements();
     result.reserve(evaluated.size());
     for (const features::EvaluatedSketchElement& element : evaluated) {
-        result.push_back(viewport::SceneSketchElement{element.id.value(), element.shape, false,
-                                                      element.construction});
+        result.push_back(makeSceneSketchElement(element));
     }
     return result;
 }

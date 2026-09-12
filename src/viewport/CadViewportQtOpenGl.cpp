@@ -98,7 +98,8 @@ class CadViewport::Impl final {
             context->Activate(presentation, AIS_Shape::SelectionMode(TopAbs_FACE));
             presentations.push_back(BodyPresentation{body.id, presentation, body.transformable});
         }
-        sketchPresentation.setElements(context, pendingSketchElements, selectedSketchElements);
+        sketchPresentation.setElements(context, pendingSketchElements, selectedSketchElements,
+                                       sketchEditor.isActive());
         sketchConstraintPresentation.setConstraints(context, pendingSketchConstraints);
         attachTransformTarget();
         if (isFirstShape) {
@@ -189,6 +190,10 @@ void CadViewport::setBodies(std::span<const SceneBody> bodies) {
 void CadViewport::setSketchElements(std::span<const SceneSketchElement> elements,
                                     std::optional<std::uint64_t> selectedId) {
     impl_->pendingSketchElements.assign(elements.begin(), elements.end());
+    std::vector<SceneSketchPoint> snapPoints;
+    for (const SceneSketchElement& element : elements)
+        snapPoints.insert(snapPoints.end(), element.points.begin(), element.points.end());
+    impl_->sketchEditor.setSnapPoints(snapPoints);
     impl_->pendingSketchConstraints.clear();
     impl_->sketchConstraintPresentation.clear(impl_->context);
     impl_->selectedSketchElements.clear();
@@ -196,7 +201,8 @@ void CadViewport::setSketchElements(std::span<const SceneSketchElement> elements
         impl_->selectedSketchElements.push_back(*selectedId);
     if (impl_->ready) {
         impl_->sketchPresentation.setElements(impl_->context, impl_->pendingSketchElements,
-                                              impl_->selectedSketchElements);
+                                              impl_->selectedSketchElements,
+                                              impl_->sketchEditor.isActive());
     }
     update();
 }
@@ -439,6 +445,8 @@ void CadViewport::mousePressEvent(QMouseEvent* event) {
         impl_->context->MoveTo(position.x(), position.y(), impl_->view, false);
         if (impl_->sketchEditor.isActive()) {
             impl_->sketchElementPressed = false;
+            if (impl_->sketchEditor.isDrawing())
+                return;
             if (impl_->context->HasDetected()) {
                 const auto detected = impl_->context->DetectedInteractive();
                 if (impl_->sketchConstraintPresentation.detectedEditableConstraint(detected))
@@ -530,7 +538,9 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
                 impl_->sketchEditor.finishElementDrag();
                 return;
             }
-            const auto intent = impl_->sketchEditor.click(position.x(), position.y());
+            const auto intent = impl_->sketchEditor.isDrawing()
+                                    ? impl_->sketchEditor.click(position.x(), position.y())
+                                    : std::nullopt;
             if (intent.has_value() && impl_->sketchEditorElementHandler) {
                 impl_->sketchEditorElementHandler(*intent);
             }
