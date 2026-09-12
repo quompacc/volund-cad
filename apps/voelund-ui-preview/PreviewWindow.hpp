@@ -5,6 +5,7 @@
 class QLabel;
 class QPushButton;
 class QStackedWidget;
+class QToolButton;
 class QTreeWidget;
 class QWidget;
 
@@ -36,6 +37,7 @@ private:
     void enterSketch();
     void finishSketch();
     void activateExtrude();
+    void activateSketchTool(int tool, QToolButton* button);
     void setWorkspaceTab(const QString& activeName);
     void refreshStyle(QWidget* widget);
 
@@ -45,7 +47,9 @@ private:
     QTreeWidget* browserTree_{nullptr};
     QLabel* statusText_{nullptr};
     QLabel* selectionText_{nullptr};
+    QPushButton* sketchWorkspaceTab_{nullptr};
     QList<QPushButton*> workspaceTabs_;
+    QList<QToolButton*> sketchToolButtons_;
 };
 
 } // namespace voelund::preview

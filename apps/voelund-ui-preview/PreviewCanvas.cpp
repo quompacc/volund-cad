@@ -1,12 +1,14 @@
 #include "PreviewCanvas.hpp"
 
 #include <QLinearGradient>
+#include <QLineF>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPainterPath>
 #include <QRadialGradient>
 
 #include <algorithm>
+#include <cmath>
 
 namespace voelund::preview {
 namespace {
@@ -41,6 +43,35 @@ void PreviewCanvas::setMode(Mode mode)
 {
     mode_ = mode;
     sideSelected_ = false;
+    pendingPoint_.reset();
+    transientRelation_.clear();
+    if (mode == Mode::Sketch && entities_.isEmpty()) {
+        entities_.append({SketchEntity::Kind::Rectangle, {-62, -31}, {48, 29}, true, true});
+        entities_.append({SketchEntity::Kind::Circle, {-8, 0}, {12, 0}, false, false});
+    }
+    update();
+}
+
+void PreviewCanvas::setSketchTool(SketchTool tool)
+{
+    sketchTool_ = tool;
+    pendingPoint_.reset();
+    transientRelation_.clear();
+    const QString name = [tool] {
+        switch (tool) {
+        case SketchTool::Select: return QStringLiteral("Select geometry");
+        case SketchTool::Line: return QStringLiteral("Line: choose first point");
+        case SketchTool::Rectangle: return QStringLiteral("Rectangle: choose first corner");
+        case SketchTool::Circle: return QStringLiteral("Circle: choose center");
+        case SketchTool::Arc: return QStringLiteral("Arc: choose center");
+        case SketchTool::Constraint: return QStringLiteral("Relation: select geometry");
+        case SketchTool::Dimension: return QStringLiteral("Dimension: select geometry");
+        case SketchTool::Trim: return QStringLiteral("Trim: select segment to remove");
+        case SketchTool::Offset: return QStringLiteral("Offset: select geometry");
+        }
+        return QString{};
+    }();
+    emit sketchStatusChanged(name);
     update();
 }
 
@@ -64,8 +95,21 @@ void PreviewCanvas::mousePressEvent(QMouseEvent* event)
         sideSelected_ = !sideSelected_;
         emit selectionChanged(sideSelected_ ? QStringLiteral("Side face") : QStringLiteral("Body / Pad"));
         update();
+    } else if (mode_ == Mode::Sketch && event->button() == Qt::LeftButton) {
+        handleSketchClick(event->position());
     }
     QWidget::mousePressEvent(event);
+}
+
+void PreviewCanvas::mouseMoveEvent(QMouseEvent* event)
+{
+    if (mode_ == Mode::Sketch) {
+        QString relation;
+        hoverPoint_ = snapPoint(toSketch(event->position()), &relation);
+        transientRelation_ = relation;
+        update();
+    }
+    QWidget::mouseMoveEvent(event);
 }
 
 void PreviewCanvas::paintBackground(QPainter& painter) const
@@ -137,9 +181,7 @@ void PreviewCanvas::paintSolid(QPainter& painter) const
 
 void PreviewCanvas::paintSketch(QPainter& painter) const
 {
-    const qreal canvasWidth = std::min(width() * 0.72, 720.0);
-    const qreal canvasHeight = std::min(height() * 0.72, 500.0);
-    const QRectF plane((width() - canvasWidth) / 2.0, (height() - canvasHeight) / 2.0, canvasWidth, canvasHeight);
+    const QRectF plane = sketchPlane();
 
     painter.setPen(QPen(QColor("#58BDE8"), 1.2));
     painter.setBrush(QColor("#F3F5F3"));
@@ -154,24 +196,64 @@ void PreviewCanvas::paintSketch(QPainter& painter) const
     painter.setPen(QPen(QColor("#4AAE69"), 1.3)); painter.drawLine(QPointF(plane.center().x(), plane.top()), QPointF(plane.center().x(), plane.bottom()));
     painter.restore();
 
-    const QPointF c = plane.center();
-    const QPointF a(c.x() - 155, c.y() + 80);
-    const QPointF b(c.x() + 120, c.y() + 80);
-    const QPointF d(c.x() + 120, c.y() - 70);
-    const QPointF e(c.x() - 155, c.y() - 70);
-    painter.setPen(QPen(QColor("#235D72"), 2.2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
-    painter.setBrush(Qt::NoBrush);
-    painter.drawPolygon(polygon({a, b, d, e}));
-    painter.drawEllipse(QPointF(c.x() - 15, c.y() + 5), 48, 48);
-    for (const QPointF& point : {a, b, d, e}) drawEndpoint(painter, point, true);
+    for (int index = 0; index < entities_.size(); ++index) {
+        const auto& entity = entities_.at(index);
+        const QPointF first = toScreen(entity.first);
+        const QPointF second = toScreen(entity.second);
+        const QColor geometryColor = entity.constrained ? QColor("#218A61") : QColor("#235D72");
+        painter.setPen(QPen(index == selectedEntity_ ? QColor("#E79525") : geometryColor,
+                            index == selectedEntity_ ? 2.8 : 2.1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        painter.setBrush(Qt::NoBrush);
+        if (entity.kind == SketchEntity::Kind::Line) {
+            painter.drawLine(first, second);
+            drawEndpoint(painter, first, entity.constrained); drawEndpoint(painter, second, entity.constrained);
+        } else if (entity.kind == SketchEntity::Kind::Rectangle) {
+            const QRectF box(first, second);
+            painter.drawRect(box.normalized());
+            const QRectF normalized = box.normalized();
+            for (const QPointF& point : {normalized.topLeft(), normalized.topRight(), normalized.bottomLeft(), normalized.bottomRight()}) {
+                drawEndpoint(painter, point, entity.constrained);
+            }
+        } else {
+            const qreal radius = QLineF(first, second).length();
+            const QRectF circle(first.x() - radius, first.y() - radius, radius * 2, radius * 2);
+            if (entity.kind == SketchEntity::Kind::Circle) painter.drawEllipse(circle);
+            else painter.drawArc(circle, 15 * 16, 285 * 16);
+            drawEndpoint(painter, first, entity.constrained);
+        }
 
-    painter.setPen(QPen(QColor("#3187A8"), 1));
-    painter.drawLine(QPointF(a.x(), a.y() + 27), QPointF(b.x(), b.y() + 27));
-    painter.drawLine(QPointF(a.x(), a.y() + 20), QPointF(a.x(), a.y() + 34));
-    painter.drawLine(QPointF(b.x(), b.y() + 20), QPointF(b.x(), b.y() + 34));
-    painter.setBrush(QColor("#F3F5F3")); painter.setPen(Qt::NoPen);
-    painter.drawRoundedRect(QRectF(c.x() - 38, a.y() + 17, 76, 22), 4, 4);
-    painter.setPen(QColor("#235D72")); painter.drawText(QRectF(c.x() - 38, a.y() + 17, 76, 22), Qt::AlignCenter, QStringLiteral("55.00 mm"));
+        if (entity.dimensioned) {
+            const QPointF middle = (first + second) / 2.0;
+            const qreal value = QLineF(entity.first, entity.second).length();
+            painter.setPen(Qt::NoPen); painter.setBrush(QColor("#F3F5F3"));
+            painter.drawRoundedRect(QRectF(middle.x() - 35, middle.y() + 12, 70, 21), 4, 4);
+            painter.setPen(QColor("#235D72"));
+            painter.drawText(QRectF(middle.x() - 35, middle.y() + 12, 70, 21), Qt::AlignCenter,
+                             QStringLiteral("%1 mm").arg(value, 0, 'f', 1));
+        }
+    }
+
+    if (pendingPoint_) {
+        const QPointF first = toScreen(*pendingPoint_);
+        const QPointF second = toScreen(hoverPoint_);
+        painter.setPen(QPen(QColor("#1EA8D7"), 1.7, Qt::DashLine));
+        painter.setBrush(QColor(43, 167, 207, 18));
+        if (sketchTool_ == SketchTool::Rectangle) painter.drawRect(QRectF(first, second).normalized());
+        else if (sketchTool_ == SketchTool::Circle || sketchTool_ == SketchTool::Arc) {
+            const qreal radius = QLineF(first, second).length();
+            const QRectF circle(first.x() - radius, first.y() - radius, radius * 2, radius * 2);
+            if (sketchTool_ == SketchTool::Circle) painter.drawEllipse(circle); else painter.drawArc(circle, 15 * 16, 285 * 16);
+        } else painter.drawLine(first, second);
+        drawEndpoint(painter, second, !transientRelation_.isEmpty());
+    }
+
+    if (!transientRelation_.isEmpty()) {
+        const QPointF labelPoint = toScreen(hoverPoint_) + QPointF(9, -24);
+        painter.setPen(Qt::NoPen); painter.setBrush(QColor("#1C6549"));
+        painter.drawRoundedRect(QRectF(labelPoint, QSizeF(86, 21)), 4, 4);
+        painter.setPen(QColor("#D9FFED"));
+        painter.drawText(QRectF(labelPoint, QSizeF(86, 21)), Qt::AlignCenter, transientRelation_);
+    }
 
     painter.setPen(QColor("#DCE6ED"));
     QFont caption = painter.font(); caption.setPointSizeF(10.5); caption.setWeight(QFont::DemiBold); painter.setFont(caption);
@@ -179,6 +261,121 @@ void PreviewCanvas::paintSketch(QPainter& painter) const
     painter.setPen(QColor("#F0B44D"));
     QFont small = painter.font(); small.setPointSizeF(9); small.setWeight(QFont::Normal); painter.setFont(small);
     painter.drawText(QRect(24, 44, 400, 24), Qt::AlignLeft, QStringLiteral("Under-constrained  ·  4 DOF"));
+}
+
+QRectF PreviewCanvas::sketchPlane() const
+{
+    const qreal canvasWidth = std::min(width() * 0.72, 720.0);
+    const qreal canvasHeight = std::min(height() * 0.72, 500.0);
+    return {(width() - canvasWidth) / 2.0, (height() - canvasHeight) / 2.0, canvasWidth, canvasHeight};
+}
+
+QPointF PreviewCanvas::toSketch(const QPointF& screenPoint) const
+{
+    constexpr qreal pixelsPerMillimetre = 2.5;
+    const QPointF relative = screenPoint - sketchPlane().center();
+    return {relative.x() / pixelsPerMillimetre, -relative.y() / pixelsPerMillimetre};
+}
+
+QPointF PreviewCanvas::toScreen(const QPointF& sketchPoint) const
+{
+    constexpr qreal pixelsPerMillimetre = 2.5;
+    return sketchPlane().center() + QPointF(sketchPoint.x() * pixelsPerMillimetre, -sketchPoint.y() * pixelsPerMillimetre);
+}
+
+QPointF PreviewCanvas::snapPoint(const QPointF& sketchPoint, QString* relation) const
+{
+    constexpr qreal grid = 5.0;
+    QPointF snapped(std::round(sketchPoint.x() / grid) * grid, std::round(sketchPoint.y() / grid) * grid);
+    if (relation) *relation = QStringLiteral("Grid");
+
+    for (const auto& entity : entities_) {
+        for (const QPointF& endpoint : {entity.first, entity.second}) {
+            if (QLineF(sketchPoint, endpoint).length() < 4.0) {
+                if (relation) *relation = QStringLiteral("Coincident");
+                return endpoint;
+            }
+        }
+    }
+    if (pendingPoint_) {
+        if (std::abs(sketchPoint.x() - pendingPoint_->x()) < 2.5) {
+            snapped.setX(pendingPoint_->x());
+            if (relation) *relation = QStringLiteral("Vertical");
+        } else if (std::abs(sketchPoint.y() - pendingPoint_->y()) < 2.5) {
+            snapped.setY(pendingPoint_->y());
+            if (relation) *relation = QStringLiteral("Horizontal");
+        }
+    }
+    return snapped;
+}
+
+int PreviewCanvas::nearestEntity(const QPointF& sketchPoint) const
+{
+    int nearest = -1;
+    qreal bestDistance = 18.0;
+    for (int index = 0; index < entities_.size(); ++index) {
+        const auto& entity = entities_.at(index);
+        const QPointF middle = (entity.first + entity.second) / 2.0;
+        const qreal distance = std::min({QLineF(sketchPoint, entity.first).length(),
+                                        QLineF(sketchPoint, entity.second).length(),
+                                        QLineF(sketchPoint, middle).length()});
+        if (distance < bestDistance) {
+            nearest = index;
+            bestDistance = distance;
+        }
+    }
+    return nearest;
+}
+
+void PreviewCanvas::handleSketchClick(const QPointF& screenPoint)
+{
+    QString relation;
+    const QPointF point = snapPoint(toSketch(screenPoint), &relation);
+    if (sketchTool_ == SketchTool::Select) {
+        selectedEntity_ = nearestEntity(point);
+        emit sketchStatusChanged(selectedEntity_ >= 0 ? QStringLiteral("Geometry selected") : QStringLiteral("Selection cleared"));
+    } else if (sketchTool_ == SketchTool::Trim) {
+        const int index = nearestEntity(point);
+        if (index >= 0) entities_.removeAt(index);
+        selectedEntity_ = -1;
+        emit sketchStatusChanged(index >= 0 ? QStringLiteral("Segment trimmed") : QStringLiteral("No segment near cursor"));
+    } else if (sketchTool_ == SketchTool::Dimension || sketchTool_ == SketchTool::Constraint) {
+        const int index = nearestEntity(point);
+        selectedEntity_ = index;
+        if (index >= 0) {
+            if (sketchTool_ == SketchTool::Dimension) entities_[index].dimensioned = true;
+            else entities_[index].constrained = true;
+        }
+        emit sketchStatusChanged(index >= 0
+            ? (sketchTool_ == SketchTool::Dimension ? QStringLiteral("Dimension added") : QStringLiteral("Relation applied"))
+            : QStringLiteral("Select geometry"));
+    } else if (sketchTool_ == SketchTool::Offset) {
+        const int index = nearestEntity(point);
+        if (index >= 0) {
+            auto copy = entities_.at(index);
+            copy.first += QPointF(8, 8); copy.second += QPointF(8, 8); copy.dimensioned = false;
+            entities_.append(copy); selectedEntity_ = entities_.size() - 1;
+        }
+        emit sketchStatusChanged(index >= 0 ? QStringLiteral("Offset preview created") : QStringLiteral("Select geometry to offset"));
+    } else if (!pendingPoint_) {
+        pendingPoint_ = point;
+        hoverPoint_ = point;
+        emit sketchStatusChanged(QStringLiteral("Choose second point  ·  snapping enabled"));
+    } else {
+        SketchEntity::Kind kind = SketchEntity::Kind::Line;
+        if (sketchTool_ == SketchTool::Rectangle) kind = SketchEntity::Kind::Rectangle;
+        else if (sketchTool_ == SketchTool::Circle) kind = SketchEntity::Kind::Circle;
+        else if (sketchTool_ == SketchTool::Arc) kind = SketchEntity::Kind::Arc;
+        const bool constrained = relation == QStringLiteral("Coincident") || relation == QStringLiteral("Horizontal")
+            || relation == QStringLiteral("Vertical");
+        entities_.append({kind, *pendingPoint_, point, false, constrained});
+        selectedEntity_ = entities_.size() - 1;
+        pendingPoint_.reset();
+        transientRelation_.clear();
+        emit sketchStatusChanged(constrained ? QStringLiteral("Geometry added  ·  relation inferred")
+                                             : QStringLiteral("Geometry added"));
+    }
+    update();
 }
 
 void PreviewCanvas::paintViewCube(QPainter& painter) const

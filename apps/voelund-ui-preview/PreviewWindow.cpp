@@ -110,6 +110,9 @@ PreviewWindow::PreviewWindow(QWidget* parent)
         selectionText_->setText(selection);
         statusText_->setText(QStringLiteral("Selected: %1").arg(selection));
     });
+    connect(canvas_, &PreviewCanvas::sketchStatusChanged, this, [this](const QString& status) {
+        statusText_->setText(QStringLiteral("Sketch 01  ·  %1").arg(status));
+    });
     setWorkspaceTab(QStringLiteral("SOLID"));
 }
 
@@ -183,6 +186,11 @@ QWidget* PreviewWindow::createWorkspaceTabs()
         workspaceTabs_.append(tab);
         layout->addWidget(tab);
     }
+    sketchWorkspaceTab_ = new QPushButton(QStringLiteral("SKETCH"));
+    sketchWorkspaceTab_->setProperty("class", QStringLiteral("workspaceTab"));
+    sketchWorkspaceTab_->hide();
+    workspaceTabs_.append(sketchWorkspaceTab_);
+    layout->addWidget(sketchWorkspaceTab_);
     layout->addStretch();
     return tabs;
 }
@@ -216,13 +224,27 @@ QWidget* PreviewWindow::createSketchRibbon()
     auto* layout = new QHBoxLayout(ribbon);
     layout->setContentsMargins(14, 4, 10, 2);
     layout->setSpacing(4);
+    const auto addSketchTool = [this](const QString& label, Icon icon, PreviewCanvas::SketchTool tool) {
+        auto* button = toolButton(label, icon);
+        sketchToolButtons_.append(button);
+        connect(button, &QToolButton::clicked, this, [this, tool, button] {
+            activateSketchTool(static_cast<int>(tool), button);
+        });
+        return button;
+    };
+    auto* select = addSketchTool(QStringLiteral("Select"), Icon::Select, PreviewCanvas::SketchTool::Select);
+    select->setProperty("active", true);
     layout->addWidget(createRibbonGroup(QStringLiteral("CREATE"), {
-        toolButton(QStringLiteral("Line"), Icon::Line), toolButton(QStringLiteral("Rectangle"), Icon::Rectangle),
-        toolButton(QStringLiteral("Circle"), Icon::Circle), toolButton(QStringLiteral("Arc"), Icon::Arc)}));
+        select, addSketchTool(QStringLiteral("Line"), Icon::Line, PreviewCanvas::SketchTool::Line),
+        addSketchTool(QStringLiteral("Rectangle"), Icon::Rectangle, PreviewCanvas::SketchTool::Rectangle),
+        addSketchTool(QStringLiteral("Circle"), Icon::Circle, PreviewCanvas::SketchTool::Circle),
+        addSketchTool(QStringLiteral("Arc"), Icon::Arc, PreviewCanvas::SketchTool::Arc)}));
     layout->addWidget(createRibbonGroup(QStringLiteral("CONSTRAIN"), {
-        toolButton(QStringLiteral("Relation"), Icon::Constraint), toolButton(QStringLiteral("Dimension"), Icon::Dimension)}));
+        addSketchTool(QStringLiteral("Relation"), Icon::Constraint, PreviewCanvas::SketchTool::Constraint),
+        addSketchTool(QStringLiteral("Dimension"), Icon::Dimension, PreviewCanvas::SketchTool::Dimension)}));
     layout->addWidget(createRibbonGroup(QStringLiteral("MODIFY"), {
-        toolButton(QStringLiteral("Trim"), Icon::Trim), toolButton(QStringLiteral("Offset"), Icon::Offset)}));
+        addSketchTool(QStringLiteral("Trim"), Icon::Trim, PreviewCanvas::SketchTool::Trim),
+        addSketchTool(QStringLiteral("Offset"), Icon::Offset, PreviewCanvas::SketchTool::Offset)}));
     layout->addStretch();
     auto* finish = toolButton(QStringLiteral("Finish Sketch"), Icon::Finish);
     finish->setObjectName(QStringLiteral("finishSketch"));
@@ -389,7 +411,8 @@ void PreviewWindow::enterSketch()
     ribbonStack_->setCurrentIndex(1);
     inspectorStack_->setCurrentIndex(1);
     canvas_->setMode(PreviewCanvas::Mode::Sketch);
-    setWorkspaceTab(QStringLiteral("SOLID"));
+    sketchWorkspaceTab_->show();
+    setWorkspaceTab(QStringLiteral("SKETCH"));
     statusText_->setText(QStringLiteral("Editing Sketch 01  ·  Top face"));
 }
 
@@ -398,6 +421,8 @@ void PreviewWindow::finishSketch()
     ribbonStack_->setCurrentIndex(0);
     inspectorStack_->setCurrentIndex(0);
     canvas_->setMode(PreviewCanvas::Mode::Solid);
+    sketchWorkspaceTab_->hide();
+    setWorkspaceTab(QStringLiteral("SOLID"));
     statusText_->setText(QStringLiteral("Sketch 01 finished  ·  Ready"));
 }
 
@@ -406,6 +431,15 @@ void PreviewWindow::activateExtrude()
     finishSketch();
     inspectorStack_->show();
     statusText_->setText(QStringLiteral("Extrude  ·  Select a profile or face"));
+}
+
+void PreviewWindow::activateSketchTool(int tool, QToolButton* button)
+{
+    for (auto* candidate : sketchToolButtons_) {
+        candidate->setProperty("active", candidate == button);
+        refreshStyle(candidate);
+    }
+    canvas_->setSketchTool(static_cast<PreviewCanvas::SketchTool>(tool));
 }
 
 void PreviewWindow::setWorkspaceTab(const QString& activeName)
