@@ -18,6 +18,7 @@ namespace voelund::preview {
 
 class PreviewCanvas;
 class SketchBackend;
+class ViewCube;
 
 }
 
@@ -59,6 +60,7 @@ private:
     PreviewCanvas* canvas_{nullptr};
     viewport::CadViewport* cadViewport_{nullptr};
     QStackedWidget* canvasStack_{nullptr};
+    ViewCube* viewCube_{nullptr};
     std::optional<viewport::PlanarFaceSelection> selectedPlanarFace_;
     application::CadSession& session_;
     std::unique_ptr<SketchBackend> sketchBackend_;

@@ -7,6 +7,8 @@ add_executable(
     PreviewIcons.hpp
     SketchBackend.cpp
     SketchBackend.hpp
+    ViewCube.cpp
+    ViewCube.hpp
     PreviewStyle.cpp
     PreviewStyle.hpp
     PreviewWindow.cpp

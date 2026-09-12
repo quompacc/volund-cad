@@ -160,6 +160,8 @@ enum class SketchAutomaticConstraint {
     concentric
 };
 
+enum class CameraView { isometric, top, front, right, left, back, bottom };
+
 struct SketchElementIntent final {
     double firstX;
     double firstY;
@@ -217,6 +219,9 @@ class CadViewport final : public CadViewportBase {
     void setTransformToolEnabled(bool enabled);
     void setTransformTarget(std::optional<std::uint64_t> bodyId);
     void setTransformSnapping(bool enabled, double linearStep, double angularStep);
+    void setCameraView(CameraView view);
+    void setPerspectiveProjection(bool enabled);
+    void fitView();
     [[nodiscard]] bool isRenderingReady() const noexcept;
     [[nodiscard]] std::size_t displayedSketchElementCount() const noexcept;
     [[nodiscard]] std::size_t displayedSketchConstraintCount() const noexcept;

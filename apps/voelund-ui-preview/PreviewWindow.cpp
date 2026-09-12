@@ -3,6 +3,7 @@
 #include "PreviewCanvas.hpp"
 #include "PreviewIcons.hpp"
 #include "SketchBackend.hpp"
+#include "ViewCube.hpp"
 
 #include <voelund/application/CadSession.hpp>
 #include <voelund/document/ModelDocument.hpp>
@@ -115,7 +116,28 @@ PreviewWindow::PreviewWindow(application::CadSession& session, QWidget* parent)
     inspectorStack_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Maximum);
     inspectorStack_->addWidget(createSolidInspector());
     inspectorStack_->addWidget(createSketchInspector());
-    overlayLayout->addWidget(inspectorStack_, 0, 0, Qt::AlignTop | Qt::AlignRight);
+    viewCube_ = new ViewCube;
+    viewCube_->setCameraHandler([this](viewport::CameraView view) {
+        cadViewport_->setCameraView(view);
+        statusText_->setText(QStringLiteral("Standard camera view selected"));
+    });
+    viewCube_->setFitHandler([this] {
+        cadViewport_->fitView();
+        statusText_->setText(QStringLiteral("View fitted to model"));
+    });
+    viewCube_->setProjectionHandler([this](bool perspective) {
+        cadViewport_->setPerspectiveProjection(perspective);
+        statusText_->setText(perspective ? QStringLiteral("Perspective camera")
+                                         : QStringLiteral("Orthographic camera"));
+    });
+    auto* overlayTools = new QWidget;
+    overlayTools->setAttribute(Qt::WA_TranslucentBackground);
+    auto* overlayToolsLayout = new QHBoxLayout(overlayTools);
+    overlayToolsLayout->setContentsMargins(0, 0, 0, 0);
+    overlayToolsLayout->setSpacing(8);
+    overlayToolsLayout->addWidget(viewCube_, 0, Qt::AlignTop);
+    overlayToolsLayout->addWidget(inspectorStack_, 0, Qt::AlignTop);
+    overlayLayout->addWidget(overlayTools, 0, 0, Qt::AlignTop | Qt::AlignRight);
     overlayLayout->setContentsMargins(0, 0, 14, 0);
     workLayout->addWidget(canvasLayer, 1);
     rootLayout->addWidget(workArea, 1);
@@ -461,6 +483,7 @@ void PreviewWindow::enterSketch()
     inspectorStack_->setCurrentIndex(1);
     canvas_->setMode(PreviewCanvas::Mode::Sketch);
     canvasStack_->setCurrentWidget(canvas_);
+    viewCube_->hide();
     sketchWorkspaceTab_->show();
     setWorkspaceTab(QStringLiteral("SKETCH"));
     statusText_->setText(QStringLiteral("Editing Sketch 01  ·  Top face"));
@@ -476,6 +499,7 @@ void PreviewWindow::finishSketch()
     inspectorStack_->setCurrentIndex(0);
     canvas_->setMode(PreviewCanvas::Mode::Solid);
     canvasStack_->setCurrentWidget(cadViewport_);
+    viewCube_->show();
     sketchWorkspaceTab_->hide();
     setWorkspaceTab(QStringLiteral("SOLID"));
     refreshBrowser();

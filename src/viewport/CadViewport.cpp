@@ -14,7 +14,13 @@
 #include <AIS_SelectionScheme.hxx>
 #include <AIS_Shape.hxx>
 #include <Aspect_DisplayConnection.hxx>
+#include <Aspect_GradientFillMethod.hxx>
+#include <Aspect_Grid.hxx>
+#include <Aspect_GridDrawMode.hxx>
+#include <Aspect_GridType.hxx>
+#include <Aspect_TypeOfTriedronPosition.hxx>
 #include <Aspect_Window.hxx>
+#include <Graphic3d_Camera.hxx>
 #include <Graphic3d_GraphicDriver.hxx>
 #include <NCollection_Vec2.hxx>
 #include <OpenGl_GraphicDriver.hxx>
@@ -72,7 +78,18 @@ class CadViewport::Impl final {
             window->Map();
         }
 
-        view->SetBackgroundColor(Quantity_Color(0.055, 0.071, 0.094, Quantity_TOC_RGB));
+        view->SetBgGradientColors(Quantity_Color(0.12, 0.15, 0.13, Quantity_TOC_RGB),
+                                  Quantity_Color(0.035, 0.05, 0.04, Quantity_TOC_RGB),
+                                  Aspect_GradientFillMethod_Vertical, false);
+        viewer->SetRectangularGridValues(0.0, 0.0, 10.0, 10.0, 0.0);
+        viewer->SetRectangularGridGraphicValues(500.0, 500.0, -0.05);
+        viewer->ActivateGrid(Aspect_GT_Rectangular, Aspect_GDM_Lines);
+        viewer->Grid()->SetColors(Quantity_Color(0.19, 0.23, 0.19, Quantity_TOC_RGB),
+                                  Quantity_Color(0.34, 0.31, 0.16, Quantity_TOC_RGB));
+        view->ZBufferTriedronSetup(Quantity_NOC_RED, Quantity_NOC_GREEN, Quantity_NOC_BLUE1,
+                                   0.8, 0.05, 12);
+        view->TriedronDisplay(Aspect_TOTP_LEFT_LOWER, Quantity_Color(0.82, 0.69, 0.30,
+                              Quantity_TOC_RGB), 0.075, V3d_ZBUFFER);
         view->SetProj(V3d_TypeOfOrientation_Zup_AxoRight);
         displayPendingBodies();
     }
@@ -389,6 +406,39 @@ void CadViewport::setTransformSnapping(bool enabled, double linearStep, double a
     impl_->manipulator.setSnapping(enabled, linearStep, angularStep);
     impl_->sketch.setSnapping(enabled, linearStep);
     impl_->sketchEditor.setSnapping(enabled, linearStep);
+}
+
+void CadViewport::setCameraView(CameraView cameraView) {
+    if (impl_->view.IsNull())
+        return;
+    V3d_TypeOfOrientation orientation = V3d_TypeOfOrientation_Zup_AxoRight;
+    switch (cameraView) {
+    case CameraView::top: orientation = V3d_TypeOfOrientation_Zup_Top; break;
+    case CameraView::front: orientation = V3d_TypeOfOrientation_Zup_Front; break;
+    case CameraView::right: orientation = V3d_TypeOfOrientation_Zup_Right; break;
+    case CameraView::left: orientation = V3d_TypeOfOrientation_Zup_Left; break;
+    case CameraView::back: orientation = V3d_TypeOfOrientation_Zup_Back; break;
+    case CameraView::bottom: orientation = V3d_TypeOfOrientation_Zup_Bottom; break;
+    case CameraView::isometric: break;
+    }
+    impl_->view->SetProj(orientation);
+    fitView();
+}
+
+void CadViewport::setPerspectiveProjection(bool enabled) {
+    if (impl_->view.IsNull())
+        return;
+    impl_->view->Camera()->SetProjectionType(enabled ? Graphic3d_Camera::Projection_Perspective
+                                                     : Graphic3d_Camera::Projection_Orthographic);
+    impl_->view->Redraw();
+}
+
+void CadViewport::fitView() {
+    if (impl_->view.IsNull())
+        return;
+    impl_->view->FitAll(0.08, false);
+    impl_->view->ZFitAll();
+    impl_->view->Redraw();
 }
 
 QPaintEngine* CadViewport::paintEngine() const { return nullptr; }
