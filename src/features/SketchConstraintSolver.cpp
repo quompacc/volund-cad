@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <stdexcept>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -83,6 +84,7 @@ GCS::Point& point(const document::SketchGeometryReference& reference, const Line
 
 SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
     document::validateSketchParameters(sketch);
+    const document::SketchElements originalElements = sketch.elements;
     std::vector<std::unique_ptr<LineState>> lineStates;
     std::vector<std::unique_ptr<CircleState>> circleStates;
     LineMap lines;
@@ -162,6 +164,12 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
         line->writeBack();
     for (const auto& circle : circleStates)
         circle->writeBack();
+    try {
+        document::validateSketchParameters(sketch);
+    } catch (const std::invalid_argument&) {
+        sketch.elements = originalElements;
+        return result;
+    }
     result.status = SketchSolveStatus::success;
     return result;
 }

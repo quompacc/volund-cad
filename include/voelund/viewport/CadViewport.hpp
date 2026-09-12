@@ -16,6 +16,7 @@
 #include <memory>
 #include <optional>
 #include <span>
+#include <utility>
 
 class QMouseEvent;
 class QPaintEngine;
@@ -35,6 +36,17 @@ struct SceneBody final {
 struct SceneSketchElement final {
     std::uint64_t id;
     TopoDS_Shape shape;
+    bool conflicting;
+
+    SceneSketchElement(std::uint64_t elementId, TopoDS_Shape elementShape, bool hasConflict = false)
+        : id(elementId), shape(std::move(elementShape)), conflicting(hasConflict) {}
+};
+
+struct SketchSelectionIntent final {
+    std::uint64_t elementId;
+    double localX;
+    double localY;
+    bool additive;
 };
 
 struct PlanarFaceSelection final {
@@ -75,50 +87,43 @@ using CadViewportBase = QWidget;
 #endif
 
 class CadViewport final : public CadViewportBase {
-public:
+  public:
     explicit CadViewport(QWidget* parent = nullptr);
     ~CadViewport() override;
 
     void setShape(const TopoDS_Shape& shape);
     void setBodies(std::span<const SceneBody> bodies);
-    void setSketchElements(
-        std::span<const SceneSketchElement> elements,
-        std::optional<std::uint64_t> selectedId = std::nullopt);
-    void setSketchElementSelectionHandler(
-        std::function<void(std::uint64_t)> handler);
+    void setSketchElements(std::span<const SceneSketchElement> elements,
+                           std::optional<std::uint64_t> selectedId = std::nullopt);
+    void
+    setSketchElementSelectionHandler(std::function<void(const SketchSelectionIntent&)> handler);
     void setSelectedSketchElement(std::optional<std::uint64_t> elementId);
+    void setSelectedSketchElements(std::span<const std::uint64_t> elementIds);
     void setBodySelectionHandler(std::function<void(std::uint64_t)> handler);
-    void setPlanarFaceSelectionHandler(
-        std::function<void(const PlanarFaceSelection&)> handler);
-    void setSketchRectangleHandler(
-        std::function<void(const SketchRectangleResult&)> handler);
+    void setPlanarFaceSelectionHandler(std::function<void(const PlanarFaceSelection&)> handler);
+    void setSketchRectangleHandler(std::function<void(const SketchRectangleResult&)> handler);
     void setSketchExtrusionPreviewHandler(std::function<void(double)> handler);
     void setSketchEditorPreviewHandler(
         std::function<void(const std::optional<SketchElementIntent>&)> handler);
-    void setSketchEditorElementHandler(
-        std::function<void(const SketchElementIntent&)> handler);
-    void setSketchEditorTranslationHandler(
-        std::function<void(double, double)> handler);
+    void setSketchEditorElementHandler(std::function<void(const SketchElementIntent&)> handler);
+    void setSketchEditorTranslationHandler(std::function<void(double, double)> handler);
     void beginRectangleSketch(const PlanarFaceSelection& support);
     void beginSketchEditor(const PlanarFaceSelection& support, SketchElementTool tool);
     void setSketchEditorTool(SketchElementTool tool);
     void updateSketchExtrusionPreview(double distance);
     void cancelSketch();
-    void setBodyMoveHandler(
-        std::function<void(std::uint64_t, double, double, double)> handler);
-    void setBodyMovePreviewHandler(
-        std::function<void(std::uint64_t, double, double, double)> handler);
-    void setBodyRotationHandler(
-        std::function<void(std::uint64_t, int, double)> handler);
-    void setBodyRotationPreviewHandler(
-        std::function<void(std::uint64_t, int, double)> handler);
+    void setBodyMoveHandler(std::function<void(std::uint64_t, double, double, double)> handler);
+    void
+    setBodyMovePreviewHandler(std::function<void(std::uint64_t, double, double, double)> handler);
+    void setBodyRotationHandler(std::function<void(std::uint64_t, int, double)> handler);
+    void setBodyRotationPreviewHandler(std::function<void(std::uint64_t, int, double)> handler);
     void setTransformToolEnabled(bool enabled);
     void setTransformTarget(std::optional<std::uint64_t> bodyId);
     void setTransformSnapping(bool enabled, double linearStep, double angularStep);
     [[nodiscard]] bool isRenderingReady() const noexcept;
     [[nodiscard]] std::size_t displayedSketchElementCount() const noexcept;
 
-protected:
+  protected:
 #if defined(VOELUND_VIEWPORT_QT_OPENGL)
     void initializeGL() override;
     void paintGL() override;
@@ -133,7 +138,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent* event) override;
     void wheelEvent(QWheelEvent* event) override;
 
-private:
+  private:
     class Impl;
     std::unique_ptr<Impl> impl_;
 };

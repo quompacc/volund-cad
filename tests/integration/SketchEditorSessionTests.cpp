@@ -28,15 +28,15 @@ bool completeEditorFlowIsOneDocumentTransaction() {
     if (!add(editor, {1.0, 1.0}, {4.0, 3.0}, 2))
         return false;
     editor.setTool(voelund::application::SketchDrawingTool::circle);
-    if (!add(editor, {8.0, 3.0}, {10.0, 3.0}, 3))
+    if (!add(editor, {8.0, 3.0}, {10.0, 3.0}, 6))
         return false;
-    if (editor.elements().size() != 3 || editor.closedProfileCount() != 2 ||
+    if (editor.elements().size() != 6 || editor.closedProfileCount() != 2 ||
         !editor.selectElement(voelund::document::SketchElementId{2}))
         return false;
 
     const auto sketchId = editor.accept();
     if (session.features().size() != 2 || session.selectedFeature() != sketchId ||
-        session.selectedSketchParameters().elements.nextId != 4)
+        session.selectedSketchParameters().elements.nextId != 7)
         return false;
     if (!session.undo() || session.features().size() != 1)
         return false;
@@ -137,10 +137,10 @@ bool existingSketchCanBeEditedAsOneTransaction() {
     if (!add(create, {0.0, 0.0}, {4.0, 3.0}, 1))
         return false;
     create.setTool(voelund::application::SketchDrawingTool::circle);
-    if (!add(create, {8.0, 2.0}, {10.0, 2.0}, 2))
+    if (!add(create, {8.0, 2.0}, {10.0, 2.0}, 5))
         return false;
     create.setTool(voelund::application::SketchDrawingTool::line);
-    if (!add(create, {0.0, 6.0}, {3.0, 6.0}, 3))
+    if (!add(create, {0.0, 6.0}, {3.0, 6.0}, 6))
         return false;
     const auto sketchId = create.accept();
     const auto original = session.sketchParameters(sketchId);
@@ -149,26 +149,23 @@ bool existingSketchCanBeEditedAsOneTransaction() {
                                                    session.sketchParameters(sketchId));
     if (!edit.selectElement(voelund::document::SketchElementId{1}) ||
         !edit.translateSelected(1.0, 0.0) ||
-        !edit.selectElement(voelund::document::SketchElementId{2}) ||
+        !edit.selectElement(voelund::document::SketchElementId{5}) ||
         !edit.translateSelected(-1.0, 1.0) ||
-        !edit.selectElement(voelund::document::SketchElementId{3}) ||
+        !edit.selectElement(voelund::document::SketchElementId{6}) ||
         !edit.translateSelected(1.0, 0.0) || !edit.translateSelected(1.0, 1.0) ||
         !edit.removeSelected())
         return false;
     edit.setTool(voelund::application::SketchDrawingTool::line);
-    if (!add(edit, {12.0, 4.0}, {13.0, 4.0}, 4) || edit.closedProfileCount() != 2)
+    if (!add(edit, {12.0, 4.0}, {13.0, 4.0}, 7) || edit.closedProfileCount() != 2)
         return false;
     static_cast<void>(edit.accept());
 
     const auto changed = session.sketchParameters(sketchId);
-    if (changed.elements.values.size() != 3 || changed.elements.nextId != 5 || changed == original)
+    if (changed.elements.values.size() != 6 || changed.elements.nextId != 8 || changed == original)
         return false;
-    const auto& movedRectangle =
-        std::get<voelund::document::SketchRectangle>(changed.elements.values[0].geometry);
     const auto& movedCircle =
-        std::get<voelund::document::SketchCircle>(changed.elements.values[1].geometry);
-    if (movedRectangle.first != voelund::document::SketchPoint{1.0, 0.0} ||
-        movedCircle.center != voelund::document::SketchPoint{7.0, 3.0})
+        std::get<voelund::document::SketchCircle>(changed.elements.values[4].geometry);
+    if (movedCircle.center != voelund::document::SketchPoint{7.0, 3.0})
         return false;
     if (!session.undo() || session.sketchParameters(sketchId) != original || !session.redo() ||
         session.sketchParameters(sketchId) != changed)
@@ -278,7 +275,7 @@ bool lineDimensionAndConstraintPersistThroughEditing() {
     return !error && loaded.sketchParameters(sketchId) == moved;
 }
 
-bool rectangleAndCircleDimensionsPersist() {
+bool rectangleDecomposesAndCircleDimensionPersists() {
     voelund::application::CadSession session;
     session.newDocument();
     const auto support = session.addBoxFeature();
@@ -286,28 +283,24 @@ bool rectangleAndCircleDimensionsPersist() {
     editor.setTool(voelund::application::SketchDrawingTool::rectangle);
     if (!add(editor, {5.0, 5.0}, {1.0, 2.0}, 1) ||
         !editor.selectElement(voelund::document::SketchElementId{1}) ||
-        editor.selectedLineLength().has_value() ||
-        editor.selectedRectangleWidth() != std::optional<double>{4.0} ||
-        editor.selectedRectangleHeight() != std::optional<double>{3.0} ||
-        !editor.setSelectedRectangleWidth(10.0) || !editor.setSelectedRectangleHeight(7.0))
+        editor.selectedLineLength() != std::optional<double>{4.0} ||
+        editor.selectedRectangleWidth().has_value() || editor.elements().size() != 4 ||
+        editor.constraints().size() != 8 || editor.closedProfileCount() != 1)
         return false;
     editor.setTool(voelund::application::SketchDrawingTool::circle);
-    if (!add(editor, {12.0, 8.0}, {14.0, 8.0}, 2) ||
-        !editor.selectElement(voelund::document::SketchElementId{2}) ||
+    if (!add(editor, {12.0, 8.0}, {14.0, 8.0}, 5) ||
+        !editor.selectElement(voelund::document::SketchElementId{5}) ||
         editor.selectedCircleRadius() != std::optional<double>{2.0} ||
         editor.selectedRectangleWidth().has_value() || !editor.setSelectedCircleRadius(3.5))
         return false;
 
     const auto sketchId = editor.accept();
     const auto changed = session.sketchParameters(sketchId);
-    const auto& rectangle =
-        std::get<voelund::document::SketchRectangle>(changed.elements.values[0].geometry);
     const auto& circle =
-        std::get<voelund::document::SketchCircle>(changed.elements.values[1].geometry);
-    if (rectangle.second != voelund::document::SketchPoint{-5.0, -2.0} || circle.radius != 3.5 ||
-        changed.constraints.values.size() != 1 ||
-        changed.constraints.values.front().kind !=
-            voelund::document::SketchConstraintKind::radius ||
+        std::get<voelund::document::SketchCircle>(changed.elements.values[4].geometry);
+    if (circle.radius != 3.5 || changed.elements.nextId != 6 ||
+        changed.constraints.values.size() != 9 ||
+        changed.constraints.values.back().kind != voelund::document::SketchConstraintKind::radius ||
         !session.undo() || session.features().size() != 1 || !session.redo() ||
         session.sketchParameters(sketchId) != changed)
         return false;
@@ -333,6 +326,50 @@ bool unchangedMeasurementCanBecomeDrivingConstraint() {
         editor.setSelectedLineLength(5.0))
         return false;
     return editor.lastSolveResult().status == voelund::features::SketchSolveStatus::success;
+}
+
+bool endpointRelationsDriveGeometryAndConflictsStayRecoverable() {
+    using namespace voelund;
+    application::CadSession session;
+    session.newDocument();
+    const auto support = session.addBoxFeature();
+    application::SketchEditorSession editor(session, support, plane);
+    if (!add(editor, {0.0, 0.0}, {4.0, 1.0}, 1) || !add(editor, {6.0, 2.0}, {7.0, 6.0}, 2) ||
+        !editor.selectElement(document::SketchElementId{1}) ||
+        !editor.setSelectedLineLength(editor.selectedLineLength().value()) ||
+        !editor.selectElement(document::SketchElementId{2}) ||
+        !editor.setSelectedLineLength(editor.selectedLineLength().value()) ||
+        !editor.selectNearestReference(document::SketchElementId{1}, {4.0, 1.0}, false) ||
+        !editor.selectNearestReference(document::SketchElementId{2}, {6.0, 2.0}, true) ||
+        !editor.canAddSelectedRelation(document::SketchConstraintKind::coincident) ||
+        !editor.addSelectedRelation(document::SketchConstraintKind::coincident))
+        return false;
+    const auto& firstCoincident = std::get<document::SketchLine>(editor.elements()[0].geometry).end;
+    const auto& secondCoincident =
+        std::get<document::SketchLine>(editor.elements()[1].geometry).start;
+    if (std::hypot(firstCoincident.x - secondCoincident.x, firstCoincident.y - secondCoincident.y) >
+        1.0e-7)
+        return false;
+
+    if (!editor.selectNearestReference(document::SketchElementId{1}, firstCoincident, false) ||
+        !editor.selectNearestReference(document::SketchElementId{2}, secondCoincident, true) ||
+        !editor.addSelectedRelation(document::SketchConstraintKind::parallel) ||
+        !editor.addSelectedRelation(document::SketchConstraintKind::perpendicular))
+        return false;
+    if (editor.lastSolveResult().status != features::SketchSolveStatus::conflicting ||
+        editor.canAccept() || !editor.isElementConflicting(document::SketchElementId{1}) ||
+        !editor.isElementConflicting(document::SketchElementId{2}) ||
+        !editor.removeLastConstraint())
+        return false;
+    const auto sharedPoint = std::get<document::SketchLine>(editor.elements()[0].geometry).end;
+    if (!editor.selectNearestReference(document::SketchElementId{1}, sharedPoint, false) ||
+        !editor.translateSelected(1.0, 2.0))
+        return false;
+    const auto& draggedFirst = std::get<document::SketchLine>(editor.elements()[0].geometry).end;
+    const auto& draggedSecond = std::get<document::SketchLine>(editor.elements()[1].geometry).start;
+    return editor.lastSolveResult().status == features::SketchSolveStatus::success &&
+           editor.canAccept() &&
+           std::hypot(draggedFirst.x - draggedSecond.x, draggedFirst.y - draggedSecond.y) <= 1.0e-7;
 }
 
 } // namespace
@@ -378,12 +415,16 @@ int main() {
         std::cerr << "Sketch line dimension or constraint did not persist\n";
         return 1;
     }
-    if (!rectangleAndCircleDimensionsPersist()) {
-        std::cerr << "Rectangle or circle dimensions did not persist\n";
+    if (!rectangleDecomposesAndCircleDimensionPersists()) {
+        std::cerr << "Rectangle decomposition or circle dimension did not persist\n";
         return 1;
     }
     if (!unchangedMeasurementCanBecomeDrivingConstraint()) {
         std::cerr << "Unchanged measurement did not become a driving constraint\n";
+        return 1;
+    }
+    if (!endpointRelationsDriveGeometryAndConflictsStayRecoverable()) {
+        std::cerr << "Endpoint relations or conflict recovery failed\n";
         return 1;
     }
     return 0;

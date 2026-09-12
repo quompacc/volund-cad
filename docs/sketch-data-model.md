@@ -56,12 +56,13 @@ one document transaction and recomputes downstream profiles and extrusions. Canc
 discards every temporary edit. Undo/Redo and Save/Load therefore preserve both the
 edited geometry and the monotonic ID allocation.
 
-Within an active edit session, the selected element itself acts as a viewport grip.
-Dragging it projects pointer movement back into sketch-local coordinates, applies the
-configured linear snap and reports only incremental translation intent to the
-application editor. The preview presentation and the numeric X/Y translation fields
-stay synchronized. Releasing the pointer ends only the gesture; OK or Cancel still
-owns the document transaction boundary.
+Within an active edit session, clicking a line chooses its nearest endpoint and
+clicking a circle chooses its center. Ctrl-click toggles additional geometry
+references. Dragging one selected reference projects pointer movement back into
+sketch-local coordinates and lets PlaneGCS move the remaining constrained geometry;
+whole-element translation remains available through the numeric X/Y fields. Releasing
+the pointer ends only the gesture; OK or Cancel still owns the document transaction
+boundary.
 
 ## Parametric constraint foundation
 
@@ -74,13 +75,18 @@ commits geometry and constraints together in one transaction. The legacy directi
 field on `SketchLine` is temporarily mirrored for version-3 compatibility; it is no
 longer the parametric source of truth.
 
-Rectangles expose independent positive width and height values while preserving the
-sign of their original drawing directions. These remain direct macro-geometry values
-for now and participate in the same single OK transaction.
+The rectangle tool is a construction command rather than a persistent macro element:
+confirmation creates four line elements, alternating horizontal and vertical driving
+constraints and four endpoint-coincidence constraints. Each edge and endpoint can
+therefore participate in later relations. Legacy `SketchRectangle` elements remain in
+the document model so older files and the direct Push/Pull convenience path continue
+to work unchanged.
 
-The document and solver adapter already support endpoint coincidence, parallel and
-perpendicular relations, degrees-of-freedom reporting and stable conflict IDs. Their
-multi-selection UI remains the next Sketcher slice. Persistent profile selection also
+The editor exposes endpoint coincidence plus line parallel and perpendicular
+relations for two Ctrl-selected references. The PlaneGCS result reports remaining
+degrees of freedom and stable conflicting constraint IDs. Conflicting elements are
+presented in red, OK stays disabled until the conflict is resolved, and the most
+recent constraint can be removed from the tool panel. Persistent profile selection
 remains later work.
 
 Rectangles and circles each form a closed profile. Connected line chains form a

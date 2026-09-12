@@ -1,4 +1,8 @@
-add_library(voelund_application STATIC CadSession.cpp SketchEditorSession.cpp)
+add_library(voelund_application STATIC
+    CadSession.cpp
+    SketchEditorRectangle.cpp
+    SketchEditorSession.cpp
+)
 
 target_include_directories(
     voelund_application

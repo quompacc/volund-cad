@@ -61,15 +61,20 @@ gehören nicht zum Produktpfad.
   und vertikale Richtungsconstraints richten die Linie längenerhaltend um ihren
   Startpunkt aus, bleiben beim Verschieben aktiv und werden mit Undo/Redo sowie
   Save/Load erhalten.
-- Ausgewählte Rechtecke bieten Breite und Höhe als getrennte positive Maße;
-  ausgewählte Kreise bieten ihren Radius. Alle werkzeugeigenen Maße aktualisieren
-  dieselbe temporäre Vorschau und werden erst mit OK als eine Transaktion übernommen.
+- Neu gezeichnete Rechtecke sind keine unteilbaren Makroelemente mehr. Der Editor
+  erzeugt vier einzeln auswählbare Linien mit vier Horizontal-/Vertikal- und vier
+  Koinzidenzconstraints. Alte gespeicherte Rechteckelemente bleiben kompatibel;
+  ausgewählte Kreise bieten weiterhin ihren exakten Radius.
 - Der Constraint-Kern ist FreeCAD PlaneGCS 1.1.1: als unveränderte, isolierte
   LGPL-Komponente eingebunden und über eine Völund-eigene C++-Grenze angesprochen.
   Längen, Radien sowie Horizontal/Vertikal besitzen stabile Constraint-IDs und
   werden im Sketch-Editor tatsächlich gelöst. Der Adapter unterstützt außerdem
-  Koinzidenz, Parallelität und Rechtwinkligkeit, Freiheitsgrade und Konflikt-IDs;
-  die Mehrfachauswahl dafür folgt im nächsten Bedien-Slice.
+  Koinzidenz, Parallelität und Rechtwinkligkeit, Freiheitsgrade und Konflikt-IDs.
+  Endpunkte beziehungsweise Kreismittelpunkte werden per Klick gewählt, mit Strg
+  mehrfach ausgewählt und können direkt gezogen werden. Das Tool-Panel aktiviert die
+  drei Relationsbefehle kontextabhängig, zeigt Freiheitsgrade an und markiert
+  widersprüchliche Geometrie rot; der letzte Constraint kann zur Wiederherstellung
+  entfernt werden.
 - Neue Dateien verwenden `VOLUND 4`; bestehende `VOLUND 1`-Rechtecksketches,
   `VOLUND 2`-Linien und `VOLUND 3`-Richtungsconstraints werden beim Laden migriert.
 - Ein temporäres generisches Tool-Panel bietet Parameter, Live-Vorschau, OK und
@@ -142,11 +147,8 @@ erzwungener Wayland-QPA weiterhin ruhende ELF-Kanten zu `libX11` und `libGLX`.
 
 Die ersten vollständigen Mehrfach-Element-Erzeugungs- und Bearbeitungs-Slices sind auf
 beiden Windows-Backends und im nativen FreeBSD-Wayland-Controlpfad bestätigt. Der
-parametrische Sketch-Modus wird als Nächstes fortgesetzt mit:
-
-1. Koinzidenz-, Parallel- und Rechtwinkligkeitsconstraints zwischen Elementen;
-2. stabilen Profilidentitäten und freier Auswahl eines oder mehrerer Profile für
-   nachfolgende Extrusionen.
+parametrische Sketch-Modus wird als Nächstes mit stabilen Profilidentitäten und der
+freien Auswahl eines oder mehrerer Profile für nachfolgende Extrusionen fortgesetzt.
 
 Der direkte Push/Pull-Ablauf bleibt dabei als schneller Weg erhalten. Er ist eine
 Bedienoberfläche über denselben parametrischen Sketch- und Extrusionsfeatures, kein

@@ -27,6 +27,9 @@ class SketchEditorSession final {
     void clearPreview() noexcept;
     [[nodiscard]] std::optional<document::SketchElementId> confirmPreview();
     [[nodiscard]] bool selectElement(document::SketchElementId elementId) noexcept;
+    [[nodiscard]] bool selectNearestReference(document::SketchElementId elementId,
+                                              document::SketchPoint position,
+                                              bool additive) noexcept;
     [[nodiscard]] bool translateSelected(double deltaX, double deltaY);
     [[nodiscard]] std::optional<double> selectedLineLength() const noexcept;
     [[nodiscard]] std::optional<double> selectedRectangleWidth() const noexcept;
@@ -39,8 +42,14 @@ class SketchEditorSession final {
     [[nodiscard]] bool setSelectedRectangleHeight(double height);
     [[nodiscard]] bool setSelectedCircleRadius(double radius);
     [[nodiscard]] bool setSelectedLineConstraint(document::SketchLineConstraint constraint);
+    [[nodiscard]] bool canAddSelectedRelation(document::SketchConstraintKind kind) const noexcept;
+    [[nodiscard]] bool addSelectedRelation(document::SketchConstraintKind kind);
+    [[nodiscard]] bool removeLastConstraint();
     [[nodiscard]] bool removeSelected();
     [[nodiscard]] std::optional<document::SketchElementId> selectedElement() const noexcept;
+    [[nodiscard]] std::span<const document::SketchGeometryReference>
+    selectedReferences() const noexcept;
+    [[nodiscard]] bool isElementConflicting(document::SketchElementId elementId) const noexcept;
     [[nodiscard]] std::span<const document::SketchElement> elements() const noexcept;
     [[nodiscard]] std::span<const document::SketchConstraint> constraints() const noexcept;
     [[nodiscard]] const features::SketchSolveResult& lastSolveResult() const noexcept;
@@ -52,6 +61,8 @@ class SketchEditorSession final {
     [[nodiscard]] bool isActive() const noexcept;
 
   private:
+    [[nodiscard]] document::SketchElementId
+    confirmRectangle(const document::SketchRectangle& rectangle);
     [[nodiscard]] document::SketchGeometry geometry(document::SketchPoint first,
                                                     document::SketchPoint second) const;
     [[nodiscard]] document::SketchParameters parameters(bool includePreview) const;
@@ -66,6 +77,7 @@ class SketchEditorSession final {
     SketchDrawingTool tool_{SketchDrawingTool::line};
     std::optional<document::SketchGeometry> preview_;
     std::optional<document::SketchElementId> selectedElement_;
+    std::vector<document::SketchGeometryReference> selectedReferences_;
     features::SketchSolveResult lastSolveResult_{features::SketchSolveStatus::success, -1, {}};
     bool active_{true};
 };

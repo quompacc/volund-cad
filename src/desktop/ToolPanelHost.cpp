@@ -109,6 +109,8 @@ void ToolPanelHost::end() {
 
 void ToolPanelHost::setAcceptEnabled(bool enabled) { acceptButton_->setEnabled(enabled); }
 
+void ToolPanelHost::setGuidance(const QString& guidance) { guidance_->setText(guidance); }
+
 void ToolPanelHost::setLengthValue(const std::string& parameterId, double value) {
     for (const auto& [id, input] : lengthInputs_) {
         if (id == parameterId) {

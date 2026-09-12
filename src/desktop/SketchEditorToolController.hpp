@@ -26,7 +26,7 @@ class SketchEditorToolController final {
     void updatePreview(const std::optional<viewport::SketchElementIntent>& intent);
     void confirmElement(const viewport::SketchElementIntent& intent);
     void translateFromViewport(double deltaX, double deltaY);
-    [[nodiscard]] bool selectElement(std::uint64_t rawId);
+    [[nodiscard]] bool selectElement(const viewport::SketchSelectionIntent& intent);
     [[nodiscard]] bool isActive() const noexcept;
     void cancel();
 
@@ -35,9 +35,12 @@ class SketchEditorToolController final {
     void applyTranslation(const std::string& id, double value);
     void applyElementDimension(const std::string& id, double value);
     void applyLineConstraint(document::SketchLineConstraint constraint);
+    void applyRelation(document::SketchConstraintKind kind);
     void removeSelected();
+    void removeLastConstraint();
     void resetTranslationInputs();
     void syncSelectedDimensionInputs();
+    void syncConstraintState();
     void showPanel();
     void refreshPresentation();
     void accept();

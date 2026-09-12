@@ -103,6 +103,10 @@ void SketchEditorToolController::showPanel() {
         {{"horizontal", QObject::tr("Constrain line horizontally")},
          {"vertical", QObject::tr("Constrain line vertically")},
          {"free", QObject::tr("Remove line direction constraint")},
+         {"coincident", QObject::tr("Make selected endpoints coincident")},
+         {"parallel", QObject::tr("Make selected lines parallel")},
+         {"perpendicular", QObject::tr("Make selected lines perpendicular")},
+         {"remove_constraint", QObject::tr("Remove last constraint")},
          {"delete", QObject::tr("Delete selected element")}},
         [this](const std::string& id, double value) {
             if (id == "translation_x" || id == "translation_y")
@@ -121,12 +125,21 @@ void SketchEditorToolController::showPanel() {
                 applyLineConstraint(document::SketchLineConstraint::vertical);
             } else if (id == "free") {
                 applyLineConstraint(document::SketchLineConstraint::none);
+            } else if (id == "coincident") {
+                applyRelation(document::SketchConstraintKind::coincident);
+            } else if (id == "parallel") {
+                applyRelation(document::SketchConstraintKind::parallel);
+            } else if (id == "perpendicular") {
+                applyRelation(document::SketchConstraintKind::perpendicular);
+            } else if (id == "remove_constraint") {
+                removeLastConstraint();
             } else if (id == "delete")
                 removeSelected();
         },
         [this]() { accept(); },
         [this]() { cancel(); }});
     syncSelectedDimensionInputs();
+    syncConstraintState();
 }
 
 void SketchEditorToolController::setTool(int index) {
@@ -159,6 +172,7 @@ void SketchEditorToolController::confirmElement(const viewport::SketchElementInt
     panel_.setAcceptEnabled(editor_->canAccept());
     resetTranslationInputs();
     syncSelectedDimensionInputs();
+    syncConstraintState();
     refreshPresentation();
     if (id.has_value()) {
         statusChanged_(QObject::tr("Sketch element #%1 added").arg(id->value()));
@@ -172,19 +186,31 @@ void SketchEditorToolController::translateFromViewport(double deltaX, double del
     translationY_ += deltaY;
     panel_.setLengthValue("translation_x", translationX_);
     panel_.setLengthValue("translation_y", translationY_);
+    syncConstraintState();
     refreshPresentation();
     statusChanged_(QObject::tr("Sketch element moved: ΔX %1 mm, ΔY %2 mm")
                        .arg(translationX_, 0, 'f', 3)
                        .arg(translationY_, 0, 'f', 3));
 }
 
-bool SketchEditorToolController::selectElement(std::uint64_t rawId) {
-    if (!editor_ || !editor_->selectElement(document::SketchElementId{rawId}))
+bool SketchEditorToolController::selectElement(const viewport::SketchSelectionIntent& intent) {
+    if (!editor_ ||
+        !editor_->selectNearestReference(document::SketchElementId{intent.elementId},
+                                         {intent.localX, intent.localY}, intent.additive))
         return false;
-    viewport_.setSelectedSketchElement(rawId);
     resetTranslationInputs();
     syncSelectedDimensionInputs();
-    statusChanged_(QObject::tr("Sketch element #%1 selected").arg(rawId));
+    syncConstraintState();
+    refreshPresentation();
+    const auto references = editor_->selectedReferences();
+    const char* pointName =
+        references.empty()                                                ? "element"
+        : references.back().point == document::SketchPointPosition::start ? "start point"
+        : references.back().point == document::SketchPointPosition::end   ? "end point"
+                                                                          : "center point";
+    statusChanged_(QObject::tr("Sketch %1 selected (%2 reference(s))")
+                       .arg(QObject::tr(pointName))
+                       .arg(references.size()));
     return true;
 }
 
@@ -208,6 +234,7 @@ void SketchEditorToolController::applyElementDimension(const std::string& id, do
     }
     if (!changed)
         return;
+    syncConstraintState();
     refreshPresentation();
     statusChanged_(QObject::tr("%1 set to %2 mm").arg(label).arg(value, 0, 'f', 3));
 }
@@ -216,12 +243,26 @@ void SketchEditorToolController::applyLineConstraint(document::SketchLineConstra
     if (!editor_ || !editor_->setSelectedLineConstraint(constraint))
         return;
     syncSelectedDimensionInputs();
+    syncConstraintState();
     refreshPresentation();
     const char* text = constraint == document::SketchLineConstraint::horizontal
                            ? "Line constrained horizontally"
                        : constraint == document::SketchLineConstraint::vertical
                            ? "Line constrained vertically"
                            : "Line direction constraint removed";
+    statusChanged_(QObject::tr(text));
+}
+
+void SketchEditorToolController::applyRelation(document::SketchConstraintKind kind) {
+    if (!editor_ || !editor_->addSelectedRelation(kind))
+        return;
+    syncSelectedDimensionInputs();
+    syncConstraintState();
+    refreshPresentation();
+    const char* text =
+        kind == document::SketchConstraintKind::coincident ? "Coincident constraint added"
+        : kind == document::SketchConstraintKind::parallel ? "Parallel constraint added"
+                                                           : "Perpendicular constraint added";
     statusChanged_(QObject::tr(text));
 }
 
@@ -239,8 +280,10 @@ void SketchEditorToolController::applyTranslation(const std::string& id, double 
     } else {
         return;
     }
-    if (editor_->translateSelected(deltaX, deltaY))
+    if (editor_->translateSelected(deltaX, deltaY)) {
+        syncConstraintState();
         refreshPresentation();
+    }
 }
 
 void SketchEditorToolController::removeSelected() {
@@ -248,9 +291,18 @@ void SketchEditorToolController::removeSelected() {
         return;
     resetTranslationInputs();
     syncSelectedDimensionInputs();
-    panel_.setAcceptEnabled(editor_->canAccept());
+    syncConstraintState();
     refreshPresentation();
     statusChanged_(QObject::tr("Sketch element deleted"));
+}
+
+void SketchEditorToolController::removeLastConstraint() {
+    if (!editor_ || !editor_->removeLastConstraint())
+        return;
+    syncSelectedDimensionInputs();
+    syncConstraintState();
+    refreshPresentation();
+    statusChanged_(QObject::tr("Last sketch constraint removed"));
 }
 
 void SketchEditorToolController::syncSelectedDimensionInputs() {
@@ -277,6 +329,29 @@ void SketchEditorToolController::syncSelectedDimensionInputs() {
         panel_.setLengthValue("circle_radius", *radius);
 }
 
+void SketchEditorToolController::syncConstraintState() {
+    if (!editor_)
+        return;
+    panel_.setActionEnabled(
+        "coincident", editor_->canAddSelectedRelation(document::SketchConstraintKind::coincident));
+    panel_.setActionEnabled(
+        "parallel", editor_->canAddSelectedRelation(document::SketchConstraintKind::parallel));
+    panel_.setActionEnabled("perpendicular", editor_->canAddSelectedRelation(
+                                                 document::SketchConstraintKind::perpendicular));
+    panel_.setActionEnabled("remove_constraint", !editor_->constraints().empty());
+    panel_.setAcceptEnabled(editor_->canAccept());
+    const auto& result = editor_->lastSolveResult();
+    if (result.status == features::SketchSolveStatus::conflicting) {
+        panel_.setGuidance(QObject::tr("Conflicting sketch: %1 conflicting constraint(s).")
+                               .arg(result.conflictingConstraints.size()));
+    } else if (result.degreesOfFreedom >= 0) {
+        panel_.setGuidance(
+            QObject::tr(
+                "Sketch solver: %1 degree(s) of freedom. Ctrl-click to add a second reference.")
+                .arg(result.degreesOfFreedom));
+    }
+}
+
 void SketchEditorToolController::resetTranslationInputs() {
     translationX_ = 0.0;
     translationY_ = 0.0;
@@ -291,12 +366,18 @@ void SketchEditorToolController::refreshPresentation() {
     std::vector<viewport::SceneSketchElement> elements;
     elements.reserve(evaluated.size());
     for (const features::EvaluatedSketchElement& element : evaluated) {
-        elements.push_back({element.id.value(), element.shape});
+        elements.push_back(
+            {element.id.value(), element.shape, editor_->isElementConflicting(element.id)});
     }
-    const auto selected = editor_->selectedElement();
-    viewport_.setSketchElements(elements, selected.has_value()
-                                              ? std::optional<std::uint64_t>{selected->value()}
-                                              : std::nullopt);
+    viewport_.setSketchElements(elements);
+    std::vector<std::uint64_t> selectedIds;
+    for (const auto& reference : editor_->selectedReferences()) {
+        if (std::ranges::find(selectedIds, reference.element.value()) == selectedIds.end())
+            selectedIds.push_back(reference.element.value());
+    }
+    if (selectedIds.empty() && editor_->selectedElement().has_value())
+        selectedIds.push_back(editor_->selectedElement()->value());
+    viewport_.setSelectedSketchElements(selectedIds);
 }
 
 void SketchEditorToolController::accept() {

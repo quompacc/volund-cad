@@ -10,13 +10,14 @@
 namespace voelund::viewport {
 
 class SketchEditorInteraction final {
-public:
+  public:
     void begin(const PlanarFaceSelection& support, SketchElementTool tool,
                const occ::handle<V3d_View>& view);
     void cancel() noexcept;
     void setTool(SketchElementTool tool) noexcept;
     void setSnapping(bool enabled, double linearStep) noexcept;
     [[nodiscard]] bool isActive() const noexcept;
+    [[nodiscard]] std::optional<std::pair<double, double>> projectPoint(int x, int y) const;
     [[nodiscard]] std::optional<SketchElementIntent> move(int x, int y) const;
     [[nodiscard]] std::optional<SketchElementIntent> click(int x, int y);
     [[nodiscard]] bool beginElementDrag(int x, int y);
@@ -24,8 +25,7 @@ public:
     void finishElementDrag() noexcept;
     [[nodiscard]] bool isElementDragging() const noexcept;
 
-private:
-    [[nodiscard]] std::optional<std::pair<double, double>> project(int x, int y) const;
+  private:
     [[nodiscard]] bool valid(const SketchElementIntent& intent) const noexcept;
 
     PlanarFaceSelection support_{};

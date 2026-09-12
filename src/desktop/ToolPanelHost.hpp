@@ -54,6 +54,7 @@ class ToolPanelHost final : public QDockWidget {
     void begin(ToolPanelDefinition definition);
     void end();
     void setAcceptEnabled(bool enabled);
+    void setGuidance(const QString& guidance);
     void setLengthValue(const std::string& parameterId, double value);
     void setLengthEnabled(const std::string& parameterId, bool enabled);
     void setActionEnabled(const std::string& actionId, bool enabled);

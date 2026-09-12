@@ -8,9 +8,8 @@
 
 namespace voelund::viewport {
 
-void SketchEditorInteraction::begin(
-    const PlanarFaceSelection& support, SketchElementTool tool,
-    const occ::handle<V3d_View>& view) {
+void SketchEditorInteraction::begin(const PlanarFaceSelection& support, SketchElementTool tool,
+                                    const occ::handle<V3d_View>& view) {
     support_ = support;
     tool_ = tool;
     view_ = view;
@@ -38,7 +37,7 @@ void SketchEditorInteraction::setSnapping(bool enabled, double linearStep) noexc
 
 bool SketchEditorInteraction::isActive() const noexcept { return active_; }
 
-std::optional<std::pair<double, double>> SketchEditorInteraction::project(int x, int y) const {
+std::optional<std::pair<double, double>> SketchEditorInteraction::projectPoint(int x, int y) const {
     if (!active_ || view_.IsNull()) {
         return std::nullopt;
     }
@@ -59,8 +58,7 @@ std::optional<std::pair<double, double>> SketchEditorInteraction::project(int x,
     }
     const double parameter = normal.Dot(gp_Vec(rayPoint, origin)) / denominator;
     const gp_Vec offset(origin, rayPoint.Translated(rayDirection * parameter));
-    const gp_Vec xDirection(
-        support_.xDirectionX, support_.xDirectionY, support_.xDirectionZ);
+    const gp_Vec xDirection(support_.xDirectionX, support_.xDirectionY, support_.xDirectionZ);
     const gp_Vec yDirection = normal.Crossed(xDirection);
     double localX = offset.Dot(xDirection);
     double localY = offset.Dot(yDirection);
@@ -85,17 +83,17 @@ std::optional<SketchElementIntent> SketchEditorInteraction::move(int x, int y) c
     if (!firstPoint_.has_value()) {
         return std::nullopt;
     }
-    const auto point = project(x, y);
+    const auto point = projectPoint(x, y);
     if (!point.has_value()) {
         return std::nullopt;
     }
-    const SketchElementIntent intent{
-        firstPoint_->first, firstPoint_->second, point->first, point->second};
+    const SketchElementIntent intent{firstPoint_->first, firstPoint_->second, point->first,
+                                     point->second};
     return valid(intent) ? std::optional{intent} : std::nullopt;
 }
 
 std::optional<SketchElementIntent> SketchEditorInteraction::click(int x, int y) {
-    const auto point = project(x, y);
+    const auto point = projectPoint(x, y);
     if (!point.has_value()) {
         return std::nullopt;
     }
@@ -103,8 +101,8 @@ std::optional<SketchElementIntent> SketchEditorInteraction::click(int x, int y) 
         firstPoint_ = point;
         return std::nullopt;
     }
-    const SketchElementIntent intent{
-        firstPoint_->first, firstPoint_->second, point->first, point->second};
+    const SketchElementIntent intent{firstPoint_->first, firstPoint_->second, point->first,
+                                     point->second};
     if (!valid(intent)) {
         return std::nullopt;
     }
@@ -113,25 +111,25 @@ std::optional<SketchElementIntent> SketchEditorInteraction::click(int x, int y) 
 }
 
 bool SketchEditorInteraction::beginElementDrag(int x, int y) {
-    dragPoint_ = project(x, y);
+    dragPoint_ = projectPoint(x, y);
     return dragPoint_.has_value();
 }
 
 std::optional<std::pair<double, double>> SketchEditorInteraction::dragElement(int x, int y) {
-    if (!dragPoint_.has_value()) return std::nullopt;
-    const auto point = project(x, y);
-    if (!point.has_value()) return std::nullopt;
-    const std::pair delta{
-        point->first - dragPoint_->first, point->second - dragPoint_->second};
+    if (!dragPoint_.has_value())
+        return std::nullopt;
+    const auto point = projectPoint(x, y);
+    if (!point.has_value())
+        return std::nullopt;
+    const std::pair delta{point->first - dragPoint_->first, point->second - dragPoint_->second};
     dragPoint_ = point;
-    if (delta.first == 0.0 && delta.second == 0.0) return std::nullopt;
+    if (delta.first == 0.0 && delta.second == 0.0)
+        return std::nullopt;
     return delta;
 }
 
 void SketchEditorInteraction::finishElementDrag() noexcept { dragPoint_.reset(); }
 
-bool SketchEditorInteraction::isElementDragging() const noexcept {
-    return dragPoint_.has_value();
-}
+bool SketchEditorInteraction::isElementDragging() const noexcept { return dragPoint_.has_value(); }
 
 } // namespace voelund::viewport

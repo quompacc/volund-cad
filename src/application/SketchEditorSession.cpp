@@ -88,10 +88,15 @@ std::optional<document::SketchElementId> SketchEditorSession::confirmPreview() {
     if (!active_ || !preview_.has_value()) {
         return std::nullopt;
     }
+    if (const auto* rectangle = std::get_if<document::SketchRectangle>(&*preview_)) {
+        return confirmRectangle(*rectangle);
+    }
     const document::SketchElementId id{elements_.nextId++};
     elements_.values.push_back({id, std::move(*preview_)});
     preview_.reset();
     selectedElement_ = id;
+    selectedReferences_.clear();
+    static_cast<void>(solveConstraints());
     return id;
 }
 
@@ -100,6 +105,42 @@ bool SketchEditorSession::selectElement(document::SketchElementId elementId) noe
     if (match == elements_.values.end()) {
         return false;
     }
+    selectedElement_ = elementId;
+    selectedReferences_.clear();
+    return true;
+}
+
+bool SketchEditorSession::selectNearestReference(document::SketchElementId elementId,
+                                                 document::SketchPoint position,
+                                                 bool additive) noexcept {
+    const auto match = std::ranges::find(elements_.values, elementId, &document::SketchElement::id);
+    if (match == elements_.values.end())
+        return false;
+    document::SketchGeometryReference reference{elementId, document::SketchPointPosition::start};
+    if (const auto* line = std::get_if<document::SketchLine>(&match->geometry)) {
+        const double startDistance =
+            std::hypot(position.x - line->start.x, position.y - line->start.y);
+        const double endDistance = std::hypot(position.x - line->end.x, position.y - line->end.y);
+        reference.point = startDistance <= endDistance ? document::SketchPointPosition::start
+                                                       : document::SketchPointPosition::end;
+    } else if (std::holds_alternative<document::SketchCircle>(match->geometry)) {
+        reference.point = document::SketchPointPosition::center;
+    } else {
+        return selectElement(elementId);
+    }
+
+    if (!additive)
+        selectedReferences_.clear();
+    const auto selected = std::ranges::find(selectedReferences_, reference);
+    if (additive && selected != selectedReferences_.end()) {
+        selectedReferences_.erase(selected);
+        selectedElement_ = selectedReferences_.empty()
+                               ? std::nullopt
+                               : std::optional{selectedReferences_.back().element};
+        return true;
+    }
+    if (selected == selectedReferences_.end())
+        selectedReferences_.push_back(reference);
     selectedElement_ = elementId;
     return true;
 }
@@ -113,25 +154,40 @@ bool SketchEditorSession::translateSelected(double deltaX, double deltaY) {
     if (match == elements_.values.end())
         return false;
     const document::SketchElements previousElements = elements_;
-    std::visit(
-        [deltaX, deltaY](auto& geometry) {
-            using Geometry = std::decay_t<decltype(geometry)>;
-            if constexpr (std::is_same_v<Geometry, document::SketchLine>) {
-                geometry.start.x += deltaX;
-                geometry.start.y += deltaY;
-                geometry.end.x += deltaX;
-                geometry.end.y += deltaY;
-            } else if constexpr (std::is_same_v<Geometry, document::SketchRectangle>) {
-                geometry.first.x += deltaX;
-                geometry.first.y += deltaY;
-                geometry.second.x += deltaX;
-                geometry.second.y += deltaY;
-            } else {
-                geometry.center.x += deltaX;
-                geometry.center.y += deltaY;
-            }
-        },
-        match->geometry);
+    const bool pointSelection =
+        selectedReferences_.size() == 1 && selectedReferences_.front().element == *selectedElement_;
+    if (pointSelection) {
+        const auto reference = selectedReferences_.front();
+        if (auto* line = std::get_if<document::SketchLine>(&match->geometry)) {
+            document::SketchPoint& point =
+                reference.point == document::SketchPointPosition::start ? line->start : line->end;
+            point.x += deltaX;
+            point.y += deltaY;
+        } else if (auto* circle = std::get_if<document::SketchCircle>(&match->geometry)) {
+            circle->center.x += deltaX;
+            circle->center.y += deltaY;
+        }
+    } else {
+        std::visit(
+            [deltaX, deltaY](auto& geometry) {
+                using Geometry = std::decay_t<decltype(geometry)>;
+                if constexpr (std::is_same_v<Geometry, document::SketchLine>) {
+                    geometry.start.x += deltaX;
+                    geometry.start.y += deltaY;
+                    geometry.end.x += deltaX;
+                    geometry.end.y += deltaY;
+                } else if constexpr (std::is_same_v<Geometry, document::SketchRectangle>) {
+                    geometry.first.x += deltaX;
+                    geometry.first.y += deltaY;
+                    geometry.second.x += deltaX;
+                    geometry.second.y += deltaY;
+                } else {
+                    geometry.center.x += deltaX;
+                    geometry.center.y += deltaY;
+                }
+            },
+            match->geometry);
+    }
     document::validateSketchElements(elements_);
     if (deltaX == 0.0 && deltaY == 0.0)
         return false;
@@ -360,6 +416,54 @@ bool SketchEditorSession::setSelectedLineConstraint(document::SketchLineConstrai
     return false;
 }
 
+bool SketchEditorSession::canAddSelectedRelation(
+    document::SketchConstraintKind kind) const noexcept {
+    if (!active_ || selectedReferences_.size() != 2 ||
+        (kind != document::SketchConstraintKind::coincident &&
+         kind != document::SketchConstraintKind::parallel &&
+         kind != document::SketchConstraintKind::perpendicular))
+        return false;
+    const auto& first = selectedReferences_[0];
+    const auto& second = selectedReferences_[1];
+    if (first == second)
+        return false;
+    if (kind != document::SketchConstraintKind::coincident) {
+        if (first.element == second.element)
+            return false;
+        const auto firstElement =
+            std::ranges::find(elements_.values, first.element, &document::SketchElement::id);
+        const auto secondElement =
+            std::ranges::find(elements_.values, second.element, &document::SketchElement::id);
+        if (firstElement == elements_.values.end() || secondElement == elements_.values.end() ||
+            !std::holds_alternative<document::SketchLine>(firstElement->geometry) ||
+            !std::holds_alternative<document::SketchLine>(secondElement->geometry))
+            return false;
+    }
+    return true;
+}
+
+bool SketchEditorSession::addSelectedRelation(document::SketchConstraintKind kind) {
+    if (!canAddSelectedRelation(kind))
+        return false;
+    const auto& first = selectedReferences_[0];
+    const auto& second = selectedReferences_[1];
+    constraints_.values.push_back(
+        {document::SketchConstraintId{constraints_.nextId++}, kind, first, second, 0.0});
+    document::SketchParameters sketch{plane_, elements_, constraints_};
+    lastSolveResult_ = features::solveSketchConstraints(sketch);
+    if (lastSolveResult_.status == features::SketchSolveStatus::success)
+        elements_ = std::move(sketch.elements);
+    return true;
+}
+
+bool SketchEditorSession::removeLastConstraint() {
+    if (!active_ || constraints_.values.empty())
+        return false;
+    constraints_.values.pop_back();
+    static_cast<void>(solveConstraints());
+    return true;
+}
+
 bool SketchEditorSession::removeSelected() {
     if (!active_ || !selectedElement_.has_value())
         return false;
@@ -373,12 +477,34 @@ bool SketchEditorSession::removeSelected() {
     });
     elements_.values.erase(match);
     selectedElement_.reset();
+    selectedReferences_.clear();
     preview_.reset();
+    if (elements_.values.empty())
+        lastSolveResult_ = {features::SketchSolveStatus::success, -1, {}};
+    else
+        static_cast<void>(solveConstraints());
     return true;
 }
 
 std::optional<document::SketchElementId> SketchEditorSession::selectedElement() const noexcept {
     return selectedElement_;
+}
+
+std::span<const document::SketchGeometryReference>
+SketchEditorSession::selectedReferences() const noexcept {
+    return selectedReferences_;
+}
+
+bool SketchEditorSession::isElementConflicting(document::SketchElementId elementId) const noexcept {
+    for (document::SketchConstraintId id : lastSolveResult_.conflictingConstraints) {
+        const auto match =
+            std::ranges::find(constraints_.values, id, &document::SketchConstraint::id);
+        if (match != constraints_.values.end() &&
+            (match->first.element == elementId ||
+             (match->second.has_value() && match->second->element == elementId)))
+            return true;
+    }
+    return false;
 }
 
 std::span<const document::SketchElement> SketchEditorSession::elements() const noexcept {
@@ -419,7 +545,8 @@ std::size_t SketchEditorSession::closedProfileCount() const {
 }
 
 bool SketchEditorSession::canAccept() const noexcept {
-    return active_ && !elements_.values.empty();
+    return active_ && !elements_.values.empty() &&
+           lastSolveResult_.status != features::SketchSolveStatus::conflicting;
 }
 
 document::FeatureId SketchEditorSession::accept() {
@@ -442,6 +569,7 @@ void SketchEditorSession::cancel() noexcept {
     active_ = false;
     preview_.reset();
     selectedElement_.reset();
+    selectedReferences_.clear();
 }
 
 bool SketchEditorSession::isActive() const noexcept { return active_; }

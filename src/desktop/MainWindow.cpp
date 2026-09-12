@@ -2,8 +2,8 @@
 
 #include "DocumentActions.hpp"
 #include "FeaturePropertiesPanel.hpp"
-#include "MeasurementInput.hpp"
 #include "MainWindowSupport.hpp"
+#include "MeasurementInput.hpp"
 #include "ModelTreePanel.hpp"
 #include "SketchEditorToolController.hpp"
 #include "SketchExtrusionToolController.hpp"
@@ -37,11 +37,8 @@
 namespace voelund::desktop {
 
 class MainWindow::Impl final {
-public:
-    explicit Impl(application::CadSession& cadSession)
-        : session(cadSession)
-    {
-    }
+  public:
+    explicit Impl(application::CadSession& cadSession) : session(cadSession) {}
 
     application::CadSession& session;
     viewport::CadViewport* viewport{nullptr};
@@ -68,9 +65,7 @@ public:
 };
 
 MainWindow::MainWindow(application::CadSession& session, QWidget* parent)
-    : QMainWindow(parent)
-    , impl_(std::make_unique<Impl>(session))
-{
+    : QMainWindow(parent), impl_(std::make_unique<Impl>(session)) {
     createViewport();
     createModelTree();
     createPropertiesPanel();
@@ -79,8 +74,8 @@ MainWindow::MainWindow(application::CadSession& session, QWidget* parent)
     createWorkspaceToolbar();
     createConnectionToolbar();
     createTransformSettingsToolbar();
-    impl_->documentActions = std::make_unique<DocumentActions>(
-        *this, impl_->session, [this]() { refreshScene(); });
+    impl_->documentActions =
+        std::make_unique<DocumentActions>(*this, impl_->session, [this]() { refreshScene(); });
     connectInteractions();
     syncProperties();
     syncTreeStatus();
@@ -90,21 +85,18 @@ MainWindow::MainWindow(application::CadSession& session, QWidget* parent)
 
 MainWindow::~MainWindow() = default;
 
-void MainWindow::closeEvent(QCloseEvent* event)
-{
+void MainWindow::closeEvent(QCloseEvent* event) {
     event->setAccepted(impl_->documentActions->confirmClose());
 }
 
-void MainWindow::createViewport()
-{
+void MainWindow::createViewport() {
     impl_->viewport = new viewport::CadViewport(this);
     const std::vector<viewport::SceneBody> bodies = makeSceneBodies(impl_->session);
     impl_->viewport->setBodies(bodies);
     setCentralWidget(impl_->viewport);
 }
 
-void MainWindow::createModelTree()
-{
+void MainWindow::createModelTree() {
     impl_->modelTree = new ModelTreePanel(this);
     auto* dock = new QDockWidget(tr("Model"), this);
     dock->setObjectName(QStringLiteral("modelDock"));
@@ -114,8 +106,7 @@ void MainWindow::createModelTree()
     syncModelTree();
 }
 
-void MainWindow::createWorkspaceToolbar()
-{
+void MainWindow::createWorkspaceToolbar() {
     modules::solid::SolidCommandServices services;
     services.addBox = [this]() {
         static_cast<void>(impl_->session.addBoxFeature());
@@ -159,9 +150,8 @@ void MainWindow::createWorkspaceToolbar()
     services.canSketch = [this]() { return impl_->selectedPlanarFace.has_value(); };
     services.canEditExistingSketch = [this]() {
         const auto selected = impl_->session.selectedFeature();
-        return selected.has_value()
-            && impl_->session.selectedFeatureDescriptor().kind
-                == document::FeatureKind::sketch;
+        return selected.has_value() &&
+               impl_->session.selectedFeatureDescriptor().kind == document::FeatureKind::sketch;
     };
     services.canTransform = [this]() {
         const auto selected = impl_->session.selectedFeature();
@@ -169,36 +159,28 @@ void MainWindow::createWorkspaceToolbar()
     };
     impl_->commandRegistry.registerModule(
         std::make_unique<modules::solid::SolidWorkspaceModule>(std::move(services)));
-    impl_->workspaceToolbar = std::make_unique<WorkspaceToolbar>(
-        *this, impl_->commandRegistry.module("solid"));
+    impl_->workspaceToolbar =
+        std::make_unique<WorkspaceToolbar>(*this, impl_->commandRegistry.module("solid"));
     impl_->addBoxAction = impl_->workspaceToolbar->action("solid.create.box");
     impl_->addCylinderAction = impl_->workspaceToolbar->action("solid.create.cylinder");
     impl_->sketchEditorAction = impl_->workspaceToolbar->action("solid.create.sketch");
-    impl_->createSketchAction =
-        impl_->workspaceToolbar->action("solid.create.sketch_rectangle");
-    impl_->transformAction =
-        impl_->workspaceToolbar->action("solid.modify.transform");
+    impl_->createSketchAction = impl_->workspaceToolbar->action("solid.create.sketch_rectangle");
+    impl_->transformAction = impl_->workspaceToolbar->action("solid.modify.transform");
     impl_->transformAction->setObjectName(QStringLiteral("transformAction"));
 }
 
-void MainWindow::createToolPanel()
-{
+void MainWindow::createToolPanel() {
     impl_->toolPanel = new ToolPanelHost(this);
     addDockWidget(Qt::RightDockWidgetArea, impl_->toolPanel);
     impl_->sketchEditorTool = std::make_unique<SketchEditorToolController>(
-        impl_->session, *impl_->viewport, *impl_->toolPanel,
-        [this]() { refreshScene(); },
+        impl_->session, *impl_->viewport, *impl_->toolPanel, [this]() { refreshScene(); },
         [this](const QString& message) { statusBar()->showMessage(message); });
     impl_->sketchExtrusionTool = std::make_unique<SketchExtrusionToolController>(
-        impl_->session,
-        *impl_->viewport,
-        *impl_->toolPanel,
-        [this]() { refreshScene(); },
+        impl_->session, *impl_->viewport, *impl_->toolPanel, [this]() { refreshScene(); },
         [this](const QString& message) { statusBar()->showMessage(message); });
 }
 
-void MainWindow::createPropertiesPanel()
-{
+void MainWindow::createPropertiesPanel() {
     impl_->propertyPanel = new FeaturePropertiesPanel(this);
     auto* dock = new QDockWidget(tr("Properties"), this);
     dock->setObjectName(QStringLiteral("featurePropertiesDock"));
@@ -206,8 +188,7 @@ void MainWindow::createPropertiesPanel()
     addDockWidget(Qt::RightDockWidgetArea, dock);
 }
 
-void MainWindow::createHistoryToolbar()
-{
+void MainWindow::createHistoryToolbar() {
     impl_->undoAction = new QAction(tr("Undo"), this);
     impl_->undoAction->setShortcut(QKeySequence::Undo);
     impl_->redoAction = new QAction(tr("Redo"), this);
@@ -219,24 +200,21 @@ void MainWindow::createHistoryToolbar()
     toolbar->addAction(impl_->redoAction);
 }
 
-void MainWindow::createConnectionToolbar()
-{
+void MainWindow::createConnectionToolbar() {
     auto* toolbar = addToolBar(tr("Connection"));
     toolbar->setObjectName(QStringLiteral("connectionToolbar"));
     toolbar->addWidget(new QLabel(tr("Connection: "), toolbar));
     impl_->connectionModeInput = new QComboBox(toolbar);
     impl_->connectionModeInput->setObjectName(QStringLiteral("connectionModeInput"));
-    impl_->connectionModeInput->addItems(
-        {tr("Join"), tr("Cut"), tr("Intersect"), tr("Separate")});
+    impl_->connectionModeInput->addItems({tr("Join"), tr("Cut"), tr("Intersect"), tr("Separate")});
     impl_->connectionModeInput->setToolTip(
         tr("Connection mode for the current and next cylinder operation"));
     toolbar->addWidget(impl_->connectionModeInput);
-    connect(impl_->connectionModeInput, &QComboBox::currentIndexChanged,
-            this, [this](int) { applyCylinderResultMode(); });
+    connect(impl_->connectionModeInput, &QComboBox::currentIndexChanged, this,
+            [this](int) { applyCylinderResultMode(); });
 }
 
-void MainWindow::createTransformSettingsToolbar()
-{
+void MainWindow::createTransformSettingsToolbar() {
     impl_->snapAction = new QAction(tr("Snap"), this);
     impl_->snapAction->setCheckable(true);
     impl_->snapAction->setChecked(true);
@@ -258,14 +236,11 @@ void MainWindow::createTransformSettingsToolbar()
     toolbar->addWidget(impl_->angularSnapInput);
 }
 
-void MainWindow::connectInteractions()
-{
+void MainWindow::connectInteractions() {
     impl_->propertyPanel->setBoxChangeHandler([this]() { applyBoxParameters(); });
     impl_->propertyPanel->setCylinderChangeHandler([this]() { applyCylinderParameters(); });
-    impl_->propertyPanel->setExtrusionChangeHandler(
-        [this]() { applyExtrusionParameters(); });
-    impl_->modelTree->setFeatureSelectionHandler(
-        [this](std::uint64_t id) { selectFeature(id); });
+    impl_->propertyPanel->setExtrusionChangeHandler([this]() { applyExtrusionParameters(); });
+    impl_->modelTree->setFeatureSelectionHandler([this](std::uint64_t id) { selectFeature(id); });
     impl_->viewport->setBodySelectionHandler([this](std::uint64_t id) { selectFeature(id); });
     impl_->viewport->setPlanarFaceSelectionHandler(
         [this](const viewport::PlanarFaceSelection& selection) {
@@ -277,9 +252,8 @@ void MainWindow::connectInteractions()
         [this](const viewport::SketchRectangleResult& rectangle) {
             impl_->sketchExtrusionTool->setResult(rectangle);
         });
-    impl_->viewport->setSketchExtrusionPreviewHandler([this](double distance) {
-        impl_->sketchExtrusionTool->updateDistancePreview(distance);
-    });
+    impl_->viewport->setSketchExtrusionPreviewHandler(
+        [this](double distance) { impl_->sketchExtrusionTool->updateDistancePreview(distance); });
     impl_->viewport->setSketchEditorPreviewHandler(
         [this](const std::optional<viewport::SketchElementIntent>& intent) {
             impl_->sketchEditorTool->updatePreview(intent);
@@ -288,25 +262,25 @@ void MainWindow::connectInteractions()
         [this](const viewport::SketchElementIntent& intent) {
             impl_->sketchEditorTool->confirmElement(intent);
         });
-    impl_->viewport->setSketchEditorTranslationHandler(
-        [this](double deltaX, double deltaY) {
-            impl_->sketchEditorTool->translateFromViewport(deltaX, deltaY);
-        });
-    impl_->viewport->setSketchElementSelectionHandler([this](std::uint64_t id) {
-        if (impl_->sketchEditorTool->isActive()) {
-            static_cast<void>(impl_->sketchEditorTool->selectElement(id));
-            return;
-        }
-        if (impl_->session.selectSketchElement(document::SketchElementId{id})) {
-            impl_->viewport->setSelectedSketchElement(id);
-            syncProperties();
-            statusBar()->showMessage(tr("Sketch element selected"), 2000);
-        }
+    impl_->viewport->setSketchEditorTranslationHandler([this](double deltaX, double deltaY) {
+        impl_->sketchEditorTool->translateFromViewport(deltaX, deltaY);
     });
+    impl_->viewport->setSketchElementSelectionHandler(
+        [this](const viewport::SketchSelectionIntent& intent) {
+            if (impl_->sketchEditorTool->isActive()) {
+                static_cast<void>(impl_->sketchEditorTool->selectElement(intent));
+                return;
+            }
+            const std::uint64_t id = intent.elementId;
+            if (impl_->session.selectSketchElement(document::SketchElementId{id})) {
+                impl_->viewport->setSelectedSketchElement(id);
+                syncProperties();
+                statusBar()->showMessage(tr("Sketch element selected"), 2000);
+            }
+        });
     impl_->viewport->setBodyMoveHandler(
         [this](std::uint64_t id, double deltaX, double deltaY, double deltaZ) {
-            if (!selectTransformFeatureForBody(
-                    impl_->session, document::FeatureId{id})) {
+            if (!selectTransformFeatureForBody(impl_->session, document::FeatureId{id})) {
                 return;
             }
             kernel::RigidTransform placement = impl_->session.selectedFeaturePlacement();
@@ -323,10 +297,9 @@ void MainWindow::connectInteractions()
             previewBodyMove(id, deltaX, deltaY, deltaZ);
         });
     const auto updateSnapping = [this]() {
-        impl_->viewport->setTransformSnapping(
-            impl_->snapAction->isChecked(),
-            impl_->linearSnapInput->value(),
-            impl_->angularSnapInput->value());
+        impl_->viewport->setTransformSnapping(impl_->snapAction->isChecked(),
+                                              impl_->linearSnapInput->value(),
+                                              impl_->angularSnapInput->value());
     };
     connect(impl_->snapAction, &QAction::toggled, this,
             [updateSnapping](bool) { updateSnapping(); });
@@ -335,26 +308,22 @@ void MainWindow::connectInteractions()
     connect(impl_->angularSnapInput, &QDoubleSpinBox::valueChanged, this,
             [updateSnapping](double) { updateSnapping(); });
     updateSnapping();
-    impl_->viewport->setBodyRotationHandler(
-        [this](std::uint64_t id, int axisIndex, double angleDegrees) {
-            if (!selectTransformFeatureForBody(
-                    impl_->session, document::FeatureId{id})) {
-                return;
-            }
-            kernel::RigidTransform placement = impl_->session.selectedFeaturePlacement();
-            double* rotations[] = {
-                &placement.rotationX,
-                &placement.rotationY,
-                &placement.rotationZ};
-            if (axisIndex < 0 || axisIndex > 2) {
-                return;
-            }
-            *rotations[axisIndex] += angleDegrees;
-            if (impl_->session.setSelectedFeaturePlacement(placement)) {
-                refreshScene();
-                statusBar()->showMessage(tr("Feature rotated"), 2000);
-            }
-        });
+    impl_->viewport->setBodyRotationHandler([this](std::uint64_t id, int axisIndex,
+                                                   double angleDegrees) {
+        if (!selectTransformFeatureForBody(impl_->session, document::FeatureId{id})) {
+            return;
+        }
+        kernel::RigidTransform placement = impl_->session.selectedFeaturePlacement();
+        double* rotations[] = {&placement.rotationX, &placement.rotationY, &placement.rotationZ};
+        if (axisIndex < 0 || axisIndex > 2) {
+            return;
+        }
+        *rotations[axisIndex] += angleDegrees;
+        if (impl_->session.setSelectedFeaturePlacement(placement)) {
+            refreshScene();
+            statusBar()->showMessage(tr("Feature rotated"), 2000);
+        }
+    });
     impl_->viewport->setBodyRotationPreviewHandler(
         [this](std::uint64_t id, int axisIndex, double angleDegrees) {
             previewBodyRotation(id, axisIndex, angleDegrees);
@@ -371,19 +340,17 @@ void MainWindow::connectInteractions()
     });
 }
 
-void MainWindow::syncModelTree()
-{
+void MainWindow::syncModelTree() {
     impl_->modelTree->showFeatures(impl_->session.features(), impl_->session.selectedFeature());
 }
 
-void MainWindow::syncProperties()
-{
+void MainWindow::syncProperties() {
     const std::optional<document::FeatureId> selected = impl_->session.selectedFeature();
     impl_->workspaceToolbar->refreshEnabled();
     if (const auto cylinderId = latestCylinderId(impl_->session)) {
         const QSignalBlocker blocker(impl_->connectionModeInput);
-        impl_->connectionModeInput->setCurrentIndex(resultModeIndex(
-            impl_->session.cylinderParameters(*cylinderId).resultMode));
+        impl_->connectionModeInput->setCurrentIndex(
+            resultModeIndex(impl_->session.cylinderParameters(*cylinderId).resultMode));
     }
     impl_->connectionModeInput->setEnabled(true);
     if (!selected.has_value()) {
@@ -400,19 +367,16 @@ void MainWindow::syncProperties()
     } else if (feature.kind == document::FeatureKind::cylinder) {
         const document::CylinderParameters& parameters =
             impl_->session.selectedCylinderParameters();
-        impl_->propertyPanel->showCylinder(
-            parameters,
-            featureErrorText(impl_->session, feature.id));
+        impl_->propertyPanel->showCylinder(parameters,
+                                           featureErrorText(impl_->session, feature.id));
     } else if (feature.kind == document::FeatureKind::extrusion) {
-        impl_->propertyPanel->showExtrusion(
-            impl_->session.selectedExtrusionParameters(),
-            featureErrorText(impl_->session, feature.id));
+        impl_->propertyPanel->showExtrusion(impl_->session.selectedExtrusionParameters(),
+                                            featureErrorText(impl_->session, feature.id));
     } else {
         const QString title = feature.kind == document::FeatureKind::sketch
-            ? sketchSelectionSummary(impl_->session)
-            : tr("Feature");
-        impl_->propertyPanel->showFeatureInfo(
-            title, featureErrorText(impl_->session, feature.id));
+                                  ? sketchSelectionSummary(impl_->session)
+                                  : tr("Feature");
+        impl_->propertyPanel->showFeatureInfo(title, featureErrorText(impl_->session, feature.id));
     }
     impl_->undoAction->setEnabled(impl_->session.canUndo());
     impl_->redoAction->setEnabled(impl_->session.canRedo());
@@ -420,34 +384,26 @@ void MainWindow::syncProperties()
     impl_->documentActions->syncWindowTitle();
 }
 
-void MainWindow::syncTreeStatus()
-{
+void MainWindow::syncTreeStatus() {
     impl_->modelTree->showStatuses(impl_->session.featureStates());
 }
 
-void MainWindow::syncSketchPresentation()
-{
+void MainWindow::syncSketchPresentation() {
     const std::vector<viewport::SceneSketchElement> elements =
         makeSceneSketchElements(impl_->session);
     const auto selected = impl_->session.selectedSketchElement();
     impl_->viewport->setSketchElements(
         elements,
-        selected.has_value()
-            ? std::optional<std::uint64_t>{selected->value()}
-            : std::nullopt);
+        selected.has_value() ? std::optional<std::uint64_t>{selected->value()} : std::nullopt);
 }
 
-void MainWindow::syncTransformTool()
-{
+void MainWindow::syncTransformTool() {
     const std::optional<document::FeatureId> selected = impl_->session.selectedFeature();
-    const bool canTransform =
-        selected.has_value() && impl_->session.canTransformFeature(*selected);
-    const std::optional<document::FeatureId> body = canTransform
-        ? impl_->session.transformBodyForFeature(*selected)
-        : std::nullopt;
-    impl_->viewport->setTransformTarget(body.has_value()
-            ? std::optional<std::uint64_t>{body->value()}
-            : std::nullopt);
+    const bool canTransform = selected.has_value() && impl_->session.canTransformFeature(*selected);
+    const std::optional<document::FeatureId> body =
+        canTransform ? impl_->session.transformBodyForFeature(*selected) : std::nullopt;
+    impl_->viewport->setTransformTarget(
+        body.has_value() ? std::optional<std::uint64_t>{body->value()} : std::nullopt);
     if (!canTransform && impl_->transformAction->isChecked()) {
         const QSignalBlocker blocker(impl_->transformAction);
         impl_->transformAction->setChecked(false);
@@ -456,8 +412,7 @@ void MainWindow::syncTransformTool()
     impl_->transformAction->setEnabled(canTransform);
 }
 
-void MainWindow::refreshScene()
-{
+void MainWindow::refreshScene() {
     if (impl_->sketchEditorTool->isActive()) {
         impl_->sketchEditorTool->cancel();
     }
@@ -472,32 +427,26 @@ void MainWindow::refreshScene()
     syncSketchPresentation();
 }
 
-void MainWindow::applyBoxParameters()
-{
+void MainWindow::applyBoxParameters() {
     if (impl_->session.setSelectedBoxParameters(impl_->propertyPanel->boxParameters())) {
         refreshScene();
         statusBar()->showMessage(tr("Feature graph recomputed"), 2000);
     }
 }
 
-void MainWindow::applyCylinderParameters()
-{
-    const document::CylinderParameters parameters =
-        impl_->propertyPanel->cylinderParameters(
-            impl_->session.selectedCylinderParameters().resultMode);
+void MainWindow::applyCylinderParameters() {
+    const document::CylinderParameters parameters = impl_->propertyPanel->cylinderParameters(
+        impl_->session.selectedCylinderParameters().resultMode);
     if (impl_->session.setSelectedCylinderParameters(parameters)) {
         refreshScene();
-        const QString errorText = featureErrorText(
-            impl_->session,
-            impl_->session.selectedFeature().value());
-        statusBar()->showMessage(
-            errorText.isEmpty() ? tr("Feature graph recomputed") : errorText,
-            errorText.isEmpty() ? 2000 : 5000);
+        const QString errorText =
+            featureErrorText(impl_->session, impl_->session.selectedFeature().value());
+        statusBar()->showMessage(errorText.isEmpty() ? tr("Feature graph recomputed") : errorText,
+                                 errorText.isEmpty() ? 2000 : 5000);
     }
 }
 
-void MainWindow::applyCylinderResultMode()
-{
+void MainWindow::applyCylinderResultMode() {
     const std::optional<document::FeatureId> cylinderId = latestCylinderId(impl_->session);
     if (!cylinderId.has_value()) {
         statusBar()->showMessage(tr("Connection mode set for the next cylinder"), 2000);
@@ -508,56 +457,42 @@ void MainWindow::applyCylinderResultMode()
     if (impl_->session.setCylinderParameters(*cylinderId, parameters)) {
         refreshScene();
         const QString errorText = featureErrorText(impl_->session, *cylinderId);
-        statusBar()->showMessage(
-            errorText.isEmpty() ? tr("Connection mode changed") : errorText,
-            errorText.isEmpty() ? 2000 : 5000);
+        statusBar()->showMessage(errorText.isEmpty() ? tr("Connection mode changed") : errorText,
+                                 errorText.isEmpty() ? 2000 : 5000);
     }
 }
 
-void MainWindow::applyExtrusionParameters()
-{
-    const document::ExtrusionParameters parameters =
-        impl_->propertyPanel->extrusionParameters();
+void MainWindow::applyExtrusionParameters() {
+    const document::ExtrusionParameters parameters = impl_->propertyPanel->extrusionParameters();
     if (impl_->session.setSelectedExtrusionParameters(parameters)) {
         refreshScene();
-        const QString errorText = featureErrorText(
-            impl_->session, impl_->session.selectedFeature().value());
-        statusBar()->showMessage(
-            errorText.isEmpty() ? tr("Extrusion recomputed") : errorText,
-            errorText.isEmpty() ? 2000 : 5000);
+        const QString errorText =
+            featureErrorText(impl_->session, impl_->session.selectedFeature().value());
+        statusBar()->showMessage(errorText.isEmpty() ? tr("Extrusion recomputed") : errorText,
+                                 errorText.isEmpty() ? 2000 : 5000);
     }
 }
 
-void MainWindow::previewBodyMove(
-    std::uint64_t id,
-    double deltaX,
-    double deltaY,
-    double deltaZ)
-{
+void MainWindow::previewBodyMove(std::uint64_t id, double deltaX, double deltaY, double deltaZ) {
     const document::FeatureId featureId{id};
     if (!selectTransformFeatureForBody(impl_->session, featureId)) {
         return;
     }
-    impl_->propertyPanel->previewMove(
-        impl_->session.selectedFeaturePlacement(), deltaX, deltaY, deltaZ);
+    impl_->propertyPanel->previewMove(impl_->session.selectedFeaturePlacement(), deltaX, deltaY,
+                                      deltaZ);
 }
 
-void MainWindow::previewBodyRotation(
-    std::uint64_t id,
-    int axisIndex,
-    double angleDegrees)
-{
+void MainWindow::previewBodyRotation(std::uint64_t id, int axisIndex, double angleDegrees) {
     const document::FeatureId featureId{id};
-    if (!selectTransformFeatureForBody(impl_->session, featureId)
-        || axisIndex < 0 || axisIndex > 2) {
+    if (!selectTransformFeatureForBody(impl_->session, featureId) || axisIndex < 0 ||
+        axisIndex > 2) {
         return;
     }
-    impl_->propertyPanel->previewRotation(
-        impl_->session.selectedFeaturePlacement(), axisIndex, angleDegrees);
+    impl_->propertyPanel->previewRotation(impl_->session.selectedFeaturePlacement(), axisIndex,
+                                          angleDegrees);
 }
 
-void MainWindow::selectFeature(std::uint64_t rawId)
-{
+void MainWindow::selectFeature(std::uint64_t rawId) {
     const document::FeatureId id{rawId};
     if (!impl_->session.selectFeature(id)) {
         return;
