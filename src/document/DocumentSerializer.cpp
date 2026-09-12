@@ -1,5 +1,7 @@
 #include <voelund/document/DocumentSerializer.hpp>
 
+#include "SketchConstraintSerialization.hpp"
+
 #include <voelund/document/ModelDocument.hpp>
 
 #include <algorithm>
@@ -165,37 +167,9 @@ SketchConstraintKind readConstraintKind(std::istringstream& line) {
         return SketchConstraintKind::equal;
     if (value == "TANGENT")
         return SketchConstraintKind::tangent;
+    if (value == "SYMMETRIC")
+        return SketchConstraintKind::symmetric;
     invalidDocument("unknown sketch constraint kind");
-}
-
-const char* constraintKindName(SketchConstraintKind kind) {
-    switch (kind) {
-    case SketchConstraintKind::horizontal:
-        return "HORIZONTAL";
-    case SketchConstraintKind::vertical:
-        return "VERTICAL";
-    case SketchConstraintKind::distance:
-        return "DISTANCE";
-    case SketchConstraintKind::radius:
-        return "RADIUS";
-    case SketchConstraintKind::coincident:
-        return "COINCIDENT";
-    case SketchConstraintKind::parallel:
-        return "PARALLEL";
-    case SketchConstraintKind::perpendicular:
-        return "PERPENDICULAR";
-    case SketchConstraintKind::coordinateX:
-        return "COORDINATE_X";
-    case SketchConstraintKind::coordinateY:
-        return "COORDINATE_Y";
-    case SketchConstraintKind::pointOnObject:
-        return "POINT_ON_OBJECT";
-    case SketchConstraintKind::equal:
-        return "EQUAL";
-    case SketchConstraintKind::tangent:
-        return "TANGENT";
-    }
-    return "HORIZONTAL";
 }
 
 void writeTransform(std::ostream& output, const kernel::RigidTransform& transform) {
@@ -363,6 +337,15 @@ ParsedFeature readSketchFeature(FeatureId id, std::string name, std::istringstre
                 double value = 0.0;
                 if (!(constraintLine >> value))
                     invalidDocument("malformed sketch constraint value");
+                std::optional<SketchGeometryReference> third;
+                if (context.version >= 8) {
+                    std::uint64_t thirdElement = 0;
+                    if (!(constraintLine >> thirdElement))
+                        invalidDocument("malformed third sketch constraint reference");
+                    const SketchPointPosition thirdPoint = readPointPosition(constraintLine);
+                    if (thirdElement != 0)
+                        third = SketchGeometryReference{SketchElementId{thirdElement}, thirdPoint};
+                }
                 ensureLineComplete(constraintLine);
                 std::optional<SketchGeometryReference> second;
                 if (secondElement != 0)
@@ -370,7 +353,7 @@ ParsedFeature readSketchFeature(FeatureId id, std::string name, std::istringstre
                 sketch.constraints.values.push_back(
                     {SketchConstraintId{rawId}, kind,
                      SketchGeometryReference{SketchElementId{firstElement}, firstPoint}, second,
-                     value});
+                     value, third});
             }
         } else if (context.version >= 3) {
             for (const SketchElement& element : sketch.elements.values) {
@@ -464,7 +447,7 @@ ParsedFeature readFeature(const std::string& source,
 void DocumentSerializer::write(const ModelDocument& document, std::ostream& output) {
     output.imbue(std::locale::classic());
     output << std::setprecision(std::numeric_limits<double>::max_digits10);
-    output << "VOLUND 7\nNEXT_ID " << document.nextFeatureId_ << "\nFEATURES "
+    output << "VOLUND 8\nNEXT_ID " << document.nextFeatureId_ << "\nFEATURES "
            << document.features_.size() << '\n';
     for (std::size_t index = 0; index < document.features_.size(); ++index) {
         const FeatureDescriptor& feature = document.features_[index];
@@ -518,7 +501,7 @@ void DocumentSerializer::write(const ModelDocument& document, std::ostream& outp
             }
             for (const SketchConstraint& constraint : sketch.constraints.values) {
                 output << "CONSTRAINT " << constraint.id.value() << ' '
-                       << constraintKindName(constraint.kind) << ' '
+                       << sketchConstraintKindName(constraint.kind) << ' '
                        << constraint.first.element.value() << ' '
                        << pointPositionName(constraint.first.point) << ' ';
                 if (constraint.second.has_value()) {
@@ -527,7 +510,13 @@ void DocumentSerializer::write(const ModelDocument& document, std::ostream& outp
                 } else {
                     output << "0 START";
                 }
-                output << ' ' << constraint.value << '\n';
+                output << ' ' << constraint.value << ' ';
+                if (constraint.third.has_value())
+                    output << constraint.third->element.value() << ' '
+                           << pointPositionName(constraint.third->point);
+                else
+                    output << "0 START";
+                output << '\n';
             }
             continue;
         } else {
@@ -555,6 +544,7 @@ ModelDocument DocumentSerializer::read(std::istream& input) {
                                   : header == "VOLUND 5" ? 5
                                   : header == "VOLUND 6" ? 6
                                   : header == "VOLUND 7" ? 7
+                                  : header == "VOLUND 8" ? 8
                                                          : 0;
     if (version == 0) {
         invalidDocument("unsupported file header or version");

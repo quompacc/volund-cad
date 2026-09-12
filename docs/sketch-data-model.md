@@ -107,6 +107,10 @@ one radius through an equal relation. Tangency is available for a line and circl
 for two circles. Both relations remain in the sketch, are solved by PlaneGCS after
 every edit and appear as `[=]` and `[T]` glyphs in the viewport.
 
+A symmetric relation uses three ordered references: two points followed by a line
+as the symmetry axis. PlaneGCS keeps their midpoint on the axis and their connecting
+segment perpendicular to it. The viewport identifies the relation with `[S]`.
+
 Rectangles and circles each form a closed profile. Connected line chains form a
 profile when at least three non-degenerate elements close within the modeling
 tolerance. Open elements remain valid sketch geometry but are ignored by extrusion.
@@ -117,20 +121,21 @@ explicit profile IDs and consumes only those faces. An empty selection remains t
 legacy meaning of "all closed profiles", so older direct Push/Pull operations retain
 their behavior.
 
-## File format version 7
+## File format version 8
 
-New saves use `VOLUND 7`. A sketch feature line stores its support, plane, element
+New saves use `VOLUND 8`. A sketch feature line stores its support, plane, element
 count, next element ID, constraint count and next constraint ID. `ELEMENT` records
 store geometry and stable IDs; following `CONSTRAINT` records store their stable ID,
 kind, one or two geometry references and an optional driving value.
 
 An extrusion record appends a profile count and its stable profile IDs. The reader
-continues to accept `VOLUND 1` through `VOLUND 6`; older extrusion records migrate to
+continues to accept `VOLUND 1` through `VOLUND 7`; older extrusion records migrate to
 an empty profile list, which preserves their previous all-profiles behavior. A version-1 inline rectangle
 is migrated in memory to a `RECTANGLE` element with ID 1 and next ID 2; version-2 lines
 are migrated with a free direction. Version-3 horizontal and vertical line fields
 are migrated to independent constraint records. Version 6 adds coordinate and
-point-on-object constraint kinds. Version 7 adds equal and tangent relations without
-changing the constraint record shape. Saving any loaded document writes version 7.
+point-on-object constraint kinds. Version 7 adds equal and tangent relations. Version
+8 appends an optional third reference for symmetric point-point-axis relations. Saving
+any loaded document writes version 8.
 Invalid, duplicate or zero element IDs, non-finite coordinates, degenerate elements,
 inconsistent next IDs and unsatisfied line constraints are rejected while loading.

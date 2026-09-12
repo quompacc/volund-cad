@@ -433,7 +433,8 @@ bool SketchEditorSession::removeSelected() {
         return false;
     std::erase_if(constraints_.values, [id = *selectedElement_](const auto& constraint) {
         return constraint.first.element == id ||
-               (constraint.second.has_value() && constraint.second->element == id);
+               (constraint.second.has_value() && constraint.second->element == id) ||
+               (constraint.third.has_value() && constraint.third->element == id);
     });
     elements_.values.erase(match);
     selectedElement_.reset();
@@ -461,7 +462,8 @@ bool SketchEditorSession::isElementConflicting(document::SketchElementId element
             std::ranges::find(constraints_.values, id, &document::SketchConstraint::id);
         if (match != constraints_.values.end() &&
             (match->first.element == elementId ||
-             (match->second.has_value() && match->second->element == elementId)))
+             (match->second.has_value() && match->second->element == elementId) ||
+             (match->third.has_value() && match->third->element == elementId)))
             return true;
     }
     return false;

@@ -104,7 +104,8 @@ enum class SketchConstraintKind {
     coordinateY,
     pointOnObject,
     equal,
-    tangent
+    tangent,
+    symmetric
 };
 
 struct SketchGeometryReference final {
@@ -120,6 +121,15 @@ struct SketchConstraint final {
     SketchGeometryReference first;
     std::optional<SketchGeometryReference> second;
     double value{0.0};
+    std::optional<SketchGeometryReference> third;
+
+    SketchConstraint(SketchConstraintId constraintId, SketchConstraintKind constraintKind,
+                     SketchGeometryReference firstReference,
+                     std::optional<SketchGeometryReference> secondReference,
+                     double drivingValue = 0.0,
+                     std::optional<SketchGeometryReference> thirdReference = std::nullopt) noexcept
+        : id(constraintId), kind(constraintKind), first(firstReference), second(secondReference),
+          value(drivingValue), third(thirdReference) {}
 
     [[nodiscard]] bool operator==(const SketchConstraint&) const = default;
 };

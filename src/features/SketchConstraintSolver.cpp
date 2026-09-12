@@ -130,6 +130,10 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
             static_cast<void>(
                 system.addConstraintP2PCoincident(point(constraint.first, lines, circles),
                                                   point(*constraint.second, lines, circles), tag));
+        else if (constraint.kind == document::SketchConstraintKind::symmetric)
+            static_cast<void>(system.addConstraintP2PSymmetric(
+                point(constraint.first, lines, circles), point(*constraint.second, lines, circles),
+                lines.at(constraint.third->element.value())->line, tag));
         else if (constraint.kind == document::SketchConstraintKind::coordinateX)
             static_cast<void>(system.addConstraintCoordinateX(
                 point(constraint.first, lines, circles), &values.back(), tag));

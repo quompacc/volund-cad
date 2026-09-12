@@ -59,6 +59,8 @@ std::string constraintLabel(const features::SketchConstraintAnnotation& annotati
         return "[=]";
     if (annotation.kind == document::SketchConstraintKind::tangent)
         return "[T]";
+    if (annotation.kind == document::SketchConstraintKind::symmetric)
+        return "[S]";
     std::ostringstream label;
     label << (annotation.kind == document::SketchConstraintKind::radius ? "R " : "L ") << std::fixed
           << std::setprecision(3) << annotation.value << " mm";
@@ -138,6 +140,7 @@ void SketchEditorToolController::showPanel() {
          {"perpendicular", QObject::tr("Make selected lines perpendicular")},
          {"equal", QObject::tr("Make selected lengths or radii equal")},
          {"tangent", QObject::tr("Make selected objects tangent")},
+         {"symmetric", QObject::tr("Mirror first two points about third selected line")},
          {"point_on_object", QObject::tr("Put first selected point on second object")},
          {"lock_point", QObject::tr("Lock selected point")},
          {"unlock_point", QObject::tr("Unlock selected point")},
@@ -170,6 +173,8 @@ void SketchEditorToolController::showPanel() {
                 applyRelation(document::SketchConstraintKind::equal);
             } else if (id == "tangent") {
                 applyRelation(document::SketchConstraintKind::tangent);
+            } else if (id == "symmetric") {
+                applyRelation(document::SketchConstraintKind::symmetric);
             } else if (id == "point_on_object") {
                 applyRelation(document::SketchConstraintKind::pointOnObject);
             } else if (id == "lock_point") {
@@ -329,7 +334,8 @@ void SketchEditorToolController::applyRelation(document::SketchConstraintKind ki
         : kind == document::SketchConstraintKind::perpendicular ? "Perpendicular constraint added"
         : kind == document::SketchConstraintKind::equal         ? "Equal constraint added"
         : kind == document::SketchConstraintKind::tangent       ? "Tangent constraint added"
-                                                          : "Point-on-object constraint added";
+        : kind == document::SketchConstraintKind::symmetric     ? "Symmetric constraint added"
+                                                            : "Point-on-object constraint added";
     statusChanged_(QObject::tr(text));
 }
 
@@ -425,6 +431,8 @@ void SketchEditorToolController::syncConstraintState() {
                             editor_->canAddSelectedRelation(document::SketchConstraintKind::equal));
     panel_.setActionEnabled(
         "tangent", editor_->canAddSelectedRelation(document::SketchConstraintKind::tangent));
+    panel_.setActionEnabled(
+        "symmetric", editor_->canAddSelectedRelation(document::SketchConstraintKind::symmetric));
     panel_.setActionEnabled("point_on_object", editor_->canAddSelectedRelation(
                                                    document::SketchConstraintKind::pointOnObject));
     panel_.setActionEnabled("lock_point", editor_->canLockSelectedReference());
@@ -438,7 +446,7 @@ void SketchEditorToolController::syncConstraintState() {
     } else if (result.degreesOfFreedom >= 0) {
         panel_.setGuidance(
             QObject::tr(
-                "Sketch solver: %1 degree(s) of freedom. Ctrl-click to add a second reference.")
+                "Sketch solver: %1 degree(s) of freedom. Ctrl-click adds relation references.")
                 .arg(result.degreesOfFreedom));
     }
 }

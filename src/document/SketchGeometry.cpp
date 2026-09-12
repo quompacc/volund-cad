@@ -108,6 +108,8 @@ void validateSketchConstraints(const SketchElements& elements,
         ids.push_back(constraint.id.value());
         if (!std::isfinite(constraint.value))
             throw std::invalid_argument("Sketch constraint value must be finite");
+        if (constraint.kind != SketchConstraintKind::symmetric && constraint.third.has_value())
+            throw std::invalid_argument("Only symmetric constraints accept a third reference");
 
         if (constraint.kind == SketchConstraintKind::coordinateX ||
             constraint.kind == SketchConstraintKind::coordinateY) {
@@ -135,6 +137,17 @@ void validateSketchConstraints(const SketchElements& elements,
             if (constraint.kind == SketchConstraintKind::coincident) {
                 requirePoint(constraint.first);
                 requirePoint(*constraint.second);
+            } else if (constraint.kind == SketchConstraintKind::symmetric) {
+                if (!constraint.third.has_value())
+                    throw std::invalid_argument("Symmetric constraint needs an axis reference");
+                requirePoint(constraint.first);
+                requirePoint(*constraint.second);
+                requireLine(*constraint.third);
+                if (constraint.first == *constraint.second ||
+                    constraint.third->element == constraint.first.element ||
+                    constraint.third->element == constraint.second->element)
+                    throw std::invalid_argument(
+                        "Symmetric constraint needs two points and a different axis line");
             } else if (constraint.kind == SketchConstraintKind::pointOnObject) {
                 requirePoint(constraint.first);
                 const SketchGeometry& target = findElement(constraint.second->element).geometry;

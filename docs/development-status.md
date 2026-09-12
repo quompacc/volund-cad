@@ -93,7 +93,10 @@ gehören nicht zum Produktpfad.
   gleichen Radius gesetzt werden. `Tangent` unterstützt Linie–Kreis und Kreis–Kreis.
   Beide Relationen werden von PlaneGCS gelöst und als `[=]` beziehungsweise `[T]`
   dargestellt.
-- Neue Dateien verwenden `VOLUND 7`; bestehende `VOLUND 1`-Rechtecksketches,
+- `Symmetric` verwendet zwei zuerst gewählte Punkte und eine als dritte Referenz
+  gewählte Achslinie. PlaneGCS hält den Mittelpunkt auf der Achse und die Verbindung
+  rechtwinklig dazu; die Relation erscheint als `[S]`.
+- Neue Dateien verwenden `VOLUND 8`; bestehende `VOLUND 1`-Rechtecksketches,
   `VOLUND 2`-Linien, `VOLUND 3`-Richtungsconstraints und `VOLUND 4`-Extrusionen
   sowie `VOLUND 5`-Profilauswahlen werden beim Laden migriert. Alte Extrusionen
   behalten dabei ihre bisherige Semantik, alle geschlossenen Profile zu verwenden.
@@ -170,8 +173,8 @@ erzwungener Wayland-QPA weiterhin ruhende ELF-Kanten zu `libX11` und `libGLX`.
 Die ersten vollständigen Mehrfach-Element-Erzeugungs- und Bearbeitungs-Slices sind auf
 beiden Windows-Backends und im nativen FreeBSD-Wayland-Controlpfad bestätigt. Sichtbare
 Constraint-Glyphen, direkte Bemaßungsinteraktion, Punktsperren und Punkt-auf-Objekt
-sowie Tangential- und Gleichheitsrelationen sind umgesetzt. Als nächste parametrische
-Ausbaustufe folgt die Symmetrierelation.
+sowie Tangential-, Gleichheits- und Symmetrierelationen sind umgesetzt. Als nächste
+parametrische Ausbaustufe folgen Punkt-zu-Punkt-Abstände und Winkelbemaßungen.
 
 Der direkte Push/Pull-Ablauf bleibt dabei als schneller Weg erhalten. Er ist eine
 Bedienoberfläche über denselben parametrischen Sketch- und Extrusionsfeatures, kein

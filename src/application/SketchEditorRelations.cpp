@@ -24,7 +24,18 @@ bool circle(const document::SketchElement* element) {
 
 bool SketchEditorSession::canAddSelectedRelation(
     document::SketchConstraintKind kind) const noexcept {
-    if (!active_ || selectedReferences_.size() != 2)
+    if (!active_)
+        return false;
+    if (kind == document::SketchConstraintKind::symmetric) {
+        if (selectedReferences_.size() != 3)
+            return false;
+        const auto& first = selectedReferences_[0];
+        const auto& second = selectedReferences_[1];
+        const auto& axis = selectedReferences_[2];
+        return first != second && axis.element != first.element && axis.element != second.element &&
+               line(findElement(elements_, axis.element));
+    }
+    if (selectedReferences_.size() != 2)
         return false;
     const auto& first = selectedReferences_[0];
     const auto& second = selectedReferences_[1];
@@ -55,8 +66,11 @@ bool SketchEditorSession::canAddSelectedRelation(
 bool SketchEditorSession::addSelectedRelation(document::SketchConstraintKind kind) {
     if (!canAddSelectedRelation(kind))
         return false;
-    constraints_.values.push_back({document::SketchConstraintId{constraints_.nextId++}, kind,
-                                   selectedReferences_[0], selectedReferences_[1], 0.0});
+    document::SketchConstraint constraint{document::SketchConstraintId{constraints_.nextId++}, kind,
+                                          selectedReferences_[0], selectedReferences_[1], 0.0};
+    if (kind == document::SketchConstraintKind::symmetric)
+        constraint.third = selectedReferences_[2];
+    constraints_.values.push_back(constraint);
     document::SketchParameters sketch{plane_, elements_, constraints_};
     lastSolveResult_ = features::solveSketchConstraints(sketch);
     if (lastSolveResult_.status == features::SketchSolveStatus::success)

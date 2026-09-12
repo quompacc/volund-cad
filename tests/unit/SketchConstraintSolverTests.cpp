@@ -167,6 +167,32 @@ bool adapterMakesLinesAndCirclesTangent() {
            close(centerDistance, firstCircle.radius + secondCircle.radius);
 }
 
+bool adapterMakesPointsSymmetricAboutLine() {
+    using namespace voelund::document;
+    SketchParameters sketch{
+        plane(),
+        {{{SketchElementId{1}, SketchLine{{2.0, 2.0}, {3.0, 2.0}}},
+          {SketchElementId{2}, SketchLine{{6.0, 3.0}, {7.0, 3.0}}},
+          {SketchElementId{3}, SketchLine{{4.0, -5.0}, {4.0, 5.0}}}},
+         4},
+        {{{SketchConstraintId{1}, SketchConstraintKind::symmetric, lineRef(1), lineRef(2), 0.0,
+           SketchGeometryReference{SketchElementId{3}, SketchPointPosition::start}}},
+         2}};
+
+    const auto result = voelund::features::solveSketchConstraints(sketch);
+    const auto& first = std::get<SketchLine>(sketch.elements.values[0].geometry).start;
+    const auto& second = std::get<SketchLine>(sketch.elements.values[1].geometry).start;
+    const auto& axis = std::get<SketchLine>(sketch.elements.values[2].geometry);
+    const SketchPoint midpoint{(first.x + second.x) * 0.5, (first.y + second.y) * 0.5};
+    const double axisX = axis.end.x - axis.start.x;
+    const double axisY = axis.end.y - axis.start.y;
+    const double midpointCross =
+        axisX * (midpoint.y - axis.start.y) - axisY * (midpoint.x - axis.start.x);
+    const double connectingDot = (second.x - first.x) * axisX + (second.y - first.y) * axisY;
+    return result.status == voelund::features::SketchSolveStatus::success &&
+           close(midpointCross, 0.0) && close(connectingDot, 0.0);
+}
+
 } // namespace
 
 int main() {
@@ -188,6 +214,10 @@ int main() {
     }
     if (!adapterMakesLinesAndCirclesTangent()) {
         std::cerr << "Völund tangent constraint adapter failed\n";
+        return 1;
+    }
+    if (!adapterMakesPointsSymmetricAboutLine()) {
+        std::cerr << "Völund symmetric constraint adapter failed\n";
         return 1;
     }
     return 0;
