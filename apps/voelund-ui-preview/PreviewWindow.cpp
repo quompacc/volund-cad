@@ -171,6 +171,29 @@ PreviewWindow::PreviewWindow(application::CadSession& session, QWidget* parent)
         refreshBrowser();
         statusText_->setText(QStringLiteral("Planar face selected  ·  Sketch is available"));
     });
+    cadViewport_->setSketchEditorPreviewHandler(
+        [this](const std::optional<viewport::SketchElementIntent>& intent) {
+            sketchBackend_->updatePreview(intent);
+            refreshSketchScene();
+        });
+    cadViewport_->setSketchEditorElementHandler([this](const viewport::SketchElementIntent& intent) {
+        if (sketchBackend_->confirmElement(intent)) {
+            statusText_->setText(sketchBackend_->lastMessage());
+            refreshSketchScene();
+        }
+    });
+    cadViewport_->setSketchEditorTranslationHandler([this](double deltaX, double deltaY) {
+        if (sketchBackend_->translateSelected(deltaX, deltaY)) {
+            statusText_->setText(sketchBackend_->lastMessage());
+            refreshSketchScene();
+        }
+    });
+    cadViewport_->setSketchElementSelectionHandler([this](const viewport::SketchSelectionIntent& intent) {
+        if (sketchBackend_->selectElement(intent)) {
+            statusText_->setText(sketchBackend_->lastMessage());
+            refreshSketchScene();
+        }
+    });
     refreshScene();
     refreshBrowser();
     setWorkspaceTab(QStringLiteral("SOLID"));
@@ -471,48 +494,6 @@ QWidget* PreviewWindow::createCard(const QString& title, const QList<QWidget*>& 
     return card;
 }
 
-void PreviewWindow::enterSketch()
-{
-    if (!selectedPlanarFace_.has_value()) {
-        statusText_->setText(QStringLiteral("Select a planar model face before starting a sketch"));
-        return;
-    }
-    if (!sketchBackend_->begin(*selectedPlanarFace_)) {
-        statusText_->setText(sketchBackend_->lastMessage());
-        return;
-    }
-    canvas_->resetSketch();
-    ribbonStack_->setCurrentIndex(1);
-    inspectorStack_->setCurrentIndex(1);
-    inspectorStack_->show();
-    canvas_->setMode(PreviewCanvas::Mode::Sketch);
-    canvasStack_->setCurrentWidget(canvas_);
-    viewCube_->hide();
-    sketchWorkspaceTab_->show();
-    setWorkspaceTab(QStringLiteral("SKETCH"));
-    statusText_->setText(QStringLiteral("Editing Sketch 01  ·  Top face"));
-}
-
-void PreviewWindow::finishSketch()
-{
-    if (sketchBackend_->active() && !sketchBackend_->finish()) {
-        statusText_->setText(sketchBackend_->lastMessage());
-        return;
-    }
-    ribbonStack_->setCurrentIndex(0);
-    inspectorStack_->setCurrentIndex(0);
-    inspectorStack_->hide();
-    canvas_->setMode(PreviewCanvas::Mode::Solid);
-    canvasStack_->setCurrentWidget(cadViewport_);
-    viewCube_->show();
-    sketchWorkspaceTab_->hide();
-    setWorkspaceTab(QStringLiteral("SOLID"));
-    refreshBrowser();
-    refreshScene();
-    statusText_->setText(sketchBackend_->lastMessage().isEmpty()
-        ? QStringLiteral("Sketch finished  ·  Ready") : sketchBackend_->lastMessage());
-}
-
 void PreviewWindow::activateExtrude()
 {
     finishSketch();
@@ -530,15 +511,6 @@ void PreviewWindow::closeActiveTool()
         refreshStyle(extrudeButton_);
     }
     statusText_->setText(QStringLiteral("Ready"));
-}
-
-void PreviewWindow::activateSketchTool(int tool, QToolButton* button)
-{
-    for (auto* candidate : sketchToolButtons_) {
-        candidate->setProperty("active", candidate == button);
-        refreshStyle(candidate);
-    }
-    canvas_->setSketchTool(static_cast<PreviewCanvas::SketchTool>(tool));
 }
 
 void PreviewWindow::setWorkspaceTab(const QString& activeName)

@@ -56,6 +56,7 @@ private:
     void setWorkspaceTab(const QString& activeName);
     void refreshBrowser();
     void refreshScene();
+    void refreshSketchScene();
     void refreshStyle(QWidget* widget);
 
     PreviewCanvas* canvas_{nullptr};

@@ -178,6 +178,13 @@ gehören nicht zum Produktpfad.
   3D-Viewport komponiert. Windows verwendet deshalb wie FreeBSD standardmäßig den
   Qt-eigenen OpenGL-Kontext. Die dafür benötigten Qt-OpenGL-Laufzeitbibliotheken
   werden beim Windows-Build automatisch neben der Vorschau-Anwendung bereitgestellt.
+- Der Sketch-Befehl der neuen Oberfläche verwendet keine separate 2D-Demofläche
+  mehr. Er bleibt im echten OCCT-Viewport, richtet die ausgewählte planare Fläche
+  senkrecht aus und verbindet Linie, Rechteck, Kreis und Mittelpunktbogen direkt mit
+  der parametrischen `SketchEditorSession`. Live-Vorschau, Fangreferenzen,
+  automatische Grundrelationen, Auswahl, Dragging, Freiheitsgrade und sichtbare
+  Constraint-Glyphen werden aus demselben Editorzustand dargestellt. Der UI-Smoke-Test
+  durchläuft alle vier Geometrietypen vor dem Commit des Sketch-Features.
 
 ## Modul- und Bedienarchitektur
 

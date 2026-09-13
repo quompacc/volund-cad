@@ -13,6 +13,7 @@ add_executable(
     PreviewStyle.hpp
     PreviewWindow.cpp
     PreviewWindow.hpp
+    PreviewWindowSketch.cpp
 )
 
 set_target_properties(voelund-ui-preview PROPERTIES AUTOMOC ON)

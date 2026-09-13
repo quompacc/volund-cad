@@ -27,9 +27,26 @@ int main(int argc, char* argv[])
     const bool smokeTest = application.arguments().contains(QStringLiteral("--smoke-test"));
     if (smokeTest) {
         voelund::preview::SketchBackend backend(session);
-        if (!backend.begin()
-            || !backend.add(voelund::preview::PreviewCanvas::SketchTool::Rectangle,
-                            QPointF(-10.0, -8.0), QPointF(10.0, 8.0))
+        using SketchTool = voelund::preview::PreviewCanvas::SketchTool;
+        using Intent = voelund::viewport::SketchElementIntent;
+        if (!backend.begin()) return 2;
+        backend.setTool(SketchTool::Line);
+        const bool line = backend.confirmElement(
+            Intent{-10.0, -8.0, 10.0, -8.0, std::nullopt, std::nullopt, std::nullopt,
+                   std::nullopt, std::nullopt, std::nullopt});
+        backend.setTool(SketchTool::Rectangle);
+        const bool rectangle = backend.confirmElement(
+            Intent{-8.0, -5.0, 8.0, 5.0, std::nullopt, std::nullopt, std::nullopt,
+                   std::nullopt, std::nullopt, std::nullopt});
+        backend.setTool(SketchTool::Circle);
+        const bool circle = backend.confirmElement(
+            Intent{20.0, 10.0, 25.0, 10.0, std::nullopt, std::nullopt, std::nullopt,
+                   std::nullopt, std::nullopt, std::nullopt});
+        backend.setTool(SketchTool::Arc);
+        const bool arc = backend.confirmElement(
+            Intent{30.0, 10.0, 35.0, 10.0, std::pair{30.0, 15.0}, std::nullopt,
+                   std::nullopt, std::nullopt, std::nullopt, std::nullopt});
+        if (!line || !rectangle || !circle || !arc || backend.sceneElements().empty()
             || !backend.finish()) {
             return 2;
         }
