@@ -101,6 +101,11 @@ SketchEditorSession::geometry(document::SketchPoint first, document::SketchPoint
         return {document::SketchCircle{first, radius}};
     if (tool_ == SketchDrawingTool::polygon)
         return polygonGeometry(first, second, polygonSides_);
+    if (!third.has_value()) {
+        if (tool_ == SketchDrawingTool::arc)
+            return {document::SketchCircle{first, radius}};
+        return {document::SketchLine{first, second}};
+    }
     if (tool_ == SketchDrawingTool::slot)
         return slotGeometry(first, second, *third);
     if (tool_ == SketchDrawingTool::threePointArc)
@@ -125,8 +130,6 @@ bool SketchEditorSession::setPreview(document::SketchPoint first, document::Sket
     const bool needsThird = tool_ == SketchDrawingTool::arc ||
                             tool_ == SketchDrawingTool::threePointArc ||
                             tool_ == SketchDrawingTool::ellipse || tool_ == SketchDrawingTool::slot;
-    if (needsThird && !third.has_value())
-        return false;
     try {
         std::vector<SketchGeometry> candidate = geometry(first, second, third);
         document::SketchElements validated = elements_;
@@ -134,17 +137,22 @@ bool SketchEditorSession::setPreview(document::SketchPoint first, document::Sket
             validated.values.push_back({document::SketchElementId{validated.nextId++}, item});
         document::validateSketchElements(validated);
         preview_ = std::move(candidate);
+        previewConfirmable_ = !needsThird || third.has_value();
         return true;
     } catch (const std::invalid_argument&) {
         preview_.clear();
+        previewConfirmable_ = false;
         return false;
     }
 }
 
-void SketchEditorSession::clearPreview() noexcept { preview_.clear(); }
+void SketchEditorSession::clearPreview() noexcept {
+    preview_.clear();
+    previewConfirmable_ = false;
+}
 
 std::optional<document::SketchElementId> SketchEditorSession::confirmPreview() {
-    if (!active_ || preview_.empty())
+    if (!active_ || preview_.empty() || !previewConfirmable_)
         return std::nullopt;
     if (const auto* rectangle = std::get_if<document::SketchRectangle>(&preview_.front()))
         return confirmRectangle(*rectangle);
@@ -183,6 +191,7 @@ std::optional<document::SketchElementId> SketchEditorSession::confirmPreview() {
         }
     }
     preview_.clear();
+    previewConfirmable_ = false;
     selectedElement_ = firstId;
     selectedReferences_.clear();
     static_cast<void>(solveConstraints());
@@ -191,7 +200,7 @@ std::optional<document::SketchElementId> SketchEditorSession::confirmPreview() {
 
 void SketchEditorSession::setPolygonSides(int sides) noexcept {
     polygonSides_ = std::clamp(sides, 3, 64);
-    preview_.clear();
+    clearPreview();
 }
 
 } // namespace voelund::application

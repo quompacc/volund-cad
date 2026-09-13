@@ -1,6 +1,7 @@
 #include <voelund/application/CadSession.hpp>
 #include <voelund/application/SketchEditorSession.hpp>
 
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <variant>
@@ -72,6 +73,53 @@ bool compoundDrawingToolsCreateProfiles() {
     const auto& value = std::get<voelund::document::SketchEllipse>(ellipse.elements().front().geometry);
     return std::abs(value.majorRadius - 8.0) < 1.0e-6 &&
            std::abs(value.minorRadius - 3.0) < 1.0e-6;
+}
+
+bool everyDrawingToolHasLivePreview() {
+    CadSession session;
+    session.newDocument();
+    const auto support = session.addBoxFeature();
+    SketchEditorSession editor(session, support, plane);
+
+    const auto previewCount = [&](SketchDrawingTool tool, std::optional<SketchPoint> third,
+                                  std::size_t expected) {
+        editor.setTool(tool);
+        if (!editor.setPreview({0.0, 0.0}, {8.0, 5.0}, third)) {
+            std::cerr << "Preview tool " << static_cast<int>(tool) << " rejected geometry\n";
+            return false;
+        }
+        const auto evaluated = editor.evaluatedElements();
+        const bool valid = evaluated.size() == expected &&
+                           std::ranges::none_of(evaluated, [](const auto& item) {
+                               return item.shape.IsNull();
+                           });
+        if (!valid)
+            std::cerr << "Preview tool " << static_cast<int>(tool) << " produced "
+                      << evaluated.size() << " of " << expected << " shapes\n";
+        return valid;
+    };
+
+    if (!previewCount(SketchDrawingTool::line, std::nullopt, 1) ||
+        !previewCount(SketchDrawingTool::polyline, std::nullopt, 1) ||
+        !previewCount(SketchDrawingTool::rectangle, std::nullopt, 1) ||
+        !previewCount(SketchDrawingTool::circle, std::nullopt, 1) ||
+        !previewCount(SketchDrawingTool::polygon, std::nullopt, 6))
+        return false;
+
+    for (const auto tool : {SketchDrawingTool::arc, SketchDrawingTool::threePointArc,
+                            SketchDrawingTool::ellipse, SketchDrawingTool::slot}) {
+        if (!previewCount(tool, std::nullopt, 1) || editor.confirmPreview().has_value() ||
+            !editor.elements().empty()) {
+            std::cerr << "Incomplete preview tool " << static_cast<int>(tool)
+                      << " was accepted or persisted\n";
+            return false;
+        }
+    }
+
+    return previewCount(SketchDrawingTool::arc, SketchPoint{0.0, 8.0}, 1) &&
+           previewCount(SketchDrawingTool::threePointArc, SketchPoint{8.0, 8.0}, 1) &&
+           previewCount(SketchDrawingTool::ellipse, SketchPoint{0.0, 3.0}, 1) &&
+           previewCount(SketchDrawingTool::slot, SketchPoint{0.0, 3.0}, 4);
 }
 
 bool lineEditingOperationsWork() {
@@ -251,6 +299,10 @@ bool automaticRelationsWork() {
 } // namespace
 
 int main() {
+    if (!everyDrawingToolHasLivePreview()) {
+        std::cerr << "Live sketch tool previews failed\n";
+        return 1;
+    }
     if (!compoundDrawingToolsCreateProfiles()) {
         std::cerr << "Compound sketch drawing tools failed\n";
         return 1;

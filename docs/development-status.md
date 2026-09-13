@@ -268,6 +268,15 @@ Der direkte Push/Pull-Ablauf bleibt dabei als schneller Weg erhalten. Er ist ein
 Bedienoberfläche über denselben parametrischen Sketch- und Extrusionsfeatures, kein
 Ersatz für den vollständigen Sketch-Editor.
 
+Alle grundlegenden Sketch-Erzeugungswerkzeuge besitzen nun eine durchgängige
+Live-Vorschau. Linie, Polylinie, Rechteck, Kreis und Polygon zeigen unmittelbar ihre
+Kontur. Bei Mittelpunktbogen, Dreipunktbogen, Ellipse und Slot wird in der ersten
+Eingabephase zunächst Radius, Sehne beziehungsweise Achse dargestellt und nach dem
+zweiten Klick die vollständige Kontur bis zur Bestätigung aktualisiert. Unvollständige
+Zwischengeometrie bleibt reine Vorschau und kann nicht in den Sketch übernommen werden.
+Ein Integrationstest prüft für alle neun Werkzeugtypen, dass jede Vorschau eine
+renderbare OCCT-Geometrie erzeugt.
+
 ## Übergabe für den nächsten Arbeitstag
 
 Der visuelle Grundaufbau und die Viewer-Navigation sind abgenommen. Der nächste Slice

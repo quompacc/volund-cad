@@ -143,6 +143,7 @@ class SketchEditorSession final {
     std::optional<document::FeatureId> editingFeature_;
     SketchDrawingTool tool_{SketchDrawingTool::line};
     std::vector<document::SketchGeometry> preview_;
+    bool previewConfirmable_{false};
     std::optional<document::SketchElementId> selectedElement_;
     std::vector<document::SketchGeometryReference> selectedReferences_;
     std::optional<document::SketchPoint> selectionPoint_;

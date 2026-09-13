@@ -52,7 +52,7 @@ SketchEditorSession::SketchEditorSession(CadSession& session, document::FeatureI
 
 void SketchEditorSession::setTool(SketchDrawingTool tool) noexcept {
     tool_ = tool;
-    preview_.clear();
+    clearPreview();
 }
 
 SketchDrawingTool SketchEditorSession::tool() const noexcept { return tool_; }
@@ -444,7 +444,7 @@ bool SketchEditorSession::removeSelected() {
     elements_.values.erase(match);
     selectedElement_.reset();
     selectedReferences_.clear();
-    preview_.clear();
+    clearPreview();
     if (elements_.values.empty())
         lastSolveResult_ = {features::SketchSolveStatus::success, -1, {}};
     else
@@ -520,7 +520,7 @@ document::FeatureId SketchEditorSession::accept() {
     if (!canAccept()) {
         throw std::logic_error("A sketch editor session requires at least one element");
     }
-    preview_.clear();
+    clearPreview();
     const document::SketchParameters result = parameters(false);
     const document::FeatureId id = editingFeature_.has_value()
                                        ? *editingFeature_
@@ -534,7 +534,7 @@ document::FeatureId SketchEditorSession::accept() {
 
 void SketchEditorSession::cancel() noexcept {
     active_ = false;
-    preview_.clear();
+    clearPreview();
     selectedElement_.reset();
     selectedReferences_.clear();
 }

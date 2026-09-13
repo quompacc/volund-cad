@@ -25,7 +25,7 @@ bool SketchEditorSession::undo() {
     --historyIndex_;
     elements_ = history_[historyIndex_].elements;
     constraints_ = history_[historyIndex_].constraints;
-    preview_.clear();
+    clearPreview();
     selectedElement_.reset();
     selectedReferences_.clear();
     if (elements_.values.empty())
@@ -41,7 +41,7 @@ bool SketchEditorSession::redo() {
     ++historyIndex_;
     elements_ = history_[historyIndex_].elements;
     constraints_ = history_[historyIndex_].constraints;
-    preview_.clear();
+    clearPreview();
     selectedElement_.reset();
     selectedReferences_.clear();
     if (elements_.values.empty())
