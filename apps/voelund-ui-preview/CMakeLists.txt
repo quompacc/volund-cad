@@ -13,6 +13,7 @@ add_executable(
     PreviewStyle.hpp
     PreviewWindow.cpp
     PreviewWindow.hpp
+    PreviewWindowRibbon.cpp
     PreviewWindowSketch.cpp
 )
 

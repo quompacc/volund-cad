@@ -79,9 +79,14 @@ void PreviewCanvas::setSketchTool(SketchTool tool)
         switch (tool) {
         case SketchTool::Select: return QStringLiteral("Select geometry");
         case SketchTool::Line: return QStringLiteral("Line: choose first point");
+        case SketchTool::Polyline: return QStringLiteral("Polyline: choose first point");
         case SketchTool::Rectangle: return QStringLiteral("Rectangle: choose first corner");
         case SketchTool::Circle: return QStringLiteral("Circle: choose center");
         case SketchTool::Arc: return QStringLiteral("Arc: choose center");
+        case SketchTool::ThreePointArc: return QStringLiteral("Three-point arc: choose start");
+        case SketchTool::Ellipse: return QStringLiteral("Ellipse: choose center");
+        case SketchTool::Slot: return QStringLiteral("Slot: choose centerline start");
+        case SketchTool::Polygon: return QStringLiteral("Polygon: choose center");
         case SketchTool::Constraint: return QStringLiteral("Relation: select geometry");
         case SketchTool::Dimension: return QStringLiteral("Dimension: select geometry");
         case SketchTool::Trim: return QStringLiteral("Trim: select segment to remove");

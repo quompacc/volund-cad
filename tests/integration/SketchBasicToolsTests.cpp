@@ -45,6 +45,16 @@ bool compoundDrawingToolsCreateProfiles() {
         !slot.confirmPreview().has_value() || slot.elements().size() != 4 ||
         slot.closedProfileCount() != 1 || !slot.canAccept())
         return false;
+    const auto& rightCap =
+        std::get<voelund::document::SketchArc>(slot.elements()[1].geometry);
+    const auto& leftCap =
+        std::get<voelund::document::SketchArc>(slot.elements()[3].geometry);
+    const double rightMidpointX = rightCap.center.x + rightCap.radius *
+        std::cos((rightCap.startAngle + rightCap.endAngle) * 0.5);
+    const double leftMidpointX = leftCap.center.x + leftCap.radius *
+        std::cos((leftCap.startAngle + leftCap.endAngle) * 0.5);
+    if (rightMidpointX <= 12.0 || leftMidpointX >= 0.0)
+        return false;
 
     SketchEditorSession arc(session, support, plane);
     arc.setTool(SketchDrawingTool::threePointArc);

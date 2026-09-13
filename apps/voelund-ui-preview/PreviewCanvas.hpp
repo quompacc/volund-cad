@@ -15,7 +15,22 @@ class PreviewCanvas final : public QWidget {
 
 public:
     enum class Mode { Solid, Sketch };
-    enum class SketchTool { Select, Line, Rectangle, Circle, Arc, Constraint, Dimension, Trim, Offset };
+    enum class SketchTool {
+        Select,
+        Line,
+        Polyline,
+        Rectangle,
+        Circle,
+        Arc,
+        ThreePointArc,
+        Ellipse,
+        Slot,
+        Polygon,
+        Constraint,
+        Dimension,
+        Trim,
+        Offset
+    };
 
     explicit PreviewCanvas(QWidget* parent = nullptr);
     void setMode(Mode mode);

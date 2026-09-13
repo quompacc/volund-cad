@@ -32,7 +32,9 @@ public:
     bool add(PreviewCanvas::SketchTool tool, const QPointF& first, const QPointF& second);
     void setTool(PreviewCanvas::SketchTool tool);
     void updatePreview(const std::optional<viewport::SketchElementIntent>& intent);
-    bool confirmElement(const viewport::SketchElementIntent& intent);
+    [[nodiscard]] std::optional<std::uint64_t>
+    confirmElement(const viewport::SketchElementIntent& intent);
+    [[nodiscard]] PreviewCanvas::SketchTool activeTool() const noexcept;
     bool selectElement(const viewport::SketchSelectionIntent& intent);
     bool translateSelected(double deltaX, double deltaY);
     [[nodiscard]] std::vector<viewport::SceneSketchElement> sceneElements() const;
@@ -48,6 +50,7 @@ private:
     application::CadSession& session_;
     std::unique_ptr<application::SketchEditorSession> editor_;
     QString lastMessage_;
+    PreviewCanvas::SketchTool activeTool_{PreviewCanvas::SketchTool::Select};
 };
 
 } // namespace voelund::preview

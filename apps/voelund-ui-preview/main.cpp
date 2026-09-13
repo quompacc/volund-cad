@@ -33,20 +33,41 @@ int main(int argc, char* argv[])
         backend.setTool(SketchTool::Line);
         const bool line = backend.confirmElement(
             Intent{-10.0, -8.0, 10.0, -8.0, std::nullopt, std::nullopt, std::nullopt,
-                   std::nullopt, std::nullopt, std::nullopt});
+                   std::nullopt, std::nullopt, std::nullopt}).has_value();
+        backend.setTool(SketchTool::Polyline);
+        const bool polyline = backend.confirmElement(
+            Intent{-10.0, -4.0, 10.0, -2.0, std::nullopt, std::nullopt, std::nullopt,
+                   std::nullopt, std::nullopt, std::nullopt}).has_value();
         backend.setTool(SketchTool::Rectangle);
         const bool rectangle = backend.confirmElement(
             Intent{-8.0, -5.0, 8.0, 5.0, std::nullopt, std::nullopt, std::nullopt,
-                   std::nullopt, std::nullopt, std::nullopt});
+                   std::nullopt, std::nullopt, std::nullopt}).has_value();
         backend.setTool(SketchTool::Circle);
         const bool circle = backend.confirmElement(
             Intent{20.0, 10.0, 25.0, 10.0, std::nullopt, std::nullopt, std::nullopt,
-                   std::nullopt, std::nullopt, std::nullopt});
+                   std::nullopt, std::nullopt, std::nullopt}).has_value();
         backend.setTool(SketchTool::Arc);
         const bool arc = backend.confirmElement(
             Intent{30.0, 10.0, 35.0, 10.0, std::pair{30.0, 15.0}, std::nullopt,
-                   std::nullopt, std::nullopt, std::nullopt, std::nullopt});
-        if (!line || !rectangle || !circle || !arc || backend.sceneElements().empty()
+                   std::nullopt, std::nullopt, std::nullopt, std::nullopt}).has_value();
+        backend.setTool(SketchTool::ThreePointArc);
+        const bool threePointArc = backend.confirmElement(
+            Intent{40.0, 10.0, 45.0, 15.0, std::pair{50.0, 10.0}, std::nullopt,
+                   std::nullopt, std::nullopt, std::nullopt, std::nullopt}).has_value();
+        backend.setTool(SketchTool::Ellipse);
+        const bool ellipse = backend.confirmElement(
+            Intent{60.0, 10.0, 66.0, 10.0, std::pair{60.0, 13.0}, std::nullopt,
+                   std::nullopt, std::nullopt, std::nullopt, std::nullopt}).has_value();
+        backend.setTool(SketchTool::Slot);
+        const bool slot = backend.confirmElement(
+            Intent{70.0, 10.0, 80.0, 10.0, std::pair{70.0, 13.0}, std::nullopt,
+                   std::nullopt, std::nullopt, std::nullopt, std::nullopt}).has_value();
+        backend.setTool(SketchTool::Polygon);
+        const bool polygon = backend.confirmElement(
+            Intent{90.0, 10.0, 95.0, 10.0, std::nullopt, std::nullopt, std::nullopt,
+                   std::nullopt, std::nullopt, std::nullopt}).has_value();
+        if (!line || !polyline || !rectangle || !circle || !arc || !threePointArc || !ellipse
+            || !slot || !polygon || backend.sceneElements().empty()
             || !backend.finish()) {
             return 2;
         }

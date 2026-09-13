@@ -184,7 +184,12 @@ gehören nicht zum Produktpfad.
   der parametrischen `SketchEditorSession`. Live-Vorschau, Fangreferenzen,
   automatische Grundrelationen, Auswahl, Dragging, Freiheitsgrade und sichtbare
   Constraint-Glyphen werden aus demselben Editorzustand dargestellt. Der UI-Smoke-Test
-  durchläuft alle vier Geometrietypen vor dem Commit des Sketch-Features.
+  durchläuft die direkt sichtbaren Grundtypen vor dem Commit des Sketch-Features.
+- Die Create-Gruppe stellt zusätzlich Polylinie, Dreipunktbogen, Ellipse, Langloch
+  und regelmäßiges Polygon über kompakte Dropdowns der zugehörigen Grundwerkzeuge
+  bereit. Damit bleiben neun parametrische Geometrietypen erreichbar, ohne das Ribbon
+  mit Einzelbuttons zu überladen. Der UI-Smoke-Test erzeugt jeden Typ über dieselbe
+  Preview-Brücke; Polylinien führen den nächsten Abschnitt am letzten Endpunkt fort.
 
 ## Modul- und Bedienarchitektur
 

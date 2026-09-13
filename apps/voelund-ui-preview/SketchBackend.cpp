@@ -17,9 +17,15 @@ application::SketchDrawingTool drawingTool(PreviewCanvas::SketchTool tool)
 {
     switch (tool) {
     case PreviewCanvas::SketchTool::Line: return application::SketchDrawingTool::line;
+    case PreviewCanvas::SketchTool::Polyline: return application::SketchDrawingTool::polyline;
     case PreviewCanvas::SketchTool::Rectangle: return application::SketchDrawingTool::rectangle;
     case PreviewCanvas::SketchTool::Circle: return application::SketchDrawingTool::circle;
     case PreviewCanvas::SketchTool::Arc: return application::SketchDrawingTool::arc;
+    case PreviewCanvas::SketchTool::ThreePointArc:
+        return application::SketchDrawingTool::threePointArc;
+    case PreviewCanvas::SketchTool::Ellipse: return application::SketchDrawingTool::ellipse;
+    case PreviewCanvas::SketchTool::Slot: return application::SketchDrawingTool::slot;
+    case PreviewCanvas::SketchTool::Polygon: return application::SketchDrawingTool::polygon;
     default: return application::SketchDrawingTool::select;
     }
 }
@@ -155,6 +161,7 @@ bool SketchBackend::add(PreviewCanvas::SketchTool tool, const QPointF& first, co
 
 void SketchBackend::setTool(PreviewCanvas::SketchTool tool)
 {
+    activeTool_ = tool;
     if (editor_) editor_->setTool(drawingTool(tool));
 }
 
@@ -173,19 +180,21 @@ void SketchBackend::updatePreview(const std::optional<viewport::SketchElementInt
                                           {intent->secondX, intent->secondY}, third));
 }
 
-bool SketchBackend::confirmElement(const viewport::SketchElementIntent& intent)
+std::optional<std::uint64_t> SketchBackend::confirmElement(
+    const viewport::SketchElementIntent& intent)
 {
-    if (!editor_) return false;
+    if (!editor_) return std::nullopt;
     const auto third = intent.third.has_value()
                            ? std::optional{document::SketchPoint{intent.third->first,
                                                                  intent.third->second}}
                            : std::nullopt;
     if (!editor_->setPreview({intent.firstX, intent.firstY},
-                             {intent.secondX, intent.secondY}, third)) return false;
+                             {intent.secondX, intent.secondY}, third)) return std::nullopt;
     const auto id = editor_->confirmPreview();
-    if (!id.has_value()) return false;
+    if (!id.has_value()) return std::nullopt;
     const auto tool = editor_->tool();
-    if (tool == application::SketchDrawingTool::line) {
+    if (tool == application::SketchDrawingTool::line ||
+        tool == application::SketchDrawingTool::polyline) {
         addCoincidence(*editor_, {*id, document::SketchPointPosition::start},
                        intent.firstReference, {intent.firstX, intent.firstY});
         addCoincidence(*editor_, {*id, document::SketchPointPosition::end},
@@ -224,8 +233,10 @@ bool SketchBackend::confirmElement(const viewport::SketchElementIntent& intent)
     }
     editor_->commitHistory();
     lastMessage_ = QStringLiteral("Sketch element #%1 added").arg(id->value());
-    return true;
+    return id->value();
 }
+
+PreviewCanvas::SketchTool SketchBackend::activeTool() const noexcept { return activeTool_; }
 
 bool SketchBackend::selectElement(const viewport::SketchSelectionIntent& intent)
 {

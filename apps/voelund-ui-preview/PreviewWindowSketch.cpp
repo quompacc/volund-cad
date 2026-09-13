@@ -72,12 +72,22 @@ void PreviewWindow::activateSketchTool(int tool, QToolButton* button)
     viewport::SketchElementTool viewportTool = viewport::SketchElementTool::select;
     if (sketchTool == PreviewCanvas::SketchTool::Line)
         viewportTool = viewport::SketchElementTool::line;
+    else if (sketchTool == PreviewCanvas::SketchTool::Polyline)
+        viewportTool = viewport::SketchElementTool::polyline;
     else if (sketchTool == PreviewCanvas::SketchTool::Rectangle)
         viewportTool = viewport::SketchElementTool::rectangle;
     else if (sketchTool == PreviewCanvas::SketchTool::Circle)
         viewportTool = viewport::SketchElementTool::circle;
     else if (sketchTool == PreviewCanvas::SketchTool::Arc)
         viewportTool = viewport::SketchElementTool::arc;
+    else if (sketchTool == PreviewCanvas::SketchTool::ThreePointArc)
+        viewportTool = viewport::SketchElementTool::threePointArc;
+    else if (sketchTool == PreviewCanvas::SketchTool::Ellipse)
+        viewportTool = viewport::SketchElementTool::ellipse;
+    else if (sketchTool == PreviewCanvas::SketchTool::Slot)
+        viewportTool = viewport::SketchElementTool::slot;
+    else if (sketchTool == PreviewCanvas::SketchTool::Polygon)
+        viewportTool = viewport::SketchElementTool::polygon;
     cadViewport_->setSketchEditorTool(viewportTool);
     refreshSketchScene();
 }

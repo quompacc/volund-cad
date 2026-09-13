@@ -177,9 +177,11 @@ PreviewWindow::PreviewWindow(application::CadSession& session, QWidget* parent)
             refreshSketchScene();
         });
     cadViewport_->setSketchEditorElementHandler([this](const viewport::SketchElementIntent& intent) {
-        if (sketchBackend_->confirmElement(intent)) {
+        if (const auto id = sketchBackend_->confirmElement(intent); id.has_value()) {
             statusText_->setText(sketchBackend_->lastMessage());
             refreshSketchScene();
+            if (sketchBackend_->activeTool() == PreviewCanvas::SketchTool::Polyline)
+                cadViewport_->continueSketchPolyline(intent.secondX, intent.secondY, *id);
         }
     });
     cadViewport_->setSketchEditorTranslationHandler([this](double deltaX, double deltaY) {
@@ -282,65 +284,6 @@ QWidget* PreviewWindow::createWorkspaceTabs()
     layout->addWidget(sketchWorkspaceTab_);
     layout->addStretch();
     return tabs;
-}
-
-QWidget* PreviewWindow::createSolidRibbon()
-{
-    auto* ribbon = new QWidget;
-    auto* layout = new QHBoxLayout(ribbon);
-    layout->setContentsMargins(14, 4, 10, 2);
-    layout->setSpacing(4);
-
-    auto* sketch = toolButton(QStringLiteral("Sketch"), Icon::Sketch, QStringLiteral("Create sketch"));
-    connect(sketch, &QToolButton::clicked, this, &PreviewWindow::enterSketch);
-    extrudeButton_ = toolButton(QStringLiteral("Extrude"), Icon::Extrude, QStringLiteral("Extrude selected profile"));
-    connect(extrudeButton_, &QToolButton::clicked, this, &PreviewWindow::activateExtrude);
-    layout->addWidget(createRibbonGroup(QStringLiteral("CREATE"), {sketch, extrudeButton_,
-        toolButton(QStringLiteral("Revolve"), Icon::Revolve), toolButton(QStringLiteral("Hole"), Icon::Hole)}));
-    layout->addWidget(createRibbonGroup(QStringLiteral("MODIFY"), {
-        toolButton(QStringLiteral("Fillet"), Icon::Fillet), toolButton(QStringLiteral("Chamfer"), Icon::Chamfer),
-        toolButton(QStringLiteral("Shell"), Icon::Shell)}));
-    layout->addWidget(createRibbonGroup(QStringLiteral("ASSEMBLE"), {toolButton(QStringLiteral("Joint"), Icon::Joint)}));
-    layout->addWidget(createRibbonGroup(QStringLiteral("SELECT"), {toolButton(QStringLiteral("Select"), Icon::Select)}));
-    layout->addStretch();
-    return ribbon;
-}
-
-QWidget* PreviewWindow::createSketchRibbon()
-{
-    auto* ribbon = new QWidget;
-    auto* layout = new QHBoxLayout(ribbon);
-    layout->setContentsMargins(14, 4, 10, 2);
-    layout->setSpacing(4);
-    const auto addSketchTool = [this](const QString& label, Icon icon, PreviewCanvas::SketchTool tool) {
-        auto* button = toolButton(label, icon);
-        sketchToolButtons_.append(button);
-        connect(button, &QToolButton::clicked, this, [this, tool, button] {
-            activateSketchTool(static_cast<int>(tool), button);
-        });
-        return button;
-    };
-    auto* select = addSketchTool(QStringLiteral("Select"), Icon::Select, PreviewCanvas::SketchTool::Select);
-    select->setProperty("active", true);
-    layout->addWidget(createRibbonGroup(QStringLiteral("CREATE"), {
-        select, addSketchTool(QStringLiteral("Line"), Icon::Line, PreviewCanvas::SketchTool::Line),
-        addSketchTool(QStringLiteral("Rectangle"), Icon::Rectangle, PreviewCanvas::SketchTool::Rectangle),
-        addSketchTool(QStringLiteral("Circle"), Icon::Circle, PreviewCanvas::SketchTool::Circle),
-        addSketchTool(QStringLiteral("Arc"), Icon::Arc, PreviewCanvas::SketchTool::Arc)}));
-    layout->addWidget(createRibbonGroup(QStringLiteral("CONSTRAIN"), {
-        addSketchTool(QStringLiteral("Relation"), Icon::Constraint, PreviewCanvas::SketchTool::Constraint),
-        addSketchTool(QStringLiteral("Dimension"), Icon::Dimension, PreviewCanvas::SketchTool::Dimension)}));
-    layout->addWidget(createRibbonGroup(QStringLiteral("MODIFY"), {
-        addSketchTool(QStringLiteral("Trim"), Icon::Trim, PreviewCanvas::SketchTool::Trim),
-        addSketchTool(QStringLiteral("Offset"), Icon::Offset, PreviewCanvas::SketchTool::Offset)}));
-    layout->addStretch();
-    auto* finish = toolButton(QStringLiteral("Finish Sketch"), Icon::Finish);
-    finish->setObjectName(QStringLiteral("finishSketch"));
-    finish->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    finish->setIcon(makeIcon(Icon::Finish, QColor("#E8FFF2")));
-    connect(finish, &QToolButton::clicked, this, &PreviewWindow::finishSketch);
-    layout->addWidget(finish);
-    return ribbon;
 }
 
 QWidget* PreviewWindow::createBrowser()

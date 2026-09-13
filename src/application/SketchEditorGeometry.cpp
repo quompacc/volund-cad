@@ -65,11 +65,11 @@ std::vector<SketchGeometry> slotGeometry(SketchPoint first, SketchPoint second,
     const SketchPoint firstBottom{first.x - nx * radius, first.y - ny * radius};
     const double axisAngle = std::atan2(dy, dx);
     return {document::SketchLine{firstTop, secondTop},
-            document::SketchArc{second, radius, axisAngle + std::numbers::pi / 2.0,
-                                axisAngle + 3.0 * std::numbers::pi / 2.0},
+            document::SketchArc{second, radius, axisAngle - std::numbers::pi / 2.0,
+                                axisAngle + std::numbers::pi / 2.0},
             document::SketchLine{secondBottom, firstBottom},
-            document::SketchArc{first, radius, axisAngle - std::numbers::pi / 2.0,
-                                axisAngle + std::numbers::pi / 2.0}};
+            document::SketchArc{first, radius, axisAngle + std::numbers::pi / 2.0,
+                                axisAngle + 3.0 * std::numbers::pi / 2.0}};
 }
 
 std::vector<SketchGeometry> polygonGeometry(SketchPoint center, SketchPoint vertex, int sides) {
