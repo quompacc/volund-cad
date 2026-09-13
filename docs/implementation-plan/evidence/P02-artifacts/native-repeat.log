@@ -1,0 +1,37 @@
+Test project V:/build/p02-native-review
+    Start 1: desktop.viewport_startup
+    Test #1: desktop.viewport_startup ...................   Passed    1.36 sec
+    Start 1: desktop.viewport_startup
+    Test #1: desktop.viewport_startup ...................   Passed    1.50 sec
+    Start 1: desktop.viewport_startup
+1/4 Test #1: desktop.viewport_startup ...................   Passed    1.45 sec
+    Start 2: desktop.viewport_startup.uninitialized
+    Test #2: desktop.viewport_startup.uninitialized .....   Passed    0.17 sec
+    Start 2: desktop.viewport_startup.uninitialized
+    Test #2: desktop.viewport_startup.uninitialized .....   Passed    0.17 sec
+    Start 2: desktop.viewport_startup.uninitialized
+2/4 Test #2: desktop.viewport_startup.uninitialized .....   Passed    0.18 sec
+    Start 3: desktop.ui_preview_startup
+    Test #3: desktop.ui_preview_startup .................   Passed    1.41 sec
+    Start 3: desktop.ui_preview_startup
+    Test #3: desktop.ui_preview_startup .................   Passed    1.42 sec
+    Start 3: desktop.ui_preview_startup
+3/4 Test #3: desktop.ui_preview_startup .................   Passed    1.42 sec
+    Start 4: desktop.ui_preview_startup.uninitialized
+    Test #4: desktop.ui_preview_startup.uninitialized ...   Passed    0.18 sec
+    Start 4: desktop.ui_preview_startup.uninitialized
+    Test #4: desktop.ui_preview_startup.uninitialized ...   Passed    0.18 sec
+    Start 4: desktop.ui_preview_startup.uninitialized
+4/4 Test #4: desktop.ui_preview_startup.uninitialized ...   Passed    0.19 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+desktop       =   3.23 sec*proc (4 tests)
+negative      =   0.36 sec*proc (2 tests)
+platform      =   3.23 sec*proc (4 tests)
+regression    =   0.36 sec*proc (2 tests)
+ui            =   1.42 sec*proc (1 test)
+windows       =   2.87 sec*proc (2 tests)
+
+Total Test time (real) =   9.94 sec

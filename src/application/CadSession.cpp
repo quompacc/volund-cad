@@ -90,15 +90,18 @@ CadSession::CadSession() {
 }
 
 document::FeatureId CadSession::addBoxFeature() {
+    document::DocumentTransaction transaction(document_);
+    auto& candidate = transaction.edit();
     const std::size_t sequence = featureCount(document_.features(), document::FeatureKind::box) + 1;
-    const document::FeatureId id = document_.addBoxFeature("Box " + std::to_string(sequence),
+    const document::FeatureId id = candidate.addBoxFeature("Box " + std::to_string(sequence),
                                                            kernel::BoxDimensions{20.0, 20.0, 40.0});
-    selectedFeature_ = id;
-    static_cast<void>(recompute());
+    static_cast<void>(commitCandidate(transaction, id, true));
     return id;
 }
 
 document::FeatureId CadSession::addCylinderFeature(document::CylinderResultMode resultMode) {
+    document::DocumentTransaction transaction(document_);
+    auto& candidate = transaction.edit();
     if (!canAddCylinder()) {
         throw std::logic_error("A cylinder requires an input feature");
     }
@@ -111,10 +114,9 @@ document::FeatureId CadSession::addCylinderFeature(document::CylinderResultMode 
         translateCylinderBetweenInputAndReference(
             parameters, evaluatedFeature(currentFeatures_, inputFeature), 1.0);
     }
-    const document::FeatureId id = document_.addCylinderFeature(
+    const document::FeatureId id = candidate.addCylinderFeature(
         "Cylinder " + std::to_string(sequence), inputFeature, parameters);
-    selectedFeature_ = id;
-    static_cast<void>(recompute());
+    static_cast<void>(commitCandidate(transaction, id, true));
     return id;
 }
 
@@ -131,23 +133,24 @@ document::FeatureId CadSession::addSketchExtrusion(document::FeatureId supportFe
 
 document::FeatureId CadSession::addSketchFeature(document::FeatureId supportFeature,
                                                  const document::SketchParameters& sketch) {
+    document::DocumentTransaction transaction(document_);
+    auto& candidate = transaction.edit();
     if (!document_.contains(supportFeature)) {
         throw std::invalid_argument("Sketch support is not in the document");
     }
     const std::size_t sequence =
         featureCount(document_.features(), document::FeatureKind::sketch) + 1;
     const document::FeatureId id =
-        document_.addSketchFeature("Sketch " + std::to_string(sequence), supportFeature, sketch);
-    selectedFeature_ = id;
-    selectedSketchElement_.reset();
-    selectedSketchProfiles_.clear();
-    static_cast<void>(recompute());
+        candidate.addSketchFeature("Sketch " + std::to_string(sequence), supportFeature, sketch);
+    static_cast<void>(commitCandidate(transaction, id, true));
     return id;
 }
 
 document::FeatureId CadSession::addSketchExtrusion(document::FeatureId supportFeature,
                                                    const document::SketchParameters& sketch,
                                                    double distance) {
+    document::DocumentTransaction transaction(document_);
+    auto& candidate = transaction.edit();
     if (!document_.contains(supportFeature)) {
         throw std::invalid_argument("Sketch support is not in the document");
     }
@@ -156,15 +159,14 @@ document::FeatureId CadSession::addSketchExtrusion(document::FeatureId supportFe
     }
     const std::size_t sketchSequence =
         featureCount(document_.features(), document::FeatureKind::sketch) + 1;
-    const document::FeatureId sketchId = document_.addSketchFeature(
+    const document::FeatureId sketchId = candidate.addSketchFeature(
         "Sketch " + std::to_string(sketchSequence), supportFeature, sketch);
     const std::size_t extrusionSequence =
         featureCount(document_.features(), document::FeatureKind::extrusion) + 1;
     const document::FeatureId extrusionId =
-        document_.addExtrusionFeature("Extrusion " + std::to_string(extrusionSequence), sketchId,
+        candidate.addExtrusionFeature("Extrusion " + std::to_string(extrusionSequence), sketchId,
                                       document::ExtrusionParameters{distance, {}});
-    selectedFeature_ = extrusionId;
-    static_cast<void>(recompute());
+    static_cast<void>(commitCandidate(transaction, extrusionId, true));
     return extrusionId;
 }
 
@@ -173,8 +175,8 @@ bool CadSession::canAddCylinder() const noexcept { return !document_.features().
 TopoDS_Shape CadSession::currentShape() const { return currentShape_; }
 
 std::optional<TopoDS_Shape> CadSession::featureShape(document::FeatureId featureId) const {
-    const auto match = std::ranges::find(currentFeatures_, featureId,
-                                         &features::EvaluatedFeature::id);
+    const auto match =
+        std::ranges::find(currentFeatures_, featureId, &features::EvaluatedFeature::id);
     return match == currentFeatures_.end() ? std::nullopt
                                            : std::optional<TopoDS_Shape>{match->shape};
 }
@@ -232,13 +234,12 @@ CadSession::sketchParameters(document::FeatureId featureId) const {
 
 bool CadSession::setSketchParameters(document::FeatureId featureId,
                                      const document::SketchParameters& parameters) {
-    if (!document_.setSketchParameters(featureId, parameters)) {
+    document::DocumentTransaction transaction(document_);
+    auto& candidate = transaction.edit();
+    if (!candidate.setSketchParameters(featureId, parameters)) {
         return false;
     }
-    selectedFeature_ = featureId;
-    selectedSketchElement_.reset();
-    selectedSketchProfiles_.clear();
-    return recompute();
+    return commitCandidate(transaction, featureId, true);
 }
 
 std::vector<features::EvaluatedSketchElement> CadSession::selectedSketchElements() const {
@@ -299,18 +300,22 @@ const document::BoxParameters& CadSession::selectedBoxParameters() const {
 }
 
 bool CadSession::setSelectedBoxDimensions(const kernel::BoxDimensions& dimensions) {
-    if (!document_.setBoxDimensions(selectedFeature_.value(), dimensions)) {
+    document::DocumentTransaction transaction(document_);
+    auto& candidate = transaction.edit();
+    if (!candidate.setBoxDimensions(selectedFeature_.value(), dimensions)) {
         return false;
     }
-    static_cast<void>(recompute());
+    static_cast<void>(commitCandidate(transaction, selectedFeature_));
     return true;
 }
 
 bool CadSession::setSelectedBoxParameters(const document::BoxParameters& parameters) {
-    if (!document_.setBoxParameters(selectedFeature_.value(), parameters)) {
+    document::DocumentTransaction transaction(document_);
+    auto& candidate = transaction.edit();
+    if (!candidate.setBoxParameters(selectedFeature_.value(), parameters)) {
         return false;
     }
-    static_cast<void>(recompute());
+    static_cast<void>(commitCandidate(transaction, selectedFeature_));
     return true;
 }
 
@@ -329,6 +334,8 @@ bool CadSession::setSelectedCylinderParameters(const document::CylinderParameter
 
 bool CadSession::setCylinderParameters(document::FeatureId featureId,
                                        const document::CylinderParameters& parameters) {
+    document::DocumentTransaction transaction(document_);
+    auto& candidate = transaction.edit();
     const auto descriptors = document_.features();
     const auto descriptor =
         std::ranges::find(descriptors, featureId, &document::FeatureDescriptor::id);
@@ -347,10 +354,10 @@ bool CadSession::setCylinderParameters(document::FeatureId featureId,
             adjusted, evaluatedFeature(currentFeatures_, *descriptor->inputFeature),
             becomesSeparate ? 1.0 : -1.0);
     }
-    if (!document_.setCylinderParameters(featureId, adjusted)) {
+    if (!candidate.setCylinderParameters(featureId, adjusted)) {
         return false;
     }
-    static_cast<void>(recompute());
+    static_cast<void>(commitCandidate(transaction, selectedFeature_));
     return true;
 }
 
@@ -359,10 +366,12 @@ const document::ExtrusionParameters& CadSession::selectedExtrusionParameters() c
 }
 
 bool CadSession::setSelectedExtrusionParameters(const document::ExtrusionParameters& parameters) {
-    if (!document_.setExtrusionParameters(selectedFeature_.value(), parameters)) {
+    document::DocumentTransaction transaction(document_);
+    auto& candidate = transaction.edit();
+    if (!candidate.setExtrusionParameters(selectedFeature_.value(), parameters)) {
         return false;
     }
-    static_cast<void>(recompute());
+    static_cast<void>(commitCandidate(transaction, selectedFeature_));
     return true;
 }
 
@@ -376,15 +385,17 @@ const kernel::RigidTransform& CadSession::selectedFeaturePlacement() const {
 }
 
 bool CadSession::setSelectedFeaturePlacement(const kernel::RigidTransform& placement) {
+    document::DocumentTransaction transaction(document_);
+    auto& candidate = transaction.edit();
     const std::optional<document::FeatureId> owner =
         placementOwner(document_, selectedFeature_.value());
     if (!owner.has_value()) {
         throw std::out_of_range("Feature result has no rigid placement");
     }
-    if (!document_.setFeaturePlacement(*owner, placement)) {
+    if (!candidate.setFeaturePlacement(*owner, placement)) {
         return false;
     }
-    static_cast<void>(recompute());
+    static_cast<void>(commitCandidate(transaction, selectedFeature_));
     return true;
 }
 
@@ -417,49 +428,12 @@ bool CadSession::redo() {
 bool CadSession::isModified() const { return serializedDocument() != cleanDocumentState_; }
 
 void CadSession::newDocument() {
+    currentFile_.clear();
     document_ = document::ModelDocument::empty();
     currentShape_.Nullify();
     currentBodies_.clear();
     currentFeatures_.clear();
     selectedFeature_.reset();
-    selectedSketchElement_.reset();
-    selectedSketchProfiles_.clear();
-    markFeaturesCurrent();
-    cleanDocumentState_ = serializedDocument();
-}
-
-void CadSession::saveDocument(const std::filesystem::path& path) {
-    if (!document_.features().empty()) {
-        static_cast<void>(featureGraph_.evaluate(document_));
-    }
-    const std::string contents = serializedDocument();
-    std::ofstream output(path, std::ios::binary | std::ios::trunc);
-    if (!output) {
-        throw std::runtime_error("Could not open the document for writing");
-    }
-    output << contents;
-    if (!output) {
-        throw std::runtime_error("Failed to write Völund document");
-    }
-    cleanDocumentState_ = contents;
-}
-
-void CadSession::loadDocument(const std::filesystem::path& path) {
-    std::ifstream input(path, std::ios::binary);
-    if (!input) {
-        throw std::runtime_error("Could not open the document for reading");
-    }
-    document::ModelDocument candidate = document::DocumentSerializer::read(input);
-    features::FeatureGraphResult result;
-    if (!candidate.features().empty()) {
-        result = featureGraph_.evaluate(candidate);
-    }
-    document_ = std::move(candidate);
-    currentShape_ = document_.features().empty() ? TopoDS_Shape{} : std::move(result.resultShape);
-    currentBodies_ = std::move(result.bodies);
-    currentFeatures_ = std::move(result.features);
-    selectedFeature_ = document_.features().empty() ? std::optional<document::FeatureId>{}
-                                                    : document_.features().back().id;
     selectedSketchElement_.reset();
     selectedSketchProfiles_.clear();
     markFeaturesCurrent();

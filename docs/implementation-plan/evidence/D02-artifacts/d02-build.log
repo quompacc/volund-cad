@@ -1,0 +1,18 @@
+[1/23] Scanning /home/eduard/src/voelund-p04-20260913/src/document/DocumentSerializer.cpp for CXX dependencies
+[2/23] Generating CXX dyndep file src/document/CMakeFiles/voelund_document.dir/CXX.dd
+[3/18] Building CXX object src/document/CMakeFiles/voelund_document.dir/DocumentSerializer.cpp.o
+[4/18] Linking CXX static library src/document/libvoelund_document.a
+[5/18] Linking CXX executable tests/voelund_document_tests
+[6/18] Linking CXX executable tests/voelund_document_parser_tests
+[7/18] Linking CXX executable tests/voelund_sketch_profile_tests
+[8/18] Linking CXX executable tests/voelund_sketch_constraint_tests
+[9/18] Linking CXX executable apps/voelund-ui-preview/voelund-ui-preview
+[10/18] Linking CXX executable apps/voelund-cad/voelund-cad
+[11/18] Linking CXX executable tests/voelund_application_tests
+[12/18] Linking CXX executable tests/voelund_sketch_construction_tests
+[13/18] Linking CXX executable tests/voelund_sketch_editor_tests
+[14/18] Linking CXX executable tests/voelund_sketch_circle_constraint_tests
+[15/18] Linking CXX executable tests/voelund_sketch_alignment_tests
+[16/18] Linking CXX executable tests/voelund_sketch_fix_distance_tests
+[17/18] Linking CXX executable tests/voelund_sketch_basic_tools_tests
+[18/18] Linking CXX executable tests/voelund_sketch_slot_tests

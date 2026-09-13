@@ -1,0 +1,38 @@
+[
+  {
+    "path": "include/voelund/application/CadSession.hpp",
+    "sha256": "56eb003f59e77899edbc0b29993921e09a7c6fdc99dc7cd4fdb4297cde96d745"
+  },
+  {
+    "path": "src/application/CadSession.cpp",
+    "sha256": "9c1f3b145cba807471a71ed74d82bd7e99e35399f4f3a8b94ea8cf8b7c336c1e"
+  },
+  {
+    "path": "src/application/CadSessionTransactions.cpp",
+    "sha256": "9012891facd3a202f52822f1585665bfefec959198ca1a974e4b9f0023acb004"
+  },
+  {
+    "path": "src/application/CadSessionSketchProfiles.cpp",
+    "sha256": "e86c712c92c0de3cee0e22d1608f8650d9be5d47acfa618fae82cb8747f44b9f"
+  },
+  {
+    "path": "src/application/CMakeLists.txt",
+    "sha256": "02805b2f83792197f7d51fdb330410db2bb608101e831b2c8fa897db2af3fd91"
+  },
+  {
+    "path": "tests/integration/CadSessionTransactionTests.cpp",
+    "sha256": "19c2c9c975d52ab50604bc497f0a2827cae13cc63f2c7195eba3ca451cb2724d"
+  },
+  {
+    "path": "tests/integration/CadSessionEvaluationTests.cpp",
+    "sha256": "2b7f69ad3b5a427fb6b52a3531e7f0c264a6dafc9808df2d0d0c63c55e6b94c9"
+  },
+  {
+    "path": "tests/CMakeLists.txt",
+    "sha256": "8328f87be24421bf6d2c8511e7d3f51073fc830617c83f3c79dc2d6f542b226b"
+  },
+  {
+    "path": "apps/voelund-cad/main.cpp",
+    "sha256": "bd89b42bae8448a8e56096f938fa94c7939ce74a70a6388ab6a09ab28bf80bf5"
+  }
+]

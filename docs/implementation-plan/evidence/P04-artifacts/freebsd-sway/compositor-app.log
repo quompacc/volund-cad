@@ -1,0 +1,4 @@
+[32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+  Unhandled GL error: GL_INVALID_OPERATION[0m
+[32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+  OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![0m

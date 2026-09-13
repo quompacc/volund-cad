@@ -34,6 +34,12 @@ struct SceneBody final {
     bool transformable;
 };
 
+/** Read-only lifecycle counters for diagnostics and native desktop tests. */
+struct ViewportLifecycleDiagnostics final {
+    std::uint64_t contextGeneration;
+    std::uint64_t cleanupGeneration;
+};
+
 enum class SketchPointKind {
     start,
     end,
@@ -226,6 +232,7 @@ class CadViewport final : public CadViewportBase {
     [[nodiscard]] std::size_t displayedSketchElementCount() const noexcept;
     [[nodiscard]] std::size_t displayedSketchConstraintCount() const noexcept;
     [[nodiscard]] std::pair<int, int> renderingPixelSize() const noexcept;
+    [[nodiscard]] ViewportLifecycleDiagnostics lifecycleDiagnostics() const noexcept;
 
   protected:
 #if defined(VOELUND_VIEWPORT_QT_OPENGL)
@@ -245,6 +252,10 @@ class CadViewport final : public CadViewportBase {
     void wheelEvent(QWheelEvent* event) override;
 
   private:
+    friend class ViewportTestAccess;
+#if defined(VOELUND_VIEWPORT_QT_OPENGL)
+    void cleanupGlResources() noexcept;
+#endif
     class Impl;
     std::unique_ptr<Impl> impl_;
 };

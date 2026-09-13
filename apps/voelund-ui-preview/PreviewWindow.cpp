@@ -1,4 +1,5 @@
 #include "PreviewWindow.hpp"
+#include "InspectorScrollArea.hpp"
 
 #include "PreviewCanvas.hpp"
 #include "PreviewIcons.hpp"
@@ -98,6 +99,7 @@ PreviewWindow::PreviewWindow(application::CadSession& session, QWidget* parent)
     overlayLayout->setContentsMargins(0, 0, 0, 0);
     canvasStack_ = new QStackedWidget;
     cadViewport_ = new viewport::CadViewport;
+    cadViewport_->setObjectName(QStringLiteral("previewCadViewport"));
     canvas_ = new PreviewCanvas;
     canvas_->setSketchCreateHandler([this](PreviewCanvas::SketchTool tool, const QPointF& first,
                                            const QPointF& second) {
@@ -205,7 +207,8 @@ PreviewWindow::~PreviewWindow() = default;
 
 bool PreviewWindow::smokeTestPassed() const
 {
-    return isVisible() && canvas_ != nullptr && ribbonStack_ != nullptr && inspectorStack_ != nullptr
+    return isVisible() && cadViewport_ != nullptr && cadViewport_->isRenderingReady() &&
+        canvas_ != nullptr && ribbonStack_ != nullptr && inspectorStack_ != nullptr
         && browserTree_ != nullptr && ribbonStack_->count() == 2 && inspectorStack_->count() == 2;
 }
 
@@ -323,16 +326,22 @@ QWidget* PreviewWindow::createSolidInspector()
     layout->setSpacing(9);
     auto* header = new QLabel(QStringLiteral("EXTRUDE")); header->setProperty("class", QStringLiteral("panelTitle")); layout->addWidget(header);
     layout->addWidget(separator());
+    auto* fields = new QWidget;
+    auto* fieldsLayout = new QVBoxLayout(fields);
+    fieldsLayout->setContentsMargins(0, 0, 0, 0);
+    fieldsLayout->setSpacing(9);
 
     selectionText_ = new QLabel(QStringLiteral("Top face / Profile 01")); selectionText_->setProperty("class", QStringLiteral("valueStrong"));
     auto* distance = new QDoubleSpinBox; distance->setRange(-10000, 10000); distance->setValue(24); distance->setSuffix(QStringLiteral(" mm"));
+    distance->setObjectName(QStringLiteral("previewExtrudeDistanceInput"));
     auto* direction = new QComboBox; direction->addItems({QStringLiteral("One side"), QStringLiteral("Symmetric"), QStringLiteral("Two sides")});
     auto* operation = new QComboBox; operation->addItems({QStringLiteral("Join"), QStringLiteral("New body"), QStringLiteral("Cut"), QStringLiteral("Intersect")});
-    layout->addWidget(createField(QStringLiteral("PROFILE"), selectionText_));
-    layout->addWidget(createField(QStringLiteral("DISTANCE"), distance));
-    layout->addWidget(createField(QStringLiteral("DIRECTION"), direction));
-    layout->addWidget(createField(QStringLiteral("OPERATION"), operation));
-    auto* taper = new QCheckBox(QStringLiteral("Taper angle")); layout->addWidget(taper);
+    fieldsLayout->addWidget(createField(QStringLiteral("PROFILE"), selectionText_));
+    fieldsLayout->addWidget(createField(QStringLiteral("DISTANCE"), distance));
+    fieldsLayout->addWidget(createField(QStringLiteral("DIRECTION"), direction));
+    fieldsLayout->addWidget(createField(QStringLiteral("OPERATION"), operation));
+    auto* taper = new QCheckBox(QStringLiteral("Taper angle")); fieldsLayout->addWidget(taper);
+    layout->addWidget(new InspectorScrollArea(fields), 1);
     auto* buttons = new QWidget; auto* buttonsLayout = new QHBoxLayout(buttons); buttonsLayout->setContentsMargins(0, 6, 0, 0);
     auto* cancel = new QPushButton(QStringLiteral("Cancel")); cancel->setProperty("class", QStringLiteral("secondary"));
     auto* okay = new QPushButton(QStringLiteral("OK")); okay->setProperty("class", QStringLiteral("primary"));

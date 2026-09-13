@@ -1,5 +1,8 @@
 add_library(voelund_application STATIC
+    CommandTransaction.cpp
     CadSession.cpp
+    CadSessionTransactions.cpp
+    CadSessionPersistence.cpp
     CadSessionSketchProfiles.cpp
     SketchEditorConstruction.cpp
     SketchEditorDimensions.cpp
@@ -23,6 +26,7 @@ target_link_libraries(
         voelund_project_options
         Voelund::Document
         Voelund::Features
+        Voelund::Platform
 )
 
 add_library(Voelund::Application ALIAS voelund_application)

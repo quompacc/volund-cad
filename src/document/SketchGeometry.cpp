@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <map>
 #include <numbers>
 #include <stdexcept>
 
@@ -95,11 +96,14 @@ void validateSketchConstraints(const SketchElements& elements,
     std::uint64_t maximumId = 0;
     std::vector<std::uint64_t> ids;
     ids.reserve(constraints.values.size());
-    const auto findElement = [&elements](SketchElementId id) -> const SketchElement& {
-        const auto match = std::ranges::find(elements.values, id, &SketchElement::id);
-        if (match == elements.values.end())
+    std::map<std::uint64_t, const SketchElement*> byId;
+    for (const auto& element : elements.values)
+        byId.emplace(element.id.value(), &element);
+    const auto findElement = [&byId](SketchElementId id) -> const SketchElement& {
+        const auto match = byId.find(id.value());
+        if (match == byId.end())
             throw std::invalid_argument("Sketch constraint references an unknown element");
-        return *match;
+        return *match->second;
     };
     const auto requireLine = [&findElement](const SketchGeometryReference& reference) {
         if (!std::holds_alternative<SketchLine>(findElement(reference.element).geometry))
@@ -133,10 +137,9 @@ void validateSketchConstraints(const SketchElements& elements,
         if (std::ranges::any_of(constraint.auxiliaryValues,
                                 [](double value) { return !std::isfinite(value); }))
             throw std::invalid_argument("Sketch constraint auxiliary values must be finite");
-        const bool supportCoordinate =
-            (constraint.kind == SketchConstraintKind::coordinateX ||
-             constraint.kind == SketchConstraintKind::coordinateY) &&
-            constraint.auxiliaryValues.size() == 2;
+        const bool supportCoordinate = (constraint.kind == SketchConstraintKind::coordinateX ||
+                                        constraint.kind == SketchConstraintKind::coordinateY) &&
+                                       constraint.auxiliaryValues.size() == 2;
         if (constraint.kind != SketchConstraintKind::fixed && !supportCoordinate &&
             !constraint.auxiliaryValues.empty())
             throw std::invalid_argument(

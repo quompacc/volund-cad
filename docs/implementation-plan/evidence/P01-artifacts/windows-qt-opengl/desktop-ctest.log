@@ -1,0 +1,21 @@
+Test project D:/300_Projekte/310_Aktiv/Völund/build/p01-windows-qt-opengl-20260913
+    Start 1: desktop.viewport_startup
+1/4 Test #1: desktop.viewport_startup ...................   Passed    1.60 sec
+    Start 2: desktop.viewport_startup.uninitialized
+2/4 Test #2: desktop.viewport_startup.uninitialized .....   Passed    0.29 sec
+    Start 3: desktop.ui_preview_startup
+3/4 Test #3: desktop.ui_preview_startup .................   Passed    1.67 sec
+    Start 4: desktop.ui_preview_startup.uninitialized
+4/4 Test #4: desktop.ui_preview_startup.uninitialized ...   Passed    0.19 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+desktop       =   3.75 sec*proc (4 tests)
+negative      =   0.48 sec*proc (2 tests)
+platform      =   3.75 sec*proc (4 tests)
+regression    =   0.48 sec*proc (2 tests)
+ui            =   1.67 sec*proc (1 test)
+windows       =   3.27 sec*proc (2 tests)
+
+Total Test time (real) =   3.76 sec

@@ -1,7 +1,17 @@
 if(VOELUND_VIEWPORT_BACKEND STREQUAL "native" AND WIN32)
-    set(voelund_viewport_sources CadViewport.cpp NativeOcctWindowWin32.cpp)
+    set(voelund_viewport_sources
+        CadViewport.cpp
+        CadViewportInput.cpp
+        CadViewportNativeCallbacks.cpp
+        NativeOcctWindowWin32.cpp
+    )
 elseif(VOELUND_VIEWPORT_BACKEND STREQUAL "qt-opengl")
-    set(voelund_viewport_sources CadViewportQtOpenGl.cpp QtOcctGlContext.cpp)
+    set(voelund_viewport_sources
+        CadViewport.cpp
+        CadViewportInput.cpp
+        CadViewportQtOpenGl.cpp
+        QtOcctGlContext.cpp
+    )
 else()
     message(
         FATAL_ERROR
@@ -11,6 +21,7 @@ else()
 endif()
 
 list(APPEND voelund_viewport_sources
+    CadViewportHandlers.cpp
     SketchEditorInteraction.cpp
     SketchInteraction.cpp
     SketchViewOrientation.cpp

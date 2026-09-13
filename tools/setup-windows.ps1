@@ -1,25 +1,20 @@
 [CmdletBinding()]
 param(
-    [switch]$SkipConfigure
+    [switch]$SkipConfigure,
+    [switch]$PassThru,
+    [ValidateSet('windows-msvc', 'windows-msvc-native-diagnostic')]
+    [string]$Preset = 'windows-msvc',
+    [ValidatePattern('^[A-Za-z0-9][A-Za-z0-9_-]*$')]
+    [string]$BuildName
 )
 
 $ErrorActionPreference = 'Stop'
 $repositoryRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
 $buildRoot = $repositoryRoot
+Import-Module (Join-Path $PSScriptRoot 'SetupWindowsMapping.psm1') -Force
 
 if ($repositoryRoot -notmatch '^[\x00-\x7F]+$') {
-    $existingMapping = (subst) | Where-Object { $_ -like 'V:\:*' }
-    if ($existingMapping) {
-        $sentinel = 'V:\.voelund-project-root'
-        $expectedSentinel = 'voelund-cad-root-6e25701d-ec07-4e9f-95c4-390df153a07c'
-        if (-not (Test-Path -LiteralPath $sentinel) -or
-            (Get-Content -Raw -LiteralPath $sentinel).Trim() -ne $expectedSentinel) {
-            throw 'V: is already mapped to another location.'
-        }
-    } else {
-        subst V: $repositoryRoot
-    }
-    $buildRoot = 'V:\'
+    $buildRoot = Initialize-VoelundWindowsMapping -RepositoryRoot $repositoryRoot
 }
 
 $vswhere = 'C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe'
@@ -28,7 +23,7 @@ if (-not (Test-Path -LiteralPath $vswhere)) {
 }
 
 $visualStudioRoot = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
-if (-not $visualStudioRoot) {
+if ($LASTEXITCODE -ne 0 -or -not $visualStudioRoot) {
     throw 'A Visual Studio C++ toolchain was not found.'
 }
 
@@ -36,7 +31,9 @@ $vcpkgRoot = Join-Path $buildRoot '.tools\vcpkg'
 if (-not (Test-Path -LiteralPath (Join-Path $vcpkgRoot 'vcpkg.exe'))) {
     New-Item -ItemType Directory -Force -Path (Join-Path $buildRoot '.tools') | Out-Null
     & git clone --depth 1 https://github.com/microsoft/vcpkg.git $vcpkgRoot
+    if ($LASTEXITCODE -ne 0) { throw "vcpkg clone failed with exit code $LASTEXITCODE." }
     & (Join-Path $vcpkgRoot 'bootstrap-vcpkg.bat') -disableMetrics
+    if ($LASTEXITCODE -ne 0) { throw "vcpkg bootstrap failed with exit code $LASTEXITCODE." }
 }
 
 $qtRoot = Join-Path $buildRoot '.tools\qt'
@@ -62,13 +59,21 @@ if (-not (Test-Path -LiteralPath $qtConfig)) {
     }
 }
 
-if ($SkipConfigure) {
-    return
-}
-
 $developerShell = Join-Path $visualStudioRoot 'VC\Auxiliary\Build\vcvars64.bat'
 $cmake = Join-Path $visualStudioRoot 'Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe'
-$command = "`"$developerShell`" >nul && `"$cmake`" --preset windows-msvc"
+$context = [pscustomobject]@{
+    PSTypeName = 'Voelund.WindowsBuildContext'
+    BuildRoot = $buildRoot
+    CMake = $cmake
+    CTest = Join-Path (Split-Path $cmake) 'ctest.exe'
+    DeveloperShell = $developerShell
+}
+if ($SkipConfigure) {
+    if ($PassThru) { $context }
+    return
+}
+$command = "`"$developerShell`" >nul && `"$cmake`" --preset $Preset"
+if ($BuildName) { $command += " -B `"build/$BuildName`"" }
 Push-Location $buildRoot
 try {
     & cmd.exe /d /s /c $command
@@ -78,3 +83,4 @@ try {
 } finally {
     Pop-Location
 }
+if ($PassThru) { $context }

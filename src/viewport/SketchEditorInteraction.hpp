@@ -15,6 +15,7 @@ class SketchEditorInteraction final {
     void begin(const PlanarFaceSelection& support, SketchElementTool tool,
                const occ::handle<V3d_View>& view);
     void cancel() noexcept;
+    void rebindView(const occ::handle<V3d_View>& view) { view_ = view; }
     void setTool(SketchElementTool tool) noexcept;
     void continuePolyline(double x, double y, std::uint64_t elementId) noexcept;
     void setSnapping(bool enabled, double linearStep) noexcept;

@@ -1,0 +1,135 @@
+Internal ctest changing into directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt
+UpdateCTestConfiguration  from :/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/DartConfiguration.tcl
+Parse Config file:/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/DartConfiguration.tcl
+Parse Config file:/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/DartConfiguration.tcl
+Test project /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 5
+    Start 5: platform.atomic_file_store
+
+5: Test command: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests/voelund_atomic_file_tests "/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests"
+5: Working Directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests
+5: Test timeout computed to be: 30
+5: CASE roundtrip
+5: CASE failures
+5: CASE nativeRestrictions
+5: CASE concurrent
+5: PASS atomic replacement, Unicode/binary/empty, all failure stages, partial write, exclusive collision, permissions/locks, concurrent saves and cleanup
+    Test #5: platform.atomic_file_store .......   Passed    0.05 sec
+    Start 5: platform.atomic_file_store
+
+5: Test command: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests/voelund_atomic_file_tests "/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests"
+5: Working Directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests
+5: Test timeout computed to be: 30
+5: CASE roundtrip
+5: CASE failures
+5: CASE nativeRestrictions
+5: CASE concurrent
+5: PASS atomic replacement, Unicode/binary/empty, all failure stages, partial write, exclusive collision, permissions/locks, concurrent saves and cleanup
+    Test #5: platform.atomic_file_store .......   Passed    0.05 sec
+    Start 5: platform.atomic_file_store
+
+5: Test command: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests/voelund_atomic_file_tests "/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests"
+5: Working Directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests
+5: Test timeout computed to be: 30
+5: CASE roundtrip
+5: CASE failures
+5: CASE nativeRestrictions
+5: CASE concurrent
+5: PASS atomic replacement, Unicode/binary/empty, all failure stages, partial write, exclusive collision, permissions/locks, concurrent saves and cleanup
+    Test #5: platform.atomic_file_store .......   Passed    0.06 sec
+    Start 5: platform.atomic_file_store
+
+5: Test command: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests/voelund_atomic_file_tests "/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests"
+5: Working Directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests
+5: Test timeout computed to be: 30
+5: CASE roundtrip
+5: CASE failures
+5: CASE nativeRestrictions
+5: CASE concurrent
+5: PASS atomic replacement, Unicode/binary/empty, all failure stages, partial write, exclusive collision, permissions/locks, concurrent saves and cleanup
+    Test #5: platform.atomic_file_store .......   Passed    0.06 sec
+    Start 5: platform.atomic_file_store
+
+5: Test command: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests/voelund_atomic_file_tests "/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests"
+5: Working Directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests
+5: Test timeout computed to be: 30
+5: CASE roundtrip
+5: CASE failures
+5: CASE nativeRestrictions
+5: CASE concurrent
+5: PASS atomic replacement, Unicode/binary/empty, all failure stages, partial write, exclusive collision, permissions/locks, concurrent saves and cleanup
+    Test #5: platform.atomic_file_store .......   Passed    0.06 sec
+    Start 5: platform.atomic_file_store
+
+5: Test command: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests/voelund_atomic_file_tests "/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests"
+5: Working Directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests
+5: Test timeout computed to be: 30
+5: CASE roundtrip
+5: CASE failures
+5: CASE nativeRestrictions
+5: CASE concurrent
+5: PASS atomic replacement, Unicode/binary/empty, all failure stages, partial write, exclusive collision, permissions/locks, concurrent saves and cleanup
+    Test #5: platform.atomic_file_store .......   Passed    0.03 sec
+    Start 5: platform.atomic_file_store
+
+5: Test command: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests/voelund_atomic_file_tests "/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests"
+5: Working Directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests
+5: Test timeout computed to be: 30
+5: CASE roundtrip
+5: CASE failures
+5: CASE nativeRestrictions
+5: CASE concurrent
+5: PASS atomic replacement, Unicode/binary/empty, all failure stages, partial write, exclusive collision, permissions/locks, concurrent saves and cleanup
+    Test #5: platform.atomic_file_store .......   Passed    0.05 sec
+    Start 5: platform.atomic_file_store
+
+5: Test command: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests/voelund_atomic_file_tests "/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests"
+5: Working Directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests
+5: Test timeout computed to be: 30
+5: CASE roundtrip
+5: CASE failures
+5: CASE nativeRestrictions
+5: CASE concurrent
+5: PASS atomic replacement, Unicode/binary/empty, all failure stages, partial write, exclusive collision, permissions/locks, concurrent saves and cleanup
+    Test #5: platform.atomic_file_store .......   Passed    0.05 sec
+    Start 5: platform.atomic_file_store
+
+5: Test command: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests/voelund_atomic_file_tests "/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests"
+5: Working Directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests
+5: Test timeout computed to be: 30
+5: CASE roundtrip
+5: CASE failures
+5: CASE nativeRestrictions
+5: CASE concurrent
+5: PASS atomic replacement, Unicode/binary/empty, all failure stages, partial write, exclusive collision, permissions/locks, concurrent saves and cleanup
+    Test #5: platform.atomic_file_store .......   Passed    0.04 sec
+    Start 5: platform.atomic_file_store
+
+5: Test command: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests/voelund_atomic_file_tests "/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests"
+5: Working Directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests
+5: Test timeout computed to be: 30
+5: CASE roundtrip
+5: CASE failures
+5: CASE nativeRestrictions
+5: CASE concurrent
+5: PASS atomic replacement, Unicode/binary/empty, all failure stages, partial write, exclusive collision, permissions/locks, concurrent saves and cleanup
+1/1 Test #5: platform.atomic_file_store .......   Passed    0.05 sec
+
+The following tests passed:
+	platform.atomic_file_store
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+platform      =   0.05 sec*proc (1 test)
+regression    =   0.05 sec*proc (1 test)
+unit          =   0.05 sec*proc (1 test)
+
+Total Test time (real) =   0.50 sec

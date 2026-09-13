@@ -6,10 +6,12 @@ Checks: >
   modernize-*,
   performance-*,
   portability-*,
-  readability-*
+  readability-*,
+  -readability-function-cognitive-complexity
 WarningsAsErrors: ''
 HeaderFilterRegex: '^(apps|include|src|tests)/'
 CheckOptions:
   readability-function-size.LineThreshold: 80
-  readability-function-cognitive-complexity.Threshold: 10
+  readability-function-size.NestingThreshold: 4
+  readability-function-size.ParameterThreshold: 5
   readability-identifier-length.MinimumVariableNameLength: 2

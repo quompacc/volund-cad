@@ -1,0 +1,2 @@
+# Preserve raw test evidence without treating its captured whitespace as authored code.
+docs/implementation-plan/evidence/** -whitespace

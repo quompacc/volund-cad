@@ -1,0 +1,75 @@
+{
+  "schema": "voelund-p04-sway-evidence-v1",
+  "date": "2026-09-13",
+  "decision": "ADR 0007",
+  "host": "eduard@192.168.1.238",
+  "remoteSource": "/home/eduard/src/voelund-p04-20260913",
+  "archiveSha256": "ac5350b8c402f4bc227c061d8e1e4ac48c2ee6f17847519d8a09e91d1e70ceb1",
+  "sourceUpdates": [
+    {
+      "file": "tests/CMakeLists.txt",
+      "sha256": "7ada495c7ddda2e9a6513c57cfb1cd6cba5b75c6748768bb478bd8aba1e732fb"
+    },
+    {
+      "file": "tests/desktop/ViewportLifecycleTests.cpp",
+      "sha256": "0b78dd3ec87a4bcc88651d24406fa0eede79dfbc1a8de27015d2f8a64a99e1b9"
+    },
+    {
+      "file": "tests/desktop/ViewportTestAccess.hpp",
+      "sha256": "3abd3ec3f272ea9345c19f57adb6f0b0e58006a8aba5116bb1f385fa8abad90c"
+    }
+  ],
+  "freebsdCTest": {
+    "passed": 23,
+    "total": 23
+  },
+  "windowsRegression": {
+    "passed": 4,
+    "total": 4
+  },
+  "images": [
+    {
+      "file": "voelund-cad-widgets.png",
+      "sha256": "ceb36d0a595e44cde73f2f5a109462158ff1be1e0416d12df0a7e4b7cbad9c6e",
+      "reviewer": "Codex",
+      "status": "visually-reviewed"
+    },
+    {
+      "file": "voelund-ui-preview-widgets.png",
+      "sha256": "d6eec62e17c0d5560a2b61c5317db5a3906bda3dd858c70593c1f44805087572",
+      "reviewer": "Codex",
+      "status": "visually-reviewed"
+    },
+    {
+      "file": "sway-resized.png",
+      "sha256": "7002d975d2f95cccb6fb14213f388a48f135fe64d5af012cd2f38546bf689fa7",
+      "reviewer": "Codex",
+      "status": "visually-reviewed"
+    },
+    {
+      "file": "sway-fullscreen.png",
+      "sha256": "07e26ebacc8ebf03e4c0b342871ff00dd31d6ecee2fd57186265a73a84da2404",
+      "reviewer": "Codex",
+      "status": "visually-reviewed"
+    },
+    {
+      "file": "p02-recreated-framebuffer.png",
+      "sha256": "cb7e65e08e3abe02cb0568589203a0bedf2a55e9ef58b1eab6792d7d1f97effc",
+      "reviewer": "Codex",
+      "status": "visually-reviewed"
+    },
+    {
+      "file": "p02-interacted-framebuffer.png",
+      "sha256": "5ef552654a7f4c0a542faa104a12798bccbf1394700028e31697514c8d193284",
+      "reviewer": "Codex",
+      "status": "visually-reviewed"
+    }
+  ],
+  "meridian": "deferred-to-L07-by-user",
+  "limits": [
+    "GL_INVALID_OPERATION/ENUM and EGL-surface warnings require follow-up; no zero-GL-error claim",
+    "Physical mixed-DPI, portal, suspend/resume not exercised",
+    "Floating resize constrained by application minimum size; fullscreen exercised, no distinct maximize proof",
+    "Input injected through Qt event routing, no physical pointer delivery proof"
+  ]
+}

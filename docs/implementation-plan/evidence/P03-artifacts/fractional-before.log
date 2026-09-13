@@ -1,0 +1,23 @@
+Test project V:/build/p02-qt-final
+    Start 13: desktop.viewport_dpi_1.5
+1/1 Test #13: desktop.viewport_dpi_1.5 .........***Failed    0.67 sec
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+resized: OCCT 1069x775 image 1070x776
+OCCT window/FBO size mismatch
+
+
+0% tests passed, 1 tests failed out of 1
+
+Label Time Summary:
+desktop      =   0.67 sec*proc (1 test)
+dpi          =   0.67 sec*proc (1 test)
+qt-opengl    =   0.67 sec*proc (1 test)
+viewport     =   0.67 sec*proc (1 test)
+
+Total Test time (real) =   0.68 sec
+
+The following tests FAILED:
+	 13 - desktop.viewport_dpi_1.5 (Failed)                 desktop dpi qt-opengl viewport
+Errors while running CTest

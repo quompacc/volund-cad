@@ -1,0 +1,24 @@
+Internal ctest changing into directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt
+Test project /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt
+    Start  5: application.command_contract_compound
+1/5 Test  #5: application.command_contract_compound ...   Passed    0.06 sec
+    Start  6: application.command_contract_errors
+2/5 Test  #6: application.command_contract_errors .....   Passed    0.02 sec
+    Start  7: application.safe_persistence
+3/5 Test  #7: application.safe_persistence ............   Passed    0.25 sec
+    Start 26: architecture.source_limits
+4/5 Test #26: architecture.source_limits ..............   Passed    0.03 sec
+    Start 27: architecture.source_limits_regression
+5/5 Test #27: architecture.source_limits_regression ...   Passed    0.09 sec
+
+100% tests passed, 0 tests failed out of 5
+
+Label Time Summary:
+application     =   0.08 sec*proc (2 tests)
+architecture    =   0.13 sec*proc (2 tests)
+contract        =   0.08 sec*proc (2 tests)
+document        =   0.25 sec*proc (1 test)
+integration     =   0.33 sec*proc (3 tests)
+regression      =   0.37 sec*proc (3 tests)
+
+Total Test time (real) =   0.46 sec

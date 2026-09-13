@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "runId": "p01-windows-native-20260913",
+  "generatedAtUtc": "2026-09-13T07:57:08.1326045Z",
+  "source": {
+    "commit": "1b78229cf4818bf1adc9c956ced661fa7fcea26c",
+    "dirty": true,
+    "fileHashes": [
+      {
+        "path": "CMakeLists.txt",
+        "sha256": "3a8b9b3825f8836cc444c1d095c19769f87d4c550f196c57173cb7e0d2ff0deb"
+      },
+      {
+        "path": "CMakePresets.json",
+        "sha256": "c5a78eb97180fabbe7f6eee261fb4686ff20fda3577b83d8e684b2760403ba49"
+      },
+      {
+        "path": "apps/SmokeSupport.cpp",
+        "sha256": "a7f778f0b79a7342dd4fde4f351f9ebcf3bde016976bdbd09e2beb62407dc0a3"
+      },
+      {
+        "path": "apps/SmokeSupport.hpp",
+        "sha256": "588d3d3d65821aa47d40ee43eb3c2674f87b8197d1da9af82637f55c2967bb57"
+      },
+      {
+        "path": "tools/New-PlatformReport.ps1",
+        "sha256": "6f5cfd7ff88deabbe0669f75331c3a9da4d6427f7e6b8ac8bdf984b0659e4749"
+      },
+      {
+        "path": "tools/Test-PlatformReport.ps1",
+        "sha256": "81fbea3ae37a97655507e408a9adb7ac92a98e8c098df49832da20c5683b76b2"
+      }
+    ]
+  },
+  "configuration": {
+    "id": "windows-native-diagnostic",
+    "platform": "Windows",
+    "osVersion": "Microsoft Windows NT 10.0.26200.0",
+    "buildPreset": "windows-msvc-native-diagnostic",
+    "backend": "native",
+    "qpa": "windows",
+    "compositor": {
+      "value": null,
+      "reason": "Windows desktop compositor identity is not collected by this run."
+    },
+    "compiler": {
+      "path": "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe",
+      "version": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36256 for x64"
+    },
+    "qtVersion": "6.11.1",
+    "occtVersion": "8.0.1",
+    "gl": {
+      "version": "4.6.0 NVIDIA 610.88",
+      "vendor": "NVIDIA Corporation",
+      "renderer": "NVIDIA GeForce RTX 4070 SUPER/PCIe/SSE2",
+      "reason": null
+    },
+    "display": {
+      "dpi": 96,
+      "devicePixelRatio": 1,
+      "scale": null,
+      "width": 839,
+      "height": 851,
+      "reason": null
+    }
+  },
+  "packageStatus": {
+    "P01": "in-progress",
+    "P02": "planned",
+    "P03": "planned",
+    "P04": "planned",
+    "G0": "open"
+  },
+  "matrix": [
+    {
+      "id": "windows-qt-opengl",
+      "operatingSystem": "Windows",
+      "backend": "qt-opengl",
+      "qpa": "windows",
+      "compositor": null,
+      "status": "skipped",
+      "reason": "Not executed in this configuration-specific report."
+    },
+    {
+      "id": "windows-native-diagnostic",
+      "operatingSystem": "Windows",
+      "backend": "native",
+      "qpa": "windows",
+      "compositor": null,
+      "status": "passed",
+      "reason": null
+    },
+    {
+      "id": "freebsd-sway-control",
+      "operatingSystem": "FreeBSD",
+      "backend": "qt-opengl",
+      "qpa": "wayland",
+      "compositor": "Sway",
+      "status": "blocked",
+      "reason": "No documented, authorized FreeBSD Sway host is available in this Windows workspace."
+    },
+    {
+      "id": "freebsd-meridian",
+      "operatingSystem": "FreeBSD",
+      "backend": "qt-opengl",
+      "qpa": "wayland",
+      "compositor": "Meridian",
+      "status": "blocked",
+      "reason": "No documented, authorized FreeBSD Meridian host is available; historical images are not current acceptance evidence."
+    },
+    {
+      "id": "linux-core",
+      "operatingSystem": "Linux",
+      "backend": null,
+      "qpa": null,
+      "compositor": null,
+      "status": "blocked",
+      "reason": "No documented, authorized Linux build host is available in this Windows workspace."
+    }
+  ],
+  "results": [
+    {
+      "id": "desktop-smokes",
+      "status": "passed",
+      "reason": null,
+      "command": "& 'C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\bin\\ctest.exe' --test-dir 'D:\\300_Projekte\\310_Aktiv\\Völund\\build\\p01-windows-native-final-20260913' --output-on-failure --no-tests=error -L desktop --output-junit 'D:\\300_Projekte\\310_Aktiv\\Völund\\docs\\implementation-plan\\evidence\\P01-artifacts\\windows-native\\desktop-ctest.xml'",
+      "exitCode": 0,
+      "artifacts": [
+        "D:\\300_Projekte\\310_Aktiv\\Völund\\docs\\implementation-plan\\evidence\\P01-artifacts\\windows-native\\desktop-ctest.log",
+        "D:\\300_Projekte\\310_Aktiv\\Völund\\docs\\implementation-plan\\evidence\\P01-artifacts\\windows-native\\desktop-ctest.xml"
+      ]
+    }
+  ],
+  "capture": {
+    "status": "visually-reviewed",
+    "method": "SmokeSupport: QWidget::grab plus separate GL framebuffer",
+    "artifacts": [
+      "D:\\300_Projekte\\310_Aktiv\\Völund\\docs\\implementation-plan\\evidence\\P01-artifacts\\windows-native\\desktop-ctest.log",
+      "D:\\300_Projekte\\310_Aktiv\\Völund\\docs\\implementation-plan\\evidence\\P01-artifacts\\windows-native\\desktop-ctest.xml",
+      "D:\\300_Projekte\\310_Aktiv\\Völund\\docs\\implementation-plan\\evidence\\P01-artifacts\\windows-native\\report.json",
+      "D:\\300_Projekte\\310_Aktiv\\Völund\\docs\\implementation-plan\\evidence\\P01-artifacts\\windows-native\\captures\\voelund-cad-framebuffer.png",
+      "D:\\300_Projekte\\310_Aktiv\\Völund\\docs\\implementation-plan\\evidence\\P01-artifacts\\windows-native\\captures\\voelund-cad-widgets.png",
+      "D:\\300_Projekte\\310_Aktiv\\Völund\\docs\\implementation-plan\\evidence\\P01-artifacts\\windows-native\\captures\\voelund-cad.json",
+      "D:\\300_Projekte\\310_Aktiv\\Völund\\docs\\implementation-plan\\evidence\\P01-artifacts\\windows-native\\captures\\voelund-ui-preview-framebuffer.png",
+      "D:\\300_Projekte\\310_Aktiv\\Völund\\docs\\implementation-plan\\evidence\\P01-artifacts\\windows-native\\captures\\voelund-ui-preview-widgets.png",
+      "D:\\300_Projekte\\310_Aktiv\\Völund\\docs\\implementation-plan\\evidence\\P01-artifacts\\windows-native\\captures\\voelund-ui-preview.json"
+    ],
+    "limitation": "Widget and GL-framebuffer captures can show separate layers; neither proves the real desktop compositor."
+  }
+}

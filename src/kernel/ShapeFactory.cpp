@@ -1,6 +1,8 @@
+#include <voelund/kernel/OcctCompatibility.hpp>
 #include <voelund/kernel/ShapeFactory.hpp>
 
 #include <BRepBuilderAPI_Transform.hxx>
+#include <BRepCheck_Analyzer.hxx>
 #include <BRepPrimAPI_MakeBox.hxx>
 #include <BRepPrimAPI_MakeCylinder.hxx>
 #include <gp_Ax1.hxx>
@@ -9,67 +11,155 @@
 #include <gp_Pnt.hxx>
 #include <gp_Trsf.hxx>
 
+#include <cmath>
 #include <numbers>
-#include <stdexcept>
+#include <string>
+#include <utility>
 
 namespace voelund::kernel {
+namespace {
 
-TopoDS_Shape ShapeFactory::makeBox(const BoxDimensions& dimensions)
-{
-    if (dimensions.width <= 0.0 || dimensions.depth <= 0.0 || dimensions.height <= 0.0) {
-        throw std::invalid_argument("Box dimensions must be positive");
-    }
+bool isFinite(double value) { return std::isfinite(value); }
 
-    return BRepPrimAPI_MakeBox(dimensions.width, dimensions.depth, dimensions.height).Shape();
+bool isFinite(const BoxDimensions& dimensions) {
+    return isFinite(dimensions.width) && isFinite(dimensions.depth) && isFinite(dimensions.height);
 }
 
-TopoDS_Shape ShapeFactory::makeCylinder(const CylinderDefinition& definition)
-{
-    if (definition.radius <= 0.0 || definition.height <= 0.0) {
-        throw std::invalid_argument("Cylinder radius and height must be positive");
-    }
-
-    const gp_Ax2 axis(
-        gp_Pnt(definition.originX, definition.originY, definition.originZ),
-        gp_Dir(0.0, 0.0, 1.0));
-    return BRepPrimAPI_MakeCylinder(axis, definition.radius, definition.height).Shape();
+bool isFinite(const CylinderDefinition& definition) {
+    return isFinite(definition.radius) && isFinite(definition.height) &&
+           isFinite(definition.originX) && isFinite(definition.originY) &&
+           isFinite(definition.originZ) && isFinite(definition.axisX) &&
+           isFinite(definition.axisY) && isFinite(definition.axisZ);
 }
 
-TopoDS_Shape ShapeFactory::applyTransform(
-    const TopoDS_Shape& source,
-    double pivotX,
-    double pivotY,
-    double pivotZ,
-    const RigidTransform& definition)
-{
-    TopoDS_Shape shape = source;
-    const gp_Pnt center(pivotX, pivotY, pivotZ);
-    constexpr double degreesToRadians = std::numbers::pi / 180.0;
-    struct Rotation final {
-        gp_Dir axis;
-        double angle;
-    };
-    const Rotation rotations[] = {
-        {gp_Dir(1.0, 0.0, 0.0), definition.rotationX},
-        {gp_Dir(0.0, 1.0, 0.0), definition.rotationY},
-        {gp_Dir(0.0, 0.0, 1.0), definition.rotationZ}};
-    for (const Rotation& rotation : rotations) {
-        if (rotation.angle == 0.0) {
-            continue;
+bool isFinite(const RigidTransform& transform) {
+    return isFinite(transform.translationX) && isFinite(transform.translationY) &&
+           isFinite(transform.translationZ) && isFinite(transform.rotationX) &&
+           isFinite(transform.rotationY) && isFinite(transform.rotationZ);
+}
+
+void requireValidShape(KernelOperation operation, const TopoDS_Shape& shape) {
+    if (shape.IsNull()) {
+        throw KernelError(operation, "operation produced a null shape");
+    }
+    if (!BRepCheck_Analyzer(shape).IsValid()) {
+        throw KernelError(operation, "operation produced an invalid shape");
+    }
+}
+
+template <typename Build> TopoDS_Shape buildShape(KernelOperation operation, Build&& build) {
+    try {
+        const TopoDS_Shape shape = build();
+        requireValidShape(operation, shape);
+        return shape;
+    } catch (const KernelError&) {
+        throw;
+    } catch (const Standard_Failure& failure) {
+        throw KernelError(operation, occtFailureDiagnostic(failure));
+    }
+}
+
+} // namespace
+
+KernelError::KernelError(KernelOperation operation, std::string diagnostic)
+    : std::runtime_error(std::string(kernelOperationName(operation)) + ": " + diagnostic),
+      operation_(operation), diagnostic_(std::move(diagnostic)) {}
+
+KernelOperation KernelError::operation() const noexcept { return operation_; }
+
+const std::string& KernelError::diagnostic() const noexcept { return diagnostic_; }
+
+const char* kernelOperationName(KernelOperation operation) noexcept {
+    switch (operation) {
+    case KernelOperation::makeBox:
+        return "makeBox";
+    case KernelOperation::makeCylinder:
+        return "makeCylinder";
+    case KernelOperation::applyTransform:
+        return "applyTransform";
+    case KernelOperation::fuse:
+        return "fuse";
+    case KernelOperation::cut:
+        return "cut";
+    case KernelOperation::intersect:
+        return "intersect";
+    case KernelOperation::compound:
+        return "compound";
+    }
+    return "unknown";
+}
+
+std::string occtFailureDiagnostic(const Standard_Failure& failure) {
+#if OCC_VERSION_MAJOR >= 8
+    const char* message = failure.what();
+#else
+    const char* message = failure.GetMessageString();
+#endif
+    return message != nullptr && message[0] != '\0' ? message
+                                                    : "OCCT failure without diagnostic message";
+}
+
+TopoDS_Shape ShapeFactory::makeBox(const BoxDimensions& dimensions) {
+    if (!isFinite(dimensions) || dimensions.width <= 0.0 || dimensions.depth <= 0.0 ||
+        dimensions.height <= 0.0) {
+        throw KernelError(KernelOperation::makeBox, "dimensions must be finite and positive");
+    }
+    return buildShape(KernelOperation::makeBox, [&] {
+        return BRepPrimAPI_MakeBox(dimensions.width, dimensions.depth, dimensions.height).Shape();
+    });
+}
+
+TopoDS_Shape ShapeFactory::makeCylinder(const CylinderDefinition& definition) {
+    if (!isFinite(definition) || definition.radius <= 0.0 || definition.height <= 0.0) {
+        throw KernelError(KernelOperation::makeCylinder,
+                          "definition must be finite with positive radius and height");
+    }
+    const double axisLengthSquared = definition.axisX * definition.axisX +
+                                     definition.axisY * definition.axisY +
+                                     definition.axisZ * definition.axisZ;
+    if (axisLengthSquared <= 0.0) {
+        throw KernelError(KernelOperation::makeCylinder, "axis must not be zero");
+    }
+    return buildShape(KernelOperation::makeCylinder, [&] {
+        const gp_Ax2 axis(gp_Pnt(definition.originX, definition.originY, definition.originZ),
+                          gp_Dir(definition.axisX, definition.axisY, definition.axisZ));
+        return BRepPrimAPI_MakeCylinder(axis, definition.radius, definition.height).Shape();
+    });
+}
+
+TopoDS_Shape ShapeFactory::applyTransform(const TopoDS_Shape& source, double pivotX, double pivotY,
+                                          double pivotZ, const RigidTransform& definition) {
+    if (source.IsNull()) {
+        throw KernelError(KernelOperation::applyTransform, "source shape must not be null");
+    }
+    if (!isFinite(pivotX) || !isFinite(pivotY) || !isFinite(pivotZ) || !isFinite(definition)) {
+        throw KernelError(KernelOperation::applyTransform, "pivot and transform must be finite");
+    }
+    return buildShape(KernelOperation::applyTransform, [&] {
+        TopoDS_Shape shape = source;
+        const gp_Pnt center(pivotX, pivotY, pivotZ);
+        constexpr double degreesToRadians = std::numbers::pi / 180.0;
+        struct Rotation final {
+            gp_Dir axis;
+            double angle;
+        };
+        const Rotation rotations[] = {{gp_Dir(1.0, 0.0, 0.0), definition.rotationX},
+                                      {gp_Dir(0.0, 1.0, 0.0), definition.rotationY},
+                                      {gp_Dir(0.0, 0.0, 1.0), definition.rotationZ}};
+        for (const Rotation& rotation : rotations) {
+            if (rotation.angle == 0.0) {
+                continue;
+            }
+            gp_Trsf transform;
+            transform.SetRotation(gp_Ax1(center, rotation.axis), rotation.angle * degreesToRadians);
+            shape = BRepBuilderAPI_Transform(shape, transform, true).Shape();
         }
-        gp_Trsf transform;
-        transform.SetRotation(
-            gp_Ax1(center, rotation.axis),
-            rotation.angle * degreesToRadians);
-        shape = BRepBuilderAPI_Transform(shape, transform, true).Shape();
-    }
-    gp_Trsf translation;
-    translation.SetTranslation(gp_Vec(
-        definition.translationX,
-        definition.translationY,
-        definition.translationZ));
-    shape = BRepBuilderAPI_Transform(shape, translation, true).Shape();
-    return shape;
+        gp_Trsf translation;
+        translation.SetTranslation(
+            gp_Vec(definition.translationX, definition.translationY, definition.translationZ));
+        shape = BRepBuilderAPI_Transform(shape, translation, true).Shape();
+        return shape;
+    });
 }
 
 } // namespace voelund::kernel

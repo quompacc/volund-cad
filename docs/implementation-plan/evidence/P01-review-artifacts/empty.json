@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "runId": "p01-windows-qt-opengl-20260913",
+  "generatedAtUtc": "2026-09-13T07:57:04.1401517Z",
+  "source": null,
+  "configuration": null,
+  "packageStatus": {
+    "P01": "in-progress",
+    "P02": "planned",
+    "P03": "planned",
+    "P04": "planned",
+    "G0": "open"
+  },
+  "matrix": [],
+  "results": [],
+  "capture": null
+}

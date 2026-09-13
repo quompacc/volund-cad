@@ -1,0 +1,20 @@
+Test project V:/build/a03-serializer-20260913
+    Start 15: application.sketch_slot_dimensions
+1/1 Test #15: application.sketch_slot_dimensions ...***Failed    0.18 sec
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 2 redundants
+Slot changed during confirmation: angle=0 radii=5.05547e-05,5.05547e-05
+
+
+0% tests passed, 1 tests failed out of 1
+
+Label Time Summary:
+application    =   0.18 sec*proc (1 test)
+integration    =   0.18 sec*proc (1 test)
+regression     =   0.18 sec*proc (1 test)
+
+Total Test time (real) =   0.19 sec
+
+The following tests FAILED:
+	 15 - application.sketch_slot_dimensions (Failed)       application integration regression
+Errors while running CTest

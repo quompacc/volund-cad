@@ -61,6 +61,7 @@ QWidget#statusBar { background: #090D0A; border-top: 1px solid #282F27; }
 QLabel#statusText { color: #81887D; font-size: 10px; }
 QSplitter::handle { background: #30372F; width: 1px; }
 QScrollArea { background: transparent; border: 0; }
+QWidget#inspectorFieldsContent { background: #111711; }
 QScrollBar:vertical { background: #111611; width: 8px; margin: 0; }
 QScrollBar::handle:vertical { background: #3B4439; border-radius: 4px; min-height: 24px; }
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }

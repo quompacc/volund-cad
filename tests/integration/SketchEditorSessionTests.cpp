@@ -1,5 +1,6 @@
 #include <voelund/application/CadSession.hpp>
 #include <voelund/application/SketchEditorSession.hpp>
+#include "../TestPaths.hpp"
 
 #include <filesystem>
 #include <iostream>
@@ -79,7 +80,7 @@ bool lineClosureRecomputesProfilesAndOpenSketchRoundtrips() {
     static_cast<void>(editor.accept());
 
     const std::filesystem::path path =
-        std::filesystem::current_path() / "voelund-sketch-editor-roundtrip.volund";
+        voelund::test::temporaryFilePath("voelund-sketch-editor-roundtrip.volund");
     session.saveDocument(path);
     voelund::application::CadSession loaded;
     loaded.loadDocument(path);
@@ -164,7 +165,7 @@ bool existingSketchCanBeEditedAsOneTransaction() {
         session.sketchParameters(sketchId) != changed)
         return false;
     const std::filesystem::path path =
-        std::filesystem::current_path() / "voelund-edited-sketch-roundtrip.volund";
+        voelund::test::temporaryFilePath("voelund-edited-sketch-roundtrip.volund");
     session.saveDocument(path);
     voelund::application::CadSession loaded;
     loaded.loadDocument(path);
@@ -259,7 +260,7 @@ bool lineDimensionAndConstraintPersistThroughEditing() {
         return false;
 
     const std::filesystem::path path =
-        std::filesystem::current_path() / "voelund-constrained-sketch-roundtrip.volund";
+        voelund::test::temporaryFilePath("voelund-constrained-sketch-roundtrip.volund");
     session.saveDocument(path);
     voelund::application::CadSession loaded;
     loaded.loadDocument(path);
@@ -299,7 +300,7 @@ bool rectangleDecomposesAndCircleDimensionPersists() {
         return false;
 
     const std::filesystem::path path =
-        std::filesystem::current_path() / "voelund-sized-sketch-roundtrip.volund";
+        voelund::test::temporaryFilePath("voelund-sized-sketch-roundtrip.volund");
     session.saveDocument(path);
     voelund::application::CadSession loaded;
     loaded.loadDocument(path);

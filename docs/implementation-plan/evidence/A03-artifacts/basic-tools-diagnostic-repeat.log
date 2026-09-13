@@ -1,0 +1,41 @@
+Test project V:/build/a03-serializer-20260913
+    Start 14: application.sketch_basic_tools
+    Test #14: application.sketch_basic_tools ...   Passed    0.30 sec
+    Start 14: application.sketch_basic_tools
+    Test #14: application.sketch_basic_tools ...   Passed    0.39 sec
+    Start 14: application.sketch_basic_tools
+    Test #14: application.sketch_basic_tools ...   Passed    0.28 sec
+    Start 14: application.sketch_basic_tools
+    Test #14: application.sketch_basic_tools ...   Passed    0.28 sec
+    Start 14: application.sketch_basic_tools
+    Test #14: application.sketch_basic_tools ...   Passed    0.28 sec
+    Start 14: application.sketch_basic_tools
+    Test #14: application.sketch_basic_tools ...   Passed    0.28 sec
+    Start 14: application.sketch_basic_tools
+    Test #14: application.sketch_basic_tools ...   Passed    0.28 sec
+    Start 14: application.sketch_basic_tools
+    Test #14: application.sketch_basic_tools ...   Passed    0.28 sec
+    Start 14: application.sketch_basic_tools
+    Test #14: application.sketch_basic_tools ...   Passed    0.38 sec
+    Start 14: application.sketch_basic_tools
+    Test #14: application.sketch_basic_tools ...   Passed    0.40 sec
+    Start 14: application.sketch_basic_tools
+    Test #14: application.sketch_basic_tools ...***Failed    0.21 sec
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 2 redundants
+slot caps: right=12 left=-5.06395e-05
+slot caps: elements=4 profiles=1 accept=1 solve=0 dof=8 conflicts=0
+Compound sketch drawing tools failed
+
+
+0% tests passed, 1 tests failed out of 1
+
+Label Time Summary:
+application    =   0.21 sec*proc (1 test)
+integration    =   0.21 sec*proc (1 test)
+
+Total Test time (real) =   3.36 sec
+
+The following tests FAILED:
+	 14 - application.sketch_basic_tools (Failed)           application integration
+Errors while running CTest

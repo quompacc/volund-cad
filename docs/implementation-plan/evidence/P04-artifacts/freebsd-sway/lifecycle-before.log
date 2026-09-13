@@ -1,0 +1,97 @@
+Internal ctest changing into directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt
+UpdateCTestConfiguration  from :/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/DartConfiguration.tcl
+Parse Config file:/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/DartConfiguration.tcl
+Parse Config file:/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/DartConfiguration.tcl
+Test project /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 11
+    Start 11: desktop.viewport_lifecycle_qt
+
+11: Test command: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests/voelund_viewport_lifecycle_tests
+11: Working Directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests
+11: Environment variables: 
+11:  QT_QPA_PLATFORM=wayland
+11: Test timeout computed to be: 45
+11: [32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+11:   Unhandled GL error: GL_INVALID_OPERATION[0m
+11: [32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+11:   OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![0m
+11: [32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+11:   Unhandled GL error: GL_INVALID_OPERATION[0m
+11: [32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+11:   OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![0m
+11: [32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+11:   Unhandled GL error: GL_INVALID_OPERATION[0m
+11: [32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+11:   OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![0m
+11: [32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+11:   Unhandled GL error: GL_INVALID_OPERATION[0m
+11: [32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+11:   OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![0m
+11: [32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+11:   Unhandled GL error: GL_INVALID_OPERATION[0m
+11: [32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+11:   OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![0m
+11: [32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+11:   Unhandled GL error: GL_INVALID_OPERATION[0m
+11: [32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+11:   OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![0m
+11: [32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+11:   Unhandled GL error: GL_INVALID_OPERATION[0m
+11: [32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+11:   OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![0m
+11: [32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+11:   Unhandled GL error: GL_INVALID_OPERATION[0m
+11: [32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+11:   OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![0m
+11: [32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+11:   Unhandled GL error: GL_INVALID_OPERATION[0m
+11: [32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+11:   OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![0m
+11: [32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+11:   Unhandled GL error: GL_INVALID_OPERATION[0m
+11: [32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+11:   OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![0m
+11: PASS ten unshown/shown destruction cycles
+11: [32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+11:   Unhandled GL error: GL_INVALID_OPERATION[0m
+11: [32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+11:   OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![0m
+11: Viewport initialization failed: P02 injected initialization failure
+11: [32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+11:   Unhandled GL error: GL_INVALID_ENUM[0m
+11: [32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+11:   OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![0m
+11: [32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+11:   Unhandled GL error: GL_INVALID_ENUM[0m
+11: PASS idempotent cleanup, partial failure and recovery
+11: [32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+11:   Unhandled GL error: GL_INVALID_OPERATION[0m
+11: [32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+11:   OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![0m
+11: Manipulator drag did not issue a move intent
+1/1 Test #11: desktop.viewport_lifecycle_qt ....***Failed    1.25 sec
+
+0% tests passed, 1 tests failed out of 1
+
+Label Time Summary:
+desktop      =   1.25 sec*proc (1 test)
+freebsd      =   1.25 sec*proc (1 test)
+lifecycle    =   1.25 sec*proc (1 test)
+qt-opengl    =   1.25 sec*proc (1 test)
+viewport     =   1.25 sec*proc (1 test)
+wayland      =   1.25 sec*proc (1 test)
+
+Total Test time (real) =   1.25 sec
+
+The following tests FAILED:
+	 11 - desktop.viewport_lifecycle_qt (Failed)            desktop freebsd lifecycle qt-opengl viewport wayland
+Errors while running CTest
+Output from these tests are in: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/Testing/Temporary/LastTest.log
+Use "--rerun-failed --output-on-failure" to re-run the failed cases verbosely.

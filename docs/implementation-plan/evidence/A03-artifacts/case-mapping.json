@@ -1,0 +1,149 @@
+[
+  {
+    "case": "cylinderBooleanModesProduceExpectedVolumes",
+    "present": true,
+    "sameIgnoringWhitespace": true,
+    "called": true,
+    "file": "tests/integration/CadSessionHistoryTests.cpp"
+  },
+  {
+    "case": "cylinderCanProduceSeparateBodies",
+    "present": true,
+    "sameIgnoringWhitespace": true,
+    "called": true,
+    "file": "tests/integration/CadSessionHistoryTests.cpp"
+  },
+  {
+    "case": "disconnectedCutReportsAnErrorAndKeepsLastValidShape",
+    "present": true,
+    "sameIgnoringWhitespace": true,
+    "called": true,
+    "file": "tests/integration/CadSessionHistoryTests.cpp"
+  },
+  {
+    "case": "disconnectedJoinReportsAnErrorAndKeepsLastValidShape",
+    "present": true,
+    "sameIgnoringWhitespace": true,
+    "called": true,
+    "file": "tests/integration/CadSessionHistoryTests.cpp"
+  },
+  {
+    "case": "graphEvaluatesAdditionalFeatures",
+    "present": true,
+    "sameIgnoringWhitespace": true,
+    "called": true,
+    "file": "tests/integration/CadSessionHistoryTests.cpp"
+  },
+  {
+    "case": "joinedResultMovesAsOneBodyAndSupportsUndo",
+    "present": true,
+    "sameIgnoringWhitespace": true,
+    "called": true,
+    "file": "tests/integration/CadSessionHistoryTests.cpp"
+  },
+  {
+    "case": "multipleSketchElementsExtrudeAllClosedProfiles",
+    "present": true,
+    "sameIgnoringWhitespace": false,
+    "called": true,
+    "file": "tests/integration/CadSessionPersistenceTests.cpp"
+  },
+  {
+    "case": "newDocumentIsEmptyCleanAndReadyForItsFirstFeature",
+    "present": true,
+    "sameIgnoringWhitespace": true,
+    "called": true,
+    "file": "tests/integration/CadSessionEvaluationTests.cpp"
+  },
+  {
+    "case": "projectedSupportPointsFollowChangedEdges",
+    "present": true,
+    "sameIgnoringWhitespace": true,
+    "called": true,
+    "file": "tests/integration/CadSessionEvaluationTests.cpp"
+  },
+  {
+    "case": "recomputeTracksDocumentHistory",
+    "present": true,
+    "sameIgnoringWhitespace": true,
+    "called": true,
+    "file": "tests/integration/CadSessionHistoryTests.cpp"
+  },
+  {
+    "case": "repeatedSketchExtrusionsRemainConnected",
+    "present": true,
+    "sameIgnoringWhitespace": true,
+    "called": true,
+    "file": "tests/integration/CadSessionEvaluationTests.cpp"
+  },
+  {
+    "case": "selectedSketchProfilesExtrudeAndRoundtrip",
+    "present": true,
+    "sameIgnoringWhitespace": false,
+    "called": true,
+    "file": "tests/integration/CadSessionPersistenceTests.cpp"
+  },
+  {
+    "case": "selectionUsesStableFeatureIdentity",
+    "present": true,
+    "sameIgnoringWhitespace": true,
+    "called": true,
+    "file": "tests/integration/CadSessionHistoryTests.cpp"
+  },
+  {
+    "case": "separateBoxPlacementIsParametricAndUndoable",
+    "present": true,
+    "sameIgnoringWhitespace": true,
+    "called": true,
+    "file": "tests/integration/CadSessionEvaluationTests.cpp"
+  },
+  {
+    "case": "separateCylinderDoesNotFollowItsFormerInput",
+    "present": true,
+    "sameIgnoringWhitespace": true,
+    "called": true,
+    "file": "tests/integration/CadSessionHistoryTests.cpp"
+  },
+  {
+    "case": "separateCylinderMovesIndependentlyAndSupportsUndo",
+    "present": true,
+    "sameIgnoringWhitespace": true,
+    "called": true,
+    "file": "tests/integration/CadSessionHistoryTests.cpp"
+  },
+  {
+    "case": "separateCylinderRotationIsParametricAndUndoable",
+    "present": true,
+    "sameIgnoringWhitespace": true,
+    "called": true,
+    "file": "tests/integration/CadSessionHistoryTests.cpp"
+  },
+  {
+    "case": "sessionCreatesFeaturesAndRestoresTheirHistory",
+    "present": true,
+    "sameIgnoringWhitespace": true,
+    "called": true,
+    "file": "tests/integration/CadSessionEvaluationTests.cpp"
+  },
+  {
+    "case": "sessionFileRoundtripRestoresTheDocument",
+    "present": true,
+    "sameIgnoringWhitespace": false,
+    "called": true,
+    "file": "tests/integration/CadSessionPersistenceTests.cpp"
+  },
+  {
+    "case": "sketchExtrusionIsParametricAndUndoable",
+    "present": true,
+    "sameIgnoringWhitespace": true,
+    "called": true,
+    "file": "tests/integration/CadSessionEvaluationTests.cpp"
+  },
+  {
+    "case": "sketchSupportFollowsChangedFace",
+    "present": true,
+    "sameIgnoringWhitespace": true,
+    "called": true,
+    "file": "tests/integration/CadSessionEvaluationTests.cpp"
+  }
+]

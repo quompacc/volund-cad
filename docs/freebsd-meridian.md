@@ -1,5 +1,7 @@
 # FreeBSD and Meridian development target
 
+> Aktuelle Reihenfolge gemäß [ADR 0007](adr/0007-sway-development-meridian-final.md): CAD-Entwicklung und laufende Abnahme auf FreeBSD/Sway; Meridian erst abschließend in L07. Der folgende Meridian-Vertrag bleibt das spätere Integrationsziel.
+
 ## Purpose
 
 FreeBSD with Meridian is Völund's primary desktop target. Windows remains the fast

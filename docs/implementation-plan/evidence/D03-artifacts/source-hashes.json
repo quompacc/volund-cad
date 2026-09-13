@@ -1,0 +1,38 @@
+[
+  {
+    "path": "include/voelund/application/CadSession.hpp",
+    "sha256": "b34f9981e2674f195533088e2cce0a1eff6151e829db8016580c69e58a90815a"
+  },
+  {
+    "path": "src/application/CadSession.cpp",
+    "sha256": "6b2fc60674648ecfd50c546ff0f51495a3ba6209f37e801c43550f4c5897e7c6"
+  },
+  {
+    "path": "src/application/CadSessionPersistence.cpp",
+    "sha256": "d97310d3072470dab1535cb9f4ec2efc19b8e9989542934648aab8209316f6fc"
+  },
+  {
+    "path": "src/application/CMakeLists.txt",
+    "sha256": "87d044c163837b84af8d49752f3dcb5784f6450efd334fe3c5cda7dd8b26ad24"
+  },
+  {
+    "path": "src/desktop/DocumentActions.cpp",
+    "sha256": "3abc7e30185387aa81c35f799375fd40cd8918e002dc738695baad29a643e377"
+  },
+  {
+    "path": "src/desktop/DocumentActions.hpp",
+    "sha256": "dd72e5d68bb7d43b0a1d12091fe65575656f521374f31657f105fba660fd8cc0"
+  },
+  {
+    "path": "tests/CMakeLists.txt",
+    "sha256": "b784721d1a53498b573745de4532c24051f37824def8abd4968a8db199642ef8"
+  },
+  {
+    "path": "tests/integration/CadSessionSafePersistenceTests.cpp",
+    "sha256": "944c636cd93b431dbabc6001af86b7553e031d48bd81c2b4607e70a2f3b3e23b"
+  },
+  {
+    "path": "tests/desktop/DocumentActionsTests.cpp",
+    "sha256": "772b5d4dbf89a97a8cb82d7d9989df73270b68ae39b180e03687489b117bce72"
+  }
+]

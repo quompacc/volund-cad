@@ -1,0 +1,317 @@
+{
+  "runtime": {
+    "directory": "captures",
+    "reason": null,
+    "status": "passed",
+    "artifacts": [
+      {
+        "sha256": "ce52b6e95cdb773aa800ca2a8e3eee98e9216b1d15f88961f1098ac2d292ab8b",
+        "path": "captures\\voelund-cad.json"
+      },
+      {
+        "sha256": "1485a81487b9ac7f2f3a2016ac07e302963f2eff003237a13a5d08e6b450bed3",
+        "path": "captures\\voelund-cad-widgets.png"
+      },
+      {
+        "sha256": "430c652ab747c88913cdabf40dc7e83e5cacd95d1fc19bfb5fbc769efed58450",
+        "path": "captures\\voelund-cad-framebuffer.png"
+      },
+      {
+        "sha256": "7834dde30df9381c80b64c9fc46f533d7718a420a13f9fffe1a13d1ce7473dc0",
+        "path": "captures\\voelund-ui-preview.json"
+      },
+      {
+        "sha256": "c3bc169e9673ef9b0995cbc6b8d478abb6b41daac444332300237e87122e666a",
+        "path": "captures\\voelund-ui-preview-widgets.png"
+      },
+      {
+        "sha256": "db5582115ff903b73dd7bd47608a3a3ae563ebc6bbff0fee7131e9c39c346904",
+        "path": "captures\\voelund-ui-preview-framebuffer.png"
+      }
+    ],
+    "applications": {
+      "voelund-cad": {
+        "backend": "native",
+        "capture": "QWidget::grab and separate framebuffer; no compositor proof",
+        "courierFontAvailable": false,
+        "dpi": 96,
+        "dpr": 1,
+        "gl": "4.6.0 NVIDIA 610.88",
+        "height": 851,
+        "occt": "8.0.1",
+        "os": "Windows 11 Version 25H2",
+        "qpa": "windows",
+        "qt": "6.11.1",
+        "renderer": "NVIDIA GeForce RTX 4070 SUPER/PCIe/SSE2",
+        "vendor": "NVIDIA Corporation",
+        "width": 839
+      },
+      "voelund-ui-preview": {
+        "backend": "native",
+        "capture": "QWidget::grab and separate framebuffer; no compositor proof",
+        "courierFontAvailable": false,
+        "dpi": 96,
+        "dpr": 1,
+        "gl": "4.6.0 NVIDIA 610.88",
+        "height": 659,
+        "occt": "8.0.1",
+        "os": "Windows 11 Version 25H2",
+        "qpa": "windows",
+        "qt": "6.11.1",
+        "renderer": "NVIDIA GeForce RTX 4070 SUPER/PCIe/SSE2",
+        "vendor": "NVIDIA Corporation",
+        "width": 1251
+      }
+    }
+  },
+  "results": [
+    {
+      "artifacts": [
+        {
+          "path": "build.log",
+          "sha256": "9d94f2226bf6404785183f105b728d19d28f2da1f91540e232c5940d91d3aeb4"
+        }
+      ],
+      "configurationId": "windows-native-diagnostic",
+      "reason": null,
+      "command": "\"C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat\" >nul && \"C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\bin\\cmake.exe\" --build \"V:\\build\\p02-native-review\" --parallel 6",
+      "id": "build",
+      "exitCode": 0,
+      "status": "passed"
+    },
+    {
+      "reason": null,
+      "status": "passed",
+      "exitCode": 0,
+      "id": "ctest",
+      "junit": {
+        "path": "ctest.xml",
+        "sha256": "6c3cbbb4b6fdda38e0df252f45dcb1128d5c177a4b4c8e5d8ad5ae7092b28237"
+      },
+      "configurationId": "windows-native-diagnostic",
+      "artifacts": [
+        {
+          "path": "ctest.log",
+          "sha256": "8786a2708538e7eefee854ad0c87cdacb3fdd2492fc214350acd9304d17352df"
+        },
+        {
+          "path": "ctest.xml",
+          "sha256": "6c3cbbb4b6fdda38e0df252f45dcb1128d5c177a4b4c8e5d8ad5ae7092b28237"
+        }
+      ],
+      "command": "& 'C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\bin\\ctest.exe' --test-dir 'V:\\build\\p02-native-review' --output-on-failure --no-tests=error --output-junit 'D:\\300_Projekte\\310_Aktiv\\Völund\\docs\\implementation-plan\\evidence\\P02-artifacts\\native-20260913\\ctest.xml'"
+    }
+  ],
+  "matrix": [
+    {
+      "status": "skipped",
+      "qpa": "windows",
+      "id": "windows-qt-opengl",
+      "operatingSystem": "Windows",
+      "resultIds": [],
+      "compositor": null,
+      "backend": "qt-opengl",
+      "reason": "Separate configuration report required."
+    },
+    {
+      "status": "passed",
+      "qpa": "windows",
+      "id": "windows-native-diagnostic",
+      "operatingSystem": "Windows",
+      "resultIds": [
+        "build",
+        "ctest"
+      ],
+      "compositor": null,
+      "backend": "native",
+      "reason": null
+    },
+    {
+      "status": "blocked",
+      "qpa": "wayland",
+      "id": "freebsd-sway-control",
+      "operatingSystem": "FreeBSD",
+      "resultIds": [],
+      "compositor": "Sway",
+      "backend": "qt-opengl",
+      "reason": "No documented authorized target host in this workspace inventory; not executed."
+    },
+    {
+      "status": "blocked",
+      "qpa": "wayland",
+      "id": "freebsd-meridian",
+      "operatingSystem": "FreeBSD",
+      "resultIds": [],
+      "compositor": "Meridian",
+      "backend": "qt-opengl",
+      "reason": "No documented authorized target host in this workspace inventory; not executed."
+    },
+    {
+      "status": "blocked",
+      "qpa": null,
+      "id": "linux-core",
+      "operatingSystem": "Linux",
+      "resultIds": [],
+      "compositor": null,
+      "backend": null,
+      "reason": "No documented authorized target host in this workspace inventory; not executed."
+    }
+  ],
+  "source": {
+    "dirty": true,
+    "before": "75f2a002ec67e46097207229dc2bb3f36de7188a5b281f14ee8b125eb571469d",
+    "after": "75f2a002ec67e46097207229dc2bb3f36de7188a5b281f14ee8b125eb571469d",
+    "snapshot": {
+      "sha256": "41fb44a2bff931962582f39b3589a678649bf9f95c0454364f0a942c7e99c315",
+      "path": "source.json"
+    },
+    "commit": "1b78229cf4818bf1adc9c956ced661fa7fcea26c"
+  },
+  "generatedAtUtc": "2026-09-13T16:00:39.0630490Z",
+  "packageStatus": {
+    "D12": "planned",
+    "S11": "planned",
+    "X09": "planned",
+    "U01": "planned",
+    "R01": "planned",
+    "X15": "planned",
+    "X17": "planned",
+    "R07": "planned",
+    "S12": "planned",
+    "U11": "planned",
+    "X13": "planned",
+    "X03": "planned",
+    "M04": "planned",
+    "R03": "planned",
+    "D05": "planned",
+    "A07": "done",
+    "R08": "planned",
+    "X10": "planned",
+    "U05": "planned",
+    "X01": "planned",
+    "X06": "planned",
+    "D08": "planned",
+    "M15": "planned",
+    "A05": "done",
+    "S07": "planned",
+    "S06": "planned",
+    "S04": "planned",
+    "M09": "planned",
+    "S02": "planned",
+    "D07": "planned",
+    "R10": "planned",
+    "X19": "planned",
+    "U07": "planned",
+    "L01": "planned",
+    "A01": "done",
+    "M06": "planned",
+    "M05": "planned",
+    "U09": "planned",
+    "D02": "planned",
+    "M18": "planned",
+    "X18": "planned",
+    "L08": "planned",
+    "L07": "planned",
+    "S08": "planned",
+    "R02": "planned",
+    "S05": "planned",
+    "D06": "planned",
+    "P04": "planned",
+    "X14": "planned",
+    "D03": "planned",
+    "M01": "planned",
+    "S10": "planned",
+    "X20": "planned",
+    "A02": "needs-design",
+    "X07": "planned",
+    "L09": "planned",
+    "P01": "done",
+    "M10": "planned",
+    "M17": "planned",
+    "X05": "planned",
+    "L04": "planned",
+    "A08": "done",
+    "U10": "planned",
+    "D04": "planned",
+    "X16": "planned",
+    "M07": "planned",
+    "X12": "planned",
+    "P02": "in-progress",
+    "D09": "planned",
+    "D13": "planned",
+    "M02": "planned",
+    "D11": "planned",
+    "R06": "planned",
+    "D01": "planned",
+    "M12": "planned",
+    "S13": "planned",
+    "L02": "planned",
+    "A04": "planned",
+    "U12": "planned",
+    "U04": "planned",
+    "L06": "planned",
+    "U08": "planned",
+    "L05": "planned",
+    "D10": "planned",
+    "U02": "planned",
+    "R09": "planned",
+    "L10": "planned",
+    "S03": "planned",
+    "M11": "planned",
+    "X02": "planned",
+    "S01": "planned",
+    "X08": "planned",
+    "M16": "planned",
+    "U03": "planned",
+    "M13": "planned",
+    "A06": "done",
+    "X11": "planned",
+    "S14": "planned",
+    "M14": "planned",
+    "X04": "planned",
+    "L03": "planned",
+    "P03": "planned",
+    "A03": "done",
+    "D14": "planned",
+    "M03": "planned",
+    "R04": "planned",
+    "U06": "planned",
+    "R05": "planned",
+    "M08": "planned",
+    "S09": "planned"
+  },
+  "buildEvidence": [
+    {
+      "path": "build.log",
+      "sha256": "9d94f2226bf6404785183f105b728d19d28f2da1f91540e232c5940d91d3aeb4"
+    },
+    {
+      "path": "CMakeCache.txt",
+      "sha256": "e8c2defdfe8126cdba6669c0c96419d4b8b0d26cd46a5437a0e1b7f22d065ff0"
+    },
+    {
+      "path": "binaries.json",
+      "sha256": "af3b0e6fbda0c197d78c55cfacc911bb581762b7f478abfc507087b445f9e191"
+    }
+  ],
+  "capture": {
+    "status": "captured-not-reviewed",
+    "method": "QWidget::grab and separate GL framebuffer; no compositor proof."
+  },
+  "schemaVersion": 2,
+  "runId": "native-20260913",
+  "configuration": {
+    "backend": "native",
+    "displayScope": "Per-application logical DPI, DPR and framebuffer dimensions are in runtime.applications. Physical monitor identity and OS scaling are not observed; DPR is not a physical-display proof.",
+    "buildPreset": "windows-msvc-native-diagnostic",
+    "osVersion": "Microsoft Windows NT 10.0.26200.0",
+    "id": "windows-native-diagnostic",
+    "compositorReason": "Desktop compositor identity not observed by this internal Qt capture.",
+    "qpa": "windows",
+    "platform": "Windows",
+    "compiler": {
+      "path": "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe",
+      "version": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36256 for x64"
+    }
+  }
+}

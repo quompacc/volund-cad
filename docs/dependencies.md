@@ -23,7 +23,31 @@ The C++ standard library is used for general containers, strings, algorithms, er
 | MSVC / GCC / Clang | compile and link | no |
 | CTest | discover and run native tests | no |
 
-On Windows, Qt Base is taken from Qt's official prebuilt archive instead of being built through vcpkg. This avoids vcpkg's large Qt host-tool dependency graph. On FreeBSD, system packages are the initial build input; release packaging must derive its library list from the final executable dependency graph, never from a complete SDK directory. Linux uses distribution packages for its compatibility build.
+On Windows, Qt Base is taken from Qt's official prebuilt archive instead of being built through vcpkg. This avoids vcpkg's large Qt host-tool dependency graph. On FreeBSD, system packages are the initial build input; release packaging must derive its library list from the final executable dependency graph, never from a complete SDK directory.
+
+Linux is a non-product compatibility path and uses the same pinned vcpkg
+toolchain as Windows for OCCT, Eigen and Boost; `linux-gcc` deliberately keeps
+the desktop disabled. It does not claim that a distribution package mix is the
+reproducible product input. FreeBSD remains the separate system-package/
+project-local-OCCT path documented below.
+
+For the FreeBSD solver build, install package `eigen` from `math/eigen3` and `boost-libs` from `devel/boost-libs`
+(the latter deliberately excludes Boost.Python) from the selected package branch,
+then verify the resolved versions before configuring:
+
+```sh
+pkg install eigen boost-libs
+pkg info eigen boost-libs
+```
+
+The exact package version follows the selected `latest` or `quarterly` repository;
+the official Ports tree identifies the Eigen package/origin in its
+[Ceres dependency declaration](https://cgit.freebsd.org/ports/tree/math/ceres-solver/Makefile?id=70a626a6448663cca56f9193ab3889b771fa4d51)
+and defines the Boost package in
+[devel/boost-libs](https://cgit.freebsd.org/ports/tree/devel/boost-libs/Makefile?id=d5d82c5ff9a1069d6e0382029cc8f99d324c9e0b).
+Check Eigen >=3.4 and Boost >=1.75 on the actual target. Installed package contents
+do not authorize shipping every contained library; runtime packaging stays limited
+to the dependencies actually required by Völund.
 
 On FreeBSD, Qt's native Wayland platform integration owns the surface and the
 OpenGL/EGL context. Völund does not add a direct X11 dependency, and OCCT's `Xw_Window`

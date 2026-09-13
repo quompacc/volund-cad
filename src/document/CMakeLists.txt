@@ -1,6 +1,10 @@
 add_library(voelund_document STATIC
     DocumentSerializer.cpp
+    DocumentSerializerSupport.cpp
+    DocumentSerializerWriter.cpp
     ModelDocument.cpp
+    ModelDocumentHistory.cpp
+    DocumentTransaction.cpp
     SketchConstraintSerialization.cpp
     SketchGeometry.cpp
 )

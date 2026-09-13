@@ -1,0 +1,45 @@
+UpdateCTestConfiguration  from :V:/build/d05-release/DartConfiguration.tcl
+Parse Config file:V:/build/d05-release/DartConfiguration.tcl
+Test project V:/build/d05-release
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 5
+    Start 5: document.transactions
+
+5: Test command: V:\build\d05-release\tests\voelund_document_transaction_tests.exe
+5: Working Directory: V:/build/d05-release/tests
+5: Test timeout computed to be: 60
+5: Document transaction tests passed
+1/2 Test #5: document.transactions ......................   Passed    0.02 sec
+test 6
+    Start 6: document.transaction_allocation_failures
+
+6: Test command: V:\build\d05-release\tests\voelund_document_transaction_tests.exe "--allocations"
+6: Working Directory: V:/build/d05-release/tests
+6: Test timeout computed to be: 60
+6: Prepared commit requires no allocation
+6: sketch edit: 14 allocation failures preserved state
+6: single mutation: 7 allocation failures preserved state
+6: compound transaction: 21 allocation failures preserved state
+6: undo: 3 allocation failures preserved state
+6: redo: 2 allocation failures preserved state
+6: Document transaction tests passed
+2/2 Test #6: document.transaction_allocation_failures ...   Passed    0.01 sec
+
+The following tests passed:
+	document.transactions
+	document.transaction_allocation_failures
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+allocation    =   0.01 sec*proc (1 test)
+document      =   0.03 sec*proc (2 tests)
+regression    =   0.03 sec*proc (2 tests)
+unit          =   0.03 sec*proc (2 tests)
+
+Total Test time (real) =   0.04 sec

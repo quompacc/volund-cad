@@ -164,6 +164,15 @@ void TransformManipulator::detach()
     }
 }
 
+void TransformManipulator::resetPresentation() {
+    detach();
+    impl_->manipulator = new AIS_Manipulator();
+    impl_->manipulator->SetPart(AIS_MM_Scaling, false);
+    impl_->manipulator->SetModeActivationOnDetection(true);
+    impl_->manipulator->SetZoomPersistence(true);
+    impl_->manipulator->SetSize(80.0f);
+}
+
 bool TransformManipulator::matches(
     const occ::handle<AIS_InteractiveObject>& interactiveObject) const noexcept
 {

@@ -1,0 +1,89 @@
+Test project V:/build/p02-qt-final
+      Start  1: desktop.viewport_startup
+ 1/32 Test  #1: desktop.viewport_startup ...................   Passed    1.55 sec
+      Start  2: desktop.viewport_startup.uninitialized
+ 2/32 Test  #2: desktop.viewport_startup.uninitialized .....   Passed    0.18 sec
+      Start  3: desktop.ui_preview_startup
+ 3/32 Test  #3: desktop.ui_preview_startup .................   Passed    1.75 sec
+      Start  4: desktop.ui_preview_startup.uninitialized
+ 4/32 Test  #4: desktop.ui_preview_startup.uninitialized ...   Passed    0.19 sec
+      Start  5: application.safe_persistence
+ 5/32 Test  #5: application.safe_persistence ...............   Passed    2.15 sec
+      Start  6: document.parser_limits_and_versions
+ 6/32 Test  #6: document.parser_limits_and_versions ........   Passed    6.14 sec
+      Start  7: platform.atomic_file_store
+ 7/32 Test  #7: platform.atomic_file_store .................   Passed    1.02 sec
+      Start  8: kernel.shape_factory
+ 8/32 Test  #8: kernel.shape_factory .......................   Passed    0.04 sec
+      Start  9: document.history
+ 9/32 Test  #9: document.history ...........................   Passed    0.01 sec
+      Start 10: features.sketch_profiles
+10/32 Test #10: features.sketch_profiles ...................   Passed    0.13 sec
+      Start 11: features.planegcs_solver
+11/32 Test #11: features.planegcs_solver ...................   Passed    0.01 sec
+      Start 12: features.sketch_constraint_adapter
+12/32 Test #12: features.sketch_constraint_adapter .........   Passed    0.01 sec
+      Start 13: application.recompute_history
+13/32 Test #13: application.recompute_history ..............   Passed    4.63 sec
+      Start 14: desktop.document_actions
+14/32 Test #14: desktop.document_actions ...................   Passed    1.37 sec
+      Start 15: desktop.viewport_lifecycle_qt
+15/32 Test #15: desktop.viewport_lifecycle_qt ..............   Passed    2.64 sec
+      Start 16: desktop.viewport_dpi_1
+16/32 Test #16: desktop.viewport_dpi_1 .....................   Passed    9.71 sec
+      Start 17: desktop.viewport_dpi_1.5
+17/32 Test #17: desktop.viewport_dpi_1.5 ...................   Passed    9.77 sec
+      Start 18: desktop.viewport_dpi_2
+18/32 Test #18: desktop.viewport_dpi_2 .....................   Passed    9.87 sec
+      Start 19: application.sketch_editor_flow
+19/32 Test #19: application.sketch_editor_flow .............   Passed    1.93 sec
+      Start 20: application.sketch_construction
+20/32 Test #20: application.sketch_construction ............   Passed    0.23 sec
+      Start 21: application.sketch_circle_constraints
+21/32 Test #21: application.sketch_circle_constraints ......   Passed    0.17 sec
+      Start 22: application.sketch_alignments
+22/32 Test #22: application.sketch_alignments ..............   Passed    0.16 sec
+      Start 23: application.sketch_fix_distance
+23/32 Test #23: application.sketch_fix_distance ............   Passed    0.09 sec
+      Start 24: application.sketch_basic_tools
+24/32 Test #24: application.sketch_basic_tools .............   Passed    0.45 sec
+      Start 25: application.sketch_slot_dimensions
+25/32 Test #25: application.sketch_slot_dimensions .........   Passed    0.31 sec
+      Start 26: workspaces.module_registry
+26/32 Test #26: workspaces.module_registry .................   Passed    0.01 sec
+      Start 27: architecture.source_limits
+27/32 Test #27: architecture.source_limits .................   Passed    0.05 sec
+      Start 28: architecture.source_limits_regression
+28/32 Test #28: architecture.source_limits_regression ......   Passed    0.27 sec
+      Start 29: architecture.ctest_label_runner
+29/32 Test #29: architecture.ctest_label_runner ............   Passed    7.93 sec
+      Start 30: architecture.desktop_smoke_runner
+30/32 Test #30: architecture.desktop_smoke_runner ..........   Passed    1.15 sec
+      Start 31: architecture.platform_report
+31/32 Test #31: architecture.platform_report ...............   Passed    3.02 sec
+      Start 32: architecture.setup_windows_mapping
+32/32 Test #32: architecture.setup_windows_mapping .........   Passed    0.63 sec
+
+100% tests passed, 0 tests failed out of 32
+
+Label Time Summary:
+application     =   7.99 sec*proc (8 tests)
+architecture    =  13.04 sec*proc (6 tests)
+desktop         =  37.02 sec*proc (9 tests)
+document        =   9.67 sec*proc (4 tests)
+dpi             =  29.35 sec*proc (3 tests)
+features        =   0.15 sec*proc (3 tests)
+integration     =  10.13 sec*proc (9 tests)
+kernel          =   0.04 sec*proc (1 test)
+lifecycle       =   2.64 sec*proc (1 test)
+negative        =   0.37 sec*proc (2 tests)
+platform        =   4.69 sec*proc (5 tests)
+qt-opengl       =  31.99 sec*proc (4 tests)
+regression      =  24.41 sec*proc (13 tests)
+ui              =   1.75 sec*proc (1 test)
+unit            =   7.38 sec*proc (8 tests)
+viewport        =  31.99 sec*proc (4 tests)
+windows         =   3.30 sec*proc (2 tests)
+workspaces      =   0.01 sec*proc (1 test)
+
+Total Test time (real) =  68.90 sec

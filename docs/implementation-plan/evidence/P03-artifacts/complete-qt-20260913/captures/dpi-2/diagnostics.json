@@ -1,0 +1,378 @@
+{
+    "cases": [
+        {
+            "case": "initial",
+            "dpr": 2,
+            "frames": 5,
+            "height": 960,
+            "qtFbo": 1,
+            "status": "passed",
+            "width": 1280
+        },
+        {
+            "case": "after-controlled-fbo-switch",
+            "dpr": 2,
+            "frames": 11,
+            "height": 960,
+            "qtFbo": 1,
+            "status": "passed",
+            "width": 1280
+        },
+        {
+            "case": "resized",
+            "dpr": 2,
+            "frames": 15,
+            "height": 1034,
+            "qtFbo": 1,
+            "status": "passed",
+            "width": 1426
+        },
+        {
+            "case": "restored",
+            "dpr": 2,
+            "frames": 19,
+            "height": 1034,
+            "qtFbo": 1,
+            "status": "passed",
+            "width": 1426
+        },
+        {
+            "case": "maximized",
+            "dpr": 2,
+            "frames": 24,
+            "height": 1370,
+            "qtFbo": 1,
+            "status": "passed",
+            "width": 3440
+        },
+        {
+            "case": "recreated",
+            "dpr": 2,
+            "frames": 28,
+            "height": 960,
+            "qtFbo": 1,
+            "status": "passed",
+            "width": 1280
+        }
+    ],
+    "controlledFboAndRatioSwitch": "passed: injected adapter exercise, not monitor change",
+    "foreignContextRestoration": "passed",
+    "qpa": "windows",
+    "qt": "6.11.1",
+    "resourceAssessment": "measurement only; no universal memory leak threshold",
+    "resourceSamples": [
+        {
+            "cycle": 1,
+            "handles": 436,
+            "privateBytes": 448749568,
+            "workingSetBytes": 209682432
+        },
+        {
+            "cycle": 2,
+            "handles": 436,
+            "privateBytes": 421613568,
+            "workingSetBytes": 210403328
+        },
+        {
+            "cycle": 3,
+            "handles": 436,
+            "privateBytes": 375386112,
+            "workingSetBytes": 188411904
+        },
+        {
+            "cycle": 4,
+            "handles": 436,
+            "privateBytes": 375996416,
+            "workingSetBytes": 187895808
+        },
+        {
+            "cycle": 5,
+            "handles": 436,
+            "privateBytes": 376504320,
+            "workingSetBytes": 188715008
+        },
+        {
+            "cycle": 6,
+            "handles": 436,
+            "privateBytes": 379801600,
+            "workingSetBytes": 188747776
+        },
+        {
+            "cycle": 7,
+            "handles": 436,
+            "privateBytes": 379781120,
+            "workingSetBytes": 188784640
+        },
+        {
+            "cycle": 8,
+            "handles": 436,
+            "privateBytes": 381046784,
+            "workingSetBytes": 188981248
+        },
+        {
+            "cycle": 9,
+            "handles": 436,
+            "privateBytes": 380293120,
+            "workingSetBytes": 188993536
+        },
+        {
+            "cycle": 10,
+            "handles": 436,
+            "privateBytes": 379797504,
+            "workingSetBytes": 188514304
+        },
+        {
+            "cycle": 11,
+            "handles": 436,
+            "privateBytes": 380862464,
+            "workingSetBytes": 193388544
+        },
+        {
+            "cycle": 12,
+            "handles": 436,
+            "privateBytes": 381693952,
+            "workingSetBytes": 193376256
+        },
+        {
+            "cycle": 13,
+            "handles": 436,
+            "privateBytes": 380497920,
+            "workingSetBytes": 193073152
+        },
+        {
+            "cycle": 14,
+            "handles": 436,
+            "privateBytes": 381403136,
+            "workingSetBytes": 193372160
+        },
+        {
+            "cycle": 15,
+            "handles": 436,
+            "privateBytes": 382664704,
+            "workingSetBytes": 194076672
+        },
+        {
+            "cycle": 16,
+            "handles": 436,
+            "privateBytes": 341651456,
+            "workingSetBytes": 193581056
+        },
+        {
+            "cycle": 17,
+            "handles": 436,
+            "privateBytes": 322551808,
+            "workingSetBytes": 194174976
+        },
+        {
+            "cycle": 18,
+            "handles": 436,
+            "privateBytes": 321462272,
+            "workingSetBytes": 193294336
+        },
+        {
+            "cycle": 19,
+            "handles": 436,
+            "privateBytes": 291602432,
+            "workingSetBytes": 189054976
+        },
+        {
+            "cycle": 20,
+            "handles": 436,
+            "privateBytes": 292270080,
+            "workingSetBytes": 188858368
+        },
+        {
+            "cycle": 21,
+            "handles": 436,
+            "privateBytes": 289705984,
+            "workingSetBytes": 190865408
+        },
+        {
+            "cycle": 22,
+            "handles": 436,
+            "privateBytes": 289787904,
+            "workingSetBytes": 190173184
+        },
+        {
+            "cycle": 23,
+            "handles": 436,
+            "privateBytes": 288567296,
+            "workingSetBytes": 189890560
+        },
+        {
+            "cycle": 24,
+            "handles": 436,
+            "privateBytes": 288231424,
+            "workingSetBytes": 189579264
+        },
+        {
+            "cycle": 25,
+            "handles": 436,
+            "privateBytes": 288628736,
+            "workingSetBytes": 189968384
+        },
+        {
+            "cycle": 26,
+            "handles": 436,
+            "privateBytes": 289624064,
+            "workingSetBytes": 190509056
+        },
+        {
+            "cycle": 27,
+            "handles": 436,
+            "privateBytes": 288407552,
+            "workingSetBytes": 189812736
+        },
+        {
+            "cycle": 28,
+            "handles": 436,
+            "privateBytes": 288342016,
+            "workingSetBytes": 189763584
+        },
+        {
+            "cycle": 29,
+            "handles": 436,
+            "privateBytes": 289382400,
+            "workingSetBytes": 189890560
+        },
+        {
+            "cycle": 30,
+            "handles": 436,
+            "privateBytes": 288419840,
+            "workingSetBytes": 189837312
+        },
+        {
+            "cycle": 31,
+            "handles": 436,
+            "privateBytes": 289554432,
+            "workingSetBytes": 189964288
+        },
+        {
+            "cycle": 32,
+            "handles": 436,
+            "privateBytes": 288419840,
+            "workingSetBytes": 189812736
+        },
+        {
+            "cycle": 33,
+            "handles": 436,
+            "privateBytes": 269381632,
+            "workingSetBytes": 190185472
+        },
+        {
+            "cycle": 34,
+            "handles": 436,
+            "privateBytes": 270913536,
+            "workingSetBytes": 190717952
+        },
+        {
+            "cycle": 35,
+            "handles": 436,
+            "privateBytes": 269090816,
+            "workingSetBytes": 189927424
+        },
+        {
+            "cycle": 36,
+            "handles": 436,
+            "privateBytes": 270675968,
+            "workingSetBytes": 190541824
+        },
+        {
+            "cycle": 37,
+            "handles": 436,
+            "privateBytes": 270073856,
+            "workingSetBytes": 189992960
+        },
+        {
+            "cycle": 38,
+            "handles": 436,
+            "privateBytes": 246734848,
+            "workingSetBytes": 189915136
+        },
+        {
+            "cycle": 39,
+            "handles": 436,
+            "privateBytes": 248803328,
+            "workingSetBytes": 191000576
+        },
+        {
+            "cycle": 40,
+            "handles": 436,
+            "privateBytes": 248426496,
+            "workingSetBytes": 190754816
+        },
+        {
+            "cycle": 41,
+            "handles": 436,
+            "privateBytes": 249044992,
+            "workingSetBytes": 190394368
+        },
+        {
+            "cycle": 42,
+            "handles": 436,
+            "privateBytes": 250994688,
+            "workingSetBytes": 190910464
+        },
+        {
+            "cycle": 43,
+            "handles": 436,
+            "privateBytes": 247726080,
+            "workingSetBytes": 190025728
+        },
+        {
+            "cycle": 44,
+            "handles": 436,
+            "privateBytes": 246796288,
+            "workingSetBytes": 189997056
+        },
+        {
+            "cycle": 45,
+            "handles": 436,
+            "privateBytes": 247734272,
+            "workingSetBytes": 190038016
+        },
+        {
+            "cycle": 46,
+            "handles": 436,
+            "privateBytes": 246771712,
+            "workingSetBytes": 189976576
+        },
+        {
+            "cycle": 47,
+            "handles": 436,
+            "privateBytes": 248979456,
+            "workingSetBytes": 191094784
+        },
+        {
+            "cycle": 48,
+            "handles": 436,
+            "privateBytes": 246722560,
+            "workingSetBytes": 189927424
+        },
+        {
+            "cycle": 49,
+            "handles": 436,
+            "privateBytes": 248086528,
+            "workingSetBytes": 191053824
+        },
+        {
+            "cycle": 50,
+            "handles": 436,
+            "privateBytes": 248217600,
+            "workingSetBytes": 190541824
+        }
+    ],
+    "scaleFactor": "2",
+    "scaleMethod": "QT_SCALE_FACTOR test override; native screen DPR multiplies it",
+    "schemaVersion": 1,
+    "screenSwitch": "blocked-external: only one screen exposed by Qt",
+    "screens": [
+        {
+            "dpr": 2,
+            "height": 720,
+            "logicalDpi": 96,
+            "name": "S34C65xV",
+            "width": 1720
+        }
+    ]
+}

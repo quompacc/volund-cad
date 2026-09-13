@@ -1,0 +1,12 @@
+{
+  "tools/New-PlatformReport.ps1": "b5887b4e8639f72e0ead8872a15bf2108c9a0c04b967435f0c1e294e7d3b6965",
+  "tools/Test-PlatformReport.ps1": "3dad87257a29c5240c34a64be11399b04c8d38349829bdc8da2e707adfc4eed6",
+  "tools/PlatformReportSupport.psm1": "5db0368abaca1d6a6c5217c516f87d38e03262a4d8b524b6c8dcf360be2bbb3f",
+  "tools/PlatformReportValidation.psm1": "249925212f46104c8e4ebffeb0759bef1a2e9dd054defab51d38aef00f764f70",
+  "tools/PlatformReportExecution.psm1": "f9ce3270fd34614b6c1689624d4f134e34dd7dcef0ad97d791cbdde83e3b0225",
+  "tools/Set-PlatformReportVisualReview.ps1": "e11c91db59c429b70672589a1f6ef8ade53208f8055cebb1678e6d53292b37a6",
+  "tests/powershell/PlatformReport.Tests.ps1": "f3228e562a2f20d2645d2ad0bcf3770ca3b5f2516ce8c8a771002941940beeb8",
+  "tests/powershell/PlatformReportFixtures.ps1": "54ccacdbc0364ec6fcd45f8ef782827ab859bc84660d08027e0c1f7accaaeb84",
+  "tests/powershell/PlatformReportExecution.Tests.ps1": "df3ac8afaf257ffdf999ca7c361baf40d57b56141570123f94767ab0b624e4f4",
+  "tests/CMakeLists.txt": "0e67421d76e429fedbd54ab6b8a60b5a34a2c4471244578381234a87bb4a4e66"
+}

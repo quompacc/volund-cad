@@ -1,0 +1,90 @@
+UpdateCTestConfiguration  from :V:/build/p02-qt-final/DartConfiguration.tcl
+Parse Config file:V:/build/p02-qt-final/DartConfiguration.tcl
+Test project V:/build/p02-qt-final
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 11
+    Start 11: desktop.viewport_lifecycle_qt
+
+11: Test command: V:\build\p02-qt-final\tests\voelund_viewport_lifecycle_tests.exe
+11: Working Directory: V:/build/p02-qt-final/tests
+11: Test timeout computed to be: 45
+11: Font_FontMgr, error: unable to find any font!
+11: TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+11:   Font 'Courier' is not found in the system!
+11: Font_FontMgr, error: unable to find any font!
+11: TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+11:   Font 'Courier' is not found in the system!
+11: Font_FontMgr, error: unable to find any font!
+11: TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+11:   Font 'Courier' is not found in the system!
+11: Font_FontMgr, error: unable to find any font!
+11: TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+11:   Font 'Courier' is not found in the system!
+11: Font_FontMgr, error: unable to find any font!
+11: TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+11:   Font 'Courier' is not found in the system!
+11: Font_FontMgr, error: unable to find any font!
+11: TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+11:   Font 'Courier' is not found in the system!
+11: Font_FontMgr, error: unable to find any font!
+11: TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+11:   Font 'Courier' is not found in the system!
+11: Font_FontMgr, error: unable to find any font!
+11: TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+11:   Font 'Courier' is not found in the system!
+11: Font_FontMgr, error: unable to find any font!
+11: TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+11:   Font 'Courier' is not found in the system!
+11: Font_FontMgr, error: unable to find any font!
+11: TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+11:   Font 'Courier' is not found in the system!
+11: PASS ten unshown/shown destruction cycles
+11: Font_FontMgr, error: unable to find any font!
+11: Font_FontMgr, error: unable to find any font!
+11: Font_FontMgr, error: unable to find any font!
+11: TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+11:   Font 'serif' is not found in the system!
+11: Font_FontMgr, error: unable to find any font!
+11: TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+11:   Font 'Courier' is not found in the system!
+11: TKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+11:   Unhandled GL error: GL_INVALID_ENUM
+11: TKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+11:   Unhandled GL error: GL_INVALID_ENUM
+11: Font_FontMgr, error: unable to find any font!
+11: Font_FontMgr, error: unable to find any font!
+11: Font_FontMgr, error: unable to find any font!
+11: TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+11:   Font 'serif' is not found in the system!
+11: Font_FontMgr, error: unable to find any font!
+11: TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+11:   Font 'Courier' is not found in the system!
+11: PASS idempotent cleanup, partial failure and recovery
+11: Font_FontMgr, error: unable to find any font!
+11: Font_FontMgr, error: unable to find any font!
+11: Font_FontMgr, error: unable to find any font!
+11: TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+11:   Font 'serif' is not found in the system!
+11: Font_FontMgr, error: unable to find any font!
+11: TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+11:   Font 'Courier' is not found in the system!
+11: PASS real context recreation, camera, scene, picking, navigation and manipulator
+1/1 Test #11: desktop.viewport_lifecycle_qt ....   Passed    2.98 sec
+
+The following tests passed:
+	desktop.viewport_lifecycle_qt
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+desktop      =   2.98 sec*proc (1 test)
+lifecycle    =   2.98 sec*proc (1 test)
+qt-opengl    =   2.98 sec*proc (1 test)
+viewport     =   2.98 sec*proc (1 test)
+
+Total Test time (real) =   3.45 sec

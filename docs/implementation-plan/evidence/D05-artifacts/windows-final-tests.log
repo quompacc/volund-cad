@@ -1,0 +1,17 @@
+Test project V:/build/p02-qt-final
+    Start  5: document.transactions
+1/3 Test  #5: document.transactions ...................   Passed    0.02 sec
+    Start 30: architecture.source_limits
+2/3 Test #30: architecture.source_limits ..............   Passed    0.05 sec
+    Start 31: architecture.source_limits_regression
+3/3 Test #31: architecture.source_limits_regression ...   Passed    0.26 sec
+
+100% tests passed, 0 tests failed out of 3
+
+Label Time Summary:
+architecture    =   0.32 sec*proc (2 tests)
+document        =   0.02 sec*proc (1 test)
+regression      =   0.34 sec*proc (3 tests)
+unit            =   0.02 sec*proc (1 test)
+
+Total Test time (real) =   0.34 sec

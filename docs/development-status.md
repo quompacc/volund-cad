@@ -1,5 +1,26 @@
 # Entwicklungsstand – 12. September 2026
 
+## Aktueller Stand – Pause am 13. September 2026
+
+[Fortsetzungsnotiz mit Umgebung und D07-Einstieg](session-checkpoint-2026-09-13.md).
+Auf Nutzerwunsch pausiert; keine Hintergrundarbeit. Abgenommen sind A01, A03,
+A05–A08, P01–P04 und D01–D06. A02 (Clang-CFG-Messung) und A04 bleiben offen.
+Die Entwicklung läuft auf FreeBSD/Sway; Meridian folgt abschließend in L07.
+
+D06: gemeinsame CadSession-Transaktionsgrenze, ein Undo für kombinierte
+Skizzenextrusion, getrennte Bestätigungen behalten zwei Schritte. Letzter voller
+Produktnachweis: **Windows 36/36, FreeBSD/Sway 32/32** CTests und betrachtete
+CAD-Aufnahmen beider Plattformen. Speicheratomarität und Parsergrenzen sind in
+D01–D03 umgesetzt; Dokumenttransaktion und Allokationsfehlerprüfung in D04–D05.
+
+Nächster Schritt ist **D07**, eindeutige Fehlerresultate und Solver-/stale-Zustände
+bis zur UI. Die aktuelle Fehlersemantik ist ausdrücklich noch nicht die vollständige
+D04-Zielpolitik. Details: [D06-Evidenz](implementation-plan/evidence/D06.md),
+[Manifest und Plan](implementation-plan/README.md).
+
+Die folgenden Funktionsangaben stammen aus dem ursprünglichen Übergabestand vom
+12. September und sind zusammen mit den aktuellen Paket-Evidenzen zu lesen.
+
 ## Verbindliches Produktziel
 
 Völund wird als natives parametrisches CAD in C++20 mit Qt 6 und OpenCASCADE
@@ -294,3 +315,7 @@ auf dem Ziel-Desktop. Zwei irrtümlich beim SCP-Abgleich erzeugte Kopien
 `/home/eduard/src/voelund/PreviewWindow.cpp` und
 `/home/eduard/src/voelund/PreviewStyle.cpp` liegen auf der FreeBSD-Maschine außerhalb
 des Buildpfads; sie wurden mangels ausdrücklicher Löschfreigabe nicht entfernt.
+
+## Entwicklungsbasis ab 13.09.2026
+
+Gemäß [ADR 0007](adr/0007-sway-development-meridian-final.md) wird das CAD-Tool auf FreeBSD/Sway stabilisiert. Meridian folgt abschließend in L07 und blockiert keine CAD-Erweiterungen. [P04](implementation-plan/evidence/P04.md) ist mit 23/23 CTests und betrachteten Compositoraufnahmen als Sway-Basis abgenommen; A02/A04 und die dokumentierten Grafik-/Hardware-Restprüfungen bleiben offen.

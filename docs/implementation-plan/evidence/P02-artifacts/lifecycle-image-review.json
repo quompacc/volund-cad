@@ -1,0 +1,14 @@
+[
+  {
+    "sha256": "3914cfe585451455b77bd7eff9dcd0f93e7a300ecc730a9a35825b5812f1f68c",
+    "reviewer": "Codex",
+    "path": "final-qt-20260913/captures/p02-recreated-framebuffer.png",
+    "status": "visually-reviewed"
+  },
+  {
+    "sha256": "7a4794fb069ef92c2df23461501e54140bcd333c8a7017f1be3b6ae148e6d7ef",
+    "reviewer": "Codex",
+    "path": "final-qt-20260913/captures/p02-interacted-framebuffer.png",
+    "status": "visually-reviewed"
+  }
+]

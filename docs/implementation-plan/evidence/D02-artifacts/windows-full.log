@@ -1,0 +1,85 @@
+Test project V:/build/p02-qt-final
+      Start  1: desktop.viewport_startup
+ 1/30 Test  #1: desktop.viewport_startup ...................   Passed    1.99 sec
+      Start  2: desktop.viewport_startup.uninitialized
+ 2/30 Test  #2: desktop.viewport_startup.uninitialized .....   Passed    0.18 sec
+      Start  3: desktop.ui_preview_startup
+ 3/30 Test  #3: desktop.ui_preview_startup .................   Passed    1.71 sec
+      Start  4: desktop.ui_preview_startup.uninitialized
+ 4/30 Test  #4: desktop.ui_preview_startup.uninitialized ...   Passed    0.17 sec
+      Start  5: document.parser_limits_and_versions
+ 5/30 Test  #5: document.parser_limits_and_versions ........   Passed    6.22 sec
+      Start  6: platform.atomic_file_store
+ 6/30 Test  #6: platform.atomic_file_store .................   Passed    3.12 sec
+      Start  7: kernel.shape_factory
+ 7/30 Test  #7: kernel.shape_factory .......................   Passed    0.15 sec
+      Start  8: document.history
+ 8/30 Test  #8: document.history ...........................   Passed    0.06 sec
+      Start  9: features.sketch_profiles
+ 9/30 Test  #9: features.sketch_profiles ...................   Passed    0.05 sec
+      Start 10: features.planegcs_solver
+10/30 Test #10: features.planegcs_solver ...................   Passed    0.01 sec
+      Start 11: features.sketch_constraint_adapter
+11/30 Test #11: features.sketch_constraint_adapter .........   Passed    0.08 sec
+      Start 12: application.recompute_history
+12/30 Test #12: application.recompute_history ..............   Passed    5.22 sec
+      Start 13: desktop.viewport_lifecycle_qt
+13/30 Test #13: desktop.viewport_lifecycle_qt ..............   Passed    2.64 sec
+      Start 14: desktop.viewport_dpi_1
+14/30 Test #14: desktop.viewport_dpi_1 .....................   Passed    9.81 sec
+      Start 15: desktop.viewport_dpi_1.5
+15/30 Test #15: desktop.viewport_dpi_1.5 ...................   Passed    9.79 sec
+      Start 16: desktop.viewport_dpi_2
+16/30 Test #16: desktop.viewport_dpi_2 .....................   Passed    9.82 sec
+      Start 17: application.sketch_editor_flow
+17/30 Test #17: application.sketch_editor_flow .............   Passed    2.07 sec
+      Start 18: application.sketch_construction
+18/30 Test #18: application.sketch_construction ............   Passed    0.47 sec
+      Start 19: application.sketch_circle_constraints
+19/30 Test #19: application.sketch_circle_constraints ......   Passed    0.26 sec
+      Start 20: application.sketch_alignments
+20/30 Test #20: application.sketch_alignments ..............   Passed    0.37 sec
+      Start 21: application.sketch_fix_distance
+21/30 Test #21: application.sketch_fix_distance ............   Passed    0.25 sec
+      Start 22: application.sketch_basic_tools
+22/30 Test #22: application.sketch_basic_tools .............   Passed    0.52 sec
+      Start 23: application.sketch_slot_dimensions
+23/30 Test #23: application.sketch_slot_dimensions .........   Passed    0.38 sec
+      Start 24: workspaces.module_registry
+24/30 Test #24: workspaces.module_registry .................   Passed    0.01 sec
+      Start 25: architecture.source_limits
+25/30 Test #25: architecture.source_limits .................   Passed    0.05 sec
+      Start 26: architecture.source_limits_regression
+26/30 Test #26: architecture.source_limits_regression ......   Passed    0.26 sec
+      Start 27: architecture.ctest_label_runner
+27/30 Test #27: architecture.ctest_label_runner ............   Passed    8.05 sec
+      Start 28: architecture.desktop_smoke_runner
+28/30 Test #28: architecture.desktop_smoke_runner ..........   Passed    1.13 sec
+      Start 29: architecture.platform_report
+29/30 Test #29: architecture.platform_report ...............   Passed    3.38 sec
+      Start 30: architecture.setup_windows_mapping
+30/30 Test #30: architecture.setup_windows_mapping .........   Passed    0.64 sec
+
+100% tests passed, 0 tests failed out of 30
+
+Label Time Summary:
+application     =   9.52 sec*proc (8 tests)
+architecture    =  13.53 sec*proc (6 tests)
+desktop         =  36.11 sec*proc (8 tests)
+document        =   6.28 sec*proc (2 tests)
+dpi             =  29.42 sec*proc (3 tests)
+features        =   0.15 sec*proc (3 tests)
+integration     =   9.52 sec*proc (8 tests)
+kernel          =   0.15 sec*proc (1 test)
+lifecycle       =   2.64 sec*proc (1 test)
+negative        =   0.36 sec*proc (2 tests)
+platform        =   7.17 sec*proc (5 tests)
+qt-opengl       =  32.06 sec*proc (4 tests)
+regression      =  23.60 sec*proc (11 tests)
+ui              =   1.71 sec*proc (1 test)
+unit            =   9.71 sec*proc (8 tests)
+viewport        =  32.06 sec*proc (4 tests)
+windows         =   3.70 sec*proc (2 tests)
+workspaces      =   0.01 sec*proc (1 test)
+
+Total Test time (real) =  68.91 sec

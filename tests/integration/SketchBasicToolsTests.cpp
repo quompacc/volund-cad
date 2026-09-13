@@ -28,6 +28,17 @@ bool addCircle(SketchEditorSession& editor, SketchPoint center, SketchPoint radi
     return editor.setPreview(center, radialPoint) && editor.confirmPreview().has_value();
 }
 
+bool reportCompoundFailure(const char* tool, const SketchEditorSession& editor) {
+    const auto& solve = editor.lastSolveResult();
+    std::cerr << tool << ": elements=" << editor.elements().size()
+              << " profiles=" << editor.closedProfileCount()
+              << " accept=" << editor.canAccept()
+              << " solve=" << static_cast<int>(solve.status)
+              << " dof=" << solve.degreesOfFreedom
+              << " conflicts=" << solve.conflictingConstraints.size() << '\n';
+    return false;
+}
+
 bool compoundDrawingToolsCreateProfiles() {
     CadSession session;
     session.newDocument();
@@ -38,14 +49,14 @@ bool compoundDrawingToolsCreateProfiles() {
     if (!polygon.setPreview({0.0, 0.0}, {8.0, 0.0}) || !polygon.confirmPreview().has_value() ||
         polygon.elements().size() != 6 || polygon.closedProfileCount() != 1 ||
         !polygon.canAccept())
-        return false;
+        return reportCompoundFailure("polygon", polygon);
 
     SketchEditorSession slot(session, support, plane);
     slot.setTool(SketchDrawingTool::slot);
     if (!slot.setPreview({0.0, 0.0}, {12.0, 0.0}, SketchPoint{0.0, 3.0}) ||
         !slot.confirmPreview().has_value() || slot.elements().size() != 4 ||
         slot.closedProfileCount() != 1 || !slot.canAccept())
-        return false;
+        return reportCompoundFailure("slot", slot);
     const auto& rightCap =
         std::get<voelund::document::SketchArc>(slot.elements()[1].geometry);
     const auto& leftCap =
@@ -54,22 +65,24 @@ bool compoundDrawingToolsCreateProfiles() {
         std::cos((rightCap.startAngle + rightCap.endAngle) * 0.5);
     const double leftMidpointX = leftCap.center.x + leftCap.radius *
         std::cos((leftCap.startAngle + leftCap.endAngle) * 0.5);
-    if (rightMidpointX <= 12.0 || leftMidpointX >= 0.0)
-        return false;
+    if (rightMidpointX <= 12.0 || leftMidpointX >= 0.0) {
+        std::cerr << "slot caps: right=" << rightMidpointX << " left=" << leftMidpointX << '\n';
+        return reportCompoundFailure("slot caps", slot);
+    }
 
     SketchEditorSession arc(session, support, plane);
     arc.setTool(SketchDrawingTool::threePointArc);
     if (!arc.setPreview({-5.0, 0.0}, {0.0, 5.0}, SketchPoint{5.0, 0.0}) ||
         !arc.confirmPreview().has_value() ||
         !std::holds_alternative<voelund::document::SketchArc>(arc.elements().front().geometry))
-        return false;
+        return reportCompoundFailure("three-point arc", arc);
 
     SketchEditorSession ellipse(session, support, plane);
     ellipse.setTool(SketchDrawingTool::ellipse);
     if (!ellipse.setPreview({0.0, 0.0}, {8.0, 0.0}, SketchPoint{0.0, 3.0}) ||
         !ellipse.confirmPreview().has_value() || ellipse.closedProfileCount() != 1 ||
         ellipse.evaluatedElements().front().shape.IsNull())
-        return false;
+        return reportCompoundFailure("ellipse", ellipse);
     const auto& value = std::get<voelund::document::SketchEllipse>(ellipse.elements().front().geometry);
     return std::abs(value.majorRadius - 8.0) < 1.0e-6 &&
            std::abs(value.minorRadius - 3.0) < 1.0e-6;

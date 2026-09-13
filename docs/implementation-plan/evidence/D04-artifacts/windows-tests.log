@@ -1,0 +1,23 @@
+Test project V:/build/p02-qt-final
+    Start  5: application.command_contract_compound
+1/5 Test  #5: application.command_contract_compound ...   Passed    0.02 sec
+    Start  6: application.command_contract_errors
+2/5 Test  #6: application.command_contract_errors .....   Passed    0.01 sec
+    Start  7: application.safe_persistence
+3/5 Test  #7: application.safe_persistence ............   Passed    3.10 sec
+    Start 29: architecture.source_limits
+4/5 Test #29: architecture.source_limits ..............   Passed    0.05 sec
+    Start 30: architecture.source_limits_regression
+5/5 Test #30: architecture.source_limits_regression ...   Passed    0.27 sec
+
+100% tests passed, 0 tests failed out of 5
+
+Label Time Summary:
+application     =   0.03 sec*proc (2 tests)
+architecture    =   0.32 sec*proc (2 tests)
+contract        =   0.03 sec*proc (2 tests)
+document        =   3.10 sec*proc (1 test)
+integration     =   3.13 sec*proc (3 tests)
+regression      =   3.42 sec*proc (3 tests)
+
+Total Test time (real) =   3.48 sec

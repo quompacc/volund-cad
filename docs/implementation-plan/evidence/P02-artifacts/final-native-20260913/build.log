@@ -1,0 +1,12 @@
+[1/21] Scanning V:\src\viewport\CadViewport.cpp for CXX dependencies
+[2/21] Scanning V:\src\viewport\CadViewportNativeCallbacks.cpp for CXX dependencies
+[3/21] Scanning V:\src\viewport\CadViewportInput.cpp for CXX dependencies
+[4/21] Scanning V:\src\viewport\CadViewportHandlers.cpp for CXX dependencies
+[5/21] Generating CXX dyndep file src\viewport\CMakeFiles\voelund_viewport.dir\CXX.dd
+[6/12] Building CXX object src\viewport\CMakeFiles\voelund_viewport.dir\CadViewportHandlers.cpp.obj
+[7/12] Building CXX object src\viewport\CMakeFiles\voelund_viewport.dir\CadViewportNativeCallbacks.cpp.obj
+[8/12] Building CXX object src\viewport\CMakeFiles\voelund_viewport.dir\CadViewportInput.cpp.obj
+[9/12] Building CXX object src\viewport\CMakeFiles\voelund_viewport.dir\CadViewport.cpp.obj
+[10/12] Linking CXX static library src\viewport\voelund_viewport.lib
+[11/12] Linking CXX executable apps\voelund-ui-preview\voelund-ui-preview.exe; Deploying the Qt runtime for the UI preview
+[12/12] Linking CXX executable apps\voelund-cad\voelund-cad.exe; Deploying the minimal Qt runtime

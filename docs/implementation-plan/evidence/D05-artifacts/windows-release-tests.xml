@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Win32-ninja"
+	tests="2"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname="megatron"
+	time="0"
+	timestamp="2026-09-13T20:13:06"
+	>
+	<testcase name="document.transactions" classname="document.transactions" time="0.0230751" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;regression;unit"/>
+		</properties>
+		<system-out>Document transaction tests passed
+</system-out>
+	</testcase>
+	<testcase name="document.transaction_allocation_failures" classname="document.transaction_allocation_failures" time="0.0091171" status="run">
+		<properties>
+			<property name="cmake_labels" value="allocation;document;regression;unit"/>
+		</properties>
+		<system-out>Prepared commit requires no allocation
+sketch edit: 14 allocation failures preserved state
+single mutation: 7 allocation failures preserved state
+compound transaction: 21 allocation failures preserved state
+undo: 3 allocation failures preserved state
+redo: 2 allocation failures preserved state
+Document transaction tests passed
+</system-out>
+	</testcase>
+</testsuite>

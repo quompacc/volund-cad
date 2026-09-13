@@ -1,0 +1,21 @@
+Test project D:/300_Projekte/310_Aktiv/Völund/build/p01-windows-native-final-20260913
+    Start 1: desktop.viewport_startup
+1/4 Test #1: desktop.viewport_startup ...................   Passed    1.80 sec
+    Start 2: desktop.viewport_startup.uninitialized
+2/4 Test #2: desktop.viewport_startup.uninitialized .....   Passed    0.17 sec
+    Start 3: desktop.ui_preview_startup
+3/4 Test #3: desktop.ui_preview_startup .................   Passed    1.71 sec
+    Start 4: desktop.ui_preview_startup.uninitialized
+4/4 Test #4: desktop.ui_preview_startup.uninitialized ...   Passed    0.17 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+desktop       =   3.86 sec*proc (4 tests)
+negative      =   0.34 sec*proc (2 tests)
+platform      =   3.86 sec*proc (4 tests)
+regression    =   0.34 sec*proc (2 tests)
+ui            =   1.71 sec*proc (1 test)
+windows       =   3.52 sec*proc (2 tests)
+
+Total Test time (real) =   3.86 sec

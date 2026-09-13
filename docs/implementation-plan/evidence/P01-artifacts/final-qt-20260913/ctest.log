@@ -1,0 +1,69 @@
+Test project V:/build/p01-windows-qt-opengl-20260913
+      Start  1: desktop.viewport_startup
+ 1/24 Test  #1: desktop.viewport_startup ...................   Passed    1.63 sec
+      Start  2: desktop.viewport_startup.uninitialized
+ 2/24 Test  #2: desktop.viewport_startup.uninitialized .....   Passed    0.18 sec
+      Start  3: desktop.ui_preview_startup
+ 3/24 Test  #3: desktop.ui_preview_startup .................   Passed    2.19 sec
+      Start  4: desktop.ui_preview_startup.uninitialized
+ 4/24 Test  #4: desktop.ui_preview_startup.uninitialized ...   Passed    0.18 sec
+      Start  5: kernel.shape_factory
+ 5/24 Test  #5: kernel.shape_factory .......................   Passed    0.04 sec
+      Start  6: document.history
+ 6/24 Test  #6: document.history ...........................   Passed    0.01 sec
+      Start  7: features.sketch_profiles
+ 7/24 Test  #7: features.sketch_profiles ...................   Passed    0.01 sec
+      Start  8: features.planegcs_solver
+ 8/24 Test  #8: features.planegcs_solver ...................   Passed    0.01 sec
+      Start  9: features.sketch_constraint_adapter
+ 9/24 Test  #9: features.sketch_constraint_adapter .........   Passed    0.01 sec
+      Start 10: application.recompute_history
+10/24 Test #10: application.recompute_history ..............   Passed    4.75 sec
+      Start 11: application.sketch_editor_flow
+11/24 Test #11: application.sketch_editor_flow .............   Passed    1.91 sec
+      Start 12: application.sketch_construction
+12/24 Test #12: application.sketch_construction ............   Passed    0.34 sec
+      Start 13: application.sketch_circle_constraints
+13/24 Test #13: application.sketch_circle_constraints ......   Passed    0.28 sec
+      Start 14: application.sketch_alignments
+14/24 Test #14: application.sketch_alignments ..............   Passed    0.27 sec
+      Start 15: application.sketch_fix_distance
+15/24 Test #15: application.sketch_fix_distance ............   Passed    0.09 sec
+      Start 16: application.sketch_basic_tools
+16/24 Test #16: application.sketch_basic_tools .............   Passed    0.55 sec
+      Start 17: application.sketch_slot_dimensions
+17/24 Test #17: application.sketch_slot_dimensions .........   Passed    0.30 sec
+      Start 18: workspaces.module_registry
+18/24 Test #18: workspaces.module_registry .................   Passed    0.01 sec
+      Start 19: architecture.source_limits
+19/24 Test #19: architecture.source_limits .................   Passed    0.05 sec
+      Start 20: architecture.source_limits_regression
+20/24 Test #20: architecture.source_limits_regression ......   Passed    0.29 sec
+      Start 21: architecture.ctest_label_runner
+21/24 Test #21: architecture.ctest_label_runner ............   Passed    0.16 sec
+      Start 22: architecture.desktop_smoke_runner
+22/24 Test #22: architecture.desktop_smoke_runner ..........   Passed    1.15 sec
+      Start 23: architecture.platform_report
+23/24 Test #23: architecture.platform_report ...............   Passed    2.96 sec
+      Start 24: architecture.setup_windows_mapping
+24/24 Test #24: architecture.setup_windows_mapping .........   Passed    0.64 sec
+
+100% tests passed, 0 tests failed out of 24
+
+Label Time Summary:
+application     =   8.49 sec*proc (8 tests)
+architecture    =   5.25 sec*proc (6 tests)
+desktop         =   4.19 sec*proc (4 tests)
+document        =   0.01 sec*proc (1 test)
+features        =   0.04 sec*proc (3 tests)
+integration     =   8.49 sec*proc (8 tests)
+kernel          =   0.04 sec*proc (1 test)
+negative        =   0.37 sec*proc (2 tests)
+platform        =   4.19 sec*proc (4 tests)
+regression      =   5.91 sec*proc (9 tests)
+ui              =   2.19 sec*proc (1 test)
+unit            =   0.09 sec*proc (6 tests)
+windows         =   3.82 sec*proc (2 tests)
+workspaces      =   0.01 sec*proc (1 test)
+
+Total Test time (real) =  18.03 sec

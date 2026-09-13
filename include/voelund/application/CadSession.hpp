@@ -1,13 +1,16 @@
 #pragma once
 
+#include <voelund/document/DocumentTransaction.hpp>
 #include <voelund/document/ModelDocument.hpp>
 #include <voelund/features/FeatureGraph.hpp>
 #include <voelund/features/SketchEvaluation.hpp>
 
 #include <filesystem>
+#include <functional>
 #include <optional>
 #include <span>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace voelund::application {
@@ -25,8 +28,7 @@ class CadSession final {
     CadSession();
 
     [[nodiscard]] TopoDS_Shape currentShape() const;
-    [[nodiscard]] std::optional<TopoDS_Shape>
-    featureShape(document::FeatureId featureId) const;
+    [[nodiscard]] std::optional<TopoDS_Shape> featureShape(document::FeatureId featureId) const;
     [[nodiscard]] std::span<const features::EvaluatedBody> currentBodies() const noexcept;
     [[nodiscard]] std::span<const document::FeatureDescriptor> features() const noexcept;
     [[nodiscard]] std::optional<document::FeatureId> selectedFeature() const noexcept;
@@ -91,8 +93,15 @@ class CadSession final {
     void newDocument();
     void saveDocument(const std::filesystem::path& path);
     void loadDocument(const std::filesystem::path& path);
+    [[nodiscard]] const std::filesystem::path& currentFile() const noexcept { return currentFile_; }
 
   private:
+    friend class CadSessionPersistenceTestAccess;
+    using DocumentWriter = std::function<void(const std::filesystem::path&, std::string_view)>;
+    void saveDocumentUsing(const std::filesystem::path& path, const DocumentWriter& writer);
+    [[nodiscard]] bool commitCandidate(document::DocumentTransaction& transaction,
+                                       std::optional<document::FeatureId> selection,
+                                       bool clearSketchSelection = false);
     [[nodiscard]] bool recompute();
     void markFeaturesCurrent();
     void markFeatureError(document::FeatureId featureId, const std::string& message);
@@ -109,6 +118,7 @@ class CadSession final {
     std::vector<document::SketchProfileId> selectedSketchProfiles_;
     std::vector<FeatureRuntimeState> featureStates_;
     std::string cleanDocumentState_;
+    std::filesystem::path currentFile_;
 };
 
 } // namespace voelund::application

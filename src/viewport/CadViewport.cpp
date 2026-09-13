@@ -1,8 +1,15 @@
+#include "ViewportContextGuard.hpp"
+#include <QDebug>
+#include <stdexcept>
 #include <voelund/viewport/CadViewport.hpp>
+#if defined(VOELUND_VIEWPORT_QT_OPENGL)
+#include "CadViewportQtOpenGlBackend.hpp"
+#else
+#include "CadViewportNativeBackend.hpp"
+#endif
 
-#include "NativeOcctWindow.hpp"
-#include "SketchConstraintPresentation.hpp"
 #include "SketchBoxSelection.hpp"
+#include "SketchConstraintPresentation.hpp"
 #include "SketchEditorInteraction.hpp"
 #include "SketchInteraction.hpp"
 #include "SketchPresentation.hpp"
@@ -25,15 +32,23 @@
 #include <NCollection_Vec2.hxx>
 #include <OpenGl_GraphicDriver.hxx>
 #include <QMouseEvent>
+#if defined(VOELUND_VIEWPORT_QT_OPENGL)
+#include <QOpenGLContext>
+#include <QSurfaceFormat>
+#else
 #include <QPaintEvent>
 #include <QResizeEvent>
-#include <QRubberBand>
 #include <QShowEvent>
 #include <QTimer>
+#endif
+#include <QRubberBand>
 #include <QWheelEvent>
 #include <Quantity_Color.hxx>
 #include <Quantity_TypeOfColor.hxx>
 #include <StdSelect_BRepOwner.hxx>
+#if defined(VOELUND_VIEWPORT_QT_OPENGL)
+#include <Standard_Failure.hxx>
+#endif
 #include <TopAbs_ShapeEnum.hxx>
 #include <TopoDS_Shape.hxx>
 #include <V3d_TypeOfOrientation.hxx>
@@ -46,165 +61,29 @@
 
 namespace voelund::viewport {
 
-class CadViewport::Impl final {
-  public:
-    enum class Gesture { none, pan, rotate, moveAxis, selectBox };
-
-    struct BodyPresentation final {
-        std::uint64_t id;
-        occ::handle<AIS_Shape> shape;
-        bool transformable;
-    };
-
-    void initialize(std::uintptr_t nativeWindowId) {
-        if (!view.IsNull()) {
-            return;
-        }
-
-        displayConnection = new Aspect_DisplayConnection();
-        graphicDriver = new OpenGl_GraphicDriver(displayConnection);
-        viewer = new V3d_Viewer(graphicDriver);
-        viewer->SetDefaultLights();
-        viewer->SetLightOn();
-
-        context = new AIS_InteractiveContext(viewer);
-        context->SetDisplayMode(AIS_Shaded, false);
-        configureHighlightStyles(context);
-
-        view = viewer->CreateView();
-        window = platform::makeOcctWindow(displayConnection, nativeWindowId);
-        view->SetWindow(window);
-        if (!window->IsMapped()) {
-            window->Map();
-        }
-
-        view->SetBgGradientColors(Quantity_Color(0.12, 0.15, 0.13, Quantity_TOC_RGB),
-                                  Quantity_Color(0.035, 0.05, 0.04, Quantity_TOC_RGB),
-                                  Aspect_GradientFillMethod_Vertical, false);
-        viewer->SetRectangularGridValues(0.0, 0.0, 10.0, 10.0, 0.0);
-        viewer->SetRectangularGridGraphicValues(500.0, 500.0, -0.05);
-        viewer->ActivateGrid(Aspect_GT_Rectangular, Aspect_GDM_Lines);
-        viewer->Grid()->SetColors(Quantity_Color(0.19, 0.23, 0.19, Quantity_TOC_RGB),
-                                  Quantity_Color(0.34, 0.31, 0.16, Quantity_TOC_RGB));
-        view->ZBufferTriedronSetup(Quantity_NOC_RED, Quantity_NOC_GREEN, Quantity_NOC_BLUE1,
-                                   0.8, 0.05, 12);
-        view->TriedronDisplay(Aspect_TOTP_LEFT_LOWER, Quantity_Color(0.82, 0.69, 0.30,
-                              Quantity_TOC_RGB), 0.075, V3d_ZBUFFER);
-        view->SetProj(V3d_TypeOfOrientation_Zup_AxoRight);
-        displayPendingBodies();
-    }
-
-    void displayPendingBodies() {
-        if (context.IsNull()) {
-            return;
-        }
-        manipulator.detach();
-        sketchPresentation.clear(context);
-        sketchConstraintPresentation.clear(context);
-
-        const bool isFirstShape = presentations.empty();
-        for (const BodyPresentation& presentation : presentations) {
-            context->Remove(presentation.shape, false);
-        }
-        presentations.clear();
-
-        for (const SceneBody& body : pendingBodies) {
-            occ::handle<AIS_Shape> presentation = new AIS_Shape(body.shape);
-            presentation->SetColor(Quantity_Color(0.72, 0.78, 0.88, Quantity_TOC_RGB));
-            context->Display(presentation, false);
-            context->Activate(presentation, AIS_Shape::SelectionMode(TopAbs_FACE));
-            presentations.push_back(BodyPresentation{body.id, presentation, body.transformable});
-        }
-        sketchPresentation.setElements(context, pendingSketchElements, selectedSketchElements,
-                                       sketchEditor.isActive());
-        sketchConstraintPresentation.setConstraints(context, pendingSketchConstraints);
-        attachTransformTarget();
-        if (isFirstShape) {
-            view->FitAll(0.08, false);
-            view->ZFitAll();
-        }
-        view->Redraw();
-    }
-
-    void setTransformToolEnabled(bool enabled) {
-        manipulator.setEnabled(enabled);
-        attachTransformTarget();
-    }
-
-    void resize() {
-        if (view.IsNull() || window.IsNull())
-            return;
-        window->DoResize();
-        view->MustBeResized();
-        view->Invalidate();
-        view->Redraw();
-    }
-
-    void attachTransformTarget() {
-        manipulator.detach();
-        if (!manipulator.isEnabled() || !transformTarget.has_value()) {
-            return;
-        }
-        for (const BodyPresentation& presentation : presentations) {
-            if (presentation.transformable && presentation.id == *transformTarget) {
-                manipulator.attach(presentation.shape, presentation.id);
-                break;
-            }
-        }
-    }
-
-    ~Impl() {
-        if (!view.IsNull()) {
-            view->Remove();
-        }
-    }
-
-    occ::handle<Aspect_DisplayConnection> displayConnection;
-    occ::handle<Graphic3d_GraphicDriver> graphicDriver;
-    occ::handle<V3d_Viewer> viewer;
-    occ::handle<AIS_InteractiveContext> context;
-    occ::handle<V3d_View> view;
-    TransformManipulator manipulator;
-    SketchInteraction sketch;
-    SketchEditorInteraction sketchEditor;
-    SketchPresentation sketchPresentation;
-    SketchConstraintPresentation sketchConstraintPresentation;
-    occ::handle<Aspect_Window> window;
-    std::vector<BodyPresentation> presentations;
-    std::vector<SceneBody> pendingBodies;
-    std::vector<SceneSketchElement> pendingSketchElements;
-    std::vector<SceneSketchConstraint> pendingSketchConstraints;
-    std::vector<std::uint64_t> selectedSketchElements;
-    std::function<void(std::uint64_t)> bodySelectionHandler;
-    std::function<void(const PlanarFaceSelection&)> planarFaceSelectionHandler;
-    std::function<void(const SketchRectangleResult&)> sketchRectangleHandler;
-    std::function<void(const std::optional<SketchElementIntent>&)> sketchEditorPreviewHandler;
-    std::function<void(const SketchElementIntent&)> sketchEditorElementHandler;
-    std::function<void(double, double)> sketchEditorTranslationHandler;
-    std::function<void(const SketchSelectionIntent&)> sketchElementSelectionHandler;
-    std::function<void(std::uint64_t)> sketchConstraintEditHandler;
-    std::optional<std::uint64_t> transformTarget;
-    QPoint gestureOrigin;
-    Gesture gesture{Gesture::none};
-    bool sketchElementPressed{false};
-    QRubberBand* selectionBand{nullptr};
-};
-
 CadViewport::CadViewport(QWidget* parent)
     : CadViewportBase(parent), impl_(std::make_unique<Impl>()) {
+#if !defined(VOELUND_VIEWPORT_QT_OPENGL)
     // OCCT owns framebuffer rendering; Qt only owns the native window and event routing.
     setAttribute(Qt::WA_NativeWindow);
     setAttribute(Qt::WA_NoSystemBackground);
     setAttribute(Qt::WA_PaintOnScreen);
+#else
+    setUpdateBehavior(QOpenGLWidget::NoPartialUpdate);
+#endif
     setFocusPolicy(Qt::StrongFocus);
     setMouseTracking(true);
     setMinimumSize(640, 480);
     impl_->selectionBand = new QRubberBand(QRubberBand::Rectangle, this);
 }
 
-CadViewport::~CadViewport() = default;
+CadViewport::~CadViewport() {
+#if defined(VOELUND_VIEWPORT_QT_OPENGL)
+    cleanupGlResources();
+#endif
+}
 
-bool CadViewport::isRenderingReady() const noexcept { return !impl_->view.IsNull(); }
+bool CadViewport::isRenderingReady() const noexcept { return impl_->ready; }
 
 std::size_t CadViewport::displayedSketchElementCount() const noexcept {
     return impl_->sketchPresentation.size();
@@ -215,484 +94,231 @@ std::size_t CadViewport::displayedSketchConstraintCount() const noexcept {
 }
 
 std::pair<int, int> CadViewport::renderingPixelSize() const noexcept {
+    if (!impl_->ready)
+        return {0, 0};
+#if defined(VOELUND_VIEWPORT_QT_OPENGL)
+    if (impl_->view->Window().IsNull())
+        return {0, 0};
+#else
     if (impl_->window.IsNull())
         return {0, 0};
+#endif
     int width = 0;
     int height = 0;
+#if defined(VOELUND_VIEWPORT_QT_OPENGL)
+    impl_->view->Window()->Size(width, height);
+#else
     impl_->window->Size(width, height);
+#endif
     return {width, height};
 }
 
+ViewportLifecycleDiagnostics CadViewport::lifecycleDiagnostics() const noexcept {
+#if defined(VOELUND_VIEWPORT_QT_OPENGL)
+    return {impl_->contextGeneration, impl_->cleanupGeneration};
+#else
+    return {impl_->ready ? 1U : 0U, 0U};
+#endif
+}
+
 void CadViewport::setShape(const TopoDS_Shape& shape) {
-    const SceneBody body{0, shape, false};
-    setBodies(std::span<const SceneBody>(&body, 1));
+    performViewportOperation(*this, impl_->ready, [&] {
+        const SceneBody body{0, shape, false};
+        setBodies(std::span<const SceneBody>(&body, 1));
+    });
 }
 
 void CadViewport::setBodies(std::span<const SceneBody> bodies) {
-    impl_->pendingBodies.assign(bodies.begin(), bodies.end());
-    impl_->displayPendingBodies();
+    performViewportOperation(*this, impl_->ready, [&] {
+        impl_->pendingBodies.assign(bodies.begin(), bodies.end());
+        impl_->displayPendingBodies();
+        update();
+    });
 }
 
 void CadViewport::setSketchElements(std::span<const SceneSketchElement> elements,
                                     std::optional<std::uint64_t> selectedId) {
-    impl_->pendingSketchElements.assign(elements.begin(), elements.end());
-    std::vector<SceneSketchPoint> snapPoints;
-    for (const SceneSketchElement& element : elements)
-        snapPoints.insert(snapPoints.end(), element.points.begin(), element.points.end());
-    impl_->sketchEditor.setSnapPoints(snapPoints);
-    impl_->pendingSketchConstraints.clear();
-    impl_->sketchConstraintPresentation.clear(impl_->context);
-    impl_->selectedSketchElements.clear();
-    if (selectedId.has_value())
-        impl_->selectedSketchElements.push_back(*selectedId);
-    impl_->sketchPresentation.setElements(impl_->context, impl_->pendingSketchElements,
-                                          impl_->selectedSketchElements,
-                                          impl_->sketchEditor.isActive());
-    if (!impl_->view.IsNull()) {
-        impl_->view->Redraw();
-    }
+    performViewportOperation(*this, impl_->ready, [&] {
+        impl_->pendingSketchElements.assign(elements.begin(), elements.end());
+        std::vector<SceneSketchPoint> snapPoints;
+        for (const SceneSketchElement& element : elements)
+            snapPoints.insert(snapPoints.end(), element.points.begin(), element.points.end());
+        impl_->sketchEditor.setSnapPoints(snapPoints);
+        impl_->pendingSketchConstraints.clear();
+        impl_->sketchConstraintPresentation.clear(impl_->context);
+        impl_->selectedSketchElements.clear();
+        if (selectedId.has_value())
+            impl_->selectedSketchElements.push_back(*selectedId);
+        if (impl_->ready)
+            impl_->sketchPresentation.setElements(impl_->context, impl_->pendingSketchElements,
+                                                  impl_->selectedSketchElements,
+                                                  impl_->sketchEditor.isActive());
+        update();
+    });
 }
 
 void CadViewport::setSketchConstraints(std::span<const SceneSketchConstraint> constraints) {
-    impl_->pendingSketchConstraints.assign(constraints.begin(), constraints.end());
-    impl_->sketchConstraintPresentation.setConstraints(impl_->context,
-                                                       impl_->pendingSketchConstraints);
-    if (!impl_->view.IsNull())
-        impl_->view->Redraw();
-}
-
-void CadViewport::setSketchConstraintEditHandler(std::function<void(std::uint64_t)> handler) {
-    impl_->sketchConstraintEditHandler = std::move(handler);
-}
-
-void CadViewport::setSketchElementSelectionHandler(
-    std::function<void(const SketchSelectionIntent&)> handler) {
-    impl_->sketchElementSelectionHandler = std::move(handler);
+    performViewportOperation(*this, impl_->ready, [&] {
+        impl_->pendingSketchConstraints.assign(constraints.begin(), constraints.end());
+        if (impl_->ready)
+            impl_->sketchConstraintPresentation.setConstraints(impl_->context,
+                                                               impl_->pendingSketchConstraints);
+        update();
+    });
 }
 
 void CadViewport::setSelectedSketchElement(std::optional<std::uint64_t> elementId) {
-    impl_->selectedSketchElements.clear();
-    if (elementId.has_value())
-        impl_->selectedSketchElements.push_back(*elementId);
-    impl_->sketchPresentation.select(impl_->context, impl_->selectedSketchElements);
-    if (!impl_->view.IsNull()) {
-        impl_->view->Redraw();
-    }
+    performViewportOperation(*this, impl_->ready, [&] {
+        impl_->selectedSketchElements.clear();
+        if (elementId.has_value())
+            impl_->selectedSketchElements.push_back(*elementId);
+        impl_->sketchPresentation.select(impl_->context, impl_->selectedSketchElements);
+        update();
+    });
 }
 
 void CadViewport::setSelectedSketchElements(std::span<const std::uint64_t> elementIds) {
-    impl_->selectedSketchElements.assign(elementIds.begin(), elementIds.end());
-    impl_->sketchPresentation.select(impl_->context, impl_->selectedSketchElements);
-    if (!impl_->view.IsNull()) {
-        impl_->view->Redraw();
-    }
+    performViewportOperation(*this, impl_->ready, [&] {
+        impl_->selectedSketchElements.assign(elementIds.begin(), elementIds.end());
+        impl_->sketchPresentation.select(impl_->context, impl_->selectedSketchElements);
+        update();
+    });
 }
 
 void CadViewport::setTransformTarget(std::optional<std::uint64_t> bodyId) {
-    impl_->transformTarget = bodyId;
-    impl_->attachTransformTarget();
-}
-
-void CadViewport::setBodySelectionHandler(std::function<void(std::uint64_t)> handler) {
-    impl_->bodySelectionHandler = std::move(handler);
-}
-
-void CadViewport::setPlanarFaceSelectionHandler(
-    std::function<void(const PlanarFaceSelection&)> handler) {
-    impl_->planarFaceSelectionHandler = std::move(handler);
-}
-
-void CadViewport::setSketchRectangleHandler(
-    std::function<void(const SketchRectangleResult&)> handler) {
-    impl_->sketchRectangleHandler = std::move(handler);
-}
-
-void CadViewport::setSketchExtrusionPreviewHandler(std::function<void(double)> handler) {
-    impl_->sketch.setDistancePreviewHandler(std::move(handler));
-}
-
-void CadViewport::setSketchEditorPreviewHandler(
-    std::function<void(const std::optional<SketchElementIntent>&)> handler) {
-    impl_->sketchEditorPreviewHandler = std::move(handler);
-}
-
-void CadViewport::setSketchEditorElementHandler(
-    std::function<void(const SketchElementIntent&)> handler) {
-    impl_->sketchEditorElementHandler = std::move(handler);
-}
-
-void CadViewport::setSketchEditorTranslationHandler(std::function<void(double, double)> handler) {
-    impl_->sketchEditorTranslationHandler = std::move(handler);
+    performViewportOperation(*this, impl_->ready, [&] {
+        impl_->transformTarget = bodyId;
+        impl_->attachTransformTarget();
+        update();
+    });
 }
 
 void CadViewport::beginRectangleSketch(const PlanarFaceSelection& support) {
-    impl_->sketchEditor.cancel();
-    impl_->manipulator.setEnabled(false);
-    impl_->manipulator.detach();
-    impl_->sketch.begin(support, impl_->context, impl_->view);
-    if (!impl_->view.IsNull()) {
-        impl_->view->Redraw();
-    }
+    performViewportOperation(*this, impl_->ready, [&] {
+        impl_->sketchEditor.cancel();
+        impl_->manipulator.setEnabled(false);
+        impl_->manipulator.detach();
+        impl_->activeSketchSupport = support;
+        impl_->sketch.begin(support, impl_->context, impl_->view);
+        update();
+    });
 }
 
 void CadViewport::beginSketchEditor(const PlanarFaceSelection& support, SketchElementTool tool) {
-    impl_->sketch.cancel();
-    impl_->manipulator.setEnabled(false);
-    impl_->manipulator.detach();
-    impl_->sketchEditor.begin(support, tool, impl_->view);
-    impl_->sketchPresentation.setReferences(impl_->context, support, true);
-    if (!impl_->view.IsNull()) {
-        impl_->view->Redraw();
-    }
+    performViewportOperation(*this, impl_->ready, [&] {
+        impl_->sketch.cancel();
+        impl_->manipulator.setEnabled(false);
+        impl_->manipulator.detach();
+        impl_->activeSketchSupport = support;
+        impl_->sketchEditor.begin(support, tool, impl_->view);
+        impl_->sketchPresentation.setReferences(impl_->context, support, true);
+        update();
+    });
 }
 
 void CadViewport::setSketchEditorTool(SketchElementTool tool) {
-    impl_->sketchEditor.setTool(tool);
-    if (impl_->sketchEditorPreviewHandler) {
-        impl_->sketchEditorPreviewHandler(std::nullopt);
-    }
+    performViewportOperation(*this, impl_->ready, [&] {
+        impl_->sketchEditor.setTool(tool);
+        if (impl_->sketchEditorPreviewHandler) {
+            impl_->sketchEditorPreviewHandler(std::nullopt);
+        }
+        update();
+    });
 }
 
 void CadViewport::continueSketchPolyline(double x, double y, std::uint64_t elementId) {
-    impl_->sketchEditor.continuePolyline(x, y, elementId);
+    performViewportOperation(*this, impl_->ready,
+                             [&] { impl_->sketchEditor.continuePolyline(x, y, elementId); });
 }
 
 bool CadViewport::cancelSketchEditorStep() { return impl_->sketchEditor.cancelStep(); }
 
 void CadViewport::updateSketchExtrusionPreview(double distance) {
-    impl_->sketch.updateDistance(distance);
-    if (!impl_->view.IsNull()) {
-        impl_->view->Redraw();
-    }
+    performViewportOperation(*this, impl_->ready, [&] {
+        impl_->sketch.updateDistance(distance);
+        update();
+    });
 }
 
 void CadViewport::cancelSketch() {
-    impl_->sketch.cancel();
-    impl_->sketchEditor.cancel();
-    impl_->sketchPresentation.setReferences(impl_->context, {}, false);
-    if (!impl_->view.IsNull()) {
-        impl_->view->Redraw();
-    }
-}
-
-void CadViewport::setBodyMoveHandler(
-    std::function<void(std::uint64_t, double, double, double)> handler) {
-    impl_->manipulator.setMoveHandler(std::move(handler));
-}
-
-void CadViewport::setBodyMovePreviewHandler(
-    std::function<void(std::uint64_t, double, double, double)> handler) {
-    impl_->manipulator.setMovePreviewHandler(std::move(handler));
-}
-
-void CadViewport::setBodyRotationHandler(std::function<void(std::uint64_t, int, double)> handler) {
-    impl_->manipulator.setRotationHandler(std::move(handler));
-}
-
-void CadViewport::setBodyRotationPreviewHandler(
-    std::function<void(std::uint64_t, int, double)> handler) {
-    impl_->manipulator.setRotationPreviewHandler(std::move(handler));
+    performViewportOperation(*this, impl_->ready, [&] {
+        impl_->activeSketchSupport.reset();
+        impl_->sketch.cancel();
+        impl_->sketchEditor.cancel();
+        impl_->sketchPresentation.setReferences(impl_->context, {}, false);
+        update();
+    });
 }
 
 void CadViewport::setTransformToolEnabled(bool enabled) {
-    impl_->setTransformToolEnabled(enabled);
-    if (impl_->context.IsNull()) {
-        return;
-    }
-    impl_->view->Redraw();
+    performViewportOperation(*this, impl_->ready, [&] {
+        impl_->setTransformToolEnabled(enabled);
+        if (!impl_->ready) {
+            return;
+        }
+        update();
+    });
 }
 
 void CadViewport::setTransformSnapping(bool enabled, double linearStep, double angularStep) {
-    impl_->manipulator.setSnapping(enabled, linearStep, angularStep);
-    impl_->sketch.setSnapping(enabled, linearStep);
-    impl_->sketchEditor.setSnapping(enabled, linearStep);
+    performViewportOperation(*this, impl_->ready, [&] {
+        impl_->manipulator.setSnapping(enabled, linearStep, angularStep);
+        impl_->sketch.setSnapping(enabled, linearStep);
+        impl_->sketchEditor.setSnapping(enabled, linearStep);
+    });
 }
 
 void CadViewport::setCameraView(CameraView cameraView) {
-    if (impl_->view.IsNull())
-        return;
-    V3d_TypeOfOrientation orientation = V3d_TypeOfOrientation_Zup_AxoRight;
-    switch (cameraView) {
-    case CameraView::top: orientation = V3d_TypeOfOrientation_Zup_Top; break;
-    case CameraView::front: orientation = V3d_TypeOfOrientation_Zup_Front; break;
-    case CameraView::right: orientation = V3d_TypeOfOrientation_Zup_Right; break;
-    case CameraView::left: orientation = V3d_TypeOfOrientation_Zup_Left; break;
-    case CameraView::back: orientation = V3d_TypeOfOrientation_Zup_Back; break;
-    case CameraView::bottom: orientation = V3d_TypeOfOrientation_Zup_Bottom; break;
-    case CameraView::isometric: break;
-    }
-    impl_->view->SetProj(orientation);
-    fitView();
+    performViewportOperation(*this, impl_->ready, [&] {
+        if (!impl_->ready)
+            return;
+        V3d_TypeOfOrientation orientation = V3d_TypeOfOrientation_Zup_AxoRight;
+        switch (cameraView) {
+        case CameraView::top:
+            orientation = V3d_TypeOfOrientation_Zup_Top;
+            break;
+        case CameraView::front:
+            orientation = V3d_TypeOfOrientation_Zup_Front;
+            break;
+        case CameraView::right:
+            orientation = V3d_TypeOfOrientation_Zup_Right;
+            break;
+        case CameraView::left:
+            orientation = V3d_TypeOfOrientation_Zup_Left;
+            break;
+        case CameraView::back:
+            orientation = V3d_TypeOfOrientation_Zup_Back;
+            break;
+        case CameraView::bottom:
+            orientation = V3d_TypeOfOrientation_Zup_Bottom;
+            break;
+        case CameraView::isometric:
+            break;
+        }
+        impl_->view->SetProj(orientation);
+        fitView();
+    });
 }
 
 void CadViewport::setPerspectiveProjection(bool enabled) {
-    if (impl_->view.IsNull())
-        return;
-    impl_->view->Camera()->SetProjectionType(enabled ? Graphic3d_Camera::Projection_Perspective
+    performViewportOperation(*this, impl_->ready, [&] {
+        if (!impl_->ready)
+            return;
+        impl_->view->Camera()->SetProjectionType(enabled
+                                                     ? Graphic3d_Camera::Projection_Perspective
                                                      : Graphic3d_Camera::Projection_Orthographic);
-    impl_->view->Redraw();
+        update();
+    });
 }
 
 void CadViewport::fitView() {
-    if (impl_->view.IsNull())
-        return;
-    impl_->view->FitAll(0.08, false);
-    impl_->view->ZFitAll();
-    impl_->view->Redraw();
-}
-
-QPaintEngine* CadViewport::paintEngine() const { return nullptr; }
-
-void CadViewport::paintEvent(QPaintEvent* event) {
-    event->accept();
-    if (!impl_->view.IsNull()) {
-        impl_->view->Redraw();
-    }
-}
-
-void CadViewport::resizeEvent(QResizeEvent* event) {
-    QWidget::resizeEvent(event);
-    impl_->resize();
-}
-
-void CadViewport::showEvent(QShowEvent* event) {
-    QWidget::showEvent(event);
-    impl_->initialize(static_cast<std::uintptr_t>(winId()));
-    impl_->resize();
-    QTimer::singleShot(0, this, [this]() { impl_->resize(); });
-}
-
-void CadViewport::mouseMoveEvent(QMouseEvent* event) {
-    if (impl_->view.IsNull()) {
-        return;
-    }
-
-    const QPoint position = event->position().toPoint();
-    if (impl_->gesture == Impl::Gesture::selectBox) {
-        impl_->selectionBand->setGeometry(QRect(impl_->gestureOrigin, position).normalized());
-        return;
-    }
-    if (impl_->sketchEditor.isElementDragging() && event->buttons().testFlag(Qt::LeftButton)) {
-        const auto delta = impl_->sketchEditor.dragElement(position.x(), position.y());
-        if (delta.has_value() && impl_->sketchEditorTranslationHandler) {
-            impl_->sketchEditorTranslationHandler(delta->first, delta->second);
-        }
-        impl_->view->Redraw();
-        return;
-    }
-    if (impl_->sketch.isActive() && event->buttons() == Qt::NoButton) {
-        impl_->sketch.move(position.x(), position.y());
-        impl_->view->Redraw();
-        return;
-    }
-    if (impl_->sketchEditor.isActive() && event->buttons() == Qt::NoButton) {
-        if (impl_->sketchEditorPreviewHandler) {
-            impl_->sketchEditorPreviewHandler(impl_->sketchEditor.move(position.x(), position.y()));
-        }
-        impl_->view->Redraw();
-        return;
-    }
-    if (impl_->gesture == Impl::Gesture::rotate) {
-        impl_->view->Rotation(position.x(), position.y());
-    } else if (impl_->gesture == Impl::Gesture::pan) {
-        const QPoint delta = position - impl_->gestureOrigin;
-        impl_->view->Pan(delta.x(), -delta.y(), 1.0, false);
-    } else if (impl_->gesture == Impl::Gesture::moveAxis) {
-        impl_->manipulator.update(position.x(), position.y(), impl_->view,
-                                  event->modifiers().testFlag(Qt::ControlModifier));
-    } else if (impl_->gesture != Impl::Gesture::selectBox) {
-        impl_->context->MoveTo(position.x(), position.y(), impl_->view, true);
-    }
-}
-
-void CadViewport::mousePressEvent(QMouseEvent* event) {
-    if (impl_->view.IsNull()) {
-        return;
-    }
-
-    impl_->gestureOrigin = event->position().toPoint();
-    if (event->button() == Qt::RightButton) {
-        impl_->gesture = Impl::Gesture::rotate;
-        impl_->view->StartRotation(impl_->gestureOrigin.x(), impl_->gestureOrigin.y());
-        setCursor(Qt::ClosedHandCursor);
-    } else if (event->button() == Qt::MiddleButton) {
-        impl_->gesture = Impl::Gesture::pan;
-        impl_->view->Pan(0, 0, 1.0, true);
-        setCursor(Qt::SizeAllCursor);
-    } else if (event->button() == Qt::LeftButton) {
-        if (impl_->sketch.isActive()) {
+    performViewportOperation(*this, impl_->ready, [&] {
+        if (!impl_->ready)
             return;
-        }
-        const QPoint position = event->position().toPoint();
-        impl_->context->MoveTo(position.x(), position.y(), impl_->view, false);
-        if (impl_->sketchEditor.isActive()) {
-            impl_->sketchElementPressed = false;
-            if (impl_->sketchEditor.isDrawing())
-                return;
-            if (impl_->context->HasDetected()) {
-                const auto detected = impl_->context->DetectedInteractive();
-                if (impl_->sketchConstraintPresentation.detectedConstraint(detected))
-                    return;
-                if (const auto id = impl_->sketchPresentation.detectedElement(detected)) {
-                    const bool additive = event->modifiers().testFlag(Qt::ControlModifier);
-                    impl_->sketchElementPressed = !additive;
-                    if (!additive)
-                        static_cast<void>(
-                            impl_->sketchEditor.beginElementDrag(position.x(), position.y()));
-                    if (impl_->sketchElementSelectionHandler) {
-                        const auto local =
-                            impl_->sketchEditor.projectPoint(position.x(), position.y());
-                        if (local.has_value())
-                            impl_->sketchElementSelectionHandler(
-                                {*id, local->first, local->second, additive});
-                    }
-                    impl_->view->Redraw();
-                }
-            } else {
-                impl_->gesture = Impl::Gesture::selectBox;
-                impl_->selectionBand->setGeometry(QRect(impl_->gestureOrigin, QSize{}));
-                impl_->selectionBand->show();
-            }
-            return;
-        }
-        if (!impl_->context->HasDetected()) {
-            return;
-        }
-        const occ::handle<AIS_InteractiveObject> detected = impl_->context->DetectedInteractive();
-        if (impl_->manipulator.matches(detected) && impl_->manipulator.hasActiveMode()) {
-            impl_->gesture = Impl::Gesture::moveAxis;
-            impl_->manipulator.start(position.x(), position.y(), impl_->view);
-            setCursor(Qt::ClosedHandCursor);
-            return;
-        }
-        if (const auto elementId = impl_->sketchPresentation.detectedElement(detected)) {
-            if (impl_->sketchElementSelectionHandler) {
-                impl_->sketchElementSelectionHandler(
-                    {*elementId, 0.0, 0.0, event->modifiers().testFlag(Qt::ControlModifier)});
-            }
-            impl_->view->Redraw();
-            return;
-        }
-        for (const Impl::BodyPresentation& presentation : impl_->presentations) {
-            if (presentation.shape != detected) {
-                continue;
-            }
-            if (impl_->bodySelectionHandler) {
-                impl_->bodySelectionHandler(presentation.id);
-            }
-            break;
-        }
-    }
-}
-
-void CadViewport::mouseDoubleClickEvent(QMouseEvent* event) {
-    if (impl_->view.IsNull() || event->button() != Qt::LeftButton)
-        return;
-    const QPoint position = event->position().toPoint();
-    impl_->context->MoveTo(position.x(), position.y(), impl_->view, false);
-    if (!impl_->context->HasDetected())
-        return;
-    const auto id = impl_->sketchConstraintPresentation.detectedConstraint(
-        impl_->context->DetectedInteractive());
-    if (id.has_value() && impl_->sketchConstraintEditHandler)
-        impl_->sketchConstraintEditHandler(*id);
-}
-
-void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
-    if (!impl_->view.IsNull() && event->button() == Qt::LeftButton &&
-        impl_->gesture == Impl::Gesture::moveAxis) {
-        impl_->manipulator.finish();
-        impl_->gesture = Impl::Gesture::none;
-        unsetCursor();
-        impl_->view->Redraw();
-        return;
-    }
-    if (!impl_->view.IsNull() && event->button() == Qt::LeftButton) {
-        const QPoint position = event->position().toPoint();
-        if (impl_->sketch.isActive()) {
-            const auto rectangle = impl_->sketch.click(position.x(), position.y());
-            if (rectangle.has_value() && impl_->sketchRectangleHandler) {
-                impl_->sketchRectangleHandler(*rectangle);
-            }
-            impl_->view->Redraw();
-            return;
-        }
-        if (impl_->sketchEditor.isActive()) {
-            if (impl_->gesture == Impl::Gesture::selectBox) {
-                const QRect rectangle(impl_->gestureOrigin, position);
-                impl_->gesture = Impl::Gesture::none;
-                impl_->selectionBand->hide();
-                if (impl_->sketchElementSelectionHandler)
-                    for (const auto& selection : boxSelectionIntents(
-                             impl_->pendingSketchElements, impl_->view, rectangle.normalized()))
-                        impl_->sketchElementSelectionHandler(selection);
-                impl_->view->Redraw();
-                return;
-            }
-            if (impl_->sketchElementPressed) {
-                impl_->sketchElementPressed = false;
-                impl_->sketchEditor.finishElementDrag();
-                return;
-            }
-            const auto intent = impl_->sketchEditor.isDrawing()
-                                    ? impl_->sketchEditor.click(position.x(), position.y())
-                                    : std::nullopt;
-            if (intent.has_value() && impl_->sketchEditorElementHandler) {
-                impl_->sketchEditorElementHandler(*intent);
-            }
-            if (impl_->sketchEditorPreviewHandler) {
-                impl_->sketchEditorPreviewHandler(std::nullopt);
-            }
-            impl_->view->Redraw();
-            return;
-        }
-        impl_->context->MoveTo(position.x(), position.y(), impl_->view, false);
-        if (impl_->context->HasDetected()) {
-            const occ::handle<AIS_InteractiveObject> detected =
-                impl_->context->DetectedInteractive();
-            if (impl_->sketchPresentation.detectedElement(detected).has_value()) {
-                impl_->gesture = Impl::Gesture::none;
-                unsetCursor();
-                impl_->view->Redraw();
-                return;
-            }
-            for (const Impl::BodyPresentation& presentation : impl_->presentations) {
-                if (presentation.shape == detected && impl_->bodySelectionHandler) {
-                    impl_->bodySelectionHandler(presentation.id);
-                    if (impl_->planarFaceSelectionHandler) {
-                        const occ::handle<StdSelect_BRepOwner> owner =
-                            occ::handle<StdSelect_BRepOwner>::DownCast(
-                                impl_->context->DetectedOwner());
-                        if (!owner.IsNull()) {
-                            const auto selection =
-                                planarFaceSelection(presentation.id, owner->Shape());
-                            if (selection.has_value()) {
-                                impl_->planarFaceSelectionHandler(*selection);
-                            }
-                        }
-                    }
-                    break;
-                }
-            }
-        }
-        impl_->context->SelectPoint(NCollection_Vec2<int>(position.x(), position.y()), impl_->view,
-                                    AIS_SelectionScheme_Replace);
-        impl_->view->Redraw();
-    }
-
-    impl_->gesture = Impl::Gesture::none;
-    unsetCursor();
-}
-
-void CadViewport::wheelEvent(QWheelEvent* event) {
-    if (impl_->view.IsNull()) {
-        return;
-    }
-
-    constexpr double zoomStep = 1.15;
-    impl_->view->SetZoom(event->angleDelta().y() > 0 ? zoomStep : 1.0 / zoomStep);
-    impl_->view->Redraw();
-    event->accept();
+        impl_->view->FitAll(0.08, false);
+        impl_->view->ZFitAll();
+        update();
+    });
 }
 
 } // namespace voelund::viewport

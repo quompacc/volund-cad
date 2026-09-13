@@ -1,0 +1,16 @@
+[1/25] Scanning V:\src\viewport\CadViewport.cpp for CXX dependencies
+[2/25] Scanning V:\src\viewport\CadViewportInput.cpp for CXX dependencies
+[3/25] Scanning V:\src\viewport\CadViewportHandlers.cpp for CXX dependencies
+[4/25] Scanning V:\src\viewport\CadViewportQtOpenGl.cpp for CXX dependencies
+[5/25] Scanning V:\tests\desktop\ViewportLifecycleTests.cpp for CXX dependencies
+[6/25] Generating CXX dyndep file src\viewport\CMakeFiles\voelund_viewport.dir\CXX.dd
+[7/16] Generating CXX dyndep file tests\CMakeFiles\voelund_viewport_lifecycle_tests.dir\CXX.dd
+[8/16] Building CXX object src\viewport\CMakeFiles\voelund_viewport.dir\CadViewportHandlers.cpp.obj
+[9/16] Building CXX object src\viewport\CMakeFiles\voelund_viewport.dir\CadViewportQtOpenGl.cpp.obj
+[10/16] Building CXX object src\viewport\CMakeFiles\voelund_viewport.dir\CadViewportInput.cpp.obj
+[11/16] Building CXX object src\viewport\CMakeFiles\voelund_viewport.dir\CadViewport.cpp.obj
+[12/16] Linking CXX static library src\viewport\voelund_viewport.lib
+[13/16] Building CXX object tests\CMakeFiles\voelund_viewport_lifecycle_tests.dir\desktop\ViewportLifecycleTests.cpp.obj
+[14/16] Linking CXX executable apps\voelund-cad\voelund-cad.exe; Deploying the minimal Qt runtime; Deploying the Qt OpenGL runtime
+[15/16] Linking CXX executable apps\voelund-ui-preview\voelund-ui-preview.exe; Deploying the Qt runtime for the UI preview; Deploying the Qt OpenGL runtime for the UI preview
+[16/16] Linking CXX executable tests\voelund_viewport_lifecycle_tests.exe

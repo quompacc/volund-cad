@@ -1,0 +1,16 @@
+{
+  "apps/SmokeSupport.hpp": "588d3d3d65821aa47d40ee43eb3c2674f87b8197d1da9af82637f55c2967bb57",
+  "apps/SmokeSupport.cpp": "a7f778f0b79a7342dd4fde4f351f9ebcf3bde016976bdbd09e2beb62407dc0a3",
+  "apps/voelund-cad/main.cpp": "476e5a5412b523f273bcc9a0a158010be4a429751d29026744f8f5808c3c3114",
+  "apps/voelund-cad/CMakeLists.txt": "a4b28ace3c874b484a4fab57688e74baec2464834235b319893ff9a58396e540",
+  "apps/voelund-ui-preview/main.cpp": "5b474ac5ef80d137f87953f45a85d7870bf83b8b23a7b5916bf3ee3272cc46f2",
+  "apps/voelund-ui-preview/CMakeLists.txt": "655ed51adb5d218c00c9e0a8b99efe2a634bdca5aca55eddf1d753a35227482b",
+  "apps/voelund-ui-preview/PreviewWindow.cpp": "f66f191381aba16134c1fec941a18ccc7181380708232632913a996439153c93",
+  "apps/voelund-ui-preview/PreviewWindowRibbon.cpp": "691b04e702ab23c951a8ab1ab880d4fe4776d76554246de24a02415f141f61d7",
+  "src/desktop/MainWindow.cpp": "50965bbc903fb744be97fe1013f322e3a265701a694d1a4bc7110a79506155dc",
+  "src/desktop/FeaturePropertiesPanel.cpp": "b75c169067d39666377b940e8de3b2718036e0b58d68c1465ae2f9aa1a274247",
+  "src/viewport/CadViewportQtOpenGl.cpp": "3914400754ab40699ccf5222fb126b7e397b25b7238e218e0a2c318906e09f19",
+  "tests/CMakeLists.txt": "d7b197271700913ee0a1a36ab66d5bf3fd101134f10a72f27bcae8dc81ad0c04",
+  "tests/cmake/ExpectedSmokeRunnerTests.cmake": "a773fc4baa423e7f00615e7b667a4cb0dee2057cd87b2853501732f18586cf5d",
+  "tools/cmake/RunExpectedSmoke.cmake": "d6982e8bd1ba3d3c44cf429cf291e28fae3ec159c2d38c20edea040072e32c02"
+}

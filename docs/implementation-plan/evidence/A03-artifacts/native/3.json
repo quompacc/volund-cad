@@ -1,0 +1,15 @@
+{
+    "backend": "native",
+    "capture": "QWidget::grab plus separate GL framebuffer; no compositor proof",
+    "devicePixelRatio": 1,
+    "logicalDpi": 96,
+    "occt": "8.0.1",
+    "os": "Windows 11 Version 25H2",
+    "qpa": "windows",
+    "qt": "6.11.1",
+    "ready": true,
+    "renderHeight": 697,
+    "renderWidth": 640,
+    "windowHeight": 760,
+    "windowWidth": 1100
+}

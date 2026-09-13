@@ -143,6 +143,14 @@ void SketchInteraction::begin(const PlanarFaceSelection& support,
     orientSketchView(support_, view_);
 }
 
+void SketchInteraction::rebind(const occ::handle<AIS_InteractiveContext>& context,
+                              const occ::handle<V3d_View>& view) {
+    preview_.Nullify();
+    context_ = context;
+    view_ = view;
+    if (active_ && !context_.IsNull() && secondPoint_) showExtrusionPreview();
+}
+
 void SketchInteraction::cancel() {
     if (!context_.IsNull() && !preview_.IsNull()) {
         context_->Remove(preview_, false);

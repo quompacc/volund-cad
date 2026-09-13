@@ -1,0 +1,30 @@
+[
+  {
+    "path": "include/voelund/application/CommandResult.hpp",
+    "sha256": "8511269780803eb8276f00f8a52f541b7a5ecb3b1f84299f1fc6ee4af0647e0a"
+  },
+  {
+    "path": "include/voelund/application/CommandTransaction.hpp",
+    "sha256": "09b64df06c233e58071653ceab7ce1f6ec06d863be4458a3529be9ae6588f6e5"
+  },
+  {
+    "path": "include/voelund/features/EvaluationState.hpp",
+    "sha256": "c4d84a557fe963499241e661d010017ee464bec058cd33a51279d7ff84a8b3f3"
+  },
+  {
+    "path": "src/application/CommandTransaction.cpp",
+    "sha256": "c57d3071f0ca25b096e884570d536ad0131a6a7183c3214d4f1b5985802dd637"
+  },
+  {
+    "path": "src/application/CMakeLists.txt",
+    "sha256": "b7712ea366335e50979696c52a476f664f91e0705624ef67e245d09494abff1b"
+  },
+  {
+    "path": "tests/integration/CommandContractTests.cpp",
+    "sha256": "b6a7a38a2dfe965faf9cbd7beb1d67132bc6b302a0a78976ed5f5ebb35f4d206"
+  },
+  {
+    "path": "tests/CMakeLists.txt",
+    "sha256": "09a131bffa7c139e0cdede3b90128d959ff488fe1bccbdb2117981c69f14007f"
+  }
+]

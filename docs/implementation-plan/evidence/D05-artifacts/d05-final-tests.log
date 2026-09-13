@@ -1,0 +1,83 @@
+Internal ctest changing into directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt
+UpdateCTestConfiguration  from :/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/DartConfiguration.tcl
+Parse Config file:/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/DartConfiguration.tcl
+Parse Config file:/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/DartConfiguration.tcl
+Test project /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 5
+    Start  5: document.transactions
+
+5: Test command: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests/voelund_document_transaction_tests
+5: Working Directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests
+5: Test timeout computed to be: 60
+5: Document transaction tests passed
+1/4 Test  #5: document.transactions ......................   Passed    0.02 sec
+test 6
+    Start  6: document.transaction_allocation_failures
+
+6: Test command: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests/voelund_document_transaction_tests "--allocations"
+6: Working Directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests
+6: Test timeout computed to be: 60
+6: Prepared commit requires no allocation
+6: sketch edit: 13 allocation failures preserved state
+6: single mutation: 7 allocation failures preserved state
+6: compound transaction: 20 allocation failures preserved state
+6: undo: 3 allocation failures preserved state
+6: redo: 2 allocation failures preserved state
+6: Document transaction tests passed
+2/4 Test  #6: document.transaction_allocation_failures ...   Passed    0.02 sec
+test 28
+    Start 28: architecture.source_limits
+
+28: Test command: /usr/local/bin/cmake "-DVOELUND_SOURCE_ROOT=/home/eduard/src/voelund-p04-20260913" "-P" "/home/eduard/src/voelund-p04-20260913/tools/cmake/CheckSourceLimits.cmake"
+28: Working Directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests
+28: Test timeout computed to be: 1500
+28: -- Checked 184 source files
+28: -- Source file limit check passed
+3/4 Test #28: architecture.source_limits .................   Passed    0.04 sec
+test 29
+    Start 29: architecture.source_limits_regression
+
+29: Test command: /usr/local/bin/cmake "-DVOELUND_TEST_ROOT=/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests/source-limit-fixtures" "-P" "/home/eduard/src/voelund-p04-20260913/tests/cmake/CheckSourceLimitsTests.cmake"
+29: Working Directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests
+29: Test timeout computed to be: 1500
+29: -- missing_variable: passed
+29: -- empty_value: passed
+29: -- nonexistent_directory: passed
+29: -- regular_file: passed
+29: -- literal_quotes: passed
+29: -- empty_directory: passed
+29: -- unsupported_files_only: passed
+29: -- spaces_and_unicode: passed
+29: -- 600_lf_final_newline_yes: passed
+29: -- 600_lf_final_newline_no: passed
+29: -- 601_lf_final_newline_yes: passed
+29: -- 601_lf_final_newline_no: passed
+29: -- 600_crlf_final_newline_yes: passed
+29: -- 600_crlf_final_newline_no: passed
+29: -- 601_crlf_final_newline_yes: passed
+29: -- 601_crlf_final_newline_no: passed
+4/4 Test #29: architecture.source_limits_regression ......   Passed    0.09 sec
+
+The following tests passed:
+	document.transactions
+	document.transaction_allocation_failures
+	architecture.source_limits
+	architecture.source_limits_regression
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+allocation      =   0.02 sec*proc (1 test)
+architecture    =   0.13 sec*proc (2 tests)
+document        =   0.03 sec*proc (2 tests)
+regression      =   0.16 sec*proc (4 tests)
+unit            =   0.03 sec*proc (2 tests)
+
+Total Test time (real) =   0.16 sec

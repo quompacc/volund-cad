@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="FreeBSD-clang++"
+	tests="22"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname="freebsd-dev"
+	time="6"
+	timestamp="2026-09-13T18:47:47"
+	>
+	<testcase name="desktop.viewport_startup.native_wayland" classname="desktop.viewport_startup.native_wayland" time="0.94695" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;freebsd;platform;wayland"/>
+		</properties>
+		<system-out>[NON-XML-CHAR-0x1B][32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+  Unhandled GL error: GL_INVALID_OPERATION[NON-XML-CHAR-0x1B][0m
+[NON-XML-CHAR-0x1B][32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+  OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![NON-XML-CHAR-0x1B][0m
+desktop-smoke {"backend":"qt-opengl","courierFontAvailable":true,"dpi":96,"dpr":1,"gl":"OpenGL ES 3.2 Mesa 26.1.3","height":980,"occt":"7.9.3","os":"FreeBSD 15.1-RELEASE-p3","qpa":"wayland","qt":"6.11.1","renderer":"Mesa Intel(R) HD Graphics 620 (KBL GT2)","vendor":"Intel","width":1378}
+smoke-ui box-height
+QFormLayout::takeAt: Invalid index 0
+smoke-ui cylinder
+QFormLayout::takeAt: Invalid index 0
+QFormLayout::takeAt: Invalid index 0
+smoke-ui transform
+smoke-ui resize
+desktop-smoke {"backend":"qt-opengl","courierFontAvailable":true,"dpi":96,"dpr":1,"gl":"OpenGL ES 3.2 Mesa 26.1.3","height":1077,"occt":"7.9.3","os":"FreeBSD 15.1-RELEASE-p3","qpa":"wayland","qt":"6.11.1","renderer":"Mesa Intel(R) HD Graphics 620 (KBL GT2)","vendor":"Intel","width"...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="desktop.viewport_startup.uninitialized" classname="desktop.viewport_startup.uninitialized" time="0.245892" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;negative;platform;regression"/>
+		</properties>
+		<system-out>-- Uninitialized viewport rejected with exact exit 10
+</system-out>
+	</testcase>
+	<testcase name="desktop.ui_preview_startup.native_wayland" classname="desktop.ui_preview_startup.native_wayland" time="0.922966" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;freebsd;platform;ui;wayland"/>
+		</properties>
+		<system-out>Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+[NON-XML-CHAR-0x1B][32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+  Unhandled GL error: GL_INVALID_OPERATION[NON-XML-CHAR-0x1B][0m
+[NON-XML-CHAR-0x1B][32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+  OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![NON-XML-CHAR-0x1B][0m
+desktop-smoke {"backend":"qt-opengl","courierFontAvailable":true,"dpi":96,"dpr":1,"gl":"OpenGL ES 3.2 Mesa 26.1.3","height":769,"occt":"7.9.3","os":"FreeBSD 15.1-RELEASE-p3","qpa":"wayland","qt":"6.11.1","renderer":"Mesa Intel(R) HD Graphics 620 (KBL GT2)","vendor":"Intel","width":1667}
+desktop-smoke {"backend":"qt-opengl","courierFontAvailable":true,"dpi":96,"dpr":1,"gl":"OpenGL ES 3.2 Mesa 26.1.3","height":769,"occt":"7.9.3","os":"FreeBSD 15.1-RELEASE-p3","qpa":"wayland","qt":"6.11.1","renderer":"Mesa Intel(R) HD Graph...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="desktop.ui_preview_startup.uninitialized" classname="desktop.ui_preview_startup.uninitialized" time="0.199927" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;negative;platform;regression"/>
+		</properties>
+		<system-out>-- Uninitialized viewport rejected with exact exit 10
+</system-out>
+	</testcase>
+	<testcase name="kernel.shape_factory" classname="kernel.shape_factory" time="0.0383495" status="run">
+		<properties>
+			<property name="cmake_labels" value="kernel;unit"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="document.history" classname="document.history" time="0.0316764" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;unit"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="features.sketch_profiles" classname="features.sketch_profiles" time="0.0162264" status="run">
+		<properties>
+			<property name="cmake_labels" value="features;unit"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="features.planegcs_solver" classname="features.planegcs_solver" time="0.00313835" status="run">
+		<properties>
+			<property name="cmake_labels" value="features;unit"/>
+		</properties>
+		<system-out>Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 0 redundants
+</system-out>
+	</testcase>
+	<testcase name="features.sketch_constraint_adapter" classname="features.sketch_constraint_adapter" time="0.0209803" status="run">
+		<properties>
+			<property name="cmake_labels" value="features;unit"/>
+		</properties>
+		<system-out>Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 0 redundants
+</system-out>
+	</testcase>
+	<testcase name="application.recompute_history" classname="application.recompute_history" time="1.36202" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="application.sketch_editor_flow" classname="application.sketch_editor_flow" time="0.557165" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;integration"/>
+		</properties>
+		<system-out>Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 0 redundants
+</system-out>
+	</testcase>
+	<testcase name="application.sketch_construction" classname="application.sketch_construction" time="0.0771545" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="application.sketch_circle_constraints" classname="application.sketch_circle_constraints" time="0.0579261" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="application.sketch_alignments" classname="application.sketch_alignments" time="0.0568253" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="application.sketch_fix_distance" classname="application.sketch_fix_distance" time="0.0387159" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="application.sketch_basic_tools" classname="application.sketch_basic_tools" time="0.13909" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;integration"/>
+		</properties>
+		<system-out>Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 2 redundants
+</system-out>
+	</testcase>
+	<testcase name="application.sketch_slot_dimensions" classname="application.sketch_slot_dimensions" time="0.102155" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;integration;regression"/>
+		</properties>
+		<system-out>Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 5 redundants
+</system-out>
+	</testcase>
+	<testcase name="workspaces.module_registry" classname="workspaces.module_registry" time="0.00170015" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit;workspaces"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="architecture.source_limits" classname="architecture.source_limits" time="0.0338866" status="run">
+		<properties>
+			<property name="cmake_labels" value="architecture;regression"/>
+		</properties>
+		<system-out>-- Checked 163 source files
+-- Source file limit check passed
+</system-out>
+	</testcase>
+	<testcase name="architecture.source_limits_regression" classname="architecture.source_limits_regression" time="0.101345" status="run">
+		<properties>
+			<property name="cmake_labels" value="architecture;regression"/>
+		</properties>
+		<system-out>-- missing_variable: passed
+-- empty_value: passed
+-- nonexistent_directory: passed
+-- regular_file: passed
+-- literal_quotes: passed
+-- empty_directory: passed
+-- unsupported_files_only: passed
+-- spaces_and_unicode: passed
+-- 600_lf_final_newline_yes: passed
+-- 600_lf_final_newline_no: passed
+-- 601_lf_final_newline_yes: passed
+-- 601_lf_final_newline_no: passed
+-- 600_crlf_final_newline_yes: passed
+-- 600_crlf_final_newline_no: passed
+-- 601_crlf_final_newline_yes: passed
+-- 601_crlf_final_newline_no: passed
+</system-out>
+	</testcase>
+	<testcase name="architecture.ctest_label_runner" classname="architecture.ctest_label_runner" time="0.100418" status="run">
+		<properties>
+			<property name="cmake_labels" value="architecture;regression"/>
+		</properties>
+		<system-out>-- CTest label 'unit' passed with 6 selected tests
+</system-out>
+	</testcase>
+	<testcase name="architecture.desktop_smoke_runner" classname="architecture.desktop_smoke_runner" time="1.06385" status="run">
+		<properties>
+			<property name="cmake_labels" value="architecture;regression"/>
+		</properties>
+		<system-out>-- Expected-smoke runner: 4 cases passed
+</system-out>
+	</testcase>
+</testsuite>

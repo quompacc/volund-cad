@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="FreeBSD-clang++"
+	tests="4"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname="freebsd-dev"
+	time="0"
+	timestamp="2026-09-13T20:12:56"
+	>
+	<testcase name="document.transactions" classname="document.transactions" time="0.0151877" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;regression;unit"/>
+		</properties>
+		<system-out>Document transaction tests passed
+</system-out>
+	</testcase>
+	<testcase name="document.transaction_allocation_failures" classname="document.transaction_allocation_failures" time="0.0187206" status="run">
+		<properties>
+			<property name="cmake_labels" value="allocation;document;regression;unit"/>
+		</properties>
+		<system-out>Prepared commit requires no allocation
+sketch edit: 13 allocation failures preserved state
+single mutation: 7 allocation failures preserved state
+compound transaction: 20 allocation failures preserved state
+undo: 3 allocation failures preserved state
+redo: 2 allocation failures preserved state
+Document transaction tests passed
+</system-out>
+	</testcase>
+	<testcase name="architecture.source_limits" classname="architecture.source_limits" time="0.0351848" status="run">
+		<properties>
+			<property name="cmake_labels" value="architecture;regression"/>
+		</properties>
+		<system-out>-- Checked 184 source files
+-- Source file limit check passed
+</system-out>
+	</testcase>
+	<testcase name="architecture.source_limits_regression" classname="architecture.source_limits_regression" time="0.0918115" status="run">
+		<properties>
+			<property name="cmake_labels" value="architecture;regression"/>
+		</properties>
+		<system-out>-- missing_variable: passed
+-- empty_value: passed
+-- nonexistent_directory: passed
+-- regular_file: passed
+-- literal_quotes: passed
+-- empty_directory: passed
+-- unsupported_files_only: passed
+-- spaces_and_unicode: passed
+-- 600_lf_final_newline_yes: passed
+-- 600_lf_final_newline_no: passed
+-- 601_lf_final_newline_yes: passed
+-- 601_lf_final_newline_no: passed
+-- 600_crlf_final_newline_yes: passed
+-- 600_crlf_final_newline_no: passed
+-- 601_crlf_final_newline_yes: passed
+-- 601_crlf_final_newline_no: passed
+</system-out>
+	</testcase>
+</testsuite>

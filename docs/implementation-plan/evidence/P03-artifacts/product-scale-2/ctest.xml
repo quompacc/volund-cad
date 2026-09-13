@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Win32-ninja"
+	tests="2"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname="megatron"
+	time="4"
+	timestamp="2026-09-13T18:27:14"
+	>
+	<testcase name="desktop.viewport_startup" classname="desktop.viewport_startup" time="1.91818" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;platform;windows"/>
+		</properties>
+		<system-out>desktop-smoke {"backend":"qt-opengl","courierFontAvailable":false,"dpi":96,"dpr":2,"gl":"4.6.0 NVIDIA 610.88","height":1328,"occt":"8.0.1","os":"Windows 11 Version 25H2","qpa":"windows","qt":"6.11.1","renderer":"NVIDIA GeForce RTX 4070 SUPER/PCIe/SSE2","vendor":"NVIDIA Corporation","width":1332}
+smoke-ui box-height
+QFormLayout::takeAt: Invalid index 0
+smoke-ui cylinder
+QFormLayout::takeAt: Invalid index 0
+QFormLayout::takeAt: Invalid index 0
+smoke-ui transform
+QWindowsWindow::setGeometry: Unable to set geometry 2746x1660+8+32 (frame: 2762x1699+0+1) on QWidgetWindow/"QMainWindowClassWindow" on "S34C65xV". Resulting geometry: 2746x1421+8+32 (frame: 2762x1460+0+1) margins: 8, 31, 8, 8 minimum size: 988x548 MINMAXINFO(maxSize=POINT(x=0, y=0), maxpos=POINT(x=0, y=0), maxtrack=POINT(x=0, y=0), mintrack=POINT(x=1992, y=1135)))
+smoke-ui resize
+desktop-smoke {"backend":"qt-opengl","courierFontAvailable":false,"dpi":96,"dpr":2,"gl":"4.6.0 NVIDIA 610.88","height":1286,"occt":"8.0.1","os":"Windows 11 Version 25H2","qpa":...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="desktop.ui_preview_startup" classname="desktop.ui_preview_startup" time="2.20271" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;platform;ui;windows"/>
+		</properties>
+		<system-out>Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+desktop-smoke {"backend":"qt-opengl","courierFontAvailable":false,"dpi":96,"dpr":2,"gl":"4.6.0 NVIDIA 610.88","height":960,"occt":"8.0.1","os":"Windows 11 Version 25H2","qpa":"windows","qt":"6.11.1","renderer":"NVIDIA GeForce RTX 4070 SUPER/PCIe/SSE2","vendor":"NVIDIA Corporation","width":2502}
+desktop-smoke {"backend":"qt-opengl","courierFontAvailable":false,"dpi":96,"dpr":2,"gl":"4.6.0 NVIDIA 610.88","height":960,"occt":"8.0.1","os":"Windows 11 Version 25H2","qpa":"windows","qt":"6.11.1","renderer":"NVIDIA GeForce RTX 4070 SUPER/PCIe/SSE2","vendor":"NVIDIA Corporation","width":2502}
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+Font_Fon...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+</testsuite>

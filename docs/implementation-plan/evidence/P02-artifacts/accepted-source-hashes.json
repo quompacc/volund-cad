@@ -1,0 +1,22 @@
+{
+  "include/voelund/viewport/CadViewport.hpp": "f712abef55144fd1ec760010b62d49d448eb4fee292fc2f2269b98f235048a7a",
+  "src/viewport/CMakeLists.txt": "d22f832b0e615b58cf2d5fca5b86fc8450238270b1ff0d2e0678829108f544e0",
+  "src/viewport/CadViewport.cpp": "49714fd0b12cbf8d74a1ee012f0478928fd390288f54c14f592611be866e80e3",
+  "src/viewport/CadViewportHandlers.cpp": "8dd4be79b74410330d72f8365bcedf2d6478859c1760b90eca6d6a07745862d9",
+  "src/viewport/CadViewportInput.cpp": "bdf14d0a59567dc8c1984828631895ffc14ddbe1af82fdee43a79a01e87aa085",
+  "src/viewport/CadViewportScene.hpp": "25b00744e20450354a1f621327652b80bced83bc9825f60d5de2778c2d6296c8",
+  "src/viewport/CadViewportNativeBackend.hpp": "96318e7b80e2e19d125cbc15371109a24d54084d94f9d12ff0f1b81e34a872ba",
+  "src/viewport/CadViewportNativeCallbacks.cpp": "e7f489f21edf5832fc3654ab130f2ae2cf7ae8c4cc8cc048baee1204bc1e5608",
+  "src/viewport/CadViewportQtOpenGlBackend.hpp": "a7ba682e5bfeebad3664a4b07f1de76f71cba83f7693aa9286ef4cd43da92bc6",
+  "src/viewport/CadViewportQtOpenGl.cpp": "93cb7ff635dcec142ecddcd1ba06a5813360b7b21b143b5f90ff40d94783072c",
+  "src/viewport/ViewportContextGuard.hpp": "44dcc47dcba7b4b11f1a30ad4862f0f6bc81220fdb828219381b75f04b9c915d",
+  "src/viewport/SketchEditorInteraction.hpp": "301c5e965851c7bd0f5a05a108ff6d82d856c0e60482b6fa5fe9616018cca2c6",
+  "src/viewport/SketchInteraction.hpp": "f292d62199b86b89e1fd493ccf5657db7b33fb6c72b622fdce59d37677009c63",
+  "src/viewport/SketchInteraction.cpp": "8cf1a50255656e6a82db4d0523bf2d1c09823c3653cdaccdecb67025c6837c24",
+  "src/viewport/TransformManipulator.hpp": "d6d49f1dec860ff48a003e4684a0df952267765f11e22a52833cdfa4ae8b6608",
+  "src/viewport/TransformManipulator.cpp": "24c7b5ab50429595b8cc9a49a0a69c8f5f0d1fba51bbd695aae7f58fac8eeac2",
+  "tests/CMakeLists.txt": "8fe77423bdc783665646cd722a13c94b4fc717ed38b299ab9344d3d5979e9052",
+  "tests/desktop/ViewportLifecycleTests.cpp": "1be37ccce945855cf9b284dcf420ddbfe73415d378bb308750188803545f9669",
+  "tests/desktop/ViewportLifecycleSupport.hpp": "ec45413595c796b6261fde9ad49fa3a8cd70d4cfc6e5d755f41c4e3143df6090",
+  "tests/desktop/ViewportTestAccess.hpp": "6974ea1fa8e8a35192b64155f16803a438e20bd77a5bbb36525cd9695082819d"
+}

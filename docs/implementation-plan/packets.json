@@ -1,0 +1,3350 @@
+{
+  "schemaVersion": 1,
+  "planDate": "2026-09-13",
+  "auditedCommit": "1b78229",
+  "status": "implementation-started",
+  "counts": {
+    "total": 110,
+    "throughG4": 90,
+    "g5": 20
+  },
+  "globalGates": [
+    {
+      "id": "initial-freebsd-sway",
+      "completedBy": "P04",
+      "rule": "ADR 0007 / Nutzerentscheidung 2026-09-13: CAD auf FreeBSD/Sway entwickeln und laufend prüfen. P04 belegt die native Entwicklungsbasis; Meridian folgt abschließend in L07 und blockiert keine CAD-Erweiterung. Eigene Paketabhängigkeiten bleiben verbindlich."
+    }
+  ],
+  "topologicalOrder": [
+    "A01",
+    "A02",
+    "A03",
+    "A04",
+    "A05",
+    "A06",
+    "A07",
+    "A08",
+    "P01",
+    "P02",
+    "P03",
+    "P04",
+    "D01",
+    "D02",
+    "D03",
+    "D04",
+    "D05",
+    "D06",
+    "D07",
+    "D08",
+    "D09",
+    "D10",
+    "D11",
+    "D12",
+    "D13",
+    "D14",
+    "R01",
+    "R02",
+    "R03",
+    "R04",
+    "R05",
+    "R06",
+    "R07",
+    "R08",
+    "R09",
+    "R10",
+    "U01",
+    "U02",
+    "U03",
+    "U04",
+    "U05",
+    "U06",
+    "U07",
+    "U08",
+    "U09",
+    "U10",
+    "S02",
+    "S03",
+    "S01",
+    "S04",
+    "S05",
+    "S07",
+    "U11",
+    "U12",
+    "S06",
+    "S08",
+    "S09",
+    "S10",
+    "S11",
+    "S12",
+    "S13",
+    "S14",
+    "M01",
+    "M02",
+    "M03",
+    "M04",
+    "M05",
+    "M06",
+    "M07",
+    "M08",
+    "M09",
+    "M10",
+    "M11",
+    "M12",
+    "M13",
+    "M14",
+    "M15",
+    "M16",
+    "M17",
+    "M18",
+    "L01",
+    "L02",
+    "L03",
+    "L04",
+    "L05",
+    "L06",
+    "L07",
+    "L08",
+    "L09",
+    "L10",
+    "X01",
+    "X02",
+    "X03",
+    "X04",
+    "X05",
+    "X06",
+    "X07",
+    "X08",
+    "X09",
+    "X10",
+    "X11",
+    "X12",
+    "X13",
+    "X14",
+    "X15",
+    "X16",
+    "X17",
+    "X18",
+    "X19",
+    "X20"
+  ],
+  "packets": [
+    {
+      "id": "A01",
+      "title": "Source-Limit-Prüfung gegen leere Eingaben absichern",
+      "deps": [],
+      "files": [
+        "tools/cmake/CheckSourceLimits.cmake",
+        "tests/CMakeLists.txt",
+        "CMakeLists.txt"
+      ],
+      "steps": [
+        "Quellpfad als einen korrekt gequoteten CMake-Parameter übergeben; eingebettete literal Quotes entfernen, nicht beliebige Pfade umdeuten.",
+        "Vor GLOB auf existierendes Verzeichnis prüfen; Anzahl geprüfter Dateien ausgeben und null Kandidaten als Fehler behandeln.",
+        "CMake-Script-Fixtures für gültigen Pfad, Leerzeichen/Umlaut, fehlenden Pfad, literal Quotes und 601-Zeilen-Datei ergänzen."
+      ],
+      "acceptance": "Der derzeitige Repositorycheck muss zunächst die vier F01-Verstöße melden. Gültige kleine Fixture besteht; alle ungültigen Eingaben scheitern mit verständlichem Grund. CTest und direkter Aufruf liefern dasselbe Ergebnis.",
+      "boundary": "Keine Grenzwertanhebung und kein Ausschluss der vier Dateien.",
+      "status": "done",
+      "gate": "G0",
+      "chapter": "03-fundament.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [
+        "evidence/A01.md"
+      ],
+      "completedCommit": null,
+      "completedDate": "2026-09-13",
+      "completedWorkingTreeHashes": {
+        "CMakeLists.txt": "3a8b9b3825f8836cc444c1d095c19769f87d4c550f196c57173cb7e0d2ff0deb",
+        "tests/CMakeLists.txt": "87e4ed83129853cd47c67dff0df058f97307097f585fda1a7d178253f54e18c7",
+        "tools/cmake/CheckSourceLimits.cmake": "0d94af3b43e83b07e2ab6da6bd2823498759c9904595f9d87944be3c47c9aee8",
+        "tests/cmake/CheckSourceLimitsTests.cmake": "f3d9dba9a16aebe787af840560a83d44ddb1450163c6cfd550edaa960cdac569"
+      }
+    },
+    {
+      "id": "A02",
+      "title": "Verbindlichen Prüfungsumfang definieren",
+      "deps": [
+        "A01"
+      ],
+      "files": [
+        "tools/cmake/CheckSourceLimits.cmake",
+        ".clang-tidy",
+        ".clang-format",
+        "docs/architecture-and-code-contract.md"
+      ],
+      "steps": [
+        "Eigene Quellen, Header, Tests, Buildskripte und eigene Kompatibilitätsschichten inventarisieren; unveränderten Upstream/Frozen-Spike exakt ausnehmen.",
+        "Maschinenlesbare Prüfungsregeln für 600 Zeilen, 80 Funktionszeilen, zyklomatische Komplexität 10, Verschachtelung 4, Parameter 5 entwerfen.",
+        "Geeignetes vorhandenes Clang-Werkzeug für echte zyklomatische Messung prüfen; keine kognitive Metrik unter falschem Namen verwenden. Fehlendes Werkzeug muss im Pflichtmodus scheitern."
+      ],
+      "acceptance": "Eine absichtlich verletzende Mini-Fixture pro Regel wird erkannt; saubere Fixture besteht. Ausnahmen haben Pfad, Grund und Geltungsbereich. Entscheidung über Werkzeug mit Version und Lizenz ist dokumentiert.",
+      "boundary": "Keine neue Dependency ohne die bestehende ADR-Regel; keine Automatik, die Code durch Umformatieren fachlich verändert.",
+      "status": "needs-design",
+      "gate": "G0",
+      "chapter": "03-fundament.md",
+      "kind": "design-and-proof",
+      "evidence": [
+        "evidence/A02.md",
+        "evidence/review-A02-A05-A07.md"
+      ],
+      "completedCommit": null
+    },
+    {
+      "id": "A03",
+      "title": "Vier übergroße Dateien fachlich aufteilen",
+      "deps": [
+        "A01"
+      ],
+      "files": [
+        "src/document/DocumentSerializer.cpp",
+        "src/viewport/CadViewport.cpp",
+        "src/viewport/CadViewportQtOpenGl.cpp",
+        "tests/integration/CadSessionTests.cpp"
+      ],
+      "steps": [
+        "Serializer in Versions-/Feature-/Constraint-Codec-Verantwortlichkeiten zerlegen, öffentliche Semantik erhalten.",
+        "Viewport gemeinsame Hilfsverantwortlichkeiten vorbereiten und backendbezogene Teile trennen; endgültiger Lebenszyklus folgt P02.",
+        "CadSession-Tests nach Persistenz, Historie und Auswertung aufteilen; CMake-Registrierung vollständig halten."
+      ],
+      "acceptance": "Alle vier Quellen und alle neu entstandenen Dateien bestehen A01; alle bisherigen Testfälle laufen weiterhin. Keine gelöschten Szenarien und keine funktionale UI-Änderung.",
+      "boundary": "In drei aufeinanderfolgende Refactor-Unterpakete A03a/b/c aufteilen, falls mehr als fünf produktive Dateien je Änderung nötig sind.",
+      "status": "done",
+      "gate": "G0",
+      "chapter": "03-fundament.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [
+        "evidence/A03.md"
+      ],
+      "completedCommit": null,
+      "completedDate": "2026-09-13",
+      "completedWorkingTreeHashes": {
+        "src/document/DocumentSerializer.cpp": "b6901125e35b899d3b380678d0f375803d44827c2637a3860cdef0ed6447bb26",
+        "src/document/DocumentSerializerWriter.cpp": "8365f2ba55862a97bd9edeffc30d3a187cff033316c462cc0a54d5791d4e0e33",
+        "src/document/DocumentSerializerSupport.cpp": "9b0eff7aff3251609c124a6c64a6f2f32d7dbd566f885ba86d568db67a3c5e55",
+        "src/document/DocumentSerializationDetail.hpp": "9e27a2ede67323cbbcb4f6397a2e182e2a1814c663696358a445c14d3bc3e74d",
+        "src/document/CMakeLists.txt": "69ac26ee1bd5a95e7ba94ecfb23024e230d93afc7f69df28d5e6e8ed69dc97bb",
+        "src/viewport/CadViewport.cpp": "a2319faee6230f436a05a4fe805c4d5d36131bfe36c485d23660e2eaee9c3ffc",
+        "src/viewport/CadViewportQtOpenGl.cpp": "39bb5c37f0d9779f3d238662747c6a9f22238e8a2c0a4b4d9fcbc875ce16d004",
+        "src/viewport/CadViewportNativeInput.cpp": "a104dd4beb89b643efc3059711334049c0376e05b13a8c8386d1da8372f8f94b",
+        "src/viewport/CadViewportQtOpenGlInput.cpp": "7a76b3f775e319a6cb8cefe8c2eb54c41636afb176bb64b8b7aa25e8605e7a65",
+        "src/viewport/CadViewportNativeBackend.hpp": "b5138fac1f0cd76c2d9338d2327da273009ec26f5e90dd631663251dbcd429d2",
+        "src/viewport/CadViewportQtOpenGlBackend.hpp": "d97b228c0108fad8c96f59cc63ca7c40f3a0b9aa4d80fbbc9514c4ad2565a440",
+        "src/viewport/CMakeLists.txt": "5c8d95d7142ec4d79787920db8d72200924b5e283e8fa56422c1336c225ba8b9",
+        "src/application/SketchEditorGeometry.cpp": "c67e8d2f5c840aabf9838067421bf85b225f75cfcf0b82f0aa7ec51c74646503",
+        "tests/CMakeLists.txt": "11d648209f3aa5dfd697d9ff5a2a150083121b6a031e17ce0e55eb9c6478bb85",
+        "tests/integration/CadSessionTests.cpp": "e2d84f802a369cc092110cc412e87cc691a7280191ecff1c2e0fbb8201b62449",
+        "tests/integration/CadSessionHistoryTests.cpp": "2fe07a631cc2e0856cddd3326cb90ab7467248748819ab6b9b934a820e4b9c4d",
+        "tests/integration/CadSessionEvaluationTests.cpp": "2fb7e6eee1b85a1afe92f533befc3f9654b1c78ec7874083782b1e1afab7bd31",
+        "tests/integration/CadSessionPersistenceTests.cpp": "6db51aface87eda4f556864a857cf595a1abf4dfdf7ff8d8fff153defccfda1b",
+        "tests/integration/CadSessionTestCases.hpp": "153e0a39316d0df386aeabfcd2abd1837033327034a86fbfa65db5a7a3a5c1a3",
+        "tests/integration/CadSessionTestSupport.hpp": "578c8d461e0c6ec8230fb9d038c13cf13e1e0d17a1015dd7abe7c8c79169fdd0",
+        "tests/integration/SketchBasicToolsTests.cpp": "2e70e9d13264f0e51abac3ab838d22471bbbcc50b53b13ef7bde84da78e302da",
+        "tests/integration/SketchSlotTests.cpp": "7ee978f89801a4764cae5793c177ee2d6f90d093266abc585a449f90b197552e",
+        "tests/desktop/ViewportVisualReview.cpp": "2615193d6e5d908a52436630e003f002baa5bdc1bc6a7608fb60252d2b21f8b8"
+      }
+    },
+    {
+      "id": "A04",
+      "title": "Format, statische Analyse und Schichtenprüfung ausführbar machen",
+      "deps": [
+        "A02",
+        "A03"
+      ],
+      "files": [
+        "CMakeLists.txt",
+        "tools/cmake/VoelundWarnings.cmake",
+        ".clang-tidy",
+        ".clang-format"
+      ],
+      "steps": [
+        "Explizite format-check und static-analysis Ziele hinzufügen; Analyse erfasst absolute Headerpfade und eigene Adapter.",
+        "Include-/Linkregeln aus K01 in einen kleinen nativen/CMake-Prüfer übersetzen; verbotenen UI-Include im Document als Fixture prüfen.",
+        "Bestehende Verstöße inventarisieren, nach Verantwortlichkeit beheben und Pflichtlauf erst ohne stilles Baseline-Verstecken grün setzen."
+      ],
+      "acceptance": "Formatverletzung, verbotene Schichtkante und ausgeschalteter Analysepfad machen die jeweilige Pflichtprüfung rot. Keine Änderung an Upstream. Vorgeschlagene Zielnamen und lokale Befehle sind dokumentiert.",
+      "boundary": "Kein vollständiger Quellbaum-Reformat in einem Featurecommit; nötige Altlasten separat mit Paket-IDs abarbeiten.",
+      "status": "planned",
+      "gate": "G0",
+      "chapter": "03-fundament.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "A05",
+      "title": "Teststruktur und Regressionsevidenz aufbauen",
+      "deps": [
+        "A01"
+      ],
+      "files": [
+        "tests/CMakeLists.txt",
+        "tests/regression/README.md",
+        "tests/differential/README.md",
+        "tests/integration/README.md"
+      ],
+      "steps": [
+        "Kernel-, Dokument-, Anwendungs-, UI-, Plattform- und Regressionstests mit CTest-Labels ordnen.",
+        "Kleine gemeinsame native Testhilfen für temporäre Dateien, geometrische Toleranzvergleiche und strukturierte Fehler bereitstellen, sofern mehrfach benötigt.",
+        "Regressionsmetadaten mit Fehler-ID, reproduzierendem Eingabezustand und erwarteter Invariante festlegen; Ausgangsbeispiele F01 und Save vorbereiten."
+      ],
+      "acceptance": "Filter laufen mit mindestens einem erwarteten Test; leerer Pflichtfilter scheitert. Fixturepfade funktionieren unabhängig vom aktuellen Arbeitsverzeichnis. Kein Python im Testpfad.",
+      "boundary": "Differentialtests nicht von einer lokal installierten FreeCAD/Python-Laufzeit abhängig machen; Referenzdaten separat provenance-geprüft importieren.",
+      "status": "done",
+      "gate": "G0",
+      "chapter": "03-fundament.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [
+        "evidence/A05.md"
+      ],
+      "completedCommit": null
+    },
+    {
+      "id": "A06",
+      "title": "Kernel-Fehlergrenze und Eingabebasis absichern",
+      "deps": [
+        "A05"
+      ],
+      "files": [
+        "include/voelund/kernel/OcctCompatibility.hpp",
+        "src/kernel/ShapeFactory.cpp",
+        "src/kernel/ShapeOperations.cpp",
+        "tests/unit/ShapeFactoryTests.cpp"
+      ],
+      "steps": [
+        "Kleinen typisierten Kernel-Fehler mit Operationskennung und Diagnose einführen; Standard_Failure versionskompatibel übersetzen.",
+        "Nichtendliche/degenerierte Eingaben vor OCCT ablehnen und Shape-Validierung am Operationsergebnis anbieten.",
+        "Einheitliche öffentliche Fehlerrückgabe oder klar dokumentierte interne Ausnahmegrenze etablieren; keine Ausnahme aus dem späteren Qt-Callback entweichen lassen."
+      ],
+      "acceptance": "Ungültige Dimension, Nullachse und absichtlich scheiternde Operation ergeben prüfbare Fehler und keinen Crash. Gültige vorhandene Primitive bleiben gleich. Tests später auf OCCT 7.9.3 und 8.0.1 ausführen.",
+      "boundary": "Keine pauschale catch-all-Erfolgsmeldung; kein Umstellen aller Anwendungstypen in diesem Paket.",
+      "status": "done",
+      "gate": "G0",
+      "chapter": "03-fundament.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [
+        "evidence/A06.md"
+      ],
+      "completedCommit": null,
+      "completedDate": "2026-09-13",
+      "completedWorkingTreeHashes": {
+        "include/voelund/kernel/OcctCompatibility.hpp": "91b00502f67cb4cbd1b26733fd3ee2980c33891bd5431378245087f191233333",
+        "include/voelund/kernel/ShapeFactory.hpp": "280c6a5d9b53e67f5896c2232ad3de9856e7e1ecb16488beee3e4755c4e6f8b4",
+        "include/voelund/kernel/ShapeOperations.hpp": "b0ca88b7b8a07e632c46ceba068a828dada93a4a4a22854aade1cc640d316e4b",
+        "src/kernel/ShapeFactory.cpp": "bc0bcea152c521992a1730392f1ab2d91b5927645203a5f4332f5859addbf624",
+        "src/kernel/ShapeOperations.cpp": "79b91f1e4326e446e7750c6ce3041ec8e744718646d47e80af6d68d1a38e8e3a",
+        "tests/unit/ShapeFactoryTests.cpp": "ce1e851964dca8327ccdb8f991d0dca9b655c1ac55d9ae2b9414918579709d78"
+      }
+    },
+    {
+      "id": "A07",
+      "title": "Reproduzierbare Build-Einstiege herstellen",
+      "deps": [
+        "A01"
+      ],
+      "files": [
+        "CMakePresets.json",
+        "tools/setup-windows.ps1",
+        "tools/setup-linux.sh",
+        "tools/setup-freebsd.sh",
+        "docs/dependencies.md"
+      ],
+      "steps": [
+        "Windows-ASCII-Pfadstrategie mit geprüftem Projektmarker und Kollisionsschutz automatisieren; existierendes fremdes Laufwerk nicht übernehmen.",
+        "Presets eindeutig benennen: Qt-OpenGL-Produktweg und gegebenenfalls expliziter Native-Diagnoseweg; Cache-/Dependency-Versionen protokollieren.",
+        "Linux-Distro/vcpkg-Widerspruch entscheiden, FreeBSD Eigen/Boost-Voraussetzungen berichtigen und frischen Setup-Befehl dokumentieren."
+      ],
+      "acceptance": "Neuer Buildordner auf Windows lässt sich ohne handbearbeiteten Cache konfigurieren. Unicode-Quellpfad funktioniert direkt oder über sichtbar dokumentiertes geprüftes Mapping. Falsches Mapping wird abgewiesen. Plattformen ohne Host werden nicht als getestet markiert.",
+      "boundary": "Kein unbegründetes Dependency-Upgrade; vorhandene installierte Tools nicht löschen.",
+      "status": "done",
+      "gate": "G0",
+      "chapter": "03-fundament.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [
+        "evidence/A07.md",
+        "evidence/review-A02-A05-A07.md"
+      ],
+      "completedCommit": null,
+      "completedDate": "2026-09-13",
+      "completedWorkingTreeHashes": {
+        "tools/setup-windows.ps1": "862b64f087168479640ba9c5b20bb9836103015526b4129617a612612f90552a",
+        "tools/SetupWindowsMapping.psm1": "a296b094ca07c7e93160f194e7167b7e56a7ba0e0096a0623cc869b434e181e7",
+        "tools/test-windows.ps1": "43939656eab317962ae6f245b4aa69a2e21b3767291012dba06f04f32dd54ae5",
+        "tests/powershell/SetupWindowsMapping.Tests.ps1": "04c460ff6070b22ee2086135e32a958ddc617d691e4a38e40370d2c04ab3e7d6",
+        "tests/CMakeLists.txt": "dafd20d32ffe26ed3baa7295bfd4a603b38f0eb71463e97120ca38c2fddd1ef2",
+        "CMakePresets.json": "c5a78eb97180fabbe7f6eee261fb4686ff20fda3577b83d8e684b2760403ba49",
+        "docs/dependencies.md": "68ae7517149d2e5085d62feb6a6f827741bc67afe2d061930d128078f6f49de4"
+      }
+    },
+    {
+      "id": "A08",
+      "title": "Aussagekräftige Desktop-Testbasis schaffen",
+      "deps": [
+        "A05",
+        "A07"
+      ],
+      "files": [
+        "apps/voelund-cad/main.cpp",
+        "apps/voelund-ui-preview/main.cpp",
+        "tests/CMakeLists.txt",
+        "src/viewport/CadViewportQtOpenGl.cpp"
+      ],
+      "steps": [
+        "Start-Smoke muss Eventloop, Rendering-Readiness und tatsächlich gewählten QPA-/Backendpfad prüfen.",
+        "Testbare UI-Objektnamen und einen kleinen Qt-Testtreiber für Klick/Key/Parameteränderung definieren; Fachlogik nicht nur vor Fenstererstellung aufrufen.",
+        "Für Logs Qt-, OCCT-, Backend-, GL-, DPI- und Betriebssystemversion erfassen, ohne benutzerspezifische Dateiinhalte zu loggen."
+      ],
+      "acceptance": "Ein absichtlich nicht initialisierter Viewport darf den Smoke nicht bestehen. Produkt-Smoke zeigt tatsächlich gerendertes Modell; Skizzen-/Extrude-End-to-End kommt mit U11. Native-Wayland-Gate prüft QPA explizit. Zusätzlich A-VIS-01 vorbereiten: reproduzierbare Aufnahme mit Umgebung/Buildzustand und erfassten Darstellungsebenen; der Agent betrachtet Testbilder selbst und dokumentiert konkrete Befunde.",
+      "boundary": "Keine privaten UI-Testzweige, die produktive Handler umgehen.",
+      "status": "done",
+      "gate": "G0",
+      "chapter": "03-fundament.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [
+        "evidence/A08.md"
+      ],
+      "completedCommit": null,
+      "completedDate": "2026-09-13",
+      "completedWorkingTreeHashes": {
+        "apps/SmokeSupport.hpp": "588d3d3d65821aa47d40ee43eb3c2674f87b8197d1da9af82637f55c2967bb57",
+        "apps/SmokeSupport.cpp": "a7f778f0b79a7342dd4fde4f351f9ebcf3bde016976bdbd09e2beb62407dc0a3",
+        "apps/voelund-cad/main.cpp": "476e5a5412b523f273bcc9a0a158010be4a429751d29026744f8f5808c3c3114",
+        "apps/voelund-cad/CMakeLists.txt": "a4b28ace3c874b484a4fab57688e74baec2464834235b319893ff9a58396e540",
+        "apps/voelund-ui-preview/main.cpp": "5b474ac5ef80d137f87953f45a85d7870bf83b8b23a7b5916bf3ee3272cc46f2",
+        "apps/voelund-ui-preview/CMakeLists.txt": "655ed51adb5d218c00c9e0a8b99efe2a634bdca5aca55eddf1d753a35227482b",
+        "apps/voelund-ui-preview/PreviewWindow.cpp": "f66f191381aba16134c1fec941a18ccc7181380708232632913a996439153c93",
+        "apps/voelund-ui-preview/PreviewWindowRibbon.cpp": "691b04e702ab23c951a8ab1ab880d4fe4776d76554246de24a02415f141f61d7",
+        "src/desktop/MainWindow.cpp": "50965bbc903fb744be97fe1013f322e3a265701a694d1a4bc7110a79506155dc",
+        "src/desktop/FeaturePropertiesPanel.cpp": "b75c169067d39666377b940e8de3b2718036e0b58d68c1465ae2f9aa1a274247",
+        "src/viewport/CadViewportQtOpenGl.cpp": "3914400754ab40699ccf5222fb126b7e397b25b7238e218e0a2c318906e09f19",
+        "tests/CMakeLists.txt": "d7b197271700913ee0a1a36ab66d5bf3fd101134f10a72f27bcae8dc81ad0c04",
+        "tests/cmake/ExpectedSmokeRunnerTests.cmake": "a773fc4baa423e7f00615e7b667a4cb0dee2057cd87b2853501732f18586cf5d",
+        "tools/cmake/RunExpectedSmoke.cmake": "d6982e8bd1ba3d3c44cf429cf291e28fae3ec159c2d38c20edea040072e32c02"
+      }
+    },
+    {
+      "id": "D01",
+      "title": "Atomaren Dateiersatz als kleinen Plattformdienst bereitstellen",
+      "deps": [
+        "A05",
+        "A06",
+        "P04"
+      ],
+      "files": [
+        "include/voelund/platform/AtomicFileStore.hpp",
+        "src/platform/AtomicFileStoreDetail.hpp",
+        "src/platform/AtomicFileStore.cpp",
+        "src/platform/AtomicFileStoreNative.cpp",
+        "src/platform/CMakeLists.txt",
+        "tests/unit/AtomicFileStoreTests.cpp",
+        "tests/CMakeLists.txt",
+        "CMakeLists.txt",
+        "src/platform/README.md"
+      ],
+      "steps": [
+        "AtomicFileStore mit write-to-sibling-temp und betriebssystemspezifischem replace definieren; Pfadbesitz und Cleanup klar halten.",
+        "Schreiben, Flush, Close, Ersetzen getrennt fehlerinjizierbar machen; kollisionsfreie temporäre Namen und passende Unicode-Pfade verwenden.",
+        "Windows- und POSIX-Garantien inklusive Fehler bei Lock, Berechtigung und Dateisystemgrenze dokumentieren."
+      ],
+      "acceptance": "Fixture ersetzt eine vorhandene Datei vollständig; jeder injizierte Fehler vor erfolgreichem Replace erhält deren Bytes. Gesperrtes Ziel produziert Fehler und keine falsche Erfolgsmeldung. Fremde Tempdatei bleibt unberührt.",
+      "boundary": "Keine Autosave-Funktion und kein neues Dateiformat.",
+      "status": "done",
+      "gate": "G1",
+      "chapter": "03-fundament.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [
+        "evidence/D01.md"
+      ],
+      "completedCommit": null,
+      "completedWorkingTreeHashes": [
+        {
+          "path": "include/voelund/platform/AtomicFileStore.hpp",
+          "sha256": "fd3376fe7f4da4107d2f2608e0adf651a517abcdad8e51878fa63e4cf16d679e"
+        },
+        {
+          "path": "src/platform/AtomicFileStoreDetail.hpp",
+          "sha256": "d9e06f3ee5540ef81c5ea5f4cc18c213e77745e734d53f21683aa4898e71a691"
+        },
+        {
+          "path": "src/platform/AtomicFileStore.cpp",
+          "sha256": "6344f75c4c4c00411f000a9db567ea2125fb4d5beafccc9d24c047ac5fc1cf4c"
+        },
+        {
+          "path": "src/platform/AtomicFileStoreNative.cpp",
+          "sha256": "a27477604ad9682fcdcda2b73ec989720747e48a286dac424b898c51f8189d51"
+        },
+        {
+          "path": "src/platform/CMakeLists.txt",
+          "sha256": "f8e10c11979c982c3d1b13c176b2029a66dc073854ff4db88ac7629e32b0596e"
+        },
+        {
+          "path": "tests/unit/AtomicFileStoreTests.cpp",
+          "sha256": "dcf47170ebff359044f2fc5e2af1cc2a187be21d42fc6088db78261febac69c6"
+        },
+        {
+          "path": "tests/CMakeLists.txt",
+          "sha256": "0a6b91332ec17f2388bf57133f1789853a86b00560c91d1efa3fbd834ff849d0"
+        },
+        {
+          "path": "CMakeLists.txt",
+          "sha256": "a6058b3244978901d76810338aba47e0b928d8ac3df3e6338a4e29b442e73bd0"
+        }
+      ],
+      "completedDate": "2026-09-13"
+    },
+    {
+      "id": "D02",
+      "title": "Dokumentparser und Altdaten-Fixtures absichern",
+      "deps": [
+        "A05",
+        "A03"
+      ],
+      "files": [
+        "src/document/DocumentSerializer.cpp",
+        "src/document/DocumentSerializationDetail.hpp",
+        "src/document/DocumentSerializerSupport.cpp",
+        "src/document/BoundedDocumentInput.hpp",
+        "src/document/SketchGeometry.cpp",
+        "tests/unit/DocumentParserTests.cpp",
+        "tests/CMakeLists.txt",
+        "tests/fixtures/documents/README.md",
+        "docs/document-reader-limits.md"
+      ],
+      "steps": [
+        "Kleine versionierte Fixtures für jede unterstützte Version 1–16 aus deren tatsächlichem Schema erstellen; erwartete Migration als fachliche Werte notieren.",
+        "Grenzen für Dateigröße, Element-/Constraintanzahl, Stringlängen und rekursive Strukturen definieren; finite Werte und Referenzkonsistenz prüfen.",
+        "Truncation, unbekannte Version, doppelte IDs und ungültige Constraintreferenzen gezielt testen."
+      ],
+      "acceptance": "Alle 16 Fixtures laden mit definierten Defaultwerten; Roundtrip im aktuellen Format erhält Semantik. Beschädigte Datei verändert kein schon geöffnetes Dokument. Ressourcenlimits gelten vor unbeschränkter Allokation.",
+      "boundary": "Keine stillen Heuristiken zum Reparieren beliebiger beschädigter Dateien; alte Reader nicht löschen.",
+      "status": "done",
+      "gate": "G1",
+      "chapter": "03-fundament.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [
+        "evidence/D02.md"
+      ],
+      "completedCommit": null,
+      "completedDate": "2026-09-13",
+      "completedWorkingTreeHashes": [
+        {
+          "path": "src/document/DocumentSerializer.cpp",
+          "sha256": "bbd686cf4c74bc4440cecae46a3fb0c7b8591e673aa4bfd11b68961308e81374"
+        },
+        {
+          "path": "src/document/DocumentSerializationDetail.hpp",
+          "sha256": "cd4e1226d3316ce63f64cf354c49942623cd67de3f471171d01c3e778e224791"
+        },
+        {
+          "path": "src/document/DocumentSerializerSupport.cpp",
+          "sha256": "377371e59aad8ccb0d52331bef3efa1df730cab33ceaae7fcd8bd5362315d5b6"
+        },
+        {
+          "path": "src/document/BoundedDocumentInput.hpp",
+          "sha256": "6f81e9805f497bc847f1c349c4b7e26c9ec5f94e7f49e14ee52745dc26245e94"
+        },
+        {
+          "path": "src/document/SketchGeometry.cpp",
+          "sha256": "e2c4ca2e2198206eed47ee25804d5e6d84d202d0b8c595510e402e9872c1944d"
+        },
+        {
+          "path": "tests/unit/DocumentParserTests.cpp",
+          "sha256": "0da4d0ae484d4d4e37a66d513180865dc57cabe1de6dfd6398e9b45b50fc0023"
+        },
+        {
+          "path": "tests/CMakeLists.txt",
+          "sha256": "b4d4f1e020a179ff146a1a1519d5a94bf1f00c6fa6f131aa96d5a8da173f9678"
+        },
+        {
+          "path": "tests/fixtures/documents/v01.volund",
+          "sha256": "7bea3f8f8b7ecce89d431e9663e9faedbef028c861467e1a20d7d0e50ff48509"
+        },
+        {
+          "path": "tests/fixtures/documents/v02.volund",
+          "sha256": "fb71bbcf0a1e86bbf25ee5299365e55d75d85672fd7cdd795077e80c9a180f3a"
+        },
+        {
+          "path": "tests/fixtures/documents/v03.volund",
+          "sha256": "1050a8409d40b318db01ca70f98c28751c4d62b5d220133b51b4bc0ff0d900f8"
+        },
+        {
+          "path": "tests/fixtures/documents/v04.volund",
+          "sha256": "b13ef37320a28577d95728f2b1975f67ebdb3d209649ff0bb0b5b99dc037a4e7"
+        },
+        {
+          "path": "tests/fixtures/documents/v05.volund",
+          "sha256": "819b25c30a3de152f0d82d3da15afcc88762cd3eff0030fbeb33ae1912915fe7"
+        },
+        {
+          "path": "tests/fixtures/documents/v06.volund",
+          "sha256": "a19136dff376b3f192814ed9a51d7e6ba72401835680d4737767bfc101e94ea6"
+        },
+        {
+          "path": "tests/fixtures/documents/v07.volund",
+          "sha256": "3f3a830f84e3704d5a5b0f3a047a2d1ac8e32634ed1c11e727493b29fa04f20d"
+        },
+        {
+          "path": "tests/fixtures/documents/v08.volund",
+          "sha256": "56c0d18ae66344b0fdb5fe829cef94b5a451fa95162d85ba9136f9f33ca0f57f"
+        },
+        {
+          "path": "tests/fixtures/documents/v09.volund",
+          "sha256": "ccfa4765b30bc5408a99ea118a7f52698a5b09a792f63d34b4eab926e11fd78a"
+        },
+        {
+          "path": "tests/fixtures/documents/v10.volund",
+          "sha256": "414caea706b5b1169e5a014a784262e454b72d5a48e7807cab85ecef99a3c789"
+        },
+        {
+          "path": "tests/fixtures/documents/v11.volund",
+          "sha256": "138e7aae0bcd91a02bb27dd16be9e793771d84960318da46b6c439cfc9823e47"
+        },
+        {
+          "path": "tests/fixtures/documents/v12.volund",
+          "sha256": "e33f8db937c7a28164c537e454b622f604a7de6b7f3e6975d4be925b774fd861"
+        },
+        {
+          "path": "tests/fixtures/documents/v13.volund",
+          "sha256": "cf854b2bc6dc17a19fcfb173579502379894d8573f3bd2293d102eee36910317"
+        },
+        {
+          "path": "tests/fixtures/documents/v14.volund",
+          "sha256": "533f16243d59220ea2454c2df8415ec90cb9d6cb4e33d39397a42135258d4e44"
+        },
+        {
+          "path": "tests/fixtures/documents/v15.volund",
+          "sha256": "0094e761f5547224ee66e0a082b516db6a5fd6d7bf81a2880c111478718a8336"
+        },
+        {
+          "path": "tests/fixtures/documents/v16.volund",
+          "sha256": "6f1f54afcdf6c8fc06daba10790aa9bbb0fc6719a2366fd810b800da6a4907f2"
+        }
+      ]
+    },
+    {
+      "id": "D03",
+      "title": "Sicheren Save/Open-Anwendungsfall anbinden",
+      "deps": [
+        "D01",
+        "D02"
+      ],
+      "files": [
+        "src/application/CadSession.cpp",
+        "src/desktop/DocumentActions.cpp",
+        "tests/integration/CadSessionTests.cpp"
+      ],
+      "steps": [
+        "Save nutzt Snapshot und AtomicFileStore; Dirty/Savepfad erst nach erfolgreich abgeschlossenem Ersatz aktualisieren.",
+        "Open parst in einen unabhängigen Kandidaten und tauscht das aktive Dokument erst nach erfolgreicher Prüfung.",
+        "Reparierbare Featurefehler von defektem Dateiformat unterscheiden; fehlerhafte parametrische Dokumente speicherbar halten."
+      ],
+      "acceptance": "A-SAVE-01/02 und A-IO-01 bestehen: bisherige Datei und aktives Dokument bleiben bei Fehler erhalten, Save-As-Fehler ändert keinen Pfad, Folgefehler können gespeichert und erneut angezeigt werden.",
+      "boundary": "Kein vollständiger Recovery-/Autosave-Workflow, der folgt L05.",
+      "status": "done",
+      "gate": "G1",
+      "chapter": "03-fundament.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": ["evidence/D03.md"],
+      "completedCommit": null
+    },
+    {
+      "id": "D04",
+      "title": "Befehlsresultat und Transaktionsvertrag festschreiben",
+      "deps": [
+        "A06",
+        "D03"
+      ],
+      "files": [
+        "include/voelund/application/CadSession.hpp",
+        "include/voelund/document/ModelDocument.hpp",
+        "include/voelund/features/FeatureGraph.hpp"
+      ],
+      "steps": [
+        "K03/K05 als kleine Headerentwürfe für CommandResult, CommandTransaction und Auswertungszustände konkretisieren.",
+        "Zustandsübergänge für NewFeature, EditFeature mit Folgefehlern, Cancel, Undo und Save schriftlich festlegen.",
+        "Zwei native Vertragsfixtures gegen einen minimalen In-memory-Adapter bauen; keine zweite produktive Dokumentimplementierung einführen."
+      ],
+      "acceptance": "Prüfbare API unterscheidet Rejected, Committed und CommittedWithErrors; ein zusammengesetzter Befehl besitzt genau eine Commitgrenze. Architekturprüfung bestätigt Eigentum und Migration der alten bool-Rückgaben.",
+      "boundary": "Entscheidungspaket: noch nicht sämtliche Call-Sites umstellen.",
+      "status": "done",
+      "gate": "G1",
+      "chapter": "03-fundament.md",
+      "kind": "design-and-proof",
+      "evidence": ["evidence/D04.md"],
+      "completedCommit": null
+    },
+    {
+      "id": "D05",
+      "title": "Eine DocumentTransaction implementieren",
+      "deps": [
+        "D04"
+      ],
+      "files": [
+        "src/document/ModelDocument.cpp",
+        "include/voelund/document/ModelDocument.hpp",
+        "tests/unit/ModelDocumentTests.cpp"
+      ],
+      "steps": [
+        "Änderungsaufzeichnung an expliziter äußerer Transaktion bündeln; interne Featuremutatoren erzeugen keine separaten Benutzerschritte.",
+        "Rollback stellt IDs, Parameter, History-Cursor und Revision vollständig wieder her.",
+        "Allokierende noexcept-Pfade bereinigen; Undo/Redo auf Wiederaufzeichnung und konsistentes Verhalten bei Fehlern prüfen."
+      ],
+      "acceptance": "A-TXN-01/02 bestehen; Abbruch nach erster von zwei Teiländerungen hinterlässt byte-/semantisch gleichen Snapshot. Undo/Redo behält IDs, keine ID-Kollision nach Abbruch.",
+      "boundary": "OCAF-Backendwechsel folgt separat; API jetzt so kapseln, dass D12 sie weiterverwenden kann.",
+      "status": "done",
+      "gate": "G1",
+      "chapter": "03-fundament.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": ["evidence/D05.md"],
+      "completedCommit": null
+    },
+    {
+      "id": "D06",
+      "title": "CadSession-Befehle auf einzelne Transaktionen umstellen",
+      "deps": [
+        "D05"
+      ],
+      "files": [
+        "src/application/CadSession.cpp",
+        "src/application/CadSessionSketchProfiles.cpp",
+        "tests/integration/CadSessionTests.cpp"
+      ],
+      "steps": [
+        "Primitive, kombinierte SketchExtrusion und Parameteränderungen über die gemeinsame Commitgrenze führen.",
+        "Bestehenden Zwei-Undo-Test gezielt durch die fachliche Ein-Aktion-Erwartung ersetzen und getrennte bestätigte Werkzeuge separat testen.",
+        "Dirty-Zustand an Save-Revision binden; Preview und Selection dürfen ihn nicht setzen."
+      ],
+      "acceptance": "AddSketchExtrusion → einmal Undo stellt den vollständigen Ausgangszustand her; Redo reproduziert beide internen Features. Save→Edit→Undo zur Save-Revision ist clean; Viewportinteraktion bleibt clean.",
+      "boundary": "Nicht nebenbei Parameter-/Geometriesemantik neuer Featuretypen ändern.",
+      "status": "done",
+      "gate": "G1",
+      "chapter": "03-fundament.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": ["evidence/D06.md"],
+      "completedCommit": null
+    },
+    {
+      "id": "D07",
+      "title": "Fehlgeschlagenes Recompute und Solve korrekt weiterreichen",
+      "deps": [
+        "D04",
+        "D06"
+      ],
+      "files": [
+        "src/application/CadSession.cpp",
+        "src/application/SketchEditorSession.cpp",
+        "src/features/FeatureGraph.cpp",
+        "include/voelund/features/SketchConstraintSolver.hpp"
+      ],
+      "steps": [
+        "Verworfene Recompute-/SetParameter-Ergebnisse durch eindeutige Resultate ersetzen.",
+        "Failed von Conflicting/UnderConstrained trennen; Accept bei numerischem Fehler sperren, Editor offenhalten.",
+        "Letzte gültige Szene mit Revision und stale-Status kennzeichnen; explizites Übernehmen reparierbarer bestehender Modelle unterstützen."
+      ],
+      "acceptance": "Injizierter Solver-/Kernel-Fehler führt weder zu Success noch zu unbemerktem Editorende. A-ERR-01 besteht; unabhängige Zweige werden nach R01 getrennt behandelt.",
+      "boundary": "Keine automatische Parameterkorrektur ohne sichtbare Benutzeraktion.",
+      "status": "planned",
+      "gate": "G1",
+      "chapter": "03-fundament.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "D08",
+      "title": "OCAF-Backend und gemeinsame Persistenzversion nachweisen",
+      "deps": [
+        "D04",
+        "A07",
+        "P04"
+      ],
+      "files": [
+        "src/document/CMakeLists.txt",
+        "src/kernel/CMakeLists.txt",
+        "tools/build-freebsd-occt.sh",
+        "docs/dependencies.md"
+      ],
+      "steps": [
+        "Isolierten C++-Nachweis mit TDocStd, Standardattributen, TNaming und nativen Binärtreibern erstellen; notwendige Toolkit-Liste aus tatsächlichen Installationen ableiten.",
+        "Dasselbe Minimaldokument zwischen OCCT 7.9.3 und 8.0.1 in beide Richtungen übertragen; Attribute, IDs, BRep und Undo prüfen.",
+        "ADR mit eindeutigem Ergebnis gemäß K08 schreiben: native gemeinsame Schreibversion oder vorerst neutraler Snapshot-Codec; öffentliche Dokument-API und private Labelstruktur festhalten."
+      ],
+      "acceptance": "Evidenz enthält beide Versionen, benötigte Buildmodule, Schreib-/Lesematrix und vollständigen Resultatvergleich. Ohne verfügbaren zweiten Build bleibt Persistenzumschaltung blockiert; kein behaupteter Kompatibilitätserfolg.",
+      "boundary": "Kein Rewrite. Keine neue Kompressions-/Serialisierungsbibliothek. Experimentcode nicht ungeprüft als Produktionsbackend übernehmen.",
+      "status": "planned",
+      "gate": "G1",
+      "chapter": "03-fundament.md",
+      "kind": "design-and-proof",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "D09",
+      "title": "Legacy-Migrationsschnittstelle vom Produktcodec trennen",
+      "deps": [
+        "D02",
+        "D08"
+      ],
+      "files": [
+        "include/voelund/document/DocumentSerializer.hpp",
+        "src/document/DocumentSerializer.cpp",
+        "src/document/SketchConstraintSerialization.cpp"
+      ],
+      "steps": [
+        "Reader 1–16 hinter LegacyDocumentImporter bündeln; neutrales validiertes Snapshotmodell definieren.",
+        "Produktstore entscheidet eindeutig anhand von Formatkennung/Schemaversion; unbekannte Zukunftsformate werden explizit abgewiesen.",
+        "Migrationsbericht benennt alte Index-/Flächenreferenzen, die noch in R06 aufgelöst werden müssen."
+      ],
+      "acceptance": "Alle D02-Fixtures bleiben lesbar; Import verändert Quelldateien nicht. Unbekanntes Format fällt nicht auf einen zufälligen älteren Parser zurück. Migration ist bei Wiederholung deterministisch.",
+      "boundary": "Keine automatische Vergabe beliebiger Ersatzflächen.",
+      "status": "planned",
+      "gate": "G1",
+      "chapter": "03-fundament.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "D10",
+      "title": "Geometrische Grundwerte und toleranzbewusste Validierung vereinheitlichen",
+      "deps": [
+        "A06",
+        "D04"
+      ],
+      "files": [
+        "src/document/SketchGeometry.cpp",
+        "include/voelund/document/SketchGeometry.hpp",
+        "src/features/SketchEvaluation.cpp",
+        "src/kernel/ShapeOperations.cpp"
+      ],
+      "steps": [
+        "Einheiten, finite Werte, Ebenenbasis, Toleranzrollen und Größenlimits in testbaren Value-Types/Validatoren festlegen.",
+        "Ebenen vor Speicherung normalisieren oder nichtorthonormale Eingabe mit genauem Fehler ablehnen; beide Wege nicht mischen.",
+        "Dimensionen, Transformationen und Kernelanschlüsse an denselben Vertrag anbinden, ohne Picking-Toleranz als Modellmaß zu verwenden."
+      ],
+      "acceptance": "A-NUM-01 besteht mit kleinen/großen Körpern, schiefen Achsen, NaN/Inf und fast verbundenen Endpunkten. Roundtrip ändert Skala nicht; kein pauschaler unkommentierter Überstand bleibt fachliche Voraussetzung.",
+      "boundary": "Keine neue globale Toleranzvariable; Änderung der vorhandenen Maße nur mit expliziter Migration.",
+      "status": "planned",
+      "gate": "G1",
+      "chapter": "03-fundament.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "D11",
+      "title": "Dokument-, Körper- und Featureidentität trennen",
+      "deps": [
+        "D05",
+        "D09",
+        "D10"
+      ],
+      "files": [
+        "include/voelund/document/FeatureId.hpp",
+        "include/voelund/document/ModelDocument.hpp",
+        "src/document/ModelDocument.cpp",
+        "src/features/FeatureGraph.cpp"
+      ],
+      "steps": [
+        "Typisierte DocumentId/BodyId und stabile Feature-ID-Zuordnung einführen; Migration bestehender Ein-Körper-Ketten eindeutig definieren.",
+        "Feature-Output referenziert Körper und Erzeuger separat; Displayname/Dateipfad sind keine IDs.",
+        "ID-Erzeugung, Kopie versus Revision und Nichtwiederverwendung dokumentieren; Überlauf vor Mutation abfangen."
+      ],
+      "acceptance": "Umbenennen, Save-As und weiteres Feature erhalten Körperidentität. Zwei Körper bleiben nach Reorder getrennt. Legacy-Kette erhält reproduzierbare Zuordnung; ungültige IDs werden abgewiesen.",
+      "boundary": "Vault-Netzwerkprotokoll und Assembly-Instanz-ID folgen später.",
+      "status": "planned",
+      "gate": "G1",
+      "chapter": "03-fundament.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "D12",
+      "title": "OCAF als gekapselte Dokumentautorität einsetzen",
+      "deps": [
+        "D08",
+        "D09",
+        "D11"
+      ],
+      "files": [
+        "include/voelund/document/ModelDocument.hpp",
+        "src/document/ModelDocument.cpp",
+        "src/document/CMakeLists.txt"
+      ],
+      "steps": [
+        "Private OCAF-Implementierung aus dem bestätigten D08-Entwurf einführen; Standardattribute halten Parameter, IDs und Referenzen.",
+        "DTOs ausschließlich als immutable Snapshots erzeugen; vorhandene mutable Vektorautorität entfernen, sobald Adapterparität bewiesen ist.",
+        "Transaktionen/Undo mit OCAF verbinden und UI-/App-Header frei von TDF-Labels halten."
+      ],
+      "acceptance": "D05/D06-Historientests laufen gegen den neuen Backend; Parameter und IDs nach Undo/Redo identisch. Kein Codepfad schreibt parallel in zwei Modellquellen. OCAF-spezifische Tests nach Verantwortung splitten.",
+      "boundary": "Bei Umfangüberschreitung Featurefamilien einzeln migrieren; Adapter bleibt währenddessen ausdrücklich nur eine Autorität pro Featurezustand.",
+      "status": "planned",
+      "gate": "G1",
+      "chapter": "03-fundament.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "D13",
+      "title": "Gewählten Produktstore integrieren",
+      "deps": [
+        "D03",
+        "D09",
+        "D12"
+      ],
+      "files": [
+        "src/document/DocumentSerializer.cpp",
+        "src/application/CadSession.cpp",
+        "src/document/CMakeLists.txt"
+      ],
+      "steps": [
+        "Den in D08 gewählten Store an AtomicFileStore anschließen; Root-Schema und Anwendungsversion sauber unterscheiden.",
+        "Parameter, IDs, Fehler-/Suppressionzustand und später persistierbare Quellshapes gemäß Schema speichern; abgeleitete Anzeige nicht zur Wahrheit machen.",
+        "Save-Revision und Save-As über OCAF-Transaktionen hinweg stabil halten."
+      ],
+      "acceptance": "Neue Datei lässt sich auf beiden Ziel-OCCT-Versionen fachlich identisch laden; A-SAVE-01/02 bleibt gültig. Eine Datei mit Folgefehlern bleibt editierbar und wird nicht als kaputt verworfen.",
+      "boundary": "Nur den gewählten Schreibweg produktiv anbieten; alternative D08-Prototypen nicht dauerhaft mitschleppen.",
+      "status": "planned",
+      "gate": "G1",
+      "chapter": "03-fundament.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "D14",
+      "title": "Migration und Dokumentkern abschließend abnehmen",
+      "deps": [
+        "D07",
+        "D13"
+      ],
+      "files": [
+        "tests/unit/ModelDocumentTests.cpp",
+        "tests/integration/CadSessionTests.cpp",
+        "docs/sketch-data-model.md",
+        "docs/development-status.md"
+      ],
+      "steps": [
+        "Versionen 1–16 durch Import→neues Save→Open→Edit→Undo führen; semantische Erwartungsdaten getrennt von Serialisierungsbytes vergleichen.",
+        "Schema-/Transaktions-/Fehlerregeln aktualisieren und veraltete Implementierungsbehauptungen berichtigen.",
+        "Migration ohne vorhandenes Modell, mit Lock, unbekannter Version und beschädigter Referenz prüfen."
+      ],
+      "acceptance": "A-MIG-01, A-TXN-01/02, A-SAVE-01/02 bestehen. Mindestens ein Fixture je historischem Versionssprung belegt dessen Default-/Constraintsemantik. G1-Bericht nennt noch offene Plattformnachweise.",
+      "boundary": "Kein Entfernen alter Fixtures nach erfolgreicher Migration.",
+      "status": "planned",
+      "gate": "G1",
+      "chapter": "03-fundament.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "R01",
+      "title": "Feature-Abhängigkeiten als echten DAG auswerten",
+      "deps": [
+        "D11",
+        "D14"
+      ],
+      "files": [
+        "include/voelund/features/FeatureGraph.hpp",
+        "src/features/FeatureGraph.cpp",
+        "src/application/CadSession.cpp"
+      ],
+      "steps": [
+        "Explizite Inputs/Outputs mit Feature-/Bodyreferenzen aus vorhandenen Featuretypen ableiten; Toposort und Zyklenerkennung implementieren.",
+        "Änderungen markieren nur transitive Nachfolger dirty; unabhängige Körper bleiben gültig.",
+        "Auswertungsergebnis pro Knoten mit konsistenter Dokumentrevision veröffentlichen; lineare Komplettfehler-Markierung ablösen."
+      ],
+      "acceptance": "Zwei unabhängige Körper: Fehler in einem Zweig blockiert nur dessen Nachfolger. Diamant-Abhängigkeit wird einmal pro benötigtem Zustand ausgewertet. Zyklusänderung wird atomar abgelehnt. A-DAG-01 besteht.",
+      "boundary": "Noch kein Threadpool; deterministische synchrone Auswertung zuerst.",
+      "status": "planned",
+      "gate": "G1",
+      "chapter": "03-fundament.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "R02",
+      "title": "SubshapeRef-Vertrag und Referenzfixtures festlegen",
+      "deps": [
+        "R01",
+        "D08"
+      ],
+      "files": [
+        "include/voelund/features/SketchSupportResolver.hpp",
+        "include/voelund/document/SketchGeometry.hpp",
+        "src/features/SketchSupportResolver.cpp"
+      ],
+      "steps": [
+        "K06 in Datenstruktur und Resolver-Resultate übersetzen; Beispielschlüssel für Boxfläche, Extrusionsdeckfläche und Konturkante definieren.",
+        "Fixtures für zwei koplanare Flächen, Split/Merge, Löschung, Rotation und Boolean-History anlegen.",
+        "Persistenz-/Migrationseinträge und Reparatur-Commandentwurf festhalten; geometrische Fallbacks ausdrücklich klassifizieren."
+      ],
+      "acceptance": "Architekturprüfung kann für jeden Fixturefall vor Implementierung Resolved/Missing/Ambiguous vorhersagen. Kein TopExp-Index und keine normale Distanz ist alleinige Identität.",
+      "boundary": "Entscheidungspaket; keine universelle automatische Naming-Garantie behaupten.",
+      "status": "planned",
+      "gate": "G1",
+      "chapter": "03-fundament.md",
+      "kind": "design-and-proof",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "R03",
+      "title": "Kernel-Operationshistorie verfügbar machen",
+      "deps": [
+        "R02",
+        "A06"
+      ],
+      "files": [
+        "src/kernel/ShapeFactory.cpp",
+        "src/kernel/ShapeOperations.cpp",
+        "include/voelund/kernel/ShapeOperations.hpp"
+      ],
+      "steps": [
+        "Geometrieergebnis mit Herkunftsinformationen für vorhandene Primitive und Boolean-Operationen ergänzen.",
+        "OCCT Generated/Modified/Deleted in eigene begrenzte History-DTOs abbilden; OCCT-Objektlebensdauer kapseln.",
+        "Fehlende oder mehrdeutige History nicht durch Traversalposition erfinden."
+      ],
+      "acceptance": "Bekannte Boxfläche und Kante nach einfachem Cut korrekt verfolgen; gelöschte Fläche wird Missing, gesplittete Fläche nach Vertrag eindeutig oder Ambiguous. Beide OCCT-Versionen vergleichen.",
+      "boundary": "Fillet-/Chamfer-History erst mit den betreffenden Operationen ergänzen.",
+      "status": "planned",
+      "gate": "G1",
+      "chapter": "03-fundament.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "R04",
+      "title": "Stützflächen über stabile Referenzen auflösen",
+      "deps": [
+        "R03",
+        "D10"
+      ],
+      "files": [
+        "src/features/SketchSupportResolver.cpp",
+        "src/features/SketchEvaluation.cpp",
+        "src/application/CadSessionSketchProfiles.cpp"
+      ],
+      "steps": [
+        "Heuristische Normalen-/Nähe-Suche im regulären Pfad durch SubshapeRef ersetzen.",
+        "Skizzenbasis aus aktueller referenzierter Fläche samt Transformation ableiten; Translation und Rotation tragen.",
+        "Unaufgelöste Stützfläche als lokalisierten Featurefehler veröffentlichen; alte Ebene nur gekennzeichnet für Reparaturvorschau behalten."
+      ],
+      "acceptance": "A-REF-01/02 besteht: zwei parallele Flächen werden nicht vertauscht; Rotation trägt die Skizze korrekt; Löschung bleibt sichtbar reparaturbedürftig.",
+      "boundary": "Keine stillschweigende Wiederverwendung der alten Ebene als gültiges Ergebnis.",
+      "status": "planned",
+      "gate": "G1",
+      "chapter": "03-fundament.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "R05",
+      "title": "Projizierte Kanten von Segmentindizes lösen",
+      "deps": [
+        "R04"
+      ],
+      "files": [
+        "src/features/SketchSupportResolver.cpp",
+        "include/voelund/document/SketchGeometry.hpp",
+        "src/viewport/SketchInteraction.cpp"
+      ],
+      "steps": [
+        "Projizierte Geometrie referenziert stabile Quellkante und Kurvenparameter statt diskretisierten Traversalindex.",
+        "Fachliche Auflösung vollständig über Feature-/Application-Projektion beziehen; doppelte Viewport-Heuristik entfernen.",
+        "Nichtlineare Kurven bei Anzeige tessellieren, Identität jedoch an analytischer Kurve halten."
+      ],
+      "acceptance": "Tessellierungsdichte ändern beeinflusst Constraints nicht. Neue Kante vor der referenzierten Kante fügt keine falsche Zuordnung ein. Kurven-Endpunkt/Parameter bleiben nach Recompute konsistent.",
+      "boundary": "Keine allgemeine Projektionsfläche jenseits planarer Skizzen in v1.",
+      "status": "planned",
+      "gate": "G1",
+      "chapter": "03-fundament.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "R06",
+      "title": "Legacy-Referenzen migrieren und bewusste Reparatur ermöglichen",
+      "deps": [
+        "R05",
+        "D13"
+      ],
+      "files": [
+        "src/document/DocumentSerializer.cpp",
+        "src/application/CadSessionSketchProfiles.cpp",
+        "src/desktop/FeaturePropertiesPanel.cpp"
+      ],
+      "steps": [
+        "Alte Supportfelder beim Import gegen unveränderte Ausgangsgeometrie auflösen und eindeutige Herkunft speichern.",
+        "Mehrdeutige Fälle als MigrationNeedsRepair mit Kandidaten anbieten; Benutzerzuweisung als einzelne Transaktion speichern.",
+        "Reparatur rückgängig machen und Save/Open testen."
+      ],
+      "acceptance": "Alte Datei mit eindeutiger Fläche migriert; zwei gleichwertige Kandidaten erzeugen keine Zufallsauswahl. A-REF-03 besteht, inklusive Undo und erneutem Öffnen.",
+      "boundary": "Keine Änderung an Originaldatei ohne Save.",
+      "status": "planned",
+      "gate": "G1",
+      "chapter": "03-fundament.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "R07",
+      "title": "Deterministischen Konturgraphen erstellen",
+      "deps": [
+        "D10",
+        "R01"
+      ],
+      "files": [
+        "src/features/SketchProfiles.cpp",
+        "include/voelund/features/SketchProfiles.hpp",
+        "tests/unit/SketchProfileTests.cpp"
+      ],
+      "steps": [
+        "Linien/Arcs/Kreise/Ellipsen und migrierte Rechtecke in orientierte Randstücke überführen; Konstruktion ausschließen.",
+        "Endpunktverbindungen toleranzbewusst bilden; unabhängig von Eingabe- und ID-Reihenfolge traversieren.",
+        "Offene Enden, Verzweigungen und überlappende Dubletten mit Element-IDs diagnostizieren."
+      ],
+      "acceptance": "Permutation und Umkehr gleicher Kontur liefern geometrisch gleiche geschlossene Schleifen. Offene Skizze bleibt editierbar, aber kein gültiger Materialrand. A-REG-01 Teil Konturen besteht.",
+      "boundary": "Noch keine verschachtelten Faces und keine heuristische automatische Schließung.",
+      "status": "planned",
+      "gate": "G1",
+      "chapter": "03-fundament.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "R08",
+      "title": "Schnittpunkte und verschachtelte Regionen bestimmen",
+      "deps": [
+        "R07"
+      ],
+      "files": [
+        "src/features/SketchProfiles.cpp",
+        "src/features/SketchEvaluation.cpp",
+        "tests/unit/SketchProfileTests.cpp"
+      ],
+      "steps": [
+        "Planare Schnittpunkte der v1-Kurven behandeln und Randstücke deterministisch teilen; unterstützte degenerierte Fälle ausdrücklich entscheiden.",
+        "Geschlossene Schleifen nach Innen/Außen und Verschachtelung ordnen; gemeinsame Kanten und Selbstschnitte klassifizieren.",
+        "Regionsresultate mit Außen- und Innenkonturen liefern; ungültige Fälle lokalisiert ablehnen."
+      ],
+      "acceptance": "Zwei konzentrische Kreise ergeben Ringregion plus gegebenenfalls separat auswählbare Innenregion gemäß Vertrag; Loch wird nicht automatisch aufgefüllt. Linie/Kreis-Schnitt, Tangentialfall und Selbstschnitt sind deterministisch getestet.",
+      "boundary": "Bei mehr als einer Algorithmusverantwortlichkeit R08a Schnittbildung und R08b Containment getrennt liefern; keine ungeprüfte allgemeine NURBS-Unterstützung.",
+      "status": "planned",
+      "gate": "G1",
+      "chapter": "03-fundament.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "R09",
+      "title": "Regionidentität und Profilauswahl stabilisieren",
+      "deps": [
+        "R08",
+        "R02"
+      ],
+      "files": [
+        "include/voelund/features/SketchProfiles.hpp",
+        "src/features/SketchProfiles.cpp",
+        "src/application/CadSessionSketchProfiles.cpp"
+      ],
+      "steps": [
+        "RegionIds aus stabilen Randbezügen zuordnen und über reine Maßänderungen erhalten.",
+        "Split/Merge eindeutig erkennen; alte min-Element-ID-Profile mit dokumentierter Ausgangszuordnung migrieren.",
+        "Explizite Mehrfachauswahl und ungültig gewordene Profilreferenz in Application-Projektion anbieten."
+      ],
+      "acceptance": "Elementumordnung verändert Auswahl nicht; gelöschter kleinster Randindex führt nicht unbemerkt zur anderen Region. Split wird nach Vertrag reparaturbedürftig. A-REG-02 besteht.",
+      "boundary": "Kein automatisches Auswählen aller erkannten Flächen als Ersatz für Benutzerabsicht.",
+      "status": "planned",
+      "gate": "G1",
+      "chapter": "03-fundament.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "R10",
+      "title": "Regionen zu validen Kernel-Faces überführen",
+      "deps": [
+        "R08",
+        "R09",
+        "A06"
+      ],
+      "files": [
+        "src/features/SketchEvaluation.cpp",
+        "src/kernel/ShapeFactory.cpp",
+        "tests/unit/SketchProfileTests.cpp"
+      ],
+      "steps": [
+        "Orientierte Außen-/Innenwires korrekt in OCCT-Faces überführen; Shape-Validität und Flächeninhalt prüfen.",
+        "Fehler bis Region-/Element-IDs zurückführen; partielle ungültige Regionen nicht als volle erfolgreiche Skizze ausgeben.",
+        "Analytische Fixtures und Toleranzmatrix für kleine/große Flächen ergänzen."
+      ],
+      "acceptance": "A-REG-01 vollständig besteht: Ringfläche π(R²−r²), Inseln, mehrere getrennte Regionen und invertierte Eingabereihenfolge. Invalides Face liefert Fehler statt leeres Erfolgsshape.",
+      "boundary": "Keine Extrude-UI; diese nutzt später dieselben Regionresultate.",
+      "status": "planned",
+      "gate": "G1",
+      "chapter": "03-fundament.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "U01",
+      "title": "Sichtbare Befehle mit tatsächlicher Funktion abgleichen",
+      "deps": [
+        "A08",
+        "D14"
+      ],
+      "files": [
+        "apps/voelund-ui-preview/PreviewWindow.cpp",
+        "apps/voelund-ui-preview/PreviewWindowRibbon.cpp",
+        "src/modules/solid/SolidWorkspaceModule.cpp"
+      ],
+      "steps": [
+        "Befehlstabelle mit ID, UI-Einstieg, Controller, Zustand und Abnahmetest anlegen.",
+        "Nicht implementierte Buttons/Workspaces eindeutig deaktivieren oder ausblenden; Aktivierungsbedingungen für Skizzen-/Körper-/Flächenauswahl definieren.",
+        "Feste Dokumenttitel und Timelineattrappen durch leeren oder tatsächlichen Zustand ersetzen."
+      ],
+      "acceptance": "Kein aktiver Button ohne registrierte ausführbare Aktion. Extrude wird erst nach M04 aktiv produktiv angeboten. Nicht verfügbares Werkzeug verändert keine Auswahl/Dokumenthistorie.",
+      "boundary": "Genehmigte Gestaltung und Navigation beibehalten; keine neue Oberflächenästhetik.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "U02",
+      "title": "Gemeinsames Shell-ViewModel definieren",
+      "deps": [
+        "U01",
+        "D04"
+      ],
+      "files": [
+        "include/voelund/desktop/MainWindow.hpp",
+        "apps/voelund-ui-preview/PreviewWindow.hpp",
+        "src/desktop/MainWindow.cpp"
+      ],
+      "steps": [
+        "Verantwortlichkeiten beider Fenster in Shell, Dokumentaktionen, Toolhost, Tree/Timeline und Viewport zuordnen.",
+        "Kleine read-only Projektion für Dokumenttitel, Dirty, aktuelle Auswahl, Befehlsverfügbarkeit und Toolzustand bereitstellen.",
+        "Ownership und Lebensdauer von CadSession, Viewport und Panels im Composition Root dokumentieren."
+      ],
+      "acceptance": "Header-/Komponentenskizze benennt für jeden Zustand genau einen Besitzer. Keine zweite CadSession pro Ansicht und keine direkten Featuremutatoren aus Widgets.",
+      "boundary": "API-/Strukturpaket; keine gleichzeitige Migration aller UI-Komponenten.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "design-and-proof",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "U03",
+      "title": "Genehmigte Gestaltung in gemeinsame Desktop-Komponenten verschieben",
+      "deps": [
+        "U02",
+        "A03"
+      ],
+      "files": [
+        "apps/voelund-ui-preview/PreviewStyle.cpp",
+        "apps/voelund-ui-preview/PreviewIcons.cpp",
+        "apps/voelund-ui-preview/ViewCube.cpp",
+        "src/desktop/CMakeLists.txt"
+      ],
+      "steps": [
+        "Style/Icons/ViewCube als wiederverwendbare Darstellungskomponenten nach desktop bzw. zuständigem Viewportbereich extrahieren.",
+        "Preview- und Produktfenster vorübergehend dieselben Komponenten verwenden lassen; keine Fachlogik übertragen.",
+        "Screenshots bei gleicher Größe/DPI als visuelle Vergleichsbasis ablegen."
+      ],
+      "acceptance": "Layout, genehmigte Farbgebung, Navigation und ViewCube bleiben visuell erhalten. Komponenten hängen nicht von PreviewWindow oder dessen Fake-Daten ab. Start-Smokes grün. Der Agent erstellt und betrachtet Vorher-/Nachherbilder gemäß Kapitel 10 selbst; keine routinemäßige Nutzerfreigabe für die Erhaltung der genehmigten Gestaltung.",
+      "boundary": "Nur Darstellung; kein Parametermodell im Style-/Iconmodul.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "U04",
+      "title": "Ribbon an CommandRegistry anbinden",
+      "deps": [
+        "U02",
+        "U03"
+      ],
+      "files": [
+        "src/workspaces/CommandRegistry.cpp",
+        "src/modules/solid/SolidWorkspaceModule.cpp",
+        "src/desktop/WorkspaceToolbar.cpp",
+        "apps/voelund-ui-preview/PreviewWindowRibbon.cpp"
+      ],
+      "steps": [
+        "Ribbon-Elemente aus registrierten Befehlen und Workspace-Metadaten erzeugen/binden.",
+        "Shortcuts und Kontextmenü verwenden dieselbe Command-ID und Zustandsprüfung.",
+        "Aktivierung bei Auswahl-/Tool-/Dokumentwechsel aktualisieren; No-op-Routing auf Select entfernen."
+      ],
+      "acceptance": "Ein Ribbon-Klick und der zugehörige Shortcut lösen identischen Application-Befehl aus. Unbekannte ID liefert Diagnose. Relation/Dimension/Trim/Offset gehen nicht versehentlich auf Select.",
+      "boundary": "Noch nicht implementierte Fachtools bleiben deaktiviert.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "U05",
+      "title": "Generischen ToolPanelHost in die neue Shell integrieren",
+      "deps": [
+        "U04",
+        "D07"
+      ],
+      "files": [
+        "src/desktop/ToolPanelHost.cpp",
+        "src/desktop/SketchEditorToolController.cpp",
+        "src/desktop/SketchExtrusionToolController.cpp",
+        "apps/voelund-ui-preview/PreviewWindow.cpp"
+      ],
+      "steps": [
+        "ToolPanelHost besitzt genau eine aktive Sitzung; Parameterpanel ist reine Bindung an deren State.",
+        "OK/Cancel/Escape/Fokuswechsel gemäß K04 vereinheitlichen; Toolwechsel bei ungültiger Skizze blockiert mit Fehlermeldung.",
+        "Panel-Layout der genehmigten Oberfläche verwenden, alte Controller über Application-Vertrag anschließen."
+      ],
+      "acceptance": "A-UI-02 besteht für OK, Cancel, Escape und Toolwechsel. Cancel lässt Dokument/Undo/Dirty unverändert. Failed-Skizze startet kein Extrude-Panel.",
+      "boundary": "Keine zweite temporäre Parametersammlung im PreviewWindow.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "U06",
+      "title": "Echte Dokumentprojektion für Titel, Tree und Eigenschaften anzeigen",
+      "deps": [
+        "U02",
+        "U05",
+        "D11"
+      ],
+      "files": [
+        "src/desktop/ModelTreePanel.cpp",
+        "src/desktop/FeaturePropertiesPanel.cpp",
+        "src/desktop/MainWindow.cpp"
+      ],
+      "steps": [
+        "Tree liest echte Body-/Feature-IDs, Namen, Fehler und Suppressionstatus.",
+        "Titel aus Dokumentname und Dirty ableiten; Properties zeigen ausgewählte reale Parameter und Auswertungsstatus.",
+        "Auswahl zwischen Tree/Viewport/Properties über typed SelectionRef synchronisieren."
+      ],
+      "acceptance": "Neues/geladenes Dokument zeigt korrekte Inhalte statt Bracket/v12. Umbenennen und Undo aktualisieren alle Ansichten. Entfernte Auswahl wird bereinigt, ohne anderes Feature zu verändern.",
+      "boundary": "Timeline-Bearbeitung folgt M15; hier nur Datenprojektion.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "U07",
+      "title": "New/Open/Save und Close-Schutz in der gemeinsamen Shell anschließen",
+      "deps": [
+        "U05",
+        "D03",
+        "D14"
+      ],
+      "files": [
+        "src/desktop/DocumentActions.cpp",
+        "src/desktop/MainWindow.cpp",
+        "apps/voelund-cad/main.cpp"
+      ],
+      "steps": [
+        "Dokumentaktionen mit dem sicheren Store verbinden und Fehler verständlich anzeigen.",
+        "Dirty-New/Open/Close bietet Save/Discard/Cancel; fehlgeschlagener Save führt nicht trotzdem zum Schließen.",
+        "Native Pfadkonvertierung für Windows und Unix eindeutig gestalten; Unicode-/Leerzeichenfälle verwenden."
+      ],
+      "acceptance": "A-IO-01 und A-UI-03 bestehen: Cancel erhält Modell; Savefehler hält Fenster offen; Openfehler zerstört kein aktives Dokument; Save-As setzt Titel erst nach Erfolg.",
+      "boundary": "Keine neue cloudbasierte Dokumentverwaltung.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "U08",
+      "title": "Sketch-Erzeugung zwischen beiden Shells vereinheitlichen",
+      "deps": [
+        "U05",
+        "D07"
+      ],
+      "files": [
+        "apps/voelund-ui-preview/SketchBackend.cpp",
+        "src/desktop/SketchEditorCreation.cpp",
+        "src/application/SketchEditorSession.cpp"
+      ],
+      "steps": [
+        "Gemeinsamen Application-Erzeugungsbefehl mit semantischen Ergebnisrollen vorbereiten und beide UI-Wege darauf abbilden.",
+        "Duplizierte Snap-/Constraint-Erzeugung aus UI entfernen; Renderingadapter erhalten nur Preview-/Result-Daten.",
+        "Bestehende robuste Legacy-Fälle als Charakterisierungstests erhalten, Preview-Abweichungen ausdrücklich korrigieren."
+      ],
+      "acceptance": "Rechteck, Circle, Arc und Ellipse aus beiden bisherigen Einstiegen erzeugen fachlich gleichen Editorzustand. Kein UI-Code berechnet IDs durch Einfügereihenfolge.",
+      "boundary": "Vollständige Werkzeugmatrix folgt S01/S04–S06; kein dritter Bridge-Layer mit eigener Fachlogik.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "U09",
+      "title": "Input und Drag als einzelne Benutzeraktion behandeln",
+      "deps": [
+        "U05",
+        "D06",
+        "U08"
+      ],
+      "files": [
+        "src/viewport/SketchEditorInteraction.cpp",
+        "src/desktop/SketchEditorPresentation.cpp",
+        "src/application/SketchEditorHistory.cpp",
+        "apps/voelund-ui-preview/SketchBackend.cpp"
+      ],
+      "steps": [
+        "Begin/Update/End/Cancel für Drag definieren; Update verändert nur temporären Kandidaten.",
+        "History-Aufzeichnung aus Renderrefresh entfernen; Pointer-up erzeugt höchstens einen Schritt, abgebrochener Drag keinen.",
+        "Keyboard-Nudge, numerische Eingabe und Mehrfachselektion mit klaren separaten Grenzen anbinden."
+      ],
+      "acceptance": "A-TXN-03: 100 MouseMoves → ein Undo; Escape während Drag → Ausgangszustand; bloßes Refresh → null Schritte. Wiederholtes Redraw verändert Dirty nicht.",
+      "boundary": "Keine Zeitdebounce-Heuristik als Ersatz für echte Eingabegrenzen.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "U10",
+      "title": "Fehler und reparierbare Referenzen sichtbar machen",
+      "deps": [
+        "U06",
+        "R06",
+        "D07"
+      ],
+      "files": [
+        "src/desktop/ModelTreePanel.cpp",
+        "src/desktop/FeaturePropertiesPanel.cpp",
+        "src/desktop/ToolPanelHost.cpp"
+      ],
+      "steps": [
+        "Featurefehler mit betroffenen IDs und Handlungsoption Edit/Repair anzeigen.",
+        "Stale-Geometrie klar kennzeichnen und Export/Messung des ungültigen aktuellen Ergebnisses sperren.",
+        "Explizites Übernehmen mit Folgefehlern aus K03 und Referenzneuzuweisung integrieren."
+      ],
+      "acceptance": "A-ERR-01 und A-REF-03 im UI bedienbar; Fehler verschwindet nach echter Reparatur, nicht nach Refresh. Undo der Reparatur stellt Fehlzustand wieder her.",
+      "boundary": "Keine generischen zusätzlichen Bestätigungsdialoge bei jedem gültigen Edit.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "U11",
+      "title": "Vollständigen UI-Fluss automatisch prüfen",
+      "deps": [
+        "U07",
+        "U08",
+        "U09",
+        "U10",
+        "S03",
+        "S07"
+      ],
+      "files": [
+        "tests/CMakeLists.txt",
+        "apps/voelund-cad/main.cpp",
+        "src/desktop/MainWindow.cpp"
+      ],
+      "steps": [
+        "Qt-Test klickt echte registrierte Aktionen, setzt Felder und bestätigt Panels nach Eventloopstart.",
+        "Basisebene→Skizze→Constraint→OK→Edit→Cancel→Save/Open über tatsächliche UI ausführen.",
+        "Rendering-Readiness, Dokumentrevision, Tree-Inhalte und Fehlerzustände prüfen; visuelle Bilder ergänzen fachliche Assertions."
+      ],
+      "acceptance": "A-UI-01 Skizzenteil und A-UI-02/03 bestehen. Absichtlich abgetrennter Handler macht Test rot. Extrude-Teil wird in M04 ergänzt. A-VIS-01 bestanden: Bilder tatsächlich selbst betrachtet, Layout-/Overlayfehler korrigiert und mit neuer Aufnahme nachgeprüft.",
+      "boundary": "Kein Test, der nur Backendmethoden aufruft und danach Fenstersichtbarkeit bestätigt.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "U12",
+      "title": "Eine produktive Anwendung und einen Composition Root festlegen",
+      "deps": [
+        "U03",
+        "U04",
+        "U05",
+        "U06",
+        "U07",
+        "U11"
+      ],
+      "files": [
+        "apps/voelund-cad/CMakeLists.txt",
+        "apps/voelund-ui-preview/CMakeLists.txt",
+        "src/desktop/MainWindow.cpp",
+        "apps/voelund-ui-preview/PreviewCanvas.cpp"
+      ],
+      "steps": [
+        "Produkt `voelund-cad` mit genehmigter gemeinsamer Shell bauen und installieren.",
+        "Preview auf optionalen Darstellungs-/Entwicklungsharness ohne eigene Fachlogik reduzieren oder nach Parität entfernen.",
+        "Fake-Canvas und verwaiste Handler entfernen; verwendete Screenshots/Doku auf produktiven Einstieg umstellen."
+      ],
+      "acceptance": "Installiertes Produkt startet dieselbe getestete Shell. Kein zweiter SketchBackend mit eigenen Regeln, keine Fake-Timeline. Ein kompletter New/Sketch/Save/Open-Fluss besteht.",
+      "boundary": "Keine Löschung der Vergleichsbasis vor belegter Funktions-/Gestaltungsparität.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "S01",
+      "title": "Semantischen SketchCreationResult abschließen",
+      "deps": [
+        "U08",
+        "R10"
+      ],
+      "files": [
+        "include/voelund/application/SketchEditorSession.hpp",
+        "src/application/SketchEditorGeometry.cpp",
+        "src/application/SketchEditorRectangle.cpp"
+      ],
+      "steps": [
+        "Für Line, Polyline, Rectangle, Circle, Arc, Ellipse, Polygon und Slot Rollen und erzeugte Constraint-IDs definieren.",
+        "Arc-Richtung, Kappenmittelpunkte und Ellipsenmittelpunkt unabhängig von Speicherreihenfolge bereitstellen.",
+        "Auto-Constraint-Anwendung nur gegen vorhandene typisierte Rollen zulassen."
+      ],
+      "acceptance": "Jede Werkzeugfamilie liefert eindeutige Rollen; umgekehrter Arc tauscht die richtigen Endpunkte, Slot-Snaps verwenden Kappenmitten. Unzulässige Rolle liefert Fehler statt ungültigem Constraint.",
+      "boundary": "Keine UI-spezifischen IDs im Resultat.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "S02",
+      "title": "Editorzustand bei Solve/Accept/Cancel vollständig sichern",
+      "deps": [
+        "U09",
+        "D07"
+      ],
+      "files": [
+        "src/application/SketchEditorSession.cpp",
+        "src/application/SketchEditorHistory.cpp",
+        "tests/integration/SketchEditorSessionTests.cpp"
+      ],
+      "steps": [
+        "Editor-Snapshot enthält Elemente, Constraints, Auswahl, temporäre Referenzen, Solverstatus und History-Cursor.",
+        "Reopen löst sofort und publiziert korrekte DOF statt -1; canAccept prüft zulässige Zustände explizit.",
+        "Fehler nach Mutation und Validate werfen keinen halbgeänderten Zustand nach außen; Reject stellt Snapshot wieder her."
+      ],
+      "acceptance": "Failed/Conflicting können nicht als gültig bestätigt werden. Unterbestimmte gültige Skizze kann entsprechend Vertrag akzeptiert werden. Cancel/Reopen/Undo stellen Auswahl und Solve-Status konsistent her.",
+      "boundary": "Keine automatische Vollbestimmung als versteckte Voraussetzung offener Skizzen.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "S03",
+      "title": "Skizze aus leerem Dokument auf Basisebene erstellen",
+      "deps": [
+        "U05",
+        "S02",
+        "D11",
+        "R04"
+      ],
+      "files": [
+        "src/application/CadSessionSketchProfiles.cpp",
+        "src/desktop/SketchEditorToolController.cpp",
+        "src/viewport/SketchViewOrientation.cpp"
+      ],
+      "steps": [
+        "XY/XZ/YZ als explizite datumartige Ebenen mit stabiler Identität anbieten.",
+        "Skizzenstart von Ebene oder gültiger planarer Stützfläche unterscheiden; vorhandenen Körper nicht voraussetzen.",
+        "Orientierung, Rückkehrkamera und Editieren vorhandener Skizze über denselben Controller führen."
+      ],
+      "acceptance": "Leeres Dokument→XY→Rechteck→OK funktioniert ohne Boxtrick. XZ/YZ und rotierte Stützfläche zeigen richtige Achsen; Cancel erzeugt kein Feature. A-UI-01 Skizzengrundlage besteht.",
+      "boundary": "Keine allgemeine gekrümmte Supportfläche.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "S04",
+      "title": "Snap und Auto-Constraints für lineare Werkzeuge korrigieren",
+      "deps": [
+        "S01",
+        "S02",
+        "S03"
+      ],
+      "files": [
+        "src/application/SketchEditorPointConstraints.cpp",
+        "src/desktop/SketchEditorCreation.cpp",
+        "tests/integration/SketchAlignmentTests.cpp"
+      ],
+      "steps": [
+        "Line/Polyline/Rectangle an Endpoint, Origin, horizontal/vertikal und projizierte Geometrie anbinden.",
+        "Beide Rechteckecken und Folgepunkte korrekt referenzieren; doppelte redundante Constraints vermeiden.",
+        "Auto-Constraints-Checkbox tatsächlich schalten und erzeugte Beziehungen verständlich anzeigen."
+      ],
+      "acceptance": "Jeder Snaptyp an erster und zweiter Ecke geprüft; Checkbox aus erzeugt keine automatische Beziehung. Entfernte Projektion wird Referenzfehler statt falscher neuer Bindung.",
+      "boundary": "Keine UI-Vorschau, die andere Constraints verspricht als anschließend gespeichert werden.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "S05",
+      "title": "Snap und Auto-Constraints für Kurven vervollständigen",
+      "deps": [
+        "S04",
+        "R05"
+      ],
+      "files": [
+        "src/application/SketchEditorGeometry.cpp",
+        "src/application/SketchEditorRelations.cpp",
+        "tests/integration/SketchCircleConstraintTests.cpp"
+      ],
+      "steps": [
+        "Circle/Arc/Ellipse an richtige Mittelpunkt-/Endpunktrollen binden; 3-Punkt-Arc-Richtung berücksichtigen.",
+        "Radial-/Tangential-/Konzentrisch-Beziehungen nur für fachlich unterstützte Kombinationen erzeugen.",
+        "Numerische Singularitäten wie identische Arc-Punkte ohne Dokumentänderung abweisen."
+      ],
+      "acceptance": "Circle an Linie tangential, Arc radial/tangential und Ellipsenmittelpunkt-Snap funktionieren in echter Erzeugung. Vertauschte Arc-Richtung bleibt korrekt; degenerierte Kurve liefert genaue Meldung.",
+      "boundary": "Keine behauptete Tangentialität für vom Solveradapter nicht unterstützte Kombinationen.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "S06",
+      "title": "Polygon und Slot mit verbindlicher Semantik liefern",
+      "deps": [
+        "S01",
+        "S05"
+      ],
+      "files": [
+        "src/application/SketchEditorConstruction.cpp",
+        "tests/integration/SketchConstructionTests.cpp"
+      ],
+      "steps": [
+        "Regular-Polygon-Vertrag festlegen: Seitenanzahl, Mittelpunkt, Radiusart, Orientierung sowie tatsächlich erhaltene Winkel-/Längenbeziehungen.",
+        "Slot mit Kappenmittelpunkten, Breite und Länge sowie horizontal/vertikal/frei definieren; erzeugte Kurvenrollen und Tangentialität prüfen.",
+        "Wenn nur einmalige Kopiergeometrie unterstützt wird, dies explizit als solche anbieten; parametrisches Werkzeug nicht vorspiegeln."
+      ],
+      "acceptance": "Maßänderung erhält Regularität bzw. Slot-Tangentialität. Freie Orientierung und vertauschte Eingabepunkte geprüft. Unsinnige Seitenzahl/negative Breite erzeugen keinen Teilzustand.",
+      "boundary": "Nicht aus gleichen Polygonseiten allein auf Regularität schließen.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "S07",
+      "title": "Constraint-Labels, DOF und Dimensionsbindung vereinheitlichen",
+      "deps": [
+        "S02",
+        "S04",
+        "S05"
+      ],
+      "files": [
+        "src/features/SketchConstraintAnnotations.cpp",
+        "src/desktop/SketchConstraintLabel.cpp",
+        "src/desktop/SketchEditorConstraintState.cpp",
+        "src/viewport/SketchConstraintPresentation.cpp"
+      ],
+      "steps": [
+        "Eine Annotationprojektion für alle vorhandenen Constrainttypen liefern; Radius/Durchmesser/Winkel/Abstände korrekt unterscheiden.",
+        "Labels und sichtbare Geometrie aus demselben Solve-Ergebnis beziehen; vollständig bestimmt, unterbestimmt, Konflikt und Failed korrekt anzeigen.",
+        "Dimensionsbearbeitung als Application-Befehl mit Validierung und einem Undo umsetzen."
+      ],
+      "acceptance": "Matrix aller im aktuellen Schema vorhandenen Constrainttypen besitzt erwarteten Labeltyp/Wert. DOF=0 zeigt vollständig bestimmt; Failed nicht under-constrained. Ungültiges Maß bleibt im Editor korrigierbar.",
+      "boundary": "Keine neuen Constrainttypen ohne vollständigen Adapter-/Serializer-/UI-Pfad.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "S08",
+      "title": "Transformationen und Mehrfachauswahl korrigieren",
+      "deps": [
+        "S01",
+        "S02"
+      ],
+      "files": [
+        "src/application/SketchEditorOperations.cpp",
+        "src/application/SketchEditorGeometry.cpp",
+        "tests/integration/SketchBasicToolsTests.cpp"
+      ],
+      "steps": [
+        "Mirror-Achsenwert vor Vektormutation sicher kopieren oder stabil über ID auflösen; keine dangling Pointer.",
+        "Translate/Rotate/Mirror für jede unterstützte Geometrievariante und deren ausgewählte Rollen definieren.",
+        "Legacy-Rechtecke bei nichtdarstellbarer Rotation kontrolliert in Linien migrieren; Delete verarbeitet gesamte vereinbarte Auswahl."
+      ],
+      "acceptance": "Mehrere Spiegelkopien mit erzwungener Reallokation laufen unter verfügbarem Sanitizer. Ellipsenmittelpunkt lässt sich verschieben. Rotiertes Rechteck bleibt Rechteck; Undo stellt ursprüngliche IDs/Beziehungen nach Vertrag her.",
+      "boundary": "Keine still ignorierten Geometrietypen bei erfolgreicher Rückgabe.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "S09",
+      "title": "Offset fachlich korrekt begrenzen und implementieren",
+      "deps": [
+        "S08",
+        "R08"
+      ],
+      "files": [
+        "src/application/SketchEditorOperations.cpp",
+        "src/features/SketchProfiles.cpp",
+        "tests/integration/SketchBasicToolsTests.cpp"
+      ],
+      "steps": [
+        "Exakte Linien-/Kreis-/Arc-Offsets samt Konturanschlüssen und Offsetrichtung definieren.",
+        "Ellipsenoffset nicht durch Halbachsenaddition ersetzen: vorerst mit klarer UnsupportedCurve-Meldung sperren, bis geeignete Kurvenrepräsentation spezifiziert ist.",
+        "Selbstschnitt, zusammenfallende Innenoffsets und ungültige Distanz transaktional behandeln."
+      ],
+      "acceptance": "Linie hält Normalabstand d, Kreis Radius r±d, kollabierender Innenoffset wird abgewiesen. Ellipse wird ausdrücklich als nicht unterstützt erklärt. Preview und Commit geometrisch identisch.",
+      "boundary": "Keine neue Spline-Repräsentation in diesem Paket; späteres Surface-/Curve-Paket darf den Umfang erweitern.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "S10",
+      "title": "Trim, Extend und Split mit klarer Werkzeugmatrix liefern",
+      "deps": [
+        "S08",
+        "R08"
+      ],
+      "files": [
+        "src/application/SketchEditorOperations.cpp",
+        "tests/integration/SketchBasicToolsTests.cpp"
+      ],
+      "steps": [
+        "Unterstützung pro Kurventyp festlegen und UI entsprechend aktivieren; vorhandenen Linienweg robust vervollständigen.",
+        "Schnittwahl, entstehende IDs und Übertragung oder Invalidierung von Constraints definieren.",
+        "Tangentialfall, endpoint-nahe Schnitte, Nullsegmente und nicht vorhandene Schnittziele behandeln."
+      ],
+      "acceptance": "Line/Line und freigegebene weitere Kombinationen liefern richtige Stücke; Unsupported-Kurve wird vor Mutation abgewiesen. Folgeconstraints werden korrekt erhalten oder lokalisiert reparaturbedürftig. Undo ist ein Schritt.",
+      "boundary": "Keine Dokumentation als allgemeines Trim/Extend, solange nur Linien unterstützt sind.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "S11",
+      "title": "Skizzenfillet und Beziehungen nach Operationen erhalten",
+      "deps": [
+        "S10",
+        "S07"
+      ],
+      "files": [
+        "src/application/SketchEditorOperations.cpp",
+        "src/application/SketchEditorRelations.cpp",
+        "tests/integration/SketchBasicToolsTests.cpp"
+      ],
+      "steps": [
+        "Fillet zwischen zwei Linien mit eindeutiger Seite/Radius und korrekter Arc-Tangentialität fertigstellen.",
+        "Constraints entfernter/gekürzter Stücke semantisch zuordnen; unauflösbare Beziehungen nicht an zufällige Nachfolger hängen.",
+        "Parallel-/kollinear-/zu-großer-Radius-Fälle mit Fehlerposition anzeigen."
+      ],
+      "acceptance": "Rechtwinklige Linien erzeugen analytisch richtigen Kreisbogen und tangentiale Übergänge; große/negative Radien werden ohne Teiländerung abgewiesen. Solve und Undo bleiben konsistent.",
+      "boundary": "Keine allgemeine Splineverrundung.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "S12",
+      "title": "Skizzenmuster und Spiegelbeziehungen ehrlich definieren",
+      "deps": [
+        "S08",
+        "S07"
+      ],
+      "files": [
+        "src/application/SketchEditorConstruction.cpp",
+        "include/voelund/document/SketchGeometry.hpp",
+        "tests/integration/SketchConstructionTests.cpp"
+      ],
+      "steps": [
+        "Für v1 bewusst zwischen Einmalkopie und assoziativem Muster entscheiden und Namen/Parameter entsprechend festlegen.",
+        "Wenn assoziativ: Master-/Instanzreferenzen, Count/Spacing/Angle und Constraintübertragung als eigenes Datenobjekt spezifizieren, anschließend in kleinem Folgepaket implementieren.",
+        "Nicht implementierte Persistenzsemantik darf nicht durch nur erzeugte Kopien als parametrisch ausgegeben werden."
+      ],
+      "acceptance": "Änderung am Master wirkt nur bei ausdrücklich assoziativem Modus; Einmalkopie bleibt unabhängig. Anzahlgrenzen, zyklische Abhängigkeit und Save/Open sind geprüft.",
+      "boundary": "Keine stillschweigende Ausweitung des Skizzenformats; neues Schema über D13-Migrationsregeln.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "design-and-proof",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "S13",
+      "title": "Skizzen-UX und Auswahlmodi abschließen",
+      "deps": [
+        "S06",
+        "S07",
+        "S09",
+        "S10",
+        "S11",
+        "S12"
+      ],
+      "files": [
+        "src/viewport/SketchBoxSelection.cpp",
+        "src/viewport/SketchEditorInteraction.cpp",
+        "src/desktop/SketchEditorToolController.cpp"
+      ],
+      "steps": [
+        "Window/Crossing-Auswahl, additive Auswahl, Escape-Abfolge und wiederholte Erzeugung eindeutig machen.",
+        "Grid/Dimensionen/projizierte Geometrie/Auto-Constraints-Schalter tatsächlich mit Ansichts- oder Fachzustand verbinden.",
+        "Fehler an betroffenen Elementen, numerische Eingabe und Tastaturfokus konsistent anzeigen."
+      ],
+      "acceptance": "Alle vier Schalter verändern den benannten Zustand; Ansichtsänderungen erzeugen kein Dirty. Auswahl mit Ellipse/Arc und Constraint-Label kollidiert nicht. Escape beendet zuerst Vorschau, dann Werkzeug nach dokumentierter Regel.",
+      "boundary": "Kein neues Ribbon-Design und keine versteckten Fachregeln in Eventhandlern.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "S14",
+      "title": "Skizzenumfang als Ganzes abnehmen und dokumentieren",
+      "deps": [
+        "S13",
+        "U12",
+        "R10"
+      ],
+      "files": [
+        "docs/sketch-data-model.md",
+        "docs/development-status.md",
+        "tests/integration/SketchEditorSessionTests.cpp"
+      ],
+      "steps": [
+        "Werkzeug×Erzeugen×Preview×Edit×Undo×Save/Open×Snap×Label-Matrix abarbeiten.",
+        "Regressionsfälle F05/F12–F15/F26/F28 aufnehmen und Unterschiede zwischen unterstützten/nicht unterstützten Operationen veröffentlichen.",
+        "Referenzskizzen mit mehreren Regionen und projizierten Kanten durch die produktive Shell prüfen."
+      ],
+      "acceptance": "A-SKETCH-01/02, A-REG-01/02 und A-TXN-03 bestehen. Kein aktives Werkzeug ohne vollständige Zeile in der Matrix. Bekannte Begrenzungen sind in UI und Datenmodelldokument gleich beschrieben.",
+      "boundary": "Kein „Sketch fertig“ allein aus Backend-Smokes ableiten.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "M01",
+      "title": "Körpermodell und erster unabhängiger Solid",
+      "deps": [
+        "S14",
+        "R01",
+        "D11"
+      ],
+      "files": [
+        "src/features/FeatureGraph.cpp",
+        "src/application/CadSession.cpp",
+        "include/voelund/document/ModelDocument.hpp"
+      ],
+      "steps": [
+        "Leeres Dokument und mehrere BodyIds ohne künstliches Startfeature unterstützen.",
+        "Featureinputs beziehen sich auf expliziten Zielkörper/Erzeuger; 'letztes Feature' nicht als pauschaler Zielkörper verwenden.",
+        "NewBody-Ausgabe und Sichtbarkeit/Selektion von Körpern in der Projektion anbieten."
+      ],
+      "acceptance": "Zwei unabhängige Körper lassen sich erstellen und gezielt verändern; dazwischen angelegte Skizze verändert Zielwahl nicht. A-BODY-01 und A-DAG-01 bestehen.",
+      "boundary": "Keine Baugruppeninstanzen; Body ist im Dokument modellierte Geometrie.",
+      "status": "planned",
+      "gate": "G3",
+      "chapter": "05-solid-historie.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "M02",
+      "title": "Extrusionsparameter und Kernel-Auswertung vollständig definieren",
+      "deps": [
+        "M01",
+        "R10",
+        "R03"
+      ],
+      "files": [
+        "include/voelund/document/ModelDocument.hpp",
+        "src/features/SketchEvaluation.cpp",
+        "src/features/FeatureGraph.cpp",
+        "src/kernel/ShapeOperations.cpp"
+      ],
+      "steps": [
+        "ExtrudeSpec mit Regionreferenzen, NewBody/Join/Cut/Intersect, Zielkörper, Richtung und Blind/Reverse/Symmetric definieren.",
+        "Prismenerzeugung an Kernelgrenze verschieben, positive Distanz plus explizite Richtung statt widersprüchlicher Vorzeichen verwenden.",
+        "Semantische Deck-/Mantelflächenreferenzen und Operationshistory liefern; Face-/Solidvalidität vor Commit prüfen."
+      ],
+      "acceptance": "Rechteckextrusion hat analytisches Volumen und richtige Orientierung auf XY/XZ/YZ. Symmetrisch verteilt Gesamtlänge entsprechend dokumentiertem Vertrag. A-EXT-01 besteht ohne vorhandenen Körper.",
+      "boundary": "Taper und weitere Endbedingungen zunächst deaktiviert; keinen heimlichen Overlap als universelle Lösung.",
+      "status": "planned",
+      "gate": "G3",
+      "chapter": "05-solid-historie.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "M03",
+      "title": "Join, Pocket/Cut und Intersect robust auswerten",
+      "deps": [
+        "M02",
+        "D10"
+      ],
+      "files": [
+        "src/kernel/ShapeOperations.cpp",
+        "src/features/FeatureGraph.cpp",
+        "tests/integration/CadSessionTests.cpp"
+      ],
+      "steps": [
+        "Operationen mit explizitem Zielkörper und validen Tool-Solids durchführen; Pocket nutzt denselben Extrusionskern mit Cut-Semantik.",
+        "Berührend, überlappend, getrennt und leeres Resultat je Operation eindeutig behandeln; unbeabsichtigte Mehrkörperresultate melden oder gemäß Body-Vertrag übernehmen.",
+        "Fehler mit Region-/Body-IDs an Anwendung weitergeben und History vollständig halten."
+      ],
+      "acceptance": "A-EXT-02: analytischer Durchbruch und Sacktasche korrekt; getrenntes Join nach festgelegtem Vertrag abgewiesen; Intersect ohne Schnitt erklärt leeres Ergebnis. Alter Zielkörper bleibt bei Reject unverändert.",
+      "boundary": "Keine versteckte automatische Änderung von NewBody zu Join oder Zielkörperwechsel.",
+      "status": "planned",
+      "gate": "G3",
+      "chapter": "05-solid-historie.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "M04",
+      "title": "Produktives Extrude/Pocket-Panel und kompletter erster CAD-Fluss",
+      "deps": [
+        "M03",
+        "U12"
+      ],
+      "files": [
+        "src/desktop/SketchExtrusionToolController.cpp",
+        "src/desktop/ToolPanelHost.cpp",
+        "src/modules/solid/SolidWorkspaceModule.cpp"
+      ],
+      "steps": [
+        "Distanz/Richtung/Operation/Ziel/Regionauswahl wirklich an ExtrudeSpec binden; Preview nutzt denselben Evaluator wie Commit.",
+        "OK erzeugt genau eine Featuretransaktion, Cancel verwirft Vorschau; Tool bei ungültiger Region erklärt betroffene Konturen.",
+        "Registry-Einträge aktivieren und UI-Test um echte Extrusion/Pocket erweitern."
+      ],
+      "acceptance": "A-UI-01 vollständig: neu→Skizze→Extrude→Maß ändern→Undo/Redo→Save/Open. Parameteränderung verändert Preview messbar; Cancel verändert Dokument nicht. G2-Abnahme protokollieren.",
+      "boundary": "Keine ungebundenen Taper-/Direction-Felder im aktiven Panel.",
+      "status": "planned",
+      "gate": "G3",
+      "chapter": "05-solid-historie.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "M05",
+      "title": "Fillet-Kerneloperation und Referenzhistory",
+      "deps": [
+        "M03",
+        "R06"
+      ],
+      "files": [
+        "src/kernel/ShapeOperations.cpp",
+        "src/features/FeatureGraph.cpp",
+        "include/voelund/document/ModelDocument.hpp"
+      ],
+      "steps": [
+        "FilletFeature mit Kantenreferenzen und Radius serialisierbar ergänzen; Kerneloperation isoliert ausführen.",
+        "BRep-Validität, Radiusgrenzen und Generated/Modified/Deleted-History prüfen.",
+        "Fehler auf ausgewählte Kanten zurückführen; ungültiger Radius darf Ausgangsmodell nicht beschädigen."
+      ],
+      "acceptance": "A-FILLET-01: einzelner gerader Boxrand mit kleinem Radius erzeugt validen Solid und erwartete Volumenänderung. Zu großer Radius wird als Fehler behandelt. Nach Basismaßänderung Referenz korrekt oder explizit reparaturbedürftig.",
+      "boundary": "Keine Variable-Radius-/allgemeine Flächenverrundung in diesem Paket.",
+      "status": "planned",
+      "gate": "G3",
+      "chapter": "05-solid-historie.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "M06",
+      "title": "Fillet-Bearbeitung über generischen Toolhost",
+      "deps": [
+        "M05",
+        "M04"
+      ],
+      "files": [
+        "src/desktop/ToolPanelHost.cpp",
+        "src/modules/solid/SolidWorkspaceModule.cpp",
+        "src/viewport/CadViewportQtOpenGl.cpp"
+      ],
+      "steps": [
+        "Kantenselektionsfilter und neues kleines FilletToolController-Modul hinzufügen.",
+        "Mehrfachkante, Radius, Previewfehler, OK/Cancel/Edit an bestehenden Host anbinden.",
+        "Featureparameter in Tree/Properties und Store aufnehmen; Codecänderung nach D13-Vertrag."
+      ],
+      "acceptance": "Fillet erzeugen, Radius ändern, Cancel, Undo/Redo, Save/Open über echte UI funktionieren. Ungültige Auswahl hält korrigierbares Panel offen. A-UI-02 auf Fillet angewendet.",
+      "boundary": "Keine direkte Kerneloperation aus dem Widget.",
+      "status": "planned",
+      "gate": "G3",
+      "chapter": "05-solid-historie.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "M07",
+      "title": "Einfache Chamfer-Funktion mit demselben Fachpfad",
+      "deps": [
+        "M06"
+      ],
+      "files": [
+        "src/kernel/ShapeOperations.cpp",
+        "src/features/FeatureGraph.cpp",
+        "src/modules/solid/SolidWorkspaceModule.cpp",
+        "src/desktop/ToolPanelHost.cpp"
+      ],
+      "steps": [
+        "ChamferFeature für symmetrischen Abstand an stabilen Kantenreferenzen definieren.",
+        "Kerneloperation plus History und kleiner Controller nach bewährtem Fillet-Vertrag implementieren.",
+        "Nicht unterstützte Distanz/Winkel-Varianten im UI nicht anbieten; Persistenz und Edit unterstützen."
+      ],
+      "acceptance": "Ein Boxrand erhält erwartete ebene Fase; negativer/zu großer Abstand rejected; Edit/Undo/Save/Open erhält Referenzen. A-FILLET-01 analoge Chamferfälle bestehen.",
+      "boundary": "Asymmetrische/Winkelfase ist ein späterer eigener Auftrag.",
+      "status": "planned",
+      "gate": "G3",
+      "chapter": "05-solid-historie.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "M08",
+      "title": "Parametrische einfache Bohrung liefern",
+      "deps": [
+        "M04",
+        "R06"
+      ],
+      "files": [
+        "src/features/FeatureGraph.cpp",
+        "src/kernel/ShapeOperations.cpp",
+        "src/modules/solid/SolidWorkspaceModule.cpp",
+        "src/desktop/ToolPanelHost.cpp"
+      ],
+      "steps": [
+        "HoleSpec mit Position aus Skizzenpunkt oder explizitem Bezug, Achse, Durchmesser und Blind/ThroughAll festlegen.",
+        "Bohrvolumen und Ziel-Cut aus gemeinsamen Kernelbausteinen erzeugen; Durchgangslänge aus Körperbezug bestimmen.",
+        "Eigenen Controller mit Preview/Edit/Persistenz ergänzen; Referenzverlust sichtbar behandeln."
+      ],
+      "acceptance": "Zylinderbohrung durch Quader hat analytisch korrektes Volumen; Blindtiefe endet richtig, ThroughAll bleibt nach Körperdickenänderung durchgehend. A-HOLE-01 besteht.",
+      "boundary": "Gewinde, Senkung und Normteilkatalog erst nach eigenem Fachvertrag; keine bloße kosmetische Gewindebehauptung.",
+      "status": "planned",
+      "gate": "G3",
+      "chapter": "05-solid-historie.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "M09",
+      "title": "Parametrische Körperspiegelung",
+      "deps": [
+        "M01",
+        "M03",
+        "R03"
+      ],
+      "files": [
+        "src/features/FeatureGraph.cpp",
+        "src/kernel/ShapeOperations.cpp",
+        "include/voelund/document/ModelDocument.hpp"
+      ],
+      "steps": [
+        "MirrorFeature mit Eingabekörper, stabiler Spiegelbezugsebene und NewBody/Join-Modus ergänzen.",
+        "Orientierung/Handedness korrigiert an Kernel übergeben; Instanzherkunft in SubshapeRefs erhalten.",
+        "Kleinen Controller, Persistenz und Edit über vorhandene Registry-/Toolmuster anschließen."
+      ],
+      "acceptance": "Asymmetrisches Referenzteil wird geometrisch gespiegelt, nicht nur verschoben. Mastermaßänderung aktualisiert Ergebnis; Join-Fehler ist lokalisiert. Undo/Save/Open stabil.",
+      "boundary": "Featuremuster versus Körpermuster nicht vermischen; v1 startet ausdrücklich mit Körpermuster.",
+      "status": "planned",
+      "gate": "G3",
+      "chapter": "05-solid-historie.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "M10",
+      "title": "Lineare und kreisförmige Körpermuster",
+      "deps": [
+        "M09",
+        "R01"
+      ],
+      "files": [
+        "src/features/FeatureGraph.cpp",
+        "src/kernel/ShapeOperations.cpp",
+        "src/modules/solid/SolidWorkspaceModule.cpp"
+      ],
+      "steps": [
+        "PatternSpec mit stabiler Quelle, Instanzindex, Count, Spacing bzw. Axis/Angle definieren; Kreis-Endpunktdopplung festlegen.",
+        "Count-/Ressourcengrenzen, Preview und parametrische Neubewertung implementieren.",
+        "Linear und Circular nacheinander als M10a/b nach identischem Vertrag liefern; gemeinsame Instanzherkunft verwenden."
+      ],
+      "acceptance": "3× lineares Muster mit Abstand20 und 4× Kreis über360° erzeugt richtige Anzahl/Position ohne doppelte erste Instanz. Count0/zu groß rejected. Masteredit, Undo und Save/Open erhalten Instanzreferenzen.",
+      "boundary": "Kein allgemeines parametrisches Feature-Replay-Muster ohne separate Input-Neuzuordnung.",
+      "status": "planned",
+      "gate": "G3",
+      "chapter": "05-solid-historie.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "M11",
+      "title": "Platzierung und Transformation aller v1-Körper konsistent machen",
+      "deps": [
+        "M09",
+        "M10"
+      ],
+      "files": [
+        "src/features/FeatureGraph.cpp",
+        "src/viewport/TransformManipulator.cpp",
+        "src/application/CadSession.cpp"
+      ],
+      "steps": [
+        "Bodyplacement von ursprünglichem Primitive-Featuretyp lösen; Extrusionskörper ebenfalls transformierbar machen.",
+        "Lokale versus Weltkoordinaten für Supportskizzen, Booleans und Muster eindeutig umrechnen.",
+        "Manipulator führt temporäre Updates und einen Commit pro Drag aus; numerische Transformation nutzt denselben Befehl."
+      ],
+      "acceptance": "Extrudiertes und primitives Teil lassen sich identisch verschieben/rotieren; aufgesetzte Skizze bleibt korrekt. Undo eines Drags stellt gesamten Zustand her. A-BODY-02 besteht.",
+      "boundary": "Keine Einzelkopie der Weltgeometrie als Ersatz für parametrische Platzierung.",
+      "status": "planned",
+      "gate": "G3",
+      "chapter": "05-solid-historie.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "M12",
+      "title": "Verlässliche Messung und Einheitenanzeige",
+      "deps": [
+        "M11",
+        "D10",
+        "U10"
+      ],
+      "files": [
+        "src/desktop/MeasurementInput.cpp",
+        "src/viewport/CadViewportQtOpenGl.cpp",
+        "src/application/CadSession.cpp"
+      ],
+      "steps": [
+        "MeasurementResult für Länge, Abstand, Winkel, Fläche und Volumen aus validem aktuellem Auswertungsstand anbieten.",
+        "Pickingreferenzen und Einheiten/Genauigkeit eindeutig anzeigen; Displayrundung vom Wert trennen.",
+        "Invalides/stale Ergebnis sperren oder ausdrücklich als historische Messung kennzeichnen."
+      ],
+      "acceptance": "A-MEASURE-01 vergleicht Box, Zylinder, Ring und bekannte Winkel mit analytischen Werten. Kamera/DPI verändern Messung nicht. Auswahl-/Messvorgang macht Dokument nicht dirty.",
+      "boundary": "Keine Toleranzprüfung/Zeichnungsbemaßung als vermeintlich identische Funktion.",
+      "status": "planned",
+      "gate": "G3",
+      "chapter": "05-solid-historie.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "M13",
+      "title": "Historische Features bearbeiten",
+      "deps": [
+        "M06",
+        "M07",
+        "M08",
+        "M11",
+        "R01"
+      ],
+      "files": [
+        "src/application/CadSession.cpp",
+        "src/desktop/FeaturePropertiesPanel.cpp",
+        "src/desktop/ToolPanelHost.cpp"
+      ],
+      "steps": [
+        "EditFeature öffnet Originalparameter und gültigen Inputzustand des historischen Features, nicht blind den aktuellen Bodytip.",
+        "Preview berechnet Feature und abhängige Nachfolger als Kandidaten; OK übernimmt eine Transaktion.",
+        "Fehler an Nachfolgern mit explizitem CommittedWithErrors anbieten und reparierbaren Zustand speichern."
+      ],
+      "acceptance": "Frühe Skizzenbreite an Teil mit Pocket/Fillet ändern aktualisiert Kette; unabhängiger Körper unverändert. Cancel stellt gesamte Kette wieder her. A-HISTORY-01 besteht.",
+      "boundary": "Nicht die gesamte spätere Timeline heimlich löschen, um Edit einfach zu machen.",
+      "status": "planned",
+      "gate": "G3",
+      "chapter": "05-solid-historie.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "M14",
+      "title": "Suppress und Rollback als unterschiedliche Zustände implementieren",
+      "deps": [
+        "M13"
+      ],
+      "files": [
+        "include/voelund/document/ModelDocument.hpp",
+        "src/features/FeatureGraph.cpp",
+        "src/application/CadSession.cpp"
+      ],
+      "steps": [
+        "Suppression persistiert fachlichen Featurezustand mit definierter Inputweitergabe bzw. blockierten Nachfolgern.",
+        "Rollback-Cursor definiert Bearbeitungs-/Auswertungsgrenze; Verhalten von Einfügen und späteren Features explizit festlegen.",
+        "Beide Benutzerbefehle getrennt implementieren und Undo-/Dirty-Semantik dokumentieren; bei Umfang M14a/b verwenden."
+      ],
+      "acceptance": "Suppress→Save/Open→Unsuppress und Rollback→Edit→Rollforward erhalten IDs und Parameter. Abhängige Referenzen werden nicht neu geraten. A-HISTORY-02 besteht.",
+      "boundary": "Rollback ist kein Löschen und Suppression keine bloße Sichtbarkeit.",
+      "status": "planned",
+      "gate": "G3",
+      "chapter": "05-solid-historie.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "M15",
+      "title": "Echte Feature-Timeline mit Auswahl, Edit und Fehlern",
+      "deps": [
+        "M14",
+        "U06"
+      ],
+      "files": [
+        "src/desktop/ModelTreePanel.cpp",
+        "src/desktop/MainWindow.cpp",
+        "src/desktop/FeaturePropertiesPanel.cpp"
+      ],
+      "steps": [
+        "Timeline aus echter Featureprojektion rendern; Auswahl zwischen Timeline/Tree/Viewport synchronisieren.",
+        "Edit/Suppress/Rollback-Befehle über Registry anbinden; Fehler/Blocked/Suppressed und aktuellen Cursor zeigen.",
+        "Tastaturbedienung und lange Listen ohne starre Featureanzahl unterstützen."
+      ],
+      "acceptance": "Timeline des gespeicherten Referenzteils entspricht tatsächlichen IDs/Reihenfolge. Rechtsklick/Edit und Undo funktionieren; keine festen Sketch/Pad/Fillet-Labels bleiben. A-HISTORY-01/02 über UI bestehen.",
+      "boundary": "Kein erneuter eigener Auswertungszustand in Timelinewidgets.",
+      "status": "planned",
+      "gate": "G3",
+      "chapter": "05-solid-historie.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "M16",
+      "title": "Reorder und Delete mit Abhängigkeitsprüfung",
+      "deps": [
+        "M15",
+        "R01"
+      ],
+      "files": [
+        "src/application/CadSession.cpp",
+        "src/features/FeatureGraph.cpp",
+        "src/desktop/ModelTreePanel.cpp"
+      ],
+      "steps": [
+        "Reorder nur zulassen, wenn alle benötigten Inputs verfügbar bleiben; ungültige Verschiebung vor Mutation erklären.",
+        "Delete mit konkreter Liste betroffener abhängiger Features anbieten; einzelne Referenzreparatur von bewusstem Kaskadenlöschen unterscheiden.",
+        "Reorder/Delete als eine Transaktion implementieren, IDs unabhängiger Objekte erhalten."
+      ],
+      "acceptance": "Gültige unabhängige Umordnung funktioniert; Feature vor seinen Input ziehen wird abgewiesen. Delete mit Abhängigkeiten verliert nichts ohne die gewählte Aktion. Undo stellt Graph und Auswahl wieder her.",
+      "boundary": "Keine generische 'alle späteren Features löschen'-Heuristik.",
+      "status": "planned",
+      "gate": "G3",
+      "chapter": "05-solid-historie.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "M17",
+      "title": "STEP-Import/Export am Kernel-/Dokumentrand",
+      "deps": [
+        "M12",
+        "D13",
+        "R03"
+      ],
+      "files": [
+        "src/kernel/CMakeLists.txt",
+        "src/kernel/ShapeOperations.cpp",
+        "tools/build-freebsd-occt.sh",
+        "src/document/CMakeLists.txt"
+      ],
+      "steps": [
+        "Benötigte OCCT-DataExchange-Toolkits exakt hinzufügen; Importfeature mit eingebettetem Quell-BRep und Quelleinheiten definieren.",
+        "STEP lesen/schreiben mit Units, mehreren Bodies und vereinbarter Namensübernahme; keine externe Quelldatei als einzige Dokumentwahrheit.",
+        "Import-/Exportfehler, Teilresultate und inkompatible Shapes in typed Result abbilden; exportiert wird nur explizit gültige Auswahl/Revision."
+      ],
+      "acceptance": "A-STEP-01: eigenes Mehrkörperteil exportieren/importieren, Solidanzahl, Boundingbox und Volumen innerhalb Toleranz vergleichen. Inches-Fixture korrekt in mm; kaputte STEP-Datei liefert Fehler ohne aktives Dokument zu ersetzen.",
+      "boundary": "Kein Versprechen einer parametrischen Timeline aus STEP; Assemblystruktur/XDE-Ausbau separat X01.",
+      "status": "planned",
+      "gate": "G3",
+      "chapter": "05-solid-historie.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "M18",
+      "title": "Austauschworkflow und mechanische v1-Abnahme",
+      "deps": [
+        "M16",
+        "M17"
+      ],
+      "files": [
+        "src/desktop/DocumentActions.cpp",
+        "src/modules/solid/SolidWorkspaceModule.cpp",
+        "tests/integration/CadSessionTests.cpp",
+        "docs/development-status.md"
+      ],
+      "steps": [
+        "Import als neue/gewählte Dokumentaktion und Export ausgewählter Körper mit sichtbaren Einheiten/Ergebnis anbinden.",
+        "Fehler, Cancel und Save/Open eines importierten Features vollständig durchführen.",
+        "Mechanische Referenzmodelle aus Kapitel08 über produktive Shell erstellen, parametrisch ändern und austauschen; G3-Bericht schreiben."
+      ],
+      "acceptance": "A-PART-01/02, A-STEP-01, A-HISTORY-01/02, A-UI-01 komplett bestanden. Handbuch nennt tatsächlich umgesetzte Varianten und Grenzen. Keine aktive Attrappe im v1-Umfang.",
+      "boundary": "G3 ist noch keine Plattform-/Releasefreigabe; L-Pakete bleiben Pflicht.",
+      "status": "planned",
+      "gate": "G3",
+      "chapter": "05-solid-historie.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "P01",
+      "title": "Plattformnachweis und Testmatrix vorbereiten",
+      "deps": [
+        "A07",
+        "A08"
+      ],
+      "files": [
+        "docs/freebsd-meridian.md",
+        "tools/run-freebsd-integration.sh",
+        "CMakePresets.json"
+      ],
+      "steps": [
+        "Matrix Windows Qt-OpenGL, Windows Native-Diagnose, FreeBSD Sway-Kontrolle, FreeBSD Meridian und Linux Core definieren.",
+        "Für jeden Lauf Commit, Compiler, Qt/OCCT, QPA, GL/GPU, Display/DPI, Buildpreset und Paketstatus protokollieren.",
+        "FreeBSD/Sway-Entwicklungsbasis von abschließender Meridian-Integration in L07 trennen (ADR 0007). Zugänge vor Blockermeldungen prüfen."
+      ],
+      "acceptance": "Ein maschinenlesbarer Bericht besitzt alle Felder und kennzeichnet skipped/blocked getrennt von passed. Zwei Qt-OpenGL-Presets zählen nicht als zwei Backends. Keine behauptete heutige Meridian-Abnahme aus historischen Screenshots. Verfügbare Hostzugänge, UI-Testtreiber, Aufnahme- und Bildlesewege werden vor Nutzeranfragen inventarisiert; fehlende Fähigkeiten bleiben ausdrücklich offen.",
+      "boundary": "Kein automatisch gestarteter unbekannter Remotehost; reale verfügbare Zielumgebung verwenden.",
+      "status": "done",
+      "gate": "G0",
+      "chapter": "06-plattform-release.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [
+        "evidence/P01.md",
+        "evidence/P01-review.md"
+      ],
+      "completedCommit": null,
+      "completedDate": "2026-09-13",
+      "completedWorkingTreeHashes": {
+        "tools/New-PlatformReport.ps1": "b5887b4e8639f72e0ead8872a15bf2108c9a0c04b967435f0c1e294e7d3b6965",
+        "tools/Test-PlatformReport.ps1": "3dad87257a29c5240c34a64be11399b04c8d38349829bdc8da2e707adfc4eed6",
+        "tools/PlatformReportSupport.psm1": "5db0368abaca1d6a6c5217c516f87d38e03262a4d8b524b6c8dcf360be2bbb3f",
+        "tools/PlatformReportValidation.psm1": "249925212f46104c8e4ebffeb0759bef1a2e9dd054defab51d38aef00f764f70",
+        "tools/PlatformReportExecution.psm1": "f9ce3270fd34614b6c1689624d4f134e34dd7dcef0ad97d791cbdde83e3b0225",
+        "tools/Set-PlatformReportVisualReview.ps1": "e11c91db59c429b70672589a1f6ef8ade53208f8055cebb1678e6d53292b37a6",
+        "tests/powershell/PlatformReport.Tests.ps1": "f3228e562a2f20d2645d2ad0bcf3770ca3b5f2516ce8c8a771002941940beeb8",
+        "tests/powershell/PlatformReportFixtures.ps1": "54ccacdbc0364ec6fcd45f8ef782827ab859bc84660d08027e0c1f7accaaeb84",
+        "tests/powershell/PlatformReportExecution.Tests.ps1": "df3ac8afaf257ffdf999ca7c361baf40d57b56141570123f94767ab0b624e4f4",
+        "tests/CMakeLists.txt": "0e67421d76e429fedbd54ab6b8a60b5a34a2c4471244578381234a87bb4a4e66"
+      }
+    },
+    {
+      "id": "P02",
+      "title": "Viewport-Gemeinsamkeiten und GL-Lebensdauer ordnen",
+      "deps": [
+        "A03",
+        "P01"
+      ],
+      "files": [
+        "src/viewport/CadViewport.cpp",
+        "src/viewport/CadViewportQtOpenGl.cpp",
+        "src/viewport/QtOcctGlContext.cpp",
+        "include/voelund/viewport/CadViewport.hpp"
+      ],
+      "steps": [
+        "Szene, Kamera-/Auswahllogik und Eingaberouting in gemeinsame Komponenten zerlegen; Backendgrenzen klein halten.",
+        "Qt-Kontextneuerzeugung mit aboutToBeDestroyed, idempotentem Cleanup und Reinitialisierung behandeln.",
+        "fitView/Projection/Redraw auf update()/zulässige GL-Callbacks oder explizite makeCurrent-Guard umstellen."
+      ],
+      "acceptance": "Keine fachlich doppelte Szene-/Inputimplementierung. Wiederholtes Erstellen/Schließen und Reparent/Context-Recreate ohne stale GL-Ressourcen. Bestehendes Picking/Manipulatorverhalten erhalten.",
+      "boundary": "Refactor in P02a gemeinsame Szene und P02b Lebenszyklus aufteilen, wenn Scopegrenze überschritten; keine neue Renderengine.",
+      "status": "done",
+      "gate": "G0",
+      "chapter": "06-plattform-release.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [
+        "evidence/P02.md"
+      ],
+      "completedCommit": null,
+      "completedDate": "2026-09-13",
+      "completedWorkingTreeHashes": {
+        "include/voelund/viewport/CadViewport.hpp": "f712abef55144fd1ec760010b62d49d448eb4fee292fc2f2269b98f235048a7a",
+        "src/viewport/CMakeLists.txt": "d22f832b0e615b58cf2d5fca5b86fc8450238270b1ff0d2e0678829108f544e0",
+        "src/viewport/CadViewport.cpp": "49714fd0b12cbf8d74a1ee012f0478928fd390288f54c14f592611be866e80e3",
+        "src/viewport/CadViewportHandlers.cpp": "8dd4be79b74410330d72f8365bcedf2d6478859c1760b90eca6d6a07745862d9",
+        "src/viewport/CadViewportInput.cpp": "bdf14d0a59567dc8c1984828631895ffc14ddbe1af82fdee43a79a01e87aa085",
+        "src/viewport/CadViewportScene.hpp": "25b00744e20450354a1f621327652b80bced83bc9825f60d5de2778c2d6296c8",
+        "src/viewport/CadViewportNativeBackend.hpp": "96318e7b80e2e19d125cbc15371109a24d54084d94f9d12ff0f1b81e34a872ba",
+        "src/viewport/CadViewportNativeCallbacks.cpp": "e7f489f21edf5832fc3654ab130f2ae2cf7ae8c4cc8cc048baee1204bc1e5608",
+        "src/viewport/CadViewportQtOpenGlBackend.hpp": "a7ba682e5bfeebad3664a4b07f1de76f71cba83f7693aa9286ef4cd43da92bc6",
+        "src/viewport/CadViewportQtOpenGl.cpp": "93cb7ff635dcec142ecddcd1ba06a5813360b7b21b143b5f90ff40d94783072c",
+        "src/viewport/ViewportContextGuard.hpp": "44dcc47dcba7b4b11f1a30ad4862f0f6bc81220fdb828219381b75f04b9c915d",
+        "src/viewport/SketchEditorInteraction.hpp": "301c5e965851c7bd0f5a05a108ff6d82d856c0e60482b6fa5fe9616018cca2c6",
+        "src/viewport/SketchInteraction.hpp": "f292d62199b86b89e1fd493ccf5657db7b33fb6c72b622fdce59d37677009c63",
+        "src/viewport/SketchInteraction.cpp": "8cf1a50255656e6a82db4d0523bf2d1c09823c3653cdaccdecb67025c6837c24",
+        "src/viewport/TransformManipulator.hpp": "d6d49f1dec860ff48a003e4684a0df952267765f11e22a52833cdfa4ae8b6608",
+        "src/viewport/TransformManipulator.cpp": "24c7b5ab50429595b8cc9a49a0a69c8f5f0d1fba51bbd695aae7f58fac8eeac2",
+        "tests/CMakeLists.txt": "8fe77423bdc783665646cd722a13c94b4fc717ed38b299ab9344d3d5979e9052",
+        "tests/desktop/ViewportLifecycleTests.cpp": "1be37ccce945855cf9b284dcf420ddbfe73415d378bb308750188803545f9669",
+        "tests/desktop/ViewportLifecycleSupport.hpp": "ec45413595c796b6261fde9ad49fa3a8cd70d4cfc6e5d755f41c4e3143df6090",
+        "tests/desktop/ViewportTestAccess.hpp": "6974ea1fa8e8a35192b64155f16803a438e20bd77a5bbb36525cd9695082819d"
+      }
+    },
+    {
+      "id": "P03",
+      "title": "DPI, FBO und Renderstabilität prüfen",
+      "deps": [
+        "P02"
+      ],
+      "files": [
+        "src/viewport/ViewportPixels.hpp",
+        "src/viewport/CadViewportInput.cpp",
+        "src/viewport/QtOcctGlContext.hpp",
+        "src/viewport/QtOcctGlContext.cpp",
+        "src/viewport/CadViewportQtOpenGl.cpp",
+        "tests/desktop/ViewportTestAccess.hpp",
+        "tests/desktop/ViewportLifecycleTests.cpp",
+        "tests/desktop/ViewportDpiTests.cpp",
+        "tests/CMakeLists.txt",
+        "apps/voelund-ui-preview/InspectorScrollArea.hpp",
+        "apps/voelund-ui-preview/PreviewWindow.cpp",
+        "apps/voelund-ui-preview/PreviewStyle.cpp",
+        "apps/voelund-ui-preview/main.cpp"
+      ],
+      "steps": [
+        "Framebufferwechsel, Resize und devicePixelRatio-Änderung samt OCCT-Fenstermaßen korrekt propagieren.",
+        "Gezielte Tests/Diagnose für Minimieren, Maximieren, Bildschirmwechsel und Context-Recreate ergänzen.",
+        "Pickingkoordinaten und Overlaypositionen an denselben physischen/logischen Pixelvertrag binden."
+      ],
+      "acceptance": "A-GL-01 besteht bei100/150/200% Skalierung, soweit Hardware/Compositor verfügbar. Known-point-Picking bleibt richtig; kein schwarzer/staler Viewport nach Wiederherstellung. Reale zugängliche Fälle selbst ausführen und optisch prüfen; nur technisch nicht selbst beobachtbare Restfälle für eine gezielte Nutzerprüfung offenhalten.",
+      "boundary": "Keine feste Skalierung erzwingen, um Fehler zu verstecken.",
+      "status": "done",
+      "gate": "G0",
+      "chapter": "06-plattform-release.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [
+        "evidence/P03.md"
+      ],
+      "completedCommit": null,
+      "completedDate": "2026-09-13",
+      "completedWorkingTreeHashes": {
+        "src/viewport/ViewportPixels.hpp": "e01e449dccc7172a765eed51b7f20ac3649e56a51c30502dd3b9d7b5022c94d4",
+        "src/viewport/CadViewportInput.cpp": "fb86e28f50b48a54ff743adac727323125ed3ecb3dcffb7b3753118ca4395003",
+        "src/viewport/QtOcctGlContext.hpp": "198a24392548b6c1615490756460d8bf8d3416184da9edb31cf9dc80a95c0750",
+        "src/viewport/QtOcctGlContext.cpp": "8c135911c96370122944d61839312e54b2daa8de6f0804f574421ae04d766596",
+        "src/viewport/CadViewportQtOpenGl.cpp": "a5043f74645aa88ab0b61d0960ea310998e63d46673f0733d8a2f97e1bc50390",
+        "tests/desktop/ViewportTestAccess.hpp": "c438c0c997845c0467ce8d771d4f86aa37a7a69e9e6381267b87efdb0c567889",
+        "tests/desktop/ViewportLifecycleTests.cpp": "b2078a621b679716afa0313e74e77114b0a8d864953dc414bf54fe308b59dba4",
+        "tests/desktop/ViewportDpiTests.cpp": "be853ed621561c42d33ba9f4c6a3ecf65fab3aef2d8ee072c021d61508dc6b5b",
+        "tests/CMakeLists.txt": "79dae5944112b9abf979e2830859a492b64db2130ee363907870515ccb8709dc",
+        "apps/voelund-ui-preview/InspectorScrollArea.hpp": "5e885bd5ec20a0c42ed988bbb15f3f96e6b9312ed16d23c98c88a952f031cc5f",
+        "apps/voelund-ui-preview/PreviewWindow.cpp": "c31c868b04e7b3ba4267333e8bb1eb31d1614330d89812b3f5adc2f3b4b13a6c",
+        "apps/voelund-ui-preview/PreviewStyle.cpp": "d17e4c041e4bd8dcecfa341378b830c2cb0a6c74eaa916d62c340b74d2a46cb8",
+        "apps/voelund-ui-preview/main.cpp": "2401c1442e6a3c06b817f0d49d46c6accff4595460f8a714c0b32e58d457896b"
+      }
+    },
+    {
+      "id": "P04",
+      "title": "Native FreeBSD/Sway-Entwicklungsbasis abnehmen",
+      "deps": [
+        "P03"
+      ],
+      "files": [
+        "docs/freebsd-meridian.md",
+        "tools/run-freebsd-integration.sh",
+        "tools/start-freebsd-control-session.sh",
+        "tests/CMakeLists.txt",
+        "tests/desktop/ViewportLifecycleTests.cpp",
+        "tests/desktop/ViewportTestAccess.hpp",
+        "docs/adr/0007-sway-development-meridian-final.md"
+      ],
+      "steps": [
+        "Aktuellen Stand separat auf echtem FreeBSD/Sway mit nativem Wayland bauen; Build/Runtime/QPA/GL-Evidenz erfassen.",
+        "Vollständigen CTest und produktive GUI-Smokes ausführen; Lifecycle, Picking, Orbit/Pan/Zoom, Manipulator sowie Größenwechsel und Overlays prüfen.",
+        "Qt- und Compositoraufnahmen betrachten; Ergebnisse und Grenzen dokumentieren. Meridian gemäß ADR 0007 erst in L07 integrieren."
+      ],
+      "acceptance": "Aktueller FreeBSD/Sway-Build, vollständiger CTest, GUI-Smokes und Lifecycle-/Interaktionsprüfung bestanden; native Wayland-/GPU-Umgebung und betrachtete Aufnahmen belegt. Kein XWayland-Ersatz. Hardwaregrenzen und GL-Diagnostik bleiben sichtbar dokumentiert.",
+      "boundary": "Entwicklungsbasis gemäß ADR 0007, keine Meridian-Abnahme. Portal/Theme/Resume, physischer Mixed-DPI-Wechsel und abschließende Meridian-Releaseintegration bleiben L07.",
+      "status": "done",
+      "gate": "G0",
+      "chapter": "06-plattform-release.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [
+        "evidence/P04.md"
+      ],
+      "completedCommit": null
+    },
+    {
+      "id": "L01",
+      "title": "Verpflichtende CI und saubere Release-Buildmatrix",
+      "deps": [
+        "A04",
+        "A05",
+        "A07",
+        "M18"
+      ],
+      "files": [
+        "CMakePresets.json",
+        "CMakeLists.txt",
+        "tests/CMakeLists.txt",
+        "docs/dependencies.md"
+      ],
+      "steps": [
+        "CI-Konfiguration im tatsächlich verwendeten Repositorysystem anlegen; falls keines existiert, zuerst runnerunabhängige Prüfskripte plus bestätigte Runnerzuordnung festhalten.",
+        "Debug/Release auf Windows, FreeBSD und Linux Core konfigurieren; Format, Analyse, Grenzen, Tests und Plattformberichte als Gates behandeln.",
+        "Nicht verfügbare GPU-/Meridianprüfungen als gesonderte erforderliche Abnahme behandeln, nicht stumm skippen."
+      ],
+      "acceptance": "Clean checkout ohne bestehendes build/ baut reproduzierbar auf vorhandenen Runnern. Fehler in einem Pflichtcheck blockiert Freigabe; JUnit/Logs/Umgebungsmanifest werden je Commit archiviert. UI-Bilder und visuelle Vergleichsbefunde werden soweit betroffen mit Szenario/Umgebung archiviert; automatisch erzeugte Bilder nicht als bereits betrachtet kennzeichnen.",
+      "boundary": "Kein grünes Badge mit fehlenden Pflichtplattformen; Netzwerk-/Runnerzugang ist explizite externe Voraussetzung.",
+      "status": "planned",
+      "gate": "G4",
+      "chapter": "06-plattform-release.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "L02",
+      "title": "Laufzeitpaket und native Dateizuordnung bauen",
+      "deps": [
+        "L01",
+        "U12",
+        "M17"
+      ],
+      "files": [
+        "apps/voelund-cad/CMakeLists.txt",
+        "src/desktop/DocumentActions.cpp",
+        "CMakeLists.txt",
+        "docs/dependencies.md"
+      ],
+      "steps": [
+        "Installregeln für tatsächlich benötigte Qt-Plugins, OCCT/Compiler-Runtime, Ressourcen und Desktop-Dateien erstellen.",
+        "Dateiargumente im produktiven main verarbeiten; mehrere Argumente eindeutig erlauben oder mit verständlicher Meldung begrenzen.",
+        "Portable/Staging-Paket auf Rechner ohne Dev-PATH starten; Unicodepfade und native Dialoge prüfen."
+      ],
+      "acceptance": "Installiertes voelund-cad öffnet per Dateizuordnung eine .volund-Datei mit Umlaut/Leerzeichen. Keine Abhängigkeit auf .tools oder Entwicklerarbeitsverzeichnis. Fehlende Runtime wird im Pakettest erkannt.",
+      "boundary": "Installationsform pro Plattform vorab konkret festlegen; keine ungeprüften DLL-Sammelkopien.",
+      "status": "planned",
+      "gate": "G4",
+      "chapter": "06-plattform-release.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "L03",
+      "title": "Release-Metadaten und Upgradepfad",
+      "deps": [
+        "L02",
+        "D14"
+      ],
+      "files": [
+        "apps/voelund-cad/main.cpp",
+        "CMakeLists.txt",
+        "docs/development-status.md"
+      ],
+      "steps": [
+        "Produktversion, Buildrevision, Schema-/Dependency-Versionen und About-/Diagnoseansicht ergänzen.",
+        "Install/Upgrade/Uninstall-Regeln definieren, Benutzerdateien und Recoverydaten erhalten.",
+        "Neue und alte Dokumente durch installierte Release-App öffnen und erneut speichern; Zukunftsformat verständlich ablehnen."
+      ],
+      "acceptance": "Version aus Paket und Laufzeit stimmt überein. Upgrade erhält Einstellungen/Dokumente; Uninstall löscht keine CAD-Dateien. Migration nicht nur im Testbinary bestanden.",
+      "boundary": "Keine automatische Rückwärtskompatibilität behaupten, die D08/D14 nicht nachgewiesen haben.",
+      "status": "planned",
+      "gate": "G4",
+      "chapter": "06-plattform-release.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "L04",
+      "title": "Herkunft, Dependencybudget und Auslieferungsbestandteile abschließen",
+      "deps": [
+        "L02"
+      ],
+      "files": [
+        "docs/provenance/README.md",
+        "docs/provenance/occt-samples-qt.md",
+        "docs/provenance/freecad-planegcs.md",
+        "docs/dependencies.md"
+      ],
+      "steps": [
+        "Alle ausgelieferten Dependencies, Versionen, Quellherkünfte, Änderungen und Lizenztexte inventarisieren; eigene Adapter separat markieren.",
+        "Vorhandene ADR-Anforderungen zur PlaneGCS-Verlinkung und notwendigen Weitergabematerialien in konkrete Paketdateien umsetzen; ungeklärte Release-Verlinkungsentscheidung ausdrücklich abschließen.",
+        "Manifest/SBOM aus realem Staginginhalt erzeugen und mit Paket vergleichen; vollständige erforderliche Notices statt bloßer URLs beilegen."
+      ],
+      "acceptance": "Jede ausgelieferte Bibliothek/Ressource hat zuordenbare Herkunft und vorgesehene Begleitmaterialien; fehlende Datei macht Paketprüfung rot. Keine Behauptung rechtlicher Freigabe allein aufgrund eines Toolchecks.",
+      "boundary": "Neue Lizenz-/Verlinkungsfragen als fachliche Releaseentscheidung bearbeiten; keine eigene Rechtsberatung oder automatische Zustimmung erfinden.",
+      "status": "planned",
+      "gate": "G4",
+      "chapter": "06-plattform-release.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "L05",
+      "title": "Autosave und Wiederherstellung ohne Originalverlust",
+      "deps": [
+        "D03",
+        "D13",
+        "U07"
+      ],
+      "files": [
+        "src/application/CadSession.cpp",
+        "src/desktop/DocumentActions.cpp",
+        "src/platform/README.md"
+      ],
+      "steps": [
+        "Recovery-Snapshots getrennt vom Benutzerpfad mit DocumentId und Ausgangsrevision speichern; Editor-Entwürfe von bestätigtem Dokument unterscheiden.",
+        "Beim Start neue/ältere Recoverykandidaten erkennen, Unterschiede anzeigen und bewusst wiederherstellen/verwerfen lassen.",
+        "Stale-Tempdateien, mehrere Appinstanzen und Schreibfehler behandeln; Originalspeicherung bleibt AtomicFileStore."
+      ],
+      "acceptance": "A-RECOVERY-01: Abbruch nach Änderungen führt zu verfügbarem Recovery, Original bleibt unverändert; Restore kann als neue Datei gespeichert werden. Beschädigter Snapshot blockiert normales Öffnen nicht.",
+      "boundary": "Kein stilles Überschreiben der letzten manuell gespeicherten Datei.",
+      "status": "planned",
+      "gate": "G4",
+      "chapter": "06-plattform-release.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "L06",
+      "title": "Performance, Ressourcen und lange Modellhistorien absichern",
+      "deps": [
+        "M18",
+        "L01"
+      ],
+      "files": [
+        "src/features/FeatureGraph.cpp",
+        "src/features/SketchConstraintSolver.cpp",
+        "src/viewport/SketchPresentation.cpp",
+        "tests/CMakeLists.txt"
+      ],
+      "steps": [
+        "Deterministische Modellsets mit gestuften Element-/Feature-/Bodyzahlen und Referenzhardware definieren; Laufzeit, Speicher und Interaktionslatenz messen.",
+        "Nur gemessene Engpässe optimieren: inkrementelle Auswertung, Caches nach Revision, Tessellierung; Ergebnisse dürfen Semantik nicht ändern.",
+        "Bei erforderlicher Hintergrundauswertung Snapshot-/Revisionvertrag und kooperative Abbruchpunkte einführen; keine veralteten Ergebnisse publizieren."
+      ],
+      "acceptance": "A-PERF-01 liefert reproduzierbare Messwerte und vereinbarte Grenzwerte vor Release. Abbruch/Neueingabe lässt UI korrigierbar; Memorywachstum nach wiederholtem Open/Close wird gemessen. Kein willkürliches Hardwareversprechen.",
+      "boundary": "Keine premature Threadpool-Architektur; einzelne nicht abbrechbare OCCT-Aufrufe als konkrete Grenze dokumentieren.",
+      "status": "planned",
+      "gate": "G4",
+      "chapter": "06-plattform-release.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "L07",
+      "title": "Vollständige Meridian-Produktabnahme wiederholen",
+      "deps": [
+        "P04",
+        "L02",
+        "L05",
+        "L06"
+      ],
+      "files": [
+        "docs/freebsd-meridian.md",
+        "tools/run-freebsd-integration.sh"
+      ],
+      "steps": [
+        "Installiertes Releasepaket auf echter Zielumgebung mit aktuellem OCCT/OCAF/DataExchange-Profil prüfen.",
+        "Portal-Dateidialog, Clipboard, Theme, Tastaturfokus, Skalierung, Multimonitor, Maximieren, Suspend/Resume und Kontextwiederaufbau ausführen.",
+        "A-PART-01 samt Save/Open/STEP auf Meridian durchführen; Sway nur zur Ursachenabgrenzung heranziehen."
+      ],
+      "acceptance": "Alle in A-PLAT-01 vorgeschriebenen Checks besitzen pass/fail und Evidenz. QPA ist nativ Wayland; kein übersehener X-Fallback. Fehler werden mit reproduzierbarem Unterpaket behoben und nachgeprüft. Der Agent bedient und prüft die verfügbare Zielumgebung selbst einschließlich Bildkontrolle; nur unbeobachtbare Restwirkungen werden gemäß Kapitel 10 gebündelt an den Nutzer gegeben.",
+      "boundary": "Initiales P04 allein reicht nach großen Backend-/Dependencyänderungen nicht als Releasefreigabe.",
+      "status": "planned",
+      "gate": "G4",
+      "chapter": "06-plattform-release.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "L08",
+      "title": "Windows-Release und Linux-Core-Kompatibilität abnehmen",
+      "deps": [
+        "L02",
+        "L05",
+        "L06"
+      ],
+      "files": [
+        "tools/setup-windows.ps1",
+        "tools/setup-linux.sh",
+        "CMakePresets.json"
+      ],
+      "steps": [
+        "Windows-Stagingpaket auf sauberer Benutzerumgebung ohne Dev-PATH öffnen, modellieren, speichern und exportieren.",
+        "Qt-OpenGL Produktweg vollständig prüfen; Native-Diagnose separat kennzeichnen.",
+        "Linux-Core Build/CTest mit tatsächlich dokumentierter Dependencystrategie durchführen und Ergebnisse archivieren."
+      ],
+      "acceptance": "Windows A-PART-01/02 und Unicode-Dateifälle bestanden; Linux-Core-Tests grün. Native-Windows nicht als Produktvoraussetzung ausgeben, wenn ADR nur Diagnose verlangt. Fehlende Plattform bleibt offen. Eigenständige optische Prüfung des Windows-Produkts nach A-VIS-01; keine generelle Bitte an den Nutzer, die Anwendung durchzutesten.",
+      "boundary": "Keine Windows-Grafikfreigabe aus Headless-Coretests ableiten.",
+      "status": "planned",
+      "gate": "G4",
+      "chapter": "06-plattform-release.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "L09",
+      "title": "Benutzerdokumentation und ausführbare Tutorials",
+      "deps": [
+        "L03",
+        "L04",
+        "L07",
+        "L08"
+      ],
+      "files": [
+        "README.md",
+        "docs/development-status.md",
+        "docs/sketch-data-model.md"
+      ],
+      "steps": [
+        "Installation, erstes Teil, Skizzenzustände, Timeline, Reparatur, Save/Recovery und STEP verständlich dokumentieren.",
+        "Tutorials exakt aus getesteten Referenzmodellen ableiten; Screenshots aus installiertem Produkt mit tatsächlichen Features.",
+        "Featurematrix und bekannte Einschränkungen aktualisieren; historische Prototypanleitungen klar trennen."
+      ],
+      "acceptance": "Der Agent arbeitet A-PART-01 ausschließlich anhand des Tutorials gegen das installierte Produkt ab, dokumentiert Lücken und korrigiert sie. Eine zusätzliche Erstnutzerprobe ist optional; die Eigenprüfung wird nicht als unabhängiger Usability-Test ausgegeben. Kein Screenshot/Schritt benutzt deaktivierten Befehl. Architektur- und Userdoku widersprechen sich nicht.",
+      "boundary": "Keine pauschale Behauptung 'FreeCAD-Ersatz' ohne Funktionsabdeckung.",
+      "status": "planned",
+      "gate": "G4",
+      "chapter": "06-plattform-release.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "L10",
+      "title": "V1-Releasekandidat prüfen und nachvollziehbar freigeben",
+      "deps": [
+        "L09"
+      ],
+      "files": [
+        "docs/development-status.md",
+        "docs/implementation-plan/08-abnahme.md"
+      ],
+      "steps": [
+        "Releasekandidat mit unveränderlicher Revision, Dependencymanifest, Prüfergebnissen und installierbaren Artefakten zusammenstellen.",
+        "Offene Befunde nach Datenverlust/Modellrichtigkeit/Bedienbarkeit prüfen; P0/P1 im v1-Umfang müssen erledigt oder Produktumfang ausdrücklich neu entschieden sein.",
+        "Vollständiges Gateprotokoll erstellen; tatsächliche Veröffentlichung/Signierung im vorgesehenen autorisierten Prozess ausführen."
+      ],
+      "acceptance": "G0–G4 belegt, alle Pflichtszenarien bestanden, keine als grün ausgegebenen skipped Gates. Paket installierbar und Dokumente migrierbar. Veröffentlichung erst nach projektspezifischer Releasefreigabe, falls dafür gesonderte Autorisierung nötig ist.",
+      "boundary": "Ein fertig gebauter Releasekandidat allein wird nicht als bereits veröffentlicht gemeldet.",
+      "status": "planned",
+      "gate": "G4",
+      "chapter": "06-plattform-release.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "X01",
+      "title": "Baugruppenvertrag und Referenzbaugruppe spezifizieren",
+      "deps": [
+        "L10"
+      ],
+      "files": [
+        "include/voelund/document/FeatureId.hpp",
+        "src/workspaces/CommandRegistry.cpp",
+        "docs/architecture-and-code-contract.md"
+      ],
+      "steps": [
+        "AssemblyDocument, PartDocument, ComponentInstance und Placement unterscheiden; Versionierung, externe Referenzauflösung und Einbetten/Verknüpfen entscheiden.",
+        "Referenzbaugruppe aus Grundplatte, zwei identischen Bolzen und einer beweglichen Lasche mit Sollpositionen festlegen.",
+        "Import von STEP-Assemblystruktur gegen OCCT-XDE prüfen und Arbeitsaufträge für Datenmodell, Resolver, Darstellung und Store ausformulieren."
+      ],
+      "acceptance": "Entwurf besitzt konkrete Header, Dateischema, Einheiten-/Transformregeln, Missing-Part-Verhalten und native Fixture. Jede folgende Implementation hat höchstens eine Verantwortlichkeit.",
+      "boundary": "Kein Aufweichen der Body-/Feature-ID-Semantik, um Instanzen wie neue Körper zu behandeln.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "07-produktbreite.md",
+      "kind": "design-and-proof",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "X02",
+      "title": "Baugruppeninstanzen und Platzierungen liefern",
+      "deps": [
+        "X01"
+      ],
+      "files": [
+        "src/document/ModelDocument.cpp",
+        "src/features/FeatureGraph.cpp",
+        "src/viewport/CadViewportQtOpenGl.cpp"
+      ],
+      "steps": [
+        "Bestätigten Assembly-Snapshot/Store mit Instanz-ID, Teilreferenz und Transformation implementieren.",
+        "Mehrere Instanzen desselben Teils ohne duplizierte Parameterwahrheit darstellen und auswählen.",
+        "Fehlende Teilrevision sichtbar behandeln; Relink als Transaktion. Gemeinsame Teiländerung aktualisiert abhängige Instanzen."
+      ],
+      "acceptance": "Referenzbaugruppe hat zwei unterscheidbare Bolzeninstanzen desselben Teils. Save/Open, Teilverschiebung, Quelle umbenennen und Missing-Part-Reparatur geprüft.",
+      "boundary": "Noch keine allgemeine Montage-Zwangslösung.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "07-produktbreite.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "X03",
+      "title": "Erste Montagebeziehungen mit DOF-Diagnose",
+      "deps": [
+        "X02"
+      ],
+      "files": [
+        "src/features/FeatureGraph.cpp",
+        "src/modules/solid/SolidWorkspaceModule.cpp"
+      ],
+      "steps": [
+        "Eigenes Assembly-Modul mit Fixed und klar begrenztem Coaxial/Planar-Mate-Vertrag entwerfen; Solverwahl durch ADR prüfen, vorhandenen 2D-PlaneGCS nicht ungeprüft als 3D-Lösung verwenden.",
+        "Mindestens Fixed plus eine nachgewiesene bewegliche Beziehung implementieren, DOF/Redundanz/Konflikt anzeigen.",
+        "Constraint-Edit/Undo/Persistenz und unabhängige Instanzidentität erhalten."
+      ],
+      "acceptance": "Lasche auf Bolzen besitzt erwartete verbleibende Beweglichkeit; widersprüchliches Mate erzeugt verständlichen Konflikt ohne Positionssprung anderer Teile. Fixture samt numerischen Grenzen dokumentiert.",
+      "boundary": "Volle kinematische Simulation und beliebige 3D-Constraints sind weitere Spezifikationspakete.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "07-produktbreite.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "X04",
+      "title": "Erste assoziative technische Zeichnung liefern",
+      "deps": [
+        "X01",
+        "L10"
+      ],
+      "files": [
+        "src/kernel/CMakeLists.txt",
+        "src/workspaces/CommandRegistry.cpp"
+      ],
+      "steps": [
+        "Drawing-Modul mit Blatt, Maßstab, Basisansicht, Projektion und referenzierten Modellkanten spezifizieren; zulässige OCCT-HLR-/Vektorexportwege prüfen.",
+        "Zunächst ein Blatt mit Vorder-/Seitenansicht, einfacher assoziativer Längenbemaßung und Titelblock implementieren.",
+        "PDF-/Vektorausgabe, Schrift-/Einheitenregeln und gebrochene Maßreferenzen explizit testen; dafür neue Abhängigkeit nur nach ADR."
+      ],
+      "acceptance": "Modellbreite ändern aktualisiert Ansicht und Maß. Fehlende Kante ergibt kaputte Referenz statt falsches Maß. Maßstab verändert Papierdarstellung, nicht Zahlenwert. Ausdruck/Export visuell und metrisch geprüft.",
+      "boundary": "GD&T, Stücklisten, Schnitt-/Detailansichten und komplette Zeichnungsnormabdeckung brauchen separate Folgepakete.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "07-produktbreite.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "X05",
+      "title": "Surface-Daten- und Genauigkeitsvertrag festlegen",
+      "deps": [
+        "L10"
+      ],
+      "files": [
+        "src/kernel/ShapeFactory.cpp",
+        "src/features/FeatureGraph.cpp",
+        "src/workspaces/CommandRegistry.cpp"
+      ],
+      "steps": [
+        "Kurven/Flächen/Shells/Solids als unterschiedliche Resultattypen und zulässige Übergänge festlegen.",
+        "Ersten Scope wählen: Loft zwischen zwei kompatiblen Profilen, Randreferenzen, Kontinuitätsanforderung und Sew-Solid-Bedingungen.",
+        "Analytische und geometrisch problematische Fixturematrix plus konkrete Kernel-/Feature-/UI-/Store-Unterpakete erstellen."
+      ],
+      "acceptance": "Entwurf erklärt offene Fläche, geschlossene Hülle und validen Solid; Toleranzen und G0/G1-Kontinuität sind prüfbar. Keine freie NURBS-Komplettheit suggeriert.",
+      "boundary": "Spec-Paket; keine zusätzliche Geometryengine.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "07-produktbreite.md",
+      "kind": "design-and-proof",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "X06",
+      "title": "Ersten parametrischen Surface-Loft vertikal liefern",
+      "deps": [
+        "X05"
+      ],
+      "files": [
+        "src/kernel/ShapeOperations.cpp",
+        "src/features/FeatureGraph.cpp",
+        "src/desktop/ToolPanelHost.cpp"
+      ],
+      "steps": [
+        "Loft-Feature nach X05 mit stabilen Profilreferenzen evaluieren und darstellen.",
+        "Verdrehung/Orientierung, inkompatible Profile und Selbstschnitt explizit behandeln.",
+        "Preview/Edit/Undo/Save/Open und STEP-Export im Surface-Workspace anschließen."
+      ],
+      "acceptance": "Zwei definierte Profile erzeugen erwartete offene bzw. geschlossene Form; Quellmaßänderung aktualisiert sie. Fehlerfälle lassen bisheriges Modell erhalten; Resultattyp korrekt ausgezeichnet.",
+      "boundary": "Patch, Sweep, freie Kontrollpunktbearbeitung und komplexe Kontinuität erst nach gesonderten Tickets.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "07-produktbreite.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "X07",
+      "title": "Mesh-Modell und Import-/Exportgrenzen spezifizieren",
+      "deps": [
+        "L10"
+      ],
+      "files": [
+        "src/kernel/CMakeLists.txt",
+        "src/workspaces/CommandRegistry.cpp"
+      ],
+      "steps": [
+        "TriangleMesh getrennt von exaktem BRep halten; Einheiten, Normalen, Indizes und Ressourcenlimits definieren.",
+        "Ersten Scope STL/gegebenenfalls vorhandenes geeignetes Format, Anzeige, Statistik und einfache Reparatur festlegen; keine neue Library ohne ADR.",
+        "Fixtures für geschlossene Schale, Loch, Nonmanifold-Kante, invertierte Normale und riesige Eingabe vorbereiten."
+      ],
+      "acceptance": "Konkrete API und Dateiformatentscheidungen; Genauigkeitsverlust gegenüber CAD sichtbar benannt. Importlimits vor großen Allokationen prüfbar.",
+      "boundary": "Meshimport ist keine automatische Rekonstruktion parametrischer CAD-Geometrie.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "07-produktbreite.md",
+      "kind": "design-and-proof",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "X08",
+      "title": "Mesh-Inspektion und begrenzte Reparatur liefern",
+      "deps": [
+        "X07"
+      ],
+      "files": [
+        "src/viewport/CadViewportQtOpenGl.cpp",
+        "src/desktop/ToolPanelHost.cpp",
+        "src/workspaces/CommandRegistry.cpp"
+      ],
+      "steps": [
+        "Mesh-Modul mit Import/Anzeige, Manifold-/Orientierungsdiagnose und Export implementieren.",
+        "Nur nachgewiesene Reparaturen anbieten, zunächst Normalenumkehr und Entfernen degenerierter Dreiecke; Topologieänderung als Vorschau zeigen.",
+        "Transaktion/Undo und eingebettete Meshquelldaten im Dokument erhalten."
+      ],
+      "acceptance": "Fixtures melden richtige Defekte; Repair verändert nur vorgesehene Dreiecke und ist rückgängig. Keine 'repariert'-Meldung bei verbleibendem Nonmanifold-Fall.",
+      "boundary": "Automatisches Löcherschließen/Remeshing erst nach Fehler-/Genauigkeitsvertrag.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "07-produktbreite.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "X09",
+      "title": "Blechvertrag mit Biegeparametern und Abwicklungsfixture",
+      "deps": [
+        "L10"
+      ],
+      "files": [
+        "src/features/FeatureGraph.cpp",
+        "src/workspaces/CommandRegistry.cpp"
+      ],
+      "steps": [
+        "Konstante Blechdicke, Innenradius, Winkel, K-Faktor/Biegezuschlag und Reliefs als explizite Parameter spezifizieren.",
+        "Ersten Scope Basislasche plus eine gerade Biegung festlegen; Formteil/Abwicklung als zusammengehörige Ergebnisse modellieren.",
+        "Analytische Fixture mit festgelegter Neutralfaserformel und Herkunft der Parameter erstellen; Anschluss an Zeichnung/Manufacturing planen."
+      ],
+      "acceptance": "API und Formel erlauben eindeutigen Sollwert der Abwicklung. Ungültige Dicke/Radius/Kollision und nichtabwickelbare Geometrie sind definierte Fehler.",
+      "boundary": "Keine universelle Fertigungsgenauigkeit ohne material-/prozessbezogene Kalibrierung behaupten.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "07-produktbreite.md",
+      "kind": "design-and-proof",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "X10",
+      "title": "Basislasche, eine Biegung und Abwicklung liefern",
+      "deps": [
+        "X09"
+      ],
+      "files": [
+        "src/kernel/ShapeOperations.cpp",
+        "src/features/FeatureGraph.cpp",
+        "src/desktop/ToolPanelHost.cpp"
+      ],
+      "steps": [
+        "Parametrisches SheetMetal-Modul nach begrenztem X09-Scope implementieren; Dicke als Invariante prüfen.",
+        "Gefaltete und abgewickelte Darstellung sowie Biegelinien als abgeleitete Ergebnisse anbieten.",
+        "Maßänderung, Undo, Save/Open und geeignetes konturtreues Exportformat anbinden."
+      ],
+      "acceptance": "Analytische Biegefixture stimmt innerhalb festgelegter Toleranz. Selbstüberschneidung/zu kleiner Radius nicht still akzeptiert. Fertigungsdaten benennen verwendete Biegeparameter.",
+      "boundary": "Mehrfachbiegungen, Eckfreistellung und allgemeines Unfold brauchen anschließende kleine Pakete.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "07-produktbreite.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "X11",
+      "title": "Gemeinsame CAD/Vault/Fertigungsidentitäten konkretisieren",
+      "deps": [
+        "L10",
+        "D11"
+      ],
+      "files": [
+        "include/voelund/document/FeatureId.hpp",
+        "docs/architecture-and-code-contract.md"
+      ],
+      "steps": [
+        "ProjectId, ModelId, immutable RevisionId und ArtifactId einschließlich Duplikat/Fork/Snapshot-Regeln spezifizieren.",
+        "Gemeinsames Austauschmanifest mit Quellrevision, Schema, Einheiten, Prüfsumme, Artefakttyp und Provenienz definieren.",
+        "Lokaler Dateipfad wird Locator, nicht Identität; Konflikt- und Referenzauflösung als API-Vertrag festhalten."
+      ],
+      "acceptance": "CAD-Datei verschieben/umbenennen erhält Modellidentität; bewusste Kopie/Fork hat definierte neue Identität. Ein Artefakt lässt sich eindeutig zur Quellrevision zurückverfolgen.",
+      "boundary": "Keine unbekannte Vault-API erfinden und kein Remotezugang voraussetzen.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "07-produktbreite.md",
+      "kind": "design-and-proof",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "X12",
+      "title": "Lokale Projekt-/Revisionsverwaltung als erster Vault-Schritt",
+      "deps": [
+        "X11"
+      ],
+      "files": [
+        "src/application/CadSession.cpp",
+        "src/desktop/DocumentActions.cpp",
+        "src/workspaces/CommandRegistry.cpp"
+      ],
+      "steps": [
+        "Lokales Projektmanifest und unveränderliche gespeicherte Revisionen implementieren; aktuelle Arbeitskopie von Revision unterscheiden.",
+        "Projekt öffnen, Revision benennen, ältere Revision ansehen und bewussten neuen Arbeitsstand ableiten.",
+        "Artefakte am Manifest registrieren; Schreibvorgänge atomar und Mehrinstanzkonflikte sichtbar behandeln."
+      ],
+      "acceptance": "Zwei Revisionen bleiben unverändert lesbar; Rückkehr zu alter Revision überschreibt neuere nicht. Abbruch während Manifestwrite beschädigt keine vorhandene Revision. IDs über Pfadänderung erhalten.",
+      "boundary": "Noch kein Server, Benutzer-/Rollenmodell oder verdeckter Sync.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "07-produktbreite.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "X13",
+      "title": "Tatsächliche Vault-Anbindung spezifizieren",
+      "deps": [
+        "X12"
+      ],
+      "files": [
+        "docs/architecture-and-code-contract.md",
+        "src/platform/README.md"
+      ],
+      "steps": [
+        "Vorhandene echte Vault-Schnittstelle/Repositorydokumentation beschaffen und deren Authentifizierung, Versionierung, Upload, Locking und Fehlercodes inventarisieren.",
+        "Adaptervertrag mit Offlinebetrieb, Conflict, Retry/Idempotenz und Credentialablage festlegen; fehlende externe Angaben als konkrete Fragenliste dokumentieren.",
+        "Lokalen Fake-Server/Vertragstest für genau bestätigte API-Fälle vorbereiten."
+      ],
+      "acceptance": "Reviewbare Schnittstellenmatrix und Fixtures existieren; keine ausgedachten Endpunkte. Ohne API-Unterlagen bleibt dieses Paket extern blockiert, lokale CAD-/Vault-Funktionen bleiben nutzbar.",
+      "boundary": "Kein Kontakt zu externen Diensten und kein Versand von Projektdateien ohne passende Nutzerautorisierung.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "07-produktbreite.md",
+      "kind": "design-and-proof",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "X14",
+      "title": "Minimalen Offline-/Online-Revisionsabgleich liefern",
+      "deps": [
+        "X13"
+      ],
+      "files": [
+        "src/application/CadSession.cpp",
+        "src/platform/README.md",
+        "src/desktop/DocumentActions.cpp"
+      ],
+      "steps": [
+        "Bestätigten Adapter für expliziten Push/Pull von Revision plus Artefakten implementieren; Credentials außerhalb Dokumentdateien halten.",
+        "Timeout, Wiederholung, Teilupload, veraltete Basisrevision und Konflikt ohne stillen Datenverlust behandeln.",
+        "UI zeigt lokale/remote Revision und ausstehende Aktion; Offlineedit bleibt eigenständig möglich."
+      ],
+      "acceptance": "Vertragstests zeigen idempotente Wiederholung und Konflikt ohne Überschreiben konkurrierender Revision. Abgebrochener Transfer als unvollständig markiert, kein falsches synced.",
+      "boundary": "Kein automatischer geometrischer Merge; Konfliktauflösung als bewusste Revision/Fork.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "07-produktbreite.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "X15",
+      "title": "Fertigungsübergabe als versioniertes Artefakt definieren",
+      "deps": [
+        "X11",
+        "M18"
+      ],
+      "files": [
+        "src/application/CadSession.cpp",
+        "src/desktop/DocumentActions.cpp"
+      ],
+      "steps": [
+        "ManufacturingJob referenziert unveränderliche Modellrevision, ausgewählte Körper, Material-/Prozessmetadaten und Exportparameter.",
+        "STEP/Mesh/Zeichnungs-/Abwicklungsartefakte mit Einheiten, Prüfsummen und Erzeugerversion manifestieren.",
+        "Abgeleitete Artefakte bei neuer Modellrevision als veraltet kennzeichnen; keine unbemerkte Weiterverwendung."
+      ],
+      "acceptance": "Änderung am CAD-Modell überschreibt freigegebenes Fertigungsartefakt nicht. Manifest kann Quelle und Parameter vollständig erklären. Fehlender/ungültiger Body verhindert erfolgreiche Übergabe.",
+      "boundary": "Keine Maschinensteuerung und keine CAM-Bahnerzeugung in diesem Paket.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "07-produktbreite.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "X16",
+      "title": "Ersten Fertigungsworkflow integrieren",
+      "deps": [
+        "X15",
+        "X12"
+      ],
+      "files": [
+        "src/workspaces/CommandRegistry.cpp",
+        "src/desktop/ToolPanelHost.cpp",
+        "src/desktop/DocumentActions.cpp"
+      ],
+      "steps": [
+        "Einen konkreten Workflow auswählen und spezifizieren, zunächst revisionsgebundene STEP-Übergabe eines gefrästen Einzelteils.",
+        "Export, Manifest, lokale Übergabe und Statusanzeige als eine nachvollziehbare Benutzeraktion anbinden.",
+        "Fehlende Materialdaten, defekter Export und veraltete Revision korrigierbar behandeln."
+      ],
+      "acceptance": "Referenzteil wird mit korrekter Revision/Einheiten exportiert; nach Modelländerung Status stale, bewusster Neuauftrag erzeugt neue Artefaktidentität. Kein Erfolg bei halb geschriebenem Export.",
+      "boundary": "Externer Auftragversand nur im tatsächlich autorisierten Prozess, nicht automatisch durch Export.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "07-produktbreite.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "X17",
+      "title": "CAM-Scope, Maschinenmodell und Simulationsabnahme festlegen",
+      "deps": [
+        "X16"
+      ],
+      "files": [
+        "docs/architecture-and-code-contract.md",
+        "docs/dependencies.md"
+      ],
+      "steps": [
+        "Ersten Scope 2.5D mit festgelegtem Rohteil, Werkzeug, Koordinatensystem, Operation und Maschinenprofil spezifizieren.",
+        "Strategie-/Geometrie-/Postprozessorgrenzen sowie Quellen für Schnittdaten und Maschinengrenzen festhalten; notwendige Libraries anhand ADR prüfen.",
+        "Referenzpfad, Kollisions-/Restmaterialchecks und unabhängige Simulation als Abnahmekette planen."
+      ],
+      "acceptance": "Kein offener Maschinen-/Werkzeugparameter wird geraten. Kleine Implementierungspakete für Setup, eine Bahnstrategie, Simulation und genau einen Postprozessor sind konkret ausgeschrieben.",
+      "boundary": "Spezifikationspaket; keine pauschale Aussage, erzeugter G-Code sei für beliebige Maschinen ausführbar.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "07-produktbreite.md",
+      "kind": "design-and-proof",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "X18",
+      "title": "Ersten CAM-Prozess bis zur geprüften Simulation liefern",
+      "deps": [
+        "X17"
+      ],
+      "files": [
+        "src/workspaces/CommandRegistry.cpp",
+        "src/desktop/ToolPanelHost.cpp"
+      ],
+      "steps": [
+        "Bestätigten 2.5D-Prozess in getrennten Kern-/Feature-/UI-Bausteinen implementieren.",
+        "Setup/Toolpath als revisionsgebundene Daten speichern; Simulation und Postprozessor gegen das festgelegte Profil prüfen.",
+        "Kollision, unerreichbare Geometrie und veraltete Quellrevision als blockierende Jobzustände behandeln."
+      ],
+      "acceptance": "Referenzwerkstück besitzt reproduzierbaren Bahnverlauf und bestandene festgelegte Simulation. Postprozessoroutput entspricht vereinbartem Maschinenprofil; echte Maschinenfreigabe bleibt gesonderte reale Abnahme.",
+      "boundary": "Keine direkte Maschinenbewegung als automatischer Softwaretest.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "07-produktbreite.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "X19",
+      "title": "Weiteren Solid-/Parameterumfang in nächste Lieferpakete zerlegen",
+      "deps": [
+        "L10"
+      ],
+      "files": [
+        "src/modules/solid/SolidWorkspaceModule.cpp",
+        "src/features/FeatureGraph.cpp",
+        "include/voelund/document/ModelDocument.hpp"
+      ],
+      "steps": [
+        "Nächste konkrete Features jeweils getrennt spezifizieren: Revolve, Shell, Draft/Taper, Sweep, weitere Fillet-/Chamfer-/Holevarianten und Featuremuster.",
+        "Benannte Parameter/Ausdrücke mit Einheiten, Zyklenerkennung, Abhängigkeitsverfolgung und Fehlerdiagnose als eigenes Daten-/Evaluatorpaket entwerfen.",
+        "Pro Feature die bereits verwendete Kette Spec→Kernel→History→Store→Controller→Edit→Abnahme mit analytischen Fixtures und Dateieinstiegen ausschreiben."
+      ],
+      "acceptance": "Jeder tatsächlich eingeplante Befehl erhält eigenständige kleine IDs, positive/negative Fixtures und Freigabegrenze; sichtbare Schaltfläche bleibt bis vollständiger Umsetzung deaktiviert.",
+      "boundary": "Dieses Paket liefert ausführbare Folgeplanung, nicht eine pauschale 'alles Solid fertig'-Behauptung.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "07-produktbreite.md",
+      "kind": "design-and-proof",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "X20",
+      "title": "Jedes weitere Modul als Produkt separat abnehmen",
+      "deps": [
+        "X03",
+        "X04",
+        "X06",
+        "X08",
+        "X10",
+        "X14",
+        "X18",
+        "X19"
+      ],
+      "files": [
+        "docs/development-status.md",
+        "docs/dependencies.md",
+        "docs/provenance/README.md"
+      ],
+      "steps": [
+        "Für jedes ausgelieferte Modul seine Fixtures, Referenzprojekte, Migrations-/Plattform-/Paketchecks und Benutzeranleitung ausführen.",
+        "Gemeinsame Releasepflichten L01–L10 wiederanwenden; Modulgrenzen und Interoperabilität prüfen.",
+        "Weiteren Umfang erst nach tatsächlicher Nutzung/Fehlerdaten priorisieren und zu neuen kleinen Paketen konkretisieren."
+      ],
+      "acceptance": "Kein Modul gilt durch registrierten Tab als fertig. Assembly/Drawings/Surface/Mesh/SheetMetal/Vault/Manufacturing haben getrennte nachweisbare Abnahme und bekannte Grenzen. Interoperabilitätsprojekte bleiben über Versionen lesbar.",
+      "boundary": "Module können einzeln nach ihren Voraussetzungen veröffentlicht werden; der Gesamtnachweis X20 wartet auf alle hier geplanten ersten Lieferstufen.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "07-produktbreite.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    }
+  ],
+  "executionPolicy": {
+    "reference": "10-autonome-umsetzung.md",
+    "preferenceDate": "2026-09-13",
+    "activation": "Within a user-authorized implementation scope; A01 is complete. Consult packet status and evidence before continuing.",
+    "onePacketAtATime": true,
+    "continueNextEligiblePacketWithoutReprompt": true,
+    "respectExplicitSinglePacketScope": true,
+    "respectDependenciesAndProductGates": true,
+    "agentOwnsTestingVisualReviewFixesAndStatus": true,
+    "visualReviewRequiredForVisibleChanges": true,
+    "visualAcceptanceScenario": "A-VIS-01",
+    "screenshotsMustActuallyBeInspected": true,
+    "baselineUpdatesMustBeJustified": true,
+    "routineHumanApprovalRequired": false,
+    "blockedPacketDoesNotBlockIndependentAuthorizedWork": true,
+    "humanFallback": "Only a prepared, specific remainder after feasible self-checks: inaccessible environment, unobservable physical effect, unresolved product preference or genuinely required authorization.",
+    "preserveEvidenceOfNotRunChecks": true,
+    "assumeBackgroundExecution": false
+  }
+}

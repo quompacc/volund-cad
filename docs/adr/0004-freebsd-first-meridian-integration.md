@@ -1,6 +1,6 @@
 # ADR 0004: FreeBSD-first Meridian desktop integration
 
-**Status:** accepted
+**Status:** accepted; Entwicklungsreihenfolge und frühe Meridian-Sperre durch [ADR 0007](0007-sway-development-meridian-final.md) ersetzt
 **Date:** 10 September 2026
 **Owner:** Völund project
 

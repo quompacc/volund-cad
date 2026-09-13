@@ -1,0 +1,467 @@
+[
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "~CadViewport",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "beginRectangleSketch",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "beginSketchEditor",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "CadViewport",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "cancelSketch",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "cancelSketchEditorStep",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "continueSketchPolyline",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "displayedSketchConstraintCount",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "displayedSketchElementCount",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "fitView",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "isRenderingReady",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "mouseDoubleClickEvent",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "mouseMoveEvent",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "mousePressEvent",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "mouseReleaseEvent",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "paintEngine",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "paintEvent",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "renderingPixelSize",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "resizeEvent",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "setBodies",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "setBodyMoveHandler",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "setBodyMovePreviewHandler",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "setBodyRotationHandler",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "setBodyRotationPreviewHandler",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "setBodySelectionHandler",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "setCameraView",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "setPerspectiveProjection",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "setPlanarFaceSelectionHandler",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "setSelectedSketchElement",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "setSelectedSketchElements",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "setShape",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "setSketchConstraintEditHandler",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "setSketchConstraints",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "setSketchEditorElementHandler",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "setSketchEditorPreviewHandler",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "setSketchEditorTool",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "setSketchEditorTranslationHandler",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "setSketchElements",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "setSketchElementSelectionHandler",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "setSketchExtrusionPreviewHandler",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "setSketchRectangleHandler",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "setTransformSnapping",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "setTransformTarget",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "setTransformToolEnabled",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "showEvent",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "updateSketchExtrusionPreview",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewport.cpp",
+    "method": "wheelEvent",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "~CadViewport",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "beginRectangleSketch",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "beginSketchEditor",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "CadViewport",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "cancelSketch",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "cancelSketchEditorStep",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "continueSketchPolyline",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "displayedSketchConstraintCount",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "displayedSketchElementCount",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "fitView",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "initializeGL",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "isRenderingReady",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "mouseDoubleClickEvent",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "mouseMoveEvent",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "mousePressEvent",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "mouseReleaseEvent",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "paintGL",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "renderingPixelSize",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "resizeGL",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "setBodies",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "setBodyMoveHandler",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "setBodyMovePreviewHandler",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "setBodyRotationHandler",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "setBodyRotationPreviewHandler",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "setBodySelectionHandler",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "setCameraView",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "setPerspectiveProjection",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "setPlanarFaceSelectionHandler",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "setSelectedSketchElement",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "setSelectedSketchElements",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "setShape",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "setSketchConstraintEditHandler",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "setSketchConstraints",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "setSketchEditorElementHandler",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "setSketchEditorPreviewHandler",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "setSketchEditorTool",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "setSketchEditorTranslationHandler",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "setSketchElements",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "setSketchElementSelectionHandler",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "setSketchExtrusionPreviewHandler",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "setSketchRectangleHandler",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "setTransformSnapping",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "setTransformTarget",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "setTransformToolEnabled",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "updateSketchExtrusionPreview",
+    "unchangedIgnoringWhitespace": true
+  },
+  {
+    "backend": "src/viewport/CadViewportQtOpenGl.cpp",
+    "method": "wheelEvent",
+    "unchangedIgnoringWhitespace": true
+  }
+]

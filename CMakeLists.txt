@@ -55,6 +55,7 @@ add_subdirectory(third_party/planegcs)
 add_subdirectory(src/kernel)
 add_subdirectory(src/document)
 add_subdirectory(src/features)
+add_subdirectory(src/platform)
 add_subdirectory(src/application)
 add_subdirectory(src/workspaces)
 add_subdirectory(src/modules/solid)
@@ -74,7 +75,7 @@ add_custom_target(
     check-source-limits
     COMMAND
         "${CMAKE_COMMAND}"
-        -DVOELUND_SOURCE_ROOT="${CMAKE_CURRENT_SOURCE_DIR}"
+        "-DVOELUND_SOURCE_ROOT=${CMAKE_CURRENT_SOURCE_DIR}"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/tools/cmake/CheckSourceLimits.cmake"
     VERBATIM
 )

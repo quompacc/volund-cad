@@ -30,7 +30,7 @@
     },
     {
       "name": "windows-msvc",
-      "displayName": "Windows MSVC Debug",
+      "displayName": "Windows MSVC Qt OpenGL product path",
       "inherits": "windows-base",
       "condition": {
         "type": "equals",
@@ -45,11 +45,11 @@
       }
     },
     {
-      "name": "windows-msvc-qt-opengl",
-      "displayName": "Windows MSVC Qt OpenGL Debug",
+      "name": "windows-msvc-native-diagnostic",
+      "displayName": "Windows MSVC native viewport diagnostic path",
       "inherits": "windows-msvc",
       "cacheVariables": {
-        "VOELUND_VIEWPORT_BACKEND": "qt-opengl",
+        "VOELUND_VIEWPORT_BACKEND": "native",
         "VCPKG_MANIFEST_MODE": "OFF"
       }
     },
@@ -64,7 +64,10 @@
       },
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": "x64-linux-voelund",
-        "VOELUND_BUILD_DESKTOP": "OFF"
+        "VOELUND_BUILD_DESKTOP": "OFF",
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/.tools/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_INSTALLED_DIR": "${sourceDir}/.tools/vcpkg_installed",
+        "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/cmake/vcpkg-triplets"
       }
     },
     {
@@ -96,8 +99,8 @@
       "configurePreset": "windows-msvc"
     },
     {
-      "name": "windows-msvc-qt-opengl",
-      "configurePreset": "windows-msvc-qt-opengl"
+      "name": "windows-msvc-native-diagnostic",
+      "configurePreset": "windows-msvc-native-diagnostic"
     },
     {
       "name": "linux-gcc",
@@ -121,8 +124,8 @@
       }
     },
     {
-      "name": "windows-msvc-qt-opengl",
-      "configurePreset": "windows-msvc-qt-opengl",
+      "name": "windows-msvc-native-diagnostic",
+      "configurePreset": "windows-msvc-native-diagnostic",
       "output": {
         "outputOnFailure": true
       }

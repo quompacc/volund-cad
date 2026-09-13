@@ -1,0 +1,18 @@
+[1/23] Scanning V:\src\document\DocumentSerializer.cpp for CXX dependencies
+[2/23] Generating CXX dyndep file src\document\CMakeFiles\voelund_document.dir\CXX.dd
+[3/18] Building CXX object src\document\CMakeFiles\voelund_document.dir\DocumentSerializer.cpp.obj
+[4/18] Linking CXX static library src\document\voelund_document.lib
+[5/18] Linking CXX executable tests\voelund_document_parser_tests.exe
+[6/18] Linking CXX executable tests\voelund_document_tests.exe
+[7/18] Linking CXX executable tests\voelund_sketch_profile_tests.exe
+[8/18] Linking CXX executable tests\voelund_sketch_constraint_tests.exe
+[9/18] Linking CXX executable apps\voelund-cad\voelund-cad.exe; Deploying the minimal Qt runtime; Deploying the Qt OpenGL runtime
+[10/18] Linking CXX executable tests\voelund_application_tests.exe
+[11/18] Linking CXX executable apps\voelund-ui-preview\voelund-ui-preview.exe; Deploying the Qt runtime for the UI preview; Deploying the Qt OpenGL runtime for the UI preview
+[12/18] Linking CXX executable tests\voelund_sketch_construction_tests.exe
+[13/18] Linking CXX executable tests\voelund_sketch_editor_tests.exe
+[14/18] Linking CXX executable tests\voelund_sketch_circle_constraint_tests.exe
+[15/18] Linking CXX executable tests\voelund_sketch_alignment_tests.exe
+[16/18] Linking CXX executable tests\voelund_sketch_fix_distance_tests.exe
+[17/18] Linking CXX executable tests\voelund_sketch_basic_tools_tests.exe
+[18/18] Linking CXX executable tests\voelund_sketch_slot_tests.exe

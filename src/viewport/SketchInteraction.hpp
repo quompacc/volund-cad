@@ -23,6 +23,8 @@ public:
         const occ::handle<AIS_InteractiveContext>& context,
         const occ::handle<V3d_View>& view);
     void cancel();
+    void rebind(const occ::handle<AIS_InteractiveContext>& context,
+                const occ::handle<V3d_View>& view);
     [[nodiscard]] bool isActive() const noexcept;
     void setSnapping(bool enabled, double linearStep);
     void setDistancePreviewHandler(std::function<void(double)> handler);

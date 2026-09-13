@@ -1,0 +1,80 @@
+Internal ctest changing into directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt
+Test project /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt
+      Start  1: desktop.viewport_startup.native_wayland
+ 1/27 Test  #1: desktop.viewport_startup.native_wayland .....   Passed    0.68 sec
+      Start  2: desktop.viewport_startup.uninitialized
+ 2/27 Test  #2: desktop.viewport_startup.uninitialized ......   Passed    0.23 sec
+      Start  3: desktop.ui_preview_startup.native_wayland
+ 3/27 Test  #3: desktop.ui_preview_startup.native_wayland ...   Passed    0.66 sec
+      Start  4: desktop.ui_preview_startup.uninitialized
+ 4/27 Test  #4: desktop.ui_preview_startup.uninitialized ....   Passed    0.21 sec
+      Start  5: application.safe_persistence
+ 5/27 Test  #5: application.safe_persistence ................   Passed    0.23 sec
+      Start  6: document.parser_limits_and_versions
+ 6/27 Test  #6: document.parser_limits_and_versions .........   Passed    9.39 sec
+      Start  7: platform.atomic_file_store
+ 7/27 Test  #7: platform.atomic_file_store ..................   Passed    0.05 sec
+      Start  8: kernel.shape_factory
+ 8/27 Test  #8: kernel.shape_factory ........................   Passed    0.04 sec
+      Start  9: document.history
+ 9/27 Test  #9: document.history ............................   Passed    0.02 sec
+      Start 10: features.sketch_profiles
+10/27 Test #10: features.sketch_profiles ....................   Passed    0.02 sec
+      Start 11: features.planegcs_solver
+11/27 Test #11: features.planegcs_solver ....................   Passed    0.00 sec
+      Start 12: features.sketch_constraint_adapter
+12/27 Test #12: features.sketch_constraint_adapter ..........   Passed    0.02 sec
+      Start 13: application.recompute_history
+13/27 Test #13: application.recompute_history ...............   Passed    1.28 sec
+      Start 14: desktop.document_actions
+14/27 Test #14: desktop.document_actions ....................   Passed    0.57 sec
+      Start 15: desktop.viewport_lifecycle_qt
+15/27 Test #15: desktop.viewport_lifecycle_qt ...............   Passed    1.30 sec
+      Start 16: application.sketch_editor_flow
+16/27 Test #16: application.sketch_editor_flow ..............   Passed    0.57 sec
+      Start 17: application.sketch_construction
+17/27 Test #17: application.sketch_construction .............   Passed    0.08 sec
+      Start 18: application.sketch_circle_constraints
+18/27 Test #18: application.sketch_circle_constraints .......   Passed    0.06 sec
+      Start 19: application.sketch_alignments
+19/27 Test #19: application.sketch_alignments ...............   Passed    0.06 sec
+      Start 20: application.sketch_fix_distance
+20/27 Test #20: application.sketch_fix_distance .............   Passed    0.04 sec
+      Start 21: application.sketch_basic_tools
+21/27 Test #21: application.sketch_basic_tools ..............   Passed    0.14 sec
+      Start 22: application.sketch_slot_dimensions
+22/27 Test #22: application.sketch_slot_dimensions ..........   Passed    0.10 sec
+      Start 23: workspaces.module_registry
+23/27 Test #23: workspaces.module_registry ..................   Passed    0.00 sec
+      Start 24: architecture.source_limits
+24/27 Test #24: architecture.source_limits ..................   Passed    0.03 sec
+      Start 25: architecture.source_limits_regression
+25/27 Test #25: architecture.source_limits_regression .......   Passed    0.09 sec
+      Start 26: architecture.ctest_label_runner
+26/27 Test #26: architecture.ctest_label_runner .............   Passed    9.54 sec
+      Start 27: architecture.desktop_smoke_runner
+27/27 Test #27: architecture.desktop_smoke_runner ...........   Passed    1.11 sec
+
+100% tests passed, 0 tests failed out of 27
+
+Label Time Summary:
+application     =   2.32 sec*proc (8 tests)
+architecture    =  10.78 sec*proc (4 tests)
+desktop         =   3.64 sec*proc (6 tests)
+document        =  10.19 sec*proc (4 tests)
+features        =   0.04 sec*proc (3 tests)
+freebsd         =   2.64 sec*proc (3 tests)
+integration     =   2.55 sec*proc (9 tests)
+kernel          =   0.04 sec*proc (1 test)
+lifecycle       =   1.30 sec*proc (1 test)
+negative        =   0.44 sec*proc (2 tests)
+platform        =   1.83 sec*proc (5 tests)
+qt-opengl       =   1.30 sec*proc (1 test)
+regression      =  21.54 sec*proc (11 tests)
+ui              =   0.66 sec*proc (1 test)
+unit            =   9.53 sec*proc (8 tests)
+viewport        =   1.30 sec*proc (1 test)
+wayland         =   2.64 sec*proc (3 tests)
+workspaces      =   0.00 sec*proc (1 test)
+
+Total Test time (real) =  26.50 sec

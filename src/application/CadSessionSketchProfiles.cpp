@@ -94,14 +94,13 @@ CadSession::addSketchProfileExtrusion(document::FeatureId sketchFeature,
         if (feature.kind == document::FeatureKind::extrusion)
             ++sequence;
     }
+    document::DocumentTransaction transaction(document_);
+    auto& candidate = transaction.edit();
     const std::vector<document::SketchProfileId> selected(profileIds.begin(), profileIds.end());
     const document::FeatureId id =
-        document_.addExtrusionFeature("Extrusion " + std::to_string(sequence), sketchFeature,
+        candidate.addExtrusionFeature("Extrusion " + std::to_string(sequence), sketchFeature,
                                       document::ExtrusionParameters{distance, selected});
-    selectedFeature_ = id;
-    selectedSketchElement_.reset();
-    selectedSketchProfiles_.clear();
-    static_cast<void>(recompute());
+    static_cast<void>(commitCandidate(transaction, id, true));
     return id;
 }
 

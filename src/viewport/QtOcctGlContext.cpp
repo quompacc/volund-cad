@@ -27,41 +27,37 @@ namespace {
 class NeutralWindow final : public Aspect_NeutralWindow {
     DEFINE_STANDARD_RTTI_INLINE(NeutralWindow, Aspect_NeutralWindow)
 
-public:
+  public:
     [[nodiscard]] double DevicePixelRatio() const override { return pixelRatio_; }
     void setDevicePixelRatio(double ratio) { pixelRatio_ = ratio; }
 
-private:
+  private:
     double pixelRatio_{1.0};
 };
 
 class QtFrameBuffer final : public OpenGl_FrameBuffer {
     DEFINE_STANDARD_RTTI_INLINE(QtFrameBuffer, OpenGl_FrameBuffer)
 
-public:
-    void BindBuffer(const occ::handle<OpenGl_Context>& context) override
-    {
+  public:
+    void BindBuffer(const occ::handle<OpenGl_Context>& context) override {
         OpenGl_FrameBuffer::BindBuffer(context);
         context->SetFrameBufferSRGB(true, false);
     }
 
-    void BindDrawBuffer(const occ::handle<OpenGl_Context>& context) override
-    {
+    void BindDrawBuffer(const occ::handle<OpenGl_Context>& context) override {
         OpenGl_FrameBuffer::BindDrawBuffer(context);
         context->SetFrameBufferSRGB(true, false);
     }
 };
 
-occ::handle<OpenGl_Context> contextFor(const occ::handle<V3d_View>& view)
-{
+occ::handle<OpenGl_Context> contextFor(const occ::handle<V3d_View>& view) {
     const auto openGlView = occ::handle<OpenGl_View>::DownCast(view->View());
     return openGlView->GlWindow()->GetGlContext();
 }
 
 } // namespace
 
-Aspect_Drawable currentNativeWindow(std::uintptr_t fallbackWindowId)
-{
+Aspect_Drawable currentNativeWindow(std::uintptr_t fallbackWindowId) {
 #if defined(_WIN32)
     static_cast<void>(fallbackWindowId);
     const HDC deviceContext = wglGetCurrentDC();
@@ -71,13 +67,8 @@ Aspect_Drawable currentNativeWindow(std::uintptr_t fallbackWindowId)
 #endif
 }
 
-bool attachCurrentContext(
-    const occ::handle<V3d_View>& view,
-    Aspect_Drawable nativeWindow,
-    int width,
-    int height,
-    double devicePixelRatio)
-{
+bool attachCurrentContext(const occ::handle<V3d_View>& view, Aspect_Drawable nativeWindow,
+                          int width, int height, double devicePixelRatio) {
     const auto driver = occ::handle<OpenGl_GraphicDriver>::DownCast(view->Viewer()->Driver());
 #if defined(VOELUND_OCCT_GLES)
     EGLDisplay eglDisplay = eglGetCurrentDisplay();
@@ -86,19 +77,18 @@ bool attachCurrentContext(
     EGLConfig eglConfig = nullptr;
     EGLint configCount = 0;
     const EGLint configAttributes[] = {EGL_CONFIG_ID, 0, EGL_NONE};
-    if (eglDisplay == EGL_NO_DISPLAY || eglContext == EGL_NO_CONTEXT
-        || eglQueryContext(eglDisplay, eglContext, EGL_CONFIG_ID, &configId) != EGL_TRUE) {
+    if (eglDisplay == EGL_NO_DISPLAY || eglContext == EGL_NO_CONTEXT ||
+        eglQueryContext(eglDisplay, eglContext, EGL_CONFIG_ID, &configId) != EGL_TRUE) {
         qWarning() << "Cannot inspect Qt's EGL context" << Qt::hex << eglGetError();
         return false;
     }
-    EGLint selectedConfigAttributes[] = {
-        configAttributes[0], configId, configAttributes[2]};
-    if (eglChooseConfig(
-            eglDisplay, selectedConfigAttributes, &eglConfig, 1, &configCount) != EGL_TRUE
-        || configCount != 1 || eglConfig == nullptr
-        || !driver->InitEglContext(eglDisplay, eglContext, eglConfig)) {
-        qWarning() << "Cannot initialize OCCT's EGL driver" << configId << configCount
-                   << Qt::hex << eglGetError();
+    EGLint selectedConfigAttributes[] = {configAttributes[0], configId, configAttributes[2]};
+    if (eglChooseConfig(eglDisplay, selectedConfigAttributes, &eglConfig, 1, &configCount) !=
+            EGL_TRUE ||
+        configCount != 1 || eglConfig == nullptr ||
+        !driver->InitEglContext(eglDisplay, eglContext, eglConfig)) {
+        qWarning() << "Cannot initialize OCCT's EGL driver" << configId << configCount << Qt::hex
+                   << eglGetError();
         return false;
     }
 #endif
@@ -119,8 +109,7 @@ bool attachCurrentContext(
     return true;
 }
 
-bool bindCurrentFramebuffer(const occ::handle<V3d_View>& view)
-{
+bool bindCurrentFramebuffer(const occ::handle<V3d_View>& view, double devicePixelRatio) {
     const auto context = contextFor(view);
     auto frameBuffer = occ::handle<QtFrameBuffer>::DownCast(context->DefaultFrameBuffer());
     if (frameBuffer.IsNull()) {
@@ -136,7 +125,9 @@ bool bindCurrentFramebuffer(const occ::handle<V3d_View>& view)
     int oldWidth = 0;
     int oldHeight = 0;
     window->Size(oldWidth, oldHeight);
-    if (oldWidth != size.x() || oldHeight != size.y()) {
+    if (oldWidth != size.x() || oldHeight != size.y() ||
+        window->DevicePixelRatio() != devicePixelRatio) {
+        window->setDevicePixelRatio(devicePixelRatio);
         window->SetSize(size.x(), size.y());
         view->MustBeResized();
         view->Invalidate();
@@ -145,8 +136,7 @@ bool bindCurrentFramebuffer(const occ::handle<V3d_View>& view)
     return true;
 }
 
-void resetStateBeforeOcct(const occ::handle<V3d_View>& view)
-{
+void resetStateBeforeOcct(const occ::handle<V3d_View>& view) {
     const auto context = contextFor(view);
     if (context.IsNull()) {
         return;
@@ -158,8 +148,7 @@ void resetStateBeforeOcct(const occ::handle<V3d_View>& view)
     context->core11fwd->glDisable(GL_BLEND);
 }
 
-void resetStateAfterOcct(const occ::handle<V3d_View>& view)
-{
+void resetStateAfterOcct(const occ::handle<V3d_View>& view) {
     const auto context = contextFor(view);
     if (context.IsNull()) {
         return;

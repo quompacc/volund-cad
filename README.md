@@ -4,6 +4,13 @@ Völund CAD is a native C++20 parametric CAD application built on Qt 6 and OpenC
 
 The binding engineering rules are defined in the [architecture and code contract](docs/architecture-and-code-contract.md).
 
+The [audited completion plan (German, 13 September 2026)](docs/implementation-plan/README.md)
+records the implementation gaps and defines 110 bounded work packages, dependencies,
+architecture decisions, acceptance scenarios, and an execution template for smaller models.
+Package A01 is now complete; [its evidence](docs/implementation-plan/evidence/A01.md)
+records the repaired source-limit check and the four existing violations it exposes.
+The remaining packages are not yet implemented.
+
 ## Current state
 
 The repository contains a working native CAD vertical slice:
@@ -19,7 +26,8 @@ The repository contains a working native CAD vertical slice:
 - planar-face rectangle sketching followed by direct Push/Pull extrusion;
 - reusable tool panel with preview, parameters, OK and Cancel;
 - modular workspace and command registry with `Solid` as the first product module;
-- native C++ tests and an enforced 600-line source-file limit.
+- native C++ tests and a 600-line source-file limit (A01 repaired the enforcement
+  gap; four existing violations remain for A03).
 
 The detailed hand-off state and next development slice are recorded in
 [`docs/development-status.md`](docs/development-status.md).
@@ -45,17 +53,22 @@ On Windows, run from a Developer PowerShell:
 ```powershell
 ./tools/setup-windows.ps1
 cmake --build --preset windows-msvc
-ctest --preset windows-msvc
+./tools/test-windows.ps1
 ```
 
-The Qt-owned OpenGL context backend is the Windows default. It keeps the OCCT scene
-and Qt overlays in one composition path, which is required for transparent camera and
-tool overlays. The explicit preset remains available as an isolated build directory:
+The test starter verifies the ASCII mapping and invokes CTest in the same execution
+context. It also works across separate agent tool calls and rejects empty test filters.
+For an existing build, use `-BuildDirectory build/<name>`; optional `-Label`,
+`-TestRegex` and `-ReportPath` select tests and capture JUnit output. A fresh configure
+directory can be requested with `setup-windows.ps1 -BuildName <name>`.
+
+The Qt-owned OpenGL context backend is the Windows product default. The separate
+native viewport is a diagnostic path:
 
 ```powershell
-cmake --preset windows-msvc-qt-opengl
-cmake --build --preset windows-msvc-qt-opengl
-ctest --preset windows-msvc-qt-opengl
+./tools/setup-windows.ps1 -Preset windows-msvc-native-diagnostic
+cmake --build --preset windows-msvc-native-diagnostic
+./tools/test-windows.ps1 -BuildDirectory build/windows-msvc-native-diagnostic
 ```
 
 On FreeBSD:

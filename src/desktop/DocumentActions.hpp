@@ -13,15 +13,13 @@ class CadSession;
 namespace voelund::desktop {
 
 class DocumentActions final {
-public:
-    DocumentActions(
-        QMainWindow& window,
-        application::CadSession& session,
-        std::function<void()> refreshHandler);
+  public:
+    DocumentActions(QMainWindow& window, application::CadSession& session,
+                    std::function<void()> refreshHandler);
     [[nodiscard]] bool confirmClose();
     void syncWindowTitle();
 
-private:
+  private:
     void newDocument();
     void open();
     [[nodiscard]] bool confirmSaveChanges();
@@ -33,7 +31,6 @@ private:
     QMainWindow& window_;
     application::CadSession& session_;
     std::function<void()> refreshHandler_;
-    QString currentFile_;
 };
 
 } // namespace voelund::desktop

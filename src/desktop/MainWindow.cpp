@@ -174,6 +174,7 @@ void MainWindow::createWorkspaceToolbar() {
         std::make_unique<WorkspaceToolbar>(*this, impl_->commandRegistry.module("solid"));
     impl_->addBoxAction = impl_->workspaceToolbar->action("solid.create.box");
     impl_->addCylinderAction = impl_->workspaceToolbar->action("solid.create.cylinder");
+    impl_->addCylinderAction->setObjectName(QStringLiteral("addCylinderAction"));
     impl_->sketchEditorAction = impl_->workspaceToolbar->action("solid.create.sketch");
     impl_->createSketchAction = impl_->workspaceToolbar->action("solid.create.sketch_rectangle");
     impl_->transformAction = impl_->workspaceToolbar->action("solid.modify.transform");

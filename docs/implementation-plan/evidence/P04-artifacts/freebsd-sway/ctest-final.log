@@ -1,0 +1,72 @@
+Internal ctest changing into directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt
+Test project /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt
+      Start  1: desktop.viewport_startup.native_wayland
+ 1/23 Test  #1: desktop.viewport_startup.native_wayland .....   Passed    0.67 sec
+      Start  2: desktop.viewport_startup.uninitialized
+ 2/23 Test  #2: desktop.viewport_startup.uninitialized ......   Passed    0.23 sec
+      Start  3: desktop.ui_preview_startup.native_wayland
+ 3/23 Test  #3: desktop.ui_preview_startup.native_wayland ...   Passed    0.66 sec
+      Start  4: desktop.ui_preview_startup.uninitialized
+ 4/23 Test  #4: desktop.ui_preview_startup.uninitialized ....   Passed    0.20 sec
+      Start  5: kernel.shape_factory
+ 5/23 Test  #5: kernel.shape_factory ........................   Passed    0.02 sec
+      Start  6: document.history
+ 6/23 Test  #6: document.history ............................   Passed    0.02 sec
+      Start  7: features.sketch_profiles
+ 7/23 Test  #7: features.sketch_profiles ....................   Passed    0.02 sec
+      Start  8: features.planegcs_solver
+ 8/23 Test  #8: features.planegcs_solver ....................   Passed    0.00 sec
+      Start  9: features.sketch_constraint_adapter
+ 9/23 Test  #9: features.sketch_constraint_adapter ..........   Passed    0.02 sec
+      Start 10: application.recompute_history
+10/23 Test #10: application.recompute_history ...............   Passed    1.36 sec
+      Start 11: desktop.viewport_lifecycle_qt
+11/23 Test #11: desktop.viewport_lifecycle_qt ...............   Passed    1.13 sec
+      Start 12: application.sketch_editor_flow
+12/23 Test #12: application.sketch_editor_flow ..............   Passed    0.56 sec
+      Start 13: application.sketch_construction
+13/23 Test #13: application.sketch_construction .............   Passed    0.08 sec
+      Start 14: application.sketch_circle_constraints
+14/23 Test #14: application.sketch_circle_constraints .......   Passed    0.06 sec
+      Start 15: application.sketch_alignments
+15/23 Test #15: application.sketch_alignments ...............   Passed    0.06 sec
+      Start 16: application.sketch_fix_distance
+16/23 Test #16: application.sketch_fix_distance .............   Passed    0.04 sec
+      Start 17: application.sketch_basic_tools
+17/23 Test #17: application.sketch_basic_tools ..............   Passed    0.14 sec
+      Start 18: application.sketch_slot_dimensions
+18/23 Test #18: application.sketch_slot_dimensions ..........   Passed    0.10 sec
+      Start 19: workspaces.module_registry
+19/23 Test #19: workspaces.module_registry ..................   Passed    0.00 sec
+      Start 20: architecture.source_limits
+20/23 Test #20: architecture.source_limits ..................   Passed    0.03 sec
+      Start 21: architecture.source_limits_regression
+21/23 Test #21: architecture.source_limits_regression .......   Passed    0.09 sec
+      Start 22: architecture.ctest_label_runner
+22/23 Test #22: architecture.ctest_label_runner .............   Passed    0.10 sec
+      Start 23: architecture.desktop_smoke_runner
+23/23 Test #23: architecture.desktop_smoke_runner ...........   Passed    1.10 sec
+
+100% tests passed, 0 tests failed out of 23
+
+Label Time Summary:
+application     =   2.39 sec*proc (8 tests)
+architecture    =   1.32 sec*proc (4 tests)
+desktop         =   2.89 sec*proc (5 tests)
+document        =   0.02 sec*proc (1 test)
+features        =   0.04 sec*proc (3 tests)
+freebsd         =   2.46 sec*proc (3 tests)
+integration     =   2.39 sec*proc (8 tests)
+kernel          =   0.02 sec*proc (1 test)
+lifecycle       =   1.13 sec*proc (1 test)
+negative        =   0.43 sec*proc (2 tests)
+platform        =   1.76 sec*proc (4 tests)
+qt-opengl       =   1.13 sec*proc (1 test)
+regression      =   1.85 sec*proc (7 tests)
+ui              =   0.66 sec*proc (1 test)
+unit            =   0.08 sec*proc (6 tests)
+viewport        =   1.13 sec*proc (1 test)
+wayland         =   2.46 sec*proc (3 tests)
+workspaces      =   0.00 sec*proc (1 test)
+
+Total Test time (real) =   6.68 sec

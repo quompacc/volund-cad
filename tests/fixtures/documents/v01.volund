@@ -1,0 +1,7 @@
+VOLUND 1
+NEXT_ID 5
+FEATURES 4
+BOX 1 "Support" 20 20 30 0 0 0 0 0 0
+CYLINDER 2 "Cylinder" 1 2 5 1 2 3 0 0 0 SEPARATE
+SKETCH 3 "Sketch" 1 0 0 30 0 0 1 1 0 0 1 2 6 8
+EXTRUSION 4 "Extrusion" 3 5

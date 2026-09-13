@@ -1,0 +1,8 @@
+[1/9] Scanning V:\src\platform\AtomicFileStoreNative.cpp for CXX dependencies
+[2/9] Scanning V:\tests\unit\AtomicFileStoreTests.cpp for CXX dependencies
+[3/9] Generating CXX dyndep file src\platform\CMakeFiles\voelund_platform.dir\CXX.dd
+[4/8] Generating CXX dyndep file tests\CMakeFiles\voelund_atomic_file_tests.dir\CXX.dd
+[5/8] Building CXX object src\platform\CMakeFiles\voelund_platform.dir\AtomicFileStoreNative.cpp.obj
+[6/8] Linking CXX static library src\platform\voelund_platform.lib
+[7/8] Building CXX object tests\CMakeFiles\voelund_atomic_file_tests.dir\unit\AtomicFileStoreTests.cpp.obj
+[8/8] Linking CXX executable tests\voelund_atomic_file_tests.exe

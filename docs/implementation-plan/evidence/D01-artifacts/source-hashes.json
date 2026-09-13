@@ -1,0 +1,34 @@
+[
+  {
+    "path": "include/voelund/platform/AtomicFileStore.hpp",
+    "sha256": "fd3376fe7f4da4107d2f2608e0adf651a517abcdad8e51878fa63e4cf16d679e"
+  },
+  {
+    "path": "src/platform/AtomicFileStoreDetail.hpp",
+    "sha256": "d9e06f3ee5540ef81c5ea5f4cc18c213e77745e734d53f21683aa4898e71a691"
+  },
+  {
+    "path": "src/platform/AtomicFileStore.cpp",
+    "sha256": "6344f75c4c4c00411f000a9db567ea2125fb4d5beafccc9d24c047ac5fc1cf4c"
+  },
+  {
+    "path": "src/platform/AtomicFileStoreNative.cpp",
+    "sha256": "a27477604ad9682fcdcda2b73ec989720747e48a286dac424b898c51f8189d51"
+  },
+  {
+    "path": "src/platform/CMakeLists.txt",
+    "sha256": "f8e10c11979c982c3d1b13c176b2029a66dc073854ff4db88ac7629e32b0596e"
+  },
+  {
+    "path": "tests/unit/AtomicFileStoreTests.cpp",
+    "sha256": "dcf47170ebff359044f2fc5e2af1cc2a187be21d42fc6088db78261febac69c6"
+  },
+  {
+    "path": "tests/CMakeLists.txt",
+    "sha256": "0a6b91332ec17f2388bf57133f1789853a86b00560c91d1efa3fbd834ff849d0"
+  },
+  {
+    "path": "CMakeLists.txt",
+    "sha256": "a6058b3244978901d76810338aba47e0b928d8ac3df3e6338a4e29b442e73bd0"
+  }
+]

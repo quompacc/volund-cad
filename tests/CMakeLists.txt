@@ -1,3 +1,39 @@
+add_executable(voelund_session_transaction_tests integration/CadSessionTransactionTests.cpp)
+target_link_libraries(voelund_session_transaction_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.command_transactions COMMAND voelund_session_transaction_tests)
+set_tests_properties(application.command_transactions PROPERTIES LABELS "integration;application;document;regression" TIMEOUT 60)
+add_executable(voelund_document_transaction_tests unit/DocumentTransactionTests.cpp unit/AllocationFailure.cpp)
+target_link_libraries(voelund_document_transaction_tests PRIVATE voelund_project_options Voelund::Document)
+add_test(NAME document.transactions COMMAND voelund_document_transaction_tests)
+set_tests_properties(document.transactions PROPERTIES LABELS "unit;document;regression" TIMEOUT 60)
+# MSVC's debug STL allocates iterator proxies inside noexcept vector constructors.
+# Run exhaustive bad_alloc injection in the separate Release build instead.
+if(NOT MSVC OR NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_test(NAME document.transaction_allocation_failures COMMAND voelund_document_transaction_tests --allocations)
+    set_tests_properties(document.transaction_allocation_failures PROPERTIES LABELS "unit;document;regression;allocation" TIMEOUT 60)
+endif()
+add_executable(voelund_command_contract_tests integration/CommandContractTests.cpp)
+target_link_libraries(voelund_command_contract_tests PRIVATE voelund_project_options Voelund::Application)
+foreach(fixture IN ITEMS compound errors)
+    add_test(NAME application.command_contract_${fixture} COMMAND voelund_command_contract_tests ${fixture})
+    set_tests_properties(application.command_contract_${fixture} PROPERTIES LABELS "integration;application;contract" TIMEOUT 15)
+endforeach()
+find_package(Threads REQUIRED)
+add_executable(voelund_safe_persistence_tests integration/CadSessionSafePersistenceTests.cpp)
+target_link_libraries(voelund_safe_persistence_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.safe_persistence COMMAND voelund_safe_persistence_tests "${CMAKE_CURRENT_BINARY_DIR}")
+set_tests_properties(application.safe_persistence PROPERTIES LABELS "integration;document;regression" TIMEOUT 60)
+add_executable(voelund_document_parser_tests unit/DocumentParserTests.cpp)
+target_link_libraries(voelund_document_parser_tests PRIVATE Voelund::Document)
+add_test(NAME document.parser_limits_and_versions COMMAND voelund_document_parser_tests
+    "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/documents")
+set_tests_properties(document.parser_limits_and_versions PROPERTIES LABELS "unit;document;regression" TIMEOUT 60)
+add_executable(voelund_atomic_file_tests unit/AtomicFileStoreTests.cpp)
+target_link_libraries(voelund_atomic_file_tests PRIVATE Voelund::Platform Threads::Threads)
+add_test(NAME platform.atomic_file_store
+    COMMAND voelund_atomic_file_tests "${CMAKE_CURRENT_BINARY_DIR}")
+set_tests_properties(platform.atomic_file_store PROPERTIES LABELS "unit;platform;regression" TIMEOUT 30)
+
 add_executable(voelund_kernel_tests unit/ShapeFactoryTests.cpp)
 target_link_libraries(
     voelund_kernel_tests
@@ -48,7 +84,13 @@ target_link_libraries(
 
 add_test(NAME features.sketch_constraint_adapter COMMAND voelund_sketch_constraint_tests)
 
-add_executable(voelund_application_tests integration/CadSessionTests.cpp)
+add_executable(
+    voelund_application_tests
+    integration/CadSessionTests.cpp
+    integration/CadSessionHistoryTests.cpp
+    integration/CadSessionEvaluationTests.cpp
+    integration/CadSessionPersistenceTests.cpp
+)
 target_link_libraries(
     voelund_application_tests
     PRIVATE
@@ -57,6 +99,65 @@ target_link_libraries(
 )
 
 add_test(NAME application.recompute_history COMMAND voelund_application_tests)
+
+if(VOELUND_BUILD_DESKTOP)
+    add_executable(voelund_document_actions_tests desktop/DocumentActionsTests.cpp ../src/desktop/DocumentActions.cpp)
+    target_link_libraries(voelund_document_actions_tests PRIVATE voelund_project_options Voelund::Application Qt6::Widgets)
+    add_test(NAME desktop.document_actions COMMAND voelund_document_actions_tests)
+    set_tests_properties(desktop.document_actions PROPERTIES LABELS "desktop;document;regression" TIMEOUT 30 RUN_SERIAL TRUE)
+    if(WIN32)
+        add_custom_command(TARGET voelund_document_actions_tests POST_BUILD
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:Qt6::Core>" "$<TARGET_FILE:Qt6::Gui>" "$<TARGET_FILE:Qt6::Widgets>" "$<TARGET_FILE_DIR:voelund_document_actions_tests>"
+            COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:voelund_document_actions_tests>/platforms"
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:Qt6::QWindowsIntegrationPlugin>" "$<TARGET_FILE_DIR:voelund_document_actions_tests>/platforms" VERBATIM)
+    endif()
+    if(WIN32)
+        # Explicit review tool: saving images alone must never count as visual approval.
+        add_executable(voelund_viewport_visual_review EXCLUDE_FROM_ALL
+            desktop/ViewportVisualReview.cpp)
+        target_link_libraries(voelund_viewport_visual_review PRIVATE
+            voelund_project_options Voelund::Application Voelund::Desktop opengl32)
+    endif()
+    if(VOELUND_VIEWPORT_BACKEND STREQUAL "qt-opengl")
+        add_executable(voelund_viewport_lifecycle_tests
+            desktop/ViewportLifecycleTests.cpp)
+        target_link_libraries(voelund_viewport_lifecycle_tests PRIVATE
+            voelund_project_options Voelund::Viewport Qt6::Widgets)
+        if(WIN32)
+            target_sources(voelund_viewport_lifecycle_tests PRIVATE desktop/ViewportDpiTests.cpp)
+            target_link_libraries(voelund_viewport_lifecycle_tests PRIVATE psapi)
+            target_compile_definitions(voelund_viewport_lifecycle_tests PRIVATE VOELUND_TEST_WINDOWS_DPI)
+            add_custom_command(TARGET voelund_viewport_lifecycle_tests POST_BUILD
+                COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                "$<TARGET_FILE:Qt6::Core>" "$<TARGET_FILE:Qt6::Gui>"
+                "$<TARGET_FILE:Qt6::Widgets>" "$<TARGET_FILE:Qt6::OpenGL>"
+                "$<TARGET_FILE:Qt6::OpenGLWidgets>"
+                "$<TARGET_FILE_DIR:voelund_viewport_lifecycle_tests>"
+                COMMAND "${CMAKE_COMMAND}" -E make_directory
+                "$<TARGET_FILE_DIR:voelund_viewport_lifecycle_tests>/platforms"
+                COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                "$<TARGET_FILE:Qt6::QWindowsIntegrationPlugin>"
+                "$<TARGET_FILE_DIR:voelund_viewport_lifecycle_tests>/platforms"
+                VERBATIM)
+        endif()
+        add_test(NAME desktop.viewport_lifecycle_qt COMMAND voelund_viewport_lifecycle_tests)
+        set_tests_properties(desktop.viewport_lifecycle_qt
+            PROPERTIES LABELS "desktop;viewport;lifecycle;qt-opengl" TIMEOUT 45)
+        if(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+            set_tests_properties(desktop.viewport_lifecycle_qt PROPERTIES
+                ENVIRONMENT "QT_QPA_PLATFORM=wayland" LABELS "desktop;viewport;lifecycle;qt-opengl;freebsd;wayland")
+        endif()
+        if(WIN32)
+            foreach(scale IN ITEMS 1 1.5 2)
+                add_test(NAME desktop.viewport_dpi_${scale}
+                    COMMAND voelund_viewport_lifecycle_tests --dpi)
+                set_tests_properties(desktop.viewport_dpi_${scale} PROPERTIES
+                    LABELS "desktop;viewport;dpi;qt-opengl" TIMEOUT 120
+                    RUN_SERIAL TRUE ENVIRONMENT "QT_SCALE_FACTOR=${scale}")
+            endforeach()
+        endif()
+    endif()
+endif()
 
 add_executable(voelund_sketch_editor_tests integration/SketchEditorSessionTests.cpp)
 target_link_libraries(
@@ -118,6 +219,13 @@ target_link_libraries(
 
 add_test(NAME application.sketch_basic_tools COMMAND voelund_sketch_basic_tools_tests)
 
+add_executable(voelund_sketch_slot_tests integration/SketchSlotTests.cpp)
+target_link_libraries(voelund_sketch_slot_tests PRIVATE
+    voelund_project_options Voelund::Application)
+add_test(NAME application.sketch_slot_dimensions COMMAND voelund_sketch_slot_tests)
+set_tests_properties(application.sketch_slot_dimensions
+    PROPERTIES LABELS "integration;application;regression")
+
 add_executable(voelund_workspace_tests unit/CommandRegistryTests.cpp)
 target_link_libraries(
     voelund_workspace_tests
@@ -128,10 +236,89 @@ target_link_libraries(
 
 add_test(NAME workspaces.module_registry COMMAND voelund_workspace_tests)
 
+set_tests_properties(
+    kernel.shape_factory
+    PROPERTIES LABELS "unit;kernel"
+)
+set_tests_properties(
+    document.history
+    PROPERTIES LABELS "unit;document"
+)
+set_tests_properties(
+    features.sketch_profiles
+    features.planegcs_solver
+    features.sketch_constraint_adapter
+    PROPERTIES LABELS "unit;features"
+)
+set_tests_properties(
+    application.recompute_history
+    application.sketch_editor_flow
+    application.sketch_construction
+    application.sketch_circle_constraints
+    application.sketch_alignments
+    application.sketch_fix_distance
+    application.sketch_basic_tools
+    PROPERTIES LABELS "integration;application"
+)
+set_tests_properties(
+    workspaces.module_registry
+    PROPERTIES LABELS "unit;workspaces"
+)
+
 add_test(
     NAME architecture.source_limits
     COMMAND
         "${CMAKE_COMMAND}"
-        -DVOELUND_SOURCE_ROOT="${PROJECT_SOURCE_DIR}"
+        "-DVOELUND_SOURCE_ROOT=${PROJECT_SOURCE_DIR}"
         -P "${PROJECT_SOURCE_DIR}/tools/cmake/CheckSourceLimits.cmake"
 )
+
+add_test(
+    NAME architecture.source_limits_regression
+    COMMAND
+        "${CMAKE_COMMAND}"
+        "-DVOELUND_TEST_ROOT=${CMAKE_CURRENT_BINARY_DIR}/source-limit-fixtures"
+        -P "${PROJECT_SOURCE_DIR}/tests/cmake/CheckSourceLimitsTests.cmake"
+)
+
+set_tests_properties(
+    architecture.source_limits
+    architecture.source_limits_regression
+    PROPERTIES LABELS "architecture;regression"
+)
+
+add_test(
+    NAME architecture.ctest_label_runner
+    COMMAND
+        "${CMAKE_COMMAND}"
+        "-DVOELUND_CTEST_COMMAND=${CMAKE_CTEST_COMMAND}"
+        "-DVOELUND_BINARY_DIR=${CMAKE_BINARY_DIR}"
+        "-DVOELUND_TEST_LABEL=unit"
+        -P "${PROJECT_SOURCE_DIR}/tests/cmake/RunLabeledTests.cmake"
+)
+set_tests_properties(architecture.ctest_label_runner PROPERTIES LABELS "architecture;regression")
+
+add_test(NAME architecture.desktop_smoke_runner
+    COMMAND "${CMAKE_COMMAND}"
+        "-DVOELUND_TEST_ROOT=${CMAKE_CURRENT_BINARY_DIR}/expected-smoke-fixtures"
+        -P "${PROJECT_SOURCE_DIR}/tests/cmake/ExpectedSmokeRunnerTests.cmake")
+set_tests_properties(architecture.desktop_smoke_runner
+    PROPERTIES LABELS "architecture;regression")
+
+if(WIN32)
+    find_program(VOELUND_POWERSHELL7_EXECUTABLE NAMES pwsh.exe REQUIRED)
+    add_test(NAME architecture.platform_report
+        COMMAND "${VOELUND_POWERSHELL7_EXECUTABLE}" -NoProfile -File
+            "${PROJECT_SOURCE_DIR}/tests/powershell/PlatformReport.Tests.ps1")
+    set_tests_properties(architecture.platform_report PROPERTIES LABELS "architecture;regression" TIMEOUT 60)
+    find_program(VOELUND_POWERSHELL_EXECUTABLE NAMES pwsh.exe powershell.exe REQUIRED)
+    add_test(
+        NAME architecture.setup_windows_mapping
+        COMMAND
+            "${VOELUND_POWERSHELL_EXECUTABLE}"
+            -NoProfile
+            -ExecutionPolicy Bypass
+            -File "${PROJECT_SOURCE_DIR}/tests/powershell/SetupWindowsMapping.Tests.ps1"
+    )
+    set_tests_properties(architecture.setup_windows_mapping PROPERTIES LABELS "architecture;regression")
+endif()

@@ -163,13 +163,21 @@ std::optional<document::SketchElementId> SketchEditorSession::confirmPreview() {
         elements_.values.push_back({ids.back(), std::move(item)});
     }
     if ((tool_ == SketchDrawingTool::slot || tool_ == SketchDrawingTool::polygon) && ids.size() > 1) {
-        for (std::size_t index = 0; index < ids.size(); ++index)
+        for (std::size_t index = 0; index < ids.size(); ++index) {
+            // Slot caps run counterclockwise, opposite to the contour traversal.
+            const bool currentIsReversed = tool_ == SketchDrawingTool::slot && index % 2 == 1;
+            const bool nextIsReversed = tool_ == SketchDrawingTool::slot && index % 2 == 0;
+            const auto outgoing = currentIsReversed ? document::SketchPointPosition::start
+                                                   : document::SketchPointPosition::end;
+            const auto incoming = nextIsReversed ? document::SketchPointPosition::end
+                                                : document::SketchPointPosition::start;
             constraints_.values.push_back(
                 {document::SketchConstraintId{constraints_.nextId++},
                  document::SketchConstraintKind::coincident,
-                 {ids[index], document::SketchPointPosition::end},
+                 {ids[index], outgoing},
                  document::SketchGeometryReference{ids[(index + 1) % ids.size()],
-                                                   document::SketchPointPosition::start}});
+                                                   incoming}});
+        }
         const auto addRelation = [this, &ids](document::SketchConstraintKind kind,
                                              std::size_t first, std::size_t second) {
             constraints_.values.push_back(

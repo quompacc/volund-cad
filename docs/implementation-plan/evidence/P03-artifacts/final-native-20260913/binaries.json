@@ -1,0 +1,66 @@
+[
+  {
+    "path": "V:\\build\\p02-native-review\\apps\\voelund-cad\\voelund-cad.exe",
+    "sha256": "8e8bc7a2cc230fac62612cab3cbd14f7113b8aba4a03e427813536baa6ef32e0"
+  },
+  {
+    "path": "V:\\build\\p02-native-review\\apps\\voelund-ui-preview\\voelund-ui-preview.exe",
+    "sha256": "580b32b2f406879bac5e09dcec4a3484d679c3a01a1c413b7389ecbd3f01afdc"
+  },
+  {
+    "path": "V:\\build\\p02-native-review\\tests\\voelund_application_tests.exe",
+    "sha256": "d238fee60944595ace45289959f69c5c1a952c29b4fdb2c24f1903a5d495088a"
+  },
+  {
+    "path": "V:\\build\\p02-native-review\\tests\\voelund_document_tests.exe",
+    "sha256": "fd2e77003da8e2be622483f46d7836e01e7c77394bb03864c3a3d1d94aef837b"
+  },
+  {
+    "path": "V:\\build\\p02-native-review\\tests\\voelund_kernel_tests.exe",
+    "sha256": "391a20733c7d567d5ffa188d21475637a54edefc8f183b1ff5caa1fe91430072"
+  },
+  {
+    "path": "V:\\build\\p02-native-review\\tests\\voelund_planegcs_tests.exe",
+    "sha256": "113636d6cb0d481eb7c385960e92820f7065fba935c6596b542b586470f4e2c2"
+  },
+  {
+    "path": "V:\\build\\p02-native-review\\tests\\voelund_sketch_alignment_tests.exe",
+    "sha256": "783b73559402d148788e1d5cf5037e1e02f4ecb8f436319d5ad26b5bdf4b663c"
+  },
+  {
+    "path": "V:\\build\\p02-native-review\\tests\\voelund_sketch_basic_tools_tests.exe",
+    "sha256": "b40c09ae3fc83e2f5fec6cb954e664654b61b9e0e2685a796ae78431ab8f873b"
+  },
+  {
+    "path": "V:\\build\\p02-native-review\\tests\\voelund_sketch_circle_constraint_tests.exe",
+    "sha256": "d86fa11a35139d2b52135abd99f6df1db07cc2c2d93f46a6546d99ec3ced64a1"
+  },
+  {
+    "path": "V:\\build\\p02-native-review\\tests\\voelund_sketch_constraint_tests.exe",
+    "sha256": "2eefef81290b8d8e2045f82a981556722b434395e5e4540cacbbfbff34303703"
+  },
+  {
+    "path": "V:\\build\\p02-native-review\\tests\\voelund_sketch_construction_tests.exe",
+    "sha256": "3d7e2fa163bfd4fca29eac22fc2bb860a02bdab64eb3c905443ecccb323cf807"
+  },
+  {
+    "path": "V:\\build\\p02-native-review\\tests\\voelund_sketch_editor_tests.exe",
+    "sha256": "d3db665fb0b5543b25852162da83120ae6945568ae617499ae75feaa0c9dbeef"
+  },
+  {
+    "path": "V:\\build\\p02-native-review\\tests\\voelund_sketch_fix_distance_tests.exe",
+    "sha256": "2b18fb35332462936f5976cf0407525e9efb7624a379a1fd2e3345c89a9c4886"
+  },
+  {
+    "path": "V:\\build\\p02-native-review\\tests\\voelund_sketch_profile_tests.exe",
+    "sha256": "7fd7f01eaf97457713a39f021ad14dab78b5e7430639e05051d34b5e824b6fa9"
+  },
+  {
+    "path": "V:\\build\\p02-native-review\\tests\\voelund_sketch_slot_tests.exe",
+    "sha256": "30a55343f2a590d33914a0b77879ee2077521f38854f4b2c8df272df26652883"
+  },
+  {
+    "path": "V:\\build\\p02-native-review\\tests\\voelund_workspace_tests.exe",
+    "sha256": "f2c8a77d3a79399b44f2f2d1633a430651439f66113f468c46d2cde532bc2239"
+  }
+]

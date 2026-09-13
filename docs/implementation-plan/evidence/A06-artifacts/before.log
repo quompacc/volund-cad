@@ -1,0 +1,20 @@
+Test project V:/build/a06-kernel-20260913
+    Start 5: kernel.shape_factory
+1/1 Test #5: kernel.shape_factory .............***Failed    0.15 sec
+Unexpected kernel error: intersect: intersect requires the tool to overlap its input body
+Cut operation identity failed
+Unexpected kernel error: makeBox: 
+OCCT exception translation failed
+
+
+0% tests passed, 1 tests failed out of 1
+
+Label Time Summary:
+kernel    =   0.15 sec*proc (1 test)
+unit      =   0.15 sec*proc (1 test)
+
+Total Test time (real) =   0.16 sec
+
+The following tests FAILED:
+	  5 - kernel.shape_factory (Failed)                     kernel unit
+Errors while running CTest

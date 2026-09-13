@@ -1,0 +1,90 @@
+Internal ctest changing into directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt
+Test project /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt
+      Start  1: desktop.viewport_startup.native_wayland
+ 1/31 Test  #1: desktop.viewport_startup.native_wayland .....   Passed    0.82 sec
+      Start  2: desktop.viewport_startup.uninitialized
+ 2/31 Test  #2: desktop.viewport_startup.uninitialized ......   Passed    0.20 sec
+      Start  3: desktop.ui_preview_startup.native_wayland
+ 3/31 Test  #3: desktop.ui_preview_startup.native_wayland ...   Passed    0.67 sec
+      Start  4: desktop.ui_preview_startup.uninitialized
+ 4/31 Test  #4: desktop.ui_preview_startup.uninitialized ....   Passed    0.20 sec
+      Start  5: document.transactions
+ 5/31 Test  #5: document.transactions .......................   Passed    0.02 sec
+      Start  6: document.transaction_allocation_failures
+ 6/31 Test  #6: document.transaction_allocation_failures ....   Passed    0.02 sec
+      Start  7: application.command_contract_compound
+ 7/31 Test  #7: application.command_contract_compound .......   Passed    0.01 sec
+      Start  8: application.command_contract_errors
+ 8/31 Test  #8: application.command_contract_errors .........   Passed    0.01 sec
+      Start  9: application.safe_persistence
+ 9/31 Test  #9: application.safe_persistence ................   Passed    0.23 sec
+      Start 10: document.parser_limits_and_versions
+10/31 Test #10: document.parser_limits_and_versions .........   Passed    9.45 sec
+      Start 11: platform.atomic_file_store
+11/31 Test #11: platform.atomic_file_store ..................   Passed    0.05 sec
+      Start 12: kernel.shape_factory
+12/31 Test #12: kernel.shape_factory ........................   Passed    0.03 sec
+      Start 13: document.history
+13/31 Test #13: document.history ............................   Passed    0.02 sec
+      Start 14: features.sketch_profiles
+14/31 Test #14: features.sketch_profiles ....................   Passed    0.02 sec
+      Start 15: features.planegcs_solver
+15/31 Test #15: features.planegcs_solver ....................   Passed    0.00 sec
+      Start 16: features.sketch_constraint_adapter
+16/31 Test #16: features.sketch_constraint_adapter ..........   Passed    0.02 sec
+      Start 17: application.recompute_history
+17/31 Test #17: application.recompute_history ...............   Passed    1.27 sec
+      Start 18: desktop.document_actions
+18/31 Test #18: desktop.document_actions ....................   Passed    0.68 sec
+      Start 19: desktop.viewport_lifecycle_qt
+19/31 Test #19: desktop.viewport_lifecycle_qt ...............   Passed    1.51 sec
+      Start 20: application.sketch_editor_flow
+20/31 Test #20: application.sketch_editor_flow ..............   Passed    0.56 sec
+      Start 21: application.sketch_construction
+21/31 Test #21: application.sketch_construction .............   Passed    0.08 sec
+      Start 22: application.sketch_circle_constraints
+22/31 Test #22: application.sketch_circle_constraints .......   Passed    0.06 sec
+      Start 23: application.sketch_alignments
+23/31 Test #23: application.sketch_alignments ...............   Passed    0.06 sec
+      Start 24: application.sketch_fix_distance
+24/31 Test #24: application.sketch_fix_distance .............   Passed    0.04 sec
+      Start 25: application.sketch_basic_tools
+25/31 Test #25: application.sketch_basic_tools ..............   Passed    0.14 sec
+      Start 26: application.sketch_slot_dimensions
+26/31 Test #26: application.sketch_slot_dimensions ..........   Passed    0.10 sec
+      Start 27: workspaces.module_registry
+27/31 Test #27: workspaces.module_registry ..................   Passed    0.00 sec
+      Start 28: architecture.source_limits
+28/31 Test #28: architecture.source_limits ..................   Passed    0.04 sec
+      Start 29: architecture.source_limits_regression
+29/31 Test #29: architecture.source_limits_regression .......   Passed    0.09 sec
+      Start 30: architecture.ctest_label_runner
+30/31 Test #30: architecture.ctest_label_runner .............   Passed    9.61 sec
+      Start 31: architecture.desktop_smoke_runner
+31/31 Test #31: architecture.desktop_smoke_runner ...........   Passed    1.08 sec
+
+100% tests passed, 0 tests failed out of 31
+
+Label Time Summary:
+allocation      =   0.02 sec*proc (1 test)
+application     =   2.33 sec*proc (10 tests)
+architecture    =  10.82 sec*proc (4 tests)
+contract        =   0.03 sec*proc (2 tests)
+desktop         =   4.08 sec*proc (6 tests)
+document        =  10.40 sec*proc (6 tests)
+features        =   0.04 sec*proc (3 tests)
+freebsd         =   2.99 sec*proc (3 tests)
+integration     =   2.55 sec*proc (11 tests)
+kernel          =   0.03 sec*proc (1 test)
+lifecycle       =   1.51 sec*proc (1 test)
+negative        =   0.40 sec*proc (2 tests)
+platform        =   1.94 sec*proc (5 tests)
+qt-opengl       =   1.51 sec*proc (1 test)
+regression      =  21.76 sec*proc (13 tests)
+ui              =   0.67 sec*proc (1 test)
+unit            =   9.61 sec*proc (10 tests)
+viewport        =   1.51 sec*proc (1 test)
+wayland         =   2.99 sec*proc (3 tests)
+workspaces      =   0.00 sec*proc (1 test)
+
+Total Test time (real) =  27.07 sec

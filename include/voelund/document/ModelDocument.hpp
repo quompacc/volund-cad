@@ -16,6 +16,7 @@
 namespace voelund::document {
 
 class DocumentSerializer;
+class DocumentTransaction;
 
 enum class FeatureKind { box, cylinder, sketch, extrusion };
 enum class CylinderResultMode { join, cut, intersect, separate };
@@ -78,6 +79,7 @@ struct FeatureDescriptor final {
     FeatureKind kind;
     std::string name;
     std::optional<FeatureId> inputFeature;
+    [[nodiscard]] bool operator==(const FeatureDescriptor&) const = default;
 };
 
 using FeatureParameters =
@@ -119,11 +121,13 @@ class ModelDocument final {
                                            const kernel::RigidTransform& placement);
     [[nodiscard]] bool canUndo() const noexcept;
     [[nodiscard]] bool canRedo() const noexcept;
-    [[nodiscard]] bool undo() noexcept;
-    [[nodiscard]] bool redo() noexcept;
+    [[nodiscard]] bool undo();
+    [[nodiscard]] bool redo();
+    [[nodiscard]] std::uint64_t revision() const noexcept { return revision_; }
 
   private:
     friend class DocumentSerializer;
+    friend class DocumentTransaction;
 
     explicit ModelDocument(bool createStarterFeatures);
 
@@ -131,18 +135,23 @@ class ModelDocument final {
         std::vector<FeatureDescriptor> features;
         std::vector<FeatureParameters> parameters;
         std::uint64_t nextFeatureId;
+        [[nodiscard]] bool operator==(const State&) const = default;
     };
 
     [[nodiscard]] std::size_t featureIndex(FeatureId featureId) const;
-    [[nodiscard]] State currentState() const noexcept;
-    void restoreState(const State& state) noexcept;
-    void recordChange();
+    [[nodiscard]] State currentState() const;
+    void swapState(State& state) noexcept;
+    void commitState(State state);
+    void checkRevisionAvailable() const;
+    [[nodiscard]] FeatureId nextFeatureId() const;
 
     std::vector<FeatureDescriptor> features_;
     std::vector<FeatureParameters> parameters_;
     std::uint64_t nextFeatureId_{1};
     std::vector<State> undoHistory_;
     std::vector<State> redoHistory_;
+    std::uint64_t revision_{0};
+    bool transactionCandidate_{false};
 };
 
 } // namespace voelund::document

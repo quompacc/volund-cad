@@ -11,14 +11,12 @@ namespace voelund::viewport::qtgl {
 
 [[nodiscard]] Aspect_Drawable currentNativeWindow(std::uintptr_t fallbackWindowId);
 
-[[nodiscard]] bool attachCurrentContext(
-    const occ::handle<V3d_View>& view,
-    Aspect_Drawable nativeWindow,
-    int width,
-    int height,
-    double devicePixelRatio);
+[[nodiscard]] bool attachCurrentContext(const occ::handle<V3d_View>& view,
+                                        Aspect_Drawable nativeWindow, int width, int height,
+                                        double devicePixelRatio);
 
-[[nodiscard]] bool bindCurrentFramebuffer(const occ::handle<V3d_View>& view);
+[[nodiscard]] bool bindCurrentFramebuffer(const occ::handle<V3d_View>& view,
+                                          double devicePixelRatio);
 void resetStateBeforeOcct(const occ::handle<V3d_View>& view);
 void resetStateAfterOcct(const occ::handle<V3d_View>& view);
 

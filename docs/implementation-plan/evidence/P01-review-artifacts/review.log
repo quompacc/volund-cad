@@ -1,0 +1,12 @@
+Probe: empty
+structuralValidity=passed
+platformAcceptance=passed
+Exit: 0
+Probe: missing-artifact
+structuralValidity=passed
+platformAcceptance=not-passed
+Exit: 0
+Probe: contradiction
+structuralValidity=passed
+platformAcceptance=passed
+Exit: 0

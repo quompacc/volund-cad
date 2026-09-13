@@ -1,0 +1,7 @@
+SHA256 (src/document/DocumentSerializer.cpp) = bbd686cf4c74bc4440cecae46a3fb0c7b8591e673aa4bfd11b68961308e81374
+SHA256 (src/document/DocumentSerializationDetail.hpp) = cd4e1226d3316ce63f64cf354c49942623cd67de3f471171d01c3e778e224791
+SHA256 (src/document/DocumentSerializerSupport.cpp) = 377371e59aad8ccb0d52331bef3efa1df730cab33ceaae7fcd8bd5362315d5b6
+SHA256 (src/document/BoundedDocumentInput.hpp) = 6f81e9805f497bc847f1c349c4b7e26c9ec5f94e7f49e14ee52745dc26245e94
+SHA256 (src/document/SketchGeometry.cpp) = e2c4ca2e2198206eed47ee25804d5e6d84d202d0b8c595510e402e9872c1944d
+SHA256 (tests/unit/DocumentParserTests.cpp) = 0da4d0ae484d4d4e37a66d513180865dc57cabe1de6dfd6398e9b45b50fc0023
+SHA256 (tests/CMakeLists.txt) = b4d4f1e020a179ff146a1a1519d5a94bf1f00c6fa6f131aa96d5a8da173f9678

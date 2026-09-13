@@ -1,0 +1,70 @@
+[
+  {
+    "sha256": "5bc443be4f1a0df97afed6ebedcfee07848889c03cc01f5930b47cdcefbb2087",
+    "path": "V:\\build\\p02-qt-final\\apps\\voelund-cad\\voelund-cad.exe"
+  },
+  {
+    "sha256": "06be2bd35bc7b6212f9c34e5b296f158c0d1f80c20df7b07d909ef7d77358c4d",
+    "path": "V:\\build\\p02-qt-final\\apps\\voelund-ui-preview\\voelund-ui-preview.exe"
+  },
+  {
+    "sha256": "d56a6b22f0423a95adbc2af2f09525118c90f59125a5f1a3715878bfa52d38c3",
+    "path": "V:\\build\\p02-qt-final\\tests\\voelund_application_tests.exe"
+  },
+  {
+    "sha256": "4cbd325a40f047772f9765dfc4fe75ee687376b0691a30198ce9022ed56eced2",
+    "path": "V:\\build\\p02-qt-final\\tests\\voelund_document_tests.exe"
+  },
+  {
+    "sha256": "2367003dc40388e5ba4dc90b0d70c69de8b9ac0822b8f907511193459858d6be",
+    "path": "V:\\build\\p02-qt-final\\tests\\voelund_kernel_tests.exe"
+  },
+  {
+    "sha256": "5fd5aa76459c5b0ae05b98e5f44df2b1566d4d8a3169585ba6f2c471b1bcbb95",
+    "path": "V:\\build\\p02-qt-final\\tests\\voelund_planegcs_tests.exe"
+  },
+  {
+    "sha256": "0e4ed67288eac7fdb4dea1c57144e372db8a1a90dfeb364ae0befe927e2ea89f",
+    "path": "V:\\build\\p02-qt-final\\tests\\voelund_sketch_alignment_tests.exe"
+  },
+  {
+    "sha256": "0f9d011b094a8dacd43eb6fdd81d82a307ec23360d61f2c3a924cd0e496c3656",
+    "path": "V:\\build\\p02-qt-final\\tests\\voelund_sketch_basic_tools_tests.exe"
+  },
+  {
+    "sha256": "e257465f8a6101d02799a747011192f26004571adf2e74f6b2690cf83a2a8ccf",
+    "path": "V:\\build\\p02-qt-final\\tests\\voelund_sketch_circle_constraint_tests.exe"
+  },
+  {
+    "sha256": "8ced0933f799670de08089688ae25310ec7a0dcaf42a7556e191a5ca510dbb81",
+    "path": "V:\\build\\p02-qt-final\\tests\\voelund_sketch_constraint_tests.exe"
+  },
+  {
+    "sha256": "6d5cd6140016d9523fb720e3e6ed8708215cd43c71ea6b7519fac24459af27a5",
+    "path": "V:\\build\\p02-qt-final\\tests\\voelund_sketch_construction_tests.exe"
+  },
+  {
+    "sha256": "0e48f23955f41fd9c27eeef86d39b9e3322d589048f874c7418a438538f395fd",
+    "path": "V:\\build\\p02-qt-final\\tests\\voelund_sketch_editor_tests.exe"
+  },
+  {
+    "sha256": "b914be21dff2897e52a9c9df983de94aaba280bece3d52040689ec9a6b0071a4",
+    "path": "V:\\build\\p02-qt-final\\tests\\voelund_sketch_fix_distance_tests.exe"
+  },
+  {
+    "sha256": "307d0619d6776dc8a8a1321845961276882c9044f58f735722a1d6613ee7da0e",
+    "path": "V:\\build\\p02-qt-final\\tests\\voelund_sketch_profile_tests.exe"
+  },
+  {
+    "sha256": "b5806877e045fe2cef5390b612b1ec0dd305c714501793dbf5374f313b2857b0",
+    "path": "V:\\build\\p02-qt-final\\tests\\voelund_sketch_slot_tests.exe"
+  },
+  {
+    "sha256": "3adbd592b6748486b2621cc8fad6cd81989b8a00c06f36571cb5b3ac72206621",
+    "path": "V:\\build\\p02-qt-final\\tests\\voelund_viewport_lifecycle_tests.exe"
+  },
+  {
+    "sha256": "3ceef4f483f84fbdfb53b39c8108e41108104a6c4926488540c5c94789bc73e5",
+    "path": "V:\\build\\p02-qt-final\\tests\\voelund_workspace_tests.exe"
+  }
+]

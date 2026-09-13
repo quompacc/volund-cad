@@ -1,0 +1,94 @@
+[
+  {
+    "path": "src/document/DocumentSerializer.cpp",
+    "sha256": "bbd686cf4c74bc4440cecae46a3fb0c7b8591e673aa4bfd11b68961308e81374"
+  },
+  {
+    "path": "src/document/DocumentSerializationDetail.hpp",
+    "sha256": "cd4e1226d3316ce63f64cf354c49942623cd67de3f471171d01c3e778e224791"
+  },
+  {
+    "path": "src/document/DocumentSerializerSupport.cpp",
+    "sha256": "377371e59aad8ccb0d52331bef3efa1df730cab33ceaae7fcd8bd5362315d5b6"
+  },
+  {
+    "path": "src/document/BoundedDocumentInput.hpp",
+    "sha256": "6f81e9805f497bc847f1c349c4b7e26c9ec5f94e7f49e14ee52745dc26245e94"
+  },
+  {
+    "path": "src/document/SketchGeometry.cpp",
+    "sha256": "e2c4ca2e2198206eed47ee25804d5e6d84d202d0b8c595510e402e9872c1944d"
+  },
+  {
+    "path": "tests/unit/DocumentParserTests.cpp",
+    "sha256": "0da4d0ae484d4d4e37a66d513180865dc57cabe1de6dfd6398e9b45b50fc0023"
+  },
+  {
+    "path": "tests/CMakeLists.txt",
+    "sha256": "b4d4f1e020a179ff146a1a1519d5a94bf1f00c6fa6f131aa96d5a8da173f9678"
+  },
+  {
+    "path": "tests/fixtures/documents/v01.volund",
+    "sha256": "7bea3f8f8b7ecce89d431e9663e9faedbef028c861467e1a20d7d0e50ff48509"
+  },
+  {
+    "path": "tests/fixtures/documents/v02.volund",
+    "sha256": "fb71bbcf0a1e86bbf25ee5299365e55d75d85672fd7cdd795077e80c9a180f3a"
+  },
+  {
+    "path": "tests/fixtures/documents/v03.volund",
+    "sha256": "1050a8409d40b318db01ca70f98c28751c4d62b5d220133b51b4bc0ff0d900f8"
+  },
+  {
+    "path": "tests/fixtures/documents/v04.volund",
+    "sha256": "b13ef37320a28577d95728f2b1975f67ebdb3d209649ff0bb0b5b99dc037a4e7"
+  },
+  {
+    "path": "tests/fixtures/documents/v05.volund",
+    "sha256": "819b25c30a3de152f0d82d3da15afcc88762cd3eff0030fbeb33ae1912915fe7"
+  },
+  {
+    "path": "tests/fixtures/documents/v06.volund",
+    "sha256": "a19136dff376b3f192814ed9a51d7e6ba72401835680d4737767bfc101e94ea6"
+  },
+  {
+    "path": "tests/fixtures/documents/v07.volund",
+    "sha256": "3f3a830f84e3704d5a5b0f3a047a2d1ac8e32634ed1c11e727493b29fa04f20d"
+  },
+  {
+    "path": "tests/fixtures/documents/v08.volund",
+    "sha256": "56c0d18ae66344b0fdb5fe829cef94b5a451fa95162d85ba9136f9f33ca0f57f"
+  },
+  {
+    "path": "tests/fixtures/documents/v09.volund",
+    "sha256": "ccfa4765b30bc5408a99ea118a7f52698a5b09a792f63d34b4eab926e11fd78a"
+  },
+  {
+    "path": "tests/fixtures/documents/v10.volund",
+    "sha256": "414caea706b5b1169e5a014a784262e454b72d5a48e7807cab85ecef99a3c789"
+  },
+  {
+    "path": "tests/fixtures/documents/v11.volund",
+    "sha256": "138e7aae0bcd91a02bb27dd16be9e793771d84960318da46b6c439cfc9823e47"
+  },
+  {
+    "path": "tests/fixtures/documents/v12.volund",
+    "sha256": "e33f8db937c7a28164c537e454b622f604a7de6b7f3e6975d4be925b774fd861"
+  },
+  {
+    "path": "tests/fixtures/documents/v13.volund",
+    "sha256": "cf854b2bc6dc17a19fcfb173579502379894d8573f3bd2293d102eee36910317"
+  },
+  {
+    "path": "tests/fixtures/documents/v14.volund",
+    "sha256": "533f16243d59220ea2454c2df8415ec90cb9d6cb4e33d39397a42135258d4e44"
+  },
+  {
+    "path": "tests/fixtures/documents/v15.volund",
+    "sha256": "0094e761f5547224ee66e0a082b516db6a5fd6d7bf81a2880c111478718a8336"
+  },
+  {
+    "path": "tests/fixtures/documents/v16.volund",
+    "sha256": "6f1f54afcdf6c8fc06daba10790aa9bbb0fc6719a2366fd810b800da6a4907f2"
+  }
+]

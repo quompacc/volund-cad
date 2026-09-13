@@ -33,6 +33,7 @@ void FeaturePropertiesPanel::createExtrusionPanel() {
     extrusionPanel_ = new QWidget(this);
     auto* layout = new QFormLayout(extrusionPanel_);
     extrusionDistanceInput_ = makeLengthInput(extrusionPanel_);
+    extrusionDistanceInput_->setObjectName(QStringLiteral("extrusionDistanceInput"));
     extrusionDistanceInput_->setMinimum(0.001);
     extrusionErrorLabel_ = new QLabel(extrusionPanel_);
     extrusionErrorLabel_->setWordWrap(true);
@@ -49,6 +50,9 @@ void FeaturePropertiesPanel::createBoxPanel() {
     lengthInput_ = makeLengthInput(boxPanel_);
     widthInput_ = makeLengthInput(boxPanel_);
     boxHeightInput_ = makeLengthInput(boxPanel_);
+    lengthInput_->setObjectName(QStringLiteral("boxLengthInput"));
+    widthInput_->setObjectName(QStringLiteral("boxWidthInput"));
+    boxHeightInput_->setObjectName(QStringLiteral("boxHeightInput"));
     for (QDoubleSpinBox*& input : boxTranslationInputs_) {
         input = makeLengthInput(boxPanel_, true);
     }
@@ -71,6 +75,8 @@ void FeaturePropertiesPanel::createCylinderPanel() {
     auto* cylinderLayout = new QFormLayout(cylinderPanel_);
     radiusInput_ = makeLengthInput(cylinderPanel_);
     cylinderHeightInput_ = makeLengthInput(cylinderPanel_);
+    radiusInput_->setObjectName(QStringLiteral("cylinderRadiusInput"));
+    cylinderHeightInput_->setObjectName(QStringLiteral("cylinderHeightInput"));
     for (QDoubleSpinBox*& input : translationInputs_) {
         input = makeLengthInput(cylinderPanel_, true);
     }

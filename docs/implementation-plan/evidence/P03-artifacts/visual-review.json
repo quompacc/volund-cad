@@ -1,0 +1,188 @@
+{
+  "atUtc": "2026-09-13T16:36:33.1833817Z",
+  "images": [
+    {
+      "path": "complete-qt-20260913\\captures\\p02-interacted-framebuffer.png",
+      "sha256": "7A4794FB069EF92C2DF23461501E54140BCD333C8A7017F1BE3B6AE148E6D7EF",
+      "viewedEquivalent": "complete-qt-20260913\\captures\\p02-interacted-framebuffer.png"
+    },
+    {
+      "path": "complete-qt-20260913\\captures\\p02-recreated-framebuffer.png",
+      "sha256": "3914CFE585451455B77BD7EFF9DCD0F93E7A300ECC730A9A35825B5812F1F68C",
+      "viewedEquivalent": "complete-qt-20260913\\captures\\p02-recreated-framebuffer.png"
+    },
+    {
+      "path": "complete-qt-20260913\\captures\\voelund-cad-framebuffer.png",
+      "sha256": "BE70721CA2D7D5F4FB11BD3E0FBC803B78D33311E6EB0C8F0CF80DA45D0BDA81",
+      "viewedEquivalent": "complete-qt-20260913\\captures\\voelund-cad-framebuffer.png"
+    },
+    {
+      "path": "complete-qt-20260913\\captures\\voelund-cad-widgets.png",
+      "sha256": "7075DC61EAC3AECD041F3365621CAF439937304E9706CEBD4B8BE11DCD0AD0D4",
+      "viewedEquivalent": "complete-qt-20260913\\captures\\voelund-cad-widgets.png"
+    },
+    {
+      "path": "complete-qt-20260913\\captures\\voelund-ui-preview-framebuffer.png",
+      "sha256": "23B62D91D73DBF60C6E4B8DCFDF5BA032F689F3A6B39E22EA2FBAB2D0D7B5D90",
+      "viewedEquivalent": "complete-qt-20260913\\captures\\voelund-ui-preview-framebuffer.png"
+    },
+    {
+      "path": "complete-qt-20260913\\captures\\voelund-ui-preview-widgets.png",
+      "sha256": "CBF790FAA9F738AA202E153BEDD78126074013A3A6E2F8740E6369B5D72C7614",
+      "viewedEquivalent": "complete-qt-20260913\\captures\\voelund-ui-preview-widgets.png"
+    },
+    {
+      "path": "complete-qt-20260913\\captures\\dpi-1\\after-controlled-fbo-switch.png",
+      "sha256": "D589FEF500CDF27FD3CFCFA02349B7E7C75BD2FDD389C14AEECBE6999CE10F5B",
+      "viewedEquivalent": "complete-qt-20260913\\captures\\dpi-1\\recreated.png"
+    },
+    {
+      "path": "complete-qt-20260913\\captures\\dpi-1\\initial.png",
+      "sha256": "D589FEF500CDF27FD3CFCFA02349B7E7C75BD2FDD389C14AEECBE6999CE10F5B",
+      "viewedEquivalent": "complete-qt-20260913\\captures\\dpi-1\\recreated.png"
+    },
+    {
+      "path": "complete-qt-20260913\\captures\\dpi-1\\maximized.png",
+      "sha256": "18A1E7450A89634D35B5DED1D36D50DAEEDF610111BC965C72319FEB535AEE58",
+      "viewedEquivalent": "complete-qt-20260913\\captures\\dpi-1\\maximized.png"
+    },
+    {
+      "path": "complete-qt-20260913\\captures\\dpi-1\\recreated.png",
+      "sha256": "D589FEF500CDF27FD3CFCFA02349B7E7C75BD2FDD389C14AEECBE6999CE10F5B",
+      "viewedEquivalent": "complete-qt-20260913\\captures\\dpi-1\\recreated.png"
+    },
+    {
+      "path": "complete-qt-20260913\\captures\\dpi-1\\resized.png",
+      "sha256": "1E10F146CC0AD2CA2A3EC6BCB03C7133D9809EE06624553F167172C54B31BE23",
+      "viewedEquivalent": "complete-qt-20260913\\captures\\dpi-1\\restored.png"
+    },
+    {
+      "path": "complete-qt-20260913\\captures\\dpi-1\\restored.png",
+      "sha256": "1E10F146CC0AD2CA2A3EC6BCB03C7133D9809EE06624553F167172C54B31BE23",
+      "viewedEquivalent": "complete-qt-20260913\\captures\\dpi-1\\restored.png"
+    },
+    {
+      "path": "complete-qt-20260913\\captures\\dpi-1\\selection-overlay.png",
+      "sha256": "4F886AC3625087BB32DBCF2C080E9B7A7FDA468F6555E0024CC5B0F13D92883D",
+      "viewedEquivalent": "complete-qt-20260913\\captures\\dpi-1\\selection-overlay.png"
+    },
+    {
+      "path": "complete-qt-20260913\\captures\\dpi-1.5\\after-controlled-fbo-switch.png",
+      "sha256": "36FC43EB931E35DD12F7CE9376DFF456BD458C906A8E1BD030802F54B6219030",
+      "viewedEquivalent": "complete-qt-20260913\\captures\\dpi-1.5\\recreated.png"
+    },
+    {
+      "path": "complete-qt-20260913\\captures\\dpi-1.5\\initial.png",
+      "sha256": "36FC43EB931E35DD12F7CE9376DFF456BD458C906A8E1BD030802F54B6219030",
+      "viewedEquivalent": "complete-qt-20260913\\captures\\dpi-1.5\\recreated.png"
+    },
+    {
+      "path": "complete-qt-20260913\\captures\\dpi-1.5\\maximized.png",
+      "sha256": "91D2AF41FB6A11D305F05507206021B5CEFF8EABC1FBFCF411DE308F7DDBEDB4",
+      "viewedEquivalent": "complete-qt-20260913\\captures\\dpi-2\\maximized.png"
+    },
+    {
+      "path": "complete-qt-20260913\\captures\\dpi-1.5\\recreated.png",
+      "sha256": "36FC43EB931E35DD12F7CE9376DFF456BD458C906A8E1BD030802F54B6219030",
+      "viewedEquivalent": "complete-qt-20260913\\captures\\dpi-1.5\\recreated.png"
+    },
+    {
+      "path": "complete-qt-20260913\\captures\\dpi-1.5\\resized.png",
+      "sha256": "7FF7A739DF66FDD91B949A319CD34325E5247C3D95909392B43C9E927EF5C5CF",
+      "viewedEquivalent": "complete-qt-20260913\\captures\\dpi-1.5\\restored.png"
+    },
+    {
+      "path": "complete-qt-20260913\\captures\\dpi-1.5\\restored.png",
+      "sha256": "7FF7A739DF66FDD91B949A319CD34325E5247C3D95909392B43C9E927EF5C5CF",
+      "viewedEquivalent": "complete-qt-20260913\\captures\\dpi-1.5\\restored.png"
+    },
+    {
+      "path": "complete-qt-20260913\\captures\\dpi-1.5\\selection-overlay.png",
+      "sha256": "0118F88D8AFF61F2AB6C4E9D05D8B40C7B1989CC1CDF49846F14E2DF8209302F",
+      "viewedEquivalent": "complete-qt-20260913\\captures\\dpi-1.5\\selection-overlay.png"
+    },
+    {
+      "path": "complete-qt-20260913\\captures\\dpi-2\\after-controlled-fbo-switch.png",
+      "sha256": "F3450DC495A3FA82D98F73B351A9EE38DF1FA151113B6778D9B6915DAED8A54B",
+      "viewedEquivalent": "complete-qt-20260913\\captures\\dpi-2\\recreated.png"
+    },
+    {
+      "path": "complete-qt-20260913\\captures\\dpi-2\\initial.png",
+      "sha256": "F3450DC495A3FA82D98F73B351A9EE38DF1FA151113B6778D9B6915DAED8A54B",
+      "viewedEquivalent": "complete-qt-20260913\\captures\\dpi-2\\recreated.png"
+    },
+    {
+      "path": "complete-qt-20260913\\captures\\dpi-2\\maximized.png",
+      "sha256": "91D2AF41FB6A11D305F05507206021B5CEFF8EABC1FBFCF411DE308F7DDBEDB4",
+      "viewedEquivalent": "complete-qt-20260913\\captures\\dpi-2\\maximized.png"
+    },
+    {
+      "path": "complete-qt-20260913\\captures\\dpi-2\\recreated.png",
+      "sha256": "F3450DC495A3FA82D98F73B351A9EE38DF1FA151113B6778D9B6915DAED8A54B",
+      "viewedEquivalent": "complete-qt-20260913\\captures\\dpi-2\\recreated.png"
+    },
+    {
+      "path": "complete-qt-20260913\\captures\\dpi-2\\resized.png",
+      "sha256": "66B1D160D75C22BBEAD617059F18AB6D1627719C0E11001D04A3752A0FC60F57",
+      "viewedEquivalent": "complete-qt-20260913\\captures\\dpi-2\\restored.png"
+    },
+    {
+      "path": "complete-qt-20260913\\captures\\dpi-2\\restored.png",
+      "sha256": "66B1D160D75C22BBEAD617059F18AB6D1627719C0E11001D04A3752A0FC60F57",
+      "viewedEquivalent": "complete-qt-20260913\\captures\\dpi-2\\restored.png"
+    },
+    {
+      "path": "complete-qt-20260913\\captures\\dpi-2\\selection-overlay.png",
+      "sha256": "21CB87FCAADB314B0CA37D3EEC47C174767274D85426F78107A7F1494536FAFF",
+      "viewedEquivalent": "complete-qt-20260913\\captures\\dpi-2\\selection-overlay.png"
+    },
+    {
+      "path": "complete-native-20260913\\captures\\voelund-cad-framebuffer.png",
+      "sha256": "430C652AB747C88913CDABF40DC7E83E5CACD95D1FC19BFB5FBC769EFED58450",
+      "viewedEquivalent": "complete-native-20260913\\captures\\voelund-cad-framebuffer.png"
+    },
+    {
+      "path": "complete-native-20260913\\captures\\voelund-cad-widgets.png",
+      "sha256": "1485A81487B9AC7F2F3A2016AC07E302963F2EFF003237A13A5D08E6B450BED3",
+      "viewedEquivalent": "complete-native-20260913\\captures\\voelund-cad-widgets.png"
+    },
+    {
+      "path": "complete-native-20260913\\captures\\voelund-ui-preview-framebuffer.png",
+      "sha256": "DB5582115FF903B73DD7BD47608A3A3AE563EBC6BBFF0FEE7131E9C39C346904",
+      "viewedEquivalent": "complete-native-20260913\\captures\\voelund-ui-preview-framebuffer.png"
+    },
+    {
+      "path": "complete-native-20260913\\captures\\voelund-ui-preview-widgets.png",
+      "sha256": "C3BC169E9673EF9B0995CBC6B8D478ABB6B41DAAC444332300237E87122E666A",
+      "viewedEquivalent": "complete-native-20260913\\captures\\voelund-ui-preview-widgets.png"
+    },
+    {
+      "path": "scroll-150\\voelund-ui-preview-framebuffer.png",
+      "sha256": "9D25ED654821E5A1D023DED1A3CC5E4713862CE8468EA340118BD82A8476CF0D",
+      "viewedEquivalent": "product-scale-1.5/voelund-ui-preview-framebuffer.png"
+    },
+    {
+      "path": "scroll-150\\voelund-ui-preview-widgets.png",
+      "sha256": "27E189D33A88EDBC6A452EAEE3050ED7C735C5E1D839C9D7AEEC440B67589417",
+      "viewedEquivalent": "verified-product-1.5/voelund-ui-preview-widgets.png"
+    },
+    {
+      "path": "scroll-200\\preview-inspector-scrolled.png",
+      "sha256": "D370E769657F3D43E93D202D84F9D7AA46930656E85A6CCB116BE4095E04A229",
+      "viewedEquivalent": "scroll-200/preview-inspector-scrolled.png"
+    },
+    {
+      "path": "scroll-200\\voelund-ui-preview-framebuffer.png",
+      "sha256": "F39B24578340E92529B60F2C7A6E0B46F5EA970E98B3DA2A0791934EEBF79913",
+      "viewedEquivalent": "product-scale-2/voelund-ui-preview-framebuffer.png"
+    },
+    {
+      "path": "scroll-200\\voelund-ui-preview-widgets.png",
+      "sha256": "36E2F11D2447BAC8217D6DD641A16046C0C14303AC4D3759A30184EE6EEDB5CF",
+      "viewedEquivalent": "verified-product-2/voelund-ui-preview-widgets.png"
+    }
+  ],
+  "status": "visually-reviewed",
+  "note": "Actual image inspection with SHA256 identity for repeated content; see P03.md for observations and limits.",
+  "reviewer": "Codex"
+}

@@ -92,11 +92,14 @@ bool ModelDocument::contains(FeatureId featureId) const noexcept {
 
 FeatureId ModelDocument::addBoxFeature(std::string name, const kernel::BoxDimensions& dimensions) {
     validateBox(dimensions);
-    recordChange();
-    const FeatureId id{nextFeatureId_++};
-    features_.push_back(FeatureDescriptor{id, FeatureKind::box, std::move(name), std::nullopt});
-    parameters_.emplace_back(
+    const FeatureId id = nextFeatureId();
+    auto candidate = currentState();
+    ++candidate.nextFeatureId;
+    candidate.features.push_back(
+        FeatureDescriptor{id, FeatureKind::box, std::move(name), std::nullopt});
+    candidate.parameters.emplace_back(
         BoxParameters{dimensions, kernel::RigidTransform{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}});
+    commitState(std::move(candidate));
     return id;
 }
 
@@ -106,11 +109,13 @@ FeatureId ModelDocument::addCylinderFeature(std::string name, FeatureId inputFea
         throw std::invalid_argument("Cylinder input feature does not exist");
     }
     validateCylinder(parameters);
-    recordChange();
-    const FeatureId id{nextFeatureId_++};
-    features_.push_back(
+    const FeatureId id = nextFeatureId();
+    auto candidate = currentState();
+    ++candidate.nextFeatureId;
+    candidate.features.push_back(
         FeatureDescriptor{id, FeatureKind::cylinder, std::move(name), inputFeature});
-    parameters_.emplace_back(parameters);
+    candidate.parameters.emplace_back(parameters);
+    commitState(std::move(candidate));
     return id;
 }
 
@@ -120,11 +125,13 @@ FeatureId ModelDocument::addSketchFeature(std::string name, FeatureId supportFea
         throw std::invalid_argument("Sketch support feature does not exist");
     }
     validateSketchParameters(parameters);
-    recordChange();
-    const FeatureId id{nextFeatureId_++};
-    features_.push_back(
+    const FeatureId id = nextFeatureId();
+    auto candidate = currentState();
+    ++candidate.nextFeatureId;
+    candidate.features.push_back(
         FeatureDescriptor{id, FeatureKind::sketch, std::move(name), supportFeature});
-    parameters_.emplace_back(parameters);
+    candidate.parameters.emplace_back(parameters);
+    commitState(std::move(candidate));
     return id;
 }
 
@@ -136,11 +143,13 @@ FeatureId ModelDocument::addExtrusionFeature(std::string name, FeatureId sketchF
     if (features_.at(featureIndex(sketchFeature)).kind != FeatureKind::sketch) {
         throw std::invalid_argument("Extrusion input feature must be a sketch");
     }
-    recordChange();
-    const FeatureId id{nextFeatureId_++};
-    features_.push_back(
+    const FeatureId id = nextFeatureId();
+    auto candidate = currentState();
+    ++candidate.nextFeatureId;
+    candidate.features.push_back(
         FeatureDescriptor{id, FeatureKind::extrusion, std::move(name), sketchFeature});
-    parameters_.emplace_back(parameters);
+    candidate.parameters.emplace_back(parameters);
+    commitState(std::move(candidate));
     return id;
 }
 
@@ -173,8 +182,9 @@ bool ModelDocument::setBoxParameters(FeatureId featureId, const BoxParameters& p
     if (*current == parameters) {
         return false;
     }
-    recordChange();
-    *std::get_if<BoxParameters>(&parameters_.at(index)) = parameters;
+    auto candidate = currentState();
+    *std::get_if<BoxParameters>(&candidate.parameters.at(index)) = parameters;
+    commitState(std::move(candidate));
     return true;
 }
 
@@ -198,8 +208,9 @@ bool ModelDocument::setCylinderParameters(FeatureId featureId,
     if (*current == parameters) {
         return false;
     }
-    recordChange();
-    *std::get_if<CylinderParameters>(&parameters_.at(index)) = parameters;
+    auto candidate = currentState();
+    *std::get_if<CylinderParameters>(&candidate.parameters.at(index)) = parameters;
+    commitState(std::move(candidate));
     return true;
 }
 
@@ -221,8 +232,9 @@ bool ModelDocument::setSketchParameters(FeatureId featureId, const SketchParamet
     if (*current == parameters) {
         return false;
     }
-    recordChange();
-    *std::get_if<SketchParameters>(&parameters_.at(index)) = parameters;
+    auto candidate = currentState();
+    *std::get_if<SketchParameters>(&candidate.parameters.at(index)) = parameters;
+    commitState(std::move(candidate));
     return true;
 }
 
@@ -253,8 +265,9 @@ bool ModelDocument::setExtrusionParameters(FeatureId featureId,
     if (*current == parameters) {
         return false;
     }
-    recordChange();
-    *std::get_if<ExtrusionParameters>(&parameters_.at(index)) = parameters;
+    auto candidate = currentState();
+    *std::get_if<ExtrusionParameters>(&candidate.parameters.at(index)) = parameters;
+    commitState(std::move(candidate));
     return true;
 }
 
@@ -284,32 +297,9 @@ bool ModelDocument::setFeaturePlacement(FeatureId featureId,
     if (changed == parameters_.at(index)) {
         return false;
     }
-    recordChange();
-    parameters_.at(index) = changed;
-    return true;
-}
-
-bool ModelDocument::canUndo() const noexcept { return !undoHistory_.empty(); }
-
-bool ModelDocument::canRedo() const noexcept { return !redoHistory_.empty(); }
-
-bool ModelDocument::undo() noexcept {
-    if (!canUndo()) {
-        return false;
-    }
-    redoHistory_.push_back(currentState());
-    restoreState(undoHistory_.back());
-    undoHistory_.pop_back();
-    return true;
-}
-
-bool ModelDocument::redo() noexcept {
-    if (!canRedo()) {
-        return false;
-    }
-    undoHistory_.push_back(currentState());
-    restoreState(redoHistory_.back());
-    redoHistory_.pop_back();
+    auto candidate = currentState();
+    candidate.parameters.at(index) = std::move(changed);
+    commitState(std::move(candidate));
     return true;
 }
 
@@ -320,21 +310,6 @@ std::size_t ModelDocument::featureIndex(FeatureId featureId) const {
         }
     }
     throw std::out_of_range("Unknown feature ID");
-}
-
-ModelDocument::State ModelDocument::currentState() const noexcept {
-    return State{features_, parameters_, nextFeatureId_};
-}
-
-void ModelDocument::restoreState(const State& state) noexcept {
-    features_ = state.features;
-    parameters_ = state.parameters;
-    nextFeatureId_ = state.nextFeatureId;
-}
-
-void ModelDocument::recordChange() {
-    undoHistory_.push_back(currentState());
-    redoHistory_.clear();
 }
 
 } // namespace voelund::document

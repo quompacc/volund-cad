@@ -1,3 +1,5 @@
+#include "../SmokeSupport.hpp"
+
 #include <voelund/application/CadSession.hpp>
 #include <voelund/desktop/MainWindow.hpp>
 #include <voelund/document/ModelDocument.hpp>
@@ -8,16 +10,167 @@
 #include <QApplication>
 #include <QComboBox>
 #include <QCoreApplication>
-#include <QDockWidget>
 #include <QDebug>
+#include <QDockWidget>
 #include <QElapsedTimer>
 #include <QGuiApplication>
 #include <QMouseEvent>
 #include <QSurfaceFormat>
 #include <QTimer>
+#include <QWheelEvent>
 
+#include <QDoubleSpinBox>
+#include <QKeyEvent>
 #include <cmath>
-#include <vector>
+
+#include <memory>
+
+namespace {
+using voelund::application::CadSession;
+using voelund::desktop::MainWindow;
+using voelund::viewport::CadViewport;
+bool verifyCadControls(MainWindow& mainWindow) {
+    QAction* transformAction = mainWindow.findChild<QAction*>(QStringLiteral("transformAction"));
+    QAction* addCylinderAction =
+        mainWindow.findChild<QAction*>(QStringLiteral("addCylinderAction"));
+    QComboBox* connectionModeInput =
+        mainWindow.findChild<QComboBox*>(QStringLiteral("connectionModeInput"));
+    QDockWidget* properties =
+        mainWindow.findChild<QDockWidget*>(QStringLiteral("featurePropertiesDock"));
+    QDockWidget* activeTool = mainWindow.findChild<QDockWidget*>(QStringLiteral("activeToolDock"));
+    if (transformAction == nullptr || addCylinderAction == nullptr ||
+        connectionModeInput == nullptr || properties == nullptr || activeTool == nullptr) {
+        qCritical() << "Required desktop controls are missing";
+        return false;
+    }
+    if (!mainWindow.tabifiedDockWidgets(properties).contains(activeTool)) {
+        qCritical() << "Properties and active tool docks are not tabified";
+        return false;
+    }
+    if (properties->maximumWidth() > 360 || activeTool->maximumWidth() > 360) {
+        qCritical() << "Right dock exceeds compact width" << properties->maximumWidth()
+                    << activeTool->maximumWidth();
+        return false;
+    }
+    if (!connectionModeInput->isVisible() || !connectionModeInput->isEnabled()) {
+        qCritical() << "Connection control is unavailable";
+        return false;
+    }
+
+    return true;
+}
+bool verifyCadResize(MainWindow& mainWindow, CadViewport* viewport) {
+    mainWindow.resize(mainWindow.width() + 173, mainWindow.height() + 119);
+    qInfo() << "smoke-ui resize";
+    QCoreApplication::processEvents();
+    // Fix the review camera after the model and window dimensions have changed.
+    viewport->fitView();
+    QCoreApplication::processEvents();
+    const auto [renderWidth, renderHeight] = viewport->renderingPixelSize();
+    const int expectedWidth =
+        static_cast<int>(std::lround(viewport->width() * viewport->devicePixelRatioF()));
+    const int expectedHeight =
+        static_cast<int>(std::lround(viewport->height() * viewport->devicePixelRatioF()));
+    if (std::abs(renderWidth - expectedWidth) > 1 || std::abs(renderHeight - expectedHeight) > 1) {
+        return false;
+    }
+
+    // A click in empty space must be harmless even though OCCT has no detected owner.
+    const QPointF localPosition(1.0, 1.0);
+    const QPointF globalPosition(viewport->mapToGlobal(localPosition.toPoint()));
+    QMouseEvent emptyClick(QEvent::MouseButtonRelease, localPosition, globalPosition,
+                           Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
+    QCoreApplication::sendEvent(viewport, &emptyClick);
+
+    return true;
+}
+bool verifyCleanNavigation(CadSession& session, CadViewport& viewport) {
+    if (session.isModified() || session.canUndo())
+        return false;
+    const QPointF center(viewport.rect().center());
+    const QPointF global(viewport.mapToGlobal(center.toPoint()));
+    QMouseEvent press(QEvent::MouseButtonPress, center, global, Qt::MiddleButton, Qt::MiddleButton,
+                      Qt::NoModifier);
+    QMouseEvent move(QEvent::MouseMove, center + QPointF(20, 10), global + QPointF(20, 10),
+                     Qt::NoButton, Qt::MiddleButton, Qt::NoModifier);
+    QMouseEvent release(QEvent::MouseButtonRelease, center + QPointF(20, 10),
+                        global + QPointF(20, 10), Qt::MiddleButton, Qt::NoButton, Qt::NoModifier);
+    QCoreApplication::sendEvent(&viewport, &press);
+    QCoreApplication::sendEvent(&viewport, &move);
+    QCoreApplication::sendEvent(&viewport, &release);
+    QWheelEvent wheel(center, global, {}, {0, 120}, Qt::NoButton, Qt::NoModifier, Qt::NoScrollPhase,
+                      false);
+    QCoreApplication::sendEvent(&viewport, &wheel);
+    viewport.fitView();
+    QCoreApplication::processEvents();
+    qInfo() << "smoke-ui clean-navigation";
+    return !session.isModified() && !session.canUndo() && !session.canRedo();
+}
+bool exerciseCadUi(MainWindow& mainWindow, CadSession& session, CadViewport* viewport) {
+    if (!verifyCleanNavigation(session, *viewport))
+        return false;
+    if (!verifyCadControls(mainWindow))
+        return false;
+    auto* transformAction = mainWindow.findChild<QAction*>(QStringLiteral("transformAction"));
+    auto* addCylinderAction = mainWindow.findChild<QAction*>(QStringLiteral("addCylinderAction"));
+    auto* connectionModeInput =
+        mainWindow.findChild<QComboBox*>(QStringLiteral("connectionModeInput"));
+    qInfo() << "smoke-ui box-height";
+    auto* boxHeight = mainWindow.findChild<QDoubleSpinBox*>(QStringLiteral("boxHeightInput"));
+    if (boxHeight == nullptr || !voelund::apps::enterSmokeValue(*boxHeight, QStringLiteral("27")) ||
+        std::abs(session.selectedBoxParameters().dimensions.height - 27.0) > 1.0e-6) {
+        return false;
+    }
+    qInfo() << "smoke-ui cylinder";
+    if (!addCylinderAction->isEnabled() || !transformAction->isEnabled()) {
+        return false;
+    }
+    connectionModeInput->setFocus();
+    QKeyEvent keyPress(QEvent::KeyPress, Qt::Key_End, Qt::NoModifier);
+    QCoreApplication::sendEvent(connectionModeInput, &keyPress);
+    const auto previousBodyCount = session.currentBodies().size();
+    addCylinderAction->trigger();
+    qInfo() << "smoke-ui transform";
+    transformAction->trigger();
+    QCoreApplication::processEvents();
+    if (session.currentBodies().size() != previousBodyCount + 1 ||
+        session.selectedCylinderParameters().resultMode !=
+            voelund::document::CylinderResultMode::separate) {
+        return false;
+    }
+
+    return verifyCadResize(mainWindow, viewport);
+}
+void startCadSmoke(MainWindow& mainWindow, CadSession& session) {
+    auto* timer = new QTimer(&mainWindow);
+    auto elapsed = std::make_shared<QElapsedTimer>();
+    elapsed->start();
+    QObject::connect(timer, &QTimer::timeout, &mainWindow, [&mainWindow, &session, timer, elapsed] {
+        auto* viewport = dynamic_cast<CadViewport*>(mainWindow.centralWidget());
+        if (viewport == nullptr) {
+            QCoreApplication::exit(4);
+            return;
+        }
+        if (!voelund::apps::verifyDesktopSmoke(*viewport)) {
+            if (elapsed->elapsed() >= 10000)
+                QCoreApplication::exit(1);
+            return;
+        }
+        timer->stop();
+        if (!exerciseCadUi(mainWindow, session, viewport)) {
+            QCoreApplication::exit(8);
+            return;
+        }
+        QTimer::singleShot(150, &mainWindow, [&mainWindow, viewport] {
+            QCoreApplication::exit(voelund::apps::verifyDesktopSmoke(*viewport) &&
+                                           voelund::apps::captureDesktopSmoke(mainWindow, *viewport)
+                                       ? 0
+                                       : 9);
+        });
+    });
+    timer->start(50);
+}
+} // namespace
 
 int main(int argc, char* argv[]) {
 #if defined(VOELUND_OCCT_GLES)
@@ -36,149 +189,21 @@ int main(int argc, char* argv[]) {
     QApplication application(argc, argv);
     voelund::application::CadSession session;
     const bool isSmokeTest = QCoreApplication::arguments().contains("--smoke-test");
-    if (isSmokeTest && qEnvironmentVariable("QT_QPA_PLATFORM") == QStringLiteral("wayland") &&
-        !QGuiApplication::platformName().startsWith(QStringLiteral("wayland"))) {
-        return 2;
-    }
-    if (isSmokeTest) {
-        static_cast<void>(
-            session.selectFeature(voelund::document::ModelDocument::initialCylinderId()));
-        voelund::document::CylinderParameters parameters = session.selectedCylinderParameters();
-        parameters.resultMode = voelund::document::CylinderResultMode::separate;
-        static_cast<void>(session.setSelectedCylinderParameters(parameters));
-        static_cast<void>(session.selectFeature(voelund::document::ModelDocument::initialBoxId()));
-        const voelund::viewport::PlanarFaceSelection previousTop{
-            voelund::document::ModelDocument::initialBoxId().value(), 0.0, 0.0, 20.0, 0.0,
-            0.0, 1.0, 1.0, 0.0, 0.0};
-        const auto boxShape =
-            session.featureShape(voelund::document::ModelDocument::initialBoxId());
-        const auto resolvedTop = boxShape.has_value()
-                                     ? voelund::viewport::resolvePlanarFaceSelection(previousTop,
-                                                                                    *boxShape)
-                                     : std::nullopt;
-        if (!resolvedTop.has_value() || resolvedTop->referenceSegments.empty() ||
-            std::abs(resolvedTop->originZ - 20.0) > 1.0e-6)
-            return 3;
-        auto changedBox = session.selectedBoxParameters();
-        changedBox.dimensions.height = 27.0;
-        if (!session.setSelectedBoxParameters(changedBox))
-            return 3;
-        const auto changedShape =
-            session.featureShape(voelund::document::ModelDocument::initialBoxId());
-        const auto movedTop = changedShape.has_value()
-                                  ? voelund::viewport::resolvePlanarFaceSelection(previousTop,
-                                                                                 *changedShape)
-                                  : std::nullopt;
-        if (!movedTop.has_value() || std::abs(movedTop->originZ - 27.0) > 1.0e-6)
-            return 3;
-    }
-    std::vector<voelund::viewport::SceneSketchElement> smokeSketchElements;
-    std::vector<voelund::viewport::SceneSketchConstraint> smokeSketchConstraints;
-    if (isSmokeTest) {
-        const voelund::document::SketchParameters sketch{
-            {0.0, 0.0, 25.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0},
-            {{{voelund::document::SketchElementId{1},
-               voelund::document::SketchRectangle{0.0, 0.0, 5.0, 4.0}},
-              {voelund::document::SketchElementId{2},
-               voelund::document::SketchCircle{{8.0, 2.0}, 1.5}},
-              {voelund::document::SketchElementId{3},
-               voelund::document::SketchLine{{0.0, 7.0}, {5.0, 7.0}}}},
-             4}};
-        for (const auto& element : voelund::features::evaluateSketchElements(sketch)) {
-            smokeSketchElements.push_back({element.id.value(), element.shape});
-        }
-        smokeSketchConstraints.push_back({1, "L 5.000 mm", 2.5, 0.0, 25.02, false, true});
-        smokeSketchConstraints.push_back({2, "[H]", 2.5, 7.0, 25.02, false, false});
+    const bool uninitializedSmoke =
+        QCoreApplication::arguments().contains("--smoke-test-uninitialized");
+    if (isSmokeTest || uninitializedSmoke)
+        voelund::apps::enableSmokeLogging();
+    if (uninitializedSmoke) {
+        voelund::viewport::CadViewport viewport;
+        QTimer::singleShot(0, &application, [&application, &viewport] {
+            application.exit(voelund::apps::verifyDesktopSmoke(viewport) ? 0 : 10);
+        });
+        return application.exec();
     }
     voelund::desktop::MainWindow mainWindow(session);
     mainWindow.show();
 
-    QTimer smokeTimer;
-    QElapsedTimer smokeElapsed;
-    if (isSmokeTest) {
-        smokeElapsed.start();
-        smokeTimer.setInterval(50);
-        QObject::connect(
-            &smokeTimer, &QTimer::timeout, &application,
-            [&mainWindow, &smokeTimer, &smokeElapsed, &smokeSketchElements,
-             &smokeSketchConstraints]() {
-                auto* viewport =
-                    dynamic_cast<voelund::viewport::CadViewport*>(mainWindow.centralWidget());
-                if (viewport == nullptr) {
-                    QCoreApplication::exit(4);
-                    return;
-                }
-                if (!viewport->isRenderingReady()) {
-                    if (smokeElapsed.elapsed() >= 10'000) {
-                        QCoreApplication::exit(1);
-                    }
-                    return;
-                }
-
-                QAction* transformAction =
-                    mainWindow.findChild<QAction*>(QStringLiteral("transformAction"));
-                QComboBox* connectionModeInput =
-                    mainWindow.findChild<QComboBox*>(QStringLiteral("connectionModeInput"));
-                QDockWidget* properties =
-                    mainWindow.findChild<QDockWidget*>(QStringLiteral("featurePropertiesDock"));
-                QDockWidget* activeTool =
-                    mainWindow.findChild<QDockWidget*>(QStringLiteral("activeToolDock"));
-                if (transformAction == nullptr || connectionModeInput == nullptr ||
-                    properties == nullptr || activeTool == nullptr) {
-                    qCritical() << "Required desktop controls are missing";
-                    QCoreApplication::exit(5);
-                    return;
-                }
-                if (!mainWindow.tabifiedDockWidgets(properties).contains(activeTool)) {
-                    qCritical() << "Properties and active tool docks are not tabified";
-                    QCoreApplication::exit(6);
-                    return;
-                }
-                if (properties->maximumWidth() > 360 || activeTool->maximumWidth() > 360) {
-                    qCritical() << "Right dock exceeds compact width" << properties->maximumWidth()
-                                << activeTool->maximumWidth();
-                    QCoreApplication::exit(7);
-                    return;
-                }
-                if (!connectionModeInput->isVisible() || !connectionModeInput->isEnabled()) {
-                    qCritical() << "Connection control is unavailable";
-                    QCoreApplication::exit(1);
-                    return;
-                }
-                smokeTimer.stop();
-                transformAction->trigger();
-                QCoreApplication::processEvents();
-                viewport->setSketchElements(smokeSketchElements, 2);
-                viewport->setSketchConstraints(smokeSketchConstraints);
-                QCoreApplication::processEvents();
-                if (viewport->displayedSketchElementCount() != smokeSketchElements.size() ||
-                    viewport->displayedSketchConstraintCount() != smokeSketchConstraints.size()) {
-                    QCoreApplication::exit(1);
-                    return;
-                }
-
-                mainWindow.resize(mainWindow.width() + 173, mainWindow.height() + 119);
-                QCoreApplication::processEvents();
-                const auto [renderWidth, renderHeight] = viewport->renderingPixelSize();
-                const int expectedWidth =
-                    static_cast<int>(std::lround(viewport->width() * viewport->devicePixelRatioF()));
-                const int expectedHeight = static_cast<int>(
-                    std::lround(viewport->height() * viewport->devicePixelRatioF()));
-                if (std::abs(renderWidth - expectedWidth) > 1 ||
-                    std::abs(renderHeight - expectedHeight) > 1) {
-                    QCoreApplication::exit(1);
-                    return;
-                }
-
-                // A click in empty space must be harmless even though OCCT has no detected owner.
-                const QPointF localPosition(1.0, 1.0);
-                const QPointF globalPosition(viewport->mapToGlobal(localPosition.toPoint()));
-                QMouseEvent emptyClick(QEvent::MouseButtonRelease, localPosition, globalPosition,
-                                       Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
-                QCoreApplication::sendEvent(viewport, &emptyClick);
-                QCoreApplication::exit(0);
-            });
-        smokeTimer.start();
-    }
+    if (isSmokeTest)
+        startCadSmoke(mainWindow, session);
     return application.exec();
 }

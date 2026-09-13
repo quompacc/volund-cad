@@ -1,0 +1,66 @@
+[
+  {
+    "sha256": "cd98de20a2e15992aa51bd38e2fa4839b638e2dc9d62199fc66386e94b4f41c1",
+    "path": "V:\\build\\p01-windows-qt-opengl-20260913\\apps\\voelund-cad\\voelund-cad.exe"
+  },
+  {
+    "sha256": "54adce072560dfc78fbf1d8f6c4ca4a91156b445841e228d8210283b7aa18474",
+    "path": "V:\\build\\p01-windows-qt-opengl-20260913\\apps\\voelund-ui-preview\\voelund-ui-preview.exe"
+  },
+  {
+    "sha256": "d764cccfc37cde0e81a644d09bd8dc24860d7d2a09cdd31ebc71d3e629588a4f",
+    "path": "V:\\build\\p01-windows-qt-opengl-20260913\\tests\\voelund_application_tests.exe"
+  },
+  {
+    "sha256": "aee15065e2a7c35d34e0d7f1a199b06b9a62594a199a03c4d6a70048087be1d9",
+    "path": "V:\\build\\p01-windows-qt-opengl-20260913\\tests\\voelund_document_tests.exe"
+  },
+  {
+    "sha256": "6048233a725a007f676ccd3a098b43aea81c863e7e814a931f4c4f1a4d8331f6",
+    "path": "V:\\build\\p01-windows-qt-opengl-20260913\\tests\\voelund_kernel_tests.exe"
+  },
+  {
+    "sha256": "a61c50b19271328d9cf5b3414e791fa7784e64fa45c7fee1ead190fd02615b8b",
+    "path": "V:\\build\\p01-windows-qt-opengl-20260913\\tests\\voelund_planegcs_tests.exe"
+  },
+  {
+    "sha256": "e16bbfa0cb04870e6fe36948c747fd2e19698b63993592687bb9d8e2c41579d6",
+    "path": "V:\\build\\p01-windows-qt-opengl-20260913\\tests\\voelund_sketch_alignment_tests.exe"
+  },
+  {
+    "sha256": "cdc870c4fad6c3b96f398786d0a1762db300dac955b110caac822e8c3987e947",
+    "path": "V:\\build\\p01-windows-qt-opengl-20260913\\tests\\voelund_sketch_basic_tools_tests.exe"
+  },
+  {
+    "sha256": "c23d03fddac46a8864a8ebae7ab5466b7b7760b3b392a8934fce6d27413e599a",
+    "path": "V:\\build\\p01-windows-qt-opengl-20260913\\tests\\voelund_sketch_circle_constraint_tests.exe"
+  },
+  {
+    "sha256": "870f1259e065bcc393f5076aa272366537b7fcef021b2fb3bc77bafec0f62857",
+    "path": "V:\\build\\p01-windows-qt-opengl-20260913\\tests\\voelund_sketch_constraint_tests.exe"
+  },
+  {
+    "sha256": "23048cbc840ef32f8c54ec4e103e025411ba39f6fb860f0f907ad6dc68fa525e",
+    "path": "V:\\build\\p01-windows-qt-opengl-20260913\\tests\\voelund_sketch_construction_tests.exe"
+  },
+  {
+    "sha256": "3946236e622264c2a3d7e4d46f68566ca059f019685aea4e6d1be956e46f85ce",
+    "path": "V:\\build\\p01-windows-qt-opengl-20260913\\tests\\voelund_sketch_editor_tests.exe"
+  },
+  {
+    "sha256": "5576decaf104bad6cffff6a551113db878d3daafc5da4747fd20a5c7892a5248",
+    "path": "V:\\build\\p01-windows-qt-opengl-20260913\\tests\\voelund_sketch_fix_distance_tests.exe"
+  },
+  {
+    "sha256": "53790921bf2221b87cdec0fea26084737913636a55147f1c445f2d92a12e4408",
+    "path": "V:\\build\\p01-windows-qt-opengl-20260913\\tests\\voelund_sketch_profile_tests.exe"
+  },
+  {
+    "sha256": "241ab2f840abb5573349f5559275b6cec1d062f2ab6e601f7895f9adc7af85ac",
+    "path": "V:\\build\\p01-windows-qt-opengl-20260913\\tests\\voelund_sketch_slot_tests.exe"
+  },
+  {
+    "sha256": "e5863044ab5f6f744903e7969c336bcdba2180c89df0cd59ee2c562bcbb8623c",
+    "path": "V:\\build\\p01-windows-qt-opengl-20260913\\tests\\voelund_workspace_tests.exe"
+  }
+]

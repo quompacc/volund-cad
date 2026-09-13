@@ -1,0 +1,13 @@
+Test project V:/build/p02-qt-final
+    Start 3: desktop.ui_preview_startup
+1/1 Test #3: desktop.ui_preview_startup .......   Passed    1.80 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+desktop     =   1.80 sec*proc (1 test)
+platform    =   1.80 sec*proc (1 test)
+ui          =   1.80 sec*proc (1 test)
+windows     =   1.80 sec*proc (1 test)
+
+Total Test time (real) =   1.80 sec

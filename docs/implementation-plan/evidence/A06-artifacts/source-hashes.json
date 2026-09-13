@@ -1,0 +1,8 @@
+{
+  "include/voelund/kernel/OcctCompatibility.hpp": "91b00502f67cb4cbd1b26733fd3ee2980c33891bd5431378245087f191233333",
+  "include/voelund/kernel/ShapeFactory.hpp": "280c6a5d9b53e67f5896c2232ad3de9856e7e1ecb16488beee3e4755c4e6f8b4",
+  "include/voelund/kernel/ShapeOperations.hpp": "b0ca88b7b8a07e632c46ceba068a828dada93a4a4a22854aade1cc640d316e4b",
+  "src/kernel/ShapeFactory.cpp": "bc0bcea152c521992a1730392f1ab2d91b5927645203a5f4332f5859addbf624",
+  "src/kernel/ShapeOperations.cpp": "79b91f1e4326e446e7750c6ce3041ec8e744718646d47e80af6d68d1a38e8e3a",
+  "tests/unit/ShapeFactoryTests.cpp": "ce1e851964dca8327ccdb8f991d0dca9b655c1ac55d9ae2b9414918579709d78"
+}

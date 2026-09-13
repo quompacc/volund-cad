@@ -1,0 +1,17 @@
+Test project V:/build/p02-qt-final
+    Start 11: desktop.viewport_lifecycle_qt
+    Test #11: desktop.viewport_lifecycle_qt ....   Passed    2.61 sec
+    Start 11: desktop.viewport_lifecycle_qt
+    Test #11: desktop.viewport_lifecycle_qt ....   Passed    2.56 sec
+    Start 11: desktop.viewport_lifecycle_qt
+1/1 Test #11: desktop.viewport_lifecycle_qt ....   Passed    2.58 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+desktop      =   2.58 sec*proc (1 test)
+lifecycle    =   2.58 sec*proc (1 test)
+qt-opengl    =   2.58 sec*proc (1 test)
+viewport     =   2.58 sec*proc (1 test)
+
+Total Test time (real) =   7.76 sec

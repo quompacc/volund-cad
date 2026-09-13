@@ -34,9 +34,11 @@ QWidget* PreviewWindow::createSolidRibbon()
     layout->setSpacing(4);
     auto* sketch = ribbonButton(QStringLiteral("Sketch"), Icon::Sketch,
                                 QStringLiteral("Create sketch"));
+    sketch->setObjectName(QStringLiteral("previewSketchAction"));
     connect(sketch, &QToolButton::clicked, this, &PreviewWindow::enterSketch);
     extrudeButton_ = ribbonButton(QStringLiteral("Extrude"), Icon::Extrude,
                                   QStringLiteral("Extrude selected profile"));
+    extrudeButton_->setObjectName(QStringLiteral("previewExtrudeAction"));
     connect(extrudeButton_, &QToolButton::clicked, this, &PreviewWindow::activateExtrude);
     layout->addWidget(createRibbonGroup(QStringLiteral("CREATE"), {sketch, extrudeButton_,
         ribbonButton(QStringLiteral("Revolve"), Icon::Revolve),

@@ -1,0 +1,66 @@
+[
+  {
+    "path": "V:\\build\\p01-windows-native-final-20260913\\apps\\voelund-cad\\voelund-cad.exe",
+    "sha256": "01deeb337aa62554ecb01fd8f77ab110652b2922dfc4f54a18ef631310ed9aef"
+  },
+  {
+    "path": "V:\\build\\p01-windows-native-final-20260913\\apps\\voelund-ui-preview\\voelund-ui-preview.exe",
+    "sha256": "84271240e8135a745f054f14aceb8ad9457638908489461cd1a49a8a013d11b0"
+  },
+  {
+    "path": "V:\\build\\p01-windows-native-final-20260913\\tests\\voelund_application_tests.exe",
+    "sha256": "143e7f8db54b65c16dc1e4f8b0dd98a1bd40f65dac8ec7f47e4030c607192e4d"
+  },
+  {
+    "path": "V:\\build\\p01-windows-native-final-20260913\\tests\\voelund_document_tests.exe",
+    "sha256": "55847ae43cc565b2314745c90af1e8c6e158476be87d824e687d36c1d9bb3c8b"
+  },
+  {
+    "path": "V:\\build\\p01-windows-native-final-20260913\\tests\\voelund_kernel_tests.exe",
+    "sha256": "7f96e6b535016abd6e0ef9492b7d066ebf424235b23a0c38e2b639ae3976ea2e"
+  },
+  {
+    "path": "V:\\build\\p01-windows-native-final-20260913\\tests\\voelund_planegcs_tests.exe",
+    "sha256": "a2fcf288f0e6a028e05a7bd71799af4e0185d1e98d412148c1d15511428b3fa0"
+  },
+  {
+    "path": "V:\\build\\p01-windows-native-final-20260913\\tests\\voelund_sketch_alignment_tests.exe",
+    "sha256": "aee67c55b2c948c8140027654b151f88f0c115b48650a38791257fce4ec0fb44"
+  },
+  {
+    "path": "V:\\build\\p01-windows-native-final-20260913\\tests\\voelund_sketch_basic_tools_tests.exe",
+    "sha256": "9061bd9ee2979807a0732ccf7cb501ff5d9fa6a8d71585da0804c968c020afff"
+  },
+  {
+    "path": "V:\\build\\p01-windows-native-final-20260913\\tests\\voelund_sketch_circle_constraint_tests.exe",
+    "sha256": "c786a2095de712663e6a97fcd395416d1a11abb221e4bdb1f907c6c53babbf39"
+  },
+  {
+    "path": "V:\\build\\p01-windows-native-final-20260913\\tests\\voelund_sketch_constraint_tests.exe",
+    "sha256": "8ad442a9eb47a7f1c6d1012524caded6677735201a007c46ec897f9fffcb4bd6"
+  },
+  {
+    "path": "V:\\build\\p01-windows-native-final-20260913\\tests\\voelund_sketch_construction_tests.exe",
+    "sha256": "f74bc2147363358670142d594e6926eebbc02c958ca5be3184a82201c947216f"
+  },
+  {
+    "path": "V:\\build\\p01-windows-native-final-20260913\\tests\\voelund_sketch_editor_tests.exe",
+    "sha256": "e88d41ce1381d4330710d798941cc0c3dd39ab57cd9f5f3119b75b6153e74228"
+  },
+  {
+    "path": "V:\\build\\p01-windows-native-final-20260913\\tests\\voelund_sketch_fix_distance_tests.exe",
+    "sha256": "c256f2a9c437d3d312a69567c05fa7e997b0487507c20c869e77d0ecaa3c8b11"
+  },
+  {
+    "path": "V:\\build\\p01-windows-native-final-20260913\\tests\\voelund_sketch_profile_tests.exe",
+    "sha256": "968f23cca21d30e7c967ec7b2703505af38a418a68af4d52a51a9fac12df8b10"
+  },
+  {
+    "path": "V:\\build\\p01-windows-native-final-20260913\\tests\\voelund_sketch_slot_tests.exe",
+    "sha256": "6ff6a11304d308d258f960575d27960112d4a088c5a2063bb6f3dfb66f83ea37"
+  },
+  {
+    "path": "V:\\build\\p01-windows-native-final-20260913\\tests\\voelund_workspace_tests.exe",
+    "sha256": "efe2ce1eafad870ce4538fc191473d5d0b9b415f0bf3eba4d313ceb25e00e57f"
+  }
+]

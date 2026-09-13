@@ -27,6 +27,7 @@ public:
     [[nodiscard]] bool isEnabled() const noexcept;
     void attach(const occ::handle<AIS_Shape>& presentation, std::uint64_t bodyId);
     void detach();
+    void resetPresentation();
     [[nodiscard]] bool matches(
         const occ::handle<AIS_InteractiveObject>& interactiveObject) const noexcept;
     [[nodiscard]] bool hasActiveMode() const noexcept;
