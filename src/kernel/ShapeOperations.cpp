@@ -1,3 +1,5 @@
+#include <Standard_OutOfMemory.hxx>
+#include <Standard_ProgramError.hxx>
 #include <voelund/kernel/OcctCompatibility.hpp>
 #include <voelund/kernel/ShapeOperations.hpp>
 
@@ -60,6 +62,10 @@ TopoDS_Shape ShapeOperations::fuse(const TopoDS_Shape& left, const TopoDS_Shape&
         return result;
     } catch (const KernelError&) {
         throw;
+    } catch (const Standard_OutOfMemory&) {
+        throw;
+    } catch (const Standard_ProgramError&) {
+        throw;
     } catch (const Standard_Failure& failure) {
         throw KernelError(KernelOperation::fuse, occtFailureDiagnostic(failure));
     }
@@ -88,6 +94,10 @@ TopoDS_Shape ShapeOperations::cut(const TopoDS_Shape& input, const TopoDS_Shape&
         }
         throw KernelError(KernelOperation::cut,
                           std::string("overlap validation failed: ") + error.what());
+    } catch (const Standard_OutOfMemory&) {
+        throw;
+    } catch (const Standard_ProgramError&) {
+        throw;
     } catch (const Standard_Failure& failure) {
         throw KernelError(KernelOperation::cut, occtFailureDiagnostic(failure));
     }
@@ -111,6 +121,10 @@ TopoDS_Shape ShapeOperations::intersect(const TopoDS_Shape& left, const TopoDS_S
         requireValidResult(KernelOperation::intersect, result);
         return result;
     } catch (const KernelError&) {
+        throw;
+    } catch (const Standard_OutOfMemory&) {
+        throw;
+    } catch (const Standard_ProgramError&) {
         throw;
     } catch (const Standard_Failure& failure) {
         throw KernelError(KernelOperation::intersect, occtFailureDiagnostic(failure));
@@ -139,6 +153,10 @@ TopoDS_Shape ShapeOperations::compound(std::span<const TopoDS_Shape> shapes) {
         requireValidResult(KernelOperation::compound, result);
         return result;
     } catch (const KernelError&) {
+        throw;
+    } catch (const Standard_OutOfMemory&) {
+        throw;
+    } catch (const Standard_ProgramError&) {
         throw;
     } catch (const Standard_Failure& failure) {
         throw KernelError(KernelOperation::compound, occtFailureDiagnostic(failure));

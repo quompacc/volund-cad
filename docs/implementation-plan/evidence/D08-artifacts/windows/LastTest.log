@@ -1,0 +1,67 @@
+Start testing: Sep 14 19:35 Mitteleuropäische Sommerzeit
+----------------------------------------------------------
+1/4 Testing: ocaf.create
+1/4 Test: ocaf.create
+Command: "V:/build/d08-ocaf-windows/voelund_ocaf_probe.exe" "create" "V:/build/d08-ocaf-windows/fixtures/local.volund"
+Directory: V:/build/d08-ocaf-windows
+"ocaf.create" start time: Sep 14 19:35 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+{"schemaVersion":1,"occt":"8.0.1","writerFormat":12,"mode":"create","status":"passed","checks":"schema,ids,unicode,reference,parameter,valid-brep,volume,bounds,topology,naming-history,undo-redo"}
+<end of output>
+Test time =   0.27 sec
+----------------------------------------------------------
+Test Passed.
+"ocaf.create" end time: Sep 14 19:35 Mitteleuropäische Sommerzeit
+"ocaf.create" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/4 Testing: ocaf.read_edit
+2/4 Test: ocaf.read_edit
+Command: "V:/build/d08-ocaf-windows/voelund_ocaf_probe.exe" "read" "V:/build/d08-ocaf-windows/fixtures/local.volund" "V:/build/d08-ocaf-windows/fixtures/rewritten.volund"
+Directory: V:/build/d08-ocaf-windows
+"ocaf.read_edit" start time: Sep 14 19:35 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+{"schemaVersion":1,"occt":"8.0.1","writerFormat":12,"mode":"read","status":"passed","checks":"schema,ids,unicode,reference,parameter,valid-brep,volume,bounds,topology,naming-history,undo-redo"}
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"ocaf.read_edit" end time: Sep 14 19:35 Mitteleuropäische Sommerzeit
+"ocaf.read_edit" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/4 Testing: ocaf.reread
+3/4 Test: ocaf.reread
+Command: "V:/build/d08-ocaf-windows/voelund_ocaf_probe.exe" "read" "V:/build/d08-ocaf-windows/fixtures/rewritten.volund"
+Directory: V:/build/d08-ocaf-windows
+"ocaf.reread" start time: Sep 14 19:35 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+{"schemaVersion":1,"occt":"8.0.1","writerFormat":12,"mode":"read","status":"passed","checks":"schema,ids,unicode,reference,parameter,valid-brep,volume,bounds,topology,naming-history,undo-redo"}
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"ocaf.reread" end time: Sep 14 19:35 Mitteleuropäische Sommerzeit
+"ocaf.reread" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/4 Testing: ocaf.negative
+4/4 Test: ocaf.negative
+Command: "V:/build/d08-ocaf-windows/voelund_ocaf_probe.exe" "negative" "V:/build/d08-ocaf-windows/fixtures"
+Directory: V:/build/d08-ocaf-windows
+"ocaf.negative" start time: Sep 14 19:35 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+{"schemaVersion":1,"occt":"8.0.1","writerFormat":12,"mode":"negative","status":"passed","checks":"schema,ids,unicode,reference,parameter,valid-brep,volume,bounds,topology,naming-history,undo-redo"}
+<end of output>
+Test time =   0.14 sec
+----------------------------------------------------------
+Test Passed.
+"ocaf.negative" end time: Sep 14 19:35 Mitteleuropäische Sommerzeit
+"ocaf.negative" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Sep 14 19:35 Mitteleuropäische Sommerzeit

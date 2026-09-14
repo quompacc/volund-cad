@@ -1,3 +1,4 @@
+#include "../CommandResultAssertions.hpp"
 #include <voelund/application/CadSession.hpp>
 #include <voelund/application/SketchEditorSession.hpp>
 
@@ -20,7 +21,8 @@ bool circlesBecomeConcentricAndDiameterRemainsEditable() {
     using namespace voelund;
     application::CadSession session;
     session.newDocument();
-    application::SketchEditorSession editor(session, session.addBoxFeature(), plane);
+    application::SketchEditorSession editor(
+        session, voelund::test::requireCommittedFeature(session.createBoxFeature()), plane);
     editor.setTool(application::SketchDrawingTool::circle);
     if (!addCircle(editor, {0.0, 0.0}, {2.0, 0.0}, 1) ||
         !addCircle(editor, {8.0, 3.0}, {11.0, 3.0}, 2) ||
@@ -49,7 +51,8 @@ bool centerArcIsParametricAndDiameterRemainsEditable() {
     using namespace voelund;
     application::CadSession session;
     session.newDocument();
-    application::SketchEditorSession editor(session, session.addBoxFeature(), plane);
+    application::SketchEditorSession editor(
+        session, voelund::test::requireCommittedFeature(session.createBoxFeature()), plane);
     editor.setTool(application::SketchDrawingTool::arc);
     if (!editor.setPreview({0.0, 0.0}, {4.0, 0.0}, document::SketchPoint{0.0, 4.0})) {
         std::cerr << "arc preview failed\n";

@@ -8,9 +8,7 @@
 
 namespace voelund::desktop {
 
-ModelTreePanel::ModelTreePanel(QWidget* parent)
-    : QTreeWidget(parent)
-{
+ModelTreePanel::ModelTreePanel(QWidget* parent) : QTreeWidget(parent) {
     setHeaderHidden(true);
     connect(this, &QTreeWidget::currentItemChanged, this,
             [this](QTreeWidgetItem* current, QTreeWidgetItem*) {
@@ -20,16 +18,12 @@ ModelTreePanel::ModelTreePanel(QWidget* parent)
             });
 }
 
-void ModelTreePanel::setFeatureSelectionHandler(
-    std::function<void(std::uint64_t)> handler)
-{
+void ModelTreePanel::setFeatureSelectionHandler(std::function<void(std::uint64_t)> handler) {
     selectionHandler_ = std::move(handler);
 }
 
-void ModelTreePanel::showFeatures(
-    std::span<const document::FeatureDescriptor> features,
-    std::optional<document::FeatureId> selectedFeature)
-{
+void ModelTreePanel::showFeatures(std::span<const document::FeatureDescriptor> features,
+                                  std::optional<document::FeatureId> selectedFeature) {
     const QSignalBlocker blocker(this);
     clear();
     auto* bodyItem = new QTreeWidgetItem(this);
@@ -48,9 +42,7 @@ void ModelTreePanel::showFeatures(
     bodyItem->setExpanded(true);
 }
 
-void ModelTreePanel::showStatuses(
-    std::span<const application::FeatureRuntimeState> states)
-{
+void ModelTreePanel::showStatuses(std::span<const application::FeatureRuntimeState> states) {
     for (const application::FeatureRuntimeState& state : states) {
         QTreeWidgetItem* item = featureItem(state.id);
         if (item == nullptr) {
@@ -58,19 +50,21 @@ void ModelTreePanel::showStatuses(
         }
         const QString name = item->data(0, Qt::UserRole + 1).toString();
         const bool hasError = state.status == application::FeatureRuntimeStatus::error;
-        item->setText(0, hasError ? tr("%1 [error]").arg(name) : name);
-        item->setToolTip(0, hasError ? QString::fromStdString(state.message) : QString{});
+        const bool blocked = state.status == application::FeatureRuntimeStatus::blocked;
+        item->setText(0, hasError  ? tr("%1 [error]").arg(name)
+                         : blocked ? tr("%1 [blocked]").arg(name)
+                                   : name);
+        item->setToolTip(0,
+                         hasError || blocked ? QString::fromStdString(state.message) : QString{});
     }
 }
 
-void ModelTreePanel::selectFeature(document::FeatureId featureId)
-{
+void ModelTreePanel::selectFeature(document::FeatureId featureId) {
     const QSignalBlocker blocker(this);
     setCurrentItem(featureItem(featureId));
 }
 
-QTreeWidgetItem* ModelTreePanel::featureItem(document::FeatureId featureId) const
-{
+QTreeWidgetItem* ModelTreePanel::featureItem(document::FeatureId featureId) const {
     QTreeWidgetItem* body = topLevelItem(0);
     if (body == nullptr) {
         return nullptr;

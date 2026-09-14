@@ -1,3 +1,4 @@
+#include "../CommandResultAssertions.hpp"
 #if !defined(VOELUND_VIEWPORT_QT_OPENGL)
 // Include GDI before OCCT's lean Windows declarations suppress this API surface.
 #include <Windows.h>
@@ -91,7 +92,7 @@ bool capture(QWidget& window, CadViewport& viewport, const QString& stem) {
 bool showSlotFixture(CadViewport& viewport) {
     voelund::application::CadSession session;
     session.newDocument();
-    const auto support = session.addBoxFeature();
+    const auto support = voelund::test::requireCommittedFeature(session.createBoxFeature());
     const voelund::document::SketchPlane plane{0, 0, 40, 0, 0, 1, 1, 0, 0};
     voelund::application::SketchEditorSession editor(session, support, plane);
     editor.setTool(voelund::application::SketchDrawingTool::slot);

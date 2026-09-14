@@ -1,0 +1,67 @@
+Start testing: Sep 14 19:35 CEST
+----------------------------------------------------------
+1/4 Testing: ocaf.create
+1/4 Test: ocaf.create
+Command: "/home/eduard/src/voelund-p04-20260913/build/d08-ocaf-freebsd/voelund_ocaf_probe" "create" "/home/eduard/src/voelund-p04-20260913/build/d08-ocaf-freebsd/fixtures/local.volund"
+Directory: /home/eduard/src/voelund-p04-20260913/build/d08-ocaf-freebsd
+"ocaf.create" start time: Sep 14 19:35 CEST
+Output:
+----------------------------------------------------------
+{"schemaVersion":1,"occt":"7.9.3","writerFormat":12,"mode":"create","status":"passed","checks":"schema,ids,unicode,reference,parameter,valid-brep,volume,bounds,topology,naming-history,undo-redo"}
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"ocaf.create" end time: Sep 14 19:35 CEST
+"ocaf.create" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/4 Testing: ocaf.read_edit
+2/4 Test: ocaf.read_edit
+Command: "/home/eduard/src/voelund-p04-20260913/build/d08-ocaf-freebsd/voelund_ocaf_probe" "read" "/home/eduard/src/voelund-p04-20260913/build/d08-ocaf-freebsd/fixtures/local.volund" "/home/eduard/src/voelund-p04-20260913/build/d08-ocaf-freebsd/fixtures/rewritten.volund"
+Directory: /home/eduard/src/voelund-p04-20260913/build/d08-ocaf-freebsd
+"ocaf.read_edit" start time: Sep 14 19:35 CEST
+Output:
+----------------------------------------------------------
+{"schemaVersion":1,"occt":"7.9.3","writerFormat":12,"mode":"read","status":"passed","checks":"schema,ids,unicode,reference,parameter,valid-brep,volume,bounds,topology,naming-history,undo-redo"}
+<end of output>
+Test time =   0.06 sec
+----------------------------------------------------------
+Test Passed.
+"ocaf.read_edit" end time: Sep 14 19:35 CEST
+"ocaf.read_edit" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/4 Testing: ocaf.reread
+3/4 Test: ocaf.reread
+Command: "/home/eduard/src/voelund-p04-20260913/build/d08-ocaf-freebsd/voelund_ocaf_probe" "read" "/home/eduard/src/voelund-p04-20260913/build/d08-ocaf-freebsd/fixtures/rewritten.volund"
+Directory: /home/eduard/src/voelund-p04-20260913/build/d08-ocaf-freebsd
+"ocaf.reread" start time: Sep 14 19:35 CEST
+Output:
+----------------------------------------------------------
+{"schemaVersion":1,"occt":"7.9.3","writerFormat":12,"mode":"read","status":"passed","checks":"schema,ids,unicode,reference,parameter,valid-brep,volume,bounds,topology,naming-history,undo-redo"}
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"ocaf.reread" end time: Sep 14 19:35 CEST
+"ocaf.reread" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/4 Testing: ocaf.negative
+4/4 Test: ocaf.negative
+Command: "/home/eduard/src/voelund-p04-20260913/build/d08-ocaf-freebsd/voelund_ocaf_probe" "negative" "/home/eduard/src/voelund-p04-20260913/build/d08-ocaf-freebsd/fixtures"
+Directory: /home/eduard/src/voelund-p04-20260913/build/d08-ocaf-freebsd
+"ocaf.negative" start time: Sep 14 19:35 CEST
+Output:
+----------------------------------------------------------
+{"schemaVersion":1,"occt":"7.9.3","writerFormat":12,"mode":"negative","status":"passed","checks":"schema,ids,unicode,reference,parameter,valid-brep,volume,bounds,topology,naming-history,undo-redo"}
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"ocaf.negative" end time: Sep 14 19:35 CEST
+"ocaf.negative" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Sep 14 19:35 CEST

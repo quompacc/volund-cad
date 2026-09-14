@@ -7,6 +7,7 @@
 namespace voelund::desktop {
 
 void SketchEditorToolController::syncConstraintState() {
+    panel_.setErrorCommitHandler({});
     if (!editor_)
         return;
     const auto enable = [this](const char* id, document::SketchConstraintKind kind) {
@@ -52,11 +53,17 @@ void SketchEditorToolController::syncConstraintState() {
     if (result.status == features::SketchSolveStatus::conflicting) {
         panel_.setGuidance(QObject::tr("Conflicting sketch: %1 conflicting constraint(s).")
                                .arg(result.conflictingConstraints.size()));
-    } else if (result.degreesOfFreedom >= 0) {
+    } else if (result.status == features::SketchSolveStatus::failed) {
         panel_.setGuidance(
-            QObject::tr(
-                "Sketch solver: %1 degree(s) of freedom. Ctrl-click adds relation references.")
-                .arg(result.degreesOfFreedom));
+            QObject::tr("Sketch solver failed. Correct the sketch or undo; OK is disabled."));
+    } else if (result.degreesOfFreedom == 0) {
+        panel_.setGuidance(QObject::tr("Sketch fully constrained."));
+    } else if (result.degreesOfFreedom > 0) {
+        panel_.setGuidance(QObject::tr("Sketch underconstrained: %1 degree(s) of freedom. "
+                                       "Ctrl-click adds relation references.")
+                               .arg(result.degreesOfFreedom));
+    } else {
+        panel_.setGuidance(QObject::tr("Draw sketch geometry to begin."));
     }
 }
 

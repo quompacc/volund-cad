@@ -52,6 +52,23 @@ Skizzenelement auswählen, Drag beginnen, 100 Updates senden, beenden: genau ein
 
 Solverfehler, konflikthafte Skizze und Kernel-Operationsfehler getrennt auslösen. Neuer ungültiger Kandidat wird rejected; Editor bleibt korrigierbar. Bei bestehendem Feature kann ausdrücklich mit Folgefehlern committed werden. Anzeige/Tree/Timeline zeigen Failed/Blocked/stale richtig; kein gültiger Export des fehlerhaften aktuellen Resultats. Repair und Undo der Repair führen deterministisch zwischen den Zuständen.
 
+### Nachweisstufen und zuständige Pakete
+
+Die vollständige A-ERR-01-Produktabnahme bleibt verpflichtend. D07 kann nicht zugleich
+die erst später eingeführte Timeline und STEP-Oberfläche abnehmen; U10 setzt D07
+sogar ausdrücklich voraus. Deshalb werden die Nachweise in dieser Reihenfolge geführt:
+
+| Stufe | Verbindlicher Nachweis | Zuständig |
+| --- | --- | --- |
+| Fundament | Solver-Failed/Conflicting getrennt; typisierte Ablehnung und explizite Fehlerübernahme; Exception-Grenzen; Editor bleibt korrigierbar; aktueller Geometriezugriff bei stale gesperrt; Fehler/Blocked im bestehenden Tree; Repair/Undo/Save/Open | D07 |
+| Abhängigkeiten und gemeinsame Shell | Nur tatsächliche Nachfolger blockieren; unabhängige Zweige bleiben gültig; Reparatur/Referenzdiagnosen und Messsperren in der zusammengeführten Oberfläche | R01, U10 |
+| Timeline | Fehler/Blocked/Suppressed und History-Cursor aus derselben aktuellen Projektion anzeigen | M15 |
+| Austausch und Gesamtprodukt | Fehlerhafte aktuelle Revision nicht exportieren; produktiven Export-/Fehlerpfad ausführen; vorstehende Stufen gemeinsam im Produkt verifizieren | M17, M18 |
+
+Eine bestandene Fundamentstufe ist keine vollständige A-ERR-01-Produktabnahme.
+Die spätere Timeline-/Exportpflicht wird weder durch eine API-Sperre noch durch
+eine fehlende oder deaktivierte Schaltfläche als bestanden gewertet.
+
 ## A-NUM-01 – Einheiten, Ebenen und Grenzwerte
 
 Modelle mit charakteristischer Länge 0,01 mm, 100 mm und 100.000 mm verwenden; D10 dokumentiert, welche Größen zum unterstützten Bereich gehören. NaN/Inf/Nullachse/negative Maße und ID-Überlauf vor Mutation abweisen. Rechtshändige Ebene mit nicht normierten Achsen gemäß festgelegtem Vertrag normalisieren oder ablehnen. Rotation/Save/Open verändert Skala nicht. Knapp unter/über Verbindungstoleranz liegende Endpunkte deterministisch klassifizieren.

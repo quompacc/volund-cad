@@ -4,6 +4,7 @@
 #include <QDoubleSpinBox>
 #include <QFormLayout>
 #include <QLabel>
+#include <QPushButton>
 #include <QSignalBlocker>
 #include <QWidget>
 
@@ -26,6 +27,21 @@ FeaturePropertiesPanel::FeaturePropertiesPanel(QWidget* parent) : QStackedWidget
     addWidget(cylinderPanel_);
     addWidget(extrusionPanel_);
     addWidget(emptyPanel_);
+    QWidget* pages[] = {boxPanel_, cylinderPanel_, extrusionPanel_};
+    for (int index = 0; index < 3; ++index) {
+        auto* button = new QPushButton(tr("Keep editable errors"), pages[index]);
+        button->setObjectName(QStringLiteral("keepEditableErrorsButton"));
+        button->setToolTip(tr(
+            "Keep the rejected parameter change as a repairable error. Undo remains available."));
+        static_cast<QFormLayout*>(pages[index]->layout())->addRow(button);
+        button->hide();
+        errorCommitButtons_[index] = button;
+        connect(button, &QPushButton::clicked, this, [this] {
+            const auto handler = errorCommitHandler_;
+            if (handler)
+                handler();
+        });
+    }
     connectEditors();
 }
 
@@ -68,6 +84,9 @@ void FeaturePropertiesPanel::createBoxPanel() {
     for (int index = 0; index < 3; ++index) {
         boxLayout->addRow(tr(rotationLabels[index]), boxRotationInputs_[index]);
     }
+    boxErrorLabel_ = new QLabel(boxPanel_);
+    boxErrorLabel_->setWordWrap(true);
+    boxLayout->addRow(boxErrorLabel_);
 }
 
 void FeaturePropertiesPanel::createCylinderPanel() {
@@ -77,13 +96,16 @@ void FeaturePropertiesPanel::createCylinderPanel() {
     cylinderHeightInput_ = makeLengthInput(cylinderPanel_);
     radiusInput_->setObjectName(QStringLiteral("cylinderRadiusInput"));
     cylinderHeightInput_->setObjectName(QStringLiteral("cylinderHeightInput"));
-    for (QDoubleSpinBox*& input : translationInputs_) {
-        input = makeLengthInput(cylinderPanel_, true);
+    for (int index = 0; index < 3; ++index) {
+        translationInputs_[index] = makeLengthInput(cylinderPanel_, true);
+        translationInputs_[index]->setObjectName(
+            QStringLiteral("cylinderTranslation%1Input").arg(index));
     }
     for (QDoubleSpinBox*& input : rotationInputs_) {
         input = makeAngleInput(cylinderPanel_);
     }
     errorLabel_ = new QLabel(cylinderPanel_);
+    errorLabel_->setObjectName(QStringLiteral("cylinderCommandError"));
     errorLabel_->setWordWrap(true);
     errorLabel_->setStyleSheet(
         QStringLiteral("QLabel { color: #ffb4ab; background: #4b2024; border: 1px solid #b94a55; "
@@ -155,8 +177,27 @@ void FeaturePropertiesPanel::showFeatureInfo(const QString& title, const QString
     setCurrentWidget(emptyPanel_);
 }
 
+void FeaturePropertiesPanel::setErrorCommitHandler(std::function<void()> handler) {
+    errorCommitHandler_ = std::move(handler);
+    for (auto* button : errorCommitButtons_)
+        button->setVisible(errorCommitHandler_ && button->parentWidget() == currentWidget());
+}
+
+void FeaturePropertiesPanel::showCommandError(const QString& message) {
+    QLabel* label = currentWidget() == boxPanel_         ? boxErrorLabel_
+                    : currentWidget() == cylinderPanel_  ? errorLabel_
+                    : currentWidget() == extrusionPanel_ ? extrusionErrorLabel_
+                                                         : emptyPanel_;
+    label->setWordWrap(true);
+    label->setText(message);
+    label->setStyleSheet(QStringLiteral("QLabel { color: #ffb4ab; background: #4b2024; border: 1px "
+                                        "solid #b94a55; padding: 6px; }"));
+    label->show();
+}
 void FeaturePropertiesPanel::showBox(const document::BoxParameters& parameters) {
     setCurrentWidget(boxPanel_);
+    boxErrorLabel_->clear();
+    boxErrorLabel_->hide();
     const QSignalBlocker blockers[] = {QSignalBlocker(lengthInput_),
                                        QSignalBlocker(widthInput_),
                                        QSignalBlocker(boxHeightInput_),

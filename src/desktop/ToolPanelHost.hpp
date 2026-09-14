@@ -59,6 +59,7 @@ class ToolPanelHost final : public QDockWidget {
     void end();
     void setAcceptEnabled(bool enabled);
     void setGuidance(const QString& guidance);
+    void setErrorCommitHandler(std::function<void()> handler);
     void setLengthValue(const std::string& parameterId, double value);
     void setLengthEnabled(const std::string& parameterId, bool enabled);
     void setLengthVisible(const std::string& parameterId, bool visible);
@@ -74,6 +75,8 @@ class ToolPanelHost final : public QDockWidget {
     QTabWidget* actionTabs_{nullptr};
     QPushButton* acceptButton_{nullptr};
     QPushButton* cancelButton_{nullptr};
+    QPushButton* errorCommitButton_{nullptr};
+    std::function<void()> errorCommitHandler_;
     QShortcut* escapeShortcut_{nullptr};
     QShortcut* undoShortcut_{nullptr};
     QShortcut* redoShortcut_{nullptr};

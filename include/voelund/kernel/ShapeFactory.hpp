@@ -18,6 +18,7 @@ struct RigidTransform final {
     double translationX;
     double translationY;
     double translationZ;
+    // Legacy document/UI boundary: degrees. Convert explicitly before kernel math.
     double rotationX;
     double rotationY;
     double rotationZ;

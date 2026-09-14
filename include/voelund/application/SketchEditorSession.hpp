@@ -1,4 +1,5 @@
 #pragma once
+#include <voelund/application/CommandTransaction.hpp>
 
 #include <voelund/document/ModelDocument.hpp>
 #include <voelund/features/SketchConstraintAnnotations.hpp>
@@ -118,11 +119,13 @@ class SketchEditorSession final {
     [[nodiscard]] std::vector<features::EvaluatedSketchElement> evaluatedElements() const;
     [[nodiscard]] std::size_t closedProfileCount() const;
     [[nodiscard]] bool canAccept() const noexcept;
-    [[nodiscard]] document::FeatureId accept();
+    [[nodiscard]] CommandResult tryAccept(ErrorDisposition disposition = ErrorDisposition::reject);
+    [[nodiscard]] document::SketchParameters draftParameters() const { return parameters(false); }
     void cancel() noexcept;
     [[nodiscard]] bool isActive() const noexcept;
 
   private:
+    friend class SketchSolverGateTestAccess;
     struct HistoryState final {
         document::SketchElements elements;
         document::SketchConstraints constraints;

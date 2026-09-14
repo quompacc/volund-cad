@@ -1,0 +1,45 @@
+[1/54] Scanning /home/eduard/src/voelund-p04-20260913/src/document/ModelDocument.cpp for CXX dependencies
+[2/54] Scanning /home/eduard/src/voelund-p04-20260913/src/document/DocumentSerializerSupport.cpp for CXX dependencies
+[3/54] Scanning /home/eduard/src/voelund-p04-20260913/src/kernel/ShapeFactory.cpp for CXX dependencies
+[4/54] Scanning /home/eduard/src/voelund-p04-20260913/tests/integration/NumericValidationTests.cpp for CXX dependencies
+[5/54] Generating CXX dyndep file tests/CMakeFiles/voelund_numeric_validation_tests.dir/CXX.dd
+[6/54] Generating CXX dyndep file src/document/CMakeFiles/voelund_document.dir/CXX.dd
+[7/46] Generating CXX dyndep file src/kernel/CMakeFiles/voelund_kernel.dir/CXX.dd
+[8/45] Building CXX object src/kernel/CMakeFiles/voelund_kernel.dir/ShapeFactory.cpp.o
+[9/45] Linking CXX static library src/kernel/libvoelund_kernel.a
+[10/45] Building CXX object src/document/CMakeFiles/voelund_document.dir/DocumentSerializerSupport.cpp.o
+[11/45] Linking CXX executable tests/voelund_kernel_tests
+[12/45] Linking CXX executable tests/voelund_viewport_lifecycle_tests
+[13/45] Building CXX object tests/CMakeFiles/voelund_numeric_validation_tests.dir/integration/NumericValidationTests.cpp.o
+[14/45] Building CXX object src/document/CMakeFiles/voelund_document.dir/ModelDocument.cpp.o
+[15/45] Linking CXX static library src/document/libvoelund_document.a
+[16/45] Linking CXX executable tests/voelund_numeric_validation_tests
+[17/45] Linking CXX executable tests/voelund_legacy_import_tests
+[18/45] Linking CXX executable tests/voelund_scene_status_tests
+[19/45] Linking CXX executable apps/voelund-ui-preview/voelund-ui-preview
+[20/45] Linking CXX executable apps/voelund-cad/voelund-cad
+[21/45] Linking CXX executable tests/voelund_command_input_tests
+[22/45] Linking CXX executable tests/voelund_session_failure_tests
+[23/45] Linking CXX executable tests/voelund_session_creation_tests
+[24/45] Linking CXX executable tests/voelund_session_transaction_tests
+[25/45] Linking CXX executable tests/voelund_document_transaction_tests
+[26/45] Linking CXX executable tests/voelund_command_contract_tests
+[27/45] Linking CXX executable tests/voelund_document_parser_tests
+[28/45] Linking CXX executable tests/voelund_document_tests
+[29/45] Linking CXX executable tests/voelund_sketch_profile_tests
+[30/45] Linking CXX executable tests/voelund_safe_persistence_tests
+[31/45] Linking CXX executable tests/voelund_sketch_constraint_tests
+[32/45] Linking CXX executable tests/voelund_sketch_command_failure_tests
+[33/45] Linking CXX executable tests/voelund_application_tests
+[34/45] Linking CXX executable tests/voelund_preview_command_failure_tests
+[35/45] Linking CXX executable tests/voelund_feature_status_tests
+[36/45] Linking CXX executable tests/voelund_sketch_solver_gate_tests
+[37/45] Linking CXX executable tests/voelund_parameter_failure_tests
+[38/45] Linking CXX executable tests/voelund_document_actions_tests
+[39/45] Linking CXX executable tests/voelund_sketch_circle_constraint_tests
+[40/45] Linking CXX executable tests/voelund_sketch_editor_tests
+[41/45] Linking CXX executable tests/voelund_sketch_alignment_tests
+[42/45] Linking CXX executable tests/voelund_sketch_construction_tests
+[43/45] Linking CXX executable tests/voelund_sketch_fix_distance_tests
+[44/45] Linking CXX executable tests/voelund_sketch_slot_tests
+[45/45] Linking CXX executable tests/voelund_sketch_basic_tools_tests

@@ -1,3 +1,4 @@
+#include "../CommandResultAssertions.hpp"
 #include "CadSessionTestCases.hpp"
 #include "CadSessionTestSupport.hpp"
 
@@ -10,10 +11,12 @@ bool sessionFileRoundtripRestoresTheDocument() {
     if (session.isModified()) {
         return false;
     }
-    const voelund::document::FeatureId boxId = session.addBoxFeature();
+    const voelund::document::FeatureId boxId =
+        voelund::test::requireCommittedFeature(session.createBoxFeature());
     voelund::kernel::RigidTransform placement = session.selectedFeaturePlacement();
     placement.translationX = 37.0;
-    static_cast<void>(session.setSelectedFeaturePlacement(placement));
+    static_cast<void>((session.editSelectedFeaturePlacement(placement).status() ==
+                       voelund::application::CommandStatus::committed));
     if (!session.isModified()) {
         return false;
     }
@@ -23,11 +26,14 @@ bool sessionFileRoundtripRestoresTheDocument() {
     }
     voelund::kernel::RigidTransform changedPlacement = placement;
     changedPlacement.translationX = 38.0;
-    static_cast<void>(session.setSelectedFeaturePlacement(changedPlacement));
-    if (!session.isModified() || !session.undo() || session.isModified()) {
+    static_cast<void>((session.editSelectedFeaturePlacement(changedPlacement).status() ==
+                       voelund::application::CommandStatus::committed));
+    if (!session.isModified() ||
+        !(session.undo().status() == voelund::application::CommandStatus::committed) ||
+        session.isModified()) {
         return false;
     }
-    static_cast<void>(session.addCylinderFeature());
+    static_cast<void>(voelund::test::requireCommittedFeature(session.createCylinderFeature()));
     if (!session.isModified()) {
         return false;
     }
@@ -42,7 +48,7 @@ bool sessionFileRoundtripRestoresTheDocument() {
 bool multipleSketchElementsExtrudeAllClosedProfiles() {
     voelund::application::CadSession session;
     session.newDocument();
-    const auto boxId = session.addBoxFeature();
+    const auto boxId = voelund::test::requireCommittedFeature(session.createBoxFeature());
     const double boxVolume = volumeOf(session.currentShape());
     const voelund::document::SketchPlane plane{0.0, 0.0, 40.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0};
     const std::vector<voelund::document::SketchElement> elements{
@@ -59,7 +65,8 @@ bool multipleSketchElementsExtrudeAllClosedProfiles() {
          voelund::document::SketchLine{{17.0, 17.0}, {19.0, 17.0}}}};
     const voelund::document::SketchParameters sketch{
         plane, voelund::document::SketchElements{elements, 7}};
-    const auto extrusionId = session.addSketchExtrusion(boxId, sketch, 10.0);
+    const auto extrusionId =
+        voelund::test::requireCommittedFeature(session.createSketchExtrusion(boxId, sketch, 10.0));
     const double expected = boxVolume + (36.0 + std::numbers::pi * 4.0 + 8.0) * 10.0;
     if (session.featureStates().back().status !=
             voelund::application::FeatureRuntimeStatus::current ||
@@ -95,7 +102,7 @@ bool selectedSketchProfilesExtrudeAndRoundtrip() {
     using namespace voelund;
     application::CadSession session;
     session.newDocument();
-    const auto boxId = session.addBoxFeature();
+    const auto boxId = voelund::test::requireCommittedFeature(session.createBoxFeature());
     const double boxVolume = volumeOf(session.currentShape());
     const document::SketchPlane plane{0.0, 0.0, 40.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0};
     const std::vector<document::SketchElement> elements{
@@ -105,8 +112,8 @@ bool selectedSketchProfilesExtrudeAndRoundtrip() {
         {document::SketchElementId{4}, document::SketchLine{{14.0, 15.0}, {10.0, 19.0}}},
         {document::SketchElementId{5}, document::SketchLine{{10.0, 19.0}, {10.0, 15.0}}},
         {document::SketchElementId{6}, document::SketchLine{{17.0, 17.0}, {19.0, 17.0}}}};
-    const auto sketchId = session.addSketchFeature(
-        boxId, document::SketchParameters{plane, document::SketchElements{elements, 7}});
+    const auto sketchId = voelund::test::requireCommittedFeature(session.createSketchFeature(
+        boxId, document::SketchParameters{plane, document::SketchElements{elements, 7}}));
     if (!session.selectSketchProfileByElement(document::SketchElementId{4}, false) ||
         !session.selectSketchProfileByElement(document::SketchElementId{2}, true) ||
         session.selectSketchProfileByElement(document::SketchElementId{6}, true) ||
@@ -117,12 +124,15 @@ bool selectedSketchProfilesExtrudeAndRoundtrip() {
 
     const std::vector<document::SketchProfileId> selected(session.selectedSketchProfiles().begin(),
                                                           session.selectedSketchProfiles().end());
-    const auto extrusionId = session.addSketchProfileExtrusion(sketchId, selected, 10.0);
+    const auto extrusionId = voelund::test::requireCommittedFeature(
+        session.createSketchProfileExtrusion(sketchId, selected, 10.0));
     const double expected = boxVolume + (8.0 + std::numbers::pi * 4.0) * 10.0;
     if (session.selectedFeature() != extrusionId ||
         session.selectedExtrusionParameters().profiles != selected ||
-        std::abs(volumeOf(session.currentShape()) - expected) >= 1.0e-4 || !session.undo() ||
-        std::abs(volumeOf(session.currentShape()) - boxVolume) >= 1.0e-4 || !session.redo() ||
+        std::abs(volumeOf(session.currentShape()) - expected) >= 1.0e-4 ||
+        !(session.undo().status() == voelund::application::CommandStatus::committed) ||
+        std::abs(volumeOf(session.currentShape()) - boxVolume) >= 1.0e-4 ||
+        !(session.redo().status() == voelund::application::CommandStatus::committed) ||
         std::abs(volumeOf(session.currentShape()) - expected) >= 1.0e-4)
         return false;
 

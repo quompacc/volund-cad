@@ -28,25 +28,44 @@ namespace {
 
 QString compactActionLabel(const std::string& id, const QString& fallback) {
     static const std::vector<std::pair<std::string, QString>> labels{
-        {"horizontal", QObject::tr("Horizontal")}, {"vertical", QObject::tr("Vertical")},
-        {"free", QObject::tr("Free")}, {"parallel", QObject::tr("Parallel")},
-        {"perpendicular", QObject::tr("Perpendicular")}, {"collinear", QObject::tr("Collinear")},
-        {"coincident", QObject::tr("Coincident")}, {"horizontal_points", QObject::tr("Align H")},
-        {"vertical_points", QObject::tr("Align V")}, {"symmetric", QObject::tr("Symmetric")},
-        {"midpoint", QObject::tr("Midpoint")}, {"perpendicular_bisector", QObject::tr("Bisector")},
-        {"point_on_object", QObject::tr("Point on object")}, {"fixed", QObject::tr("Fix")},
-        {"equal", QObject::tr("Equal")}, {"tangent", QObject::tr("Tangent")},
-        {"concentric", QObject::tr("Concentric")}, {"diameter", QObject::tr("Diameter")},
-        {"point_distance", QObject::tr("Distance")}, {"point_line_distance", QObject::tr("Point–line")},
-        {"point_distance_x", QObject::tr("Distance X")}, {"point_distance_y", QObject::tr("Distance Y")},
-        {"angle", QObject::tr("Angle")}, {"construction", QObject::tr("Construction")},
-        {"lock_point", QObject::tr("Lock point")}, {"unlock_point", QObject::tr("Unlock point")},
-        {"remove_constraint", QObject::tr("Remove constraint")}, {"undo_sketch", QObject::tr("Undo")},
-        {"redo_sketch", QObject::tr("Redo")}, {"trim", QObject::tr("Trim")},
-        {"extend", QObject::tr("Extend")}, {"split", QObject::tr("Split")},
-        {"fillet", QObject::tr("Fillet")}, {"offset", QObject::tr("Offset")},
-        {"mirror", QObject::tr("Mirror")}, {"linear_pattern", QObject::tr("Linear pattern")},
-        {"circular_pattern", QObject::tr("Circular pattern")}, {"delete", QObject::tr("Delete")}};
+        {"horizontal", QObject::tr("Horizontal")},
+        {"vertical", QObject::tr("Vertical")},
+        {"free", QObject::tr("Free")},
+        {"parallel", QObject::tr("Parallel")},
+        {"perpendicular", QObject::tr("Perpendicular")},
+        {"collinear", QObject::tr("Collinear")},
+        {"coincident", QObject::tr("Coincident")},
+        {"horizontal_points", QObject::tr("Align H")},
+        {"vertical_points", QObject::tr("Align V")},
+        {"symmetric", QObject::tr("Symmetric")},
+        {"midpoint", QObject::tr("Midpoint")},
+        {"perpendicular_bisector", QObject::tr("Bisector")},
+        {"point_on_object", QObject::tr("Point on object")},
+        {"fixed", QObject::tr("Fix")},
+        {"equal", QObject::tr("Equal")},
+        {"tangent", QObject::tr("Tangent")},
+        {"concentric", QObject::tr("Concentric")},
+        {"diameter", QObject::tr("Diameter")},
+        {"point_distance", QObject::tr("Distance")},
+        {"point_line_distance", QObject::tr("Point–line")},
+        {"point_distance_x", QObject::tr("Distance X")},
+        {"point_distance_y", QObject::tr("Distance Y")},
+        {"angle", QObject::tr("Angle")},
+        {"construction", QObject::tr("Construction")},
+        {"lock_point", QObject::tr("Lock point")},
+        {"unlock_point", QObject::tr("Unlock point")},
+        {"remove_constraint", QObject::tr("Remove constraint")},
+        {"undo_sketch", QObject::tr("Undo")},
+        {"redo_sketch", QObject::tr("Redo")},
+        {"trim", QObject::tr("Trim")},
+        {"extend", QObject::tr("Extend")},
+        {"split", QObject::tr("Split")},
+        {"fillet", QObject::tr("Fillet")},
+        {"offset", QObject::tr("Offset")},
+        {"mirror", QObject::tr("Mirror")},
+        {"linear_pattern", QObject::tr("Linear pattern")},
+        {"circular_pattern", QObject::tr("Circular pattern")},
+        {"delete", QObject::tr("Delete")}};
     const auto match = std::ranges::find(labels, id, &decltype(labels)::value_type::first);
     return match == labels.end() ? fallback : match->second;
 }
@@ -75,6 +94,14 @@ ToolPanelHost::ToolPanelHost(QWidget* parent) : QDockWidget(parent) {
     auto* buttons = new QHBoxLayout();
     acceptButton_ = new QPushButton(tr("OK"), content_);
     cancelButton_ = new QPushButton(tr("Cancel"), content_);
+    errorCommitButton_ = new QPushButton(tr("Keep editable errors"), content_);
+    errorCommitButton_->setObjectName(QStringLiteral("keepSketchErrorsButton"));
+    errorCommitButton_->hide();
+    connect(errorCommitButton_, &QPushButton::clicked, this, [this] {
+        const auto handler = errorCommitHandler_;
+        if (handler)
+            handler();
+    });
     escapeShortcut_ = new QShortcut(QKeySequence(Qt::Key_Escape), this);
     undoShortcut_ = new QShortcut(QKeySequence::Undo, this);
     redoShortcut_ = new QShortcut(QKeySequence::Redo, this);
@@ -85,7 +112,8 @@ ToolPanelHost::ToolPanelHost(QWidget* parent) : QDockWidget(parent) {
             definition_.cancel();
     });
     const auto triggerAction = [this](const std::string& id) {
-        const auto match = std::ranges::find(actionInputs_, id, &decltype(actionInputs_)::value_type::first);
+        const auto match =
+            std::ranges::find(actionInputs_, id, &decltype(actionInputs_)::value_type::first);
         if (match != actionInputs_.end() && match->second->isEnabled())
             match->second->click();
     };
@@ -102,6 +130,7 @@ ToolPanelHost::ToolPanelHost(QWidget* parent) : QDockWidget(parent) {
     layout->addWidget(actionTabs_, 1);
     layout->addStretch();
     layout->addLayout(buttons);
+    layout->addWidget(errorCommitButton_);
     setWidget(content_);
     connect(acceptButton_, &QPushButton::clicked, this, [this]() {
         if (definition_.accept) {
@@ -116,6 +145,7 @@ ToolPanelHost::ToolPanelHost(QWidget* parent) : QDockWidget(parent) {
 }
 
 void ToolPanelHost::begin(ToolPanelDefinition definition) {
+    setErrorCommitHandler({});
     clearParameters();
     definition_ = std::move(definition);
     setWindowTitle(definition_.title);
@@ -152,10 +182,11 @@ void ToolPanelHost::begin(ToolPanelDefinition definition) {
                 choicesLayout->addWidget(button, static_cast<int>(index / 3),
                                          static_cast<int>(index % 3));
             }
-            connect(group, &QButtonGroup::idClicked, this, [this, parameterId = parameter.id](int index) {
-                if (definition_.choiceChanged)
-                    definition_.choiceChanged(parameterId, index);
-            });
+            connect(group, &QButtonGroup::idClicked, this,
+                    [this, parameterId = parameter.id](int index) {
+                        if (definition_.choiceChanged)
+                            definition_.choiceChanged(parameterId, index);
+                    });
             parameterLayout_->addRow(parameter.label, choices);
             continue;
         }
@@ -212,12 +243,18 @@ void ToolPanelHost::begin(ToolPanelDefinition definition) {
 }
 
 void ToolPanelHost::end() {
+    setErrorCommitHandler({});
     hide();
     clearParameters();
     definition_ = {};
 }
 
 void ToolPanelHost::setAcceptEnabled(bool enabled) { acceptButton_->setEnabled(enabled); }
+
+void ToolPanelHost::setErrorCommitHandler(std::function<void()> handler) {
+    errorCommitHandler_ = std::move(handler);
+    errorCommitButton_->setVisible(static_cast<bool>(errorCommitHandler_));
+}
 
 void ToolPanelHost::setGuidance(const QString& guidance) { guidance_->setText(guidance); }
 

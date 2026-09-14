@@ -166,7 +166,7 @@ Aktueller Paketstatus und Evidenz stehen im Manifest. A01 ist abgenommen; die ü
   1. Verworfene Recompute-/SetParameter-Ergebnisse durch eindeutige Resultate ersetzen.
   2. Failed von Conflicting/UnderConstrained trennen; Accept bei numerischem Fehler sperren, Editor offenhalten.
   3. Letzte gültige Szene mit Revision und stale-Status kennzeichnen; explizites Übernehmen reparierbarer bestehender Modelle unterstützen.
-- **Abnahme:** Injizierter Solver-/Kernel-Fehler führt weder zu Success noch zu unbemerktem Editorende. A-ERR-01 besteht; unabhängige Zweige werden nach R01 getrennt behandelt.
+- **Abnahme:** Injizierter Solver-/Kernel-Fehler führt weder zu Success noch zu unbemerktem Editorende. Die A-ERR-01-Fundamentstufe aus Kapitel 08 besteht; unabhängige Zweige folgen R01, gemeinsame Shell U10, Timeline M15 und produktiver Export/Gesamtnachweis M17/M18. Diese späteren Nachweise bleiben offen.
 - **Grenze:** Keine automatische Parameterkorrektur ohne sichtbare Benutzeraktion.
 
 ## D08 – OCAF-Backend und gemeinsame Persistenzversion nachweisen
@@ -182,6 +182,8 @@ Aktueller Paketstatus und Evidenz stehen im Manifest. A01 ist abgenommen; die ü
 
 ## D09 – Legacy-Migrationsschnittstelle vom Produktcodec trennen
 
+- **Umsetzung/Nachweis:** [D09](evidence/D09.md); Legacy-Import, Snapshot und Importbericht einschließlich Session-Lebensdauer.
+
 - **Voraussetzungen:** D02, D08.
 - **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08; `include/voelund/document/DocumentSerializer.hpp`, `src/document/DocumentSerializer.cpp`, `src/document/SketchConstraintSerialization.cpp`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
 - **Auftrag:**
@@ -192,6 +194,8 @@ Aktueller Paketstatus und Evidenz stehen im Manifest. A01 ist abgenommen; die ü
 - **Grenze:** Keine automatische Vergabe beliebiger Ersatzflächen.
 
 ## D10 – Geometrische Grundwerte und toleranzbewusste Validierung vereinheitlichen
+
+- **Fortschritt/Restaufträge:** [D10](evidence/D10.md); D10a beseitigt Richtungsüberlauf, D10b1 schützt nicht kanonische Altachsen; D10b2–d bleiben Voraussetzung der Gesamtabnahme.
 
 - **Voraussetzungen:** A06, D04.
 - **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08; `src/document/SketchGeometry.cpp`, `include/voelund/document/SketchGeometry.hpp`, `src/features/SketchEvaluation.cpp`, `src/kernel/ShapeOperations.cpp`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.

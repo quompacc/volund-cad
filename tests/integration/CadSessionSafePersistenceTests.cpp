@@ -1,4 +1,5 @@
 #include "../../src/platform/AtomicFileStoreDetail.hpp"
+#include "../CommandResultAssertions.hpp"
 #include <fstream>
 #include <iostream>
 #include <random>
@@ -61,7 +62,8 @@ void saveFailures(const fs::path& root) {
     platform::AtomicFileStore::write(target, "previous target bytes");
     auto dimensions = session.selectedBoxDimensions();
     dimensions.width += 1;
-    static_cast<void>(session.setSelectedBoxDimensions(dimensions));
+    static_cast<void>((session.editSelectedBoxDimensions(dimensions).status() ==
+                       voelund::application::CommandStatus::committed));
     const auto shape = session.currentShape();
     const auto selected = session.selectedFeature();
     const auto originalBytes = bytes(original);
@@ -88,7 +90,10 @@ void saveFailures(const fs::path& root) {
     session.saveDocument(target);
     require(!session.isModified() && session.currentFile() == fs::absolute(target),
             "save commit state");
-    require(session.undo() && session.isModified() && session.redo() && !session.isModified(),
+    require((session.undo().status() == voelund::application::CommandStatus::committed) &&
+                session.isModified() &&
+                (session.redo().status() == voelund::application::CommandStatus::committed) &&
+                !session.isModified(),
             "saved state does not follow history");
     for (const auto& entry : fs::directory_iterator(root))
         require(entry.path().filename().string().find(".voelund-save-") != 0,
@@ -101,7 +106,7 @@ void openFailuresAndUnicode(const fs::path& root) {
     application::CadSession session;
     session.saveDocument(path);
     const auto validBytes = bytes(path);
-    static_cast<void>(session.addBoxFeature());
+    static_cast<void>(voelund::test::requireCommittedFeature(session.createBoxFeature()));
     const auto selected = session.selectedFeature();
     const auto shape = session.currentShape();
     const auto count = session.features().size();
@@ -129,19 +134,24 @@ void brokenGeometryRoundtrip(const fs::path& root) {
     require(session.selectFeature(document::ModelDocument::initialCylinderId()), "select cylinder");
     auto parameters = session.selectedCylinderParameters();
     parameters.placement.translationZ = 10;
-    static_cast<void>(session.setSelectedCylinderParameters(parameters));
+    require(session.editSelectedCylinderParameters(
+                       parameters, application::ErrorDisposition::keepEditableErrors)
+                    .status() == application::CommandStatus::committedWithErrors,
+            "explicit error commit");
     require(session.featureStates().back().status == application::FeatureRuntimeStatus::error,
             "expected disconnected join error");
     const auto path = root / "editable-error.volund";
     session.saveDocument(path);
     application::CadSession loaded;
     loaded.loadDocument(path);
-    require(!loaded.isModified() && loaded.currentShape().IsNull() &&
+    require(!loaded.isModified() && loaded.displayShape().IsNull() &&
+                !loaded.sceneStatus().isCurrent() &&
                 loaded.featureStates().back().status == application::FeatureRuntimeStatus::error &&
                 loaded.selectedCylinderParameters().placement.translationZ == 10,
             "error document not restored safely");
     parameters.placement.translationZ = 0;
-    static_cast<void>(loaded.setSelectedCylinderParameters(parameters));
+    static_cast<void>((loaded.editSelectedCylinderParameters(parameters).status() ==
+                       voelund::application::CommandStatus::committed));
     require(!loaded.currentShape().IsNull() && loaded.isModified() &&
                 loaded.featureStates().back().status == application::FeatureRuntimeStatus::current,
             "loaded error not editable");

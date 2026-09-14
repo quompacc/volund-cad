@@ -740,13 +740,13 @@
         "Failed von Conflicting/UnderConstrained trennen; Accept bei numerischem Fehler sperren, Editor offenhalten.",
         "Letzte gültige Szene mit Revision und stale-Status kennzeichnen; explizites Übernehmen reparierbarer bestehender Modelle unterstützen."
       ],
-      "acceptance": "Injizierter Solver-/Kernel-Fehler führt weder zu Success noch zu unbemerktem Editorende. A-ERR-01 besteht; unabhängige Zweige werden nach R01 getrennt behandelt.",
+      "acceptance": "Injizierter Solver-/Kernel-Fehler führt weder zu Success noch zu unbemerktem Editorende. A-ERR-01-Fundament gemäß Kapitel 08 besteht. Unabhängige Zweige R01, gemeinsame Shell U10, Timeline M15 und Export/Gesamtnachweis M17/M18 bleiben separat verpflichtend.",
       "boundary": "Keine automatische Parameterkorrektur ohne sichtbare Benutzeraktion.",
-      "status": "planned",
+      "status": "done",
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
+      "evidence": ["evidence/D07.md", "evidence/D07f.md"],
       "completedCommit": null
     },
     {
@@ -770,11 +770,11 @@
       ],
       "acceptance": "Evidenz enthält beide Versionen, benötigte Buildmodule, Schreib-/Lesematrix und vollständigen Resultatvergleich. Ohne verfügbaren zweiten Build bleibt Persistenzumschaltung blockiert; kein behaupteter Kompatibilitätserfolg.",
       "boundary": "Kein Rewrite. Keine neue Kompressions-/Serialisierungsbibliothek. Experimentcode nicht ungeprüft als Produktionsbackend übernehmen.",
-      "status": "planned",
+      "status": "done",
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "design-and-proof",
-      "evidence": [],
+      "evidence": ["evidence/D08.md", "../adr/0008-ocaf-binary-persistence.md"],
       "completedCommit": null
     },
     {
@@ -787,7 +787,14 @@
       "files": [
         "include/voelund/document/DocumentSerializer.hpp",
         "src/document/DocumentSerializer.cpp",
-        "src/document/SketchConstraintSerialization.cpp"
+        "src/document/SketchConstraintSerialization.cpp",
+        "include/voelund/document/DocumentSnapshot.hpp",
+        "include/voelund/document/LegacyDocumentImporter.hpp",
+        "src/document/DocumentSnapshot.cpp",
+        "src/document/DocumentFormat.hpp",
+        "src/document/LegacyDocumentImporter.cpp",
+        "src/application/CadSessionPersistence.cpp",
+        "tests/integration/LegacyImportTests.cpp"
       ],
       "steps": [
         "Reader 1–16 hinter LegacyDocumentImporter bündeln; neutrales validiertes Snapshotmodell definieren.",
@@ -796,11 +803,11 @@
       ],
       "acceptance": "Alle D02-Fixtures bleiben lesbar; Import verändert Quelldateien nicht. Unbekanntes Format fällt nicht auf einen zufälligen älteren Parser zurück. Migration ist bei Wiederholung deterministisch.",
       "boundary": "Keine automatische Vergabe beliebiger Ersatzflächen.",
-      "status": "planned",
+      "status": "done",
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
+      "evidence": ["evidence/D09.md"],
       "completedCommit": null
     },
     {
@@ -823,11 +830,11 @@
       ],
       "acceptance": "A-NUM-01 besteht mit kleinen/großen Körpern, schiefen Achsen, NaN/Inf und fast verbundenen Endpunkten. Roundtrip ändert Skala nicht; kein pauschaler unkommentierter Überstand bleibt fachliche Voraussetzung.",
       "boundary": "Keine neue globale Toleranzvariable; Änderung der vorhandenen Maße nur mit expliziter Migration.",
-      "status": "planned",
+      "status": "in-progress",
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
+      "evidence": ["evidence/D10.md", "evidence/D10b.md", "evidence/D10b2.md"],
       "completedCommit": null
     },
     {
@@ -2288,7 +2295,7 @@
         "Edit/Suppress/Rollback-Befehle über Registry anbinden; Fehler/Blocked/Suppressed und aktuellen Cursor zeigen.",
         "Tastaturbedienung und lange Listen ohne starre Featureanzahl unterstützen."
       ],
-      "acceptance": "Timeline des gespeicherten Referenzteils entspricht tatsächlichen IDs/Reihenfolge. Rechtsklick/Edit und Undo funktionieren; keine festen Sketch/Pad/Fillet-Labels bleiben. A-HISTORY-01/02 über UI bestehen.",
+      "acceptance": "Timeline des gespeicherten Referenzteils entspricht tatsächlichen IDs/Reihenfolge. Rechtsklick/Edit und Undo funktionieren; keine festen Sketch/Pad/Fillet-Labels bleiben. A-HISTORY-01/02 über UI bestehen. A-ERR-01-Timeline-Stufe aus Kapitel 08 nachweisen.",
       "boundary": "Kein erneuter eigener Auswertungszustand in Timelinewidgets.",
       "status": "planned",
       "gate": "G3",
@@ -2342,7 +2349,7 @@
         "STEP lesen/schreiben mit Units, mehreren Bodies und vereinbarter Namensübernahme; keine externe Quelldatei als einzige Dokumentwahrheit.",
         "Import-/Exportfehler, Teilresultate und inkompatible Shapes in typed Result abbilden; exportiert wird nur explizit gültige Auswahl/Revision."
       ],
-      "acceptance": "A-STEP-01: eigenes Mehrkörperteil exportieren/importieren, Solidanzahl, Boundingbox und Volumen innerhalb Toleranz vergleichen. Inches-Fixture korrekt in mm; kaputte STEP-Datei liefert Fehler ohne aktives Dokument zu ersetzen.",
+      "acceptance": "A-STEP-01: eigenes Mehrkörperteil exportieren/importieren, Solidanzahl, Boundingbox und Volumen innerhalb Toleranz vergleichen. Inches-Fixture korrekt in mm; kaputte STEP-Datei liefert Fehler ohne aktives Dokument zu ersetzen. A-ERR-01: Export der fehlerhaften aktuellen Revision trotz vorhandener letzter gültiger Darstellung ablehnen.",
       "boundary": "Kein Versprechen einer parametrischen Timeline aus STEP; Assemblystruktur/XDE-Ausbau separat X01.",
       "status": "planned",
       "gate": "G3",
@@ -2369,7 +2376,7 @@
         "Fehler, Cancel und Save/Open eines importierten Features vollständig durchführen.",
         "Mechanische Referenzmodelle aus Kapitel08 über produktive Shell erstellen, parametrisch ändern und austauschen; G3-Bericht schreiben."
       ],
-      "acceptance": "A-PART-01/02, A-STEP-01, A-HISTORY-01/02, A-UI-01 komplett bestanden. Handbuch nennt tatsächlich umgesetzte Varianten und Grenzen. Keine aktive Attrappe im v1-Umfang.",
+      "acceptance": "A-PART-01/02, A-STEP-01, A-HISTORY-01/02, A-UI-01 komplett bestanden. Handbuch nennt tatsächlich umgesetzte Varianten und Grenzen. Keine aktive Attrappe im v1-Umfang. A-ERR-01 vollständig über gemeinsame Shell, Timeline, Repair/Undo und produktiven Exportpfad abnehmen.",
       "boundary": "G3 ist noch keine Plattform-/Releasefreigabe; L-Pakete bleiben Pflicht.",
       "status": "planned",
       "gate": "G3",

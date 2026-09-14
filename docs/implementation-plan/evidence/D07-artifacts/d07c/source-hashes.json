@@ -1,0 +1,212 @@
+[
+  {
+    "path": "include/voelund/application/CadSession.hpp",
+    "sha256": "ec7b5584b594513c6a131229680a3c86d2782df2f658d85125f99f3abc2db057",
+    "freebsdSha256": "ec7b5584b594513c6a131229680a3c86d2782df2f658d85125f99f3abc2db057",
+    "matches": true
+  },
+  {
+    "path": "include/voelund/application/CommandResult.hpp",
+    "sha256": "3123c1b0c12ab5cb3048a8f38d1b7745ec6c5d8718f053e7a42cb3128ecf8d02",
+    "freebsdSha256": "3123c1b0c12ab5cb3048a8f38d1b7745ec6c5d8718f053e7a42cb3128ecf8d02",
+    "matches": true
+  },
+  {
+    "path": "include/voelund/application/SketchEditorSession.hpp",
+    "sha256": "c93966101e1e0548544636759c7416f115c482905a913869dbf8c213d209421c",
+    "freebsdSha256": "c93966101e1e0548544636759c7416f115c482905a913869dbf8c213d209421c",
+    "matches": true
+  },
+  {
+    "path": "include/voelund/features/GeometryEvaluationError.hpp",
+    "sha256": "b488b78fbf9f6a247f4908166adb784980640012ec17ee05ca4be845630742f1",
+    "freebsdSha256": "b488b78fbf9f6a247f4908166adb784980640012ec17ee05ca4be845630742f1",
+    "matches": true
+  },
+  {
+    "path": "src/application/CadSession.cpp",
+    "sha256": "923cd7e066aabff081c3c633717ca9fbe755cd8efba28cf867c45de173ca0f1d",
+    "freebsdSha256": "923cd7e066aabff081c3c633717ca9fbe755cd8efba28cf867c45de173ca0f1d",
+    "matches": true
+  },
+  {
+    "path": "src/application/CadSessionCreationCompatibility.cpp",
+    "sha256": "d5ef3a9c543fd454e320a22344a9e5d1892a5352fb6c3570ac1165df968da37c",
+    "freebsdSha256": "d5ef3a9c543fd454e320a22344a9e5d1892a5352fb6c3570ac1165df968da37c",
+    "matches": true
+  },
+  {
+    "path": "src/application/CadSessionEditCompatibility.cpp",
+    "sha256": "77e0b7e6e0e7b944de885db8316329f69c8d9e28f7ba398187de5e109e975d86",
+    "freebsdSha256": "77e0b7e6e0e7b944de885db8316329f69c8d9e28f7ba398187de5e109e975d86",
+    "matches": true
+  },
+  {
+    "path": "src/application/CadSessionSketchProfiles.cpp",
+    "sha256": "8738570fd246d83d28b24f157db51025c06f82d1c95d1672c2ea4da6556bd671",
+    "freebsdSha256": "8738570fd246d83d28b24f157db51025c06f82d1c95d1672c2ea4da6556bd671",
+    "matches": true
+  },
+  {
+    "path": "src/application/CadSessionTransactions.cpp",
+    "sha256": "6eeee6446c1c8eb96b0e7478477ff433e0bfbf12ea0fb124ed54545e1190762f",
+    "freebsdSha256": "6eeee6446c1c8eb96b0e7478477ff433e0bfbf12ea0fb124ed54545e1190762f",
+    "matches": true
+  },
+  {
+    "path": "src/application/CMakeLists.txt",
+    "sha256": "5abfe57633ba04a8d30334ba37e90193865ed22bd143690b1d3fdd17d83945ae",
+    "freebsdSha256": "5abfe57633ba04a8d30334ba37e90193865ed22bd143690b1d3fdd17d83945ae",
+    "matches": true
+  },
+  {
+    "path": "src/application/SketchEditorAcceptance.cpp",
+    "sha256": "d04ba338c6384c8c3a023a86c95d851fcd103195e584e5168fbebd652385bff5",
+    "freebsdSha256": "d04ba338c6384c8c3a023a86c95d851fcd103195e584e5168fbebd652385bff5",
+    "matches": true
+  },
+  {
+    "path": "src/application/SketchEditorSession.cpp",
+    "sha256": "0652ac690f540ee91ddccc2a1bd90e8d400d3db1f08adc15faf4200564808dee",
+    "freebsdSha256": "0652ac690f540ee91ddccc2a1bd90e8d400d3db1f08adc15faf4200564808dee",
+    "matches": true
+  },
+  {
+    "path": "src/desktop/CommandFeedback.hpp",
+    "sha256": "2769f519dd63387a234afd5d356542ea1cf75055ddf063c39aafb25918cde8b8",
+    "freebsdSha256": "2769f519dd63387a234afd5d356542ea1cf75055ddf063c39aafb25918cde8b8",
+    "matches": true
+  },
+  {
+    "path": "src/desktop/FeaturePropertiesPanel.cpp",
+    "sha256": "7e904e780bb4939eb1e596e6719e05691e9a72ec9820009f8528498962c3db8f",
+    "freebsdSha256": "7e904e780bb4939eb1e596e6719e05691e9a72ec9820009f8528498962c3db8f",
+    "matches": true
+  },
+  {
+    "path": "src/desktop/FeaturePropertiesPanel.hpp",
+    "sha256": "4df7415a0277cad740afd955204f635e0d1b382cc51082b26a4ab2c478c75a9a",
+    "freebsdSha256": "4df7415a0277cad740afd955204f635e0d1b382cc51082b26a4ab2c478c75a9a",
+    "matches": true
+  },
+  {
+    "path": "src/desktop/MainWindow.cpp",
+    "sha256": "fc3bcd8fd19b9a623536f79e5ea516d17f893c9bba965dd5a655d92e1f3e6893",
+    "freebsdSha256": "fc3bcd8fd19b9a623536f79e5ea516d17f893c9bba965dd5a655d92e1f3e6893",
+    "matches": true
+  },
+  {
+    "path": "src/desktop/SketchEditorConstraintState.cpp",
+    "sha256": "7a216e356a2738e60bf1bf6e476674e7ba805cbeb1253e9f26c73898ae34bcf3",
+    "freebsdSha256": "7a216e356a2738e60bf1bf6e476674e7ba805cbeb1253e9f26c73898ae34bcf3",
+    "matches": true
+  },
+  {
+    "path": "src/desktop/SketchEditorToolController.cpp",
+    "sha256": "332b9ebbc43dedb8f885109928297faf72a176ff802bcfe88015b956eb8badec",
+    "freebsdSha256": "332b9ebbc43dedb8f885109928297faf72a176ff802bcfe88015b956eb8badec",
+    "matches": true
+  },
+  {
+    "path": "src/desktop/SketchEditorToolController.hpp",
+    "sha256": "582ce874b2bbcd7ed0dc6369295ffc36cba4331164229bf209090ca62c6468e7",
+    "freebsdSha256": "582ce874b2bbcd7ed0dc6369295ffc36cba4331164229bf209090ca62c6468e7",
+    "matches": true
+  },
+  {
+    "path": "src/desktop/SketchExtrusionToolController.cpp",
+    "sha256": "4079b9dd195e9ee599f961346fe792e36be9a023a2d3851c54c5f6b7acdee714",
+    "freebsdSha256": "4079b9dd195e9ee599f961346fe792e36be9a023a2d3851c54c5f6b7acdee714",
+    "matches": true
+  },
+  {
+    "path": "src/features/CylinderFeature.cpp",
+    "sha256": "9873c9845323e6dc342bfce64a415762cfe6f05bc3607333d587361cbfc96f56",
+    "freebsdSha256": "9873c9845323e6dc342bfce64a415762cfe6f05bc3607333d587361cbfc96f56",
+    "matches": true
+  },
+  {
+    "path": "src/features/FeatureEvaluationDetail.hpp",
+    "sha256": "4dfd7cd3d7988f00843ac8b66d49bdf9d54961bbb1c7b36418888c5c1f51dd7e",
+    "freebsdSha256": "4dfd7cd3d7988f00843ac8b66d49bdf9d54961bbb1c7b36418888c5c1f51dd7e",
+    "matches": true
+  },
+  {
+    "path": "src/features/FeatureGraph.cpp",
+    "sha256": "672c701ccc3864842c7186a68a9b1bbf2417775f2e6759829c54e56dfc510573",
+    "freebsdSha256": "672c701ccc3864842c7186a68a9b1bbf2417775f2e6759829c54e56dfc510573",
+    "matches": true
+  },
+  {
+    "path": "src/features/SketchEvaluation.cpp",
+    "sha256": "032b3e65a1960990710c1373d76da8b15b675b1f25fd8b5909ebf29a3820ea8c",
+    "freebsdSha256": "032b3e65a1960990710c1373d76da8b15b675b1f25fd8b5909ebf29a3820ea8c",
+    "matches": true
+  },
+  {
+    "path": "src/kernel/ShapeFactory.cpp",
+    "sha256": "5e4ac0b5eaf8c521995c94f4be2fab3510dd8005bc4c05fe7b3f7ec50da650bc",
+    "freebsdSha256": "5e4ac0b5eaf8c521995c94f4be2fab3510dd8005bc4c05fe7b3f7ec50da650bc",
+    "matches": true
+  },
+  {
+    "path": "src/kernel/ShapeOperations.cpp",
+    "sha256": "7e823cb39c9cb69de96cf657a8d0e20cdea97cdcd8f3b2155cd607336ac8cea1",
+    "freebsdSha256": "7e823cb39c9cb69de96cf657a8d0e20cdea97cdcd8f3b2155cd607336ac8cea1",
+    "matches": true
+  },
+  {
+    "path": "tests/CMakeLists.txt",
+    "sha256": "916fe4114ec0db926a31bc59c3663638fe57dd5b165158e5968e52806a992d05",
+    "freebsdSha256": "916fe4114ec0db926a31bc59c3663638fe57dd5b165158e5968e52806a992d05",
+    "matches": true
+  },
+  {
+    "path": "tests/desktop/ParameterFailureTests.cpp",
+    "sha256": "9dad6e6051d028b3ee398f09daabd3b7b34abdc0e754a0e2c60d980c41438e92",
+    "freebsdSha256": "9dad6e6051d028b3ee398f09daabd3b7b34abdc0e754a0e2c60d980c41438e92",
+    "matches": true
+  },
+  {
+    "path": "tests/desktop/SketchCommandFailureTests.cpp",
+    "sha256": "18cd0f972c21c997cb03e35b5465a372ea78feb4c0ca4ce0c1eec9906bc194f4",
+    "freebsdSha256": "18cd0f972c21c997cb03e35b5465a372ea78feb4c0ca4ce0c1eec9906bc194f4",
+    "matches": true
+  },
+  {
+    "path": "tests/desktop/SketchSolverGateTests.cpp",
+    "sha256": "ea077c600c302467588eb9f3d65b95f0f91854b08a0e184144e5d31bdb1695b5",
+    "freebsdSha256": "ea077c600c302467588eb9f3d65b95f0f91854b08a0e184144e5d31bdb1695b5",
+    "matches": true
+  },
+  {
+    "path": "tests/integration/CadSessionCreationResultTests.cpp",
+    "sha256": "7c0d398c79784339ba69fd48cdca3a6535b59bfa2b9ee389a455eca464fab248",
+    "freebsdSha256": "7c0d398c79784339ba69fd48cdca3a6535b59bfa2b9ee389a455eca464fab248",
+    "matches": true
+  },
+  {
+    "path": "tests/integration/CadSessionFailureBoundaryTests.cpp",
+    "sha256": "c96141536a38f06867d257ba7b09ca1696b9aee2bea2d83cd974cacd3a69eba4",
+    "freebsdSha256": "c96141536a38f06867d257ba7b09ca1696b9aee2bea2d83cd974cacd3a69eba4",
+    "matches": true
+  },
+  {
+    "path": "tests/integration/CadSessionHistoryTests.cpp",
+    "sha256": "0dd0466087160bc76d2c9395798358ec6223f028806ce09e24cb93e6d044a03b",
+    "freebsdSha256": "0dd0466087160bc76d2c9395798358ec6223f028806ce09e24cb93e6d044a03b",
+    "matches": true
+  },
+  {
+    "path": "tests/integration/CadSessionSafePersistenceTests.cpp",
+    "sha256": "cad56b74983afd80c9faf253bd05a58f568c2df457125a6b6badebf6ceacfd4d",
+    "freebsdSha256": "cad56b74983afd80c9faf253bd05a58f568c2df457125a6b6badebf6ceacfd4d",
+    "matches": true
+  },
+  {
+    "path": "tests/integration/SketchEditorSessionTests.cpp",
+    "sha256": "e4ac743bfba417ae1dc7810d5f15c4bc98857fe533748ffb4a9bc5e1a56c9a3e",
+    "freebsdSha256": "e4ac743bfba417ae1dc7810d5f15c4bc98857fe533748ffb4a9bc5e1a56c9a3e",
+    "matches": true
+  }
+]

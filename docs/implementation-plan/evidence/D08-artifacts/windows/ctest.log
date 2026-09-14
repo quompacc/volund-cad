@@ -1,0 +1,13 @@
+Test project V:/build/d08-ocaf-windows
+    Start 1: ocaf.create
+1/4 Test #1: ocaf.create ......................   Passed    0.27 sec
+    Start 2: ocaf.read_edit
+2/4 Test #2: ocaf.read_edit ...................   Passed    0.02 sec
+    Start 3: ocaf.reread
+3/4 Test #3: ocaf.reread ......................   Passed    0.02 sec
+    Start 4: ocaf.negative
+4/4 Test #4: ocaf.negative ....................   Passed    0.14 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Total Test time (real) =   0.48 sec

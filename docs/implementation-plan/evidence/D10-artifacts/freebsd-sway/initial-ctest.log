@@ -1,0 +1,199 @@
+Test project /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt
+      Start  1: desktop.viewport_startup.native_wayland
+ 1/43 Test  #1: desktop.viewport_startup.native_wayland .....   Passed    0.75 sec
+      Start  2: desktop.viewport_startup.uninitialized
+ 2/43 Test  #2: desktop.viewport_startup.uninitialized ......   Passed    0.21 sec
+      Start  3: desktop.ui_preview_startup.native_wayland
+ 3/43 Test  #3: desktop.ui_preview_startup.native_wayland ...   Passed    0.69 sec
+      Start  4: desktop.ui_preview_startup.uninitialized
+ 4/43 Test  #4: desktop.ui_preview_startup.uninitialized ....   Passed    0.21 sec
+      Start  5: document.numeric_validation
+ 5/43 Test  #5: document.numeric_validation .................***Failed    0.02 sec
+Direction magnitude must be finite and exceed its minimum
+
+      Start  6: document.legacy_import
+ 6/43 Test  #6: document.legacy_import ......................   Passed    0.07 sec
+      Start  7: application.command_input
+ 7/43 Test  #7: application.command_input ...................   Passed    0.16 sec
+      Start  8: application.scene_status
+ 8/43 Test  #8: application.scene_status ....................   Passed    0.16 sec
+      Start  9: application.failure_boundaries
+ 9/43 Test  #9: application.failure_boundaries ..............   Passed    0.61 sec
+      Start 10: application.creation_results
+10/43 Test #10: application.creation_results ................   Passed    0.23 sec
+      Start 11: application.command_transactions
+11/43 Test #11: application.command_transactions ............   Passed    0.24 sec
+      Start 12: document.transactions
+12/43 Test #12: document.transactions .......................   Passed    0.02 sec
+      Start 13: document.transaction_allocation_failures
+13/43 Test #13: document.transaction_allocation_failures ....   Passed    0.02 sec
+      Start 14: application.command_contract_compound
+14/43 Test #14: application.command_contract_compound .......   Passed    0.02 sec
+      Start 15: application.command_contract_errors
+15/43 Test #15: application.command_contract_errors .........   Passed    0.02 sec
+      Start 16: application.safe_persistence
+16/43 Test #16: application.safe_persistence ................   Passed    0.23 sec
+      Start 17: document.parser_limits_and_versions
+17/43 Test #17: document.parser_limits_and_versions .........   Passed    9.43 sec
+      Start 18: platform.atomic_file_store
+18/43 Test #18: platform.atomic_file_store ..................   Passed    0.04 sec
+      Start 19: kernel.shape_factory
+19/43 Test #19: kernel.shape_factory ........................***Failed    0.02 sec
+Zero axis validation test failed
+
+      Start 20: document.history
+20/43 Test #20: document.history ............................   Passed    0.02 sec
+      Start 21: features.sketch_profiles
+21/43 Test #21: features.sketch_profiles ....................   Passed    0.02 sec
+      Start 22: features.planegcs_solver
+22/43 Test #22: features.planegcs_solver ....................   Passed    0.00 sec
+      Start 23: features.sketch_constraint_adapter
+23/43 Test #23: features.sketch_constraint_adapter ..........   Passed    0.02 sec
+      Start 24: application.recompute_history
+24/43 Test #24: application.recompute_history ...............   Passed    1.29 sec
+      Start 25: desktop.sketch_command_failure
+25/43 Test #25: desktop.sketch_command_failure ..............   Passed    0.23 sec
+      Start 26: desktop.preview_command_failures
+26/43 Test #26: desktop.preview_command_failures ............   Passed    0.16 sec
+      Start 27: desktop.feature_status
+27/43 Test #27: desktop.feature_status ......................   Passed    0.45 sec
+      Start 28: desktop.parameter_failures
+28/43 Test #28: desktop.parameter_failures ..................   Passed    0.35 sec
+      Start 29: desktop.sketch_solver_gate
+29/43 Test #29: desktop.sketch_solver_gate ..................   Passed    0.31 sec
+      Start 30: desktop.document_actions
+30/43 Test #30: desktop.document_actions ....................   Passed    0.60 sec
+      Start 31: desktop.viewport_lifecycle_qt
+31/43 Test #31: desktop.viewport_lifecycle_qt ...............   Passed    1.12 sec
+      Start 32: application.sketch_editor_flow
+32/43 Test #32: application.sketch_editor_flow ..............   Passed    0.56 sec
+      Start 33: application.sketch_construction
+33/43 Test #33: application.sketch_construction .............   Passed    0.08 sec
+      Start 34: application.sketch_circle_constraints
+34/43 Test #34: application.sketch_circle_constraints .......   Passed    0.06 sec
+      Start 35: application.sketch_alignments
+35/43 Test #35: application.sketch_alignments ...............   Passed    0.06 sec
+      Start 36: application.sketch_fix_distance
+36/43 Test #36: application.sketch_fix_distance .............   Passed    0.04 sec
+      Start 37: application.sketch_basic_tools
+37/43 Test #37: application.sketch_basic_tools ..............   Passed    0.14 sec
+      Start 38: application.sketch_slot_dimensions
+38/43 Test #38: application.sketch_slot_dimensions ..........   Passed    0.10 sec
+      Start 39: workspaces.module_registry
+39/43 Test #39: workspaces.module_registry ..................   Passed    0.00 sec
+      Start 40: architecture.source_limits
+40/43 Test #40: architecture.source_limits ..................   Passed    0.04 sec
+      Start 41: architecture.source_limits_regression
+41/43 Test #41: architecture.source_limits_regression .......   Passed    0.09 sec
+      Start 42: architecture.ctest_label_runner
+42/43 Test #42: architecture.ctest_label_runner .............***Failed    9.53 sec
+CMake Error at /home/eduard/src/voelund-p04-20260913/tests/cmake/RunLabeledTests.cmake:36 (message):
+  CTest label 'unit' failed:
+
+  Test project
+  /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt
+
+        Start 12: document.transactions
+   1/10 Test #12: document.transactions ......................   Passed    0.02 sec
+        Start 13: document.transaction_allocation_failures
+   2/10 Test #13: document.transaction_allocation_failures ...   Passed    0.02 sec
+        Start 17: document.parser_limits_and_versions
+   3/10 Test #17: document.parser_limits_and_versions ........   Passed    9.36 sec
+        Start 18: platform.atomic_file_store
+   4/10 Test #18: platform.atomic_file_store .................   Passed    0.03 sec
+        Start 19: kernel.shape_factory
+   5/10 Test #19: kernel.shape_factory .......................***Failed    0.02 sec
+
+  Zero axis validation test failed
+
+
+
+        Start 20: document.history
+   6/10 Test #20: document.history ...........................   Passed    0.02 sec
+        Start 21: features.sketch_profiles
+   7/10 Test #21: features.sketch_profiles ...................   Passed    0.02 sec
+        Start 22: features.planegcs_solver
+   8/10 Test #22: features.planegcs_solver ...................   Passed    0.00 sec
+        Start 23: features.sketch_constraint_adapter
+   9/10 Test #23: features.sketch_constraint_adapter .........   Passed    0.02 sec
+        Start 39: workspaces.module_registry
+
+  10/10 Test #39: workspaces.module_registry .................  Passed 0.00
+  sec
+
+
+
+  90% tests passed, 1 tests failed out of 10
+
+
+
+  Label Time Summary:
+
+  allocation = 0.02 sec*proc (1 test)
+
+  document = 9.41 sec*proc (4 tests)
+
+  features = 0.04 sec*proc (3 tests)
+
+  kernel = 0.02 sec*proc (1 test)
+
+  platform = 0.03 sec*proc (1 test)
+
+  regression = 9.43 sec*proc (4 tests)
+
+  unit = 9.51 sec*proc (10 tests)
+
+  workspaces = 0.00 sec*proc (1 test)
+
+
+
+  Total Test time (real) = 9.51 sec
+
+
+
+  The following tests FAILED:
+
+  	 19 - kernel.shape_factory (Failed) kernel unit
+
+
+
+  Errors while running CTest
+
+
+
+
+      Start 43: architecture.desktop_smoke_runner
+43/43 Test #43: architecture.desktop_smoke_runner ...........   Passed    1.07 sec
+
+93% tests passed, 3 tests failed out of 43
+
+Label Time Summary:
+allocation      =   0.02 sec*proc (1 test)
+application     =   3.75 sec*proc (15 tests)
+architecture    =  10.73 sec*proc (4 tests)
+contract        =   0.03 sec*proc (2 tests)
+desktop         =   5.08 sec*proc (11 tests)
+document        =  11.79 sec*proc (13 tests)
+features        =   0.04 sec*proc (3 tests)
+freebsd         =   2.55 sec*proc (3 tests)
+integration     =   4.08 sec*proc (18 tests)
+kernel          =   0.04 sec*proc (2 tests)
+lifecycle       =   1.12 sec*proc (1 test)
+negative        =   0.42 sec*proc (2 tests)
+platform        =   1.90 sec*proc (5 tests)
+qt-opengl       =   1.12 sec*proc (1 test)
+regression      =  24.58 sec*proc (25 tests)
+sketch          =   1.51 sec*proc (5 tests)
+ui              =   0.69 sec*proc (1 test)
+unit            =   9.58 sec*proc (10 tests)
+viewport        =   1.12 sec*proc (1 test)
+wayland         =   2.55 sec*proc (3 tests)
+workspaces      =   0.00 sec*proc (1 test)
+
+Total Test time (real) =  29.48 sec
+
+The following tests FAILED:
+	  5 - document.numeric_validation (Failed)              document integration kernel regression
+	 19 - kernel.shape_factory (Failed)                     kernel unit
+	 42 - architecture.ctest_label_runner (Failed)          architecture regression
+Errors while running CTest

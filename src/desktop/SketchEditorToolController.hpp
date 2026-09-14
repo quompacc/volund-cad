@@ -32,6 +32,7 @@ class SketchEditorToolController final {
     void cancel();
 
   private:
+    friend class SketchSolverGateTestAccess;
     void setTool(int index);
     void applyTranslation(const std::string& id, double value);
     void applyElementDimension(const std::string& id, double value);
@@ -48,7 +49,7 @@ class SketchEditorToolController final {
     void syncConstraintState();
     void showPanel();
     void refreshPresentation();
-    void accept();
+    void accept(application::ErrorDisposition disposition = application::ErrorDisposition::reject);
     void stepBack();
 
     application::CadSession& session_;

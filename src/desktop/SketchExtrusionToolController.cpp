@@ -1,4 +1,5 @@
 #include "SketchExtrusionToolController.hpp"
+#include "CommandFeedback.hpp"
 
 #include "ToolPanelHost.hpp"
 
@@ -94,8 +95,16 @@ void SketchExtrusionToolController::setDistance(double distance) {
 
 void SketchExtrusionToolController::accept() {
     if (profileSketch_.has_value()) {
-        static_cast<void>(
-            session_.addSketchProfileExtrusion(*profileSketch_, profileIds_, distance_));
+        if (!runCommand(
+                [this] {
+                    return session_.createSketchProfileExtrusion(*profileSketch_, profileIds_,
+                                                                 distance_);
+                },
+                [this](const QString& message) {
+                    panel_.setGuidance(message);
+                    statusChanged_(message);
+                }))
+            return;
         panel_.end();
         profileSketch_.reset();
         profileIds_.clear();
@@ -114,8 +123,16 @@ void SketchExtrusionToolController::accept() {
         support.xDirectionX, support.xDirectionY, support.xDirectionZ};
     const document::SketchRectangle rectangle{result_->firstX, result_->firstY, result_->secondX,
                                               result_->secondY};
-    static_cast<void>(session_.addSketchExtrusion(document::FeatureId{support.bodyId}, plane,
-                                                  rectangle, distance_));
+    if (!runCommand(
+            [&] {
+                return session_.createSketchExtrusion(document::FeatureId{support.bodyId}, plane,
+                                                      rectangle, distance_);
+            },
+            [this](const QString& message) {
+                panel_.setGuidance(message);
+                statusChanged_(message);
+            }))
+        return;
     viewport_.cancelSketch();
     panel_.end();
     result_.reset();

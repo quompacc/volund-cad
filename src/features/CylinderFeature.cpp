@@ -1,54 +1,40 @@
 #include <voelund/features/CylinderFeature.hpp>
+#include <voelund/features/GeometryEvaluationError.hpp>
 
 #include <voelund/document/ModelDocument.hpp>
 #include <voelund/kernel/ShapeFactory.hpp>
 
-#include <Bnd_Box.hxx>
 #include <BRepBndLib.hxx>
+#include <Bnd_Box.hxx>
 
 #include <algorithm>
 #include <stdexcept>
 
 namespace voelund::features {
 
-CylinderFeature::CylinderFeature(document::FeatureId featureId) noexcept
-    : featureId_(featureId)
-{
-}
+CylinderFeature::CylinderFeature(document::FeatureId featureId) noexcept : featureId_(featureId) {}
 
-TopoDS_Shape CylinderFeature::evaluateTool(
-    const document::ModelDocument& document,
-    const TopoDS_Shape& inputShape,
-    bool applyPlacement) const
-{
+TopoDS_Shape CylinderFeature::evaluateTool(const document::ModelDocument& document,
+                                           const TopoDS_Shape& inputShape,
+                                           bool applyPlacement) const {
     const document::CylinderParameters& cylinder = document.cylinderParameters(featureId_);
     const gp_Pnt origin = attachmentOrigin(inputShape, cylinder.height);
-    const kernel::CylinderDefinition definition{
-        cylinder.radius,
-        cylinder.height,
-        origin.X(),
-        origin.Y(),
-        origin.Z()};
+    const kernel::CylinderDefinition definition{cylinder.radius, cylinder.height, origin.X(),
+                                                origin.Y(), origin.Z()};
     const TopoDS_Shape cylinderShape = kernel::ShapeFactory::makeCylinder(definition);
     if (!applyPlacement) {
         return cylinderShape;
     }
-    return kernel::ShapeFactory::applyTransform(
-        cylinderShape,
-        origin.X(),
-        origin.Y(),
-        origin.Z() + cylinder.height * 0.5,
-        cylinder.placement);
+    return kernel::ShapeFactory::applyTransform(cylinderShape, origin.X(), origin.Y(),
+                                                origin.Z() + cylinder.height * 0.5,
+                                                cylinder.placement);
 }
 
-gp_Pnt CylinderFeature::attachmentOrigin(
-    const TopoDS_Shape& inputShape,
-    double cylinderHeight)
-{
+gp_Pnt CylinderFeature::attachmentOrigin(const TopoDS_Shape& inputShape, double cylinderHeight) {
     Bnd_Box bounds;
     BRepBndLib::AddOptimal(inputShape, bounds, false, false);
     if (bounds.IsVoid()) {
-        throw std::runtime_error("Cylinder input feature has no geometry");
+        throw GeometryEvaluationError("Cylinder input feature has no geometry");
     }
     double minimumX = 0.0;
     double minimumY = 0.0;

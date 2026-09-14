@@ -1,3 +1,4 @@
+#include "../CommandResultAssertions.hpp"
 #include <voelund/application/CadSession.hpp>
 #include <voelund/application/SketchEditorSession.hpp>
 
@@ -44,7 +45,7 @@ bool coincidencesHold(const voelund::application::SketchEditorSession& editor) {
 bool preservesSlotDimensions(double angle) {
     voelund::application::CadSession session;
     session.newDocument();
-    const auto support = session.addBoxFeature();
+    const auto support = voelund::test::requireCommittedFeature(session.createBoxFeature());
     const voelund::document::SketchPlane plane{0, 0, 40, 0, 0, 1, 1, 0, 0};
     voelund::application::SketchEditorSession editor(session, support, plane);
     editor.setTool(voelund::application::SketchDrawingTool::slot);

@@ -1,0 +1,28 @@
+[1/44] Scanning V:\src\application\CadSessionHistory.cpp for CXX dependencies
+[2/44] Generating CXX dyndep file src\application\CMakeFiles\voelund_application.dir\CXX.dd
+[3/28] Scanning V:\tests\desktop\ParameterFailureTests.cpp for CXX dependencies
+[4/28] Generating CXX dyndep file tests\CMakeFiles\voelund_parameter_failure_tests.dir\CXX.dd
+[5/28] Building CXX object src\application\CMakeFiles\voelund_application.dir\CadSessionHistory.cpp.obj
+[6/28] Building CXX object tests\CMakeFiles\voelund_parameter_failure_tests.dir\desktop\ParameterFailureTests.cpp.obj
+[7/28] Linking CXX static library src\application\voelund_application.lib
+[8/28] Linking CXX executable tests\voelund_scene_status_tests.exe
+[9/28] Linking CXX executable tests\voelund_session_creation_tests.exe
+[10/28] Linking CXX executable tests\voelund_session_failure_tests.exe
+[11/28] Linking CXX executable tests\voelund_command_input_tests.exe
+[12/28] Linking CXX executable tests\voelund_command_contract_tests.exe
+[13/28] Linking CXX executable apps\voelund-ui-preview\voelund-ui-preview.exe; Deploying the Qt runtime for the UI preview; Deploying the Qt OpenGL runtime for the UI preview
+[14/28] Linking CXX executable apps\voelund-cad\voelund-cad.exe; Deploying the minimal Qt runtime; Deploying the Qt OpenGL runtime
+[15/28] Linking CXX executable tests\voelund_session_transaction_tests.exe
+[16/28] Linking CXX executable tests\voelund_safe_persistence_tests.exe
+[17/28] Linking CXX executable tests\voelund_application_tests.exe
+[18/28] Linking CXX executable tests\voelund_sketch_command_failure_tests.exe
+[19/28] Linking CXX executable tests\voelund_sketch_editor_tests.exe
+[20/28] Linking CXX executable tests\voelund_document_actions_tests.exe
+[21/28] Linking CXX executable tests\voelund_sketch_solver_gate_tests.exe
+[22/28] Linking CXX executable tests\voelund_parameter_failure_tests.exe
+[23/28] Linking CXX executable tests\voelund_sketch_construction_tests.exe
+[24/28] Linking CXX executable tests\voelund_sketch_circle_constraint_tests.exe
+[25/28] Linking CXX executable tests\voelund_sketch_alignment_tests.exe
+[26/28] Linking CXX executable tests\voelund_sketch_fix_distance_tests.exe
+[27/28] Linking CXX executable tests\voelund_sketch_basic_tools_tests.exe
+[28/28] Linking CXX executable tests\voelund_sketch_slot_tests.exe

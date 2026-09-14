@@ -1,4 +1,5 @@
 #include "DocumentSerializationDetail.hpp"
+#include <voelund/kernel/NumericValidation.hpp>
 
 #include <algorithm>
 #include <charconv>
@@ -65,19 +66,7 @@ void validateTransform(const kernel::RigidTransform& transform) {
             invalidDocument("placement contains a non-finite value");
 }
 
-bool positiveFinite(double value) { return std::isfinite(value) && value > 0.0; }
-
-void validatePlaneDirections(const SketchPlane& plane) {
-    const double normal = std::hypot(plane.normalX, plane.normalY, plane.normalZ);
-    const double direction = std::hypot(plane.xDirectionX, plane.xDirectionY, plane.xDirectionZ);
-    if (!positiveFinite(normal) || !positiveFinite(direction))
-        invalidDocument("invalid sketch direction magnitude");
-    const double dot = (plane.normalX / normal) * (plane.xDirectionX / direction) +
-                       (plane.normalY / normal) * (plane.xDirectionY / direction) +
-                       (plane.normalZ / normal) * (plane.xDirectionZ / direction);
-    if (!std::isfinite(dot) || std::abs(dot) > 1e-8)
-        invalidDocument("sketch plane directions must be perpendicular");
-}
+bool positiveFinite(double value) { return kernel::positiveFinite(value); }
 
 void validateConstraintVersion(SketchConstraintKind kind, std::uint64_t version) {
     using Kind = SketchConstraintKind;

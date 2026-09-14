@@ -66,6 +66,7 @@ struct SketchParameters final {
 };
 
 void validateSketchParameters(const SketchParameters& parameters);
+void validateCylinderParameters(const CylinderParameters& parameters);
 
 struct ExtrusionParameters final {
     double distance;
@@ -127,6 +128,7 @@ class ModelDocument final {
 
   private:
     friend class DocumentSerializer;
+    friend class DocumentSnapshot;
     friend class DocumentTransaction;
 
     explicit ModelDocument(bool createStarterFeatures);

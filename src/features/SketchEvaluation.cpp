@@ -1,3 +1,5 @@
+#include "SketchPlaneGuard.hpp"
+#include <voelund/features/GeometryEvaluationError.hpp>
 #include <voelund/features/SketchEvaluation.hpp>
 
 #include <voelund/features/SketchProfiles.hpp>
@@ -120,8 +122,8 @@ TopoDS_Edge ellipseEdge(const document::SketchParameters& sketch,
     const gp_Dir planeY = normal.Crossed(planeX);
     const gp_Dir majorDirection(gp_Vec(planeX) * std::cos(ellipse.rotation) +
                                 gp_Vec(planeY) * std::sin(ellipse.rotation));
-    const Handle(Geom_Ellipse) curve = new Geom_Ellipse(
-        gp_Ax2(center, normal, majorDirection), ellipse.majorRadius, ellipse.minorRadius);
+    const Handle(Geom_Ellipse) curve = new Geom_Ellipse(gp_Ax2(center, normal, majorDirection),
+                                                        ellipse.majorRadius, ellipse.minorRadius);
     return BRepBuilderAPI_MakeEdge(curve).Edge();
 }
 
@@ -129,7 +131,7 @@ const document::SketchElement& findElement(const document::SketchParameters& ske
                                            document::SketchElementId id) {
     const auto match = std::ranges::find(sketch.elements.values, id, &document::SketchElement::id);
     if (match == sketch.elements.values.end()) {
-        throw std::runtime_error("Sketch profile references an unknown element");
+        throw GeometryEvaluationError("Sketch profile references an unknown element");
     }
     return *match;
 }
@@ -202,7 +204,8 @@ TopoDS_Face profileFace(const document::SketchParameters& sketch, const SketchPr
             .Face();
     }
     if (const auto* ellipse = std::get_if<document::SketchEllipse>(&first)) {
-        return BRepBuilderAPI_MakeFace(BRepBuilderAPI_MakeWire(ellipseEdge(sketch, *ellipse)).Wire())
+        return BRepBuilderAPI_MakeFace(
+                   BRepBuilderAPI_MakeWire(ellipseEdge(sketch, *ellipse)).Wire())
             .Face();
     }
     if (std::ranges::any_of(profile.elementIds, [&sketch](document::SketchElementId id) {
@@ -233,6 +236,7 @@ TopoDS_Shape elementShape(const document::SketchParameters& sketch,
 
 std::vector<EvaluatedSketchElement>
 evaluateSketchElements(const document::SketchParameters& sketch) {
+    detail::requireCanonicalPlane(sketch.plane);
     std::vector<EvaluatedSketchElement> result;
     result.reserve(sketch.elements.values.size());
     for (const document::SketchElement& element : sketch.elements.values) {
@@ -251,9 +255,10 @@ TopoDS_Shape evaluateSketchProfileFaces(const document::SketchParameters& sketch
 TopoDS_Shape
 evaluateSketchProfileFaces(const document::SketchParameters& sketch,
                            std::span<const document::SketchProfileId> selectedProfiles) {
+    detail::requireCanonicalPlane(sketch.plane);
     const std::vector<SketchProfile> profiles = detectClosedProfiles(sketch.elements.values);
     if (profiles.empty()) {
-        throw std::runtime_error("Sketch does not contain a closed profile");
+        throw GeometryEvaluationError("Sketch does not contain a closed profile");
     }
     TopoDS_Compound faces;
     BRep_Builder builder;
@@ -268,7 +273,7 @@ evaluateSketchProfileFaces(const document::SketchParameters& sketch,
         ++selectedCount;
     }
     if (!selectedProfiles.empty() && selectedCount != selectedProfiles.size())
-        throw std::runtime_error("Extrusion references an unknown sketch profile");
+        throw GeometryEvaluationError("Extrusion references an unknown sketch profile");
     return faces;
 }
 

@@ -1,0 +1,13 @@
+[1/29] Scanning V:\src\desktop\SketchViewAdapter.cpp for CXX dependencies
+[2/29] Scanning V:\tests\desktop\FeatureStatusTests.cpp for CXX dependencies
+[3/29] Generating CXX dyndep file src\desktop\CMakeFiles\voelund_desktop.dir\CXX.dd
+[4/13] Generating CXX dyndep file tests\CMakeFiles\voelund_feature_status_tests.dir\CXX.dd
+[5/13] Building CXX object src\desktop\CMakeFiles\voelund_desktop.dir\SketchViewAdapter.cpp.obj
+[6/13] Linking CXX static library src\desktop\voelund_desktop.lib
+[7/13] Building CXX object tests\CMakeFiles\voelund_feature_status_tests.dir\desktop\FeatureStatusTests.cpp.obj
+[8/13] Linking CXX executable tests\voelund_preview_command_failure_tests.exe
+[9/13] Linking CXX executable tests\voelund_sketch_command_failure_tests.exe
+[10/13] Linking CXX executable apps\voelund-cad\voelund-cad.exe; Deploying the minimal Qt runtime; Deploying the Qt OpenGL runtime
+[11/13] Linking CXX executable tests\voelund_parameter_failure_tests.exe
+[12/13] Linking CXX executable tests\voelund_sketch_solver_gate_tests.exe
+[13/13] Linking CXX executable tests\voelund_feature_status_tests.exe

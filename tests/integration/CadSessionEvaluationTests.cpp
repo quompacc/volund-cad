@@ -1,3 +1,4 @@
+#include "../CommandResultAssertions.hpp"
 #include "CadSessionTestCases.hpp"
 #include "CadSessionTestSupport.hpp"
 
@@ -5,14 +6,19 @@ namespace voelund::test {
 
 bool sessionCreatesFeaturesAndRestoresTheirHistory() {
     voelund::application::CadSession session;
-    const voelund::document::FeatureId boxId = session.addBoxFeature();
+    const voelund::document::FeatureId boxId =
+        voelund::test::requireCommittedFeature(session.createBoxFeature());
     if (session.features().size() != 3 || session.currentBodies().size() != 2 ||
-        session.selectedFeature() != boxId || !session.undo() || session.features().size() != 2 ||
-        session.selectedFeature() == boxId || !session.redo() || session.features().size() != 3) {
+        session.selectedFeature() != boxId ||
+        !(session.undo().status() == voelund::application::CommandStatus::committed) ||
+        session.features().size() != 2 || session.selectedFeature() == boxId ||
+        !(session.redo().status() == voelund::application::CommandStatus::committed) ||
+        session.features().size() != 3) {
         return false;
     }
 
-    const voelund::document::FeatureId cylinderId = session.addCylinderFeature();
+    const voelund::document::FeatureId cylinderId =
+        voelund::test::requireCommittedFeature(session.createCylinderFeature());
     const auto features = session.features();
     return features.size() == 4 && features.back().id == cylinderId &&
            features.back().inputFeature == boxId && session.selectedFeature() == cylinderId &&
@@ -21,7 +27,8 @@ bool sessionCreatesFeaturesAndRestoresTheirHistory() {
 
 bool separateBoxPlacementIsParametricAndUndoable() {
     voelund::application::CadSession session;
-    const voelund::document::FeatureId boxId = session.addBoxFeature();
+    const voelund::document::FeatureId boxId =
+        voelund::test::requireCommittedFeature(session.createBoxFeature());
     const double initialMaximumX = maximumXOf(session.currentBodies().back().shape);
     if (!session.canTransformFeature(boxId)) {
         return false;
@@ -29,12 +36,14 @@ bool separateBoxPlacementIsParametricAndUndoable() {
     voelund::kernel::RigidTransform placement = session.selectedFeaturePlacement();
     placement.translationX = 30.0;
     placement.rotationY = 90.0;
-    if (!session.setSelectedFeaturePlacement(placement)) {
+    if (!(session.editSelectedFeaturePlacement(placement).status() ==
+          voelund::application::CommandStatus::committed)) {
         return false;
     }
     const double transformedMaximumX = maximumXOf(session.currentBodies().back().shape);
     return transformedMaximumX > initialMaximumX + 20.0 &&
-           session.selectedBoxParameters().placement == placement && session.undo() &&
+           session.selectedBoxParameters().placement == placement &&
+           (session.undo().status() == voelund::application::CommandStatus::committed) &&
            session.selectedBoxParameters().placement.translationX == 0.0 &&
            session.selectedBoxParameters().placement.rotationY == 0.0 &&
            std::abs(maximumXOf(session.currentBodies().back().shape) - initialMaximumX) < 1.0e-9;
@@ -48,7 +57,8 @@ bool newDocumentIsEmptyCleanAndReadyForItsFirstFeature() {
         session.isModified() || session.canAddCylinder()) {
         return false;
     }
-    const voelund::document::FeatureId firstId = session.addBoxFeature();
+    const voelund::document::FeatureId firstId =
+        voelund::test::requireCommittedFeature(session.createBoxFeature());
     return firstId.value() == 1 && session.features().size() == 1 &&
            session.selectedFeature() == firstId && session.isModified();
 }
@@ -56,60 +66,65 @@ bool newDocumentIsEmptyCleanAndReadyForItsFirstFeature() {
 bool sketchExtrusionIsParametricAndUndoable() {
     voelund::application::CadSession session;
     session.newDocument();
-    const voelund::document::FeatureId boxId = session.addBoxFeature();
+    const voelund::document::FeatureId boxId =
+        voelund::test::requireCommittedFeature(session.createBoxFeature());
     const double boxVolume = volumeOf(session.currentShape());
     const voelund::document::SketchPlane plane{0.0, 0.0, 40.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0};
     const voelund::document::SketchRectangle rectangle{2.0, 3.0, 8.0, 9.0};
-    const voelund::document::FeatureId extrusionId =
-        session.addSketchExtrusion(boxId, plane, rectangle, 10.0);
+    const voelund::document::FeatureId extrusionId = voelund::test::requireCommittedFeature(
+        session.createSketchExtrusion(boxId, plane, rectangle, 10.0));
     if (session.features().size() != 3 || session.selectedFeature() != extrusionId ||
         session.currentBodies().size() != 1 ||
         std::abs(volumeOf(session.currentShape()) - (boxVolume + 360.0)) > 1.0e-6) {
         return false;
     }
-    if (!session.undo() || session.features().size() != 1 ||
+    if (!(session.undo().status() == voelund::application::CommandStatus::committed) ||
+        session.features().size() != 1 ||
         std::abs(volumeOf(session.currentShape()) - boxVolume) > 1.0e-6) {
         return false;
     }
-    return session.redo() && session.features().size() == 3 &&
-           session.features().back().id == extrusionId &&
+    return (session.redo().status() == voelund::application::CommandStatus::committed) &&
+           session.features().size() == 3 && session.features().back().id == extrusionId &&
            std::abs(volumeOf(session.currentShape()) - (boxVolume + 360.0)) < 1.0e-6;
 }
 
 bool repeatedSketchExtrusionsRemainConnected() {
     voelund::application::CadSession session;
     session.newDocument();
-    const voelund::document::FeatureId boxId = session.addBoxFeature();
+    const voelund::document::FeatureId boxId =
+        voelund::test::requireCommittedFeature(session.createBoxFeature());
     const double boxVolume = volumeOf(session.currentShape());
     const voelund::document::SketchRectangle firstRectangle{2.0, 3.0, 8.0, 9.0};
     const voelund::document::SketchPlane firstPlane{0.0, 0.0, 40.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0};
-    const voelund::document::FeatureId firstExtrusion =
-        session.addSketchExtrusion(boxId, firstPlane, firstRectangle, 10.0);
+    const voelund::document::FeatureId firstExtrusion = voelund::test::requireCommittedFeature(
+        session.createSketchExtrusion(boxId, firstPlane, firstRectangle, 10.0));
     const voelund::document::SketchRectangle secondRectangle{3.0, 4.0, 7.0, 8.0};
     const voelund::document::SketchPlane secondPlane{0.0, 0.0, 50.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0};
-    const voelund::document::FeatureId secondExtrusion =
-        session.addSketchExtrusion(firstExtrusion, secondPlane, secondRectangle, 10.0);
+    const voelund::document::FeatureId secondExtrusion = voelund::test::requireCommittedFeature(
+        session.createSketchExtrusion(firstExtrusion, secondPlane, secondRectangle, 10.0));
     const double expectedVolume = boxVolume + 360.0 + 160.0;
     const bool initialChainIsValid =
         session.features().size() == 5 && session.selectedFeature() == secondExtrusion &&
         session.featureStates().back().status ==
             voelund::application::FeatureRuntimeStatus::current &&
         std::abs(volumeOf(session.currentShape()) - expectedVolume) < 1.0e-4;
-    if (!initialChainIsValid || !session.setSelectedExtrusionParameters({20.0, {}})) {
+    if (!initialChainIsValid || !(session.editSelectedExtrusionParameters({20.0, {}}).status() ==
+                                  voelund::application::CommandStatus::committed)) {
         return false;
     }
     const double editedVolume = boxVolume + 360.0 + 320.0;
-    return std::abs(volumeOf(session.currentShape()) - editedVolume) < 1.0e-4 && session.undo() &&
+    return std::abs(volumeOf(session.currentShape()) - editedVolume) < 1.0e-4 &&
+           (session.undo().status() == voelund::application::CommandStatus::committed) &&
            std::abs(volumeOf(session.currentShape()) - expectedVolume) < 1.0e-4;
 }
 
 bool sketchSupportFollowsChangedFace() {
     voelund::application::CadSession session;
     session.newDocument();
-    const auto boxId = session.addBoxFeature();
+    const auto boxId = voelund::test::requireCommittedFeature(session.createBoxFeature());
     const voelund::document::SketchPlane topPlane{0.0, 0.0, 40.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0};
-    static_cast<void>(session.addSketchExtrusion(
-        boxId, topPlane, voelund::document::SketchRectangle{2.0, 3.0, 8.0, 9.0}, 10.0));
+    static_cast<void>(voelund::test::requireCommittedFeature(session.createSketchExtrusion(
+        boxId, topPlane, voelund::document::SketchRectangle{2.0, 3.0, 8.0, 9.0}, 10.0)));
     if (!session.featureShape(boxId).has_value() ||
         std::abs(maximumZOf(session.currentShape()) - 50.0) > 1.0e-6)
         return false;
@@ -117,7 +132,8 @@ bool sketchSupportFollowsChangedFace() {
         return false;
     auto changed = session.selectedBoxParameters();
     changed.dimensions.height = 47.0;
-    return session.setSelectedBoxParameters(changed) &&
+    return (session.editSelectedBoxParameters(changed).status() ==
+            voelund::application::CommandStatus::committed) &&
            std::abs(maximumZOf(session.currentShape()) - 57.0) < 1.0e-6;
 }
 

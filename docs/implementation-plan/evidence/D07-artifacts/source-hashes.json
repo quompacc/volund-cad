@@ -1,0 +1,44 @@
+[
+  {
+    "path": "include/voelund/application/SketchEditorSession.hpp",
+    "sha256": "637c4b99c2373b2332d511d34f72173d983f4eb1e5127c6f2596b391d97d646d",
+    "freebsdSha256": "637c4b99c2373b2332d511d34f72173d983f4eb1e5127c6f2596b391d97d646d",
+    "matches": true
+  },
+  {
+    "path": "src/application/SketchEditorSession.cpp",
+    "sha256": "51f70bd2be2cdda6f14f59c60e8f1eb0eb71a648756238a165eaad381dc9a2fb",
+    "freebsdSha256": "51f70bd2be2cdda6f14f59c60e8f1eb0eb71a648756238a165eaad381dc9a2fb",
+    "matches": true
+  },
+  {
+    "path": "src/desktop/SketchEditorConstraintState.cpp",
+    "sha256": "7a216e356a2738e60bf1bf6e476674e7ba805cbeb1253e9f26c73898ae34bcf3",
+    "freebsdSha256": "7a216e356a2738e60bf1bf6e476674e7ba805cbeb1253e9f26c73898ae34bcf3",
+    "matches": true
+  },
+  {
+    "path": "src/desktop/SketchEditorToolController.cpp",
+    "sha256": "2b0cc5d7961a74fafc0a30375b434935e456cdcf4b11b0a9ab49fd1335ca6122",
+    "freebsdSha256": "2b0cc5d7961a74fafc0a30375b434935e456cdcf4b11b0a9ab49fd1335ca6122",
+    "matches": true
+  },
+  {
+    "path": "src/desktop/SketchEditorToolController.hpp",
+    "sha256": "582ce874b2bbcd7ed0dc6369295ffc36cba4331164229bf209090ca62c6468e7",
+    "freebsdSha256": "582ce874b2bbcd7ed0dc6369295ffc36cba4331164229bf209090ca62c6468e7",
+    "matches": true
+  },
+  {
+    "path": "tests/CMakeLists.txt",
+    "sha256": "e38b96fd4072005b8432970c079464b49baf5360ce847eba35e12661c7f436e0",
+    "freebsdSha256": "e38b96fd4072005b8432970c079464b49baf5360ce847eba35e12661c7f436e0",
+    "matches": true
+  },
+  {
+    "path": "tests/desktop/SketchSolverGateTests.cpp",
+    "sha256": "ea077c600c302467588eb9f3d65b95f0f91854b08a0e184144e5d31bdb1695b5",
+    "freebsdSha256": "ea077c600c302467588eb9f3d65b95f0f91854b08a0e184144e5d31bdb1695b5",
+    "matches": true
+  }
+]

@@ -1,0 +1,1323 @@
+Start testing: Sep 14 18:03 Mitteleuropäische Sommerzeit
+----------------------------------------------------------
+1/42 Testing: desktop.viewport_startup
+1/42 Test: desktop.viewport_startup
+Command: "V:/build/p02-qt-final/apps/voelund-cad/voelund-cad.exe" "--smoke-test"
+Directory: V:/build/p02-qt-final/apps/voelund-cad
+"desktop.viewport_startup" start time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+desktop-smoke {"backend":"qt-opengl","courierFontAvailable":false,"dpi":96,"dpr":1,"gl":"4.6.0 NVIDIA 610.88","height":724,"occt":"8.0.1","os":"Windows 11 Version 25H2","qpa":"windows","qt":"6.11.1","renderer":"NVIDIA GeForce RTX 4070 SUPER/PCIe/SSE2","vendor":"NVIDIA Corporation","width":666}
+smoke-ui clean-navigation
+smoke-ui box-height
+QFormLayout::takeAt: Invalid index 0
+smoke-ui cylinder
+QFormLayout::takeAt: Invalid index 0
+QFormLayout::takeAt: Invalid index 0
+smoke-ui transform
+smoke-ui resize
+desktop-smoke {"backend":"qt-opengl","courierFontAvailable":false,"dpi":96,"dpr":1,"gl":"4.6.0 NVIDIA 610.88","height":843,"occt":"8.0.1","os":"Windows 11 Version 25H2","qpa":"windows","qt":"6.11.1","renderer":"NVIDIA GeForce RTX 4070 SUPER/PCIe/SSE2","vendor":"NVIDIA Corporation","width":839}
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+Font_FontMgr, error: unable to find any font!
+<end of output>
+Test time =   1.57 sec
+----------------------------------------------------------
+Test Passed.
+"desktop.viewport_startup" end time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+"desktop.viewport_startup" time elapsed: 00:00:01
+----------------------------------------------------------
+
+2/42 Testing: desktop.viewport_startup.uninitialized
+2/42 Test: desktop.viewport_startup.uninitialized
+Command: "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/cmake.exe" "-DVOELUND_SMOKE_EXECUTABLE=V:/build/p02-qt-final/apps/voelund-cad/voelund-cad.exe" "-DVOELUND_REQUIRE_WAYLAND=OFF" "-P" "V://tools/cmake/RunExpectedSmoke.cmake"
+Directory: V:/build/p02-qt-final/apps/voelund-cad
+"desktop.viewport_startup.uninitialized" start time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+-- Uninitialized viewport rejected with exact exit 10
+<end of output>
+Test time =   0.17 sec
+----------------------------------------------------------
+Test Passed.
+"desktop.viewport_startup.uninitialized" end time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+"desktop.viewport_startup.uninitialized" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/42 Testing: desktop.ui_preview_startup
+3/42 Test: desktop.ui_preview_startup
+Command: "V:/build/p02-qt-final/apps/voelund-ui-preview/voelund-ui-preview.exe" "--smoke-test"
+Directory: V:/build/p02-qt-final/apps/voelund-ui-preview
+"desktop.ui_preview_startup" start time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+desktop-smoke {"backend":"qt-opengl","courierFontAvailable":false,"dpi":96,"dpr":1,"gl":"4.6.0 NVIDIA 610.88","height":659,"occt":"8.0.1","os":"Windows 11 Version 25H2","qpa":"windows","qt":"6.11.1","renderer":"NVIDIA GeForce RTX 4070 SUPER/PCIe/SSE2","vendor":"NVIDIA Corporation","width":1251}
+desktop-smoke {"backend":"qt-opengl","courierFontAvailable":false,"dpi":96,"dpr":1,"gl":"4.6.0 NVIDIA 610.88","height":659,"occt":"8.0.1","os":"Windows 11 Version 25H2","qpa":"windows","qt":"6.11.1","renderer":"NVIDIA GeForce RTX 4070 SUPER/PCIe/SSE2","vendor":"NVIDIA Corporation","width":1251}
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+Font_FontMgr, error: unable to find any font!
+<end of output>
+Test time =   1.88 sec
+----------------------------------------------------------
+Test Passed.
+"desktop.ui_preview_startup" end time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+"desktop.ui_preview_startup" time elapsed: 00:00:01
+----------------------------------------------------------
+
+4/42 Testing: desktop.ui_preview_startup.uninitialized
+4/42 Test: desktop.ui_preview_startup.uninitialized
+Command: "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/cmake.exe" "-DVOELUND_SMOKE_EXECUTABLE=V:/build/p02-qt-final/apps/voelund-ui-preview/voelund-ui-preview.exe" "-DVOELUND_REQUIRE_WAYLAND=OFF" "-P" "V://tools/cmake/RunExpectedSmoke.cmake"
+Directory: V:/build/p02-qt-final/apps/voelund-ui-preview
+"desktop.ui_preview_startup.uninitialized" start time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+-- Uninitialized viewport rejected with exact exit 10
+<end of output>
+Test time =   0.19 sec
+----------------------------------------------------------
+Test Passed.
+"desktop.ui_preview_startup.uninitialized" end time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+"desktop.ui_preview_startup.uninitialized" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/42 Testing: application.scene_status
+5/42 Test: application.scene_status
+Command: "V:/build/p02-qt-final/tests/voelund_scene_status_tests.exe" "V:/build/p02-qt-final/tests"
+Directory: V:/build/p02-qt-final/tests
+"application.scene_status" start time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+Scene revision, display isolation, history and persistence tests passed
+<end of output>
+Test time =   1.13 sec
+----------------------------------------------------------
+Test Passed.
+"application.scene_status" end time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+"application.scene_status" time elapsed: 00:00:01
+----------------------------------------------------------
+
+6/42 Testing: application.failure_boundaries
+6/42 Test: application.failure_boundaries
+Command: "V:/build/p02-qt-final/tests/voelund_session_failure_tests.exe"
+Directory: V:/build/p02-qt-final/tests
+"application.failure_boundaries" start time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+Typed edits and exception rollback tests passed
+<end of output>
+Test time =   2.28 sec
+----------------------------------------------------------
+Test Passed.
+"application.failure_boundaries" end time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+"application.failure_boundaries" time elapsed: 00:00:02
+----------------------------------------------------------
+
+7/42 Testing: application.creation_results
+7/42 Test: application.creation_results
+Command: "V:/build/p02-qt-final/tests/voelund_session_creation_tests.exe"
+Directory: V:/build/p02-qt-final/tests
+"application.creation_results" start time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+Creation result and editor rollback tests passed
+<end of output>
+Test time =   0.92 sec
+----------------------------------------------------------
+Test Passed.
+"application.creation_results" end time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+"application.creation_results" time elapsed: 00:00:00
+----------------------------------------------------------
+
+8/42 Testing: application.command_transactions
+8/42 Test: application.command_transactions
+Command: "V:/build/p02-qt-final/tests/voelund_session_transaction_tests.exe"
+Directory: V:/build/p02-qt-final/tests
+"application.command_transactions" start time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+Session transaction tests passed
+<end of output>
+Test time =   1.41 sec
+----------------------------------------------------------
+Test Passed.
+"application.command_transactions" end time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+"application.command_transactions" time elapsed: 00:00:01
+----------------------------------------------------------
+
+9/42 Testing: document.transactions
+9/42 Test: document.transactions
+Command: "V:/build/p02-qt-final/tests/voelund_document_transaction_tests.exe"
+Directory: V:/build/p02-qt-final/tests
+"document.transactions" start time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+Document transaction tests passed
+<end of output>
+Test time =   0.06 sec
+----------------------------------------------------------
+Test Passed.
+"document.transactions" end time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+"document.transactions" time elapsed: 00:00:00
+----------------------------------------------------------
+
+10/42 Testing: application.command_contract_compound
+10/42 Test: application.command_contract_compound
+Command: "V:/build/p02-qt-final/tests/voelund_command_contract_tests.exe" "compound"
+Directory: V:/build/p02-qt-final/tests
+"application.command_contract_compound" start time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+Command contract fixture passed
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"application.command_contract_compound" end time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+"application.command_contract_compound" time elapsed: 00:00:00
+----------------------------------------------------------
+
+11/42 Testing: application.command_contract_errors
+11/42 Test: application.command_contract_errors
+Command: "V:/build/p02-qt-final/tests/voelund_command_contract_tests.exe" "errors"
+Directory: V:/build/p02-qt-final/tests
+"application.command_contract_errors" start time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+Command contract fixture passed
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"application.command_contract_errors" end time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+"application.command_contract_errors" time elapsed: 00:00:00
+----------------------------------------------------------
+
+12/42 Testing: application.safe_persistence
+12/42 Test: application.safe_persistence
+Command: "V:/build/p02-qt-final/tests/voelund_safe_persistence_tests.exe" "V:/build/p02-qt-final/tests"
+Directory: V:/build/p02-qt-final/tests
+"application.safe_persistence" start time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+Safe save/open, all commit phases, Unicode and editable errors passed
+<end of output>
+Test time =   2.29 sec
+----------------------------------------------------------
+Test Passed.
+"application.safe_persistence" end time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+"application.safe_persistence" time elapsed: 00:00:02
+----------------------------------------------------------
+
+13/42 Testing: document.parser_limits_and_versions
+13/42 Test: document.parser_limits_and_versions
+Command: "V:/build/p02-qt-final/tests/voelund_document_parser_tests.exe" "V:/tests/fixtures/documents"
+Directory: V:/build/p02-qt-final/tests
+"document.parser_limits_and_versions" start time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+PASS 16 version fixtures, semantic migration, roundtrip/CRLF, truncation, corrupt references/counts/values, byte/line/record limits and I/O failure
+<end of output>
+Test time =   6.25 sec
+----------------------------------------------------------
+Test Passed.
+"document.parser_limits_and_versions" end time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+"document.parser_limits_and_versions" time elapsed: 00:00:06
+----------------------------------------------------------
+
+14/42 Testing: platform.atomic_file_store
+14/42 Test: platform.atomic_file_store
+Command: "V:/build/p02-qt-final/tests/voelund_atomic_file_tests.exe" "V:/build/p02-qt-final/tests"
+Directory: V:/build/p02-qt-final/tests
+"platform.atomic_file_store" start time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+CASE roundtrip
+CASE failures
+CASE nativeRestrictions
+CASE concurrent
+PASS atomic replacement, Unicode/binary/empty, all failure stages, partial write, exclusive collision, permissions/locks, concurrent saves and cleanup
+<end of output>
+Test time =   1.98 sec
+----------------------------------------------------------
+Test Passed.
+"platform.atomic_file_store" end time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+"platform.atomic_file_store" time elapsed: 00:00:01
+----------------------------------------------------------
+
+15/42 Testing: kernel.shape_factory
+15/42 Test: kernel.shape_factory
+Command: "V:/build/p02-qt-final/tests/voelund_kernel_tests.exe"
+Directory: V:/build/p02-qt-final/tests
+"kernel.shape_factory" start time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.10 sec
+----------------------------------------------------------
+Test Passed.
+"kernel.shape_factory" end time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+"kernel.shape_factory" time elapsed: 00:00:00
+----------------------------------------------------------
+
+16/42 Testing: document.history
+16/42 Test: document.history
+Command: "V:/build/p02-qt-final/tests/voelund_document_tests.exe"
+Directory: V:/build/p02-qt-final/tests
+"document.history" start time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.12 sec
+----------------------------------------------------------
+Test Passed.
+"document.history" end time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+"document.history" time elapsed: 00:00:00
+----------------------------------------------------------
+
+17/42 Testing: features.sketch_profiles
+17/42 Test: features.sketch_profiles
+Command: "V:/build/p02-qt-final/tests/voelund_sketch_profile_tests.exe"
+Directory: V:/build/p02-qt-final/tests
+"features.sketch_profiles" start time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.06 sec
+----------------------------------------------------------
+Test Passed.
+"features.sketch_profiles" end time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+"features.sketch_profiles" time elapsed: 00:00:00
+----------------------------------------------------------
+
+18/42 Testing: features.planegcs_solver
+18/42 Test: features.planegcs_solver
+Command: "V:/build/p02-qt-final/tests/voelund_planegcs_tests.exe"
+Directory: V:/build/p02-qt-final/tests
+"features.planegcs_solver" start time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 0 redundants
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"features.planegcs_solver" end time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+"features.planegcs_solver" time elapsed: 00:00:00
+----------------------------------------------------------
+
+19/42 Testing: features.sketch_constraint_adapter
+19/42 Test: features.sketch_constraint_adapter
+Command: "V:/build/p02-qt-final/tests/voelund_sketch_constraint_tests.exe"
+Directory: V:/build/p02-qt-final/tests
+"features.sketch_constraint_adapter" start time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 0 redundants
+<end of output>
+Test time =   0.11 sec
+----------------------------------------------------------
+Test Passed.
+"features.sketch_constraint_adapter" end time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+"features.sketch_constraint_adapter" time elapsed: 00:00:00
+----------------------------------------------------------
+
+20/42 Testing: application.recompute_history
+20/42 Test: application.recompute_history
+Command: "V:/build/p02-qt-final/tests/voelund_application_tests.exe"
+Directory: V:/build/p02-qt-final/tests
+"application.recompute_history" start time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   4.84 sec
+----------------------------------------------------------
+Test Passed.
+"application.recompute_history" end time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+"application.recompute_history" time elapsed: 00:00:04
+----------------------------------------------------------
+
+21/42 Testing: desktop.sketch_command_failure
+21/42 Test: desktop.sketch_command_failure
+Command: "V:/build/p02-qt-final/tests/voelund_sketch_command_failure_tests.exe"
+Directory: V:/build/p02-qt-final/tests
+"desktop.sketch_command_failure" start time: Sep 14 18:03 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+Productive extrusion rejection/repair tests passed
+<end of output>
+Test time =   0.93 sec
+----------------------------------------------------------
+Test Passed.
+"desktop.sketch_command_failure" end time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+"desktop.sketch_command_failure" time elapsed: 00:00:00
+----------------------------------------------------------
+
+22/42 Testing: desktop.parameter_failures
+22/42 Test: desktop.parameter_failures
+Command: "V:/build/p02-qt-final/tests/voelund_parameter_failure_tests.exe"
+Directory: V:/build/p02-qt-final/tests
+"desktop.parameter_failures" start time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Parameter rejection and Qt exception containment tests passed
+<end of output>
+Test time =   1.73 sec
+----------------------------------------------------------
+Test Passed.
+"desktop.parameter_failures" end time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+"desktop.parameter_failures" time elapsed: 00:00:01
+----------------------------------------------------------
+
+23/42 Testing: desktop.sketch_solver_gate
+23/42 Test: desktop.sketch_solver_gate
+Command: "V:/build/p02-qt-final/tests/voelund_sketch_solver_gate_tests.exe"
+Directory: V:/build/p02-qt-final/tests
+"desktop.sketch_solver_gate" start time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 0 redundants
+Sketch solver acceptance and panel tests passed
+<end of output>
+Test time =   1.31 sec
+----------------------------------------------------------
+Test Passed.
+"desktop.sketch_solver_gate" end time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+"desktop.sketch_solver_gate" time elapsed: 00:00:01
+----------------------------------------------------------
+
+24/42 Testing: desktop.document_actions
+24/42 Test: desktop.document_actions
+Command: "V:/build/p02-qt-final/tests/voelund_document_actions_tests.exe"
+Directory: V:/build/p02-qt-final/tests
+"desktop.document_actions" start time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+Production file actions: Unicode, cancel, corrupt open, save and failure titles passed
+<end of output>
+Test time =   1.54 sec
+----------------------------------------------------------
+Test Passed.
+"desktop.document_actions" end time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+"desktop.document_actions" time elapsed: 00:00:01
+----------------------------------------------------------
+
+25/42 Testing: desktop.viewport_lifecycle_qt
+25/42 Test: desktop.viewport_lifecycle_qt
+Command: "V:/build/p02-qt-final/tests/voelund_viewport_lifecycle_tests.exe"
+Directory: V:/build/p02-qt-final/tests
+"desktop.viewport_lifecycle_qt" start time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+PASS ten unshown/shown destruction cycles
+Font_FontMgr, error: unable to find any font!
+Font_FontMgr, error: unable to find any font!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'serif' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+TKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+  Unhandled GL error: GL_INVALID_ENUM
+TKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+  Unhandled GL error: GL_INVALID_ENUM
+Font_FontMgr, error: unable to find any font!
+Font_FontMgr, error: unable to find any font!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'serif' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+PASS idempotent cleanup, partial failure and recovery
+Font_FontMgr, error: unable to find any font!
+Font_FontMgr, error: unable to find any font!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'serif' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+PASS real context recreation, camera, scene, picking, navigation and manipulator
+<end of output>
+Test time =   2.96 sec
+----------------------------------------------------------
+Test Passed.
+"desktop.viewport_lifecycle_qt" end time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+"desktop.viewport_lifecycle_qt" time elapsed: 00:00:02
+----------------------------------------------------------
+
+26/42 Testing: desktop.viewport_dpi_1
+26/42 Test: desktop.viewport_dpi_1
+Command: "V:/build/p02-qt-final/tests/voelund_viewport_lifecycle_tests.exe" "--dpi"
+Directory: V:/build/p02-qt-final/tests
+"desktop.viewport_dpi_1" start time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+PASS DPI 1: picking, physical FBO/window, overlay, resize, minimize/maximize, recreate; 50 cycles
+{"cases":[{"case":"initial","dpr":1,"frames":5,"height":480,"qtFbo":1,"status":"passed","width":640},{"case":"after-controlled-fbo-switch","dpr":1,"frames":10,"height":480,"qtFbo":1,"status":"passed","width":640},{"case":"resized","dpr":1,"frames":14,"height":517,"qtFbo":1,"status":"passed","width":713},{"case":"restored","dpr":1,"frames":18,"height":517,"qtFbo":1,"status":"passed","width":713},{"case":"maximized","dpr":1,"frames":23,"height":1369,"qtFbo":1,"status":"passed","width":3440},{"case":"recreated","dpr":1,"frames":27,"height":480,"qtFbo":1,"status":"passed","width":640}],"controlledFboAndRatioSwitch":"passed: injected adapter exercise, not monitor change","foreignContextRestoration":"passed","qpa":"windows","qt":"6.11.1","resourceAssessment":"measurement only; no universal memory leak threshold","resourceSamples":[{"cycle":1,"handles":424,"privateBytes":384090112,"workingSetBytes":179605504},{"cycle":2,"handles":424,"privateBytes":384802816,"workingSetBytes":180637696},{"cycle":3,"handles":424,"privateBytes":384987136,"workingSetBytes":182906880},{"cycle":4,"handles":424,"privateBytes":384847872,"workingSetBytes":182824960},{"cycle":5,"handles":424,"privateBytes":385814528,"workingSetBytes":183013376},{"cycle":6,"handles":424,"privateBytes":385961984,"workingSetBytes":183422976},{"cycle":7,"handles":424,"privateBytes":384602112,"workingSetBytes":182145024},{"cycle":8,"handles":424,"privateBytes":385536000,"workingSetBytes":182317056},{"cycle":9,"handles":424,"privateBytes":385150976,"workingSetBytes":182009856},{"cycle":10,"handles":424,"privateBytes":386211840,"workingSetBytes":182476800},{"cycle":11,"handles":424,"privateBytes":386306048,"workingSetBytes":182611968},{"cycle":12,"handles":424,"privateBytes":386260992,"workingSetBytes":182366208},{"cycle":13,"handles":424,"privateBytes":386797568,"workingSetBytes":183709696},{"cycle":14,"handles":424,"privateBytes":387555328,"workingSetBytes":183758848},{"cycle":15,"handles":424,"privateBytes":387612672,"workingSetBytes":183877632},{"cycle":16,"handles":424,"privateBytes":387366912,"workingSetBytes":183705600},{"cycle":17,"handles":424,"privateBytes":306962432,"workingSetBytes":183988224},{"cycle":18,"handles":424,"privateBytes":280358912,"workingSetBytes":183840768},{"cycle":19,"handles":424,"privateBytes":278482944,"workingSetBytes":183726080},{"cycle":20,"handles":424,"privateBytes":279261184,"workingSetBytes":183615488},{"cycle":21,"handles":424,"privateBytes":277913600,"workingSetBytes":183595008},{"cycle":22,"handles":424,"privateBytes":277905408,"workingSetBytes":182935552},{"cycle":23,"handles":424,"privateBytes":279994368,"workingSetBytes":185204736},{"cycle":24,"handles":424,"privateBytes":277897216,"workingSetBytes":184451072},{"cycle":25,"handles":425,"privateBytes":275886080,"workingSetBytes":181911552},{"cycle":26,"handles":425,"privateBytes":278163456,"workingSetBytes":183312384},{"cycle":27,"handles":425,"privateBytes":280055808,"workingSetBytes":183607296},{"cycle":28,"handles":425,"privateBytes":280014848,"workingSetBytes":183758848},{"cycle":29,"handles":425,"privateBytes":279785472,"workingSetBytes":183877632},{"cycle":30,"handles":425,"privateBytes":281600000,"workingSetBytes":185118720},{"cycle":31,"handles":425,"privateBytes":274903040,"workingSetBytes":182210560},{"cycle":32,"handles":425,"privateBytes":276193280,"workingSetBytes":182247424},{"cycle":33,"handles":425,"privateBytes":278130688,"workingSetBytes":183304192},{"cycle":34,"handles":425,"privateBytes":256823296,"workingSetBytes":182317056},{"cycle":35,"handles":425,"privateBytes":257933312,"workingSetBytes":182636544},{"cycle":36,"handles":425,"privateBytes":253026304,"workingSetBytes":182325248},{"cycle":37,"handles":425,"privateBytes":255774720,"workingSetBytes":183390208},{"cycle":38,"handles":425,"privateBytes":253100032,"workingSetBytes":182452224},{"cycle":39,"handles":425,"privateBytes":253124608,"workingSetBytes":182525952},{"cycle":40,"handles":425,"privateBytes":252936192,"workingSetBytes":182370304},{"cycle":41,"handles":425,"privateBytes":253759488,"workingSetBytes":182951936},{"cycle":42,"handles":425,"privateBytes":255393792,"workingSetBytes":183422976},{"cycle":43,"handles":425,"privateBytes":254017536,"workingSetBytes":183316480},{"cycle":44,"handles":425,"privateBytes":256389120,"workingSetBytes":183418880},{"cycle":45,"handles":425,"privateBytes":255086592,"workingSetBytes":183365632},{"cycle":46,"handles":425,"privateBytes":235114496,"workingSetBytes":182927360},{"cycle":47,"handles":425,"privateBytes":234647552,"workingSetBytes":183316480},{"cycle":48,"handles":425,"privateBytes":234958848,"workingSetBytes":182931456},{"cycle":49,"handles":425,"privateBytes":234065920,"workingSetBytes":182734848},{"cycle":50,"handles":425,"privateBytes":236118016,"workingSetBytes":183525376}],"scaleFactor":"1","scaleMethod":"QT_SCALE_FACTOR test override; native screen DPR multiplies it","schemaVersion":1,"screenSwitch":"blocked-external: only one screen exposed by Qt","screens":[{"dpr":1,"height":1440,"logicalDpi":96,"name":"S34C65xV","width":3440}]}
+<end of output>
+Test time =   9.69 sec
+----------------------------------------------------------
+Test Passed.
+"desktop.viewport_dpi_1" end time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+"desktop.viewport_dpi_1" time elapsed: 00:00:09
+----------------------------------------------------------
+
+27/42 Testing: desktop.viewport_dpi_1.5
+27/42 Test: desktop.viewport_dpi_1.5
+Command: "V:/build/p02-qt-final/tests/voelund_viewport_lifecycle_tests.exe" "--dpi"
+Directory: V:/build/p02-qt-final/tests
+"desktop.viewport_dpi_1.5" start time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+PASS DPI 1.5: picking, physical FBO/window, overlay, resize, minimize/maximize, recreate; 50 cycles
+{"cases":[{"case":"initial","dpr":1.5,"frames":5,"height":720,"qtFbo":1,"status":"passed","width":960},{"case":"after-controlled-fbo-switch","dpr":1.5,"frames":10,"height":720,"qtFbo":1,"status":"passed","width":960},{"case":"resized","dpr":1.5,"frames":14,"height":776,"qtFbo":1,"status":"passed","width":1070},{"case":"restored","dpr":1.5,"frames":18,"height":776,"qtFbo":1,"status":"passed","width":1070},{"case":"maximized","dpr":1.5,"frames":23,"height":1370,"qtFbo":1,"status":"passed","width":3440},{"case":"recreated","dpr":1.5,"frames":27,"height":720,"qtFbo":1,"status":"passed","width":960}],"controlledFboAndRatioSwitch":"passed: injected adapter exercise, not monitor change","foreignContextRestoration":"passed","qpa":"windows","qt":"6.11.1","resourceAssessment":"measurement only; no universal memory leak threshold","resourceSamples":[{"cycle":1,"handles":424,"privateBytes":396734464,"workingSetBytes":180846592},{"cycle":2,"handles":424,"privateBytes":398327808,"workingSetBytes":181764096},{"cycle":3,"handles":424,"privateBytes":397295616,"workingSetBytes":183672832},{"cycle":4,"handles":424,"privateBytes":397582336,"workingSetBytes":183853056},{"cycle":5,"handles":424,"privateBytes":397471744,"workingSetBytes":184004608},{"cycle":6,"handles":424,"privateBytes":397406208,"workingSetBytes":183951360},{"cycle":7,"handles":424,"privateBytes":397246464,"workingSetBytes":183984128},{"cycle":8,"handles":424,"privateBytes":397910016,"workingSetBytes":184066048},{"cycle":9,"handles":424,"privateBytes":397828096,"workingSetBytes":183988224},{"cycle":10,"handles":424,"privateBytes":397836288,"workingSetBytes":184041472},{"cycle":11,"handles":424,"privateBytes":397643776,"workingSetBytes":187142144},{"cycle":12,"handles":424,"privateBytes":399200256,"workingSetBytes":187154432},{"cycle":13,"handles":424,"privateBytes":400121856,"workingSetBytes":187539456},{"cycle":14,"handles":424,"privateBytes":399867904,"workingSetBytes":187490304},{"cycle":15,"handles":424,"privateBytes":400322560,"workingSetBytes":187445248},{"cycle":16,"handles":424,"privateBytes":401629184,"workingSetBytes":187486208},{"cycle":17,"handles":424,"privateBytes":320405504,"workingSetBytes":187449344},{"cycle":18,"handles":424,"privateBytes":320081920,"workingSetBytes":187486208},{"cycle":19,"handles":424,"privateBytes":317628416,"workingSetBytes":187584512},{"cycle":20,"handles":424,"privateBytes":317603840,"workingSetBytes":187535360},{"cycle":21,"handles":424,"privateBytes":318054400,"workingSetBytes":188727296},{"cycle":22,"handles":424,"privateBytes":316993536,"workingSetBytes":187723776},{"cycle":23,"handles":424,"privateBytes":316850176,"workingSetBytes":187658240},{"cycle":24,"handles":424,"privateBytes":316882944,"workingSetBytes":187781120},{"cycle":25,"handles":424,"privateBytes":317734912,"workingSetBytes":187932672},{"cycle":26,"handles":424,"privateBytes":317026304,"workingSetBytes":187531264},{"cycle":27,"handles":424,"privateBytes":317382656,"workingSetBytes":187576320},{"cycle":28,"handles":424,"privateBytes":317321216,"workingSetBytes":187551744},{"cycle":29,"handles":424,"privateBytes":317304832,"workingSetBytes":187801600},{"cycle":30,"handles":424,"privateBytes":317505536,"workingSetBytes":187805696},{"cycle":31,"handles":424,"privateBytes":317571072,"workingSetBytes":187756544},{"cycle":32,"handles":424,"privateBytes":317063168,"workingSetBytes":187453440},{"cycle":33,"handles":424,"privateBytes":317095936,"workingSetBytes":187510784},{"cycle":34,"handles":424,"privateBytes":316821504,"workingSetBytes":187441152},{"cycle":35,"handles":424,"privateBytes":279093248,"workingSetBytes":187858944},{"cycle":36,"handles":424,"privateBytes":278315008,"workingSetBytes":187584512},{"cycle":37,"handles":424,"privateBytes":278372352,"workingSetBytes":187568128},{"cycle":38,"handles":424,"privateBytes":278937600,"workingSetBytes":187695104},{"cycle":39,"handles":424,"privateBytes":279117824,"workingSetBytes":188198912},{"cycle":40,"handles":424,"privateBytes":278405120,"workingSetBytes":187854848},{"cycle":41,"handles":424,"privateBytes":278753280,"workingSetBytes":187887616},{"cycle":42,"handles":424,"privateBytes":278343680,"workingSetBytes":187539456},{"cycle":43,"handles":424,"privateBytes":278437888,"workingSetBytes":187863040},{"cycle":44,"handles":424,"privateBytes":278257664,"workingSetBytes":187592704},{"cycle":45,"handles":424,"privateBytes":279453696,"workingSetBytes":188162048},{"cycle":46,"handles":424,"privateBytes":278159360,"workingSetBytes":187494400},{"cycle":47,"handles":424,"privateBytes":278786048,"workingSetBytes":188100608},{"cycle":48,"handles":424,"privateBytes":278192128,"workingSetBytes":187449344},{"cycle":49,"handles":424,"privateBytes":278077440,"workingSetBytes":187543552},{"cycle":50,"handles":424,"privateBytes":278458368,"workingSetBytes":187826176}],"scaleFactor":"1.5","scaleMethod":"QT_SCALE_FACTOR test override; native screen DPR multiplies it","schemaVersion":1,"screenSwitch":"blocked-external: only one screen exposed by Qt","screens":[{"dpr":1.5,"height":960,"logicalDpi":96,"name":"S34C65xV","width":2293}]}
+<end of output>
+Test time =   9.72 sec
+----------------------------------------------------------
+Test Passed.
+"desktop.viewport_dpi_1.5" end time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+"desktop.viewport_dpi_1.5" time elapsed: 00:00:09
+----------------------------------------------------------
+
+28/42 Testing: desktop.viewport_dpi_2
+28/42 Test: desktop.viewport_dpi_2
+Command: "V:/build/p02-qt-final/tests/voelund_viewport_lifecycle_tests.exe" "--dpi"
+Directory: V:/build/p02-qt-final/tests
+"desktop.viewport_dpi_2" start time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+PASS DPI 2: picking, physical FBO/window, overlay, resize, minimize/maximize, recreate; 50 cycles
+{"cases":[{"case":"initial","dpr":2,"frames":5,"height":960,"qtFbo":1,"status":"passed","width":1280},{"case":"after-controlled-fbo-switch","dpr":2,"frames":10,"height":960,"qtFbo":1,"status":"passed","width":1280},{"case":"resized","dpr":2,"frames":14,"height":1034,"qtFbo":1,"status":"passed","width":1426},{"case":"restored","dpr":2,"frames":18,"height":1034,"qtFbo":1,"status":"passed","width":1426},{"case":"maximized","dpr":2,"frames":23,"height":1370,"qtFbo":1,"status":"passed","width":3440},{"case":"recreated","dpr":2,"frames":27,"height":960,"qtFbo":1,"status":"passed","width":1280}],"controlledFboAndRatioSwitch":"passed: injected adapter exercise, not monitor change","foreignContextRestoration":"passed","qpa":"windows","qt":"6.11.1","resourceAssessment":"measurement only; no universal memory leak threshold","resourceSamples":[{"cycle":1,"handles":424,"privateBytes":394330112,"workingSetBytes":184152064},{"cycle":2,"handles":424,"privateBytes":398733312,"workingSetBytes":185257984},{"cycle":3,"handles":424,"privateBytes":398761984,"workingSetBytes":187432960},{"cycle":4,"handles":424,"privateBytes":400470016,"workingSetBytes":187658240},{"cycle":5,"handles":424,"privateBytes":398913536,"workingSetBytes":187555840},{"cycle":6,"handles":424,"privateBytes":390561792,"workingSetBytes":187142144},{"cycle":7,"handles":424,"privateBytes":394526720,"workingSetBytes":186908672},{"cycle":8,"handles":424,"privateBytes":394637312,"workingSetBytes":187150336},{"cycle":9,"handles":424,"privateBytes":398651392,"workingSetBytes":191598592},{"cycle":10,"handles":424,"privateBytes":398741504,"workingSetBytes":191528960},{"cycle":11,"handles":424,"privateBytes":398655488,"workingSetBytes":191590400},{"cycle":12,"handles":424,"privateBytes":387272704,"workingSetBytes":185708544},{"cycle":13,"handles":424,"privateBytes":398299136,"workingSetBytes":191127552},{"cycle":14,"handles":424,"privateBytes":398544896,"workingSetBytes":191094784},{"cycle":15,"handles":424,"privateBytes":398057472,"workingSetBytes":190861312},{"cycle":16,"handles":424,"privateBytes":398639104,"workingSetBytes":191008768},{"cycle":17,"handles":424,"privateBytes":330682368,"workingSetBytes":190930944},{"cycle":18,"handles":424,"privateBytes":332021760,"workingSetBytes":191492096},{"cycle":19,"handles":424,"privateBytes":333598720,"workingSetBytes":193224704},{"cycle":20,"handles":424,"privateBytes":331210752,"workingSetBytes":193253376},{"cycle":21,"handles":424,"privateBytes":330829824,"workingSetBytes":193204224},{"cycle":22,"handles":424,"privateBytes":329375744,"workingSetBytes":191926272},{"cycle":23,"handles":424,"privateBytes":329670656,"workingSetBytes":192155648},{"cycle":24,"handles":424,"privateBytes":329424896,"workingSetBytes":191963136},{"cycle":25,"handles":424,"privateBytes":333058048,"workingSetBytes":193122304},{"cycle":26,"handles":424,"privateBytes":332238848,"workingSetBytes":192708608},{"cycle":27,"handles":424,"privateBytes":329973760,"workingSetBytes":192212992},{"cycle":28,"handles":424,"privateBytes":330256384,"workingSetBytes":192417792},{"cycle":29,"handles":424,"privateBytes":329318400,"workingSetBytes":192020480},{"cycle":30,"handles":424,"privateBytes":331231232,"workingSetBytes":193048576},{"cycle":31,"handles":424,"privateBytes":329641984,"workingSetBytes":192221184},{"cycle":32,"handles":424,"privateBytes":331460608,"workingSetBytes":193413120},{"cycle":33,"handles":424,"privateBytes":329592832,"workingSetBytes":192307200},{"cycle":34,"handles":424,"privateBytes":288059392,"workingSetBytes":192393216},{"cycle":35,"handles":424,"privateBytes":288116736,"workingSetBytes":192520192},{"cycle":36,"handles":424,"privateBytes":288382976,"workingSetBytes":192380928},{"cycle":37,"handles":424,"privateBytes":288268288,"workingSetBytes":192290816},{"cycle":38,"handles":424,"privateBytes":287817728,"workingSetBytes":192311296},{"cycle":39,"handles":424,"privateBytes":288010240,"workingSetBytes":192270336},{"cycle":40,"handles":424,"privateBytes":291033088,"workingSetBytes":193351680},{"cycle":41,"handles":424,"privateBytes":289882112,"workingSetBytes":192892928},{"cycle":42,"handles":424,"privateBytes":290086912,"workingSetBytes":193384448},{"cycle":43,"handles":424,"privateBytes":288415744,"workingSetBytes":192446464},{"cycle":44,"handles":424,"privateBytes":288075776,"workingSetBytes":192380928},{"cycle":45,"handles":424,"privateBytes":289546240,"workingSetBytes":193097728},{"cycle":46,"handles":424,"privateBytes":289222656,"workingSetBytes":192790528},{"cycle":47,"handles":424,"privateBytes":290926592,"workingSetBytes":193388544},{"cycle":48,"handles":424,"privateBytes":288133120,"workingSetBytes":192602112},{"cycle":49,"handles":424,"privateBytes":290856960,"workingSetBytes":193417216},{"cycle":50,"handles":424,"privateBytes":289898496,"workingSetBytes":192778240}],"scaleFactor":"2","scaleMethod":"QT_SCALE_FACTOR test override; native screen DPR multiplies it","schemaVersion":1,"screenSwitch":"blocked-external: only one screen exposed by Qt","screens":[{"dpr":2,"height":720,"logicalDpi":96,"name":"S34C65xV","width":1720}]}
+<end of output>
+Test time =   9.75 sec
+----------------------------------------------------------
+Test Passed.
+"desktop.viewport_dpi_2" end time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+"desktop.viewport_dpi_2" time elapsed: 00:00:09
+----------------------------------------------------------
+
+29/42 Testing: application.sketch_editor_flow
+29/42 Test: application.sketch_editor_flow
+Command: "V:/build/p02-qt-final/tests/voelund_sketch_editor_tests.exe"
+Directory: V:/build/p02-qt-final/tests
+"application.sketch_editor_flow" start time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 0 redundants
+<end of output>
+Test time =   2.07 sec
+----------------------------------------------------------
+Test Passed.
+"application.sketch_editor_flow" end time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+"application.sketch_editor_flow" time elapsed: 00:00:02
+----------------------------------------------------------
+
+30/42 Testing: application.sketch_construction
+30/42 Test: application.sketch_construction
+Command: "V:/build/p02-qt-final/tests/voelund_sketch_construction_tests.exe"
+Directory: V:/build/p02-qt-final/tests
+"application.sketch_construction" start time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.32 sec
+----------------------------------------------------------
+Test Passed.
+"application.sketch_construction" end time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+"application.sketch_construction" time elapsed: 00:00:00
+----------------------------------------------------------
+
+31/42 Testing: application.sketch_circle_constraints
+31/42 Test: application.sketch_circle_constraints
+Command: "V:/build/p02-qt-final/tests/voelund_sketch_circle_constraint_tests.exe"
+Directory: V:/build/p02-qt-final/tests
+"application.sketch_circle_constraints" start time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.32 sec
+----------------------------------------------------------
+Test Passed.
+"application.sketch_circle_constraints" end time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+"application.sketch_circle_constraints" time elapsed: 00:00:00
+----------------------------------------------------------
+
+32/42 Testing: application.sketch_alignments
+32/42 Test: application.sketch_alignments
+Command: "V:/build/p02-qt-final/tests/voelund_sketch_alignment_tests.exe"
+Directory: V:/build/p02-qt-final/tests
+"application.sketch_alignments" start time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.30 sec
+----------------------------------------------------------
+Test Passed.
+"application.sketch_alignments" end time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+"application.sketch_alignments" time elapsed: 00:00:00
+----------------------------------------------------------
+
+33/42 Testing: application.sketch_fix_distance
+33/42 Test: application.sketch_fix_distance
+Command: "V:/build/p02-qt-final/tests/voelund_sketch_fix_distance_tests.exe"
+Directory: V:/build/p02-qt-final/tests
+"application.sketch_fix_distance" start time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.24 sec
+----------------------------------------------------------
+Test Passed.
+"application.sketch_fix_distance" end time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+"application.sketch_fix_distance" time elapsed: 00:00:00
+----------------------------------------------------------
+
+34/42 Testing: application.sketch_basic_tools
+34/42 Test: application.sketch_basic_tools
+Command: "V:/build/p02-qt-final/tests/voelund_sketch_basic_tools_tests.exe"
+Directory: V:/build/p02-qt-final/tests
+"application.sketch_basic_tools" start time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 2 redundants
+<end of output>
+Test time =   0.57 sec
+----------------------------------------------------------
+Test Passed.
+"application.sketch_basic_tools" end time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+"application.sketch_basic_tools" time elapsed: 00:00:00
+----------------------------------------------------------
+
+35/42 Testing: application.sketch_slot_dimensions
+35/42 Test: application.sketch_slot_dimensions
+Command: "V:/build/p02-qt-final/tests/voelund_sketch_slot_tests.exe"
+Directory: V:/build/p02-qt-final/tests
+"application.sketch_slot_dimensions" start time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 5 redundants
+<end of output>
+Test time =   0.39 sec
+----------------------------------------------------------
+Test Passed.
+"application.sketch_slot_dimensions" end time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+"application.sketch_slot_dimensions" time elapsed: 00:00:00
+----------------------------------------------------------
+
+36/42 Testing: workspaces.module_registry
+36/42 Test: workspaces.module_registry
+Command: "V:/build/p02-qt-final/tests/voelund_workspace_tests.exe"
+Directory: V:/build/p02-qt-final/tests
+"workspaces.module_registry" start time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"workspaces.module_registry" end time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+"workspaces.module_registry" time elapsed: 00:00:00
+----------------------------------------------------------
+
+37/42 Testing: architecture.source_limits
+37/42 Test: architecture.source_limits
+Command: "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/cmake.exe" "-DVOELUND_SOURCE_ROOT=V:/" "-P" "V://tools/cmake/CheckSourceLimits.cmake"
+Directory: V:/build/p02-qt-final/tests
+"architecture.source_limits" start time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+-- Checked 202 source files
+-- Source file limit check passed
+<end of output>
+Test time =   0.06 sec
+----------------------------------------------------------
+Test Passed.
+"architecture.source_limits" end time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+"architecture.source_limits" time elapsed: 00:00:00
+----------------------------------------------------------
+
+38/42 Testing: architecture.source_limits_regression
+38/42 Test: architecture.source_limits_regression
+Command: "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/cmake.exe" "-DVOELUND_TEST_ROOT=V:/build/p02-qt-final/tests/source-limit-fixtures" "-P" "V://tests/cmake/CheckSourceLimitsTests.cmake"
+Directory: V:/build/p02-qt-final/tests
+"architecture.source_limits_regression" start time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+-- missing_variable: passed
+-- empty_value: passed
+-- nonexistent_directory: passed
+-- regular_file: passed
+-- literal_quotes: passed
+-- empty_directory: passed
+-- unsupported_files_only: passed
+-- spaces_and_unicode: passed
+-- 600_lf_final_newline_yes: passed
+-- 600_lf_final_newline_no: passed
+-- 601_lf_final_newline_yes: passed
+-- 601_lf_final_newline_no: passed
+-- 600_crlf_final_newline_yes: passed
+-- 600_crlf_final_newline_no: passed
+-- 601_crlf_final_newline_yes: passed
+-- 601_crlf_final_newline_no: passed
+<end of output>
+Test time =   0.25 sec
+----------------------------------------------------------
+Test Passed.
+"architecture.source_limits_regression" end time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+"architecture.source_limits_regression" time elapsed: 00:00:00
+----------------------------------------------------------
+
+39/42 Testing: architecture.ctest_label_runner
+39/42 Test: architecture.ctest_label_runner
+Command: "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/cmake.exe" "-DVOELUND_CTEST_COMMAND=C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/ctest.exe" "-DVOELUND_BINARY_DIR=V:/build/p02-qt-final" "-DVOELUND_TEST_LABEL=unit" "-P" "V://tests/cmake/RunLabeledTests.cmake"
+Directory: V:/build/p02-qt-final/tests
+"architecture.ctest_label_runner" start time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+-- CTest label 'unit' passed with 9 selected tests
+<end of output>
+Test time =   7.52 sec
+----------------------------------------------------------
+Test Passed.
+"architecture.ctest_label_runner" end time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+"architecture.ctest_label_runner" time elapsed: 00:00:07
+----------------------------------------------------------
+
+40/42 Testing: architecture.desktop_smoke_runner
+40/42 Test: architecture.desktop_smoke_runner
+Command: "C:/Program Files/Microsoft Visual Studio/18/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/cmake.exe" "-DVOELUND_TEST_ROOT=V:/build/p02-qt-final/tests/expected-smoke-fixtures" "-P" "V://tests/cmake/ExpectedSmokeRunnerTests.cmake"
+Directory: V:/build/p02-qt-final/tests
+"architecture.desktop_smoke_runner" start time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+-- Expected-smoke runner: 4 cases passed
+<end of output>
+Test time =   1.14 sec
+----------------------------------------------------------
+Test Passed.
+"architecture.desktop_smoke_runner" end time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+"architecture.desktop_smoke_runner" time elapsed: 00:00:01
+----------------------------------------------------------
+
+41/42 Testing: architecture.platform_report
+41/42 Test: architecture.platform_report
+Command: "C:/Users/eduar/.cache/codex-runtimes/codex-primary-runtime/dependencies/native/powershell/pwsh.exe" "-NoProfile" "-File" "V://tests/powershell/PlatformReport.Tests.ps1"
+Directory: V:/build/p02-qt-final/tests
+"architecture.platform_report" start time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+Platform report regressions passed: 30 cases plus blocked acceptance exit code. Fixtures: V:\build\platform-report-tests-fed8ff92712b426f911015e42f34d4e4
+Execution regressions passed: test failure, environment restoration, skip, build failure, existing report and existing run.
+<end of output>
+Test time =   2.95 sec
+----------------------------------------------------------
+Test Passed.
+"architecture.platform_report" end time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+"architecture.platform_report" time elapsed: 00:00:02
+----------------------------------------------------------
+
+42/42 Testing: architecture.setup_windows_mapping
+42/42 Test: architecture.setup_windows_mapping
+Command: "C:/Users/eduar/.cache/codex-runtimes/codex-primary-runtime/dependencies/native/powershell/pwsh.exe" "-NoProfile" "-ExecutionPolicy" "Bypass" "-File" "V://tests/powershell/SetupWindowsMapping.Tests.ps1"
+Directory: V:/build/p02-qt-final/tests
+"architecture.setup_windows_mapping" start time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+Output:
+----------------------------------------------------------
+existing Unicode target: passed
+other checkout with identical marker: passed
+wrong marker: passed
+missing marker: passed
+occupied physical drive: passed
+inspection failed: passed
+subst returned failure: passed
+created Unicode target: passed
+creation did not establish mapping: passed
+creation points to other checkout: passed
+created mapping has wrong marker: passed
+Setup-Windows mapping tests passed without changing any real drive mapping.
+<end of output>
+Test time =   0.61 sec
+----------------------------------------------------------
+Test Passed.
+"architecture.setup_windows_mapping" end time: Sep 14 18:04 Mitteleuropäische Sommerzeit
+"architecture.setup_windows_mapping" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Sep 14 18:04 Mitteleuropäische Sommerzeit
+
+application =  14.83 sec*proc
+
+architecture =  12.52 sec*proc
+
+contract =   0.05 sec*proc
+
+desktop =  41.45 sec*proc
+
+document =  16.00 sec*proc
+
+dpi =  29.16 sec*proc
+
+features =   0.17 sec*proc
+
+integration =  17.12 sec*proc
+
+kernel =   0.10 sec*proc
+
+lifecycle =   2.96 sec*proc
+
+negative =   0.36 sec*proc
+
+platform =   5.79 sec*proc
+
+qt-opengl =  32.12 sec*proc
+
+regression =  35.10 sec*proc
+
+sketch =   3.97 sec*proc
+
+ui =   1.88 sec*proc
+
+unit =   8.70 sec*proc
+
+viewport =  32.12 sec*proc
+
+windows =   3.45 sec*proc
+
+workspaces =   0.01 sec*proc
+

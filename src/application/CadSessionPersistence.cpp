@@ -1,4 +1,6 @@
+#include <algorithm>
 #include <fstream>
+#include <limits>
 #include <sstream>
 #include <type_traits>
 #include <utility>
@@ -13,10 +15,12 @@ struct PreparedLoad {
     features::FeatureGraphResult evaluated;
     std::vector<FeatureRuntimeState> states;
     std::string clean;
+    std::optional<document::MigrationReport> report;
 };
 
 PreparedLoad prepareLoad(std::istream& input) {
-    auto document = document::DocumentSerializer::read(input);
+    auto imported = document::DocumentSerializer::readWithReport(input);
+    auto document = imported.snapshot.toDocument();
     std::ostringstream serialized;
     document::DocumentSerializer::write(document, serialized);
     std::vector<FeatureRuntimeState> states;
@@ -34,14 +38,14 @@ PreparedLoad prepareLoad(std::istream& input) {
                 state.status = FeatureRuntimeStatus::error;
                 state.message = error.what();
             } else if (failed) {
-                state.status = FeatureRuntimeStatus::error;
+                state.status = FeatureRuntimeStatus::blocked;
                 state.message = "Blocked by an earlier feature error";
             }
         }
         // No shape from the previously open document may leak into this failed model.
         evaluated = {};
     }
-    return {std::move(document), std::move(evaluated), std::move(states), serialized.str()};
+    return {std::move(document), std::move(evaluated), std::move(states), serialized.str(), std::move(imported.report)};
 }
 } // namespace
 
@@ -63,17 +67,26 @@ void CadSession::saveDocumentUsing(const std::filesystem::path& path,
 }
 
 void CadSession::loadDocument(const std::filesystem::path& path) {
+    if (generation_ == std::numeric_limits<std::uint64_t>::max())
+        throw std::overflow_error("Document generation exhausted");
     auto preparedPath = std::filesystem::absolute(path);
     std::ifstream input(preparedPath, std::ios::binary);
     if (!input)
         throw std::runtime_error("Could not open the document for reading");
     auto candidate = prepareLoad(input);
+    const bool valid = std::ranges::all_of(candidate.states, [](const auto& state) {
+        return state.status == FeatureRuntimeStatus::current;
+    });
     const auto selection = candidate.document.features().empty()
                                ? std::optional<document::FeatureId>{}
                                : candidate.document.features().back().id;
     static_assert(std::is_nothrow_move_assignable_v<document::ModelDocument>);
     static_assert(std::is_nothrow_move_assignable_v<TopoDS_Shape>);
+    static_assert(std::is_nothrow_move_assignable_v<decltype(importReport_)>);
     document_ = std::move(candidate.document);
+    importReport_ = std::move(candidate.report);
+    ++generation_;
+    geometryStamp_ = valid ? std::optional<DocumentStamp>{sceneStatus().document} : std::nullopt;
     currentShape_ = std::move(candidate.evaluated.resultShape);
     currentBodies_.swap(candidate.evaluated.bodies);
     currentFeatures_.swap(candidate.evaluated.features);

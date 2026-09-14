@@ -1,10 +1,15 @@
+#include "FeatureEvaluationDetail.hpp"
+#include <Standard_OutOfMemory.hxx>
+#include <Standard_ProgramError.hxx>
 #include <voelund/features/FeatureGraph.hpp>
+#include <voelund/features/GeometryEvaluationError.hpp>
+#include <voelund/kernel/OcctCompatibility.hpp>
 
 #include <voelund/document/ModelDocument.hpp>
 #include <voelund/features/BoxFeature.hpp>
 #include <voelund/features/CylinderFeature.hpp>
-#include <voelund/features/SketchEvaluation.hpp>
 #include <voelund/features/SketchConstraintSolver.hpp>
+#include <voelund/features/SketchEvaluation.hpp>
 #include <voelund/features/SketchSupportResolver.hpp>
 #include <voelund/kernel/ShapeFactory.hpp>
 #include <voelund/kernel/ShapeOperations.hpp>
@@ -27,7 +32,7 @@ const TopoDS_Shape& findOutput(const std::vector<EvaluatedFeature>& outputs,
                                document::FeatureId featureId, bool reference = false) {
     const auto match = std::ranges::find(outputs, featureId, &EvaluatedFeature::id);
     if (match == outputs.end()) {
-        throw std::runtime_error("Feature input has not been evaluated");
+        throw GeometryEvaluationError("Feature input has not been evaluated");
     }
     return reference ? match->referenceShape : match->shape;
 }
@@ -35,14 +40,14 @@ const TopoDS_Shape& findOutput(const std::vector<EvaluatedFeature>& outputs,
 EvaluatedBody& findBody(std::vector<EvaluatedBody>& bodies, document::FeatureId featureId) {
     const auto match = std::ranges::find(bodies, featureId, &EvaluatedBody::sourceFeature);
     if (match == bodies.end()) {
-        throw std::runtime_error("Join input does not produce an editable body");
+        throw GeometryEvaluationError("Join input does not produce an editable body");
     }
     return *match;
 }
 
 TopoDS_Shape createResultShape(const std::vector<EvaluatedBody>& bodies) {
     if (bodies.empty()) {
-        throw std::runtime_error("Feature graph produced no bodies");
+        throw GeometryEvaluationError("Feature graph produced no bodies");
     }
     if (bodies.size() == 1) {
         return bodies.front().shape;
@@ -87,7 +92,7 @@ void evaluateCylinder(const document::ModelDocument& document,
                       std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
                       std::vector<EvaluatedBody>& referenceBodies) {
     if (!descriptor.inputFeature.has_value()) {
-        throw std::runtime_error("Cylinder feature requires an input feature");
+        throw GeometryEvaluationError("Cylinder feature requires an input feature");
     }
     const document::FeatureId inputId = *descriptor.inputFeature;
     const TopoDS_Shape& inputShape = findOutput(outputs, inputId);
@@ -123,9 +128,9 @@ void evaluateSketch(const document::ModelDocument& document,
     if (descriptor.inputFeature.has_value()) {
         if (!updateSketchSupportReferences(parameters,
                                            findOutput(outputs, *descriptor.inputFeature)))
-            throw std::runtime_error("Sketch support face is no longer available");
+            throw GeometryEvaluationError("Sketch support face is no longer available");
         if (solveSketchConstraints(parameters).status != SketchSolveStatus::success)
-            throw std::runtime_error("Sketch support references cannot be solved");
+            throw GeometryEvaluationError("Sketch support references cannot be solved");
     }
     TopoDS_Compound geometry;
     BRep_Builder builder;
@@ -141,7 +146,7 @@ void evaluateExtrusion(const document::ModelDocument& document,
                        std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
                        std::vector<EvaluatedBody>& referenceBodies) {
     if (!descriptor.inputFeature.has_value()) {
-        throw std::runtime_error("Extrusion requires a sketch input");
+        throw GeometryEvaluationError("Extrusion requires a sketch input");
     }
     const document::FeatureId sketchId = *descriptor.inputFeature;
     document::SketchParameters sketch = document.sketchParameters(sketchId);
@@ -150,12 +155,12 @@ void evaluateExtrusion(const document::ModelDocument& document,
     const auto sketchDescriptor =
         std::ranges::find(descriptors, sketchId, &document::FeatureDescriptor::id);
     if (sketchDescriptor == descriptors.end() || !sketchDescriptor->inputFeature.has_value())
-        throw std::runtime_error("Sketch support feature is missing");
+        throw GeometryEvaluationError("Sketch support feature is missing");
     const document::FeatureId supportId = *sketchDescriptor->inputFeature;
     if (!updateSketchSupportReferences(sketch, findOutput(outputs, supportId)))
-        throw std::runtime_error("Sketch support face is no longer available");
+        throw GeometryEvaluationError("Sketch support face is no longer available");
     if (solveSketchConstraints(sketch).status != SketchSolveStatus::success)
-        throw std::runtime_error("Sketch support references cannot be solved");
+        throw GeometryEvaluationError("Sketch support references cannot be solved");
     const TopoDS_Shape sketchFace = evaluateSketchProfileFaces(sketch, parameters.profiles);
     // Start just inside the support body. Repeated OCCT booleans can otherwise leave
     // microscopic gaps at a face that is mathematically coincident with the sketch.
@@ -194,6 +199,8 @@ FeatureGraphResult FeatureGraph::evaluate(const document::ModelDocument& documen
     referenceBodies.reserve(document.features().size());
     for (const document::FeatureDescriptor& descriptor : document.features()) {
         try {
+            if (detail::beforeFeatureEvaluation)
+                detail::beforeFeatureEvaluation(descriptor.id);
             switch (descriptor.kind) {
             case document::FeatureKind::box:
                 evaluateBox(document, descriptor, outputs, bodies, referenceBodies);
@@ -208,8 +215,16 @@ FeatureGraphResult FeatureGraph::evaluate(const document::ModelDocument& documen
                 evaluateExtrusion(document, descriptor, outputs, bodies, referenceBodies);
                 break;
             }
-        } catch (const std::exception& error) {
+        } catch (const GeometryEvaluationError& error) {
             throw FeatureEvaluationError(descriptor.id, error.what());
+        } catch (const kernel::KernelError& error) {
+            throw FeatureEvaluationError(descriptor.id, error.what());
+        } catch (const Standard_OutOfMemory&) {
+            throw;
+        } catch (const Standard_ProgramError&) {
+            throw;
+        } catch (const Standard_Failure& failure) {
+            throw FeatureEvaluationError(descriptor.id, kernel::occtFailureDiagnostic(failure));
         }
     }
     return FeatureGraphResult{createResultShape(bodies), std::move(bodies), std::move(outputs)};

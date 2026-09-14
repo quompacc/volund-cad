@@ -1,0 +1,16 @@
+[1/4] Scanning V:\tests\desktop\SketchSolverGateTests.cpp for CXX dependencies
+[2/4] Generating CXX dyndep file tests\CMakeFiles\voelund_sketch_solver_gate_tests.dir\CXX.dd
+[3/4] Building CXX object tests\CMakeFiles\voelund_sketch_solver_gate_tests.dir\desktop\SketchSolverGateTests.cpp.obj
+[4/4] Linking CXX executable tests\voelund_sketch_solver_gate_tests.exe
+Test project V:/build/p02-qt-final
+    Start 18: desktop.sketch_solver_gate
+1/1 Test #18: desktop.sketch_solver_gate .......   Passed    0.66 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+desktop       =   0.66 sec*proc (1 test)
+regression    =   0.66 sec*proc (1 test)
+sketch        =   0.66 sec*proc (1 test)
+
+Total Test time (real) =   0.67 sec

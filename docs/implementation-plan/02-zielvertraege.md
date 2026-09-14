@@ -23,6 +23,8 @@ Kleine zustandsarme DTOs dürfen an den Grenzen stehen. OCCT ist im bestehenden 
 
 Alle internen Längen in Millimeter, Winkel in Radiant; Umrechnung an Eingabe-/Dateigrenzen. Ebenen werden durch validierten Ursprung und orthonormale rechtshändige Basis beschrieben. NaN/Inf, degenerierte Achsen und unzulässige Maße werden vor Mutation abgewiesen. Unterschiedliche Darstellungspräzision verändert keine Modellmaße.
 
+**D10b1-Ebenenentscheidung:** Produkteingaben müssen bereits orthonormal sein (64 * double-epsilon als dimensionslose Rundungsgrenze); keine automatische Normalisierung. Historische nicht kanonische Ebenen bleiben verlustfrei les-/speicherbar, werden im Importbericht markiert und vor Geometrieauswertung als Fehler abgewiesen. Explizite Korrekturen sind normale geprüfte Befehle mit Undo/Redo. Die einheitliche Radiant-Konvention ist noch in D10b2 umzusetzen.
+
 Toleranzpolitik in einem kleinen typisierten Konfigurationswert, nicht globale mutable Settings: geometrische Verbindung, Winkel, Modellvergleich und Picking sind getrennte Größen. Numerische Toleranz ist maßstabsbewusst und vom Kernel-Minimum begrenzt; konkrete Werte werden mit kleinen/großen Fixtures in D10 festgelegt. Der bestehende pauschale Extrusionsüberstand `1e-4 mm` darf keine unbenannte Modellierungsregel bleiben.
 
 ## K03 – Befehle und Transaktionen
@@ -78,6 +80,12 @@ Jede Erzeugungsoperation liefert semantische Rollen: Mittelpunkt, Start/Ende, Re
 Solve-Zustände mindestens `UnderConstrained`, `FullyConstrained`, `Conflicting`, `Failed`; ein numerischer Fehler ist nicht „unterbestimmt“. Die Anzahl der Freiheitsgrade und Konflikt-IDs stammen aus demselben Solve-Ergebnis wie die angezeigte Geometrie. Undo/Cancel stellt den gesamten Editorzustand her. Offset bedeutet geometrisch konstanten Normalabstand; wenn der Datentyp eine Kurve nicht darstellen kann, wird die Operation mit Grund abgewiesen, nicht durch eine andere Kurve angenähert und als exakt bezeichnet.
 
 ## K08 – OCAF und Dateiformat: vorgeschlagener Übergang
+
+**D08-Entscheidung vom 14.09.2026:** Der isolierte Austausch 8.0.1 ↔ 7.9.3 ist
+einschließlich Rücklauf bestanden. [ADR 0008](../adr/0008-ocaf-binary-persistence.md)
+wählt native BinOcaf-Streams mit expliziter OCAF-Schreibversion 12 für D12/D13.
+Der Produktcodec ist noch nicht umgestellt; der nachfolgend beschriebene neutrale
+Fallback bleibt ein Rückfallweg, ist aber nicht der gewählte neue Writer.
 
 Die OCAF-Anforderung bleibt bestehen. **Vorgeschlagene Zielrichtung:** OCAF als alleinige autoritative Quelle für Featureparameter/IDs/Transaktionen, gekapselt hinter `ModelDocument`; immutable DTO-Snapshots für Anwendung und Legacy-Konvertierung. Kein synchron zu haltendes zweites veränderliches Vektordokument. Cache und Darstellung bleiben abgeleitet.
 

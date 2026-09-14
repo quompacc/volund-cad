@@ -31,7 +31,6 @@ std::string requiredLine(std::istream& input, const char* description);
 std::uint64_t headerValue(std::istream& input, const char* expectedName);
 kernel::RigidTransform readTransform(std::istringstream& line);
 void validateTransform(const kernel::RigidTransform& transform);
-void validatePlaneDirections(const SketchPlane& plane);
 void validateConstraintVersion(SketchConstraintKind kind, std::uint64_t version);
 [[nodiscard]] bool positiveFinite(double value);
 CylinderResultMode readResultMode(std::istringstream& line);

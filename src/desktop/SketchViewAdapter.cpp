@@ -1,4 +1,5 @@
 #include "SketchViewAdapter.hpp"
+#include <voelund/document/SketchPlaneValidation.hpp>
 
 #include <voelund/application/CadSession.hpp>
 
@@ -30,12 +31,11 @@ viewport::SceneSketchElement makeSceneSketchElement(const features::EvaluatedSke
     if (element.points.size() == 2) {
         const auto& first = element.points[0];
         const auto& second = element.points[1];
-        points.push_back({element.id.value(), viewport::SketchPointKind::midpoint,
-                          (first.local.x + second.local.x) * 0.5,
-                          (first.local.y + second.local.y) * 0.5,
-                          (first.world.X() + second.world.X()) * 0.5,
-                          (first.world.Y() + second.world.Y()) * 0.5,
-                          (first.world.Z() + second.world.Z()) * 0.5});
+        points.push_back(
+            {element.id.value(), viewport::SketchPointKind::midpoint,
+             (first.local.x + second.local.x) * 0.5, (first.local.y + second.local.y) * 0.5,
+             (first.world.X() + second.world.X()) * 0.5, (first.world.Y() + second.world.Y()) * 0.5,
+             (first.world.Z() + second.world.Z()) * 0.5});
     }
     return {element.id.value(), element.shape, conflicting, element.construction,
             std::move(points)};
@@ -47,6 +47,12 @@ makeSceneSketchElements(const application::CadSession& session) {
     const auto selected = session.selectedFeature();
     if (!selected.has_value() ||
         session.selectedFeatureDescriptor().kind != document::FeatureKind::sketch) {
+        return result;
+    }
+    try {
+        document::validateCanonicalSketchPlane(session.selectedSketchParameters().plane);
+    } catch (const std::invalid_argument&) {
+        // The tree/status carries the migration diagnostic; no guessed overlay.
         return result;
     }
     const auto evaluated = session.selectedSketchElements();

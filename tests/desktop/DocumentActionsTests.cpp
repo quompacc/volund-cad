@@ -1,4 +1,5 @@
 #include "../../src/desktop/DocumentActions.hpp"
+#include "../CommandResultAssertions.hpp"
 #include <QAbstractButton>
 #include <QAction>
 #include <QApplication>
@@ -78,7 +79,7 @@ int main(int argc, char** argv) {
                     !session.isModified() &&
                     window.windowTitle().startsWith(QString::fromUtf8("Teil äöü.volund")),
                 "Save As Unicode/title");
-        static_cast<void>(session.addBoxFeature());
+        static_cast<void>(voelund::test::requireCommittedFeature(session.createBoxFeature()));
         actions.syncWindowTitle();
         const QString dirtyTitle = window.windowTitle();
         const auto selection = session.selectedFeature();
@@ -104,13 +105,13 @@ int main(int argc, char** argv) {
         require(!session.isModified() && session.features().size() == 2 &&
                     !window.windowTitle().contains(" *"),
                 "open action did not commit");
-        static_cast<void>(session.addBoxFeature());
+        static_cast<void>(voelund::test::requireCommittedFeature(session.createBoxFeature()));
         actions.syncWindowTitle();
         action(window, QStringLiteral("&Save"))->trigger();
         require(!session.isModified() && !window.windowTitle().contains(" *"), "save action state");
         std::filesystem::remove(native(path));
         std::filesystem::create_directory(native(path));
-        static_cast<void>(session.addBoxFeature());
+        static_cast<void>(voelund::test::requireCommittedFeature(session.createBoxFeature()));
         actions.syncWindowTitle();
         const auto beforeFailure = window.windowTitle();
         action(window, QStringLiteral("&Save"))->trigger();

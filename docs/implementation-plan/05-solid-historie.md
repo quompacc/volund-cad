@@ -169,6 +169,9 @@ K02/K05/K06/K08/K10 gelten für jeden neuen Featuretyp. Ein neuer Typ braucht Pa
 - **Abnahme:** Timeline des gespeicherten Referenzteils entspricht tatsächlichen IDs/Reihenfolge. Rechtsklick/Edit und Undo funktionieren; keine festen Sketch/Pad/Fillet-Labels bleiben. A-HISTORY-01/02 über UI bestehen.
 - **Grenze:** Kein erneuter eigener Auswertungszustand in Timelinewidgets.
 
+Zusätzlicher Pflichtnachweis: A-ERR-01-Timeline-Stufe aus Kapitel 08; ein D07-
+Fundamentnachweis ersetzt die Prüfung der echten Timeline nicht.
+
 ## M16 – Reorder und Delete mit Abhängigkeitsprüfung
 
 - **Voraussetzungen:** M15, R01.
@@ -191,6 +194,9 @@ K02/K05/K06/K08/K10 gelten für jeden neuen Featuretyp. Ein neuer Typ braucht Pa
 - **Abnahme:** A-STEP-01: eigenes Mehrkörperteil exportieren/importieren, Solidanzahl, Boundingbox und Volumen innerhalb Toleranz vergleichen. Inches-Fixture korrekt in mm; kaputte STEP-Datei liefert Fehler ohne aktives Dokument zu ersetzen.
 - **Grenze:** Kein Versprechen einer parametrischen Timeline aus STEP; Assemblystruktur/XDE-Ausbau separat X01.
 
+Zusätzlicher Pflichtnachweis: Exportversuch einer fehlerhaften aktuellen Revision
+ablehnen, auch wenn eine letzte gültige Darstellung vorhanden ist (A-ERR-01).
+
 ## M18 – Austauschworkflow und mechanische v1-Abnahme
 
 - **Voraussetzungen:** M16, M17.
@@ -200,4 +206,7 @@ K02/K05/K06/K08/K10 gelten für jeden neuen Featuretyp. Ein neuer Typ braucht Pa
   2. Fehler, Cancel und Save/Open eines importierten Features vollständig durchführen.
   3. Mechanische Referenzmodelle aus Kapitel08 über produktive Shell erstellen, parametrisch ändern und austauschen; G3-Bericht schreiben.
 - **Abnahme:** A-PART-01/02, A-STEP-01, A-HISTORY-01/02, A-UI-01 komplett bestanden. Handbuch nennt tatsächlich umgesetzte Varianten und Grenzen. Keine aktive Attrappe im v1-Umfang.
+- **Zusätzliche Gesamtprüfung:** A-ERR-01 über gemeinsame Shell, echte Timeline,
+  Reparatur/Undo und produktiven Exportpfad vollständig wiederholen. Die vorherigen
+  Teilnachweise allein schließen die Produktabnahme nicht ab.
 - **Grenze:** G3 ist noch keine Plattform-/Releasefreigabe; L-Pakete bleiben Pflicht.

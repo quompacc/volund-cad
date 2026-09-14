@@ -1,3 +1,38 @@
+add_executable(voelund_angle_boundary_tests integration/AngleBoundaryTests.cpp)
+target_link_libraries(voelund_angle_boundary_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME document.angle_boundaries COMMAND voelund_angle_boundary_tests
+    "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/documents")
+set_tests_properties(document.angle_boundaries PROPERTIES LABELS "integration;document;regression" TIMEOUT 60)
+add_executable(voelund_plane_migration_tests integration/PlaneMigrationTests.cpp)
+target_link_libraries(voelund_plane_migration_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME document.plane_migration COMMAND voelund_plane_migration_tests
+    "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/documents" "${CMAKE_CURRENT_BINARY_DIR}")
+set_tests_properties(document.plane_migration PROPERTIES LABELS "integration;document;regression" TIMEOUT 60)
+add_executable(voelund_numeric_validation_tests integration/NumericValidationTests.cpp)
+target_link_libraries(voelund_numeric_validation_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME document.numeric_validation COMMAND voelund_numeric_validation_tests)
+set_tests_properties(document.numeric_validation PROPERTIES LABELS "integration;document;kernel;regression" TIMEOUT 60)
+add_executable(voelund_legacy_import_tests integration/LegacyImportTests.cpp)
+target_link_libraries(voelund_legacy_import_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME document.legacy_import COMMAND voelund_legacy_import_tests
+    "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/documents" "${CMAKE_CURRENT_BINARY_DIR}")
+set_tests_properties(document.legacy_import PROPERTIES LABELS "integration;document;regression" TIMEOUT 60)
+add_executable(voelund_scene_status_tests integration/SceneStatusTests.cpp)
+add_executable(voelund_command_input_tests integration/CommandInputTests.cpp)
+target_link_libraries(voelund_command_input_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.command_input COMMAND voelund_command_input_tests)
+set_tests_properties(application.command_input PROPERTIES LABELS "integration;application;document;regression" TIMEOUT 60)
+target_link_libraries(voelund_scene_status_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.scene_status COMMAND voelund_scene_status_tests "${CMAKE_CURRENT_BINARY_DIR}")
+set_tests_properties(application.scene_status PROPERTIES LABELS "integration;application;document;regression" TIMEOUT 60)
+add_executable(voelund_session_failure_tests integration/CadSessionFailureBoundaryTests.cpp)
+target_link_libraries(voelund_session_failure_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.failure_boundaries COMMAND voelund_session_failure_tests)
+set_tests_properties(application.failure_boundaries PROPERTIES LABELS "integration;application;document;regression" TIMEOUT 60)
+add_executable(voelund_session_creation_tests integration/CadSessionCreationResultTests.cpp)
+target_link_libraries(voelund_session_creation_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.creation_results COMMAND voelund_session_creation_tests)
+set_tests_properties(application.creation_results PROPERTIES LABELS "integration;application;document;regression" TIMEOUT 60)
 add_executable(voelund_session_transaction_tests integration/CadSessionTransactionTests.cpp)
 target_link_libraries(voelund_session_transaction_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME application.command_transactions COMMAND voelund_session_transaction_tests)
@@ -101,6 +136,76 @@ target_link_libraries(
 add_test(NAME application.recompute_history COMMAND voelund_application_tests)
 
 if(VOELUND_BUILD_DESKTOP)
+    add_executable(voelund_sketch_command_failure_tests desktop/SketchCommandFailureTests.cpp)
+    target_link_libraries(voelund_sketch_command_failure_tests PRIVATE voelund_project_options Voelund::Desktop)
+    add_test(NAME desktop.sketch_command_failure COMMAND voelund_sketch_command_failure_tests)
+    set_tests_properties(desktop.sketch_command_failure PROPERTIES LABELS "desktop;sketch;regression" TIMEOUT 30 RUN_SERIAL TRUE)
+    if(WIN32)
+        add_custom_command(TARGET voelund_sketch_command_failure_tests POST_BUILD
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                "$<TARGET_FILE:Qt6::Core>" "$<TARGET_FILE:Qt6::Gui>" "$<TARGET_FILE:Qt6::Widgets>"
+                "$<TARGET_FILE:Qt6::OpenGL>" "$<TARGET_FILE:Qt6::OpenGLWidgets>"
+                "$<TARGET_FILE_DIR:voelund_sketch_command_failure_tests>"
+            COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:voelund_sketch_command_failure_tests>/platforms"
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:Qt6::QWindowsIntegrationPlugin>"
+                "$<TARGET_FILE_DIR:voelund_sketch_command_failure_tests>/platforms" VERBATIM)
+    endif()
+    add_executable(voelund_preview_command_failure_tests desktop/PreviewCommandFailureTests.cpp ../apps/voelund-ui-preview/SketchBackend.cpp)
+    target_link_libraries(voelund_preview_command_failure_tests PRIVATE voelund_project_options Voelund::Desktop)
+    add_test(NAME desktop.preview_command_failures COMMAND voelund_preview_command_failure_tests)
+    set_tests_properties(desktop.preview_command_failures PROPERTIES LABELS "desktop;sketch;regression" TIMEOUT 30 RUN_SERIAL TRUE)
+    if(WIN32)
+        add_custom_command(TARGET voelund_preview_command_failure_tests POST_BUILD
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                "$<TARGET_FILE:Qt6::Core>" "$<TARGET_FILE:Qt6::Gui>" "$<TARGET_FILE:Qt6::Widgets>"
+                "$<TARGET_FILE:Qt6::OpenGL>" "$<TARGET_FILE:Qt6::OpenGLWidgets>"
+                "$<TARGET_FILE_DIR:voelund_preview_command_failure_tests>"
+            COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:voelund_preview_command_failure_tests>/platforms"
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:Qt6::QWindowsIntegrationPlugin>"
+                "$<TARGET_FILE_DIR:voelund_preview_command_failure_tests>/platforms" VERBATIM)
+    endif()
+    add_executable(voelund_feature_status_tests desktop/FeatureStatusTests.cpp)
+    target_link_libraries(voelund_feature_status_tests PRIVATE voelund_project_options Voelund::Desktop)
+    add_test(NAME desktop.feature_status COMMAND voelund_feature_status_tests "${CMAKE_CURRENT_BINARY_DIR}")
+    set_tests_properties(desktop.feature_status PROPERTIES LABELS "desktop;sketch;regression" TIMEOUT 30 RUN_SERIAL TRUE)
+    if(WIN32)
+        add_custom_command(TARGET voelund_feature_status_tests POST_BUILD
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                "$<TARGET_FILE:Qt6::Core>" "$<TARGET_FILE:Qt6::Gui>" "$<TARGET_FILE:Qt6::Widgets>"
+                "$<TARGET_FILE:Qt6::OpenGL>" "$<TARGET_FILE:Qt6::OpenGLWidgets>"
+                "$<TARGET_FILE_DIR:voelund_feature_status_tests>"
+            COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:voelund_feature_status_tests>/platforms"
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:Qt6::QWindowsIntegrationPlugin>"
+                "$<TARGET_FILE_DIR:voelund_feature_status_tests>/platforms" VERBATIM)
+    endif()
+    add_executable(voelund_parameter_failure_tests desktop/ParameterFailureTests.cpp)
+    target_link_libraries(voelund_parameter_failure_tests PRIVATE voelund_project_options Voelund::Desktop)
+    add_test(NAME desktop.parameter_failures COMMAND voelund_parameter_failure_tests)
+    set_tests_properties(desktop.parameter_failures PROPERTIES LABELS "desktop;sketch;regression" TIMEOUT 30 RUN_SERIAL TRUE)
+    if(WIN32)
+        add_custom_command(TARGET voelund_parameter_failure_tests POST_BUILD
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                "$<TARGET_FILE:Qt6::Core>" "$<TARGET_FILE:Qt6::Gui>" "$<TARGET_FILE:Qt6::Widgets>"
+                "$<TARGET_FILE:Qt6::OpenGL>" "$<TARGET_FILE:Qt6::OpenGLWidgets>"
+                "$<TARGET_FILE_DIR:voelund_parameter_failure_tests>"
+            COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:voelund_parameter_failure_tests>/platforms"
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:Qt6::QWindowsIntegrationPlugin>"
+                "$<TARGET_FILE_DIR:voelund_parameter_failure_tests>/platforms" VERBATIM)
+    endif()
+    add_executable(voelund_sketch_solver_gate_tests desktop/SketchSolverGateTests.cpp)
+    target_link_libraries(voelund_sketch_solver_gate_tests PRIVATE voelund_project_options Voelund::Desktop)
+    add_test(NAME desktop.sketch_solver_gate COMMAND voelund_sketch_solver_gate_tests)
+    set_tests_properties(desktop.sketch_solver_gate PROPERTIES LABELS "desktop;sketch;regression" TIMEOUT 30 RUN_SERIAL TRUE)
+    if(WIN32)
+        add_custom_command(TARGET voelund_sketch_solver_gate_tests POST_BUILD
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                "$<TARGET_FILE:Qt6::Core>" "$<TARGET_FILE:Qt6::Gui>" "$<TARGET_FILE:Qt6::Widgets>"
+                "$<TARGET_FILE:Qt6::OpenGL>" "$<TARGET_FILE:Qt6::OpenGLWidgets>"
+                "$<TARGET_FILE_DIR:voelund_sketch_solver_gate_tests>"
+            COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:voelund_sketch_solver_gate_tests>/platforms"
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:Qt6::QWindowsIntegrationPlugin>"
+                "$<TARGET_FILE_DIR:voelund_sketch_solver_gate_tests>/platforms" VERBATIM)
+    endif()
     add_executable(voelund_document_actions_tests desktop/DocumentActionsTests.cpp ../src/desktop/DocumentActions.cpp)
     target_link_libraries(voelund_document_actions_tests PRIVATE voelund_project_options Voelund::Application Qt6::Widgets)
     add_test(NAME desktop.document_actions COMMAND voelund_document_actions_tests)
@@ -159,7 +264,7 @@ if(VOELUND_BUILD_DESKTOP)
     endif()
 endif()
 
-add_executable(voelund_sketch_editor_tests integration/SketchEditorSessionTests.cpp)
+add_executable(voelund_sketch_editor_tests integration/SketchEditorSessionTests.cpp integration/SketchEditorRelationTests.cpp)
 target_link_libraries(
     voelund_sketch_editor_tests
     PRIVATE

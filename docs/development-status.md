@@ -1,22 +1,22 @@
 # Entwicklungsstand – 12. September 2026
 
-## Aktueller Stand – Pause am 13. September 2026
+## Aktueller Stand – Pause am 14. September 2026
 
-[Fortsetzungsnotiz mit Umgebung und D07-Einstieg](session-checkpoint-2026-09-13.md).
-Auf Nutzerwunsch pausiert; keine Hintergrundarbeit. Abgenommen sind A01, A03,
-A05–A08, P01–P04 und D01–D06. A02 (Clang-CFG-Messung) und A04 bleiben offen.
-Die Entwicklung läuft auf FreeBSD/Sway; Meridian folgt abschließend in L07.
+[Fortsetzungsnotiz mit Stand, Umgebung und nächstem Schritt](session-checkpoint-2026-09-14.md).
+Abgenommen sind inzwischen D07 als Fehlerfundament, D08 als isolierter
+OCAF-/Persistenzentscheid und D09 als Legacy-Importschnittstelle.
+D10 ist in Arbeit: D10a, D10b1 und die Winkelgrenzen D10b2a sind Teilnachweise,
+keine vollständige D10-/A-NUM-01-Abnahme.
 
-D06: gemeinsame CadSession-Transaktionsgrenze, ein Undo für kombinierte
-Skizzenextrusion, getrennte Bestätigungen behalten zwei Schritte. Letzter voller
-Produktnachweis: **Windows 36/36, FreeBSD/Sway 32/32** CTests und betrachtete
-CAD-Aufnahmen beider Plattformen. Speicheratomarität und Parsergrenzen sind in
-D01–D03 umgesetzt; Dokumenttransaktion und Allokationsfehlerprüfung in D04–D05.
+Nächster Schritt ist die dokumentierte **Grad-/Radiant-Migration D10b2**.
+Die Dokumentfelder wurden noch nicht auf Radiant umgestellt. Danach folgen
+Größen-/Toleranzrollen und der Boolean-Anschlussvertrag. Fundament hat Vorrang
+vor weiteren Modellierungsfunktionen; FreeBSD/Sway zuerst, Meridian erst L07.
+A02/A04 und die noch nicht umgesetzten Referenz-/DAG-/Persistenzpakete bleiben offen.
 
-Nächster Schritt ist **D07**, eindeutige Fehlerresultate und Solver-/stale-Zustände
-bis zur UI. Die aktuelle Fehlersemantik ist ausdrücklich noch nicht die vollständige
-D04-Zielpolitik. Details: [D06-Evidenz](implementation-plan/evidence/D06.md),
-[Manifest und Plan](implementation-plan/README.md).
+Aktuelle Prüfergebnisse: **Windows 49/49**, **FreeBSD/Sway 45/45** CTests bestanden;
+[D10b2-Evidenz](implementation-plan/evidence/D10b2.md).
+Auf Nutzerwunsch nach dem Tagesabschluss pausiert; keine Hintergrundarbeit.
 
 Die folgenden Funktionsangaben stammen aus dem ursprünglichen Übergabestand vom
 12. September und sind zusammen mit den aktuellen Paket-Evidenzen zu lesen.

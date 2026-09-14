@@ -1,3 +1,4 @@
+#include "../CommandResultAssertions.hpp"
 #include <voelund/application/CadSession.hpp>
 #include <voelund/application/SketchEditorSession.hpp>
 
@@ -26,7 +27,8 @@ bool fixedGeometryAndPointLineDistanceRemainParametric() {
     using namespace voelund;
     application::CadSession session;
     session.newDocument();
-    application::SketchEditorSession editor(session, session.addBoxFeature(), plane);
+    application::SketchEditorSession editor(
+        session, voelund::test::requireCommittedFeature(session.createBoxFeature()), plane);
     if (!addLine(editor, {1.0, 2.0}, {5.0, 3.0}, 1) ||
         !editor.selectNearestReference(document::SketchElementId{1}, {1.0, 2.0}, false) ||
         !editor.addSelectedRelation(document::SketchConstraintKind::fixed))

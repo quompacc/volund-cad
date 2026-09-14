@@ -1,10 +1,13 @@
 add_library(voelund_application STATIC
     CommandTransaction.cpp
     CadSession.cpp
+    CadSessionHistory.cpp
+    CadSessionCreation.cpp
     CadSessionTransactions.cpp
     CadSessionPersistence.cpp
     CadSessionSketchProfiles.cpp
     SketchEditorConstruction.cpp
+    SketchEditorAcceptance.cpp
     SketchEditorDimensions.cpp
     SketchEditorGeometry.cpp
     SketchEditorHistory.cpp

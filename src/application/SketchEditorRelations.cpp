@@ -1,4 +1,5 @@
 #include <voelund/application/SketchEditorSession.hpp>
+#include <voelund/kernel/Angle.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -59,8 +60,9 @@ double lineAngleDegrees(const document::SketchLine& first, const document::Sketc
     const double firstY = first.end.y - first.start.y;
     const double secondX = second.end.x - second.start.x;
     const double secondY = second.end.y - second.start.y;
-    return std::atan2(firstX * secondY - firstY * secondX, firstX * secondX + firstY * secondY) *
-           180.0 / std::numbers::pi;
+    return kernel::toDegrees(kernel::Radians(std::atan2(firstX * secondY - firstY * secondX,
+                                                        firstX * secondX + firstY * secondY)))
+        .value();
 }
 
 double pointLineDistance(const document::SketchPoint& point, const document::SketchLine& line) {
@@ -339,13 +341,12 @@ bool SketchEditorSession::addSupportReference(document::SketchGeometryReference 
     return false;
 }
 
-bool SketchEditorSession::addPointOnObjectReference(
-    document::SketchGeometryReference reference, document::SketchElementId object) {
-    if (!active_ || reference.element == object || !referencePoint(elements_, reference).has_value() ||
-        !line(findElement(elements_, object)))
+bool SketchEditorSession::addPointOnObjectReference(document::SketchGeometryReference reference,
+                                                    document::SketchElementId object) {
+    if (!active_ || reference.element == object ||
+        !referencePoint(elements_, reference).has_value() || !line(findElement(elements_, object)))
         return false;
-    const document::SketchGeometryReference target{object,
-                                                    document::SketchPointPosition::start};
+    const document::SketchGeometryReference target{object, document::SketchPointPosition::start};
     if (std::ranges::any_of(constraints_.values, [&](const auto& constraint) {
             return constraint.kind == document::SketchConstraintKind::pointOnObject &&
                    constraint.first == reference && constraint.second == target;
@@ -402,10 +403,11 @@ SketchEditorSession::addAutomaticLineRelation(document::SketchElementId lineId) 
         return std::nullopt;
     const auto previousElements = elements_;
     const auto previousConstraints = constraints_;
-    constraints_.values.push_back({document::SketchConstraintId{constraints_.nextId++}, relation,
-                                   {lineId, document::SketchPointPosition::start},
-                                   document::SketchGeometryReference{
-                                       targetId, document::SketchPointPosition::start}});
+    constraints_.values.push_back(
+        {document::SketchConstraintId{constraints_.nextId++},
+         relation,
+         {lineId, document::SketchPointPosition::start},
+         document::SketchGeometryReference{targetId, document::SketchPointPosition::start}});
     if (solveConstraints())
         return relation;
     elements_ = previousElements;
@@ -418,16 +420,16 @@ bool SketchEditorSession::addTangencyReference(document::SketchElementId radialI
                                                document::SketchElementId targetId) {
     const auto* radialElement = findElement(elements_, radialId);
     const auto* targetElement = findElement(elements_, targetId);
-    if (!active_ || !radial(radialElement) ||
-        (!line(targetElement) && !radial(targetElement)) || radialId == targetId)
+    if (!active_ || !radial(radialElement) || (!line(targetElement) && !radial(targetElement)) ||
+        radialId == targetId)
         return false;
     const auto previousElements = elements_;
     const auto previousConstraints = constraints_;
-    constraints_.values.push_back({document::SketchConstraintId{constraints_.nextId++},
-                                   document::SketchConstraintKind::tangent,
-                                   {radialId, document::SketchPointPosition::start},
-                                   document::SketchGeometryReference{
-                                       targetId, document::SketchPointPosition::start}});
+    constraints_.values.push_back(
+        {document::SketchConstraintId{constraints_.nextId++},
+         document::SketchConstraintKind::tangent,
+         {radialId, document::SketchPointPosition::start},
+         document::SketchGeometryReference{targetId, document::SketchPointPosition::start}});
     if (solveConstraints())
         return true;
     elements_ = previousElements;
@@ -454,10 +456,11 @@ bool SketchEditorSession::addAutomaticRadialRelation(document::SketchElementId r
         return true;
     const auto previousElements = elements_;
     const auto previousConstraints = constraints_;
-    constraints_.values.push_back({document::SketchConstraintId{constraints_.nextId++}, kind,
-                                   {radialId, document::SketchPointPosition::center},
-                                   document::SketchGeometryReference{
-                                       targetId, document::SketchPointPosition::center}});
+    constraints_.values.push_back(
+        {document::SketchConstraintId{constraints_.nextId++},
+         kind,
+         {radialId, document::SketchPointPosition::center},
+         document::SketchGeometryReference{targetId, document::SketchPointPosition::center}});
     if (solveConstraints())
         return true;
     elements_ = previousElements;

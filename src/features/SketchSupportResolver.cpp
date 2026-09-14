@@ -1,3 +1,4 @@
+#include "SketchPlaneGuard.hpp"
 #include <voelund/features/SketchSupportResolver.hpp>
 
 #include <BRepAdaptor_Curve.hxx>
@@ -32,7 +33,7 @@ struct ReferenceSegment final {
 };
 
 std::optional<ResolvedFace> resolveSupportFace(const document::SketchPlane& previous,
-                                              const TopoDS_Shape& supportShape) {
+                                               const TopoDS_Shape& supportShape) {
     std::optional<ResolvedFace> best;
     double bestDistance = std::numeric_limits<double>::max();
     const gp_Vec previousNormal(previous.normalX, previous.normalY, previous.normalZ);
@@ -55,11 +56,10 @@ std::optional<ResolvedFace> resolveSupportFace(const document::SketchPlane& prev
             continue;
         bestDistance = distance;
         const gp_Pnt origin = previousOrigin.Translated(previousNormal * signedDistance);
-        best = ResolvedFace{
-            face,
-            {origin.X(), origin.Y(), origin.Z(), previous.normalX, previous.normalY,
-             previous.normalZ, previous.xDirectionX, previous.xDirectionY,
-             previous.xDirectionZ}};
+        best = ResolvedFace{face,
+                            {origin.X(), origin.Y(), origin.Z(), previous.normalX, previous.normalY,
+                             previous.normalZ, previous.xDirectionX, previous.xDirectionY,
+                             previous.xDirectionZ}};
     }
     return best;
 }
@@ -78,8 +78,8 @@ std::vector<ReferenceSegment> referenceSegments(const ResolvedFace& support) {
         const double lastParameter = curve.LastParameter();
         gp_Pnt first = curve.Value(firstParameter);
         for (int index = 1; index <= divisions; ++index) {
-            const gp_Pnt second = curve.Value(
-                firstParameter + (lastParameter - firstParameter) * index / divisions);
+            const gp_Pnt second =
+                curve.Value(firstParameter + (lastParameter - firstParameter) * index / divisions);
             const gp_Vec firstOffset(origin, first);
             const gp_Vec secondOffset(origin, second);
             result.push_back({firstOffset.Dot(xDirection), firstOffset.Dot(yDirection),
@@ -100,6 +100,7 @@ document::SketchPlane resolveSketchPlane(const document::SketchPlane& previous,
 
 bool updateSketchSupportReferences(document::SketchParameters& sketch,
                                    const TopoDS_Shape& supportShape) {
+    detail::requireCanonicalPlane(sketch.plane);
     const auto support = resolveSupportFace(sketch.plane, supportShape);
     if (!support.has_value())
         return false;

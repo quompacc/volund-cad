@@ -1,0 +1,28 @@
+-- The CXX compiler identification is Clang 19.1.7
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- D08 TKBin transitive modules: TKBRep;TKMath;TKernel;TKG2d;TKG3d;TKCAF;TKCDF;TKLCAF;TKBinL
+-- D08 TKCAF transitive modules: TKernel;TKGeomBase;TKBRep;TKTopAlgo;TKMath;TKG2d;TKG3d;TKCDF;TKLCAF;TKBO
+-- D08 TKPrim transitive modules: TKBRep;TKernel;TKMath;TKG2d;TKGeomBase;TKG3d;TKTopAlgo
+-- Configuring done (0.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/eduard/src/voelund-p04-20260913/build/d08-ocaf-freebsd
+[1/6] Scanning /home/eduard/src/voelund-p04-20260913/tools/ocaf-probe/main.cpp for CXX dependencies
+[2/6] Scanning /home/eduard/src/voelund-p04-20260913/tools/ocaf-probe/Fixture.cpp for CXX dependencies
+[3/6] Generating CXX dyndep file CMakeFiles/voelund_ocaf_probe.dir/CXX.dd
+[4/6] Building CXX object CMakeFiles/voelund_ocaf_probe.dir/main.cpp.o
+[5/6] Building CXX object CMakeFiles/voelund_ocaf_probe.dir/Fixture.cpp.o
+FAILED: [code=1] CMakeFiles/voelund_ocaf_probe.dir/Fixture.cpp.o 
+/usr/bin/c++ -DHAVE_DRACO -DHAVE_FFMPEG -DHAVE_FREEIMAGE -DHAVE_FREETYPE -DHAVE_GLES2_EXT -DHAVE_Inspector -DHAVE_OPENGL_EXT -DHAVE_QT -DHAVE_RAPIDJSON -DHAVE_TBB -DHAVE_TK -DHAVE_VTK -DHAVE_XLIB -DOCC_CONVERT_SIGNALS -DVTK_OPENGL2_BACKEND -isystem /usr/local/include/OpenCASCADE -O3 -DNDEBUG -std=gnu++20 -Wall -Wextra -Wpedantic -Werror -MD -MT CMakeFiles/voelund_ocaf_probe.dir/Fixture.cpp.o -MF CMakeFiles/voelund_ocaf_probe.dir/Fixture.cpp.o.d @CMakeFiles/voelund_ocaf_probe.dir/Fixture.cpp.o.modmap -o CMakeFiles/voelund_ocaf_probe.dir/Fixture.cpp.o -c /home/eduard/src/voelund-p04-20260913/tools/ocaf-probe/Fixture.cpp
+/home/eduard/src/voelund-p04-20260913/tools/ocaf-probe/Fixture.cpp:56:21: error: loop variable '[kind, count]' creates a copy from type 'std::pair<TopAbs_ShapeEnum, int> const' [-Werror,-Wrange-loop-construct]
+   56 |     for (const auto [kind, count] :
+      |                     ^
+/home/eduard/src/voelund-p04-20260913/tools/ocaf-probe/Fixture.cpp:56:10: note: use reference type 'std::pair<TopAbs_ShapeEnum, int> const &' to prevent copying
+   56 |     for (const auto [kind, count] :
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                     &
+1 error generated.
+ninja: build stopped: subcommand failed.

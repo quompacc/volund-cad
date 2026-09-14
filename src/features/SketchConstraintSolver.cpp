@@ -1,4 +1,5 @@
 #include <voelund/features/SketchConstraintSolver.hpp>
+#include <voelund/kernel/Angle.hpp>
 
 #include <GCS.h>
 
@@ -134,8 +135,8 @@ struct EllipseState final {
           centerY(std::get<document::SketchEllipse>(source.geometry).center.y),
           minorRadius(std::get<document::SketchEllipse>(source.geometry).minorRadius) {
         const auto& value = std::get<document::SketchEllipse>(source.geometry);
-        const double focalDistance =
-            std::sqrt(value.majorRadius * value.majorRadius - value.minorRadius * value.minorRadius);
+        const double focalDistance = std::sqrt(value.majorRadius * value.majorRadius -
+                                               value.minorRadius * value.minorRadius);
         focusX = centerX + focalDistance * std::cos(value.rotation);
         focusY = centerY + focalDistance * std::sin(value.rotation);
         ellipse.center = {&centerX, &centerY};
@@ -230,7 +231,7 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
     tags.reserve(sketch.constraints.values.size());
     for (const document::SketchConstraint& constraint : sketch.constraints.values) {
         values.push_back(constraint.kind == document::SketchConstraintKind::angle
-                             ? constraint.value * std::numbers::pi / 180.0
+                             ? kernel::toRadians(kernel::Degrees(constraint.value)).value()
                              : constraint.value);
         tags.push_back(constraint.id);
         const int tag = static_cast<int>(tags.size());
@@ -269,10 +270,9 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
                 point(constraint.first, lines, circles, arcs, centers),
                 point(*constraint.second, lines, circles, arcs, centers), tag));
         else if (constraint.kind == document::SketchConstraintKind::verticalPoints)
-            static_cast<void>(
-                system.addConstraintVertical(point(constraint.first, lines, circles, arcs, centers),
-                                             point(*constraint.second, lines, circles, arcs, centers),
-                                             tag));
+            static_cast<void>(system.addConstraintVertical(
+                point(constraint.first, lines, circles, arcs, centers),
+                point(*constraint.second, lines, circles, arcs, centers), tag));
         else if (constraint.kind == document::SketchConstraintKind::concentric)
             static_cast<void>(system.addConstraintP2PCoincident(
                 *centers.at(constraint.first.element.value()),

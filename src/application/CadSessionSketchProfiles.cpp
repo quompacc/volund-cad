@@ -1,3 +1,4 @@
+#include "CommandInput.hpp"
 #include <voelund/application/CadSession.hpp>
 
 #include <voelund/features/SketchProfiles.hpp>
@@ -69,6 +70,8 @@ std::vector<document::SketchElementId> CadSession::selectedSketchProfileElements
 }
 
 bool CadSession::canExtrudeSelectedSketchProfiles() const noexcept {
+    if (!sceneStatus().isCurrent())
+        return false;
     if (!selectedFeature_.has_value() || selectedSketchProfiles_.empty())
         return false;
     const auto descriptors = document_.features();
@@ -77,17 +80,23 @@ bool CadSession::canExtrudeSelectedSketchProfiles() const noexcept {
     return descriptor != descriptors.end() && descriptor->kind == document::FeatureKind::sketch;
 }
 
-document::FeatureId
-CadSession::addSketchProfileExtrusion(document::FeatureId sketchFeature,
-                                      std::span<const document::SketchProfileId> profileIds,
-                                      double distance) {
+CommandResult
+CadSession::createSketchProfileExtrusion(document::FeatureId sketchFeature,
+                                         std::span<const document::SketchProfileId> profileIds,
+                                         double distance) {
     if (!std::isfinite(distance) || distance <= 0.0 || profileIds.empty())
-        throw std::invalid_argument("Profile extrusion requires selected profiles and a distance");
+        return CommandResult::invalidInput(
+            "Profile extrusion requires selected profiles and a positive finite distance");
+    const auto descriptor =
+        std::ranges::find(document_.features(), sketchFeature, &document::FeatureDescriptor::id);
+    if (descriptor == document_.features().end() ||
+        descriptor->kind != document::FeatureKind::sketch)
+        return CommandResult::invalidInput("Profile extrusion requires an existing sketch");
     const auto profiles =
         features::detectClosedProfiles(document_.sketchParameters(sketchFeature).elements.values);
     for (document::SketchProfileId profileId : profileIds) {
         if (!containsProfile(profiles, profileId))
-            throw std::invalid_argument("Profile extrusion references an unknown profile");
+            return CommandResult::invalidInput("Profile extrusion references an unknown profile");
     }
     std::size_t sequence = 1;
     for (const document::FeatureDescriptor& feature : document_.features()) {
@@ -97,11 +106,14 @@ CadSession::addSketchProfileExtrusion(document::FeatureId sketchFeature,
     document::DocumentTransaction transaction(document_);
     auto& candidate = transaction.edit();
     const std::vector<document::SketchProfileId> selected(profileIds.begin(), profileIds.end());
-    const document::FeatureId id =
-        candidate.addExtrusionFeature("Extrusion " + std::to_string(sequence), sketchFeature,
-                                      document::ExtrusionParameters{distance, selected});
-    static_cast<void>(commitCandidate(transaction, id, true));
-    return id;
+    const auto input = detail::prepareInput([&] {
+        return candidate.addExtrusionFeature("Extrusion " + std::to_string(sequence), sketchFeature,
+                                             document::ExtrusionParameters{distance, selected});
+    });
+    if (!input.value)
+        return CommandResult::invalidInput(input.diagnostic);
+    return finishCandidate(transaction, *input.value, CommandKind::newFeature,
+                           ErrorDisposition::reject, true);
 }
 
 } // namespace voelund::application

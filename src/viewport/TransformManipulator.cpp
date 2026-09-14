@@ -1,3 +1,4 @@
+#include <voelund/kernel/Angle.hpp>
 #include "TransformManipulator.hpp"
 
 #include <AIS_Manipulator.hxx>
@@ -42,7 +43,7 @@ public:
         if (mode != AIS_MM_Rotation || !transformation.GetRotation(axis, angle)) {
             return transformation;
         }
-        const double angularStepRadians = angularSnapStep * std::numbers::pi / 180.0;
+        const double angularStepRadians = kernel::toRadians(kernel::Degrees(angularSnapStep)).value();
         gp_Trsf snapped;
         snapped.SetRotation(
             gp_Ax1(transformPivot, gp_Dir(axis)),
@@ -63,7 +64,7 @@ public:
         const double component = axisIndex == 0 ? axis.X()
             : axisIndex == 1                   ? axis.Y()
                                                : axis.Z();
-        angleDegrees = angle * 180.0 / std::numbers::pi
+        angleDegrees = kernel::toDegrees(kernel::Radians(angle)).value()
             * (component < 0.0 ? -1.0 : 1.0);
         return true;
     }

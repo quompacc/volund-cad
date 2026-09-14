@@ -1,5 +1,7 @@
 add_library(voelund_document STATIC
     DocumentSerializer.cpp
+    LegacyDocumentImporter.cpp
+    DocumentSnapshot.cpp
     DocumentSerializerSupport.cpp
     DocumentSerializerWriter.cpp
     ModelDocument.cpp

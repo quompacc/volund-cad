@@ -3,11 +3,13 @@ add_library(
     FeaturePropertiesPanel.cpp
     DocumentActions.cpp
     MainWindow.cpp
+    MainWindowParameters.cpp
     MainWindowSupport.cpp
     MeasurementInput.cpp
     ModelTreePanel.cpp
     SketchConstraintLabel.cpp
     SketchEditorConstraintState.cpp
+    SketchEditorCommand.cpp
     SketchEditorCreation.cpp
     SketchEditorPresentation.cpp
     SketchEditorToolController.cpp

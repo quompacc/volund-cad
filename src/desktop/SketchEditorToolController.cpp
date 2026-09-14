@@ -1,4 +1,6 @@
+#include <voelund/document/SketchPlaneValidation.hpp>
 #include "SketchEditorToolController.hpp"
+#include "CommandFeedback.hpp"
 
 #include "SketchConstraintLabel.hpp"
 #include "SketchViewAdapter.hpp"
@@ -95,19 +97,27 @@ bool SketchEditorToolController::beginSelectedSketch() {
     if (descriptor.kind != document::FeatureKind::sketch || !descriptor.inputFeature.has_value())
         return false;
     document::SketchParameters parameters = session_.sketchParameters(*selected);
+    try {
+        document::validateCanonicalSketchPlane(parameters.plane);
+    } catch (const std::invalid_argument& error) {
+        statusChanged_(QString::fromUtf8(error.what()));
+        return false;
+    }
     const auto& persistedPlane = parameters.plane;
     const viewport::PlanarFaceSelection persistedSupport{
-        descriptor.inputFeature->value(), persistedPlane.originX, persistedPlane.originY,
-        persistedPlane.originZ, persistedPlane.normalX, persistedPlane.normalY,
-        persistedPlane.normalZ, persistedPlane.xDirectionX, persistedPlane.xDirectionY,
+        descriptor.inputFeature->value(), persistedPlane.originX,     persistedPlane.originY,
+        persistedPlane.originZ,           persistedPlane.normalX,     persistedPlane.normalY,
+        persistedPlane.normalZ,           persistedPlane.xDirectionX, persistedPlane.xDirectionY,
         persistedPlane.xDirectionZ};
     viewport::PlanarFaceSelection support = persistedSupport;
     if (const auto shape = session_.featureShape(*descriptor.inputFeature); shape.has_value()) {
         if (const auto resolved = viewport::resolvePlanarFaceSelection(persistedSupport, *shape);
             resolved.has_value())
             support = *resolved;
-        if (features::updateSketchSupportReferences(parameters, *shape))
-            static_cast<void>(features::solveSketchConstraints(parameters));
+        if (!features::updateSketchSupportReferences(parameters, *shape)) {
+            statusChanged_(QObject::tr("Sketch support is no longer available."));
+            return false;
+        }
     }
     parameters.plane = sketchPlane(support);
     editing_ = true;
@@ -195,8 +205,7 @@ void SketchEditorToolController::showPanel() {
          {"split", QObject::tr("Split selected line at picked position"), QObject::tr("Edit")},
          {"fillet", QObject::tr("Fillet two selected lines"), QObject::tr("Edit")},
          {"offset", QObject::tr("Offset selected geometry"), QObject::tr("Edit")},
-         {"mirror", QObject::tr("Mirror selections about last selected line"),
-          QObject::tr("Edit")},
+         {"mirror", QObject::tr("Mirror selections about last selected line"), QObject::tr("Edit")},
          {"linear_pattern", QObject::tr("Create linear pattern"), QObject::tr("Edit")},
          {"circular_pattern", QObject::tr("Create circular pattern about origin"),
           QObject::tr("Edit")},
@@ -306,16 +315,13 @@ void SketchEditorToolController::setTool(int index) {
     viewport_.setSketchEditorTool(viewportTool(index));
     syncSelectedDimensionInputs();
     refreshPresentation();
-    const QString guidance = index == 5
-                                 ? QObject::tr("Center arc: center, radius point, end point")
-                             : index == 6
-                                 ? QObject::tr("Three-point arc: start, point on arc, end")
-                             : index == 7
-                                 ? QObject::tr("Ellipse: center, major radius, minor radius")
-                             : index == 8
-                                 ? QObject::tr("Slot: centerline start, centerline end, width")
-                             : index == 9 ? QObject::tr("Polygon: center and first vertex")
-                                          : QObject::tr("Sketch tool changed");
+    const QString guidance =
+        index == 5   ? QObject::tr("Center arc: center, radius point, end point")
+        : index == 6 ? QObject::tr("Three-point arc: start, point on arc, end")
+        : index == 7 ? QObject::tr("Ellipse: center, major radius, minor radius")
+        : index == 8 ? QObject::tr("Slot: centerline start, centerline end, width")
+        : index == 9 ? QObject::tr("Polygon: center and first vertex")
+                     : QObject::tr("Sketch tool changed");
     statusChanged_(guidance);
 }
 
@@ -557,19 +563,6 @@ void SketchEditorToolController::removeLastConstraint() {
     syncConstraintState();
     refreshPresentation();
     statusChanged_(QObject::tr("Last sketch constraint removed"));
-}
-
-void SketchEditorToolController::accept() {
-    if (!editor_ || !editor_->canAccept())
-        return;
-    const bool wasEditing = editing_;
-    static_cast<void>(editor_->accept());
-    editor_.reset();
-    editing_ = false;
-    viewport_.cancelSketch();
-    panel_.end();
-    sceneChanged_();
-    statusChanged_(wasEditing ? QObject::tr("Sketch updated") : QObject::tr("Sketch created"));
 }
 
 void SketchEditorToolController::cancel() {

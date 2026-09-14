@@ -1,0 +1,212 @@
+Test project V:/build/p02-qt-final
+      Start  1: desktop.viewport_startup
+ 1/47 Test  #1: desktop.viewport_startup ...................   Passed    1.70 sec
+      Start  2: desktop.viewport_startup.uninitialized
+ 2/47 Test  #2: desktop.viewport_startup.uninitialized .....   Passed    0.18 sec
+      Start  3: desktop.ui_preview_startup
+ 3/47 Test  #3: desktop.ui_preview_startup .................   Passed    1.78 sec
+      Start  4: desktop.ui_preview_startup.uninitialized
+ 4/47 Test  #4: desktop.ui_preview_startup.uninitialized ...   Passed    0.17 sec
+      Start  5: document.numeric_validation
+ 5/47 Test  #5: document.numeric_validation ................   Passed    0.09 sec
+      Start  6: document.legacy_import
+ 6/47 Test  #6: document.legacy_import .....................   Passed    0.86 sec
+      Start  7: application.command_input
+ 7/47 Test  #7: application.command_input ..................   Passed    0.65 sec
+      Start  8: application.scene_status
+ 8/47 Test  #8: application.scene_status ...................   Passed    1.19 sec
+      Start  9: application.failure_boundaries
+ 9/47 Test  #9: application.failure_boundaries .............   Passed    2.44 sec
+      Start 10: application.creation_results
+10/47 Test #10: application.creation_results ...............   Passed    0.93 sec
+      Start 11: application.command_transactions
+11/47 Test #11: application.command_transactions ...........   Passed    1.12 sec
+      Start 12: document.transactions
+12/47 Test #12: document.transactions ......................   Passed    0.11 sec
+      Start 13: application.command_contract_compound
+13/47 Test #13: application.command_contract_compound ......   Passed    0.06 sec
+      Start 14: application.command_contract_errors
+14/47 Test #14: application.command_contract_errors ........   Passed    0.01 sec
+      Start 15: application.safe_persistence
+15/47 Test #15: application.safe_persistence ...............   Passed    3.32 sec
+      Start 16: document.parser_limits_and_versions
+16/47 Test #16: document.parser_limits_and_versions ........   Passed    6.18 sec
+      Start 17: platform.atomic_file_store
+17/47 Test #17: platform.atomic_file_store .................   Passed    1.48 sec
+      Start 18: kernel.shape_factory
+18/47 Test #18: kernel.shape_factory .......................***Failed    0.08 sec
+Zero axis validation test failed
+
+      Start 19: document.history
+19/47 Test #19: document.history ...........................   Passed    0.10 sec
+      Start 20: features.sketch_profiles
+20/47 Test #20: features.sketch_profiles ...................   Passed    0.15 sec
+      Start 21: features.planegcs_solver
+21/47 Test #21: features.planegcs_solver ...................   Passed    0.01 sec
+      Start 22: features.sketch_constraint_adapter
+22/47 Test #22: features.sketch_constraint_adapter .........   Passed    0.10 sec
+      Start 23: application.recompute_history
+23/47 Test #23: application.recompute_history ..............   Passed    4.93 sec
+      Start 24: desktop.sketch_command_failure
+24/47 Test #24: desktop.sketch_command_failure .............   Passed    0.84 sec
+      Start 25: desktop.preview_command_failures
+25/47 Test #25: desktop.preview_command_failures ...........   Passed    0.41 sec
+      Start 26: desktop.feature_status
+26/47 Test #26: desktop.feature_status .....................   Passed    2.14 sec
+      Start 27: desktop.parameter_failures
+27/47 Test #27: desktop.parameter_failures .................   Passed    1.72 sec
+      Start 28: desktop.sketch_solver_gate
+28/47 Test #28: desktop.sketch_solver_gate .................   Passed    1.07 sec
+      Start 29: desktop.document_actions
+29/47 Test #29: desktop.document_actions ...................   Passed    1.53 sec
+      Start 30: desktop.viewport_lifecycle_qt
+30/47 Test #30: desktop.viewport_lifecycle_qt ..............   Passed    2.67 sec
+      Start 31: desktop.viewport_dpi_1
+31/47 Test #31: desktop.viewport_dpi_1 .....................   Passed    9.67 sec
+      Start 32: desktop.viewport_dpi_1.5
+32/47 Test #32: desktop.viewport_dpi_1.5 ...................   Passed    9.70 sec
+      Start 33: desktop.viewport_dpi_2
+33/47 Test #33: desktop.viewport_dpi_2 .....................   Passed    9.73 sec
+      Start 34: application.sketch_editor_flow
+34/47 Test #34: application.sketch_editor_flow .............   Passed    2.08 sec
+      Start 35: application.sketch_construction
+35/47 Test #35: application.sketch_construction ............   Passed    0.40 sec
+      Start 36: application.sketch_circle_constraints
+36/47 Test #36: application.sketch_circle_constraints ......   Passed    0.30 sec
+      Start 37: application.sketch_alignments
+37/47 Test #37: application.sketch_alignments ..............   Passed    0.42 sec
+      Start 38: application.sketch_fix_distance
+38/47 Test #38: application.sketch_fix_distance ............   Passed    0.30 sec
+      Start 39: application.sketch_basic_tools
+39/47 Test #39: application.sketch_basic_tools .............   Passed    0.58 sec
+      Start 40: application.sketch_slot_dimensions
+40/47 Test #40: application.sketch_slot_dimensions .........   Passed    0.53 sec
+      Start 41: workspaces.module_registry
+41/47 Test #41: workspaces.module_registry .................   Passed    0.01 sec
+      Start 42: architecture.source_limits
+42/47 Test #42: architecture.source_limits .................   Passed    0.06 sec
+      Start 43: architecture.source_limits_regression
+43/47 Test #43: architecture.source_limits_regression ......   Passed    0.31 sec
+      Start 44: architecture.ctest_label_runner
+44/47 Test #44: architecture.ctest_label_runner ............***Failed    8.05 sec
+CMake Error at V:/tests/cmake/RunLabeledTests.cmake:36 (message):
+  CTest label 'unit' failed:
+
+  Test project V:/build/p02-qt-final
+
+      Start 12: document.transactions
+
+  1/9 Test #12: document.transactions .................  Passed 0.01 sec
+
+      Start 16: document.parser_limits_and_versions
+
+  2/9 Test #16: document.parser_limits_and_versions ...  Passed 6.12 sec
+
+      Start 17: platform.atomic_file_store
+
+  3/9 Test #17: platform.atomic_file_store ............  Passed 1.73 sec
+
+      Start 18: kernel.shape_factory
+
+  4/9 Test #18: kernel.shape_factory ..................***Failed 0.03 sec
+
+  Zero axis validation test failed
+
+
+
+      Start 19: document.history
+
+  5/9 Test #19: document.history ......................  Passed 0.04 sec
+
+      Start 20: features.sketch_profiles
+
+  6/9 Test #20: features.sketch_profiles ..............  Passed 0.02 sec
+
+      Start 21: features.planegcs_solver
+
+  7/9 Test #21: features.planegcs_solver ..............  Passed 0.01 sec
+
+      Start 22: features.sketch_constraint_adapter
+
+  8/9 Test #22: features.sketch_constraint_adapter ....  Passed 0.02 sec
+
+      Start 41: workspaces.module_registry
+
+  9/9 Test #41: workspaces.module_registry ............  Passed 0.01 sec
+
+
+
+  89% tests passed, 1 tests failed out of 9
+
+
+
+  Label Time Summary:
+
+  document = 6.17 sec*proc (3 tests)
+
+  features = 0.04 sec*proc (3 tests)
+
+  kernel = 0.03 sec*proc (1 test)
+
+  platform = 1.73 sec*proc (1 test)
+
+  regression = 7.86 sec*proc (3 tests)
+
+  unit = 7.99 sec*proc (9 tests)
+
+  workspaces = 0.01 sec*proc (1 test)
+
+
+
+  Total Test time (real) = 8.00 sec
+
+
+
+  The following tests FAILED:
+
+  	 18 - kernel.shape_factory (Failed) kernel unit
+
+
+
+  Errors while running CTest
+
+
+
+
+      Start 45: architecture.desktop_smoke_runner
+45/47 Test #45: architecture.desktop_smoke_runner ..........   Passed    1.13 sec
+      Start 46: architecture.platform_report
+46/47 Test #46: architecture.platform_report ...............   Passed    3.14 sec
+      Start 47: architecture.setup_windows_mapping
+47/47 Test #47: architecture.setup_windows_mapping .........   Passed    0.64 sec
+
+96% tests passed, 2 tests failed out of 47
+
+Label Time Summary:
+application     =  15.94 sec*proc (15 tests)
+architecture    =  13.33 sec*proc (6 tests)
+contract        =   0.07 sec*proc (2 tests)
+desktop         =  43.30 sec*proc (14 tests)
+document        =  18.51 sec*proc (12 tests)
+dpi             =  29.10 sec*proc (3 tests)
+features        =   0.27 sec*proc (3 tests)
+integration     =  20.20 sec*proc (18 tests)
+kernel          =   0.17 sec*proc (2 tests)
+lifecycle       =   2.67 sec*proc (1 test)
+negative        =   0.35 sec*proc (2 tests)
+platform        =   5.31 sec*proc (5 tests)
+qt-opengl       =  31.77 sec*proc (4 tests)
+regression      =  40.27 sec*proc (26 tests)
+sketch          =   6.17 sec*proc (5 tests)
+ui              =   1.78 sec*proc (1 test)
+unit            =   8.23 sec*proc (9 tests)
+viewport        =  31.77 sec*proc (4 tests)
+windows         =   3.48 sec*proc (2 tests)
+workspaces      =   0.01 sec*proc (1 test)
+
+Total Test time (real) =  85.11 sec
+
+The following tests FAILED:
+	 18 - kernel.shape_factory (Failed)                     kernel unit
+	 44 - architecture.ctest_label_runner (Failed)          architecture regression
+Errors while running CTest

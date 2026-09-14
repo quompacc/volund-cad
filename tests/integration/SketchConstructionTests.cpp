@@ -1,3 +1,4 @@
+#include "../CommandResultAssertions.hpp"
 #include <voelund/application/CadSession.hpp>
 #include <voelund/application/SketchEditorSession.hpp>
 
@@ -18,7 +19,8 @@ bool constructionGeometryIsExcludedFromProfiles() {
     using namespace voelund;
     application::CadSession session;
     session.newDocument();
-    application::SketchEditorSession editor(session, session.addBoxFeature(), plane);
+    application::SketchEditorSession editor(
+        session, voelund::test::requireCommittedFeature(session.createBoxFeature()), plane);
     if (!add(editor, {0.0, 0.0}, {4.0, 0.0}, 1) || !add(editor, {4.0, 0.0}, {4.0, 3.0}, 2) ||
         !add(editor, {4.0, 3.0}, {0.0, 3.0}, 3) || !add(editor, {0.0, 3.0}, {0.0, 0.0}, 4) ||
         editor.closedProfileCount() != 1 || !editor.selectElement(document::SketchElementId{1}) ||
@@ -33,7 +35,8 @@ bool directionalPointDimensionsAreSignedAndEditable() {
     using namespace voelund;
     application::CadSession session;
     session.newDocument();
-    application::SketchEditorSession editor(session, session.addBoxFeature(), plane);
+    application::SketchEditorSession editor(
+        session, voelund::test::requireCommittedFeature(session.createBoxFeature()), plane);
     if (!add(editor, {0.0, 0.0}, {1.0, 0.0}, 1) || !add(editor, {3.0, 4.0}, {4.0, 4.0}, 2) ||
         !editor.selectNearestReference(document::SketchElementId{1}, {0.0, 0.0}, false) ||
         !editor.selectNearestReference(document::SketchElementId{2}, {3.0, 4.0}, true) ||
@@ -61,7 +64,8 @@ bool midpointAndConstructionBisectorRemainParametric() {
     using namespace voelund;
     application::CadSession session;
     session.newDocument();
-    application::SketchEditorSession editor(session, session.addBoxFeature(), plane);
+    application::SketchEditorSession editor(
+        session, voelund::test::requireCommittedFeature(session.createBoxFeature()), plane);
     if (!add(editor, {2.0, 3.0}, {3.0, 3.0}, 1) || !add(editor, {0.0, 0.0}, {10.0, 0.0}, 2) ||
         !editor.selectNearestReference(document::SketchElementId{1}, {2.0, 3.0}, false) ||
         !editor.selectNearestReference(document::SketchElementId{2}, {0.0, 0.0}, true) ||

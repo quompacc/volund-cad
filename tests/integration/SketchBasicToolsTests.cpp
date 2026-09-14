@@ -1,3 +1,4 @@
+#include "../CommandResultAssertions.hpp"
 #include <voelund/application/CadSession.hpp>
 #include <voelund/application/SketchEditorSession.hpp>
 
@@ -15,8 +16,7 @@ using voelund::document::SketchElementId;
 using voelund::document::SketchLine;
 using voelund::document::SketchPoint;
 
-constexpr voelund::document::SketchPlane plane{0.0, 0.0, 40.0, 0.0, 0.0, 1.0,
-                                                1.0, 0.0, 0.0};
+constexpr voelund::document::SketchPlane plane{0.0, 0.0, 40.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0};
 
 bool addLine(SketchEditorSession& editor, SketchPoint first, SketchPoint second) {
     editor.setTool(SketchDrawingTool::line);
@@ -31,10 +31,8 @@ bool addCircle(SketchEditorSession& editor, SketchPoint center, SketchPoint radi
 bool reportCompoundFailure(const char* tool, const SketchEditorSession& editor) {
     const auto& solve = editor.lastSolveResult();
     std::cerr << tool << ": elements=" << editor.elements().size()
-              << " profiles=" << editor.closedProfileCount()
-              << " accept=" << editor.canAccept()
-              << " solve=" << static_cast<int>(solve.status)
-              << " dof=" << solve.degreesOfFreedom
+              << " profiles=" << editor.closedProfileCount() << " accept=" << editor.canAccept()
+              << " solve=" << static_cast<int>(solve.status) << " dof=" << solve.degreesOfFreedom
               << " conflicts=" << solve.conflictingConstraints.size() << '\n';
     return false;
 }
@@ -42,13 +40,12 @@ bool reportCompoundFailure(const char* tool, const SketchEditorSession& editor) 
 bool compoundDrawingToolsCreateProfiles() {
     CadSession session;
     session.newDocument();
-    const auto support = session.addBoxFeature();
+    const auto support = voelund::test::requireCommittedFeature(session.createBoxFeature());
     SketchEditorSession polygon(session, support, plane);
     polygon.setTool(SketchDrawingTool::polygon);
     polygon.setPolygonSides(6);
     if (!polygon.setPreview({0.0, 0.0}, {8.0, 0.0}) || !polygon.confirmPreview().has_value() ||
-        polygon.elements().size() != 6 || polygon.closedProfileCount() != 1 ||
-        !polygon.canAccept())
+        polygon.elements().size() != 6 || polygon.closedProfileCount() != 1 || !polygon.canAccept())
         return reportCompoundFailure("polygon", polygon);
 
     SketchEditorSession slot(session, support, plane);
@@ -57,14 +54,13 @@ bool compoundDrawingToolsCreateProfiles() {
         !slot.confirmPreview().has_value() || slot.elements().size() != 4 ||
         slot.closedProfileCount() != 1 || !slot.canAccept())
         return reportCompoundFailure("slot", slot);
-    const auto& rightCap =
-        std::get<voelund::document::SketchArc>(slot.elements()[1].geometry);
-    const auto& leftCap =
-        std::get<voelund::document::SketchArc>(slot.elements()[3].geometry);
-    const double rightMidpointX = rightCap.center.x + rightCap.radius *
-        std::cos((rightCap.startAngle + rightCap.endAngle) * 0.5);
-    const double leftMidpointX = leftCap.center.x + leftCap.radius *
-        std::cos((leftCap.startAngle + leftCap.endAngle) * 0.5);
+    const auto& rightCap = std::get<voelund::document::SketchArc>(slot.elements()[1].geometry);
+    const auto& leftCap = std::get<voelund::document::SketchArc>(slot.elements()[3].geometry);
+    const double rightMidpointX =
+        rightCap.center.x +
+        rightCap.radius * std::cos((rightCap.startAngle + rightCap.endAngle) * 0.5);
+    const double leftMidpointX =
+        leftCap.center.x + leftCap.radius * std::cos((leftCap.startAngle + leftCap.endAngle) * 0.5);
     if (rightMidpointX <= 12.0 || leftMidpointX >= 0.0) {
         std::cerr << "slot caps: right=" << rightMidpointX << " left=" << leftMidpointX << '\n';
         return reportCompoundFailure("slot caps", slot);
@@ -83,15 +79,15 @@ bool compoundDrawingToolsCreateProfiles() {
         !ellipse.confirmPreview().has_value() || ellipse.closedProfileCount() != 1 ||
         ellipse.evaluatedElements().front().shape.IsNull())
         return reportCompoundFailure("ellipse", ellipse);
-    const auto& value = std::get<voelund::document::SketchEllipse>(ellipse.elements().front().geometry);
-    return std::abs(value.majorRadius - 8.0) < 1.0e-6 &&
-           std::abs(value.minorRadius - 3.0) < 1.0e-6;
+    const auto& value =
+        std::get<voelund::document::SketchEllipse>(ellipse.elements().front().geometry);
+    return std::abs(value.majorRadius - 8.0) < 1.0e-6 && std::abs(value.minorRadius - 3.0) < 1.0e-6;
 }
 
 bool everyDrawingToolHasLivePreview() {
     CadSession session;
     session.newDocument();
-    const auto support = session.addBoxFeature();
+    const auto support = voelund::test::requireCommittedFeature(session.createBoxFeature());
     SketchEditorSession editor(session, support, plane);
 
     const auto previewCount = [&](SketchDrawingTool tool, std::optional<SketchPoint> third,
@@ -102,10 +98,9 @@ bool everyDrawingToolHasLivePreview() {
             return false;
         }
         const auto evaluated = editor.evaluatedElements();
-        const bool valid = evaluated.size() == expected &&
-                           std::ranges::none_of(evaluated, [](const auto& item) {
-                               return item.shape.IsNull();
-                           });
+        const bool valid =
+            evaluated.size() == expected &&
+            std::ranges::none_of(evaluated, [](const auto& item) { return item.shape.IsNull(); });
         if (!valid)
             std::cerr << "Preview tool " << static_cast<int>(tool) << " produced "
                       << evaluated.size() << " of " << expected << " shapes\n";
@@ -138,20 +133,17 @@ bool everyDrawingToolHasLivePreview() {
 bool lineEditingOperationsWork() {
     CadSession session;
     session.newDocument();
-    const auto support = session.addBoxFeature();
+    const auto support = voelund::test::requireCommittedFeature(session.createBoxFeature());
     SketchEditorSession trim(session, support, plane);
-    if (!addLine(trim, {0.0, 0.0}, {10.0, 0.0}) ||
-        !addLine(trim, {5.0, -5.0}, {5.0, 5.0}) ||
-        !trim.selectNearestReference(SketchElementId{1}, {8.0, 0.0}, false) ||
-        !trim.trimSelected())
+    if (!addLine(trim, {0.0, 0.0}, {10.0, 0.0}) || !addLine(trim, {5.0, -5.0}, {5.0, 5.0}) ||
+        !trim.selectNearestReference(SketchElementId{1}, {8.0, 0.0}, false) || !trim.trimSelected())
         return false;
     const auto& trimmed = std::get<SketchLine>(trim.elements().front().geometry);
     if (std::abs(trimmed.end.x - 5.0) > 1.0e-6)
         return false;
 
     SketchEditorSession extend(session, support, plane);
-    if (!addLine(extend, {0.0, 0.0}, {4.0, 0.0}) ||
-        !addLine(extend, {8.0, -2.0}, {8.0, 2.0}) ||
+    if (!addLine(extend, {0.0, 0.0}, {4.0, 0.0}) || !addLine(extend, {8.0, -2.0}, {8.0, 2.0}) ||
         !extend.selectNearestReference(SketchElementId{1}, {4.0, 0.0}, false) ||
         !extend.extendSelected())
         return false;
@@ -170,7 +162,7 @@ bool lineEditingOperationsWork() {
 bool transformationsAndLocalHistoryWork() {
     CadSession session;
     session.newDocument();
-    const auto support = session.addBoxFeature();
+    const auto support = voelund::test::requireCommittedFeature(session.createBoxFeature());
     SketchEditorSession editor(session, support, plane);
     if (!addLine(editor, {0.0, 0.0}, {4.0, 0.0}))
         return false;
@@ -192,26 +184,23 @@ bool transformationsAndLocalHistoryWork() {
 bool remainingOperationsAndReferencesWork() {
     CadSession session;
     session.newDocument();
-    const auto support = session.addBoxFeature();
+    const auto support = voelund::test::requireCommittedFeature(session.createBoxFeature());
 
     SketchEditorSession fillet(session, support, plane);
-    if (!addLine(fillet, {0.0, 0.0}, {10.0, 0.0}) ||
-        !addLine(fillet, {10.0, 0.0}, {10.0, 10.0}) ||
+    if (!addLine(fillet, {0.0, 0.0}, {10.0, 0.0}) || !addLine(fillet, {10.0, 0.0}, {10.0, 10.0}) ||
         !fillet.selectNearestReference(SketchElementId{1}, {9.0, 0.0}, false) ||
         !fillet.selectNearestReference(SketchElementId{2}, {10.0, 1.0}, true) ||
         !fillet.filletSelected(2.0) || fillet.elements().size() != 3)
         return false;
 
     SketchEditorSession mirror(session, support, plane);
-    if (!addLine(mirror, {2.0, 1.0}, {4.0, 1.0}) ||
-        !addLine(mirror, {0.0, -5.0}, {0.0, 5.0}) ||
+    if (!addLine(mirror, {2.0, 1.0}, {4.0, 1.0}) || !addLine(mirror, {0.0, -5.0}, {0.0, 5.0}) ||
         !mirror.selectNearestReference(SketchElementId{1}, {3.0, 1.0}, false) ||
         !mirror.selectNearestReference(SketchElementId{2}, {0.0, 0.0}, true) ||
         !mirror.mirrorSelected() || mirror.elements().size() != 3)
         return false;
     const auto& mirrored = std::get<SketchLine>(mirror.elements().back().geometry);
-    if (std::abs(mirrored.start.x + 2.0) > 1.0e-6 ||
-        std::abs(mirrored.end.x + 4.0) > 1.0e-6)
+    if (std::abs(mirrored.start.x + 2.0) > 1.0e-6 || std::abs(mirrored.end.x + 4.0) > 1.0e-6)
         return false;
 
     SketchEditorSession circular(session, support, plane);
@@ -220,15 +209,13 @@ bool remainingOperationsAndReferencesWork() {
         !circular.circularPatternSelected(4, 360.0) || circular.elements().size() != 4)
         return false;
     const auto& quarterTurn = std::get<SketchLine>(circular.elements()[1].geometry);
-    if (std::abs(quarterTurn.start.x) > 1.0e-6 ||
-        std::abs(quarterTurn.start.y - 2.0) > 1.0e-6)
+    if (std::abs(quarterTurn.start.x) > 1.0e-6 || std::abs(quarterTurn.start.y - 2.0) > 1.0e-6)
         return false;
 
     SketchEditorSession fixed(session, support, plane);
     if (!addLine(fixed, {0.0, 0.0}, {5.0, 0.0}) ||
-        !fixed.addSupportReference({SketchElementId{1},
-                                    voelund::document::SketchPointPosition::end},
-                                   {5.0, 0.0}, 3, 0.5))
+        !fixed.addSupportReference(
+            {SketchElementId{1}, voelund::document::SketchPointPosition::end}, {5.0, 0.0}, 3, 0.5))
         return false;
     return fixed.constraints().size() == 2 &&
            fixed.constraints()[0].auxiliaryValues == std::vector<double>({3.0, 0.5}) &&
@@ -238,10 +225,9 @@ bool remainingOperationsAndReferencesWork() {
 bool automaticRelationsWork() {
     CadSession session;
     session.newDocument();
-    const auto support = session.addBoxFeature();
+    const auto support = voelund::test::requireCommittedFeature(session.createBoxFeature());
     SketchEditorSession editor(session, support, plane);
-    if (!addLine(editor, {0.0, 0.0}, {10.0, 10.0}) ||
-        !addLine(editor, {0.0, 5.0}, {10.0, 15.5}))
+    if (!addLine(editor, {0.0, 0.0}, {10.0, 10.0}) || !addLine(editor, {0.0, 5.0}, {10.0, 15.5}))
         return false;
     const auto parallel = editor.addAutomaticLineRelation(SketchElementId{2});
     if (parallel != voelund::document::SketchConstraintKind::parallel)
@@ -263,16 +249,14 @@ bool automaticRelationsWork() {
     if (!addLine(tangent, {0.0, 0.0}, {10.0, 0.0}))
         return false;
     tangent.setTool(SketchDrawingTool::circle);
-    if (!tangent.setPreview({5.0, 5.0}, {5.0, 0.0}) ||
-        !tangent.confirmPreview().has_value() ||
+    if (!tangent.setPreview({5.0, 5.0}, {5.0, 0.0}) || !tangent.confirmPreview().has_value() ||
         !tangent.addTangencyReference(SketchElementId{2}, SketchElementId{1}))
         return false;
     if (tangent.constraints().size() != 1)
         return false;
 
     SketchEditorSession equal(session, support, plane);
-    if (!addCircle(equal, {0.0, 0.0}, {5.0, 0.0}) ||
-        !addCircle(equal, {15.0, 0.0}, {20.1, 0.0}) ||
+    if (!addCircle(equal, {0.0, 0.0}, {5.0, 0.0}) || !addCircle(equal, {15.0, 0.0}, {20.1, 0.0}) ||
         !equal.addAutomaticRadialRelation(SketchElementId{2}, SketchElementId{1},
                                           voelund::document::SketchConstraintKind::equal)) {
         std::cerr << "Automatic equal-radius relation failed\n";
@@ -301,9 +285,8 @@ bool automaticRelationsWork() {
     const bool circleTangency =
         addCircle(circleTangent, {0.0, 0.0}, {5.0, 0.0}) &&
         addCircle(circleTangent, {10.0, 0.0}, {15.0, 0.0}) &&
-        circleTangent.addAutomaticRadialRelation(
-            SketchElementId{2}, SketchElementId{1},
-            voelund::document::SketchConstraintKind::tangent);
+        circleTangent.addAutomaticRadialRelation(SketchElementId{2}, SketchElementId{1},
+                                                 voelund::document::SketchConstraintKind::tangent);
     if (!circleTangency)
         std::cerr << "Automatic circle tangency failed\n";
     return circleTangency;

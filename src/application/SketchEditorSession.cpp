@@ -1,3 +1,4 @@
+#include <voelund/document/SketchPlaneValidation.hpp>
 #include <voelund/application/SketchEditorSession.hpp>
 
 #include <voelund/application/CadSession.hpp>
@@ -37,6 +38,7 @@ bool upsertUnaryConstraint(document::SketchConstraints& constraints,
 SketchEditorSession::SketchEditorSession(CadSession& session, document::FeatureId supportFeature,
                                          document::SketchPlane plane)
     : session_(session), supportFeature_(supportFeature), plane_(plane) {
+    document::validateCanonicalSketchPlane(plane_);
     commitHistory();
 }
 
@@ -47,6 +49,7 @@ SketchEditorSession::SketchEditorSession(CadSession& session, document::FeatureI
       elements_(std::move(parameters.elements)), constraints_(std::move(parameters.constraints)),
       editingFeature_(sketchFeature) {
     document::validateSketchParameters({plane_, elements_, constraints_});
+    static_cast<void>(solveConstraints());
     commitHistory();
 }
 
@@ -513,23 +516,7 @@ std::size_t SketchEditorSession::closedProfileCount() const {
 
 bool SketchEditorSession::canAccept() const noexcept {
     return active_ && !elements_.values.empty() &&
-           lastSolveResult_.status != features::SketchSolveStatus::conflicting;
-}
-
-document::FeatureId SketchEditorSession::accept() {
-    if (!canAccept()) {
-        throw std::logic_error("A sketch editor session requires at least one element");
-    }
-    clearPreview();
-    const document::SketchParameters result = parameters(false);
-    const document::FeatureId id = editingFeature_.has_value()
-                                       ? *editingFeature_
-                                       : session_.addSketchFeature(supportFeature_, result);
-    if (editingFeature_.has_value()) {
-        static_cast<void>(session_.setSketchParameters(id, result));
-    }
-    active_ = false;
-    return id;
+           lastSolveResult_.status == features::SketchSolveStatus::success;
 }
 
 void SketchEditorSession::cancel() noexcept {

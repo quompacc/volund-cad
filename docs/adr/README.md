@@ -12,3 +12,5 @@ Current decisions:
 - [0006: Qt-owned OpenGL viewport on all desktop targets](0006-qt-owned-opengl-viewport.md)
 
 - [0007: Sway-Entwicklung, Meridian-Integration zum Schluss](0007-sway-development-meridian-final.md)
+
+- [0008 – OCAF-Dokumentautorität und native Binärpersistenz](0008-ocaf-binary-persistence.md)

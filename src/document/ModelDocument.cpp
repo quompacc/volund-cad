@@ -1,4 +1,5 @@
 #include <voelund/document/ModelDocument.hpp>
+#include <voelund/document/SketchPlaneValidation.hpp>
 
 #include <cmath>
 #include <stdexcept>
@@ -8,15 +9,33 @@ namespace voelund::document {
 namespace {
 
 void validateBox(const kernel::BoxDimensions& dimensions) {
-    if (dimensions.width <= 0.0 || dimensions.depth <= 0.0 || dimensions.height <= 0.0) {
-        throw std::invalid_argument("Box dimensions must be positive");
+    if (!kernel::positiveFinite(dimensions.width) || !kernel::positiveFinite(dimensions.depth) ||
+        !kernel::positiveFinite(dimensions.height)) {
+        throw std::invalid_argument("Box dimensions must be positive and finite");
     }
 }
 
 void validateCylinder(const CylinderParameters& parameters) {
-    if (parameters.radius <= 0.0 || parameters.height <= 0.0) {
-        throw std::invalid_argument("Cylinder radius and height must be positive");
+    if (!std::isfinite(parameters.radius) || !std::isfinite(parameters.height) ||
+        parameters.radius <= 0.0 || parameters.height <= 0.0) {
+        throw std::invalid_argument("Cylinder radius and height must be positive and finite");
     }
+    switch (parameters.resultMode) {
+    case CylinderResultMode::separate:
+    case CylinderResultMode::join:
+    case CylinderResultMode::cut:
+    case CylinderResultMode::intersect:
+        break;
+    default:
+        throw std::invalid_argument("Unknown cylinder connection mode");
+    }
+}
+
+void validatePlacement(const kernel::RigidTransform& placement) {
+    for (double value : {placement.translationX, placement.translationY, placement.translationZ,
+                         placement.rotationX, placement.rotationY, placement.rotationZ})
+        if (!std::isfinite(value))
+            throw std::invalid_argument("Placement must contain finite values");
 }
 
 void validateExtrusion(const ExtrusionParameters& parameters) {
@@ -34,29 +53,13 @@ void validateExtrusion(const ExtrusionParameters& parameters) {
 
 } // namespace
 
+void validateCylinderParameters(const CylinderParameters& parameters) {
+    validateCylinder(parameters);
+    validatePlacement(parameters.placement);
+}
+
 void validateSketchParameters(const SketchParameters& parameters) {
-    const double values[] = {
-        parameters.plane.originX,     parameters.plane.originY,     parameters.plane.originZ,
-        parameters.plane.normalX,     parameters.plane.normalY,     parameters.plane.normalZ,
-        parameters.plane.xDirectionX, parameters.plane.xDirectionY, parameters.plane.xDirectionZ};
-    for (double value : values) {
-        if (!std::isfinite(value)) {
-            throw std::invalid_argument("Sketch plane must contain finite values");
-        }
-    }
-    const double normalLength =
-        std::hypot(parameters.plane.normalX, parameters.plane.normalY, parameters.plane.normalZ);
-    const double xDirectionLength = std::hypot(
-        parameters.plane.xDirectionX, parameters.plane.xDirectionY, parameters.plane.xDirectionZ);
-    if (normalLength <= 1.0e-9 || xDirectionLength <= 1.0e-9) {
-        throw std::invalid_argument("Sketch plane directions must not be zero");
-    }
-    const double dot = parameters.plane.normalX * parameters.plane.xDirectionX +
-                       parameters.plane.normalY * parameters.plane.xDirectionY +
-                       parameters.plane.normalZ * parameters.plane.xDirectionZ;
-    if (std::abs(dot / (normalLength * xDirectionLength)) > 1.0e-8) {
-        throw std::invalid_argument("Sketch plane directions must be perpendicular");
-    }
+    validateCanonicalSketchPlane(parameters.plane);
     validateSketchElements(parameters.elements);
     validateSketchConstraints(parameters.elements, parameters.constraints);
 }
@@ -108,7 +111,7 @@ FeatureId ModelDocument::addCylinderFeature(std::string name, FeatureId inputFea
     if (!contains(inputFeature)) {
         throw std::invalid_argument("Cylinder input feature does not exist");
     }
-    validateCylinder(parameters);
+    validateCylinderParameters(parameters);
     const FeatureId id = nextFeatureId();
     auto candidate = currentState();
     ++candidate.nextFeatureId;
@@ -174,6 +177,7 @@ bool ModelDocument::setBoxDimensions(FeatureId featureId, const kernel::BoxDimen
 
 bool ModelDocument::setBoxParameters(FeatureId featureId, const BoxParameters& parameters) {
     validateBox(parameters.dimensions);
+    validatePlacement(parameters.placement);
     const std::size_t index = featureIndex(featureId);
     auto* current = std::get_if<BoxParameters>(&parameters_.at(index));
     if (current == nullptr) {
@@ -199,7 +203,7 @@ const CylinderParameters& ModelDocument::cylinderParameters(FeatureId featureId)
 
 bool ModelDocument::setCylinderParameters(FeatureId featureId,
                                           const CylinderParameters& parameters) {
-    validateCylinder(parameters);
+    validateCylinderParameters(parameters);
     const std::size_t index = featureIndex(featureId);
     auto* current = std::get_if<CylinderParameters>(&parameters_.at(index));
     if (current == nullptr) {
@@ -285,6 +289,7 @@ const kernel::RigidTransform& ModelDocument::featurePlacement(FeatureId featureI
 
 bool ModelDocument::setFeaturePlacement(FeatureId featureId,
                                         const kernel::RigidTransform& placement) {
+    validatePlacement(placement);
     const std::size_t index = featureIndex(featureId);
     FeatureParameters changed = parameters_.at(index);
     if (auto* box = std::get_if<BoxParameters>(&changed)) {

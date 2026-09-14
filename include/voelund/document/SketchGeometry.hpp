@@ -79,6 +79,7 @@ struct SketchCircle final {
 struct SketchArc final {
     SketchPoint center;
     double radius;
+    // Geometry angles are radians; they are not legacy degree-valued constraints.
     double startAngle;
     double endAngle;
 
@@ -89,7 +90,7 @@ struct SketchEllipse final {
     SketchPoint center;
     double majorRadius;
     double minorRadius;
-    double rotation;
+    double rotation; // radians
 
     [[nodiscard]] bool operator==(const SketchEllipse&) const = default;
 };
@@ -158,6 +159,7 @@ struct SketchConstraint final {
     SketchConstraintKind kind;
     SketchGeometryReference first;
     std::optional<SketchGeometryReference> second;
+    // angle constraints retain legacy degrees until the explicit document migration.
     double value{0.0};
     std::optional<SketchGeometryReference> third;
     std::vector<double> auxiliaryValues;

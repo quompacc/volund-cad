@@ -1,3 +1,4 @@
+#include "../CommandResultAssertions.hpp"
 #include <voelund/application/CadSession.hpp>
 #include <voelund/application/SketchEditorSession.hpp>
 
@@ -19,7 +20,8 @@ bool lineAndPointAlignmentsRemainParametric() {
     using namespace voelund;
     application::CadSession session;
     session.newDocument();
-    application::SketchEditorSession editor(session, session.addBoxFeature(), plane);
+    application::SketchEditorSession editor(
+        session, voelund::test::requireCommittedFeature(session.createBoxFeature()), plane);
     if (!addLine(editor, {0.0, 0.0}, {4.0, 1.0}, 1) ||
         !addLine(editor, {8.0, 3.0}, {12.0, 5.0}, 2) ||
         !addLine(editor, {0.0, 8.0}, {3.0, 10.0}, 3) ||
@@ -62,7 +64,8 @@ bool automaticCoincidenceUsesTheSolver() {
     using namespace voelund;
     application::CadSession session;
     session.newDocument();
-    application::SketchEditorSession editor(session, session.addBoxFeature(), plane);
+    application::SketchEditorSession editor(
+        session, voelund::test::requireCommittedFeature(session.createBoxFeature()), plane);
     if (!addLine(editor, {0.0, 0.0}, {4.0, 0.0}, 1) ||
         !addLine(editor, {7.0, 2.0}, {10.0, 2.0}, 2) ||
         !editor.addCoincidentReferences(

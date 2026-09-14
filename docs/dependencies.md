@@ -70,3 +70,12 @@ Diese Liste ist kein Verbot technisch sinnvoller Standardbibliotheken. Sie verhi
 nur vorsorgliche Aufnahme. Sobald Eigenentwicklung unverhältnismäßig, riskant oder
 schlechter wartbar wäre, wird die passende Bibliothek nach dem ADR-Verfahren bewertet
 und bei positivem Ergebnis aufgenommen.
+
+## D08: isolated OCAF persistence probe
+
+[ADR 0008](adr/0008-ocaf-binary-persistence.md) selects native BinOcaf format 12
+for D12/D13. The isolated probe links TKBin, TKCAF and TKPrim and verifies actual
+OCCT 8.0.1 / 7.9.3 bidirectional persistence. The OCAF modules TKCDF, TKLCAF, TKCAF,
+TKBinL and TKBin are available in the full installations; the lean FreeBSD product
+build still needs its own verified extension before D12. Do not mix its kernel
+libraries with system OCAF libraries. [Evidence and runtime lists](implementation-plan/evidence/D08.md).

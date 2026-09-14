@@ -1,0 +1,16 @@
+[1/4] Scanning /home/eduard/src/voelund-p04-20260913/tests/desktop/SketchSolverGateTests.cpp for CXX dependencies
+[2/4] Generating CXX dyndep file tests/CMakeFiles/voelund_sketch_solver_gate_tests.dir/CXX.dd
+[3/4] Building CXX object tests/CMakeFiles/voelund_sketch_solver_gate_tests.dir/desktop/SketchSolverGateTests.cpp.o
+[4/4] Linking CXX executable tests/voelund_sketch_solver_gate_tests
+Test project /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt
+    Start 19: desktop.sketch_solver_gate
+1/1 Test #19: desktop.sketch_solver_gate .......   Passed    0.26 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+desktop       =   0.26 sec*proc (1 test)
+regression    =   0.26 sec*proc (1 test)
+sketch        =   0.26 sec*proc (1 test)
+
+Total Test time (real) =   0.26 sec

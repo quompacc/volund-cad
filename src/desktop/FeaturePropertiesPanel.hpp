@@ -10,6 +10,7 @@
 
 class QDoubleSpinBox;
 class QLabel;
+class QPushButton;
 
 namespace voelund::desktop {
 
@@ -21,6 +22,8 @@ class FeaturePropertiesPanel final : public QStackedWidget {
     void setCylinderChangeHandler(std::function<void()> handler);
     void setExtrusionChangeHandler(std::function<void()> handler);
     void showNone();
+    void showCommandError(const QString& message);
+    void setErrorCommitHandler(std::function<void()> handler);
     void showFeatureInfo(const QString& title, const QString& errorText);
     void showBox(const document::BoxParameters& parameters);
     void showCylinder(const document::CylinderParameters& parameters, const QString& errorText);
@@ -53,6 +56,9 @@ class FeaturePropertiesPanel final : public QStackedWidget {
     QDoubleSpinBox* translationInputs_[3]{};
     QDoubleSpinBox* rotationInputs_[3]{};
     QLabel* errorLabel_{nullptr};
+    QLabel* boxErrorLabel_{nullptr};
+    QPushButton* errorCommitButtons_[3]{};
+    std::function<void()> errorCommitHandler_;
     QDoubleSpinBox* extrusionDistanceInput_{nullptr};
     QLabel* extrusionErrorLabel_{nullptr};
     std::vector<document::SketchProfileId> extrusionProfiles_;

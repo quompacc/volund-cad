@@ -1,3 +1,4 @@
+#include "SketchPlaneGuard.hpp"
 #include <voelund/features/SketchConstraintAnnotations.hpp>
 
 #include <algorithm>
@@ -85,6 +86,7 @@ gp_Pnt worldPoint(const document::SketchPlane& plane, const document::SketchPoin
 
 std::vector<SketchConstraintAnnotation>
 evaluateSketchConstraintAnnotations(const document::SketchParameters& sketch) {
+    detail::requireCanonicalPlane(sketch.plane);
     std::vector<SketchConstraintAnnotation> result;
     result.reserve(sketch.constraints.values.size());
     for (const document::SketchConstraint& constraint : sketch.constraints.values) {

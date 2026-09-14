@@ -1,0 +1,13 @@
+[1/26] Scanning /home/eduard/src/voelund-p04-20260913/tests/desktop/ParameterFailureTests.cpp for CXX dependencies
+[2/26] Generating CXX dyndep file tests/CMakeFiles/voelund_parameter_failure_tests.dir/CXX.dd
+[3/26] Scanning /home/eduard/src/voelund-p04-20260913/src/desktop/FeaturePropertiesPanel.cpp for CXX dependencies
+[4/26] Scanning /home/eduard/src/voelund-p04-20260913/src/desktop/MainWindow.cpp for CXX dependencies
+[5/26] Generating CXX dyndep file src/desktop/CMakeFiles/voelund_desktop.dir/CXX.dd
+[6/13] Building CXX object src/desktop/CMakeFiles/voelund_desktop.dir/FeaturePropertiesPanel.cpp.o
+[7/13] Building CXX object tests/CMakeFiles/voelund_parameter_failure_tests.dir/desktop/ParameterFailureTests.cpp.o
+[8/13] Building CXX object src/desktop/CMakeFiles/voelund_desktop.dir/MainWindow.cpp.o
+[9/13] Linking CXX static library src/desktop/libvoelund_desktop.a
+[10/13] Linking CXX executable tests/voelund_sketch_command_failure_tests
+[11/13] Linking CXX executable apps/voelund-cad/voelund-cad
+[12/13] Linking CXX executable tests/voelund_sketch_solver_gate_tests
+[13/13] Linking CXX executable tests/voelund_parameter_failure_tests

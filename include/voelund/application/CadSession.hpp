@@ -1,7 +1,10 @@
 #pragma once
+#include <voelund/application/CommandTransaction.hpp>
+#include <voelund/application/SceneStatus.hpp>
 
 #include <voelund/document/DocumentTransaction.hpp>
 #include <voelund/document/ModelDocument.hpp>
+#include <voelund/document/LegacyDocumentImporter.hpp>
 #include <voelund/features/FeatureGraph.hpp>
 #include <voelund/features/SketchEvaluation.hpp>
 
@@ -15,7 +18,7 @@
 
 namespace voelund::application {
 
-enum class FeatureRuntimeStatus { current, error };
+enum class FeatureRuntimeStatus { current, error, blocked };
 
 struct FeatureRuntimeState final {
     document::FeatureId id;
@@ -28,8 +31,16 @@ class CadSession final {
     CadSession();
 
     [[nodiscard]] TopoDS_Shape currentShape() const;
+    // Retained geometry is for explicitly labelled display only, never current evaluation.
+    [[nodiscard]] TopoDS_Shape displayShape() const { return currentShape_; }
+    [[nodiscard]] std::span<const features::EvaluatedBody> displayBodies() const noexcept {
+        return currentBodies_;
+    }
+    [[nodiscard]] SceneStatus sceneStatus() const noexcept {
+        return {{generation_, document_.revision()}, geometryStamp_};
+    }
     [[nodiscard]] std::optional<TopoDS_Shape> featureShape(document::FeatureId featureId) const;
-    [[nodiscard]] std::span<const features::EvaluatedBody> currentBodies() const noexcept;
+    [[nodiscard]] std::span<const features::EvaluatedBody> currentBodies() const;
     [[nodiscard]] std::span<const document::FeatureDescriptor> features() const noexcept;
     [[nodiscard]] std::optional<document::FeatureId> selectedFeature() const noexcept;
     [[nodiscard]] bool selectFeature(document::FeatureId featureId) noexcept;
@@ -44,25 +55,27 @@ class CadSession final {
     [[nodiscard]] const document::SketchParameters& selectedSketchParameters() const;
     [[nodiscard]] const document::SketchParameters&
     sketchParameters(document::FeatureId featureId) const;
-    [[nodiscard]] bool setSketchParameters(document::FeatureId featureId,
-                                           const document::SketchParameters& parameters);
+    [[nodiscard]] CommandResult
+    editSketchParameters(document::FeatureId featureId,
+                         const document::SketchParameters& parameters,
+                         ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] std::vector<features::EvaluatedSketchElement> selectedSketchElements() const;
-    [[nodiscard]] document::FeatureId addBoxFeature();
-    [[nodiscard]] document::FeatureId addCylinderFeature(
+    [[nodiscard]] CommandResult createBoxFeature();
+    [[nodiscard]] CommandResult createCylinderFeature(
         document::CylinderResultMode resultMode = document::CylinderResultMode::separate);
-    [[nodiscard]] document::FeatureId addSketchExtrusion(document::FeatureId supportFeature,
-                                                         const document::SketchPlane& plane,
-                                                         const document::SketchRectangle& rectangle,
-                                                         double distance = 10.0);
-    [[nodiscard]] document::FeatureId addSketchFeature(document::FeatureId supportFeature,
-                                                       const document::SketchParameters& sketch);
-    [[nodiscard]] document::FeatureId addSketchExtrusion(document::FeatureId supportFeature,
-                                                         const document::SketchParameters& sketch,
-                                                         double distance = 10.0);
-    [[nodiscard]] document::FeatureId
-    addSketchProfileExtrusion(document::FeatureId sketchFeature,
-                              std::span<const document::SketchProfileId> profileIds,
-                              double distance = 10.0);
+    [[nodiscard]] CommandResult createSketchExtrusion(document::FeatureId supportFeature,
+                                                      const document::SketchPlane& plane,
+                                                      const document::SketchRectangle& rectangle,
+                                                      double distance = 10.0);
+    [[nodiscard]] CommandResult createSketchFeature(document::FeatureId supportFeature,
+                                                    const document::SketchParameters& sketch);
+    [[nodiscard]] CommandResult createSketchExtrusion(document::FeatureId supportFeature,
+                                                      const document::SketchParameters& sketch,
+                                                      double distance = 10.0);
+    [[nodiscard]] CommandResult
+    createSketchProfileExtrusion(document::FeatureId sketchFeature,
+                                 std::span<const document::SketchProfileId> profileIds,
+                                 double distance = 10.0);
     [[nodiscard]] bool canAddCylinder() const noexcept;
     [[nodiscard]] bool canTransformFeature(document::FeatureId featureId) const noexcept;
     [[nodiscard]] std::optional<document::FeatureId>
@@ -70,38 +83,54 @@ class CadSession final {
     [[nodiscard]] const document::FeatureDescriptor& selectedFeatureDescriptor() const;
     [[nodiscard]] const kernel::BoxDimensions& selectedBoxDimensions() const;
     [[nodiscard]] const document::BoxParameters& selectedBoxParameters() const;
-    [[nodiscard]] bool setSelectedBoxDimensions(const kernel::BoxDimensions& dimensions);
-    [[nodiscard]] bool setSelectedBoxParameters(const document::BoxParameters& parameters);
+    [[nodiscard]] CommandResult
+    editSelectedBoxDimensions(const kernel::BoxDimensions& dimensions,
+                              ErrorDisposition disposition = ErrorDisposition::reject);
+    [[nodiscard]] CommandResult
+    editSelectedBoxParameters(const document::BoxParameters& parameters,
+                              ErrorDisposition disposition = ErrorDisposition::reject);
+    [[nodiscard]] CommandResult
+    editSelectedCylinderParameters(const document::CylinderParameters& parameters,
+                                   ErrorDisposition disposition = ErrorDisposition::reject);
+    [[nodiscard]] CommandResult
+    editCylinderParameters(document::FeatureId featureId,
+                           const document::CylinderParameters& parameters,
+                           ErrorDisposition disposition = ErrorDisposition::reject);
+    [[nodiscard]] CommandResult
+    editSelectedExtrusionParameters(const document::ExtrusionParameters& parameters,
+                                    ErrorDisposition disposition = ErrorDisposition::reject);
+    [[nodiscard]] CommandResult
+    editSelectedFeaturePlacement(const kernel::RigidTransform& placement,
+                                 ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] const document::CylinderParameters& selectedCylinderParameters() const;
     [[nodiscard]] const document::CylinderParameters&
     cylinderParameters(document::FeatureId featureId) const;
-    [[nodiscard]] bool
-    setSelectedCylinderParameters(const document::CylinderParameters& parameters);
-    [[nodiscard]] bool setCylinderParameters(document::FeatureId featureId,
-                                             const document::CylinderParameters& parameters);
     [[nodiscard]] const document::ExtrusionParameters& selectedExtrusionParameters() const;
-    [[nodiscard]] bool
-    setSelectedExtrusionParameters(const document::ExtrusionParameters& parameters);
     [[nodiscard]] const kernel::RigidTransform& selectedFeaturePlacement() const;
-    [[nodiscard]] bool setSelectedFeaturePlacement(const kernel::RigidTransform& placement);
     [[nodiscard]] std::span<const FeatureRuntimeState> featureStates() const noexcept;
     [[nodiscard]] bool canUndo() const noexcept;
     [[nodiscard]] bool canRedo() const noexcept;
-    [[nodiscard]] bool undo();
-    [[nodiscard]] bool redo();
+    [[nodiscard]] CommandResult undo();
+    [[nodiscard]] CommandResult redo();
     [[nodiscard]] bool isModified() const;
     void newDocument();
     void saveDocument(const std::filesystem::path& path);
     void loadDocument(const std::filesystem::path& path);
+    // Provenance of the last successful import; editing/saving does not resolve its issues.
+    [[nodiscard]] const std::optional<document::MigrationReport>& lastImportReport() const noexcept {
+        return importReport_;
+    }
     [[nodiscard]] const std::filesystem::path& currentFile() const noexcept { return currentFile_; }
 
   private:
     friend class CadSessionPersistenceTestAccess;
     using DocumentWriter = std::function<void(const std::filesystem::path&, std::string_view)>;
     void saveDocumentUsing(const std::filesystem::path& path, const DocumentWriter& writer);
-    [[nodiscard]] bool commitCandidate(document::DocumentTransaction& transaction,
-                                       std::optional<document::FeatureId> selection,
-                                       bool clearSketchSelection = false);
+    [[nodiscard]] CommandResult finishCandidate(document::DocumentTransaction& transaction,
+                                                std::optional<document::FeatureId> selection,
+                                                CommandKind kind, ErrorDisposition disposition,
+                                                bool clearSketchSelection);
+    [[nodiscard]] CommandResult restoreHistory(bool forward);
     [[nodiscard]] bool recompute();
     void markFeaturesCurrent();
     void markFeatureError(document::FeatureId featureId, const std::string& message);
@@ -119,6 +148,9 @@ class CadSession final {
     std::vector<FeatureRuntimeState> featureStates_;
     std::string cleanDocumentState_;
     std::filesystem::path currentFile_;
+    std::optional<document::MigrationReport> importReport_;
+    std::uint64_t generation_{0};
+    std::optional<DocumentStamp> geometryStamp_;
 };
 
 } // namespace voelund::application

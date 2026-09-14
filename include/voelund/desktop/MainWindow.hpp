@@ -1,6 +1,8 @@
 #pragma once
 
 #include <QMainWindow>
+#include <functional>
+#include <voelund/application/CommandTransaction.hpp>
 
 #include <cstdint>
 #include <memory>
@@ -14,14 +16,19 @@ class CadSession;
 namespace voelund::desktop {
 
 class MainWindow final : public QMainWindow {
-public:
+  public:
     explicit MainWindow(application::CadSession& session, QWidget* parent = nullptr);
     ~MainWindow() override;
 
-protected:
+  protected:
     void closeEvent(QCloseEvent* event) override;
 
-private:
+  private:
+    void syncGeometryStatus();
+    void applyParameterCommand(
+        std::function<application::CommandResult(application::ErrorDisposition)> command);
+    void keepParameterError();
+    void applyHistoryCommand(bool forward);
     void createViewport();
     void createModelTree();
     void createPropertiesPanel();

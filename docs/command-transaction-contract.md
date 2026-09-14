@@ -122,3 +122,43 @@ und UI-Migration wird im konkreten D07-Paket abgeschlossen, einschließlich der
 bisher breiten Exception-Übersetzung in FeatureGraph. Frühere Hinweise auf D06
 als alleinigen Abschluss dieser Migration waren zu knapp; die dreistufige
 Resultatpolitik ist noch nicht produktiv abgenommen.
+
+## D07-Zwischenstand
+
+Die produktiven Erzeugungswege und SketchEditor-Bestätigung konsumieren jetzt
+CommandResult. Ein SessionDocumentBackend verbindet D04 mit der Dokumentgrenze;
+neue ungültige Features werden verworfen. Der nächste Schritt migriert die noch
+vorhandenen Legacy-Setter und entfernt die Übergangsadapter. Die Gesamtpolitik
+ist weiterhin nicht abgenommen: Ausnahmeübersetzung, stale-Projektion und
+ausdrückliche Fehlerübernahme in der UI fehlen noch. Details in
+[D07b](implementation-plan/evidence/D07b.md).
+
+D07c migriert auch Parameter-/Placement-Aufrufer auf typisierte Resultate mit
+Default-Ablehnung. Geometriefehler besitzen eine engere Ausnahmegrenze; Speicher-
+und Programmierfehler werden weitergereicht. Undo/Redo bereiten Session und
+Auswertung vor Veröffentlichung vor. Verbleibende Adapter, Eingabevalidierung,
+stale-Projektion und ausdrückliche UI-Fehlerübernahme stehen im
+[aktuellen Restauftrag](implementation-plan/evidence/D07c.md).
+
+D07d bindet Dokument und Auswertung an Generation und Revision. Veraltete Formen
+sind nur über ausdrückliche Darstellungszugriffe verfügbar; aktuelle Geometrie-
+zugriffe und davon abhängige Aktionen sind gesperrt. Parameterpanel und Editor
+bestehender Skizzen bieten eine eigene, an Dokument/Entwurf gebundene Fehlerübernahme.
+Save/Open/New und Undo/Redo sind gegen diese Projektion geprüft. Die verbleibende
+Eingabevalidierung, Adapterentfernung und Gesamtabnahme stehen in
+[D07d](implementation-plan/evidence/D07d.md); D07 bleibt in-progress.
+
+D07e führt Eingabefehler vor der Auswertung in `invalidInput` mit eigener Diagnose
+über und entfernt die öffentlichen ID-/bool-Kompatibilitätsadapter. Undo/Redo
+liefern typisierte Ergebnisse einschließlich `committedWithErrors`; ihre Diagnose
+entsteht vor Veröffentlichung. Read-only-Prüfungen sowie interne ModelDocument-
+Mutatoren bleiben davon getrennt. Konkrete UI-Restpunkte für A-ERR-01 stehen in
+[D07e](implementation-plan/evidence/D07e.md). D07 ist weiterhin nicht insgesamt abgenommen.
+
+## D07-Fundament abgenommen
+
+D07f schließt überholte Parameterangebote und Preview-Ausnahmegrenzen und führt
+blocked als eigene Laufzeit-/Baumprojektion. D07 ist damit als Fehlerfundament
+abgenommen; vollständige A-ERR-01-Produktnachweise für gemeinsame Shell, Timeline
+und Export bleiben gemäß Kapitel 08 R01/U10/M15/M17/M18 zugeordnet. Die obigen
+Zwischenstände sind historisch. [Abnahme und Grenzen](implementation-plan/evidence/D07f.md).
