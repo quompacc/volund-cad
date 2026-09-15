@@ -24,8 +24,12 @@ D11e ergänzt Betriebssystem-Zufallsvergabe und einen unveränderlichen identifi
 Snapshot: Revision und Wertkopie behalten die ID, explizites Duplizieren erzeugt
 einen neuen Dokumentnamensraum. Diese Store-Schnittstelle ist geprüft; ihre
 produktive New-/Open-/Save-As-/Duplikat-Anbindung bleibt offen.
-Keine Terra-Übergabe, kein Commit/Push;
-HEAD bleibt `e8b65b8` auf `main`.
+Der geprüfte D10-/D11e-Quellstand samt Belegen ist auf Nutzerauftrag in
+`6737465afe6af30758147471035a5582e466342f` auf `main` committed. Ausgangspunkt
+der Prüfläufe war `e8b65b8`; ältere Uncommittet-Vermerke in den Evidenzen
+beschreiben diesen historischen Prüfzeitpunkt. Keine Terra-Übergabe, kein Push.
+[Changelog](../CHANGELOG.md) und [Versionsregeln](versioning.md) sind angelegt;
+die Basisversion bleibt `0.1.0`, ein Release-Tag ist noch nicht gesetzt.
 FreeBSD/Sway zuerst, Meridian bleibt L07. A02/A04 und die noch nicht umgesetzten
 Referenz-/DAG-/Persistenzpakete bleiben offen.
 

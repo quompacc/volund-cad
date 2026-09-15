@@ -7,9 +7,9 @@ The binding engineering rules are defined in the [architecture and code contract
 The [audited completion plan (German, 13 September 2026)](docs/implementation-plan/README.md)
 records the implementation gaps and defines 110 bounded work packages, dependencies,
 architecture decisions, acceptance scenarios, and an execution template for smaller models.
-Package A01 is now complete; [its evidence](docs/implementation-plan/evidence/A01.md)
-records the repaired source-limit check and the four existing violations it exposes.
-The remaining packages are not yet implemented.
+The current package states and acceptance evidence are tracked in
+[`packets.json`](docs/implementation-plan/packets.json). D10 is complete;
+D11 identity work is implemented through D11e, with native store integration still open.
 
 ## Current state
 
@@ -26,8 +26,19 @@ The repository contains a working native CAD vertical slice:
 - planar-face rectangle sketching followed by direct Push/Pull extrusion;
 - reusable tool panel with preview, parameters, OK and Cancel;
 - modular workspace and command registry with `Solid` as the first product module;
-- native C++ tests and a 600-line source-file limit (A01 repaired the enforcement
-  gap; four existing violations remain for A03).
+- native C++ tests and an enforced 600-line source-file limit.
+
+The accepted D11e source baseline passes **58/58 Windows** and **54/54 FreeBSD/Sway**
+tests. Persistent document identity in product commands and Meridian acceptance
+remain open; see the [D11e evidence](docs/implementation-plan/evidence/D11e.md).
+
+## Versions and changes
+
+The current base version is `0.1.0`; no versioned release is tagged yet.
+Changes are collected under `Unreleased` in the [Changelog](CHANGELOG.md).
+[Versioning and release rules](docs/versioning.md) distinguish product releases,
+Git revisions and document formats. Native OCAF probes do not change the current
+VOLUND 16 product writer.
 
 The detailed hand-off state and next development slice are recorded in
 [`docs/development-status.md`](docs/development-status.md).

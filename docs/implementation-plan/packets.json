@@ -835,7 +835,7 @@
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
       "evidence": ["evidence/D10.md", "evidence/D10b.md", "evidence/D10b2.md", "evidence/D10b2b.md", "evidence/D10c.md", "evidence/D10d.md", "evidence/D10-review.md", "evidence/D10e.md"],
-      "completedCommit": null
+      "completedCommit": "6737465afe6af30758147471035a5582e466342f"
     },
     {
       "id": "D11",

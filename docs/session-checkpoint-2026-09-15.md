@@ -4,7 +4,22 @@
 
 Der Nutzer hat ausdrücklich **„D10 abschließen, D11 beginnen“** gewählt.
 Die früheren Offen-Anweisungen zu D10 weiter unten sind damit historisch.
-Manifest: D10 `done`, D11 `in-progress`, beide ohne neuen Commit.
+Manifest: D10 `done`, D11 `in-progress`.
+
+### Commit- und Dokumentationsabschluss
+
+Der Nutzer hat anschließend **„schreib die doku, commite“** beauftragt. Der gesamte
+geprüfte D10-/D11e-Stand samt Evidenzen ist jetzt als
+`6737465afe6af30758147471035a5582e466342f` auf `main` committed. Dieser Auftrag
+ersetzt die bisherigen Nicht-Commit-Anweisungen. Die folgenden Hinweise auf
+`e8b65b8` und uncommittete Änderungen dokumentieren den damaligen Prüfzeitpunkt.
+Den aktuellen HEAD mit `git rev-parse HEAD` feststellen; der Dokumentationsabschluss
+folgt als eigener Commit. Kein Push, keine Terra-Übergabe.
+
+[Changelog](../CHANGELOG.md) mit `Unreleased` und [Versionsregeln](versioning.md)
+sind angelegt. Basisversion bleibt `0.1.0`; es wurde kein Release-Tag gesetzt.
+Build-Identifikation über zentrale Version, Vorab-Kennung und Git-SHA ist vor
+einem ersten verteilten versionierten Build noch technisch anzubinden.
 
 [D11a](implementation-plan/evidence/D11a.md) implementiert DocumentId/BodyId-Typen
 und eine reine Legacy-Körperzuordnung anhand stabiler Feature-/Supportreferenzen.
