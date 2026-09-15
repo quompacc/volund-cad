@@ -109,9 +109,14 @@ class SketchEditorSession final {
     [[nodiscard]] bool isElementConflicting(document::SketchElementId elementId) const noexcept;
     [[nodiscard]] bool
     isConstraintConflicting(document::SketchConstraintId constraintId) const noexcept;
+    // Linear dimensions/coordinates only; angles require the typed accessors.
     [[nodiscard]] std::optional<double>
     constraintValue(document::SketchConstraintId constraintId) const noexcept;
     [[nodiscard]] bool setConstraintValue(document::SketchConstraintId constraintId, double value);
+    [[nodiscard]] std::optional<kernel::Radians>
+    constraintAngle(document::SketchConstraintId constraintId) const noexcept;
+    [[nodiscard]] bool setConstraintAngle(document::SketchConstraintId constraintId,
+                                          kernel::Radians angle);
     [[nodiscard]] std::vector<features::SketchConstraintAnnotation> evaluatedConstraints() const;
     [[nodiscard]] std::span<const document::SketchElement> elements() const noexcept;
     [[nodiscard]] std::span<const document::SketchConstraint> constraints() const noexcept;
@@ -125,6 +130,12 @@ class SketchEditorSession final {
     [[nodiscard]] bool isActive() const noexcept;
 
   private:
+    [[nodiscard]] bool canAllocateIds(std::uint64_t elements, std::uint64_t constraints) const noexcept;
+    [[nodiscard]] bool canAllocatePreviewIds(std::span<const document::SketchGeometry> preview) const noexcept;
+    [[nodiscard]] bool canUpsertUnaryConstraint(document::SketchElementId element,
+                                               document::SketchConstraintKind kind) const noexcept;
+    [[nodiscard]] bool setConstraintInternalValue(document::SketchConstraintId constraintId,
+                                                  double value);
     friend class SketchSolverGateTestAccess;
     struct HistoryState final {
         document::SketchElements elements;

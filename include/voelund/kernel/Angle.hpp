@@ -19,13 +19,18 @@ class Degrees final {
     explicit Degrees(double value) : value_(detail::finiteAngle(value)) {}
     [[nodiscard]] double value() const noexcept { return value_; }
 
+    [[nodiscard]] bool operator==(const Degrees&) const = default;
+
   private:
     double value_;
 };
 class Radians final {
   public:
+    Radians() noexcept : value_(0.0) {}
     explicit Radians(double value) : value_(detail::finiteAngle(value)) {}
     [[nodiscard]] double value() const noexcept { return value_; }
+
+    [[nodiscard]] bool operator==(const Radians&) const = default;
 
   private:
     double value_;

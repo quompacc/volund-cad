@@ -1,5 +1,6 @@
 #pragma once
 
+#include <voelund/kernel/Angle.hpp>
 #include <voelund/kernel/OcctCompatibility.hpp>
 
 #include <TopoDS_Shape.hxx>
@@ -18,10 +19,10 @@ struct RigidTransform final {
     double translationX;
     double translationY;
     double translationZ;
-    // Legacy document/UI boundary: degrees. Convert explicitly before kernel math.
-    double rotationX;
-    double rotationY;
-    double rotationZ;
+    // Internal rotations are radians; legacy files and UI convert explicitly.
+    Radians rotationX;
+    Radians rotationY;
+    Radians rotationZ;
 
     [[nodiscard]] bool operator==(const RigidTransform&) const = default;
 };

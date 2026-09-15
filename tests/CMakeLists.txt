@@ -54,6 +54,15 @@ foreach(fixture IN ITEMS compound errors)
     set_tests_properties(application.command_contract_${fixture} PROPERTIES LABELS "integration;application;contract" TIMEOUT 15)
 endforeach()
 find_package(Threads REQUIRED)
+add_executable(voelund_document_identity_tests unit/DocumentIdentityTests.cpp)
+target_link_libraries(voelund_document_identity_tests PRIVATE
+    voelund_project_options Voelund::Document Threads::Threads)
+foreach(identity_case IN ITEMS generator lifecycle)
+    add_test(NAME document.identity_${identity_case}
+        COMMAND voelund_document_identity_tests ${identity_case})
+    set_tests_properties(document.identity_${identity_case} PROPERTIES
+        LABELS "unit;document;identity;regression" TIMEOUT 30)
+endforeach()
 add_executable(voelund_safe_persistence_tests integration/CadSessionSafePersistenceTests.cpp)
 target_link_libraries(voelund_safe_persistence_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME application.safe_persistence COMMAND voelund_safe_persistence_tests "${CMAKE_CURRENT_BINARY_DIR}")
@@ -177,6 +186,20 @@ if(VOELUND_BUILD_DESKTOP)
             COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:voelund_feature_status_tests>/platforms"
             COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:Qt6::QWindowsIntegrationPlugin>"
                 "$<TARGET_FILE_DIR:voelund_feature_status_tests>/platforms" VERBATIM)
+    endif()
+    add_executable(voelund_angle_input_tests desktop/AngleInputTests.cpp)
+    target_link_libraries(voelund_angle_input_tests PRIVATE voelund_project_options Voelund::Desktop)
+    add_test(NAME desktop.angle_inputs COMMAND voelund_angle_input_tests)
+    set_tests_properties(desktop.angle_inputs PROPERTIES LABELS "desktop;sketch;regression" TIMEOUT 30 RUN_SERIAL TRUE)
+    if(WIN32)
+        add_custom_command(TARGET voelund_angle_input_tests POST_BUILD
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                "$<TARGET_FILE:Qt6::Core>" "$<TARGET_FILE:Qt6::Gui>" "$<TARGET_FILE:Qt6::Widgets>"
+                "$<TARGET_FILE:Qt6::OpenGL>" "$<TARGET_FILE:Qt6::OpenGLWidgets>"
+                "$<TARGET_FILE_DIR:voelund_angle_input_tests>"
+            COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:voelund_angle_input_tests>/platforms"
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:Qt6::QWindowsIntegrationPlugin>"
+                "$<TARGET_FILE_DIR:voelund_angle_input_tests>/platforms" VERBATIM)
     endif()
     add_executable(voelund_parameter_failure_tests desktop/ParameterFailureTests.cpp)
     target_link_libraries(voelund_parameter_failure_tests PRIVATE voelund_project_options Voelund::Desktop)
@@ -427,3 +450,28 @@ if(WIN32)
     )
     set_tests_properties(architecture.setup_windows_mapping PROPERTIES LABELS "architecture;regression")
 endif()
+add_executable(voelund_numeric_policy_tests integration/NumericPolicyTests.cpp)
+target_link_libraries(voelund_numeric_policy_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME document.numeric_policy COMMAND voelund_numeric_policy_tests)
+set_tests_properties(document.numeric_policy PROPERTIES LABELS "integration;document;kernel;regression" TIMEOUT 60)
+add_executable(voelund_boolean_connection_tests integration/BooleanConnectionTests.cpp)
+target_link_libraries(voelund_boolean_connection_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME features.boolean_connection COMMAND voelund_boolean_connection_tests)
+set_tests_properties(features.boolean_connection PROPERTIES LABELS "integration;features;kernel;regression" TIMEOUT 60)
+add_executable(voelund_sketch_id_capacity_tests integration/SketchIdCapacityTests.cpp)
+target_link_libraries(voelund_sketch_id_capacity_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.sketch_id_capacity COMMAND voelund_sketch_id_capacity_tests)
+set_tests_properties(application.sketch_id_capacity PROPERTIES LABELS "integration;document;application;regression" TIMEOUT 60)
+add_executable(voelund_legacy_body_identity_tests integration/LegacyBodyIdentityTests.cpp)
+target_link_libraries(voelund_legacy_body_identity_tests PRIVATE voelund_project_options Voelund::Document)
+add_test(NAME document.legacy_body_identity COMMAND voelund_legacy_body_identity_tests
+    "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/documents")
+set_tests_properties(document.legacy_body_identity PROPERTIES LABELS "integration;document;regression" TIMEOUT 60)
+add_executable(voelund_feature_id_lifetime_tests integration/FeatureIdLifetimeTests.cpp)
+target_link_libraries(voelund_feature_id_lifetime_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME document.feature_id_lifetime COMMAND voelund_feature_id_lifetime_tests)
+set_tests_properties(document.feature_id_lifetime PROPERTIES LABELS "integration;document;application;regression" TIMEOUT 60)
+add_executable(voelund_body_identity_evaluation_tests integration/BodyIdentityEvaluationTests.cpp)
+target_link_libraries(voelund_body_identity_evaluation_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME features.body_identity COMMAND voelund_body_identity_evaluation_tests)
+set_tests_properties(features.body_identity PROPERTIES LABELS "integration;document;features;regression" TIMEOUT 60)

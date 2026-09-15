@@ -1,4 +1,7 @@
-add_library(voelund_platform STATIC AtomicFileStore.cpp AtomicFileStoreNative.cpp)
+add_library(voelund_platform STATIC AtomicFileStore.cpp AtomicFileStoreNative.cpp RandomBytes.cpp)
 target_include_directories(voelund_platform PUBLIC "${PROJECT_SOURCE_DIR}/include")
 target_link_libraries(voelund_platform PUBLIC voelund_project_options)
+if(WIN32)
+    target_link_libraries(voelund_platform PRIVATE bcrypt)
+endif()
 add_library(Voelund::Platform ALIAS voelund_platform)

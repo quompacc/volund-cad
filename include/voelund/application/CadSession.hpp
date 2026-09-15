@@ -146,7 +146,7 @@ class CadSession final {
     std::optional<document::SketchElementId> selectedSketchElement_;
     std::vector<document::SketchProfileId> selectedSketchProfiles_;
     std::vector<FeatureRuntimeState> featureStates_;
-    std::string cleanDocumentState_;
+    std::optional<document::DocumentSnapshot> cleanDocumentState_;
     std::filesystem::path currentFile_;
     std::optional<document::MigrationReport> importReport_;
     std::uint64_t generation_{0};

@@ -1,13 +1,15 @@
 #pragma once
 #include <voelund/document/ModelDocument.hpp>
 #include <voelund/kernel/NumericValidation.hpp>
+#include <voelund/kernel/NumericPolicy.hpp>
 
 namespace voelund::document {
 // D10a preserves legacy thresholds and stored axis magnitudes. These are
 // dimensionless direction checks, not distances, connection or picking tolerances.
 inline void validateSketchPlane(const SketchPlane& plane) {
-    if (!kernel::finiteValues({plane.originX, plane.originY, plane.originZ}))
-        throw std::invalid_argument("Sketch plane origin must contain finite values");
+    if (!kernel::modelCoordinate(plane.originX) || !kernel::modelCoordinate(plane.originY) ||
+        !kernel::modelCoordinate(plane.originZ))
+        throw std::invalid_argument(kernel::modelRangeDiagnostic);
     constexpr double minimumDirectionMagnitude = 1.0e-9;
     constexpr double maximumPerpendicularDot = 1.0e-8;
     const auto normal = kernel::UnitDirection::fromComponents(

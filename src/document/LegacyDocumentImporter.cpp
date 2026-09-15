@@ -1,3 +1,4 @@
+#include <voelund/kernel/NumericPolicy.hpp>
 #include "BoundedDocumentInput.hpp"
 #include "DocumentFormat.hpp"
 #include "DocumentSerializationDetail.hpp"
@@ -43,7 +44,7 @@ ParsedFeature readBoxFeature(FeatureId id, std::string name, std::istringstream&
     box.placement = readTransform(line);
     if (!positiveFinite(box.dimensions.width) || !positiveFinite(box.dimensions.depth) ||
         !positiveFinite(box.dimensions.height)) {
-        invalidDocument("box dimensions must be positive and finite");
+        invalidDocument(kernel::modelRangeDiagnostic);
     }
     validateTransform(box.placement);
     ensureLineComplete(line);
@@ -64,7 +65,7 @@ ParsedFeature readCylinderFeature(FeatureId id, std::string name, std::istringst
         invalidDocument("cylinder input must reference an earlier feature");
     }
     if (!positiveFinite(cylinder.radius) || !positiveFinite(cylinder.height)) {
-        invalidDocument("cylinder dimensions must be positive and finite");
+        invalidDocument(kernel::modelRangeDiagnostic);
     }
     validateTransform(cylinder.placement);
     ensureLineComplete(line);
@@ -172,13 +173,16 @@ SketchConstraint readConstraint(std::istream& input, std::uint64_t version) {
     std::optional<SketchGeometryReference> second;
     if (secondElement != 0)
         second = SketchGeometryReference{SketchElementId{secondElement}, secondPoint};
-    return {SketchConstraintId{rawId},
-            kind,
-            SketchGeometryReference{SketchElementId{firstElement}, firstPoint},
-            second,
-            value,
-            third,
-            std::move(auxiliaryValues)};
+    SketchConstraint result{SketchConstraintId{rawId},
+                            kind,
+                            SketchGeometryReference{SketchElementId{firstElement}, firstPoint},
+                            second,
+                            kind == SketchConstraintKind::angle ? 0.0 : value,
+                            third,
+                            std::move(auxiliaryValues)};
+    if (kind == SketchConstraintKind::angle)
+        result.angleValue = kernel::toRadians(kernel::Degrees(value));
+    return result;
 }
 
 ParsedFeature readSketchFeature(FeatureId id, std::string name, std::istringstream& line,
@@ -259,10 +263,11 @@ ParsedFeature readExtrusionFeature(FeatureId id, std::string name, std::istrings
                                    std::uint64_t version) {
     std::uint64_t rawSketchId = 0;
     ExtrusionParameters extrusion{};
-    if (!(line >> unsignedValue(rawSketchId) >> extrusion.distance) ||
-        !positiveFinite(extrusion.distance)) {
+    if (!(line >> unsignedValue(rawSketchId) >> extrusion.distance)) {
         invalidDocument("malformed extrusion parameters");
     }
+    if (!positiveFinite(extrusion.distance))
+        invalidDocument(kernel::modelRangeDiagnostic);
     const FeatureId sketchId{rawSketchId};
     if (!containsFeatureKind(previousFeatures, sketchId, FeatureKind::sketch)) {
         invalidDocument("extrusion input must reference an earlier sketch");

@@ -55,7 +55,11 @@ void writeSketch(const FeatureDescriptor& feature, const SketchParameters& sketc
                    << detail::pointPositionName(constraint.second->point);
         else
             output << "0 START";
-        output << ' ' << constraint.value << ' ';
+        output << ' '
+               << (constraint.kind == SketchConstraintKind::angle
+                       ? kernel::toDegrees(constraint.angleValue).value()
+                       : constraint.value)
+               << ' ';
         if (constraint.third)
             output << constraint.third->element.value() << ' '
                    << detail::pointPositionName(constraint.third->point);

@@ -11,6 +11,7 @@ add_library(voelund_application STATIC
     SketchEditorDimensions.cpp
     SketchEditorGeometry.cpp
     SketchEditorHistory.cpp
+    SketchEditorIdCapacity.cpp
     SketchEditorOperations.cpp
     SketchEditorPointConstraints.cpp
     SketchEditorRelations.cpp

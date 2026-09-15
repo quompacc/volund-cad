@@ -52,7 +52,7 @@ bool featureIdentitySurvivesHistory() {
 bool featureCreationParticipatesInHistory() {
     voelund::document::ModelDocument document;
     const voelund::document::CylinderParameters parameters{
-        4.0, 10.0, voelund::kernel::RigidTransform{25.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+        4.0, 10.0, voelund::kernel::RigidTransform{25.0, 0.0, 0.0, {}, {}, {}},
         voelund::document::CylinderResultMode::separate};
     const voelund::document::FeatureId featureId = document.addCylinderFeature(
         "Cylinder 2", voelund::document::ModelDocument::initialCylinderId(), parameters);
@@ -70,11 +70,16 @@ bool serializationPreservesGraphAndResetsHistory() {
     voelund::document::ModelDocument source;
     voelund::document::BoxParameters box =
         source.boxParameters(voelund::document::ModelDocument::initialBoxId());
-    box.placement = voelund::kernel::RigidTransform{12.5, -4.0, 3.0, 0.0, 45.0, 0.0};
+    box.placement = voelund::kernel::RigidTransform{
+        12.5, -4.0, 3.0, {}, voelund::kernel::toRadians(voelund::kernel::Degrees(45.0)), {}};
     static_cast<void>(
         source.setBoxParameters(voelund::document::ModelDocument::initialBoxId(), box));
     const voelund::document::CylinderParameters cylinder{
-        3.5, 11.0, voelund::kernel::RigidTransform{8.0, 2.0, 0.0, 5.0, 10.0, 15.0},
+        3.5, 11.0,
+        voelund::kernel::RigidTransform{8.0, 2.0, 0.0,
+                                        voelund::kernel::toRadians(voelund::kernel::Degrees(5.0)),
+                                        voelund::kernel::toRadians(voelund::kernel::Degrees(10.0)),
+                                        voelund::kernel::toRadians(voelund::kernel::Degrees(15.0))},
         voelund::document::CylinderResultMode::separate};
     const voelund::document::FeatureId thirdId = source.addCylinderFeature(
         "Cylinder with spaces", voelund::document::ModelDocument::initialCylinderId(), cylinder);
@@ -203,7 +208,7 @@ bool relationalConstraintsRoundtripInCurrentVersion() {
            SketchConstraintKind::angle,
            {SketchElementId{1}, SketchPointPosition::start},
            SketchGeometryReference{SketchElementId{2}, SketchPointPosition::start},
-           45.0},
+           voelund::kernel::toRadians(voelund::kernel::Degrees(45.0))},
           {SketchConstraintId{9},
            SketchConstraintKind::pointDistanceX,
            {SketchElementId{1}, SketchPointPosition::start},

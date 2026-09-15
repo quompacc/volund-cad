@@ -1,0 +1,11 @@
+include/voelund/document/DocumentId.hpp
+include/voelund/document/IdentifiedDocumentSnapshot.hpp
+include/voelund/platform/RandomBytes.hpp
+src/document/CMakeLists.txt
+src/document/DocumentIdGeneration.hpp
+src/document/DocumentIdGenerator.cpp
+src/document/IdentifiedDocumentSnapshot.cpp
+src/platform/CMakeLists.txt
+src/platform/RandomBytes.cpp
+tests/CMakeLists.txt
+tests/unit/DocumentIdentityTests.cpp

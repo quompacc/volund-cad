@@ -6,6 +6,9 @@ class LegacyDocumentImporter;
 // Validated, read-only interchange value; no OCAF labels or mutable document authority.
 class DocumentSnapshot final {
   public:
+    [[nodiscard]] static DocumentSnapshot capture(const ModelDocument& document);
+    // Model content equality deliberately excludes the monotonic allocation watermark.
+    [[nodiscard]] bool matchesContent(const ModelDocument& document) const;
     [[nodiscard]] std::span<const FeatureDescriptor> features() const noexcept { return features_; }
     [[nodiscard]] std::span<const FeatureParameters> parameters() const noexcept {
         return parameters_;

@@ -1,0 +1,7 @@
+src/document/CMakeLists.txt
+tests/CMakeLists.txt
+include/voelund/document/DocumentId.hpp
+include/voelund/document/BodyId.hpp
+include/voelund/document/LegacyBodyIdentity.hpp
+src/document/LegacyBodyIdentity.cpp
+tests/integration/LegacyBodyIdentityTests.cpp

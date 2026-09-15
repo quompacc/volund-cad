@@ -1,0 +1,128 @@
+Test project /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt
+      Start  1: desktop.viewport_startup.native_wayland
+ 1/46 Test  #1: desktop.viewport_startup.native_wayland .....   Passed    0.74 sec
+      Start  2: desktop.viewport_startup.uninitialized
+ 2/46 Test  #2: desktop.viewport_startup.uninitialized ......   Passed    0.21 sec
+      Start  3: desktop.ui_preview_startup.native_wayland
+ 3/46 Test  #3: desktop.ui_preview_startup.native_wayland ...   Passed    0.69 sec
+      Start  4: desktop.ui_preview_startup.uninitialized
+ 4/46 Test  #4: desktop.ui_preview_startup.uninitialized ....   Passed    0.21 sec
+      Start  5: document.angle_boundaries
+ 5/46 Test  #5: document.angle_boundaries ...................   Passed    0.50 sec
+      Start  6: document.plane_migration
+ 6/46 Test  #6: document.plane_migration ....................   Passed    0.15 sec
+      Start  7: document.numeric_validation
+ 7/46 Test  #7: document.numeric_validation .................   Passed    0.03 sec
+      Start  8: document.legacy_import
+ 8/46 Test  #8: document.legacy_import ......................   Passed    0.07 sec
+      Start  9: application.command_input
+ 9/46 Test  #9: application.command_input ...................   Passed    0.16 sec
+      Start 10: application.scene_status
+10/46 Test #10: application.scene_status ....................   Passed    0.16 sec
+      Start 11: application.failure_boundaries
+11/46 Test #11: application.failure_boundaries ..............   Passed    0.61 sec
+      Start 12: application.creation_results
+12/46 Test #12: application.creation_results ................   Passed    0.23 sec
+      Start 13: application.command_transactions
+13/46 Test #13: application.command_transactions ............   Passed    0.27 sec
+      Start 14: document.transactions
+14/46 Test #14: document.transactions .......................   Passed    0.02 sec
+      Start 15: document.transaction_allocation_failures
+15/46 Test #15: document.transaction_allocation_failures ....   Passed    0.02 sec
+      Start 16: application.command_contract_compound
+16/46 Test #16: application.command_contract_compound .......   Passed    0.01 sec
+      Start 17: application.command_contract_errors
+17/46 Test #17: application.command_contract_errors .........   Passed    0.02 sec
+      Start 18: application.safe_persistence
+18/46 Test #18: application.safe_persistence ................   Passed    0.23 sec
+      Start 19: document.parser_limits_and_versions
+19/46 Test #19: document.parser_limits_and_versions .........   Passed    9.68 sec
+      Start 20: platform.atomic_file_store
+20/46 Test #20: platform.atomic_file_store ..................   Passed    0.04 sec
+      Start 21: kernel.shape_factory
+21/46 Test #21: kernel.shape_factory ........................   Passed    0.02 sec
+      Start 22: document.history
+22/46 Test #22: document.history ............................   Passed    0.02 sec
+      Start 23: features.sketch_profiles
+23/46 Test #23: features.sketch_profiles ....................   Passed    0.02 sec
+      Start 24: features.planegcs_solver
+24/46 Test #24: features.planegcs_solver ....................   Passed    0.00 sec
+      Start 25: features.sketch_constraint_adapter
+25/46 Test #25: features.sketch_constraint_adapter ..........   Passed    0.02 sec
+      Start 26: application.recompute_history
+26/46 Test #26: application.recompute_history ...............   Passed    1.31 sec
+      Start 27: desktop.sketch_command_failure
+27/46 Test #27: desktop.sketch_command_failure ..............   Passed    0.23 sec
+      Start 28: desktop.preview_command_failures
+28/46 Test #28: desktop.preview_command_failures ............   Passed    0.16 sec
+      Start 29: desktop.feature_status
+29/46 Test #29: desktop.feature_status ......................   Passed    0.50 sec
+      Start 30: desktop.angle_inputs
+30/46 Test #30: desktop.angle_inputs ........................   Passed    0.47 sec
+      Start 31: desktop.parameter_failures
+31/46 Test #31: desktop.parameter_failures ..................   Passed    0.37 sec
+      Start 32: desktop.sketch_solver_gate
+32/46 Test #32: desktop.sketch_solver_gate ..................   Passed    0.31 sec
+      Start 33: desktop.document_actions
+33/46 Test #33: desktop.document_actions ....................   Passed    0.55 sec
+      Start 34: desktop.viewport_lifecycle_qt
+34/46 Test #34: desktop.viewport_lifecycle_qt ...............   Passed    1.40 sec
+      Start 35: application.sketch_editor_flow
+35/46 Test #35: application.sketch_editor_flow ..............***Failed    0.57 sec
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 0 redundants
+Sketch editor relation cases failed
+
+      Start 36: application.sketch_construction
+36/46 Test #36: application.sketch_construction .............   Passed    0.08 sec
+      Start 37: application.sketch_circle_constraints
+37/46 Test #37: application.sketch_circle_constraints .......   Passed    0.06 sec
+      Start 38: application.sketch_alignments
+38/46 Test #38: application.sketch_alignments ...............   Passed    0.06 sec
+      Start 39: application.sketch_fix_distance
+39/46 Test #39: application.sketch_fix_distance .............   Passed    0.04 sec
+      Start 40: application.sketch_basic_tools
+40/46 Test #40: application.sketch_basic_tools ..............   Passed    0.14 sec
+      Start 41: application.sketch_slot_dimensions
+41/46 Test #41: application.sketch_slot_dimensions ..........   Passed    0.10 sec
+      Start 42: workspaces.module_registry
+42/46 Test #42: workspaces.module_registry ..................   Passed    0.00 sec
+      Start 43: architecture.source_limits
+43/46 Test #43: architecture.source_limits ..................   Passed    0.04 sec
+      Start 44: architecture.source_limits_regression
+44/46 Test #44: architecture.source_limits_regression .......   Passed    0.09 sec
+      Start 45: architecture.ctest_label_runner
+45/46 Test #45: architecture.ctest_label_runner .............   Passed    9.87 sec
+      Start 46: architecture.desktop_smoke_runner
+46/46 Test #46: architecture.desktop_smoke_runner ...........   Passed    1.06 sec
+
+98% tests passed, 1 tests failed out of 46
+
+Label Time Summary:
+allocation      =   0.02 sec*proc (1 test)
+application     =   3.80 sec*proc (15 tests)
+architecture    =  11.06 sec*proc (4 tests)
+contract        =   0.03 sec*proc (2 tests)
+desktop         =   5.85 sec*proc (12 tests)
+document        =  12.68 sec*proc (15 tests)
+features        =   0.04 sec*proc (3 tests)
+freebsd         =   2.83 sec*proc (3 tests)
+integration     =   4.78 sec*proc (20 tests)
+kernel          =   0.05 sec*proc (2 tests)
+lifecycle       =   1.40 sec*proc (1 test)
+negative        =   0.42 sec*proc (2 tests)
+platform        =   1.89 sec*proc (5 tests)
+qt-opengl       =   1.40 sec*proc (1 test)
+regression      =  26.34 sec*proc (28 tests)
+sketch          =   2.05 sec*proc (6 tests)
+ui              =   0.69 sec*proc (1 test)
+unit            =   9.84 sec*proc (10 tests)
+viewport        =   1.40 sec*proc (1 test)
+wayland         =   2.83 sec*proc (3 tests)
+workspaces      =   0.00 sec*proc (1 test)
+
+Total Test time (real) =  31.53 sec
+
+The following tests FAILED:
+	 35 - application.sketch_editor_flow (Failed)           application integration
+Errors while running CTest

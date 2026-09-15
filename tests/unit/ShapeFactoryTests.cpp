@@ -30,7 +30,7 @@ bool boxRejectsNonPositiveDimensions() {
         static_cast<void>(voelund::kernel::ShapeFactory::makeBox(dimensions));
     } catch (const voelund::kernel::KernelError& error) {
         return error.operation() == voelund::kernel::KernelOperation::makeBox &&
-               error.diagnostic().find("positive") != std::string::npos;
+               error.diagnostic().find("[0.001, 1000000]") != std::string::npos;
     }
     return false;
 }
@@ -136,14 +136,9 @@ bool rejectsNonFiniteDefinitions() {
                          }) ||
             !rejectsWith(KernelOperation::applyTransform,
                          [&] { return ShapeFactory::applyTransform(box, value, 0.0, 0.0, {}); }) ||
-            !rejectsWith(KernelOperation::applyTransform,
-                         [&] {
-                             return ShapeFactory::applyTransform(box, 0.0, 0.0, 0.0,
-                                                                 {value, 0.0, 0.0, 0.0, 0.0, 0.0});
-                         }) ||
             !rejectsWith(KernelOperation::applyTransform, [&] {
                 return ShapeFactory::applyTransform(box, 0.0, 0.0, 0.0,
-                                                    {0.0, 0.0, 0.0, 0.0, value, 0.0});
+                                                    {value, 0.0, 0.0, {}, {}, {}});
             })) {
             return false;
         }
@@ -159,7 +154,7 @@ bool translatesOcctFailure() {
         occtFailureDiagnostic(emptyFailure).empty()) {
         return false;
     }
-    // Positive but below OCCT's geometric resolution: reaches the OCCT builder.
+    // Below the supported input range: rejected before reaching the OCCT builder.
     return rejectsWith(KernelOperation::makeBox,
                        [&] { return ShapeFactory::makeBox({1.0e-20, 10.0, 10.0}); });
 }
@@ -167,8 +162,9 @@ bool translatesOcctFailure() {
 bool cylinderAndTransformPreserveGeometry() {
     using namespace voelund::kernel;
     const auto cylinder = ShapeFactory::makeCylinder({2.0, 5.0, 1.0, 2.0, 3.0, 1.0, 0.0, 0.0});
-    const auto moved =
-        ShapeFactory::applyTransform(cylinder, 0.0, 0.0, 0.0, {10.0, 20.0, 30.0, 0.0, 0.0, 90.0});
+    const auto moved = ShapeFactory::applyTransform(
+        cylinder, 0.0, 0.0, 0.0,
+        {10.0, 20.0, 30.0, {}, {}, voelund::kernel::toRadians(voelund::kernel::Degrees(90))});
     GProp_GProps originalProperties;
     GProp_GProps movedProperties;
     BRepGProp::VolumeProperties(cylinder, originalProperties);

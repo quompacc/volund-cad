@@ -188,23 +188,24 @@ bool separateCylinderRotationIsParametricAndUndoable() {
         return false;
     }
     const double initialMaximumX = maximumXOf(session.currentBodies()[1].shape);
-    parameters.placement.rotationY = 90.0;
+    parameters.placement.rotationY = voelund::kernel::toRadians(voelund::kernel::Degrees(90.0));
     if (!(session.editSelectedCylinderParameters(parameters).status() ==
           voelund::application::CommandStatus::committed)) {
         return false;
     }
     const double rotatedMaximumX = maximumXOf(session.currentBodies()[1].shape);
     return std::abs(rotatedMaximumX - initialMaximumX) > 1.0 &&
-           session.selectedCylinderParameters().placement.rotationY == 90.0 &&
+           session.selectedCylinderParameters().placement.rotationY ==
+               voelund::kernel::toRadians(voelund::kernel::Degrees(90.0)) &&
            (session.undo().status() == voelund::application::CommandStatus::committed) &&
-           session.selectedCylinderParameters().placement.rotationY == 0.0 &&
+           session.selectedCylinderParameters().placement.rotationY == voelund::kernel::Radians{} &&
            std::abs(maximumXOf(session.currentBodies()[1].shape) - initialMaximumX) < 1.0e-9;
 }
 
 bool graphEvaluatesAdditionalFeatures() {
     voelund::document::ModelDocument document;
     const voelund::document::CylinderParameters parameters{
-        4.0, 10.0, voelund::kernel::RigidTransform{30.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+        4.0, 10.0, voelund::kernel::RigidTransform{30.0, 0.0, 0.0, {}, {}, {}},
         voelund::document::CylinderResultMode::separate};
     const voelund::document::FeatureId featureId = document.addCylinderFeature(
         "Cylinder 2", voelund::document::ModelDocument::initialCylinderId(), parameters);

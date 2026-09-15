@@ -59,7 +59,7 @@ CadSession::CadSession() {
     if (!recompute()) {
         throw std::runtime_error("Initial feature graph evaluation failed");
     }
-    cleanDocumentState_ = serializedDocument();
+    cleanDocumentState_ = document::DocumentSnapshot::capture(document_);
 }
 
 bool CadSession::canAddCylinder() const noexcept {
@@ -353,15 +353,15 @@ bool CadSession::canUndo() const noexcept { return document_.canUndo(); }
 
 bool CadSession::canRedo() const noexcept { return document_.canRedo(); }
 
-bool CadSession::isModified() const { return serializedDocument() != cleanDocumentState_; }
+bool CadSession::isModified() const {
+    return !cleanDocumentState_ || !cleanDocumentState_->matchesContent(document_);
+}
 
 void CadSession::newDocument() {
     if (generation_ == std::numeric_limits<std::uint64_t>::max())
         throw std::overflow_error("Document generation exhausted");
     auto empty = document::ModelDocument::empty();
-    std::ostringstream output;
-    document::DocumentSerializer::write(empty, output);
-    auto clean = output.str();
+    auto clean = std::optional{document::DocumentSnapshot::capture(empty)};
     // Empty document and clean baseline are prepared before publication.
     document_ = std::move(empty);
     ++generation_;

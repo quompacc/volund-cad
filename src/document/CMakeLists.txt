@@ -1,7 +1,11 @@
 add_library(voelund_document STATIC
     DocumentSerializer.cpp
     LegacyDocumentImporter.cpp
+    LegacyBodyIdentity.cpp
     DocumentSnapshot.cpp
+    DocumentId.cpp
+    DocumentIdGenerator.cpp
+    IdentifiedDocumentSnapshot.cpp
     DocumentSerializerSupport.cpp
     DocumentSerializerWriter.cpp
     ModelDocument.cpp
@@ -21,6 +25,8 @@ target_link_libraries(
     PUBLIC
         voelund_project_options
         Voelund::Kernel
+    PRIVATE
+        Voelund::Platform
 )
 
 add_library(Voelund::Document ALIAS voelund_document)

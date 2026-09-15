@@ -1,3 +1,4 @@
+#include <voelund/kernel/NumericPolicy.hpp>
 #include <voelund/document/SketchPlaneValidation.hpp>
 #include <voelund/application/SketchEditorSession.hpp>
 
@@ -182,7 +183,6 @@ bool SketchEditorSession::translateSelected(double deltaX, double deltaY) {
             },
             match->geometry);
     }
-    document::validateSketchElements(elements_);
     if (deltaX == 0.0 && deltaY == 0.0)
         return false;
     if (solveConstraints())
@@ -266,7 +266,7 @@ SketchEditorSession::selectedLineConstraint() const noexcept {
 }
 
 bool SketchEditorSession::setSelectedLineLength(double length) {
-    if (!active_ || !std::isfinite(length) || length <= 1.0e-9 || !selectedElement_.has_value())
+    if (!active_ || !kernel::modelLength(length) || !selectedElement_.has_value())
         return false;
     const auto match =
         std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);
@@ -274,6 +274,8 @@ bool SketchEditorSession::setSelectedLineLength(double length) {
         return false;
     auto* line = std::get_if<document::SketchLine>(&match->geometry);
     if (line == nullptr)
+        return false;
+    if (!canUpsertUnaryConstraint(*selectedElement_, document::SketchConstraintKind::distance))
         return false;
     const document::SketchElements previousElements = elements_;
     const document::SketchConstraints previousConstraints = constraints_;
@@ -283,7 +285,6 @@ bool SketchEditorSession::setSelectedLineLength(double length) {
     line->end.y = line->start.y + (line->end.y - line->start.y) * scale;
     const bool constraintChanged = upsertUnaryConstraint(
         constraints_, *selectedElement_, document::SketchConstraintKind::distance, length);
-    document::validateSketchElements(elements_);
     if (length == current && !constraintChanged)
         return false;
     if (solveConstraints())
@@ -294,7 +295,7 @@ bool SketchEditorSession::setSelectedLineLength(double length) {
 }
 
 bool SketchEditorSession::setSelectedRectangleWidth(double width) {
-    if (!active_ || !std::isfinite(width) || width <= 1.0e-9 || !selectedElement_.has_value())
+    if (!active_ || !kernel::modelLength(width) || !selectedElement_.has_value())
         return false;
     const auto match =
         std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);
@@ -303,15 +304,21 @@ bool SketchEditorSession::setSelectedRectangleWidth(double width) {
     auto* rectangle = std::get_if<document::SketchRectangle>(&match->geometry);
     if (rectangle == nullptr)
         return false;
+    const auto previousElements = elements_;
     const double current = std::abs(rectangle->second.x - rectangle->first.x);
     const double direction = rectangle->second.x < rectangle->first.x ? -1.0 : 1.0;
     rectangle->second.x = rectangle->first.x + direction * width;
-    document::validateSketchElements(elements_);
+    try {
+        document::validateSketchElements(elements_);
+    } catch (const std::invalid_argument&) {
+        elements_ = previousElements;
+        return false;
+    }
     return width != current;
 }
 
 bool SketchEditorSession::setSelectedRectangleHeight(double height) {
-    if (!active_ || !std::isfinite(height) || height <= 1.0e-9 || !selectedElement_.has_value())
+    if (!active_ || !kernel::modelLength(height) || !selectedElement_.has_value())
         return false;
     const auto match =
         std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);
@@ -320,15 +327,21 @@ bool SketchEditorSession::setSelectedRectangleHeight(double height) {
     auto* rectangle = std::get_if<document::SketchRectangle>(&match->geometry);
     if (rectangle == nullptr)
         return false;
+    const auto previousElements = elements_;
     const double current = std::abs(rectangle->second.y - rectangle->first.y);
     const double direction = rectangle->second.y < rectangle->first.y ? -1.0 : 1.0;
     rectangle->second.y = rectangle->first.y + direction * height;
-    document::validateSketchElements(elements_);
+    try {
+        document::validateSketchElements(elements_);
+    } catch (const std::invalid_argument&) {
+        elements_ = previousElements;
+        return false;
+    }
     return height != current;
 }
 
 bool SketchEditorSession::setSelectedCircleRadius(double radius) {
-    if (!active_ || !std::isfinite(radius) || radius <= 1.0e-9 || !selectedElement_.has_value())
+    if (!active_ || !kernel::modelLength(radius) || !selectedElement_.has_value())
         return false;
     const auto match =
         std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);
@@ -338,13 +351,14 @@ bool SketchEditorSession::setSelectedCircleRadius(double radius) {
     auto* arc = std::get_if<document::SketchArc>(&match->geometry);
     if (circle == nullptr && arc == nullptr)
         return false;
+    if (!canUpsertUnaryConstraint(*selectedElement_, document::SketchConstraintKind::radius))
+        return false;
     const document::SketchElements previousElements = elements_;
     const document::SketchConstraints previousConstraints = constraints_;
     const double current = circle ? circle->radius : arc->radius;
     (circle ? circle->radius : arc->radius) = radius;
     const bool constraintChanged = upsertUnaryConstraint(
         constraints_, *selectedElement_, document::SketchConstraintKind::radius, radius);
-    document::validateSketchElements(elements_);
     if (radius == current && !constraintChanged)
         return false;
     if (solveConstraints())
@@ -383,6 +397,8 @@ bool SketchEditorSession::setSelectedLineConstraint(document::SketchLineConstrai
          (constraint != document::SketchLineConstraint::none && directionConstraintCount == 1 &&
           hasRequestedConstraint)))
         return false;
+    if (constraint != document::SketchLineConstraint::none && !canAllocateIds(0, 1))
+        return false;
     const document::SketchElements previousElements = elements_;
     const document::SketchConstraints previousConstraints = constraints_;
     std::erase_if(constraints_.values, [id = *selectedElement_](const auto& item) {
@@ -405,7 +421,6 @@ bool SketchEditorSession::setSelectedLineConstraint(document::SketchLineConstrai
     else if (constraint == document::SketchLineConstraint::vertical)
         static_cast<void>(upsertUnaryConstraint(constraints_, *selectedElement_,
                                                 document::SketchConstraintKind::vertical));
-    document::validateSketchElements(elements_);
     if (solveConstraints())
         return true;
     elements_ = previousElements;
@@ -491,7 +506,7 @@ const features::SketchSolveResult& SketchEditorSession::lastSolveResult() const 
 
 document::SketchParameters SketchEditorSession::parameters(bool includePreview) const {
     document::SketchElements result = elements_;
-    if (includePreview)
+    if (includePreview && canAllocatePreviewIds(preview_))
         for (const document::SketchGeometry& geometry : preview_)
             result.values.push_back({document::SketchElementId{result.nextId++}, geometry});
     return {plane_, std::move(result), constraints_};
@@ -499,7 +514,11 @@ document::SketchParameters SketchEditorSession::parameters(bool includePreview) 
 
 bool SketchEditorSession::solveConstraints() {
     document::SketchParameters sketch{plane_, elements_, constraints_};
-    lastSolveResult_ = features::solveSketchConstraints(sketch);
+    try {
+        lastSolveResult_ = features::solveSketchConstraints(sketch);
+    } catch (const std::invalid_argument&) {
+        return false;
+    }
     if (lastSolveResult_.status != features::SketchSolveStatus::success)
         return false;
     elements_ = std::move(sketch.elements);

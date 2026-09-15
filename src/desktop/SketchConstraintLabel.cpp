@@ -47,7 +47,8 @@ std::string sketchConstraintLabel(const features::SketchConstraintAnnotation& an
         return "[CC]";
     std::ostringstream label;
     if (annotation.kind == SketchConstraintKind::angle) {
-        label << "A " << std::fixed << std::setprecision(3) << annotation.value << "°";
+        label << "A " << std::fixed << std::setprecision(3)
+              << kernel::toDegrees(kernel::Radians(annotation.value)).value() << "°";
         return label.str();
     }
     if (annotation.kind == SketchConstraintKind::pointDistance)

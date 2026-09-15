@@ -75,11 +75,12 @@ Keine XCAF-, XML-, Qt-, OpenGL- oder neue Serialisierungsbibliothek ist für die
 OCAF-Nachweis erforderlich. FreeBSD-Systembibliotheken können eigene transitive
 Abhängigkeiten besitzen; deren Liste wird nicht als schlanker Produktumfang ausgegeben.
 
-Der schlanke projektlokale FreeBSD-OCCT-Build besitzt diese OCAF-Module noch nicht.
-Vor D12 muss dessen Toolkit-Liste um `TKBin` mit seinem automatisch aufgelösten
-OCAF-Unterbau erweitert und frisch gebaut werden. Der jetzt erfolgreiche System-
-Paketnachweis ersetzt diesen späteren Integrationsbuild nicht. Keine Vermischung
-von System-OCAF und projektlokalen Kernelbibliotheken im selben Produktprozess.
+[D11d](../implementation-plan/evidence/D11d.md) ergänzt den schlanken FreeBSD-Build
+um `TKBin` und seinen automatisch aufgelösten OCAF-Unterbau. Der isolierte Neubau,
+native Austauschproben und die Produktsuite sind geprüft; alle OCCT-Laufzeitmodule
+stammen aus derselben neuen Installation. Der D08-System-Paketnachweis allein
+ersetzt diesen Integrationsbuild nicht. Der produktive Autoritätswechsel bleibt
+D12 vorbehalten. Keine Vermischung von System-OCAF und projektlokalem Kernel.
 
 Windows-Proben deployen die aufgelösten Nicht-System-DLLs direkt neben die EXE und
 schlagen beim Build mit unaufgelösten Abhängigkeiten fehl. D08 wurde danach ohne

@@ -1,3 +1,4 @@
+#include "SketchConnection.hpp"
 #include "SketchPlaneGuard.hpp"
 #include <voelund/features/GeometryEvaluationError.hpp>
 #include <voelund/features/SketchEvaluation.hpp>
@@ -9,6 +10,9 @@
 #include <BRepBuilderAPI_MakePolygon.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
 #include <BRep_Builder.hxx>
+#include <BRepCheck_Analyzer.hxx>
+#include <TopExp_Explorer.hxx>
+#include <TopoDS.hxx>
 #include <GC_MakeCircle.hxx>
 #include <Geom_Circle.hxx>
 #include <Geom_Ellipse.hxx>
@@ -26,7 +30,7 @@
 namespace voelund::features {
 namespace {
 
-constexpr double connectionTolerance = 1.0e-8;
+using detail::connected;
 
 gp_Pnt worldPoint(const document::SketchPlane& plane, const document::SketchPoint& point) {
     const gp_Dir normal(plane.normalX, plane.normalY, plane.normalZ);
@@ -136,29 +140,7 @@ const document::SketchElement& findElement(const document::SketchParameters& ske
     return *match;
 }
 
-bool connected(const document::SketchPoint& first, const document::SketchPoint& second) {
-    return std::hypot(second.x - first.x, second.y - first.y) <= connectionTolerance;
-}
 
-TopoDS_Face lineProfileFace(const document::SketchParameters& sketch,
-                            const SketchProfile& profile) {
-    BRepBuilderAPI_MakePolygon polygon;
-    std::optional<document::SketchPoint> current;
-    for (document::SketchElementId id : profile.elementIds) {
-        const auto& line = std::get<document::SketchLine>(findElement(sketch, id).geometry);
-        if (!current.has_value()) {
-            polygon.Add(worldPoint(sketch.plane, line.start));
-            current = line.end;
-        } else if (connected(*current, line.start)) {
-            current = line.end;
-        } else {
-            current = line.start;
-        }
-        polygon.Add(worldPoint(sketch.plane, *current));
-    }
-    polygon.Close();
-    return BRepBuilderAPI_MakeFace(polygon.Wire()).Face();
-}
 
 std::pair<document::SketchPoint, document::SketchPoint>
 curveEndpoints(const document::SketchGeometry& geometry) {
@@ -187,10 +169,21 @@ TopoDS_Face curveProfileFace(const document::SketchParameters& sketch,
             edge.Reverse();
             std::swap(points.first, points.second);
         }
+        // Preserve the original curves. OCCT may share vertices within this
+        // explicit tolerance; no polygon reconstruction or endpoint snapping.
+        BRep_Builder builder;
+        const double tolerance = detail::connectionTolerance(points.first, points.second).millimetres;
+        for (TopExp_Explorer vertex(edge, TopAbs_VERTEX); vertex.More(); vertex.Next())
+            builder.UpdateVertex(TopoDS::Vertex(vertex.Current()), tolerance);
         wire.Add(edge);
+        if (!wire.IsDone())
+            throw GeometryEvaluationError("Sketch profile wire could not be connected");
         current = points.second;
     }
-    return BRepBuilderAPI_MakeFace(wire.Wire()).Face();
+    BRepBuilderAPI_MakeFace face(wire.Wire());
+    if (!face.IsDone() || !BRepCheck_Analyzer(face.Face()).IsValid())
+        throw GeometryEvaluationError("Sketch profile did not produce a valid face");
+    return face.Face();
 }
 
 TopoDS_Face profileFace(const document::SketchParameters& sketch, const SketchProfile& profile) {
@@ -208,11 +201,7 @@ TopoDS_Face profileFace(const document::SketchParameters& sketch, const SketchPr
                    BRepBuilderAPI_MakeWire(ellipseEdge(sketch, *ellipse)).Wire())
             .Face();
     }
-    if (std::ranges::any_of(profile.elementIds, [&sketch](document::SketchElementId id) {
-            return std::holds_alternative<document::SketchArc>(findElement(sketch, id).geometry);
-        }))
-        return curveProfileFace(sketch, profile);
-    return lineProfileFace(sketch, profile);
+    return curveProfileFace(sketch, profile);
 }
 
 TopoDS_Shape elementShape(const document::SketchParameters& sketch,
@@ -237,6 +226,8 @@ TopoDS_Shape elementShape(const document::SketchParameters& sketch,
 std::vector<EvaluatedSketchElement>
 evaluateSketchElements(const document::SketchParameters& sketch) {
     detail::requireCanonicalPlane(sketch.plane);
+    if (!sketch.elements.values.empty())
+        document::validateSketchElements(sketch.elements);
     std::vector<EvaluatedSketchElement> result;
     result.reserve(sketch.elements.values.size());
     for (const document::SketchElement& element : sketch.elements.values) {
@@ -256,6 +247,8 @@ TopoDS_Shape
 evaluateSketchProfileFaces(const document::SketchParameters& sketch,
                            std::span<const document::SketchProfileId> selectedProfiles) {
     detail::requireCanonicalPlane(sketch.plane);
+    if (!sketch.elements.values.empty())
+        document::validateSketchElements(sketch.elements);
     const std::vector<SketchProfile> profiles = detectClosedProfiles(sketch.elements.values);
     if (profiles.empty()) {
         throw GeometryEvaluationError("Sketch does not contain a closed profile");

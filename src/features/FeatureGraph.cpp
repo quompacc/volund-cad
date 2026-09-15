@@ -28,20 +28,35 @@
 namespace voelund::features {
 namespace {
 
-const TopoDS_Shape& findOutput(const std::vector<EvaluatedFeature>& outputs,
-                               document::FeatureId featureId, bool reference = false) {
+const EvaluatedFeature& findFeature(const std::vector<EvaluatedFeature>& outputs,
+                                    document::FeatureId featureId) {
     const auto match = std::ranges::find(outputs, featureId, &EvaluatedFeature::id);
     if (match == outputs.end()) {
         throw GeometryEvaluationError("Feature input has not been evaluated");
     }
-    return reference ? match->referenceShape : match->shape;
+    return *match;
 }
 
-EvaluatedBody& findBody(std::vector<EvaluatedBody>& bodies, document::FeatureId featureId) {
-    const auto match = std::ranges::find(bodies, featureId, &EvaluatedBody::sourceFeature);
+const TopoDS_Shape& findOutput(const std::vector<EvaluatedFeature>& outputs,
+                               document::FeatureId featureId, bool reference = false) {
+    const auto& output = findFeature(outputs, featureId);
+    return reference ? output.referenceShape : output.shape;
+}
+
+EvaluatedBody& findBody(std::vector<EvaluatedBody>& bodies,
+                        const std::vector<EvaluatedFeature>& outputs,
+                        document::FeatureId featureId) {
+    const auto bodyId = findFeature(outputs, featureId).bodyId;
+    if (!bodyId)
+        throw GeometryEvaluationError("Input feature has no solid body identity");
+    const auto match = std::ranges::find(bodies, *bodyId, &EvaluatedBody::bodyId);
     if (match == bodies.end()) {
         throw GeometryEvaluationError("Join input does not produce an editable body");
     }
+    // Identity does not select a historical shape version. Keep the existing
+    // current-input restriction until R01 defines operations on historical results.
+    if (match->sourceFeature != featureId)
+        throw GeometryEvaluationError("Body input refers to an earlier feature result");
     return *match;
 }
 
@@ -67,9 +82,10 @@ void evaluateBox(const document::ModelDocument& document,
     const TopoDS_Shape shape = BoxFeature(descriptor.id).evaluate(document);
     const TopoDS_Shape referenceShape =
         kernel::ShapeFactory::makeBox(document.boxDimensions(descriptor.id));
-    outputs.push_back(EvaluatedFeature{descriptor.id, shape, referenceShape});
-    bodies.push_back(EvaluatedBody{descriptor.id, shape});
-    referenceBodies.push_back(EvaluatedBody{descriptor.id, referenceShape});
+    const document::BodyId bodyId{descriptor.id.value()};
+    outputs.push_back(EvaluatedFeature{descriptor.id, shape, referenceShape, bodyId});
+    bodies.push_back(EvaluatedBody{bodyId, descriptor.id, shape});
+    referenceBodies.push_back(EvaluatedBody{bodyId, descriptor.id, referenceShape});
 }
 
 TopoDS_Shape combineCylinder(document::CylinderResultMode mode, const TopoDS_Shape& input,
@@ -103,22 +119,25 @@ void evaluateCylinder(const document::ModelDocument& document,
         const TopoDS_Shape tool = cylinder.evaluateTool(document, referenceInputShape);
         const TopoDS_Shape referenceTool =
             cylinder.evaluateTool(document, referenceInputShape, false);
-        outputs.push_back(EvaluatedFeature{descriptor.id, tool, referenceTool});
-        bodies.push_back(EvaluatedBody{descriptor.id, tool});
-        referenceBodies.push_back(EvaluatedBody{descriptor.id, referenceTool});
+        const document::BodyId bodyId{descriptor.id.value()};
+        outputs.push_back(EvaluatedFeature{descriptor.id, tool, referenceTool, bodyId});
+        bodies.push_back(EvaluatedBody{bodyId, descriptor.id, tool});
+        referenceBodies.push_back(EvaluatedBody{bodyId, descriptor.id, referenceTool});
         return;
     }
 
+    EvaluatedBody& inputBody = findBody(bodies, outputs, inputId);
+    EvaluatedBody& referenceInputBody = findBody(referenceBodies, outputs, inputId);
     const TopoDS_Shape tool = cylinder.evaluateTool(document, inputShape);
     const TopoDS_Shape referenceTool = cylinder.evaluateTool(document, referenceInputShape);
     const TopoDS_Shape result = combineCylinder(parameters.resultMode, inputShape, tool);
     const TopoDS_Shape referenceResult =
         combineCylinder(parameters.resultMode, referenceInputShape, referenceTool);
-    outputs.push_back(EvaluatedFeature{descriptor.id, result, referenceResult});
-    EvaluatedBody& inputBody = findBody(bodies, inputId);
-    inputBody = EvaluatedBody{descriptor.id, result};
-    EvaluatedBody& referenceInputBody = findBody(referenceBodies, inputId);
-    referenceInputBody = EvaluatedBody{descriptor.id, referenceResult};
+    outputs.push_back(EvaluatedFeature{descriptor.id, result, referenceResult, inputBody.bodyId});
+    inputBody.sourceFeature = descriptor.id;
+    inputBody.shape = result;
+    referenceInputBody.sourceFeature = descriptor.id;
+    referenceInputBody.shape = referenceResult;
 }
 
 void evaluateSketch(const document::ModelDocument& document,
@@ -138,7 +157,7 @@ void evaluateSketch(const document::ModelDocument& document,
     for (const EvaluatedSketchElement& element : evaluateSketchElements(parameters)) {
         builder.Add(geometry, element.shape);
     }
-    outputs.push_back(EvaluatedFeature{descriptor.id, geometry, geometry});
+    outputs.push_back(EvaluatedFeature{descriptor.id, geometry, geometry, std::nullopt});
 }
 
 void evaluateExtrusion(const document::ModelDocument& document,
@@ -162,25 +181,21 @@ void evaluateExtrusion(const document::ModelDocument& document,
     if (solveSketchConstraints(sketch).status != SketchSolveStatus::success)
         throw GeometryEvaluationError("Sketch support references cannot be solved");
     const TopoDS_Shape sketchFace = evaluateSketchProfileFaces(sketch, parameters.profiles);
-    // Start just inside the support body. Repeated OCCT booleans can otherwise leave
-    // microscopic gaps at a face that is mathematically coincident with the sketch.
-    constexpr double joinOverlap = 1.0e-4;
+    // Exact support-plane contact: preserve both the start plane and the requested
+    // end plane. OCCT's Boolean classifies the coincident faces; no length padding.
     const gp_Vec outward(sketch.plane.normalX, sketch.plane.normalY, sketch.plane.normalZ);
-    gp_Trsf inwardTransform;
-    inwardTransform.SetTranslation(outward * -joinOverlap);
-    const TopoDS_Shape overlappingFace =
-        BRepBuilderAPI_Transform(sketchFace, inwardTransform, true).Shape();
-    const gp_Vec direction = outward * (parameters.distance + joinOverlap);
-    const TopoDS_Shape tool = BRepPrimAPI_MakePrism(overlappingFace, direction).Shape();
+    const TopoDS_Shape tool = BRepPrimAPI_MakePrism(sketchFace, outward * parameters.distance).Shape();
 
-    EvaluatedBody& supportBody = findBody(bodies, supportId);
-    EvaluatedBody& referenceSupportBody = findBody(referenceBodies, supportId);
+    EvaluatedBody& supportBody = findBody(bodies, outputs, supportId);
+    EvaluatedBody& referenceSupportBody = findBody(referenceBodies, outputs, supportId);
     const TopoDS_Shape result = kernel::ShapeOperations::fuse(supportBody.shape, tool);
     const TopoDS_Shape referenceResult =
         kernel::ShapeOperations::fuse(referenceSupportBody.shape, tool);
-    outputs.push_back(EvaluatedFeature{descriptor.id, result, referenceResult});
-    supportBody = EvaluatedBody{descriptor.id, result};
-    referenceSupportBody = EvaluatedBody{descriptor.id, referenceResult};
+    outputs.push_back(EvaluatedFeature{descriptor.id, result, referenceResult, supportBody.bodyId});
+    supportBody.sourceFeature = descriptor.id;
+    supportBody.shape = result;
+    referenceSupportBody.sourceFeature = descriptor.id;
+    referenceSupportBody.shape = referenceResult;
 }
 
 } // namespace

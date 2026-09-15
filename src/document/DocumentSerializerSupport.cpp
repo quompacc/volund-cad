@@ -1,3 +1,4 @@
+#include <voelund/kernel/NumericPolicy.hpp>
 #include "DocumentSerializationDetail.hpp"
 #include <voelund/kernel/NumericValidation.hpp>
 
@@ -52,21 +53,30 @@ std::uint64_t headerValue(std::istream& input, const char* expectedName) {
 
 kernel::RigidTransform readTransform(std::istringstream& line) {
     kernel::RigidTransform transform{};
+    double xDegrees = 0, yDegrees = 0, zDegrees = 0;
     if (!(line >> transform.translationX >> transform.translationY >> transform.translationZ >>
-          transform.rotationX >> transform.rotationY >> transform.rotationZ))
+          xDegrees >> yDegrees >> zDegrees))
         invalidDocument("malformed feature placement");
+    transform.rotationX = kernel::toRadians(kernel::Degrees(xDegrees));
+    transform.rotationY = kernel::toRadians(kernel::Degrees(yDegrees));
+    transform.rotationZ = kernel::toRadians(kernel::Degrees(zDegrees));
     return transform;
 }
 
 void validateTransform(const kernel::RigidTransform& transform) {
-    const double values[] = {transform.translationX, transform.translationY, transform.translationZ,
-                             transform.rotationX,    transform.rotationY,    transform.rotationZ};
+    if (!kernel::modelCoordinate(transform.translationX) ||
+        !kernel::modelCoordinate(transform.translationY) ||
+        !kernel::modelCoordinate(transform.translationZ))
+        invalidDocument(kernel::modelRangeDiagnostic);
+    const double values[] = {transform.translationX,      transform.translationY,
+                             transform.translationZ,      transform.rotationX.value(),
+                             transform.rotationY.value(), transform.rotationZ.value()};
     for (double value : values)
         if (!std::isfinite(value))
             invalidDocument("placement contains a non-finite value");
 }
 
-bool positiveFinite(double value) { return kernel::positiveFinite(value); }
+bool positiveFinite(double value) { return kernel::modelLength(value); }
 
 void validateConstraintVersion(SketchConstraintKind kind, std::uint64_t version) {
     using Kind = SketchConstraintKind;
@@ -160,8 +170,9 @@ const char* pointPositionName(SketchPointPosition position) {
 
 void writeTransform(std::ostream& output, const kernel::RigidTransform& transform) {
     output << ' ' << transform.translationX << ' ' << transform.translationY << ' '
-           << transform.translationZ << ' ' << transform.rotationX << ' ' << transform.rotationY
-           << ' ' << transform.rotationZ;
+           << transform.translationZ << ' ' << kernel::toDegrees(transform.rotationX).value() << ' '
+           << kernel::toDegrees(transform.rotationY).value() << ' '
+           << kernel::toDegrees(transform.rotationZ).value();
 }
 
 bool containsFeature(const std::vector<FeatureDescriptor>& features, FeatureId featureId) {

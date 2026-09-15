@@ -1,5 +1,6 @@
-#include <voelund/kernel/Angle.hpp>
 #include "TransformManipulator.hpp"
+#include "RotationInput.hpp"
+#include <voelund/kernel/Angle.hpp>
 
 #include <AIS_Manipulator.hxx>
 #include <gp_Ax1.hxx>
@@ -38,17 +39,11 @@ public:
                 std::round(translation.Z() / linearSnapStep) * linearSnapStep));
             return snapped;
         }
-        gp_XYZ axis;
-        double angle = 0.0;
-        if (mode != AIS_MM_Rotation || !transformation.GetRotation(axis, angle)) {
+        if (mode != AIS_MM_Rotation) {
             return transformation;
         }
-        const double angularStepRadians = kernel::toRadians(kernel::Degrees(angularSnapStep)).value();
-        gp_Trsf snapped;
-        snapped.SetRotation(
-            gp_Ax1(transformPivot, gp_Dir(axis)),
-            std::round(angle / angularStepRadians) * angularStepRadians);
-        return snapped;
+        return detail::snapRotation(transformation, transformPivot,
+                                    kernel::Degrees(angularSnapStep));
     }
 
     [[nodiscard]] bool rotationDelta(
@@ -56,16 +51,11 @@ public:
         int axisIndex,
         double& angleDegrees) const
     {
-        gp_XYZ axis;
-        double angle = 0.0;
-        if (!transformation.GetRotation(axis, angle)) {
+        const auto delta = detail::rotationDeltaDegrees(transformation, axisIndex);
+        if (!delta) {
             return false;
         }
-        const double component = axisIndex == 0 ? axis.X()
-            : axisIndex == 1                   ? axis.Y()
-                                               : axis.Z();
-        angleDegrees = kernel::toDegrees(kernel::Radians(angle)).value()
-            * (component < 0.0 ? -1.0 : 1.0);
+        angleDegrees = delta->value();
         return true;
     }
 

@@ -69,10 +69,29 @@ void dimensionsAndPlacement() {
     }
     for (double invalid :
          {std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::infinity()}) {
+        // Invalid rotations now fail at typed-value construction, before commands.
+        for (auto field : {&kernel::RigidTransform::rotationX, &kernel::RigidTransform::rotationY,
+                           &kernel::RigidTransform::rotationZ}) {
+            const auto stamp = session.sceneStatus();
+            const bool undo = session.canUndo(), redo = session.canRedo(),
+                       dirty = session.isModified();
+            auto placement = box.placement;
+            bool rejected = false;
+            try {
+                placement.*field = kernel::Radians(invalid);
+                static_cast<void>(session.editSelectedFeaturePlacement(placement));
+            } catch (const std::invalid_argument&) {
+                rejected = true;
+            }
+            require(rejected && placement == box.placement &&
+                        session.sceneStatus().document == stamp.document &&
+                        session.canUndo() == undo && session.canRedo() == redo &&
+                        session.isModified() == dirty,
+                    "Invalid typed rotation changed document or history");
+        }
         for (auto field :
              {&kernel::RigidTransform::translationX, &kernel::RigidTransform::translationY,
-              &kernel::RigidTransform::translationZ, &kernel::RigidTransform::rotationX,
-              &kernel::RigidTransform::rotationY, &kernel::RigidTransform::rotationZ}) {
+              &kernel::RigidTransform::translationZ}) {
             auto parameters = box;
             parameters.placement.*field = invalid;
             rejectsInput(session, [&] { return session.editSelectedBoxParameters(parameters); });

@@ -1,3 +1,4 @@
+#include <voelund/document/IdCapacity.hpp>
 #include <voelund/document/ModelDocument.hpp>
 #include <voelund/document/SketchPlaneValidation.hpp>
 
@@ -9,16 +10,15 @@ namespace voelund::document {
 namespace {
 
 void validateBox(const kernel::BoxDimensions& dimensions) {
-    if (!kernel::positiveFinite(dimensions.width) || !kernel::positiveFinite(dimensions.depth) ||
-        !kernel::positiveFinite(dimensions.height)) {
-        throw std::invalid_argument("Box dimensions must be positive and finite");
+    if (!kernel::modelLength(dimensions.width) || !kernel::modelLength(dimensions.depth) ||
+        !kernel::modelLength(dimensions.height)) {
+        throw std::invalid_argument(kernel::modelRangeDiagnostic);
     }
 }
 
 void validateCylinder(const CylinderParameters& parameters) {
-    if (!std::isfinite(parameters.radius) || !std::isfinite(parameters.height) ||
-        parameters.radius <= 0.0 || parameters.height <= 0.0) {
-        throw std::invalid_argument("Cylinder radius and height must be positive and finite");
+    if (!kernel::modelLength(parameters.radius) || !kernel::modelLength(parameters.height)) {
+        throw std::invalid_argument(kernel::modelRangeDiagnostic);
     }
     switch (parameters.resultMode) {
     case CylinderResultMode::separate:
@@ -32,15 +32,20 @@ void validateCylinder(const CylinderParameters& parameters) {
 }
 
 void validatePlacement(const kernel::RigidTransform& placement) {
-    for (double value : {placement.translationX, placement.translationY, placement.translationZ,
-                         placement.rotationX, placement.rotationY, placement.rotationZ})
+    if (!kernel::modelCoordinate(placement.translationX) ||
+        !kernel::modelCoordinate(placement.translationY) ||
+        !kernel::modelCoordinate(placement.translationZ))
+        throw std::invalid_argument(kernel::modelRangeDiagnostic);
+    for (double value :
+         {placement.translationX, placement.translationY, placement.translationZ,
+          placement.rotationX.value(), placement.rotationY.value(), placement.rotationZ.value()})
         if (!std::isfinite(value))
             throw std::invalid_argument("Placement must contain finite values");
 }
 
 void validateExtrusion(const ExtrusionParameters& parameters) {
-    if (!std::isfinite(parameters.distance) || parameters.distance <= 0.0)
-        throw std::invalid_argument("Extrusion distance must be positive and finite");
+    if (!kernel::modelLength(parameters.distance))
+        throw std::invalid_argument(kernel::modelRangeDiagnostic);
     for (std::size_t index = 0; index < parameters.profiles.size(); ++index) {
         if (parameters.profiles[index].value() == 0)
             throw std::invalid_argument("Extrusion profile IDs must be non-zero");
@@ -74,11 +79,11 @@ ModelDocument::ModelDocument(bool createStarterFeatures) {
     }
     features_.push_back(FeatureDescriptor{initialBoxId(), FeatureKind::box, "Box", std::nullopt});
     parameters_.emplace_back(BoxParameters{kernel::BoxDimensions{40.0, 30.0, 20.0},
-                                           kernel::RigidTransform{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}});
+                                           kernel::RigidTransform{0.0, 0.0, 0.0, {}, {}, {}}});
     features_.push_back(
         FeatureDescriptor{initialCylinderId(), FeatureKind::cylinder, "Cylinder", initialBoxId()});
     parameters_.emplace_back(CylinderParameters{
-        8.0, 25.0, kernel::RigidTransform{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}, CylinderResultMode::join});
+        8.0, 25.0, kernel::RigidTransform{0.0, 0.0, 0.0, {}, {}, {}}, CylinderResultMode::join});
     nextFeatureId_ = 3;
 }
 
@@ -101,7 +106,7 @@ FeatureId ModelDocument::addBoxFeature(std::string name, const kernel::BoxDimens
     candidate.features.push_back(
         FeatureDescriptor{id, FeatureKind::box, std::move(name), std::nullopt});
     candidate.parameters.emplace_back(
-        BoxParameters{dimensions, kernel::RigidTransform{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}});
+        BoxParameters{dimensions, kernel::RigidTransform{0.0, 0.0, 0.0, {}, {}, {}}});
     commitState(std::move(candidate));
     return id;
 }
@@ -244,6 +249,8 @@ bool ModelDocument::setSketchParameters(FeatureId featureId, const SketchParamet
 
 SketchElementId ModelDocument::addSketchElement(FeatureId featureId, SketchGeometry geometry) {
     SketchParameters changed = sketchParameters(featureId);
+    if (!hasIdCapacity(changed.elements.nextId, 1))
+        throw std::overflow_error("Sketch element IDs exhausted");
     const SketchElementId id{changed.elements.nextId++};
     changed.elements.values.push_back(SketchElement{id, std::move(geometry)});
     static_cast<void>(setSketchParameters(featureId, changed));

@@ -1,0 +1,10 @@
+include/voelund/application/CadSession.hpp
+include/voelund/document/DocumentSnapshot.hpp
+src/application/CadSession.cpp
+src/application/CadSessionPersistence.cpp
+src/document/DocumentSnapshot.cpp
+src/document/ModelDocumentHistory.cpp
+tests/CMakeLists.txt
+tests/unit/DocumentTransactionTests.cpp
+tests/integration/FeatureIdLifetimeTests.cpp
+tests/integration/CadSessionCreationResultTests.cpp

@@ -395,7 +395,10 @@ void SketchEditorToolController::editConstraint(std::uint64_t constraintId) {
     if (!editor_)
         return;
     const document::SketchConstraintId id{constraintId};
-    const auto current = editor_->constraintValue(id);
+    const auto currentAngle = editor_->constraintAngle(id);
+    const auto current = currentAngle
+                             ? std::optional<double>{kernel::toDegrees(*currentAngle).value()}
+                             : editor_->constraintValue(id);
     if (!current.has_value()) {
         if (editor_->removeConstraint(id)) {
             syncConstraintState();
@@ -407,8 +410,7 @@ void SketchEditorToolController::editConstraint(std::uint64_t constraintId) {
     const auto annotations = editor_->evaluatedConstraints();
     const auto annotation =
         std::ranges::find(annotations, id, &features::SketchConstraintAnnotation::id);
-    const bool angle = annotation != annotations.end() &&
-                       annotation->kind == document::SketchConstraintKind::angle;
+    const bool angle = currentAngle.has_value();
     const bool directional = annotation != annotations.end() &&
                              (annotation->kind == document::SketchConstraintKind::pointDistanceX ||
                               annotation->kind == document::SketchConstraintKind::pointDistanceY);
@@ -420,7 +422,9 @@ void SketchEditorToolController::editConstraint(std::uint64_t constraintId) {
         : directional ? -1'000'000.0
                       : 0.001,
         angle ? 179.999 : 1'000'000.0, 3, &accepted);
-    if (!accepted || !editor_->setConstraintValue(id, value))
+    if (!accepted ||
+        !(angle ? editor_->setConstraintAngle(id, kernel::toRadians(kernel::Degrees(value)))
+                : editor_->setConstraintValue(id, value)))
         return;
     syncSelectedDimensionInputs();
     syncConstraintState();

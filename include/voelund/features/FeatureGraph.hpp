@@ -1,10 +1,12 @@
 #pragma once
 
 #include <voelund/document/FeatureId.hpp>
+#include <voelund/document/BodyId.hpp>
 
 #include <TopoDS_Shape.hxx>
 
 #include <stdexcept>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -15,6 +17,8 @@ class ModelDocument;
 namespace voelund::features {
 
 struct EvaluatedBody final {
+    document::BodyId bodyId;
+    // Latest producer of this body's current shape, not its identity.
     document::FeatureId sourceFeature;
     TopoDS_Shape shape;
 };
@@ -23,6 +27,7 @@ struct EvaluatedFeature final {
     document::FeatureId id;
     TopoDS_Shape shape;
     TopoDS_Shape referenceShape;
+    std::optional<document::BodyId> bodyId;
 };
 
 struct FeatureGraphResult final {

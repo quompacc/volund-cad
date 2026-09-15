@@ -76,6 +76,16 @@ und bei positivem Ergebnis aufgenommen.
 [ADR 0008](adr/0008-ocaf-binary-persistence.md) selects native BinOcaf format 12
 for D12/D13. The isolated probe links TKBin, TKCAF and TKPrim and verifies actual
 OCCT 8.0.1 / 7.9.3 bidirectional persistence. The OCAF modules TKCDF, TKLCAF, TKCAF,
-TKBinL and TKBin are available in the full installations; the lean FreeBSD product
-build still needs its own verified extension before D12. Do not mix its kernel
-libraries with system OCAF libraries. [Evidence and runtime lists](implementation-plan/evidence/D08.md).
+TKBinL and TKBin are available in the full installations.
+[D11d](implementation-plan/evidence/D11d.md) also verifies an isolated lean FreeBSD
+build with these modules, the product suite, and bidirectional native probes.
+All OCCT libraries resolve from that same installation. Product OCAF authority
+remains a D12 task. Do not mix its kernel libraries with system OCAF libraries.
+[Original evidence and runtime lists](implementation-plan/evidence/D08.md).
+
+## D11e: document identity entropy
+
+The platform adapter uses Windows `bcrypt` (system library) and FreeBSD libc
+`arc4random_buf`. The Linux `getentropy` branch is implemented but not covered by
+the Windows/FreeBSD acceptance runs. No third-party UUID library or new runtime
+service is introduced. [Contract, API references and evidence](implementation-plan/evidence/D11e.md).

@@ -1,3 +1,4 @@
+#include <voelund/kernel/NumericPolicy.hpp>
 #include "SketchEditorInteraction.hpp"
 #include "SketchViewOrientation.hpp"
 
@@ -178,10 +179,10 @@ SketchEditorInteraction::interactionPoint(int x, int y) const {
                                     SketchPointReferenceIntent{0, SketchPointKind::yAxis}};
     }
     if (nearest == nullptr) {
-        constexpr double lineSnapRadius = 8.0;
+        constexpr kernel::PickingTolerance lineSnapRadius{8};
         const SceneSketchPoint* bestStart = nullptr;
         const SceneSketchPoint* bestEnd = nullptr;
-        double bestDistance = lineSnapRadius;
+        double bestDistance = lineSnapRadius.pixels;
         for (const SceneSketchPoint& start : snapPoints_) {
             if (start.elementId == 0 || start.kind != SketchPointKind::start)
                 continue;

@@ -1,0 +1,85 @@
+[1/6] Scanning V:\tools\ocaf-probe\Identity.cpp for CXX dependencies
+[2/6] Generating CXX dyndep file CMakeFiles\voelund_identity_probe.dir\CXX.dd
+[3/4] Building CXX object CMakeFiles\voelund_identity_probe.dir\Identity.cpp.obj
+[4/4] Linking CXX executable voelund_identity_probe.exe
+CMake Warning (dev) at V:/tools/ocaf-probe/DeployRuntime.cmake:4 (file):
+  Policy CMP0207 is not set: file(GET_RUNTIME_DEPENDENCIES) normalizes paths
+  before matching.  Run "cmake --help-policy CMP0207" for policy details.
+  Use the cmake_policy command to set the policy and suppress this warning.
+
+  Path
+
+    "C:\WINDOWS\system32/msvcp140.dll"
+
+  would be converted to
+
+    "C:/WINDOWS/system32/msvcp140.dll"
+
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) at V:/tools/ocaf-probe/DeployRuntime.cmake:4 (file):
+  Policy CMP0207 is not set: file(GET_RUNTIME_DEPENDENCIES) normalizes paths
+  before matching.  Run "cmake --help-policy CMP0207" for policy details.
+  Use the cmake_policy command to set the policy and suppress this warning.
+
+  Path
+
+    "C:\WINDOWS\system32/vcruntime140.dll"
+
+  would be converted to
+
+    "C:/WINDOWS/system32/vcruntime140.dll"
+
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) at V:/tools/ocaf-probe/DeployRuntime.cmake:4 (file):
+  Policy CMP0207 is not set: file(GET_RUNTIME_DEPENDENCIES) normalizes paths
+  before matching.  Run "cmake --help-policy CMP0207" for policy details.
+  Use the cmake_policy command to set the policy and suppress this warning.
+
+  Path
+
+    "C:\WINDOWS\system32/vcruntime140_1.dll"
+
+  would be converted to
+
+    "C:/WINDOWS/system32/vcruntime140_1.dll"
+
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+CMake Warning (dev) at V:/tools/ocaf-probe/DeployRuntime.cmake:4 (file):
+  Policy CMP0207 is not set: file(GET_RUNTIME_DEPENDENCIES) normalizes paths
+  before matching.  Run "cmake --help-policy CMP0207" for policy details.
+  Use the cmake_policy command to set the policy and suppress this warning.
+
+  Path
+
+    "C:\WINDOWS\system32/kernel32.dll"
+
+  would be converted to
+
+    "C:/WINDOWS/system32/kernel32.dll"
+
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+Test project V:/build/d11d-ocaf-windows
+    Start 1: ocaf.create
+1/8 Test #1: ocaf.create ......................   Passed    0.02 sec
+    Start 2: ocaf.read_edit
+2/8 Test #2: ocaf.read_edit ...................   Passed    0.02 sec
+    Start 3: ocaf.reread
+3/8 Test #3: ocaf.reread ......................   Passed    0.02 sec
+    Start 4: ocaf.negative
+4/8 Test #4: ocaf.negative ....................   Passed    0.02 sec
+    Start 5: identity.create
+5/8 Test #5: identity.create ..................   Passed    0.14 sec
+    Start 6: identity.read_edit
+6/8 Test #6: identity.read_edit ...............   Passed    0.01 sec
+    Start 7: identity.reread
+7/8 Test #7: identity.reread ..................   Passed    0.01 sec
+    Start 8: identity.negative
+8/8 Test #8: identity.negative ................   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 8
+
+Total Test time (real) =   0.26 sec

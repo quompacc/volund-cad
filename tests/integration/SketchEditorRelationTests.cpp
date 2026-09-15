@@ -195,7 +195,25 @@ bool pointDistanceAndAngleDimensionsRemainEditable() {
         !editor.addSelectedRelation(document::SketchConstraintKind::angle))
         return false;
     const auto angleId = editor.constraints().back().id;
-    if (!editor.setConstraintValue(angleId, 60.0))
+    editor.commitHistory();
+    if (!editor.setConstraintAngle(angleId, kernel::Radians(std::numbers::pi / 3.0)))
+        return false;
+    editor.commitHistory();
+    if (!editor.setConstraintAngle(angleId, kernel::Radians(-std::numbers::pi / 3.0)))
+        return false;
+    editor.commitHistory();
+    if (editor.constraints().back().angleValue != kernel::Radians(-std::numbers::pi / 3.0) ||
+        !editor.undo() ||
+        editor.constraintAngle(angleId) != kernel::Radians(std::numbers::pi / 3.0) ||
+        !editor.redo() ||
+        editor.constraintAngle(angleId) != kernel::Radians(-std::numbers::pi / 3.0) ||
+        !editor.undo())
+        return false;
+    const auto preserved = editor.draftParameters();
+    if (editor.setConstraintValue(angleId, 60.0) ||
+        editor.setConstraintAngle(angleId, kernel::Radians(std::numbers::pi)) ||
+        editor.setConstraintAngle(angleId, kernel::Radians(0.0)) ||
+        editor.draftParameters() != preserved)
         return false;
     const auto& firstLine = std::get<document::SketchLine>(editor.elements()[2].geometry);
     const auto& secondLine = std::get<document::SketchLine>(editor.elements()[3].geometry);
@@ -206,7 +224,7 @@ bool pointDistanceAndAngleDimensionsRemainEditable() {
     const double angle =
         std::atan2(firstX * secondY - firstY * secondX, firstX * secondX + firstY * secondY) *
         180.0 / std::numbers::pi;
-    return editor.constraintValue(angleId) == std::optional<double>{60.0} &&
+    return editor.constraintAngle(angleId) == kernel::Radians(std::numbers::pi / 3.0) &&
            std::abs(angle - 60.0) <= 1.0e-7;
 }
 

@@ -1,0 +1,26 @@
+-- The CXX compiler identification is Clang 19.1.7
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- D08 TKBin transitive modules: TKBRep;TKMath;TKernel;TKG2d;TKG3d;TKCAF;TKCDF;TKLCAF;TKBinL
+-- D08 TKCAF transitive modules: TKernel;TKGeomBase;TKBRep;TKTopAlgo;TKMath;TKG2d;TKG3d;TKCDF;TKLCAF;TKBO
+-- D08 TKPrim transitive modules: TKBRep;TKernel;TKMath;TKG2d;TKGeomBase;TKG3d;TKTopAlgo
+-- Configuring done (0.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/eduard/src/voelund-p04-20260913/build/d11d-ocaf-freebsd
+[1/14] Scanning /home/eduard/src/voelund-p04-20260913/tools/ocaf-probe/main.cpp for CXX dependencies
+[2/14] Scanning /home/eduard/src/voelund-p04-20260913/tools/ocaf-probe/Identity.cpp for CXX dependencies
+[3/14] Scanning /home/eduard/src/voelund-p04-20260913/tools/ocaf-probe/Fixture.cpp for CXX dependencies
+[4/14] Scanning /home/eduard/src/voelund-p04-20260913/tools/ocaf-probe/Fixture.cpp for CXX dependencies
+[5/14] Generating CXX dyndep file CMakeFiles/voelund_ocaf_probe.dir/CXX.dd
+[6/14] Scanning /home/eduard/src/voelund-p04-20260913/src/document/DocumentId.cpp for CXX dependencies
+[7/14] Generating CXX dyndep file CMakeFiles/voelund_identity_probe.dir/CXX.dd
+[8/14] Building CXX object CMakeFiles/voelund_ocaf_probe.dir/main.cpp.o
+[9/14] Building CXX object CMakeFiles/voelund_identity_probe.dir/Identity.cpp.o
+[10/14] Building CXX object CMakeFiles/voelund_ocaf_probe.dir/Fixture.cpp.o
+[11/14] Building CXX object CMakeFiles/voelund_identity_probe.dir/Fixture.cpp.o
+[12/14] Linking CXX executable voelund_ocaf_probe
+[13/14] Building CXX object CMakeFiles/voelund_identity_probe.dir/home/eduard/src/voelund-p04-20260913/src/document/DocumentId.cpp.o
+[14/14] Linking CXX executable voelund_identity_probe

@@ -1,0 +1,22 @@
+Internal ctest changing into directory: /home/eduard/src/voelund-p04-20260913/build/d11d-ocaf-freebsd
+Test project /home/eduard/src/voelund-p04-20260913/build/d11d-ocaf-freebsd
+    Start 1: ocaf.create
+1/8 Test #1: ocaf.create ......................   Passed    0.03 sec
+    Start 2: ocaf.read_edit
+2/8 Test #2: ocaf.read_edit ...................   Passed    0.03 sec
+    Start 3: ocaf.reread
+3/8 Test #3: ocaf.reread ......................   Passed    0.03 sec
+    Start 4: ocaf.negative
+4/8 Test #4: ocaf.negative ....................   Passed    0.03 sec
+    Start 5: identity.create
+5/8 Test #5: identity.create ..................   Passed    0.02 sec
+    Start 6: identity.read_edit
+6/8 Test #6: identity.read_edit ...............   Passed    0.02 sec
+    Start 7: identity.reread
+7/8 Test #7: identity.reread ..................   Passed    0.02 sec
+    Start 8: identity.negative
+8/8 Test #8: identity.negative ................   Passed    0.02 sec
+
+100% tests passed, 0 tests failed out of 8
+
+Total Test time (real) =   0.20 sec

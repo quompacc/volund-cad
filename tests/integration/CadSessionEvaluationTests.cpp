@@ -35,7 +35,7 @@ bool separateBoxPlacementIsParametricAndUndoable() {
     }
     voelund::kernel::RigidTransform placement = session.selectedFeaturePlacement();
     placement.translationX = 30.0;
-    placement.rotationY = 90.0;
+    placement.rotationY = voelund::kernel::toRadians(voelund::kernel::Degrees(90.0));
     if (!(session.editSelectedFeaturePlacement(placement).status() ==
           voelund::application::CommandStatus::committed)) {
         return false;
@@ -45,7 +45,7 @@ bool separateBoxPlacementIsParametricAndUndoable() {
            session.selectedBoxParameters().placement == placement &&
            (session.undo().status() == voelund::application::CommandStatus::committed) &&
            session.selectedBoxParameters().placement.translationX == 0.0 &&
-           session.selectedBoxParameters().placement.rotationY == 0.0 &&
+           session.selectedBoxParameters().placement.rotationY == voelund::kernel::Radians{} &&
            std::abs(maximumXOf(session.currentBodies().back().shape) - initialMaximumX) < 1.0e-9;
 }
 

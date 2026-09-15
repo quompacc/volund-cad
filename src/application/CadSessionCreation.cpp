@@ -25,7 +25,7 @@ CommandResult CadSession::createCylinderFeature(document::CylinderResultMode res
         featureCount(document_.features(), document::FeatureKind::cylinder) + 1;
     const document::FeatureId inputFeature = document_.features().back().id;
     document::CylinderParameters parameters{
-        8.0, 25.0, kernel::RigidTransform{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}, resultMode};
+        8.0, 25.0, kernel::RigidTransform{0.0, 0.0, 0.0, {}, {}, {}}, resultMode};
     if (resultMode == document::CylinderResultMode::separate) {
         translateCylinderBetweenInputAndReference(
             parameters, evaluatedFeature(currentFeatures_, inputFeature), 1.0);

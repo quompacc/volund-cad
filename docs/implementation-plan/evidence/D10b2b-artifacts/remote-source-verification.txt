@@ -1,0 +1,1 @@
+PASS: all 266 transferred file hashes match Windows source manifest.

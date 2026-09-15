@@ -41,8 +41,9 @@ void rejectedCreationPreservesState() {
                 (session.undo().status() == voelund::application::CommandStatus::committed),
             "rejected creation changed redo identity");
     const auto sketch = session.createSketchFeature(box, openSketch());
-    require(sketch.status() == CommandStatus::committed && sketch.feature() == next.feature(),
-            "rejection consumed IDs");
+    require(sketch.status() == CommandStatus::committed &&
+                sketch.feature() == document::FeatureId{next.feature()->value() + 1},
+            "rejection consumed IDs or undo reused a published ID");
     require((session.undo().status() == voelund::application::CommandStatus::committed) &&
                 session.features().size() == 1 &&
                 (session.undo().status() == voelund::application::CommandStatus::committed) &&

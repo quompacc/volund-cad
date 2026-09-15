@@ -5,6 +5,7 @@
 #include <utility>
 #include <variant>
 #include <vector>
+#include <voelund/kernel/Angle.hpp>
 
 namespace voelund::document {
 
@@ -159,8 +160,9 @@ struct SketchConstraint final {
     SketchConstraintKind kind;
     SketchGeometryReference first;
     std::optional<SketchGeometryReference> second;
-    // angle constraints retain legacy degrees until the explicit document migration.
+    // Non-angular dimensions/coordinates only; angles use angleValue.
     double value{0.0};
+    kernel::Radians angleValue{};
     std::optional<SketchGeometryReference> third;
     std::vector<double> auxiliaryValues;
 
@@ -169,9 +171,21 @@ struct SketchConstraint final {
                      std::optional<SketchGeometryReference> secondReference,
                      double drivingValue = 0.0,
                      std::optional<SketchGeometryReference> thirdReference = std::nullopt,
-                     std::vector<double> extraValues = {}) noexcept
+                     std::vector<double> extraValues = {})
         : id(constraintId), kind(constraintKind), first(firstReference), second(secondReference),
-          value(drivingValue), third(thirdReference), auxiliaryValues(std::move(extraValues)) {}
+          value(drivingValue), third(thirdReference), auxiliaryValues(std::move(extraValues)) {
+        if (kind == SketchConstraintKind::angle && drivingValue != 0.0)
+            throw std::invalid_argument("Angle constraint requires typed radians");
+    }
+
+    SketchConstraint(SketchConstraintId constraintId, SketchConstraintKind constraintKind,
+                     SketchGeometryReference firstReference,
+                     std::optional<SketchGeometryReference> secondReference, kernel::Radians angle)
+        : SketchConstraint(constraintId, constraintKind, firstReference, secondReference) {
+        if (kind != SketchConstraintKind::angle)
+            throw std::invalid_argument("Radians require an angle constraint");
+        angleValue = angle;
+    }
 
     [[nodiscard]] bool operator==(const SketchConstraint&) const = default;
 };

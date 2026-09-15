@@ -53,6 +53,7 @@ void compoundAndHistory() {
     document =
         DocumentSerializer::read(savedBase); // Loaded one-body start, no preexisting history.
     const auto original = snapshot(document);
+    const auto originalContent = DocumentSnapshot::capture(document);
     const auto revision = document.revision();
     DocumentTransaction transaction(document);
     auto& candidate = transaction.edit();
@@ -67,7 +68,7 @@ void compoundAndHistory() {
                 document.revision() == revision + 1,
             "compound commit incorrect");
     mustThrow([&] { static_cast<void>(transaction.commit()); });
-    require(document.undo() && snapshot(document) == original && !document.canUndo(),
+    require(document.undo() && originalContent.matchesContent(document) && !document.canUndo(),
             "compound requires two undos");
     require(document.redo() && snapshot(document) == expected && !document.canRedo() &&
                 document.contains(sketchId) && document.contains(extrusionId),
@@ -78,7 +79,8 @@ void compoundAndHistory() {
     const auto before = fingerprint(document);
     {
         DocumentTransaction cancelled(document);
-        require(cancelled.edit().addBoxFeature("Cancelled", {1, 2, 3}) == sketchId, "candidate ID");
+        require(cancelled.edit().addBoxFeature("Cancelled", {1, 2, 3}) ==
+                    FeatureId{extrusionId.value() + 1}, "candidate reused published ID");
         cancelled.rollback();
         mustThrow([&] { static_cast<void>(cancelled.commit()); });
     }
@@ -95,8 +97,8 @@ void compoundAndHistory() {
     require(partialFailure && fingerprint(document) == before,
             "exception after first partial edit leaked");
     DocumentTransaction branch(document);
-    require(branch.edit().addBoxFeature("Replacement", {3, 4, 5}) == sketchId,
-            "aborted IDs not restored");
+    require(branch.edit().addBoxFeature("Replacement", {3, 4, 5}) ==
+                FeatureId{extrusionId.value() + 1}, "aborted IDs not restored");
     require(branch.commit() && !document.canRedo(), "branch did not discard redo");
 }
 void noChangeAndConflicts() {

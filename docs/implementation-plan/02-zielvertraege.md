@@ -23,9 +23,25 @@ Kleine zustandsarme DTOs dürfen an den Grenzen stehen. OCCT ist im bestehenden 
 
 Alle internen Längen in Millimeter, Winkel in Radiant; Umrechnung an Eingabe-/Dateigrenzen. Ebenen werden durch validierten Ursprung und orthonormale rechtshändige Basis beschrieben. NaN/Inf, degenerierte Achsen und unzulässige Maße werden vor Mutation abgewiesen. Unterschiedliche Darstellungspräzision verändert keine Modellmaße.
 
-**D10b1-Ebenenentscheidung:** Produkteingaben müssen bereits orthonormal sein (64 * double-epsilon als dimensionslose Rundungsgrenze); keine automatische Normalisierung. Historische nicht kanonische Ebenen bleiben verlustfrei les-/speicherbar, werden im Importbericht markiert und vor Geometrieauswertung als Fehler abgewiesen. Explizite Korrekturen sind normale geprüfte Befehle mit Undo/Redo. Die einheitliche Radiant-Konvention ist noch in D10b2 umzusetzen.
+**D10b1-Ebenenentscheidung:** Produkteingaben müssen bereits orthonormal sein (64 * double-epsilon als dimensionslose Rundungsgrenze); keine automatische Normalisierung. Historische nicht kanonische Ebenen bleiben verlustfrei les-/speicherbar, werden im Importbericht markiert und vor Geometrieauswertung als Fehler abgewiesen. Explizite Korrekturen sind normale geprüfte Befehle mit Undo/Redo. Die einheitliche interne Radiant-Konvention ist mit [D10b2b](evidence/D10b2b.md) umgesetzt; Legacy- und UI-Gradgrenzen konvertieren explizit.
 
-Toleranzpolitik in einem kleinen typisierten Konfigurationswert, nicht globale mutable Settings: geometrische Verbindung, Winkel, Modellvergleich und Picking sind getrennte Größen. Numerische Toleranz ist maßstabsbewusst und vom Kernel-Minimum begrenzt; konkrete Werte werden mit kleinen/großen Fixtures in D10 festgelegt. Der bestehende pauschale Extrusionsüberstand `1e-4 mm` darf keine unbenannte Modellierungsregel bleiben.
+[D10c](evidence/D10c.md) definiert getrennte Typen für Verbindung (mm), Winkel (Radiant), Modellvergleich (relativ) und Picking (Pixel), ohne global mutable Settings. Längen liegen in [0,001; 1.000.000] mm, Koordinaten betragsmäßig höchstens bei 1.000.000 mm. Die Verbindungsschwelle ist max(OCCT Precision::Confusion(), 1e-12 * lokaler Koordinatenmaßstab). Ungültige Altmaße werden konkret diagnostiziert, nicht korrigiert. [D10d](evidence/D10d.md) ersetzt den pauschalen Extrusionsüberstand durch exakten Supportflächenanschluss. D10 ist nach dem ID-Grenznachweis D10e auf Nutzerauftrag abgeschlossen. Der Beginn von D11 ist in [D11a](evidence/D11a.md) dokumentiert; dessen Zustands- und Persistenzintegration bleibt offen.
+
+**D11-Zwischenstand:** [D11b](evidence/D11b.md) erhält den Feature-Vergabezähler
+über Undo hinweg; der Inhaltsvergleich für Dirty schließt diesen Zähler aus.
+[D11c](evidence/D11c.md) trennt die dokumentlokale Körper-ID im Auswertungsergebnis
+vom letzten Shape-Erzeuger. Für den bestehenden Legacy-Pfad ist ihre Herkunft
+aus gespeicherten Feature-IDs und Modi rekonstruierbar. Der Zylinder reaktiviert
+bei Separate seine reservierte eigene Herkunft; Join/Cut/Intersect gehören zum
+Eingabekörper. Die persistente DocumentId und der native Übergang bleiben offen.
+
+[D11e](evidence/D11e.md) konkretisiert die Dokumentidentität an der unveränderlichen
+Store-Grenze: Betriebssystemzufall erzeugt einen nicht leeren 128-Bit-Namensraum.
+Wertkopie und Revision erhalten ihn; explizites Duplizieren erzeugt einen neuen,
+von der Quelle verschiedenen Namensraum und erhält dokumentlokale IDs. Native
+Open übernimmt die gespeicherte ID, Save-As soll sie erhalten. Die letzte Aussage
+ist ein Integrationsvertrag, noch kein produktiver Persistenznachweis. Die ID ist
+kein Pfad-/Namens-/Inhaltshash und keine Revisionsnummer; es gibt keine UUID-Behauptung.
 
 ## K03 – Befehle und Transaktionen
 

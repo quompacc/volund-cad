@@ -65,6 +65,11 @@ bool SketchEditorSession::lockSelectedReference() {
     if (!canLockSelectedReference())
         return false;
     const auto reference = selectedReferences_.front();
+    const std::uint64_t needed =
+        !hasCoordinate(constraints_.values, reference, document::SketchConstraintKind::coordinateX) +
+        !hasCoordinate(constraints_.values, reference, document::SketchConstraintKind::coordinateY);
+    if (!canAllocateIds(0, needed))
+        return false;
     const document::SketchPoint position = *referencePoint(elements_.values, reference);
     const auto addCoordinate = [this, reference](document::SketchConstraintKind kind,
                                                  double value) {

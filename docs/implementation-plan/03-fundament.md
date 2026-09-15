@@ -195,7 +195,7 @@ Aktueller Paketstatus und Evidenz stehen im Manifest. A01 ist abgenommen; die ü
 
 ## D10 – Geometrische Grundwerte und toleranzbewusste Validierung vereinheitlichen
 
-- **Fortschritt/Restaufträge:** [D10](evidence/D10.md); D10a beseitigt Richtungsüberlauf, D10b1 schützt nicht kanonische Altachsen; D10b2–d bleiben Voraussetzung der Gesamtabnahme.
+- **Abgeschlossen:** [D10](evidence/D10.md); D10a beseitigt Richtungsüberlauf, D10b1 schützt nicht kanonische Altachsen; [D10b2b](evidence/D10b2b.md) schließt die Winkelmigration ab. [D10c](evidence/D10c.md) und [D10d](evidence/D10d.md) sind numerisch geprüft. Die [Abschlussprüfung](evidence/D10-review.md) fand einen ID-Überlauf; [D10e](evidence/D10e.md) behebt ihn mit 49/49 FreeBSD/Sway und 53/53 Windows. Formeller Abschluss auf ausdrücklichen Nutzerauftrag vom 15.09.2026.
 
 - **Voraussetzungen:** A06, D04.
 - **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08; `src/document/SketchGeometry.cpp`, `include/voelund/document/SketchGeometry.hpp`, `src/features/SketchEvaluation.cpp`, `src/kernel/ShapeOperations.cpp`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
@@ -208,6 +208,7 @@ Aktueller Paketstatus und Evidenz stehen im Manifest. A01 ist abgenommen; die ü
 
 ## D11 – Dokument-, Körper- und Featureidentität trennen
 
+- **Fortschritt:** [D11a](evidence/D11a.md) führt getrennte ID-Typen und eine deterministische Legacy-Körperzuordnung ein. [D11b](evidence/D11b.md) sichert Feature-ID-Vergabe über Undo und trennt Inhaltsgleichheit vom Vergabezähler. [D11c](evidence/D11c.md) bindet die rekonstruierbare Körperidentität an die produktive Auswertung an und trennt sie vom Shape-Erzeuger. [D11d](evidence/D11d.md) prüft native ID-Feldkodierung und isolierte OCAF-Laufzeit. [D11e](evidence/D11e.md) implementiert Zufallsvergabe und Kopie-/Revisions-/Duplikatsemantik am unveränderlichen Snapshot-Übergang. Deren produktive Anbindung und der native Identitäts-/Schemaübergang bleiben offen; D11 ist `in-progress`.
 - **Voraussetzungen:** D05, D09, D10.
 - **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08; `include/voelund/document/FeatureId.hpp`, `include/voelund/document/ModelDocument.hpp`, `src/document/ModelDocument.cpp`, `src/features/FeatureGraph.cpp`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
 - **Auftrag:**

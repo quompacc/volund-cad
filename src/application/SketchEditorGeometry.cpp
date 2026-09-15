@@ -132,6 +132,8 @@ bool SketchEditorSession::setPreview(document::SketchPoint first, document::Sket
                             tool_ == SketchDrawingTool::ellipse || tool_ == SketchDrawingTool::slot;
     try {
         std::vector<SketchGeometry> candidate = geometry(first, second, third);
+        if (!canAllocatePreviewIds(candidate))
+            return false;
         document::SketchElements validated = elements_;
         for (const SketchGeometry& item : candidate)
             validated.values.push_back({document::SketchElementId{validated.nextId++}, item});
@@ -152,7 +154,7 @@ void SketchEditorSession::clearPreview() noexcept {
 }
 
 std::optional<document::SketchElementId> SketchEditorSession::confirmPreview() {
-    if (!active_ || preview_.empty() || !previewConfirmable_)
+    if (!active_ || preview_.empty() || !previewConfirmable_ || !canAllocatePreviewIds(preview_))
         return std::nullopt;
     if (const auto* rectangle = std::get_if<document::SketchRectangle>(&preview_.front()))
         return confirmRectangle(*rectangle);

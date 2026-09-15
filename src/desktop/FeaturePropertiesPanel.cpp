@@ -72,8 +72,9 @@ void FeaturePropertiesPanel::createBoxPanel() {
     for (QDoubleSpinBox*& input : boxTranslationInputs_) {
         input = makeLengthInput(boxPanel_, true);
     }
-    for (QDoubleSpinBox*& input : boxRotationInputs_) {
-        input = makeAngleInput(boxPanel_);
+    for (int index = 0; index < 3; ++index) {
+        boxRotationInputs_[index] = makeAngleInput(boxPanel_);
+        boxRotationInputs_[index]->setObjectName(QStringLiteral("boxRotation%1Input").arg(index));
     }
     boxLayout->addRow(tr("Length"), lengthInput_);
     boxLayout->addRow(tr("Width"), widthInput_);
@@ -213,8 +214,9 @@ void FeaturePropertiesPanel::showBox(const document::BoxParameters& parameters) 
     const double translations[] = {parameters.placement.translationX,
                                    parameters.placement.translationY,
                                    parameters.placement.translationZ};
-    const double rotations[] = {parameters.placement.rotationX, parameters.placement.rotationY,
-                                parameters.placement.rotationZ};
+    const double rotations[] = {kernel::toDegrees(parameters.placement.rotationX).value(),
+                                kernel::toDegrees(parameters.placement.rotationY).value(),
+                                kernel::toDegrees(parameters.placement.rotationZ).value()};
     for (int index = 0; index < 3; ++index) {
         boxTranslationInputs_[index]->setValue(translations[index]);
         boxRotationInputs_[index]->setValue(rotations[index]);
@@ -235,8 +237,9 @@ void FeaturePropertiesPanel::showCylinder(const document::CylinderParameters& pa
     const double translations[] = {parameters.placement.translationX,
                                    parameters.placement.translationY,
                                    parameters.placement.translationZ};
-    const double rotations[] = {parameters.placement.rotationX, parameters.placement.rotationY,
-                                parameters.placement.rotationZ};
+    const double rotations[] = {kernel::toDegrees(parameters.placement.rotationX).value(),
+                                kernel::toDegrees(parameters.placement.rotationY).value(),
+                                kernel::toDegrees(parameters.placement.rotationZ).value()};
     for (int index = 0; index < 3; ++index) {
         translationInputs_[index]->setValue(translations[index]);
         rotationInputs_[index]->setValue(rotations[index]);
@@ -261,16 +264,20 @@ document::BoxParameters FeaturePropertiesPanel::boxParameters() const {
         kernel::BoxDimensions{lengthInput_->value(), widthInput_->value(),
                               boxHeightInput_->value()},
         kernel::RigidTransform{boxTranslationInputs_[0]->value(), boxTranslationInputs_[1]->value(),
-                               boxTranslationInputs_[2]->value(), boxRotationInputs_[0]->value(),
-                               boxRotationInputs_[1]->value(), boxRotationInputs_[2]->value()}};
+                               boxTranslationInputs_[2]->value(),
+                               kernel::toRadians(kernel::Degrees(boxRotationInputs_[0]->value())),
+                               kernel::toRadians(kernel::Degrees(boxRotationInputs_[1]->value())),
+                               kernel::toRadians(kernel::Degrees(boxRotationInputs_[2]->value()))}};
 }
 
 document::CylinderParameters
 FeaturePropertiesPanel::cylinderParameters(document::CylinderResultMode resultMode) const {
     return {radiusInput_->value(), cylinderHeightInput_->value(),
             kernel::RigidTransform{translationInputs_[0]->value(), translationInputs_[1]->value(),
-                                   translationInputs_[2]->value(), rotationInputs_[0]->value(),
-                                   rotationInputs_[1]->value(), rotationInputs_[2]->value()},
+                                   translationInputs_[2]->value(),
+                                   kernel::toRadians(kernel::Degrees(rotationInputs_[0]->value())),
+                                   kernel::toRadians(kernel::Degrees(rotationInputs_[1]->value())),
+                                   kernel::toRadians(kernel::Degrees(rotationInputs_[2]->value()))},
             resultMode};
 }
 
@@ -295,7 +302,9 @@ void FeaturePropertiesPanel::previewRotation(const kernel::RigidTransform& base,
     if (axisIndex < 0 || axisIndex > 2) {
         return;
     }
-    const double values[] = {base.rotationX, base.rotationY, base.rotationZ};
+    const double values[] = {kernel::toDegrees(base.rotationX).value(),
+                             kernel::toDegrees(base.rotationY).value(),
+                             kernel::toDegrees(base.rotationZ).value()};
     QDoubleSpinBox** inputs = currentWidget() == boxPanel_ ? boxRotationInputs_ : rotationInputs_;
     const QSignalBlocker blocker(inputs[axisIndex]);
     inputs[axisIndex]->setValue(values[axisIndex] + angleDegrees);

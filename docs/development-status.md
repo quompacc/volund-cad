@@ -1,22 +1,33 @@
 # Entwicklungsstand – 12. September 2026
 
-## Aktueller Stand – Pause am 14. September 2026
+## Aktueller Stand – 15. September 2026
 
-[Fortsetzungsnotiz mit Stand, Umgebung und nächstem Schritt](session-checkpoint-2026-09-14.md).
-Abgenommen sind inzwischen D07 als Fehlerfundament, D08 als isolierter
-OCAF-/Persistenzentscheid und D09 als Legacy-Importschnittstelle.
-D10 ist in Arbeit: D10a, D10b1 und die Winkelgrenzen D10b2a sind Teilnachweise,
-keine vollständige D10-/A-NUM-01-Abnahme.
+[Fortsetzungsnotiz](session-checkpoint-2026-09-15.md) und
+[D10-Abschlussprüfung](implementation-plan/evidence/D10-review.md).
+D10b2b hat die interne Radiantmigration abgeschlossen. D10c/D10d implementieren
+Größen-/Toleranzrollen und exakten Boolean-Anschluss. Die aktuellen Suiten
+bestehen nach [D11e](implementation-plan/evidence/D11e.md) mit **58/58 Windows** und **54/54 FreeBSD/Sway**.
 
-Nächster Schritt ist die dokumentierte **Grad-/Radiant-Migration D10b2**.
-Die Dokumentfelder wurden noch nicht auf Radiant umgestellt. Danach folgen
-Größen-/Toleranzrollen und der Boolean-Anschlussvertrag. Fundament hat Vorrang
-vor weiteren Modellierungsfunktionen; FreeBSD/Sway zuerst, Meridian erst L07.
-A02/A04 und die noch nicht umgesetzten Referenz-/DAG-/Persistenzpakete bleiben offen.
-
-Aktuelle Prüfergebnisse: **Windows 49/49**, **FreeBSD/Sway 45/45** CTests bestanden;
-[D10b2-Evidenz](implementation-plan/evidence/D10b2.md).
-Auf Nutzerwunsch nach dem Tagesabschluss pausiert; keine Hintergrundarbeit.
+**D10 ist auf Nutzerauftrag abgeschlossen; D11 ist begonnen.** Der in der Abschlussprüfung reproduzierte
+ID-Überlauf ist durch Vorabprüfung des vollständigen ID-Bedarfs behoben und mit
+Grenztests abgesichert. Die beschriebenen A-NUM-01-Fälle bestehen. D11a ergänzt
+getrennte DocumentId-/BodyId-Typen und eine deterministische Legacy-Körperzuordnung.
+D11b verhindert die Wiederverwendung veröffentlichter Feature-IDs nach Undo und
+erhält den korrekten Inhalts-/Dirty-Vergleich. D11c trennt die Körper-ID in der
+produktiven Auswertung vom letzten Shape-Erzeuger. Ihre bestehende Herkunfts-
+zuordnung bleibt über Moduswechsel, Save-As und Open erhalten. Dauerhafte
+Dokumentidentität, Duplikatsemantik und nativer Identitäts-/Schemaübergang bleiben offen.
+D11d ergänzt die verlustfreie Dokument-ID-Feldkodierung und den isolierten
+FreeBSD-OCCT-Build mit OCAF. Native Proben bestehen auf beiden Plattformen mit
+je **8/8**, einschließlich bidirektionaler Speicherzyklen und Laufzeitprüfung.
+D11e ergänzt Betriebssystem-Zufallsvergabe und einen unveränderlichen identifizierten
+Snapshot: Revision und Wertkopie behalten die ID, explizites Duplizieren erzeugt
+einen neuen Dokumentnamensraum. Diese Store-Schnittstelle ist geprüft; ihre
+produktive New-/Open-/Save-As-/Duplikat-Anbindung bleibt offen.
+Keine Terra-Übergabe, kein Commit/Push;
+HEAD bleibt `e8b65b8` auf `main`.
+FreeBSD/Sway zuerst, Meridian bleibt L07. A02/A04 und die noch nicht umgesetzten
+Referenz-/DAG-/Persistenzpakete bleiben offen.
 
 Die folgenden Funktionsangaben stammen aus dem ursprünglichen Übergabestand vom
 12. September und sind zusammen mit den aktuellen Paket-Evidenzen zu lesen.

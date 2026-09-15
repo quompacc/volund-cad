@@ -231,7 +231,7 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
     tags.reserve(sketch.constraints.values.size());
     for (const document::SketchConstraint& constraint : sketch.constraints.values) {
         values.push_back(constraint.kind == document::SketchConstraintKind::angle
-                             ? kernel::toRadians(kernel::Degrees(constraint.value)).value()
+                             ? constraint.angleValue.value()
                              : constraint.value);
         tags.push_back(constraint.id);
         const int tag = static_cast<int>(tags.size());

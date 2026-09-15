@@ -1,3 +1,4 @@
+#include <voelund/document/IdCapacity.hpp>
 #include <voelund/application/SketchEditorSession.hpp>
 
 #include <algorithm>
@@ -196,6 +197,8 @@ bool SketchEditorSession::extendSelected() {
 }
 
 bool SketchEditorSession::splitSelected() {
+    if (!canAllocateIds(1, 1))
+        return false;
     if (!active_ || !selectedElement_.has_value() || !selectionPoint_.has_value())
         return false;
     auto match = std::ranges::find(elements_.values, *selectedElement_, &SketchElement::id);
@@ -247,6 +250,8 @@ bool SketchEditorSession::splitSelected() {
 }
 
 bool SketchEditorSession::offsetSelected(double distance) {
+    if (!canAllocateIds(1, 0))
+        return false;
     if (!active_ || !selectedElement_.has_value() || !std::isfinite(distance) || distance == 0.0)
         return false;
     const auto match = std::ranges::find(elements_.values, *selectedElement_, &SketchElement::id);
@@ -283,7 +288,7 @@ bool SketchEditorSession::offsetSelected(double distance) {
 
 bool SketchEditorSession::mirrorSelected() {
     const auto ids = selectedIds(selectedReferences_, selectedElement_);
-    if (!active_ || ids.size() < 2)
+    if (!active_ || ids.size() < 2 || !canAllocateIds(ids.size() - 1, 0))
         return false;
     const auto axisMatch = std::ranges::find(elements_.values, ids.back(), &SketchElement::id);
     if (axisMatch == elements_.values.end())
@@ -339,6 +344,9 @@ bool SketchEditorSession::linearPatternSelected(int count, double spacing) {
     const auto ids = selectedIds(selectedReferences_, selectedElement_);
     if (!active_ || ids.empty() || count < 2 || !std::isfinite(spacing) || spacing == 0.0)
         return false;
+    if (!document::hasRepeatedIdCapacity(elements_.nextId, ids.size(),
+                                         static_cast<std::uint64_t>(count - 1)))
+        return false;
     const auto original = elements_.values;
     for (int copy = 1; copy < count; ++copy)
         for (SketchElementId id : ids) {
@@ -356,6 +364,9 @@ bool SketchEditorSession::circularPatternSelected(int count, double angleDegrees
     if (!active_ || ids.empty() || count < 2 || !std::isfinite(angleDegrees) ||
         angleDegrees == 0.0)
         return false;
+    if (!document::hasRepeatedIdCapacity(elements_.nextId, ids.size(),
+                                         static_cast<std::uint64_t>(count - 1)))
+        return false;
     const auto original = elements_.values;
     for (int copy = 1; copy < count; ++copy)
         for (SketchElementId id : ids) {
@@ -364,14 +375,16 @@ bool SketchEditorSession::circularPatternSelected(int count, double angleDegrees
                 elements_.values.push_back(
                     {SketchElementId{elements_.nextId++},
                      rotatedGeometry(source->geometry,
-                                     angleDegrees * copy * std::numbers::pi /
-                                         (180.0 * static_cast<double>(count))),
+                                     kernel::toRadians(kernel::Degrees(angleDegrees)).value() *
+                                         (static_cast<double>(copy) / count)),
                      source->construction});
         }
     return true;
 }
 
 bool SketchEditorSession::filletSelected(double radius) {
+    if (!canAllocateIds(1, 4))
+        return false;
     const auto ids = selectedIds(selectedReferences_, selectedElement_);
     if (!active_ || ids.size() != 2 || !std::isfinite(radius) || radius <= 1.0e-9)
         return false;

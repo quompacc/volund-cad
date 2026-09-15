@@ -1,0 +1,29 @@
+Test project /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt
+    Start 35: application.sketch_editor_flow
+    Test #35: application.sketch_editor_flow ...   Passed    0.57 sec
+    Start 35: application.sketch_editor_flow
+    Test #35: application.sketch_editor_flow ...   Passed    0.61 sec
+    Start 35: application.sketch_editor_flow
+    Test #35: application.sketch_editor_flow ...   Passed    0.57 sec
+    Start 35: application.sketch_editor_flow
+    Test #35: application.sketch_editor_flow ...   Passed    0.56 sec
+    Start 35: application.sketch_editor_flow
+    Test #35: application.sketch_editor_flow ...   Passed    0.56 sec
+    Start 35: application.sketch_editor_flow
+    Test #35: application.sketch_editor_flow ...   Passed    0.57 sec
+    Start 35: application.sketch_editor_flow
+    Test #35: application.sketch_editor_flow ...   Passed    0.57 sec
+    Start 35: application.sketch_editor_flow
+    Test #35: application.sketch_editor_flow ...   Passed    0.56 sec
+    Start 35: application.sketch_editor_flow
+    Test #35: application.sketch_editor_flow ...   Passed    0.62 sec
+    Start 35: application.sketch_editor_flow
+1/1 Test #35: application.sketch_editor_flow ...   Passed    0.57 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+application    =   0.57 sec*proc (1 test)
+integration    =   0.57 sec*proc (1 test)
+
+Total Test time (real) =   5.76 sec

@@ -17,6 +17,9 @@ static_assert(!std::is_convertible_v<double, kernel::Degrees>);
 static_assert(!std::is_convertible_v<double, kernel::Radians>);
 static_assert(!std::is_convertible_v<kernel::Degrees, kernel::Radians>);
 static_assert(!std::is_convertible_v<kernel::Radians, double>);
+static_assert(std::is_same_v<decltype(kernel::RigidTransform{}.rotationX), kernel::Radians>);
+static_assert(std::is_same_v<decltype(std::declval<document::SketchConstraint>().angleValue),
+                             kernel::Radians>);
 void require(bool condition, const char* message) {
     if (!condition)
         throw std::runtime_error(message);
@@ -71,14 +74,21 @@ void conversions() {
     }
     require(rejected, "Overflowing conversion accepted");
 }
-void placement(const std::string& original) {
-    for (int degrees : {-90, 90, 450, 720}) {
+void placementAxis(const std::string& original, int axis) {
+    for (int degrees : {-720, -90, 90, 450, 720}) {
         auto source = original;
-        replace(source, "20 20 30 0 0 0 0 0 0", "20 20 30 0 0 0 0 0 " + std::to_string(degrees));
+        const std::string rotation = std::to_string(degrees);
+        replace(source, "20 20 30 0 0 0 0 0 0",
+                "20 20 30 0 0 0 " + (axis == 0   ? rotation + " 0 0"
+                                     : axis == 1 ? "0 " + rotation + " 0"
+                                                 : "0 0 " + rotation));
         const auto doc = read(source);
         const auto loaded = roundtrip(doc);
         const auto& box = loaded.boxParameters(document::FeatureId{1});
-        require(box.placement.rotationZ == degrees &&
+        const kernel::Radians rotations[] = {box.placement.rotationX, box.placement.rotationY,
+                                             box.placement.rotationZ};
+        require(std::abs(rotations[axis].value() -
+                         kernel::toRadians(kernel::Degrees(degrees)).value()) < 1e-14 &&
                     box == doc.boxParameters(document::FeatureId{1}),
                 "Legacy placement degree value changed");
         const auto shape = kernel::ShapeFactory::makeBox(box.dimensions);
@@ -86,11 +96,15 @@ void placement(const std::string& original) {
         GProp_GProps properties;
         BRepGProp::VolumeProperties(rotated, properties);
         const auto center = properties.CentreOfMass();
-        const double expectedX = degrees == -90 || degrees == 720 ? 10.0 : -10.0;
-        const double expectedY = degrees == -90 ? -10.0 : 10.0;
+        const double angle = degrees * std::numbers::pi / 180;
+        const double c = std::cos(angle), s = std::sin(angle);
+        const double expectedX = axis == 0 ? 10 : axis == 1 ? 10 * c + 15 * s : 10 * c - 10 * s;
+        const double expectedY = axis == 0 ? 10 * c - 15 * s : axis == 1 ? 10 : 10 * s + 10 * c;
+        const double expectedZ = axis == 0 ? 10 * s + 15 * c : axis == 1 ? -10 * s + 15 * c : 15;
         require(std::abs(properties.Mass() - 12000.0) < 1e-7 &&
                     std::abs(center.X() - expectedX) < 1e-8 &&
-                    std::abs(center.Y() - expectedY) < 1e-8 && std::abs(center.Z() - 15.0) < 1e-8,
+                    std::abs(center.Y() - expectedY) < 1e-8 &&
+                    std::abs(center.Z() - expectedZ) < 1e-8,
                 "Legacy degrees interpreted as radians in kernel");
     }
 }
@@ -107,15 +121,18 @@ void drivingAngles(const std::string& original, int version) {
                            " 0 START" + (version >= 14 ? " 0" : ""));
         const auto doc = read(source);
         auto parameters = roundtrip(doc).sketchParameters(document::FeatureId{3});
-        require(parameters.constraints.values.front().value == degrees,
+        require(std::abs(parameters.constraints.values.front().angleValue.value() -
+                         kernel::toRadians(kernel::Degrees(degrees)).value()) < 1e-14,
                 "Legacy driving angle changed in persistence");
         parameters.elements.values[1].geometry = document::SketchLine{
             {0, 0}, {5, degrees < 0 ? -8.0 : 8.0}, document::SketchLineConstraint::none};
         // Preserve the legacy line's horizontal geometry explicitly in the
         // solver fixture; replacing its only constraint must not free that axis.
         parameters.constraints.values.push_back(
-            {document::SketchConstraintId{2}, document::SketchConstraintKind::horizontal,
-             {document::SketchElementId{1}, document::SketchPointPosition::start}, std::nullopt});
+            {document::SketchConstraintId{2},
+             document::SketchConstraintKind::horizontal,
+             {document::SketchElementId{1}, document::SketchPointPosition::start},
+             std::nullopt});
         parameters.constraints.nextId = 3;
         require(features::solveSketchConstraints(parameters).status ==
                     features::SketchSolveStatus::success,
@@ -135,7 +152,8 @@ void fixtures(const std::filesystem::path& directory) {
         name << 'v' << std::setw(2) << std::setfill('0') << version << ".volund";
         const auto path = directory / name.str();
         const auto original = bytes(path);
-        placement(original);
+        for (int axis = 0; axis < 3; ++axis)
+            placementAxis(original, axis);
         drivingAngles(original, version);
         const auto doc = read(original);
         const auto restored = roundtrip(doc);

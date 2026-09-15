@@ -1,0 +1,34 @@
+[
+  {
+    "file": "freebsd-geometry-via-windows.volund",
+    "sha256": "7dbf1a231aa406663bc265f2c6c1ac6e7918b0dec7ba48826cbabb61a5d41218"
+  },
+  {
+    "file": "freebsd-geometry.volund",
+    "sha256": "e2cf0cf12cdcb7e0a9bc69d6d8b2513768a08822ed26e4479368195fdd5ac635"
+  },
+  {
+    "file": "freebsd-identity-via-windows.volund",
+    "sha256": "f2c1d772974322f594ddc5974aab0bdb1f7255c72ed35cf971a1d54f6751685d"
+  },
+  {
+    "file": "freebsd-identity.volund",
+    "sha256": "f2c1d772974322f594ddc5974aab0bdb1f7255c72ed35cf971a1d54f6751685d"
+  },
+  {
+    "file": "windows-geometry-via-freebsd.volund",
+    "sha256": "7dbf1a231aa406663bc265f2c6c1ac6e7918b0dec7ba48826cbabb61a5d41218"
+  },
+  {
+    "file": "windows-geometry.volund",
+    "sha256": "e2cf0cf12cdcb7e0a9bc69d6d8b2513768a08822ed26e4479368195fdd5ac635"
+  },
+  {
+    "file": "windows-identity-via-freebsd.volund",
+    "sha256": "f2c1d772974322f594ddc5974aab0bdb1f7255c72ed35cf971a1d54f6751685d"
+  },
+  {
+    "file": "windows-identity.volund",
+    "sha256": "f2c1d772974322f594ddc5974aab0bdb1f7255c72ed35cf971a1d54f6751685d"
+  }
+]

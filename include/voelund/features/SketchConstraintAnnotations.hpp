@@ -12,6 +12,7 @@ struct SketchConstraintAnnotation final {
     document::SketchConstraintId id;
     document::SketchConstraintKind kind;
     gp_Pnt position;
+    // Internal units: radians for angles, millimeters for lengths.
     double value;
 };
 

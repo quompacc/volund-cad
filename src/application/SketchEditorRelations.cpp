@@ -55,14 +55,14 @@ referencePoint(const document::SketchElements& elements,
     return std::nullopt;
 }
 
-double lineAngleDegrees(const document::SketchLine& first, const document::SketchLine& second) {
+kernel::Radians lineAngleRadians(const document::SketchLine& first,
+                                 const document::SketchLine& second) {
     const double firstX = first.end.x - first.start.x;
     const double firstY = first.end.y - first.start.y;
     const double secondX = second.end.x - second.start.x;
     const double secondY = second.end.y - second.start.y;
-    return kernel::toDegrees(kernel::Radians(std::atan2(firstX * secondY - firstY * secondX,
-                                                        firstX * secondX + firstY * secondY)))
-        .value();
+    return kernel::Radians(
+        std::atan2(firstX * secondY - firstY * secondX, firstX * secondX + firstY * secondY));
 }
 
 double pointLineDistance(const document::SketchPoint& point, const document::SketchLine& line) {
@@ -142,10 +142,11 @@ bool SketchEditorSession::canAddSelectedRelation(
     if (kind == document::SketchConstraintKind::angle) {
         if (!line(firstElement) || !line(secondElement))
             return false;
-        const double value =
-            lineAngleDegrees(std::get<document::SketchLine>(firstElement->geometry),
+        const auto value =
+            lineAngleRadians(std::get<document::SketchLine>(firstElement->geometry),
                              std::get<document::SketchLine>(secondElement->geometry));
-        return std::abs(value) > 1.0e-9 && std::abs(value) < 180.0;
+        return std::abs(value.value()) > kernel::toRadians(kernel::Degrees(1.0e-9)).value() &&
+               std::abs(value.value()) < std::numbers::pi;
     }
     if (kind == document::SketchConstraintKind::pointOnObject)
         return (line(firstElement) || circle(firstElement)) &&
@@ -163,7 +164,7 @@ bool SketchEditorSession::canAddSelectedRelation(
 }
 
 bool SketchEditorSession::addSelectedRelation(document::SketchConstraintKind kind) {
-    if (!canAddSelectedRelation(kind))
+    if (!canAddSelectedRelation(kind) || !canAllocateIds(0, 1))
         return false;
     std::optional<document::SketchGeometryReference> secondReference;
     if (kind != document::SketchConstraintKind::diameter &&
@@ -207,8 +208,8 @@ bool SketchEditorSession::addSelectedRelation(document::SketchConstraintKind kin
     } else if (kind == document::SketchConstraintKind::angle) {
         const auto* first = findElement(elements_, selectedReferences_[0].element);
         const auto* second = findElement(elements_, selectedReferences_[1].element);
-        constraint.value = lineAngleDegrees(std::get<document::SketchLine>(first->geometry),
-                                            std::get<document::SketchLine>(second->geometry));
+        constraint.angleValue = lineAngleRadians(std::get<document::SketchLine>(first->geometry),
+                                                 std::get<document::SketchLine>(second->geometry));
     }
     if (kind == document::SketchConstraintKind::symmetric)
         constraint.third = selectedReferences_[2];
@@ -231,7 +232,9 @@ bool SketchEditorSession::addCoincidentReferences(document::SketchGeometryRefere
                     (constraint.first == second && *constraint.second == first));
         }))
         return false;
-    const document::SketchElements previousElements = elements_;
+    if (!canAllocateIds(0, 1))
+        return false;
+    const auto previousElements = elements_;
     const features::SketchSolveResult previousSolve = lastSolveResult_;
     constraints_.values.push_back({document::SketchConstraintId{constraints_.nextId++},
                                    document::SketchConstraintKind::coincident, first, second, 0.0});
@@ -254,6 +257,19 @@ bool SketchEditorSession::addCoincidentReferences(document::SketchGeometryRefere
 bool SketchEditorSession::addAxisReference(document::SketchGeometryReference reference,
                                            SketchAxisReference axis) {
     if (!active_ || reference.element.value() == 0)
+        return false;
+    const auto missing = [&](document::SketchConstraintKind kind) {
+        return std::ranges::none_of(constraints_.values, [&](const auto& item) {
+            return item.kind == kind && item.first == reference && !item.second.has_value() &&
+                   item.value == 0.0;
+        });
+    };
+    const std::uint64_t needed =
+        ((axis == SketchAxisReference::origin || axis == SketchAxisReference::yAxis) &&
+         missing(document::SketchConstraintKind::coordinateX)) +
+        ((axis == SketchAxisReference::origin || axis == SketchAxisReference::xAxis) &&
+         missing(document::SketchConstraintKind::coordinateY));
+    if (!canAllocateIds(0, needed))
         return false;
     const auto previousElements = elements_;
     const auto previousConstraints = constraints_;
@@ -282,6 +298,8 @@ bool SketchEditorSession::addMidpointReference(document::SketchGeometryReference
                                                document::SketchElementId line) {
     if (!active_ || reference.element == line)
         return false;
+    if (!canAllocateIds(0, 1))
+        return false;
     const auto previousElements = elements_;
     const auto previousConstraints = constraints_;
     constraints_.values.push_back(
@@ -299,6 +317,8 @@ bool SketchEditorSession::addMidpointReference(document::SketchGeometryReference
 bool SketchEditorSession::addFixedReference(document::SketchGeometryReference reference,
                                             document::SketchPoint point) {
     if (!active_ || reference.element.value() == 0)
+        return false;
+    if (!canAllocateIds(0, 2))
         return false;
     const auto previousElements = elements_;
     const auto previousConstraints = constraints_;
@@ -322,6 +342,8 @@ bool SketchEditorSession::addSupportReference(document::SketchGeometryReference 
                                               double supportReferenceParameter) {
     if (!active_ || reference.element.value() == 0 || supportReferenceId == 0 ||
         !std::isfinite(supportReferenceParameter))
+        return false;
+    if (!canAllocateIds(0, 2))
         return false;
     const auto previousElements = elements_;
     const auto previousConstraints = constraints_;
@@ -352,6 +374,8 @@ bool SketchEditorSession::addPointOnObjectReference(document::SketchGeometryRefe
                    constraint.first == reference && constraint.second == target;
         }))
         return true;
+    if (!canAllocateIds(0, 1))
+        return false;
     const auto previousElements = elements_;
     const auto previousConstraints = constraints_;
     constraints_.values.push_back({document::SketchConstraintId{constraints_.nextId++},
@@ -401,6 +425,8 @@ SketchEditorSession::addAutomaticLineRelation(document::SketchElementId lineId) 
     }
     if (targetId.value() == 0)
         return std::nullopt;
+    if (!canAllocateIds(0, 1))
+        return std::nullopt;
     const auto previousElements = elements_;
     const auto previousConstraints = constraints_;
     constraints_.values.push_back(
@@ -422,6 +448,8 @@ bool SketchEditorSession::addTangencyReference(document::SketchElementId radialI
     const auto* targetElement = findElement(elements_, targetId);
     if (!active_ || !radial(radialElement) || (!line(targetElement) && !radial(targetElement)) ||
         radialId == targetId)
+        return false;
+    if (!canAllocateIds(0, 1))
         return false;
     const auto previousElements = elements_;
     const auto previousConstraints = constraints_;
@@ -454,6 +482,8 @@ bool SketchEditorSession::addAutomaticRadialRelation(document::SketchElementId r
                    constraint.second.has_value() && constraint.second->element == targetId;
         }))
         return true;
+    if (!canAllocateIds(0, 1))
+        return false;
     const auto previousElements = elements_;
     const auto previousConstraints = constraints_;
     constraints_.values.push_back(

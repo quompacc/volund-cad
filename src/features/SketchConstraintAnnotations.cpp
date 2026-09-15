@@ -92,7 +92,9 @@ evaluateSketchConstraintAnnotations(const document::SketchParameters& sketch) {
     for (const document::SketchConstraint& constraint : sketch.constraints.values) {
         result.push_back({constraint.id, constraint.kind,
                           worldPoint(sketch.plane, annotationPoint(sketch, constraint)),
-                          constraint.value});
+                          constraint.kind == document::SketchConstraintKind::angle
+                              ? constraint.angleValue.value()
+                              : constraint.value});
     }
     return result;
 }

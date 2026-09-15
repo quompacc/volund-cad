@@ -1,0 +1,369 @@
+[1/2] Cleaning additional files...
+[2/2] Cleaning all built files...
+Cleaning... 547 files.
+[1/366] Scanning V:\src\kernel\ShapeFactory.cpp for CXX dependencies
+[2/366] Scanning V:\src\kernel\ShapeOperations.cpp for CXX dependencies
+[3/366] Scanning V:\third_party\planegcs\upstream\src\Mod\Sketcher\App\planegcs\Geo.cpp for CXX dependencies
+[4/366] Scanning V:\third_party\planegcs\upstream\src\Mod\Sketcher\App\planegcs\qp_eq.cpp for CXX dependencies
+[5/366] Generating CXX dyndep file src\kernel\CMakeFiles\voelund_kernel.dir\CXX.dd
+[6/366] Scanning V:\third_party\planegcs\upstream\src\Mod\Sketcher\App\planegcs\Constraints.cpp for CXX dependencies
+[7/366] Scanning V:\src\document\DocumentSerializer.cpp for CXX dependencies
+[8/366] Scanning V:\third_party\planegcs\upstream\src\Mod\Sketcher\App\planegcs\SubSystem.cpp for CXX dependencies
+[9/366] Scanning V:\src\document\LegacyDocumentImporter.cpp for CXX dependencies
+[10/366] Scanning V:\src\document\DocumentSnapshot.cpp for CXX dependencies
+[11/366] Scanning V:\src\document\DocumentSerializerSupport.cpp for CXX dependencies
+[12/366] Scanning V:\src\document\DocumentSerializerWriter.cpp for CXX dependencies
+[13/366] Scanning V:\src\document\ModelDocument.cpp for CXX dependencies
+[14/366] Scanning V:\src\document\ModelDocumentHistory.cpp for CXX dependencies
+[15/366] Scanning V:\third_party\planegcs\upstream\src\Mod\Sketcher\App\planegcs\GCS.cpp for CXX dependencies
+[16/366] Scanning V:\src\document\DocumentTransaction.cpp for CXX dependencies
+[17/366] Generating CXX dyndep file third_party\planegcs\CMakeFiles\voelund_planegcs.dir\CXX.dd
+[18/366] Scanning V:\src\document\SketchConstraintSerialization.cpp for CXX dependencies
+[19/366] Scanning V:\src\document\SketchGeometry.cpp for CXX dependencies
+[20/366] Generating CXX dyndep file src\document\CMakeFiles\voelund_document.dir\CXX.dd
+[21/366] Scanning V:\src\features\BoxFeature.cpp for CXX dependencies
+[22/366] Scanning V:\src\features\CylinderFeature.cpp for CXX dependencies
+[23/366] Scanning V:\src\features\FeatureGraph.cpp for CXX dependencies
+[24/366] Scanning V:\src\features\SketchConstraintAnnotations.cpp for CXX dependencies
+[25/366] Scanning V:\src\features\SketchConstraintSolver.cpp for CXX dependencies
+[26/366] Scanning V:\src\features\SketchEvaluation.cpp for CXX dependencies
+[27/366] Scanning V:\src\features\SketchProfiles.cpp for CXX dependencies
+[28/366] Scanning V:\src\features\SketchSupportResolver.cpp for CXX dependencies
+[29/366] Scanning V:\src\platform\AtomicFileStore.cpp for CXX dependencies
+[30/366] Scanning V:\src\platform\AtomicFileStoreNative.cpp for CXX dependencies
+[31/366] Building CXX object src\kernel\CMakeFiles\voelund_kernel.dir\ShapeFactory.cpp.obj
+[32/366] Building CXX object src\kernel\CMakeFiles\voelund_kernel.dir\ShapeOperations.cpp.obj
+[33/366] Building CXX object third_party\planegcs\CMakeFiles\voelund_planegcs.dir\upstream\src\Mod\Sketcher\App\planegcs\Geo.cpp.obj
+[34/366] Building CXX object third_party\planegcs\CMakeFiles\voelund_planegcs.dir\upstream\src\Mod\Sketcher\App\planegcs\Constraints.cpp.obj
+[35/366] Linking CXX static library src\kernel\voelund_kernel.lib
+[36/366] Building CXX object src\document\CMakeFiles\voelund_document.dir\DocumentSerializer.cpp.obj
+[37/366] Building CXX object third_party\planegcs\CMakeFiles\voelund_planegcs.dir\upstream\src\Mod\Sketcher\App\planegcs\SubSystem.cpp.obj
+[38/366] Building CXX object src\document\CMakeFiles\voelund_document.dir\LegacyDocumentImporter.cpp.obj
+[39/366] Building CXX object src\document\CMakeFiles\voelund_document.dir\DocumentSnapshot.cpp.obj
+[40/366] Building CXX object src\document\CMakeFiles\voelund_document.dir\DocumentSerializerSupport.cpp.obj
+[41/366] Building CXX object src\document\CMakeFiles\voelund_document.dir\DocumentSerializerWriter.cpp.obj
+[42/366] Building CXX object src\document\CMakeFiles\voelund_document.dir\ModelDocumentHistory.cpp.obj
+[43/366] Building CXX object src\document\CMakeFiles\voelund_document.dir\ModelDocument.cpp.obj
+[44/366] Building CXX object src\document\CMakeFiles\voelund_document.dir\SketchConstraintSerialization.cpp.obj
+[45/366] Building CXX object src\document\CMakeFiles\voelund_document.dir\DocumentTransaction.cpp.obj
+[46/366] Generating CXX dyndep file src\features\CMakeFiles\voelund_features.dir\CXX.dd
+[47/366] Generating CXX dyndep file src\platform\CMakeFiles\voelund_platform.dir\CXX.dd
+[48/366] Building CXX object third_party\planegcs\CMakeFiles\voelund_planegcs.dir\upstream\src\Mod\Sketcher\App\planegcs\qp_eq.cpp.obj
+[49/366] Scanning V:\src\application\CommandTransaction.cpp for CXX dependencies
+[50/366] Building CXX object src\document\CMakeFiles\voelund_document.dir\SketchGeometry.cpp.obj
+[51/366] Scanning V:\src\application\CadSession.cpp for CXX dependencies
+[52/366] Scanning V:\src\application\CadSessionHistory.cpp for CXX dependencies
+[53/366] Scanning V:\src\application\CadSessionCreation.cpp for CXX dependencies
+[54/366] Scanning V:\src\application\CadSessionTransactions.cpp for CXX dependencies
+[55/366] Scanning V:\src\application\CadSessionPersistence.cpp for CXX dependencies
+[56/366] Scanning V:\src\application\CadSessionSketchProfiles.cpp for CXX dependencies
+[57/366] Scanning V:\src\application\SketchEditorConstruction.cpp for CXX dependencies
+[58/366] Scanning V:\src\application\SketchEditorAcceptance.cpp for CXX dependencies
+[59/366] Scanning V:\src\application\SketchEditorDimensions.cpp for CXX dependencies
+[60/366] Scanning V:\src\application\SketchEditorGeometry.cpp for CXX dependencies
+[61/366] Scanning V:\src\application\SketchEditorHistory.cpp for CXX dependencies
+[62/366] Scanning V:\src\application\SketchEditorOperations.cpp for CXX dependencies
+[63/366] Scanning V:\src\application\SketchEditorPointConstraints.cpp for CXX dependencies
+[64/366] Scanning V:\src\application\SketchEditorRelations.cpp for CXX dependencies
+[65/366] Scanning V:\src\application\SketchEditorRectangle.cpp for CXX dependencies
+[66/366] Scanning V:\src\application\SketchEditorSession.cpp for CXX dependencies
+[67/366] Scanning V:\src\viewport\CadViewport.cpp for CXX dependencies
+[68/366] Scanning V:\src\viewport\CadViewportInput.cpp for CXX dependencies
+[69/366] Scanning V:\src\viewport\CadViewportQtOpenGl.cpp for CXX dependencies
+[70/366] Scanning V:\src\viewport\CadViewportHandlers.cpp for CXX dependencies
+[71/366] Scanning V:\src\viewport\SketchEditorInteraction.cpp for CXX dependencies
+[72/366] Scanning V:\src\viewport\QtOcctGlContext.cpp for CXX dependencies
+[73/366] Scanning V:\src\viewport\SketchViewOrientation.cpp for CXX dependencies
+[74/366] Scanning V:\src\viewport\SketchInteraction.cpp for CXX dependencies
+[75/366] Scanning V:\src\viewport\SketchConstraintPresentation.cpp for CXX dependencies
+[76/366] Scanning V:\src\viewport\SketchBoxSelection.cpp for CXX dependencies
+[77/366] Scanning V:\src\viewport\TransformManipulator.cpp for CXX dependencies
+[78/366] Building CXX object third_party\planegcs\CMakeFiles\voelund_planegcs.dir\upstream\src\Mod\Sketcher\App\planegcs\GCS.cpp.obj
+[79/366] Scanning V:\src\viewport\SketchPresentation.cpp for CXX dependencies
+[80/366] Linking CXX static library src\document\voelund_document.lib
+[81/366] Scanning V:\src\viewport\ViewportHighlightStyle.cpp for CXX dependencies
+[82/366] Building CXX object src\features\CMakeFiles\voelund_features.dir\BoxFeature.cpp.obj
+[83/366] Building CXX object src\features\CMakeFiles\voelund_features.dir\CylinderFeature.cpp.obj
+[84/366] Building CXX object src\features\CMakeFiles\voelund_features.dir\FeatureGraph.cpp.obj
+[85/366] Linking CXX static library third_party\planegcs\voelund_planegcs.lib
+[86/366] Building CXX object src\features\CMakeFiles\voelund_features.dir\SketchConstraintAnnotations.cpp.obj
+[87/366] Building CXX object src\features\CMakeFiles\voelund_features.dir\SketchProfiles.cpp.obj
+[88/366] Building CXX object src\features\CMakeFiles\voelund_features.dir\SketchEvaluation.cpp.obj
+[89/366] Building CXX object src\features\CMakeFiles\voelund_features.dir\SketchConstraintSolver.cpp.obj
+[90/366] Building CXX object src\features\CMakeFiles\voelund_features.dir\SketchSupportResolver.cpp.obj
+[91/366] Generating CXX dyndep file src\application\CMakeFiles\voelund_application.dir\CXX.dd
+[92/366] Generating CXX dyndep file src\viewport\CMakeFiles\voelund_viewport.dir\CXX.dd
+[93/366] Linking CXX static library src\features\voelund_features.lib
+[94/366] Building CXX object src\platform\CMakeFiles\voelund_platform.dir\AtomicFileStore.cpp.obj
+[95/366] Building CXX object src\application\CMakeFiles\voelund_application.dir\CommandTransaction.cpp.obj
+[96/366] Building CXX object src\platform\CMakeFiles\voelund_platform.dir\AtomicFileStoreNative.cpp.obj
+[97/366] Linking CXX static library src\platform\voelund_platform.lib
+[98/366] Building CXX object src\application\CMakeFiles\voelund_application.dir\CadSession.cpp.obj
+[99/366] Building CXX object src\application\CMakeFiles\voelund_application.dir\CadSessionHistory.cpp.obj
+[100/366] Building CXX object src\application\CMakeFiles\voelund_application.dir\CadSessionCreation.cpp.obj
+[101/366] Building CXX object src\application\CMakeFiles\voelund_application.dir\CadSessionTransactions.cpp.obj
+[102/366] Building CXX object src\application\CMakeFiles\voelund_application.dir\SketchEditorConstruction.cpp.obj
+[103/366] Building CXX object src\application\CMakeFiles\voelund_application.dir\CadSessionPersistence.cpp.obj
+[104/366] Building CXX object src\application\CMakeFiles\voelund_application.dir\CadSessionSketchProfiles.cpp.obj
+[105/366] Building CXX object src\application\CMakeFiles\voelund_application.dir\SketchEditorDimensions.cpp.obj
+[106/366] Building CXX object src\application\CMakeFiles\voelund_application.dir\SketchEditorAcceptance.cpp.obj
+[107/366] Building CXX object src\application\CMakeFiles\voelund_application.dir\SketchEditorGeometry.cpp.obj
+[108/366] Building CXX object src\application\CMakeFiles\voelund_application.dir\SketchEditorHistory.cpp.obj
+[109/366] Building CXX object src\application\CMakeFiles\voelund_application.dir\SketchEditorOperations.cpp.obj
+[110/366] Building CXX object src\application\CMakeFiles\voelund_application.dir\SketchEditorPointConstraints.cpp.obj
+[111/366] Scanning V:\src\workspaces\CommandRegistry.cpp for CXX dependencies
+[112/366] Building CXX object src\application\CMakeFiles\voelund_application.dir\SketchEditorRelations.cpp.obj
+[113/366] Building CXX object src\application\CMakeFiles\voelund_application.dir\SketchEditorRectangle.cpp.obj
+[114/366] Building CXX object src\application\CMakeFiles\voelund_application.dir\SketchEditorSession.cpp.obj
+[115/366] Building CXX object src\viewport\CMakeFiles\voelund_viewport.dir\CadViewportInput.cpp.obj
+[116/366] Building CXX object src\viewport\CMakeFiles\voelund_viewport.dir\CadViewport.cpp.obj
+[117/366] Building CXX object src\viewport\CMakeFiles\voelund_viewport.dir\CadViewportQtOpenGl.cpp.obj
+[118/366] Building CXX object src\viewport\CMakeFiles\voelund_viewport.dir\QtOcctGlContext.cpp.obj
+[119/366] Building CXX object src\viewport\CMakeFiles\voelund_viewport.dir\SketchEditorInteraction.cpp.obj
+[120/366] Building CXX object src\viewport\CMakeFiles\voelund_viewport.dir\CadViewportHandlers.cpp.obj
+[121/366] Building CXX object src\viewport\CMakeFiles\voelund_viewport.dir\SketchInteraction.cpp.obj
+[122/366] Building CXX object src\viewport\CMakeFiles\voelund_viewport.dir\SketchViewOrientation.cpp.obj
+[123/366] Building CXX object src\viewport\CMakeFiles\voelund_viewport.dir\TransformManipulator.cpp.obj
+[124/366] Building CXX object src\viewport\CMakeFiles\voelund_viewport.dir\SketchConstraintPresentation.cpp.obj
+[125/366] Building CXX object src\viewport\CMakeFiles\voelund_viewport.dir\SketchBoxSelection.cpp.obj
+[126/366] Generating CXX dyndep file src\workspaces\CMakeFiles\voelund_workspaces.dir\CXX.dd
+[127/366] Scanning V:\src\modules\solid\SolidWorkspaceModule.cpp for CXX dependencies
+[128/366] Linking CXX static library src\application\voelund_application.lib
+[129/366] Generating CXX dyndep file src\modules\solid\CMakeFiles\voelund_module_solid.dir\CXX.dd
+[130/366] Building CXX object src\viewport\CMakeFiles\voelund_viewport.dir\SketchPresentation.cpp.obj
+[131/366] Scanning V:\src\desktop\FeaturePropertiesPanel.cpp for CXX dependencies
+[132/366] Scanning V:\src\desktop\DocumentActions.cpp for CXX dependencies
+[133/366] Building CXX object src\workspaces\CMakeFiles\voelund_workspaces.dir\CommandRegistry.cpp.obj
+[134/366] Scanning V:\src\desktop\MainWindow.cpp for CXX dependencies
+[135/366] Scanning V:\src\desktop\MainWindowParameters.cpp for CXX dependencies
+[136/366] Building CXX object src\viewport\CMakeFiles\voelund_viewport.dir\ViewportHighlightStyle.cpp.obj
+[137/366] Scanning V:\src\desktop\MainWindowSupport.cpp for CXX dependencies
+[138/366] Scanning V:\src\desktop\MeasurementInput.cpp for CXX dependencies
+[139/366] Scanning V:\src\desktop\SketchConstraintLabel.cpp for CXX dependencies
+[140/366] Linking CXX static library src\viewport\voelund_viewport.lib
+[141/366] Scanning V:\src\desktop\ModelTreePanel.cpp for CXX dependencies
+[142/366] Scanning V:\src\desktop\SketchEditorConstraintState.cpp for CXX dependencies
+[143/366] Scanning V:\src\desktop\SketchEditorCommand.cpp for CXX dependencies
+[144/366] Scanning V:\src\desktop\SketchEditorCreation.cpp for CXX dependencies
+[145/366] Scanning V:\src\desktop\SketchEditorPresentation.cpp for CXX dependencies
+[146/366] Scanning V:\src\desktop\SketchEditorToolController.cpp for CXX dependencies
+[147/366] Scanning V:\src\desktop\SketchExtrusionToolController.cpp for CXX dependencies
+[148/366] Scanning V:\src\desktop\ToolPanelHost.cpp for CXX dependencies
+[149/366] Scanning V:\src\desktop\SketchViewAdapter.cpp for CXX dependencies
+[150/366] Linking CXX static library src\workspaces\voelund_workspaces.lib
+[151/366] Scanning V:\src\desktop\WorkspaceToolbar.cpp for CXX dependencies
+[152/366] Generating CXX dyndep file src\desktop\CMakeFiles\voelund_desktop.dir\CXX.dd
+[153/366] Automatic MOC for target voelund-ui-preview
+[154/366] Scanning V:\apps\voelund-cad\main.cpp for CXX dependencies
+[155/366] Building CXX object src\modules\solid\CMakeFiles\voelund_module_solid.dir\SolidWorkspaceModule.cpp.obj
+[156/366] Scanning V:\apps\SmokeSupport.cpp for CXX dependencies
+[157/366] Scanning V:\apps\voelund-ui-preview\main.cpp for CXX dependencies
+[158/366] Scanning V:\apps\voelund-ui-preview\PreviewCanvas.cpp for CXX dependencies
+[159/366] Scanning V:\apps\voelund-ui-preview\PreviewIcons.cpp for CXX dependencies
+[160/366] Scanning V:\apps\voelund-ui-preview\PreviewStyle.cpp for CXX dependencies
+[161/366] Scanning V:\apps\voelund-ui-preview\SketchBackend.cpp for CXX dependencies
+[162/366] Scanning V:\apps\voelund-ui-preview\ViewCube.cpp for CXX dependencies
+[163/366] Scanning V:\apps\voelund-ui-preview\PreviewWindow.cpp for CXX dependencies
+[164/366] Scanning V:\apps\voelund-ui-preview\PreviewWindowRibbon.cpp for CXX dependencies
+[165/366] Scanning V:\apps\voelund-ui-preview\PreviewWindowSketch.cpp for CXX dependencies
+[166/366] Scanning V:\tests\integration\AngleBoundaryTests.cpp for CXX dependencies
+[167/366] Scanning V:\apps\SmokeSupport.cpp for CXX dependencies
+[168/366] Scanning V:\tests\integration\PlaneMigrationTests.cpp for CXX dependencies
+[169/366] Scanning V:\tests\integration\NumericValidationTests.cpp for CXX dependencies
+[170/366] Scanning V:\tests\integration\LegacyImportTests.cpp for CXX dependencies
+[171/366] Scanning V:\tests\integration\SceneStatusTests.cpp for CXX dependencies
+[172/366] Scanning V:\tests\integration\CommandInputTests.cpp for CXX dependencies
+[173/366] Scanning V:\tests\integration\CadSessionFailureBoundaryTests.cpp for CXX dependencies
+[174/366] Scanning V:\tests\integration\CadSessionCreationResultTests.cpp for CXX dependencies
+[175/366] Scanning V:\tests\unit\AllocationFailure.cpp for CXX dependencies
+[176/366] Scanning V:\tests\integration\CadSessionTransactionTests.cpp for CXX dependencies
+[177/366] Scanning V:\tests\unit\DocumentTransactionTests.cpp for CXX dependencies
+[178/366] Scanning V:\tests\integration\CommandContractTests.cpp for CXX dependencies
+[179/366] Scanning V:\tests\integration\CadSessionSafePersistenceTests.cpp for CXX dependencies
+[180/366] Scanning V:\tests\unit\DocumentParserTests.cpp for CXX dependencies
+[181/366] Scanning V:\tests\unit\ShapeFactoryTests.cpp for CXX dependencies
+[182/366] Scanning V:\tests\unit\ModelDocumentTests.cpp for CXX dependencies
+[183/366] Scanning V:\tests\unit\SketchProfileTests.cpp for CXX dependencies
+[184/366] Scanning V:\tests\unit\AtomicFileStoreTests.cpp for CXX dependencies
+[185/366] Scanning V:\tests\integration\CadSessionTests.cpp for CXX dependencies
+[186/366] Scanning V:\tests\unit\SketchConstraintSolverTests.cpp for CXX dependencies
+[187/366] Scanning V:\tests\unit\PlaneGcsTests.cpp for CXX dependencies
+[188/366] Scanning V:\tests\integration\CadSessionHistoryTests.cpp for CXX dependencies
+[189/366] Scanning V:\tests\integration\CadSessionEvaluationTests.cpp for CXX dependencies
+[190/366] Scanning V:\tests\integration\CadSessionPersistenceTests.cpp for CXX dependencies
+[191/366] Scanning V:\tests\desktop\SketchCommandFailureTests.cpp for CXX dependencies
+[192/366] Scanning V:\tests\desktop\PreviewCommandFailureTests.cpp for CXX dependencies
+[193/366] Scanning V:\apps\voelund-ui-preview\SketchBackend.cpp for CXX dependencies
+[194/366] Scanning V:\tests\desktop\FeatureStatusTests.cpp for CXX dependencies
+[195/366] Scanning V:\tests\desktop\AngleInputTests.cpp for CXX dependencies
+[196/366] Scanning V:\tests\desktop\ParameterFailureTests.cpp for CXX dependencies
+[197/366] Scanning V:\tests\desktop\SketchSolverGateTests.cpp for CXX dependencies
+[198/366] Scanning V:\tests\desktop\DocumentActionsTests.cpp for CXX dependencies
+[199/366] Scanning V:\src\desktop\DocumentActions.cpp for CXX dependencies
+[200/366] Scanning V:\tests\integration\SketchEditorSessionTests.cpp for CXX dependencies
+[201/366] Scanning V:\tests\integration\SketchEditorRelationTests.cpp for CXX dependencies
+[202/366] Scanning V:\tests\integration\SketchConstructionTests.cpp for CXX dependencies
+[203/366] Scanning V:\tests\desktop\ViewportLifecycleTests.cpp for CXX dependencies
+[204/366] Scanning V:\tests\desktop\ViewportDpiTests.cpp for CXX dependencies
+[205/366] Scanning V:\tests\integration\SketchCircleConstraintTests.cpp for CXX dependencies
+[206/366] Scanning V:\tests\integration\SketchAlignmentTests.cpp for CXX dependencies
+[207/366] Scanning V:\tests\integration\SketchFixDistanceTests.cpp for CXX dependencies
+[208/366] Scanning V:\tests\integration\SketchBasicToolsTests.cpp for CXX dependencies
+[209/366] Scanning V:\tests\unit\CommandRegistryTests.cpp for CXX dependencies
+[210/366] Scanning V:\tests\integration\SketchSlotTests.cpp for CXX dependencies
+[211/366] Linking CXX static library src\modules\solid\voelund_module_solid.lib
+[212/366] Scanning V:\tests\integration\NumericPolicyTests.cpp for CXX dependencies
+[213/366] Building CXX object src\desktop\CMakeFiles\voelund_desktop.dir\FeaturePropertiesPanel.cpp.obj
+[214/366] Building CXX object src\desktop\CMakeFiles\voelund_desktop.dir\DocumentActions.cpp.obj
+[215/366] Building CXX object src\desktop\CMakeFiles\voelund_desktop.dir\MainWindowParameters.cpp.obj
+[216/366] Building CXX object src\desktop\CMakeFiles\voelund_desktop.dir\MainWindow.cpp.obj
+[217/366] Building CXX object src\desktop\CMakeFiles\voelund_desktop.dir\SketchConstraintLabel.cpp.obj
+[218/366] Building CXX object src\desktop\CMakeFiles\voelund_desktop.dir\MeasurementInput.cpp.obj
+[219/366] Building CXX object src\desktop\CMakeFiles\voelund_desktop.dir\MainWindowSupport.cpp.obj
+[220/366] Building CXX object src\desktop\CMakeFiles\voelund_desktop.dir\ModelTreePanel.cpp.obj
+[221/366] Building CXX object src\desktop\CMakeFiles\voelund_desktop.dir\SketchEditorConstraintState.cpp.obj
+[222/366] Building CXX object src\desktop\CMakeFiles\voelund_desktop.dir\SketchEditorCreation.cpp.obj
+[223/366] Building CXX object src\desktop\CMakeFiles\voelund_desktop.dir\SketchEditorCommand.cpp.obj
+[224/366] Building CXX object src\desktop\CMakeFiles\voelund_desktop.dir\SketchEditorPresentation.cpp.obj
+[225/366] Building CXX object src\desktop\CMakeFiles\voelund_desktop.dir\SketchEditorToolController.cpp.obj
+[226/366] Building CXX object src\desktop\CMakeFiles\voelund_desktop.dir\SketchViewAdapter.cpp.obj
+[227/366] Building CXX object src\desktop\CMakeFiles\voelund_desktop.dir\SketchExtrusionToolController.cpp.obj
+[228/366] Generating CXX dyndep file apps\voelund-cad\CMakeFiles\voelund-cad.dir\CXX.dd
+[229/366] Generating CXX dyndep file tests\CMakeFiles\voelund_angle_boundary_tests.dir\CXX.dd
+[230/366] Generating CXX dyndep file apps\voelund-ui-preview\CMakeFiles\voelund-ui-preview.dir\CXX.dd
+[231/366] Generating CXX dyndep file tests\CMakeFiles\voelund_plane_migration_tests.dir\CXX.dd
+[232/366] Generating CXX dyndep file tests\CMakeFiles\voelund_numeric_validation_tests.dir\CXX.dd
+[233/366] Generating CXX dyndep file tests\CMakeFiles\voelund_legacy_import_tests.dir\CXX.dd
+[234/366] Generating CXX dyndep file tests\CMakeFiles\voelund_scene_status_tests.dir\CXX.dd
+[235/366] Generating CXX dyndep file tests\CMakeFiles\voelund_command_input_tests.dir\CXX.dd
+[236/366] Generating CXX dyndep file tests\CMakeFiles\voelund_session_creation_tests.dir\CXX.dd
+[237/366] Generating CXX dyndep file tests\CMakeFiles\voelund_session_failure_tests.dir\CXX.dd
+[238/366] Generating CXX dyndep file tests\CMakeFiles\voelund_document_transaction_tests.dir\CXX.dd
+[239/366] Generating CXX dyndep file tests\CMakeFiles\voelund_session_transaction_tests.dir\CXX.dd
+[240/366] Generating CXX dyndep file tests\CMakeFiles\voelund_command_contract_tests.dir\CXX.dd
+[241/366] Generating CXX dyndep file tests\CMakeFiles\voelund_safe_persistence_tests.dir\CXX.dd
+[242/366] Generating CXX dyndep file tests\CMakeFiles\voelund_document_parser_tests.dir\CXX.dd
+[243/366] Generating CXX dyndep file tests\CMakeFiles\voelund_atomic_file_tests.dir\CXX.dd
+[244/366] Generating CXX dyndep file tests\CMakeFiles\voelund_kernel_tests.dir\CXX.dd
+[245/366] Generating CXX dyndep file tests\CMakeFiles\voelund_document_tests.dir\CXX.dd
+[246/366] Generating CXX dyndep file tests\CMakeFiles\voelund_sketch_profile_tests.dir\CXX.dd
+[247/366] Generating CXX dyndep file tests\CMakeFiles\voelund_planegcs_tests.dir\CXX.dd
+[248/366] Generating CXX dyndep file tests\CMakeFiles\voelund_sketch_constraint_tests.dir\CXX.dd
+[249/366] Generating CXX dyndep file tests\CMakeFiles\voelund_application_tests.dir\CXX.dd
+[250/366] Generating CXX dyndep file tests\CMakeFiles\voelund_sketch_command_failure_tests.dir\CXX.dd
+[251/366] Generating CXX dyndep file tests\CMakeFiles\voelund_feature_status_tests.dir\CXX.dd
+[252/366] Generating CXX dyndep file tests\CMakeFiles\voelund_preview_command_failure_tests.dir\CXX.dd
+[253/366] Generating CXX dyndep file tests\CMakeFiles\voelund_angle_input_tests.dir\CXX.dd
+[254/366] Generating CXX dyndep file tests\CMakeFiles\voelund_parameter_failure_tests.dir\CXX.dd
+[255/366] Generating CXX dyndep file tests\CMakeFiles\voelund_sketch_solver_gate_tests.dir\CXX.dd
+[256/366] Generating CXX dyndep file tests\CMakeFiles\voelund_document_actions_tests.dir\CXX.dd
+[257/366] Generating CXX dyndep file tests\CMakeFiles\voelund_viewport_lifecycle_tests.dir\CXX.dd
+[258/366] Generating CXX dyndep file tests\CMakeFiles\voelund_sketch_editor_tests.dir\CXX.dd
+[259/366] Generating CXX dyndep file tests\CMakeFiles\voelund_sketch_construction_tests.dir\CXX.dd
+[260/366] Generating CXX dyndep file tests\CMakeFiles\voelund_sketch_circle_constraint_tests.dir\CXX.dd
+[261/366] Generating CXX dyndep file tests\CMakeFiles\voelund_sketch_alignment_tests.dir\CXX.dd
+[262/366] Generating CXX dyndep file tests\CMakeFiles\voelund_sketch_fix_distance_tests.dir\CXX.dd
+[263/366] Generating CXX dyndep file tests\CMakeFiles\voelund_sketch_basic_tools_tests.dir\CXX.dd
+[264/366] Generating CXX dyndep file tests\CMakeFiles\voelund_sketch_slot_tests.dir\CXX.dd
+[265/366] Generating CXX dyndep file tests\CMakeFiles\voelund_workspace_tests.dir\CXX.dd
+[266/366] Generating CXX dyndep file tests\CMakeFiles\voelund_numeric_policy_tests.dir\CXX.dd
+[267/366] Building CXX object src\desktop\CMakeFiles\voelund_desktop.dir\ToolPanelHost.cpp.obj
+[268/366] Building CXX object src\desktop\CMakeFiles\voelund_desktop.dir\WorkspaceToolbar.cpp.obj
+[269/366] Linking CXX static library src\desktop\voelund_desktop.lib
+[270/366] Building CXX object apps\voelund-ui-preview\CMakeFiles\voelund-ui-preview.dir\voelund-ui-preview_autogen\mocs_compilation.cpp.obj
+[271/366] Building CXX object apps\voelund-cad\CMakeFiles\voelund-cad.dir\__\SmokeSupport.cpp.obj
+[272/366] Building CXX object apps\voelund-cad\CMakeFiles\voelund-cad.dir\main.cpp.obj
+[273/366] Building CXX object apps\voelund-ui-preview\CMakeFiles\voelund-ui-preview.dir\PreviewIcons.cpp.obj
+[274/366] Building CXX object apps\voelund-ui-preview\CMakeFiles\voelund-ui-preview.dir\main.cpp.obj
+[275/366] Building CXX object apps\voelund-ui-preview\CMakeFiles\voelund-ui-preview.dir\PreviewCanvas.cpp.obj
+[276/366] Building CXX object apps\voelund-ui-preview\CMakeFiles\voelund-ui-preview.dir\PreviewStyle.cpp.obj
+[277/366] Building CXX object apps\voelund-ui-preview\CMakeFiles\voelund-ui-preview.dir\SketchBackend.cpp.obj
+[278/366] Building CXX object apps\voelund-ui-preview\CMakeFiles\voelund-ui-preview.dir\ViewCube.cpp.obj
+[279/366] Building CXX object apps\voelund-ui-preview\CMakeFiles\voelund-ui-preview.dir\PreviewWindowRibbon.cpp.obj
+[280/366] Building CXX object apps\voelund-ui-preview\CMakeFiles\voelund-ui-preview.dir\PreviewWindow.cpp.obj
+[281/366] Building CXX object apps\voelund-ui-preview\CMakeFiles\voelund-ui-preview.dir\PreviewWindowSketch.cpp.obj
+[282/366] Building CXX object tests\CMakeFiles\voelund_numeric_validation_tests.dir\integration\NumericValidationTests.cpp.obj
+[283/366] Building CXX object tests\CMakeFiles\voelund_angle_boundary_tests.dir\integration\AngleBoundaryTests.cpp.obj
+[284/366] Building CXX object tests\CMakeFiles\voelund_plane_migration_tests.dir\integration\PlaneMigrationTests.cpp.obj
+[285/366] Building CXX object apps\voelund-ui-preview\CMakeFiles\voelund-ui-preview.dir\__\SmokeSupport.cpp.obj
+[286/366] Building CXX object tests\CMakeFiles\voelund_legacy_import_tests.dir\integration\LegacyImportTests.cpp.obj
+[287/366] Building CXX object tests\CMakeFiles\voelund_scene_status_tests.dir\integration\SceneStatusTests.cpp.obj
+[288/366] Building CXX object tests\CMakeFiles\voelund_session_failure_tests.dir\integration\CadSessionFailureBoundaryTests.cpp.obj
+[289/366] Building CXX object tests\CMakeFiles\voelund_command_input_tests.dir\integration\CommandInputTests.cpp.obj
+[290/366] Building CXX object tests\CMakeFiles\voelund_document_transaction_tests.dir\unit\AllocationFailure.cpp.obj
+[291/366] Building CXX object tests\CMakeFiles\voelund_command_contract_tests.dir\integration\CommandContractTests.cpp.obj
+[292/366] Building CXX object tests\CMakeFiles\voelund_document_transaction_tests.dir\unit\DocumentTransactionTests.cpp.obj
+[293/366] Building CXX object tests\CMakeFiles\voelund_session_creation_tests.dir\integration\CadSessionCreationResultTests.cpp.obj
+[294/366] Building CXX object tests\CMakeFiles\voelund_session_transaction_tests.dir\integration\CadSessionTransactionTests.cpp.obj
+[295/366] Building CXX object tests\CMakeFiles\voelund_kernel_tests.dir\unit\ShapeFactoryTests.cpp.obj
+[296/366] Building CXX object tests\CMakeFiles\voelund_safe_persistence_tests.dir\integration\CadSessionSafePersistenceTests.cpp.obj
+[297/366] Building CXX object tests\CMakeFiles\voelund_document_parser_tests.dir\unit\DocumentParserTests.cpp.obj
+[298/366] Building CXX object tests\CMakeFiles\voelund_atomic_file_tests.dir\unit\AtomicFileStoreTests.cpp.obj
+[299/366] Building CXX object tests\CMakeFiles\voelund_document_tests.dir\unit\ModelDocumentTests.cpp.obj
+[300/366] Building CXX object tests\CMakeFiles\voelund_sketch_profile_tests.dir\unit\SketchProfileTests.cpp.obj
+[301/366] Building CXX object tests\CMakeFiles\voelund_application_tests.dir\integration\CadSessionTests.cpp.obj
+[302/366] Building CXX object tests\CMakeFiles\voelund_sketch_constraint_tests.dir\unit\SketchConstraintSolverTests.cpp.obj
+[303/366] Building CXX object tests\CMakeFiles\voelund_planegcs_tests.dir\unit\PlaneGcsTests.cpp.obj
+[304/366] Building CXX object tests\CMakeFiles\voelund_application_tests.dir\integration\CadSessionHistoryTests.cpp.obj
+[305/366] Building CXX object tests\CMakeFiles\voelund_application_tests.dir\integration\CadSessionEvaluationTests.cpp.obj
+[306/366] Building CXX object tests\CMakeFiles\voelund_application_tests.dir\integration\CadSessionPersistenceTests.cpp.obj
+[307/366] Building CXX object tests\CMakeFiles\voelund_sketch_command_failure_tests.dir\desktop\SketchCommandFailureTests.cpp.obj
+[308/366] Building CXX object tests\CMakeFiles\voelund_preview_command_failure_tests.dir\desktop\PreviewCommandFailureTests.cpp.obj
+[309/366] Building CXX object tests\CMakeFiles\voelund_preview_command_failure_tests.dir\__\apps\voelund-ui-preview\SketchBackend.cpp.obj
+[310/366] Building CXX object tests\CMakeFiles\voelund_feature_status_tests.dir\desktop\FeatureStatusTests.cpp.obj
+[311/366] Building CXX object tests\CMakeFiles\voelund_angle_input_tests.dir\desktop\AngleInputTests.cpp.obj
+[312/366] Building CXX object tests\CMakeFiles\voelund_parameter_failure_tests.dir\desktop\ParameterFailureTests.cpp.obj
+[313/366] Building CXX object tests\CMakeFiles\voelund_sketch_solver_gate_tests.dir\desktop\SketchSolverGateTests.cpp.obj
+[314/366] Building CXX object tests\CMakeFiles\voelund_document_actions_tests.dir\desktop\DocumentActionsTests.cpp.obj
+[315/366] Building CXX object tests\CMakeFiles\voelund_document_actions_tests.dir\__\src\desktop\DocumentActions.cpp.obj
+[316/366] Building CXX object tests\CMakeFiles\voelund_sketch_editor_tests.dir\integration\SketchEditorSessionTests.cpp.obj
+[317/366] Building CXX object tests\CMakeFiles\voelund_viewport_lifecycle_tests.dir\desktop\ViewportLifecycleTests.cpp.obj
+[318/366] Building CXX object tests\CMakeFiles\voelund_sketch_editor_tests.dir\integration\SketchEditorRelationTests.cpp.obj
+[319/366] Building CXX object tests\CMakeFiles\voelund_viewport_lifecycle_tests.dir\desktop\ViewportDpiTests.cpp.obj
+[320/366] Building CXX object tests\CMakeFiles\voelund_sketch_construction_tests.dir\integration\SketchConstructionTests.cpp.obj
+[321/366] Building CXX object tests\CMakeFiles\voelund_sketch_circle_constraint_tests.dir\integration\SketchCircleConstraintTests.cpp.obj
+[322/366] Building CXX object tests\CMakeFiles\voelund_sketch_alignment_tests.dir\integration\SketchAlignmentTests.cpp.obj
+[323/366] Building CXX object tests\CMakeFiles\voelund_sketch_fix_distance_tests.dir\integration\SketchFixDistanceTests.cpp.obj
+[324/366] Building CXX object tests\CMakeFiles\voelund_sketch_basic_tools_tests.dir\integration\SketchBasicToolsTests.cpp.obj
+[325/366] Building CXX object tests\CMakeFiles\voelund_workspace_tests.dir\unit\CommandRegistryTests.cpp.obj
+[326/366] Linking CXX executable apps\voelund-cad\voelund-cad.exe; Deploying the minimal Qt runtime; Deploying the Qt OpenGL runtime
+[327/366] Linking CXX executable apps\voelund-ui-preview\voelund-ui-preview.exe; Deploying the Qt runtime for the UI preview; Deploying the Qt OpenGL runtime for the UI preview
+[328/366] Building CXX object tests\CMakeFiles\voelund_sketch_slot_tests.dir\integration\SketchSlotTests.cpp.obj
+[329/366] Building CXX object tests\CMakeFiles\voelund_numeric_policy_tests.dir\integration\NumericPolicyTests.cpp.obj
+[330/366] Linking CXX executable tests\voelund_angle_boundary_tests.exe
+[331/366] Linking CXX executable tests\voelund_numeric_validation_tests.exe
+[332/366] Linking CXX executable tests\voelund_plane_migration_tests.exe
+[333/366] Linking CXX executable tests\voelund_legacy_import_tests.exe
+[334/366] Linking CXX executable tests\voelund_scene_status_tests.exe
+[335/366] Linking CXX executable tests\voelund_command_input_tests.exe
+[336/366] Linking CXX executable tests\voelund_session_failure_tests.exe
+[337/366] Linking CXX executable tests\voelund_command_contract_tests.exe
+[338/366] Linking CXX executable tests\voelund_session_creation_tests.exe
+[339/366] Linking CXX executable tests\voelund_document_transaction_tests.exe
+[340/366] Linking CXX executable tests\voelund_session_transaction_tests.exe
+[341/366] Linking CXX executable tests\voelund_document_parser_tests.exe
+[342/366] Linking CXX executable tests\voelund_atomic_file_tests.exe
+[343/366] Linking CXX executable tests\voelund_kernel_tests.exe
+[344/366] Linking CXX executable tests\voelund_document_tests.exe
+[345/366] Linking CXX executable tests\voelund_safe_persistence_tests.exe
+[346/366] Linking CXX executable tests\voelund_sketch_profile_tests.exe
+[347/366] Linking CXX executable tests\voelund_planegcs_tests.exe
+[348/366] Linking CXX executable tests\voelund_sketch_constraint_tests.exe
+[349/366] Linking CXX executable tests\voelund_application_tests.exe
+[350/366] Linking CXX executable tests\voelund_sketch_command_failure_tests.exe
+[351/366] Linking CXX executable tests\voelund_preview_command_failure_tests.exe
+[352/366] Linking CXX executable tests\voelund_feature_status_tests.exe
+[353/366] Linking CXX executable tests\voelund_angle_input_tests.exe
+[354/366] Linking CXX executable tests\voelund_parameter_failure_tests.exe
+[355/366] Linking CXX executable tests\voelund_sketch_solver_gate_tests.exe
+[356/366] Linking CXX executable tests\voelund_document_actions_tests.exe
+[357/366] Linking CXX executable tests\voelund_viewport_lifecycle_tests.exe
+[358/366] Linking CXX executable tests\voelund_sketch_editor_tests.exe
+[359/366] Linking CXX executable tests\voelund_sketch_construction_tests.exe
+[360/366] Linking CXX executable tests\voelund_sketch_circle_constraint_tests.exe
+[361/366] Linking CXX executable tests\voelund_sketch_alignment_tests.exe
+[362/366] Linking CXX executable tests\voelund_sketch_fix_distance_tests.exe
+[363/366] Linking CXX executable tests\voelund_workspace_tests.exe
+[364/366] Linking CXX executable tests\voelund_sketch_basic_tools_tests.exe
+[365/366] Linking CXX executable tests\voelund_sketch_slot_tests.exe
+[366/366] Linking CXX executable tests\voelund_numeric_policy_tests.exe

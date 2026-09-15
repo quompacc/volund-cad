@@ -1,3 +1,5 @@
+#include <voelund/document/IdCapacity.hpp>
+#include "SketchGeometryRange.hpp"
 #include <voelund/document/SketchGeometry.hpp>
 
 #include <algorithm>
@@ -20,6 +22,7 @@ double squaredDistance(const SketchPoint& first, const SketchPoint& second) {
 }
 
 void validateGeometry(const SketchGeometry& geometry) {
+    detail::validateGeometryRange(geometry);
     if (const auto* line = std::get_if<SketchLine>(&geometry)) {
         if (!finite(line->start) || !finite(line->end) ||
             squaredDistance(line->start, line->end) <= minimumLength * minimumLength) {
@@ -60,7 +63,7 @@ void validateGeometry(const SketchGeometry& geometry) {
     const SketchArc& arc = std::get<SketchArc>(geometry);
     const double sweep = arc.endAngle - arc.startAngle;
     if (!finite(arc.center) || !std::isfinite(arc.radius) || arc.radius <= minimumLength ||
-        !std::isfinite(arc.startAngle) || !std::isfinite(arc.endAngle) || sweep <= minimumLength ||
+        !std::isfinite(arc.startAngle) || !std::isfinite(arc.endAngle) || sweep <= kernel::angularTolerance.radians ||
         sweep >= 2.0 * std::numbers::pi)
         throw std::invalid_argument("Sketch arc must have a finite center, radius and sweep");
 }
@@ -68,6 +71,8 @@ void validateGeometry(const SketchGeometry& geometry) {
 } // namespace
 
 void validateSketchElements(const SketchElements& elements) {
+    if (!hasIdCapacity(elements.nextId, 0))
+        throw std::invalid_argument("Sketch next element ID is exhausted or zero");
     if (elements.values.empty()) {
         throw std::invalid_argument("Sketch must contain at least one element");
     }
@@ -93,6 +98,8 @@ void validateSketchElements(const SketchElements& elements) {
 
 void validateSketchConstraints(const SketchElements& elements,
                                const SketchConstraints& constraints) {
+    if (!hasIdCapacity(constraints.nextId, 0))
+        throw std::invalid_argument("Sketch next constraint ID is exhausted or zero");
     std::uint64_t maximumId = 0;
     std::vector<std::uint64_t> ids;
     ids.reserve(constraints.values.size());
@@ -132,8 +139,21 @@ void validateSketchConstraints(const SketchElements& elements,
             throw std::invalid_argument("Sketch constraint ID must not be zero");
         maximumId = std::max(maximumId, constraint.id.value());
         ids.push_back(constraint.id.value());
+        const auto kind = constraint.kind;
+        if ((kind == SketchConstraintKind::coordinateX || kind == SketchConstraintKind::coordinateY ||
+             kind == SketchConstraintKind::pointDistanceX || kind == SketchConstraintKind::pointDistanceY) &&
+            !kernel::modelCoordinate(constraint.value))
+            throw std::invalid_argument(kernel::modelRangeDiagnostic);
+        if ((kind == SketchConstraintKind::distance || kind == SketchConstraintKind::radius ||
+             kind == SketchConstraintKind::diameter || kind == SketchConstraintKind::pointDistance ||
+             kind == SketchConstraintKind::pointLineDistance) && !kernel::modelLength(constraint.value))
+            throw std::invalid_argument(kernel::modelRangeDiagnostic);
         if (!std::isfinite(constraint.value))
             throw std::invalid_argument("Sketch constraint value must be finite");
+        if ((constraint.kind == SketchConstraintKind::angle && constraint.value != 0.0) ||
+            (constraint.kind != SketchConstraintKind::angle &&
+             constraint.angleValue.value() != 0.0))
+            throw std::invalid_argument("Sketch constraint value uses the wrong unit field");
         if (std::ranges::any_of(constraint.auxiliaryValues,
                                 [](double value) { return !std::isfinite(value); }))
             throw std::invalid_argument("Sketch constraint auxiliary values must be finite");
@@ -228,8 +248,10 @@ void validateSketchConstraints(const SketchElements& elements,
                 requireLine(constraint.first);
                 requireLine(*constraint.second);
                 if (constraint.first.element == constraint.second->element ||
-                    std::abs(constraint.value) <= minimumLength ||
-                    std::abs(constraint.value) >= 180.0)
+                    constraint.value != 0.0 ||
+                    std::abs(constraint.angleValue.value()) <=
+                        kernel::toRadians(kernel::Degrees(minimumLength)).value() ||
+                    std::abs(constraint.angleValue.value()) >= std::numbers::pi)
                     throw std::invalid_argument("Angle constraint needs two different lines and an "
                                                 "angle below 180 degrees");
             } else if (constraint.kind == SketchConstraintKind::symmetric) {

@@ -205,7 +205,8 @@ bool adapterDrivesPointDistanceAndLineAngle() {
          5},
         {{{SketchConstraintId{1}, SketchConstraintKind::pointDistance, lineRef(1), lineRef(2),
            10.0},
-          {SketchConstraintId{2}, SketchConstraintKind::angle, lineRef(3), lineRef(4), 60.0}},
+          {SketchConstraintId{2}, SketchConstraintKind::angle, lineRef(3), lineRef(4),
+           voelund::kernel::toRadians(voelund::kernel::Degrees(60.0))}},
          3}};
 
     const auto result = voelund::features::solveSketchConstraints(sketch);

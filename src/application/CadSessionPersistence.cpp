@@ -14,15 +14,13 @@ struct PreparedLoad {
     document::ModelDocument document;
     features::FeatureGraphResult evaluated;
     std::vector<FeatureRuntimeState> states;
-    std::string clean;
+    std::optional<document::DocumentSnapshot> clean;
     std::optional<document::MigrationReport> report;
 };
 
 PreparedLoad prepareLoad(std::istream& input) {
     auto imported = document::DocumentSerializer::readWithReport(input);
     auto document = imported.snapshot.toDocument();
-    std::ostringstream serialized;
-    document::DocumentSerializer::write(document, serialized);
     std::vector<FeatureRuntimeState> states;
     for (const auto& feature : document.features())
         states.push_back({feature.id, FeatureRuntimeStatus::current, {}});
@@ -45,7 +43,8 @@ PreparedLoad prepareLoad(std::istream& input) {
         // No shape from the previously open document may leak into this failed model.
         evaluated = {};
     }
-    return {std::move(document), std::move(evaluated), std::move(states), serialized.str(), std::move(imported.report)};
+    return {std::move(document), std::move(evaluated), std::move(states),
+            std::move(imported.snapshot), std::move(imported.report)};
 }
 } // namespace
 
@@ -57,12 +56,14 @@ void CadSession::saveDocumentUsing(const std::filesystem::path& path,
                                    const DocumentWriter& writer) {
     auto preparedPath = std::filesystem::absolute(path);
     auto contents = serializedDocument();
+    auto clean = std::optional{document::DocumentSnapshot::capture(document_)};
     std::istringstream verification(contents);
     static_cast<void>(document::DocumentSerializer::read(verification));
     // Geometry may be broken but structurally valid, editable parameters must remain saveable.
     writer(preparedPath, contents);
     // All allocation and validation precede the irreversible filesystem commit.
-    cleanDocumentState_.swap(contents);
+    static_assert(std::is_nothrow_swappable_v<decltype(cleanDocumentState_)>);
+    cleanDocumentState_.swap(clean);
     currentFile_.swap(preparedPath);
 }
 

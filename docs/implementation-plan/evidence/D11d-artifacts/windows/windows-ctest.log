@@ -1,0 +1,139 @@
+Test project V:/build/p02-qt-final
+      Start  1: desktop.viewport_startup
+ 1/56 Test  #1: desktop.viewport_startup ...................   Passed    1.88 sec
+      Start  2: desktop.viewport_startup.uninitialized
+ 2/56 Test  #2: desktop.viewport_startup.uninitialized .....   Passed    0.18 sec
+      Start  3: desktop.ui_preview_startup
+ 3/56 Test  #3: desktop.ui_preview_startup .................   Passed    1.75 sec
+      Start  4: desktop.ui_preview_startup.uninitialized
+ 4/56 Test  #4: desktop.ui_preview_startup.uninitialized ...   Passed    0.19 sec
+      Start  5: document.angle_boundaries
+ 5/56 Test  #5: document.angle_boundaries ..................   Passed    2.08 sec
+      Start  6: document.plane_migration
+ 6/56 Test  #6: document.plane_migration ...................   Passed    1.20 sec
+      Start  7: document.numeric_validation
+ 7/56 Test  #7: document.numeric_validation ................   Passed    0.11 sec
+      Start  8: document.legacy_import
+ 8/56 Test  #8: document.legacy_import .....................   Passed    0.70 sec
+      Start  9: application.command_input
+ 9/56 Test  #9: application.command_input ..................   Passed    0.77 sec
+      Start 10: application.scene_status
+10/56 Test #10: application.scene_status ...................   Passed    1.16 sec
+      Start 11: application.failure_boundaries
+11/56 Test #11: application.failure_boundaries .............   Passed    2.31 sec
+      Start 12: application.creation_results
+12/56 Test #12: application.creation_results ...............   Passed    0.70 sec
+      Start 13: application.command_transactions
+13/56 Test #13: application.command_transactions ...........   Passed    0.79 sec
+      Start 14: document.transactions
+14/56 Test #14: document.transactions ......................   Passed    0.11 sec
+      Start 15: application.command_contract_compound
+15/56 Test #15: application.command_contract_compound ......   Passed    0.05 sec
+      Start 16: application.command_contract_errors
+16/56 Test #16: application.command_contract_errors ........   Passed    0.01 sec
+      Start 17: application.safe_persistence
+17/56 Test #17: application.safe_persistence ...............   Passed    2.62 sec
+      Start 18: document.parser_limits_and_versions
+18/56 Test #18: document.parser_limits_and_versions ........   Passed    6.03 sec
+      Start 19: platform.atomic_file_store
+19/56 Test #19: platform.atomic_file_store .................   Passed    1.71 sec
+      Start 20: kernel.shape_factory
+20/56 Test #20: kernel.shape_factory .......................   Passed    0.04 sec
+      Start 21: document.history
+21/56 Test #21: document.history ...........................   Passed    0.07 sec
+      Start 22: features.sketch_profiles
+22/56 Test #22: features.sketch_profiles ...................   Passed    0.17 sec
+      Start 23: features.planegcs_solver
+23/56 Test #23: features.planegcs_solver ...................   Passed    0.01 sec
+      Start 24: features.sketch_constraint_adapter
+24/56 Test #24: features.sketch_constraint_adapter .........   Passed    0.09 sec
+      Start 25: application.recompute_history
+25/56 Test #25: application.recompute_history ..............   Passed    3.89 sec
+      Start 26: desktop.sketch_command_failure
+26/56 Test #26: desktop.sketch_command_failure .............   Passed    0.75 sec
+      Start 27: desktop.preview_command_failures
+27/56 Test #27: desktop.preview_command_failures ...........   Passed    0.34 sec
+      Start 28: desktop.feature_status
+28/56 Test #28: desktop.feature_status .....................   Passed    2.26 sec
+      Start 29: desktop.angle_inputs
+29/56 Test #29: desktop.angle_inputs .......................   Passed    1.46 sec
+      Start 30: desktop.parameter_failures
+30/56 Test #30: desktop.parameter_failures .................   Passed    1.65 sec
+      Start 31: desktop.sketch_solver_gate
+31/56 Test #31: desktop.sketch_solver_gate .................   Passed    1.07 sec
+      Start 32: desktop.document_actions
+32/56 Test #32: desktop.document_actions ...................   Passed    1.54 sec
+      Start 33: desktop.viewport_lifecycle_qt
+33/56 Test #33: desktop.viewport_lifecycle_qt ..............   Passed    2.47 sec
+      Start 34: desktop.viewport_dpi_1
+34/56 Test #34: desktop.viewport_dpi_1 .....................   Passed    9.49 sec
+      Start 35: desktop.viewport_dpi_1.5
+35/56 Test #35: desktop.viewport_dpi_1.5 ...................   Passed    9.55 sec
+      Start 36: desktop.viewport_dpi_2
+36/56 Test #36: desktop.viewport_dpi_2 .....................   Passed    9.74 sec
+      Start 37: application.sketch_editor_flow
+37/56 Test #37: application.sketch_editor_flow .............   Passed    1.87 sec
+      Start 38: application.sketch_construction
+38/56 Test #38: application.sketch_construction ............   Passed    0.34 sec
+      Start 39: application.sketch_circle_constraints
+39/56 Test #39: application.sketch_circle_constraints ......   Passed    0.29 sec
+      Start 40: application.sketch_alignments
+40/56 Test #40: application.sketch_alignments ..............   Passed    0.30 sec
+      Start 41: application.sketch_fix_distance
+41/56 Test #41: application.sketch_fix_distance ............   Passed    0.18 sec
+      Start 42: application.sketch_basic_tools
+42/56 Test #42: application.sketch_basic_tools .............   Passed    0.57 sec
+      Start 43: application.sketch_slot_dimensions
+43/56 Test #43: application.sketch_slot_dimensions .........   Passed    0.40 sec
+      Start 44: workspaces.module_registry
+44/56 Test #44: workspaces.module_registry .................   Passed    0.01 sec
+      Start 45: architecture.source_limits
+45/56 Test #45: architecture.source_limits .................   Passed    0.06 sec
+      Start 46: architecture.source_limits_regression
+46/56 Test #46: architecture.source_limits_regression ......   Passed    0.26 sec
+      Start 47: architecture.ctest_label_runner
+47/56 Test #47: architecture.ctest_label_runner ............   Passed    7.26 sec
+      Start 48: architecture.desktop_smoke_runner
+48/56 Test #48: architecture.desktop_smoke_runner ..........   Passed    1.14 sec
+      Start 49: architecture.platform_report
+49/56 Test #49: architecture.platform_report ...............   Passed    2.86 sec
+      Start 50: architecture.setup_windows_mapping
+50/56 Test #50: architecture.setup_windows_mapping .........   Passed    0.61 sec
+      Start 51: document.numeric_policy
+51/56 Test #51: document.numeric_policy ....................   Passed    0.21 sec
+      Start 52: features.boolean_connection
+52/56 Test #52: features.boolean_connection ................   Passed    5.38 sec
+      Start 53: application.sketch_id_capacity
+53/56 Test #53: application.sketch_id_capacity .............   Passed    0.62 sec
+      Start 54: document.legacy_body_identity
+54/56 Test #54: document.legacy_body_identity ..............   Passed    0.11 sec
+      Start 55: document.feature_id_lifetime
+55/56 Test #55: document.feature_id_lifetime ...............   Passed    0.21 sec
+      Start 56: features.body_identity
+56/56 Test #56: features.body_identity .....................   Passed    1.34 sec
+
+100% tests passed, 0 tests failed out of 56
+
+Label Time Summary:
+application     =  14.44 sec*proc (17 tests)
+architecture    =  12.19 sec*proc (6 tests)
+contract        =   0.05 sec*proc (2 tests)
+desktop         =  44.33 sec*proc (15 tests)
+document        =  22.68 sec*proc (19 tests)
+dpi             =  28.78 sec*proc (3 tests)
+features        =   7.00 sec*proc (5 tests)
+integration     =  28.20 sec*proc (26 tests)
+kernel          =   5.74 sec*proc (4 tests)
+lifecycle       =   2.47 sec*proc (1 test)
+negative        =   0.37 sec*proc (2 tests)
+platform        =   5.71 sec*proc (5 tests)
+qt-opengl       =  31.25 sec*proc (4 tests)
+regression      =  50.21 sec*proc (35 tests)
+sketch          =   7.54 sec*proc (6 tests)
+ui              =   1.75 sec*proc (1 test)
+unit            =   8.24 sec*proc (9 tests)
+viewport        =  31.25 sec*proc (4 tests)
+windows         =   3.62 sec*proc (2 tests)
+workspaces      =   0.01 sec*proc (1 test)
+
+Total Test time (real) =  93.00 sec

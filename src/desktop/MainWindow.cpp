@@ -340,11 +340,14 @@ void MainWindow::connectInteractions() {
             return;
         }
         kernel::RigidTransform placement = impl_->session.selectedFeaturePlacement();
-        double* rotations[] = {&placement.rotationX, &placement.rotationY, &placement.rotationZ};
+        kernel::Radians* rotations[] = {&placement.rotationX, &placement.rotationY,
+                                        &placement.rotationZ};
         if (axisIndex < 0 || axisIndex > 2) {
             return;
         }
-        *rotations[axisIndex] += angleDegrees;
+        *rotations[axisIndex] =
+            kernel::Radians(rotations[axisIndex]->value() +
+                            kernel::toRadians(kernel::Degrees(angleDegrees)).value());
         applyParameterCommand([this, placement](application::ErrorDisposition disposition) {
             return impl_->session.editSelectedFeaturePlacement(placement, disposition);
         });

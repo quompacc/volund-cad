@@ -1,3 +1,4 @@
+#include <voelund/kernel/NumericPolicy.hpp>
 #include <Standard_OutOfMemory.hxx>
 #include <Standard_ProgramError.hxx>
 #include <voelund/kernel/Angle.hpp>
@@ -38,8 +39,8 @@ bool isFinite(const CylinderDefinition& definition) {
 
 bool isFinite(const RigidTransform& transform) {
     return isFinite(transform.translationX) && isFinite(transform.translationY) &&
-           isFinite(transform.translationZ) && isFinite(transform.rotationX) &&
-           isFinite(transform.rotationY) && isFinite(transform.rotationZ);
+           isFinite(transform.translationZ) && isFinite(transform.rotationX.value()) &&
+           isFinite(transform.rotationY.value()) && isFinite(transform.rotationZ.value());
 }
 
 void requireValidShape(KernelOperation operation, const TopoDS_Shape& shape) {
@@ -108,9 +109,8 @@ std::string occtFailureDiagnostic(const Standard_Failure& failure) {
 }
 
 TopoDS_Shape ShapeFactory::makeBox(const BoxDimensions& dimensions) {
-    if (!isFinite(dimensions) || dimensions.width <= 0.0 || dimensions.depth <= 0.0 ||
-        dimensions.height <= 0.0) {
-        throw KernelError(KernelOperation::makeBox, "dimensions must be finite and positive");
+    if (!isFinite(dimensions) || !modelLength(dimensions.width) || !modelLength(dimensions.depth) || !modelLength(dimensions.height)) {
+        throw KernelError(KernelOperation::makeBox, modelRangeDiagnostic);
     }
     return buildShape(KernelOperation::makeBox, [&] {
         return BRepPrimAPI_MakeBox(dimensions.width, dimensions.depth, dimensions.height).Shape();
@@ -118,9 +118,11 @@ TopoDS_Shape ShapeFactory::makeBox(const BoxDimensions& dimensions) {
 }
 
 TopoDS_Shape ShapeFactory::makeCylinder(const CylinderDefinition& definition) {
-    if (!isFinite(definition) || definition.radius <= 0.0 || definition.height <= 0.0) {
+    if (!isFinite(definition) || !modelLength(definition.radius) || !modelLength(definition.height) ||
+        !modelCoordinate(definition.originX) || !modelCoordinate(definition.originY) ||
+        !modelCoordinate(definition.originZ)) {
         throw KernelError(KernelOperation::makeCylinder,
-                          "definition must be finite with positive radius and height");
+                          modelRangeDiagnostic);
     }
     return buildShape(KernelOperation::makeCylinder, [&] {
         const auto direction = [&] {
@@ -143,8 +145,10 @@ TopoDS_Shape ShapeFactory::applyTransform(const TopoDS_Shape& source, double piv
     if (source.IsNull()) {
         throw KernelError(KernelOperation::applyTransform, "source shape must not be null");
     }
-    if (!isFinite(pivotX) || !isFinite(pivotY) || !isFinite(pivotZ) || !isFinite(definition)) {
-        throw KernelError(KernelOperation::applyTransform, "pivot and transform must be finite");
+    if (!modelCoordinate(pivotX) || !modelCoordinate(pivotY) || !modelCoordinate(pivotZ) ||
+        !modelCoordinate(definition.translationX) || !modelCoordinate(definition.translationY) ||
+        !modelCoordinate(definition.translationZ) || !isFinite(definition)) {
+        throw KernelError(KernelOperation::applyTransform, modelRangeDiagnostic);
     }
     return buildShape(KernelOperation::applyTransform, [&] {
         TopoDS_Shape shape = source;
@@ -153,10 +157,9 @@ TopoDS_Shape ShapeFactory::applyTransform(const TopoDS_Shape& source, double piv
             gp_Dir axis;
             Radians angle;
         };
-        const Rotation rotations[] = {
-            {gp_Dir(1.0, 0.0, 0.0), toRadians(Degrees(definition.rotationX))},
-            {gp_Dir(0.0, 1.0, 0.0), toRadians(Degrees(definition.rotationY))},
-            {gp_Dir(0.0, 0.0, 1.0), toRadians(Degrees(definition.rotationZ))}};
+        const Rotation rotations[] = {{gp_Dir(1.0, 0.0, 0.0), definition.rotationX},
+                                      {gp_Dir(0.0, 1.0, 0.0), definition.rotationY},
+                                      {gp_Dir(0.0, 0.0, 1.0), definition.rotationZ}};
         for (const Rotation& rotation : rotations) {
             if (rotation.angle.value() == 0.0) {
                 continue;

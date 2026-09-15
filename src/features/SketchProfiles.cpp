@@ -1,3 +1,4 @@
+#include "SketchConnection.hpp"
 #include <voelund/features/SketchProfiles.hpp>
 
 #include <cmath>
@@ -6,11 +7,9 @@
 namespace voelund::features {
 namespace {
 
-constexpr double connectionTolerance = 1.0e-8;
+using detail::connected;
 
-bool connected(const document::SketchPoint& first, const document::SketchPoint& second) {
-    return std::hypot(second.x - first.x, second.y - first.y) <= connectionTolerance;
-}
+
 
 struct OrientedElement final {
     document::SketchElementId id;

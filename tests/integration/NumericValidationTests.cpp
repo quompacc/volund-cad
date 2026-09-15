@@ -147,8 +147,9 @@ void scales() {
     for (double length : {0.01, 100.0, 100000.0}) {
         document::ModelDocument doc;
         const document::FeatureId id{1};
-        const document::BoxParameters parameters{{length, length * 2, length * 3},
-                                                 {length * 4, 0, 0, 0, 0, 90}};
+        const document::BoxParameters parameters{
+            {length, length * 2, length * 3},
+            {length * 4, 0, 0, {}, {}, kernel::toRadians(kernel::Degrees(90))}};
         require(doc.setBoxParameters(id, parameters), "Scale fixture did not change");
         std::istringstream input(serialized(doc));
         const auto loaded = document::DocumentSerializer::read(input);
