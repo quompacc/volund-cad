@@ -54,6 +54,18 @@ foreach(fixture IN ITEMS compound errors)
     set_tests_properties(application.command_contract_${fixture} PROPERTIES LABELS "integration;application;contract" TIMEOUT 15)
 endforeach()
 find_package(Threads REQUIRED)
+add_executable(voelund_native_box_tests integration/NativeBoxTests.cpp)
+target_link_libraries(voelund_native_box_tests PRIVATE
+    voelund_project_options Voelund::Features TKBin)
+add_test(NAME document.native_boxes COMMAND voelund_native_box_tests)
+set_tests_properties(document.native_boxes PROPERTIES
+    LABELS "integration;document;native;regression" TIMEOUT 30)
+add_executable(voelund_native_metadata_tests integration/NativeMetadataTests.cpp)
+target_link_libraries(voelund_native_metadata_tests PRIVATE
+    voelund_project_options Voelund::Document TKBin)
+add_test(NAME document.native_metadata COMMAND voelund_native_metadata_tests)
+set_tests_properties(document.native_metadata PROPERTIES
+    LABELS "integration;document;native;regression" TIMEOUT 30)
 add_executable(voelund_document_identity_tests unit/DocumentIdentityTests.cpp)
 target_link_libraries(voelund_document_identity_tests PRIVATE
     voelund_project_options Voelund::Document Threads::Threads)

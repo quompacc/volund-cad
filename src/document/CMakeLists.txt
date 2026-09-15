@@ -6,6 +6,8 @@ add_library(voelund_document STATIC
     DocumentId.cpp
     DocumentIdGenerator.cpp
     IdentifiedDocumentSnapshot.cpp
+    NativeDocumentMetadata.cpp
+    NativeBoxCodec.cpp
     DocumentSerializerSupport.cpp
     DocumentSerializerWriter.cpp
     ModelDocument.cpp
@@ -27,6 +29,7 @@ target_link_libraries(
         Voelund::Kernel
     PRIVATE
         Voelund::Platform
+        TKLCAF
 )
 
 add_library(Voelund::Document ALIAS voelund_document)

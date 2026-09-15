@@ -1,0 +1,5 @@
+src/document/CMakeLists.txt
+src/document/NativeDocumentMetadata.cpp
+src/document/NativeDocumentMetadata.hpp
+tests/CMakeLists.txt
+tests/integration/NativeMetadataTests.cpp

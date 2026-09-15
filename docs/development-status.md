@@ -6,7 +6,7 @@
 [D10-Abschlussprüfung](implementation-plan/evidence/D10-review.md).
 D10b2b hat die interne Radiantmigration abgeschlossen. D10c/D10d implementieren
 Größen-/Toleranzrollen und exakten Boolean-Anschluss. Die aktuellen Suiten
-bestehen nach [D11e](implementation-plan/evidence/D11e.md) mit **58/58 Windows** und **54/54 FreeBSD/Sway**.
+bestehen nach [D11g](implementation-plan/evidence/D11g.md) mit **60/60 Windows** und **56/56 FreeBSD/Sway**.
 
 **D10 ist auf Nutzerauftrag abgeschlossen; D11 ist begonnen.** Der in der Abschlussprüfung reproduzierte
 ID-Überlauf ist durch Vorabprüfung des vollständigen ID-Bedarfs behoben und mit
@@ -24,6 +24,16 @@ D11e ergänzt Betriebssystem-Zufallsvergabe und einen unveränderlichen identifi
 Snapshot: Revision und Wertkopie behalten die ID, explizites Duplizieren erzeugt
 einen neuen Dokumentnamensraum. Diese Store-Schnittstelle ist geprüft; ihre
 produktive New-/Open-/Save-As-/Duplikat-Anbindung bleibt offen.
+D11f ergänzt den privaten nativen Dokumentkopf mit strikter Kennungs-/Schema-
+und Identitätsprüfung. Native Speicherzyklen in beide Plattformrichtungen
+bestehen. Feature-/Parameter-Schema und produktiver Dispatch fehlen weiterhin.
+D11g bildet reine Box-Snapshots mit Parametern und getrennten Körper-/Feature-
+Identitäten nativ ab. Beide Austauschrichtungen und die erneute BRep-Auswertung
+sind geprüft. Zylinder-/Skizzen-/Extrusionsschema und Produktintegration bleiben offen.
+D11f/D11g werden mit diesem dokumentierten Tagesabschluss samt Abnahmebelegen
+auf `main` eingecheckt. Ihre Prüfbasis war `a5d76d9`; der aktuelle Abschlusscommit
+ist über `git log -1 --oneline` feststellbar. Nächster Block ist die native
+Zylinderfamilie mit Eingabereferenzen und Verknüpfungsmodi.
 Der geprüfte D10-/D11e-Quellstand samt Belegen ist auf Nutzerauftrag in
 `6737465afe6af30758147471035a5582e466342f` auf `main` committed. Ausgangspunkt
 der Prüfläufe war `e8b65b8`; ältere Uncommittet-Vermerke in den Evidenzen

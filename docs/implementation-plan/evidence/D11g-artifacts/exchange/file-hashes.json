@@ -1,0 +1,18 @@
+[
+  {
+    "file": "d11g-freebsd-boxes.volund",
+    "sha256": "3566e4b9c6a3dc1d4c491a03f781fd766ce2f864b2a54cf43923f0e2ca29f3f5"
+  },
+  {
+    "file": "d11g-windows-via-freebsd.volund",
+    "sha256": "3566e4b9c6a3dc1d4c491a03f781fd766ce2f864b2a54cf43923f0e2ca29f3f5"
+  },
+  {
+    "file": "freebsd-via-windows.volund",
+    "sha256": "3566e4b9c6a3dc1d4c491a03f781fd766ce2f864b2a54cf43923f0e2ca29f3f5"
+  },
+  {
+    "file": "windows-boxes.volund",
+    "sha256": "3566e4b9c6a3dc1d4c491a03f781fd766ce2f864b2a54cf43923f0e2ca29f3f5"
+  }
+]

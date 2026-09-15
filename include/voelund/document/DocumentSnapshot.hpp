@@ -2,6 +2,7 @@
 #include <voelund/document/ModelDocument.hpp>
 
 namespace voelund::document {
+namespace detail { class NativeBoxCodec; }
 class LegacyDocumentImporter;
 // Validated, read-only interchange value; no OCAF labels or mutable document authority.
 class DocumentSnapshot final {
@@ -19,6 +20,7 @@ class DocumentSnapshot final {
 
   private:
     friend class LegacyDocumentImporter;
+    friend class detail::NativeBoxCodec;
     DocumentSnapshot(std::vector<FeatureDescriptor> features,
                      std::vector<FeatureParameters> parameters, std::uint64_t nextFeatureId)
         : features_(std::move(features)), parameters_(std::move(parameters)),

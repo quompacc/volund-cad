@@ -9,7 +9,7 @@ records the implementation gaps and defines 110 bounded work packages, dependenc
 architecture decisions, acceptance scenarios, and an execution template for smaller models.
 The current package states and acceptance evidence are tracked in
 [`packets.json`](docs/implementation-plan/packets.json). D10 is complete;
-D11 identity work is implemented through D11e, with native store integration still open.
+D11 identity work is implemented through D11g, with native store integration still open.
 
 ## Current state
 
@@ -28,9 +28,9 @@ The repository contains a working native CAD vertical slice:
 - modular workspace and command registry with `Solid` as the first product module;
 - native C++ tests and an enforced 600-line source-file limit.
 
-The accepted D11e source baseline passes **58/58 Windows** and **54/54 FreeBSD/Sway**
+The accepted D11g source baseline passes **60/60 Windows** and **56/56 FreeBSD/Sway**
 tests. Persistent document identity in product commands and Meridian acceptance
-remain open; see the [D11e evidence](docs/implementation-plan/evidence/D11e.md).
+remain open; see the [D11g evidence](docs/implementation-plan/evidence/D11g.md).
 
 ## Versions and changes
 

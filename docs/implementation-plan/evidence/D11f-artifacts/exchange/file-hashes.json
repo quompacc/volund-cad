@@ -1,0 +1,18 @@
+[
+  {
+    "file": "d11f-freebsd-metadata.volund",
+    "sha256": "09c2198ef1b6f873f5b62262465bd9339c15568102d168f6190976b5442746f5"
+  },
+  {
+    "file": "d11f-windows-via-freebsd.volund",
+    "sha256": "09c2198ef1b6f873f5b62262465bd9339c15568102d168f6190976b5442746f5"
+  },
+  {
+    "file": "freebsd-via-windows.volund",
+    "sha256": "09c2198ef1b6f873f5b62262465bd9339c15568102d168f6190976b5442746f5"
+  },
+  {
+    "file": "windows-metadata.volund",
+    "sha256": "09c2198ef1b6f873f5b62262465bd9339c15568102d168f6190976b5442746f5"
+  }
+]
