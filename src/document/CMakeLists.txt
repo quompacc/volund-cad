@@ -7,7 +7,7 @@ add_library(voelund_document STATIC
     DocumentIdGenerator.cpp
     IdentifiedDocumentSnapshot.cpp
     NativeDocumentMetadata.cpp
-    NativeBoxCodec.cpp
+    NativePrimitiveCodec.cpp
     DocumentSerializerSupport.cpp
     DocumentSerializerWriter.cpp
     ModelDocument.cpp

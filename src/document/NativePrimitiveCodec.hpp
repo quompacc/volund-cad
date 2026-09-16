@@ -3,8 +3,8 @@
 #include <TDocStd_Document.hxx>
 
 namespace voelund::document::detail {
-// Isolated box-family adapter; not the product dispatch or a mutable shadow backend.
-class NativeBoxCodec final {
+// Native box/cylinder snapshot adapter; not the product dispatch or a mutable backend.
+class NativePrimitiveCodec final {
   public:
     static void write(const Handle(TDocStd_Document)& document,
                       const IdentifiedDocumentSnapshot& snapshot);

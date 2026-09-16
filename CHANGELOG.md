@@ -6,12 +6,15 @@ Versionsregeln: [Versionierung und Releases](docs/versioning.md).
 
 ## [Unreleased]
 
-Entwicklungsstand vom 15. September 2026. Basisversion: `0.1.0`; noch kein
+Entwicklungsstand vom 16. September 2026. Basisversion: `0.1.0`; noch kein
 versionierter Release-Tag. Dieser erste Eintrag fasst den jüngsten D10-/D11-Block
 zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 
 ### Hinzugefügt
 
+- Native Zylinder-Abbildung für Join/Cut/Intersect/Separate mit echten
+  Eingabereferenzen, Körpergruppen und eigenständiger Feature-Reihenfolge.
+  Beide Plattformen erhalten Snapshots und neu ausgewertete Geometrie identisch.
 - Native Box-Abbildung mit expliziten Körper-/Feature-IDs, Namen, Reihenfolge und
   Radiant-Parametern. Snapshot-Parität und rekonstruierte BReps auf beiden Plattformen
   geprüft; andere Featurefamilien werden vor dem Schreiben abgewiesen.
@@ -28,6 +31,9 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 
 ### Geändert
 
+- Der private Primitive-Adapter ersetzt den reinen Box-Adapter. Das unveröffentlichte
+  native Entwurfslayout heißt jetzt `Primitives.v1`; ältere `Boxes.v1`-Probedateien
+  bleiben historische Nachweise. Der produktive Legacy-Reader ist unverändert.
 - Interne Winkel verwenden durchgängig Radiant; Anzeige und Legacy-Dateigrenzen
   konvertieren ausdrücklich. Größenlimits und Toleranzen haben getrennte Rollen.
 - Extrusionen verwenden den exakten Supportflächenanschluss ohne pauschalen Überstand.
@@ -43,11 +49,11 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 ### Prüfung und offene Integration
 
 - D10 abgeschlossen; D11 insgesamt weiterhin in Arbeit.
-- Aktueller Quellstand: **60/60 Windows**, **56/56 FreeBSD/Sway**; 281 Quellhashes
+- Aktueller Quellstand: **61/61 Windows**, **57/57 FreeBSD/Sway**; 282 Quellhashes
   identisch. Native D11d-Proben: jeweils **8/8**, beide Austauschrichtungen geprüft.
 - Die dauerhafte Dokument-ID ist noch nicht in produktive New-/Open-/Save-As-
   und Duplikatbefehle eingebunden. Der Produktwriter bleibt **VOLUND 16**.
   Der native Autoritäts-/Store-Wechsel und Meridian-Abnahme bleiben offen.
 - Details und Testbelege: [D10](docs/implementation-plan/evidence/D10.md),
-  [D11g](docs/implementation-plan/evidence/D11g.md),
+  [D11h](docs/implementation-plan/evidence/D11h.md),
   [Entwicklungsstand](docs/development-status.md).

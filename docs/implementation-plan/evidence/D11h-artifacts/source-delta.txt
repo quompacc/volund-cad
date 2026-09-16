@@ -1,0 +1,7 @@
+include/voelund/document/DocumentSnapshot.hpp
+src/document/CMakeLists.txt
+src/document/NativePrimitiveCodec.cpp
+src/document/NativePrimitiveCodec.hpp
+tests/CMakeLists.txt
+tests/integration/NativeBoxTests.cpp
+tests/integration/NativeCylinderTests.cpp

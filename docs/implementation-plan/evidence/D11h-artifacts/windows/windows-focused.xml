@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Win32-ninja"
+	tests="2"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname="megatron"
+	time="2"
+	timestamp="2026-09-16T05:07:16"
+	>
+	<testcase name="document.native_cylinders" classname="document.native_cylinders" time="2.22779" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;native;regression"/>
+		</properties>
+		<system-out>PASS native cylinders: modes, inputs, identities, order, parameters, BRep
+</system-out>
+	</testcase>
+	<testcase name="document.native_boxes" classname="document.native_boxes" time="0.714141" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;native;regression"/>
+		</properties>
+		<system-out>PASS native boxes: identities, names, order, radians, parameters, BRep
+</system-out>
+	</testcase>
+</testsuite>

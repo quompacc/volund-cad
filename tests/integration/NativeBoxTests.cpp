@@ -1,4 +1,4 @@
-#include "../../src/document/NativeBoxCodec.hpp"
+#include "../../src/document/NativePrimitiveCodec.hpp"
 #include <voelund/document/LegacyDocumentImporter.hpp>
 #include <voelund/features/FeatureGraph.hpp>
 #include <BinDrivers.hxx>
@@ -17,7 +17,7 @@
 namespace {
 using namespace voelund;
 using namespace document;
-using detail::NativeBoxCodec;
+using detail::NativePrimitiveCodec;
 void require(bool value, const char* message) {
     if (!value) throw std::runtime_error(message);
 }
@@ -50,7 +50,7 @@ Handle(TDocStd_Document) open(const Handle(TDocStd_Application)& app, std::istre
     return doc;
 }
 void check(const Handle(TDocStd_Document)& doc, const IdentifiedDocumentSnapshot& expected) {
-    const auto actual = NativeBoxCodec::read(doc);
+    const auto actual = NativePrimitiveCodec::read(doc);
     require(actual == expected, "Native box snapshot lost identity, order, names or parameters");
     const auto model = actual.snapshot().toDocument();
     require(!model.canUndo() && !model.canRedo(), "Transient history leaked into native snapshot");
@@ -67,33 +67,33 @@ void check(const Handle(TDocStd_Document)& doc, const IdentifiedDocumentSnapshot
 void regressions(const Handle(TDocStd_Application)& app) {
     const auto expected = fixture();
     auto doc = fresh(app);
-    NativeBoxCodec::write(doc, expected);
+    NativePrimitiveCodec::write(doc, expected);
     check(doc, expected);
     std::stringstream bytes(std::ios::in | std::ios::out | std::ios::binary);
     save(app, doc, bytes);
     auto loaded = open(app, bytes);
     check(loaded, expected);
     app->Close(loaded);
-    rejected([&] { NativeBoxCodec::write(doc, expected.duplicate()); });
+    rejected([&] { NativePrimitiveCodec::write(doc, expected.duplicate()); });
     check(doc, expected);
     const auto bodies = doc->Main().FindChild(10);
-    const auto first = bodies.FindChild(1).FindChild(10);
+    const auto first = bodies.FindChild(1).FindChild(10).FindChild(1);
     doc->SetUndoLimit(10);
     doc->NewCommand();
     Handle(TDataStd_RealArray) dimensions;
     first.FindChild(4).FindAttribute(TDataStd_RealArray::GetID(), dimensions);
     dimensions->SetValue(1, 3);
     require(doc->CommitCommand(), "Native box edit did not commit");
-    const auto edited = NativeBoxCodec::read(doc);
+    const auto edited = NativePrimitiveCodec::read(doc);
     require(edited.id() == expected.id() && edited.snapshot() != expected.snapshot() &&
                 doc->Undo(), "Native box edit changed identity or failed undo");
     check(doc, expected);
-    require(doc->Redo() && NativeBoxCodec::read(doc) == edited && doc->Undo(),
+    require(doc->Redo() && NativePrimitiveCodec::read(doc) == edited && doc->Undo(),
             "Native box redo failed");
     const auto corrupt = [&](auto mutate) {
         doc->NewCommand();
         mutate();
-        rejected([&] { (void)NativeBoxCodec::read(doc); });
+        rejected([&] { (void)NativePrimitiveCodec::read(doc); });
         doc->AbortCommand();
         check(doc, expected);
     };
@@ -123,12 +123,16 @@ void regressions(const Handle(TDocStd_Application)& app) {
     auto empty = fresh(app);
     const auto emptySnapshot = IdentifiedDocumentSnapshot::create(
         DocumentSnapshot::capture(ModelDocument::empty()));
-    NativeBoxCodec::write(empty, emptySnapshot);
+    NativePrimitiveCodec::write(empty, emptySnapshot);
     check(empty, emptySnapshot);
     app->Close(empty);
     auto unsupported = fresh(app);
-    const auto mixed = IdentifiedDocumentSnapshot::create(DocumentSnapshot::capture(ModelDocument{}));
-    rejected([&] { NativeBoxCodec::write(unsupported, mixed); });
+    auto mixedModel = ModelDocument{};
+    (void)mixedModel.addSketchFeature("Unsupported", ModelDocument::initialBoxId(),
+        {{0, 0, 0, 0, 0, 1, 1, 0, 0},
+         SketchElements{{SketchElement{SketchElementId{1}, SketchRectangle{0, 0, 2, 3}}}, 2}});
+    const auto mixed = IdentifiedDocumentSnapshot::create(DocumentSnapshot::capture(mixedModel));
+    rejected([&] { NativePrimitiveCodec::write(unsupported, mixed); });
     require(!unsupported->Main().HasChild(), "Rejected family partially wrote native header");
     app->Close(unsupported);
 }
@@ -144,7 +148,7 @@ int main(int argc, char** argv) {
             const std::string mode = argv[1];
             if (mode == "create") {
                 doc = fresh(app);
-                NativeBoxCodec::write(doc, fixture());
+                NativePrimitiveCodec::write(doc, fixture());
             } else {
                 require(mode == "read", "Unknown mode");
                 std::ifstream input(argv[2], std::ios::binary);
