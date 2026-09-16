@@ -93,8 +93,12 @@ D13a ist geprüft: privater nativer Payloadadapter, noch kein Produktdispatch.
 freigegeben und übertragen, alle Prüfprozesse beendet.
 [Nachweis](implementation-plan/evidence/D13a.md) und
 [Teilplan](implementation-plan/D13-plan.md).
-Nächster Block: **D13b**, eindeutige Produktformaterkennung, begrenztes Einlesen
-und Ressourcenpolitik vor Produktfreigabe. D13 bleibt insgesamt offen.
+D13b1 implementiert begrenztes Einlesen ohne Seek und eindeutige Formatzuordnung.
+[Prüfstand und Nachweise](implementation-plan/evidence/D13b1.md).
+Die gesonderte Freigabe für fünf D13b1-Dateien samt Prüfskript auf FreeBSD ist
+angefragt; noch keine Übertragung. Zuerst diese Plattformabnahme abschließen,
+danach D13b2 (native Containerprüfung/Ressourcenpolitik).
+D13b und D13 bleiben insgesamt offen.
 
 Der Autoritätswechsel aus [ADR 0008](adr/0008-ocaf-binary-persistence.md) ist umgesetzt;
 der Store-Wechsel folgt in D13. Noch kein produktiver nativer Dispatch: **VOLUND 16 bleibt Produktwriter**.

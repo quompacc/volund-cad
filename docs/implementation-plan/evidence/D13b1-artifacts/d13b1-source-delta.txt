@@ -1,0 +1,5 @@
+src/document/DocumentFileInput.hpp
+src/document/DocumentFileInput.cpp
+src/document/CMakeLists.txt
+tests/integration/DocumentFileInputTests.cpp
+tests/CMakeLists.txt

@@ -1,3 +1,7 @@
+add_executable(voelund_document_file_input_tests integration/DocumentFileInputTests.cpp)
+target_link_libraries(voelund_document_file_input_tests PRIVATE voelund_project_options Voelund::Document)
+add_test(NAME document.file_input COMMAND voelund_document_file_input_tests "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/documents")
+set_tests_properties(document.file_input PROPERTIES LABELS "integration;document;regression" TIMEOUT 60)
 add_executable(voelund_native_store_tests integration/NativeDocumentStoreTests.cpp)
 target_link_libraries(voelund_native_store_tests PRIVATE voelund_project_options Voelund::Document TKBin)
 add_test(NAME document.native_store COMMAND voelund_native_store_tests)

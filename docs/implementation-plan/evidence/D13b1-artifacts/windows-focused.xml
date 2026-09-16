@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Win32-ninja"
+	tests="1"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname="megatron"
+	time="0"
+	timestamp="2026-09-16T19:18:39"
+	>
+	<testcase name="document.file_input" classname="document.file_input" time="0.163754" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;regression"/>
+		</properties>
+		<system-out>Storage_StreamTypeMismatchError
+
+PASS file input: 16 legacy versions, native, forward streams, EOF, I/O errors, size limits
+</system-out>
+	</testcase>
+</testsuite>
