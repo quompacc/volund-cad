@@ -858,12 +858,13 @@
       ],
       "acceptance": "Umbenennen, Save-As und weiteres Feature erhalten Körperidentität. Zwei Körper bleiben nach Reorder getrennt. Legacy-Kette erhält reproduzierbare Zuordnung; ungültige IDs werden abgewiesen.",
       "boundary": "Vault-Netzwerkprotokoll und Assembly-Instanz-ID folgen später.",
-      "status": "in-progress",
+      "status": "done",
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": ["evidence/D11a.md", "evidence/D11b.md", "evidence/D11c.md", "evidence/D11d.md", "evidence/D11e.md", "evidence/D11f.md", "evidence/D11g.md", "evidence/D11h.md", "evidence/D11i.md", "evidence/D11j.md", "evidence/D11k.md", "evidence/D11l.md", "evidence/D11m.md", "evidence/D11n.md"],
-      "completedCommit": null
+      "evidence": ["evidence/D11a.md", "evidence/D11b.md", "evidence/D11c.md", "evidence/D11d.md", "evidence/D11e.md", "evidence/D11f.md", "evidence/D11g.md", "evidence/D11h.md", "evidence/D11i.md", "evidence/D11j.md", "evidence/D11k.md", "evidence/D11l.md", "evidence/D11m.md", "evidence/D11n.md",
+      "evidence/D11-review.md"],
+      "completedCommit": "b71a081740a70161e106bef9942f44d195ccf27b"
     },
     {
       "id": "D12",

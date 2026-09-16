@@ -9,7 +9,8 @@ records the implementation gaps and defines 110 bounded work packages, dependenc
 architecture decisions, acceptance scenarios, and an execution template for smaller models.
 The current package states and acceptance evidence are tracked in
 [`packets.json`](docs/implementation-plan/packets.json). D10 is complete;
-D11 identity work is implemented through D11n, with native store integration still open.
+D11 identity acceptance is complete; see the [acceptance matrix](docs/implementation-plan/evidence/D11-review.md).
+The next block is [D12a](docs/implementation-plan/D12a-plan.md); native product store integration remains open in D13.
 
 ## Current state
 

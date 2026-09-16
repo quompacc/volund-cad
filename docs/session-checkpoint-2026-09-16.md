@@ -2,10 +2,10 @@
 
 ## Verbindlicher Stand
 
-D10 abgeschlossen. **D11a–D11n geprüft, D11 insgesamt weiterhin `in-progress`.**
-D12/D13 und Meridian-Abnahme L07 bleiben offen. D11n-Implementierung: `ef7c240`.
-Der nachgeholte FreeBSD-Nachweis ist bestanden und wird mit diesem
-Dokumentationscommit ergänzt; `git log -1 --oneline`.
+D10 und **D11 abgeschlossen**. Die [D11-Abnahmematrix](implementation-plan/evidence/D11-review.md)
+ordnet sämtliche ursprünglichen Kriterien den vorhandenen Tests zu. Geprüfter
+Quellstand: `b71a081`; dieser Abschluss ergänzt ausschließlich Dokumentation.
+D12/D13, A-BODY-03 und Meridian-Abnahme L07 bleiben offen.
 Kein Push, kein Release-Tag, keine Terra-Übergabe.
 
 ## D11l – Abschluss
@@ -30,7 +30,7 @@ Desktop-Aktion und native dauerhafte Speicherung fehlen noch.
 **66/66 Windows** (95,88 s), **62/62 FreeBSD/Sway** (34,61 s).
 **294 Quellhashes identisch und unverändert**. Alle Builds und Tests beendet.
 Die sieben Quellen samt Skript wurden ausdrücklich freigegeben und übertragen.
-Belege: [D11m](implementation-plan/evidence/D11m.md) und `D11n-artifacts`.
+Belege: [D11m](implementation-plan/evidence/D11m.md) und `D11m-artifacts`.
 
 ## D11n – Abschluss
 
@@ -54,10 +54,10 @@ abgenommen. Die Schema-/Identitätsprüfung bestätigt, dass unabhängige
 Körper direkt unter dem Dokument möglich sind; den UI-/NewBody-Ausbau über
 S03/M01–M04 nicht mit den bereits bestandenen Codec-Tests gleichsetzen.
 
-Als nächster Block: D11-Abnahmematrix
-aktualisieren und den verbleibenden Persistenzteil explizit D12/D13 zuordnen;
-konkreten ersten Schritt des Autoritätswechsels festlegen. D11 bleibt bis zur
-vollständigen Identitätsabnahme offen. Desktop-Duplikation ist implementiert.
+Als nächster Block folgt **[D12a](implementation-plan/D12a-plan.md)**: Modellzustand
+und Historie privat kapseln, Wertkopie und isolierte Transaktionskandidaten erhalten.
+Danach folgt OCAF als einzige Autorität. D12 bleibt bis Implementierungsbeginn geplant.
+D11 wartet nicht auf D13: Identitätsvertrag → Autoritätswechsel → Produktstore.
 
 Der Autoritäts-/Store-Wechsel folgt gemäß [ADR 0008](adr/0008-ocaf-binary-persistence.md)
 und D12/D13. Noch kein produktiver nativer Dispatch: **VOLUND 16 bleibt Produktwriter**.

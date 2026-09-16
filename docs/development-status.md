@@ -2,70 +2,35 @@
 
 ## Aktueller Stand – 16. September 2026
 
-[Fortsetzungsnotiz](session-checkpoint-2026-09-16.md) und
-[D10-Abschlussprüfung](implementation-plan/evidence/D10-review.md).
-D10b2b hat die interne Radiantmigration abgeschlossen. D10c/D10d implementieren
-Größen-/Toleranzrollen und exakten Boolean-Anschluss. Die aktuellen Suiten
-bestehen nach [D11n](implementation-plan/evidence/D11n.md) mit **66/66 Windows** und **62/62 FreeBSD/Sway**.
+[Fortsetzungsnotiz](session-checkpoint-2026-09-16.md),
+[D10-Abschlussprüfung](implementation-plan/evidence/D10-review.md) und
+[D11-Abnahmematrix](implementation-plan/evidence/D11-review.md).
 
-**D10 ist auf Nutzerauftrag abgeschlossen; D11 ist begonnen.** Der in der Abschlussprüfung reproduzierte
-ID-Überlauf ist durch Vorabprüfung des vollständigen ID-Bedarfs behoben und mit
-Grenztests abgesichert. Die beschriebenen A-NUM-01-Fälle bestehen. D11a ergänzt
-getrennte DocumentId-/BodyId-Typen und eine deterministische Legacy-Körperzuordnung.
-D11b verhindert die Wiederverwendung veröffentlichter Feature-IDs nach Undo und
-erhält den korrekten Inhalts-/Dirty-Vergleich. D11c trennt die Körper-ID in der
-produktiven Auswertung vom letzten Shape-Erzeuger. Ihre bestehende Herkunfts-
-zuordnung bleibt über Moduswechsel, Save-As und Open erhalten. Dauerhafte
-Dokumentidentität, Duplikatsemantik und nativer Identitäts-/Schemaübergang bleiben offen.
-D11d ergänzt die verlustfreie Dokument-ID-Feldkodierung und den isolierten
-FreeBSD-OCCT-Build mit OCAF. Native Proben bestehen auf beiden Plattformen mit
-je **8/8**, einschließlich bidirektionaler Speicherzyklen und Laufzeitprüfung.
-D11e ergänzt Betriebssystem-Zufallsvergabe und einen unveränderlichen identifizierten
-Snapshot: Revision und Wertkopie behalten die ID, explizites Duplizieren erzeugt
-einen neuen Dokumentnamensraum. Diese Store-Schnittstelle ist geprüft; ihre
-produktive New-/Open-/Save-As-/Duplikat-Anbindung bleibt offen.
-D11f ergänzt den privaten nativen Dokumentkopf mit strikter Kennungs-/Schema-
-und Identitätsprüfung. Native Speicherzyklen in beide Plattformrichtungen
-bestehen. Feature-/Parameter-Schema und produktiver Dispatch fehlen weiterhin.
-D11g bildet reine Box-Snapshots mit Parametern und getrennten Körper-/Feature-
-Identitäten nativ ab. Beide Austauschrichtungen und die erneute BRep-Auswertung
-sind geprüft. D11h erweitert dies um Zylinder aller vier Modi, Körpergruppen,
-native Eingabereferenzen und eine unabhängige Feature-Reihenfolge. D11i ergänzt
-Skizzenebenen, Elemente, IDs und Stützreferenzen. D11j ergänzt alle 26 Constraintarten
-mit nativen Elementreferenzen, Maß-/Winkel- und Zusatzwerten sowie Solver-Parität.
-D11k ergänzt Extrusionsdistanz, native Skizzeneingabe und geordnete Profilauswahl.
-Alle vier aktuellen Featurearten sind im privaten Adapter abgebildet; die
-Produktintegration bleibt offen.
-D11k wurde mit `225e7d8` abgeschlossen. D11l ergänzt den gemeinsamen Schema-/
-Identitätsnachweis auf beiden Plattformen. Nächster Block ist der produktive
-Dokumentidentitäts-Lebenszyklus an der CadSession-/Snapshot-Grenze.
-D11 bleibt insgesamt offen.
-Der geprüfte D10-/D11e-Quellstand samt Belegen ist auf Nutzerauftrag in
-`6737465afe6af30758147471035a5582e466342f` auf `main` committed. Ausgangspunkt
-der Prüfläufe war `e8b65b8`; ältere Uncommittet-Vermerke in den Evidenzen
-beschreiben diesen historischen Prüfzeitpunkt. Keine Terra-Übergabe, kein Push.
-[Changelog](../CHANGELOG.md) und [Versionsregeln](versioning.md) sind angelegt;
-die Basisversion bleibt `0.1.0`, ein Release-Tag ist noch nicht gesetzt.
-FreeBSD/Sway zuerst, Meridian bleibt L07. A02/A04 und die noch nicht umgesetzten
-Referenz-/DAG-/Persistenzpakete bleiben offen.
+**D10 und D11 sind abgeschlossen.** D11 trennt Dokument-, Körper- und
+Featureidentität, erhält Körperidentität über Folgeoperationen und Save-As und
+sichert Vergabe, Revision, Kopie und explizites Duplikat. CadSession und
+**File → Duplicate** sind einschließlich Save/Cancel/Fehlerpfaden angebunden.
+Der private native Adapter bildet alle vier aktuellen Featurearten ab.
+Die Abnahmematrix nennt für jedes ursprüngliche Kriterium den Test und seine Grenze.
 
-Die folgenden Funktionsangaben stammen aus dem ursprünglichen Übergabestand vom
-12. September und sind zusammen mit den aktuellen Paket-Evidenzen zu lesen.
+Geprüfter Quellstand: `b71a081`, Implementierung bis D11n. Letzte vollständige
+Suiten: **66/66 Windows**, **62/62 FreeBSD/Sway**, **294 Quellhashes identisch**.
+Siehe [D11n](implementation-plan/evidence/D11n.md); der anschließende
+D11-Abschlussblock ändert nur Dokumentation und übernimmt diese Prüfergebnisse.
 
-D11l: gemeinsame Feld-/Identitätsprüfung und gemischter Schematest vollständig
-mit **65/65 Windows**, **61/61 FreeBSD/Sway** und beidseitigem Dateiaustausch geprüft.
-[D11l-Prüfung und offene Integrationsgrenzen](implementation-plan/evidence/D11l.md).
+Nächster Block: **[D12a – private Dokumentautorität vorbereiten](implementation-plan/D12a-plan.md)**.
+D12 bleibt geplant. Zunächst Modellzustand/History kapseln und Kopie-/Transaktions-
+semantik erhalten, danach OCAF als einzige Autorität integrieren. D13 bindet den
+nativen Produktstore an. VOLUND 16 bleibt bis dahin Produktwriter ohne persistente
+DocumentId; Legacy-Open vergibt eine neue Dokument-ID. Die offene Produktpersistenz
+ist kein Rückwärtsblocker für die D11-Identitätsabnahme.
 
-D11m ergänzt den Dokumentidentitäts-Lebenszyklus in CadSession einschließlich
-New, Legacy-Open, Save-As und explizitem Anwendungsduplikat. **66/66 Windows**,
-**62/62 FreeBSD/Sway** bestanden; **294 Quellhashes identisch**.
-Dokument-IDs werden weiterhin nicht in VOLUND 16 gespeichert; als nächster Block
-folgt die D11-Abnahmematrix. D11m-Implementierung: `9931c10`; Desktop-Anbindung siehe D11n.
-[D11m-Details](implementation-plan/evidence/D11m.md).
-
-D11n bindet **File → Duplicate** an den bestehenden Desktop-Dokumentablauf an:
-Original speichern, ohne Speichern duplizieren oder abbrechen; Fehlerdialoge für
-New und Duplicate. **66/66 Windows**, **62/62 FreeBSD/Sway** bestanden; 294 Quellhashes identisch. [D11n-Belege](implementation-plan/evidence/D11n.md).
+A-BODY-03, D12/D13, Referenz-/DAG-Arbeiten und Meridian L07 bleiben offen.
+[Changelog](../CHANGELOG.md) und [Versionsregeln](versioning.md) sind aktuell;
+Basisversion `0.1.0`, kein Release-Tag, kein Push, keine Terra-Übergabe.
+Historische D11a–D11n-Offenvermerke beziehen sich auf ihren jeweiligen Prüfzeitpunkt.
+Die Funktionsangaben weiter unten stammen aus dem ursprünglichen Übergabestand
+vom 12. September und sind zusammen mit den aktuellen Paket-Evidenzen zu lesen.
 
 ## Verbindliches Produktziel
 

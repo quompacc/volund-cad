@@ -56,6 +56,10 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 
 ### Geändert
 
+- D11 anhand der ursprünglichen Identitätskriterien abgeschlossen und nachgewiesen.
+  OCAF-Autorität (D12), native Produktpersistenz (D13) und Mehrkörper-Bedienabnahme
+  bleiben offen. D12a ist als erster Kapselungsblock konkretisiert; keine Produktänderung.
+
 - Verbindliches v1-Ziel präzisiert: direkter Mehrkörperworkflow ohne Komponenten-/
   Baugruppenpflicht, individueller Körperbereich und explizites NewBody. Neue
   geplante Abnahme A-BODY-03; dies dokumentiert eine Anforderung, keine fertige Funktion.
