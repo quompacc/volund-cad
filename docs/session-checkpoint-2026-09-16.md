@@ -104,8 +104,14 @@ D13b2, erster Teil geprüft: BinOcaf-Dateikopf vor nativem Open validieren.
 **309 Quellhashes identisch**. Sechs Quellen samt Prüfskript ausdrücklich
 freigegeben und übertragen; alle Prüfprozesse beendet.
 [Nachweis und Grenzen](implementation-plan/evidence/D13b2.md).
-Nächster Teil: **D13b2 fortsetzen**, native Nutzdaten/Attributgrößen,
-Labelanzahl/Baumtiefe und exaktes Dateiende. D13b2 noch nicht abschließen.
+D13b2, zweiter Teil geprüft: Abschnittstabelle, äußere Attributblockgrößen,
+Labelanzahl/Baumtiefe und exaktes Dateiende. **73/73 Windows** (105,47 s),
+**70/70 FreeBSD/Sway** (38,23 s), **312 Quellhashes identisch**.
+Sechs Dateien samt Prüfskript ausdrücklich freigegeben und übertragen;
+alle Prüfprozesse beendet. Historische Austauschdateien weiterhin lesbar.
+[Nachweis](implementation-plan/evidence/D13b2-structure.md).
+Nächster Teil: **D13b2 fortsetzen**, innere Attributwerte und Treiberzuordnung
+vor OCCT-Open validieren. D13b2 noch nicht abschließen.
 D13b und D13 bleiben insgesamt offen.
 
 Der Autoritätswechsel aus [ADR 0008](adr/0008-ocaf-binary-persistence.md) ist umgesetzt;

@@ -56,6 +56,9 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 
 ### Geändert
 
+- D13b2 prüft zusätzlich die BinOcaf-12-Struktur vor OCCT-Open:
+  Abschnittstabelle, äußere Attributblockgrößen, Labelanzahl/Baumtiefe und
+  exaktes Dateiende. Innere Attributwerte und Treiberzuordnung bleiben offen.
 - D13b2 ergänzt eine Vorprüfung des BinOcaf-12-Dateikopfs vor nativem Öffnen:
   Grenzen, Textlängen, Anzahlen und Version werden ohne eingabeabhängige
   Pufferreservierungen geprüft. Native Nutzdatenprüfung bleibt offen.

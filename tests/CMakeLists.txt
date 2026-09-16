@@ -1,3 +1,7 @@
+add_executable(voelund_native_structure_tests integration/NativeContainerStructureTests.cpp)
+target_link_libraries(voelund_native_structure_tests PRIVATE voelund_project_options Voelund::Document)
+add_test(NAME document.native_container_structure COMMAND voelund_native_structure_tests)
+set_tests_properties(document.native_container_structure PROPERTIES LABELS "integration;document;native;regression" TIMEOUT 60)
 add_executable(voelund_native_header_tests integration/NativeContainerHeaderTests.cpp)
 target_link_libraries(voelund_native_header_tests PRIVATE voelund_project_options Voelund::Document)
 add_test(NAME document.native_container_header COMMAND voelund_native_header_tests)

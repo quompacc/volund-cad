@@ -43,8 +43,11 @@ Einlesen ohne Seek und Formatzuordnung. **71/71 Windows**, **68/68 FreeBSD/Sway*
 **306 Quellhashes identisch**; [Nachweis](implementation-plan/evidence/D13b1.md).
 **D13b2, erster Teil geprüft:** BinOcaf-Dateikopf vor OCCT-Open validieren.
 **72/72 Windows**, **69/69 FreeBSD/Sway**, **309 Quellhashes identisch**.
-[Nachweis](implementation-plan/evidence/D13b2.md). D13b2 bleibt offen:
-als Nächstes native Nutzdaten, Attributgrößen, Baumgrenzen und Dateiende prüfen.
+[Nachweis](implementation-plan/evidence/D13b2.md).
+**D13b2, zweiter Teil geprüft:** Abschnittstabelle, äußere Attributblockgrößen,
+Baumgrenzen und Dateiende. **73/73 Windows**, **70/70 FreeBSD/Sway**,
+**312 Quellhashes identisch**; [Nachweis](implementation-plan/evidence/D13b2-structure.md).
+D13b2 bleibt offen: als Nächstes innere Attributwerte und Treiberzuordnung prüfen.
 [Teilplan](implementation-plan/D13-plan.md). Insgesamt bleiben 88 von 110 Hauptpaketen offen.
 
 A-BODY-03, D13, Referenz-/DAG-Arbeiten und Meridian L07 bleiben offen.

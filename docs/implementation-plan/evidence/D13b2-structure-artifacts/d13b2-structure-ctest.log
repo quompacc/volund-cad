@@ -1,0 +1,170 @@
+Test project /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt
+      Start  1: desktop.viewport_startup.native_wayland
+ 1/70 Test  #1: desktop.viewport_startup.native_wayland .....   Passed    0.75 sec
+      Start  2: desktop.viewport_startup.uninitialized
+ 2/70 Test  #2: desktop.viewport_startup.uninitialized ......   Passed    0.22 sec
+      Start  3: desktop.ui_preview_startup.native_wayland
+ 3/70 Test  #3: desktop.ui_preview_startup.native_wayland ...   Passed    0.72 sec
+      Start  4: desktop.ui_preview_startup.uninitialized
+ 4/70 Test  #4: desktop.ui_preview_startup.uninitialized ....   Passed    0.23 sec
+      Start  5: document.native_container_structure
+ 5/70 Test  #5: document.native_container_structure .........   Passed    0.27 sec
+      Start  6: document.native_container_header
+ 6/70 Test  #6: document.native_container_header ............   Passed    0.02 sec
+      Start  7: document.file_input
+ 7/70 Test  #7: document.file_input .........................   Passed    0.09 sec
+      Start  8: document.native_store
+ 8/70 Test  #8: document.native_store .......................   Passed    0.05 sec
+      Start  9: document.product_ocaf_backend
+ 9/70 Test  #9: document.product_ocaf_backend ...............   Passed    0.04 sec
+      Start 10: document.native_model_state
+10/70 Test #10: document.native_model_state .................   Passed    0.02 sec
+      Start 11: document.native_model_allocations
+11/70 Test #11: document.native_model_allocations ...........   Passed    0.06 sec
+      Start 12: application.document_read_boundaries
+12/70 Test #12: application.document_read_boundaries ........   Passed    0.06 sec
+      Start 13: document.angle_boundaries
+13/70 Test #13: document.angle_boundaries ...................   Passed    0.62 sec
+      Start 14: document.plane_migration
+14/70 Test #14: document.plane_migration ....................   Passed    0.16 sec
+      Start 15: document.numeric_validation
+15/70 Test #15: document.numeric_validation .................   Passed    0.04 sec
+      Start 16: document.legacy_import
+16/70 Test #16: document.legacy_import ......................   Passed    0.08 sec
+      Start 17: application.command_input
+17/70 Test #17: application.command_input ...................   Passed    0.16 sec
+      Start 18: application.scene_status
+18/70 Test #18: application.scene_status ....................   Passed    0.17 sec
+      Start 19: application.failure_boundaries
+19/70 Test #19: application.failure_boundaries ..............   Passed    0.63 sec
+      Start 20: application.creation_results
+20/70 Test #20: application.creation_results ................   Passed    0.18 sec
+      Start 21: application.command_transactions
+21/70 Test #21: application.command_transactions ............   Passed    0.17 sec
+      Start 22: document.transactions
+22/70 Test #22: document.transactions .......................   Passed    0.03 sec
+      Start 23: document.transaction_allocation_failures
+23/70 Test #23: document.transaction_allocation_failures ....   Passed    0.80 sec
+      Start 24: application.command_contract_compound
+24/70 Test #24: application.command_contract_compound .......   Passed    0.02 sec
+      Start 25: application.command_contract_errors
+25/70 Test #25: application.command_contract_errors .........   Passed    0.02 sec
+      Start 26: application.document_identity
+26/70 Test #26: application.document_identity ...............   Passed    0.20 sec
+      Start 27: document.native_schema
+27/70 Test #27: document.native_schema ......................   Passed    0.32 sec
+      Start 28: document.native_extrusions
+28/70 Test #28: document.native_extrusions ..................   Passed    0.20 sec
+      Start 29: document.native_sketch_constraints
+29/70 Test #29: document.native_sketch_constraints ..........   Passed    0.04 sec
+      Start 30: document.native_sketch_geometry
+30/70 Test #30: document.native_sketch_geometry .............   Passed    0.05 sec
+      Start 31: document.native_cylinders
+31/70 Test #31: document.native_cylinders ...................   Passed    0.65 sec
+      Start 32: document.native_boxes
+32/70 Test #32: document.native_boxes .......................   Passed    0.14 sec
+      Start 33: document.native_metadata
+33/70 Test #33: document.native_metadata ....................   Passed    0.02 sec
+      Start 34: document.identity_generator
+34/70 Test #34: document.identity_generator .................   Passed    0.03 sec
+      Start 35: document.identity_lifecycle
+35/70 Test #35: document.identity_lifecycle .................   Passed    0.02 sec
+      Start 36: application.safe_persistence
+36/70 Test #36: application.safe_persistence ................   Passed    0.28 sec
+      Start 37: document.parser_limits_and_versions
+37/70 Test #37: document.parser_limits_and_versions .........   Passed    9.51 sec
+      Start 38: platform.atomic_file_store
+38/70 Test #38: platform.atomic_file_store ..................   Passed    0.05 sec
+      Start 39: kernel.shape_factory
+39/70 Test #39: kernel.shape_factory ........................   Passed    0.04 sec
+      Start 40: document.history
+40/70 Test #40: document.history ............................   Passed    0.03 sec
+      Start 41: features.sketch_profiles
+41/70 Test #41: features.sketch_profiles ....................   Passed    0.02 sec
+      Start 42: features.planegcs_solver
+42/70 Test #42: features.planegcs_solver ....................   Passed    0.00 sec
+      Start 43: features.sketch_constraint_adapter
+43/70 Test #43: features.sketch_constraint_adapter ..........   Passed    0.03 sec
+      Start 44: application.recompute_history
+44/70 Test #44: application.recompute_history ...............   Passed    1.13 sec
+      Start 45: desktop.sketch_command_failure
+45/70 Test #45: desktop.sketch_command_failure ..............   Passed    0.25 sec
+      Start 46: desktop.preview_command_failures
+46/70 Test #46: desktop.preview_command_failures ............   Passed    0.18 sec
+      Start 47: desktop.feature_status
+47/70 Test #47: desktop.feature_status ......................   Passed    0.46 sec
+      Start 48: desktop.angle_inputs
+48/70 Test #48: desktop.angle_inputs ........................   Passed    0.37 sec
+      Start 49: desktop.parameter_failures
+49/70 Test #49: desktop.parameter_failures ..................   Passed    0.39 sec
+      Start 50: desktop.sketch_solver_gate
+50/70 Test #50: desktop.sketch_solver_gate ..................   Passed    0.32 sec
+      Start 51: desktop.document_actions
+51/70 Test #51: desktop.document_actions ....................   Passed    1.24 sec
+      Start 52: desktop.viewport_lifecycle_qt
+52/70 Test #52: desktop.viewport_lifecycle_qt ...............   Passed    1.55 sec
+      Start 53: application.sketch_editor_flow
+53/70 Test #53: application.sketch_editor_flow ..............   Passed    0.61 sec
+      Start 54: application.sketch_construction
+54/70 Test #54: application.sketch_construction .............   Passed    0.08 sec
+      Start 55: application.sketch_circle_constraints
+55/70 Test #55: application.sketch_circle_constraints .......   Passed    0.06 sec
+      Start 56: application.sketch_alignments
+56/70 Test #56: application.sketch_alignments ...............   Passed    0.06 sec
+      Start 57: application.sketch_fix_distance
+57/70 Test #57: application.sketch_fix_distance .............   Passed    0.04 sec
+      Start 58: application.sketch_basic_tools
+58/70 Test #58: application.sketch_basic_tools ..............   Passed    0.15 sec
+      Start 59: application.sketch_slot_dimensions
+59/70 Test #59: application.sketch_slot_dimensions ..........   Passed    0.11 sec
+      Start 60: workspaces.module_registry
+60/70 Test #60: workspaces.module_registry ..................   Passed    0.00 sec
+      Start 61: architecture.source_limits
+61/70 Test #61: architecture.source_limits ..................   Passed    0.05 sec
+      Start 62: architecture.source_limits_regression
+62/70 Test #62: architecture.source_limits_regression .......   Passed    0.09 sec
+      Start 63: architecture.ctest_label_runner
+63/70 Test #63: architecture.ctest_label_runner .............   Passed   10.56 sec
+      Start 64: architecture.desktop_smoke_runner
+64/70 Test #64: architecture.desktop_smoke_runner ...........   Passed    1.07 sec
+      Start 65: document.numeric_policy
+65/70 Test #65: document.numeric_policy .....................   Passed    0.05 sec
+      Start 66: features.boolean_connection
+66/70 Test #66: features.boolean_connection .................   Passed    1.49 sec
+      Start 67: application.sketch_id_capacity
+67/70 Test #67: application.sketch_id_capacity ..............   Passed    0.15 sec
+      Start 68: document.legacy_body_identity
+68/70 Test #68: document.legacy_body_identity ...............   Passed    0.07 sec
+      Start 69: document.feature_id_lifetime
+69/70 Test #69: document.feature_id_lifetime ................   Passed    0.05 sec
+      Start 70: features.body_identity
+70/70 Test #70: features.body_identity ......................   Passed    0.36 sec
+
+100% tests passed, 0 tests failed out of 70
+
+Label Time Summary:
+allocation      =   0.86 sec*proc (2 tests)
+application     =   4.11 sec*proc (20 tests)
+architecture    =  11.78 sec*proc (4 tests)
+contract        =   0.04 sec*proc (2 tests)
+desktop         =   6.68 sec*proc (12 tests)
+document        =  17.07 sec*proc (38 tests)
+features        =   1.90 sec*proc (5 tests)
+freebsd         =   3.02 sec*proc (3 tests)
+identity        =   0.05 sec*proc (2 tests)
+integration     =   9.15 sec*proc (41 tests)
+kernel          =   1.61 sec*proc (4 tests)
+lifecycle       =   1.55 sec*proc (1 test)
+native          =   1.85 sec*proc (12 tests)
+negative        =   0.45 sec*proc (2 tests)
+platform        =   1.98 sec*proc (5 tests)
+qt-opengl       =   1.55 sec*proc (1 test)
+regression      =  32.90 sec*proc (52 tests)
+sketch          =   1.97 sec*proc (6 tests)
+ui              =   0.72 sec*proc (1 test)
+unit            =  10.54 sec*proc (12 tests)
+viewport        =   1.55 sec*proc (1 test)
+wayland         =   3.02 sec*proc (3 tests)
+workspaces      =   0.00 sec*proc (1 test)
+
+Total Test time (real) =  38.23 sec
