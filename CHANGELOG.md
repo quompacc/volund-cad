@@ -56,6 +56,9 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 
 ### Geändert
 
+- D13b2 ergänzt eine Vorprüfung des BinOcaf-12-Dateikopfs vor nativem Öffnen:
+  Grenzen, Textlängen, Anzahlen und Version werden ohne eingabeabhängige
+  Pufferreservierungen geprüft. Native Nutzdatenprüfung bleibt offen.
 - D13b1 ergänzt privates, begrenztes Einlesen ohne Seek und eindeutige Zuordnung
   zu Legacy-Text oder nativer Binärcontainerfamilie. Native Containerprüfung
   und Produktintegration bleiben offen. Windows- und FreeBSD/Sway-Abnahme

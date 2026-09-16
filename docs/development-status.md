@@ -41,7 +41,10 @@ Eingabefehler. **70/70 Windows**, **67/67 FreeBSD/Sway**, **303 Quellhashes iden
 D13 bleibt in Arbeit. **D13b1 ist auf beiden Plattformen geprüft:** begrenztes
 Einlesen ohne Seek und Formatzuordnung. **71/71 Windows**, **68/68 FreeBSD/Sway**,
 **306 Quellhashes identisch**; [Nachweis](implementation-plan/evidence/D13b1.md).
-Nächster Block ist D13b2 mit nativer Containerprüfung und Ressourcenpolitik.
+**D13b2, erster Teil geprüft:** BinOcaf-Dateikopf vor OCCT-Open validieren.
+**72/72 Windows**, **69/69 FreeBSD/Sway**, **309 Quellhashes identisch**.
+[Nachweis](implementation-plan/evidence/D13b2.md). D13b2 bleibt offen:
+als Nächstes native Nutzdaten, Attributgrößen, Baumgrenzen und Dateiende prüfen.
 [Teilplan](implementation-plan/D13-plan.md). Insgesamt bleiben 88 von 110 Hauptpaketen offen.
 
 A-BODY-03, D13, Referenz-/DAG-Arbeiten und Meridian L07 bleiben offen.

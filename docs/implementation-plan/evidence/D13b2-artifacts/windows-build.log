@@ -1,0 +1,265 @@
+[0/1] Re-running CMake...
+-- Running vcpkg install
+Detecting compiler hash for triplet x64-windows...
+Compiler found: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe
+Detecting compiler hash for triplet x64-windows-voelund...
+Compiler found: C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe
+The following packages are already installed:
+  * boost-algorithm:x64-windows-voelund@1.92.0
+  * boost-align:x64-windows-voelund@1.92.0
+  * boost-any:x64-windows-voelund@1.92.0
+  * boost-array:x64-windows-voelund@1.92.0
+  * boost-assert:x64-windows-voelund@1.92.0
+  * boost-atomic:x64-windows-voelund@1.92.0
+  * boost-bimap:x64-windows-voelund@1.92.0
+  * boost-bind:x64-windows-voelund@1.92.0
+  * boost-chrono:x64-windows-voelund@1.92.0
+  * boost-cmake:x64-windows-voelund@1.92.0
+  * boost-compat:x64-windows-voelund@1.92.0
+  * boost-concept-check:x64-windows-voelund@1.92.0
+  * boost-config:x64-windows-voelund@1.92.0
+  * boost-container:x64-windows-voelund@1.92.0
+  * boost-container-hash:x64-windows-voelund@1.92.0
+  * boost-conversion:x64-windows-voelund@1.92.0
+  * boost-core:x64-windows-voelund@1.92.0
+  * boost-date-time:x64-windows-voelund@1.92.0
+  * boost-describe:x64-windows-voelund@1.92.0
+  * boost-detail:x64-windows-voelund@1.92.0
+  * boost-dynamic-bitset:x64-windows-voelund@1.92.0
+  * boost-endian:x64-windows-voelund@1.92.0
+  * boost-exception:x64-windows-voelund@1.92.0
+  * boost-foreach:x64-windows-voelund@1.92.0
+  * boost-function:x64-windows-voelund@1.92.0
+  * boost-function-types:x64-windows-voelund@1.92.0
+  * boost-fusion:x64-windows-voelund@1.92.0
+    boost-graph:x64-windows-voelund@1.92.0
+  * boost-headers:x64-windows-voelund@1.92.0
+  * boost-integer:x64-windows-voelund@1.92.0
+  * boost-intrusive:x64-windows-voelund@1.92.0
+  * boost-io:x64-windows-voelund@1.92.0
+  * boost-iterator:x64-windows-voelund@1.92.0
+  * boost-lambda:x64-windows-voelund@1.92.0
+  * boost-lexical-cast:x64-windows-voelund@1.92.0
+  * boost-math:x64-windows-voelund@1.92.0
+  * boost-move:x64-windows-voelund@1.92.0
+  * boost-mp11:x64-windows-voelund@1.92.0
+  * boost-mpl:x64-windows-voelund@1.92.0
+  * boost-multi-index:x64-windows-voelund@1.92.0
+  * boost-multiprecision:x64-windows-voelund@1.92.0
+  * boost-numeric-conversion:x64-windows-voelund@1.92.0
+  * boost-optional:x64-windows-voelund@1.92.0
+  * boost-parameter:x64-windows-voelund@1.92.0
+  * boost-phoenix:x64-windows-voelund@1.92.0
+  * boost-pool:x64-windows-voelund@1.92.0
+  * boost-predef:x64-windows-voelund@1.92.0
+  * boost-preprocessor:x64-windows-voelund@1.92.0
+  * boost-property-map:x64-windows-voelund@1.92.0
+  * boost-property-tree:x64-windows-voelund@1.92.0
+  * boost-proto:x64-windows-voelund@1.92.0
+  * boost-random:x64-windows-voelund@1.92.0
+  * boost-range:x64-windows-voelund@1.92.0
+  * boost-ratio:x64-windows-voelund@1.92.0
+  * boost-regex:x64-windows-voelund@1.92.0
+  * boost-serialization:x64-windows-voelund@1.92.0
+  * boost-smart-ptr:x64-windows-voelund@1.92.0
+  * boost-spirit:x64-windows-voelund@1.92.0
+  * boost-static-assert:x64-windows-voelund@1.92.0
+  * boost-system:x64-windows-voelund@1.92.0
+  * boost-thread:x64-windows-voelund@1.92.0
+  * boost-throw-exception:x64-windows-voelund@1.92.0
+  * boost-tokenizer:x64-windows-voelund@1.92.0
+  * boost-tti:x64-windows-voelund@1.92.0
+  * boost-tuple:x64-windows-voelund@1.92.0
+  * boost-type-index:x64-windows-voelund@1.92.0
+  * boost-type-traits:x64-windows-voelund@1.92.0
+  * boost-typeof:x64-windows-voelund@1.92.0
+  * boost-uninstall:x64-windows-voelund@1.92.0
+  * boost-unordered:x64-windows-voelund@1.92.0
+  * boost-utility:x64-windows-voelund@1.92.0
+  * boost-variant:x64-windows-voelund@1.92.0
+  * boost-variant2:x64-windows-voelund@1.92.0
+  * boost-winapi:x64-windows-voelund@1.92.0
+  * boost-xpressive:x64-windows-voelund@1.92.0
+  * egl-registry:x64-windows-voelund@2025-05-27
+    eigen3:x64-windows-voelund@5.0.1
+    opencascade:x64-windows-voelund@8.0.1
+  * opengl:x64-windows-voelund@2022-12-04#3
+  * opengl-registry:x64-windows-voelund@2026-08-03
+  * vcpkg-boost:x64-windows@2026-08-21
+  * vcpkg-cmake:x64-windows@2025-08-07
+  * vcpkg-cmake-config:x64-windows@2026-07-21
+boost-graph is compatible with built-in CMake targets of FindBoost.cmake:
+
+    find_package(Boost REQUIRED COMPONENTS graph)
+    target_link_libraries(main PRIVATE Boost::graph)
+
+or the generated cmake configs via:
+
+    find_package(boost_graph REQUIRED CONFIG)
+    target_link_libraries(main PRIVATE Boost::graph)
+
+eigen3 provides CMake targets:
+
+  # this is heuristically generated, and may not be correct
+  find_package(Eigen3 CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE Eigen3::Eigen)
+
+eigen3 provides pkg-config modules:
+
+  # A C++ template library for linear algebra: vectors, matrices, and related algorithms
+  eigen3
+
+opencascade provides CMake targets:
+
+  # this is heuristically generated, and may not be correct
+  find_package(OpenCASCADE CONFIG REQUIRED)
+  # note: 46 additional targets are not displayed.
+  target_link_libraries(main PRIVATE TKBO TKDE TKBin TKCAF)
+
+All requested installations completed successfully in: 776 us
+-- Running vcpkg install - done
+CMake Warning (dev) at .tools/vcpkg_installed/x64-windows-voelund/share/boost/vcpkg-cmake-wrapper.cmake:3 (_find_package):
+  Policy CMP0167 is not set: The FindBoost module is removed.  Run "cmake
+  --help-policy CMP0167" for policy details.  Use the cmake_policy command to
+  set the policy and suppress this warning.
+
+Call Stack (most recent call first):
+  .tools/vcpkg/scripts/buildsystems/vcpkg.cmake:893 (include)
+  CMakeLists.txt:28 (find_package)
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+-- Could NOT find WrapVulkanHeaders (missing: Vulkan_INCLUDE_DIR) 
+-- Could NOT find WrapVulkanHeaders (missing: Vulkan_INCLUDE_DIR) 
+-- Configuring done (4.4s)
+-- Generating done (0.3s)
+-- Build files have been written to: V:/build/p02-qt-final
+[1/312] Generating CXX dyndep file src\kernel\CMakeFiles\voelund_kernel.dir\CXX.dd
+[2/309] Generating CXX dyndep file src\platform\CMakeFiles\voelund_platform.dir\CXX.dd
+[3/305] Generating CXX dyndep file third_party\planegcs\CMakeFiles\voelund_planegcs.dir\CXX.dd
+[4/299] Generating CXX dyndep file src\features\CMakeFiles\voelund_features.dir\CXX.dd
+[5/290] Generating CXX dyndep file src\viewport\CMakeFiles\voelund_viewport.dir\CXX.dd
+[6/276] Generating CXX dyndep file src\application\CMakeFiles\voelund_application.dir\CXX.dd
+[7/256] Scanning V:\src\document\NativeContainerHeader.cpp for CXX dependencies
+[8/256] Generating CXX dyndep file src\modules\solid\CMakeFiles\voelund_module_solid.dir\CXX.dd
+[9/254] Generating CXX dyndep file src\workspaces\CMakeFiles\voelund_workspaces.dir\CXX.dd
+[10/252] Generating CXX dyndep file src\desktop\CMakeFiles\voelund_desktop.dir\CXX.dd
+[11/234] Generating CXX dyndep file apps\voelund-cad\CMakeFiles\voelund-cad.dir\CXX.dd
+[12/232] Scanning V:\src\document\NativeDocumentStore.cpp for CXX dependencies
+[13/232] Generating CXX dyndep file tests\CMakeFiles\voelund_document_file_input_tests.dir\CXX.dd
+[14/231] Generating CXX dyndep file tests\CMakeFiles\voelund_native_store_tests.dir\CXX.dd
+[15/230] Generating CXX dyndep file tests\CMakeFiles\voelund_model_backend_tests.dir\CXX.dd
+[16/229] Generating CXX dyndep file tests\CMakeFiles\voelund_native_model_state_tests.dir\CXX.dd
+[17/227] Generating CXX dyndep file src\document\CMakeFiles\voelund_document.dir\CXX.dd
+[18/206] Generating CXX dyndep file tests\CMakeFiles\voelund_read_boundary_tests.dir\CXX.dd
+[19/205] Generating CXX dyndep file tests\CMakeFiles\voelund_angle_boundary_tests.dir\CXX.dd
+[20/204] Generating CXX dyndep file tests\CMakeFiles\voelund_plane_migration_tests.dir\CXX.dd
+[21/203] Generating CXX dyndep file tests\CMakeFiles\voelund_numeric_validation_tests.dir\CXX.dd
+[22/202] Generating CXX dyndep file tests\CMakeFiles\voelund_legacy_import_tests.dir\CXX.dd
+[23/201] Scanning V:\tests\integration\NativeContainerHeaderTests.cpp for CXX dependencies
+[24/201] Generating CXX dyndep file tests\CMakeFiles\voelund_scene_status_tests.dir\CXX.dd
+[25/200] Generating CXX dyndep file tests\CMakeFiles\voelund_command_input_tests.dir\CXX.dd
+[26/199] Generating CXX dyndep file tests\CMakeFiles\voelund_native_header_tests.dir\CXX.dd
+[27/199] Generating CXX dyndep file tests\CMakeFiles\voelund_session_failure_tests.dir\CXX.dd
+[28/198] Generating CXX dyndep file tests\CMakeFiles\voelund_session_creation_tests.dir\CXX.dd
+[29/197] Generating CXX dyndep file tests\CMakeFiles\voelund_session_transaction_tests.dir\CXX.dd
+[30/196] Generating CXX dyndep file tests\CMakeFiles\voelund_document_transaction_tests.dir\CXX.dd
+[31/194] Generating CXX dyndep file tests\CMakeFiles\voelund_command_contract_tests.dir\CXX.dd
+[32/193] Generating CXX dyndep file tests\CMakeFiles\voelund_session_identity_tests.dir\CXX.dd
+[33/192] Generating CXX dyndep file tests\CMakeFiles\voelund_native_extrusion_tests.dir\CXX.dd
+[34/191] Generating CXX dyndep file tests\CMakeFiles\voelund_native_schema_tests.dir\CXX.dd
+[35/190] Generating CXX dyndep file tests\CMakeFiles\voelund_native_sketch_constraint_tests.dir\CXX.dd
+[36/189] Generating CXX dyndep file tests\CMakeFiles\voelund_native_sketch_tests.dir\CXX.dd
+[37/188] Generating CXX dyndep file tests\CMakeFiles\voelund_native_cylinder_tests.dir\CXX.dd
+[38/187] Generating CXX dyndep file tests\CMakeFiles\voelund_native_box_tests.dir\CXX.dd
+[39/186] Generating CXX dyndep file tests\CMakeFiles\voelund_native_metadata_tests.dir\CXX.dd
+[40/185] Generating CXX dyndep file tests\CMakeFiles\voelund_document_identity_tests.dir\CXX.dd
+[41/184] Generating CXX dyndep file tests\CMakeFiles\voelund_safe_persistence_tests.dir\CXX.dd
+[42/183] Generating CXX dyndep file tests\CMakeFiles\voelund_document_parser_tests.dir\CXX.dd
+[43/182] Generating CXX dyndep file tests\CMakeFiles\voelund_atomic_file_tests.dir\CXX.dd
+[44/180] Generating CXX dyndep file tests\CMakeFiles\voelund_kernel_tests.dir\CXX.dd
+[45/178] Generating CXX dyndep file tests\CMakeFiles\voelund_document_tests.dir\CXX.dd
+[46/177] Generating CXX dyndep file tests\CMakeFiles\voelund_sketch_profile_tests.dir\CXX.dd
+[47/176] Generating CXX dyndep file tests\CMakeFiles\voelund_planegcs_tests.dir\CXX.dd
+[48/174] Generating CXX dyndep file tests\CMakeFiles\voelund_sketch_constraint_tests.dir\CXX.dd
+[49/173] Generating CXX dyndep file tests\CMakeFiles\voelund_application_tests.dir\CXX.dd
+[50/169] Generating CXX dyndep file tests\CMakeFiles\voelund_sketch_command_failure_tests.dir\CXX.dd
+[51/168] Generating CXX dyndep file tests\CMakeFiles\voelund_preview_command_failure_tests.dir\CXX.dd
+[52/166] Generating CXX dyndep file tests\CMakeFiles\voelund_feature_status_tests.dir\CXX.dd
+[53/165] Generating CXX dyndep file tests\CMakeFiles\voelund_angle_input_tests.dir\CXX.dd
+[54/164] Generating CXX dyndep file tests\CMakeFiles\voelund_parameter_failure_tests.dir\CXX.dd
+[55/163] Generating CXX dyndep file tests\CMakeFiles\voelund_sketch_solver_gate_tests.dir\CXX.dd
+[56/162] Generating CXX dyndep file tests\CMakeFiles\voelund_document_actions_tests.dir\CXX.dd
+[57/160] Generating CXX dyndep file tests\CMakeFiles\voelund_viewport_lifecycle_tests.dir\CXX.dd
+[58/157] Generating CXX dyndep file tests\CMakeFiles\voelund_sketch_editor_tests.dir\CXX.dd
+[59/155] Generating CXX dyndep file tests\CMakeFiles\voelund_sketch_construction_tests.dir\CXX.dd
+[60/154] Generating CXX dyndep file tests\CMakeFiles\voelund_sketch_circle_constraint_tests.dir\CXX.dd
+[61/153] Generating CXX dyndep file tests\CMakeFiles\voelund_sketch_alignment_tests.dir\CXX.dd
+[62/152] Generating CXX dyndep file tests\CMakeFiles\voelund_sketch_fix_distance_tests.dir\CXX.dd
+[63/151] Generating CXX dyndep file tests\CMakeFiles\voelund_sketch_basic_tools_tests.dir\CXX.dd
+[64/150] Generating CXX dyndep file tests\CMakeFiles\voelund_sketch_slot_tests.dir\CXX.dd
+[65/149] Generating CXX dyndep file tests\CMakeFiles\voelund_workspace_tests.dir\CXX.dd
+[66/147] Generating CXX dyndep file tests\CMakeFiles\voelund_boolean_connection_tests.dir\CXX.dd
+[67/146] Generating CXX dyndep file tests\CMakeFiles\voelund_numeric_policy_tests.dir\CXX.dd
+[68/145] Generating CXX dyndep file tests\CMakeFiles\voelund_legacy_body_identity_tests.dir\CXX.dd
+[69/144] Generating CXX dyndep file tests\CMakeFiles\voelund_sketch_id_capacity_tests.dir\CXX.dd
+[70/143] Generating CXX dyndep file tests\CMakeFiles\voelund_feature_id_lifetime_tests.dir\CXX.dd
+[71/142] Generating CXX dyndep file tests\CMakeFiles\voelund_body_identity_evaluation_tests.dir\CXX.dd
+[72/141] Building CXX object src\document\CMakeFiles\voelund_document.dir\NativeContainerHeader.cpp.obj
+[73/141] Building CXX object src\document\CMakeFiles\voelund_document.dir\NativeDocumentStore.cpp.obj
+[74/141] Building CXX object tests\CMakeFiles\voelund_native_header_tests.dir\integration\NativeContainerHeaderTests.cpp.obj
+[75/141] Linking CXX static library src\document\voelund_document.lib
+[76/141] Generating CXX dyndep file apps\voelund-ui-preview\CMakeFiles\voelund-ui-preview.dir\CXX.dd
+[77/131] Linking CXX executable tests\voelund_native_header_tests.exe
+[78/131] Linking CXX executable tests\voelund_document_file_input_tests.exe
+[79/131] Linking CXX executable apps\voelund-ui-preview\voelund-ui-preview.exe; Deploying the Qt runtime for the UI preview; Deploying the Qt OpenGL runtime for the UI preview
+[80/131] Linking CXX executable apps\voelund-cad\voelund-cad.exe; Deploying the minimal Qt runtime; Deploying the Qt OpenGL runtime
+[81/131] Linking CXX executable tests\voelund_native_store_tests.exe
+[82/131] Linking CXX executable tests\voelund_model_backend_tests.exe
+[83/131] Linking CXX executable tests\voelund_native_model_state_tests.exe
+[84/131] Linking CXX executable tests\voelund_angle_boundary_tests.exe
+[85/131] Linking CXX executable tests\voelund_read_boundary_tests.exe
+[86/131] Linking CXX executable tests\voelund_numeric_validation_tests.exe
+[87/131] Linking CXX executable tests\voelund_plane_migration_tests.exe
+[88/131] Linking CXX executable tests\voelund_scene_status_tests.exe
+[89/131] Linking CXX executable tests\voelund_legacy_import_tests.exe
+[90/131] Linking CXX executable tests\voelund_command_input_tests.exe
+[91/131] Linking CXX executable tests\voelund_session_failure_tests.exe
+[92/131] Linking CXX executable tests\voelund_session_creation_tests.exe
+[93/131] Linking CXX executable tests\voelund_command_contract_tests.exe
+[94/131] Linking CXX executable tests\voelund_document_transaction_tests.exe
+[95/131] Linking CXX executable tests\voelund_session_transaction_tests.exe
+[96/131] Linking CXX executable tests\voelund_session_identity_tests.exe
+[97/131] Linking CXX executable tests\voelund_native_schema_tests.exe
+[98/131] Linking CXX executable tests\voelund_native_extrusion_tests.exe
+[99/131] Linking CXX executable tests\voelund_native_sketch_constraint_tests.exe
+[100/131] Linking CXX executable tests\voelund_native_sketch_tests.exe
+[101/131] Linking CXX executable tests\voelund_native_metadata_tests.exe
+[102/131] Linking CXX executable tests\voelund_native_box_tests.exe
+[103/131] Linking CXX executable tests\voelund_native_cylinder_tests.exe
+[104/131] Linking CXX executable tests\voelund_document_identity_tests.exe
+[105/131] Linking CXX executable tests\voelund_safe_persistence_tests.exe
+[106/131] Linking CXX executable tests\voelund_document_parser_tests.exe
+[107/131] Linking CXX executable tests\voelund_document_tests.exe
+[108/131] Linking CXX executable tests\voelund_sketch_profile_tests.exe
+[109/131] Linking CXX executable tests\voelund_sketch_constraint_tests.exe
+[110/131] Linking CXX executable tests\voelund_application_tests.exe
+[111/131] Linking CXX executable tests\voelund_sketch_command_failure_tests.exe
+[112/131] Linking CXX executable tests\voelund_preview_command_failure_tests.exe
+[113/131] Linking CXX executable tests\voelund_feature_status_tests.exe
+[114/131] Linking CXX executable tests\voelund_angle_input_tests.exe
+[115/131] Linking CXX executable tests\voelund_parameter_failure_tests.exe
+[116/131] Linking CXX executable tests\voelund_sketch_solver_gate_tests.exe
+[117/131] Linking CXX executable tests\voelund_document_actions_tests.exe
+[118/131] Linking CXX executable tests\voelund_sketch_editor_tests.exe
+[119/131] Linking CXX executable tests\voelund_sketch_construction_tests.exe
+[120/131] Linking CXX executable tests\voelund_sketch_circle_constraint_tests.exe
+[121/131] Linking CXX executable tests\voelund_sketch_alignment_tests.exe
+[122/131] Linking CXX executable tests\voelund_sketch_fix_distance_tests.exe
+[123/131] Linking CXX executable tests\voelund_sketch_basic_tools_tests.exe
+[124/131] Linking CXX executable tests\voelund_sketch_slot_tests.exe
+[125/131] Linking CXX executable tests\voelund_sketch_id_capacity_tests.exe
+[126/131] Linking CXX executable tests\voelund_numeric_policy_tests.exe
+[127/131] Linking CXX executable tests\voelund_boolean_connection_tests.exe
+[128/131] Linking CXX executable tests\voelund_legacy_body_identity_tests.exe
+[129/131] Linking CXX executable tests\voelund_body_identity_evaluation_tests.exe
+[130/131] Linking CXX executable tests\voelund_feature_id_lifetime_tests.exe

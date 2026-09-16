@@ -99,7 +99,13 @@ D13b1 ist abgeschlossen: begrenztes Einlesen ohne Seek und eindeutige Formatzuor
 Fünf Dateien samt Prüfskript ausdrücklich freigegeben und übertragen.
 Alle Prüfprozesse beendet; keine Quellkorrekturen für die FreeBSD-Abnahme nötig.
 [Nachweis](implementation-plan/evidence/D13b1.md).
-Nächster Block: **D13b2**, native Containerprüfung und Ressourcenpolitik.
+D13b2, erster Teil geprüft: BinOcaf-Dateikopf vor nativem Open validieren.
+**72/72 Windows** (103,35 s), **69/69 FreeBSD/Sway** (37,80 s),
+**309 Quellhashes identisch**. Sechs Quellen samt Prüfskript ausdrücklich
+freigegeben und übertragen; alle Prüfprozesse beendet.
+[Nachweis und Grenzen](implementation-plan/evidence/D13b2.md).
+Nächster Teil: **D13b2 fortsetzen**, native Nutzdaten/Attributgrößen,
+Labelanzahl/Baumtiefe und exaktes Dateiende. D13b2 noch nicht abschließen.
 D13b und D13 bleiben insgesamt offen.
 
 Der Autoritätswechsel aus [ADR 0008](adr/0008-ocaf-binary-persistence.md) ist umgesetzt;

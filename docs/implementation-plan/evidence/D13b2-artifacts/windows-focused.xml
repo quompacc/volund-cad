@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Win32-ninja"
+	tests="3"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname="megatron"
+	time="0"
+	timestamp="2026-09-16T19:32:38"
+	>
+	<testcase name="document.native_container_header" classname="document.native_container_header" time="0.0328152" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;native;regression"/>
+		</properties>
+		<system-out>PASS native header: ranges, lengths, counts, version, truncation, roundtrip
+</system-out>
+	</testcase>
+	<testcase name="document.file_input" classname="document.file_input" time="0.400282" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;regression"/>
+		</properties>
+		<system-out>PASS file input: 16 legacy versions, native, forward streams, EOF, I/O errors, size limits
+</system-out>
+	</testcase>
+	<testcase name="document.native_store" classname="document.native_store" time="0.136027" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;native;regression"/>
+		</properties>
+		<system-out>BinLDrivers_DocumentRetrievalDriver: error: unexpected EOF or garbage data
+PASS native store: snapshots, identity, history, watermark, malformed input, schema, size
+</system-out>
+	</testcase>
+</testsuite>

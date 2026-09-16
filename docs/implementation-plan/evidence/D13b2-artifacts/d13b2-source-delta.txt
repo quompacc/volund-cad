@@ -1,0 +1,6 @@
+src/document/NativeContainerHeader.hpp
+src/document/NativeContainerHeader.cpp
+src/document/NativeDocumentStore.cpp
+src/document/CMakeLists.txt
+tests/integration/NativeContainerHeaderTests.cpp
+tests/CMakeLists.txt
