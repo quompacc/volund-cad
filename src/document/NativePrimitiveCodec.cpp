@@ -109,6 +109,8 @@ std::vector<FeatureBodyIdentity> validate(std::span<const FeatureDescriptor> fea
             const auto& sketch = std::get<SketchParameters>(parameters[index]);
             require(sketch.elements.values.size() <= remainingElements);
             remainingElements -= sketch.elements.values.size();
+            require(sketch.constraints.values.size() <= remainingElements);
+            remainingElements -= sketch.constraints.values.size();
             validateNativeSketchGeometry(sketch);
             continue;
         }
@@ -236,7 +238,10 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
             FeatureParameters decoded = sketch
                 ? FeatureParameters{readNativeSketchGeometry(child(native, 4), remainingElements)}
                 : parameters(native, box);
-            if (sketch) remainingElements -= std::get<SketchParameters>(decoded).elements.values.size();
+            if (sketch) {
+                const auto& data = std::get<SketchParameters>(decoded);
+                remainingElements -= data.elements.values.size() + data.constraints.values.size();
+            }
             records.push_back({native, bodyId, {FeatureId{id(child(native, 2))},
                 box ? FeatureKind::box : sketch ? FeatureKind::sketch : FeatureKind::cylinder,
                 text(child(native, 3)), std::nullopt}, std::move(decoded)});

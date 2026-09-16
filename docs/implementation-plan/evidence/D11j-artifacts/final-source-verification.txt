@@ -1,0 +1,1 @@
+PASS 288 frozen source hashes unchanged after all tests; Windows 63/63, FreeBSD 59/59; both native exchange directions PASS; D11i fixture compatibility PASS on both platforms; 16 OCCT libraries from isolated prefix.

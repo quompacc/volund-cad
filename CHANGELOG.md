@@ -12,9 +12,13 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 
 ### Hinzugefügt
 
+- Native Speicherung aller 26 Skizzen-Constraintarten mit Elementreferenzen,
+  getrennten Maß-/Radiantwerten und vollständigen Zusatzparametern. Lösbare und
+  widersprüchliche Skizzen behalten identische Solver-Ergebnisse nach Save/Open.
+
 - Native Skizzengeometrie mit Ebenen, Element-IDs, Parametern, Konstruktionsflags
   und Stützreferenzen; alle fünf Elementarten samt Vergabezählern verlustfrei.
-  Constraints und Extrusionen bleiben bis zu ihrer Abbildung ausdrücklich gesperrt.
+  Extrusionen bleiben bis zu ihrer Abbildung ausdrücklich gesperrt.
 
 - Native Zylinder-Abbildung für Join/Cut/Intersect/Separate mit echten
   Eingabereferenzen, Körpergruppen und eigenständiger Feature-Reihenfolge.
@@ -53,11 +57,11 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 ### Prüfung und offene Integration
 
 - D10 abgeschlossen; D11 insgesamt weiterhin in Arbeit.
-- Aktueller Quellstand: **62/62 Windows**, **58/58 FreeBSD/Sway**; 285 Quellhashes
+- Aktueller Quellstand: **63/63 Windows**, **59/59 FreeBSD/Sway**; 288 Quellhashes
   identisch. Native D11d-Proben: jeweils **8/8**, beide Austauschrichtungen geprüft.
 - Die dauerhafte Dokument-ID ist noch nicht in produktive New-/Open-/Save-As-
   und Duplikatbefehle eingebunden. Der Produktwriter bleibt **VOLUND 16**.
   Der native Autoritäts-/Store-Wechsel und Meridian-Abnahme bleiben offen.
 - Details und Testbelege: [D10](docs/implementation-plan/evidence/D10.md),
-  [D11i](docs/implementation-plan/evidence/D11i.md),
+  [D11j](docs/implementation-plan/evidence/D11j.md),
   [Entwicklungsstand](docs/development-status.md).

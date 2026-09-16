@@ -6,7 +6,7 @@
 [D10-Abschlussprüfung](implementation-plan/evidence/D10-review.md).
 D10b2b hat die interne Radiantmigration abgeschlossen. D10c/D10d implementieren
 Größen-/Toleranzrollen und exakten Boolean-Anschluss. Die aktuellen Suiten
-bestehen nach [D11i](implementation-plan/evidence/D11i.md) mit **62/62 Windows** und **58/58 FreeBSD/Sway**.
+bestehen nach [D11j](implementation-plan/evidence/D11j.md) mit **63/63 Windows** und **59/59 FreeBSD/Sway**.
 
 **D10 ist auf Nutzerauftrag abgeschlossen; D11 ist begonnen.** Der in der Abschlussprüfung reproduzierte
 ID-Überlauf ist durch Vorabprüfung des vollständigen ID-Bedarfs behoben und mit
@@ -31,11 +31,12 @@ D11g bildet reine Box-Snapshots mit Parametern und getrennten Körper-/Feature-
 Identitäten nativ ab. Beide Austauschrichtungen und die erneute BRep-Auswertung
 sind geprüft. D11h erweitert dies um Zylinder aller vier Modi, Körpergruppen,
 native Eingabereferenzen und eine unabhängige Feature-Reihenfolge. D11i ergänzt
-Skizzenebenen, Elemente, IDs und Stützreferenzen. Constraint-/Extrusionsschema
-und Produktintegration bleiben offen.
-D11h wurde mit `572ac5e` abgeschlossen. D11i wird mit seinen Belegen und dieser
+Skizzenebenen, Elemente, IDs und Stützreferenzen. D11j ergänzt alle 26 Constraintarten
+mit nativen Elementreferenzen, Maß-/Winkel- und Zusatzwerten sowie Solver-Parität.
+Extrusionsschema und Produktintegration bleiben offen.
+D11i wurde mit `cef3feb` abgeschlossen. D11j wird mit seinen Belegen und dieser
 Dokumentation auf `main` eingecheckt; der Abschlusscommit ist über
-`git log -1 --oneline` feststellbar. Nächster Block sind native Skizzen-Constraints.
+`git log -1 --oneline` feststellbar. Nächster Block sind native Extrusionen mit Profilreferenzen.
 Der geprüfte D10-/D11e-Quellstand samt Belegen ist auf Nutzerauftrag in
 `6737465afe6af30758147471035a5582e466342f` auf `main` committed. Ausgangspunkt
 der Prüfläufe war `e8b65b8`; ältere Uncommittet-Vermerke in den Evidenzen

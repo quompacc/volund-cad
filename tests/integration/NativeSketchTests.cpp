@@ -95,9 +95,11 @@ void check(const Handle(TDocStd_Document)& doc, const IdentifiedDocumentSnapshot
 void regressions(const Handle(TDocStd_Application)& app) {
     const auto expected = fixture();
     auto doc = fresh(app);
-    // Unsupported constraints must fail before changing even the header.
-    rejected([&] { NativePrimitiveCodec::write(doc, fixture(true)); });
-    require(doc->Main().NbChildren() == 0, "Rejected write modified root");
+    // The D11j adapter also preserves active constraints.
+    NativePrimitiveCodec::write(doc, fixture(true));
+    check(doc, fixture(true));
+    app->Close(doc);
+    doc = fresh(app);
     NativePrimitiveCodec::write(doc, expected);
     check(doc, expected);
     std::stringstream bytes(std::ios::in | std::ios::out | std::ios::binary);

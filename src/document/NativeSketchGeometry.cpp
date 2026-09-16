@@ -1,4 +1,5 @@
 #include "NativeSketchGeometry.hpp"
+#include "NativeSketchConstraints.hpp"
 #include "DocumentSerializationDetail.hpp"
 #include <voelund/document/IdCapacity.hpp>
 #include <voelund/document/SketchPlaneValidation.hpp>
@@ -120,11 +121,11 @@ SketchElement readElement(const TDF_Label& label) {
 }
 } // namespace
 void validateNativeSketchGeometry(const SketchParameters& sketch) {
-    require(sketch.constraints.values.empty() && sketch.elements.values.size() <= maximumSketchElementCount);
+    require(sketch.elements.values.size() <= maximumSketchElementCount);
     // Preserve legacy axis magnitudes; canonicalization remains an explicit edit.
     validateSketchPlane(sketch.plane);
     validateSketchElements(sketch.elements);
-    validateSketchConstraints(sketch.elements, sketch.constraints);
+    validateNativeSketchConstraints(sketch);
     for (const auto& element : sketch.elements.values)
         if (const auto* line = std::get_if<SketchLine>(&element.geometry))
             (void)lineMode(line->constraint);
@@ -135,14 +136,14 @@ void writeNativeSketchGeometry(const TDF_Label& label, const SketchParameters& s
                       plane.normalZ, plane.xDirectionX, plane.xDirectionY, plane.xDirectionZ});
     writeNumber(label.FindChild(1), sketch.elements.nextId);
     writeNumber(label.FindChild(2), sketch.constraints.nextId);
-    TDataStd_Integer::Set(label.FindChild(3), 0); // Non-empty constraints not supported yet.
     const auto elements = label.FindChild(10);
     TDataStd_Integer::Set(elements, static_cast<int>(sketch.elements.values.size()));
     for (std::size_t index = 0; index < sketch.elements.values.size(); ++index)
         writeElement(elements.FindChild(static_cast<int>(index + 1)), sketch.elements.values[index]);
+    writeNativeSketchConstraints(label.FindChild(3), elements, sketch);
 }
 SketchParameters readNativeSketchGeometry(const TDF_Label& label, std::size_t remainingElements) {
-    require(label.NbChildren() == 4 && integer(child(label, 3)) == 0);
+    require(label.NbChildren() == 4);
     const auto plane = reals(label, 9);
     const auto elements = child(label, 10);
     const int count = integer(elements);
@@ -154,6 +155,8 @@ SketchParameters readNativeSketchGeometry(const TDF_Label& label, std::size_t re
     sketch.constraints.nextId = number(child(label, 2), true);
     for (int index = 1; index <= count; ++index)
         sketch.elements.values.push_back(readElement(child(elements, index)));
+    sketch.constraints = readNativeSketchConstraints(child(label, 3), elements, sketch.elements,
+        sketch.constraints.nextId, remainingElements - static_cast<std::size_t>(count));
     validateNativeSketchGeometry(sketch);
     return sketch;
 }
