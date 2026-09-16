@@ -83,5 +83,5 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
   und Duplikatbefehle eingebunden. Der Produktwriter bleibt **VOLUND 16**.
   Der native Autoritäts-/Store-Wechsel und Meridian-Abnahme bleiben offen.
 - Details und Testbelege: [D10](docs/implementation-plan/evidence/D10.md),
-  [D11m](docs/implementation-plan/evidence/D11m.md),
+  [D11n](docs/implementation-plan/evidence/D11n.md),
   [Entwicklungsstand](docs/development-status.md).

@@ -6,7 +6,7 @@
 [D10-Abschlussprüfung](implementation-plan/evidence/D10-review.md).
 D10b2b hat die interne Radiantmigration abgeschlossen. D10c/D10d implementieren
 Größen-/Toleranzrollen und exakten Boolean-Anschluss. Die aktuellen Suiten
-bestehen nach [D11m](implementation-plan/evidence/D11m.md) mit **66/66 Windows** und **62/62 FreeBSD/Sway**.
+bestehen nach [D11n](implementation-plan/evidence/D11n.md) mit **66/66 Windows** und **62/62 FreeBSD/Sway**.
 
 **D10 ist auf Nutzerauftrag abgeschlossen; D11 ist begonnen.** Der in der Abschlussprüfung reproduzierte
 ID-Überlauf ist durch Vorabprüfung des vollständigen ID-Bedarfs behoben und mit
@@ -65,8 +65,7 @@ folgt die D11-Abnahmematrix. D11m-Implementierung: `9931c10`; Desktop-Anbindung 
 
 D11n bindet **File → Duplicate** an den bestehenden Desktop-Dokumentablauf an:
 Original speichern, ohne Speichern duplizieren oder abbrechen; Fehlerdialoge für
-New und Duplicate. **66/66 Windows** bestanden; FreeBSD-Freigabe und Prüfung
-stehen aus. [D11n-Belege](implementation-plan/evidence/D11n.md).
+New und Duplicate. **66/66 Windows**, **62/62 FreeBSD/Sway** bestanden; 294 Quellhashes identisch. [D11n-Belege](implementation-plan/evidence/D11n.md).
 
 ## Verbindliches Produktziel
 

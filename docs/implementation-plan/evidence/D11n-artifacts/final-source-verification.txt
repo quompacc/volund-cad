@@ -1,0 +1,1 @@
+PASS 294 frozen source hashes unchanged; Windows 66/66; FreeBSD 62/62. Supersedes pending-remote status in local-source-verification.txt.

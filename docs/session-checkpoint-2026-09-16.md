@@ -2,8 +2,8 @@
 
 ## Verbindlicher Stand
 
-D10 abgeschlossen. **D11a–D11m geprüft, D11 insgesamt weiterhin `in-progress`.**
-D12/D13 und Meridian-Abnahme L07 bleiben offen. D11m-Implementierung: `9931c10`.
+D10 abgeschlossen. **D11a–D11n geprüft, D11 insgesamt weiterhin `in-progress`.**
+D12/D13 und Meridian-Abnahme L07 bleiben offen. D11n-Implementierung: `ef7c240`.
 Der nachgeholte FreeBSD-Nachweis ist bestanden und wird mit diesem
 Dokumentationscommit ergänzt; `git log -1 --oneline`.
 Kein Push, kein Release-Tag, keine Terra-Übergabe.
@@ -30,9 +30,9 @@ Desktop-Aktion und native dauerhafte Speicherung fehlen noch.
 **66/66 Windows** (95,88 s), **62/62 FreeBSD/Sway** (34,61 s).
 **294 Quellhashes identisch und unverändert**. Alle Builds und Tests beendet.
 Die sieben Quellen samt Skript wurden ausdrücklich freigegeben und übertragen.
-Belege: [D11m](implementation-plan/evidence/D11m.md) und `D11m-artifacts`.
+Belege: [D11m](implementation-plan/evidence/D11m.md) und `D11n-artifacts`.
 
-## D11n – lokaler Zwischenstand
+## D11n – Abschluss
 
 Desktop-File-Menü enthält Duplicate. Saubere Dokumente werden direkt dupliziert;
 bei Änderungen: Save / Duplicate without saving / Cancel. Alle aktuellen Änderungen
@@ -40,13 +40,10 @@ bleiben im Duplikat; Speichercancel/-fehler verhindert den Identitätswechsel.
 Duplikat erscheint als Untitled *, ohne Pfad und Historie. New/Duplicate fangen
 Anwendungsfehler ab und zeigen den bestehenden Fehlerdialog.
 
-**66/66 Windows** (99,41 s), **294 lokale Quellhashes unverändert**. Windows beendet.
-Offen: ausdrückliche Antwort auf D11n-Übertragungsfrage; bis dahin keine Übertragung.
-Drei Dateien: `src/desktop/DocumentActions.cpp`, `src/desktop/DocumentActions.hpp`,
-`tests/desktop/DocumentActionsTests.cpp`. Archiv `build/d11n/d11n-source-delta.tar`;
-Delta/Manifest/Skript in `docs/implementation-plan/evidence/D11n-artifacts`.
-Nach Freigabe FreeBSD bauen/testen und Hashes abgleichen. D11m bleibt letzter
-beidseitig geprüfter Stand. [D11n](implementation-plan/evidence/D11n.md).
+**66/66 Windows** (99,41 s), **62/62 FreeBSD/Sway** (35,31 s).
+**294 Quellhashes identisch und unverändert**. Alle Builds und Tests beendet.
+Drei Quellen samt Skript ausdrücklich freigegeben und übertragen. Implementierung
+in `ef7c240`; Belege: [D11n](implementation-plan/evidence/D11n.md).
 
 ## Nächster Block
 
@@ -57,7 +54,7 @@ abgenommen. Die Schema-/Identitätsprüfung bestätigt, dass unabhängige
 Körper direkt unter dem Dokument möglich sind; den UI-/NewBody-Ausbau über
 S03/M01–M04 nicht mit den bereits bestandenen Codec-Tests gleichsetzen.
 
-Zuerst offenen D11n-FreeBSD-Nachweis abschließen. Danach D11-Abnahmematrix
+Als nächster Block: D11-Abnahmematrix
 aktualisieren und den verbleibenden Persistenzteil explizit D12/D13 zuordnen;
 konkreten ersten Schritt des Autoritätswechsels festlegen. D11 bleibt bis zur
 vollständigen Identitätsabnahme offen. Desktop-Duplikation ist implementiert.
@@ -76,9 +73,9 @@ mutabler OCAF-Schattenzustand. Die bestehenden nativen und Produktregressionen e
 - OCCT-Prefix: `<Prüfbaum>/build/d11d-occt/install`; `OpenCASCADE_DIR` ausdrücklich
   auf `<Prefix>/lib/cmake/opencascade` setzen. Das `.tools/occt-freebsd`-Symlinkziel
   bleibt die ursprüngliche gemeinsame Installation, nicht der Prüf-Prefix.
-- Sieben D11m-Quelldateien samt Prüfskript wurden nach ausdrücklicher Freigabe
+- Drei D11n-Quelldateien samt Prüfskript wurden nach ausdrücklicher Freigabe
   übertragen; keine Quelldateien gelöscht. Die Suite nutzt denselben isolierten Prefix.
-- Befehle, Quelllisten, Hashes, Dateirundläufe und Logs stehen in `D11m-artifacts`.
+- Befehle, Quelllisten, Hashes, Dateirundläufe und Logs stehen in `D11n-artifacts`.
 
 ## Versionierung
 
