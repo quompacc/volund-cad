@@ -54,6 +54,12 @@ foreach(fixture IN ITEMS compound errors)
     set_tests_properties(application.command_contract_${fixture} PROPERTIES LABELS "integration;application;contract" TIMEOUT 15)
 endforeach()
 find_package(Threads REQUIRED)
+add_executable(voelund_native_schema_tests integration/NativeSchemaTests.cpp)
+target_link_libraries(voelund_native_schema_tests PRIVATE
+    voelund_project_options Voelund::Features TKBin)
+add_test(NAME document.native_schema COMMAND voelund_native_schema_tests)
+set_tests_properties(document.native_schema PROPERTIES
+    LABELS "integration;document;native;regression" TIMEOUT 60)
 add_executable(voelund_native_extrusion_tests integration/NativeExtrusionTests.cpp)
 target_link_libraries(voelund_native_extrusion_tests PRIVATE
     voelund_project_options Voelund::Features TKBin)

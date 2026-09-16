@@ -12,6 +12,10 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 
 ### Hinzugefügt
 
+- Gemeinsamer nativer Schematest mit allen vier Featurearten, drei unabhängigen
+  Körpern, Umordnung, Umbenennung, Duplikat-/Revisionssemantik und ID-Vergabe nach Undo.
+  Die D11l-Prüfung dokumentiert die Grenzen zu Produktidentität und Mehrkörper-UI.
+
 - Native Extrusionen mit Distanz, Skizzeneingabereferenz und geordneter Profilauswahl.
   Körperidentitäten, Folgeextrusionen und historische unbekannte Profil-IDs bleiben
   erhalten. Damit sind alle vier vorhandenen Featurearten im privaten Adapter abgebildet.

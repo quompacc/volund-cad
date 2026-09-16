@@ -51,6 +51,11 @@ Referenz-/DAG-/Persistenzpakete bleiben offen.
 Die folgenden Funktionsangaben stammen aus dem ursprünglichen Übergabestand vom
 12. September und sind zusammen mit den aktuellen Paket-Evidenzen zu lesen.
 
+D11l: gemeinsame Feld-/Identitätsprüfung und neuer gemischter Schematest lokal
+abgeschlossen, **65/65 Windows**. FreeBSD-Übertragung/-Abnahme wartet auf die
+angefragte Freigabe; letzter vollständiger Plattformnachweis bleibt D11k.
+[D11l-Prüfung und offene Integrationsgrenzen](implementation-plan/evidence/D11l.md).
+
 ## Verbindliches Produktziel
 
 Nutzerpräzisierung vom 16.09.2026: Mehrere unabhängige Körper direkt in einem

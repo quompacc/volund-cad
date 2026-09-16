@@ -28,6 +28,23 @@ Richtungen samt Rückschreiben/-lesen bestanden, alle vier Dateien byteidentisch
 **291 Quellhashes identisch**. Alle Builds und Tests beendet.
 [Evidenz und Artefakte](implementation-plan/evidence/D11k.md).
 
+## D11l – lokaler Zwischenstand
+
+Auf Basis von `f962bef` wurde die gemeinsame Schema-/Identitätsprüfung durchgeführt.
+Alle aktuellen Snapshotfelder sind zugeordnet. Neuer Test `document.native_schema`:
+alle vier Featurearten, drei unabhängige Körper, Reorder/Rename, Kopie/Duplikat,
+Revision und ID-Vergabe nach Undo. **65/65 Windows** bestanden (97,71 s),
+**292 lokale Quellhashes unverändert**. Produktquellen wurden nicht geändert.
+
+**Offen:** Nutzerantwort auf die D11l-Übertragungsfrage abwarten. Nur
+`tests/CMakeLists.txt` und `tests/integration/NativeSchemaTests.cpp` sowie Skript
+sind zu übertragen. Archiv: `build/d11l/d11l-source-delta.tar`; Skript/Manifest:
+`docs/implementation-plan/evidence/D11l-artifacts`. Danach vollständigen FreeBSD-Lauf,
+bidirektionalen nativen Dateiaustausch und Quellhashvergleich abschließen.
+Der Windows-Fixture liegt unter `build/d11l/windows-schema.cbf`.
+Letzter beidseitig geprüfter Stand bleibt D11k; D11l nicht als vollständig abgenommen markieren.
+Siehe [D11l](implementation-plan/evidence/D11l.md) für Feldmatrix und offene Grenzen.
+
 ## Nächster Block
 
 Neue verbindliche Nutzeranforderung: einfacher Mehrkörperworkflow nach dem gezeigten
@@ -37,11 +54,11 @@ abgenommen. Beim kommenden Schema-/Identitätsreview sicherstellen, dass unabhä
 Körper direkt unter dem Dokument möglich bleiben; den UI-/NewBody-Ausbau über
 S03/M01–M04 nicht mit den bereits bestandenen Codec-Tests gleichsetzen.
 
-Gemeinsame **Schema- und Identitätsprüfung des vollständigen nativen Snapshots**:
-Abdeckung aller Modellfelder, gemischte Featureketten, Validierungsgrenzen und
-verbliebene D11-Abnahmepunkte gegen Paketplan und ADR prüfen. D11 nicht allein wegen
-der vier abgebildeten Featurearten als abgeschlossen markieren. Den konkreten
-Übergang zu produktiver Dokumentidentität und D12/D13 daraus ableiten.
+Nach Abschluss des offenen D11l-Plattformnachweises: **produktiven Dokumentidentitäts-
+Lebenszyklus an der CadSession-/Snapshot-Grenze** implementieren. New erzeugt einen
+Namensraum, Revision/Wertkopie/Save-As behalten ihn, Duplikat wechselt ihn.
+Legacy-Open-Regel ausdrücklich festlegen; Persistenzgrenze zu D13 sichtbar halten.
+D11 bleibt offen, bis seine produktiven Identitätsabnahmen erfüllt sind.
 
 Der Autoritäts-/Store-Wechsel folgt gemäß [ADR 0008](adr/0008-ocaf-binary-persistence.md)
 und D12/D13. Noch kein produktiver nativer Dispatch: **VOLUND 16 bleibt Produktwriter**.
