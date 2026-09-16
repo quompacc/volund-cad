@@ -34,9 +34,9 @@ native Eingabereferenzen und eine unabhängige Feature-Reihenfolge. D11i ergänz
 Skizzenebenen, Elemente, IDs und Stützreferenzen. D11j ergänzt alle 26 Constraintarten
 mit nativen Elementreferenzen, Maß-/Winkel- und Zusatzwerten sowie Solver-Parität.
 Extrusionsschema und Produktintegration bleiben offen.
-D11i wurde mit `cef3feb` abgeschlossen. D11j wird mit seinen Belegen und dieser
-Dokumentation auf `main` eingecheckt; der Abschlusscommit ist über
-`git log -1 --oneline` feststellbar. Nächster Block sind native Extrusionen mit Profilreferenzen.
+D11i wurde mit `cef3feb`, D11j einschließlich Belegen und Dokumentation mit
+`cddf45d` auf `main` abgeschlossen. Die Arbeit ist auf Nutzerwunsch pausiert.
+Nächster Block sind native Extrusionen mit Profilreferenzen; noch nicht begonnen.
 Der geprüfte D10-/D11e-Quellstand samt Belegen ist auf Nutzerauftrag in
 `6737465afe6af30758147471035a5582e466342f` auf `main` committed. Ausgangspunkt
 der Prüfläufe war `e8b65b8`; ältere Uncommittet-Vermerke in den Evidenzen

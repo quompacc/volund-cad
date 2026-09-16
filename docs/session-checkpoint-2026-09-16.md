@@ -4,8 +4,9 @@
 
 D10 abgeschlossen. **D11a–D11j geprüft, D11 insgesamt weiterhin `in-progress`.**
 D12/D13 und Meridian-Abnahme L07 bleiben offen. Prüfbasis dieses Blocks: `cef3feb`.
-D11j wird gemeinsam mit Belegen, Changelog und dieser Fortsetzungsdoku auf `main`
-committed. Den Abschlusscommit über `git log -1 --oneline` feststellen.
+D11j ist einschließlich Belegen und Changelog mit `cddf45d` auf `main` committed.
+Die Arbeit ist auf Nutzerwunsch pausiert; der nächste Implementierungsblock wurde
+noch nicht begonnen. Diese Pausennotiz folgt als eigener Dokumentationscommit.
 Kein Push, kein Release-Tag, keine Terra-Übergabe.
 
 ## D11j
@@ -27,6 +28,10 @@ Richtungen samt Rückschreiben/-lesen bestanden, alle vier Dateien byteidentisch
 [Evidenz und Artefakte](implementation-plan/evidence/D11j.md).
 
 ## Nächster Block
+
+Beim Wiederaufnehmen zuerst Branch und Arbeitsbaum prüfen. Letzter geprüfter
+Implementierungsstand ist `cddf45d`; nachfolgende reine Dokumentationscommits
+ändern die unten festgehaltene Testbasis nicht.
 
 Native **Extrusionen mit Profilreferenzen**: alle vorhandenen Parameter, IDs und
 Eingaben verlustfrei abbilden. Featurefamilien einzeln gegen immutable Snapshots
