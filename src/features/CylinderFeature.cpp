@@ -1,7 +1,7 @@
 #include <voelund/features/CylinderFeature.hpp>
 #include <voelund/features/GeometryEvaluationError.hpp>
 
-#include <voelund/document/ModelDocument.hpp>
+#include <voelund/document/DocumentSnapshot.hpp>
 #include <voelund/kernel/ShapeFactory.hpp>
 
 #include <BRepBndLib.hxx>
@@ -15,6 +15,12 @@ namespace voelund::features {
 CylinderFeature::CylinderFeature(document::FeatureId featureId) noexcept : featureId_(featureId) {}
 
 TopoDS_Shape CylinderFeature::evaluateTool(const document::ModelDocument& document,
+                                           const TopoDS_Shape& inputShape,
+                                           bool applyPlacement) const {
+    return evaluateTool(document::DocumentSnapshot::capture(document), inputShape, applyPlacement);
+}
+
+TopoDS_Shape CylinderFeature::evaluateTool(const document::DocumentSnapshot& document,
                                            const TopoDS_Shape& inputShape,
                                            bool applyPlacement) const {
     const document::CylinderParameters& cylinder = document.cylinderParameters(featureId_);

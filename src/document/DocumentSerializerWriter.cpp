@@ -1,4 +1,4 @@
-#include "ModelDocumentImpl.hpp"
+#include <voelund/document/DocumentSnapshot.hpp>
 #include "DocumentSerializationDetail.hpp"
 #include "SketchConstraintSerialization.hpp"
 
@@ -78,34 +78,35 @@ void writeSketch(const FeatureDescriptor& feature, const SketchParameters& sketc
 void DocumentSerializer::write(const ModelDocument& document, std::ostream& output) {
     output.imbue(std::locale::classic());
     output << std::setprecision(std::numeric_limits<double>::max_digits10);
-    output << "VOLUND 16\nNEXT_ID " << document.impl_->nextFeatureId_ << "\nFEATURES "
-           << document.impl_->features_.size() << '\n';
-    for (std::size_t index = 0; index < document.impl_->features_.size(); ++index) {
-        const FeatureDescriptor& feature = document.impl_->features_[index];
+    const auto snapshot = DocumentSnapshot::capture(document);
+    output << "VOLUND 16\nNEXT_ID " << snapshot.nextFeatureId() << "\nFEATURES "
+           << snapshot.features().size() << '\n';
+    for (std::size_t index = 0; index < snapshot.features().size(); ++index) {
+        const FeatureDescriptor& feature = snapshot.features()[index];
         const char* kindName = feature.kind == FeatureKind::box        ? "BOX "
                                : feature.kind == FeatureKind::cylinder ? "CYLINDER "
                                : feature.kind == FeatureKind::sketch   ? "SKETCH "
                                                                        : "EXTRUSION ";
         output << kindName << feature.id.value() << ' ' << std::quoted(feature.name);
         if (feature.kind == FeatureKind::box) {
-            const auto& box = std::get<BoxParameters>(document.impl_->parameters_[index]);
+            const auto& box = std::get<BoxParameters>(snapshot.parameters()[index]);
             output << ' ' << box.dimensions.width << ' ' << box.dimensions.depth << ' '
                    << box.dimensions.height;
             detail::writeTransform(output, box.placement);
         } else if (feature.kind == FeatureKind::cylinder) {
-            const auto& cylinder = std::get<CylinderParameters>(document.impl_->parameters_[index]);
+            const auto& cylinder = std::get<CylinderParameters>(snapshot.parameters()[index]);
             output << ' ' << feature.inputFeature->value() << ' ' << cylinder.radius << ' '
                    << cylinder.height;
             detail::writeTransform(output, cylinder.placement);
             output << ' ' << detail::resultModeName(cylinder.resultMode);
         } else if (feature.kind == FeatureKind::extrusion) {
-            const auto& extrusion = std::get<ExtrusionParameters>(document.impl_->parameters_[index]);
+            const auto& extrusion = std::get<ExtrusionParameters>(snapshot.parameters()[index]);
             output << ' ' << feature.inputFeature->value() << ' ' << extrusion.distance << ' '
                    << extrusion.profiles.size();
             for (SketchProfileId profile : extrusion.profiles)
                 output << ' ' << profile.value();
         } else {
-            const auto& sketch = std::get<SketchParameters>(document.impl_->parameters_[index]);
+            const auto& sketch = std::get<SketchParameters>(snapshot.parameters()[index]);
             writeSketch(feature, sketch, output);
             continue;
         }

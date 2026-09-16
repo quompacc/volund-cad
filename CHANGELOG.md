@@ -56,6 +56,11 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 
 ### Geändert
 
+- D12b bindet Geometrieauswertung und Legacy-Writer an je einen eingefrorenen
+  Dokumentstand. Die Oberfläche erhält eigene Parameter-/Featurewerte, die nach
+  Modellwechsel gültig bleiben. D12c–D12e trennen OCAF-Vorbereitung, Umschaltung
+  und Gesamtabnahme. VOLUND 16 bleibt unverändert.
+
 - D12a kapselt Modellzustand und Historie privat. Unabhängige Wertkopien, atomare
   Kopierzuweisung und Transaktionskandidaten sind abgesichert; der OCAF-Backendwechsel
   folgt separat. VOLUND 16 und die Bedienabläufe bleiben erhalten.

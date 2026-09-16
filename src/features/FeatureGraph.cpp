@@ -5,7 +5,7 @@
 #include <voelund/features/GeometryEvaluationError.hpp>
 #include <voelund/kernel/OcctCompatibility.hpp>
 
-#include <voelund/document/ModelDocument.hpp>
+#include <voelund/document/DocumentSnapshot.hpp>
 #include <voelund/features/BoxFeature.hpp>
 #include <voelund/features/CylinderFeature.hpp>
 #include <voelund/features/SketchConstraintSolver.hpp>
@@ -75,7 +75,7 @@ TopoDS_Shape createResultShape(const std::vector<EvaluatedBody>& bodies) {
     return kernel::ShapeOperations::compound(shapes);
 }
 
-void evaluateBox(const document::ModelDocument& document,
+void evaluateBox(const document::DocumentSnapshot& document,
                  const document::FeatureDescriptor& descriptor,
                  std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
                  std::vector<EvaluatedBody>& referenceBodies) {
@@ -103,7 +103,7 @@ TopoDS_Shape combineCylinder(document::CylinderResultMode mode, const TopoDS_Sha
     throw std::logic_error("Separate cylinders are not boolean operations");
 }
 
-void evaluateCylinder(const document::ModelDocument& document,
+void evaluateCylinder(const document::DocumentSnapshot& document,
                       const document::FeatureDescriptor& descriptor,
                       std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
                       std::vector<EvaluatedBody>& referenceBodies) {
@@ -140,7 +140,7 @@ void evaluateCylinder(const document::ModelDocument& document,
     referenceInputBody.shape = referenceResult;
 }
 
-void evaluateSketch(const document::ModelDocument& document,
+void evaluateSketch(const document::DocumentSnapshot& document,
                     const document::FeatureDescriptor& descriptor,
                     std::vector<EvaluatedFeature>& outputs) {
     document::SketchParameters parameters = document.sketchParameters(descriptor.id);
@@ -160,7 +160,7 @@ void evaluateSketch(const document::ModelDocument& document,
     outputs.push_back(EvaluatedFeature{descriptor.id, geometry, geometry, std::nullopt});
 }
 
-void evaluateExtrusion(const document::ModelDocument& document,
+void evaluateExtrusion(const document::DocumentSnapshot& document,
                        const document::FeatureDescriptor& descriptor,
                        std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
                        std::vector<EvaluatedBody>& referenceBodies) {
@@ -206,6 +206,10 @@ FeatureEvaluationError::FeatureEvaluationError(document::FeatureId featureId, st
 document::FeatureId FeatureEvaluationError::featureId() const noexcept { return featureId_; }
 
 FeatureGraphResult FeatureGraph::evaluate(const document::ModelDocument& document) const {
+    return evaluate(document::DocumentSnapshot::capture(document));
+}
+
+FeatureGraphResult FeatureGraph::evaluate(const document::DocumentSnapshot& document) const {
     std::vector<EvaluatedFeature> outputs;
     std::vector<EvaluatedBody> bodies;
     std::vector<EvaluatedBody> referenceBodies;

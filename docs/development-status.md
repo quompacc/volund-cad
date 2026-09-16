@@ -18,8 +18,12 @@ Wertkopie, starke Fehlergarantie der Kopierzuweisung, Move und isolierte
 Transaktionskandidaten sind abgesichert. **66/66 Windows**, **62/62 FreeBSD/Sway**,
 **295 Quellhashes identisch**. Siehe [D12a](implementation-plan/evidence/D12a.md).
 
-D12 ist `in-progress`. Nächster Block: D12b, OCAF als einzige Modellautorität
-integrieren und die bisherigen Transaktions-/Historygarantien erhalten.
+**D12b ist geprüft:** eingefrorene Auswertungs-/Writer-Snapshots und eigene
+UI-Datenwerte. **67/67 Windows**, **63/63 FreeBSD/Sway**, **296 Quellhashes identisch**.
+[Nachweis](implementation-plan/evidence/D12b.md). D12 bleibt `in-progress`.
+Nächster Block: D12c, OCAF-Zustand isoliert entwickeln und Änderung/Abbruch prüfen.
+D12d schaltet Produktmodell und Transaktionen/Undo/Redo gemeinsam um; D12e nimmt
+das Gesamtpaket ab. [Bestätigte Aufteilung](implementation-plan/D12-plan.md).
 D13 bindet danach den nativen Produktstore an. VOLUND 16 bleibt bis dahin
 Produktwriter ohne persistente DocumentId; Legacy-Open vergibt eine neue
 Dokument-ID. D12a ist noch kein OCAF-Backendwechsel.

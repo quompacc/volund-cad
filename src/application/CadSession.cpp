@@ -88,8 +88,9 @@ std::span<const features::EvaluatedBody> CadSession::currentBodies() const {
     return currentBodies_;
 }
 
-std::span<const document::FeatureDescriptor> CadSession::features() const noexcept {
-    return document_.features();
+std::vector<document::FeatureDescriptor> CadSession::features() const {
+    const auto descriptors = document_.features();
+    return {descriptors.begin(), descriptors.end()};
 }
 
 std::optional<document::FeatureId> CadSession::selectedFeature() const noexcept {
@@ -126,11 +127,11 @@ bool CadSession::selectSketchElement(document::SketchElementId elementId) noexce
     return true;
 }
 
-const document::SketchParameters& CadSession::selectedSketchParameters() const {
+document::SketchParameters CadSession::selectedSketchParameters() const {
     return document_.sketchParameters(selectedFeature_.value());
 }
 
-const document::SketchParameters&
+document::SketchParameters
 CadSession::sketchParameters(document::FeatureId featureId) const {
     return document_.sketchParameters(featureId);
 }
@@ -179,7 +180,7 @@ CadSession::transformBodyForFeature(document::FeatureId featureId) const noexcep
     return std::nullopt;
 }
 
-const document::FeatureDescriptor& CadSession::selectedFeatureDescriptor() const {
+document::FeatureDescriptor CadSession::selectedFeatureDescriptor() const {
     for (const document::FeatureDescriptor& feature : document_.features()) {
         if (feature.id == selectedFeature_.value()) {
             return feature;
@@ -188,11 +189,11 @@ const document::FeatureDescriptor& CadSession::selectedFeatureDescriptor() const
     throw std::logic_error("Selected feature is not in the document");
 }
 
-const kernel::BoxDimensions& CadSession::selectedBoxDimensions() const {
+kernel::BoxDimensions CadSession::selectedBoxDimensions() const {
     return document_.boxDimensions(selectedFeature_.value());
 }
 
-const document::BoxParameters& CadSession::selectedBoxParameters() const {
+document::BoxParameters CadSession::selectedBoxParameters() const {
     return document_.boxParameters(selectedFeature_.value());
 }
 
@@ -228,11 +229,11 @@ CommandResult CadSession::editSelectedBoxParameters(const document::BoxParameter
                            false);
 }
 
-const document::CylinderParameters& CadSession::selectedCylinderParameters() const {
+document::CylinderParameters CadSession::selectedCylinderParameters() const {
     return cylinderParameters(selectedFeature_.value());
 }
 
-const document::CylinderParameters&
+document::CylinderParameters
 CadSession::cylinderParameters(document::FeatureId featureId) const {
     return document_.cylinderParameters(featureId);
 }
@@ -294,7 +295,7 @@ CommandResult CadSession::editCylinderParameters(document::FeatureId featureId,
                            false);
 }
 
-const document::ExtrusionParameters& CadSession::selectedExtrusionParameters() const {
+document::ExtrusionParameters CadSession::selectedExtrusionParameters() const {
     return document_.extrusionParameters(selectedFeature_.value());
 }
 
@@ -315,7 +316,7 @@ CadSession::editSelectedExtrusionParameters(const document::ExtrusionParameters&
                            false);
 }
 
-const kernel::RigidTransform& CadSession::selectedFeaturePlacement() const {
+kernel::RigidTransform CadSession::selectedFeaturePlacement() const {
     const std::optional<document::FeatureId> owner =
         placementOwner(document_, selectedFeature_.value());
     if (!owner.has_value()) {

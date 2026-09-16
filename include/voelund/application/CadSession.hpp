@@ -46,7 +46,7 @@ class CadSession final {
     }
     [[nodiscard]] std::optional<TopoDS_Shape> featureShape(document::FeatureId featureId) const;
     [[nodiscard]] std::span<const features::EvaluatedBody> currentBodies() const;
-    [[nodiscard]] std::span<const document::FeatureDescriptor> features() const noexcept;
+    [[nodiscard]] std::vector<document::FeatureDescriptor> features() const;
     [[nodiscard]] std::optional<document::FeatureId> selectedFeature() const noexcept;
     [[nodiscard]] bool selectFeature(document::FeatureId featureId) noexcept;
     [[nodiscard]] std::optional<document::SketchElementId> selectedSketchElement() const noexcept;
@@ -57,8 +57,8 @@ class CadSession final {
                                                     bool additive);
     [[nodiscard]] std::vector<document::SketchElementId> selectedSketchProfileElements() const;
     [[nodiscard]] bool canExtrudeSelectedSketchProfiles() const noexcept;
-    [[nodiscard]] const document::SketchParameters& selectedSketchParameters() const;
-    [[nodiscard]] const document::SketchParameters&
+    [[nodiscard]] document::SketchParameters selectedSketchParameters() const;
+    [[nodiscard]] document::SketchParameters
     sketchParameters(document::FeatureId featureId) const;
     [[nodiscard]] CommandResult
     editSketchParameters(document::FeatureId featureId,
@@ -85,9 +85,9 @@ class CadSession final {
     [[nodiscard]] bool canTransformFeature(document::FeatureId featureId) const noexcept;
     [[nodiscard]] std::optional<document::FeatureId>
     transformBodyForFeature(document::FeatureId featureId) const noexcept;
-    [[nodiscard]] const document::FeatureDescriptor& selectedFeatureDescriptor() const;
-    [[nodiscard]] const kernel::BoxDimensions& selectedBoxDimensions() const;
-    [[nodiscard]] const document::BoxParameters& selectedBoxParameters() const;
+    [[nodiscard]] document::FeatureDescriptor selectedFeatureDescriptor() const;
+    [[nodiscard]] kernel::BoxDimensions selectedBoxDimensions() const;
+    [[nodiscard]] document::BoxParameters selectedBoxParameters() const;
     [[nodiscard]] CommandResult
     editSelectedBoxDimensions(const kernel::BoxDimensions& dimensions,
                               ErrorDisposition disposition = ErrorDisposition::reject);
@@ -107,11 +107,11 @@ class CadSession final {
     [[nodiscard]] CommandResult
     editSelectedFeaturePlacement(const kernel::RigidTransform& placement,
                                  ErrorDisposition disposition = ErrorDisposition::reject);
-    [[nodiscard]] const document::CylinderParameters& selectedCylinderParameters() const;
-    [[nodiscard]] const document::CylinderParameters&
+    [[nodiscard]] document::CylinderParameters selectedCylinderParameters() const;
+    [[nodiscard]] document::CylinderParameters
     cylinderParameters(document::FeatureId featureId) const;
-    [[nodiscard]] const document::ExtrusionParameters& selectedExtrusionParameters() const;
-    [[nodiscard]] const kernel::RigidTransform& selectedFeaturePlacement() const;
+    [[nodiscard]] document::ExtrusionParameters selectedExtrusionParameters() const;
+    [[nodiscard]] kernel::RigidTransform selectedFeaturePlacement() const;
     [[nodiscard]] std::span<const FeatureRuntimeState> featureStates() const noexcept;
     [[nodiscard]] bool canUndo() const noexcept;
     [[nodiscard]] bool canRedo() const noexcept;

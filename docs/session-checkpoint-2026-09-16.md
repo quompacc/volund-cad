@@ -5,7 +5,7 @@
 D10 und **D11 abgeschlossen**. Die [D11-Abnahmematrix](implementation-plan/evidence/D11-review.md)
 ordnet sämtliche ursprünglichen Kriterien den vorhandenen Tests zu. Geprüfter
 D11-Quellstand: `b71a081`; Abschlussdokumentation in `ef36dca`.
-Aktuell ist zusätzlich **D12a geprüft**, D12 insgesamt `in-progress`.
+Aktuell sind zusätzlich **D12a und D12b geprüft**, D12 insgesamt `in-progress`.
 D12/D13, A-BODY-03 und Meridian-Abnahme L07 bleiben offen.
 Kein Push, kein Release-Tag, keine Terra-Übergabe.
 
@@ -61,9 +61,16 @@ isolierte Transaktionskandidaten erhalten. **66/66 Windows** (97,21 s),
 Alle Prüfprozesse beendet. Neun Dateien samt Prüfskript ausdrücklich freigegeben.
 [D12a-Nachweis](implementation-plan/evidence/D12a.md).
 
-Nächster Block: **D12b**, OCAF als einzige Modellautorität mit unveränderlichen
-Snapshots und bisherigen D05/D06-Fehler-/Historygarantien integrieren. Der private
-D12a-Zustand ist noch vektorbasiert. D12 bleibt insgesamt offen.
+D12b ist abgeschlossen: eingefrorene Auswertungs-/Writer-Snapshots und eigene
+UI-Datenwerte. **67/67 Windows** (99,37 s), **63/63 FreeBSD/Sway** (35,13 s),
+**296 Quellhashes identisch und unverändert**. Alle Prüfprozesse beendet.
+13 Dateien samt Prüfskript ausdrücklich freigegeben und übertragen.
+Abnahme: [D12b-Nachweis](implementation-plan/evidence/D12b.md).
+
+Nächster Block: **D12c**, privaten OCAF-Zustand isoliert entwickeln und Änderung/
+Abbruch prüfen. Erst D12d schaltet Produktautorität und Transaktionen/Undo/Redo
+zusammen um; D12e übernimmt die Gesamtabnahme. Siehe bestätigte
+[D12-Aufteilung](implementation-plan/D12-plan.md). D12 bleibt insgesamt offen.
 
 Der Autoritäts-/Store-Wechsel folgt gemäß [ADR 0008](adr/0008-ocaf-binary-persistence.md)
 und D12/D13. Noch kein produktiver nativer Dispatch: **VOLUND 16 bleibt Produktwriter**.
@@ -79,9 +86,9 @@ mutabler OCAF-Schattenzustand. Die bestehenden nativen und Produktregressionen e
 - OCCT-Prefix: `<Prüfbaum>/build/d11d-occt/install`; `OpenCASCADE_DIR` ausdrücklich
   auf `<Prefix>/lib/cmake/opencascade` setzen. Das `.tools/occt-freebsd`-Symlinkziel
   bleibt die ursprüngliche gemeinsame Installation, nicht der Prüf-Prefix.
-- Neun D12a-Quelldateien samt Prüfskript wurden nach ausdrücklicher Freigabe
+- 13 D12b-Quelldateien samt Prüfskript wurden nach ausdrücklicher Freigabe
   übertragen; keine Quelldateien gelöscht. Die Suite nutzt denselben isolierten Prefix.
-- Befehle, Quelllisten, Hashes, Dateirundläufe und Logs stehen in `D12a-artifacts` (Dateiaustausch historisch unter D11l).
+- Befehle, Quelllisten, Hashes, Dateirundläufe und Logs stehen in `D12b-artifacts` (Dateiaustausch historisch unter D11l).
 
 ## Versionierung
 

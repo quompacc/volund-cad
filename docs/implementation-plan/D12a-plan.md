@@ -41,6 +41,10 @@ parallel beschreibbaren OCAF-Zustand ein. ADR 0008 und der D11-ID-Vertrag gelten
 
 ## Anschließender D12-Backendwechsel
 
+Fortschreibung: Die inzwischen bestätigte [Aufteilung D12a–D12e](D12-plan.md)
+zerlegt den folgenden Gesamtumfang. D12b bereitet Datenabfragen vor, D12c prüft
+OCAF isoliert; erst D12d schaltet die Produktautorität um.
+
 Danach OCAF-Parameter/IDs/Referenzen zur einzigen Autorität machen und immutable
 Snapshots für Auswertung und Anzeige bereitstellen. Vor Veröffentlichung alle vier
 Featurefamilien gegen D11l abgleichen; keinen produktiven Doppelwriter als Übergang

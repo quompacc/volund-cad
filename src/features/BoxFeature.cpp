@@ -1,6 +1,6 @@
 #include <voelund/features/BoxFeature.hpp>
 
-#include <voelund/document/ModelDocument.hpp>
+#include <voelund/document/DocumentSnapshot.hpp>
 #include <voelund/kernel/ShapeFactory.hpp>
 
 namespace voelund::features {
@@ -10,7 +10,11 @@ BoxFeature::BoxFeature(document::FeatureId featureId) noexcept
 {
 }
 
-TopoDS_Shape BoxFeature::evaluate(const document::ModelDocument& document) const
+TopoDS_Shape BoxFeature::evaluate(const document::ModelDocument& document) const {
+    return evaluate(document::DocumentSnapshot::capture(document));
+}
+
+TopoDS_Shape BoxFeature::evaluate(const document::DocumentSnapshot& document) const
 {
     const document::BoxParameters& parameters = document.boxParameters(featureId_);
     const TopoDS_Shape shape = kernel::ShapeFactory::makeBox(parameters.dimensions);

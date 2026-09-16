@@ -1,3 +1,8 @@
+add_executable(voelund_read_boundary_tests integration/DocumentReadBoundaryTests.cpp)
+target_link_libraries(voelund_read_boundary_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.document_read_boundaries COMMAND voelund_read_boundary_tests)
+set_tests_properties(application.document_read_boundaries PROPERTIES
+    LABELS "integration;application;document;regression" TIMEOUT 60)
 add_executable(voelund_angle_boundary_tests integration/AngleBoundaryTests.cpp)
 target_link_libraries(voelund_angle_boundary_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME document.angle_boundaries COMMAND voelund_angle_boundary_tests

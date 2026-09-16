@@ -1,0 +1,13 @@
+include/voelund/document/DocumentSnapshot.hpp
+src/document/DocumentSnapshot.cpp
+include/voelund/features/BoxFeature.hpp
+src/features/BoxFeature.cpp
+include/voelund/features/CylinderFeature.hpp
+src/features/CylinderFeature.cpp
+include/voelund/features/FeatureGraph.hpp
+src/features/FeatureGraph.cpp
+include/voelund/application/CadSession.hpp
+src/application/CadSession.cpp
+src/document/DocumentSerializerWriter.cpp
+tests/CMakeLists.txt
+tests/integration/DocumentReadBoundaryTests.cpp

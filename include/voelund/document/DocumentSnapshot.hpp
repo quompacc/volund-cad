@@ -15,6 +15,13 @@ class DocumentSnapshot final {
         return parameters_;
     }
     [[nodiscard]] std::uint64_t nextFeatureId() const noexcept { return nextFeatureId_; }
+    // Borrowed read-only views remain valid while this snapshot is alive and unchanged.
+    [[nodiscard]] const FeatureParameters& featureParameters(FeatureId id) const;
+    [[nodiscard]] const BoxParameters& boxParameters(FeatureId id) const;
+    [[nodiscard]] const CylinderParameters& cylinderParameters(FeatureId id) const;
+    [[nodiscard]] const SketchParameters& sketchParameters(FeatureId id) const;
+    [[nodiscard]] const ExtrusionParameters& extrusionParameters(FeatureId id) const;
+    [[nodiscard]] const kernel::BoxDimensions& boxDimensions(FeatureId id) const;
     [[nodiscard]] ModelDocument toDocument() const;
     [[nodiscard]] bool operator==(const DocumentSnapshot&) const = default;
 

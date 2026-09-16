@@ -12,6 +12,7 @@
 
 namespace voelund::document {
 class ModelDocument;
+class DocumentSnapshot;
 }
 
 namespace voelund::features {
@@ -48,6 +49,7 @@ private:
 class FeatureGraph final {
 public:
     [[nodiscard]] FeatureGraphResult evaluate(const document::ModelDocument& document) const;
+    [[nodiscard]] FeatureGraphResult evaluate(const document::DocumentSnapshot& document) const;
 };
 
 } // namespace voelund::features
