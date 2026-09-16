@@ -30,6 +30,13 @@ Richtungen samt Rückschreiben/-lesen bestanden, alle vier Dateien byteidentisch
 
 ## Nächster Block
 
+Neue verbindliche Nutzeranforderung: einfacher Mehrkörperworkflow nach dem gezeigten
+Fusion-Browser, ohne Komponenten-/Baugruppenpflicht. Im Architekturvertrag und K10
+aufgenommen, M01 konkretisiert, neue Abnahme **A-BODY-03**. Noch nicht umgesetzt oder
+abgenommen. Beim kommenden Schema-/Identitätsreview sicherstellen, dass unabhängige
+Körper direkt unter dem Dokument möglich bleiben; den UI-/NewBody-Ausbau über
+S03/M01–M04 nicht mit den bereits bestandenen Codec-Tests gleichsetzen.
+
 Gemeinsame **Schema- und Identitätsprüfung des vollständigen nativen Snapshots**:
 Abdeckung aller Modellfelder, gemischte Featureketten, Validierungsgrenzen und
 verbliebene D11-Abnahmepunkte gegen Paketplan und ADR prüfen. D11 nicht allein wegen

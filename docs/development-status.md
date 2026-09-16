@@ -53,6 +53,13 @@ Die folgenden Funktionsangaben stammen aus dem ursprünglichen Übergabestand vo
 
 ## Verbindliches Produktziel
 
+Nutzerpräzisierung vom 16.09.2026: Mehrere unabhängige Körper direkt in einem
+Dokument konstruieren, ohne eine Komponente oder Baugruppe vorbereiten zu müssen.
+Der erste und weitere Körper verwenden denselben „Neuer Körper“-Workflow und sind
+im Körperbereich einzeln bearbeitbar. Vertrag und geplante Abnahme A-BODY-03 sind
+festgehalten; die bisherigen Mehrkörper-/Codec-Tests belegen noch nicht diesen
+vollständigen UI-Ablauf. Umsetzung über S03, M01–M04 und R01 bleibt offen.
+
 Völund wird als natives parametrisches CAD in C++20 mit Qt 6 und OpenCASCADE
 Technology für FreeBSD mit Meridian entwickelt. Völund bleibt dabei eine
 eigenständige Wayland-Anwendung. FreeCAD bleibt Referenz und Verhaltensorakel, ist aber

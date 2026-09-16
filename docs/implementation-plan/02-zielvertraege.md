@@ -121,6 +121,14 @@ Gemeinsame Szene/Auswahl/Kamera/Eingabe werden einmal implementiert; nur die not
 
 ## K10 – Fachlicher v1-Vertrag
 
+**Verbindliche Nutzerpräzisierung vom 16.09.2026:** Mehrkörperkonstruktion ist ein
+direkter Dokumentworkflow ohne vorherige Komponenten-/Baugruppeneinrichtung.
+„Neuer Körper“ muss für den zweiten und jeden weiteren unabhängigen Körper genauso
+einfach erreichbar sein wie für den ersten. Körper erscheinen einzeln im Bereich
+„Körper“ und bleiben getrennt editierbar. Siehe den
+[Körperworkflow-Vertrag](../architecture-and-code-contract.md#48-körper--verbindungs--und-transformationssemantik)
+und A-BODY-03. Diese Anforderung gehört zu v1 und wartet nicht auf das Baugruppenmodul.
+
 V1 liefert metrische Einzelteile und mehrere Körper in einem Dokument: Basisebenen/planare Stützflächen, Skizzen mit vorhandenen elementaren Kurven und Constraints, Regionen mit Löchern, Extrusion als NewBody/Join/Cut/Intersect, einfache Verrundung/Fase, Bohrung, Spiegelung/Muster, Edit/Suppress/Rollback, Messung und STEP-Austausch. Vollständige Montagezwänge, technische Zeichnung, freie NURBS-Modellierung, Blechabwicklung und CAM folgen als benannte G5-Module.
 
 Extrusionsparameter trennen Profil, Zielkörper, Operation, Richtung, Start-/Endbedingung und Distanz. Zunächst Blind/Reverse/Symmetric mit konstanter Querschnittsform; weitere Endbedingungen erst nach eigenem Vertrag. Taper, Revolve, Shell und andere sichtbare Erweiterungen bleiben deaktiviert, bis ihr vollständiger Pfad und ihre Abnahme existieren; X19 liefert den nächsten Solid-Ausbauschritt. Der Produktrand ist in UI und Handbuch gleich beschrieben.

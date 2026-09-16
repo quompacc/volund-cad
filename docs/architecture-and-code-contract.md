@@ -145,6 +145,36 @@ Siehe ADR 0003.
 
 ### 4.8 Körper-, Verbindungs- und Transformationssemantik
 
+#### Verbindlicher Produktworkflow: mehrere Körper ohne Baugruppe
+
+Nutzeranforderung vom 16.09.2026, konkretisiert anhand des gezeigten Fusion-Baums:
+Mehrere unabhängige Teile/Volumenkörper müssen direkt in einem Dokument konstruierbar
+sein. Das Anlegen oder Aktivieren einer Komponente, eines Part-Containers oder einer
+Baugruppe darf dafür keine Voraussetzung sein. Dies ist ein Zielvertrag, keine
+Behauptung eines bereits vollständig umgesetzten Produktablaufs.
+
+- Der erste, zweite und weitere Körper entstehen über denselben einfachen Ablauf:
+  Skizze/Profil anlegen, Operation „Neuer Körper“ wählen, bestätigen. Ein vorhandener
+  Körper oder räumlicher Anschluss an ihn ist dabei nicht erforderlich.
+- Getrennte gültige Volumenkörper sind im Dokument ein regulärer Zustand. Ein zweiter
+  Körper darf weder einen allgemeinen Modellfehler auslösen noch still verschmolzen
+  werden. Die geometrischen Anschlussregeln für ein ausdrücklich gewähltes Join
+  bleiben davon unberührt.
+- Der Browser bietet einen Bereich „Körper“ mit einzeln auswählbaren, benennbaren,
+  ein-/ausblendbaren und platzierbaren Körpern. Skizzen und Featurehistorie bleiben
+  zugänglich; Körperorganisation und spätere Komponenten-/Baugruppenstruktur sind
+  getrennte Begriffe. Optionale Ordnungsgruppen erzeugen keine Montagezwänge.
+- „Neuer Körper“ ist bei körpererzeugenden Werkzeugen direkt erreichbar. Join/Cut/
+  Intersect arbeiten mit nachvollziehbar gewähltem Zielkörper; Auswahl oder letztes
+  Feature dürfen keinen anderen Körper unbemerkt zum Ziel machen.
+- Bearbeiten, Undo/Redo, Speichern/Öffnen und Save-As erhalten getrennte Körper und
+  ihre Identitäten. Fehler eines Zweigs blockieren keine unabhängigen Körper.
+
+Umsetzung über S03, M01–M04, R01 und die Baum-/Auswahlprojektion;
+verbindliche Abnahme: [A-BODY-03](implementation-plan/08-abnahme.md#a-body-03--direkter-mehrkörperworkflow-ohne-baugruppe).
+Die Fusion-Abbildung dient als Workflowreferenz, nicht als Vorgabe für eine exakte
+UI-Kopie oder als pauschale Aussage über Fähigkeiten anderer CAD-Systeme.
+
 - `Join`, `Cut` und `Intersect` erzeugen einen gemeinsamen sichtbaren Ergebniskörper.
   Jedes im Modellbaum ausgewählte Feature, das zu diesem Körper beiträgt und denselben
   Platzierungsinhaber besitzt, adressiert für direkte Transformation denselben

@@ -117,6 +117,32 @@ Ohne Boxvorlage auf XY eine Skizze und NewBody-Extrusion erstellen. Zweiten unab
 
 Box und skizzenbasierte Extrusion mit identischer Geometrie jeweils um(30,−10,5)mm verschieben und um90° um Z drehen. Boundingbox-/Punktlage vergleichen. Stützskizze, projizierte Kante und anschließender Cut verwenden konsistente Lokal-/Weltkoordinaten. Ein Manipulatordrag erzeugt ein Undo.
 
+## A-BODY-03 – Direkter Mehrkörperworkflow ohne Baugruppe
+
+Verbindliche Nutzeranforderung vom 16.09.2026, Workflowreferenz: gezeigter Fusion-
+Browser mit vielen einzeln aufgeführten Körpern neben einer separaten Komponentenstruktur.
+Status: geplant, noch nicht als durchgehender Produktworkflow abgenommen.
+
+1. Leeres Dokument öffnen. Ohne Komponente/Baugruppe/zusätzlichen Part-Container
+   eine Basisebenenskizze und Extrusion „Neuer Körper“ erstellen.
+2. Zwei weitere räumlich getrennte Körper auf diesem Weg erzeugen. Kein bestehender
+   Körper muss als Support oder Boolean-Ziel gewählt werden. Kein automatischer
+   Join, kein allgemeiner Fehler „mehrere Volumenkörper“; drei gültige BodyIds.
+3. Im Bereich „Körper“ A/B/C einzeln benennen, auswählen, ein-/ausblenden und
+   platzieren. Ausblenden löscht keine Geometrie und ändert keine fachliche Referenz.
+4. Nach Auswahl von B eine weitere Skizze anlegen und gezielt A mit Join/Cut ändern.
+   Vorschau und Panel nennen das tatsächliche Ziel; B/C bleiben geometrisch und in
+   ihrer Identität unverändert. Ein räumlich unmöglicher Join meldet einen lokalen
+   Operationsfehler, ohne die gültigen unabhängigen Körper zu verwerfen.
+5. Erstellen und Bearbeiten rückgängig machen/wiederholen; Save, Open und Save-As
+   erhalten Körperanzahl, Namen, Platzierungen, Sichtbarkeit und getrennte IDs.
+6. Einen Featurezweig ungültig machen: unabhängige Körper bleiben gültig und
+   bearbeitbar. Nach Reparatur bestehen ihre IDs und Platzierungen unverändert.
+
+Nachweis: automatisierte Modell-/Persistenzprüfungen plus reproduzierbarer UI-
+Durchlauf auf der Zielplattform. S03, M01–M04, R01 und Baum-/Auswahlprojektion sind
+beteiligt. Assembly-Instanzen und Montagezwänge sind keine Voraussetzung.
+
 ## A-EXT-01 – Richtungen und erstes Volumen
 
 Rechteck20×10mm auf XY, Distanz8mm: NewBody `1600 mm³`. Blind positiv ergibt Z-Bereich[0,8], Reverse[−8,0], Symmetric mit Gesamtlänge8 ergibt[−4,4]. Auf XZ/YZ entsprechend transformiert. Ring R20/r10×8 ergibt `2400π mm³`. Offenes Profil, Distanz0/NaN und verlorene Region rejected.

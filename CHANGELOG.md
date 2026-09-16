@@ -43,6 +43,9 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 
 ### Geändert
 
+- Verbindliches v1-Ziel präzisiert: direkter Mehrkörperworkflow ohne Komponenten-/
+  Baugruppenpflicht, individueller Körperbereich und explizites NewBody. Neue
+  geplante Abnahme A-BODY-03; dies dokumentiert eine Anforderung, keine fertige Funktion.
 - Der private Primitive-Adapter ersetzt den reinen Box-Adapter. Das unveröffentlichte
   native Entwurfslayout heißt jetzt `Primitives.v1`; ältere `Boxes.v1`-Probedateien
   bleiben historische Nachweise. Der produktive Legacy-Reader ist unverändert.

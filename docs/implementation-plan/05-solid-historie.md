@@ -12,7 +12,11 @@ K02/K05/K06/K08/K10 gelten für jeden neuen Featuretyp. Ein neuer Typ braucht Pa
   1. Leeres Dokument und mehrere BodyIds ohne künstliches Startfeature unterstützen.
   2. Featureinputs beziehen sich auf expliziten Zielkörper/Erzeuger; 'letztes Feature' nicht als pauschaler Zielkörper verwenden.
   3. NewBody-Ausgabe und Sichtbarkeit/Selektion von Körpern in der Projektion anbieten.
-- **Abnahme:** Zwei unabhängige Körper lassen sich erstellen und gezielt verändern; dazwischen angelegte Skizze verändert Zielwahl nicht. A-BODY-01 und A-DAG-01 bestehen.
+  4. Direkten Mehrkörperworkflow gemäß Nutzeranforderung vom 16.09.2026 sicherstellen:
+     beliebige weitere unabhängige Körper über denselben NewBody-Ablauf, ohne
+     Komponenten-/Baugruppenpflicht. Körperbereich mit individuellen Namen,
+     Sichtbarkeit, Auswahl und Platzierung; kein Fehler allein durch einen zweiten Solid.
+- **Abnahme:** Zwei unabhängige Körper lassen sich erstellen und gezielt verändern; dazwischen angelegte Skizze verändert Zielwahl nicht. A-BODY-01, A-BODY-03 und A-DAG-01 bestehen. Der UI-Ablauf ist ebenso Pflicht wie das interne Mehrkörpermodell.
 - **Grenze:** Keine Baugruppeninstanzen; Body ist im Dokument modellierte Geometrie.
 
 ## M02 – Extrusionsparameter und Kernel-Auswertung vollständig definieren
