@@ -38,10 +38,10 @@ Dokument-ID.
 **D13a ist geprüft:** privater BinOcaf-Payloadadapter, ID-/Parameter-Rundlauf und
 Eingabefehler. **70/70 Windows**, **67/67 FreeBSD/Sway**, **303 Quellhashes identisch**.
 [Nachweis und Grenzen](implementation-plan/evidence/D13a.md).
-D13 bleibt in Arbeit. D13b1 implementiert begrenztes Einlesen ohne Seek und
-Formatzuordnung; [Prüfstand](implementation-plan/evidence/D13b1.md).
-Die FreeBSD-Freigabe für diesen Umfang ist angefragt, noch keine Übertragung.
-Danach folgt D13b2 mit nativer Containerprüfung und Ressourcenpolitik.
+D13 bleibt in Arbeit. **D13b1 ist auf beiden Plattformen geprüft:** begrenztes
+Einlesen ohne Seek und Formatzuordnung. **71/71 Windows**, **68/68 FreeBSD/Sway**,
+**306 Quellhashes identisch**; [Nachweis](implementation-plan/evidence/D13b1.md).
+Nächster Block ist D13b2 mit nativer Containerprüfung und Ressourcenpolitik.
 [Teilplan](implementation-plan/D13-plan.md). Insgesamt bleiben 88 von 110 Hauptpaketen offen.
 
 A-BODY-03, D13, Referenz-/DAG-Arbeiten und Meridian L07 bleiben offen.

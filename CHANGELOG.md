@@ -58,7 +58,8 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 
 - D13b1 ergänzt privates, begrenztes Einlesen ohne Seek und eindeutige Zuordnung
   zu Legacy-Text oder nativer Binärcontainerfamilie. Native Containerprüfung
-  und Produktintegration bleiben offen.
+  und Produktintegration bleiben offen. Windows- und FreeBSD/Sway-Abnahme
+  einschließlich identischer Quellstände bestanden.
 - D13a ergänzt einen privaten BinOcaf-Adapter für unveränderliche Dokument-Snapshots,
   mit ID-/Parameter-Rundlauf, Schemafehlern und Eingabegrößenprüfung vor dem Öffnen.
   Produktdispatch und Writerwechsel bleiben folgende Teilblöcke.

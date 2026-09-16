@@ -6,7 +6,7 @@ Der Produktwriter bleibt bis zur zusammenhängenden Umschaltung VOLUND 16.
 | Block | Umfang | Abschlussgrenze |
 | --- | --- | --- |
 | D13a | Privater BinOcaf-Payloadadapter mit Schema-/Identitätsvalidierung | [Nachweis](evidence/D13a.md): encode/decode, vier Featurearten, Fehlerfälle, beide Plattformen. Noch kein Produktdispatch. |
-| D13b1 | Begrenztes Einlesen und Formatzuordnung | [Nachweis](evidence/D13b1.md): vollständige Bytes ohne Seek, 64-MiB-Grenze, Legacy-Versionen und native Containerfamilie; noch kein Produktdispatch. |
+| D13b1 | Begrenztes Einlesen und Formatzuordnung | [Auf beiden Plattformen geprüft](evidence/D13b1.md): vollständige Bytes ohne Seek, 64-MiB-Grenze, Legacy-Versionen und native Containerfamilie; noch kein Produktdispatch. |
 | D13b2 | Native Containerprüfung und Ressourcenpolitik | Container-/Anwendungsversionen, interne Größen/Referenzen und angehängte Daten vor Produktfreigabe behandeln. D13b bleibt bis dahin insgesamt offen. |
 | D13c | Save/Open und AtomicFileStore geschlossen anbinden | Genau ein Produktwriter; Dokument-ID bei nativem Open erhalten, Legacy-Open neue ID; Save-As, Dirty-/Save-Revision und starke Fehlergarantien erhalten. |
 | D13d | Austausch und Gesamtprüfung | Native Dateien Windows ↔ FreeBSD, A-SAVE-01/02, editierbare Folgefehler; D13 erst nach Gesamtabnahme abschließen. |
