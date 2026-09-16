@@ -1,0 +1,9 @@
+include/voelund/document/ModelDocument.hpp
+include/voelund/document/DocumentTransaction.hpp
+src/document/ModelDocumentImpl.hpp
+src/document/ModelDocument.cpp
+src/document/ModelDocumentHistory.cpp
+src/document/DocumentSnapshot.cpp
+src/document/DocumentSerializerWriter.cpp
+src/document/DocumentTransaction.cpp
+tests/unit/DocumentTransactionTests.cpp

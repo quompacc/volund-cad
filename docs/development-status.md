@@ -13,17 +13,16 @@ sichert Vergabe, Revision, Kopie und explizites Duplikat. CadSession und
 Der private native Adapter bildet alle vier aktuellen Featurearten ab.
 Die Abnahmematrix nennt für jedes ursprüngliche Kriterium den Test und seine Grenze.
 
-Geprüfter Quellstand: `b71a081`, Implementierung bis D11n. Letzte vollständige
-Suiten: **66/66 Windows**, **62/62 FreeBSD/Sway**, **294 Quellhashes identisch**.
-Siehe [D11n](implementation-plan/evidence/D11n.md); der anschließende
-D11-Abschlussblock ändert nur Dokumentation und übernimmt diese Prüfergebnisse.
+**D12a ist geprüft:** Modellzustand/History sind privat gekapselt. Unabhängige
+Wertkopie, starke Fehlergarantie der Kopierzuweisung, Move und isolierte
+Transaktionskandidaten sind abgesichert. **66/66 Windows**, **62/62 FreeBSD/Sway**,
+**295 Quellhashes identisch**. Siehe [D12a](implementation-plan/evidence/D12a.md).
 
-Nächster Block: **[D12a – private Dokumentautorität vorbereiten](implementation-plan/D12a-plan.md)**.
-D12 bleibt geplant. Zunächst Modellzustand/History kapseln und Kopie-/Transaktions-
-semantik erhalten, danach OCAF als einzige Autorität integrieren. D13 bindet den
-nativen Produktstore an. VOLUND 16 bleibt bis dahin Produktwriter ohne persistente
-DocumentId; Legacy-Open vergibt eine neue Dokument-ID. Die offene Produktpersistenz
-ist kein Rückwärtsblocker für die D11-Identitätsabnahme.
+D12 ist `in-progress`. Nächster Block: D12b, OCAF als einzige Modellautorität
+integrieren und die bisherigen Transaktions-/Historygarantien erhalten.
+D13 bindet danach den nativen Produktstore an. VOLUND 16 bleibt bis dahin
+Produktwriter ohne persistente DocumentId; Legacy-Open vergibt eine neue
+Dokument-ID. D12a ist noch kein OCAF-Backendwechsel.
 
 A-BODY-03, D12/D13, Referenz-/DAG-Arbeiten und Meridian L07 bleiben offen.
 [Changelog](../CHANGELOG.md) und [Versionsregeln](versioning.md) sind aktuell;

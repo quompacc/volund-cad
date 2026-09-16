@@ -1,8 +1,8 @@
 # D12a – Private Dokumentautorität vorbereiten
 
-Status: **geplant**, 16.09.2026; erster Implementierungsblock nach der
-[D11-Abnahme](evidence/D11-review.md). Kein bereits umgestellter Produktbackend.
-D12 bleibt bis zum Beginn der Implementierung `planned`.
+Status: **implementiert**, 16.09.2026; Abnahme siehe [D12a-Nachweis](evidence/D12a.md).
+Der folgende Plan bleibt als Umfangsdefinition erhalten. D12 ist `in-progress`;
+der OCAF-Backendwechsel steht weiterhin aus.
 
 ## Ziel des ersten Blocks
 

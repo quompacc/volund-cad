@@ -56,6 +56,10 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 
 ### Geändert
 
+- D12a kapselt Modellzustand und Historie privat. Unabhängige Wertkopien, atomare
+  Kopierzuweisung und Transaktionskandidaten sind abgesichert; der OCAF-Backendwechsel
+  folgt separat. VOLUND 16 und die Bedienabläufe bleiben erhalten.
+
 - D11 anhand der ursprünglichen Identitätskriterien abgeschlossen und nachgewiesen.
   OCAF-Autorität (D12), native Produktpersistenz (D13) und Mehrkörper-Bedienabnahme
   bleiben offen. D12a ist als erster Kapselungsblock konkretisiert; keine Produktänderung.

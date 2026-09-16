@@ -1,5 +1,5 @@
 #pragma once
-#include <optional>
+#include <memory>
 #include <voelund/document/ModelDocument.hpp>
 
 namespace voelund::document {
@@ -8,6 +8,7 @@ namespace voelund::document {
 class DocumentTransaction final {
   public:
     explicit DocumentTransaction(ModelDocument& target);
+    ~DocumentTransaction();
     DocumentTransaction(const DocumentTransaction&) = delete;
     DocumentTransaction& operator=(const DocumentTransaction&) = delete;
     DocumentTransaction(DocumentTransaction&&) = delete;
@@ -25,8 +26,8 @@ class DocumentTransaction final {
     ModelDocument candidate_;
     std::uint64_t baseRevision_;
     std::uint64_t preparedRevision_{0};
-    std::optional<ModelDocument::State> before_;
-    std::optional<ModelDocument::State> after_;
+    std::unique_ptr<ModelDocument::State> before_;
+    std::unique_ptr<ModelDocument::State> after_;
     bool prepared_{false};
     bool finished_{false};
 };

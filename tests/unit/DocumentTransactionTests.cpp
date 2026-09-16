@@ -101,6 +101,44 @@ void compoundAndHistory() {
                 FeatureId{extrusionId.value() + 1}, "aborted IDs not restored");
     require(branch.commit() && !document.canRedo(), "branch did not discard redo");
 }
+void independentCopiesAndMoves() {
+    ModelDocument original;
+    const auto id = original.addBoxFeature("History", {2, 3, 4});
+    require(original.undo(), "prepare copy with redo history");
+    const auto before = fingerprint(original);
+    auto copy = original;
+    require(fingerprint(copy) == before, "copy lost history or revision");
+    require(copy.redo() && copy.contains(id), "copy cannot independently redo");
+    require(fingerprint(original) == before, "copy redo changed original");
+    ModelDocument assigned;
+    assigned = original;
+    require(fingerprint(assigned) == before, "copy assignment lost state");
+    require(assigned.setBoxDimensions(ModelDocument::initialBoxId(), {6, 7, 8}),
+            "copy assignment edit failed");
+    require(fingerprint(original) == before, "assigned edit changed original");
+    auto& same = original;
+    original = same;
+    require(fingerprint(original) == before, "self assignment changed history");
+    const auto copied = fingerprint(copy);
+    ModelDocument moved(std::move(copy));
+    require(fingerprint(moved) == copied, "move constructor lost history");
+    copy = original; // Reassign a moved-from object before using it.
+    assigned = std::move(moved);
+    require(fingerprint(assigned) == copied && fingerprint(copy) == before,
+            "move assignment or moved-from reassignment failed");
+    moved = ModelDocument::empty();
+    require(moved.features().empty(), "moved-from value cannot be replaced");
+    DocumentTransaction transaction(original);
+    auto candidateCopy = transaction.candidate();
+    static_cast<void>(candidateCopy.addBoxFeature("Isolated candidate copy", {1, 2, 3}));
+    require(snapshot(transaction.candidate()) == snapshot(original) &&
+                fingerprint(original) == before,
+            "candidate value copy shares model storage");
+    static_cast<void>(transaction.edit().addBoxFeature("Abandoned candidate", {3, 4, 5}));
+    require(transaction.prepare(), "prepare isolated candidate");
+    transaction.rollback();
+    require(fingerprint(original) == before, "prepared rollback changed original");
+}
 void noChangeAndConflicts() {
     ModelDocument document;
     const auto before = fingerprint(document);
@@ -196,6 +234,13 @@ void allocationSweep(const char* name, Setup setup, Operation operation) {
             changed.elements.nextId = 3;
             static_cast<void>(document.setSketchParameters(FeatureId{3}, changed));
         });
+    ModelDocument copySource;
+    static_cast<void>(copySource.addBoxFeature("Copy source history", {9, 8, 7}));
+    const auto sourceBefore = fingerprint(copySource);
+    allocationSweep("copy assignment", initial, [&](auto& document) {
+        document = copySource;
+    });
+    require(fingerprint(copySource) == sourceBefore, "copy assignment changed its source");
     allocationSweep("single mutation", initial, [](auto& document) {
         static_cast<void>(document.addBoxFeature(std::string(200, 'b'), {3, 4, 5}));
     });
@@ -241,6 +286,7 @@ int main(int argc, char** argv) {
 #endif
         } else {
             require(argc == 1, "unknown arguments");
+            independentCopiesAndMoves();
             compoundAndHistory();
             noChangeAndConflicts();
         }

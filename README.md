@@ -10,7 +10,7 @@ architecture decisions, acceptance scenarios, and an execution template for smal
 The current package states and acceptance evidence are tracked in
 [`packets.json`](docs/implementation-plan/packets.json). D10 is complete;
 D11 identity acceptance is complete; see the [acceptance matrix](docs/implementation-plan/evidence/D11-review.md).
-The next block is [D12a](docs/implementation-plan/D12a-plan.md); native product store integration remains open in D13.
+D12a encapsulates model storage and history behind a private implementation; see [evidence](docs/implementation-plan/evidence/D12a.md). OCAF authority (D12b) and native product store integration (D13) remain open.
 
 ## Current state
 
@@ -29,9 +29,9 @@ The repository contains a working native CAD vertical slice:
 - modular workspace and command registry with `Solid` as the first product module;
 - native C++ tests and an enforced 600-line source-file limit.
 
-The accepted D11n source baseline passes **66/66 Windows** and **62/62 FreeBSD/Sway**
+The accepted D12a source baseline passes **66/66 Windows** and **62/62 FreeBSD/Sway**
 tests. Persistent document identity in product commands and Meridian acceptance
-remain open; see the [D11n evidence](docs/implementation-plan/evidence/D11n.md).
+remain open; see the [D12a evidence](docs/implementation-plan/evidence/D12a.md).
 
 ## Versions and changes
 

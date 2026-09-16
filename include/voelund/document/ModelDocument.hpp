@@ -6,6 +6,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <span>
 #include <string>
@@ -89,6 +90,12 @@ using FeatureParameters =
 class ModelDocument final {
   public:
     ModelDocument();
+    ~ModelDocument();
+    ModelDocument(const ModelDocument& other);
+    ModelDocument& operator=(const ModelDocument& other);
+    // A moved-from document may be destroyed or assigned a new value.
+    ModelDocument(ModelDocument&& other) noexcept;
+    ModelDocument& operator=(ModelDocument&& other) noexcept;
     [[nodiscard]] static ModelDocument empty();
 
     [[nodiscard]] static constexpr FeatureId initialBoxId() noexcept { return FeatureId{1}; }
@@ -124,7 +131,7 @@ class ModelDocument final {
     [[nodiscard]] bool canRedo() const noexcept;
     [[nodiscard]] bool undo();
     [[nodiscard]] bool redo();
-    [[nodiscard]] std::uint64_t revision() const noexcept { return revision_; }
+    [[nodiscard]] std::uint64_t revision() const noexcept;
 
   private:
     friend class DocumentSerializer;
@@ -133,12 +140,8 @@ class ModelDocument final {
 
     explicit ModelDocument(bool createStarterFeatures);
 
-    struct State final {
-        std::vector<FeatureDescriptor> features;
-        std::vector<FeatureParameters> parameters;
-        std::uint64_t nextFeatureId;
-        [[nodiscard]] bool operator==(const State&) const = default;
-    };
+    struct State;
+    struct Impl;
 
     [[nodiscard]] std::size_t featureIndex(FeatureId featureId) const;
     [[nodiscard]] State currentState() const;
@@ -147,13 +150,7 @@ class ModelDocument final {
     void checkRevisionAvailable() const;
     [[nodiscard]] FeatureId nextFeatureId() const;
 
-    std::vector<FeatureDescriptor> features_;
-    std::vector<FeatureParameters> parameters_;
-    std::uint64_t nextFeatureId_{1};
-    std::vector<State> undoHistory_;
-    std::vector<State> redoHistory_;
-    std::uint64_t revision_{0};
-    bool transactionCandidate_{false};
+    std::unique_ptr<Impl> impl_;
 };
 
 } // namespace voelund::document

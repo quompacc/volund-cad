@@ -1,3 +1,4 @@
+#include "ModelDocumentImpl.hpp"
 #include <voelund/document/IdCapacity.hpp>
 #include <voelund/document/ModelDocument.hpp>
 #include <voelund/document/SketchPlaneValidation.hpp>
@@ -73,24 +74,24 @@ ModelDocument::ModelDocument() : ModelDocument(true) {}
 
 ModelDocument ModelDocument::empty() { return ModelDocument(false); }
 
-ModelDocument::ModelDocument(bool createStarterFeatures) {
+ModelDocument::ModelDocument(bool createStarterFeatures) : impl_(std::make_unique<Impl>()) {
     if (!createStarterFeatures) {
         return;
     }
-    features_.push_back(FeatureDescriptor{initialBoxId(), FeatureKind::box, "Box", std::nullopt});
-    parameters_.emplace_back(BoxParameters{kernel::BoxDimensions{40.0, 30.0, 20.0},
+    impl_->features_.push_back(FeatureDescriptor{initialBoxId(), FeatureKind::box, "Box", std::nullopt});
+    impl_->parameters_.emplace_back(BoxParameters{kernel::BoxDimensions{40.0, 30.0, 20.0},
                                            kernel::RigidTransform{0.0, 0.0, 0.0, {}, {}, {}}});
-    features_.push_back(
+    impl_->features_.push_back(
         FeatureDescriptor{initialCylinderId(), FeatureKind::cylinder, "Cylinder", initialBoxId()});
-    parameters_.emplace_back(CylinderParameters{
+    impl_->parameters_.emplace_back(CylinderParameters{
         8.0, 25.0, kernel::RigidTransform{0.0, 0.0, 0.0, {}, {}, {}}, CylinderResultMode::join});
-    nextFeatureId_ = 3;
+    impl_->nextFeatureId_ = 3;
 }
 
-std::span<const FeatureDescriptor> ModelDocument::features() const noexcept { return features_; }
+std::span<const FeatureDescriptor> ModelDocument::features() const noexcept { return impl_->features_; }
 
 bool ModelDocument::contains(FeatureId featureId) const noexcept {
-    for (const FeatureDescriptor& feature : features_) {
+    for (const FeatureDescriptor& feature : impl_->features_) {
         if (feature.id == featureId) {
             return true;
         }
@@ -148,7 +149,7 @@ FeatureId ModelDocument::addExtrusionFeature(std::string name, FeatureId sketchF
     if (!contains(sketchFeature))
         throw std::invalid_argument("Extrusion requires an existing sketch");
     validateExtrusion(parameters);
-    if (features_.at(featureIndex(sketchFeature)).kind != FeatureKind::sketch) {
+    if (impl_->features_.at(featureIndex(sketchFeature)).kind != FeatureKind::sketch) {
         throw std::invalid_argument("Extrusion input feature must be a sketch");
     }
     const FeatureId id = nextFeatureId();
@@ -166,7 +167,7 @@ const kernel::BoxDimensions& ModelDocument::boxDimensions(FeatureId featureId) c
 }
 
 const BoxParameters& ModelDocument::boxParameters(FeatureId featureId) const {
-    const FeatureParameters& parameters = parameters_.at(featureIndex(featureId));
+    const FeatureParameters& parameters = impl_->parameters_.at(featureIndex(featureId));
     const auto* box = std::get_if<BoxParameters>(&parameters);
     if (box == nullptr) {
         throw std::out_of_range("Feature is not a box");
@@ -184,7 +185,7 @@ bool ModelDocument::setBoxParameters(FeatureId featureId, const BoxParameters& p
     validateBox(parameters.dimensions);
     validatePlacement(parameters.placement);
     const std::size_t index = featureIndex(featureId);
-    auto* current = std::get_if<BoxParameters>(&parameters_.at(index));
+    auto* current = std::get_if<BoxParameters>(&impl_->parameters_.at(index));
     if (current == nullptr) {
         throw std::out_of_range("Feature is not a box");
     }
@@ -198,7 +199,7 @@ bool ModelDocument::setBoxParameters(FeatureId featureId, const BoxParameters& p
 }
 
 const CylinderParameters& ModelDocument::cylinderParameters(FeatureId featureId) const {
-    const FeatureParameters& parameters = parameters_.at(featureIndex(featureId));
+    const FeatureParameters& parameters = impl_->parameters_.at(featureIndex(featureId));
     const auto* cylinder = std::get_if<CylinderParameters>(&parameters);
     if (cylinder == nullptr) {
         throw std::out_of_range("Feature is not a cylinder");
@@ -210,7 +211,7 @@ bool ModelDocument::setCylinderParameters(FeatureId featureId,
                                           const CylinderParameters& parameters) {
     validateCylinderParameters(parameters);
     const std::size_t index = featureIndex(featureId);
-    auto* current = std::get_if<CylinderParameters>(&parameters_.at(index));
+    auto* current = std::get_if<CylinderParameters>(&impl_->parameters_.at(index));
     if (current == nullptr) {
         throw std::out_of_range("Feature is not a cylinder");
     }
@@ -224,7 +225,7 @@ bool ModelDocument::setCylinderParameters(FeatureId featureId,
 }
 
 const SketchParameters& ModelDocument::sketchParameters(FeatureId featureId) const {
-    const auto* value = std::get_if<SketchParameters>(&parameters_.at(featureIndex(featureId)));
+    const auto* value = std::get_if<SketchParameters>(&impl_->parameters_.at(featureIndex(featureId)));
     if (value == nullptr) {
         throw std::out_of_range("Feature is not a sketch");
     }
@@ -234,7 +235,7 @@ const SketchParameters& ModelDocument::sketchParameters(FeatureId featureId) con
 bool ModelDocument::setSketchParameters(FeatureId featureId, const SketchParameters& parameters) {
     validateSketchParameters(parameters);
     const std::size_t index = featureIndex(featureId);
-    auto* current = std::get_if<SketchParameters>(&parameters_.at(index));
+    auto* current = std::get_if<SketchParameters>(&impl_->parameters_.at(index));
     if (current == nullptr) {
         throw std::out_of_range("Feature is not a sketch");
     }
@@ -258,7 +259,7 @@ SketchElementId ModelDocument::addSketchElement(FeatureId featureId, SketchGeome
 }
 
 const ExtrusionParameters& ModelDocument::extrusionParameters(FeatureId featureId) const {
-    const auto* value = std::get_if<ExtrusionParameters>(&parameters_.at(featureIndex(featureId)));
+    const auto* value = std::get_if<ExtrusionParameters>(&impl_->parameters_.at(featureIndex(featureId)));
     if (value == nullptr) {
         throw std::out_of_range("Feature is not an extrusion");
     }
@@ -269,7 +270,7 @@ bool ModelDocument::setExtrusionParameters(FeatureId featureId,
                                            const ExtrusionParameters& parameters) {
     validateExtrusion(parameters);
     const std::size_t index = featureIndex(featureId);
-    auto* current = std::get_if<ExtrusionParameters>(&parameters_.at(index));
+    auto* current = std::get_if<ExtrusionParameters>(&impl_->parameters_.at(index));
     if (current == nullptr) {
         throw std::out_of_range("Feature is not an extrusion");
     }
@@ -283,7 +284,7 @@ bool ModelDocument::setExtrusionParameters(FeatureId featureId,
 }
 
 const kernel::RigidTransform& ModelDocument::featurePlacement(FeatureId featureId) const {
-    const FeatureParameters& parameters = parameters_.at(featureIndex(featureId));
+    const FeatureParameters& parameters = impl_->parameters_.at(featureIndex(featureId));
     if (const auto* box = std::get_if<BoxParameters>(&parameters)) {
         return box->placement;
     }
@@ -298,7 +299,7 @@ bool ModelDocument::setFeaturePlacement(FeatureId featureId,
                                         const kernel::RigidTransform& placement) {
     validatePlacement(placement);
     const std::size_t index = featureIndex(featureId);
-    FeatureParameters changed = parameters_.at(index);
+    FeatureParameters changed = impl_->parameters_.at(index);
     if (auto* box = std::get_if<BoxParameters>(&changed)) {
         box->placement = placement;
     } else if (auto* cylinder = std::get_if<CylinderParameters>(&changed)) {
@@ -306,7 +307,7 @@ bool ModelDocument::setFeaturePlacement(FeatureId featureId,
     } else {
         throw std::out_of_range("Feature has no rigid placement");
     }
-    if (changed == parameters_.at(index)) {
+    if (changed == impl_->parameters_.at(index)) {
         return false;
     }
     auto candidate = currentState();
@@ -316,12 +317,28 @@ bool ModelDocument::setFeaturePlacement(FeatureId featureId,
 }
 
 std::size_t ModelDocument::featureIndex(FeatureId featureId) const {
-    for (std::size_t index = 0; index < features_.size(); ++index) {
-        if (features_[index].id == featureId) {
+    for (std::size_t index = 0; index < impl_->features_.size(); ++index) {
+        if (impl_->features_[index].id == featureId) {
             return index;
         }
     }
     throw std::out_of_range("Unknown feature ID");
 }
 
+} // namespace voelund::document
+
+namespace voelund::document {
+ModelDocument::~ModelDocument() = default;
+ModelDocument::ModelDocument(const ModelDocument& other)
+    : impl_(std::make_unique<Impl>(*other.impl_)) {}
+ModelDocument& ModelDocument::operator=(const ModelDocument& other) {
+    if (this != &other) {
+        auto copy = std::make_unique<Impl>(*other.impl_);
+        impl_.swap(copy);
+    }
+    return *this;
+}
+ModelDocument::ModelDocument(ModelDocument&& other) noexcept = default;
+ModelDocument& ModelDocument::operator=(ModelDocument&& other) noexcept = default;
+std::uint64_t ModelDocument::revision() const noexcept { return impl_->revision_; }
 } // namespace voelund::document
