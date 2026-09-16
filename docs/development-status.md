@@ -56,6 +56,12 @@ D11l: gemeinsame Feld-/Identitätsprüfung und gemischter Schematest vollständi
 mit **65/65 Windows**, **61/61 FreeBSD/Sway** und beidseitigem Dateiaustausch geprüft.
 [D11l-Prüfung und offene Integrationsgrenzen](implementation-plan/evidence/D11l.md).
 
+D11m ergänzt den Dokumentidentitäts-Lebenszyklus in CadSession einschließlich
+New, Legacy-Open, Save-As und explizitem Anwendungsduplikat. **66/66 Windows**
+bestanden; FreeBSD-Freigabe und -Prüfung stehen aus. Dokument-IDs werden weiterhin
+nicht in VOLUND 16 gespeichert; Desktop-Duplikataktion noch offen.
+[D11m-Details](implementation-plan/evidence/D11m.md).
+
 ## Verbindliches Produktziel
 
 Nutzerpräzisierung vom 16.09.2026: Mehrere unabhängige Körper direkt in einem

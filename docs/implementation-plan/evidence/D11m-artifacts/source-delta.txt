@@ -1,0 +1,7 @@
+include/voelund/application/CadSession.hpp
+src/application/CMakeLists.txt
+src/application/CadSession.cpp
+src/application/CadSessionPersistence.cpp
+src/application/CadSessionIdentity.cpp
+tests/CMakeLists.txt
+tests/integration/CadSessionIdentityTests.cpp

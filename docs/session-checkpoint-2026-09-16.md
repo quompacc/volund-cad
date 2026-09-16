@@ -19,6 +19,23 @@ Beidseitiger nativer Dateirundlauf bestanden; alle vier Dateien byteidentisch.
 Alle Builds und Tests beendet. Produktquellen wurden in D11l nicht geändert.
 Siehe [D11l](implementation-plan/evidence/D11l.md) für Feldmatrix und offene Grenzen.
 
+## D11m – lokaler Zwischenstand
+
+CadSession besitzt jetzt DocumentId, `identifiedSnapshot()` und
+`duplicateDocument()`. Bearbeitung/Undo/Redo/Save-As behalten die ID; New, Legacy-
+Open und explizites Duplikat erzeugen neue. Legacy-Dateien tragen keine ID, daher
+auch bei erneutem Open derselben Datei neue ID. Duplikat ist ungespeichert/dirty,
+ohne Pfad und flüchtige Historie; Parameter, Zähler und Auswahl bleiben erhalten.
+Desktop-Aktion und native dauerhafte Speicherung fehlen noch.
+
+**66/66 Windows** (95,88 s), **294 lokale Quellhashes unverändert**. Kein laufender
+Windows-Prozess. FreeBSD-Freigabe für sieben Quellen plus Skript angefragt, noch
+ohne Antwort. Übertragung erst nach ausdrücklicher Zustimmung. Vorbereitet:
+`build/d11m/d11m-source-delta.tar`, Delta/Manifest/Skript in `D11m-artifacts`.
+Danach FreeBSD vollständig bauen/testen und 294 Quellhashes abgleichen; bestehende
+native Codec-Tests in der Suite erhalten. Siehe [D11m](implementation-plan/evidence/D11m.md).
+Letzter vollständiger beidseitiger Nachweis bleibt D11l.
+
 ## Nächster Block
 
 Neue verbindliche Nutzeranforderung: einfacher Mehrkörperworkflow nach dem gezeigten
@@ -28,11 +45,11 @@ abgenommen. Die Schema-/Identitätsprüfung bestätigt, dass unabhängige
 Körper direkt unter dem Dokument möglich sind; den UI-/NewBody-Ausbau über
 S03/M01–M04 nicht mit den bereits bestandenen Codec-Tests gleichsetzen.
 
-Als nächster Schritt: **produktiven Dokumentidentitäts-
-Lebenszyklus an der CadSession-/Snapshot-Grenze** implementieren. New erzeugt einen
-Namensraum, Revision/Wertkopie/Save-As behalten ihn, Duplikat wechselt ihn.
-Legacy-Open-Regel ausdrücklich festlegen; Persistenzgrenze zu D13 sichtbar halten.
-D11 bleibt offen, bis seine produktiven Identitätsabnahmen erfüllt sind.
+Zuerst offenen D11m-FreeBSD-Nachweis abschließen. Danach explizites Duplizieren
+an den bestehenden Desktop-Dokumentablauf anbinden, einschließlich Umgang mit
+ungespeicherten Änderungen. Die Anwendungsmethode existiert; keine zweite
+Dokumentautorität einführen. Native Persistenz bleibt D12/D13 zugeordnet.
+D11 bleibt bis zur vollständigen Identitätsabnahme offen.
 
 Der Autoritäts-/Store-Wechsel folgt gemäß [ADR 0008](adr/0008-ocaf-binary-persistence.md)
 und D12/D13. Noch kein produktiver nativer Dispatch: **VOLUND 16 bleibt Produktwriter**.

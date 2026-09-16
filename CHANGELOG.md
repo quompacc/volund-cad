@@ -12,6 +12,11 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 
 ### Hinzugefügt
 
+- Dokument-ID und identifizierter Snapshot an CadSession: Bearbeitung, Undo/Redo
+  und Save-As behalten die ID; New, Legacy-Open und explizites Anwendungsduplikat
+  erzeugen neue Namensräume. D11m lokal mit 66/66 Windows geprüft; FreeBSD offen.
+  Die ID wird noch nicht in VOLUND 16 gespeichert; Desktop-Duplikataktion folgt.
+
 - Gemeinsamer nativer Schematest mit allen vier Featurearten, drei unabhängigen
   Körpern, Umordnung, Umbenennung, Duplikat-/Revisionssemantik und ID-Vergabe nach Undo.
   Die D11l-Prüfung dokumentiert die Grenzen zu Produktidentität und Mehrkörper-UI.

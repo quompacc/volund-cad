@@ -43,6 +43,13 @@ Open übernimmt die gespeicherte ID, Save-As soll sie erhalten. Die letzte Aussa
 ist ein Integrationsvertrag, noch kein produktiver Persistenznachweis. Die ID ist
 kein Pfad-/Namens-/Inhaltshash und keine Revisionsnummer; es gibt keine UUID-Behauptung.
 
+[D11m](evidence/D11m.md) bindet diese ID an CadSession: New und explizites
+Anwendungsduplikat erzeugen neue Namensräume; Bearbeitung, Undo/Redo und Save-As
+erhalten sie. Legacy-Dateien ohne ID bekommen bei jedem erfolgreichen Open einen
+neuen Namensraum. Fehlgeschlagenes Open/Save verändert ihn nicht. VOLUND 16 bleibt
+unverändert und speichert die ID noch nicht; native dauerhafte Identität bleibt
+D12/D13 vorbehalten. Die Desktop-Aktion für das Anwendungsduplikat ist noch offen.
+
 ## K03 – Befehle und Transaktionen
 
 D04 konkretisiert diesen Vertrag im [geprüften Schnittstellen- und Migrationsentwurf](../command-transaction-contract.md). Die produktive Anbindung folgt D05/D06.

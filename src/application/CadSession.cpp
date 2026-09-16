@@ -362,8 +362,10 @@ void CadSession::newDocument() {
         throw std::overflow_error("Document generation exhausted");
     auto empty = document::ModelDocument::empty();
     auto clean = std::optional{document::DocumentSnapshot::capture(empty)};
+    const auto identity = document::IdentifiedDocumentSnapshot::restore(documentId_, *clean).duplicate().id();
     // Empty document and clean baseline are prepared before publication.
     document_ = std::move(empty);
+    documentId_ = identity;
     ++generation_;
     currentFile_.clear();
     importReport_.reset();
