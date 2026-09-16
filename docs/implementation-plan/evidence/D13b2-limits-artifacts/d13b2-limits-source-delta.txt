@@ -1,0 +1,10 @@
+src/document/NativeAttributeValues.hpp
+src/document/NativeAttributeValues.cpp
+src/document/NativeContainerStructure.hpp
+src/document/NativeContainerStructure.cpp
+src/document/NativeDocumentStore.cpp
+src/document/BoundedNativeOutput.hpp
+src/document/CMakeLists.txt
+tests/integration/NativeAttributeValuesTests.cpp
+tests/integration/NativeOutputLimitsTests.cpp
+tests/CMakeLists.txt

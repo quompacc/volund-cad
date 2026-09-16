@@ -2,6 +2,7 @@
 #include "NativePrimitiveCodec.hpp"
 #include "NativeContainerStructure.hpp"
 #include "DocumentSerializationDetail.hpp"
+#include "BoundedNativeOutput.hpp"
 #include <voelund/kernel/OcctCompatibility.hpp>
 #include <BinDrivers.hxx>
 #include <PCDM_ReaderStatus.hxx>
@@ -30,10 +31,11 @@ std::string NativeDocumentStore::encode(const IdentifiedDocumentSnapshot& snapsh
         session.application->NewDocument("BinOcaf", session.document);
         session.document->ChangeStorageFormatVersion(TDocStd_FormatVersion_VERSION_12);
         NativePrimitiveCodec::write(session.document, snapshot);
-        std::ostringstream output(std::ios::binary);
+        BoundedNativeOutput buffer;
+        std::ostream output(&buffer);
         if (session.application->SaveAs(session.document, output) != PCDM_SS_OK || !output.good())
             throw std::runtime_error("Native document serialization failed");
-        auto bytes = std::move(output).str();
+        auto bytes = buffer.release();
         if (bytes.size() > maximumDocumentBytes)
             throw std::invalid_argument("Native document byte limit exceeded");
         validateNativeContainerStructure(bytes, true);

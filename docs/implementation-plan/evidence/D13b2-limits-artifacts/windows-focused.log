@@ -1,0 +1,23 @@
+Test project V:/build/p02-qt-final
+    Start  5: document.native_output_limits
+1/6 Test  #5: document.native_output_limits .........   Passed    0.03 sec
+    Start  6: document.native_attribute_values
+2/6 Test  #6: document.native_attribute_values ......   Passed    0.28 sec
+    Start  7: document.native_container_structure
+3/6 Test  #7: document.native_container_structure ...   Passed    0.44 sec
+    Start  8: document.native_container_header
+4/6 Test  #8: document.native_container_header ......   Passed    0.18 sec
+    Start  9: document.file_input
+5/6 Test  #9: document.file_input ...................   Passed    0.34 sec
+    Start 10: document.native_store
+6/6 Test #10: document.native_store .................   Passed    0.20 sec
+
+100% tests passed, 0 tests failed out of 6
+
+Label Time Summary:
+document       =   1.48 sec*proc (6 tests)
+integration    =   1.48 sec*proc (6 tests)
+native         =   1.14 sec*proc (5 tests)
+regression     =   1.48 sec*proc (6 tests)
+
+Total Test time (real) =   1.54 sec

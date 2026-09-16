@@ -56,6 +56,9 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 
 ### Geändert
 
+- D13b2 begrenzt native Ausgabebytes bereits während des Schreibens und erhält
+  OCCTs Rückwärtskorrekturen von Größen/Offsets. Zusätzliche Grenztests prüfen
+  das Referenzpfadbudget und die maximale interne Attribut-ID.
 - D13b2 ergänzt die Vorprüfung der fünf unterstützten Attributtreiber:
   innere Werte, Array-/Referenzgrenzen, eindeutige Attribut-IDs und begrenzte
   Referenzpfade. Plattformabnahme und Gesamtabschluss stehen im Paketnachweis.

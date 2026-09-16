@@ -47,10 +47,11 @@ Einlesen ohne Seek und Formatzuordnung. **71/71 Windows**, **68/68 FreeBSD/Sway*
 **D13b2, zweiter Teil geprüft:** Abschnittstabelle, äußere Attributblockgrößen,
 Baumgrenzen und Dateiende. **73/73 Windows**, **70/70 FreeBSD/Sway**,
 **312 Quellhashes identisch**; [Nachweis](implementation-plan/evidence/D13b2-structure.md).
-D13b2 bleibt offen. Die Attributwerte-/Treiberprüfung ist implementiert;
-[Prüfstand](implementation-plan/evidence/D13b2-attributes.md).
-Die FreeBSD-Freigabe für die acht neuen/geänderten Dateien ist angefragt.
-Danach folgen Plattformabnahme und D13b2-Gesamtreview; noch kein Produktwriterwechsel.
+**D13b2, Attributprüfung und Ausgabelimits gemeinsam geprüft:**
+**75/75 Windows**, **72/72 FreeBSD/Sway**, **317 Quellhashes identisch**.
+Die zuvor offene FreeBSD-Abnahme ist nachgeholt.
+[Nachweis](implementation-plan/evidence/D13b2-limits.md).
+Nächster Block: D13b2-Gesamtreview; noch kein Produktwriterwechsel.
 [Teilplan](implementation-plan/D13-plan.md). Insgesamt bleiben 88 von 110 Hauptpaketen offen.
 
 A-BODY-03, D13, Referenz-/DAG-Arbeiten und Meridian L07 bleiben offen.

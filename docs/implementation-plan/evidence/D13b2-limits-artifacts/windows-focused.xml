@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Win32-ninja"
+	tests="6"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname="megatron"
+	time="1"
+	timestamp="2026-09-16T20:07:40"
+	>
+	<testcase name="document.native_output_limits" classname="document.native_output_limits" time="0.0348609" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;native;regression"/>
+		</properties>
+		<system-out>PASS native output: byte caps, backpatch, seek errors, OCCT roundtrip and failure
+</system-out>
+	</testcase>
+	<testcase name="document.native_attribute_values" classname="document.native_attribute_values" time="0.277102" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;native;regression"/>
+		</properties>
+		<system-out>PASS native attributes: drivers, values, array bounds, reference lengths, IDs, roundtrip
+</system-out>
+	</testcase>
+	<testcase name="document.native_container_structure" classname="document.native_container_structure" time="0.44129" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;native;regression"/>
+		</properties>
+		<system-out>PASS native structure: TOC, label sizes, records, depth/count limits, truncation, EOF
+</system-out>
+	</testcase>
+	<testcase name="document.native_container_header" classname="document.native_container_header" time="0.181246" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;native;regression"/>
+		</properties>
+		<system-out>PASS native header: ranges, lengths, counts, version, truncation, roundtrip
+</system-out>
+	</testcase>
+	<testcase name="document.file_input" classname="document.file_input" time="0.342737" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;regression"/>
+		</properties>
+		<system-out>PASS file input: 16 legacy versions, native, forward streams, EOF, I/O errors, size limits
+</system-out>
+	</testcase>
+	<testcase name="document.native_store" classname="document.native_store" time="0.203819" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;native;regression"/>
+		</properties>
+		<system-out>PASS native store: snapshots, identity, history, watermark, malformed input, schema, size
+</system-out>
+	</testcase>
+</testsuite>

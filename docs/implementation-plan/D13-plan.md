@@ -7,7 +7,7 @@ Der Produktwriter bleibt bis zur zusammenhängenden Umschaltung VOLUND 16.
 | --- | --- | --- |
 | D13a | Privater BinOcaf-Payloadadapter mit Schema-/Identitätsvalidierung | [Nachweis](evidence/D13a.md): encode/decode, vier Featurearten, Fehlerfälle, beide Plattformen. Noch kein Produktdispatch. |
 | D13b1 | Begrenztes Einlesen und Formatzuordnung | [Auf beiden Plattformen geprüft](evidence/D13b1.md): vollständige Bytes ohne Seek, 64-MiB-Grenze, Legacy-Versionen und native Containerfamilie; noch kein Produktdispatch. |
-| D13b2 | Native Containerprüfung und Ressourcenpolitik | [Dateikopf](evidence/D13b2.md) und [Strukturprüfung](evidence/D13b2-structure.md) vor OCCT-Open. [Attributprüfung](evidence/D13b2-attributes.md) implementiert; Plattformabnahme und Gesamtreview noch offen. D13b2/D13b nicht abgeschlossen. |
+| D13b2 | Native Containerprüfung und Ressourcenpolitik | [Dateikopf](evidence/D13b2.md) und [Strukturprüfung](evidence/D13b2-structure.md) vor OCCT-Open. [Attributprüfung](evidence/D13b2-attributes.md) und [Ausgabelimits](evidence/D13b2-limits.md) geprüft; Gesamtreview noch offen. D13b2/D13b nicht abgeschlossen. |
 | D13c | Save/Open und AtomicFileStore geschlossen anbinden | Genau ein Produktwriter; Dokument-ID bei nativem Open erhalten, Legacy-Open neue ID; Save-As, Dirty-/Save-Revision und starke Fehlergarantien erhalten. |
 | D13d | Austausch und Gesamtprüfung | Native Dateien Windows ↔ FreeBSD, A-SAVE-01/02, editierbare Folgefehler; D13 erst nach Gesamtabnahme abschließen. |
 
@@ -50,8 +50,7 @@ und inkonsistente Grenzen werden vor OCCT-Open abgewiesen.
 
 Die anschließende [Strukturprüfung](evidence/D13b2-structure.md) kontrolliert
 Abschnittstabelle, äußere Attributblockgrößen, Baumtiefe/Labelanzahl und das exakte
-Dateiende. Die Datei ist damit noch nicht vollständig validiert: innere
-Attributwerte und die Zuordnung zu den nativen Treibern bleiben als nächste Arbeit offen. Der FSD-Wert edata markiert hier nur das Metadatenende,
+Dateiende. Die nachfolgende Attributprüfung ergänzt innere Werte und Treiberzuordnung. Der FSD-Wert edata markiert hier nur das Metadatenende,
 nicht das Dateiende. Eine bloße Prüfung edata == Dateigröße wäre fachlich falsch.
 Die D13c-Produktumschaltung bleibt bis zur geklärten Nutzdaten-/Ressourcengrenze offen.
 
@@ -69,6 +68,18 @@ sein. Referenzpfade sind einzeln auf 256 Tags, insgesamt auf 200.000 Tags
 begrenzt. Das begrenzt auch das Erzeugen zusätzlicher Labels durch den nativen
 Referenztreiber. Fachliche Referenzziele bleiben anschließend Sache des Codecs.
 
-Vor D13b2-Abschluss müssen die Plattformabnahme dieses letzten Teils und ein
-Gesamtreview der Ressourcenregeln vorliegen. Die Ausgabepuffergrenze für die
-Produktintegration bleibt ausdrücklich zu entscheiden; noch kein D13c-Writerwechsel.
+Die Attributprüfung ist zusammen mit den [Ausgabelimits](evidence/D13b2-limits.md)
+auf beiden Plattformen geprüft. Referenzbudget und maximale interne Attribut-ID
+haben zusätzliche Grenztests. Vor D13b2-Abschluss folgt das Gesamtreview der
+Ressourcenregeln; noch kein D13c-Writerwechsel.
+
+## Ausgabepuffer
+
+Der seekbare native Ausgabepuffer begrenzt ab diesem Stand jeden Schreibzugriff
+vor dem Vergrößern auf höchstens 64 MiB logische Dateibytes. Rückwärtskorrekturen
+von Größen/Offsets bleiben möglich; Seek außerhalb der bereits geschriebenen
+Bytes scheitert. Die abschließende Größenkontrolle bleibt zusätzlich erhalten.
+
+Dies ist keine Obergrenze des Prozessspeichers: String-Kapazität, OCAF-Zustand,
+Snapshots und sonstige Laufzeitstrukturen benötigen zusätzlichen Speicher.
+Die Produktintegration darf die Bytegrenze nicht als RAM-Garantie ausgeben.

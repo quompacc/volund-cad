@@ -113,10 +113,12 @@ alle Prüfprozesse beendet. Historische Austauschdateien weiterhin lesbar.
 D13b2, Attributprüfung implementiert: fünf erlaubte Treiber, innere Werte,
 eindeutige interne Attribut-IDs und Referenzpfadbudget.
 [Prüfstand](implementation-plan/evidence/D13b2-attributes.md).
-Die Freigabe der acht Quellen samt Prüfskript auf FreeBSD ist angefragt;
-noch keine Übertragung. Als Nächstes diese Plattformabnahme nachholen, anschließend
-D13b2-Gesamtreview einschließlich Ressourcenregeln und Ausgabepuffer.
-D13b2 noch nicht abschließen.
+Attributprüfung und Ausgabebegrenzung sind jetzt gemeinsam geprüft:
+**75/75 Windows** (101,51 s), **72/72 FreeBSD/Sway** (38,43 s),
+**317 Quellhashes identisch**. Zehn Quellen samt Prüfskript ausdrücklich
+freigegeben und übertragen; alle Prüfprozesse beendet.
+[Nachweis](implementation-plan/evidence/D13b2-limits.md).
+Nächster Block: **D13b2-Gesamtreview**. D13b2 noch nicht formal abgeschlossen.
 D13b und D13 bleiben insgesamt offen.
 
 Der Autoritätswechsel aus [ADR 0008](adr/0008-ocaf-binary-persistence.md) ist umgesetzt;

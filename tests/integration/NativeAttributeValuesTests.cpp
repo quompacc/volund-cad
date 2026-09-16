@@ -101,12 +101,40 @@ void typeTable(const std::string& bytes) {
     require(types.values[0] == NativeAttributeKind::integer && types.values[1] == NativeAttributeKind::ascii,
         "Driver mapping ignored header order");
 }
+void aggregateLimits(const std::string& bytes) {
+    const auto types = readNativeAttributeTypes(bytes);
+    std::size_t refType = 0;
+    while (types.values.at(refType) != NativeAttributeKind::reference) ++refType;
+    const auto prefix = bytes.substr(0, validateNativeContainerHeader(bytes) + 32);
+    auto makeReferences = [&](std::size_t count) {
+        std::string result = prefix;
+        const auto root = result.size();
+        result.resize(root + 20 + count * 24, '\0');
+        put(result, root + 4, 16 + count * 24, 8);
+        for (std::size_t i = 0; i < count; ++i) {
+            const auto at = root + 12 + i * 24;
+            put(result, at, refType + 1); put(result, at + 4, i + 1);
+            put(result, at + 8, 12); put(result, at + 12, 2); put(result, at + 20, 1);
+        }
+        put(result, result.size() - 8, 0xffffffff); put(result, result.size() - 4, 0xfffffffe);
+        return result;
+    };
+    // 100,000 references with two tags each meet the independent reference budget.
+    validateNativeContainerStructure(makeReferences(100000), true);
+    rejected([&] { validateNativeContainerStructure(makeReferences(100001), true); });
+    auto one = makeReferences(1);
+    put(one, prefix.size() + 16, 200000);
+    validateNativeContainerStructure(one, true);
+    put(one, prefix.size() + 16, 200001);
+    rejected([&] { validateNativeContainerStructure(one, true); });
+}
 void integration() {
     const auto expected = fixture();
     const auto bytes = NativeDocumentStore::encode(expected);
     const auto types = readNativeAttributeTypes(bytes);
     require(types.count == 5, "Fixture does not cover every driver");
     typeTable(bytes);
+    aggregateLimits(bytes);
     require(NativeDocumentStore::decode(bytes) == expected, "Native fields changed");
     auto badType = bytes;
     badType.at(badType.find("TDataStd_AsciiString")) = 'X';

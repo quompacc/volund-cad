@@ -1,6 +1,7 @@
 # D13b2 – Dritter Teil: Attributwerte und Treiberzuordnung
 
-Status: **implementiert; FreeBSD-Abnahme und D13b2-Gesamtreview offen**.
+Status: **auf beiden Plattformen geprüft** im [gemeinsamen Folgestand](D13b2-limits.md).
+D13b2-Gesamtreview bleibt offen.
 Ausgangspunkt: `ce26f6d`. D13b2 und D13 bleiben insgesamt offen.
 
 ## Umsetzung
@@ -67,7 +68,7 @@ Die Gesamtabnahme muss die aggregierten Ressourcenregeln und den noch
 nachgelagerten fachlichen Referenzcheck ausdrücklich einordnen. Nicht jeder
 denkbare Grenzwert ist mit diesem einen Test vollständig abgedeckt.
 
-## Prüfstand
+## Historischer lokaler Prüfstand
 
 **74/74 Windows** bestanden, 101,52 s; **315 lokale Quellhashes unverändert**.
 Die vorhandenen D11l-Dateien windows-schema.cbf und freebsd-freebsd-schema.cbf
@@ -84,3 +85,11 @@ noch keine Übertragung und kein neuer FreeBSD-Prüflauf.
 
 Nächster Schritt: FreeBSD-Abnahme dieses Standes, dann D13b2-Gesamtreview
 einschließlich offener Ressourcen- und Ausgabegrenzen. Produktumschaltung erst D13c.
+
+## Nachgeholte FreeBSD-Abnahme
+
+Der [Folgeblock mit Ausgabelimits](D13b2-limits.md) enthält diesen Attributstand
+und zusätzliche Tests des Referenzbudgets sowie der maximalen Attribut-ID.
+Gemeinsame Abnahme: 75/75 Windows, 72/72 FreeBSD/Sway, 317 identische Quellhashes.
+Die zehn gemeinsamen Dateien samt Prüfskript wurden ausdrücklich freigegeben
+und übertragen. Die obige offene Transfernotiz beschreibt nur den Zwischenstand.

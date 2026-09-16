@@ -1,3 +1,7 @@
+add_executable(voelund_native_output_tests integration/NativeOutputLimitsTests.cpp)
+target_link_libraries(voelund_native_output_tests PRIVATE voelund_project_options Voelund::Document TKBin)
+add_test(NAME document.native_output_limits COMMAND voelund_native_output_tests)
+set_tests_properties(document.native_output_limits PROPERTIES LABELS "integration;document;native;regression" TIMEOUT 60)
 add_executable(voelund_native_attribute_tests integration/NativeAttributeValuesTests.cpp)
 target_link_libraries(voelund_native_attribute_tests PRIVATE voelund_project_options Voelund::Document)
 add_test(NAME document.native_attribute_values COMMAND voelund_native_attribute_tests)
