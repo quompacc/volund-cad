@@ -1,0 +1,17 @@
+src/document/NativeModelState.hpp
+src/document/NativeModelState.cpp
+include/voelund/document/ModelDocument.hpp
+src/document/ModelDocument.cpp
+src/document/ModelDocumentImpl.hpp
+src/document/ModelDocumentHistory.cpp
+include/voelund/document/DocumentSnapshot.hpp
+src/document/DocumentSnapshot.cpp
+include/voelund/document/DocumentTransaction.hpp
+src/document/DocumentTransaction.cpp
+include/voelund/application/CadSession.hpp
+src/application/CadSession.cpp
+src/application/CadSessionIdentity.cpp
+src/application/CadSessionPersistence.cpp
+tests/CMakeLists.txt
+tests/integration/ModelBackendParityTests.cpp
+tests/integration/NativeModelStateTests.cpp

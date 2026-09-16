@@ -56,6 +56,10 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 
 ### Geändert
 
+- D12d stellt das Produktmodell mit Transaktionen und Undo/Redo auf die private
+  OCAF-Autorität um. Modellabfragen nutzen eine unveränderliche abgeleitete Ansicht;
+  CadSession übernimmt die Dokument-ID des Modells. VOLUND 16 bleibt Produktwriter.
+
 - D12c ergänzt einen isolierten privaten OCAF-Zustand mit vorbereiteten Änderungen,
   Abbruch und Undo/Redo bei monotonem ID-Vergabestand. Historie hält vollständige
   OCAF-Stände; die Produktanwendung wird erst in D12d umgestellt.

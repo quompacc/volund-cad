@@ -25,8 +25,12 @@ UI-Datenwerte. **67/67 Windows**, **63/63 FreeBSD/Sway**, **296 Quellhashes iden
 und Historie vollständiger OCAF-Stände; keine native Delta-Undo-Abnahme.
 **68/68 Windows**, **65/65 FreeBSD/Sway**, **299 Quellhashes identisch**.
 [Nachweis und Kosten](implementation-plan/evidence/D12c.md).
-Nächster Block D12d schaltet Produktmodell und Transaktionen/Undo/Redo gemeinsam um;
-D12e nimmt das Gesamtpaket ab. [Bestätigte Aufteilung](implementation-plan/D12-plan.md).
+**D12d ist geprüft:** Produktmodell, Transaktionen und Undo/Redo verwenden jetzt
+OCAF als Autorität; unveränderliche abgeleitete Leseansichten ersetzen die alte
+Vektorautorität. CadSession liest die Modell-ID. **69/69 Windows**, **66/66 FreeBSD/Sway**,
+**300 Quellhashes identisch**. [Nachweis](implementation-plan/evidence/D12d.md).
+Nächster Block: D12e, Gesamtabnahme und Bereinigung; D12 bleibt bis dahin offen.
+[Bestätigte Aufteilung](implementation-plan/D12-plan.md).
 D13 bindet danach den nativen Produktstore an. VOLUND 16 bleibt bis dahin
 Produktwriter ohne persistente DocumentId; Legacy-Open vergibt eine neue
 Dokument-ID. D12a ist noch kein OCAF-Backendwechsel.

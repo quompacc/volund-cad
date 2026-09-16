@@ -73,8 +73,10 @@ void lifecycle() {
     rejected([&] { (void)state.prepare(base); });
     rejected([&] { (void)state.prepare(before.duplicate()); });
     auto invalid = before.snapshot().toDocument();
-    static_cast<void>(invalid.addBoxFeature(std::string(10000, 'x'), {2, 3, 4}));
-    rejected([&] { (void)state.prepare(before.revised(DocumentSnapshot::capture(invalid))); });
+    rejected([&] {
+        static_cast<void>(invalid.addBoxFeature(std::string(10000, 'x'), {2, 3, 4}));
+        (void)state.prepare(before.revised(DocumentSnapshot::capture(invalid)));
+    });
     require(state.snapshot() == before && state.revision() == revision, "Rejection changed state");
     auto first = state.prepareUndo(), stale = state.prepareUndo();
     auto moved = std::move(first);

@@ -890,7 +890,7 @@
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": ["evidence/D12a.md", "evidence/D12b.md", "evidence/D12c.md"],
+      "evidence": ["evidence/D12a.md", "evidence/D12b.md", "evidence/D12c.md", "evidence/D12d.md"],
       "completedCommit": null
     },
     {

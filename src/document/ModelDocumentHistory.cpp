@@ -1,65 +1,32 @@
 #include "ModelDocumentImpl.hpp"
 #include <voelund/document/IdCapacity.hpp>
-#include <algorithm>
 #include <limits>
 #include <stdexcept>
-#include <type_traits>
-#include <voelund/document/ModelDocument.hpp>
 
 namespace voelund::document {
 void ModelDocument::checkRevisionAvailable() const {
-    if (impl_->revision_ == std::numeric_limits<std::uint64_t>::max())
+    if (revision() == std::numeric_limits<std::uint64_t>::max())
         throw std::overflow_error("Document revision exhausted");
 }
 FeatureId ModelDocument::nextFeatureId() const {
-    if (!hasIdCapacity(impl_->nextFeatureId_, 1))
-        throw std::overflow_error("Feature IDs exhausted");
-    return FeatureId{impl_->nextFeatureId_};
+    const auto next = impl_->view().nextFeatureId();
+    if (!hasIdCapacity(next, 1)) throw std::overflow_error("Feature IDs exhausted");
+    return FeatureId{next};
 }
 ModelDocument::State ModelDocument::currentState() const {
-    return {impl_->features_, impl_->parameters_, impl_->nextFeatureId_};
-}
-void ModelDocument::swapState(State& state) noexcept {
-    impl_->features_.swap(state.features);
-    impl_->parameters_.swap(state.parameters);
-    // Restoring content must never make a published feature ID available again.
-    // Transaction candidates own their counter; rollback cannot consume target IDs.
-    const auto previous = impl_->nextFeatureId_;
-    impl_->nextFeatureId_ = std::max(impl_->nextFeatureId_, state.nextFeatureId);
-    state.nextFeatureId = previous;
+    const auto& view = impl_->view();
+    return {{view.features().begin(), view.features().end()},
+            {view.parameters().begin(), view.parameters().end()}, view.nextFeatureId()};
 }
 void ModelDocument::commitState(State state) {
-    checkRevisionAvailable();
-    if (!impl_->transactionCandidate_) {
-        auto before = currentState();
-        impl_->undoHistory_.push_back(std::move(before));
-        impl_->redoHistory_.clear();
-    }
-    swapState(state);
-    ++impl_->revision_;
+    const DocumentSnapshot snapshot(std::move(state.features), std::move(state.parameters),
+                                    state.nextFeatureId);
+    auto prepared = impl_->native.prepare(IdentifiedDocumentSnapshot::restore(documentId(), snapshot),
+                                          !impl_->transactionCandidate_);
+    (void)impl_->native.commit(std::move(prepared));
 }
-bool ModelDocument::canUndo() const noexcept { return !impl_->undoHistory_.empty(); }
-bool ModelDocument::canRedo() const noexcept { return !impl_->redoHistory_.empty(); }
-bool ModelDocument::undo() {
-    if (!canUndo())
-        return false;
-    checkRevisionAvailable();
-    auto before = currentState();
-    impl_->redoHistory_.push_back(std::move(before));
-    swapState(impl_->undoHistory_.back());
-    impl_->undoHistory_.pop_back();
-    ++impl_->revision_;
-    return true;
-}
-bool ModelDocument::redo() {
-    if (!canRedo())
-        return false;
-    checkRevisionAvailable();
-    auto before = currentState();
-    impl_->undoHistory_.push_back(std::move(before));
-    swapState(impl_->redoHistory_.back());
-    impl_->redoHistory_.pop_back();
-    ++impl_->revision_;
-    return true;
-}
+bool ModelDocument::canUndo() const noexcept { return impl_->native.canUndo(); }
+bool ModelDocument::canRedo() const noexcept { return impl_->native.canRedo(); }
+bool ModelDocument::undo() { return impl_->native.commit(impl_->native.prepareUndo()); }
+bool ModelDocument::redo() { return impl_->native.commit(impl_->native.prepareRedo()); }
 } // namespace voelund::document

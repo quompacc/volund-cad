@@ -23,10 +23,12 @@ class DocumentSnapshot final {
     [[nodiscard]] const ExtrusionParameters& extrusionParameters(FeatureId id) const;
     [[nodiscard]] const kernel::BoxDimensions& boxDimensions(FeatureId id) const;
     [[nodiscard]] ModelDocument toDocument() const;
+    [[nodiscard]] ModelDocument toDocument(DocumentId id) const;
     [[nodiscard]] bool operator==(const DocumentSnapshot&) const = default;
 
   private:
     friend class LegacyDocumentImporter;
+    friend class ModelDocument;
     friend class detail::NativePrimitiveCodec;
     friend class detail::NativeModelState;
     DocumentSnapshot(std::vector<FeatureDescriptor> features,

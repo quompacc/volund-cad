@@ -1,3 +1,7 @@
+add_executable(voelund_model_backend_tests integration/ModelBackendParityTests.cpp)
+target_link_libraries(voelund_model_backend_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME document.product_ocaf_backend COMMAND voelund_model_backend_tests)
+set_tests_properties(document.product_ocaf_backend PROPERTIES LABELS "integration;document;application;regression" TIMEOUT 60)
 add_executable(voelund_native_model_state_tests integration/NativeModelStateTests.cpp unit/AllocationFailure.cpp)
 target_link_libraries(voelund_native_model_state_tests PRIVATE voelund_project_options Voelund::Document)
 add_test(NAME document.native_model_state COMMAND voelund_native_model_state_tests)

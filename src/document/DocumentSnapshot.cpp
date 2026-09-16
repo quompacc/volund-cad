@@ -5,10 +5,11 @@
 
 namespace voelund::document {
 DocumentSnapshot DocumentSnapshot::capture(const ModelDocument& document) {
-    return {document.impl_->features_, document.impl_->parameters_, document.impl_->nextFeatureId_};
+    return document.impl_->view();
 }
 bool DocumentSnapshot::matchesContent(const ModelDocument& document) const {
-    return features_ == document.impl_->features_ && parameters_ == document.impl_->parameters_;
+    const auto& view = document.impl_->view();
+    return std::ranges::equal(features_, view.features()) && std::ranges::equal(parameters_, view.parameters());
 }
 const FeatureParameters& DocumentSnapshot::featureParameters(FeatureId id) const {
     const auto found = std::ranges::find(features_, id, &FeatureDescriptor::id);
@@ -32,10 +33,9 @@ const kernel::BoxDimensions& DocumentSnapshot::boxDimensions(FeatureId id) const
     return boxParameters(id).dimensions;
 }
 ModelDocument DocumentSnapshot::toDocument() const {
-    auto document = ModelDocument::empty();
-    document.impl_->features_ = features_;
-    document.impl_->parameters_ = parameters_;
-    document.impl_->nextFeatureId_ = nextFeatureId_;
-    return document;
+    return toDocument(generateDocumentId());
+}
+ModelDocument DocumentSnapshot::toDocument(DocumentId id) const {
+    return ModelDocument(*this, id);
 }
 } // namespace voelund::document

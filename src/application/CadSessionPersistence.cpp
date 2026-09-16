@@ -77,7 +77,8 @@ void CadSession::loadDocument(const std::filesystem::path& path) {
     auto candidate = prepareLoad(input);
     // Legacy files carry no DocumentId. Each successful import starts a new namespace.
     // Prepare entropy/allocation before publishing any part of the loaded state.
-    const auto identity = document::IdentifiedDocumentSnapshot::restore(documentId_, *candidate.clean).duplicate().id();
+    const auto identity = document::IdentifiedDocumentSnapshot::restore(documentId(), *candidate.clean).duplicate().id();
+    candidate.document = candidate.clean->toDocument(identity);
     const bool valid = std::ranges::all_of(candidate.states, [](const auto& state) {
         return state.status == FeatureRuntimeStatus::current;
     });
@@ -88,7 +89,6 @@ void CadSession::loadDocument(const std::filesystem::path& path) {
     static_assert(std::is_nothrow_move_assignable_v<TopoDS_Shape>);
     static_assert(std::is_nothrow_move_assignable_v<decltype(importReport_)>);
     document_ = std::move(candidate.document);
-    documentId_ = identity;
     importReport_ = std::move(candidate.report);
     ++generation_;
     geometryStamp_ = valid ? std::optional<DocumentStamp>{sceneStatus().document} : std::nullopt;

@@ -26,8 +26,8 @@ class DocumentTransaction final {
     ModelDocument candidate_;
     std::uint64_t baseRevision_;
     std::uint64_t preparedRevision_{0};
-    std::unique_ptr<ModelDocument::State> before_;
-    std::unique_ptr<ModelDocument::State> after_;
+
+    std::unique_ptr<ModelDocument::Impl> after_;
     bool prepared_{false};
     bool finished_{false};
 };

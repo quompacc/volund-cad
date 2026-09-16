@@ -14,7 +14,10 @@ Handle(TDocStd_Document) NativeModelState::encode(const IdentifiedDocumentSnapsh
 NativeModelState::NativeModelState(const IdentifiedDocumentSnapshot& initial)
     : state_(std::make_unique<State>()) {
     state_->current = encode(initial);
+    state_->view = std::make_shared<const IdentifiedDocumentSnapshot>(snapshot());
 }
+NativeModelState::NativeModelState(const NativeModelState& other)
+    : state_(std::make_unique<State>(*other.state_)) {}
 IdentifiedDocumentSnapshot NativeModelState::snapshot() const {
     return NativePrimitiveCodec::read(state_->current);
 }
@@ -26,8 +29,8 @@ void NativeModelState::checkRevisionAvailable() const {
         throw std::overflow_error("Native model revision exhausted");
 }
 NativeModelState::Prepared NativeModelState::prepare(
-        const IdentifiedDocumentSnapshot& replacement) const {
-    const auto before = snapshot();
+        const IdentifiedDocumentSnapshot& replacement, bool recordHistory) const {
+    const auto& before = view();
     if (replacement.id() != before.id() ||
         replacement.snapshot().nextFeatureId() < before.snapshot().nextFeatureId())
         throw std::invalid_argument("Native revision cannot change identity or lower ID watermark");
@@ -36,7 +39,8 @@ NativeModelState::Prepared NativeModelState::prepare(
     checkRevisionAvailable();
     auto next = std::make_unique<State>(*state_);
     next->current = encode(replacement);
-    next->undo.push_back(state_->current);
+    next->view = std::make_shared<const IdentifiedDocumentSnapshot>(NativePrimitiveCodec::read(next->current));
+    if (recordHistory) next->undo.push_back(state_->current);
     next->redo.clear();
     ++next->revision;
     return Prepared(this, revision(), std::move(next));
@@ -46,7 +50,7 @@ NativeModelState::Prepared NativeModelState::prepareHistory(bool undo) const {
     if (history.empty())
         return Prepared(this, revision(), nullptr);
     checkRevisionAvailable();
-    const auto before = snapshot();
+    const auto& before = view();
     const auto historical = NativePrimitiveCodec::read(history.back());
     auto content = historical.snapshot();
     // Undo restores content, never the old published-ID allocation watermark.
@@ -54,6 +58,7 @@ NativeModelState::Prepared NativeModelState::prepareHistory(bool undo) const {
     const auto restored = IdentifiedDocumentSnapshot::restore(before.id(), std::move(content));
     auto next = std::make_unique<State>(*state_);
     next->current = encode(restored);
+    next->view = std::make_shared<const IdentifiedDocumentSnapshot>(NativePrimitiveCodec::read(next->current));
     (undo ? next->redo : next->undo).push_back(state_->current);
     (undo ? next->undo : next->redo).pop_back();
     ++next->revision;

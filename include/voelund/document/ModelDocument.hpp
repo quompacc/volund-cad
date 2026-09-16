@@ -1,6 +1,7 @@
 #pragma once
 
 #include <voelund/document/FeatureId.hpp>
+#include <voelund/document/DocumentId.hpp>
 #include <voelund/document/SketchGeometry.hpp>
 #include <voelund/kernel/ShapeFactory.hpp>
 
@@ -18,6 +19,7 @@ namespace voelund::document {
 
 class DocumentSerializer;
 class DocumentTransaction;
+class DocumentSnapshot;
 
 enum class FeatureKind { box, cylinder, sketch, extrusion };
 enum class CylinderResultMode { join, cut, intersect, separate };
@@ -97,6 +99,7 @@ class ModelDocument final {
     ModelDocument(ModelDocument&& other) noexcept;
     ModelDocument& operator=(ModelDocument&& other) noexcept;
     [[nodiscard]] static ModelDocument empty();
+    [[nodiscard]] DocumentId documentId() const noexcept;
 
     [[nodiscard]] static constexpr FeatureId initialBoxId() noexcept { return FeatureId{1}; }
     [[nodiscard]] static constexpr FeatureId initialCylinderId() noexcept { return FeatureId{2}; }
@@ -136,16 +139,18 @@ class ModelDocument final {
   private:
     friend class DocumentSerializer;
     friend class DocumentSnapshot;
+    friend struct ModelDocumentBackendTestAccess;
     friend class DocumentTransaction;
 
     explicit ModelDocument(bool createStarterFeatures);
+    ModelDocument(const DocumentSnapshot& snapshot, DocumentId id);
 
     struct State;
     struct Impl;
 
     [[nodiscard]] std::size_t featureIndex(FeatureId featureId) const;
     [[nodiscard]] State currentState() const;
-    void swapState(State& state) noexcept;
+    static DocumentSnapshot initialSnapshot(bool createStarterFeatures);
     void commitState(State state);
     void checkRevisionAvailable() const;
     [[nodiscard]] FeatureId nextFeatureId() const;

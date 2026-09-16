@@ -5,12 +5,13 @@
 #include <utility>
 
 namespace voelund::document::detail {
-// Isolated OCAF revision store. Not yet used by ModelDocument or CadSession.
+// Private OCAF authority; immutable read views are derived before publication.
 // No mutable native handle escapes. Prepared changes require the target to outlive them.
 class NativeModelState final {
     friend struct NativeModelStateTestAccess;
     struct State {
         Handle(TDocStd_Document) current;
+        std::shared_ptr<const IdentifiedDocumentSnapshot> view;
         std::vector<Handle(TDocStd_Document)> undo;
         std::vector<Handle(TDocStd_Document)> redo;
         std::uint64_t revision{0};
@@ -35,13 +36,14 @@ class NativeModelState final {
         bool consumed_{false};
     };
     explicit NativeModelState(const IdentifiedDocumentSnapshot& initial);
-    NativeModelState(const NativeModelState&) = delete;
+    NativeModelState(const NativeModelState& other);
     NativeModelState& operator=(const NativeModelState&) = delete;
     [[nodiscard]] IdentifiedDocumentSnapshot snapshot() const;
+    [[nodiscard]] const IdentifiedDocumentSnapshot& view() const noexcept { return *state_->view; }
     [[nodiscard]] std::uint64_t revision() const noexcept;
     [[nodiscard]] bool canUndo() const noexcept;
     [[nodiscard]] bool canRedo() const noexcept;
-    [[nodiscard]] Prepared prepare(const IdentifiedDocumentSnapshot& replacement) const;
+    [[nodiscard]] Prepared prepare(const IdentifiedDocumentSnapshot& replacement, bool recordHistory = true) const;
     [[nodiscard]] Prepared prepareUndo() const;
     [[nodiscard]] Prepared prepareRedo() const;
     // A successful prepared commit only swaps owners; no allocation/native mutation.

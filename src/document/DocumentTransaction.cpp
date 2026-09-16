@@ -5,11 +5,9 @@
 
 namespace voelund::document {
 DocumentTransaction::DocumentTransaction(ModelDocument& target)
-    : target_(target), candidate_(ModelDocument::empty()), baseRevision_(target.revision()) {
+    : target_(target), candidate_(DocumentSnapshot::capture(target).toDocument(target.documentId())), baseRevision_(target.revision()) {
     if (target.impl_->transactionCandidate_)
         throw std::logic_error("Nested document transactions are not supported");
-    auto state = target.currentState();
-    candidate_.swapState(state);
     candidate_.impl_->transactionCandidate_ = true;
 }
 DocumentTransaction::~DocumentTransaction() = default;
@@ -36,9 +34,11 @@ bool DocumentTransaction::prepare() {
     auto after = candidate_.currentState();
     if (!(before == after)) {
         target_.checkRevisionAvailable();
-        target_.impl_->undoHistory_.reserve(target_.impl_->undoHistory_.size() + 1);
-        before_ = std::make_unique<ModelDocument::State>(std::move(before));
-        after_ = std::make_unique<ModelDocument::State>(std::move(after));
+        auto prepared = std::make_unique<ModelDocument::Impl>(*target_.impl_);
+        const auto replacement = IdentifiedDocumentSnapshot::restore(target_.documentId(),
+            DocumentSnapshot::capture(candidate_));
+        (void)prepared->native.commit(prepared->native.prepare(replacement));
+        after_ = std::move(prepared);
     }
     preparedRevision_ = candidate_.revision();
     prepared_ = true;
@@ -48,20 +48,14 @@ bool DocumentTransaction::commit() {
     const bool changed = prepare();
     // prepare verifies both revisions even when called for the second time.
     if (changed) {
-        static_assert(std::is_nothrow_move_constructible_v<ModelDocument::State>);
-        target_.impl_->undoHistory_.push_back(std::move(*before_)); // capacity reserved in prepare
-        target_.swapState(*after_);
-        target_.impl_->redoHistory_.clear();
-        ++target_.impl_->revision_;
+        target_.impl_.swap(after_);
     }
     finished_ = true;
-    before_.reset();
     after_.reset();
     return changed;
 }
 void DocumentTransaction::rollback() noexcept {
     finished_ = true;
-    before_.reset();
     after_.reset();
 }
 } // namespace voelund::document

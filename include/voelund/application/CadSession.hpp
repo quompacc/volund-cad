@@ -30,7 +30,7 @@ struct FeatureRuntimeState final {
 class CadSession final {
   public:
     CadSession();
-    [[nodiscard]] document::DocumentId documentId() const noexcept { return documentId_; }
+    [[nodiscard]] document::DocumentId documentId() const noexcept { return document_.documentId(); }
     [[nodiscard]] document::IdentifiedDocumentSnapshot identifiedSnapshot() const;
     // Replace this session with an unsaved copy in a new namespace; clear transient history.
     void duplicateDocument();
@@ -143,7 +143,6 @@ class CadSession final {
     [[nodiscard]] std::string serializedDocument() const;
 
     document::ModelDocument document_;
-    document::DocumentId documentId_{document::generateDocumentId()};
     features::FeatureGraph featureGraph_;
     TopoDS_Shape currentShape_;
     std::vector<features::EvaluatedBody> currentBodies_;

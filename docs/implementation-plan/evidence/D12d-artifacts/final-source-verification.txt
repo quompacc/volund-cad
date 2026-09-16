@@ -1,0 +1,1 @@
+PASS 300 frozen source hashes unchanged; Windows 69/69 (104.71 s); FreeBSD 66/66 (37.51 s). Product compound transaction: 481 injected allocation failures preserved state; prepared commit without allocation. Windows clean-PATH product smoke passed; 18 FreeBSD OCCT libraries from isolated prefix. All build/test processes finished.
