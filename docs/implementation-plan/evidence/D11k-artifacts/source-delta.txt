@@ -1,0 +1,8 @@
+src/document/CMakeLists.txt
+src/document/NativePrimitiveCodec.cpp
+src/document/NativePrimitiveCodec.hpp
+src/document/NativeExtrusion.cpp
+src/document/NativeExtrusion.hpp
+tests/CMakeLists.txt
+tests/integration/NativeBoxTests.cpp
+tests/integration/NativeExtrusionTests.cpp

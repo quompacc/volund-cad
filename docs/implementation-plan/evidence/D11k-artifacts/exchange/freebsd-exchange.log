@@ -1,0 +1,4 @@
+PASS native extrusions: profiles, distance, references, identities, BRep, history
+PASS native extrusions: profiles, distance, references, identities, BRep, history
+PASS native sketch constraints: kinds, references, values, history, solver parity
+PASS native extrusions: profiles, distance, references, identities, BRep, history

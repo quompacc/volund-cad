@@ -3,7 +3,7 @@
 #include <TDocStd_Document.hxx>
 
 namespace voelund::document::detail {
-// Native box/cylinder/sketch-geometry adapter; not the product dispatch or a mutable backend.
+// Native adapter for all current feature kinds; not the product dispatch or a mutable backend.
 class NativePrimitiveCodec final {
   public:
     static void write(const Handle(TDocStd_Document)& document,

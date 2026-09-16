@@ -1,6 +1,7 @@
 #include "NativePrimitiveCodec.hpp"
 #include "NativeDocumentMetadata.hpp"
 #include "NativeSketchGeometry.hpp"
+#include "NativeExtrusion.hpp"
 #include "DocumentSerializationDetail.hpp"
 #include <voelund/document/LegacyBodyIdentity.hpp>
 #include <voelund/kernel/NumericPolicy.hpp>
@@ -102,6 +103,16 @@ std::vector<FeatureBodyIdentity> validate(std::span<const FeatureDescriptor> fea
     for (std::size_t index = 0; index < features.size(); ++index) {
         const auto& feature = features[index];
         const bool box = feature.kind == FeatureKind::box;
+        if (feature.kind == FeatureKind::extrusion) {
+            require(std::holds_alternative<ExtrusionParameters>(parameters[index]) &&
+                feature.id.value() < next && feature.name.size() <= maximumNameBytes &&
+                feature.name.find('\0') == std::string::npos);
+            const auto& extrusion = std::get<ExtrusionParameters>(parameters[index]);
+            require(extrusion.profiles.size() <= remainingElements);
+            remainingElements -= extrusion.profiles.size();
+            validateNativeExtrusion(extrusion);
+            continue;
+        }
         if (feature.kind == FeatureKind::sketch) {
             require(std::holds_alternative<SketchParameters>(parameters[index]) &&
                 feature.id.value() < next && feature.name.size() <= maximumNameBytes &&
@@ -184,18 +195,21 @@ void NativePrimitiveCodec::write(const Handle(TDocStd_Document)& document,
         TDataStd_Integer::Set(members, members.NbChildren());
         const bool box = feature.kind == FeatureKind::box;
         const bool sketch = feature.kind == FeatureKind::sketch;
-        TDataStd_AsciiString::Set(native.FindChild(1), box ? "box" : sketch ? "sketch" : "cylinder");
+        const bool extrusion = feature.kind == FeatureKind::extrusion;
+        TDataStd_AsciiString::Set(native.FindChild(1), box ? "box" : sketch ? "sketch" : extrusion ? "extrusion" : "cylinder");
         TDataStd_AsciiString::Set(native.FindChild(2), std::to_string(feature.id.value()).c_str());
         TDataStd_AsciiString::Set(native.FindChild(3), feature.name.c_str());
         if (sketch) {
             writeNativeSketchGeometry(native.FindChild(4), std::get<SketchParameters>(snapshot.parameters()[index]));
+        } else if (extrusion) {
+            writeNativeExtrusion(native.FindChild(4), std::get<ExtrusionParameters>(snapshot.parameters()[index]));
         } else {
             const auto data = values(snapshot.parameters()[index]);
             auto array = TDataStd_RealArray::Set(native.FindChild(4), 1, static_cast<int>(data.size()));
             for (int item = 1; item <= static_cast<int>(data.size()); ++item)
                 array->SetValue(item, data[static_cast<std::size_t>(item - 1)]);
         }
-        if (!box && !sketch) TDataStd_Integer::Set(native.FindChild(6),
+        if (feature.kind == FeatureKind::cylinder) TDataStd_Integer::Set(native.FindChild(6),
             modeCode(std::get<CylinderParameters>(snapshot.parameters()[index]).resultMode));
         featureLabels.emplace(feature.id.value(), native);
         TDF_Reference::Set(order.FindChild(static_cast<int>(index + 1)), native);
@@ -233,17 +247,21 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
             const auto kind = text(child(native, 1));
             const bool box = kind == "box";
             const bool sketch = kind == "sketch";
-            require((box || sketch || kind == "cylinder") && native.NbChildren() == (box ? 4 : sketch ? 5 : 6));
+            const bool extrusion = kind == "extrusion";
+            require((box || sketch || extrusion || kind == "cylinder") &&
+                native.NbChildren() == (box ? 4 : (sketch || extrusion) ? 5 : 6));
             labels.emplace(entry(native), records.size());
             FeatureParameters decoded = sketch
                 ? FeatureParameters{readNativeSketchGeometry(child(native, 4), remainingElements)}
+                : extrusion ? FeatureParameters{readNativeExtrusion(child(native, 4), remainingElements)}
                 : parameters(native, box);
             if (sketch) {
                 const auto& data = std::get<SketchParameters>(decoded);
                 remainingElements -= data.elements.values.size() + data.constraints.values.size();
             }
+            if (extrusion) remainingElements -= std::get<ExtrusionParameters>(decoded).profiles.size();
             records.push_back({native, bodyId, {FeatureId{id(child(native, 2))},
-                box ? FeatureKind::box : sketch ? FeatureKind::sketch : FeatureKind::cylinder,
+                box ? FeatureKind::box : sketch ? FeatureKind::sketch : extrusion ? FeatureKind::extrusion : FeatureKind::cylinder,
                 text(child(native, 3)), std::nullopt}, std::move(decoded)});
         }
     }

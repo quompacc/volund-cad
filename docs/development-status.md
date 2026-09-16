@@ -6,7 +6,7 @@
 [D10-Abschlussprüfung](implementation-plan/evidence/D10-review.md).
 D10b2b hat die interne Radiantmigration abgeschlossen. D10c/D10d implementieren
 Größen-/Toleranzrollen und exakten Boolean-Anschluss. Die aktuellen Suiten
-bestehen nach [D11j](implementation-plan/evidence/D11j.md) mit **63/63 Windows** und **59/59 FreeBSD/Sway**.
+bestehen nach [D11k](implementation-plan/evidence/D11k.md) mit **64/64 Windows** und **60/60 FreeBSD/Sway**.
 
 **D10 ist auf Nutzerauftrag abgeschlossen; D11 ist begonnen.** Der in der Abschlussprüfung reproduzierte
 ID-Überlauf ist durch Vorabprüfung des vollständigen ID-Bedarfs behoben und mit
@@ -33,10 +33,12 @@ sind geprüft. D11h erweitert dies um Zylinder aller vier Modi, Körpergruppen,
 native Eingabereferenzen und eine unabhängige Feature-Reihenfolge. D11i ergänzt
 Skizzenebenen, Elemente, IDs und Stützreferenzen. D11j ergänzt alle 26 Constraintarten
 mit nativen Elementreferenzen, Maß-/Winkel- und Zusatzwerten sowie Solver-Parität.
-Extrusionsschema und Produktintegration bleiben offen.
-D11i wurde mit `cef3feb`, D11j einschließlich Belegen und Dokumentation mit
-`cddf45d` auf `main` abgeschlossen. Die Arbeit ist auf Nutzerwunsch pausiert.
-Nächster Block sind native Extrusionen mit Profilreferenzen; noch nicht begonnen.
+D11k ergänzt Extrusionsdistanz, native Skizzeneingabe und geordnete Profilauswahl.
+Alle vier aktuellen Featurearten sind im privaten Adapter abgebildet; die
+Produktintegration bleibt offen.
+D11j wurde mit `cddf45d` abgeschlossen; D11k wird mit Belegen und Dokumentation
+auf `main` eingecheckt. Nächster Block ist die gemeinsame Schema-/Identitätsprüfung
+vor dem produktiven Autoritäts-/Store-Wechsel. D11 bleibt insgesamt offen.
 Der geprüfte D10-/D11e-Quellstand samt Belegen ist auf Nutzerauftrag in
 `6737465afe6af30758147471035a5582e466342f` auf `main` committed. Ausgangspunkt
 der Prüfläufe war `e8b65b8`; ältere Uncommittet-Vermerke in den Evidenzen

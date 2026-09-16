@@ -1,0 +1,1166 @@
+[
+  {
+    "path": "CMakeLists.txt",
+    "sha256": "a6058b3244978901d76810338aba47e0b928d8ac3df3e6338a4e29b442e73bd0"
+  },
+  {
+    "path": "CMakePresets.json",
+    "sha256": "c5a78eb97180fabbe7f6eee261fb4686ff20fda3577b83d8e684b2760403ba49"
+  },
+  {
+    "path": "include/voelund/application/CadSession.hpp",
+    "sha256": "1b8de83afa8ec494a5c4b739090cb47ed7549645ec7e06308167b5125f10609b"
+  },
+  {
+    "path": "include/voelund/application/CommandResult.hpp",
+    "sha256": "63206f58549017720887c03f6b3f1355f58d80e5f148090f3ffe0a910da8ab1e"
+  },
+  {
+    "path": "include/voelund/application/CommandTransaction.hpp",
+    "sha256": "09b64df06c233e58071653ceab7ce1f6ec06d863be4458a3529be9ae6588f6e5"
+  },
+  {
+    "path": "include/voelund/application/SceneStatus.hpp",
+    "sha256": "aa6bbdcdc611d262ddd04d1217f43f170b84cf8a35d31dd1701bb8dd24c4e493"
+  },
+  {
+    "path": "include/voelund/application/SketchEditorSession.hpp",
+    "sha256": "5524dfbeebe14f27a8ddbb15d4d88634dd8c9a450df5913404897939e8797fc9"
+  },
+  {
+    "path": "include/voelund/desktop/MainWindow.hpp",
+    "sha256": "982a2e7674923ca7eb22d37cbdb4f0c782cb2d279e1d4dc775d79bdfa888dca0"
+  },
+  {
+    "path": "include/voelund/document/BodyId.hpp",
+    "sha256": "5564c54f3b6cb33aa41ba416779f2df0040f6674e878612968d337b2b546590f"
+  },
+  {
+    "path": "include/voelund/document/DocumentId.hpp",
+    "sha256": "7e0fb566cf31ed57606fcfc4577623fadc65f428aa8f906e9dd0c4c745c9b24f"
+  },
+  {
+    "path": "include/voelund/document/DocumentSerializer.hpp",
+    "sha256": "48b3f0ff573cadae8768a3f91f29d89fee1b8dab6fb0045966d29d9a3f74ca14"
+  },
+  {
+    "path": "include/voelund/document/DocumentSnapshot.hpp",
+    "sha256": "9bd2523e8eb0a52f9d89ff4de5feca7ce8f68f379d3fc82ff4ba842d4c66f5ab"
+  },
+  {
+    "path": "include/voelund/document/DocumentTransaction.hpp",
+    "sha256": "4c1628ed285e3cf39c97172cf5cf29276dbcaa9c153b9a81f02c9faf93e089f0"
+  },
+  {
+    "path": "include/voelund/document/FeatureId.hpp",
+    "sha256": "82932902675a07726261211bf2724d602e0fd916a5c80704fa4b66b193035e59"
+  },
+  {
+    "path": "include/voelund/document/IdCapacity.hpp",
+    "sha256": "e0eeb083666a9e13044e7b6fe09186243fa74f61f25bfe886743a7a7c80b98ba"
+  },
+  {
+    "path": "include/voelund/document/IdentifiedDocumentSnapshot.hpp",
+    "sha256": "d6367a5660d94358db322a15f2c72c21ad2e2b470f7a6a4fbf6f36c0c7c38610"
+  },
+  {
+    "path": "include/voelund/document/LegacyBodyIdentity.hpp",
+    "sha256": "0d4a3eee5be1508bdb6730db4ed80a234d5561c99a83e8d95e59bb8b1e349f08"
+  },
+  {
+    "path": "include/voelund/document/LegacyDocumentImporter.hpp",
+    "sha256": "4d7b84075dcbdfb4edfe87b848674a0d606fd0945e328534c7b74412485b5ce1"
+  },
+  {
+    "path": "include/voelund/document/ModelDocument.hpp",
+    "sha256": "c1104ac522679299c2999a852e895b237a0e77aae1479b34dbae6622754237cc"
+  },
+  {
+    "path": "include/voelund/document/SketchGeometry.hpp",
+    "sha256": "6b0217fbcc98a2ce1d421d01f2adab611b9c6d1a29923fb0d99d81886acdb31f"
+  },
+  {
+    "path": "include/voelund/document/SketchPlaneValidation.hpp",
+    "sha256": "b2cec13b467c23e764ab8eb9e5285718cb56f78da6a7c5357d189b04a841e60a"
+  },
+  {
+    "path": "include/voelund/features/BoxFeature.hpp",
+    "sha256": "94a1b4bf3b67b2b1784ea9553df040927ea08fe73868c8661254ed7448d34e74"
+  },
+  {
+    "path": "include/voelund/features/CylinderFeature.hpp",
+    "sha256": "912caf5d69ec50771890f4601af055056924821b8456fa9e7e41486a63557459"
+  },
+  {
+    "path": "include/voelund/features/EvaluationState.hpp",
+    "sha256": "c4d84a557fe963499241e661d010017ee464bec058cd33a51279d7ff84a8b3f3"
+  },
+  {
+    "path": "include/voelund/features/FeatureGraph.hpp",
+    "sha256": "68c0a14554dce96449f49ed394eeae90a1f3ebea2b91a297904eda6b29a75390"
+  },
+  {
+    "path": "include/voelund/features/GeometryEvaluationError.hpp",
+    "sha256": "b488b78fbf9f6a247f4908166adb784980640012ec17ee05ca4be845630742f1"
+  },
+  {
+    "path": "include/voelund/features/SketchConstraintAnnotations.hpp",
+    "sha256": "2b1ef5ab96b7d6f1250730b67d1d7fd5b73bd714e458bf4b51319cde849b7ec3"
+  },
+  {
+    "path": "include/voelund/features/SketchConstraintSolver.hpp",
+    "sha256": "a6dd759e837dec41b7d9e3573e81ff3af34d7fbf8b74e13431ce9fc045564b65"
+  },
+  {
+    "path": "include/voelund/features/SketchEvaluation.hpp",
+    "sha256": "e2ef4c9e5f11756be229a342ecf0ee27ed5fc86649936554b3127beecc4a0a82"
+  },
+  {
+    "path": "include/voelund/features/SketchProfiles.hpp",
+    "sha256": "e2f3a2bc148904898ff816342873def240cc09f2886be49a06de341f04d14bda"
+  },
+  {
+    "path": "include/voelund/features/SketchSupportResolver.hpp",
+    "sha256": "dad60a16753c9b384bbc55da3ec0968563ea632cbdfdf2c9faeef0ecfb3d6f50"
+  },
+  {
+    "path": "include/voelund/kernel/Angle.hpp",
+    "sha256": "e9f269a8f95969932b239887ad6746eae52f22924bfb5242ad20e7ff72cbdd82"
+  },
+  {
+    "path": "include/voelund/kernel/NumericPolicy.hpp",
+    "sha256": "d72b78371cc1c33752fd9a1142f0df5e958b5e71e3883b56cc8742901800fda7"
+  },
+  {
+    "path": "include/voelund/kernel/NumericValidation.hpp",
+    "sha256": "a237a8c3587b2668a15069cdb892339f60e1642de024e8ffd91b1192c423e826"
+  },
+  {
+    "path": "include/voelund/kernel/OcctCompatibility.hpp",
+    "sha256": "91b00502f67cb4cbd1b26733fd3ee2980c33891bd5431378245087f191233333"
+  },
+  {
+    "path": "include/voelund/kernel/ShapeFactory.hpp",
+    "sha256": "bddfba7e16b104fb167cfd468423ba82ef3cf7b65928ecd3a1dab279df49107d"
+  },
+  {
+    "path": "include/voelund/kernel/ShapeOperations.hpp",
+    "sha256": "b0ca88b7b8a07e632c46ceba068a828dada93a4a4a22854aade1cc640d316e4b"
+  },
+  {
+    "path": "include/voelund/modules/solid/SolidWorkspaceModule.hpp",
+    "sha256": "5758fc27924be9fcf82da227ac957982754e11cfdde7dd44a0c2375cc1f1a7f8"
+  },
+  {
+    "path": "include/voelund/platform/AtomicFileStore.hpp",
+    "sha256": "fd3376fe7f4da4107d2f2608e0adf651a517abcdad8e51878fa63e4cf16d679e"
+  },
+  {
+    "path": "include/voelund/platform/RandomBytes.hpp",
+    "sha256": "42fc3815d5d0eee52ccdf28e78d0775311400c1b9dfac70964c7f2d19dc86d85"
+  },
+  {
+    "path": "include/voelund/viewport/CadViewport.hpp",
+    "sha256": "f712abef55144fd1ec760010b62d49d448eb4fee292fc2f2269b98f235048a7a"
+  },
+  {
+    "path": "include/voelund/workspaces/CommandRegistry.hpp",
+    "sha256": "ca84f780565a66fe609291b65eb80e450c5da450ec41aaf2acf6bd8a761227af"
+  },
+  {
+    "path": "include/voelund/workspaces/WorkspaceModule.hpp",
+    "sha256": "e050dc02779d73d4efab6db5e5f23f41ef1cc69cff1aca33823dea2a86ccf33e"
+  },
+  {
+    "path": "src/application/CadSession.cpp",
+    "sha256": "3df0933db0507d09e02fe3df93555ae995b599b3d206d24efb7b4611bfa1cbce"
+  },
+  {
+    "path": "src/application/CadSessionCreation.cpp",
+    "sha256": "cc6354284821244cee38e35db9611b031780e4111ca2220b7b86c344645a0598"
+  },
+  {
+    "path": "src/application/CadSessionGeometryDetail.hpp",
+    "sha256": "8c0d18df10e91177a1737b9907457516d07bd98b58a4f5f97063401ad4354fd2"
+  },
+  {
+    "path": "src/application/CadSessionHistory.cpp",
+    "sha256": "c70ccf771a5526d52741094dc476105bca7ed2a7d4c9da2013d5fa52f19bf026"
+  },
+  {
+    "path": "src/application/CadSessionPersistence.cpp",
+    "sha256": "2a3b43fbd4b32bfd4dbf8ddaa39b3e5286c9b501cd0afbe1767b0e237f9c3a93"
+  },
+  {
+    "path": "src/application/CadSessionSketchProfiles.cpp",
+    "sha256": "fd5be35ac7874c79de12580b16ad4036190d6a7dce4de45cb1e81aaa5d9305d7"
+  },
+  {
+    "path": "src/application/CadSessionTransactions.cpp",
+    "sha256": "5ebd97c10cdb9fb6ae0b2257d05b46f1b73cf811607ba5342485d0f9072e98e8"
+  },
+  {
+    "path": "src/application/CMakeLists.txt",
+    "sha256": "f4ebd74d5e038b5165f2d34171d39c2deffb02d827d1a9161d48e2f02b4f4b5a"
+  },
+  {
+    "path": "src/application/CommandInput.hpp",
+    "sha256": "d34de90aa644f93ec622b199bdfd2b4a1f4fd9496b9ad95ae163b864598b792d"
+  },
+  {
+    "path": "src/application/CommandTransaction.cpp",
+    "sha256": "c57d3071f0ca25b096e884570d536ad0131a6a7183c3214d4f1b5985802dd637"
+  },
+  {
+    "path": "src/application/SketchEditorAcceptance.cpp",
+    "sha256": "ef7befb5d854fd9a42b82b3082c3bc5becfe7cee2eb8f65208bc50ef29143d75"
+  },
+  {
+    "path": "src/application/SketchEditorConstruction.cpp",
+    "sha256": "de1123223b9d2334639409763b0a079b9bdb3755731c79634467d701c54200a1"
+  },
+  {
+    "path": "src/application/SketchEditorDimensions.cpp",
+    "sha256": "9e0a73dadbda54c7e76dd41ffea38fa353b97566b66f8d1ae3d23cf85170d649"
+  },
+  {
+    "path": "src/application/SketchEditorGeometry.cpp",
+    "sha256": "8c88334afd8048a898919bdf963d16780506d67c42ad998a317aac5719e62e4a"
+  },
+  {
+    "path": "src/application/SketchEditorHistory.cpp",
+    "sha256": "d6056a9e3ab88d567f391f4a8f91239588c47ea4fa7407fb57c2b3f71a7addd2"
+  },
+  {
+    "path": "src/application/SketchEditorIdCapacity.cpp",
+    "sha256": "50461355e8884ca68fe7bae02a011a8cc86c5ca1c3840339084bee74bc78ea22"
+  },
+  {
+    "path": "src/application/SketchEditorOperations.cpp",
+    "sha256": "410a158ba1ef3b257d1b030d878696fe0373885780995aea0fa70217313a2df5"
+  },
+  {
+    "path": "src/application/SketchEditorPointConstraints.cpp",
+    "sha256": "de5a77d9d3c9a9909d6a2e8b83bc1d387d9649d7ae0acb3f179bca5c43151b1f"
+  },
+  {
+    "path": "src/application/SketchEditorRectangle.cpp",
+    "sha256": "c60b6e007488350511881f506d3c2e96de0588b1d014bcfc36f49047dc644113"
+  },
+  {
+    "path": "src/application/SketchEditorRelations.cpp",
+    "sha256": "28b16078e03bb11bcf45853f94deef5c70f2ac5b7794c0f79eefaf1cee3b937e"
+  },
+  {
+    "path": "src/application/SketchEditorSession.cpp",
+    "sha256": "249f503abf49d82f03048f4e206ebd92b907777f4053fa21a44623c4c6f409c0"
+  },
+  {
+    "path": "src/desktop/CMakeLists.txt",
+    "sha256": "ba483fcf815ef4ead8af15947a3eaf3c2f31856f7b068f0f4a94d4ce01ee4665"
+  },
+  {
+    "path": "src/desktop/CommandFeedback.hpp",
+    "sha256": "1cc5810b396744344df6652aa7b45f94838c909e645c8613f52e34ff674d9fe4"
+  },
+  {
+    "path": "src/desktop/DocumentActions.cpp",
+    "sha256": "3abc7e30185387aa81c35f799375fd40cd8918e002dc738695baad29a643e377"
+  },
+  {
+    "path": "src/desktop/DocumentActions.hpp",
+    "sha256": "dd72e5d68bb7d43b0a1d12091fe65575656f521374f31657f105fba660fd8cc0"
+  },
+  {
+    "path": "src/desktop/FeaturePropertiesPanel.cpp",
+    "sha256": "8793e0c8c41b7d8c353441198c56283145f27fa4e51a16e96de0c60507862a24"
+  },
+  {
+    "path": "src/desktop/FeaturePropertiesPanel.hpp",
+    "sha256": "f1dd5c16fc2a57b8d3b056a4073c91cb2214e639ec21618c7517b4f9f06f7d56"
+  },
+  {
+    "path": "src/desktop/MainWindow.cpp",
+    "sha256": "724e35518c355e1e470a547135bcec2ce62c9f001fb2d30ed48b214ff05fe90c"
+  },
+  {
+    "path": "src/desktop/MainWindowParameters.cpp",
+    "sha256": "22172f4eee7a3ac7c75398687a932b1e78a1a42fb7667733c1a2821b19e5a809"
+  },
+  {
+    "path": "src/desktop/MainWindowState.hpp",
+    "sha256": "f6e650896b811816acb7cc3552ac076648ffa099acca0e87676708c5db87f16a"
+  },
+  {
+    "path": "src/desktop/MainWindowSupport.cpp",
+    "sha256": "ff4ae5f2982ff207e86f5eebc5501b590637cdae32e5dac39c745da31da4464b"
+  },
+  {
+    "path": "src/desktop/MainWindowSupport.hpp",
+    "sha256": "5f04d9e408ee103fa10e73483630d7af20f287a6d5abf438da6d559d8ac66b0f"
+  },
+  {
+    "path": "src/desktop/MeasurementInput.cpp",
+    "sha256": "6d16f2a225b29265631568f46eba1c5f9a0c846ec4cc7850423fa0ee0dd9a374"
+  },
+  {
+    "path": "src/desktop/MeasurementInput.hpp",
+    "sha256": "6fc87ec8a71d2e39d36f98ea1b49794e3c2aa2513fdf1de858b46d7cd265083a"
+  },
+  {
+    "path": "src/desktop/ModelTreePanel.cpp",
+    "sha256": "3fbb517db7de75d09dd4cd46d2808ec91a0bdd8eb212851d4b97443025e46790"
+  },
+  {
+    "path": "src/desktop/ModelTreePanel.hpp",
+    "sha256": "f41f68769de3e05bba95ade67baab23564ab3352c3483815f721886d0e142827"
+  },
+  {
+    "path": "src/desktop/SketchConstraintLabel.cpp",
+    "sha256": "f871fa8a96528751b889a7505cc22680cacfcd8612c1fe84846676402be7b071"
+  },
+  {
+    "path": "src/desktop/SketchConstraintLabel.hpp",
+    "sha256": "6fac81df567057eb2814f2e55410e0389536a92cb10646fe1125aeaa79d0ebba"
+  },
+  {
+    "path": "src/desktop/SketchEditorCommand.cpp",
+    "sha256": "9ac59692695e3350923c067397e182ace43fdb228abb01744b0b80dfca98bf68"
+  },
+  {
+    "path": "src/desktop/SketchEditorConstraintState.cpp",
+    "sha256": "7993e443f92b30dddc46f4e6d0d43149bce149622dcd838f344f58c8e4258c4e"
+  },
+  {
+    "path": "src/desktop/SketchEditorCreation.cpp",
+    "sha256": "0a18bc18d1db07bfd343bedffbaf6f9e2b7b4da905a144a18d5397531c47768a"
+  },
+  {
+    "path": "src/desktop/SketchEditorPresentation.cpp",
+    "sha256": "081d265955dadb8bf890c511bf137de1b085b8b354632f4e4bb2efb2ad87ca63"
+  },
+  {
+    "path": "src/desktop/SketchEditorToolController.cpp",
+    "sha256": "1ea3ee06bdd8070f53528576bbd8f1365d82068a14bc6a351d7043ed233b27bc"
+  },
+  {
+    "path": "src/desktop/SketchEditorToolController.hpp",
+    "sha256": "daff5bbeb28a87469fe8c7384d61fb1e24bc033c75d1821e4ee671c10902606f"
+  },
+  {
+    "path": "src/desktop/SketchExtrusionToolController.cpp",
+    "sha256": "4079b9dd195e9ee599f961346fe792e36be9a023a2d3851c54c5f6b7acdee714"
+  },
+  {
+    "path": "src/desktop/SketchExtrusionToolController.hpp",
+    "sha256": "e80065f2ee518c8bbda02c5d4d7a3e1c97bf2acbd650bf29bc55bdae2c267401"
+  },
+  {
+    "path": "src/desktop/SketchViewAdapter.cpp",
+    "sha256": "b1650b8ac87bd017629ae3f1c242ed65f1323cf1fbb612339263218b4937e910"
+  },
+  {
+    "path": "src/desktop/SketchViewAdapter.hpp",
+    "sha256": "d50d412eb9862cd23d62ad50520d42e938d13ae4f8349c9b4e590da999206a07"
+  },
+  {
+    "path": "src/desktop/ToolPanelHost.cpp",
+    "sha256": "a13f68b9267542b80779ff45de46b8b11182e0ca7a01abff60262388020f0d3e"
+  },
+  {
+    "path": "src/desktop/ToolPanelHost.hpp",
+    "sha256": "b981ba65e2eae9186d0395d432b7ef53249c9f2ed57c01ec5ab0181d78b92fa0"
+  },
+  {
+    "path": "src/desktop/WorkspaceToolbar.cpp",
+    "sha256": "853d9f1e9019812ac22d1fb2e5a2af37c98a2a9e3481c700ab358d9dc0fd6a67"
+  },
+  {
+    "path": "src/desktop/WorkspaceToolbar.hpp",
+    "sha256": "5b0bd9daa3c7be66dde8f6c05d05d2ff493cbd1d1c14b2ee9607abbff0bc4005"
+  },
+  {
+    "path": "src/document/BoundedDocumentInput.hpp",
+    "sha256": "6f81e9805f497bc847f1c349c4b7e26c9ec5f94e7f49e14ee52745dc26245e94"
+  },
+  {
+    "path": "src/document/CMakeLists.txt",
+    "sha256": "6d0c302fff3650b0238780c8046ad56896d2e3750282b0a8d184e1b921093519"
+  },
+  {
+    "path": "src/document/DocumentFormat.hpp",
+    "sha256": "3d8748fce67becf645f608ee779f340922bd623cc1db8820b9bc9b531599695c"
+  },
+  {
+    "path": "src/document/DocumentId.cpp",
+    "sha256": "febd4f60def5526057e2f5c95b7d8a6597280acb6c920a1c8ca17778dae93f0f"
+  },
+  {
+    "path": "src/document/DocumentIdGeneration.hpp",
+    "sha256": "2bc59c78a866086e0e9450df5e2ae18dacb258f630061d5830b7148dc27fabf4"
+  },
+  {
+    "path": "src/document/DocumentIdGenerator.cpp",
+    "sha256": "4437541f4a8346a53d70b18ebf7825b489fc95666999f36853dbe9537a59f76f"
+  },
+  {
+    "path": "src/document/DocumentSerializationDetail.hpp",
+    "sha256": "431226f24344a009719f739a08f42b4a122caec36c91605085933beaca6c6162"
+  },
+  {
+    "path": "src/document/DocumentSerializer.cpp",
+    "sha256": "4248c56b037c5d726d13e99d2865afdb55fc1e2cde5ef686f4237438c7f4dec0"
+  },
+  {
+    "path": "src/document/DocumentSerializerSupport.cpp",
+    "sha256": "22d41cb9c537b0061a4fb96287d4b9245376ec5e580f2ec31b1f7711af4bea65"
+  },
+  {
+    "path": "src/document/DocumentSerializerWriter.cpp",
+    "sha256": "a6955adcd390cf740cea2852fe1f9652bfac9aa53f0c027be5ee28b9ddce03b0"
+  },
+  {
+    "path": "src/document/DocumentSnapshot.cpp",
+    "sha256": "c0cc07b533950d4367c6fa6a58f4eb68c2bbaa7850467386bea410c1f153914c"
+  },
+  {
+    "path": "src/document/DocumentTransaction.cpp",
+    "sha256": "a07372056e82277813cdaa051fd370076637f66bf9d0ab042ccdd059dbdda1ee"
+  },
+  {
+    "path": "src/document/IdentifiedDocumentSnapshot.cpp",
+    "sha256": "4e3a8345285daf4884830596a7732729fae1f0eeeb418701812244605ce65a38"
+  },
+  {
+    "path": "src/document/LegacyBodyIdentity.cpp",
+    "sha256": "c47259b6f12f3f3275fd7df1424b209e7b92ab188af33bd33bf29f28c53da026"
+  },
+  {
+    "path": "src/document/LegacyDocumentImporter.cpp",
+    "sha256": "0f130f6e84b2d57697bcfcc86d27316fa88e4d146b86bfa18f7037be16a8680f"
+  },
+  {
+    "path": "src/document/ModelDocument.cpp",
+    "sha256": "94a131e03168d98ceefa15790cb77a5929d7379cbe3d21e09c0ef2922f53fb7a"
+  },
+  {
+    "path": "src/document/ModelDocumentHistory.cpp",
+    "sha256": "3649b0aedd0b8414a4e3e03c0a9119dbeca7ce5936978fa74a30597edf6140ea"
+  },
+  {
+    "path": "src/document/NativeDocumentMetadata.cpp",
+    "sha256": "eaeaaf489821d9a93b1eb1c0743419afc336a0d4ca3549fafb13a1db26be4a8f"
+  },
+  {
+    "path": "src/document/NativeDocumentMetadata.hpp",
+    "sha256": "cae965979635a39b39aa17fed85c2a712c56d6a4b48f7f96fe50757cf3a4a89b"
+  },
+  {
+    "path": "src/document/NativeExtrusion.cpp",
+    "sha256": "deb82a3c67d2aed75528910210410f71e97e7589d9d34879a65a72ce6aa18e77"
+  },
+  {
+    "path": "src/document/NativeExtrusion.hpp",
+    "sha256": "ec6ebcaf17fc283660c94620ea67cd282d00be13dd49985d49082187c2487587"
+  },
+  {
+    "path": "src/document/NativePrimitiveCodec.cpp",
+    "sha256": "d2cedfba2104ef65645db8c3394b6b351b43e99b9faaeb8a85d511965ba19119"
+  },
+  {
+    "path": "src/document/NativePrimitiveCodec.hpp",
+    "sha256": "32588f846aae80a3de6f0268c0c1f2aef9da61fbf6cde1b4958f705dc1498403"
+  },
+  {
+    "path": "src/document/NativeSketchConstraints.cpp",
+    "sha256": "f846bff3de3c3f8d69bc061a9692c03d7191ab41e3bf1d6a450919566319ebce"
+  },
+  {
+    "path": "src/document/NativeSketchConstraints.hpp",
+    "sha256": "b01ddcde3ea551969d8cbdcb164910c9ecd09ff1e566b62c1df75d49f46a6d20"
+  },
+  {
+    "path": "src/document/NativeSketchGeometry.cpp",
+    "sha256": "e54c07f0da560714fa2a5200d86281c0283a4a71a1ce9ff474ab0301bbc1b3dc"
+  },
+  {
+    "path": "src/document/NativeSketchGeometry.hpp",
+    "sha256": "d8bd547fa8a410f1279ba1396c1bf0102f1cd0c0ff01f25b649bf54112e13622"
+  },
+  {
+    "path": "src/document/SketchConstraintSerialization.cpp",
+    "sha256": "babb141808bced798384e63cb3e71f3b125bcd807837fd30961a77abab15b1b3"
+  },
+  {
+    "path": "src/document/SketchConstraintSerialization.hpp",
+    "sha256": "124a318a97b010bb0904aa3910f47b14b81573b21dbf2a2f9a5bb05d83646f83"
+  },
+  {
+    "path": "src/document/SketchGeometry.cpp",
+    "sha256": "7fd644059d3c0fb5c2dead0a5928b7a1740455cdea0f9d2670a07c14c743c7ad"
+  },
+  {
+    "path": "src/document/SketchGeometryRange.hpp",
+    "sha256": "a28de544c15d6adbfa12fce1ddf396a36f28f350d78c96d1bb609c2f9dc18ffa"
+  },
+  {
+    "path": "src/features/BoxFeature.cpp",
+    "sha256": "d04335611e81738c5a7336a94f1caca8810570e358e1478643ddd6d480501ace"
+  },
+  {
+    "path": "src/features/CMakeLists.txt",
+    "sha256": "9db2a5ad2610b9122413b2892fd93a6931999cd1f40d26eb0063578b65a84007"
+  },
+  {
+    "path": "src/features/CylinderFeature.cpp",
+    "sha256": "9873c9845323e6dc342bfce64a415762cfe6f05bc3607333d587361cbfc96f56"
+  },
+  {
+    "path": "src/features/FeatureEvaluationDetail.hpp",
+    "sha256": "4dfd7cd3d7988f00843ac8b66d49bdf9d54961bbb1c7b36418888c5c1f51dd7e"
+  },
+  {
+    "path": "src/features/FeatureGraph.cpp",
+    "sha256": "be1ae456baff39c4325a169ed46284644e81ae99f068e2054b29ff70eb4cc339"
+  },
+  {
+    "path": "src/features/SketchConnection.hpp",
+    "sha256": "39b8f92d1f90a69d8bbda5fccd74b2c59db475afe92e25892006cd91150594f9"
+  },
+  {
+    "path": "src/features/SketchConstraintAnnotations.cpp",
+    "sha256": "e59ef57cafe2102983a81245a5107def6e44a28ec8d4ac5db12bd1951bddef20"
+  },
+  {
+    "path": "src/features/SketchConstraintSolver.cpp",
+    "sha256": "155bff3b86c10a2946a47f6c73989201b981cb9fc83614349d7ff55c10d4d726"
+  },
+  {
+    "path": "src/features/SketchEvaluation.cpp",
+    "sha256": "8c8a4252341a96d9ffaabea8ef7c230400f430badc03c71aba854b36777b917c"
+  },
+  {
+    "path": "src/features/SketchPlaneGuard.hpp",
+    "sha256": "84519d57ccc429266b1065254ebbd3f6d9497e914d260e9f10fe0ce34841e4a7"
+  },
+  {
+    "path": "src/features/SketchProfiles.cpp",
+    "sha256": "969dc6e4d6102abe782d24c3c16dd2327974f9558e9c9f64df06ee10203e3aaf"
+  },
+  {
+    "path": "src/features/SketchSupportResolver.cpp",
+    "sha256": "595c82ae817eb8c5458f070d3784737ac90fbdab5cac0909e27857b8a23bed06"
+  },
+  {
+    "path": "src/kernel/CMakeLists.txt",
+    "sha256": "54d8dd7a14c5c06f6032b827a43811a8d3d43beba6b6de6844df5571b4135898"
+  },
+  {
+    "path": "src/kernel/ShapeFactory.cpp",
+    "sha256": "e959a16ece5e38c323be9d736e6a9c0ff7c346a4b7c5f66c8b4f10cf7b005bf0"
+  },
+  {
+    "path": "src/kernel/ShapeOperations.cpp",
+    "sha256": "7e823cb39c9cb69de96cf657a8d0e20cdea97cdcd8f3b2155cd607336ac8cea1"
+  },
+  {
+    "path": "src/modules/solid/CMakeLists.txt",
+    "sha256": "1f2d906df846f7b8376da9bdd2e4df82e0b3931cdadfff55a59a2b4c260be146"
+  },
+  {
+    "path": "src/modules/solid/SolidWorkspaceModule.cpp",
+    "sha256": "ca8da067d06cfd33d5ad53d80dbab411c5a39ff50f642e12a096dcff713f09c7"
+  },
+  {
+    "path": "src/platform/AtomicFileStore.cpp",
+    "sha256": "6344f75c4c4c00411f000a9db567ea2125fb4d5beafccc9d24c047ac5fc1cf4c"
+  },
+  {
+    "path": "src/platform/AtomicFileStoreDetail.hpp",
+    "sha256": "d9e06f3ee5540ef81c5ea5f4cc18c213e77745e734d53f21683aa4898e71a691"
+  },
+  {
+    "path": "src/platform/AtomicFileStoreNative.cpp",
+    "sha256": "a27477604ad9682fcdcda2b73ec989720747e48a286dac424b898c51f8189d51"
+  },
+  {
+    "path": "src/platform/CMakeLists.txt",
+    "sha256": "b84b8e03dabb8213f8358aeb4cc7ca1d04df6d8b9a786769a430df0614725b37"
+  },
+  {
+    "path": "src/platform/RandomBytes.cpp",
+    "sha256": "b2cd6d63883f8149ed2e0bd644b08c0b67b556341529210a03ba7f8f884fc5fa"
+  },
+  {
+    "path": "src/platform/README.md",
+    "sha256": "bda192274cc03388b6561e2f23374cb787468af07e2cd3ba6cf943830aaa9328"
+  },
+  {
+    "path": "src/viewport/CadViewport.cpp",
+    "sha256": "49714fd0b12cbf8d74a1ee012f0478928fd390288f54c14f592611be866e80e3"
+  },
+  {
+    "path": "src/viewport/CadViewportHandlers.cpp",
+    "sha256": "8dd4be79b74410330d72f8365bcedf2d6478859c1760b90eca6d6a07745862d9"
+  },
+  {
+    "path": "src/viewport/CadViewportInput.cpp",
+    "sha256": "fb86e28f50b48a54ff743adac727323125ed3ecb3dcffb7b3753118ca4395003"
+  },
+  {
+    "path": "src/viewport/CadViewportNativeBackend.hpp",
+    "sha256": "96318e7b80e2e19d125cbc15371109a24d54084d94f9d12ff0f1b81e34a872ba"
+  },
+  {
+    "path": "src/viewport/CadViewportNativeCallbacks.cpp",
+    "sha256": "e7f489f21edf5832fc3654ab130f2ae2cf7ae8c4cc8cc048baee1204bc1e5608"
+  },
+  {
+    "path": "src/viewport/CadViewportQtOpenGl.cpp",
+    "sha256": "a5043f74645aa88ab0b61d0960ea310998e63d46673f0733d8a2f97e1bc50390"
+  },
+  {
+    "path": "src/viewport/CadViewportQtOpenGlBackend.hpp",
+    "sha256": "a7ba682e5bfeebad3664a4b07f1de76f71cba83f7693aa9286ef4cd43da92bc6"
+  },
+  {
+    "path": "src/viewport/CadViewportScene.hpp",
+    "sha256": "25b00744e20450354a1f621327652b80bced83bc9825f60d5de2778c2d6296c8"
+  },
+  {
+    "path": "src/viewport/CMakeLists.txt",
+    "sha256": "d22f832b0e615b58cf2d5fca5b86fc8450238270b1ff0d2e0678829108f544e0"
+  },
+  {
+    "path": "src/viewport/NativeOcctWindow.hpp",
+    "sha256": "68d2775800fbe266245fd4ccd82f4243fb7f8fff9af620a334f67c6ee01f64af"
+  },
+  {
+    "path": "src/viewport/NativeOcctWindowWin32.cpp",
+    "sha256": "f165f7c2c8c0ad022c6cd5bbd8c66342b1c988e76dd83645c67a7f6d02c2bc39"
+  },
+  {
+    "path": "src/viewport/QtOcctGlContext.cpp",
+    "sha256": "8c135911c96370122944d61839312e54b2daa8de6f0804f574421ae04d766596"
+  },
+  {
+    "path": "src/viewport/QtOcctGlContext.hpp",
+    "sha256": "198a24392548b6c1615490756460d8bf8d3416184da9edb31cf9dc80a95c0750"
+  },
+  {
+    "path": "src/viewport/RotationInput.hpp",
+    "sha256": "8a3358677755fd6449dcc4b06c378ee6d9548c6a98aeacbfd9881eb3a1656102"
+  },
+  {
+    "path": "src/viewport/SketchBoxSelection.cpp",
+    "sha256": "3d2dd443eba40f561cfa6cbfa58147186d2d61bc5869088d2f241bf8abdc39d9"
+  },
+  {
+    "path": "src/viewport/SketchBoxSelection.hpp",
+    "sha256": "8ace76fd51ee0a94092567d500fe99b369afc64e65d928f2a75ee99717e06d81"
+  },
+  {
+    "path": "src/viewport/SketchConstraintPresentation.cpp",
+    "sha256": "ad9ec919ebde14a21fa6070f294f52d112d4239ec9d86a731d0df9dc4d53cc41"
+  },
+  {
+    "path": "src/viewport/SketchConstraintPresentation.hpp",
+    "sha256": "087bece8cf2d81d7727bf9a10f3390b20fbd5270e77f96719f812d1943c89943"
+  },
+  {
+    "path": "src/viewport/SketchEditorInteraction.cpp",
+    "sha256": "23360dd7a7632081ab3cb63b08f8f145a1e82dcd25c2bcd0c883f89ba4f1ceee"
+  },
+  {
+    "path": "src/viewport/SketchEditorInteraction.hpp",
+    "sha256": "301c5e965851c7bd0f5a05a108ff6d82d856c0e60482b6fa5fe9616018cca2c6"
+  },
+  {
+    "path": "src/viewport/SketchInteraction.cpp",
+    "sha256": "8cf1a50255656e6a82db4d0523bf2d1c09823c3653cdaccdecb67025c6837c24"
+  },
+  {
+    "path": "src/viewport/SketchInteraction.hpp",
+    "sha256": "f292d62199b86b89e1fd493ccf5657db7b33fb6c72b622fdce59d37677009c63"
+  },
+  {
+    "path": "src/viewport/SketchPresentation.cpp",
+    "sha256": "b2c9cf8ba437d193ffa2bc3cd05fbc6fbc18c1e92b8cc803902b698f3d9804aa"
+  },
+  {
+    "path": "src/viewport/SketchPresentation.hpp",
+    "sha256": "20c2dc1244305c38ec3b2e72297e8c8616e651229bd583e616227732dc893f6a"
+  },
+  {
+    "path": "src/viewport/SketchViewOrientation.cpp",
+    "sha256": "4bd04fc15bd276b8bcbb609a334fea091897e72d2b0e38b831eb33dc2ec0e6d6"
+  },
+  {
+    "path": "src/viewport/SketchViewOrientation.hpp",
+    "sha256": "b239f918e02aaf6b446dcb006ec030bb44034e18eb32b1f32b9520bb3f97f258"
+  },
+  {
+    "path": "src/viewport/TransformManipulator.cpp",
+    "sha256": "76463eeff1199c740eac607fc07868ace4b4638afc2b7a63ba35815a9d74f042"
+  },
+  {
+    "path": "src/viewport/TransformManipulator.hpp",
+    "sha256": "d6d49f1dec860ff48a003e4684a0df952267765f11e22a52833cdfa4ae8b6608"
+  },
+  {
+    "path": "src/viewport/ViewportContextGuard.hpp",
+    "sha256": "44dcc47dcba7b4b11f1a30ad4862f0f6bc81220fdb828219381b75f04b9c915d"
+  },
+  {
+    "path": "src/viewport/ViewportHighlightStyle.cpp",
+    "sha256": "fabc62a97e4e6bebf6607b4257106769d9336ffa2d984db8ff8deb9156163c62"
+  },
+  {
+    "path": "src/viewport/ViewportHighlightStyle.hpp",
+    "sha256": "8e213a84c04c12b1d75cddbda9868a1555999d3fbde57f3649c0cc4d3624bdf9"
+  },
+  {
+    "path": "src/viewport/ViewportPixels.hpp",
+    "sha256": "e01e449dccc7172a765eed51b7f20ac3649e56a51c30502dd3b9d7b5022c94d4"
+  },
+  {
+    "path": "src/workspaces/CMakeLists.txt",
+    "sha256": "86777e4487c4bdc97d26d86b132a2a1e88f815495ce4abb7873244af33475566"
+  },
+  {
+    "path": "src/workspaces/CommandRegistry.cpp",
+    "sha256": "6f9371aaa41d84375ac94e28e42b0cf957ef812098a33fa140abd7b5f465acac"
+  },
+  {
+    "path": "tests/cmake/CheckSourceLimitsTests.cmake",
+    "sha256": "f3d9dba9a16aebe787af840560a83d44ddb1450163c6cfd550edaa960cdac569"
+  },
+  {
+    "path": "tests/cmake/ExpectedSmokeRunnerTests.cmake",
+    "sha256": "a773fc4baa423e7f00615e7b667a4cb0dee2057cd87b2853501732f18586cf5d"
+  },
+  {
+    "path": "tests/cmake/QualityFixtureIsolationTests.cmake",
+    "sha256": "8f9ccf997e1c0f6859c2f62991f7783d4174b0bfb8218e531b2229e004822f28"
+  },
+  {
+    "path": "tests/cmake/QualityRulesTests.cmake",
+    "sha256": "2c56970155f20aeb1e3d4d5359c9353959f353f5680baadd1e139e9f63145857"
+  },
+  {
+    "path": "tests/cmake/RunLabeledTests.cmake",
+    "sha256": "0d6dc70bcbac8e4176f4b63b73998453daff8fe42b54d951e07bd70a71d782cc"
+  },
+  {
+    "path": "tests/CMakeLists.txt",
+    "sha256": "13d6b1c27a271b617e86899bd9472bfc8d0f16fb31d49ba5d8022561ae9b241e"
+  },
+  {
+    "path": "tests/CommandResultAssertions.hpp",
+    "sha256": "7a36b9660b3aa10fe4560c6450c1eccf1e4d9023bd3320a3a8614a1b64e7762d"
+  },
+  {
+    "path": "tests/desktop/AngleInputTests.cpp",
+    "sha256": "bae28d49b5959278d937c48fa1ef86cc33a00a95873f8b715094b12ae927ed67"
+  },
+  {
+    "path": "tests/desktop/DocumentActionsTests.cpp",
+    "sha256": "a13fa26c7a543c8b6754da439b447d9ef642e1b4e5b902f7dc2ac8b6c13814a6"
+  },
+  {
+    "path": "tests/desktop/FeatureStatusTests.cpp",
+    "sha256": "043093d7120114768e08cfd4dfbdbe1bc117cb09f6363f9e99e0cc190ce2b519"
+  },
+  {
+    "path": "tests/desktop/ParameterFailureTests.cpp",
+    "sha256": "425b42a902e1a78402f92048763492d4cc3baea2d6b675ddf8daf7f1712e15af"
+  },
+  {
+    "path": "tests/desktop/PreviewCommandFailureTests.cpp",
+    "sha256": "4781ca9e69559400da76131b5352fa7f853fc108e599b727707f93483092e21a"
+  },
+  {
+    "path": "tests/desktop/SketchCommandFailureTests.cpp",
+    "sha256": "5d63661c4a053dd449c45a042c29ea9c3bf26c158f1274fb3067574f942e9e53"
+  },
+  {
+    "path": "tests/desktop/SketchSolverGateTests.cpp",
+    "sha256": "08ec5154b388300690a37cdd4a186fce1f132518ec5363e6e3b2834757dd0803"
+  },
+  {
+    "path": "tests/desktop/ViewportDpiTests.cpp",
+    "sha256": "be853ed621561c42d33ba9f4c6a3ecf65fab3aef2d8ee072c021d61508dc6b5b"
+  },
+  {
+    "path": "tests/desktop/ViewportLifecycleSupport.hpp",
+    "sha256": "ec45413595c796b6261fde9ad49fa3a8cd70d4cfc6e5d755f41c4e3143df6090"
+  },
+  {
+    "path": "tests/desktop/ViewportLifecycleTests.cpp",
+    "sha256": "0b78dd3ec87a4bcc88651d24406fa0eede79dfbc1a8de27015d2f8a64a99e1b9"
+  },
+  {
+    "path": "tests/desktop/ViewportTestAccess.hpp",
+    "sha256": "3abd3ec3f272ea9345c19f57adb6f0b0e58006a8aba5116bb1f385fa8abad90c"
+  },
+  {
+    "path": "tests/desktop/ViewportVisualReview.cpp",
+    "sha256": "f94d8f9687c5c76e4420281eec527e2b4897f1c830442921f51fe0be28b92128"
+  },
+  {
+    "path": "tests/differential/README.md",
+    "sha256": "d226f071f40b3c4a495a7dca79e302063ecf67098ef24cf8f8cd794495c0a3c1"
+  },
+  {
+    "path": "tests/fixtures/documents/README.md",
+    "sha256": "564316421020bfd2fa8e589340e11a2f2f389ae9cfbc6b5e2f738e590f3e91d5"
+  },
+  {
+    "path": "tests/fixtures/documents/v01.volund",
+    "sha256": "7bea3f8f8b7ecce89d431e9663e9faedbef028c861467e1a20d7d0e50ff48509"
+  },
+  {
+    "path": "tests/fixtures/documents/v02.volund",
+    "sha256": "fb71bbcf0a1e86bbf25ee5299365e55d75d85672fd7cdd795077e80c9a180f3a"
+  },
+  {
+    "path": "tests/fixtures/documents/v03.volund",
+    "sha256": "1050a8409d40b318db01ca70f98c28751c4d62b5d220133b51b4bc0ff0d900f8"
+  },
+  {
+    "path": "tests/fixtures/documents/v04.volund",
+    "sha256": "b13ef37320a28577d95728f2b1975f67ebdb3d209649ff0bb0b5b99dc037a4e7"
+  },
+  {
+    "path": "tests/fixtures/documents/v05.volund",
+    "sha256": "819b25c30a3de152f0d82d3da15afcc88762cd3eff0030fbeb33ae1912915fe7"
+  },
+  {
+    "path": "tests/fixtures/documents/v06.volund",
+    "sha256": "a19136dff376b3f192814ed9a51d7e6ba72401835680d4737767bfc101e94ea6"
+  },
+  {
+    "path": "tests/fixtures/documents/v07.volund",
+    "sha256": "3f3a830f84e3704d5a5b0f3a047a2d1ac8e32634ed1c11e727493b29fa04f20d"
+  },
+  {
+    "path": "tests/fixtures/documents/v08.volund",
+    "sha256": "56c0d18ae66344b0fdb5fe829cef94b5a451fa95162d85ba9136f9f33ca0f57f"
+  },
+  {
+    "path": "tests/fixtures/documents/v09.volund",
+    "sha256": "ccfa4765b30bc5408a99ea118a7f52698a5b09a792f63d34b4eab926e11fd78a"
+  },
+  {
+    "path": "tests/fixtures/documents/v10.volund",
+    "sha256": "414caea706b5b1169e5a014a784262e454b72d5a48e7807cab85ecef99a3c789"
+  },
+  {
+    "path": "tests/fixtures/documents/v11.volund",
+    "sha256": "138e7aae0bcd91a02bb27dd16be9e793771d84960318da46b6c439cfc9823e47"
+  },
+  {
+    "path": "tests/fixtures/documents/v12.volund",
+    "sha256": "e33f8db937c7a28164c537e454b622f604a7de6b7f3e6975d4be925b774fd861"
+  },
+  {
+    "path": "tests/fixtures/documents/v13.volund",
+    "sha256": "cf854b2bc6dc17a19fcfb173579502379894d8573f3bd2293d102eee36910317"
+  },
+  {
+    "path": "tests/fixtures/documents/v14.volund",
+    "sha256": "533f16243d59220ea2454c2df8415ec90cb9d6cb4e33d39397a42135258d4e44"
+  },
+  {
+    "path": "tests/fixtures/documents/v15.volund",
+    "sha256": "0094e761f5547224ee66e0a082b516db6a5fd6d7bf81a2880c111478718a8336"
+  },
+  {
+    "path": "tests/fixtures/documents/v16.volund",
+    "sha256": "6f1f54afcdf6c8fc06daba10790aa9bbb0fc6719a2366fd810b800da6a4907f2"
+  },
+  {
+    "path": "tests/integration/AngleBoundaryTests.cpp",
+    "sha256": "7657b40ae8c05251dd8a8f8e00e734f3e75022dd7f600082541e9222a329dd07"
+  },
+  {
+    "path": "tests/integration/BodyIdentityEvaluationTests.cpp",
+    "sha256": "2a8c737b5ccbc4549bb22c42efff9b9e5ba96f0780de8c0c5e38934ba80c2907"
+  },
+  {
+    "path": "tests/integration/BooleanConnectionTests.cpp",
+    "sha256": "7d0e02dce07e6b613d7dfe7425c311ea298124ff3dadeafcb532a76c3938a838"
+  },
+  {
+    "path": "tests/integration/CadSessionCreationResultTests.cpp",
+    "sha256": "0c7132b029f08cf67104acb7769dd77e9bf174a0a7c51426fbb5a20a4618df30"
+  },
+  {
+    "path": "tests/integration/CadSessionEvaluationTests.cpp",
+    "sha256": "99c035049e662176b56a31205c5ff7c03d406043c3e2032de6b53a89bee3632a"
+  },
+  {
+    "path": "tests/integration/CadSessionFailureBoundaryTests.cpp",
+    "sha256": "ad0ea0eb2b5135bac08bd24596f387812e180caea5d564f24a1421f05cbe6bd8"
+  },
+  {
+    "path": "tests/integration/CadSessionHistoryTests.cpp",
+    "sha256": "6935a996312fe1ccd4aa56474c97f78d133593aa08bd3e6f473cc9be6e2bf45a"
+  },
+  {
+    "path": "tests/integration/CadSessionPersistenceTests.cpp",
+    "sha256": "9f733d9984b42bf3a2b859ca9e54bc1473d7c9c78a704dc8490542a2e0154566"
+  },
+  {
+    "path": "tests/integration/CadSessionSafePersistenceTests.cpp",
+    "sha256": "7cbccc90cfc308a4be6a883346d3b40eba91d53c669acc65da2a8092bc6789e2"
+  },
+  {
+    "path": "tests/integration/CadSessionTestCases.hpp",
+    "sha256": "51013e5ca6558b07543186777bbecc97249425b022f5d66aa2278ad25ee01e06"
+  },
+  {
+    "path": "tests/integration/CadSessionTests.cpp",
+    "sha256": "e2d84f802a369cc092110cc412e87cc691a7280191ecff1c2e0fbb8201b62449"
+  },
+  {
+    "path": "tests/integration/CadSessionTestSupport.hpp",
+    "sha256": "578c8d461e0c6ec8230fb9d038c13cf13e1e0d17a1015dd7abe7c8c79169fdd0"
+  },
+  {
+    "path": "tests/integration/CadSessionTransactionTests.cpp",
+    "sha256": "9bdff311093c3c268626e8b41bbe760f7411553621d095ea23c15a97a925e5b9"
+  },
+  {
+    "path": "tests/integration/CommandContractTests.cpp",
+    "sha256": "b6a7a38a2dfe965faf9cbd7beb1d67132bc6b302a0a78976ed5f5ebb35f4d206"
+  },
+  {
+    "path": "tests/integration/CommandInputTests.cpp",
+    "sha256": "f0f6c64e0b1cab5675e77b235ec12503f80fdd31f8ddee1eb00e01f7a5c1415f"
+  },
+  {
+    "path": "tests/integration/FeatureIdLifetimeTests.cpp",
+    "sha256": "f1147dfb249ebbb10cb6e98d92e260059d48050a0e849dd3e57b478a50bb581a"
+  },
+  {
+    "path": "tests/integration/LegacyBodyIdentityTests.cpp",
+    "sha256": "755bd4817aefb3d09549321bee1927098995d5aaa0eb2e6456dc158fb9804af9"
+  },
+  {
+    "path": "tests/integration/LegacyImportTests.cpp",
+    "sha256": "238a551c8115f2652b3abf68e628cf71299ffd27c2b32e8325c17094d51ea96c"
+  },
+  {
+    "path": "tests/integration/NativeBoxTests.cpp",
+    "sha256": "9dcc4251bf24fd31b9ab4657035cd0c9e174f0cf41fa9c04d9239f5a4257046d"
+  },
+  {
+    "path": "tests/integration/NativeCylinderTests.cpp",
+    "sha256": "1f0e29fb479f391a77ffe9e13fc24fd154eca0829c862ebffae4297ca8f01e32"
+  },
+  {
+    "path": "tests/integration/NativeExtrusionTests.cpp",
+    "sha256": "d96db462156558ed817f47a19dccb8e88bf0257c423466efa94f8793b2a5be74"
+  },
+  {
+    "path": "tests/integration/NativeMetadataTests.cpp",
+    "sha256": "32a1ca0cb683e4ad6c5a0fbe575fb58b70e55cd9f8801aa5f04f80245b0b1836"
+  },
+  {
+    "path": "tests/integration/NativeSketchConstraintTests.cpp",
+    "sha256": "079b8602064a56fab29c55bd838f4f86c0c43c6de28e96dee6bbf144f9570ecb"
+  },
+  {
+    "path": "tests/integration/NativeSketchTests.cpp",
+    "sha256": "406a622ebd3342874a29a54bbed545d76afc77b677daeb4676b6f5c36642306c"
+  },
+  {
+    "path": "tests/integration/NumericPolicyTests.cpp",
+    "sha256": "a13288e8e1266af51044a07f1d6b70fd442cc189ee62ef0f5b9e42ab6773d197"
+  },
+  {
+    "path": "tests/integration/NumericValidationTests.cpp",
+    "sha256": "e58de375811518b2eab6059e7d82146a921076361debd1a26561355dc1745463"
+  },
+  {
+    "path": "tests/integration/PlaneMigrationTests.cpp",
+    "sha256": "c49cedd81124bdae0afd946a038fd244a18288a3ec155837bcdd8da951092832"
+  },
+  {
+    "path": "tests/integration/README.md",
+    "sha256": "9a59c7fd652ab3b185e8cbc36ed24a722789ade47593576b538eb9a1bc591120"
+  },
+  {
+    "path": "tests/integration/SceneStatusTests.cpp",
+    "sha256": "bb0fcaa5302986f227e101ad102c8550fd03463c34d9f191795da9b14d1366ca"
+  },
+  {
+    "path": "tests/integration/SketchAlignmentTests.cpp",
+    "sha256": "deafa781127e15b2bb7f2239e7297b46a00eb9a38f0a526af361754b60297b3f"
+  },
+  {
+    "path": "tests/integration/SketchBasicToolsTests.cpp",
+    "sha256": "5a120f11c5062ca6f2f22d624b62a5186a26eb6db07664e52204b34ee4715991"
+  },
+  {
+    "path": "tests/integration/SketchCircleConstraintTests.cpp",
+    "sha256": "8f4e3dd6d565a7bf26ea2057f1b445b38a9a6649a8a18d0a57722fdfe2b0b9e7"
+  },
+  {
+    "path": "tests/integration/SketchConstructionTests.cpp",
+    "sha256": "71b93e2f1302ede35af76c7ec34e476a553aa251781812378aac11452624653f"
+  },
+  {
+    "path": "tests/integration/SketchEditorRelationTests.cpp",
+    "sha256": "c5a587d459453eaacf3bd67a10ca34773fcbbcaa4168790d3b51e35af1b9d723"
+  },
+  {
+    "path": "tests/integration/SketchEditorSessionTests.cpp",
+    "sha256": "d00710a8076b6820c268746b645a02fbc737ac47b68a890c590d1b1a8995ae45"
+  },
+  {
+    "path": "tests/integration/SketchFixDistanceTests.cpp",
+    "sha256": "6b466e23efc332375851960a0fe9f507f4c52351b8147463cba05a868bf7affe"
+  },
+  {
+    "path": "tests/integration/SketchIdCapacityTests.cpp",
+    "sha256": "bb9c54c484ab375266b8b086ea24f32ef8707921a4322fcb2517977f0264627f"
+  },
+  {
+    "path": "tests/integration/SketchSlotTests.cpp",
+    "sha256": "b8ec82a773d8c5fe8ec18ae87e67ec7737ec53b3be71c571ccf1f3034ba08db3"
+  },
+  {
+    "path": "tests/powershell/PlatformReport.Tests.ps1",
+    "sha256": "f3228e562a2f20d2645d2ad0bcf3770ca3b5f2516ce8c8a771002941940beeb8"
+  },
+  {
+    "path": "tests/powershell/PlatformReportExecution.Tests.ps1",
+    "sha256": "df3ac8afaf257ffdf999ca7c361baf40d57b56141570123f94767ab0b624e4f4"
+  },
+  {
+    "path": "tests/powershell/PlatformReportFixtures.ps1",
+    "sha256": "54ccacdbc0364ec6fcd45f8ef782827ab859bc84660d08027e0c1f7accaaeb84"
+  },
+  {
+    "path": "tests/powershell/SetupWindowsMapping.Tests.ps1",
+    "sha256": "04c460ff6070b22ee2086135e32a958ddc617d691e4a38e40370d2c04ab3e7d6"
+  },
+  {
+    "path": "tests/regression/A03-slot-endpoints.md",
+    "sha256": "1bf3765f15867e9264b07064fea03885b9266a3a7c9a90e2d68e8ad612910c46"
+  },
+  {
+    "path": "tests/regression/F01-source-limit.md",
+    "sha256": "4fc78f801d6c0243b2f53d6b5dcad1045a87c19d38ea3263c349be3ab591e707"
+  },
+  {
+    "path": "tests/regression/F02-save-safety.md",
+    "sha256": "7faaee62e2b0e2dec3b5c45416c3a5f5c31719e26edd26f1916a0558f13ab259"
+  },
+  {
+    "path": "tests/regression/README.md",
+    "sha256": "e0f64f8c82e8ff4824e5df6ebd38930c7fef93fb1eec632a5c8625e7436ac6ea"
+  },
+  {
+    "path": "tests/TestPaths.hpp",
+    "sha256": "f76cbc4d79210111a6ad31bf20134d5ed7f068936b8cb423d158b5f8235475e8"
+  },
+  {
+    "path": "tests/unit/AllocationFailure.cpp",
+    "sha256": "ef12de5da94ea6595e1badb9ecec34ac590c797d2ba3d4505621c429ea65e977"
+  },
+  {
+    "path": "tests/unit/AllocationFailure.hpp",
+    "sha256": "a67610af01f8d662ad3375cec6eba7bffedecb65f07114b8e753abd36a93ca8b"
+  },
+  {
+    "path": "tests/unit/AtomicFileStoreTests.cpp",
+    "sha256": "dcf47170ebff359044f2fc5e2af1cc2a187be21d42fc6088db78261febac69c6"
+  },
+  {
+    "path": "tests/unit/CommandRegistryTests.cpp",
+    "sha256": "94d8717e9625f4f5ab46a781811b3a6fbcc53a2cee782d4daf95a598cd6d6dc0"
+  },
+  {
+    "path": "tests/unit/DocumentIdentityTests.cpp",
+    "sha256": "008902358cbf0c4c9e32eb35be6c763952732e7c46523bd62113714f008703e0"
+  },
+  {
+    "path": "tests/unit/DocumentParserTests.cpp",
+    "sha256": "0da4d0ae484d4d4e37a66d513180865dc57cabe1de6dfd6398e9b45b50fc0023"
+  },
+  {
+    "path": "tests/unit/DocumentTransactionTests.cpp",
+    "sha256": "4868fdf8b602aa67fcbaae92412d46e9b7acf22c17eaaf3a8f97ef823112fac1"
+  },
+  {
+    "path": "tests/unit/ModelDocumentTests.cpp",
+    "sha256": "cc6de0536c6732e996769ebe40470a6ca2957006884cb5731319020dae2edbf1"
+  },
+  {
+    "path": "tests/unit/PlaneGcsTests.cpp",
+    "sha256": "e3cf24a245ca223144a1ef040fb539b982f4e181f013a9c5c13218879c6950e8"
+  },
+  {
+    "path": "tests/unit/ShapeFactoryTests.cpp",
+    "sha256": "4cb4016f9f0a78d7f0cfddadc532307d06319e31fc6b6314922ca542fc33f7d2"
+  },
+  {
+    "path": "tests/unit/SketchConstraintSolverTests.cpp",
+    "sha256": "180199aedddd78b397e7fb84b279a1e35dd7f9ede0487bd5233cb1c0ecf8a802"
+  },
+  {
+    "path": "tests/unit/SketchProfileTests.cpp",
+    "sha256": "7da18c5d1b257b7bebe1bb59fb0ab5971ea0ac69cdfeba1a9bfc5f9415087d21"
+  },
+  {
+    "path": "tools/build-freebsd-occt.sh",
+    "sha256": "0d32b756af9b5f7c093788b2eb2b4f48dcace179f4c5304d1fe9fba16d9dd733"
+  },
+  {
+    "path": "tools/cmake/CheckCyclomaticComplexity.cmake",
+    "sha256": "e09381f1243c451806afdf0084dca0e9fea06fcf33e846f6c08ead4b3639d9cd"
+  },
+  {
+    "path": "tools/cmake/CheckSourceLimits.cmake",
+    "sha256": "0d94af3b43e83b07e2ab6da6bd2823498759c9904595f9d87944be3c47c9aee8"
+  },
+  {
+    "path": "tools/cmake/QualityScope.cmake",
+    "sha256": "589bfa487cda9e0e1b1ec420d2ac901fac75580d5bb98f15827bad4a84c2dd38"
+  },
+  {
+    "path": "tools/cmake/RunExpectedSmoke.cmake",
+    "sha256": "d6982e8bd1ba3d3c44cf429cf291e28fae3ec159c2d38c20edea040072e32c02"
+  },
+  {
+    "path": "tools/cmake/VoelundWarnings.cmake",
+    "sha256": "795684c9e66382149060698cdec9052d3851c5015128e503e38564856faeb233"
+  },
+  {
+    "path": "tools/ocaf-probe/CMakeLists.txt",
+    "sha256": "b14447786b8ae7f7ff1367662a62e678eef403821fe62fb8a1598304e009194a"
+  },
+  {
+    "path": "tools/ocaf-probe/DeployRuntime.cmake",
+    "sha256": "8a956c2f2145e0d7a91d94a880128b94ceac04bda4671dede50958773807d748"
+  },
+  {
+    "path": "tools/ocaf-probe/Fixture.cpp",
+    "sha256": "b32f17f6b48187e1f14e1d3be63011603db9bfc100ab2bbacead6d4a22fd85de"
+  },
+  {
+    "path": "tools/ocaf-probe/Fixture.hpp",
+    "sha256": "f717d603d2cd71e1a2122b9fe7f814c94adab6b0c2160ad9727783836c786222"
+  },
+  {
+    "path": "tools/ocaf-probe/Identity.cpp",
+    "sha256": "318c9e357044d747edf935c2a826b29f456a02c8986279f7b65aee35f4241eee"
+  },
+  {
+    "path": "tools/ocaf-probe/main.cpp",
+    "sha256": "0755fb87aadb211e97fdcc3565a488b792753a2c2a606958d0fda94e8da4bf12"
+  }
+]

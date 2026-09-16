@@ -133,8 +133,8 @@ void regressions(const Handle(TDocStd_Application)& app) {
          SketchElements{{SketchElement{SketchElementId{1}, SketchRectangle{0, 0, 2, 3}}}, 2}});
     (void)mixedModel.addExtrusionFeature("Unsupported", unsupportedSketch, {2, {}});
     const auto mixed = IdentifiedDocumentSnapshot::create(DocumentSnapshot::capture(mixedModel));
-    rejected([&] { NativePrimitiveCodec::write(unsupported, mixed); });
-    require(!unsupported->Main().HasChild(), "Rejected family partially wrote native header");
+    NativePrimitiveCodec::write(unsupported, mixed);
+    require(NativePrimitiveCodec::read(unsupported) == mixed, "Mixed family snapshot changed");
     app->Close(unsupported);
 }
 } // namespace
