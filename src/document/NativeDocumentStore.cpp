@@ -36,7 +36,7 @@ std::string NativeDocumentStore::encode(const IdentifiedDocumentSnapshot& snapsh
         auto bytes = std::move(output).str();
         if (bytes.size() > maximumDocumentBytes)
             throw std::invalid_argument("Native document byte limit exceeded");
-        validateNativeContainerStructure(bytes);
+        validateNativeContainerStructure(bytes, true);
         return bytes;
     } catch (const Standard_Failure& error) {
         throw std::runtime_error("Native document serialization: " + kernel::occtFailureDiagnostic(error));
@@ -47,7 +47,7 @@ IdentifiedDocumentSnapshot NativeDocumentStore::decode(std::string_view bytes) {
     // bound OCCT's internal allocations caused by malicious container metadata.
     if (bytes.empty() || bytes.size() > maximumDocumentBytes)
         throw std::invalid_argument("Invalid native document byte count");
-    validateNativeContainerStructure(bytes);
+    validateNativeContainerStructure(bytes, true);
     try {
         NativeSession session;
         std::istringstream input(std::string(bytes), std::ios::binary);

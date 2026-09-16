@@ -1,0 +1,8 @@
+src/document/NativeAttributeValues.hpp
+src/document/NativeAttributeValues.cpp
+src/document/NativeContainerStructure.hpp
+src/document/NativeContainerStructure.cpp
+src/document/NativeDocumentStore.cpp
+src/document/CMakeLists.txt
+tests/integration/NativeAttributeValuesTests.cpp
+tests/CMakeLists.txt

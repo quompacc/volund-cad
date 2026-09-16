@@ -56,6 +56,9 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 
 ### Geändert
 
+- D13b2 ergänzt die Vorprüfung der fünf unterstützten Attributtreiber:
+  innere Werte, Array-/Referenzgrenzen, eindeutige Attribut-IDs und begrenzte
+  Referenzpfade. Plattformabnahme und Gesamtabschluss stehen im Paketnachweis.
 - D13b2 prüft zusätzlich die BinOcaf-12-Struktur vor OCCT-Open:
   Abschnittstabelle, äußere Attributblockgrößen, Labelanzahl/Baumtiefe und
   exaktes Dateiende. Innere Attributwerte und Treiberzuordnung bleiben offen.

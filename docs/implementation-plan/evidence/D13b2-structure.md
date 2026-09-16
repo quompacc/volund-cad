@@ -73,7 +73,7 @@ Laufzeitkompatibilität ist mit Windows/OCCT 8.0.1 und FreeBSD/OCCT 7.9.3 geprü
 gezielte Windows-Prüfung, historische Austauschprüfung, Manifest/Hashvergleich,
 Transferliste, Skript und Hashes der untersuchten OCCT-Quellen.
 
-## Nächster Teil und offene Grenze
+## Zum damaligen Prüfstand offene Grenze
 
 Die innere Attributstruktur und ihre Zuordnung zu den im Header genannten
 OCCT-Treibern bleiben offen. Ein in die Datei passender Attributblock kann
@@ -86,3 +86,9 @@ nicht Teil des aktuellen Formats.
 D13b2 nicht abschließen, bevor diese Grenze geklärt und geprüft ist.
 Die Ausgabegrößenprüfung nach Serialisierung bleibt ebenfalls bestehen.
 D13c/Produktumschaltung folgt erst nach dem Ressourcenvertrag.
+
+## Fortsetzung
+
+Die [Attributprüfung](D13b2-attributes.md) ergänzt innere Werte und
+Treiberzuordnung. Ihr eigener Plattformstatus ist maßgeblich; die obigen
+73/70-Testergebnisse belegen ausschließlich den Strukturstand.

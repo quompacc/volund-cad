@@ -110,8 +110,13 @@ Labelanzahl/Baumtiefe und exaktes Dateiende. **73/73 Windows** (105,47 s),
 Sechs Dateien samt Prüfskript ausdrücklich freigegeben und übertragen;
 alle Prüfprozesse beendet. Historische Austauschdateien weiterhin lesbar.
 [Nachweis](implementation-plan/evidence/D13b2-structure.md).
-Nächster Teil: **D13b2 fortsetzen**, innere Attributwerte und Treiberzuordnung
-vor OCCT-Open validieren. D13b2 noch nicht abschließen.
+D13b2, Attributprüfung implementiert: fünf erlaubte Treiber, innere Werte,
+eindeutige interne Attribut-IDs und Referenzpfadbudget.
+[Prüfstand](implementation-plan/evidence/D13b2-attributes.md).
+Die Freigabe der acht Quellen samt Prüfskript auf FreeBSD ist angefragt;
+noch keine Übertragung. Als Nächstes diese Plattformabnahme nachholen, anschließend
+D13b2-Gesamtreview einschließlich Ressourcenregeln und Ausgabepuffer.
+D13b2 noch nicht abschließen.
 D13b und D13 bleiben insgesamt offen.
 
 Der Autoritätswechsel aus [ADR 0008](adr/0008-ocaf-binary-persistence.md) ist umgesetzt;

@@ -1,5 +1,8 @@
 #include "NativeContainerStructure.hpp"
 #include "NativeContainerHeader.hpp"
+#include "NativeAttributeValues.hpp"
+#include <bitset>
+#include <optional>
 #include "DocumentSerializationDetail.hpp"
 #include <cstdint>
 #include <limits>
@@ -12,7 +15,10 @@ namespace {
 }
 class Structure final {
   public:
-    explicit Structure(std::string_view bytes) : bytes_(bytes), offset_(validateNativeContainerHeader(bytes)) {}
+    Structure(std::string_view bytes, bool validateAttributes)
+        : bytes_(bytes), offset_(validateNativeContainerHeader(bytes)) {
+        if (validateAttributes) types_ = readNativeAttributeTypes(bytes);
+    }
     void validate() {
         // Our parameter-only documents have no additional shape/application sections.
         if (integer(4, bytes_.size()) != 4 || take(4, bytes_.size()) != std::string_view(":\0\0\0", 4))
@@ -66,14 +72,26 @@ class Structure final {
                 invalidStructure();
             const auto size = integer(4, end);
             if (size > end - offset_) invalidStructure();
-            (void)take(static_cast<std::size_t>(size), end);
+            const auto value = take(static_cast<std::size_t>(size), end);
+            if (types_) {
+                if (type > types_->count || id > maximumDocumentRecords || ids_.test(static_cast<std::size_t>(id)))
+                    invalidStructure();
+                ids_.set(static_cast<std::size_t>(id));
+                referenceTags_ += validateNativeAttributeValue(types_->values[static_cast<std::size_t>(type - 1)], value);
+                if (referenceTags_ > maximumDocumentRecords) invalidStructure();
+            }
         }
     }
     std::string_view bytes_;
     std::size_t offset_;
     std::size_t labels_{};
     std::size_t attributes_{};
+    std::optional<NativeAttributeTypes> types_;
+    std::bitset<maximumDocumentRecords + 1> ids_;
+    std::size_t referenceTags_{};
 };
 } // namespace
-void validateNativeContainerStructure(std::string_view bytes) { Structure(bytes).validate(); }
+void validateNativeContainerStructure(std::string_view bytes, bool validateAttributes) {
+    Structure(bytes, validateAttributes).validate();
+}
 } // namespace voelund::document::detail
