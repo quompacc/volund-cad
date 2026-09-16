@@ -6,7 +6,7 @@
 [D10-Abschlussprüfung](implementation-plan/evidence/D10-review.md).
 D10b2b hat die interne Radiantmigration abgeschlossen. D10c/D10d implementieren
 Größen-/Toleranzrollen und exakten Boolean-Anschluss. Die aktuellen Suiten
-bestehen nach [D11k](implementation-plan/evidence/D11k.md) mit **64/64 Windows** und **60/60 FreeBSD/Sway**.
+bestehen nach [D11l](implementation-plan/evidence/D11l.md) mit **65/65 Windows** und **61/61 FreeBSD/Sway**.
 
 **D10 ist auf Nutzerauftrag abgeschlossen; D11 ist begonnen.** Der in der Abschlussprüfung reproduzierte
 ID-Überlauf ist durch Vorabprüfung des vollständigen ID-Bedarfs behoben und mit
@@ -36,9 +36,10 @@ mit nativen Elementreferenzen, Maß-/Winkel- und Zusatzwerten sowie Solver-Parit
 D11k ergänzt Extrusionsdistanz, native Skizzeneingabe und geordnete Profilauswahl.
 Alle vier aktuellen Featurearten sind im privaten Adapter abgebildet; die
 Produktintegration bleibt offen.
-D11j wurde mit `cddf45d` abgeschlossen; D11k wird mit Belegen und Dokumentation
-auf `main` eingecheckt. Nächster Block ist die gemeinsame Schema-/Identitätsprüfung
-vor dem produktiven Autoritäts-/Store-Wechsel. D11 bleibt insgesamt offen.
+D11k wurde mit `225e7d8` abgeschlossen. D11l ergänzt den gemeinsamen Schema-/
+Identitätsnachweis auf beiden Plattformen. Nächster Block ist der produktive
+Dokumentidentitäts-Lebenszyklus an der CadSession-/Snapshot-Grenze.
+D11 bleibt insgesamt offen.
 Der geprüfte D10-/D11e-Quellstand samt Belegen ist auf Nutzerauftrag in
 `6737465afe6af30758147471035a5582e466342f` auf `main` committed. Ausgangspunkt
 der Prüfläufe war `e8b65b8`; ältere Uncommittet-Vermerke in den Evidenzen
@@ -51,9 +52,8 @@ Referenz-/DAG-/Persistenzpakete bleiben offen.
 Die folgenden Funktionsangaben stammen aus dem ursprünglichen Übergabestand vom
 12. September und sind zusammen mit den aktuellen Paket-Evidenzen zu lesen.
 
-D11l: gemeinsame Feld-/Identitätsprüfung und neuer gemischter Schematest lokal
-abgeschlossen, **65/65 Windows**. FreeBSD-Übertragung/-Abnahme wartet auf die
-angefragte Freigabe; letzter vollständiger Plattformnachweis bleibt D11k.
+D11l: gemeinsame Feld-/Identitätsprüfung und gemischter Schematest vollständig
+mit **65/65 Windows**, **61/61 FreeBSD/Sway** und beidseitigem Dateiaustausch geprüft.
 [D11l-Prüfung und offene Integrationsgrenzen](implementation-plan/evidence/D11l.md).
 
 ## Verbindliches Produktziel

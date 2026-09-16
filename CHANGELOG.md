@@ -68,11 +68,11 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 ### Prüfung und offene Integration
 
 - D10 abgeschlossen; D11 insgesamt weiterhin in Arbeit.
-- Aktueller Quellstand: **64/64 Windows**, **60/60 FreeBSD/Sway**; 291 Quellhashes
+- Aktueller Quellstand: **65/65 Windows**, **61/61 FreeBSD/Sway**; 292 Quellhashes
   identisch. Native D11d-Proben: jeweils **8/8**, beide Austauschrichtungen geprüft.
 - Die dauerhafte Dokument-ID ist noch nicht in produktive New-/Open-/Save-As-
   und Duplikatbefehle eingebunden. Der Produktwriter bleibt **VOLUND 16**.
   Der native Autoritäts-/Store-Wechsel und Meridian-Abnahme bleiben offen.
 - Details und Testbelege: [D10](docs/implementation-plan/evidence/D10.md),
-  [D11k](docs/implementation-plan/evidence/D11k.md),
+  [D11l](docs/implementation-plan/evidence/D11l.md),
   [Entwicklungsstand](docs/development-status.md).

@@ -1,0 +1,1 @@
+PASS 292 frozen source hashes unchanged; Windows 65/65; FreeBSD 61/61; bidirectional native exchange PASS; 16 OCCT libraries from isolated prefix. Supersedes the pending-remote status in local-source-verification.txt.
