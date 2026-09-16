@@ -31,7 +31,7 @@ The repository contains a working native CAD vertical slice:
 
 The current D13b2 output-limit baseline passes **75/75 Windows** and **72/72 FreeBSD/Sway**
 tests. Persistent document identity in product commands and Meridian acceptance
-remain open; see the [D13b2 evidence and remaining checks](docs/implementation-plan/evidence/D13b2-limits.md).
+remain open. D13b is complete; the documentation-only [acceptance review](docs/implementation-plan/evidence/D13b-review.md) rechecks all 317 source hashes against that tested baseline. Next: D13c product persistence.
 
 ## Versions and changes
 

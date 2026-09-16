@@ -93,3 +93,8 @@ und zusätzliche Tests des Referenzbudgets sowie der maximalen Attribut-ID.
 Gemeinsame Abnahme: 75/75 Windows, 72/72 FreeBSD/Sway, 317 identische Quellhashes.
 Die zehn gemeinsamen Dateien samt Prüfskript wurden ausdrücklich freigegeben
 und übertragen. Die obige offene Transfernotiz beschreibt nur den Zwischenstand.
+
+## Nachtrag: Gesamtabnahme
+
+Das [Gesamtreview vom 16.09.2026](D13b-review.md) schließt D13b2/D13b ab.
+Die oben beschriebenen Prüfläufe bleiben der historische Nachweis. D13 bleibt offen.

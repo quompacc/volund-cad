@@ -70,3 +70,8 @@ Ressourcenbudgets sind keine exakte Obergrenze für Prozessspeicher.
 D13b2/D13b werden erst nach dieser Prüfung formal abgeschlossen.
 Native Produktpersistenz, AtomicFileStore-Anbindung und dauerhafte Dokument-ID
 beim Produkt-Open bleiben D13c; Gesamtdateiaustausch und Save-Abnahme D13d.
+
+## Nachtrag: Gesamtabnahme
+
+Das [Gesamtreview vom 16.09.2026](D13b-review.md) schließt D13b2/D13b ab.
+Die oben beschriebenen Prüfläufe bleiben der historische Nachweis. D13 bleibt offen.

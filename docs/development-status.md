@@ -51,7 +51,7 @@ Baumgrenzen und Dateiende. **73/73 Windows**, **70/70 FreeBSD/Sway**,
 **75/75 Windows**, **72/72 FreeBSD/Sway**, **317 Quellhashes identisch**.
 Die zuvor offene FreeBSD-Abnahme ist nachgeholt.
 [Nachweis](implementation-plan/evidence/D13b2-limits.md).
-Nächster Block: D13b2-Gesamtreview; noch kein Produktwriterwechsel.
+**D13b abgeschlossen:** [Gesamtabnahme](implementation-plan/evidence/D13b-review.md); 317 Quellhashes erneut unverändert bestätigt, keine neuen Testläufe. Nächster Block: D13c, native Produktpersistenz. D13 bleibt offen.
 [Teilplan](implementation-plan/D13-plan.md). Insgesamt bleiben 88 von 110 Hauptpaketen offen.
 
 A-BODY-03, D13, Referenz-/DAG-Arbeiten und Meridian L07 bleiben offen.

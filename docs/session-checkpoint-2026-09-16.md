@@ -118,8 +118,10 @@ Attributprüfung und Ausgabebegrenzung sind jetzt gemeinsam geprüft:
 **317 Quellhashes identisch**. Zehn Quellen samt Prüfskript ausdrücklich
 freigegeben und übertragen; alle Prüfprozesse beendet.
 [Nachweis](implementation-plan/evidence/D13b2-limits.md).
-Nächster Block: **D13b2-Gesamtreview**. D13b2 noch nicht formal abgeschlossen.
-D13b und D13 bleiben insgesamt offen.
+**D13b2 und D13b abgeschlossen:** [Gesamtabnahme](implementation-plan/evidence/D13b-review.md).
+Implementierungsstand `62c9023`, 317 Quellhashes erneut unverändert bestätigt.
+Dokumentationsblock ohne neue Builds, Tests oder Übertragungen.
+Nächster Block: **D13c**, native Produktpersistenz. D13 bleibt insgesamt offen.
 
 Der Autoritätswechsel aus [ADR 0008](adr/0008-ocaf-binary-persistence.md) ist umgesetzt;
 der Store-Wechsel folgt in D13. Noch kein produktiver nativer Dispatch: **VOLUND 16 bleibt Produktwriter**.

@@ -56,6 +56,10 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 
 ### Geändert
 
+- D13b nach Gesamtreview abgeschlossen; Prüfgrenzen und D13c-Einstieg dokumentiert.
+  317 Quellhashes erneut bestätigt; vorhandene 75/72-Tests übernommen, nicht neu ausgeführt.
+  D13 bleibt offen, VOLUND 16 bleibt bis D13c Produktwriter.
+
 - D13b2 begrenzt native Ausgabebytes bereits während des Schreibens und erhält
   OCCTs Rückwärtskorrekturen von Größen/Offsets. Zusätzliche Grenztests prüfen
   das Referenzpfadbudget und die maximale interne Attribut-ID.
@@ -64,13 +68,13 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
   Referenzpfade. Plattformabnahme und Gesamtabschluss stehen im Paketnachweis.
 - D13b2 prüft zusätzlich die BinOcaf-12-Struktur vor OCCT-Open:
   Abschnittstabelle, äußere Attributblockgrößen, Labelanzahl/Baumtiefe und
-  exaktes Dateiende. Innere Attributwerte und Treiberzuordnung bleiben offen.
+  exaktes Dateiende. Innere Attributwerte und Treiberzuordnung sind inzwischen ergänzt.
 - D13b2 ergänzt eine Vorprüfung des BinOcaf-12-Dateikopfs vor nativem Öffnen:
   Grenzen, Textlängen, Anzahlen und Version werden ohne eingabeabhängige
-  Pufferreservierungen geprüft. Native Nutzdatenprüfung bleibt offen.
+  Pufferreservierungen geprüft. Native Nutzdatenprüfung ist inzwischen ergänzt.
 - D13b1 ergänzt privates, begrenztes Einlesen ohne Seek und eindeutige Zuordnung
-  zu Legacy-Text oder nativer Binärcontainerfamilie. Native Containerprüfung
-  und Produktintegration bleiben offen. Windows- und FreeBSD/Sway-Abnahme
+  zu Legacy-Text oder nativer Binärcontainerfamilie. Die Containerprüfung ist
+  inzwischen abgeschlossen; Produktintegration folgt in D13c. Windows- und FreeBSD/Sway-Abnahme
   einschließlich identischer Quellstände bestanden.
 - D13a ergänzt einen privaten BinOcaf-Adapter für unveränderliche Dokument-Snapshots,
   mit ID-/Parameter-Rundlauf, Schemafehlern und Eingabegrößenprüfung vor dem Öffnen.
