@@ -61,16 +61,20 @@ D13b ist abgenommen, D13c ist der nächste Integrationsblock. Noch kein Release-
 ## Gitea-Repository vorbereiten
 
 Das bestehende Gitea-Repository `volund` ist laut Nutzer für CAD Vault bestimmt.
-Dieses CAD-Projekt erhält ein separates Repository. Namensvorschlag: **volund-cad**;
+Dieses CAD-Projekt erhält ein separates Repository. Bestätigter Repository-Name: **volund-cad**;
 Produktname Völund CAD, C++-Namespace und lokales Projektverzeichnis bleiben erhalten.
-Der Vorschlag ist noch nicht als endgültiger Remote-Name bestätigt.
+Ziel: `ssh://git@192.168.1.11:2222/eduard/volund-cad.git`.
 
 Ein erster Push ist bereits während der Entwicklung sinnvoll: Er sichert die
 Git-Historie auf einem weiteren Rechner und schafft einen gemeinsamen Stand für
 spätere Zusammenarbeit und CI. Er ist kein Release und ersetzt keine unabhängige
 Sicherung des Gitea-Servers.
 
-Stand 16.09.2026: lokal kein Git-Remote konfiguriert. Vor dem ersten Push:
+Vorbereitung des ersten Pushs am 16.09.2026: Ziel erreichbar und leer. Die 76
+vorhandenen Commits wurden auf gängige Zugangsdatenmuster geprüft (keine Treffer);
+kein Git-Blob über 10 MiB. Das ist keine Garantie auf vollständige Geheimnisfreiheit.
+
+Ablauf für die Erstübertragung:
 
 1. Zielname und Gitea-Clone-URL festlegen; vorzugsweise ein privates, leeres
    Repository ohne automatisch angelegte README oder Lizenz verwenden.
@@ -79,4 +83,7 @@ Stand 16.09.2026: lokal kein Git-Remote konfiguriert. Vor dem ersten Push:
 3. Ziel als Remote eintragen und `main` mit seiner bestehenden Historie übertragen.
    Nicht in das bestehende CAD-Vault-Repository pushen.
 
-Die Prüfung vor Veröffentlichung und der erste Push stehen noch aus.
+`origin` verwendet die bestätigte URL. Für die IP-Adresse wird der vorhandene
+Gitea-Schlüssel über die lokale Git-Konfiguration ausgewählt; keine Änderung an
+globaler SSH-Konfiguration. Übertragen wird `main` einschließlich Historie ohne
+Force-Push. Erfolg anschließend durch Vergleich von lokalem HEAD und Remote prüfen.
