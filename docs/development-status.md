@@ -20,7 +20,7 @@ Transaktionskandidaten sind abgesichert. **66/66 Windows**, **62/62 FreeBSD/Sway
 
 **D12b ist geprüft:** eingefrorene Auswertungs-/Writer-Snapshots und eigene
 UI-Datenwerte. **67/67 Windows**, **63/63 FreeBSD/Sway**, **296 Quellhashes identisch**.
-[Nachweis](implementation-plan/evidence/D12b.md). D12 bleibt `in-progress`.
+[Nachweis](implementation-plan/evidence/D12b.md).
 **D12c ist geprüft:** isolierter privater OCAF-Zustand mit vorbereiteten Änderungen
 und Historie vollständiger OCAF-Stände; keine native Delta-Undo-Abnahme.
 **68/68 Windows**, **65/65 FreeBSD/Sway**, **299 Quellhashes identisch**.
@@ -29,13 +29,13 @@ und Historie vollständiger OCAF-Stände; keine native Delta-Undo-Abnahme.
 OCAF als Autorität; unveränderliche abgeleitete Leseansichten ersetzen die alte
 Vektorautorität. CadSession liest die Modell-ID. **69/69 Windows**, **66/66 FreeBSD/Sway**,
 **300 Quellhashes identisch**. [Nachweis](implementation-plan/evidence/D12d.md).
-Nächster Block: D12e, Gesamtabnahme und Bereinigung; D12 bleibt bis dahin offen.
+**D12 ist abgeschlossen:** [D12e-Abnahmematrix](implementation-plan/evidence/D12e.md). Die 300 Quellhashes des geprüften D12d-Stands wurden erneut bestätigt; D12e ändert nur Dokumentation und führt keine neuen Testläufe an.
 [Bestätigte Aufteilung](implementation-plan/D12-plan.md).
 D13 bindet danach den nativen Produktstore an. VOLUND 16 bleibt bis dahin
 Produktwriter ohne persistente DocumentId; Legacy-Open vergibt eine neue
-Dokument-ID. D12a ist noch kein OCAF-Backendwechsel.
+Dokument-ID. Nächster Implementierungsblock: D13, Integration des nativen Produktstores.
 
-A-BODY-03, D12/D13, Referenz-/DAG-Arbeiten und Meridian L07 bleiben offen.
+A-BODY-03, D13, Referenz-/DAG-Arbeiten und Meridian L07 bleiben offen.
 [Changelog](../CHANGELOG.md) und [Versionsregeln](versioning.md) sind aktuell;
 Basisversion `0.1.0`, kein Release-Tag, kein Push, keine Terra-Übergabe.
 Historische D11a–D11n-Offenvermerke beziehen sich auf ihren jeweiligen Prüfzeitpunkt.

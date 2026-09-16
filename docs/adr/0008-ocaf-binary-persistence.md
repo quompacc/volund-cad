@@ -2,7 +2,9 @@
 
 Status: angenommen für die Umsetzung in D09–D13, 14.09.2026.
 Entscheidungsnachweis: [D08](../implementation-plan/evidence/D08.md).
-Der produktive Dokumentkern und sein bisheriger Codec sind noch nicht umgestellt.
+Umsetzungsstand 16.09.2026: Der produktive Dokumentkern ist mit
+[D12](../implementation-plan/evidence/D12e.md) auf OCAF umgestellt.
+Der Produktwriter bleibt VOLUND 16; native Binärpersistenz folgt in D13.
 
 ## Entscheidung
 
@@ -65,6 +67,15 @@ verlässliche Benutzerreferenz auf eine Fläche.
 - VOLUND1–VOLUND16 bleiben über den Legacy-Importer lesbar. Quelldateien werden
   nicht automatisch überschrieben. Unbekannte zukünftige Schemata werden abgewiesen.
 
+## Produktive Historie nach D12
+
+Die produktive Historie hält vollständige, nach Veröffentlichung unveränderte OCAF-
+Stände. Änderungen werden einschließlich Validierung und abgeleiteter Leseansicht
+vorbereitet; der Commit tauscht den Besitzer. Dies erhält die bestehenden Fehler-
+und Allokationsgarantien. Native OCAF-Undo-Deltas werden im Produkt nicht verwendet.
+Speicher- und Laufzeitkosten vollständiger Stände sind bekannt; eine Abnahme großer
+Modelle ist damit nicht verbunden. Die D08-Delta-Probe oben bleibt ein Experiment.
+
 ## Benötigte Module und Integration
 
 Direkte Experiment-Links: `TKBin`, `TKCAF`, `TKPrim`.
@@ -79,8 +90,8 @@ Abhängigkeiten besitzen; deren Liste wird nicht als schlanker Produktumfang aus
 um `TKBin` und seinen automatisch aufgelösten OCAF-Unterbau. Der isolierte Neubau,
 native Austauschproben und die Produktsuite sind geprüft; alle OCCT-Laufzeitmodule
 stammen aus derselben neuen Installation. Der D08-System-Paketnachweis allein
-ersetzt diesen Integrationsbuild nicht. Der produktive Autoritätswechsel bleibt
-D12 vorbehalten. Keine Vermischung von System-OCAF und projektlokalem Kernel.
+ersetzt diesen Integrationsbuild nicht. Der produktive Autoritätswechsel ist
+durch D12 abgeschlossen. Keine Vermischung von System-OCAF und projektlokalem Kernel.
 
 Windows-Proben deployen die aufgelösten Nicht-System-DLLs direkt neben die EXE und
 schlagen beim Build mit unaufgelösten Abhängigkeiten fehl. D08 wurde danach ohne

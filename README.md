@@ -10,7 +10,7 @@ architecture decisions, acceptance scenarios, and an execution template for smal
 The current package states and acceptance evidence are tracked in
 [`packets.json`](docs/implementation-plan/packets.json). D10 is complete;
 D11 identity acceptance is complete; see the [acceptance matrix](docs/implementation-plan/evidence/D11-review.md).
-D12d integrates OCAF as the product model authority, including transactions, history and document identity; see [evidence](docs/implementation-plan/evidence/D12d.md). Final D12 acceptance (D12e) remains open in the [D12 plan](docs/implementation-plan/D12-plan.md). Native product persistence remains D13.
+D12d integrates OCAF as the product model authority, including transactions, history and document identity; see [evidence](docs/implementation-plan/evidence/D12d.md). D12 is complete; see the [acceptance matrix](docs/implementation-plan/evidence/D12e.md). Native product persistence remains D13.
 
 ## Current state
 

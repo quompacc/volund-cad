@@ -5,8 +5,9 @@
 D10 und **D11 abgeschlossen**. Die [D11-Abnahmematrix](implementation-plan/evidence/D11-review.md)
 ordnet sämtliche ursprünglichen Kriterien den vorhandenen Tests zu. Geprüfter
 D11-Quellstand: `b71a081`; Abschlussdokumentation in `ef36dca`.
-Aktuell sind zusätzlich **D12a–D12d geprüft**, D12 insgesamt `in-progress`.
-D12/D13, A-BODY-03 und Meridian-Abnahme L07 bleiben offen.
+**D12 ist mit der [D12e-Gesamtabnahme](implementation-plan/evidence/D12e.md) abgeschlossen.**
+Geprüfter Implementierungsstand: `7d3e68b`; D12e ändert nur Dokumentation.
+D13, A-BODY-03 und Meridian-Abnahme L07 bleiben offen.
 Kein Push, kein Release-Tag, keine Terra-Übergabe.
 
 ## D11l – Abschluss
@@ -82,13 +83,14 @@ Leseansichten werden unveränderlich aus OCAF abgeleitet. **69/69 Windows** (104
 Windows-Produktsmoke mit sauberem PATH bestanden; 18 FreeBSD-OCCT-Bibliotheken
 aus dem isolierten Prefix. [D12d-Nachweis](implementation-plan/evidence/D12d.md).
 
-Nächster Block: **D12e**, Gesamtabnahme, verbleibende Backend-/Headergrenzen
-prüfen und Dokumentation bereinigen. Historienkosten bleiben offengelegt.
-D12 bis dahin insgesamt offen. Siehe bestätigte
-[D12-Aufteilung](implementation-plan/D12-plan.md). D12 bleibt insgesamt offen.
+D12e schließt die ursprünglichen Kriterien ab: private OCAF-Autorität, unveränderliche
+Leseansichten, Transaktionen/Undo/Redo und öffentliche Headergrenzen geprüft.
+300 Quellhashes erneut bestätigt; keine neuen Builds oder Testläufe im Dokumentationsblock.
+Siehe [Abnahmematrix](implementation-plan/evidence/D12e.md).
+Nächster Block: **D13**, nativen Produktstore in begrenzten Teilschritten integrieren.
 
-Der Autoritäts-/Store-Wechsel folgt gemäß [ADR 0008](adr/0008-ocaf-binary-persistence.md)
-und D12/D13. Noch kein produktiver nativer Dispatch: **VOLUND 16 bleibt Produktwriter**.
+Der Autoritätswechsel aus [ADR 0008](adr/0008-ocaf-binary-persistence.md) ist umgesetzt;
+der Store-Wechsel folgt in D13. Noch kein produktiver nativer Dispatch: **VOLUND 16 bleibt Produktwriter**.
 Die Datei enthält noch keine produktive persistente DocumentId. Kein paralleler
 mutabler OCAF-Schattenzustand. Die bestehenden nativen und Produktregressionen erhalten.
 

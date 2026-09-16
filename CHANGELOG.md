@@ -56,6 +56,9 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 
 ### Geändert
 
+- D12e schließt die Gesamtabnahme der OCAF-Modellautorität ab und ordnet die
+  ursprünglichen Kriterien den bestehenden Plattform- und Fehlernachweisen zu.
+  Nur Dokumentation; native Produktpersistenz bleibt D13.
 - D12d stellt das Produktmodell mit Transaktionen und Undo/Redo auf die private
   OCAF-Autorität um. Modellabfragen nutzen eine unveränderliche abgeleitete Ansicht;
   CadSession übernimmt die Dokument-ID des Modells. VOLUND 16 bleibt Produktwriter.

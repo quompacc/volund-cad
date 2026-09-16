@@ -886,12 +886,12 @@
       ],
       "acceptance": "D05/D06-Historientests laufen gegen den neuen Backend; Parameter und IDs nach Undo/Redo identisch. Kein Codepfad schreibt parallel in zwei Modellquellen. OCAF-spezifische Tests nach Verantwortung splitten.",
       "boundary": "Bei Umfangüberschreitung Featurefamilien einzeln migrieren; Adapter bleibt währenddessen ausdrücklich nur eine Autorität pro Featurezustand.",
-      "status": "in-progress",
+      "status": "done",
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": ["evidence/D12a.md", "evidence/D12b.md", "evidence/D12c.md", "evidence/D12d.md"],
-      "completedCommit": null
+      "evidence": ["evidence/D12a.md", "evidence/D12b.md", "evidence/D12c.md", "evidence/D12d.md", "evidence/D12e.md"],
+      "completedCommit": "7d3e68b5c518166f26aeb046d80dfa4eefe1b383"
     },
     {
       "id": "D13",

@@ -1,7 +1,7 @@
 # D12 – Teilblöcke und Abnahmegrenzen
 
-Aufteilung vom 16.09.2026, vom Nutzer bestätigt. D12 bleibt bis zur Gesamtabnahme
-`in-progress`. Der bisher als D12b bezeichnete vollständige Autoritätswechsel wird
+Aufteilung vom 16.09.2026, vom Nutzer bestätigt. D12 ist mit der
+[Gesamtabnahme D12e](evidence/D12e.md) abgeschlossen (`done`). Der bisher als D12b bezeichnete vollständige Autoritätswechsel wird
 in Vorbereitung, isolierten OCAF-Zustand, Produktumschaltung und Abnahme zerlegt.
 
 | Block | Umfang | Abschlusskriterium |
@@ -10,7 +10,7 @@ in Vorbereitung, isolierten OCAF-Zustand, Produktumschaltung und Abnahme zerlegt
 | D12b | Unveränderliche Snapshot-Abfragen; Auswertung/Writer an einen eingefrorenen Stand binden; eigene UI-Datenwerte | [Nachweis](evidence/D12b.md): keine Abhängigkeit dieser Ergebnisse von späteren Modellmutationen. |
 | D12c | Privaten OCAF-Zustand für alle vier Featurearten isoliert entwickeln | [Nachweis](evidence/D12c.md): vorbereitete OCAF-Stände mit privater Historie; keine produktive zweite Autorität und keine native Delta-Undo-Abnahme. |
 | D12d | Produktmodell und Transaktionen/Undo/Redo geschlossen auf OCAF umstellen | [Nachweis](evidence/D12d.md): OCAF-Autorität mit unveränderlicher abgeleiteter Leseansicht, D05/D06-Regressionen und produktiver Identität. |
-| D12e | D12-Gesamtabnahme und Bereinigung | Fehlerfälle, ID-Erhalt und beide Plattformen vollständig; alte Modellautorität entfernt, keine Doppelwriter. |
+| D12e | D12-Gesamtabnahme und Bereinigung | [Abgenommen](evidence/D12e.md): ursprüngliche Kriterien und vorhandene Plattformnachweise zugeordnet; keine Doppelwriter. |
 
 ## D12c – geprüfter Umfang
 
@@ -41,10 +41,10 @@ Der Produktwriter bleibt während D12 VOLUND 16; native Produktpersistenz folgt 
 Mehrkörper ohne Komponenten-/Baugruppenpflicht bleibt verbindlich. A-BODY-03 ist
 weiterhin eine eigene offene Bedienabnahme; D12 erfüllt sie nicht durch Codec-Tests.
 
-## Nächster Block: D12e
+## D12e – Gesamtabnahme abgeschlossen
 
 Gesamtabnahme gegen die ursprünglichen D12-Kriterien. Verbliebene interne Zugriffe,
 öffentliche Header und Schreibwege prüfen; native Attribute und abgeleitete
 Leseansichten dürfen nicht auseinanderlaufen. Bestehende D05/D06-Fehler-/History-
-Nachweise zuordnen und Altbehauptungen zur Vektorautorität berichtigen. D12 erst
-nach dieser Prüfung abschließen. D13 bleibt das eigene Produktstore-Paket.
+Nachweise zuordnen und Altbehauptungen zur Vektorautorität berichtigen. Die [Abnahmematrix](evidence/D12e.md) dokumentiert diese Prüfung.
+D13 bleibt das nächste eigene Produktstore-Paket.
