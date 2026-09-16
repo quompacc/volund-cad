@@ -21,9 +21,12 @@ Transaktionskandidaten sind abgesichert. **66/66 Windows**, **62/62 FreeBSD/Sway
 **D12b ist geprüft:** eingefrorene Auswertungs-/Writer-Snapshots und eigene
 UI-Datenwerte. **67/67 Windows**, **63/63 FreeBSD/Sway**, **296 Quellhashes identisch**.
 [Nachweis](implementation-plan/evidence/D12b.md). D12 bleibt `in-progress`.
-Nächster Block: D12c, OCAF-Zustand isoliert entwickeln und Änderung/Abbruch prüfen.
-D12d schaltet Produktmodell und Transaktionen/Undo/Redo gemeinsam um; D12e nimmt
-das Gesamtpaket ab. [Bestätigte Aufteilung](implementation-plan/D12-plan.md).
+**D12c ist geprüft:** isolierter privater OCAF-Zustand mit vorbereiteten Änderungen
+und Historie vollständiger OCAF-Stände; keine native Delta-Undo-Abnahme.
+**68/68 Windows**, **65/65 FreeBSD/Sway**, **299 Quellhashes identisch**.
+[Nachweis und Kosten](implementation-plan/evidence/D12c.md).
+Nächster Block D12d schaltet Produktmodell und Transaktionen/Undo/Redo gemeinsam um;
+D12e nimmt das Gesamtpaket ab. [Bestätigte Aufteilung](implementation-plan/D12-plan.md).
 D13 bindet danach den nativen Produktstore an. VOLUND 16 bleibt bis dahin
 Produktwriter ohne persistente DocumentId; Legacy-Open vergibt eine neue
 Dokument-ID. D12a ist noch kein OCAF-Backendwechsel.

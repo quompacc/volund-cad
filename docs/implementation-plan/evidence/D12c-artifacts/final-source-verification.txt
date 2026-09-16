@@ -1,0 +1,1 @@
+PASS 299 frozen source hashes unchanged; Windows 68/68 (102.67 s); FreeBSD 65/65 (35.37 s). Native allocation sweeps: change 50, undo 70, redo 70 failures; prepared commits without allocation. All build/test processes finished.

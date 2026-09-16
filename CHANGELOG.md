@@ -56,6 +56,10 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 
 ### Geändert
 
+- D12c ergänzt einen isolierten privaten OCAF-Zustand mit vorbereiteten Änderungen,
+  Abbruch und Undo/Redo bei monotonem ID-Vergabestand. Historie hält vollständige
+  OCAF-Stände; die Produktanwendung wird erst in D12d umgestellt.
+
 - D12b bindet Geometrieauswertung und Legacy-Writer an je einen eingefrorenen
   Dokumentstand. Die Oberfläche erhält eigene Parameter-/Featurewerte, die nach
   Modellwechsel gültig bleiben. D12c–D12e trennen OCAF-Vorbereitung, Umschaltung

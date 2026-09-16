@@ -8,6 +8,7 @@ add_library(voelund_document STATIC
     IdentifiedDocumentSnapshot.cpp
     NativeDocumentMetadata.cpp
     NativePrimitiveCodec.cpp
+    NativeModelState.cpp
     NativeExtrusion.cpp
     NativeSketchGeometry.cpp
     NativeSketchConstraints.cpp

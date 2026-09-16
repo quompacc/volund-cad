@@ -10,7 +10,7 @@ architecture decisions, acceptance scenarios, and an execution template for smal
 The current package states and acceptance evidence are tracked in
 [`packets.json`](docs/implementation-plan/packets.json). D10 is complete;
 D11 identity acceptance is complete; see the [acceptance matrix](docs/implementation-plan/evidence/D11-review.md).
-D12b adds frozen evaluation snapshots and owned UI data values; see [evidence](docs/implementation-plan/evidence/D12b.md). The [D12 plan](docs/implementation-plan/D12-plan.md) separates isolated OCAF preparation (D12c), product integration (D12d) and final acceptance (D12e). Native product persistence remains D13.
+D12c adds an isolated private OCAF revision store with prepared changes and rollback/history checks; see [evidence](docs/implementation-plan/evidence/D12c.md). The [D12 plan](docs/implementation-plan/D12-plan.md) keeps product integration (D12d) and final acceptance (D12e) open. Native product persistence remains D13.
 
 ## Current state
 
@@ -29,9 +29,9 @@ The repository contains a working native CAD vertical slice:
 - modular workspace and command registry with `Solid` as the first product module;
 - native C++ tests and an enforced 600-line source-file limit.
 
-The accepted D12b source baseline passes **67/67 Windows** and **63/63 FreeBSD/Sway**
+The accepted D12c source baseline passes **68/68 Windows** and **65/65 FreeBSD/Sway**
 tests. Persistent document identity in product commands and Meridian acceptance
-remain open; see the [D12b evidence](docs/implementation-plan/evidence/D12b.md).
+remain open; see the [D12c evidence](docs/implementation-plan/evidence/D12c.md).
 
 ## Versions and changes
 

@@ -220,7 +220,7 @@ Aktueller Paketstatus und Evidenz stehen im Manifest. A01 ist abgenommen; die ü
 
 ## D12 – OCAF als gekapselte Dokumentautorität einsetzen
 
-- **Fortschritt:** [D12a](evidence/D12a.md) kapselt Modellzustand und History privat. [D12b](evidence/D12b.md) bindet Auswertung und Writer an unveränderliche Snapshots und liefert eigene UI-Datenwerte. D12 bleibt `in-progress`; die bestätigte [Aufteilung D12a–D12e](D12-plan.md) trennt isolierte OCAF-Vorbereitung (D12c), Produktumschaltung (D12d) und Gesamtabnahme (D12e).
+- **Fortschritt:** [D12a](evidence/D12a.md) kapselt Modellzustand und History privat. [D12b](evidence/D12b.md) bindet Auswertung und Writer an unveränderliche Snapshots und liefert eigene UI-Datenwerte. [D12c](evidence/D12c.md) ergänzt den isolierten privaten OCAF-Zustand mit vorbereiteter Veröffentlichung und Historie vollständiger OCAF-Stände. D12 bleibt `in-progress`; die bestätigte [Aufteilung D12a–D12e](D12-plan.md) trennt isolierte OCAF-Vorbereitung (D12c), Produktumschaltung (D12d) und Gesamtabnahme (D12e).
 
 - **Voraussetzungen:** D08, D09, D11.
 - **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08; `include/voelund/document/ModelDocument.hpp`, `src/document/ModelDocument.cpp`, `src/document/CMakeLists.txt`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.

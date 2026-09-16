@@ -1,0 +1,7 @@
+src/document/NativeModelState.hpp
+src/document/NativeModelState.cpp
+include/voelund/document/DocumentSnapshot.hpp
+src/document/CMakeLists.txt
+tests/CMakeLists.txt
+tests/integration/NativeModelStateTests.cpp
+tests/unit/AllocationFailure.cpp

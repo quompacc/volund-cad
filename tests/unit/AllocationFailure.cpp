@@ -20,7 +20,7 @@ namespace voelund::test {
 void failAllocationAfter(int successfulAllocations) noexcept { remaining = successfulAllocations; }
 void disableAllocationFailure() noexcept { remaining = -1; }
 } // namespace voelund::test
-// Linked only into document_transaction_tests, never the CAD applications.
+// Linked only into dedicated allocation-test executables, never the CAD applications.
 void* operator new(std::size_t size) { return allocate(size); }
 void* operator new[](std::size_t size) { return allocate(size); }
 void operator delete(void* pointer) noexcept { std::free(pointer); }

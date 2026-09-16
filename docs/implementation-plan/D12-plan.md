@@ -8,11 +8,14 @@ in Vorbereitung, isolierten OCAF-Zustand, Produktumschaltung und Abnahme zerlegt
 | --- | --- | --- |
 | D12a | Private Modellautorität, Wertkopie, Transaktionskandidaten | [Geprüft](evidence/D12a.md), 66/66 Windows, 62/62 FreeBSD. |
 | D12b | Unveränderliche Snapshot-Abfragen; Auswertung/Writer an einen eingefrorenen Stand binden; eigene UI-Datenwerte | [Nachweis](evidence/D12b.md): keine Abhängigkeit dieser Ergebnisse von späteren Modellmutationen. |
-| D12c | Privaten OCAF-Zustand für alle vier Featurearten isoliert entwickeln | Snapshot-Parität, Änderung/Abbruch, Vergabezähler und Fehlergarantien auf beiden Plattformen; keine produktive zweite Autorität. |
+| D12c | Privaten OCAF-Zustand für alle vier Featurearten isoliert entwickeln | [Nachweis](evidence/D12c.md): vorbereitete OCAF-Stände mit privater Historie; keine produktive zweite Autorität und keine native Delta-Undo-Abnahme. |
 | D12d | Produktmodell und Transaktionen/Undo/Redo geschlossen auf OCAF umstellen | D05/D06-Regressionen, ein beschreibbarer Modellzustand, keine geliehenen Backend-Referenzen an bisherigen Modellabfragen. |
 | D12e | D12-Gesamtabnahme und Bereinigung | Fehlerfälle, ID-Erhalt und beide Plattformen vollständig; alte Modellautorität entfernt, keine Doppelwriter. |
 
-## Nächster Implementierungsblock: D12c
+## D12c – geprüfter Umfang
+
+Implementierung und Grenzen stehen im [D12c-Nachweis](evidence/D12c.md).
+Die folgende Umfangsdefinition bleibt als Grundlage erhalten.
 
 - Bestehenden privaten nativen Adapter als Schema-Grundlage nutzen; keine zweite
   Kodierung der vier Featurefamilien einführen.
@@ -27,7 +30,12 @@ in Vorbereitung, isolierten OCAF-Zustand, Produktumschaltung und Abnahme zerlegt
 - Testzustand darf neben Produktcode existieren, wird aber nicht als zweiter
   beschreibbarer Spiegel des laufenden Produktdokuments geführt.
 
-D12d übernimmt anschließend zusammenhängend Modellautorität und Transaktionsanbindung.
+## Nächster Implementierungsblock: D12d
+
+D12d übernimmt zusammenhängend Modellautorität und Transaktionsanbindung.
+Der D12c-Prototyp hält vollständige OCAF-Stände statt nativer Undo-Deltas;
+diese Entscheidung und ihre Speicher-/Laufzeitkosten bei der Integration
+explizit erhalten oder einen anderen Mechanismus gleichwertig nachweisen.
 Wenn die D12c-Garantien nicht nachweisbar sind, wird diese Umschaltung nicht vorgezogen.
 Der Produktwriter bleibt während D12 VOLUND 16; native Produktpersistenz folgt in D13.
 Mehrkörper ohne Komponenten-/Baugruppenpflicht bleibt verbindlich. A-BODY-03 ist
