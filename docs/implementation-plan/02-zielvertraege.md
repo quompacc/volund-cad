@@ -48,7 +48,7 @@ Anwendungsduplikat erzeugen neue Namensräume; Bearbeitung, Undo/Redo und Save-A
 erhalten sie. Legacy-Dateien ohne ID bekommen bei jedem erfolgreichen Open einen
 neuen Namensraum. Fehlgeschlagenes Open/Save verändert ihn nicht. VOLUND 16 bleibt
 unverändert und speichert die ID noch nicht; native dauerhafte Identität bleibt
-D12/D13 vorbehalten. Die Desktop-Aktion für das Anwendungsduplikat ist noch offen.
+D12/D13 vorbehalten. [D11n](evidence/D11n.md) ergänzt die Desktop-Aktion mit explizitem Umgang mit ungespeicherten Änderungen.
 
 ## K03 – Befehle und Transaktionen
 

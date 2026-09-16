@@ -60,8 +60,13 @@ D11m ergänzt den Dokumentidentitäts-Lebenszyklus in CadSession einschließlich
 New, Legacy-Open, Save-As und explizitem Anwendungsduplikat. **66/66 Windows**,
 **62/62 FreeBSD/Sway** bestanden; **294 Quellhashes identisch**.
 Dokument-IDs werden weiterhin nicht in VOLUND 16 gespeichert; als nächster Block
-folgt die Desktop-Duplikataktion. Implementierung: `9931c10`.
+folgt die D11-Abnahmematrix. D11m-Implementierung: `9931c10`; Desktop-Anbindung siehe D11n.
 [D11m-Details](implementation-plan/evidence/D11m.md).
+
+D11n bindet **File → Duplicate** an den bestehenden Desktop-Dokumentablauf an:
+Original speichern, ohne Speichern duplizieren oder abbrechen; Fehlerdialoge für
+New und Duplicate. **66/66 Windows** bestanden; FreeBSD-Freigabe und Prüfung
+stehen aus. [D11n-Belege](implementation-plan/evidence/D11n.md).
 
 ## Verbindliches Produktziel
 

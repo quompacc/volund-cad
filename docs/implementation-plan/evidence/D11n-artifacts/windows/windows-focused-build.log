@@ -1,0 +1,6 @@
+[1/6] Scanning V:\src\desktop\DocumentActions.cpp for CXX dependencies
+[2/6] Scanning V:\tests\desktop\DocumentActionsTests.cpp for CXX dependencies
+[3/6] Generating CXX dyndep file tests\CMakeFiles\voelund_document_actions_tests.dir\CXX.dd
+[4/6] Building CXX object tests\CMakeFiles\voelund_document_actions_tests.dir\__\src\desktop\DocumentActions.cpp.obj
+[5/6] Building CXX object tests\CMakeFiles\voelund_document_actions_tests.dir\desktop\DocumentActionsTests.cpp.obj
+[6/6] Linking CXX executable tests\voelund_document_actions_tests.exe

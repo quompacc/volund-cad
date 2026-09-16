@@ -32,6 +32,22 @@ Desktop-Aktion und native dauerhafte Speicherung fehlen noch.
 Die sieben Quellen samt Skript wurden ausdrücklich freigegeben und übertragen.
 Belege: [D11m](implementation-plan/evidence/D11m.md) und `D11m-artifacts`.
 
+## D11n – lokaler Zwischenstand
+
+Desktop-File-Menü enthält Duplicate. Saubere Dokumente werden direkt dupliziert;
+bei Änderungen: Save / Duplicate without saving / Cancel. Alle aktuellen Änderungen
+bleiben im Duplikat; Speichercancel/-fehler verhindert den Identitätswechsel.
+Duplikat erscheint als Untitled *, ohne Pfad und Historie. New/Duplicate fangen
+Anwendungsfehler ab und zeigen den bestehenden Fehlerdialog.
+
+**66/66 Windows** (99,41 s), **294 lokale Quellhashes unverändert**. Windows beendet.
+Offen: ausdrückliche Antwort auf D11n-Übertragungsfrage; bis dahin keine Übertragung.
+Drei Dateien: `src/desktop/DocumentActions.cpp`, `src/desktop/DocumentActions.hpp`,
+`tests/desktop/DocumentActionsTests.cpp`. Archiv `build/d11n/d11n-source-delta.tar`;
+Delta/Manifest/Skript in `docs/implementation-plan/evidence/D11n-artifacts`.
+Nach Freigabe FreeBSD bauen/testen und Hashes abgleichen. D11m bleibt letzter
+beidseitig geprüfter Stand. [D11n](implementation-plan/evidence/D11n.md).
+
 ## Nächster Block
 
 Neue verbindliche Nutzeranforderung: einfacher Mehrkörperworkflow nach dem gezeigten
@@ -41,11 +57,10 @@ abgenommen. Die Schema-/Identitätsprüfung bestätigt, dass unabhängige
 Körper direkt unter dem Dokument möglich sind; den UI-/NewBody-Ausbau über
 S03/M01–M04 nicht mit den bereits bestandenen Codec-Tests gleichsetzen.
 
-Als nächster Block: explizites Duplizieren
-an den bestehenden Desktop-Dokumentablauf anbinden, einschließlich Umgang mit
-ungespeicherten Änderungen. Die Anwendungsmethode existiert; keine zweite
-Dokumentautorität einführen. Native Persistenz bleibt D12/D13 zugeordnet.
-D11 bleibt bis zur vollständigen Identitätsabnahme offen.
+Zuerst offenen D11n-FreeBSD-Nachweis abschließen. Danach D11-Abnahmematrix
+aktualisieren und den verbleibenden Persistenzteil explizit D12/D13 zuordnen;
+konkreten ersten Schritt des Autoritätswechsels festlegen. D11 bleibt bis zur
+vollständigen Identitätsabnahme offen. Desktop-Duplikation ist implementiert.
 
 Der Autoritäts-/Store-Wechsel folgt gemäß [ADR 0008](adr/0008-ocaf-binary-persistence.md)
 und D12/D13. Noch kein produktiver nativer Dispatch: **VOLUND 16 bleibt Produktwriter**.

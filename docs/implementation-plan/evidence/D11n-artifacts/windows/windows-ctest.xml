@@ -1,0 +1,643 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Win32-ninja"
+	tests="66"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname="megatron"
+	time="99"
+	timestamp="2026-09-16T17:28:59"
+	>
+	<testcase name="desktop.viewport_startup" classname="desktop.viewport_startup" time="1.53529" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;platform;windows"/>
+		</properties>
+		<system-out>desktop-smoke {"backend":"qt-opengl","courierFontAvailable":false,"dpi":96,"dpr":1,"gl":"4.6.0 NVIDIA 610.88","height":724,"occt":"8.0.1","os":"Windows 11 Version 25H2","qpa":"windows","qt":"6.11.1","renderer":"NVIDIA GeForce RTX 4070 SUPER/PCIe/SSE2","vendor":"NVIDIA Corporation","width":666}
+smoke-ui clean-navigation
+smoke-ui box-height
+QFormLayout::takeAt: Invalid index 0
+smoke-ui cylinder
+QFormLayout::takeAt: Invalid index 0
+QFormLayout::takeAt: Invalid index 0
+smoke-ui transform
+smoke-ui resize
+desktop-smoke {"backend":"qt-opengl","courierFontAvailable":false,"dpi":96,"dpr":1,"gl":"4.6.0 NVIDIA 610.88","height":843,"occt":"8.0.1","os":"Windows 11 Version 25H2","qpa":"windows","qt":"6.11.1","renderer":"NVIDIA GeForce RTX 4070 SUPER/PCIe/SSE2","vendor":"NVIDIA Corporation","width":839}
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+Font_FontMgr, error: unable ...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="desktop.viewport_startup.uninitialized" classname="desktop.viewport_startup.uninitialized" time="0.172813" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;negative;platform;regression"/>
+		</properties>
+		<system-out>-- Uninitialized viewport rejected with exact exit 10
+</system-out>
+	</testcase>
+	<testcase name="desktop.ui_preview_startup" classname="desktop.ui_preview_startup" time="1.62634" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;platform;ui;windows"/>
+		</properties>
+		<system-out>Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+desktop-smoke {"backend":"qt-opengl","courierFontAvailable":false,"dpi":96,"dpr":1,"gl":"4.6.0 NVIDIA 610.88","height":659,"occt":"8.0.1","os":"Windows 11 Version 25H2","qpa":"windows","qt":"6.11.1","renderer":"NVIDIA GeForce RTX 4070 SUPER/PCIe/SSE2","vendor":"NVIDIA Corporation","width":1251}
+desktop-smoke {"backend":"qt-opengl","courierFontAvailable":false,"dpi":96,"dpr":1,"gl":"4.6.0 NVIDIA 610.88","height":659,"occt":"8.0.1","os":"Windows 11 Version 25H2","qpa":"windows","qt":"6.11.1","renderer":"NVIDIA GeForce RTX 4070 SUPER/PCIe/SSE2","vendor":"NVIDIA Corporation","width":1251}
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+Font_Fon...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="desktop.ui_preview_startup.uninitialized" classname="desktop.ui_preview_startup.uninitialized" time="0.175981" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;negative;platform;regression"/>
+		</properties>
+		<system-out>-- Uninitialized viewport rejected with exact exit 10
+</system-out>
+	</testcase>
+	<testcase name="document.angle_boundaries" classname="document.angle_boundaries" time="1.89649" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;regression"/>
+		</properties>
+		<system-out>PASS explicit units, 16 placement versions, signed driving angles, geometry radians
+</system-out>
+	</testcase>
+	<testcase name="document.plane_migration" classname="document.plane_migration" time="0.43232" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;regression"/>
+		</properties>
+		<system-out>PASS legacy plane preservation, canonical input gate, evaluation guard, explicit repair history
+</system-out>
+	</testcase>
+	<testcase name="document.numeric_validation" classname="document.numeric_validation" time="0.0691472" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;kernel;regression"/>
+		</properties>
+		<system-out>PASS direction overflow/underflow, atomic plane rejection, legacy parity, scale roundtrip
+</system-out>
+	</testcase>
+	<testcase name="document.legacy_import" classname="document.legacy_import" time="0.237876" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;regression"/>
+		</properties>
+		<system-out>PASS 16 immutable imports, deterministic reports, strict dispatch, atomic report lifecycle
+</system-out>
+	</testcase>
+	<testcase name="application.command_input" classname="application.command_input" time="0.482778" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;document;integration;regression"/>
+		</properties>
+		<system-out>Input results, validation boundaries and unchanged history passed
+</system-out>
+	</testcase>
+	<testcase name="application.scene_status" classname="application.scene_status" time="0.548371" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;document;integration;regression"/>
+		</properties>
+		<system-out>Scene revision, display isolation, history and persistence tests passed
+</system-out>
+	</testcase>
+	<testcase name="application.failure_boundaries" classname="application.failure_boundaries" time="2.21307" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;document;integration;regression"/>
+		</properties>
+		<system-out>Typed edits and exception rollback tests passed
+</system-out>
+	</testcase>
+	<testcase name="application.creation_results" classname="application.creation_results" time="0.603826" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;document;integration;regression"/>
+		</properties>
+		<system-out>Creation result and editor rollback tests passed
+</system-out>
+	</testcase>
+	<testcase name="application.command_transactions" classname="application.command_transactions" time="0.532613" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;document;integration;regression"/>
+		</properties>
+		<system-out>Session transaction tests passed
+</system-out>
+	</testcase>
+	<testcase name="document.transactions" classname="document.transactions" time="0.0179766" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;regression;unit"/>
+		</properties>
+		<system-out>Document transaction tests passed
+</system-out>
+	</testcase>
+	<testcase name="application.command_contract_compound" classname="application.command_contract_compound" time="0.0117197" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;contract;integration"/>
+		</properties>
+		<system-out>Command contract fixture passed
+</system-out>
+	</testcase>
+	<testcase name="application.command_contract_errors" classname="application.command_contract_errors" time="0.0069934" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;contract;integration"/>
+		</properties>
+		<system-out>Command contract fixture passed
+</system-out>
+	</testcase>
+	<testcase name="application.document_identity" classname="application.document_identity" time="0.644594" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;document;integration;regression"/>
+		</properties>
+		<system-out>PASS session identity: New, edit, history, Save-As, legacy Open, duplicate, failures
+</system-out>
+	</testcase>
+	<testcase name="document.native_schema" classname="document.native_schema" time="1.13949" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;native;regression"/>
+		</properties>
+		<system-out>PASS native schema: mixed features, independent bodies, reorder, identity, watermark
+</system-out>
+	</testcase>
+	<testcase name="document.native_extrusions" classname="document.native_extrusions" time="0.756759" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;native;regression"/>
+		</properties>
+		<system-out>PASS native extrusions: profiles, distance, references, identities, BRep, history
+</system-out>
+	</testcase>
+	<testcase name="document.native_sketch_constraints" classname="document.native_sketch_constraints" time="0.0517777" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;native;regression"/>
+		</properties>
+		<system-out>Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 0 redundants
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 0 redundants
+PASS native sketch constraints: kinds, references, values, history, solver parity
+</system-out>
+	</testcase>
+	<testcase name="document.native_sketch_geometry" classname="document.native_sketch_geometry" time="0.21327" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;native;regression"/>
+		</properties>
+		<system-out>PASS native sketch geometry: elements, planes, support, identity, validation, history
+</system-out>
+	</testcase>
+	<testcase name="document.native_cylinders" classname="document.native_cylinders" time="2.2466" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;native;regression"/>
+		</properties>
+		<system-out>PASS native cylinders: modes, inputs, identities, order, parameters, BRep
+</system-out>
+	</testcase>
+	<testcase name="document.native_boxes" classname="document.native_boxes" time="0.630695" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;native;regression"/>
+		</properties>
+		<system-out>PASS native boxes: identities, names, order, radians, parameters, BRep
+</system-out>
+	</testcase>
+	<testcase name="document.native_metadata" classname="document.native_metadata" time="0.136467" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;native;regression"/>
+		</properties>
+		<system-out>PASS native document metadata, application schema 1, container 12
+</system-out>
+	</testcase>
+	<testcase name="document.identity_generator" classname="document.identity_generator" time="0.0245339" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;identity;regression;unit"/>
+		</properties>
+		<system-out>PASS document identity generator
+</system-out>
+	</testcase>
+	<testcase name="document.identity_lifecycle" classname="document.identity_lifecycle" time="0.0077024" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;identity;regression;unit"/>
+		</properties>
+		<system-out>PASS document identity lifecycle
+</system-out>
+	</testcase>
+	<testcase name="application.safe_persistence" classname="application.safe_persistence" time="3.09319" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;regression"/>
+		</properties>
+		<system-out>Safe save/open, all commit phases, Unicode and editable errors passed
+</system-out>
+	</testcase>
+	<testcase name="document.parser_limits_and_versions" classname="document.parser_limits_and_versions" time="6.80357" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;regression;unit"/>
+		</properties>
+		<system-out>PASS 16 version fixtures, semantic migration, roundtrip/CRLF, truncation, corrupt references/counts/values, byte/line/record limits and I/O failure
+</system-out>
+	</testcase>
+	<testcase name="platform.atomic_file_store" classname="platform.atomic_file_store" time="1.02798" status="run">
+		<properties>
+			<property name="cmake_labels" value="platform;regression;unit"/>
+		</properties>
+		<system-out>CASE roundtrip
+CASE failures
+CASE nativeRestrictions
+CASE concurrent
+PASS atomic replacement, Unicode/binary/empty, all failure stages, partial write, exclusive collision, permissions/locks, concurrent saves and cleanup
+</system-out>
+	</testcase>
+	<testcase name="kernel.shape_factory" classname="kernel.shape_factory" time="0.043079" status="run">
+		<properties>
+			<property name="cmake_labels" value="kernel;unit"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="document.history" classname="document.history" time="0.0114719" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;unit"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="features.sketch_profiles" classname="features.sketch_profiles" time="0.0194746" status="run">
+		<properties>
+			<property name="cmake_labels" value="features;unit"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="features.planegcs_solver" classname="features.planegcs_solver" time="0.0097797" status="run">
+		<properties>
+			<property name="cmake_labels" value="features;unit"/>
+		</properties>
+		<system-out>Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 0 redundants
+</system-out>
+	</testcase>
+	<testcase name="features.sketch_constraint_adapter" classname="features.sketch_constraint_adapter" time="0.0177392" status="run">
+		<properties>
+			<property name="cmake_labels" value="features;unit"/>
+		</properties>
+		<system-out>Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 0 redundants
+</system-out>
+	</testcase>
+	<testcase name="application.recompute_history" classname="application.recompute_history" time="4.20264" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="desktop.sketch_command_failure" classname="desktop.sketch_command_failure" time="0.621994" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;regression;sketch"/>
+		</properties>
+		<system-out>Productive extrusion rejection/repair tests passed
+</system-out>
+	</testcase>
+	<testcase name="desktop.preview_command_failures" classname="desktop.preview_command_failures" time="0.229978" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;regression;sketch"/>
+		</properties>
+		<system-out>Preview command exceptions and recovery passed
+</system-out>
+	</testcase>
+	<testcase name="desktop.feature_status" classname="desktop.feature_status" time="2.13447" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;regression;sketch"/>
+		</properties>
+		<system-out>Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Failed/blocked publication, persistence, history and tree passed
+</system-out>
+	</testcase>
+	<testcase name="desktop.angle_inputs" classname="desktop.angle_inputs" time="1.40075" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;regression;sketch"/>
+		</properties>
+		<system-out>Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+PASS degree inputs, typed placements, signed snap, annotation, undo/redo
+</system-out>
+	</testcase>
+	<testcase name="desktop.parameter_failures" classname="desktop.parameter_failures" time="1.51749" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;regression;sketch"/>
+		</properties>
+		<system-out>Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Parameter rejection and Qt exception containment tests passed
+</system-out>
+	</testcase>
+	<testcase name="desktop.sketch_solver_gate" classname="desktop.sketch_solver_gate" time="0.896302" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;regression;sketch"/>
+		</properties>
+		<system-out>Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 0 redundants
+Sketch solver acceptance and panel tests passed
+</system-out>
+	</testcase>
+	<testcase name="desktop.document_actions" classname="desktop.document_actions" time="2.36276" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;document;regression"/>
+		</properties>
+		<system-out>Production file actions: Unicode, cancel, corrupt open, save and failure titles passed
+</system-out>
+	</testcase>
+	<testcase name="desktop.viewport_lifecycle_qt" classname="desktop.viewport_lifecycle_qt" time="2.59141" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;lifecycle;qt-opengl;viewport"/>
+		</properties>
+		<system-out>Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="desktop.viewport_dpi_1" classname="desktop.viewport_dpi_1" time="10.3237" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;dpi;qt-opengl;viewport"/>
+		</properties>
+		<system-out>Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="desktop.viewport_dpi_1.5" classname="desktop.viewport_dpi_1.5" time="10.1604" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;dpi;qt-opengl;viewport"/>
+		</properties>
+		<system-out>Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="desktop.viewport_dpi_2" classname="desktop.viewport_dpi_2" time="10.272" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;dpi;qt-opengl;viewport"/>
+		</properties>
+		<system-out>Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="application.sketch_editor_flow" classname="application.sketch_editor_flow" time="1.80342" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;integration"/>
+		</properties>
+		<system-out>Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 0 redundants
+</system-out>
+	</testcase>
+	<testcase name="application.sketch_construction" classname="application.sketch_construction" time="0.235715" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="application.sketch_circle_constraints" classname="application.sketch_circle_constraints" time="0.161626" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="application.sketch_alignments" classname="application.sketch_alignments" time="0.158997" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="application.sketch_fix_distance" classname="application.sketch_fix_distance" time="0.0923787" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="application.sketch_basic_tools" classname="application.sketch_basic_tools" time="0.438899" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;integration"/>
+		</properties>
+		<system-out>Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 2 redundants
+</system-out>
+	</testcase>
+	<testcase name="application.sketch_slot_dimensions" classname="application.sketch_slot_dimensions" time="0.299494" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;integration;regression"/>
+		</properties>
+		<system-out>Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 5 redundants
+</system-out>
+	</testcase>
+	<testcase name="workspaces.module_registry" classname="workspaces.module_registry" time="0.0088435" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit;workspaces"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="architecture.source_limits" classname="architecture.source_limits" time="0.0683634" status="run">
+		<properties>
+			<property name="cmake_labels" value="architecture;regression"/>
+		</properties>
+		<system-out>-- Checked 271 source files
+-- Source file limit check passed
+</system-out>
+	</testcase>
+	<testcase name="architecture.source_limits_regression" classname="architecture.source_limits_regression" time="0.248258" status="run">
+		<properties>
+			<property name="cmake_labels" value="architecture;regression"/>
+		</properties>
+		<system-out>-- missing_variable: passed
+-- empty_value: passed
+-- nonexistent_directory: passed
+-- regular_file: passed
+-- literal_quotes: passed
+-- empty_directory: passed
+-- unsupported_files_only: passed
+-- spaces_and_unicode: passed
+-- 600_lf_final_newline_yes: passed
+-- 600_lf_final_newline_no: passed
+-- 601_lf_final_newline_yes: passed
+-- 601_lf_final_newline_no: passed
+-- 600_crlf_final_newline_yes: passed
+-- 600_crlf_final_newline_no: passed
+-- 601_crlf_final_newline_yes: passed
+-- 601_crlf_final_newline_no: passed
+</system-out>
+	</testcase>
+	<testcase name="architecture.ctest_label_runner" classname="architecture.ctest_label_runner" time="8.15181" status="run">
+		<properties>
+			<property name="cmake_labels" value="architecture;regression"/>
+		</properties>
+		<system-out>-- CTest label 'unit' passed with 11 selected tests
+</system-out>
+	</testcase>
+	<testcase name="architecture.desktop_smoke_runner" classname="architecture.desktop_smoke_runner" time="1.15073" status="run">
+		<properties>
+			<property name="cmake_labels" value="architecture;regression"/>
+		</properties>
+		<system-out>-- Expected-smoke runner: 4 cases passed
+</system-out>
+	</testcase>
+	<testcase name="architecture.platform_report" classname="architecture.platform_report" time="3.03388" status="run">
+		<properties>
+			<property name="cmake_labels" value="architecture;regression"/>
+		</properties>
+		<system-out>Platform report regressions passed: 30 cases plus blocked acceptance exit code. Fixtures: V:\build\platform-report-tests-82914b553e29403bbc31903052454f39
+Execution regressions passed: test failure, environment restoration, skip, build failure, existing report and existing run.
+</system-out>
+	</testcase>
+	<testcase name="architecture.setup_windows_mapping" classname="architecture.setup_windows_mapping" time="0.623145" status="run">
+		<properties>
+			<property name="cmake_labels" value="architecture;regression"/>
+		</properties>
+		<system-out>existing Unicode target: passed
+other checkout with identical marker: passed
+wrong marker: passed
+missing marker: passed
+occupied physical drive: passed
+inspection failed: passed
+subst returned failure: passed
+created Unicode target: passed
+creation did not establish mapping: passed
+creation points to other checkout: passed
+created mapping has wrong marker: passed
+Setup-Windows mapping tests passed without changing any real drive mapping.
+</system-out>
+	</testcase>
+	<testcase name="document.numeric_policy" classname="document.numeric_policy" time="0.101577" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;kernel;regression"/>
+		</properties>
+		<system-out>PASS numeric ranges and actual profile threshold faces; kernel floor 1e-07
+</system-out>
+	</testcase>
+	<testcase name="features.boolean_connection" classname="features.boolean_connection" time="6.04336" status="run">
+		<properties>
+			<property name="cmake_labels" value="features;integration;kernel;regression"/>
+		</properties>
+		<system-out>PASS exact extrusion bounds, repeated joins, volume, roundtrip and history
+</system-out>
+	</testcase>
+	<testcase name="application.sketch_id_capacity" classname="application.sketch_id_capacity" time="0.454341" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;document;integration;regression"/>
+		</properties>
+		<system-out>Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 5 redundants
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 5 redundants
+PASS ID capacity: drawing, operations, relations, atomic rejection and roundtrip
+</system-out>
+	</testcase>
+	<testcase name="document.legacy_body_identity" classname="document.legacy_body_identity" time="0.0763206" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;regression"/>
+		</properties>
+		<system-out>Legacy body identity migration passed
+</system-out>
+	</testcase>
+	<testcase name="document.feature_id_lifetime" classname="document.feature_id_lifetime" time="0.128735" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;document;integration;regression"/>
+		</properties>
+		<system-out>Feature ID lifetime tests passed
+</system-out>
+	</testcase>
+	<testcase name="features.body_identity" classname="features.body_identity" time="1.19411" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;features;integration;regression"/>
+		</properties>
+		<system-out>Body identity evaluation tests passed
+</system-out>
+	</testcase>
+</testsuite>

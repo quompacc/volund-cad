@@ -13,6 +13,13 @@
 #include <stdexcept>
 #include <voelund/application/CadSession.hpp>
 
+namespace voelund::application {
+class CadSessionPersistenceTestAccess {
+public:
+    static void exhaust(CadSession& session) { session.generation_ = UINT64_MAX; }
+};
+}
+
 namespace {
 void require(bool value, const char* message) {
     if (!value)
@@ -51,6 +58,8 @@ int main(int argc, char** argv) {
         bool cancel = false;
         int dialogs = 0;
         int errors = 0;
+        auto answer = QMessageBox::Discard;
+        int duplicatePrompts = 0;
         QTimer responder;
         QObject::connect(&responder, &QTimer::timeout, [&] {
             auto* modal = QApplication::activeModalWidget();
@@ -65,8 +74,11 @@ int main(int argc, char** argv) {
                     QMetaObject::invokeMethod(dialog, "accept", Qt::DirectConnection);
                 }
             } else if (auto* message = qobject_cast<QMessageBox*>(modal)) {
-                if (message->standardButtons().testFlag(QMessageBox::Discard))
-                    message->button(QMessageBox::Discard)->click();
+                if (message->standardButtons().testFlag(QMessageBox::Discard)) {
+                    if (message->windowTitle() == QStringLiteral("Duplicate document"))
+                        ++duplicatePrompts;
+                    message->button(answer)->click();
+                }
                 else {
                     ++errors;
                     message->button(QMessageBox::Ok)->click();
@@ -118,6 +130,59 @@ int main(int argc, char** argv) {
         require(errors == 2 && session.isModified() && window.windowTitle() == beforeFailure &&
                     session.currentFile() == native(path),
                 "failed save changed UI state");
+        // Dirty original cannot be saved over a directory: duplication must stop.
+        const auto failedOriginal = session.identifiedSnapshot();
+        answer = QMessageBox::Save;
+        action(window, QStringLiteral("&Duplicate"))->trigger();
+        require(errors == 3 && session.identifiedSnapshot() == failedOriginal &&
+            session.currentFile() == native(path) && window.windowTitle() == beforeFailure,
+            "failed source save created a duplicate");
+        answer = QMessageBox::Cancel;
+        action(window, QStringLiteral("&Duplicate"))->trigger();
+        require(session.identifiedSnapshot() == failedOriginal && session.canUndo() &&
+            window.windowTitle() == beforeFailure, "cancel duplicate changed document");
+        answer = QMessageBox::Discard;
+        action(window, QStringLiteral("&Duplicate"))->trigger();
+        require(session.documentId() != failedOriginal.id() &&
+            session.identifiedSnapshot().snapshot() == failedOriginal.snapshot() &&
+            session.currentFile().empty() && session.isModified() && !session.canUndo() &&
+            window.windowTitle().startsWith(QStringLiteral("Untitled *")),
+            "duplicate without saving lost current content or UI state");
+        require(std::filesystem::is_directory(native(path)), "duplicate wrote original path");
+        const auto unsaved = session.identifiedSnapshot();
+        answer = QMessageBox::Save;
+        cancel = true;
+        action(window, QStringLiteral("&Duplicate"))->trigger();
+        require(session.identifiedSnapshot() == unsaved && session.currentFile().empty(),
+            "cancel source Save-As created duplicate");
+        cancel = false;
+        chosen = fixture.path() + QStringLiteral("/source-copy.volund");
+        action(window, QStringLiteral("&Duplicate"))->trigger();
+        require(session.documentId() != unsaved.id() && session.currentFile().empty() &&
+            session.identifiedSnapshot().snapshot() == unsaved.snapshot() && session.isModified() &&
+            std::filesystem::is_regular_file(native(chosen)), "save source then duplicate failed");
+        voelund::application::CadSession savedSource;
+        savedSource.loadDocument(native(chosen));
+        require(savedSource.identifiedSnapshot().snapshot() == unsaved.snapshot(), "source save lost changes");
+        chosen = fixture.path() + QStringLiteral("/duplicate.volund");
+        const auto duplicateId = session.documentId();
+        action(window, QStringLiteral("&Save"))->trigger();
+        require(session.documentId() == duplicateId && !session.isModified() &&
+            session.currentFile() == native(chosen), "saving duplicate changed namespace");
+        const int promptCount = duplicatePrompts;
+        const auto clean = session.identifiedSnapshot();
+        action(window, QStringLiteral("&Duplicate"))->trigger();
+        require(duplicatePrompts == promptCount && session.documentId() != clean.id() &&
+            session.identifiedSnapshot().snapshot() == clean.snapshot(), "clean duplicate prompted or lost content");
+        // New and Duplicate must report infrastructure exceptions through the existing error dialog.
+        answer = QMessageBox::Discard;
+        voelund::application::CadSessionPersistenceTestAccess::exhaust(session);
+        const auto exhausted = session.identifiedSnapshot();
+        const auto exhaustedTitle = window.windowTitle();
+        action(window, QStringLiteral("&Duplicate"))->trigger();
+        action(window, QStringLiteral("&New"))->trigger();
+        require(errors == 5 && session.identifiedSnapshot() == exhausted &&
+            window.windowTitle() == exhaustedTitle, "lifecycle failure escaped or changed UI");
         responder.stop();
         std::cout << "Production file actions: Unicode, cancel, corrupt open, save and failure "
                      "titles passed\n";

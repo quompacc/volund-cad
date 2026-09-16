@@ -3,6 +3,7 @@
 #include <voelund/application/CadSession.hpp>
 
 #include <QAction>
+#include <QAbstractButton>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QKeySequence>
@@ -52,6 +53,9 @@ DocumentActions::DocumentActions(QMainWindow& window, application::CadSession& s
     saveAction->setShortcut(QKeySequence::Save);
     QAction* saveAsAction = fileMenu->addAction(QStringLiteral("Save &As…"));
     saveAsAction->setShortcut(QKeySequence::SaveAs);
+    QAction* duplicateAction = fileMenu->addAction(QStringLiteral("&Duplicate"));
+    duplicateAction->setToolTip(QStringLiteral("Create an unsaved copy of the current document"));
+    QObject::connect(duplicateAction, &QAction::triggered, &window_, [this]() { duplicateDocument(); });
     QObject::connect(newAction, &QAction::triggered, &window_, [this]() { newDocument(); });
     QObject::connect(openAction, &QAction::triggered, &window_, [this]() { open(); });
     QObject::connect(saveAction, &QAction::triggered, &window_,
@@ -76,9 +80,38 @@ void DocumentActions::newDocument() {
     if (!confirmSaveChanges()) {
         return;
     }
-    session_.newDocument();
-    refreshHandler_();
-    window_.statusBar()->showMessage(QStringLiteral("New document created"), 3000);
+    try {
+        session_.newDocument();
+        refreshHandler_();
+        window_.statusBar()->showMessage(QStringLiteral("New document created"), 3000);
+    } catch (const std::exception& error) {
+        showError(QStringLiteral("New failed"), error);
+    }
+}
+
+bool DocumentActions::confirmDuplicate() {
+    if (!session_.isModified()) return true;
+    QMessageBox prompt(QMessageBox::Warning, QStringLiteral("Duplicate document"),
+        QStringLiteral("Save changes to the original before duplicating?\n"
+                       "The duplicate will include all current changes."),
+        QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel, &window_);
+    prompt.button(QMessageBox::Discard)->setText(QStringLiteral("Duplicate without saving"));
+    prompt.setDefaultButton(QMessageBox::Save);
+    const auto answer = prompt.exec();
+    if (answer == QMessageBox::Save) return save();
+    return answer == QMessageBox::Discard;
+}
+
+void DocumentActions::duplicateDocument() {
+    if (!confirmDuplicate()) return;
+    try {
+        session_.duplicateDocument();
+        refreshHandler_();
+        syncWindowTitle();
+        window_.statusBar()->showMessage(QStringLiteral("Unsaved duplicate created"), 3000);
+    } catch (const std::exception& error) {
+        showError(QStringLiteral("Duplicate failed"), error);
+    }
 }
 
 void DocumentActions::open() {

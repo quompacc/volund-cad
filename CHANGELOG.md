@@ -12,10 +12,14 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 
 ### Hinzugefügt
 
+- Desktop-Aktion **File → Duplicate**: neue ungespeicherte Dokumentkopie; bei
+  Änderungen wahlweise Original speichern, ohne Speichern duplizieren oder abbrechen.
+  Abbruch und Fehler vor dem Duplizieren erhalten die bisherige Dokumentidentität.
+
 - Dokument-ID und identifizierter Snapshot an CadSession: Bearbeitung, Undo/Redo
   und Save-As behalten die ID; New, Legacy-Open und explizites Anwendungsduplikat
   erzeugen neue Namensräume. D11m mit 66/66 Windows und 62/62 FreeBSD geprüft.
-  Die ID wird noch nicht in VOLUND 16 gespeichert; Desktop-Duplikataktion folgt.
+  Die ID wird noch nicht in VOLUND 16 gespeichert; Desktop-Anbindung siehe D11n.
 
 - Gemeinsamer nativer Schematest mit allen vier Featurearten, drei unabhängigen
   Körpern, Umordnung, Umbenennung, Duplikat-/Revisionssemantik und ID-Vergabe nach Undo.

@@ -21,6 +21,8 @@ class DocumentActions final {
 
   private:
     void newDocument();
+    void duplicateDocument();
+    [[nodiscard]] bool confirmDuplicate();
     void open();
     [[nodiscard]] bool confirmSaveChanges();
     [[nodiscard]] bool save();
