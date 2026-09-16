@@ -1,20 +1,20 @@
-#include "BoundedDocumentInput.hpp"
-#include "DocumentFormat.hpp"
-#include <locale>
+#include "DocumentFileInput.hpp"
+#include "NativeDocumentStore.hpp"
+#include <sstream>
 #include <voelund/document/DocumentSerializer.hpp>
 
 namespace voelund::document {
-ImportedDocument DocumentSerializer::readWithReport(std::istream& source) {
-    detail::BoundedDocumentInput input(source);
-    input.imbue(std::locale::classic());
-    const auto format = detail::readSourceFormat(input);
-    switch (format.encoding) {
-    case DocumentEncoding::legacyText:
-        return LegacyDocumentImporter::readPayload(input, format);
+DocumentReadResult DocumentSerializer::readWithReport(std::istream& source) {
+    auto input = detail::DocumentFileInput::read(source);
+    if (input.kind == detail::DocumentFileKind::nativeBinary) {
+        const auto native = detail::NativeDocumentStore::decode(input.bytes);
+        return {native.snapshot(), native.id(), std::nullopt};
     }
-    detail::invalidDocument("unsupported document encoding");
+    std::istringstream legacy(input.bytes);
+    auto imported = LegacyDocumentImporter::read(legacy);
+    return {std::move(imported.snapshot), generateDocumentId(), std::move(imported.report)};
 }
 ModelDocument DocumentSerializer::read(std::istream& input) {
-    return readWithReport(input).snapshot.toDocument();
+    return readWithReport(input).toDocument();
 }
 } // namespace voelund::document

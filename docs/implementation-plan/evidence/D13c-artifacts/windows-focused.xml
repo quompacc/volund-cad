@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Win32-ninja"
+	tests="6"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname="megatron"
+	time="5"
+	timestamp="2026-09-16T20:40:52"
+	>
+	<testcase name="application.native_persistence" classname="application.native_persistence" time="0.434843" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;document;integration;native;regression"/>
+		</properties>
+		<system-out>PASS native product identity, legacy migration, Save-As, failed input/output/store
+</system-out>
+	</testcase>
+	<testcase name="document.plane_migration" classname="document.plane_migration" time="0.864778" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;regression"/>
+		</properties>
+		<system-out>PASS legacy plane preservation, canonical input gate, evaluation guard, explicit repair history
+</system-out>
+	</testcase>
+	<testcase name="document.numeric_validation" classname="document.numeric_validation" time="0.24797" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;kernel;regression"/>
+		</properties>
+		<system-out>PASS direction overflow/underflow, atomic plane rejection, legacy parity, scale roundtrip
+</system-out>
+	</testcase>
+	<testcase name="document.legacy_import" classname="document.legacy_import" time="0.527342" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;regression"/>
+		</properties>
+		<system-out>PASS 16 immutable imports, deterministic reports, strict dispatch, atomic report lifecycle
+</system-out>
+	</testcase>
+	<testcase name="application.safe_persistence" classname="application.safe_persistence" time="1.63678" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;regression"/>
+		</properties>
+		<system-out>Safe save/open, all commit phases, Unicode and editable errors passed
+</system-out>
+	</testcase>
+	<testcase name="document.parser_limits_and_versions" classname="document.parser_limits_and_versions" time="1.57845" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;regression;unit"/>
+		</properties>
+		<system-out>PASS 16 version fixtures, semantic migration, roundtrip/CRLF, truncation, corrupt references/counts/values, byte/line/record limits and I/O failure
+</system-out>
+	</testcase>
+</testsuite>

@@ -39,7 +39,7 @@ document::SketchParameters sketch(const document::SketchPlane& plane) {
 }
 void rejectedPlane(const document::SketchPlane& plane) {
     document::ModelDocument doc;
-    const auto before = serialized(doc);
+    const auto before = document::DocumentSnapshot::capture(doc);
     const auto revision = doc.revision();
     bool rejected = false;
     try {
@@ -47,7 +47,7 @@ void rejectedPlane(const document::SketchPlane& plane) {
     } catch (const std::invalid_argument&) {
         rejected = true;
     }
-    require(rejected && serialized(doc) == before && doc.revision() == revision && !doc.canUndo(),
+    require(rejected && document::DocumentSnapshot::capture(doc) == before && doc.revision() == revision && !doc.canUndo(),
             "Invalid plane mutated document or history");
     std::istringstream input(legacy(plane));
     rejected = false;
@@ -99,6 +99,7 @@ void planes() {
         document::ModelDocument doc;
         const auto id = doc.addSketchFeature("Valid", document::FeatureId{1}, sketch(plane));
         const auto bytes = serialized(doc);
+        const auto snapshot = document::DocumentSnapshot::capture(doc);
         std::istringstream input(bytes), old(legacy(plane));
         require(document::DocumentSerializer::read(input).sketchParameters(id).plane == plane &&
                     document::DocumentSerializer::read(old)
@@ -116,7 +117,7 @@ void planes() {
         } catch (const std::invalid_argument&) {
             rejected = true;
         }
-        require(rejected && serialized(doc) == bytes, "Rejected plane edit changed document");
+        require(rejected && document::DocumentSnapshot::capture(doc) == snapshot, "Rejected plane edit changed document");
     }
 }
 void cylinderDirections() {

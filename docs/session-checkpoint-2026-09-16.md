@@ -8,7 +8,7 @@ D11-Quellstand: `b71a081`; Abschlussdokumentation in `ef36dca`.
 **D12 ist mit der [D12e-Gesamtabnahme](implementation-plan/evidence/D12e.md) abgeschlossen.**
 Geprüfter Implementierungsstand: `7d3e68b`; D12e ändert nur Dokumentation.
 D13, A-BODY-03 und Meridian-Abnahme L07 bleiben offen.
-Kein Push, kein Release-Tag, keine Terra-Übergabe.
+Gitea-Remote `eduard/volund-cad` eingerichtet; kein Release-Tag, keine Terra-Übergabe.
 
 ## D11l – Abschluss
 
@@ -121,11 +121,14 @@ freigegeben und übertragen; alle Prüfprozesse beendet.
 **D13b2 und D13b abgeschlossen:** [Gesamtabnahme](implementation-plan/evidence/D13b-review.md).
 Implementierungsstand `62c9023`, 317 Quellhashes erneut unverändert bestätigt.
 Dokumentationsblock ohne neue Builds, Tests oder Übertragungen.
-Nächster Block: **D13c**, native Produktpersistenz. D13 bleibt insgesamt offen.
+**D13c abgeschlossen:** [Nachweis](implementation-plan/evidence/D13c.md).
+76/76 Windows (92,92 s), 73/73 FreeBSD/Sway (27,91 s), 318 Quellhashes identisch.
+13 Quelldateien ausdrücklich freigegeben und übertragen. Alle Prüfprozesse beendet.
+Nächste Sitzung: **D13d**, neuer Produktdateiaustausch und Gesamtabnahme. D13 bleibt offen.
 
 Der Autoritätswechsel aus [ADR 0008](adr/0008-ocaf-binary-persistence.md) ist umgesetzt;
-der Store-Wechsel folgt in D13. Noch kein produktiver nativer Dispatch: **VOLUND 16 bleibt Produktwriter**.
-Die Datei enthält noch keine produktive persistente DocumentId. Kein paralleler
+der Store-Wechsel ist mit D13c umgesetzt: **BinOcaf 12 / Anwendungsschema 1 ist Produktwriter**.
+Native Dateien enthalten ihre persistente DocumentId; VOLUND 1–16 bleiben lesbar. Kein paralleler
 mutabler OCAF-Schattenzustand. Die bestehenden nativen und Produktregressionen erhalten.
 
 ## Prüfumgebung

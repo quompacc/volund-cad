@@ -143,7 +143,7 @@ bool sketchElementsKeepStableIdsThroughHistoryAndSerialization() {
         sketchId, voelund::document::SketchEllipse{{8.0, 7.0}, 4.0, 2.0, 0.25});
     std::ostringstream output;
     voelund::document::DocumentSerializer::write(document, output);
-    if (!output.str().starts_with("VOLUND 16\n"))
+    if (!output.str().starts_with("BINFILE"))
         return false;
     std::istringstream input(output.str());
     const auto loaded = voelund::document::DocumentSerializer::read(input);
@@ -274,7 +274,7 @@ bool relationalConstraintsRoundtripInCurrentVersion() {
     const auto loaded = DocumentSerializer::read(input);
     const auto& constraints = loaded.sketchParameters(sketchId).constraints;
     const auto& loadedSketch = loaded.sketchParameters(sketchId);
-    return output.str().starts_with("VOLUND 16\n") && constraints == sketch.constraints &&
+    return output.str().starts_with("BINFILE") && constraints == sketch.constraints &&
            loadedSketch.elements.values[3].construction;
 }
 

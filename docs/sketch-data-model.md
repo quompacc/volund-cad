@@ -189,9 +189,16 @@ explicit profile IDs and consumes only those faces. An empty selection remains t
 legacy meaning of "all closed profiles", so older direct Push/Pull operations retain
 their behavior.
 
-## File format version 16
+## Current persistence
 
-New saves use `VOLUND 16`. A sketch feature line stores its support, plane, element
+Since D13c, new saves use native BinOcaf container version 12 and application
+schema 1, retaining document identity. VOLUND 1–16 remain supported inputs.
+The following describes the historical text format; saving an imported document
+writes the native format. See [D13c](implementation-plan/evidence/D13c.md).
+
+## Legacy file format version 16
+
+In `VOLUND 16`, a sketch feature line stores its support, plane, element
 count, next element ID, constraint count and next constraint ID. `ELEMENT` records
 store geometry and stable IDs; following `CONSTRAINT` records store their stable ID,
 kind, one or two geometry references and an optional driving value.
@@ -211,7 +218,6 @@ concentric relations and driving circle diameters.
 Version 13 adds collinear lines and horizontal/vertical point alignment relations.
 Version 14 appends auxiliary values to constraint records and adds fixed geometry plus
 point-to-line distances. Version 15 adds persistent center arcs with radius and
-start/end angles. Version 16 adds persistent rotated ellipses. Saving any loaded
-document writes version 16.
+start/end angles. Version 16 adds persistent rotated ellipses.
 Invalid, duplicate or zero element IDs, non-finite coordinates, degenerate elements,
 inconsistent next IDs and unsatisfied line constraints are rejected while loading.

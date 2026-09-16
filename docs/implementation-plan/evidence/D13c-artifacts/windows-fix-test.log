@@ -1,0 +1,13 @@
+Test project V:/build/p02-qt-final
+    Start 76: features.body_identity
+1/1 Test #76: features.body_identity ...........   Passed    1.38 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+document       =   1.38 sec*proc (1 test)
+features       =   1.38 sec*proc (1 test)
+integration    =   1.38 sec*proc (1 test)
+regression     =   1.38 sec*proc (1 test)
+
+Total Test time (real) =   1.38 sec

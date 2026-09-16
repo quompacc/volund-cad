@@ -56,6 +56,12 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 
 ### Geändert
 
+- D13c: Save/Open verwendet natives BinOcaf (Container 12, Anwendungsschema 1).
+  Dokument-ID bleibt bei nativem Open und Save-As erhalten; VOLUND 1–16 bleiben
+  lesbar und erhalten beim Import eine neue ID. AtomicFileStore-Fehlergarantien
+  und editierbare Geometriefehler bestehen weiter. 76/76 Windows, 73/73 FreeBSD.
+  Alte Programmstände mit reinem Textleser können neue native Dateien nicht öffnen.
+
 - D13b nach Gesamtreview abgeschlossen; Prüfgrenzen und D13c-Einstieg dokumentiert.
   317 Quellhashes erneut bestätigt; vorhandene 75/72-Tests übernommen, nicht neu ausgeführt.
   D13 bleibt offen, VOLUND 16 bleibt bis D13c Produktwriter.

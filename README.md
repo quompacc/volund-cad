@@ -29,17 +29,18 @@ The repository contains a working native CAD vertical slice:
 - modular workspace and command registry with `Solid` as the first product module;
 - native C++ tests and an enforced 600-line source-file limit.
 
-The current D13b2 output-limit baseline passes **75/75 Windows** and **72/72 FreeBSD/Sway**
-tests. Persistent document identity in product commands and Meridian acceptance
-remain open. D13b is complete; the documentation-only [acceptance review](docs/implementation-plan/evidence/D13b-review.md) rechecks all 317 source hashes against that tested baseline. Next: D13c product persistence.
+D13c switches product Save/Open to native BinOcaf persistence and retains document
+identity. The baseline passes **76/76 Windows** and **73/73 FreeBSD/Sway** tests;
+318 source hashes match. See [D13c evidence](docs/implementation-plan/evidence/D13c.md).
+D13d product-file exchange and final acceptance remain open, as does Meridian acceptance.
 
 ## Versions and changes
 
 The current base version is `0.1.0`; no versioned release is tagged yet.
 Changes are collected under `Unreleased` in the [Changelog](CHANGELOG.md).
 [Versioning and release rules](docs/versioning.md) distinguish product releases,
-Git revisions and document formats. Native OCAF probes do not change the current
-VOLUND 16 product writer.
+Git revisions and document formats. New saves use BinOcaf container version 12
+with native application schema 1; VOLUND 1–16 remain readable legacy formats.
 
 The detailed hand-off state and next development slice are recorded in
 [`docs/development-status.md`](docs/development-status.md).

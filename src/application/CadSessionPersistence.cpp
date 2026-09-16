@@ -20,7 +20,7 @@ struct PreparedLoad {
 
 PreparedLoad prepareLoad(std::istream& input) {
     auto imported = document::DocumentSerializer::readWithReport(input);
-    auto document = imported.snapshot.toDocument();
+    auto document = imported.toDocument();
     std::vector<FeatureRuntimeState> states;
     for (const auto& feature : document.features())
         states.push_back({feature.id, FeatureRuntimeStatus::current, {}});
@@ -75,10 +75,7 @@ void CadSession::loadDocument(const std::filesystem::path& path) {
     if (!input)
         throw std::runtime_error("Could not open the document for reading");
     auto candidate = prepareLoad(input);
-    // Legacy files carry no DocumentId. Each successful import starts a new namespace.
-    // Prepare entropy/allocation before publishing any part of the loaded state.
-    const auto identity = document::IdentifiedDocumentSnapshot::restore(documentId(), *candidate.clean).duplicate().id();
-    candidate.document = candidate.clean->toDocument(identity);
+    // The prepared document already has its persisted native ID or a fresh legacy ID.
     const bool valid = std::ranges::all_of(candidate.states, [](const auto& state) {
         return state.status == FeatureRuntimeStatus::current;
     });

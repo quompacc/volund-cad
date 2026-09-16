@@ -33,9 +33,9 @@ inkompatible Änderungen daran erhöhen dann die Major-Version.
 | --- | --- |
 | Produktversion, z. B. `0.1.0-alpha.1` | freigegebener Softwarestand |
 | Git-Commit | genaue Quellrevision |
-| VOLUND 16 | aktuelles geschriebenes Produktdateiformat |
+| VOLUND 1–16 | historische Textformate, weiterhin lesbar; kein Produktwriter mehr |
 | OCAF-Speicherformat 12 | native Container-Schreibversion aus ADR 0008 |
-| künftiges natives Anwendungsschema | Struktur und Bedeutung der Völund-Daten im Container |
+| natives Anwendungsschema 1 | Struktur und Bedeutung der Völund-Daten im Container |
 | DocumentId | Identität eines Dokuments über seine Revisionen hinweg |
 
 Eine neue Produktversion erhöht keine dieser anderen Kennungen automatisch.
@@ -56,7 +56,7 @@ Lesekompatibilität und Migrationen werden pro Dateiformat dokumentiert.
    Prüfsummen beilegen. Veröffentlichung und Push erfolgen als eigener Auftrag.
 
 D11 und D12 sind abgeschlossen. D13 bleibt gemäß Implementierungsplan offen;
-D13b ist abgenommen, D13c ist der nächste Integrationsblock. Noch kein Release-Tag.
+D13b und D13c sind abgenommen; D13d-Dateiaustausch und Gesamtabnahme folgen. Noch kein Release-Tag.
 
 ## Gitea-Repository vorbereiten
 

@@ -1,0 +1,648 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="FreeBSD-clang++"
+	tests="73"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname="freebsd-dev"
+	time="27"
+	timestamp="2026-09-16T20:44:39"
+	>
+	<testcase name="desktop.viewport_startup.native_wayland" classname="desktop.viewport_startup.native_wayland" time="0.735886" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;freebsd;platform;wayland"/>
+		</properties>
+		<system-out>[NON-XML-CHAR-0x1B][32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+  Unhandled GL error: GL_INVALID_OPERATION[NON-XML-CHAR-0x1B][0m
+[NON-XML-CHAR-0x1B][32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+  OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![NON-XML-CHAR-0x1B][0m
+desktop-smoke {"backend":"qt-opengl","courierFontAvailable":true,"dpi":96,"dpr":1,"gl":"OpenGL ES 3.2 Mesa 26.1.3","height":953,"occt":"7.9.3","os":"FreeBSD 15.1-RELEASE-p3","qpa":"wayland","qt":"6.11.1","renderer":"Mesa Intel(R) HD Graphics 620 (KBL GT2)","vendor":"Intel","width":1378}
+smoke-ui clean-navigation
+smoke-ui box-height
+QFormLayout::takeAt: Invalid index 0
+smoke-ui cylinder
+QFormLayout::takeAt: Invalid index 0
+QFormLayout::takeAt: Invalid index 0
+smoke-ui transform
+smoke-ui resize
+desktop-smoke {"backend":"qt-opengl","courierFontAvailable":true,"dpi":96,"dpr":1,"gl":"OpenGL ES 3.2 Mesa 26.1.3","height":1072,"occt":"7.9.3","os":"FreeBSD 15.1-RELEASE-p3","qpa":"wayland","qt":"6.11.1","renderer":"Mesa Intel(R) HD Graphics 620 (KBL GT2)...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="desktop.viewport_startup.uninitialized" classname="desktop.viewport_startup.uninitialized" time="0.229636" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;negative;platform;regression"/>
+		</properties>
+		<system-out>-- Uninitialized viewport rejected with exact exit 10
+</system-out>
+	</testcase>
+	<testcase name="desktop.ui_preview_startup.native_wayland" classname="desktop.ui_preview_startup.native_wayland" time="0.699361" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;freebsd;platform;ui;wayland"/>
+		</properties>
+		<system-out>Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+[NON-XML-CHAR-0x1B][32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+  Unhandled GL error: GL_INVALID_OPERATION[NON-XML-CHAR-0x1B][0m
+[NON-XML-CHAR-0x1B][32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+  OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![NON-XML-CHAR-0x1B][0m
+desktop-smoke {"backend":"qt-opengl","courierFontAvailable":true,"dpi":96,"dpr":1,"gl":"OpenGL ES 3.2 Mesa 26.1.3","height":769,"occt":"7.9.3","os":"FreeBSD 15.1-RELEASE-p3","qpa":"wayland","qt":"6.11.1","renderer":"Mesa Intel(R) HD Graphics 620 (KBL GT2)","vendor":"Intel","width":1667}
+desktop-smoke {"backend":"qt-opengl","courierFontAvailable":true,"dpi":96,"dpr":1,"gl":"OpenGL ES 3.2 Mesa 26.1.3","height":769,"occt":"7.9.3","os":"FreeBSD 15.1-RELEASE-p3","qpa":"wayland","qt":"6.11.1","renderer":"Mesa Intel(R) HD Graph...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="desktop.ui_preview_startup.uninitialized" classname="desktop.ui_preview_startup.uninitialized" time="0.230857" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;negative;platform;regression"/>
+		</properties>
+		<system-out>-- Uninitialized viewport rejected with exact exit 10
+</system-out>
+	</testcase>
+	<testcase name="application.native_persistence" classname="application.native_persistence" time="0.198792" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;document;integration;native;regression"/>
+		</properties>
+		<system-out>PASS native product identity, legacy migration, Save-As, failed input/output/store
+</system-out>
+	</testcase>
+	<testcase name="document.native_output_limits" classname="document.native_output_limits" time="0.0234205" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;native;regression"/>
+		</properties>
+		<system-out>PASS native output: byte caps, backpatch, seek errors, OCCT roundtrip and failure
+</system-out>
+	</testcase>
+	<testcase name="document.native_attribute_values" classname="document.native_attribute_values" time="0.0966907" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;native;regression"/>
+		</properties>
+		<system-out>PASS native attributes: drivers, values, array bounds, reference lengths, IDs, roundtrip
+</system-out>
+	</testcase>
+	<testcase name="document.native_container_structure" classname="document.native_container_structure" time="0.276713" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;native;regression"/>
+		</properties>
+		<system-out>PASS native structure: TOC, label sizes, records, depth/count limits, truncation, EOF
+</system-out>
+	</testcase>
+	<testcase name="document.native_container_header" classname="document.native_container_header" time="0.024409" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;native;regression"/>
+		</properties>
+		<system-out>PASS native header: ranges, lengths, counts, version, truncation, roundtrip
+</system-out>
+	</testcase>
+	<testcase name="document.file_input" classname="document.file_input" time="0.0945393" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;regression"/>
+		</properties>
+		<system-out>PASS file input: 16 legacy versions, native, forward streams, EOF, I/O errors, size limits
+</system-out>
+	</testcase>
+	<testcase name="document.native_store" classname="document.native_store" time="0.051184" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;native;regression"/>
+		</properties>
+		<system-out>PASS native store: snapshots, identity, history, watermark, malformed input, schema, size
+</system-out>
+	</testcase>
+	<testcase name="document.product_ocaf_backend" classname="document.product_ocaf_backend" time="0.0453217" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;document;integration;regression"/>
+		</properties>
+		<system-out>PASS product OCAF attribute/query parity and transactional identity
+</system-out>
+	</testcase>
+	<testcase name="document.native_model_state" classname="document.native_model_state" time="0.0218096" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;native;regression"/>
+		</properties>
+		<system-out>PASS isolated native model state
+</system-out>
+	</testcase>
+	<testcase name="document.native_model_allocations" classname="document.native_model_allocations" time="0.0550827" status="run">
+		<properties>
+			<property name="cmake_labels" value="allocation;document;native;regression"/>
+		</properties>
+		<system-out>Native operation 0: 51 allocation failures preserved state; commit without allocation
+Native operation 1: 71 allocation failures preserved state; commit without allocation
+Native operation 2: 71 allocation failures preserved state; commit without allocation
+PASS isolated native model state
+</system-out>
+	</testcase>
+	<testcase name="application.document_read_boundaries" classname="application.document_read_boundaries" time="0.0636028" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;document;integration;regression"/>
+		</properties>
+		<system-out>PASS owned read boundaries and frozen evaluation
+</system-out>
+	</testcase>
+	<testcase name="document.angle_boundaries" classname="document.angle_boundaries" time="0.792113" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;regression"/>
+		</properties>
+		<system-out>PASS explicit units, 16 placement versions, signed driving angles, geometry radians
+</system-out>
+	</testcase>
+	<testcase name="document.plane_migration" classname="document.plane_migration" time="0.198557" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;regression"/>
+		</properties>
+		<system-out>PASS legacy plane preservation, canonical input gate, evaluation guard, explicit repair history
+</system-out>
+	</testcase>
+	<testcase name="document.numeric_validation" classname="document.numeric_validation" time="0.0433574" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;kernel;regression"/>
+		</properties>
+		<system-out>PASS direction overflow/underflow, atomic plane rejection, legacy parity, scale roundtrip
+</system-out>
+	</testcase>
+	<testcase name="document.legacy_import" classname="document.legacy_import" time="0.0788185" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;regression"/>
+		</properties>
+		<system-out>PASS 16 immutable imports, deterministic reports, strict dispatch, atomic report lifecycle
+</system-out>
+	</testcase>
+	<testcase name="application.command_input" classname="application.command_input" time="0.157033" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;document;integration;regression"/>
+		</properties>
+		<system-out>Input results, validation boundaries and unchanged history passed
+</system-out>
+	</testcase>
+	<testcase name="application.scene_status" classname="application.scene_status" time="0.17721" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;document;integration;regression"/>
+		</properties>
+		<system-out>Scene revision, display isolation, history and persistence tests passed
+</system-out>
+	</testcase>
+	<testcase name="application.failure_boundaries" classname="application.failure_boundaries" time="0.631781" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;document;integration;regression"/>
+		</properties>
+		<system-out>Typed edits and exception rollback tests passed
+</system-out>
+	</testcase>
+	<testcase name="application.creation_results" classname="application.creation_results" time="0.18349" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;document;integration;regression"/>
+		</properties>
+		<system-out>Creation result and editor rollback tests passed
+</system-out>
+	</testcase>
+	<testcase name="application.command_transactions" classname="application.command_transactions" time="0.17238" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;document;integration;regression"/>
+		</properties>
+		<system-out>Session transaction tests passed
+</system-out>
+	</testcase>
+	<testcase name="document.transactions" classname="document.transactions" time="0.0386479" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;regression;unit"/>
+		</properties>
+		<system-out>Document transaction tests passed
+</system-out>
+	</testcase>
+	<testcase name="document.transaction_allocation_failures" classname="document.transaction_allocation_failures" time="1.58373" status="run">
+		<properties>
+			<property name="cmake_labels" value="allocation;document;regression;unit"/>
+		</properties>
+		<system-out>Prepared commit requires no allocation
+sketch edit: 140 allocation failures preserved state
+copy assignment: 3 allocation failures preserved state
+single mutation: 121 allocation failures preserved state
+compound transaction: 481 allocation failures preserved state
+undo: 108 allocation failures preserved state
+redo: 149 allocation failures preserved state
+Document transaction tests passed
+</system-out>
+	</testcase>
+	<testcase name="application.command_contract_compound" classname="application.command_contract_compound" time="0.0203129" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;contract;integration"/>
+		</properties>
+		<system-out>Command contract fixture passed
+</system-out>
+	</testcase>
+	<testcase name="application.command_contract_errors" classname="application.command_contract_errors" time="0.0202127" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;contract;integration"/>
+		</properties>
+		<system-out>Command contract fixture passed
+</system-out>
+	</testcase>
+	<testcase name="application.document_identity" classname="application.document_identity" time="0.211719" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;document;integration;regression"/>
+		</properties>
+		<system-out>PASS session identity: New, edit, history, Save-As, legacy Open, duplicate, failures
+</system-out>
+	</testcase>
+	<testcase name="document.native_schema" classname="document.native_schema" time="0.315612" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;native;regression"/>
+		</properties>
+		<system-out>PASS native schema: mixed features, independent bodies, reorder, identity, watermark
+</system-out>
+	</testcase>
+	<testcase name="document.native_extrusions" classname="document.native_extrusions" time="0.200659" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;native;regression"/>
+		</properties>
+		<system-out>PASS native extrusions: profiles, distance, references, identities, BRep, history
+</system-out>
+	</testcase>
+	<testcase name="document.native_sketch_constraints" classname="document.native_sketch_constraints" time="0.0433645" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;native;regression"/>
+		</properties>
+		<system-out>Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 0 redundants
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 0 redundants
+PASS native sketch constraints: kinds, references, values, history, solver parity
+</system-out>
+	</testcase>
+	<testcase name="document.native_sketch_geometry" classname="document.native_sketch_geometry" time="0.0546652" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;native;regression"/>
+		</properties>
+		<system-out>PASS native sketch geometry: elements, planes, support, identity, validation, history
+</system-out>
+	</testcase>
+	<testcase name="document.native_cylinders" classname="document.native_cylinders" time="0.647465" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;native;regression"/>
+		</properties>
+		<system-out>PASS native cylinders: modes, inputs, identities, order, parameters, BRep
+</system-out>
+	</testcase>
+	<testcase name="document.native_boxes" classname="document.native_boxes" time="0.146169" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;native;regression"/>
+		</properties>
+		<system-out>PASS native boxes: identities, names, order, radians, parameters, BRep
+</system-out>
+	</testcase>
+	<testcase name="document.native_metadata" classname="document.native_metadata" time="0.0221545" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;native;regression"/>
+		</properties>
+		<system-out>PASS native document metadata, application schema 1, container 12
+</system-out>
+	</testcase>
+	<testcase name="document.identity_generator" classname="document.identity_generator" time="0.0267942" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;identity;regression;unit"/>
+		</properties>
+		<system-out>PASS document identity generator
+</system-out>
+	</testcase>
+	<testcase name="document.identity_lifecycle" classname="document.identity_lifecycle" time="0.020407" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;identity;regression;unit"/>
+		</properties>
+		<system-out>PASS document identity lifecycle
+</system-out>
+	</testcase>
+	<testcase name="application.safe_persistence" classname="application.safe_persistence" time="0.310376" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;regression"/>
+		</properties>
+		<system-out>Safe save/open, all commit phases, Unicode and editable errors passed
+</system-out>
+	</testcase>
+	<testcase name="document.parser_limits_and_versions" classname="document.parser_limits_and_versions" time="3.31403" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;regression;unit"/>
+		</properties>
+		<system-out>PASS 16 version fixtures, semantic migration, roundtrip/CRLF, truncation, corrupt references/counts/values, byte/line/record limits and I/O failure
+</system-out>
+	</testcase>
+	<testcase name="platform.atomic_file_store" classname="platform.atomic_file_store" time="0.0552643" status="run">
+		<properties>
+			<property name="cmake_labels" value="platform;regression;unit"/>
+		</properties>
+		<system-out>CASE roundtrip
+CASE failures
+CASE nativeRestrictions
+CASE concurrent
+PASS atomic replacement, Unicode/binary/empty, all failure stages, partial write, exclusive collision, permissions/locks, concurrent saves and cleanup
+</system-out>
+	</testcase>
+	<testcase name="kernel.shape_factory" classname="kernel.shape_factory" time="0.0286354" status="run">
+		<properties>
+			<property name="cmake_labels" value="kernel;unit"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="document.history" classname="document.history" time="0.0295623" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;unit"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="features.sketch_profiles" classname="features.sketch_profiles" time="0.0217868" status="run">
+		<properties>
+			<property name="cmake_labels" value="features;unit"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="features.planegcs_solver" classname="features.planegcs_solver" time="0.00317321" status="run">
+		<properties>
+			<property name="cmake_labels" value="features;unit"/>
+		</properties>
+		<system-out>Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 0 redundants
+</system-out>
+	</testcase>
+	<testcase name="features.sketch_constraint_adapter" classname="features.sketch_constraint_adapter" time="0.0266714" status="run">
+		<properties>
+			<property name="cmake_labels" value="features;unit"/>
+		</properties>
+		<system-out>Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 0 redundants
+</system-out>
+	</testcase>
+	<testcase name="application.recompute_history" classname="application.recompute_history" time="1.13227" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="desktop.sketch_command_failure" classname="desktop.sketch_command_failure" time="0.255213" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;regression;sketch"/>
+		</properties>
+		<system-out>QFormLayout::takeAt: Invalid index 0
+QFormLayout::takeAt: Invalid index 0
+QFormLayout::takeAt: Invalid index 0
+QFormLayout::takeAt: Invalid index 0
+Productive extrusion rejection/repair tests passed
+</system-out>
+	</testcase>
+	<testcase name="desktop.preview_command_failures" classname="desktop.preview_command_failures" time="0.187142" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;regression;sketch"/>
+		</properties>
+		<system-out>Preview command exceptions and recovery passed
+</system-out>
+	</testcase>
+	<testcase name="desktop.feature_status" classname="desktop.feature_status" time="0.465987" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;regression;sketch"/>
+		</properties>
+		<system-out>[NON-XML-CHAR-0x1B][32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+  Unhandled GL error: GL_INVALID_OPERATION[NON-XML-CHAR-0x1B][0m
+[NON-XML-CHAR-0x1B][32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+  OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![NON-XML-CHAR-0x1B][0m
+[NON-XML-CHAR-0x1B][32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+  Unhandled GL error: GL_INVALID_OPERATION[NON-XML-CHAR-0x1B][0m
+[NON-XML-CHAR-0x1B][32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+  OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![NON-XML-CHAR-0x1B][0m
+Failed/blocked publication, persistence, history and tree passed
+</system-out>
+	</testcase>
+	<testcase name="desktop.angle_inputs" classname="desktop.angle_inputs" time="0.38212" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;regression;sketch"/>
+		</properties>
+		<system-out>[NON-XML-CHAR-0x1B][32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+  Unhandled GL error: GL_INVALID_OPERATION[NON-XML-CHAR-0x1B][0m
+[NON-XML-CHAR-0x1B][32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+  OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![NON-XML-CHAR-0x1B][0m
+QFormLayout::takeAt: Invalid index 0
+QFormLayout::takeAt: Invalid index 0
+QFormLayout::takeAt: Invalid index 0
+QFormLayout::takeAt: Invalid index 0
+QFormLayout::takeAt: Invalid index 0
+QFormLayout::takeAt: Invalid index 0
+QFormLayout::takeAt: Invalid index 0
+QFormLayout::takeAt: Invalid index 0
+QFormLayout::takeAt: Invalid index 0
+QFormLayout::takeAt: Invalid index 0
+QFormLayout::takeAt: Invalid index 0
+PASS degree inputs, typed placements, signed snap, annotation, undo/redo
+</system-out>
+	</testcase>
+	<testcase name="desktop.parameter_failures" classname="desktop.parameter_failures" time="0.388836" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;regression;sketch"/>
+		</properties>
+		<system-out>[NON-XML-CHAR-0x1B][32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+  Unhandled GL error: GL_INVALID_OPERATION[NON-XML-CHAR-0x1B][0m
+[NON-XML-CHAR-0x1B][32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+  OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![NON-XML-CHAR-0x1B][0m
+QFormLayout::takeAt: Invalid index 0
+QFormLayout::takeAt: Invalid index 0
+QFormLayout::takeAt: Invalid index 0
+QFormLayout::takeAt: Invalid index 0
+QFormLayout::takeAt: Invalid index 0
+Parameter rejection and Qt exception containment tests passed
+</system-out>
+	</testcase>
+	<testcase name="desktop.sketch_solver_gate" classname="desktop.sketch_solver_gate" time="0.319174" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;regression;sketch"/>
+		</properties>
+		<system-out>Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 0 redundants
+QFormLayout::takeAt: Invalid index 0
+QFormLayout::takeAt: Invalid index 0
+QFormLayout::takeAt: Invalid index 0
+QFormLayout::takeAt: Invalid index 0
+Sketch solver acceptance and panel tests passed
+</system-out>
+	</testcase>
+	<testcase name="desktop.document_actions" classname="desktop.document_actions" time="1.20883" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;document;regression"/>
+		</properties>
+		<system-out>Production file actions: Unicode, cancel, corrupt open, save and failure titles passed
+</system-out>
+	</testcase>
+	<testcase name="desktop.viewport_lifecycle_qt" classname="desktop.viewport_lifecycle_qt" time="1.3997" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;freebsd;lifecycle;qt-opengl;viewport;wayland"/>
+		</properties>
+		<system-out>[NON-XML-CHAR-0x1B][32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+  Unhandled GL error: GL_INVALID_OPERATION[NON-XML-CHAR-0x1B][0m
+[NON-XML-CHAR-0x1B][32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+  OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![NON-XML-CHAR-0x1B][0m
+[NON-XML-CHAR-0x1B][32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+  Unhandled GL error: GL_INVALID_OPERATION[NON-XML-CHAR-0x1B][0m
+[NON-XML-CHAR-0x1B][32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+  OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![NON-XML-CHAR-0x1B][0m
+[NON-XML-CHAR-0x1B][32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+  Unhandled GL error: GL_INVALID_OPERATION[NON-XML-CHAR-0x1B][0m
+[NON-XML-CHAR-0x1B][32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+  OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![NON-XML-CHAR-0x1B][0m
+[NON-XML-CHAR-0x1B][32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+  Unhandled GL error: GL_INVALID_OPERATION[NON-XML-CHAR-0x1B][0m
+[NON-XML-CHAR-0x1B][32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+  OpenGl_Window::CreateWindow: ...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="application.sketch_editor_flow" classname="application.sketch_editor_flow" time="0.570355" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;integration"/>
+		</properties>
+		<system-out>Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 0 redundants
+</system-out>
+	</testcase>
+	<testcase name="application.sketch_construction" classname="application.sketch_construction" time="0.0838543" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="application.sketch_circle_constraints" classname="application.sketch_circle_constraints" time="0.0643669" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="application.sketch_alignments" classname="application.sketch_alignments" time="0.0635046" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="application.sketch_fix_distance" classname="application.sketch_fix_distance" time="0.0443344" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="application.sketch_basic_tools" classname="application.sketch_basic_tools" time="0.147447" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;integration"/>
+		</properties>
+		<system-out>Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 2 redundants
+</system-out>
+	</testcase>
+	<testcase name="application.sketch_slot_dimensions" classname="application.sketch_slot_dimensions" time="0.108909" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;integration;regression"/>
+		</properties>
+		<system-out>Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 4 redundants
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 5 redundants
+</system-out>
+	</testcase>
+	<testcase name="workspaces.module_registry" classname="workspaces.module_registry" time="0.00174423" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit;workspaces"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="architecture.source_limits" classname="architecture.source_limits" time="0.0497971" status="run">
+		<properties>
+			<property name="cmake_labels" value="architecture;regression"/>
+		</properties>
+		<system-out>-- Checked 295 source files
+-- Source file limit check passed
+</system-out>
+	</testcase>
+	<testcase name="architecture.source_limits_regression" classname="architecture.source_limits_regression" time="0.0922965" status="run">
+		<properties>
+			<property name="cmake_labels" value="architecture;regression"/>
+		</properties>
+		<system-out>-- missing_variable: passed
+-- empty_value: passed
+-- nonexistent_directory: passed
+-- regular_file: passed
+-- literal_quotes: passed
+-- empty_directory: passed
+-- unsupported_files_only: passed
+-- spaces_and_unicode: passed
+-- 600_lf_final_newline_yes: passed
+-- 600_lf_final_newline_no: passed
+-- 601_lf_final_newline_yes: passed
+-- 601_lf_final_newline_no: passed
+-- 600_crlf_final_newline_yes: passed
+-- 600_crlf_final_newline_no: passed
+-- 601_crlf_final_newline_yes: passed
+-- 601_crlf_final_newline_no: passed
+</system-out>
+	</testcase>
+	<testcase name="architecture.ctest_label_runner" classname="architecture.ctest_label_runner" time="5.17405" status="run">
+		<properties>
+			<property name="cmake_labels" value="architecture;regression"/>
+		</properties>
+		<system-out>-- CTest label 'unit' passed with 12 selected tests
+</system-out>
+	</testcase>
+	<testcase name="architecture.desktop_smoke_runner" classname="architecture.desktop_smoke_runner" time="1.10607" status="run">
+		<properties>
+			<property name="cmake_labels" value="architecture;regression"/>
+		</properties>
+		<system-out>-- Expected-smoke runner: 4 cases passed
+</system-out>
+	</testcase>
+	<testcase name="document.numeric_policy" classname="document.numeric_policy" time="0.0483045" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;kernel;regression"/>
+		</properties>
+		<system-out>PASS numeric ranges and actual profile threshold faces; kernel floor 1e-07
+</system-out>
+	</testcase>
+	<testcase name="features.boolean_connection" classname="features.boolean_connection" time="1.50727" status="run">
+		<properties>
+			<property name="cmake_labels" value="features;integration;kernel;regression"/>
+		</properties>
+		<system-out>PASS exact extrusion bounds, repeated joins, volume, roundtrip and history
+</system-out>
+	</testcase>
+	<testcase name="application.sketch_id_capacity" classname="application.sketch_id_capacity" time="0.1584" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;document;integration;regression"/>
+		</properties>
+		<system-out>Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 5 redundants
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 5 redundants
+PASS ID capacity: drawing, operations, relations, atomic rejection and roundtrip
+</system-out>
+	</testcase>
+	<testcase name="document.legacy_body_identity" classname="document.legacy_body_identity" time="0.0814733" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;regression"/>
+		</properties>
+		<system-out>Legacy body identity migration passed
+</system-out>
+	</testcase>
+	<testcase name="document.feature_id_lifetime" classname="document.feature_id_lifetime" time="0.0571663" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;document;integration;regression"/>
+		</properties>
+		<system-out>Feature ID lifetime tests passed
+</system-out>
+	</testcase>
+	<testcase name="features.body_identity" classname="features.body_identity" time="0.373098" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;features;integration;regression"/>
+		</properties>
+		<system-out>Body identity evaluation tests passed
+</system-out>
+	</testcase>
+</testsuite>

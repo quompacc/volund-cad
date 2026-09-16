@@ -38,14 +38,14 @@ std::string changed(std::string text, const std::string& from, const std::string
     return text;
 }
 void rejects(const std::string& text, ModelDocument& current) {
-    const auto before = serialize(current);
+    const auto before = DocumentSnapshot::capture(current);
     bool rejected = false;
     try {
         current = parse(text);
     } catch (const std::runtime_error&) {
         rejected = true;
     }
-    require(rejected && serialize(current) == before,
+    require(rejected && DocumentSnapshot::capture(current) == before,
             "Malformed input accepted or current model changed");
 }
 void migration(const ModelDocument& document, int version) {
@@ -123,7 +123,9 @@ void versions(const std::filesystem::path& root) {
         const auto document = parse(text);
         migration(document, version);
         const auto canonical = serialize(document);
-        require(canonical.starts_with("VOLUND 16\n") && serialize(parse(canonical)) == canonical,
+        require(canonical.starts_with("BINFILE") &&
+                    DocumentSnapshot::capture(parse(canonical)) == DocumentSnapshot::capture(document) &&
+                    parse(canonical).documentId() == document.documentId(),
                 "Current-format roundtrip unstable");
         migration(parse(canonical), version);
         std::string crlf;
@@ -132,7 +134,7 @@ void versions(const std::filesystem::path& root) {
                 crlf += '\r';
             crlf += c;
         }
-        require(serialize(parse(crlf)) == canonical, "CRLF differs from LF");
+        require(DocumentSnapshot::capture(parse(crlf)) == DocumentSnapshot::capture(document), "CRLF differs from LF");
         auto current = document;
         // Every missing required record must fail; a final LF itself is optional.
         for (std::size_t pos = 0; pos < text.size(); ++pos)
@@ -229,7 +231,7 @@ void resourceLimits() {
         } catch (const std::runtime_error& error) {
             rejected = std::string(error.what()).find("limit") != std::string::npos;
         }
-        require(rejected && buffer.consumed < size,
+        require(rejected && (size <= detail::maximumDocumentBytes || buffer.consumed < size),
                 "Resource limit consumed entire oversized source");
     }
     std::istringstream failed("VOLUND 16\nNEXT_ID 1\nFEATURES 0\n");

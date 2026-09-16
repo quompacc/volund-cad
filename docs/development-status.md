@@ -31,9 +31,8 @@ Vektorautorität. CadSession liest die Modell-ID. **69/69 Windows**, **66/66 Fre
 **300 Quellhashes identisch**. [Nachweis](implementation-plan/evidence/D12d.md).
 **D12 ist abgeschlossen:** [D12e-Abnahmematrix](implementation-plan/evidence/D12e.md). Die 300 Quellhashes des geprüften D12d-Stands wurden erneut bestätigt; D12e ändert nur Dokumentation und führt keine neuen Testläufe an.
 [Bestätigte Aufteilung](implementation-plan/D12-plan.md).
-D13 bindet danach den nativen Produktstore an. VOLUND 16 bleibt bis dahin
-Produktwriter ohne persistente DocumentId; Legacy-Open vergibt eine neue
-Dokument-ID.
+D13c bindet den nativen Produktstore an: BinOcaf 12 mit Anwendungsschema 1.
+Native Dateien erhalten ihre persistente DocumentId; Legacy-Open vergibt eine neue.
 
 **D13a ist geprüft:** privater BinOcaf-Payloadadapter, ID-/Parameter-Rundlauf und
 Eingabefehler. **70/70 Windows**, **67/67 FreeBSD/Sway**, **303 Quellhashes identisch**.
@@ -51,12 +50,12 @@ Baumgrenzen und Dateiende. **73/73 Windows**, **70/70 FreeBSD/Sway**,
 **75/75 Windows**, **72/72 FreeBSD/Sway**, **317 Quellhashes identisch**.
 Die zuvor offene FreeBSD-Abnahme ist nachgeholt.
 [Nachweis](implementation-plan/evidence/D13b2-limits.md).
-**D13b abgeschlossen:** [Gesamtabnahme](implementation-plan/evidence/D13b-review.md); 317 Quellhashes erneut unverändert bestätigt, keine neuen Testläufe. Nächster Block: D13c, native Produktpersistenz. D13 bleibt offen.
+**D13b abgeschlossen:** [Gesamtabnahme](implementation-plan/evidence/D13b-review.md); 317 Quellhashes erneut unverändert bestätigt, keine neuen Testläufe. **D13c abgeschlossen:** natives Save/Open mit persistenter ID, **76/76 Windows**, **73/73 FreeBSD/Sway**, **318 Quellhashes identisch**. [Nachweis](implementation-plan/evidence/D13c.md). Nächster Block: D13d, Produktdateiaustausch und Gesamtabnahme. D13 bleibt offen.
 [Teilplan](implementation-plan/D13-plan.md). Insgesamt bleiben 88 von 110 Hauptpaketen offen.
 
 A-BODY-03, D13, Referenz-/DAG-Arbeiten und Meridian L07 bleiben offen.
 [Changelog](../CHANGELOG.md) und [Versionsregeln](versioning.md) sind aktuell;
-Basisversion `0.1.0`, kein Release-Tag, kein Push, keine Terra-Übergabe.
+Basisversion `0.1.0`, kein Release-Tag, keine Terra-Übergabe. Gitea-Remote für dieses Projekt: `eduard/volund-cad`.
 Historische D11a–D11n-Offenvermerke beziehen sich auf ihren jeweiligen Prüfzeitpunkt.
 Die Funktionsangaben weiter unten stammen aus dem ursprünglichen Übergabestand
 vom 12. September und sind zusammen mit den aktuellen Paket-Evidenzen zu lesen.
@@ -216,7 +215,7 @@ gehören nicht zum Produktpfad.
   Mittelpunkte sowie innere und äußere Berührung mit vorhandenen Kreisen und Bögen.
   Der Radius rastet auf den exakten Solverwert ein; `[=?]`, `[CC?]` und `[T?]`
   machen die Designabsicht vor dem Bestätigen sichtbar.
-- Neue Dateien verwenden `VOLUND 16`; bestehende `VOLUND 1`-Rechtecksketches,
+- Neue Dateien verwenden seit D13c natives BinOcaf; bestehende `VOLUND 1`-Rechtecksketches,
   `VOLUND 2`-Linien, `VOLUND 3`-Richtungsconstraints und `VOLUND 4`-Extrusionen
   sowie `VOLUND 5`-Profilauswahlen werden beim Laden migriert. Alte Extrusionen
   behalten dabei ihre bisherige Semantik, alle geschlossenen Profile zu verwenden.

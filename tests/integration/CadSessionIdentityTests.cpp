@@ -53,10 +53,10 @@ void lifecycle(const std::filesystem::path& root) {
         session.canUndo(), "Failed open changed identity/history");
     session.loadDocument(root / "one.volund");
     const auto imported = session.identifiedSnapshot();
-    require(imported.id() != beforeSave.id() && imported.snapshot() == beforeSave.snapshot(),
-        "Legacy import did not create fresh namespace with exact content");
+    require(imported.id() == beforeSave.id() && imported.snapshot() == beforeSave.snapshot(),
+        "Native open did not preserve namespace with exact content");
     session.loadDocument(root / "one.volund");
-    require(session.documentId() != imported.id(), "Repeated legacy import reused absent file identity");
+    require(session.documentId() == imported.id(), "Repeated native open changed file identity");
     require(session.selectFeature(created), "Lost feature after import");
     const auto prior = session.identifiedSnapshot();
     const auto shape = session.currentShape();

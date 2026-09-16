@@ -65,16 +65,17 @@ void formats() {
         bool rejected = false;
         try {
             static_cast<void>(DocumentSerializer::readWithReport(input));
-        } catch (const std::runtime_error& error) {
+        } catch (const std::exception& error) {
             const std::string message = error.what();
             rejected = message.find("schema version") != std::string::npos ||
-                       message.find("unknown document encoding") != std::string::npos;
+                       message.find("unknown document encoding") != std::string::npos ||
+                       message.find("native container") != std::string::npos;
         }
         require(rejected, "Unknown format reached legacy payload parser");
     }
     std::istringstream empty("VOLUND 16\nNEXT_ID 1\nFEATURES 0\n");
     const auto result = DocumentSerializer::readWithReport(empty);
-    require(result.snapshot.features().empty() && result.report.referenceIssues.empty(),
+    require(result.snapshot.features().empty() && result.report && result.report->referenceIssues.empty(),
             "Empty import fabricated references");
 }
 void session(const std::filesystem::path& fixtures, const std::filesystem::path& work) {

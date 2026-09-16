@@ -86,24 +86,24 @@ void namesAndOrder() {
     require(expected == std::vector<std::pair<std::uint64_t, std::uint64_t>>{
                             {first.value(), first.value()}, {second.value(), second.value()},
                             {separate.value(), separate.value()}}, "New body origin assignment");
-    std::istringstream original(bytes(document));
-    std::vector<std::string> lines;
-    for (std::string line; std::getline(original, line); ) {
-        const auto name = line.find("\"Same\"");
-        if (name != std::string::npos)
-            line.replace(name, 6, "\"Renamed\"");
-        lines.push_back(std::move(line));
-    }
-    require(lines.size() == 6, "Unexpected simple legacy encoding");
-    std::swap(lines[3], lines[4]); // Reorder independent roots, preserving valid dependencies.
+    // Explicit legacy fixture: renamed independent roots in reversed order.
+    // Product output is binary; never edit it as if it were legacy text.
     std::ostringstream reordered;
-    for (const auto& line : lines)
-        reordered << line << '\n';
+    reordered << "VOLUND 16\nNEXT_ID 4\nFEATURES 3\n"
+              << "BOX " << second.value() << " \"Renamed\" 3 4 5 0 0 0 0 0 0\n"
+              << "BOX " << first.value() << " \"Renamed\" 40 30 20 0 0 0 0 0 0\n"
+              << "CYLINDER " << separate.value() << " \"Renamed\" " << first.value()
+              << " 2 5 0 0 0 0 0 0 SEPARATE\n";
     std::istringstream input(reordered.str());
     const auto loaded = DocumentSerializer::read(input);
     require(loaded.features().front().id == second &&
                 identities(checked(loaded)) == expected,
             "Rename/reorder changed body identity or merged bodies");
+    std::istringstream native(bytes(loaded));
+    const auto reopened = DocumentSerializer::read(native);
+    require(DocumentSnapshot::capture(reopened) == DocumentSnapshot::capture(loaded) &&
+                reopened.documentId() == loaded.documentId() && identities(checked(reopened)) == expected,
+            "Native roundtrip lost reordered content, document or body identities");
 }
 void newBranchDoesNotReuseBody() {
     auto document = ModelDocument::empty();

@@ -1,0 +1,1 @@
+318 local SHA-256 hashes match source-hashes.json and freebsd-source-hashes.txt. No product source differences between Windows and FreeBSD. Final blank-line-only edits in tests/CMakeLists.txt and NumericValidationTests.cpp were rebuilt on both platforms; document.numeric_validation passed again after those edits.

@@ -917,7 +917,7 @@
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": ["evidence/D13a.md", "evidence/D13b1.md", "evidence/D13b2.md", "evidence/D13b2-structure.md", "evidence/D13b2-attributes.md", "evidence/D13b2-limits.md", "evidence/D13b-review.md"],
+      "evidence": ["evidence/D13a.md", "evidence/D13b1.md", "evidence/D13b2.md", "evidence/D13b2-structure.md", "evidence/D13b2-attributes.md", "evidence/D13b2-limits.md", "evidence/D13b-review.md", "evidence/D13c.md"],
       "completedCommit": null
     },
     {

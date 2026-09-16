@@ -4,7 +4,7 @@ Status: angenommen für die Umsetzung in D09–D13, 14.09.2026.
 Entscheidungsnachweis: [D08](../implementation-plan/evidence/D08.md).
 Umsetzungsstand 16.09.2026: Der produktive Dokumentkern ist mit
 [D12](../implementation-plan/evidence/D12e.md) auf OCAF umgestellt.
-Der Produktwriter bleibt VOLUND 16; native Binärpersistenz folgt in D13.
+[D13c](../implementation-plan/evidence/D13c.md) bindet natives Save/Open an: BinOcaf 12, Anwendungsschema 1 und persistente Dokument-ID. D13d-Abnahme steht aus.
 
 ## Entscheidung
 
@@ -27,7 +27,7 @@ OCAF-Speicherformat 12 und Völund-Anwendungsschema sind unterschiedliche Versio
 ein späterer OCCT-Default darf das Dateiformat nicht stillschweigend ändern.
 Das Anwendungsschema wird am Root gespeichert und vor Veröffentlichung validiert.
 Der im Experiment benutzte Wert 1 ist nur ein Probeschema und reserviert keine neue
-Produktformatnummer. D09/D13 entscheiden die neue Kennung auf dem dann aktuellen Stand.
+Produktformatnummer. D13c verwendet das validierte native Schema 1 mit Kennung `VoelundCAD.Native`; VOLUND 17 wird nicht eingeführt.
 
 ## Belegte Reichweite
 

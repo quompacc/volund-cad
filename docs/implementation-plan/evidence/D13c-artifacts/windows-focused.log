@@ -1,0 +1,26 @@
+Test project V:/build/p02-qt-final
+    Start  5: application.native_persistence
+1/6 Test  #5: application.native_persistence ........   Passed    0.43 sec
+    Start 16: document.plane_migration
+2/6 Test #16: document.plane_migration ..............   Passed    0.86 sec
+    Start 17: document.numeric_validation
+3/6 Test #17: document.numeric_validation ...........   Passed    0.25 sec
+    Start 18: document.legacy_import
+4/6 Test #18: document.legacy_import ................   Passed    0.53 sec
+    Start 37: application.safe_persistence
+5/6 Test #37: application.safe_persistence ..........   Passed    1.64 sec
+    Start 38: document.parser_limits_and_versions
+6/6 Test #38: document.parser_limits_and_versions ...   Passed    1.58 sec
+
+100% tests passed, 0 tests failed out of 6
+
+Label Time Summary:
+application    =   0.43 sec*proc (1 test)
+document       =   5.29 sec*proc (6 tests)
+integration    =   3.71 sec*proc (5 tests)
+kernel         =   0.25 sec*proc (1 test)
+native         =   0.43 sec*proc (1 test)
+regression     =   5.29 sec*proc (6 tests)
+unit           =   1.58 sec*proc (1 test)
+
+Total Test time (real) =   5.32 sec

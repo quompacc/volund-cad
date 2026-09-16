@@ -1,0 +1,12 @@
+include/voelund/document/DocumentSerializer.hpp
+src/application/CadSessionPersistence.cpp
+src/document/DocumentSerializer.cpp
+src/document/DocumentSerializerWriter.cpp
+tests/CMakeLists.txt
+tests/integration/CadSessionIdentityTests.cpp
+tests/integration/LegacyImportTests.cpp
+tests/integration/NumericValidationTests.cpp
+tests/integration/PlaneMigrationTests.cpp
+tests/unit/DocumentParserTests.cpp
+tests/unit/ModelDocumentTests.cpp
+tests/integration/NativeProductPersistenceTests.cpp
