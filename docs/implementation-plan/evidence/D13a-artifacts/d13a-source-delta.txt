@@ -1,0 +1,5 @@
+src/document/NativeDocumentStore.hpp
+src/document/NativeDocumentStore.cpp
+src/document/CMakeLists.txt
+tests/integration/NativeDocumentStoreTests.cpp
+tests/CMakeLists.txt

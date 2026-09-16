@@ -1,0 +1,56 @@
+[1/66] Generating CXX dyndep file apps\voelund-ui-preview\CMakeFiles\voelund-ui-preview.dir\CXX.dd
+[2/56] Scanning V:\tests\integration\NativeDocumentStoreTests.cpp for CXX dependencies
+[3/56] Generating CXX dyndep file tests\CMakeFiles\voelund_native_store_tests.dir\CXX.dd
+[4/56] Linking CXX executable apps\voelund-ui-preview\voelund-ui-preview.exe; Deploying the Qt runtime for the UI preview; Deploying the Qt OpenGL runtime for the UI preview
+[5/56] Linking CXX executable tests\voelund_model_backend_tests.exe
+[6/56] Linking CXX executable apps\voelund-cad\voelund-cad.exe; Deploying the minimal Qt runtime; Deploying the Qt OpenGL runtime
+[7/56] Linking CXX executable tests\voelund_native_model_state_tests.exe
+[8/56] Building CXX object tests\CMakeFiles\voelund_native_store_tests.dir\integration\NativeDocumentStoreTests.cpp.obj
+[9/56] Linking CXX executable tests\voelund_read_boundary_tests.exe
+[10/56] Linking CXX executable tests\voelund_angle_boundary_tests.exe
+[11/56] Linking CXX executable tests\voelund_native_store_tests.exe
+[12/56] Linking CXX executable tests\voelund_plane_migration_tests.exe
+[13/56] Linking CXX executable tests\voelund_numeric_validation_tests.exe
+[14/56] Linking CXX executable tests\voelund_legacy_import_tests.exe
+[15/56] Linking CXX executable tests\voelund_scene_status_tests.exe
+[16/56] Linking CXX executable tests\voelund_command_input_tests.exe
+[17/56] Linking CXX executable tests\voelund_session_failure_tests.exe
+[18/56] Linking CXX executable tests\voelund_session_creation_tests.exe
+[19/56] Linking CXX executable tests\voelund_command_contract_tests.exe
+[20/56] Linking CXX executable tests\voelund_session_transaction_tests.exe
+[21/56] Linking CXX executable tests\voelund_document_transaction_tests.exe
+[22/56] Linking CXX executable tests\voelund_session_identity_tests.exe
+[23/56] Linking CXX executable tests\voelund_native_schema_tests.exe
+[24/56] Linking CXX executable tests\voelund_native_extrusion_tests.exe
+[25/56] Linking CXX executable tests\voelund_native_sketch_constraint_tests.exe
+[26/56] Linking CXX executable tests\voelund_native_sketch_tests.exe
+[27/56] Linking CXX executable tests\voelund_native_cylinder_tests.exe
+[28/56] Linking CXX executable tests\voelund_native_metadata_tests.exe
+[29/56] Linking CXX executable tests\voelund_native_box_tests.exe
+[30/56] Linking CXX executable tests\voelund_document_identity_tests.exe
+[31/56] Linking CXX executable tests\voelund_safe_persistence_tests.exe
+[32/56] Linking CXX executable tests\voelund_document_parser_tests.exe
+[33/56] Linking CXX executable tests\voelund_document_tests.exe
+[34/56] Linking CXX executable tests\voelund_sketch_profile_tests.exe
+[35/56] Linking CXX executable tests\voelund_sketch_constraint_tests.exe
+[36/56] Linking CXX executable tests\voelund_application_tests.exe
+[37/56] Linking CXX executable tests\voelund_sketch_command_failure_tests.exe
+[38/56] Linking CXX executable tests\voelund_preview_command_failure_tests.exe
+[39/56] Linking CXX executable tests\voelund_feature_status_tests.exe
+[40/56] Linking CXX executable tests\voelund_angle_input_tests.exe
+[41/56] Linking CXX executable tests\voelund_sketch_solver_gate_tests.exe
+[42/56] Linking CXX executable tests\voelund_parameter_failure_tests.exe
+[43/56] Linking CXX executable tests\voelund_sketch_editor_tests.exe
+[44/56] Linking CXX executable tests\voelund_document_actions_tests.exe
+[45/56] Linking CXX executable tests\voelund_sketch_circle_constraint_tests.exe
+[46/56] Linking CXX executable tests\voelund_sketch_construction_tests.exe
+[47/56] Linking CXX executable tests\voelund_sketch_fix_distance_tests.exe
+[48/56] Linking CXX executable tests\voelund_sketch_alignment_tests.exe
+[49/56] Linking CXX executable tests\voelund_sketch_basic_tools_tests.exe
+[50/56] Linking CXX executable tests\voelund_sketch_slot_tests.exe
+[51/56] Linking CXX executable tests\voelund_boolean_connection_tests.exe
+[52/56] Linking CXX executable tests\voelund_numeric_policy_tests.exe
+[53/56] Linking CXX executable tests\voelund_sketch_id_capacity_tests.exe
+[54/56] Linking CXX executable tests\voelund_legacy_body_identity_tests.exe
+[55/56] Linking CXX executable tests\voelund_feature_id_lifetime_tests.exe
+[56/56] Linking CXX executable tests\voelund_body_identity_evaluation_tests.exe

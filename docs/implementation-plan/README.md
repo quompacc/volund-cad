@@ -1,7 +1,36 @@
 # Völund: vom vorhandenen Prototyp zum belastbaren CAD
 
-**Pause am 13.09.2026:** [Fortsetzungsnotiz und Einstieg D07](../session-checkpoint-2026-09-13.md). Keine Hintergrundarbeit.
+## Aktueller Stand – 16. September 2026
 
+Laut [Paketstatus](packets.json): **110 Hauptpakete, 22 abgeschlossen, 88 offen**.
+Offen sind 86 geplante Pakete, D13 in Arbeit und A02 mit Designbedarf.
+Teilblöcke wie D12a–e zählen nicht als zusätzliche Hauptpakete; die Paketanzahl
+ist kein Maß für Restaufwand oder Fertigstellungszeit.
+
+| Stufe | Offene Hauptpakete |
+| --- | ---: |
+| G0 – Basis | 2 |
+| G1 – Dokument und Referenzen | 12 |
+| G2 – zusammenhängender CAD-Workflow | 26 |
+| G3 – mechanisches CAD v1 | 18 |
+| G4 – veröffentlichbare v1 | 10 |
+| G5 – spätere Produktfamilie | 20 |
+| Gesamt | 88 |
+
+Bis einschließlich G4 bleiben 68 Hauptpakete. G2 ist der erste durchgängige
+Bedienablauf, G3 der begrenzte mechanische Funktionsumfang. G5 umfasst zusätzliche
+Bereiche wie Baugruppen und Zeichnungen. Nutzbarkeit wird an diesen Abläufen
+abgenommen, nicht am Erreichen einer Prozentzahl.
+
+D12 ist [abgeschlossen](evidence/D12e.md); D13 beginnt mit dem
+[privaten nativen Store](evidence/D13a.md). Aktueller Einstieg:
+[Fortsetzungsnotiz](../session-checkpoint-2026-09-16.md).
+
+## Historischer Ausgangsstand
+
+Die folgenden Befunde und Testzahlen beschreiben den damaligen Auditstand.
+Insbesondere atomare Speicherung und OCAF-Modellautorität sind inzwischen umgesetzt;
+aktuelle Paketnachweise haben Vorrang.
 Planungsstand: **13. September 2026**, untersuchter Code: `1b78229`.
 Status: **A01, A03, A05, A06, A07, A08, P01, P02 und P03 abgenommen; A02 braucht weitere Entwicklung. G0 bleibt offen.**
 Aktueller Nachweis: [A06 – Kernel-Fehlergrenze mit Gegenprüfung](evidence/A06.md).

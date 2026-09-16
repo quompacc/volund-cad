@@ -233,6 +233,8 @@ Aktueller Paketstatus und Evidenz stehen im Manifest. A01 ist abgenommen; die ü
 
 ## D13 – Gewählten Produktstore integrieren
 
+- **Fortschritt:** [D13a](evidence/D13a.md) kapselt den nativen Payloadadapter; D13 ist in-progress. Produktdispatch und Writerwechsel folgen gemäß [Teilplan](D13-plan.md).
+
 - **Voraussetzungen:** D03, D09, D12.
 - **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08; `src/document/DocumentSerializer.cpp`, `src/application/CadSession.cpp`, `src/document/CMakeLists.txt`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
 - **Auftrag:**

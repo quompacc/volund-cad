@@ -56,6 +56,9 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 
 ### Geändert
 
+- D13a ergänzt einen privaten BinOcaf-Adapter für unveränderliche Dokument-Snapshots,
+  mit ID-/Parameter-Rundlauf, Schemafehlern und Eingabegrößenprüfung vor dem Öffnen.
+  Produktdispatch und Writerwechsel bleiben folgende Teilblöcke.
 - D12e schließt die Gesamtabnahme der OCAF-Modellautorität ab und ordnet die
   ursprünglichen Kriterien den bestehenden Plattform- und Fehlernachweisen zu.
   Nur Dokumentation; native Produktpersistenz bleibt D13.

@@ -9,6 +9,7 @@ add_library(voelund_document STATIC
     NativeDocumentMetadata.cpp
     NativePrimitiveCodec.cpp
     NativeModelState.cpp
+    NativeDocumentStore.cpp
     NativeExtrusion.cpp
     NativeSketchGeometry.cpp
     NativeSketchConstraints.cpp
@@ -34,6 +35,7 @@ target_link_libraries(
     PRIVATE
         Voelund::Platform
         TKLCAF
+        TKBin
 )
 
 add_library(Voelund::Document ALIAS voelund_document)

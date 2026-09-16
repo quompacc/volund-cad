@@ -87,7 +87,14 @@ D12e schließt die ursprünglichen Kriterien ab: private OCAF-Autorität, unver�
 Leseansichten, Transaktionen/Undo/Redo und öffentliche Headergrenzen geprüft.
 300 Quellhashes erneut bestätigt; keine neuen Builds oder Testläufe im Dokumentationsblock.
 Siehe [Abnahmematrix](implementation-plan/evidence/D12e.md).
-Nächster Block: **D13**, nativen Produktstore in begrenzten Teilschritten integrieren.
+D13a ist geprüft: privater nativer Payloadadapter, noch kein Produktdispatch.
+**70/70 Windows** (104,63 s), **67/67 FreeBSD/Sway** (37,79 s);
+**303 Quellhashes identisch**. Fünf Quelldateien samt Prüfskript ausdrücklich
+freigegeben und übertragen, alle Prüfprozesse beendet.
+[Nachweis](implementation-plan/evidence/D13a.md) und
+[Teilplan](implementation-plan/D13-plan.md).
+Nächster Block: **D13b**, eindeutige Produktformaterkennung, begrenztes Einlesen
+und Ressourcenpolitik vor Produktfreigabe. D13 bleibt insgesamt offen.
 
 Der Autoritätswechsel aus [ADR 0008](adr/0008-ocaf-binary-persistence.md) ist umgesetzt;
 der Store-Wechsel folgt in D13. Noch kein produktiver nativer Dispatch: **VOLUND 16 bleibt Produktwriter**.

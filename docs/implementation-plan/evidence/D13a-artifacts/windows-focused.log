@@ -1,0 +1,13 @@
+Test project V:/build/p02-qt-final
+    Start 5: document.native_store
+1/1 Test #5: document.native_store ............   Passed    0.60 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+document       =   0.60 sec*proc (1 test)
+integration    =   0.60 sec*proc (1 test)
+native         =   0.60 sec*proc (1 test)
+regression     =   0.60 sec*proc (1 test)
+
+Total Test time (real) =   0.64 sec

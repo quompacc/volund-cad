@@ -1,3 +1,7 @@
+add_executable(voelund_native_store_tests integration/NativeDocumentStoreTests.cpp)
+target_link_libraries(voelund_native_store_tests PRIVATE voelund_project_options Voelund::Document TKBin)
+add_test(NAME document.native_store COMMAND voelund_native_store_tests)
+set_tests_properties(document.native_store PROPERTIES LABELS "integration;document;native;regression" TIMEOUT 60)
 add_executable(voelund_model_backend_tests integration/ModelBackendParityTests.cpp)
 target_link_libraries(voelund_model_backend_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME document.product_ocaf_backend COMMAND voelund_model_backend_tests)

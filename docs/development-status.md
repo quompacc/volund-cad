@@ -33,7 +33,13 @@ Vektorautorität. CadSession liest die Modell-ID. **69/69 Windows**, **66/66 Fre
 [Bestätigte Aufteilung](implementation-plan/D12-plan.md).
 D13 bindet danach den nativen Produktstore an. VOLUND 16 bleibt bis dahin
 Produktwriter ohne persistente DocumentId; Legacy-Open vergibt eine neue
-Dokument-ID. Nächster Implementierungsblock: D13, Integration des nativen Produktstores.
+Dokument-ID.
+
+**D13a ist geprüft:** privater BinOcaf-Payloadadapter, ID-/Parameter-Rundlauf und
+Eingabefehler. **70/70 Windows**, **67/67 FreeBSD/Sway**, **303 Quellhashes identisch**.
+[Nachweis und Grenzen](implementation-plan/evidence/D13a.md).
+D13 bleibt in Arbeit; nächster Block ist D13b, Produktformaterkennung und begrenztes Einlesen.
+[Teilplan](implementation-plan/D13-plan.md). Insgesamt bleiben 88 von 110 Hauptpaketen offen.
 
 A-BODY-03, D13, Referenz-/DAG-Arbeiten und Meridian L07 bleiben offen.
 [Changelog](../CHANGELOG.md) und [Versionsregeln](versioning.md) sind aktuell;

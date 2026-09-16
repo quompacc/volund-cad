@@ -29,9 +29,9 @@ The repository contains a working native CAD vertical slice:
 - modular workspace and command registry with `Solid` as the first product module;
 - native C++ tests and an enforced 600-line source-file limit.
 
-The accepted D12d source baseline passes **69/69 Windows** and **66/66 FreeBSD/Sway**
+The accepted D13a source baseline passes **70/70 Windows** and **67/67 FreeBSD/Sway**
 tests. Persistent document identity in product commands and Meridian acceptance
-remain open; see the [D12d evidence](docs/implementation-plan/evidence/D12d.md).
+remain open; see the [D13a evidence](docs/implementation-plan/evidence/D13a.md).
 
 ## Versions and changes
 

@@ -913,11 +913,11 @@
       ],
       "acceptance": "Neue Datei lässt sich auf beiden Ziel-OCCT-Versionen fachlich identisch laden; A-SAVE-01/02 bleibt gültig. Eine Datei mit Folgefehlern bleibt editierbar und wird nicht als kaputt verworfen.",
       "boundary": "Nur den gewählten Schreibweg produktiv anbieten; alternative D08-Prototypen nicht dauerhaft mitschleppen.",
-      "status": "planned",
+      "status": "in-progress",
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
+      "evidence": ["evidence/D13a.md"],
       "completedCommit": null
     },
     {
