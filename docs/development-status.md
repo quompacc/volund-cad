@@ -6,7 +6,7 @@
 [D10-Abschlussprüfung](implementation-plan/evidence/D10-review.md).
 D10b2b hat die interne Radiantmigration abgeschlossen. D10c/D10d implementieren
 Größen-/Toleranzrollen und exakten Boolean-Anschluss. Die aktuellen Suiten
-bestehen nach [D11l](implementation-plan/evidence/D11l.md) mit **65/65 Windows** und **61/61 FreeBSD/Sway**.
+bestehen nach [D11m](implementation-plan/evidence/D11m.md) mit **66/66 Windows** und **62/62 FreeBSD/Sway**.
 
 **D10 ist auf Nutzerauftrag abgeschlossen; D11 ist begonnen.** Der in der Abschlussprüfung reproduzierte
 ID-Überlauf ist durch Vorabprüfung des vollständigen ID-Bedarfs behoben und mit
@@ -57,9 +57,10 @@ mit **65/65 Windows**, **61/61 FreeBSD/Sway** und beidseitigem Dateiaustausch ge
 [D11l-Prüfung und offene Integrationsgrenzen](implementation-plan/evidence/D11l.md).
 
 D11m ergänzt den Dokumentidentitäts-Lebenszyklus in CadSession einschließlich
-New, Legacy-Open, Save-As und explizitem Anwendungsduplikat. **66/66 Windows**
-bestanden; FreeBSD-Freigabe und -Prüfung stehen aus. Dokument-IDs werden weiterhin
-nicht in VOLUND 16 gespeichert; Desktop-Duplikataktion noch offen.
+New, Legacy-Open, Save-As und explizitem Anwendungsduplikat. **66/66 Windows**,
+**62/62 FreeBSD/Sway** bestanden; **294 Quellhashes identisch**.
+Dokument-IDs werden weiterhin nicht in VOLUND 16 gespeichert; als nächster Block
+folgt die Desktop-Duplikataktion. Implementierung: `9931c10`.
 [D11m-Details](implementation-plan/evidence/D11m.md).
 
 ## Verbindliches Produktziel

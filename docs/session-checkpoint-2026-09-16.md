@@ -2,11 +2,10 @@
 
 ## Verbindlicher Stand
 
-D10 abgeschlossen. **D11a–D11l geprüft, D11 insgesamt weiterhin `in-progress`.**
-D12/D13 und Meridian-Abnahme L07 bleiben offen. D11k: `225e7d8`,
-Mehrkörperanforderung: `f962bef`, lokaler D11l-Zwischenstand: `422e746`.
-D11l wurde nach ausdrücklicher Übertragungsfreigabe auf FreeBSD fertig geprüft.
-Dieser Dokumentationscommit ergänzt die fehlenden Belege; `git log -1 --oneline`.
+D10 abgeschlossen. **D11a–D11m geprüft, D11 insgesamt weiterhin `in-progress`.**
+D12/D13 und Meridian-Abnahme L07 bleiben offen. D11m-Implementierung: `9931c10`.
+Der nachgeholte FreeBSD-Nachweis ist bestanden und wird mit diesem
+Dokumentationscommit ergänzt; `git log -1 --oneline`.
 Kein Push, kein Release-Tag, keine Terra-Übergabe.
 
 ## D11l – Abschluss
@@ -19,7 +18,7 @@ Beidseitiger nativer Dateirundlauf bestanden; alle vier Dateien byteidentisch.
 Alle Builds und Tests beendet. Produktquellen wurden in D11l nicht geändert.
 Siehe [D11l](implementation-plan/evidence/D11l.md) für Feldmatrix und offene Grenzen.
 
-## D11m – lokaler Zwischenstand
+## D11m – Abschluss
 
 CadSession besitzt jetzt DocumentId, `identifiedSnapshot()` und
 `duplicateDocument()`. Bearbeitung/Undo/Redo/Save-As behalten die ID; New, Legacy-
@@ -28,13 +27,10 @@ auch bei erneutem Open derselben Datei neue ID. Duplikat ist ungespeichert/dirty
 ohne Pfad und flüchtige Historie; Parameter, Zähler und Auswahl bleiben erhalten.
 Desktop-Aktion und native dauerhafte Speicherung fehlen noch.
 
-**66/66 Windows** (95,88 s), **294 lokale Quellhashes unverändert**. Kein laufender
-Windows-Prozess. FreeBSD-Freigabe für sieben Quellen plus Skript angefragt, noch
-ohne Antwort. Übertragung erst nach ausdrücklicher Zustimmung. Vorbereitet:
-`build/d11m/d11m-source-delta.tar`, Delta/Manifest/Skript in `D11m-artifacts`.
-Danach FreeBSD vollständig bauen/testen und 294 Quellhashes abgleichen; bestehende
-native Codec-Tests in der Suite erhalten. Siehe [D11m](implementation-plan/evidence/D11m.md).
-Letzter vollständiger beidseitiger Nachweis bleibt D11l.
+**66/66 Windows** (95,88 s), **62/62 FreeBSD/Sway** (34,61 s).
+**294 Quellhashes identisch und unverändert**. Alle Builds und Tests beendet.
+Die sieben Quellen samt Skript wurden ausdrücklich freigegeben und übertragen.
+Belege: [D11m](implementation-plan/evidence/D11m.md) und `D11m-artifacts`.
 
 ## Nächster Block
 
@@ -45,7 +41,7 @@ abgenommen. Die Schema-/Identitätsprüfung bestätigt, dass unabhängige
 Körper direkt unter dem Dokument möglich sind; den UI-/NewBody-Ausbau über
 S03/M01–M04 nicht mit den bereits bestandenen Codec-Tests gleichsetzen.
 
-Zuerst offenen D11m-FreeBSD-Nachweis abschließen. Danach explizites Duplizieren
+Als nächster Block: explizites Duplizieren
 an den bestehenden Desktop-Dokumentablauf anbinden, einschließlich Umgang mit
 ungespeicherten Änderungen. Die Anwendungsmethode existiert; keine zweite
 Dokumentautorität einführen. Native Persistenz bleibt D12/D13 zugeordnet.
@@ -65,10 +61,9 @@ mutabler OCAF-Schattenzustand. Die bestehenden nativen und Produktregressionen e
 - OCCT-Prefix: `<Prüfbaum>/build/d11d-occt/install`; `OpenCASCADE_DIR` ausdrücklich
   auf `<Prefix>/lib/cmake/opencascade` setzen. Das `.tools/occt-freebsd`-Symlinkziel
   bleibt die ursprüngliche gemeinsame Installation, nicht der Prüf-Prefix.
-- Zwei D11l-Testdateien und Prüfskript wurden nach ausdrücklicher Nutzerfreigabe
-  übertragen. Keine Quelldateien gelöscht. Alle 16 OCCT-Laufzeitauflösungen des
-  Schematests zeigen auf den isolierten Prefix.
-- Befehle, Quelllisten, Hashes, Dateirundläufe und Logs stehen in `D11l-artifacts`.
+- Sieben D11m-Quelldateien samt Prüfskript wurden nach ausdrücklicher Freigabe
+  übertragen; keine Quelldateien gelöscht. Die Suite nutzt denselben isolierten Prefix.
+- Befehle, Quelllisten, Hashes, Dateirundläufe und Logs stehen in `D11m-artifacts`.
 
 ## Versionierung
 

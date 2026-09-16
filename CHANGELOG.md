@@ -14,7 +14,7 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 
 - Dokument-ID und identifizierter Snapshot an CadSession: Bearbeitung, Undo/Redo
   und Save-As behalten die ID; New, Legacy-Open und explizites Anwendungsduplikat
-  erzeugen neue Namensräume. D11m lokal mit 66/66 Windows geprüft; FreeBSD offen.
+  erzeugen neue Namensräume. D11m mit 66/66 Windows und 62/62 FreeBSD geprüft.
   Die ID wird noch nicht in VOLUND 16 gespeichert; Desktop-Duplikataktion folgt.
 
 - Gemeinsamer nativer Schematest mit allen vier Featurearten, drei unabhängigen
@@ -73,11 +73,11 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 ### Prüfung und offene Integration
 
 - D10 abgeschlossen; D11 insgesamt weiterhin in Arbeit.
-- Aktueller Quellstand: **65/65 Windows**, **61/61 FreeBSD/Sway**; 292 Quellhashes
+- Aktueller Quellstand: **66/66 Windows**, **62/62 FreeBSD/Sway**; 294 Quellhashes
   identisch. Native D11d-Proben: jeweils **8/8**, beide Austauschrichtungen geprüft.
 - Die dauerhafte Dokument-ID ist noch nicht in produktive New-/Open-/Save-As-
   und Duplikatbefehle eingebunden. Der Produktwriter bleibt **VOLUND 16**.
   Der native Autoritäts-/Store-Wechsel und Meridian-Abnahme bleiben offen.
 - Details und Testbelege: [D10](docs/implementation-plan/evidence/D10.md),
-  [D11l](docs/implementation-plan/evidence/D11l.md),
+  [D11m](docs/implementation-plan/evidence/D11m.md),
   [Entwicklungsstand](docs/development-status.md).
