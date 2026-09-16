@@ -2,35 +2,34 @@
 
 ## Verbindlicher Stand
 
-D10 abgeschlossen. **D11a–D11h geprüft, D11 insgesamt weiterhin `in-progress`.**
-D12/D13 und Meridian-Abnahme L07 bleiben offen. Prüfbasis dieses Blocks: `0d92f48`.
-D11h wird gemeinsam mit Belegen, Changelog und dieser Fortsetzungsdoku auf `main`
+D10 abgeschlossen. **D11a–D11i geprüft, D11 insgesamt weiterhin `in-progress`.**
+D12/D13 und Meridian-Abnahme L07 bleiben offen. Prüfbasis dieses Blocks: `572ac5e`.
+D11i wird gemeinsam mit Belegen, Changelog und dieser Fortsetzungsdoku auf `main`
 committed. Den Abschlusscommit über `git log -1 --oneline` feststellen.
 Kein Push, kein Release-Tag, keine Terra-Übergabe.
 
-## D11h
+## D11i
 
-- `NativePrimitiveCodec` ersetzt die beiden `NativeBoxCodec`-Quelldateien.
-- Boxen und Zylinder mit Join/Cut/Intersect/Separate haben native Parameter,
-  explizite Körper-/Feature-IDs und echte OCAF-Eingabereferenzen.
-- `Main():10` enthält `Primitives.v1` mit eindeutigen Körpern und deren Featuregruppen;
-  `Main():20` enthält die unabhängige Reihenfolge aller Features als Labelreferenzen.
-- Reader validiert bekannte Ziele im selben Datenbaum, Reihenfolge, Parameter,
-  doppelte IDs, Zyklen und die zur Referenzstruktur passende Körperzuordnung.
-- Strukturell gültige, derzeit geometrisch nicht auswertbare Inputs bleiben erhalten.
-- Alte `Boxes.v1`-Dateien sind historische Experimentbelege. Keine veröffentlichte
-  native Produktdatei ist betroffen. Der aktuelle Adapter erkennt nur das neue Layout.
+- `NativePrimitiveCodec` unterstützt nun Box, Zylinder und Skizzengeometrie;
+  `NativeSketchGeometry` kapselt die private Skizzenkodierung.
+- Ebene, Linie/Rechteck/Kreis/Bogen/Ellipse, Element-IDs, Konstruktionsflags,
+  Linienrichtungen und beide Vergabezähler bleiben exakt erhalten.
+- Die native Stützreferenz zeigt auf ein Solid-Feature. Die Skizze liegt in dessen
+  Körpergruppe, erzeugt aber fachlich weiterhin keine eigene Solid-BodyId.
+- Gültige historische skalierte Ebenenachsen werden nicht still normalisiert.
+- Nichtleere Constraints und Extrusionen werden vor Schreibmutationen abgewiesen.
+- `Primitives.v1`, der native Kopf und die Box-/Zylinderkodierung bleiben erhalten.
 
-**61/61 Windows**, **57/57 FreeBSD/Sway**; native Box- und Zylinderdateien in beiden
-Richtungen samt Rückschreiben/-lesen bestanden. **282 Quellhashes identisch**.
-Alle Builds und Tests beendet. [Evidenz und Artefakte](implementation-plan/evidence/D11h.md).
+**62/62 Windows**, **58/58 FreeBSD/Sway**; native Skizzendateien in beiden
+Richtungen samt Rückschreiben/-lesen bestanden. **285 Quellhashes identisch**.
+Alle Builds und Tests beendet. [Evidenz und Artefakte](implementation-plan/evidence/D11i.md).
 
 ## Nächster Block
 
-Native **Skizzengeometrie**: Ebene, Element-IDs und Geometrieparameter verlustfrei
-abbilden. Danach Constraints und Extrusionen mit Profilreferenzen. Featurefamilien
-weiter einzeln gegen immutable Snapshots prüfen; keine nicht unterstützten Daten
-stillschweigend verwerfen. Die vorhandenen Schema-Kopf-/Box-/Zylindertests erhalten.
+Native **Skizzen-Constraints**: vollständige Parameter, Referenzen und IDs ohne
+stillschweigenden Datenverlust abbilden. Danach Extrusionen mit Profilreferenzen.
+Featurefamilien einzeln gegen immutable Snapshots prüfen. Die vorhandenen nativen
+Kopf-/Box-/Zylinder-/Skizzenregressionen erhalten.
 
 Erst nach vollständiger Abbildung folgt der Autoritäts-/Store-Wechsel gemäß
 [ADR 0008](adr/0008-ocaf-binary-persistence.md) und D12/D13. Noch kein produktiver
@@ -45,16 +44,15 @@ produktive persistente DocumentId. Kein paralleler mutabler OCAF-Schattenzustand
   `/home/eduard/src/voelund-p04-20260913`.
 - OCCT-Prefix: `<Prüfbaum>/build/d11d-occt/install`; `OpenCASCADE_DIR` ausdrücklich
   auf `<Prefix>/lib/cmake/opencascade` setzen. Das `.tools/occt-freebsd`-Symlinkziel
-  ist weiterhin die ursprüngliche gemeinsame Installation, nicht der Prüf-Prefix.
-- D11h-Prüfskript überträgt sieben Quellen und entfernt ausschließlich die zwei
-  ersetzten `src/document/NativeBoxCodec`-Dateien im isolierten Prüfbaum.
-  Keine System-OCAF-Bibliotheken zumischen; alle 32 Auflösungen beider nativer Tests
-  zeigen auf den isolierten Prefix.
-- Befehle, Quelllisten, Hashes und Logs stehen in `D11h-artifacts`.
+  bleibt die ursprüngliche gemeinsame Installation, nicht der Prüf-Prefix.
+- Acht D11i-Quelldateien und Prüfskript wurden nach ausdrücklicher Nutzerfreigabe
+  übertragen. Keine Quelldateien gelöscht. Alle 16 OCCT-Laufzeitauflösungen des
+  Skizzentests zeigen auf den isolierten Prefix.
+- Befehle, Quelllisten, Hashes, Dateirundläufe und Logs stehen in `D11i-artifacts`.
 
-## Versionierung und vorheriger Abschluss
+## Versionierung
 
 Basisversion `0.1.0`, Changelog unter `Unreleased` aktuell. Produktversion,
 Anwendungsschema und OCAF-Containerformat 12 bleiben getrennt.
-`0d92f48` enthält den vorherigen Abschluss D11f/g.
+`572ac5e` enthält den vorherigen Abschluss D11h.
 [Vortagsnotiz](session-checkpoint-2026-09-15.md) bleibt historischer Nachweis.

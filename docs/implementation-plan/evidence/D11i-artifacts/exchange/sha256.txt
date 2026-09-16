@@ -1,0 +1,4 @@
+033dceae5de595c4ad8213f3d4b9bb45aadbe4e2a70ccfbd9a8b70abccf312bd  freebsd-freebsd-sketch.cbf
+033dceae5de595c4ad8213f3d4b9bb45aadbe4e2a70ccfbd9a8b70abccf312bd  freebsd-return.cbf
+033dceae5de595c4ad8213f3d4b9bb45aadbe4e2a70ccfbd9a8b70abccf312bd  freebsd-windows-return.cbf
+033dceae5de595c4ad8213f3d4b9bb45aadbe4e2a70ccfbd9a8b70abccf312bd  windows-sketch.cbf

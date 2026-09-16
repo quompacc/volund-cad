@@ -128,9 +128,10 @@ void regressions(const Handle(TDocStd_Application)& app) {
     app->Close(empty);
     auto unsupported = fresh(app);
     auto mixedModel = ModelDocument{};
-    (void)mixedModel.addSketchFeature("Unsupported", ModelDocument::initialBoxId(),
+    const auto unsupportedSketch = mixedModel.addSketchFeature("Sketch", ModelDocument::initialBoxId(),
         {{0, 0, 0, 0, 0, 1, 1, 0, 0},
          SketchElements{{SketchElement{SketchElementId{1}, SketchRectangle{0, 0, 2, 3}}}, 2}});
+    (void)mixedModel.addExtrusionFeature("Unsupported", unsupportedSketch, {2, {}});
     const auto mixed = IdentifiedDocumentSnapshot::create(DocumentSnapshot::capture(mixedModel));
     rejected([&] { NativePrimitiveCodec::write(unsupported, mixed); });
     require(!unsupported->Main().HasChild(), "Rejected family partially wrote native header");

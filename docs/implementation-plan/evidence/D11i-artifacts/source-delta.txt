@@ -1,0 +1,8 @@
+src/document/CMakeLists.txt
+src/document/NativePrimitiveCodec.cpp
+src/document/NativePrimitiveCodec.hpp
+src/document/NativeSketchGeometry.cpp
+src/document/NativeSketchGeometry.hpp
+tests/CMakeLists.txt
+tests/integration/NativeBoxTests.cpp
+tests/integration/NativeSketchTests.cpp

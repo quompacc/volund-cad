@@ -1,5 +1,6 @@
 #include "NativePrimitiveCodec.hpp"
 #include "NativeDocumentMetadata.hpp"
+#include "NativeSketchGeometry.hpp"
 #include "DocumentSerializationDetail.hpp"
 #include <voelund/document/LegacyBodyIdentity.hpp>
 #include <voelund/kernel/NumericPolicy.hpp>
@@ -97,9 +98,20 @@ std::vector<FeatureBodyIdentity> validate(std::span<const FeatureDescriptor> fea
         std::span<const FeatureParameters> parameters, std::uint64_t next) {
     require(features.size() == parameters.size() && features.size() <= maximumFeatureCount &&
             hasIdCapacity(next, 0));
+    std::size_t remainingElements = maximumDocumentRecords - features.size();
     for (std::size_t index = 0; index < features.size(); ++index) {
         const auto& feature = features[index];
         const bool box = feature.kind == FeatureKind::box;
+        if (feature.kind == FeatureKind::sketch) {
+            require(std::holds_alternative<SketchParameters>(parameters[index]) &&
+                feature.id.value() < next && feature.name.size() <= maximumNameBytes &&
+                feature.name.find('\0') == std::string::npos);
+            const auto& sketch = std::get<SketchParameters>(parameters[index]);
+            require(sketch.elements.values.size() <= remainingElements);
+            remainingElements -= sketch.elements.values.size();
+            validateNativeSketchGeometry(sketch);
+            continue;
+        }
         require((box || feature.kind == FeatureKind::cylinder) &&
             (box ? std::holds_alternative<BoxParameters>(parameters[index])
                  : std::holds_alternative<CylinderParameters>(parameters[index])) &&
@@ -115,7 +127,15 @@ std::vector<FeatureBodyIdentity> validate(std::span<const FeatureDescriptor> fea
         }
     }
     // Includes unique/non-reserved IDs, input kinds, missing references and cycles.
-    return legacyBodyIdentities(features, parameters);
+    auto assignments = legacyBodyIdentities(features, parameters);
+    std::map<std::uint64_t, std::size_t> indices;
+    for (std::size_t index = 0; index < features.size(); ++index)
+        indices.emplace(features[index].id.value(), index);
+    // Sketches create no solid. Store them in their validated support body's group.
+    for (std::size_t index = 0; index < features.size(); ++index)
+        if (features[index].kind == FeatureKind::sketch)
+            assignments[index].body = assignments[indices.at(features[index].inputFeature->value())].body;
+    return assignments;
 }
 FeatureParameters parameters(const TDF_Label& feature, bool box) {
     Handle(TDataStd_RealArray) data;
@@ -161,14 +181,19 @@ void NativePrimitiveCodec::write(const Handle(TDocStd_Document)& document,
         const auto native = members.FindChild(members.NbChildren() + 1);
         TDataStd_Integer::Set(members, members.NbChildren());
         const bool box = feature.kind == FeatureKind::box;
-        TDataStd_AsciiString::Set(native.FindChild(1), box ? "box" : "cylinder");
+        const bool sketch = feature.kind == FeatureKind::sketch;
+        TDataStd_AsciiString::Set(native.FindChild(1), box ? "box" : sketch ? "sketch" : "cylinder");
         TDataStd_AsciiString::Set(native.FindChild(2), std::to_string(feature.id.value()).c_str());
         TDataStd_AsciiString::Set(native.FindChild(3), feature.name.c_str());
-        const auto data = values(snapshot.parameters()[index]);
-        auto array = TDataStd_RealArray::Set(native.FindChild(4), 1, static_cast<int>(data.size()));
-        for (int item = 1; item <= static_cast<int>(data.size()); ++item)
-            array->SetValue(item, data[static_cast<std::size_t>(item - 1)]);
-        if (!box) TDataStd_Integer::Set(native.FindChild(6),
+        if (sketch) {
+            writeNativeSketchGeometry(native.FindChild(4), std::get<SketchParameters>(snapshot.parameters()[index]));
+        } else {
+            const auto data = values(snapshot.parameters()[index]);
+            auto array = TDataStd_RealArray::Set(native.FindChild(4), 1, static_cast<int>(data.size()));
+            for (int item = 1; item <= static_cast<int>(data.size()); ++item)
+                array->SetValue(item, data[static_cast<std::size_t>(item - 1)]);
+        }
+        if (!box && !sketch) TDataStd_Integer::Set(native.FindChild(6),
             modeCode(std::get<CylinderParameters>(snapshot.parameters()[index]).resultMode));
         featureLabels.emplace(feature.id.value(), native);
         TDF_Reference::Set(order.FindChild(static_cast<int>(index + 1)), native);
@@ -188,6 +213,7 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
     const auto order = child(root, 20);
     require(text(bodies) == "Primitives.v1");
     const int bodyCount = count(bodies), featureCount = count(order);
+    std::size_t remainingElements = maximumDocumentRecords - static_cast<std::size_t>(featureCount);
     std::vector<Record> records;
     std::map<std::string, std::size_t> labels;
     std::set<std::uint64_t> bodyIds;
@@ -204,11 +230,16 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
             const auto native = child(members, member);
             const auto kind = text(child(native, 1));
             const bool box = kind == "box";
-            require((box || kind == "cylinder") && native.NbChildren() == (box ? 4 : 6));
+            const bool sketch = kind == "sketch";
+            require((box || sketch || kind == "cylinder") && native.NbChildren() == (box ? 4 : sketch ? 5 : 6));
             labels.emplace(entry(native), records.size());
+            FeatureParameters decoded = sketch
+                ? FeatureParameters{readNativeSketchGeometry(child(native, 4), remainingElements)}
+                : parameters(native, box);
+            if (sketch) remainingElements -= std::get<SketchParameters>(decoded).elements.values.size();
             records.push_back({native, bodyId, {FeatureId{id(child(native, 2))},
-                box ? FeatureKind::box : FeatureKind::cylinder, text(child(native, 3)), std::nullopt},
-                parameters(native, box)});
+                box ? FeatureKind::box : sketch ? FeatureKind::sketch : FeatureKind::cylinder,
+                text(child(native, 3)), std::nullopt}, std::move(decoded)});
         }
     }
     require(records.size() == static_cast<std::size_t>(featureCount));
@@ -218,7 +249,7 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
         return found->second;
     };
     for (auto& record : records)
-        if (record.feature.kind == FeatureKind::cylinder)
+        if (record.feature.kind != FeatureKind::box)
             record.feature.inputFeature = records[resolve(child(record.label, 5))].feature.id;
     std::vector<FeatureDescriptor> features;
     std::vector<FeatureParameters> data;

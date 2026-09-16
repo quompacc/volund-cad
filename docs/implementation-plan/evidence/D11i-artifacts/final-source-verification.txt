@@ -1,0 +1,1 @@
+PASS 285 frozen source hashes unchanged after all tests; Windows 62/62, FreeBSD 58/58; both native exchange directions PASS; 16 OCCT libraries from isolated prefix.

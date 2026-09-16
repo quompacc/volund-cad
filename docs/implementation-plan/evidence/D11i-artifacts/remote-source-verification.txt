@@ -1,0 +1,1 @@
+PASS 285 source hashes match frozen Windows manifest

@@ -12,12 +12,16 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 
 ### Hinzugefügt
 
+- Native Skizzengeometrie mit Ebenen, Element-IDs, Parametern, Konstruktionsflags
+  und Stützreferenzen; alle fünf Elementarten samt Vergabezählern verlustfrei.
+  Constraints und Extrusionen bleiben bis zu ihrer Abbildung ausdrücklich gesperrt.
+
 - Native Zylinder-Abbildung für Join/Cut/Intersect/Separate mit echten
   Eingabereferenzen, Körpergruppen und eigenständiger Feature-Reihenfolge.
   Beide Plattformen erhalten Snapshots und neu ausgewertete Geometrie identisch.
 - Native Box-Abbildung mit expliziten Körper-/Feature-IDs, Namen, Reihenfolge und
   Radiant-Parametern. Snapshot-Parität und rekonstruierte BReps auf beiden Plattformen
-  geprüft; andere Featurefamilien werden vor dem Schreiben abgewiesen.
+  geprüft; nicht unterstützte Featurefamilien werden vor dem Schreiben abgewiesen.
 - Privater nativer Dokumentkopf mit Kennung, Schema, Dokument-ID und verlustfreiem
   Feature-Vergabezähler; auf Windows/FreeBSD einschließlich nativem Dateiaustausch
   geprüft, Produktdispatch noch geschlossen.
@@ -49,11 +53,11 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 ### Prüfung und offene Integration
 
 - D10 abgeschlossen; D11 insgesamt weiterhin in Arbeit.
-- Aktueller Quellstand: **61/61 Windows**, **57/57 FreeBSD/Sway**; 282 Quellhashes
+- Aktueller Quellstand: **62/62 Windows**, **58/58 FreeBSD/Sway**; 285 Quellhashes
   identisch. Native D11d-Proben: jeweils **8/8**, beide Austauschrichtungen geprüft.
 - Die dauerhafte Dokument-ID ist noch nicht in produktive New-/Open-/Save-As-
   und Duplikatbefehle eingebunden. Der Produktwriter bleibt **VOLUND 16**.
   Der native Autoritäts-/Store-Wechsel und Meridian-Abnahme bleiben offen.
 - Details und Testbelege: [D10](docs/implementation-plan/evidence/D10.md),
-  [D11h](docs/implementation-plan/evidence/D11h.md),
+  [D11i](docs/implementation-plan/evidence/D11i.md),
   [Entwicklungsstand](docs/development-status.md).
