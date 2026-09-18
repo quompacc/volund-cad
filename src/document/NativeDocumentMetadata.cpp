@@ -1,16 +1,16 @@
 #include "NativeDocumentMetadata.hpp"
-#include <voelund/document/IdCapacity.hpp>
 #include <TDataStd_AsciiString.hxx>
 #include <TDataStd_Integer.hxx>
 #include <charconv>
 #include <limits>
+#include <voelund/document/IdCapacity.hpp>
 
 namespace voelund::document::detail {
 namespace {
 constexpr const char* marker = "VoelundCAD.Native";
 // Private Main() children: marker, application schema, document ID, allocation watermark.
 enum Slot { formatSlot = 1, schemaSlot = 2, identitySlot = 3, watermarkSlot = 4 };
-TDF_Label root(const Handle(TDocStd_Document)& document) {
+TDF_Label root(const Handle(TDocStd_Document) & document) {
     if (document.IsNull())
         throw std::invalid_argument("Missing native document");
     return document->Main();
@@ -28,7 +28,7 @@ void validateWatermark(std::uint64_t value) {
         throw std::invalid_argument("Invalid native feature ID watermark");
 }
 } // namespace
-void initializeNativeMetadata(const Handle(TDocStd_Document)& document,
+void initializeNativeMetadata(const Handle(TDocStd_Document) & document,
                               const NativeDocumentMetadata& metadata) {
     validateWatermark(metadata.nextFeatureId);
     const auto main = root(document);
@@ -41,15 +41,14 @@ void initializeNativeMetadata(const Handle(TDocStd_Document)& document,
     TDataStd_AsciiString::Set(main.FindChild(identitySlot), id.c_str());
     TDataStd_AsciiString::Set(main.FindChild(watermarkSlot), next.c_str());
 }
-NativeDocumentMetadata readNativeMetadata(const Handle(TDocStd_Document)& document) {
+NativeDocumentMetadata readNativeMetadata(const Handle(TDocStd_Document) & document) {
     const auto main = root(document);
     if (text(main, formatSlot) != marker)
         throw std::invalid_argument("Unknown native document marker");
     const auto schemaLabel = main.FindChild(schemaSlot, false);
     Handle(TDataStd_Integer) schema;
-    if (schemaLabel.IsNull() ||
-        !schemaLabel.FindAttribute(TDataStd_Integer::GetID(), schema) ||
-        schema->Get() != nativeSchemaVersion)
+    if (schemaLabel.IsNull() || !schemaLabel.FindAttribute(TDataStd_Integer::GetID(), schema) ||
+        (schema->Get() < 1 || schema->Get() > nativeSchemaVersion))
         throw std::invalid_argument("Unsupported native application schema");
     const auto id = documentIdFromHex(text(main, identitySlot));
     const auto encoded = text(main, watermarkSlot);
@@ -59,6 +58,6 @@ NativeDocumentMetadata readNativeMetadata(const Handle(TDocStd_Document)& docume
         encoded != std::to_string(next))
         throw std::invalid_argument("Invalid native feature ID watermark encoding");
     validateWatermark(next);
-    return {id, next};
+    return {id, next, schema->Get()};
 }
 } // namespace voelund::document::detail

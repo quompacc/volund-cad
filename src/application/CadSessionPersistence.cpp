@@ -1,3 +1,4 @@
+#include "CadSessionEvaluationDetail.hpp"
 #include <algorithm>
 #include <fstream>
 #include <limits>
@@ -13,6 +14,7 @@ namespace {
 struct PreparedLoad {
     document::ModelDocument document;
     features::FeatureGraphResult evaluated;
+    std::shared_ptr<const features::FeatureGraphEvaluation> evaluation;
     std::vector<FeatureRuntimeState> states;
     std::optional<document::DocumentSnapshot> clean;
     std::optional<document::MigrationReport> report;
@@ -20,31 +22,16 @@ struct PreparedLoad {
 
 PreparedLoad prepareLoad(std::istream& input) {
     auto imported = document::DocumentSerializer::readWithReport(input);
+    imported.snapshot = imported.snapshot.markLegacySketchReferencesForRepair();
     auto document = imported.toDocument();
-    std::vector<FeatureRuntimeState> states;
-    for (const auto& feature : document.features())
-        states.push_back({feature.id, FeatureRuntimeStatus::current, {}});
-    features::FeatureGraphResult evaluated;
-    try {
-        if (!document.features().empty())
-            evaluated = features::FeatureGraph{}.evaluate(document);
-    } catch (const features::FeatureEvaluationError& error) {
-        bool failed = false;
-        for (auto& state : states) {
-            if (state.id == error.featureId()) {
-                failed = true;
-                state.status = FeatureRuntimeStatus::error;
-                state.message = error.what();
-            } else if (failed) {
-                state.status = FeatureRuntimeStatus::blocked;
-                state.message = "Blocked by an earlier feature error";
-            }
-        }
-        // No shape from the previously open document may leak into this failed model.
-        evaluated = {};
-    }
-    return {std::move(document), std::move(evaluated), std::move(states),
-            std::move(imported.snapshot), std::move(imported.report)};
+    auto evaluation =
+        features::FeatureGraph{}.evaluateDetailed(document::DocumentSnapshot::capture(document));
+    auto states = detail::runtimeStates(evaluation->report);
+    // Full-scene display remains unavailable on an erroneous Open; valid branches
+    // are exposed separately from the revision-bound evaluation.
+    auto evaluated = evaluation->valid() ? evaluation->result : features::FeatureGraphResult{};
+    return {std::move(document), std::move(evaluated),         std::move(evaluation),
+            std::move(states),   std::move(imported.snapshot), std::move(imported.report)};
 }
 } // namespace
 
@@ -86,6 +73,7 @@ void CadSession::loadDocument(const std::filesystem::path& path) {
     static_assert(std::is_nothrow_move_assignable_v<TopoDS_Shape>);
     static_assert(std::is_nothrow_move_assignable_v<decltype(importReport_)>);
     document_ = std::move(candidate.document);
+    evaluation_ = std::move(candidate.evaluation);
     importReport_ = std::move(candidate.report);
     ++generation_;
     geometryStamp_ = valid ? std::optional<DocumentStamp>{sceneStatus().document} : std::nullopt;

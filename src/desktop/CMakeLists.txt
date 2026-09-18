@@ -4,6 +4,10 @@ add_library(
     DocumentActions.cpp
     MainWindow.cpp
     MainWindowParameters.cpp
+    MainWindowReferenceRepair.cpp
+    ReferenceRepairDialog.cpp
+    DocumentRepairDialog.cpp
+    ReferenceRepairPreview.cpp
     MainWindowSupport.cpp
     MeasurementInput.cpp
     ModelTreePanel.cpp
@@ -13,6 +17,7 @@ add_library(
     SketchEditorCreation.cpp
     SketchEditorPresentation.cpp
     SketchEditorToolController.cpp
+    SketchEditorStart.cpp
     SketchExtrusionToolController.cpp
     SketchViewAdapter.cpp
     ToolPanelHost.cpp

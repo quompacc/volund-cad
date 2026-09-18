@@ -4,9 +4,9 @@
   "auditedCommit": "1b78229",
   "status": "implementation-started",
   "counts": {
-    "total": 110,
-    "throughG4": 90,
-    "g5": 20
+    "total": 121,
+    "throughG4": 92,
+    "g5": 29
   },
   "globalGates": [
     {
@@ -44,6 +44,7 @@
     "D14",
     "R01",
     "R02",
+    "AI01",
     "R03",
     "R04",
     "R05",
@@ -55,6 +56,7 @@
     "U01",
     "U02",
     "U03",
+    "AI02",
     "U04",
     "U05",
     "U06",
@@ -125,7 +127,16 @@
     "X17",
     "X18",
     "X19",
-    "X20"
+    "X20",
+    "AI03",
+    "AI04",
+    "FEM01",
+    "FEM02",
+    "FEM03",
+    "OPT01",
+    "OPT02",
+    "OPT03",
+    "OPT04"
   ],
   "packets": [
     {
@@ -643,7 +654,9 @@
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": ["evidence/D03.md"],
+      "evidence": [
+        "evidence/D03.md"
+      ],
       "completedCommit": null
     },
     {
@@ -669,7 +682,9 @@
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "design-and-proof",
-      "evidence": ["evidence/D04.md"],
+      "evidence": [
+        "evidence/D04.md"
+      ],
       "completedCommit": null
     },
     {
@@ -694,7 +709,9 @@
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": ["evidence/D05.md"],
+      "evidence": [
+        "evidence/D05.md"
+      ],
       "completedCommit": null
     },
     {
@@ -719,7 +736,9 @@
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": ["evidence/D06.md"],
+      "evidence": [
+        "evidence/D06.md"
+      ],
       "completedCommit": null
     },
     {
@@ -746,7 +765,10 @@
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": ["evidence/D07.md", "evidence/D07f.md"],
+      "evidence": [
+        "evidence/D07.md",
+        "evidence/D07f.md"
+      ],
       "completedCommit": null
     },
     {
@@ -774,7 +796,10 @@
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "design-and-proof",
-      "evidence": ["evidence/D08.md", "../adr/0008-ocaf-binary-persistence.md"],
+      "evidence": [
+        "evidence/D08.md",
+        "../adr/0008-ocaf-binary-persistence.md"
+      ],
       "completedCommit": null
     },
     {
@@ -807,7 +832,9 @@
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": ["evidence/D09.md"],
+      "evidence": [
+        "evidence/D09.md"
+      ],
       "completedCommit": null
     },
     {
@@ -834,7 +861,16 @@
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": ["evidence/D10.md", "evidence/D10b.md", "evidence/D10b2.md", "evidence/D10b2b.md", "evidence/D10c.md", "evidence/D10d.md", "evidence/D10-review.md", "evidence/D10e.md"],
+      "evidence": [
+        "evidence/D10.md",
+        "evidence/D10b.md",
+        "evidence/D10b2.md",
+        "evidence/D10b2b.md",
+        "evidence/D10c.md",
+        "evidence/D10d.md",
+        "evidence/D10-review.md",
+        "evidence/D10e.md"
+      ],
       "completedCommit": "6737465afe6af30758147471035a5582e466342f"
     },
     {
@@ -862,8 +898,23 @@
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": ["evidence/D11a.md", "evidence/D11b.md", "evidence/D11c.md", "evidence/D11d.md", "evidence/D11e.md", "evidence/D11f.md", "evidence/D11g.md", "evidence/D11h.md", "evidence/D11i.md", "evidence/D11j.md", "evidence/D11k.md", "evidence/D11l.md", "evidence/D11m.md", "evidence/D11n.md",
-      "evidence/D11-review.md"],
+      "evidence": [
+        "evidence/D11a.md",
+        "evidence/D11b.md",
+        "evidence/D11c.md",
+        "evidence/D11d.md",
+        "evidence/D11e.md",
+        "evidence/D11f.md",
+        "evidence/D11g.md",
+        "evidence/D11h.md",
+        "evidence/D11i.md",
+        "evidence/D11j.md",
+        "evidence/D11k.md",
+        "evidence/D11l.md",
+        "evidence/D11m.md",
+        "evidence/D11n.md",
+        "evidence/D11-review.md"
+      ],
       "completedCommit": "b71a081740a70161e106bef9942f44d195ccf27b"
     },
     {
@@ -890,7 +941,13 @@
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": ["evidence/D12a.md", "evidence/D12b.md", "evidence/D12c.md", "evidence/D12d.md", "evidence/D12e.md"],
+      "evidence": [
+        "evidence/D12a.md",
+        "evidence/D12b.md",
+        "evidence/D12c.md",
+        "evidence/D12d.md",
+        "evidence/D12e.md"
+      ],
       "completedCommit": "7d3e68b5c518166f26aeb046d80dfa4eefe1b383"
     },
     {
@@ -913,11 +970,21 @@
       ],
       "acceptance": "Neue Datei lässt sich auf beiden Ziel-OCCT-Versionen fachlich identisch laden; A-SAVE-01/02 bleibt gültig. Eine Datei mit Folgefehlern bleibt editierbar und wird nicht als kaputt verworfen.",
       "boundary": "Nur den gewählten Schreibweg produktiv anbieten; alternative D08-Prototypen nicht dauerhaft mitschleppen.",
-      "status": "in-progress",
+      "status": "done",
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": ["evidence/D13a.md", "evidence/D13b1.md", "evidence/D13b2.md", "evidence/D13b2-structure.md", "evidence/D13b2-attributes.md", "evidence/D13b2-limits.md", "evidence/D13b-review.md", "evidence/D13c.md"],
+      "evidence": [
+        "evidence/D13a.md",
+        "evidence/D13b1.md",
+        "evidence/D13b2.md",
+        "evidence/D13b2-structure.md",
+        "evidence/D13b2-attributes.md",
+        "evidence/D13b2-limits.md",
+        "evidence/D13b-review.md",
+        "evidence/D13c.md",
+        "evidence/D13d.md"
+      ],
       "completedCommit": null
     },
     {
@@ -940,11 +1007,13 @@
       ],
       "acceptance": "A-MIG-01, A-TXN-01/02, A-SAVE-01/02 bestehen. Mindestens ein Fixture je historischem Versionssprung belegt dessen Default-/Constraintsemantik. G1-Bericht nennt noch offene Plattformnachweise.",
       "boundary": "Kein Entfernen alter Fixtures nach erfolgreicher Migration.",
-      "status": "planned",
+      "status": "done",
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
+      "evidence": [
+        "evidence/D14.md"
+      ],
       "completedCommit": null
     },
     {
@@ -966,11 +1035,13 @@
       ],
       "acceptance": "Zwei unabhängige Körper: Fehler in einem Zweig blockiert nur dessen Nachfolger. Diamant-Abhängigkeit wird einmal pro benötigtem Zustand ausgewertet. Zyklusänderung wird atomar abgelehnt. A-DAG-01 besteht.",
       "boundary": "Noch kein Threadpool; deterministische synchrone Auswertung zuerst.",
-      "status": "planned",
+      "status": "done",
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
+      "evidence": [
+        "evidence/R01.md"
+      ],
       "completedCommit": null
     },
     {
@@ -992,11 +1063,13 @@
       ],
       "acceptance": "Architekturprüfung kann für jeden Fixturefall vor Implementierung Resolved/Missing/Ambiguous vorhersagen. Kein TopExp-Index und keine normale Distanz ist alleinige Identität.",
       "boundary": "Entscheidungspaket; keine universelle automatische Naming-Garantie behaupten.",
-      "status": "planned",
+      "status": "done",
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "design-and-proof",
-      "evidence": [],
+      "evidence": [
+        "evidence/R02.md"
+      ],
       "completedCommit": null
     },
     {
@@ -1018,11 +1091,13 @@
       ],
       "acceptance": "Bekannte Boxfläche und Kante nach einfachem Cut korrekt verfolgen; gelöschte Fläche wird Missing, gesplittete Fläche nach Vertrag eindeutig oder Ambiguous. Beide OCCT-Versionen vergleichen.",
       "boundary": "Fillet-/Chamfer-History erst mit den betreffenden Operationen ergänzen.",
-      "status": "planned",
+      "status": "done",
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
+      "evidence": [
+        "evidence/R03.md"
+      ],
       "completedCommit": null
     },
     {
@@ -1044,11 +1119,17 @@
       ],
       "acceptance": "A-REF-01/02 besteht: zwei parallele Flächen werden nicht vertauscht; Rotation trägt die Skizze korrekt; Löschung bleibt sichtbar reparaturbedürftig.",
       "boundary": "Keine stillschweigende Wiederverwendung der alten Ebene als gültiges Ergebnis.",
-      "status": "planned",
+      "status": "done",
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
+      "evidence": [
+        "evidence/R04.md",
+        "R04-plan.md",
+        "evidence/R04a.md",
+        "evidence/R04b.md",
+        "evidence/R04c.md"
+      ],
       "completedCommit": null
     },
     {
@@ -1069,11 +1150,18 @@
       ],
       "acceptance": "Tessellierungsdichte ändern beeinflusst Constraints nicht. Neue Kante vor der referenzierten Kante fügt keine falsche Zuordnung ein. Kurven-Endpunkt/Parameter bleiben nach Recompute konsistent.",
       "boundary": "Keine allgemeine Projektionsfläche jenseits planarer Skizzen in v1.",
-      "status": "planned",
+      "status": "done",
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
+      "evidence": [
+        "R05-plan.md",
+        "evidence/R05.md",
+        "evidence/R05a.md",
+        "evidence/R05b.md",
+        "evidence/R05b-P.md",
+        "evidence/R05b-U.md"
+      ],
       "completedCommit": null
     },
     {
@@ -1084,22 +1172,22 @@
         "D13"
       ],
       "files": [
-        "src/document/DocumentSerializer.cpp",
-        "src/application/CadSessionSketchProfiles.cpp",
-        "src/desktop/FeaturePropertiesPanel.cpp"
+        "src/application/CadSessionPersistence.cpp",
+        "src/application/CadSessionReferenceRepair.cpp",
+        "src/desktop/ReferenceRepairDialog.cpp"
       ],
       "steps": [
-        "Alte Supportfelder beim Import gegen unveränderte Ausgangsgeometrie auflösen und eindeutige Herkunft speichern.",
+        "Alte Referenzdaten erhalten; ohne belegte ursprüngliche Identität MigrationNeedsRepair setzen. Geometrische Kandidaten nur vorschlagen und ausdrücklich zuordnen.",
         "Mehrdeutige Fälle als MigrationNeedsRepair mit Kandidaten anbieten; Benutzerzuweisung als einzelne Transaktion speichern.",
         "Reparatur rückgängig machen und Save/Open testen."
       ],
-      "acceptance": "Alte Datei mit eindeutiger Fläche migriert; zwei gleichwertige Kandidaten erzeugen keine Zufallsauswahl. A-REF-03 besteht, inklusive Undo und erneutem Öffnen.",
+      "acceptance": "Alte Datei mit ausdrücklich gewählter Fläche repariert; Open und lesende Prüfung erzeugen keine automatische Zuordnung. R06d: ausdrücklicher Auto-Klick übernimmt eindeutige Supportvorschläge gemeinsam, Mehrdeutigkeit bleibt offen; ein Undo je Batch. A-REF-03 besteht, inklusive Undo und erneutem Öffnen.",
       "boundary": "Keine Änderung an Originaldatei ohne Save.",
-      "status": "planned",
+      "status": "done",
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
+      "evidence": ["R06-plan.md", "evidence/R06a.md", "evidence/R06b.md", "evidence/R06c.md", "evidence/R06d.md", "evidence/R06.md"],
       "completedCommit": null
     },
     {
@@ -1290,7 +1378,8 @@
       "title": "Ribbon an CommandRegistry anbinden",
       "deps": [
         "U02",
-        "U03"
+        "U03",
+        "AI02"
       ],
       "files": [
         "src/workspaces/CommandRegistry.cpp",
@@ -1301,7 +1390,8 @@
       "steps": [
         "Ribbon-Elemente aus registrierten Befehlen und Workspace-Metadaten erzeugen/binden.",
         "Shortcuts und Kontextmenü verwenden dieselbe Command-ID und Zustandsprüfung.",
-        "Aktivierung bei Auswahl-/Tool-/Dokumentwechsel aktualisieren; No-op-Routing auf Select entfernen."
+        "Aktivierung bei Auswahl-/Tool-/Dokumentwechsel aktualisieren; No-op-Routing auf Select entfernen.",
+        "Gemeinsame zielgerichtete Application-Aktionen aus AI02 verwenden; Auswahl nur beim Erstellen des Requests auflösen."
       ],
       "acceptance": "Ein Ribbon-Klick und der zugehörige Shortcut lösen identischen Application-Befehl aus. Unbekannte ID liefert Diagnose. Relation/Dimension/Trim/Offset gehen nicht versehentlich auf Select.",
       "boundary": "Noch nicht implementierte Fachtools bleiben deaktiviert.",
@@ -3334,6 +3424,267 @@
       "kind": "implementation-or-acceptance",
       "evidence": [],
       "completedCommit": null
+    },
+    {
+      "id": "AI01",
+      "title": "Erweiterungsgrenzen und unmittelbare Grundlagen festlegen",
+      "deps": [
+        "D07",
+        "D11",
+        "R02"
+      ],
+      "files": [
+        "include/voelund/application/CadSession.hpp",
+        "docs/implementation-plan/11-ki-fem-optimierung.md"
+      ],
+      "steps": [
+        "Aktions- und Analysevertrag gegen bestehende Identität, Revision und Transaktionen prüfen.",
+        "Vor größerer Implementierung Unterpakete nach Kapitel 11 und Paketgrenze festlegen."
+      ],
+      "acceptance": "ADR 0010, K12/K13, Folgepakete und geprüfter Plan; keine KI-/FEM-Implementierungsbehauptung.",
+      "boundary": "Umfang und Nicht-Ziele laut eigenem Abschnitt in Kapitel 11; keine neuen Runtime-Abhängigkeiten ohne konkrete Entscheidung.",
+      "status": "done",
+      "gate": "G1",
+      "chapter": "11-ki-fem-optimierung.md",
+      "kind": "design-or-decision",
+      "evidence": "evidence/AI01.md",
+      "completedCommit": null
+    },
+    {
+      "id": "AI02",
+      "title": "Gemeinsame zielgerichtete CAD-Aktionen im Anwendungskern",
+      "deps": [
+        "AI01",
+        "R10",
+        "U02"
+      ],
+      "files": [
+        "include/voelund/application/CadSession.hpp",
+        "docs/implementation-plan/11-ki-fem-optimierung.md"
+      ],
+      "steps": [
+        "Request und Kontext, explizite Ziele, Standprüfung, Kandidat/Commit und gemeinsame Shell-Anbindung liefern.",
+        "Vor größerer Implementierung Unterpakete nach Kapitel 11 und Paketgrenze festlegen."
+      ],
+      "acceptance": "A-ACTION-01; identische GUI-/Direktresultate, keine veralteten oder doppelten Mutationen, ein Undo je Kandidat.",
+      "boundary": "Umfang und Nicht-Ziele laut eigenem Abschnitt in Kapitel 11; keine neuen Runtime-Abhängigkeiten ohne konkrete Entscheidung.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "11-ki-fem-optimierung.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": null,
+      "completedCommit": null
+    },
+    {
+      "id": "AI03",
+      "title": "Integrierten nativen Konstruktionsassistenten liefern",
+      "deps": [
+        "AI02",
+        "L10"
+      ],
+      "files": [
+        "include/voelund/application/CadSession.hpp",
+        "docs/implementation-plan/11-ki-fem-optimierung.md"
+      ],
+      "steps": [
+        "Modelladapter und Qt-Workflow mit Auswahl, Aktionsvorschlag, Vorschau und bearbeitbaren Features liefern.",
+        "Vor größerer Implementierung Unterpakete nach Kapitel 11 und Paketgrenze festlegen."
+      ],
+      "acceptance": "A-AI-01; Adapterfixtures und separat protokollierter echter Modelllauf, Abbruch und Dokumentwechsel geprüft.",
+      "boundary": "Umfang und Nicht-Ziele laut eigenem Abschnitt in Kapitel 11; keine neuen Runtime-Abhängigkeiten ohne konkrete Entscheidung.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "11-ki-fem-optimierung.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": null,
+      "completedCommit": null
+    },
+    {
+      "id": "AI04",
+      "title": "Optionalen MCP-Zugang bereitstellen",
+      "deps": [
+        "AI02",
+        "L10"
+      ],
+      "files": [
+        "include/voelund/application/CadSession.hpp",
+        "docs/implementation-plan/11-ki-fem-optimierung.md"
+      ],
+      "steps": [
+        "Versionierte Tools und Kontextabfragen auf dieselbe Aktionsgrenze abbilden.",
+        "Vor größerer Implementierung Unterpakete nach Kapitel 11 und Paketgrenze festlegen."
+      ],
+      "acceptance": "A-ACTION-01 über tatsächlichen Client, Reconnect und Wiederholung ohne Doppelmutation.",
+      "boundary": "Umfang und Nicht-Ziele laut eigenem Abschnitt in Kapitel 11; keine neuen Runtime-Abhängigkeiten ohne konkrete Entscheidung.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "11-ki-fem-optimierung.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": null,
+      "completedCommit": null
+    },
+    {
+      "id": "FEM01",
+      "title": "Statikvertrag und Wiederverwendung nachweisen",
+      "deps": [
+        "AI01",
+        "L10"
+      ],
+      "files": [
+        "include/voelund/application/CadSession.hpp",
+        "docs/implementation-plan/11-ki-fem-optimierung.md"
+      ],
+      "steps": [
+        "Begrenzte lineare Statik, Solver/Mesher-Spike, FreeCAD-Portierbarkeit, Lizenzen und Plattformen prüfen.",
+        "Vor größerer Implementierung Unterpakete nach Kapitel 11 und Paketgrenze festlegen."
+      ],
+      "acceptance": "Dependency-ADR, Eingabe-/Ergebnisvertrag und konkrete FEM02/03-Unterpakete; Referenzrechnung auf beiden Plattformen.",
+      "boundary": "Umfang und Nicht-Ziele laut eigenem Abschnitt in Kapitel 11; keine neuen Runtime-Abhängigkeiten ohne konkrete Entscheidung.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "11-ki-fem-optimierung.md",
+      "kind": "design-or-decision",
+      "evidence": null,
+      "completedCommit": null
+    },
+    {
+      "id": "FEM02",
+      "title": "Nativen Analysefall und Berechnung liefern",
+      "deps": [
+        "FEM01"
+      ],
+      "files": [
+        "include/voelund/application/CadSession.hpp",
+        "docs/implementation-plan/11-ki-fem-optimierung.md"
+      ],
+      "steps": [
+        "Analysefall, stabile CAD-Referenzen, Netz, Prozesssteuerung und revisionsgebundene Ergebnisse implementieren.",
+        "Vor größerer Implementierung Unterpakete nach Kapitel 11 und Paketgrenze festlegen."
+      ],
+      "acceptance": "A-FEM-01 einschließlich Save/Open, alter Jobs, Abbruch und unveränderter CAD-Geometrie.",
+      "boundary": "Umfang und Nicht-Ziele laut eigenem Abschnitt in Kapitel 11; keine neuen Runtime-Abhängigkeiten ohne konkrete Entscheidung.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "11-ki-fem-optimierung.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": null,
+      "completedCommit": null
+    },
+    {
+      "id": "FEM03",
+      "title": "Ergebnisdarstellung und numerische Qualität abnehmen",
+      "deps": [
+        "FEM02"
+      ],
+      "files": [
+        "include/voelund/application/CadSession.hpp",
+        "docs/implementation-plan/11-ki-fem-optimierung.md"
+      ],
+      "steps": [
+        "Verformung, Spannungen, Aktualität und Einheiten darstellen; Konvergenz und Gleichgewicht nachweisen.",
+        "Vor größerer Implementierung Unterpakete nach Kapitel 11 und Paketgrenze festlegen."
+      ],
+      "acceptance": "A-FEM-01 auf Windows/FreeBSD, analytische Vergleichsfälle, Netzstudie und eigene Bildprüfung.",
+      "boundary": "Umfang und Nicht-Ziele laut eigenem Abschnitt in Kapitel 11; keine neuen Runtime-Abhängigkeiten ohne konkrete Entscheidung.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "11-ki-fem-optimierung.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": null,
+      "completedCommit": null
+    },
+    {
+      "id": "OPT01",
+      "title": "Vorhandene CAD-Parameter optimieren",
+      "deps": [
+        "AI02",
+        "FEM03"
+      ],
+      "files": [
+        "include/voelund/application/CadSession.hpp",
+        "docs/implementation-plan/11-ki-fem-optimierung.md"
+      ],
+      "steps": [
+        "Begrenzte Parameter mit Zielen und Nebenbedingungen isoliert variieren und gewählte Variante atomar übernehmen.",
+        "Vor größerer Implementierung Unterpakete nach Kapitel 11 und Paketgrenze festlegen."
+      ],
+      "acceptance": "A-OPT-01 mit ungültigen Varianten, unerreichbarem Ziel, Abbruch, Reproduzierbarkeit und Undo.",
+      "boundary": "Umfang und Nicht-Ziele laut eigenem Abschnitt in Kapitel 11; keine neuen Runtime-Abhängigkeiten ohne konkrete Entscheidung.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "11-ki-fem-optimierung.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": null,
+      "completedCommit": null
+    },
+    {
+      "id": "OPT02",
+      "title": "Topologie- und Fertigungsvertrag experimentell bestimmen",
+      "deps": [
+        "FEM03"
+      ],
+      "files": [
+        "include/voelund/application/CadSession.hpp",
+        "docs/implementation-plan/11-ki-fem-optimierung.md"
+      ],
+      "steps": [
+        "Begrenzten 3D-Lastfall, Design-/Erhaltungsbereiche, Mindestgröße und ein Fertigungsverfahren mit Optimierer evaluieren.",
+        "Vor größerer Implementierung Unterpakete nach Kapitel 11 und Paketgrenze festlegen."
+      ],
+      "acceptance": "Reproduzierbares Experiment, Lizenz-/Plattformnachweis, Ergebnisrepräsentation und Unterpakete für OPT03/04.",
+      "boundary": "Umfang und Nicht-Ziele laut eigenem Abschnitt in Kapitel 11; keine neuen Runtime-Abhängigkeiten ohne konkrete Entscheidung.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "11-ki-fem-optimierung.md",
+      "kind": "design-or-decision",
+      "evidence": null,
+      "completedCommit": null
+    },
+    {
+      "id": "OPT03",
+      "title": "Begrenzte organische Formoptimierung liefern",
+      "deps": [
+        "OPT02"
+      ],
+      "files": [
+        "include/voelund/application/CadSession.hpp",
+        "docs/implementation-plan/11-ki-fem-optimierung.md"
+      ],
+      "steps": [
+        "Beschlossenen Optimierer anbinden und Feld-/Meshvarianten mit Zielerreichung und Erhaltungsbereichen liefern.",
+        "Vor größerer Implementierung Unterpakete nach Kapitel 11 und Paketgrenze festlegen."
+      ],
+      "acceptance": "A-TOPO-01 bis Feld/Mesh, erneute Analyse, Abbruch und Ausgangsteil unverändert.",
+      "boundary": "Umfang und Nicht-Ziele laut eigenem Abschnitt in Kapitel 11; keine neuen Runtime-Abhängigkeiten ohne konkrete Entscheidung.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "11-ki-fem-optimierung.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": null,
+      "completedCommit": null
+    },
+    {
+      "id": "OPT04",
+      "title": "Optimierungsergebnis in nutzbare CAD-Geometrie überführen",
+      "deps": [
+        "OPT03"
+      ],
+      "files": [
+        "include/voelund/application/CadSession.hpp",
+        "docs/implementation-plan/11-ki-fem-optimierung.md"
+      ],
+      "steps": [
+        "Begrenzten Rückführungsweg mit Anschlusserhaltung, gültigem Solid und Abweichungsnachweis liefern.",
+        "Vor größerer Implementierung Unterpakete nach Kapitel 11 und Paketgrenze festlegen."
+      ],
+      "acceptance": "A-TOPO-01 einschließlich erneuter FEM der Rückführung, Bearbeitbarkeit und STEP-Rücklauf.",
+      "boundary": "Umfang und Nicht-Ziele laut eigenem Abschnitt in Kapitel 11; keine neuen Runtime-Abhängigkeiten ohne konkrete Entscheidung.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "11-ki-fem-optimierung.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": null,
+      "completedCommit": null
     }
   ],
   "executionPolicy": {
@@ -3350,9 +3701,20 @@
     "screenshotsMustActuallyBeInspected": true,
     "baselineUpdatesMustBeJustified": true,
     "routineHumanApprovalRequired": false,
+    "freebsdTestAuthorization": {
+      "grantedBy": "explicit user instruction",
+      "date": "2026-09-18",
+      "scope": "project-wide, across sessions and new or corrected work-package payloads",
+      "host": "eduard@192.168.1.238",
+      "workspace": "/home/eduard/src/voelund-p04-20260913/",
+      "allowed": ["transfer project source, tests, fixtures, build scripts and hash lists", "run builds and tests", "retrieve and inspect test artifacts including logs, native test files and UI captures"],
+      "repromptPerPayloadRequired": false,
+      "reference": "10-autonome-umsetzung.md#dauerhafte-freigabe-für-den-freebsd-prüfrechner"
+    },
     "blockedPacketDoesNotBlockIndependentAuthorizedWork": true,
     "humanFallback": "Only a prepared, specific remainder after feasible self-checks: inaccessible environment, unobservable physical effect, unresolved product preference or genuinely required authorization.",
     "preserveEvidenceOfNotRunChecks": true,
     "assumeBackgroundExecution": false
-  }
+  },
+  "updatedDate": "2026-09-18"
 }

@@ -3,6 +3,10 @@ add_library(voelund_document STATIC
     LegacyDocumentImporter.cpp
     LegacyBodyIdentity.cpp
     DocumentSnapshot.cpp
+    SubshapeReference.cpp
+    EdgeReference.cpp
+    NativeProjectedEdge.cpp
+    NativeSketchSupport.cpp
     DocumentId.cpp
     DocumentIdGenerator.cpp
     IdentifiedDocumentSnapshot.cpp

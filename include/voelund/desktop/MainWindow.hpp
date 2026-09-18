@@ -24,6 +24,8 @@ class MainWindow final : public QMainWindow {
     void closeEvent(QCloseEvent* event) override;
 
   private:
+    void repairReferences();
+    void repairAllReferences();
     void syncGeometryStatus();
     void applyParameterCommand(
         std::function<application::CommandResult(application::ErrorDisposition)> command);

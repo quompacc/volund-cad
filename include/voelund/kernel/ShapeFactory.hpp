@@ -2,6 +2,7 @@
 
 #include <voelund/kernel/Angle.hpp>
 #include <voelund/kernel/OcctCompatibility.hpp>
+#include <voelund/kernel/OperationHistory.hpp>
 
 #include <TopoDS_Shape.hxx>
 
@@ -40,6 +41,12 @@ struct CylinderDefinition final {
 
 class ShapeFactory final {
   public:
+    [[nodiscard]] static ShapeOperationResult makeBoxWithHistory(const BoxDimensions& dimensions);
+    [[nodiscard]] static ShapeOperationResult
+    makeCylinderWithHistory(const CylinderDefinition& definition);
+    [[nodiscard]] static ShapeOperationResult
+    applyTransformWithHistory(const TopoDS_Shape& shape, double pivotX, double pivotY,
+                              double pivotZ, const RigidTransform& transform);
     // All entry points reject invalid inputs and throw KernelError when OCCT
     // rejects an operation or produces an invalid result.
     [[nodiscard]] static TopoDS_Shape makeBox(const BoxDimensions& dimensions);

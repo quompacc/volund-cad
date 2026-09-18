@@ -1,0 +1,4 @@
+Windows/OCCT 8.0.1 and FreeBSD/OCCT 7.9.3 contour fixture outputs identical.
+rectangle roles, analytic circle/ellipse frame, seam, construction exclusion and reordered elements passed
+connected line/arc builder identity, reversed wire orientation, prism caps, density and Boolean split passed
+profile selection, placed/reference contours, independent cache, undo/redo, native reconstruction and replacement identity passed

@@ -39,12 +39,14 @@ Die bestehende genehmigte Gestaltung bleibt erhalten. K03/K04/K07 sind Pflichtve
 
 ## U04 – Ribbon an CommandRegistry anbinden
 
-- **Voraussetzungen:** U02, U03.
+- **Voraussetzungen:** U02, U03, AI02.
 - **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08; `src/workspaces/CommandRegistry.cpp`, `src/modules/solid/SolidWorkspaceModule.cpp`, `src/desktop/WorkspaceToolbar.cpp`, `apps/voelund-ui-preview/PreviewWindowRibbon.cpp`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
 - **Auftrag:**
   1. Ribbon-Elemente aus registrierten Befehlen und Workspace-Metadaten erzeugen/binden.
   2. Shortcuts und Kontextmenü verwenden dieselbe Command-ID und Zustandsprüfung.
   3. Aktivierung bei Auswahl-/Tool-/Dokumentwechsel aktualisieren; No-op-Routing auf Select entfernen.
+  4. Gemeinsame zielgerichtete Application-Aktionen aus AI02 verwenden; Auswahl nur
+     beim Erstellen des Requests auflösen. Keine parallele KI-/GUI-Fachlogik einführen.
 - **Abnahme:** Ein Ribbon-Klick und der zugehörige Shortcut lösen identischen Application-Befehl aus. Unbekannte ID liefert Diagnose. Relation/Dimension/Trim/Offset gehen nicht versehentlich auf Select.
 - **Grenze:** Noch nicht implementierte Fachtools bleiben deaktiviert.
 

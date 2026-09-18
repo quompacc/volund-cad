@@ -1,0 +1,9 @@
+include/voelund/application/CadSession.hpp
+include/voelund/application/SketchReferenceInspection.hpp
+include/voelund/features/SketchReferenceReview.hpp
+src/application/CadSessionReferenceInspection.cpp
+src/application/CMakeLists.txt
+src/features/CMakeLists.txt
+src/features/SketchReferenceReview.cpp
+tests/CMakeLists.txt
+tests/integration/SketchReferenceReviewTests.cpp

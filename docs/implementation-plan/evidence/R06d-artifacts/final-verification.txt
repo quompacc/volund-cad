@@ -1,0 +1,15 @@
+R06d final verification – 2026-09-18
+Windows complete suite: 92/92, 124.89 s.
+Final compact Details button: rebuilt; 3/3 UI/source-limit checks, 4.86 s.
+FreeBSD complete final build/suite: 89/89, 35.51 s.
+375 source/fixture hashes identical; 13 source/test files relative to R06c.
+3 identical semantic fixture result lines (platform diagnostics excluded).
+Native repaired batch file: Windows -> FreeBSD and FreeBSD -> Windows, exit 0.
+12 final UI captures viewed: 6 Windows + 6 FreeBSD.
+git diff --check passed; packets.json parses.
+Initial fixture mistake retained in initial logs; fixed and full suites rerun.
+Schema 4 / readers 1–4 / BinOcaf 12 unchanged.
+Verification preceded the user-requested local day-end commit; no push.
+Initially launched the separate UI preview in error; corrected to apps/voelund-cad/voelund-cad.exe, process 23096.
+
+User manual feedback: sehr gut. Scheint zu funktionieren.

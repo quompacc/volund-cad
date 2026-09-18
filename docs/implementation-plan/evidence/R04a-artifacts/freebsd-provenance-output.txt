@@ -1,0 +1,4 @@
+coplanar identity, resized/rotated source and independent cache passed
+Boolean ancestry, deletion, undo/redo and extrusion input lineage passed
+split ambiguity and persistent history gap passed
+

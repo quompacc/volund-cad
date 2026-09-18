@@ -1,5 +1,6 @@
 #pragma once
 
+#include <voelund/application/SceneStatus.hpp>
 #include <voelund/document/ModelDocument.hpp>
 #include <voelund/viewport/CadViewport.hpp>
 
@@ -39,6 +40,8 @@ class SketchExtrusionToolController final {
     std::function<void(const QString&)> statusChanged_;
     std::optional<viewport::SketchRectangleResult> result_;
     std::optional<document::FeatureId> profileSketch_;
+    std::optional<document::SketchSupportBinding> supportBinding_;
+    std::optional<application::DocumentStamp> supportStamp_;
     std::vector<document::SketchProfileId> profileIds_;
     double distance_{1.0};
     bool active_{false};

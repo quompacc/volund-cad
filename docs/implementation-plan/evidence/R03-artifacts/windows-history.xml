@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Win32-ninja"
+	tests="1"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname="megatron"
+	time="0"
+	timestamp="2026-09-17T17:16:51"
+	>
+	<testcase name="kernel.operation_history" classname="kernel.operation_history" time="0.353228" status="run">
+		<properties>
+			<property name="cmake_labels" value="integration;kernel;regression"/>
+		</properties>
+		<system-out>cut: face Resolved area80, edge length8, split Ambiguous 2x40, deletion Missing
+primitive roles and rotation: retained after builder/source-owner destruction
+fuse/common, coplanar bodies, unchanged topology and operand provenance passed
+</system-out>
+	</testcase>
+</testsuite>

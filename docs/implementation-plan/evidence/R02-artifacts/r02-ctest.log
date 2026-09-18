@@ -1,0 +1,8 @@
+Internal ctest changing into directory: /home/eduard/src/voelund-p04-20260913/build/r02-reference-contract
+Test project /home/eduard/src/voelund-p04-20260913/build/r02-reference-contract
+    Start 1: contract.reference_fixtures
+1/1 Test #1: contract.reference_fixtures ......   Passed    0.00 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =   0.00 sec

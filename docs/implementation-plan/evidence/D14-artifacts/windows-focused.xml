@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Win32-ninja"
+	tests="2"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname="megatron"
+	time="4"
+	timestamp="2026-09-17T05:35:01"
+	>
+	<testcase name="document.legacy_constraint_migration" classname="document.legacy_constraint_migration" time="0.106313" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;regression"/>
+		</properties>
+		<system-out>PASS VOLUND 4 VERTICAL 1 START 0 START 0
+PASS VOLUND 4 DISTANCE 1 START 0 START 10
+PASS VOLUND 4 COINCIDENT 1 START 2 START 0
+PASS VOLUND 4 PARALLEL 1 START 2 START 0
+PASS VOLUND 4 PERPENDICULAR 1 START 2 START 0
+PASS VOLUND 6 COORDINATE_Y 1 START 0 START -3
+PASS VOLUND 6 POINT_ON_OBJECT 1 START 2 START 0
+PASS VOLUND 7 TANGENT 1 START 3 START 0
+PASS VOLUND 9 ANGLE 1 START 2 START -90
+PASS VOLUND 10 POINT_DISTANCE_Y 1 START 2 START -4
+PASS VOLUND 11 PERPENDICULAR_BISECTOR 1 START 2 START 0
+PASS VOLUND 12 CONCENTRIC 2 START 3 START 0
+PASS VOLUND 13 COLLINEAR 1 START 2 START 0
+PASS VOLUND 13 VERTICAL_POINTS 1 START 2 START 0
+PASS VOLUND 14 POINT_LINE_DISTANCE 1 START 2 START 4
+</system-out>
+	</testcase>
+	<testcase name="application.migration_acceptance" classname="application.migration_acceptance" time="4.08554" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;document;integration;regression"/>
+		</properties>
+		<system-out>PASS VOLUND 1 import/native/open/edit/undo/redo/invalid/source-preserved
+PASS VOLUND 2 import/native/open/edit/undo/redo/invalid/source-preserved
+PASS VOLUND 3 import/native/open/edit/undo/redo/invalid/source-preserved
+PASS VOLUND 4 import/native/open/edit/undo/redo/invalid/source-preserved
+PASS VOLUND 5 import/native/open/edit/undo/redo/invalid/source-preserved
+PASS VOLUND 6 import/native/open/edit/undo/redo/invalid/source-preserved
+PASS VOLUND 7 import/native/open/edit/undo/redo/invalid/source-preserved
+PASS VOLUND 8 import/native/open/edit/undo/redo/invalid/source-preserved
+PASS VOLUND 9 import/native/open/edit/undo/redo/invalid/source-preserved
+PASS VOLUND 10 import/native/open/edit/undo/redo/invalid/source-preserved
+PASS VOLUND 11 import/native/open/edit/undo/redo/invalid/source-preserved
+PASS VOLUND 12 import/native/open/edit/undo/redo/invalid/source-preserved
+PASS VOLUND 13 import/native/open/edit/undo/redo/invalid/source-preserved
+PASS VOLUND 14 import/native/open/edit/undo/redo/invalid/source-preserv...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+</testsuite>

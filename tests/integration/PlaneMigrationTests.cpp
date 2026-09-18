@@ -1,5 +1,6 @@
 #include <BRepGProp.hxx>
 #include <GProp_GProps.hxx>
+#include <algorithm>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -57,8 +58,7 @@ void legacyVersions(const std::filesystem::path& fixtures) {
             document::DocumentSerializer::write(imported.snapshot.toDocument(), output);
             std::istringstream saved(output.str());
             const auto roundtrip = document::DocumentSerializer::readWithReport(saved);
-            require(roundtrip.snapshot == imported.snapshot &&
-                        !roundtrip.report,
+            require(roundtrip.snapshot == imported.snapshot && !roundtrip.report,
                     "Save silently normalized an unresolved legacy plane");
         }
         std::istringstream valid(original);
@@ -123,18 +123,21 @@ void lifecycle(const std::filesystem::path& directory) {
     const auto states = session.featureStates();
     require(states[1].status == application::FeatureRuntimeStatus::error &&
                 states[2].status == application::FeatureRuntimeStatus::blocked &&
-                states[1].message.find("migration") != std::string::npos,
+                states[1].message.find("MigrationNeedsRepair") != std::string::npos,
             "Legacy ambiguity was not visible as an evaluation failure");
     session.saveDocument(directory / "d10b-legacy-resaved.volund");
     require(session.lastImportReport()->planeIssues[0].original.normalZ == 2,
             "Save discarded original plane provenance");
-    // Explicit command, never automatic migration: choose unit axes and keep distance 5.
-    auto corrected = session.sketchParameters(document::FeatureId{2});
-    corrected.plane = {0, 0, 30, 0, 0, 1, 1, 0, 0};
-    require(session.editSketchParameters(document::FeatureId{2}, corrected).status() ==
+    // Explicit semantic choice replaces the invalid legacy frame in one transaction.
+    const auto inspection = session.inspectSketchReferences(document::FeatureId{2});
+    const auto candidate = std::ranges::find_if(inspection.review.candidates, [](const auto& c) {
+        return c.binding.reference.origin.role == kernel::PrimitiveRole::boxPositiveZ;
+    });
+    require(candidate != inspection.review.candidates.end() &&
+                session.repairSketchSupport(inspection, *candidate).status() ==
                     application::CommandStatus::committed &&
                 session.sceneStatus().isCurrent(),
-            "Explicit plane correction did not recover evaluation");
+            "Explicit support repair did not recover evaluation");
     GProp_GProps properties;
     BRepGProp::VolumeProperties(session.currentShape(), properties);
     require(std::abs(properties.Mass() - 12150.0) < 1e-6,

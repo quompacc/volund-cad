@@ -1,30 +1,42 @@
 # Völund: vom vorhandenen Prototyp zum belastbaren CAD
 
-## Aktueller Stand – 16. September 2026
+## Aktueller Stand – 18. September 2026
 
-Laut [Paketstatus](packets.json): **110 Hauptpakete, 22 abgeschlossen, 88 offen**.
-Offen sind 86 geplante Pakete, D13 in Arbeit und A02 mit Designbedarf.
+Laut [Paketstatus](packets.json): **121 Hauptpakete, 31 abgeschlossen, 90 offen**.
+Offen sind 89 geplante Pakete und A02 mit Designbedarf.
+R06 einschließlich Reparaturbedienung und A-REF-03 ist abgeschlossen; als Nächstes folgt R07 (Konturgraph). [Gesamtabnahme](evidence/R06.md).
 Teilblöcke wie D12a–e zählen nicht als zusätzliche Hauptpakete; die Paketanzahl
 ist kein Maß für Restaufwand oder Fertigstellungszeit.
 
 | Stufe | Offene Hauptpakete |
 | --- | ---: |
 | G0 – Basis | 2 |
-| G1 – Dokument und Referenzen | 12 |
-| G2 – zusammenhängender CAD-Workflow | 26 |
+| G1 – Dokument und Referenzen | 4 |
+| G2 – zusammenhängender CAD-Workflow | 27 |
 | G3 – mechanisches CAD v1 | 18 |
 | G4 – veröffentlichbare v1 | 10 |
-| G5 – spätere Produktfamilie | 20 |
-| Gesamt | 88 |
+| G5 – spätere Produktfamilie | 29 |
+| Gesamt | 90 |
 
-Bis einschließlich G4 bleiben 68 Hauptpakete. G2 ist der erste durchgängige
+Bis einschließlich G4 bleiben 61 Hauptpakete. G2 ist der erste durchgängige
 Bedienablauf, G3 der begrenzte mechanische Funktionsumfang. G5 umfasst zusätzliche
 Bereiche wie Baugruppen und Zeichnungen. Nutzbarkeit wird an diesen Abläufen
 abgenommen, nicht am Erreichen einer Prozentzahl.
 
-D12 ist [abgeschlossen](evidence/D12e.md); D13 beginnt mit dem
-[privaten nativen Store](evidence/D13a.md). Aktueller Einstieg:
-[Fortsetzungsnotiz](../session-checkpoint-2026-09-16.md).
+D12 ist [abgeschlossen](evidence/D12e.md); D13 ist abgeschlossen mit dem
+[Produktdateiaustausch und der Gesamtabnahme](evidence/D13d.md). D14 ist ebenfalls [abgenommen](evidence/D14.md); R01 ist [plattformübergreifend abgenommen](evidence/R01.md). R02 ist [als Entscheidungspaket abgenommen](evidence/R02.md), mit identischen Vertragsfixtures auf Windows und FreeBSD. R03 ist [plattformübergreifend abgenommen](evidence/R03.md): 81/81 Windows, 78/78 FreeBSD und 328 identische Quell-/Fixture-Hashes. R04 ist [insgesamt abgenommen](evidence/R04.md): 84/84 Windows, 81/81 FreeBSD, 341 identische Quell-/Fixture-Hashes und eigene UI-Sichtprüfung. R05 ist [insgesamt abgenommen](evidence/R05.md): stabile Primitive-/Konturkanten, Schema-3-Referenzen und Editor-Anbindung; 88/88 Windows, 85/85 FreeBSD, 358 identische Quellhashes, beidseitiger nativer Dateiaustausch und UI-Sichtprüfung. G1 bleibt wegen R06–R10 offen. Aktueller Einstieg:
+[Fortsetzungsnotiz](../session-checkpoint-2026-09-18.md).
+
+## Ergänzung: native KI und späterer FEM-Ausbau
+
+[AI01](evidence/AI01.md) ist als Vertrags-/Planungspaket abgeschlossen. Das zählt
+keine implementierte KI/FEM als fertig. [Kapitel 11](11-ki-fem-optimierung.md) und
+[ADR 0010](../adr/0010-native-actions-and-analysis-extension.md) trennen die Stufen:
+AI02 liefert vor U04 die gemeinsame zielgerichtete CAD-Aktionsgrenze. Integrierter
+Assistent und optionaler MCP-Zugang folgen nach v1 unabhängig von FEM. Lineare FEM,
+Parameteroptimierung, Topologieoptimierung und CAD-Rückführung sind eigene spätere
+Pakete. Keine neuen Runtime-Bibliotheken oder Physik-Dateifelder werden jetzt eingeführt.
+Aktuelle Implementierung bleibt R05b; bestehende Paketabnahmen bleiben erhalten.
 
 ## Historischer Ausgangsstand
 
@@ -58,7 +70,7 @@ Die Untersuchung erlaubt keine belastbare Aussage, dass ein bestimmtes Modell da
 | G2 – zusammenhängendes CAD | Eine produktive Oberfläche; neues Dokument → Ebene → Skizze → echte Extrusion → Änderung → Speichern → Öffnen | Alle sichtbaren aktivierten Befehle funktionieren über denselben Anwendungskern |
 | G3 – mechanisches CAD v1 | Mehrkörpermodell, robuste Profile/Referenzen, Extrude/Pocket, Fillet/Chamfer, Hole, Mirror/Pattern, Timeline, STEP, Maße | Definierter Funktionsumfang und veröffentlichte Grenzen; kein FreeCAD-Komplettheitsversprechen |
 | G4 – veröffentlichbare v1 | Installierbares Paket auf Windows und FreeBSD/Meridian, Migration, Recovery, nachvollziehbare Herkunft und Abnahme | Build auf Entwicklerrechner allein genügt nicht |
-| G5 – erweiterte Produktfamilie | Baugruppen, Zeichnungen, Surface, Mesh, Sheet Metal, Vault und Fertigungsanbindung | Jedes Modul erhält eigene Fachverträge, Fixtures und Freigabestufen |
+| G5 – erweiterte Produktfamilie | Baugruppen, Zeichnungen, Surface, Mesh, Sheet Metal, Vault, Fertigung, native KI und FEM/Optimierung | Jedes Modul erhält eigene Fachverträge, Fixtures und Freigabestufen |
 
 **V1 ist der erste verlässliche mechanische Produktkern, nicht das Ende der Gesamtvision.** Die ursprüngliche Vision CAD/Vault/Manufacturing bleibt im [Ausbauplan](07-produktbreite.md) erhalten. Ein vollständiger FreeCAD-ähnlicher Umfang ist ein mehrstufiges Produktprogramm. Ein seriöser Plan kann unbekannte Vault-Schnittstellen oder Maschinenprofile nicht vorweg erfinden; dafür sind eigene, begrenzte Spezifikationsaufträge enthalten.
 
@@ -74,11 +86,11 @@ Die Untersuchung erlaubt keine belastbare Aussage, dass ein bestimmtes Modell da
 8. [08 – Abnahmekatalog](08-abnahme.md): Konkrete positive und negative Szenarien.
 9. [09 – Arbeitsauftrag für Terra](09-terra-arbeitsauftrag.md): Direkt verwendbarer Ausführungsauftrag.
 10. [10 – Selbstständige Umsetzung und optische Prüfung](10-autonome-umsetzung.md): Eigenständige Paketfolge, Testverantwortung und minimale Benutzerbeteiligung.
-11. [Maschinenlesbare Paketliste](packets.json): IDs, Abhängigkeiten, Prüfpunkte und Status.
+11. [11 – Native KI, FEM und Optimierung](11-ki-fem-optimierung.md): frühe Aktionsgrenze und getrennte spätere Lieferstufen.(packets.json): IDs, Abhängigkeiten, Prüfpunkte und Status.
 
 Nachweise: [Windows-Audit mit Reproduktionsbefehlen](evidence/windows-audit-20260913.md)
 und [Inventar der 220 versionierten Ausgangsdateien](evidence/inventory.json).
-Die Planprüfung hat alle 110 IDs, die vollständige topologische Reihenfolge,
+Die aktualisierte Planprüfung hat alle 121 IDs, die vollständige topologische Reihenfolge,
 Paketüberschriften, vorhandene Code-Einstiegspunkte, lokale Links und referenzierte
 Abnahmeszenarien geprüft. Das bestätigt die Konsistenz des Plans, nicht die bereits
 erfolgte Umsetzung seiner Pakete.
@@ -98,7 +110,7 @@ erfolgte Umsetzung seiner Pakete.
 
 ## Reihenfolge und kritischer Pfad
 
-Der vollständige Abhängigkeitsgraph und eine gültige Ausführungsreihenfolge stehen in `packets.json` unter `topologicalOrder`. Es gibt **110 Hauptpakete: 90 bis zur veröffentlichbaren v1 und 20 für die ersten Lieferstufen der weiteren Produktmodule**. Die Kapitel sind thematisch geordnet; insbesondere P01–P04 laufen früh und U11 wartet auf einzelne S-Pakete. Bei widersprüchlichen Abhängigkeiten gilt: nicht raten, Manifest korrigieren und prüfen.
+Der vollständige Abhängigkeitsgraph und eine gültige Ausführungsreihenfolge stehen in `packets.json` unter `topologicalOrder`. Es gibt **121 Hauptpakete: 92 bis zur veröffentlichbaren v1 und 29 für die ersten Lieferstufen der weiteren Produktmodule**. Die Kapitel sind thematisch geordnet; insbesondere P01–P04 laufen früh und U11 wartet auf einzelne S-Pakete. Bei widersprüchlichen Abhängigkeiten gilt: nicht raten, Manifest korrigieren und prüfen.
 
 ```mermaid
 flowchart TD

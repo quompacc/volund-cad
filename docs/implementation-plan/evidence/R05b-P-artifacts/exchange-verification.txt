@@ -1,0 +1,4 @@
+353/353 source hashes identical.
+3/3 projected-edge fixture output lines identical.
+FreeBSD verification script exit: 0 (Windows file read and FreeBSD file written).
+Windows read of FreeBSD native file exit: 0.

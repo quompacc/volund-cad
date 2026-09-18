@@ -1,5 +1,5 @@
-#include <voelund/document/IdCapacity.hpp>
 #include "SketchGeometryRange.hpp"
+#include <voelund/document/IdCapacity.hpp>
 #include <voelund/document/SketchGeometry.hpp>
 
 #include <algorithm>
@@ -63,8 +63,8 @@ void validateGeometry(const SketchGeometry& geometry) {
     const SketchArc& arc = std::get<SketchArc>(geometry);
     const double sweep = arc.endAngle - arc.startAngle;
     if (!finite(arc.center) || !std::isfinite(arc.radius) || arc.radius <= minimumLength ||
-        !std::isfinite(arc.startAngle) || !std::isfinite(arc.endAngle) || sweep <= kernel::angularTolerance.radians ||
-        sweep >= 2.0 * std::numbers::pi)
+        !std::isfinite(arc.startAngle) || !std::isfinite(arc.endAngle) ||
+        sweep <= kernel::angularTolerance.radians || sweep >= 2.0 * std::numbers::pi)
         throw std::invalid_argument("Sketch arc must have a finite center, radius and sweep");
 }
 
@@ -140,13 +140,25 @@ void validateSketchConstraints(const SketchElements& elements,
         maximumId = std::max(maximumId, constraint.id.value());
         ids.push_back(constraint.id.value());
         const auto kind = constraint.kind;
-        if ((kind == SketchConstraintKind::coordinateX || kind == SketchConstraintKind::coordinateY ||
-             kind == SketchConstraintKind::pointDistanceX || kind == SketchConstraintKind::pointDistanceY) &&
+        if (constraint.projectedEdge) {
+            validateProjectedEdgeReference(*constraint.projectedEdge);
+            if ((kind != SketchConstraintKind::coordinateX &&
+                 kind != SketchConstraintKind::coordinateY) ||
+                constraint.second || constraint.third || !constraint.auxiliaryValues.empty())
+                throw std::invalid_argument("Projected edges require a unary coordinate constraint "
+                                            "without legacy attachment");
+        }
+        if ((kind == SketchConstraintKind::coordinateX ||
+             kind == SketchConstraintKind::coordinateY ||
+             kind == SketchConstraintKind::pointDistanceX ||
+             kind == SketchConstraintKind::pointDistanceY) &&
             !kernel::modelCoordinate(constraint.value))
             throw std::invalid_argument(kernel::modelRangeDiagnostic);
         if ((kind == SketchConstraintKind::distance || kind == SketchConstraintKind::radius ||
-             kind == SketchConstraintKind::diameter || kind == SketchConstraintKind::pointDistance ||
-             kind == SketchConstraintKind::pointLineDistance) && !kernel::modelLength(constraint.value))
+             kind == SketchConstraintKind::diameter ||
+             kind == SketchConstraintKind::pointDistance ||
+             kind == SketchConstraintKind::pointLineDistance) &&
+            !kernel::modelLength(constraint.value))
             throw std::invalid_argument(kernel::modelRangeDiagnostic);
         if (!std::isfinite(constraint.value))
             throw std::invalid_argument("Sketch constraint value must be finite");

@@ -1,6 +1,44 @@
 # Parametric sketch data model
 
-## First vertical slice
+## Current document contract
+
+R04b adds an optional durable `SketchSupportBinding`: document/body namespace,
+primitive face role or extrusion end-cap boundary element IDs, and a relative
+sketch frame. The evaluated source frame supplies current placement. Deleted,
+ambiguous or unproven ancestry fails the sketch; geometry proximity never replaces
+the reference. End-cap keys cover the current supported profiles, not the general
+region identity promised by R09. Duplication remaps internal document namespaces.
+R04c connects picked faces to new bindings; the editor retains existing bindings
+and resolves their current frame. Overlays and extrusion use evaluated sketch
+parameters. Pending drafts check the document revision before confirmation.
+Unbound legacy sketches remain on the legacy resolver until R06;
+bound sketches reject legacy projected segment references pending R05.
+
+As of D14, private OCAF state is the sole mutable document authority. Public
+snapshots contain immutable parameter values and identities. Transactions publish
+prepared states atomically; one compound sketch/extrusion command is one Undo step.
+Separate confirmed tools retain separate steps. Undo/Redo recomputes geometry and
+does not create another history entry. Returning to saved content clears Dirty;
+the feature-ID allocation watermark does not move backwards after Undo.
+
+New saves use BinOcaf 12 / application schema 4 (schemas 1/2/3 remain readable; see R06b). Native Open and Save-As preserve
+DocumentId; every successful legacy import gets a fresh DocumentId. New and
+Duplicate also create new identities. The import report remains available while
+editing or saving the imported session, but is not stored as native provenance.
+Undo history and evaluated shapes are not persistent parameter data.
+
+Structurally invalid files fail before publication. Structurally valid parameters
+with solver, geometry or missing-profile errors remain loadable and editable;
+errors are recomputed after Open. A failed Open or Save preserves the previous
+document and save state. Original legacy files remain unchanged when migrating
+with Save-As. In-place Save explicitly replaces the legacy file with native bytes.
+
+Legacy support planes and profile IDs do not provide stable topological identity.
+Import reports preserve unresolved references without guessing replacements.
+Stable reference migration and repair UI remain R02–R06; independent error branches
+are implemented and accepted in R01 on Windows and FreeBSD/Sway. Whole-scene current geometry remains unavailable on errors, while valid branch bodies are exposed separately. See [R01 status](implementation-plan/evidence/R01.md) and [D14 acceptance](implementation-plan/evidence/D14.md).
+
+## Historical first vertical slice
 
 The original direct Push/Pull path projected two viewport clicks onto a selected
 planar face, previewed one rectangle and one extrusion, and committed a dedicated
@@ -152,9 +190,10 @@ as the symmetry axis. PlaneGCS keeps their midpoint on the axis and their connec
 segment perpendicular to it. The viewport identifies the relation with `[S]`.
 
 Two selected points can carry a driving point-to-point distance, including the two
-endpoints of one line. Two selected lines can carry a signed driving angle in degrees.
-Both dimensions are editable directly from their `D … mm` and `A …°` viewport labels;
-the PlaneGCS adapter converts stored degrees to radians only at the solver boundary.
+endpoints of one line. Two selected lines can carry a signed driving angle.
+Both dimensions are editable directly from their `D … mm` and `A …°` viewport labels.
+The document and native store use radians; degrees are converted at the legacy
+text-import and UI boundaries. PlaneGCS receives radians directly.
 
 Directional dimensions store the signed differences `x₂−x₁` and `y₂−y₁`, including
 zero, and appear as `DX … mm` and `DY … mm`. Any sketch element can be toggled to
@@ -191,8 +230,8 @@ their behavior.
 
 ## Current persistence
 
-Since D13c, new saves use native BinOcaf container version 12 and application
-schema 1, retaining document identity. VOLUND 1–16 remain supported inputs.
+New saves use native BinOcaf container version 12 and application schema 4 (R06b),
+retaining document identity. Native schemas 1/2/3 and VOLUND 1–16 remain readable.
 The following describes the historical text format; saving an imported document
 writes the native format. See [D13c](implementation-plan/evidence/D13c.md).
 
@@ -205,7 +244,7 @@ kind, one or two geometry references and an optional driving value.
 
 An extrusion record appends a profile count and its stable profile IDs. The reader
 continues to accept `VOLUND 1` through `VOLUND 15`; older extrusion records migrate to
-an empty profile list, which preserves their previous all-profiles behavior. A version-1 inline rectangle
+an empty profile list for versions 1–4, which preserves their previous all-profiles behavior. A version-1 inline rectangle
 is migrated in memory to a `RECTANGLE` element with ID 1 and next ID 2; version-2 lines
 are migrated with a free direction. Version-3 horizontal and vertical line fields
 are migrated to independent constraint records. Version 6 adds coordinate and
@@ -220,4 +259,51 @@ Version 14 appends auxiliary values to constraint records and adds fixed geometr
 point-to-line distances. Version 15 adds persistent center arcs with radius and
 start/end angles. Version 16 adds persistent rotated ellipses.
 Invalid, duplicate or zero element IDs, non-finite coordinates, degenerate elements,
-inconsistent next IDs and unsatisfied line constraints are rejected while loading.
+inconsistent next IDs and structurally invalid constraint references are rejected
+while loading. Solver satisfaction and valid final geometry are separate checks;
+a failed solve or missing selected profile does not make a structurally valid file
+unreadable.
+
+## Typed projected edge references (R05b-P)
+
+A coordinateX/coordinateY constraint may carry `ProjectedEdgeReference`: DocumentId,
+BodyId, primitive face-pair or contour origin, and start/end/normalized analytic
+parameter selection. Endpoint selections store an unused parameter of zero.
+Contour origin includes sketch/element IDs, geometry kind or rectangle-side role,
+and for extrusion contours the extrusion feature and start/end stage.
+Only explicitly bound support sketches accept this field. It cannot coexist with
+legacy numeric auxiliary attachments. Duplication remaps internal document IDs.
+Evaluation resolves the current analytic curve, verifies membership in the named
+support face and updates derived coordinates before solving. Missing, ambiguous,
+unavailable and clipped-away parameters fail; stored coordinates are not fallback.
+
+Schema 3 adds optional constraint child 8. Its root stores the document hex ID;
+children: 1 body, 2 origin tag (1 primitive / 2 contour), 3 producer/sketch ID,
+4 first primitive face role / contour element ID, 5 second face role / contour role,
+6 contour stage and 7 optional extrusion ID encoded as zero for a sketch contour,
+8 point kind and 9 normalized parameter. Primitive payload has seven children,
+contour payload nine. IDs use canonical decimal strings, role codes correspond to
+schema-3 enum values and must not be reordered. All payloads are fixed-size and
+share the existing constraint/document count and bounded container limits.
+The point-reference UI and both platforms were accepted in R05b-U.
+## Persistent reference repair (R06b)
+
+Application Open marks sketches without support binding as `legacySupport`, or
+bound sketches with legacy coordinate attachments as `legacyEdges`. It preserves
+original plane, element and constraint data, does not write the source file and
+does not create an undo entry or dirty state. A persisted repair reason produces
+`MigrationNeedsRepair`; descendants are blocked while independent branches remain
+valid. The low-level codec remains a lossless structural reader.
+
+Schema 4 adds optional sketch child 12 containing one integer attribute:
+1 = legacySupport (requires absent binding), 2 = legacyEdges (requires binding
+and at least one legacy coordinate attachment). Unknown values, inconsistent
+states, extra payload and this child under schemas 1–3 are rejected.
+
+Support and edge repairs require current document identity, generation/revision,
+original slot contents and a verified current candidate. A geometric match is
+only a proposal. Repair is a single document transaction with the existing
+reject/keepEditableErrors policy. Paired coordinate slots can be repaired together;
+remaining legacy attachments keep the error state. Undo/Redo and native Save/Open
+preserve pending and repaired states. The editor refuses pending migration states.
+Candidate selection in the product UI and A-REF-03 were accepted in R06c. The repair dialog requires explicit selection, previews face bounds and edge points, and retains pending errors only after explicit confirmation.

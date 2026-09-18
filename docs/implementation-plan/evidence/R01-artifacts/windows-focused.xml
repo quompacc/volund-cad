@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Win32-ninja"
+	tests="6"
+	failures="1"
+	disabled="0"
+	skipped="0"
+	hostname="megatron"
+	time="18"
+	timestamp="2026-09-17T16:42:29"
+	>
+	<testcase name="features.dependency_dag" classname="features.dependency_dag" time="12.4972" status="fail">
+		<failure message="Failed"/>
+		<properties>
+			<property name="cmake_labels" value="application;features;integration;regression"/>
+		</properties>
+		<system-out>Initial DAG geometry invalid
+</system-out>
+	</testcase>
+	<testcase name="application.native_persistence" classname="application.native_persistence" time="0.734851" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;document;integration;native;regression"/>
+		</properties>
+		<system-out>PASS native product identity, legacy migration, Save-As, failed input/output/store
+</system-out>
+	</testcase>
+	<testcase name="application.scene_status" classname="application.scene_status" time="0.574433" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;document;integration;regression"/>
+		</properties>
+		<system-out>Scene revision, display isolation, history and persistence tests passed
+</system-out>
+	</testcase>
+	<testcase name="application.failure_boundaries" classname="application.failure_boundaries" time="2.22121" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;document;integration;regression"/>
+		</properties>
+		<system-out>Typed edits and exception rollback tests passed
+</system-out>
+	</testcase>
+	<testcase name="application.command_transactions" classname="application.command_transactions" time="0.696545" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;document;integration;regression"/>
+		</properties>
+		<system-out>Session transaction tests passed
+</system-out>
+	</testcase>
+	<testcase name="application.safe_persistence" classname="application.safe_persistence" time="2.13368" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;regression"/>
+		</properties>
+		<system-out>Safe save/open, all commit phases, Unicode and editable errors passed
+</system-out>
+	</testcase>
+</testsuite>

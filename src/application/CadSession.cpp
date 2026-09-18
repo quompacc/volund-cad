@@ -1,3 +1,4 @@
+#include "CadSessionEvaluationDetail.hpp"
 #include "CadSessionGeometryDetail.hpp"
 #include "CommandInput.hpp"
 #include <voelund/application/CadSession.hpp>
@@ -63,7 +64,8 @@ CadSession::CadSession() {
 }
 
 bool CadSession::canAddCylinder() const noexcept {
-    return sceneStatus().isCurrent() && !document_.features().empty();
+    return !document_.features().empty() &&
+           featureShape(document_.features().back().id).has_value();
 }
 
 TopoDS_Shape CadSession::currentShape() const {
@@ -73,15 +75,22 @@ TopoDS_Shape CadSession::currentShape() const {
     return currentShape_;
 }
 
-std::optional<TopoDS_Shape> CadSession::featureShape(document::FeatureId featureId) const {
-    if (!sceneStatus().isCurrent())
-        return std::nullopt;
-    const auto match =
-        std::ranges::find(currentFeatures_, featureId, &features::EvaluatedFeature::id);
-    return match == currentFeatures_.end() ? std::nullopt
-                                           : std::optional<TopoDS_Shape>{match->shape};
+std::span<const features::EvaluatedBody> CadSession::validBodies() const noexcept {
+    return evaluation_ ? std::span<const features::EvaluatedBody>{evaluation_->result.bodies}
+                       : std::span<const features::EvaluatedBody>{};
 }
-
+std::optional<TopoDS_Shape> CadSession::featureShape(document::FeatureId featureId) const {
+    if (!evaluation_)
+        return std::nullopt;
+    const auto& outputs = evaluation_->result.features;
+    const auto found = std::ranges::find(outputs, featureId, &features::EvaluatedFeature::id);
+    if (found == outputs.end())
+        return std::nullopt;
+    if (found->bodyId && std::ranges::find(validBodies(), *found->bodyId,
+                                           &features::EvaluatedBody::bodyId) == validBodies().end())
+        return std::nullopt;
+    return found->shape;
+}
 std::span<const features::EvaluatedBody> CadSession::currentBodies() const {
     if (!sceneStatus().isCurrent())
         throw std::logic_error("Current bodies are unavailable; retained geometry is display-only");
@@ -131,17 +140,23 @@ document::SketchParameters CadSession::selectedSketchParameters() const {
     return document_.sketchParameters(selectedFeature_.value());
 }
 
-document::SketchParameters
-CadSession::sketchParameters(document::FeatureId featureId) const {
+document::SketchParameters CadSession::sketchParameters(document::FeatureId featureId) const {
     return document_.sketchParameters(featureId);
 }
 
 std::vector<features::EvaluatedSketchElement> CadSession::selectedSketchElements() const {
-    return features::evaluateSketchElements(selectedSketchParameters());
+    if (!selectedFeature_ || !evaluation_)
+        return {};
+    const auto& outputs = evaluation_->result.features;
+    const auto found =
+        std::ranges::find(outputs, *selectedFeature_, &features::EvaluatedFeature::id);
+    if (found == outputs.end() || !found->resolvedSketch)
+        return {};
+    return features::evaluateSketchElements(*found->resolvedSketch);
 }
 
 bool CadSession::canTransformFeature(document::FeatureId featureId) const noexcept {
-    if (!sceneStatus().isCurrent())
+    if (!featureShape(featureId))
         return false;
     const auto descriptors = document_.features();
     const auto feature =
@@ -166,13 +181,13 @@ bool CadSession::canTransformFeature(document::FeatureId featureId) const noexce
 
 std::optional<document::FeatureId>
 CadSession::transformBodyForFeature(document::FeatureId featureId) const noexcept {
-    if (!sceneStatus().isCurrent())
+    if (!featureShape(featureId))
         return std::nullopt;
     const std::optional<document::FeatureId> owner = placementOwner(document_, featureId);
     if (!owner.has_value()) {
         return std::nullopt;
     }
-    for (const features::EvaluatedBody& body : currentBodies_) {
+    for (const features::EvaluatedBody& body : validBodies()) {
         if (placementOwner(document_, body.sourceFeature) == owner) {
             return body.sourceFeature;
         }
@@ -233,8 +248,7 @@ document::CylinderParameters CadSession::selectedCylinderParameters() const {
     return cylinderParameters(selectedFeature_.value());
 }
 
-document::CylinderParameters
-CadSession::cylinderParameters(document::FeatureId featureId) const {
+document::CylinderParameters CadSession::cylinderParameters(document::FeatureId featureId) const {
     return document_.cylinderParameters(featureId);
 }
 
@@ -270,7 +284,7 @@ CommandResult CadSession::editCylinderParameters(document::FeatureId featureId,
     document::CylinderParameters adjusted = parameters;
     const bool wasSeparate = current.resultMode == document::CylinderResultMode::separate;
     const bool becomesSeparate = adjusted.resultMode == document::CylinderResultMode::separate;
-    if (wasSeparate != becomesSeparate && !sceneStatus().isCurrent()) {
+    if (wasSeparate != becomesSeparate && !featureShape(*descriptor->inputFeature)) {
         features::EvaluationReport report;
         report.features.push_back(
             {featureId,
@@ -282,7 +296,7 @@ CommandResult CadSession::editCylinderParameters(document::FeatureId featureId,
     }
     if (wasSeparate != becomesSeparate) {
         translateCylinderBetweenInputAndReference(
-            adjusted, evaluatedFeature(currentFeatures_, *descriptor->inputFeature),
+            adjusted, evaluatedFeature(evaluation_->result.features, *descriptor->inputFeature),
             becomesSeparate ? 1.0 : -1.0);
     }
     const auto input =
@@ -363,10 +377,12 @@ void CadSession::newDocument() {
         throw std::overflow_error("Document generation exhausted");
     auto empty = document::ModelDocument::empty();
     auto clean = std::optional{document::DocumentSnapshot::capture(empty)};
-    const auto identity = document::IdentifiedDocumentSnapshot::restore(documentId(), *clean).duplicate().id();
+    const auto identity =
+        document::IdentifiedDocumentSnapshot::restore(documentId(), *clean).duplicate().id();
     empty = clean->toDocument(identity);
     // Empty document and clean baseline are prepared before publication.
     document_ = std::move(empty);
+    evaluation_.reset();
     ++generation_;
     currentFile_.clear();
     importReport_.reset();
@@ -381,56 +397,24 @@ void CadSession::newDocument() {
     geometryStamp_ = sceneStatus().document;
 }
 bool CadSession::recompute() {
-    if (document_.features().empty()) {
-        currentShape_.Nullify();
-        currentBodies_.clear();
-        currentFeatures_.clear();
-        markFeaturesCurrent();
+    auto evaluation =
+        featureGraph_.evaluateDetailed(document::DocumentSnapshot::capture(document_), evaluation_);
+    auto states = detail::runtimeStates(evaluation->report);
+    if (evaluation->valid()) {
+        auto result = evaluation->result;
+        currentShape_ = std::move(result.resultShape);
+        currentBodies_.swap(result.bodies);
+        currentFeatures_.swap(result.features);
         geometryStamp_ = sceneStatus().document;
-        return true;
     }
-    try {
-        features::FeatureGraphResult candidate = featureGraph_.evaluate(document_);
-        currentShape_ = candidate.resultShape;
-        currentBodies_ = std::move(candidate.bodies);
-        currentFeatures_ = std::move(candidate.features);
-        markFeaturesCurrent();
-        geometryStamp_ = sceneStatus().document;
-        return true;
-    } catch (const features::FeatureEvaluationError& error) {
-        markFeaturesCurrent();
-        markFeatureError(error.featureId(), error.what());
-        return false;
-    }
+    featureStates_.swap(states);
+    evaluation_ = std::move(evaluation);
+    return evaluation_->valid();
 }
-
 std::string CadSession::serializedDocument() const {
     std::ostringstream output;
     document::DocumentSerializer::write(document_, output);
     return output.str();
-}
-
-void CadSession::markFeaturesCurrent() {
-    featureStates_.clear();
-    featureStates_.reserve(document_.features().size());
-    for (const document::FeatureDescriptor& feature : document_.features()) {
-        featureStates_.push_back(
-            FeatureRuntimeState{feature.id, FeatureRuntimeStatus::current, {}});
-    }
-}
-
-void CadSession::markFeatureError(document::FeatureId featureId, const std::string& message) {
-    bool failureReached = false;
-    for (FeatureRuntimeState& state : featureStates_) {
-        if (state.id == featureId) {
-            state.status = FeatureRuntimeStatus::error;
-            state.message = message;
-            failureReached = true;
-        } else if (failureReached) {
-            state.status = FeatureRuntimeStatus::blocked;
-            state.message = "Blocked by an earlier feature error";
-        }
-    }
 }
 
 void CadSession::normalizeSelection() noexcept {

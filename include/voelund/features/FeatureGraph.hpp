@@ -1,19 +1,25 @@
 #pragma once
 
-#include <voelund/document/FeatureId.hpp>
+#include <memory>
 #include <voelund/document/BodyId.hpp>
+#include <voelund/document/DocumentSnapshot.hpp>
+#include <voelund/document/FeatureId.hpp>
+#include <voelund/features/EdgeProvenance.hpp>
+#include <voelund/features/EvaluationState.hpp>
+#include <voelund/features/FeatureDependencies.hpp>
+#include <voelund/features/SupportProvenance.hpp>
 
 #include <TopoDS_Shape.hxx>
 
-#include <stdexcept>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
 namespace voelund::document {
 class ModelDocument;
 class DocumentSnapshot;
-}
+} // namespace voelund::document
 
 namespace voelund::features {
 
@@ -29,6 +35,11 @@ struct EvaluatedFeature final {
     TopoDS_Shape shape;
     TopoDS_Shape referenceShape;
     std::optional<document::BodyId> bodyId;
+    std::vector<SupportProvenance> supportOrigins{};
+    std::optional<document::SketchParameters> resolvedSketch{};
+    std::vector<SupportProvenance> referenceSupportOrigins{};
+    std::vector<EdgeProvenance> edgeOrigins{};
+    std::vector<EdgeProvenance> referenceEdgeOrigins{};
 };
 
 struct FeatureGraphResult final {
@@ -37,17 +48,28 @@ struct FeatureGraphResult final {
     std::vector<EvaluatedFeature> features;
 };
 
+struct FeatureGraphEvaluation final {
+    document::DocumentSnapshot snapshot;
+    FeatureDependencies dependencies;
+    FeatureGraphResult result;
+    EvaluationReport report;
+    [[nodiscard]] bool valid() const noexcept;
+};
+
 class FeatureEvaluationError final : public std::runtime_error {
-public:
+  public:
     FeatureEvaluationError(document::FeatureId featureId, std::string message);
     [[nodiscard]] document::FeatureId featureId() const noexcept;
 
-private:
+  private:
     document::FeatureId featureId_;
 };
 
 class FeatureGraph final {
-public:
+  public:
+    [[nodiscard]] std::shared_ptr<const FeatureGraphEvaluation>
+    evaluateDetailed(const document::DocumentSnapshot& document,
+                     const std::shared_ptr<const FeatureGraphEvaluation>& previous = {}) const;
     [[nodiscard]] FeatureGraphResult evaluate(const document::ModelDocument& document) const;
     [[nodiscard]] FeatureGraphResult evaluate(const document::DocumentSnapshot& document) const;
 };

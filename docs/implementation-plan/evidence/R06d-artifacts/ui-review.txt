@@ -1,0 +1,12 @@
+Viewed all six final captures on Windows and FreeBSD:
+batch-selected, batch-narrow, batch-auto-complete, batch-ambiguity-remains,
+batch-stale, batch-stale-ambiguous.
+Checked: rows and multiple checkboxes visible; candidate text, controls and
+status messages legible; zero rows after complete Auto; only ambiguous row
+after partial Auto; stale rejection without mutation.
+Initial long detail-button text clipped after table rebuild; replaced with
+uniform compact Details label and status tooltip. Final captures reviewed.
+Windows narrow 780x500; FreeBSD narrow 780x500; Sway expands the larger dialog.
+Tests log OCCT font diagnostics on Windows and low-severity GL/EGL plus
+QFormLayout diagnostics on FreeBSD. These runs prove repair/dialog behavior;
+they do not constitute new general renderer or physical-display acceptance.

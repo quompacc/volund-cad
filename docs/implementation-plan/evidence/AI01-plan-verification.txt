@@ -1,0 +1,11 @@
+AI01 plan verification — 2026-09-17
+PASS: 121 unique package IDs and a complete topological order.
+PASS: All dependencies exist and precede dependent packages.
+PASS: All 121 chapter headings and declared entry files exist.
+PASS: 92 packages through G4, 29 G5.
+PASS: 29 done, 90 planned, 1 in-progress (R05), 1 needs-design (A02).
+PASS: 92 open total, 63 open through G4.
+PASS: New ADR/chapter/evidence local Markdown links resolve.
+PASS: All 347 accepted R05b contour source/fixture hashes remain unchanged.
+PASS: git -c core.autocrlf=false diff --check after normalizing JSON line endings.
+No product builds/tests rerun: planning/documentation changes only.

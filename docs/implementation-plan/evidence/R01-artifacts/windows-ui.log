@@ -1,0 +1,12 @@
+Test project V:/build/p02-qt-final
+    Start 52: desktop.feature_status
+1/1 Test #52: desktop.feature_status ...........   Passed    2.52 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+desktop       =   2.52 sec*proc (1 test)
+regression    =   2.52 sec*proc (1 test)
+sketch        =   2.52 sec*proc (1 test)
+
+Total Test time (real) =   2.52 sec

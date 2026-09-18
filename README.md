@@ -10,7 +10,7 @@ architecture decisions, acceptance scenarios, and an execution template for smal
 The current package states and acceptance evidence are tracked in
 [`packets.json`](docs/implementation-plan/packets.json). D10 is complete;
 D11 identity acceptance is complete; see the [acceptance matrix](docs/implementation-plan/evidence/D11-review.md).
-D12d integrates OCAF as the product model authority, including transactions, history and document identity; see [evidence](docs/implementation-plan/evidence/D12d.md). D12 is complete; see the [acceptance matrix](docs/implementation-plan/evidence/D12e.md). Native product persistence remains D13.
+D12d integrates OCAF as the product model authority, including transactions, history and document identity; see [evidence](docs/implementation-plan/evidence/D12d.md). D12 is complete; see the [acceptance matrix](docs/implementation-plan/evidence/D12e.md). Native product persistence is complete; see [D13 acceptance](docs/implementation-plan/evidence/D13d.md).
 
 ## Current state
 
@@ -32,7 +32,7 @@ The repository contains a working native CAD vertical slice:
 D13c switches product Save/Open to native BinOcaf persistence and retains document
 identity. The baseline passes **76/76 Windows** and **73/73 FreeBSD/Sway** tests;
 318 source hashes match. See [D13c evidence](docs/implementation-plan/evidence/D13c.md).
-D13d product-file exchange and final acceptance remain open, as does Meridian acceptance.
+D13d completes bidirectional product-file exchange and D13 acceptance: 77/77 Windows, 74/74 FreeBSD/Sway, 319 matching source hashes. See [D13d evidence](docs/implementation-plan/evidence/D13d.md). D14 migration acceptance is complete: 79/79 Windows and 76/76 FreeBSD/Sway tests, including all legacy versions and all 26 constraint kinds. See [D14 evidence](docs/implementation-plan/evidence/D14.md). R01 implements dependency ordering, incremental parameter evaluation and independent error branches (80/80 Windows and 77/77 FreeBSD/Sway tests; 325 matching source/fixture hashes). See [R01 status](docs/implementation-plan/evidence/R01.md). R02 defines the [SubshapeRef contract](docs/subshape-reference-contract.md), with all 26 symbolic fixtures passing on Windows and FreeBSD; the three prototype source hashes match. R03 exposes real primitive/Boolean/transform history: 81/81 Windows and 78/78 FreeBSD tests pass, with matching history outcomes and 328 identical source/fixture hashes. See [R03 status](docs/implementation-plan/evidence/R03.md). R04 is complete: persistent support binding and product integration pass 84/84 Windows and 81/81 FreeBSD tests, with 341 matching source/fixture hashes and reviewed UI captures on both platforms. See [R04 acceptance](docs/implementation-plan/evidence/R04.md). R05 is complete, including persistent projected edges and product integration: 88/88 Windows and 85/85 FreeBSD tests. See [R05 acceptance](docs/implementation-plan/evidence/R05.md). R06 is complete: persistent repair state, explicit transactions and a product repair dialog pass A-REF-03. 91/91 Windows and 88/88 FreeBSD tests, 371 matching source hashes, bidirectional file exchange and reviewed UI captures. See [R06 acceptance](docs/implementation-plan/evidence/R06.md). R06d adds document-wide multi-selection and immediate Auto repair of unique support matches, with one Undo for the batch and unresolved cases left for review. See [R06d evidence](docs/implementation-plan/evidence/R06d.md). R07–R10 and Meridian remain open. Project file transfers and tests on the dedicated FreeBSD host have standing user authorization.
 
 ## Versions and changes
 
@@ -40,7 +40,7 @@ The current base version is `0.1.0`; no versioned release is tagged yet.
 Changes are collected under `Unreleased` in the [Changelog](CHANGELOG.md).
 [Versioning and release rules](docs/versioning.md) distinguish product releases,
 Git revisions and document formats. New saves use BinOcaf container version 12
-with native application schema 1; VOLUND 1–16 remain readable legacy formats.
+with native application schema 2 (schema 1 remains readable); VOLUND 1–16 remain readable legacy formats.
 
 The detailed hand-off state and next development slice are recorded in
 [`docs/development-status.md`](docs/development-status.md).

@@ -1,0 +1,8 @@
+include/voelund/kernel/OperationHistory.hpp
+include/voelund/kernel/ShapeFactory.hpp
+include/voelund/kernel/ShapeOperations.hpp
+src/kernel/OperationHistoryDetail.hpp
+src/kernel/ShapeFactory.cpp
+src/kernel/ShapeOperations.cpp
+tests/CMakeLists.txt
+tests/integration/OperationHistoryTests.cpp

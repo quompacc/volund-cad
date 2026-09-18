@@ -1,0 +1,10 @@
+include/voelund/desktop/MainWindow.hpp
+src/desktop/CMakeLists.txt
+src/desktop/MainWindow.cpp
+src/desktop/MainWindowReferenceRepair.cpp
+src/desktop/MainWindowState.hpp
+src/desktop/ReferenceRepairDialog.cpp
+src/desktop/ReferenceRepairDialog.hpp
+src/desktop/ReferenceRepairPreview.cpp
+tests/CMakeLists.txt
+tests/desktop/ReferenceRepairFlowTests.cpp

@@ -2,11 +2,33 @@
 
 Status: angenommen für die Umsetzung in D09–D13, 14.09.2026.
 Entscheidungsnachweis: [D08](../implementation-plan/evidence/D08.md).
-Umsetzungsstand 16.09.2026: Der produktive Dokumentkern ist mit
+Umsetzungsstand 17.09.2026: Der produktive Dokumentkern ist mit
 [D12](../implementation-plan/evidence/D12e.md) auf OCAF umgestellt.
-[D13c](../implementation-plan/evidence/D13c.md) bindet natives Save/Open an: BinOcaf 12, Anwendungsschema 1 und persistente Dokument-ID. D13d-Abnahme steht aus.
+[D13c](../implementation-plan/evidence/D13c.md) bindet natives Save/Open an: BinOcaf 12, Anwendungsschema 1 und persistente Dokument-ID. [D13d](../implementation-plan/evidence/D13d.md) schließt Dateiaustausch und D13-Abnahme ab.
 
 ## Entscheidung
+
+Erweiterung R06b (18.09.2026): Anwendungsschema 4 ergänzt einen optionalen
+Reparaturgrund an Skizzen (Child 12: 1 Legacy-Support, 2 Legacy-Kanten).
+Reader akzeptiert 1/2/3/4 und weist das Feld unter älteren Schemas zurück.
+Der Application-Import markiert ungebundene Skizzen und alte Kantenattachments;
+Originalebene und Referenzdaten bleiben erhalten. Ohne explizite Reparatur bleibt
+die Auswertung fehlerhaft und abhängige Features blockiert. Save/Open und Undo/Redo
+erhalten den Zustand. Container 12 bleibt unverändert.
+[Implementierung und Prüfstand](../implementation-plan/evidence/R06b.md).
+
+Erweiterung R05b-P (18.09.2026, auf Windows/FreeBSD einschließlich Dateiaustausch abgenommen): Der Writer
+verwendet Anwendungsschema 3 für optionale typisierte Kantenreferenzen an
+Koordinatenconstraints. Reader akzeptiert 1/2/3, neue Kantenfelder unter 1/2 werden
+abgewiesen. Schema 2 bleibt für historische Stützflächenbindungen lesbar;
+Container 12 unverändert. Persistiert werden Namespace, Herkunft und analytische
+Punktauswahl, keine TopoDS-Zeiger oder Tessellierungsindizes. UI-Anbindung bleibt offen.
+
+Erweiterung R04b (17.09.2026): Der Writer verwendet Anwendungsschema 2 für
+optionale `SketchSupportBinding`-Daten (Dokument, Körper, Flächenherkunft und lokale
+Basis). Der Reader akzeptiert Schema 1 und 2; Bindungsdaten unter Schema 1 werden
+abgewiesen. OCAF-Container 12 bleibt erhalten. Historische Nachweise unten beziehen
+sich auf ihren damaligen Schemastand. Die [R04b-Plattformabnahme](../implementation-plan/evidence/R04b.md) belegt beidseitigen Dateiaustausch mit diesen Bindungen.
 
 OCAF wird gemäß K08 als einzige veränderliche Dokumentautorität hinter
 `ModelDocument` umgesetzt. Als künftiger Produktstore wird **native BinOcaf-

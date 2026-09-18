@@ -70,7 +70,7 @@ std::vector<document::SketchElementId> CadSession::selectedSketchProfileElements
 }
 
 bool CadSession::canExtrudeSelectedSketchProfiles() const noexcept {
-    if (!sceneStatus().isCurrent())
+    if (!selectedFeature_ || !featureShape(*selectedFeature_))
         return false;
     if (!selectedFeature_.has_value() || selectedSketchProfiles_.empty())
         return false;

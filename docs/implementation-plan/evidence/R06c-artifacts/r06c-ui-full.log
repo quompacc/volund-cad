@@ -1,0 +1,20 @@
+[32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+  Unhandled GL error: GL_INVALID_OPERATION[0m
+[32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+  OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![0m
+single geometric proposal: explicit UI selection, Cancel, Undo/Redo, file dialogs passed
+[32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+  Unhandled GL error: GL_INVALID_OPERATION[0m
+[32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+  OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![0m
+two coplanar candidates: explicit UI selection, Cancel, Undo/Redo, file dialogs passed
+[32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+  Unhandled GL error: GL_INVALID_OPERATION[0m
+[32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+  OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![0m
+edge group, explicit partial repair, independent edit and stale refresh passed
+[32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+  Unhandled GL error: GL_INVALID_OPERATION[0m
+[32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+  OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![0m
+unavailable support: no replacement, no mutation passed

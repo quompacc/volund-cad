@@ -3,6 +3,9 @@
 
 namespace voelund::application {
 CommandResult SketchEditorSession::tryAccept(ErrorDisposition disposition) {
+    if (supportStamp_ && *supportStamp_ != session_.sceneStatus().document)
+        return CommandResult::invalidInput(
+            "The model changed. Reopen the sketch on its current support.");
     if (!canAccept())
         return CommandResult::invalidInput(
             "Sketch acceptance requires nonempty geometry and a successful solve");

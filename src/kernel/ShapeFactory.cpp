@@ -1,7 +1,8 @@
-#include <voelund/kernel/NumericPolicy.hpp>
+#include "OperationHistoryDetail.hpp"
 #include <Standard_OutOfMemory.hxx>
 #include <Standard_ProgramError.hxx>
 #include <voelund/kernel/Angle.hpp>
+#include <voelund/kernel/NumericPolicy.hpp>
 #include <voelund/kernel/NumericValidation.hpp>
 #include <voelund/kernel/OcctCompatibility.hpp>
 #include <voelund/kernel/ShapeFactory.hpp>
@@ -52,10 +53,11 @@ void requireValidShape(KernelOperation operation, const TopoDS_Shape& shape) {
     }
 }
 
-template <typename Build> TopoDS_Shape buildShape(KernelOperation operation, Build&& build) {
+template <typename Build>
+ShapeOperationResult buildShape(KernelOperation operation, Build&& build) {
     try {
-        const TopoDS_Shape shape = build();
-        requireValidShape(operation, shape);
+        const ShapeOperationResult shape = build();
+        requireValidShape(operation, shape.shape);
         return shape;
     } catch (const KernelError&) {
         throw;
@@ -108,21 +110,30 @@ std::string occtFailureDiagnostic(const Standard_Failure& failure) {
                                                     : "OCCT failure without diagnostic message";
 }
 
-TopoDS_Shape ShapeFactory::makeBox(const BoxDimensions& dimensions) {
-    if (!isFinite(dimensions) || !modelLength(dimensions.width) || !modelLength(dimensions.depth) || !modelLength(dimensions.height)) {
+ShapeOperationResult ShapeFactory::makeBoxWithHistory(const BoxDimensions& dimensions) {
+    if (!isFinite(dimensions) || !modelLength(dimensions.width) || !modelLength(dimensions.depth) ||
+        !modelLength(dimensions.height)) {
         throw KernelError(KernelOperation::makeBox, modelRangeDiagnostic);
     }
     return buildShape(KernelOperation::makeBox, [&] {
-        return BRepPrimAPI_MakeBox(dimensions.width, dimensions.depth, dimensions.height).Shape();
+        BRepPrimAPI_MakeBox maker(dimensions.width, dimensions.depth, dimensions.height);
+        const auto shape = maker.Shape();
+        return ShapeOperationResult{shape,
+                                    {{PrimitiveRole::boxNegativeX, maker.BackFace()},
+                                     {PrimitiveRole::boxPositiveX, maker.FrontFace()},
+                                     {PrimitiveRole::boxNegativeY, maker.LeftFace()},
+                                     {PrimitiveRole::boxPositiveY, maker.RightFace()},
+                                     {PrimitiveRole::boxNegativeZ, maker.BottomFace()},
+                                     {PrimitiveRole::boxPositiveZ, maker.TopFace()}},
+                                    {}};
     });
 }
 
-TopoDS_Shape ShapeFactory::makeCylinder(const CylinderDefinition& definition) {
-    if (!isFinite(definition) || !modelLength(definition.radius) || !modelLength(definition.height) ||
-        !modelCoordinate(definition.originX) || !modelCoordinate(definition.originY) ||
-        !modelCoordinate(definition.originZ)) {
-        throw KernelError(KernelOperation::makeCylinder,
-                          modelRangeDiagnostic);
+ShapeOperationResult ShapeFactory::makeCylinderWithHistory(const CylinderDefinition& definition) {
+    if (!isFinite(definition) || !modelLength(definition.radius) ||
+        !modelLength(definition.height) || !modelCoordinate(definition.originX) ||
+        !modelCoordinate(definition.originY) || !modelCoordinate(definition.originZ)) {
+        throw KernelError(KernelOperation::makeCylinder, modelRangeDiagnostic);
     }
     return buildShape(KernelOperation::makeCylinder, [&] {
         const auto direction = [&] {
@@ -136,12 +147,20 @@ TopoDS_Shape ShapeFactory::makeCylinder(const CylinderDefinition& definition) {
         }();
         const gp_Ax2 axis(gp_Pnt(definition.originX, definition.originY, definition.originZ),
                           gp_Dir(direction.x(), direction.y(), direction.z()));
-        return BRepPrimAPI_MakeCylinder(axis, definition.radius, definition.height).Shape();
+        BRepPrimAPI_MakeCylinder maker(axis, definition.radius, definition.height);
+        const auto shape = maker.Shape();
+        return ShapeOperationResult{shape,
+                                    {{PrimitiveRole::cylinderStart, maker.Cylinder().BottomFace()},
+                                     {PrimitiveRole::cylinderEnd, maker.Cylinder().TopFace()},
+                                     {PrimitiveRole::cylinderSide, maker.Cylinder().LateralFace()}},
+                                    {}};
     });
 }
 
-TopoDS_Shape ShapeFactory::applyTransform(const TopoDS_Shape& source, double pivotX, double pivotY,
-                                          double pivotZ, const RigidTransform& definition) {
+ShapeOperationResult ShapeFactory::applyTransformWithHistory(const TopoDS_Shape& source,
+                                                             double pivotX, double pivotY,
+                                                             double pivotZ,
+                                                             const RigidTransform& definition) {
     if (source.IsNull()) {
         throw KernelError(KernelOperation::applyTransform, "source shape must not be null");
     }
@@ -151,7 +170,7 @@ TopoDS_Shape ShapeFactory::applyTransform(const TopoDS_Shape& source, double piv
         throw KernelError(KernelOperation::applyTransform, modelRangeDiagnostic);
     }
     return buildShape(KernelOperation::applyTransform, [&] {
-        TopoDS_Shape shape = source;
+        auto shape = detail::transformInput(source);
         const gp_Pnt center(pivotX, pivotY, pivotZ);
         struct Rotation final {
             gp_Dir axis;
@@ -166,14 +185,24 @@ TopoDS_Shape ShapeFactory::applyTransform(const TopoDS_Shape& source, double piv
             }
             gp_Trsf transform;
             transform.SetRotation(gp_Ax1(center, rotation.axis), rotation.angle.value());
-            shape = BRepBuilderAPI_Transform(shape, transform, true).Shape();
+            detail::transformStep(shape, transform);
         }
         gp_Trsf translation;
         translation.SetTranslation(
             gp_Vec(definition.translationX, definition.translationY, definition.translationZ));
-        shape = BRepBuilderAPI_Transform(shape, translation, true).Shape();
+        detail::transformStep(shape, translation);
         return shape;
     });
 }
 
+TopoDS_Shape ShapeFactory::makeBox(const BoxDimensions& dimensions) {
+    return makeBoxWithHistory(dimensions).shape;
+}
+TopoDS_Shape ShapeFactory::makeCylinder(const CylinderDefinition& definition) {
+    return makeCylinderWithHistory(definition).shape;
+}
+TopoDS_Shape ShapeFactory::applyTransform(const TopoDS_Shape& shape, double x, double y, double z,
+                                          const RigidTransform& transform) {
+    return applyTransformWithHistory(shape, x, y, z, transform).shape;
+}
 } // namespace voelund::kernel

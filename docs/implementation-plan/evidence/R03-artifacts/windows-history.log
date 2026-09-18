@@ -1,0 +1,12 @@
+Test project V:/build/p02-qt-final
+    Start 45: kernel.operation_history
+1/1 Test #45: kernel.operation_history .........   Passed    0.35 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+integration    =   0.35 sec*proc (1 test)
+kernel         =   0.35 sec*proc (1 test)
+regression     =   0.35 sec*proc (1 test)
+
+Total Test time (real) =   0.39 sec

@@ -1,5 +1,6 @@
 #pragma once
 #include <voelund/application/CommandTransaction.hpp>
+#include <voelund/application/SceneStatus.hpp>
 
 #include <voelund/document/ModelDocument.hpp>
 #include <voelund/features/SketchConstraintAnnotations.hpp>
@@ -31,7 +32,8 @@ enum class SketchAxisReference { origin, xAxis, yAxis };
 class SketchEditorSession final {
   public:
     SketchEditorSession(CadSession& session, document::FeatureId supportFeature,
-                        document::SketchPlane plane);
+                        document::SketchPlane plane,
+                        std::optional<document::SketchSupportBinding> binding = std::nullopt);
     SketchEditorSession(CadSession& session, document::FeatureId sketchFeature,
                         document::FeatureId supportFeature, document::SketchParameters parameters);
 
@@ -71,6 +73,8 @@ class SketchEditorSession final {
                                            document::SketchPoint point,
                                            std::uint64_t supportReferenceId,
                                            double supportReferenceParameter);
+    [[nodiscard]] bool addProjectedEdgeReference(document::SketchGeometryReference point,
+                                                 const document::ProjectedEdgeReference& reference);
     [[nodiscard]] bool addPointOnObjectReference(document::SketchGeometryReference reference,
                                                  document::SketchElementId object);
     [[nodiscard]] std::optional<document::SketchConstraintKind>
@@ -130,10 +134,12 @@ class SketchEditorSession final {
     [[nodiscard]] bool isActive() const noexcept;
 
   private:
-    [[nodiscard]] bool canAllocateIds(std::uint64_t elements, std::uint64_t constraints) const noexcept;
-    [[nodiscard]] bool canAllocatePreviewIds(std::span<const document::SketchGeometry> preview) const noexcept;
+    [[nodiscard]] bool canAllocateIds(std::uint64_t elements,
+                                      std::uint64_t constraints) const noexcept;
+    [[nodiscard]] bool
+    canAllocatePreviewIds(std::span<const document::SketchGeometry> preview) const noexcept;
     [[nodiscard]] bool canUpsertUnaryConstraint(document::SketchElementId element,
-                                               document::SketchConstraintKind kind) const noexcept;
+                                                document::SketchConstraintKind kind) const noexcept;
     [[nodiscard]] bool setConstraintInternalValue(document::SketchConstraintId constraintId,
                                                   double value);
     friend class SketchSolverGateTestAccess;
@@ -152,6 +158,8 @@ class SketchEditorSession final {
     CadSession& session_;
     document::FeatureId supportFeature_;
     document::SketchPlane plane_;
+    std::optional<document::SketchSupportBinding> supportBinding_;
+    std::optional<DocumentStamp> supportStamp_;
     document::SketchElements elements_;
     document::SketchConstraints constraints_;
     std::optional<document::FeatureId> editingFeature_;

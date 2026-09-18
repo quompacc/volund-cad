@@ -1,0 +1,17 @@
+Test project V:/build/p02-qt-final
+    Start 58: desktop.document_repair_flow
+1/3 Test #58: desktop.document_repair_flow ............   Passed    4.52 sec
+    Start 79: architecture.source_limits
+2/3 Test #79: architecture.source_limits ..............   Passed    0.08 sec
+    Start 80: architecture.source_limits_regression
+3/3 Test #80: architecture.source_limits_regression ...   Passed    0.26 sec
+
+100% tests passed, 0 tests failed out of 3
+
+Label Time Summary:
+architecture    =   0.34 sec*proc (2 tests)
+desktop         =   4.52 sec*proc (1 test)
+regression      =   4.85 sec*proc (3 tests)
+sketch          =   4.52 sec*proc (1 test)
+
+Total Test time (real) =   4.86 sec

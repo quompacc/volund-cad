@@ -1,0 +1,3 @@
+persistence, namespace isolation, duplicate, editor retention, cap edit and boundary loss passed
+rotated frame, stale selection, deletion, blocked descendants, independent body, split and missing history passed
+schema 1 compatibility, schema 2 binding and invalid role rejection passed

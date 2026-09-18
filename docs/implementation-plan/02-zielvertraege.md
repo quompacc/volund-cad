@@ -86,7 +86,7 @@ Feature-Abhängigkeiten bilden einen DAG; Timeline-Reihenfolge allein bestimmt s
 
 ## K06 – Stabile Topologiereferenzen
 
-**Vorschlag für R02:** `SubshapeRef` enthält Dokument-/Körper-/Erzeuger-ID, erwartete Topologieart und einen semantischen Herkunftsschlüssel. Beispiel: Extrusionsdeckfläche einer Region, Mantelfläche einer bestimmten Konturkante. OCCT-History `generated/modified/deleted` wird pro Operation ausgewertet. Geometrische Signaturen dienen zur Plausibilisierung oder expliziten Reparaturvorschlägen, nicht als stiller Ersatz für Identität.
+**R02-Entscheidung:** [ADR 0009](../adr/0009-subshape-reference-contract.md) und der [geprüfte Vertragsentwurf](../subshape-reference-contract.md) konkretisieren die folgende Regel. Produktintegration bleibt R03–R06 vorbehalten. `SubshapeRef` enthält Dokument-/Körper-/Erzeuger-ID, erwartete Topologieart und einen semantischen Herkunftsschlüssel. Beispiel: Extrusionsdeckfläche einer Region, Mantelfläche einer bestimmten Konturkante. OCCT-History `generated/modified/deleted` wird pro Operation ausgewertet. Geometrische Signaturen dienen zur Plausibilisierung oder expliziten Reparaturvorschlägen, nicht als stiller Ersatz für Identität.
 
 Auflösung liefert `Resolved`, `Missing` oder `Ambiguous` mit Kandidaten. Gleichartige koplanare Flächen dürfen nicht willkürlich vertauscht werden. Eine alte Segmentnummer im Serialisierungsfeld ist kein dauerhafter Kantenschlüssel. Aufteilungen/Zusammenführungen müssen eine deterministische dokumentierte Regel oder einen Reparaturzustand erzeugen. Der Benutzer kann eine neue Fläche bewusst zuweisen; diese Reparatur ist eine eigene Undo-Transaktion.
 
@@ -147,3 +147,27 @@ Ready: Paketvoraussetzungen fertig; relevante Verträge eindeutig; betroffene AP
 Done: Anwendungspfad funktioniert; Fehler hinterlassen den vereinbarten Zustand; passende Regression besteht; relevante Bestandsprüfungen und Vertragschecks bestehen; Migrations-/Plattformwirkung ist geprüft oder als noch blockierendes Gate markiert; keine Attrappen als umgesetzt dokumentiert. Testumbenennungen oder kleinere Dateien allein erfüllen keinen Fachauftrag.
 
 Der ausführende Agent verantwortet diese Prüfungen und bei sichtbaren Änderungen die eigene optische Kontrolle nach [Kapitel 10](10-autonome-umsetzung.md). Ein routinemäßiges „bitte selbst ausprobieren“ erfüllt Done nicht. Bei beauftragter Gesamtumsetzung führt bestandene Paketabnahme ohne erneute Nutzeraufforderung zum nächsten zulässigen Paket; offene externe Gates bleiben dabei wirksam.
+
+## K12 – Native Konstruktionsaktionen für GUI und KI
+
+Nutzerentscheidung 17.09.2026 / [ADR 0010](../adr/0010-native-actions-and-analysis-extension.md).
+Die gemeinsame Aktionsgrenze verwendet explizite Ziel-IDs, Dokumentnamespace,
+Generation/Revision, typisierte Parameter und strukturierte Resultate. Vorschau,
+Standprüfung, Commit, Abbruch und Undo gelten für GUI, Assistent und MCP identisch.
+Anbieter und Transport besitzen keine eigene Modellautorität. Wiederholte Requests
+erzeugen keine doppelten Features; mehrteilige bestätigte Vorschläge sind atomare
+Kandidaten oder ausdrücklich getrennte Aktionen. Kein beliebiger Skriptcode als
+Voraussetzung für native Konstruktion. [AI02](11-ki-fem-optimierung.md) integriert
+den vorhandenen Umfang vor U04; A-ACTION-01 prüft den Vertrag ohne Modellzugang.
+
+## K13 – Nachrüstbare Analyse und Optimierung
+
+FEM, Parameteroptimierung, Topologieoptimierung und CAD-Rückführung werden separat
+geliefert. Analyseeingaben binden CAD-Referenzen, Material, Lasten, Lagerungen,
+Netz- und Solverkonfiguration an einen unveränderlichen Stand. Netznummern sind
+keine dauerhaften CAD-Referenzen. Ergebnisse sind abgeleitet und nach Änderungen
+veraltet; nur eine ausdrückliche CAD-Aktion übernimmt eine gewählte Variante.
+Kein neues Physik-/Persistenzschema oder Jobframework auf Vorrat. FEM01 konkretisiert
+Einheiten, Dateivertrag, Bibliotheken, Lizenzen und Windows-/FreeBSD-Nachweise.
+Der native Assistent bleibt unabhängig von FEM und MCP; alle Ausbaustufen stehen in
+[Kapitel 11](11-ki-fem-optimierung.md).

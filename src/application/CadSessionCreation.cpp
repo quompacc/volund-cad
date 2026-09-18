@@ -28,7 +28,7 @@ CommandResult CadSession::createCylinderFeature(document::CylinderResultMode res
         8.0, 25.0, kernel::RigidTransform{0.0, 0.0, 0.0, {}, {}, {}}, resultMode};
     if (resultMode == document::CylinderResultMode::separate) {
         translateCylinderBetweenInputAndReference(
-            parameters, evaluatedFeature(currentFeatures_, inputFeature), 1.0);
+            parameters, evaluatedFeature(evaluation_->result.features, inputFeature), 1.0);
     }
     const auto idInput = detail::prepareInput([&] {
         return candidate.addCylinderFeature("Cylinder " + std::to_string(sequence), inputFeature,

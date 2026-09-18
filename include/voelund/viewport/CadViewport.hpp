@@ -1,4 +1,5 @@
 #pragma once
+#include <voelund/document/EdgeReference.hpp>
 
 #include <voelund/kernel/OcctCompatibility.hpp>
 
@@ -63,6 +64,7 @@ struct SceneSketchPoint final {
     std::uint64_t supportReferenceId{0};
     double supportReferenceParameter{0.0};
     double radialRadius{0.0};
+    std::optional<document::ProjectedEdgeReference> projectedEdge{};
 };
 
 struct SceneSketchElement final {
@@ -83,6 +85,7 @@ struct SketchPointReferenceIntent final {
     SketchPointKind point;
     std::uint64_t supportReferenceId{0};
     double supportReferenceParameter{0.0};
+    std::optional<document::ProjectedEdgeReference> projectedEdge{};
 };
 
 struct SketchSelectionIntent final {
@@ -128,6 +131,10 @@ struct PlanarFaceSelection final {
     double xDirectionY;
     double xDirectionZ;
     std::vector<PlanarReferenceSegment> referenceSegments{};
+    // Transient picked topology, checked against current application provenance.
+    TopoDS_Shape selectedFace{};
+    bool stableReferences{false};
+    std::vector<SceneSketchPoint> referencePoints{};
 };
 
 [[nodiscard]] std::optional<PlanarFaceSelection>

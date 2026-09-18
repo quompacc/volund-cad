@@ -1,0 +1,4 @@
+358/358 source/fixture hashes identical between manifest, current Windows workspace and FreeBSD.
+FreeBSD verification script exit: 0.
+Windows: 88/88 tests, 107.87 s.
+FreeBSD: 85/85 tests, 31.21 s.

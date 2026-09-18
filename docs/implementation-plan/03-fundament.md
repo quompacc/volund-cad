@@ -233,7 +233,7 @@ Aktueller Paketstatus und Evidenz stehen im Manifest. A01 ist abgenommen; die ü
 
 ## D13 – Gewählten Produktstore integrieren
 
-- **Fortschritt:** [D13a](evidence/D13a.md) kapselt den nativen Payloadadapter; D13 ist in-progress. [D13b1](evidence/D13b1.md) ergänzt begrenztes Einlesen und Formatzuordnung; Windows und FreeBSD/Sway sind geprüft. [D13b2](evidence/D13b2.md) prüft als ersten Teil den nativen Dateikopf auf beiden Plattformen; [Strukturprüfung](evidence/D13b2-structure.md) ergänzt Baum-/Blockgrenzen und EOF. [Attributprüfung](evidence/D13b2-attributes.md) und [Ausgabelimits](evidence/D13b2-limits.md) sind auf beiden Plattformen geprüft; [Gesamtreview](evidence/D13b-review.md) schließt D13b2/D13b ab. D13 bleibt in-progress. [D13c](evidence/D13c.md) schaltet Produktdispatch und Writer auf native Persistenz um; 76/73 Tests bestanden. D13d-Dateiaustausch und Gesamtabnahme folgen gemäß [Teilplan](D13-plan.md).
+- **Fortschritt:** [D13a](evidence/D13a.md) kapselt den nativen Payloadadapter; D13 ist in-progress. [D13b1](evidence/D13b1.md) ergänzt begrenztes Einlesen und Formatzuordnung; Windows und FreeBSD/Sway sind geprüft. [D13b2](evidence/D13b2.md) prüft als ersten Teil den nativen Dateikopf auf beiden Plattformen; [Strukturprüfung](evidence/D13b2-structure.md) ergänzt Baum-/Blockgrenzen und EOF. [Attributprüfung](evidence/D13b2-attributes.md) und [Ausgabelimits](evidence/D13b2-limits.md) sind auf beiden Plattformen geprüft; [Gesamtreview](evidence/D13b-review.md) schließt D13b2/D13b ab. D13 bleibt in-progress. [D13c](evidence/D13c.md) schaltet Produktdispatch und Writer auf native Persistenz um; 76/73 Tests bestanden. [D13d](evidence/D13d.md) schließt Dateiaustausch und Gesamtabnahme ab: 77/74 Tests, 319 identische Quellhashes. **D13 ist done**; frühere Offenvermerke beschreiben die Teilstände.
 
 - **Voraussetzungen:** D03, D09, D12.
 - **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08; `src/document/DocumentSerializer.cpp`, `src/application/CadSession.cpp`, `src/document/CMakeLists.txt`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
@@ -246,6 +246,8 @@ Aktueller Paketstatus und Evidenz stehen im Manifest. A01 ist abgenommen; die ü
 
 ## D14 – Migration und Dokumentkern abschließend abnehmen
 
+- **Status: done**, 17.09.2026. [Abnahme und G1-Restbericht](evidence/D14.md): 16 produktive Migrationsabläufe, alle 26 Constraintarten, echte Dateisperre/Schreibrechte; 79/79 Windows, 76/76 FreeBSD, 321 identische Quell-/Fixture-Hashes. G1 bleibt wegen R01–R10 offen.
+
 - **Voraussetzungen:** D07, D13.
 - **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08; `tests/unit/ModelDocumentTests.cpp`, `tests/integration/CadSessionTests.cpp`, `docs/sketch-data-model.md`, `docs/development-status.md`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
 - **Auftrag:**
@@ -256,6 +258,8 @@ Aktueller Paketstatus und Evidenz stehen im Manifest. A01 ist abgenommen; die ü
 - **Grenze:** Kein Entfernen alter Fixtures nach erfolgreicher Migration.
 
 ## R01 – Feature-Abhängigkeiten als echten DAG auswerten
+
+- **Status: done**, 17.09.2026. [Implementierung und Abnahme](evidence/R01.md): explizite Abhängigkeiten, stabile Toposortierung, Fehlerisolation und inkrementelle Parameterauswertung; 80/80 Windows, 77/77 FreeBSD/Sway, 325 identische Quell-/Fixture-Hashes. Desktop-Bilder beider Plattformen geprüft.
 
 - **Voraussetzungen:** D11, D14.
 - **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08; `include/voelund/features/FeatureGraph.hpp`, `src/features/FeatureGraph.cpp`, `src/application/CadSession.cpp`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
@@ -268,6 +272,8 @@ Aktueller Paketstatus und Evidenz stehen im Manifest. A01 ist abgenommen; die ü
 
 ## R02 – SubshapeRef-Vertrag und Referenzfixtures festlegen
 
+- **Status: done als Entscheidungspaket**, 17.09.2026. [Vertrag und Nachweis](evidence/R02.md): typisierte Herkunftsschlüssel, Persistenz-/Reparaturentwurf, jeweils 26/26 symbolische Vertragsfixtures und 1/1 CTest unter Windows und FreeBSD. 3/3 Prototypquellhashes identisch; produktive Anbindung folgt R03–R06.
+
 - **Voraussetzungen:** R01, D08.
 - **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08; `include/voelund/features/SketchSupportResolver.hpp`, `include/voelund/document/SketchGeometry.hpp`, `src/features/SketchSupportResolver.cpp`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
 - **Auftrag:**
@@ -278,6 +284,8 @@ Aktueller Paketstatus und Evidenz stehen im Manifest. A01 ist abgenommen; die ü
 - **Grenze:** Entscheidungspaket; keine universelle automatische Naming-Garantie behaupten.
 
 ## R03 – Kernel-Operationshistorie verfügbar machen
+
+- **Status: done**, 17.09.2026. [Implementierung und Abnahme](evidence/R03.md): echte Primitive-/Boolean-/Transformationshistorie, 81/81 Windows und 78/78 FreeBSD, 2/2 zusätzliche Kerneltests nach Formatierung; 328 identische Quell-/Fixture-Hashes. Reale Historienfälle auf OCCT 8.0.1 und 7.9.3 übereinstimmend bestanden.
 
 - **Voraussetzungen:** R02, A06.
 - **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08; `src/kernel/ShapeFactory.cpp`, `src/kernel/ShapeOperations.cpp`, `include/voelund/kernel/ShapeOperations.hpp`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
@@ -290,6 +298,8 @@ Aktueller Paketstatus und Evidenz stehen im Manifest. A01 ist abgenommen; die ü
 
 ## R04 – Stützflächen über stabile Referenzen auflösen
 
+- **Status: done**, 17.09.2026. [Gesamtabnahme](evidence/R04.md): dauerhafte Stützflächenbindung und Produktanbindung, 84/84 Windows, 81/81 FreeBSD, 341 identische Quell-/Fixture-Hashes; eigene UI-Sichtprüfung beider Plattformen. Legacy-Reparatur und stabile Kanten bleiben R06/R05.
+
 - **Voraussetzungen:** R03, D10.
 - **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08; `src/features/SketchSupportResolver.cpp`, `src/features/SketchEvaluation.cpp`, `src/application/CadSessionSketchProfiles.cpp`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
 - **Auftrag:**
@@ -300,6 +310,8 @@ Aktueller Paketstatus und Evidenz stehen im Manifest. A01 ist abgenommen; die ü
 - **Grenze:** Keine stillschweigende Wiederverwendung der alten Ebene als gültiges Ergebnis.
 
 ## R05 – Projizierte Kanten von Segmentindizes lösen
+
+- **Status: done**, 18.09.2026. [Gesamtabnahme](evidence/R05.md): stabile Primitive-/Konturkanten, Schema-3-Referenzen und Editor-Anbindung. 88/88 Windows, 85/85 FreeBSD, 358 identische Quellhashes; beidseitiger nativer Dateiaustausch und UI-Sichtprüfungen belegt.
 
 - **Voraussetzungen:** R04.
 - **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08; `src/features/SketchSupportResolver.cpp`, `include/voelund/document/SketchGeometry.hpp`, `src/viewport/SketchInteraction.cpp`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
@@ -312,13 +324,15 @@ Aktueller Paketstatus und Evidenz stehen im Manifest. A01 ist abgenommen; die ü
 
 ## R06 – Legacy-Referenzen migrieren und bewusste Reparatur ermöglichen
 
+- **Status: done**, 18.09.2026. [Gesamtabnahme](evidence/R06.md): Kandidatenanalyse, persistenter Reparaturzustand, explizite Transaktion und Produktdialog. A-REF-03 bestanden; 91/91 Windows, 88/88 FreeBSD, 371 identische Quellhashes, beidseitiger nativer Dateiaustausch und 24 betrachtete UI-Aufnahmen.
+
 - **Voraussetzungen:** R05, D13.
 - **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08; `src/document/DocumentSerializer.cpp`, `src/application/CadSessionSketchProfiles.cpp`, `src/desktop/FeaturePropertiesPanel.cpp`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
 - **Auftrag:**
-  1. Alte Supportfelder beim Import gegen unveränderte Ausgangsgeometrie auflösen und eindeutige Herkunft speichern.
+  1. Alte Referenzdaten erhalten; ohne belegte ursprüngliche Identität MigrationNeedsRepair setzen. Geometrische Kandidaten nur vorschlagen und ausdrücklich zuordnen.
   2. Mehrdeutige Fälle als MigrationNeedsRepair mit Kandidaten anbieten; Benutzerzuweisung als einzelne Transaktion speichern.
   3. Reparatur rückgängig machen und Save/Open testen.
-- **Abnahme:** Alte Datei mit eindeutiger Fläche migriert; zwei gleichwertige Kandidaten erzeugen keine Zufallsauswahl. A-REF-03 besteht, inklusive Undo und erneutem Öffnen.
+- **Abnahme:** Alte Datei mit ausdrücklich gewählter Fläche repariert; ein geometrischer Treffer und zwei gleichwertige Kandidaten erzeugen keine automatische Zuordnung. A-REF-03 besteht, inklusive Undo und erneutem Öffnen.
 - **Grenze:** Keine Änderung an Originaldatei ohne Save.
 
 ## R07 – Deterministischen Konturgraphen erstellen

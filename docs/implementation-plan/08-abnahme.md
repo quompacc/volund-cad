@@ -87,7 +87,9 @@ Stützfläche samt Körper verschieben und um90° rotieren: Skizzenbasis folgt k
 
 ## A-REF-03 – Bewusste Reparatur und Legacy-Migration
 
-Alte Index-/Supportreferenz in eindeutigem und mehrdeutigem Modell importieren. Eindeutige Zuordnung migriert; mehrdeutiger Fall zeigt Kandidaten. Benutzer wählt Ersatzfläche: eine Transaktion; Save/Open erhält sie; Undo stellt vorherigen Fehler wieder her. Ein beschädigter Bezug führt nie durch automatisch kleinste Distanz zu einer willkürlichen anderen Fläche.
+**Bestanden am 18.09.2026:** [R06-Gesamtabnahme](evidence/R06.md), Windows und FreeBSD.
+
+Alte Index-/Supportreferenz in eindeutigem und mehrdeutigem Modell importieren. Auch ein einzelner geometrischer Treffer bleibt ein Vorschlag; die ausdrückliche Zuordnung repariert den Bezug. Mehrdeutige Fälle zeigen die Alternativen. Benutzer wählt Ersatzfläche: eine Transaktion; Save/Open erhält sie; Undo stellt vorherigen Fehler wieder her. Ein beschädigter Bezug führt nie durch automatisch kleinste Distanz zu einer willkürlichen anderen Fläche.
 
 ## A-REG-01 – Konturen, Löcher und Inseln
 
@@ -227,5 +229,65 @@ Volumenstufen:24000mm³ → `24000−160π` → `22880−160π` → `22880−160
 Zwei konzentrische Kreise R20/r10 auf XY, explizit Ringregion extrudieren8; Volumen2400π. Unabhängige Box10³ bei deutlich getrenntem X-Bereich erzeugen. Außenradius20→24 ergibt3808π, Box unverändert. Region bewusst durch zusammenfallende Radien ungültig machen: Ringfeature Failed, Box Valid, kein zufällig gefüllter Kreis. Fehlerzustand speichern/öffnen und reparieren. Dies verbindet Lochprofil, DAG, Mehrkörper, Persistenz und Repair in einem Modell.
 
 ## Gateprotokoll
+
+Ergänzende Szenarien für AI/FEM/Optimierung stehen im folgenden Abschnitt. Sie sind
+geplant; nur A-ACTION-01 gehört bereits zur G2-Lieferung. Die übrigen sind eigene
+G5-Abnahmen und keine zusätzlichen Voraussetzungen der mechanischen v1.
+
+## A-ACTION-01 – Gemeinsame zielgerichtete CAD-Aktionen
+
+Zwei Körper A/B, Request für A vorbereiten, GUI-Auswahl auf B wechseln: ausschließlich
+A ändert sich. Gleicher Request über GUI-Adapter und direkten Aufruf liefert denselben
+fachlichen Snapshot und Status. Fremde DocumentId, alte Generation/Revision, fehlendes
+Ziel, NaN/Inf und unzulässige Einheit werden ohne Mutation/Undo abgewiesen. Vorschau
+verändert das aktive Dokument nicht. Während Vorschau Nutzeränderung ausführen: alter
+Commit wird abgewiesen. Einen mehrteiligen Kandidaten am zweiten Schritt scheitern
+lassen: kein Teilergebnis. Erfolgreicher Kandidat: genau ein Undo, Redo identisch.
+Identische Request-ID erneut senden: keine zweite Mutation; geänderter Inhalt unter
+derselben ID abgewiesen. Unabhängige fehlerfreie Körper bleiben zugänglich.
+
+## A-AI-01 – Native Konstruktion mit Auswahl und Sprache
+
+Referenzplatte auswählen; Bohrungsmaß ändern und eine mit vorhandenen Features
+darstellbare Rippe vorschlagen lassen. Deterministischer Modelladapter prüft Aufruf-
+und Abbruchsemantik, zusätzlich echten Modelllauf separat protokollieren. Mehrdeutige
+Fläche erfordert Klärung; Antwort darf keine unbekannte Funktion ausführen. Vorschau,
+Commit, Featurebaum, Einzelbearbeitung, Undo/Redo und Save/Open prüfen. Dokumentwechsel
+während Antwort, Abbruch und Providerfehler erzeugen keine verspätete Mutation.
+Modellnamen/Kommentare mit vermeintlichen Anweisungen bleiben Daten. Produkt läuft
+ohne Providerzugang normal weiter; Zugangsdaten sind kein Dokumentinhalt.
+
+## A-FEM-01 – Begrenzte lineare Statik
+
+FEM01 legt Material, Einheiten, Elementtypen und numerische Toleranzen vorab fest.
+Axial belasteten Stab mit analytischem Sollwert und Balken in passendem Gültigkeitsbereich
+rechnen; mindestens drei Netzstufen und Konvergenz der definierten Größen dokumentieren.
+Resultierende Kräfte/Reaktionen, Verformung und Einheiten vergleichen. Singularitäts-
+maxima nicht als Netzkonvergenz ausgeben. Anschließend Halter mit fixierten Anschlüssen
+und definierter Last prüfen. Referenz löschen, Last/Material ändern und CAD neu öffnen:
+alter Ergebnisstand bleibt erkennbar veraltet; keine zufällige Netzgruppen-Neuzuordnung.
+Solverausfall, Abbruch, fehlende Installation, unzulässiges Material und ungenügende
+Lagerung werden verständlich diagnostiziert. Windows-/FreeBSD-Ergebnisse innerhalb
+begründeter numerischer Toleranzen vergleichen; Farbdarstellung selbst betrachten.
+
+## A-OPT-01 – Parametervarianten und Übernahme
+
+Halter mit begrenzten Wand-/Rippenmaßen, definiertem Massenziel und Verformungsgrenze
+optimieren. Ausgangsmodell während Berechnung unverändert. Jede Variante besitzt
+Parameter, Eingabestand, Ergebnis und Status. Ungültige Geometrie ist keine gültige
+leichte Lösung. Unerreichbare Ziele ehrlich melden. Abbruch/Budgetende und Nutzeredit
+prüfen. Gewählte zulässige Variante in einem Commit übernehmen, Undo/Redo und erneute
+Berechnung nachweisen. Reproduzierbare Konfiguration; kein globales Optimum behaupten.
+
+## A-TOPO-01 – Organische Optimierung und getrennte Rückführung
+
+OPT02 definiert Bauraum, Erhaltungs-/Sperrbereiche, Lastfall, Materialbudget,
+Mindeststrukturgröße und Fertigungsbedingung. Optimiertes Feld/Mesh nach OPT03 erneut
+analysieren; getrennte oder unzulässige Strukturen liefern Fehler. OPT04 prüft zusätzlich
+den tatsächlich zurückgeführten Solid: Anschlussgeometrie, BRep-Gültigkeit, dokumentierte
+Formabweichung, erneute FEM, normale CAD-Bearbeitung und STEP-Rücklauf. Rohmesh, gültiger
+Solid und parametrischer Featurebaum dürfen nicht als dasselbe Ergebnis bezeichnet werden.
+
+## Protokollumfang
 
 Jeder Gatebericht enthält: Commit, Datum, ausführende Umgebung, Paketliste, Szenarioresultate, Befehle/Logs, Artefakte, bekannte Grenzen, externe offene Voraussetzungen und Freigabeentscheidung. `passed`, `failed`, `not-run` und `blocked-external` getrennt halten. Geplante Tests in diesem Dokument sind keine Evidenz; erst reale Resultate schließen Pakete.

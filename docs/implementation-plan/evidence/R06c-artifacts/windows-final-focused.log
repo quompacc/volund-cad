@@ -1,0 +1,17 @@
+Test project V:/build/p02-qt-final
+    Start 58: desktop.reference_repair_flow
+1/3 Test #58: desktop.reference_repair_flow ....   Passed    6.42 sec
+    Start 61: desktop.feature_status
+2/3 Test #61: desktop.feature_status ...........   Passed    2.74 sec
+    Start 78: architecture.source_limits
+3/3 Test #78: architecture.source_limits .......   Passed    0.08 sec
+
+100% tests passed, 0 tests failed out of 3
+
+Label Time Summary:
+architecture    =   0.08 sec*proc (1 test)
+desktop         =   9.17 sec*proc (2 tests)
+regression      =   9.25 sec*proc (3 tests)
+sketch          =   9.17 sec*proc (2 tests)
+
+Total Test time (real) =   9.25 sec

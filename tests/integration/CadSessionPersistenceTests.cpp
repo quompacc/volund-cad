@@ -1,3 +1,4 @@
+#include "../BoundSketchFixture.hpp"
 #include "../CommandResultAssertions.hpp"
 #include "CadSessionTestCases.hpp"
 #include "CadSessionTestSupport.hpp"
@@ -74,6 +75,7 @@ bool multipleSketchElementsExtrudeAllClosedProfiles() {
         return false;
     }
     const auto sketchId = session.features()[1].id;
+    bindTop(session, sketchId);
     if (!session.selectFeature(sketchId)) {
         return false;
     }
@@ -114,6 +116,7 @@ bool selectedSketchProfilesExtrudeAndRoundtrip() {
         {document::SketchElementId{6}, document::SketchLine{{17.0, 17.0}, {19.0, 17.0}}}};
     const auto sketchId = voelund::test::requireCommittedFeature(session.createSketchFeature(
         boxId, document::SketchParameters{plane, document::SketchElements{elements, 7}}));
+    bindTop(session, sketchId);
     if (!session.selectSketchProfileByElement(document::SketchElementId{4}, false) ||
         !session.selectSketchProfileByElement(document::SketchElementId{2}, true) ||
         session.selectSketchProfileByElement(document::SketchElementId{6}, true) ||

@@ -1,0 +1,13 @@
+include/voelund/application/CadSession.hpp
+include/voelund/application/SketchReferenceInspection.hpp
+include/voelund/desktop/MainWindow.hpp
+src/application/CadSessionBatchRepair.cpp
+src/application/CMakeLists.txt
+src/desktop/CMakeLists.txt
+src/desktop/DocumentRepairDialog.cpp
+src/desktop/DocumentRepairDialog.hpp
+src/desktop/MainWindow.cpp
+src/desktop/MainWindowReferenceRepair.cpp
+src/desktop/MainWindowState.hpp
+tests/CMakeLists.txt
+tests/desktop/DocumentRepairFlowTests.cpp

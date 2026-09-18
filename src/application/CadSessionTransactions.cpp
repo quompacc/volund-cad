@@ -1,3 +1,4 @@
+#include "CadSessionEvaluationDetail.hpp"
 #include "CommandInput.hpp"
 #include <utility>
 #include <voelund/application/CadSession.hpp>
@@ -28,57 +29,47 @@ CommandResult CadSession::finishCandidate(document::DocumentTransaction& transac
                                           std::optional<document::FeatureId> selection,
                                           CommandKind kind, ErrorDisposition disposition,
                                           bool clearSketchSelection) {
-    std::vector<FeatureRuntimeState> states;
-    features::EvaluationReport report;
+    auto evaluation = featureGraph_.evaluateDetailed(document::DocumentSnapshot::capture(transaction.candidate()), evaluation_);
+    auto states = detail::runtimeStates(evaluation->report);
+    auto report = evaluation->report;
+    auto evaluated = evaluation->result;
+    // Unchanged errors in unrelated branches do not require another error-acceptance action.
+    std::vector<document::FeatureId> changed;
+    const auto before = document::DocumentSnapshot::capture(document_);
     for (const auto& feature : transaction.candidate().features()) {
-        states.push_back({feature.id, FeatureRuntimeStatus::current, {}});
-        report.features.push_back({feature.id, features::EvaluationStatus::valid, {}, {}, {}});
+        if (!document_.contains(feature.id) ||
+            evaluation->snapshot.featureParameters(feature.id) !=
+                before.featureParameters(feature.id))
+            changed.push_back(feature.id);
     }
-    features::FeatureGraphResult evaluated;
-    bool valid = true;
-    try {
-        if (!transaction.candidate().features().empty())
-            evaluated = featureGraph_.evaluate(transaction.candidate());
-    } catch (const features::FeatureEvaluationError& error) {
-        valid = false;
-        bool failed = false;
-        for (std::size_t i = 0; i < states.size(); ++i) {
-            auto& state = states[i];
-            auto& issue = report.features[i];
-            if (state.id == error.featureId()) {
-                failed = true;
-                state.status = FeatureRuntimeStatus::error;
-                state.message = error.what();
-                issue.status = features::EvaluationStatus::failed;
-                issue.code = "feature-evaluation-failed";
-            } else if (failed) {
-                state.status = FeatureRuntimeStatus::blocked;
-                state.message = "Blocked by an earlier feature error";
-                issue.status = features::EvaluationStatus::blockedByDependency;
-                issue.code = "blocked-by-earlier-feature";
-            }
-            issue.message = state.message;
-        }
-    }
+    const auto affected = evaluation->dependencies.affected(changed);
+    for (std::size_t i = 0; i < report.features.size(); ++i)
+        if (kind != CommandKind::newFeature && !affected[i])
+            report.features[i].status = features::EvaluationStatus::valid;
+    CommandResult published(evaluation->valid() ? CommandStatus::committed : CommandStatus::committedWithErrors,
+        RejectionReason::none, evaluation->report);
     CommandTransaction command(kind, std::make_unique<SessionDocumentBackend>(transaction));
     auto result = command.finish(std::move(report), disposition);
-    if (result.status() == CommandStatus::rejected)
+    if (result.status() == CommandStatus::rejected) {
+        result.evaluation_ = std::move(published.evaluation_);
         return result;
+    }
     // No callbacks or allocation between document publication and session projection.
-    if (valid) {
+    if (evaluation->valid()) {
         currentShape_ = std::move(evaluated.resultShape);
         currentBodies_.swap(evaluated.bodies);
         currentFeatures_.swap(evaluated.features);
         geometryStamp_ = sceneStatus().document;
     }
+    evaluation_ = std::move(evaluation);
     featureStates_.swap(states);
     selectedFeature_ = selection;
     if (clearSketchSelection) {
         selectedSketchElement_.reset();
         selectedSketchProfiles_.clear();
     }
-    result.feature_ = selection;
-    return result;
+    published.feature_ = selection;
+    return published;
 }
 
 CommandResult CadSession::editSketchParameters(document::FeatureId featureId,

@@ -1,4 +1,5 @@
 #include "../../src/platform/AtomicFileStoreDetail.hpp"
+#include "../BoundSketchFixture.hpp"
 #include "../CommandResultAssertions.hpp"
 #include <fstream>
 #include <iostream>
@@ -59,14 +60,16 @@ void saveFailures(const fs::path& root) {
     const auto original = root / "original.volund";
     const auto target = root / "save-as.volund";
     session.saveDocument(original);
-    platform::AtomicFileStore::write(target, "previous target bytes");
+    const auto originalBytes = bytes(original);
+    platform::AtomicFileStore::write(target, originalBytes);
     auto dimensions = session.selectedBoxDimensions();
     dimensions.width += 1;
     static_cast<void>((session.editSelectedBoxDimensions(dimensions).status() ==
                        voelund::application::CommandStatus::committed));
     const auto shape = session.currentShape();
     const auto selected = session.selectedFeature();
-    const auto originalBytes = bytes(original);
+    const auto edited = session.identifiedSnapshot();
+    const auto stamp = session.sceneStatus().document;
     for (const auto stage : {platform::FileStoreStage::create, platform::FileStoreStage::write,
                              platform::FileStoreStage::flush, platform::FileStoreStage::close,
                              platform::FileStoreStage::replace}) {
@@ -77,11 +80,13 @@ void saveFailures(const fs::path& root) {
             caught = error.stage() == stage;
         }
         require(caught, "missing phase error");
-        require(bytes(target) == "previous target bytes" && bytes(original) == originalBytes,
+        require(bytes(target) == originalBytes && bytes(original) == originalBytes,
                 "failed save changed bytes");
         require(session.currentFile() == fs::absolute(original) && session.isModified() &&
                     session.canUndo() && !session.canRedo() &&
-                    session.selectedFeature() == selected && session.currentShape().IsSame(shape),
+                    session.selectedFeature() == selected && session.currentShape().IsSame(shape) &&
+                    session.identifiedSnapshot() == edited &&
+                    session.sceneStatus().document == stamp,
                 "failed save changed session");
     }
     fails([&] { session.saveDocument(root); });
@@ -90,6 +95,10 @@ void saveFailures(const fs::path& root) {
     session.saveDocument(target);
     require(!session.isModified() && session.currentFile() == fs::absolute(target),
             "save commit state");
+    application::CadSession reopened;
+    reopened.loadDocument(target);
+    require(reopened.identifiedSnapshot() == edited && !reopened.isModified(),
+            "successful replacement did not load exact edited snapshot");
     require((session.undo().status() == voelund::application::CommandStatus::committed) &&
                 session.isModified() &&
                 (session.redo().status() == voelund::application::CommandStatus::committed) &&
@@ -159,6 +168,50 @@ void brokenGeometryRoundtrip(const fs::path& root) {
     session.loadDocument(path);
     require(!session.currentShape().IsNull() && !session.isModified(), "repaired file failed");
 }
+void missingProfileRoundtrip(const fs::path& root) {
+    application::CadSession session;
+    session.newDocument();
+    const auto box = test::requireCommittedFeature(session.createBoxFeature());
+    const auto extrusion = test::requireCommittedFeature(
+        session.createSketchExtrusion(box, document::SketchPlane{0, 0, 40, 0, 0, 1, 1, 0, 0},
+                                      document::SketchRectangle{2, 3, 8, 9}, 10));
+    const auto sketch = *session.selectedFeatureDescriptor().inputFeature;
+    test::bindTop(session, sketch);
+    require(session.selectFeature(extrusion), "Select extrusion after fixture binding");
+    const auto valid = session.selectedExtrusionParameters();
+    auto missing = valid;
+    missing.profiles = {document::SketchProfileId{999}};
+    require(session.editSelectedExtrusionParameters(
+                       missing, application::ErrorDisposition::keepEditableErrors)
+                    .status() == application::CommandStatus::committedWithErrors,
+            "missing profile not retained explicitly");
+    const auto expected = session.identifiedSnapshot();
+    const auto path = root / "missing-profile.volund";
+    session.saveDocument(path);
+    application::CadSession loaded;
+    loaded.loadDocument(path);
+    require(loaded.identifiedSnapshot() == expected && !loaded.isModified() &&
+                !loaded.sceneStatus().isCurrent() && loaded.displayShape().IsNull() &&
+                loaded.featureStates().back().status == application::FeatureRuntimeStatus::error &&
+                loaded.selectFeature(extrusion) &&
+                loaded.selectedExtrusionParameters().profiles == missing.profiles,
+            "missing downstream profile reference was rejected, replaced or lost");
+    require(loaded.editSelectedExtrusionParameters(valid).status() ==
+                    application::CommandStatus::committed &&
+                loaded.sceneStatus().isCurrent() && loaded.isModified(),
+            "missing profile could not be repaired");
+    require(loaded.undo().status() == application::CommandStatus::committedWithErrors &&
+                !loaded.isModified() && loaded.identifiedSnapshot() == expected,
+            "undo repair lost saved broken reference");
+    require(loaded.redo().status() == application::CommandStatus::committed &&
+                loaded.sceneStatus().isCurrent(),
+            "redo reference repair failed");
+    loaded.saveDocument(path);
+    session.loadDocument(path);
+    require(session.sceneStatus().isCurrent() && !session.isModified() &&
+                session.identifiedSnapshot() == loaded.identifiedSnapshot(),
+            "repaired reference did not survive save/open");
+}
 } // namespace
 int main(int argc, char** argv) {
     try {
@@ -167,6 +220,7 @@ int main(int argc, char** argv) {
         saveFailures(fixture.root);
         openFailuresAndUnicode(fixture.root);
         brokenGeometryRoundtrip(fixture.root);
+        missingProfileRoundtrip(fixture.root);
         std::cout << "Safe save/open, all commit phases, Unicode and editable errors passed\n";
         return 0;
     } catch (const std::exception& error) {

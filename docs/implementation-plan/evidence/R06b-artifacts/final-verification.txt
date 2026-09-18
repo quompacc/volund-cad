@@ -1,0 +1,18 @@
+R06b verification, 2026-09-18
+Windows build: passed
+Windows CTest: 90/90 passed, 132.75 seconds
+Windows repair fixtures: 3 output lines passed
+Source limits: 345 files passed
+Source manifest: 366 files, 27-file delta from R06a
+Local source rehash: 366/366 match manifest
+Git diff whitespace check: passed
+Windows UI: 3 captures visually reviewed
+FreeBSD build: passed
+FreeBSD CTest: 87/87 passed, 31.55 seconds
+FreeBSD vs Windows source hashes: 366/366 match
+FreeBSD vs Windows repair fixtures: 3/3 lines match
+Windows -> FreeBSD: pending and repaired native fixtures passed
+FreeBSD -> Windows: pending and repaired native fixtures passed
+FreeBSD UI: 3 captures visually reviewed
+All build/test/transfer processes completed
+No commit or push performed

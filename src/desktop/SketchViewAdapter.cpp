@@ -4,8 +4,38 @@
 #include <voelund/application/CadSession.hpp>
 
 #include <QObject>
+#include <gp_Vec.hxx>
 
 namespace voelund::desktop {
+void setSupportProjection(viewport::PlanarFaceSelection& support,
+                          const application::SketchSupportProjection& projection) {
+    support.referenceSegments.clear();
+    support.referencePoints.clear();
+    support.stableReferences = true;
+    const auto& p = projection.plane;
+    support.originX = p.originX;
+    support.originY = p.originY;
+    support.originZ = p.originZ;
+    support.normalX = p.normalX;
+    support.normalY = p.normalY;
+    support.normalZ = p.normalZ;
+    support.xDirectionX = p.xDirectionX;
+    support.xDirectionY = p.xDirectionY;
+    support.xDirectionZ = p.xDirectionZ;
+    const gp_Pnt origin(p.originX, p.originY, p.originZ);
+    const gp_Vec x(p.xDirectionX, p.xDirectionY, p.xDirectionZ);
+    const auto y = gp_Vec(p.normalX, p.normalY, p.normalZ).Crossed(x);
+    for (const auto& segment : projection.segments) {
+        const gp_Vec a(origin, segment.first), b(origin, segment.second);
+        support.referenceSegments.push_back(
+            {a.Dot(x), a.Dot(y), b.Dot(x), b.Dot(y), segment.first.X(), segment.first.Y(),
+             segment.first.Z(), segment.second.X(), segment.second.Y(), segment.second.Z()});
+    }
+    for (const auto& point : projection.points)
+        support.referencePoints.push_back({0, viewport::SketchPointKind::projected, point.local.x,
+                                           point.local.y, point.world.X(), point.world.Y(),
+                                           point.world.Z(), 0, 0, 0, point.reference});
+}
 namespace {
 
 viewport::SketchPointKind pointKind(document::SketchPointPosition kind) {

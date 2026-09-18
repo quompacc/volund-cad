@@ -1,0 +1,13 @@
+Test project V:/build/p02-qt-final
+    Start 5: features.dependency_dag
+1/1 Test #5: features.dependency_dag ..........   Passed    0.88 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+application    =   0.88 sec*proc (1 test)
+features       =   0.88 sec*proc (1 test)
+integration    =   0.88 sec*proc (1 test)
+regression     =   0.88 sec*proc (1 test)
+
+Total Test time (real) =   0.89 sec

@@ -1,0 +1,3 @@
+support repair, stale slots, atomic undo/redo, isolated errors and both persistent states passed
+legacy and broken typed edges, explicit error disposition and paired-slot transaction passed
+schema4 repair marker and older-schema rejection passed

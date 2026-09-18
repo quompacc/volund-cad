@@ -35,6 +35,8 @@ class MainWindow::Impl final {
     std::unique_ptr<SketchExtrusionToolController> sketchExtrusionTool;
     QAction* undoAction{nullptr};
     QAction* redoAction{nullptr};
+    QAction* repairAction{nullptr};
+    QAction* repairAllAction{nullptr};
     QAction* addBoxAction{nullptr};
     QAction* addCylinderAction{nullptr};
     QAction* sketchEditorAction{nullptr};

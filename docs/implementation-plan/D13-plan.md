@@ -1,6 +1,6 @@
 # D13 – Native Produktpersistenz in Teilblöcken
 
-Status: **in-progress**, 16.09.2026. D12 ist abgeschlossen.
+Status: **abgeschlossen**, 17.09.2026. D12 und D13 sind abgeschlossen; [Gesamtabnahme D13d](evidence/D13d.md).
 D13c schaltet den Produktwriter auf BinOcaf 12 / Anwendungsschema 1 um; VOLUND 1–16 bleiben lesbar.
 
 | Block | Umfang | Abschlussgrenze |
@@ -9,7 +9,7 @@ D13c schaltet den Produktwriter auf BinOcaf 12 / Anwendungsschema 1 um; VOLUND 1
 | D13b1 | Begrenztes Einlesen und Formatzuordnung | [Auf beiden Plattformen geprüft](evidence/D13b1.md): vollständige Bytes ohne Seek, 64-MiB-Grenze, Legacy-Versionen und native Containerfamilie; noch kein Produktdispatch. |
 | D13b2 | Native Containerprüfung und Ressourcenpolitik | [Dateikopf](evidence/D13b2.md) und [Strukturprüfung](evidence/D13b2-structure.md) vor OCCT-Open. [Attributprüfung](evidence/D13b2-attributes.md) und [Ausgabelimits](evidence/D13b2-limits.md) geprüft; [Gesamtreview abgeschlossen](evidence/D13b-review.md): D13b2 und D13b abgeschlossen. |
 | D13c | Save/Open und AtomicFileStore geschlossen anbinden | [Abgeschlossen](evidence/D13c.md), beide Plattformen geprüft. Genau ein Produktwriter; Dokument-ID bei nativem Open erhalten, Legacy-Open neue ID; Save-As, Dirty-/Save-Revision und starke Fehlergarantien erhalten. |
-| D13d | Austausch und Gesamtprüfung | Native Dateien Windows ↔ FreeBSD, A-SAVE-01/02, editierbare Folgefehler; D13 erst nach Gesamtabnahme abschließen. |
+| D13d | Austausch und Gesamtprüfung | [Abgeschlossen](evidence/D13d.md): Produktdateien Windows ↔ FreeBSD, A-SAVE-01/02 und reparierbare Profilreferenz; D13 ist done. |
 
 ## Grenzen
 
@@ -99,5 +99,5 @@ Die Produktintegration darf die Bytegrenze nicht als RAM-Garantie ausgeben.
    und weiterhin editierbare Geometriefehler ergänzen. Fehlgeschlagenes Open
    erhält vorheriges Dokument, Auswahl, Pfad und Revision.
 
-D13c ist nach gemeinsamer Windows-/FreeBSD-Prüfung abgeschlossen. D13d bestätigt
-als nächstes den neuen Produktdateiaustausch und A-SAVE-01/02. D13 bleibt bis dahin offen.
+D13c ist nach gemeinsamer Windows-/FreeBSD-Prüfung abgeschlossen. D13d bestätigt jetzt
+den neuen Produktdateiaustausch und A-SAVE-01/02. D13 ist abgeschlossen; D14 folgt.

@@ -1,0 +1,16 @@
+include/voelund/application/CadSession.hpp
+include/voelund/features/EvaluationState.hpp
+include/voelund/features/FeatureDependencies.hpp
+include/voelund/features/FeatureGraph.hpp
+src/application/CadSession.cpp
+src/application/CadSessionCreation.cpp
+src/application/CadSessionEvaluationDetail.hpp
+src/application/CadSessionPersistence.cpp
+src/application/CadSessionSketchProfiles.cpp
+src/application/CadSessionTransactions.cpp
+src/features/CMakeLists.txt
+src/features/FeatureDependencies.cpp
+src/features/FeatureGraph.cpp
+tests/CMakeLists.txt
+tests/desktop/FeatureStatusTests.cpp
+tests/integration/FeatureDagTests.cpp

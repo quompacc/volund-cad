@@ -1,0 +1,31 @@
+Test project V:/build/p02-qt-final
+    Start  5: features.dependency_dag
+1/6 Test  #5: features.dependency_dag ............***Failed   12.50 sec
+Initial DAG geometry invalid
+
+    Start  9: application.native_persistence
+2/6 Test  #9: application.native_persistence .....   Passed    0.73 sec
+    Start 24: application.scene_status
+3/6 Test #24: application.scene_status ...........   Passed    0.57 sec
+    Start 25: application.failure_boundaries
+4/6 Test #25: application.failure_boundaries .....   Passed    2.22 sec
+    Start 27: application.command_transactions
+5/6 Test #27: application.command_transactions ...   Passed    0.70 sec
+    Start 41: application.safe_persistence
+6/6 Test #41: application.safe_persistence .......   Passed    2.13 sec
+
+83% tests passed, 1 tests failed out of 6
+
+Label Time Summary:
+application    =  16.72 sec*proc (5 tests)
+document       =   6.36 sec*proc (5 tests)
+features       =  12.50 sec*proc (1 test)
+integration    =  18.86 sec*proc (6 tests)
+native         =   0.73 sec*proc (1 test)
+regression     =  18.86 sec*proc (6 tests)
+
+Total Test time (real) =  18.99 sec
+
+The following tests FAILED:
+	  5 - features.dependency_dag (Failed)                  application features integration regression
+Errors while running CTest

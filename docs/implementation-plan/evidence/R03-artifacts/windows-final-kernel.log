@@ -1,0 +1,15 @@
+Test project V:/build/p02-qt-final
+    Start 44: kernel.shape_factory
+1/2 Test #44: kernel.shape_factory .............   Passed    0.05 sec
+    Start 45: kernel.operation_history
+2/2 Test #45: kernel.operation_history .........   Passed    0.51 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+integration    =   0.51 sec*proc (1 test)
+kernel         =   0.56 sec*proc (2 tests)
+regression     =   0.51 sec*proc (1 test)
+unit           =   0.05 sec*proc (1 test)
+
+Total Test time (real) =   0.61 sec

@@ -1,0 +1,1 @@
+332/332 local and FreeBSD source/fixture hashes match.

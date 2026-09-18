@@ -1,0 +1,3 @@
+primitive reference persistence, namespaces, duplication, recompute, undo/redo and isolated failures passed
+extrusion contour reference roundtrip, analytic circle parameter and placed support frame passed
+schema1/2 compatibility, schema3 gating and malformed reference rejection passed

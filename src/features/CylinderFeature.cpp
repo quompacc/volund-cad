@@ -1,3 +1,4 @@
+#include "PrimitivePlacement.hpp"
 #include <voelund/features/CylinderFeature.hpp>
 #include <voelund/features/GeometryEvaluationError.hpp>
 
@@ -23,17 +24,23 @@ TopoDS_Shape CylinderFeature::evaluateTool(const document::ModelDocument& docume
 TopoDS_Shape CylinderFeature::evaluateTool(const document::DocumentSnapshot& document,
                                            const TopoDS_Shape& inputShape,
                                            bool applyPlacement) const {
+    return evaluateToolWithHistory(document, inputShape, applyPlacement).shape;
+}
+
+kernel::ShapeOperationResult
+CylinderFeature::evaluateToolWithHistory(const document::DocumentSnapshot& document,
+                                         const TopoDS_Shape& inputShape,
+                                         bool applyPlacement) const {
     const document::CylinderParameters& cylinder = document.cylinderParameters(featureId_);
     const gp_Pnt origin = attachmentOrigin(inputShape, cylinder.height);
     const kernel::CylinderDefinition definition{cylinder.radius, cylinder.height, origin.X(),
                                                 origin.Y(), origin.Z()};
-    const TopoDS_Shape cylinderShape = kernel::ShapeFactory::makeCylinder(definition);
+    const auto cylinderShape = kernel::ShapeFactory::makeCylinderWithHistory(definition);
     if (!applyPlacement) {
         return cylinderShape;
     }
-    return kernel::ShapeFactory::applyTransform(cylinderShape, origin.X(), origin.Y(),
-                                                origin.Z() + cylinder.height * 0.5,
-                                                cylinder.placement);
+    return detail::placePrimitive(cylinderShape, origin.X(), origin.Y(),
+                                  origin.Z() + cylinder.height * 0.5, cylinder.placement);
 }
 
 gp_Pnt CylinderFeature::attachmentOrigin(const TopoDS_Shape& inputShape, double cylinderHeight) {

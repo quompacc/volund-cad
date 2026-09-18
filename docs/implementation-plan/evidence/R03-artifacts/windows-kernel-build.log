@@ -1,0 +1,24 @@
+[1/6] Scanning V:\src\kernel\ShapeOperations.cpp for CXX dependencies
+[2/6] Scanning V:\src\kernel\ShapeFactory.cpp for CXX dependencies
+[3/6] Generating CXX dyndep file src\kernel\CMakeFiles\voelund_kernel.dir\CXX.dd
+[4/6] Building CXX object src\kernel\CMakeFiles\voelund_kernel.dir\ShapeOperations.cpp.obj
+FAILED: [code=2] src/kernel/CMakeFiles/voelund_kernel.dir/ShapeOperations.cpp.obj 
+C:\PROGRA~1\MICROS~1\18\COMMUN~1\VC\Tools\MSVC\1451~1.362\bin\Hostx64\x64\cl.exe  /nologo /TP -DHAVE_OPENGL_EXT -DNOMINMAX -DUNICODE -D_CRT_NONSTDC_NO_DEPRECATE -D_CRT_SECURE_NO_WARNINGS -D_UNICODE -IV:\include -external:IV:\.tools\vcpkg_installed\x64-windows-voelund\include\opencascade -external:W0 /DWIN32 /D_WINDOWS /EHsc /Ob0 /Od /RTC1 -std:c++20 -MDd -Zi /W4 /permissive- /Zc:__cplusplus /utf-8 /WX /FS /showIncludes @src\kernel\CMakeFiles\voelund_kernel.dir\ShapeOperations.cpp.obj.modmap /Fosrc\kernel\CMakeFiles\voelund_kernel.dir\ShapeOperations.cpp.obj /Fdsrc\kernel\CMakeFiles\voelund_kernel.dir\voelund_kernel.pdb /FS -c V:\src\kernel\ShapeOperations.cpp
+V:\.tools\vcpkg_installed\x64-windows-voelund\include\opencascade\TopTools_IndexedMapOfShape.hxx(28): warning: TopTools_IndexedMapOfShape.hxx is deprecated since OCCT 8.0.0. Use NCollection_IndexedMap<TopoDS_Shape, TopTools_ShapeMapHasher> directly.
+V:\.tools\vcpkg_installed\x64-windows-voelund\include\opencascade\TopTools_ListOfShape.hxx(27): warning: TopTools_ListOfShape.hxx is deprecated since OCCT 8.0.0. Use NCollection types directly.
+V:\src\kernel\OperationHistoryDetail.hpp(14): error C2220: Die folgende Warnung wird als Fehler behandelt.
+V:\src\kernel\OperationHistoryDetail.hpp(14): warning C4996: 'TopTools_IndexedMapOfShape': TopTools_IndexedMapOfShape is deprecated, use NCollection_IndexedMap<TopoDS_Shape, TopTools_ShapeMapHasher> directly
+V:\src\kernel\OperationHistoryDetail.hpp(29): warning C4996: 'TopTools_ListOfShape': TopTools_ListOfShape is deprecated, use NCollection_List<TopoDS_Shape> directly
+V:\src\kernel\OperationHistoryDetail.hpp(40): warning C4996: 'TopTools_IndexedMapOfShape': TopTools_IndexedMapOfShape is deprecated, use NCollection_IndexedMap<TopoDS_Shape, TopTools_ShapeMapHasher> directly
+V:\src\kernel\OperationHistoryDetail.hpp(84): warning C4996: 'TopTools_IndexedMapOfShape': TopTools_IndexedMapOfShape is deprecated, use NCollection_IndexedMap<TopoDS_Shape, TopTools_ShapeMapHasher> directly
+[5/6] Building CXX object src\kernel\CMakeFiles\voelund_kernel.dir\ShapeFactory.cpp.obj
+FAILED: [code=2] src/kernel/CMakeFiles/voelund_kernel.dir/ShapeFactory.cpp.obj 
+C:\PROGRA~1\MICROS~1\18\COMMUN~1\VC\Tools\MSVC\1451~1.362\bin\Hostx64\x64\cl.exe  /nologo /TP -DHAVE_OPENGL_EXT -DNOMINMAX -DUNICODE -D_CRT_NONSTDC_NO_DEPRECATE -D_CRT_SECURE_NO_WARNINGS -D_UNICODE -IV:\include -external:IV:\.tools\vcpkg_installed\x64-windows-voelund\include\opencascade -external:W0 /DWIN32 /D_WINDOWS /EHsc /Ob0 /Od /RTC1 -std:c++20 -MDd -Zi /W4 /permissive- /Zc:__cplusplus /utf-8 /WX /FS /showIncludes @src\kernel\CMakeFiles\voelund_kernel.dir\ShapeFactory.cpp.obj.modmap /Fosrc\kernel\CMakeFiles\voelund_kernel.dir\ShapeFactory.cpp.obj /Fdsrc\kernel\CMakeFiles\voelund_kernel.dir\voelund_kernel.pdb /FS -c V:\src\kernel\ShapeFactory.cpp
+V:\.tools\vcpkg_installed\x64-windows-voelund\include\opencascade\TopTools_IndexedMapOfShape.hxx(28): warning: TopTools_IndexedMapOfShape.hxx is deprecated since OCCT 8.0.0. Use NCollection_IndexedMap<TopoDS_Shape, TopTools_ShapeMapHasher> directly.
+V:\.tools\vcpkg_installed\x64-windows-voelund\include\opencascade\TopTools_ListOfShape.hxx(27): warning: TopTools_ListOfShape.hxx is deprecated since OCCT 8.0.0. Use NCollection types directly.
+V:\src\kernel\OperationHistoryDetail.hpp(14): error C2220: Die folgende Warnung wird als Fehler behandelt.
+V:\src\kernel\OperationHistoryDetail.hpp(14): warning C4996: 'TopTools_IndexedMapOfShape': TopTools_IndexedMapOfShape is deprecated, use NCollection_IndexedMap<TopoDS_Shape, TopTools_ShapeMapHasher> directly
+V:\src\kernel\OperationHistoryDetail.hpp(29): warning C4996: 'TopTools_ListOfShape': TopTools_ListOfShape is deprecated, use NCollection_List<TopoDS_Shape> directly
+V:\src\kernel\OperationHistoryDetail.hpp(40): warning C4996: 'TopTools_IndexedMapOfShape': TopTools_IndexedMapOfShape is deprecated, use NCollection_IndexedMap<TopoDS_Shape, TopTools_ShapeMapHasher> directly
+V:\src\kernel\OperationHistoryDetail.hpp(84): warning C4996: 'TopTools_IndexedMapOfShape': TopTools_IndexedMapOfShape is deprecated, use NCollection_IndexedMap<TopoDS_Shape, TopTools_ShapeMapHasher> directly
+ninja: build stopped: subcommand failed.

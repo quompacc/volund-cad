@@ -14,3 +14,7 @@ Current decisions:
 - [0007: Sway-Entwicklung, Meridian-Integration zum Schluss](0007-sway-development-meridian-final.md)
 
 - [0008 – OCAF-Dokumentautorität und native Binärpersistenz](0008-ocaf-binary-persistence.md)
+
+- [0009 – Herkunftsbasierte Subshape-Referenzen](0009-subshape-reference-contract.md)
+
+- [0010 – Native Konstruktionsaktionen und nachrüstbare Analyse](0010-native-actions-and-analysis-extension.md)

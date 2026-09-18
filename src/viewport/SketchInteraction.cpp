@@ -1,8 +1,8 @@
 #include "SketchInteraction.hpp"
 #include "SketchViewOrientation.hpp"
 
-#include <BRepAdaptor_Surface.hxx>
 #include <BRepAdaptor_Curve.hxx>
+#include <BRepAdaptor_Surface.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepBuilderAPI_MakePolygon.hxx>
 #include <BRepPrimAPI_MakePrism.hxx>
@@ -62,27 +62,34 @@ std::optional<PlanarFaceSelection> planarFaceSelection(std::uint64_t bodyId,
         const double lastParameter = curve.LastParameter();
         gp_Pnt first = curve.Value(firstParameter);
         for (int index = 1; index <= divisions; ++index) {
-            const gp_Pnt second = curve.Value(firstParameter +
-                                              (lastParameter - firstParameter) * index / divisions);
+            const gp_Pnt second =
+                curve.Value(firstParameter + (lastParameter - firstParameter) * index / divisions);
             const gp_Vec firstOffset(origin, first);
             const gp_Vec secondOffset(origin, second);
-            references.push_back({firstOffset.Dot(gp_Vec(xDirection)),
-                                  firstOffset.Dot(gp_Vec(yDirection)),
-                                  secondOffset.Dot(gp_Vec(xDirection)),
-                                  secondOffset.Dot(gp_Vec(yDirection)),
-                                  first.X(), first.Y(), first.Z(), second.X(), second.Y(),
-                                  second.Z(), references.size() + 1});
+            references.push_back(
+                {firstOffset.Dot(gp_Vec(xDirection)), firstOffset.Dot(gp_Vec(yDirection)),
+                 secondOffset.Dot(gp_Vec(xDirection)), secondOffset.Dot(gp_Vec(yDirection)),
+                 first.X(), first.Y(), first.Z(), second.X(), second.Y(), second.Z(),
+                 references.size() + 1});
             first = second;
         }
     }
-    return PlanarFaceSelection{bodyId,         origin.X(),    origin.Y(), origin.Z(),
-                               normal.X(),     normal.Y(),    normal.Z(), xDirection.X(),
-                               xDirection.Y(), xDirection.Z(), std::move(references)};
+    return PlanarFaceSelection{bodyId,
+                               origin.X(),
+                               origin.Y(),
+                               origin.Z(),
+                               normal.X(),
+                               normal.Y(),
+                               normal.Z(),
+                               xDirection.X(),
+                               xDirection.Y(),
+                               xDirection.Z(),
+                               std::move(references),
+                               face};
 }
 
-std::optional<PlanarFaceSelection>
-resolvePlanarFaceSelection(const PlanarFaceSelection& previous,
-                           const TopoDS_Shape& supportShape) {
+std::optional<PlanarFaceSelection> resolvePlanarFaceSelection(const PlanarFaceSelection& previous,
+                                                              const TopoDS_Shape& supportShape) {
     std::optional<PlanarFaceSelection> best;
     double bestDistance = std::numeric_limits<double>::max();
     const gp_Vec previousNormal(previous.normalX, previous.normalY, previous.normalZ);
@@ -95,8 +102,7 @@ resolvePlanarFaceSelection(const PlanarFaceSelection& previous,
         if (previousNormal.Dot(candidateNormal) < 0.999)
             continue;
         const gp_Pnt candidateOrigin(candidate->originX, candidate->originY, candidate->originZ);
-        const double signedDistance =
-            gp_Vec(previousOrigin, candidateOrigin).Dot(previousNormal);
+        const double signedDistance = gp_Vec(previousOrigin, candidateOrigin).Dot(previousNormal);
         const double distance = std::abs(signedDistance);
         if (distance < bestDistance) {
             bestDistance = distance;
@@ -144,11 +150,12 @@ void SketchInteraction::begin(const PlanarFaceSelection& support,
 }
 
 void SketchInteraction::rebind(const occ::handle<AIS_InteractiveContext>& context,
-                              const occ::handle<V3d_View>& view) {
+                               const occ::handle<V3d_View>& view) {
     preview_.Nullify();
     context_ = context;
     view_ = view;
-    if (active_ && !context_.IsNull() && secondPoint_) showExtrusionPreview();
+    if (active_ && !context_.IsNull() && secondPoint_)
+        showExtrusionPreview();
 }
 
 void SketchInteraction::cancel() {

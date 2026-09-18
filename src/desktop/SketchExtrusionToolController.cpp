@@ -19,6 +19,18 @@ SketchExtrusionToolController::SketchExtrusionToolController(
       statusChanged_(std::move(statusChanged)) {}
 
 void SketchExtrusionToolController::begin(const viewport::PlanarFaceSelection& support) {
+    try {
+        const document::SketchPlane plane{
+            support.originX,     support.originY,     support.originZ,
+            support.normalX,     support.normalY,     support.normalZ,
+            support.xDirectionX, support.xDirectionY, support.xDirectionZ};
+        supportBinding_ = session_.bindSelectedSupport(document::FeatureId{support.bodyId},
+                                                       support.selectedFace, plane);
+    } catch (const std::exception& error) {
+        statusChanged_(QString::fromUtf8(error.what()));
+        return;
+    }
+    supportStamp_ = session_.sceneStatus().document;
     active_ = true;
     result_.reset();
     profileSketch_.reset();
@@ -47,6 +59,8 @@ void SketchExtrusionToolController::beginSelectedProfiles() {
     if (!session_.canExtrudeSelectedSketchProfiles())
         return;
     active_ = true;
+    supportBinding_.reset();
+    supportStamp_ = session_.sceneStatus().document;
     result_.reset();
     profileSketch_ = session_.selectedFeature();
     const auto selected = session_.selectedSketchProfiles();
@@ -94,6 +108,13 @@ void SketchExtrusionToolController::setDistance(double distance) {
 }
 
 void SketchExtrusionToolController::accept() {
+    if (supportStamp_ && *supportStamp_ != session_.sceneStatus().document) {
+        const auto message =
+            QObject::tr("The model changed. Reopen the extrusion on its current support.");
+        panel_.setGuidance(message);
+        statusChanged_(message);
+        return;
+    }
     if (profileSketch_.has_value()) {
         if (!runCommand(
                 [this] {
@@ -125,8 +146,11 @@ void SketchExtrusionToolController::accept() {
                                               result_->secondY};
     if (!runCommand(
             [&] {
-                return session_.createSketchExtrusion(document::FeatureId{support.bodyId}, plane,
-                                                      rectangle, distance_);
+                document::SketchParameters sketch{plane,
+                                                  {{{document::SketchElementId{1}, rectangle}}, 2}};
+                sketch.supportBinding = supportBinding_;
+                return session_.createSketchExtrusion(document::FeatureId{support.bodyId}, sketch,
+                                                      distance_);
             },
             [this](const QString& message) {
                 panel_.setGuidance(message);

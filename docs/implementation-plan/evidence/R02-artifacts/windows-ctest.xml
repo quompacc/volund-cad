@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="1"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="0"
+	timestamp="2026-09-17T17:04:37"
+	>
+	<testcase name="contract.reference_fixtures" classname="contract.reference_fixtures" time="0.005801" status="run">
+		<properties/>
+		<system-out>box-top PASS
+coplanar-known-origin PASS
+coplanar-legacy-tie PASS
+split PASS
+merge PASS
+split-then-merge PASS
+deleted PASS
+rotated-90 PASS
+boolean-modified PASS
+boolean-generated-is-not-continuation PASS
+boolean-history-gap PASS
+single-geometric-suggestion PASS
+foreign-document PASS
+foreign-body PASS
+stale-revision PASS
+wrong-output-producer PASS
+different-origin-role PASS
+different-origin-feature PASS
+extrusion-end-cap PASS
+contour-edge-tessellation-independent PASS
+extrusion-side PASS
+invalid-topology PASS
+contradictory-deletion PASS
+unexplained-empty-history PASS
+zero-origin-id PASS
+empty-region-key PASS
+26 contract fixtures passed (symbolic, no OCCT history proof)
+</system-out>
+	</testcase>
+</testsuite>

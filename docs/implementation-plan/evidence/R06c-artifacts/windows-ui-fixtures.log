@@ -1,0 +1,4 @@
+single geometric proposal: explicit UI selection, Cancel, Undo/Redo, file dialogs passed
+two coplanar candidates: explicit UI selection, Cancel, Undo/Redo, file dialogs passed
+edge group, explicit partial repair, independent edit and stale refresh passed
+unavailable support: no replacement, no mutation passed

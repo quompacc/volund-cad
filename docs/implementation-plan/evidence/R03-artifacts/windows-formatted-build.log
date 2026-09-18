@@ -1,0 +1,14 @@
+[1/14] Scanning V:\tests\unit\ShapeFactoryTests.cpp for CXX dependencies
+[2/14] Generating CXX dyndep file tests\CMakeFiles\voelund_kernel_tests.dir\CXX.dd
+[3/14] Scanning V:\src\kernel\ShapeOperations.cpp for CXX dependencies
+[4/14] Scanning V:\src\kernel\ShapeFactory.cpp for CXX dependencies
+[5/14] Scanning V:\tests\integration\OperationHistoryTests.cpp for CXX dependencies
+[6/14] Generating CXX dyndep file src\kernel\CMakeFiles\voelund_kernel.dir\CXX.dd
+[7/14] Generating CXX dyndep file tests\CMakeFiles\voelund_operation_history_tests.dir\CXX.dd
+[8/14] Building CXX object tests\CMakeFiles\voelund_kernel_tests.dir\unit\ShapeFactoryTests.cpp.obj
+[9/14] Building CXX object src\kernel\CMakeFiles\voelund_kernel.dir\ShapeOperations.cpp.obj
+[10/14] Building CXX object src\kernel\CMakeFiles\voelund_kernel.dir\ShapeFactory.cpp.obj
+[11/14] Building CXX object tests\CMakeFiles\voelund_operation_history_tests.dir\integration\OperationHistoryTests.cpp.obj
+[12/14] Linking CXX static library src\kernel\voelund_kernel.lib
+[13/14] Linking CXX executable tests\voelund_kernel_tests.exe
+[14/14] Linking CXX executable tests\voelund_operation_history_tests.exe

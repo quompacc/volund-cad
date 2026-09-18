@@ -16,6 +16,7 @@ IdentifiedDocumentSnapshot IdentifiedDocumentSnapshot::revised(DocumentSnapshot 
     return {id_, std::move(snapshot)};
 }
 IdentifiedDocumentSnapshot IdentifiedDocumentSnapshot::duplicate() const {
-    return {detail::generateDocumentIdUsing(platform::randomBytes128, id_), snapshot_};
+    const auto next = detail::generateDocumentIdUsing(platform::randomBytes128, id_);
+    return {next, snapshot_.remapSupportNamespace(id_, next)};
 }
 } // namespace voelund::document

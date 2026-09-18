@@ -1,0 +1,3 @@
+tests/CMakeLists.txt
+tests/integration/MigrationAcceptanceTests.cpp
+tests/integration/LegacyConstraintMigrationTests.cpp

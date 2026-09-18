@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Win32-ninja"
+	tests="2"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname="megatron"
+	time="4"
+	timestamp="2026-09-17T05:21:13"
+	>
+	<testcase name="application.product_file_exchange" classname="application.product_file_exchange" time="2.63107" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;document;integration;native;regression"/>
+		</properties>
+		<system-out>PASS product exchange: full snapshots/IDs, three analytic bodies, edits, Save-As, error repair/undo/redo
+</system-out>
+	</testcase>
+	<testcase name="application.safe_persistence" classname="application.safe_persistence" time="1.72982" status="run">
+		<properties>
+			<property name="cmake_labels" value="document;integration;regression"/>
+		</properties>
+		<system-out>Safe save/open, all commit phases, Unicode and editable errors passed
+</system-out>
+	</testcase>
+</testsuite>

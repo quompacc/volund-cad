@@ -68,6 +68,10 @@ void validateSketchParameters(const SketchParameters& parameters) {
     validateCanonicalSketchPlane(parameters.plane);
     validateSketchElements(parameters.elements);
     validateSketchConstraints(parameters.elements, parameters.constraints);
+    if (parameters.supportBinding) {
+        validateSubshapeOrigin(parameters.supportBinding->reference.origin);
+        validateCanonicalSketchPlane(parameters.supportBinding->localPlane);
+    }
 }
 
 ModelDocument::ModelDocument() : ModelDocument(true) {}
@@ -79,15 +83,19 @@ ModelDocument::ModelDocument(bool createStarterFeatures)
 ModelDocument::ModelDocument(const DocumentSnapshot& snapshot, DocumentId id)
     : impl_(std::make_unique<Impl>(IdentifiedDocumentSnapshot::restore(id, snapshot))) {}
 DocumentSnapshot ModelDocument::initialSnapshot(bool createStarterFeatures) {
-    if (!createStarterFeatures) return DocumentSnapshot({}, {}, 1);
-    return DocumentSnapshot({
-        {initialBoxId(), FeatureKind::box, "Box", std::nullopt},
-        {initialCylinderId(), FeatureKind::cylinder, "Cylinder", initialBoxId()}},
+    if (!createStarterFeatures)
+        return DocumentSnapshot({}, {}, 1);
+    return DocumentSnapshot(
+        {{initialBoxId(), FeatureKind::box, "Box", std::nullopt},
+         {initialCylinderId(), FeatureKind::cylinder, "Cylinder", initialBoxId()}},
         {BoxParameters{{40, 30, 20}, {0, 0, 0, {}, {}, {}}},
-         CylinderParameters{8, 25, {0, 0, 0, {}, {}, {}}, CylinderResultMode::join}}, 3);
+         CylinderParameters{8, 25, {0, 0, 0, {}, {}, {}}, CylinderResultMode::join}},
+        3);
 }
 
-std::span<const FeatureDescriptor> ModelDocument::features() const noexcept { return impl_->view().features(); }
+std::span<const FeatureDescriptor> ModelDocument::features() const noexcept {
+    return impl_->view().features();
+}
 
 bool ModelDocument::contains(FeatureId featureId) const noexcept {
     for (const FeatureDescriptor& feature : impl_->view().features()) {
@@ -224,7 +232,8 @@ bool ModelDocument::setCylinderParameters(FeatureId featureId,
 }
 
 const SketchParameters& ModelDocument::sketchParameters(FeatureId featureId) const {
-    const auto* value = std::get_if<SketchParameters>(&impl_->view().parameters()[featureIndex(featureId)]);
+    const auto* value =
+        std::get_if<SketchParameters>(&impl_->view().parameters()[featureIndex(featureId)]);
     if (value == nullptr) {
         throw std::out_of_range("Feature is not a sketch");
     }
@@ -258,7 +267,8 @@ SketchElementId ModelDocument::addSketchElement(FeatureId featureId, SketchGeome
 }
 
 const ExtrusionParameters& ModelDocument::extrusionParameters(FeatureId featureId) const {
-    const auto* value = std::get_if<ExtrusionParameters>(&impl_->view().parameters()[featureIndex(featureId)]);
+    const auto* value =
+        std::get_if<ExtrusionParameters>(&impl_->view().parameters()[featureIndex(featureId)]);
     if (value == nullptr) {
         throw std::out_of_range("Feature is not an extrusion");
     }
@@ -344,4 +354,4 @@ std::uint64_t ModelDocument::revision() const noexcept { return impl_->native.re
 
 namespace voelund::document {
 DocumentId ModelDocument::documentId() const noexcept { return impl_->native.view().id(); }
-}
+} // namespace voelund::document

@@ -1,8 +1,9 @@
 #pragma once
 
-#include <voelund/document/FeatureId.hpp>
 #include <voelund/document/DocumentId.hpp>
+#include <voelund/document/FeatureId.hpp>
 #include <voelund/document/SketchGeometry.hpp>
+#include <voelund/document/SubshapeReference.hpp>
 #include <voelund/kernel/ShapeFactory.hpp>
 
 #include <cstddef>
@@ -54,10 +55,20 @@ struct SketchPlane final {
     [[nodiscard]] bool operator==(const SketchPlane&) const = default;
 };
 
+struct SketchSupportBinding final {
+    SubshapeRef reference;
+    // Sketch frame expressed in the semantic source face's moving frame.
+    SketchPlane localPlane;
+    bool operator==(const SketchSupportBinding&) const = default;
+};
+
+enum class SketchRepairReason { legacySupport = 1, legacyEdges = 2 };
 struct SketchParameters final {
     SketchPlane plane;
     SketchElements elements;
     SketchConstraints constraints;
+    std::optional<SketchSupportBinding> supportBinding{};
+    std::optional<SketchRepairReason> repairReason{};
 
     SketchParameters() = default;
     SketchParameters(SketchPlane sketchPlane, SketchElements sketchElements,

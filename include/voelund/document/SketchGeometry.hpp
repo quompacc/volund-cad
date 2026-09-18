@@ -5,20 +5,10 @@
 #include <utility>
 #include <variant>
 #include <vector>
+#include <voelund/document/EdgeReference.hpp>
 #include <voelund/kernel/Angle.hpp>
 
 namespace voelund::document {
-
-class SketchElementId final {
-  public:
-    constexpr explicit SketchElementId(std::uint64_t value) noexcept : value_(value) {}
-
-    [[nodiscard]] constexpr std::uint64_t value() const noexcept { return value_; }
-    [[nodiscard]] constexpr bool operator==(const SketchElementId&) const noexcept = default;
-
-  private:
-    std::uint64_t value_;
-};
 
 class SketchConstraintId final {
   public:
@@ -165,6 +155,7 @@ struct SketchConstraint final {
     kernel::Radians angleValue{};
     std::optional<SketchGeometryReference> third;
     std::vector<double> auxiliaryValues;
+    std::optional<ProjectedEdgeReference> projectedEdge{};
 
     SketchConstraint(SketchConstraintId constraintId, SketchConstraintKind constraintKind,
                      SketchGeometryReference firstReference,

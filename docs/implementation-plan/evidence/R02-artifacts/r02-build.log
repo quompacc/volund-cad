@@ -1,0 +1,11 @@
+-- The CXX compiler identification is Clang 19.1.7
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done (0.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/eduard/src/voelund-p04-20260913/build/r02-reference-contract
+[1/2] Building CXX object CMakeFiles/reference_contract.dir/ContractProof.cpp.o
+[2/2] Linking CXX executable reference_contract

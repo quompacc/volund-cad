@@ -340,7 +340,7 @@ bool SketchEditorSession::addSupportReference(document::SketchGeometryReference 
                                               document::SketchPoint point,
                                               std::uint64_t supportReferenceId,
                                               double supportReferenceParameter) {
-    if (!active_ || reference.element.value() == 0 || supportReferenceId == 0 ||
+    if (supportBinding_ || !active_ || reference.element.value() == 0 || supportReferenceId == 0 ||
         !std::isfinite(supportReferenceParameter))
         return false;
     if (!canAllocateIds(0, 2))

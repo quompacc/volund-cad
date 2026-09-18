@@ -1,0 +1,14 @@
+[1/34] Scanning V:\src\desktop\ReferenceRepairDialog.cpp for CXX dependencies
+[2/34] Generating CXX dyndep file src\desktop\CMakeFiles\voelund_desktop.dir\CXX.dd
+[3/14] Building CXX object src\desktop\CMakeFiles\voelund_desktop.dir\ReferenceRepairDialog.cpp.obj
+[4/14] Linking CXX static library src\desktop\voelund_desktop.lib
+[5/14] Linking CXX executable tests\voelund_preview_command_failure_tests.exe
+[6/14] Linking CXX executable tests\voelund_sketch_command_failure_tests.exe
+[7/14] Linking CXX executable tests\voelund_feature_status_tests.exe
+[8/14] Linking CXX executable tests\voelund_support_flow_tests.exe
+[9/14] Linking CXX executable tests\voelund_reference_repair_flow_tests.exe
+[10/14] Linking CXX executable apps\voelund-cad\voelund-cad.exe; Deploying the minimal Qt runtime; Deploying the Qt OpenGL runtime
+[11/14] Linking CXX executable tests\voelund_projected_edge_flow_tests.exe
+[12/14] Linking CXX executable tests\voelund_angle_input_tests.exe
+[13/14] Linking CXX executable tests\voelund_parameter_failure_tests.exe
+[14/14] Linking CXX executable tests\voelund_sketch_solver_gate_tests.exe

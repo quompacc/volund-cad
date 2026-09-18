@@ -1,0 +1,14 @@
+[
+  {
+    "sha256": "52cab723f0179b7d86346af161f0e8d6ad8048d06290a772461ed5a364ae7ad0",
+    "path": "tools/reference-contract/CMakeLists.txt"
+  },
+  {
+    "sha256": "167f2cca5f903fa012b6207a75ddf885bef7c9d94b91f5ec1db2c7724fdcf55d",
+    "path": "tools/reference-contract/SubshapeContract.hpp"
+  },
+  {
+    "sha256": "874ae637d0ea7428c9caf32cd0ee210b3876f9a789014736809c764d9e94dd56",
+    "path": "tools/reference-contract/ContractProof.cpp"
+  }
+]

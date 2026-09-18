@@ -1,0 +1,13 @@
+R06c final verification, 2026-09-18
+Windows full CTest: 91/91 passed, 121.47 seconds
+After explicit signed-index casts: Windows rebuild and focused UI/status/source-limit tests 3/3 passed, 9.25 seconds
+FreeBSD build and full CTest: 88/88 passed, 34.97 seconds
+Source manifest/local/FreeBSD: 371/371 SHA-256 values match
+10 source/test files transferred versus R06b
+Windows -> FreeBSD: unrepaired, single repaired, coplanar repaired native UI fixtures passed
+FreeBSD -> Windows: same three states passed
+UI fixture output: 4/4 lines match (FreeBSD untruncated standalone output; JUnit truncates)
+350 source files within size limits; git diff whitespace check passed
+12 Windows and 12 FreeBSD UI images visually reviewed (see ui-review.txt)
+A-REF-03 and R06 accepted
+No commit or push

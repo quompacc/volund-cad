@@ -34,8 +34,12 @@ wechselt. Native Wayland-Läufe verwenden dieses Runtime-Verzeichnis und
 `WAYLAND_DISPLAY=wayland-1`, `QT_QPA_PLATFORM=wayland`, ohne DISPLAY.
 Sitzung/Socket vor Verwendung erneut prüfen.
 
-Der Nutzer hat Quellcodeübertragungen und den separaten Build auf diesen Host
-für die laufende Sitzung ausdrücklich freigegeben. Der vorhandene Projektstand
+Der Nutzer hat am 18.09.2026 die **dauerhafte projektweite Freigabe** erteilt:
+Projektdateien einschließlich neuer interner Quelltexte, Tests und Prüfdaten dürfen
+auf diesen ausdrücklich dafür aufgesetzten Host übertragen werden. Builds und Tests
+sowie Rücktransfer und Auswertung ihrer Artefakte sind eingeschlossen. Die Freigabe
+gilt auch für neue Pakete, korrigierte Payloads und spätere Sitzungen; keine erneute
+Zustimmung je Transfer einholen. Verbindlich: [Ausführungsregel](implementation-plan/10-autonome-umsetzung.md#dauerhafte-freigabe-für-den-freebsd-prüfrechner). Der vorhandene Projektstand
 wird nicht durch den aktuellen Arbeitsbaum überschrieben. Eine laufende oder
 installierte Meridian-Sitzung wurde bislang nicht gefunden; Sway bleibt der
 Kontrollcompositor und wird nicht als Meridian ausgegeben.

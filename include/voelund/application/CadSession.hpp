@@ -1,11 +1,13 @@
 #pragma once
 #include <voelund/application/CommandTransaction.hpp>
 #include <voelund/application/SceneStatus.hpp>
+#include <voelund/application/SketchReferenceInspection.hpp>
+#include <voelund/application/SketchSupportProjection.hpp>
 
 #include <voelund/document/DocumentTransaction.hpp>
-#include <voelund/document/ModelDocument.hpp>
 #include <voelund/document/IdentifiedDocumentSnapshot.hpp>
 #include <voelund/document/LegacyDocumentImporter.hpp>
+#include <voelund/document/ModelDocument.hpp>
 #include <voelund/features/FeatureGraph.hpp>
 #include <voelund/features/SketchEvaluation.hpp>
 
@@ -30,12 +32,16 @@ struct FeatureRuntimeState final {
 class CadSession final {
   public:
     CadSession();
-    [[nodiscard]] document::DocumentId documentId() const noexcept { return document_.documentId(); }
+    [[nodiscard]] document::DocumentId documentId() const noexcept {
+        return document_.documentId();
+    }
     [[nodiscard]] document::IdentifiedDocumentSnapshot identifiedSnapshot() const;
     // Replace this session with an unsaved copy in a new namespace; clear transient history.
     void duplicateDocument();
 
     [[nodiscard]] TopoDS_Shape currentShape() const;
+    // Current successful final bodies, including independent branches of an error document.
+    [[nodiscard]] std::span<const features::EvaluatedBody> validBodies() const noexcept;
     // Retained geometry is for explicitly labelled display only, never current evaluation.
     [[nodiscard]] TopoDS_Shape displayShape() const { return currentShape_; }
     [[nodiscard]] std::span<const features::EvaluatedBody> displayBodies() const noexcept {
@@ -58,8 +64,33 @@ class CadSession final {
     [[nodiscard]] std::vector<document::SketchElementId> selectedSketchProfileElements() const;
     [[nodiscard]] bool canExtrudeSelectedSketchProfiles() const noexcept;
     [[nodiscard]] document::SketchParameters selectedSketchParameters() const;
+    [[nodiscard]] document::SketchParameters sketchParameters(document::FeatureId featureId) const;
     [[nodiscard]] document::SketchParameters
-    sketchParameters(document::FeatureId featureId) const;
+    sketchParametersForEditing(document::FeatureId featureId) const;
+    [[nodiscard]] document::SketchSupportBinding
+    bindSelectedSupport(document::FeatureId support, const TopoDS_Shape& face,
+                        const document::SketchPlane& plane) const;
+    [[nodiscard]] SketchSupportProjection
+    projectSketchSupport(document::FeatureId support, const document::SketchSupportBinding& binding,
+                         unsigned divisions = 32) const;
+    void resolveSketchSupport(document::FeatureId support,
+                              document::SketchParameters& sketch) const;
+    [[nodiscard]] SketchReferenceInspection
+    inspectSketchReferences(document::FeatureId sketch) const;
+    // Read-only staged proposals, including downstream references unlocked by earlier proposals.
+    [[nodiscard]] std::vector<SketchSupportRepairSuggestion> suggestSketchSupportRepairs() const;
+    [[nodiscard]] CommandResult
+    repairSketchSupports(std::span<const SketchSupportRepair> repairs,
+                         ErrorDisposition disposition = ErrorDisposition::reject);
+    [[nodiscard]] CommandResult
+    repairSketchSupport(const SketchReferenceInspection& expected,
+                        const features::SketchSupportCandidate& chosen,
+                        ErrorDisposition disposition = ErrorDisposition::reject);
+    [[nodiscard]] CommandResult
+    repairSketchEdgeReferences(const SketchReferenceInspection& expected,
+                               std::span<const document::SketchConstraintId> slots,
+                               const document::ProjectedEdgeReference& chosen,
+                               ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] CommandResult
     editSketchParameters(document::FeatureId featureId,
                          const document::SketchParameters& parameters,
@@ -122,7 +153,8 @@ class CadSession final {
     void saveDocument(const std::filesystem::path& path);
     void loadDocument(const std::filesystem::path& path);
     // Provenance of the last successful import; editing/saving does not resolve its issues.
-    [[nodiscard]] const std::optional<document::MigrationReport>& lastImportReport() const noexcept {
+    [[nodiscard]] const std::optional<document::MigrationReport>&
+    lastImportReport() const noexcept {
         return importReport_;
     }
     [[nodiscard]] const std::filesystem::path& currentFile() const noexcept { return currentFile_; }
@@ -137,13 +169,12 @@ class CadSession final {
                                                 bool clearSketchSelection);
     [[nodiscard]] CommandResult restoreHistory(bool forward);
     [[nodiscard]] bool recompute();
-    void markFeaturesCurrent();
-    void markFeatureError(document::FeatureId featureId, const std::string& message);
     void normalizeSelection() noexcept;
     [[nodiscard]] std::string serializedDocument() const;
 
     document::ModelDocument document_;
     features::FeatureGraph featureGraph_;
+    std::shared_ptr<const features::FeatureGraphEvaluation> evaluation_;
     TopoDS_Shape currentShape_;
     std::vector<features::EvaluatedBody> currentBodies_;
     std::vector<features::EvaluatedFeature> currentFeatures_;

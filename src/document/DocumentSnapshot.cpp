@@ -4,12 +4,30 @@
 #include <voelund/document/DocumentSnapshot.hpp>
 
 namespace voelund::document {
+DocumentSnapshot DocumentSnapshot::markLegacySketchReferencesForRepair() const {
+    auto result = *this;
+    for (auto& parameter : result.parameters_) {
+        auto* sketch = std::get_if<SketchParameters>(&parameter);
+        if (!sketch || sketch->repairReason)
+            continue;
+        if (!sketch->supportBinding)
+            sketch->repairReason = SketchRepairReason::legacySupport;
+        else if (std::ranges::any_of(sketch->constraints.values, [](const auto& c) {
+                     return (c.kind == SketchConstraintKind::coordinateX ||
+                             c.kind == SketchConstraintKind::coordinateY) &&
+                            c.auxiliaryValues.size() == 2;
+                 }))
+            sketch->repairReason = SketchRepairReason::legacyEdges;
+    }
+    return result;
+}
 DocumentSnapshot DocumentSnapshot::capture(const ModelDocument& document) {
     return document.impl_->view();
 }
 bool DocumentSnapshot::matchesContent(const ModelDocument& document) const {
     const auto& view = document.impl_->view();
-    return std::ranges::equal(features_, view.features()) && std::ranges::equal(parameters_, view.parameters());
+    return std::ranges::equal(features_, view.features()) &&
+           std::ranges::equal(parameters_, view.parameters());
 }
 const FeatureParameters& DocumentSnapshot::featureParameters(FeatureId id) const {
     const auto found = std::ranges::find(features_, id, &FeatureDescriptor::id);
@@ -33,9 +51,30 @@ const kernel::BoxDimensions& DocumentSnapshot::boxDimensions(FeatureId id) const
     return boxParameters(id).dimensions;
 }
 ModelDocument DocumentSnapshot::toDocument() const {
+    for (const auto& parameter : parameters_)
+        if (const auto* sketch = std::get_if<SketchParameters>(&parameter);
+            sketch && sketch->supportBinding)
+            throw std::invalid_argument(
+                "Bound snapshot requires its document identity or explicit duplication");
     return toDocument(generateDocumentId());
 }
-ModelDocument DocumentSnapshot::toDocument(DocumentId id) const {
-    return ModelDocument(*this, id);
+DocumentSnapshot DocumentSnapshot::remapSupportNamespace(DocumentId from, DocumentId to) const {
+    auto result = *this;
+    for (auto& parameter : result.parameters_)
+        if (auto* sketch = std::get_if<SketchParameters>(&parameter);
+            sketch && sketch->supportBinding) {
+            if (sketch->supportBinding->reference.document != from)
+                throw std::invalid_argument("Cannot remap a foreign support namespace");
+            sketch->supportBinding->reference.document = to;
+            for (auto& constraint : sketch->constraints.values)
+                if (constraint.projectedEdge) {
+                    if (constraint.projectedEdge->document != from)
+                        throw std::invalid_argument(
+                            "Cannot remap a foreign projected edge namespace");
+                    constraint.projectedEdge->document = to;
+                }
+        }
+    return result;
 }
+ModelDocument DocumentSnapshot::toDocument(DocumentId id) const { return ModelDocument(*this, id); }
 } // namespace voelund::document

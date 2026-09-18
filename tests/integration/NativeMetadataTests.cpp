@@ -1,6 +1,4 @@
 #include "../../src/document/NativeDocumentMetadata.hpp"
-#include <voelund/document/IdCapacity.hpp>
-#include <voelund/kernel/OcctCompatibility.hpp>
 #include <BinDrivers.hxx>
 #include <PCDM_ReaderStatus.hxx>
 #include <PCDM_StoreStatus.hxx>
@@ -10,36 +8,43 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <voelund/document/IdCapacity.hpp>
+#include <voelund/kernel/OcctCompatibility.hpp>
 
 namespace {
 using namespace voelund::document;
 using namespace voelund::document::detail;
 void require(bool value, const char* message) {
-    if (!value) throw std::runtime_error(message);
+    if (!value)
+        throw std::runtime_error(message);
 }
-template<class Action> void rejected(Action action) {
+template <class Action> void rejected(Action action) {
     bool failed = false;
-    try { action(); } catch (const std::invalid_argument&) { failed = true; }
+    try {
+        action();
+    } catch (const std::invalid_argument&) {
+        failed = true;
+    }
     require(failed, "Invalid native metadata accepted");
 }
-Handle(TDocStd_Document) fresh(const Handle(TDocStd_Application)& app) {
+Handle(TDocStd_Document) fresh(const Handle(TDocStd_Application) & app) {
     Handle(TDocStd_Document) doc;
     app->NewDocument("BinOcaf", doc);
     doc->ChangeStorageFormatVersion(TDocStd_FormatVersion_VERSION_12);
     return doc;
 }
-std::string save(const Handle(TDocStd_Application)& app, const Handle(TDocStd_Document)& doc) {
+std::string save(const Handle(TDocStd_Application) & app, const Handle(TDocStd_Document) & doc) {
     std::ostringstream bytes(std::ios::binary);
     require(app->SaveAs(doc, bytes) == PCDM_SS_OK && bytes.good(), "Native save failed");
     return bytes.str();
 }
-Handle(TDocStd_Document) open(const Handle(TDocStd_Application)& app, std::istream& bytes) {
+Handle(TDocStd_Document) open(const Handle(TDocStd_Application) & app, std::istream& bytes) {
     Handle(TDocStd_Document) doc;
     require(app->Open(bytes, doc) == PCDM_RS_OK && !doc.IsNull(), "Native open failed");
     doc->ChangeStorageFormatVersion(TDocStd_FormatVersion_VERSION_12);
     return doc;
 }
-void regressions(const Handle(TDocStd_Application)& app) {
+void regressions(const Handle(TDocStd_Application) & app) {
     Handle(TDocStd_Document) missing;
     rejected([&] { (void)readNativeMetadata(missing); });
     auto doc = fresh(app);
@@ -62,9 +67,10 @@ void regressions(const Handle(TDocStd_Application)& app) {
     TDataStd_AsciiString::Set(doc->Main().FindChild(4), "1");
     require(doc->CommitCommand() && readNativeMetadata(doc).id == expected.id && doc->Undo() &&
                 readNativeMetadata(doc) == expected && doc->Redo() &&
-                readNativeMetadata(doc).nextFeatureId == 1 && doc->Undo(), "Metadata history failed");
-    for (const std::string value : {"0", "01", "+1", "-1", "1 ", "18446744073709551615",
-                                    "18446744073709551616", ""}) {
+                readNativeMetadata(doc).nextFeatureId == 1 && doc->Undo(),
+            "Metadata history failed");
+    for (const std::string value :
+         {"0", "01", "+1", "-1", "1 ", "18446744073709551615", "18446744073709551616", ""}) {
         doc->NewCommand();
         TDataStd_AsciiString::Set(doc->Main().FindChild(4), value.c_str());
         rejected([&] { (void)readNativeMetadata(doc); });
@@ -77,7 +83,7 @@ void regressions(const Handle(TDocStd_Application)& app) {
         rejected([&] { (void)readNativeMetadata(doc); });
         doc->AbortCommand();
     }
-    for (int version : {0, 2, -1}) {
+    for (int version : {0, 5, -1}) {
         doc->NewCommand();
         TDataStd_Integer::Set(doc->Main().FindChild(2), version);
         rejected([&] { (void)readNativeMetadata(doc); });
@@ -106,7 +112,8 @@ int main(int argc, char** argv) {
             regressions(app);
         } else {
             require(argc == 3 || argc == 4, "Usage: create FILE | read FILE [REWRITE]");
-            const NativeDocumentMetadata expected{DocumentId{UINT64_MAX, UINT64_MAX}, UINT64_MAX - 1};
+            const NativeDocumentMetadata expected{DocumentId{UINT64_MAX, UINT64_MAX},
+                                                  UINT64_MAX - 1};
             Handle(TDocStd_Document) doc;
             const std::string mode = argv[1];
             if (mode == "create") {
@@ -126,7 +133,7 @@ int main(int argc, char** argv) {
             }
             app->Close(doc);
         }
-        std::cout << "PASS native document metadata, application schema 1, container 12\n";
+        std::cout << "PASS native document metadata, application schema 4, container 12\n";
         return 0;
     } catch (const Standard_Failure& error) {
         std::cerr << voelund::kernel::occtFailureDiagnostic(error) << '\n';

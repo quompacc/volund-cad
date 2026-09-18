@@ -35,7 +35,7 @@ inkompatible Änderungen daran erhöhen dann die Major-Version.
 | Git-Commit | genaue Quellrevision |
 | VOLUND 1–16 | historische Textformate, weiterhin lesbar; kein Produktwriter mehr |
 | OCAF-Speicherformat 12 | native Container-Schreibversion aus ADR 0008 |
-| natives Anwendungsschema 1 | Struktur und Bedeutung der Völund-Daten im Container |
+| natives Anwendungsschema 4 | Persistenter Reparaturgrund für Legacy-Skizzen; Schema 1/2/3 bleiben lesbar. Typisierte Stützflächen-/Kantenreferenzen aus Schema 2/3 bleiben erhalten; Nachweis in R06b. |
 | DocumentId | Identität eines Dokuments über seine Revisionen hinweg |
 
 Eine neue Produktversion erhöht keine dieser anderen Kennungen automatisch.
@@ -55,8 +55,8 @@ Lesekompatibilität und Migrationen werden pro Dateiformat dokumentiert.
 5. Falls Artefakte verteilt werden, Plattform, Abhängigkeiten, Prüfergebnisse und
    Prüfsummen beilegen. Veröffentlichung und Push erfolgen als eigener Auftrag.
 
-D11 und D12 sind abgeschlossen. D13 bleibt gemäß Implementierungsplan offen;
-D13b und D13c sind abgenommen; D13d-Dateiaustausch und Gesamtabnahme folgen. Noch kein Release-Tag.
+D11, D12 und D13 sind abgeschlossen;
+[D13d-Dateiaustausch und Gesamtabnahme](implementation-plan/evidence/D13d.md) sind bestanden; [D14-Migrationsabnahme](implementation-plan/evidence/D14.md) ist ebenfalls abgeschlossen. R01 ist ebenfalls plattformübergreifend abgenommen; R02 ist als Referenz-Vertragsentscheidung abgeschlossen; R03 ist mit echter Kernel-Historie auf beiden Plattformen abgenommen; G1 bleibt wegen R04–R10 offen. Noch kein Release-Tag.
 
 ## Gitea-Repository vorbereiten
 

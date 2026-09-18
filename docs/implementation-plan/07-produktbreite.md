@@ -17,8 +17,17 @@ Die bei neuen Modulen genannten existierenden Dateien sind Integrations- und Lek
 | Manufacturing | Revisionsgebundene Artefaktübergabe | Tatsächliches nachgelagertes Prozesssystem |
 | CAM | Ein festgelegter 2.5D-Prozess bis Simulation | Maschinenprofil, Werkzeuge, Schnittdaten und reale Freigabe |
 | Weitere Solids | Eigene Pakete je Revolve/Shell/Draft/Sweep usw. | Konkrete Feature-/Fehlermatrix statt Ribbonversprechen |
+| Native KI | Auswahlbezogene Aktionsvorschläge und bearbeitbare Features | Gemeinsame CAD-Aktionen früh in AI02; Modelladapter/UI später AI03 |
+| FEM | Lineare Statik eines Volumenkörpers | Komponenten-/Lizenz-/Plattformprüfung, Vernetzung und numerische Abnahme FEM01–03 |
+| Optimierung | Zunächst bestehende Featureparameter | Organische Topologie und CAD-Rückführung getrennt in OPT02–04 |
 
 **Prüfweg:** jedes Modul erbt K01–K11, die sichere Dokumentbasis und den Plattform-/Releaseprozess. Ein neues Modul braucht kein neues allgemeines Appframework; WorkspaceRegistry und Toolhost werden erweitert. Für fremde Services sind deren tatsächliche Dokumentation und Autorisierung erforderlich.
+
+K12/K13 gelten zusätzlich. [Kapitel 11](11-ki-fem-optimierung.md) enthält AI01–AI04,
+FEM01–FEM03 und OPT01–OPT04. Die dortigen G5-Zweige warten auf ihre eigenen
+Voraussetzungen, nicht auf X20 oder die gesamte übrige Produktfamilie. Bestehende
+Solver/Mesher und gezielt portierbare FreeCAD-Bausteine werden bevorzugt geprüft;
+eine komplette FreeCAD-/Python-Runtime bleibt ausgeschlossen.
 
 ## X01 – Baugruppenvertrag und Referenzbaugruppe spezifizieren
 

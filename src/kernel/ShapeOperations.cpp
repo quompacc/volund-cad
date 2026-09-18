@@ -1,3 +1,4 @@
+#include "OperationHistoryDetail.hpp"
 #include <Standard_OutOfMemory.hxx>
 #include <Standard_ProgramError.hxx>
 #include <voelund/kernel/OcctCompatibility.hpp>
@@ -43,12 +44,13 @@ void requireValidResult(KernelOperation operation, const TopoDS_Shape& shape) {
 
 } // namespace
 
-TopoDS_Shape ShapeOperations::fuse(const TopoDS_Shape& left, const TopoDS_Shape& right) {
+ShapeOperationResult ShapeOperations::fuseWithHistory(const TopoDS_Shape& left,
+                                                      const TopoDS_Shape& right) {
     requireInput(KernelOperation::fuse, left, "left");
     requireInput(KernelOperation::fuse, right, "right");
     try {
-        BRepAlgoAPI_Fuse operation(left, right);
-        operation.Build();
+        BRepAlgoAPI_Fuse operation;
+        detail::configureBoolean(operation, left, right);
         if (!operation.IsDone()) {
             throw KernelError(KernelOperation::fuse,
                               "OCCT failed to join the tool with its input body");
@@ -59,7 +61,7 @@ TopoDS_Shape ShapeOperations::fuse(const TopoDS_Shape& left, const TopoDS_Shape&
                               "join requires the tool to intersect its input body");
         }
         requireValidResult(KernelOperation::fuse, result);
-        return result;
+        return detail::booleanResult(operation, left, right);
     } catch (const KernelError&) {
         throw;
     } catch (const Standard_OutOfMemory&) {
@@ -71,13 +73,14 @@ TopoDS_Shape ShapeOperations::fuse(const TopoDS_Shape& left, const TopoDS_Shape&
     }
 }
 
-TopoDS_Shape ShapeOperations::cut(const TopoDS_Shape& input, const TopoDS_Shape& tool) {
+ShapeOperationResult ShapeOperations::cutWithHistory(const TopoDS_Shape& input,
+                                                     const TopoDS_Shape& tool) {
     requireInput(KernelOperation::cut, input, "input");
     requireInput(KernelOperation::cut, tool, "tool");
     try {
         static_cast<void>(intersect(input, tool));
-        BRepAlgoAPI_Cut operation(input, tool);
-        operation.Build();
+        BRepAlgoAPI_Cut operation;
+        detail::configureBoolean(operation, input, tool);
         if (!operation.IsDone()) {
             throw KernelError(KernelOperation::cut,
                               "OCCT failed to cut the tool from its input body");
@@ -87,7 +90,7 @@ TopoDS_Shape ShapeOperations::cut(const TopoDS_Shape& input, const TopoDS_Shape&
             throw KernelError(KernelOperation::cut, "cut removed the entire input body");
         }
         requireValidResult(KernelOperation::cut, result);
-        return result;
+        return detail::booleanResult(operation, input, tool);
     } catch (const KernelError& error) {
         if (error.operation() == KernelOperation::cut) {
             throw;
@@ -103,12 +106,13 @@ TopoDS_Shape ShapeOperations::cut(const TopoDS_Shape& input, const TopoDS_Shape&
     }
 }
 
-TopoDS_Shape ShapeOperations::intersect(const TopoDS_Shape& left, const TopoDS_Shape& right) {
+ShapeOperationResult ShapeOperations::intersectWithHistory(const TopoDS_Shape& left,
+                                                           const TopoDS_Shape& right) {
     requireInput(KernelOperation::intersect, left, "left");
     requireInput(KernelOperation::intersect, right, "right");
     try {
-        BRepAlgoAPI_Common operation(left, right);
-        operation.Build();
+        BRepAlgoAPI_Common operation;
+        detail::configureBoolean(operation, left, right);
         if (!operation.IsDone()) {
             throw KernelError(KernelOperation::intersect,
                               "OCCT failed to intersect the tool with its input body");
@@ -119,7 +123,7 @@ TopoDS_Shape ShapeOperations::intersect(const TopoDS_Shape& left, const TopoDS_S
                               "intersect requires the tool to overlap its input body");
         }
         requireValidResult(KernelOperation::intersect, result);
-        return result;
+        return detail::booleanResult(operation, left, right);
     } catch (const KernelError&) {
         throw;
     } catch (const Standard_OutOfMemory&) {
@@ -163,4 +167,13 @@ TopoDS_Shape ShapeOperations::compound(std::span<const TopoDS_Shape> shapes) {
     }
 }
 
+TopoDS_Shape ShapeOperations::fuse(const TopoDS_Shape& left, const TopoDS_Shape& right) {
+    return fuseWithHistory(left, right).shape;
+}
+TopoDS_Shape ShapeOperations::cut(const TopoDS_Shape& input, const TopoDS_Shape& tool) {
+    return cutWithHistory(input, tool).shape;
+}
+TopoDS_Shape ShapeOperations::intersect(const TopoDS_Shape& left, const TopoDS_Shape& right) {
+    return intersectWithHistory(left, right).shape;
+}
 } // namespace voelund::kernel

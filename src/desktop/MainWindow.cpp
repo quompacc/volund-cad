@@ -204,6 +204,12 @@ void MainWindow::createHistoryToolbar() {
     toolbar->setToolButtonStyle(Qt::ToolButtonTextOnly);
     toolbar->addAction(impl_->undoAction);
     toolbar->addAction(impl_->redoAction);
+    impl_->repairAction = toolbar->addAction(tr("Repair references…"));
+    impl_->repairAction->setObjectName(QStringLiteral("repairReferencesAction"));
+    connect(impl_->repairAction, &QAction::triggered, this, [this] { repairReferences(); });
+    impl_->repairAllAction = toolbar->addAction(tr("Repair all…"));
+    impl_->repairAllAction->setObjectName(QStringLiteral("repairAllReferencesAction"));
+    connect(impl_->repairAllAction, &QAction::triggered, this, [this] { repairAllReferences(); });
 }
 
 void MainWindow::createConnectionToolbar() {
@@ -334,24 +340,24 @@ void MainWindow::connectInteractions() {
     connect(impl_->angularSnapInput, &QDoubleSpinBox::valueChanged, this,
             [updateSnapping](double) { updateSnapping(); });
     updateSnapping();
-    impl_->viewport->setBodyRotationHandler([this](std::uint64_t id, int axisIndex,
-                                                   double angleDegrees) {
-        if (!selectTransformFeatureForBody(impl_->session, document::FeatureId{id})) {
-            return;
-        }
-        kernel::RigidTransform placement = impl_->session.selectedFeaturePlacement();
-        kernel::Radians* rotations[] = {&placement.rotationX, &placement.rotationY,
-                                        &placement.rotationZ};
-        if (axisIndex < 0 || axisIndex > 2) {
-            return;
-        }
-        *rotations[axisIndex] =
-            kernel::Radians(rotations[axisIndex]->value() +
-                            kernel::toRadians(kernel::Degrees(angleDegrees)).value());
-        applyParameterCommand([this, placement](application::ErrorDisposition disposition) {
-            return impl_->session.editSelectedFeaturePlacement(placement, disposition);
+    impl_->viewport->setBodyRotationHandler(
+        [this](std::uint64_t id, int axisIndex, double angleDegrees) {
+            if (!selectTransformFeatureForBody(impl_->session, document::FeatureId{id})) {
+                return;
+            }
+            kernel::RigidTransform placement = impl_->session.selectedFeaturePlacement();
+            kernel::Radians* rotations[] = {&placement.rotationX, &placement.rotationY,
+                                            &placement.rotationZ};
+            if (axisIndex < 0 || axisIndex > 2) {
+                return;
+            }
+            *rotations[axisIndex] =
+                kernel::Radians(rotations[axisIndex]->value() +
+                                kernel::toRadians(kernel::Degrees(angleDegrees)).value());
+            applyParameterCommand([this, placement](application::ErrorDisposition disposition) {
+                return impl_->session.editSelectedFeaturePlacement(placement, disposition);
+            });
         });
-    });
     impl_->viewport->setBodyRotationPreviewHandler(
         [this](std::uint64_t id, int axisIndex, double angleDegrees) {
             previewBodyRotation(id, axisIndex, angleDegrees);
@@ -369,6 +375,9 @@ void MainWindow::syncProperties() {
     impl_->pendingStamp.reset();
     impl_->propertyPanel->setErrorCommitHandler({});
     const std::optional<document::FeatureId> selected = impl_->session.selectedFeature();
+    impl_->repairAllAction->setEnabled(!impl_->session.features().empty());
+    impl_->repairAction->setEnabled(selected && impl_->session.selectedFeatureDescriptor().kind ==
+                                                    document::FeatureKind::sketch);
     impl_->workspaceToolbar->refreshEnabled();
     if (const auto cylinderId = latestCylinderId(impl_->session)) {
         const QSignalBlocker blocker(impl_->connectionModeInput);

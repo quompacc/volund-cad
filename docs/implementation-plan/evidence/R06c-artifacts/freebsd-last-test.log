@@ -1,0 +1,223 @@
+Start testing: Sep 18 17:50 CEST
+----------------------------------------------------------
+29/88 Testing: document.transactions
+29/88 Test: document.transactions
+Command: "/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests/voelund_document_transaction_tests"
+Directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests
+"document.transactions" start time: Sep 18 17:50 CEST
+Output:
+----------------------------------------------------------
+Document transaction tests passed
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"document.transactions" end time: Sep 18 17:50 CEST
+"document.transactions" time elapsed: 00:00:00
+----------------------------------------------------------
+
+30/88 Testing: document.transaction_allocation_failures
+30/88 Test: document.transaction_allocation_failures
+Command: "/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests/voelund_document_transaction_tests" "--allocations"
+Directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests
+"document.transaction_allocation_failures" start time: Sep 18 17:50 CEST
+Output:
+----------------------------------------------------------
+Prepared commit requires no allocation
+sketch edit: 140 allocation failures preserved state
+copy assignment: 3 allocation failures preserved state
+single mutation: 121 allocation failures preserved state
+compound transaction: 481 allocation failures preserved state
+undo: 108 allocation failures preserved state
+redo: 149 allocation failures preserved state
+Document transaction tests passed
+<end of output>
+Test time =   1.60 sec
+----------------------------------------------------------
+Test Passed.
+"document.transaction_allocation_failures" end time: Sep 18 17:50 CEST
+"document.transaction_allocation_failures" time elapsed: 00:00:01
+----------------------------------------------------------
+
+41/88 Testing: document.identity_generator
+41/88 Test: document.identity_generator
+Command: "/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests/voelund_document_identity_tests" "generator"
+Directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests
+"document.identity_generator" start time: Sep 18 17:50 CEST
+Output:
+----------------------------------------------------------
+PASS document identity generator
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"document.identity_generator" end time: Sep 18 17:50 CEST
+"document.identity_generator" time elapsed: 00:00:00
+----------------------------------------------------------
+
+42/88 Testing: document.identity_lifecycle
+42/88 Test: document.identity_lifecycle
+Command: "/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests/voelund_document_identity_tests" "lifecycle"
+Directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests
+"document.identity_lifecycle" start time: Sep 18 17:50 CEST
+Output:
+----------------------------------------------------------
+PASS document identity lifecycle
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"document.identity_lifecycle" end time: Sep 18 17:50 CEST
+"document.identity_lifecycle" time elapsed: 00:00:00
+----------------------------------------------------------
+
+44/88 Testing: document.parser_limits_and_versions
+44/88 Test: document.parser_limits_and_versions
+Command: "/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests/voelund_document_parser_tests" "/home/eduard/src/voelund-p04-20260913/tests/fixtures/documents"
+Directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests
+"document.parser_limits_and_versions" start time: Sep 18 17:50 CEST
+Output:
+----------------------------------------------------------
+PASS 16 version fixtures, semantic migration, roundtrip/CRLF, truncation, corrupt references/counts/values, byte/line/record limits and I/O failure
+<end of output>
+Test time =   3.25 sec
+----------------------------------------------------------
+Test Passed.
+"document.parser_limits_and_versions" end time: Sep 18 17:50 CEST
+"document.parser_limits_and_versions" time elapsed: 00:00:03
+----------------------------------------------------------
+
+45/88 Testing: platform.atomic_file_store
+45/88 Test: platform.atomic_file_store
+Command: "/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests/voelund_atomic_file_tests" "/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests"
+Directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests
+"platform.atomic_file_store" start time: Sep 18 17:50 CEST
+Output:
+----------------------------------------------------------
+CASE roundtrip
+CASE failures
+CASE nativeRestrictions
+CASE concurrent
+PASS atomic replacement, Unicode/binary/empty, all failure stages, partial write, exclusive collision, permissions/locks, concurrent saves and cleanup
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"platform.atomic_file_store" end time: Sep 18 17:50 CEST
+"platform.atomic_file_store" time elapsed: 00:00:00
+----------------------------------------------------------
+
+46/88 Testing: kernel.shape_factory
+46/88 Test: kernel.shape_factory
+Command: "/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests/voelund_kernel_tests"
+Directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests
+"kernel.shape_factory" start time: Sep 18 17:50 CEST
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"kernel.shape_factory" end time: Sep 18 17:50 CEST
+"kernel.shape_factory" time elapsed: 00:00:00
+----------------------------------------------------------
+
+53/88 Testing: document.history
+53/88 Test: document.history
+Command: "/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests/voelund_document_tests"
+Directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests
+"document.history" start time: Sep 18 17:50 CEST
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"document.history" end time: Sep 18 17:50 CEST
+"document.history" time elapsed: 00:00:00
+----------------------------------------------------------
+
+54/88 Testing: features.sketch_profiles
+54/88 Test: features.sketch_profiles
+Command: "/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests/voelund_sketch_profile_tests"
+Directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests
+"features.sketch_profiles" start time: Sep 18 17:50 CEST
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"features.sketch_profiles" end time: Sep 18 17:50 CEST
+"features.sketch_profiles" time elapsed: 00:00:00
+----------------------------------------------------------
+
+55/88 Testing: features.planegcs_solver
+55/88 Test: features.planegcs_solver
+Command: "/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests/voelund_planegcs_tests"
+Directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests
+"features.planegcs_solver" start time: Sep 18 17:50 CEST
+Output:
+----------------------------------------------------------
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 0 redundants
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"features.planegcs_solver" end time: Sep 18 17:50 CEST
+"features.planegcs_solver" time elapsed: 00:00:00
+----------------------------------------------------------
+
+56/88 Testing: features.sketch_constraint_adapter
+56/88 Test: features.sketch_constraint_adapter
+Command: "/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests/voelund_sketch_constraint_tests"
+Directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests
+"features.sketch_constraint_adapter" start time: Sep 18 17:50 CEST
+Output:
+----------------------------------------------------------
+Sketcher::RedundantSolving-DogLeg-
+Sketcher Redundant solving: 0 redundants
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"features.sketch_constraint_adapter" end time: Sep 18 17:50 CEST
+"features.sketch_constraint_adapter" time elapsed: 00:00:00
+----------------------------------------------------------
+
+76/88 Testing: workspaces.module_registry
+76/88 Test: workspaces.module_registry
+Command: "/home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests/voelund_workspace_tests"
+Directory: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt/tests
+"workspaces.module_registry" start time: Sep 18 17:50 CEST
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"workspaces.module_registry" end time: Sep 18 17:50 CEST
+"workspaces.module_registry" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Sep 18 17:50 CEST
+
+allocation =   1.60 sec*proc
+
+document =   4.96 sec*proc
+
+features =   0.05 sec*proc
+
+identity =   0.05 sec*proc
+
+kernel =   0.03 sec*proc
+
+platform =   0.05 sec*proc
+
+regression =   4.98 sec*proc
+
+unit =   5.09 sec*proc
+
+workspaces =   0.00 sec*proc
+

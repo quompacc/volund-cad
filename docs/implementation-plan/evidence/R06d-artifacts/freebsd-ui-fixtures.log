@@ -1,0 +1,15 @@
+batch chain: read-only planning, atomic rejection, ordering, Undo/Redo and persistence passed
+[NON-XML-CHAR-0x1B][32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+  Unhandled GL error: GL_INVALID_OPERATION[NON-XML-CHAR-0x1B][0m
+[NON-XML-CHAR-0x1B][32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+  OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![NON-XML-CHAR-0x1B][0m
+QFormLayout::takeAt: Invalid index 0
+QFormLayout::takeAt: Invalid index 0
+multi selection and immediate Auto: UI and atomic Undo passed
+[NON-XML-CHAR-0x1B][32;1mTKOpenGl | Type: Other | ID: 0 | Severity: Low | Message:
+  Unhandled GL error: GL_INVALID_OPERATION[NON-XML-CHAR-0x1B][0m
+[NON-XML-CHAR-0x1B][32;1mTKOpenGl | Type: Portability | ID: 0 | Severity: Low | Message:
+  OpenGl_Window::CreateWindow: WARNING, a Window is created without a EGL Surface![NON-XML-CHAR-0x1B][0m
+QFormLayout::takeAt: Invalid index 0
+ambiguous review retained: UI and atomic Undo passed
+

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Win32-ninja"
+	tests="3"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname="megatron"
+	time="9"
+	timestamp="2026-09-18T17:51:19"
+	>
+	<testcase name="desktop.reference_repair_flow" classname="desktop.reference_repair_flow" time="6.42415" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;regression;sketch"/>
+		</properties>
+		<system-out>Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+single geometric proposal: explicit UI selection, Cancel, Undo/Redo, file dialogs passed
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+two coplanar candidates: explicit UI selection, Cancel, Undo/Redo, file dialogs passed
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+edge group, explicit partial repair, independent edit and stale refresh passed
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+unavailable support: no replacement, no mutation passed
+</system-out>
+	</testcase>
+	<testcase name="desktop.feature_status" classname="desktop.feature_status" time="2.74335" status="run">
+		<properties>
+			<property name="cmake_labels" value="desktop;regression;sketch"/>
+		</properties>
+		<system-out>Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+Failed/blocked publication, persistence, history and tree passed
+</system-out>
+	</testcase>
+	<testcase name="architecture.source_limits" classname="architecture.source_limits" time="0.0794288" status="run">
+		<properties>
+			<property name="cmake_labels" value="architecture;regression"/>
+		</properties>
+		<system-out>-- Checked 350 source files
+-- Source file limit check passed
+</system-out>
+	</testcase>
+</testsuite>

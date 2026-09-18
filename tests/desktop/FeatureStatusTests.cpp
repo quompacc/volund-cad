@@ -1,3 +1,4 @@
+#include "../BoundSketchFixture.hpp"
 #include "../CommandResultAssertions.hpp"
 #include <QAction>
 #include <QApplication>
@@ -21,11 +22,12 @@ void require(bool value, const char* message) {
 }
 void checkStates(const application::CadSession& session) {
     const auto states = session.featureStates();
-    require(states.size() == 5 && states[0].status == application::FeatureRuntimeStatus::current &&
+    require(states.size() == 6 && states[0].status == application::FeatureRuntimeStatus::current &&
                 states[1].status == application::FeatureRuntimeStatus::current &&
                 states[2].status == application::FeatureRuntimeStatus::error &&
                 states[3].status == application::FeatureRuntimeStatus::blocked &&
                 states[4].status == application::FeatureRuntimeStatus::blocked &&
+                states[5].status == application::FeatureRuntimeStatus::current &&
                 !states[2].message.empty() &&
                 states[4].message.find("Blocked") != std::string::npos,
             "Failed and blocked projections were conflated");
@@ -33,9 +35,10 @@ void checkStates(const application::CadSession& session) {
 void checkReport(const application::CommandResult& result) {
     const auto& states = result.evaluation().features;
     require(result.status() == application::CommandStatus::committedWithErrors &&
-                states.size() == 5 && states[2].status == features::EvaluationStatus::failed &&
+                states.size() == 6 && states[2].status == features::EvaluationStatus::failed &&
                 states[3].status == features::EvaluationStatus::blockedByDependency &&
-                states[4].status == features::EvaluationStatus::blockedByDependency,
+                states[4].status == features::EvaluationStatus::blockedByDependency &&
+                states[5].status == features::EvaluationStatus::valid,
             "History/command report lost blocked status");
 }
 void inspectWindow(application::CadSession& session) {
@@ -53,10 +56,12 @@ void inspectWindow(application::CadSession& session) {
     auto* tree = window.findChild<QTreeWidget*>();
     require(tree && tree->topLevelItemCount() == 1, "model tree");
     auto* body = tree->topLevelItem(0);
-    require(body->childCount() == 5 && body->child(2)->text(0).contains("[error]") &&
+    require(body->childCount() == 6 && body->child(2)->text(0).contains("[error]") &&
                 body->child(3)->text(0).contains("[blocked]") &&
                 body->child(4)->text(0).contains("[blocked]") &&
-                body->child(4)->toolTip(0).contains("Blocked"),
+                body->child(4)->toolTip(0).contains("Blocked") &&
+                !body->child(5)->text(0).contains("[blocked]") &&
+                !body->child(5)->text(0).contains("[error]"),
             "Model tree lost failure/block distinction");
     const auto directory = qEnvironmentVariable("VOELUND_FEATURE_STATUS_ARTIFACT_DIR");
     if (!directory.isEmpty()) {
@@ -64,6 +69,14 @@ void inspectWindow(application::CadSession& session) {
         QApplication::processEvents();
         require(window.grab().save(directory + "/feature-failed-blocked.png"), "capture tree");
     }
+    tree->setCurrentItem(body->child(5));
+    QApplication::processEvents();
+    require(session.selectedFeature() == document::FeatureId{6} &&
+                session.canTransformFeature(document::FeatureId{6}),
+            "Independent tree selection/editing was disabled");
+    if (!directory.isEmpty())
+        require(window.grab().save(directory + "/feature-independent-current.png"),
+                "capture independent body");
 }
 void run(const std::filesystem::path& directory) {
     struct Fixture {
@@ -81,7 +94,14 @@ void run(const std::filesystem::path& directory) {
         session.createSketchExtrusion(box, firstPlane, {2, 3, 8, 9}, 10));
     test::requireCommittedFeature(session.createSketchExtrusion(
         extrusion, document::SketchPlane{0, 0, 50, 0, 0, 1, 1, 0, 0}, {3, 4, 7, 8}, 10));
+    test::requireCommittedFeature(session.createBoxFeature());
+    auto independent = session.selectedBoxParameters();
+    independent.placement.translationX = 60;
+    require(session.editSelectedBoxParameters(independent).status() ==
+                application::CommandStatus::committed,
+            "Independent body placement");
     const auto sketchId = session.features()[1].id;
+    test::bindTop(session, sketchId);
     const auto original = session.sketchParameters(sketchId);
     auto broken = original;
     broken.elements.values.front().geometry = document::SketchLine{{2, 3}, {8, 9}};
@@ -135,7 +155,7 @@ void inspectLegacyPlane(const std::filesystem::path& directory) {
     auto* body = tree->topLevelItem(0);
     require(body->childCount() == 3 && body->child(1)->text(0).contains("[error]") &&
                 body->child(2)->text(0).contains("[blocked]") &&
-                body->child(1)->toolTip(0).contains("migration"),
+                body->child(1)->toolTip(0).contains("MigrationNeedsRepair"),
             "Legacy plane error was not visible");
     QAction* edit = nullptr;
     for (auto* action : window.findChildren<QAction*>())
@@ -145,7 +165,7 @@ void inspectLegacyPlane(const std::filesystem::path& directory) {
     const auto stamp = session.sceneStatus().document;
     edit->trigger();
     QApplication::processEvents();
-    require(window.statusBar()->currentMessage().contains("migration") &&
+    require(window.statusBar()->currentMessage().contains("MigrationNeedsRepair") &&
                 session.sceneStatus().document == stamp && !session.isModified() &&
                 !session.sceneStatus().isCurrent(),
             "Editing legacy plane silently repaired data or lost diagnostic");

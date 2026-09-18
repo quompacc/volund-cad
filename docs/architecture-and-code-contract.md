@@ -1,8 +1,9 @@
 # Völund CAD – Architektur- und Codevertrag
 
 **Status:** verbindlich
-**Version:** 1.2
+**Version:** 1.3
 **Beschlossen am:** 12. September 2026
+**Ergänzt am:** 17. September 2026 – native Aktionsgrenze und spätere Analyse gemäß ADR 0010
 **Gültig für:** sämtlichen neu entstehenden Produktivcode, Build-Code und alle Architekturentscheidungen von Völund CAD
 
 ## 1. Zweck und Verbindlichkeit
@@ -121,6 +122,23 @@ Siehe ADR 0003.
 - implementiert Anwendungsfälle, Commands, Auswahlsemantik und Orchestrierung;
 - ist die einzige reguläre Brücke zwischen Oberfläche und Fachmodellen;
 - liefert stabile IDs und kleine Datenmodelle statt globaler Zustände.
+
+#### Native Aktions- und Analysegrenze
+
+GUI, integrierter KI-Assistent und optionaler MCP-Zugang MÜSSEN dieselben fachlichen
+Application-Aktionen verwenden. Requests benennen konkrete Ziele, Einheiten und
+erwarteten Dokument-/Sitzungsstand. Auswahl und Freitext dürfen keine implizite
+Modellmutation auslösen. Vorschau/Commit und Fehler folgen den vorhandenen
+Transaktionsregeln; spätere Worker-Ergebnisse dürfen keinen neueren Stand überschreiben.
+Die schrittweise Integration vor U04 ist AI02, nicht bereits abgeschlossener Produktcode.
+
+Spätere FEM-/Optimierungsadapter arbeiten mit unveränderlichen Eingaben und
+revisionsgebundenen Ergebnissen. CAD-Referenzen und Netzindizes bleiben getrennt.
+Solver-, Modellanbieter- und Transportabhängigkeiten bleiben an der äußeren Grenze.
+Konkrete Bibliotheken, Einheiten der Physik und Analysepersistenz werden erst im
+zuständigen Entscheidungspaket eingeführt. Die Verbote aus Abschnitt 2 gelten weiter.
+Siehe [ADR 0010](adr/0010-native-actions-and-analysis-extension.md) und
+[gestuften Ausbauplan](implementation-plan/11-ki-fem-optimierung.md).
 
 ### 4.5 `viewport`
 

@@ -1,0 +1,5 @@
+339/339 source and fixture hashes match.
+r04b-freebsd-bound.volund : bound primitive and extrusion cap file exchange passed
+r04b-freebsd-roundtrip.volund : bound primitive and extrusion cap file exchange passed
+Root document identity and both support namespaces retained in FreeBSD roundtrip.
+Windows and FreeBSD binding fixture reports match.

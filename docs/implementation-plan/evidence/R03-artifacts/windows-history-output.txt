@@ -1,0 +1,5 @@
+cut: face Resolved area80, edge length8, split Ambiguous 2x40, deletion Missing
+primitive roles and rotation: retained after builder/source-owner destruction
+fuse/common, coplanar bodies, unchanged topology and operand provenance passed
+disabled OCCT history: all source entries explicitly unavailable
+

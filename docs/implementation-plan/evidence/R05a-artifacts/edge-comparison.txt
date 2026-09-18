@@ -1,0 +1,5 @@
+Windows/OCCT 8.0.1 and FreeBSD/OCCT 7.9.3 edge fixture outputs identical.
+12 semantic box edges, 2 cylinder rings, canonical endpoints, reordered origins and density-independent analytic circle points passed
+real Boolean trim, original parameter interval, deleted endpoint, split, deletion and unproven mapping passed
+recompute, resized/rotated local direction, independent cache and undo/redo passed
+Boolean input/tool edge provenance and extrusion continuation passed

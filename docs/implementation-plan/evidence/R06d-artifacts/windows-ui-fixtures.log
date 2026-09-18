@@ -1,0 +1,10 @@
+batch chain: read-only planning, atomic rejection, ordering, Undo/Redo and persistence passed
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+multi selection and immediate Auto: UI and atomic Undo passed
+Font_FontMgr, error: unable to find any font!
+TKOpenGl | Type: Error | ID: 0 | Severity: High | Message:
+  Font 'Courier' is not found in the system!
+ambiguous review retained: UI and atomic Undo passed
+

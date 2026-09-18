@@ -4,7 +4,7 @@
 #include <voelund/document/FeatureId.hpp>
 
 namespace voelund::features {
-// Contract DTO; FeatureGraph adoption and revision binding follow D06/R01.
+// Per-node evaluation report; published together with the matching document revision.
 enum class EvaluationStatus { valid, dirty, failed, blockedByDependency, suppressed };
 struct EvaluationIssue final {
     document::FeatureId feature;

@@ -2,7 +2,10 @@
 #include <voelund/document/ModelDocument.hpp>
 
 namespace voelund::document {
-namespace detail { class NativePrimitiveCodec; class NativeModelState; }
+namespace detail {
+class NativePrimitiveCodec;
+class NativeModelState;
+} // namespace detail
 class LegacyDocumentImporter;
 // Validated, read-only interchange value; no OCAF labels or mutable document authority.
 class DocumentSnapshot final {
@@ -24,6 +27,8 @@ class DocumentSnapshot final {
     [[nodiscard]] const kernel::BoxDimensions& boxDimensions(FeatureId id) const;
     [[nodiscard]] ModelDocument toDocument() const;
     [[nodiscard]] ModelDocument toDocument(DocumentId id) const;
+    [[nodiscard]] DocumentSnapshot remapSupportNamespace(DocumentId from, DocumentId to) const;
+    [[nodiscard]] DocumentSnapshot markLegacySketchReferencesForRepair() const;
     [[nodiscard]] bool operator==(const DocumentSnapshot&) const = default;
 
   private:

@@ -1,0 +1,11 @@
+include/voelund/features/ContourProvenance.hpp
+include/voelund/features/EdgeProvenance.hpp
+include/voelund/features/FeatureGraph.hpp
+include/voelund/features/SketchEvaluation.hpp
+src/features/CMakeLists.txt
+src/features/ContourProvenance.cpp
+src/features/EdgeProvenance.cpp
+src/features/FeatureGraph.cpp
+src/features/SketchEvaluation.cpp
+tests/CMakeLists.txt
+tests/integration/ContourProvenanceTests.cpp

@@ -1,0 +1,20 @@
+Test project V:/build/p02-qt-final
+    Start  5: features.dependency_dag
+1/4 Test  #5: features.dependency_dag ............   Passed    1.07 sec
+    Start 25: application.failure_boundaries
+2/4 Test #25: application.failure_boundaries .....   Passed    2.66 sec
+    Start 26: application.creation_results
+3/4 Test #26: application.creation_results .......   Passed    0.70 sec
+    Start 27: application.command_transactions
+4/4 Test #27: application.command_transactions ...   Passed    0.69 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+application    =   5.12 sec*proc (4 tests)
+document       =   4.05 sec*proc (3 tests)
+features       =   1.07 sec*proc (1 test)
+integration    =   5.12 sec*proc (4 tests)
+regression     =   5.12 sec*proc (4 tests)
+
+Total Test time (real) =   5.14 sec

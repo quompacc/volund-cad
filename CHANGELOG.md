@@ -6,11 +6,75 @@ Versionsregeln: [Versionierung und Releases](docs/versioning.md).
 
 ## [Unreleased]
 
-Entwicklungsstand vom 16. September 2026. Basisversion: `0.1.0`; noch kein
+Entwicklungsstand vom 17. September 2026. Basisversion: `0.1.0`; noch kein
 versionierter Release-Tag. Dieser erste Eintrag fasst den jüngsten D10-/D11-Block
 zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 
 ### Hinzugefügt
+
+- R06d: dokumentweite Mehrfachauswahl und unmittelbar anwendender Automodus für eindeutige Supportvorschläge. Unklarheiten bleiben offen; ein Undo je Reparaturlauf. [Nachweis](docs/implementation-plan/evidence/R06d.md).
+
+- R06 abgeschlossen: Reparaturdialog mit ausdrücklicher Kandidatenwahl, Vorschau, Cancel, Stale-Prüfung und bestätigter Fehlerübernahme. A-REF-03 bestanden; 91/91 Windows, 88/88 FreeBSD, 371 identische Quellhashes, beidseitiger Dateiaustausch und 24 betrachtete UI-Aufnahmen. [Gesamtabnahme](docs/implementation-plan/evidence/R06.md).
+
+- R06b: persistenter Reparaturzustand in nativem Schema 4 und explizite Support-/Kantenreparatur als Transaktion mit Undo/Redo. 90/90 Windows, 87/87 FreeBSD, 366 identische Quellhashes, beidseitiger Dateiaustausch und sechs betrachtete UI-Aufnahmen. Auswahloberfläche folgt in R06c. [Nachweis](docs/implementation-plan/evidence/R06b.md).
+
+- Dauerhafte projektweite Nutzerfreigabe für Projektdateitransfers und Builds/Tests auf dem dedizierten FreeBSD-Prüfrechner dokumentiert; gilt über Pakete und Sitzungen hinweg ohne erneute Einzelbestätigung.
+
+- R06a: lesende Referenzprüfung mit erhaltenen Originaldaten und eindeutig benannten Reparaturkandidaten. Geometrische Treffer bleiben Vorschläge; kein automatischer Wechsel. 89/89 Windows, 86/86 FreeBSD, 363 identische Quellhashes und vier identische Fixture-Ausgaben. Reparaturzustand und UI folgen separat. [Nachweis](docs/implementation-plan/evidence/R06a.md).
+
+- R05 insgesamt abgenommen: stabile Randkanten im Skizzeneditor, analytische Fangpunkte, Referenzen an beiden Linienenden und Rollback bei abgewiesenem Attachment. 88/88 Windows, 85/85 FreeBSD, 358 identische Quellhashes und beide UI-Aufnahmen geprüft. [Gesamtnachweis](docs/implementation-plan/evidence/R05.md).
+
+- R05b-P plattformübergreifend abgenommen: typisierte projizierte Kantenreferenzen und analytische Constraintauflösung, natives Schema 3 mit Leser für 1/2/3, Namespace-Erhaltung beim Duplizieren. 87/87 Windows-Tests, 84/84 FreeBSD-Tests, 353 identische Quellhashes und beidseitiger nativer Dateiaustausch; UI-Anbindung folgt in R05b-U. [Nachweis](docs/implementation-plan/evidence/R05b-P.md).
+
+- Plan um native CAD-Aktionen, integrierte KI-Bedienung und gestuften FEM-/Optimierungsausbau erweitert. ADR 0010 und K12/K13 sind verbindlich; AI02 liegt vor U04. Keine neue Runtime oder KI-/FEM-Implementierung in diesem Planungsschritt. [Plan](docs/implementation-plan/11-ki-fem-optimierung.md).
+
+- R05b-Konturgrundlage plattformübergreifend geprüft: feste Skizzenelement-/Seitenrollen,
+  tatsächliche Drahtkanten und Prism-Anfang/Ende, Kreisrahmen sowie getrennte Welt-/Referenzkanten.
+  86/86 Windows, 83/83 FreeBSD, 347 identische Quell-/Fixture-Hashes. Persistente
+  Kantenconstraints und UI-Anbindung bleiben offen. [Prüfstand](docs/implementation-plan/evidence/R05b.md).
+
+- R05a plattformübergreifend abgenommen: semantische Primitive-Kantenherkunft, analytische
+  Kurvenparameter und tessellierungsunabhängige Auflösung. 85/85 Windows-Tests,
+  82/82 FreeBSD-Tests und 344 identische Quell-/Fixture-Hashes. Speicherung und Produktanbindung folgen
+  R05b. [Prüfstand](docs/implementation-plan/evidence/R05a.md).
+
+- R04 abgeschlossen: gepickte Flächen werden dauerhaft gebunden; Editor, Überlagerung
+  und Extrusion folgen der aktuellen Fläche. Fehler nach Löschung bleiben sichtbar.
+  Referenzgeometrie für verschobene/gedrehte Extrusion korrigiert. 84/84 Windows,
+  81/81 FreeBSD, 341 identische Quell-/Fixture-Hashes und eigene UI-Sichtprüfung.
+  [Gesamtabnahme](docs/implementation-plan/evidence/R04.md).
+
+- R04b als Teilblock abgenommen: dauerhafte Stützflächenbindung mit relativer Basis,
+  benannte Extrusions-Endflächen, Schema 2 bei weiter lesbarem Schema 1.
+  83/83 Windows, 80/80 FreeBSD, 339 identische Quell-/Fixture-Hashes und
+  beidseitiger Dateiaustausch bestanden. [Abnahme](docs/implementation-plan/evidence/R04b.md).
+
+- R04a als Teilblock abgenommen: Herkunft bekannter Stützflächen im Feature-Auswertungsstand, einschließlich
+  Transformation, Boolean-Fortführung und Cache. 82/82 Windows, 79/79 FreeBSD; 332 identische Quellhashes. [Abnahme](docs/implementation-plan/evidence/R04a.md).
+  Die anschließende Bindung ist in R04b abgenommen; Produktanbindung ist in R04c abgenommen.
+
+- R03 abgeschlossen: Primitive-Rollen und echte Generated/Modified/Deleted-
+  Historie für Boolean-Operationen, Zuordnung bei starren Transformationen.
+  81/81 Windows, 78/78 FreeBSD; Historienvergleich und 328 Quellhashes identisch. [Prüfstand](docs/implementation-plan/evidence/R03.md).
+
+- R02 als Entscheidungspaket abgeschlossen: typisierte Subshape-Herkunft, Split-/Merge-Regeln,
+  Persistenz-/Reparaturentwurf und jeweils 26 symbolische Fixtures auf Windows/FreeBSD.
+  [Abnahme und Grenzen](docs/implementation-plan/evidence/R02.md); Produktintegration folgt R03–R06.
+
+- R01 abgeschlossen: expliziter Feature-DAG, gezielte Neuauswertung bei
+  Parameteränderungen und editierbare gültige Zweige trotz Fehlern anderer Zweige.
+  80/80 Windows, 77/77 FreeBSD/Sway; 325 identische Quell-/Fixture-Hashes.
+  [Prüfstand und Grenzen](docs/implementation-plan/evidence/R01.md).
+
+- D14 abgeschlossen: VOLUND 1–16 über natives Speichern, Öffnen, Editieren und
+  Undo/Redo geprüft; alle 26 Constraintarten einschließlich alter Winkelkonvention.
+  Echte gesperrte Migration erhält Altdatei und Sitzung. 79/79 Windows, 76/76 FreeBSD.
+  [Abnahme und offene G1-Arbeiten](docs/implementation-plan/evidence/D14.md).
+
+- D13 abgeschlossen: produktiver Dateiaustausch Windows ↔ FreeBSD mit vollständigen
+  Snapshots/IDs, analytischer Geometrieprüfung und reparierbaren Fehlerzuständen.
+  77/77 bzw. 74/74 Tests; zusätzliche Abnahme einer fehlenden Profilreferenz.
+  [Gesamtnachweis](docs/implementation-plan/evidence/D13d.md).
 
 - Desktop-Aktion **File → Duplicate**: neue ungespeicherte Dokumentkopie; bei
   Änderungen wahlweise Original speichern, ohne Speichern duplizieren oder abbrechen.

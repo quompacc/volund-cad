@@ -1,8 +1,9 @@
-#include <voelund/kernel/NumericPolicy.hpp>
-#include <voelund/document/SketchPlaneValidation.hpp>
 #include <voelund/application/SketchEditorSession.hpp>
+#include <voelund/document/SketchPlaneValidation.hpp>
+#include <voelund/kernel/NumericPolicy.hpp>
 
 #include <voelund/application/CadSession.hpp>
+#include <voelund/features/GeometryEvaluationError.hpp>
 #include <voelund/features/SketchProfiles.hpp>
 
 #include <algorithm>
@@ -37,8 +38,11 @@ bool upsertUnaryConstraint(document::SketchConstraints& constraints,
 } // namespace
 
 SketchEditorSession::SketchEditorSession(CadSession& session, document::FeatureId supportFeature,
-                                         document::SketchPlane plane)
-    : session_(session), supportFeature_(supportFeature), plane_(plane) {
+                                         document::SketchPlane plane,
+                                         std::optional<document::SketchSupportBinding> binding)
+    : session_(session), supportFeature_(supportFeature), plane_(plane), supportBinding_(binding) {
+    if (supportBinding_)
+        supportStamp_ = session.sceneStatus().document;
     document::validateCanonicalSketchPlane(plane_);
     commitHistory();
 }
@@ -47,9 +51,14 @@ SketchEditorSession::SketchEditorSession(CadSession& session, document::FeatureI
                                          document::FeatureId supportFeature,
                                          document::SketchParameters parameters)
     : session_(session), supportFeature_(supportFeature), plane_(parameters.plane),
-      elements_(std::move(parameters.elements)), constraints_(std::move(parameters.constraints)),
-      editingFeature_(sketchFeature) {
-    document::validateSketchParameters({plane_, elements_, constraints_});
+      supportBinding_(parameters.supportBinding), elements_(std::move(parameters.elements)),
+      constraints_(std::move(parameters.constraints)), editingFeature_(sketchFeature) {
+    if (parameters.repairReason)
+        throw std::invalid_argument(
+            "MigrationNeedsRepair: repair sketch references before editing");
+    if (supportBinding_)
+        supportStamp_ = session.sceneStatus().document;
+    document::validateSketchParameters(this->parameters(false));
     static_cast<void>(solveConstraints());
     commitHistory();
 }
@@ -509,19 +518,30 @@ document::SketchParameters SketchEditorSession::parameters(bool includePreview) 
     if (includePreview && canAllocatePreviewIds(preview_))
         for (const document::SketchGeometry& geometry : preview_)
             result.values.push_back({document::SketchElementId{result.nextId++}, geometry});
-    return {plane_, std::move(result), constraints_};
+    document::SketchParameters sketch{plane_, std::move(result), constraints_};
+    sketch.supportBinding = supportBinding_;
+    return sketch;
 }
 
 bool SketchEditorSession::solveConstraints() {
-    document::SketchParameters sketch{plane_, elements_, constraints_};
+    auto sketch = parameters(false);
     try {
+        if (supportBinding_) {
+            if (!supportStamp_ || *supportStamp_ != session_.sceneStatus().document)
+                return false;
+            session_.resolveSketchSupport(supportFeature_, sketch);
+        }
         lastSolveResult_ = features::solveSketchConstraints(sketch);
     } catch (const std::invalid_argument&) {
+        return false;
+    } catch (const features::GeometryEvaluationError&) {
         return false;
     }
     if (lastSolveResult_.status != features::SketchSolveStatus::success)
         return false;
     elements_ = std::move(sketch.elements);
+    constraints_ = std::move(sketch.constraints);
+    plane_ = sketch.plane;
     return true;
 }
 

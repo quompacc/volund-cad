@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Win32-ninja"
+	tests="4"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname="megatron"
+	time="5"
+	timestamp="2026-09-17T16:47:32"
+	>
+	<testcase name="features.dependency_dag" classname="features.dependency_dag" time="1.06885" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;features;integration;regression"/>
+		</properties>
+		<system-out>PASS stable DAG, diamond, cycles, incremental evaluation, independent errors/edit/repair/undo/save/open
+</system-out>
+	</testcase>
+	<testcase name="application.failure_boundaries" classname="application.failure_boundaries" time="2.66186" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;document;integration;regression"/>
+		</properties>
+		<system-out>Typed edits and exception rollback tests passed
+</system-out>
+	</testcase>
+	<testcase name="application.creation_results" classname="application.creation_results" time="0.699843" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;document;integration;regression"/>
+		</properties>
+		<system-out>Creation result and editor rollback tests passed
+</system-out>
+	</testcase>
+	<testcase name="application.command_transactions" classname="application.command_transactions" time="0.690095" status="run">
+		<properties>
+			<property name="cmake_labels" value="application;document;integration;regression"/>
+		</properties>
+		<system-out>Session transaction tests passed
+</system-out>
+	</testcase>
+</testsuite>

@@ -1,0 +1,13 @@
+Test project V:/build/p02-qt-final
+    Start 5: application.migration_acceptance
+1/1 Test #5: application.migration_acceptance ...   Passed    4.22 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+application    =   4.22 sec*proc (1 test)
+document       =   4.22 sec*proc (1 test)
+integration    =   4.22 sec*proc (1 test)
+regression     =   4.22 sec*proc (1 test)
+
+Total Test time (real) =   4.24 sec

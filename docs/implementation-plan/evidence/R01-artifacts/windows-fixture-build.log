@@ -1,0 +1,4 @@
+[1/4] Scanning V:\tests\integration\FeatureDagTests.cpp for CXX dependencies
+[2/4] Generating CXX dyndep file tests\CMakeFiles\voelund_feature_dag_tests.dir\CXX.dd
+[3/4] Building CXX object tests\CMakeFiles\voelund_feature_dag_tests.dir\integration\FeatureDagTests.cpp.obj
+[4/4] Linking CXX executable tests\voelund_feature_dag_tests.exe

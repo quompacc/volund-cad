@@ -1,0 +1,4 @@
+legacy single-match proposal, stable order, original values, namespaces and history rejection passed
+two coplanar named faces retained without automatic choice passed
+native inspection preserves file, dirty state, selection and undo; replacement stamp passed
+legacy text proposal and native Save/Open preserve original unresolved data passed

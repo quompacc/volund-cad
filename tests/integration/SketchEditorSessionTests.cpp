@@ -1,3 +1,4 @@
+#include "../BoundSketchFixture.hpp"
 #include "../CommandResultAssertions.hpp"
 #include "../TestPaths.hpp"
 #include <voelund/application/CadSession.hpp>
@@ -20,7 +21,8 @@ bool completeEditorFlowIsOneDocumentTransaction() {
     voelund::application::CadSession session;
     session.newDocument();
     const auto support = voelund::test::requireCommittedFeature(session.createBoxFeature());
-    voelund::application::SketchEditorSession editor(session, support, plane);
+    voelund::application::SketchEditorSession editor(
+        session, support, plane, voelund::test::topBinding(session, support, plane));
 
     if (!add(editor, {0.0, 0.0}, {5.0, 0.0}, 1))
         return false;
@@ -48,7 +50,8 @@ bool cancelLeavesNoFeatureOrUndoEntry() {
     voelund::application::CadSession session;
     session.newDocument();
     const auto support = voelund::test::requireCommittedFeature(session.createBoxFeature());
-    voelund::application::SketchEditorSession editor(session, support, plane);
+    voelund::application::SketchEditorSession editor(
+        session, support, plane, voelund::test::topBinding(session, support, plane));
     if (!add(editor, {0.0, 0.0}, {2.0, 2.0}, 1))
         return false;
     editor.cancel();
@@ -61,7 +64,8 @@ bool toolChangesClearOnlyPreviewAndKeepStableIds() {
     voelund::application::CadSession session;
     session.newDocument();
     const auto support = voelund::test::requireCommittedFeature(session.createBoxFeature());
-    voelund::application::SketchEditorSession editor(session, support, plane);
+    voelund::application::SketchEditorSession editor(
+        session, support, plane, voelund::test::topBinding(session, support, plane));
     if (!editor.setPreview({0.0, 0.0}, {1.0, 0.0}))
         return false;
     editor.setTool(voelund::application::SketchDrawingTool::circle);
@@ -77,7 +81,8 @@ bool lineClosureRecomputesProfilesAndOpenSketchRoundtrips() {
     voelund::application::CadSession session;
     session.newDocument();
     const auto support = voelund::test::requireCommittedFeature(session.createBoxFeature());
-    voelund::application::SketchEditorSession editor(session, support, plane);
+    voelund::application::SketchEditorSession editor(
+        session, support, plane, voelund::test::topBinding(session, support, plane));
     if (!add(editor, {0.0, 0.0}, {4.0, 0.0}, 1) || !add(editor, {4.0, 0.0}, {2.0, 3.0}, 2) ||
         editor.closedProfileCount() != 0 || !add(editor, {2.0, 3.0}, {0.0, 0.0}, 3) ||
         editor.closedProfileCount() != 1)
@@ -101,7 +106,8 @@ bool exclusivelyOpenGeometryIsAValidSketch() {
     voelund::application::CadSession session;
     session.newDocument();
     const auto support = voelund::test::requireCommittedFeature(session.createBoxFeature());
-    voelund::application::SketchEditorSession editor(session, support, plane);
+    voelund::application::SketchEditorSession editor(
+        session, support, plane, voelund::test::topBinding(session, support, plane));
     if (!add(editor, {1.0, 1.0}, {6.0, 2.0}, 1))
         return false;
     const auto sketchId = voelund::test::requireCommittedFeature(editor.tryAccept());
@@ -131,7 +137,8 @@ bool existingSketchCanBeEditedAsOneTransaction() {
     voelund::application::CadSession session;
     session.newDocument();
     const auto support = voelund::test::requireCommittedFeature(session.createBoxFeature());
-    voelund::application::SketchEditorSession create(session, support, plane);
+    voelund::application::SketchEditorSession create(
+        session, support, plane, voelund::test::topBinding(session, support, plane));
     create.setTool(voelund::application::SketchDrawingTool::rectangle);
     if (!add(create, {0.0, 0.0}, {4.0, 3.0}, 1))
         return false;
@@ -185,7 +192,8 @@ bool cancellingExistingSketchEditLeavesHistoryUntouched() {
     voelund::application::CadSession session;
     session.newDocument();
     const auto support = voelund::test::requireCommittedFeature(session.createBoxFeature());
-    voelund::application::SketchEditorSession create(session, support, plane);
+    voelund::application::SketchEditorSession create(
+        session, support, plane, voelund::test::topBinding(session, support, plane));
     if (!add(create, {0.0, 0.0}, {4.0, 0.0}, 1))
         return false;
     const auto sketchId = voelund::test::requireCommittedFeature(create.tryAccept());
@@ -232,7 +240,8 @@ bool lineDimensionAndConstraintPersistThroughEditing() {
     voelund::application::CadSession session;
     session.newDocument();
     const auto support = voelund::test::requireCommittedFeature(session.createBoxFeature());
-    voelund::application::SketchEditorSession create(session, support, plane);
+    voelund::application::SketchEditorSession create(
+        session, support, plane, voelund::test::topBinding(session, support, plane));
     if (!add(create, {0.0, 0.0}, {3.0, 4.0}, 1) ||
         !create.selectElement(voelund::document::SketchElementId{1}) ||
         !create.setSelectedLineLength(10.0) ||
@@ -285,7 +294,8 @@ bool rectangleDecomposesAndCircleDimensionPersists() {
     voelund::application::CadSession session;
     session.newDocument();
     const auto support = voelund::test::requireCommittedFeature(session.createBoxFeature());
-    voelund::application::SketchEditorSession editor(session, support, plane);
+    voelund::application::SketchEditorSession editor(
+        session, support, plane, voelund::test::topBinding(session, support, plane));
     editor.setTool(voelund::application::SketchDrawingTool::rectangle);
     if (!add(editor, {5.0, 5.0}, {1.0, 2.0}, 1) ||
         !editor.selectElement(voelund::document::SketchElementId{1}) ||
@@ -327,7 +337,8 @@ bool unchangedMeasurementCanBecomeDrivingConstraint() {
     voelund::application::CadSession session;
     session.newDocument();
     const auto support = voelund::test::requireCommittedFeature(session.createBoxFeature());
-    voelund::application::SketchEditorSession editor(session, support, plane);
+    voelund::application::SketchEditorSession editor(
+        session, support, plane, voelund::test::topBinding(session, support, plane));
     if (!add(editor, {0.0, 0.0}, {3.0, 4.0}, 1) ||
         !editor.selectElement(voelund::document::SketchElementId{1}) ||
         !editor.setSelectedLineLength(5.0) || editor.constraints().size() != 1 ||

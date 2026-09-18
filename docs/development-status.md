@@ -1,8 +1,8 @@
 # Entwicklungsstand – 12. September 2026
 
-## Aktueller Stand – 16. September 2026
+## Aktueller Stand – 17. September 2026
 
-[Fortsetzungsnotiz](session-checkpoint-2026-09-16.md),
+[Fortsetzungsnotiz](session-checkpoint-2026-09-17.md),
 [D10-Abschlussprüfung](implementation-plan/evidence/D10-review.md) und
 [D11-Abnahmematrix](implementation-plan/evidence/D11-review.md).
 
@@ -50,10 +50,10 @@ Baumgrenzen und Dateiende. **73/73 Windows**, **70/70 FreeBSD/Sway**,
 **75/75 Windows**, **72/72 FreeBSD/Sway**, **317 Quellhashes identisch**.
 Die zuvor offene FreeBSD-Abnahme ist nachgeholt.
 [Nachweis](implementation-plan/evidence/D13b2-limits.md).
-**D13b abgeschlossen:** [Gesamtabnahme](implementation-plan/evidence/D13b-review.md); 317 Quellhashes erneut unverändert bestätigt, keine neuen Testläufe. **D13c abgeschlossen:** natives Save/Open mit persistenter ID, **76/76 Windows**, **73/73 FreeBSD/Sway**, **318 Quellhashes identisch**. [Nachweis](implementation-plan/evidence/D13c.md). Nächster Block: D13d, Produktdateiaustausch und Gesamtabnahme. D13 bleibt offen.
-[Teilplan](implementation-plan/D13-plan.md). Insgesamt bleiben 88 von 110 Hauptpaketen offen.
+**D13b abgeschlossen:** [Gesamtabnahme](implementation-plan/evidence/D13b-review.md); 317 Quellhashes erneut unverändert bestätigt, keine neuen Testläufe. **D13c abgeschlossen:** natives Save/Open mit persistenter ID, **76/76 Windows**, **73/73 FreeBSD/Sway**, **318 Quellhashes identisch**. [Nachweis](implementation-plan/evidence/D13c.md). **D13d und D13 abgeschlossen:** Produktdateiaustausch Windows ↔ FreeBSD, A-SAVE-01/02 und Referenzreparatur geprüft; **77/77 Windows**, **74/74 FreeBSD/Sway**, **319 Quellhashes identisch**. [Gesamtabnahme](implementation-plan/evidence/D13d.md). **D14 abgeschlossen:** [Migrations- und Dokumentkernabnahme](implementation-plan/evidence/D14.md), **79/79 Windows**, **76/76 FreeBSD**, **321 Quell-/Fixture-Hashes identisch**. **R01 abgeschlossen:** 80/80 Windows, 77/77 FreeBSD/Sway, 325 identische Quell-/Fixture-Hashes und eigene Sichtprüfung der unabhängigen Box bei Fehlern auf beiden Plattformen; [Abnahme](implementation-plan/evidence/R01.md). **R02 abgeschlossen als Entscheidungspaket:** [SubshapeRef-Vertrag und 26 symbolische Fixtures](implementation-plan/evidence/R02.md), jeweils 26/26 und 1/1 CTest unter Windows und FreeBSD, 3/3 Prototypquellhashes identisch. **R03 abgeschlossen:** [echte Kernel-Operationshistorie](implementation-plan/evidence/R03.md), 81/81 Windows, 78/78 FreeBSD, 328 identische Quell-/Fixture-Hashes und übereinstimmende Historienfixtures. **R04 abgeschlossen:** [Gesamtabnahme](implementation-plan/evidence/R04.md), dauerhafte Bindung und Produktanbindung; 84/84 Windows, 81/81 FreeBSD, 341 identische Quell-/Fixture-Hashes und eigene UI-Sichtprüfung. R05 ist in Arbeit: R05a abgenommen, 85/85 Windows, 82/82 FreeBSD und 344 identische Quell-/Fixture-Hashes; R05b ist in Arbeit: Konturherkunft mit 86/86 Windows, 83/83 FreeBSD und 347 identischen Quell-/Fixture-Hashes geprüft; Persistenz und UI bleiben offen. [Prüfstand](implementation-plan/evidence/R05b.md). G1 bleibt wegen R05–R10 offen.
+[Teilplan](implementation-plan/D13-plan.md). Nach der Planerweiterung AI01 bleiben 91 von 121 Hauptpaketen offen (30 done, 89 planned, R06 in-progress, A02 needs-design). Native Aktionsgrenze vor U04; KI/FEM/Optimierung folgen gestuft nach [Kapitel 11](implementation-plan/11-ki-fem-optimierung.md).
 
-A-BODY-03, D13, Referenz-/DAG-Arbeiten und Meridian L07 bleiben offen.
+A-BODY-03, Referenz-/DAG-Arbeiten und Meridian L07 bleiben offen.
 [Changelog](../CHANGELOG.md) und [Versionsregeln](versioning.md) sind aktuell;
 Basisversion `0.1.0`, kein Release-Tag, keine Terra-Übergabe. Gitea-Remote für dieses Projekt: `eduard/volund-cad`.
 Historische D11a–D11n-Offenvermerke beziehen sich auf ihren jeweiligen Prüfzeitpunkt.
@@ -67,7 +67,7 @@ Dokument konstruieren, ohne eine Komponente oder Baugruppe vorbereiten zu müsse
 Der erste und weitere Körper verwenden denselben „Neuer Körper“-Workflow und sind
 im Körperbereich einzeln bearbeitbar. Vertrag und geplante Abnahme A-BODY-03 sind
 festgehalten; die bisherigen Mehrkörper-/Codec-Tests belegen noch nicht diesen
-vollständigen UI-Ablauf. Umsetzung über S03, M01–M04 und R01 bleibt offen.
+vollständigen UI-Ablauf. Der DAG-Unterbau ist mit R01 abgenommen; der vollständige UI-Ablauf über S03 und M01–M04 bleibt offen.
 
 Völund wird als natives parametrisches CAD in C++20 mit Qt 6 und OpenCASCADE
 Technology für FreeBSD mit Meridian entwickelt. Völund bleibt dabei eine
@@ -365,3 +365,34 @@ des Buildpfads; sie wurden mangels ausdrücklicher Löschfreigabe nicht entfernt
 ## Entwicklungsbasis ab 13.09.2026
 
 Gemäß [ADR 0007](adr/0007-sway-development-meridian-final.md) wird das CAD-Tool auf FreeBSD/Sway stabilisiert. Meridian folgt abschließend in L07 und blockiert keine CAD-Erweiterungen. [P04](implementation-plan/evidence/P04.md) ist mit 23/23 CTests und betrachteten Compositoraufnahmen als Sway-Basis abgenommen; A02/A04 und die dokumentierten Grafik-/Hardware-Restprüfungen bleiben offen.
+
+R05b-P, 18.09.2026: typisierte Kantenreferenzen, natives Schema 3 (Leser 1/2/3),
+Duplikat-Namespace und analytische Constraintauflösung plattformübergreifend abgenommen. 87/87 Windows
+(116,42 s), 84/84 FreeBSD (30,96 s), 353 identische Quellhashes und beidseitiger nativer Dateiaustausch. UI-Anbindung anschließend in R05b-U abgenommen.
+[Prüfstand](implementation-plan/evidence/R05b-P.md).
+
+R05b-U, 18.09.2026: gemeinsame Kantenprojektion und Editor-Anbindung abgenommen,
+88/88 Windows (107,87 s), 85/85 FreeBSD (31,21 s), 358 identische Quellhashes und
+beide UI-Aufnahmen betrachtet. [R05 insgesamt abgeschlossen](implementation-plan/evidence/R05.md); R06 folgt.
+
+R06a, 18.09.2026: Kandidatenanalyse plattformübergreifend geprüft, 89/89 Windows (109,50 s),
+86/86 FreeBSD (31,21 s), 363 identische Quellhashes und vier identische Fixture-Ausgaben. Keine automatische Migration oder
+Reparatur-UI. [Prüfstand](implementation-plan/evidence/R06a.md).
+
+R06b, 18.09.2026: persistenter MigrationNeedsRepair-Zustand (Schema 4, Leser 1–4)
+und explizite Support-/Kantenreparatur mit Undo/Redo abgenommen. 90/90 Windows
+(132,75 s), 87/87 FreeBSD (31,55 s), 366 identische Quellhashes, drei identische
+Fixture-Ausgaben, beidseitiger nativer Dateiaustausch und sechs UI-Aufnahmen
+betrachtet. R06c ergänzt die Kandidatenauswahl; R06 insgesamt bleibt in-progress.
+[Prüfstand](implementation-plan/evidence/R06b.md).
+R06c / R06 insgesamt, 18.09.2026: Reparaturdialog und A-REF-03 abgenommen.
+91/91 Windows (121,47 s), 3/3 Nachprüfungen nach expliziten Indexcasts,
+88/88 FreeBSD (34,97 s), 371 identische Quellhashes, vier gleiche UI-Fixture-
+Ausgaben, je drei native Dateizustände in beide Richtungen und 24 betrachtete
+UI-Aufnahmen. [Gesamtabnahme](implementation-plan/evidence/R06.md).
+Aktuell 121 Hauptpakete, 31 done, 89 planned, A02 needs-design; 90 offen,
+davon 61 bis G4. Nächster Schritt: R07 (deterministischer Konturgraph).
+R06d ergänzt auf Nutzerwunsch die dokumentweite Mehrfachauswahl und den
+ausdrücklich gestarteten Automodus: eindeutige Supportvorschläge unmittelbar
+gemeinsam anwenden, nur Unklarheiten übrig lassen, ein Undo für den Batch.
+Keine Zuordnung beim Öffnen. [Nachweis](implementation-plan/evidence/R06d.md).
