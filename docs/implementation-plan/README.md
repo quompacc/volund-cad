@@ -1,24 +1,24 @@
 # Völund: vom vorhandenen Prototyp zum belastbaren CAD
 
-## Aktueller Stand – 18. September 2026
+## Aktueller Stand – 19. September 2026
 
-Laut [Paketstatus](packets.json): **121 Hauptpakete, 31 abgeschlossen, 90 offen**.
-Offen sind 89 geplante Pakete und A02 mit Designbedarf.
-R06 einschließlich Reparaturbedienung und A-REF-03 ist abgeschlossen; als Nächstes folgt R07 (Konturgraph). [Gesamtabnahme](evidence/R06.md).
+Laut [Paketstatus](packets.json): **121 Hauptpakete, 33 abgeschlossen, 88 offen**.
+Offen sind 87 geplante Pakete und A02 mit Designbedarf.
+R08 ist mit Schnittbildung und abgeleiteten Regionen/Innenkonturen abgenommen. Als Nächstes folgt R09 (Regionidentität und Profilauswahl). [R08-Abnahme](evidence/R08.md).
 Teilblöcke wie D12a–e zählen nicht als zusätzliche Hauptpakete; die Paketanzahl
 ist kein Maß für Restaufwand oder Fertigstellungszeit.
 
 | Stufe | Offene Hauptpakete |
 | --- | ---: |
 | G0 – Basis | 2 |
-| G1 – Dokument und Referenzen | 4 |
+| G1 – Dokument und Referenzen | 2 |
 | G2 – zusammenhängender CAD-Workflow | 27 |
 | G3 – mechanisches CAD v1 | 18 |
 | G4 – veröffentlichbare v1 | 10 |
 | G5 – spätere Produktfamilie | 29 |
-| Gesamt | 90 |
+| Gesamt | 88 |
 
-Bis einschließlich G4 bleiben 61 Hauptpakete. G2 ist der erste durchgängige
+Bis einschließlich G4 bleiben 59 Hauptpakete. G2 ist der erste durchgängige
 Bedienablauf, G3 der begrenzte mechanische Funktionsumfang. G5 umfasst zusätzliche
 Bereiche wie Baugruppen und Zeichnungen. Nutzbarkeit wird an diesen Abläufen
 abgenommen, nicht am Erreichen einer Prozentzahl.

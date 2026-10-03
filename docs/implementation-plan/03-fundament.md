@@ -337,6 +337,8 @@ Aktueller Paketstatus und Evidenz stehen im Manifest. A01 ist abgenommen; die ü
 
 ## R07 – Deterministischen Konturgraphen erstellen
 
+**Abgenommen am 19.09.2026:** 93/93 Windows, 90/90 FreeBSD, 380 gleiche Quellhashes. [Nachweis](evidence/R07.md).
+
 - **Voraussetzungen:** D10, R01.
 - **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08; `src/features/SketchProfiles.cpp`, `include/voelund/features/SketchProfiles.hpp`, `tests/unit/SketchProfileTests.cpp`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
 - **Auftrag:**
@@ -347,6 +349,8 @@ Aktueller Paketstatus und Evidenz stehen im Manifest. A01 ist abgenommen; die ü
 - **Grenze:** Noch keine verschachtelten Faces und keine heuristische automatische Schließung.
 
 ## R08 – Schnittpunkte und verschachtelte Regionen bestimmen
+
+**Abgenommen am 19.09.2026:** [R08a/R08b](evidence/R08.md), 95/95 Windows, 92/92 FreeBSD, 390 gleiche Quellhashes. Produktive Identität und Face-Anbindung bleiben R09/R10.
 
 - **Voraussetzungen:** R07.
 - **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08; `src/features/SketchProfiles.cpp`, `src/features/SketchEvaluation.cpp`, `tests/unit/SketchProfileTests.cpp`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.

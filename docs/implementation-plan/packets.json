@@ -1209,11 +1209,11 @@
       ],
       "acceptance": "Permutation und Umkehr gleicher Kontur liefern geometrisch gleiche geschlossene Schleifen. Offene Skizze bleibt editierbar, aber kein gültiger Materialrand. A-REG-01 Teil Konturen besteht.",
       "boundary": "Noch keine verschachtelten Faces und keine heuristische automatische Schließung.",
-      "status": "planned",
+      "status": "done",
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
+      "evidence": ["evidence/R07.md"],
       "completedCommit": null
     },
     {
@@ -1234,11 +1234,11 @@
       ],
       "acceptance": "Zwei konzentrische Kreise ergeben Ringregion plus gegebenenfalls separat auswählbare Innenregion gemäß Vertrag; Loch wird nicht automatisch aufgefüllt. Linie/Kreis-Schnitt, Tangentialfall und Selbstschnitt sind deterministisch getestet.",
       "boundary": "Bei mehr als einer Algorithmusverantwortlichkeit R08a Schnittbildung und R08b Containment getrennt liefern; keine ungeprüfte allgemeine NURBS-Unterstützung.",
-      "status": "planned",
+      "status": "done",
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
+      "evidence": ["R08-plan.md", "evidence/R08a.md", "evidence/R08b.md", "evidence/R08.md"],
       "completedCommit": null
     },
     {

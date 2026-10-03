@@ -1,0 +1,4 @@
+rectangle permutations and directions: 384 graph/face checks passed
+analytic line/arc, rectangle, circle, ellipse and construction passed
+localized open, branch, line/arc/ellipse overlap and independent component passed
+tolerance boundary and non-transitive ambiguity passed

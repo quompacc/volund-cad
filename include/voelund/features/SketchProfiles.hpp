@@ -10,6 +10,7 @@ namespace voelund::features {
 struct SketchProfile final {
     document::SketchProfileId id;
     std::vector<document::SketchElementId> elementIds;
+    std::vector<bool> reversed; // Derived traversal direction, never persisted.
 };
 
 [[nodiscard]] std::vector<SketchProfile>

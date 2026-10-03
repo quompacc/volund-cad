@@ -3,6 +3,7 @@
 #include <voelund/features/GeometryEvaluationError.hpp>
 #include <voelund/features/SketchEvaluation.hpp>
 
+#include <voelund/features/SketchContourGraph.hpp>
 #include <voelund/features/SketchProfiles.hpp>
 
 #include <BRepAdaptor_Curve.hxx>
@@ -30,8 +31,6 @@
 
 namespace voelund::features {
 namespace {
-
-using detail::connected;
 
 gp_Pnt worldPoint(const document::SketchPlane& plane, const document::SketchPoint& point) {
     const gp_Dir normal(plane.normalX, plane.normalY, plane.normalZ);
@@ -183,7 +182,7 @@ curveEndpoints(const document::SketchGeometry& geometry) {
 TopoDS_Face curveProfileFace(const document::SketchParameters& sketch, const SketchProfile& profile,
                              std::vector<EvaluatedContourEdge>& edges) {
     BRepBuilderAPI_MakeWire wire;
-    std::optional<document::SketchPoint> current;
+    std::size_t contourIndex = 0;
     for (document::SketchElementId id : profile.elementIds) {
         const auto& geometry = findElement(sketch, id).geometry;
         auto points = curveEndpoints(geometry);
@@ -192,7 +191,7 @@ TopoDS_Face curveProfileFace(const document::SketchParameters& sketch, const Ske
                                                          worldPoint(sketch.plane, points.second))
                                      .Edge()
                                : arcEdge(sketch, std::get<document::SketchArc>(geometry));
-        if (current.has_value() && connected(*current, points.second)) {
+        if (profile.reversed.at(contourIndex++)) {
             edge.Reverse();
             std::swap(points.first, points.second);
         }
@@ -210,7 +209,6 @@ TopoDS_Face curveProfileFace(const document::SketchParameters& sketch, const Ske
                    std::holds_alternative<document::SketchLine>(geometry) ? ContourRole::line
                                                                           : ContourRole::arc,
                    edge, wire.Edge());
-        current = points.second;
     }
     BRepBuilderAPI_MakeFace face(wire.Wire());
     if (!face.IsDone() || !BRepCheck_Analyzer(face.Face()).IsValid())
@@ -311,7 +309,32 @@ evaluateNamedProfileFaces(const document::SketchParameters& sketch,
         document::validateSketchElements(sketch.elements);
     const std::vector<SketchProfile> profiles = detectClosedProfiles(sketch.elements.values);
     if (profiles.empty()) {
-        throw GeometryEvaluationError("Sketch does not contain a closed profile");
+        std::string message = "Sketch does not contain a closed profile";
+        const auto graph = buildSketchContourGraph(sketch.elements.values);
+        for (const auto& d : graph.diagnostics) {
+            switch (d.issue) {
+            case ContourIssue::openEnd:
+                message += "; open end";
+                break;
+            case ContourIssue::branch:
+                message += "; branch";
+                break;
+            case ContourIssue::overlap:
+                message += "; overlapping boundaries";
+                break;
+            case ContourIssue::ambiguousConnection:
+                message += "; ambiguous tolerance connection";
+                break;
+            case ContourIssue::degenerate:
+                message += "; degenerate boundary";
+                break;
+            }
+            message += " [elements";
+            for (auto id : d.elements)
+                message += " " + std::to_string(id.value());
+            message += "]";
+        }
+        throw GeometryEvaluationError(message);
     }
     std::vector<EvaluatedProfileFace> faces;
     std::size_t selectedCount = 0;

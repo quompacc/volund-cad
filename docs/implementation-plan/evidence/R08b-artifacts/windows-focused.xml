@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Win32-ninja"
+	tests="2"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname="megatron"
+	time="0"
+	timestamp="2026-09-19T06:55:42"
+	>
+	<testcase name="features.sketch_intersections" classname="features.sketch_intersections" time="0.0236041" status="run">
+		<properties>
+			<property name="cmake_labels" value="features;regression;sketch"/>
+		</properties>
+		<system-out>line/circle/ellipse and conic intersections passed
+tangent and endpoint classification passed
+source domains, rectangle lineage, construction and self crossing passed
+overlap rejection and finite domains passed
+permutation, direction, IDs, multiway crossings and scale range passed
+</system-out>
+	</testcase>
+	<testcase name="features.sketch_regions" classname="features.sketch_regions" time="0.820762" status="run">
+		<properties>
+			<property name="cmake_labels" value="features;regression;sketch"/>
+		</properties>
+		<system-out>concentric ring, separate inner region and three containment levels passed
+line/circle chord, self crossing and crossing-circle cells passed
+rectangle/ellipse, separate islands, construction and smooth arc joins passed
+open boundaries, tangent contacts and overlaps explicitly rejected
+region permutation/direction/IDs: 384 cases plus translated scale limits passed
+</system-out>
+	</testcase>
+</testsuite>

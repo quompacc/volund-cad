@@ -1,0 +1,8 @@
+[1/8] Scanning /home/eduard/src/voelund-p04-20260913/tests/integration/SketchReferenceRepairTests.cpp for CXX dependencies
+[2/8] Generating CXX dyndep file tests/CMakeFiles/voelund_sketch_reference_repair_tests.dir/CXX.dd
+[3/8] Scanning /home/eduard/src/voelund-p04-20260913/tests/desktop/ReferenceRepairFlowTests.cpp for CXX dependencies
+[4/8] Generating CXX dyndep file tests/CMakeFiles/voelund_reference_repair_flow_tests.dir/CXX.dd
+[5/8] Building CXX object tests/CMakeFiles/voelund_sketch_reference_repair_tests.dir/integration/SketchReferenceRepairTests.cpp.o
+[6/8] Linking CXX executable tests/voelund_sketch_reference_repair_tests
+[7/8] Building CXX object tests/CMakeFiles/voelund_reference_repair_flow_tests.dir/desktop/ReferenceRepairFlowTests.cpp.o
+[8/8] Linking CXX executable tests/voelund_reference_repair_flow_tests

@@ -307,3 +307,35 @@ reject/keepEditableErrors policy. Paired coordinate slots can be repaired togeth
 remaining legacy attachments keep the error state. Undo/Redo and native Save/Open
 preserve pending and repaired states. The editor refuses pending migration states.
 Candidate selection in the product UI and A-REF-03 were accepted in R06c. The repair dialog requires explicit selection, previews face bounds and edge points, and retains pending errors only after explicit confirmation.
+## Konturgraph (R07)
+
+Die Profilerkennung nutzt einen abgeleiteten Graphen orientierter Randstücke.
+Konstruktion wird ausgeschlossen; Verzweigungen und überlappende Dubletten
+liefern keinen Materialrand. Eine Hilfslinie am Rand muss deshalb ausdrücklich
+Konstruktion sein, wenn sie nicht zum Materialrand gehören soll. Die alte
+greedy Suche konnte solche Zweige still übergehen.
+
+Toleranzverbindungen ändern keine gespeicherten Kurven. Mehrdeutige transitive
+Verbindungen werden abgewiesen. Diagnosen tragen Element-IDs; die Flächenauswertung
+übernimmt die berechnete Laufrichtung. Profil-IDs bleiben vorläufig kompatibel,
+werden aber nicht als dauerhafte Regionsidentität ausgegeben (R09).
+Schnittbildung, Innenkonturen und allgemeine Regionsbildung folgen in R08.
+
+## Analytische Schnittintervalle (R08a)
+
+SketchIntersectionResult enthält Quellstücke, Schnittparameter/Kontaktart und
+Teilintervalle auf unveränderten analytischen Kurven. Konstruktion ist ausgeschlossen.
+Bei Diagnosen sind keine Intervalle zur Weiterverarbeitung vorhanden. Periodische
+Naht und Originaldomäne bleiben explizit. Weder dauerhafte Region-ID noch Face
+sind Bestandteil dieses Ergebnisses; R08b/R09/R10 ergänzen diese Schritte.
+
+## Abgeleitete Regionen (R08b)
+
+SketchRegionResult enthält positive Randläufe und Regionen mit Außenrand und
+unmittelbaren Innenrändern. Außenläufe sind gegen den Uhrzeigersinn orientiert;
+Innenränder verwenden die referenzierten Läufe in umgekehrter Richtung.
+Region.area subtrahiert ausschließlich die unmittelbaren Löcher. Eine innere
+Fläche ist eine eigene, nicht automatisch ausgewählte Region. Vektorindizes
+sind keine dauerhaften IDs. R09 führt Identität/Auswahl und Migration ein.
+R10 übernimmt den produktiven Face-Weg. Bei ungültiger Topologie liefert der
+Regionsvertrag Diagnosen mit Element-IDs, aber keine verwendbaren Regionen.

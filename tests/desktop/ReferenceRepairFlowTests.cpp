@@ -99,9 +99,10 @@ ModelDocument fixture(bool edges, bool multiple) {
     }
     SketchParameters p{{0, 0, z, 0, 0, 1, 1, 0, 0},
                        {{{SketchElementId{1}, SketchRectangle{3, 3, 4, 4}},
-                         {SketchElementId{2}, SketchLine{{2, 2}, {7, 7}}}},
+                         {SketchElementId{2}, SketchLine{{2, 2}, {7, 7}}, true}},
                         3},
                        {}};
+    // Attachment helper is construction, not a branching material boundary.
     if (edges)
         for (auto kind : {SketchConstraintKind::coordinateX, SketchConstraintKind::coordinateY})
             p.constraints.values.push_back({SketchConstraintId{p.constraints.nextId++},

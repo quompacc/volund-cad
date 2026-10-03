@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Win32-ninja"
+	tests="1"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname="megatron"
+	time="0"
+	timestamp="2026-09-19T06:42:27"
+	>
+	<testcase name="features.sketch_intersections" classname="features.sketch_intersections" time="0.0247097" status="run">
+		<properties>
+			<property name="cmake_labels" value="features;regression;sketch"/>
+		</properties>
+		<system-out>line/circle/ellipse and conic intersections passed
+tangent and endpoint classification passed
+source domains, rectangle lineage, construction and self crossing passed
+overlap rejection and finite domains passed
+permutation, direction, IDs, multiway crossings and scale range passed
+</system-out>
+	</testcase>
+</testsuite>

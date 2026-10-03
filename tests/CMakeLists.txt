@@ -633,3 +633,18 @@ set_tests_properties(application.sketch_reference_review PROPERTIES LABELS "inte
 target_link_libraries(voelund_body_identity_evaluation_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME features.body_identity COMMAND voelund_body_identity_evaluation_tests)
 set_tests_properties(features.body_identity PROPERTIES LABELS "integration;document;features;regression" TIMEOUT 60)
+
+add_executable(voelund_sketch_contour_graph_tests unit/SketchContourGraphTests.cpp)
+target_link_libraries(voelund_sketch_contour_graph_tests PRIVATE voelund_project_options Voelund::Features)
+add_test(NAME features.sketch_contour_graph COMMAND voelund_sketch_contour_graph_tests)
+set_tests_properties(features.sketch_contour_graph PROPERTIES LABELS "features;sketch;regression" TIMEOUT 90)
+
+add_executable(voelund_sketch_intersection_tests unit/SketchIntersectionTests.cpp)
+target_link_libraries(voelund_sketch_intersection_tests PRIVATE voelund_project_options Voelund::Features)
+add_test(NAME features.sketch_intersections COMMAND voelund_sketch_intersection_tests)
+set_tests_properties(features.sketch_intersections PROPERTIES LABELS "features;sketch;regression" TIMEOUT 90)
+
+add_executable(voelund_sketch_region_tests unit/SketchRegionTests.cpp)
+target_link_libraries(voelund_sketch_region_tests PRIVATE voelund_project_options Voelund::Features)
+add_test(NAME features.sketch_regions COMMAND voelund_sketch_region_tests)
+set_tests_properties(features.sketch_regions PROPERTIES LABELS "features;sketch;regression" TIMEOUT 90)

@@ -1,0 +1,14 @@
+Test project V:/build/p02-qt-final
+    Start 94: features.sketch_intersections
+1/2 Test #94: features.sketch_intersections ....   Passed    0.02 sec
+    Start 95: features.sketch_regions
+2/2 Test #95: features.sketch_regions ..........   Passed    0.82 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+features      =   0.84 sec*proc (2 tests)
+regression    =   0.84 sec*proc (2 tests)
+sketch        =   0.84 sec*proc (2 tests)
+
+Total Test time (real) =   0.86 sec

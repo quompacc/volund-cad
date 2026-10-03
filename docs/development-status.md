@@ -396,3 +396,17 @@ R06d ergänzt auf Nutzerwunsch die dokumentweite Mehrfachauswahl und den
 ausdrücklich gestarteten Automodus: eindeutige Supportvorschläge unmittelbar
 gemeinsam anwenden, nur Unklarheiten übrig lassen, ein Undo für den Batch.
 Keine Zuordnung beim Öffnen. [Nachweis](implementation-plan/evidence/R06d.md).
+
+R07, 19.09.2026: deterministischer Konturgraph und gerichteter Flächenbau abgenommen.
+93/93 Windows, 90/90 FreeBSD, 380 identische Quellhashes. Verzweigungen, Dubletten
+und mehrdeutige Toleranzketten werden lokalisiert abgewiesen. Schnittbildung
+und Containment folgen R08. [Nachweis](implementation-plan/evidence/R07.md).
+
+R08a, 19.09.2026: analytische Schnittbildung und Quellparameterintervalle
+abgenommen, 94/94 Windows und 91/91 FreeBSD, 385 gleiche Quellhashes.
+R08 bleibt in-progress; Containment/Regionen folgen R08b. Keine Umstellung
+der bisherigen produktiven Profilauswahl. [Nachweis](implementation-plan/evidence/R08a.md).
+
+R08b/R08, 19.09.2026: abgeleitete Regionen mit Innenkonturen und separaten
+Innenflächen abgenommen. 95/95 Windows, 92/92 FreeBSD, 390 gleiche Quellhashes.
+R09 (Identität/Auswahl) und R10 (produktive Faces) folgen. [Nachweis](implementation-plan/evidence/R08.md).

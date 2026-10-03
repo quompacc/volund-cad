@@ -1,0 +1,7 @@
+include/voelund/features/SketchIntersections.hpp
+src/features/CMakeLists.txt
+src/features/SketchIntersectionCurves.cpp
+src/features/SketchIntersectionCurves.hpp
+src/features/SketchIntersections.cpp
+tests/CMakeLists.txt
+tests/unit/SketchIntersectionTests.cpp

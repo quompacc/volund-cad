@@ -1,0 +1,5 @@
+line/circle/ellipse and conic intersections passed
+tangent and endpoint classification passed
+source domains, rectangle lineage, construction and self crossing passed
+overlap rejection and finite domains passed
+permutation, direction, IDs, multiway crossings and scale range passed

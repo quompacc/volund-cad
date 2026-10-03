@@ -1,0 +1,20 @@
+Test project V:/build/p02-qt-final
+    Start 52: features.sketch_profiles
+1/3 Test #52: features.sketch_profiles .........   Passed    0.43 sec
+    Start 85: document.numeric_policy
+2/3 Test #85: document.numeric_policy ..........   Passed    0.68 sec
+    Start 93: features.sketch_contour_graph
+3/3 Test #93: features.sketch_contour_graph ....   Passed    0.64 sec
+
+100% tests passed, 0 tests failed out of 3
+
+Label Time Summary:
+document       =   0.68 sec*proc (1 test)
+features       =   1.07 sec*proc (2 tests)
+integration    =   0.68 sec*proc (1 test)
+kernel         =   0.68 sec*proc (1 test)
+regression     =   1.32 sec*proc (2 tests)
+sketch         =   0.64 sec*proc (1 test)
+unit           =   0.43 sec*proc (1 test)
+
+Total Test time (real) =   1.81 sec

@@ -1,0 +1,12 @@
+R08b / R08 final verification – 2026-09-19
+Windows full suite: 95/95, 119.77 s.
+FreeBSD full suite: 92/92, 35.79 s.
+390 identical source/fixture SHA256 hashes; 8 changed/new files vs R08a.
+Five identical semantic region test output lines.
+384 region permutation/direction/ID cases plus translated scale limits.
+Concentric ring 300*pi and separate inner region 100*pi verified.
+Three nesting levels, crossing/self-crossing cells and invalid topology tested.
+All existing product regression tests passed.
+No schema or UI layout change; no new visual acceptance claimed.
+R08 complete. Persistent region identity/selection R09; production faces R10.
+No commit/push.

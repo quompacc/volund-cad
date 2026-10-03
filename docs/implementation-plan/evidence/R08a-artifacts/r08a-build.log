@@ -1,0 +1,180 @@
+CMake Warning (dev) at CMakeLists.txt:28 (find_package):
+  Policy CMP0167 is not set: The FindBoost module is removed.  Run "cmake
+  --help-policy CMP0167" for policy details.  Use the cmake_policy command to
+  set the policy and suppress this warning.
+
+This warning is for project developers.  Use -Wno-dev to suppress it.
+Preset CMake variables:
+
+  BUILD_TESTING="ON"
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_CXX_COMPILER="clang++"
+  VOELUND_BUILD_DESKTOP="ON"
+  VOELUND_VIEWPORT_BACKEND="qt-opengl"
+  VOELUND_WARNINGS_AS_ERRORS="ON"
+
+
+-- Found OpenGL: /usr/local/lib/libOpenGL.so
+-- Found OpenGL: /usr/local/lib/libEGL.so  found components: EGL GLES2
+-- Configuring done (0.2s)
+-- Generating done (0.2s)
+-- Build files have been written to: /home/eduard/src/voelund-p04-20260913/build/freebsd-clang-lean-occt
+[1/403] Generating CXX dyndep file src/kernel/CMakeFiles/voelund_kernel.dir/CXX.dd
+[2/400] Generating CXX dyndep file src/platform/CMakeFiles/voelund_platform.dir/CXX.dd
+[3/396] Generating CXX dyndep file third_party/planegcs/CMakeFiles/voelund_planegcs.dir/CXX.dd
+[4/390] Generating CXX dyndep file src/document/CMakeFiles/voelund_document.dir/CXX.dd
+[5/360] Generating CXX dyndep file src/application/CMakeFiles/voelund_application.dir/CXX.dd
+[6/334] Generating CXX dyndep file src/viewport/CMakeFiles/voelund_viewport.dir/CXX.dd
+[7/320] Generating CXX dyndep file src/workspaces/CMakeFiles/voelund_workspaces.dir/CXX.dd
+[8/318] Generating CXX dyndep file src/modules/solid/CMakeFiles/voelund_module_solid.dir/CXX.dd
+[9/316] Generating CXX dyndep file src/desktop/CMakeFiles/voelund_desktop.dir/CXX.dd
+[10/293] Generating CXX dyndep file apps/voelund-cad/CMakeFiles/voelund-cad.dir/CXX.dd
+[11/291] Generating CXX dyndep file tests/CMakeFiles/voelund_native_product_tests.dir/CXX.dd
+[12/290] Generating CXX dyndep file tests/CMakeFiles/voelund_feature_dag_tests.dir/CXX.dd
+[13/289] Generating CXX dyndep file tests/CMakeFiles/voelund_legacy_constraint_migration_tests.dir/CXX.dd
+[14/287] Generating CXX dyndep file tests/CMakeFiles/voelund_migration_acceptance_tests.dir/CXX.dd
+[15/286] Generating CXX dyndep file tests/CMakeFiles/voelund_product_exchange_tests.dir/CXX.dd
+[16/285] Generating CXX dyndep file tests/CMakeFiles/voelund_native_output_tests.dir/CXX.dd
+[17/283] Generating CXX dyndep file tests/CMakeFiles/voelund_native_attribute_tests.dir/CXX.dd
+[18/281] Generating CXX dyndep file tests/CMakeFiles/voelund_native_structure_tests.dir/CXX.dd
+[19/279] Generating CXX dyndep file tests/CMakeFiles/voelund_native_header_tests.dir/CXX.dd
+[20/277] Generating CXX dyndep file tests/CMakeFiles/voelund_document_file_input_tests.dir/CXX.dd
+[21/275] Scanning /home/eduard/src/voelund-p04-20260913/src/features/SketchIntersectionCurves.cpp for CXX dependencies
+[22/275] Generating CXX dyndep file tests/CMakeFiles/voelund_native_store_tests.dir/CXX.dd
+[23/273] Scanning /home/eduard/src/voelund-p04-20260913/src/features/SketchIntersections.cpp for CXX dependencies
+[24/273] Generating CXX dyndep file tests/CMakeFiles/voelund_model_backend_tests.dir/CXX.dd
+[25/272] Generating CXX dyndep file tests/CMakeFiles/voelund_native_model_state_tests.dir/CXX.dd
+[26/269] Generating CXX dyndep file tests/CMakeFiles/voelund_read_boundary_tests.dir/CXX.dd
+[27/268] Generating CXX dyndep file src/features/CMakeFiles/voelund_features.dir/CXX.dd
+[28/252] Scanning /home/eduard/src/voelund-p04-20260913/tests/unit/SketchIntersectionTests.cpp for CXX dependencies
+[29/252] Generating CXX dyndep file tests/CMakeFiles/voelund_angle_boundary_tests.dir/CXX.dd
+[30/251] Generating CXX dyndep file tests/CMakeFiles/voelund_plane_migration_tests.dir/CXX.dd
+[31/250] Generating CXX dyndep file tests/CMakeFiles/voelund_numeric_validation_tests.dir/CXX.dd
+[32/249] Generating CXX dyndep file tests/CMakeFiles/voelund_legacy_import_tests.dir/CXX.dd
+[33/248] Generating CXX dyndep file tests/CMakeFiles/voelund_scene_status_tests.dir/CXX.dd
+[34/247] Generating CXX dyndep file tests/CMakeFiles/voelund_command_input_tests.dir/CXX.dd
+[35/246] Generating CXX dyndep file tests/CMakeFiles/voelund_session_failure_tests.dir/CXX.dd
+[36/245] Generating CXX dyndep file tests/CMakeFiles/voelund_session_creation_tests.dir/CXX.dd
+[37/244] Generating CXX dyndep file tests/CMakeFiles/voelund_session_transaction_tests.dir/CXX.dd
+[38/243] Generating CXX dyndep file tests/CMakeFiles/voelund_document_transaction_tests.dir/CXX.dd
+[39/240] Generating CXX dyndep file tests/CMakeFiles/voelund_command_contract_tests.dir/CXX.dd
+[40/239] Generating CXX dyndep file tests/CMakeFiles/voelund_session_identity_tests.dir/CXX.dd
+[41/238] Generating CXX dyndep file tests/CMakeFiles/voelund_native_schema_tests.dir/CXX.dd
+[42/237] Generating CXX dyndep file tests/CMakeFiles/voelund_native_extrusion_tests.dir/CXX.dd
+[43/236] Generating CXX dyndep file tests/CMakeFiles/voelund_native_sketch_constraint_tests.dir/CXX.dd
+[44/235] Generating CXX dyndep file tests/CMakeFiles/voelund_native_sketch_tests.dir/CXX.dd
+[45/234] Generating CXX dyndep file tests/CMakeFiles/voelund_native_cylinder_tests.dir/CXX.dd
+[46/233] Generating CXX dyndep file tests/CMakeFiles/voelund_native_box_tests.dir/CXX.dd
+[47/232] Generating CXX dyndep file tests/CMakeFiles/voelund_native_metadata_tests.dir/CXX.dd
+[48/230] Generating CXX dyndep file tests/CMakeFiles/voelund_document_identity_tests.dir/CXX.dd
+[49/228] Generating CXX dyndep file tests/CMakeFiles/voelund_safe_persistence_tests.dir/CXX.dd
+[50/227] Generating CXX dyndep file tests/CMakeFiles/voelund_document_parser_tests.dir/CXX.dd
+[51/225] Generating CXX dyndep file tests/CMakeFiles/voelund_atomic_file_tests.dir/CXX.dd
+[52/223] Generating CXX dyndep file tests/CMakeFiles/voelund_kernel_tests.dir/CXX.dd
+[53/221] Generating CXX dyndep file tests/CMakeFiles/voelund_support_provenance_tests.dir/CXX.dd
+[54/220] Generating CXX dyndep file tests/CMakeFiles/voelund_edge_provenance_tests.dir/CXX.dd
+[55/219] Generating CXX dyndep file tests/CMakeFiles/voelund_projected_edge_tests.dir/CXX.dd
+[56/218] Generating CXX dyndep file tests/CMakeFiles/voelund_contour_provenance_tests.dir/CXX.dd
+[57/217] Generating CXX dyndep file tests/CMakeFiles/voelund_support_binding_tests.dir/CXX.dd
+[58/216] Generating CXX dyndep file tests/CMakeFiles/voelund_operation_history_tests.dir/CXX.dd
+[59/214] Generating CXX dyndep file tests/CMakeFiles/voelund_document_tests.dir/CXX.dd
+[60/212] Generating CXX dyndep file tests/CMakeFiles/voelund_sketch_profile_tests.dir/CXX.dd
+[61/211] Generating CXX dyndep file tests/CMakeFiles/voelund_planegcs_tests.dir/CXX.dd
+[62/209] Generating CXX dyndep file tests/CMakeFiles/voelund_sketch_constraint_tests.dir/CXX.dd
+[63/208] Generating CXX dyndep file tests/CMakeFiles/voelund_application_tests.dir/CXX.dd
+[64/204] Generating CXX dyndep file tests/CMakeFiles/voelund_sketch_command_failure_tests.dir/CXX.dd
+[65/203] Generating CXX dyndep file tests/CMakeFiles/voelund_preview_command_failure_tests.dir/CXX.dd
+[66/201] Generating CXX dyndep file tests/CMakeFiles/voelund_feature_status_tests.dir/CXX.dd
+[67/200] Generating CXX dyndep file tests/CMakeFiles/voelund_reference_repair_flow_tests.dir/CXX.dd
+[68/199] Generating CXX dyndep file tests/CMakeFiles/voelund_document_repair_flow_tests.dir/CXX.dd
+[69/198] Generating CXX dyndep file tests/CMakeFiles/voelund_support_flow_tests.dir/CXX.dd
+[70/197] Generating CXX dyndep file tests/CMakeFiles/voelund_projected_edge_flow_tests.dir/CXX.dd
+[71/196] Generating CXX dyndep file tests/CMakeFiles/voelund_angle_input_tests.dir/CXX.dd
+[72/195] Generating CXX dyndep file tests/CMakeFiles/voelund_parameter_failure_tests.dir/CXX.dd
+[73/194] Generating CXX dyndep file tests/CMakeFiles/voelund_sketch_solver_gate_tests.dir/CXX.dd
+[74/193] Generating CXX dyndep file tests/CMakeFiles/voelund_document_actions_tests.dir/CXX.dd
+[75/191] Generating CXX dyndep file tests/CMakeFiles/voelund_viewport_lifecycle_tests.dir/CXX.dd
+[76/189] Generating CXX dyndep file tests/CMakeFiles/voelund_sketch_editor_tests.dir/CXX.dd
+[77/187] Generating CXX dyndep file tests/CMakeFiles/voelund_sketch_construction_tests.dir/CXX.dd
+[78/186] Generating CXX dyndep file tests/CMakeFiles/voelund_sketch_circle_constraint_tests.dir/CXX.dd
+[79/185] Generating CXX dyndep file tests/CMakeFiles/voelund_sketch_alignment_tests.dir/CXX.dd
+[80/184] Generating CXX dyndep file tests/CMakeFiles/voelund_sketch_fix_distance_tests.dir/CXX.dd
+[81/183] Generating CXX dyndep file tests/CMakeFiles/voelund_sketch_basic_tools_tests.dir/CXX.dd
+[82/182] Generating CXX dyndep file tests/CMakeFiles/voelund_sketch_slot_tests.dir/CXX.dd
+[83/181] Generating CXX dyndep file tests/CMakeFiles/voelund_workspace_tests.dir/CXX.dd
+[84/179] Generating CXX dyndep file tests/CMakeFiles/voelund_numeric_policy_tests.dir/CXX.dd
+[85/178] Generating CXX dyndep file tests/CMakeFiles/voelund_boolean_connection_tests.dir/CXX.dd
+[86/177] Generating CXX dyndep file tests/CMakeFiles/voelund_sketch_id_capacity_tests.dir/CXX.dd
+[87/176] Generating CXX dyndep file tests/CMakeFiles/voelund_legacy_body_identity_tests.dir/CXX.dd
+[88/174] Generating CXX dyndep file tests/CMakeFiles/voelund_feature_id_lifetime_tests.dir/CXX.dd
+[89/173] Generating CXX dyndep file tests/CMakeFiles/voelund_body_identity_evaluation_tests.dir/CXX.dd
+[90/172] Generating CXX dyndep file tests/CMakeFiles/voelund_sketch_reference_review_tests.dir/CXX.dd
+[91/171] Generating CXX dyndep file tests/CMakeFiles/voelund_sketch_reference_repair_tests.dir/CXX.dd
+[92/170] Generating CXX dyndep file tests/CMakeFiles/voelund_sketch_contour_graph_tests.dir/CXX.dd
+[93/169] Generating CXX dyndep file tests/CMakeFiles/voelund_sketch_intersection_tests.dir/CXX.dd
+[94/169] Building CXX object src/features/CMakeFiles/voelund_features.dir/SketchIntersectionCurves.cpp.o
+[95/169] Building CXX object src/features/CMakeFiles/voelund_features.dir/SketchIntersections.cpp.o
+[96/169] Linking CXX static library src/features/libvoelund_features.a
+[97/169] Generating CXX dyndep file apps/voelund-ui-preview/CMakeFiles/voelund-ui-preview.dir/CXX.dd
+[98/159] Building CXX object tests/CMakeFiles/voelund_sketch_intersection_tests.dir/unit/SketchIntersectionTests.cpp.o
+[99/159] Linking CXX executable tests/voelund_native_product_tests
+[100/159] Linking CXX executable tests/voelund_feature_dag_tests
+[101/159] Linking CXX executable apps/voelund-ui-preview/voelund-ui-preview
+[102/159] Linking CXX executable apps/voelund-cad/voelund-cad
+[103/159] Linking CXX executable tests/voelund_migration_acceptance_tests
+[104/159] Linking CXX executable tests/voelund_model_backend_tests
+[105/159] Linking CXX executable tests/voelund_product_exchange_tests
+[106/159] Linking CXX executable tests/voelund_read_boundary_tests
+[107/159] Linking CXX executable tests/voelund_angle_boundary_tests
+[108/159] Linking CXX executable tests/voelund_numeric_validation_tests
+[109/159] Linking CXX executable tests/voelund_plane_migration_tests
+[110/159] Linking CXX executable tests/voelund_scene_status_tests
+[111/159] Linking CXX executable tests/voelund_legacy_import_tests
+[112/159] Linking CXX executable tests/voelund_command_input_tests
+[113/159] Linking CXX executable tests/voelund_command_contract_tests
+[114/159] Linking CXX executable tests/voelund_session_creation_tests
+[115/159] Linking CXX executable tests/voelund_session_failure_tests
+[116/159] Linking CXX executable tests/voelund_session_transaction_tests
+[117/159] Linking CXX executable tests/voelund_session_identity_tests
+[118/159] Linking CXX executable tests/voelund_native_sketch_constraint_tests
+[119/159] Linking CXX executable tests/voelund_native_schema_tests
+[120/159] Linking CXX executable tests/voelund_native_extrusion_tests
+[121/159] Linking CXX executable tests/voelund_native_cylinder_tests
+[122/159] Linking CXX executable tests/voelund_safe_persistence_tests
+[123/159] Linking CXX executable tests/voelund_native_sketch_tests
+[124/159] Linking CXX executable tests/voelund_native_box_tests
+[125/159] Linking CXX executable tests/voelund_support_provenance_tests
+[126/159] Linking CXX executable tests/voelund_edge_provenance_tests
+[127/159] Linking CXX executable tests/voelund_projected_edge_tests
+[128/159] Linking CXX executable tests/voelund_contour_provenance_tests
+[129/159] Linking CXX executable tests/voelund_sketch_profile_tests
+[130/159] Linking CXX executable tests/voelund_support_binding_tests
+[131/159] Linking CXX executable tests/voelund_sketch_constraint_tests
+[132/159] Linking CXX executable tests/voelund_application_tests
+[133/159] Linking CXX executable tests/voelund_sketch_command_failure_tests
+[134/159] Linking CXX executable tests/voelund_preview_command_failure_tests
+[135/159] Linking CXX executable tests/voelund_feature_status_tests
+[136/159] Linking CXX executable tests/voelund_reference_repair_flow_tests
+[137/159] Linking CXX executable tests/voelund_document_repair_flow_tests
+[138/159] Linking CXX executable tests/voelund_support_flow_tests
+[139/159] Linking CXX executable tests/voelund_projected_edge_flow_tests
+[140/159] Linking CXX executable tests/voelund_angle_input_tests
+[141/159] Linking CXX executable tests/voelund_parameter_failure_tests
+[142/159] Linking CXX executable tests/voelund_document_actions_tests
+[143/159] Linking CXX executable tests/voelund_sketch_editor_tests
+[144/159] Linking CXX executable tests/voelund_sketch_solver_gate_tests
+[145/159] Linking CXX executable tests/voelund_sketch_construction_tests
+[146/159] Linking CXX executable tests/voelund_sketch_alignment_tests
+[147/159] Linking CXX executable tests/voelund_sketch_circle_constraint_tests
+[148/159] Linking CXX executable tests/voelund_sketch_fix_distance_tests
+[149/159] Linking CXX executable tests/voelund_sketch_basic_tools_tests
+[150/159] Linking CXX executable tests/voelund_numeric_policy_tests
+[151/159] Linking CXX executable tests/voelund_sketch_slot_tests
+[152/159] Linking CXX executable tests/voelund_boolean_connection_tests
+[153/159] Linking CXX executable tests/voelund_sketch_id_capacity_tests
+[154/159] Linking CXX executable tests/voelund_body_identity_evaluation_tests
+[155/159] Linking CXX executable tests/voelund_feature_id_lifetime_tests
+[156/159] Linking CXX executable tests/voelund_sketch_reference_repair_tests
+[157/159] Linking CXX executable tests/voelund_sketch_reference_review_tests
+[158/159] Linking CXX executable tests/voelund_sketch_intersection_tests
+[159/159] Linking CXX executable tests/voelund_sketch_contour_graph_tests

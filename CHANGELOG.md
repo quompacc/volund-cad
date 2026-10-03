@@ -12,6 +12,12 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 
 ### Hinzugefügt
 
+- R08 abgeschlossen: orientierte Regionen und unmittelbare Innenränder, Ring/Innenfläche getrennt, explizite Tangential-/Offenranddiagnosen. 95/95 Windows, 92/92 FreeBSD, 390 gleiche Quellhashes. Produktanbindung folgt R09/R10. [Nachweis](docs/implementation-plan/evidence/R08.md).
+
+- R08a: analytische Schnittpunkte, Tangentenklassifikation und Quellparameterintervalle mit Herkunft. 94/94 Windows, 91/91 FreeBSD, 385 gleiche Quellhashes. Regionsbildung folgt R08b. [Nachweis](docs/implementation-plan/evidence/R08a.md).
+
+- R07: deterministischer Konturgraph, explizite Laufrichtung und lokale Diagnose offener/verzweigter/überlappender Grenzen. 384 Permutations-/Richtungsvarianten; 93/93 Windows, 90/90 FreeBSD, 380 gleiche Quellhashes. [Nachweis](docs/implementation-plan/evidence/R07.md).
+
 - R06d: dokumentweite Mehrfachauswahl und unmittelbar anwendender Automodus für eindeutige Supportvorschläge. Unklarheiten bleiben offen; ein Undo je Reparaturlauf. [Nachweis](docs/implementation-plan/evidence/R06d.md).
 
 - R06 abgeschlossen: Reparaturdialog mit ausdrücklicher Kandidatenwahl, Vorschau, Cancel, Stale-Prüfung und bestätigter Fehlerübernahme. A-REF-03 bestanden; 91/91 Windows, 88/88 FreeBSD, 371 identische Quellhashes, beidseitiger Dateiaustausch und 24 betrachtete UI-Aufnahmen. [Gesamtabnahme](docs/implementation-plan/evidence/R06.md).

@@ -1,0 +1,9 @@
+R08a final verification – 2026-09-19
+Windows full suite: 94/94, 121.71 s.
+FreeBSD full suite: 91/91, 35.46 s.
+385 identical source/fixture SHA256 hashes; 7 changed/new files vs R07.
+Five identical semantic intersection test output lines.
+Source limits and all existing product regressions passed.
+No production profile/region selection, schema or UI layout change.
+R08a accepted; R08 remains in-progress, R08b next.
+No commit/push.

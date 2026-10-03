@@ -1,0 +1,5 @@
+concentric ring, separate inner region and three containment levels passed
+line/circle chord, self crossing and crossing-circle cells passed
+rectangle/ellipse, separate islands, construction and smooth arc joins passed
+open boundaries, tangent contacts and overlaps explicitly rejected
+region permutation/direction/IDs: 384 cases plus translated scale limits passed

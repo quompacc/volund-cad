@@ -1,0 +1,12 @@
+include/voelund/features/SketchContourGraph.hpp
+include/voelund/features/SketchProfiles.hpp
+src/features/CMakeLists.txt
+src/features/SketchContourGeometry.cpp
+src/features/SketchContourGeometry.hpp
+src/features/SketchContourGraph.cpp
+src/features/SketchEvaluation.cpp
+src/features/SketchProfiles.cpp
+tests/CMakeLists.txt
+tests/desktop/ReferenceRepairFlowTests.cpp
+tests/integration/SketchReferenceRepairTests.cpp
+tests/unit/SketchContourGraphTests.cpp

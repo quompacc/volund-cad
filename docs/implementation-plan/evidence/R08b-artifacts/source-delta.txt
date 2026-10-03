@@ -1,0 +1,8 @@
+include/voelund/features/SketchRegions.hpp
+src/features/CMakeLists.txt
+src/features/SketchIntersections.cpp
+src/features/SketchRegionGeometry.cpp
+src/features/SketchRegionGeometry.hpp
+src/features/SketchRegions.cpp
+tests/CMakeLists.txt
+tests/unit/SketchRegionTests.cpp

@@ -1,0 +1,11 @@
+R07 final verification – 2026-09-19
+Windows full suite: 93/93, 115.66 s.
+FreeBSD full suite: 90/90, 34.84 s.
+380 identical source/fixture SHA256 hashes; 12 changed/new files vs R06d.
+Four identical semantic contour test output lines.
+384 graph and OCCT face permutation/direction/ID checks.
+Initial regression: branching helper lines in two R06 fixtures, now explicit construction.
+Both complete suites rerun after fixture correction.
+Source limits and existing UI/reference/persistence tests included.
+No schema change; no new visual acceptance (no layout change).
+No commit/push. Next R08.
