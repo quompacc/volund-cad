@@ -55,6 +55,7 @@ MainWindow::MainWindow(application::CadSession& session, QWidget* parent)
         std::make_unique<DocumentActions>(*this, impl_->session, [this]() { refreshScene(); });
     createHeader();
     createCommandSurfaces();
+    createTimeline();
     // The shell layout is fixed (ADR 0012): no floating, closing or dragging of panels.
     for (auto* dock : findChildren<QDockWidget*>())
         dock->setFeatures(QDockWidget::NoDockWidgetFeatures);
@@ -152,6 +153,8 @@ void MainWindow::applyTheme(ThemeMode mode) {
     impl_->viewCube->setTokens(themeTokens(mode));
     impl_->header->setTheme(mode);
     applyCommandIcons(*this, mode);
+    if (impl_->timeline != nullptr)
+        impl_->timeline->setTheme(mode);
     const ThemeTokens& tokens = themeTokens(mode);
     impl_->modelTree->setEyeIcons(shellIcon(ShellIcon::eye, tokens.muted, tokens.accent),
                                   shellIcon(ShellIcon::eyeOff, tokens.faint, tokens.accent));
@@ -281,6 +284,7 @@ void MainWindow::syncModelTree() {
     const auto features = impl_->session.features();
     impl_->modelTree->showModel(impl_->session.modelOutline(), features,
                                 impl_->session.selectedFeature(), impl_->visibility);
+    syncTimeline();
 }
 
 void MainWindow::syncProperties() {
@@ -397,6 +401,7 @@ void MainWindow::selectFeature(std::uint64_t rawId) {
         return;
     }
     impl_->modelTree->selectFeature(id);
+    syncTimeline();
     syncProperties();
     syncSketchPresentation();
 }

@@ -7,7 +7,9 @@
 #include <voelund/application/CadSession.hpp>
 #include <voelund/viewport/CadViewport.hpp>
 
+#include <QAction>
 #include <QStatusBar>
+#include <QToolBar>
 
 // U06: view state from the model tree (origins, planes, grid, body visibility) and picks of
 // base planes from the tree or the viewport.
@@ -61,6 +63,39 @@ void MainWindow::selectBasePlane(int plane) {
     statusBar()->showMessage(tr("%1-Ebene gewählt").arg(QString::fromLatin1(names[plane - 1])),
                              2000);
     syncShell();
+}
+
+void MainWindow::createTimeline() {
+    impl_->timeline = new TimelineBar(this);
+    impl_->timeline->setOpenHandler([this](std::uint64_t id) { openTimelineStep(id); });
+    auto* bar = new QToolBar(tr("Timeline"), this);
+    bar->setObjectName(QStringLiteral("timelineToolbar"));
+    bar->setMovable(false);
+    bar->addWidget(impl_->timeline);
+    addToolBar(Qt::BottomToolBarArea, bar);
+    syncTimeline();
+}
+
+void MainWindow::syncTimeline() {
+    if (impl_->timeline == nullptr)
+        return;
+    const auto features = impl_->session.features();
+    impl_->timeline->showFeatures(features, impl_->session.selectedFeature());
+}
+
+void MainWindow::openTimelineStep(std::uint64_t featureId) {
+    if (impl_->shell().toolBlocksCommands()) {
+        statusBar()->showMessage(tr("Schließe zuerst das offene Werkzeug"), 3000);
+        syncTimeline();
+        return;
+    }
+    impl_->selectedDatum.reset();
+    impl_->selectedPlanarFace.reset();
+    selectFeature(featureId);
+    // Sketches open their editor; other features are edited in the properties card.
+    QAction* edit = impl_->commandActions->action("solid.modify.edit_sketch");
+    if (impl_->session.selectedFeature() == document::FeatureId{featureId} && edit->isEnabled())
+        edit->trigger();
 }
 
 } // namespace voelund::desktop

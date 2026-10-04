@@ -103,6 +103,14 @@ QFrame[floatingCard="true"] QPushButton { padding: 6px 6px; }
 QFrame[floatingCard="true"] QToolButton { padding: 5px 4px; }
 QGroupBox::title { subcontrol-origin: margin; left: 0; color: @muted; font-size: 12px; }
 #toolGuidance { color: @muted; }
+#timeline { background: @panel; }
+QToolBar#timelineToolbar { border-top: 1px solid @line; border-bottom: 0; padding: 0; }
+#timelineTitle { color: @muted; font-size: 11px; letter-spacing: 1px; }
+#timelineEmpty { color: @muted; }
+#timelineEnd { color: @accentInk; border-left: 3px solid @accent; padding-left: 6px; }
+QToolButton#timelineStep { border: 1px solid @line; border-radius: 9px; padding: 4px 10px; }
+QToolButton#timelineStep:checked { border-color: @accent; background: @accentSoft;
+    color: @accentInk; }
 #toolRail, #contextBar, #commandSearch { background: @panel; border: 1px solid @line;
     border-radius: 14px; }
 #toolRail QToolButton { font-size: 11px; padding: 6px 2px; }

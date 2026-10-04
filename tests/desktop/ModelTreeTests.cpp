@@ -3,9 +3,12 @@
 #include "ViewportLifecycleSupport.hpp"
 #include <QAction>
 #include <QApplication>
+#include <QPushButton>
+#include <QToolButton>
 #include <QTreeWidget>
 #include <iostream>
 #include <string>
+#include <vector>
 #include <voelund/application/CadSession.hpp>
 #include <voelund/desktop/MainWindow.hpp>
 
@@ -30,6 +33,42 @@ QAction& command(desktop::MainWindow& window, const char* id) {
         if (action->property("commandId").toString() == QLatin1String(id))
             return *action;
     throw std::runtime_error(std::string("Command is missing: ") + id);
+}
+
+QToolButton& step(QWidget& timeline, std::size_t index) {
+    std::vector<QToolButton*> steps;
+    for (auto* button : timeline.findChildren<QToolButton*>(QStringLiteral("timelineStep")))
+        if (button->isVisibleTo(&timeline))
+            steps.push_back(button);
+    require(index < steps.size(), "Timeline step missing");
+    return *steps[index];
+}
+
+// U06b: the timeline lists the features in document order; a click opens the feature.
+void timeline(application::CadSession& session, desktop::MainWindow& window) {
+    auto* bar = window.findChild<QWidget*>(QStringLiteral("timeline"));
+    require(bar != nullptr && bar->isVisible(), "Timeline shown below the viewport");
+    const auto features = session.features();
+    require(step(*bar, 0).text().endsWith(QStringLiteral("Skizze 1")) &&
+                step(*bar, 1).text().endsWith(QStringLiteral("Extrusion 1")) &&
+                step(*bar, 2).text().endsWith(QStringLiteral("Quader 1")),
+            "Steps follow the document order");
+    step(*bar, 1).click();
+    QApplication::processEvents();
+    auto* properties = window.findChild<QWidget*>(QStringLiteral("featurePropertiesCard"));
+    require(session.selectedFeature() == features[1].id && properties->isVisible() &&
+                step(*bar, 1).isChecked(),
+            "A feature step selects the feature and shows its properties");
+    const auto stamp = session.sceneStatus().document;
+    step(*bar, 0).click();
+    QApplication::processEvents();
+    auto* panel = window.findChild<QWidget*>(QStringLiteral("activeToolPanel"));
+    require(panel->isVisible() && session.selectedFeature() == features[0].id,
+            "A sketch step opens the sketch editor");
+    panel->findChild<QPushButton*>(QStringLiteral("toolCancelButton"))->click();
+    QApplication::processEvents();
+    require(!panel->isVisible() && session.sceneStatus().document == stamp,
+            "Cancel leaves the document unchanged");
 }
 
 void run() {
@@ -90,7 +129,8 @@ void run() {
     emit tree->itemClicked(find(*tree, Kind::plane, QStringLiteral("YZ-Ebene")), 0);
     QApplication::processEvents();
     require(command(window, "solid.create.sketch").isEnabled(), "Tree pick enables Sketch");
-    std::cout << "PASS model tree projection and view state\n";
+    timeline(session, window);
+    std::cout << "PASS model tree projection, view state and timeline\n";
 }
 } // namespace
 

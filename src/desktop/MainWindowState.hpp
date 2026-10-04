@@ -10,6 +10,7 @@
 #include "SketchEditorToolController.hpp"
 #include "SketchExtrusionToolController.hpp"
 #include "Theme.hpp"
+#include "TimelineBar.hpp"
 #include "ToolPanelHost.hpp"
 #include "ToolRail.hpp"
 #include "ViewCube.hpp"
@@ -78,6 +79,7 @@ class MainWindow::Impl final {
     std::optional<viewport::PlanarFaceSelection> selectedPlanarFace;
     std::optional<document::DatumPlane> selectedDatum; // V01b: base plane picked in viewport.
     ViewVisibility visibility;                         // U06: model tree eyes (view state)
+    TimelineBar* timeline{nullptr};
     workspaces::CommandRegistry commandRegistry;
     std::unique_ptr<CommandActions> commandActions;
     std::unique_ptr<DocumentActions> documentActions;

@@ -48,6 +48,9 @@ class MainWindow final : public QMainWindow {
     void syncVisibility();
     void toggleVisibility(int kind, std::uint64_t id);
     void selectBasePlane(int plane);
+    void createTimeline();
+    void syncTimeline();
+    void openTimelineStep(std::uint64_t featureId);
     void syncProperties();
     void syncTreeStatus();
     void syncSketchPresentation();

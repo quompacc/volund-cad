@@ -32,6 +32,7 @@ add_library(
     SketchViewAdapter.cpp
     Theme.cpp
     ToolPanelHost.cpp
+    TimelineBar.cpp
     ToolRail.cpp
     ViewCube.cpp
 )
