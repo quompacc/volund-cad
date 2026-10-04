@@ -1430,12 +1430,15 @@
       ],
       "acceptance": "Produkt startet im Layout des freigegebenen Prototyps in heller und dunkler Darstellung; Komponenten hängen nicht von voelund-ui-preview ab. Start-Smokes grün; Aufnahmen selbst geprüft und dem Nutzer vorgelegt.",
       "boundary": "Nur Darstellung; keine Fachlogik und kein Parametermodell in Style-/Symbolmodulen. Grundlage ist ADR 0012, nicht mehr die Gestaltung der UI-Vorschau.",
-      "status": "planned",
+      "status": "done",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/U03a.md",
+        "docs/implementation-plan/evidence/U03b.md"
+      ],
+      "completedCommit": "fd30a2f"
     },
     {
       "id": "U04",
