@@ -5,6 +5,8 @@
 #include "MainWindowSupport.hpp"
 #include "MeasurementInput.hpp"
 
+#include "ShellActions.hpp"
+
 #include <voelund/application/CadSession.hpp>
 #include <voelund/modules/solid/SolidWorkspaceModule.hpp>
 #include <voelund/viewport/CadViewport.hpp>
@@ -26,7 +28,12 @@ namespace voelund::desktop {
 void MainWindow::createCommands() {
     modules::solid::SolidCommandServices services;
     services.addBox = [this]() {
-        if (!runCommand([this] { return impl_->session.createBoxFeature(); },
+        if (!runCommand(
+                [this] {
+                    return runAction(impl_->session,
+                                     application::CreateBoxAction{
+                                         millimetres(20.0), millimetres(20.0), millimetres(40.0)});
+                },
                         [this](const QString& message) { statusBar()->showMessage(message); }))
             return;
         refreshScene();
@@ -35,7 +42,14 @@ void MainWindow::createCommands() {
     services.addCylinder = [this]() {
         if (!runCommand(
                 [this] {
-                    return impl_->session.createCylinderFeature(document::CylinderResultMode::join);
+                    // The request names the input the command offered: the last feature.
+                    const auto features = impl_->session.features();
+                    if (features.empty())
+                        return application::CommandResult::invalidInput(
+                            "A cylinder requires a current input feature");
+                    return runAction(impl_->session,
+                                     application::CreateCylinderAction{
+                                         features.back().id, document::CylinderResultMode::join});
                 },
                 [this](const QString& message) { statusBar()->showMessage(message); }))
             return;

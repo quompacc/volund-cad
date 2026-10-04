@@ -3,6 +3,8 @@
 
 #include "ToolPanelHost.hpp"
 
+#include "ShellActions.hpp"
+
 #include <voelund/application/CadSession.hpp>
 #include <voelund/document/ModelDocument.hpp>
 
@@ -60,8 +62,10 @@ void SketchExtrusionToolController::accept() {
         return;
     if (!runCommand(
             [this] {
-                return session_.createSketchProfileExtrusion(*profileSketch_, profileIds_,
-                                                             distance_);
+                return runAction(session_,
+                                 application::CreateProfileExtrusionAction{
+                                     *profileSketch_, profileIds_, millimetres(distance_)},
+                                 supportStamp_);
             },
             [this](const QString& message) {
                 panel_.setGuidance(message);

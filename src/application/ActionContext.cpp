@@ -43,17 +43,17 @@ std::vector<ActionKind> availableActions(const CadSession& session,
     std::vector<ActionKind> actions;
     switch (descriptor->kind) {
     case FeatureKind::box:
-        actions = {ActionKind::setBoxDimensions};
+        actions = {ActionKind::setBoxDimensions, ActionKind::editBoxParameters};
         break;
     case FeatureKind::cylinder:
-        actions = {ActionKind::setCylinderSize};
+        actions = {ActionKind::setCylinderSize, ActionKind::editCylinderParameters};
         break;
     case FeatureKind::sketch:
         actions = {ActionKind::editSketch, ActionKind::bindSketchDimension,
                    ActionKind::createProfileExtrusion};
         break;
     case FeatureKind::extrusion:
-        actions = {ActionKind::bindExtrusionDistance};
+        actions = {ActionKind::bindExtrusionDistance, ActionKind::editExtrusionParameters};
         // A bound distance follows its parameter; it is changed there or after unbinding.
         if (!snapshot.extrusionParameters(feature).distanceParameter)
             actions.push_back(ActionKind::setExtrusionDistance);
@@ -61,8 +61,12 @@ std::vector<ActionKind> availableActions(const CadSession& session,
     }
     if (session.placementFeature(feature))
         actions.push_back(ActionKind::setPlacement);
-    if (session.canAddCylinder(feature))
+    // A current result offers faces to sketch on and an input for a cylinder.
+    if (session.canAddCylinder(feature)) {
         actions.push_back(ActionKind::createCylinder);
+        if (descriptor->kind != FeatureKind::sketch)
+            actions.push_back(ActionKind::createSketch);
+    }
     return actions;
 }
 } // namespace detail

@@ -1,3 +1,4 @@
+#include <voelund/application/Actions.hpp>
 #include <voelund/application/CadSession.hpp>
 #include <voelund/application/SketchEditorSession.hpp>
 
@@ -9,11 +10,16 @@ CommandResult SketchEditorSession::tryAccept(ErrorDisposition disposition) {
     if (!canAccept())
         return CommandResult::invalidInput(
             "Sketch acceptance requires nonempty geometry and a successful solve");
-    const auto sketch = parameters(false);
-    auto result = editingFeature_.has_value()
-                      ? session_.editSketchParameters(*editingFeature_, sketch, disposition)
-                      : datum_ ? session_.createDatumSketchFeature(sketch)
-                               : session_.createSketchFeature(*supportFeature_, sketch);
+    // AI02d: one request on the stamp the editor started from.
+    auto sketch = parameters(false);
+    Action action = editingFeature_.has_value()
+                        ? Action{EditSketchAction{*editingFeature_, std::move(sketch)}}
+                    : datum_ ? Action{CreateDatumSketchAction{std::move(sketch)}}
+                             : Action{CreateSketchAction{*supportFeature_, std::move(sketch)}};
+    auto result =
+        executeAction(session_, prepareRequest(session_, std::move(action), supportStamp_,
+                                               disposition))
+            .command;
     if (result.status() == CommandStatus::committed ||
         result.status() == CommandStatus::committedWithErrors ||
         (result.status() == CommandStatus::rejected &&

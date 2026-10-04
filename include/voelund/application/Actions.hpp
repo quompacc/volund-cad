@@ -107,6 +107,28 @@ struct SetCylinderSizeAction final {
     bool operator==(const SetCylinderSizeAction&) const = default;
 };
 // Moves the feature that places this feature's result (CadSession::placementFeature).
+// AI02d: the shell's edits. A sketch on a body face carries its support binding; the full
+// parameter edits mirror the property panel (lengths in mm, rotations in rad).
+struct CreateSketchAction final {
+    document::FeatureId support;
+    document::SketchParameters sketch;
+    bool operator==(const CreateSketchAction&) const = default;
+};
+struct EditBoxParametersAction final {
+    document::FeatureId box;
+    document::BoxParameters parameters;
+    bool operator==(const EditBoxParametersAction&) const = default;
+};
+struct EditCylinderParametersAction final {
+    document::FeatureId cylinder;
+    document::CylinderParameters parameters;
+    bool operator==(const EditCylinderParametersAction&) const = default;
+};
+struct EditExtrusionParametersAction final {
+    document::FeatureId extrusion;
+    document::ExtrusionParameters parameters;
+    bool operator==(const EditExtrusionParametersAction&) const = default;
+};
 // AI02c: a base-plane sketch and its extrusion in one transaction and one undo step. Empty
 // `regions` extrudes every unambiguous region of the new sketch.
 struct CreateSketchExtrusionAction final {
@@ -132,7 +154,9 @@ using Action = std::variant<CreateParameterAction, SetParameterValueAction, Rena
                             CreateProfileExtrusionAction, SetExtrusionDistanceAction,
                             CreateBoxAction, SetBoxDimensionsAction, CreateCylinderAction,
                             SetCylinderSizeAction, SetPlacementAction,
-                            CreateSketchExtrusionAction>;
+                            CreateSketchExtrusionAction, CreateSketchAction,
+                            EditBoxParametersAction, EditCylinderParametersAction,
+                            EditExtrusionParametersAction>;
 // Parallel to the alternatives of Action.
 enum class ActionKind {
     createParameter,
@@ -149,7 +173,11 @@ enum class ActionKind {
     createCylinder,
     setCylinderSize,
     setPlacement,
-    createSketchExtrusion
+    createSketchExtrusion,
+    createSketch,
+    editBoxParameters,
+    editCylinderParameters,
+    editExtrusionParameters
 };
 [[nodiscard]] ActionKind actionKind(const Action& action) noexcept;
 
@@ -158,8 +186,16 @@ struct ActionRequest final {
     document::DocumentId document;
     DocumentStamp expected;
     Action action;
+    // How an evaluation error is handled; nullopt keeps the command's default (parameter
+    // edits and bindings keep editable errors, everything else rejects).
+    std::optional<ErrorDisposition> disposition{};
     bool operator==(const ActionRequest&) const = default;
 };
+// AI02d: a request of a local caller (the shell) on the current stamp or on the stamp a
+// tool stored when it started. Local requests are not repeated, so they share one ID.
+[[nodiscard]] ActionRequest prepareRequest(const CadSession& session, Action action,
+                                           std::optional<DocumentStamp> stamp = std::nullopt,
+                                           std::optional<ErrorDisposition> disposition = std::nullopt);
 
 // Checked before any transaction, in this order (AI01). `none` leaves the decision to the
 // command itself; see ActionResult::command.

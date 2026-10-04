@@ -95,6 +95,15 @@ class Validation final {
                 Findings::note(findings_.unresolvedReference,
                                "The sketch region does not resolve: " + region.text());
     }
+    void finite(std::initializer_list<double> values) {
+        for (const double value : values)
+            if (!std::isfinite(value))
+                Findings::note(findings_.nonFinite, "The value is not finite");
+    }
+    void placement(const kernel::RigidTransform& value) {
+        finite({value.translationX, value.translationY, value.translationZ,
+                value.rotationX.value(), value.rotationY.value(), value.rotationZ.value()});
+    }
     void lengths(std::initializer_list<Quantity> values) {
         for (const auto& value : values)
             quantity(value, QuantityUnit::millimetre);
@@ -177,6 +186,25 @@ class Validation final {
             quantity(angle, QuantityUnit::radian);
     }
 
+    void operator()(const CreateSketchAction& action) {
+        static_cast<void>(target(action.support, ActionKind::createSketch));
+    }
+    void operator()(const EditBoxParametersAction& action) {
+        static_cast<void>(target(action.box, ActionKind::editBoxParameters));
+        const auto& dimensions = action.parameters.dimensions;
+        finite({dimensions.width, dimensions.depth, dimensions.height});
+        placement(action.parameters.placement);
+    }
+    void operator()(const EditCylinderParametersAction& action) {
+        static_cast<void>(target(action.cylinder, ActionKind::editCylinderParameters));
+        finite({action.parameters.radius, action.parameters.height});
+        placement(action.parameters.placement);
+    }
+    void operator()(const EditExtrusionParametersAction& action) {
+        static_cast<void>(target(action.extrusion, ActionKind::editExtrusionParameters));
+        finite({action.parameters.distance});
+    }
+
     [[nodiscard]] const Findings& findings() const noexcept { return findings_; }
 
   private:
@@ -195,29 +223,32 @@ class Validation final {
     Findings findings_;
 };
 
-CommandResult run(CadSession& session, const DocumentSnapshot& snapshot, const Action& action) {
+CommandResult run(CadSession& session, const DocumentSnapshot& snapshot,
+                  const ActionRequest& request) {
+    const auto keep = request.disposition.value_or(ErrorDisposition::keepEditableErrors);
+    const auto reject = request.disposition.value_or(ErrorDisposition::reject);
     return std::visit(
         Overloaded{
             [&](const CreateParameterAction& a) {
                 return session.createParameter(a.name, a.unit, a.value.value, a.comment);
             },
             [&](const SetParameterValueAction& a) {
-                return session.setParameterValue(a.parameter, a.value.value);
+                return session.setParameterValue(a.parameter, a.value.value, keep);
             },
             [&](const RenameParameterAction& a) {
                 return session.renameParameter(a.parameter, a.name);
             },
             [&](const BindSketchDimensionAction& a) {
-                return session.bindSketchDimension(a.sketch, a.constraint, a.parameter);
+                return session.bindSketchDimension(a.sketch, a.constraint, a.parameter, keep);
             },
             [&](const BindExtrusionDistanceAction& a) {
-                return session.bindExtrusionDistance(a.extrusion, a.parameter);
+                return session.bindExtrusionDistance(a.extrusion, a.parameter, keep);
             },
             [&](const CreateDatumSketchAction& a) {
                 return session.createDatumSketchFeature(a.sketch);
             },
             [&](const EditSketchAction& a) {
-                return session.editSketchParameters(a.sketch, a.parameters);
+                return session.editSketchParameters(a.sketch, a.parameters, reject);
             },
             [&](const CreateProfileExtrusionAction& a) {
                 return session.createSketchProfileExtrusion(a.sketch, a.regions,
@@ -226,14 +257,14 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot, const A
             [&](const SetExtrusionDistanceAction& a) {
                 auto parameters = snapshot.extrusionParameters(a.extrusion);
                 parameters.distance = a.distance.value;
-                return session.editExtrusionParameters(a.extrusion, parameters);
+                return session.editExtrusionParameters(a.extrusion, parameters, reject);
             },
             [&](const CreateBoxAction& a) {
                 return session.createBoxFeature({a.width.value, a.depth.value, a.height.value});
             },
             [&](const SetBoxDimensionsAction& a) {
-                return session.editBoxDimensions(a.box,
-                                                 {a.width.value, a.depth.value, a.height.value});
+                return session.editBoxDimensions(
+                    a.box, {a.width.value, a.depth.value, a.height.value}, reject);
             },
             [&](const CreateCylinderAction& a) {
                 return session.createCylinderFeature(a.input, a.mode);
@@ -242,7 +273,7 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot, const A
                 auto parameters = snapshot.cylinderParameters(a.cylinder);
                 parameters.radius = a.radius.value;
                 parameters.height = a.height.value;
-                return session.editCylinderParameters(a.cylinder, parameters);
+                return session.editCylinderParameters(a.cylinder, parameters, reject);
             },
             [&](const CreateSketchExtrusionAction& a) {
                 return session.createDatumSketchExtrusion(a.sketch, a.regions, a.distance.value);
@@ -251,9 +282,22 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot, const A
                 return session.editFeaturePlacement(
                     a.feature, {a.x.value, a.y.value, a.z.value, kernel::Radians(a.rotationX.value),
                                 kernel::Radians(a.rotationY.value),
-                                kernel::Radians(a.rotationZ.value)});
+                                kernel::Radians(a.rotationZ.value)},
+                    reject);
+            },
+            [&](const CreateSketchAction& a) {
+                return session.createSketchFeature(a.support, a.sketch);
+            },
+            [&](const EditBoxParametersAction& a) {
+                return session.editBoxParameters(a.box, a.parameters, reject);
+            },
+            [&](const EditCylinderParametersAction& a) {
+                return session.editCylinderParameters(a.cylinder, a.parameters, reject);
+            },
+            [&](const EditExtrusionParametersAction& a) {
+                return session.editExtrusionParameters(a.extrusion, a.parameters, reject);
             }},
-        action);
+        request.action);
 }
 
 void recordChanges(ActionResult& result, const DocumentSnapshot& before,
@@ -289,6 +333,13 @@ ActionResult rejected(const CadSession& session, ActionRejection rejection,
 }
 } // namespace
 
+ActionRequest prepareRequest(const CadSession& session, Action action,
+                             std::optional<DocumentStamp> stamp,
+                             std::optional<ErrorDisposition> disposition) {
+    return {"local", session.documentId(), stamp.value_or(session.sceneStatus().document),
+            std::move(action), disposition};
+}
+
 ActionResult executeAction(CadSession& session, const ActionRequest& request) {
     if (!(request.document == session.documentId()))
         return rejected(session, ActionRejection::foreignDocument,
@@ -302,7 +353,7 @@ ActionResult executeAction(CadSession& session, const ActionRequest& request) {
     if (const auto finding = validation.findings().first())
         return rejected(session, finding->first, finding->second);
 
-    ActionResult result{run(session, before.snapshot(), request.action),
+    ActionResult result{run(session, before.snapshot(), request),
                         ActionRejection::none,
                         session.sceneStatus().document,
                         {},

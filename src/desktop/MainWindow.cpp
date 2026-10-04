@@ -8,6 +8,7 @@
 #include "MeasurementInput.hpp"
 #include "ModelTreePanel.hpp"
 #include "ShellHeader.hpp"
+#include "ShellActions.hpp"
 #include "ShellIcons.hpp"
 #include "SketchEditorToolController.hpp"
 #include "SketchExtrusionToolController.hpp"
@@ -235,7 +236,10 @@ void MainWindow::connectInteractions() {
             placement.translationY += deltaY;
             placement.translationZ += deltaZ;
             applyParameterCommand([this, placement](application::ErrorDisposition disposition) {
-                return impl_->session.editSelectedFeaturePlacement(placement, disposition);
+                return runOnSelected(
+                    impl_->session,
+                    [&](document::FeatureId feature) { return placementAction(feature, placement); },
+                    disposition);
             });
         });
     impl_->viewport->setBodyMovePreviewHandler(
@@ -269,7 +273,10 @@ void MainWindow::connectInteractions() {
                 kernel::Radians(rotations[axisIndex]->value() +
                                 kernel::toRadians(kernel::Degrees(angleDegrees)).value());
             applyParameterCommand([this, placement](application::ErrorDisposition disposition) {
-                return impl_->session.editSelectedFeaturePlacement(placement, disposition);
+                return runOnSelected(
+                    impl_->session,
+                    [&](document::FeatureId feature) { return placementAction(feature, placement); },
+                    disposition);
             });
         });
     impl_->viewport->setBodyRotationPreviewHandler(

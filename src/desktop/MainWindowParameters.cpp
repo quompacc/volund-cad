@@ -1,6 +1,7 @@
 #include "CommandFeedback.hpp"
 #include "MainWindowState.hpp"
 #include "MainWindowSupport.hpp"
+#include "ShellActions.hpp"
 #include <QComboBox>
 #include <QLabel>
 #include <QStatusBar>
@@ -112,19 +113,34 @@ void MainWindow::keepParameterError() {
 void MainWindow::applyBoxParameters() {
     const auto parameters = impl_->propertyPanel->boxParameters();
     applyParameterCommand([this, parameters](ErrorDisposition disposition) {
-        return impl_->session.editSelectedBoxParameters(parameters, disposition);
+        return runOnSelected(
+            impl_->session,
+            [&](document::FeatureId box) {
+                return application::EditBoxParametersAction{box, parameters};
+            },
+            disposition);
     });
 }
 void MainWindow::applyCylinderParameters() {
     const auto parameters = impl_->propertyPanel->cylinderParameters();
     applyParameterCommand([this, parameters](ErrorDisposition disposition) {
-        return impl_->session.editSelectedCylinderParameters(parameters, disposition);
+        return runOnSelected(
+            impl_->session,
+            [&](document::FeatureId cylinder) {
+                return application::EditCylinderParametersAction{cylinder, parameters};
+            },
+            disposition);
     });
 }
 void MainWindow::applyExtrusionParameters() {
     const auto parameters = impl_->propertyPanel->extrusionParameters();
     applyParameterCommand([this, parameters](ErrorDisposition disposition) {
-        return impl_->session.editSelectedExtrusionParameters(parameters, disposition);
+        return runOnSelected(
+            impl_->session,
+            [&](document::FeatureId extrusion) {
+                return application::EditExtrusionParametersAction{extrusion, parameters};
+            },
+            disposition);
     });
 }
 } // namespace voelund::desktop
