@@ -1,5 +1,12 @@
 # Entwicklungsstand – 12. September 2026
 
+## Aktueller Stand – 4. Oktober 2026
+
+**Einstieg:** [Fortsetzungsnotiz vom 04.10.2026](session-checkpoint-2026-10-04.md). Sie
+nennt den Stand, die Arbeitsregeln, Zugänge und den nächsten Schritt (**AI02a** laut
+[AI02-plan.md](implementation-plan/AI02-plan.md)). Die Abschnitte darunter sind
+historisch.
+
 ## Aktueller Stand – 17. September 2026
 
 [Fortsetzungsnotiz](session-checkpoint-2026-09-17.md),
