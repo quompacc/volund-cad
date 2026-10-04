@@ -1,3 +1,5 @@
+#include "SketchPlaneGuard.hpp"
+#include "SketchRegionIntervalFaces.hpp"
 #include <voelund/features/GeometryEvaluationError.hpp>
 #include <voelund/features/SketchEvaluation.hpp>
 #include <voelund/features/SketchProfiles.hpp>
@@ -112,8 +114,7 @@ EvaluatedProfileFace loopFace(const document::SketchParameters& sketch,
             return evaluateNamedProfileFaces(sketch, id).front();
         }
     }
-    throw GeometryEvaluationError("Region on intersecting boundaries is not supported before R10b" +
-                                  elementList(elements));
+    throw GeometryEvaluationError("Region boundary is no closed loop" + elementList(elements));
 }
 
 } // namespace
@@ -135,6 +136,26 @@ evaluateRegionFaces(const document::SketchParameters& sketch,
                 elementList(
                     failingElements(identities, sketch.elements.values, id, resolved.status)));
         selected.push_back(*resolved.region);
+    }
+    // R10b: cells of crossing or branching contours are no whole closed loops; build them
+    // directly from their intervals. Whole loops keep the R10 path and its references.
+    const auto loopBacked = [&](std::size_t boundary) {
+        const auto elements = boundaryElements(identities.regions, boundary);
+        return std::ranges::any_of(loops, [&](const SketchProfile& loop) {
+            std::set<std::uint64_t> loopElements;
+            for (document::SketchElementId element : loop.elementIds)
+                loopElements.insert(element.value());
+            return loopElements == elements;
+        });
+    };
+    const bool wholeLoops =
+        detail::wholeLoopCells(identities.regions, selected) &&
+        std::ranges::all_of(selected, [&](std::size_t cell) {
+            return loopBacked(cells[cell].outer) && std::ranges::all_of(cells[cell].holes, loopBacked);
+        });
+    if (!wholeLoops) {
+        detail::requireCanonicalPlane(sketch.plane);
+        return detail::intervalRegionFaces(sketch, identities.regions, selected);
     }
     const auto innerRegion = [&](std::size_t hole) -> std::optional<std::size_t> {
         const auto found = std::ranges::find(cells, hole, &SketchRegion::outer);

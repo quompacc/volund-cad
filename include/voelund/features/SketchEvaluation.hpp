@@ -9,6 +9,7 @@
 
 #include <optional>
 #include <span>
+#include <utility>
 #include <vector>
 
 namespace voelund::features {
@@ -19,6 +20,9 @@ struct EvaluatedContourEdge final {
     TopoDS_Edge edge;
     double startParameter;
     double endParameter;
+    // R10b: set for a fragment of a split element (an R08b interval). References keep
+    // using the whole oriented source domain, so they survive moving intersections.
+    std::optional<std::pair<double, double>> domain{};
 };
 struct EvaluatedProfileFace final {
     std::vector<document::SketchElementId> boundary;
@@ -28,10 +32,11 @@ struct EvaluatedProfileFace final {
 [[nodiscard]] std::vector<EvaluatedProfileFace>
 evaluateNamedProfileFaces(const document::SketchParameters& sketch,
                           std::span<const document::SketchProfileId> selectedProfiles);
-// R10 (V01 scope): each selected region whose outer and hole boundaries are whole closed
-// loops (nested, non-crossing contours) becomes one valid face with inner wires; a selected
-// inner region fills its parent's hole. Unresolved RegionIds and arrangements of crossing
-// boundaries (R10b) are rejected with the elements involved, never substituted or empty.
+// R10: each selected region whose outer and hole boundaries are whole closed loops (nested,
+// non-crossing contours) becomes one valid face with inner wires; a selected inner region
+// fills its parent's hole. R10b: cells of crossing contours are built from their boundary
+// intervals; adjacent selected cells merge into one face. Unresolved RegionIds are rejected
+// with the elements involved, never substituted or empty.
 [[nodiscard]] std::vector<EvaluatedProfileFace>
 evaluateRegionFaces(const document::SketchParameters& sketch,
                     std::span<const document::SketchRegionId> regions);

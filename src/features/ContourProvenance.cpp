@@ -1,4 +1,6 @@
 #include <BRepAdaptor_Curve.hxx>
+#include <BRepBuilderAPI_MakeEdge.hxx>
+#include <BRep_Tool.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
 #include <voelund/features/ContourProvenance.hpp>
@@ -26,7 +28,16 @@ EdgeProvenance provenance(ContourEdgeOrigin origin, const EvaluatedContourEdge& 
     if (curve.FirstParameter() != source.startParameter ||
         curve.LastParameter() != source.endParameter)
         throw GeometryEvaluationError("Prism changed the contour parameter domain");
-    return {origin, edge, source.startParameter, source.endParameter, {edge}};
+    if (!source.domain)
+        return {origin, edge, source.startParameter, source.endParameter, {edge}};
+    // R10b: a fragment refers to its whole element. The source spans the full oriented
+    // domain on the same curve, so continued history keeps proving the parameter mapping.
+    TopLoc_Location location;
+    double first = 0, last = 0;
+    const auto shared = BRep_Tool::Curve(edge, location, first, last);
+    TopoDS_Edge whole = BRepBuilderAPI_MakeEdge(shared, source.domain->first, source.domain->second);
+    whole.Location(location);
+    return {origin, whole, source.domain->first, source.domain->second, {edge}};
 }
 } // namespace
 std::vector<EdgeProvenance> sketchEdgeOrigins(document::FeatureId sketch,

@@ -5,6 +5,7 @@
 #include <TopoDS.hxx>
 #include <algorithm>
 #include <cmath>
+#include <optional>
 #include <stdexcept>
 #include <voelund/features/EdgeProvenance.hpp>
 
@@ -117,21 +118,29 @@ EdgePointResolution resolveEdgePoint(std::span<const EdgeProvenance> origins,
         throw std::invalid_argument("Invalid edge point kind");
     if (!std::isfinite(selection.parameter) || selection.parameter < 0 || selection.parameter > 1)
         throw std::invalid_argument("Curve parameter must be in [0,1]");
-    const auto found = std::ranges::find(origins, origin, &EdgeProvenance::origin);
-    if (found == origins.end())
-        return {EdgeResolutionStatus::missing};
-    const auto state = status(*found);
-    if (state != EdgeResolutionStatus::resolved)
-        return {state};
     const double t = selection.kind == EdgePointKind::start ? 0
                      : selection.kind == EdgePointKind::end ? 1
                                                             : selection.parameter;
-    const double u = found->startParameter + t * (found->endParameter - found->startParameter);
-    const BRepAdaptor_Curve current(found->edges.front());
-    // Do not clamp into a surviving fragment or reinterpret its shortened interval.
-    if (u < current.FirstParameter() || u > current.LastParameter())
-        return {EdgeResolutionStatus::parameterOutside};
-    return {EdgeResolutionStatus::resolved, BRepAdaptor_Curve(found->source).Value(u)};
+    // R10b: a split element has one entry per fragment, all on its whole source domain.
+    // The point belongs to the fragment containing it; nothing is clamped or reinterpreted.
+    std::optional<EdgeResolutionStatus> failure;
+    for (const EdgeProvenance& item : origins) {
+        if (!(item.origin == origin))
+            continue;
+        const auto state = status(item);
+        if (state != EdgeResolutionStatus::resolved) {
+            failure = failure.value_or(state);
+            continue;
+        }
+        const double u = item.startParameter + t * (item.endParameter - item.startParameter);
+        const BRepAdaptor_Curve current(item.edges.front());
+        if (u < current.FirstParameter() || u > current.LastParameter()) {
+            failure = failure.value_or(EdgeResolutionStatus::parameterOutside);
+            continue;
+        }
+        return {EdgeResolutionStatus::resolved, BRepAdaptor_Curve(item.source).Value(u)};
+    }
+    return {failure.value_or(EdgeResolutionStatus::missing)};
 }
 std::vector<EdgeDisplaySegment> tessellateEdge(const EdgeProvenance& origin, unsigned divisions) {
     if (divisions == 0 || divisions > 4096)
