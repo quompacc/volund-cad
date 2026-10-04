@@ -20,6 +20,7 @@ class DocumentSnapshot final {
         return parameters_;
     }
     [[nodiscard]] std::uint64_t nextFeatureId() const noexcept { return nextFeatureId_; }
+    [[nodiscard]] const ParameterTable& parameterTable() const noexcept { return parameterTable_; }
     // Borrowed read-only views remain valid while this snapshot is alive and unchanged.
     [[nodiscard]] const FeatureParameters& featureParameters(FeatureId id) const;
     [[nodiscard]] const BoxParameters& boxParameters(FeatureId id) const;
@@ -46,11 +47,13 @@ class DocumentSnapshot final {
     friend class detail::NativePrimitiveCodec;
     friend class detail::NativeModelState;
     DocumentSnapshot(std::vector<FeatureDescriptor> features,
-                     std::vector<FeatureParameters> parameters, std::uint64_t nextFeatureId)
+                     std::vector<FeatureParameters> parameters, std::uint64_t nextFeatureId,
+                     ParameterTable parameterTable = {})
         : features_(std::move(features)), parameters_(std::move(parameters)),
-          nextFeatureId_(nextFeatureId) {}
+          nextFeatureId_(nextFeatureId), parameterTable_(std::move(parameterTable)) {}
     std::vector<FeatureDescriptor> features_;
     std::vector<FeatureParameters> parameters_;
     std::uint64_t nextFeatureId_;
+    ParameterTable parameterTable_;
 };
 } // namespace voelund::document

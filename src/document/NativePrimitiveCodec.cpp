@@ -2,6 +2,7 @@
 #include "DocumentSerializationDetail.hpp"
 #include "NativeDocumentMetadata.hpp"
 #include "NativeExtrusion.hpp"
+#include "NativeParameters.hpp"
 #include "NativeSketchGeometry.hpp"
 #include <TDF_Reference.hxx>
 #include <TDF_Tool.hxx>
@@ -109,10 +110,13 @@ std::vector<double> values(const FeatureParameters& parameters) {
 }
 std::vector<FeatureBodyIdentity> validate(std::span<const FeatureDescriptor> features,
                                           std::span<const FeatureParameters> parameters,
-                                          std::uint64_t next) {
+                                          std::uint64_t next, const ParameterTable& table) {
     require(features.size() == parameters.size() && features.size() <= maximumFeatureCount &&
-            hasIdCapacity(next, 0));
-    std::size_t remainingElements = maximumDocumentRecords - features.size();
+            hasIdCapacity(next, 0) &&
+            nativeParameterRecords(table) <= maximumDocumentRecords - features.size());
+    validateParameterBindings(parameters, table);
+    std::size_t remainingElements =
+        maximumDocumentRecords - features.size() - nativeParameterRecords(table);
     for (std::size_t index = 0; index < features.size(); ++index) {
         const auto& feature = features[index];
         const bool box = feature.kind == FeatureKind::box;
@@ -203,7 +207,8 @@ void NativePrimitiveCodec::write(const Handle(TDocStd_Document) & document,
                                  const IdentifiedDocumentSnapshot& identified) {
     const auto& snapshot = identified.snapshot();
     const auto assignments =
-        validate(snapshot.features(), snapshot.parameters(), snapshot.nextFeatureId());
+        validate(snapshot.features(), snapshot.parameters(), snapshot.nextFeatureId(),
+                 snapshot.parameterTable());
     for (std::size_t i = 0; i < snapshot.parameters().size(); ++i)
         if (const auto* sketch = std::get_if<SketchParameters>(&snapshot.parameters()[i]); sketch) {
             if (sketch->supportBinding)
@@ -264,6 +269,9 @@ void NativePrimitiveCodec::write(const Handle(TDocStd_Document) & document,
         TDF_Reference::Set(order.FindChild(static_cast<int>(index + 1)), native);
     }
     TDataStd_Integer::Set(bodies, static_cast<int>(bodyLabels.size()));
+    if (!(snapshot.parameterTable() == ParameterTable{}))
+        writeNativeParameterTable(document->Main().FindChild(nativeParameterSlot),
+                                  snapshot.parameterTable());
     for (const auto& feature : snapshot.features())
         if (feature.inputFeature)
             TDF_Reference::Set(featureLabels.at(feature.id.value()).FindChild(5),
@@ -273,12 +281,18 @@ void NativePrimitiveCodec::write(const Handle(TDocStd_Document) & document,
 IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Document) & document) {
     const auto metadata = readNativeMetadata(document);
     const auto root = document->Main();
-    require(root.NbChildren() == 6);
+    const auto parameterLabel = root.FindChild(nativeParameterSlot, false);
+    require(root.NbChildren() == (parameterLabel.IsNull() ? 6 : 7) &&
+            (parameterLabel.IsNull() || metadata.schemaVersion >= 7));
     const auto bodies = child(root, 10);
     const auto order = child(root, 20);
     require(text(bodies) == "Primitives.v1");
     const int bodyCount = count(bodies), featureCount = count(order);
     std::size_t remainingElements = maximumDocumentRecords - static_cast<std::size_t>(featureCount);
+    const auto table = parameterLabel.IsNull()
+                           ? ParameterTable{}
+                           : readNativeParameterTable(parameterLabel, remainingElements);
+    remainingElements -= nativeParameterRecords(table);
     std::vector<Record> records;
     std::map<std::string, std::size_t> labels;
     std::set<std::uint64_t> bodyIds;
@@ -353,7 +367,7 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
         data.push_back(record.parameters);
         storedBodies.push_back(record.body);
     }
-    const auto assignments = validate(features, data, metadata.nextFeatureId);
+    const auto assignments = validate(features, data, metadata.nextFeatureId, table);
     for (std::size_t index = 0; index < assignments.size(); ++index)
         require(assignments[index].body == storedBodies[index]);
     for (std::size_t i = 0; i < data.size(); ++i)
@@ -368,6 +382,6 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
         }
     return IdentifiedDocumentSnapshot::restore(
         metadata.id,
-        DocumentSnapshot{std::move(features), std::move(data), metadata.nextFeatureId});
+        DocumentSnapshot{std::move(features), std::move(data), metadata.nextFeatureId, table});
 }
 } // namespace voelund::document::detail

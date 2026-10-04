@@ -1,5 +1,6 @@
 #include "NativeSketchConstraints.hpp"
 #include "DocumentSerializationDetail.hpp"
+#include "NativeParameters.hpp"
 #include "NativeProjectedEdge.hpp"
 #include <TDF_Reference.hxx>
 #include <TDF_Tool.hxx>
@@ -168,6 +169,8 @@ void writeNativeSketchConstraints(const TDF_Label& label, const TDF_Label& eleme
         const auto native = label.FindChild(static_cast<int>(index + 1));
         if (constraint.projectedEdge)
             writeNativeProjectedEdge(native.FindChild(8), *constraint.projectedEdge);
+        if (constraint.parameter)
+            writeNativeParameterBinding(native.FindChild(9), *constraint.parameter);
         TDataStd_AsciiString::Set(native.FindChild(1),
                                   std::to_string(constraint.id.value()).c_str());
         TDataStd_AsciiString::Set(native.FindChild(2), name(constraint.kind).data());
@@ -201,7 +204,11 @@ SketchConstraints readNativeSketchConstraints(const TDF_Label& label, const TDF_
     SketchConstraints result{{}, nextId};
     for (int index = 1; index <= count; ++index) {
         const auto native = child(label, index);
-        require(native.NbChildren() == 7 || (schemaVersion >= 3 && native.NbChildren() == 8));
+        // Optional children: 8 projected edge (schema 3), 9 parameter binding (schema 7).
+        const bool projected = !native.FindChild(8, false).IsNull();
+        const bool bound = !native.FindChild(9, false).IsNull();
+        require(native.NbChildren() == 7 + (projected ? 1 : 0) + (bound ? 1 : 0) &&
+                (!projected || schemaVersion >= 3) && (!bound || schemaVersion >= 7));
         const auto first = readReference(child(native, 3), elements, labels);
         require(first.has_value());
         const auto second = readReference(child(native, 4), elements, labels);
@@ -227,8 +234,10 @@ SketchConstraints readNativeSketchConstraints(const TDF_Label& label, const TDF_
                                     third,
                                     std::move(extra)};
         constraint.angleValue = kernel::Radians{values->Value(2)};
-        if (native.NbChildren() == 8)
+        if (projected)
             constraint.projectedEdge = readNativeProjectedEdge(child(native, 8));
+        if (bound)
+            constraint.parameter = readNativeParameterBinding(child(native, 9));
         result.values.push_back(std::move(constraint));
     }
     return result;

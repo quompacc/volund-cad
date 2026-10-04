@@ -132,6 +132,12 @@ target_link_libraries(voelund_native_extrusion_tests PRIVATE
 add_test(NAME document.native_extrusions COMMAND voelund_native_extrusion_tests)
 set_tests_properties(document.native_extrusions PROPERTIES
     LABELS "integration;document;native;regression" TIMEOUT 60)
+add_executable(voelund_native_parameter_tests integration/NativeParameterTests.cpp)
+target_link_libraries(voelund_native_parameter_tests PRIVATE
+    voelund_project_options Voelund::Features TKBin)
+add_test(NAME document.native_parameters COMMAND voelund_native_parameter_tests)
+set_tests_properties(document.native_parameters PROPERTIES
+    LABELS "integration;document;native;regression" TIMEOUT 60)
 add_executable(voelund_native_sketch_constraint_tests integration/NativeSketchConstraintTests.cpp)
 target_link_libraries(voelund_native_sketch_constraint_tests PRIVATE
     voelund_project_options Voelund::Features TKBin)
@@ -749,3 +755,7 @@ add_executable(voelund_datum_sketch_tests integration/DatumSketchTests.cpp)
 target_link_libraries(voelund_datum_sketch_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME application.datum_sketch COMMAND voelund_datum_sketch_tests)
 set_tests_properties(application.datum_sketch PROPERTIES LABELS "integration;application;sketch;regression" TIMEOUT 90)
+add_executable(voelund_document_parameter_tests integration/DocumentParameterTests.cpp)
+target_link_libraries(voelund_document_parameter_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.document_parameters COMMAND voelund_document_parameter_tests)
+set_tests_properties(application.document_parameters PROPERTIES LABELS "integration;application;sketch;regression" TIMEOUT 90)

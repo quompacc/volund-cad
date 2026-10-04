@@ -5,6 +5,7 @@
 #include <utility>
 #include <variant>
 #include <vector>
+#include <voelund/document/ParameterId.hpp>
 #include <voelund/document/EdgeReference.hpp>
 #include <voelund/kernel/Angle.hpp>
 
@@ -156,6 +157,8 @@ struct SketchConstraint final {
     std::optional<SketchGeometryReference> third;
     std::vector<double> auxiliaryValues;
     std::optional<ProjectedEdgeReference> projectedEdge{};
+    // PAR01: the value mirrors this document parameter while bound.
+    std::optional<ParameterId> parameter{};
 
     SketchConstraint(SketchConstraintId constraintId, SketchConstraintKind constraintKind,
                      SketchGeometryReference firstReference,

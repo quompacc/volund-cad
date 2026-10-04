@@ -55,6 +55,8 @@ NativeModelState::Prepared NativeModelState::prepareHistory(bool undo) const {
     auto content = historical.snapshot();
     // Undo restores content, never the old published-ID allocation watermark.
     content.nextFeatureId_ = std::max(content.nextFeatureId_, before.snapshot().nextFeatureId());
+    content.parameterTable_.nextId =
+        std::max(content.parameterTable_.nextId, before.snapshot().parameterTable().nextId);
     const auto restored = IdentifiedDocumentSnapshot::restore(before.id(), std::move(content));
     auto next = std::make_unique<State>(*state_);
     next->current = encode(restored);

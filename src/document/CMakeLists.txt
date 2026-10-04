@@ -24,6 +24,9 @@ add_library(voelund_document STATIC
     DocumentSerializerSupport.cpp
     DocumentSerializerWriter.cpp
     ModelDocument.cpp
+    ModelDocumentParameters.cpp
+    DocumentParameters.cpp
+    NativeParameters.cpp
     ModelDocumentHistory.cpp
     DocumentTransaction.cpp
     SketchConstraintSerialization.cpp

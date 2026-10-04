@@ -5,6 +5,7 @@ add_library(voelund_application STATIC
     CadSessionHistory.cpp
     CadSessionCreation.cpp
     CadSessionTransactions.cpp
+    CadSessionParameters.cpp
     CadSessionPersistence.cpp
     CadSessionSketchProfiles.cpp
     CadSessionSketchSupport.cpp

@@ -8,6 +8,7 @@ struct ModelDocument::State final {
     std::vector<FeatureDescriptor> features;
     std::vector<FeatureParameters> parameters;
     std::uint64_t nextFeatureId;
+    ParameterTable parameterTable{};
     [[nodiscard]] bool operator==(const State&) const = default;
 };
 struct ModelDocument::Impl final {

@@ -211,6 +211,13 @@ void evaluateSketch(const document::DocumentSnapshot& document,
             throw GeometryEvaluationError("Sketch support face is no longer available");
         if (solveSketchConstraints(parameters).status != SketchSolveStatus::success)
             throw GeometryEvaluationError("Sketch support references cannot be solved");
+    } else if (std::ranges::any_of(parameters.constraints.values, [](const auto& constraint) {
+                   return constraint.parameter.has_value();
+               })) {
+        // PAR01: a table change mirrors values without an editor solve; an unsolvable
+        // result stays visible as an error instead of stale geometry.
+        if (solveSketchConstraints(parameters).status != SketchSolveStatus::success)
+            throw GeometryEvaluationError("Sketch parameters cannot be solved");
     }
     TopoDS_Compound geometry;
     BRep_Builder builder;

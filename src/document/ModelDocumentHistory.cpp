@@ -16,14 +16,28 @@ FeatureId ModelDocument::nextFeatureId() const {
 ModelDocument::State ModelDocument::currentState() const {
     const auto& view = impl_->view();
     return {{view.features().begin(), view.features().end()},
-            {view.parameters().begin(), view.parameters().end()}, view.nextFeatureId()};
+            {view.parameters().begin(), view.parameters().end()}, view.nextFeatureId(),
+            view.parameterTable()};
 }
 void ModelDocument::commitState(State state) {
     const DocumentSnapshot snapshot(std::move(state.features), std::move(state.parameters),
-                                    state.nextFeatureId);
+                                    state.nextFeatureId, std::move(state.parameterTable));
     auto prepared = impl_->native.prepare(IdentifiedDocumentSnapshot::restore(documentId(), snapshot),
                                           !impl_->transactionCandidate_);
     (void)impl_->native.commit(std::move(prepared));
+}
+const ParameterTable& ModelDocument::parameterTable() const noexcept {
+    return impl_->view().parameterTable();
+}
+bool ModelDocument::setParameterTable(const ParameterTable& table) {
+    validateParameterTable(table);
+    if (table == parameterTable())
+        return false;
+    auto candidate = currentState();
+    validateParameterBindings(candidate.parameters, table);
+    candidate.parameterTable = table;
+    commitState(std::move(candidate));
+    return true;
 }
 bool ModelDocument::canUndo() const noexcept { return impl_->native.canUndo(); }
 bool ModelDocument::canRedo() const noexcept { return impl_->native.canRedo(); }

@@ -1,5 +1,6 @@
 #include "NativeExtrusion.hpp"
 #include "DocumentSerializationDetail.hpp"
+#include "NativeParameters.hpp"
 #include <voelund/kernel/NumericPolicy.hpp>
 #include <TDataStd_AsciiString.hxx>
 #include <TDataStd_Integer.hxx>
@@ -96,14 +97,18 @@ void writeNativeExtrusion(const TDF_Label& label, const ExtrusionParameters& par
             std::to_string(parameters.profiles[index].value()).c_str());
     if (!parameters.regions.empty())
         writeRegions(label.FindChild(2), parameters.regions);
+    if (parameters.distanceParameter)
+        writeNativeParameterBinding(label.FindChild(3), *parameters.distanceParameter);
 }
 ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t remainingRecords,
                                         int schemaVersion) {
     // Schema 5 (R09) adds the region selection as optional child 2, present only when
     // regions are selected, so documents without regions keep the older encoding.
+    // Schema 7 (PAR01) adds the distance parameter binding as optional child 3.
     const auto regions = label.FindChild(2, false);
-    require((regions.IsNull() || schemaVersion >= 5) &&
-        label.NbChildren() == (regions.IsNull() ? 1 : 2));
+    const auto binding = label.FindChild(3, false);
+    require((regions.IsNull() || schemaVersion >= 5) && (binding.IsNull() || schemaVersion >= 7) &&
+        label.NbChildren() == 1 + (regions.IsNull() ? 0 : 1) + (binding.IsNull() ? 0 : 1));
     Handle(TDataStd_Real) distance;
     require(label.FindAttribute(TDataStd_Real::GetID(), distance));
     const auto profiles = child(label, 1);
@@ -131,6 +136,8 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
         result.regions = readRegions(regions, remainingRecords);
         require(!result.regions.empty());
     }
+    if (!binding.IsNull())
+        result.distanceParameter = readNativeParameterBinding(binding);
     validateNativeExtrusion(result);
     return result;
 }

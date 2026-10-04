@@ -1,6 +1,7 @@
 #pragma once
 
 #include <voelund/document/DocumentId.hpp>
+#include <voelund/document/DocumentParameters.hpp>
 #include <voelund/document/FeatureId.hpp>
 #include <voelund/document/SketchGeometry.hpp>
 #include <voelund/document/SketchRegionId.hpp>
@@ -98,6 +99,8 @@ struct ExtrusionParameters final {
     std::vector<SketchProfileId> profiles;
     // Explicit R09 region selection. Both lists empty selects every closed profile.
     std::vector<SketchRegionId> regions{};
+    // PAR01: the distance mirrors this length parameter while bound.
+    std::optional<ParameterId> distanceParameter{};
 
     [[nodiscard]] bool operator==(const ExtrusionParameters&) const = default;
 };
@@ -112,6 +115,11 @@ struct FeatureDescriptor final {
 
 using FeatureParameters =
     std::variant<BoxParameters, CylinderParameters, SketchParameters, ExtrusionParameters>;
+
+// PAR01: every binding names an existing parameter of a matching unit, only dimensional
+// constraints bind, and the table itself is valid. Throws std::invalid_argument.
+void validateParameterBindings(std::span<const FeatureParameters> parameters,
+                               const ParameterTable& table);
 
 class ModelDocument final {
   public:
@@ -157,6 +165,10 @@ class ModelDocument final {
     [[nodiscard]] const kernel::RigidTransform& featurePlacement(FeatureId featureId) const;
     [[nodiscard]] bool setFeaturePlacement(FeatureId featureId,
                                            const kernel::RigidTransform& placement);
+    [[nodiscard]] const ParameterTable& parameterTable() const noexcept;
+    // Replaces the whole table; bindings are validated against it. Values are not mirrored
+    // here: the application re-solves bound sketches in the same transaction.
+    [[nodiscard]] bool setParameterTable(const ParameterTable& table);
     [[nodiscard]] bool canUndo() const noexcept;
     [[nodiscard]] bool canRedo() const noexcept;
     [[nodiscard]] bool undo();

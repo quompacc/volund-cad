@@ -51,6 +51,10 @@ struct ModelOutline final {
     std::vector<document::FeatureId> loose;
 };
 
+// PAR01: deleting a parameter that is still bound is refused unless its uses are first
+// switched to their current fixed values (docs/parameter-table.md, rule 6).
+enum class ParameterDeletion { refuseWhenUsed, unbindUses };
+
 class CadSession final {
   public:
     CadSession();
@@ -174,6 +178,31 @@ class CadSession final {
     [[nodiscard]] document::ExtrusionParameters selectedExtrusionParameters() const;
     [[nodiscard]] kernel::RigidTransform selectedFeaturePlacement() const;
     [[nodiscard]] std::span<const FeatureRuntimeState> featureStates() const noexcept;
+    // PAR01 document parameters. Every command is one transaction and one undo step.
+    [[nodiscard]] const document::ParameterTable& parameterTable() const noexcept;
+    [[nodiscard]] std::size_t parameterUseCount(document::ParameterId id) const;
+    [[nodiscard]] CommandResult createParameter(std::string name, document::ParameterUnit unit,
+                                                double value, std::string comment = {});
+    // Mirrors the value into every binding, re-solves bound sketches and recomputes; an
+    // unsolvable result is kept as an editable error by default.
+    [[nodiscard]] CommandResult
+    setParameterValue(document::ParameterId id, double value,
+                      ErrorDisposition disposition = ErrorDisposition::keepEditableErrors);
+    [[nodiscard]] CommandResult renameParameter(document::ParameterId id, std::string name);
+    [[nodiscard]] CommandResult setParameterComment(document::ParameterId id,
+                                                    std::string comment);
+    [[nodiscard]] CommandResult
+    deleteParameter(document::ParameterId id,
+                    ParameterDeletion mode = ParameterDeletion::refuseWhenUsed);
+    // nullopt unbinds and keeps the current value as a fixed one.
+    [[nodiscard]] CommandResult
+    bindSketchDimension(document::FeatureId sketch, document::SketchConstraintId constraint,
+                        std::optional<document::ParameterId> parameter,
+                        ErrorDisposition disposition = ErrorDisposition::keepEditableErrors);
+    [[nodiscard]] CommandResult
+    bindExtrusionDistance(document::FeatureId extrusion,
+                          std::optional<document::ParameterId> parameter,
+                          ErrorDisposition disposition = ErrorDisposition::keepEditableErrors);
     [[nodiscard]] bool canUndo() const noexcept;
     [[nodiscard]] bool canRedo() const noexcept;
     [[nodiscard]] CommandResult undo();
@@ -198,6 +227,11 @@ class CadSession final {
                                                 CommandKind kind, ErrorDisposition disposition,
                                                 bool clearSketchSelection);
     [[nodiscard]] CommandResult restoreHistory(bool forward);
+    [[nodiscard]] CommandResult
+    commitParameterEdit(const std::function<bool(document::ModelDocument&)>& edit,
+                        ErrorDisposition disposition);
+    [[nodiscard]] bool mirrorParameter(document::ModelDocument& candidate,
+                                       document::ParameterId id) const;
     [[nodiscard]] bool recompute();
     void normalizeSelection() noexcept;
     [[nodiscard]] std::string serializedDocument() const;
