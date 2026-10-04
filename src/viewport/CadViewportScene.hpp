@@ -49,6 +49,7 @@
 #include <array>
 #include <cstdint>
 #include <functional>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -199,6 +200,25 @@ class CadViewportScene {
                     return owner;
         }
         return {};
+    }
+
+    // V01: the topmost sketch element, or one behind a base plane (planes never steal a
+    // click from the sketch); a body in front keeps the click.
+    [[nodiscard]] std::optional<std::uint64_t> detectedSketchElement() const {
+        const auto topmost = context->DetectedInteractive();
+        if (const auto id = sketchPresentation.detectedElement(topmost))
+            return id;
+        if (!basePlanes.plane(topmost).has_value())
+            return std::nullopt;
+        for (context->InitDetected(); context->MoreDetected(); context->NextDetected()) {
+            const auto owner = context->DetectedCurrentOwner();
+            if (owner.IsNull())
+                continue;
+            const auto object = occ::handle<AIS_InteractiveObject>::DownCast(owner->Selectable());
+            if (const auto id = sketchPresentation.detectedElement(object))
+                return id;
+        }
+        return std::nullopt;
     }
 
     void notifyDetectedBody(bool includeFace) {

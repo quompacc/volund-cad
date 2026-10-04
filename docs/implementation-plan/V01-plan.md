@@ -38,3 +38,9 @@ zusätzlich von U06 ab.
 
 Abnahme laut Paket: neues Dokument → XY → Rechteck mit Innenkreis → Extrusion (Ring,
 Volumen analytisch) → Distanz ändern → Undo/Redo → Speichern → Öffnen mit gleichem Volumen.
+
+## Abschluss (04.10.2026)
+
+V01b ist durch U06 ersetzt: Die Ebenen gehören zu Ursprüngen im Modellbaum, und Körper bzw.
+Skizzenelemente haben beim Klick Vorrang. V01c läuft als `desktop.v01_flow` in der
+Oberfläche nach ADR 0012, siehe [Evidenz](evidence/V01c.md).

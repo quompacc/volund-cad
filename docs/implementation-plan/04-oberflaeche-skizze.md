@@ -180,6 +180,17 @@ Grundlage der Oberfläche ist [ADR 0012](../adr/0012-ui-shell-concept.md) (freig
 - **Abnahme:** Leeres Dokument→XY→Rechteck→OK funktioniert ohne Boxtrick. XZ/YZ und rotierte Stützfläche zeigen richtige Achsen; Cancel erzeugt kein Feature. A-UI-01 Skizzengrundlage besteht.
 - **Grenze:** Keine allgemeine gekrümmte Supportfläche.
 
+## S04a – Sichtbare Fangmarker, Beziehungsvorschau und Rechteck aus dem Mittelpunkt
+
+- **Voraussetzungen:** V01, U13.
+- **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08, ADR 0012; `src/viewport/SketchEditorInteraction.cpp`, `src/viewport/SketchPresentation.cpp`, `src/desktop/SketchEditorToolController.cpp`, `src/desktop/SketchToolActions.cpp`, `tests/desktop/`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
+- **Auftrag:**
+  1. Fangpunkte (Endpunkte, Mittelpunkte, Kreismittelpunkte, Ursprung, projizierte Punkte) im Skizzenmodus beim Hovern als Marker zeigen; der aktive Fangpunkt leuchtet in der Akzentfarbe.
+  2. Die Beziehung, die beim Klick automatisch entsteht (deckungsgleich, waagrecht, senkrecht, auf Objekt, tangential, konzentrisch), als Symbol am Cursor vorab zeigen; Strg unterdrückt das Fangen.
+  3. Rechteck aus dem Mittelpunkt als eigenes Zeichenwerkzeug (sketch.tool.center_rectangle) mit Kürzel; der Mittelpunkt bindet sich per Beziehung an einen gefangenen Punkt, z. B. den Ursprung.
+- **Abnahme:** Qt-Test mit echten Ereignissen: Hover nahe dem Ursprung zeigt den aktiven Marker; ein Rechteck aus dem Mittelpunkt am Ursprung bleibt nach einer Maßänderung zentriert; die angekündigte Beziehung entsteht tatsächlich. Aufnahmen gesichtet und dem Nutzer vorgelegt.
+- **Grenze:** Nutzerwunsch vom 2026-10-04 (nach U13). Nur Sichtbarkeit und Mittelpunkt-Rechteck; fachliche Korrekturen von Fangen und Auto-Constraints bleiben S04/S05.
+
 ## S04 – Snap und Auto-Constraints für lineare Werkzeuge korrigieren
 
 - **Voraussetzungen:** S01, S02, S03.

@@ -32,6 +32,8 @@ Paketanzahl ist kein Maß für Restaufwand oder Fertigstellungszeit.
   Skizzenbemaßungen und Extrusionen bindet.
 - **U13** (Nutzerwunsch nach U05): Die Werkzeugleiste passt sich dem aktiven Modus an;
   im Skizzenmodus zeigt sie die Skizzenwerkzeuge.
+- **S04a** (Nutzerwunsch nach U13): sichtbare Fangmarker, Vorschau der automatischen
+  Beziehung und Rechteck aus dem Mittelpunkt, direkt nach V01.
 - Sichtbare UI-Änderungen werden vor der Umsetzung mit dem Nutzer abgestimmt;
   Aufnahmen werden zur Durchsicht vorgelegt.
 
@@ -39,13 +41,13 @@ Paketanzahl ist kein Maß für Restaufwand oder Fertigstellungszeit.
 | --- | ---: |
 | G0 – Basis | 2 |
 | G1 – Dokument und Referenzen | 0 |
-| G2 – zusammenhängender CAD-Workflow | 25 |
+| G2 – zusammenhängender CAD-Workflow | 26 |
 | G3 – mechanisches CAD v1 | 18 |
 | G4 – veröffentlichbare v1 | 10 |
 | G5 – spätere Produktfamilie | 30 |
-| Gesamt | 85 |
+| Gesamt | 86 |
 
-Bis einschließlich G4 bleiben 55 Hauptpakete. G2 ist der erste durchgängige
+Bis einschließlich G4 bleiben 56 Hauptpakete. G2 ist der erste durchgängige
 Bedienablauf, G3 der begrenzte mechanische Funktionsumfang. G5 umfasst zusätzliche
 Bereiche wie Baugruppen und Zeichnungen. Nutzbarkeit wird an diesen Abläufen
 abgenommen, nicht am Erreichen einer Prozentzahl.

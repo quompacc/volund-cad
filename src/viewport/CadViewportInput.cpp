@@ -120,7 +120,7 @@ void CadViewport::mousePressEvent(QMouseEvent* event) {
                 setCursor(Qt::ClosedHandCursor);
                 return;
             }
-            if (const auto elementId = impl_->sketchPresentation.detectedElement(detected)) {
+            if (const auto elementId = impl_->detectedSketchElement()) {
                 if (impl_->sketchElementSelectionHandler) {
                     impl_->sketchElementSelectionHandler(
                         {*elementId, 0.0, 0.0, event->modifiers().testFlag(Qt::ControlModifier)});
@@ -201,7 +201,7 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
             if (impl_->context->HasDetected()) {
                 const occ::handle<AIS_InteractiveObject> detected =
                     impl_->context->DetectedInteractive();
-                if (impl_->sketchPresentation.detectedElement(detected).has_value()) {
+                if (impl_->detectedSketchElement().has_value()) {
                     impl_->gesture = Impl::Gesture::none;
                     unsetCursor();
                     update();
