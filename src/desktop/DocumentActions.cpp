@@ -1,12 +1,12 @@
 #include "DocumentActions.hpp"
 #include "MainWindowSupport.hpp"
+#include "ShellState.hpp"
 
 #include <voelund/application/CadSession.hpp>
 
 #include <QAbstractButton>
 #include <QAction>
 #include <QFileDialog>
-#include <QFileInfo>
 #include <QKeySequence>
 #include <QMainWindow>
 #include <QMenu>
@@ -29,14 +29,6 @@ std::filesystem::path nativePath(const QString& fileName) {
     return std::filesystem::path(fileName.toStdWString());
 #else
     return std::filesystem::path(fileName.toUtf8().constData());
-#endif
-}
-
-QString displayPath(const std::filesystem::path& path) {
-#ifdef _WIN32
-    return QString::fromStdWString(path.native());
-#else
-    return QString::fromUtf8(path.native().c_str());
 #endif
 }
 
@@ -75,12 +67,7 @@ DocumentActions::DocumentActions(QMainWindow& window, application::CadSession& s
 bool DocumentActions::confirmClose() { return confirmSaveChanges(); }
 
 void DocumentActions::syncWindowTitle() {
-    const QString currentFile = displayPath(session_.currentFile());
-    const QString name =
-        currentFile.isEmpty() ? QStringLiteral("Untitled") : QFileInfo(currentFile).fileName();
-    window_.setWindowTitle(
-        QStringLiteral("%1%2 — Völund CAD")
-            .arg(name, session_.isModified() ? QStringLiteral(" *") : QString{}));
+    window_.setWindowTitle(projectShell(session_, {}).windowTitle());
 }
 
 void DocumentActions::newDocument() {
@@ -160,13 +147,13 @@ bool DocumentActions::save() {
     if (session_.currentFile().empty()) {
         return saveAs();
     }
-    return saveTo(displayPath(session_.currentFile()));
+    return saveTo(nativeDisplayPath(session_.currentFile()));
 }
 
 bool DocumentActions::saveAs() {
     QString fileName =
         QFileDialog::getSaveFileName(&window_, QStringLiteral("Save Völund Document"),
-                                     displayPath(session_.currentFile()), documentFilter());
+                                     nativeDisplayPath(session_.currentFile()), documentFilter());
     if (fileName.isEmpty()) {
         return false;
     }

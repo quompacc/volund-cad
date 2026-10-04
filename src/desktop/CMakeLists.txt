@@ -19,6 +19,7 @@ add_library(
     SketchEditorToolController.cpp
     SketchEditorStart.cpp
     SketchExtrusionToolController.cpp
+    ShellState.cpp
     SketchViewAdapter.cpp
     ToolPanelHost.cpp
     WorkspaceToolbar.cpp

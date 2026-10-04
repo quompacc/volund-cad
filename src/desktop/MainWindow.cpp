@@ -134,18 +134,9 @@ void MainWindow::createWorkspaceToolbar() {
     };
     services.canAddCylinder = [this]() { return impl_->session.canAddCylinder(); };
     // Enables "Sketch": a picked planar face or a picked base plane (V01b).
-    services.canEditSketch = [this]() {
-        return impl_->session.sceneStatus().isCurrent() &&
-               (impl_->selectedPlanarFace.has_value() || impl_->selectedDatum.has_value());
-    };
-    services.canEditExistingSketch = [this]() {
-        const auto selected = impl_->session.selectedFeature();
-        return selected.has_value() &&
-               impl_->session.selectedFeatureDescriptor().kind == document::FeatureKind::sketch;
-    };
-    services.canExtrudeProfiles = [this]() {
-        return impl_->session.canExtrudeSelectedSketchProfiles();
-    };
+    services.canEditSketch = [this]() { return impl_->shell().canSketch(); };
+    services.canEditExistingSketch = [this]() { return impl_->shell().canEditSketch(); };
+    services.canExtrudeProfiles = [this]() { return impl_->shell().canExtrude(); };
     services.canTransform = [this]() {
         const auto selected = impl_->session.selectedFeature();
         return selected.has_value() && impl_->session.canTransformFeature(*selected);
@@ -366,14 +357,14 @@ void MainWindow::syncProperties() {
     impl_->pendingParameter = {};
     impl_->pendingStamp.reset();
     impl_->propertyPanel->setErrorCommitHandler({});
-    const std::optional<document::FeatureId> selected = impl_->session.selectedFeature();
+    const ShellState shell = impl_->shell();
+    const std::optional<document::FeatureId> selected = shell.feature;
     impl_->repairAllAction->setEnabled(!impl_->session.features().empty());
-    impl_->repairAction->setEnabled(selected && impl_->session.selectedFeatureDescriptor().kind ==
-                                                    document::FeatureKind::sketch);
+    impl_->repairAction->setEnabled(shell.canEditSketch());
     impl_->workspaceToolbar->refreshEnabled();
     // Undo/Redo follow the document history, not the selection (U01).
-    impl_->undoAction->setEnabled(impl_->session.canUndo());
-    impl_->redoAction->setEnabled(impl_->session.canRedo());
+    impl_->undoAction->setEnabled(shell.canUndo);
+    impl_->redoAction->setEnabled(shell.canRedo);
     if (!selected.has_value()) {
         impl_->propertyPanel->showNone();
         syncTransformTool();
