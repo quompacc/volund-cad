@@ -342,10 +342,21 @@ CadSession::editSelectedExtrusionParameters(const document::ExtrusionParameters&
                                             ErrorDisposition disposition) {
     if (!selectedFeature_)
         return CommandResult::invalidInput("Select a feature before editing parameters");
+    return editExtrusionParameters(selectedFeature_.value(), parameters, disposition);
+}
+
+document::ExtrusionParameters
+CadSession::extrusionParameters(document::FeatureId featureId) const {
+    return document_.extrusionParameters(featureId);
+}
+
+CommandResult CadSession::editExtrusionParameters(document::FeatureId featureId,
+                                                  const document::ExtrusionParameters& parameters,
+                                                  ErrorDisposition disposition) {
     document::DocumentTransaction transaction(document_);
     auto& candidate = transaction.edit();
     const auto input = detail::prepareInput(
-        [&] { return candidate.setExtrusionParameters(selectedFeature_.value(), parameters); });
+        [&] { return candidate.setExtrusionParameters(featureId, parameters); });
     if (!input.value)
         return CommandResult::invalidInput(input.diagnostic);
     if (!*input.value)

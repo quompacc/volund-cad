@@ -1,4 +1,6 @@
 add_library(voelund_application STATIC
+    ActionContext.cpp
+    ActionExecution.cpp
     CommandTransaction.cpp
     CadSession.cpp
     CadSessionIdentity.cpp

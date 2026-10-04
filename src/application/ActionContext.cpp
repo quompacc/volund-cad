@@ -1,0 +1,81 @@
+#include "ActionDetail.hpp"
+
+#include <voelund/features/SketchRegionIdentity.hpp>
+
+#include <algorithm>
+
+namespace voelund::application {
+namespace {
+using document::FeatureKind;
+
+SketchRegionsSummary summarizeRegions(document::FeatureId sketch,
+                                      const document::SketchParameters& parameters) {
+    const auto identities = features::identifySketchRegions(parameters.elements.values);
+    SketchRegionsSummary summary{sketch, identities.regions.valid(), {}};
+    for (std::size_t index = 0; index < identities.ids.size(); ++index)
+        summary.regions.push_back({identities.ids[index], identities.regions.regions[index].area,
+                                   identities.ambiguous(index)});
+    return summary;
+}
+} // namespace
+
+ActionKind actionKind(const Action& action) noexcept {
+    return static_cast<ActionKind>(action.index());
+}
+
+namespace detail {
+std::vector<ActionKind> availableActions(const document::DocumentSnapshot& snapshot,
+                                         const ActionTarget& target) {
+    if (std::holds_alternative<std::monostate>(target))
+        return {ActionKind::createParameter, ActionKind::createDatumSketch};
+    if (const auto* parameter = std::get_if<document::ParameterId>(&target)) {
+        if (document::findParameter(snapshot.parameterTable(), *parameter) == nullptr)
+            return {};
+        return {ActionKind::setParameterValue, ActionKind::renameParameter};
+    }
+    const auto feature = std::get<document::FeatureId>(target);
+    const auto features = snapshot.features();
+    const auto descriptor = std::ranges::find(features, feature, &document::FeatureDescriptor::id);
+    if (descriptor == features.end())
+        return {};
+    if (descriptor->kind == FeatureKind::sketch)
+        return {ActionKind::editSketch, ActionKind::bindSketchDimension,
+                ActionKind::createProfileExtrusion};
+    if (descriptor->kind != FeatureKind::extrusion)
+        return {};
+    // A bound distance follows its parameter; it is changed there or after unbinding.
+    if (snapshot.extrusionParameters(feature).distanceParameter)
+        return {ActionKind::bindExtrusionDistance};
+    return {ActionKind::bindExtrusionDistance, ActionKind::setExtrusionDistance};
+}
+} // namespace detail
+
+ActionContext describeActionContext(const CadSession& session) {
+    const auto identified = session.identifiedSnapshot();
+    const auto& snapshot = identified.snapshot();
+    const auto states = session.featureStates();
+    ActionContext context{identified.id(),
+                          session.sceneStatus().document,
+                          {},
+                          {snapshot.features().begin(), snapshot.features().end()},
+                          session.modelOutline(),
+                          {states.begin(), states.end()},
+                          snapshot.parameterTable(),
+                          {},
+                          {}};
+    context.available.push_back({std::monostate{}, detail::availableActions(snapshot, {})});
+    for (const auto& feature : context.features) {
+        if (feature.kind == FeatureKind::sketch)
+            context.sketchRegions.push_back(
+                summarizeRegions(feature.id, snapshot.sketchParameters(feature.id)));
+        auto actions = detail::availableActions(snapshot, feature.id);
+        if (!actions.empty())
+            context.available.push_back({feature.id, std::move(actions)});
+    }
+    for (const auto& parameter : context.parameters.values)
+        context.available.push_back(
+            {parameter.id, detail::availableActions(snapshot, parameter.id)});
+    return context;
+}
+
+} // namespace voelund::application

@@ -745,3 +745,7 @@ add_executable(voelund_document_parameter_tests integration/DocumentParameterTes
 target_link_libraries(voelund_document_parameter_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME application.document_parameters COMMAND voelund_document_parameter_tests)
 set_tests_properties(application.document_parameters PROPERTIES LABELS "integration;application;sketch;regression" TIMEOUT 90)
+add_executable(voelund_action_request_tests integration/ActionRequestTests.cpp)
+target_link_libraries(voelund_action_request_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.action_requests COMMAND voelund_action_request_tests)
+set_tests_properties(application.action_requests PROPERTIES LABELS "integration;application;regression" TIMEOUT 90)

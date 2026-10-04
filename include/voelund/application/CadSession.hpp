@@ -169,6 +169,11 @@ class CadSession final {
     [[nodiscard]] CommandResult
     editSelectedExtrusionParameters(const document::ExtrusionParameters& parameters,
                                     ErrorDisposition disposition = ErrorDisposition::reject);
+    // AI02: explicit target; the selection is kept.
+    [[nodiscard]] CommandResult
+    editExtrusionParameters(document::FeatureId featureId,
+                            const document::ExtrusionParameters& parameters,
+                            ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] CommandResult
     editSelectedFeaturePlacement(const kernel::RigidTransform& placement,
                                  ErrorDisposition disposition = ErrorDisposition::reject);
@@ -176,6 +181,8 @@ class CadSession final {
     [[nodiscard]] document::CylinderParameters
     cylinderParameters(document::FeatureId featureId) const;
     [[nodiscard]] document::ExtrusionParameters selectedExtrusionParameters() const;
+    [[nodiscard]] document::ExtrusionParameters
+    extrusionParameters(document::FeatureId featureId) const;
     [[nodiscard]] kernel::RigidTransform selectedFeaturePlacement() const;
     [[nodiscard]] std::span<const FeatureRuntimeState> featureStates() const noexcept;
     // PAR01 document parameters. Every command is one transaction and one undo step.
