@@ -44,7 +44,8 @@ keine Tabellenkalkulation wie FreeCAD-Spreadsheet oder VarSet.
 
 ## Bedienung (PAR02, Gestaltung im UI-Konzept UX01 abstimmen)
 
-- Tabelle über einen festen Knopf oder ein Tastenkürzel erreichbar, als andockbares Panel.
+- Tabelle über den Knopf „Parameter“ in der Kopfzeile oder ein Tastenkürzel erreichbar,
+  als Seitenpanel rechts (ADR 0012).
   Einträge werden direkt in der Zeile bearbeitet.
 - Im Maßfeld einer Skizze oder Extrusion statt einer Zahl `=A` eingeben, mit
   Autovervollständigung der Parameternamen. Ein noch unbekannter Name kann direkt als neuer
@@ -52,9 +53,14 @@ keine Tabellenkalkulation wie FreeCAD-Spreadsheet oder VarSet.
 - Gebundene Maße zeigen im Viewport und im Panel `A = 10 mm`. Die Tabelle zeigt je
   Parameter die Anzahl der Verwendungen.
 
+## Geltungsbereich
+
+Parameter gelten je Dokument (Nutzerentscheidung vom 04.10.2026). Eine
+dateiübergreifende Parameterbibliothek ist vorerst nicht vorgesehen.
+
 ## Zeitpunkt
 
-PAR01 folgt direkt auf V01. Der Kern hängt nicht an der Oberfläche. Wird er früh
+PAR01 folgt auf V01, das nach der neuen Oberfläche (U01–U06) abschließt. Der Kern hängt nicht an der Oberfläche. Wird er früh
 eingeführt, werden Maße von Anfang an bindbar gespeichert, und spätere
 Dateimigrationen entfallen. PAR02 folgt mit der neuen Oberfläche nach UX01 und mit der
 vereinheitlichten Dimensionsbindung aus S07.

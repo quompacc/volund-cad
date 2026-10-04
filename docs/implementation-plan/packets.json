@@ -59,10 +59,7 @@
     "C01",
     "R09",
     "R10",
-    "V01",
     "UX01",
-    "PAR01",
-    "R10b",
     "A04",
     "U01",
     "U02",
@@ -70,6 +67,9 @@
     "U04",
     "U05",
     "U06",
+    "V01",
+    "PAR01",
+    "R10b",
     "U07",
     "U08",
     "U09",
@@ -1359,17 +1359,18 @@
         "D14"
       ],
       "files": [
-        "apps/voelund-ui-preview/PreviewWindow.cpp",
-        "apps/voelund-ui-preview/PreviewWindowRibbon.cpp",
-        "src/modules/solid/SolidWorkspaceModule.cpp"
+        "src/desktop/MainWindow.cpp",
+        "src/modules/solid/SolidWorkspaceModule.cpp",
+        "src/workspaces/CommandRegistry.cpp",
+        "docs/ui-concept.md"
       ],
       "steps": [
-        "Befehlstabelle mit ID, UI-Einstieg, Controller, Zustand und Abnahmetest anlegen.",
-        "Nicht implementierte Buttons/Workspaces eindeutig deaktivieren oder ausblenden; Aktivierungsbedingungen für Skizzen-/Körper-/Flächenauswahl definieren.",
-        "Feste Dokumenttitel und Timelineattrappen durch leeren oder tatsächlichen Zustand ersetzen."
+        "Befehlstabelle des Produkts mit ID, Einstieg (Werkzeugleiste, Kontextleiste, Skizzenleiste, Befehlssuche, Kürzel), Controller, Aktivierungsbedingung und Abnahmetest anlegen.",
+        "Doppelte und funktionslose Einstiege (z. B. „Sketch Rectangle“ neben „Sketch“, Connection auf den letzten Zylinder) entfernen oder eindeutig sperren; Aktivierung für Ebene, Fläche, Skizzenbereich und Körper festlegen.",
+        "Start mit leerem Dokument statt Box/Zylinder; feste Platzhalter durch tatsächlichen Zustand ersetzen."
       ],
-      "acceptance": "Kein aktiver Button ohne registrierte ausführbare Aktion. Extrude wird erst nach M04 aktiv produktiv angeboten. Nicht verfügbares Werkzeug verändert keine Auswahl/Dokumenthistorie.",
-      "boundary": "Genehmigte Gestaltung und Navigation beibehalten; keine neue Oberflächenästhetik.",
+      "acceptance": "Kein aktiver Knopf ohne registrierte ausführbare Aktion; jeder Befehl der Tabelle ist über genau eine Command-ID erreichbar. Nicht verfügbares Werkzeug verändert weder Auswahl noch Historie.",
+      "boundary": "Noch keine neue Gestaltung (U03); bereinigt die Befehlsbasis für ADR 0012. UI-Vorschau wird nicht mehr angepasst.",
       "status": "planned",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
@@ -1387,16 +1388,16 @@
       ],
       "files": [
         "include/voelund/desktop/MainWindow.hpp",
-        "apps/voelund-ui-preview/PreviewWindow.hpp",
-        "src/desktop/MainWindow.cpp"
+        "src/desktop/MainWindow.cpp",
+        "src/desktop/"
       ],
       "steps": [
-        "Verantwortlichkeiten beider Fenster in Shell, Dokumentaktionen, Toolhost, Tree/Timeline und Viewport zuordnen.",
-        "Kleine read-only Projektion für Dokumenttitel, Dirty, aktuelle Auswahl, Befehlsverfügbarkeit und Toolzustand bereitstellen.",
+        "Verantwortlichkeiten der Produktshell nach ADR 0012 zuordnen: Kopfzeile, Modellbaum, Werkzeugleiste, Kontextleiste, Werkzeugpanel, Timeline, Parameterpanel, Viewport.",
+        "Kleine read-only Projektion für Dokumenttitel, Speicherzustand, aktuelle Auswahl, Befehlsverfügbarkeit und Werkzeugzustand bereitstellen.",
         "Ownership und Lebensdauer von CadSession, Viewport und Panels im Composition Root dokumentieren."
       ],
-      "acceptance": "Header-/Komponentenskizze benennt für jeden Zustand genau einen Besitzer. Keine zweite CadSession pro Ansicht und keine direkten Featuremutatoren aus Widgets.",
-      "boundary": "API-/Strukturpaket; keine gleichzeitige Migration aller UI-Komponenten.",
+      "acceptance": "Komponentenskizze benennt für jeden Zustand genau einen Besitzer. Keine zweite CadSession pro Ansicht und keine direkten Featuremutatoren aus Widgets.",
+      "boundary": "API-/Strukturpaket; keine gleichzeitige Migration aller UI-Komponenten. Grundlage ADR 0012.",
       "status": "planned",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
@@ -1406,25 +1407,25 @@
     },
     {
       "id": "U03",
-      "title": "Genehmigte Gestaltung in gemeinsame Desktop-Komponenten verschieben",
+      "title": "Gestaltung nach ADR 0012 als Desktop-Komponenten umsetzen",
       "deps": [
         "U02",
         "A03",
         "UX01"
       ],
       "files": [
-        "apps/voelund-ui-preview/PreviewStyle.cpp",
-        "apps/voelund-ui-preview/PreviewIcons.cpp",
-        "apps/voelund-ui-preview/ViewCube.cpp",
+        "src/desktop/",
+        "src/viewport/",
+        "resources/",
         "src/desktop/CMakeLists.txt"
       ],
       "steps": [
-        "Style/Icons/ViewCube als wiederverwendbare Darstellungskomponenten nach desktop bzw. zuständigem Viewportbereich extrahieren.",
-        "Preview- und Produktfenster vorübergehend dieselben Komponenten verwenden lassen; keine Fachlogik übertragen.",
-        "Screenshots bei gleicher Größe/DPI als visuelle Vergleichsbasis ablegen."
+        "Farbtoken für hell und dunkel, Schriften (Albert Sans, JetBrains Mono, eingebettet) und ein einheitliches Symbolset als Desktop-Komponenten anlegen; Umschalter hell/dunkel.",
+        "Grundlayout der Shell: Kopfzeile, Baum links, Viewport mit ViewCube und Standardansichten, Fläche für Timeline; Viewportfarben aus den Token.",
+        "Oberflächentexte deutsch über tr(); Aufnahmen hell/dunkel bei gleicher Größe als Vergleichsbasis."
       ],
-      "acceptance": "Layout, genehmigte Farbgebung, Navigation und ViewCube bleiben visuell erhalten. Komponenten hängen nicht von PreviewWindow oder dessen Fake-Daten ab. Start-Smokes grün. Der Agent erstellt und betrachtet Vorher-/Nachherbilder gemäß Kapitel 10 selbst; keine routinemäßige Nutzerfreigabe für die Erhaltung der genehmigten Gestaltung.",
-      "boundary": "Nur Darstellung; kein Parametermodell im Style-/Iconmodul. Umstellung 2026-10-04: Grundlage ist das mit dem Nutzer festgelegte Konzept aus UX01, nicht mehr die Gestaltung der UI-Vorschau.",
+      "acceptance": "Produkt startet im Layout des freigegebenen Prototyps in heller und dunkler Darstellung; Komponenten hängen nicht von voelund-ui-preview ab. Start-Smokes grün; Aufnahmen selbst geprüft und dem Nutzer vorgelegt.",
+      "boundary": "Nur Darstellung; keine Fachlogik und kein Parametermodell in Style-/Symbolmodulen. Grundlage ist ADR 0012, nicht mehr die Gestaltung der UI-Vorschau.",
       "status": "planned",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
@@ -1434,7 +1435,7 @@
     },
     {
       "id": "U04",
-      "title": "Ribbon an CommandRegistry anbinden",
+      "title": "Werkzeugleiste, Kontextleiste und Befehlssuche an CommandRegistry anbinden",
       "deps": [
         "U02",
         "U03"
@@ -1443,15 +1444,15 @@
         "src/workspaces/CommandRegistry.cpp",
         "src/modules/solid/SolidWorkspaceModule.cpp",
         "src/desktop/WorkspaceToolbar.cpp",
-        "apps/voelund-ui-preview/PreviewWindowRibbon.cpp"
+        "src/desktop/"
       ],
       "steps": [
-        "Ribbon-Elemente aus registrierten Befehlen und Workspace-Metadaten erzeugen/binden.",
-        "Shortcuts und Kontextmenü verwenden dieselbe Command-ID und Zustandsprüfung.",
-        "Aktivierung bei Auswahl-/Tool-/Dokumentwechsel aktualisieren; No-op-Routing auf Select entfernen."
+        "Senkrechte, ausblendbare Werkzeugleiste aus registrierten Befehlen und Modulmetadaten erzeugen; unpassende Werkzeuge gesperrt statt versteckt.",
+        "Schwebende Kontextleiste zeigt je Auswahl (nichts, Ebene, Fläche, Skizzenbereich, Körper, Skizzenmodus) die passenden Befehle; der nächste Schritt ist hervorgehoben.",
+        "Befehlssuche (Strg+K), Tastenkürzel und Kontextmenü verwenden dieselbe Command-ID und Zustandsprüfung; Aktivierung bei Auswahl-/Werkzeug-/Dokumentwechsel aktualisieren."
       ],
-      "acceptance": "Ein Ribbon-Klick und der zugehörige Shortcut lösen identischen Application-Befehl aus. Unbekannte ID liefert Diagnose. Relation/Dimension/Trim/Offset gehen nicht versehentlich auf Select.",
-      "boundary": "Noch nicht implementierte Fachtools bleiben deaktiviert.",
+      "acceptance": "Werkzeugleiste, Kontextleiste, Befehlssuche und Kürzel lösen für dieselbe ID denselben Application-Befehl aus. Unbekannte ID liefert Diagnose. Kein Befehl ist nur über die Kontextleiste erreichbar.",
+      "boundary": "Noch nicht implementierte Fachtools bleiben gesperrt. Kein Ribbon.",
       "status": "planned",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
@@ -1461,7 +1462,7 @@
     },
     {
       "id": "U05",
-      "title": "Generischen ToolPanelHost in die neue Shell integrieren",
+      "title": "Schwebendes Werkzeugpanel über den generischen ToolPanelHost",
       "deps": [
         "U04",
         "D07"
@@ -1470,15 +1471,15 @@
         "src/desktop/ToolPanelHost.cpp",
         "src/desktop/SketchEditorToolController.cpp",
         "src/desktop/SketchExtrusionToolController.cpp",
-        "apps/voelund-ui-preview/PreviewWindow.cpp"
+        "src/desktop/"
       ],
       "steps": [
-        "ToolPanelHost besitzt genau eine aktive Sitzung; Parameterpanel ist reine Bindung an deren State.",
-        "OK/Cancel/Escape/Fokuswechsel gemäß K04 vereinheitlichen; Toolwechsel bei ungültiger Skizze blockiert mit Fehlermeldung.",
-        "Panel-Layout der genehmigten Oberfläche verwenden, alte Controller über Application-Vertrag anschließen."
+        "ToolPanelHost besitzt genau eine aktive Sitzung und zeigt sie als schwebendes Panel am Viewport; Parameterfelder sind reine Bindung an deren State.",
+        "OK/Abbrechen/Escape/Fokuswechsel gemäß K04 vereinheitlichen; Toolwechsel bei ungültiger Skizze blockiert mit Fehlermeldung.",
+        "Docks „Properties“/„Tool“ ablösen; vorhandene Controller über den Application-Vertrag anschließen; erweiterte Optionen einklappbar, nie weggelassen."
       ],
-      "acceptance": "A-UI-02 besteht für OK, Cancel, Escape und Toolwechsel. Cancel lässt Dokument/Undo/Dirty unverändert. Failed-Skizze startet kein Extrude-Panel.",
-      "boundary": "Keine zweite temporäre Parametersammlung im PreviewWindow.",
+      "acceptance": "A-UI-02 besteht für OK, Abbrechen, Escape und Toolwechsel. Abbrechen lässt Dokument/Undo/Dirty unverändert. Fehlgeschlagene Skizze startet kein Extrusionspanel.",
+      "boundary": "Keine zweite temporäre Parametersammlung. Layout nach ADR 0012.",
       "status": "planned",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
@@ -1488,7 +1489,7 @@
     },
     {
       "id": "U06",
-      "title": "Echte Dokumentprojektion für Titel, Tree und Eigenschaften anzeigen",
+      "title": "Modellbaum mit Ursprüngen, Sichtbarkeit, Raster und Timeline aus echter Dokumentprojektion",
       "deps": [
         "U02",
         "U05",
@@ -1497,15 +1498,16 @@
       "files": [
         "src/desktop/ModelTreePanel.cpp",
         "src/desktop/FeaturePropertiesPanel.cpp",
-        "src/desktop/MainWindow.cpp"
+        "src/desktop/MainWindow.cpp",
+        "src/viewport/BasePlanePresentation.cpp"
       ],
       "steps": [
-        "Tree liest echte Body-/Feature-IDs, Namen, Fehler und Suppressionstatus.",
-        "Titel aus Dokumentname und Dirty ableiten; Properties zeigen ausgewählte reale Parameter und Auswertungsstatus.",
-        "Auswahl zwischen Tree/Viewport/Properties über typed SelectionRef synchronisieren."
+        "Baum liest echte Körper-/Feature-IDs, Namen, Fehler und Unterdrückung; Ursprung des Dokuments und je Körper mit XY/XZ/YZ; Augen-Schalter für Ebenen, Skizzen, Körper und das Raster auf XY. Sichtbarkeit ist Ansichtszustand ohne Undo/Dirty.",
+        "Basisebenen aus V01b an die Ursprünge binden: im leeren Dokument sichtbar, neben Körpern dezent, Klicks auf Körper haben Vorrang.",
+        "Timeline unten als Projektion der Featurereihenfolge; Klick öffnet das Feature über die vorhandenen Edit-Wege. Titel aus Dokumentname und Speicherzustand; Auswahl zwischen Baum, Viewport und Timeline über typed SelectionRef synchronisieren."
       ],
-      "acceptance": "Neues/geladenes Dokument zeigt korrekte Inhalte statt Bracket/v12. Umbenennen und Undo aktualisieren alle Ansichten. Entfernte Auswahl wird bereinigt, ohne anderes Feature zu verändern.",
-      "boundary": "Timeline-Bearbeitung folgt M15; hier nur Datenprojektion.",
+      "acceptance": "Neues/geladenes Dokument zeigt korrekte Inhalte. Ausblenden einer Ebene im Baum entfernt sie aus Viewport und Pick, ohne Dirty. Umbenennen und Undo aktualisieren alle Ansichten. Timeline-Klick öffnet Skizze bzw. Extrusion.",
+      "boundary": "Rückrollmarke, Umordnen und Fehleranzeige in der Timeline folgen M15; hier nur Projektion und Öffnen.",
       "status": "planned",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
@@ -1542,7 +1544,7 @@
     },
     {
       "id": "U08",
-      "title": "Sketch-Erzeugung zwischen beiden Shells vereinheitlichen",
+      "title": "Skizzen-Erzeugung auf einen Weg vereinheitlichen",
       "deps": [
         "U05",
         "D07"
@@ -1553,12 +1555,12 @@
         "src/application/SketchEditorSession.cpp"
       ],
       "steps": [
-        "Gemeinsamen Application-Erzeugungsbefehl mit semantischen Ergebnisrollen vorbereiten und beide UI-Wege darauf abbilden.",
+        "Gemeinsamen Application-Erzeugungsbefehl mit semantischen Ergebnisrollen vorbereiten; der Produktweg ist maßgeblich.",
         "Duplizierte Snap-/Constraint-Erzeugung aus UI entfernen; Renderingadapter erhalten nur Preview-/Result-Daten.",
-        "Bestehende robuste Legacy-Fälle als Charakterisierungstests erhalten, Preview-Abweichungen ausdrücklich korrigieren."
+        "Robuste Legacy-Fälle als Charakterisierungstests erhalten; der zweite Weg der UI-Vorschau wird nicht weiterentwickelt."
       ],
       "acceptance": "Rechteck, Circle, Arc und Ellipse aus beiden bisherigen Einstiegen erzeugen fachlich gleichen Editorzustand. Kein UI-Code berechnet IDs durch Einfügereihenfolge.",
-      "boundary": "Vollständige Werkzeugmatrix folgt S01/S04–S06; kein dritter Bridge-Layer mit eigener Fachlogik.",
+      "boundary": "Kein Ausbau von voelund-ui-preview; deren SketchBackend dient nur als Vergleich bis U12.",
       "status": "planned",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
@@ -1638,9 +1640,9 @@
         "src/desktop/MainWindow.cpp"
       ],
       "steps": [
-        "Qt-Test klickt echte registrierte Aktionen, setzt Felder und bestätigt Panels nach Eventloopstart.",
-        "Basisebene→Skizze→Constraint→OK→Edit→Cancel→Save/Open über tatsächliche UI ausführen.",
-        "Rendering-Readiness, Dokumentrevision, Tree-Inhalte und Fehlerzustände prüfen; visuelle Bilder ergänzen fachliche Assertions."
+        "Qt-Test klickt echte registrierte Aktionen in Werkzeugleiste, Kontextleiste und Panel, setzt Felder und bestätigt nach Eventloopstart.",
+        "Ursprung/Ebene→Skizze→Constraint→Skizze fertig→Bearbeiten über Timeline→Abbrechen→Speichern/Öffnen über die tatsächliche UI ausführen.",
+        "Rendering-Readiness, Dokumentrevision, Baum-/Timeline-Inhalte und Fehlerzustände prüfen; Aufnahmen hell/dunkel ergänzen fachliche Assertions."
       ],
       "acceptance": "A-UI-01 Skizzenteil und A-UI-02/03 bestehen. Absichtlich abgetrennter Handler macht Test rot. Extrude-Teil wird in M04 ergänzt. A-VIS-01 bestanden: Bilder tatsächlich selbst betrachtet, Layout-/Overlayfehler korrigiert und mit neuer Aufnahme nachgeprüft.",
       "boundary": "Kein Test, der nur Backendmethoden aufruft und danach Fenstersichtbarkeit bestätigt.",
@@ -1669,12 +1671,12 @@
         "apps/voelund-ui-preview/PreviewCanvas.cpp"
       ],
       "steps": [
-        "Produkt `voelund-cad` mit genehmigter gemeinsamer Shell bauen und installieren.",
-        "Preview auf optionalen Darstellungs-/Entwicklungsharness ohne eigene Fachlogik reduzieren oder nach Parität entfernen.",
-        "Fake-Canvas und verwaiste Handler entfernen; verwendete Screenshots/Doku auf produktiven Einstieg umstellen."
+        "Produkt `voelund-cad` mit der Shell nach ADR 0012 bauen und installieren.",
+        "voelund-ui-preview nach belegter Funktionsparität entfernen; Fake-Canvas, Fake-Timeline und verwaiste Handler mit entfernen.",
+        "Screenshots und Doku auf den produktiven Einstieg umstellen."
       ],
       "acceptance": "Installiertes Produkt startet dieselbe getestete Shell. Kein zweiter SketchBackend mit eigenen Regeln, keine Fake-Timeline. Ein kompletter New/Sketch/Save/Open-Fluss besteht.",
-      "boundary": "Keine Löschung der Vergleichsbasis vor belegter Funktions-/Gestaltungsparität.",
+      "boundary": "Keine Löschung der Vorschau vor belegter Funktionsparität; ihre Gestaltung ist keine Vergleichsbasis mehr (ADR 0012).",
       "status": "planned",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
@@ -2020,7 +2022,7 @@
         "Fehler an betroffenen Elementen, numerische Eingabe und Tastaturfokus konsistent anzeigen."
       ],
       "acceptance": "Alle vier Schalter verändern den benannten Zustand; Ansichtsänderungen erzeugen kein Dirty. Auswahl mit Ellipse/Arc und Constraint-Label kollidiert nicht. Escape beendet zuerst Vorschau, dann Werkzeug nach dokumentierter Regel.",
-      "boundary": "Kein neues Ribbon-Design und keine versteckten Fachregeln in Eventhandlern.",
+      "boundary": "Kein eigenes Skizzen-Ribbon: Skizzenwerkzeuge sitzen nach ADR 0012 in der Kontextleiste; keine versteckten Fachregeln in Eventhandlern.",
       "status": "planned",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
@@ -3811,7 +3813,8 @@
       "deps": [
         "R10",
         "C01",
-        "D14"
+        "D14",
+        "U06"
       ],
       "files": [
         "src/application/CadSessionSketchProfiles.cpp",
@@ -3822,10 +3825,10 @@
       "steps": [
         "In voelund-cad XY/XZ/YZ als Basisebenen mit stabiler Identität anbieten, sodass eine Skizze ohne vorhandenen Körper entsteht (Kern von S03).",
         "Regionauswahl aus R09 und Faces aus R10 im bestehenden Extrusionspanel verwenden; ein Undo je Feature.",
-        "Qt-Testtreiber mit echten Events für den gesamten Ablauf; läuft in CI unter Linux und lokal unter Windows."
+        "Qt-Testtreiber mit echten Events für den gesamten Ablauf in der neuen Shell (V01c, nach U06); läuft in CI unter Linux und lokal unter Windows."
       ],
       "acceptance": "Ein UI-Test besteht: neues Dokument → XY → Rechteck mit Innenkreis → Extrusion (Ringkörper, Volumen analytisch geprüft) → Distanz ändern → Undo/Redo → Speichern → Öffnen mit gleichem Volumen. Grün in CI und lokal auf Windows.",
-      "boundary": "Keine neue Shell, kein Ribbon, keine Arbeit an voelund-ui-preview. Pocket, Zielkörper und weitere Panelfelder bleiben M02–M04; S03 vervollständigt denselben Weg.",
+      "boundary": "Pocket, Zielkörper und weitere Panelfelder bleiben M02–M04; S03 vervollständigt denselben Weg. Umstellung 2026-10-04: Ebenen hängen an Ursprüngen im Baum (U06), der UI-Test läuft in der Shell nach ADR 0012.",
       "status": "planned",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
@@ -3837,7 +3840,7 @@
       "id": "UX01",
       "title": "Bedien- und Gestaltungskonzept mit dem Nutzer neu festlegen",
       "deps": [
-        "V01"
+        "R10"
       ],
       "files": [
         "docs/ui-concept.md",
@@ -3849,12 +3852,14 @@
         "Entscheidung als ADR festhalten und U02–U12 sowie S13 daran ausrichten."
       ],
       "acceptance": "Nutzer hat das Zielbild ausdrücklich freigegeben; ADR und angepasste U-Pakete liegen vor. Keine Umsetzung im Produkt in diesem Paket.",
-      "boundary": "Entscheidungspaket. Ersetzt die bisherige „genehmigte Gestaltung“ der UI-Vorschau als Grundlage von U03. Eingefügt am 2026-10-04 auf Nutzerwunsch.",
-      "status": "planned",
+      "boundary": "Entscheidungspaket. Ersetzt die bisherige „genehmigte Gestaltung“ der UI-Vorschau als Grundlage von U03. Eingefügt am 2026-10-04 auf Nutzerwunsch. Abgeschlossen 2026-10-04 mit ADR 0012; lief auf Nutzerwunsch vor dem Abschluss von V01.",
+      "status": "done",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
       "kind": "decision",
-      "evidence": [],
+      "evidence": [
+        "docs/implementation-plan/evidence/UX01.md"
+      ],
       "completedCommit": null
     },
     {
@@ -3900,12 +3905,12 @@
         "tests/desktop/"
       ],
       "steps": [
-        "Tabelle mit einem Klick bzw. Tastenkürzel als andockbares Panel; Zeilen direkt bearbeiten, Verwendungen anzeigen.",
+        "Parameterpanel rechts, erreichbar über „Parameter“ in der Kopfzeile oder Tastenkürzel; Zeilen direkt bearbeiten, Verwendungen anzeigen.",
         "Maßfelder in Skizze und Extrusion akzeptieren =Name mit Autovervollständigung; unbekannten Namen als neuen Parameter anlegen.",
         "Gebundene Maße im Viewport und Panel als Name = Wert anzeigen; Qt-Testtreiber für Ändern, Umbenennen und Löschschutz."
       ],
       "acceptance": "Nutzerablauf: Rechteck mit Breite =A, Höhe =B, Extrusion =C; A in der Tabelle ändern aktualisiert Viewport und Volumen; Undo stellt zurück; Aufnahmen vom Nutzer gesichtet.",
-      "boundary": "Gestaltung gemäß UX01; keine Ausdrücke.",
+      "boundary": "Gestaltung gemäß ADR 0012; Parameter gelten je Dokument; keine Ausdrücke.",
       "status": "planned",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",

@@ -23,10 +23,11 @@ Paketanzahl ist kein Maß für Restaufwand oder Fertigstellungszeit.
 
 **Ergänzung vom 4. Oktober 2026 (Nutzerwunsch):**
 
-- **UX01** direkt nach V01: Bedien- und Gestaltungskonzept gemeinsam mit dem Nutzer neu
-  festlegen und vor jeder weiteren U-Arbeit freigeben lassen. Die bisherige Oberfläche
-  gilt als Flickwerk; U02/U03 bauen auf UX01 statt auf der UI-Vorschau auf.
-- **PAR01** (Kern) direkt danach, **PAR02** (Oberfläche) nach UX01/S07:
+- **UX01** ist abgeschlossen: Der Nutzer hat das Zielbild freigegeben
+  ([ADR 0012](../adr/0012-ui-shell-concept.md), [UI-Konzept](../ui-concept.md)). Die
+  neue Oberfläche entsteht in U01–U06. Danach schließt V01 mit dem UI-Test des ganzen
+  Ablaufs in dieser Oberfläche ab.
+- **PAR01** (Kern) nach V01, **PAR02** (Oberfläche) nach UX01/S07:
   [Parametertabelle](../parameter-table.md), die benannte Maße wie `A = 10 mm` an
   Skizzenbemaßungen und Extrusionen bindet.
 - Sichtbare UI-Änderungen werden vor der Umsetzung mit dem Nutzer abgestimmt;
@@ -36,13 +37,13 @@ Paketanzahl ist kein Maß für Restaufwand oder Fertigstellungszeit.
 | --- | ---: |
 | G0 – Basis | 2 |
 | G1 – Dokument und Referenzen | 0 |
-| G2 – zusammenhängender CAD-Workflow | 31 |
+| G2 – zusammenhängender CAD-Workflow | 30 |
 | G3 – mechanisches CAD v1 | 18 |
 | G4 – veröffentlichbare v1 | 10 |
 | G5 – spätere Produktfamilie | 30 |
-| Gesamt | 91 |
+| Gesamt | 90 |
 
-Bis einschließlich G4 bleiben 61 Hauptpakete. G2 ist der erste durchgängige
+Bis einschließlich G4 bleiben 60 Hauptpakete. G2 ist der erste durchgängige
 Bedienablauf, G3 der begrenzte mechanische Funktionsumfang. G5 umfasst zusätzliche
 Bereiche wie Baugruppen und Zeichnungen. Nutzbarkeit wird an diesen Abläufen
 abgenommen, nicht am Erreichen einer Prozentzahl.

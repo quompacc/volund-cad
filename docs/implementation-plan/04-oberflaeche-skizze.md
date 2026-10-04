@@ -1,76 +1,74 @@
 # 04 – Eine Anwendungsschale und ein vollständiger Skizzenablauf
 
-Die bestehende genehmigte Gestaltung bleibt erhalten. K03/K04/K07 sind Pflichtverträge. Dieses Kapitel baut kein zusätzliches Frontend, sondern führt vorhandene Funktionen und Darstellung zusammen. U11 wartet ausdrücklich auf die benötigten S-Pakete; die IDs sind keine starre numerische Reihenfolge.
+Grundlage der Oberfläche ist [ADR 0012](../adr/0012-ui-shell-concept.md) (freigegeben 2026-10-04); die Gestaltung der UI-Vorschau gilt nicht mehr. K03/K04/K07 sind Pflichtverträge. Dieses Kapitel baut kein zusätzliches Frontend, sondern führt vorhandene Funktionen und Darstellung zusammen. U11 wartet ausdrücklich auf die benötigten S-Pakete; die IDs sind keine starre numerische Reihenfolge.
 
 **Prüfweg:** vorhandene `application.sketch_*`-Tests und `workspaces.module_registry`, neue fachliche Regressionen und ab U11 echte UI-Ereignisse. Bei Darstellung mit gleicher Fenstergröße/DPI visuell vergleichen; Bilder ersetzen keine Prüfung des tatsächlichen Dokumentzustands.
 
 ## U01 – Sichtbare Befehle mit tatsächlicher Funktion abgleichen
 
 - **Voraussetzungen:** A08, D14.
-- **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08; `apps/voelund-ui-preview/PreviewWindow.cpp`, `apps/voelund-ui-preview/PreviewWindowRibbon.cpp`, `src/modules/solid/SolidWorkspaceModule.cpp`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
+- **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08, ADR 0012; `src/desktop/MainWindow.cpp`, `src/modules/solid/SolidWorkspaceModule.cpp`, `src/workspaces/CommandRegistry.cpp`, `docs/ui-concept.md`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
 - **Auftrag:**
-  1. Befehlstabelle mit ID, UI-Einstieg, Controller, Zustand und Abnahmetest anlegen.
-  2. Nicht implementierte Buttons/Workspaces eindeutig deaktivieren oder ausblenden; Aktivierungsbedingungen für Skizzen-/Körper-/Flächenauswahl definieren.
-  3. Feste Dokumenttitel und Timelineattrappen durch leeren oder tatsächlichen Zustand ersetzen.
-- **Abnahme:** Kein aktiver Button ohne registrierte ausführbare Aktion. Extrude wird erst nach M04 aktiv produktiv angeboten. Nicht verfügbares Werkzeug verändert keine Auswahl/Dokumenthistorie.
-- **Grenze:** Genehmigte Gestaltung und Navigation beibehalten; keine neue Oberflächenästhetik.
+  1. Befehlstabelle des Produkts mit ID, Einstieg (Werkzeugleiste, Kontextleiste, Skizzenleiste, Befehlssuche, Kürzel), Controller, Aktivierungsbedingung und Abnahmetest anlegen.
+  2. Doppelte und funktionslose Einstiege (z. B. „Sketch Rectangle“ neben „Sketch“, Connection auf den letzten Zylinder) entfernen oder eindeutig sperren; Aktivierung für Ebene, Fläche, Skizzenbereich und Körper festlegen.
+  3. Start mit leerem Dokument statt Box/Zylinder; feste Platzhalter durch tatsächlichen Zustand ersetzen.
+- **Abnahme:** Kein aktiver Knopf ohne registrierte ausführbare Aktion; jeder Befehl der Tabelle ist über genau eine Command-ID erreichbar. Nicht verfügbares Werkzeug verändert weder Auswahl noch Historie.
+- **Grenze:** Noch keine neue Gestaltung (U03); bereinigt die Befehlsbasis für ADR 0012. UI-Vorschau wird nicht mehr angepasst.
 
 ## U02 – Gemeinsames Shell-ViewModel definieren
 
-- **Voraussetzungen:** U01, D04.
-- **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08; `include/voelund/desktop/MainWindow.hpp`, `apps/voelund-ui-preview/PreviewWindow.hpp`, `src/desktop/MainWindow.cpp`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
+- **Voraussetzungen:** U01, D04, UX01.
+- **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08, ADR 0012; `include/voelund/desktop/MainWindow.hpp`, `src/desktop/MainWindow.cpp`, `src/desktop/`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
 - **Auftrag:**
-  1. Verantwortlichkeiten beider Fenster in Shell, Dokumentaktionen, Toolhost, Tree/Timeline und Viewport zuordnen.
-  2. Kleine read-only Projektion für Dokumenttitel, Dirty, aktuelle Auswahl, Befehlsverfügbarkeit und Toolzustand bereitstellen.
+  1. Verantwortlichkeiten der Produktshell nach ADR 0012 zuordnen: Kopfzeile, Modellbaum, Werkzeugleiste, Kontextleiste, Werkzeugpanel, Timeline, Parameterpanel, Viewport.
+  2. Kleine read-only Projektion für Dokumenttitel, Speicherzustand, aktuelle Auswahl, Befehlsverfügbarkeit und Werkzeugzustand bereitstellen.
   3. Ownership und Lebensdauer von CadSession, Viewport und Panels im Composition Root dokumentieren.
-- **Abnahme:** Header-/Komponentenskizze benennt für jeden Zustand genau einen Besitzer. Keine zweite CadSession pro Ansicht und keine direkten Featuremutatoren aus Widgets.
-- **Grenze:** API-/Strukturpaket; keine gleichzeitige Migration aller UI-Komponenten.
+- **Abnahme:** Komponentenskizze benennt für jeden Zustand genau einen Besitzer. Keine zweite CadSession pro Ansicht und keine direkten Featuremutatoren aus Widgets.
+- **Grenze:** API-/Strukturpaket; keine gleichzeitige Migration aller UI-Komponenten. Grundlage ADR 0012.
 
-## U03 – Genehmigte Gestaltung in gemeinsame Desktop-Komponenten verschieben
+## U03 – Gestaltung nach ADR 0012 als Desktop-Komponenten umsetzen
 
-- **Voraussetzungen:** U02, A03.
-- **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08; `apps/voelund-ui-preview/PreviewStyle.cpp`, `apps/voelund-ui-preview/PreviewIcons.cpp`, `apps/voelund-ui-preview/ViewCube.cpp`, `src/desktop/CMakeLists.txt`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
+- **Voraussetzungen:** U02, A03, UX01.
+- **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08, ADR 0012; `src/desktop/`, `src/viewport/`, `resources/`, `src/desktop/CMakeLists.txt`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
 - **Auftrag:**
-  1. Style/Icons/ViewCube als wiederverwendbare Darstellungskomponenten nach desktop bzw. zuständigem Viewportbereich extrahieren.
-  2. Preview- und Produktfenster vorübergehend dieselben Komponenten verwenden lassen; keine Fachlogik übertragen.
-  3. Screenshots bei gleicher Größe/DPI als visuelle Vergleichsbasis ablegen.
-- **Abnahme:** Layout, genehmigte Farbgebung, Navigation und ViewCube bleiben visuell erhalten. Komponenten hängen nicht von PreviewWindow oder dessen Fake-Daten ab. Start-Smokes grün. Der Agent erstellt und betrachtet Vorher-/Nachherbilder gemäß Kapitel 10 selbst; keine routinemäßige Nutzerfreigabe für die Erhaltung der genehmigten Gestaltung.
-- **Grenze:** Nur Darstellung; kein Parametermodell im Style-/Iconmodul.
+  1. Farbtoken für hell und dunkel, Schriften (Albert Sans, JetBrains Mono, eingebettet) und ein einheitliches Symbolset als Desktop-Komponenten anlegen; Umschalter hell/dunkel.
+  2. Grundlayout der Shell: Kopfzeile, Baum links, Viewport mit ViewCube und Standardansichten, Fläche für Timeline; Viewportfarben aus den Token.
+  3. Oberflächentexte deutsch über tr(); Aufnahmen hell/dunkel bei gleicher Größe als Vergleichsbasis.
+- **Abnahme:** Produkt startet im Layout des freigegebenen Prototyps in heller und dunkler Darstellung; Komponenten hängen nicht von voelund-ui-preview ab. Start-Smokes grün; Aufnahmen selbst geprüft und dem Nutzer vorgelegt.
+- **Grenze:** Nur Darstellung; keine Fachlogik und kein Parametermodell in Style-/Symbolmodulen. Grundlage ist ADR 0012, nicht mehr die Gestaltung der UI-Vorschau.
 
-## U04 – Ribbon an CommandRegistry anbinden
+## U04 – Werkzeugleiste, Kontextleiste und Befehlssuche an CommandRegistry anbinden
 
-- **Voraussetzungen:** U02, U03, AI02.
-- **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08; `src/workspaces/CommandRegistry.cpp`, `src/modules/solid/SolidWorkspaceModule.cpp`, `src/desktop/WorkspaceToolbar.cpp`, `apps/voelund-ui-preview/PreviewWindowRibbon.cpp`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
+- **Voraussetzungen:** U02, U03.
+- **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08, ADR 0012; `src/workspaces/CommandRegistry.cpp`, `src/modules/solid/SolidWorkspaceModule.cpp`, `src/desktop/WorkspaceToolbar.cpp`, `src/desktop/`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
 - **Auftrag:**
-  1. Ribbon-Elemente aus registrierten Befehlen und Workspace-Metadaten erzeugen/binden.
-  2. Shortcuts und Kontextmenü verwenden dieselbe Command-ID und Zustandsprüfung.
-  3. Aktivierung bei Auswahl-/Tool-/Dokumentwechsel aktualisieren; No-op-Routing auf Select entfernen.
-  4. Gemeinsame zielgerichtete Application-Aktionen aus AI02 verwenden; Auswahl nur
-     beim Erstellen des Requests auflösen. Keine parallele KI-/GUI-Fachlogik einführen.
-- **Abnahme:** Ein Ribbon-Klick und der zugehörige Shortcut lösen identischen Application-Befehl aus. Unbekannte ID liefert Diagnose. Relation/Dimension/Trim/Offset gehen nicht versehentlich auf Select.
-- **Grenze:** Noch nicht implementierte Fachtools bleiben deaktiviert.
+  1. Senkrechte, ausblendbare Werkzeugleiste aus registrierten Befehlen und Modulmetadaten erzeugen; unpassende Werkzeuge gesperrt statt versteckt.
+  2. Schwebende Kontextleiste zeigt je Auswahl (nichts, Ebene, Fläche, Skizzenbereich, Körper, Skizzenmodus) die passenden Befehle; der nächste Schritt ist hervorgehoben.
+  3. Befehlssuche (Strg+K), Tastenkürzel und Kontextmenü verwenden dieselbe Command-ID und Zustandsprüfung; Aktivierung bei Auswahl-/Werkzeug-/Dokumentwechsel aktualisieren.
+- **Abnahme:** Werkzeugleiste, Kontextleiste, Befehlssuche und Kürzel lösen für dieselbe ID denselben Application-Befehl aus. Unbekannte ID liefert Diagnose. Kein Befehl ist nur über die Kontextleiste erreichbar.
+- **Grenze:** Noch nicht implementierte Fachtools bleiben gesperrt. Kein Ribbon.
 
-## U05 – Generischen ToolPanelHost in die neue Shell integrieren
+## U05 – Schwebendes Werkzeugpanel über den generischen ToolPanelHost
 
 - **Voraussetzungen:** U04, D07.
-- **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08; `src/desktop/ToolPanelHost.cpp`, `src/desktop/SketchEditorToolController.cpp`, `src/desktop/SketchExtrusionToolController.cpp`, `apps/voelund-ui-preview/PreviewWindow.cpp`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
+- **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08, ADR 0012; `src/desktop/ToolPanelHost.cpp`, `src/desktop/SketchEditorToolController.cpp`, `src/desktop/SketchExtrusionToolController.cpp`, `src/desktop/`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
 - **Auftrag:**
-  1. ToolPanelHost besitzt genau eine aktive Sitzung; Parameterpanel ist reine Bindung an deren State.
-  2. OK/Cancel/Escape/Fokuswechsel gemäß K04 vereinheitlichen; Toolwechsel bei ungültiger Skizze blockiert mit Fehlermeldung.
-  3. Panel-Layout der genehmigten Oberfläche verwenden, alte Controller über Application-Vertrag anschließen.
-- **Abnahme:** A-UI-02 besteht für OK, Cancel, Escape und Toolwechsel. Cancel lässt Dokument/Undo/Dirty unverändert. Failed-Skizze startet kein Extrude-Panel.
-- **Grenze:** Keine zweite temporäre Parametersammlung im PreviewWindow.
+  1. ToolPanelHost besitzt genau eine aktive Sitzung und zeigt sie als schwebendes Panel am Viewport; Parameterfelder sind reine Bindung an deren State.
+  2. OK/Abbrechen/Escape/Fokuswechsel gemäß K04 vereinheitlichen; Toolwechsel bei ungültiger Skizze blockiert mit Fehlermeldung.
+  3. Docks „Properties“/„Tool“ ablösen; vorhandene Controller über den Application-Vertrag anschließen; erweiterte Optionen einklappbar, nie weggelassen.
+- **Abnahme:** A-UI-02 besteht für OK, Abbrechen, Escape und Toolwechsel. Abbrechen lässt Dokument/Undo/Dirty unverändert. Fehlgeschlagene Skizze startet kein Extrusionspanel.
+- **Grenze:** Keine zweite temporäre Parametersammlung. Layout nach ADR 0012.
 
-## U06 – Echte Dokumentprojektion für Titel, Tree und Eigenschaften anzeigen
+## U06 – Modellbaum mit Ursprüngen, Sichtbarkeit, Raster und Timeline aus echter Dokumentprojektion
 
 - **Voraussetzungen:** U02, U05, D11.
-- **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08; `src/desktop/ModelTreePanel.cpp`, `src/desktop/FeaturePropertiesPanel.cpp`, `src/desktop/MainWindow.cpp`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
+- **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08, ADR 0012; `src/desktop/ModelTreePanel.cpp`, `src/desktop/FeaturePropertiesPanel.cpp`, `src/desktop/MainWindow.cpp`, `src/viewport/BasePlanePresentation.cpp`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
 - **Auftrag:**
-  1. Tree liest echte Body-/Feature-IDs, Namen, Fehler und Suppressionstatus.
-  2. Titel aus Dokumentname und Dirty ableiten; Properties zeigen ausgewählte reale Parameter und Auswertungsstatus.
-  3. Auswahl zwischen Tree/Viewport/Properties über typed SelectionRef synchronisieren.
-- **Abnahme:** Neues/geladenes Dokument zeigt korrekte Inhalte statt Bracket/v12. Umbenennen und Undo aktualisieren alle Ansichten. Entfernte Auswahl wird bereinigt, ohne anderes Feature zu verändern.
-- **Grenze:** Timeline-Bearbeitung folgt M15; hier nur Datenprojektion.
+  1. Baum liest echte Körper-/Feature-IDs, Namen, Fehler und Unterdrückung; Ursprung des Dokuments und je Körper mit XY/XZ/YZ; Augen-Schalter für Ebenen, Skizzen, Körper und das Raster auf XY. Sichtbarkeit ist Ansichtszustand ohne Undo/Dirty.
+  2. Basisebenen aus V01b an die Ursprünge binden: im leeren Dokument sichtbar, neben Körpern dezent, Klicks auf Körper haben Vorrang.
+  3. Timeline unten als Projektion der Featurereihenfolge; Klick öffnet das Feature über die vorhandenen Edit-Wege. Titel aus Dokumentname und Speicherzustand; Auswahl zwischen Baum, Viewport und Timeline über typed SelectionRef synchronisieren.
+- **Abnahme:** Neues/geladenes Dokument zeigt korrekte Inhalte. Ausblenden einer Ebene im Baum entfernt sie aus Viewport und Pick, ohne Dirty. Umbenennen und Undo aktualisieren alle Ansichten. Timeline-Klick öffnet Skizze bzw. Extrusion.
+- **Grenze:** Rückrollmarke, Umordnen und Fehleranzeige in der Timeline folgen M15; hier nur Projektion und Öffnen.
 
 ## U07 – New/Open/Save und Close-Schutz in der gemeinsamen Shell anschließen
 
@@ -83,16 +81,16 @@ Die bestehende genehmigte Gestaltung bleibt erhalten. K03/K04/K07 sind Pflichtve
 - **Abnahme:** A-IO-01 und A-UI-03 bestehen: Cancel erhält Modell; Savefehler hält Fenster offen; Openfehler zerstört kein aktives Dokument; Save-As setzt Titel erst nach Erfolg.
 - **Grenze:** Keine neue cloudbasierte Dokumentverwaltung.
 
-## U08 – Sketch-Erzeugung zwischen beiden Shells vereinheitlichen
+## U08 – Skizzen-Erzeugung auf einen Weg vereinheitlichen
 
 - **Voraussetzungen:** U05, D07.
-- **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08; `apps/voelund-ui-preview/SketchBackend.cpp`, `src/desktop/SketchEditorCreation.cpp`, `src/application/SketchEditorSession.cpp`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
+- **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08, ADR 0012; `apps/voelund-ui-preview/SketchBackend.cpp`, `src/desktop/SketchEditorCreation.cpp`, `src/application/SketchEditorSession.cpp`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
 - **Auftrag:**
-  1. Gemeinsamen Application-Erzeugungsbefehl mit semantischen Ergebnisrollen vorbereiten und beide UI-Wege darauf abbilden.
+  1. Gemeinsamen Application-Erzeugungsbefehl mit semantischen Ergebnisrollen vorbereiten; der Produktweg ist maßgeblich.
   2. Duplizierte Snap-/Constraint-Erzeugung aus UI entfernen; Renderingadapter erhalten nur Preview-/Result-Daten.
-  3. Bestehende robuste Legacy-Fälle als Charakterisierungstests erhalten, Preview-Abweichungen ausdrücklich korrigieren.
+  3. Robuste Legacy-Fälle als Charakterisierungstests erhalten; der zweite Weg der UI-Vorschau wird nicht weiterentwickelt.
 - **Abnahme:** Rechteck, Circle, Arc und Ellipse aus beiden bisherigen Einstiegen erzeugen fachlich gleichen Editorzustand. Kein UI-Code berechnet IDs durch Einfügereihenfolge.
-- **Grenze:** Vollständige Werkzeugmatrix folgt S01/S04–S06; kein dritter Bridge-Layer mit eigener Fachlogik.
+- **Grenze:** Kein Ausbau von voelund-ui-preview; deren SketchBackend dient nur als Vergleich bis U12.
 
 ## U09 – Input und Drag als einzelne Benutzeraktion behandeln
 
@@ -119,24 +117,24 @@ Die bestehende genehmigte Gestaltung bleibt erhalten. K03/K04/K07 sind Pflichtve
 ## U11 – Vollständigen UI-Fluss automatisch prüfen
 
 - **Voraussetzungen:** U07, U08, U09, U10, S03, S07.
-- **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08; `tests/CMakeLists.txt`, `apps/voelund-cad/main.cpp`, `src/desktop/MainWindow.cpp`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
+- **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08, ADR 0012; `tests/CMakeLists.txt`, `apps/voelund-cad/main.cpp`, `src/desktop/MainWindow.cpp`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
 - **Auftrag:**
-  1. Qt-Test klickt echte registrierte Aktionen, setzt Felder und bestätigt Panels nach Eventloopstart.
-  2. Basisebene→Skizze→Constraint→OK→Edit→Cancel→Save/Open über tatsächliche UI ausführen.
-  3. Rendering-Readiness, Dokumentrevision, Tree-Inhalte und Fehlerzustände prüfen; visuelle Bilder ergänzen fachliche Assertions.
+  1. Qt-Test klickt echte registrierte Aktionen in Werkzeugleiste, Kontextleiste und Panel, setzt Felder und bestätigt nach Eventloopstart.
+  2. Ursprung/Ebene→Skizze→Constraint→Skizze fertig→Bearbeiten über Timeline→Abbrechen→Speichern/Öffnen über die tatsächliche UI ausführen.
+  3. Rendering-Readiness, Dokumentrevision, Baum-/Timeline-Inhalte und Fehlerzustände prüfen; Aufnahmen hell/dunkel ergänzen fachliche Assertions.
 - **Abnahme:** A-UI-01 Skizzenteil und A-UI-02/03 bestehen. Absichtlich abgetrennter Handler macht Test rot. Extrude-Teil wird in M04 ergänzt. A-VIS-01 bestanden: Bilder tatsächlich selbst betrachtet, Layout-/Overlayfehler korrigiert und mit neuer Aufnahme nachgeprüft.
 - **Grenze:** Kein Test, der nur Backendmethoden aufruft und danach Fenstersichtbarkeit bestätigt.
 
 ## U12 – Eine produktive Anwendung und einen Composition Root festlegen
 
 - **Voraussetzungen:** U03, U04, U05, U06, U07, U11.
-- **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08; `apps/voelund-cad/CMakeLists.txt`, `apps/voelund-ui-preview/CMakeLists.txt`, `src/desktop/MainWindow.cpp`, `apps/voelund-ui-preview/PreviewCanvas.cpp`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
+- **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08, ADR 0012; `apps/voelund-cad/CMakeLists.txt`, `apps/voelund-ui-preview/CMakeLists.txt`, `src/desktop/MainWindow.cpp`, `apps/voelund-ui-preview/PreviewCanvas.cpp`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
 - **Auftrag:**
-  1. Produkt `voelund-cad` mit genehmigter gemeinsamer Shell bauen und installieren.
-  2. Preview auf optionalen Darstellungs-/Entwicklungsharness ohne eigene Fachlogik reduzieren oder nach Parität entfernen.
-  3. Fake-Canvas und verwaiste Handler entfernen; verwendete Screenshots/Doku auf produktiven Einstieg umstellen.
+  1. Produkt `voelund-cad` mit der Shell nach ADR 0012 bauen und installieren.
+  2. voelund-ui-preview nach belegter Funktionsparität entfernen; Fake-Canvas, Fake-Timeline und verwaiste Handler mit entfernen.
+  3. Screenshots und Doku auf den produktiven Einstieg umstellen.
 - **Abnahme:** Installiertes Produkt startet dieselbe getestete Shell. Kein zweiter SketchBackend mit eigenen Regeln, keine Fake-Timeline. Ein kompletter New/Sketch/Save/Open-Fluss besteht.
-- **Grenze:** Keine Löschung der Vergleichsbasis vor belegter Funktions-/Gestaltungsparität.
+- **Grenze:** Keine Löschung der Vorschau vor belegter Funktionsparität; ihre Gestaltung ist keine Vergleichsbasis mehr (ADR 0012).
 
 ## S01 – Semantischen SketchCreationResult abschließen
 
@@ -273,13 +271,13 @@ Die bestehende genehmigte Gestaltung bleibt erhalten. K03/K04/K07 sind Pflichtve
 ## S13 – Skizzen-UX und Auswahlmodi abschließen
 
 - **Voraussetzungen:** S06, S07, S09, S10, S11, S12.
-- **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08; `src/viewport/SketchBoxSelection.cpp`, `src/viewport/SketchEditorInteraction.cpp`, `src/desktop/SketchEditorToolController.cpp`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
+- **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08, ADR 0012; `src/viewport/SketchBoxSelection.cpp`, `src/viewport/SketchEditorInteraction.cpp`, `src/desktop/SketchEditorToolController.cpp`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
 - **Auftrag:**
   1. Window/Crossing-Auswahl, additive Auswahl, Escape-Abfolge und wiederholte Erzeugung eindeutig machen.
   2. Grid/Dimensionen/projizierte Geometrie/Auto-Constraints-Schalter tatsächlich mit Ansichts- oder Fachzustand verbinden.
   3. Fehler an betroffenen Elementen, numerische Eingabe und Tastaturfokus konsistent anzeigen.
 - **Abnahme:** Alle vier Schalter verändern den benannten Zustand; Ansichtsänderungen erzeugen kein Dirty. Auswahl mit Ellipse/Arc und Constraint-Label kollidiert nicht. Escape beendet zuerst Vorschau, dann Werkzeug nach dokumentierter Regel.
-- **Grenze:** Kein neues Ribbon-Design und keine versteckten Fachregeln in Eventhandlern.
+- **Grenze:** Kein eigenes Skizzen-Ribbon: Skizzenwerkzeuge sitzen nach ADR 0012 in der Kontextleiste; keine versteckten Fachregeln in Eventhandlern.
 
 ## S14 – Skizzenumfang als Ganzes abnehmen und dokumentieren
 

@@ -21,6 +21,13 @@ und im **Modellbaum ein- und ausblendbar** sein. Damit ist die Entscheidung „k
 Ursprungsordner im Modellbaum“ überholt. Die Umsetzung erfolgt im Rahmen des
 UI-Konzepts UX01. V01b gilt bis dahin als Zwischenstand und wird nicht abgenommen.
 
+## Festlegung nach UX01 (04.10.2026)
+
+Das Zielbild ist in [ADR 0012](../adr/0012-ui-shell-concept.md) festgelegt. Die Ebenen
+werden in U06 an Ursprünge im Modellbaum gebunden (Dokument und je Körper, mit
+Augen-Schalter). V01c läuft danach in der neuen Oberfläche. V01 hängt deshalb
+zusätzlich von U06 ab.
+
 ## Unterpakete
 
 | Paket | Inhalt | UI |

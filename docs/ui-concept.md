@@ -85,5 +85,49 @@ dem 04.10.2026 gilt sie nicht mehr als Grundlage; das Zielbild entsteht neu in U
 
 ## Teil 2 – Zielbild
 
-Offen; wird mit dem Nutzer erarbeitet (klickbare Mockups), danach ADR und Anpassung von
-U02–U12 und S13.
+Vom Nutzer am 04.10.2026 freigegeben; verbindlich festgehalten in
+[ADR 0012](adr/0012-ui-shell-concept.md). Grundlage ist der klickbare Prototyp
+„Völund UI-Konzept“ (Quelle `artifacts/ux01-mockup/`, nicht versioniert).
+
+### Rückmeldung des Nutzers
+
+- „Sehr einfach ohne viel Lärm.“ Die Grundrichtung wird so umgesetzt.
+- Die senkrechte Werkzeugleiste bleibt, ausblendbar.
+- Die Timeline wird ausdrücklich gewünscht.
+- Das Raster auf XY ist zu Beginn nützlich und lässt sich ausblenden.
+- Parameter gelten dokumentweit. Eine dateiübergreifende Bibliothek ist vorerst nicht
+  vorgesehen.
+- Bedingung: Völund darf nicht zum Spielzeug-CAD werden; es bleibt vollparametrisch
+  (siehe ADR 0012).
+- Ein endgültiges Urteil fällt erst beim Modellieren eines echten Teils im Produkt. Die
+  Umsetzung bleibt deshalb in kleinen, vorführbaren Schritten.
+
+### Ablauf im Zielbild
+
+1. Ein leeres Dokument zeigt Ursprung, Ebenen und Raster. Ein Hinweis lautet „Ebene
+   oder Fläche anklicken“.
+2. Ist eine Ebene oder Fläche gewählt, zeigt die Kontextleiste „Skizze erstellen“
+   (hervorgehoben), „Ebene versetzen“ und „Ausblenden“.
+3. Im Skizzenmodus sitzen die Skizzenwerkzeuge in der Kontextleiste. Das Panel zeigt
+   Bestimmtheit und Maße, `=A` bindet ein Maß an einen Parameter. „Skizze fertig“
+   schließt den Modus.
+4. Ein Klick auf einen Bereich der Skizze wählt ihn; danach sind „Extrudieren“ und
+   „Drehen“ möglich.
+5. Das Extrusionspanel bietet Distanz (auch `=D`), Richtung und Ergebnis (neuer Körper,
+   vereinigen, abziehen) mit Live-Vorschau sowie OK/Abbrechen.
+6. Danach stehen der Körper mit Ursprung, Skizze und Feature im Baum, und die Timeline
+   zeigt „Skizze 1“ und „Extrusion 1“. Ein Klick öffnet den jeweiligen Schritt.
+
+### Zuordnung zu Paketen
+
+| Paket | Inhalt im Zielbild |
+|---|---|
+| U01 | Befehlstabelle des Produkts; welche Befehle Werkzeugleiste und Kontextleiste zeigen |
+| U02 | Shell-Projektion: Titel, Speicherzustand, Auswahl, Befehlsverfügbarkeit, Werkzeugzustand |
+| U03 | Gestaltung als Desktop-Komponenten: Farben hell/dunkel, Schriften, Symbole, ViewCube, Grundlayout |
+| U04 | Werkzeugleiste, Kontextleiste und Befehlssuche an der CommandRegistry |
+| U05 | Schwebendes Werkzeugpanel mit OK/Abbrechen/Escape |
+| U06 | Modellbaum mit Ursprüngen und Augen-Schaltern, Raster, Timeline als Projektion |
+| V01 | UI-Test des ganzen Ablaufs (V01c) in der neuen Oberfläche |
+| PAR02 | Parameterpanel rechts, `=Name` in Maßfeldern |
+| M15 | Timeline mit Rückrollmarke, Fehlern und Umordnen |

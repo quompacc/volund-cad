@@ -20,3 +20,5 @@ Current decisions:
 - [0010 – Native Konstruktionsaktionen und nachrüstbare Analyse](0010-native-actions-and-analysis-extension.md)
 
 - [0011 – Linux-Desktop als gleichrangiges Ziel, CI auf dem Testrechner](0011-linux-desktop-and-ci-runner.md)
+
+- [0012 – Schlanke Arbeitsoberfläche mit Werkzeugleiste, Kontextleiste und Timeline](0012-ui-shell-concept.md)
