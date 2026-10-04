@@ -2,7 +2,12 @@ add_library(
     voelund_desktop STATIC
     FeaturePropertiesPanel.cpp
     DocumentActions.cpp
+    CommandActions.cpp
+    CommandPalette.cpp
+    ContextBar.cpp
+    ContextCommands.cpp
     MainWindow.cpp
+    MainWindowCommands.cpp
     MainWindowParameters.cpp
     MainWindowReferenceRepair.cpp
     ReferenceRepairDialog.cpp
@@ -25,8 +30,8 @@ add_library(
     SketchViewAdapter.cpp
     Theme.cpp
     ToolPanelHost.cpp
+    ToolRail.cpp
     ViewCube.cpp
-    WorkspaceToolbar.cpp
 )
 
 target_include_directories(

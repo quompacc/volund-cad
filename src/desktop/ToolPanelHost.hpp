@@ -57,6 +57,8 @@ class ToolPanelHost final : public QDockWidget {
 
     void begin(ToolPanelDefinition definition);
     void end();
+    // Notified when a tool session starts or ends (U04: the shell hides its context bar).
+    void setActivityHandler(std::function<void()> handler);
     void setAcceptEnabled(bool enabled);
     void setGuidance(const QString& guidance);
     void setErrorCommitHandler(std::function<void()> handler);
@@ -77,6 +79,7 @@ class ToolPanelHost final : public QDockWidget {
     QPushButton* cancelButton_{nullptr};
     QPushButton* errorCommitButton_{nullptr};
     std::function<void()> errorCommitHandler_;
+    std::function<void()> activityHandler_;
     QShortcut* escapeShortcut_{nullptr};
     QShortcut* undoShortcut_{nullptr};
     QShortcut* redoShortcut_{nullptr};

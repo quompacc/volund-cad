@@ -37,11 +37,12 @@ class MainWindow final : public QMainWindow {
     void createModelTree();
     void createPropertiesPanel();
     void createToolPanel();
-    void createHistoryToolbar();
+    void createHistoryActions();
+    void createCommandSurfaces();
+    void syncShell();
     void createHeader();
     void applyTheme(ThemeMode mode);
-    void createWorkspaceToolbar();
-    void createTransformSettingsToolbar();
+    void createCommands();
     void connectInteractions();
     void syncModelTree();
     void syncProperties();

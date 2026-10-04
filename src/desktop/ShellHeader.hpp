@@ -20,6 +20,8 @@ class ShellHeader final : public QWidget {
 
     void setFileMenu(QMenu& menu);
     void setActions(QAction& undo, QAction& redo, QAction& theme);
+    // U04: command search field and the tool rail switch.
+    void setViewActions(QAction& search, QAction& toolRail);
     void display(const ShellState& state);
     void setTheme(ThemeMode mode);
 
@@ -31,6 +33,8 @@ class ShellHeader final : public QWidget {
     QToolButton* undoButton_{nullptr};
     QToolButton* redoButton_{nullptr};
     QToolButton* themeButton_{nullptr};
+    QToolButton* searchButton_{nullptr};
+    QToolButton* railButton_{nullptr};
 };
 
 } // namespace voelund::desktop

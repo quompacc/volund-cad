@@ -18,10 +18,12 @@ struct CommandDescriptor final {
     bool checkable;
     std::function<void(bool)> trigger;
     std::function<bool()> isEnabled;
+    // Short label for the tool rail and context bar; empty uses the title (U04).
+    std::string shortTitle{};
 };
 
 class WorkspaceModule {
-public:
+  public:
     virtual ~WorkspaceModule() = default;
     [[nodiscard]] virtual std::string id() const = 0;
     [[nodiscard]] virtual std::string title() const = 0;

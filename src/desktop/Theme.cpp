@@ -94,6 +94,21 @@ QToolButton:disabled { color: @faint; }
 QToolButton::menu-indicator { image: none; width: 0; }
 QToolButton:focus { border-color: @accent; }
 
+#toolRail, #contextBar, #commandSearch { background: @panel; border: 1px solid @line;
+    border-radius: 14px; }
+#toolRail QToolButton { font-size: 11px; padding: 6px 2px; }
+#toolRailSeparator, #contextDivider { background: @line; }
+#contextTitle { font-weight: 600; padding: 0 8px; }
+QToolButton[primary="true"] { background: @accent; color: @onAccent; border-color: @accent; }
+QToolButton[primary="true"]:hover { background: @accentHover; }
+QToolButton[primary="true"]:disabled { background: @accentSoft; color: @muted; }
+#commandSearchButton { background: @field; border: 1px solid @line; color: @muted;
+    text-align: left; padding: 5px 12px; }
+#commandSearch QListWidget { background: @panel; border: 0; outline: 0; }
+#commandSearch QListWidget::item { min-height: 30px; border-radius: 6px; padding: 0 6px; }
+#commandSearch QListWidget::item:selected { background: @accentSoft; color: @accentInk; }
+#commandSearch QListWidget::item:disabled { color: @faint; }
+
 QPushButton { background: @panel; border: 1px solid @line; border-radius: 8px;
     padding: 6px 14px; min-height: 22px; }
 QPushButton:hover { background: @soft; }
@@ -149,6 +164,7 @@ QScrollBar::handle:vertical { background: @line; border-radius: 4px; min-height:
 QScrollBar:horizontal { background: transparent; height: 10px; margin: 0; }
 QScrollBar::handle:horizontal { background: @line; border-radius: 4px; min-width: 24px; }
 QScrollBar::add-line, QScrollBar::sub-line { width: 0; height: 0; }
+QScrollBar::add-page, QScrollBar::sub-page { background: none; }
 )");
     const std::pair<const char*, QString> tokens[] = {{"@bg", hex(t.background)},
                                                       {"@panel", hex(t.panel)},

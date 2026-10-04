@@ -68,6 +68,34 @@ void themes() {
     capture(window, "u03-dark");
     theme->trigger(); // Leave the stored preference on light.
 }
+QAction* command(QWidget& window, const char* id) {
+    for (auto* action : window.findChildren<QAction*>())
+        if (action->property("commandId").toString() == QLatin1String(id))
+            return action;
+    throw std::runtime_error(std::string("missing command ") + id);
+}
+// U04: tool rail, context bar and command search.
+void commandSurfaces() {
+    application::CadSession session;
+    session.newDocument();
+    desktop::MainWindow window(session);
+    auto& viewport = open(window);
+    capture(window, "u04-empty");
+    command(window, "solid.create.box")->trigger();
+    test::render(viewport);
+    capture(window, "u04-box-selected");
+    command(window, "solid.modify.transform")->trigger();
+    QApplication::processEvents();
+    test::render(viewport);
+    capture(window, "u04-transform");
+    command(window, "solid.modify.transform")->trigger();
+    command(window, "view.command_search")->trigger();
+    QApplication::processEvents();
+    if (auto* search = window.findChild<QWidget*>(QStringLiteral("commandSearch"))) {
+        search->grab().save(directory + "/ux01-u04-search.png");
+        search->hide();
+    }
+}
 void defaultDocument() {
     application::CadSession session;
     desktop::MainWindow window(session);
@@ -123,6 +151,7 @@ int main(int argc, char** argv) {
     try {
         emptyStart();
         themes();
+        commandSurfaces();
         defaultDocument();
         existingSketch();
     } catch (const std::exception& error) {

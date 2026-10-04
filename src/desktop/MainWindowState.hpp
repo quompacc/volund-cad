@@ -1,4 +1,7 @@
 #pragma once
+#include "CommandActions.hpp"
+#include "CommandPalette.hpp"
+#include "ContextBar.hpp"
 #include "DocumentActions.hpp"
 #include "FeaturePropertiesPanel.hpp"
 #include "ShellHeader.hpp"
@@ -7,8 +10,8 @@
 #include "SketchExtrusionToolController.hpp"
 #include "Theme.hpp"
 #include "ToolPanelHost.hpp"
+#include "ToolRail.hpp"
 #include "ViewCube.hpp"
-#include "WorkspaceToolbar.hpp"
 #include <QAction>
 #include <functional>
 #include <optional>
@@ -16,7 +19,6 @@
 #include <voelund/desktop/MainWindow.hpp>
 #include <voelund/workspaces/CommandRegistry.hpp>
 class QDockWidget;
-class QToolBar;
 class QDoubleSpinBox;
 class QLabel;
 namespace voelund::desktop {
@@ -55,7 +57,11 @@ class MainWindow::Impl final {
     ViewCube* viewCube{nullptr};
     QAction* themeAction{nullptr};
     ThemeMode themeMode{ThemeMode::light};
-    QToolBar* repairToolbar{nullptr};
+    ToolRail* toolRail{nullptr};
+    ContextBar* contextBar{nullptr};
+    CommandPalette* commandPalette{nullptr};
+    QAction* searchAction{nullptr};
+    QAction* toolRailAction{nullptr};
     QAction* undoAction{nullptr};
     QAction* redoAction{nullptr};
     QAction* repairAction{nullptr};
@@ -70,7 +76,7 @@ class MainWindow::Impl final {
     std::optional<viewport::PlanarFaceSelection> selectedPlanarFace;
     std::optional<document::DatumPlane> selectedDatum; // V01b: base plane picked in viewport.
     workspaces::CommandRegistry commandRegistry;
-    std::unique_ptr<WorkspaceToolbar> workspaceToolbar;
+    std::unique_ptr<CommandActions> commandActions;
     std::unique_ptr<DocumentActions> documentActions;
 };
 

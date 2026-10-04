@@ -140,25 +140,40 @@ entsprechen. Registry-Befehle verwenden ihre registrierte ID. Die heutigen Einst
 Menü und Toolbars; Werkzeugleiste, Kontextleiste und Befehlssuche nach ADR 0012 binden
 in U04 an dieselben IDs.
 
-| Command-ID | Heute | Ziel (ADR 0012) | Controller | Aktiv, wenn | Test |
-|---|---|---|---|---|---|
-| `document.new` | Dateimenü der Kopfzeile, Strg+N | Kopfzeile/Menü, Befehlssuche | DocumentActions | immer | document_actions |
-| `document.open` | Dateimenü der Kopfzeile, Strg+O | Kopfzeile/Menü, Befehlssuche | DocumentActions | immer | document_actions |
-| `document.save` | Dateimenü der Kopfzeile, Strg+S | Kopfzeile/Menü, Befehlssuche | DocumentActions | immer | document_actions |
-| `document.save_as` | Dateimenü der Kopfzeile | Menü, Befehlssuche | DocumentActions | immer | document_actions |
-| `document.duplicate` | Dateimenü der Kopfzeile | Menü, Befehlssuche | DocumentActions | immer | document_actions |
-| `history.undo` | Kopfzeile, Strg+Z | Kopfzeile | MainWindow | Historie hat einen Schritt | command_inventory |
-| `history.redo` | Kopfzeile, Strg+Y | Kopfzeile | MainWindow | Historie hat einen Schritt | command_inventory |
-| `repair.references` | Toolbar Repair | Panel des fehlerhaften Features (U10) | ReferenceRepairDialog | Skizze gewählt | reference_repair_flow |
-| `repair.all` | Toolbar Repair | Panel des fehlerhaften Features (U10) | DocumentRepairDialog | Dokument hat Features | document_repair_flow |
-| `transform.snap` | Toolbar Transform | Panel von Verschieben/Drehen (U05) | Viewport | immer | – |
-| `view.theme` | Kopfzeile (Sonne/Mond) | Kopfzeile, Befehlssuche | MainWindow | immer | command_inventory |
-| `solid.create.box` | Toolbar Solid | Kontextleiste (leer), Werkzeugleiste | CadSession | immer | command_inventory, viewport_startup |
-| `solid.create.cylinder` | Toolbar Solid | Kontextleiste (leer), Werkzeugleiste | CadSession | ein letztes Feature mit Geometrie existiert | command_inventory |
-| `solid.create.sketch` | Toolbar Solid | Kontextleiste (Ebene/Fläche), Werkzeugleiste | SketchEditorToolController | Ebene oder ebene Fläche gewählt, Modell aktuell | base_planes |
-| `solid.create.extrude_profiles` | Toolbar Solid | Kontextleiste (Bereich), Werkzeugleiste | SketchExtrusionToolController | Skizzenbereich gewählt | region_selection_acceptance |
-| `solid.modify.transform` | Toolbar Solid, M | Kontextleiste (Körper), Werkzeugleiste | Viewport-Gizmo | getrennter Körper gewählt | viewport_startup |
-| `solid.modify.edit_sketch` | Toolbar Solid | Kontextleiste (Skizze), Timeline | SketchEditorToolController | Skizze gewählt | support_binding_flow |
+| Command-ID | Einstieg (seit U04) | Controller | Aktiv, wenn | Test |
+|---|---|---|---|---|
+| `document.new` | Dateimenü, Strg+N, Suche | DocumentActions | immer | document_actions |
+| `document.open` | Dateimenü, Strg+O, Suche | DocumentActions | immer | document_actions |
+| `document.save` | Dateimenü, Strg+S, Suche | DocumentActions | immer | document_actions |
+| `document.save_as` | Dateimenü, Suche | DocumentActions | immer | document_actions |
+| `document.duplicate` | Dateimenü, Suche | DocumentActions | immer | document_actions |
+| `history.undo` | Kopfzeile, Strg+Z, Suche | MainWindow | Historie hat einen Schritt | command_inventory |
+| `history.redo` | Kopfzeile, Strg+Y, Suche | MainWindow | Historie hat einen Schritt | command_inventory |
+| `repair.references` | Kontextleiste (Skizze), Suche; später am Feature (U10) | ReferenceRepairDialog | Skizze gewählt | reference_repair_flow |
+| `repair.all` | Suche; später am Feature (U10) | DocumentRepairDialog | Dokument hat Features | document_repair_flow |
+| `transform.snap` | Kontextleiste (Verschieben/Drehen), Suche | Viewport | immer | command_surfaces |
+| `view.theme` | Kopfzeile (Sonne/Mond), Suche | MainWindow | immer | command_inventory |
+| `view.command_search` | Kopfzeile (Suchfeld), Strg+K | CommandPalette | immer | command_surfaces |
+| `view.tool_rail` | Kopfzeile (Werkzeugleiste), Suche | MainWindow | immer | command_surfaces |
+| `solid.create.box` | Werkzeugleiste, Kontextleiste (leer), Suche | CadSession | immer | command_inventory, command_surfaces |
+| `solid.create.cylinder` | Werkzeugleiste, Kontextleiste (leer, Feature), Suche | CadSession | ein letztes Feature mit Geometrie existiert | command_inventory |
+| `solid.create.sketch` | Werkzeugleiste, Kontextleiste (Ebene/Fläche, primär), Suche | SketchEditorToolController | Ebene oder ebene Fläche gewählt, Modell aktuell | base_planes |
+| `solid.create.extrude_profiles` | Werkzeugleiste, Kontextleiste (Bereich, primär), Suche | SketchExtrusionToolController | Skizzenbereich gewählt | region_selection_acceptance |
+| `solid.modify.transform` | Werkzeugleiste („Bewegen“), Kontextleiste (Feature), M, Suche | Viewport-Gizmo | getrennter Körper gewählt | viewport_startup |
+| `solid.modify.edit_sketch` | Werkzeugleiste („Bearbeiten“), Kontextleiste (Skizze, primär), Suche | SketchEditorToolController | Skizze gewählt | support_binding_flow |
+
+Die Kontextleiste zeigt je Auswahl (`ContextCommands`):
+
+| Auswahl | Titel | Befehle (primär fett) |
+|---|---|---|
+| nichts | Ebene oder Fläche anklicken | Skizze, Quader, Zylinder |
+| Basisebene | XY-/XZ-/YZ-Ebene | **Skizze** |
+| ebene Fläche | Ebene Fläche | **Skizze** |
+| Skizzenbereich | Skizzenbereich | **Extrudieren**, Bearbeiten |
+| Skizze, Skizzenelement | Skizze | **Bearbeiten**, Referenzen reparieren |
+| Feature | Quader/Zylinder/Extrusion | Bewegen, Zylinder |
+| Werkzeug Verschieben/Drehen | Verschieben/Drehen | Fangen, Bewegen, Fangwerte |
+| Skizzeneditor, Extrusion | – (Leiste aus; das Panel trägt die Bedienung) | – |
 
 Bereinigt in U01:
 

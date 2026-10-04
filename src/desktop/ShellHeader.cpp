@@ -58,6 +58,18 @@ ShellHeader::ShellHeader(QWidget* parent) : QWidget(parent) {
     layout->addWidget(undoButton_);
     layout->addWidget(redoButton_);
     layout->addStretch(1);
+    searchButton_ = new QToolButton(this);
+    searchButton_->setObjectName(QStringLiteral("commandSearchButton"));
+    searchButton_->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    searchButton_->setIconSize(QSize(16, 16));
+    searchButton_->setMinimumWidth(320);
+    layout->addWidget(searchButton_);
+    layout->addStretch(1);
+    railButton_ = new QToolButton(this);
+    railButton_->setObjectName(QStringLiteral("toolRailButton"));
+    railButton_->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    railButton_->setIconSize(QSize(18, 18));
+    layout->addWidget(railButton_);
     themeButton_ = iconButton(this, "themeButton");
     layout->addWidget(themeButton_);
     setTheme(ThemeMode::light);
@@ -69,6 +81,11 @@ void ShellHeader::setActions(QAction& undo, QAction& redo, QAction& theme) {
     undoButton_->setDefaultAction(&undo);
     redoButton_->setDefaultAction(&redo);
     themeButton_->setDefaultAction(&theme);
+}
+
+void ShellHeader::setViewActions(QAction& search, QAction& toolRail) {
+    searchButton_->setDefaultAction(&search);
+    railButton_->setDefaultAction(&toolRail);
 }
 
 void ShellHeader::display(const ShellState& state) {

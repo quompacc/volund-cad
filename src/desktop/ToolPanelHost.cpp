@@ -242,6 +242,8 @@ void ToolPanelHost::begin(ToolPanelDefinition definition) {
     acceptButton_->setEnabled(false);
     show();
     raise();
+    if (activityHandler_)
+        activityHandler_();
 }
 
 void ToolPanelHost::end() {
@@ -249,6 +251,12 @@ void ToolPanelHost::end() {
     hide();
     clearParameters();
     definition_ = {};
+    if (activityHandler_)
+        activityHandler_();
+}
+
+void ToolPanelHost::setActivityHandler(std::function<void()> handler) {
+    activityHandler_ = std::move(handler);
 }
 
 void ToolPanelHost::setAcceptEnabled(bool enabled) { acceptButton_->setEnabled(enabled); }

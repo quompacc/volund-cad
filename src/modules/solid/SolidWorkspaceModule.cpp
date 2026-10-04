@@ -55,7 +55,8 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
     commands_.push_back({"solid.modify.transform", "Verschieben/Drehen",
                          "Gewählten getrennten Körper verschieben oder drehen", "M",
                          workspaces::CommandGroup::modify, true, true,
-                         std::move(services.transform), std::move(services.canTransform)});
+                         std::move(services.transform), std::move(services.canTransform),
+                         "Bewegen"});
     commands_.push_back({"solid.modify.edit_sketch",
                          "Skizze bearbeiten",
                          "Geometrie der gewählten Skizze bearbeiten",
@@ -64,7 +65,8 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                          true,
                          false,
                          simpleCommand(std::move(services.editSketch)),
-                         std::move(services.canEditExistingSketch)});
+                         std::move(services.canEditExistingSketch),
+                         "Bearbeiten"});
 }
 
 std::string SolidWorkspaceModule::id() const { return "solid"; }
