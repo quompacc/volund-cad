@@ -115,6 +115,9 @@ QToolButton#timelineStep:checked { border-color: @accent; background: @accentSof
     border-radius: 14px; }
 #toolRail QToolButton { font-size: 11px; padding: 6px 2px; }
 #toolRailSeparator, #contextDivider { background: @line; }
+#railGroupTitle { color: @muted; font-size: 11px; padding: 6px 4px 0 4px; }
+#sketchToolPage, #sketchToolContent { background: transparent; }
+#sketchToolContent QToolButton { font-size: 12px; padding: 4px 4px; text-align: left; }
 #contextTitle { font-weight: 600; padding: 0 8px; }
 QToolButton[primary="true"] { background: @accent; color: @onAccent; border-color: @accent; }
 QToolButton[primary="true"]:hover { background: @accentHover; }

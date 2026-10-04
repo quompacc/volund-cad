@@ -24,8 +24,6 @@
 #include <utility>
 
 namespace voelund::desktop {
-namespace {
-
 QString compactActionLabel(const std::string& id, const QString& fallback) {
     static const std::vector<std::pair<std::string, QString>> labels{
         {"horizontal", QObject::tr("Waagrecht")},
@@ -69,8 +67,6 @@ QString compactActionLabel(const std::string& id, const QString& fallback) {
     const auto match = std::ranges::find(labels, id, &decltype(labels)::value_type::first);
     return match == labels.end() ? fallback : match->second;
 }
-
-} // namespace
 
 ToolPanelHost::ToolPanelHost(QWidget* host)
     : FloatingCard(*host, QStringLiteral("activeToolPanel")) {
@@ -190,11 +186,14 @@ void ToolPanelHost::begin(ToolPanelDefinition definition) {
             }
             connect(group, &QButtonGroup::idClicked, this,
                     [this, parameterId = parameter.id](int index) {
-                        if (definition_.choiceChanged)
-                            definition_.choiceChanged(parameterId, index);
+                        chooseOption(parameterId, index);
                     });
             // The tool choice spans the card; its buttons name themselves.
             parameterLayout_->addRow(choices);
+            choiceIndices_.emplace_back(parameter.id, parameter.currentIndex);
+            toolGroup_ = group;
+            toolChoices_ = choices;
+            choices->setVisible(!toolsInRail_);
             continue;
         }
         auto* input = new QComboBox(content_);
@@ -243,8 +242,10 @@ void ToolPanelHost::begin(ToolPanelDefinition definition) {
         ++match->count;
         actionInputs_.emplace_back(action.id, button);
     }
-    actionTabs_->setVisible(!definition_.actions.empty());
+    actionTabs_->setVisible(!definition_.actions.empty() && !toolsInRail_);
     acceptButton_->setEnabled(false);
+    active_ = true;
+    syncParameterGroup();
     show();
     raise();
     if (activityHandler_)
@@ -256,8 +257,65 @@ void ToolPanelHost::end() {
     hide();
     clearParameters();
     definition_ = {};
+    active_ = false;
     if (activityHandler_)
         activityHandler_();
+}
+
+void ToolPanelHost::setToolsInRail(bool inRail) {
+    toolsInRail_ = inRail;
+    if (toolChoices_ != nullptr)
+        toolChoices_->setVisible(!inRail);
+    actionTabs_->setVisible(!definition_.actions.empty() && !inRail);
+    syncParameterGroup();
+}
+
+void ToolPanelHost::syncParameterGroup() {
+    // Hide "Aktive Werte" when none of its rows is shown, so the card stays compact.
+    bool any = toolChoices_ != nullptr && !toolsInRail_;
+    for (const auto& [id, input] : lengthInputs_)
+        any = any || !input->isHidden();
+    any = any || !choiceInputs_.empty();
+    parameterContainer_->setVisible(any);
+    content_->adjustSize();
+    refit();
+}
+
+void ToolPanelHost::setStateHandler(std::function<void()> handler) {
+    stateHandler_ = std::move(handler);
+}
+
+bool ToolPanelHost::isActionEnabled(const std::string& actionId) const {
+    for (const auto& [id, input] : actionInputs_)
+        if (id == actionId)
+            return input->isEnabled();
+    return false;
+}
+
+int ToolPanelHost::choiceIndex(const std::string& choiceId) const {
+    for (const auto& [id, index] : choiceIndices_)
+        if (id == choiceId)
+            return index;
+    return -1;
+}
+
+void ToolPanelHost::chooseOption(const std::string& choiceId, int index) {
+    for (auto& [id, current] : choiceIndices_)
+        if (id == choiceId)
+            current = index;
+    if (toolGroup_ != nullptr && choiceId == "tool")
+        if (auto* button = toolGroup_->button(index))
+            button->setChecked(true);
+    if (definition_.choiceChanged)
+        definition_.choiceChanged(choiceId, index);
+    if (stateHandler_)
+        stateHandler_();
+}
+
+void ToolPanelHost::triggerAction(const std::string& actionId) {
+    if (!isActionEnabled(actionId) || !definition_.actionTriggered)
+        return;
+    definition_.actionTriggered(actionId);
 }
 
 void ToolPanelHost::setActivityHandler(std::function<void()> handler) {
@@ -299,6 +357,7 @@ void ToolPanelHost::setLengthVisible(const std::string& parameterId, bool visibl
         input->setVisible(visible);
         if (QWidget* label = parameterLayout_->labelForField(input))
             label->setVisible(visible);
+        syncParameterGroup();
         return;
     }
 }
@@ -306,7 +365,11 @@ void ToolPanelHost::setLengthVisible(const std::string& parameterId, bool visibl
 void ToolPanelHost::setActionEnabled(const std::string& actionId, bool enabled) {
     for (const auto& [id, input] : actionInputs_) {
         if (id == actionId) {
+            if (input->isEnabled() == enabled)
+                return;
             input->setEnabled(enabled);
+            if (stateHandler_)
+                stateHandler_();
             return;
         }
     }
@@ -322,6 +385,9 @@ void ToolPanelHost::clearParameters() {
     lengthInputs_.clear();
     choiceInputs_.clear();
     actionInputs_.clear();
+    choiceIndices_.clear();
+    toolGroup_ = nullptr;
+    toolChoices_ = nullptr;
     while (actionTabs_->count() > 0) {
         QWidget* page = actionTabs_->widget(0);
         actionTabs_->removeTab(0);

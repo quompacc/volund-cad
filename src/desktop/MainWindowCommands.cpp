@@ -118,8 +118,13 @@ void MainWindow::createCommandSurfaces() {
     impl_->toolRail->setVisible(impl_->toolRailAction->isChecked());
     connect(impl_->toolRailAction, &QAction::toggled, this, [this](bool visible) {
         impl_->toolRail->setVisible(visible);
+        // Without the rail the panel offers the sketch tools itself (U13).
+        impl_->toolPanel->setToolsInRail(visible);
         QSettings().setValue(QStringLiteral("ui/toolRail"), visible);
     });
+    impl_->sketchActions = std::make_unique<SketchToolActions>(*this, *impl_->toolPanel);
+    impl_->toolPanel->setToolsInRail(impl_->toolRailAction->isChecked());
+    impl_->toolPanel->setStateHandler([this] { impl_->sketchActions->sync(); });
     impl_->commandPalette = new CommandPalette(*this);
     connect(impl_->searchAction, &QAction::triggered, this,
             [this] { impl_->commandPalette->openSearch(); });
@@ -157,6 +162,14 @@ void MainWindow::createCommandSurfaces() {
 void MainWindow::syncShell() {
     impl_->commandActions->refreshEnabled();
     const ShellState shell = impl_->shell();
+    // U13: the rail shows the tools of the active function.
+    if (impl_->sketchActions != nullptr && impl_->toolRail != nullptr) {
+        impl_->sketchActions->sync();
+        if (shell.tool == ShellTool::sketchEditor && impl_->sketchActions->sketchActive())
+            impl_->toolRail->showSketch(impl_->sketchActions->groups());
+        else
+            impl_->toolRail->showSolid();
+    }
     // Undo/Redo follow the document history, not the selection (U01), and wait for an open
     // tool (U05).
     impl_->undoAction->setEnabled(shell.canUndo);

@@ -29,6 +29,7 @@ add_library(
     ShellHeader.cpp
     ShellIcons.cpp
     ShellState.cpp
+    SketchToolActions.cpp
     SketchViewAdapter.cpp
     Theme.cpp
     ToolPanelHost.cpp

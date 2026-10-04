@@ -16,6 +16,8 @@ class FloatingCard : public QFrame {
     FloatingCard(QWidget& host, const QString& objectName);
 
     void setTitle(const QString& title);
+    // Re-measures the card after its content changed visibility.
+    void refit() { place(); }
     [[nodiscard]] QVBoxLayout& body() const noexcept { return *body_; }
     // Always visible below the scrolling body, e.g. OK and Cancel.
     [[nodiscard]] QVBoxLayout& footer() const noexcept { return *footer_; }

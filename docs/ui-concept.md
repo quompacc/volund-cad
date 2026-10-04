@@ -166,6 +166,19 @@ in U04 an dieselben IDs.
 | `solid.modify.transform` | Werkzeugleiste („Bewegen“), Kontextleiste (Feature), M, Suche | Viewport-Gizmo | getrennter Körper gewählt | viewport_startup |
 | `solid.modify.edit_sketch` | Werkzeugleiste („Bearbeiten“), Kontextleiste (Skizze, primär), Suche | SketchEditorToolController | Skizze gewählt | support_binding_flow |
 
+Skizzenbefehle (U13): Solange der Skizzeneditor offen ist, zeigt die Werkzeugleiste statt der
+Volumenwerkzeuge die Skizzenwerkzeuge. Jedes ist ein Befehl mit Command-ID, den auch Suche und
+Kürzel erreichen; außerhalb einer Skizze sind sie gesperrt.
+
+| Gruppe | Command-IDs | Kürzel |
+|---|---|---|
+| Zeichnen | `sketch.tool.select`, `.line`, `.polyline`, `.rectangle`, `.circle`, `.center_arc`, `.three_point_arc`, `.ellipse`, `.slot`, `.polygon` | S, L, P, R, C, A, T, E, N, G |
+| Linien | `sketch.horizontal`, `.vertical`, `.free`, `.parallel`, `.perpendicular`, `.collinear` | – |
+| Punkte | `sketch.coincident`, `.horizontal_points`, `.vertical_points`, `.symmetric`, `.midpoint`, `.perpendicular_bisector`, `.point_on_object` | – |
+| Beziehungen | `sketch.fixed`, `.equal`, `.tangent`, `.concentric` | – |
+| Bemaßungen | `sketch.diameter`, `.point_distance`, `.point_line_distance`, `.point_distance_x`, `.point_distance_y`, `.angle` | – |
+| Bearbeiten | `sketch.construction`, `.lock_point`, `.unlock_point`, `.remove_constraint`, `.undo_sketch`, `.redo_sketch`, `.trim`, `.extend`, `.split`, `.fillet`, `.offset`, `.mirror`, `.linear_pattern`, `.circular_pattern`, `.delete` | Strg+Z/Strg+Y für Rückgängig/Wiederholen im Werkzeug |
+
 Die Kontextleiste zeigt je Auswahl (`ContextCommands`):
 
 | Auswahl | Titel | Befehle (primär fett) |

@@ -7,6 +7,7 @@
 #include <vector>
 
 class QDoubleSpinBox;
+class QButtonGroup;
 class QComboBox;
 class QFormLayout;
 class QLabel;
@@ -15,6 +16,9 @@ class QTabWidget;
 class QShortcut;
 
 namespace voelund::desktop {
+
+// Short button label for a tool action (panel and tool rail, U13).
+[[nodiscard]] QString compactActionLabel(const std::string& id, const QString& fallback);
 
 struct ToolLengthParameter final {
     std::string id;
@@ -29,6 +33,8 @@ struct ToolChoiceParameter final {
     QString label;
     std::vector<QString> choices;
     int currentIndex;
+    // Stable IDs of the choices for command IDs (U13); empty when not offered elsewhere.
+    std::vector<std::string> choiceIds{};
 };
 
 struct ToolAction final {
@@ -68,8 +74,20 @@ class ToolPanelHost final : public FloatingCard {
     void setLengthVisible(const std::string& parameterId, bool visible);
     void setActionEnabled(const std::string& actionId, bool enabled);
 
+    // U13: the tool rail offers the session's tool choice and actions; the panel then keeps
+    // only values, feedback and OK/Cancel.
+    void setToolsInRail(bool inRail);
+    void setStateHandler(std::function<void()> handler);
+    [[nodiscard]] bool isActive() const noexcept { return active_; }
+    [[nodiscard]] const ToolPanelDefinition& definition() const noexcept { return definition_; }
+    [[nodiscard]] bool isActionEnabled(const std::string& actionId) const;
+    [[nodiscard]] int choiceIndex(const std::string& choiceId) const;
+    void chooseOption(const std::string& choiceId, int index);
+    void triggerAction(const std::string& actionId);
+
   private:
     void clearParameters();
+    void syncParameterGroup();
 
     QWidget* content_{nullptr};
     QLabel* guidance_{nullptr};
@@ -81,6 +99,12 @@ class ToolPanelHost final : public FloatingCard {
     QPushButton* errorCommitButton_{nullptr};
     std::function<void()> errorCommitHandler_;
     std::function<void()> activityHandler_;
+    std::function<void()> stateHandler_;
+    std::vector<std::pair<std::string, int>> choiceIndices_;
+    QButtonGroup* toolGroup_{nullptr};
+    QWidget* toolChoices_{nullptr};
+    bool toolsInRail_{false};
+    bool active_{false};
     QShortcut* escapeShortcut_{nullptr};
     QShortcut* undoShortcut_{nullptr};
     QShortcut* redoShortcut_{nullptr};

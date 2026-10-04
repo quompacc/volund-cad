@@ -9,6 +9,7 @@
 #include "ShellState.hpp"
 #include "SketchEditorToolController.hpp"
 #include "SketchExtrusionToolController.hpp"
+#include "SketchToolActions.hpp"
 #include "Theme.hpp"
 #include "TimelineBar.hpp"
 #include "ToolPanelHost.hpp"
@@ -80,6 +81,7 @@ class MainWindow::Impl final {
     std::optional<document::DatumPlane> selectedDatum; // V01b: base plane picked in viewport.
     ViewVisibility visibility;                         // U06: model tree eyes (view state)
     TimelineBar* timeline{nullptr};
+    std::unique_ptr<SketchToolActions> sketchActions; // U13
     workspaces::CommandRegistry commandRegistry;
     std::unique_ptr<CommandActions> commandActions;
     std::unique_ptr<DocumentActions> documentActions;
