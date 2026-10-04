@@ -6,24 +6,36 @@
 namespace voelund::application {
 using namespace detail;
 CommandResult CadSession::createBoxFeature() {
+    return createBoxFeature(kernel::BoxDimensions{20.0, 20.0, 40.0});
+}
+
+CommandResult CadSession::createBoxFeature(const kernel::BoxDimensions& dimensions) {
     document::DocumentTransaction transaction(document_);
     auto& candidate = transaction.edit();
     const std::size_t sequence = featureCount(document_.features(), document::FeatureKind::box) + 1;
-    const document::FeatureId id = candidate.addBoxFeature("Quader " + std::to_string(sequence),
-                                                           kernel::BoxDimensions{20.0, 20.0, 40.0});
-    return finishCandidate(transaction, id, CommandKind::newFeature, ErrorDisposition::reject,
-                           true);
+    const auto idInput = detail::prepareInput(
+        [&] { return candidate.addBoxFeature("Quader " + std::to_string(sequence), dimensions); });
+    if (!idInput.value)
+        return CommandResult::invalidInput(idInput.diagnostic);
+    return finishCandidate(transaction, *idInput.value, CommandKind::newFeature,
+                           ErrorDisposition::reject, true);
 }
 
 CommandResult CadSession::createCylinderFeature(document::CylinderResultMode resultMode) {
+    if (!canAddCylinder())
+        return CommandResult::invalidInput("A cylinder requires a current input feature");
+    return createCylinderFeature(document_.features().back().id, resultMode);
+}
+
+CommandResult CadSession::createCylinderFeature(document::FeatureId inputFeature,
+                                                document::CylinderResultMode resultMode) {
     document::DocumentTransaction transaction(document_);
     auto& candidate = transaction.edit();
-    if (!canAddCylinder()) {
+    if (!canAddCylinder(inputFeature)) {
         return CommandResult::invalidInput("A cylinder requires a current input feature");
     }
     const std::size_t sequence =
         featureCount(document_.features(), document::FeatureKind::cylinder) + 1;
-    const document::FeatureId inputFeature = document_.features().back().id;
     document::CylinderParameters parameters{
         8.0, 25.0, kernel::RigidTransform{0.0, 0.0, 0.0, {}, {}, {}}, resultMode};
     if (resultMode == document::CylinderResultMode::separate) {

@@ -65,8 +65,11 @@ CadSession::CadSession() {
 }
 
 bool CadSession::canAddCylinder() const noexcept {
-    return !document_.features().empty() &&
-           featureShape(document_.features().back().id).has_value();
+    return !document_.features().empty() && canAddCylinder(document_.features().back().id);
+}
+
+bool CadSession::canAddCylinder(document::FeatureId inputFeature) const noexcept {
+    return featureShape(inputFeature).has_value();
 }
 
 TopoDS_Shape CadSession::currentShape() const {
@@ -240,32 +243,14 @@ CommandResult CadSession::editSelectedBoxDimensions(const kernel::BoxDimensions&
                                                     ErrorDisposition disposition) {
     if (!selectedFeature_)
         return CommandResult::invalidInput("Select a feature before editing parameters");
-    document::DocumentTransaction transaction(document_);
-    auto& candidate = transaction.edit();
-    const auto input = detail::prepareInput(
-        [&] { return candidate.setBoxDimensions(selectedFeature_.value(), dimensions); });
-    if (!input.value)
-        return CommandResult::invalidInput(input.diagnostic);
-    if (!*input.value)
-        return {CommandStatus::rejected, RejectionReason::noChange};
-    return finishCandidate(transaction, selectedFeature_, CommandKind::editFeature, disposition,
-                           false);
+    return editBoxDimensions(selectedFeature_.value(), dimensions, disposition);
 }
 
 CommandResult CadSession::editSelectedBoxParameters(const document::BoxParameters& parameters,
                                                     ErrorDisposition disposition) {
     if (!selectedFeature_)
         return CommandResult::invalidInput("Select a feature before editing parameters");
-    document::DocumentTransaction transaction(document_);
-    auto& candidate = transaction.edit();
-    const auto input = detail::prepareInput(
-        [&] { return candidate.setBoxParameters(selectedFeature_.value(), parameters); });
-    if (!input.value)
-        return CommandResult::invalidInput(input.diagnostic);
-    if (!*input.value)
-        return {CommandStatus::rejected, RejectionReason::noChange};
-    return finishCandidate(transaction, selectedFeature_, CommandKind::editFeature, disposition,
-                           false);
+    return editBoxParameters(selectedFeature_.value(), parameters, disposition);
 }
 
 document::CylinderParameters CadSession::selectedCylinderParameters() const {
@@ -378,21 +363,12 @@ CommandResult CadSession::editSelectedFeaturePlacement(const kernel::RigidTransf
                                                        ErrorDisposition disposition) {
     if (!selectedFeature_)
         return CommandResult::invalidInput("Select a feature before editing parameters");
-    document::DocumentTransaction transaction(document_);
-    auto& candidate = transaction.edit();
-    const std::optional<document::FeatureId> owner =
-        placementOwner(document_, selectedFeature_.value());
-    if (!owner.has_value()) {
-        return CommandResult::invalidInput("Feature result has no rigid placement");
-    }
-    const auto input =
-        detail::prepareInput([&] { return candidate.setFeaturePlacement(*owner, placement); });
-    if (!input.value)
-        return CommandResult::invalidInput(input.diagnostic);
-    if (!*input.value)
-        return {CommandStatus::rejected, RejectionReason::noChange};
-    return finishCandidate(transaction, selectedFeature_, CommandKind::editFeature, disposition,
-                           false);
+    return editFeaturePlacement(selectedFeature_.value(), placement, disposition);
+}
+
+std::optional<document::FeatureId>
+CadSession::placementFeature(document::FeatureId featureId) const {
+    return placementOwner(document_, featureId);
 }
 
 std::span<const FeatureRuntimeState> CadSession::featureStates() const noexcept {

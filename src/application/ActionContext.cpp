@@ -24,10 +24,12 @@ ActionKind actionKind(const Action& action) noexcept {
 }
 
 namespace detail {
-std::vector<ActionKind> availableActions(const document::DocumentSnapshot& snapshot,
+std::vector<ActionKind> availableActions(const CadSession& session,
+                                         const document::DocumentSnapshot& snapshot,
                                          const ActionTarget& target) {
     if (std::holds_alternative<std::monostate>(target))
-        return {ActionKind::createParameter, ActionKind::createDatumSketch};
+        return {ActionKind::createParameter, ActionKind::createDatumSketch,
+                ActionKind::createBox};
     if (const auto* parameter = std::get_if<document::ParameterId>(&target)) {
         if (document::findParameter(snapshot.parameterTable(), *parameter) == nullptr)
             return {};
@@ -38,15 +40,30 @@ std::vector<ActionKind> availableActions(const document::DocumentSnapshot& snaps
     const auto descriptor = std::ranges::find(features, feature, &document::FeatureDescriptor::id);
     if (descriptor == features.end())
         return {};
-    if (descriptor->kind == FeatureKind::sketch)
-        return {ActionKind::editSketch, ActionKind::bindSketchDimension,
-                ActionKind::createProfileExtrusion};
-    if (descriptor->kind != FeatureKind::extrusion)
-        return {};
-    // A bound distance follows its parameter; it is changed there or after unbinding.
-    if (snapshot.extrusionParameters(feature).distanceParameter)
-        return {ActionKind::bindExtrusionDistance};
-    return {ActionKind::bindExtrusionDistance, ActionKind::setExtrusionDistance};
+    std::vector<ActionKind> actions;
+    switch (descriptor->kind) {
+    case FeatureKind::box:
+        actions = {ActionKind::setBoxDimensions};
+        break;
+    case FeatureKind::cylinder:
+        actions = {ActionKind::setCylinderSize};
+        break;
+    case FeatureKind::sketch:
+        actions = {ActionKind::editSketch, ActionKind::bindSketchDimension,
+                   ActionKind::createProfileExtrusion};
+        break;
+    case FeatureKind::extrusion:
+        actions = {ActionKind::bindExtrusionDistance};
+        // A bound distance follows its parameter; it is changed there or after unbinding.
+        if (!snapshot.extrusionParameters(feature).distanceParameter)
+            actions.push_back(ActionKind::setExtrusionDistance);
+        break;
+    }
+    if (session.placementFeature(feature))
+        actions.push_back(ActionKind::setPlacement);
+    if (session.canAddCylinder(feature))
+        actions.push_back(ActionKind::createCylinder);
+    return actions;
 }
 } // namespace detail
 
@@ -63,18 +80,19 @@ ActionContext describeActionContext(const CadSession& session) {
                           snapshot.parameterTable(),
                           {},
                           {}};
-    context.available.push_back({std::monostate{}, detail::availableActions(snapshot, {})});
+    context.available.push_back(
+        {std::monostate{}, detail::availableActions(session, snapshot, {})});
     for (const auto& feature : context.features) {
         if (feature.kind == FeatureKind::sketch)
             context.sketchRegions.push_back(
                 summarizeRegions(feature.id, snapshot.sketchParameters(feature.id)));
-        auto actions = detail::availableActions(snapshot, feature.id);
+        auto actions = detail::availableActions(session, snapshot, feature.id);
         if (!actions.empty())
             context.available.push_back({feature.id, std::move(actions)});
     }
     for (const auto& parameter : context.parameters.values)
         context.available.push_back(
-            {parameter.id, detail::availableActions(snapshot, parameter.id)});
+            {parameter.id, detail::availableActions(session, snapshot, parameter.id)});
     return context;
 }
 

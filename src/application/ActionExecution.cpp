@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <initializer_list>
 #include <optional>
 #include <string>
 #include <utility>
@@ -51,7 +52,8 @@ struct Findings final {
 
 class Validation final {
   public:
-    explicit Validation(const DocumentSnapshot& snapshot) : snapshot_(snapshot) {}
+    Validation(const CadSession& session, const DocumentSnapshot& snapshot)
+        : session_(session), snapshot_(snapshot) {}
 
     // Existence and capability of the target for this action.
     bool target(const ActionTarget& target, ActionKind kind) {
@@ -59,7 +61,7 @@ class Validation final {
             Findings::note(findings_.unknownTarget, "The target does not exist");
             return false;
         }
-        const auto actions = detail::availableActions(snapshot_, target);
+        const auto actions = detail::availableActions(session_, snapshot_, target);
         if (std::ranges::find(actions, kind) == actions.end()) {
             Findings::note(findings_.unsupportedTarget, "The target does not offer this action");
             return false;
@@ -82,6 +84,10 @@ class Validation final {
         unit(value.unit, expected);
         if (!std::isfinite(value.value))
             Findings::note(findings_.nonFinite, "The value is not finite");
+    }
+    void lengths(std::initializer_list<Quantity> values) {
+        for (const auto& value : values)
+            quantity(value, QuantityUnit::millimetre);
     }
 
     void operator()(const CreateParameterAction& action) {
@@ -140,6 +146,27 @@ class Validation final {
         static_cast<void>(target(action.extrusion, ActionKind::setExtrusionDistance));
         quantity(action.distance, QuantityUnit::millimetre);
     }
+    void operator()(const CreateBoxAction& action) {
+        static_cast<void>(target(std::monostate{}, ActionKind::createBox));
+        lengths({action.width, action.depth, action.height});
+    }
+    void operator()(const SetBoxDimensionsAction& action) {
+        static_cast<void>(target(action.box, ActionKind::setBoxDimensions));
+        lengths({action.width, action.depth, action.height});
+    }
+    void operator()(const CreateCylinderAction& action) {
+        static_cast<void>(target(action.input, ActionKind::createCylinder));
+    }
+    void operator()(const SetCylinderSizeAction& action) {
+        static_cast<void>(target(action.cylinder, ActionKind::setCylinderSize));
+        lengths({action.radius, action.height});
+    }
+    void operator()(const SetPlacementAction& action) {
+        static_cast<void>(target(action.feature, ActionKind::setPlacement));
+        lengths({action.x, action.y, action.z});
+        for (const auto& angle : {action.rotationX, action.rotationY, action.rotationZ})
+            quantity(angle, QuantityUnit::radian);
+    }
 
     [[nodiscard]] const Findings& findings() const noexcept { return findings_; }
 
@@ -154,6 +181,7 @@ class Validation final {
         return true;
     }
 
+    const CadSession& session_;
     const DocumentSnapshot& snapshot_;
     Findings findings_;
 };
@@ -190,6 +218,28 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot, const A
                 auto parameters = snapshot.extrusionParameters(a.extrusion);
                 parameters.distance = a.distance.value;
                 return session.editExtrusionParameters(a.extrusion, parameters);
+            },
+            [&](const CreateBoxAction& a) {
+                return session.createBoxFeature({a.width.value, a.depth.value, a.height.value});
+            },
+            [&](const SetBoxDimensionsAction& a) {
+                return session.editBoxDimensions(a.box,
+                                                 {a.width.value, a.depth.value, a.height.value});
+            },
+            [&](const CreateCylinderAction& a) {
+                return session.createCylinderFeature(a.input, a.mode);
+            },
+            [&](const SetCylinderSizeAction& a) {
+                auto parameters = snapshot.cylinderParameters(a.cylinder);
+                parameters.radius = a.radius.value;
+                parameters.height = a.height.value;
+                return session.editCylinderParameters(a.cylinder, parameters);
+            },
+            [&](const SetPlacementAction& a) {
+                return session.editFeaturePlacement(
+                    a.feature, {a.x.value, a.y.value, a.z.value, kernel::Radians(a.rotationX.value),
+                                kernel::Radians(a.rotationY.value),
+                                kernel::Radians(a.rotationZ.value)});
             }},
         action);
 }
@@ -235,7 +285,7 @@ ActionResult executeAction(CadSession& session, const ActionRequest& request) {
         return rejected(session, ActionRejection::staleStamp,
                         "The document changed since the request was prepared");
     const auto before = session.identifiedSnapshot();
-    Validation validation(before.snapshot());
+    Validation validation(session, before.snapshot());
     std::visit(validation, request.action);
     if (const auto finding = validation.findings().first())
         return rejected(session, finding->first, finding->second);

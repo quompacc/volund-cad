@@ -68,11 +68,45 @@ struct SetExtrusionDistanceAction final {
     document::FeatureId extrusion;
     Quantity distance;
 };
+// AI02b: solids and placements. A box opens a new body.
+struct CreateBoxAction final {
+    Quantity width;
+    Quantity depth;
+    Quantity height;
+};
+struct SetBoxDimensionsAction final {
+    document::FeatureId box;
+    Quantity width;
+    Quantity depth;
+    Quantity height;
+};
+// The input needs a current result; `separate` opens a new body beside it.
+struct CreateCylinderAction final {
+    document::FeatureId input;
+    document::CylinderResultMode mode;
+};
+struct SetCylinderSizeAction final {
+    document::FeatureId cylinder;
+    Quantity radius;
+    Quantity height;
+};
+// Moves the feature that places this feature's result (CadSession::placementFeature).
+struct SetPlacementAction final {
+    document::FeatureId feature;
+    Quantity x;
+    Quantity y;
+    Quantity z;
+    Quantity rotationX;
+    Quantity rotationY;
+    Quantity rotationZ;
+};
 
 using Action = std::variant<CreateParameterAction, SetParameterValueAction, RenameParameterAction,
                             BindSketchDimensionAction, BindExtrusionDistanceAction,
                             CreateDatumSketchAction, EditSketchAction,
-                            CreateProfileExtrusionAction, SetExtrusionDistanceAction>;
+                            CreateProfileExtrusionAction, SetExtrusionDistanceAction,
+                            CreateBoxAction, SetBoxDimensionsAction, CreateCylinderAction,
+                            SetCylinderSizeAction, SetPlacementAction>;
 // Parallel to the alternatives of Action.
 enum class ActionKind {
     createParameter,
@@ -83,7 +117,12 @@ enum class ActionKind {
     createDatumSketch,
     editSketch,
     createProfileExtrusion,
-    setExtrusionDistance
+    setExtrusionDistance,
+    createBox,
+    setBoxDimensions,
+    createCylinder,
+    setCylinderSize,
+    setPlacement
 };
 [[nodiscard]] ActionKind actionKind(const Action& action) noexcept;
 
@@ -139,7 +178,8 @@ struct SketchRegionsSummary final {
     bool valid; // False when region construction failed; then `regions` is empty.
     std::vector<SketchRegionSummary> regions;
 };
-// The document itself (createParameter, createDatumSketch), a feature or a parameter.
+// The document itself (createParameter, createDatumSketch, createBox), a feature or a
+// parameter.
 using ActionTarget = std::variant<std::monostate, document::FeatureId, document::ParameterId>;
 struct ActionAvailability final {
     ActionTarget target;

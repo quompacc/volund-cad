@@ -129,8 +129,14 @@ class CadSession final {
                          ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] std::vector<features::EvaluatedSketchElement> selectedSketchElements() const;
     [[nodiscard]] CommandResult createBoxFeature();
+    // AI02: commands with explicit targets; they keep the selection. The legacy variants
+    // above and the Selected ones below delegate to them.
+    [[nodiscard]] CommandResult createBoxFeature(const kernel::BoxDimensions& dimensions);
+    // On the last feature.
     [[nodiscard]] CommandResult createCylinderFeature(
         document::CylinderResultMode resultMode = document::CylinderResultMode::separate);
+    [[nodiscard]] CommandResult createCylinderFeature(document::FeatureId inputFeature,
+                                                      document::CylinderResultMode resultMode);
     [[nodiscard]] CommandResult createSketchExtrusion(document::FeatureId supportFeature,
                                                       const document::SketchPlane& plane,
                                                       const document::SketchRectangle& rectangle,
@@ -147,6 +153,10 @@ class CadSession final {
                                  std::span<const document::SketchRegionId> profileIds,
                                  double distance = 10.0);
     [[nodiscard]] bool canAddCylinder() const noexcept;
+    [[nodiscard]] bool canAddCylinder(document::FeatureId inputFeature) const noexcept;
+    // The feature whose placement moves this feature's result, if any.
+    [[nodiscard]] std::optional<document::FeatureId>
+    placementFeature(document::FeatureId featureId) const;
     [[nodiscard]] bool canTransformFeature(document::FeatureId featureId) const noexcept;
     [[nodiscard]] std::optional<document::FeatureId>
     transformBodyForFeature(document::FeatureId featureId) const noexcept;
@@ -160,6 +170,12 @@ class CadSession final {
     editSelectedBoxParameters(const document::BoxParameters& parameters,
                               ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] CommandResult
+    editBoxDimensions(document::FeatureId featureId, const kernel::BoxDimensions& dimensions,
+                      ErrorDisposition disposition = ErrorDisposition::reject);
+    [[nodiscard]] CommandResult
+    editBoxParameters(document::FeatureId featureId, const document::BoxParameters& parameters,
+                      ErrorDisposition disposition = ErrorDisposition::reject);
+    [[nodiscard]] CommandResult
     editSelectedCylinderParameters(const document::CylinderParameters& parameters,
                                    ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] CommandResult
@@ -169,7 +185,6 @@ class CadSession final {
     [[nodiscard]] CommandResult
     editSelectedExtrusionParameters(const document::ExtrusionParameters& parameters,
                                     ErrorDisposition disposition = ErrorDisposition::reject);
-    // AI02: explicit target; the selection is kept.
     [[nodiscard]] CommandResult
     editExtrusionParameters(document::FeatureId featureId,
                             const document::ExtrusionParameters& parameters,
@@ -177,6 +192,10 @@ class CadSession final {
     [[nodiscard]] CommandResult
     editSelectedFeaturePlacement(const kernel::RigidTransform& placement,
                                  ErrorDisposition disposition = ErrorDisposition::reject);
+    // Moves the placement feature of featureId.
+    [[nodiscard]] CommandResult
+    editFeaturePlacement(document::FeatureId featureId, const kernel::RigidTransform& placement,
+                         ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] document::CylinderParameters selectedCylinderParameters() const;
     [[nodiscard]] document::CylinderParameters
     cylinderParameters(document::FeatureId featureId) const;

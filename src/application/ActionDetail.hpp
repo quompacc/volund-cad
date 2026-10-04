@@ -6,6 +6,8 @@
 
 namespace voelund::application::detail {
 // The single capability rule shared by the context and the validation of requests.
-[[nodiscard]] std::vector<ActionKind> availableActions(const document::DocumentSnapshot& snapshot,
+// Feature targets also depend on the current results (cylinder input, placement).
+[[nodiscard]] std::vector<ActionKind> availableActions(const CadSession& session,
+                                                       const document::DocumentSnapshot& snapshot,
                                                        const ActionTarget& target);
 } // namespace voelund::application::detail
