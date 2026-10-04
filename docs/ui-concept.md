@@ -142,16 +142,17 @@ in U04 an dieselben IDs.
 
 | Command-ID | Heute | Ziel (ADR 0012) | Controller | Aktiv, wenn | Test |
 |---|---|---|---|---|---|
-| `document.new` | Menü File, Strg+N | Kopfzeile/Menü, Befehlssuche | DocumentActions | immer | document_actions |
-| `document.open` | Menü File, Strg+O | Kopfzeile/Menü, Befehlssuche | DocumentActions | immer | document_actions |
-| `document.save` | Menü File, Strg+S | Kopfzeile/Menü, Befehlssuche | DocumentActions | immer | document_actions |
-| `document.save_as` | Menü File | Menü, Befehlssuche | DocumentActions | immer | document_actions |
-| `document.duplicate` | Menü File | Menü, Befehlssuche | DocumentActions | immer | document_actions |
-| `history.undo` | Toolbar History, Strg+Z | Kopfzeile | MainWindow | Historie hat einen Schritt | command_inventory |
-| `history.redo` | Toolbar History, Strg+Y | Kopfzeile | MainWindow | Historie hat einen Schritt | command_inventory |
-| `repair.references` | Toolbar History | Panel des fehlerhaften Features (U10) | ReferenceRepairDialog | Skizze gewählt | reference_repair_flow |
-| `repair.all` | Toolbar History | Panel des fehlerhaften Features (U10) | DocumentRepairDialog | Dokument hat Features | document_repair_flow |
+| `document.new` | Dateimenü der Kopfzeile, Strg+N | Kopfzeile/Menü, Befehlssuche | DocumentActions | immer | document_actions |
+| `document.open` | Dateimenü der Kopfzeile, Strg+O | Kopfzeile/Menü, Befehlssuche | DocumentActions | immer | document_actions |
+| `document.save` | Dateimenü der Kopfzeile, Strg+S | Kopfzeile/Menü, Befehlssuche | DocumentActions | immer | document_actions |
+| `document.save_as` | Dateimenü der Kopfzeile | Menü, Befehlssuche | DocumentActions | immer | document_actions |
+| `document.duplicate` | Dateimenü der Kopfzeile | Menü, Befehlssuche | DocumentActions | immer | document_actions |
+| `history.undo` | Kopfzeile, Strg+Z | Kopfzeile | MainWindow | Historie hat einen Schritt | command_inventory |
+| `history.redo` | Kopfzeile, Strg+Y | Kopfzeile | MainWindow | Historie hat einen Schritt | command_inventory |
+| `repair.references` | Toolbar Repair | Panel des fehlerhaften Features (U10) | ReferenceRepairDialog | Skizze gewählt | reference_repair_flow |
+| `repair.all` | Toolbar Repair | Panel des fehlerhaften Features (U10) | DocumentRepairDialog | Dokument hat Features | document_repair_flow |
 | `transform.snap` | Toolbar Transform | Panel von Verschieben/Drehen (U05) | Viewport | immer | – |
+| `view.theme` | Kopfzeile (Sonne/Mond) | Kopfzeile, Befehlssuche | MainWindow | immer | command_inventory |
 | `solid.create.box` | Toolbar Solid | Kontextleiste (leer), Werkzeugleiste | CadSession | immer | command_inventory, viewport_startup |
 | `solid.create.cylinder` | Toolbar Solid | Kontextleiste (leer), Werkzeugleiste | CadSession | ein letztes Feature mit Geometrie existiert | command_inventory |
 | `solid.create.sketch` | Toolbar Solid | Kontextleiste (Ebene/Fläche), Werkzeugleiste | SketchEditorToolController | Ebene oder ebene Fläche gewählt, Modell aktuell | base_planes |

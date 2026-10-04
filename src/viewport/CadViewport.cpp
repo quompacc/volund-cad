@@ -277,6 +277,18 @@ void CadViewport::setTransformSnapping(bool enabled, double linearStep, double a
     });
 }
 
+void CadViewport::setTheme(const ViewportTheme& theme) {
+    impl_->theme = theme;
+    performViewportOperation(*this, impl_->ready, [&] {
+        if (!impl_->ready)
+            return;
+        impl_->applyTheme();
+        update();
+    });
+}
+
+const ViewportTheme& CadViewport::theme() const noexcept { return impl_->theme; }
+
 void CadViewport::setCameraView(CameraView cameraView) {
     performViewportOperation(*this, impl_->ready, [&] {
         if (!impl_->ready)

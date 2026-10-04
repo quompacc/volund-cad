@@ -1,4 +1,5 @@
 #include "BasePlanePresentation.hpp"
+#include "ViewportHighlightStyle.hpp"
 
 #include <AIS_DisplayMode.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
@@ -20,18 +21,16 @@ struct PlaneSpec {
 // y +Z, normal +X).
 const std::array<PlaneSpec, 3>& specs() {
     static const std::array<PlaneSpec, 3> values{
-        PlaneSpec{gp_Dir(0, 0, 1), gp_Dir(1, 0, 0),
-                  Quantity_Color(0.30, 0.52, 0.95, Quantity_TOC_RGB)},
-        PlaneSpec{gp_Dir(0, -1, 0), gp_Dir(1, 0, 0),
-                  Quantity_Color(0.32, 0.78, 0.42, Quantity_TOC_RGB)},
-        PlaneSpec{gp_Dir(1, 0, 0), gp_Dir(0, 1, 0),
-                  Quantity_Color(0.92, 0.40, 0.34, Quantity_TOC_RGB)}};
+        // Axis colors of ADR 0012: XY #4C7BE0, XZ #3FA36B, YZ #D95A4E.
+        PlaneSpec{gp_Dir(0, 0, 1), gp_Dir(1, 0, 0), occtColor(QColor(0x4C, 0x7B, 0xE0))},
+        PlaneSpec{gp_Dir(0, -1, 0), gp_Dir(1, 0, 0), occtColor(QColor(0x3F, 0xA3, 0x6B))},
+        PlaneSpec{gp_Dir(1, 0, 0), gp_Dir(0, 1, 0), occtColor(QColor(0xD9, 0x5A, 0x4E))}};
     return values;
 }
 } // namespace
 
 void BasePlanePresentation::show(const occ::handle<AIS_InteractiveContext>& context,
-                                 bool emphasized, double halfSize) {
+                                 bool emphasized, double halfSize, const ViewportTheme& theme) {
     hide(context);
     for (std::size_t index = 0; index < specs().size(); ++index) {
         const auto& spec = specs()[index];
@@ -53,10 +52,8 @@ void BasePlanePresentation::show(const occ::handle<AIS_InteractiveContext>& cont
             drawer->SetZLayer(Graphic3d_ZLayerId_Default);
             return drawer;
         };
-        plane->SetDynamicHilightAttributes(
-            highlight(Quantity_Color(1.0, 0.58, 0.08, Quantity_TOC_RGB), 0.55F));
-        plane->SetHilightAttributes(
-            highlight(Quantity_Color(0.05, 0.42, 1.0, Quantity_TOC_RGB), 0.45F));
+        plane->SetDynamicHilightAttributes(highlight(occtColor(theme.hover), 0.55F));
+        plane->SetHilightAttributes(highlight(occtColor(theme.selection), 0.45F));
         context->Display(plane, AIS_Shaded, AIS_Shape::SelectionMode(TopAbs_FACE), false);
         planes_[index] = plane;
     }

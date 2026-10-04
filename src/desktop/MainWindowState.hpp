@@ -1,10 +1,13 @@
 #pragma once
 #include "DocumentActions.hpp"
 #include "FeaturePropertiesPanel.hpp"
+#include "ShellHeader.hpp"
 #include "ShellState.hpp"
 #include "SketchEditorToolController.hpp"
 #include "SketchExtrusionToolController.hpp"
+#include "Theme.hpp"
 #include "ToolPanelHost.hpp"
+#include "ViewCube.hpp"
 #include "WorkspaceToolbar.hpp"
 #include <QAction>
 #include <functional>
@@ -13,6 +16,7 @@
 #include <voelund/desktop/MainWindow.hpp>
 #include <voelund/workspaces/CommandRegistry.hpp>
 class QDockWidget;
+class QToolBar;
 class QDoubleSpinBox;
 class QLabel;
 namespace voelund::desktop {
@@ -47,6 +51,11 @@ class MainWindow::Impl final {
     ToolPanelHost* toolPanel{nullptr};
     std::unique_ptr<SketchEditorToolController> sketchEditorTool;
     std::unique_ptr<SketchExtrusionToolController> sketchExtrusionTool;
+    ShellHeader* header{nullptr};
+    ViewCube* viewCube{nullptr};
+    QAction* themeAction{nullptr};
+    ThemeMode themeMode{ThemeMode::light};
+    QToolBar* repairToolbar{nullptr};
     QAction* undoAction{nullptr};
     QAction* redoAction{nullptr};
     QAction* repairAction{nullptr};

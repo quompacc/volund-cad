@@ -10,7 +10,6 @@
 #include <QKeySequence>
 #include <QMainWindow>
 #include <QMenu>
-#include <QMenuBar>
 #include <QMessageBox>
 #include <QStatusBar>
 #include <QString>
@@ -37,7 +36,10 @@ std::filesystem::path nativePath(const QString& fileName) {
 DocumentActions::DocumentActions(QMainWindow& window, application::CadSession& session,
                                  std::function<void()> refreshHandler)
     : window_(window), session_(session), refreshHandler_(std::move(refreshHandler)) {
-    QMenu* fileMenu = window_.menuBar()->addMenu(QStringLiteral("&File"));
+    // The shell header shows this menu (ADR 0012); it no longer lives in a menu bar.
+    fileMenu_ = new QMenu(QStringLiteral("&File"), &window_);
+    fileMenu_->setObjectName(QStringLiteral("fileMenu"));
+    QMenu* fileMenu = fileMenu_;
     QAction* newAction = fileMenu->addAction(QStringLiteral("&New"));
     newAction->setShortcut(QKeySequence::New);
     QAction* openAction = fileMenu->addAction(QStringLiteral("&Open…"));
@@ -48,6 +50,8 @@ DocumentActions::DocumentActions(QMainWindow& window, application::CadSession& s
     saveAsAction->setShortcut(QKeySequence::SaveAs);
     QAction* duplicateAction = fileMenu->addAction(QStringLiteral("&Duplicate"));
     duplicateAction->setToolTip(QStringLiteral("Create an unsaved copy of the current document"));
+    // Shortcuts need the actions on the window; the menu itself is only shown on demand.
+    window_.addActions(fileMenu_->actions());
     setCommandId(*newAction, "document.new");
     setCommandId(*openAction, "document.open");
     setCommandId(*saveAction, "document.save");
@@ -66,8 +70,17 @@ DocumentActions::DocumentActions(QMainWindow& window, application::CadSession& s
 
 bool DocumentActions::confirmClose() { return confirmSaveChanges(); }
 
+QMenu& DocumentActions::menu() const { return *fileMenu_; }
+
 void DocumentActions::syncWindowTitle() {
     window_.setWindowTitle(projectShell(session_, {}).windowTitle());
+    if (shellChanged_)
+        shellChanged_();
+}
+
+void DocumentActions::setShellChangedHandler(std::function<void()> handler) {
+    shellChanged_ = std::move(handler);
+    syncWindowTitle();
 }
 
 void DocumentActions::newDocument() {

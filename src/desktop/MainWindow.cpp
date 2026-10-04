@@ -7,10 +7,13 @@
 #include "MainWindowSupport.hpp"
 #include "MeasurementInput.hpp"
 #include "ModelTreePanel.hpp"
+#include "ShellHeader.hpp"
 #include "SketchEditorToolController.hpp"
 #include "SketchExtrusionToolController.hpp"
 #include "SketchViewAdapter.hpp"
+#include "Theme.hpp"
 #include "ToolPanelHost.hpp"
+#include "ViewCube.hpp"
 #include "WorkspaceToolbar.hpp"
 
 #include <voelund/application/CadSession.hpp>
@@ -41,8 +44,6 @@ MainWindow::MainWindow(application::CadSession& session, QWidget* parent)
     : QMainWindow(parent), impl_(std::make_unique<Impl>(session)) {
     impl_->geometryStatus = new QLabel(this);
     impl_->geometryStatus->setObjectName(QStringLiteral("geometryStatus"));
-    impl_->geometryStatus->setStyleSheet(
-        QStringLiteral("QLabel { color: #512600; background: #ffdd88; padding: 4px; }"));
     statusBar()->addPermanentWidget(impl_->geometryStatus);
     createViewport();
     createModelTree();
@@ -50,9 +51,17 @@ MainWindow::MainWindow(application::CadSession& session, QWidget* parent)
     createToolPanel();
     createHistoryToolbar();
     createWorkspaceToolbar();
+    addToolBar(impl_->repairToolbar);
     createTransformSettingsToolbar();
     impl_->documentActions =
         std::make_unique<DocumentActions>(*this, impl_->session, [this]() { refreshScene(); });
+    createHeader();
+    // The shell layout is fixed (ADR 0012): no floating, closing or dragging of panels.
+    for (auto* dock : findChildren<QDockWidget*>())
+        dock->setFeatures(QDockWidget::NoDockWidgetFeatures);
+    for (auto* toolbar : findChildren<QToolBar*>())
+        toolbar->setMovable(false);
+    applyTheme(storedThemeMode());
     connectInteractions();
     syncProperties();
     syncTreeStatus();
@@ -70,6 +79,7 @@ void MainWindow::createViewport() {
     impl_->viewport = new viewport::CadViewport(this);
     const std::vector<viewport::SceneBody> bodies = makeSceneBodies(impl_->session);
     impl_->viewport->setBodies(bodies);
+    impl_->viewCube = new ViewCube(*impl_->viewport);
     setCentralWidget(impl_->viewport);
 }
 
@@ -186,11 +196,11 @@ void MainWindow::createHistoryToolbar() {
     impl_->redoAction->setShortcuts(QKeySequence::Redo);
     setCommandId(*impl_->undoAction, "history.undo");
     setCommandId(*impl_->redoAction, "history.redo");
-    auto* toolbar = addToolBar(tr("History"));
-    toolbar->setObjectName(QStringLiteral("historyToolbar"));
+    // Undo/Redo sit in the shell header; repair stays here until U10 moves it to the feature.
+    auto* toolbar = new QToolBar(tr("Repair"), this);
+    toolbar->setObjectName(QStringLiteral("repairToolbar"));
     toolbar->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    toolbar->addAction(impl_->undoAction);
-    toolbar->addAction(impl_->redoAction);
+    impl_->repairToolbar = toolbar;
     impl_->repairAction = toolbar->addAction(tr("Repair references…"));
     impl_->repairAction->setObjectName(QStringLiteral("repairReferencesAction"));
     setCommandId(*impl_->repairAction, "repair.references");
@@ -199,6 +209,31 @@ void MainWindow::createHistoryToolbar() {
     impl_->repairAllAction->setObjectName(QStringLiteral("repairAllReferencesAction"));
     setCommandId(*impl_->repairAllAction, "repair.all");
     connect(impl_->repairAllAction, &QAction::triggered, this, [this] { repairAllReferences(); });
+}
+
+void MainWindow::createHeader() {
+    impl_->themeAction = new QAction(tr("Switch light/dark theme"), this);
+    setCommandId(*impl_->themeAction, "view.theme");
+    connect(impl_->themeAction, &QAction::triggered, this, [this] {
+        const ThemeMode next =
+            impl_->themeMode == ThemeMode::dark ? ThemeMode::light : ThemeMode::dark;
+        storeThemeMode(next);
+        applyTheme(next);
+    });
+    impl_->header = new ShellHeader(this);
+    impl_->header->setFileMenu(impl_->documentActions->menu());
+    impl_->header->setActions(*impl_->undoAction, *impl_->redoAction, *impl_->themeAction);
+    setMenuWidget(impl_->header);
+    impl_->documentActions->setShellChangedHandler(
+        [this] { impl_->header->display(impl_->shell()); });
+}
+
+void MainWindow::applyTheme(ThemeMode mode) {
+    impl_->themeMode = mode;
+    setStyleSheet(themeStyleSheet(themeTokens(mode)));
+    impl_->viewport->setTheme(viewportTheme(mode));
+    impl_->viewCube->setTokens(themeTokens(mode));
+    impl_->header->setTheme(mode);
 }
 
 void MainWindow::createTransformSettingsToolbar() {

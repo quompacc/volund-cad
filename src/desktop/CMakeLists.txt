@@ -19,9 +19,13 @@ add_library(
     SketchEditorToolController.cpp
     SketchEditorStart.cpp
     SketchExtrusionToolController.cpp
+    ShellHeader.cpp
+    ShellIcons.cpp
     ShellState.cpp
     SketchViewAdapter.cpp
+    Theme.cpp
     ToolPanelHost.cpp
+    ViewCube.cpp
     WorkspaceToolbar.cpp
 )
 
@@ -38,6 +42,17 @@ target_link_libraries(
         Voelund::Viewport
         Voelund::ModuleSolid
         Qt6::Widgets
+)
+
+# Fonts of ADR 0012 (OFL 1.1, docs/provenance/fonts.md).
+qt_add_resources(
+    voelund_desktop
+    "voelund_fonts"
+    PREFIX "/voelund/fonts"
+    BASE "${PROJECT_SOURCE_DIR}/resources/fonts"
+    FILES
+        "${PROJECT_SOURCE_DIR}/resources/fonts/AlbertSans-Variable.ttf"
+        "${PROJECT_SOURCE_DIR}/resources/fonts/JetBrainsMono-Variable.ttf"
 )
 
 add_library(Voelund::Desktop ALIAS voelund_desktop)

@@ -15,6 +15,8 @@ class CadSession;
 
 namespace voelund::desktop {
 
+enum class ThemeMode;
+
 class MainWindow final : public QMainWindow {
   public:
     explicit MainWindow(application::CadSession& session, QWidget* parent = nullptr);
@@ -36,6 +38,8 @@ class MainWindow final : public QMainWindow {
     void createPropertiesPanel();
     void createToolPanel();
     void createHistoryToolbar();
+    void createHeader();
+    void applyTheme(ThemeMode mode);
     void createWorkspaceToolbar();
     void createTransformSettingsToolbar();
     void connectInteractions();

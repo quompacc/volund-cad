@@ -13,7 +13,8 @@ namespace voelund::viewport {
 // them), hidden while a sketch is being drawn.
 class BasePlanePresentation final {
   public:
-    void show(const occ::handle<AIS_InteractiveContext>& context, bool emphasized, double halfSize);
+    void show(const occ::handle<AIS_InteractiveContext>& context, bool emphasized, double halfSize,
+              const ViewportTheme& theme);
     void hide(const occ::handle<AIS_InteractiveContext>& context);
     [[nodiscard]] std::optional<BasePlane>
     plane(const occ::handle<AIS_InteractiveObject>& object) const;

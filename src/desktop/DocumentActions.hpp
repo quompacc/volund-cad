@@ -6,6 +6,7 @@
 #include <functional>
 
 class QMainWindow;
+class QMenu;
 namespace voelund::application {
 class CadSession;
 }
@@ -17,7 +18,10 @@ class DocumentActions final {
     DocumentActions(QMainWindow& window, application::CadSession& session,
                     std::function<void()> refreshHandler);
     [[nodiscard]] bool confirmClose();
+    [[nodiscard]] QMenu& menu() const;
     void syncWindowTitle();
+    // Called whenever the title changes, so the shell header can follow (U03).
+    void setShellChangedHandler(std::function<void()> handler);
 
   private:
     void newDocument();
@@ -33,6 +37,8 @@ class DocumentActions final {
     QMainWindow& window_;
     application::CadSession& session_;
     std::function<void()> refreshHandler_;
+    QMenu* fileMenu_{nullptr};
+    std::function<void()> shellChanged_;
 };
 
 } // namespace voelund::desktop

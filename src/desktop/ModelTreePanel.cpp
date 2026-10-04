@@ -10,6 +10,9 @@ namespace voelund::desktop {
 
 ModelTreePanel::ModelTreePanel(QWidget* parent) : QTreeWidget(parent) {
     setHeaderHidden(true);
+    // Flat list look of ADR 0012; bodies stay expanded (U06 brings the full tree).
+    setRootIsDecorated(false);
+    setIndentation(16);
     connect(this, &QTreeWidget::currentItemChanged, this,
             [this](QTreeWidgetItem* current, QTreeWidgetItem*) {
                 if (current != nullptr && selectionHandler_) {

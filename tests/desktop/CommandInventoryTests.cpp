@@ -29,6 +29,7 @@ const std::set<std::string> commandTable{"document.new",
                                          "repair.references",
                                          "repair.all",
                                          "transform.snap",
+                                         "view.theme",
                                          "solid.create.box",
                                          "solid.create.cylinder",
                                          "solid.create.sketch",
@@ -66,7 +67,7 @@ QAction& command(const desktop::MainWindow& window, const std::string& id) {
     throw std::runtime_error("Command is missing: " + id);
 }
 
-void everyActionIsInTheTable(const desktop::MainWindow& window) {
+void everyActionIsInTheTable(desktop::MainWindow& window) {
     std::set<std::string> seen;
     for (const auto* action : commands(window)) {
         const std::string id = commandId(*action);
@@ -75,6 +76,11 @@ void everyActionIsInTheTable(const desktop::MainWindow& window) {
         require(seen.insert(id).second, ("Duplicate command ID: " + id).c_str());
     }
     require(seen == commandTable, "Visible commands must match the command table");
+    // File commands live in the header menu; their shortcuts must still reach the window.
+    for (const char* id : {"document.new", "document.open", "document.save"})
+        require(
+            command(window, id).associatedObjects().contains(&window),
+            ("Shortcut of a file command does not reach the window: " + std::string(id)).c_str());
 }
 
 void emptyDocumentOffersOnlyApplicableCommands(application::CadSession& session,
@@ -85,7 +91,7 @@ void emptyDocumentOffersOnlyApplicableCommands(application::CadSession& session,
             enabled.insert(commandId(*action));
     const std::set<std::string> expected{"document.new",     "document.open",      "document.save",
                                          "document.save_as", "document.duplicate", "transform.snap",
-                                         "solid.create.box"};
+                                         "view.theme",       "solid.create.box"};
     require(enabled == expected, "Empty document enables only document commands and Box");
     const auto before = session.sceneStatus().document;
     for (const std::string& id : commandTable) {

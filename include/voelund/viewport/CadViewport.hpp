@@ -3,6 +3,8 @@
 
 #include <voelund/kernel/OcctCompatibility.hpp>
 
+#include <QColor>
+
 #if defined(VOELUND_VIEWPORT_QT_OPENGL)
 #include <QOpenGLWidget>
 #else
@@ -174,6 +176,19 @@ enum class SketchAutomaticConstraint {
 };
 
 enum class CameraView { isometric, top, front, right, left, back, bottom };
+
+// U03: colors of the 3D view, supplied by the desktop theme (ADR 0012). Defaults are the
+// light theme.
+struct ViewportTheme final {
+    QColor background{0xE9, 0xEC, 0xEF};
+    QColor gridMinor{0xD6, 0xDB, 0xE0};
+    QColor gridMajor{0xBA, 0xC2, 0xCB};
+    QColor body{0xB4, 0xBF, 0xCB};
+    QColor edge{0x6E, 0x79, 0x86};
+    QColor hover{0xF0, 0xA0, 0x6E};
+    QColor selection{0xD9, 0x62, 0x2B};
+    QColor axisLabel{0x5F, 0x68, 0x73};
+};
 // Base planes offered in the viewport (V01b); values match document::DatumPlane.
 enum class BasePlane { xy = 1, xz = 2, yz = 3 };
 
@@ -235,6 +250,8 @@ class CadViewport final : public CadViewportBase {
     void setTransformToolEnabled(bool enabled);
     void setTransformTarget(std::optional<std::uint64_t> bodyId);
     void setTransformSnapping(bool enabled, double linearStep, double angularStep);
+    void setTheme(const ViewportTheme& theme);
+    [[nodiscard]] const ViewportTheme& theme() const noexcept;
     void setCameraView(CameraView view);
     void setPerspectiveProjection(bool enabled);
     void fitView();

@@ -13,6 +13,12 @@ Völund keeps its direct dependency surface deliberately small. A new direct or 
 
 The C++ standard library is used for general containers, strings, algorithms, errors, filesystem access, and concurrency. No separate convenience library is approved.
 
+## Bundled assets
+
+| Asset | Purpose | License |
+|---|---|---|
+| Albert Sans, JetBrains Mono (variable TTF) | UI and value fonts (ADR 0012), embedded as Qt resource | SIL OFL 1.1; see `docs/provenance/fonts.md` |
+
 ## Build-only tools
 
 | Tool | Purpose | Runtime component |

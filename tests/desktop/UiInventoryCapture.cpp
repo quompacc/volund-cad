@@ -41,6 +41,33 @@ void emptyStart() {
     open(window);
     capture(window, "00-empty-start");
 }
+// U03: the new shell in both themes with a ring body (rectangle with hole on XY).
+void themes() {
+    application::CadSession session;
+    session.newDocument();
+    document::SketchParameters sketch{
+        document::datumSketchPlane(document::DatumPlane::xy),
+        document::SketchElements{
+            {{document::SketchElementId{1}, document::SketchRectangle{-20, -15, 20, 15}},
+             {document::SketchElementId{2}, document::SketchCircle{{0, 0}, 6}}},
+            3}};
+    sketch.datum = document::DatumPlane::xy;
+    const auto sketchId = *session.createDatumSketchFeature(sketch).feature();
+    static_cast<void>(session.selectSketchProfileByElement(document::SketchElementId{1}, false));
+    static_cast<void>(
+        session.createSketchProfileExtrusion(sketchId, session.selectedSketchProfiles(), 12));
+    desktop::MainWindow window(session);
+    auto& viewport = open(window);
+    capture(window, "u03-light");
+    QAction* theme = nullptr;
+    for (auto* action : window.findChildren<QAction*>())
+        if (action->property("commandId").toString() == QStringLiteral("view.theme"))
+            theme = action;
+    theme->trigger();
+    test::render(viewport);
+    capture(window, "u03-dark");
+    theme->trigger(); // Leave the stored preference on light.
+}
 void defaultDocument() {
     application::CadSession session;
     desktop::MainWindow window(session);
@@ -57,15 +84,14 @@ void existingSketch() {
     session.newDocument();
     const auto box = *session.createBoxFeature().feature();
     const document::SketchPlane plane{0, 0, 20, 0, 0, 1, 1, 0, 0};
-    const auto sketch = *session
-                             .createSketchFeature(
-                                 box, {plane,
-                                       {{{document::SketchElementId{1},
-                                          document::SketchRectangle{5, 5, 30, 25}},
-                                         {document::SketchElementId{2},
-                                          document::SketchCircle{{17.5, 15}, 4}}},
-                                        3}})
-                             .feature();
+    const auto sketch =
+        *session
+             .createSketchFeature(
+                 box, {plane,
+                       {{{document::SketchElementId{1}, document::SketchRectangle{5, 5, 30, 25}},
+                         {document::SketchElementId{2}, document::SketchCircle{{17.5, 15}, 4}}},
+                        3}})
+             .feature();
     test::bindTop(session, sketch);
     desktop::MainWindow window(session);
     auto& viewport = open(window);
@@ -87,12 +113,14 @@ void existingSketch() {
 
 int main(int argc, char** argv) {
     QApplication application(argc, argv);
+    QCoreApplication::setOrganizationName(QStringLiteral("VoelundCapture"));
     directory = qEnvironmentVariable("VOELUND_SMOKE_ARTIFACT_DIR");
     if (directory.isEmpty())
         return 2;
     QDir().mkpath(directory);
     try {
         emptyStart();
+        themes();
         defaultDocument();
         existingSketch();
     } catch (const std::exception& error) {

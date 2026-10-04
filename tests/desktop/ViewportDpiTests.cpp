@@ -65,12 +65,15 @@ QJsonObject checkpoint(CadViewport& v, const QString& name, const QString& direc
     const QPoint pixel = (QPointF(logical) * v.devicePixelRatioF()).toPoint();
     const QColor body = image.pixelColor(pixel);
     const QColor background = image.pixelColor(image.width() - 5, 5);
-    require(std::abs(body.red() - background.red()) + std::abs(body.green() - background.green()) +
-                    std::abs(body.blue() - background.blue()) >
-                60,
-            "Rendered target absent or framebuffer black/stale");
+    const int contrast = std::abs(body.red() - background.red()) +
+                         std::abs(body.green() - background.green()) +
+                         std::abs(body.blue() - background.blue());
+    if (contrast <= 60)
+        std::cerr << name.toStdString() << ": target " << body.name().toStdString()
+                  << " background " << background.name().toStdString() << std::endl;
     if (!directory.isEmpty())
         require(image.save(directory + "/" + name + ".png"), "DPI capture failed");
+    require(contrast > 60, "Rendered target absent or framebuffer black/stale");
     return {{"case", name},
             {"status", "passed"},
             {"dpr", v.devicePixelRatioF()},

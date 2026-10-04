@@ -15,18 +15,20 @@
 #include <AIS_InteractiveContext.hxx>
 #include <AIS_SelectionScheme.hxx>
 #include <AIS_Shape.hxx>
-#include <BRepBndLib.hxx>
-#include <Bnd_Box.hxx>
 #include <Aspect_DisplayConnection.hxx>
 #include <Aspect_GradientFillMethod.hxx>
 #include <Aspect_Grid.hxx>
 #include <Aspect_GridDrawMode.hxx>
 #include <Aspect_GridType.hxx>
 #include <Aspect_TypeOfTriedronPosition.hxx>
+#include <BRepBndLib.hxx>
+#include <Bnd_Box.hxx>
 #include <Graphic3d_Camera.hxx>
 #include <Graphic3d_GraphicDriver.hxx>
 #include <NCollection_Vec2.hxx>
 #include <OpenGl_GraphicDriver.hxx>
+#include <Prs3d_Drawer.hxx>
+#include <Prs3d_LineAspect.hxx>
 #include <QDebug>
 #include <QMetaObject>
 #include <QMouseEvent>
@@ -66,23 +68,38 @@ class CadViewportScene {
         viewer->SetLightOn();
         context = new AIS_InteractiveContext(viewer);
         context->SetDisplayMode(AIS_Shaded, false);
-        configureHighlightStyles(context);
         view = viewer->CreateView();
         view->SetImmediateUpdate(false);
-        view->SetBgGradientColors(Quantity_Color(0.12, 0.15, 0.13, Quantity_TOC_RGB),
-                                  Quantity_Color(0.035, 0.05, 0.04, Quantity_TOC_RGB),
-                                  Aspect_GradientFillMethod_Vertical, false);
         viewer->SetRectangularGridValues(0.0, 0.0, 10.0, 10.0, 0.0);
         viewer->SetRectangularGridGraphicValues(500.0, 500.0, -0.05);
         viewer->ActivateGrid(Aspect_GT_Rectangular, Aspect_GDM_Lines);
-        viewer->Grid()->SetColors(Quantity_Color(0.19, 0.23, 0.19, Quantity_TOC_RGB),
-                                  Quantity_Color(0.34, 0.31, 0.16, Quantity_TOC_RGB));
         view->ZBufferTriedronSetup(Quantity_NOC_RED, Quantity_NOC_GREEN, Quantity_NOC_BLUE1, 0.8,
                                    0.05, 12);
-        view->TriedronDisplay(Aspect_TOTP_LEFT_LOWER,
-                              Quantity_Color(0.82, 0.69, 0.30, Quantity_TOC_RGB), 0.075,
-                              V3d_ZBUFFER);
+        applyTheme();
         view->SetProj(V3d_TypeOfOrientation_Zup_AxoRight);
+    }
+
+    // Thin edges keep faces apart on the light theme (ADR 0012 prototype).
+    void showEdges(const occ::handle<AIS_Shape>& shape) const {
+        shape->Attributes()->SetFaceBoundaryDraw(true);
+        shape->Attributes()->SetFaceBoundaryAspect(
+            new Prs3d_LineAspect(occtColor(theme.edge), Aspect_TOL_SOLID, 1.0));
+    }
+
+    // Colors of the current theme for background, grid, bodies, highlights and planes.
+    void applyTheme() {
+        configureHighlightStyles(context, theme);
+        view->SetBgGradientStyle(Aspect_GradientFillMethod_None, false);
+        view->SetBackgroundColor(occtColor(theme.background));
+        viewer->Grid()->SetColors(occtColor(theme.gridMinor), occtColor(theme.gridMajor));
+        view->TriedronDisplay(Aspect_TOTP_LEFT_LOWER, occtColor(theme.axisLabel), 0.075,
+                              V3d_ZBUFFER);
+        for (const BodyPresentation& presentation : presentations) {
+            presentation.shape->SetColor(occtColor(theme.body));
+            showEdges(presentation.shape);
+            context->Redisplay(presentation.shape, false);
+        }
+        refreshBasePlanes();
     }
 
     void displayPendingBodies() {
@@ -100,7 +117,8 @@ class CadViewportScene {
 
         for (const SceneBody& body : pendingBodies) {
             occ::handle<AIS_Shape> presentation = new AIS_Shape(body.shape);
-            presentation->SetColor(Quantity_Color(0.72, 0.78, 0.88, Quantity_TOC_RGB));
+            presentation->SetColor(occtColor(theme.body));
+            showEdges(presentation);
             context->Display(presentation, false);
             context->Activate(presentation, AIS_Shape::SelectionMode(TopAbs_FACE));
             presentations.push_back(BodyPresentation{body.id, presentation, body.transformable});
@@ -139,7 +157,7 @@ class CadViewportScene {
                 halfSize = std::max({25.0, 0.6 * (x1 - x0), 0.6 * (y1 - y0), 0.6 * (z1 - z0)});
             }
         }
-        basePlanes.show(context, presentations.empty(), halfSize);
+        basePlanes.show(context, presentations.empty(), halfSize, theme);
     }
 
     void setTransformToolEnabled(bool enabled) {
@@ -214,6 +232,7 @@ class CadViewportScene {
     bool sketchElementPressed{false};
     QRubberBand* selectionBand{nullptr};
     bool ready{false};
+    ViewportTheme theme;
     occ::handle<Graphic3d_Camera> savedCamera;
     std::optional<PlanarFaceSelection> activeSketchSupport;
 };
