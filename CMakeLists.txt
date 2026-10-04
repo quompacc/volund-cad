@@ -25,6 +25,10 @@ find_package(Eigen3 CONFIG REQUIRED)
 if(Eigen3_VERSION VERSION_LESS 3.4)
     message(FATAL_ERROR "Völund requires Eigen 3.4 or newer")
 endif()
+# Boost ships BoostConfig.cmake on every target; CMake 3.30+ removed FindBoost.
+if(POLICY CMP0167)
+    cmake_policy(SET CMP0167 NEW)
+endif()
 find_package(Boost 1.75 REQUIRED COMPONENTS graph)
 
 # FreeBSD and Linux desktops share the native Wayland/EGL path (ADR 0004, ADR 0011).
