@@ -3759,11 +3759,13 @@
       ],
       "acceptance": "Absichtlich fehlschlagender Test färbt den Lauf rot; frischer Checkout ohne build/ läuft grün; Artefakte je Commit abrufbar; Runner übersteht Neustart. Paketnachweise verweisen ab jetzt auf CI-Läufe statt auf Hashlisten.",
       "boundary": "Keine Release-Buildmatrix (L01). FreeBSD läuft nicht je Push, sondern an Gate-Abnahmen. Ein headless Lauf ist kein GPU-/Compositornachweis.",
-      "status": "planned",
+      "status": "done",
       "gate": "G1",
       "chapter": "06-plattform-release.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
+      "evidence": [
+        "evidence/C01.md"
+      ],
       "completedCommit": null
     },
     {
