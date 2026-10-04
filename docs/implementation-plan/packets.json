@@ -1460,12 +1460,14 @@
       ],
       "acceptance": "Werkzeugleiste, Kontextleiste, Befehlssuche und Kürzel lösen für dieselbe ID denselben Application-Befehl aus. Unbekannte ID liefert Diagnose. Kein Befehl ist nur über die Kontextleiste erreichbar.",
       "boundary": "Noch nicht implementierte Fachtools bleiben gesperrt. Kein Ribbon.",
-      "status": "planned",
+      "status": "done",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/U04.md"
+      ],
+      "completedCommit": "c6167c4"
     },
     {
       "id": "U05",
