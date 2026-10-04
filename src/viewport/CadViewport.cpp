@@ -199,6 +199,8 @@ void CadViewport::beginRectangleSketch(const PlanarFaceSelection& support) {
         impl_->manipulator.setEnabled(false);
         impl_->manipulator.detach();
         impl_->activeSketchSupport = support;
+        if (!impl_->context.IsNull())
+            impl_->basePlanes.hide(impl_->context);
         impl_->sketch.begin(support, impl_->context, impl_->view);
         update();
     });
@@ -210,6 +212,8 @@ void CadViewport::beginSketchEditor(const PlanarFaceSelection& support, SketchEl
         impl_->manipulator.setEnabled(false);
         impl_->manipulator.detach();
         impl_->activeSketchSupport = support;
+        if (!impl_->context.IsNull())
+            impl_->basePlanes.hide(impl_->context);
         impl_->sketchEditor.begin(support, tool, impl_->view);
         impl_->sketchPresentation.setReferences(impl_->context, support, true);
         update();
@@ -246,8 +250,13 @@ void CadViewport::cancelSketch() {
         impl_->sketch.cancel();
         impl_->sketchEditor.cancel();
         impl_->sketchPresentation.setReferences(impl_->context, {}, false);
+        impl_->refreshBasePlanes();
         update();
     });
+}
+
+std::size_t CadViewport::displayedBasePlaneCount() const noexcept {
+    return impl_->basePlanes.displayedCount();
 }
 
 void CadViewport::setTransformToolEnabled(bool enabled) {

@@ -106,6 +106,12 @@ void MainWindow::createWorkspaceToolbar() {
         statusBar()->showMessage(tr("Cylinder feature created"), 2000);
     };
     services.sketchEditor = [this]() {
+        if (impl_->selectedDatum.has_value()) {
+            if (impl_->sketchExtrusionTool->isActive())
+                impl_->sketchExtrusionTool->cancel();
+            impl_->sketchEditorTool->beginOnBasePlane(*impl_->selectedDatum);
+            return;
+        }
         if (impl_->selectedPlanarFace.has_value()) {
             if (impl_->sketchExtrusionTool->isActive()) {
                 impl_->sketchExtrusionTool->cancel();
@@ -139,8 +145,10 @@ void MainWindow::createWorkspaceToolbar() {
         impl_->viewport->setTransformToolEnabled(enabled);
     };
     services.canAddCylinder = [this]() { return impl_->session.canAddCylinder(); };
+    // Enables "Sketch": a picked planar face or a picked base plane (V01b).
     services.canEditSketch = [this]() {
-        return impl_->session.sceneStatus().isCurrent() && impl_->selectedPlanarFace.has_value();
+        return impl_->session.sceneStatus().isCurrent() &&
+               (impl_->selectedPlanarFace.has_value() || impl_->selectedDatum.has_value());
     };
     services.canSketch = [this]() {
         return impl_->session.sceneStatus().isCurrent() && impl_->selectedPlanarFace.has_value();
@@ -165,6 +173,8 @@ void MainWindow::createWorkspaceToolbar() {
     impl_->addCylinderAction = impl_->workspaceToolbar->action("solid.create.cylinder");
     impl_->addCylinderAction->setObjectName(QStringLiteral("addCylinderAction"));
     impl_->sketchEditorAction = impl_->workspaceToolbar->action("solid.create.sketch");
+    impl_->sketchEditorAction->setObjectName(QStringLiteral("sketchEditorAction"));
+    impl_->addBoxAction->setObjectName(QStringLiteral("addBoxAction"));
     impl_->createSketchAction = impl_->workspaceToolbar->action("solid.create.sketch_rectangle");
     impl_->transformAction = impl_->workspaceToolbar->action("solid.modify.transform");
     impl_->transformAction->setObjectName(QStringLiteral("transformAction"));
@@ -259,6 +269,7 @@ void MainWindow::connectInteractions() {
     impl_->viewport->setBodySelectionHandler([this](std::uint64_t id) { selectFeature(id); });
     impl_->viewport->setPlanarFaceSelectionHandler(
         [this](const viewport::PlanarFaceSelection& selection) {
+            impl_->selectedDatum.reset();
             if (impl_->session.sceneStatus().isCurrent()) {
                 impl_->selectedPlanarFace = selection;
                 statusBar()->showMessage(tr("Planar face selected"), 2000);
@@ -268,6 +279,15 @@ void MainWindow::connectInteractions() {
             }
             impl_->workspaceToolbar->refreshEnabled();
         });
+    impl_->viewport->setBasePlaneSelectionHandler([this](viewport::BasePlane plane) {
+        impl_->selectedPlanarFace.reset();
+        impl_->selectedDatum = static_cast<document::DatumPlane>(plane);
+        static const char* const names[]{"XY", "XZ", "YZ"};
+        statusBar()->showMessage(
+            tr("%1 plane selected").arg(QString::fromLatin1(names[static_cast<int>(plane) - 1])),
+            2000);
+        impl_->workspaceToolbar->refreshEnabled();
+    });
     impl_->viewport->setSketchRectangleHandler(
         [this](const viewport::SketchRectangleResult& rectangle) {
             impl_->sketchExtrusionTool->setResult(rectangle);
@@ -461,6 +481,7 @@ void MainWindow::refreshScene() {
         impl_->sketchEditorTool->cancel();
     }
     impl_->selectedPlanarFace.reset();
+    impl_->selectedDatum.reset();
     impl_->viewport->cancelSketch();
     impl_->toolPanel->end();
     const std::vector<viewport::SceneBody> bodies = makeSceneBodies(impl_->session);

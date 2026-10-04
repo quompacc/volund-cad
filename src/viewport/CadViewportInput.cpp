@@ -207,6 +207,15 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
                     update();
                     return;
                 }
+                if (const auto plane = impl_->basePlanes.plane(detected)) {
+                    impl_->context->SelectDetected(AIS_SelectionScheme_Replace);
+                    if (impl_->basePlaneSelectionHandler)
+                        impl_->basePlaneSelectionHandler(*plane);
+                    impl_->gesture = Impl::Gesture::none;
+                    unsetCursor();
+                    update();
+                    return;
+                }
                 impl_->notifyDetectedBody(true);
             }
             // A click selects only the topmost face. SelectPoint would select every owner the

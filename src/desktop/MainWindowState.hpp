@@ -47,6 +47,7 @@ class MainWindow::Impl final {
     QDoubleSpinBox* angularSnapInput{nullptr};
     QComboBox* connectionModeInput{nullptr};
     std::optional<viewport::PlanarFaceSelection> selectedPlanarFace;
+    std::optional<document::DatumPlane> selectedDatum; // V01b: base plane picked in viewport.
     workspaces::CommandRegistry commandRegistry;
     std::unique_ptr<WorkspaceToolbar> workspaceToolbar;
     std::unique_ptr<DocumentActions> documentActions;

@@ -22,6 +22,7 @@ class SketchEditorToolController final {
                                std::function<void(const QString&)> statusChanged);
 
     void begin(const viewport::PlanarFaceSelection& support);
+    void beginOnBasePlane(document::DatumPlane datum);
     [[nodiscard]] bool beginSelectedSketch();
     void updatePreview(const std::optional<viewport::SketchElementIntent>& intent);
     void confirmElement(const viewport::SketchElementIntent& intent);

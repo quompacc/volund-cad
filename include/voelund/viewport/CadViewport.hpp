@@ -174,6 +174,8 @@ enum class SketchAutomaticConstraint {
 };
 
 enum class CameraView { isometric, top, front, right, left, back, bottom };
+// Base planes offered in the viewport (V01b); values match document::DatumPlane.
+enum class BasePlane { xy = 1, xz = 2, yz = 3 };
 
 struct SketchElementIntent final {
     double firstX;
@@ -211,6 +213,7 @@ class CadViewport final : public CadViewportBase {
     void setSketchConstraintEditHandler(std::function<void(std::uint64_t)> handler);
     void setBodySelectionHandler(std::function<void(std::uint64_t)> handler);
     void setPlanarFaceSelectionHandler(std::function<void(const PlanarFaceSelection&)> handler);
+    void setBasePlaneSelectionHandler(std::function<void(BasePlane)> handler);
     void setSketchRectangleHandler(std::function<void(const SketchRectangleResult&)> handler);
     void setSketchExtrusionPreviewHandler(std::function<void(double)> handler);
     void setSketchEditorPreviewHandler(
@@ -238,6 +241,7 @@ class CadViewport final : public CadViewportBase {
     [[nodiscard]] bool isRenderingReady() const noexcept;
     [[nodiscard]] std::size_t displayedSketchElementCount() const noexcept;
     [[nodiscard]] std::size_t displayedSketchConstraintCount() const noexcept;
+    [[nodiscard]] std::size_t displayedBasePlaneCount() const noexcept;
     [[nodiscard]] std::pair<int, int> renderingPixelSize() const noexcept;
     [[nodiscard]] ViewportLifecycleDiagnostics lifecycleDiagnostics() const noexcept;
 

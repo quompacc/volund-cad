@@ -37,14 +37,53 @@ void SketchEditorToolController::begin(const viewport::PlanarFaceSelection& supp
     statusChanged_(QObject::tr("Sketch editor: set two points for a line"));
 }
 
+// The drawing frame of a base plane; bodyId 0 because no body supports it.
+viewport::PlanarFaceSelection basePlaneSupport(document::DatumPlane datum) {
+    const auto plane = document::datumSketchPlane(datum);
+    return {0,
+            plane.originX,
+            plane.originY,
+            plane.originZ,
+            plane.normalX,
+            plane.normalY,
+            plane.normalZ,
+            plane.xDirectionX,
+            plane.xDirectionY,
+            plane.xDirectionZ};
+}
+
+void SketchEditorToolController::beginOnBasePlane(document::DatumPlane datum) {
+    editing_ = false;
+    editor_ = std::make_unique<application::SketchEditorSession>(session_, datum);
+    showPanel();
+    panel_.setAcceptEnabled(editor_->canAccept());
+    viewport_.beginSketchEditor(basePlaneSupport(datum), viewport::SketchElementTool::line);
+    refreshPresentation();
+    statusChanged_(QObject::tr("Sketch editor: set two points for a line"));
+}
+
 bool SketchEditorToolController::beginSelectedSketch() {
     const auto selected = session_.selectedFeature();
     if (!selected.has_value())
         return false;
     const document::FeatureDescriptor& descriptor = session_.selectedFeatureDescriptor();
-    if (descriptor.kind != document::FeatureKind::sketch || !descriptor.inputFeature.has_value())
+    if (descriptor.kind != document::FeatureKind::sketch)
         return false;
     document::SketchParameters parameters = session_.sketchParameters(*selected);
+    if (!descriptor.inputFeature.has_value()) {
+        if (!parameters.datum)
+            return false;
+        editing_ = true;
+        editor_ =
+            std::make_unique<application::SketchEditorSession>(session_, *selected, parameters);
+        showPanel();
+        panel_.setAcceptEnabled(editor_->canAccept());
+        viewport_.beginSketchEditor(basePlaneSupport(*parameters.datum),
+                                    viewport::SketchElementTool::line);
+        refreshPresentation();
+        statusChanged_(QObject::tr("Editing existing sketch"));
+        return true;
+    }
     try {
         parameters = session_.sketchParametersForEditing(*selected);
         document::validateCanonicalSketchPlane(parameters.plane);

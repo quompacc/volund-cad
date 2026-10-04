@@ -18,6 +18,10 @@ void CadViewport::setBodySelectionHandler(std::function<void(std::uint64_t)> han
     impl_->bodySelectionHandler = std::move(handler);
 }
 
+void CadViewport::setBasePlaneSelectionHandler(std::function<void(BasePlane)> handler) {
+    impl_->basePlaneSelectionHandler = std::move(handler);
+}
+
 void CadViewport::setPlanarFaceSelectionHandler(
     std::function<void(const PlanarFaceSelection&)> handler) {
     impl_->planarFaceSelectionHandler = std::move(handler);

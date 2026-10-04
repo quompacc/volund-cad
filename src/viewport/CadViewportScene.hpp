@@ -2,6 +2,7 @@
 
 #include <voelund/viewport/CadViewport.hpp>
 
+#include "BasePlanePresentation.hpp"
 #include "SketchBoxSelection.hpp"
 #include "SketchConstraintPresentation.hpp"
 #include "SketchEditorInteraction.hpp"
@@ -14,6 +15,8 @@
 #include <AIS_InteractiveContext.hxx>
 #include <AIS_SelectionScheme.hxx>
 #include <AIS_Shape.hxx>
+#include <BRepBndLib.hxx>
+#include <Bnd_Box.hxx>
 #include <Aspect_DisplayConnection.hxx>
 #include <Aspect_GradientFillMethod.hxx>
 #include <Aspect_Grid.hxx>
@@ -39,6 +42,7 @@
 #include <V3d_TypeOfOrientation.hxx>
 #include <V3d_View.hxx>
 #include <V3d_Viewer.hxx>
+#include <algorithm>
 #include <cstdint>
 #include <functional>
 #include <utility>
@@ -108,10 +112,34 @@ class CadViewportScene {
             sketchPresentation.setReferences(context, *activeSketchSupport,
                                              sketchEditor.isActive());
         attachTransformTarget();
-        if (isFirstShape) {
+        refreshBasePlanes();
+        if (isFirstShape && (!presentations.empty() || !basePlanesFitted)) {
             view->FitAll(0.08, false);
             view->ZFitAll();
+            basePlanesFitted = true;
         }
+    }
+
+    // Prominent in an empty scene, faint beside bodies, hidden while sketching.
+    void refreshBasePlanes() {
+        if (context.IsNull())
+            return; // Not initialized yet; the first rebuild shows the planes.
+        if (sketchEditor.isActive() || activeSketchSupport) {
+            basePlanes.hide(context);
+            return;
+        }
+        double halfSize = 50.0;
+        if (!presentations.empty()) {
+            Bnd_Box bounds;
+            for (const BodyPresentation& presentation : presentations)
+                BRepBndLib::Add(presentation.shape->Shape(), bounds);
+            if (!bounds.IsVoid()) {
+                double x0, y0, z0, x1, y1, z1;
+                bounds.Get(x0, y0, z0, x1, y1, z1);
+                halfSize = std::max({25.0, 0.6 * (x1 - x0), 0.6 * (y1 - y0), 0.6 * (z1 - z0)});
+            }
+        }
+        basePlanes.show(context, presentations.empty(), halfSize);
     }
 
     void setTransformToolEnabled(bool enabled) {
@@ -171,6 +199,9 @@ class CadViewportScene {
     std::vector<std::uint64_t> selectedSketchElements;
     std::function<void(std::uint64_t)> bodySelectionHandler;
     std::function<void(const PlanarFaceSelection&)> planarFaceSelectionHandler;
+    std::function<void(BasePlane)> basePlaneSelectionHandler;
+    BasePlanePresentation basePlanes;
+    bool basePlanesFitted{false};
     std::function<void(const SketchRectangleResult&)> sketchRectangleHandler;
     std::function<void(const std::optional<SketchElementIntent>&)> sketchEditorPreviewHandler;
     std::function<void(const SketchElementIntent&)> sketchEditorElementHandler;
