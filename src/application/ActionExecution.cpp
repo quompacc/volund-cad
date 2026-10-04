@@ -217,8 +217,13 @@ void recordChanges(ActionResult& result, const DocumentSnapshot& before,
 
 ActionResult rejected(const CadSession& session, ActionRejection rejection,
                       std::string diagnostic) {
-    return {CommandResult::invalidInput(std::move(diagnostic)), rejection,
-            session.sceneStatus().document};
+    return {CommandResult::invalidInput(std::move(diagnostic)),
+            rejection,
+            session.sceneStatus().document,
+            {},
+            {},
+            {},
+            {}};
 }
 } // namespace
 
@@ -235,8 +240,13 @@ ActionResult executeAction(CadSession& session, const ActionRequest& request) {
     if (const auto finding = validation.findings().first())
         return rejected(session, finding->first, finding->second);
 
-    ActionResult result{run(session, before.snapshot(), request.action), ActionRejection::none,
-                        session.sceneStatus().document};
+    ActionResult result{run(session, before.snapshot(), request.action),
+                        ActionRejection::none,
+                        session.sceneStatus().document,
+                        {},
+                        {},
+                        {},
+                        {}};
     if (result.command.status() != CommandStatus::rejected)
         recordChanges(result, before.snapshot(), session.identifiedSnapshot().snapshot());
     return result;

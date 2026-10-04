@@ -75,7 +75,7 @@ struct Model final {
 
 Model build(application::CadSession& session) {
     auto result = committed(session,
-                            application::CreateParameterAction{"A", ParameterUnit::length, mm(10)},
+                            application::CreateParameterAction{"A", ParameterUnit::length, mm(10), {}},
                             "Create A");
     require(result.createdParameters.size() == 1 && result.changedParameters.empty() &&
                 result.createdFeatures.empty(),
@@ -83,7 +83,7 @@ Model build(application::CadSession& session) {
     const auto length = result.createdParameters.front();
     result = committed(session,
                        application::CreateParameterAction{
-                           "W", ParameterUnit::angle, {30, QuantityUnit::degree}},
+                           "W", ParameterUnit::angle, {30, QuantityUnit::degree}, {}},
                        "Create W");
     const auto angle = result.createdParameters.front();
 
@@ -196,7 +196,7 @@ void rejections(application::CadSession& session, const Model& model) {
     expect(make(application::BindExtrusionDistanceAction{model.extrusion, model.angle}),
            ActionRejection::invalidUnit, "Distance bound to an angle");
     expect(make(application::CreateParameterAction{"B", ParameterUnit::length,
-                                                   {inf, QuantityUnit::radian}}),
+                                                   {inf, QuantityUnit::radian}, {}}),
            ActionRejection::invalidUnit, "Unit before finiteness");
 
     for (const double value : {nan, inf, -inf})
