@@ -4,8 +4,8 @@
   "auditedCommit": "1b78229",
   "status": "implementation-started",
   "counts": {
-    "total": 124,
-    "throughG4": 94,
+    "total": 125,
+    "throughG4": 95,
     "g5": 30
   },
   "globalGates": [
@@ -60,6 +60,7 @@
     "R09",
     "R10",
     "V01",
+    "R10b",
     "A04",
     "U01",
     "U02",
@@ -1312,8 +1313,36 @@
       ],
       "acceptance": "A-REG-01 vollständig besteht: Ringfläche π(R²−r²), Inseln, mehrere getrennte Regionen und invertierte Eingabereihenfolge. Invalides Face liefert Fehler statt leeres Erfolgsshape.",
       "boundary": "Keine Extrude-UI; diese nutzt später dieselben Regionresultate. Umstellung 2026-10-04: Umfang auf den Bedarf des Durchstichs V01 begrenzen; weitergehende Fälle als eigenes Unterpaket nach V01.",
-      "status": "planned",
+      "status": "done",
       "gate": "G1",
+      "chapter": "03-fundament.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [
+        "evidence/R10.md"
+      ],
+      "completedCommit": null
+    },
+    {
+      "id": "R10b",
+      "title": "Faces für Regionen schneidender Konturen",
+      "deps": [
+        "R10",
+        "V01"
+      ],
+      "files": [
+        "src/features/SketchRegionFaces.cpp",
+        "src/features/SketchIntersectionCurves.cpp",
+        "tests/unit/SketchRegionFaceTests.cpp"
+      ],
+      "steps": [
+        "Faces direkt aus den R08b-Randintervallen bauen (getrimmte Quellkurven je Intervall), auch wenn Ränder keine ganzen Schleifen sind.",
+        "Mehrere gewählte, aneinandergrenzende Zellen ohne berührende Einzelkörper vereinigen.",
+        "Kantenprovenienz je Intervall (Element, Rolle, Parameterbereich) für Kappen- und Seitenreferenzen liefern."
+      ],
+      "acceptance": "Linse und Sicheln zweier sich schneidender Kreise, Selbstschnitt-Zellen und Sehnenhälften ergeben gültige Faces mit analytischer Fläche; Kappenreferenzen bleiben über Maßänderungen stabil.",
+      "boundary": "Abgespalten aus R10 nach der Umstellung vom 2026-10-04; R10 deckt verschachtelte, nicht schneidende Konturen für V01 ab.",
+      "status": "planned",
+      "gate": "G2",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
       "evidence": [],

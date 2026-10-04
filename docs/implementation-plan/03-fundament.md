@@ -382,3 +382,7 @@ Aktueller Paketstatus und Evidenz stehen im Manifest. A01 ist abgenommen; die ü
   3. Analytische Fixtures und Toleranzmatrix für kleine/große Flächen ergänzen.
 - **Abnahme:** A-REG-01 vollständig besteht: Ringfläche π(R²−r²), Inseln, mehrere getrennte Regionen und invertierte Eingabereihenfolge. Invalides Face liefert Fehler statt leeres Erfolgsshape.
 - **Grenze:** Keine Extrude-UI; diese nutzt später dieselben Regionresultate.
+
+**Aufteilung vom 04.10.2026:** R10 deckt verschachtelte, nicht schneidende Konturen für V01
+ab ([Nachweis](evidence/R10.md)). Faces für Regionen schneidender Konturen folgen als
+**R10b** nach V01 (`packets.json`).

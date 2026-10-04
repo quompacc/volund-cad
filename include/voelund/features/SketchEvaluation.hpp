@@ -28,9 +28,10 @@ struct EvaluatedProfileFace final {
 [[nodiscard]] std::vector<EvaluatedProfileFace>
 evaluateNamedProfileFaces(const document::SketchParameters& sketch,
                           std::span<const document::SketchProfileId> selectedProfiles);
-// R09 bridge until R10: each selected region whose outer and hole boundaries are whole
-// closed loops (nested, non-crossing contours) becomes one face with inner wires. Regions
-// that need a split arrangement and unresolved RegionIds are rejected, never substituted.
+// R10 (V01 scope): each selected region whose outer and hole boundaries are whole closed
+// loops (nested, non-crossing contours) becomes one valid face with inner wires; a selected
+// inner region fills its parent's hole. Unresolved RegionIds and arrangements of crossing
+// boundaries (R10b) are rejected with the elements involved, never substituted or empty.
 [[nodiscard]] std::vector<EvaluatedProfileFace>
 evaluateRegionFaces(const document::SketchParameters& sketch,
                     std::span<const document::SketchRegionId> regions);

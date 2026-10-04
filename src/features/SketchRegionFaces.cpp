@@ -36,6 +36,35 @@ std::string reason(SketchRegionReferenceStatus status) {
     return "unknown";
 }
 
+// R10: failures name the elements a user has to look at.
+std::string elementList(const std::set<std::uint64_t>& elements) {
+    std::string text = " [elements";
+    for (const std::uint64_t element : elements)
+        text += " " + std::to_string(element);
+    return text + "]";
+}
+
+std::set<std::uint64_t> failingElements(const SketchRegionIdentities& identities,
+                                        std::span<const document::SketchElement> elements,
+                                        const document::SketchRegionId& id,
+                                        SketchRegionReferenceStatus status) {
+    std::set<std::uint64_t> result;
+    if (status == SketchRegionReferenceStatus::invalidSketch) {
+        for (const SketchRegionDiagnostic& diagnostic : identities.regions.diagnostics)
+            for (document::SketchElementId element : diagnostic.elements)
+                result.insert(element.value());
+        return result;
+    }
+    for (document::SketchElementId element : id.elements()) {
+        const bool material = std::ranges::any_of(elements, [&](const auto& candidate) {
+            return candidate.id == element && !candidate.construction;
+        });
+        if (status != SketchRegionReferenceStatus::elementsRemoved || !material)
+            result.insert(element.value());
+    }
+    return result;
+}
+
 std::set<std::uint64_t> boundaryElements(const SketchRegionResult& regions, std::size_t boundary) {
     std::set<std::uint64_t> elements;
     for (const RegionHalfEdge& edge : regions.boundaries[boundary].edges)
@@ -83,8 +112,8 @@ EvaluatedProfileFace loopFace(const document::SketchParameters& sketch,
             return evaluateNamedProfileFaces(sketch, id).front();
         }
     }
-    throw GeometryEvaluationError(
-        "Region on intersecting boundaries requires the R10 face construction");
+    throw GeometryEvaluationError("Region on intersecting boundaries is not supported before R10b" +
+                                  elementList(elements));
 }
 
 } // namespace
@@ -101,8 +130,10 @@ evaluateRegionFaces(const document::SketchParameters& sketch,
     for (const document::SketchRegionId& id : regions) {
         const auto resolved = resolveSketchRegion(identities, sketch.elements.values, id);
         if (resolved.status != SketchRegionReferenceStatus::resolved)
-            throw GeometryEvaluationError("Extrusion region needs repair: " +
-                                          reason(resolved.status));
+            throw GeometryEvaluationError(
+                "Extrusion region needs repair: " + reason(resolved.status) +
+                elementList(
+                    failingElements(identities, sketch.elements.values, id, resolved.status)));
         selected.push_back(*resolved.region);
     }
     const auto innerRegion = [&](std::size_t hole) -> std::optional<std::size_t> {

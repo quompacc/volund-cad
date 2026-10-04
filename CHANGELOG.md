@@ -12,6 +12,8 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 
 ### Hinzugefügt
 
+- R10 abgeschlossen (V01-Umfang): Regionen verschachtelter Konturen werden gültige Flächen mit Innenwires und analytischem Inhalt (A-REG-01: Ring 300π, Innenregion 100π, Inseln, Permutation, Toleranzmatrix); Fehler nennen die betroffenen Element-IDs. Schneidende Konturen folgen als R10b nach V01. [Nachweis](docs/implementation-plan/evidence/R10.md).
+
 - R09 abgeschlossen (V01-Umfang): dauerhafte Regionsidentität aus kanonischen Randsignaturen statt kleinster Element-ID; Auswahl per Rand-Pick, natives Schema 5 mit Regionsauswahl, Migration alter Profil-IDs beim Öffnen, Ringextrusion mit Loch, Split und gelöschte Ränder werden reparaturbedürftig statt umgedeutet. Offene Skizzenelemente verhindern keine Regionen mehr. A-REG-02 besteht. [Nachweis](docs/implementation-plan/evidence/R09.md).
 
 - C01 abgeschlossen: Pflicht-CI je Push/PR auf dem Fedora-Runner (`gitea-runner`, Label `linux-desktop`). Build, Quellgrenzen und vollständiger CTest in headless `kwin_wayland --virtual` auf der Host-GPU; Logs, JUnit und Aufnahmen als Laufartefakt. Rot-Prüfung und Neustart ohne Desktopanmeldung belegt. [Nachweis](docs/implementation-plan/evidence/C01.md).
