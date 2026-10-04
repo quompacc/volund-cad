@@ -50,7 +50,11 @@ grünen Linux-CI-Lauf. Konzept: [parameter-table.md](../../parameter-table.md).
 | `document.native_metadata` | Schema 8 wird abgewiesen, Schema 7 ist aktuell |
 
 - **Windows:** 112/112 Tests bestanden (Debug, MSVC, seriell).
-- **Linux:** CI-Lauf ausstehend.
+- **Linux:** CI-Lauf 363 auf Commit `fdaf24c`, grün; er enthält `20cf5cc`. Lauf 362 auf
+  `20cf5cc` war rot: `desktop.sketch_snap` (S04a) schlug zufällig fehl, schon vor PAR01
+  (8/20 Läufe auf `81b107a`). Ursache war ein vom Heap abhängiger Lösungsweg in PlaneGCS;
+  `fdaf24c` legt die Unbekannten in Elementreihenfolge ab (danach 0/20 auf Fedora, 28/28
+  unter Windows).
 
 ## Grenzen
 
