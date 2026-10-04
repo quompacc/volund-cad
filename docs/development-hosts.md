@@ -50,6 +50,14 @@ anderen Projekts und **nicht** der Testrechner.
 - Desktoptests standardmäßig in headless `kwin_wayland --virtual` auf der Intel-GPU
   (`renderD128`), unabhängig von einer Anmeldung; `VOELUND_CI_SESSION=desktop`
   verwendet stattdessen die angemeldete Sitzung.
+- CI-Stand prüfen: Lese-Token des Nutzers (nur lesend, für Agenten angelegt am 04.10.2026)
+  in `~/.config/volund/gitea-read-token` (Modus 600). Der Token gehört nicht ins Repo.
+  Lauf-ID (`id`) ist die in Nachweisen zitierte Nummer, `run_number` das „ci #N“ der Oberfläche.
+
+```sh
+curl -fsS -H "Authorization: token $(cat ~/.config/volund/gitea-read-token)" \
+  "https://gitea.hl.home.arpa/api/v1/repos/eduard/volund-cad/actions/runs?limit=5"
+```
 
 ## Historisch: FreeBSD-Testrechner (September 2026)
 
