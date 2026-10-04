@@ -1371,12 +1371,14 @@
       ],
       "acceptance": "Kein aktiver Knopf ohne registrierte ausführbare Aktion; jeder Befehl der Tabelle ist über genau eine Command-ID erreichbar. Nicht verfügbares Werkzeug verändert weder Auswahl noch Historie.",
       "boundary": "Noch keine neue Gestaltung (U03); bereinigt die Befehlsbasis für ADR 0012. UI-Vorschau wird nicht mehr angepasst.",
-      "status": "planned",
+      "status": "done",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/U01.md"
+      ],
+      "completedCommit": "2680813"
     },
     {
       "id": "U02",
