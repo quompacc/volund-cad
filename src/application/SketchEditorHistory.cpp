@@ -28,10 +28,14 @@ bool SketchEditorSession::undo() {
     clearPreview();
     selectedElement_.reset();
     selectedReferences_.clear();
-    if (elements_.values.empty())
+    if (elements_.values.empty()) {
         lastSolveResult_ = {features::SketchSolveStatus::success, -1, {}};
-    else
-        static_cast<void>(solveConstraints());
+    } else if (solveConstraints()) {
+        // Entries are already solved; the solve only refreshes its result. PlaneGCS orders
+        // work by heap address, so writing its geometry back could perturb the last bits.
+        elements_ = history_[historyIndex_].elements;
+        constraints_ = history_[historyIndex_].constraints;
+    }
     return true;
 }
 
@@ -44,10 +48,14 @@ bool SketchEditorSession::redo() {
     clearPreview();
     selectedElement_.reset();
     selectedReferences_.clear();
-    if (elements_.values.empty())
+    if (elements_.values.empty()) {
         lastSolveResult_ = {features::SketchSolveStatus::success, -1, {}};
-    else
-        static_cast<void>(solveConstraints());
+    } else if (solveConstraints()) {
+        // Entries are already solved; the solve only refreshes its result. PlaneGCS orders
+        // work by heap address, so writing its geometry back could perturb the last bits.
+        elements_ = history_[historyIndex_].elements;
+        constraints_ = history_[historyIndex_].constraints;
+    }
     return true;
 }
 

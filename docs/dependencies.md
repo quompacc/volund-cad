@@ -25,11 +25,14 @@ The C++ standard library is used for general containers, strings, algorithms, er
 
 On Windows, Qt Base is taken from Qt's official prebuilt archive instead of being built through vcpkg. This avoids vcpkg's large Qt host-tool dependency graph. On FreeBSD, system packages are the initial build input; release packaging must derive its library list from the final executable dependency graph, never from a complete SDK directory.
 
-Linux is a non-product compatibility path and uses the same pinned vcpkg
-toolchain as Windows for OCCT, Eigen and Boost; `linux-gcc` deliberately keeps
-the desktop disabled. It does not claim that a distribution package mix is the
-reproducible product input. FreeBSD remains the separate system-package/
-project-local-OCCT path documented below.
+Linux desktop (ADR 0011, reference Fedora) follows the FreeBSD model: Qt 6 with
+the Wayland plugin, Boost and Eigen come from distribution packages, OCCT from
+the project-local lean 7.9.3 build (`tools/build-lean-occt.sh`, preset
+`linux-desktop`). Distribution OCCT packages are not used because they build the
+renderer with Xlib and cannot attach Qt's Wayland EGL context without `DISPLAY`
+(same finding as the stock FreeBSD package below); they also differ from the
+pinned version. The separate `linux-gcc` core preset keeps the pinned vcpkg
+toolchain without desktop. Packaging (RPM/Flatpak) is decided in L02.
 
 For the FreeBSD solver build, install package `eigen` from `math/eigen3` and `boost-libs` from `devel/boost-libs`
 (the latter deliberately excludes Boost.Python) from the selected package branch,

@@ -103,16 +103,17 @@ ctest --preset freebsd-clang-lean-occt -L wayland
 See [`docs/freebsd-meridian.md`](docs/freebsd-meridian.md) for the two-stage
 control-desktop and Meridian validation procedure.
 
-For the Linux core compatibility build:
+On Linux (reference: Fedora), the native Wayland desktop build uses system Qt 6,
+Boost and Eigen plus the same project-local OCCT 7.9.3 as FreeBSD:
 
 ```bash
-./tools/setup-linux.sh
-cmake --build --preset linux-gcc
-ctest --preset linux-gcc
+./tools/setup-linux.sh            # checks packages, builds lean OCCT, configures linux-desktop
+cmake --build --preset linux-desktop
+sh ./tools/run-linux-desktop.sh   # inside the Wayland session: full CTest, DISPLAY unset
 ```
 
-The Linux preset currently builds and tests the CAD core without the desktop target;
-the native Wayland desktop build on Fedora follows in packet P05. Product desktop targets
+`./tools/setup-linux.sh core` keeps the vcpkg-based `linux-gcc` core build without
+the desktop target. Packet P05 accepts the Linux desktop path. Product desktop targets
 are native Wayland on Linux and on FreeBSD under Meridian. X11 and
 XWayland do not satisfy its viewport acceptance gate. Desktop enablement is validated
 first on a mature FreeBSD Wayland desktop as a control and then under Meridian.

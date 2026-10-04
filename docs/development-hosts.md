@@ -4,9 +4,38 @@
 
 Der Testrechner läuft laut Nutzer seit Anfang Oktober 2026 nativ mit Fedora und
 soll als Gitea-Actions-Runner dienen ([ADR 0011](adr/0011-linux-desktop-and-ci-runner.md)).
-Adresse, SSH-Schlüssel, Compositor, GPU/Mesa, Qt- und Compilerversion sind noch
-nicht verifiziert und werden in P05 eingetragen. Am 04.10.2026 war
-`192.168.1.238:22` mit dem bisherigen Schlüssel nicht erreichbar.
+Am 04.10.2026 in P05 per SSH verifiziert:
+
+| Eigenschaft | Verifizierter Stand |
+|---|---|
+| SSH | `eduard@192.168.1.203`, Schlüssel `%USERPROFILE%/.ssh/meridian_freebsd` |
+| Hostname / Betriebssystem | `fedora-dev`, Fedora Linux 44 (KDE Plasma), Kernel 7.2.8 |
+| Hardware | 4 Kerne, 15 GB RAM; Intel HD 620 (aktiv) und NVIDIA GM107 (nicht geprüft) |
+| Grafiksitzung | KDE Plasma, `kwin_wayland`, `WAYLAND_DISPLAY=wayland-0`, `XDG_RUNTIME_DIR=/run/user/1000` |
+| Ausgabe | eDP-1, 1920 × 1080, Faktor 1 |
+| Mesa / EGL | Mesa 26.2.3, EGL 1.5, OpenGL ES 3.2 |
+| Qt / Compiler / CMake | Qt 6.11.2 (Fedora), GCC 16.2.1, CMake 4.3.0, Eigen 5.0.1, Boost 1.90 |
+| OCCT | projektlokal 7.9.3 unter `.tools/occt-linux/install` |
+| Prüfverzeichnis | `/home/eduard/src/volund-cad` (kein Git-Checkout) |
+| Aufnahme | `spectacle -b -n -f -o <datei>` |
+| sudo | mit Passwort; Paketinstallation erfolgt durch den Nutzer |
+
+Verbindung aus PowerShell:
+
+```powershell
+ssh -i "$env:USERPROFILE/.ssh/meridian_freebsd" -o IdentitiesOnly=yes eduard@192.168.1.203
+```
+
+Native Wayland-Läufe über SSH setzen `XDG_RUNTIME_DIR=/run/user/1000` und
+`WAYLAND_DISPLAY=wayland-0`; `DISPLAY` bleibt ungesetzt.
+
+Desktop-Prüfweg (P05): `tools/setup-linux.sh` (Fedora-Pakete prüfen, projektlokales
+OCCT 7.9.3 bauen, Preset `linux-desktop` konfigurieren), danach in der aktiven
+Wayland-Sitzung `sh tools/run-linux-desktop.sh`. Es schreibt Hostinventar, EGL-Info,
+Bibliotheksliste und CTest/JUnit nach `artifacts/linux-desktop/`.
+
+Der SSH-Alias `volund` (`192.168.1.19`, `volund-lxc`) ist ein Debian-Container eines
+anderen Projekts und **nicht** der Testrechner.
 
 ## Historisch: FreeBSD-Testrechner (September 2026)
 

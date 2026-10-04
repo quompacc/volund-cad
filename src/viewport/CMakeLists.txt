@@ -49,7 +49,7 @@ target_link_libraries(
         TKService
 )
 
-if(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD" AND VOELUND_VIEWPORT_BACKEND STREQUAL "qt-opengl")
+if(VOELUND_NATIVE_WAYLAND AND VOELUND_VIEWPORT_BACKEND STREQUAL "qt-opengl")
     target_compile_definitions(voelund_viewport PUBLIC HAVE_GLES2=1 VOELUND_OCCT_GLES=1)
     target_link_libraries(voelund_viewport PUBLIC TKOpenGles OpenGL::EGL)
 else()

@@ -111,7 +111,7 @@ bool verifyDesktopSmoke(viewport::CadViewport& viewport) {
 #if defined(_WIN32)
     if (requestedQpa.isEmpty())
         requestedQpa = QStringLiteral("windows");
-#elif defined(__FreeBSD__)
+#elif defined(__FreeBSD__) || defined(__linux__)
     if (requestedQpa.isEmpty())
         requestedQpa = QStringLiteral("wayland");
 #endif

@@ -54,7 +54,7 @@ if(UNIX AND NOT APPLE)
 endif()
 
 if(BUILD_TESTING AND VOELUND_BUILD_DESKTOP)
-    if(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+    if(VOELUND_NATIVE_WAYLAND)
         add_test(
             NAME desktop.viewport_startup.native_wayland
             COMMAND
@@ -63,7 +63,7 @@ if(BUILD_TESTING AND VOELUND_BUILD_DESKTOP)
         )
         set_tests_properties(
             desktop.viewport_startup.native_wayland
-            PROPERTIES TIMEOUT 20 LABELS "freebsd;wayland;desktop;platform"
+            PROPERTIES TIMEOUT 20 LABELS "${VOELUND_PLATFORM_LABEL};wayland;desktop;platform"
         )
     elseif(WIN32)
         add_test(NAME desktop.viewport_startup COMMAND voelund-cad --smoke-test)
@@ -75,11 +75,8 @@ target_sources(voelund-cad PRIVATE "${PROJECT_SOURCE_DIR}/apps/SmokeSupport.cpp"
 if(WIN32)
     target_link_libraries(voelund-cad PRIVATE opengl32)
 endif()
-if(BUILD_TESTING AND VOELUND_BUILD_DESKTOP AND (WIN32 OR CMAKE_SYSTEM_NAME STREQUAL "FreeBSD"))
-    set(smoke_require_wayland OFF)
-    if(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
-        set(smoke_require_wayland ON)
-    endif()
+if(BUILD_TESTING AND VOELUND_BUILD_DESKTOP AND (WIN32 OR VOELUND_NATIVE_WAYLAND))
+    set(smoke_require_wayland ${VOELUND_NATIVE_WAYLAND})
     add_test(NAME desktop.viewport_startup.uninitialized
         COMMAND "${CMAKE_COMMAND}"
             "-DVOELUND_SMOKE_EXECUTABLE=$<TARGET_FILE:voelund-cad>"

@@ -71,6 +71,21 @@
       }
     },
     {
+      "name": "linux-desktop",
+      "displayName": "Linux GCC Native Wayland Desktop with lean OCCT",
+      "inherits": "base",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "g++",
+        "VOELUND_VIEWPORT_BACKEND": "qt-opengl",
+        "CMAKE_PREFIX_PATH": "${sourceDir}/.tools/occt-linux/install"
+      }
+    },
+    {
       "name": "freebsd-clang",
       "displayName": "FreeBSD Clang Native Wayland Debug",
       "inherits": "base",
@@ -107,6 +122,10 @@
       "configurePreset": "linux-gcc"
     },
     {
+      "name": "linux-desktop",
+      "configurePreset": "linux-desktop"
+    },
+    {
       "name": "freebsd-clang",
       "configurePreset": "freebsd-clang"
     },
@@ -133,6 +152,13 @@
     {
       "name": "linux-gcc",
       "configurePreset": "linux-gcc",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "linux-desktop",
+      "configurePreset": "linux-desktop",
       "output": {
         "outputOnFailure": true
       }

@@ -3717,7 +3717,8 @@
       "files": [
         "CMakePresets.json",
         "tools/setup-linux.sh",
-        "cmake/vcpkg-triplets/x64-linux-voelund.cmake",
+        "tools/build-lean-occt.sh",
+        "tools/run-linux-desktop.sh",
         "tests/CMakeLists.txt",
         "docs/development-hosts.md"
       ],
@@ -3728,11 +3729,13 @@
       ],
       "acceptance": "Frischer Checkout baut auf Fedora den Desktop-Build; vollständiger CTest grün, QPA nachweislich wayland, kein XWayland. GUI-Smokes und betrachtete Aufnahmen belegt. setup-linux.sh beschreibt den tatsächlichen Weg.",
       "boundary": "Keine Distributionspakete (L02/L08). Kein X11-Desktopnachweis. FreeBSD-Presets bleiben unverändert gültig.",
-      "status": "planned",
+      "status": "done",
       "gate": "G0",
       "chapter": "06-plattform-release.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
+      "evidence": [
+        "evidence/P05.md"
+      ],
       "completedCommit": null
     },
     {

@@ -421,9 +421,10 @@ if(VOELUND_BUILD_DESKTOP)
         add_test(NAME desktop.viewport_lifecycle_qt COMMAND voelund_viewport_lifecycle_tests)
         set_tests_properties(desktop.viewport_lifecycle_qt
             PROPERTIES LABELS "desktop;viewport;lifecycle;qt-opengl" TIMEOUT 45)
-        if(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+        if(VOELUND_NATIVE_WAYLAND)
             set_tests_properties(desktop.viewport_lifecycle_qt PROPERTIES
-                ENVIRONMENT "QT_QPA_PLATFORM=wayland" LABELS "desktop;viewport;lifecycle;qt-opengl;freebsd;wayland")
+                ENVIRONMENT "QT_QPA_PLATFORM=wayland"
+                LABELS "desktop;viewport;lifecycle;qt-opengl;${VOELUND_PLATFORM_LABEL};wayland")
         endif()
         if(WIN32)
             foreach(scale IN ITEMS 1 1.5 2)

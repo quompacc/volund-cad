@@ -12,6 +12,8 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 
 ### Hinzugefügt
 
+- P05 abgeschlossen: Linux-Desktop mit nativem Wayland (Fedora 44, KDE) über Preset `linux-desktop`, projektlokales OCCT 7.9.3 (`tools/build-lean-occt.sh`), `tools/setup-linux.sh` und `tools/run-linux-desktop.sh`. Behoben: nichtdeterministisches Editor-Undo/Redo durch erneutes PlaneGCS-Lösen und in den Toolbar-Überlauf verdrängte Verbindungsauswahl (Modi/Snap jetzt zweite Toolbarzeile). 92/92 Fedora, 95/95 Windows. [Nachweis](docs/implementation-plan/evidence/P05.md).
+
 - R08 abgeschlossen: orientierte Regionen und unmittelbare Innenränder, Ring/Innenfläche getrennt, explizite Tangential-/Offenranddiagnosen. 95/95 Windows, 92/92 FreeBSD, 390 gleiche Quellhashes. Produktanbindung folgt R09/R10. [Nachweis](docs/implementation-plan/evidence/R08.md).
 
 - R08a: analytische Schnittpunkte, Tangentenklassifikation und Quellparameterintervalle mit Herkunft. 94/94 Windows, 91/91 FreeBSD, 385 gleiche Quellhashes. Regionsbildung folgt R08b. [Nachweis](docs/implementation-plan/evidence/R08a.md).

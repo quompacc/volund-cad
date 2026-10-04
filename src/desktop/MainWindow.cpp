@@ -213,6 +213,9 @@ void MainWindow::createHistoryToolbar() {
 }
 
 void MainWindow::createConnectionToolbar() {
+    // Modes and settings start a second row so wider styles (e.g. Breeze) never move the
+    // global connection control into a toolbar overflow menu.
+    addToolBarBreak();
     auto* toolbar = addToolBar(tr("Connection"));
     toolbar->setObjectName(QStringLiteral("connectionToolbar"));
     toolbar->addWidget(new QLabel(tr("Connection: "), toolbar));
