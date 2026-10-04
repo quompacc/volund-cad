@@ -27,7 +27,8 @@ compositor_pid=
 runtime_dir=
 cleanup() {
     if [ -n "$compositor_pid" ]; then
-        kill "$compositor_pid" 2>/dev/null || true
+        # dbus-run-session does not forward TERM; stop the compositor's whole group.
+        kill -TERM -- "-$compositor_pid" 2>/dev/null || true
         wait "$compositor_pid" 2>/dev/null || true
     fi
     if [ -n "$runtime_dir" ]; then
@@ -42,7 +43,7 @@ case "$session_kind" in
         chmod 700 "$runtime_dir"
         socket="voelund-ci-$$"
         env -u DISPLAY -u WAYLAND_DISPLAY XDG_RUNTIME_DIR="$runtime_dir" \
-            dbus-run-session -- kwin_wayland --virtual --socket "$socket" \
+            setsid dbus-run-session -- kwin_wayland --virtual --socket "$socket" \
             --width 1600 --height 1000 >"$report_dir/compositor.txt" 2>&1 &
         compositor_pid=$!
         attempts=0

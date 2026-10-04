@@ -21,6 +21,41 @@ DocumentSnapshot DocumentSnapshot::markLegacySketchReferencesForRepair() const {
     }
     return result;
 }
+DocumentSnapshot
+DocumentSnapshot::migrateLegacyExtrusionProfiles(const LegacyProfileMapper& mapper) const {
+    auto result = *this;
+    for (std::size_t index = 0; index < result.features_.size(); ++index) {
+        auto* extrusion = std::get_if<ExtrusionParameters>(&result.parameters_[index]);
+        const auto& input = result.features_[index].inputFeature;
+        if (!extrusion || extrusion->profiles.empty() || !input)
+            continue;
+        const auto sketch = std::ranges::find(result.features_, *input, &FeatureDescriptor::id);
+        if (sketch == result.features_.end())
+            continue;
+        const auto* parameters = std::get_if<SketchParameters>(
+            &result.parameters_[static_cast<std::size_t>(sketch - result.features_.begin())]);
+        if (!parameters)
+            continue;
+        std::vector<SketchRegionId> regions;
+        bool mapped = true;
+        for (const SketchProfileId profile : extrusion->profiles) {
+            const auto target = mapper(*parameters, profile);
+            if (!target) {
+                mapped = false;
+                break;
+            }
+            regions.insert(regions.end(), target->begin(), target->end());
+        }
+        if (!mapped)
+            continue;
+        std::ranges::sort(regions);
+        const auto duplicates = std::ranges::unique(regions);
+        regions.erase(duplicates.begin(), duplicates.end());
+        extrusion->profiles.clear();
+        extrusion->regions = std::move(regions);
+    }
+    return result;
+}
 DocumentSnapshot DocumentSnapshot::capture(const ModelDocument& document) {
     return document.impl_->view();
 }

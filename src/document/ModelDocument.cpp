@@ -55,6 +55,14 @@ void validateExtrusion(const ExtrusionParameters& parameters) {
                 throw std::invalid_argument("Extrusion profile IDs must be unique");
         }
     }
+    if (!parameters.profiles.empty() && !parameters.regions.empty())
+        throw std::invalid_argument("Extrusion mixes legacy profiles and regions");
+    for (std::size_t index = 0; index < parameters.regions.size(); ++index) {
+        for (std::size_t prior = 0; prior < index; ++prior) {
+            if (parameters.regions[prior] == parameters.regions[index])
+                throw std::invalid_argument("Extrusion region IDs must be unique");
+        }
+    }
 }
 
 } // namespace

@@ -6,6 +6,7 @@
 #include <TDataStd_Real.hxx>
 #include <charconv>
 #include <set>
+#include <string>
 
 namespace voelund::document::detail {
 namespace {
@@ -17,6 +18,62 @@ TDF_Label child(const TDF_Label& label, int tag) {
     require(!result.IsNull());
     return result;
 }
+// AsciiString attributes are bounded by maximumNameBytes; long signatures are chunked.
+constexpr std::size_t regionChunkBytes = 4000;
+std::size_t chunkCount(const SketchRegionId& region) {
+    return (region.text().size() + regionChunkBytes - 1) / regionChunkBytes;
+}
+void writeRegions(const TDF_Label& label, const std::vector<SketchRegionId>& regions) {
+    TDataStd_Integer::Set(label, static_cast<int>(regions.size()));
+    for (std::size_t index = 0; index < regions.size(); ++index) {
+        const auto region = label.FindChild(static_cast<int>(index + 1));
+        const auto& text = regions[index].text();
+        TDataStd_Integer::Set(region, static_cast<int>(chunkCount(regions[index])));
+        for (std::size_t chunk = 0; chunk < chunkCount(regions[index]); ++chunk)
+            TDataStd_AsciiString::Set(region.FindChild(static_cast<int>(chunk + 1)),
+                text.substr(chunk * regionChunkBytes, regionChunkBytes).c_str());
+    }
+}
+std::vector<SketchRegionId> readRegions(const TDF_Label& label, std::size_t& remainingRecords) {
+    Handle(TDataStd_Integer) size;
+    require(label.FindAttribute(TDataStd_Integer::GetID(), size));
+    const int count = size->Get();
+    require(count >= 0 && count <= static_cast<int>(maximumExtrusionProfileCount) &&
+        static_cast<std::size_t>(count) <= remainingRecords && label.NbChildren() == count);
+    remainingRecords -= static_cast<std::size_t>(count);
+    std::vector<SketchRegionId> regions;
+    for (int index = 1; index <= count; ++index) {
+        const auto region = child(label, index);
+        Handle(TDataStd_Integer) chunks;
+        require(region.FindAttribute(TDataStd_Integer::GetID(), chunks));
+        const int pieces = chunks->Get();
+        require(pieces >= 1 && static_cast<std::size_t>(pieces) <= remainingRecords &&
+            region.NbChildren() == pieces);
+        remainingRecords -= static_cast<std::size_t>(pieces);
+        std::string text;
+        for (int chunk = 1; chunk <= pieces; ++chunk) {
+            const auto part = child(region, chunk);
+            Handle(TDataStd_AsciiString) value;
+            require(part.NbChildren() == 0 &&
+                part.FindAttribute(TDataStd_AsciiString::GetID(), value));
+            const auto length = static_cast<std::size_t>(value->Get().Length());
+            // Every chunk but the last is full, so the split is canonical as well.
+            require(length >= 1 && length <= regionChunkBytes &&
+                (chunk == pieces || length == regionChunkBytes));
+            text.append(value->Get().ToCString(), length);
+        }
+        const auto id = SketchRegionId::parse(text);
+        require(id.has_value());
+        regions.push_back(*id);
+    }
+    return regions;
+}
+}
+std::size_t nativeExtrusionRecords(const ExtrusionParameters& parameters) {
+    std::size_t records = parameters.profiles.size() + parameters.regions.size();
+    for (const auto& region : parameters.regions)
+        records += chunkCount(region);
+    return records;
 }
 void validateNativeExtrusion(const ExtrusionParameters& parameters) {
     require(kernel::modelLength(parameters.distance) &&
@@ -24,6 +81,11 @@ void validateNativeExtrusion(const ExtrusionParameters& parameters) {
     std::set<std::uint64_t> ids;
     for (const auto id : parameters.profiles)
         require(id.value() != 0 && ids.insert(id.value()).second);
+    require(parameters.regions.size() <= maximumExtrusionProfileCount &&
+        (parameters.profiles.empty() || parameters.regions.empty()));
+    std::set<std::string> regions;
+    for (const auto& region : parameters.regions)
+        require(regions.insert(region.text()).second);
 }
 void writeNativeExtrusion(const TDF_Label& label, const ExtrusionParameters& parameters) {
     TDataStd_Real::Set(label, parameters.distance);
@@ -32,9 +94,16 @@ void writeNativeExtrusion(const TDF_Label& label, const ExtrusionParameters& par
     for (std::size_t index = 0; index < parameters.profiles.size(); ++index)
         TDataStd_AsciiString::Set(profiles.FindChild(static_cast<int>(index + 1)),
             std::to_string(parameters.profiles[index].value()).c_str());
+    if (!parameters.regions.empty())
+        writeRegions(label.FindChild(2), parameters.regions);
 }
-ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t remainingRecords) {
-    require(label.NbChildren() == 1);
+ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t remainingRecords,
+                                        int schemaVersion) {
+    // Schema 5 (R09) adds the region selection as optional child 2, present only when
+    // regions are selected, so documents without regions keep the older encoding.
+    const auto regions = label.FindChild(2, false);
+    require((regions.IsNull() || schemaVersion >= 5) &&
+        label.NbChildren() == (regions.IsNull() ? 1 : 2));
     Handle(TDataStd_Real) distance;
     require(label.FindAttribute(TDataStd_Real::GetID(), distance));
     const auto profiles = child(label, 1);
@@ -56,6 +125,11 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
             id != 0 && text == std::to_string(id));
         // Profile IDs are historical selections, not allocation counters or element references.
         result.profiles.emplace_back(id);
+    }
+    if (!regions.IsNull()) {
+        remainingRecords -= static_cast<std::size_t>(count);
+        result.regions = readRegions(regions, remainingRecords);
+        require(!result.regions.empty());
     }
     validateNativeExtrusion(result);
     return result;

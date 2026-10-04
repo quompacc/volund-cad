@@ -248,7 +248,7 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
     if (sketchDescriptor == descriptors.end() || !sketchDescriptor->inputFeature.has_value())
         throw GeometryEvaluationError("Sketch support feature is missing");
     const document::FeatureId supportId = *sketchDescriptor->inputFeature;
-    const auto profiles = evaluateNamedProfileFaces(sketch, parameters.profiles);
+    const auto profiles = evaluateExtrusionFaces(sketch, parameters);
     TopoDS_Compound sketchFace;
     BRep_Builder builder;
     builder.MakeCompound(sketchFace);
@@ -288,7 +288,7 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
         if (solveSketchConstraints(referenceSketch).status != SketchSolveStatus::success)
             throw GeometryEvaluationError("Reference sketch projected edges cannot be solved");
     }
-    const auto referenceProfiles = evaluateNamedProfileFaces(referenceSketch, parameters.profiles);
+    const auto referenceProfiles = evaluateExtrusionFaces(referenceSketch, parameters);
     TopoDS_Compound referenceFaces;
     builder.MakeCompound(referenceFaces);
     for (const auto& profile : referenceProfiles)

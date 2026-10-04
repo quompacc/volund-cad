@@ -121,8 +121,8 @@ std::vector<FeatureBodyIdentity> validate(std::span<const FeatureDescriptor> fea
                     feature.id.value() < next && feature.name.size() <= maximumNameBytes &&
                     feature.name.find('\0') == std::string::npos);
             const auto& extrusion = std::get<ExtrusionParameters>(parameters[index]);
-            require(extrusion.profiles.size() <= remainingElements);
-            remainingElements -= extrusion.profiles.size();
+            require(nativeExtrusionRecords(extrusion) <= remainingElements);
+            remainingElements -= nativeExtrusionRecords(extrusion);
             validateNativeExtrusion(extrusion);
             continue;
         }
@@ -303,7 +303,8 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
                 sketch ? FeatureParameters{readNativeSketchGeometry(
                              child(native, 4), remainingElements, metadata.schemaVersion)}
                 : extrusion
-                    ? FeatureParameters{readNativeExtrusion(child(native, 4), remainingElements)}
+                    ? FeatureParameters{readNativeExtrusion(child(native, 4), remainingElements,
+                                                            metadata.schemaVersion)}
                     : parameters(native, box);
             if (sketch) {
                 const auto& data = std::get<SketchParameters>(decoded);
@@ -313,7 +314,7 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
                         data.supportBinding->reference.origin.extrusionBoundary.size();
             }
             if (extrusion)
-                remainingElements -= std::get<ExtrusionParameters>(decoded).profiles.size();
+                remainingElements -= nativeExtrusionRecords(std::get<ExtrusionParameters>(decoded));
             records.push_back({native,
                                bodyId,
                                {FeatureId{id(child(native, 2))},

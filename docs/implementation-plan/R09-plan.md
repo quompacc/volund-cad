@@ -50,8 +50,11 @@ auf den Bedarf von V01 begrenzt; weitergehende Fortführungsregeln folgen nach V
    die Region abgebildet, deren Außenrand genau die Elemente dieser Schleife trägt,
    und auf alle darin verschachtelten Regionen. Die Vereinigung ist genau die früher
    extrudierte gefüllte Fläche, die Geometrie bleibt also erhalten. Ist keine
-   eindeutige Abbildung möglich, wird die Extrusion reparaturbedürftig und behält
-   die alte ID zur Anzeige. Eine leere Liste bleibt „alle Regionen“.
+   eindeutige Abbildung möglich, behält die Extrusion ihre alte Auswahl. Diese wird
+   weiter wie bisher über Schleifen ausgewertet, damit funktionierende Dokumente
+   nicht brechen; R08b verwirft etwa jede Skizze mit losem offenem Element. Die
+   Projektion zeigt sie aber als veraltet und reparaturbedürftig an. Neue Auswahlen
+   entstehen nur noch als RegionIds. Beide Listen leer bleibt „alle Profile“.
 4. **Persistenz.** RegionIds werden als kanonischer ASCII-Text gespeichert, im nativen
    Schema 5. Schema 1–4 wird gelesen und beim Öffnen migriert. Die
    Signaturgrammatik wird beim Lesen strikt geprüft.

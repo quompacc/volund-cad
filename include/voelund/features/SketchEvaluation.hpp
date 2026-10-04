@@ -28,6 +28,16 @@ struct EvaluatedProfileFace final {
 [[nodiscard]] std::vector<EvaluatedProfileFace>
 evaluateNamedProfileFaces(const document::SketchParameters& sketch,
                           std::span<const document::SketchProfileId> selectedProfiles);
+// R09 bridge until R10: each selected region whose outer and hole boundaries are whole
+// closed loops (nested, non-crossing contours) becomes one face with inner wires. Regions
+// that need a split arrangement and unresolved RegionIds are rejected, never substituted.
+[[nodiscard]] std::vector<EvaluatedProfileFace>
+evaluateRegionFaces(const document::SketchParameters& sketch,
+                    std::span<const document::SketchRegionId> regions);
+// Regions when selected, otherwise the legacy profile selection (empty: all profiles).
+[[nodiscard]] std::vector<EvaluatedProfileFace>
+evaluateExtrusionFaces(const document::SketchParameters& sketch,
+                       const document::ExtrusionParameters& parameters);
 
 struct EvaluatedSketchPoint final {
     document::SketchPointPosition kind;

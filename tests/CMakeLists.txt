@@ -653,3 +653,7 @@ add_executable(voelund_sketch_region_identity_tests unit/SketchRegionIdentityTes
 target_link_libraries(voelund_sketch_region_identity_tests PRIVATE voelund_project_options Voelund::Features)
 add_test(NAME features.sketch_region_identity COMMAND voelund_sketch_region_identity_tests)
 set_tests_properties(features.sketch_region_identity PROPERTIES LABELS "unit;features;sketch;regression" TIMEOUT 60)
+add_executable(voelund_region_migration_tests integration/RegionMigrationTests.cpp)
+target_link_libraries(voelund_region_migration_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.region_migration COMMAND voelund_region_migration_tests "${CMAKE_CURRENT_BINARY_DIR}")
+set_tests_properties(application.region_migration PROPERTIES LABELS "integration;document;application;regression" TIMEOUT 60)

@@ -1,6 +1,8 @@
 #pragma once
 #include <voelund/document/ModelDocument.hpp>
 
+#include <functional>
+
 namespace voelund::document {
 namespace detail {
 class NativePrimitiveCodec;
@@ -29,6 +31,13 @@ class DocumentSnapshot final {
     [[nodiscard]] ModelDocument toDocument(DocumentId id) const;
     [[nodiscard]] DocumentSnapshot remapSupportNamespace(DocumentId from, DocumentId to) const;
     [[nodiscard]] DocumentSnapshot markLegacySketchReferencesForRepair() const;
+    // Maps a legacy minimum-element profile of the given sketch to regions, or nullopt.
+    using LegacyProfileMapper = std::function<std::optional<std::vector<SketchRegionId>>(
+        const SketchParameters& sketch, SketchProfileId profile)>;
+    // R09 Open migration: an extrusion whose every legacy profile maps is rewritten to the
+    // union of the mapped regions; otherwise it keeps its profiles and needs repair.
+    [[nodiscard]] DocumentSnapshot
+    migrateLegacyExtrusionProfiles(const LegacyProfileMapper& mapper) const;
     [[nodiscard]] bool operator==(const DocumentSnapshot&) const = default;
 
   private:

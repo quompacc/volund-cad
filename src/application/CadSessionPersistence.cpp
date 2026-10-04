@@ -7,6 +7,7 @@
 #include <utility>
 #include <voelund/application/CadSession.hpp>
 #include <voelund/document/DocumentSerializer.hpp>
+#include <voelund/features/SketchRegionIdentity.hpp>
 #include <voelund/platform/AtomicFileStore.hpp>
 
 namespace voelund::application {
@@ -20,9 +21,21 @@ struct PreparedLoad {
     std::optional<document::MigrationReport> report;
 };
 
+// R09 documented mapping of a legacy minimum-element profile to its filled regions.
+std::optional<std::vector<document::SketchRegionId>>
+mapLegacyProfile(const document::SketchParameters& sketch, document::SketchProfileId profile) {
+    try {
+        const auto identities = features::identifySketchRegions(sketch.elements.values);
+        return features::legacyProfileRegions(identities, sketch.elements.values, profile);
+    } catch (const std::exception&) {
+        return std::nullopt; // Unmappable selections stay legacy and need repair.
+    }
+}
+
 PreparedLoad prepareLoad(std::istream& input) {
     auto imported = document::DocumentSerializer::readWithReport(input);
-    imported.snapshot = imported.snapshot.markLegacySketchReferencesForRepair();
+    imported.snapshot = imported.snapshot.markLegacySketchReferencesForRepair()
+                            .migrateLegacyExtrusionProfiles(mapLegacyProfile);
     auto document = imported.toDocument();
     auto evaluation =
         features::FeatureGraph{}.evaluateDetailed(document::DocumentSnapshot::capture(document));

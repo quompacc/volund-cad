@@ -3,6 +3,7 @@
 #include <voelund/document/DocumentId.hpp>
 #include <voelund/document/FeatureId.hpp>
 #include <voelund/document/SketchGeometry.hpp>
+#include <voelund/document/SketchRegionId.hpp>
 #include <voelund/document/SubshapeReference.hpp>
 #include <voelund/kernel/ShapeFactory.hpp>
 
@@ -84,7 +85,11 @@ void validateCylinderParameters(const CylinderParameters& parameters);
 
 struct ExtrusionParameters final {
     double distance;
+    // Pre-R09 selection by minimum loop element ID. Kept only until Open migrates it to
+    // regions; a remaining entry means the selection could not be mapped and needs repair.
     std::vector<SketchProfileId> profiles;
+    // Explicit R09 region selection. Both lists empty selects every closed profile.
+    std::vector<SketchRegionId> regions{};
 
     [[nodiscard]] bool operator==(const ExtrusionParameters&) const = default;
 };

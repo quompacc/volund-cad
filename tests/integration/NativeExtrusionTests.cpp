@@ -1,6 +1,7 @@
 #include "../../src/document/NativePrimitiveCodec.hpp"
 #include "../../src/document/NativeExtrusion.hpp"
 #include <voelund/features/FeatureGraph.hpp>
+#include <voelund/features/SketchEvaluation.hpp>
 #include <BinDrivers.hxx>
 #include <BRepCheck_Analyzer.hxx>
 #include <BRepGProp.hxx>
@@ -17,6 +18,7 @@
 #include <fstream>
 #include <iostream>
 #include <limits>
+#include <numbers>
 #include <sstream>
 
 namespace {
@@ -112,8 +114,102 @@ void historicalProfiles(const Handle(TDocStd_Application)& app) {
     app->Close(loaded);
     app->Close(doc);
 }
+// R09 schema 5: region selections, chunked signatures and the schema-4 reading path.
+IdentifiedDocumentSnapshot regionFixture(std::vector<SketchProfileId> profiles,
+                                         std::vector<SketchRegionId> regions) {
+    auto model = ModelDocument::empty();
+    const auto support = model.addBoxFeature("Support", {40, 30, 20});
+    const auto sketch = model.addSketchFeature("Ring", support,
+        {{0, 0, 20, 0, 0, 1, 1, 0, 0}, {{
+            {SketchElementId{1}, SketchRectangle{1, 1, 9, 7}},
+            {SketchElementId{2}, SketchCircle{{5, 4}, 1}}}, 3}});
+    (void)model.addExtrusionFeature("Extrusion", sketch,
+                                    {5, std::move(profiles), std::move(regions)});
+    return IdentifiedDocumentSnapshot::restore(DocumentId{7, 9}, DocumentSnapshot::capture(model));
+}
+SketchRegionId region(const char* text) {
+    const auto id = SketchRegionId::parse(text);
+    require(id.has_value(), "Region fixture text");
+    return *id;
+}
+void regionSelections(const Handle(TDocStd_Application)& app) {
+    const auto ring = region("o:1.0,1.1,1.2,1.3;h:2.0+");
+    const auto expected = regionFixture({}, {ring, region("o:2.0+")});
+    auto doc = fresh(app);
+    NativePrimitiveCodec::write(doc, expected);
+    std::stringstream bytes(std::ios::in | std::ios::out | std::ios::binary);
+    save(app, doc, bytes);
+    auto loaded = open(app, bytes);
+    require(NativePrimitiveCodec::read(loaded) == expected, "Region selection roundtrip");
+    app->Close(loaded);
+    const auto result = features::FeatureGraph{}.evaluate(expected.snapshot().toDocument());
+    GProp_GProps properties;
+    BRepGProp::VolumeProperties(result.bodies.front().shape, properties);
+    // The selected inner disc fills the ring's hole: one face, no touching second solid.
+    require(features::evaluateRegionFaces(expected.snapshot().sketchParameters(FeatureId{2}),
+                                          expected.snapshot().extrusionParameters(FeatureId{3})
+                                              .regions)
+                    .size() == 1,
+            "Selected inner region did not fill the hole");
+    require(std::abs(properties.Mass() - (24000 + 48 * 5)) < 1e-6,
+            "Ring and inner disc together fill the rectangle");
+    const auto ringOnly = regionFixture({}, {ring});
+    const auto ringResult = features::FeatureGraph{}.evaluate(ringOnly.snapshot().toDocument());
+    BRepGProp::VolumeProperties(ringResult.bodies.front().shape, properties);
+    require(BRepCheck_Analyzer(ringResult.bodies.front().shape).IsValid() &&
+                std::abs(properties.Mass() - (24000 + (48 - std::numbers::pi) * 5)) < 1e-6,
+            "Ring region extrudes with its hole");
+
+    // Signatures beyond one attribute are chunked; every chunk but the last is full.
+    std::vector<SketchRegionBoundaryUse> uses;
+    for (std::uint64_t element = 1; element <= 2000; ++element)
+        uses.push_back({SketchElementId{element}, 0, std::nullopt});
+    const auto large = SketchRegionId::fromBoundaries(uses, {});
+    require(large.text().size() > 8000, "Large signature fixture");
+    const auto chunked = regionFixture({}, {large});
+    auto other = fresh(app);
+    NativePrimitiveCodec::write(other, chunked);
+    require(NativePrimitiveCodec::read(other) == chunked, "Chunked signature roundtrip");
+    app->Close(other);
+
+    const auto payload = feature(doc, 3).FindChild(4);
+    const auto regions = payload.FindChild(2);
+    doc->SetUndoLimit(10);
+    const auto corrupt = [&](auto mutate) {
+        doc->NewCommand();
+        mutate();
+        rejected([&] { (void)NativePrimitiveCodec::read(doc); });
+        doc->AbortCommand();
+        require(NativePrimitiveCodec::read(doc) == expected, "Rejected edit damaged document");
+    };
+    for (const char* text : {"o:1.1,1.0", "o:2.0+ ", "o:", "o:2.0+;h:", "o:0.0"})
+        corrupt([&] { TDataStd_AsciiString::Set(regions.FindChild(2).FindChild(1), text); });
+    corrupt([&] { TDataStd_AsciiString::Set(regions.FindChild(2).FindChild(1),
+                                            ring.text().c_str()); }); // duplicate
+    for (int count : {-1, 0, 1, 3})
+        corrupt([&] { TDataStd_Integer::Set(regions, count); });
+    corrupt([&] { TDataStd_Integer::Set(regions.FindChild(1), 2); });
+    corrupt([&] { TDataStd_Integer::Set(doc->Main().FindChild(2), 4); }); // regions on schema 4
+    rejected([&] { detail::validateNativeExtrusion({1, {SketchProfileId{1}}, {ring}}); });
+    rejected([&] { detail::validateNativeExtrusion({1, {}, {ring, ring}}); });
+
+    // Without regions the extrusion keeps the schema-4 encoding; legacy profiles read unchanged.
+    const auto legacy = regionFixture({SketchProfileId{1}}, {});
+    auto old = fresh(app);
+    NativePrimitiveCodec::write(old, legacy);
+    TDataStd_Integer::Set(old->Main().FindChild(2), 4);
+    std::stringstream oldBytes(std::ios::in | std::ios::out | std::ios::binary);
+    save(app, old, oldBytes);
+    auto reopened = open(app, oldBytes);
+    require(NativePrimitiveCodec::read(reopened) == legacy, "Schema 4 legacy profiles");
+    app->Close(reopened);
+    app->Close(old);
+    app->Close(doc);
+    std::cout << "schema 5 regions, chunking, ring evaluation and schema-4 reading passed\n";
+}
 void regressions(const Handle(TDocStd_Application)& app) {
     historicalProfiles(app);
+    regionSelections(app);
     auto doc = fresh(app);
     const auto expected = fixture();
     NativePrimitiveCodec::write(doc, expected);
@@ -151,7 +247,7 @@ void regressions(const Handle(TDocStd_Application)& app) {
     corrupt([&] { TDF_Reference::Set(extrusion.FindChild(5), feature(doc, 7)); });
     corrupt([&] { TDF_Reference::Set(extrusion.FindChild(5), feature(doc, 5)); }); // wrong body
     corrupt([&] { TDF_Reference::Set(feature(doc, 8).FindChild(5), extrusion); }); // cycle
-    rejected([&] { (void)detail::readNativeExtrusion(payload, 1); });
+    rejected([&] { (void)detail::readNativeExtrusion(payload, 1, 5); });
     rejected([&] { detail::validateNativeExtrusion({0, {}}); });
     rejected([&] { detail::validateNativeExtrusion({1, {SketchProfileId{0}}}); });
     rejected([&] { detail::validateNativeExtrusion({1, {SketchProfileId{2}, SketchProfileId{2}}}); });
