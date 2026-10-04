@@ -16,6 +16,9 @@ build_preset=${1:-linux-desktop}
 repository_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 report_dir="$repository_root/artifacts/linux-desktop"
 mkdir -p "$report_dir"
+smoke_dir="${VOELUND_SMOKE_ARTIFACT_DIR:-$report_dir/smoke}"
+mkdir -p "$smoke_dir"
+export VOELUND_SMOKE_ARTIFACT_DIR="$smoke_dir"
 
 {
     echo "timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)"

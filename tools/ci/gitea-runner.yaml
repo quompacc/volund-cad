@@ -1,0 +1,13 @@
+# Gitea runner on the Fedora test host (C01). Registration state lives in
+# /home/eduard/gitea-runner/.runner and is never committed.
+log:
+  level: info
+runner:
+  file: /home/eduard/gitea-runner/.runner
+  capacity: 1
+  timeout: 3h
+  # Host executor: desktop tests need the host GPU and a Wayland compositor.
+  labels:
+    - "linux-desktop:host"
+host:
+  workdir_parent: /home/eduard/gitea-runner/work

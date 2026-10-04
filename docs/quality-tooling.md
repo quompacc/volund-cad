@@ -21,6 +21,19 @@ Einzelausnahme steht ausschließlich als Eintrag `Pfad | Grund | Prüfungen` in
 Breite Globs, unsichtbare Baselines und eine Ausnahme ohne Entfernungs- oder
 Geltungsgrund sind unzulässig.
 
+## Pflicht-CI (C01, ADR 0011)
+
+`.gitea/workflows/ci.yml` läuft bei jedem Push und Pull Request auf dem
+Fedora-Runner (`runs-on: linux-desktop`) und führt `tools/run-ci-linux.sh` aus:
+Konfiguration `linux-desktop`, Quellgrenzen (`check-source-limits`), Build und
+vollständiger CTest in einer headless Wayland-Sitzung (`kwin_wayland --virtual`).
+Logs, JUnit, EGL-/Hostdaten und Smoke-Aufnahmen stehen als Artefakt
+`linux-desktop-<sha>` am Lauf; die Sitzungsart steht in `session.txt`. Ein headless
+Lauf ist kein Compositor- oder Displaynachweis. `main` wird nur mit grünem Lauf
+geändert. Windows prüft je Paket lokal mit `tools/test-windows.ps1`; ein
+Windows-Runner auf der Entwicklungsmaschine wäre ein späterer Folgeschritt.
+FreeBSD läuft nicht je Push, sondern an Gate-Abnahmen.
+
 ## Regeln und Werkzeuge
 
 | Regel | Harte Grenze | Mechanismus |

@@ -37,6 +37,20 @@ Bibliotheksliste und CTest/JUnit nach `artifacts/linux-desktop/`.
 Der SSH-Alias `volund` (`192.168.1.19`, `volund-lxc`) ist ein Debian-Container eines
 anderen Projekts und **nicht** der Testrechner.
 
+### Gitea-Runner (C01)
+
+- Dienst `gitea-runner.service` (System-Unit, `User=eduard`), Binärdatei
+  `/usr/local/bin/gitea-runner` v4.1.0, Konfiguration `~/gitea-runner/config.yaml`
+  aus `tools/ci/gitea-runner.yaml`, Registrierung `~/gitea-runner/.runner` (nicht im Repo).
+- Label `linux-desktop:host`, Kapazität 1, Instanz `https://gitea.hl.home.arpa`;
+  der Host vertraut dafür der Homelab-CA „HL Home Root CA“ (SHA-1 `2DAF…9B90`).
+- Einrichtung einmalig: Token nach `~/gitea-runner/token`, dann
+  `sudo sh ~/gitea-runner/install-runner.sh` (Kopie von `tools/ci/install-runner.sh`).
+- Jobs laufen in `~/gitea-runner/work`; OCCT kommt aus `~/.cache/voelund/occt-linux`.
+- Desktoptests standardmäßig in headless `kwin_wayland --virtual` auf der Intel-GPU
+  (`renderD128`), unabhängig von einer Anmeldung; `VOELUND_CI_SESSION=desktop`
+  verwendet stattdessen die angemeldete Sitzung.
+
 ## Historisch: FreeBSD-Testrechner (September 2026)
 
 Die folgenden Angaben beschreiben den Stand bis zur Neuinstallation und belegen

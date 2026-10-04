@@ -1,0 +1,15 @@
+[Unit]
+Description=Gitea Actions runner for eduard/volund-cad
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=eduard
+WorkingDirectory=/home/eduard/gitea-runner
+ExecStart=/usr/local/bin/gitea-runner daemon --config /home/eduard/gitea-runner/config.yaml
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
