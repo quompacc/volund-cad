@@ -37,6 +37,7 @@
 #include <QWheelEvent>
 #include <Quantity_Color.hxx>
 #include <Quantity_TypeOfColor.hxx>
+#include <SelectMgr_EntityOwner.hxx>
 #include <Standard_Failure.hxx>
 #include <StdSelect_BRepOwner.hxx>
 #include <TopAbs_ShapeEnum.hxx>
@@ -45,6 +46,7 @@
 #include <V3d_View.hxx>
 #include <V3d_Viewer.hxx>
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <functional>
 #include <utility>
@@ -72,7 +74,7 @@ class CadViewportScene {
         view->SetImmediateUpdate(false);
         viewer->SetRectangularGridValues(0.0, 0.0, 10.0, 10.0, 0.0);
         viewer->SetRectangularGridGraphicValues(500.0, 500.0, -0.05);
-        viewer->ActivateGrid(Aspect_GT_Rectangular, Aspect_GDM_Lines);
+        applyGrid();
         view->ZBufferTriedronSetup(Quantity_NOC_RED, Quantity_NOC_GREEN, Quantity_NOC_BLUE1, 0.8,
                                    0.05, 12);
         applyTheme();
@@ -157,7 +159,7 @@ class CadViewportScene {
                 halfSize = std::max({25.0, 0.6 * (x1 - x0), 0.6 * (y1 - y0), 0.6 * (z1 - z0)});
             }
         }
-        basePlanes.show(context, presentations.empty(), halfSize, theme);
+        basePlanes.show(context, presentations.empty(), halfSize, theme, planeVisibility);
     }
 
     void setTransformToolEnabled(bool enabled) {
@@ -178,8 +180,37 @@ class CadViewportScene {
         }
     }
 
+    void applyGrid() {
+        if (gridVisible)
+            viewer->ActivateGrid(Aspect_GT_Rectangular, Aspect_GDM_Lines);
+        else
+            viewer->DeactivateGrid();
+    }
+
+    // U06: the first detected owner that belongs to a body, even behind a base plane.
+    [[nodiscard]] occ::handle<SelectMgr_EntityOwner> detectedBodyOwner() const {
+        for (context->InitDetected(); context->MoreDetected(); context->NextDetected()) {
+            const auto owner = context->DetectedCurrentOwner();
+            if (owner.IsNull())
+                continue;
+            const auto object = occ::handle<AIS_InteractiveObject>::DownCast(owner->Selectable());
+            for (const BodyPresentation& presentation : presentations)
+                if (presentation.shape == object)
+                    return owner;
+        }
+        return {};
+    }
+
     void notifyDetectedBody(bool includeFace) {
-        const auto detected = context->DetectedInteractive();
+        notifyBodyOwner(context->DetectedOwner(), includeFace);
+    }
+
+    void notifyBodyOwner(const occ::handle<SelectMgr_EntityOwner>& detectedOwner,
+                         bool includeFace) {
+        if (detectedOwner.IsNull())
+            return;
+        const auto detected =
+            occ::handle<AIS_InteractiveObject>::DownCast(detectedOwner->Selectable());
         for (const BodyPresentation& presentation : presentations) {
             if (presentation.shape != detected || !bodySelectionHandler)
                 continue;
@@ -188,8 +219,7 @@ class CadViewportScene {
             const auto faceHandler = planarFaceSelectionHandler;
             std::optional<PlanarFaceSelection> selection;
             if (includeFace && faceHandler) {
-                const auto owner =
-                    occ::handle<StdSelect_BRepOwner>::DownCast(context->DetectedOwner());
+                const auto owner = occ::handle<StdSelect_BRepOwner>::DownCast(detectedOwner);
                 if (!owner.IsNull())
                     selection = planarFaceSelection(bodyId, owner->Shape());
             }
@@ -233,6 +263,8 @@ class CadViewportScene {
     QRubberBand* selectionBand{nullptr};
     bool ready{false};
     ViewportTheme theme;
+    std::array<bool, 3> planeVisibility{true, true, true};
+    bool gridVisible{true};
     occ::handle<Graphic3d_Camera> savedCamera;
     std::optional<PlanarFaceSelection> activeSketchSupport;
 };

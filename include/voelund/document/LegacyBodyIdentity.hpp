@@ -19,4 +19,11 @@ struct FeatureBodyIdentity final {
 legacyBodyIdentities(std::span<const FeatureDescriptor> features,
                      std::span<const FeatureParameters> parameters);
 
+// The body each feature works on, sketches included: a base-plane sketch opens its own body,
+// a face sketch belongs to its support's body (U06 model tree). Same rules and errors as
+// legacyBodyIdentities.
+[[nodiscard]] std::vector<std::optional<BodyId>>
+featureBodyContexts(std::span<const FeatureDescriptor> features,
+                    std::span<const FeatureParameters> parameters);
+
 } // namespace voelund::document

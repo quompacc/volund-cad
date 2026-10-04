@@ -289,6 +289,28 @@ void CadViewport::setTheme(const ViewportTheme& theme) {
 
 const ViewportTheme& CadViewport::theme() const noexcept { return impl_->theme; }
 
+void CadViewport::setBasePlaneVisibility(std::array<bool, 3> visible) {
+    impl_->planeVisibility = visible;
+    performViewportOperation(*this, impl_->ready, [&] {
+        if (!impl_->ready)
+            return;
+        impl_->refreshBasePlanes();
+        update();
+    });
+}
+
+void CadViewport::setGridVisible(bool visible) {
+    impl_->gridVisible = visible;
+    performViewportOperation(*this, impl_->ready, [&] {
+        if (!impl_->ready)
+            return;
+        impl_->applyGrid();
+        update();
+    });
+}
+
+bool CadViewport::isGridVisible() const noexcept { return impl_->gridVisible; }
+
 void CadViewport::setCameraView(CameraView cameraView) {
     performViewportOperation(*this, impl_->ready, [&] {
         if (!impl_->ready)

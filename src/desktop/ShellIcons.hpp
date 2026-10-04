@@ -23,6 +23,8 @@ enum class ShellIcon {
     transform,
     editSketch,
     repair,
+    eye,
+    eyeOff,
 };
 
 [[nodiscard]] QIcon shellIcon(ShellIcon icon, const QColor& ink, const QColor& accent);

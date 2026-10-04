@@ -4,6 +4,7 @@
 #include <voelund/application/CadSession.hpp>
 
 #include <voelund/document/DocumentSerializer.hpp>
+#include <voelund/document/LegacyBodyIdentity.hpp>
 #include <voelund/features/CylinderFeature.hpp>
 
 #include <algorithm>
@@ -100,6 +101,29 @@ std::span<const features::EvaluatedBody> CadSession::currentBodies() const {
 std::vector<document::FeatureDescriptor> CadSession::features() const {
     const auto descriptors = document_.features();
     return {descriptors.begin(), descriptors.end()};
+}
+
+ModelOutline CadSession::modelOutline() const {
+    const auto snapshot = document::DocumentSnapshot::capture(document_);
+    ModelOutline outline;
+    std::vector<std::optional<document::BodyId>> contexts;
+    try {
+        contexts = document::featureBodyContexts(snapshot.features(), snapshot.parameters());
+    } catch (const std::invalid_argument&) {
+        contexts.assign(snapshot.features().size(), std::nullopt);
+    }
+    for (std::size_t index = 0; index < contexts.size(); ++index) {
+        const document::FeatureId feature = snapshot.features()[index].id;
+        if (!contexts[index]) {
+            outline.loose.push_back(feature);
+            continue;
+        }
+        auto body = std::ranges::find(outline.bodies, *contexts[index], &OutlineBody::id);
+        if (body == outline.bodies.end())
+            body = outline.bodies.insert(outline.bodies.end(), {*contexts[index], {}});
+        body->features.push_back(feature);
+    }
+    return outline;
 }
 
 std::optional<document::FeatureId> CadSession::selectedFeature() const noexcept {

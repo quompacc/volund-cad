@@ -4,10 +4,13 @@
 
 namespace voelund::desktop {
 
-std::vector<viewport::SceneBody> makeSceneBodies(const application::CadSession& session) {
+std::vector<viewport::SceneBody> makeSceneBodies(const application::CadSession& session,
+                                                 const std::set<std::uint64_t>& hiddenBodies) {
     std::vector<viewport::SceneBody> bodies;
     bodies.reserve(session.displayBodies().size());
     for (const features::EvaluatedBody& body : session.displayBodies()) {
+        if (hiddenBodies.contains(body.bodyId.value()))
+            continue;
         bodies.push_back({body.sourceFeature.value(), body.shape,
                           session.canTransformFeature(body.sourceFeature)});
     }

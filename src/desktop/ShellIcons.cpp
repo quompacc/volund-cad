@@ -127,6 +127,18 @@ void draw(QPainter& painter, ShellIcon icon, const QColor& ink, const QColor& ac
         painter.drawLine(QPointF(5, 19), QPointF(13, 11));
         painter.drawEllipse(QPointF(16, 8), 4, 4);
         break;
+    case ShellIcon::eye:
+    case ShellIcon::eyeOff: {
+        QPainterPath lid;
+        lid.moveTo(2.5, 12);
+        lid.quadTo(12, 3, 21.5, 12);
+        lid.quadTo(12, 21, 2.5, 12);
+        painter.drawPath(lid);
+        painter.drawEllipse(QPointF(12, 12), 3, 3);
+        if (icon == ShellIcon::eyeOff)
+            painter.drawLine(QPointF(4, 4), QPointF(20, 20));
+        break;
+    }
     case ShellIcon::moon: {
         QPainterPath outer;
         outer.addEllipse(QPointF(12, 12), 8, 8);

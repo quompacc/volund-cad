@@ -2,6 +2,7 @@
 #include "../../src/desktop/ToolPanelHost.hpp"
 #include "../../src/viewport/SketchInteraction.hpp"
 #include "../CommandResultAssertions.hpp"
+#include "ModelTreeLookup.hpp"
 #include <BRepGProp.hxx>
 #include <GProp_GProps.hxx>
 #include <QAction>
@@ -86,13 +87,12 @@ void screenshot(application::CadSession& session, const QString& name, bool fail
     }
     if (failed) {
         auto* tree = window.findChild<QTreeWidget*>();
-        require(tree && tree->topLevelItemCount() == 1, "Model tree missing");
-        auto* root = tree->topLevelItem(0);
-        require(root->child(2)->text(0).contains("[Fehler]") &&
-                    root->child(3)->text(0).contains("[blockiert]") &&
-                    !root->child(4)->text(0).contains("[Fehler]"),
+        require(tree != nullptr, "Model tree missing");
+        const auto row = [&](std::size_t index) { return test::featureRow(*tree, session, index); };
+        require(row(2)->text(0).contains("[Fehler]") && row(3)->text(0).contains("[blockiert]") &&
+                    !row(4)->text(0).contains("[Fehler]"),
                 "Support error tree incorrect");
-        tree->setCurrentItem(root->child(2));
+        tree->setCurrentItem(row(2));
     }
     const auto directory = qEnvironmentVariable("VOELUND_SUPPORT_FLOW_ARTIFACT_DIR");
     if (!directory.isEmpty()) {

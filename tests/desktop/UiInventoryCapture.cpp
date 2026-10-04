@@ -1,4 +1,5 @@
 #include "../BoundSketchFixture.hpp"
+#include "ModelTreeLookup.hpp"
 #include "ViewportLifecycleSupport.hpp"
 #include <QAction>
 #include <QApplication>
@@ -126,7 +127,7 @@ void existingSketch() {
     desktop::MainWindow window(session);
     auto& viewport = open(window);
     auto* tree = window.findChild<QTreeWidget*>();
-    tree->setCurrentItem(tree->topLevelItem(0)->child(1));
+    tree->setCurrentItem(test::featureRow(*tree, session, 1));
     test::render(viewport);
     capture(window, "04-sketch-selected");
     click(viewport, 5, 15, 20);

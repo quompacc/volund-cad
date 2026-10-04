@@ -9,7 +9,7 @@ CommandResult CadSession::createBoxFeature() {
     document::DocumentTransaction transaction(document_);
     auto& candidate = transaction.edit();
     const std::size_t sequence = featureCount(document_.features(), document::FeatureKind::box) + 1;
-    const document::FeatureId id = candidate.addBoxFeature("Box " + std::to_string(sequence),
+    const document::FeatureId id = candidate.addBoxFeature("Quader " + std::to_string(sequence),
                                                            kernel::BoxDimensions{20.0, 20.0, 40.0});
     return finishCandidate(transaction, id, CommandKind::newFeature, ErrorDisposition::reject,
                            true);
@@ -31,7 +31,7 @@ CommandResult CadSession::createCylinderFeature(document::CylinderResultMode res
             parameters, evaluatedFeature(evaluation_->result.features, inputFeature), 1.0);
     }
     const auto idInput = detail::prepareInput([&] {
-        return candidate.addCylinderFeature("Cylinder " + std::to_string(sequence), inputFeature,
+        return candidate.addCylinderFeature("Zylinder " + std::to_string(sequence), inputFeature,
                                             parameters);
     });
     if (!idInput.value)
@@ -62,7 +62,7 @@ CommandResult CadSession::createSketchFeature(document::FeatureId supportFeature
     const std::size_t sequence =
         featureCount(document_.features(), document::FeatureKind::sketch) + 1;
     const auto idInput = detail::prepareInput([&] {
-        return candidate.addSketchFeature("Sketch " + std::to_string(sequence), supportFeature,
+        return candidate.addSketchFeature("Skizze " + std::to_string(sequence), supportFeature,
                                           sketch);
     });
     if (!idInput.value)
@@ -78,7 +78,7 @@ CommandResult CadSession::createDatumSketchFeature(const document::SketchParamet
     const std::size_t sequence =
         featureCount(document_.features(), document::FeatureKind::sketch) + 1;
     const auto idInput = detail::prepareInput([&] {
-        return candidate.addDatumSketchFeature("Sketch " + std::to_string(sequence), sketch);
+        return candidate.addDatumSketchFeature("Skizze " + std::to_string(sequence), sketch);
     });
     if (!idInput.value)
         return CommandResult::invalidInput(idInput.diagnostic);
@@ -100,7 +100,7 @@ CommandResult CadSession::createSketchExtrusion(document::FeatureId supportFeatu
     const std::size_t sketchSequence =
         featureCount(document_.features(), document::FeatureKind::sketch) + 1;
     const auto sketchIdInput = detail::prepareInput([&] {
-        return candidate.addSketchFeature("Sketch " + std::to_string(sketchSequence),
+        return candidate.addSketchFeature("Skizze " + std::to_string(sketchSequence),
                                           supportFeature, sketch);
     });
     if (!sketchIdInput.value)

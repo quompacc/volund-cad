@@ -13,6 +13,7 @@
 
 #include <TopoDS_Shape.hxx>
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -251,6 +252,10 @@ class CadViewport final : public CadViewportBase {
     void setTransformTarget(std::optional<std::uint64_t> bodyId);
     void setTransformSnapping(bool enabled, double linearStep, double angularStep);
     void setTheme(const ViewportTheme& theme);
+    // U06: view state from the model tree; no document change. Index 0 = XY, 1 = XZ, 2 = YZ.
+    void setBasePlaneVisibility(std::array<bool, 3> visible);
+    void setGridVisible(bool visible);
+    [[nodiscard]] bool isGridVisible() const noexcept;
     [[nodiscard]] const ViewportTheme& theme() const noexcept;
     void setCameraView(CameraView view);
     void setPerspectiveProjection(bool enabled);

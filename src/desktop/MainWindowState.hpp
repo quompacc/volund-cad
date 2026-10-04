@@ -13,6 +13,7 @@
 #include "ToolPanelHost.hpp"
 #include "ToolRail.hpp"
 #include "ViewCube.hpp"
+#include "ViewVisibility.hpp"
 #include <QAction>
 #include <functional>
 #include <optional>
@@ -76,6 +77,7 @@ class MainWindow::Impl final {
     QDoubleSpinBox* angularSnapInput{nullptr};
     std::optional<viewport::PlanarFaceSelection> selectedPlanarFace;
     std::optional<document::DatumPlane> selectedDatum; // V01b: base plane picked in viewport.
+    ViewVisibility visibility;                         // U06: model tree eyes (view state)
     workspaces::CommandRegistry commandRegistry;
     std::unique_ptr<CommandActions> commandActions;
     std::unique_ptr<DocumentActions> documentActions;

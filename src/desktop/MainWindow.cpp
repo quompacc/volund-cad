@@ -8,6 +8,7 @@
 #include "MeasurementInput.hpp"
 #include "ModelTreePanel.hpp"
 #include "ShellHeader.hpp"
+#include "ShellIcons.hpp"
 #include "SketchEditorToolController.hpp"
 #include "SketchExtrusionToolController.hpp"
 #include "SketchViewAdapter.hpp"
@@ -59,6 +60,7 @@ MainWindow::MainWindow(application::CadSession& session, QWidget* parent)
         dock->setFeatures(QDockWidget::NoDockWidgetFeatures);
     applyTheme(storedThemeMode());
     connectInteractions();
+    syncVisibility(); // Origin, planes and grid follow the model tree from the start (U06).
     syncProperties();
     syncTreeStatus();
     syncSketchPresentation();
@@ -73,8 +75,7 @@ void MainWindow::closeEvent(QCloseEvent* event) {
 
 void MainWindow::createViewport() {
     impl_->viewport = new viewport::CadViewport(this);
-    const std::vector<viewport::SceneBody> bodies = makeSceneBodies(impl_->session);
-    impl_->viewport->setBodies(bodies);
+    impl_->viewport->setBodies(makeSceneBodies(impl_->session));
     impl_->viewCube = new ViewCube(*impl_->viewport);
     setCentralWidget(impl_->viewport);
 }
@@ -151,13 +152,20 @@ void MainWindow::applyTheme(ThemeMode mode) {
     impl_->viewCube->setTokens(themeTokens(mode));
     impl_->header->setTheme(mode);
     applyCommandIcons(*this, mode);
+    const ThemeTokens& tokens = themeTokens(mode);
+    impl_->modelTree->setEyeIcons(shellIcon(ShellIcon::eye, tokens.muted, tokens.accent),
+                                  shellIcon(ShellIcon::eyeOff, tokens.faint, tokens.accent));
 }
 
 void MainWindow::connectInteractions() {
     impl_->propertyPanel->setBoxChangeHandler([this]() { applyBoxParameters(); });
     impl_->propertyPanel->setCylinderChangeHandler([this]() { applyCylinderParameters(); });
     impl_->propertyPanel->setExtrusionChangeHandler([this]() { applyExtrusionParameters(); });
-    impl_->modelTree->setFeatureSelectionHandler([this](std::uint64_t id) { selectFeature(id); });
+    impl_->modelTree->setHandlers({[this](std::uint64_t id) { selectFeature(id); },
+                                   [this](int plane) { selectBasePlane(plane); },
+                                   [this](ModelTreePanel::Kind kind, std::uint64_t id) {
+                                       toggleVisibility(static_cast<int>(kind), id);
+                                   }});
     impl_->viewport->setBodySelectionHandler([this](std::uint64_t id) { selectFeature(id); });
     impl_->viewport->setPlanarFaceSelectionHandler(
         [this](const viewport::PlanarFaceSelection& selection) {
@@ -172,15 +180,8 @@ void MainWindow::connectInteractions() {
             }
             syncShell();
         });
-    impl_->viewport->setBasePlaneSelectionHandler([this](viewport::BasePlane plane) {
-        impl_->selectedPlanarFace.reset();
-        impl_->selectedDatum = static_cast<document::DatumPlane>(plane);
-        static const char* const names[]{"XY", "XZ", "YZ"};
-        statusBar()->showMessage(
-            tr("%1-Ebene gewählt").arg(QString::fromLatin1(names[static_cast<int>(plane) - 1])),
-            2000);
-        syncShell();
-    });
+    impl_->viewport->setBasePlaneSelectionHandler(
+        [this](viewport::BasePlane plane) { selectBasePlane(static_cast<int>(plane)); });
     impl_->viewport->setSketchEditorPreviewHandler(
         [this](const std::optional<viewport::SketchElementIntent>& intent) {
             impl_->sketchEditorTool->updatePreview(intent);
@@ -277,7 +278,9 @@ void MainWindow::connectInteractions() {
 }
 
 void MainWindow::syncModelTree() {
-    impl_->modelTree->showFeatures(impl_->session.features(), impl_->session.selectedFeature());
+    const auto features = impl_->session.features();
+    impl_->modelTree->showModel(impl_->session.modelOutline(), features,
+                                impl_->session.selectedFeature(), impl_->visibility);
 }
 
 void MainWindow::syncProperties() {
@@ -362,8 +365,7 @@ void MainWindow::refreshScene() {
     impl_->selectedDatum.reset();
     impl_->viewport->cancelSketch();
     impl_->toolPanel->end();
-    const std::vector<viewport::SceneBody> bodies = makeSceneBodies(impl_->session);
-    impl_->viewport->setBodies(bodies);
+    syncVisibility();
     syncModelTree();
     syncProperties();
     syncTreeStatus();

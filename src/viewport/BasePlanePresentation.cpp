@@ -30,9 +30,12 @@ const std::array<PlaneSpec, 3>& specs() {
 } // namespace
 
 void BasePlanePresentation::show(const occ::handle<AIS_InteractiveContext>& context,
-                                 bool emphasized, double halfSize, const ViewportTheme& theme) {
+                                 bool emphasized, double halfSize, const ViewportTheme& theme,
+                                 std::array<bool, 3> visible) {
     hide(context);
     for (std::size_t index = 0; index < specs().size(); ++index) {
+        if (!visible[index])
+            continue;
         const auto& spec = specs()[index];
         const gp_Ax3 frame(gp_Pnt(0, 0, 0), spec.normal, spec.xDirection);
         const auto face =

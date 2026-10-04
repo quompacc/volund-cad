@@ -207,6 +207,21 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
                     update();
                     return;
                 }
+                // U06: a body behind a translucent base plane wins the click.
+                if (impl_->basePlanes.plane(detected).has_value()) {
+                    const auto bodyOwner = impl_->detectedBodyOwner();
+                    if (!bodyOwner.IsNull()) {
+                        impl_->notifyBodyOwner(bodyOwner, true);
+                        impl_->context->MoveTo(position.x(), position.y(), impl_->view, false);
+                        const auto current = impl_->detectedBodyOwner();
+                        if (!current.IsNull())
+                            impl_->context->SetSelected(current, false);
+                        impl_->gesture = Impl::Gesture::none;
+                        unsetCursor();
+                        update();
+                        return;
+                    }
+                }
                 if (const auto plane = impl_->basePlanes.plane(detected)) {
                     impl_->context->SelectDetected(AIS_SelectionScheme_Replace);
                     if (impl_->basePlaneSelectionHandler)

@@ -40,6 +40,17 @@ struct ExtrusionSelectionState final {
     [[nodiscard]] bool needsRepair() const noexcept;
 };
 
+// U06: features grouped by the body they work on, both in document order. Features that
+// belong to no body (invalid documents) stay loose.
+struct OutlineBody final {
+    document::BodyId id;
+    std::vector<document::FeatureId> features;
+};
+struct ModelOutline final {
+    std::vector<OutlineBody> bodies;
+    std::vector<document::FeatureId> loose;
+};
+
 class CadSession final {
   public:
     CadSession();
@@ -64,14 +75,14 @@ class CadSession final {
     [[nodiscard]] std::optional<TopoDS_Shape> featureShape(document::FeatureId featureId) const;
     [[nodiscard]] std::span<const features::EvaluatedBody> currentBodies() const;
     [[nodiscard]] std::vector<document::FeatureDescriptor> features() const;
+    [[nodiscard]] ModelOutline modelOutline() const;
     [[nodiscard]] std::optional<document::FeatureId> selectedFeature() const noexcept;
     [[nodiscard]] bool selectFeature(document::FeatureId featureId) noexcept;
     [[nodiscard]] std::optional<document::SketchElementId> selectedSketchElement() const noexcept;
     [[nodiscard]] bool selectSketchElement(document::SketchElementId elementId) noexcept;
     // Sketch "profiles" are R09 regions: picking an element selects the one region whose
     // outer boundary uses it; ambiguous picks select nothing.
-    [[nodiscard]] std::span<const document::SketchRegionId>
-    selectedSketchProfiles() const noexcept;
+    [[nodiscard]] std::span<const document::SketchRegionId> selectedSketchProfiles() const noexcept;
     [[nodiscard]] bool selectSketchProfileByElement(document::SketchElementId elementId,
                                                     bool additive);
     [[nodiscard]] std::vector<document::SketchElementId> selectedSketchProfileElements() const;

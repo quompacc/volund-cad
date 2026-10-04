@@ -1,57 +1,135 @@
 #include "ModelTreePanel.hpp"
 
+#include <QHeaderView>
 #include <QSignalBlocker>
 #include <QTreeWidgetItem>
+#include <QTreeWidgetItemIterator>
 #include <QVariant>
 
+#include <map>
 #include <utility>
 
 namespace voelund::desktop {
+namespace {
+
+constexpr int eyeColumn = 1;
+
+QString planeName(int index) {
+    static const char* const names[] = {QT_TRANSLATE_NOOP("QObject", "XY-Ebene"),
+                                        QT_TRANSLATE_NOOP("QObject", "XZ-Ebene"),
+                                        QT_TRANSLATE_NOOP("QObject", "YZ-Ebene")};
+    return QObject::tr(names[index]);
+}
+
+} // namespace
 
 ModelTreePanel::ModelTreePanel(QWidget* parent) : QTreeWidget(parent) {
+    setObjectName(QStringLiteral("modelTree"));
     setHeaderHidden(true);
-    // Flat list look of ADR 0012; bodies stay expanded (U06 brings the full tree).
+    setColumnCount(2);
+    header()->setStretchLastSection(false);
+    header()->setSectionResizeMode(0, QHeaderView::Stretch);
+    header()->setSectionResizeMode(eyeColumn, QHeaderView::Fixed);
+    header()->resizeSection(eyeColumn, 34);
     setRootIsDecorated(false);
     setIndentation(16);
+    connect(this, &QTreeWidget::itemClicked, this, [this](QTreeWidgetItem* item, int column) {
+        const auto kind = static_cast<Kind>(item->data(0, kindRole).toInt());
+        const auto id = item->data(0, idRole).toULongLong();
+        if (column == eyeColumn && item->data(eyeColumn, Qt::UserRole).isValid()) {
+            if (handlers_.visibilityToggled)
+                handlers_.visibilityToggled(kind, id);
+            return;
+        }
+        if (kind == Kind::plane && handlers_.planeSelected)
+            handlers_.planeSelected(static_cast<int>(id));
+    });
     connect(this, &QTreeWidget::currentItemChanged, this,
             [this](QTreeWidgetItem* current, QTreeWidgetItem*) {
-                if (current != nullptr && selectionHandler_) {
-                    selectionHandler_(current->data(0, Qt::UserRole).toULongLong());
-                }
+                if (current == nullptr || !handlers_.featureSelected ||
+                    static_cast<Kind>(current->data(0, kindRole).toInt()) != Kind::feature)
+                    return;
+                handlers_.featureSelected(current->data(0, idRole).toULongLong());
             });
 }
 
-void ModelTreePanel::setFeatureSelectionHandler(std::function<void(std::uint64_t)> handler) {
-    selectionHandler_ = std::move(handler);
+void ModelTreePanel::setHandlers(Handlers handlers) { handlers_ = std::move(handlers); }
+
+void ModelTreePanel::setEyeIcons(const QIcon& shown, const QIcon& hidden) {
+    shownIcon_ = shown;
+    hiddenIcon_ = hidden;
+    for (QTreeWidgetItemIterator it(this); *it != nullptr; ++it) {
+        const QVariant eye = (*it)->data(eyeColumn, Qt::UserRole);
+        if (eye.isValid())
+            (*it)->setIcon(eyeColumn, eye.toBool() ? shownIcon_ : hiddenIcon_);
+    }
 }
 
-void ModelTreePanel::showFeatures(std::span<const document::FeatureDescriptor> features,
-                                  std::optional<document::FeatureId> selectedFeature) {
+QTreeWidgetItem* ModelTreePanel::addItem(QTreeWidgetItem* parent, Kind kind, std::uint64_t id,
+                                         const QString& text, std::optional<bool> eye) {
+    auto* item = parent == nullptr ? new QTreeWidgetItem(this) : new QTreeWidgetItem(parent);
+    item->setText(0, text);
+    item->setData(0, idRole, QVariant::fromValue<qulonglong>(id));
+    item->setData(0, nameRole, text);
+    item->setData(0, kindRole, static_cast<int>(kind));
+    if (eye.has_value()) {
+        item->setIcon(eyeColumn, *eye ? shownIcon_ : hiddenIcon_);
+        item->setToolTip(eyeColumn, *eye ? tr("Ausblenden") : tr("Einblenden"));
+        item->setData(eyeColumn, Qt::UserRole, *eye);
+        if (!*eye)
+            item->setForeground(0, palette().color(QPalette::Disabled, QPalette::Text));
+    }
+    return item;
+}
+
+void ModelTreePanel::showModel(const application::ModelOutline& outline,
+                               std::span<const document::FeatureDescriptor> features,
+                               std::optional<document::FeatureId> selectedFeature,
+                               const ViewVisibility& visibility) {
     const QSignalBlocker blocker(this);
     clear();
-    auto* bodyItem = new QTreeWidgetItem(this);
-    bodyItem->setText(0, tr("Körper"));
-    bodyItem->setFlags(bodyItem->flags() & ~Qt::ItemIsSelectable);
-    for (const document::FeatureDescriptor& feature : features) {
-        auto* item = new QTreeWidgetItem(bodyItem);
-        const QString name = QString::fromStdString(feature.name);
-        item->setText(0, name);
-        item->setData(0, Qt::UserRole, QVariant::fromValue<qulonglong>(feature.id.value()));
-        item->setData(0, Qt::UserRole + 1, name);
-        if (selectedFeature == feature.id) {
+    std::map<std::uint64_t, const document::FeatureDescriptor*> byId;
+    for (const document::FeatureDescriptor& feature : features)
+        byId.emplace(feature.id.value(), &feature);
+    const bool hasBodies = !outline.bodies.empty();
+    auto* origin =
+        addItem(nullptr, Kind::origin, 0, tr("Ursprung"), visibility.originShown(hasBodies));
+    for (int index = 0; index < 3; ++index)
+        addItem(origin, Kind::plane, static_cast<std::uint64_t>(index + 1), planeName(index),
+                visibility.planes[static_cast<std::size_t>(index)]);
+    addItem(origin, Kind::grid, 0, tr("Raster auf XY"), visibility.grid);
+    origin->setExpanded(true);
+
+    const auto addFeature = [&](QTreeWidgetItem* parent, document::FeatureId id) {
+        const auto match = byId.find(id.value());
+        if (match == byId.end())
+            return;
+        auto* item = addItem(parent, Kind::feature, id.value(),
+                             QString::fromStdString(match->second->name), std::nullopt);
+        if (selectedFeature == id)
             setCurrentItem(item);
-        }
+    };
+    int number = 1;
+    for (const application::OutlineBody& body : outline.bodies) {
+        const auto bodyId = body.id.value();
+        auto* item = addItem(nullptr, Kind::body, bodyId, tr("Körper %1").arg(number++),
+                             !visibility.hiddenBodies.contains(bodyId));
+        addItem(item, Kind::bodyOrigin, bodyId, tr("Ursprung"),
+                visibility.shownBodyOrigins.contains(bodyId));
+        for (const document::FeatureId feature : body.features)
+            addFeature(item, feature);
+        item->setExpanded(true);
     }
-    bodyItem->setExpanded(true);
+    for (const document::FeatureId feature : outline.loose)
+        addFeature(nullptr, feature);
 }
 
 void ModelTreePanel::showStatuses(std::span<const application::FeatureRuntimeState> states) {
     for (const application::FeatureRuntimeState& state : states) {
         QTreeWidgetItem* item = featureItem(state.id);
-        if (item == nullptr) {
+        if (item == nullptr)
             continue;
-        }
-        const QString name = item->data(0, Qt::UserRole + 1).toString();
+        const QString name = item->data(0, nameRole).toString();
         const bool hasError = state.status == application::FeatureRuntimeStatus::error;
         const bool blocked = state.status == application::FeatureRuntimeStatus::blocked;
         item->setText(0, hasError  ? tr("%1 [Fehler]").arg(name)
@@ -68,15 +146,11 @@ void ModelTreePanel::selectFeature(document::FeatureId featureId) {
 }
 
 QTreeWidgetItem* ModelTreePanel::featureItem(document::FeatureId featureId) const {
-    QTreeWidgetItem* body = topLevelItem(0);
-    if (body == nullptr) {
-        return nullptr;
-    }
-    for (int index = 0; index < body->childCount(); ++index) {
-        QTreeWidgetItem* item = body->child(index);
-        if (item->data(0, Qt::UserRole).toULongLong() == featureId.value()) {
+    for (QTreeWidgetItemIterator it(const_cast<ModelTreePanel*>(this)); *it != nullptr; ++it) {
+        QTreeWidgetItem* item = *it;
+        if (static_cast<Kind>(item->data(0, kindRole).toInt()) == Kind::feature &&
+            item->data(0, idRole).toULongLong() == featureId.value())
             return item;
-        }
     }
     return nullptr;
 }

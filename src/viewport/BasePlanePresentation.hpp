@@ -14,7 +14,7 @@ namespace voelund::viewport {
 class BasePlanePresentation final {
   public:
     void show(const occ::handle<AIS_InteractiveContext>& context, bool emphasized, double halfSize,
-              const ViewportTheme& theme);
+              const ViewportTheme& theme, std::array<bool, 3> visible);
     void hide(const occ::handle<AIS_InteractiveContext>& context);
     [[nodiscard]] std::optional<BasePlane>
     plane(const occ::handle<AIS_InteractiveObject>& object) const;

@@ -9,7 +9,9 @@ namespace {
 void validateKind(const FeatureDescriptor& feature, const FeatureParameters& parameters) {
     bool matches = false;
     switch (feature.kind) {
-    case FeatureKind::box: matches = std::holds_alternative<BoxParameters>(parameters); break;
+    case FeatureKind::box:
+        matches = std::holds_alternative<BoxParameters>(parameters);
+        break;
     case FeatureKind::cylinder:
         matches = std::holds_alternative<CylinderParameters>(parameters);
         if (matches)
@@ -17,13 +19,18 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
             case CylinderResultMode::join:
             case CylinderResultMode::cut:
             case CylinderResultMode::intersect:
-            case CylinderResultMode::separate: break;
-            default: matches = false;
+            case CylinderResultMode::separate:
+                break;
+            default:
+                matches = false;
             }
         break;
-    case FeatureKind::sketch: matches = std::holds_alternative<SketchParameters>(parameters); break;
+    case FeatureKind::sketch:
+        matches = std::holds_alternative<SketchParameters>(parameters);
+        break;
     case FeatureKind::extrusion:
-        matches = std::holds_alternative<ExtrusionParameters>(parameters); break;
+        matches = std::holds_alternative<ExtrusionParameters>(parameters);
+        break;
     }
     if (!matches)
         throw std::invalid_argument("Legacy body identity: feature parameter kind mismatch");
@@ -37,9 +44,9 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
 
 } // namespace
 
-std::vector<FeatureBodyIdentity>
-legacyBodyIdentities(std::span<const FeatureDescriptor> features,
-                     std::span<const FeatureParameters> parameters) {
+std::vector<std::optional<BodyId>>
+featureBodyContexts(std::span<const FeatureDescriptor> features,
+                    std::span<const FeatureParameters> parameters) {
     if (features.size() != parameters.size())
         throw std::invalid_argument("Legacy body identity: parameter count mismatch");
     std::map<std::uint64_t, std::size_t> indices;
@@ -83,19 +90,27 @@ legacyBodyIdentities(std::span<const FeatureDescriptor> features,
             const auto& feature = features[index];
             // A datum sketch opens a body; its extrusion produces the body's first solid.
             const bool createsBody = feature.kind == FeatureKind::box ||
-                (feature.kind == FeatureKind::sketch && !inputs[index]) ||
-                (feature.kind == FeatureKind::cylinder &&
-                 std::get<CylinderParameters>(parameters[index]).resultMode ==
-                     CylinderResultMode::separate);
+                                     (feature.kind == FeatureKind::sketch && !inputs[index]) ||
+                                     (feature.kind == FeatureKind::cylinder &&
+                                      std::get<CylinderParameters>(parameters[index]).resultMode ==
+                                          CylinderResultMode::separate);
             context[index] = createsBody ? BodyId{feature.id.value()} : context[*inputs[index]];
             state[index] = 2;
         }
     }
+    return context;
+}
+
+std::vector<FeatureBodyIdentity>
+legacyBodyIdentities(std::span<const FeatureDescriptor> features,
+                     std::span<const FeatureParameters> parameters) {
+    const auto context = featureBodyContexts(features, parameters);
     std::vector<FeatureBodyIdentity> result;
     result.reserve(features.size());
     for (std::size_t index = 0; index < features.size(); ++index)
-        result.push_back({features[index].id,
-                          features[index].kind == FeatureKind::sketch ? std::nullopt : context[index]});
+        result.push_back({features[index].id, features[index].kind == FeatureKind::sketch
+                                                  ? std::nullopt
+                                                  : context[index]});
     return result;
 }
 

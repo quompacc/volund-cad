@@ -15,6 +15,7 @@ add_library(
     DocumentRepairDialog.cpp
     ReferenceRepairPreview.cpp
     MainWindowSupport.cpp
+    MainWindowView.cpp
     MeasurementInput.cpp
     ModelTreePanel.cpp
     SketchConstraintLabel.cpp

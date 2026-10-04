@@ -45,6 +45,9 @@ class MainWindow final : public QMainWindow {
     void createCommands();
     void connectInteractions();
     void syncModelTree();
+    void syncVisibility();
+    void toggleVisibility(int kind, std::uint64_t id);
+    void selectBasePlane(int plane);
     void syncProperties();
     void syncTreeStatus();
     void syncSketchPresentation();

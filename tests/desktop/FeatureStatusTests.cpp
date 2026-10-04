@@ -1,5 +1,6 @@
 #include "../BoundSketchFixture.hpp"
 #include "../CommandResultAssertions.hpp"
+#include "ModelTreeLookup.hpp"
 #include <QAction>
 #include <QApplication>
 #include <QDir>
@@ -54,14 +55,11 @@ void inspectWindow(application::CadSession& session) {
     }
     require(viewport->isRenderingReady(), "visible viewport readiness");
     auto* tree = window.findChild<QTreeWidget*>();
-    require(tree && tree->topLevelItemCount() == 1, "model tree");
-    auto* body = tree->topLevelItem(0);
-    require(body->childCount() == 6 && body->child(2)->text(0).contains("[Fehler]") &&
-                body->child(3)->text(0).contains("[blockiert]") &&
-                body->child(4)->text(0).contains("[blockiert]") &&
-                body->child(4)->toolTip(0).contains("Blocked") &&
-                !body->child(5)->text(0).contains("[blockiert]") &&
-                !body->child(5)->text(0).contains("[Fehler]"),
+    require(tree && session.features().size() == 6, "model tree");
+    const auto row = [&](std::size_t index) { return test::featureRow(*tree, session, index); };
+    require(row(2)->text(0).contains("[Fehler]") && row(3)->text(0).contains("[blockiert]") &&
+                row(4)->text(0).contains("[blockiert]") && row(4)->toolTip(0).contains("Blocked") &&
+                !row(5)->text(0).contains("[blockiert]") && !row(5)->text(0).contains("[Fehler]"),
             "Model tree lost failure/block distinction");
     const auto directory = qEnvironmentVariable("VOELUND_FEATURE_STATUS_ARTIFACT_DIR");
     if (!directory.isEmpty()) {
@@ -69,7 +67,7 @@ void inspectWindow(application::CadSession& session) {
         QApplication::processEvents();
         require(window.grab().save(directory + "/feature-failed-blocked.png"), "capture tree");
     }
-    tree->setCurrentItem(body->child(5));
+    tree->setCurrentItem(row(5));
     QApplication::processEvents();
     require(session.selectedFeature() == document::FeatureId{6} &&
                 session.canTransformFeature(document::FeatureId{6}),
@@ -151,11 +149,10 @@ void inspectLegacyPlane(const std::filesystem::path& directory) {
     }
     require(viewport->isRenderingReady(), "legacy viewport readiness");
     auto* tree = window.findChild<QTreeWidget*>();
-    require(tree && tree->topLevelItemCount() == 1, "legacy model tree");
-    auto* body = tree->topLevelItem(0);
-    require(body->childCount() == 3 && body->child(1)->text(0).contains("[Fehler]") &&
-                body->child(2)->text(0).contains("[blockiert]") &&
-                body->child(1)->toolTip(0).contains("MigrationNeedsRepair"),
+    require(tree && session.features().size() == 3, "legacy model tree");
+    const auto row = [&](std::size_t index) { return test::featureRow(*tree, session, index); };
+    require(row(1)->text(0).contains("[Fehler]") && row(2)->text(0).contains("[blockiert]") &&
+                row(1)->toolTip(0).contains("MigrationNeedsRepair"),
             "Legacy plane error was not visible");
     QAction* edit = nullptr;
     for (auto* action : window.findChildren<QAction*>())
