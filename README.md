@@ -1,6 +1,6 @@
 # Völund CAD
 
-Völund CAD is a native C++20 parametric CAD application built on Qt 6 and OpenCASCADE Technology (OCCT/OCAF). Its primary desktop target is FreeBSD with Meridian. FreeCAD is a reference implementation and test oracle, not a runtime dependency.
+Völund CAD is a native C++20 parametric CAD application built on Qt 6 and OpenCASCADE Technology (OCCT/OCAF). Its desktop targets are Linux (native Wayland, reference: Fedora), FreeBSD with Meridian, and Windows; see [ADR 0011](docs/adr/0011-linux-desktop-and-ci-runner.md). FreeCAD is a reference implementation and test oracle, not a runtime dependency.
 
 The binding engineering rules are defined in the [architecture and code contract](docs/architecture-and-code-contract.md).
 
@@ -111,8 +111,9 @@ cmake --build --preset linux-gcc
 ctest --preset linux-gcc
 ```
 
-The Linux preset currently builds and tests the CAD core without the desktop target.
-The product desktop target is native Wayland on FreeBSD under Meridian. X11 and
+The Linux preset currently builds and tests the CAD core without the desktop target;
+the native Wayland desktop build on Fedora follows in packet P05. Product desktop targets
+are native Wayland on Linux and on FreeBSD under Meridian. X11 and
 XWayland do not satisfy its viewport acceptance gate. Desktop enablement is validated
 first on a mature FreeBSD Wayland desktop as a control and then under Meridian.
 

@@ -18,3 +18,5 @@ Current decisions:
 - [0009 – Herkunftsbasierte Subshape-Referenzen](0009-subshape-reference-contract.md)
 
 - [0010 – Native Konstruktionsaktionen und nachrüstbare Analyse](0010-native-actions-and-analysis-extension.md)
+
+- [0011 – Linux-Desktop als gleichrangiges Ziel, CI auf dem Testrechner](0011-linux-desktop-and-ci-runner.md)

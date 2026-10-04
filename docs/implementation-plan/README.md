@@ -1,24 +1,37 @@
 # Völund: vom vorhandenen Prototyp zum belastbaren CAD
 
-## Aktueller Stand – 19. September 2026
+## Aktueller Stand – 4. Oktober 2026
 
-Laut [Paketstatus](packets.json): **121 Hauptpakete, 33 abgeschlossen, 88 offen**.
-Offen sind 87 geplante Pakete und A02 mit Designbedarf.
-R08 ist mit Schnittbildung und abgeleiteten Regionen/Innenkonturen abgenommen. Als Nächstes folgt R09 (Regionidentität und Profilauswahl). [R08-Abnahme](evidence/R08.md).
-Teilblöcke wie D12a–e zählen nicht als zusätzliche Hauptpakete; die Paketanzahl
-ist kein Maß für Restaufwand oder Fertigstellungszeit.
+[`packets.json`](packets.json) ist die einzige Statusquelle; dieser Abschnitt fasst
+sie nur zusammen. **124 Hauptpakete, 33 abgeschlossen, 91 offen** (90 geplant,
+A02 mit Designbedarf). Teilblöcke wie D12a–e zählen nicht als Hauptpakete; die
+Paketanzahl ist kein Maß für Restaufwand oder Fertigstellungszeit.
+
+**Umstellung vom 4. Oktober 2026** ([ADR 0011](../adr/0011-linux-desktop-and-ci-runner.md)):
+
+- Linux-Desktop (natives Wayland, Referenz Fedora) ist gleichrangiges Ziel neben
+  FreeBSD/Meridian und Windows.
+- Nächste Pakete: **P05** Linux-Desktopbasis auf dem Fedora-Testrechner →
+  **C01** Pflicht-CI mit Gitea-Runner auf diesem Rechner → **R09/R10** schlank →
+  **V01** Durchstich leeres Dokument → Ebene → Skizze → Extrusion → Speichern/Öffnen
+  in `voelund-cad`. Danach U-, S- und M-Pakete auf diesem Weg.
+- L01 ist nur noch die Release-Matrix auf C01; L08 nimmt Windows und Linux-Desktop ab.
+- AI02 und alle G5-Pakete sind bis zur G3-Abnahme eingefroren; U04 hängt nicht mehr an AI02.
+- Nachweis je Paket: grüner CI-Lauf, lokaler Windows-Lauf und kurze Evidenznotiz.
+  Keine Quellhash-Listen, keine eingecheckten Logs/Aufnahmen. FreeBSD/Sway wird je Gate geprüft.
+- Ein Commit je abgenommenem Paket.
 
 | Stufe | Offene Hauptpakete |
 | --- | ---: |
-| G0 – Basis | 2 |
-| G1 – Dokument und Referenzen | 2 |
+| G0 – Basis | 3 |
+| G1 – Dokument und Referenzen | 3 |
 | G2 – zusammenhängender CAD-Workflow | 27 |
 | G3 – mechanisches CAD v1 | 18 |
 | G4 – veröffentlichbare v1 | 10 |
-| G5 – spätere Produktfamilie | 29 |
-| Gesamt | 88 |
+| G5 – spätere Produktfamilie | 30 |
+| Gesamt | 91 |
 
-Bis einschließlich G4 bleiben 59 Hauptpakete. G2 ist der erste durchgängige
+Bis einschließlich G4 bleiben 61 Hauptpakete. G2 ist der erste durchgängige
 Bedienablauf, G3 der begrenzte mechanische Funktionsumfang. G5 umfasst zusätzliche
 Bereiche wie Baugruppen und Zeichnungen. Nutzbarkeit wird an diesen Abläufen
 abgenommen, nicht am Erreichen einer Prozentzahl.

@@ -4,18 +4,22 @@
 
 Dies konkretisiert den bestehenden [Architekturvertrag, Abschnitt 10](../architecture-and-code-contract.md#10-definition-of-done): „Diese Arbeit wird nicht zur schrittweisen Bedienkontrolle an den Benutzer delegiert.“ Es ändert keine Funktions-/Architekturvorgaben und meldet geplante Tests nicht als bereits ausgeführt. Der tatsächliche Umsetzungsstand steht mit Evidenz im Manifest; bereits abgeschlossene Pakete werden nicht erneut ausgeführt. Eine Ausführung im Hintergrund oder nach Ende einer Sitzung wird ohne tatsächlich eingerichteten Ausführungsmechanismus nicht behauptet.
 
-## Dauerhafte Freigabe für den FreeBSD-Prüfrechner
+## Dauerhafte Freigabe für den Testrechner
 
 **Ausdrückliche Nutzerfreigabe vom 18.09.2026, projektweit und über Sitzungen hinweg:**
-Die BSD-Maschine ist ausdrücklich für die Entwicklung und Prüfung dieses Projekts
+Die Maschine ist ausdrücklich für die Entwicklung und Prüfung dieses Projekts
 aufgesetzt. Der Agent darf Projektdateien einschließlich neuer/geänderter interner
-Quelltexte, Tests, Fixtures, Build-/Prüfskripte und Hashlisten nach
-`eduard@192.168.1.238` übertragen, dort Builds und Tests ausführen und Prüfartefakte
-(Logs, Hashes, native Testdateien und UI-Aufnahmen) zurückholen und auswerten.
+Quelltexte, Tests, Fixtures und Build-/Prüfskripte auf den Testrechner
+übertragen, dort Builds und Tests ausführen und Prüfartefakte
+(Logs, native Testdateien und UI-Aufnahmen) zurückholen und auswerten.
 Das schließt neue Arbeitspakete und korrigierte Payloads ein; eine erneute Freigabe
 pro Datei, Delta, Paket oder Sitzung ist nicht erforderlich.
 
-Reguläres Prüfverzeichnis: `/home/eduard/src/voelund-p04-20260913/`.
+**Erweiterung vom 04.10.2026 ([ADR 0011](../adr/0011-linux-desktop-and-ci-runner.md)):**
+Der Testrechner läuft jetzt nativ mit Fedora. Er soll als Gitea-Actions-Runner für
+`eduard/volund-cad` dienen; Einrichtung und Betrieb des Runners sowie CI-Läufe sind
+von der Freigabe umfasst. Adresse und Prüfverzeichnis werden in P05 neu erfasst
+(die frühere FreeBSD-Adresse `192.168.1.238` war am 04.10.2026 nicht erreichbar).
 Zugang und Plattformdetails: [Hostdokumentation](../development-hosts.md).
 Transferumfang und tatsächliche Prüfergebnisse weiterhin nachvollziehbar dokumentieren.
 Diese dauerhafte Freigabe ersetzt frühere Hinweise auf nur sitzungs- oder
@@ -31,7 +35,7 @@ allein wegen eines neuen Projekt-Quellpayloads stellen.
 4. Implementieren, passende Tests ausführen und bei UI-/Darstellungswirkung zusätzlich Abschnitt 3 abarbeiten. Fehler selbst reproduzieren, beheben und gezielt nachprüfen. Erfolgreiche unveränderte Tests nur bei begründetem Integrationsbedarf wiederholen.
 5. Ergebnis anhand des tatsächlichen Diffs und der vereinbarten Fehlerfälle gegenprüfen; Evidenz, Paketstatus und Gatebericht selbst pflegen. Neuer Testbedarf wird als Unterpaket bearbeitet, nicht als Anleitung an den Nutzer abgegeben.
 6. Nach bestandener Paketabnahme mit dem nächsten zulässigen Paket fortfahren. Kurze Fortschrittsberichte ersetzen die Frage „Soll ich weitermachen?“. Ein ausdrücklich begrenzter Einzelauftrag wird dadurch nicht erweitert.
-7. Bei echtem externem Blocker nur betroffene Arbeit blockieren. Unabhängige zulässige Pakete oder vorbereitende Prüfungen weiterführen. Gemäß ADR 0007 wird auf FreeBSD/Sway weiterentwickelt; Meridian folgt abschließend in L07. Eigene Paketabhängigkeiten bleiben verbindlich.
+7. Bei echtem externem Blocker nur betroffene Arbeit blockieren. Unabhängige zulässige Pakete oder vorbereitende Prüfungen weiterführen. Gemäß ADR 0011 wird je Push in der CI auf Linux (Fedora) und je Paket lokal auf Windows geprüft; FreeBSD/Sway je Gate, Meridian abschließend in L07. Eigene Paketabhängigkeiten bleiben verbindlich.
 
 Ein gescheiterter Test ist zunächst Entwicklungsarbeit, kein Anlass zur Nutzerprüfung. Wenn mehrere Versuche keine neue Evidenz liefern, Diagnoseansatz ändern und das konkrete Hindernis festhalten. Nicht endlos denselben Test oder dieselbe unzugängliche Umgebung wiederholen.
 

@@ -4,22 +4,25 @@
   "auditedCommit": "1b78229",
   "status": "implementation-started",
   "counts": {
-    "total": 121,
-    "throughG4": 92,
-    "g5": 29
+    "total": 124,
+    "throughG4": 94,
+    "g5": 30
   },
   "globalGates": [
     {
       "id": "initial-freebsd-sway",
       "completedBy": "P04",
-      "rule": "ADR 0007 / Nutzerentscheidung 2026-09-13: CAD auf FreeBSD/Sway entwickeln und laufend prüfen. P04 belegt die native Entwicklungsbasis; Meridian folgt abschließend in L07 und blockiert keine CAD-Erweiterung. Eigene Paketabhängigkeiten bleiben verbindlich."
+      "rule": "ADR 0007 / Nutzerentscheidung 2026-09-13: CAD auf FreeBSD/Sway entwickeln und laufend prüfen. P04 belegt die native Entwicklungsbasis; Meridian folgt abschließend in L07 und blockiert keine CAD-Erweiterung. Eigene Paketabhängigkeiten bleiben verbindlich. Seit ADR 0011 (2026-10-04) wird FreeBSD/Sway an Gate-Abnahmen und in L07 geprüft, nicht mehr je Paket."
+    },
+    {
+      "id": "linux-desktop-equal-target",
+      "completedBy": "P05",
+      "rule": "ADR 0011 / Nutzerentscheidung 2026-10-04: Linux-Desktop (natives Wayland, Referenz Fedora) ist gleichrangiges Produktziel neben FreeBSD/Meridian und Windows. Paketprüfung je Push in der CI auf dem Fedora-Testrechner, Windows lokal je Paket, FreeBSD je Gate."
     }
   ],
   "topologicalOrder": [
     "A01",
-    "A02",
     "A03",
-    "A04",
     "A05",
     "A06",
     "A07",
@@ -51,12 +54,16 @@
     "R06",
     "R07",
     "R08",
+    "A02",
+    "P05",
+    "C01",
     "R09",
     "R10",
+    "V01",
+    "A04",
     "U01",
     "U02",
     "U03",
-    "AI02",
     "U04",
     "U05",
     "U06",
@@ -108,6 +115,7 @@
     "L08",
     "L09",
     "L10",
+    "AI02",
     "X01",
     "X02",
     "X03",
@@ -1187,7 +1195,14 @@
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": ["R06-plan.md", "evidence/R06a.md", "evidence/R06b.md", "evidence/R06c.md", "evidence/R06d.md", "evidence/R06.md"],
+      "evidence": [
+        "R06-plan.md",
+        "evidence/R06a.md",
+        "evidence/R06b.md",
+        "evidence/R06c.md",
+        "evidence/R06d.md",
+        "evidence/R06.md"
+      ],
       "completedCommit": null
     },
     {
@@ -1213,7 +1228,9 @@
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": ["evidence/R07.md"],
+      "evidence": [
+        "evidence/R07.md"
+      ],
       "completedCommit": null
     },
     {
@@ -1238,7 +1255,12 @@
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": ["R08-plan.md", "evidence/R08a.md", "evidence/R08b.md", "evidence/R08.md"],
+      "evidence": [
+        "R08-plan.md",
+        "evidence/R08a.md",
+        "evidence/R08b.md",
+        "evidence/R08.md"
+      ],
       "completedCommit": null
     },
     {
@@ -1259,7 +1281,7 @@
         "Explizite Mehrfachauswahl und ungültig gewordene Profilreferenz in Application-Projektion anbieten."
       ],
       "acceptance": "Elementumordnung verändert Auswahl nicht; gelöschter kleinster Randindex führt nicht unbemerkt zur anderen Region. Split wird nach Vertrag reparaturbedürftig. A-REG-02 besteht.",
-      "boundary": "Kein automatisches Auswählen aller erkannten Flächen als Ersatz für Benutzerabsicht.",
+      "boundary": "Kein automatisches Auswählen aller erkannten Flächen als Ersatz für Benutzerabsicht. Umstellung 2026-10-04: Umfang auf den Bedarf des Durchstichs V01 begrenzen; weitergehende Fälle als eigenes Unterpaket nach V01.",
       "status": "planned",
       "gate": "G1",
       "chapter": "03-fundament.md",
@@ -1286,7 +1308,7 @@
         "Analytische Fixtures und Toleranzmatrix für kleine/große Flächen ergänzen."
       ],
       "acceptance": "A-REG-01 vollständig besteht: Ringfläche π(R²−r²), Inseln, mehrere getrennte Regionen und invertierte Eingabereihenfolge. Invalides Face liefert Fehler statt leeres Erfolgsshape.",
-      "boundary": "Keine Extrude-UI; diese nutzt später dieselben Regionresultate.",
+      "boundary": "Keine Extrude-UI; diese nutzt später dieselben Regionresultate. Umstellung 2026-10-04: Umfang auf den Bedarf des Durchstichs V01 begrenzen; weitergehende Fälle als eigenes Unterpaket nach V01.",
       "status": "planned",
       "gate": "G1",
       "chapter": "03-fundament.md",
@@ -1378,8 +1400,7 @@
       "title": "Ribbon an CommandRegistry anbinden",
       "deps": [
         "U02",
-        "U03",
-        "AI02"
+        "U03"
       ],
       "files": [
         "src/workspaces/CommandRegistry.cpp",
@@ -1390,8 +1411,7 @@
       "steps": [
         "Ribbon-Elemente aus registrierten Befehlen und Workspace-Metadaten erzeugen/binden.",
         "Shortcuts und Kontextmenü verwenden dieselbe Command-ID und Zustandsprüfung.",
-        "Aktivierung bei Auswahl-/Tool-/Dokumentwechsel aktualisieren; No-op-Routing auf Select entfernen.",
-        "Gemeinsame zielgerichtete Application-Aktionen aus AI02 verwenden; Auswahl nur beim Erstellen des Requests auflösen."
+        "Aktivierung bei Auswahl-/Tool-/Dokumentwechsel aktualisieren; No-op-Routing auf Select entfernen."
       ],
       "acceptance": "Ein Ribbon-Klick und der zugehörige Shortcut lösen identischen Application-Befehl aus. Unbekannte ID liefert Diagnose. Relation/Dimension/Trim/Offset gehen nicht versehentlich auf Select.",
       "boundary": "Noch nicht implementierte Fachtools bleiben deaktiviert.",
@@ -1684,7 +1704,8 @@
         "U05",
         "S02",
         "D11",
-        "R04"
+        "R04",
+        "V01"
       ],
       "files": [
         "src/application/CadSessionSketchProfiles.cpp",
@@ -2083,7 +2104,8 @@
       "title": "Produktives Extrude/Pocket-Panel und kompletter erster CAD-Fluss",
       "deps": [
         "M03",
-        "U12"
+        "U12",
+        "V01"
       ],
       "files": [
         "src/desktop/SketchExtrusionToolController.cpp",
@@ -2656,11 +2678,10 @@
     },
     {
       "id": "L01",
-      "title": "Verpflichtende CI und saubere Release-Buildmatrix",
+      "title": "Release-Buildmatrix auf der bestehenden Pflicht-CI",
       "deps": [
+        "C01",
         "A04",
-        "A05",
-        "A07",
         "M18"
       ],
       "files": [
@@ -2670,8 +2691,8 @@
         "docs/dependencies.md"
       ],
       "steps": [
-        "CI-Konfiguration im tatsächlich verwendeten Repositorysystem anlegen; falls keines existiert, zuerst runnerunabhängige Prüfskripte plus bestätigte Runnerzuordnung festhalten.",
-        "Debug/Release auf Windows, FreeBSD und Linux Core konfigurieren; Format, Analyse, Grenzen, Tests und Plattformberichte als Gates behandeln.",
+        "Die in C01 eingeführte CI um Release-Builds erweitern; Format-, Analyse- und Grenzprüfungen aus A04 als Pflichtschritte aufnehmen.",
+        "Debug/Release auf Windows, Linux-Desktop und FreeBSD konfigurieren; fehlende Runner als offene Pflichtplattform ausweisen.",
         "Nicht verfügbare GPU-/Meridianprüfungen als gesonderte erforderliche Abnahme behandeln, nicht stumm skippen."
       ],
       "acceptance": "Clean checkout ohne bestehendes build/ baut reproduzierbar auf vorhandenen Runnern. Fehler in einem Pflichtcheck blockiert Freigabe; JUnit/Logs/Umgebungsmanifest werden je Commit archiviert. UI-Bilder und visuelle Vergleichsbefunde werden soweit betroffen mit Szenario/Umgebung archiviert; automatisch erzeugte Bilder nicht als bereits betrachtet kennzeichnen.",
@@ -2703,7 +2724,7 @@
         "Portable/Staging-Paket auf Rechner ohne Dev-PATH starten; Unicodepfade und native Dialoge prüfen."
       ],
       "acceptance": "Installiertes voelund-cad öffnet per Dateizuordnung eine .volund-Datei mit Umlaut/Leerzeichen. Keine Abhängigkeit auf .tools oder Entwicklerarbeitsverzeichnis. Fehlende Runtime wird im Pakettest erkannt.",
-      "boundary": "Installationsform pro Plattform vorab konkret festlegen; keine ungeprüften DLL-Sammelkopien.",
+      "boundary": "Installationsform je Plattform (Windows, Linux, FreeBSD) vorab konkret festlegen; keine ungeprüften DLL-/SO-Sammelkopien.",
       "status": "planned",
       "gate": "G4",
       "chapter": "06-plattform-release.md",
@@ -2846,7 +2867,7 @@
     },
     {
       "id": "L08",
-      "title": "Windows-Release und Linux-Core-Kompatibilität abnehmen",
+      "title": "Windows- und Linux-Desktop-Release abnehmen",
       "deps": [
         "L02",
         "L05",
@@ -2860,9 +2881,9 @@
       "steps": [
         "Windows-Stagingpaket auf sauberer Benutzerumgebung ohne Dev-PATH öffnen, modellieren, speichern und exportieren.",
         "Qt-OpenGL Produktweg vollständig prüfen; Native-Diagnose separat kennzeichnen.",
-        "Linux-Core Build/CTest mit tatsächlich dokumentierter Dependencystrategie durchführen und Ergebnisse archivieren."
+        "Linux-Desktoppaket (Form aus L02) auf sauberer Fedora-Benutzerumgebung unter nativem Wayland öffnen, modellieren, speichern und exportieren; Ergebnisse archivieren."
       ],
-      "acceptance": "Windows A-PART-01/02 und Unicode-Dateifälle bestanden; Linux-Core-Tests grün. Native-Windows nicht als Produktvoraussetzung ausgeben, wenn ADR nur Diagnose verlangt. Fehlende Plattform bleibt offen. Eigenständige optische Prüfung des Windows-Produkts nach A-VIS-01; keine generelle Bitte an den Nutzer, die Anwendung durchzutesten.",
+      "acceptance": "Windows A-PART-01/02 und Unicode-Dateifälle bestanden; Linux-Desktop A-PART-01/02 unter nativem Wayland bestanden. Native-Windows nicht als Produktvoraussetzung ausgeben, wenn ADR nur Diagnose verlangt. Fehlende Plattform bleibt offen. Eigenständige optische Prüfung des Windows-Produkts nach A-VIS-01; keine generelle Bitte an den Nutzer, die Anwendung durchzutesten.",
       "boundary": "Keine Windows-Grafikfreigabe aus Headless-Coretests ableiten.",
       "status": "planned",
       "gate": "G4",
@@ -3467,9 +3488,9 @@
         "Vor größerer Implementierung Unterpakete nach Kapitel 11 und Paketgrenze festlegen."
       ],
       "acceptance": "A-ACTION-01; identische GUI-/Direktresultate, keine veralteten oder doppelten Mutationen, ein Undo je Kandidat.",
-      "boundary": "Umfang und Nicht-Ziele laut eigenem Abschnitt in Kapitel 11; keine neuen Runtime-Abhängigkeiten ohne konkrete Entscheidung.",
+      "boundary": "Umfang und Nicht-Ziele laut eigenem Abschnitt in Kapitel 11; keine neuen Runtime-Abhängigkeiten ohne konkrete Entscheidung. Umstellung 2026-10-04: eingefroren bis zur G3-Abnahme; nicht mehr Voraussetzung für U04.",
       "status": "planned",
-      "gate": "G2",
+      "gate": "G5",
       "chapter": "11-ki-fem-optimierung.md",
       "kind": "implementation-or-acceptance",
       "evidence": null,
@@ -3685,6 +3706,90 @@
       "kind": "implementation-or-acceptance",
       "evidence": null,
       "completedCommit": null
+    },
+    {
+      "id": "P05",
+      "title": "Linux-Desktop (Fedora, natives Wayland) als gleichrangiges Ziel bauen und prüfen",
+      "deps": [
+        "P03",
+        "A07"
+      ],
+      "files": [
+        "CMakePresets.json",
+        "tools/setup-linux.sh",
+        "cmake/vcpkg-triplets/x64-linux-voelund.cmake",
+        "tests/CMakeLists.txt",
+        "docs/development-hosts.md"
+      ],
+      "steps": [
+        "Testrechner (Fedora) erfassen: Adresse, Zugang, Compositor, GPU/Mesa, Qt-6- und Compilerversion; in development-hosts.md festhalten.",
+        "Preset linux-desktop mit VOELUND_BUILD_DESKTOP=ON anlegen; Qt 6 mit Wayland-Plugin und dieselbe gepinnte OCCT-Version wie FreeBSD (7.9.3) verwenden. Distributionspakete oder lokaler OCCT-Build werden begründet entschieden.",
+        "Vollständigen CTest einschließlich desktop-/wayland-Labels und produktiver GUI-Smokes unter nativem Wayland ausführen; Lifecycle, Picking, Navigation und Manipulator prüfen und Aufnahmen betrachten."
+      ],
+      "acceptance": "Frischer Checkout baut auf Fedora den Desktop-Build; vollständiger CTest grün, QPA nachweislich wayland, kein XWayland. GUI-Smokes und betrachtete Aufnahmen belegt. setup-linux.sh beschreibt den tatsächlichen Weg.",
+      "boundary": "Keine Distributionspakete (L02/L08). Kein X11-Desktopnachweis. FreeBSD-Presets bleiben unverändert gültig.",
+      "status": "planned",
+      "gate": "G0",
+      "chapter": "06-plattform-release.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "C01",
+      "title": "Pflicht-CI mit Gitea-Runner auf dem Fedora-Testrechner",
+      "deps": [
+        "P05",
+        "A05",
+        "A07"
+      ],
+      "files": [
+        ".gitea/workflows/ci.yml",
+        "tools/run-ci-linux.sh",
+        "docs/development-hosts.md",
+        "docs/quality-tooling.md"
+      ],
+      "steps": [
+        "Runner für das Gitea-Repository eduard/volund-cad auf dem Testrechner als Systemdienst einrichten (Labels z. B. linux-desktop, wayland); keine Secrets im Repository.",
+        "Workflow je Push/PR: Configure, Build, vollständiger CTest (linux-desktop Debug), Quellgrenzenprüfung; JUnit, Logs und Aufnahmen als CI-Artefakte statt Git-Commits. Desktoptests in echter oder headless Wayland-Sitzung; Art der Sitzung im Ergebnis ausweisen.",
+        "main nur mit grünem CI ändern. Windows vorerst lokal über tools/test-windows.ps1 je Paket; optionalen Windows-Runner auf der Entwicklungsmaschine als Folgeschritt dokumentieren."
+      ],
+      "acceptance": "Absichtlich fehlschlagender Test färbt den Lauf rot; frischer Checkout ohne build/ läuft grün; Artefakte je Commit abrufbar; Runner übersteht Neustart. Paketnachweise verweisen ab jetzt auf CI-Läufe statt auf Hashlisten.",
+      "boundary": "Keine Release-Buildmatrix (L01). FreeBSD läuft nicht je Push, sondern an Gate-Abnahmen. Ein headless Lauf ist kein GPU-/Compositornachweis.",
+      "status": "planned",
+      "gate": "G1",
+      "chapter": "06-plattform-release.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "V01",
+      "title": "Durchstich: leeres Dokument → Ebene → Skizze → Extrusion → Speichern/Öffnen im Produkt",
+      "deps": [
+        "R10",
+        "C01",
+        "D14"
+      ],
+      "files": [
+        "src/application/CadSessionSketchProfiles.cpp",
+        "src/desktop/SketchEditorToolController.cpp",
+        "src/desktop/SketchExtrusionToolController.cpp",
+        "tests/desktop/"
+      ],
+      "steps": [
+        "In voelund-cad XY/XZ/YZ als Basisebenen mit stabiler Identität anbieten, sodass eine Skizze ohne vorhandenen Körper entsteht (Kern von S03).",
+        "Regionauswahl aus R09 und Faces aus R10 im bestehenden Extrusionspanel verwenden; ein Undo je Feature.",
+        "Qt-Testtreiber mit echten Events für den gesamten Ablauf; läuft in CI unter Linux und lokal unter Windows."
+      ],
+      "acceptance": "Ein UI-Test besteht: neues Dokument → XY → Rechteck mit Innenkreis → Extrusion (Ringkörper, Volumen analytisch geprüft) → Distanz ändern → Undo/Redo → Speichern → Öffnen mit gleichem Volumen. Grün in CI und lokal auf Windows.",
+      "boundary": "Keine neue Shell, kein Ribbon, keine Arbeit an voelund-ui-preview. Pocket, Zielkörper und weitere Panelfelder bleiben M02–M04; S03 vervollständigt denselben Weg.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
     }
   ],
   "executionPolicy": {
@@ -3701,20 +3806,40 @@
     "screenshotsMustActuallyBeInspected": true,
     "baselineUpdatesMustBeJustified": true,
     "routineHumanApprovalRequired": false,
-    "freebsdTestAuthorization": {
-      "grantedBy": "explicit user instruction",
-      "date": "2026-09-18",
-      "scope": "project-wide, across sessions and new or corrected work-package payloads",
-      "host": "eduard@192.168.1.238",
-      "workspace": "/home/eduard/src/voelund-p04-20260913/",
-      "allowed": ["transfer project source, tests, fixtures, build scripts and hash lists", "run builds and tests", "retrieve and inspect test artifacts including logs, native test files and UI captures"],
-      "repromptPerPayloadRequired": false,
-      "reference": "10-autonome-umsetzung.md#dauerhafte-freigabe-für-den-freebsd-prüfrechner"
-    },
     "blockedPacketDoesNotBlockIndependentAuthorizedWork": true,
     "humanFallback": "Only a prepared, specific remainder after feasible self-checks: inaccessible environment, unobservable physical effect, unresolved product preference or genuinely required authorization.",
     "preserveEvidenceOfNotRunChecks": true,
-    "assumeBackgroundExecution": false
+    "assumeBackgroundExecution": false,
+    "testHostAuthorization": {
+      "grantedBy": "explicit user instruction",
+      "date": "2026-09-18",
+      "extended": {
+        "date": "2026-10-04",
+        "by": "explicit user instruction",
+        "change": "Derselbe Testrechner läuft jetzt nativ mit Fedora und soll als CI-Runner dienen; Runnereinrichtung und CI-Läufe sind eingeschlossen."
+      },
+      "scope": "project-wide, across sessions and new or corrected work-package payloads",
+      "host": "Fedora-Testrechner; Adresse in P05 neu erfassen (192.168.1.238 war am 2026-10-04 per SSH nicht erreichbar)",
+      "workspace": "in P05 festlegen",
+      "allowed": [
+        "transfer project source, tests, fixtures, build scripts and hash lists",
+        "run builds and tests",
+        "retrieve and inspect test artifacts including logs, native test files and UI captures",
+        "install and operate a Gitea Actions runner for eduard/volund-cad"
+      ],
+      "repromptPerPayloadRequired": false,
+      "reference": "10-autonome-umsetzung.md#dauerhafte-freigabe-für-den-testrechner"
+    },
+    "evidencePolicy": {
+      "since": "2026-10-04",
+      "perPacket": "Grüner CI-Lauf (Run-ID), lokaler Windows-Lauf und eine kurze evidence/<ID>.md mit Änderung, Prüfungen und Grenzen. Keine Quellhash-Listen.",
+      "artifacts": "Logs, JUnit und Aufnahmen bleiben CI-Artefakte und werden nicht mehr eingecheckt; bestehende Evidenz bleibt unverändert.",
+      "visual": "Screenshots nur bei sichtbaren Änderungen (A-VIS-01).",
+      "platformReview": "Vollständige FreeBSD/Sway- und spätere Meridian-Prüfung je Gate-Abnahme statt je Paket."
+    },
+    "commitPolicy": "Ein Commit je abgenommenem Paket bzw. Unterpaket; nichts bleibt über Sitzungen uncommittet.",
+    "statusSource": "packets.json ist die einzige Statusquelle; README und Statusseiten verweisen nur darauf und nennen keine Testzahlen.",
+    "frozen": "G5 einschließlich AI02 beginnt erst nach G3-Abnahme."
   },
-  "updatedDate": "2026-09-18"
+  "updatedDate": "2026-10-04"
 }

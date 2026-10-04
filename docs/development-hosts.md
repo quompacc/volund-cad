@@ -1,4 +1,17 @@
-# Eingerichteter FreeBSD-Testrechner
+# Testrechner
+
+## Aktuell: Fedora (seit Oktober 2026)
+
+Der Testrechner läuft laut Nutzer seit Anfang Oktober 2026 nativ mit Fedora und
+soll als Gitea-Actions-Runner dienen ([ADR 0011](adr/0011-linux-desktop-and-ci-runner.md)).
+Adresse, SSH-Schlüssel, Compositor, GPU/Mesa, Qt- und Compilerversion sind noch
+nicht verifiziert und werden in P05 eingetragen. Am 04.10.2026 war
+`192.168.1.238:22` mit dem bisherigen Schlüssel nicht erreichbar.
+
+## Historisch: FreeBSD-Testrechner (September 2026)
+
+Die folgenden Angaben beschreiben den Stand bis zur Neuinstallation und belegen
+die bisherigen FreeBSD/Sway-Nachweise.
 
 Am 13.09.2026 vom Nutzer ausdrücklich für diese Tests benannt und per SSH geprüft.
 Vor Aussagen über fehlende Plattformzugänge diese Datei und die lokale SSH-
@@ -39,7 +52,7 @@ Projektdateien einschließlich neuer interner Quelltexte, Tests und Prüfdaten d
 auf diesen ausdrücklich dafür aufgesetzten Host übertragen werden. Builds und Tests
 sowie Rücktransfer und Auswertung ihrer Artefakte sind eingeschlossen. Die Freigabe
 gilt auch für neue Pakete, korrigierte Payloads und spätere Sitzungen; keine erneute
-Zustimmung je Transfer einholen. Verbindlich: [Ausführungsregel](implementation-plan/10-autonome-umsetzung.md#dauerhafte-freigabe-für-den-freebsd-prüfrechner). Der vorhandene Projektstand
+Zustimmung je Transfer einholen. Verbindlich: [Ausführungsregel](implementation-plan/10-autonome-umsetzung.md#dauerhafte-freigabe-für-den-testrechner). Der vorhandene Projektstand
 wird nicht durch den aktuellen Arbeitsbaum überschrieben. Eine laufende oder
 installierte Meridian-Sitzung wurde bislang nicht gefunden; Sway bleibt der
 Kontrollcompositor und wird nicht als Meridian ausgegeben.
