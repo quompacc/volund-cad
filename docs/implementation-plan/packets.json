@@ -1490,12 +1490,14 @@
       ],
       "acceptance": "A-UI-02 besteht für OK, Abbrechen, Escape und Toolwechsel. Abbrechen lässt Dokument/Undo/Dirty unverändert. Fehlgeschlagene Skizze startet kein Extrusionspanel.",
       "boundary": "Keine zweite temporäre Parametersammlung. Layout nach ADR 0012.",
-      "status": "planned",
+      "status": "done",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/U05.md"
+      ],
+      "completedCommit": "4f0148c"
     },
     {
       "id": "U06",
