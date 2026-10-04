@@ -1,6 +1,6 @@
 # AI02c – Kandidat, Vorschau, atomarer Commit, Wiederholung
 
-**Status:** umgesetzt, CI-Lauf ausstehend. Teilplan: [AI02-plan.md](../AI02-plan.md).
+**Status:** abgenommen am 04.10.2026 nach grünem CI-Lauf 380. Teilplan: [AI02-plan.md](../AI02-plan.md).
 
 ## Umsetzung
 
@@ -46,7 +46,7 @@
 | `application.action_candidates` | Skizze + Extrusion in einem Request: zwei neue Features, Volumen 500π; genau ein Undo entfernt beides, Redo stellt den identischen Stand her. Fehler in Schritt 2 (negative Distanz, offene Skizze) und unbekannte Region: Dokument, Stand, Undo und Redo bleiben gleich. Vorschau: Ergebnis und Körper des Kandidaten, aktive Session unverändert; nach einer Nutzeränderung scheitert der Commit des vorgeschauten Requests mit `staleStamp`, ein neuer Request committet. Wiederholung derselben ID liefert das gespeicherte Ergebnis ohne Mutation; anderer Wert oder anderer Stand unter derselben ID: `requestConflict`; leere ID abgewiesen. Nach 256 neueren Requests ist die erste ID vergessen; nach Neu ist eine ID wieder frei |
 
 - **Windows:** 112/112 Tests bestanden (Debug, MSVC, seriell).
-- **Linux:** CI-Lauf ausstehend. Vorab auf Fedora mit GCC gebaut: 31/31 Tests der
+- **Linux:** CI-Lauf 380 auf `261caae`, grün. Vorab auf Fedora mit GCC gebaut: 31/31 Tests der
   Anwendungsschicht.
 
 ## Grenzen

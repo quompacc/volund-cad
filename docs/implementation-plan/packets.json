@@ -3612,7 +3612,8 @@
       "kind": "implementation-or-acceptance",
       "evidence": [
         "docs/implementation-plan/evidence/AI02a.md",
-        "docs/implementation-plan/evidence/AI02b.md"
+        "docs/implementation-plan/evidence/AI02b.md",
+        "docs/implementation-plan/evidence/AI02c.md"
       ],
       "completedCommit": null
     },
