@@ -1552,12 +1552,14 @@
       ],
       "acceptance": "Im Skizzenmodus zeigt die Werkzeugleiste alle Skizzenwerkzeuge und keine Volumenwerkzeuge; nach OK/Abbrechen wieder die Volumenwerkzeuge. Jedes Skizzenwerkzeug ist über Werkzeugleiste, Befehlssuche und Kürzel mit derselben Command-ID erreichbar. Bestehende Skizzentests grün; Aufnahmen gesichtet und vorgelegt.",
       "boundary": "Nutzerentscheidung vom 2026-10-04 (Ergänzung zu ADR 0012). Keine neuen Skizzenfunktionen; nur deren Einstieg. Fachregeln bleiben in den Controllern.",
-      "status": "planned",
+      "status": "done",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/U13.md"
+      ],
+      "completedCommit": "4b4cbc6"
     },
     {
       "id": "U07",
@@ -1830,12 +1832,14 @@
       ],
       "acceptance": "Qt-Test mit echten Ereignissen: Hover nahe dem Ursprung zeigt den aktiven Marker; ein Rechteck aus dem Mittelpunkt am Ursprung bleibt nach einer Maßänderung zentriert; die angekündigte Beziehung entsteht tatsächlich. Aufnahmen gesichtet und dem Nutzer vorgelegt.",
       "boundary": "Nutzerwunsch vom 2026-10-04 (nach U13). Nur Sichtbarkeit und Mittelpunkt-Rechteck; fachliche Korrekturen von Fangen und Auto-Constraints bleiben S04/S05.",
-      "status": "planned",
+      "status": "done",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/S04a.md"
+      ],
+      "completedCommit": "169da6c"
     },
     {
       "id": "S04",
@@ -3901,12 +3905,16 @@
       ],
       "acceptance": "Ein UI-Test besteht: neues Dokument → XY → Rechteck mit Innenkreis → Extrusion (Ringkörper, Volumen analytisch geprüft) → Distanz ändern → Undo/Redo → Speichern → Öffnen mit gleichem Volumen. Grün in CI und lokal auf Windows.",
       "boundary": "Pocket, Zielkörper und weitere Panelfelder bleiben M02–M04; S03 vervollständigt denselben Weg. Umstellung 2026-10-04: Ebenen hängen an Ursprüngen im Baum (U06), der UI-Test läuft in der Shell nach ADR 0012.",
-      "status": "planned",
+      "status": "done",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/V01a.md",
+        "docs/implementation-plan/evidence/V01b.md",
+        "docs/implementation-plan/evidence/V01c.md"
+      ],
+      "completedCommit": "dc7cb7d"
     },
     {
       "id": "UX01",
