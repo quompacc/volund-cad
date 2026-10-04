@@ -152,6 +152,12 @@ class CadSession final {
     createSketchProfileExtrusion(document::FeatureId sketchFeature,
                                  std::span<const document::SketchRegionId> profileIds,
                                  double distance = 10.0);
+    // AI02c: a base-plane sketch and its extrusion as one transaction and one undo step.
+    // The regions resolve against the new sketch; empty selects every unambiguous region.
+    [[nodiscard]] CommandResult
+    createDatumSketchExtrusion(const document::SketchParameters& sketch,
+                               std::span<const document::SketchRegionId> regions,
+                               double distance);
     [[nodiscard]] bool canAddCylinder() const noexcept;
     [[nodiscard]] bool canAddCylinder(document::FeatureId inputFeature) const noexcept;
     // The feature whose placement moves this feature's result, if any.

@@ -6,6 +6,7 @@
 #include <cmath>
 #include <initializer_list>
 #include <optional>
+#include <span>
 #include <string>
 #include <utility>
 
@@ -85,6 +86,15 @@ class Validation final {
         if (!std::isfinite(value.value))
             Findings::note(findings_.nonFinite, "The value is not finite");
     }
+    void regions(std::span<const document::SketchElement> elements,
+                 std::span<const document::SketchRegionId> ids) {
+        const auto identities = features::identifySketchRegions(elements);
+        for (const auto& region : ids)
+            if (features::resolveSketchRegion(identities, elements, region).status !=
+                features::SketchRegionReferenceStatus::resolved)
+                Findings::note(findings_.unresolvedReference,
+                               "The sketch region does not resolve: " + region.text());
+    }
     void lengths(std::initializer_list<Quantity> values) {
         for (const auto& value : values)
             quantity(value, QuantityUnit::millimetre);
@@ -132,15 +142,14 @@ class Validation final {
     void operator()(const CreateProfileExtrusionAction& action) {
         const bool sketch = target(action.sketch, ActionKind::createProfileExtrusion);
         quantity(action.distance, QuantityUnit::millimetre);
-        if (!sketch)
-            return;
-        const auto& elements = snapshot_.sketchParameters(action.sketch).elements.values;
-        const auto identities = features::identifySketchRegions(elements);
-        for (const auto& region : action.regions)
-            if (features::resolveSketchRegion(identities, elements, region).status !=
-                features::SketchRegionReferenceStatus::resolved)
-                Findings::note(findings_.unresolvedReference,
-                               "The sketch region does not resolve: " + region.text());
+        if (sketch)
+            regions(snapshot_.sketchParameters(action.sketch).elements.values, action.regions);
+    }
+    // The new sketch stores its elements as given, so its regions resolve against them.
+    void operator()(const CreateSketchExtrusionAction& action) {
+        static_cast<void>(target(std::monostate{}, ActionKind::createSketchExtrusion));
+        quantity(action.distance, QuantityUnit::millimetre);
+        regions(action.sketch.elements.values, action.regions);
     }
     void operator()(const SetExtrusionDistanceAction& action) {
         static_cast<void>(target(action.extrusion, ActionKind::setExtrusionDistance));
@@ -234,6 +243,9 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot, const A
                 parameters.radius = a.radius.value;
                 parameters.height = a.height.value;
                 return session.editCylinderParameters(a.cylinder, parameters);
+            },
+            [&](const CreateSketchExtrusionAction& a) {
+                return session.createDatumSketchExtrusion(a.sketch, a.regions, a.distance.value);
             },
             [&](const SetPlacementAction& a) {
                 return session.editFeaturePlacement(

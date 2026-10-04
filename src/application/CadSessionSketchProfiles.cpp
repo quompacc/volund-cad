@@ -144,4 +144,44 @@ CadSession::createSketchProfileExtrusion(document::FeatureId sketchFeature,
                            ErrorDisposition::reject, true);
 }
 
+CommandResult
+CadSession::createDatumSketchExtrusion(const document::SketchParameters& sketch,
+                                       std::span<const document::SketchRegionId> regions,
+                                       double distance) {
+    const auto count = [&](document::FeatureKind kind) {
+        return std::ranges::count(document_.features(), kind, &document::FeatureDescriptor::kind);
+    };
+    const auto sketchName = "Skizze " + std::to_string(count(document::FeatureKind::sketch) + 1);
+    const auto extrusionName =
+        "Extrusion " + std::to_string(count(document::FeatureKind::extrusion) + 1);
+    document::DocumentTransaction transaction(document_);
+    auto& candidate = transaction.edit();
+    const auto sketchId =
+        detail::prepareInput([&] { return candidate.addDatumSketchFeature(sketchName, sketch); });
+    if (!sketchId.value)
+        return CommandResult::invalidInput(sketchId.diagnostic);
+    // Step 2 reads the elements the candidate stored; any failure discards step 1 as well.
+    const auto elements = candidate.sketchParameters(*sketchId.value).elements.values;
+    const auto identities = features::identifySketchRegions(elements);
+    std::vector<document::SketchRegionId> selected(regions.begin(), regions.end());
+    if (selected.empty())
+        for (std::size_t index = 0; index < identities.ids.size(); ++index)
+            if (!identities.ambiguous(index))
+                selected.push_back(identities.ids[index]);
+    if (selected.empty())
+        return CommandResult::invalidInput("The sketch has no closed region to extrude");
+    for (const document::SketchRegionId& region : selected)
+        if (features::resolveSketchRegion(identities, elements, region).status !=
+            features::SketchRegionReferenceStatus::resolved)
+            return CommandResult::invalidInput("Profile extrusion references an unknown profile");
+    const auto extrusionId = detail::prepareInput([&] {
+        return candidate.addExtrusionFeature(extrusionName, *sketchId.value,
+                                             document::ExtrusionParameters{distance, {}, selected});
+    });
+    if (!extrusionId.value)
+        return CommandResult::invalidInput(extrusionId.diagnostic);
+    return finishCandidate(transaction, *extrusionId.value, CommandKind::newFeature,
+                           ErrorDisposition::reject, true);
+}
+
 } // namespace voelund::application

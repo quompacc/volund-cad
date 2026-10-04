@@ -29,7 +29,7 @@ std::vector<ActionKind> availableActions(const CadSession& session,
                                          const ActionTarget& target) {
     if (std::holds_alternative<std::monostate>(target))
         return {ActionKind::createParameter, ActionKind::createDatumSketch,
-                ActionKind::createBox};
+                ActionKind::createBox, ActionKind::createSketchExtrusion};
     if (const auto* parameter = std::get_if<document::ParameterId>(&target)) {
         if (document::findParameter(snapshot.parameterTable(), *parameter) == nullptr)
             return {};

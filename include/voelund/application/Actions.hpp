@@ -8,6 +8,9 @@
 #include <voelund/document/ModelDocument.hpp>
 #include <voelund/document/SketchRegionId.hpp>
 
+#include <cstddef>
+#include <cstdint>
+#include <deque>
 #include <optional>
 #include <string>
 #include <variant>
@@ -32,65 +35,86 @@ struct CreateParameterAction final {
     document::ParameterUnit unit;
     Quantity value;
     std::string comment{};
+    bool operator==(const CreateParameterAction&) const = default;
 };
 struct SetParameterValueAction final {
     document::ParameterId parameter;
     Quantity value;
+    bool operator==(const SetParameterValueAction&) const = default;
 };
 struct RenameParameterAction final {
     document::ParameterId parameter;
     std::string name;
+    bool operator==(const RenameParameterAction&) const = default;
 };
 // nullopt unbinds and keeps the current value as a fixed one.
 struct BindSketchDimensionAction final {
     document::FeatureId sketch;
     document::SketchConstraintId constraint;
     std::optional<document::ParameterId> parameter;
+    bool operator==(const BindSketchDimensionAction&) const = default;
 };
 struct BindExtrusionDistanceAction final {
     document::FeatureId extrusion;
     std::optional<document::ParameterId> parameter;
+    bool operator==(const BindExtrusionDistanceAction&) const = default;
 };
 // A sketch on a base plane (sketch.datum set); it opens a new body.
 struct CreateDatumSketchAction final {
     document::SketchParameters sketch;
+    bool operator==(const CreateDatumSketchAction&) const = default;
 };
 struct EditSketchAction final {
     document::FeatureId sketch;
     document::SketchParameters parameters;
+    bool operator==(const EditSketchAction&) const = default;
 };
 struct CreateProfileExtrusionAction final {
     document::FeatureId sketch;
     std::vector<document::SketchRegionId> regions;
     Quantity distance;
+    bool operator==(const CreateProfileExtrusionAction&) const = default;
 };
 struct SetExtrusionDistanceAction final {
     document::FeatureId extrusion;
     Quantity distance;
+    bool operator==(const SetExtrusionDistanceAction&) const = default;
 };
 // AI02b: solids and placements. A box opens a new body.
 struct CreateBoxAction final {
     Quantity width;
     Quantity depth;
     Quantity height;
+    bool operator==(const CreateBoxAction&) const = default;
 };
 struct SetBoxDimensionsAction final {
     document::FeatureId box;
     Quantity width;
     Quantity depth;
     Quantity height;
+    bool operator==(const SetBoxDimensionsAction&) const = default;
 };
 // The input needs a current result; `separate` opens a new body beside it.
 struct CreateCylinderAction final {
     document::FeatureId input;
     document::CylinderResultMode mode;
+    bool operator==(const CreateCylinderAction&) const = default;
 };
 struct SetCylinderSizeAction final {
     document::FeatureId cylinder;
     Quantity radius;
     Quantity height;
+    bool operator==(const SetCylinderSizeAction&) const = default;
 };
 // Moves the feature that places this feature's result (CadSession::placementFeature).
+// AI02c: a base-plane sketch and its extrusion in one transaction and one undo step. Empty
+// `regions` extrudes every unambiguous region of the new sketch.
+struct CreateSketchExtrusionAction final {
+    document::SketchParameters sketch;
+    std::vector<document::SketchRegionId> regions;
+    Quantity distance;
+    bool operator==(const CreateSketchExtrusionAction&) const = default;
+};
 struct SetPlacementAction final {
     document::FeatureId feature;
     Quantity x;
@@ -99,6 +123,7 @@ struct SetPlacementAction final {
     Quantity rotationX;
     Quantity rotationY;
     Quantity rotationZ;
+    bool operator==(const SetPlacementAction&) const = default;
 };
 
 using Action = std::variant<CreateParameterAction, SetParameterValueAction, RenameParameterAction,
@@ -106,7 +131,8 @@ using Action = std::variant<CreateParameterAction, SetParameterValueAction, Rena
                             CreateDatumSketchAction, EditSketchAction,
                             CreateProfileExtrusionAction, SetExtrusionDistanceAction,
                             CreateBoxAction, SetBoxDimensionsAction, CreateCylinderAction,
-                            SetCylinderSizeAction, SetPlacementAction>;
+                            SetCylinderSizeAction, SetPlacementAction,
+                            CreateSketchExtrusionAction>;
 // Parallel to the alternatives of Action.
 enum class ActionKind {
     createParameter,
@@ -122,7 +148,8 @@ enum class ActionKind {
     setBoxDimensions,
     createCylinder,
     setCylinderSize,
-    setPlacement
+    setPlacement,
+    createSketchExtrusion
 };
 [[nodiscard]] ActionKind actionKind(const Action& action) noexcept;
 
@@ -131,6 +158,7 @@ struct ActionRequest final {
     document::DocumentId document;
     DocumentStamp expected;
     Action action;
+    bool operator==(const ActionRequest&) const = default;
 };
 
 // Checked before any transaction, in this order (AI01). `none` leaves the decision to the
@@ -144,8 +172,8 @@ enum class ActionRejection {
     invalidUnit,
     nonFinite,
     unresolvedReference,
-    duplicateRequest, // AI02c
-    requestConflict   // AI02c
+    missingRequestId, // ActionDispatcher only.
+    requestConflict   // The request ID was already used for other content.
 };
 
 struct ActionResult final {
@@ -156,11 +184,45 @@ struct ActionResult final {
     std::vector<document::FeatureId> changedFeatures;
     std::vector<document::ParameterId> createdParameters;
     std::vector<document::ParameterId> changedParameters;
+    // ActionDispatcher: the stored result of an earlier, identical request; nothing ran again.
+    bool repeated{false};
 };
 
 // Validates and, if accepted, runs the request as exactly one CadSession command. A
 // rejection leaves document, stamp and undo history unchanged.
 [[nodiscard]] ActionResult executeAction(CadSession& session, const ActionRequest& request);
+
+// AI02c: runs the request on an isolated copy of the session. The active document, its
+// stamp and history stay unchanged; `result.stamp` is the unchanged session stamp. A later
+// execute of the same request revalidates against the then current stamp.
+struct ActionPreview final {
+    ActionResult result;
+    std::vector<features::EvaluatedBody> bodies; // Valid bodies of the candidate.
+};
+[[nodiscard]] ActionPreview previewAction(const CadSession& session, const ActionRequest& request);
+
+// AI02c: executeAction with protection against repetition. A request ID seen before with
+// identical content returns the stored result (`repeated`); with other content it is
+// rejected (`requestConflict`). The table holds the last `capacity` requests of the
+// current document generation.
+class ActionDispatcher final {
+  public:
+    static constexpr std::size_t capacity = 256;
+    explicit ActionDispatcher(CadSession& session) : session_(session) {}
+    [[nodiscard]] ActionResult execute(const ActionRequest& request);
+    [[nodiscard]] ActionPreview preview(const ActionRequest& request) const {
+        return previewAction(session_, request);
+    }
+
+  private:
+    struct Entry final {
+        ActionRequest request;
+        ActionResult result;
+    };
+    CadSession& session_;
+    std::uint64_t generation_{0};
+    std::deque<Entry> entries_;
+};
 
 // Read-only context for a caller that prepares requests.
 struct ActionUnits final {
