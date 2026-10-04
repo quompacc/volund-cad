@@ -1,3 +1,4 @@
+#include "IsolatedSettings.hpp"
 #include "ViewportLifecycleSupport.hpp"
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepPrimAPI_MakeBox.hxx>
@@ -154,6 +155,7 @@ void reparentAndInteract() {
 
 int main(int argc, char** argv) {
     QApplication app(argc, argv);
+    voelund::test::isolateSettings();
     app.setQuitOnLastWindowClosed(false);
     try {
 #ifdef VOELUND_TEST_WINDOWS_DPI

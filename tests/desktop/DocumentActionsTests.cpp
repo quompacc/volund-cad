@@ -1,3 +1,4 @@
+#include "IsolatedSettings.hpp"
 #include "../../src/desktop/DocumentActions.hpp"
 #include "../CommandResultAssertions.hpp"
 #include <QAbstractButton>
@@ -43,6 +44,7 @@ std::filesystem::path native(const QString& value) {
 int main(int argc, char** argv) {
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
     QApplication app(argc, argv);
+    voelund::test::isolateSettings();
     try {
         QTemporaryDir fixture;
         require(fixture.isValid(), "fixture directory");

@@ -1,3 +1,4 @@
+#include "IsolatedSettings.hpp"
 #include "../../src/desktop/CommandPalette.hpp"
 #include "../../src/desktop/ContextCommands.hpp"
 #include "ViewportLifecycleSupport.hpp"
@@ -131,7 +132,7 @@ void surfaces() {
 
 int main(int argc, char** argv) {
     QApplication application(argc, argv);
-    QCoreApplication::setOrganizationName(QStringLiteral("VoelundTest"));
+    voelund::test::isolateSettings();
     try {
         contextRules();
         surfaces();

@@ -6,7 +6,7 @@
 #include "SketchBoxSelection.hpp"
 #include "SketchConstraintPresentation.hpp"
 #include "SketchEditorInteraction.hpp"
-#include "SketchInteraction.hpp"
+#include "PlanarFaceSelection.hpp"
 #include "SketchPresentation.hpp"
 #include "SketchSnapOverlay.hpp"
 #include "TransformManipulator.hpp"
@@ -257,7 +257,6 @@ class CadViewportScene {
     occ::handle<AIS_InteractiveContext> context;
     occ::handle<V3d_View> view;
     TransformManipulator manipulator;
-    SketchInteraction sketch;
     SketchEditorInteraction sketchEditor;
     SketchPresentation sketchPresentation;
     SketchConstraintPresentation sketchConstraintPresentation;
@@ -271,7 +270,6 @@ class CadViewportScene {
     std::function<void(BasePlane)> basePlaneSelectionHandler;
     BasePlanePresentation basePlanes;
     bool basePlanesFitted{false};
-    std::function<void(const SketchRectangleResult&)> sketchRectangleHandler;
     std::function<void(const std::optional<SketchElementIntent>&)> sketchEditorPreviewHandler;
     std::function<void(const SketchElementIntent&)> sketchEditorElementHandler;
     std::function<void(double, double)> sketchEditorTranslationHandler;

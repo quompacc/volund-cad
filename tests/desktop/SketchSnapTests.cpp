@@ -1,3 +1,4 @@
+#include "IsolatedSettings.hpp"
 #include "ViewportLifecycleSupport.hpp"
 #include <QAction>
 #include <QApplication>
@@ -156,7 +157,7 @@ void run() {
 
 int main(int argc, char** argv) {
     QApplication application(argc, argv);
-    QCoreApplication::setOrganizationName(QStringLiteral("VoelundTest"));
+    voelund::test::isolateSettings();
     try {
         run();
     } catch (const std::exception& error) {

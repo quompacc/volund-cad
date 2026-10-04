@@ -1,3 +1,4 @@
+#include "IsolatedSettings.hpp"
 #include "../../src/desktop/ModelTreePanel.hpp"
 #include "../CommandResultAssertions.hpp"
 #include "ViewportLifecycleSupport.hpp"
@@ -136,7 +137,7 @@ void run() {
 
 int main(int argc, char** argv) {
     QApplication application(argc, argv);
-    QCoreApplication::setOrganizationName(QStringLiteral("VoelundTest"));
+    voelund::test::isolateSettings();
     try {
         run();
     } catch (const std::exception& error) {

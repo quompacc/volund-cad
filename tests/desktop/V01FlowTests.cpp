@@ -1,3 +1,4 @@
+#include "IsolatedSettings.hpp"
 #include "ViewportLifecycleSupport.hpp"
 #include <BRepGProp.hxx>
 #include <GProp_GProps.hxx>
@@ -176,7 +177,7 @@ void run() {
 int main(int argc, char** argv) {
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
     QApplication application(argc, argv);
-    QCoreApplication::setOrganizationName(QStringLiteral("VoelundTest"));
+    voelund::test::isolateSettings();
     try {
         run();
     } catch (const std::exception& error) {

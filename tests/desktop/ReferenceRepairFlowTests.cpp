@@ -1,3 +1,4 @@
+#include "IsolatedSettings.hpp"
 #include "../../src/desktop/ReferenceRepairDialog.hpp"
 #include "../BoundSketchFixture.hpp"
 #include <QAction>
@@ -333,6 +334,7 @@ void unavailable(const std::filesystem::path& directory) {
 int main(int argc, char** argv) {
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
     QApplication app(argc, argv);
+    voelund::test::isolateSettings();
     try {
         require(argc == 2, "Artifact directory required");
         supportFlow(argv[1], false);

@@ -82,9 +82,9 @@ Die einfache Oberfläche ist eine Darstellungsfrage, keine Einschränkung des Mo
 
 ## Konsequenzen
 
-- `voelund-ui-preview` ist keine Gestaltungsgrundlage mehr. U12 entfernt die Vorschau,
-  sobald das Produkt ihre echten Funktionen abdeckt. Ihre Fake-Daten werden nicht
-  übernommen.
+- `voelund-ui-preview` ist keine Gestaltungsgrundlage mehr. Ihre Fake-Daten werden nicht
+  übernommen. Nachtrag 04.10.2026: U12a hat die Vorschau vorgezogen entfernt, damit keine
+  zweite Oberfläche Fehler verdeckt (Nutzerentscheidung).
 - U01–U06, U11, U12 und S13 sind auf diesen Aufbau ausgerichtet:
   - Statt des Ribbons bindet U04 Werkzeugleiste, Kontextleiste und Befehlssuche an die
     CommandRegistry.

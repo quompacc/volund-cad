@@ -45,7 +45,7 @@ if ($execution.results[1].status -eq 'passed') {
         $directory = Join-Path $run 'captures'
         $applications = Read-ReportRuntime $directory $backend
         $artifacts = @()
-        foreach ($app in 'voelund-cad','voelund-ui-preview') {
+        foreach ($app in 'voelund-cad') {
             foreach ($suffix in '.json','-widgets.png','-framebuffer.png') {
                 $artifacts += New-ReportArtifact (Join-Path $directory "$app$suffix") $base
             }

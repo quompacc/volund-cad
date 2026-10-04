@@ -24,7 +24,7 @@ list(APPEND voelund_viewport_sources
     BasePlanePresentation.cpp
     CadViewportHandlers.cpp
     SketchEditorInteraction.cpp
-    SketchInteraction.cpp
+    PlanarFaceSelection.cpp
     SketchSnapOverlay.cpp
     SketchViewOrientation.cpp
     SketchConstraintPresentation.cpp

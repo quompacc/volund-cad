@@ -1,3 +1,4 @@
+#include "IsolatedSettings.hpp"
 #include "../../src/desktop/SketchExtrusionToolController.hpp"
 #include "../../src/desktop/ToolPanelHost.hpp"
 #include "../CommandResultAssertions.hpp"
@@ -81,6 +82,7 @@ void run() {
 } // namespace
 int main(int argc, char** argv) {
     QApplication app(argc, argv);
+    voelund::test::isolateSettings();
     try {
         run();
         std::cout << "Productive extrusion rejection/repair tests passed\n";

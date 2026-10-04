@@ -1,3 +1,4 @@
+#include "IsolatedSettings.hpp"
 #include "../../src/features/FeatureEvaluationDetail.hpp"
 #include <QAction>
 #include <QApplication>
@@ -143,6 +144,7 @@ void run() {
 } // namespace
 int main(int argc, char** argv) {
     QApplication app(argc, argv);
+    voelund::test::isolateSettings();
     try {
         run();
         std::cout << "Parameter rejection and Qt exception containment tests passed\n";

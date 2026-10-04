@@ -11,7 +11,7 @@
 #include "SketchBoxSelection.hpp"
 #include "SketchConstraintPresentation.hpp"
 #include "SketchEditorInteraction.hpp"
-#include "SketchInteraction.hpp"
+#include "PlanarFaceSelection.hpp"
 #include "SketchPresentation.hpp"
 #include "TransformManipulator.hpp"
 #include "ViewportHighlightStyle.hpp"
@@ -194,22 +194,8 @@ void CadViewport::setTransformTarget(std::optional<std::uint64_t> bodyId) {
     });
 }
 
-void CadViewport::beginRectangleSketch(const PlanarFaceSelection& support) {
-    performViewportOperation(*this, impl_->ready, [&] {
-        impl_->sketchEditor.cancel();
-        impl_->manipulator.setEnabled(false);
-        impl_->manipulator.detach();
-        impl_->activeSketchSupport = support;
-        if (!impl_->context.IsNull())
-            impl_->basePlanes.hide(impl_->context);
-        impl_->sketch.begin(support, impl_->context, impl_->view);
-        update();
-    });
-}
-
 void CadViewport::beginSketchEditor(const PlanarFaceSelection& support, SketchElementTool tool) {
     performViewportOperation(*this, impl_->ready, [&] {
-        impl_->sketch.cancel();
         impl_->manipulator.setEnabled(false);
         impl_->manipulator.detach();
         impl_->activeSketchSupport = support;
@@ -239,18 +225,10 @@ void CadViewport::continueSketchPolyline(double x, double y, std::uint64_t eleme
 
 bool CadViewport::cancelSketchEditorStep() { return impl_->sketchEditor.cancelStep(); }
 
-void CadViewport::updateSketchExtrusionPreview(double distance) {
-    performViewportOperation(*this, impl_->ready, [&] {
-        impl_->sketch.updateDistance(distance);
-        update();
-    });
-}
-
 void CadViewport::cancelSketch() {
     performViewportOperation(*this, impl_->ready, [&] {
         impl_->activeSketchSupport.reset();
         impl_->snapOverlay->clear();
-        impl_->sketch.cancel();
         impl_->sketchEditor.cancel();
         impl_->sketchPresentation.setReferences(impl_->context, {}, false);
         impl_->refreshBasePlanes();
@@ -275,7 +253,6 @@ void CadViewport::setTransformToolEnabled(bool enabled) {
 void CadViewport::setTransformSnapping(bool enabled, double linearStep, double angularStep) {
     performViewportOperation(*this, impl_->ready, [&] {
         impl_->manipulator.setSnapping(enabled, linearStep, angularStep);
-        impl_->sketch.setSnapping(enabled, linearStep);
         impl_->sketchEditor.setSnapping(enabled, linearStep);
     });
 }

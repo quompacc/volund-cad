@@ -30,11 +30,6 @@ void CadViewport::mouseMoveEvent(QMouseEvent* event) {
             update();
             return;
         }
-        if (impl_->sketch.isActive() && event->buttons() == Qt::NoButton) {
-            impl_->sketch.move(position.x(), position.y());
-            update();
-            return;
-        }
         if (impl_->sketchEditor.isActive() && event->buttons() == Qt::NoButton) {
             impl_->sketchEditor.setSnapBypass(event->modifiers().testFlag(Qt::ControlModifier));
             if (impl_->snapOverlay != nullptr)
@@ -79,9 +74,6 @@ void CadViewport::mousePressEvent(QMouseEvent* event) {
             impl_->view->Pan(0, 0, 1.0, true);
             setCursor(Qt::SizeAllCursor);
         } else if (event->button() == Qt::LeftButton) {
-            if (impl_->sketch.isActive()) {
-                return;
-            }
             const QPoint position = framebufferPoint(*this, event->position());
             impl_->context->MoveTo(position.x(), position.y(), impl_->view, false);
             if (impl_->sketchEditor.isActive()) {
@@ -165,14 +157,6 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
         }
         if (impl_->ready && event->button() == Qt::LeftButton) {
             const QPoint position = framebufferPoint(*this, event->position());
-            if (impl_->sketch.isActive()) {
-                const auto rectangle = impl_->sketch.click(position.x(), position.y());
-                if (rectangle.has_value() && impl_->sketchRectangleHandler) {
-                    impl_->sketchRectangleHandler(*rectangle);
-                }
-                update();
-                return;
-            }
             if (impl_->sketchEditor.isActive()) {
                 if (impl_->gesture == Impl::Gesture::selectBox) {
                     const QRect rectangle(impl_->gestureOrigin, position);

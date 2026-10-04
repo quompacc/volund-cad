@@ -27,15 +27,6 @@ void CadViewport::setPlanarFaceSelectionHandler(
     impl_->planarFaceSelectionHandler = std::move(handler);
 }
 
-void CadViewport::setSketchRectangleHandler(
-    std::function<void(const SketchRectangleResult&)> handler) {
-    impl_->sketchRectangleHandler = std::move(handler);
-}
-
-void CadViewport::setSketchExtrusionPreviewHandler(std::function<void(double)> handler) {
-    impl_->sketch.setDistancePreviewHandler(std::move(handler));
-}
-
 void CadViewport::setSketchEditorPreviewHandler(
     std::function<void(const std::optional<SketchElementIntent>&)> handler) {
     impl_->sketchEditorPreviewHandler = std::move(handler);

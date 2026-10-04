@@ -1,3 +1,4 @@
+#include "IsolatedSettings.hpp"
 #include "../../src/desktop/SketchEditorToolController.hpp"
 #include "../../src/desktop/ToolPanelHost.hpp"
 #include "../CommandResultAssertions.hpp"
@@ -184,6 +185,7 @@ void existingSketchErrorOffer() {
 } // namespace
 int main(int argc, char** argv) {
     QApplication app(argc, argv);
+    voelund::test::isolateSettings();
     try {
         run();
         existingSketchErrorOffer();

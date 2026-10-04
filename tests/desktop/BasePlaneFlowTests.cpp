@@ -1,3 +1,4 @@
+#include "IsolatedSettings.hpp"
 #include "../../src/desktop/ModelTreePanel.hpp"
 #include "ViewportLifecycleSupport.hpp"
 #include <QAction>
@@ -118,6 +119,7 @@ void basePlanes() {
 
 int main(int argc, char** argv) {
     QApplication application(argc, argv);
+    voelund::test::isolateSettings();
     try {
         basePlanes();
         bodyWinsOverPlane();

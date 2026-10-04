@@ -47,13 +47,13 @@ $goodXml.Replace('architecture.source_limits', 'unrelated') | Set-Content -Liter
 Check 'missing required JUnit case' { param($x) $x.results[1].junit = New-ReportArtifact (Join-Path $work 'missing-case.xml') $work }
 $goodXml.Replace('status="run"', 'status="notrun"') | Set-Content -LiteralPath (Join-Path $work 'skipped.xml')
 Check 'skipped JUnit case' { param($x) $x.results[1].junit = New-ReportArtifact (Join-Path $work 'skipped.xml') $work }
-$valid.runtime.applications['voelund-ui-preview'].backend = 'native'
+$valid.runtime.applications['voelund-cad'].backend = 'native'
 Check 'embedded runtime mismatch' {}
-$valid.runtime.applications['voelund-ui-preview'].backend = 'qt-opengl'
+$valid.runtime.applications['voelund-cad'].backend = 'qt-opengl'
 # Unrelated JSON must never be read as a runtime diagnostic.
 '{"backend":"native"}' | Set-Content -LiteralPath (Join-Path $work 'captures/aaa-unrelated.json')
 Check 'unrelated JSON ignored' {} $true
-$runtimePath = Join-Path $work 'captures/voelund-ui-preview.json'
+$runtimePath = Join-Path $work 'captures/voelund-cad.json'
 $originalRuntime = Get-Content -LiteralPath $runtimePath -Raw
 $originalRuntime.Replace('qt-opengl', 'native') | Set-Content -LiteralPath $runtimePath
 Check 'actual runtime mismatch' { param($x) $x.runtime.artifacts = @(Get-FixtureRuntimeArtifacts $work) }

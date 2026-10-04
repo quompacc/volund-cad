@@ -42,7 +42,7 @@ function Resolve-ReportArtifact($Artifact, [string]$Base) {
 
 function Read-ReportRuntime([string]$Directory, [string]$Backend) {
     $values = @{}
-    foreach ($app in 'voelund-cad', 'voelund-ui-preview') {
+    foreach ($app in 'voelund-cad') {
         $path = Join-Path $Directory "$app.json"
         $data = Get-Content -LiteralPath $path -Raw | ConvertFrom-Json -AsHashtable -DateKind String
         Assert-Report ($data.backend -ceq $Backend -and $data.qpa -ceq 'windows') "Unexpected runtime backend/QPA: $app"
@@ -58,9 +58,6 @@ function Read-ReportRuntime([string]$Directory, [string]$Backend) {
             Assert-Report ($bytes.Length -gt 8 -and [Convert]::ToHexString($bytes[0..7]) -eq '89504E470D0A1A0A') "Invalid PNG: $png"
         }
         $values[$app] = $data
-    }
-    foreach ($key in 'backend','qpa','qt','occt','gl','vendor','renderer') {
-        Assert-Report ($values['voelund-cad'][$key] -ceq $values['voelund-ui-preview'][$key]) "Applications disagree on $key"
     }
     $values
 }
@@ -79,8 +76,7 @@ function Assert-ReportJUnit([string]$Path) {
     foreach ($case in $cases) {
         Assert-Report ($case.GetAttribute('status') -eq 'run' -and $case.SelectNodes('failure|error|skipped').Count -eq 0) 'JUnit contains an unsuccessful case.'
     }
-    foreach ($name in 'desktop.viewport_startup','desktop.ui_preview_startup',
-        'desktop.viewport_startup.uninitialized','desktop.ui_preview_startup.uninitialized',
+    foreach ($name in 'desktop.viewport_startup','desktop.viewport_startup.uninitialized',
         'architecture.platform_report','architecture.source_limits') {
         Assert-Report (@($cases | Where-Object { $_.GetAttribute('name') -ceq $name }).Count -eq 1) "Missing/duplicate required test: $name"
     }

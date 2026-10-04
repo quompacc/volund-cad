@@ -201,5 +201,5 @@ Bereinigt in U01:
   Zylinder vereinigen.
 - Das Produkt startet mit einem leeren Dokument statt mit Box und Zylinder.
 - Undo/Redo hängen nur noch an der Historie, nicht mehr an einer Auswahl.
-- Offen für U12: Die Viewport-Interaktion des alten Rechteckwegs (`SketchInteraction`,
-  `beginRectangleSketch`) hat keinen Aufrufer mehr im Produkt und wird dort entfernt.
+- Die Viewport-Interaktion des alten Rechteckwegs (`SketchInteraction`,
+  `beginRectangleSketch`) ist mit U12a entfernt.

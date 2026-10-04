@@ -1,5 +1,5 @@
 function Get-FixtureRuntimeArtifacts([string]$Work) {
-    foreach ($app in 'voelund-cad','voelund-ui-preview') {
+    foreach ($app in 'voelund-cad') {
         foreach ($suffix in '.json','-widgets.png','-framebuffer.png') {
             New-ReportArtifact (Join-Path $Work "captures/$app$suffix") $Work
         }
@@ -12,7 +12,7 @@ function New-PlatformReportFixture([string]$Work) {
     $runtime = @{ backend = 'qt-opengl'; qpa = 'windows'; qt = '6.11.1'; occt = '8.0.1';
         gl = 'fixture'; vendor = 'fixture'; renderer = 'fixture'; os = 'fixture'; dpi = 96; dpr = 1; width = 1; height = 1 }
     $png = [Convert]::FromBase64String('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6VAAAAABJRU5ErkJggg==')
-    foreach ($app in 'voelund-cad','voelund-ui-preview') {
+    foreach ($app in 'voelund-cad') {
         $runtime | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $captures "$app.json")
         foreach ($suffix in 'widgets','framebuffer') { [IO.File]::WriteAllBytes((Join-Path $captures "$app-$suffix.png"), $png) }
     }
@@ -22,16 +22,16 @@ function New-PlatformReportFixture([string]$Work) {
     $digest = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($canonical))).ToLowerInvariant()
     @{ files = @(@{ path = 'src/source.cpp'; sha256 = $sourceHash }); scope = @('src'); digest = $digest } |
         ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $Work 'source.json')
-    $names = @('desktop.viewport_startup','desktop.ui_preview_startup','desktop.viewport_startup.uninitialized',
-        'desktop.ui_preview_startup.uninitialized','architecture.platform_report','architecture.source_limits')
-    $xml = '<testsuite name="Win32-ninja" tests="6" failures="0" disabled="0">' + (($names | ForEach-Object { '<testcase name="' + $_ + '" status="run" />' }) -join '') + '</testsuite>'
+    $names = @('desktop.viewport_startup','desktop.viewport_startup.uninitialized',
+        'architecture.platform_report','architecture.source_limits')
+    $xml = '<testsuite name="Win32-ninja" tests="4" failures="0" disabled="0">' + (($names | ForEach-Object { '<testcase name="' + $_ + '" status="run" />' }) -join '') + '</testsuite>'
     $xml | Set-Content -LiteralPath (Join-Path $Work 'ctest.xml')
     'fixture log' | Set-Content -LiteralPath (Join-Path $Work 'run.log')
     $log = New-ReportArtifact (Join-Path $Work 'run.log') $Work
     $junit = New-ReportArtifact (Join-Path $Work 'ctest.xml') $Work
     'fixture build' | Set-Content -LiteralPath (Join-Path $Work 'build.log')
     'VOELUND_VIEWPORT_BACKEND:STRING=qt-opengl' | Set-Content -LiteralPath (Join-Path $Work 'CMakeCache.txt')
-    @('voelund-cad.exe','voelund-ui-preview.exe','voelund_kernel_tests.exe' | ForEach-Object {
+    @('voelund-cad.exe','voelund_kernel_tests.exe' | ForEach-Object {
         @{ path = $_; sha256 = 'a' * 64 }
     }) | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $Work 'binaries.json')
     @{

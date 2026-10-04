@@ -1,3 +1,4 @@
+#include "IsolatedSettings.hpp"
 #include "../../src/desktop/FeaturePropertiesPanel.hpp"
 #include "../../src/desktop/SketchConstraintLabel.hpp"
 #include "../../src/desktop/SketchEditorToolController.hpp"
@@ -200,6 +201,7 @@ void dimensionDialog() {
 } // namespace
 int main(int argc, char** argv) {
     QApplication app(argc, argv);
+    voelund::test::isolateSettings();
     try {
         snap();
         panel();

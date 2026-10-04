@@ -1,3 +1,4 @@
+#include "IsolatedSettings.hpp"
 #include "../BoundSketchFixture.hpp"
 #include <QAction>
 #include <QApplication>
@@ -216,6 +217,7 @@ void ui(const std::filesystem::path& dir, bool ambiguous) {
 } // namespace
 int main(int argc, char** argv) {
     QApplication app(argc, argv);
+    voelund::test::isolateSettings();
     try {
         require(argc == 2, "Fixture directory");
         core(argv[1]);

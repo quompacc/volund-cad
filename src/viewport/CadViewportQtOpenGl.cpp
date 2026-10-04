@@ -23,7 +23,6 @@ void CadViewport::cleanupGlResources() noexcept {
             makeCurrent();
         const bool ownsCurrent = context() && context() == impl_->boundContext &&
                                  context() == QOpenGLContext::currentContext();
-        impl_->sketch.rebind({}, {});
         impl_->sketchEditor.rebindView({});
         impl_->sketchEditor.finishElementDrag();
         impl_->gesture = Impl::Gesture::none;
@@ -80,7 +79,6 @@ void CadViewport::initializeGL() {
         ++impl_->contextGeneration;
         impl_->lastError.clear();
         impl_->displayPendingBodies();
-        impl_->sketch.rebind(impl_->context, impl_->view);
         impl_->sketchEditor.rebindView(impl_->view);
         if (!impl_->savedCamera.IsNull()) {
             impl_->view->SetCamera(impl_->savedCamera);

@@ -1,3 +1,4 @@
+#include "IsolatedSettings.hpp"
 #include "ViewportLifecycleSupport.hpp"
 #include <QAction>
 #include <QApplication>
@@ -144,6 +145,7 @@ void connectionIsEditedOnTheSelectedCylinder(application::CadSession& session,
 
 int main(int argc, char** argv) {
     QApplication application(argc, argv);
+    voelund::test::isolateSettings();
     try {
         application::CadSession session;
         session.newDocument();

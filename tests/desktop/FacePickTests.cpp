@@ -1,3 +1,4 @@
+#include "IsolatedSettings.hpp"
 #include "ViewportLifecycleSupport.hpp"
 #include <QApplication>
 #include <QDir>
@@ -44,6 +45,7 @@ void facePick() {
 
 int main(int argc, char** argv) {
     QApplication application(argc, argv);
+    voelund::test::isolateSettings();
     try {
         facePick();
     } catch (const std::exception& error) {

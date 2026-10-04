@@ -1,6 +1,7 @@
+#include "IsolatedSettings.hpp"
 #include "../../src/desktop/SketchEditorToolController.hpp"
 #include "../../src/desktop/ToolPanelHost.hpp"
-#include "../../src/viewport/SketchInteraction.hpp"
+#include "../../src/viewport/PlanarFaceSelection.hpp"
 #include "../CommandResultAssertions.hpp"
 #include "ModelTreeLookup.hpp"
 #include <BRepGProp.hxx>
@@ -237,6 +238,7 @@ void deletion(const std::filesystem::path& directory) {
 } // namespace
 int main(int argc, char** argv) {
     QApplication app(argc, argv);
+    voelund::test::isolateSettings();
     try {
         require(argc == 2, "Fixture directory required");
         flow(argv[1]);

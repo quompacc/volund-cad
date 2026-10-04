@@ -1,3 +1,4 @@
+#include "IsolatedSettings.hpp"
 #include "../BoundSketchFixture.hpp"
 #include "../CommandResultAssertions.hpp"
 #include "ModelTreeLookup.hpp"
@@ -175,6 +176,7 @@ void inspectLegacyPlane(const std::filesystem::path& directory) {
 } // namespace
 int main(int argc, char** argv) {
     QApplication app(argc, argv);
+    voelund::test::isolateSettings();
     try {
         require(argc == 2, "fixture directory argument");
         run(argv[1]);

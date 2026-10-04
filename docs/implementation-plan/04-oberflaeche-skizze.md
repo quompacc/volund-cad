@@ -101,7 +101,7 @@ Grundlage der Oberfläche ist [ADR 0012](../adr/0012-ui-shell-concept.md) (freig
   2. Duplizierte Snap-/Constraint-Erzeugung aus UI entfernen; Renderingadapter erhalten nur Preview-/Result-Daten.
   3. Robuste Legacy-Fälle als Charakterisierungstests erhalten; der zweite Weg der UI-Vorschau wird nicht weiterentwickelt.
 - **Abnahme:** Rechteck, Circle, Arc und Ellipse aus beiden bisherigen Einstiegen erzeugen fachlich gleichen Editorzustand. Kein UI-Code berechnet IDs durch Einfügereihenfolge.
-- **Grenze:** Kein Ausbau von voelund-ui-preview; deren SketchBackend dient nur als Vergleich bis U12.
+- **Grenze:** Die UI-Vorschau mit ihrem SketchBackend ist mit U12a entfernt; maßgeblich ist der Produktweg.
 
 ## U09 – Input und Drag als einzelne Benutzeraktion behandeln
 
@@ -136,16 +136,26 @@ Grundlage der Oberfläche ist [ADR 0012](../adr/0012-ui-shell-concept.md) (freig
 - **Abnahme:** A-UI-01 Skizzenteil und A-UI-02/03 bestehen. Absichtlich abgetrennter Handler macht Test rot. Extrude-Teil wird in M04 ergänzt. A-VIS-01 bestanden: Bilder tatsächlich selbst betrachtet, Layout-/Overlayfehler korrigiert und mit neuer Aufnahme nachgeprüft.
 - **Grenze:** Kein Test, der nur Backendmethoden aufruft und danach Fenstersichtbarkeit bestätigt.
 
+## U12a – Altlasten der Oberfläche vor dem Weiterbau entfernen
+
+- **Voraussetzungen:** U06, U13. Nutzerentscheidung vom 04.10.2026, vorgezogener Teil von U12.
+- **Auftrag:**
+  1. voelund-ui-preview mit Ribbon, Fake-Canvas, Fake-Timeline, eigenem SketchBackend und Starttests entfernen; der Plattformbericht prüft nur noch das Produkt.
+  2. Toten Rechteckweg im Viewport (`SketchInteraction`, `beginRectangleSketch`, Rechteck- und Extrusionsvorschau-Handler) entfernen; Flächenauswahl-Hilfen bleiben.
+  3. Desktop-Tests schreiben Einstellungen nur in ein temporäres INI-Verzeichnis je Prozess.
+- **Abnahme:** Build und alle Tests grün unter Windows und in der Linux-CI ohne voelund-ui-preview. Kein Aufrufer des alten Rechteckwegs. Kein Desktop-Test liest oder schreibt dauerhafte Einstellungen.
+- **Grenze:** Keine sichtbare Änderung am Produkt. Testgerüste mit einzelnen Panels bleiben; Composition Root und Installation bleiben U12.
+
 ## U12 – Eine produktive Anwendung und einen Composition Root festlegen
 
-- **Voraussetzungen:** U03, U04, U05, U06, U07, U11.
-- **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08, ADR 0012; `apps/voelund-cad/CMakeLists.txt`, `apps/voelund-ui-preview/CMakeLists.txt`, `src/desktop/MainWindow.cpp`, `apps/voelund-ui-preview/PreviewCanvas.cpp`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
+- **Voraussetzungen:** U03, U04, U05, U06, U07, U11, U12a.
+- **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08, ADR 0012; `apps/voelund-cad/CMakeLists.txt`, `src/desktop/MainWindow.cpp`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
 - **Auftrag:**
   1. Produkt `voelund-cad` mit der Shell nach ADR 0012 bauen und installieren.
-  2. voelund-ui-preview nach belegter Funktionsparität entfernen; Fake-Canvas, Fake-Timeline und verwaiste Handler mit entfernen.
+  2. Vorschau und toter Rechteckweg sind mit U12a entfernt; verbleibende verwaiste Handler mit entfernen.
   3. Screenshots und Doku auf den produktiven Einstieg umstellen.
 - **Abnahme:** Installiertes Produkt startet dieselbe getestete Shell. Kein zweiter SketchBackend mit eigenen Regeln, keine Fake-Timeline. Ein kompletter New/Sketch/Save/Open-Fluss besteht.
-- **Grenze:** Keine Löschung der Vorschau vor belegter Funktionsparität; ihre Gestaltung ist keine Vergleichsbasis mehr (ADR 0012).
+- **Grenze:** Die Vorschau ist mit U12a entfernt (Nutzerentscheidung 04.10.2026); ihre Gestaltung war seit ADR 0012 keine Vergleichsbasis mehr.
 
 ## S01 – Semantischen SketchCreationResult abschließen
 

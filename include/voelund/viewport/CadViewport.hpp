@@ -143,15 +143,6 @@ struct PlanarFaceSelection final {
 [[nodiscard]] std::optional<PlanarFaceSelection>
 resolvePlanarFaceSelection(const PlanarFaceSelection& previous, const TopoDS_Shape& supportShape);
 
-struct SketchRectangleResult final {
-    PlanarFaceSelection support;
-    double firstX;
-    double firstY;
-    double secondX;
-    double secondY;
-    double distance;
-};
-
 enum class SketchElementTool {
     select,
     line,
@@ -231,18 +222,14 @@ class CadViewport final : public CadViewportBase {
     void setBodySelectionHandler(std::function<void(std::uint64_t)> handler);
     void setPlanarFaceSelectionHandler(std::function<void(const PlanarFaceSelection&)> handler);
     void setBasePlaneSelectionHandler(std::function<void(BasePlane)> handler);
-    void setSketchRectangleHandler(std::function<void(const SketchRectangleResult&)> handler);
-    void setSketchExtrusionPreviewHandler(std::function<void(double)> handler);
     void setSketchEditorPreviewHandler(
         std::function<void(const std::optional<SketchElementIntent>&)> handler);
     void setSketchEditorElementHandler(std::function<void(const SketchElementIntent&)> handler);
     void setSketchEditorTranslationHandler(std::function<void(double, double)> handler);
-    void beginRectangleSketch(const PlanarFaceSelection& support);
     void beginSketchEditor(const PlanarFaceSelection& support, SketchElementTool tool);
     void setSketchEditorTool(SketchElementTool tool);
     void continueSketchPolyline(double x, double y, std::uint64_t elementId);
     [[nodiscard]] bool cancelSketchEditorStep();
-    void updateSketchExtrusionPreview(double distance);
     void cancelSketch();
     void setBodyMoveHandler(std::function<void(std::uint64_t, double, double, double)> handler);
     void

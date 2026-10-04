@@ -1,7 +1,8 @@
+#include "IsolatedSettings.hpp"
 #include "../../src/desktop/SketchEditorToolController.hpp"
 #include "../../src/desktop/SketchViewAdapter.hpp"
 #include "../../src/desktop/ToolPanelHost.hpp"
-#include "../../src/viewport/SketchInteraction.hpp"
+#include "../../src/viewport/PlanarFaceSelection.hpp"
 #include <QAction>
 #include <QApplication>
 #include <QDir>
@@ -242,6 +243,7 @@ void circle() {
 } // namespace
 int main(int argc, char** argv) {
     QApplication app(argc, argv);
+    voelund::test::isolateSettings();
     try {
         require(argc == 2, "Expected artifact directory");
         flow(argv[1]);

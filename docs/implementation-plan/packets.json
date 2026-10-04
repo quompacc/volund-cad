@@ -4,8 +4,8 @@
   "auditedCommit": "1b78229",
   "status": "implementation-started",
   "counts": {
-    "total": 130,
-    "throughG4": 100,
+    "total": 131,
+    "throughG4": 101,
     "g5": 30
   },
   "globalGates": [
@@ -71,6 +71,7 @@
     "V01",
     "S04a",
     "PAR01",
+    "U12a",
     "R10b",
     "U07",
     "U08",
@@ -1708,21 +1709,20 @@
         "U05",
         "U06",
         "U07",
-        "U11"
+        "U11",
+        "U12a"
       ],
       "files": [
         "apps/voelund-cad/CMakeLists.txt",
-        "apps/voelund-ui-preview/CMakeLists.txt",
-        "src/desktop/MainWindow.cpp",
-        "apps/voelund-ui-preview/PreviewCanvas.cpp"
+        "src/desktop/MainWindow.cpp"
       ],
       "steps": [
         "Produkt `voelund-cad` mit der Shell nach ADR 0012 bauen und installieren.",
-        "voelund-ui-preview nach belegter Funktionsparität entfernen; Fake-Canvas, Fake-Timeline und verwaiste Handler mit entfernen.",
+        "Vorschau und toter Rechteckweg sind mit U12a entfernt; verbleibende verwaiste Handler mit entfernen.",
         "Screenshots und Doku auf den produktiven Einstieg umstellen."
       ],
       "acceptance": "Installiertes Produkt startet dieselbe getestete Shell. Kein zweiter SketchBackend mit eigenen Regeln, keine Fake-Timeline. Ein kompletter New/Sketch/Save/Open-Fluss besteht.",
-      "boundary": "Keine Löschung der Vorschau vor belegter Funktionsparität; ihre Gestaltung ist keine Vergleichsbasis mehr (ADR 0012).",
+      "boundary": "Die Vorschau ist mit U12a entfernt (Nutzerentscheidung 2026-10-04); ihre Gestaltung war seit ADR 0012 keine Vergleichsbasis mehr.",
       "status": "planned",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
@@ -3972,6 +3972,35 @@
         "docs/implementation-plan/evidence/PAR01.md"
       ],
       "completedCommit": "20cf5cc"
+    },
+    {
+      "id": "U12a",
+      "title": "Altlasten der Oberfläche vor dem Weiterbau entfernen",
+      "deps": [
+        "U06",
+        "U13"
+      ],
+      "files": [
+        "CMakeLists.txt",
+        "apps/voelund-ui-preview/",
+        "src/viewport/",
+        "tools/PlatformReport*.psm1",
+        "tests/desktop/",
+        "tests/powershell/"
+      ],
+      "steps": [
+        "voelund-ui-preview mit Ribbon, Fake-Canvas, Fake-Timeline, eigenem SketchBackend und Starttests entfernen; Plattformbericht prüft nur noch das Produkt.",
+        "Toten Rechteckweg im Viewport (SketchInteraction, beginRectangleSketch, Rechteck- und Extrusionsvorschau-Handler) entfernen; Flächenauswahl-Hilfen bleiben.",
+        "Desktop-Tests schreiben Einstellungen nur in ein temporäres INI-Verzeichnis je Prozess."
+      ],
+      "acceptance": "Build und alle Tests grün unter Windows und in der Linux-CI ohne voelund-ui-preview. Kein Aufrufer des alten Rechteckwegs. Kein Desktop-Test liest oder schreibt dauerhafte Einstellungen.",
+      "boundary": "Nutzerentscheidung vom 2026-10-04: vorgezogener Teil von U12, damit keine zweite Oberfläche Fehler verdeckt. Keine sichtbare Änderung am Produkt. Testgerüste mit einzelnen Panels bleiben; Composition Root und Installation bleiben U12.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
     },
     {
       "id": "PAR02",

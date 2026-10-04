@@ -90,16 +90,16 @@ function Test-ReportRuntimeEvidence($Report, [string]$Base) {
         return
     }
     $directory = [IO.Path]::GetFullPath((Join-Path $Base $runtime.directory))
-    Assert-Report (@($runtime.artifacts).Count -eq 6) 'Expected six runtime capture artifacts.'
+    Assert-Report (@($runtime.artifacts).Count -eq 3) 'Expected three runtime capture artifacts.'
     $expectedPaths = @()
-    foreach ($app in 'voelund-cad','voelund-ui-preview') {
+    foreach ($app in 'voelund-cad') {
         foreach ($suffix in '.json','-widgets.png','-framebuffer.png') { $expectedPaths += Join-Path $directory "$app$suffix" }
     }
     $paths = @($runtime.artifacts | ForEach-Object { Resolve-ReportArtifact $_ $Base })
-    Assert-Report (@($paths | Sort-Object -Unique).Count -eq 6 -and
+    Assert-Report (@($paths | Sort-Object -Unique).Count -eq 3 -and
         @($expectedPaths | Where-Object { $_ -notin $paths }).Count -eq 0) 'Runtime artifacts do not match named application captures.'
     $actual = Read-ReportRuntime $directory $Report.configuration.backend
-    foreach ($app in 'voelund-cad','voelund-ui-preview') {
+    foreach ($app in 'voelund-cad') {
         foreach ($key in $actual[$app].Keys) {
             Assert-Report ($runtime.applications[$app][$key] -ceq $actual[$app][$key]) "Embedded runtime differs: $app/$key"
         }
@@ -171,7 +171,7 @@ function Test-ReportBuildEvidence($Report, [string]$Base) {
         Need-Text $binary.path 'binary.path'
         Assert-Report ($binary.sha256 -cmatch '^[0-9a-f]{64}$') 'Invalid binary digest.'
     }
-    foreach ($name in 'voelund-cad.exe','voelund-ui-preview.exe','voelund_kernel_tests.exe') {
+    foreach ($name in 'voelund-cad.exe','voelund_kernel_tests.exe') {
         Assert-Report (@($binaries | Where-Object { [IO.Path]::GetFileName($_.path) -ceq $name }).Count -eq 1) "Missing built binary identity: $name"
     }
 }

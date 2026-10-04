@@ -299,20 +299,6 @@ if(VOELUND_BUILD_DESKTOP)
             COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:Qt6::QWindowsIntegrationPlugin>"
                 "$<TARGET_FILE_DIR:voelund_sketch_command_failure_tests>/platforms" VERBATIM)
     endif()
-    add_executable(voelund_preview_command_failure_tests desktop/PreviewCommandFailureTests.cpp ../apps/voelund-ui-preview/SketchBackend.cpp)
-    target_link_libraries(voelund_preview_command_failure_tests PRIVATE voelund_project_options Voelund::Desktop)
-    add_test(NAME desktop.preview_command_failures COMMAND voelund_preview_command_failure_tests)
-    set_tests_properties(desktop.preview_command_failures PROPERTIES LABELS "desktop;sketch;regression" TIMEOUT 30 RUN_SERIAL TRUE)
-    if(WIN32)
-        add_custom_command(TARGET voelund_preview_command_failure_tests POST_BUILD
-            COMMAND "${CMAKE_COMMAND}" -E copy_if_different
-                "$<TARGET_FILE:Qt6::Core>" "$<TARGET_FILE:Qt6::Gui>" "$<TARGET_FILE:Qt6::Widgets>"
-                "$<TARGET_FILE:Qt6::OpenGL>" "$<TARGET_FILE:Qt6::OpenGLWidgets>"
-                "$<TARGET_FILE_DIR:voelund_preview_command_failure_tests>"
-            COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:voelund_preview_command_failure_tests>/platforms"
-            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:Qt6::QWindowsIntegrationPlugin>"
-                "$<TARGET_FILE_DIR:voelund_preview_command_failure_tests>/platforms" VERBATIM)
-    endif()
     add_executable(voelund_feature_status_tests desktop/FeatureStatusTests.cpp)
     add_executable(voelund_reference_repair_flow_tests desktop/ReferenceRepairFlowTests.cpp)
     add_executable(voelund_document_repair_flow_tests desktop/DocumentRepairFlowTests.cpp)
