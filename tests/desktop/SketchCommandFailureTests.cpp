@@ -38,11 +38,10 @@ void run() {
     auto* panel = new desktop::ToolPanelHost(&window);
     window.addDockWidget(Qt::RightDockWidgetArea, panel);
     window.setCentralWidget(new QLabel(QStringLiteral("Extrusion rejection regression")));
-    viewport::CadViewport viewport;
     unsigned sceneChanges = 0;
     QString status;
     desktop::SketchExtrusionToolController controller(
-        session, viewport, *panel, [&] { ++sceneChanges; },
+        session, *panel, [&] { ++sceneChanges; },
         [&](const QString& message) { status = message; });
     controller.beginSelectedProfiles();
     window.resize(1000, 700);

@@ -37,7 +37,6 @@ class MainWindow final : public QMainWindow {
     void createToolPanel();
     void createHistoryToolbar();
     void createWorkspaceToolbar();
-    void createConnectionToolbar();
     void createTransformSettingsToolbar();
     void connectInteractions();
     void syncModelTree();
@@ -48,7 +47,6 @@ class MainWindow final : public QMainWindow {
     void refreshScene();
     void applyBoxParameters();
     void applyCylinderParameters();
-    void applyCylinderResultMode();
     void applyExtrusionParameters();
     void previewBodyMove(std::uint64_t id, double deltaX, double deltaY, double deltaZ);
     void previewBodyRotation(std::uint64_t id, int axisIndex, double angleDegrees);

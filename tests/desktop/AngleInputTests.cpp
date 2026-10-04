@@ -58,12 +58,11 @@ void panel() {
         document::CylinderParameters cylinder{4, 10, placement,
                                               document::CylinderResultMode::separate};
         panel.showCylinder(cylinder, {});
-        require(panel.cylinderParameters(cylinder.resultMode) == cylinder,
+        require(panel.cylinderParameters() == cylinder,
                 "cylinder properties roundtrip changed internal radians");
         panel.previewRotation(placement, 2, 5);
-        near(kernel::toDegrees(panel.cylinderParameters(cylinder.resultMode).placement.rotationZ)
-                 .value(),
-             degrees + 5, "cylinder preview wrapped complete turns");
+        near(kernel::toDegrees(panel.cylinderParameters().placement.rotationZ).value(), degrees + 5,
+             "cylinder preview wrapped complete turns");
     }
     const features::SketchConstraintAnnotation annotation{document::SketchConstraintId{1},
                                                           document::SketchConstraintKind::angle,

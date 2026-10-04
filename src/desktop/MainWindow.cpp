@@ -21,7 +21,6 @@
 
 #include <QAction>
 #include <QCloseEvent>
-#include <QComboBox>
 #include <QDockWidget>
 #include <QDoubleSpinBox>
 #include <QKeySequence>
@@ -51,7 +50,6 @@ MainWindow::MainWindow(application::CadSession& session, QWidget* parent)
     createToolPanel();
     createHistoryToolbar();
     createWorkspaceToolbar();
-    createConnectionToolbar();
     createTransformSettingsToolbar();
     impl_->documentActions =
         std::make_unique<DocumentActions>(*this, impl_->session, [this]() { refreshScene(); });
@@ -97,8 +95,7 @@ void MainWindow::createWorkspaceToolbar() {
     services.addCylinder = [this]() {
         if (!runCommand(
                 [this] {
-                    return impl_->session.createCylinderFeature(
-                        resultModeFromIndex(impl_->connectionModeInput->currentIndex()));
+                    return impl_->session.createCylinderFeature(document::CylinderResultMode::join);
                 },
                 [this](const QString& message) { statusBar()->showMessage(message); }))
             return;
@@ -118,15 +115,6 @@ void MainWindow::createWorkspaceToolbar() {
             }
             impl_->sketchEditorTool->begin(*impl_->selectedPlanarFace);
         }
-    };
-    services.sketchRectangle = [this]() {
-        if (!impl_->selectedPlanarFace.has_value()) {
-            return;
-        }
-        if (impl_->sketchEditorTool->isActive()) {
-            impl_->sketchEditorTool->cancel();
-        }
-        impl_->sketchExtrusionTool->begin(*impl_->selectedPlanarFace);
     };
     services.editSketch = [this]() {
         if (impl_->sketchExtrusionTool->isActive()) {
@@ -150,9 +138,6 @@ void MainWindow::createWorkspaceToolbar() {
         return impl_->session.sceneStatus().isCurrent() &&
                (impl_->selectedPlanarFace.has_value() || impl_->selectedDatum.has_value());
     };
-    services.canSketch = [this]() {
-        return impl_->session.sceneStatus().isCurrent() && impl_->selectedPlanarFace.has_value();
-    };
     services.canEditExistingSketch = [this]() {
         const auto selected = impl_->session.selectedFeature();
         return selected.has_value() &&
@@ -175,7 +160,6 @@ void MainWindow::createWorkspaceToolbar() {
     impl_->sketchEditorAction = impl_->workspaceToolbar->action("solid.create.sketch");
     impl_->sketchEditorAction->setObjectName(QStringLiteral("sketchEditorAction"));
     impl_->addBoxAction->setObjectName(QStringLiteral("addBoxAction"));
-    impl_->createSketchAction = impl_->workspaceToolbar->action("solid.create.sketch_rectangle");
     impl_->transformAction = impl_->workspaceToolbar->action("solid.modify.transform");
     impl_->transformAction->setObjectName(QStringLiteral("transformAction"));
 }
@@ -189,7 +173,7 @@ void MainWindow::createToolPanel() {
         impl_->session, *impl_->viewport, *impl_->toolPanel, [this]() { refreshScene(); },
         [this](const QString& message) { statusBar()->showMessage(message); });
     impl_->sketchExtrusionTool = std::make_unique<SketchExtrusionToolController>(
-        impl_->session, *impl_->viewport, *impl_->toolPanel, [this]() { refreshScene(); },
+        impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
         [this](const QString& message) { statusBar()->showMessage(message); });
 }
 
@@ -209,6 +193,8 @@ void MainWindow::createHistoryToolbar() {
     impl_->undoAction->setShortcut(QKeySequence::Undo);
     impl_->redoAction = new QAction(tr("Redo"), this);
     impl_->redoAction->setShortcuts(QKeySequence::Redo);
+    setCommandId(*impl_->undoAction, "history.undo");
+    setCommandId(*impl_->redoAction, "history.redo");
     auto* toolbar = addToolBar(tr("History"));
     toolbar->setObjectName(QStringLiteral("historyToolbar"));
     toolbar->setToolButtonStyle(Qt::ToolButtonTextOnly);
@@ -216,33 +202,22 @@ void MainWindow::createHistoryToolbar() {
     toolbar->addAction(impl_->redoAction);
     impl_->repairAction = toolbar->addAction(tr("Repair references…"));
     impl_->repairAction->setObjectName(QStringLiteral("repairReferencesAction"));
+    setCommandId(*impl_->repairAction, "repair.references");
     connect(impl_->repairAction, &QAction::triggered, this, [this] { repairReferences(); });
     impl_->repairAllAction = toolbar->addAction(tr("Repair all…"));
     impl_->repairAllAction->setObjectName(QStringLiteral("repairAllReferencesAction"));
+    setCommandId(*impl_->repairAllAction, "repair.all");
     connect(impl_->repairAllAction, &QAction::triggered, this, [this] { repairAllReferences(); });
 }
 
-void MainWindow::createConnectionToolbar() {
-    // Modes and settings start a second row so wider styles (e.g. Breeze) never move the
-    // global connection control into a toolbar overflow menu.
-    addToolBarBreak();
-    auto* toolbar = addToolBar(tr("Connection"));
-    toolbar->setObjectName(QStringLiteral("connectionToolbar"));
-    toolbar->addWidget(new QLabel(tr("Connection: "), toolbar));
-    impl_->connectionModeInput = new QComboBox(toolbar);
-    impl_->connectionModeInput->setObjectName(QStringLiteral("connectionModeInput"));
-    impl_->connectionModeInput->addItems({tr("Join"), tr("Cut"), tr("Intersect"), tr("Separate")});
-    impl_->connectionModeInput->setToolTip(
-        tr("Connection mode for the current and next cylinder operation"));
-    toolbar->addWidget(impl_->connectionModeInput);
-    connect(impl_->connectionModeInput, &QComboBox::currentIndexChanged, this,
-            [this](int) { applyCylinderResultMode(); });
-}
-
 void MainWindow::createTransformSettingsToolbar() {
+    // Settings start a second row so wider styles (e.g. Breeze) never move them into a
+    // toolbar overflow menu.
+    addToolBarBreak();
     impl_->snapAction = new QAction(tr("Snap"), this);
     impl_->snapAction->setCheckable(true);
     impl_->snapAction->setChecked(true);
+    setCommandId(*impl_->snapAction, "transform.snap");
     impl_->snapAction->setToolTip(tr("Snap transformations; hold Ctrl to bypass temporarily"));
     auto* toolbar = addToolBar(tr("Transform"));
     toolbar->setObjectName(QStringLiteral("transformToolbar"));
@@ -288,12 +263,6 @@ void MainWindow::connectInteractions() {
             2000);
         impl_->workspaceToolbar->refreshEnabled();
     });
-    impl_->viewport->setSketchRectangleHandler(
-        [this](const viewport::SketchRectangleResult& rectangle) {
-            impl_->sketchExtrusionTool->setResult(rectangle);
-        });
-    impl_->viewport->setSketchExtrusionPreviewHandler(
-        [this](double distance) { impl_->sketchExtrusionTool->updateDistancePreview(distance); });
     impl_->viewport->setSketchEditorPreviewHandler(
         [this](const std::optional<viewport::SketchElementIntent>& intent) {
             impl_->sketchEditorTool->updatePreview(intent);
@@ -402,16 +371,11 @@ void MainWindow::syncProperties() {
     impl_->repairAction->setEnabled(selected && impl_->session.selectedFeatureDescriptor().kind ==
                                                     document::FeatureKind::sketch);
     impl_->workspaceToolbar->refreshEnabled();
-    if (const auto cylinderId = latestCylinderId(impl_->session)) {
-        const QSignalBlocker blocker(impl_->connectionModeInput);
-        impl_->connectionModeInput->setCurrentIndex(
-            resultModeIndex(impl_->session.cylinderParameters(*cylinderId).resultMode));
-    }
-    impl_->connectionModeInput->setEnabled(impl_->session.sceneStatus().isCurrent());
+    // Undo/Redo follow the document history, not the selection (U01).
+    impl_->undoAction->setEnabled(impl_->session.canUndo());
+    impl_->redoAction->setEnabled(impl_->session.canRedo());
     if (!selected.has_value()) {
         impl_->propertyPanel->showNone();
-        impl_->undoAction->setEnabled(false);
-        impl_->redoAction->setEnabled(false);
         syncTransformTool();
         impl_->documentActions->syncWindowTitle();
         return;
@@ -433,8 +397,6 @@ void MainWindow::syncProperties() {
                                   : tr("Feature");
         impl_->propertyPanel->showFeatureInfo(title, featureErrorText(impl_->session, feature.id));
     }
-    impl_->undoAction->setEnabled(impl_->session.canUndo());
-    impl_->redoAction->setEnabled(impl_->session.canRedo());
     syncTransformTool();
     impl_->documentActions->syncWindowTitle();
 }

@@ -2,8 +2,6 @@
 
 #include <voelund/application/CadSession.hpp>
 
-#include <algorithm>
-
 namespace voelund::desktop {
 
 std::vector<viewport::SceneBody> makeSceneBodies(const application::CadSession& session) {
@@ -50,15 +48,6 @@ document::CylinderResultMode resultModeFromIndex(int index) {
     default:
         return document::CylinderResultMode::join;
     }
-}
-
-std::optional<document::FeatureId> latestCylinderId(const application::CadSession& session) {
-    const auto features = session.features();
-    const auto cylinder =
-        std::ranges::find(features.rbegin(), features.rend(), document::FeatureKind::cylinder,
-                          &document::FeatureDescriptor::kind);
-    return cylinder == features.rend() ? std::optional<document::FeatureId>{}
-                                       : std::optional<document::FeatureId>{cylinder->id};
 }
 
 bool selectTransformFeatureForBody(application::CadSession& session, document::FeatureId bodyId) {

@@ -1,6 +1,8 @@
 #include "FeaturePropertiesPanel.hpp"
+#include "MainWindowSupport.hpp"
 #include "MeasurementInput.hpp"
 
+#include <QComboBox>
 #include <QDoubleSpinBox>
 #include <QFormLayout>
 #include <QLabel>
@@ -97,6 +99,10 @@ void FeaturePropertiesPanel::createCylinderPanel() {
     cylinderHeightInput_ = makeLengthInput(cylinderPanel_);
     radiusInput_->setObjectName(QStringLiteral("cylinderRadiusInput"));
     cylinderHeightInput_->setObjectName(QStringLiteral("cylinderHeightInput"));
+    // The connection belongs to the selected cylinder, not to a global toolbar (U01).
+    cylinderResultModeInput_ = new QComboBox(cylinderPanel_);
+    cylinderResultModeInput_->setObjectName(QStringLiteral("cylinderResultModeInput"));
+    cylinderResultModeInput_->addItems({tr("Join"), tr("Cut"), tr("Intersect"), tr("Separate")});
     for (int index = 0; index < 3; ++index) {
         translationInputs_[index] = makeLengthInput(cylinderPanel_, true);
         translationInputs_[index]->setObjectName(
@@ -114,6 +120,7 @@ void FeaturePropertiesPanel::createCylinderPanel() {
 
     cylinderLayout->addRow(tr("Radius"), radiusInput_);
     cylinderLayout->addRow(tr("Height"), cylinderHeightInput_);
+    cylinderLayout->addRow(tr("Connection"), cylinderResultModeInput_);
     for (int index = 0; index < 3; ++index) {
         cylinderLayout->addRow(tr(moveLabels[index]), translationInputs_[index]);
     }
@@ -143,6 +150,11 @@ void FeaturePropertiesPanel::connectEditors() {
             }
         });
     }
+    connect(cylinderResultModeInput_, &QComboBox::activated, this, [this](int) {
+        if (cylinderChangeHandler_) {
+            cylinderChangeHandler_();
+        }
+    });
     connect(extrusionDistanceInput_, &QDoubleSpinBox::editingFinished, this, [this]() {
         if (extrusionChangeHandler_) {
             extrusionChangeHandler_();
@@ -232,6 +244,8 @@ void FeaturePropertiesPanel::showCylinder(const document::CylinderParameters& pa
         QSignalBlocker(translationInputs_[0]), QSignalBlocker(translationInputs_[1]),
         QSignalBlocker(translationInputs_[2]), QSignalBlocker(rotationInputs_[0]),
         QSignalBlocker(rotationInputs_[1]),    QSignalBlocker(rotationInputs_[2])};
+    const QSignalBlocker modeBlocker(cylinderResultModeInput_);
+    cylinderResultModeInput_->setCurrentIndex(resultModeIndex(parameters.resultMode));
     radiusInput_->setValue(parameters.radius);
     cylinderHeightInput_->setValue(parameters.height);
     const double translations[] = {parameters.placement.translationX,
@@ -270,15 +284,14 @@ document::BoxParameters FeaturePropertiesPanel::boxParameters() const {
                                kernel::toRadians(kernel::Degrees(boxRotationInputs_[2]->value()))}};
 }
 
-document::CylinderParameters
-FeaturePropertiesPanel::cylinderParameters(document::CylinderResultMode resultMode) const {
+document::CylinderParameters FeaturePropertiesPanel::cylinderParameters() const {
     return {radiusInput_->value(), cylinderHeightInput_->value(),
             kernel::RigidTransform{translationInputs_[0]->value(), translationInputs_[1]->value(),
                                    translationInputs_[2]->value(),
                                    kernel::toRadians(kernel::Degrees(rotationInputs_[0]->value())),
                                    kernel::toRadians(kernel::Degrees(rotationInputs_[1]->value())),
                                    kernel::toRadians(kernel::Degrees(rotationInputs_[2]->value()))},
-            resultMode};
+            resultModeFromIndex(cylinderResultModeInput_->currentIndex())};
 }
 
 document::ExtrusionParameters FeaturePropertiesPanel::extrusionParameters() const {

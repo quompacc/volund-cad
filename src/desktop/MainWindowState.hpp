@@ -11,7 +11,6 @@
 #include <voelund/desktop/MainWindow.hpp>
 #include <voelund/workspaces/CommandRegistry.hpp>
 class QAction;
-class QComboBox;
 class QDockWidget;
 class QDoubleSpinBox;
 class QLabel;
@@ -40,12 +39,10 @@ class MainWindow::Impl final {
     QAction* addBoxAction{nullptr};
     QAction* addCylinderAction{nullptr};
     QAction* sketchEditorAction{nullptr};
-    QAction* createSketchAction{nullptr};
     QAction* transformAction{nullptr};
     QAction* snapAction{nullptr};
     QDoubleSpinBox* linearSnapInput{nullptr};
     QDoubleSpinBox* angularSnapInput{nullptr};
-    QComboBox* connectionModeInput{nullptr};
     std::optional<viewport::PlanarFaceSelection> selectedPlanarFace;
     std::optional<document::DatumPlane> selectedDatum; // V01b: base plane picked in viewport.
     workspaces::CommandRegistry commandRegistry;

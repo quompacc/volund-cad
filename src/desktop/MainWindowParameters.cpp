@@ -115,22 +115,9 @@ void MainWindow::applyBoxParameters() {
     });
 }
 void MainWindow::applyCylinderParameters() {
-    const auto parameters = impl_->propertyPanel->cylinderParameters(
-        impl_->session.selectedCylinderParameters().resultMode);
+    const auto parameters = impl_->propertyPanel->cylinderParameters();
     applyParameterCommand([this, parameters](ErrorDisposition disposition) {
         return impl_->session.editSelectedCylinderParameters(parameters, disposition);
-    });
-}
-void MainWindow::applyCylinderResultMode() {
-    const auto cylinderId = latestCylinderId(impl_->session);
-    if (!cylinderId) {
-        statusBar()->showMessage(tr("Connection mode set for the next cylinder"), 2000);
-        return;
-    }
-    auto parameters = impl_->session.cylinderParameters(*cylinderId);
-    parameters.resultMode = resultModeFromIndex(impl_->connectionModeInput->currentIndex());
-    applyParameterCommand([this, parameters, id = *cylinderId](ErrorDisposition disposition) {
-        return impl_->session.editCylinderParameters(id, parameters, disposition);
     });
 }
 void MainWindow::applyExtrusionParameters() {

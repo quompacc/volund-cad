@@ -11,13 +11,11 @@ struct SolidCommandServices final {
     std::function<void()> addBox;
     std::function<void()> addCylinder;
     std::function<void()> sketchEditor;
-    std::function<void()> sketchRectangle;
     std::function<void()> editSketch;
     std::function<void()> extrudeProfiles;
     std::function<void(bool)> transform;
     std::function<bool()> canAddCylinder;
     std::function<bool()> canEditSketch;
-    std::function<bool()> canSketch;
     std::function<bool()> canEditExistingSketch;
     std::function<bool()> canExtrudeProfiles;
     std::function<bool()> canTransform;

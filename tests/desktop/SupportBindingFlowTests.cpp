@@ -1,5 +1,4 @@
 #include "../../src/desktop/SketchEditorToolController.hpp"
-#include "../../src/desktop/SketchExtrusionToolController.hpp"
 #include "../../src/desktop/ToolPanelHost.hpp"
 #include "../../src/viewport/SketchInteraction.hpp"
 #include "../CommandResultAssertions.hpp"
@@ -175,22 +174,6 @@ void flow(const std::filesystem::path& directory) {
             "Select rotated profile");
     test::requireCommittedFeature(
         session.createSketchProfileExtrusion(sketch, session.selectedSketchProfiles(), 3));
-    // The rectangle/extrusion command must also create the durable binding.
-    desktop::SketchExtrusionToolController extrusion(
-        session, viewport, *panel, [] {}, [&](const QString& s) { status = s; });
-    const auto currentOther = top(session, b);
-    extrusion.begin(currentOther);
-    require(extrusion.isActive(), "Start rectangle extrusion");
-    extrusion.setResult({currentOther, 2, 2, 6, 6, 3});
-    ok(*panel)->click();
-    if (extrusion.isActive() || session.features().size() != 6)
-        throw std::runtime_error("Rectangle extrusion failed: " + status.toStdString());
-    const auto secondSketch = session.features()[4].id;
-    require(session.sketchParameters(secondSketch).supportBinding.has_value(),
-            "Rectangle command left legacy sketch");
-    committed(session.undo());
-    committed(session.redo());
-    require(session.sketchParameters(secondSketch).supportBinding.has_value(), "Redo lost binding");
     std::cout << "picked identity, coplanar body rejection, rotated overlay/editor, stale draft, "
                  "native roundtrip and rectangle extrusion passed\n";
 }

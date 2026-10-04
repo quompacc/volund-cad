@@ -8,6 +8,7 @@
 #include <functional>
 #include <vector>
 
+class QComboBox;
 class QDoubleSpinBox;
 class QLabel;
 class QPushButton;
@@ -29,8 +30,7 @@ class FeaturePropertiesPanel final : public QStackedWidget {
     void showCylinder(const document::CylinderParameters& parameters, const QString& errorText);
     void showExtrusion(const document::ExtrusionParameters& parameters, const QString& errorText);
     [[nodiscard]] document::BoxParameters boxParameters() const;
-    [[nodiscard]] document::CylinderParameters
-    cylinderParameters(document::CylinderResultMode resultMode) const;
+    [[nodiscard]] document::CylinderParameters cylinderParameters() const;
     [[nodiscard]] document::ExtrusionParameters extrusionParameters() const;
     void previewMove(const kernel::RigidTransform& base, double deltaX, double deltaY,
                      double deltaZ);
@@ -53,6 +53,7 @@ class FeaturePropertiesPanel final : public QStackedWidget {
     QDoubleSpinBox* boxRotationInputs_[3]{};
     QDoubleSpinBox* radiusInput_{nullptr};
     QDoubleSpinBox* cylinderHeightInput_{nullptr};
+    QComboBox* cylinderResultModeInput_{nullptr};
     QDoubleSpinBox* translationInputs_[3]{};
     QDoubleSpinBox* rotationInputs_[3]{};
     QLabel* errorLabel_{nullptr};

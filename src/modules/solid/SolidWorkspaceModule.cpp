@@ -43,15 +43,6 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                          false,
                          simpleCommand(std::move(services.sketchEditor)),
                          std::move(services.canEditSketch)});
-    commands_.push_back({"solid.create.sketch_rectangle",
-                         "Sketch Rectangle",
-                         "Create a rectangle sketch and pull it into a solid",
-                         {},
-                         workspaces::CommandGroup::create,
-                         true,
-                         false,
-                         simpleCommand(std::move(services.sketchRectangle)),
-                         std::move(services.canSketch)});
     commands_.push_back({"solid.create.extrude_profiles",
                          "Extrude Profiles",
                          "Extrude the selected sketch profiles",

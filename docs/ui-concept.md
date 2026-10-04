@@ -131,3 +131,42 @@ Vom Nutzer am 04.10.2026 freigegeben; verbindlich festgehalten in
 | V01 | UI-Test des ganzen Ablaufs (V01c) in der neuen Oberfläche |
 | PAR02 | Parameterpanel rechts, `=Name` in Maßfeldern |
 | M15 | Timeline mit Rückrollmarke, Fehlern und Umordnen |
+
+## Teil 3 – Befehlstabelle (U01)
+
+Jede sichtbare Aktion trägt eine stabile Command-ID (Qt-Property `commandId`). Der Test
+`desktop.command_inventory` prüft, dass die sichtbaren Aktionen genau dieser Tabelle
+entsprechen. Registry-Befehle verwenden ihre registrierte ID. Die heutigen Einstiege sind
+Menü und Toolbars; Werkzeugleiste, Kontextleiste und Befehlssuche nach ADR 0012 binden
+in U04 an dieselben IDs.
+
+| Command-ID | Heute | Ziel (ADR 0012) | Controller | Aktiv, wenn | Test |
+|---|---|---|---|---|---|
+| `document.new` | Menü File, Strg+N | Kopfzeile/Menü, Befehlssuche | DocumentActions | immer | document_actions |
+| `document.open` | Menü File, Strg+O | Kopfzeile/Menü, Befehlssuche | DocumentActions | immer | document_actions |
+| `document.save` | Menü File, Strg+S | Kopfzeile/Menü, Befehlssuche | DocumentActions | immer | document_actions |
+| `document.save_as` | Menü File | Menü, Befehlssuche | DocumentActions | immer | document_actions |
+| `document.duplicate` | Menü File | Menü, Befehlssuche | DocumentActions | immer | document_actions |
+| `history.undo` | Toolbar History, Strg+Z | Kopfzeile | MainWindow | Historie hat einen Schritt | command_inventory |
+| `history.redo` | Toolbar History, Strg+Y | Kopfzeile | MainWindow | Historie hat einen Schritt | command_inventory |
+| `repair.references` | Toolbar History | Panel des fehlerhaften Features (U10) | ReferenceRepairDialog | Skizze gewählt | reference_repair_flow |
+| `repair.all` | Toolbar History | Panel des fehlerhaften Features (U10) | DocumentRepairDialog | Dokument hat Features | document_repair_flow |
+| `transform.snap` | Toolbar Transform | Panel von Verschieben/Drehen (U05) | Viewport | immer | – |
+| `solid.create.box` | Toolbar Solid | Kontextleiste (leer), Werkzeugleiste | CadSession | immer | command_inventory, viewport_startup |
+| `solid.create.cylinder` | Toolbar Solid | Kontextleiste (leer), Werkzeugleiste | CadSession | ein letztes Feature mit Geometrie existiert | command_inventory |
+| `solid.create.sketch` | Toolbar Solid | Kontextleiste (Ebene/Fläche), Werkzeugleiste | SketchEditorToolController | Ebene oder ebene Fläche gewählt, Modell aktuell | base_planes |
+| `solid.create.extrude_profiles` | Toolbar Solid | Kontextleiste (Bereich), Werkzeugleiste | SketchExtrusionToolController | Skizzenbereich gewählt | region_selection_acceptance |
+| `solid.modify.transform` | Toolbar Solid, M | Kontextleiste (Körper), Werkzeugleiste | Viewport-Gizmo | getrennter Körper gewählt | viewport_startup |
+| `solid.modify.edit_sketch` | Toolbar Solid | Kontextleiste (Skizze), Timeline | SketchEditorToolController | Skizze gewählt | support_binding_flow |
+
+Bereinigt in U01:
+
+- „Sketch Rectangle“ (alter Weg Rechteck + Herausziehen) ist entfernt. Skizzen entstehen
+  nur noch über „Sketch“, extrudiert wird über gewählte Bereiche.
+- Die globale Toolbar „Connection“ ist entfernt. Sie änderte immer den letzten Zylinder.
+  Die Verbindungsart steht jetzt in den Eigenschaften des gewählten Zylinders; neue
+  Zylinder vereinigen.
+- Das Produkt startet mit einem leeren Dokument statt mit Box und Zylinder.
+- Undo/Redo hängen nur noch an der Historie, nicht mehr an einer Auswahl.
+- Offen für U12: Die Viewport-Interaktion des alten Rechteckwegs (`SketchInteraction`,
+  `beginRectangleSketch`) hat keinen Aufrufer mehr im Produkt und wird dort entfernt.

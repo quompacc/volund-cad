@@ -34,6 +34,13 @@ viewport::CadViewport& open(desktop::MainWindow& window) {
     test::render(*viewport);
     return *viewport;
 }
+void emptyStart() {
+    application::CadSession session;
+    session.newDocument(); // The product starts empty since U01.
+    desktop::MainWindow window(session);
+    open(window);
+    capture(window, "00-empty-start");
+}
 void defaultDocument() {
     application::CadSession session;
     desktop::MainWindow window(session);
@@ -85,6 +92,7 @@ int main(int argc, char** argv) {
         return 2;
     QDir().mkpath(directory);
     try {
+        emptyStart();
         defaultDocument();
         existingSketch();
     } catch (const std::exception& error) {

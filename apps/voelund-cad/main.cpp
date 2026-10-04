@@ -31,15 +31,14 @@ using voelund::desktop::MainWindow;
 using voelund::viewport::CadViewport;
 bool verifyCadControls(MainWindow& mainWindow) {
     QAction* transformAction = mainWindow.findChild<QAction*>(QStringLiteral("transformAction"));
+    QAction* addBoxAction = mainWindow.findChild<QAction*>(QStringLiteral("addBoxAction"));
     QAction* addCylinderAction =
         mainWindow.findChild<QAction*>(QStringLiteral("addCylinderAction"));
-    QComboBox* connectionModeInput =
-        mainWindow.findChild<QComboBox*>(QStringLiteral("connectionModeInput"));
     QDockWidget* properties =
         mainWindow.findChild<QDockWidget*>(QStringLiteral("featurePropertiesDock"));
     QDockWidget* activeTool = mainWindow.findChild<QDockWidget*>(QStringLiteral("activeToolDock"));
-    if (transformAction == nullptr || addCylinderAction == nullptr ||
-        connectionModeInput == nullptr || properties == nullptr || activeTool == nullptr) {
+    if (transformAction == nullptr || addBoxAction == nullptr || addCylinderAction == nullptr ||
+        properties == nullptr || activeTool == nullptr) {
         qCritical() << "Required desktop controls are missing";
         return false;
     }
@@ -52,8 +51,10 @@ bool verifyCadControls(MainWindow& mainWindow) {
                     << activeTool->maximumWidth();
         return false;
     }
-    if (!connectionModeInput->isVisible() || !connectionModeInput->isEnabled()) {
-        qCritical() << "Connection control is unavailable";
+    // The product starts with an empty document: only creating a primitive is possible (U01).
+    if (!addBoxAction->isEnabled() || addCylinderAction->isEnabled() ||
+        transformAction->isEnabled()) {
+        qCritical() << "Empty-document command availability is wrong";
         return false;
     }
 
@@ -112,9 +113,13 @@ bool exerciseCadUi(MainWindow& mainWindow, CadSession& session, CadViewport* vie
     if (!verifyCadControls(mainWindow))
         return false;
     auto* transformAction = mainWindow.findChild<QAction*>(QStringLiteral("transformAction"));
+    auto* addBoxAction = mainWindow.findChild<QAction*>(QStringLiteral("addBoxAction"));
     auto* addCylinderAction = mainWindow.findChild<QAction*>(QStringLiteral("addCylinderAction"));
-    auto* connectionModeInput =
-        mainWindow.findChild<QComboBox*>(QStringLiteral("connectionModeInput"));
+    qInfo() << "smoke-ui box";
+    addBoxAction->trigger();
+    QCoreApplication::processEvents();
+    if (session.currentBodies().size() != 1)
+        return false;
     qInfo() << "smoke-ui box-height";
     auto* boxHeight = mainWindow.findChild<QDoubleSpinBox*>(QStringLiteral("boxHeightInput"));
     if (boxHeight == nullptr || !voelund::apps::enterSmokeValue(*boxHeight, QStringLiteral("27")) ||
@@ -125,11 +130,16 @@ bool exerciseCadUi(MainWindow& mainWindow, CadSession& session, CadViewport* vie
     if (!addCylinderAction->isEnabled() || !transformAction->isEnabled()) {
         return false;
     }
-    connectionModeInput->setFocus();
-    QKeyEvent keyPress(QEvent::KeyPress, Qt::Key_End, Qt::NoModifier);
-    QCoreApplication::sendEvent(connectionModeInput, &keyPress);
     const auto previousBodyCount = session.currentBodies().size();
     addCylinderAction->trigger();
+    QCoreApplication::processEvents();
+    // The connection of the selected cylinder is edited in its properties.
+    auto* resultMode = mainWindow.findChild<QComboBox*>(QStringLiteral("cylinderResultModeInput"));
+    if (resultMode == nullptr || !resultMode->isVisible())
+        return false;
+    resultMode->setFocus();
+    QKeyEvent keyPress(QEvent::KeyPress, Qt::Key_End, Qt::NoModifier);
+    QCoreApplication::sendEvent(resultMode, &keyPress);
     qInfo() << "smoke-ui transform";
     transformAction->trigger();
     QCoreApplication::processEvents();
@@ -188,6 +198,7 @@ int main(int argc, char* argv[]) {
     QGuiApplication::setDesktopFileName(QStringLiteral("io.github.quompacc.Voelund"));
     QApplication application(argc, argv);
     voelund::application::CadSession session;
+    session.newDocument();
     const bool isSmokeTest = QCoreApplication::arguments().contains("--smoke-test");
     const bool uninitializedSmoke =
         QCoreApplication::arguments().contains("--smoke-test-uninitialized");

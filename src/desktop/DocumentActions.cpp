@@ -1,9 +1,10 @@
 #include "DocumentActions.hpp"
+#include "MainWindowSupport.hpp"
 
 #include <voelund/application/CadSession.hpp>
 
-#include <QAction>
 #include <QAbstractButton>
+#include <QAction>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QKeySequence>
@@ -55,7 +56,13 @@ DocumentActions::DocumentActions(QMainWindow& window, application::CadSession& s
     saveAsAction->setShortcut(QKeySequence::SaveAs);
     QAction* duplicateAction = fileMenu->addAction(QStringLiteral("&Duplicate"));
     duplicateAction->setToolTip(QStringLiteral("Create an unsaved copy of the current document"));
-    QObject::connect(duplicateAction, &QAction::triggered, &window_, [this]() { duplicateDocument(); });
+    setCommandId(*newAction, "document.new");
+    setCommandId(*openAction, "document.open");
+    setCommandId(*saveAction, "document.save");
+    setCommandId(*saveAsAction, "document.save_as");
+    setCommandId(*duplicateAction, "document.duplicate");
+    QObject::connect(duplicateAction, &QAction::triggered, &window_,
+                     [this]() { duplicateDocument(); });
     QObject::connect(newAction, &QAction::triggered, &window_, [this]() { newDocument(); });
     QObject::connect(openAction, &QAction::triggered, &window_, [this]() { open(); });
     QObject::connect(saveAction, &QAction::triggered, &window_,
@@ -90,20 +97,23 @@ void DocumentActions::newDocument() {
 }
 
 bool DocumentActions::confirmDuplicate() {
-    if (!session_.isModified()) return true;
+    if (!session_.isModified())
+        return true;
     QMessageBox prompt(QMessageBox::Warning, QStringLiteral("Duplicate document"),
-        QStringLiteral("Save changes to the original before duplicating?\n"
-                       "The duplicate will include all current changes."),
-        QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel, &window_);
+                       QStringLiteral("Save changes to the original before duplicating?\n"
+                                      "The duplicate will include all current changes."),
+                       QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel, &window_);
     prompt.button(QMessageBox::Discard)->setText(QStringLiteral("Duplicate without saving"));
     prompt.setDefaultButton(QMessageBox::Save);
     const auto answer = prompt.exec();
-    if (answer == QMessageBox::Save) return save();
+    if (answer == QMessageBox::Save)
+        return save();
     return answer == QMessageBox::Discard;
 }
 
 void DocumentActions::duplicateDocument() {
-    if (!confirmDuplicate()) return;
+    if (!confirmDuplicate())
+        return;
     try {
         session_.duplicateDocument();
         refreshHandler_();

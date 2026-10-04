@@ -13,9 +13,7 @@ voelund::modules::solid::SolidCommandServices services() {
             []() {},
             []() {},
             []() {},
-            []() {},
             [](bool) {},
-            []() { return true; },
             []() { return true; },
             []() { return true; },
             []() { return true; },
@@ -26,12 +24,12 @@ voelund::modules::solid::SolidCommandServices services() {
 bool solidModulePublishesOnlyItsAvailableCommands() {
     voelund::modules::solid::SolidWorkspaceModule module(services());
     const auto commands = module.commands();
-    return module.id() == "solid" && module.title() == "Solid" && commands.size() == 7 &&
+    return module.id() == "solid" && module.title() == "Solid" && commands.size() == 6 &&
            commands.front().id == "solid.create.box" &&
            commands.front().group == voelund::workspaces::CommandGroup::create &&
            commands[2].id == "solid.create.sketch" &&
-           commands[4].id == "solid.create.extrude_profiles" &&
-           commands[5].id == "solid.modify.transform" && commands[5].checkable &&
+           commands[3].id == "solid.create.extrude_profiles" &&
+           commands[4].id == "solid.modify.transform" && commands[4].checkable &&
            commands.back().id == "solid.modify.edit_sketch";
 }
 
@@ -39,7 +37,7 @@ bool registryOwnsAndResolvesModules() {
     voelund::workspaces::CommandRegistry registry;
     registry.registerModule(
         std::make_unique<voelund::modules::solid::SolidWorkspaceModule>(services()));
-    return registry.modules().size() == 1 && registry.module("solid").commands().size() == 7;
+    return registry.modules().size() == 1 && registry.module("solid").commands().size() == 6;
 }
 
 bool registryRejectsDuplicateModuleIds() {
