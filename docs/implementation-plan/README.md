@@ -3,7 +3,7 @@
 ## Aktueller Stand – 4. Oktober 2026
 
 [`packets.json`](packets.json) ist die einzige Statusquelle; dieser Abschnitt fasst
-sie nur zusammen. **125 Hauptpakete, 37 abgeschlossen, 88 offen** (87 geplant,
+sie nur zusammen. **128 Hauptpakete, 37 abgeschlossen, 91 offen** (90 geplant,
 A02 mit Designbedarf). Teilblöcke wie D12a–e zählen nicht als Hauptpakete; die
 Paketanzahl ist kein Maß für Restaufwand oder Fertigstellungszeit.
 
@@ -21,17 +21,28 @@ Paketanzahl ist kein Maß für Restaufwand oder Fertigstellungszeit.
   Keine Quellhash-Listen, keine eingecheckten Logs/Aufnahmen. FreeBSD/Sway wird je Gate geprüft.
 - Ein Commit je abgenommenem Paket.
 
+**Ergänzung vom 4. Oktober 2026 (Nutzerwunsch):**
+
+- **UX01** direkt nach V01: Bedien- und Gestaltungskonzept gemeinsam mit dem Nutzer neu
+  festlegen und vor jeder weiteren U-Arbeit freigeben lassen. Die bisherige Oberfläche
+  gilt als Flickwerk; U02/U03 bauen auf UX01 statt auf der UI-Vorschau auf.
+- **PAR01** (Kern) direkt danach, **PAR02** (Oberfläche) nach UX01/S07:
+  [Parametertabelle](../parameter-table.md), die benannte Maße wie `A = 10 mm` an
+  Skizzenbemaßungen und Extrusionen bindet.
+- Sichtbare UI-Änderungen werden vor der Umsetzung mit dem Nutzer abgestimmt;
+  Aufnahmen werden zur Durchsicht vorgelegt.
+
 | Stufe | Offene Hauptpakete |
 | --- | ---: |
 | G0 – Basis | 2 |
 | G1 – Dokument und Referenzen | 0 |
-| G2 – zusammenhängender CAD-Workflow | 28 |
+| G2 – zusammenhängender CAD-Workflow | 31 |
 | G3 – mechanisches CAD v1 | 18 |
 | G4 – veröffentlichbare v1 | 10 |
 | G5 – spätere Produktfamilie | 30 |
-| Gesamt | 88 |
+| Gesamt | 91 |
 
-Bis einschließlich G4 bleiben 58 Hauptpakete. G2 ist der erste durchgängige
+Bis einschließlich G4 bleiben 61 Hauptpakete. G2 ist der erste durchgängige
 Bedienablauf, G3 der begrenzte mechanische Funktionsumfang. G5 umfasst zusätzliche
 Bereiche wie Baugruppen und Zeichnungen. Nutzbarkeit wird an diesen Abläufen
 abgenommen, nicht am Erreichen einer Prozentzahl.

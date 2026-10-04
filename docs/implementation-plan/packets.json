@@ -4,8 +4,8 @@
   "auditedCommit": "1b78229",
   "status": "implementation-started",
   "counts": {
-    "total": 125,
-    "throughG4": 95,
+    "total": 128,
+    "throughG4": 98,
     "g5": 30
   },
   "globalGates": [
@@ -60,6 +60,8 @@
     "R09",
     "R10",
     "V01",
+    "UX01",
+    "PAR01",
     "R10b",
     "A04",
     "U01",
@@ -78,6 +80,7 @@
     "S04",
     "S05",
     "S07",
+    "PAR02",
     "U11",
     "U12",
     "S06",
@@ -1379,7 +1382,8 @@
       "title": "Gemeinsames Shell-ViewModel definieren",
       "deps": [
         "U01",
-        "D04"
+        "D04",
+        "UX01"
       ],
       "files": [
         "include/voelund/desktop/MainWindow.hpp",
@@ -1405,7 +1409,8 @@
       "title": "Genehmigte Gestaltung in gemeinsame Desktop-Komponenten verschieben",
       "deps": [
         "U02",
-        "A03"
+        "A03",
+        "UX01"
       ],
       "files": [
         "apps/voelund-ui-preview/PreviewStyle.cpp",
@@ -1419,7 +1424,7 @@
         "Screenshots bei gleicher Größe/DPI als visuelle Vergleichsbasis ablegen."
       ],
       "acceptance": "Layout, genehmigte Farbgebung, Navigation und ViewCube bleiben visuell erhalten. Komponenten hängen nicht von PreviewWindow oder dessen Fake-Daten ab. Start-Smokes grün. Der Agent erstellt und betrachtet Vorher-/Nachherbilder gemäß Kapitel 10 selbst; keine routinemäßige Nutzerfreigabe für die Erhaltung der genehmigten Gestaltung.",
-      "boundary": "Nur Darstellung; kein Parametermodell im Style-/Iconmodul.",
+      "boundary": "Nur Darstellung; kein Parametermodell im Style-/Iconmodul. Umstellung 2026-10-04: Grundlage ist das mit dem Nutzer festgelegte Konzept aus UX01, nicht mehr die Gestaltung der UI-Vorschau.",
       "status": "planned",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
@@ -3821,6 +3826,86 @@
       ],
       "acceptance": "Ein UI-Test besteht: neues Dokument → XY → Rechteck mit Innenkreis → Extrusion (Ringkörper, Volumen analytisch geprüft) → Distanz ändern → Undo/Redo → Speichern → Öffnen mit gleichem Volumen. Grün in CI und lokal auf Windows.",
       "boundary": "Keine neue Shell, kein Ribbon, keine Arbeit an voelund-ui-preview. Pocket, Zielkörper und weitere Panelfelder bleiben M02–M04; S03 vervollständigt denselben Weg.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "UX01",
+      "title": "Bedien- und Gestaltungskonzept mit dem Nutzer neu festlegen",
+      "deps": [
+        "V01"
+      ],
+      "files": [
+        "docs/ui-concept.md",
+        "docs/adr/"
+      ],
+      "steps": [
+        "Ist-Zustand beider Oberflächen (voelund-cad, voelund-ui-preview) mit Aufnahmen und Befehlsinventar erfassen; Brüche im Arbeitsablauf benennen.",
+        "Zielbild mit dem Nutzer erarbeiten: Fensteraufbau, Befehlsstruktur, Modellbaum, Eigenschaften/Werkzeugpanel, Skizzenmodus, Auswahl- und Hoververhalten, Parametertabelle (PAR02); als klickbare Mockups vorlegen.",
+        "Entscheidung als ADR festhalten und U02–U12 sowie S13 daran ausrichten."
+      ],
+      "acceptance": "Nutzer hat das Zielbild ausdrücklich freigegeben; ADR und angepasste U-Pakete liegen vor. Keine Umsetzung im Produkt in diesem Paket.",
+      "boundary": "Entscheidungspaket. Ersetzt die bisherige „genehmigte Gestaltung“ der UI-Vorschau als Grundlage von U03. Eingefügt am 2026-10-04 auf Nutzerwunsch.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "decision",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "PAR01",
+      "title": "Dokumentparameter: Modell, Bindung, Persistenz und Neuberechnung",
+      "deps": [
+        "V01",
+        "D14"
+      ],
+      "files": [
+        "docs/parameter-table.md",
+        "include/voelund/document/ModelDocument.hpp",
+        "src/document/",
+        "src/application/",
+        "tests/integration/"
+      ],
+      "steps": [
+        "Parametertabelle je Dokument mit stabiler ParameterId, Name, Einheit (Länge/Winkel), Wert und Kommentar; Namensregeln prüfen.",
+        "Bemaßungs-Constraints und Extrusionsdistanz wahlweise an eine ParameterId binden; Einheitenprüfung; Bindung lösen auf festen Wert.",
+        "Wertänderung als eine Transaktion mit Neu-Lösen und Neuberechnung; Umbenennen erhält Bindungen; Löschschutz für verwendete Parameter.",
+        "Natives Schema erhöhen; ältere Dateien öffnen ohne Parameter; Rundlauf, Undo/Redo und Fehlerfälle testen."
+      ],
+      "acceptance": "Zwei Skizzen und eine Extrusion an A = 10 mm gebunden; A → 20 mm ändert alle Maße und Volumina in einem Undo-Schritt; Umbenennen erhält Bindungen; Löschen eines verwendeten Parameters wird verhindert; Speichern/Öffnen identisch; unlösbare Folge sichtbar als Fehler.",
+      "boundary": "Keine Oberfläche (PAR02), keine Ausdrücke (spätere Ausbaustufe). Konzept: docs/parameter-table.md.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "PAR02",
+      "title": "Parametertabelle in der Oberfläche",
+      "deps": [
+        "PAR01",
+        "UX01",
+        "U05",
+        "S07"
+      ],
+      "files": [
+        "src/desktop/",
+        "tests/desktop/"
+      ],
+      "steps": [
+        "Tabelle mit einem Klick bzw. Tastenkürzel als andockbares Panel; Zeilen direkt bearbeiten, Verwendungen anzeigen.",
+        "Maßfelder in Skizze und Extrusion akzeptieren =Name mit Autovervollständigung; unbekannten Namen als neuen Parameter anlegen.",
+        "Gebundene Maße im Viewport und Panel als Name = Wert anzeigen; Qt-Testtreiber für Ändern, Umbenennen und Löschschutz."
+      ],
+      "acceptance": "Nutzerablauf: Rechteck mit Breite =A, Höhe =B, Extrusion =C; A in der Tabelle ändern aktualisiert Viewport und Volumen; Undo stellt zurück; Aufnahmen vom Nutzer gesichtet.",
+      "boundary": "Gestaltung gemäß UX01; keine Ausdrücke.",
       "status": "planned",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
