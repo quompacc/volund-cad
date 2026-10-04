@@ -42,7 +42,7 @@ class SketchExtrusionToolController final {
     std::optional<document::FeatureId> profileSketch_;
     std::optional<document::SketchSupportBinding> supportBinding_;
     std::optional<application::DocumentStamp> supportStamp_;
-    std::vector<document::SketchProfileId> profileIds_;
+    std::vector<document::SketchRegionId> profileIds_;
     double distance_{1.0};
     bool active_{false};
 };

@@ -160,7 +160,8 @@ void sketchAndSelection() {
     rejectsInput(session, [&] { return session.editSketchParameters(sketchId, malformed); });
     rejectsInput(session, [&] { return session.editSketchParameters(box, sketch); });
     rejectsInput(session, [&] { return session.editSelectedFeaturePlacement({}); });
-    const std::vector<document::SketchProfileId> unknown{document::SketchProfileId{9999}};
+    const std::vector<document::SketchRegionId> unknown{
+        *document::SketchRegionId::parse("o:9999.0")};
     rejectsInput(session, [&] { return session.createSketchProfileExtrusion(box, unknown, 5); });
     rejectsInput(session,
                  [&] { return session.createSketchProfileExtrusion(sketchId, unknown, 5); });
@@ -168,13 +169,14 @@ void sketchAndSelection() {
     require(session.selectSketchProfileByElement(document::SketchElementId{1}, false),
             "select profile");
     const auto id = session.selectedSketchProfiles().front();
-    const std::vector<document::SketchProfileId> duplicate{id, id};
+    const std::vector<document::SketchRegionId> duplicate{id, id};
     rejectsInput(session,
                  [&] { return session.createSketchProfileExtrusion(sketchId, duplicate, 5); });
     test::requireCommittedFeature(
         session.createSketchProfileExtrusion(sketchId, session.selectedSketchProfiles(), 5));
     rejectsInput(session, [&] { return session.editSelectedExtrusionParameters({-1, {}}); });
-    rejectsInput(session, [&] { return session.editSelectedExtrusionParameters({5, duplicate}); });
+    rejectsInput(session,
+                 [&] { return session.editSelectedExtrusionParameters({5, {}, duplicate}); });
     application::SketchEditorSession editor(session, box, plane);
     rejectsInput(session, [&] { return editor.tryAccept(); });
     require(editor.isActive(), "rejected empty editor closed");

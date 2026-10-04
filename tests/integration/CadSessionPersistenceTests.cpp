@@ -125,13 +125,13 @@ bool selectedSketchProfilesExtrudeAndRoundtrip() {
         !session.canExtrudeSelectedSketchProfiles())
         return false;
 
-    const std::vector<document::SketchProfileId> selected(session.selectedSketchProfiles().begin(),
-                                                          session.selectedSketchProfiles().end());
+    const std::vector<document::SketchRegionId> selected(session.selectedSketchProfiles().begin(),
+                                                         session.selectedSketchProfiles().end());
     const auto extrusionId = voelund::test::requireCommittedFeature(
         session.createSketchProfileExtrusion(sketchId, selected, 10.0));
     const double expected = boxVolume + (8.0 + std::numbers::pi * 4.0) * 10.0;
     if (session.selectedFeature() != extrusionId ||
-        session.selectedExtrusionParameters().profiles != selected ||
+        session.selectedExtrusionParameters().regions != selected ||
         std::abs(volumeOf(session.currentShape()) - expected) >= 1.0e-4 ||
         !(session.undo().status() == voelund::application::CommandStatus::committed) ||
         std::abs(volumeOf(session.currentShape()) - boxVolume) >= 1.0e-4 ||
@@ -146,7 +146,7 @@ bool selectedSketchProfilesExtrudeAndRoundtrip() {
     loaded.loadDocument(path);
     std::error_code error;
     std::filesystem::remove(path, error);
-    return !error && loaded.selectedExtrusionParameters().profiles == selected &&
+    return !error && loaded.selectedExtrusionParameters().regions == selected &&
            std::abs(volumeOf(loaded.currentShape()) - expected) < 1.0e-4;
 }
 

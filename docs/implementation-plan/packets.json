@@ -1282,11 +1282,14 @@
       ],
       "acceptance": "Elementumordnung verändert Auswahl nicht; gelöschter kleinster Randindex führt nicht unbemerkt zur anderen Region. Split wird nach Vertrag reparaturbedürftig. A-REG-02 besteht.",
       "boundary": "Kein automatisches Auswählen aller erkannten Flächen als Ersatz für Benutzerabsicht. Umstellung 2026-10-04: Umfang auf den Bedarf des Durchstichs V01 begrenzen; weitergehende Fälle als eigenes Unterpaket nach V01.",
-      "status": "planned",
+      "status": "done",
       "gate": "G1",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
+      "evidence": [
+        "R09-plan.md",
+        "evidence/R09.md"
+      ],
       "completedCommit": null
     },
     {

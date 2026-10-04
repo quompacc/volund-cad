@@ -76,6 +76,22 @@ SketchRegionResult buildSketchRegions(std::span<const document::SketchElement> e
     std::vector<std::vector<std::size_t>> outgoing(2 * n);
     for (std::size_t h = 0; h < 2 * n; ++h)
         outgoing[vertices.root(h)].push_back(h);
+    // K07: a sketch may be open. Dangling chains bound no material, so they are pruned
+    // iteratively instead of invalidating every region; bridges between cycles remain
+    // rejected below because their walk traverses an interval twice.
+    std::vector<bool> pruned(n, false);
+    for (bool changed = true; changed;) {
+        changed = false;
+        for (auto& fan : outgoing) {
+            if (fan.size() != 1)
+                continue;
+            const std::size_t interval = fan.front() / 2;
+            pruned[interval] = true;
+            changed = true;
+            for (const std::size_t h : {2 * interval, 2 * interval + 1})
+                std::erase(outgoing[vertices.root(h)], h);
+        }
+    }
     std::vector<double> angle(2 * n);
     try {
         for (std::size_t h = 0; h < 2 * n; ++h) {
@@ -113,6 +129,8 @@ SketchRegionResult buildSketchRegions(std::span<const document::SketchElement> e
             return r;
         std::vector<std::size_t> next(2 * n);
         for (std::size_t h = 0; h < 2 * n; ++h) {
+            if (pruned[h / 2])
+                continue;
             const auto twin = h ^ 1u;
             const auto& fan = outgoing[vertices.root(twin)];
             const auto at = static_cast<std::size_t>(std::ranges::find(fan, twin) - fan.begin());
@@ -120,7 +138,7 @@ SketchRegionResult buildSketchRegions(std::span<const document::SketchElement> e
         }
         std::vector<bool> visited(2 * n, false);
         for (std::size_t start = 0; start < 2 * n; ++start) {
-            if (visited[start])
+            if (visited[start] || pruned[start / 2])
                 continue;
             std::vector<RegionHalfEdge> walk;
             std::vector<std::size_t> intervals;

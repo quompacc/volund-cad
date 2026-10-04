@@ -221,12 +221,14 @@ Rectangles and circles each form a closed profile. Connected line-and-arc chains
 a profile when at least two non-degenerate elements close within the modeling
 tolerance; this includes a semicircle plus its diameter. Open elements remain valid
 sketch geometry but are ignored by extrusion.
-Every detected profile receives a deterministic stable identity equal to the smallest
-stable element ID in its boundary. Clicking any boundary element selects the complete
-profile; Ctrl-click toggles additional profiles. A new profile extrusion stores the
-explicit profile IDs and consumes only those faces. An empty selection remains the
-legacy meaning of "all closed profiles", so older direct Push/Pull operations retain
-their behavior.
+Since R09 a selected profile is a region identified by its canonical boundary
+signature (`SketchRegionId`, see `implementation-plan/R09-plan.md`), not by the smallest
+element ID. Clicking a boundary element selects the one region whose outer boundary
+uses it; Ctrl-click toggles additional regions. A new profile extrusion stores the
+explicit RegionIds. Legacy minimum-element profile IDs are migrated on Open to the
+filled loop interior; unmappable ones keep the old meaning and need repair. An empty
+selection remains the legacy meaning of "all closed profiles", so older direct
+Push/Pull operations retain their behavior.
 
 ## Current persistence
 

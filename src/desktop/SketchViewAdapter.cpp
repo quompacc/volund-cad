@@ -100,10 +100,10 @@ QString sketchSelectionSummary(const application::CadSession& session) {
     const auto profiles = session.selectedSketchProfiles();
     if (!profiles.empty()) {
         QString ids;
-        for (document::SketchProfileId profile : profiles) {
+        for (const document::SketchRegionId& profile : profiles) {
             if (!ids.isEmpty())
-                ids += QStringLiteral(", ");
-            ids += QString::number(profile.value());
+                ids += QStringLiteral("; ");
+            ids += QString::fromStdString(profile.text());
         }
         return summary + QObject::tr("\n\nSelected profiles: %1\nStable IDs: %2")
                              .arg(profiles.size())

@@ -657,3 +657,7 @@ add_executable(voelund_region_migration_tests integration/RegionMigrationTests.c
 target_link_libraries(voelund_region_migration_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME application.region_migration COMMAND voelund_region_migration_tests "${CMAKE_CURRENT_BINARY_DIR}")
 set_tests_properties(application.region_migration PROPERTIES LABELS "integration;document;application;regression" TIMEOUT 60)
+add_executable(voelund_region_selection_tests integration/RegionSelectionAcceptanceTests.cpp)
+target_link_libraries(voelund_region_selection_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.region_selection_acceptance COMMAND voelund_region_selection_tests)
+set_tests_properties(application.region_selection_acceptance PROPERTIES LABELS "integration;application;sketch;regression" TIMEOUT 90)

@@ -112,7 +112,7 @@ void neverSilentlyRedirected() {
     disc.push_back(line(2, -2, 0, 2, 0));
     require(status(disc, whole) == SketchRegionReferenceStatus::topologyChanged,
             "Split requires repair");
-    disc.push_back(line(3, 5, 5, 6, 5)); // Open boundary invalidates the arrangement.
+    disc.push_back(line(3, -1, 0, 1, 0)); // Overlapping the chord invalidates the arrangement.
     require(status(disc, whole) == SketchRegionReferenceStatus::invalidSketch, "Invalid sketch");
     std::cout << "deleted smallest ID, split and invalid sketch never resolve silently passed\n";
 }

@@ -12,6 +12,8 @@ zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.
 
 ### Hinzugefügt
 
+- R09 abgeschlossen (V01-Umfang): dauerhafte Regionsidentität aus kanonischen Randsignaturen statt kleinster Element-ID; Auswahl per Rand-Pick, natives Schema 5 mit Regionsauswahl, Migration alter Profil-IDs beim Öffnen, Ringextrusion mit Loch, Split und gelöschte Ränder werden reparaturbedürftig statt umgedeutet. Offene Skizzenelemente verhindern keine Regionen mehr. A-REG-02 besteht. [Nachweis](docs/implementation-plan/evidence/R09.md).
+
 - C01 abgeschlossen: Pflicht-CI je Push/PR auf dem Fedora-Runner (`gitea-runner`, Label `linux-desktop`). Build, Quellgrenzen und vollständiger CTest in headless `kwin_wayland --virtual` auf der Host-GPU; Logs, JUnit und Aufnahmen als Laufartefakt. Rot-Prüfung und Neustart ohne Desktopanmeldung belegt. [Nachweis](docs/implementation-plan/evidence/C01.md).
 
 - P05 abgeschlossen: Linux-Desktop mit nativem Wayland (Fedora 44, KDE) über Preset `linux-desktop`, projektlokales OCCT 7.9.3 (`tools/build-lean-occt.sh`), `tools/setup-linux.sh` und `tools/run-linux-desktop.sh`. Behoben: nichtdeterministisches Editor-Undo/Redo durch erneutes PlaneGCS-Lösen und in den Toolbar-Überlauf verdrängte Verbindungsauswahl (Modi/Snap jetzt zweite Toolbarzeile). 92/92 Fedora, 95/95 Windows. [Nachweis](docs/implementation-plan/evidence/P05.md).

@@ -254,7 +254,7 @@ void FeaturePropertiesPanel::showExtrusion(const document::ExtrusionParameters& 
     setCurrentWidget(extrusionPanel_);
     const QSignalBlocker blocker(extrusionDistanceInput_);
     extrusionDistanceInput_->setValue(parameters.distance);
-    extrusionProfiles_ = parameters.profiles;
+    extrusionSelection_ = parameters;
     extrusionErrorLabel_->setText(errorText);
     extrusionErrorLabel_->setVisible(!errorText.isEmpty());
 }
@@ -282,7 +282,10 @@ FeaturePropertiesPanel::cylinderParameters(document::CylinderResultMode resultMo
 }
 
 document::ExtrusionParameters FeaturePropertiesPanel::extrusionParameters() const {
-    return {extrusionDistanceInput_->value(), extrusionProfiles_};
+    // Only the distance is edited here; the legacy or region selection passes through.
+    auto parameters = extrusionSelection_;
+    parameters.distance = extrusionDistanceInput_->value();
+    return parameters;
 }
 
 void FeaturePropertiesPanel::previewMove(const kernel::RigidTransform& base, double deltaX,

@@ -10,6 +10,7 @@
 #include <voelund/document/ModelDocument.hpp>
 #include <voelund/features/FeatureGraph.hpp>
 #include <voelund/features/SketchEvaluation.hpp>
+#include <voelund/features/SketchRegionIdentity.hpp>
 
 #include <filesystem>
 #include <functional>
@@ -27,6 +28,16 @@ struct FeatureRuntimeState final {
     document::FeatureId id;
     FeatureRuntimeStatus status;
     std::string message;
+};
+
+struct ExtrusionRegionState final {
+    document::SketchRegionId region;
+    features::SketchRegionReferenceStatus status;
+};
+struct ExtrusionSelectionState final {
+    std::vector<document::SketchProfileId> legacyProfiles; // Evaluated as before; needs repair.
+    std::vector<ExtrusionRegionState> regions;
+    [[nodiscard]] bool needsRepair() const noexcept;
 };
 
 class CadSession final {
@@ -57,12 +68,18 @@ class CadSession final {
     [[nodiscard]] bool selectFeature(document::FeatureId featureId) noexcept;
     [[nodiscard]] std::optional<document::SketchElementId> selectedSketchElement() const noexcept;
     [[nodiscard]] bool selectSketchElement(document::SketchElementId elementId) noexcept;
-    [[nodiscard]] std::span<const document::SketchProfileId>
+    // Sketch "profiles" are R09 regions: picking an element selects the one region whose
+    // outer boundary uses it; ambiguous picks select nothing.
+    [[nodiscard]] std::span<const document::SketchRegionId>
     selectedSketchProfiles() const noexcept;
     [[nodiscard]] bool selectSketchProfileByElement(document::SketchElementId elementId,
                                                     bool additive);
     [[nodiscard]] std::vector<document::SketchElementId> selectedSketchProfileElements() const;
     [[nodiscard]] bool canExtrudeSelectedSketchProfiles() const noexcept;
+    // R09 projection of an extrusion's selection: unmigrated legacy profiles and the
+    // current resolution of every region, so the UI can offer repair instead of guessing.
+    [[nodiscard]] ExtrusionSelectionState
+    inspectExtrusionSelection(document::FeatureId extrusion) const;
     [[nodiscard]] document::SketchParameters selectedSketchParameters() const;
     [[nodiscard]] document::SketchParameters sketchParameters(document::FeatureId featureId) const;
     [[nodiscard]] document::SketchParameters
@@ -110,7 +127,7 @@ class CadSession final {
                                                       double distance = 10.0);
     [[nodiscard]] CommandResult
     createSketchProfileExtrusion(document::FeatureId sketchFeature,
-                                 std::span<const document::SketchProfileId> profileIds,
+                                 std::span<const document::SketchRegionId> profileIds,
                                  double distance = 10.0);
     [[nodiscard]] bool canAddCylinder() const noexcept;
     [[nodiscard]] bool canTransformFeature(document::FeatureId featureId) const noexcept;
@@ -180,7 +197,7 @@ class CadSession final {
     std::vector<features::EvaluatedFeature> currentFeatures_;
     std::optional<document::FeatureId> selectedFeature_{document::ModelDocument::initialBoxId()};
     std::optional<document::SketchElementId> selectedSketchElement_;
-    std::vector<document::SketchProfileId> selectedSketchProfiles_;
+    std::vector<document::SketchRegionId> selectedSketchProfiles_;
     std::vector<FeatureRuntimeState> featureStates_;
     std::optional<document::DocumentSnapshot> cleanDocumentState_;
     std::filesystem::path currentFile_;

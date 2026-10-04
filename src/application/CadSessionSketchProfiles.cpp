@@ -1,7 +1,7 @@
 #include "CommandInput.hpp"
 #include <voelund/application/CadSession.hpp>
 
-#include <voelund/features/SketchProfiles.hpp>
+#include <voelund/features/SketchRegionIdentity.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -11,47 +11,63 @@
 namespace voelund::application {
 namespace {
 
-const features::SketchProfile* profileContaining(std::span<const features::SketchProfile> profiles,
-                                                 document::SketchElementId elementId) {
-    for (const features::SketchProfile& profile : profiles) {
-        if (std::ranges::find(profile.elementIds, elementId) != profile.elementIds.end())
-            return &profile;
+// The single unambiguous region whose outer boundary uses the element. Elements that bound
+// several cells (crossing curves) select nothing until region picking by point exists.
+std::optional<document::SketchRegionId>
+regionByOuterElement(const features::SketchRegionIdentities& identities,
+                     document::SketchElementId elementId) {
+    std::optional<document::SketchRegionId> result;
+    const auto& regions = identities.regions;
+    for (std::size_t index = 0; index < regions.regions.size(); ++index) {
+        const auto& boundary = regions.boundaries[regions.regions[index].outer];
+        const bool uses = std::ranges::any_of(boundary.edges, [&](const auto& edge) {
+            const auto piece = regions.split.intervals[edge.interval].piece;
+            return regions.split.pieces[piece].element == elementId;
+        });
+        if (!uses)
+            continue;
+        if (result || identities.ambiguous(index))
+            return std::nullopt;
+        result = identities.ids[index];
     }
-    return nullptr;
+    return result;
 }
 
-bool containsProfile(std::span<const features::SketchProfile> profiles,
-                     document::SketchProfileId profileId) {
-    return std::ranges::find(profiles, profileId, &features::SketchProfile::id) != profiles.end();
+bool isSketch(const document::ModelDocument& document, document::FeatureId feature) {
+    const auto descriptors = document.features();
+    const auto descriptor =
+        std::ranges::find(descriptors, feature, &document::FeatureDescriptor::id);
+    return descriptor != descriptors.end() && descriptor->kind == document::FeatureKind::sketch;
 }
 
 } // namespace
 
-std::span<const document::SketchProfileId> CadSession::selectedSketchProfiles() const noexcept {
+bool ExtrusionSelectionState::needsRepair() const noexcept {
+    return !legacyProfiles.empty() ||
+           std::ranges::any_of(regions, [](const ExtrusionRegionState& state) {
+               return state.status != features::SketchRegionReferenceStatus::resolved;
+           });
+}
+
+std::span<const document::SketchRegionId> CadSession::selectedSketchProfiles() const noexcept {
     return selectedSketchProfiles_;
 }
 
 bool CadSession::selectSketchProfileByElement(document::SketchElementId elementId, bool additive) {
-    if (!selectedFeature_.has_value())
+    if (!selectedFeature_.has_value() || !isSketch(document_, *selectedFeature_))
         return false;
-    const auto descriptors = document_.features();
-    const auto descriptor =
-        std::ranges::find(descriptors, *selectedFeature_, &document::FeatureDescriptor::id);
-    if (descriptor == descriptors.end() || descriptor->kind != document::FeatureKind::sketch)
-        return false;
-    const auto profiles = features::detectClosedProfiles(
-        document_.sketchParameters(*selectedFeature_).elements.values);
-    const features::SketchProfile* profile = profileContaining(profiles, elementId);
-    if (profile == nullptr)
+    const auto& elements = document_.sketchParameters(*selectedFeature_).elements.values;
+    const auto region = regionByOuterElement(features::identifySketchRegions(elements), elementId);
+    if (!region)
         return false;
 
     if (!additive)
         selectedSketchProfiles_.clear();
-    const auto selected = std::ranges::find(selectedSketchProfiles_, profile->id);
+    const auto selected = std::ranges::find(selectedSketchProfiles_, *region);
     if (additive && selected != selectedSketchProfiles_.end())
         selectedSketchProfiles_.erase(selected);
     else if (selected == selectedSketchProfiles_.end())
-        selectedSketchProfiles_.push_back(profile->id);
+        selectedSketchProfiles_.push_back(*region);
     selectedSketchElement_ = elementId;
     return true;
 }
@@ -60,12 +76,10 @@ std::vector<document::SketchElementId> CadSession::selectedSketchProfileElements
     std::vector<document::SketchElementId> result;
     if (!selectedFeature_.has_value() || selectedSketchProfiles_.empty())
         return result;
-    const auto profiles = features::detectClosedProfiles(
-        document_.sketchParameters(*selectedFeature_).elements.values);
-    for (const features::SketchProfile& profile : profiles) {
-        if (std::ranges::find(selectedSketchProfiles_, profile.id) != selectedSketchProfiles_.end())
-            result.insert(result.end(), profile.elementIds.begin(), profile.elementIds.end());
-    }
+    for (const document::SketchRegionId& region : selectedSketchProfiles_)
+        for (document::SketchElementId element : region.elements())
+            if (std::ranges::find(result, element) == result.end())
+                result.push_back(element);
     return result;
 }
 
@@ -74,28 +88,42 @@ bool CadSession::canExtrudeSelectedSketchProfiles() const noexcept {
         return false;
     if (!selectedFeature_.has_value() || selectedSketchProfiles_.empty())
         return false;
+    return isSketch(document_, *selectedFeature_);
+}
+
+ExtrusionSelectionState CadSession::inspectExtrusionSelection(document::FeatureId extrusion) const {
     const auto descriptors = document_.features();
     const auto descriptor =
-        std::ranges::find(descriptors, *selectedFeature_, &document::FeatureDescriptor::id);
-    return descriptor != descriptors.end() && descriptor->kind == document::FeatureKind::sketch;
+        std::ranges::find(descriptors, extrusion, &document::FeatureDescriptor::id);
+    if (descriptor == descriptors.end() || descriptor->kind != document::FeatureKind::extrusion ||
+        !descriptor->inputFeature)
+        throw std::invalid_argument("Selection inspection requires an extrusion");
+    const auto& parameters = document_.extrusionParameters(extrusion);
+    ExtrusionSelectionState state{parameters.profiles, {}};
+    if (parameters.regions.empty())
+        return state;
+    const auto& elements = document_.sketchParameters(*descriptor->inputFeature).elements.values;
+    const auto identities = features::identifySketchRegions(elements);
+    for (const document::SketchRegionId& region : parameters.regions)
+        state.regions.push_back(
+            {region, features::resolveSketchRegion(identities, elements, region).status});
+    return state;
 }
 
 CommandResult
 CadSession::createSketchProfileExtrusion(document::FeatureId sketchFeature,
-                                         std::span<const document::SketchProfileId> profileIds,
+                                         std::span<const document::SketchRegionId> profileIds,
                                          double distance) {
     if (!std::isfinite(distance) || distance <= 0.0 || profileIds.empty())
         return CommandResult::invalidInput(
             "Profile extrusion requires selected profiles and a positive finite distance");
-    const auto descriptor =
-        std::ranges::find(document_.features(), sketchFeature, &document::FeatureDescriptor::id);
-    if (descriptor == document_.features().end() ||
-        descriptor->kind != document::FeatureKind::sketch)
+    if (!isSketch(document_, sketchFeature))
         return CommandResult::invalidInput("Profile extrusion requires an existing sketch");
-    const auto profiles =
-        features::detectClosedProfiles(document_.sketchParameters(sketchFeature).elements.values);
-    for (document::SketchProfileId profileId : profileIds) {
-        if (!containsProfile(profiles, profileId))
+    const auto& elements = document_.sketchParameters(sketchFeature).elements.values;
+    const auto identities = features::identifySketchRegions(elements);
+    for (const document::SketchRegionId& region : profileIds) {
+        if (features::resolveSketchRegion(identities, elements, region).status !=
+            features::SketchRegionReferenceStatus::resolved)
             return CommandResult::invalidInput("Profile extrusion references an unknown profile");
     }
     std::size_t sequence = 1;
@@ -105,10 +133,10 @@ CadSession::createSketchProfileExtrusion(document::FeatureId sketchFeature,
     }
     document::DocumentTransaction transaction(document_);
     auto& candidate = transaction.edit();
-    const std::vector<document::SketchProfileId> selected(profileIds.begin(), profileIds.end());
+    const std::vector<document::SketchRegionId> selected(profileIds.begin(), profileIds.end());
     const auto input = detail::prepareInput([&] {
         return candidate.addExtrusionFeature("Extrusion " + std::to_string(sequence), sketchFeature,
-                                             document::ExtrusionParameters{distance, selected});
+                                             document::ExtrusionParameters{distance, {}, selected});
     });
     if (!input.value)
         return CommandResult::invalidInput(input.diagnostic);

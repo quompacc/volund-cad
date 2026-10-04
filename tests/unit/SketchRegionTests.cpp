@@ -163,9 +163,14 @@ void stability() {
               << " cases plus translated scale limits passed\n";
 }
 void rejected() {
+    // K07: open geometry bounds no material; it is pruned, not a sketch-wide error.
     auto r = regions(std::vector{line(1, 0, 0, 1, 0)});
-    require(!r.valid() && r.regions.empty() && !r.diagnostics.front().elements.empty(),
-            "Open boundary accepted");
+    require(r.valid() && r.regions.empty(), "Open line must yield no region");
+    r = regions(std::vector{SketchElement{SketchElementId{1}, SketchRectangle{0, 0, 4, 3}},
+                            line(2, 4, 3, 6, 5), line(3, 6, 5, 7, 5), line(4, 2, 1, 3, 1),
+                            line(5, 10, 10, 11, 10)});
+    require(r.valid() && r.regions.size() == 1 && std::abs(r.regions.front().area - 12) < 1e-9,
+            "Dangling chain, inner stub and isolated line must not invalidate the rectangle");
     r = regions(std::vector{SketchElement{SketchElementId{1}, SketchCircle{{0, 0}, 1}},
                             SketchElement{SketchElementId{2}, SketchCircle{{2, 0}, 1}}});
     require(!r.valid() && r.regions.empty(), "Tangent circles accepted");
@@ -180,7 +185,7 @@ void rejected() {
         SketchElement{SketchElementId{2},
                       SketchArc{{0, 0}, 1, std::numbers::pi - 1e-10, 2 * std::numbers::pi}}});
     require(!r.valid() && r.regions.empty(), "Tiny arc overlap accepted as smooth join");
-    std::cout << "open boundaries, tangent contacts and overlaps explicitly rejected\n";
+    std::cout << "open geometry pruned; tangent contacts, bridges and overlaps rejected\n";
 }
 } // namespace
 int main() {
