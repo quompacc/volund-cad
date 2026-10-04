@@ -1,7 +1,6 @@
 # PAR01 – Dokumentparameter: Modell, Bindung, Persistenz und Neuberechnung
 
-**Status:** umgesetzt am 04.10.2026, unter Windows geprüft. Die Abnahme folgt nach einem
-grünen Linux-CI-Lauf. Konzept: [parameter-table.md](../../parameter-table.md).
+**Status:** abgenommen am 04.10.2026 nach grünem CI-Lauf 363. Konzept: [parameter-table.md](../../parameter-table.md).
 
 ## Umsetzung
 
