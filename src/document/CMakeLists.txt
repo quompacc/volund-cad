@@ -28,6 +28,7 @@ add_library(voelund_document STATIC
     DocumentTransaction.cpp
     SketchConstraintSerialization.cpp
     SketchGeometry.cpp
+    SketchRegionId.cpp
 )
 
 target_include_directories(
