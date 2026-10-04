@@ -23,7 +23,7 @@ ViewCube::ViewCube(viewport::CadViewport& viewport)
     setFixedSize(96, 122);
     setMouseTracking(true);
     setAttribute(Qt::WA_TranslucentBackground);
-    setToolTip(tr("Standard views"));
+    setToolTip(tr("Standardansichten"));
     viewport.installEventFilter(this);
     placeInCorner();
 }
@@ -59,9 +59,11 @@ void ViewCube::paintEvent(QPaintEvent*) {
     font.setPixelSize(9);
     font.setWeight(QFont::DemiBold);
     painter.setFont(font);
-    face(topFace, Region::top, tokens_.cubeTop, tr("TOP"), {12, 14, 72, 24});
-    face(frontFace, Region::front, tokens_.cubeLeft, tr("FRONT"), {12, 44, 36, 28});
-    face(rightFace, Region::right, tokens_.cubeRight, tr("RIGHT"), {48, 44, 36, 28});
+    face(topFace, Region::top, tokens_.cubeTop, tr("OBEN"), {12, 14, 72, 24});
+    font.setPixelSize(8); // Side labels share a narrow face each.
+    painter.setFont(font);
+    face(frontFace, Region::front, tokens_.cubeLeft, tr("VORNE"), {12, 44, 36, 28});
+    face(rightFace, Region::right, tokens_.cubeRight, tr("RECHTS"), {48, 44, 36, 28});
     const auto button = [&](const QRectF& box, Region region, const QString& label) {
         painter.setPen(QPen(hovered_ == region ? tokens_.accent : tokens_.line, 1));
         painter.setBrush(hovered_ == region ? tokens_.accentSoft : tokens_.panel);
@@ -72,7 +74,7 @@ void ViewCube::paintEvent(QPaintEvent*) {
     font.setPixelSize(11);
     painter.setFont(font);
     button(isoButton, Region::isometric, tr("ISO"));
-    button(fitButton, Region::fit, tr("Fit"));
+    button(fitButton, Region::fit, tr("Alles"));
 }
 
 void ViewCube::mousePressEvent(QMouseEvent* event) {

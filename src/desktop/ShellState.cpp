@@ -34,7 +34,7 @@ QString ShellState::windowTitle() const {
 
 QString documentDisplayName(const application::CadSession& session) {
     const QString currentFile = nativeDisplayPath(session.currentFile());
-    return currentFile.isEmpty() ? QStringLiteral("Untitled") : QFileInfo(currentFile).fileName();
+    return currentFile.isEmpty() ? QObject::tr("Unbenannt") : QFileInfo(currentFile).fileName();
 }
 
 ShellState projectShell(const application::CadSession& session, const ShellInputs& inputs) {

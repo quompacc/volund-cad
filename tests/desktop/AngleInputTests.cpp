@@ -91,9 +91,9 @@ void window() {
     QAction* undo = nullptr;
     QAction* redo = nullptr;
     for (auto* action : window.findChildren<QAction*>()) {
-        if (action->text() == "Undo")
+        if (action->property("commandId").toString() == "history.undo")
             undo = action;
-        if (action->text() == "Redo")
+        if (action->property("commandId").toString() == "history.redo")
             redo = action;
     }
     require(undo && redo, "history actions missing");
@@ -163,7 +163,7 @@ void dimensionDialog() {
         if (!dialog)
             return;
         displayedDegrees =
-            std::abs(dialog->doubleValue() + 60) < 1e-10 && dialog->labelText().contains("degrees");
+            std::abs(dialog->doubleValue() + 60) < 1e-10 && dialog->labelText().contains("Grad");
         dialog->setDoubleValue(60);
         const auto directory = qEnvironmentVariable("VOELUND_ANGLE_ARTIFACT_DIR");
         if (!directory.isEmpty())
@@ -176,7 +176,7 @@ void dimensionDialog() {
     require(session.sketchParameters(id) == sketch, "dimension dialog committed without OK");
     QPushButton* accept = nullptr;
     for (auto* button : host->findChildren<QPushButton*>())
-        if (button->text() == "OK")
+        if (button->objectName() == "toolAcceptButton")
             accept = button;
     require(accept && accept->isEnabled(), "angle sketch OK disabled");
     accept->click();

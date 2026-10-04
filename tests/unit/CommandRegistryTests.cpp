@@ -24,7 +24,7 @@ voelund::modules::solid::SolidCommandServices services() {
 bool solidModulePublishesOnlyItsAvailableCommands() {
     voelund::modules::solid::SolidWorkspaceModule module(services());
     const auto commands = module.commands();
-    return module.id() == "solid" && module.title() == "Solid" && commands.size() == 6 &&
+    return module.id() == "solid" && module.title() == "Volumen" && commands.size() == 6 &&
            commands.front().id == "solid.create.box" &&
            commands.front().group == voelund::workspaces::CommandGroup::create &&
            commands[2].id == "solid.create.sketch" &&

@@ -30,27 +30,27 @@ class RepairPreview final : public QGraphicsView {
 };
 QString role(const document::SubshapeOrigin& origin) {
     if (!origin.role)
-        return QObject::tr("Extrusion end face");
+        return QObject::tr("Endfläche der Extrusion");
     using kernel::PrimitiveRole;
     switch (*origin.role) {
     case PrimitiveRole::boxNegativeX:
-        return QObject::tr("Left (−X)");
+        return QObject::tr("Links (−X)");
     case PrimitiveRole::boxPositiveX:
-        return QObject::tr("Right (+X)");
+        return QObject::tr("Rechts (+X)");
     case PrimitiveRole::boxNegativeY:
-        return QObject::tr("Front (−Y)");
+        return QObject::tr("Vorne (−Y)");
     case PrimitiveRole::boxPositiveY:
-        return QObject::tr("Back (+Y)");
+        return QObject::tr("Hinten (+Y)");
     case PrimitiveRole::boxNegativeZ:
-        return QObject::tr("Bottom (−Z)");
+        return QObject::tr("Unten (−Z)");
     case PrimitiveRole::boxPositiveZ:
-        return QObject::tr("Top (+Z)");
+        return QObject::tr("Oben (+Z)");
     case PrimitiveRole::cylinderStart:
-        return QObject::tr("Cylinder start");
+        return QObject::tr("Zylinderanfang");
     case PrimitiveRole::cylinderEnd:
-        return QObject::tr("Cylinder end");
+        return QObject::tr("Zylinderende");
     case PrimitiveRole::cylinderSide:
-        return QObject::tr("Cylinder side");
+        return QObject::tr("Zylindermantel");
     }
     return {};
 }
@@ -66,7 +66,7 @@ ReferenceRepairDialog::ReferenceRepairDialog(application::CadSession& session,
                                              std::function<void()> changed, QWidget* parent)
     : QDialog(parent), session_(session), sketch_(sketch), changed_(std::move(changed)) {
     setObjectName("referenceRepairDialog");
-    setWindowTitle(tr("Repair sketch references"));
+    setWindowTitle(tr("Skizzenreferenzen reparieren"));
     setAttribute(Qt::WA_DeleteOnClose);
     setWindowModality(Qt::WindowModal);
     resize(760, 700);
@@ -74,9 +74,10 @@ ReferenceRepairDialog::ReferenceRepairDialog(application::CadSession& session,
     original_ = new QLabel(this);
     original_->setWordWrap(true);
     layout->addWidget(original_);
-    auto* instructions = new QLabel(tr("Choose a reference and a replacement. Matching geometry is "
-                                       "only a suggestion. Cancel leaves the document unchanged."),
-                                    this);
+    auto* instructions =
+        new QLabel(tr("Wähle eine Referenz und einen Ersatz. Passende Geometrie ist nur "
+                      "ein Vorschlag. Abbrechen lässt das Dokument unverändert."),
+                   this);
     instructions->setWordWrap(true);
     layout->addWidget(instructions);
     target_ = new QComboBox(this);
@@ -87,7 +88,7 @@ ReferenceRepairDialog::ReferenceRepairDialog(application::CadSession& session,
     candidates_->setWordWrap(true);
     layout->addWidget(candidates_, 2);
     auto* caption = new QLabel(
-        tr("Support outline in the selected face plane; orange marks the chosen edge point."),
+        tr("Umriss der Stützfläche in ihrer Ebene; Orange markiert den gewählten Kantenpunkt."),
         this);
     caption->setWordWrap(true);
     layout->addWidget(caption);
@@ -103,15 +104,16 @@ ReferenceRepairDialog::ReferenceRepairDialog(application::CadSession& session,
     message_->setWordWrap(true);
     layout->addWidget(message_);
     keepErrors_ = new QCheckBox(
-        tr("Keep this repair with the remaining model errors (Undo available)"), this);
+        tr("Diese Reparatur mit den übrigen Modellfehlern behalten (Rückgängig möglich)"), this);
     keepErrors_->setObjectName("repairKeepErrors");
     keepErrors_->hide();
     layout->addWidget(keepErrors_);
     auto* buttons = new QDialogButtonBox(QDialogButtonBox::Cancel, this);
-    apply_ = buttons->addButton(tr("Apply repair"), QDialogButtonBox::ActionRole);
+    apply_ = buttons->addButton(tr("Reparatur übernehmen"), QDialogButtonBox::ActionRole);
     apply_->setObjectName("repairApply");
     apply_->setAutoDefault(false);
-    auto* refresh = buttons->addButton(tr("Refresh candidates"), QDialogButtonBox::ActionRole);
+    auto* refresh =
+        buttons->addButton(tr("Kandidaten aktualisieren"), QDialogButtonBox::ActionRole);
     refresh->setObjectName("repairRefresh");
     refresh->setAutoDefault(false);
     layout->addWidget(buttons);
@@ -130,15 +132,16 @@ void ReferenceRepairDialog::reload() {
     try {
         inspection_ = session_.inspectSketchReferences(sketch_);
         const auto& p = inspection_->review.original.plane;
-        original_->setText(tr("Sketch %1 — original plane origin (%2, %3, %4), normal (%5, %6, %7)")
-                               .arg(sketch_.value())
-                               .arg(p.originX)
-                               .arg(p.originY)
-                               .arg(p.originZ)
-                               .arg(p.normalX)
-                               .arg(p.normalY)
-                               .arg(p.normalZ));
-        target_->addItem(tr("Support face"));
+        original_->setText(
+            tr("Skizze %1 — ursprüngliche Ebene: Ursprung (%2, %3, %4), Normale (%5, %6, %7)")
+                .arg(sketch_.value())
+                .arg(p.originX)
+                .arg(p.originY)
+                .arg(p.originZ)
+                .arg(p.normalX)
+                .arg(p.normalY)
+                .arg(p.normalZ));
+        target_->addItem(tr("Stützfläche"));
         const auto& constraints = inspection_->review.original.constraints.values;
         for (const auto& c : constraints) {
             if (!attachment(c))
@@ -159,9 +162,9 @@ void ReferenceRepairDialog::reload() {
                     ids.push_back(QString::number(other.id.value()));
                 }
             slots_.push_back(std::move(group));
-            QString label = tr("Edge point — constraints %1").arg(ids.join(", "));
+            QString label = tr("Kantenpunkt — Bedingungen %1").arg(ids.join(", "));
             if (c.auxiliaryValues.size() == 2)
-                label += tr("; original segment %1, parameter %2")
+                label += tr("; ursprüngliches Segment %1, Parameter %2")
                              .arg(c.auxiliaryValues[0])
                              .arg(c.auxiliaryValues[1]);
             target_->addItem(label);
@@ -189,7 +192,7 @@ void ReferenceRepairDialog::populate() {
     try {
         if (target_->currentIndex() == 0) {
             for (const auto& c : inspection_->review.candidates) {
-                QString title = tr("%1 — feature %2; origin (%3, %4, %5)")
+                QString title = tr("%1 — Feature %2; Ursprung (%3, %4, %5)")
                                     .arg(role(c.binding.reference.origin))
                                     .arg(c.binding.reference.origin.feature.value())
                                     .arg(c.plane.originX)
@@ -199,10 +202,10 @@ void ReferenceRepairDialog::populate() {
                     QStringList ids;
                     for (auto id : c.binding.reference.origin.extrusionBoundary)
                         ids.push_back(QString::number(id.value()));
-                    title += tr("; boundary %1").arg(ids.join(", "));
+                    title += tr("; Rand %1").arg(ids.join(", "));
                 }
                 if (c.matchesOriginalPlane)
-                    title += tr(" — matches original plane (unconfirmed)");
+                    title += tr(" — passt zur ursprünglichen Ebene (unbestätigt)");
                 candidates_->addItem(title);
             }
         } else {
@@ -215,20 +218,20 @@ void ReferenceRepairDialog::populate() {
             for (std::size_t i = 0; i < points_.size(); ++i) {
                 const auto& p = points_[i];
                 const auto kind = p.reference.selection.kind;
-                const QString position = kind == document::EdgePointKind::start ? tr("Start")
-                                         : kind == document::EdgePointKind::end ? tr("End")
-                                                                                : tr("Midpoint");
-                candidates_->addItem(tr("%1 — local (%2, %3), candidate %4")
+                const QString position = kind == document::EdgePointKind::start ? tr("Anfang")
+                                         : kind == document::EdgePointKind::end ? tr("Ende")
+                                                                                : tr("Mittelpunkt");
+                candidates_->addItem(tr("%1 — lokal (%2, %3), Kandidat %4")
                                          .arg(position)
                                          .arg(p.local.x)
                                          .arg(p.local.y)
                                          .arg(i + 1));
             }
         }
-        message_->setText(
-            candidates_->count()
-                ? tr("Select a candidate explicitly to enable Apply.")
-                : tr("No uniquely named current candidates. Repair the upstream feature first."));
+        message_->setText(candidates_->count()
+                              ? tr("Wähle ausdrücklich einen Kandidaten, um zu übernehmen.")
+                              : tr("Keine eindeutig benannten aktuellen Kandidaten. Repariere "
+                                   "zuerst das vorgelagerte Feature."));
     } catch (const std::exception& e) {
         message_->setText(QString::fromUtf8(e.what()));
     }
@@ -248,8 +251,8 @@ void ReferenceRepairDialog::selectionChanged() {
                  : *inspection_->review.original.supportBinding;
         const auto projection = session_.projectSketchSupport(inspection_->support, binding);
         preview(projection, face ? nullptr : &points_.at(static_cast<std::size_t>(row)));
-        message_->setText(
-            tr("Review the replacement, then apply. Original data changes only on Apply."));
+        message_->setText(tr(
+            "Prüfe den Ersatz und übernimm ihn dann. Die Daten ändern sich erst beim Übernehmen."));
         apply_->setEnabled(true);
     } catch (const std::exception& e) {
         message_->setText(QString::fromUtf8(e.what()));
@@ -281,7 +284,8 @@ void ReferenceRepairDialog::apply() {
         keepErrors_->setVisible(result.reason() == application::RejectionReason::evaluationFailed);
         if (result.reason() != application::RejectionReason::evaluationFailed) {
             apply_->setEnabled(false);
-            message_->setText(message_->text() + tr(" Refresh candidates before choosing again."));
+            message_->setText(message_->text() +
+                              tr(" Aktualisiere die Kandidaten, bevor du erneut wählst."));
         }
     } catch (const std::exception& e) {
         message_->setText(QString::fromUtf8(e.what()));

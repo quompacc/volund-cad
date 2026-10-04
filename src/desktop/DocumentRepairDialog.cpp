@@ -15,25 +15,26 @@ DocumentRepairDialog::DocumentRepairDialog(application::CadSession& session,
                                            std::function<void()> changed, QWidget* parent)
     : QDialog(parent), session_(session), changed_(std::move(changed)) {
     setObjectName("documentRepairDialog");
-    setWindowTitle(tr("Repair document references"));
+    setWindowTitle(tr("Dokumentreferenzen reparieren"));
     setAttribute(Qt::WA_DeleteOnClose);
     setWindowModality(Qt::WindowModal);
     resize(1000, 600);
     auto* layout = new QVBoxLayout(this);
-    auto* info = new QLabel(tr("Auto repair applies unique matching support faces, including "
-                               "dependent sketches. Ambiguous faces and edge references remain for "
-                               "review. One Undo reverses the entire batch."),
-                            this);
+    auto* info =
+        new QLabel(tr("Die automatische Reparatur übernimmt eindeutig passende Stützflächen, "
+                      "auch für abhängige Skizzen. Mehrdeutige Flächen und Kantenreferenzen "
+                      "bleiben zur Prüfung. Ein Rückgängig nimmt den ganzen Durchgang zurück."),
+                   this);
     info->setWordWrap(true);
     layout->addWidget(info);
-    auto* automatic = new QPushButton(tr("Auto repair unique matches"), this);
+    auto* automatic = new QPushButton(tr("Eindeutige Treffer automatisch reparieren"), this);
     automatic->setObjectName("repairAuto");
     layout->addWidget(automatic);
     table_ = new QTableWidget(this);
     table_->setObjectName("repairBatchTable");
     table_->setColumnCount(4);
     table_->setHorizontalHeaderLabels(
-        {tr("Apply"), tr("Sketch"), tr("Replacement support face"), tr("Review")});
+        {tr("Übernehmen"), tr("Skizze"), tr("Ersatz-Stützfläche"), tr("Prüfen")});
     table_->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     table_->horizontalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
     table_->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Stretch);
@@ -44,17 +45,19 @@ DocumentRepairDialog::DocumentRepairDialog(application::CadSession& session,
     message_->setObjectName("repairBatchMessage");
     message_->setWordWrap(true);
     layout->addWidget(message_);
-    keep_ =
-        new QCheckBox(tr("Keep selected repairs with the remaining errors (Undo available)"), this);
+    keep_ = new QCheckBox(
+        tr("Gewählte Reparaturen mit den übrigen Fehlern behalten (Rückgängig möglich)"), this);
     keep_->setObjectName("repairBatchKeepErrors");
     keep_->hide();
     layout->addWidget(keep_);
     auto* buttons = new QDialogButtonBox(QDialogButtonBox::Close, this);
-    auto* applyButton = buttons->addButton(tr("Apply checked"), QDialogButtonBox::ActionRole);
+    auto* applyButton =
+        buttons->addButton(tr("Markierte übernehmen"), QDialogButtonBox::ActionRole);
     applyButton->setObjectName("repairBatchApply");
-    auto* select = buttons->addButton(tr("Select unique proposals"), QDialogButtonBox::ActionRole);
+    auto* select =
+        buttons->addButton(tr("Eindeutige Vorschläge wählen"), QDialogButtonBox::ActionRole);
     select->setObjectName("repairBatchSelect");
-    auto* refresh = buttons->addButton(tr("Refresh"), QDialogButtonBox::ActionRole);
+    auto* refresh = buttons->addButton(tr("Aktualisieren"), QDialogButtonBox::ActionRole);
     refresh->setObjectName("repairBatchRefresh");
     layout->addWidget(buttons);
     connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
@@ -92,10 +95,10 @@ void DocumentRepairDialog::reload() {
             name->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
             table_->setItem(row, 1, name);
             auto* choices = new QComboBox(table_);
-            choices->addItem(tr("Choose replacement…"));
+            choices->addItem(tr("Ersatz wählen…"));
             for (const auto& c : item.inspection.review.candidates) {
                 const auto& p = c.plane;
-                QString label = tr("Feature %1 · normal (%2,%3,%4) · origin (%5,%6,%7)")
+                QString label = tr("Feature %1 · Normale (%2,%3,%4) · Ursprung (%5,%6,%7)")
                                     .arg(c.binding.reference.origin.feature.value())
                                     .arg(p.normalX)
                                     .arg(p.normalY)
@@ -107,10 +110,10 @@ void DocumentRepairDialog::reload() {
                     QStringList ids;
                     for (auto id : c.binding.reference.origin.extrusionBoundary)
                         ids.push_back(QString::number(id.value()));
-                    label += tr(" · boundary %1").arg(ids.join(","));
+                    label += tr(" · Rand %1").arg(ids.join(","));
                 }
                 if (c.matchesOriginalPlane)
-                    label += tr(" · plane match");
+                    label += tr(" · Ebene passt");
                 choices->addItem(label);
             }
             table_->setCellWidget(row, 2, choices);
@@ -120,7 +123,7 @@ void DocumentRepairDialog::reload() {
                 keep_->hide();
             });
             auto* detail = new QPushButton(tr("Details…"), table_);
-            detail->setToolTip(item.proposal ? tr("Unique proposal") : tr("Needs review"));
+            detail->setToolTip(item.proposal ? tr("Eindeutiger Vorschlag") : tr("Prüfung nötig"));
             table_->setCellWidget(row, 3, detail);
             connect(detail, &QPushButton::clicked, this, [this, id = item.inspection.feature] {
                 auto* dialog = new ReferenceRepairDialog(
@@ -133,10 +136,11 @@ void DocumentRepairDialog::reload() {
                 dialog->open();
             });
         }
-        message_->setText(suggestions_.empty() ? tr("No unresolved references remain.")
-                                               : tr("%1 sketches need review. Check several rows "
-                                                    "to apply them together, or use Auto repair.")
-                                                     .arg(suggestions_.size()));
+        message_->setText(suggestions_.empty()
+                              ? tr("Keine offenen Referenzen mehr.")
+                              : tr("%1 Skizzen brauchen eine Prüfung. Markiere mehrere "
+                                   "Zeilen oder nutze die automatische Reparatur.")
+                                    .arg(suggestions_.size()));
     } catch (const std::exception& e) {
         message_->setText(QString::fromUtf8(e.what()));
     }
@@ -172,7 +176,8 @@ void DocumentRepairDialog::apply() {
                                                  static_cast<std::size_t>(index - 1))});
         }
         if (requests.empty()) {
-            message_->setText(tr("No unique matches selected. Review the remaining references."));
+            message_->setText(
+                tr("Keine eindeutigen Treffer gewählt. Prüfe die übrigen Referenzen."));
             return;
         }
         const auto result = session_.repairSketchSupports(
@@ -182,10 +187,10 @@ void DocumentRepairDialog::apply() {
         if (result.status() != application::CommandStatus::rejected) {
             changed_();
             reload();
-            message_->setText(
-                tr("%1 references repaired in one Undo step. %2 sketches remain for review.")
-                    .arg(requests.size())
-                    .arg(suggestions_.size()));
+            message_->setText(tr("%1 Referenzen in einem Rückgängig-Schritt repariert. %2 Skizzen "
+                                 "bleiben zur Prüfung.")
+                                  .arg(requests.size())
+                                  .arg(suggestions_.size()));
             return;
         }
         message_->setText(commandFeedbackMessage(result));

@@ -15,8 +15,15 @@
 namespace voelund::desktop {
 namespace {
 
-constexpr const char* moveLabels[] = {"Move X", "Move Y", "Move Z"};
-constexpr const char* rotationLabels[] = {"Rotate X", "Rotate Y", "Rotate Z"};
+// Marked for translation with QT_TRANSLATE_NOOP so tr() finds them at run time.
+constexpr const char* moveLabels[] = {
+    QT_TRANSLATE_NOOP("voelund::desktop::FeaturePropertiesPanel", "Verschieben X"),
+    QT_TRANSLATE_NOOP("voelund::desktop::FeaturePropertiesPanel", "Verschieben Y"),
+    QT_TRANSLATE_NOOP("voelund::desktop::FeaturePropertiesPanel", "Verschieben Z")};
+constexpr const char* rotationLabels[] = {
+    QT_TRANSLATE_NOOP("voelund::desktop::FeaturePropertiesPanel", "Drehen X"),
+    QT_TRANSLATE_NOOP("voelund::desktop::FeaturePropertiesPanel", "Drehen Y"),
+    QT_TRANSLATE_NOOP("voelund::desktop::FeaturePropertiesPanel", "Drehen Z")};
 
 } // namespace
 
@@ -24,17 +31,17 @@ FeaturePropertiesPanel::FeaturePropertiesPanel(QWidget* parent) : QStackedWidget
     createBoxPanel();
     createCylinderPanel();
     createExtrusionPanel();
-    emptyPanel_ = new QLabel(tr("No feature selected"), this);
+    emptyPanel_ = new QLabel(tr("Kein Feature gewählt"), this);
     addWidget(boxPanel_);
     addWidget(cylinderPanel_);
     addWidget(extrusionPanel_);
     addWidget(emptyPanel_);
     QWidget* pages[] = {boxPanel_, cylinderPanel_, extrusionPanel_};
     for (int index = 0; index < 3; ++index) {
-        auto* button = new QPushButton(tr("Keep editable errors"), pages[index]);
+        auto* button = new QPushButton(tr("Bearbeitbare Fehler behalten"), pages[index]);
         button->setObjectName(QStringLiteral("keepEditableErrorsButton"));
-        button->setToolTip(tr(
-            "Keep the rejected parameter change as a repairable error. Undo remains available."));
+        button->setToolTip(tr("Die abgelehnte Änderung als reparierbaren Fehler behalten. "
+                              "Rückgängig bleibt möglich."));
         static_cast<QFormLayout*>(pages[index]->layout())->addRow(button);
         button->hide();
         errorCommitButtons_[index] = button;
@@ -58,7 +65,7 @@ void FeaturePropertiesPanel::createExtrusionPanel() {
     extrusionErrorLabel_->setStyleSheet(
         QStringLiteral("QLabel { color: #ffb4ab; background: #4b2024; border: 1px solid #b94a55; "
                        "border-radius: 3px; padding: 6px; }"));
-    layout->addRow(tr("Distance"), extrusionDistanceInput_);
+    layout->addRow(tr("Distanz"), extrusionDistanceInput_);
     layout->addRow(extrusionErrorLabel_);
 }
 
@@ -78,9 +85,9 @@ void FeaturePropertiesPanel::createBoxPanel() {
         boxRotationInputs_[index] = makeAngleInput(boxPanel_);
         boxRotationInputs_[index]->setObjectName(QStringLiteral("boxRotation%1Input").arg(index));
     }
-    boxLayout->addRow(tr("Length"), lengthInput_);
-    boxLayout->addRow(tr("Width"), widthInput_);
-    boxLayout->addRow(tr("Height"), boxHeightInput_);
+    boxLayout->addRow(tr("Länge"), lengthInput_);
+    boxLayout->addRow(tr("Breite"), widthInput_);
+    boxLayout->addRow(tr("Höhe"), boxHeightInput_);
     for (int index = 0; index < 3; ++index) {
         boxLayout->addRow(tr(moveLabels[index]), boxTranslationInputs_[index]);
     }
@@ -102,7 +109,8 @@ void FeaturePropertiesPanel::createCylinderPanel() {
     // The connection belongs to the selected cylinder, not to a global toolbar (U01).
     cylinderResultModeInput_ = new QComboBox(cylinderPanel_);
     cylinderResultModeInput_->setObjectName(QStringLiteral("cylinderResultModeInput"));
-    cylinderResultModeInput_->addItems({tr("Join"), tr("Cut"), tr("Intersect"), tr("Separate")});
+    cylinderResultModeInput_->addItems(
+        {tr("Vereinigen"), tr("Abziehen"), tr("Schneiden"), tr("Getrennt")});
     for (int index = 0; index < 3; ++index) {
         translationInputs_[index] = makeLengthInput(cylinderPanel_, true);
         translationInputs_[index]->setObjectName(
@@ -119,8 +127,8 @@ void FeaturePropertiesPanel::createCylinderPanel() {
                        "border-radius: 3px; padding: 6px; }"));
 
     cylinderLayout->addRow(tr("Radius"), radiusInput_);
-    cylinderLayout->addRow(tr("Height"), cylinderHeightInput_);
-    cylinderLayout->addRow(tr("Connection"), cylinderResultModeInput_);
+    cylinderLayout->addRow(tr("Höhe"), cylinderHeightInput_);
+    cylinderLayout->addRow(tr("Verbindung"), cylinderResultModeInput_);
     for (int index = 0; index < 3; ++index) {
         cylinderLayout->addRow(tr(moveLabels[index]), translationInputs_[index]);
     }
@@ -175,7 +183,7 @@ void FeaturePropertiesPanel::setExtrusionChangeHandler(std::function<void()> han
 }
 
 void FeaturePropertiesPanel::showNone() {
-    emptyPanel_->setText(tr("No feature selected"));
+    emptyPanel_->setText(tr("Kein Feature gewählt"));
     emptyPanel_->setStyleSheet({});
     setCurrentWidget(emptyPanel_);
 }

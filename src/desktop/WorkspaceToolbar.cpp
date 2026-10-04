@@ -18,11 +18,11 @@ namespace {
 QString groupTitle(workspaces::CommandGroup group) {
     switch (group) {
     case workspaces::CommandGroup::create:
-        return QObject::tr("Create");
+        return QObject::tr("Erstellen");
     case workspaces::CommandGroup::modify:
-        return QObject::tr("Modify");
+        return QObject::tr("Ändern");
     case workspaces::CommandGroup::construct:
-        return QObject::tr("Construct");
+        return QObject::tr("Konstruieren");
     }
     return {};
 }

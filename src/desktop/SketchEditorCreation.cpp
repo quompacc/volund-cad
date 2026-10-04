@@ -38,7 +38,7 @@ void addAutomaticCoincidence(application::SketchEditorSession& editor,
         if (target->point == viewport::SketchPointKind::projected) {
             if (target->projectedEdge) {
                 if (!editor.addProjectedEdgeReference(created, *target->projectedEdge))
-                    throw std::invalid_argument("Projected edge attachment was rejected");
+                    throw std::invalid_argument("Anbindung an die projizierte Kante abgelehnt");
                 return;
             }
             static_cast<void>(editor.addSupportReference(created, targetPoint,
@@ -215,7 +215,7 @@ void SketchEditorToolController::confirmElement(const viewport::SketchElementInt
         }
     }
     if (id.has_value())
-        statusChanged_(QObject::tr("Sketch element #%1 added").arg(id->value()));
+        statusChanged_(QObject::tr("Skizzenelement #%1 hinzugefügt").arg(id->value()));
 }
 
 } // namespace voelund::desktop

@@ -77,7 +77,7 @@ void run() {
     QApplication::processEvents();
     QPushButton* accept = nullptr;
     for (auto* button : panel->findChildren<QPushButton*>())
-        if (button->text() == "OK")
+        if (button->objectName() == "toolAcceptButton")
             accept = button;
     auto* guidance = panel->findChild<QLabel*>(QStringLiteral("toolGuidance"));
     require(accept && guidance, "productive panel controls missing");
@@ -87,7 +87,7 @@ void run() {
                                                      dof);
         desktop::SketchSolverGateTestAccess::sync(controller);
         require(!active.canAccept() && !accept->isEnabled() &&
-                    guidance->text().contains("solver failed"),
+                    guidance->text().contains("Skizzenlöser fehlgeschlagen"),
                 "failed solve shown as valid or accepted");
         const bool rejected =
             active.tryAccept().reason() == application::RejectionReason::invalidInput;
@@ -106,12 +106,12 @@ void run() {
     application::SketchSolverGateTestAccess::set(active, features::SketchSolveStatus::conflicting,
                                                  0);
     desktop::SketchSolverGateTestAccess::sync(controller);
-    require(!accept->isEnabled() && guidance->text().contains("Conflicting"), "conflict caption");
+    require(!accept->isEnabled() && guidance->text().contains("Widersprüchliche"),
+            "conflict caption");
     require(active.selectElement(document::SketchElementId{1}) && active.setSelectedLineLength(9),
             "repair failed");
     desktop::SketchSolverGateTestAccess::sync(controller);
-    require(active.canAccept() && accept->isEnabled() &&
-                guidance->text().contains("underconstrained"),
+    require(active.canAccept() && accept->isEnabled() && guidance->text().contains("unterbestimmt"),
             "repair did not enable OK");
     if (!directory.isEmpty()) {
         QApplication::processEvents();
@@ -153,7 +153,7 @@ void existingSketchErrorOffer() {
     QApplication::processEvents();
     QPushButton* accept = nullptr;
     for (auto* button : panel->findChildren<QPushButton*>())
-        if (button->text() == "OK")
+        if (button->objectName() == "toolAcceptButton")
             accept = button;
     require(accept && accept->isEnabled(), "solver-valid draft must reach evaluation");
     accept->click();

@@ -56,12 +56,12 @@ void inspectWindow(application::CadSession& session) {
     auto* tree = window.findChild<QTreeWidget*>();
     require(tree && tree->topLevelItemCount() == 1, "model tree");
     auto* body = tree->topLevelItem(0);
-    require(body->childCount() == 6 && body->child(2)->text(0).contains("[error]") &&
-                body->child(3)->text(0).contains("[blocked]") &&
-                body->child(4)->text(0).contains("[blocked]") &&
+    require(body->childCount() == 6 && body->child(2)->text(0).contains("[Fehler]") &&
+                body->child(3)->text(0).contains("[blockiert]") &&
+                body->child(4)->text(0).contains("[blockiert]") &&
                 body->child(4)->toolTip(0).contains("Blocked") &&
-                !body->child(5)->text(0).contains("[blocked]") &&
-                !body->child(5)->text(0).contains("[error]"),
+                !body->child(5)->text(0).contains("[blockiert]") &&
+                !body->child(5)->text(0).contains("[Fehler]"),
             "Model tree lost failure/block distinction");
     const auto directory = qEnvironmentVariable("VOELUND_FEATURE_STATUS_ARTIFACT_DIR");
     if (!directory.isEmpty()) {
@@ -153,13 +153,13 @@ void inspectLegacyPlane(const std::filesystem::path& directory) {
     auto* tree = window.findChild<QTreeWidget*>();
     require(tree && tree->topLevelItemCount() == 1, "legacy model tree");
     auto* body = tree->topLevelItem(0);
-    require(body->childCount() == 3 && body->child(1)->text(0).contains("[error]") &&
-                body->child(2)->text(0).contains("[blocked]") &&
+    require(body->childCount() == 3 && body->child(1)->text(0).contains("[Fehler]") &&
+                body->child(2)->text(0).contains("[blockiert]") &&
                 body->child(1)->toolTip(0).contains("MigrationNeedsRepair"),
             "Legacy plane error was not visible");
     QAction* edit = nullptr;
     for (auto* action : window.findChildren<QAction*>())
-        if (action->text() == "Edit Sketch")
+        if (action->property("commandId").toString() == "solid.modify.edit_sketch")
             edit = action;
     require(edit && edit->isEnabled(), "edit sketch action");
     const auto stamp = session.sceneStatus().document;

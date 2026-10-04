@@ -31,8 +31,8 @@ ShellHeader::ShellHeader(QWidget* parent) : QWidget(parent) {
 
     fileButton_ = iconButton(this, "fileMenuButton");
     fileButton_->setPopupMode(QToolButton::InstantPopup);
-    fileButton_->setToolTip(tr("File"));
-    fileButton_->setAccessibleName(tr("File"));
+    fileButton_->setToolTip(tr("Datei"));
+    fileButton_->setAccessibleName(tr("Datei"));
     layout->addWidget(fileButton_);
 
     brand_ = new QLabel(this);
@@ -73,7 +73,7 @@ void ShellHeader::setActions(QAction& undo, QAction& redo, QAction& theme) {
 
 void ShellHeader::display(const ShellState& state) {
     documentName_->setText(state.documentName);
-    saveState_->setText(state.modified ? tr("Unsaved") : tr("Saved"));
+    saveState_->setText(state.modified ? tr("Ungespeichert") : tr("Gespeichert"));
     saveState_->setProperty("modified", state.modified);
     // Re-polish so the [modified="true"] style rule follows the property.
     saveState_->style()->unpolish(saveState_);

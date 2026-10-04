@@ -21,13 +21,13 @@ void emptyDocument() {
     application::CadSession session;
     session.newDocument();
     const auto state = desktop::projectShell(session, {});
-    require(state.documentName == QStringLiteral("Untitled") && !state.modified && !state.canUndo &&
-                !state.canRedo && state.modelCurrent,
+    require(state.documentName == QStringLiteral("Unbenannt") && !state.modified &&
+                !state.canUndo && !state.canRedo && state.modelCurrent,
             "Empty document header state");
     require(state.selection == ShellSelection::nothing && !state.canSketch() &&
                 !state.canExtrude() && !state.canEditSketch() && state.tool == ShellTool::none,
             "Nothing is selected or available in an empty document");
-    require(state.windowTitle() == QStringLiteral("Untitled — Völund CAD"), "Clean title");
+    require(state.windowTitle() == QStringLiteral("Unbenannt — Völund CAD"), "Clean title");
 }
 
 void viewPicks() {
@@ -52,7 +52,7 @@ void documentSelection() {
     auto state = desktop::projectShell(session, {});
     require(state.selection == ShellSelection::feature &&
                 state.featureKind == document::FeatureKind::box && state.modified &&
-                state.canUndo && state.windowTitle() == QStringLiteral("Untitled * — Völund CAD"),
+                state.canUndo && state.windowTitle() == QStringLiteral("Unbenannt * — Völund CAD"),
             "A new box is the selected, unsaved feature");
     session.newDocument();
     document::SketchParameters sketch{

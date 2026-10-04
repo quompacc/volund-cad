@@ -28,9 +28,9 @@ void SketchExtrusionToolController::beginSelectedProfiles() {
     profileIds_.assign(selected.begin(), selected.end());
     distance_ = 10.0;
     panel_.begin(ToolPanelDefinition{
-        QObject::tr("Extrude Profiles"),
-        QObject::tr("Extrude %1 selected sketch profile(s).").arg(profileIds_.size()),
-        {{"distance", QObject::tr("Distance"), distance_, 0.001, 1'000'000.0}},
+        QObject::tr("Extrudieren"),
+        QObject::tr("%1 gewählte(n) Skizzenbereich(e) extrudieren.").arg(profileIds_.size()),
+        {{"distance", QObject::tr("Distanz"), distance_, 0.001, 1'000'000.0}},
         {},
         {},
         [this](const std::string& id, double value) {
@@ -43,15 +43,15 @@ void SketchExtrusionToolController::beginSelectedProfiles() {
         [this]() { cancel(); },
         {}});
     panel_.setAcceptEnabled(true);
-    statusChanged_(QObject::tr("Extrusion ready: %1 profile(s)").arg(profileIds_.size()));
+    statusChanged_(QObject::tr("Extrusion bereit: %1 Bereich(e)").arg(profileIds_.size()));
 }
 
 void SketchExtrusionToolController::setDistance(double distance) { distance_ = distance; }
 
 void SketchExtrusionToolController::accept() {
     if (supportStamp_ && *supportStamp_ != session_.sceneStatus().document) {
-        const auto message =
-            QObject::tr("The model changed. Reopen the extrusion on its current support.");
+        const auto message = QObject::tr(
+            "Das Modell hat sich geändert. Öffne die Extrusion erneut auf ihrer aktuellen Stütze.");
         panel_.setGuidance(message);
         statusChanged_(message);
         return;
@@ -73,7 +73,7 @@ void SketchExtrusionToolController::accept() {
     profileIds_.clear();
     active_ = false;
     sceneChanged_();
-    statusChanged_(QObject::tr("Selected profiles extruded"));
+    statusChanged_(QObject::tr("Gewählte Bereiche extrudiert"));
 }
 
 void SketchExtrusionToolController::cancel() {
@@ -81,7 +81,7 @@ void SketchExtrusionToolController::cancel() {
     profileSketch_.reset();
     profileIds_.clear();
     active_ = false;
-    statusChanged_(QObject::tr("Tool cancelled"));
+    statusChanged_(QObject::tr("Werkzeug abgebrochen"));
 }
 
 bool SketchExtrusionToolController::isActive() const noexcept { return active_; }

@@ -85,7 +85,7 @@ void MainWindow::createViewport() {
 
 void MainWindow::createModelTree() {
     impl_->modelTree = new ModelTreePanel(this);
-    auto* dock = new QDockWidget(tr("Model"), this);
+    auto* dock = new QDockWidget(tr("Modell"), this);
     dock->setObjectName(QStringLiteral("modelDock"));
     dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     dock->setWidget(impl_->modelTree);
@@ -100,7 +100,7 @@ void MainWindow::createWorkspaceToolbar() {
                         [this](const QString& message) { statusBar()->showMessage(message); }))
             return;
         refreshScene();
-        statusBar()->showMessage(tr("Box feature created"), 2000);
+        statusBar()->showMessage(tr("Quader angelegt"), 2000);
     };
     services.addCylinder = [this]() {
         if (!runCommand(
@@ -110,7 +110,7 @@ void MainWindow::createWorkspaceToolbar() {
                 [this](const QString& message) { statusBar()->showMessage(message); }))
             return;
         refreshScene();
-        statusBar()->showMessage(tr("Cylinder feature created"), 2000);
+        statusBar()->showMessage(tr("Zylinder angelegt"), 2000);
     };
     services.sketchEditor = [this]() {
         if (impl_->selectedDatum.has_value()) {
@@ -180,7 +180,7 @@ void MainWindow::createToolPanel() {
 
 void MainWindow::createPropertiesPanel() {
     impl_->propertyPanel = new FeaturePropertiesPanel(this);
-    auto* dock = new QDockWidget(tr("Properties"), this);
+    auto* dock = new QDockWidget(tr("Eigenschaften"), this);
     dock->setObjectName(QStringLiteral("featurePropertiesDock"));
     dock->setWidget(impl_->propertyPanel);
     dock->setMinimumWidth(270);
@@ -190,29 +190,29 @@ void MainWindow::createPropertiesPanel() {
 }
 
 void MainWindow::createHistoryToolbar() {
-    impl_->undoAction = new QAction(tr("Undo"), this);
+    impl_->undoAction = new QAction(tr("Rückgängig"), this);
     impl_->undoAction->setShortcut(QKeySequence::Undo);
-    impl_->redoAction = new QAction(tr("Redo"), this);
+    impl_->redoAction = new QAction(tr("Wiederholen"), this);
     impl_->redoAction->setShortcuts(QKeySequence::Redo);
     setCommandId(*impl_->undoAction, "history.undo");
     setCommandId(*impl_->redoAction, "history.redo");
     // Undo/Redo sit in the shell header; repair stays here until U10 moves it to the feature.
-    auto* toolbar = new QToolBar(tr("Repair"), this);
+    auto* toolbar = new QToolBar(tr("Reparatur"), this);
     toolbar->setObjectName(QStringLiteral("repairToolbar"));
     toolbar->setToolButtonStyle(Qt::ToolButtonTextOnly);
     impl_->repairToolbar = toolbar;
-    impl_->repairAction = toolbar->addAction(tr("Repair references…"));
+    impl_->repairAction = toolbar->addAction(tr("Referenzen reparieren…"));
     impl_->repairAction->setObjectName(QStringLiteral("repairReferencesAction"));
     setCommandId(*impl_->repairAction, "repair.references");
     connect(impl_->repairAction, &QAction::triggered, this, [this] { repairReferences(); });
-    impl_->repairAllAction = toolbar->addAction(tr("Repair all…"));
+    impl_->repairAllAction = toolbar->addAction(tr("Alle reparieren…"));
     impl_->repairAllAction->setObjectName(QStringLiteral("repairAllReferencesAction"));
     setCommandId(*impl_->repairAllAction, "repair.all");
     connect(impl_->repairAllAction, &QAction::triggered, this, [this] { repairAllReferences(); });
 }
 
 void MainWindow::createHeader() {
-    impl_->themeAction = new QAction(tr("Switch light/dark theme"), this);
+    impl_->themeAction = new QAction(tr("Helle/dunkle Darstellung umschalten"), this);
     setCommandId(*impl_->themeAction, "view.theme");
     connect(impl_->themeAction, &QAction::triggered, this, [this] {
         const ThemeMode next =
@@ -240,24 +240,25 @@ void MainWindow::createTransformSettingsToolbar() {
     // Settings start a second row so wider styles (e.g. Breeze) never move them into a
     // toolbar overflow menu.
     addToolBarBreak();
-    impl_->snapAction = new QAction(tr("Snap"), this);
+    impl_->snapAction = new QAction(tr("Fangen"), this);
     impl_->snapAction->setCheckable(true);
     impl_->snapAction->setChecked(true);
     setCommandId(*impl_->snapAction, "transform.snap");
-    impl_->snapAction->setToolTip(tr("Snap transformations; hold Ctrl to bypass temporarily"));
-    auto* toolbar = addToolBar(tr("Transform"));
+    impl_->snapAction->setToolTip(
+        tr("Transformationen fangen; Strg halten, um vorübergehend frei zu bewegen"));
+    auto* toolbar = addToolBar(tr("Transformieren"));
     toolbar->setObjectName(QStringLiteral("transformToolbar"));
     toolbar->setToolButtonStyle(Qt::ToolButtonTextOnly);
     toolbar->addAction(impl_->snapAction);
     impl_->linearSnapInput = makeLengthInput(toolbar);
     impl_->linearSnapInput->setPrefix(tr("Linear: "));
     impl_->linearSnapInput->setValue(1.0);
-    impl_->linearSnapInput->setMaximumWidth(145);
+    impl_->linearSnapInput->setMaximumWidth(170);
     impl_->angularSnapInput = makeAngleInput(toolbar);
-    impl_->angularSnapInput->setPrefix(tr("Angular: "));
+    impl_->angularSnapInput->setPrefix(tr("Winkel: "));
     impl_->angularSnapInput->setValue(5.0);
     impl_->angularSnapInput->setRange(0.1, 180.0);
-    impl_->angularSnapInput->setMaximumWidth(145);
+    impl_->angularSnapInput->setMaximumWidth(170);
     toolbar->addWidget(impl_->linearSnapInput);
     toolbar->addWidget(impl_->angularSnapInput);
 }
@@ -273,10 +274,11 @@ void MainWindow::connectInteractions() {
             impl_->selectedDatum.reset();
             if (impl_->session.sceneStatus().isCurrent()) {
                 impl_->selectedPlanarFace = selection;
-                statusBar()->showMessage(tr("Planar face selected"), 2000);
+                statusBar()->showMessage(tr("Ebene Fläche gewählt"), 2000);
             } else {
                 impl_->selectedPlanarFace.reset();
-                statusBar()->showMessage(tr("Repair the model before selecting geometry"), 3000);
+                statusBar()->showMessage(tr("Repariere das Modell, bevor du Geometrie wählst"),
+                                         3000);
             }
             impl_->workspaceToolbar->refreshEnabled();
         });
@@ -285,7 +287,7 @@ void MainWindow::connectInteractions() {
         impl_->selectedDatum = static_cast<document::DatumPlane>(plane);
         static const char* const names[]{"XY", "XZ", "YZ"};
         statusBar()->showMessage(
-            tr("%1 plane selected").arg(QString::fromLatin1(names[static_cast<int>(plane) - 1])),
+            tr("%1-Ebene gewählt").arg(QString::fromLatin1(names[static_cast<int>(plane) - 1])),
             2000);
         impl_->workspaceToolbar->refreshEnabled();
     });
@@ -319,14 +321,14 @@ void MainWindow::connectInteractions() {
                 impl_->viewport->setSelectedSketchElements(selectedIds);
                 syncProperties();
                 impl_->workspaceToolbar->refreshEnabled();
-                statusBar()->showMessage(tr("Sketch profile selected"), 2000);
+                statusBar()->showMessage(tr("Skizzenbereich gewählt"), 2000);
                 return;
             }
             if (!intent.additive &&
                 impl_->session.selectSketchElement(document::SketchElementId{id})) {
                 impl_->viewport->setSelectedSketchElement(id);
                 syncProperties();
-                statusBar()->showMessage(tr("Sketch element selected"), 2000);
+                statusBar()->showMessage(tr("Skizzenelement gewählt"), 2000);
             }
         });
     impl_->viewport->setBodyMoveHandler(

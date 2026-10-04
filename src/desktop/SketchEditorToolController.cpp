@@ -77,80 +77,89 @@ void SketchEditorToolController::showPanel() {
     translationX_ = 0.0;
     translationY_ = 0.0;
     panel_.begin(ToolPanelDefinition{
-        QObject::tr("Sketch Editor"),
-        QObject::tr("Choose a tool and set its points. Add any number of elements, then confirm."),
-        {{"translation_x", QObject::tr("Selected ΔX"), 0.0, -1'000'000.0, 1'000'000.0},
-         {"translation_y", QObject::tr("Selected ΔY"), 0.0, -1'000'000.0, 1'000'000.0},
-         {"line_length", QObject::tr("Line length"), 1.0, 0.001, 1'000'000.0},
-         {"rectangle_width", QObject::tr("Rectangle width"), 1.0, 0.001, 1'000'000.0},
-         {"rectangle_height", QObject::tr("Rectangle height"), 1.0, 0.001, 1'000'000.0},
-         {"circle_radius", QObject::tr("Circle / arc radius"), 1.0, 0.001, 1'000'000.0},
-         {"polygon_sides", QObject::tr("Polygon sides"), 6.0, 3.0, 64.0},
-         {"fillet_radius", QObject::tr("Fillet radius"), 2.0, 0.001, 1'000'000.0},
-         {"offset_distance", QObject::tr("Offset distance"), 1.0, -1'000'000.0, 1'000'000.0},
-         {"pattern_count", QObject::tr("Pattern count"), 3.0, 2.0, 1000.0},
-         {"pattern_spacing", QObject::tr("Linear spacing"), 10.0, -1'000'000.0, 1'000'000.0},
-         {"pattern_angle", QObject::tr("Circular angle"), 360.0, -3600.0, 3600.0}},
+        QObject::tr("Skizzeneditor"),
+        QObject::tr("Wähle ein Werkzeug und setze seine Punkte. Füge beliebig viele Elemente hinzu "
+                    "und bestätige dann."),
+        {{"translation_x", QObject::tr("Gewählt ΔX"), 0.0, -1'000'000.0, 1'000'000.0},
+         {"translation_y", QObject::tr("Gewählt ΔY"), 0.0, -1'000'000.0, 1'000'000.0},
+         {"line_length", QObject::tr("Linienlänge"), 1.0, 0.001, 1'000'000.0},
+         {"rectangle_width", QObject::tr("Rechteckbreite"), 1.0, 0.001, 1'000'000.0},
+         {"rectangle_height", QObject::tr("Rechteckhöhe"), 1.0, 0.001, 1'000'000.0},
+         {"circle_radius", QObject::tr("Kreis-/Bogenradius"), 1.0, 0.001, 1'000'000.0},
+         {"polygon_sides", QObject::tr("Polygonseiten"), 6.0, 3.0, 64.0},
+         {"fillet_radius", QObject::tr("Rundungsradius"), 2.0, 0.001, 1'000'000.0},
+         {"offset_distance", QObject::tr("Versatzabstand"), 1.0, -1'000'000.0, 1'000'000.0},
+         {"pattern_count", QObject::tr("Anzahl im Muster"), 3.0, 2.0, 1000.0},
+         {"pattern_spacing", QObject::tr("Linearer Abstand"), 10.0, -1'000'000.0, 1'000'000.0},
+         {"pattern_angle", QObject::tr("Kreiswinkel"), 360.0, -3600.0, 3600.0}},
         {{"tool",
-          QObject::tr("Tool"),
-          {QObject::tr("Select"), QObject::tr("Line"), QObject::tr("Polyline"),
-           QObject::tr("Rectangle"), QObject::tr("Circle"), QObject::tr("Center arc"),
-           QObject::tr("Three-point arc"), QObject::tr("Ellipse"), QObject::tr("Slot"),
-           QObject::tr("Regular polygon")},
+          QObject::tr("Werkzeug"),
+          {QObject::tr("Auswählen"), QObject::tr("Linie"), QObject::tr("Polylinie"),
+           QObject::tr("Rechteck"), QObject::tr("Kreis"), QObject::tr("Bogen (Mitte)"),
+           QObject::tr("Dreipunktbogen"), QObject::tr("Ellipse"), QObject::tr("Langloch"),
+           QObject::tr("Polygon")},
           1}},
-        {{"horizontal", QObject::tr("Constrain line horizontally"), QObject::tr("Lines")},
-         {"vertical", QObject::tr("Constrain line vertically"), QObject::tr("Lines")},
-         {"free", QObject::tr("Remove line direction constraint"), QObject::tr("Lines")},
-         {"parallel", QObject::tr("Make selected lines parallel"), QObject::tr("Lines")},
-         {"perpendicular", QObject::tr("Make selected lines perpendicular"), QObject::tr("Lines")},
-         {"collinear", QObject::tr("Make selected lines collinear"), QObject::tr("Lines")},
-         {"coincident", QObject::tr("Make selected endpoints coincident"), QObject::tr("Points")},
-         {"horizontal_points", QObject::tr("Align selected points horizontally"),
-          QObject::tr("Points")},
-         {"vertical_points", QObject::tr("Align selected points vertically"),
-          QObject::tr("Points")},
-         {"symmetric", QObject::tr("Mirror first two points about third selected line"),
-          QObject::tr("Points")},
-         {"midpoint", QObject::tr("Put first selected point at midpoint of selected line"),
-          QObject::tr("Points")},
-         {"perpendicular_bisector", QObject::tr("Make first line bisect second line"),
-          QObject::tr("Points")},
-         {"point_on_object", QObject::tr("Put first selected point on second object"),
-          QObject::tr("Points")},
-         {"fixed", QObject::tr("Fix selected line or circle"), QObject::tr("Relations")},
-         {"equal", QObject::tr("Make selected lengths or radii equal"), QObject::tr("Relations")},
-         {"tangent", QObject::tr("Make selected objects tangent"), QObject::tr("Relations")},
-         {"concentric", QObject::tr("Make selected circles concentric"), QObject::tr("Relations")},
-         {"diameter", QObject::tr("Add diameter dimension to selected circle"),
-          QObject::tr("Dimensions")},
-         {"point_distance", QObject::tr("Dimension distance between selected points"),
-          QObject::tr("Dimensions")},
-         {"point_line_distance", QObject::tr("Dimension first point from second line"),
-          QObject::tr("Dimensions")},
-         {"point_distance_x", QObject::tr("Dimension horizontal distance between points"),
-          QObject::tr("Dimensions")},
-         {"point_distance_y", QObject::tr("Dimension vertical distance between points"),
-          QObject::tr("Dimensions")},
-         {"angle", QObject::tr("Dimension angle between selected lines"),
-          QObject::tr("Dimensions")},
-         {"construction", QObject::tr("Toggle selected construction geometry"),
-          QObject::tr("Edit")},
-         {"lock_point", QObject::tr("Lock selected point"), QObject::tr("Edit")},
-         {"unlock_point", QObject::tr("Unlock selected point"), QObject::tr("Edit")},
-         {"remove_constraint", QObject::tr("Remove last constraint"), QObject::tr("Edit")},
-         {"undo_sketch", QObject::tr("Undo sketch operation"), QObject::tr("Edit")},
-         {"redo_sketch", QObject::tr("Redo sketch operation"), QObject::tr("Edit")},
-         {"trim", QObject::tr("Trim selected line at nearest intersection"), QObject::tr("Edit")},
-         {"extend", QObject::tr("Extend selected line to nearest intersection"),
-          QObject::tr("Edit")},
-         {"split", QObject::tr("Split selected line at picked position"), QObject::tr("Edit")},
-         {"fillet", QObject::tr("Fillet two selected lines"), QObject::tr("Edit")},
-         {"offset", QObject::tr("Offset selected geometry"), QObject::tr("Edit")},
-         {"mirror", QObject::tr("Mirror selections about last selected line"), QObject::tr("Edit")},
-         {"linear_pattern", QObject::tr("Create linear pattern"), QObject::tr("Edit")},
-         {"circular_pattern", QObject::tr("Create circular pattern about origin"),
-          QObject::tr("Edit")},
-         {"delete", QObject::tr("Delete selected element"), QObject::tr("Edit")}},
+        {{"horizontal", QObject::tr("Linie waagrecht festlegen"), QObject::tr("Linien")},
+         {"vertical", QObject::tr("Linie senkrecht festlegen"), QObject::tr("Linien")},
+         {"free", QObject::tr("Richtungsbedingung der Linie entfernen"), QObject::tr("Linien")},
+         {"parallel", QObject::tr("Gewählte Linien parallel machen"), QObject::tr("Linien")},
+         {"perpendicular", QObject::tr("Gewählte Linien rechtwinklig machen"),
+          QObject::tr("Linien")},
+         {"collinear", QObject::tr("Gewählte Linien kollinear machen"), QObject::tr("Linien")},
+         {"coincident", QObject::tr("Gewählte Endpunkte zusammenlegen"), QObject::tr("Punkte")},
+         {"horizontal_points", QObject::tr("Gewählte Punkte waagrecht ausrichten"),
+          QObject::tr("Punkte")},
+         {"vertical_points", QObject::tr("Gewählte Punkte senkrecht ausrichten"),
+          QObject::tr("Punkte")},
+         {"symmetric", QObject::tr("Erste zwei Punkte an der dritten gewählten Linie spiegeln"),
+          QObject::tr("Punkte")},
+         {"midpoint", QObject::tr("Ersten gewählten Punkt auf die Mitte der gewählten Linie legen"),
+          QObject::tr("Punkte")},
+         {"perpendicular_bisector", QObject::tr("Erste Linie halbiert die zweite"),
+          QObject::tr("Punkte")},
+         {"point_on_object", QObject::tr("Ersten gewählten Punkt auf das zweite Objekt legen"),
+          QObject::tr("Punkte")},
+         {"fixed", QObject::tr("Gewählte Linie oder Kreis fixieren"), QObject::tr("Beziehungen")},
+         {"equal", QObject::tr("Gewählte Längen oder Radien gleich machen"),
+          QObject::tr("Beziehungen")},
+         {"tangent", QObject::tr("Gewählte Objekte tangential machen"), QObject::tr("Beziehungen")},
+         {"concentric", QObject::tr("Gewählte Kreise konzentrisch machen"),
+          QObject::tr("Beziehungen")},
+         {"diameter", QObject::tr("Durchmesser des gewählten Kreises bemaßen"),
+          QObject::tr("Bemaßungen")},
+         {"point_distance", QObject::tr("Abstand der gewählten Punkte bemaßen"),
+          QObject::tr("Bemaßungen")},
+         {"point_line_distance",
+          QObject::tr("Abstand des ersten Punkts von der zweiten Linie bemaßen"),
+          QObject::tr("Bemaßungen")},
+         {"point_distance_x", QObject::tr("Waagrechten Abstand der Punkte bemaßen"),
+          QObject::tr("Bemaßungen")},
+         {"point_distance_y", QObject::tr("Senkrechten Abstand der Punkte bemaßen"),
+          QObject::tr("Bemaßungen")},
+         {"angle", QObject::tr("Winkel zwischen den gewählten Linien bemaßen"),
+          QObject::tr("Bemaßungen")},
+         {"construction", QObject::tr("Konstruktionsgeometrie der Auswahl umschalten"),
+          QObject::tr("Bearbeiten")},
+         {"lock_point", QObject::tr("Gewählten Punkt sperren"), QObject::tr("Bearbeiten")},
+         {"unlock_point", QObject::tr("Gewählten Punkt freigeben"), QObject::tr("Bearbeiten")},
+         {"remove_constraint", QObject::tr("Letzte Bedingung entfernen"),
+          QObject::tr("Bearbeiten")},
+         {"undo_sketch", QObject::tr("Skizzenschritt rückgängig"), QObject::tr("Bearbeiten")},
+         {"redo_sketch", QObject::tr("Skizzenschritt wiederholen"), QObject::tr("Bearbeiten")},
+         {"trim", QObject::tr("Gewählte Linie am nächsten Schnittpunkt stutzen"),
+          QObject::tr("Bearbeiten")},
+         {"extend", QObject::tr("Gewählte Linie bis zum nächsten Schnittpunkt verlängern"),
+          QObject::tr("Bearbeiten")},
+         {"split", QObject::tr("Gewählte Linie an der gepickten Stelle teilen"),
+          QObject::tr("Bearbeiten")},
+         {"fillet", QObject::tr("Zwei gewählte Linien abrunden"), QObject::tr("Bearbeiten")},
+         {"offset", QObject::tr("Gewählte Geometrie versetzen"), QObject::tr("Bearbeiten")},
+         {"mirror", QObject::tr("Auswahl an der zuletzt gewählten Linie spiegeln"),
+          QObject::tr("Bearbeiten")},
+         {"linear_pattern", QObject::tr("Lineares Muster anlegen"), QObject::tr("Bearbeiten")},
+         {"circular_pattern", QObject::tr("Kreismuster um den Ursprung anlegen"),
+          QObject::tr("Bearbeiten")},
+         {"delete", QObject::tr("Gewähltes Element löschen"), QObject::tr("Bearbeiten")}},
         [this](const std::string& id, double value) {
             if (id == "translation_x" || id == "translation_y")
                 applyTranslation(id, value);
@@ -257,12 +266,12 @@ void SketchEditorToolController::setTool(int index) {
     syncSelectedDimensionInputs();
     refreshPresentation();
     const QString guidance =
-        index == 5   ? QObject::tr("Center arc: center, radius point, end point")
-        : index == 6 ? QObject::tr("Three-point arc: start, point on arc, end")
-        : index == 7 ? QObject::tr("Ellipse: center, major radius, minor radius")
-        : index == 8 ? QObject::tr("Slot: centerline start, centerline end, width")
-        : index == 9 ? QObject::tr("Polygon: center and first vertex")
-                     : QObject::tr("Sketch tool changed");
+        index == 5   ? QObject::tr("Mittelpunktbogen: Mittelpunkt, Radiuspunkt, Endpunkt")
+        : index == 6 ? QObject::tr("Dreipunktbogen: Anfang, Punkt auf dem Bogen, Ende")
+        : index == 7 ? QObject::tr("Ellipse: Mittelpunkt, großer Radius, kleiner Radius")
+        : index == 8 ? QObject::tr("Langloch: Mittellinie Anfang, Mittellinie Ende, Breite")
+        : index == 9 ? QObject::tr("Polygon: Mittelpunkt und erste Ecke")
+                     : QObject::tr("Skizzenwerkzeug gewechselt");
     statusChanged_(guidance);
 }
 
@@ -272,7 +281,7 @@ void SketchEditorToolController::stepBack() {
     if (viewport_.cancelSketchEditorStep()) {
         editor_->clearPreview();
         refreshPresentation();
-        statusChanged_(QObject::tr("Current sketch step cancelled"));
+        statusChanged_(QObject::tr("Aktueller Skizzenschritt abgebrochen"));
         return;
     }
     cancel();
@@ -306,7 +315,7 @@ void SketchEditorToolController::translateFromViewport(double deltaX, double del
     panel_.setLengthValue("translation_y", translationY_);
     syncConstraintState();
     refreshPresentation();
-    statusChanged_(QObject::tr("Sketch element moved: ΔX %1 mm, ΔY %2 mm")
+    statusChanged_(QObject::tr("Skizzenelement verschoben: ΔX %1 mm, ΔY %2 mm")
                        .arg(translationX_, 0, 'f', 3)
                        .arg(translationY_, 0, 'f', 3));
 }
@@ -326,7 +335,7 @@ bool SketchEditorToolController::selectElement(const viewport::SketchSelectionIn
         : references.back().point == document::SketchPointPosition::start ? "start point"
         : references.back().point == document::SketchPointPosition::end   ? "end point"
                                                                           : "center point";
-    statusChanged_(QObject::tr("Sketch %1 selected (%2 reference(s))")
+    statusChanged_(QObject::tr("Skizze %1 gewählt (%2 Referenz(en))")
                        .arg(QObject::tr(pointName))
                        .arg(references.size()));
     return true;
@@ -344,7 +353,7 @@ void SketchEditorToolController::editConstraint(std::uint64_t constraintId) {
         if (editor_->removeConstraint(id)) {
             syncConstraintState();
             refreshPresentation();
-            statusChanged_(QObject::tr("Sketch constraint removed"));
+            statusChanged_(QObject::tr("Skizzenbedingung entfernt"));
         }
         return;
     }
@@ -357,8 +366,8 @@ void SketchEditorToolController::editConstraint(std::uint64_t constraintId) {
                               annotation->kind == document::SketchConstraintKind::pointDistanceY);
     bool accepted = false;
     const double value = QInputDialog::getDouble(
-        &panel_, QObject::tr("Edit sketch dimension"),
-        angle ? QObject::tr("Angle (degrees)") : QObject::tr("Value (mm)"), *current,
+        &panel_, QObject::tr("Skizzenmaß bearbeiten"),
+        angle ? QObject::tr("Winkel (Grad)") : QObject::tr("Wert (mm)"), *current,
         angle         ? -179.999
         : directional ? -1'000'000.0
                       : 0.001,
@@ -370,8 +379,8 @@ void SketchEditorToolController::editConstraint(std::uint64_t constraintId) {
     syncSelectedDimensionInputs();
     syncConstraintState();
     refreshPresentation();
-    statusChanged_(angle ? QObject::tr("Sketch angle set to %1°").arg(value, 0, 'f', 3)
-                         : QObject::tr("Sketch dimension set to %1 mm").arg(value, 0, 'f', 3));
+    statusChanged_(angle ? QObject::tr("Skizzenwinkel auf %1° gesetzt").arg(value, 0, 'f', 3)
+                         : QObject::tr("Skizzenmaß auf %1 mm gesetzt").arg(value, 0, 'f', 3));
 }
 
 void SketchEditorToolController::applyElementDimension(const std::string& id, double value) {
@@ -381,22 +390,22 @@ void SketchEditorToolController::applyElementDimension(const std::string& id, do
     QString label;
     if (id == "line_length") {
         changed = editor_->setSelectedLineLength(value);
-        label = QObject::tr("Line length");
+        label = QObject::tr("Linienlänge");
     } else if (id == "rectangle_width") {
         changed = editor_->setSelectedRectangleWidth(value);
-        label = QObject::tr("Rectangle width");
+        label = QObject::tr("Rechteckbreite");
     } else if (id == "rectangle_height") {
         changed = editor_->setSelectedRectangleHeight(value);
-        label = QObject::tr("Rectangle height");
+        label = QObject::tr("Rechteckhöhe");
     } else if (id == "circle_radius") {
         changed = editor_->setSelectedCircleRadius(value);
-        label = QObject::tr("Circle / arc radius");
+        label = QObject::tr("Kreis-/Bogenradius");
     }
     if (!changed)
         return;
     syncConstraintState();
     refreshPresentation();
-    statusChanged_(QObject::tr("%1 set to %2 mm").arg(label).arg(value, 0, 'f', 3));
+    statusChanged_(QObject::tr("%1 auf %2 mm gesetzt").arg(label).arg(value, 0, 'f', 3));
 }
 
 void SketchEditorToolController::applyLineConstraint(document::SketchLineConstraint constraint) {
@@ -406,10 +415,10 @@ void SketchEditorToolController::applyLineConstraint(document::SketchLineConstra
     syncConstraintState();
     refreshPresentation();
     const char* text = constraint == document::SketchLineConstraint::horizontal
-                           ? "Line constrained horizontally"
+                           ? QT_TRANSLATE_NOOP("QObject", "Linie waagrecht festgelegt")
                        : constraint == document::SketchLineConstraint::vertical
-                           ? "Line constrained vertically"
-                           : "Line direction constraint removed";
+                           ? QT_TRANSLATE_NOOP("QObject", "Linie senkrecht festgelegt")
+                           : QT_TRANSLATE_NOOP("QObject", "Richtungsbedingung der Linie entfernt");
     statusChanged_(QObject::tr(text));
 }
 
@@ -419,29 +428,45 @@ void SketchEditorToolController::applyRelation(document::SketchConstraintKind ki
     syncSelectedDimensionInputs();
     syncConstraintState();
     refreshPresentation();
-    const char* text =
-        kind == document::SketchConstraintKind::coincident      ? "Coincident constraint added"
-        : kind == document::SketchConstraintKind::parallel      ? "Parallel constraint added"
-        : kind == document::SketchConstraintKind::perpendicular ? "Perpendicular constraint added"
-        : kind == document::SketchConstraintKind::collinear     ? "Collinear constraint added"
-        : kind == document::SketchConstraintKind::horizontalPoints
-            ? "Horizontal point alignment added"
-        : kind == document::SketchConstraintKind::verticalPoints ? "Vertical point alignment added"
-        : kind == document::SketchConstraintKind::fixed          ? "Geometry fixed"
-        : kind == document::SketchConstraintKind::equal          ? "Equal constraint added"
-        : kind == document::SketchConstraintKind::tangent        ? "Tangent constraint added"
-        : kind == document::SketchConstraintKind::symmetric      ? "Symmetric constraint added"
-        : kind == document::SketchConstraintKind::midpoint       ? "Midpoint constraint added"
-        : kind == document::SketchConstraintKind::perpendicularBisector
-            ? "Perpendicular bisector constraint added"
-        : kind == document::SketchConstraintKind::concentric        ? "Concentric constraint added"
-        : kind == document::SketchConstraintKind::diameter          ? "Diameter dimension added"
-        : kind == document::SketchConstraintKind::pointDistance     ? "Point distance added"
-        : kind == document::SketchConstraintKind::pointLineDistance ? "Point-to-line distance added"
-        : kind == document::SketchConstraintKind::pointDistanceX    ? "Horizontal distance added"
-        : kind == document::SketchConstraintKind::pointDistanceY    ? "Vertical distance added"
-        : kind == document::SketchConstraintKind::angle             ? "Angle dimension added"
-                                                        : "Point-on-object constraint added";
+    const char* text = kind == document::SketchConstraintKind::coincident
+                           ? QT_TRANSLATE_NOOP("QObject", "Deckungsgleich-Bedingung hinzugefügt")
+                       : kind == document::SketchConstraintKind::parallel
+                           ? QT_TRANSLATE_NOOP("QObject", "Parallel-Bedingung hinzugefügt")
+                       : kind == document::SketchConstraintKind::perpendicular
+                           ? QT_TRANSLATE_NOOP("QObject", "Rechtwinklig-Bedingung hinzugefügt")
+                       : kind == document::SketchConstraintKind::collinear
+                           ? QT_TRANSLATE_NOOP("QObject", "Kollinear-Bedingung hinzugefügt")
+                       : kind == document::SketchConstraintKind::horizontalPoints
+                           ? QT_TRANSLATE_NOOP("QObject", "Waagrechte Punktausrichtung hinzugefügt")
+                       : kind == document::SketchConstraintKind::verticalPoints
+                           ? QT_TRANSLATE_NOOP("QObject", "Senkrechte Punktausrichtung hinzugefügt")
+                       : kind == document::SketchConstraintKind::fixed
+                           ? QT_TRANSLATE_NOOP("QObject", "Geometrie fixiert")
+                       : kind == document::SketchConstraintKind::equal
+                           ? QT_TRANSLATE_NOOP("QObject", "Gleich-Bedingung hinzugefügt")
+                       : kind == document::SketchConstraintKind::tangent
+                           ? QT_TRANSLATE_NOOP("QObject", "Tangential-Bedingung hinzugefügt")
+                       : kind == document::SketchConstraintKind::symmetric
+                           ? QT_TRANSLATE_NOOP("QObject", "Symmetrie-Bedingung hinzugefügt")
+                       : kind == document::SketchConstraintKind::midpoint
+                           ? QT_TRANSLATE_NOOP("QObject", "Mittelpunkt-Bedingung hinzugefügt")
+                       : kind == document::SketchConstraintKind::perpendicularBisector
+                           ? QT_TRANSLATE_NOOP("QObject", "Mittelsenkrechte-Bedingung hinzugefügt")
+                       : kind == document::SketchConstraintKind::concentric
+                           ? QT_TRANSLATE_NOOP("QObject", "Konzentrisch-Bedingung hinzugefügt")
+                       : kind == document::SketchConstraintKind::diameter
+                           ? QT_TRANSLATE_NOOP("QObject", "Durchmessermaß hinzugefügt")
+                       : kind == document::SketchConstraintKind::pointDistance
+                           ? QT_TRANSLATE_NOOP("QObject", "Punktabstand hinzugefügt")
+                       : kind == document::SketchConstraintKind::pointLineDistance
+                           ? QT_TRANSLATE_NOOP("QObject", "Abstand Punkt–Linie hinzugefügt")
+                       : kind == document::SketchConstraintKind::pointDistanceX
+                           ? QT_TRANSLATE_NOOP("QObject", "Waagrechter Abstand hinzugefügt")
+                       : kind == document::SketchConstraintKind::pointDistanceY
+                           ? QT_TRANSLATE_NOOP("QObject", "Senkrechter Abstand hinzugefügt")
+                       : kind == document::SketchConstraintKind::angle
+                           ? QT_TRANSLATE_NOOP("QObject", "Winkelmaß hinzugefügt")
+                           : QT_TRANSLATE_NOOP("QObject", "Punkt-auf-Objekt-Bedingung hinzugefügt");
     statusChanged_(QObject::tr(text));
 }
 
@@ -450,9 +475,8 @@ void SketchEditorToolController::toggleConstruction() {
         return;
     syncConstraintState();
     refreshPresentation();
-    statusChanged_(editor_->isSelectedConstruction()
-                       ? QObject::tr("Construction geometry enabled")
-                       : QObject::tr("Construction geometry disabled"));
+    statusChanged_(editor_->isSelectedConstruction() ? QObject::tr("Konstruktionsgeometrie ein")
+                                                     : QObject::tr("Konstruktionsgeometrie aus"));
 }
 
 void SketchEditorToolController::lockSelectedReference() {
@@ -460,7 +484,7 @@ void SketchEditorToolController::lockSelectedReference() {
         return;
     syncConstraintState();
     refreshPresentation();
-    statusChanged_(QObject::tr("Selected sketch point locked"));
+    statusChanged_(QObject::tr("Gewählter Skizzenpunkt gesperrt"));
 }
 
 void SketchEditorToolController::unlockSelectedReference() {
@@ -468,7 +492,7 @@ void SketchEditorToolController::unlockSelectedReference() {
         return;
     syncConstraintState();
     refreshPresentation();
-    statusChanged_(QObject::tr("Selected sketch point unlocked"));
+    statusChanged_(QObject::tr("Gewählter Skizzenpunkt freigegeben"));
 }
 
 void SketchEditorToolController::applyTranslation(const std::string& id, double value) {
@@ -498,7 +522,7 @@ void SketchEditorToolController::removeSelected() {
     syncSelectedDimensionInputs();
     syncConstraintState();
     refreshPresentation();
-    statusChanged_(QObject::tr("Sketch element deleted"));
+    statusChanged_(QObject::tr("Skizzenelement gelöscht"));
 }
 
 void SketchEditorToolController::removeLastConstraint() {
@@ -507,7 +531,7 @@ void SketchEditorToolController::removeLastConstraint() {
     syncSelectedDimensionInputs();
     syncConstraintState();
     refreshPresentation();
-    statusChanged_(QObject::tr("Last sketch constraint removed"));
+    statusChanged_(QObject::tr("Letzte Skizzenbedingung entfernt"));
 }
 
 void SketchEditorToolController::cancel() {
@@ -521,7 +545,7 @@ void SketchEditorToolController::cancel() {
         makeSceneSketchElements(session_),
         selected.has_value() ? std::optional<std::uint64_t>{selected->value()} : std::nullopt);
     panel_.end();
-    statusChanged_(QObject::tr("Sketch editor cancelled"));
+    statusChanged_(QObject::tr("Skizzeneditor abgebrochen"));
 }
 
 bool SketchEditorToolController::isActive() const noexcept { return editor_ != nullptr; }

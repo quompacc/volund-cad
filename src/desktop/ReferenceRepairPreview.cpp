@@ -42,8 +42,8 @@ void ReferenceRepairDialog::preview(const application::SketchSupportProjection& 
                        point && segment.origin == point->reference.origin ? selected : outline);
     }
     previewInfo_->setText(projection.segments.empty()
-                              ? tr("No outline available.")
-                              : tr("Outline in face coordinates: X %1 to %2 mm; Y %3 to %4 mm")
+                              ? tr("Kein Umriss verfügbar.")
+                              : tr("Umriss in Flächenkoordinaten: X %1 bis %2 mm; Y %3 bis %4 mm")
                                     .arg(minX)
                                     .arg(maxX)
                                     .arg(minY)

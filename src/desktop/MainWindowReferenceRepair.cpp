@@ -27,8 +27,8 @@ void MainWindow::repairReferences() {
             refreshScene();
             statusBar()->showMessage(
                 impl_->session.sceneStatus().isCurrent()
-                    ? tr("Reference repaired")
-                    : tr("Repair retained. Remaining model errors need attention."));
+                    ? tr("Referenz repariert")
+                    : tr("Reparatur behalten. Die übrigen Modellfehler brauchen Aufmerksamkeit."));
         },
         this);
     dialog->open();

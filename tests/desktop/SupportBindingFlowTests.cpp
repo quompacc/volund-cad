@@ -53,7 +53,7 @@ viewport::PlanarFaceSelection top(const application::CadSession& session,
 }
 QPushButton* ok(QWidget& widget) {
     for (auto* b : widget.findChildren<QPushButton*>())
-        if (b->text() == "OK")
+        if (b->objectName() == "toolAcceptButton")
             return b;
     throw std::runtime_error("No OK button");
 }
@@ -78,7 +78,7 @@ void screenshot(application::CadSession& session, const QString& name, bool fail
     if (!failed) {
         QAction* edit = nullptr;
         for (auto* action : window.findChildren<QAction*>())
-            if (action->text() == "Edit Sketch")
+            if (action->property("commandId").toString() == "solid.modify.edit_sketch")
                 edit = action;
         require(edit && edit->isEnabled(), "Edit action unavailable");
         edit->trigger();
@@ -88,9 +88,9 @@ void screenshot(application::CadSession& session, const QString& name, bool fail
         auto* tree = window.findChild<QTreeWidget*>();
         require(tree && tree->topLevelItemCount() == 1, "Model tree missing");
         auto* root = tree->topLevelItem(0);
-        require(root->child(2)->text(0).contains("[error]") &&
-                    root->child(3)->text(0).contains("[blocked]") &&
-                    !root->child(4)->text(0).contains("[error]"),
+        require(root->child(2)->text(0).contains("[Fehler]") &&
+                    root->child(3)->text(0).contains("[blockiert]") &&
+                    !root->child(4)->text(0).contains("[Fehler]"),
                 "Support error tree incorrect");
         tree->setCurrentItem(root->child(2));
     }

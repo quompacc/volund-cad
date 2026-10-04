@@ -10,18 +10,18 @@ template <class Execute, class Report> bool guardCommand(Execute execute, Report
     try {
         return execute();
     } catch (const Standard_Failure& error) {
-        report(QObject::tr("Operation failed: %1")
+        report(QObject::tr("Vorgang fehlgeschlagen: %1")
                    .arg(QString::fromStdString(kernel::occtFailureDiagnostic(error))));
     } catch (const std::exception& error) {
-        report(QObject::tr("Operation failed: %1").arg(QString::fromUtf8(error.what())));
+        report(QObject::tr("Vorgang fehlgeschlagen: %1").arg(QString::fromUtf8(error.what())));
     }
     return false;
 }
 
 inline QString commandFeedbackMessage(const application::CommandResult& result) {
     QString message = result.status() == application::CommandStatus::committedWithErrors
-                          ? QObject::tr("Changes committed with errors.")
-                          : QObject::tr("Change rejected. The document was not changed.");
+                          ? QObject::tr("Änderungen mit Fehlern übernommen.")
+                          : QObject::tr("Änderung abgelehnt. Das Dokument blieb unverändert.");
     if (!result.diagnostic().empty())
         message += QStringLiteral("\n") + QString::fromStdString(result.diagnostic());
     for (const auto& issue : result.evaluation().features) {

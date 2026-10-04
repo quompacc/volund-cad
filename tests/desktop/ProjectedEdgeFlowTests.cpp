@@ -44,7 +44,7 @@ document::SketchPlane plane(const viewport::PlanarFaceSelection& s) {
 }
 QPushButton* accept(QWidget& panel) {
     for (auto* button : panel.findChildren<QPushButton*>())
-        if (button->text() == "OK")
+        if (button->objectName() == "toolAcceptButton")
             return button;
     throw std::runtime_error("Accept button missing");
 }
@@ -107,7 +107,8 @@ void capture(application::CadSession& session) {
     require(view->isRenderingReady(), "Viewport unavailable");
     bool triggered = false;
     for (auto* action : window.findChildren<QAction*>())
-        if (action->text() == "Edit Sketch" && action->isEnabled()) {
+        if (action->property("commandId").toString() == "solid.modify.edit_sketch" &&
+            action->isEnabled()) {
             action->trigger();
             triggered = true;
             break;
@@ -169,7 +170,7 @@ void flow(const std::filesystem::path& dir) {
     auto invalid = intent;
     invalid.firstReference->projectedEdge->body = document::BodyId{999};
     controller.confirmElement(invalid);
-    require(status.contains("rejected") && !accept(*panel)->isEnabled(),
+    require(status.contains("abgelehnt") && !accept(*panel)->isEnabled(),
             "Rejected attachment left an unbound draft element");
     controller.confirmElement(intent);
     require(accept(*panel)->isEnabled(), "Typed attachment failed");

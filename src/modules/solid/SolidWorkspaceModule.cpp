@@ -17,8 +17,8 @@ std::function<bool()> alwaysEnabled() {
 
 SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
     commands_.push_back({"solid.create.box",
-                         "Box",
-                         "Create a parametric box",
+                         "Quader",
+                         "Parametrischen Quader anlegen",
                          {},
                          workspaces::CommandGroup::create,
                          true,
@@ -26,8 +26,8 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                          simpleCommand(std::move(services.addBox)),
                          alwaysEnabled()});
     commands_.push_back({"solid.create.cylinder",
-                         "Cylinder",
-                         "Create a parametric cylinder",
+                         "Zylinder",
+                         "Parametrischen Zylinder anlegen",
                          {},
                          workspaces::CommandGroup::create,
                          true,
@@ -35,8 +35,8 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                          simpleCommand(std::move(services.addCylinder)),
                          std::move(services.canAddCylinder)});
     commands_.push_back({"solid.create.sketch",
-                         "Sketch",
-                         "Create a multi-element sketch on a planar face",
+                         "Skizze",
+                         "Skizze auf einer Ebene oder ebenen Fläche anlegen",
                          {},
                          workspaces::CommandGroup::create,
                          true,
@@ -44,21 +44,21 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                          simpleCommand(std::move(services.sketchEditor)),
                          std::move(services.canEditSketch)});
     commands_.push_back({"solid.create.extrude_profiles",
-                         "Extrude Profiles",
-                         "Extrude the selected sketch profiles",
+                         "Extrudieren",
+                         "Gewählte Skizzenbereiche extrudieren",
                          {},
                          workspaces::CommandGroup::create,
                          true,
                          false,
                          simpleCommand(std::move(services.extrudeProfiles)),
                          std::move(services.canExtrudeProfiles)});
-    commands_.push_back({"solid.modify.transform", "Move / Rotate",
-                         "Move or rotate the selected separate body", "M",
+    commands_.push_back({"solid.modify.transform", "Verschieben/Drehen",
+                         "Gewählten getrennten Körper verschieben oder drehen", "M",
                          workspaces::CommandGroup::modify, true, true,
                          std::move(services.transform), std::move(services.canTransform)});
     commands_.push_back({"solid.modify.edit_sketch",
-                         "Edit Sketch",
-                         "Edit the selected sketch geometry",
+                         "Skizze bearbeiten",
+                         "Geometrie der gewählten Skizze bearbeiten",
                          {},
                          workspaces::CommandGroup::modify,
                          true,
@@ -69,7 +69,7 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
 
 std::string SolidWorkspaceModule::id() const { return "solid"; }
 
-std::string SolidWorkspaceModule::title() const { return "Solid"; }
+std::string SolidWorkspaceModule::title() const { return "Volumen"; }
 
 std::span<const workspaces::CommandDescriptor> SolidWorkspaceModule::commands() const {
     return commands_;

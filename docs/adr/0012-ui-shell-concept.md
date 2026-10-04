@@ -47,7 +47,8 @@ Eine einzige produktive Oberfläche in `voelund-cad` mit diesem Aufbau:
   - Albert Sans für die Oberfläche, JetBrains Mono für Werte.
   - Helle und dunkle Darstellung.
 - **Sprache:** Deutsch als Oberflächensprache. Alle Texte laufen über `tr()`, damit
-  eine Übersetzung später möglich bleibt.
+  eine Übersetzung später möglich bleibt. Die Quelltexte sind deutsch (U03b); Tests
+  finden Bedienelemente über Command-IDs und Objektnamen, nie über Text.
 
 ### Vollparametrik ist nicht verhandelbar
 

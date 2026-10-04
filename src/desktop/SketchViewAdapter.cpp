@@ -96,7 +96,7 @@ makeSceneSketchElements(const application::CadSession& session) {
 QString sketchSelectionSummary(const application::CadSession& session) {
     const auto& sketch = session.selectedSketchParameters();
     const auto selectedId = session.selectedSketchElement();
-    QString summary = QObject::tr("Sketch — %1 elements").arg(sketch.elements.values.size());
+    QString summary = QObject::tr("Skizze — %1 Elemente").arg(sketch.elements.values.size());
     const auto profiles = session.selectedSketchProfiles();
     if (!profiles.empty()) {
         QString ids;
@@ -105,7 +105,7 @@ QString sketchSelectionSummary(const application::CadSession& session) {
                 ids += QStringLiteral("; ");
             ids += QString::fromStdString(profile.text());
         }
-        return summary + QObject::tr("\n\nSelected profiles: %1\nStable IDs: %2")
+        return summary + QObject::tr("\n\nGewählte Bereiche: %1\nStabile IDs: %2")
                              .arg(profiles.size())
                              .arg(ids);
     }
@@ -116,17 +116,17 @@ QString sketchSelectionSummary(const application::CadSession& session) {
         if (element.id != *selectedId) {
             continue;
         }
-        QString kind = QObject::tr("Circle");
+        QString kind = QObject::tr("Kreis");
         if (std::holds_alternative<document::SketchLine>(element.geometry)) {
-            kind = QObject::tr("Line");
+            kind = QObject::tr("Linie");
         } else if (std::holds_alternative<document::SketchRectangle>(element.geometry)) {
-            kind = QObject::tr("Rectangle");
+            kind = QObject::tr("Rechteck");
         } else if (std::holds_alternative<document::SketchArc>(element.geometry)) {
-            kind = QObject::tr("Arc");
+            kind = QObject::tr("Bogen");
         } else if (std::holds_alternative<document::SketchEllipse>(element.geometry)) {
             kind = QObject::tr("Ellipse");
         }
-        return summary + QObject::tr("\n\nSelected: %1 #%2").arg(kind).arg(element.id.value());
+        return summary + QObject::tr("\n\nGewählt: %1 #%2").arg(kind).arg(element.id.value());
     }
     return summary;
 }

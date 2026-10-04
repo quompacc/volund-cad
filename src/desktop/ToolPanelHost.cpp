@@ -28,44 +28,44 @@ namespace {
 
 QString compactActionLabel(const std::string& id, const QString& fallback) {
     static const std::vector<std::pair<std::string, QString>> labels{
-        {"horizontal", QObject::tr("Horizontal")},
-        {"vertical", QObject::tr("Vertical")},
-        {"free", QObject::tr("Free")},
+        {"horizontal", QObject::tr("Waagrecht")},
+        {"vertical", QObject::tr("Senkrecht")},
+        {"free", QObject::tr("Frei")},
         {"parallel", QObject::tr("Parallel")},
-        {"perpendicular", QObject::tr("Perpendicular")},
-        {"collinear", QObject::tr("Collinear")},
-        {"coincident", QObject::tr("Coincident")},
-        {"horizontal_points", QObject::tr("Align H")},
-        {"vertical_points", QObject::tr("Align V")},
-        {"symmetric", QObject::tr("Symmetric")},
-        {"midpoint", QObject::tr("Midpoint")},
-        {"perpendicular_bisector", QObject::tr("Bisector")},
-        {"point_on_object", QObject::tr("Point on object")},
-        {"fixed", QObject::tr("Fix")},
-        {"equal", QObject::tr("Equal")},
-        {"tangent", QObject::tr("Tangent")},
-        {"concentric", QObject::tr("Concentric")},
-        {"diameter", QObject::tr("Diameter")},
-        {"point_distance", QObject::tr("Distance")},
-        {"point_line_distance", QObject::tr("Point–line")},
-        {"point_distance_x", QObject::tr("Distance X")},
-        {"point_distance_y", QObject::tr("Distance Y")},
-        {"angle", QObject::tr("Angle")},
-        {"construction", QObject::tr("Construction")},
-        {"lock_point", QObject::tr("Lock point")},
-        {"unlock_point", QObject::tr("Unlock point")},
-        {"remove_constraint", QObject::tr("Remove constraint")},
-        {"undo_sketch", QObject::tr("Undo")},
-        {"redo_sketch", QObject::tr("Redo")},
-        {"trim", QObject::tr("Trim")},
-        {"extend", QObject::tr("Extend")},
-        {"split", QObject::tr("Split")},
-        {"fillet", QObject::tr("Fillet")},
-        {"offset", QObject::tr("Offset")},
-        {"mirror", QObject::tr("Mirror")},
-        {"linear_pattern", QObject::tr("Linear pattern")},
-        {"circular_pattern", QObject::tr("Circular pattern")},
-        {"delete", QObject::tr("Delete")}};
+        {"perpendicular", QObject::tr("Rechtwinklig")},
+        {"collinear", QObject::tr("Kollinear")},
+        {"coincident", QObject::tr("Deckungsgleich")},
+        {"horizontal_points", QObject::tr("Waagrecht ausr.")},
+        {"vertical_points", QObject::tr("Senkrecht ausr.")},
+        {"symmetric", QObject::tr("Symmetrisch")},
+        {"midpoint", QObject::tr("Mittelpunkt")},
+        {"perpendicular_bisector", QObject::tr("Halbierend")},
+        {"point_on_object", QObject::tr("Punkt auf Objekt")},
+        {"fixed", QObject::tr("Fixieren")},
+        {"equal", QObject::tr("Gleich")},
+        {"tangent", QObject::tr("Tangential")},
+        {"concentric", QObject::tr("Konzentrisch")},
+        {"diameter", QObject::tr("Durchmesser")},
+        {"point_distance", QObject::tr("Distanz")},
+        {"point_line_distance", QObject::tr("Punkt–Linie")},
+        {"point_distance_x", QObject::tr("Abstand X")},
+        {"point_distance_y", QObject::tr("Abstand Y")},
+        {"angle", QObject::tr("Winkel")},
+        {"construction", QObject::tr("Konstruktion")},
+        {"lock_point", QObject::tr("Punkt sperren")},
+        {"unlock_point", QObject::tr("Punkt freigeben")},
+        {"remove_constraint", QObject::tr("Bedingung entfernen")},
+        {"undo_sketch", QObject::tr("Rückgängig")},
+        {"redo_sketch", QObject::tr("Wiederholen")},
+        {"trim", QObject::tr("Stutzen")},
+        {"extend", QObject::tr("Verlängern")},
+        {"split", QObject::tr("Teilen")},
+        {"fillet", QObject::tr("Abrunden")},
+        {"offset", QObject::tr("Versetzen")},
+        {"mirror", QObject::tr("Spiegeln")},
+        {"linear_pattern", QObject::tr("Lineares Muster")},
+        {"circular_pattern", QObject::tr("Kreismuster")},
+        {"delete", QObject::tr("Löschen")}};
     const auto match = std::ranges::find(labels, id, &decltype(labels)::value_type::first);
     return match == labels.end() ? fallback : match->second;
 }
@@ -74,7 +74,7 @@ QString compactActionLabel(const std::string& id, const QString& fallback) {
 
 ToolPanelHost::ToolPanelHost(QWidget* parent) : QDockWidget(parent) {
     setObjectName(QStringLiteral("activeToolDock"));
-    setWindowTitle(tr("Tool"));
+    setWindowTitle(tr("Werkzeug"));
     setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
     setMinimumWidth(270);
@@ -86,15 +86,17 @@ ToolPanelHost::ToolPanelHost(QWidget* parent) : QDockWidget(parent) {
     guidance_ = new QLabel(content_);
     guidance_->setWordWrap(true);
     guidance_->setObjectName(QStringLiteral("toolGuidance"));
-    parameterContainer_ = new QGroupBox(tr("Active values"), content_);
+    parameterContainer_ = new QGroupBox(tr("Aktive Werte"), content_);
     parameterLayout_ = new QFormLayout(parameterContainer_);
     parameterLayout_->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
     actionTabs_ = new QTabWidget(content_);
     actionTabs_->setDocumentMode(true);
     auto* buttons = new QHBoxLayout();
     acceptButton_ = new QPushButton(tr("OK"), content_);
-    cancelButton_ = new QPushButton(tr("Cancel"), content_);
-    errorCommitButton_ = new QPushButton(tr("Keep editable errors"), content_);
+    cancelButton_ = new QPushButton(tr("Abbrechen"), content_);
+    acceptButton_->setObjectName(QStringLiteral("toolAcceptButton"));
+    cancelButton_->setObjectName(QStringLiteral("toolCancelButton"));
+    errorCommitButton_ = new QPushButton(tr("Bearbeitbare Fehler behalten"), content_);
     errorCommitButton_->setObjectName(QStringLiteral("keepSketchErrorsButton"));
     errorCommitButton_->hide();
     connect(errorCommitButton_, &QPushButton::clicked, this, [this] {
@@ -211,7 +213,7 @@ void ToolPanelHost::begin(ToolPanelDefinition definition) {
     };
     std::vector<ActionGroup> actionGroups;
     for (const ToolAction& action : definition_.actions) {
-        const QString group = action.group.isEmpty() ? tr("Actions") : action.group;
+        const QString group = action.group.isEmpty() ? tr("Aktionen") : action.group;
         auto match = std::ranges::find_if(
             actionGroups, [&group](const auto& item) { return item.name == group; });
         if (match == actionGroups.end()) {

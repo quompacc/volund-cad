@@ -34,7 +34,7 @@ void SketchEditorToolController::begin(const viewport::PlanarFaceSelection& supp
     panel_.setAcceptEnabled(editor_->canAccept());
     viewport_.beginSketchEditor(drawingSupport, viewport::SketchElementTool::line);
     refreshPresentation();
-    statusChanged_(QObject::tr("Sketch editor: set two points for a line"));
+    statusChanged_(QObject::tr("Skizzeneditor: zwei Punkte für eine Linie setzen"));
 }
 
 // The drawing frame of a base plane; bodyId 0 because no body supports it.
@@ -59,7 +59,7 @@ void SketchEditorToolController::beginOnBasePlane(document::DatumPlane datum) {
     panel_.setAcceptEnabled(editor_->canAccept());
     viewport_.beginSketchEditor(basePlaneSupport(datum), viewport::SketchElementTool::line);
     refreshPresentation();
-    statusChanged_(QObject::tr("Sketch editor: set two points for a line"));
+    statusChanged_(QObject::tr("Skizzeneditor: zwei Punkte für eine Linie setzen"));
 }
 
 bool SketchEditorToolController::beginSelectedSketch() {
@@ -81,7 +81,7 @@ bool SketchEditorToolController::beginSelectedSketch() {
         viewport_.beginSketchEditor(basePlaneSupport(*parameters.datum),
                                     viewport::SketchElementTool::line);
         refreshPresentation();
-        statusChanged_(QObject::tr("Editing existing sketch"));
+        statusChanged_(QObject::tr("Vorhandene Skizze wird bearbeitet"));
         return true;
     }
     try {
@@ -122,7 +122,7 @@ bool SketchEditorToolController::beginSelectedSketch() {
     panel_.setAcceptEnabled(editor_->canAccept());
     viewport_.beginSketchEditor(support, viewport::SketchElementTool::line);
     refreshPresentation();
-    statusChanged_(QObject::tr("Editing existing sketch"));
+    statusChanged_(QObject::tr("Vorhandene Skizze wird bearbeitet"));
     return true;
 }
 

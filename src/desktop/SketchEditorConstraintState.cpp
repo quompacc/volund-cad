@@ -51,19 +51,20 @@ void SketchEditorToolController::syncConstraintState() {
     panel_.setAcceptEnabled(editor_->canAccept());
     const auto& result = editor_->lastSolveResult();
     if (result.status == features::SketchSolveStatus::conflicting) {
-        panel_.setGuidance(QObject::tr("Conflicting sketch: %1 conflicting constraint(s).")
-                               .arg(result.conflictingConstraints.size()));
-    } else if (result.status == features::SketchSolveStatus::failed) {
         panel_.setGuidance(
-            QObject::tr("Sketch solver failed. Correct the sketch or undo; OK is disabled."));
+            QObject::tr("Widersprüchliche Skizze: %1 widersprüchliche Bedingung(en).")
+                .arg(result.conflictingConstraints.size()));
+    } else if (result.status == features::SketchSolveStatus::failed) {
+        panel_.setGuidance(QObject::tr("Skizzenlöser fehlgeschlagen. Korrigiere die Skizze oder "
+                                       "mache rückgängig; OK ist gesperrt."));
     } else if (result.degreesOfFreedom == 0) {
-        panel_.setGuidance(QObject::tr("Sketch fully constrained."));
+        panel_.setGuidance(QObject::tr("Skizze vollständig bestimmt."));
     } else if (result.degreesOfFreedom > 0) {
-        panel_.setGuidance(QObject::tr("Sketch underconstrained: %1 degree(s) of freedom. "
-                                       "Ctrl-click adds relation references.")
+        panel_.setGuidance(QObject::tr("Skizze unterbestimmt: %1 Freiheitsgrad(e). "
+                                       "Strg-Klick fügt Bezüge für Beziehungen hinzu.")
                                .arg(result.degreesOfFreedom));
     } else {
-        panel_.setGuidance(QObject::tr("Draw sketch geometry to begin."));
+        panel_.setGuidance(QObject::tr("Zeichne Skizzengeometrie, um zu beginnen."));
     }
 }
 

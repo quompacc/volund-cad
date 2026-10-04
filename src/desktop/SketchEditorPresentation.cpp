@@ -15,12 +15,12 @@ namespace voelund::desktop {
 void SketchEditorToolController::applyEditOperation(const std::string& id) {
     if (!editor_)
         return;
-    const bool changed = id == "trim"       ? editor_->trimSelected()
-                         : id == "extend"    ? editor_->extendSelected()
-                         : id == "split"     ? editor_->splitSelected()
-                         : id == "fillet"    ? editor_->filletSelected(filletRadius_)
-                         : id == "offset"    ? editor_->offsetSelected(offsetDistance_)
-                         : id == "mirror"    ? editor_->mirrorSelected()
+    const bool changed = id == "trim"     ? editor_->trimSelected()
+                         : id == "extend" ? editor_->extendSelected()
+                         : id == "split"  ? editor_->splitSelected()
+                         : id == "fillet" ? editor_->filletSelected(filletRadius_)
+                         : id == "offset" ? editor_->offsetSelected(offsetDistance_)
+                         : id == "mirror" ? editor_->mirrorSelected()
                          : id == "linear_pattern"
                              ? editor_->linearPatternSelected(
                                    static_cast<int>(std::lround(patternCount_)), patternSpacing_)
@@ -34,7 +34,7 @@ void SketchEditorToolController::applyEditOperation(const std::string& id) {
     syncSelectedDimensionInputs();
     syncConstraintState();
     refreshPresentation();
-    statusChanged_(QObject::tr("Sketch operation completed"));
+    statusChanged_(QObject::tr("Skizzenoperation abgeschlossen"));
 }
 
 void SketchEditorToolController::syncSelectedDimensionInputs() {
@@ -53,7 +53,8 @@ void SketchEditorToolController::syncSelectedDimensionInputs() {
     panel_.setLengthVisible("rectangle_height", height.has_value());
     panel_.setLengthVisible("circle_radius", radius.has_value());
     panel_.setLengthVisible("polygon_sides", toolIndex_ == 9);
-    panel_.setLengthVisible("fillet_radius", selecting && editor_->selectedReferences().size() >= 2);
+    panel_.setLengthVisible("fillet_radius",
+                            selecting && editor_->selectedReferences().size() >= 2);
     panel_.setLengthVisible("offset_distance", selecting && hasSelection);
     panel_.setLengthVisible("pattern_count", selecting && hasSelection);
     panel_.setLengthVisible("pattern_spacing", selecting && hasSelection);
@@ -109,15 +110,15 @@ void SketchEditorToolController::refreshPresentation() {
     std::vector<viewport::SceneSketchConstraint> constraints;
     constraints.reserve(annotations.size());
     for (const features::SketchConstraintAnnotation& annotation : annotations) {
-        const bool editable = annotation.kind == document::SketchConstraintKind::distance ||
-                              annotation.kind == document::SketchConstraintKind::radius ||
-                              annotation.kind == document::SketchConstraintKind::diameter ||
-                              annotation.kind == document::SketchConstraintKind::pointDistance ||
-                              annotation.kind ==
-                                  document::SketchConstraintKind::pointLineDistance ||
-                              annotation.kind == document::SketchConstraintKind::pointDistanceX ||
-                              annotation.kind == document::SketchConstraintKind::pointDistanceY ||
-                              annotation.kind == document::SketchConstraintKind::angle;
+        const bool editable =
+            annotation.kind == document::SketchConstraintKind::distance ||
+            annotation.kind == document::SketchConstraintKind::radius ||
+            annotation.kind == document::SketchConstraintKind::diameter ||
+            annotation.kind == document::SketchConstraintKind::pointDistance ||
+            annotation.kind == document::SketchConstraintKind::pointLineDistance ||
+            annotation.kind == document::SketchConstraintKind::pointDistanceX ||
+            annotation.kind == document::SketchConstraintKind::pointDistanceY ||
+            annotation.kind == document::SketchConstraintKind::angle;
         constraints.push_back({annotation.id.value(), sketchConstraintLabel(annotation),
                                annotation.position.X(), annotation.position.Y(),
                                annotation.position.Z(),
@@ -129,25 +130,18 @@ void SketchEditorToolController::refreshPresentation() {
         const gp_Pnt second = evaluated.back().points.size() >= 2
                                   ? evaluated.back().points[1].world
                                   : evaluated.back().radialAnchor.value_or(first);
-        const auto previewLabel = *previewAutomatic_ == viewport::SketchAutomaticConstraint::horizontal
-                                      ? "[H?]"
-                                  : *previewAutomatic_ == viewport::SketchAutomaticConstraint::vertical
-                                      ? "[V?]"
-                                  : *previewAutomatic_ == viewport::SketchAutomaticConstraint::parallel
-                                      ? "[P?]"
-                                  : *previewAutomatic_ == viewport::SketchAutomaticConstraint::perpendicular
-                                      ? "[⊥?]"
-                                  : *previewAutomatic_ == viewport::SketchAutomaticConstraint::tangent
-                                      ? "[T?]"
-                                  : *previewAutomatic_ == viewport::SketchAutomaticConstraint::equal
-                                      ? "[=?]"
-                                  : *previewAutomatic_ == viewport::SketchAutomaticConstraint::concentric
-                                      ? "[CC?]"
-                                      : "[O?]";
-        constraints.push_back(
-            {0, previewLabel,
-             (first.X() + second.X()) * 0.5, (first.Y() + second.Y()) * 0.5,
-             (first.Z() + second.Z()) * 0.5, false, false});
+        const auto previewLabel =
+            *previewAutomatic_ == viewport::SketchAutomaticConstraint::horizontal      ? "[H?]"
+            : *previewAutomatic_ == viewport::SketchAutomaticConstraint::vertical      ? "[V?]"
+            : *previewAutomatic_ == viewport::SketchAutomaticConstraint::parallel      ? "[P?]"
+            : *previewAutomatic_ == viewport::SketchAutomaticConstraint::perpendicular ? "[⊥?]"
+            : *previewAutomatic_ == viewport::SketchAutomaticConstraint::tangent       ? "[T?]"
+            : *previewAutomatic_ == viewport::SketchAutomaticConstraint::equal         ? "[=?]"
+            : *previewAutomatic_ == viewport::SketchAutomaticConstraint::concentric    ? "[CC?]"
+                                                                                       : "[O?]";
+        constraints.push_back({0, previewLabel, (first.X() + second.X()) * 0.5,
+                               (first.Y() + second.Y()) * 0.5, (first.Z() + second.Z()) * 0.5,
+                               false, false});
     }
     viewport_.setSketchConstraints(constraints);
 }

@@ -30,7 +30,7 @@ void ModelTreePanel::showFeatures(std::span<const document::FeatureDescriptor> f
     const QSignalBlocker blocker(this);
     clear();
     auto* bodyItem = new QTreeWidgetItem(this);
-    bodyItem->setText(0, tr("Body"));
+    bodyItem->setText(0, tr("Körper"));
     bodyItem->setFlags(bodyItem->flags() & ~Qt::ItemIsSelectable);
     for (const document::FeatureDescriptor& feature : features) {
         auto* item = new QTreeWidgetItem(bodyItem);
@@ -54,8 +54,8 @@ void ModelTreePanel::showStatuses(std::span<const application::FeatureRuntimeSta
         const QString name = item->data(0, Qt::UserRole + 1).toString();
         const bool hasError = state.status == application::FeatureRuntimeStatus::error;
         const bool blocked = state.status == application::FeatureRuntimeStatus::blocked;
-        item->setText(0, hasError  ? tr("%1 [error]").arg(name)
-                         : blocked ? tr("%1 [blocked]").arg(name)
+        item->setText(0, hasError  ? tr("%1 [Fehler]").arg(name)
+                         : blocked ? tr("%1 [blockiert]").arg(name)
                                    : name);
         item->setToolTip(0,
                          hasError || blocked ? QString::fromStdString(state.message) : QString{});

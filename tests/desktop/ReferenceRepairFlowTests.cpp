@@ -45,7 +45,7 @@ void click(QWidget* widget, QPoint at = {}) {
 }
 QAction* action(QWidget& w, const QString& name) {
     for (auto* a : w.findChildren<QAction*>())
-        if (a->text() == name || a->objectName() == name)
+        if (a->property("commandId").toString() == name || a->objectName() == name)
             return a;
     throw std::runtime_error("Missing action: " + name.toStdString());
 }
@@ -214,19 +214,19 @@ void supportFlow(const std::filesystem::path& directory, bool multiple) {
             "UI repair failed");
     const auto repaired = session.identifiedSnapshot();
     capture(w, multiple ? "multiple-repaired" : "single-repaired");
-    action(w, "Undo")->trigger();
+    action(w, "history.undo")->trigger();
     events();
     require(session.identifiedSnapshot() == original && !session.sceneStatus().isCurrent(),
             "Undo lost original error");
     capture(w, multiple ? "multiple-undo" : "single-undo");
-    action(w, "Redo")->trigger();
+    action(w, "history.redo")->trigger();
     events();
     require(session.identifiedSnapshot() == repaired, "Redo lost repair");
     const auto saved =
         directory / (multiple ? "repair-ui-multiple-fixed.volund" : "repair-ui-fixed.volund");
     std::filesystem::remove(saved);
-    fileAction(w, "Save &As…", saved);
-    fileAction(w, "&Open…", saved);
+    fileAction(w, "document.save_as", saved);
+    fileAction(w, "document.open", saved);
     require(session.identifiedSnapshot() == repaired && session.sceneStatus().isCurrent() &&
                 !session.isModified(),
             "UI Save/Open failed");
@@ -279,11 +279,11 @@ void edgeAndStale(const std::filesystem::path& directory) {
     require(s.sceneStatus().isCurrent() && !s.sketchParameters(FeatureId{2}).repairReason,
             "Edge repair failed");
     const auto fixed = s.identifiedSnapshot();
-    action(w, "Undo")->trigger();
+    action(w, "history.undo")->trigger();
     events();
     require(s.sketchParameters(FeatureId{2}).repairReason == SketchRepairReason::legacyEdges,
             "Edge undo");
-    action(w, "Redo")->trigger();
+    action(w, "history.redo")->trigger();
     events();
     require(s.identifiedSnapshot() == fixed, "Edge redo");
     d = open(w);

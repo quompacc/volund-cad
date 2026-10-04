@@ -50,11 +50,11 @@ void run() {
     require(session.selectedCylinderParameters() == original && !session.isModified() &&
                 !session.canUndo() && session.currentShape().IsSame(shape) &&
                 moveZ->value() == original.placement.translationZ &&
-                window.statusBar()->currentMessage().contains("rejected"),
+                window.statusBar()->currentMessage().contains("abgelehnt"),
             "rejected parameter was published or input was not restored");
     QApplication::processEvents();
     auto* diagnostic = window.findChild<QLabel*>(QStringLiteral("cylinderCommandError"));
-    require(diagnostic && diagnostic->isVisible() && diagnostic->text().contains("rejected") &&
+    require(diagnostic && diagnostic->isVisible() && diagnostic->text().contains("abgelehnt") &&
                 diagnostic->text().contains("Feature"),
             "persistent rejection diagnostic");
     const auto directory = qEnvironmentVariable("VOELUND_PARAMETER_FAILURE_ARTIFACT_DIR");
@@ -83,7 +83,7 @@ void run() {
                 session.selectedCylinderParameters().placement.translationZ == 10 &&
                 session.displayShape().IsSame(shape) && geometryStatus &&
                 geometryStatus->isVisible() &&
-                geometryStatus->text().contains("Last valid geometry"),
+                geometryStatus->text().contains("Letzte gültige Geometrie"),
             "explicit error commit was not labelled stale");
     if (!directory.isEmpty()) {
         QApplication::processEvents();
@@ -91,7 +91,7 @@ void run() {
     }
     QAction* undo = nullptr;
     for (auto* action : window.findChildren<QAction*>())
-        if (action->text() == "Undo")
+        if (action->property("commandId").toString() == "history.undo")
             undo = action;
     require(undo && undo->isEnabled(), "undo action");
     finish(*moveZ, 0);
@@ -100,7 +100,7 @@ void run() {
             "productive repair did not restore current geometry");
     undo->trigger();
     require(!session.sceneStatus().isCurrent() && geometryStatus->isVisible() &&
-                diagnostic->isVisible() && diagnostic->text().contains("committed with errors") &&
+                diagnostic->isVisible() && diagnostic->text().contains("mit Fehlern übernommen") &&
                 moveZ->value() == 10,
             "undo repair lost typed error result or stale presentation");
     if (!directory.isEmpty()) {
@@ -117,7 +117,7 @@ void run() {
     finish(*radius, 9);
     features::detail::beforeFeatureEvaluation = previousHook;
     require(!session.isModified() && radius->value() == original.radius &&
-                window.statusBar()->currentMessage().contains("Operation failed"),
+                window.statusBar()->currentMessage().contains("Vorgang fehlgeschlagen"),
             "allocation exception escaped Qt callback or changed parameters");
     features::detail::beforeFeatureEvaluation = [](document::FeatureId) {
         throw Standard_ProgramError("injected OCCT program error");

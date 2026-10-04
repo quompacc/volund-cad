@@ -35,10 +35,10 @@ void MainWindow::syncGeometryStatus() {
     }
     impl_->geometryStatus->setText(
         state.geometry
-            ? tr("Last valid geometry r%1 — model r%2 has errors")
+            ? tr("Letzte gültige Geometrie r%1 — Modell r%2 hat Fehler")
                   .arg(state.geometry->revision)
                   .arg(state.document.revision)
-            : tr("No valid geometry — model r%1 has errors").arg(state.document.revision));
+            : tr("Keine gültige Geometrie — Modell r%1 hat Fehler").arg(state.document.revision));
 }
 
 void MainWindow::applyParameterCommand(
@@ -48,7 +48,7 @@ void MainWindow::applyParameterCommand(
             const auto result = command(ErrorDisposition::reject);
             if (result.status() == CommandStatus::committed) {
                 refreshScene();
-                statusBar()->showMessage(tr("Feature graph recomputed"), 2000);
+                statusBar()->showMessage(tr("Modell neu berechnet"), 2000);
                 return true;
             }
             if (result.reason() == application::RejectionReason::noChange) {
@@ -85,7 +85,8 @@ void MainWindow::keepParameterError() {
     impl_->propertyPanel->setErrorCommitHandler({});
     if (!sameDocument) {
         syncProperties();
-        impl_->propertyPanel->showCommandError(tr("The model changed. Enter the change again."));
+        impl_->propertyPanel->showCommandError(
+            tr("Das Modell hat sich geändert. Gib die Änderung erneut ein."));
         return;
     }
     static_cast<void>(guardCommand(

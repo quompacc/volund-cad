@@ -21,7 +21,7 @@
 namespace voelund::desktop {
 namespace {
 
-QString documentFilter() { return QStringLiteral("Völund CAD Document (*.volund)"); }
+QString documentFilter() { return QObject::tr("Völund-CAD-Dokument (*.volund)"); }
 
 std::filesystem::path nativePath(const QString& fileName) {
 #ifdef _WIN32
@@ -37,19 +37,20 @@ DocumentActions::DocumentActions(QMainWindow& window, application::CadSession& s
                                  std::function<void()> refreshHandler)
     : window_(window), session_(session), refreshHandler_(std::move(refreshHandler)) {
     // The shell header shows this menu (ADR 0012); it no longer lives in a menu bar.
-    fileMenu_ = new QMenu(QStringLiteral("&File"), &window_);
+    fileMenu_ = new QMenu(QObject::tr("&Datei"), &window_);
     fileMenu_->setObjectName(QStringLiteral("fileMenu"));
     QMenu* fileMenu = fileMenu_;
-    QAction* newAction = fileMenu->addAction(QStringLiteral("&New"));
+    QAction* newAction = fileMenu->addAction(QObject::tr("&Neu"));
     newAction->setShortcut(QKeySequence::New);
-    QAction* openAction = fileMenu->addAction(QStringLiteral("&Open…"));
+    QAction* openAction = fileMenu->addAction(QObject::tr("Ö&ffnen…"));
     openAction->setShortcut(QKeySequence::Open);
-    QAction* saveAction = fileMenu->addAction(QStringLiteral("&Save"));
+    QAction* saveAction = fileMenu->addAction(QObject::tr("&Speichern"));
     saveAction->setShortcut(QKeySequence::Save);
-    QAction* saveAsAction = fileMenu->addAction(QStringLiteral("Save &As…"));
+    QAction* saveAsAction = fileMenu->addAction(QObject::tr("Speichern &unter…"));
     saveAsAction->setShortcut(QKeySequence::SaveAs);
-    QAction* duplicateAction = fileMenu->addAction(QStringLiteral("&Duplicate"));
-    duplicateAction->setToolTip(QStringLiteral("Create an unsaved copy of the current document"));
+    QAction* duplicateAction = fileMenu->addAction(QObject::tr("&Duplizieren"));
+    duplicateAction->setToolTip(
+        QObject::tr("Ungespeicherte Kopie des aktuellen Dokuments anlegen"));
     // Shortcuts need the actions on the window; the menu itself is only shown on demand.
     window_.addActions(fileMenu_->actions());
     setCommandId(*newAction, "document.new");
@@ -90,20 +91,20 @@ void DocumentActions::newDocument() {
     try {
         session_.newDocument();
         refreshHandler_();
-        window_.statusBar()->showMessage(QStringLiteral("New document created"), 3000);
+        window_.statusBar()->showMessage(QObject::tr("Neues Dokument angelegt"), 3000);
     } catch (const std::exception& error) {
-        showError(QStringLiteral("New failed"), error);
+        showError(QObject::tr("Neu fehlgeschlagen"), error);
     }
 }
 
 bool DocumentActions::confirmDuplicate() {
     if (!session_.isModified())
         return true;
-    QMessageBox prompt(QMessageBox::Warning, QStringLiteral("Duplicate document"),
-                       QStringLiteral("Save changes to the original before duplicating?\n"
-                                      "The duplicate will include all current changes."),
+    QMessageBox prompt(QMessageBox::Warning, QObject::tr("Dokument duplizieren"),
+                       QObject::tr("Änderungen am Original vor dem Duplizieren speichern?\n"
+                                   "Das Duplikat enthält alle aktuellen Änderungen."),
                        QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel, &window_);
-    prompt.button(QMessageBox::Discard)->setText(QStringLiteral("Duplicate without saving"));
+    prompt.button(QMessageBox::Discard)->setText(QObject::tr("Ohne Speichern duplizieren"));
     prompt.setDefaultButton(QMessageBox::Save);
     const auto answer = prompt.exec();
     if (answer == QMessageBox::Save)
@@ -118,9 +119,9 @@ void DocumentActions::duplicateDocument() {
         session_.duplicateDocument();
         refreshHandler_();
         syncWindowTitle();
-        window_.statusBar()->showMessage(QStringLiteral("Unsaved duplicate created"), 3000);
+        window_.statusBar()->showMessage(QObject::tr("Ungespeichertes Duplikat angelegt"), 3000);
     } catch (const std::exception& error) {
-        showError(QStringLiteral("Duplicate failed"), error);
+        showError(QObject::tr("Duplizieren fehlgeschlagen"), error);
     }
 }
 
@@ -129,16 +130,16 @@ void DocumentActions::open() {
         return;
     }
     const QString fileName = QFileDialog::getOpenFileName(
-        &window_, QStringLiteral("Open Völund Document"), {}, documentFilter());
+        &window_, QObject::tr("Völund-Dokument öffnen"), {}, documentFilter());
     if (fileName.isEmpty()) {
         return;
     }
     try {
         session_.loadDocument(nativePath(fileName));
         refreshHandler_();
-        window_.statusBar()->showMessage(QStringLiteral("Document loaded"), 3000);
+        window_.statusBar()->showMessage(QObject::tr("Dokument geladen"), 3000);
     } catch (const std::exception& error) {
-        showError(QStringLiteral("Open failed"), error);
+        showError(QObject::tr("Öffnen fehlgeschlagen"), error);
     }
 }
 
@@ -147,8 +148,8 @@ bool DocumentActions::confirmSaveChanges() {
         return true;
     }
     const QMessageBox::StandardButton answer = QMessageBox::warning(
-        &window_, QStringLiteral("Unsaved changes"),
-        QStringLiteral("Save changes to the current document?"),
+        &window_, QObject::tr("Ungespeicherte Änderungen"),
+        QObject::tr("Änderungen am aktuellen Dokument speichern?"),
         QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel, QMessageBox::Save);
     if (answer == QMessageBox::Cancel) {
         return false;
@@ -165,7 +166,7 @@ bool DocumentActions::save() {
 
 bool DocumentActions::saveAs() {
     QString fileName =
-        QFileDialog::getSaveFileName(&window_, QStringLiteral("Save Völund Document"),
+        QFileDialog::getSaveFileName(&window_, QObject::tr("Völund-Dokument speichern"),
                                      nativeDisplayPath(session_.currentFile()), documentFilter());
     if (fileName.isEmpty()) {
         return false;
@@ -180,10 +181,10 @@ bool DocumentActions::saveTo(const QString& fileName) {
     try {
         session_.saveDocument(nativePath(fileName));
         syncWindowTitle();
-        window_.statusBar()->showMessage(QStringLiteral("Document saved"), 3000);
+        window_.statusBar()->showMessage(QObject::tr("Dokument gespeichert"), 3000);
         return true;
     } catch (const std::exception& error) {
-        showError(QStringLiteral("Save failed"), error);
+        showError(QObject::tr("Speichern fehlgeschlagen"), error);
         return false;
     }
 }

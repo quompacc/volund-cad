@@ -102,7 +102,9 @@ void existingSketch() {
     click(viewport, 5, 15, 20);
     capture(window, "05-profile-picked");
     for (auto* action : window.findChildren<QAction*>())
-        if (action->text() == QStringLiteral("Extrude Profiles") && action->isEnabled()) {
+        if (action->property("commandId").toString() ==
+                QStringLiteral("solid.create.extrude_profiles") &&
+            action->isEnabled()) {
             action->trigger();
             break;
         }

@@ -23,8 +23,8 @@ void SketchEditorToolController::accept(application::ErrorDisposition dispositio
                         if (!editor_ || session_.sceneStatus().document != stamp ||
                             editor_->draftParameters() != draft) {
                             panel_.setErrorCommitHandler({});
-                            panel_.setGuidance(
-                                QObject::tr("The sketch or model changed. Confirm again."));
+                            panel_.setGuidance(QObject::tr(
+                                "Skizze oder Modell haben sich geändert. Bestätige erneut."));
                             return;
                         }
                         accept(application::ErrorDisposition::keepEditableErrors);
@@ -39,9 +39,9 @@ void SketchEditorToolController::accept(application::ErrorDisposition dispositio
             panel_.end();
             sceneChanged_();
             statusChanged_(result.status() == application::CommandStatus::committedWithErrors
-                               ? QObject::tr("Sketch kept with editable errors")
-                           : wasEditing ? QObject::tr("Sketch updated")
-                                        : QObject::tr("Sketch created"));
+                               ? QObject::tr("Skizze mit bearbeitbaren Fehlern behalten")
+                           : wasEditing ? QObject::tr("Skizze aktualisiert")
+                                        : QObject::tr("Skizze angelegt"));
             return true;
         },
         [this](const QString& message) {
