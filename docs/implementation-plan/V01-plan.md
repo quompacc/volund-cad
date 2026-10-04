@@ -13,6 +13,14 @@ Der Nutzer ist sich beim bisherigen Oberflächenstil unsicher. Jede weitere sich
 UI-Änderung, die über diese Entscheidung hinausgeht, wird vorher mit ihm abgestimmt.
 Aufnahmen werden zur Durchsicht vorgelegt.
 
+## Korrektur des Nutzers vom 04.10.2026 (nach Sichtung von V01b)
+
+Die Ebenenauswahl soll wie in anderen CAD-Programmen **an das Objekt gebunden** sein
+(Ursprung je Körper bzw. je Komponente, vergleichbar FreeCAD-Body oder Fusion-Komponente)
+und im **Modellbaum ein- und ausblendbar** sein. Damit ist die Entscheidung „kein
+Ursprungsordner im Modellbaum“ überholt. Die Umsetzung erfolgt im Rahmen des
+UI-Konzepts UX01. V01b gilt bis dahin als Zwischenstand und wird nicht abgenommen.
+
 ## Unterpakete
 
 | Paket | Inhalt | UI |

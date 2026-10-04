@@ -418,6 +418,10 @@ if(VOELUND_BUILD_DESKTOP)
                 "$<TARGET_FILE_DIR:voelund_viewport_lifecycle_tests>/platforms"
                 VERBATIM)
         endif()
+        # UX01 inventory helper, built on demand only.
+        add_executable(voelund_ui_inventory_capture EXCLUDE_FROM_ALL desktop/UiInventoryCapture.cpp)
+        target_link_libraries(voelund_ui_inventory_capture PRIVATE
+            voelund_project_options Voelund::Desktop)
         add_executable(voelund_base_plane_tests desktop/BasePlaneFlowTests.cpp)
         target_link_libraries(voelund_base_plane_tests PRIVATE voelund_project_options Voelund::Desktop)
         add_test(NAME desktop.base_planes COMMAND voelund_base_plane_tests)
