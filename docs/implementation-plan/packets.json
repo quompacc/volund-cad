@@ -3610,7 +3610,9 @@
       "gate": "G2",
       "chapter": "11-ki-fem-optimierung.md",
       "kind": "implementation-or-acceptance",
-      "evidence": null,
+      "evidence": [
+        "docs/implementation-plan/evidence/AI02a.md"
+      ],
       "completedCommit": null
     },
     {

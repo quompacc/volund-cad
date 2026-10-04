@@ -1,6 +1,6 @@
 # AI02a – Request, Result, Kontext und Standprüfung
 
-**Status:** abgenommen am 04.10.2026 nach gr�nem CI-Lauf 375. Teilplan: [AI02-plan.md](../AI02-plan.md).
+**Status:** abgenommen am 04.10.2026 nach grünem CI-Lauf 375. Teilplan: [AI02-plan.md](../AI02-plan.md).
 
 ## Umsetzung
 
@@ -42,8 +42,8 @@
 | `application.action_requests` | Aufbau nur über Requests: Parameter A (mm) und W (Grad), Kreisskizze, Profil-Extrusion über die RegionId aus dem Kontext, Distanz 15, Bindung an A, A → 20; Volumen und gemeldete IDs je Schritt. Kontext: Stand, Einheiten, Region mit Fläche 100π, angebotene Extrusion. Ablehnungen: fremdes Dokument, alter Stand (Revision, Generation), unbekanntes Feature, unbekannter Parameter, unbekanntes Skizzenmaß, falsche Zielart, gebundene Distanz, falsche Einheiten (auch bei Bindungen), NaN/±Inf, unauflösbare Region, sowie die Reihenfolge bei mehreren Befunden. Nach jeder Ablehnung sind Stand, Dokument-Snapshot, Undo und Redo gleich; das nächste Undo nimmt weiterhin A → 20 zurück. Ein vor Redo vorbereiteter Request ist danach veraltet |
 
 - **Windows:** 110/110 Tests bestanden (Debug, MSVC, seriell).
-- **Linux:** CI-Lauf 375 auf `ac70a94`, gr�n. Lauf 374 auf `73e04b0` war rot: GCC meldete die
-  unvollst�ndige Aggregat-Initialisierung von `ActionResult`
+- **Linux:** CI-Lauf 375 auf `ac70a94`, grün. Lauf 374 auf `73e04b0` war rot: GCC meldete die
+  unvollständige Aggregat-Initialisierung von `ActionResult`
   (`-Werror=missing-field-initializers`), MSVC nicht. `ac70a94` initialisiert alle Felder.
 
 ## Grenzen

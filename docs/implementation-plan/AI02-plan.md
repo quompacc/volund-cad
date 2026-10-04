@@ -136,9 +136,9 @@ Reihenfolge verbindlich. Jedes Unterpaket hat einen eigenen Nachweis
 
 ## Offene Punkte für den Start
 
-- Prüfen, ob `createDatumSketchFeature` Constraints vor der Auswertung löst oder nur
-  validiert. Der FeatureGraph löst Basisebenen-Skizzen nur bei gebundenen Maßen (PAR01)
-  neu.
+- Geklärt in [AI02a](evidence/AI02a.md): `createDatumSketchFeature` löst keine
+  Constraints, es übernimmt die Geometrie wie übergeben. Aufrufer ohne Editor liefern
+  gelöste Geometrie.
 - Für AI02d gibt es noch kein Testgerüst, das GUI-Weg und Direktaufruf vergleicht.
   Vorbild: `tests/desktop/V01FlowTests.cpp`.
 - Lebensdauer der Wiederholungstabelle: je Generation, nicht über Speichern und Öffnen
