@@ -1,6 +1,6 @@
 # AI02d – Anbindung der Shell
 
-**Status:** umgesetzt, CI-Lauf ausstehend. Teilplan: [AI02-plan.md](../AI02-plan.md).
+**Status:** abgenommen am 04.10.2026 nach grünem CI-Lauf 382; damit ist AI02 abgeschlossen. Teilplan: [AI02-plan.md](../AI02-plan.md).
 
 ## Umsetzung
 
@@ -36,7 +36,7 @@
 | bestehende Tests | `desktop.v01_flow`, `desktop.parameter_failures` (Fehlerrückfrage mit `keepEditableErrors`), `desktop.sketch_command_failure`, `application.sketch_editor_flow` und die übrigen Desktop-Tests laufen unverändert über die neuen Wege |
 
 - **Windows:** 113/113 Tests bestanden (Debug, MSVC, seriell).
-- **Linux:** CI-Lauf ausstehend. Vorab auf Fedora mit GCC gebaut, 31/31 Tests der
+- **Linux:** CI-Lauf 382 auf `b907002`, grün. Vorab auf Fedora mit GCC gebaut, 31/31 Tests der
   Anwendungsschicht sowie `action_shell`, `v01_flow`, `parameter_failures` und
   `sketch_command_failure` unter `kwin_wayland --virtual` bestanden.
 

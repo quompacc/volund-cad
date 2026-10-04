@@ -3606,16 +3606,17 @@
       ],
       "acceptance": "A-ACTION-01; identische GUI-/Direktresultate, keine veralteten oder doppelten Mutationen, ein Undo je Kandidat.",
       "boundary": "Umfang und Nicht-Ziele laut eigenem Abschnitt in Kapitel 11; keine neuen Runtime-Abhängigkeiten ohne konkrete Entscheidung. Umstellung 2026-10-04: eingefroren bis zur G3-Abnahme; nicht mehr Voraussetzung für U04. Nutzerentscheidung 2026-10-04: direkt nach R10b vorgezogen; die Regel ‚vor U04‘ war mit UX01 übersprungen worden, AI02 schließt die Lücke vor U07–U10.",
-      "status": "planned",
+      "status": "done",
       "gate": "G2",
       "chapter": "11-ki-fem-optimierung.md",
       "kind": "implementation-or-acceptance",
       "evidence": [
         "docs/implementation-plan/evidence/AI02a.md",
         "docs/implementation-plan/evidence/AI02b.md",
-        "docs/implementation-plan/evidence/AI02c.md"
+        "docs/implementation-plan/evidence/AI02c.md",
+        "docs/implementation-plan/evidence/AI02d.md"
       ],
-      "completedCommit": null
+      "completedCommit": "b907002"
     },
     {
       "id": "AI03",

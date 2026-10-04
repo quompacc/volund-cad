@@ -1,14 +1,14 @@
 # Fortsetzung – 4. Oktober 2026
 
-**Einstieg für die nächste Sitzung:** Dieses Dokument zuerst lesen. Danach
-[AI02-plan.md](implementation-plan/AI02-plan.md) lesen und mit **AI02a** beginnen.
+**Einstieg für die nächste Sitzung:** Dieses Dokument zuerst lesen. AI02 ist
+abgeschlossen. Als Nächstes kommt **AI03**, vorher mit dem Nutzer abstimmen (siehe
+„Nächste Schritte“).
 
 ## Stand des Repos
 
 - Arbeitsbranch `ux01`; `main` wird nach grüner CI per Fast-Forward nachgezogen (siehe
-  Arbeitsregeln). Beim Schreiben dieser Notiz war `main` = `1a8eb7d`. Der Abnahme-Commit
-  `5182597` (R10b, AI-Umstellung) wartete noch auf seinen CI-Lauf und wird danach nach
-  `main` gebracht.
+  Arbeitsregeln). Der letzte Abnahme-Commit (AI02) folgt nach seinem CI-Lauf auf `main`;
+  vorher stand `main` auf `e768d03`.
 - Remotes: `origin` = Gitea `ssh://git@192.168.1.11:2222/eduard/volund-cad.git`
   (maßgeblich, mit CI), `github` = `git@github.com:quompacc/volund-cad.git` (wird nicht
   automatisch gepflegt).
@@ -25,6 +25,10 @@
 | PAR01 | Dokumentparameter, Bindungen, Schema 7 (ohne UI) | 363 | [PAR01](implementation-plan/evidence/PAR01.md) |
 | U12a | UI-Vorschau und toter Rechteckweg entfernt, Test-Einstellungen isoliert | 366 | [U12a](implementation-plan/evidence/U12a.md) |
 | R10b | Faces für Regionen schneidender Konturen | 370 | [R10b](implementation-plan/evidence/R10b.md) |
+| AI02a | Typisierte Requests, Kontext, Prüfung vor jeder Transaktion | 375 | [AI02a](implementation-plan/evidence/AI02a.md) |
+| AI02b | Explizite Ziele für Box, Zylinder, Platzierung | 378 | [AI02b](implementation-plan/evidence/AI02b.md) |
+| AI02c | Vorschau, Skizze + Extrusion als ein Commit, Request-IDs | 380 | [AI02c](implementation-plan/evidence/AI02c.md) |
+| AI02d | Shell-Befehle laufen als Requests | 382 | [AI02d](implementation-plan/evidence/AI02d.md) |
 
 Außerdem:
 
@@ -34,13 +38,16 @@ Außerdem:
 
 ## Nächste Schritte (Reihenfolge)
 
-1. **AI02a–d** laut [AI02-plan.md](implementation-plan/AI02-plan.md): eine gemeinsame,
-   zielgerichtete Aktionsschicht für GUI, Assistent und MCP. Ohne Netzwerk und ohne SDK.
-2. **AI03** integrierter Assistent: Claude per API, Adapter austauschbar, ChatGPT möglich.
+1. **AI03** integrierter Assistent: Claude per API, Adapter austauschbar, ChatGPT möglich.
    Vor Beginn mit dem Nutzer abstimmen: Bedienung im UI (Seitenpanel nach ADR 0012),
    Ablage des API-Schlüssels, erster Anwendungsfall laut Kapitel 11 (Referenzplatte,
    Bohrung, Rippe).
-3. Danach U07–U10 und die weiteren Pakete laut `topologicalOrder` in
+   - Grundlage ist `include/voelund/application/Actions.hpp`: `describeActionContext`,
+     `ActionDispatcher` (Wiederholungsschutz) und `preview` für Vorschläge vor dem Commit.
+   - Absehbare Lücken: Skizzen auf Körperflächen ohne GUI (Flächenbezug über
+     `SubshapeRef`), allgemeine mehrteilige Stapel mit Verweisen auf frühere Schritte,
+     Bohrung und Rippe als Features gibt es noch nicht.
+2. Danach U07–U10 und die weiteren Pakete laut `topologicalOrder` in
    [packets.json](implementation-plan/packets.json).
 
 Hintergrund ist die Nutzerentscheidung vom 04.10.2026 ([Kapitel 11](implementation-plan/11-ki-fem-optimierung.md),
@@ -89,7 +96,7 @@ Hintergrund ist die Nutzerentscheidung vom 04.10.2026 ([Kapitel 11](implementati
   - `subst V: "D:\300_Projekte\310_Aktiv\volund-cad"`, dann
     `"C:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\vcvars64.bat"`
     (`vswhere` fehlt) und von `V:\` aus `cmake --build build/p02-qt-final` sowie
-    `ctest --test-dir build/p02-qt-final -j1`. Stand heute: 109 Tests.
+    `ctest --test-dir build/p02-qt-final -j1`. Stand heute: 113 Tests.
   - Git braucht `-c safe.directory='*'`.
   - Desktop-Tests laufen unter Windows auf dem echten Desktop. Mausbewegungen des Nutzers
     können Hover-Tests stören (`sketch_snap`).
@@ -99,6 +106,13 @@ Hintergrund ist die Nutzerentscheidung vom 04.10.2026 ([Kapitel 11](implementati
   - Headless-Sitzung wie in der CI: `kwin_wayland --virtual` (siehe `~/repro-snap.sh`).
   - Windows nutzt OCCT 8, Fedora OCCT 7.9.3. Beispiel: `Standard_Failure::what()` gibt es
     nur in 8, `GetMessageString()` ist dort veraltet. Versionsneutral bleiben.
+- **GCC vor dem Push:** MSVC lässt Dinge durch, an denen die CI scheitert, z. B.
+  `-Werror=missing-field-initializers` bei unvollständigen Aggregaten (Lauf 374). Vorab
+  auf Fedora bauen: in `~/repro/par01` `fetch` und `checkout -f <HEAD>`, dann die
+  geänderten Dateien per `tar cf - … | ssh … 'tar xmf -'` übertragen (`m` setzt neue
+  Zeitstempel, sonst baut ninja nicht neu) und `cmake --build --preset linux-desktop`.
+- **Kodierung:** Python unter Windows schreibt ohne Angabe cp1252. Immer
+  `encoding='utf-8'` angeben.
 - **Zeilenenden:** Windows checkt mit CRLF aus. Python-Skripte, die Dateien bearbeiten,
   müssen die Zeilenenden beibehalten (`newline=''`), sonst greifen Ersetzungen nicht.
 

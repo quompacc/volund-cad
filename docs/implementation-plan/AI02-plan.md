@@ -1,5 +1,8 @@
 # AI02 – Teilplan: gemeinsame zielgerichtete CAD-Aktionen
 
+**Abgeschlossen am 04.10.2026:** [AI02a](evidence/AI02a.md), [AI02b](evidence/AI02b.md),
+[AI02c](evidence/AI02c.md), [AI02d](evidence/AI02d.md); AI02e entfällt (siehe AI02d).
+
 Stand 04.10.2026. Grundlage: [Kapitel 11](11-ki-fem-optimierung.md) (Aktionsvertrag AI01),
 [ADR 0010](../adr/0010-native-actions-and-analysis-extension.md), K12 in
 [02-zielvertraege.md](02-zielvertraege.md), Abnahme A-ACTION-01 in

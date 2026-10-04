@@ -3,7 +3,7 @@
 ## Aktueller Stand – 4. Oktober 2026
 
 [`packets.json`](packets.json) ist die einzige Statusquelle; dieser Abschnitt fasst
-sie nur zusammen. **128 Hauptpakete, 37 abgeschlossen, 91 offen** (90 geplant,
+sie nur zusammen. **131 Pakete, 51 abgeschlossen, 80 offen** (79 geplant,
 A02 mit Designbedarf). Teilblöcke wie D12a–e zählen nicht als Hauptpakete; die
 Paketanzahl ist kein Maß für Restaufwand oder Fertigstellungszeit.
 
@@ -42,13 +42,13 @@ Paketanzahl ist kein Maß für Restaufwand oder Fertigstellungszeit.
 | --- | ---: |
 | G0 – Basis | 2 |
 | G1 – Dokument und Referenzen | 0 |
-| G2 – zusammenhängender CAD-Workflow | 22 |
+| G2 – zusammenhängender CAD-Workflow | 21 |
 | G3 – mechanisches CAD v1 | 18 |
 | G4 – veröffentlichbare v1 | 10 |
 | G5 – spätere Produktfamilie | 29 |
-| Gesamt | 81 |
+| Gesamt | 80 |
 
-Bis einschließlich G4 bleiben 52 Hauptpakete. G2 ist der erste durchgängige
+Bis einschließlich G4 bleiben 51 Hauptpakete. G2 ist der erste durchgängige
 Bedienablauf, G3 der begrenzte mechanische Funktionsumfang. G5 umfasst zusätzliche
 Bereiche wie Baugruppen und Zeichnungen. Nutzbarkeit wird an diesen Abläufen
 abgenommen, nicht am Erreichen einer Prozentzahl.
@@ -62,7 +62,8 @@ D12 ist [abgeschlossen](evidence/D12e.md); D13 ist abgeschlossen mit dem
 [AI01](evidence/AI01.md) ist als Vertrags-/Planungspaket abgeschlossen. Das zählt
 keine implementierte KI/FEM als fertig. [Kapitel 11](11-ki-fem-optimierung.md) und
 [ADR 0010](../adr/0010-native-actions-and-analysis-extension.md) trennen die Stufen:
-AI02 liefert die gemeinsame zielgerichtete CAD-Aktionsgrenze. Der optionale MCP-Zugang
+AI02 liefert die gemeinsame zielgerichtete CAD-Aktionsgrenze und ist seit dem
+4. Oktober 2026 [abgeschlossen](AI02-plan.md) (AI02a–d). Der optionale MCP-Zugang
 (AI04) folgt nach v1 unabhängig von FEM.
 
 **Nutzerentscheidung vom 4. Oktober 2026:** AI02 kommt direkt nach R10b (G2), der
