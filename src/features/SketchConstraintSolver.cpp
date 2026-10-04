@@ -11,6 +11,7 @@
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
+#include <variant>
 #include <vector>
 
 namespace voelund::features {
@@ -158,6 +159,10 @@ struct EllipseState final {
     }
 };
 
+// PlaneGCS orders unknowns by their addresses. All states share one storage in element order so
+// an underdetermined sketch solves the same way in every run, independent of heap layout.
+using ElementState = std::variant<LineState, CircleState, ArcState, EllipseState>;
+
 using LineMap = std::unordered_map<std::uint64_t, LineState*>;
 using CircleMap = std::unordered_map<std::uint64_t, CircleState*>;
 using ArcMap = std::unordered_map<std::uint64_t, ArcState*>;
@@ -185,10 +190,10 @@ GCS::Point& point(const document::SketchGeometryReference& reference, const Line
 SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
     document::validateSketchParameters(sketch);
     const document::SketchElements originalElements = sketch.elements;
-    std::vector<std::unique_ptr<LineState>> lineStates;
-    std::vector<std::unique_ptr<CircleState>> circleStates;
-    std::vector<std::unique_ptr<ArcState>> arcStates;
-    std::vector<std::unique_ptr<EllipseState>> ellipseStates;
+    // Reserved once: states point into themselves and must never be relocated.
+    std::vector<ElementState> states;
+    states.reserve(sketch.elements.values.size());
+    std::vector<ArcState*> arcStates;
     LineMap lines;
     CircleMap circles;
     ArcMap arcs;
@@ -196,27 +201,28 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
     GCS::VEC_pD unknowns;
     for (document::SketchElement& element : sketch.elements.values) {
         if (std::holds_alternative<document::SketchLine>(element.geometry)) {
-            auto state = std::make_unique<LineState>(element);
-            state->appendUnknowns(unknowns);
-            lines.emplace(element.id.value(), state.get());
-            lineStates.push_back(std::move(state));
+            auto& state = states.emplace_back(std::in_place_type<LineState>, element);
+            auto& line = std::get<LineState>(state);
+            line.appendUnknowns(unknowns);
+            lines.emplace(element.id.value(), &line);
         } else if (std::holds_alternative<document::SketchCircle>(element.geometry)) {
-            auto state = std::make_unique<CircleState>(element);
-            state->appendUnknowns(unknowns);
-            circles.emplace(element.id.value(), state.get());
-            centers.emplace(element.id.value(), &state->circle.center);
-            circleStates.push_back(std::move(state));
+            auto& state = states.emplace_back(std::in_place_type<CircleState>, element);
+            auto& circle = std::get<CircleState>(state);
+            circle.appendUnknowns(unknowns);
+            circles.emplace(element.id.value(), &circle);
+            centers.emplace(element.id.value(), &circle.circle.center);
         } else if (std::holds_alternative<document::SketchArc>(element.geometry)) {
-            auto state = std::make_unique<ArcState>(element);
-            state->appendUnknowns(unknowns);
-            arcs.emplace(element.id.value(), state.get());
-            centers.emplace(element.id.value(), &state->arc.center);
-            arcStates.push_back(std::move(state));
+            auto& state = states.emplace_back(std::in_place_type<ArcState>, element);
+            auto& arc = std::get<ArcState>(state);
+            arc.appendUnknowns(unknowns);
+            arcs.emplace(element.id.value(), &arc);
+            centers.emplace(element.id.value(), &arc.arc.center);
+            arcStates.push_back(&arc);
         } else if (std::holds_alternative<document::SketchEllipse>(element.geometry)) {
-            auto state = std::make_unique<EllipseState>(element);
-            state->appendUnknowns(unknowns);
-            centers.emplace(element.id.value(), &state->ellipse.center);
-            ellipseStates.push_back(std::move(state));
+            auto& state = states.emplace_back(std::in_place_type<EllipseState>, element);
+            auto& ellipse = std::get<EllipseState>(state);
+            ellipse.appendUnknowns(unknowns);
+            centers.emplace(element.id.value(), &ellipse.ellipse.center);
         }
     }
 
@@ -434,14 +440,8 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
     if (status != GCS::Success && status != GCS::Converged)
         return result;
     system.applySolution();
-    for (const auto& line : lineStates)
-        line->writeBack();
-    for (const auto& circle : circleStates)
-        circle->writeBack();
-    for (const auto& arc : arcStates)
-        arc->writeBack();
-    for (const auto& ellipse : ellipseStates)
-        ellipse->writeBack();
+    for (const auto& state : states)
+        std::visit([](const auto& element) { element.writeBack(); }, state);
     try {
         document::validateSketchParameters(sketch);
     } catch (const std::invalid_argument&) {
