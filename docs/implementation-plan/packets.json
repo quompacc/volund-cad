@@ -3611,7 +3611,8 @@
       "chapter": "11-ki-fem-optimierung.md",
       "kind": "implementation-or-acceptance",
       "evidence": [
-        "docs/implementation-plan/evidence/AI02a.md"
+        "docs/implementation-plan/evidence/AI02a.md",
+        "docs/implementation-plan/evidence/AI02b.md"
       ],
       "completedCommit": null
     },

@@ -1,6 +1,6 @@
 # AI02b – Mutationen mit expliziten Zielen
 
-**Status:** umgesetzt, CI-Lauf ausstehend. Teilplan: [AI02-plan.md](../AI02-plan.md).
+**Status:** abgenommen am 04.10.2026 nach grünem CI-Lauf 378. Teilplan: [AI02-plan.md](../AI02-plan.md).
 
 ## Umsetzung
 
@@ -31,7 +31,7 @@
 | bestehende Tests | `creation_results`, `command_transactions`, `recompute_history` und die Desktop-Tests nutzen weiter die delegierenden Varianten |
 
 - **Windows:** 111/111 Tests bestanden (Debug, MSVC, seriell).
-- **Linux:** CI-Lauf ausstehend. Vorab auf Fedora mit GCC gebaut: 30/30 Tests der
+- **Linux:** CI-Lauf 378 auf `8d98d3f`, grün. Vorab auf Fedora mit GCC gebaut: 30/30 Tests der
   Anwendungsschicht.
 
 ## Grenzen
