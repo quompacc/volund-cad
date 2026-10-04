@@ -50,6 +50,9 @@ struct ShellState final {
     bool regionExtrudable{false};
     ShellTool tool{ShellTool::none};
 
+    // An open sketch or extrusion owns the document until OK, Cancel or Escape (K04, U05):
+    // other tools, primitives and document undo wait.
+    [[nodiscard]] bool toolBlocksCommands() const noexcept;
     // Command availability derived only from this state (U01 command table).
     [[nodiscard]] bool canSketch() const noexcept;
     [[nodiscard]] bool canExtrude() const noexcept;

@@ -148,7 +148,6 @@ void flow(const std::filesystem::path& dir) {
     mouseSelection(session, box, display, *selected);
     QMainWindow window;
     auto* panel = new desktop::ToolPanelHost(&window);
-    window.addDockWidget(Qt::RightDockWidgetArea, panel);
     viewport::CadViewport view;
     QString status;
     desktop::SketchEditorToolController controller(

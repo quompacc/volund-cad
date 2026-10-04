@@ -11,7 +11,6 @@
 #include <QComboBox>
 #include <QCoreApplication>
 #include <QDebug>
-#include <QDockWidget>
 #include <QElapsedTimer>
 #include <QGuiApplication>
 #include <QMouseEvent>
@@ -34,21 +33,17 @@ bool verifyCadControls(MainWindow& mainWindow) {
     QAction* addBoxAction = mainWindow.findChild<QAction*>(QStringLiteral("addBoxAction"));
     QAction* addCylinderAction =
         mainWindow.findChild<QAction*>(QStringLiteral("addCylinderAction"));
-    QDockWidget* properties =
-        mainWindow.findChild<QDockWidget*>(QStringLiteral("featurePropertiesDock"));
-    QDockWidget* activeTool = mainWindow.findChild<QDockWidget*>(QStringLiteral("activeToolDock"));
+    QWidget* properties = mainWindow.findChild<QWidget*>(QStringLiteral("featurePropertiesCard"));
+    QWidget* activeTool = mainWindow.findChild<QWidget*>(QStringLiteral("activeToolPanel"));
     if (transformAction == nullptr || addBoxAction == nullptr || addCylinderAction == nullptr ||
         properties == nullptr || activeTool == nullptr) {
         qCritical() << "Required desktop controls are missing";
         return false;
     }
-    if (!mainWindow.tabifiedDockWidgets(properties).contains(activeTool)) {
-        qCritical() << "Properties and active tool docks are not tabified";
-        return false;
-    }
-    if (properties->maximumWidth() > 360 || activeTool->maximumWidth() > 360) {
-        qCritical() << "Right dock exceeds compact width" << properties->maximumWidth()
-                    << activeTool->maximumWidth();
+    // U05: both float in the viewport and share one compact slot.
+    if (properties->parentWidget() != activeTool->parentWidget() || properties->width() > 360 ||
+        activeTool->width() > 360) {
+        qCritical() << "Properties and tool panel do not share the floating slot";
         return false;
     }
     // The product starts with an empty document: only creating a primitive is possible (U01).

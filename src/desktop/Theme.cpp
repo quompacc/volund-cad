@@ -94,6 +94,15 @@ QToolButton:disabled { color: @faint; }
 QToolButton::menu-indicator { image: none; width: 0; }
 QToolButton:focus { border-color: @accent; }
 
+QFrame[floatingCard="true"] { background: @panel; border: 1px solid @line; border-radius: 14px; }
+QFrame[floatingCard="true"] QScrollArea, #cardContent { background: transparent; border: 0; }
+#cardTitle { font-weight: 700; font-size: 15px; }
+QGroupBox { border: 0; margin-top: 18px; padding: 0; }
+QFrame[floatingCard="true"] QTabBar::tab { padding: 6px 8px; }
+QFrame[floatingCard="true"] QPushButton { padding: 6px 6px; }
+QFrame[floatingCard="true"] QToolButton { padding: 5px 4px; }
+QGroupBox::title { subcontrol-origin: margin; left: 0; color: @muted; font-size: 12px; }
+#toolGuidance { color: @muted; }
 #toolRail, #contextBar, #commandSearch { background: @panel; border: 1px solid @line;
     border-radius: 14px; }
 #toolRail QToolButton { font-size: 11px; padding: 6px 2px; }

@@ -60,7 +60,6 @@ void run() {
     loadedConflict(session);
     QMainWindow window;
     auto* panel = new desktop::ToolPanelHost(&window);
-    window.addDockWidget(Qt::RightDockWidgetArea, panel);
     window.setCentralWidget(new QLabel(QStringLiteral("Sketch solver acceptance regression")));
     viewport::CadViewport viewport; // No shown GL surface is needed for this panel contract.
     desktop::SketchEditorToolController controller(
@@ -136,7 +135,6 @@ void existingSketchErrorOffer() {
     require(session.selectFeature(sketch), "select existing sketch");
     QMainWindow window;
     auto* panel = new desktop::ToolPanelHost(&window);
-    window.addDockWidget(Qt::RightDockWidgetArea, panel);
     viewport::CadViewport viewport;
     desktop::SketchEditorToolController controller(
         session, viewport, *panel, [] {}, [](const QString&) {});

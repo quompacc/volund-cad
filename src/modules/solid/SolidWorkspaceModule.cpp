@@ -24,7 +24,7 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                          true,
                          false,
                          simpleCommand(std::move(services.addBox)),
-                         alwaysEnabled()});
+                         services.canAddBox ? std::move(services.canAddBox) : alwaysEnabled()});
     commands_.push_back({"solid.create.cylinder",
                          "Zylinder",
                          "Parametrischen Zylinder anlegen",

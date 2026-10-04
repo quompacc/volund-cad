@@ -39,10 +39,13 @@ void viewPicks() {
             "A picked base plane offers a sketch");
     const auto both = desktop::projectShell(session, {DatumPlane::xy, true, ShellTool::none});
     require(both.selection == ShellSelection::basePlane, "Base plane wins over a stale face");
-    const auto face = desktop::projectShell(session, {std::nullopt, true, ShellTool::sketchEditor});
-    require(face.selection == ShellSelection::planarFace && face.canSketch() &&
-                face.tool == ShellTool::sketchEditor,
-            "A picked face offers a sketch and the active tool passes through");
+    const auto face = desktop::projectShell(session, {std::nullopt, true, ShellTool::none});
+    require(face.selection == ShellSelection::planarFace && face.canSketch(),
+            "A picked face offers a sketch");
+    const auto busy = desktop::projectShell(session, {std::nullopt, true, ShellTool::sketchEditor});
+    require(busy.tool == ShellTool::sketchEditor && busy.toolBlocksCommands() &&
+                !busy.canSketch() && !busy.canUndo,
+            "An open sketch blocks another sketch and document undo (U05)");
 }
 
 void documentSelection() {

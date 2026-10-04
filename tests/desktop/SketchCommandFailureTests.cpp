@@ -36,7 +36,6 @@ void run() {
     const auto shape = session.currentShape();
     QMainWindow window;
     auto* panel = new desktop::ToolPanelHost(&window);
-    window.addDockWidget(Qt::RightDockWidgetArea, panel);
     window.setCentralWidget(new QLabel(QStringLiteral("Extrusion rejection regression")));
     unsigned sceneChanges = 0;
     QString status;

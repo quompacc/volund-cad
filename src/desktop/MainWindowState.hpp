@@ -4,6 +4,7 @@
 #include "ContextBar.hpp"
 #include "DocumentActions.hpp"
 #include "FeaturePropertiesPanel.hpp"
+#include "FloatingCard.hpp"
 #include "ShellHeader.hpp"
 #include "ShellState.hpp"
 #include "SketchEditorToolController.hpp"
@@ -49,7 +50,7 @@ class MainWindow::Impl final {
     viewport::CadViewport* viewport{nullptr};
     ModelTreePanel* modelTree{nullptr};
     FeaturePropertiesPanel* propertyPanel{nullptr};
-    QDockWidget* propertyDock{nullptr};
+    FloatingCard* propertyCard{nullptr};
     ToolPanelHost* toolPanel{nullptr};
     std::unique_ptr<SketchEditorToolController> sketchEditorTool;
     std::unique_ptr<SketchExtrusionToolController> sketchExtrusionTool;

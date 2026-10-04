@@ -72,16 +72,12 @@ QString compactActionLabel(const std::string& id, const QString& fallback) {
 
 } // namespace
 
-ToolPanelHost::ToolPanelHost(QWidget* parent) : QDockWidget(parent) {
-    setObjectName(QStringLiteral("activeToolDock"));
-    setWindowTitle(tr("Werkzeug"));
-    setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-    setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
-    setMinimumWidth(270);
-    setMaximumWidth(360);
+ToolPanelHost::ToolPanelHost(QWidget* host)
+    : FloatingCard(*host, QStringLiteral("activeToolPanel")) {
+    setTitle(tr("Werkzeug"));
     content_ = new QWidget(this);
     auto* layout = new QVBoxLayout(content_);
-    layout->setContentsMargins(8, 8, 8, 8);
+    layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(7);
     guidance_ = new QLabel(content_);
     guidance_->setWordWrap(true);
@@ -91,6 +87,8 @@ ToolPanelHost::ToolPanelHost(QWidget* parent) : QDockWidget(parent) {
     parameterLayout_->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
     actionTabs_ = new QTabWidget(content_);
     actionTabs_->setDocumentMode(true);
+    actionTabs_->setUsesScrollButtons(true); // Groups stay reachable in the narrow card.
+    actionTabs_->setElideMode(Qt::ElideNone);
     auto* buttons = new QHBoxLayout();
     acceptButton_ = new QPushButton(tr("OK"), content_);
     cancelButton_ = new QPushButton(tr("Abbrechen"), content_);
@@ -107,6 +105,12 @@ ToolPanelHost::ToolPanelHost(QWidget* parent) : QDockWidget(parent) {
     escapeShortcut_ = new QShortcut(QKeySequence(Qt::Key_Escape), this);
     undoShortcut_ = new QShortcut(QKeySequence::Undo, this);
     redoShortcut_ = new QShortcut(QKeySequence::Redo, this);
+    // Enter confirms like OK when the tool allows it (K04); a spin box first applies its value.
+    acceptShortcut_ = new QShortcut(QKeySequence(Qt::Key_Return), this);
+    connect(acceptShortcut_, &QShortcut::activated, this, [this]() {
+        if (acceptButton_->isEnabled())
+            acceptButton_->click();
+    });
     connect(escapeShortcut_, &QShortcut::activated, this, [this]() {
         if (definition_.stepBack)
             definition_.stepBack();
@@ -131,9 +135,9 @@ ToolPanelHost::ToolPanelHost(QWidget* parent) : QDockWidget(parent) {
     layout->addWidget(parameterContainer_);
     layout->addWidget(actionTabs_, 1);
     layout->addStretch();
-    layout->addLayout(buttons);
-    layout->addWidget(errorCommitButton_);
-    setWidget(content_);
+    footer().addLayout(buttons);
+    footer().addWidget(errorCommitButton_);
+    body().addWidget(content_);
     connect(acceptButton_, &QPushButton::clicked, this, [this]() {
         if (definition_.accept) {
             definition_.accept();
@@ -150,7 +154,7 @@ void ToolPanelHost::begin(ToolPanelDefinition definition) {
     setErrorCommitHandler({});
     clearParameters();
     definition_ = std::move(definition);
-    setWindowTitle(definition_.title);
+    setTitle(definition_.title);
     guidance_->setText(definition_.guidance);
     for (const ToolLengthParameter& parameter : definition_.lengthParameters) {
         QDoubleSpinBox* input = makeLengthInput(content_);
@@ -189,7 +193,8 @@ void ToolPanelHost::begin(ToolPanelDefinition definition) {
                         if (definition_.choiceChanged)
                             definition_.choiceChanged(parameterId, index);
                     });
-            parameterLayout_->addRow(parameter.label, choices);
+            // The tool choice spans the card; its buttons name themselves.
+            parameterLayout_->addRow(choices);
             continue;
         }
         auto* input = new QComboBox(content_);

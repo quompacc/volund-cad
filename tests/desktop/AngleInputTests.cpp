@@ -148,7 +148,6 @@ void dimensionDialog() {
     const auto id = *session.selectedFeature();
     QMainWindow window;
     auto* host = new desktop::ToolPanelHost(&window);
-    window.addDockWidget(Qt::RightDockWidgetArea, host);
     viewport::CadViewport viewport;
     desktop::SketchEditorToolController controller(
         session, viewport, *host, [] {}, [](const QString&) {});

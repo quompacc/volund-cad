@@ -1,6 +1,7 @@
 add_library(
     voelund_desktop STATIC
     FeaturePropertiesPanel.cpp
+    FloatingCard.cpp
     DocumentActions.cpp
     CommandActions.cpp
     CommandPalette.cpp

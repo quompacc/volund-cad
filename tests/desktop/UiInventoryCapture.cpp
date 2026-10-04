@@ -89,6 +89,8 @@ void commandSurfaces() {
     test::render(viewport);
     capture(window, "u04-transform");
     command(window, "solid.modify.transform")->trigger();
+    QApplication::processEvents();
+    capture(window, "u05-properties");
     command(window, "view.command_search")->trigger();
     QApplication::processEvents();
     if (auto* search = window.findChild<QWidget*>(QStringLiteral("commandSearch"))) {
@@ -136,6 +138,8 @@ void existingSketch() {
             action->trigger();
             break;
         }
+    test::render(viewport);
+    QApplication::processEvents();
     test::render(viewport);
     capture(window, "06-extrude-panel");
 }

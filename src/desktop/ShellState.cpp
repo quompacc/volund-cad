@@ -14,17 +14,22 @@ QString nativeDisplayPath(const std::filesystem::path& path) {
 #endif
 }
 
+bool ShellState::toolBlocksCommands() const noexcept {
+    return tool == ShellTool::sketchEditor || tool == ShellTool::extrusion;
+}
+
 bool ShellState::canSketch() const noexcept {
-    return modelCurrent &&
+    return modelCurrent && !toolBlocksCommands() &&
            (selection == ShellSelection::basePlane || selection == ShellSelection::planarFace);
 }
 
 bool ShellState::canExtrude() const noexcept {
-    return selection == ShellSelection::sketchRegion && regionExtrudable;
+    return selection == ShellSelection::sketchRegion && regionExtrudable && !toolBlocksCommands();
 }
 
 bool ShellState::canEditSketch() const noexcept {
-    return feature.has_value() && featureKind == document::FeatureKind::sketch;
+    return feature.has_value() && featureKind == document::FeatureKind::sketch &&
+           !toolBlocksCommands();
 }
 
 QString ShellState::windowTitle() const {
@@ -45,6 +50,8 @@ ShellState projectShell(const application::CadSession& session, const ShellInput
     state.canRedo = session.canRedo();
     state.modelCurrent = session.sceneStatus().isCurrent();
     state.tool = inputs.tool;
+    if (state.toolBlocksCommands())
+        state.canUndo = state.canRedo = false; // The tool panel owns Ctrl+Z meanwhile.
     state.feature = session.selectedFeature();
     if (state.feature.has_value())
         state.featureKind = session.selectedFeatureDescriptor().kind;

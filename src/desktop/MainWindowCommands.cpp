@@ -73,14 +73,18 @@ void MainWindow::createCommands() {
         impl_->viewport->setTransformToolEnabled(enabled);
         syncShell(); // The context bar switches to the snap settings.
     };
-    services.canAddCylinder = [this]() { return impl_->session.canAddCylinder(); };
+    services.canAddCylinder = [this]() {
+        return impl_->session.canAddCylinder() && !impl_->shell().toolBlocksCommands();
+    };
+    services.canAddBox = [this]() { return !impl_->shell().toolBlocksCommands(); };
     // Enables "Sketch": a picked planar face or a picked base plane (V01b).
     services.canEditSketch = [this]() { return impl_->shell().canSketch(); };
     services.canEditExistingSketch = [this]() { return impl_->shell().canEditSketch(); };
     services.canExtrudeProfiles = [this]() { return impl_->shell().canExtrude(); };
     services.canTransform = [this]() {
         const auto selected = impl_->session.selectedFeature();
-        return selected.has_value() && impl_->session.canTransformFeature(*selected);
+        return selected.has_value() && impl_->session.canTransformFeature(*selected) &&
+               !impl_->shell().toolBlocksCommands();
     };
     impl_->commandRegistry.registerModule(
         std::make_unique<modules::solid::SolidWorkspaceModule>(std::move(services)));
@@ -153,6 +157,16 @@ void MainWindow::createCommandSurfaces() {
 void MainWindow::syncShell() {
     impl_->commandActions->refreshEnabled();
     const ShellState shell = impl_->shell();
+    // Undo/Redo follow the document history, not the selection (U01), and wait for an open
+    // tool (U05).
+    impl_->undoAction->setEnabled(shell.canUndo);
+    impl_->redoAction->setEnabled(shell.canRedo);
+    // One card slot (U05): the active tool's panel, otherwise the selected feature.
+    impl_->propertyCard->setVisible(shell.feature.has_value() && !shell.toolBlocksCommands() &&
+                                    (shell.selection == ShellSelection::feature ||
+                                     shell.selection == ShellSelection::sketch ||
+                                     shell.selection == ShellSelection::sketchRegion ||
+                                     shell.selection == ShellSelection::sketchElement));
     if (impl_->contextBar != nullptr)
         impl_->contextBar->display(contextCommands(shell));
 }

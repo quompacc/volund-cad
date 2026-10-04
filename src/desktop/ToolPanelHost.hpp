@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QDockWidget>
+#include "FloatingCard.hpp"
 
 #include <functional>
 #include <string>
@@ -51,9 +51,10 @@ struct ToolPanelDefinition final {
     std::function<void()> stepBack;
 };
 
-class ToolPanelHost final : public QDockWidget {
+// U05: the floating tool panel of ADR 0012; it owns at most one active tool session.
+class ToolPanelHost final : public FloatingCard {
   public:
-    explicit ToolPanelHost(QWidget* parent = nullptr);
+    explicit ToolPanelHost(QWidget* host);
 
     void begin(ToolPanelDefinition definition);
     void end();
@@ -83,6 +84,7 @@ class ToolPanelHost final : public QDockWidget {
     QShortcut* escapeShortcut_{nullptr};
     QShortcut* undoShortcut_{nullptr};
     QShortcut* redoShortcut_{nullptr};
+    QShortcut* acceptShortcut_{nullptr};
     std::vector<std::pair<std::string, QDoubleSpinBox*>> lengthInputs_;
     std::vector<std::pair<std::string, QComboBox*>> choiceInputs_;
     std::vector<std::pair<std::string, QPushButton*>> actionInputs_;

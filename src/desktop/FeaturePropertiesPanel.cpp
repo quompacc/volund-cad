@@ -52,6 +52,14 @@ FeaturePropertiesPanel::FeaturePropertiesPanel(QWidget* parent) : QStackedWidget
         });
     }
     connectEditors();
+    // The floating card is as tall as the visible page, not the tallest one (U05).
+    connect(this, &QStackedWidget::currentChanged, this, [this](int current) {
+        for (int index = 0; index < count(); ++index)
+            widget(index)->setSizePolicy(QSizePolicy::Preferred, index == current
+                                                                     ? QSizePolicy::Preferred
+                                                                     : QSizePolicy::Ignored);
+        updateGeometry();
+    });
 }
 
 void FeaturePropertiesPanel::createExtrusionPanel() {

@@ -113,7 +113,6 @@ void flow(const std::filesystem::path& directory) {
     const auto other = top(session, b);
     QMainWindow window;
     auto* panel = new desktop::ToolPanelHost(&window);
-    window.addDockWidget(Qt::RightDockWidgetArea, panel);
     viewport::CadViewport viewport;
     QString status;
     desktop::SketchEditorToolController editor(
@@ -190,7 +189,6 @@ void deletion(const std::filesystem::path& directory) {
     auto picked = top(session, cut);
     QMainWindow window;
     auto* panel = new desktop::ToolPanelHost(&window);
-    window.addDockWidget(Qt::RightDockWidgetArea, panel);
     viewport::CadViewport viewport;
     QString status;
     desktop::SketchEditorToolController editor(

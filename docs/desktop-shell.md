@@ -38,6 +38,9 @@ gehören über die Parent-Kette dem Fenster; Controller und Registry gehören de
   Widgets. Neue Auswahlarten erweitern `ShellSelection`, nicht einzelne Widgets.
 - Ansichtspicks sind spezifischer als die Dokumentauswahl. Die Reihenfolge ist:
   Basisebene, Fläche, Skizzenbereich, Skizzenelement, Skizze, Feature.
+- Ein offener Skizzeneditor oder eine offene Extrusion sperren andere Werkzeuge,
+  Grundkörper und das Dokument-Undo, bis OK, Abbrechen oder Escape (K04, U05). Die Karte
+  rechts zeigt entweder das aktive Werkzeug oder die Eigenschaften des gewählten Features.
 - Nach jeder Dokumentänderung ruft der Besitzer der Aktion `refreshScene()` auf. Es
   verwirft Ansichtspicks und aktive Werkzeuge und synchronisiert alle Ansichten.
 
@@ -45,11 +48,11 @@ gehören über die Parent-Kette dem Fenster; Controller und Registry gehören de
 
 | Bereich (ADR 0012) | Komponente heute | Paket |
 |---|---|---|
-| Kopfzeile | Toolbar History, Menü File | U03 (Layout), U04 (Befehlssuche) |
+| Kopfzeile | `ShellHeader` mit Dateimenü, Undo/Redo, Suchfeld, Werkzeugleisten- und Theme-Schalter | U03, U04 erledigt |
 | Modellbaum | `ModelTreePanel` | U06 |
-| Werkzeugleiste, Kontextleiste | `WorkspaceToolbar` | U04, liest `ShellState::selection` |
-| Werkzeugpanel | `ToolPanelHost` (Dock) | U05 (schwebend) |
-| Eigenschaften | `FeaturePropertiesPanel` (Dock) | U05 (geht im Werkzeugpanel auf) |
+| Werkzeugleiste, Kontextleiste, Befehlssuche | `ToolRail`, `ContextBar` (`ContextCommands`), `CommandPalette` auf `CommandActions` | U04 erledigt |
+| Werkzeugpanel | `ToolPanelHost` als schwebende `FloatingCard` | U05 erledigt |
+| Eigenschaften | `FeaturePropertiesPanel` in einer `FloatingCard` am selben Platz | U05 erledigt |
 | Timeline | – | U06 (Projektion), M15 (Bearbeitung) |
 | Parameter | – | PAR02 |
 | Viewport | `CadViewport` | U03 (Farben), U06 (Ursprünge, Raster) |

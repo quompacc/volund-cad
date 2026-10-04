@@ -19,6 +19,8 @@ struct SolidCommandServices final {
     std::function<bool()> canEditExistingSketch;
     std::function<bool()> canExtrudeProfiles;
     std::function<bool()> canTransform;
+    // Optional; primitives are always available when empty (U05 blocks them during a tool).
+    std::function<bool()> canAddBox{};
 };
 
 class SolidWorkspaceModule final : public workspaces::WorkspaceModule {
