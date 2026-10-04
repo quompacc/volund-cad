@@ -1400,12 +1400,14 @@
       ],
       "acceptance": "Komponentenskizze benennt für jeden Zustand genau einen Besitzer. Keine zweite CadSession pro Ansicht und keine direkten Featuremutatoren aus Widgets.",
       "boundary": "API-/Strukturpaket; keine gleichzeitige Migration aller UI-Komponenten. Grundlage ADR 0012.",
-      "status": "planned",
+      "status": "done",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
       "kind": "design-and-proof",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/U02.md"
+      ],
+      "completedCommit": "69c7364"
     },
     {
       "id": "U03",
