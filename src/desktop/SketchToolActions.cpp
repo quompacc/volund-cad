@@ -21,16 +21,18 @@ const ToolChoiceParameter* toolChoice(const ToolPanelDefinition& definition) {
 }
 
 QString toolShortcut(const std::string& id) {
-    static const std::map<std::string, QString> keys{{"select", QStringLiteral("S")},
-                                                     {"line", QStringLiteral("L")},
-                                                     {"polyline", QStringLiteral("P")},
-                                                     {"rectangle", QStringLiteral("R")},
-                                                     {"circle", QStringLiteral("C")},
-                                                     {"center_arc", QStringLiteral("A")},
-                                                     {"three_point_arc", QStringLiteral("T")},
-                                                     {"ellipse", QStringLiteral("E")},
-                                                     {"slot", QStringLiteral("N")},
-                                                     {"polygon", QStringLiteral("G")}};
+    static const std::map<std::string, QString> keys{
+        {"select", QStringLiteral("S")},
+        {"line", QStringLiteral("L")},
+        {"polyline", QStringLiteral("P")},
+        {"rectangle", QStringLiteral("R")},
+        {"circle", QStringLiteral("C")},
+        {"center_arc", QStringLiteral("A")},
+        {"three_point_arc", QStringLiteral("T")},
+        {"ellipse", QStringLiteral("E")},
+        {"slot", QStringLiteral("N")},
+        {"polygon", QStringLiteral("G")},
+        {"center_rectangle", QStringLiteral("Shift+R")}};
     const auto match = keys.find(id);
     return match == keys.end() ? QString{} : match->second;
 }

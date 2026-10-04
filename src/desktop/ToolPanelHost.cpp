@@ -277,7 +277,6 @@ void ToolPanelHost::syncParameterGroup() {
         any = any || !input->isHidden();
     any = any || !choiceInputs_.empty();
     parameterContainer_->setVisible(any);
-    content_->adjustSize();
     refit();
 }
 

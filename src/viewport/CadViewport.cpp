@@ -73,6 +73,7 @@ CadViewport::CadViewport(QWidget* parent)
 #endif
     setFocusPolicy(Qt::StrongFocus);
     setMouseTracking(true);
+    impl_->snapOverlay = new SketchSnapOverlay(*this);
     setMinimumSize(640, 480);
     impl_->selectionBand = new QRubberBand(QRubberBand::Rectangle, this);
 }
@@ -223,6 +224,7 @@ void CadViewport::beginSketchEditor(const PlanarFaceSelection& support, SketchEl
 void CadViewport::setSketchEditorTool(SketchElementTool tool) {
     performViewportOperation(*this, impl_->ready, [&] {
         impl_->sketchEditor.setTool(tool);
+        impl_->snapOverlay->clear();
         if (impl_->sketchEditorPreviewHandler) {
             impl_->sketchEditorPreviewHandler(std::nullopt);
         }
@@ -247,6 +249,7 @@ void CadViewport::updateSketchExtrusionPreview(double distance) {
 void CadViewport::cancelSketch() {
     performViewportOperation(*this, impl_->ready, [&] {
         impl_->activeSketchSupport.reset();
+        impl_->snapOverlay->clear();
         impl_->sketch.cancel();
         impl_->sketchEditor.cancel();
         impl_->sketchPresentation.setReferences(impl_->context, {}, false);
@@ -279,6 +282,7 @@ void CadViewport::setTransformSnapping(bool enabled, double linearStep, double a
 
 void CadViewport::setTheme(const ViewportTheme& theme) {
     impl_->theme = theme;
+    impl_->snapOverlay->setColors(theme.selection, theme.axisLabel, theme.background);
     performViewportOperation(*this, impl_->ready, [&] {
         if (!impl_->ready)
             return;

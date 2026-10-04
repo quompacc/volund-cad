@@ -60,7 +60,71 @@ void addAutomaticCoincidence(application::SketchEditorSession& editor,
 
 } // namespace
 
+void SketchEditorToolController::confirmCenterRectangle(
+    const viewport::SketchElementIntent& intent) {
+    // S04a: a rectangle around the picked center. A construction diagonal and a construction
+    // half-diagonal tie the center to the diagonal's midpoint, so the rectangle stays centered
+    // on the snapped point (e.g. the origin) when its sizes change.
+    const document::SketchPoint center{intent.firstX, intent.firstY};
+    const document::SketchPoint corner{intent.secondX, intent.secondY};
+    const document::SketchPoint opposite{2 * center.x - corner.x, 2 * center.y - corner.y};
+    auto previous = std::make_unique<application::SketchEditorSession>(*editor_);
+    const auto addLine = [this](document::SketchPoint from, document::SketchPoint to) {
+        editor_->setTool(application::SketchDrawingTool::line);
+        if (!editor_->setPreview(from, to))
+            throw std::invalid_argument("Rechteck aus dem Mittelpunkt: ungültige Größe");
+        const auto id = editor_->confirmPreview();
+        if (!id.has_value() || !editor_->selectElement(*id) ||
+            !editor_->toggleSelectedConstruction())
+            throw std::invalid_argument("Rechteck aus dem Mittelpunkt: Hilfslinie abgelehnt");
+        return *id;
+    };
+    try {
+        editor_->setTool(application::SketchDrawingTool::rectangle);
+        if (!editor_->setPreview(opposite, corner))
+            return;
+        const auto rectangle = editor_->confirmPreview();
+        if (!rectangle.has_value())
+            return;
+        const document::SketchGeometryReference first{*rectangle,
+                                                      document::SketchPointPosition::start};
+        const document::SketchGeometryReference second{
+            document::SketchElementId{rectangle->value() + 2},
+            document::SketchPointPosition::start};
+        const auto diagonal = addLine(opposite, corner);
+        static_cast<void>(editor_->addCoincidentReferences(
+            {diagonal, document::SketchPointPosition::start}, first));
+        static_cast<void>(editor_->addCoincidentReferences(
+            {diagonal, document::SketchPointPosition::end}, second));
+        const auto half = addLine(center, corner);
+        static_cast<void>(
+            editor_->addCoincidentReferences({half, document::SketchPointPosition::end}, second));
+        static_cast<void>(
+            editor_->addMidpointReference({half, document::SketchPointPosition::start}, diagonal));
+        addAutomaticCoincidence(*editor_, {half, document::SketchPointPosition::start},
+                                intent.firstReference, center);
+        addAutomaticCoincidence(*editor_, second, intent.secondReference, corner);
+        editor_->setTool(application::SketchDrawingTool::rectangle);
+        if (!editor_->selectElement(*rectangle))
+            static_cast<void>(editor_->selectElement(half));
+    } catch (const std::invalid_argument& error) {
+        editor_ = std::move(previous);
+        editor_->clearPreview();
+        statusChanged_(QString::fromUtf8(error.what()));
+    }
+    panel_.setAcceptEnabled(editor_->canAccept());
+    resetTranslationInputs();
+    syncSelectedDimensionInputs();
+    syncConstraintState();
+    refreshPresentation();
+}
+
 void SketchEditorToolController::confirmElement(const viewport::SketchElementIntent& intent) {
+    if (toolIndex_ == centerRectangleTool) {
+        previewAutomatic_.reset();
+        confirmCenterRectangle(intent);
+        return;
+    }
     previewAutomatic_.reset();
     const auto third =
         intent.third.has_value()

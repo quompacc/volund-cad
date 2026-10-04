@@ -36,6 +36,11 @@ void CadViewport::mouseMoveEvent(QMouseEvent* event) {
             return;
         }
         if (impl_->sketchEditor.isActive() && event->buttons() == Qt::NoButton) {
+            impl_->sketchEditor.setSnapBypass(event->modifiers().testFlag(Qt::ControlModifier));
+            if (impl_->snapOverlay != nullptr)
+                impl_->snapOverlay->display(
+                    impl_->sketchEditor.snapFeedback(position.x(), position.y()), event->position(),
+                    devicePixelRatioF());
             if (impl_->sketchEditorPreviewHandler) {
                 impl_->sketchEditorPreviewHandler(
                     impl_->sketchEditor.move(position.x(), position.y()));

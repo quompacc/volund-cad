@@ -13,6 +13,9 @@ class CadSession;
 
 namespace voelund::desktop {
 
+// Index of "Rechteck (Mitte)" in the tool choice (S04a).
+inline constexpr int centerRectangleTool = 10;
+
 class ToolPanelHost;
 
 class SketchEditorToolController final {
@@ -33,6 +36,7 @@ class SketchEditorToolController final {
     void cancel();
 
   private:
+    void confirmCenterRectangle(const viewport::SketchElementIntent& intent);
     friend class SketchSolverGateTestAccess;
     void setTool(int index);
     void applyTranslation(const std::string& id, double value);

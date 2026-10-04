@@ -39,6 +39,8 @@ application::SketchDrawingTool applicationTool(int index) {
         return application::SketchDrawingTool::slot;
     if (index == 9)
         return application::SketchDrawingTool::polygon;
+    if (index == centerRectangleTool)
+        return application::SketchDrawingTool::rectangle;
     return application::SketchDrawingTool::select;
 }
 
@@ -61,6 +63,8 @@ viewport::SketchElementTool viewportTool(int index) {
         return viewport::SketchElementTool::slot;
     if (index == 9)
         return viewport::SketchElementTool::polygon;
+    if (index == centerRectangleTool)
+        return viewport::SketchElementTool::centerRectangle;
     return viewport::SketchElementTool::select;
 }
 
@@ -97,10 +101,10 @@ void SketchEditorToolController::showPanel() {
           {QObject::tr("Auswählen"), QObject::tr("Linie"), QObject::tr("Polylinie"),
            QObject::tr("Rechteck"), QObject::tr("Kreis"), QObject::tr("Bogen (Mitte)"),
            QObject::tr("Dreipunktbogen"), QObject::tr("Ellipse"), QObject::tr("Langloch"),
-           QObject::tr("Polygon")},
+           QObject::tr("Polygon"), QObject::tr("Rechteck (Mitte)")},
           1,
           {"select", "line", "polyline", "rectangle", "circle", "center_arc", "three_point_arc",
-           "ellipse", "slot", "polygon"}}},
+           "ellipse", "slot", "polygon", "center_rectangle"}}},
         {{"horizontal", QObject::tr("Linie waagrecht festlegen"), QObject::tr("Linien")},
          {"vertical", QObject::tr("Linie senkrecht festlegen"), QObject::tr("Linien")},
          {"free", QObject::tr("Richtungsbedingung der Linie entfernen"), QObject::tr("Linien")},
@@ -273,7 +277,9 @@ void SketchEditorToolController::setTool(int index) {
         : index == 7 ? QObject::tr("Ellipse: Mittelpunkt, großer Radius, kleiner Radius")
         : index == 8 ? QObject::tr("Langloch: Mittellinie Anfang, Mittellinie Ende, Breite")
         : index == 9 ? QObject::tr("Polygon: Mittelpunkt und erste Ecke")
-                     : QObject::tr("Skizzenwerkzeug gewechselt");
+        : index == centerRectangleTool
+            ? QObject::tr("Rechteck aus dem Mittelpunkt: Mittelpunkt, dann eine Ecke")
+            : QObject::tr("Skizzenwerkzeug gewechselt");
     statusChanged_(guidance);
 }
 
@@ -293,7 +299,13 @@ void SketchEditorToolController::updatePreview(
     const std::optional<viewport::SketchElementIntent>& intent) {
     if (!editor_)
         return;
-    if (intent.has_value()) {
+    if (intent.has_value() && toolIndex_ == centerRectangleTool) {
+        // Preview the full rectangle around the picked center (S04a).
+        previewAutomatic_ = intent->automaticConstraint;
+        static_cast<void>(editor_->setPreview(
+            {2 * intent->firstX - intent->secondX, 2 * intent->firstY - intent->secondY},
+            {intent->secondX, intent->secondY}));
+    } else if (intent.has_value()) {
         previewAutomatic_ = intent->automaticConstraint;
         const auto third =
             intent->third.has_value()

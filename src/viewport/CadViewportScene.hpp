@@ -8,6 +8,7 @@
 #include "SketchEditorInteraction.hpp"
 #include "SketchInteraction.hpp"
 #include "SketchPresentation.hpp"
+#include "SketchSnapOverlay.hpp"
 #include "TransformManipulator.hpp"
 #include "ViewportHighlightStyle.hpp"
 
@@ -283,6 +284,7 @@ class CadViewportScene {
     QRubberBand* selectionBand{nullptr};
     bool ready{false};
     ViewportTheme theme;
+    SketchSnapOverlay* snapOverlay{nullptr}; // S04a, child widget of the viewport
     std::array<bool, 3> planeVisibility{true, true, true};
     bool gridVisible{true};
     occ::handle<Graphic3d_Camera> savedCamera;

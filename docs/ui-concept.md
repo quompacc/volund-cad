@@ -172,7 +172,7 @@ Kürzel erreichen; außerhalb einer Skizze sind sie gesperrt.
 
 | Gruppe | Command-IDs | Kürzel |
 |---|---|---|
-| Zeichnen | `sketch.tool.select`, `.line`, `.polyline`, `.rectangle`, `.circle`, `.center_arc`, `.three_point_arc`, `.ellipse`, `.slot`, `.polygon` | S, L, P, R, C, A, T, E, N, G |
+| Zeichnen | `sketch.tool.select`, `.line`, `.polyline`, `.rectangle`, `.circle`, `.center_arc`, `.three_point_arc`, `.ellipse`, `.slot`, `.polygon`, `.center_rectangle` | S, L, P, R, C, A, T, E, N, G, Umschalt+R |
 | Linien | `sketch.horizontal`, `.vertical`, `.free`, `.parallel`, `.perpendicular`, `.collinear` | – |
 | Punkte | `sketch.coincident`, `.horizontal_points`, `.vertical_points`, `.symmetric`, `.midpoint`, `.perpendicular_bisector`, `.point_on_object` | – |
 | Beziehungen | `sketch.fixed`, `.equal`, `.tangent`, `.concentric` | – |

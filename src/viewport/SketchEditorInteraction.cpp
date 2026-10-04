@@ -155,6 +155,8 @@ SketchEditorInteraction::interactionPoint(int x, int y) const {
     const auto projected = projectPoint(x, y);
     if (!projected.has_value())
         return std::nullopt;
+    if (bypass_)
+        return InteractionPoint{*projected, std::nullopt};
     constexpr int snapRadiusPixels = 12;
     const SceneSketchPoint* nearest = nullptr;
     int nearestDistance = snapRadiusPixels * snapRadiusPixels + 1;
@@ -237,6 +239,40 @@ SketchEditorInteraction::interactionPoint(int x, int y) const {
         {nearest->localX, nearest->localY},
         SketchPointReferenceIntent{nearest->elementId, nearest->kind, nearest->supportReferenceId,
                                    nearest->supportReferenceParameter, nearest->projectedEdge}};
+}
+
+SketchEditorInteraction::SnapFeedback SketchEditorInteraction::snapFeedback(int x, int y) const {
+    SnapFeedback feedback;
+    // Every drawing tool shows snap markers; selecting does not snap.
+    if (!active_ || view_.IsNull() || tool_ == SketchElementTool::select)
+        return feedback;
+    constexpr int markerRadiusPixels = 60;
+    if (!bypass_)
+        for (const SceneSketchPoint& candidate : snapPoints_) {
+            int pointX = 0;
+            int pointY = 0;
+            view_->Convert(candidate.worldX, candidate.worldY, candidate.worldZ, pointX, pointY);
+            if ((pointX - x) * (pointX - x) + (pointY - y) * (pointY - y) <=
+                markerRadiusPixels * markerRadiusPixels)
+                feedback.candidates.emplace_back(pointX, pointY);
+        }
+    const auto resolved = interactionPoint(x, y);
+    if (resolved.has_value() && resolved->reference.has_value()) {
+        const gp_Vec xDirection(support_.xDirectionX, support_.xDirectionY, support_.xDirectionZ);
+        const gp_Vec normal(support_.normalX, support_.normalY, support_.normalZ);
+        const gp_Vec yDirection = normal.Crossed(xDirection);
+        const gp_Pnt world = gp_Pnt(support_.originX, support_.originY, support_.originZ)
+                                 .Translated(xDirection * resolved->position.first +
+                                             yDirection * resolved->position.second);
+        int pointX = 0;
+        int pointY = 0;
+        view_->Convert(world.X(), world.Y(), world.Z(), pointX, pointY);
+        feedback.active = std::pair{pointX, pointY};
+        feedback.activeKind = resolved->reference->point;
+    }
+    if (const auto intent = move(x, y))
+        feedback.relation = intent->automaticConstraint;
+    return feedback;
 }
 
 std::pair<std::pair<double, double>, std::optional<SketchAutomaticConstraint>>
@@ -368,7 +404,7 @@ bool SketchEditorInteraction::valid(const SketchElementIntent& intent) const noe
     constexpr double minimumSize = 1.0e-6;
     const double deltaX = intent.secondX - intent.firstX;
     const double deltaY = intent.secondY - intent.firstY;
-    if (tool_ == SketchElementTool::rectangle) {
+    if (tool_ == SketchElementTool::rectangle || tool_ == SketchElementTool::centerRectangle) {
         return std::abs(deltaX) >= minimumSize && std::abs(deltaY) >= minimumSize;
     }
     if (needsThirdPoint(tool_) && intent.third.has_value()) {

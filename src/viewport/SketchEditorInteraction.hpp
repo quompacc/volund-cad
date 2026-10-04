@@ -7,11 +7,20 @@
 #include <optional>
 #include <tuple>
 #include <utility>
+#include <vector>
 
 namespace voelund::viewport {
 
 class SketchEditorInteraction final {
   public:
+    // S04a: what the cursor would snap to, in framebuffer pixels, for the snap markers.
+    struct SnapFeedback final {
+        std::vector<std::pair<int, int>> candidates;
+        std::optional<std::pair<int, int>> active;
+        std::optional<SketchPointKind> activeKind;
+        std::optional<SketchAutomaticConstraint> relation;
+    };
+
     void begin(const PlanarFaceSelection& support, SketchElementTool tool,
                const occ::handle<V3d_View>& view);
     void cancel() noexcept;
@@ -20,6 +29,9 @@ class SketchEditorInteraction final {
     void continuePolyline(double x, double y, std::uint64_t elementId) noexcept;
     void setSnapping(bool enabled, double linearStep) noexcept;
     void setSnapPoints(std::span<const SceneSketchPoint> points);
+    // Ctrl held: no point, axis or object snapping for this pointer position.
+    void setSnapBypass(bool bypass) noexcept { bypass_ = bypass; }
+    [[nodiscard]] SnapFeedback snapFeedback(int x, int y) const;
     [[nodiscard]] bool isActive() const noexcept;
     [[nodiscard]] bool isDrawing() const noexcept;
     [[nodiscard]] std::optional<std::pair<double, double>> projectPoint(int x, int y) const;
@@ -39,19 +51,17 @@ class SketchEditorInteraction final {
 
     [[nodiscard]] bool valid(const SketchElementIntent& intent) const noexcept;
     [[nodiscard]] std::optional<InteractionPoint> interactionPoint(int x, int y) const;
-    [[nodiscard]] std::pair<std::pair<double, double>,
-                            std::optional<SketchAutomaticConstraint>>
+    [[nodiscard]] std::pair<std::pair<double, double>, std::optional<SketchAutomaticConstraint>>
     relatedLineEnd(std::pair<double, double> first, std::pair<double, double> second) const;
-    [[nodiscard]] bool tangentToReferencedLine(
-        std::pair<double, double> center, std::pair<double, double> radialPoint,
-        const std::optional<SketchPointReferenceIntent>& reference) const;
-    [[nodiscard]] std::tuple<std::pair<double, double>,
-                             std::optional<SketchAutomaticConstraint>,
+    [[nodiscard]] bool
+    tangentToReferencedLine(std::pair<double, double> center, std::pair<double, double> radialPoint,
+                            const std::optional<SketchPointReferenceIntent>& reference) const;
+    [[nodiscard]] std::tuple<std::pair<double, double>, std::optional<SketchAutomaticConstraint>,
                              std::optional<std::uint64_t>>
     relatedRadialPoint(std::pair<double, double> center,
                        std::pair<double, double> radialPoint) const;
-    [[nodiscard]] bool isRadialCenterReference(
-        const std::optional<SketchPointReferenceIntent>& reference) const;
+    [[nodiscard]] bool
+    isRadialCenterReference(const std::optional<SketchPointReferenceIntent>& reference) const;
 
     PlanarFaceSelection support_{};
     SketchElementTool tool_{SketchElementTool::line};
@@ -64,6 +74,7 @@ class SketchEditorInteraction final {
     std::optional<std::pair<double, double>> dragPoint_;
     double linearStep_{1.0};
     bool snapping_{true};
+    bool bypass_{false};
     bool active_{false};
 };
 
