@@ -209,8 +209,14 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
                 }
                 impl_->notifyDetectedBody(true);
             }
-            impl_->context->SelectPoint(NCollection_Vec2<int>(position.x(), position.y()),
-                                        impl_->view, AIS_SelectionScheme_Replace);
+            // A click selects only the topmost face. SelectPoint would select every owner the
+            // pick ray crosses (e.g. a cylinder's cap and its far side), and the callback above
+            // may have rebuilt the presentations, so detect again before selecting.
+            impl_->context->MoveTo(position.x(), position.y(), impl_->view, false);
+            if (impl_->context->HasDetected())
+                impl_->context->SelectDetected(AIS_SelectionScheme_Replace);
+            else
+                impl_->context->ClearSelected(false);
             update();
         }
 

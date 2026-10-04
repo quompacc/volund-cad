@@ -51,6 +51,26 @@ void pick(CadViewport& v) {
     require(selected == 42, "Known-point body picking failed");
 }
 
+// The application refreshes the scene from the selection callback; the click must still
+// select the picked face, not the whole body (regression reported on 2026-10-04).
+void pickFaceAfterRefresh(CadViewport& v) {
+    const SceneBody body{42, BRepPrimAPI_MakeBox(20, 20, 20).Shape(), true};
+    std::optional<std::uint64_t> face;
+    v.setBodySelectionHandler([&](std::uint64_t) { v.setBodies(std::span(&body, 1)); });
+    v.setPlanarFaceSelectionHandler([&](const PlanarFaceSelection& selection) {
+        face = selection.bodyId;
+    });
+    const QPoint point = ViewportTestAccess::project(v, 12, 12, 20);
+    mouse(v, QEvent::MouseButtonPress, point, Qt::LeftButton, Qt::LeftButton);
+    mouse(v, QEvent::MouseButtonRelease, point, Qt::LeftButton, Qt::NoButton);
+    v.setBodySelectionHandler({});
+    v.setPlanarFaceSelectionHandler({});
+    require(face == 42, "Face pick did not report the planar face");
+    require(ViewportTestAccess::selectedShapeType(v) == TopAbs_FACE,
+            "Face pick highlighted the whole body instead of the face");
+    std::cout << "PASS face pick after scene refresh selects only the face\n";
+}
+
 void failureRecovery(CadViewport& v) {
     const auto camera = ViewportTestAccess::camera(v);
     ViewportTestAccess::cleanup(v);
@@ -88,6 +108,7 @@ void reparentAndInteract() {
     v->setCameraView(CameraView::top);
     render(*v);
     pick(*v);
+    pickFaceAfterRefresh(*v);
     failureRecovery(*v);
     const auto camera = ViewportTestAccess::camera(*v);
     const auto before = v->lifecycleDiagnostics();

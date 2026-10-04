@@ -2,6 +2,8 @@
 #include "../../src/viewport/CadViewportQtOpenGlBackend.hpp"
 #include <AIS_Manipulator.hxx>
 #include <Aspect_Window.hxx>
+#include <StdSelect_BRepOwner.hxx>
+#include <TopAbs_ShapeEnum.hxx>
 #include <cmath>
 #include <stdexcept>
 
@@ -18,6 +20,24 @@ class ViewportTestAccess {
         v.update();
     }
     static std::string error(CadViewport& v) { return v.impl_->lastError; }
+    static int selectedCount(CadViewport& v) {
+        int count = 0;
+        const auto& context = v.impl_->context;
+        for (context->InitSelected(); context->MoreSelected(); context->NextSelected())
+            ++count;
+        return count;
+    }
+    // Shape type of the selected owner: a face pick must not select the whole body.
+    static std::optional<TopAbs_ShapeEnum> selectedShapeType(CadViewport& v) {
+        const auto& context = v.impl_->context;
+        context->InitSelected();
+        if (!context->MoreSelected())
+            return std::nullopt;
+        const auto owner = occ::handle<StdSelect_BRepOwner>::DownCast(context->SelectedOwner());
+        if (owner.IsNull())
+            return std::nullopt;
+        return owner->Shape().ShapeType();
+    }
     static occ::handle<Graphic3d_Camera> camera(CadViewport& v) {
         return new Graphic3d_Camera(v.impl_->view->Camera());
     }

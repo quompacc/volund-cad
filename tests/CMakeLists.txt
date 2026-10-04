@@ -418,6 +418,14 @@ if(VOELUND_BUILD_DESKTOP)
                 "$<TARGET_FILE_DIR:voelund_viewport_lifecycle_tests>/platforms"
                 VERBATIM)
         endif()
+        add_executable(voelund_face_pick_tests desktop/FacePickTests.cpp)
+        target_link_libraries(voelund_face_pick_tests PRIVATE voelund_project_options Voelund::Desktop)
+        add_test(NAME desktop.face_pick COMMAND voelund_face_pick_tests)
+        set_tests_properties(desktop.face_pick PROPERTIES
+            LABELS "desktop;viewport;qt-opengl;regression" TIMEOUT 60 RUN_SERIAL TRUE)
+        if(VOELUND_NATIVE_WAYLAND)
+            set_tests_properties(desktop.face_pick PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
+        endif()
         add_test(NAME desktop.viewport_lifecycle_qt COMMAND voelund_viewport_lifecycle_tests)
         set_tests_properties(desktop.viewport_lifecycle_qt
             PROPERTIES LABELS "desktop;viewport;lifecycle;qt-opengl" TIMEOUT 45)
