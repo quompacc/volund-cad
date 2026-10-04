@@ -384,5 +384,5 @@ Aktueller Paketstatus und Evidenz stehen im Manifest. A01 ist abgenommen; die ü
 - **Grenze:** Keine Extrude-UI; diese nutzt später dieselben Regionresultate.
 
 **Aufteilung vom 04.10.2026:** R10 deckt verschachtelte, nicht schneidende Konturen für V01
-ab ([Nachweis](evidence/R10.md)). Faces für Regionen schneidender Konturen folgen als
-**R10b** nach V01 (`packets.json`).
+ab ([Nachweis](evidence/R10.md)). Faces für Regionen schneidender Konturen liefert
+**R10b**, abgenommen am 04.10.2026 ([Nachweis](evidence/R10b.md)).

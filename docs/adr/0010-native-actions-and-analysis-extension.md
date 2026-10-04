@@ -1,6 +1,8 @@
 # ADR 0010 – Native Konstruktionsaktionen und nachrüstbare Analyse
 
 - Status: accepted (Architektur-/Planungsentscheidung, keine implementierte KI/FEM)
+- Nachtrag 04.10.2026: AI02 direkt nach R10b, AI03 direkt danach ohne L10-Bindung;
+  Anbieter zunächst Claude per API, austauschbar (Kapitel 11).
 - Datum: 17. September 2026
 - Grundlage: Nutzerauftrag zu nativer KI-Konstruktion, FEM-Wiederverwendung und gestuftem Ausbau.
 

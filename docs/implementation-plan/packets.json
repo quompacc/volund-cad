@@ -5,8 +5,8 @@
   "status": "implementation-started",
   "counts": {
     "total": 131,
-    "throughG4": 101,
-    "g5": 30
+    "throughG4": 102,
+    "g5": 29
   },
   "globalGates": [
     {
@@ -73,6 +73,8 @@
     "PAR01",
     "U12a",
     "R10b",
+    "AI02",
+    "AI03",
     "U07",
     "U08",
     "U09",
@@ -122,7 +124,6 @@
     "L08",
     "L09",
     "L10",
-    "AI02",
     "X01",
     "X02",
     "X03",
@@ -143,7 +144,6 @@
     "X18",
     "X19",
     "X20",
-    "AI03",
     "AI04",
     "FEM01",
     "FEM02",
@@ -1347,12 +1347,14 @@
       ],
       "acceptance": "Linse und Sicheln zweier sich schneidender Kreise, Selbstschnitt-Zellen und Sehnenhälften ergeben gültige Faces mit analytischer Fläche; Kappenreferenzen bleiben über Maßänderungen stabil.",
       "boundary": "Abgespalten aus R10 nach der Umstellung vom 2026-10-04; R10 deckt verschachtelte, nicht schneidende Konturen für V01 ab.",
-      "status": "planned",
+      "status": "done",
       "gate": "G2",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/R10b.md"
+      ],
+      "completedCommit": "63a2579"
     },
     {
       "id": "U01",
@@ -3603,9 +3605,9 @@
         "Vor größerer Implementierung Unterpakete nach Kapitel 11 und Paketgrenze festlegen."
       ],
       "acceptance": "A-ACTION-01; identische GUI-/Direktresultate, keine veralteten oder doppelten Mutationen, ein Undo je Kandidat.",
-      "boundary": "Umfang und Nicht-Ziele laut eigenem Abschnitt in Kapitel 11; keine neuen Runtime-Abhängigkeiten ohne konkrete Entscheidung. Umstellung 2026-10-04: eingefroren bis zur G3-Abnahme; nicht mehr Voraussetzung für U04.",
+      "boundary": "Umfang und Nicht-Ziele laut eigenem Abschnitt in Kapitel 11; keine neuen Runtime-Abhängigkeiten ohne konkrete Entscheidung. Umstellung 2026-10-04: eingefroren bis zur G3-Abnahme; nicht mehr Voraussetzung für U04. Nutzerentscheidung 2026-10-04: direkt nach R10b vorgezogen; die Regel ‚vor U04‘ war mit UX01 übersprungen worden, AI02 schließt die Lücke vor U07–U10.",
       "status": "planned",
-      "gate": "G5",
+      "gate": "G2",
       "chapter": "11-ki-fem-optimierung.md",
       "kind": "implementation-or-acceptance",
       "evidence": null,
@@ -3615,8 +3617,7 @@
       "id": "AI03",
       "title": "Integrierten nativen Konstruktionsassistenten liefern",
       "deps": [
-        "AI02",
-        "L10"
+        "AI02"
       ],
       "files": [
         "include/voelund/application/CadSession.hpp",
@@ -3627,7 +3628,7 @@
         "Vor größerer Implementierung Unterpakete nach Kapitel 11 und Paketgrenze festlegen."
       ],
       "acceptance": "A-AI-01; Adapterfixtures und separat protokollierter echter Modelllauf, Abbruch und Dokumentwechsel geprüft.",
-      "boundary": "Umfang und Nicht-Ziele laut eigenem Abschnitt in Kapitel 11; keine neuen Runtime-Abhängigkeiten ohne konkrete Entscheidung.",
+      "boundary": "Umfang und Nicht-Ziele laut eigenem Abschnitt in Kapitel 11; keine neuen Runtime-Abhängigkeiten ohne konkrete Entscheidung. Nutzerentscheidung 2026-10-04: nicht mehr an L10 gebunden, direkt nach AI02; Anbieter zunächst Claude per API mit austauschbarem Adapter (ChatGPT möglich). Bleibt G5, damit G4 ohne KI/Netz abnehmbar bleibt.",
       "status": "planned",
       "gate": "G5",
       "chapter": "11-ki-fem-optimierung.md",

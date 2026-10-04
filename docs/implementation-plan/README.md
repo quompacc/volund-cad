@@ -17,6 +17,7 @@ Paketanzahl ist kein Maß für Restaufwand oder Fertigstellungszeit.
   in `voelund-cad`. Danach U-, S- und M-Pakete auf diesem Weg.
 - L01 ist nur noch die Release-Matrix auf C01; L08 nimmt Windows und Linux-Desktop ab.
 - AI02 und alle G5-Pakete sind bis zur G3-Abnahme eingefroren; U04 hängt nicht mehr an AI02.
+  *Aufgehoben für AI02 und AI03 durch die Nutzerentscheidung vom 4. Oktober 2026 (unten).*
 - Nachweis je Paket: grüner CI-Lauf, lokaler Windows-Lauf und kurze Evidenznotiz.
   Keine Quellhash-Listen, keine eingecheckten Logs/Aufnahmen. FreeBSD/Sway wird je Gate geprüft.
 - Ein Commit je abgenommenem Paket.
@@ -44,8 +45,8 @@ Paketanzahl ist kein Maß für Restaufwand oder Fertigstellungszeit.
 | G2 – zusammenhängender CAD-Workflow | 22 |
 | G3 – mechanisches CAD v1 | 18 |
 | G4 – veröffentlichbare v1 | 10 |
-| G5 – spätere Produktfamilie | 30 |
-| Gesamt | 82 |
+| G5 – spätere Produktfamilie | 29 |
+| Gesamt | 81 |
 
 Bis einschließlich G4 bleiben 52 Hauptpakete. G2 ist der erste durchgängige
 Bedienablauf, G3 der begrenzte mechanische Funktionsumfang. G5 umfasst zusätzliche
@@ -61,8 +62,13 @@ D12 ist [abgeschlossen](evidence/D12e.md); D13 ist abgeschlossen mit dem
 [AI01](evidence/AI01.md) ist als Vertrags-/Planungspaket abgeschlossen. Das zählt
 keine implementierte KI/FEM als fertig. [Kapitel 11](11-ki-fem-optimierung.md) und
 [ADR 0010](../adr/0010-native-actions-and-analysis-extension.md) trennen die Stufen:
-AI02 liefert vor U04 die gemeinsame zielgerichtete CAD-Aktionsgrenze. Integrierter
-Assistent und optionaler MCP-Zugang folgen nach v1 unabhängig von FEM. Lineare FEM,
+AI02 liefert die gemeinsame zielgerichtete CAD-Aktionsgrenze. Der optionale MCP-Zugang
+(AI04) folgt nach v1 unabhängig von FEM.
+
+**Nutzerentscheidung vom 4. Oktober 2026:** AI02 kommt direkt nach R10b (G2), der
+integrierte Assistent AI03 direkt danach, ohne auf L10 zu warten. Er nutzt zunächst Claude
+per API, mit austauschbarem Adapter (ChatGPT möglich). AI03 bleibt G5, damit G4 ohne KI und
+Netz abnehmbar bleibt. Zuschnitt: [AI02-plan.md](AI02-plan.md). Lineare FEM,
 Parameteroptimierung, Topologieoptimierung und CAD-Rückführung sind eigene spätere
 Pakete. Keine neuen Runtime-Bibliotheken oder Physik-Dateifelder werden jetzt eingeführt.
 Aktuelle Implementierung bleibt R05b; bestehende Paketabnahmen bleiben erhalten.

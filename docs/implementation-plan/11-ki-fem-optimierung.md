@@ -1,6 +1,13 @@
 # 11 – Native KI-Konstruktion, FEM und Optimierung
 
 Nutzerentscheidung vom 17.09.2026; [ADR 0010](../adr/0010-native-actions-and-analysis-extension.md).
+
+**Umstellung vom 04.10.2026 (Nutzerentscheidung):** AI02 folgt direkt auf R10b (G2), AI03
+direkt auf AI02 und hängt nicht mehr an L10. Die Regel „AI02 vor U04“ war mit der neuen
+Oberfläche (UX01, U04 abgenommen) übersprungen worden. AI02 schließt die Lücke, bevor
+U07–U10 weitere Befehle hinzufügen. AI03 bleibt G5, damit G4 ohne KI und Netz abnehmbar
+bleibt. Anbieter für AI03 zunächst Claude per API mit austauschbarem Adapter; ChatGPT
+ist ausdrücklich möglich. Zuschnitt von AI02: [AI02-plan.md](AI02-plan.md).
 Ziel ist direkte modellbezogene Konstruktion über Auswahl und Sprache, mit normal
 weiterbearbeitbaren Features. Ein MCP-Server allein erfüllt dieses Ziel nicht.
 
@@ -9,8 +16,8 @@ weiterbearbeitbaren Features. Ein MCP-Server allein erfüllt dieses Ziel nicht.
 | Zeitpunkt | Verbindlicher Umfang | Bewusst zurückgestellt |
 |---|---|---|
 | Jetzt: AI01 | Gemeinsamer Aktions-/Kontextvertrag; vorhandene Grundlagen prüfen; R05 fortsetzen | Neue Runtime, KI-Anbieter, FEM-Bibliotheken, spekulative Dateifelder |
-| G2: AI02, vor U04 | Vorhandene CAD-Aktionen mit expliziten Zielen, Standprüfung und gemeinsamen Ergebnissen | Neue Modellierungsfunktionen, generischer Workflowinterpreter |
-| Nach v1: AI03 | Integrierter nativer Assistent, Auswahlkontext, Vorschau und bearbeitbare Änderungen | FEM und eigenes Modelltraining |
+| G2: AI02, direkt nach R10b | Vorhandene CAD-Aktionen mit expliziten Zielen, Standprüfung und gemeinsamen Ergebnissen | Neue Modellierungsfunktionen, generischer Workflowinterpreter |
+| Direkt nach AI02: AI03 | Integrierter nativer Assistent, Auswahlkontext, Vorschau und bearbeitbare Änderungen | FEM und eigenes Modelltraining |
 | Optional parallel: AI04 | MCP-Adapter auf derselben Schnittstelle | Eigenständige MCP-Fachlogik oder Skriptpflicht |
 | Nach v1: FEM01–03 | Begrenzte lineare Statik samt Vernetzung, Ergebnissen und Qualitätsnachweis | Kontakt, Plastizität, CFD, Dynamik, vollständiger FreeCAD-FEM-Umfang |
 | Danach: OPT01 | Parameter vorhandener Features optimieren | Veränderung der Materialtopologie |
@@ -63,7 +70,7 @@ konkretisiert; die CAD-Konvention mm/Radiant bleibt jetzt unverändert.
 
 ## AI02 – Gemeinsame zielgerichtete CAD-Aktionen im Anwendungskern
 
-- **Voraussetzungen:** AI01, R10, U02. Muss vor U04 abgeschlossen sein.
+- **Voraussetzungen:** AI01, R10, U02. Ursprünglich vor U04; seit 04.10.2026 direkt nach R10b.
 - **Einstieg:** `CadSession.hpp`, `CommandResult.hpp`, `SceneStatus.hpp`,
   `CadSessionTransactions.cpp`, `CommandRegistry.cpp`; vorhandene Dokumenttransaktionen.
 - **Auftrag:** konkrete Unterpakete für Request/Context, zielgerichtete Mutationen,
@@ -77,7 +84,7 @@ konkretisiert; die CAD-Konvention mm/Radiant bleibt jetzt unverändert.
 
 ## AI03 – Integrierten nativen Konstruktionsassistenten liefern
 
-- **Voraussetzungen:** AI02, L10.
+- **Voraussetzungen:** AI02 (L10 entfällt seit 04.10.2026).
 - **Auftrag:** austauschbaren Modelladapter und native Qt-Bedienung spezifizieren;
   danach Auswahl/Frage → Aktionsvorschlag → Vorschau → Commit → Ergebnis verbinden.
   Erster Fall: bestehende Referenzplatte bearbeiten, Bohrungsmaße ändern und Rippe
