@@ -148,6 +148,11 @@ void validateNativeSketchGeometry(const SketchParameters& sketch) {
                        c.auxiliaryValues.size() == 2;
             }));
     }
+    if (sketch.datum) {
+        const auto value = static_cast<int>(*sketch.datum);
+        require(value >= 1 && value <= 3 && !sketch.supportBinding && !sketch.repairReason &&
+                sketch.plane == datumSketchPlane(*sketch.datum));
+    }
     require(sketch.elements.values.size() <= maximumSketchElementCount);
     // Preserve legacy axis magnitudes; canonicalization remains an explicit edit.
     validateSketchPlane(sketch.plane);
@@ -181,13 +186,18 @@ void writeNativeSketchGeometry(const TDF_Label& label, const SketchParameters& s
         writeNativeSketchSupport(label.FindChild(11), *sketch.supportBinding);
     if (sketch.repairReason)
         TDataStd_Integer::Set(label.FindChild(12), static_cast<int>(*sketch.repairReason));
+    if (sketch.datum)
+        TDataStd_Integer::Set(label.FindChild(13), static_cast<int>(*sketch.datum));
 }
 SketchParameters readNativeSketchGeometry(const TDF_Label& label, std::size_t remainingElements,
                                           int schemaVersion) {
     const auto binding = label.FindChild(11, false);
     const auto repair = label.FindChild(12, false);
-    require((binding.IsNull() || schemaVersion >= 2) && (repair.IsNull() || schemaVersion >= 4));
-    require(label.NbChildren() == 4 + (binding.IsNull() ? 0 : 1) + (repair.IsNull() ? 0 : 1));
+    const auto datum = label.FindChild(13, false);
+    require((binding.IsNull() || schemaVersion >= 2) && (repair.IsNull() || schemaVersion >= 4) &&
+            (datum.IsNull() || schemaVersion >= 6));
+    require(label.NbChildren() == 4 + (binding.IsNull() ? 0 : 1) + (repair.IsNull() ? 0 : 1) +
+                                      (datum.IsNull() ? 0 : 1));
     const auto plane = reals(label, 9);
     const auto elements = child(label, 10);
     const int count = integer(elements);
@@ -212,6 +222,12 @@ SketchParameters readNativeSketchGeometry(const TDF_Label& label, std::size_t re
     if (!repair.IsNull()) {
         require(repair.NbChildren() == 0 && repair.NbAttributes() == 1);
         sketch.repairReason = static_cast<SketchRepairReason>(integer(repair));
+    }
+    if (!datum.IsNull()) {
+        require(datum.NbChildren() == 0 && datum.NbAttributes() == 1);
+        const int value = integer(datum);
+        require(value >= 1 && value <= 3);
+        sketch.datum = static_cast<DatumPlane>(value);
     }
     validateNativeSketchGeometry(sketch);
     return sketch;

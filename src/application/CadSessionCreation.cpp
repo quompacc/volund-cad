@@ -72,6 +72,20 @@ CommandResult CadSession::createSketchFeature(document::FeatureId supportFeature
                            true);
 }
 
+CommandResult CadSession::createDatumSketchFeature(const document::SketchParameters& sketch) {
+    document::DocumentTransaction transaction(document_);
+    auto& candidate = transaction.edit();
+    const std::size_t sequence =
+        featureCount(document_.features(), document::FeatureKind::sketch) + 1;
+    const auto idInput = detail::prepareInput([&] {
+        return candidate.addDatumSketchFeature("Sketch " + std::to_string(sequence), sketch);
+    });
+    if (!idInput.value)
+        return CommandResult::invalidInput(idInput.diagnostic);
+    return finishCandidate(transaction, *idInput.value, CommandKind::newFeature,
+                           ErrorDisposition::reject, true);
+}
+
 CommandResult CadSession::createSketchExtrusion(document::FeatureId supportFeature,
                                                 const document::SketchParameters& sketch,
                                                 double distance) {

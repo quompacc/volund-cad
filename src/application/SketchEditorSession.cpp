@@ -63,6 +63,23 @@ SketchEditorSession::SketchEditorSession(CadSession& session, document::FeatureI
     commitHistory();
 }
 
+SketchEditorSession::SketchEditorSession(CadSession& session, document::DatumPlane datum)
+    : session_(session), datum_(datum), plane_(document::datumSketchPlane(datum)) {
+    commitHistory();
+}
+
+SketchEditorSession::SketchEditorSession(CadSession& session, document::FeatureId sketchFeature,
+                                         document::SketchParameters parameters)
+    : session_(session), datum_(parameters.datum), plane_(parameters.plane),
+      elements_(std::move(parameters.elements)), constraints_(std::move(parameters.constraints)),
+      editingFeature_(sketchFeature) {
+    if (!datum_)
+        throw std::invalid_argument("Only base-plane sketches are edited without a support");
+    document::validateSketchParameters(this->parameters(false));
+    static_cast<void>(solveConstraints());
+    commitHistory();
+}
+
 void SketchEditorSession::setTool(SketchDrawingTool tool) noexcept {
     tool_ = tool;
     clearPreview();
@@ -520,6 +537,7 @@ document::SketchParameters SketchEditorSession::parameters(bool includePreview) 
             result.values.push_back({document::SketchElementId{result.nextId++}, geometry});
     document::SketchParameters sketch{plane_, std::move(result), constraints_};
     sketch.supportBinding = supportBinding_;
+    sketch.datum = datum_;
     return sketch;
 }
 
@@ -529,7 +547,7 @@ bool SketchEditorSession::solveConstraints() {
         if (supportBinding_) {
             if (!supportStamp_ || *supportStamp_ != session_.sceneStatus().document)
                 return false;
-            session_.resolveSketchSupport(supportFeature_, sketch);
+            session_.resolveSketchSupport(*supportFeature_, sketch);
         }
         lastSolveResult_ = features::solveSketchConstraints(sketch);
     } catch (const std::invalid_argument&) {

@@ -64,12 +64,20 @@ struct SketchSupportBinding final {
 };
 
 enum class SketchRepairReason { legacySupport = 1, legacyEdges = 2 };
+// V01: document base planes with stable identity. A sketch on one of them needs no support
+// body and opens a new body whose BodyId is the sketch's FeatureId.
+enum class DatumPlane { xy = 1, xz = 2, yz = 3 };
+// Canonical frames: XY normal +Z; XZ x along +X, sketch y along +Z (normal -Y); YZ x along
+// +Y, sketch y along +Z (normal +X). All pass through the origin.
+[[nodiscard]] SketchPlane datumSketchPlane(DatumPlane datum);
 struct SketchParameters final {
     SketchPlane plane;
     SketchElements elements;
     SketchConstraints constraints;
     std::optional<SketchSupportBinding> supportBinding{};
     std::optional<SketchRepairReason> repairReason{};
+    // Set exactly for sketches without a support feature; the plane equals the datum's.
+    std::optional<DatumPlane> datum{};
 
     SketchParameters() = default;
     SketchParameters(SketchPlane sketchPlane, SketchElements sketchElements,
@@ -125,6 +133,9 @@ class ModelDocument final {
                                           const kernel::BoxDimensions& dimensions);
     [[nodiscard]] FeatureId addCylinderFeature(std::string name, FeatureId inputFeature,
                                                const CylinderParameters& parameters);
+    // V01: a sketch on a base plane; parameters.datum must be set.
+    [[nodiscard]] FeatureId addDatumSketchFeature(std::string name,
+                                                  const SketchParameters& parameters);
     [[nodiscard]] FeatureId addSketchFeature(std::string name, FeatureId supportFeature,
                                              const SketchParameters& parameters);
     [[nodiscard]] FeatureId addExtrusionFeature(std::string name, FeatureId sketchFeature,

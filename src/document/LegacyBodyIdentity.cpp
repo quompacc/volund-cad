@@ -27,7 +27,11 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
     }
     if (!matches)
         throw std::invalid_argument("Legacy body identity: feature parameter kind mismatch");
-    if ((feature.kind == FeatureKind::box) == feature.inputFeature.has_value())
+    // Boxes and base-plane (datum) sketches stand alone; every other feature has an input.
+    const bool standalone =
+        feature.kind == FeatureKind::box ||
+        (feature.kind == FeatureKind::sketch && std::get<SketchParameters>(parameters).datum);
+    if (standalone == feature.inputFeature.has_value())
         throw std::invalid_argument("Legacy body identity: invalid input presence");
 }
 
@@ -77,7 +81,9 @@ legacyBodyIdentities(std::span<const FeatureDescriptor> features,
             const auto index = path.back();
             path.pop_back();
             const auto& feature = features[index];
+            // A datum sketch opens a body; its extrusion produces the body's first solid.
             const bool createsBody = feature.kind == FeatureKind::box ||
+                (feature.kind == FeatureKind::sketch && !inputs[index]) ||
                 (feature.kind == FeatureKind::cylinder &&
                  std::get<CylinderParameters>(parameters[index]).resultMode ==
                      CylinderResultMode::separate);

@@ -297,6 +297,12 @@ does not create an undo entry or dirty state. A persisted repair reason produces
 `MigrationNeedsRepair`; descendants are blocked while independent branches remain
 valid. The low-level codec remains a lossless structural reader.
 
+Sketches on base planes (V01a, schema 6) are exempt: they have no support feature
+and no binding by design, carry `datum` (1 = XY, 2 = XZ, 3 = YZ) in optional sketch
+child 13 and lie exactly on that plane. Such a sketch has no input reference (feature
+child 5), opens its own body group with BodyId equal to its FeatureId, and its
+extrusion produces that body's first solid without a fuse.
+
 Schema 4 adds optional sketch child 12 containing one integer attribute:
 1 = legacySupport (requires absent binding), 2 = legacyEdges (requires binding
 and at least one legacy coordinate attachment). Unknown values, inconsistent

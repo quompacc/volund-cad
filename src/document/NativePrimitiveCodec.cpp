@@ -165,11 +165,14 @@ std::vector<FeatureBodyIdentity> validate(std::span<const FeatureDescriptor> fea
     std::map<std::uint64_t, std::size_t> indices;
     for (std::size_t index = 0; index < features.size(); ++index)
         indices.emplace(features[index].id.value(), index);
-    // Sketches create no solid. Store them in their validated support body's group.
+    // Sketches create no solid. Store them in their validated support body's group; a
+    // base-plane sketch opens its own body group (BodyId = its FeatureId, schema 6).
     for (std::size_t index = 0; index < features.size(); ++index)
         if (features[index].kind == FeatureKind::sketch)
             assignments[index].body =
-                assignments[indices.at(features[index].inputFeature->value())].body;
+                features[index].inputFeature
+                    ? assignments[indices.at(features[index].inputFeature->value())].body
+                    : BodyId{features[index].id.value()};
     return assignments;
 }
 FeatureParameters parameters(const TDF_Label& feature, bool box) {
@@ -294,8 +297,11 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
             const bool box = kind == "box";
             const bool sketch = kind == "sketch";
             const bool extrusion = kind == "extrusion";
+            // A base-plane sketch (schema 6) has no input reference child 5.
+            const bool standaloneSketch =
+                sketch && native.FindChild(5, false).IsNull() && metadata.schemaVersion >= 6;
             require((box || sketch || extrusion || kind == "cylinder") &&
-                    native.NbChildren() == (box                     ? 4
+                    native.NbChildren() == (box || standaloneSketch ? 4
                                             : (sketch || extrusion) ? 5
                                                                     : 6));
             labels.emplace(entry(native), records.size());
@@ -333,7 +339,7 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
         return found->second;
     };
     for (auto& record : records)
-        if (record.feature.kind != FeatureKind::box)
+        if (record.feature.kind != FeatureKind::box && !record.label.FindChild(5, false).IsNull())
             record.feature.inputFeature = records[resolve(child(record.label, 5))].feature.id;
     std::vector<FeatureDescriptor> features;
     std::vector<FeatureParameters> data;

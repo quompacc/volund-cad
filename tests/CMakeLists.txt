@@ -673,3 +673,7 @@ add_executable(voelund_region_selection_tests integration/RegionSelectionAccepta
 target_link_libraries(voelund_region_selection_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME application.region_selection_acceptance COMMAND voelund_region_selection_tests)
 set_tests_properties(application.region_selection_acceptance PROPERTIES LABELS "integration;application;sketch;regression" TIMEOUT 90)
+add_executable(voelund_datum_sketch_tests integration/DatumSketchTests.cpp)
+target_link_libraries(voelund_datum_sketch_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.datum_sketch COMMAND voelund_datum_sketch_tests)
+set_tests_properties(application.datum_sketch PROPERTIES LABELS "integration;application;sketch;regression" TIMEOUT 90)

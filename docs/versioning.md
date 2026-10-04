@@ -35,7 +35,7 @@ inkompatible Änderungen daran erhöhen dann die Major-Version.
 | Git-Commit | genaue Quellrevision |
 | VOLUND 1–16 | historische Textformate, weiterhin lesbar; kein Produktwriter mehr |
 | OCAF-Speicherformat 12 | native Container-Schreibversion aus ADR 0008 |
-| natives Anwendungsschema 4 | Persistenter Reparaturgrund für Legacy-Skizzen; Schema 1/2/3 bleiben lesbar. Typisierte Stützflächen-/Kantenreferenzen aus Schema 2/3 bleiben erhalten; Nachweis in R06b. |
+| natives Anwendungsschema 6 | 6: Skizzen auf Basisebenen ohne Stützkörper (V01a); 5: Regionsauswahl der Extrusion (R09b); 4: persistenter Reparaturgrund für Legacy-Skizzen (R06b). Schema 1–5 bleiben lesbar; typisierte Stützflächen-/Kantenreferenzen aus Schema 2/3 bleiben erhalten. |
 | DocumentId | Identität eines Dokuments über seine Revisionen hinweg |
 
 Eine neue Produktversion erhöht keine dieser anderen Kennungen automatisch.

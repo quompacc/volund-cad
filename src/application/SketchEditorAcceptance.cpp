@@ -12,7 +12,8 @@ CommandResult SketchEditorSession::tryAccept(ErrorDisposition disposition) {
     const auto sketch = parameters(false);
     auto result = editingFeature_.has_value()
                       ? session_.editSketchParameters(*editingFeature_, sketch, disposition)
-                      : session_.createSketchFeature(supportFeature_, sketch);
+                      : datum_ ? session_.createDatumSketchFeature(sketch)
+                               : session_.createSketchFeature(*supportFeature_, sketch);
     if (result.status() == CommandStatus::committed ||
         result.status() == CommandStatus::committedWithErrors ||
         (result.status() == CommandStatus::rejected &&

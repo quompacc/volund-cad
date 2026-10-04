@@ -122,6 +122,8 @@ class CadSession final {
                                                       double distance = 10.0);
     [[nodiscard]] CommandResult createSketchFeature(document::FeatureId supportFeature,
                                                     const document::SketchParameters& sketch);
+    // V01: a sketch on a base plane (sketch.datum set) needs no body and opens a new one.
+    [[nodiscard]] CommandResult createDatumSketchFeature(const document::SketchParameters& sketch);
     [[nodiscard]] CommandResult createSketchExtrusion(document::FeatureId supportFeature,
                                                       const document::SketchParameters& sketch,
                                                       double distance = 10.0);

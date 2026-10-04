@@ -1,5 +1,6 @@
 #include "../../src/document/NativePrimitiveCodec.hpp"
 #include "../../src/document/NativeExtrusion.hpp"
+#include "../../src/document/NativeSketchGeometry.hpp"
 #include <voelund/features/FeatureGraph.hpp>
 #include <voelund/features/SketchEvaluation.hpp>
 #include <BinDrivers.hxx>
@@ -207,8 +208,44 @@ void regionSelections(const Handle(TDocStd_Application)& app) {
     app->Close(doc);
     std::cout << "schema 5 regions, chunking, ring evaluation and schema-4 reading passed\n";
 }
+// V01a schema 6: a base-plane sketch has no input reference and opens its own body.
+void datumSketches(const Handle(TDocStd_Application)& app) {
+    auto model = ModelDocument::empty();
+    SketchParameters sketch{datumSketchPlane(DatumPlane::xz),
+                            {{{SketchElementId{1}, SketchRectangle{0, 0, 4, 3}}}, 2}};
+    sketch.datum = DatumPlane::xz;
+    const auto sketchId = model.addDatumSketchFeature("Base", sketch);
+    (void)model.addExtrusionFeature("Body", sketchId, {2, {}, {region("o:1.0,1.1,1.2,1.3")}});
+    const auto expected =
+        IdentifiedDocumentSnapshot::restore(DocumentId{3, 4}, DocumentSnapshot::capture(model));
+    auto doc = fresh(app);
+    NativePrimitiveCodec::write(doc, expected);
+    std::stringstream bytes(std::ios::in | std::ios::out | std::ios::binary);
+    save(app, doc, bytes);
+    auto loaded = open(app, bytes);
+    require(NativePrimitiveCodec::read(loaded) == expected, "Datum sketch roundtrip");
+    app->Close(loaded);
+    const auto result = features::FeatureGraph{}.evaluate(expected.snapshot().toDocument());
+    GProp_GProps properties;
+    BRepGProp::VolumeProperties(result.bodies.front().shape, properties);
+    require(result.bodies.size() == 1 && result.bodies.front().bodyId == BodyId{1} &&
+                std::abs(properties.Mass() - 24) < 1e-9,
+            "Datum body identity and volume");
+    TDataStd_Integer::Set(doc->Main().FindChild(2), 5);
+    rejected([&] { (void)NativePrimitiveCodec::read(doc); }); // datum needs schema 6
+    TDataStd_Integer::Set(doc->Main().FindChild(2), 6);
+    auto shifted = sketch;
+    shifted.plane.originY = 1;
+    rejected([&] { detail::validateNativeSketchGeometry(shifted); });
+    auto bound = sketch;
+    bound.repairReason = SketchRepairReason::legacySupport;
+    rejected([&] { detail::validateNativeSketchGeometry(bound); });
+    app->Close(doc);
+    std::cout << "schema 6 datum sketch, own body, schema gate and plane checks passed\n";
+}
 void regressions(const Handle(TDocStd_Application)& app) {
     historicalProfiles(app);
+    datumSketches(app);
     regionSelections(app);
     auto doc = fresh(app);
     const auto expected = fixture();

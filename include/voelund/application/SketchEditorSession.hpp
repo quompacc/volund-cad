@@ -36,6 +36,10 @@ class SketchEditorSession final {
                         std::optional<document::SketchSupportBinding> binding = std::nullopt);
     SketchEditorSession(CadSession& session, document::FeatureId sketchFeature,
                         document::FeatureId supportFeature, document::SketchParameters parameters);
+    // V01: a new sketch on a base plane, and editing an existing base-plane sketch.
+    SketchEditorSession(CadSession& session, document::DatumPlane datum);
+    SketchEditorSession(CadSession& session, document::FeatureId sketchFeature,
+                        document::SketchParameters parameters);
 
     void setTool(SketchDrawingTool tool) noexcept;
     [[nodiscard]] SketchDrawingTool tool() const noexcept;
@@ -156,7 +160,8 @@ class SketchEditorSession final {
     [[nodiscard]] bool solveConstraints();
 
     CadSession& session_;
-    document::FeatureId supportFeature_;
+    std::optional<document::FeatureId> supportFeature_;
+    std::optional<document::DatumPlane> datum_;
     document::SketchPlane plane_;
     std::optional<document::SketchSupportBinding> supportBinding_;
     std::optional<DocumentStamp> supportStamp_;

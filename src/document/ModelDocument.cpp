@@ -72,7 +72,23 @@ void validateCylinderParameters(const CylinderParameters& parameters) {
     validatePlacement(parameters.placement);
 }
 
+SketchPlane datumSketchPlane(DatumPlane datum) {
+    switch (datum) {
+    case DatumPlane::xy:
+        return {0, 0, 0, 0, 0, 1, 1, 0, 0};
+    case DatumPlane::xz:
+        return {0, 0, 0, 0, -1, 0, 1, 0, 0};
+    case DatumPlane::yz:
+        return {0, 0, 0, 1, 0, 0, 0, 1, 0};
+    }
+    throw std::invalid_argument("Unknown datum plane");
+}
+
 void validateSketchParameters(const SketchParameters& parameters) {
+    if (parameters.datum &&
+        (parameters.supportBinding || parameters.repairReason ||
+         !(parameters.plane == datumSketchPlane(*parameters.datum))))
+        throw std::invalid_argument("A datum sketch lies exactly on its unbound base plane");
     validateCanonicalSketchPlane(parameters.plane);
     validateSketchElements(parameters.elements);
     validateSketchConstraints(parameters.elements, parameters.constraints);
@@ -143,11 +159,28 @@ FeatureId ModelDocument::addCylinderFeature(std::string name, FeatureId inputFea
     return id;
 }
 
+FeatureId ModelDocument::addDatumSketchFeature(std::string name,
+                                               const SketchParameters& parameters) {
+    if (!parameters.datum)
+        throw std::invalid_argument("A sketch without support requires a base plane");
+    validateSketchParameters(parameters);
+    const FeatureId id = nextFeatureId();
+    auto candidate = currentState();
+    ++candidate.nextFeatureId;
+    candidate.features.push_back(
+        FeatureDescriptor{id, FeatureKind::sketch, std::move(name), std::nullopt});
+    candidate.parameters.emplace_back(parameters);
+    commitState(std::move(candidate));
+    return id;
+}
+
 FeatureId ModelDocument::addSketchFeature(std::string name, FeatureId supportFeature,
                                           const SketchParameters& parameters) {
     if (!contains(supportFeature)) {
         throw std::invalid_argument("Sketch support feature does not exist");
     }
+    if (parameters.datum)
+        throw std::invalid_argument("A supported sketch cannot also lie on a base plane");
     validateSketchParameters(parameters);
     const FeatureId id = nextFeatureId();
     auto candidate = currentState();

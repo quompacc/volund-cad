@@ -245,9 +245,8 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
     const auto descriptors = document.features();
     const auto sketchDescriptor =
         std::ranges::find(descriptors, sketchId, &document::FeatureDescriptor::id);
-    if (sketchDescriptor == descriptors.end() || !sketchDescriptor->inputFeature.has_value())
-        throw GeometryEvaluationError("Sketch support feature is missing");
-    const document::FeatureId supportId = *sketchDescriptor->inputFeature;
+    if (sketchDescriptor == descriptors.end())
+        throw GeometryEvaluationError("Extrusion sketch is missing");
     const auto profiles = evaluateExtrusionFaces(sketch, parameters);
     TopoDS_Compound sketchFace;
     BRep_Builder builder;
@@ -268,6 +267,19 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
                               kernel::HistoryCoverage::complete,
                               cap});
     }
+    if (!sketchDescriptor->inputFeature) {
+        // V01: a base-plane sketch opened its own body (BodyId = sketch FeatureId); this
+        // prism is that body's first solid, so nothing is fused and nothing is guessed.
+        const document::BodyId bodyId{sketchId.value()};
+        if (std::ranges::find(bodies, bodyId, &EvaluatedBody::bodyId) != bodies.end())
+            throw GeometryEvaluationError("Base-plane body already has a solid");
+        outputs.push_back(EvaluatedFeature{descriptor.id, tool, tool, bodyId, capOrigins, {},
+                                           capOrigins, toolEdges, toolEdges});
+        bodies.push_back({bodyId, descriptor.id, tool});
+        referenceBodies.push_back({bodyId, descriptor.id, tool});
+        return;
+    }
+    const document::FeatureId supportId = *sketchDescriptor->inputFeature;
 
     EvaluatedBody& supportBody = findBody(bodies, outputs, supportId);
     EvaluatedBody& referenceSupportBody = findBody(referenceBodies, outputs, supportId);

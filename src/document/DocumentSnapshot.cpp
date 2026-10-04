@@ -8,8 +8,8 @@ DocumentSnapshot DocumentSnapshot::markLegacySketchReferencesForRepair() const {
     auto result = *this;
     for (auto& parameter : result.parameters_) {
         auto* sketch = std::get_if<SketchParameters>(&parameter);
-        if (!sketch || sketch->repairReason)
-            continue;
+        if (!sketch || sketch->repairReason || sketch->datum)
+            continue; // Base-plane sketches have no support to repair.
         if (!sketch->supportBinding)
             sketch->repairReason = SketchRepairReason::legacySupport;
         else if (std::ranges::any_of(sketch->constraints.values, [](const auto& c) {
