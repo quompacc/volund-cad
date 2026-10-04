@@ -102,6 +102,10 @@ Vom Nutzer am 04.10.2026 freigegeben; verbindlich festgehalten in
 - Ein endgültiges Urteil fällt erst beim Modellieren eines echten Teils im Produkt. Die
   Umsetzung bleibt deshalb in kleinen, vorführbaren Schritten.
 
+- Nach U05: Die Werkzeugleiste soll sich dem aktiven Modus anpassen und die Werkzeuge der
+  gerade genutzten Funktion zeigen. Im Skizzenmodus sind das Skizzenelemente,
+  Beziehungen, Bemaßungen usw. Umsetzung in U13.
+
 ### Ablauf im Zielbild
 
 1. Ein leeres Dokument zeigt Ursprung, Ebenen und Raster. Ein Hinweis lautet „Ebene

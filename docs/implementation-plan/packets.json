@@ -4,8 +4,8 @@
   "auditedCommit": "1b78229",
   "status": "implementation-started",
   "counts": {
-    "total": 128,
-    "throughG4": 98,
+    "total": 129,
+    "throughG4": 99,
     "g5": 30
   },
   "globalGates": [
@@ -67,6 +67,7 @@
     "U04",
     "U05",
     "U06",
+    "U13",
     "V01",
     "PAR01",
     "R10b",
@@ -1517,6 +1518,34 @@
       ],
       "acceptance": "Neues/geladenes Dokument zeigt korrekte Inhalte. Ausblenden einer Ebene im Baum entfernt sie aus Viewport und Pick, ohne Dirty. Umbenennen und Undo aktualisieren alle Ansichten. Timeline-Klick öffnet Skizze bzw. Extrusion.",
       "boundary": "Rückrollmarke, Umordnen und Fehleranzeige in der Timeline folgen M15; hier nur Projektion und Öffnen.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "U13",
+      "title": "Werkzeugleiste passt sich dem aktiven Modus an (Skizzenmodus)",
+      "deps": [
+        "U05",
+        "U04"
+      ],
+      "files": [
+        "src/desktop/ToolRail.cpp",
+        "src/desktop/SketchEditorToolController.cpp",
+        "src/desktop/ToolPanelHost.cpp",
+        "src/desktop/ContextCommands.cpp",
+        "tests/desktop/"
+      ],
+      "steps": [
+        "Werkzeugleiste zeigt je Modus deren Werkzeuge: außerhalb einer Skizze die Volumenwerkzeuge, im Skizzenmodus Zeichenelemente, Beziehungen, Bemaßungen und Bearbeitung (Stutzen, Versetzen, Muster usw.), gruppiert und mit Symbolen.",
+        "Skizzenwerkzeuge als registrierte Befehle mit Command-ID, sodass Werkzeugleiste, Befehlssuche und Kürzel denselben Weg nutzen; das Werkzeugpanel behält nur Werte, Rückmeldung und OK/Abbrechen.",
+        "Gesperrt statt versteckt nach Auswahl im Skizzenmodus; Wechsel des Modus aktualisiert die Leiste ohne Dokumentänderung."
+      ],
+      "acceptance": "Im Skizzenmodus zeigt die Werkzeugleiste alle Skizzenwerkzeuge und keine Volumenwerkzeuge; nach OK/Abbrechen wieder die Volumenwerkzeuge. Jedes Skizzenwerkzeug ist über Werkzeugleiste, Befehlssuche und Kürzel mit derselben Command-ID erreichbar. Bestehende Skizzentests grün; Aufnahmen gesichtet und vorgelegt.",
+      "boundary": "Nutzerentscheidung vom 2026-10-04 (Ergänzung zu ADR 0012). Keine neuen Skizzenfunktionen; nur deren Einstieg. Fachregeln bleiben in den Controllern.",
       "status": "planned",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",

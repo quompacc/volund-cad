@@ -31,6 +31,10 @@ Eine einzige produktive Oberfläche in `voelund-cad` mit diesem Aufbau:
   Dokument eingeschaltet und lässt sich im Baum und im Viewport ausschalten.
 - **Werkzeugleiste:** senkrecht am linken Viewportrand, ausblendbar. Sie zeigt alle
   Volumenwerkzeuge. Was zur Auswahl nicht passt, ist gesperrt, nicht versteckt.
+- **Werkzeugleiste je Modus** (Nutzerentscheidung vom 04.10.2026, nach U05): Die
+  Werkzeugleiste zeigt die Werkzeuge der gerade genutzten Funktion. Im Skizzenmodus sind
+  das Zeichenelemente, Beziehungen, Bemaßungen und Bearbeitungswerkzeuge, außerhalb davon
+  die Volumenwerkzeuge. Weitere Modi folgen demselben Muster.
 - **Kontextleiste:** schwebt unten. Sie zeigt die Schritte, die zur aktuellen Auswahl
   passen; der nächste sinnvolle Schritt ist hervorgehoben. Im Skizzenmodus trägt sie
   die Skizzenwerkzeuge und „Skizze fertig“.

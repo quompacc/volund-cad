@@ -70,6 +70,17 @@ Grundlage der Oberfläche ist [ADR 0012](../adr/0012-ui-shell-concept.md) (freig
 - **Abnahme:** Neues/geladenes Dokument zeigt korrekte Inhalte. Ausblenden einer Ebene im Baum entfernt sie aus Viewport und Pick, ohne Dirty. Umbenennen und Undo aktualisieren alle Ansichten. Timeline-Klick öffnet Skizze bzw. Extrusion.
 - **Grenze:** Rückrollmarke, Umordnen und Fehleranzeige in der Timeline folgen M15; hier nur Projektion und Öffnen.
 
+## U13 – Werkzeugleiste passt sich dem aktiven Modus an (Skizzenmodus)
+
+- **Voraussetzungen:** U05, U04.
+- **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08, ADR 0012; `src/desktop/ToolRail.cpp`, `src/desktop/SketchEditorToolController.cpp`, `src/desktop/ToolPanelHost.cpp`, `src/desktop/ContextCommands.cpp`, `tests/desktop/`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
+- **Auftrag:**
+  1. Werkzeugleiste zeigt je Modus deren Werkzeuge: außerhalb einer Skizze die Volumenwerkzeuge, im Skizzenmodus Zeichenelemente, Beziehungen, Bemaßungen und Bearbeitung (Stutzen, Versetzen, Muster usw.), gruppiert und mit Symbolen.
+  2. Skizzenwerkzeuge als registrierte Befehle mit Command-ID, sodass Werkzeugleiste, Befehlssuche und Kürzel denselben Weg nutzen; das Werkzeugpanel behält nur Werte, Rückmeldung und OK/Abbrechen.
+  3. Gesperrt statt versteckt nach Auswahl im Skizzenmodus; Wechsel des Modus aktualisiert die Leiste ohne Dokumentänderung.
+- **Abnahme:** Im Skizzenmodus zeigt die Werkzeugleiste alle Skizzenwerkzeuge und keine Volumenwerkzeuge; nach OK/Abbrechen wieder die Volumenwerkzeuge. Jedes Skizzenwerkzeug ist über Werkzeugleiste, Befehlssuche und Kürzel mit derselben Command-ID erreichbar. Bestehende Skizzentests grün; Aufnahmen gesichtet und vorgelegt.
+- **Grenze:** Nutzerentscheidung vom 2026-10-04 (Ergänzung zu ADR 0012). Keine neuen Skizzenfunktionen; nur deren Einstieg. Fachregeln bleiben in den Controllern.
+
 ## U07 – New/Open/Save und Close-Schutz in der gemeinsamen Shell anschließen
 
 - **Voraussetzungen:** U05, D03, D14.
