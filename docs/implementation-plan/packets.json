@@ -3995,12 +3995,14 @@
       ],
       "acceptance": "Build und alle Tests grün unter Windows und in der Linux-CI ohne voelund-ui-preview. Kein Aufrufer des alten Rechteckwegs. Kein Desktop-Test liest oder schreibt dauerhafte Einstellungen.",
       "boundary": "Nutzerentscheidung vom 2026-10-04: vorgezogener Teil von U12, damit keine zweite Oberfläche Fehler verdeckt. Keine sichtbare Änderung am Produkt. Testgerüste mit einzelnen Panels bleiben; Composition Root und Installation bleiben U12.",
-      "status": "planned",
+      "status": "done",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/U12a.md"
+      ],
+      "completedCommit": "21d220e"
     },
     {
       "id": "PAR02",
