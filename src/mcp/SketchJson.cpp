@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <optional>
 #include <string>
 
 namespace voelund::mcp {
@@ -35,6 +36,14 @@ constexpr SketchConstraintKind acceptedKinds[] = {
     SketchConstraintKind::pointDistance,  SketchConstraintKind::angle,
     SketchConstraintKind::pointDistanceX, SketchConstraintKind::pointDistanceY,
     SketchConstraintKind::concentric,     SketchConstraintKind::diameter};
+
+// The unit of a constraint's value. Coordinates carry a value but cannot be bound
+// (document::dimensionUnit lists only the bindable dimensions).
+std::optional<document::ParameterUnit> valueUnit(SketchConstraintKind kind) {
+    if (kind == SketchConstraintKind::coordinateX || kind == SketchConstraintKind::coordinateY)
+        return document::ParameterUnit::length;
+    return document::dimensionUnit(kind);
+}
 
 QJsonArray point(const document::SketchPoint& value) { return {value.x, value.y}; }
 document::SketchPoint point(const detail::JsonReader& reader, const QString& key) {
@@ -124,7 +133,7 @@ QJsonObject encodeConstraint(const document::SketchConstraint& constraint) {
         json.insert("second", encodeReference(*constraint.second));
     if (constraint.third)
         json.insert("third", encodeReference(*constraint.third));
-    if (const auto unit = document::dimensionUnit(constraint.kind)) {
+    if (const auto unit = valueUnit(constraint.kind)) {
         json.insert("value", *unit == document::ParameterUnit::angle
                                  ? detail::quantity(constraint.angleValue.value(), "rad")
                                  : detail::quantity(constraint.value, "mm"));
@@ -144,7 +153,7 @@ document::SketchConstraint decodeConstraint(const detail::JsonReader& reader,
     const auto second = reader.has("second")
                             ? std::optional{decodeReference(reader.object("second"))}
                             : std::nullopt;
-    const auto unit = document::dimensionUnit(kind);
+    const auto unit = valueUnit(kind);
     if (!unit) {
         if (reader.has("value") || reader.has("parameterId"))
             throw ArgumentError(reader.field("value"), "This constraint has no value");
@@ -154,6 +163,8 @@ document::SketchConstraint decodeConstraint(const detail::JsonReader& reader,
     std::optional<document::ParameterId> bound;
     std::optional<double> value;
     if (const auto parameterId = reader.optionalId("parameterId")) {
+        if (!document::dimensionUnit(kind))
+            throw ArgumentError(reader.field("parameterId"), "Coordinates cannot be bound");
         bound = document::ParameterId{*parameterId};
         const auto* parameter = document::findParameter(parameters, *bound);
         if (parameter == nullptr)

@@ -38,6 +38,18 @@ Teilplan: [AI04-plan.md](../AI04-plan.md).
 - **Linux:** CI-Lauf ausstehend. Vorab auf Fedora mit GCC gebaut, 113/113 Tests unter
   `kwin_wayland --virtual` bestanden.
 
+## Vorab-Durchlauf mit echtem Client
+
+Claude Code 2.1.289 unter Windows, headless über `--mcp-config` mit diesem Server (nur
+`mcp__volund__*` erlaubt). Auftrag: Parameter A = 8 mm, Platte 80 × 40 × 10 zentriert auf
+XY mit Bohrung, Radius an A gebunden, danach A = 10 mm. Claude Code hat dafür
+`get_context`, `create_parameter`, `create_sketch_extrusion`, `set_parameter_value` und
+erneut `get_context` aufgerufen und die Fläche selbst nachgerechnet (3200 − 100π mm²).
+Der erste Versuch von `create_sketch_extrusion` wurde abgewiesen, ohne dass sich etwas
+änderte: Werte an `coordinateX`/`coordinateY` lehnte der Codec fälschlich ab. Das ist
+in `mcp.tools` behoben (Koordinaten tragen einen Wert, sind aber nicht bindbar) und
+geprüft. Die förmliche Abnahme mit echtem Client folgt in AI04d.
+
 ## Grenzen
 
 - Noch keine sichtbare Bedienung (Ein/Aus, Port, Token, Befehl zum Kopieren); Start nur

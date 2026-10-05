@@ -74,7 +74,8 @@ class Client final {
 QJsonObject circle(int id, double x, double radius) {
     return {{"id", id}, {"type", "circle"}, {"center", QJsonArray{x, 0}}, {"radius", radius}};
 }
-// 80 x 40 plate around the origin with a bore of radius A (approximate 9, solved to A).
+// 80 x 40 plate around the origin with a bore of radius A (approximate 9, solved to A) whose
+// center (given as (1.5, -1)) is fixed at the origin by coordinate constraints.
 QJsonObject plateSketch(int parameter) {
     const QJsonObject rectangle{{"id", 1},
                                 {"type", "rectangle"},
@@ -84,9 +85,18 @@ QJsonObject plateSketch(int parameter) {
                              {"kind", "radius"},
                              {"first", QJsonObject{{"element", 2}, {"point", "center"}}},
                              {"parameterId", parameter}};
+    const auto coordinate = [](int id, const char* kind) {
+        return QJsonObject{{"id", id},
+                           {"kind", kind},
+                           {"first", QJsonObject{{"element", 2}, {"point", "center"}}},
+                           {"value", mm(0)}};
+    };
+    auto bore = circle(2, 1.5, 9);
+    bore.insert("center", QJsonArray{1.5, -1});
     return {{"plane", "xy"},
-            {"elements", QJsonArray{rectangle, circle(2, 0, 9)}},
-            {"constraints", QJsonArray{radius}}};
+            {"elements", QJsonArray{rectangle, bore}},
+            {"constraints",
+             QJsonArray{radius, coordinate(2, "coordinateX"), coordinate(3, "coordinateY")}}};
 }
 double plateVolume(double radius, double thickness) {
     return (80.0 * 40.0 - std::numbers::pi * radius * radius) * thickness;
@@ -129,6 +139,14 @@ void plateWithBore() {
     require(near(test::volumeOf(session.currentShape()), plateVolume(10, 10)),
             "The bore follows A");
     const auto sketch = client.context().value("features").toArray().at(0).toObject();
+    const auto stored = session.sketchParameters(document::FeatureId{
+        static_cast<std::uint64_t>(sketch.value("id").toInteger())});
+    const auto& center = std::get<document::SketchCircle>(stored.elements.values[1].geometry).center;
+    const auto constraints =
+        sketch.value("parameters").toObject().value("sketch").toObject().value("constraints").toArray();
+    require(std::abs(center.x) < 1e-9 && std::abs(center.y) < 1e-9 && constraints.size() == 3 &&
+                constraints.at(1).toObject().value("value").toObject().value("value") == 0,
+            "Coordinates fix the bore center and appear in the context with their value");
     require(sketch.value("kind") == QLatin1String("sketch") &&
                 sketch.value("regions").toArray().size() == 2 &&
                 sketch.value("parameters").toObject().value("sketch").toObject().value("plane") ==
