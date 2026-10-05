@@ -3633,7 +3633,7 @@
         "Vor größerer Implementierung Unterpakete nach Kapitel 11 und Paketgrenze festlegen."
       ],
       "acceptance": "A-AI-01; Adapterfixtures und separat protokollierter echter Modelllauf, Abbruch und Dokumentwechsel geprüft.",
-      "boundary": "Umfang und Nicht-Ziele laut eigenem Abschnitt in Kapitel 11; keine neuen Runtime-Abhängigkeiten ohne konkrete Entscheidung. Nutzerentscheidung 2026-10-04: nicht mehr an L10 gebunden, direkt nach AI02; Anbieter zunächst Claude per API mit austauschbarem Adapter (ChatGPT möglich). Bleibt G5, damit G4 ohne KI/Netz abnehmbar bleibt.",
+      "boundary": "Umfang und Nicht-Ziele laut eigenem Abschnitt in Kapitel 11; keine neuen Runtime-Abhängigkeiten ohne konkrete Entscheidung. Nutzerentscheidung 2026-10-04: nicht mehr an L10 gebunden, direkt nach AI02; Anbieter zunächst Claude per API mit austauschbarem Adapter (ChatGPT möglich). Bleibt G5, damit G4 ohne KI/Netz abnehmbar bleibt. Nutzerentscheidung 2026-10-05: kein API-Schlüssel; das Panel startet Claude Code mit dem Abo des Nutzers gegen den MCP-Server aus AI04; Zuschnitt in AI03-plan.md.",
       "status": "planned",
       "gate": "G5",
       "chapter": "11-ki-fem-optimierung.md",

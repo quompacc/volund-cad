@@ -85,6 +85,8 @@ konkretisiert; die CAD-Konvention mm/Radiant bleibt jetzt unverändert.
 ## AI03 – Integrierten nativen Konstruktionsassistenten liefern
 
 - **Voraussetzungen:** AI02 (L10 entfällt seit 04.10.2026).
+- **Zuschnitt seit 05.10.2026:** [AI03-plan.md](AI03-plan.md). Kein API-Schlüssel; das Panel
+  startet Claude Code mit dem Abo des Nutzers gegen den MCP-Server aus AI04.
 - **Auftrag:** austauschbaren Modelladapter und native Qt-Bedienung spezifizieren;
   danach Auswahl/Frage → Aktionsvorschlag → Vorschau → Commit → Ergebnis verbinden.
   Erster Fall: bestehende Referenzplatte bearbeiten, Bohrungsmaße ändern und Rippe
