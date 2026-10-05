@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <optional>
 #include <stdexcept>
 #include <string>
 
@@ -29,6 +30,30 @@ regionByOuterElement(const features::SketchRegionIdentities& identities,
         if (result || identities.ambiguous(index))
             return std::nullopt;
         result = identities.ids[index];
+    }
+    return result;
+}
+
+// Default fill of nested contours, as in a drawing: the outermost region is filled, the
+// region inside one of its holes stays empty, an island inside that is filled again.
+// Ambiguous cells are never chosen.
+std::vector<document::SketchRegionId>
+filledRegions(const features::SketchRegionIdentities& identities) {
+    const auto& cells = identities.regions.regions;
+    const auto parent = [&](std::size_t index) -> std::optional<std::size_t> {
+        for (std::size_t other = 0; other < cells.size(); ++other)
+            if (std::ranges::find(cells[other].holes, cells[index].outer) !=
+                cells[other].holes.end())
+                return other;
+        return std::nullopt;
+    };
+    std::vector<document::SketchRegionId> result;
+    for (std::size_t index = 0; index < identities.ids.size(); ++index) {
+        std::size_t depth = 0;
+        for (auto outer = parent(index); outer && depth <= cells.size(); outer = parent(*outer))
+            ++depth;
+        if (depth % 2 == 0 && !identities.ambiguous(index))
+            result.push_back(identities.ids[index]);
     }
     return result;
 }
@@ -165,9 +190,7 @@ CadSession::createDatumSketchExtrusion(const document::SketchParameters& sketch,
     const auto identities = features::identifySketchRegions(elements);
     std::vector<document::SketchRegionId> selected(regions.begin(), regions.end());
     if (selected.empty())
-        for (std::size_t index = 0; index < identities.ids.size(); ++index)
-            if (!identities.ambiguous(index))
-                selected.push_back(identities.ids[index]);
+        selected = filledRegions(identities);
     if (selected.empty())
         return CommandResult::invalidInput("The sketch has no closed region to extrude");
     for (const document::SketchRegionId& region : selected)

@@ -153,7 +153,8 @@ class CadSession final {
                                  std::span<const document::SketchRegionId> profileIds,
                                  double distance = 10.0);
     // AI02c: a base-plane sketch and its extrusion as one transaction and one undo step.
-    // The regions resolve against the new sketch; empty selects every unambiguous region.
+    // The regions resolve against the new sketch. Empty fills nested contours alternately:
+    // the outer region, not the inside of its holes, again islands inside those.
     [[nodiscard]] CommandResult
     createDatumSketchExtrusion(const document::SketchParameters& sketch,
                                std::span<const document::SketchRegionId> regions,

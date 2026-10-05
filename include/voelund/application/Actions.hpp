@@ -130,7 +130,7 @@ struct EditExtrusionParametersAction final {
     bool operator==(const EditExtrusionParametersAction&) const = default;
 };
 // AI02c: a base-plane sketch and its extrusion in one transaction and one undo step. Empty
-// `regions` extrudes every unambiguous region of the new sketch.
+// `regions` fills nested contours alternately (a contour inside makes a hole, AI04a).
 struct CreateSketchExtrusionAction final {
     document::SketchParameters sketch;
     std::vector<document::SketchRegionId> regions;
