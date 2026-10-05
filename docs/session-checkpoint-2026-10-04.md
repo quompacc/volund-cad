@@ -1,9 +1,10 @@
 # Fortsetzung – 4. Oktober 2026
 
 **Einstieg für die nächste Sitzung:** Dieses Dokument zuerst lesen. AI02 ist
-abgeschlossen, seit 05.10.2026 auch **AI04** (MCP-Zugang für Claude Code, siehe
-[AI04-plan.md](implementation-plan/AI04-plan.md)). Als Nächstes kommt **AI03**: Aufbau und
-Aufnahmen vorher mit dem Nutzer abstimmen.
+abgeschlossen, seit 05.10.2026 auch **AI04** (MCP-Zugang für Claude Code) und **AI03**
+(Claude-Panel), siehe [AI04-plan.md](implementation-plan/AI04-plan.md) und
+[AI03-plan.md](implementation-plan/AI03-plan.md). Weiter mit den Paketen laut
+`topologicalOrder` (U07–U10 …) oder den von Claude benannten Werkzeuglücken.
 
 ## Stand des Repos
 
@@ -39,17 +40,21 @@ Außerdem:
 
 ## Nächste Schritte (Reihenfolge)
 
-1. **AI03**: Seitenpanel mit Chat nach ADR 0012. Es startet Claude Code headless
-   (`claude -p`, Abo des Nutzers) gegen den MCP-Server aus AI04; der Claude-Chip in der
-   Kopfzeile öffnet es später. Vorher mit dem Nutzer abstimmen und Aufnahmen vorlegen.
-   AI04 ist abgeschlossen (Nutzerentscheidung 05.10.2026: kein API-Schlüssel in Völund,
-   Änderungen direkt mit Undo, kein Claude Code auf Fedora; Abnahmehelfer
-   `voelund_mcp_client_acceptance` unter Windows).
-   - Grundlage ist `include/voelund/application/Actions.hpp`: `describeActionContext`,
-     `ActionDispatcher` (Wiederholungsschutz) und `preview` für Vorschläge vor dem Commit.
-   - Absehbare Lücken: Skizzen auf Körperflächen ohne GUI (Flächenbezug über
-     `SubshapeRef`), allgemeine mehrteilige Stapel mit Verweisen auf frühere Schritte,
-     Bohrung und Rippe als Features gibt es noch nicht.
+1. **AI02, AI04 und AI03 sind abgeschlossen** (05.10.2026). Völund hat den Claude-Zugang
+   (MCP-Server, Chip in der Kopfzeile), das Claude-Panel (Claude Code mit dem Abo des
+   Nutzers, nur Völund-Werkzeuge) und den Datenschutzschalter „KI-Funktionen erlauben“
+   bzw. `VOELUND_DISABLE_AI`. Abnahmehelfer mit echtem Client (nur Windows, kein Claude
+   Code auf Fedora): `voelund_mcp_client_acceptance`, `voelund_assistant_panel_acceptance`.
+   Ebenfalls am 05.10.2026 auf Wunsch des Nutzers erledigt, außerhalb der Paketliste:
+   - Abwählen per Klick ins Leere.
+   - Symbole für die Skizzenwerkzeuge (nur Symbole, Name im Tooltip).
+   - ViewCube als echter 3D-Würfel.
+   - Farben im Modellbaum folgen dem Theme.
+   Offen ist die Freigabe der Aufnahmen von Symbolen und ViewCube
+   (Hilfsprogramm `voelund_mcp_chip_capture`).
+   - Von Claude in AI03c benannte Lücken der Werkzeuge, Kandidaten für die nächsten
+     Pakete: Extrusion mit Versatz bzw. von einer Fläche aus, Skizze auf einer
+     Körperfläche über MCP, Körper vereinigen, Verschieben von Extrusionskörpern.
 2. Danach U07–U10 und die weiteren Pakete laut `topologicalOrder` in
    [packets.json](implementation-plan/packets.json).
 
@@ -99,7 +104,7 @@ Hintergrund ist die Nutzerentscheidung vom 04.10.2026 ([Kapitel 11](implementati
   - `subst V: "D:\300_Projekte\310_Aktiv\volund-cad"`, dann
     `"C:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\vcvars64.bat"`
     (`vswhere` fehlt) und von `V:\` aus `cmake --build build/p02-qt-final` sowie
-    `ctest --test-dir build/p02-qt-final -j1`. Stand heute: 113 Tests.
+    `ctest --test-dir build/p02-qt-final -j1`. Stand heute: 119 Tests.
   - Git braucht `-c safe.directory='*'`.
   - Desktop-Tests laufen unter Windows auf dem echten Desktop. Mausbewegungen des Nutzers
     können Hover-Tests stören (`sketch_snap`).

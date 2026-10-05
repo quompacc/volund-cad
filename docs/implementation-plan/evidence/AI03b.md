@@ -1,6 +1,7 @@
 # AI03b – Claude-Panel
 
-**Status:** umgesetzt; Aufnahmen liegen dem Nutzer zur Freigabe vor, CI-Lauf ausstehend.
+**Status:** abgenommen am 05.10.2026 nach grünem CI-Lauf 408 und Freigabe der Aufnahmen
+durch den Nutzer.
 Teilplan: [AI03-plan.md](../AI03-plan.md).
 
 ## Umsetzung
@@ -39,7 +40,7 @@ Teilplan: [AI03-plan.md](../AI03-plan.md).
 | bestehende Tests | `desktop.mcp_shell`, `desktop.command_inventory`, `assistant.backend` |
 
 - **Windows:** 118/118 Tests bestanden (Debug, MSVC, seriell).
-- **Linux:** CI-Lauf ausstehend. Vorab auf Fedora mit GCC gebaut, 115/115 Tests unter
+- **Linux:** CI-Lauf 408 auf `1034142`, grün. Vorab auf Fedora mit GCC gebaut, 115/115 Tests unter
   `kwin_wayland --virtual`.
 
 ## Grenzen

@@ -1,7 +1,7 @@
 # AI03c – Abnahme A-AI-01
 
-**Status:** bestanden am 05.10.2026 unter Windows mit Claude Code 2.1.289; CI-Lauf
-ausstehend. Der Nutzer hat das Panel (AI03b) freigegeben. Teilplan:
+**Status:** abgenommen am 05.10.2026 (Windows, Claude Code 2.1.289) nach grünem CI-Lauf
+411; damit ist AI03 abgeschlossen. Der Nutzer hat das Panel (AI03b) freigegeben. Teilplan:
 [AI03-plan.md](../AI03-plan.md).
 
 ## Ablauf mit echtem Client

@@ -1,5 +1,8 @@
 # AI03 – Teilplan: Claude-Panel in Völund
 
+**Abgeschlossen am 05.10.2026:** [AI03a](evidence/AI03a.md), [AI03b](evidence/AI03b.md),
+[AI03c](evidence/AI03c.md).
+
 Stand 05.10.2026. Grundlage: [Kapitel 11](11-ki-fem-optimierung.md), Abnahme A-AI-01 in
 [08-abnahme.md](08-abnahme.md), [AI04-plan.md](AI04-plan.md) (MCP-Server),
 [ADR 0012](../adr/0012-ui-shell-concept.md).
