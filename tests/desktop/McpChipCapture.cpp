@@ -106,6 +106,30 @@ void run() {
     test::render(*viewport);
     capture(window, "6-panel-dark");
 }
+
+// Sketch tool symbols (user request 2026-10-05), light and dark.
+void sketchRail() {
+    application::CadSession session;
+    session.newDocument();
+    desktop::MainWindow window(session);
+    window.resize(1400, 860);
+    window.show();
+    auto* viewport = dynamic_cast<viewport::CadViewport*>(window.centralWidget());
+    test::render(*viewport);
+    viewport->setCameraView(viewport::CameraView::isometric);
+    test::render(*viewport);
+    const QPoint xy = viewport::ViewportTestAccess::project(*viewport, 30, 30, 0);
+    test::mouse(*viewport, QEvent::MouseMove, xy, Qt::NoButton, Qt::NoButton);
+    test::mouse(*viewport, QEvent::MouseButtonPress, xy, Qt::LeftButton, Qt::LeftButton);
+    test::mouse(*viewport, QEvent::MouseButtonRelease, xy, Qt::LeftButton, Qt::NoButton);
+    command(window, "solid.create.sketch").trigger();
+    test::render(*viewport);
+    capture(window, "7-sketch-rail");
+    command(window, "view.theme").trigger();
+    test::render(*viewport);
+    capture(window, "8-sketch-rail-dark");
+    command(window, "view.theme").trigger();
+}
 } // namespace
 
 int main(int argc, char** argv) {
@@ -114,6 +138,7 @@ int main(int argc, char** argv) {
     directory = argc > 1 ? QString::fromLocal8Bit(argv[1]) : QStringLiteral(".");
     try {
         run();
+        sketchRail();
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';
         return 1;

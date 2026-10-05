@@ -27,6 +27,7 @@ add_library(
     SketchEditorCreation.cpp
     SketchEditorPresentation.cpp
     SketchEditorToolController.cpp
+    SketchIcons.cpp
     SketchEditorStart.cpp
     SketchExtrusionToolController.cpp
     ShellHeader.cpp

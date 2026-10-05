@@ -58,7 +58,8 @@ void SketchToolActions::build() {
         action->setCheckable(true);
         action->setActionGroup(tools_);
         action->setShortcut(QKeySequence(toolShortcut(id)));
-        action->setToolTip(choice->choices[index]);
+        action->setToolTip(QStringLiteral("%1  (%2)").arg(choice->choices[index],
+                                                          toolShortcut(id)));
         setCommandId(*action, ("sketch.tool." + id).c_str());
         const int choiceIndex = static_cast<int>(index);
         QObject::connect(action, &QAction::triggered, &window_,

@@ -2,6 +2,7 @@
 #include "CommandActions.hpp"
 #include "MainWindowSupport.hpp"
 #include "ShellIcons.hpp"
+#include "SketchIcons.hpp"
 
 #include <voelund/viewport/CadViewport.hpp>
 
@@ -138,15 +139,19 @@ void ToolRail::buildSketchPage(const std::vector<SketchToolActions::Group>& grou
         auto* title = new QLabel(group.title, content);
         title->setObjectName(QStringLiteral("railGroupTitle"));
         layout->addWidget(title);
+        // User decision 2026-10-05: symbols only, name and shortcut in the tooltip.
         auto* grid = new QGridLayout;
         grid->setSpacing(2);
+        constexpr int columns = 4;
         for (std::size_t index = 0; index < group.actions.size(); ++index) {
             auto* button = new QToolButton(content);
             button->setDefaultAction(group.actions[index]);
-            button->setToolButtonStyle(Qt::ToolButtonTextOnly);
-            button->setFixedWidth(112);
+            button->setToolButtonStyle(Qt::ToolButtonIconOnly);
+            button->setIconSize(QSize(22, 22));
+            button->setFixedSize(38, 38);
             button->setAutoRaise(true);
-            grid->addWidget(button, static_cast<int>(index / 2), static_cast<int>(index % 2));
+            grid->addWidget(button, static_cast<int>(index / columns),
+                            static_cast<int>(index % columns));
         }
         layout->addLayout(grid);
     }
@@ -160,9 +165,11 @@ void ToolRail::buildSketchPage(const std::vector<SketchToolActions::Group>& grou
 void applyCommandIcons(QWidget& window, ThemeMode mode) {
     const ThemeTokens& tokens = themeTokens(mode);
     for (QAction* action : window.findChildren<QAction*>()) {
-        const auto icon = iconFor(action->property(commandIdProperty).toString());
-        if (icon.has_value())
+        const auto id = action->property(commandIdProperty).toString();
+        if (const auto icon = iconFor(id))
             action->setIcon(shellIcon(*icon, tokens.ink, tokens.accent));
+        else if (const auto sketch = sketchIcon(id, tokens.ink, tokens.accent))
+            action->setIcon(*sketch);
     }
 }
 

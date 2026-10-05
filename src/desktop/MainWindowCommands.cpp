@@ -179,8 +179,12 @@ void MainWindow::syncShell() {
     // U13: the rail shows the tools of the active function.
     if (impl_->sketchActions != nullptr && impl_->toolRail != nullptr) {
         impl_->sketchActions->sync();
-        if (shell.tool == ShellTool::sketchEditor && impl_->sketchActions->sketchActive())
+        if (shell.tool == ShellTool::sketchEditor && impl_->sketchActions->sketchActive()) {
+            // Sketch commands exist from the first sketch on; they get their symbols then.
+            if (!impl_->toolRail->showsSketch())
+                applyCommandIcons(*this, impl_->themeMode);
             impl_->toolRail->showSketch(impl_->sketchActions->groups());
+        }
         else
             impl_->toolRail->showSolid();
     }
