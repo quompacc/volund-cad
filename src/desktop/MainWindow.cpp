@@ -383,6 +383,17 @@ void MainWindow::refreshScene() {
     syncSketchPresentation();
 }
 
+void MainWindow::refreshAfterExternalChange() {
+    syncVisibility();
+    syncModelTree();
+    syncProperties();
+    syncTreeStatus();
+    if (!impl_->sketchEditorTool->isActive())
+        syncSketchPresentation();
+    syncGeometryStatus();
+    syncShell();
+}
+
 void MainWindow::previewBodyMove(std::uint64_t id, double deltaX, double deltaY, double deltaZ) {
     const document::FeatureId featureId{id};
     if (!selectTransformFeatureForBody(impl_->session, featureId)) {

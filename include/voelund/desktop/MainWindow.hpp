@@ -21,6 +21,9 @@ class MainWindow final : public QMainWindow {
   public:
     explicit MainWindow(application::CadSession& session, QWidget* parent = nullptr);
     ~MainWindow() override;
+    // AI04c: the session was changed from outside the shell (MCP). Views follow; open tools
+    // stay open, and their stored stamp makes a later accept stale instead of overwriting.
+    void refreshAfterExternalChange();
 
   protected:
     void closeEvent(QCloseEvent* event) override;

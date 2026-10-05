@@ -58,6 +58,7 @@ SketchEditorSession::SketchEditorSession(CadSession& session, document::FeatureI
             "MigrationNeedsRepair: repair sketch references before editing");
     if (supportBinding_)
         supportStamp_ = session.sceneStatus().document;
+    editedBaseline_ = storedSketch(session, sketchFeature);
     document::validateSketchParameters(this->parameters(false));
     static_cast<void>(solveConstraints());
     commitHistory();
@@ -75,6 +76,7 @@ SketchEditorSession::SketchEditorSession(CadSession& session, document::FeatureI
       editingFeature_(sketchFeature) {
     if (!datum_)
         throw std::invalid_argument("Only base-plane sketches are edited without a support");
+    editedBaseline_ = storedSketch(session, sketchFeature);
     document::validateSketchParameters(this->parameters(false));
     static_cast<void>(solveConstraints());
     commitHistory();

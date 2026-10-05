@@ -14,6 +14,7 @@ if(WIN32)
         POST_BUILD
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different
             "$<TARGET_FILE:Qt6::Core>"
+            "$<TARGET_FILE:Qt6::Network>"
             "$<TARGET_FILE:Qt6::Gui>"
             "$<TARGET_FILE:Qt6::Widgets>"
             "$<TARGET_FILE_DIR:voelund-cad>"

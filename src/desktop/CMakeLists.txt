@@ -16,6 +16,7 @@ add_library(
     ReferenceRepairPreview.cpp
     MainWindowSupport.cpp
     MainWindowView.cpp
+    McpAccess.cpp
     MeasurementInput.cpp
     ModelTreePanel.cpp
     SketchConstraintLabel.cpp
@@ -50,6 +51,7 @@ target_link_libraries(
         Voelund::Application
         Voelund::Viewport
         Voelund::ModuleSolid
+        Voelund::Mcp
         Qt6::Widgets
 )
 

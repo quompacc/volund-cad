@@ -168,6 +168,11 @@ class SketchEditorSession final {
     document::SketchElements elements_;
     document::SketchConstraints constraints_;
     std::optional<document::FeatureId> editingFeature_;
+    // AI04c: the stored sketch when editing began; a change from outside (MCP) is not
+    // overwritten silently. Empty for a sketch the session does not hold.
+    std::optional<document::SketchParameters> editedBaseline_;
+    [[nodiscard]] static std::optional<document::SketchParameters>
+    storedSketch(const CadSession& session, document::FeatureId sketch);
     SketchDrawingTool tool_{SketchDrawingTool::line};
     std::vector<document::SketchGeometry> preview_;
     bool previewConfirmable_{false};

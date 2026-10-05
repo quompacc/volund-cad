@@ -292,7 +292,7 @@ if(VOELUND_BUILD_DESKTOP)
     if(WIN32)
         add_custom_command(TARGET voelund_sketch_command_failure_tests POST_BUILD
             COMMAND "${CMAKE_COMMAND}" -E copy_if_different
-                "$<TARGET_FILE:Qt6::Core>" "$<TARGET_FILE:Qt6::Gui>" "$<TARGET_FILE:Qt6::Widgets>"
+                "$<TARGET_FILE:Qt6::Core>" "$<TARGET_FILE:Qt6::Network>" "$<TARGET_FILE:Qt6::Gui>" "$<TARGET_FILE:Qt6::Widgets>"
                 "$<TARGET_FILE:Qt6::OpenGL>" "$<TARGET_FILE:Qt6::OpenGLWidgets>"
                 "$<TARGET_FILE_DIR:voelund_sketch_command_failure_tests>"
             COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:voelund_sketch_command_failure_tests>/platforms"
@@ -322,7 +322,7 @@ if(VOELUND_BUILD_DESKTOP)
     if(WIN32)
         add_custom_command(TARGET voelund_feature_status_tests POST_BUILD
             COMMAND "${CMAKE_COMMAND}" -E copy_if_different
-                "$<TARGET_FILE:Qt6::Core>" "$<TARGET_FILE:Qt6::Gui>" "$<TARGET_FILE:Qt6::Widgets>"
+                "$<TARGET_FILE:Qt6::Core>" "$<TARGET_FILE:Qt6::Network>" "$<TARGET_FILE:Qt6::Gui>" "$<TARGET_FILE:Qt6::Widgets>"
                 "$<TARGET_FILE:Qt6::OpenGL>" "$<TARGET_FILE:Qt6::OpenGLWidgets>"
                 "$<TARGET_FILE_DIR:voelund_feature_status_tests>"
             COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:voelund_feature_status_tests>/platforms"
@@ -336,7 +336,7 @@ if(VOELUND_BUILD_DESKTOP)
     if(WIN32)
         add_custom_command(TARGET voelund_angle_input_tests POST_BUILD
             COMMAND "${CMAKE_COMMAND}" -E copy_if_different
-                "$<TARGET_FILE:Qt6::Core>" "$<TARGET_FILE:Qt6::Gui>" "$<TARGET_FILE:Qt6::Widgets>"
+                "$<TARGET_FILE:Qt6::Core>" "$<TARGET_FILE:Qt6::Network>" "$<TARGET_FILE:Qt6::Gui>" "$<TARGET_FILE:Qt6::Widgets>"
                 "$<TARGET_FILE:Qt6::OpenGL>" "$<TARGET_FILE:Qt6::OpenGLWidgets>"
                 "$<TARGET_FILE_DIR:voelund_angle_input_tests>"
             COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:voelund_angle_input_tests>/platforms"
@@ -350,7 +350,7 @@ if(VOELUND_BUILD_DESKTOP)
     if(WIN32)
         add_custom_command(TARGET voelund_parameter_failure_tests POST_BUILD
             COMMAND "${CMAKE_COMMAND}" -E copy_if_different
-                "$<TARGET_FILE:Qt6::Core>" "$<TARGET_FILE:Qt6::Gui>" "$<TARGET_FILE:Qt6::Widgets>"
+                "$<TARGET_FILE:Qt6::Core>" "$<TARGET_FILE:Qt6::Network>" "$<TARGET_FILE:Qt6::Gui>" "$<TARGET_FILE:Qt6::Widgets>"
                 "$<TARGET_FILE:Qt6::OpenGL>" "$<TARGET_FILE:Qt6::OpenGLWidgets>"
                 "$<TARGET_FILE_DIR:voelund_parameter_failure_tests>"
             COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:voelund_parameter_failure_tests>/platforms"
@@ -364,7 +364,7 @@ if(VOELUND_BUILD_DESKTOP)
     if(WIN32)
         add_custom_command(TARGET voelund_sketch_solver_gate_tests POST_BUILD
             COMMAND "${CMAKE_COMMAND}" -E copy_if_different
-                "$<TARGET_FILE:Qt6::Core>" "$<TARGET_FILE:Qt6::Gui>" "$<TARGET_FILE:Qt6::Widgets>"
+                "$<TARGET_FILE:Qt6::Core>" "$<TARGET_FILE:Qt6::Network>" "$<TARGET_FILE:Qt6::Gui>" "$<TARGET_FILE:Qt6::Widgets>"
                 "$<TARGET_FILE:Qt6::OpenGL>" "$<TARGET_FILE:Qt6::OpenGLWidgets>"
                 "$<TARGET_FILE_DIR:voelund_sketch_solver_gate_tests>"
             COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:voelund_sketch_solver_gate_tests>/platforms"
@@ -377,7 +377,7 @@ if(VOELUND_BUILD_DESKTOP)
     set_tests_properties(desktop.document_actions PROPERTIES LABELS "desktop;document;regression" TIMEOUT 30 RUN_SERIAL TRUE)
     if(WIN32)
         add_custom_command(TARGET voelund_document_actions_tests POST_BUILD
-            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:Qt6::Core>" "$<TARGET_FILE:Qt6::Gui>" "$<TARGET_FILE:Qt6::Widgets>" "$<TARGET_FILE_DIR:voelund_document_actions_tests>"
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:Qt6::Core>" "$<TARGET_FILE:Qt6::Network>" "$<TARGET_FILE:Qt6::Gui>" "$<TARGET_FILE:Qt6::Widgets>" "$<TARGET_FILE_DIR:voelund_document_actions_tests>"
             COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:voelund_document_actions_tests>/platforms"
             COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:Qt6::QWindowsIntegrationPlugin>" "$<TARGET_FILE_DIR:voelund_document_actions_tests>/platforms" VERBATIM)
     endif()
@@ -399,7 +399,7 @@ if(VOELUND_BUILD_DESKTOP)
             target_compile_definitions(voelund_viewport_lifecycle_tests PRIVATE VOELUND_TEST_WINDOWS_DPI)
             add_custom_command(TARGET voelund_viewport_lifecycle_tests POST_BUILD
                 COMMAND "${CMAKE_COMMAND}" -E copy_if_different
-                "$<TARGET_FILE:Qt6::Core>" "$<TARGET_FILE:Qt6::Gui>"
+                "$<TARGET_FILE:Qt6::Core>" "$<TARGET_FILE:Qt6::Network>" "$<TARGET_FILE:Qt6::Gui>"
                 "$<TARGET_FILE:Qt6::Widgets>" "$<TARGET_FILE:Qt6::OpenGL>"
                 "$<TARGET_FILE:Qt6::OpenGLWidgets>"
                 "$<TARGET_FILE_DIR:voelund_viewport_lifecycle_tests>"
@@ -487,6 +487,14 @@ if(VOELUND_BUILD_DESKTOP)
                 COMMAND "${CMAKE_COMMAND}" -E copy_if_different
                     "$<TARGET_FILE:Qt6::Core>" "$<TARGET_FILE:Qt6::Network>"
                     "$<TARGET_FILE_DIR:voelund_mcp_http_tests>" VERBATIM)
+        endif()
+        add_executable(voelund_mcp_shell_tests desktop/McpShellTests.cpp)
+        target_link_libraries(voelund_mcp_shell_tests PRIVATE voelund_project_options Voelund::Desktop)
+        add_test(NAME desktop.mcp_shell COMMAND voelund_mcp_shell_tests)
+        set_tests_properties(desktop.mcp_shell PROPERTIES
+            LABELS "desktop;qt-opengl;mcp;regression" TIMEOUT 120 RUN_SERIAL TRUE)
+        if(VOELUND_NATIVE_WAYLAND)
+            set_tests_properties(desktop.mcp_shell PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
         endif()
         add_executable(voelund_action_shell_tests desktop/ActionShellTests.cpp)
         target_link_libraries(voelund_action_shell_tests PRIVATE voelund_project_options Voelund::Desktop)

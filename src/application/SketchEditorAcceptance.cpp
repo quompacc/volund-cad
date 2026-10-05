@@ -2,11 +2,27 @@
 #include <voelund/application/CadSession.hpp>
 #include <voelund/application/SketchEditorSession.hpp>
 
+#include <algorithm>
+
 namespace voelund::application {
+std::optional<document::SketchParameters>
+SketchEditorSession::storedSketch(const CadSession& session, document::FeatureId sketch) {
+    const auto features = session.features();
+    const auto found = std::ranges::find(features, sketch, &document::FeatureDescriptor::id);
+    if (found == features.end() || found->kind != document::FeatureKind::sketch)
+        return std::nullopt;
+    return session.sketchParameters(sketch);
+}
+
 CommandResult SketchEditorSession::tryAccept(ErrorDisposition disposition) {
     if (supportStamp_ && *supportStamp_ != session_.sceneStatus().document)
         return CommandResult::invalidInput(
             "The model changed. Reopen the sketch on its current support.");
+    if (editingFeature_ && editedBaseline_) {
+        if (storedSketch(session_, *editingFeature_) != editedBaseline_)
+            return CommandResult::invalidInput(
+                "The sketch was changed meanwhile. Reopen it to edit the current state.");
+    }
     if (!canAccept())
         return CommandResult::invalidInput(
             "Sketch acceptance requires nonempty geometry and a successful solve");
