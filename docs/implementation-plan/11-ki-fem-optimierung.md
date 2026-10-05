@@ -97,7 +97,8 @@ konkretisiert; die CAD-Konvention mm/Radiant bleibt jetzt unverändert.
 
 ## AI04 – Optionalen MCP-Zugang bereitstellen
 
-- **Voraussetzungen:** AI02, L10; unabhängig von AI03/FEM.
+- **Voraussetzungen:** AI02; unabhängig von AI03/FEM. Seit 05.10.2026 vor AI03 und ohne L10
+  (Nutzerentscheidung, Zuschnitt in [AI04-plan.md](AI04-plan.md)).
 - **Auftrag:** versionierte Tools/Kontextabfragen auf AI02 abbilden; lokale Verbindung,
   Sitzungsbindung und tatsächlichen Clientnachweis spezifizieren und umsetzen.
 - **Abnahme:** A-ACTION-01 auch über Transport; gleicher Request erzeugt gleiche

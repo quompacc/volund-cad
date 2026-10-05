@@ -1,8 +1,8 @@
 # Fortsetzung – 4. Oktober 2026
 
 **Einstieg für die nächste Sitzung:** Dieses Dokument zuerst lesen. AI02 ist
-abgeschlossen. Als Nächstes kommt **AI03**, vorher mit dem Nutzer abstimmen (siehe
-„Nächste Schritte“).
+abgeschlossen. Seit 05.10.2026 kommt **AI04** (MCP-Zugang für Claude Code) vor AI03, siehe
+[AI04-plan.md](implementation-plan/AI04-plan.md).
 
 ## Stand des Repos
 
@@ -38,10 +38,10 @@ Außerdem:
 
 ## Nächste Schritte (Reihenfolge)
 
-1. **AI03** integrierter Assistent: Claude per API, Adapter austauschbar, ChatGPT möglich.
-   Vor Beginn mit dem Nutzer abstimmen: Bedienung im UI (Seitenpanel nach ADR 0012),
-   Ablage des API-Schlüssels, erster Anwendungsfall laut Kapitel 11 (Referenzplatte,
-   Bohrung, Rippe).
+1. **AI04a–d** laut [AI04-plan.md](implementation-plan/AI04-plan.md): lokaler MCP-Server
+   in Völund für Claude Code (Nutzerentscheidung 05.10.2026: kein API-Schlüssel in Völund,
+   Änderungen direkt mit Undo, erster Fall mit vorhandenen Features). Danach **AI03**
+   (Seitenpanel, das Claude Code mit diesem Server startet).
    - Grundlage ist `include/voelund/application/Actions.hpp`: `describeActionContext`,
      `ActionDispatcher` (Wiederholungsschutz) und `preview` für Vorschläge vor dem Commit.
    - Absehbare Lücken: Skizzen auf Körperflächen ohne GUI (Flächenbezug über

@@ -64,7 +64,11 @@ keine implementierte KI/FEM als fertig. [Kapitel 11](11-ki-fem-optimierung.md) u
 [ADR 0010](../adr/0010-native-actions-and-analysis-extension.md) trennen die Stufen:
 AI02 liefert die gemeinsame zielgerichtete CAD-Aktionsgrenze und ist seit dem
 4. Oktober 2026 [abgeschlossen](AI02-plan.md) (AI02a–d). Der optionale MCP-Zugang
-(AI04) folgt nach v1 unabhängig von FEM.
+(AI04) ist unabhängig von FEM.
+
+**Nutzerentscheidung vom 5. Oktober 2026:** AI04 kommt vor AI03 und ohne L10. Völund
+speichert keinen API-Schlüssel; der Nutzer verbindet Claude Code mit einem lokalen
+MCP-Server in Völund. Zuschnitt: [AI04-plan.md](AI04-plan.md).
 
 **Nutzerentscheidung vom 4. Oktober 2026:** AI02 kommt direkt nach R10b (G2), der
 integrierte Assistent AI03 direkt danach, ohne auf L10 zu warten. Er nutzt zunächst Claude
