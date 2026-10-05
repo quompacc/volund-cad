@@ -27,6 +27,19 @@ Stand 05.10.2026. Grundlage: [Kapitel 11](11-ki-fem-optimierung.md), Abnahme A-A
 - **Ein Gespräch pro Dokument**, bis „Neu“ oder bis ein anderes Dokument geöffnet oder neu
   angelegt wird. Nach einem Neustart beginnt ein neues Gespräch.
 
+**05.10.2026, Datenschutz:**
+
+- **Ausschalter „KI-Funktionen erlauben“** (`assistant.allow`, im Chip-Menü und in der
+  Befehlssuche; Einstellung `assistant/disabled`). Ausgeschaltet öffnet Völund keinen Port,
+  startet kein Claude Code und zeigt weder Chip noch Panel. Über Völund kann dann nichts an
+  Anthropic gehen. Völund selbst sendet keine Telemetrie.
+- **`VOELUND_DISABLE_AI=1`** sperrt alle KI-Funktionen für eine Installation; die
+  Oberfläche kann das nicht aufheben.
+- Startet das Panel Claude Code, dann mit `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1`
+  (keine Telemetrie, keine Fehlerberichte, keine Auto-Updates von Claude Code). Es gehen
+  nur die Modellanfragen selbst an Anthropic.
+- Der Schalter wirkt bereits auf den Zugang aus AI04.
+
 ## Architektur
 
 - **Modul `src/assistant`** (Qt Core, keine Oberfläche):
@@ -65,6 +78,8 @@ Stand 05.10.2026. Grundlage: [Kapitel 11](11-ki-fem-optimierung.md), Abnahme A-A
 
 - `AssistantBackend`, `ClaudeCodeBackend`, Parser für `stream-json`, Widerruf des Tokens
   je Lauf im MCP-Server.
+- `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` im Prozess von Claude Code; kein Start bei
+  ausgeschalteten KI-Funktionen.
 - **Test** mit einem Fake-`claude` (Testprogramm, das aufgezeichnete `stream-json`-Ausgabe
   abspielt und über HTTP echte Werkzeugaufrufe gegen den Server macht):
   - Argumente.

@@ -17,6 +17,23 @@ QByteArray newToken() {
 }
 } // namespace
 
+bool aiLockedByEnvironment() {
+    const auto value = qEnvironmentVariable("VOELUND_DISABLE_AI").trimmed();
+    return !value.isEmpty() && value != QLatin1String("0");
+}
+
+bool aiAllowed() {
+    return !aiLockedByEnvironment() &&
+           !QSettings().value(QStringLiteral("assistant/disabled"), false).toBool();
+}
+
+bool setAiAllowed(bool allowed) {
+    if (allowed && aiLockedByEnvironment())
+        return false;
+    QSettings().setValue(QStringLiteral("assistant/disabled"), !allowed);
+    return true;
+}
+
 McpSettings loadMcpSettings() {
     QSettings settings;
     auto token = settings.value(QStringLiteral("mcp/token")).toByteArray();
@@ -40,6 +57,10 @@ void McpAccess::setActivityHandler(std::function<void()> activity) {
 }
 
 bool McpAccess::setEnabled(bool enabled) {
+    if (enabled && !aiAllowed()) {
+        server_.close();
+        return false;
+    }
     QSettings().setValue(QStringLiteral("mcp/enabled"), enabled);
     settings_.enabled = enabled;
     if (!enabled) {

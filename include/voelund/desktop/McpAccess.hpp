@@ -25,6 +25,14 @@ struct McpSettings final {
 // token is generated (32 random bytes, hex).
 [[nodiscard]] McpSettings loadMcpSettings();
 
+// Privacy switch (user request 2026-10-05): with AI functions off, Völund opens no port and
+// starts no Claude Code, so nothing can reach Anthropic through Völund. VOELUND_DISABLE_AI
+// (any value but empty or "0") locks this for an installation; the UI cannot override it.
+[[nodiscard]] bool aiLockedByEnvironment();
+[[nodiscard]] bool aiAllowed();
+// Returns false when the environment locks AI functions.
+bool setAiAllowed(bool allowed);
+
 class McpAccess final {
   public:
     static constexpr quint16 defaultPort = 47913;
@@ -32,7 +40,8 @@ class McpAccess final {
     McpAccess(application::CadSession& session, const McpSettings& settings);
     void setChangeHandler(mcp::ToolHost::ChangeHandler changed);
     void setActivityHandler(std::function<void()> activity);
-    // Starts or stops the server and remembers the choice.
+    // Starts or stops the server and remembers the choice; never starts while AI functions
+    // are not allowed.
     [[nodiscard]] bool setEnabled(bool enabled);
     [[nodiscard]] bool isRunning() const;
     // A new token: connected clients have to be set up again.

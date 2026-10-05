@@ -82,6 +82,24 @@ void MainWindow::createAssistant() {
         statusBar()->showMessage(
             tr("Neuer Token – Claude Code mit dem neuen Befehl erneut verbinden"), 5000);
     });
+    impl_->aiAllowedAction = new QAction(tr("KI-Funktionen erlauben"), this);
+    impl_->aiAllowedAction->setCheckable(true);
+    setCommandId(*impl_->aiAllowedAction, "assistant.allow");
+    connect(impl_->aiAllowedAction, &QAction::triggered, this, [this](bool allowed) {
+        if (!setAiAllowed(allowed)) {
+            syncAssistant();
+            return;
+        }
+        if (!allowed)
+            static_cast<void>(setMcpAccessEnabled(false));
+        syncAssistant();
+        statusBar()->showMessage(allowed ? tr("KI-Funktionen erlaubt")
+                                         : tr("KI-Funktionen aus – Völund öffnet keinen Port "
+                                              "und startet kein Claude Code"),
+                                 6000);
+    });
+    // Also reachable through the command search while the chip is hidden.
+    addAction(impl_->aiAllowedAction);
     auto* hint = new QLabel(tr("Jede Änderung von Claude ist ein Rückgängig-Schritt."), menu);
     hint->setObjectName(QStringLiteral("assistantHint"));
     menu->addAction(impl_->mcpAction);
@@ -91,13 +109,15 @@ void MainWindow::createAssistant() {
     menu->addAction(impl_->mcpTokenAction);
     menu->addSeparator();
     menu->addAction(labelAction(*menu, hint));
+    menu->addSeparator();
+    menu->addAction(impl_->aiAllowedAction);
     impl_->header->setAssistantMenu(*menu);
 
     // "verbunden" fades to "bereit" when the client has been quiet for a while.
     auto* timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, [this] { syncAssistant(); });
     timer->start(30 * 1000);
-    if (settings.enabled)
+    if (settings.enabled && aiAllowed())
         static_cast<void>(setMcpAccessEnabled(true));
     syncAssistant();
 }
@@ -115,6 +135,15 @@ bool MainWindow::setMcpAccessEnabled(bool enabled) {
 QString MainWindow::mcpConnectCommand() const { return impl_->mcp->claudeCommand(); }
 
 void MainWindow::syncAssistant() {
+    const bool allowed = aiAllowed();
+    const bool locked = aiLockedByEnvironment();
+    impl_->aiAllowedAction->setChecked(allowed);
+    impl_->aiAllowedAction->setEnabled(!locked);
+    impl_->aiAllowedAction->setToolTip(locked ? tr("Durch VOELUND_DISABLE_AI gesperrt")
+                                              : QString());
+    impl_->header->setAssistantVisible(allowed);
+    impl_->mcpAction->setEnabled(allowed);
+    impl_->mcpTokenAction->setEnabled(allowed);
     const bool running = impl_->mcp->isRunning();
     const bool connected = running && impl_->mcpActivity.isValid() &&
                            impl_->mcpActivity.elapsed() < connectedWindowMs;

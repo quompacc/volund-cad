@@ -118,6 +118,8 @@ void ShellHeader::showAssistant(AssistantState state) {
     assistantButton_->style()->polish(assistantButton_);
 }
 
+void ShellHeader::setAssistantVisible(bool visible) { assistantButton_->setVisible(visible); }
+
 void ShellHeader::flashAssistant() {
     const auto repolish = [button = assistantButton_](bool on) {
         button->setProperty("flash", on);

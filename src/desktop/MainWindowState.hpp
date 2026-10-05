@@ -93,6 +93,7 @@ class MainWindow::Impl final {
     QAction* mcpAction{nullptr};
     QAction* mcpCopyAction{nullptr};
     QAction* mcpTokenAction{nullptr};
+    QAction* aiAllowedAction{nullptr}; // Privacy switch for all AI functions.
     QLabel* mcpAddress{nullptr};
     QElapsedTimer mcpActivity; // Last accepted request; invalid until the first one.
 };

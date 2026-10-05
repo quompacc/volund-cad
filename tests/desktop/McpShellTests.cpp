@@ -195,6 +195,50 @@ void run() {
           "Switching off closes the port and is remembered");
     std::cout << "PASS AI04c: MCP changes in the running shell\n";
 }
+
+// Privacy switch: with AI functions off there is no port and no chip, also after a restart;
+// VOELUND_DISABLE_AI locks this for an installation.
+void privacySwitch() {
+    QSettings settings;
+    settings.setValue(QStringLiteral("mcp/enabled"), true);
+    settings.setValue(QStringLiteral("mcp/port"), 0);
+    settings.setValue(QStringLiteral("assistant/disabled"), false);
+    application::CadSession session;
+    session.newDocument();
+    {
+        desktop::MainWindow window(session);
+        auto* chip = window.findChild<QToolButton*>(QStringLiteral("assistantChip"));
+        check(!chip->isHidden() && command(window, "assistant.mcp").isChecked(),
+              "Access on before the switch");
+        command(window, "assistant.allow").trigger();
+        check(chip->isHidden() && !command(window, "assistant.mcp").isChecked() &&
+                  !command(window, "assistant.mcp").isEnabled() &&
+                  !window.setMcpAccessEnabled(true) &&
+                  QSettings().value(QStringLiteral("assistant/disabled")).toBool(),
+              "AI functions off: no port, no chip, access cannot be switched on");
+    }
+    {
+        desktop::MainWindow restarted(session);
+        auto* chip = restarted.findChild<QToolButton*>(QStringLiteral("assistantChip"));
+        check(chip->isHidden() && !command(restarted, "assistant.mcp").isChecked(),
+              "The switch survives a restart");
+        command(restarted, "assistant.allow").trigger();
+        check(!chip->isHidden() && command(restarted, "assistant.allow").isChecked() &&
+                  !command(restarted, "assistant.mcp").isChecked(),
+              "Allowed again; the access itself stays off until switched on");
+    }
+    qputenv("VOELUND_DISABLE_AI", "1");
+    {
+        desktop::MainWindow locked(session);
+        auto& allow = command(locked, "assistant.allow");
+        allow.trigger();
+        check(!allow.isEnabled() && !locked.setMcpAccessEnabled(true) &&
+                  locked.findChild<QToolButton*>(QStringLiteral("assistantChip"))->isHidden(),
+              "VOELUND_DISABLE_AI locks all AI functions");
+    }
+    qunsetenv("VOELUND_DISABLE_AI");
+    std::cout << "PASS privacy switch\n";
+}
 } // namespace
 
 int main(int argc, char** argv) {
@@ -202,6 +246,7 @@ int main(int argc, char** argv) {
     voelund::test::isolateSettings();
     try {
         run();
+        privacySwitch();
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';
         return 1;

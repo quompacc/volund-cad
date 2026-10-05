@@ -41,7 +41,8 @@ const std::set<std::string> commandTable{"document.new",
                                          "solid.modify.edit_sketch",
                                          "assistant.mcp",
                                          "assistant.mcp_copy_command",
-                                         "assistant.mcp_new_token"};
+                                         "assistant.mcp_new_token",
+                                         "assistant.allow"};
 
 std::string commandId(const QAction& action) {
     return action.property("commandId").toString().toStdString();
@@ -98,7 +99,8 @@ void emptyDocumentOffersOnlyApplicableCommands(application::CadSession& session,
     const std::set<std::string> expected{
         "document.new",       "document.open",   "document.save", "document.save_as",
         "document.duplicate", "transform.snap",  "view.theme",    "view.command_search",
-        "view.tool_rail",     "solid.create.box", "assistant.mcp", "assistant.mcp_new_token"};
+        "view.tool_rail",     "solid.create.box", "assistant.mcp", "assistant.mcp_new_token",
+        "assistant.allow"};
     require(enabled == expected, "Empty document enables only document commands and Box");
     const auto before = session.sceneStatus().document;
     for (const std::string& id : commandTable) {

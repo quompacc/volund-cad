@@ -30,6 +30,8 @@ class ShellHeader final : public QWidget {
     void setAssistantMenu(QMenu& menu);
     void showAssistant(AssistantState state);
     void flashAssistant();
+    // Hidden while AI functions are switched off.
+    void setAssistantVisible(bool visible);
     void setTheme(ThemeMode mode);
 
   private:
