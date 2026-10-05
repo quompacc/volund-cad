@@ -324,6 +324,45 @@ void CadViewport::setCameraView(CameraView cameraView) {
     });
 }
 
+CameraFrame CadViewport::cameraFrame() const {
+    CameraFrame frame{{0.0, 0.0, 1.0}, {0.0, 1.0, 0.0}};
+    if (!impl_->ready)
+        return frame;
+    impl_->view->Proj(frame.toEye[0], frame.toEye[1], frame.toEye[2]);
+    impl_->view->Up(frame.up[0], frame.up[1], frame.up[2]);
+    return frame;
+}
+
+void CadViewport::setCameraFrame(const CameraFrame& frame) {
+    performViewportOperation(*this, impl_->ready, [&] {
+        if (!impl_->ready)
+            return;
+        impl_->view->SetProj(frame.toEye[0], frame.toEye[1], frame.toEye[2]);
+        impl_->view->SetUp(frame.up[0], frame.up[1], frame.up[2]);
+        update();
+    });
+}
+
+void CadViewport::orbitBy(double horizontalRadians, double verticalRadians) {
+    performViewportOperation(*this, impl_->ready, [&] {
+        if (!impl_->ready)
+            return;
+        // V3d_View::Rotate turns about the view's up axis with its first angle and about its
+        // right axis with the second (checked in desktop.view_cube).
+        impl_->view->Rotate(horizontalRadians, verticalRadians, 0.0, true);
+        update();
+    });
+}
+
+void CadViewport::rollView(double radians) {
+    performViewportOperation(*this, impl_->ready, [&] {
+        if (!impl_->ready)
+            return;
+        impl_->view->Rotate(0.0, 0.0, radians, true);
+        update();
+    });
+}
+
 void CadViewport::setPerspectiveProjection(bool enabled) {
     performViewportOperation(*this, impl_->ready, [&] {
         if (!impl_->ready)

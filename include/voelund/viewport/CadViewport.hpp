@@ -170,6 +170,13 @@ enum class SketchAutomaticConstraint {
 
 enum class CameraView { isometric, top, front, right, left, back, bottom };
 
+// Camera orientation in model coordinates: `toEye` points from the viewed center towards the
+// eye (OCCT's projection vector), `up` is the screen's up direction.
+struct CameraFrame final {
+    double toEye[3];
+    double up[3];
+};
+
 // U03: colors of the 3D view, supplied by the desktop theme (ADR 0012). Defaults are the
 // light theme.
 struct ViewportTheme final {
@@ -248,6 +255,11 @@ class CadViewport final : public CadViewportBase {
     [[nodiscard]] bool isGridVisible() const noexcept;
     [[nodiscard]] const ViewportTheme& theme() const noexcept;
     void setCameraView(CameraView view);
+    // View cube: read and set any direction (center and zoom stay), orbit and roll.
+    [[nodiscard]] CameraFrame cameraFrame() const;
+    void setCameraFrame(const CameraFrame& frame);
+    void orbitBy(double horizontalRadians, double verticalRadians);
+    void rollView(double radians);
     void setPerspectiveProjection(bool enabled);
     void fitView();
     [[nodiscard]] bool isRenderingReady() const noexcept;
