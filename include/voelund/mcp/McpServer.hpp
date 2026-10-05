@@ -49,6 +49,14 @@ class McpHttpServer final : public QObject {
     [[nodiscard]] QString url() const;
     // A new token ends every session; clients need the new connect command.
     void setToken(QByteArray token);
+    // AI03: short-lived tokens of panel runs, accepted besides the main token. A revoked
+    // token is refused from the next request on; requests run on this thread, so a call is
+    // either complete before the revocation or refused.
+    [[nodiscard]] QByteArray issueRunToken();
+    void revokeRunToken(const QByteArray& token);
+    [[nodiscard]] bool hasRunTokens() const { return !runTokens_.isEmpty(); }
+    // The main token serves external clients; off while only panel runs use the server.
+    void setMainTokenAccepted(bool accepted) { mainTokenAccepted_ = accepted; }
     // Runs after every request that passed host, origin and token checks.
     void setActivityHandler(std::function<void()> activity) { activity_ = std::move(activity); }
 
@@ -72,6 +80,8 @@ class McpHttpServer final : public QObject {
     QHash<QTcpSocket*, QByteArray> buffers_;
     QSet<QByteArray> sessions_;
     std::function<void()> activity_;
+    QSet<QByteArray> runTokens_;
+    bool mainTokenAccepted_{true};
 };
 
 } // namespace voelund::mcp

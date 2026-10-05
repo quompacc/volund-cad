@@ -1,11 +1,13 @@
 #include <voelund/mcp/McpServer.hpp>
 
 #include <QHostAddress>
+#include <QRandomGenerator>
 #include <QJsonDocument>
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QUuid>
 
+#include <array>
 #include <utility>
 
 namespace voelund::mcp {
@@ -65,6 +67,17 @@ void McpHttpServer::close() {
 }
 bool McpHttpServer::isListening() const { return server_->isListening(); }
 quint16 McpHttpServer::port() const { return server_->serverPort(); }
+QByteArray McpHttpServer::issueRunToken() {
+    std::array<quint32, 8> random{};
+    QRandomGenerator::system()->fillRange(random.data(), random.size());
+    auto token = QByteArray(reinterpret_cast<const char*>(random.data()),
+                            static_cast<qsizetype>(sizeof(random)))
+                     .toHex();
+    runTokens_.insert(token);
+    return token;
+}
+void McpHttpServer::revokeRunToken(const QByteArray& token) { runTokens_.remove(token); }
+
 void McpHttpServer::setToken(QByteArray token) {
     token_ = std::move(token);
     sessions_.clear();
@@ -155,7 +168,11 @@ McpHttpServer::Response McpHttpServer::respond(const QByteArray& method, const Q
         return {403, {}, {}};
     if (path.split('?').front() != "/mcp")
         return {404, {}, {}};
-    if (!sameSecret(headers.value("authorization"), "Bearer " + token_))
+    const auto authorization = headers.value("authorization");
+    bool authorized = mainTokenAccepted_ && sameSecret(authorization, "Bearer " + token_);
+    for (const auto& run : runTokens_)
+        authorized = sameSecret(authorization, "Bearer " + run) || authorized;
+    if (!authorized)
         return {401, {}, {{"WWW-Authenticate", "Bearer"}}};
     if (activity_)
         activity_();
