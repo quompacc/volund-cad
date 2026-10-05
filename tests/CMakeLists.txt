@@ -413,6 +413,8 @@ if(VOELUND_BUILD_DESKTOP)
         # UX01 inventory helper, built on demand only.
         add_executable(voelund_mcp_chip_capture EXCLUDE_FROM_ALL desktop/McpChipCapture.cpp)
         target_link_libraries(voelund_mcp_chip_capture PRIVATE voelund_project_options Voelund::Desktop)
+        add_executable(voelund_mcp_client_acceptance EXCLUDE_FROM_ALL desktop/McpClientAcceptance.cpp)
+        target_link_libraries(voelund_mcp_client_acceptance PRIVATE voelund_project_options Voelund::Desktop)
         add_executable(voelund_ui_inventory_capture EXCLUDE_FROM_ALL desktop/UiInventoryCapture.cpp)
         target_link_libraries(voelund_ui_inventory_capture PRIVATE
             voelund_project_options Voelund::Desktop)
