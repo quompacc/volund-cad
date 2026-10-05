@@ -133,6 +133,12 @@ std::optional<document::FeatureId> CadSession::selectedFeature() const noexcept 
     return selectedFeature_;
 }
 
+void CadSession::clearSelection() noexcept {
+    selectedFeature_.reset();
+    selectedSketchElement_.reset();
+    selectedSketchProfiles_.clear();
+}
+
 bool CadSession::selectFeature(document::FeatureId featureId) noexcept {
     if (!document_.contains(featureId)) {
         return false;

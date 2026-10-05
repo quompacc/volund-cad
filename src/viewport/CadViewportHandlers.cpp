@@ -22,6 +22,10 @@ void CadViewport::setBasePlaneSelectionHandler(std::function<void(BasePlane)> ha
     impl_->basePlaneSelectionHandler = std::move(handler);
 }
 
+void CadViewport::setEmptySelectionHandler(std::function<void()> handler) {
+    impl_->emptySelectionHandler = std::move(handler);
+}
+
 void CadViewport::setPlanarFaceSelectionHandler(
     std::function<void(const PlanarFaceSelection&)> handler) {
     impl_->planarFaceSelectionHandler = std::move(handler);

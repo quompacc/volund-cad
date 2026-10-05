@@ -91,6 +91,19 @@ void basePlanes() {
     require(sketch->isEnabled(), "Picking the XY plane enables Sketch");
     capture(*viewport, window, "selected-xy");
 
+    // A click into empty space deselects the plane again (user report 2026-10-05).
+    const QPoint empty(viewport->width() - 20, viewport->height() - 20);
+    test::mouse(*viewport, QEvent::MouseMove, empty, Qt::NoButton, Qt::NoButton);
+    test::mouse(*viewport, QEvent::MouseButtonPress, empty, Qt::LeftButton, Qt::LeftButton);
+    test::mouse(*viewport, QEvent::MouseButtonRelease, empty, Qt::LeftButton, Qt::NoButton);
+    test::render(*viewport);
+    require(!sketch->isEnabled(), "A click into empty space deselects the plane");
+    test::mouse(*viewport, QEvent::MouseMove, xy, Qt::NoButton, Qt::NoButton);
+    test::mouse(*viewport, QEvent::MouseButtonPress, xy, Qt::LeftButton, Qt::LeftButton);
+    test::mouse(*viewport, QEvent::MouseButtonRelease, xy, Qt::LeftButton, Qt::NoButton);
+    test::render(*viewport);
+    require(sketch->isEnabled(), "The plane can be picked again");
+
     sketch->trigger();
     test::render(*viewport);
     require(viewport->displayedBasePlaneCount() == 0, "Base planes are hidden while sketching");

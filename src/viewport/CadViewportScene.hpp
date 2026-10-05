@@ -268,6 +268,7 @@ class CadViewportScene {
     std::function<void(std::uint64_t)> bodySelectionHandler;
     std::function<void(const PlanarFaceSelection&)> planarFaceSelectionHandler;
     std::function<void(BasePlane)> basePlaneSelectionHandler;
+    std::function<void()> emptySelectionHandler;
     BasePlanePresentation basePlanes;
     bool basePlanesFitted{false};
     std::function<void(const std::optional<SketchElementIntent>&)> sketchEditorPreviewHandler;

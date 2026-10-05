@@ -191,6 +191,18 @@ void MainWindow::connectInteractions() {
         });
     impl_->viewport->setBasePlaneSelectionHandler(
         [this](viewport::BasePlane plane) { selectBasePlane(static_cast<int>(plane)); });
+    // A click into empty space selects nothing: no plane, face or feature (user report).
+    impl_->viewport->setEmptySelectionHandler([this] {
+        if (impl_->shell().toolBlocksCommands())
+            return;
+        impl_->selectedDatum.reset();
+        impl_->selectedPlanarFace.reset();
+        impl_->session.clearSelection();
+        syncModelTree();
+        syncTimeline();
+        syncProperties();
+        syncSketchPresentation();
+    });
     impl_->viewport->setSketchEditorPreviewHandler(
         [this](const std::optional<viewport::SketchElementIntent>& intent) {
             impl_->sketchEditorTool->updatePreview(intent);

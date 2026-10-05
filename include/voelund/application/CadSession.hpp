@@ -82,6 +82,8 @@ class CadSession final {
     [[nodiscard]] ModelOutline modelOutline() const;
     [[nodiscard]] std::optional<document::FeatureId> selectedFeature() const noexcept;
     [[nodiscard]] bool selectFeature(document::FeatureId featureId) noexcept;
+    // Nothing selected (a click into empty space); view state only.
+    void clearSelection() noexcept;
     [[nodiscard]] std::optional<document::SketchElementId> selectedSketchElement() const noexcept;
     [[nodiscard]] bool selectSketchElement(document::SketchElementId elementId) noexcept;
     // Sketch "profiles" are R09 regions: picking an element selects the one region whose

@@ -222,6 +222,8 @@ class CadViewport final : public CadViewportBase {
     void setBodySelectionHandler(std::function<void(std::uint64_t)> handler);
     void setPlanarFaceSelectionHandler(std::function<void(const PlanarFaceSelection&)> handler);
     void setBasePlaneSelectionHandler(std::function<void(BasePlane)> handler);
+    // A click outside the sketch editor that hits nothing.
+    void setEmptySelectionHandler(std::function<void()> handler);
     void setSketchEditorPreviewHandler(
         std::function<void(const std::optional<SketchElementIntent>&)> handler);
     void setSketchEditorElementHandler(std::function<void(const SketchElementIntent&)> handler);
