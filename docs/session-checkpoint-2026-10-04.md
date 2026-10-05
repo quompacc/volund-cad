@@ -1,8 +1,9 @@
 # Fortsetzung – 4. Oktober 2026
 
 **Einstieg für die nächste Sitzung:** Dieses Dokument zuerst lesen. AI02 ist
-abgeschlossen. Seit 05.10.2026 kommt **AI04** (MCP-Zugang für Claude Code) vor AI03, siehe
-[AI04-plan.md](implementation-plan/AI04-plan.md).
+abgeschlossen, seit 05.10.2026 auch **AI04** (MCP-Zugang für Claude Code, siehe
+[AI04-plan.md](implementation-plan/AI04-plan.md)). Als Nächstes kommt **AI03**: Aufbau und
+Aufnahmen vorher mit dem Nutzer abstimmen.
 
 ## Stand des Repos
 
@@ -38,10 +39,12 @@ Außerdem:
 
 ## Nächste Schritte (Reihenfolge)
 
-1. **AI04a–d** laut [AI04-plan.md](implementation-plan/AI04-plan.md): lokaler MCP-Server
-   in Völund für Claude Code (Nutzerentscheidung 05.10.2026: kein API-Schlüssel in Völund,
-   Änderungen direkt mit Undo, erster Fall mit vorhandenen Features). Danach **AI03**
-   (Seitenpanel, das Claude Code mit diesem Server startet).
+1. **AI03**: Seitenpanel mit Chat nach ADR 0012. Es startet Claude Code headless
+   (`claude -p`, Abo des Nutzers) gegen den MCP-Server aus AI04; der Claude-Chip in der
+   Kopfzeile öffnet es später. Vorher mit dem Nutzer abstimmen und Aufnahmen vorlegen.
+   AI04 ist abgeschlossen (Nutzerentscheidung 05.10.2026: kein API-Schlüssel in Völund,
+   Änderungen direkt mit Undo, kein Claude Code auf Fedora; Abnahmehelfer
+   `voelund_mcp_client_acceptance` unter Windows).
    - Grundlage ist `include/voelund/application/Actions.hpp`: `describeActionContext`,
      `ActionDispatcher` (Wiederholungsschutz) und `preview` für Vorschläge vor dem Commit.
    - Absehbare Lücken: Skizzen auf Körperflächen ohne GUI (Flächenbezug über

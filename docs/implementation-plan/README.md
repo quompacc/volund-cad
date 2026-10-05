@@ -3,7 +3,7 @@
 ## Aktueller Stand – 4. Oktober 2026
 
 [`packets.json`](packets.json) ist die einzige Statusquelle; dieser Abschnitt fasst
-sie nur zusammen. **131 Pakete, 51 abgeschlossen, 80 offen** (79 geplant,
+sie nur zusammen. **131 Pakete, 52 abgeschlossen, 79 offen** (78 geplant,
 A02 mit Designbedarf). Teilblöcke wie D12a–e zählen nicht als Hauptpakete; die
 Paketanzahl ist kein Maß für Restaufwand oder Fertigstellungszeit.
 
@@ -45,8 +45,8 @@ Paketanzahl ist kein Maß für Restaufwand oder Fertigstellungszeit.
 | G2 – zusammenhängender CAD-Workflow | 21 |
 | G3 – mechanisches CAD v1 | 18 |
 | G4 – veröffentlichbare v1 | 10 |
-| G5 – spätere Produktfamilie | 29 |
-| Gesamt | 80 |
+| G5 – spätere Produktfamilie | 28 |
+| Gesamt | 79 |
 
 Bis einschließlich G4 bleiben 51 Hauptpakete. G2 ist der erste durchgängige
 Bedienablauf, G3 der begrenzte mechanische Funktionsumfang. G5 umfasst zusätzliche
@@ -68,7 +68,8 @@ AI02 liefert die gemeinsame zielgerichtete CAD-Aktionsgrenze und ist seit dem
 
 **Nutzerentscheidung vom 5. Oktober 2026:** AI04 kommt vor AI03 und ohne L10. Völund
 speichert keinen API-Schlüssel; der Nutzer verbindet Claude Code mit einem lokalen
-MCP-Server in Völund. Zuschnitt: [AI04-plan.md](AI04-plan.md).
+MCP-Server in Völund. Zuschnitt: [AI04-plan.md](AI04-plan.md). AI04 ist seit dem
+5. Oktober 2026 abgeschlossen (AI04a–d).
 
 **Nutzerentscheidung vom 4. Oktober 2026:** AI02 kommt direkt nach R10b (G2), der
 integrierte Assistent AI03 direkt danach, ohne auf L10 zu warten. Er nutzt zunächst Claude

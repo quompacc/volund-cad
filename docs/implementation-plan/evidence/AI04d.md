@@ -1,6 +1,7 @@
 # AI04d – Abnahme mit echtem Client
 
-**Status:** bestanden am 05.10.2026 unter Windows; CI-Lauf ausstehend. Teilplan:
+**Status:** abgenommen am 05.10.2026 (Windows, echter Client) nach grünem CI-Lauf 401;
+damit ist AI04 abgeschlossen. Teilplan:
 [AI04-plan.md](../AI04-plan.md).
 
 Nutzerentscheidung vom 05.10.2026: Die Abnahme mit echtem Client erfolgt nur unter

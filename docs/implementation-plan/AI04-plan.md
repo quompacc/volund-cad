@@ -1,5 +1,8 @@
 # AI04 – Teilplan: MCP-Zugang für Claude Code
 
+**Abgeschlossen am 05.10.2026:** [AI04a](evidence/AI04a.md), [AI04b](evidence/AI04b.md),
+[AI04c](evidence/AI04c.md), [AI04d](evidence/AI04d.md).
+
 Stand 05.10.2026. Grundlage: [Kapitel 11](11-ki-fem-optimierung.md) (Aktionsvertrag AI01),
 [AI02-plan.md](AI02-plan.md) (Aktionsschicht), Abnahme A-ACTION-01 in
 [08-abnahme.md](08-abnahme.md).

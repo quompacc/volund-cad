@@ -3657,16 +3657,17 @@
       ],
       "acceptance": "A-ACTION-01 über tatsächlichen Client, Reconnect und Wiederholung ohne Doppelmutation.",
       "boundary": "Umfang und Nicht-Ziele laut eigenem Abschnitt in Kapitel 11; keine neuen Runtime-Abhängigkeiten ohne konkrete Entscheidung. Nutzerentscheidung 2026-10-05: vor AI03 vorgezogen, ohne L10; erster Client Claude Code, kein API-Schlüssel in Völund; Zuschnitt in AI04-plan.md.",
-      "status": "planned",
+      "status": "done",
       "gate": "G5",
       "chapter": "11-ki-fem-optimierung.md",
       "kind": "implementation-or-acceptance",
       "evidence": [
         "docs/implementation-plan/evidence/AI04a.md",
         "docs/implementation-plan/evidence/AI04b.md",
-        "docs/implementation-plan/evidence/AI04c.md"
+        "docs/implementation-plan/evidence/AI04c.md",
+        "docs/implementation-plan/evidence/AI04d.md"
       ],
-      "completedCommit": null
+      "completedCommit": "64c09ce"
     },
     {
       "id": "FEM01",
