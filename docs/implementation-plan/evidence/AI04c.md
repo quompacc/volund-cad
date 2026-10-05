@@ -1,8 +1,7 @@
 # AI04c – Anbindung an die Shell
 
-**Status:** Teil 1 (Server im laufenden Programm) und Teil 2 (sichtbare Bedienung nach
-Nutzerentscheidung vom 05.10.2026) umgesetzt. Die Aufnahmen liegen dem Nutzer zur Freigabe
-vor; CI-Lauf ausstehend. Teilplan: [AI04-plan.md](../AI04-plan.md).
+**Status:** abgenommen am 05.10.2026 nach grünem CI-Lauf 396. Der Nutzer hat die
+Aufnahmen der Bedienung freigegeben. Teilplan: [AI04-plan.md](../AI04-plan.md).
 
 ## Umsetzung (Teil 1)
 
@@ -63,8 +62,8 @@ und jede Änderung von Claude wird dreifach angezeigt.
 | bestehende Tests | Skizzeneditor, Stützbindung, Solver-Freigabe und ID-Kapazität mit Editoren ohne Skizze in der Session |
 
 - **Windows:** 116/116 Tests bestanden (Debug, MSVC, seriell), nach Teil 1 und Teil 2.
-- **Linux:** CI-Lauf ausstehend. Vorab auf Fedora mit GCC gebaut, 113/113 Tests unter
-  `kwin_wayland --virtual` bestanden, nach Teil 1 und Teil 2.
+- **Linux:** CI-Lauf 396 auf `fc46d71`, grün (Teil 1: Lauf 393, Fix der Koordinaten: 394).
+  Vorab auf Fedora mit GCC gebaut, 113/113 Tests unter `kwin_wayland --virtual`.
 
 ## Vorab-Durchlauf mit echtem Client
 
