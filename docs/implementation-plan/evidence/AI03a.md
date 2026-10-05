@@ -1,6 +1,6 @@
 # AI03a – Backend und Ereignisse
 
-**Status:** umgesetzt, CI-Lauf ausstehend. Teilplan: [AI03-plan.md](../AI03-plan.md).
+**Status:** abgenommen am 05.10.2026 nach grünem CI-Lauf 407. Teilplan: [AI03-plan.md](../AI03-plan.md).
 
 ## Umsetzung
 
@@ -35,7 +35,7 @@
 | `assistant.backend` | Parser (Text, Werkzeugaufruf, Ergebnis mit Struktur, Fehler-Ergebnis, Unbekanntes). Gegen `voelund_fake_claude`, das echte MCP-Aufrufe macht und `stream-json` ausgibt; der Server nimmt dabei nur Token je Lauf an. Ein Lauf legt einen Parameter an: Ereignisfolge, Sitzung, Token danach widerrufen. Aufgezeichnete Argumente: keine eingebauten Werkzeuge, nur `mcp__volund__*`, keine Nutzereinstellungen, `stream-json`, Nebenverkehr aus. Zweiter Lauf mit `--resume`, unbekannte Ausgabe übergangen. Widerrufenes Token mitten im Lauf: Die spätere Änderung wird abgewiesen, das Dokument bleibt unverändert. Stopp: sofort „abgebrochen“, Token widerrufen, keine Änderung, keine weiteren Ereignisse. Nicht erreichbarer Server beendet den Lauf sofort. Exit-Code 3 mit Fehlermeldung. Fehlendes Programm. KI-Funktionen aus: kein Start |
 
 - **Windows:** 117/117 Tests bestanden (Debug, MSVC, seriell).
-- **Linux:** CI-Lauf ausstehend. Vorab auf Fedora mit GCC gebaut: 34/34 Tests der
+- **Linux:** CI-Lauf 407 auf `3c07add`, grün. Vorab auf Fedora mit GCC gebaut: 34/34 Tests der
   Anwendungsschicht, von MCP und Assistent.
 
 ## Grenzen
