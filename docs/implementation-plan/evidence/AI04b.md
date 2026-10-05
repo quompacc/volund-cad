@@ -1,6 +1,6 @@
 # AI04b – MCP-Protokoll und HTTP-Transport
 
-**Status:** umgesetzt, CI-Lauf ausstehend. Teilplan: [AI04-plan.md](../AI04-plan.md).
+**Status:** abgenommen am 05.10.2026 nach grünem CI-Lauf 391. Teilplan: [AI04-plan.md](../AI04-plan.md).
 
 ## Umsetzung
 
@@ -43,7 +43,7 @@
 - **Windows:** 114/115 im Gesamtlauf; `platform.atomic_file_store` scheiterte einmal nach
   11 s und bestand danach 5/5 Wiederholungen. Der Test berührt MCP nicht. Alle übrigen
   Tests bestanden (Debug, MSVC, seriell).
-- **Linux:** CI-Lauf ausstehend. Vorab auf Fedora mit GCC gebaut: 33/33 Tests der
+- **Linux:** CI-Lauf 391 auf `cb08676`, grün. Vorab auf Fedora mit GCC gebaut: 33/33 Tests der
   Anwendungsschicht und von MCP.
 
 ## Grenzen
