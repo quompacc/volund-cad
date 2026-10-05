@@ -6,6 +6,7 @@
 #include <QLabel>
 #include <QMenu>
 #include <QStyle>
+#include <QTimer>
 #include <QToolButton>
 
 namespace voelund::desktop {
@@ -72,6 +73,13 @@ ShellHeader::ShellHeader(QWidget* parent) : QWidget(parent) {
     layout->addWidget(railButton_);
     themeButton_ = iconButton(this, "themeButton");
     layout->addWidget(themeButton_);
+    assistantButton_ = new QToolButton(this);
+    assistantButton_->setObjectName(QStringLiteral("assistantChip"));
+    assistantButton_->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    assistantButton_->setPopupMode(QToolButton::InstantPopup);
+    assistantButton_->setToolTip(tr("Claude-Zugang (MCP)"));
+    layout->addWidget(assistantButton_);
+    showAssistant(AssistantState::off);
     setTheme(ThemeMode::light);
 }
 
@@ -95,6 +103,29 @@ void ShellHeader::display(const ShellState& state) {
     // Re-polish so the [modified="true"] style rule follows the property.
     saveState_->style()->unpolish(saveState_);
     saveState_->style()->polish(saveState_);
+}
+
+void ShellHeader::setAssistantMenu(QMenu& menu) { assistantButton_->setMenu(&menu); }
+
+void ShellHeader::showAssistant(AssistantState state) {
+    static constexpr const char* names[] = {"off", "ready", "connected"};
+    const QString texts[] = {tr("Claude: aus"), tr("Claude: bereit"), tr("Claude: verbunden")};
+    const auto index = static_cast<std::size_t>(state);
+    assistantButton_->setText(texts[index]);
+    assistantButton_->setAccessibleName(texts[index]);
+    assistantButton_->setProperty("state", QString::fromLatin1(names[index]));
+    assistantButton_->style()->unpolish(assistantButton_);
+    assistantButton_->style()->polish(assistantButton_);
+}
+
+void ShellHeader::flashAssistant() {
+    const auto repolish = [button = assistantButton_](bool on) {
+        button->setProperty("flash", on);
+        button->style()->unpolish(button);
+        button->style()->polish(button);
+    };
+    repolish(true);
+    QTimer::singleShot(900, assistantButton_, [repolish] { repolish(false); });
 }
 
 void ShellHeader::setTheme(ThemeMode mode) {

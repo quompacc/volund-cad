@@ -17,10 +17,13 @@
 #include "ViewCube.hpp"
 #include "ViewVisibility.hpp"
 #include <QAction>
+#include <QElapsedTimer>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <voelund/application/CadSession.hpp>
 #include <voelund/desktop/MainWindow.hpp>
+#include <voelund/desktop/McpAccess.hpp>
 #include <voelund/workspaces/CommandRegistry.hpp>
 class QDockWidget;
 class QDoubleSpinBox;
@@ -85,6 +88,13 @@ class MainWindow::Impl final {
     workspaces::CommandRegistry commandRegistry;
     std::unique_ptr<CommandActions> commandActions;
     std::unique_ptr<DocumentActions> documentActions;
+    // AI04c: local Claude access (MCP).
+    std::unique_ptr<McpAccess> mcp;
+    QAction* mcpAction{nullptr};
+    QAction* mcpCopyAction{nullptr};
+    QAction* mcpTokenAction{nullptr};
+    QLabel* mcpAddress{nullptr};
+    QElapsedTimer mcpActivity; // Last accepted request; invalid until the first one.
 };
 
 } // namespace voelund::desktop

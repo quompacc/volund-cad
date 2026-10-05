@@ -9,7 +9,9 @@
 #include <QString>
 #include <QStringList>
 
+#include <functional>
 #include <optional>
+#include <utility>
 
 class QTcpServer;
 class QTcpSocket;
@@ -45,6 +47,10 @@ class McpHttpServer final : public QObject {
     [[nodiscard]] bool isListening() const;
     [[nodiscard]] quint16 port() const;
     [[nodiscard]] QString url() const;
+    // A new token ends every session; clients need the new connect command.
+    void setToken(QByteArray token);
+    // Runs after every request that passed host, origin and token checks.
+    void setActivityHandler(std::function<void()> activity) { activity_ = std::move(activity); }
 
   private:
     struct Response final {
@@ -65,6 +71,7 @@ class McpHttpServer final : public QObject {
     QTcpServer* server_;
     QHash<QTcpSocket*, QByteArray> buffers_;
     QSet<QByteArray> sessions_;
+    std::function<void()> activity_;
 };
 
 } // namespace voelund::mcp

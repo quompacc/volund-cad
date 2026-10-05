@@ -1,12 +1,15 @@
 #include "ModelTreePanel.hpp"
 
 #include <QHeaderView>
+#include <QBrush>
 #include <QSignalBlocker>
+#include <QTimer>
 #include <QTreeWidgetItem>
 #include <QTreeWidgetItemIterator>
 #include <QVariant>
 
 #include <map>
+#include <vector>
 #include <utility>
 
 namespace voelund::desktop {
@@ -122,6 +125,7 @@ void ModelTreePanel::showModel(const application::ModelOutline& outline,
     }
     for (const document::FeatureId feature : outline.loose)
         addFeature(nullptr, feature);
+    paintFlash(true); // A rebuild during a running mark keeps it.
 }
 
 void ModelTreePanel::showStatuses(std::span<const application::FeatureRuntimeState> states) {
@@ -143,6 +147,38 @@ void ModelTreePanel::showStatuses(std::span<const application::FeatureRuntimeSta
 void ModelTreePanel::selectFeature(document::FeatureId featureId) {
     const QSignalBlocker blocker(this);
     setCurrentItem(featureItem(featureId));
+}
+
+void ModelTreePanel::flashFeatures(std::span<const document::FeatureId> features,
+                                   const QColor& color) {
+    paintFlash(false);
+    flashed_.assign(features.begin(), features.end());
+    flashColor_ = color;
+    paintFlash(true);
+    const auto marked = flashed_;
+    QTimer::singleShot(1500, this, [this, marked] {
+        if (flashed_ != marked)
+            return; // A newer change owns the marks.
+        paintFlash(false);
+        flashed_.clear();
+    });
+}
+
+bool ModelTreePanel::isFlashed(document::FeatureId feature) const {
+    const auto* item = featureItem(feature);
+    return item != nullptr && item->font(0).bold();
+}
+
+void ModelTreePanel::paintFlash(bool on) {
+    for (const auto id : flashed_) {
+        auto* item = featureItem(id);
+        if (item == nullptr)
+            continue;
+        auto font = item->font(0);
+        font.setBold(on);
+        item->setFont(0, font);
+        item->setForeground(0, on ? QBrush(flashColor_) : QBrush());
+    }
 }
 
 QTreeWidgetItem* ModelTreePanel::featureItem(document::FeatureId featureId) const {

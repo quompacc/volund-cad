@@ -93,6 +93,13 @@ QToolButton:pressed, QToolButton:checked { background: @accentSoft; color: @acce
 QToolButton:disabled { color: @faint; }
 QToolButton::menu-indicator { image: none; width: 0; }
 QToolButton:focus { border-color: @accent; }
+/* AI04c: Claude access chip; it lights up once for every change made over MCP. */
+#shellHeader QToolButton#assistantChip { color: @muted; background: @soft; border-radius: 9px;
+    padding: 2px 10px; min-height: 20px; font-size: 12px; }
+#shellHeader QToolButton#assistantChip[state="ready"] { color: @ink; }
+#shellHeader QToolButton#assistantChip[state="connected"] { color: @accentInk;
+    background: @accentSoft; }
+#shellHeader QToolButton#assistantChip[flash="true"] { color: @onAccent; background: @accent; }
 
 QFrame[floatingCard="true"] { background: @panel; border: 1px solid @line; border-radius: 14px; }
 QFrame[floatingCard="true"] QScrollArea, #cardContent { background: transparent; border: 0; }

@@ -30,7 +30,7 @@ void run() {
     application::CadSession session;
     session.newDocument();
     int changes = 0;
-    mcp::ToolHost host(session, [&] { ++changes; });
+    mcp::ToolHost host(session, [&](const auto&) { ++changes; });
     const QByteArray token = "test-token-0123456789";
     mcp::McpHttpServer server(host, token);
     require(server.listen() && server.port() != 0, "Listens on a free local port");

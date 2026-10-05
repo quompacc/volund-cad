@@ -165,6 +165,9 @@ in U04 an dieselben IDs.
 | `solid.create.extrude_profiles` | Werkzeugleiste, Kontextleiste (Bereich, primär), Suche | SketchExtrusionToolController | Skizzenbereich gewählt | region_selection_acceptance |
 | `solid.modify.transform` | Werkzeugleiste („Bewegen“), Kontextleiste (Feature), M, Suche | Viewport-Gizmo | getrennter Körper gewählt | viewport_startup |
 | `solid.modify.edit_sketch` | Werkzeugleiste („Bearbeiten“), Kontextleiste (Skizze, primär), Suche | SketchEditorToolController | Skizze gewählt | support_binding_flow |
+| `assistant.mcp` | Kopfzeile (Claude-Chip), Suche | McpAccess | immer; zeigt an/aus | mcp_shell |
+| `assistant.mcp_copy_command` | Kopfzeile (Claude-Chip), Suche | McpAccess | Zugang an | mcp_shell |
+| `assistant.mcp_new_token` | Kopfzeile (Claude-Chip), Suche | McpAccess | immer | command_inventory |
 
 Skizzenbefehle (U13): Solange der Skizzeneditor offen ist, zeigt die Werkzeugleiste statt der
 Volumenwerkzeuge die Skizzenwerkzeuge. Jedes ist ein Befehl mit Command-ID, den auch Suche und

@@ -31,7 +31,7 @@ std::string text(const QJsonObject& object) {
 
 class Client final {
   public:
-    explicit Client(application::CadSession& session) : host(session, [this] { ++changes; }) {}
+    explicit Client(application::CadSession& session) : host(session, [this](const auto&) { ++changes; }) {}
     QJsonObject context() { return raw("get_context", {}); }
     // The request envelope on the current stamp.
     QJsonObject call(const QString& tool, QJsonObject arguments, QString requestId = {}) {

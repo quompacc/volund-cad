@@ -11,6 +11,7 @@
 #include <functional>
 #include <optional>
 #include <span>
+#include <vector>
 
 namespace voelund::desktop {
 
@@ -37,6 +38,10 @@ class ModelTreePanel final : public QTreeWidget {
     void showStatuses(std::span<const application::FeatureRuntimeState> states);
     void selectFeature(document::FeatureId featureId);
     [[nodiscard]] QTreeWidgetItem* featureItem(document::FeatureId featureId) const;
+    // AI04c: briefly marks features changed from outside the shell (MCP) with bold text in
+    // the given color; the style sheet paints item backgrounds itself.
+    void flashFeatures(std::span<const document::FeatureId> features, const QColor& color);
+    [[nodiscard]] bool isFlashed(document::FeatureId feature) const;
 
     static constexpr int idRole = Qt::UserRole;
     static constexpr int nameRole = Qt::UserRole + 1;
@@ -46,7 +51,11 @@ class ModelTreePanel final : public QTreeWidget {
     QTreeWidgetItem* addItem(QTreeWidgetItem* parent, Kind kind, std::uint64_t id,
                              const QString& text, std::optional<bool> eye);
 
+    void paintFlash(bool on);
+
     Handlers handlers_;
+    std::vector<document::FeatureId> flashed_;
+    QColor flashColor_;
     QIcon shownIcon_;
     QIcon hiddenIcon_;
 };

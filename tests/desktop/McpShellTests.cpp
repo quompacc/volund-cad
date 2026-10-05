@@ -4,7 +4,12 @@
 
 #include <QAction>
 #include <QApplication>
+#include <QClipboard>
 #include <QPushButton>
+#include <QRegularExpression>
+#include <QSettings>
+#include <QTcpSocket>
+#include <QToolButton>
 #include <QStatusBar>
 #include <QTreeWidget>
 #include <QUrl>
@@ -12,11 +17,11 @@
 #include <string>
 #include <voelund/application/CadSession.hpp>
 #include <voelund/desktop/MainWindow.hpp>
-#include <voelund/desktop/McpAccess.hpp>
 
-// AI04c: the running shell with its MCP server. A change over MCP appears in the model tree
-// and is one undo step for the user. A sketch the user is drawing stays open; accepting it
-// afterwards is refused as stale instead of overwriting the change.
+// AI04c: the running shell with its MCP server. The header chip switches the access, copies the
+// connect command and shows off/ready/connected. A change over MCP appears in the model tree
+// (marked), the status bar and the chip, and is one undo step for the user. A sketch the
+// user is drawing stays open; an older draft never overwrites Claude's change.
 namespace {
 using namespace voelund;
 using test::mcpclient::Client;
@@ -50,7 +55,14 @@ QPushButton* acceptButton(QWidget& window) {
                             : panel->findChild<QPushButton*>(QStringLiteral("toolAcceptButton"));
 }
 
+constexpr const char* token = "shell-test-token-0123456789abcdef";
+
 void run() {
+    // The access was switched on in an earlier run; port 0 picks a free port.
+    QSettings settings;
+    settings.setValue(QStringLiteral("mcp/enabled"), true);
+    settings.setValue(QStringLiteral("mcp/port"), 0);
+    settings.setValue(QStringLiteral("mcp/token"), QByteArray(token));
     application::CadSession session;
     session.newDocument();
     desktop::MainWindow window(session);
@@ -62,13 +74,23 @@ void run() {
     viewport->setCameraView(viewport::CameraView::isometric);
     test::render(*viewport);
 
-    desktop::McpAccess access(session, window, {0, "shell-test-token-0123456789abcdef"});
-    check(access.start() && access.isRunning(), "The MCP server starts");
-    check(access.claudeCommand().contains(access.url()) &&
-              access.claudeCommand().contains(QStringLiteral("Bearer shell-test-token")),
-          "The connect command names URL and token");
-    Client client(static_cast<quint16>(QUrl(access.url()).port()), "shell-test-token-0123456789abcdef");
+    auto* chip = window.findChild<QToolButton*>(QStringLiteral("assistantChip"));
+    check(chip != nullptr && chip->property("state") == QStringLiteral("ready") &&
+              command(window, "assistant.mcp").isChecked(),
+          "The remembered access is on after the start");
+    command(window, "assistant.mcp_copy_command").trigger();
+    const auto copied = QApplication::clipboard()->text();
+    const auto match =
+        QRegularExpression(QStringLiteral("^claude mcp add --transport http volund "
+                                          "http://127\\.0\\.0\\.1:(\\d+)/mcp --header "
+                                          "\"Authorization: Bearer ([0-9a-z-]+)\"$"))
+            .match(copied);
+    check(match.hasMatch() && match.captured(2) == QLatin1String(token),
+          "The copied command connects Claude Code: " + copied.toStdString());
+    Client client(static_cast<quint16>(match.captured(1).toUInt()), token);
     static_cast<void>(client.open());
+    settle();
+    check(chip->property("state") == QStringLiteral("connected"), "The chip shows the client");
 
     // The user starts a sketch on XY and draws a rectangle.
     click(*viewport, 30, 30);
@@ -101,6 +123,10 @@ void run() {
     };
     check(tree != nullptr && treeItem(session.features().front().name) != nullptr,
           "The model tree shows the box");
+    check(window.statusBar()->currentMessage().startsWith(QStringLiteral("Claude: ")) &&
+              chip->property("flash").toBool() &&
+              treeItem(session.features().front().name)->font(0).bold(),
+          "Status bar, chip and model tree announce Claude's change");
     check(acceptButton(window) != nullptr && acceptButton(window)->isVisible(),
           "The user's sketch stays open");
 
@@ -159,6 +185,14 @@ void run() {
     command(window, "history.undo").trigger();
     settle();
     check(stored() == drawn && session.features().size() == 2, "Undo restores the drawn sketch");
+    // Switched off: no open port, and the choice is remembered.
+    command(window, "assistant.mcp").trigger();
+    settle();
+    QTcpSocket probe;
+    probe.connectToHost(QHostAddress::LocalHost, static_cast<quint16>(match.captured(1).toUInt()));
+    check(!probe.waitForConnected(1000) && chip->property("state") == QStringLiteral("off") &&
+              !QSettings().value(QStringLiteral("mcp/enabled")).toBool(),
+          "Switching off closes the port and is remembered");
     std::cout << "PASS AI04c: MCP changes in the running shell\n";
 }
 } // namespace

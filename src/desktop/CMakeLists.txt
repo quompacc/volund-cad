@@ -8,6 +8,7 @@ add_library(
     ContextBar.cpp
     ContextCommands.cpp
     MainWindow.cpp
+    MainWindowAssistant.cpp
     MainWindowCommands.cpp
     MainWindowParameters.cpp
     MainWindowReferenceRepair.cpp

@@ -27,7 +27,7 @@ QJsonObject argumentError(const QString& field, const char* message) {
 }
 } // namespace
 
-ToolHost::ToolHost(application::CadSession& session, std::function<void()> changed)
+ToolHost::ToolHost(application::CadSession& session, ChangeHandler changed)
     : session_(session), dispatcher_(session), changed_(std::move(changed)) {}
 
 bool ToolHost::hasTool(const QString& name) const {
@@ -54,7 +54,7 @@ QJsonObject ToolHost::callTool(const QString& name, const QJsonObject& arguments
     const bool published =
         result.command.status() != application::CommandStatus::rejected && !result.repeated;
     if (!call->preview && published && changed_)
-        changed_();
+        changed_(result);
     return toolResult(encodeResult(result, call->preview),
                       result.command.status() == application::CommandStatus::rejected);
 }

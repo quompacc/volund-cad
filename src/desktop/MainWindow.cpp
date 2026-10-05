@@ -57,6 +57,7 @@ MainWindow::MainWindow(application::CadSession& session, QWidget* parent)
     createHeader();
     createCommandSurfaces();
     createTimeline();
+    createAssistant();
     // The shell layout is fixed (ADR 0012): no floating, closing or dragging of panels.
     for (auto* dock : findChildren<QDockWidget*>())
         dock->setFeatures(QDockWidget::NoDockWidgetFeatures);

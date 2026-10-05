@@ -65,6 +65,10 @@ void McpHttpServer::close() {
 }
 bool McpHttpServer::isListening() const { return server_->isListening(); }
 quint16 McpHttpServer::port() const { return server_->serverPort(); }
+void McpHttpServer::setToken(QByteArray token) {
+    token_ = std::move(token);
+    sessions_.clear();
+}
 QString McpHttpServer::url() const {
     return QStringLiteral("http://127.0.0.1:%1/mcp").arg(port());
 }
@@ -153,6 +157,8 @@ McpHttpServer::Response McpHttpServer::respond(const QByteArray& method, const Q
         return {404, {}, {}};
     if (!sameSecret(headers.value("authorization"), "Bearer " + token_))
         return {401, {}, {{"WWW-Authenticate", "Bearer"}}};
+    if (activity_)
+        activity_();
     const auto session = headers.value("mcp-session-id");
     if (method == "DELETE") {
         return sessions_.remove(session) ? Response{200, {}, {}} : Response{404, {}, {}};

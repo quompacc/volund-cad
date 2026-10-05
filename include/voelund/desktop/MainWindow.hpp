@@ -11,6 +11,7 @@ class QCloseEvent;
 
 namespace voelund::application {
 class CadSession;
+struct ActionResult;
 }
 
 namespace voelund::desktop {
@@ -24,6 +25,9 @@ class MainWindow final : public QMainWindow {
     // AI04c: the session was changed from outside the shell (MCP). Views follow; open tools
     // stay open, and their stored stamp makes a later accept stale instead of overwriting.
     void refreshAfterExternalChange();
+    // AI04c: the local Claude access (MCP); the choice is remembered for the next start.
+    bool setMcpAccessEnabled(bool enabled);
+    [[nodiscard]] QString mcpConnectCommand() const;
 
   protected:
     void closeEvent(QCloseEvent* event) override;
@@ -65,6 +69,9 @@ class MainWindow final : public QMainWindow {
     void previewBodyMove(std::uint64_t id, double deltaX, double deltaY, double deltaZ);
     void previewBodyRotation(std::uint64_t id, int axisIndex, double angleDegrees);
     void selectFeature(std::uint64_t rawId);
+    void createAssistant();
+    void syncAssistant();
+    void announceExternalChange(const application::ActionResult& result);
 
     class Impl;
     std::unique_ptr<Impl> impl_;

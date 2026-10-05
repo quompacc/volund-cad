@@ -2,7 +2,6 @@
 
 #include <voelund/application/CadSession.hpp>
 #include <voelund/desktop/MainWindow.hpp>
-#include <voelund/desktop/McpAccess.hpp>
 #include <voelund/document/ModelDocument.hpp>
 #include <voelund/features/SketchEvaluation.hpp>
 #include <voelund/viewport/CadViewport.hpp>
@@ -212,23 +211,20 @@ int main(int argc, char* argv[]) {
     }
     voelund::desktop::MainWindow mainWindow(session);
     mainWindow.show();
-    // AI04c: local MCP server for Claude Code. Until its controls exist in the shell, it is
-    // started with --mcp; the connect command goes to the log and to mcp-connect.txt in the
-    // configuration directory.
-    std::unique_ptr<voelund::desktop::McpAccess> mcp;
+    // AI04c: --mcp switches the Claude access (MCP) on, as the chip in the header does; the
+    // connect command also goes to the log and to mcp-connect.txt in the configuration
+    // directory.
     if (QCoreApplication::arguments().contains(QStringLiteral("--mcp"))) {
-        mcp = std::make_unique<voelund::desktop::McpAccess>(session, mainWindow,
-                                                            voelund::desktop::loadMcpSettings());
-        if (mcp->start()) {
+        if (mainWindow.setMcpAccessEnabled(true)) {
             const auto directory =
                 QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
             QDir().mkpath(directory);
             QFile file(directory + QStringLiteral("/mcp-connect.txt"));
             if (file.open(QIODevice::WriteOnly | QIODevice::Truncate))
-                file.write(mcp->claudeCommand().toUtf8() + '\n');
-            qInfo().noquote() << "MCP:" << mcp->claudeCommand();
+                file.write(mainWindow.mcpConnectCommand().toUtf8() + '\n');
+            qInfo().noquote() << "MCP:" << mainWindow.mcpConnectCommand();
         } else {
-            qWarning() << "MCP server could not listen on" << mcp->url();
+            qWarning() << "MCP server could not listen";
         }
     }
 
