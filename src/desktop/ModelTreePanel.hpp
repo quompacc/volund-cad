@@ -30,7 +30,9 @@ class ModelTreePanel final : public QTreeWidget {
     explicit ModelTreePanel(QWidget* parent = nullptr);
 
     void setHandlers(Handlers handlers);
-    void setEyeIcons(const QIcon& shown, const QIcon& hidden);
+    // Icons and the text color of hidden entries follow the theme; existing entries are
+    // recolored, so a theme switch never leaves text in the old theme's color.
+    void setEyeIcons(const QIcon& shown, const QIcon& hidden, const QColor& hiddenText);
     void showModel(const application::ModelOutline& outline,
                    std::span<const document::FeatureDescriptor> features,
                    std::optional<document::FeatureId> selectedFeature,
@@ -58,6 +60,7 @@ class ModelTreePanel final : public QTreeWidget {
     QColor flashColor_;
     QIcon shownIcon_;
     QIcon hiddenIcon_;
+    QColor hiddenText_;
 };
 
 } // namespace voelund::desktop

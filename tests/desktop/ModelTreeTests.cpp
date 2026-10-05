@@ -108,6 +108,14 @@ void run() {
                 tree->topLevelItem(2)->child(1)->text(0) == QStringLiteral("Quader 1"),
             "Bodies carry their origin and German feature names");
     require(viewport->displayedBasePlaneCount() == 0, "Origin hidden beside bodies");
+    // A hidden row keeps a readable color across theme switches (it was invisible in dark).
+    const auto hiddenColor = [&] { return tree->topLevelItem(0)->foreground(0).color(); };
+    const auto lightColor = hiddenColor();
+    command(window, "view.theme").trigger();
+    require(hiddenColor() != lightColor && hiddenColor() != tree->palette().color(QPalette::Base),
+            "Hidden rows follow the theme");
+    command(window, "view.theme").trigger();
+    require(hiddenColor() == lightColor, "Switching back restores the color");
 
     const auto stamp = session.sceneStatus().document;
     const bool modified = session.isModified();

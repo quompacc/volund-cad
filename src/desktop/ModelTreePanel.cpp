@@ -58,13 +58,17 @@ ModelTreePanel::ModelTreePanel(QWidget* parent) : QTreeWidget(parent) {
 
 void ModelTreePanel::setHandlers(Handlers handlers) { handlers_ = std::move(handlers); }
 
-void ModelTreePanel::setEyeIcons(const QIcon& shown, const QIcon& hidden) {
+void ModelTreePanel::setEyeIcons(const QIcon& shown, const QIcon& hidden,
+                                 const QColor& hiddenText) {
     shownIcon_ = shown;
     hiddenIcon_ = hidden;
+    hiddenText_ = hiddenText;
     for (QTreeWidgetItemIterator it(this); *it != nullptr; ++it) {
         const QVariant eye = (*it)->data(eyeColumn, Qt::UserRole);
-        if (eye.isValid())
-            (*it)->setIcon(eyeColumn, eye.toBool() ? shownIcon_ : hiddenIcon_);
+        if (!eye.isValid())
+            continue;
+        (*it)->setIcon(eyeColumn, eye.toBool() ? shownIcon_ : hiddenIcon_);
+        (*it)->setForeground(0, eye.toBool() ? QBrush() : QBrush(hiddenText_));
     }
 }
 
@@ -80,7 +84,7 @@ QTreeWidgetItem* ModelTreePanel::addItem(QTreeWidgetItem* parent, Kind kind, std
         item->setToolTip(eyeColumn, *eye ? tr("Ausblenden") : tr("Einblenden"));
         item->setData(eyeColumn, Qt::UserRole, *eye);
         if (!*eye)
-            item->setForeground(0, palette().color(QPalette::Disabled, QPalette::Text));
+            item->setForeground(0, hiddenText_);
     }
     return item;
 }

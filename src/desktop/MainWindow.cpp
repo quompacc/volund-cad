@@ -159,7 +159,8 @@ void MainWindow::applyTheme(ThemeMode mode) {
         impl_->timeline->setTheme(mode);
     const ThemeTokens& tokens = themeTokens(mode);
     impl_->modelTree->setEyeIcons(shellIcon(ShellIcon::eye, tokens.muted, tokens.accent),
-                                  shellIcon(ShellIcon::eyeOff, tokens.faint, tokens.accent));
+                                  shellIcon(ShellIcon::eyeOff, tokens.faint, tokens.accent),
+                                  tokens.faint);
 }
 
 void MainWindow::connectInteractions() {
