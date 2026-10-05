@@ -1,6 +1,6 @@
 # AI04a – JSON-Codec und Werkzeugkatalog
 
-**Status:** umgesetzt, CI-Lauf ausstehend. Teilplan: [AI04-plan.md](../AI04-plan.md).
+**Status:** abgenommen am 05.10.2026 nach grünem CI-Lauf 389. Teilplan: [AI04-plan.md](../AI04-plan.md).
 
 ## Umsetzung
 
@@ -45,7 +45,7 @@
 | `application.action_candidates` | Skizze + Extrusion mit einem Kreis wie bisher |
 
 - **Windows:** 114/114 Tests bestanden (Debug, MSVC, seriell).
-- **Linux:** CI-Lauf ausstehend. Vorab auf Fedora mit GCC gebaut: 32/32 Tests der
+- **Linux:** CI-Lauf 389 auf `13c5132`, grün. Vorab auf Fedora mit GCC gebaut: 32/32 Tests der
   Anwendungsschicht und `mcp.tools`.
 
 ## Grenzen

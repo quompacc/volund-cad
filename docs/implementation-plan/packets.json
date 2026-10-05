@@ -3661,7 +3661,9 @@
       "gate": "G5",
       "chapter": "11-ki-fem-optimierung.md",
       "kind": "implementation-or-acceptance",
-      "evidence": null,
+      "evidence": [
+        "docs/implementation-plan/evidence/AI04a.md"
+      ],
       "completedCommit": null
     },
     {
