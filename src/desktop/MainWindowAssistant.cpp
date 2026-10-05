@@ -255,8 +255,12 @@ void MainWindow::sendToAssistant(const QString& message, bool withSelection) {
     }
     impl_->assistantPanel->addUserMessage(message);
     impl_->assistantPanel->setRunning(true);
-    if (!impl_->assistantBackend->send(prompt))
-        impl_->assistantPanel->setRunning(impl_->assistantBackend->isRunning());
+    if (!impl_->assistantBackend->send(prompt)) {
+        impl_->assistantPanel->setRunning(false);
+        if (impl_->assistantBackend->isRunning())
+            impl_->assistantPanel->present({assistant::AssistantEvent::Kind::failed,
+                                            tr("Claude arbeitet noch an der letzten Nachricht.")});
+    }
     syncAssistant();
 }
 

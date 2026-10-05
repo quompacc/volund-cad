@@ -45,8 +45,16 @@ QStringList ClaudeCodeBackend::arguments(const QString& message, const QString& 
 }
 
 bool ClaudeCodeBackend::send(const QString& message) {
-    if (isRunning())
-        return false;
+    // Claude Code reports its result shortly before the process exits; a message sent in
+    // between must not be lost.
+    if (isRunning()) {
+        if (!ended_)
+            return false; // The previous message is still being worked on.
+        if (!process_->waitForFinished(5000)) {
+            process_->kill();
+            process_->waitForFinished(2000);
+        }
+    }
     const auto access = options_.beginRun ? options_.beginRun() : RunAccess{};
     token_ = access.token;
     if (token_.isEmpty()) {

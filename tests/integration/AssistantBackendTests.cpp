@@ -135,6 +135,19 @@ void runs(const QString& program, const QString& work) {
                 fixture.has(Kind::finished, "Nichts zu tun"),
             "The conversation continues; unknown output is ignored");
 
+    // The next message right after the result, while the process is still exiting.
+    qputenv("FAKE_CLAUDE_SCENARIO", "linger");
+    fixture.events.clear();
+    require(fixture.backend->send("Kurz"), "Lingering run starts");
+    spinUntil([&] { return fixture.has(Kind::finished); }, "lingering result");
+    require(fixture.backend->isRunning(), "The process still exits after its result");
+    qputenv("FAKE_CLAUDE_SCENARIO", "noise");
+    fixture.events.clear();
+    require(fixture.backend->send("Sofort weiter"), "A message right after the result is sent");
+    spinUntil([&] { return !fixture.events.empty() && ends(fixture.events.back()); }, "next run");
+    require(fixture.has(Kind::finished, "Nichts zu tun"), "The next message is answered");
+    spinUntil([&] { return !fixture.backend->isRunning(); }, "next exit");
+
     // A revoked run token: the run goes on, but its change is refused (no late change).
     const auto trigger = work + "/trigger";
     qputenv("FAKE_CLAUDE_TRIGGER", trigger.toLocal8Bit());

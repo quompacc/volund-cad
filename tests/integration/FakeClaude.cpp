@@ -109,6 +109,13 @@ int run(const QStringList& arguments) {
         return 0;
     }
     init(session, "connected");
+    if (scenario == "linger") {
+        // Like Claude Code: the result comes a moment before the process exits.
+        text("Fertig.");
+        finalResult(session, "Fertig.", true);
+        QThread::msleep(1500);
+        return 0;
+    }
     if (scenario == "noise") {
         std::cout << "not json" << std::endl;
         print({{"type", "rate_limit_event"}, {"session_id", session}});

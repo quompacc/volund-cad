@@ -1,6 +1,7 @@
 #include "AssistantPanel.hpp"
 
 #include <QHBoxLayout>
+#include <QJsonArray>
 #include <QLabel>
 #include <QLineEdit>
 #include <QListWidget>
@@ -40,6 +41,10 @@ QString refusal(const QJsonObject& result, const QString& text) {
         return rejection;
     if (!result.value("diagnostic").toString().isEmpty())
         return result.value("diagnostic").toString();
+    // A preview or commit that failed in the evaluation names the feature's problem.
+    const auto issues = result.value("issues").toArray();
+    if (!issues.isEmpty())
+        return issues.first().toObject().value("message").toString();
     if (!result.value("message").toString().isEmpty())
         return result.value("message").toString();
     return text.left(120);
