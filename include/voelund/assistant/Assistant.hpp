@@ -63,12 +63,16 @@ class AssistantBackend {
     Handler handler_;
 };
 
+// Address and fresh token of the Völund MCP server for one run.
+struct RunAccess final {
+    QString url;
+    QByteArray token; // Empty: the run must not start (e.g. AI functions switched off).
+};
+
 struct ClaudeCodeOptions final {
     QString program{QStringLiteral("claude")};
-    QString mcpUrl;
-    // A fresh token per run and its revocation (McpHttpServer run tokens). An empty token
-    // means the run must not start (e.g. AI functions switched off).
-    std::function<QByteArray()> beginRun;
+    // Opens access for a run (McpHttpServer run token) and revokes it at its end.
+    std::function<RunAccess()> beginRun;
     std::function<void(const QByteArray&)> endRun;
 };
 

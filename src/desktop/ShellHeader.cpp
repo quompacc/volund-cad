@@ -107,6 +107,11 @@ void ShellHeader::display(const ShellState& state) {
 
 void ShellHeader::setAssistantMenu(QMenu& menu) { assistantButton_->setMenu(&menu); }
 
+void ShellHeader::setAssistantClicked(std::function<void()> clicked) {
+    assistantButton_->setPopupMode(QToolButton::MenuButtonPopup);
+    connect(assistantButton_, &QToolButton::clicked, this, [clicked] { clicked(); });
+}
+
 void ShellHeader::showAssistant(AssistantState state) {
     static constexpr const char* names[] = {"off", "ready", "connected"};
     const QString texts[] = {tr("Claude: aus"), tr("Claude: bereit"), tr("Claude: verbunden")};

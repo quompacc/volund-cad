@@ -5,6 +5,8 @@
 
 #include <QWidget>
 
+#include <functional>
+
 class QAction;
 class QLabel;
 class QMenu;
@@ -28,6 +30,8 @@ class ShellHeader final : public QWidget {
     void display(const ShellState& state);
     // AI04c: the Claude chip right of the theme switch and its menu.
     void setAssistantMenu(QMenu& menu);
+    // AI03b: a click on the chip itself opens the Claude panel; the arrow opens the menu.
+    void setAssistantClicked(std::function<void()> clicked);
     void showAssistant(AssistantState state);
     void flashAssistant();
     // Hidden while AI functions are switched off.

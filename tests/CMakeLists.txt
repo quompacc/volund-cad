@@ -508,6 +508,15 @@ if(VOELUND_BUILD_DESKTOP)
         add_test(NAME assistant.backend
             COMMAND voelund_assistant_backend_tests "$<TARGET_FILE:voelund_fake_claude>")
         set_tests_properties(assistant.backend PROPERTIES LABELS "integration;assistant;regression" TIMEOUT 120)
+        add_executable(voelund_assistant_panel_tests desktop/AssistantPanelTests.cpp)
+        target_link_libraries(voelund_assistant_panel_tests PRIVATE voelund_project_options Voelund::Desktop)
+        add_test(NAME desktop.assistant_panel
+            COMMAND voelund_assistant_panel_tests "$<TARGET_FILE:voelund_fake_claude>")
+        set_tests_properties(desktop.assistant_panel PROPERTIES
+            LABELS "desktop;qt-opengl;assistant;regression" TIMEOUT 120 RUN_SERIAL TRUE)
+        if(VOELUND_NATIVE_WAYLAND)
+            set_tests_properties(desktop.assistant_panel PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
+        endif()
         add_executable(voelund_action_shell_tests desktop/ActionShellTests.cpp)
         target_link_libraries(voelund_action_shell_tests PRIVATE voelund_project_options Voelund::Desktop)
         add_test(NAME desktop.action_shell COMMAND voelund_action_shell_tests)

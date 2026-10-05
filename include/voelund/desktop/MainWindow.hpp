@@ -70,7 +70,10 @@ class MainWindow final : public QMainWindow {
     void previewBodyRotation(std::uint64_t id, int axisIndex, double angleDegrees);
     void selectFeature(std::uint64_t rawId);
     void createAssistant();
+    void createAssistantPanel();
     void syncAssistant();
+    void syncAssistantContext();
+    void sendToAssistant(const QString& message, bool withSelection);
     void announceExternalChange(const application::ActionResult& result);
 
     class Impl;

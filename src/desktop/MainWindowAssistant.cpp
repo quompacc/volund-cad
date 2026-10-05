@@ -1,3 +1,4 @@
+#include "AssistantPanel.hpp"
 #include "MainWindowState.hpp"
 #include "MainWindowSupport.hpp"
 #include "ModelTreePanel.hpp"
@@ -6,6 +7,7 @@
 
 #include <QApplication>
 #include <QClipboard>
+#include <QDockWidget>
 #include <QLabel>
 #include <QMenu>
 #include <QStatusBar>
@@ -112,6 +114,7 @@ void MainWindow::createAssistant() {
     menu->addSeparator();
     menu->addAction(impl_->aiAllowedAction);
     impl_->header->setAssistantMenu(*menu);
+    createAssistantPanel();
 
     // "verbunden" fades to "bereit" when the client has been quiet for a while.
     auto* timer = new QTimer(this);
@@ -136,6 +139,13 @@ QString MainWindow::mcpConnectCommand() const { return impl_->mcp->claudeCommand
 
 void MainWindow::syncAssistant() {
     const bool allowed = aiAllowed();
+    if (!allowed && impl_->assistantBackend->isRunning())
+        impl_->assistantBackend->cancel();
+    impl_->assistantPanelAction->setEnabled(allowed);
+    if (!allowed) {
+        impl_->assistantPanelAction->setChecked(false);
+        impl_->assistantDock->hide();
+    }
     const bool locked = aiLockedByEnvironment();
     impl_->aiAllowedAction->setChecked(allowed);
     impl_->aiAllowedAction->setEnabled(!locked);
@@ -178,6 +188,95 @@ void MainWindow::announceExternalChange(const application::ActionResult& result)
     std::vector<document::FeatureId> marked = result.createdFeatures;
     marked.insert(marked.end(), result.changedFeatures.begin(), result.changedFeatures.end());
     impl_->modelTree->flashFeatures(marked, themeTokens(impl_->themeMode).accent);
+}
+
+
+// AI03b: the Claude panel at the right. Claude Code runs per message against this window's
+// MCP server with a token per run; Stop and a document change revoke it.
+void MainWindow::createAssistantPanel() {
+    impl_->assistantPanel = new AssistantPanel(this);
+    impl_->assistantDock = new QDockWidget(tr("Claude"), this);
+    impl_->assistantDock->setObjectName(QStringLiteral("assistantDock"));
+    impl_->assistantDock->setAllowedAreas(Qt::RightDockWidgetArea);
+    impl_->assistantDock->setWidget(impl_->assistantPanel);
+    addDockWidget(Qt::RightDockWidgetArea, impl_->assistantDock);
+    impl_->assistantDock->hide();
+
+    impl_->assistantPanelAction = new QAction(tr("Claude-Panel"), this);
+    impl_->assistantPanelAction->setCheckable(true);
+    setCommandId(*impl_->assistantPanelAction, "assistant.panel");
+    addAction(impl_->assistantPanelAction);
+    connect(impl_->assistantPanelAction, &QAction::toggled, this,
+            [this](bool open) { impl_->assistantDock->setVisible(open && aiAllowed()); });
+    impl_->header->setAssistantClicked([this] { impl_->assistantPanelAction->toggle(); });
+
+    assistant::ClaudeCodeOptions options;
+    options.program = qEnvironmentVariable("VOELUND_CLAUDE_PROGRAM", QStringLiteral("claude"));
+    options.beginRun = [this] {
+        const auto run = impl_->mcp->beginPanelRun();
+        return assistant::RunAccess{run.url, run.token};
+    };
+    options.endRun = [this](const QByteArray& token) {
+        impl_->mcp->endPanelRun(token);
+        syncAssistant();
+    };
+    impl_->assistantBackend = std::make_unique<assistant::ClaudeCodeBackend>(std::move(options));
+    impl_->assistantBackend->setHandler([this](const assistant::AssistantEvent& event) {
+        impl_->assistantPanel->present(event);
+        impl_->assistantPanel->setRunning(impl_->assistantBackend->isRunning() &&
+                                          event.kind != assistant::AssistantEvent::Kind::finished &&
+                                          event.kind != assistant::AssistantEvent::Kind::failed &&
+                                          event.kind != assistant::AssistantEvent::Kind::cancelled);
+    });
+    impl_->assistantPanel->setHandlers(
+        {[this](const QString& message, bool withSelection) {
+             sendToAssistant(message, withSelection);
+         },
+         [this] { impl_->assistantBackend->cancel(); },
+         [this] {
+             impl_->assistantBackend->cancel();
+             impl_->assistantBackend->reset();
+             impl_->assistantPanel->clear();
+         }});
+    impl_->assistantGeneration = impl_->session.sceneStatus().document.generation;
+}
+
+void MainWindow::sendToAssistant(const QString& message, bool withSelection) {
+    QString prompt = message;
+    const auto selected = impl_->session.selectedFeature();
+    if (withSelection && selected) {
+        // The selection goes along as data; names are quoted and never instructions.
+        for (const auto& feature : impl_->session.features())
+            if (feature.id == *selected)
+                prompt = tr("[Völund-Kontext, nur Daten] Auswahl: Feature-ID %1, Name „%2“.")
+                             .arg(selected->value())
+                             .arg(QString::fromStdString(feature.name)) +
+                         QStringLiteral("\n\n") + message;
+    }
+    impl_->assistantPanel->addUserMessage(message);
+    impl_->assistantPanel->setRunning(true);
+    if (!impl_->assistantBackend->send(prompt))
+        impl_->assistantPanel->setRunning(impl_->assistantBackend->isRunning());
+    syncAssistant();
+}
+
+void MainWindow::syncAssistantContext() {
+    if (impl_->assistantPanel == nullptr)
+        return;
+    const auto generation = impl_->session.sceneStatus().document.generation;
+    if (generation != impl_->assistantGeneration) {
+        impl_->assistantGeneration = generation;
+        impl_->assistantBackend->cancel();
+        impl_->assistantBackend->reset();
+        impl_->assistantPanel->clear(tr("Anderes Dokument – neues Gespräch."));
+    }
+    const auto selected = impl_->session.selectedFeature();
+    QString name;
+    if (selected)
+        for (const auto& feature : impl_->session.features())
+            if (feature.id == *selected)
+                name = QString::fromStdString(feature.name);
+    impl_->assistantPanel->setSelection(name);
 }
 
 } // namespace voelund::desktop

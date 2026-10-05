@@ -44,6 +44,15 @@ class McpAccess final {
     // are not allowed.
     [[nodiscard]] bool setEnabled(bool enabled);
     [[nodiscard]] bool isRunning() const;
+    // AI03: access for one run of the Claude panel. With the external access off, the port
+    // is open only during panel runs and accepts only their tokens. Empty token while AI
+    // functions are off or the port is taken.
+    struct PanelRun final {
+        QString url;
+        QByteArray token;
+    };
+    [[nodiscard]] PanelRun beginPanelRun();
+    void endPanelRun(const QByteArray& token);
     // A new token: connected clients have to be set up again.
     void regenerateToken();
     [[nodiscard]] QString url() const;

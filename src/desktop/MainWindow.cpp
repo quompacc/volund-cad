@@ -1,5 +1,6 @@
 #include <voelund/desktop/MainWindow.hpp>
 
+#include "AssistantPanel.hpp"
 #include "CommandFeedback.hpp"
 #include "DocumentActions.hpp"
 #include "FeaturePropertiesPanel.hpp"
@@ -158,6 +159,8 @@ void MainWindow::applyTheme(ThemeMode mode) {
     if (impl_->timeline != nullptr)
         impl_->timeline->setTheme(mode);
     const ThemeTokens& tokens = themeTokens(mode);
+    if (impl_->assistantPanel != nullptr)
+        impl_->assistantPanel->setColors(tokens.muted, tokens.error);
     impl_->modelTree->setEyeIcons(shellIcon(ShellIcon::eye, tokens.muted, tokens.accent),
                                   shellIcon(ShellIcon::eyeOff, tokens.faint, tokens.accent),
                                   tokens.faint);
@@ -297,6 +300,7 @@ void MainWindow::syncModelTree() {
 }
 
 void MainWindow::syncProperties() {
+    syncAssistantContext(); // Selection for Claude; another document ends the conversation.
     impl_->pendingParameter = {};
     impl_->pendingStamp.reset();
     impl_->propertyPanel->setErrorCommitHandler({});

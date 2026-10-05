@@ -47,7 +47,8 @@ QStringList ClaudeCodeBackend::arguments(const QString& message, const QString& 
 bool ClaudeCodeBackend::send(const QString& message) {
     if (isRunning())
         return false;
-    token_ = options_.beginRun ? options_.beginRun() : QByteArray();
+    const auto access = options_.beginRun ? options_.beginRun() : RunAccess{};
+    token_ = access.token;
     if (token_.isEmpty()) {
         handle({Kind::failed, QStringLiteral("Die KI-Funktionen sind ausgeschaltet.")});
         return false;
@@ -60,7 +61,7 @@ bool ClaudeCodeBackend::send(const QString& message) {
         return false;
     }
     const QJsonObject server{{"type", "http"},
-                             {"url", options_.mcpUrl},
+                             {"url", access.url},
                              {"headers", QJsonObject{{"Authorization",
                                                       QString::fromLatin1("Bearer " + token_)}}}};
     file.write(QJsonDocument(QJsonObject{{"mcpServers", QJsonObject{{"volund", server}}}}).toJson());

@@ -8,6 +8,7 @@ add_library(
     ContextBar.cpp
     ContextCommands.cpp
     MainWindow.cpp
+    AssistantPanel.cpp
     MainWindowAssistant.cpp
     MainWindowCommands.cpp
     MainWindowParameters.cpp
@@ -53,6 +54,7 @@ target_link_libraries(
         Voelund::Viewport
         Voelund::ModuleSolid
         Voelund::Mcp
+        Voelund::Assistant
         Qt6::Widgets
 )
 

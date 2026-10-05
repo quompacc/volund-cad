@@ -63,13 +63,33 @@ bool McpAccess::setEnabled(bool enabled) {
     }
     QSettings().setValue(QStringLiteral("mcp/enabled"), enabled);
     settings_.enabled = enabled;
+    server_.setMainTokenAccepted(enabled);
     if (!enabled) {
-        server_.close();
+        // A running panel run keeps its port; it closes with the run.
+        if (!server_.hasRunTokens())
+            server_.close();
         return true;
     }
     return server_.isListening() || server_.listen(settings_.port);
 }
-bool McpAccess::isRunning() const { return server_.isListening(); }
+bool McpAccess::isRunning() const { return server_.isListening() && settings_.enabled; }
+
+McpAccess::PanelRun McpAccess::beginPanelRun() {
+    if (!aiAllowed())
+        return {};
+    if (!server_.isListening()) {
+        if (!server_.listen(settings_.port))
+            return {};
+        server_.setMainTokenAccepted(false);
+    }
+    return {server_.url(), server_.issueRunToken()};
+}
+
+void McpAccess::endPanelRun(const QByteArray& token) {
+    server_.revokeRunToken(token);
+    if (!settings_.enabled && !server_.hasRunTokens())
+        server_.close();
+}
 
 void McpAccess::regenerateToken() {
     settings_.token = newToken();

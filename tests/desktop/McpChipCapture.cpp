@@ -4,7 +4,10 @@
 
 #include <QAction>
 #include <QApplication>
+#include <QElapsedTimer>
+#include <QLineEdit>
 #include <QMenu>
+#include <QPushButton>
 #include <QRegularExpression>
 #include <QSettings>
 #include <QToolButton>
@@ -82,6 +85,26 @@ void run() {
     command(window, "view.theme").trigger();
     test::render(*viewport);
     capture(window, "4-dark-connected");
+
+    // AI03b: the Claude panel after a run of the fake claude, the plate selected.
+    if (qEnvironmentVariableIsEmpty("VOELUND_CLAUDE_PROGRAM"))
+        return;
+    command(window, "view.theme").trigger();
+    command(window, "assistant.panel").trigger();
+    qputenv("FAKE_CLAUDE_SCENARIO", "plate");
+    auto* input = window.findChild<QLineEdit*>(QStringLiteral("assistantInput"));
+    input->setText(QStringLiteral("Lege einen Parameter A = 8 mm an"));
+    auto* send = window.findChild<QPushButton*>(QStringLiteral("assistantSendButton"));
+    send->click();
+    QElapsedTimer timer;
+    timer.start();
+    while (!send->isEnabled() && timer.elapsed() < 30000)
+        QApplication::processEvents(QEventLoop::AllEvents, 20);
+    test::render(*viewport);
+    capture(window, "5-panel");
+    command(window, "view.theme").trigger();
+    test::render(*viewport);
+    capture(window, "6-panel-dark");
 }
 } // namespace
 

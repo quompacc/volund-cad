@@ -168,6 +168,7 @@ in U04 an dieselben IDs.
 | `assistant.mcp` | Kopfzeile (Claude-Chip), Suche | McpAccess | immer; zeigt an/aus | mcp_shell |
 | `assistant.mcp_copy_command` | Kopfzeile (Claude-Chip), Suche | McpAccess | Zugang an | mcp_shell |
 | `assistant.mcp_new_token` | Kopfzeile (Claude-Chip), Suche | McpAccess | KI-Funktionen erlaubt | command_inventory |
+| `assistant.panel` | Kopfzeile (Klick auf den Claude-Chip), Suche | AssistantPanel | KI-Funktionen erlaubt | assistant_panel |
 | `assistant.allow` | Kopfzeile (Claude-Chip), Suche | McpAccess | nicht durch `VOELUND_DISABLE_AI` gesperrt; aus: kein Port, kein Claude Code, Chip ausgeblendet | mcp_shell |
 
 Skizzenbefehle (U13): Solange der Skizzeneditor offen ist, zeigt die Werkzeugleiste statt der

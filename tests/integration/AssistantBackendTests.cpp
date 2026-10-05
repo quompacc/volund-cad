@@ -44,10 +44,10 @@ class Fixture final {
         require(server.listen(), "Server listens");
         server.setMainTokenAccepted(false); // Only run tokens, as with external access off.
         backend = std::make_unique<assistant::ClaudeCodeBackend>(assistant::ClaudeCodeOptions{
-            program, server.url(),
+            program,
             [this] {
                 lastToken = allowed ? server.issueRunToken() : QByteArray();
-                return lastToken;
+                return assistant::RunAccess{server.url(), lastToken};
             },
             [this](const QByteArray& token) { server.revokeRunToken(token); }});
         backend->setHandler([this](const AssistantEvent& event) { events.push_back(event); });

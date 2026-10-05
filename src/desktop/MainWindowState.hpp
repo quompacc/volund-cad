@@ -23,6 +23,7 @@
 #include <optional>
 #include <voelund/application/CadSession.hpp>
 #include <voelund/desktop/MainWindow.hpp>
+#include <voelund/assistant/Assistant.hpp>
 #include <voelund/desktop/McpAccess.hpp>
 #include <voelund/workspaces/CommandRegistry.hpp>
 class QDockWidget;
@@ -94,6 +95,12 @@ class MainWindow::Impl final {
     QAction* mcpCopyAction{nullptr};
     QAction* mcpTokenAction{nullptr};
     QAction* aiAllowedAction{nullptr}; // Privacy switch for all AI functions.
+    // AI03b: Claude panel and its backend (Claude Code against the server above).
+    QAction* assistantPanelAction{nullptr};
+    QDockWidget* assistantDock{nullptr};
+    class AssistantPanel* assistantPanel{nullptr};
+    std::unique_ptr<assistant::ClaudeCodeBackend> assistantBackend;
+    std::uint64_t assistantGeneration{0};
     QLabel* mcpAddress{nullptr};
     QElapsedTimer mcpActivity; // Last accepted request; invalid until the first one.
 };
