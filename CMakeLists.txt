@@ -43,7 +43,7 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 endif()
 
 if(VOELUND_BUILD_DESKTOP)
-    find_package(Qt6 CONFIG REQUIRED COMPONENTS Core Gui Widgets)
+    find_package(Qt6 CONFIG REQUIRED COMPONENTS Core Gui Network Widgets)
     if(VOELUND_VIEWPORT_BACKEND STREQUAL "qt-opengl")
         find_package(Qt6 CONFIG REQUIRED COMPONENTS OpenGLWidgets)
         if(VOELUND_NATIVE_WAYLAND)

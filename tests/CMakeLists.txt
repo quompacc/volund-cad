@@ -478,6 +478,16 @@ if(VOELUND_BUILD_DESKTOP)
         target_link_libraries(voelund_mcp_tool_tests PRIVATE voelund_project_options Voelund::Mcp)
         add_test(NAME mcp.tools COMMAND voelund_mcp_tool_tests)
         set_tests_properties(mcp.tools PROPERTIES LABELS "integration;mcp;regression" TIMEOUT 90)
+        add_executable(voelund_mcp_http_tests integration/McpHttpTests.cpp)
+        target_link_libraries(voelund_mcp_http_tests PRIVATE voelund_project_options Voelund::Mcp)
+        add_test(NAME mcp.http COMMAND voelund_mcp_http_tests)
+        set_tests_properties(mcp.http PROPERTIES LABELS "integration;mcp;regression" TIMEOUT 90)
+        if(WIN32)
+            add_custom_command(TARGET voelund_mcp_http_tests POST_BUILD
+                COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                    "$<TARGET_FILE:Qt6::Core>" "$<TARGET_FILE:Qt6::Network>"
+                    "$<TARGET_FILE_DIR:voelund_mcp_http_tests>" VERBATIM)
+        endif()
         add_executable(voelund_action_shell_tests desktop/ActionShellTests.cpp)
         target_link_libraries(voelund_action_shell_tests PRIVATE voelund_project_options Voelund::Desktop)
         add_test(NAME desktop.action_shell COMMAND voelund_action_shell_tests)
