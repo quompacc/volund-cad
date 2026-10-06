@@ -4125,12 +4125,14 @@
       ],
       "acceptance": "Extrusion mit Versatz beginnt messbar versetzt; 'bis Fläche' endet auf der gewählten Fläche und folgt ihr bei Änderung; Undo und Speichern/Öffnen erhalten beides.",
       "boundary": "Nutzerentscheidung 2026-10-06: Werkzeuglücken aus AI03c vor U07–U10; Zuschnitt in T-plan.md. Vorgezogener Teil von M02.",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "chapter": "05-solid-historie.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/T03.md"
+      ],
+      "completedCommit": "9c08320"
     }
   ],
   "executionPolicy": {
