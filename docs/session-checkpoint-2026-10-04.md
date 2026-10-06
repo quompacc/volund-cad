@@ -1,5 +1,7 @@
 # Fortsetzung – 4. Oktober 2026
 
+> **Abgelöst durch [session-checkpoint-2026-10-06.md](session-checkpoint-2026-10-06.md).** Arbeitsregeln und Werkzeuge unten gelten weiter.
+
 **Einstieg für die nächste Sitzung:** Dieses Dokument zuerst lesen. AI02 ist
 abgeschlossen, seit 05.10.2026 auch **AI04** (MCP-Zugang für Claude Code) und **AI03**
 (Claude-Panel), siehe [AI04-plan.md](implementation-plan/AI04-plan.md) und
