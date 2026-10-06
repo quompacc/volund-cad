@@ -4097,16 +4097,18 @@
       ],
       "acceptance": "Tasche durch eine Platte und Rippe als eigener Körper wählbar, in Oberfläche und über MCP; alte Dateien behalten ihr Verhalten; Aufnahmen vom Nutzer gesichtet.",
       "boundary": "Nutzerentscheidung 2026-10-06: Werkzeuglücken aus AI03c vor U07–U10; Zuschnitt in T-plan.md. Vorgezogener Teil von M02/M03; kein Intersect, keine Mehrkörperziele.",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "chapter": "05-solid-historie.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/T02.md"
+      ],
+      "completedCommit": "465d35d"
     },
     {
       "id": "T03",
-      "title": "Startversatz der Extrusion",
+      "title": "Startversatz und Extrusion bis Fläche",
       "deps": [
         "T02"
       ],
@@ -4117,10 +4119,11 @@
         "src/mcp/"
       ],
       "steps": [
-        "Versatz entlang der Normalen als Längenmaß, an Parameter bindbar; Schema und Migration.",
-        "Panel und MCP; 'bis Fläche' nach T02 entscheiden."
+        "Versatz entlang der Richtung als Längenmaß (auch negativ), an Parameter bindbar; Schema und Migration.",
+        "Endbedingung 'Bis Fläche' mit stabiler Flächenreferenz (wie T01); Distanz folgt der Fläche.",
+        "Panel und MCP; Aufnahmen vom Nutzer gesichtet."
       ],
-      "acceptance": "Extrusion mit Versatz beginnt messbar versetzt; Parameteränderung, Undo und Speichern/Öffnen erhalten ihn.",
+      "acceptance": "Extrusion mit Versatz beginnt messbar versetzt; 'bis Fläche' endet auf der gewählten Fläche und folgt ihr bei Änderung; Undo und Speichern/Öffnen erhalten beides.",
       "boundary": "Nutzerentscheidung 2026-10-06: Werkzeuglücken aus AI03c vor U07–U10; Zuschnitt in T-plan.md. Vorgezogener Teil von M02.",
       "status": "planned",
       "gate": "G3",

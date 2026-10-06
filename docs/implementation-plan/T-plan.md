@@ -22,7 +22,7 @@ Ziel: Diese Fälle gehen in der Oberfläche **und** über MCP (Aktionsschicht `A
 |---|---|---|
 | T01 | Skizze auf einer Körperfläche über MCP | G5 (wie AI04) |
 | T02 | Ergebnis der Extrusion: neuer Körper / vereinigen / abziehen | G3, vorgezogener Teil von M02/M03 |
-| T03 | Startversatz der Extrusion entlang der Normalen | G3, vorgezogener Teil von M02 |
+| T03 | Startversatz und Extrusion bis Fläche | G3, vorgezogener Teil von M02 |
 
 Danach wird die Abnahme mit echtem Client (`voelund_assistant_panel_acceptance`) erneut
 ausgeführt.
@@ -81,8 +81,14 @@ ausgeführt.
 - Bei getrennten Körpern gilt der Vertrag aus M03: ein getrenntes Vereinigen wird
   abgewiesen, keine stille Umdeutung.
 
-### T03 – Startversatz
+### T03 – Startversatz und Extrusion bis Fläche
 
-- Versatz entlang der Normalen als Längenmaß, an Parameter bindbar.
-- Schemaänderung wie T02; Panel und MCP.
-- „Bis Fläche“ wird erst nach T02 entschieden.
+Nutzerentscheidung vom 06.10.2026: „Versatz + Bis Fläche“; die T02-Aufnahmen sind
+freigegeben.
+
+- Feld „Versatz“ unter Distanz: Längenmaß, Vorgabe 0 mm, auch negativ, an Parameter
+  bindbar. Die Extrusion beginnt um den Versatz entlang ihrer Richtung verschoben.
+- Endbedingung „Bis Fläche“: Eine ebene Fläche eines Körpers wird im Viewport bzw. über
+  ihre Referenz aus `get_context` gewählt (wie T01). Die Extrusion endet auf ihr und folgt
+  ihr bei Änderungen.
+- Schemaänderung wie T02; Panel und MCP; Aufnahmen werden vorgelegt.
