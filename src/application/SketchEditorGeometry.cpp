@@ -154,6 +154,11 @@ void SketchEditorSession::clearPreview() noexcept {
 }
 
 std::optional<document::SketchElementId> SketchEditorSession::confirmPreview() {
+    const auto created = confirmCreation();
+    return created ? std::optional{created->primary()} : std::nullopt;
+}
+
+std::optional<SketchCreationResult> SketchEditorSession::confirmCreation() {
     if (!active_ || preview_.empty() || !previewConfirmable_ || !canAllocatePreviewIds(preview_))
         return std::nullopt;
     if (const auto* rectangle = std::get_if<document::SketchRectangle>(&preview_.front()))
@@ -205,7 +210,17 @@ std::optional<document::SketchElementId> SketchEditorSession::confirmPreview() {
     selectedElement_ = firstId;
     selectedReferences_.clear();
     static_cast<void>(solveConstraints());
-    return firstId;
+    // Roles follow slotGeometry and polygonGeometry.
+    constexpr SketchCreationRole slotRoles[] = {
+        SketchCreationRole::slotFirstSide, SketchCreationRole::slotSecondCap,
+        SketchCreationRole::slotSecondSide, SketchCreationRole::slotFirstCap};
+    SketchCreationResult result;
+    for (std::size_t index = 0; index < ids.size(); ++index)
+        result.elements.push_back(
+            {ids[index], tool_ == SketchDrawingTool::slot && ids.size() == 4 ? slotRoles[index]
+                         : tool_ == SketchDrawingTool::polygon ? SketchCreationRole::polygonSide
+                                                               : SketchCreationRole::element});
+    return result;
 }
 
 void SketchEditorSession::setPolygonSides(int sides) noexcept {

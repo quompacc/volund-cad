@@ -4,7 +4,7 @@
 
 namespace voelund::application {
 
-document::SketchElementId
+SketchCreationResult
 SketchEditorSession::confirmRectangle(const document::SketchRectangle& rectangle) {
     const std::array points{
         rectangle.first,
@@ -44,7 +44,10 @@ SketchEditorSession::confirmRectangle(const document::SketchRectangle& rectangle
     selectedElement_ = ids.front();
     selectedReferences_.clear();
     static_cast<void>(solveConstraints());
-    return ids.front();
+    return {{{ids[0], SketchCreationRole::rectangleFromFirstCorner},
+             {ids[1], SketchCreationRole::rectangleToSecondCorner},
+             {ids[2], SketchCreationRole::rectangleFromSecondCorner},
+             {ids[3], SketchCreationRole::rectangleToFirstCorner}}};
 }
 
 } // namespace voelund::application

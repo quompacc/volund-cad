@@ -17,6 +17,7 @@ add_library(voelund_application STATIC
     CadSessionReferenceInspection.cpp
     CadSessionReferenceRepair.cpp
     CadSessionBatchRepair.cpp
+    SketchEditorCreation.cpp
     SketchEditorEdgeReferences.cpp
     SketchEditorConstruction.cpp
     SketchEditorAcceptance.cpp

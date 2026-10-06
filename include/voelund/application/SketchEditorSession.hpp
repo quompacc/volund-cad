@@ -1,5 +1,6 @@
 #pragma once
 #include <voelund/application/CommandTransaction.hpp>
+#include <voelund/application/SketchCreation.hpp>
 #include <voelund/application/SceneStatus.hpp>
 
 #include <voelund/document/ModelDocument.hpp>
@@ -47,6 +48,13 @@ class SketchEditorSession final {
                                   std::optional<document::SketchPoint> third = std::nullopt);
     void clearPreview() noexcept;
     [[nodiscard]] std::optional<document::SketchElementId> confirmPreview();
+    // U08: confirmPreview with every created element by role.
+    [[nodiscard]] std::optional<SketchCreationResult> confirmCreation();
+    // U08: one creation step of the active tool with its snaps and automatic relations, as
+    // the interactive editor performs it (SketchCreation.hpp). nullopt for an invalid size; a
+    // rejected reference throws std::invalid_argument and leaves partial changes, so a caller
+    // keeps a copy of the session to restore.
+    [[nodiscard]] std::optional<SketchCreationResult> create(const SketchCreationInput& input);
     [[nodiscard]] bool selectElement(document::SketchElementId elementId) noexcept;
     [[nodiscard]] bool selectNearestReference(document::SketchElementId elementId,
                                               document::SketchPoint position,
@@ -155,8 +163,11 @@ class SketchEditorSession final {
         document::SketchElements elements;
         document::SketchConstraints constraints;
     };
-    [[nodiscard]] document::SketchElementId
+    [[nodiscard]] SketchCreationResult
     confirmRectangle(const document::SketchRectangle& rectangle);
+    void snapTo(document::SketchGeometryReference created, const std::optional<SketchSnap>& snap,
+                document::SketchPoint point);
+    [[nodiscard]] std::optional<SketchCreationResult> createCentered(const SketchCreationInput& input);
     [[nodiscard]] std::vector<document::SketchGeometry>
     geometry(document::SketchPoint first, document::SketchPoint second,
              std::optional<document::SketchPoint> third) const;

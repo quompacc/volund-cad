@@ -37,7 +37,6 @@ class SketchEditorToolController final {
     void cancel();
 
   private:
-    void confirmCenterRectangle(const viewport::SketchElementIntent& intent);
     friend class SketchSolverGateTestAccess;
     void setTool(int index);
     void applyTranslation(const std::string& id, double value);

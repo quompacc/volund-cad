@@ -655,6 +655,11 @@ target_link_libraries(
 
 add_test(NAME application.sketch_basic_tools COMMAND voelund_sketch_basic_tools_tests)
 
+add_executable(voelund_sketch_creation_tests integration/SketchCreationTests.cpp)
+target_link_libraries(voelund_sketch_creation_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.sketch_creation COMMAND voelund_sketch_creation_tests)
+set_tests_properties(application.sketch_creation PROPERTIES LABELS "integration;application;sketch;regression" TIMEOUT 60)
+
 add_executable(voelund_sketch_slot_tests integration/SketchSlotTests.cpp)
 target_link_libraries(voelund_sketch_slot_tests PRIVATE
     voelund_project_options Voelund::Application)
