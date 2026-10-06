@@ -3,7 +3,7 @@
 ## Aktueller Stand – 4. Oktober 2026
 
 [`packets.json`](packets.json) ist die einzige Statusquelle; dieser Abschnitt fasst
-sie nur zusammen. **134 Pakete, 56 abgeschlossen, 78 offen** (77 geplant,
+sie nur zusammen. **134 Pakete, 58 abgeschlossen, 76 offen** (75 geplant,
 A02 mit Designbedarf). Teilblöcke wie D12a–e zählen nicht als Hauptpakete; die
 Paketanzahl ist kein Maß für Restaufwand oder Fertigstellungszeit.
 
@@ -42,13 +42,13 @@ Paketanzahl ist kein Maß für Restaufwand oder Fertigstellungszeit.
 | --- | ---: |
 | G0 – Basis | 2 |
 | G1 – Dokument und Referenzen | 0 |
-| G2 – zusammenhängender CAD-Workflow | 21 |
+| G2 – zusammenhängender CAD-Workflow | 19 |
 | G3 – mechanisches CAD v1 | 18 |
 | G4 – veröffentlichbare v1 | 10 |
 | G5 – spätere Produktfamilie | 27 |
-| Gesamt | 78 |
+| Gesamt | 76 |
 
-Bis einschließlich G4 bleiben 51 Hauptpakete. G2 ist der erste durchgängige
+Bis einschließlich G4 bleiben 49 Hauptpakete. G2 ist der erste durchgängige
 Bedienablauf, G3 der begrenzte mechanische Funktionsumfang. G5 umfasst zusätzliche
 Bereiche wie Baugruppen und Zeichnungen. Nutzbarkeit wird an diesen Abläufen
 abgenommen, nicht am Erreichen einer Prozentzahl.

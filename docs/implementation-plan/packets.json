@@ -1587,12 +1587,14 @@
       ],
       "acceptance": "A-IO-01 und A-UI-03 bestehen: Cancel erhält Modell; Savefehler hält Fenster offen; Openfehler zerstört kein aktives Dokument; Save-As setzt Titel erst nach Erfolg.",
       "boundary": "Keine neue cloudbasierte Dokumentverwaltung.",
-      "status": "planned",
+      "status": "done",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/U07.md"
+      ],
+      "completedCommit": "80471e7"
     },
     {
       "id": "U08",
@@ -1613,12 +1615,14 @@
       ],
       "acceptance": "Rechteck, Circle, Arc und Ellipse aus beiden bisherigen Einstiegen erzeugen fachlich gleichen Editorzustand. Kein UI-Code berechnet IDs durch Einfügereihenfolge.",
       "boundary": "Kein Ausbau von voelund-ui-preview; deren SketchBackend dient nur als Vergleich bis U12.",
-      "status": "planned",
+      "status": "done",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/U08.md"
+      ],
+      "completedCommit": "efb5d14"
     },
     {
       "id": "U09",
