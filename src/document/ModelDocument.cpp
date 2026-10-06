@@ -1,5 +1,6 @@
 #include "ModelDocumentImpl.hpp"
 #include <voelund/document/IdCapacity.hpp>
+#include <voelund/document/LegacyBodyIdentity.hpp>
 #include <voelund/document/ModelDocument.hpp>
 #include <voelund/document/SketchPlaneValidation.hpp>
 
@@ -63,9 +64,21 @@ void validateExtrusion(const ExtrusionParameters& parameters) {
                 throw std::invalid_argument("Extrusion region IDs must be unique");
         }
     }
+    if (parameters.operation && (*parameters.operation < ExtrusionOperation::newBody ||
+                                 *parameters.operation > ExtrusionOperation::cut))
+        throw std::invalid_argument("Unknown extrusion operation");
+    if (parameters.target && parameters.operation != ExtrusionOperation::join &&
+        parameters.operation != ExtrusionOperation::cut)
+        throw std::invalid_argument("Only a join or cut names a target body");
 }
 
 } // namespace
+
+ExtrusionOperation effectiveOperation(const ExtrusionParameters& parameters,
+                                      bool baseSketch) noexcept {
+    return parameters.operation.value_or(baseSketch ? ExtrusionOperation::newBody
+                                                    : ExtrusionOperation::join);
+}
 
 void validateCylinderParameters(const CylinderParameters& parameters) {
     validateCylinder(parameters);
@@ -206,6 +219,7 @@ FeatureId ModelDocument::addExtrusionFeature(std::string name, FeatureId sketchF
     candidate.features.push_back(
         FeatureDescriptor{id, FeatureKind::extrusion, std::move(name), sketchFeature});
     candidate.parameters.emplace_back(parameters);
+    static_cast<void>(featureBodyContexts(candidate.features, candidate.parameters));
     commitState(std::move(candidate));
     return id;
 }
@@ -329,6 +343,7 @@ bool ModelDocument::setExtrusionParameters(FeatureId featureId,
     }
     auto candidate = currentState();
     *std::get_if<ExtrusionParameters>(&candidate.parameters.at(index)) = parameters;
+    static_cast<void>(featureBodyContexts(candidate.features, candidate.parameters));
     commitState(std::move(candidate));
     return true;
 }

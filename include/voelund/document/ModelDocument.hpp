@@ -92,6 +92,9 @@ struct SketchParameters final {
 void validateSketchParameters(const SketchParameters& parameters);
 void validateCylinderParameters(const CylinderParameters& parameters);
 
+// T02: what an extrusion's prism does to a body.
+enum class ExtrusionOperation { newBody = 1, join = 2, cut = 3 };
+
 struct ExtrusionParameters final {
     double distance;
     // Pre-R09 selection by minimum loop element ID. Kept only until Open migrates it to
@@ -101,9 +104,20 @@ struct ExtrusionParameters final {
     std::vector<SketchRegionId> regions{};
     // PAR01: the distance mirrors this length parameter while bound.
     std::optional<ParameterId> distanceParameter{};
+    // T02 (schema 8). Unset keeps the earlier rule: the prism of a base-plane sketch opens
+    // the sketch's body, the prism of a face sketch joins its support's body.
+    std::optional<ExtrusionOperation> operation{};
+    // Extrude against the sketch normal, e.g. a cut into the face the sketch lies on.
+    bool reversed{false};
+    // Join or cut of a base-plane sketch names the body it works on (its creating feature's
+    // ID). A face sketch always works on its support's body and names none.
+    std::optional<BodyId> target{};
 
     [[nodiscard]] bool operator==(const ExtrusionParameters&) const = default;
 };
+// The operation in effect, with the earlier rule for an unset one.
+[[nodiscard]] ExtrusionOperation effectiveOperation(const ExtrusionParameters& parameters,
+                                                    bool baseSketch) noexcept;
 
 struct FeatureDescriptor final {
     FeatureId id;

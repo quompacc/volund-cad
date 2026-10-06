@@ -252,7 +252,7 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot,
             },
             [&](const CreateProfileExtrusionAction& a) {
                 return session.createSketchProfileExtrusion(a.sketch, a.regions,
-                                                            a.distance.value);
+                                                            a.distance.value, a.mode);
             },
             [&](const SetExtrusionDistanceAction& a) {
                 auto parameters = snapshot.extrusionParameters(a.extrusion);
@@ -276,7 +276,8 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot,
                 return session.editCylinderParameters(a.cylinder, parameters, reject);
             },
             [&](const CreateSketchExtrusionAction& a) {
-                return session.createDatumSketchExtrusion(a.sketch, a.regions, a.distance.value);
+                return session.createDatumSketchExtrusion(a.sketch, a.regions, a.distance.value,
+                                                          a.mode);
             },
             [&](const SetPlacementAction& a) {
                 return session.editFeaturePlacement(

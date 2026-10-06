@@ -4,6 +4,7 @@
 
 #include <QButtonGroup>
 #include <QComboBox>
+#include <QSignalBlocker>
 #include <QDoubleSpinBox>
 #include <QFormLayout>
 #include <QGridLayout>
@@ -207,14 +208,14 @@ void ToolPanelHost::begin(ToolPanelDefinition definition) {
             input->addItem(choice);
         }
         input->setCurrentIndex(parameter.currentIndex);
+        input->setObjectName(QString::fromStdString("toolChoice_" + parameter.id));
         const std::string parameterId = parameter.id;
         connect(input, &QComboBox::currentIndexChanged, this, [this, parameterId](int index) {
-            if (definition_.choiceChanged) {
-                definition_.choiceChanged(parameterId, index);
-            }
+            chooseOption(parameterId, index);
         });
         parameterLayout_->addRow(parameter.label, input);
         choiceInputs_.emplace_back(parameter.id, input);
+        choiceIndices_.emplace_back(parameter.id, parameter.currentIndex);
     }
     struct ActionGroup final {
         QString name;
@@ -311,6 +312,12 @@ void ToolPanelHost::chooseOption(const std::string& choiceId, int index) {
     if (toolGroup_ != nullptr && choiceId == "tool")
         if (auto* button = toolGroup_->button(index))
             button->setChecked(true);
+    // A choice the tool or a test sets shows in its field without a second notification.
+    for (auto& [id, input] : choiceInputs_)
+        if (id == choiceId && input->currentIndex() != index) {
+            const QSignalBlocker blocker(input);
+            input->setCurrentIndex(index);
+        }
     if (definition_.choiceChanged)
         definition_.choiceChanged(choiceId, index);
     if (stateHandler_)

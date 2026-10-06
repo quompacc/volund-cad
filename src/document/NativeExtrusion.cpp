@@ -69,6 +69,23 @@ std::vector<SketchRegionId> readRegions(const TDF_Label& label, std::size_t& rem
     }
     return regions;
 }
+// Decimal text like profile IDs, so 64-bit body IDs fit.
+std::uint64_t readDecimal(const TDF_Label& label) {
+    Handle(TDataStd_AsciiString) value;
+    require(label.NbChildren() == 0 && label.FindAttribute(TDataStd_AsciiString::GetID(), value) &&
+        value->Get().Length() <= 20);
+    const std::string text{value->Get().ToCString(), static_cast<std::size_t>(value->Get().Length())};
+    std::uint64_t id = 0;
+    const auto parsed = std::from_chars(text.data(), text.data() + text.size(), id);
+    require(parsed.ec == std::errc{} && parsed.ptr == text.data() + text.size() && id != 0 &&
+        text == std::to_string(id));
+    return id;
+}
+int readInteger(const TDF_Label& label) {
+    Handle(TDataStd_Integer) value;
+    require(label.NbChildren() == 0 && label.FindAttribute(TDataStd_Integer::GetID(), value));
+    return value->Get();
+}
 }
 std::size_t nativeExtrusionRecords(const ExtrusionParameters& parameters) {
     std::size_t records = parameters.profiles.size() + parameters.regions.size();
@@ -87,6 +104,7 @@ void validateNativeExtrusion(const ExtrusionParameters& parameters) {
     std::set<std::string> regions;
     for (const auto& region : parameters.regions)
         require(regions.insert(region.text()).second);
+    require(!parameters.target || parameters.target->value() != 0);
 }
 void writeNativeExtrusion(const TDF_Label& label, const ExtrusionParameters& parameters) {
     TDataStd_Real::Set(label, parameters.distance);
@@ -99,16 +117,30 @@ void writeNativeExtrusion(const TDF_Label& label, const ExtrusionParameters& par
         writeRegions(label.FindChild(2), parameters.regions);
     if (parameters.distanceParameter)
         writeNativeParameterBinding(label.FindChild(3), *parameters.distanceParameter);
+    if (parameters.operation)
+        TDataStd_Integer::Set(label.FindChild(4), static_cast<int>(*parameters.operation));
+    if (parameters.reversed)
+        TDataStd_Integer::Set(label.FindChild(5), 1);
+    if (parameters.target)
+        TDataStd_AsciiString::Set(label.FindChild(6),
+            std::to_string(parameters.target->value()).c_str());
 }
 ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t remainingRecords,
                                         int schemaVersion) {
     // Schema 5 (R09) adds the region selection as optional child 2, present only when
     // regions are selected, so documents without regions keep the older encoding.
     // Schema 7 (PAR01) adds the distance parameter binding as optional child 3.
+    // Schema 8 (T02) adds operation (4), reversed direction (5) and target body (6).
     const auto regions = label.FindChild(2, false);
     const auto binding = label.FindChild(3, false);
+    const auto operation = label.FindChild(4, false);
+    const auto reversed = label.FindChild(5, false);
+    const auto target = label.FindChild(6, false);
+    const int t02 = (operation.IsNull() ? 0 : 1) + (reversed.IsNull() ? 0 : 1) +
+        (target.IsNull() ? 0 : 1);
     require((regions.IsNull() || schemaVersion >= 5) && (binding.IsNull() || schemaVersion >= 7) &&
-        label.NbChildren() == 1 + (regions.IsNull() ? 0 : 1) + (binding.IsNull() ? 0 : 1));
+        (t02 == 0 || schemaVersion >= 8) &&
+        label.NbChildren() == 1 + (regions.IsNull() ? 0 : 1) + (binding.IsNull() ? 0 : 1) + t02);
     Handle(TDataStd_Real) distance;
     require(label.FindAttribute(TDataStd_Real::GetID(), distance));
     const auto profiles = child(label, 1);
@@ -138,6 +170,18 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
     }
     if (!binding.IsNull())
         result.distanceParameter = readNativeParameterBinding(binding);
+    if (!operation.IsNull()) {
+        const int value = readInteger(operation);
+        require(value >= static_cast<int>(ExtrusionOperation::newBody) &&
+            value <= static_cast<int>(ExtrusionOperation::cut));
+        result.operation = static_cast<ExtrusionOperation>(value);
+    }
+    if (!reversed.IsNull()) {
+        require(readInteger(reversed) == 1); // Written only when set.
+        result.reversed = true;
+    }
+    if (!target.IsNull())
+        result.target = BodyId{readDecimal(target)};
     validateNativeExtrusion(result);
     return result;
 }

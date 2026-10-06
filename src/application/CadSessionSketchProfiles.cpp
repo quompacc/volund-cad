@@ -180,10 +180,22 @@ ExtrusionSelectionState CadSession::inspectExtrusionSelection(document::FeatureI
     return state;
 }
 
+namespace {
+document::ExtrusionParameters newExtrusionParameters(double distance,
+                                                  std::vector<document::SketchRegionId> regions,
+                                                  const ExtrusionMode& mode) {
+    document::ExtrusionParameters parameters{distance, {}, std::move(regions)};
+    parameters.operation = mode.operation;
+    parameters.reversed = mode.reversed;
+    parameters.target = mode.target;
+    return parameters;
+}
+} // namespace
+
 CommandResult
 CadSession::createSketchProfileExtrusion(document::FeatureId sketchFeature,
                                          std::span<const document::SketchRegionId> profileIds,
-                                         double distance) {
+                                         double distance, const ExtrusionMode& mode) {
     if (!std::isfinite(distance) || distance <= 0.0 || profileIds.empty())
         return CommandResult::invalidInput(
             "Profile extrusion requires selected profiles and a positive finite distance");
@@ -206,7 +218,7 @@ CadSession::createSketchProfileExtrusion(document::FeatureId sketchFeature,
     const std::vector<document::SketchRegionId> selected(profileIds.begin(), profileIds.end());
     const auto input = detail::prepareInput([&] {
         return candidate.addExtrusionFeature("Extrusion " + std::to_string(sequence), sketchFeature,
-                                             document::ExtrusionParameters{distance, {}, selected});
+                                             newExtrusionParameters(distance, selected, mode));
     });
     if (!input.value)
         return CommandResult::invalidInput(input.diagnostic);
@@ -217,7 +229,7 @@ CadSession::createSketchProfileExtrusion(document::FeatureId sketchFeature,
 CommandResult
 CadSession::createDatumSketchExtrusion(const document::SketchParameters& sketch,
                                        std::span<const document::SketchRegionId> regions,
-                                       double distance) {
+                                       double distance, const ExtrusionMode& mode) {
     const auto count = [&](document::FeatureKind kind) {
         return std::ranges::count(document_.features(), kind, &document::FeatureDescriptor::kind);
     };
@@ -244,7 +256,7 @@ CadSession::createDatumSketchExtrusion(const document::SketchParameters& sketch,
             return CommandResult::invalidInput("Profile extrusion references an unknown profile");
     const auto extrusionId = detail::prepareInput([&] {
         return candidate.addExtrusionFeature(extrusionName, *sketchId.value,
-                                             document::ExtrusionParameters{distance, {}, selected});
+                                             newExtrusionParameters(distance, selected, mode));
     });
     if (!extrusionId.value)
         return CommandResult::invalidInput(extrusionId.diagnostic);

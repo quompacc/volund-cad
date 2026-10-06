@@ -243,9 +243,69 @@ void datumSketches(const Handle(TDocStd_Application)& app) {
     app->Close(doc);
     std::cout << "schema 6 datum sketch, own body, schema gate and plane checks passed\n";
 }
+// T02, schema 8: operation, reversed direction and target body as optional children. A cut
+// from a second base-plane sketch into the first body round-trips, groups its sketch with
+// that body and is refused by a schema 7 reader.
+void extrusionModes(const Handle(TDocStd_Application)& app) {
+    auto model = ModelDocument::empty();
+    SketchParameters plate{datumSketchPlane(DatumPlane::xy),
+                           {{{SketchElementId{1}, SketchRectangle{0, 0, 4, 3}}}, 2}};
+    plate.datum = DatumPlane::xy;
+    const auto plateSketch = model.addDatumSketchFeature("Plate", plate);
+    ExtrusionParameters body{2, {}, {region("o:1.0,1.1,1.2,1.3")}};
+    body.operation = ExtrusionOperation::newBody;
+    (void)model.addExtrusionFeature("Body", plateSketch, body);
+    SketchParameters hole{datumSketchPlane(DatumPlane::xy),
+                          {{{SketchElementId{1}, SketchRectangle{1, 1, 2, 2}}}, 2}};
+    hole.datum = DatumPlane::xy;
+    const auto holeSketch = model.addDatumSketchFeature("Hole", hole);
+    ExtrusionParameters cut{2, {}, {region("o:1.0,1.1,1.2,1.3")}};
+    cut.operation = ExtrusionOperation::cut;
+    cut.target = BodyId{plateSketch.value()};
+    const auto cutId = model.addExtrusionFeature("Cut", holeSketch, cut);
+    auto reversed = cut;
+    reversed.reversed = true;
+    reversed.distance = 1;
+    require(model.setExtrusionParameters(cutId, reversed), "Reversed cut set");
+    auto stray = cut;
+    stray.target = BodyId{99};
+    rejected([&] { (void)model.setExtrusionParameters(cutId, stray); });
+    auto newBodyTarget = cut;
+    newBodyTarget.operation = ExtrusionOperation::newBody;
+    rejected([&] { (void)model.setExtrusionParameters(cutId, newBodyTarget); });
+    const auto expected =
+        IdentifiedDocumentSnapshot::restore(DocumentId{3, 5}, DocumentSnapshot::capture(model));
+    auto doc = fresh(app);
+    NativePrimitiveCodec::write(doc, expected);
+    std::stringstream bytes(std::ios::in | std::ios::out | std::ios::binary);
+    save(app, doc, bytes);
+    auto loaded = open(app, bytes);
+    require(NativePrimitiveCodec::read(loaded) == expected, "Extrusion mode roundtrip");
+    app->Close(loaded);
+    // Reversed, the hole is cut downwards from z = 0 and misses the plate above: an error,
+    // not a silent no-op. Along the normal it cuts 1 x 1 x 1 from the bottom up.
+    bool missed = false;
+    try {
+        (void)features::FeatureGraph{}.evaluate(expected.snapshot().toDocument());
+    } catch (const features::FeatureEvaluationError& error) {
+        missed = error.featureId() == cutId;
+    }
+    reversed.reversed = false;
+    require(model.setExtrusionParameters(cutId, reversed), "Upward cut set");
+    const auto result = features::FeatureGraph{}.evaluate(model);
+    GProp_GProps properties;
+    BRepGProp::VolumeProperties(result.resultShape, properties);
+    require(missed && result.bodies.size() == 1 && std::abs(properties.Mass() - 23) < 1e-9,
+            "Cut direction and target body");
+    TDataStd_Integer::Set(doc->Main().FindChild(2), 7);
+    rejected([&] { (void)NativePrimitiveCodec::read(doc); }); // T02 children need schema 8
+    app->Close(doc);
+    std::cout << "schema 8 extrusion operation, direction and target round-trip and gate passed\n";
+}
 void regressions(const Handle(TDocStd_Application)& app) {
     historicalProfiles(app);
     datumSketches(app);
+    extrusionModes(app);
     regionSelections(app);
     auto doc = fresh(app);
     const auto expected = fixture();

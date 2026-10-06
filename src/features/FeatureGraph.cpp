@@ -18,18 +18,16 @@
 #include <voelund/kernel/ShapeOperations.hpp>
 
 #include <BRepBuilderAPI_Transform.hxx>
-#include <BRepPrimAPI_MakePrism.hxx>
 #include <BRep_Builder.hxx>
 #include <TopoDS_Compound.hxx>
 #include <algorithm>
 #include <gp_Trsf.hxx>
-#include <gp_Vec.hxx>
 #include <stdexcept>
 #include <utility>
 #include <vector>
 
 namespace voelund::features {
-namespace {
+namespace detail {
 
 const EvaluatedFeature& findFeature(const std::vector<EvaluatedFeature>& outputs,
                                     document::FeatureId featureId) {
@@ -38,12 +36,6 @@ const EvaluatedFeature& findFeature(const std::vector<EvaluatedFeature>& outputs
         throw GeometryEvaluationError("Feature input has not been evaluated");
     }
     return *match;
-}
-
-const TopoDS_Shape& findOutput(const std::vector<EvaluatedFeature>& outputs,
-                               document::FeatureId featureId, bool reference = false) {
-    const auto& output = findFeature(outputs, featureId);
-    return reference ? output.referenceShape : output.shape;
 }
 
 EvaluatedBody& findBody(std::vector<EvaluatedBody>& bodies,
@@ -61,6 +53,18 @@ EvaluatedBody& findBody(std::vector<EvaluatedBody>& bodies,
     if (match->sourceFeature != featureId)
         throw GeometryEvaluationError("Body input refers to an earlier feature result");
     return *match;
+}
+
+} // namespace detail
+
+namespace {
+using detail::findBody;
+using detail::findFeature;
+
+const TopoDS_Shape& findOutput(const std::vector<EvaluatedFeature>& outputs,
+                               document::FeatureId featureId, bool reference = false) {
+    const auto& output = findFeature(outputs, featureId);
+    return reference ? output.referenceShape : output.shape;
 }
 
 TopoDS_Shape createResultShape(const std::vector<EvaluatedBody>& bodies) {
@@ -236,133 +240,6 @@ void evaluateSketch(const document::DocumentSnapshot& document,
                                        sketchEdgeOrigins(descriptor.id, elements)});
 }
 
-void evaluateExtrusion(const document::DocumentSnapshot& document,
-                       const document::FeatureDescriptor& descriptor,
-                       std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
-                       std::vector<EvaluatedBody>& referenceBodies) {
-    if (!descriptor.inputFeature.has_value()) {
-        throw GeometryEvaluationError("Extrusion requires a sketch input");
-    }
-    const document::FeatureId sketchId = *descriptor.inputFeature;
-    const auto& projected = findFeature(outputs, sketchId).resolvedSketch;
-    if (!projected)
-        throw GeometryEvaluationError("Current sketch projection is missing");
-    const document::SketchParameters& sketch = *projected;
-    const document::ExtrusionParameters& parameters = document.extrusionParameters(descriptor.id);
-    const auto descriptors = document.features();
-    const auto sketchDescriptor =
-        std::ranges::find(descriptors, sketchId, &document::FeatureDescriptor::id);
-    if (sketchDescriptor == descriptors.end())
-        throw GeometryEvaluationError("Extrusion sketch is missing");
-    const auto profiles = evaluateExtrusionFaces(sketch, parameters);
-    TopoDS_Compound sketchFace;
-    BRep_Builder builder;
-    builder.MakeCompound(sketchFace);
-    for (const auto& profile : profiles)
-        builder.Add(sketchFace, profile.face);
-    // Exact support-plane contact: preserve both the start plane and the requested
-    // end plane. OCCT's Boolean classifies the coincident faces; no length padding.
-    const gp_Vec outward(sketch.plane.normalX, sketch.plane.normalY, sketch.plane.normalZ);
-    BRepPrimAPI_MakePrism prism(sketchFace, outward * parameters.distance);
-    const TopoDS_Shape tool = prism.Shape();
-    const auto toolEdges = extrusionEdgeOrigins(descriptor.id, sketchId, profiles, prism);
-    std::vector<SupportProvenance> capOrigins;
-    for (const auto& profile : profiles) {
-        const auto cap = prism.LastShape(profile.face);
-        capOrigins.push_back({{descriptor.id, std::nullopt, profile.boundary},
-                              {cap},
-                              kernel::HistoryCoverage::complete,
-                              cap});
-    }
-    if (!sketchDescriptor->inputFeature) {
-        // V01: a base-plane sketch opened its own body (BodyId = sketch FeatureId); this
-        // prism is that body's first solid, so nothing is fused and nothing is guessed.
-        const document::BodyId bodyId{sketchId.value()};
-        if (std::ranges::find(bodies, bodyId, &EvaluatedBody::bodyId) != bodies.end())
-            throw GeometryEvaluationError("Base-plane body already has a solid");
-        outputs.push_back(EvaluatedFeature{descriptor.id, tool, tool, bodyId, capOrigins, {},
-                                           capOrigins, toolEdges, toolEdges});
-        bodies.push_back({bodyId, descriptor.id, tool});
-        referenceBodies.push_back({bodyId, descriptor.id, tool});
-        return;
-    }
-    const document::FeatureId supportId = *sketchDescriptor->inputFeature;
-
-    EvaluatedBody& supportBody = findBody(bodies, outputs, supportId);
-    EvaluatedBody& referenceSupportBody = findBody(referenceBodies, outputs, supportId);
-    const auto evaluated = kernel::ShapeOperations::fuseWithHistory(supportBody.shape, tool);
-    const TopoDS_Shape result = evaluated.shape;
-    auto referenceSketch = sketch;
-    if (sketch.supportBinding) {
-        const auto& support = findFeature(outputs, supportId);
-        const EvaluatedFeature referenceSupport{support.id,
-                                                support.referenceShape,
-                                                support.referenceShape,
-                                                support.bodyId,
-                                                support.referenceSupportOrigins,
-                                                {},
-                                                {},
-                                                support.referenceEdgeOrigins};
-        resolveBoundSketchSupport(referenceSketch, referenceSupport);
-        if (solveSketchConstraints(referenceSketch).status != SketchSolveStatus::success)
-            throw GeometryEvaluationError("Reference sketch projected edges cannot be solved");
-    }
-    const auto referenceProfiles = evaluateExtrusionFaces(referenceSketch, parameters);
-    TopoDS_Compound referenceFaces;
-    builder.MakeCompound(referenceFaces);
-    for (const auto& profile : referenceProfiles)
-        builder.Add(referenceFaces, profile.face);
-    BRepPrimAPI_MakePrism referencePrism(referenceFaces, gp_Vec(referenceSketch.plane.normalX,
-                                                                referenceSketch.plane.normalY,
-                                                                referenceSketch.plane.normalZ) *
-                                                             parameters.distance);
-    const auto reference = kernel::ShapeOperations::fuseWithHistory(referenceSupportBody.shape,
-                                                                    referencePrism.Shape());
-    const auto referenceToolEdges =
-        extrusionEdgeOrigins(descriptor.id, sketchId, referenceProfiles, referencePrism);
-    const TopoDS_Shape referenceResult = reference.shape;
-    auto referenceOrigins =
-        continueSupportOrigins(findFeature(outputs, supportId).referenceSupportOrigins, reference);
-    std::vector<SupportProvenance> referenceCaps;
-    for (const auto& profile : referenceProfiles) {
-        const auto cap = referencePrism.LastShape(profile.face);
-        referenceCaps.push_back({{descriptor.id, std::nullopt, profile.boundary},
-                                 {cap},
-                                 kernel::HistoryCoverage::complete,
-                                 cap});
-    }
-    const auto continuedCaps =
-        continueSupportOrigins(referenceCaps, reference, kernel::HistoryOperand::second);
-    referenceOrigins.insert(referenceOrigins.end(), continuedCaps.begin(), continuedCaps.end());
-    auto origins =
-        continueSupportOrigins(findFeature(outputs, supportId).supportOrigins, evaluated);
-    auto caps = continueSupportOrigins(capOrigins, evaluated, kernel::HistoryOperand::second);
-    origins.insert(origins.end(), caps.begin(), caps.end());
-    auto edges = continueEdgeOrigins(findFeature(outputs, supportId).edgeOrigins, evaluated);
-    const auto continuedToolEdges =
-        continueEdgeOrigins(toolEdges, evaluated, kernel::HistoryOperand::second);
-    edges.insert(edges.end(), continuedToolEdges.begin(), continuedToolEdges.end());
-    auto referenceEdges =
-        continueEdgeOrigins(findFeature(outputs, supportId).referenceEdgeOrigins, reference);
-    const auto continuedReferenceEdges =
-        continueEdgeOrigins(referenceToolEdges, reference, kernel::HistoryOperand::second);
-    referenceEdges.insert(referenceEdges.end(), continuedReferenceEdges.begin(),
-                          continuedReferenceEdges.end());
-    outputs.push_back(EvaluatedFeature{descriptor.id,
-                                       result,
-                                       referenceResult,
-                                       supportBody.bodyId,
-                                       std::move(origins),
-                                       {},
-                                       std::move(referenceOrigins),
-                                       std::move(edges),
-                                       std::move(referenceEdges)});
-    supportBody.sourceFeature = descriptor.id;
-    supportBody.shape = result;
-    referenceSupportBody.sourceFeature = descriptor.id;
-    referenceSupportBody.shape = referenceResult;
-}
-
 } // namespace
 
 FeatureEvaluationError::FeatureEvaluationError(document::FeatureId featureId, std::string message)
@@ -397,7 +274,7 @@ void runFeature(const document::DocumentSnapshot& document,
         evaluateSketch(document, descriptor, outputs);
         break;
     case document::FeatureKind::extrusion:
-        evaluateExtrusion(document, descriptor, outputs, bodies, references);
+        detail::evaluateExtrusion(document, descriptor, outputs, bodies, references);
         break;
     }
 }

@@ -31,6 +31,8 @@ constexpr const char* evaluationNames[] = {"valid", "dirty", "failed", "blockedB
 constexpr const char* featureKinds[] = {"box", "cylinder", "sketch", "extrusion"};
 constexpr const char* runtimeNames[] = {"current", "error", "blocked"};
 constexpr const char* cylinderModes[] = {"join", "cut", "intersect", "separate"};
+// Indexed by ExtrusionOperation (newBody = 1).
+constexpr const char* operationNames[] = {"", "newBody", "join", "cut"};
 
 template <class Enum, std::size_t N> const char* name(const char* const (&names)[N], Enum value) {
     return names[static_cast<std::size_t>(value)];
@@ -101,6 +103,23 @@ void insertSketchFace(QJsonObject& json, const application::CadSession& session,
         return; // The support is not current; the feature state explains why.
     }
     json.insert("frame", detail::encodeSketchFrame(parameters.plane));
+}
+
+// T02: the operation in effect, also for extrusions that predate the choice.
+void insertExtrusionMode(QJsonObject& json, const document::DocumentSnapshot& snapshot,
+                         const document::FeatureDescriptor& feature) {
+    const auto& extrusion = snapshot.extrusionParameters(feature.id);
+    const auto features = snapshot.features();
+    const auto sketch =
+        std::ranges::find(features, *feature.inputFeature, &document::FeatureDescriptor::id);
+    const bool baseSketch = sketch != features.end() && !sketch->inputFeature;
+    auto parameters = json.value("parameters").toObject();
+    parameters.insert("operation",
+                      name(operationNames, document::effectiveOperation(extrusion, baseSketch)));
+    parameters.insert("direction", extrusion.reversed ? "reversed" : "normal");
+    if (extrusion.target)
+        parameters.insert("targetBodyId", id(extrusion.target->value()));
+    json.insert("parameters", parameters);
 }
 
 QJsonArray toolsFor(const std::vector<ActionKind>& actions) {
@@ -175,6 +194,8 @@ QJsonObject encodeContext(const application::CadSession& session) {
         }
         if (feature.kind == document::FeatureKind::sketch)
             insertSketchFace(json, session, feature.id);
+        if (feature.kind == document::FeatureKind::extrusion)
+            insertExtrusionMode(json, snapshot, feature);
         const auto regions = std::ranges::find(context.sketchRegions, feature.id,
                                                &application::SketchRegionsSummary::sketch);
         if (regions != context.sketchRegions.end()) {

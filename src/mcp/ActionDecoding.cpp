@@ -60,6 +60,20 @@ document::SketchParameters editedSketch(const JsonReader& reader, const CadSessi
     return sketch;
 }
 
+constexpr const char* operationNames[] = {"newBody", "join", "cut"};
+constexpr const char* directionNames[] = {"normal", "reversed"};
+// T02: optional operation, direction and target body of a new extrusion.
+application::ExtrusionMode extrusionMode(const JsonReader& reader) {
+    application::ExtrusionMode mode;
+    if (reader.has("operation"))
+        mode.operation =
+            static_cast<document::ExtrusionOperation>(reader.choice("operation", operationNames) + 1);
+    mode.reversed = reader.has("direction") && reader.choice("direction", directionNames) == 1;
+    if (const auto target = reader.optionalId("targetBodyId"))
+        mode.target = document::BodyId{*target};
+    return mode;
+}
+
 using Decoder = Action (*)(const JsonReader&, const CadSession&);
 struct ToolDecoder final {
     const char* name;
@@ -140,12 +154,14 @@ const ToolDecoder decoders[] = {
     {"create_profile_extrusion",
      [](const JsonReader& r, const CadSession&) -> Action {
          return application::CreateProfileExtrusionAction{feature(r, "sketchId"), regions(r),
-                                                           readQuantity(r, "distance")};
+                                                           readQuantity(r, "distance"),
+                                                           extrusionMode(r)};
      }},
     {"create_sketch_extrusion",
      [](const JsonReader& r, const CadSession& s) -> Action {
          return application::CreateSketchExtrusionAction{newSketch(r, s), regions(r),
-                                                          readQuantity(r, "distance")};
+                                                          readQuantity(r, "distance"),
+                                                          extrusionMode(r)};
      }},
     {"set_extrusion_distance",
      [](const JsonReader& r, const CadSession&) -> Action {

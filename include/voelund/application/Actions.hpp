@@ -73,6 +73,7 @@ struct CreateProfileExtrusionAction final {
     document::FeatureId sketch;
     std::vector<document::SketchRegionId> regions;
     Quantity distance;
+    ExtrusionMode mode{}; // T02
     bool operator==(const CreateProfileExtrusionAction&) const = default;
 };
 struct SetExtrusionDistanceAction final {
@@ -135,6 +136,7 @@ struct CreateSketchExtrusionAction final {
     document::SketchParameters sketch;
     std::vector<document::SketchRegionId> regions;
     Quantity distance;
+    ExtrusionMode mode{}; // T02
     bool operator==(const CreateSketchExtrusionAction&) const = default;
 };
 struct SetPlacementAction final {

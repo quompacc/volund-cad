@@ -53,6 +53,15 @@ struct ModelOutline final {
     std::vector<document::FeatureId> loose;
 };
 
+// T02: operation, direction and target body of a new extrusion. The default keeps the
+// earlier rule (document::effectiveOperation).
+struct ExtrusionMode final {
+    std::optional<document::ExtrusionOperation> operation{};
+    bool reversed{false};
+    std::optional<document::BodyId> target{};
+    bool operator==(const ExtrusionMode&) const = default;
+};
+
 // PAR01: deleting a parameter that is still bound is refused unless its uses are first
 // switched to their current fixed values (docs/parameter-table.md, rule 6).
 enum class ParameterDeletion { refuseWhenUsed, unbindUses };
@@ -166,14 +175,14 @@ class CadSession final {
     [[nodiscard]] CommandResult
     createSketchProfileExtrusion(document::FeatureId sketchFeature,
                                  std::span<const document::SketchRegionId> profileIds,
-                                 double distance = 10.0);
+                                 double distance = 10.0, const ExtrusionMode& mode = {});
     // AI02c: a base-plane sketch and its extrusion as one transaction and one undo step.
     // The regions resolve against the new sketch. Empty fills nested contours alternately:
     // the outer region, not the inside of its holes, again islands inside those.
     [[nodiscard]] CommandResult
     createDatumSketchExtrusion(const document::SketchParameters& sketch,
                                std::span<const document::SketchRegionId> regions,
-                               double distance);
+                               double distance, const ExtrusionMode& mode = {});
     [[nodiscard]] bool canAddCylinder() const noexcept;
     [[nodiscard]] bool canAddCylinder(document::FeatureId inputFeature) const noexcept;
     // The feature whose placement moves this feature's result, if any.

@@ -166,17 +166,13 @@ std::vector<FeatureBodyIdentity> validate(std::span<const FeatureDescriptor> fea
     }
     // Includes unique/non-reserved IDs, input kinds, missing references and cycles.
     auto assignments = legacyBodyIdentities(features, parameters);
-    std::map<std::uint64_t, std::size_t> indices;
-    for (std::size_t index = 0; index < features.size(); ++index)
-        indices.emplace(features[index].id.value(), index);
-    // Sketches create no solid. Store them in their validated support body's group; a
-    // base-plane sketch opens its own body group (BodyId = its FeatureId, schema 6).
+    // Sketches create no solid. Store them in the group of the body they work on: the
+    // support's body, a base-plane sketch's own body (BodyId = its FeatureId, schema 6) or
+    // the body its prisms all name (schema 8).
+    const auto contexts = featureBodyContexts(features, parameters);
     for (std::size_t index = 0; index < features.size(); ++index)
         if (features[index].kind == FeatureKind::sketch)
-            assignments[index].body =
-                features[index].inputFeature
-                    ? assignments[indices.at(features[index].inputFeature->value())].body
-                    : BodyId{features[index].id.value()};
+            assignments[index].body = contexts[index];
     return assignments;
 }
 FeatureParameters parameters(const TDF_Label& feature, bool box) {

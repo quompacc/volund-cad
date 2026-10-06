@@ -29,7 +29,8 @@ const QString instructions = QStringLiteral(
     "never applied twice. After a staleStamp rejection call get_context again. Every change "
     "is one undo step for the user. A sketch on a base plane starts a new body; to add to a "
     "body (e.g. a rib on a plate), sketch on one of its faces with create_sketch_on_face, "
-    "and the extrusion joins that body.");
+    "and the extrusion joins that body. For a pocket or a hole, extrude with operation cut "
+    "and direction reversed (into the body).");
 } // namespace
 
 const QStringList& McpProtocol::supportedVersions() {

@@ -2,8 +2,13 @@
 #include <voelund/document/FeatureId.hpp>
 #include <span>
 #include <vector>
+#include <optional>
 namespace voelund::document { class DocumentSnapshot; }
 namespace voelund::features {
+// T02: a join or cut of a base-plane sketch works on its target body as the latest earlier
+// feature (document order) left it; nullopt without a target or before the body's first solid.
+[[nodiscard]] std::optional<document::FeatureId>
+targetProducer(const document::DocumentSnapshot& snapshot, document::FeatureId extrusion);
 struct FeatureInputs final {
     document::FeatureId feature;
     std::vector<document::FeatureId> inputs;

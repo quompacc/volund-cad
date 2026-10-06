@@ -7,6 +7,7 @@
 
 #include <functional>
 #include <optional>
+#include <string>
 #include <vector>
 
 namespace voelund::application {
@@ -29,6 +30,7 @@ class SketchExtrusionToolController final {
 
   private:
     void setDistance(double distance);
+    void choose(const std::string& choice, int index);
     void accept();
 
     application::CadSession& session_;
@@ -39,6 +41,12 @@ class SketchExtrusionToolController final {
     std::optional<application::DocumentStamp> supportStamp_;
     std::vector<document::SketchRegionId> profileIds_;
     double distance_{1.0};
+    // T02: result, direction and, for a base-plane sketch, the body a join or cut works on.
+    document::ExtrusionOperation operation_{document::ExtrusionOperation::newBody};
+    bool reversed_{false};
+    bool baseSketch_{false};
+    std::vector<document::BodyId> targets_;
+    std::optional<document::BodyId> target_;
     bool active_{false};
 };
 

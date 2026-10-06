@@ -90,6 +90,22 @@ QJsonObject sketchSchema(bool withPlane) {
                   "regions; a contour inside another one makes a hole.");
 }
 
+// T02: what a new extrusion does; all optional.
+void insertExtrusionMode(QJsonObject& properties) {
+    properties.insert(
+        "operation",
+        choice({"newBody", "join", "cut"},
+               "newBody, join or cut. Default: a base-plane sketch makes a new body, a face "
+               "sketch joins its body. A join must touch the body, a cut must remove material"));
+    properties.insert("direction",
+                      choice({"normal", "reversed"},
+                             "Along the sketch normal (default) or against it, e.g. a cut "
+                             "from a face into its body"));
+    properties.insert("targetBodyId",
+                      typed("integer", "Join or cut of a base-plane sketch: the body id from "
+                                       "get_context. A face sketch always works on its body"));
+}
+
 // Every mutating tool: the request envelope plus its own fields.
 ToolDefinition action(const char* name, const QString& description, QJsonObject properties,
                       QStringList required) {
@@ -174,22 +190,26 @@ std::vector<ToolDefinition> makeCatalog() {
                            "Replace elements and constraints of a sketch; its plane stays.",
                            {{"sketchId", featureId("sketch")}, {"sketch", sketchSchema(false)}},
                            {"sketchId", "sketch"}));
-    tools.push_back(action(
-        "create_profile_extrusion", "Extrude regions of an existing sketch.",
-        {{"sketchId", featureId("sketch")},
-         {"regions", QJsonObject{{"type", "array"},
-                                 {"items", typed("string", "region id from get_context")}}},
-         {"distance", length("extrusion distance")}},
-        {"sketchId", "regions", "distance"}));
+    QJsonObject profileExtrusion{
+        {"sketchId", featureId("sketch")},
+        {"regions",
+         QJsonObject{{"type", "array"}, {"items", typed("string", "region id from get_context")}}},
+        {"distance", length("extrusion distance")}};
+    insertExtrusionMode(profileExtrusion);
+    tools.push_back(action("create_profile_extrusion",
+                           "Extrude regions of an existing sketch: a new body, joined to a body "
+                           "or cut from it.",
+                           profileExtrusion, {"sketchId", "regions", "distance"}));
+    QJsonObject sketchExtrusion{{"sketch", sketchSchema(true)},
+                                {"regions", QJsonObject{{"type", "array"}, {"items", typed("string")}}},
+                                {"distance", length("extrusion distance")}};
+    insertExtrusionMode(sketchExtrusion);
     tools.push_back(action(
         "create_sketch_extrusion",
         "Create a base-plane sketch and extrude it in one step (one undo step). Without "
         "regions, nested contours alternate as in a drawing: the outer contour is filled and "
         "a contour inside it makes a hole (e.g. a plate with bores).",
-        {{"sketch", sketchSchema(true)},
-         {"regions", QJsonObject{{"type", "array"}, {"items", typed("string")}}},
-         {"distance", length("extrusion distance")}},
-        {"sketch", "distance"}));
+        sketchExtrusion, {"sketch", "distance"}));
     tools.push_back(action("set_extrusion_distance",
                            "Change an unbound extrusion distance (bound ones follow their "
                            "parameter).",

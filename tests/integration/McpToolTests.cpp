@@ -299,6 +299,74 @@ void ribOnPlate() {
             "Rejected face sketches change nothing");
 }
 
+// T02: operation, direction and target body over MCP; the context shows the operation in
+// effect, also for an extrusion that predates the choice.
+void extrusionOperations() {
+    application::CadSession session;
+    session.newDocument();
+    Client client(session);
+    const auto rectangle = [](double x0, double y0, double x1, double y1) {
+        return QJsonObject{{"plane", "xy"},
+                           {"elements", QJsonArray{QJsonObject{{"id", 1},
+                                                               {"type", "rectangle"},
+                                                               {"first", QJsonArray{x0, y0}},
+                                                               {"second", QJsonArray{x1, y1}}}}}};
+    };
+    auto result = client.committed("create_sketch_extrusion",
+                                   {{"sketch", rectangle(-40, -20, 40, 20)}, {"distance", mm(10)}});
+    const int plateExtrusion = result.value("createdFeatures").toArray().at(1).toInt();
+    auto context = client.context();
+    const auto body = context.value("bodies").toArray().at(0).toObject().value("id");
+    auto parameters = context.value("features").toArray().at(1).toObject().value("parameters").toObject();
+    require(parameters.value("operation") == QLatin1String("newBody") &&
+                parameters.value("direction") == QLatin1String("normal"),
+            "An extrusion without a choice reports the earlier rule: " + text(parameters));
+
+    const auto face = topFace(context);
+    const QJsonObject pocket{{"elements", QJsonArray{QJsonObject{{"id", 1},
+                                                                 {"type", "rectangle"},
+                                                                 {"first", onFace(face, -10, 5)},
+                                                                 {"second", onFace(face, 10, 15)}}}}};
+    result = client.committed("create_sketch_on_face", {{"supportId", plateExtrusion},
+                                                        {"face", face.value("face")},
+                                                        {"sketch", pocket}});
+    const int pocketSketch = result.value("feature").toInt();
+    const auto regions = client.context().value("features").toArray().at(2).toObject().value("regions").toArray();
+    client.committed("create_profile_extrusion",
+                     {{"sketchId", pocketSketch},
+                      {"regions", QJsonArray{regions.at(0).toObject().value("id")}},
+                      {"distance", mm(4)},
+                      {"operation", "cut"},
+                      {"direction", "reversed"}});
+    require(session.validBodies().size() == 1 && near(test::volumeOf(session.currentShape()), 32000 - 800),
+            "A pocket cut from the top face");
+    client.committed("create_sketch_extrusion", {{"sketch", rectangle(30, -5, 60, 5)},
+                                                 {"distance", mm(10)},
+                                                 {"operation", "join"},
+                                                 {"targetBodyId", body}});
+    context = client.context();
+    parameters = context.value("features").toArray().at(5).toObject().value("parameters").toObject();
+    require(session.validBodies().size() == 1 &&
+                near(test::volumeOf(session.currentShape()), 32000 - 800 + 2000) &&
+                parameters.value("operation") == QLatin1String("join") &&
+                parameters.value("targetBodyId") == body &&
+                context.value("bodies").toArray().size() == 1,
+            "A base-plane join into the named body: " + text(parameters));
+    const auto changes = client.changes;
+    result = client.call("create_sketch_extrusion", {{"sketch", rectangle(100, 0, 110, 10)},
+                                                     {"distance", mm(10)},
+                                                     {"operation", "join"},
+                                                     {"targetBodyId", body}});
+    require(result.value("status") == QLatin1String("rejected") && client.changes == changes,
+            "A join that does not touch is rejected: " + text(result));
+    result = client.call("create_profile_extrusion", {{"sketchId", pocketSketch},
+                                                      {"regions", QJsonArray{}},
+                                                      {"distance", mm(1)},
+                                                      {"operation", "subtract"}});
+    require(client.isError && result.value("field") == QLatin1String("operation"),
+            "An unknown operation is an argument error");
+}
+
 // A box offers its planar sides by role.
 void boxFaces() {
     application::CadSession session;
@@ -394,6 +462,7 @@ int main() {
         catalog();
         plateWithBore();
         ribOnPlate();
+        extrusionOperations();
         boxFaces();
         rejections();
         return EXIT_SUCCESS;
