@@ -92,7 +92,8 @@ void SketchEditorToolController::refreshPresentation() {
     elements.reserve(evaluated.size());
     for (const features::EvaluatedSketchElement& element : evaluated) {
         auto presentation =
-            makeSceneSketchElement(element, editor_->isElementConflicting(element.id));
+            makeSceneSketchElement(element, editor_->isElementConflicting(element.id),
+                                   editor_->isElementDetermined(element.id));
         if (std::ranges::find(editor_->elements(), element.id, &document::SketchElement::id) ==
             editor_->elements().end())
             presentation.points.clear();

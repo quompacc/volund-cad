@@ -1,7 +1,11 @@
 #include "CommandInput.hpp"
 #include <voelund/application/CadSession.hpp>
 
+#include <voelund/features/SketchEvaluation.hpp>
 #include <voelund/features/SketchRegionIdentity.hpp>
+
+#include <BRepClass_FaceClassifier.hxx>
+#include <gp_Pnt.hxx>
 
 #include <algorithm>
 #include <cmath>
@@ -94,6 +98,47 @@ bool CadSession::selectSketchProfileByElement(document::SketchElementId elementI
     else if (selected == selectedSketchProfiles_.end())
         selectedSketchProfiles_.push_back(*region);
     selectedSketchElement_ = elementId;
+    return true;
+}
+
+bool CadSession::selectSketchProfileAt(document::FeatureId sketch,
+                                       const std::array<double, 3>& point, bool additive) {
+    if (!isSketch(document_, sketch))
+        return false;
+    const auto& parameters = document_.sketchParameters(sketch);
+    const auto identities = features::identifySketchRegions(parameters.elements.values);
+    const gp_Pnt location(point[0], point[1], point[2]);
+    std::optional<std::size_t> found;
+    for (std::size_t index = 0; index < identities.ids.size(); ++index) {
+        if (identities.ambiguous(index))
+            continue;
+        std::vector<features::EvaluatedProfileFace> faces;
+        try {
+            faces = features::evaluateRegionFaces(parameters, std::span(&identities.ids[index], 1));
+        } catch (const std::exception&) {
+            continue; // A region that cannot become a face cannot be picked by area.
+        }
+        const bool inside = std::ranges::any_of(faces, [&](const auto& face) {
+            return BRepClass_FaceClassifier(face.face, location, 1e-6).State() == TopAbs_IN;
+        });
+        // Cells do not overlap; the smallest wins should faces of nested regions both claim it.
+        if (inside && (!found || identities.regions.regions[index].area <
+                                     identities.regions.regions[*found].area))
+            found = index;
+    }
+    if (!found)
+        return false;
+    const auto& region = identities.ids[*found];
+    if (selectedFeature_ != sketch || !additive) {
+        selectedFeature_ = sketch;
+        selectedSketchProfiles_.clear();
+    }
+    const auto selected = std::ranges::find(selectedSketchProfiles_, region);
+    if (additive && selected != selectedSketchProfiles_.end())
+        selectedSketchProfiles_.erase(selected);
+    else if (selected == selectedSketchProfiles_.end())
+        selectedSketchProfiles_.push_back(region);
+    selectedSketchElement_.reset();
     return true;
 }
 

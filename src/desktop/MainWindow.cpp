@@ -33,6 +33,10 @@
 #include <QSignalBlocker>
 #include <QStatusBar>
 #include <QVBoxLayout>
+
+#include <algorithm>
+#include <array>
+#include <cmath>
 #include <QWidget>
 
 #include <memory>
@@ -193,6 +197,10 @@ void MainWindow::connectInteractions() {
         [this](viewport::BasePlane plane) { selectBasePlane(static_cast<int>(plane)); });
     // A click into empty space selects nothing: no plane, face or feature (user report).
     impl_->viewport->setEmptySelectionHandler([this] {
+        if (impl_->sketchEditorTool->isActive()) {
+            impl_->sketchEditorTool->clearSelection();
+            return;
+        }
         if (impl_->shell().toolBlocksCommands())
             return;
         impl_->selectedDatum.reset();
@@ -216,8 +224,63 @@ void MainWindow::connectInteractions() {
     });
     impl_->viewport->setSketchConstraintEditHandler(
         [this](std::uint64_t id) { impl_->sketchEditorTool->editConstraint(id); });
+    // A picked sketch region shows its boundary elements as selected.
+    const auto showSelectedProfiles = [this] {
+        const auto selectedElements = impl_->session.selectedSketchProfileElements();
+        std::vector<std::uint64_t> selectedIds;
+        selectedIds.reserve(selectedElements.size());
+        for (document::SketchElementId selected : selectedElements)
+            selectedIds.push_back(selected.value());
+        impl_->viewport->setSelectedSketchElements(selectedIds);
+        impl_->selectedDatum.reset();
+        impl_->selectedPlanarFace.reset();
+        impl_->modelTree->selectFeature(*impl_->session.selectedFeature());
+        syncTimeline();
+        syncProperties();
+        syncShell();
+        statusBar()->showMessage(tr("Skizzenbereich gewählt"), 2000);
+    };
+    // A click into the area of a visible sketch region picks it (user report 2026-10-05).
+    impl_->viewport->setAreaClickHandler([this, showSelectedProfiles](const viewport::ViewRay& ray) {
+        if (impl_->shell().toolBlocksCommands())
+            return false;
+        const auto outline = impl_->session.modelOutline();
+        const auto hidden = [&](document::FeatureId feature) {
+            for (const auto& body : outline.bodies)
+                if (std::ranges::find(body.features, feature) != body.features.end())
+                    return impl_->visibility.hiddenBodies.contains(body.id.value());
+            return false;
+        };
+        std::vector<std::pair<double, document::FeatureId>> crossings;
+        for (const auto& feature : impl_->session.features()) {
+            if (feature.kind != document::FeatureKind::sketch || hidden(feature.id))
+                continue;
+            const auto& plane = impl_->session.sketchParameters(feature.id).plane;
+            const double normal[3]{plane.normalX, plane.normalY, plane.normalZ};
+            const double along = normal[0] * ray.direction[0] + normal[1] * ray.direction[1] +
+                                 normal[2] * ray.direction[2];
+            if (std::abs(along) < 1e-9)
+                continue; // Looking along the plane.
+            const double distance = (normal[0] * (plane.originX - ray.origin[0]) +
+                                     normal[1] * (plane.originY - ray.origin[1]) +
+                                     normal[2] * (plane.originZ - ray.origin[2])) /
+                                    along;
+            crossings.emplace_back(distance, feature.id);
+        }
+        std::ranges::sort(crossings, {}, &std::pair<double, document::FeatureId>::first);
+        for (const auto& [distance, sketch] : crossings) {
+            const std::array<double, 3> point{ray.origin[0] + distance * ray.direction[0],
+                                              ray.origin[1] + distance * ray.direction[1],
+                                              ray.origin[2] + distance * ray.direction[2]};
+            if (impl_->session.selectSketchProfileAt(sketch, point, ray.additive)) {
+                showSelectedProfiles();
+                return true;
+            }
+        }
+        return false;
+    });
     impl_->viewport->setSketchElementSelectionHandler(
-        [this](const viewport::SketchSelectionIntent& intent) {
+        [this, showSelectedProfiles](const viewport::SketchSelectionIntent& intent) {
             if (impl_->sketchEditorTool->isActive()) {
                 static_cast<void>(impl_->sketchEditorTool->selectElement(intent));
                 return;
@@ -225,15 +288,7 @@ void MainWindow::connectInteractions() {
             const std::uint64_t id = intent.elementId;
             if (impl_->session.selectSketchProfileByElement(document::SketchElementId{id},
                                                             intent.additive)) {
-                const auto selectedElements = impl_->session.selectedSketchProfileElements();
-                std::vector<std::uint64_t> selectedIds;
-                selectedIds.reserve(selectedElements.size());
-                for (document::SketchElementId selected : selectedElements)
-                    selectedIds.push_back(selected.value());
-                impl_->viewport->setSelectedSketchElements(selectedIds);
-                syncProperties();
-                syncShell();
-                statusBar()->showMessage(tr("Skizzenbereich gewählt"), 2000);
+                showSelectedProfiles();
                 return;
             }
             if (!intent.additive &&

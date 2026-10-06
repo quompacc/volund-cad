@@ -129,6 +129,31 @@ void sketchRail() {
     test::render(*viewport);
     capture(window, "8-sketch-rail-dark");
     command(window, "view.theme").trigger();
+
+    // Determination (user decision 2026-10-05): a rectangle, its top side fixed, one side as
+    // construction geometry.
+    const auto clickAt = [&](double x, double y) {
+        const QPoint point = viewport::ViewportTestAccess::project(*viewport, x, y, 0);
+        test::mouse(*viewport, QEvent::MouseMove, point, Qt::NoButton, Qt::NoButton);
+        test::mouse(*viewport, QEvent::MouseButtonPress, point, Qt::LeftButton, Qt::LeftButton);
+        test::mouse(*viewport, QEvent::MouseButtonRelease, point, Qt::LeftButton, Qt::NoButton);
+        test::render(*viewport);
+        settle();
+    };
+    command(window, "sketch.tool.rectangle").trigger();
+    clickAt(-30, -15);
+    clickAt(30, 15);
+    command(window, "sketch.tool.line").trigger();
+    clickAt(-30, -15);
+    clickAt(30, 15);
+    command(window, "sketch.tool.select").trigger();
+    clickAt(15, 7.5);
+    command(window, "sketch.construction").trigger();
+    clickAt(0, 15);
+    command(window, "sketch.fixed").trigger();
+    clickAt(200, 200);
+    test::render(*viewport);
+    capture(window, "9-sketch-state");
 }
 } // namespace
 

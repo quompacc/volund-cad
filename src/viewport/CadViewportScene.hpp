@@ -104,6 +104,8 @@ class CadViewportScene {
             context->Redisplay(presentation.shape, false);
         }
         refreshBasePlanes();
+        sketchPresentation.setColors(occtColor(theme.sketchFree), occtColor(theme.sketchDetermined));
+        sketchPresentation.select(context, selectedSketchElements);
     }
 
     void displayPendingBodies() {
@@ -269,6 +271,7 @@ class CadViewportScene {
     std::function<void(const PlanarFaceSelection&)> planarFaceSelectionHandler;
     std::function<void(BasePlane)> basePlaneSelectionHandler;
     std::function<void()> emptySelectionHandler;
+    std::function<bool(const ViewRay&)> areaClickHandler;
     BasePlanePresentation basePlanes;
     bool basePlanesFitted{false};
     std::function<void(const std::optional<SketchElementIntent>&)> sketchEditorPreviewHandler;

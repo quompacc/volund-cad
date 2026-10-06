@@ -49,22 +49,29 @@ void SketchEditorToolController::syncConstraintState() {
     panel_.setActionEnabled("undo_sketch", editor_->canUndo());
     panel_.setActionEnabled("redo_sketch", editor_->canRedo());
     panel_.setAcceptEnabled(editor_->canAccept());
+    // The state stays visible in its own line; tool hints use the guidance below it (user
+    // request 2026-10-05). Geometry is colored by the same state.
     const auto& result = editor_->lastSolveResult();
     if (result.status == features::SketchSolveStatus::conflicting) {
-        panel_.setGuidance(
-            QObject::tr("Widersprüchliche Skizze: %1 widersprüchliche Bedingung(en).")
-                .arg(result.conflictingConstraints.size()));
+        panel_.setStatus(QObject::tr("Widerspruch: %1 Bedingung(en)")
+                             .arg(result.conflictingConstraints.size()));
+        panel_.setGuidance(QObject::tr("Rote Geometrie widerspricht sich. Entferne eine "
+                                       "Bedingung oder mache rückgängig."));
     } else if (result.status == features::SketchSolveStatus::failed) {
-        panel_.setGuidance(QObject::tr("Skizzenlöser fehlgeschlagen. Korrigiere die Skizze oder "
-                                       "mache rückgängig; OK ist gesperrt."));
-    } else if (result.degreesOfFreedom == 0) {
-        panel_.setGuidance(QObject::tr("Skizze vollständig bestimmt."));
-    } else if (result.degreesOfFreedom > 0) {
-        panel_.setGuidance(QObject::tr("Skizze unterbestimmt: %1 Freiheitsgrad(e). "
-                                       "Strg-Klick fügt Bezüge für Beziehungen hinzu.")
-                               .arg(result.degreesOfFreedom));
-    } else {
+        panel_.setStatus(QObject::tr("Löser fehlgeschlagen"));
+        panel_.setGuidance(QObject::tr("Korrigiere die Skizze oder mache rückgängig; OK ist "
+                                       "gesperrt."));
+    } else if (editor_->elements().empty()) {
+        panel_.setStatus({});
         panel_.setGuidance(QObject::tr("Zeichne Skizzengeometrie, um zu beginnen."));
+    } else if (result.degreesOfFreedom == 0) {
+        panel_.setStatus(QObject::tr("✓ Vollständig bestimmt"), true);
+        panel_.setGuidance(QObject::tr("Alle Elemente sind festgelegt (dunkel)."));
+    } else {
+        panel_.setStatus(QObject::tr("Freiheitsgrade: %1").arg(result.degreesOfFreedom));
+        panel_.setGuidance(QObject::tr("Blaue Elemente sind noch frei. Bemaßungen und "
+                                       "Beziehungen legen sie fest; Strg-Klick wählt mehrere "
+                                       "Bezüge."));
     }
 }
 

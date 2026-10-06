@@ -13,6 +13,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QShortcut>
+#include <QStyle>
 #include <QSignalBlocker>
 #include <QSizePolicy>
 #include <QTabWidget>
@@ -75,6 +76,9 @@ ToolPanelHost::ToolPanelHost(QWidget* host)
     auto* layout = new QVBoxLayout(content_);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(7);
+    status_ = new QLabel(content_);
+    status_->setObjectName(QStringLiteral("toolStatus"));
+    status_->hide();
     guidance_ = new QLabel(content_);
     guidance_->setWordWrap(true);
     guidance_->setObjectName(QStringLiteral("toolGuidance"));
@@ -127,6 +131,7 @@ ToolPanelHost::ToolPanelHost(QWidget* host)
     buttons->addStretch();
     buttons->addWidget(acceptButton_);
     buttons->addWidget(cancelButton_);
+    layout->addWidget(status_);
     layout->addWidget(guidance_);
     layout->addWidget(parameterContainer_);
     layout->addWidget(actionTabs_, 1);
@@ -152,6 +157,7 @@ void ToolPanelHost::begin(ToolPanelDefinition definition) {
     definition_ = std::move(definition);
     setTitle(definition_.title);
     guidance_->setText(definition_.guidance);
+    setStatus({});
     for (const ToolLengthParameter& parameter : definition_.lengthParameters) {
         QDoubleSpinBox* input = makeLengthInput(content_);
         input->setRange(parameter.minimum, parameter.maximum);
@@ -329,6 +335,14 @@ void ToolPanelHost::setErrorCommitHandler(std::function<void()> handler) {
 }
 
 void ToolPanelHost::setGuidance(const QString& guidance) { guidance_->setText(guidance); }
+
+void ToolPanelHost::setStatus(const QString& status, bool good) {
+    status_->setText(status);
+    status_->setVisible(!status.isEmpty());
+    status_->setProperty("good", good);
+    status_->style()->unpolish(status_);
+    status_->style()->polish(status_);
+}
 
 void ToolPanelHost::setLengthValue(const std::string& parameterId, double value) {
     for (const auto& [id, input] : lengthInputs_) {

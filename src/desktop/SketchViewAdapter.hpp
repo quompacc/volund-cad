@@ -17,7 +17,8 @@ void setSupportProjection(viewport::PlanarFaceSelection& support,
                           const application::SketchSupportProjection& projection);
 
 [[nodiscard]] viewport::SceneSketchElement
-makeSceneSketchElement(const features::EvaluatedSketchElement& element, bool conflicting = false);
+makeSceneSketchElement(const features::EvaluatedSketchElement& element, bool conflicting = false,
+                       bool determined = false);
 [[nodiscard]] std::vector<viewport::SceneSketchElement>
 makeSceneSketchElements(const application::CadSession& session);
 [[nodiscard]] QString sketchSelectionSummary(const application::CadSession& session);

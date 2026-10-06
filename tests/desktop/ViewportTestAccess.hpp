@@ -38,6 +38,12 @@ class ViewportTestAccess {
             return std::nullopt;
         return owner->Shape().ShapeType();
     }
+    static std::optional<Quantity_Color> sketchElementColor(CadViewport& v, std::uint64_t id) {
+        return v.impl_->sketchPresentation.color(id);
+    }
+    static std::optional<bool> sketchElementDashed(CadViewport& v, std::uint64_t id) {
+        return v.impl_->sketchPresentation.dashed(id);
+    }
     static occ::handle<Graphic3d_Camera> camera(CadViewport& v) {
         return new Graphic3d_Camera(v.impl_->view->Camera());
     }

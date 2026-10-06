@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include <utility>
 #include <variant>
+#include <set>
 #include <vector>
 
 namespace voelund::features {
@@ -199,7 +200,10 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
     ArcMap arcs;
     PointMap centers;
     GCS::VEC_pD unknowns;
+    // Unknowns of each element, to tell free from fully determined elements.
+    std::vector<std::pair<document::SketchElementId, std::size_t>> unknownStarts;
     for (document::SketchElement& element : sketch.elements.values) {
+        unknownStarts.emplace_back(element.id, unknowns.size());
         if (std::holds_alternative<document::SketchLine>(element.geometry)) {
             auto& state = states.emplace_back(std::in_place_type<LineState>, element);
             auto& line = std::get<LineState>(state);
@@ -427,6 +431,18 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
     system.getConflicting(conflictingTags);
     SketchSolveResult result;
     result.degreesOfFreedom = system.dofsNumber();
+    GCS::VEC_pD dependent;
+    system.getDependentParams(dependent);
+    const std::set<double*> freeParameters(dependent.begin(), dependent.end());
+    for (std::size_t index = 0; index < unknownStarts.size(); ++index) {
+        const auto end =
+            index + 1 < unknownStarts.size() ? unknownStarts[index + 1].second : unknowns.size();
+        for (auto parameter = unknownStarts[index].second; parameter < end; ++parameter)
+            if (freeParameters.contains(unknowns[parameter])) {
+                result.freeElements.push_back(unknownStarts[index].first);
+                break;
+            }
+    }
     for (int tag : conflictingTags) {
         if (tag > 0 && static_cast<std::size_t>(tag) <= tags.size())
             result.conflictingConstraints.push_back(tags[static_cast<std::size_t>(tag - 1)]);

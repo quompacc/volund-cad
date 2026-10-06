@@ -76,11 +76,13 @@ struct SceneSketchElement final {
     bool conflicting;
     bool construction;
     std::vector<SceneSketchPoint> points;
+    bool determined{false}; // No degree of freedom left.
 
     SceneSketchElement(std::uint64_t elementId, TopoDS_Shape elementShape, bool hasConflict = false,
-                       bool isConstruction = false, std::vector<SceneSketchPoint> snapPoints = {})
+                       bool isConstruction = false, std::vector<SceneSketchPoint> snapPoints = {},
+                       bool isDetermined = false)
         : id(elementId), shape(std::move(elementShape)), conflicting(hasConflict),
-          construction(isConstruction), points(std::move(snapPoints)) {}
+          construction(isConstruction), points(std::move(snapPoints)), determined(isDetermined) {}
 };
 
 struct SketchPointReferenceIntent final {
@@ -177,6 +179,13 @@ struct CameraFrame final {
     double up[3];
 };
 
+// A click as a ray in model coordinates (from the eye into the scene).
+struct ViewRay final {
+    double origin[3];
+    double direction[3];
+    bool additive; // Ctrl held
+};
+
 // U03: colors of the 3D view, supplied by the desktop theme (ADR 0012). Defaults are the
 // light theme.
 struct ViewportTheme final {
@@ -188,6 +197,10 @@ struct ViewportTheme final {
     QColor hover{0xF0, 0xA0, 0x6E};
     QColor selection{0xD9, 0x62, 0x2B};
     QColor axisLabel{0x5F, 0x68, 0x73};
+    // Sketch geometry by determination (user decision 2026-10-05): still free, fully
+    // determined. Conflicts stay red, selection orange; construction geometry is dashed.
+    QColor sketchFree{0x1F, 0x6F, 0xEB};
+    QColor sketchDetermined{0x1B, 0x20, 0x26};
 };
 // Base planes offered in the viewport (V01b); values match document::DatumPlane.
 enum class BasePlane { xy = 1, xz = 2, yz = 3 };
@@ -231,6 +244,9 @@ class CadViewport final : public CadViewportBase {
     void setBasePlaneSelectionHandler(std::function<void(BasePlane)> handler);
     // A click outside the sketch editor that hits nothing.
     void setEmptySelectionHandler(std::function<void()> handler);
+    // A click that hits nothing or only a base plane; returning true consumes it (e.g. the
+    // area of a sketch region was picked, user report 2026-10-05).
+    void setAreaClickHandler(std::function<bool(const ViewRay&)> handler);
     void setSketchEditorPreviewHandler(
         std::function<void(const std::optional<SketchElementIntent>&)> handler);
     void setSketchEditorElementHandler(std::function<void(const SketchElementIntent&)> handler);

@@ -115,6 +115,10 @@ class SketchEditorSession final {
     [[nodiscard]] std::span<const document::SketchGeometryReference>
     selectedReferences() const noexcept;
     [[nodiscard]] bool isElementConflicting(document::SketchElementId elementId) const noexcept;
+    // A click into empty space: nothing selected.
+    void clearSelection() noexcept;
+    // No degree of freedom left after the last successful solve.
+    [[nodiscard]] bool isElementDetermined(document::SketchElementId elementId) const noexcept;
     [[nodiscard]] bool
     isConstraintConflicting(document::SketchConstraintId constraintId) const noexcept;
     // Linear dimensions/coordinates only; angles require the typed accessors.

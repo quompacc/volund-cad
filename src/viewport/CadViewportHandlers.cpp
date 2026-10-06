@@ -26,6 +26,10 @@ void CadViewport::setEmptySelectionHandler(std::function<void()> handler) {
     impl_->emptySelectionHandler = std::move(handler);
 }
 
+void CadViewport::setAreaClickHandler(std::function<bool(const ViewRay&)> handler) {
+    impl_->areaClickHandler = std::move(handler);
+}
+
 void CadViewport::setPlanarFaceSelectionHandler(
     std::function<void(const PlanarFaceSelection&)> handler) {
     impl_->planarFaceSelectionHandler = std::move(handler);

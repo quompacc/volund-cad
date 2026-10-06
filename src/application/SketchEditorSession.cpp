@@ -507,6 +507,12 @@ SketchEditorSession::selectedReferences() const noexcept {
     return selectedReferences_;
 }
 
+bool SketchEditorSession::isElementDetermined(document::SketchElementId elementId) const noexcept {
+    return lastSolveResult_.status == features::SketchSolveStatus::success &&
+           std::ranges::find(lastSolveResult_.freeElements, elementId) ==
+               lastSolveResult_.freeElements.end();
+}
+
 bool SketchEditorSession::isElementConflicting(document::SketchElementId elementId) const noexcept {
     for (document::SketchConstraintId id : lastSolveResult_.conflictingConstraints) {
         const auto match =

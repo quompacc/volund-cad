@@ -4,6 +4,8 @@
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <Geom_CartesianPoint.hxx>
 #include <Graphic3d_ZLayerId.hxx>
+#include <Prs3d_Drawer.hxx>
+#include <Prs3d_LineAspect.hxx>
 #include <Prs3d_PointAspect.hxx>
 #include <Quantity_Color.hxx>
 #include <Quantity_TypeOfColor.hxx>
@@ -19,13 +21,30 @@
 namespace voelund::viewport {
 namespace {
 
-const Quantity_Color regularColor(0.15, 0.9, 0.4, Quantity_TOC_RGB);
 const Quantity_Color selectedColor(1.0, 0.65, 0.1, Quantity_TOC_RGB);
 const Quantity_Color conflictingColor(1.0, 0.15, 0.12, Quantity_TOC_RGB);
-const Quantity_Color constructionColor(0.2, 0.65, 1.0, Quantity_TOC_RGB);
 
 bool selected(std::span<const std::uint64_t> selectedIds, std::uint64_t id) {
     return std::ranges::find(selectedIds, id) != selectedIds.end();
+}
+
+// Color by state: conflict, selection, then free or fully determined (user decision
+// 2026-10-05). Construction geometry is dashed and thinner in the same colors.
+void applyStyle(const occ::handle<AIS_Shape>& shape, bool isSelected, bool conflicting,
+                bool construction, const Quantity_Color& stateColor) {
+    const Quantity_Color& color = conflicting  ? conflictingColor
+                                  : isSelected ? selectedColor
+                                               : stateColor;
+    const double width = isSelected || conflicting ? 5.0 : construction ? 2.0 : 3.0;
+    shape->SetColor(color);
+    shape->SetWidth(width);
+    // Own aspects: the drawer may still share the context's defaults.
+    const auto type = construction ? Aspect_TOL_DASH : Aspect_TOL_SOLID;
+    const occ::handle<Prs3d_Drawer>& drawer = shape->Attributes();
+    drawer->SetWireAspect(new Prs3d_LineAspect(color, type, width));
+    drawer->SetLineAspect(new Prs3d_LineAspect(color, type, width));
+    drawer->SetFreeBoundaryAspect(new Prs3d_LineAspect(color, type, width));
+    drawer->SetUnFreeBoundaryAspect(new Prs3d_LineAspect(color, type, width));
 }
 
 } // namespace
@@ -40,14 +59,8 @@ void SketchPresentation::setElements(const occ::handle<AIS_InteractiveContext>& 
     elements_.reserve(elements.size());
     for (const SceneSketchElement& element : elements) {
         occ::handle<AIS_Shape> presentation = new AIS_Shape(element.shape);
-        const bool isSelected = selected(selectedIds, element.id);
-        presentation->SetColor(element.conflicting    ? conflictingColor
-                               : isSelected           ? selectedColor
-                               : element.construction ? constructionColor
-                                                      : regularColor);
-        presentation->SetWidth(isSelected || element.conflicting ? 5.0
-                               : element.construction            ? 2.0
-                                                                 : 3.0);
+        applyStyle(presentation, selected(selectedIds, element.id), element.conflicting,
+                   element.construction, element.determined ? determined_ : free_);
         if (showPoints)
             presentation->SetZLayer(Graphic3d_ZLayerId_Topmost);
         context->Display(presentation, false);
@@ -67,7 +80,8 @@ void SketchPresentation::setElements(const occ::handle<AIS_InteractiveContext>& 
             }
         }
         elements_.push_back(ElementPresentation{element.id, presentation, std::move(points),
-                                                element.conflicting, element.construction});
+                                                element.conflicting, element.construction,
+                                                element.determined});
     }
 }
 
@@ -143,14 +157,8 @@ void SketchPresentation::select(const occ::handle<AIS_InteractiveContext>& conte
         return;
     }
     for (const ElementPresentation& element : elements_) {
-        const bool isSelected = selected(selectedIds, element.id);
-        element.shape->SetColor(element.conflicting    ? conflictingColor
-                                : isSelected           ? selectedColor
-                                : element.construction ? constructionColor
-                                                       : regularColor);
-        element.shape->SetWidth(isSelected || element.conflicting ? 5.0
-                                : element.construction            ? 2.0
-                                                                  : 3.0);
+        applyStyle(element.shape, selected(selectedIds, element.id), element.conflicting,
+                   element.construction, element.determined ? determined_ : free_);
         context->Redisplay(element.shape, false);
     }
 }
@@ -168,5 +176,25 @@ std::optional<std::uint64_t> SketchPresentation::detectedElement(
 }
 
 std::size_t SketchPresentation::size() const noexcept { return elements_.size(); }
+
+void SketchPresentation::setColors(const Quantity_Color& free, const Quantity_Color& determined) {
+    free_ = free;
+    determined_ = determined;
+}
+
+std::optional<Quantity_Color> SketchPresentation::color(std::uint64_t id) const {
+    for (const ElementPresentation& element : elements_)
+        if (element.id == id)
+            return element.shape->Attributes()->WireAspect()->Aspect()->Color();
+    return std::nullopt;
+}
+
+std::optional<bool> SketchPresentation::dashed(std::uint64_t id) const {
+    for (const ElementPresentation& element : elements_)
+        if (element.id == id)
+            return element.shape->Attributes()->WireAspect()->Aspect()->LineType() ==
+                   Aspect_TOL_DASH;
+    return std::nullopt;
+}
 
 } // namespace voelund::viewport

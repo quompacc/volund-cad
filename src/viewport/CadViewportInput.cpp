@@ -162,10 +162,15 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
                     const QRect rectangle(impl_->gestureOrigin, position);
                     impl_->gesture = Impl::Gesture::none;
                     impl_->selectionBand->hide();
+                    const auto intents = boxSelectionIntents(impl_->pendingSketchElements,
+                                                             impl_->view, rectangle.normalized());
                     if (impl_->sketchElementSelectionHandler)
-                        for (const auto& selection : boxSelectionIntents(
-                                 impl_->pendingSketchElements, impl_->view, rectangle.normalized()))
+                        for (const auto& selection : intents)
                             impl_->sketchElementSelectionHandler(selection);
+                    // A plain click on nothing clears the sketch selection.
+                    if (intents.empty() && rectangle.normalized().width() < 4 &&
+                        rectangle.normalized().height() < 4 && impl_->emptySelectionHandler)
+                        impl_->emptySelectionHandler();
                     update();
                     return;
                 }
@@ -186,6 +191,23 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
                 update();
                 return;
             }
+            // The area of a sketch region wins over the base plane behind it and over empty
+            // space (user report 2026-10-05).
+            const auto areaClick = [&] {
+                if (!impl_->areaClickHandler)
+                    return false;
+                double x = 0, y = 0, z = 0, vx = 0, vy = 0, vz = 0, ex = 0, ey = 0, ez = 0;
+                impl_->view->ConvertWithProj(position.x(), position.y(), x, y, z, vx, vy, vz);
+                impl_->view->Proj(ex, ey, ez);
+                const ViewRay ray{{x, y, z},
+                                  {-ex, -ey, -ez},
+                                  event->modifiers().testFlag(Qt::ControlModifier)};
+                if (!impl_->areaClickHandler(ray))
+                    return false;
+                impl_->context->ClearSelected(false);
+                update();
+                return true;
+            };
             impl_->context->MoveTo(position.x(), position.y(), impl_->view, false);
             if (impl_->context->HasDetected()) {
                 const occ::handle<AIS_InteractiveObject> detected =
@@ -211,6 +233,11 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
                         return;
                     }
                 }
+                if (impl_->basePlanes.plane(detected).has_value() && areaClick()) {
+                    impl_->gesture = Impl::Gesture::none;
+                    unsetCursor();
+                    return;
+                }
                 if (const auto plane = impl_->basePlanes.plane(detected)) {
                     impl_->context->SelectDetected(AIS_SelectionScheme_Replace);
                     if (impl_->basePlaneSelectionHandler)
@@ -228,7 +255,7 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
             impl_->context->MoveTo(position.x(), position.y(), impl_->view, false);
             if (impl_->context->HasDetected()) {
                 impl_->context->SelectDetected(AIS_SelectionScheme_Replace);
-            } else {
+            } else if (!areaClick()) {
                 impl_->context->ClearSelected(false);
                 if (impl_->emptySelectionHandler)
                     impl_->emptySelectionHandler();

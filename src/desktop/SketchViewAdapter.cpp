@@ -3,7 +3,11 @@
 
 #include <voelund/application/CadSession.hpp>
 
+#include <voelund/features/SketchConstraintSolver.hpp>
+
 #include <QObject>
+
+#include <algorithm>
 #include <gp_Vec.hxx>
 
 namespace voelund::desktop {
@@ -49,7 +53,7 @@ viewport::SketchPointKind pointKind(document::SketchPointPosition kind) {
 } // namespace
 
 viewport::SceneSketchElement makeSceneSketchElement(const features::EvaluatedSketchElement& element,
-                                                    bool conflicting) {
+                                                    bool conflicting, bool determined) {
     std::vector<viewport::SceneSketchPoint> points;
     points.reserve(element.points.size());
     for (const auto& point : element.points) {
@@ -68,7 +72,7 @@ viewport::SceneSketchElement makeSceneSketchElement(const features::EvaluatedSke
              (first.world.Z() + second.world.Z()) * 0.5});
     }
     return {element.id.value(), element.shape, conflicting, element.construction,
-            std::move(points)};
+            std::move(points), determined};
 }
 
 std::vector<viewport::SceneSketchElement>
@@ -85,10 +89,20 @@ makeSceneSketchElements(const application::CadSession& session) {
         // The tree/status carries the migration diagnostic; no guessed overlay.
         return result;
     }
+    // The determination of the stored sketch, from a solve of a copy.
+    features::SketchSolveResult solved;
+    try {
+        auto copy = session.selectedSketchParameters();
+        solved = features::solveSketchConstraints(copy);
+    } catch (const std::exception&) {
+    }
     const auto evaluated = session.selectedSketchElements();
     result.reserve(evaluated.size());
     for (const features::EvaluatedSketchElement& element : evaluated) {
-        result.push_back(makeSceneSketchElement(element));
+        const bool determined =
+            solved.status == features::SketchSolveStatus::success &&
+            std::ranges::find(solved.freeElements, element.id) == solved.freeElements.end();
+        result.push_back(makeSceneSketchElement(element, false, determined));
     }
     return result;
 }

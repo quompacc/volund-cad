@@ -79,7 +79,8 @@ void run() {
     for (auto* button : panel->findChildren<QPushButton*>())
         if (button->objectName() == "toolAcceptButton")
             accept = button;
-    auto* guidance = panel->findChild<QLabel*>(QStringLiteral("toolGuidance"));
+    // The solver state has its own line (user request 2026-10-05).
+    auto* guidance = panel->findChild<QLabel*>(QStringLiteral("toolStatus"));
     require(accept && guidance, "productive panel controls missing");
     const auto originalShape = session.currentShape();
     for (int dof : {-1, 0, 4}) {
@@ -87,7 +88,7 @@ void run() {
                                                      dof);
         desktop::SketchSolverGateTestAccess::sync(controller);
         require(!active.canAccept() && !accept->isEnabled() &&
-                    guidance->text().contains("Skizzenlöser fehlgeschlagen"),
+                    guidance->text().contains("Löser fehlgeschlagen"),
                 "failed solve shown as valid or accepted");
         const bool rejected =
             active.tryAccept().reason() == application::RejectionReason::invalidInput;
@@ -106,12 +107,12 @@ void run() {
     application::SketchSolverGateTestAccess::set(active, features::SketchSolveStatus::conflicting,
                                                  0);
     desktop::SketchSolverGateTestAccess::sync(controller);
-    require(!accept->isEnabled() && guidance->text().contains("Widersprüchliche"),
+    require(!accept->isEnabled() && guidance->text().contains("Widerspruch"),
             "conflict caption");
     require(active.selectElement(document::SketchElementId{1}) && active.setSelectedLineLength(9),
             "repair failed");
     desktop::SketchSolverGateTestAccess::sync(controller);
-    require(active.canAccept() && accept->isEnabled() && guidance->text().contains("unterbestimmt"),
+    require(active.canAccept() && accept->isEnabled() && guidance->text().contains("Freiheitsgrade"),
             "repair did not enable OK");
     if (!directory.isEmpty()) {
         QApplication::processEvents();

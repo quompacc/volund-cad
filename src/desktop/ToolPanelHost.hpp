@@ -68,6 +68,8 @@ class ToolPanelHost final : public FloatingCard {
     void setActivityHandler(std::function<void()> handler);
     void setAcceptEnabled(bool enabled);
     void setGuidance(const QString& guidance);
+    // A fixed line above the guidance, e.g. the sketch's degrees of freedom; empty hides it.
+    void setStatus(const QString& status, bool good = false);
     void setErrorCommitHandler(std::function<void()> handler);
     void setLengthValue(const std::string& parameterId, double value);
     void setLengthEnabled(const std::string& parameterId, bool enabled);
@@ -91,6 +93,7 @@ class ToolPanelHost final : public FloatingCard {
 
     QWidget* content_{nullptr};
     QLabel* guidance_{nullptr};
+    QLabel* status_{nullptr};
     QWidget* parameterContainer_{nullptr};
     QFormLayout* parameterLayout_{nullptr};
     QTabWidget* actionTabs_{nullptr};

@@ -43,7 +43,8 @@ viewport::ViewportTheme viewportTheme(ThemeMode mode) {
         return {};
     return {QColor(0x14, 0x18, 0x1C), QColor(0x22, 0x29, 0x30), QColor(0x34, 0x3E, 0x48),
             QColor(0x8A, 0x96, 0xA3), QColor(0x4A, 0x54, 0x5F), QColor(0xF6, 0x8B, 0x54),
-            QColor(0xEF, 0x7A, 0x3E), QColor(0xA0, 0xAA, 0xB4)};
+            QColor(0xEF, 0x7A, 0x3E), QColor(0xA0, 0xAA, 0xB4), QColor(0x5A, 0x9C, 0xFF),
+            QColor(0xE8, 0xEB, 0xEE)};
 }
 
 QString uiFontFamily() {
@@ -84,6 +85,8 @@ QToolTip { background: @ink; color: @panel; border: 0; padding: 4px 8px; }
 #shellHeader QLabel#saveState { color: @muted; background: @soft; border-radius: 9px;
     padding: 2px 10px; font-size: 12px; }
 #shellHeader QLabel#saveState[modified="true"] { color: @accentInk; background: @accentSoft; }
+QLabel#toolStatus { font-weight: 600; color: @ink; }
+QLabel#toolStatus[good="true"] { color: @accentInk; }
 
 QToolButton { background: transparent; border: 1px solid transparent; border-radius: 8px;
     padding: 5px 10px; min-height: 26px; }

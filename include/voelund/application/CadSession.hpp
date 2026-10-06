@@ -12,6 +12,7 @@
 #include <voelund/features/SketchEvaluation.hpp>
 #include <voelund/features/SketchRegionIdentity.hpp>
 
+#include <array>
 #include <filesystem>
 #include <functional>
 #include <optional>
@@ -91,6 +92,10 @@ class CadSession final {
     [[nodiscard]] std::span<const document::SketchRegionId> selectedSketchProfiles() const noexcept;
     [[nodiscard]] bool selectSketchProfileByElement(document::SketchElementId elementId,
                                                     bool additive);
+    // Picking the area (user report 2026-10-05): the unambiguous region of `sketch` whose face
+    // contains the point (model coordinates, on the sketch plane). Selects the sketch.
+    [[nodiscard]] bool selectSketchProfileAt(document::FeatureId sketch,
+                                             const std::array<double, 3>& point, bool additive);
     [[nodiscard]] std::vector<document::SketchElementId> selectedSketchProfileElements() const;
     [[nodiscard]] bool canExtrudeSelectedSketchProfiles() const noexcept;
     // R09 projection of an extrusion's selection: unmigrated legacy profiles and the

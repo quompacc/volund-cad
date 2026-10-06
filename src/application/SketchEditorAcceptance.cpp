@@ -5,6 +5,11 @@
 #include <algorithm>
 
 namespace voelund::application {
+void SketchEditorSession::clearSelection() noexcept {
+    selectedElement_.reset();
+    selectedReferences_.clear();
+}
+
 std::optional<document::SketchParameters>
 SketchEditorSession::storedSketch(const CadSession& session, document::FeatureId sketch) {
     const auto features = session.features();

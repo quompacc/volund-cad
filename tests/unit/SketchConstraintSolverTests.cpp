@@ -385,9 +385,32 @@ bool adapterFixesGeometryAndDrivesPointLineDistance() {
            fixedCircle == SketchCircle{{3.0, 4.0}, 2.0} && close(distance, 7.0);
 }
 
+// Per element: line 1 is pinned (start fixed, horizontal, length), line 2 has no constraint.
+bool adapterReportsFreeElements() {
+    using namespace voelund::document;
+    SketchParameters sketch{
+        plane(),
+        {{{SketchElementId{1}, SketchLine{{1.0, 1.0}, {9.0, 2.0}}},
+          {SketchElementId{2}, SketchLine{{0.0, 5.0}, {4.0, 8.0}}}},
+         3},
+        {{{SketchConstraintId{1}, SketchConstraintKind::coordinateX, lineRef(1), std::nullopt, 0.0},
+          {SketchConstraintId{2}, SketchConstraintKind::coordinateY, lineRef(1), std::nullopt, 0.0},
+          {SketchConstraintId{3}, SketchConstraintKind::horizontal, lineRef(1), std::nullopt, 0.0},
+          {SketchConstraintId{4}, SketchConstraintKind::distance, lineRef(1), std::nullopt, 10.0}},
+         5}};
+    const auto result = voelund::features::solveSketchConstraints(sketch);
+    return result.status == voelund::features::SketchSolveStatus::success &&
+           result.degreesOfFreedom == 4 &&
+           result.freeElements == std::vector<SketchElementId>{SketchElementId{2}};
+}
+
 } // namespace
 
 int main() {
+    if (!adapterReportsFreeElements()) {
+        std::cerr << "Völund free element report failed\n";
+        return 1;
+    }
     if (!adapterSolvesVoeIundGeometryAndReportsDegreesOfFreedom()) {
         std::cerr << "Völund PlaneGCS adapter solve failed\n";
         return 1;

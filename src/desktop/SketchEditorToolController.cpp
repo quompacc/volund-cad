@@ -355,6 +355,16 @@ bool SketchEditorToolController::selectElement(const viewport::SketchSelectionIn
     return true;
 }
 
+void SketchEditorToolController::clearSelection() {
+    if (!editor_)
+        return;
+    editor_->clearSelection();
+    resetTranslationInputs();
+    syncSelectedDimensionInputs();
+    syncConstraintState();
+    refreshPresentation();
+}
+
 void SketchEditorToolController::editConstraint(std::uint64_t constraintId) {
     if (!editor_)
         return;
