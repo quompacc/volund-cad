@@ -67,11 +67,19 @@ ausgeführt.
 - Schema: Operation und Zielkörper an `ExtrusionParameters`. Dazu kommen eine neue
   Schemaversion, eine Migration (alte Dateien behalten ihr heutiges Verhalten) und Tests
   für das Lesen alter Dateien.
-- Panel: Auswahl „Ergebnis“ im Extrusionspanel. Aufnahmen werden dem Nutzer vorgelegt.
+- Panel (Nutzerentscheidung 06.10.2026, „Richtung + Ergebnis“):
+  - Felder Distanz, Richtung (entlang / entgegen der Flächennormalen), Ergebnis (Neuer
+    Körper / Vereinigen / Abziehen).
+  - Vorbelegung: Skizze auf einer Fläche → Vereinigen, auf einer Basisebene → Neuer
+    Körper.
+  - Die Wahl von Abziehen stellt die Richtung sichtbar auf „entgegen“ (in das Material);
+    das bleibt änderbar.
+  - Ein Feld Zielkörper erscheint nur bei mehreren Körpern und einer Skizze auf einer
+    Basisebene.
+  - Aufnahmen werden dem Nutzer vorgelegt.
 - MCP: `operation` an den Extrusionswerkzeugen.
 - Bei getrennten Körpern gilt der Vertrag aus M03: ein getrenntes Vereinigen wird
   abgewiesen, keine stille Umdeutung.
-- Zuschnitt vor dem Start mit dem Nutzer abstimmen.
 
 ### T03 – Startversatz
 

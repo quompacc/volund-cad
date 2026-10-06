@@ -4068,12 +4068,14 @@
       ],
       "acceptance": "Rippe 60 × 4 × 8 auf der Deckfläche einer Platte mit Bohrung ist ein Körper mit ihr und folgt der Plattendicke; falsche Fläche und älteres Ergebnis werden ohne Änderung abgewiesen; Abnahmehelfer besteht mit echtem Claude Code.",
       "boundary": "Nutzerentscheidung 2026-10-06: Werkzeuglücken aus AI03c vor U07–U10; Zuschnitt in T-plan.md. Keine Schemaänderung, keine neue sichtbare Oberfläche außer dem Chip-Text.",
-      "status": "planned",
+      "status": "done",
       "gate": "G5",
       "chapter": "11-ki-fem-optimierung.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/T01.md"
+      ],
+      "completedCommit": "3412e27"
     },
     {
       "id": "T02",

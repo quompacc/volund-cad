@@ -3,7 +3,7 @@
 ## Aktueller Stand – 4. Oktober 2026
 
 [`packets.json`](packets.json) ist die einzige Statusquelle; dieser Abschnitt fasst
-sie nur zusammen. **131 Pakete, 53 abgeschlossen, 78 offen** (77 geplant,
+sie nur zusammen. **134 Pakete, 54 abgeschlossen, 80 offen** (79 geplant,
 A02 mit Designbedarf). Teilblöcke wie D12a–e zählen nicht als Hauptpakete; die
 Paketanzahl ist kein Maß für Restaufwand oder Fertigstellungszeit.
 
@@ -43,12 +43,12 @@ Paketanzahl ist kein Maß für Restaufwand oder Fertigstellungszeit.
 | G0 – Basis | 2 |
 | G1 – Dokument und Referenzen | 0 |
 | G2 – zusammenhängender CAD-Workflow | 21 |
-| G3 – mechanisches CAD v1 | 18 |
+| G3 – mechanisches CAD v1 | 20 |
 | G4 – veröffentlichbare v1 | 10 |
 | G5 – spätere Produktfamilie | 27 |
-| Gesamt | 78 |
+| Gesamt | 80 |
 
-Bis einschließlich G4 bleiben 51 Hauptpakete. G2 ist der erste durchgängige
+Bis einschließlich G4 bleiben 53 Hauptpakete. G2 ist der erste durchgängige
 Bedienablauf, G3 der begrenzte mechanische Funktionsumfang. G5 umfasst zusätzliche
 Bereiche wie Baugruppen und Zeichnungen. Nutzbarkeit wird an diesen Abläufen
 abgenommen, nicht am Erreichen einer Prozentzahl.
@@ -71,6 +71,12 @@ speichert keinen API-Schlüssel; der Nutzer verbindet Claude Code mit einem loka
 MCP-Server in Völund. Zuschnitt: [AI04-plan.md](AI04-plan.md). AI04 ist seit dem
 5. Oktober 2026 abgeschlossen (AI04a–d), ebenso AI03, das Claude-Panel in Völund
 (AI03a–c, [AI03-plan.md](AI03-plan.md)).
+
+**Nutzerentscheidung vom 6. Oktober 2026:** Die Werkzeuglücken, die Claude in AI03c
+benannt hat, kommen vor U07–U10 ([T-plan.md](T-plan.md)). T01 (Skizze auf einer
+Körperfläche über MCP) ist [abgeschlossen](evidence/T01.md). T02 (Ergebnis der Extrusion)
+und T03 (Startversatz) ziehen Teile von M02/M03 vor. Das Verschieben von Körpern bleibt
+in M11.
 
 **Nutzerentscheidung vom 4. Oktober 2026:** AI02 kommt direkt nach R10b (G2), der
 integrierte Assistent AI03 direkt danach, ohne auf L10 zu warten. Er nutzt zunächst Claude
