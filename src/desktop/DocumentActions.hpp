@@ -18,6 +18,9 @@ class DocumentActions final {
     DocumentActions(QMainWindow& window, application::CadSession& session,
                     std::function<void()> refreshHandler);
     [[nodiscard]] bool confirmClose();
+    // U07: opens a file as File > Open does, without the dialog (a file argument). Unsaved
+    // changes are asked for first; a failure keeps the active document.
+    void openFile(const QString& fileName);
     [[nodiscard]] QMenu& menu() const;
     void syncWindowTitle();
     // Called whenever the title changes, so the shell header can follow (U03).
@@ -28,6 +31,7 @@ class DocumentActions final {
     void duplicateDocument();
     [[nodiscard]] bool confirmDuplicate();
     void open();
+    void load(const QString& fileName);
     [[nodiscard]] bool confirmSaveChanges();
     [[nodiscard]] bool save();
     [[nodiscard]] bool saveAs();

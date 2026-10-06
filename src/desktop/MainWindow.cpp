@@ -77,6 +77,10 @@ MainWindow::MainWindow(application::CadSession& session, QWidget* parent)
 
 MainWindow::~MainWindow() = default;
 
+void MainWindow::openFile(const QString& fileName) {
+    impl_->documentActions->openFile(fileName);
+}
+
 void MainWindow::closeEvent(QCloseEvent* event) {
     event->setAccepted(impl_->documentActions->confirmClose());
 }

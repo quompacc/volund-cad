@@ -28,6 +28,8 @@ class MainWindow final : public QMainWindow {
     // AI04c: the local Claude access (MCP); the choice is remembered for the next start.
     bool setMcpAccessEnabled(bool enabled);
     [[nodiscard]] QString mcpConnectCommand() const;
+    // U07: a file argument (desktop association) takes the same safe path as File > Open.
+    void openFile(const QString& fileName);
 
   protected:
     void closeEvent(QCloseEvent* event) override;

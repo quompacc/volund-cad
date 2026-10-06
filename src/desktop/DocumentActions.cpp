@@ -134,6 +134,15 @@ void DocumentActions::open() {
     if (fileName.isEmpty()) {
         return;
     }
+    load(fileName);
+}
+
+void DocumentActions::openFile(const QString& fileName) {
+    if (confirmSaveChanges())
+        load(fileName);
+}
+
+void DocumentActions::load(const QString& fileName) {
     try {
         session_.loadDocument(nativePath(fileName));
         refreshHandler_();

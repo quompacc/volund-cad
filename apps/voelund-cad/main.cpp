@@ -228,6 +228,15 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    // U07: a document given on the command line (desktop file association) opens through the
+    // same safe Open action; a failure shows its error and keeps the new document.
+    const auto arguments = QCoreApplication::arguments();
+    for (qsizetype index = 1; index < arguments.size(); ++index)
+        if (!arguments[index].startsWith(QLatin1Char('-'))) {
+            mainWindow.openFile(arguments[index]);
+            break;
+        }
+
     if (isSmokeTest)
         startCadSmoke(mainWindow, session);
     return application.exec();
