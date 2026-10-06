@@ -11,10 +11,9 @@ Auftrag des Nutzers (06.10.2026), **nacheinander** abzuarbeiten:
 
 ## Stand des Repos
 
-- Branch `ux01`, sauber. `origin/main` steht auf `197553c` (AI03 abgenommen, CI 414 grün).
-- Auf `ux01` liegt darüber nur `4700973` (Skizzen-Rückmeldungen, siehe unten).
-  **CI-Lauf 416** lief bei Sitzungsende noch. Zuerst prüfen; bei Erfolg
-  `git push origin 4700973:main` (Fast-Forward), bei Fehler zuerst beheben.
+- Branch `ux01`. `origin/main` steht auf `4700973` (Skizzen-Rückmeldungen, CI 416 grün).
+- Darüber liegen auf `ux01` nur Dokumentations-Commits (dieser Checkpoint). Nach grünem
+  CI-Lauf per Fast-Forward auf `main` nachziehen.
 - Windows: 120/120 Tests. Fedora (GCC, `kwin_wayland --virtual`): 117/117.
 
 ## Seit dem letzten Checkpoint erledigt (05./06.10.2026)
