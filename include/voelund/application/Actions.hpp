@@ -283,6 +283,12 @@ struct ActionAvailability final {
     ActionTarget target;
     std::vector<ActionKind> actions;
 };
+// T01: the faces of a body's latest result that create_sketch_on_face can name.
+struct BodyFaces final {
+    document::BodyId body;
+    document::FeatureId support; // The body's latest producer; the sketch's support.
+    std::vector<features::SupportFaceFrame> faces;
+};
 struct ActionContext final {
     document::DocumentId document;
     DocumentStamp stamp;
@@ -293,6 +299,7 @@ struct ActionContext final {
     document::ParameterTable parameters;
     std::vector<SketchRegionsSummary> sketchRegions;
     std::vector<ActionAvailability> available;
+    std::vector<BodyFaces> bodyFaces;
 };
 [[nodiscard]] ActionContext describeActionContext(const CadSession& session);
 

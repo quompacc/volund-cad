@@ -118,8 +118,9 @@ std::vector<ToolDefinition> makeCatalog() {
         {"get_context",
          "Current Völund document: documentId and stamp for requests, units, features with "
          "their parameters (sketches in the form create_sketch accepts, regions with ids and "
-         "areas), bodies, document parameters and the tools available per target. Call it "
-         "first and again after a staleStamp rejection.",
+         "areas), bodies with the planar faces a sketch can be placed on, document parameters "
+         "and the tools available per target. Call it first and again after a staleStamp "
+         "rejection.",
          object({}, {})});
     tools.push_back(action(
         "create_parameter", "Create a named document parameter (length in mm, angle in deg).",
@@ -150,6 +151,25 @@ std::vector<ToolDefinition> makeCatalog() {
                            {"extrusionId"}));
     tools.push_back(action("create_sketch", "Create a sketch on a base plane; opens a new body.",
                            {{"sketch", sketchSchema(true)}}, {"sketch"}));
+    tools.push_back(action(
+        "create_sketch_on_face",
+        "Create a sketch on a planar face of a body (e.g. a rib on top of a plate). An "
+        "extrusion of it joins that body. Sketch coordinates are in the face's frame from "
+        "get_context: world point = origin + x * xDirection + y * yDirection; min/max give "
+        "the face extent in these coordinates.",
+        {{"supportId", featureId("supportId of the body in get_context")},
+         {"face",
+          object({{"feature", typed("integer", "Feature that produced the face")},
+                  {"role", choice({"-x", "+x", "-y", "+y", "-z", "+z", "start", "end"},
+                                  "Box side in the box's own axes, or cylinder end")},
+                  {"boundary", QJsonObject{{"type", "array"},
+                                           {"items", typed("integer")},
+                                           {"description",
+                                            "Sketch elements bounding an extrusion's end "
+                                            "face"}}}},
+                 {"feature"}, "A face reference copied from bodies[].faces[].face")},
+         {"sketch", sketchSchema(false)}},
+        {"supportId", "face", "sketch"}));
     tools.push_back(action("edit_sketch",
                            "Replace elements and constraints of a sketch; its plane stays.",
                            {{"sketchId", featureId("sketch")}, {"sketch", sketchSchema(false)}},

@@ -44,7 +44,7 @@ void run() {
                 !initialized.value("instructions").toString().isEmpty(),
             "Version negotiated, tools offered, instructions given");
     const auto tools = client.post(client.request("tools/list", {})).json();
-    require(tools.value("result").toObject().value("tools").toArray().size() == 16,
+    require(tools.value("result").toObject().value("tools").toArray().size() == 17,
             "tools/list returns the catalog");
 
     const auto context = structured(client.call("get_context", {}));

@@ -103,6 +103,35 @@ const ToolDecoder decoders[] = {
      [](const JsonReader& r, const CadSession& s) -> Action {
          return application::CreateDatumSketchAction{newSketch(r, s)};
      }},
+    {"create_sketch_on_face",
+     [](const JsonReader& r, const CadSession& s) -> Action {
+         const auto support = feature(r, "supportId");
+         const auto face = detail::decodeFaceOrigin(r.object("face"));
+         document::SketchParameters sketch{document::datumSketchPlane(document::DatumPlane::xy),
+                                           {}};
+         // Faces come from a body's latest result only: an extrusion on an earlier one could
+         // not join the body. An unknown support is the action layer's rejection.
+         const auto bodies = s.validBodies();
+         if (s.featureShape(support) &&
+             std::ranges::find(bodies, support, &features::EvaluatedBody::sourceFeature) ==
+                 bodies.end())
+             throw ArgumentError(r.field("supportId"),
+                                 "Use the supportId of a body from get_context");
+         if (!s.supportFaces(support).empty()) {
+             try {
+                 sketch = s.sketchOnFace(support, face);
+             } catch (const std::invalid_argument&) {
+                 throw ArgumentError(r.field("face"), "Not a current planar face of this "
+                                                      "support; see bodies[].faces in "
+                                                      "get_context");
+             }
+         }
+         const auto content = r.object("sketch");
+         if (content.has("plane"))
+             throw ArgumentError(content.field("plane"), "The face gives the sketch's plane");
+         detail::decodeSketchContent(content, sketch, s.parameterTable());
+         return application::CreateSketchAction{support, std::move(sketch)};
+     }},
     {"edit_sketch",
      [](const JsonReader& r, const CadSession& s) -> Action {
          const auto id = feature(r, "sketchId");

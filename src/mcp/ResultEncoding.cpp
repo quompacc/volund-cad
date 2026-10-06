@@ -17,7 +17,7 @@ constexpr const char* toolNames[] = {
     "edit_sketch",            "create_profile_extrusion", "set_extrusion_distance",
     "create_box",             "set_box_dimensions",     "create_cylinder",
     "set_cylinder_size",      "set_placement",          "create_sketch_extrusion",
-    nullptr,                  nullptr,                  nullptr,
+    "create_sketch_on_face",  nullptr,                  nullptr,
     nullptr};
 constexpr const char* statusNames[] = {"rejected", "committed", "committedWithErrors"};
 constexpr const char* rejectionNames[] = {
@@ -85,6 +85,22 @@ QJsonObject featureParameters(const document::FeatureParameters& parameters) {
                 return json;
             }},
         parameters);
+}
+
+// A sketch on a body face: the face it names and its current frame, in which its
+// coordinates are given.
+void insertSketchFace(QJsonObject& json, const application::CadSession& session,
+                      document::FeatureId sketch) {
+    auto parameters = session.sketchParameters(sketch);
+    if (!parameters.supportBinding)
+        return;
+    json.insert("face", detail::encodeFaceOrigin(parameters.supportBinding->reference.origin));
+    try {
+        parameters = session.sketchParametersForEditing(sketch);
+    } catch (const std::exception&) {
+        return; // The support is not current; the feature state explains why.
+    }
+    json.insert("frame", detail::encodeSketchFrame(parameters.plane));
 }
 
 QJsonArray toolsFor(const std::vector<ActionKind>& actions) {
@@ -157,6 +173,8 @@ QJsonObject encodeContext(const application::CadSession& session) {
             if (!state->message.empty())
                 json.insert("message", QString::fromStdString(state->message));
         }
+        if (feature.kind == document::FeatureKind::sketch)
+            insertSketchFace(json, session, feature.id);
         const auto regions = std::ranges::find(context.sketchRegions, feature.id,
                                                &application::SketchRegionsSummary::sketch);
         if (regions != context.sketchRegions.end()) {
@@ -171,8 +189,19 @@ QJsonObject encodeContext(const application::CadSession& session) {
         featureList.append(json);
     }
     QJsonArray bodies;
-    for (const auto& body : context.outline.bodies)
-        bodies.append(QJsonObject{{"id", id(body.id.value())}, {"features", ids(body.features)}});
+    for (const auto& body : context.outline.bodies) {
+        QJsonObject json{{"id", id(body.id.value())}, {"features", ids(body.features)}};
+        const auto faces =
+            std::ranges::find(context.bodyFaces, body.id, &application::BodyFaces::body);
+        if (faces != context.bodyFaces.end()) {
+            QJsonArray list;
+            for (const auto& face : faces->faces)
+                list.append(detail::encodeFace(face));
+            json.insert("supportId", id(faces->support.value()));
+            json.insert("faces", list);
+        }
+        bodies.append(json);
+    }
     QJsonArray parameters;
     for (const auto& parameter : context.parameters.values)
         parameters.append(QJsonObject{

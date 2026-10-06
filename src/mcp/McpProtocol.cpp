@@ -27,7 +27,9 @@ const QString instructions = QStringLiteral(
     "Lengths are mm, sketch angles rad, angle parameters deg. Give every intended change its "
     "own requestId; retry with the same requestId and content after a lost answer, it is "
     "never applied twice. After a staleStamp rejection call get_context again. Every change "
-    "is one undo step for the user.");
+    "is one undo step for the user. A sketch on a base plane starts a new body; to add to a "
+    "body (e.g. a rib on a plate), sketch on one of its faces with create_sketch_on_face, "
+    "and the extrusion joins that body.");
 } // namespace
 
 const QStringList& McpProtocol::supportedVersions() {

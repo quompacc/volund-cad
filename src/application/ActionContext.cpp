@@ -83,6 +83,7 @@ ActionContext describeActionContext(const CadSession& session) {
                           {states.begin(), states.end()},
                           snapshot.parameterTable(),
                           {},
+                          {},
                           {}};
     context.available.push_back(
         {std::monostate{}, detail::availableActions(session, snapshot, {})});
@@ -94,6 +95,9 @@ ActionContext describeActionContext(const CadSession& session) {
         if (!actions.empty())
             context.available.push_back({feature.id, std::move(actions)});
     }
+    for (const auto& body : session.validBodies())
+        context.bodyFaces.push_back(
+            {body.bodyId, body.sourceFeature, session.supportFaces(body.sourceFeature)});
     for (const auto& parameter : context.parameters.values)
         context.available.push_back(
             {parameter.id, detail::availableActions(session, snapshot, parameter.id)});

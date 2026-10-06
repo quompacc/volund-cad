@@ -3,6 +3,8 @@
 #include <voelund/mcp/ActionJson.hpp>
 #include <voelund/mcp/ToolHost.hpp>
 
+#include <BRepBndLib.hxx>
+#include <Bnd_Box.hxx>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QSet>
@@ -110,9 +112,10 @@ void catalog() {
                 "Every tool has an object schema and a description");
         names.insert(tool.name);
     }
-    require(names.size() == 16 && names.contains("get_context") &&
-                names.contains("create_sketch_extrusion") && names.contains("set_placement"),
-            "Version 1 has get_context and 15 action tools with unique names");
+    require(names.size() == 17 && names.contains("get_context") &&
+                names.contains("create_sketch_extrusion") && names.contains("set_placement") &&
+                names.contains("create_sketch_on_face"),
+            "Version 1 has get_context and 16 action tools with unique names");
 }
 
 void plateWithBore() {
@@ -168,6 +171,147 @@ void plateWithBore() {
                 session.sceneStatus().document == before && client.changes == 3 &&
                 near(test::volumeOf(session.currentShape()), plateVolume(10, 10)),
             "A preview leaves the document alone");
+}
+
+double coordinate(const QJsonValue& vector, int axis) {
+    return vector.toArray().at(axis).toDouble();
+}
+double topOf(const TopoDS_Shape& shape) {
+    Bnd_Box bounds;
+    BRepBndLib::AddOptimal(shape, bounds, false, false);
+    double xMin = 0, yMin = 0, zMin = 0, xMax = 0, yMax = 0, zMax = 0;
+    bounds.Get(xMin, yMin, zMin, xMax, yMax, zMax);
+    return zMax;
+}
+// The face of the only body whose normal points along +z.
+QJsonObject topFace(const QJsonObject& context) {
+    const auto bodies = context.value("bodies").toArray();
+    require(bodies.size() == 1, "One body: " + text(context));
+    for (const auto& face : bodies.at(0).toObject().value("faces").toArray())
+        if (near(coordinate(face.toObject().value("normal"), 2), 1.0))
+            return face.toObject();
+    throw std::runtime_error("No top face: " + text(context));
+}
+// A world point (x, y) on the face, in the face's sketch coordinates.
+QJsonArray onFace(const QJsonObject& face, double x, double y) {
+    const auto origin = face.value("origin");
+    const double dx = x - coordinate(origin, 0);
+    const double dy = y - coordinate(origin, 1);
+    const auto axis = [&](const char* name) {
+        const auto direction = face.value(name);
+        return dx * coordinate(direction, 0) + dy * coordinate(direction, 1);
+    };
+    return {axis("xDirection"), axis("yDirection")};
+}
+
+// T01 (the gap of AI03c): a rib 60 x 4 x 8 on top of a plate with a bore, sketched on the
+// plate's top face through get_context's face reference, is one body with the plate and
+// follows the plate's thickness.
+void ribOnPlate() {
+    application::CadSession session;
+    session.newDocument();
+    Client client(session);
+    const QJsonObject plate{{"plane", "xy"},
+                            {"elements", QJsonArray{QJsonObject{{"id", 1},
+                                                                {"type", "rectangle"},
+                                                                {"first", QJsonArray{-40, -20}},
+                                                                {"second", QJsonArray{40, 20}}},
+                                                    circle(2, 0, 8)}}};
+    auto result =
+        client.committed("create_sketch_extrusion", {{"sketch", plate}, {"distance", mm(10)}});
+    const int plateExtrusion = result.value("createdFeatures").toArray().at(1).toInt();
+    auto context = client.context();
+    const auto body = context.value("bodies").toArray().at(0).toObject();
+    auto face = topFace(context);
+    require(body.value("supportId").toInt() == plateExtrusion &&
+                face.value("face").toObject() ==
+                    QJsonObject{{"feature", plateExtrusion}, {"boundary", QJsonArray{1, 2}}} &&
+                near(coordinate(face.value("origin"), 2), 10.0) &&
+                context.value("available")
+                    .toObject()
+                    .value("features")
+                    .toObject()
+                    .value(QString::number(plateExtrusion))
+                    .toArray()
+                    .contains(QStringLiteral("create_sketch_on_face")),
+            "The plate offers its top face by its end-cap boundary: " + text(body));
+    const auto min = face.value("min").toArray();
+    const auto max = face.value("max").toArray();
+    require(near(max.at(0).toDouble() - min.at(0).toDouble(), 80) &&
+                near(max.at(1).toDouble() - min.at(1).toDouble(), 40),
+            "The face extent is 80 x 40 in its own frame: " + text(face));
+
+    const QJsonObject rib{{"elements", QJsonArray{QJsonObject{{"id", 1},
+                                                              {"type", "rectangle"},
+                                                              {"first", onFace(face, -30, 12)},
+                                                              {"second", onFace(face, 30, 16)}}}}};
+    result = client.committed("create_sketch_on_face", {{"supportId", plateExtrusion},
+                                                        {"face", face.value("face")},
+                                                        {"sketch", rib}});
+    const int ribSketch = result.value("feature").toInt();
+    const auto ribRegions = client.context().value("features").toArray().at(2).toObject().value(
+        "regions").toArray();
+    require(ribRegions.size() == 1, "The rib sketch has one region");
+    result = client.committed(
+        "create_profile_extrusion",
+        {{"sketchId", ribSketch},
+         {"regions", QJsonArray{ribRegions.at(0).toObject().value("id")}},
+         {"distance", mm(8)}});
+    const double plateVolume = (80.0 * 40.0 - std::numbers::pi * 64.0) * 10.0;
+    require(session.validBodies().size() == 1 &&
+                near(test::volumeOf(session.currentShape()), plateVolume + 60.0 * 4.0 * 8.0) &&
+                near(topOf(session.currentShape()), 18.0),
+            "The rib sits on the plate and is one body with it");
+    context = client.context();
+    const auto sketch = context.value("features").toArray().at(2).toObject();
+    require(sketch.value("face").toObject() == face.value("face").toObject() &&
+                near(coordinate(sketch.value("frame").toObject().value("origin"), 2), 10.0) &&
+                sketch.value("parameters").toObject().value("sketch").toObject().value("plane") ==
+                    QLatin1String("face"),
+            "The context names the sketch's face and frame: " + text(sketch));
+
+    client.committed("set_extrusion_distance",
+                     {{"extrusionId", plateExtrusion}, {"distance", mm(12)}});
+    require(session.validBodies().size() == 1 && near(topOf(session.currentShape()), 20.0),
+            "The rib follows the thicker plate");
+
+    // A role on an extrusion face, and a support that is no body's latest result.
+    const auto before = session.sceneStatus().document;
+    const auto changes = client.changes;
+    const auto support = client.context().value("bodies").toArray().at(0).toObject().value("supportId");
+    result = client.call("create_sketch_on_face",
+                         {{"supportId", support},
+                          {"face", QJsonObject{{"feature", plateExtrusion}, {"role", "+z"}}},
+                          {"sketch", rib}});
+    require(client.isError && result.value("field") == QLatin1String("face"),
+            "An unknown face is an argument error: " + text(result));
+    result = client.call("create_sketch_on_face", {{"supportId", plateExtrusion},
+                                                   {"face", face.value("face")},
+                                                   {"sketch", rib}});
+    require(client.isError && result.value("field") == QLatin1String("supportId"),
+            "An earlier result offers no faces: " + text(result));
+    result = client.call("create_sketch_on_face", {{"supportId", 77},
+                                                   {"face", face.value("face")},
+                                                   {"sketch", rib}});
+    require(result.value("rejection") == QLatin1String("unknownTarget"),
+            "An unknown support is rejected: " + text(result));
+    require(session.sceneStatus().document == before && client.changes == changes,
+            "Rejected face sketches change nothing");
+}
+
+// A box offers its planar sides by role.
+void boxFaces() {
+    application::CadSession session;
+    session.newDocument();
+    Client client(session);
+    client.committed("create_box", {{"width", mm(30)}, {"depth", mm(20)}, {"height", mm(10)}});
+    const auto faces =
+        client.context().value("bodies").toArray().at(0).toObject().value("faces").toArray();
+    QSet<QString> roles;
+    for (const auto& face : faces)
+        roles.insert(face.toObject().value("face").toObject().value("role").toString());
+    require(faces.size() == 6 && roles.size() == 6 && roles.contains("+z"),
+            "Six box sides with their roles: " + text(QJsonObject{{"faces", faces}}));
 }
 
 void rejections() {
@@ -249,6 +393,8 @@ int main() {
     try {
         catalog();
         plateWithBore();
+        ribOnPlate();
+        boxFaces();
         rejections();
         return EXIT_SUCCESS;
     } catch (const std::exception& error) {

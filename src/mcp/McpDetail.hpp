@@ -33,6 +33,11 @@ inline double readQuantity(const JsonReader& reader, const QString& key, const c
 }
 
 [[nodiscard]] bool isActionTool(const QString& name);
+// T01 (FaceJson.cpp): a face as feature plus role or end-cap boundary, and its frame.
+[[nodiscard]] QJsonObject encodeFaceOrigin(const features::SupportOrigin& origin);
+[[nodiscard]] QJsonObject encodeSketchFrame(const document::SketchPlane& plane);
+[[nodiscard]] QJsonObject encodeFace(const features::SupportFaceFrame& face);
+[[nodiscard]] features::SupportOrigin decodeFaceOrigin(const JsonReader& reader);
 void decodeSketchContent(const JsonReader& reader, document::SketchParameters& sketch,
                          const document::ParameterTable& parameters);
 

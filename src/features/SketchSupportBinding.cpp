@@ -1,9 +1,14 @@
 #include <BRepAdaptor_Surface.hxx>
+#include <BRepBndLib.hxx>
+#include <Bnd_Box.hxx>
 #include <TopExp_Explorer.hxx>
+#include <TopLoc_Location.hxx>
 #include <TopoDS.hxx>
 #include <algorithm>
 #include <cmath>
+#include <gp_Ax3.hxx>
 #include <gp_Pln.hxx>
+#include <gp_Trsf.hxx>
 #include <gp_Vec.hxx>
 #include <voelund/document/SketchPlaneValidation.hpp>
 #include <voelund/features/GeometryEvaluationError.hpp>
@@ -68,6 +73,36 @@ void requirePlane(const document::SketchPlane& p, const TopoDS_Shape& face) {
         throw GeometryEvaluationError("Sketch frame no longer lies on its named support face");
 }
 } // namespace
+std::vector<SupportFaceFrame> supportFaceFrames(const EvaluatedFeature& support) {
+    std::vector<SupportFaceFrame> result;
+    for (const auto& item : support.supportOrigins) {
+        if (item.coverage != kernel::HistoryCoverage::complete || item.faces.size() != 1 ||
+            BRepAdaptor_Surface(TopoDS::Face(item.faces.front())).GetType() != GeomAbs_Plane)
+            continue;
+        const auto& face = item.faces.front();
+        if (std::ranges::count_if(support.supportOrigins, [&](const SupportProvenance& other) {
+                return std::ranges::any_of(other.faces,
+                                           [&](const auto& shape) { return shape.IsSame(face); });
+            }) != 1)
+            continue;
+        const auto f = frame(face);
+        gp_Trsf toFrame;
+        toFrame.SetTransformation(gp_Ax3(f.origin, gp_Dir(f.z), gp_Dir(f.x)));
+        Bnd_Box bounds;
+        BRepBndLib::AddOptimal(face.Moved(TopLoc_Location(toFrame)), bounds, false, false);
+        double xMin = 0, yMin = 0, zMin = 0, xMax = 0, yMax = 0, zMax = 0;
+        bounds.Get(xMin, yMin, zMin, xMax, yMax, zMax);
+        result.push_back({item.origin,
+                          face,
+                          {f.origin.X(), f.origin.Y(), f.origin.Z(), f.z.X(), f.z.Y(), f.z.Z(),
+                           f.x.X(), f.x.Y(), f.x.Z()},
+                          xMin,
+                          yMin,
+                          xMax,
+                          yMax});
+    }
+    return result;
+}
 document::SketchSupportBinding bindSketchSupport(document::DocumentId document,
                                                  const EvaluatedFeature& support,
                                                  SupportOrigin origin,

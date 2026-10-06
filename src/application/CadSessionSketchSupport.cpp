@@ -26,6 +26,24 @@ CadSession::bindSelectedSupport(document::FeatureId support, const TopoDS_Shape&
         throw std::invalid_argument("Selected face has no unique stable support origin");
     return features::bindSketchSupport(documentId(), *found, *origin, face, plane);
 }
+std::vector<features::SupportFaceFrame>
+CadSession::supportFaces(document::FeatureId support) const {
+    if (!featureShape(support))
+        return {};
+    const auto& outputs = evaluation_->result.features;
+    return features::supportFaceFrames(
+        *std::ranges::find(outputs, support, &features::EvaluatedFeature::id));
+}
+document::SketchParameters CadSession::sketchOnFace(document::FeatureId support,
+                                                    const features::SupportOrigin& face) const {
+    const auto faces = supportFaces(support);
+    const auto found = std::ranges::find(faces, face, &features::SupportFaceFrame::origin);
+    if (found == faces.end())
+        throw std::invalid_argument("Not a current planar face of this support");
+    document::SketchParameters sketch{found->plane, {}};
+    sketch.supportBinding = bindSelectedSupport(support, found->face, found->plane);
+    return sketch;
+}
 document::SketchParameters
 CadSession::sketchParametersForEditing(document::FeatureId featureId) const {
     auto sketch = document_.sketchParameters(featureId);

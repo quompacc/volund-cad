@@ -22,6 +22,7 @@ QString toolLabel(const QString& tool) {
         {"bind_sketch_dimension", QObject::tr("Maß binden")},
         {"bind_extrusion_distance", QObject::tr("Distanz binden")},
         {"create_sketch", QObject::tr("Skizze anlegen")},
+        {"create_sketch_on_face", QObject::tr("Skizze auf Fläche anlegen")},
         {"edit_sketch", QObject::tr("Skizze ändern")},
         {"create_profile_extrusion", QObject::tr("Extrusion anlegen")},
         {"create_sketch_extrusion", QObject::tr("Skizze und Extrusion anlegen")},

@@ -22,8 +22,8 @@
 #include <voelund/desktop/MainWindow.hpp>
 
 // AI03c acceptance helper (not a CI test; needs a logged-in Claude Code): A-AI-01 through the
-// real Claude panel. A reference plate is selected; Claude changes the bore, adds a rib with
-// existing features, asks back on an unclear request and treats a parameter comment that
+// real Claude panel. A reference plate is selected; Claude changes the bore, adds a rib on the
+// plate's top face as part of the plate's body (T01), asks back on an unclear request and treats a parameter comment that
 // looks like an instruction as data. Then undo/redo and save/open. Prints checks and the
 // conversation.
 namespace {
@@ -122,21 +122,20 @@ void run(const QString& work) {
     const double plateWithBore10 = (3200.0 - 100.0 * std::numbers::pi) * 10.0;
     check(approximately(volume(session), plateWithBore10), "Bore diameter 20 mm");
 
-    std::cout << "Step 2: a rib made of existing features\n";
+    std::cout << "Step 2: a rib on the plate, one body with it (T01)\n";
     const auto featuresBefore = session.features().size();
     // Beside the bore (radius 10), so the request is unambiguous.
     ask(window, QStringLiteral("Ergänze oben auf der Platte eine Rippe: 60 mm lang entlang der "
                                "langen Seite, 4 mm breit, 8 mm hoch, mittig in x, mit ihrer "
-                               "Mitte bei y = 14 mm. Nutze vorhandene Features und frag nicht "
-                               "nach, die Ausführung überlasse ich dir."));
+                               "Mitte bei y = 14 mm. Die Rippe soll mit der Platte ein Körper "
+                               "sein. Frag nicht nach, die Ausführung überlasse ich dir."));
     const double added = volume(session) - plateWithBore10;
-    // A box set on top adds 60x4x8; an extrusion from the base plane overlaps the plate as a
-    // separate body and adds 60x4x18. Both reach z = 18.
-    check(session.features().size() > featuresBefore &&
-              (approximately(added, 60.0 * 4.0 * 8.0) || approximately(added, 60.0 * 4.0 * 18.0)) &&
-              std::abs(topZ(session) - 18.0) < 1e-3,
-          "Rib 60 x 4 reaches z = 18 (added " + std::to_string(added) + " mm³, top " +
-              std::to_string(topZ(session)) + ")");
+    // Since T01 Claude sketches on the plate's top face; the extrusion joins the plate.
+    check(session.features().size() > featuresBefore && session.validBodies().size() == 1 &&
+              approximately(added, 60.0 * 4.0 * 8.0) && std::abs(topZ(session) - 18.0) < 1e-3,
+          "Rib 60 x 4 x 8 on the plate, one body (bodies " +
+              std::to_string(session.validBodies().size()) + ", added " + std::to_string(added) +
+              " mm³, top " + std::to_string(topZ(session)) + ")");
 
     std::cout << "Step 3: an unclear request is clarified, not guessed\n";
     auto revision = session.sceneStatus().document.revision;

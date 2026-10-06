@@ -11,6 +11,7 @@
 #include <voelund/features/FeatureGraph.hpp>
 #include <voelund/features/SketchEvaluation.hpp>
 #include <voelund/features/SketchRegionIdentity.hpp>
+#include <voelund/features/SketchSupportBinding.hpp>
 
 #include <array>
 #include <filesystem>
@@ -109,6 +110,13 @@ class CadSession final {
     [[nodiscard]] document::SketchSupportBinding
     bindSelectedSupport(document::FeatureId support, const TopoDS_Shape& face,
                         const document::SketchPlane& plane) const;
+    // T01: faces a sketch can name on the current result of `support` (empty when that
+    // result is not current), and a sketch bound to one of them in the face's own frame,
+    // as a pick of that face would bind it. Throws std::invalid_argument for another face.
+    [[nodiscard]] std::vector<features::SupportFaceFrame>
+    supportFaces(document::FeatureId support) const;
+    [[nodiscard]] document::SketchParameters
+    sketchOnFace(document::FeatureId support, const features::SupportOrigin& face) const;
     [[nodiscard]] SketchSupportProjection
     projectSketchSupport(document::FeatureId support, const document::SketchSupportBinding& binding,
                          unsigned divisions = 32) const;

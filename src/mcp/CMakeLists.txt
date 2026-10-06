@@ -1,6 +1,7 @@
 # AI04: MCP access to the action layer (docs/implementation-plan/AI04-plan.md).
 add_library(voelund_mcp STATIC
     ActionDecoding.cpp
+    FaceJson.cpp
     McpHttpServer.cpp
     McpProtocol.cpp
     ResultEncoding.cpp
