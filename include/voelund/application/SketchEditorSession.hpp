@@ -113,7 +113,16 @@ class SketchEditorSession final {
     [[nodiscard]] bool mirrorSelected();
     [[nodiscard]] bool linearPatternSelected(int count, double spacing);
     [[nodiscard]] bool circularPatternSelected(int count, double angleDegrees);
+    // Records the current state as one undo step (no-op while a drag runs, U09).
     void commitHistory();
+    // U09: a drag or a typed translation of the selection is one user action. dragSelected
+    // moves from the state at beginDrag by the total offset (the candidate); endDrag records
+    // one step, cancelDrag restores the starting state.
+    void beginDrag();
+    [[nodiscard]] bool dragSelected(double totalX, double totalY);
+    void endDrag();
+    void cancelDrag();
+    [[nodiscard]] bool isDragging() const noexcept { return dragStart_.has_value(); }
     [[nodiscard]] bool canUndo() const noexcept;
     [[nodiscard]] bool canRedo() const noexcept;
     [[nodiscard]] bool undo();
@@ -198,6 +207,7 @@ class SketchEditorSession final {
     int polygonSides_{6};
     std::vector<HistoryState> history_;
     std::size_t historyIndex_{0};
+    std::optional<HistoryState> dragStart_;
     bool active_{true};
 };
 

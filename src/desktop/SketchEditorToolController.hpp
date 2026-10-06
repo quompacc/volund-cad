@@ -30,6 +30,8 @@ class SketchEditorToolController final {
     void updatePreview(const std::optional<viewport::SketchElementIntent>& intent);
     void confirmElement(const viewport::SketchElementIntent& intent);
     void translateFromViewport(double deltaX, double deltaY);
+    // U09: pointer-up or the end of a typed translation records the move as one step.
+    void finishDrag();
     [[nodiscard]] bool selectElement(const viewport::SketchSelectionIntent& intent);
     void clearSelection();
     void editConstraint(std::uint64_t constraintId);
@@ -40,6 +42,7 @@ class SketchEditorToolController final {
     friend class SketchSolverGateTestAccess;
     void setTool(int index);
     void applyTranslation(const std::string& id, double value);
+    [[nodiscard]] bool dragTo(double translationX, double translationY);
     void applyElementDimension(const std::string& id, double value);
     void applyLineConstraint(document::SketchLineConstraint constraint);
     void applyRelation(document::SketchConstraintKind kind);
@@ -58,6 +61,8 @@ class SketchEditorToolController final {
     void stepBack();
 
     application::CadSession& session_;
+    double dragBaseX_{0.0};
+    double dragBaseY_{0.0};
     viewport::CadViewport& viewport_;
     ToolPanelHost& panel_;
     std::function<void()> sceneChanged_;

@@ -229,6 +229,8 @@ void MainWindow::connectInteractions() {
         [this](const viewport::SketchElementIntent& intent) {
             impl_->sketchEditorTool->confirmElement(intent);
         });
+    impl_->viewport->setSketchEditorDragEndHandler(
+        [this] { impl_->sketchEditorTool->finishDrag(); });
     impl_->viewport->setSketchEditorTranslationHandler([this](double deltaX, double deltaY) {
         impl_->sketchEditorTool->translateFromViewport(deltaX, deltaY);
     });

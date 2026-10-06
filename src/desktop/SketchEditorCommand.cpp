@@ -5,6 +5,7 @@
 
 namespace voelund::desktop {
 void SketchEditorToolController::accept(application::ErrorDisposition disposition) {
+    finishDrag();
     if (!editor_ || !editor_->canAccept())
         return;
     panel_.setErrorCommitHandler({});

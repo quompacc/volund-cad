@@ -258,7 +258,11 @@ void SketchEditorToolController::showPanel() {
         },
         [this]() { accept(); },
         [this]() { cancel(); },
-        [this]() { stepBack(); }});
+        [this]() { stepBack(); },
+        [this](const std::string& id) {
+            if (id == "translation_x" || id == "translation_y")
+                finishDrag();
+        }});
     syncSelectedDimensionInputs();
     syncConstraintState();
 }
@@ -286,6 +290,19 @@ void SketchEditorToolController::setTool(int index) {
 void SketchEditorToolController::stepBack() {
     if (!editor_)
         return;
+    // U09: Escape during a drag restores the state before it and keeps the editor open.
+    if (editor_->isDragging()) {
+        static_cast<void>(viewport_.cancelSketchElementDrag());
+        editor_->cancelDrag();
+        translationX_ = dragBaseX_;
+        translationY_ = dragBaseY_;
+        panel_.setLengthValue("translation_x", translationX_);
+        panel_.setLengthValue("translation_y", translationY_);
+        syncConstraintState();
+        refreshPresentation();
+        statusChanged_(QObject::tr("Verschieben abgebrochen"));
+        return;
+    }
     if (viewport_.cancelSketchEditorStep()) {
         editor_->clearPreview();
         refreshPresentation();
@@ -318,20 +335,6 @@ void SketchEditorToolController::updatePreview(
         editor_->clearPreview();
     }
     refreshPresentation();
-}
-
-void SketchEditorToolController::translateFromViewport(double deltaX, double deltaY) {
-    if (!editor_ || !editor_->translateSelected(deltaX, deltaY))
-        return;
-    translationX_ += deltaX;
-    translationY_ += deltaY;
-    panel_.setLengthValue("translation_x", translationX_);
-    panel_.setLengthValue("translation_y", translationY_);
-    syncConstraintState();
-    refreshPresentation();
-    statusChanged_(QObject::tr("Skizzenelement verschoben: ΔX %1 mm, ΔY %2 mm")
-                       .arg(translationX_, 0, 'f', 3)
-                       .arg(translationY_, 0, 'f', 3));
 }
 
 bool SketchEditorToolController::selectElement(const viewport::SketchSelectionIntent& intent) {
@@ -517,26 +520,6 @@ void SketchEditorToolController::unlockSelectedReference() {
     syncConstraintState();
     refreshPresentation();
     statusChanged_(QObject::tr("Gewählter Skizzenpunkt freigegeben"));
-}
-
-void SketchEditorToolController::applyTranslation(const std::string& id, double value) {
-    if (!editor_ || !editor_->selectedElement().has_value())
-        return;
-    double deltaX = 0.0;
-    double deltaY = 0.0;
-    if (id == "translation_x") {
-        deltaX = value - translationX_;
-        translationX_ = value;
-    } else if (id == "translation_y") {
-        deltaY = value - translationY_;
-        translationY_ = value;
-    } else {
-        return;
-    }
-    if (editor_->translateSelected(deltaX, deltaY)) {
-        syncConstraintState();
-        refreshPresentation();
-    }
 }
 
 void SketchEditorToolController::removeSelected() {

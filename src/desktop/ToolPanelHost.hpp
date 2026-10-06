@@ -55,6 +55,8 @@ struct ToolPanelDefinition final {
     std::function<void()> accept;
     std::function<void()> cancel;
     std::function<void()> stepBack;
+    // U09: Enter or focus loss ends the editing of a length input (one user action).
+    std::function<void(const std::string&)> parameterFinished{};
 };
 
 // U05: the floating tool panel of ADR 0012; it owns at most one active tool session.

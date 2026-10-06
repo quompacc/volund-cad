@@ -177,6 +177,8 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
                 if (impl_->sketchElementPressed) {
                     impl_->sketchElementPressed = false;
                     impl_->sketchEditor.finishElementDrag();
+                    if (impl_->sketchEditorDragEndHandler)
+                        impl_->sketchEditorDragEndHandler();
                     return;
                 }
                 const auto intent = impl_->sketchEditor.isDrawing()

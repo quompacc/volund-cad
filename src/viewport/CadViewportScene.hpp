@@ -277,6 +277,7 @@ class CadViewportScene {
     std::function<void(const std::optional<SketchElementIntent>&)> sketchEditorPreviewHandler;
     std::function<void(const SketchElementIntent&)> sketchEditorElementHandler;
     std::function<void(double, double)> sketchEditorTranslationHandler;
+    std::function<void()> sketchEditorDragEndHandler;
     std::function<void(const SketchSelectionIntent&)> sketchElementSelectionHandler;
     std::function<void(std::uint64_t)> sketchConstraintEditHandler;
     std::optional<std::uint64_t> transformTarget;

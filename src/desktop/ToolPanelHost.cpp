@@ -169,6 +169,10 @@ void ToolPanelHost::begin(ToolPanelDefinition definition) {
                 definition_.parameterChanged(parameterId, value);
             }
         });
+        connect(input, &QDoubleSpinBox::editingFinished, this, [this, parameterId] {
+            if (definition_.parameterFinished)
+                definition_.parameterFinished(parameterId);
+        });
         input->setObjectName(QString::fromStdString("toolLength_" + parameter.id));
         parameterLayout_->addRow(parameter.label, input);
         lengthInputs_.emplace_back(parameter.id, input);

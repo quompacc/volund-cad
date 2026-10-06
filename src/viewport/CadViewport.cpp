@@ -225,6 +225,14 @@ void CadViewport::continueSketchPolyline(double x, double y, std::uint64_t eleme
 
 bool CadViewport::cancelSketchEditorStep() { return impl_->sketchEditor.cancelStep(); }
 
+bool CadViewport::cancelSketchElementDrag() {
+    if (!impl_->sketchElementPressed)
+        return false;
+    impl_->sketchElementPressed = false;
+    impl_->sketchEditor.finishElementDrag();
+    return true;
+}
+
 void CadViewport::cancelSketch() {
     performViewportOperation(*this, impl_->ready, [&] {
         impl_->activeSketchSupport.reset();

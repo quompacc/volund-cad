@@ -45,6 +45,10 @@ void CadViewport::setSketchEditorElementHandler(
     impl_->sketchEditorElementHandler = std::move(handler);
 }
 
+void CadViewport::setSketchEditorDragEndHandler(std::function<void()> handler) {
+    impl_->sketchEditorDragEndHandler = std::move(handler);
+}
+
 void CadViewport::setSketchEditorTranslationHandler(std::function<void(double, double)> handler) {
     impl_->sketchEditorTranslationHandler = std::move(handler);
 }

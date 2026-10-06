@@ -25,6 +25,7 @@ add_library(
     SketchEditorConstraintState.cpp
     SketchEditorCommand.cpp
     SketchEditorCreation.cpp
+    SketchEditorDrag.cpp
     SketchEditorPresentation.cpp
     SketchEditorToolController.cpp
     SketchIcons.cpp

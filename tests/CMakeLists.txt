@@ -361,6 +361,10 @@ if(VOELUND_BUILD_DESKTOP)
     target_link_libraries(voelund_sketch_solver_gate_tests PRIVATE voelund_project_options Voelund::Desktop)
     add_test(NAME desktop.sketch_solver_gate COMMAND voelund_sketch_solver_gate_tests)
     set_tests_properties(desktop.sketch_solver_gate PROPERTIES LABELS "desktop;sketch;regression" TIMEOUT 30 RUN_SERIAL TRUE)
+    add_executable(voelund_sketch_drag_tests desktop/SketchDragTests.cpp)
+    target_link_libraries(voelund_sketch_drag_tests PRIVATE voelund_project_options Voelund::Desktop)
+    add_test(NAME desktop.sketch_drag COMMAND voelund_sketch_drag_tests)
+    set_tests_properties(desktop.sketch_drag PROPERTIES LABELS "desktop;sketch;regression" TIMEOUT 30 RUN_SERIAL TRUE)
     if(WIN32)
         add_custom_command(TARGET voelund_sketch_solver_gate_tests POST_BUILD
             COMMAND "${CMAKE_COMMAND}" -E copy_if_different

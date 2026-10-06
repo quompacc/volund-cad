@@ -77,6 +77,9 @@ void SketchEditorToolController::syncSelectedDimensionInputs() {
 }
 
 void SketchEditorToolController::resetTranslationInputs() {
+    // A new selection or operation ends a running translation as its own step (U09).
+    if (editor_ && editor_->isDragging())
+        editor_->endDrag();
     translationX_ = 0.0;
     translationY_ = 0.0;
     panel_.setLengthValue("translation_x", 0.0);

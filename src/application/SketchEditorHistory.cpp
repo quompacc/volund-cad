@@ -3,6 +3,8 @@
 namespace voelund::application {
 
 void SketchEditorSession::commitHistory() {
+    if (dragStart_)
+        return;
     if (!history_.empty() && history_[historyIndex_].elements == elements_ &&
         history_[historyIndex_].constraints == constraints_)
         return;
@@ -11,6 +13,37 @@ void SketchEditorSession::commitHistory() {
                        history_.end());
     history_.push_back({elements_, constraints_});
     historyIndex_ = history_.size() - 1;
+}
+
+void SketchEditorSession::beginDrag() {
+    if (!dragStart_)
+        dragStart_ = HistoryState{elements_, constraints_};
+}
+
+bool SketchEditorSession::dragSelected(double totalX, double totalY) {
+    if (!dragStart_)
+        return false;
+    elements_ = dragStart_->elements;
+    constraints_ = dragStart_->constraints;
+    if (totalX == 0.0 && totalY == 0.0) {
+        static_cast<void>(solveConstraints());
+        return true;
+    }
+    return translateSelected(totalX, totalY);
+}
+
+void SketchEditorSession::endDrag() {
+    dragStart_.reset();
+    commitHistory();
+}
+
+void SketchEditorSession::cancelDrag() {
+    if (!dragStart_)
+        return;
+    elements_ = dragStart_->elements;
+    constraints_ = dragStart_->constraints;
+    dragStart_.reset();
+    static_cast<void>(solveConstraints());
 }
 
 bool SketchEditorSession::canUndo() const noexcept { return historyIndex_ > 0; }

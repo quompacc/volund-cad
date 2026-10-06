@@ -251,6 +251,10 @@ class CadViewport final : public CadViewportBase {
         std::function<void(const std::optional<SketchElementIntent>&)> handler);
     void setSketchEditorElementHandler(std::function<void(const SketchElementIntent&)> handler);
     void setSketchEditorTranslationHandler(std::function<void(double, double)> handler);
+    // U09: pointer-up after dragging sketch elements; cancelSketchElementDrag ends a running
+    // drag without that notification (Escape).
+    void setSketchEditorDragEndHandler(std::function<void()> handler);
+    [[nodiscard]] bool cancelSketchElementDrag();
     void beginSketchEditor(const PlanarFaceSelection& support, SketchElementTool tool);
     void setSketchEditorTool(SketchElementTool tool);
     void continueSketchPolyline(double x, double y, std::uint64_t elementId);
