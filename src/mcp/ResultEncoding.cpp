@@ -119,6 +119,13 @@ void insertExtrusionMode(QJsonObject& json, const document::DocumentSnapshot& sn
     parameters.insert("direction", extrusion.reversed ? "reversed" : "normal");
     if (extrusion.target)
         parameters.insert("targetBodyId", id(extrusion.target->value()));
+    parameters.insert("offset", detail::quantity(extrusion.offset, "mm"));
+    if (extrusion.offsetParameter)
+        parameters.insert("offsetParameterId", id(extrusion.offsetParameter->value()));
+    if (extrusion.upToFace)
+        parameters.insert("upToFace",
+                          QJsonObject{{"bodyId", id(extrusion.upToFace->body.value())},
+                                      {"face", detail::encodeFaceOrigin(extrusion.upToFace->origin)}});
     json.insert("parameters", parameters);
 }
 

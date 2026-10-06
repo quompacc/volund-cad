@@ -57,6 +57,7 @@ struct BindSketchDimensionAction final {
 struct BindExtrusionDistanceAction final {
     document::FeatureId extrusion;
     std::optional<document::ParameterId> parameter;
+    bool offset{false}; // T03: binds the start offset instead of the distance
     bool operator==(const BindExtrusionDistanceAction&) const = default;
 };
 // A sketch on a base plane (sketch.datum set); it opens a new body.

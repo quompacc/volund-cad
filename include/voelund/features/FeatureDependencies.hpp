@@ -1,12 +1,18 @@
 #pragma once
+#include <voelund/document/BodyId.hpp>
 #include <voelund/document/FeatureId.hpp>
 #include <span>
 #include <vector>
 #include <optional>
 namespace voelund::document { class DocumentSnapshot; }
 namespace voelund::features {
+// T02/T03: the latest feature before `feature` (document order) that produced `body`'s
+// solid; nullopt before the body's first solid.
+[[nodiscard]] std::optional<document::FeatureId>
+bodyProducerBefore(const document::DocumentSnapshot& snapshot, document::FeatureId feature,
+                   document::BodyId body);
 // T02: a join or cut of a base-plane sketch works on its target body as the latest earlier
-// feature (document order) left it; nullopt without a target or before the body's first solid.
+// feature left it; nullopt without a target or before the body's first solid.
 [[nodiscard]] std::optional<document::FeatureId>
 targetProducer(const document::DocumentSnapshot& snapshot, document::FeatureId extrusion);
 struct FeatureInputs final {

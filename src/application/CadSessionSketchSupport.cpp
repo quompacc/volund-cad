@@ -34,6 +34,23 @@ CadSession::supportFaces(document::FeatureId support) const {
     return features::supportFaceFrames(
         *std::ranges::find(outputs, support, &features::EvaluatedFeature::id));
 }
+document::BodyFaceReference
+CadSession::faceReference(document::FeatureId support, const features::SupportOrigin& face) const {
+    const auto faces = supportFaces(support);
+    if (std::ranges::find(faces, face, &features::SupportFaceFrame::origin) == faces.end())
+        throw std::invalid_argument("Not a current planar face of this support");
+    const auto& outputs = evaluation_->result.features;
+    return {*std::ranges::find(outputs, support, &features::EvaluatedFeature::id)->bodyId, face};
+}
+document::BodyFaceReference CadSession::faceReference(document::FeatureId support,
+                                                      const TopoDS_Shape& face) const {
+    const auto faces = supportFaces(support);
+    const auto found = std::ranges::find_if(
+        faces, [&](const features::SupportFaceFrame& item) { return item.face.IsSame(face); });
+    if (found == faces.end())
+        throw std::invalid_argument("Pick a planar face with a stable origin");
+    return faceReference(support, found->origin);
+}
 document::SketchParameters CadSession::sketchOnFace(document::FeatureId support,
                                                     const features::SupportOrigin& face) const {
     const auto faces = supportFaces(support);

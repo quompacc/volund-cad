@@ -59,6 +59,8 @@ struct ExtrusionMode final {
     std::optional<document::ExtrusionOperation> operation{};
     bool reversed{false};
     std::optional<document::BodyId> target{};
+    double offset{0.0};                                  // T03
+    std::optional<document::BodyFaceReference> upToFace{}; // T03
     bool operator==(const ExtrusionMode&) const = default;
 };
 
@@ -126,6 +128,12 @@ class CadSession final {
     supportFaces(document::FeatureId support) const;
     [[nodiscard]] document::SketchParameters
     sketchOnFace(document::FeatureId support, const features::SupportOrigin& face) const;
+    // T03: a face of `support`'s current result as a stable reference (e.g. an extrusion's
+    // end face), from a named origin or from a picked face. Throws std::invalid_argument.
+    [[nodiscard]] document::BodyFaceReference
+    faceReference(document::FeatureId support, const features::SupportOrigin& face) const;
+    [[nodiscard]] document::BodyFaceReference faceReference(document::FeatureId support,
+                                                            const TopoDS_Shape& face) const;
     [[nodiscard]] SketchSupportProjection
     projectSketchSupport(document::FeatureId support, const document::SketchSupportBinding& binding,
                          unsigned divisions = 32) const;
@@ -259,7 +267,8 @@ class CadSession final {
     [[nodiscard]] CommandResult
     bindExtrusionDistance(document::FeatureId extrusion,
                           std::optional<document::ParameterId> parameter,
-                          ErrorDisposition disposition = ErrorDisposition::keepEditableErrors);
+                          ErrorDisposition disposition = ErrorDisposition::keepEditableErrors,
+                          bool offset = false); // T03: the start offset instead
     [[nodiscard]] bool canUndo() const noexcept;
     [[nodiscard]] bool canRedo() const noexcept;
     [[nodiscard]] CommandResult undo();

@@ -1,11 +1,13 @@
 #include "NativeExtrusion.hpp"
 #include "DocumentSerializationDetail.hpp"
 #include "NativeParameters.hpp"
+#include "NativeSketchSupport.hpp"
 #include <voelund/kernel/NumericPolicy.hpp>
 #include <TDataStd_AsciiString.hxx>
 #include <TDataStd_Integer.hxx>
 #include <TDataStd_Real.hxx>
 #include <charconv>
+#include <cmath>
 #include <set>
 #include <string>
 
@@ -88,7 +90,8 @@ int readInteger(const TDF_Label& label) {
 }
 }
 std::size_t nativeExtrusionRecords(const ExtrusionParameters& parameters) {
-    std::size_t records = parameters.profiles.size() + parameters.regions.size();
+    std::size_t records = parameters.profiles.size() + parameters.regions.size() +
+        (parameters.upToFace ? parameters.upToFace->origin.extrusionBoundary.size() : 0);
     for (const auto& region : parameters.regions)
         records += chunkCount(region);
     return records;
@@ -105,6 +108,8 @@ void validateNativeExtrusion(const ExtrusionParameters& parameters) {
     for (const auto& region : parameters.regions)
         require(regions.insert(region.text()).second);
     require(!parameters.target || parameters.target->value() != 0);
+    require(std::isfinite(parameters.offset) &&
+        (!parameters.upToFace || parameters.upToFace->body.value() != 0));
 }
 void writeNativeExtrusion(const TDF_Label& label, const ExtrusionParameters& parameters) {
     TDataStd_Real::Set(label, parameters.distance);
@@ -124,6 +129,16 @@ void writeNativeExtrusion(const TDF_Label& label, const ExtrusionParameters& par
     if (parameters.target)
         TDataStd_AsciiString::Set(label.FindChild(6),
             std::to_string(parameters.target->value()).c_str());
+    if (parameters.offset != 0.0)
+        TDataStd_Real::Set(label.FindChild(7), parameters.offset);
+    if (parameters.offsetParameter)
+        writeNativeParameterBinding(label.FindChild(8), *parameters.offsetParameter);
+    if (parameters.upToFace) {
+        const auto face = label.FindChild(9);
+        TDataStd_AsciiString::Set(face.FindChild(1),
+            std::to_string(parameters.upToFace->body.value()).c_str());
+        writeNativeSubshapeOrigin(face, parameters.upToFace->origin);
+    }
 }
 ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t remainingRecords,
                                         int schemaVersion) {
@@ -136,11 +151,18 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
     const auto operation = label.FindChild(4, false);
     const auto reversed = label.FindChild(5, false);
     const auto target = label.FindChild(6, false);
+    // Schema 9 (T03) adds start offset (7), its binding (8) and the end face (9).
+    const auto offset = label.FindChild(7, false);
+    const auto offsetBinding = label.FindChild(8, false);
+    const auto endFace = label.FindChild(9, false);
     const int t02 = (operation.IsNull() ? 0 : 1) + (reversed.IsNull() ? 0 : 1) +
         (target.IsNull() ? 0 : 1);
+    const int t03 = (offset.IsNull() ? 0 : 1) + (offsetBinding.IsNull() ? 0 : 1) +
+        (endFace.IsNull() ? 0 : 1);
     require((regions.IsNull() || schemaVersion >= 5) && (binding.IsNull() || schemaVersion >= 7) &&
-        (t02 == 0 || schemaVersion >= 8) &&
-        label.NbChildren() == 1 + (regions.IsNull() ? 0 : 1) + (binding.IsNull() ? 0 : 1) + t02);
+        (t02 == 0 || schemaVersion >= 8) && (t03 == 0 || schemaVersion >= 9) &&
+        label.NbChildren() ==
+            1 + (regions.IsNull() ? 0 : 1) + (binding.IsNull() ? 0 : 1) + t02 + t03);
     Handle(TDataStd_Real) distance;
     require(label.FindAttribute(TDataStd_Real::GetID(), distance));
     const auto profiles = child(label, 1);
@@ -182,6 +204,19 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
     }
     if (!target.IsNull())
         result.target = BodyId{readDecimal(target)};
+    if (!offset.IsNull()) {
+        Handle(TDataStd_Real) value;
+        require(offset.NbChildren() == 0 && offset.FindAttribute(TDataStd_Real::GetID(), value) &&
+            value->Get() != 0.0); // Written only when set.
+        result.offset = value->Get();
+    }
+    if (!offsetBinding.IsNull())
+        result.offsetParameter = readNativeParameterBinding(offsetBinding);
+    if (!endFace.IsNull()) {
+        require(endFace.NbChildren() == 4);
+        const BodyId body{readDecimal(child(endFace, 1))};
+        result.upToFace = BodyFaceReference{body, readNativeSubshapeOrigin(endFace, remainingRecords)};
+    }
     validateNativeExtrusion(result);
     return result;
 }

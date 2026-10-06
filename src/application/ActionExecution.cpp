@@ -242,7 +242,7 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot,
                 return session.bindSketchDimension(a.sketch, a.constraint, a.parameter, keep);
             },
             [&](const BindExtrusionDistanceAction& a) {
-                return session.bindExtrusionDistance(a.extrusion, a.parameter, keep);
+                return session.bindExtrusionDistance(a.extrusion, a.parameter, keep, a.offset);
             },
             [&](const CreateDatumSketchAction& a) {
                 return session.createDatumSketchFeature(a.sketch);

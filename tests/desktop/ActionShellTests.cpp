@@ -90,7 +90,7 @@ std::pair<document::FeatureId, document::FeatureId> guiFlow(application::CadSess
     settle();
     auto* panel = window.findChild<QWidget*>(QStringLiteral("activeToolPanel"));
     QDoubleSpinBox* distance = nullptr;
-    for (auto* field : panel->findChildren<QDoubleSpinBox*>())
+    for (auto* field : panel->findChildren<QDoubleSpinBox*>(QStringLiteral("toolLength_distance")))
         if (field->isVisible())
             distance = field;
     require(distance != nullptr, "Extrusion distance field");

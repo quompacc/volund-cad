@@ -86,14 +86,20 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
                 std::get<CylinderParameters>(parameters[index]).resultMode ==
                     CylinderResultMode::separate);
     };
-    // T02: a join or cut of a base-plane sketch names a body that some feature creates.
+    // T02: a join or cut of a base-plane sketch names a body that some feature creates;
+    // T03: so does the face an extrusion ends on.
+    const auto isBody = [&](BodyId body) {
+        const auto creator = indices.find(body.value());
+        return creator != indices.end() && createsBody(creator->second);
+    };
     for (std::size_t index = 0; index < features.size(); ++index) {
         const auto* prism = extrusion(index);
-        if (prism == nullptr || !prism->target)
+        if (prism == nullptr)
             continue;
-        const auto creator = indices.find(prism->target->value());
-        if (inputs[*inputs[index]] || creator == indices.end() || !createsBody(creator->second))
+        if (prism->target && (inputs[*inputs[index]] || !isBody(*prism->target)))
             throw std::invalid_argument("Extrusion target is not a body of this document");
+        if (prism->upToFace && !isBody(prism->upToFace->body))
+            throw std::invalid_argument("Extrusion end face is not on a body of this document");
     }
     // Iterative traversal also handles long legacy chains without recursive stack growth.
     std::vector<unsigned char> state(features.size(), 0);

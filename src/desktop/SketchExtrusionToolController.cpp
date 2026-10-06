@@ -37,6 +37,9 @@ void SketchExtrusionToolController::beginSelectedProfiles() {
     operation_ = baseSketch_ ? document::ExtrusionOperation::newBody
                              : document::ExtrusionOperation::join;
     reversed_ = false;
+    offset_ = 0.0;
+    upToFace_ = false;
+    endFace_.reset();
     // A base-plane sketch joins or cuts a named body; the field shows when there is a choice.
     targets_.clear();
     std::vector<QString> targetNames;
@@ -52,6 +55,7 @@ void SketchExtrusionToolController::beginSelectedProfiles() {
     }
     target_ = targets_.empty() ? std::nullopt : std::optional{targets_.front()};
     std::vector<ToolChoiceParameter> choices{
+        {"end", QObject::tr("Ende"), {QObject::tr("Distanz"), QObject::tr("Bis Fläche")}, 0},
         {"direction",
          QObject::tr("Richtung"),
          {QObject::tr("Entlang Normale"), QObject::tr("Entgegen Normale")},
@@ -65,12 +69,15 @@ void SketchExtrusionToolController::beginSelectedProfiles() {
     panel_.begin(ToolPanelDefinition{
         QObject::tr("Extrudieren"),
         QObject::tr("%1 gewählte(n) Skizzenbereich(e) extrudieren.").arg(profileIds_.size()),
-        {{"distance", QObject::tr("Distanz"), distance_, 0.001, 1'000'000.0}},
+        {{"distance", QObject::tr("Distanz"), distance_, 0.001, 1'000'000.0},
+         {"offset", QObject::tr("Versatz"), offset_, -1'000'000.0, 1'000'000.0}},
         std::move(choices),
         {},
         [this](const std::string& id, double value) {
             if (id == "distance")
                 setDistance(value);
+            else if (id == "offset")
+                offset_ = value;
         },
         [this](const std::string& id, int index) { choose(id, index); },
         {},
@@ -84,7 +91,15 @@ void SketchExtrusionToolController::beginSelectedProfiles() {
 void SketchExtrusionToolController::setDistance(double distance) { distance_ = distance; }
 
 void SketchExtrusionToolController::choose(const std::string& choice, int index) {
-    if (choice == "direction") {
+    if (choice == "end") {
+        upToFace_ = index == 1;
+        panel_.setLengthEnabled("distance", !upToFace_);
+        panel_.setAcceptEnabled(!upToFace_ || endFace_.has_value());
+        panel_.setGuidance(upToFace_ && !endFace_
+                               ? QObject::tr("Wähle im Modell die Fläche, an der die Extrusion endet.")
+                               : QObject::tr("%1 gewählte(n) Skizzenbereich(e) extrudieren.")
+                                     .arg(profileIds_.size()));
+    } else if (choice == "direction") {
         reversed_ = index == 1;
     } else if (choice == "operation") {
         operation_ = static_cast<document::ExtrusionOperation>(index + 1);
@@ -114,7 +129,8 @@ void SketchExtrusionToolController::accept() {
                 return runAction(session_,
                                  application::CreateProfileExtrusionAction{
                                      *profileSketch_, profileIds_, millimetres(distance_),
-                                     {operation_, reversed_, named ? target_ : std::nullopt}},
+                                     {operation_, reversed_, named ? target_ : std::nullopt,
+                                      offset_, upToFace_ ? endFace_ : std::nullopt}},
                                  supportStamp_);
             },
             [this](const QString& message) {
@@ -139,5 +155,21 @@ void SketchExtrusionToolController::cancel() {
 }
 
 bool SketchExtrusionToolController::isActive() const noexcept { return active_; }
+
+bool SketchExtrusionToolController::awaitsEndFace() const noexcept { return active_ && upToFace_; }
+
+void SketchExtrusionToolController::pickEndFace(document::FeatureId support,
+                                                const TopoDS_Shape& face) {
+    try {
+        endFace_ = session_.faceReference(support, face);
+    } catch (const std::exception&) {
+        panel_.setGuidance(QObject::tr("Diese Fläche lässt sich nicht als Ende verwenden. Wähle "
+                                       "eine ebene Fläche eines Körpers."));
+        return;
+    }
+    panel_.setAcceptEnabled(true);
+    panel_.setGuidance(QObject::tr("Endfläche gewählt. Eine andere Fläche ersetzt sie."));
+    statusChanged_(QObject::tr("Endfläche gewählt"));
+}
 
 } // namespace voelund::desktop

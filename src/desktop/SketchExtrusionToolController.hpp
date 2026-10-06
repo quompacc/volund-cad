@@ -4,6 +4,7 @@
 #include <voelund/document/ModelDocument.hpp>
 
 #include <QString>
+#include <TopoDS_Shape.hxx>
 
 #include <functional>
 #include <optional>
@@ -27,6 +28,9 @@ class SketchExtrusionToolController final {
     void beginSelectedProfiles();
     [[nodiscard]] bool isActive() const noexcept;
     void cancel();
+    // T03: with "Bis Fläche" chosen, a face picked in the viewport becomes the end face.
+    [[nodiscard]] bool awaitsEndFace() const noexcept;
+    void pickEndFace(document::FeatureId support, const TopoDS_Shape& face);
 
   private:
     void setDistance(double distance);
@@ -47,6 +51,9 @@ class SketchExtrusionToolController final {
     bool baseSketch_{false};
     std::vector<document::BodyId> targets_;
     std::optional<document::BodyId> target_;
+    double offset_{0.0};
+    bool upToFace_{false};
+    std::optional<document::BodyFaceReference> endFace_;
     bool active_{false};
 };
 

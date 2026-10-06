@@ -5,13 +5,17 @@
 #include <voelund/features/GeometryEvaluationError.hpp>
 #include <voelund/features/SketchConstraintSolver.hpp>
 #include <voelund/features/SketchEvaluation.hpp>
+#include <voelund/features/FeatureDependencies.hpp>
 #include <voelund/features/SketchSupportBinding.hpp>
+#include <voelund/kernel/NumericPolicy.hpp>
 #include <voelund/kernel/ShapeOperations.hpp>
 
 #include <BRepPrimAPI_MakePrism.hxx>
 #include <BRep_Builder.hxx>
 #include <TopoDS_Compound.hxx>
 #include <algorithm>
+#include <cmath>
+#include <gp_Pnt.hxx>
 #include <gp_Vec.hxx>
 #include <utility>
 #include <vector>
@@ -23,10 +27,44 @@ struct Prism final {
     std::vector<SupportProvenance> caps;
     std::vector<EdgeProvenance> edges;
 };
+// The sweep direction: the sketch normal, reversed on request.
+gp_Vec direction(const document::SketchParameters& sketch,
+                 const document::ExtrusionParameters& parameters) {
+    const gp_Vec normal(sketch.plane.normalX, sketch.plane.normalY, sketch.plane.normalZ);
+    return parameters.reversed ? -normal : normal;
+}
+// T03: the sketch moved by the start offset along the sweep direction.
+document::SketchParameters startSketch(document::SketchParameters sketch,
+                                       const document::ExtrusionParameters& parameters) {
+    const auto shift = direction(sketch, parameters) * parameters.offset;
+    sketch.plane.originX += shift.X();
+    sketch.plane.originY += shift.Y();
+    sketch.plane.originZ += shift.Z();
+    return sketch;
+}
+// T03: the length from the start plane to a parallel end face ahead of it.
+double lengthToFace(const document::SketchParameters& start,
+                    const document::ExtrusionParameters& parameters,
+                    const EvaluatedFeature& faceOwner, const document::SubshapeOrigin& origin) {
+    const auto faces = supportFaceFrames(faceOwner);
+    const auto face = std::ranges::find(faces, origin, &SupportFaceFrame::origin);
+    if (face == faces.end())
+        throw GeometryEvaluationError("End face is no longer a unique planar face of its body");
+    const auto along = direction(start, parameters);
+    const gp_Vec normal(face->plane.normalX, face->plane.normalY, face->plane.normalZ);
+    if (along.CrossMagnitude(normal) > std::sin(kernel::angularTolerance.radians))
+        throw GeometryEvaluationError("End face must be parallel to the sketch");
+    const gp_Vec offset(gp_Pnt(start.plane.originX, start.plane.originY, start.plane.originZ),
+                        gp_Pnt(face->plane.originX, face->plane.originY, face->plane.originZ));
+    const double length = offset.Dot(along);
+    if (length <= 1e-6)
+        throw GeometryEvaluationError("End face does not lie ahead in the extrusion direction");
+    return length;
+}
 // The selected regions swept along the sketch normal, against it when reversed.
 Prism makePrism(document::FeatureId extrusion, document::FeatureId sketchId,
                 const document::SketchParameters& sketch,
-                const document::ExtrusionParameters& parameters) {
+                const document::ExtrusionParameters& parameters, double length) {
     const auto profiles = evaluateExtrusionFaces(sketch, parameters);
     TopoDS_Compound faces;
     BRep_Builder builder;
@@ -35,9 +73,7 @@ Prism makePrism(document::FeatureId extrusion, document::FeatureId sketchId,
         builder.Add(faces, profile.face);
     // Exact support-plane contact: preserve both the start plane and the requested
     // end plane. OCCT's Boolean classifies the coincident faces; no length padding.
-    const double length = parameters.reversed ? -parameters.distance : parameters.distance;
-    BRepPrimAPI_MakePrism prism(
-        faces, gp_Vec(sketch.plane.normalX, sketch.plane.normalY, sketch.plane.normalZ) * length);
+    BRepPrimAPI_MakePrism prism(faces, direction(sketch, parameters) * length);
     Prism result{prism.Shape(), {}, extrusionEdgeOrigins(extrusion, sketchId, profiles, prism)};
     for (const auto& profile : profiles) {
         const auto cap = prism.LastShape(profile.face);
@@ -86,7 +122,21 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
         throw GeometryEvaluationError("Extrusion sketch is missing");
     const auto support = sketchDescriptor->inputFeature;
     const auto operation = document::effectiveOperation(parameters, !support);
-    const auto prism = makePrism(descriptor.id, sketchId, sketch, parameters);
+    // T03: the end face's body as it was before this extrusion, current and reference.
+    std::optional<document::FeatureId> faceOwner;
+    if (parameters.upToFace) {
+        faceOwner = bodyProducerBefore(document, descriptor.id, parameters.upToFace->body);
+        if (!faceOwner)
+            throw GeometryEvaluationError("End face body has no solid before this extrusion");
+    }
+    const auto start = startSketch(sketch, parameters);
+    // The reference prism keeps this length: reference results are unplaced primitives, so
+    // the end face's reference position says nothing about the current extent.
+    const double length =
+        faceOwner ? lengthToFace(start, parameters, findFeature(outputs, *faceOwner),
+                                 parameters.upToFace->origin)
+                  : parameters.distance;
+    const auto prism = makePrism(descriptor.id, sketchId, start, parameters, length);
 
     // The reference evaluation resolves a bound face sketch on the support's reference
     // result; a base-plane sketch is its own reference.
@@ -105,7 +155,9 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
         if (solveSketchConstraints(referenceSketch).status != SketchSolveStatus::success)
             throw GeometryEvaluationError("Reference sketch projected edges cannot be solved");
     }
-    const auto referencePrism = makePrism(descriptor.id, sketchId, referenceSketch, parameters);
+    const auto referenceStart = startSketch(referenceSketch, parameters);
+    const auto referencePrism =
+        makePrism(descriptor.id, sketchId, referenceStart, parameters, length);
 
     if (operation == document::ExtrusionOperation::newBody) {
         // V01: a base-plane sketch opened its own body (BodyId = sketch FeatureId); T02: a

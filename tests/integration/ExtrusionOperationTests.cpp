@@ -25,9 +25,18 @@ void require(bool condition, const std::string& message) {
 }
 bool near(double a, double b) { return std::abs(a - b) < 1e-6 * std::max(1.0, std::abs(b)); }
 document::FeatureId committed(const application::CommandResult& result) {
+    for (const auto& issue : result.evaluation().features)
+        if (!issue.message.empty())
+            std::cerr << "feature " << issue.feature.value() << ": " << issue.message
+                      << std::endl;
     require(result.status() == CommandStatus::committed && result.feature().has_value(),
-            "Command was not committed: " + result.diagnostic());
+            "Command was not committed (status " +
+                std::to_string(static_cast<int>(result.status())) + ", reason " +
+                std::to_string(static_cast<int>(result.reason())) + "): " + result.diagnostic());
     return *result.feature();
+}
+void applied(const application::CommandResult& result) {
+    require(result.status() == CommandStatus::committed, "Edit was not applied: " + result.diagnostic());
 }
 document::SketchParameters onXy(double x0, double y0, double x1, double y1) {
     document::SketchParameters sketch{
@@ -117,6 +126,42 @@ void faceOperations() {
             "The default joins the face's body");
 }
 
+// T03: a start offset shifts the prism; "up to face" ends on a parallel face and follows it.
+void offsetAndEndFace() {
+    application::CadSession session;
+    auto base = plate(session);
+    auto sketch = topSketch(session, base.extrusion, 0, 10);
+    committed(extrude(session, sketch, 8, {ExtrusionOperation::newBody, false, std::nullopt, 5}));
+    require(session.validBodies().size() == 2 && near(test::maximumZOf(session.currentShape()), 23),
+            "A rib with offset 5 floats from z = 15 to 23");
+
+    // A column from the plate's top face up to the underside of a box placed above.
+    base = plate(session);
+    const auto box = committed(session.createBoxFeature());
+    auto placed = session.identifiedSnapshot().snapshot().boxParameters(box);
+    placed.dimensions = {20, 20, 5};
+    placed.placement.translationZ = 30;
+    applied(session.editBoxParameters(box, placed));
+    const auto faces = session.supportFaces(box);
+    const auto underside = std::ranges::find_if(faces, [](const auto& face) {
+        return face.origin.role == kernel::PrimitiveRole::boxNegativeZ;
+    });
+    require(underside != faces.end(), "The box offers its underside");
+    const auto end = session.faceReference(box, underside->origin);
+    sketch = topSketch(session, base.extrusion, 0, 10);
+    committed(extrude(session, sketch, 1, {ExtrusionOperation::join, false, std::nullopt, 0, end}));
+    const double column = 20 * 10 * 20;
+    require(session.validBodies().size() == 2 && near(volume(session), 32000 + column + 2000),
+            "The column joins the plate and ends on the box: " + std::to_string(volume(session)));
+    placed.placement.translationZ = 40;
+    applied(session.editBoxParameters(box, placed));
+    require(near(volume(session), 32000 + 1.5 * column + 2000), "The column follows the box");
+    placed.placement.translationZ = 5;
+    const auto behind = session.editBoxParameters(box, placed);
+    require(behind.status() == CommandStatus::rejected && near(volume(session), 32000 + 1.5 * column + 2000),
+            "A box below the start is rejected: " + behind.diagnostic());
+}
+
 void namedTargets(const std::filesystem::path& work) {
     application::CadSession session;
     const auto base = plate(session);
@@ -167,9 +212,10 @@ int main() {
         const auto work = std::filesystem::temp_directory_path() / "voelund-t02";
         std::filesystem::create_directories(work);
         faceOperations();
+        offsetAndEndFace();
         namedTargets(work);
         std::filesystem::remove_all(work);
-        std::cout << "PASS T02 extrusion operations\n";
+        std::cout << "PASS T02/T03 extrusion operations\n";
         return EXIT_SUCCESS;
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';

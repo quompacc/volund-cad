@@ -182,6 +182,12 @@ void MainWindow::connectInteractions() {
     impl_->viewport->setBodySelectionHandler([this](std::uint64_t id) { selectFeature(id); });
     impl_->viewport->setPlanarFaceSelectionHandler(
         [this](const viewport::PlanarFaceSelection& selection) {
+            // T03: while the extrusion waits for its end face, the pick goes to the tool.
+            if (impl_->sketchExtrusionTool->awaitsEndFace()) {
+                impl_->sketchExtrusionTool->pickEndFace(document::FeatureId{selection.bodyId},
+                                                        selection.selectedFace);
+                return;
+            }
             impl_->selectedDatum.reset();
             if (impl_->session.sceneStatus().isCurrent()) {
                 impl_->selectedPlanarFace = selection;

@@ -15,6 +15,7 @@
 #include <voelund/application/CadSession.hpp>
 #include <voelund/desktop/MainWindow.hpp>
 #include <voelund/features/SketchRegionIdentity.hpp>
+#include "../integration/CadSessionTestSupport.hpp"
 
 // T02: the extrusion panel offers direction and result (ADR 0012 target, user decision
 // 2026-10-06). A face sketch defaults to join; choosing cut turns the direction into the
@@ -59,14 +60,12 @@ QComboBox& choice(QWidget& window, const char* id) {
     require(box != nullptr, "Panel choice missing");
     return *box;
 }
-void setDistance(QWidget& window, double value) {
-    QDoubleSpinBox* distance = nullptr;
-    for (auto* candidate : panel(window).findChildren<QDoubleSpinBox*>())
-        if (candidate->isVisible())
-            distance = candidate;
-    require(distance != nullptr, "Distance field");
-    distance->setValue(value);
+void setLength(QWidget& window, const char* id, double value) {
+    auto* input = field<QDoubleSpinBox>(window, QStringLiteral("toolLength_") + QLatin1String(id));
+    require(input != nullptr, "Length field");
+    input->setValue(value);
 }
+void setDistance(QWidget& window, double value) { setLength(window, "distance", value); }
 void acceptPanel(QWidget& window) {
     auto* accept = panel(window).findChild<QPushButton*>(QStringLiteral("toolAcceptButton"));
     require(accept != nullptr && accept->isEnabled(), "OK enabled");
@@ -107,9 +106,8 @@ void openExtrusion(QWidget& window, application::CadSession& session, document::
     settle();
 }
 
-void pocketFromFace(desktop::MainWindow& window, application::CadSession& session) {
-    session.newDocument();
-    const auto support = plate(session, -40, 40);
+// A 20 x 10 rectangle in the middle of the plate's top face, as a sketch on that face.
+document::FeatureId faceSketch(application::CadSession& session, document::FeatureId support) {
     const auto faces = session.supportFaces(support);
     const auto top = std::ranges::find_if(
         faces, [](const auto& face) { return face.plane.normalZ > 0.5 && face.plane.originZ > 9; });
@@ -123,7 +121,12 @@ void pocketFromFace(desktop::MainWindow& window, application::CadSession& sessio
         2};
     const auto created = session.createSketchFeature(support, sketch);
     require(created.feature().has_value(), "Face sketch");
-    openExtrusion(window, session, *created.feature());
+    return *created.feature();
+}
+
+void pocketFromFace(desktop::MainWindow& window, application::CadSession& session) {
+    session.newDocument();
+    openExtrusion(window, session, faceSketch(session, plate(session, -40, 40)));
     require(choice(window, "operation").currentIndex() == 1 &&
                 choice(window, "direction").currentIndex() == 0 &&
                 field<QComboBox>(window, QStringLiteral("toolChoice_target")) == nullptr,
@@ -162,6 +165,60 @@ void joinFromBasePlane(desktop::MainWindow& window, application::CadSession& ses
             "OK joins the rectangle to body 1");
 }
 
+// T03: a start offset lifts a new body; "Bis Fläche" waits for a face picked in the
+// viewport, then ends the column on the top of a box above the plate.
+void offsetAndEndFace(desktop::MainWindow& window, application::CadSession& session,
+                      viewport::CadViewport& viewport) {
+    session.newDocument();
+    auto support = plate(session, -40, 40);
+    openExtrusion(window, session, faceSketch(session, support));
+    choice(window, "operation").setCurrentIndex(0);
+    setDistance(window, 8);
+    setLength(window, "offset", 5);
+    acceptPanel(window);
+    settle();
+    require(session.validBodies().size() == 2 &&
+                std::abs(test::maximumZOf(session.currentShape()) - 23) < 1e-6,
+            "Offset 5 lifts the new body to z = 15..23");
+
+    session.newDocument();
+    support = plate(session, -40, 40);
+    const auto box = session.createBoxFeature();
+    require(box.feature().has_value(), "Box");
+    auto placed = session.identifiedSnapshot().snapshot().boxParameters(*box.feature());
+    placed.dimensions = {30, 30, 5};
+    placed.placement.translationX = -15;
+    placed.placement.translationY = -5;
+    placed.placement.translationZ = 30;
+    require(session.editBoxParameters(*box.feature(), placed).status() ==
+                application::CommandStatus::committed,
+            "Box above the plate");
+    openExtrusion(window, session, faceSketch(session, support));
+    choice(window, "end").setCurrentIndex(1);
+    settle();
+    auto* accept = panel(window).findChild<QPushButton*>(QStringLiteral("toolAcceptButton"));
+    require(!accept->isEnabled() &&
+                !field<QDoubleSpinBox>(window, QStringLiteral("toolLength_distance"))->isEnabled(),
+            "Up to face waits for a face; the distance is off");
+    test::render(viewport);
+    const QPoint point = viewport::ViewportTestAccess::project(viewport, 10, 20, 35);
+    test::mouse(viewport, QEvent::MouseMove, point, Qt::NoButton, Qt::NoButton);
+    test::mouse(viewport, QEvent::MouseButtonPress, point, Qt::LeftButton, Qt::LeftButton);
+    test::mouse(viewport, QEvent::MouseButtonRelease, point, Qt::LeftButton, Qt::NoButton);
+    test::render(viewport);
+    settle();
+    require(accept->isEnabled(), "A picked face enables OK");
+    capture(window, "t03-up-to-face.png");
+    acceptPanel(window);
+    settle();
+    const auto plateBody = std::ranges::find(session.validBodies(), document::BodyId{1},
+                                             &features::EvaluatedBody::bodyId);
+    GProp_GProps properties;
+    BRepGProp::VolumeProperties(plateBody->shape, properties);
+    require(matches(properties.Mass(), 32000 + 20 * 10 * 25),
+            "The column joins the plate and ends on the box top at z = 35");
+}
+
 void run() {
     application::CadSession session;
     desktop::MainWindow window(session);
@@ -172,7 +229,9 @@ void run() {
     test::render(*viewport);
     pocketFromFace(window, session);
     joinFromBasePlane(window, session);
-    std::cout << "PASS T02 extrusion panel: defaults, cut direction, target body\n";
+    viewport->setCameraView(viewport::CameraView::isometric);
+    offsetAndEndFace(window, session, *viewport);
+    std::cout << "PASS T02/T03 extrusion panel: defaults, cut direction, target, offset, up to face\n";
 }
 } // namespace
 

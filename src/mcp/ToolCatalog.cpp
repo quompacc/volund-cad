@@ -104,6 +104,15 @@ void insertExtrusionMode(QJsonObject& properties) {
     properties.insert("targetBodyId",
                       typed("integer", "Join or cut of a base-plane sketch: the body id from "
                                        "get_context. A face sketch always works on its body"));
+    properties.insert("offset", length("Start offset along the extrusion direction, may be "
+                                       "negative; default 0"));
+    properties.insert(
+        "upToFace",
+        object({{"supportId", featureId("supportId of the face's body in get_context")},
+                {"face", typed("object", "A face reference from bodies[].faces[].face")}},
+               {"supportId", "face"},
+               "End on this planar face, parallel to the sketch, instead of after distance; the "
+               "extrusion follows the face when it moves"));
 }
 
 // Every mutating tool: the request envelope plus its own fields.
@@ -161,9 +170,11 @@ std::vector<ToolDefinition> makeCatalog() {
          {"parameterId", typed("integer")}},
         {"sketchId", "constraintId"}));
     tools.push_back(action("bind_extrusion_distance",
-                           "Bind an extrusion distance to a length parameter, or unbind it.",
+                           "Bind an extrusion distance (or its start offset) to a length "
+                           "parameter, or unbind it.",
                            {{"extrusionId", featureId("extrusion")},
-                            {"parameterId", typed("integer")}},
+                            {"parameterId", typed("integer")},
+                            {"length", choice({"distance", "offset"}, "Default distance")}},
                            {"extrusionId"}));
     tools.push_back(action("create_sketch", "Create a sketch on a base plane; opens a new body.",
                            {{"sketch", sketchSchema(true)}}, {"sketch"}));

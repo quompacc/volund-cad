@@ -7,6 +7,19 @@
 #include <stdexcept>
 
 namespace voelund::features {
+std::optional<document::FeatureId> bodyProducerBefore(const document::DocumentSnapshot& snapshot,
+                                                      document::FeatureId feature,
+                                                      document::BodyId body) {
+    const auto features = snapshot.features();
+    const auto found = std::ranges::find(features, feature, &document::FeatureDescriptor::id);
+    if (found == features.end())
+        return std::nullopt;
+    const auto contexts = document::featureBodyContexts(features, snapshot.parameters());
+    for (auto index = static_cast<std::size_t>(found - features.begin()); index-- > 0;)
+        if (features[index].kind != document::FeatureKind::sketch && contexts[index] == body)
+            return features[index].id;
+    return std::nullopt;
+}
 std::optional<document::FeatureId> targetProducer(const document::DocumentSnapshot& snapshot,
                                                   document::FeatureId extrusion) {
     const auto features = snapshot.features();
@@ -14,13 +27,7 @@ std::optional<document::FeatureId> targetProducer(const document::DocumentSnapsh
     if (found == features.end() || found->kind != document::FeatureKind::extrusion)
         return std::nullopt;
     const auto target = snapshot.extrusionParameters(extrusion).target;
-    if (!target)
-        return std::nullopt;
-    const auto contexts = document::featureBodyContexts(features, snapshot.parameters());
-    for (auto index = static_cast<std::size_t>(found - features.begin()); index-- > 0;)
-        if (features[index].kind != document::FeatureKind::sketch && contexts[index] == target)
-            return features[index].id;
-    return std::nullopt;
+    return target ? bodyProducerBefore(snapshot, extrusion, *target) : std::nullopt;
 }
 FeatureDependencies::FeatureDependencies(std::vector<FeatureInputs> nodes) : nodes_(std::move(nodes)) {
     std::map<std::uint64_t, std::size_t> indices;
@@ -61,6 +68,11 @@ FeatureDependencies FeatureDependencies::from(const document::DocumentSnapshot& 
             if (sketch == features.end()) throw std::invalid_argument("Missing extrusion sketch");
             if (sketch->inputFeature) node.inputs.push_back(*sketch->inputFeature);
             else if (const auto producer = targetProducer(snapshot, feature.id)) node.inputs.push_back(*producer);
+            // T03: the body of the end face, as it was before this extrusion.
+            if (const auto face = snapshot.extrusionParameters(feature.id).upToFace)
+                if (const auto producer = bodyProducerBefore(snapshot, feature.id, face->body);
+                    producer && std::ranges::find(node.inputs, *producer) == node.inputs.end())
+                    node.inputs.push_back(*producer);
         }
         nodes.push_back(std::move(node));
     }

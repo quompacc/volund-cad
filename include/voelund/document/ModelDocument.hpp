@@ -92,6 +92,13 @@ struct SketchParameters final {
 void validateSketchParameters(const SketchParameters& parameters);
 void validateCylinderParameters(const CylinderParameters& parameters);
 
+// T03: a planar face of one of this document's bodies, named by its semantic origin.
+struct BodyFaceReference final {
+    BodyId body;
+    SubshapeOrigin origin;
+    [[nodiscard]] bool operator==(const BodyFaceReference&) const = default;
+};
+
 // T02: what an extrusion's prism does to a body.
 enum class ExtrusionOperation { newBody = 1, join = 2, cut = 3 };
 
@@ -112,6 +119,13 @@ struct ExtrusionParameters final {
     // Join or cut of a base-plane sketch names the body it works on (its creating feature's
     // ID). A face sketch always works on its support's body and names none.
     std::optional<BodyId> target{};
+    // T03 (schema 9): the prism starts this far along its direction from the sketch plane
+    // (mm, may be negative); bindable like the distance.
+    double offset{0.0};
+    std::optional<ParameterId> offsetParameter{};
+    // T03: the prism ends on this face, parallel to the sketch, instead of after `distance`
+    // (which stays stored as the last value).
+    std::optional<BodyFaceReference> upToFace{};
 
     [[nodiscard]] bool operator==(const ExtrusionParameters&) const = default;
 };

@@ -37,21 +37,38 @@ int integer(const TDF_Label& label) {
     return value->Get();
 }
 } // namespace
+void writeNativeSubshapeOrigin(const TDF_Label& label, const SubshapeOrigin& origin) {
+    validateSubshapeOrigin(origin);
+    TDataStd_AsciiString::Set(label.FindChild(2), std::to_string(origin.feature.value()).c_str());
+    TDataStd_Integer::Set(label.FindChild(3), origin.role ? static_cast<int>(*origin.role) : -1);
+    const auto boundary = label.FindChild(4);
+    TDataStd_Integer::Set(boundary, static_cast<int>(origin.extrusionBoundary.size()));
+    int index = 0;
+    for (const auto id : origin.extrusionBoundary)
+        TDataStd_AsciiString::Set(boundary.FindChild(++index), std::to_string(id.value()).c_str());
+}
+SubshapeOrigin readNativeSubshapeOrigin(const TDF_Label& label, std::size_t& remainingElements) {
+    SubshapeOrigin origin{FeatureId{number(child(label, 2))}, std::nullopt};
+    const int role = integer(child(label, 3));
+    require(role >= -1 && role <= static_cast<int>(kernel::PrimitiveRole::cylinderSide));
+    if (role >= 0)
+        origin.role = static_cast<kernel::PrimitiveRole>(role);
+    const auto boundary = child(label, 4);
+    const int count = integer(boundary);
+    require(count >= 0 && static_cast<std::size_t>(count) <= remainingElements &&
+            boundary.NbChildren() == count);
+    remainingElements -= static_cast<std::size_t>(count);
+    for (int i = 1; i <= count; ++i)
+        origin.extrusionBoundary.emplace_back(number(child(boundary, i)));
+    validateSubshapeOrigin(origin);
+    return origin;
+}
 void writeNativeSketchSupport(const TDF_Label& label, const SketchSupportBinding& binding) {
     const auto& ref = binding.reference;
-    validateSubshapeOrigin(ref.origin);
     validateCanonicalSketchPlane(binding.localPlane);
     TDataStd_AsciiString::Set(label, documentIdToHex(ref.document).c_str());
     TDataStd_AsciiString::Set(label.FindChild(1), std::to_string(ref.body.value()).c_str());
-    TDataStd_AsciiString::Set(label.FindChild(2),
-                              std::to_string(ref.origin.feature.value()).c_str());
-    TDataStd_Integer::Set(label.FindChild(3),
-                          ref.origin.role ? static_cast<int>(*ref.origin.role) : -1);
-    const auto boundary = label.FindChild(4);
-    TDataStd_Integer::Set(boundary, static_cast<int>(ref.origin.extrusionBoundary.size()));
-    int index = 0;
-    for (const auto id : ref.origin.extrusionBoundary)
-        TDataStd_AsciiString::Set(boundary.FindChild(++index), std::to_string(id.value()).c_str());
+    writeNativeSubshapeOrigin(label, ref.origin);
     const auto& p = binding.localPlane;
     const double values[] = {p.originX, p.originY,     p.originZ,     p.normalX,    p.normalY,
                              p.normalZ, p.xDirectionX, p.xDirectionY, p.xDirectionZ};
@@ -62,18 +79,7 @@ void writeNativeSketchSupport(const TDF_Label& label, const SketchSupportBinding
 SketchSupportBinding readNativeSketchSupport(const TDF_Label& label,
                                              std::size_t remainingElements) {
     require(label.NbChildren() == 5);
-    SubshapeOrigin origin{FeatureId{number(child(label, 2))}, std::nullopt};
-    const int role = integer(child(label, 3));
-    require(role >= -1 && role <= static_cast<int>(kernel::PrimitiveRole::cylinderSide));
-    if (role >= 0)
-        origin.role = static_cast<kernel::PrimitiveRole>(role);
-    const auto boundary = child(label, 4);
-    const int count = integer(boundary);
-    require(count >= 0 && static_cast<std::size_t>(count) <= remainingElements &&
-            boundary.NbChildren() == count);
-    for (int i = 1; i <= count; ++i)
-        origin.extrusionBoundary.emplace_back(number(child(boundary, i)));
-    validateSubshapeOrigin(origin);
+    const auto origin = readNativeSubshapeOrigin(label, remainingElements);
     Handle(TDataStd_RealArray) data;
     require(child(label, 5).FindAttribute(TDataStd_RealArray::GetID(), data) &&
             data->Lower() == 1 && data->Upper() == 9);

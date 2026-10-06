@@ -340,20 +340,32 @@ void extrusionOperations() {
                       {"direction", "reversed"}});
     require(session.validBodies().size() == 1 && near(test::volumeOf(session.currentShape()), 32000 - 800),
             "A pocket cut from the top face");
+    // T03: the join ends on the plate's top face instead of after a distance.
+    context = client.context();
+    const auto plateBody = context.value("bodies").toArray().at(0).toObject();
+    const QJsonObject upToTop{{"supportId", plateBody.value("supportId")},
+                              {"face", topFace(context).value("face")}};
     client.committed("create_sketch_extrusion", {{"sketch", rectangle(30, -5, 60, 5)},
-                                                 {"distance", mm(10)},
+                                                 {"distance", mm(1)},
                                                  {"operation", "join"},
-                                                 {"targetBodyId", body}});
+                                                 {"targetBodyId", body},
+                                                 {"upToFace", upToTop}});
     context = client.context();
     parameters = context.value("features").toArray().at(5).toObject().value("parameters").toObject();
     require(session.validBodies().size() == 1 &&
                 near(test::volumeOf(session.currentShape()), 32000 - 800 + 2000) &&
                 parameters.value("operation") == QLatin1String("join") &&
                 parameters.value("targetBodyId") == body &&
+                parameters.value("upToFace").toObject().value("face") == upToTop.value("face") &&
                 context.value("bodies").toArray().size() == 1,
-            "A base-plane join into the named body: " + text(parameters));
+            "A base-plane join into the named body, up to its top face: " + text(parameters));
+    client.committed("create_sketch_extrusion", {{"sketch", rectangle(100, 0, 110, 10)},
+                                                 {"distance", mm(5)},
+                                                 {"offset", mm(20)}});
+    require(session.validBodies().size() == 2 && near(topOf(session.currentShape()), 25),
+            "An offset lifts a new body to z = 20..25");
     const auto changes = client.changes;
-    result = client.call("create_sketch_extrusion", {{"sketch", rectangle(100, 0, 110, 10)},
+    result = client.call("create_sketch_extrusion", {{"sketch", rectangle(200, 0, 210, 10)},
                                                      {"distance", mm(10)},
                                                      {"operation", "join"},
                                                      {"targetBodyId", body}});

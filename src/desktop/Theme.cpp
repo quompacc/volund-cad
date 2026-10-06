@@ -174,6 +174,7 @@ QLineEdit, QAbstractSpinBox, QComboBox { background: @field; border: 1px solid @
     selection-color: @onAccent; }
 QAbstractSpinBox { font-family: "@value"; }
 QLineEdit:focus, QAbstractSpinBox:focus, QComboBox:focus { border-color: @accent; }
+QLineEdit:disabled, QAbstractSpinBox:disabled, QComboBox:disabled { color: @faint; }
 QAbstractSpinBox::up-button, QAbstractSpinBox::down-button { width: 0; border: 0; }
 QComboBox::drop-down { border: 0; width: 18px; }
 QComboBox QAbstractItemView { background: @panel; border: 1px solid @line;

@@ -188,6 +188,8 @@ document::ExtrusionParameters newExtrusionParameters(double distance,
     parameters.operation = mode.operation;
     parameters.reversed = mode.reversed;
     parameters.target = mode.target;
+    parameters.offset = mode.offset;
+    parameters.upToFace = mode.upToFace;
     return parameters;
 }
 } // namespace

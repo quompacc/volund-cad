@@ -62,8 +62,9 @@ document::SketchParameters editedSketch(const JsonReader& reader, const CadSessi
 
 constexpr const char* operationNames[] = {"newBody", "join", "cut"};
 constexpr const char* directionNames[] = {"normal", "reversed"};
-// T02: optional operation, direction and target body of a new extrusion.
-application::ExtrusionMode extrusionMode(const JsonReader& reader) {
+constexpr const char* extrusionLengths[] = {"distance", "offset"};
+// T02/T03: optional operation, direction, target body, start offset and end face.
+application::ExtrusionMode extrusionMode(const JsonReader& reader, const CadSession& session) {
     application::ExtrusionMode mode;
     if (reader.has("operation"))
         mode.operation =
@@ -71,6 +72,19 @@ application::ExtrusionMode extrusionMode(const JsonReader& reader) {
     mode.reversed = reader.has("direction") && reader.choice("direction", directionNames) == 1;
     if (const auto target = reader.optionalId("targetBodyId"))
         mode.target = document::BodyId{*target};
+    if (reader.has("offset"))
+        mode.offset = detail::readQuantity(reader, "offset", "mm");
+    if (reader.has("upToFace")) {
+        const auto end = reader.object("upToFace");
+        const auto support = FeatureId{end.id("supportId")};
+        const auto face = detail::decodeFaceOrigin(end.object("face"));
+        try {
+            mode.upToFace = session.faceReference(support, face);
+        } catch (const std::invalid_argument&) {
+            throw ArgumentError(end.field("face"), "Not a current planar face of this support; "
+                                                   "see bodies[].faces in get_context");
+        }
+    }
     return mode;
 }
 
@@ -110,8 +124,9 @@ const ToolDecoder decoders[] = {
      }},
     {"bind_extrusion_distance",
      [](const JsonReader& r, const CadSession&) -> Action {
-         return application::BindExtrusionDistanceAction{feature(r, "extrusionId"),
-                                                         optionalParameter(r)};
+         return application::BindExtrusionDistanceAction{
+             feature(r, "extrusionId"), optionalParameter(r),
+             r.has("length") && r.choice("length", extrusionLengths) == 1};
      }},
     {"create_sketch",
      [](const JsonReader& r, const CadSession& s) -> Action {
@@ -152,16 +167,16 @@ const ToolDecoder decoders[] = {
          return application::EditSketchAction{id, editedSketch(r, s, id)};
      }},
     {"create_profile_extrusion",
-     [](const JsonReader& r, const CadSession&) -> Action {
+     [](const JsonReader& r, const CadSession& s) -> Action {
          return application::CreateProfileExtrusionAction{feature(r, "sketchId"), regions(r),
                                                            readQuantity(r, "distance"),
-                                                           extrusionMode(r)};
+                                                           extrusionMode(r, s)};
      }},
     {"create_sketch_extrusion",
      [](const JsonReader& r, const CadSession& s) -> Action {
          return application::CreateSketchExtrusionAction{newSketch(r, s), regions(r),
                                                           readQuantity(r, "distance"),
-                                                          extrusionMode(r)};
+                                                          extrusionMode(r, s)};
      }},
     {"set_extrusion_distance",
      [](const JsonReader& r, const CadSession&) -> Action {

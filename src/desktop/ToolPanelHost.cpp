@@ -169,6 +169,7 @@ void ToolPanelHost::begin(ToolPanelDefinition definition) {
                 definition_.parameterChanged(parameterId, value);
             }
         });
+        input->setObjectName(QString::fromStdString("toolLength_" + parameter.id));
         parameterLayout_->addRow(parameter.label, input);
         lengthInputs_.emplace_back(parameter.id, input);
     }
@@ -397,7 +398,9 @@ void ToolPanelHost::setActionEnabled(const std::string& actionId, bool enabled) 
 
 void ToolPanelHost::clearParameters() {
     while (QLayoutItem* item = parameterLayout_->takeAt(0)) {
+        // Hidden at once: the deferred deletion may come after the next session's fields.
         if (QWidget* itemWidget = item->widget()) {
+            itemWidget->hide();
             itemWidget->deleteLater();
         }
         delete item;

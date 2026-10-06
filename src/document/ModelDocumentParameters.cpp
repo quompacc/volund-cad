@@ -28,9 +28,10 @@ void validateParameterBindings(std::span<const FeatureParameters> parameters,
                     throw std::invalid_argument("Only dimensional constraints bind parameters");
                 static_cast<void>(bound(table, *constraint.parameter, *unit));
             }
-        } else if (const auto* extrusion = std::get_if<ExtrusionParameters>(&feature);
-                   extrusion && extrusion->distanceParameter) {
-            static_cast<void>(bound(table, *extrusion->distanceParameter, ParameterUnit::length));
+        } else if (const auto* extrusion = std::get_if<ExtrusionParameters>(&feature)) {
+            for (const auto& parameter : {extrusion->distanceParameter, extrusion->offsetParameter})
+                if (parameter)
+                    static_cast<void>(bound(table, *parameter, ParameterUnit::length));
         }
     }
 }

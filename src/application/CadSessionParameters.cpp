@@ -42,7 +42,7 @@ bool usesParameter(const document::FeatureParameters& feature, ParameterId id) {
         return std::ranges::any_of(sketch->constraints.values,
                                    [&](const auto& c) { return c.parameter == id; });
     const auto* extrusion = std::get_if<document::ExtrusionParameters>(&feature);
-    return extrusion && extrusion->distanceParameter == id;
+    return extrusion && (extrusion->distanceParameter == id || extrusion->offsetParameter == id);
 }
 } // namespace
 
@@ -94,9 +94,10 @@ bool CadSession::mirrorParameter(document::ModelDocument& candidate,
             changed = candidate.setSketchParameters(feature.id, sketch) || changed;
         } else if (feature.kind == document::FeatureKind::extrusion) {
             auto extrusion = candidate.extrusionParameters(feature.id);
-            if (extrusion.distanceParameter != id || extrusion.distance == value.value)
-                continue;
-            extrusion.distance = value.value;
+            if (extrusion.distanceParameter == id)
+                extrusion.distance = value.value;
+            if (extrusion.offsetParameter == id)
+                extrusion.offset = value.value; // T03
             changed = candidate.setExtrusionParameters(feature.id, extrusion) || changed;
         }
     }
@@ -181,11 +182,14 @@ CommandResult CadSession::deleteParameter(document::ParameterId id, ParameterDel
                     static_cast<void>(candidate.setSketchParameters(feature.id, sketch));
                 } else if (feature.kind == document::FeatureKind::extrusion) {
                     auto extrusion = candidate.extrusionParameters(feature.id);
-                    if (extrusion.distanceParameter != id)
+                    if (extrusion.distanceParameter != id && extrusion.offsetParameter != id)
                         continue;
                     if (mode == ParameterDeletion::refuseWhenUsed)
                         throw std::invalid_argument("Parameter is still in use: " + name);
-                    extrusion.distanceParameter.reset();
+                    if (extrusion.distanceParameter == id)
+                        extrusion.distanceParameter.reset();
+                    if (extrusion.offsetParameter == id)
+                        extrusion.offsetParameter.reset();
                     static_cast<void>(candidate.setExtrusionParameters(feature.id, extrusion));
                 }
             }
@@ -216,11 +220,11 @@ CommandResult CadSession::bindSketchDimension(document::FeatureId sketchFeature,
 
 CommandResult CadSession::bindExtrusionDistance(document::FeatureId extrusionFeature,
                                                 std::optional<document::ParameterId> parameter,
-                                                ErrorDisposition disposition) {
+                                                ErrorDisposition disposition, bool offset) {
     return commitParameterEdit(
         [&](document::ModelDocument& candidate) {
             auto extrusion = candidate.extrusionParameters(extrusionFeature);
-            extrusion.distanceParameter = parameter;
+            (offset ? extrusion.offsetParameter : extrusion.distanceParameter) = parameter;
             const bool changed = candidate.setExtrusionParameters(extrusionFeature, extrusion);
             return (parameter && mirrorParameter(candidate, *parameter)) || changed;
         },

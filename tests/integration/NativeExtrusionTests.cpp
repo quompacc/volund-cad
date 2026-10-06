@@ -275,11 +275,11 @@ void extrusionModes(const Handle(TDocStd_Application)& app) {
     rejected([&] { (void)model.setExtrusionParameters(cutId, newBodyTarget); });
     const auto expected =
         IdentifiedDocumentSnapshot::restore(DocumentId{3, 5}, DocumentSnapshot::capture(model));
-    auto doc = fresh(app);
+    Handle(TDocStd_Document) doc = fresh(app);
     NativePrimitiveCodec::write(doc, expected);
     std::stringstream bytes(std::ios::in | std::ios::out | std::ios::binary);
     save(app, doc, bytes);
-    auto loaded = open(app, bytes);
+    Handle(TDocStd_Document) loaded = open(app, bytes);
     require(NativePrimitiveCodec::read(loaded) == expected, "Extrusion mode roundtrip");
     app->Close(loaded);
     // Reversed, the hole is cut downwards from z = 0 and misses the plate above: an error,
@@ -300,7 +300,38 @@ void extrusionModes(const Handle(TDocStd_Application)& app) {
     TDataStd_Integer::Set(doc->Main().FindChild(2), 7);
     rejected([&] { (void)NativePrimitiveCodec::read(doc); }); // T02 children need schema 8
     app->Close(doc);
-    std::cout << "schema 8 extrusion operation, direction and target round-trip and gate passed\n";
+
+    // T03, schema 9: start offset with its binding, and an end face on the plate.
+    ParameterTable table{{{ParameterId{1}, "V", ParameterUnit::length, -0.5}}, 2};
+    require(model.setParameterTable(table), "Offset parameter");
+    reversed.offset = -0.5;
+    reversed.offsetParameter = ParameterId{1};
+    reversed.upToFace = BodyFaceReference{BodyId{plateSketch.value()},
+                                          {FeatureId{plateSketch.value() + 1}, std::nullopt,
+                                           {SketchElementId{1}}}};
+    require(model.setExtrusionParameters(cutId, reversed), "Offset and end face set");
+    auto foreign = reversed;
+    foreign.upToFace->body = BodyId{99};
+    rejected([&] { (void)model.setExtrusionParameters(cutId, foreign); });
+    const auto withEnd =
+        IdentifiedDocumentSnapshot::restore(DocumentId{3, 6}, DocumentSnapshot::capture(model));
+    doc = fresh(app);
+    NativePrimitiveCodec::write(doc, withEnd);
+    std::stringstream endBytes(std::ios::in | std::ios::out | std::ios::binary);
+    save(app, doc, endBytes);
+    loaded = open(app, endBytes);
+    require(NativePrimitiveCodec::read(loaded) == withEnd, "Offset and end face roundtrip");
+    app->Close(loaded);
+    // From z = -0.5 up to the plate's top cap at z = 2: the 1 x 1 hole goes through.
+    const auto through = features::FeatureGraph{}.evaluate(withEnd.snapshot().toDocument());
+    GProp_GProps throughVolume;
+    BRepGProp::VolumeProperties(through.resultShape, throughVolume);
+    require(std::abs(throughVolume.Mass() - 22) < 1e-9, "Cut from the offset up to the top face");
+    TDataStd_Integer::Set(doc->Main().FindChild(2), 8);
+    rejected([&] { (void)NativePrimitiveCodec::read(doc); }); // T03 children need schema 9
+    app->Close(doc);
+    std::cout << "schema 8/9 extrusion operation, direction, target, offset and end face "
+                 "round-trip and gates passed\n";
 }
 void regressions(const Handle(TDocStd_Application)& app) {
     historicalProfiles(app);

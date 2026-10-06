@@ -70,6 +70,10 @@ void validateExtrusion(const ExtrusionParameters& parameters) {
     if (parameters.target && parameters.operation != ExtrusionOperation::join &&
         parameters.operation != ExtrusionOperation::cut)
         throw std::invalid_argument("Only a join or cut names a target body");
+    if (!kernel::modelCoordinate(parameters.offset))
+        throw std::invalid_argument(kernel::modelRangeDiagnostic);
+    if (parameters.upToFace)
+        validateSubshapeOrigin(parameters.upToFace->origin);
 }
 
 } // namespace
