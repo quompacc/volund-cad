@@ -115,3 +115,37 @@ Schritte:
 | T04a | Flächenprofil im Modell: `ExtrusionParameters::faceProfile` (Körper + semantische Herkunft), Extrusion ohne Skizzeneingang, Auswertung über den Körperstand vor dem Feature, Deckfläche mit eigener stabiler Herkunft; Schema 10; Aktion, Bearbeiten der Strecke, MCP `push_pull_face` |
 | T04b | Seiten- und Bodenflächen von Extrusionen stabil nach `ExtrusionSideKey`/`ExtrusionCapKey` ([Vertrag](../subshape-reference-contract.md)), damit sie Skizzen tragen und gedrückt/gezogen werden können |
 | T04c | Oberfläche: Befehl „Drücken/Ziehen“ in der Kontextleiste, Pfeil im Viewport, Maßfeld, Live-Vorschau über `previewAction`; Aufnahmen |
+
+### Stand 07.10.2026 abends
+
+- **T04a** fertig (`42557fb`):
+  - Flächenprofil (Schema 10), Deckfläche mit eigener Herkunft (Rolle −2 in der Datei).
+  - `PushPullFaceAction`, MCP `push_pull_face`.
+  - Gemeldete Flächenrahmen zeigen nach außen (vorher zeigten −x/−y/−z eines Quaders
+    nach innen).
+  - Test `application.push_pull`. Windows 128/128, Fedora 93/93; CI-Lauf 458 stand noch
+    aus.
+- **Grenze aus T04a:** Nach dem Vereinigen bleiben koplanare Flächen getrennt. Drücken der
+  Quaderseite wirkt nur auf die Quaderseite, nicht auf die daneben liegende Seite des
+  aufgezogenen Teils.
+- **Entwurf T04b** (noch nicht umgesetzt):
+  - `SubshapeOrigin` bekommt `ExtrusionFace {end, start, side}` und `sweptEdge`
+    (`EdgeOrigin` der Kante, aus der die Seitenfläche gezogen wurde).
+  - `faceExtrusionCap` heißt dann `faceExtrusion`.
+  - Seiten von Skizzen-Extrusionen: `ContourEdgeOrigin{sketch, element, role}`.
+  - Seiten von Flächen-Extrusionen: die benannte Kante der Körperfläche (Quaderkante =
+    `PrimitiveEdgeOrigin`).
+  - Mehrdeutige Seiten (gleiche Kante, mehrere Flächen) werden nicht angeboten.
+  - Datei: Kind 6 des Host-Labels mit Flächenart (1) und Kante (2), weiter Schema 10.
+    Dazu `validateEdgeOrigin` und `write/readNativeEdgeOrigin` aus dem Projektionskante-Codec
+    herauslösen.
+  - MCP: `cap: "start"` bzw. `side: {…}` an der Flächenreferenz.
+  - Grenze: Seiten einer gezogenen Deckfläche haben noch keinen Kantennamen.
+
+## Offen zur Entscheidung (Nutzer, 07.10.2026)
+
+- **CI-Runner umziehen:** vom Fedora-Laptop (Host-Executor in der KDE-Sitzung) in eine
+  eigene Fedora-44-VM in Proxmox, gegebenenfalls als zweiter Runner mit Label
+  `linux-desktop`. Der vorhandene Proxmox-Runner ist ein Docker-Runner mit Ubuntu-Labels
+  und taugt dafür nicht direkt (Qt 6.11, OCCT 7.9.3 nötig). Nutzer: „morgen entscheiden,
+  laufendes System nicht anfassen“.
