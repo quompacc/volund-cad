@@ -25,7 +25,8 @@
 // still holds A; the next start offers B with time and feature counts; restoring gives an
 // unsaved document that Save As writes to a new file. An entry of a running instance is not
 // offered; a damaged or foreign snapshot never blocks normal opening; an older snapshot is
-// marked; a write error is reported and changes nothing.
+// marked; a write error is reported and changes nothing. L05b: an open sketch draft is kept
+// apart and comes back in the editor.
 namespace {
 using namespace voelund;
 void require(bool condition, const std::string& message) {
@@ -275,6 +276,102 @@ void dialogAtStartRestores() {
     window.offerRecovery();
     require(dialogs == 1, "A restored entry is not offered again in the same run");
 }
+
+// L05b: a sketch on XY with one rectangle (and the same with a second one as the draft).
+document::SketchParameters rectangles(int count) {
+    document::SketchParameters sketch{document::datumSketchPlane(document::DatumPlane::xy), {}};
+    sketch.datum = document::DatumPlane::xy;
+    for (int index = 0; index < count; ++index)
+        sketch.elements.values.push_back(
+            {document::SketchElementId{static_cast<std::uint64_t>(index + 1)},
+             document::SketchRectangle{index * 20.0, 0, index * 20.0 + 10, 6}});
+    sketch.elements.nextId = static_cast<std::uint64_t>(count + 1);
+    return sketch;
+}
+
+// The open draft is unsaved work of its own: it is written apart, also while the document
+// itself is unchanged, and goes when the editor closes.
+void draftIsWrittenApart() {
+    QTemporaryDir root;
+    require(root.isValid(), "fixture");
+    application::CadSession session;
+    session.newDocument();
+    desktop::RecoveryStore store(root.path());
+    desktop::AutosaveController autosave(session, store, manual, [](const QString&) {});
+    std::optional<desktop::SketchEditorToolController::RecoveryDraft> open{
+        desktop::SketchEditorToolController::RecoveryDraft{std::nullopt, std::nullopt,
+                                                           rectangles(1)}};
+    autosave.setDraftProvider([&open] { return open; });
+    autosave.poll();
+    const QString base = root.path() + QLatin1Char('/') + QString::fromStdString(hex(session));
+    require(!session.isModified() && QFile::exists(base + QStringLiteral(".draft")) &&
+                QFile::exists(base + QStringLiteral(".volund")),
+            "A draft on an unchanged document is written, apart from the document");
+    open.reset();
+    autosave.poll();
+    require(!QFile::exists(base + QStringLiteral(".draft")) &&
+                !QFile::exists(base + QStringLiteral(".meta")),
+            "A closed editor leaves no entry for an unchanged document");
+}
+
+// The whole way: the entry with a draft is restored in the real window, the editor opens
+// with the draft, and OK commits exactly that sketch.
+void draftRestoresIntoTheEditor(bool edits) {
+    QTemporaryDir root;
+    require(root.isValid(), "fixture");
+    const QString recovery = root.path() + QStringLiteral("/recovery");
+    application::CadSession crashed;
+    crashed.newDocument();
+    std::optional<document::FeatureId> edited;
+    if (edits)
+        edited = test::requireCommittedFeature(crashed.createDatumSketchFeature(rectangles(1)));
+    const std::size_t before = crashed.features().size();
+    const auto draft = crashed.sketchDraftSnapshot(edited, std::nullopt, rectangles(2));
+    {
+        desktop::RecoveryStore store(recovery);
+        desktop::RecoverySnapshot snapshot{hex(crashed), crashed.recoverySnapshot(), {},
+                                           before, std::nullopt};
+        snapshot.draft = draft.bytes;
+        snapshot.draftFeature = draft.feature.value();
+        snapshot.draftEdits = edits;
+        require(store.write(snapshot), "entry with draft");
+    }
+    qputenv("VOELUND_RECOVERY_DIR", recovery.toUtf8());
+    application::CadSession session;
+    session.newDocument();
+    desktop::MainWindow window(session);
+    window.show();
+    QString shown;
+    QTimer user;
+    QObject::connect(&user, &QTimer::timeout, [&] {
+        auto* dialog = qobject_cast<QDialog*>(QApplication::activeModalWidget());
+        if (!dialog || dialog->objectName() != QLatin1String("recoveryDialog") ||
+            dialog->property("answered").toBool())
+            return;
+        dialog->setProperty("answered", true);
+        shown = dialog->findChild<QListWidget*>(QStringLiteral("recoveryList"))->item(0)->text();
+        QTimer::singleShot(0, dialog->findChild<QPushButton*>(QStringLiteral("recoveryRestore")),
+                           &QPushButton::click);
+    });
+    user.start(50);
+    window.offerRecovery();
+    user.stop();
+    QApplication::processEvents();
+    require(shown.contains(QStringLiteral("Skizzenentwurf")), "The dialog names the draft");
+    require(session.features().size() == before,
+            "The draft is not part of the restored document");
+    QPushButton* accept = nullptr;
+    for (auto* button : window.findChildren<QPushButton*>())
+        if (button->objectName() == QLatin1String("toolAcceptButton") && button->isVisible())
+            accept = button;
+    require(accept && accept->isEnabled(), "The editor is open with the draft");
+    accept->click();
+    QApplication::processEvents();
+    const auto sketch = edits ? *edited : session.features().back().id;
+    require(session.features().size() == (edits ? before : before + 1) &&
+                session.sketchParameters(sketch).elements.values.size() >= 2,
+            std::string("OK commits the restored draft (") + (edits ? "edit" : "new") + ")");
+}
 } // namespace
 
 int main(int argc, char** argv) {
@@ -286,7 +383,10 @@ int main(int argc, char** argv) {
         savingRemovesTheEntryAndForeignEntriesStay();
         damagedOlderStaleAndFailedWrites();
         dialogAtStartRestores();
-        std::cout << "PASS L05 A-RECOVERY-01 autosave and recovery without loss of the original\n";
+        draftIsWrittenApart();
+        draftRestoresIntoTheEditor(false);
+        draftRestoresIntoTheEditor(true);
+        std::cout << "PASS L05 A-RECOVERY-01 autosave and recovery (with sketch drafts) without loss of the original\n";
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';
         return 1;

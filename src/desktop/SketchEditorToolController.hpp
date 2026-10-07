@@ -1,5 +1,6 @@
 #pragma once
 
+#include <voelund/application/CadSession.hpp>
 #include <voelund/application/SketchEditorSession.hpp>
 #include <voelund/viewport/CadViewport.hpp>
 
@@ -27,6 +28,18 @@ class SketchEditorToolController final {
     void begin(const viewport::PlanarFaceSelection& support);
     void beginOnBasePlane(document::DatumPlane datum);
     [[nodiscard]] bool beginSelectedSketch();
+    // L05b: the open draft for its recovery file, once it has changes.
+    struct RecoveryDraft final {
+        std::optional<document::FeatureId> edited;
+        std::optional<document::FeatureId> support;
+        document::SketchParameters sketch;
+        bool operator==(const RecoveryDraft&) const = default;
+    };
+    [[nodiscard]] std::optional<RecoveryDraft> recoveryDraft() const;
+    // L05b: opens a recovered draft the way it was started (edited sketch, base plane or
+    // support face) and loads its content; false leaves no editor open.
+    [[nodiscard]] bool restoreDraft(const application::CadSession::SketchDraft& draft,
+                                    std::optional<document::FeatureId> edited);
     void updatePreview(const std::optional<viewport::SketchElementIntent>& intent);
     void confirmElement(const viewport::SketchElementIntent& intent);
     void translateFromViewport(double deltaX, double deltaY);
@@ -59,6 +72,9 @@ class SketchEditorToolController final {
     void refreshPresentation();
     void accept(application::ErrorDisposition disposition = application::ErrorDisposition::reject);
     void stepBack();
+    void startOnSupport(const viewport::PlanarFaceSelection& drawing, document::FeatureId support,
+                        const document::SketchPlane& plane,
+                        const document::SketchSupportBinding& binding);
 
     application::CadSession& session_;
     double dragBaseX_{0.0};
@@ -77,6 +93,9 @@ class SketchEditorToolController final {
     double patternAngle_{360.0};
     int toolIndex_{1};
     bool editing_{false};
+    // L05b: how the open editor was started, for its recovery draft.
+    std::optional<document::FeatureId> draftEdited_;
+    std::optional<document::FeatureId> draftSupport_;
     std::optional<viewport::SketchAutomaticConstraint> previewAutomatic_;
 };
 

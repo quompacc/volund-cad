@@ -79,10 +79,18 @@ bool RecoveryStore::write(const RecoverySnapshot& snapshot) {
         QStringLiteral("file=%1").arg(snapshot.originalFile)};
     if (snapshot.savedFeatures)
         lines.append(QStringLiteral("savedFeatures=%1").arg(*snapshot.savedFeatures));
+    // The draft goes first and apart; the metadata names it only once it is complete.
+    if (snapshot.draft) {
+        platform::AtomicFileStore::write(nativePath(path(id, ".draft")), *snapshot.draft);
+        lines.append(QStringLiteral("draftFeature=%1").arg(snapshot.draftFeature));
+        lines.append(QStringLiteral("draftEdits=%1").arg(snapshot.draftEdits ? 1 : 0));
+    }
     platform::AtomicFileStore::write(nativePath(path(id, ".meta")),
                                      (lines.join(QLatin1Char('\n')) + QLatin1Char('\n'))
                                          .toUtf8()
                                          .toStdString());
+    if (!snapshot.draft)
+        QFile::remove(path(id, ".draft"));
     return true;
 }
 
@@ -92,6 +100,7 @@ void RecoveryStore::remove(const std::string& documentId) {
         return; // Another running instance owns it.
     QFile::remove(path(id, ".meta"));
     QFile::remove(path(id, ".volund"));
+    QFile::remove(path(id, ".draft"));
     release(id);
 }
 
@@ -138,6 +147,12 @@ std::vector<RecoveryEntry> RecoveryStore::candidates() {
             entry.originalFile = values[QStringLiteral("file")];
             if (values.contains(QStringLiteral("savedFeatures")))
                 entry.savedFeatures = values[QStringLiteral("savedFeatures")].toULongLong();
+            if (values.contains(QStringLiteral("draftFeature"))) {
+                entry.draftFeature = values[QStringLiteral("draftFeature")].toULongLong();
+                entry.draftEdits = values[QStringLiteral("draftEdits")] == QStringLiteral("1");
+                entry.hasDraft =
+                    entry.draftFeature != 0 && QFileInfo(path(id, ".draft")).size() > 0;
+            }
             entry.damaged = values[QStringLiteral("format")] != QString::number(metadataFormat) ||
                             values[QStringLiteral("document")] != id || !countOk ||
                             !entry.savedAt.isValid() ||
@@ -150,6 +165,13 @@ std::vector<RecoveryEntry> RecoveryStore::candidates() {
         result.push_back(std::move(entry));
     }
     return result;
+}
+
+std::string RecoveryStore::readDraft(const RecoveryEntry& entry) const {
+    QFile data(path(entry.documentId, ".draft"));
+    if (!entry.hasDraft || !data.open(QIODevice::ReadOnly))
+        throw std::runtime_error("The sketch draft cannot be read");
+    return data.readAll().toStdString();
 }
 
 std::string RecoveryStore::read(const RecoveryEntry& entry) const {

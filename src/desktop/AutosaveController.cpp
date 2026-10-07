@@ -18,6 +18,10 @@ AutosaveController::AutosaveController(application::CadSession& session, Recover
     timer_.start();
 }
 
+AutosaveController::State AutosaveController::current() const {
+    return {session_.sceneStatus().document, draft_ ? draft_() : std::nullopt};
+}
+
 void AutosaveController::poll() {
     const auto id = document::documentIdToHex(session_.documentId());
     if (id != documentId_) {
@@ -25,27 +29,27 @@ void AutosaveController::poll() {
         if (ownsEntry_)
             store_.remove(documentId_);
         documentId_ = id;
-        lastStamp_.reset();
-        writtenStamp_.reset();
+        lastState_.reset();
+        writtenState_.reset();
         ownsEntry_ = false;
     }
-    if (!session_.isModified()) {
+    auto state = current();
+    if (!session_.isModified() && !state.draft) {
         if (ownsEntry_)
             store_.remove(documentId_); // Saved: the file holds the work now.
         ownsEntry_ = false;
-        writtenStamp_.reset();
-        lastStamp_ = session_.sceneStatus().document;
+        writtenState_.reset();
+        lastState_ = std::move(state);
         sincePending_.invalidate();
         return;
     }
-    const auto stamp = session_.sceneStatus().document;
-    if (stamp != lastStamp_) {
-        lastStamp_ = stamp;
+    if (state != lastState_) {
+        lastState_ = state;
         sinceChange_.start();
-        if (!sincePending_.isValid() && stamp != writtenStamp_)
+        if (!sincePending_.isValid() && state != writtenState_)
             sincePending_.start();
     }
-    if (stamp == writtenStamp_)
+    if (state == writtenState_)
         return;
     const bool quiet = sinceChange_.isValid() && sinceChange_.elapsed() >= timing_.quietMs;
     const bool overdue = sincePending_.isValid() && sincePending_.elapsed() >= timing_.maximumMs;
@@ -54,16 +58,23 @@ void AutosaveController::poll() {
 }
 
 void AutosaveController::saveNow() {
-    if (!session_.isModified())
+    auto state = current();
+    if (!session_.isModified() && !state.draft)
         return;
-    const auto stamp = session_.sceneStatus().document;
     try {
         RecoverySnapshot snapshot{documentId_, session_.recoverySnapshot(),
                                   QString::fromStdU16String(session_.currentFile().u16string()),
                                   session_.features().size(), session_.savedFeatureCount()};
+        if (state.draft) {
+            auto draft = session_.sketchDraftSnapshot(state.draft->edited, state.draft->support,
+                                                      state.draft->sketch);
+            snapshot.draft = std::move(draft.bytes);
+            snapshot.draftFeature = draft.feature.value();
+            snapshot.draftEdits = state.draft->edited.has_value();
+        }
         if (!store_.write(snapshot))
             return;
-        writtenStamp_ = stamp;
+        writtenState_ = std::move(state);
         ownsEntry_ = true;
         sincePending_.invalidate();
         failureReported_ = false;
@@ -77,8 +88,8 @@ void AutosaveController::saveNow() {
 
 void AutosaveController::adoptRestored() {
     documentId_ = document::documentIdToHex(session_.documentId());
-    lastStamp_.reset();
-    writtenStamp_.reset();
+    lastState_.reset();
+    writtenState_.reset();
     ownsEntry_ = true;
 }
 

@@ -288,6 +288,23 @@ class CadSession final {
     // confirmed Save As writes it; the original file is never touched. A snapshot of another
     // document than `expected` is rejected before anything changes.
     void restoreDocument(std::string_view bytes, document::DocumentId expected);
+    // L05b: an open sketch draft for its own recovery file: this document with the draft
+    // replacing the edited sketch, or added as a new sketch on its base plane or support.
+    // Nothing in the session changes.
+    struct SketchDraftSnapshot final {
+        std::string bytes;
+        document::FeatureId feature;
+    };
+    [[nodiscard]] SketchDraftSnapshot
+    sketchDraftSnapshot(std::optional<document::FeatureId> edited,
+                        std::optional<document::FeatureId> support,
+                        const document::SketchParameters& draft) const;
+    struct SketchDraft final {
+        document::SketchParameters sketch;
+        std::optional<document::FeatureId> support;
+    };
+    [[nodiscard]] static SketchDraft readSketchDraft(std::string_view bytes,
+                                                     document::FeatureId feature);
     // Provenance of the last successful import; editing/saving does not resolve its issues.
     [[nodiscard]] const std::optional<document::MigrationReport>&
     lastImportReport() const noexcept {

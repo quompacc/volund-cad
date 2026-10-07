@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RecoveryStore.hpp"
+#include "SketchEditorToolController.hpp"
 
 #include <voelund/application/SceneStatus.hpp>
 
@@ -31,6 +32,9 @@ class AutosaveController final : public QObject {
     };
     AutosaveController(application::CadSession& session, RecoveryStore& store, Timing timing,
                        std::function<void(const QString&)> report, QObject* parent = nullptr);
+    // L05b: the open sketch draft, if any; a changed draft is unsaved work of its own.
+    using DraftProvider = std::function<std::optional<SketchEditorToolController::RecoveryDraft>()>;
+    void setDraftProvider(DraftProvider provider) { draft_ = std::move(provider); }
     // One check now (also what the timer runs).
     void poll();
     // Writes the current document's entry now if it has unsaved changes.
@@ -47,8 +51,16 @@ class AutosaveController final : public QObject {
     std::function<void(const QString&)> report_;
     QTimer timer_;
     std::string documentId_;
-    std::optional<application::DocumentStamp> lastStamp_;
-    std::optional<application::DocumentStamp> writtenStamp_;
+    // What was last seen and last written: document stamp and open draft.
+    struct State final {
+        application::DocumentStamp stamp;
+        std::optional<SketchEditorToolController::RecoveryDraft> draft;
+        bool operator==(const State&) const = default;
+    };
+    [[nodiscard]] State current() const;
+    DraftProvider draft_;
+    std::optional<State> lastState_;
+    std::optional<State> writtenState_;
     QElapsedTimer sinceChange_;
     QElapsedTimer sincePending_;
     bool ownsEntry_{false}; // written or restored by this instance

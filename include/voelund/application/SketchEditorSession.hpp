@@ -114,6 +114,10 @@ class SketchEditorSession final {
     [[nodiscard]] bool circularPatternSelected(int count, double angleDegrees);
     // Records the current state as one undo step (no-op while a drag runs, U09).
     void commitHistory();
+    // L05b: a recovered draft replaces the content as one undo step, solved as it was saved
+    // (also under-determined or conflicting). An invalid draft changes nothing.
+    [[nodiscard]] bool loadDraft(document::SketchElements elements,
+                                 document::SketchConstraints constraints);
     // U09: a drag or a typed translation of the selection is one user action. dragSelected
     // moves from the state at beginDrag by the total offset (the candidate); endDrag records
     // one step, cancelDrag restores the starting state.

@@ -3,6 +3,7 @@
 #include <QDateTime>
 #include <QString>
 
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <optional>
@@ -24,6 +25,11 @@ struct RecoverySnapshot final {
     QString originalFile;   // empty for a document never saved
     std::size_t features{0};
     std::optional<std::size_t> savedFeatures{};
+    // L05b: an open sketch draft, kept apart in <id>.draft (the document with the draft
+    // applied as feature draftFeature; draftEdits: it replaces that existing sketch).
+    std::optional<std::string> draft{};
+    std::uint64_t draftFeature{0};
+    bool draftEdits{false};
 };
 
 struct RecoveryEntry final {
@@ -36,6 +42,9 @@ struct RecoveryEntry final {
     bool olderThanFile{false};
     // Metadata or data unreadable: it can only be discarded.
     bool damaged{false};
+    bool hasDraft{false};
+    std::uint64_t draftFeature{0};
+    bool draftEdits{false};
 };
 
 class RecoveryStore final {
@@ -58,6 +67,7 @@ class RecoveryStore final {
     // released. Leftover temporary files of an interrupted write are removed first.
     [[nodiscard]] std::vector<RecoveryEntry> candidates();
     [[nodiscard]] std::string read(const RecoveryEntry& entry) const;
+    [[nodiscard]] std::string readDraft(const RecoveryEntry& entry) const;
     // Gives up the locks of offered entries that were neither restored nor discarded.
     void release(const QString& documentId);
 

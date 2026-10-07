@@ -14,6 +14,23 @@ void MainWindow::createRecovery() {
     impl_->autosave = std::make_unique<AutosaveController>(
         impl_->session, *impl_->recoveryStore, AutosaveController::Timing{},
         [this](const QString& message) { statusBar()->showMessage(message, 8000); }, this);
+    impl_->autosave->setDraftProvider([this] { return impl_->sketchEditorTool->recoveryDraft(); });
+}
+
+void MainWindow::restoreSketchDraft(const RecoveryEntry& entry) {
+    const document::FeatureId feature{entry.draftFeature};
+    bool opened = false;
+    try {
+        const auto draft = application::CadSession::readSketchDraft(
+            impl_->recoveryStore->readDraft(entry), feature);
+        opened = impl_->sketchEditorTool->restoreDraft(
+            draft, entry.draftEdits ? std::optional{feature} : std::nullopt);
+    } catch (const std::exception&) {
+    }
+    if (!opened)
+        statusBar()->showMessage(tr("Das Dokument ist wiederhergestellt; der Skizzenentwurf "
+                                    "ließ sich nicht öffnen."),
+                                 8000);
 }
 
 void MainWindow::offerRecovery() {
@@ -30,6 +47,8 @@ void MainWindow::offerRecovery() {
         if (restored) {
             impl_->autosave->adoptRestored();
             settled.insert(entry.documentId);
+            if (entry.hasDraft)
+                restoreSketchDraft(entry);
         }
         return restored;
     };

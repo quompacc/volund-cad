@@ -17,6 +17,7 @@ struct ActionResult;
 namespace voelund::desktop {
 
 enum class ThemeMode;
+struct RecoveryEntry;
 
 class MainWindow final : public QMainWindow {
   public:
@@ -38,6 +39,7 @@ class MainWindow final : public QMainWindow {
 
   private:
     void createRecovery();
+    void restoreSketchDraft(const RecoveryEntry& entry);
     void repairReferences();
     void repairAllReferences();
     void syncGeometryStatus();

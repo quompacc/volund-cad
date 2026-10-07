@@ -11,6 +11,7 @@ add_library(voelund_application STATIC
     CadSessionTransactions.cpp
     CadSessionParameters.cpp
     CadSessionPersistence.cpp
+    CadSessionRecovery.cpp
     CadSessionSketchProfiles.cpp
     CadSessionSketchSupport.cpp
     CadSessionEdgeProjection.cpp

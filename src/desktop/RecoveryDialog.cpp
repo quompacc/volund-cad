@@ -23,6 +23,8 @@ QString RecoveryDialog::describe(const RecoveryEntry& entry) {
                                .arg(*entry.savedFeatures)
                                .arg(entry.features)
                          : QObject::tr("%1 Features, nie gespeichert").arg(entry.features);
+    if (entry.hasDraft)
+        detail += QObject::tr("\n+ offener Skizzenentwurf");
     if (entry.olderThanFile)
         detail += QObject::tr("\nDie Datei wurde danach gespeichert; die Sicherung ist älter.");
     return QStringLiteral("%1    %2\n%3").arg(name, time, detail);

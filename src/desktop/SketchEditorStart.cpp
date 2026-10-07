@@ -27,12 +27,21 @@ void SketchEditorToolController::begin(const viewport::PlanarFaceSelection& supp
         statusChanged_(QString::fromUtf8(error.what()));
         return;
     }
+    startOnSupport(drawingSupport, document::FeatureId{support.bodyId}, sketchPlane(support),
+                   *binding);
+}
+
+void SketchEditorToolController::startOnSupport(const viewport::PlanarFaceSelection& drawing,
+                                                document::FeatureId support,
+                                                const document::SketchPlane& plane,
+                                                const document::SketchSupportBinding& binding) {
     editing_ = false;
-    editor_ = std::make_unique<application::SketchEditorSession>(
-        session_, document::FeatureId{support.bodyId}, sketchPlane(support), binding);
+    draftEdited_.reset();
+    draftSupport_ = support;
+    editor_ = std::make_unique<application::SketchEditorSession>(session_, support, plane, binding);
     showPanel();
     panel_.setAcceptEnabled(editor_->canAccept());
-    viewport_.beginSketchEditor(drawingSupport, viewport::SketchElementTool::line);
+    viewport_.beginSketchEditor(drawing, viewport::SketchElementTool::line);
     refreshPresentation();
     statusChanged_(QObject::tr("Skizzeneditor: zwei Punkte für eine Linie setzen"));
 }
@@ -54,6 +63,8 @@ viewport::PlanarFaceSelection basePlaneSupport(document::DatumPlane datum) {
 
 void SketchEditorToolController::beginOnBasePlane(document::DatumPlane datum) {
     editing_ = false;
+    draftEdited_.reset();
+    draftSupport_.reset();
     editor_ = std::make_unique<application::SketchEditorSession>(session_, datum);
     showPanel();
     panel_.setAcceptEnabled(editor_->canAccept());
@@ -74,6 +85,8 @@ bool SketchEditorToolController::beginSelectedSketch() {
         if (!parameters.datum)
             return false;
         editing_ = true;
+        draftEdited_ = *selected;
+        draftSupport_.reset();
         editor_ =
             std::make_unique<application::SketchEditorSession>(session_, *selected, parameters);
         showPanel();
@@ -116,6 +129,8 @@ bool SketchEditorToolController::beginSelectedSketch() {
         }
     }
     editing_ = true;
+    draftEdited_ = *selected;
+    draftSupport_ = *descriptor.inputFeature;
     editor_ = std::make_unique<application::SketchEditorSession>(
         session_, *selected, *descriptor.inputFeature, parameters);
     showPanel();

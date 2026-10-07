@@ -90,6 +90,28 @@ bool SketchEditorSession::keepIfValid(Rollback& rollback) {
     return true;
 }
 
+bool SketchEditorSession::loadDraft(document::SketchElements elements,
+                                    document::SketchConstraints constraints) {
+    if (!active_ || dragStart_)
+        return false;
+    Rollback rollback(*this);
+    elements_ = std::move(elements);
+    constraints_ = std::move(constraints);
+    clearPreview();
+    selectedElement_.reset();
+    selectedReferences_.clear();
+    selectionPoint_.reset();
+    try {
+        document::validateSketchParameters(parameters(false));
+    } catch (const std::invalid_argument&) {
+        return false;
+    }
+    refreshSolve();
+    rollback.keep();
+    commitHistory();
+    return true;
+}
+
 void SketchEditorSession::commitHistory() {
     if (dragStart_)
         return;
