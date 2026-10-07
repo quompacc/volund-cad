@@ -64,20 +64,66 @@ enum class SketchCreationRole {
     slotSecondCap,
     slotSecondSide,
     slotFirstCap,
-    polygonSide
+    polygonSide // `index` counts the sides from the picked vertex, counterclockwise
 };
 struct SketchCreatedElement final {
     document::SketchElementId id;
     SketchCreationRole role;
+    std::uint32_t index{0};
     bool operator==(const SketchCreatedElement&) const = default;
 };
+
+// S01: the points of a step by meaning. They follow the picks, not the order in which the
+// elements or their endpoints are stored: a clockwise three-point arc is stored
+// counterclockwise, so its arcStart is the stored end.
+enum class SketchCreationPoint {
+    lineStart, // line and polyline segment, in drawing order
+    lineEnd,
+    center,   // circle, arc, three-point arc and ellipse
+    arcStart, // the arc's first and last picked end
+    arcEnd,
+    rectangleFirstCorner,
+    rectangleSecondCorner,
+    rectangleCenter, // centered rectangle only
+    slotFirstCenter, // cap centers, at the first and second pick
+    slotSecondCenter,
+    polygonVertex // the picked vertex; the polygon has no center element (S06)
+};
+struct SketchCreatedPoint final {
+    SketchCreationPoint role;
+    document::SketchGeometryReference reference;
+    bool operator==(const SketchCreatedPoint&) const = default;
+};
+enum class SketchArcDirection { counterclockwise, clockwise };
+
+// Why a constraint of the step exists: the tool's own shape (rectangle corners, slot
+// tangencies, polygon sides), a snapped pick, or the suggested relation.
+enum class SketchConstraintOrigin { shape, snap, relation };
+struct SketchCreatedConstraint final {
+    document::SketchConstraintId id;
+    SketchConstraintOrigin origin;
+    bool operator==(const SketchCreatedConstraint&) const = default;
+};
+
 struct SketchCreationResult final {
-    std::vector<SketchCreatedElement> elements;
+    std::vector<SketchCreatedElement> elements{};
+    std::vector<SketchCreatedPoint> points{};
+    std::vector<SketchCreatedConstraint> constraints{};
+    // Arcs: the direction from arcStart to arcEnd.
+    std::optional<SketchArcDirection> arcDirection{};
     [[nodiscard]] document::SketchElementId primary() const { return elements.front().id; }
-    [[nodiscard]] std::optional<document::SketchElementId> find(SketchCreationRole role) const {
+    [[nodiscard]] std::optional<document::SketchElementId> find(SketchCreationRole role,
+                                                                std::uint32_t index = 0) const {
         for (const auto& element : elements)
-            if (element.role == role)
+            if (element.role == role && element.index == index)
                 return element.id;
+        return std::nullopt;
+    }
+    [[nodiscard]] std::optional<document::SketchGeometryReference>
+    point(SketchCreationPoint role) const {
+        for (const auto& item : points)
+            if (item.role == role)
+                return item.reference;
         return std::nullopt;
     }
     bool operator==(const SketchCreationResult&) const = default;

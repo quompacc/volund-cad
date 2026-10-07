@@ -172,14 +172,28 @@ class SketchEditorSession final {
         document::SketchElements elements;
         document::SketchConstraints constraints;
     };
+    // S01: what the preview's items mean; points name an item by its position in preview_.
+    struct PreviewPoint final {
+        SketchCreationPoint role;
+        std::size_t item;
+        document::SketchPointPosition position;
+    };
+    struct PreviewShape final {
+        std::vector<SketchCreationRole> roles;
+        std::vector<PreviewPoint> points;
+        std::optional<SketchArcDirection> arcDirection;
+    };
     [[nodiscard]] SketchCreationResult
     confirmRectangle(const document::SketchRectangle& rectangle);
     void snapTo(document::SketchGeometryReference created, const std::optional<SketchSnap>& snap,
                 document::SketchPoint point);
     [[nodiscard]] std::optional<SketchCreationResult> createCentered(const SketchCreationInput& input);
+    // Adds the constraints from `firstConstraint` on that the result does not list yet.
+    void record(SketchCreationResult& result, std::uint64_t firstConstraint,
+                SketchConstraintOrigin origin) const;
     [[nodiscard]] std::vector<document::SketchGeometry>
     geometry(document::SketchPoint first, document::SketchPoint second,
-             std::optional<document::SketchPoint> third) const;
+             std::optional<document::SketchPoint> third, PreviewShape& shape) const;
     [[nodiscard]] document::SketchParameters parameters(bool includePreview) const;
     [[nodiscard]] bool solveConstraints();
 
@@ -199,6 +213,7 @@ class SketchEditorSession final {
     storedSketch(const CadSession& session, document::FeatureId sketch);
     SketchDrawingTool tool_{SketchDrawingTool::line};
     std::vector<document::SketchGeometry> preview_;
+    PreviewShape previewShape_;
     bool previewConfirmable_{false};
     std::optional<document::SketchElementId> selectedElement_;
     std::vector<document::SketchGeometryReference> selectedReferences_;

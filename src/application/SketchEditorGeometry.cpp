@@ -11,7 +11,9 @@ namespace {
 using document::SketchGeometry;
 using document::SketchPoint;
 
-document::SketchArc threePointArc(SketchPoint first, SketchPoint middle, SketchPoint last) {
+// `reversed`: the picks run clockwise, so the stored (counterclockwise) arc starts at `last`.
+document::SketchArc threePointArc(SketchPoint first, SketchPoint middle, SketchPoint last,
+                                  bool& reversed) {
     const double determinant = 2.0 * (first.x * (middle.y - last.y) +
                                       middle.x * (last.y - first.y) +
                                       last.x * (first.y - middle.y));
@@ -41,7 +43,8 @@ document::SketchArc threePointArc(SketchPoint first, SketchPoint middle, SketchP
     };
     double start = firstAngle;
     double end = firstAngle + positiveSweep(firstAngle, lastAngle);
-    if (positiveSweep(firstAngle, middleAngle) > positiveSweep(firstAngle, lastAngle)) {
+    reversed = positiveSweep(firstAngle, middleAngle) > positiveSweep(firstAngle, lastAngle);
+    if (reversed) {
         start = lastAngle;
         end = lastAngle + positiveSweep(lastAngle, firstAngle);
     }
@@ -91,35 +94,71 @@ std::vector<SketchGeometry> polygonGeometry(SketchPoint center, SketchPoint vert
 
 std::vector<document::SketchGeometry>
 SketchEditorSession::geometry(document::SketchPoint first, document::SketchPoint second,
-                              std::optional<document::SketchPoint> third) const {
-    if (tool_ == SketchDrawingTool::line || tool_ == SketchDrawingTool::polyline)
+                              std::optional<document::SketchPoint> third,
+                              PreviewShape& shape) const {
+    using enum SketchCreationPoint;
+    using Position = document::SketchPointPosition;
+    shape = {};
+    const auto single = [&shape](std::vector<PreviewPoint> points) {
+        shape.roles = {SketchCreationRole::element};
+        shape.points = std::move(points);
+    };
+    if (tool_ == SketchDrawingTool::line || tool_ == SketchDrawingTool::polyline) {
+        single({{lineStart, 0, Position::start}, {lineEnd, 0, Position::end}});
         return {document::SketchLine{first, second}};
-    if (tool_ == SketchDrawingTool::rectangle)
+    }
+    if (tool_ == SketchDrawingTool::rectangle) // confirmRectangle names its own items
         return {document::SketchRectangle{first.x, first.y, second.x, second.y}};
     const double radius = std::hypot(second.x - first.x, second.y - first.y);
-    if (tool_ == SketchDrawingTool::circle)
+    if (tool_ == SketchDrawingTool::circle) {
+        single({{center, 0, Position::center}});
         return {document::SketchCircle{first, radius}};
-    if (tool_ == SketchDrawingTool::polygon)
-        return polygonGeometry(first, second, polygonSides_);
+    }
+    if (tool_ == SketchDrawingTool::polygon) {
+        auto sides = polygonGeometry(first, second, polygonSides_);
+        shape.roles.assign(sides.size(), SketchCreationRole::polygonSide);
+        shape.points = {{polygonVertex, 0, Position::start}};
+        return sides;
+    }
     if (!third.has_value()) {
         if (tool_ == SketchDrawingTool::arc)
             return {document::SketchCircle{first, radius}};
         return {document::SketchLine{first, second}};
     }
-    if (tool_ == SketchDrawingTool::slot)
+    if (tool_ == SketchDrawingTool::slot) {
+        // Order of slotGeometry: side, cap around `second`, side back, cap around `first`.
+        shape.roles = {SketchCreationRole::slotFirstSide, SketchCreationRole::slotSecondCap,
+                       SketchCreationRole::slotSecondSide, SketchCreationRole::slotFirstCap};
+        shape.points = {{slotFirstCenter, 3, Position::center},
+                        {slotSecondCenter, 1, Position::center}};
         return slotGeometry(first, second, *third);
-    if (tool_ == SketchDrawingTool::threePointArc)
-        return {threePointArc(first, second, *third)};
+    }
+    if (tool_ == SketchDrawingTool::threePointArc) {
+        bool reversed = false;
+        auto arc = threePointArc(first, second, *third, reversed);
+        single({{center, 0, Position::center},
+                {arcStart, 0, reversed ? Position::end : Position::start},
+                {arcEnd, 0, reversed ? Position::start : Position::end}});
+        shape.arcDirection =
+            reversed ? SketchArcDirection::clockwise : SketchArcDirection::counterclockwise;
+        return {arc};
+    }
     if (tool_ == SketchDrawingTool::ellipse) {
         const double rotation = std::atan2(second.y - first.y, second.x - first.x);
         const double minor = std::min(radius, std::abs(-(third->x - first.x) * std::sin(rotation) +
                                                        (third->y - first.y) * std::cos(rotation)));
+        single({{center, 0, Position::center}});
         return {document::SketchEllipse{first, radius, minor, rotation}};
     }
+    // Center arc: counterclockwise from the start pick to the end pick.
     double startAngle = std::atan2(second.y - first.y, second.x - first.x);
     double endAngle = std::atan2(third->y - first.y, third->x - first.x);
     while (endAngle <= startAngle)
         endAngle += 2.0 * std::numbers::pi;
+    single({{center, 0, Position::center},
+            {arcStart, 0, Position::start},
+            {arcEnd, 0, Position::end}});
+    shape.arcDirection = SketchArcDirection::counterclockwise;
     return {document::SketchArc{first, radius, startAngle, endAngle}};
 }
 
@@ -131,7 +170,8 @@ bool SketchEditorSession::setPreview(document::SketchPoint first, document::Sket
                             tool_ == SketchDrawingTool::threePointArc ||
                             tool_ == SketchDrawingTool::ellipse || tool_ == SketchDrawingTool::slot;
     try {
-        std::vector<SketchGeometry> candidate = geometry(first, second, third);
+        PreviewShape shape;
+        std::vector<SketchGeometry> candidate = geometry(first, second, third, shape);
         if (!canAllocatePreviewIds(candidate))
             return false;
         document::SketchElements validated = elements_;
@@ -139,10 +179,12 @@ bool SketchEditorSession::setPreview(document::SketchPoint first, document::Sket
             validated.values.push_back({document::SketchElementId{validated.nextId++}, item});
         document::validateSketchElements(validated);
         preview_ = std::move(candidate);
+        previewShape_ = std::move(shape);
         previewConfirmable_ = !needsThird || third.has_value();
         return true;
     } catch (const std::invalid_argument&) {
         preview_.clear();
+        previewShape_ = {};
         previewConfirmable_ = false;
         return false;
     }
@@ -150,6 +192,7 @@ bool SketchEditorSession::setPreview(document::SketchPoint first, document::Sket
 
 void SketchEditorSession::clearPreview() noexcept {
     preview_.clear();
+    previewShape_ = {};
     previewConfirmable_ = false;
 }
 
@@ -164,6 +207,7 @@ std::optional<SketchCreationResult> SketchEditorSession::confirmCreation() {
     if (const auto* rectangle = std::get_if<document::SketchRectangle>(&preview_.front()))
         return confirmRectangle(*rectangle);
     const document::SketchElementId firstId{elements_.nextId};
+    const std::uint64_t firstConstraint = constraints_.nextId;
     std::vector<document::SketchElementId> ids;
     for (document::SketchGeometry& item : preview_) {
         ids.push_back(document::SketchElementId{elements_.nextId++});
@@ -210,16 +254,21 @@ std::optional<SketchCreationResult> SketchEditorSession::confirmCreation() {
     selectedElement_ = firstId;
     selectedReferences_.clear();
     static_cast<void>(solveConstraints());
-    // Roles follow slotGeometry and polygonGeometry.
-    constexpr SketchCreationRole slotRoles[] = {
-        SketchCreationRole::slotFirstSide, SketchCreationRole::slotSecondCap,
-        SketchCreationRole::slotSecondSide, SketchCreationRole::slotFirstCap};
     SketchCreationResult result;
-    for (std::size_t index = 0; index < ids.size(); ++index)
+    std::uint32_t side = 0;
+    for (std::size_t index = 0; index < ids.size(); ++index) {
+        const auto role = index < previewShape_.roles.size() ? previewShape_.roles[index]
+                                                             : SketchCreationRole::element;
         result.elements.push_back(
-            {ids[index], tool_ == SketchDrawingTool::slot && ids.size() == 4 ? slotRoles[index]
-                         : tool_ == SketchDrawingTool::polygon ? SketchCreationRole::polygonSide
-                                                               : SketchCreationRole::element});
+            {ids[index], role, role == SketchCreationRole::polygonSide ? side++ : 0U});
+    }
+    for (const PreviewPoint& point : previewShape_.points)
+        result.points.push_back({point.role, {ids.at(point.item), point.position}});
+    result.arcDirection = previewShape_.arcDirection;
+    for (const auto& constraint : constraints_.values)
+        if (constraint.id.value() >= firstConstraint)
+            result.constraints.push_back({constraint.id, SketchConstraintOrigin::shape});
+    previewShape_ = {};
     return result;
 }
 

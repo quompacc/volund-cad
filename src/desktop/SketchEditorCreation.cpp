@@ -93,11 +93,13 @@ void SketchEditorToolController::confirmElement(const viewport::SketchElementInt
     if (!created)
         return;
     const auto id = created->primary();
-    if (editor_->tool() == application::SketchDrawingTool::polyline) {
-        const auto match = std::ranges::find(editor_->elements(), id, &document::SketchElement::id);
+    const auto end = created->point(application::SketchCreationPoint::lineEnd);
+    if (editor_->tool() == application::SketchDrawingTool::polyline && end) {
+        const auto match =
+            std::ranges::find(editor_->elements(), end->element, &document::SketchElement::id);
         if (match != editor_->elements().end()) {
             const auto& line = std::get<document::SketchLine>(match->geometry);
-            viewport_.continueSketchPolyline(line.end.x, line.end.y, id.value());
+            viewport_.continueSketchPolyline(line.end.x, line.end.y, end->element.value());
         }
     }
     statusChanged_(QObject::tr("Skizzenelement #%1 hinzugefügt").arg(id.value()));

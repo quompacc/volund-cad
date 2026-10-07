@@ -1,11 +1,14 @@
 #include <voelund/application/SketchEditorSession.hpp>
 
 #include <algorithm>
-#include <cmath>
+#include <span>
 #include <stdexcept>
+#include <string>
+#include <variant>
 
 // U08: the creation step of the interactive editor, moved here from the desktop so that
 // every caller gets the same elements and relations, and roles instead of ID arithmetic.
+// S01: snaps bind only to the typed points of the result.
 namespace voelund::application {
 namespace {
 using document::SketchConstraintKind;
@@ -21,12 +24,48 @@ SketchPointPosition position(SketchSnapKind kind) {
         return SketchPointPosition::center;
     return SketchPointPosition::start;
 }
+
+[[noreturn]] void rejectSnap(SketchElementId element, const char* what) {
+    throw std::invalid_argument("Fangpunkt an Element #" + std::to_string(element.value()) +
+                                " abgelehnt: " + what);
+}
+
+// S01: a snap names a typed point of an existing element. One that does not fit the element
+// is an error, not a dropped or invalid constraint.
+void checkSnapTarget(std::span<const document::SketchElement> elements, const SketchSnap& snap) {
+    const auto match = std::ranges::find(elements, snap.element, &document::SketchElement::id);
+    if (match == elements.end())
+        rejectSnap(snap.element, "unbekanntes Element");
+    const auto& geometry = match->geometry;
+    const bool line = std::holds_alternative<document::SketchLine>(geometry);
+    if (snap.kind == SketchSnapKind::midpoint || snap.kind == SketchSnapKind::onObject) {
+        if (!line)
+            rejectSnap(snap.element, "nur auf Linien");
+        return;
+    }
+    const bool center = snap.kind == SketchSnapKind::center;
+    const bool fits = std::holds_alternative<document::SketchArc>(geometry) ||
+                      (line && !center) ||
+                      (center && (std::holds_alternative<document::SketchCircle>(geometry) ||
+                                  std::holds_alternative<document::SketchEllipse>(geometry)));
+    if (!fits)
+        rejectSnap(snap.element, "das Element hat keinen solchen Punkt");
+}
+
+SketchGeometryReference required(const SketchCreationResult& result, SketchCreationPoint role) {
+    const auto point = result.point(role);
+    if (!point.has_value())
+        throw std::logic_error("Skizzenerzeugung: Punktrolle fehlt");
+    return *point;
+}
 } // namespace
 
 void SketchEditorSession::snapTo(SketchGeometryReference created,
                                  const std::optional<SketchSnap>& snap, SketchPoint point) {
     if (!snap.has_value())
         return;
+    if (snap->element.value() != 0)
+        checkSnapTarget(elements_.values, *snap);
     if (snap->kind == SketchSnapKind::midpoint) {
         static_cast<void>(addMidpointReference(created, snap->element));
         return;
@@ -55,6 +94,15 @@ void SketchEditorSession::snapTo(SketchGeometryReference created,
     static_cast<void>(addCoincidentReferences(created, {snap->element, position(snap->kind)}));
 }
 
+void SketchEditorSession::record(SketchCreationResult& result, std::uint64_t firstConstraint,
+                                 SketchConstraintOrigin origin) const {
+    for (const auto& constraint : constraints_.values)
+        if (constraint.id.value() >= firstConstraint &&
+            std::ranges::find(result.constraints, constraint.id, &SketchCreatedConstraint::id) ==
+                result.constraints.end())
+            result.constraints.push_back({constraint.id, origin});
+}
+
 std::optional<SketchCreationResult>
 SketchEditorSession::createCentered(const SketchCreationInput& input) {
     // S04a: a rectangle around the picked center. A construction diagonal and a construction
@@ -77,22 +125,27 @@ SketchEditorSession::createCentered(const SketchCreationInput& input) {
             throw std::invalid_argument("Rechteck aus dem Mittelpunkt: Hilfslinie abgelehnt");
         return *id;
     };
-    const SketchGeometryReference first{result->primary(), SketchPointPosition::start};
-    const SketchGeometryReference second{
-        *result->find(SketchCreationRole::rectangleFromSecondCorner), SketchPointPosition::start};
+    const auto first = required(*result, SketchCreationPoint::rectangleFirstCorner);
+    const auto second = required(*result, SketchCreationPoint::rectangleSecondCorner);
+    const std::uint64_t shapeStart = constraints_.nextId;
     const auto diagonal = addLine(opposite, corner);
     static_cast<void>(addCoincidentReferences({diagonal, SketchPointPosition::start}, first));
     static_cast<void>(addCoincidentReferences({diagonal, SketchPointPosition::end}, second));
     const auto half = addLine(center, corner);
     static_cast<void>(addCoincidentReferences({half, SketchPointPosition::end}, second));
     static_cast<void>(addMidpointReference({half, SketchPointPosition::start}, diagonal));
-    snapTo({half, SketchPointPosition::start}, input.firstSnap, center);
+    record(*result, shapeStart, SketchConstraintOrigin::shape);
+    const SketchGeometryReference middle{half, SketchPointPosition::start};
+    const std::uint64_t snapStart = constraints_.nextId;
+    snapTo(middle, input.firstSnap, center);
     snapTo(second, input.secondSnap, corner);
+    record(*result, snapStart, SketchConstraintOrigin::snap);
     setTool(SketchDrawingTool::rectangle);
     if (!selectElement(result->primary()))
         static_cast<void>(selectElement(half));
-    result->elements.push_back({diagonal, SketchCreationRole::centerDiagonal});
-    result->elements.push_back({half, SketchCreationRole::centerHalfDiagonal});
+    result->elements.push_back({diagonal, SketchCreationRole::centerDiagonal, 0});
+    result->elements.push_back({half, SketchCreationRole::centerHalfDiagonal, 0});
+    result->points.push_back({SketchCreationPoint::rectangleCenter, middle});
     return result;
 }
 
@@ -104,28 +157,46 @@ std::optional<SketchCreationResult> SketchEditorSession::create(const SketchCrea
     }
     if (!setPreview(in.first, in.second, in.third))
         return std::nullopt;
-    const auto result = confirmCreation();
+    auto result = confirmCreation();
     if (!result)
         return std::nullopt;
     const auto id = result->primary();
-    const auto radial = [&](SketchConstraintKind kind) {
-        return in.relationTarget.has_value() &&
-               addAutomaticRadialRelation(id, *in.relationTarget, kind);
+    // Each snap goes to a typed point of the result; every new constraint is recorded with
+    // its origin as it is added.
+    const auto snap = [&](SketchCreationPoint role, const std::optional<SketchSnap>& snapped,
+                          SketchPoint point) {
+        const std::uint64_t start = constraints_.nextId;
+        snapTo(required(*result, role), snapped, point);
+        record(*result, start, SketchConstraintOrigin::snap);
     };
+    const auto relate = [&](auto&& add) {
+        const std::uint64_t start = constraints_.nextId;
+        const bool added = add();
+        record(*result, start, SketchConstraintOrigin::relation);
+        return added;
+    };
+    const auto radial = [&](SketchConstraintKind kind) {
+        return in.relationTarget.has_value() && relate([&] {
+                   return addAutomaticRadialRelation(id, *in.relationTarget, kind);
+               });
+    };
+    const SketchPoint last = in.third.value_or(in.second);
     switch (tool_) {
     case SketchDrawingTool::line:
     case SketchDrawingTool::polyline:
-        snapTo({id, SketchPointPosition::start}, in.firstSnap, in.first);
-        snapTo({id, SketchPointPosition::end}, in.secondSnap, in.second);
+        snap(SketchCreationPoint::lineStart, in.firstSnap, in.first);
+        snap(SketchCreationPoint::lineEnd, in.secondSnap, in.second);
         if (in.relation == SketchAutoRelation::horizontal ||
             in.relation == SketchAutoRelation::vertical)
-            static_cast<void>(setSelectedLineConstraint(
-                in.relation == SketchAutoRelation::horizontal
-                    ? document::SketchLineConstraint::horizontal
-                    : document::SketchLineConstraint::vertical));
+            static_cast<void>(relate([&] {
+                return selectElement(id) &&
+                       setSelectedLineConstraint(in.relation == SketchAutoRelation::horizontal
+                                                     ? document::SketchLineConstraint::horizontal
+                                                     : document::SketchLineConstraint::vertical);
+            }));
         else if (in.relation == SketchAutoRelation::parallel ||
                  in.relation == SketchAutoRelation::perpendicular || !in.relation.has_value())
-            static_cast<void>(addAutomaticLineRelation(id));
+            static_cast<void>(relate([&] { return addAutomaticLineRelation(id).has_value(); }));
         break;
     case SketchDrawingTool::circle:
     case SketchDrawingTool::ellipse: {
@@ -134,12 +205,13 @@ std::optional<SketchCreationResult> SketchEditorSession::create(const SketchCrea
             circle && in.relation == SketchAutoRelation::concentric &&
             radial(SketchConstraintKind::concentric);
         if (!centerRelated)
-            snapTo({id, SketchPointPosition::center}, in.firstSnap, in.first);
+            snap(SketchCreationPoint::center, in.firstSnap, in.first);
         if (circle && in.relation == SketchAutoRelation::tangent) {
             if (in.relationTarget.has_value())
                 static_cast<void>(radial(SketchConstraintKind::tangent));
             else if (in.secondSnap.has_value())
-                static_cast<void>(addTangencyReference(id, in.secondSnap->element));
+                static_cast<void>(
+                    relate([&] { return addTangencyReference(id, in.secondSnap->element); }));
         } else if (circle && in.relation == SketchAutoRelation::equal) {
             static_cast<void>(radial(SketchConstraintKind::equal));
         }
@@ -149,48 +221,37 @@ std::optional<SketchCreationResult> SketchEditorSession::create(const SketchCrea
         const bool centerRelated = in.relation == SketchAutoRelation::concentric &&
                                    radial(SketchConstraintKind::concentric);
         if (!centerRelated)
-            snapTo({id, SketchPointPosition::center}, in.firstSnap, in.first);
-        snapTo({id, SketchPointPosition::start}, in.secondSnap, in.second);
-        snapTo({id, SketchPointPosition::end}, in.thirdSnap, in.third.value_or(in.second));
+            snap(SketchCreationPoint::center, in.firstSnap, in.first);
+        snap(SketchCreationPoint::arcStart, in.secondSnap, in.second);
+        snap(SketchCreationPoint::arcEnd, in.thirdSnap, last);
         if (in.relation == SketchAutoRelation::tangent) {
             if (in.relationTarget.has_value())
                 static_cast<void>(radial(SketchConstraintKind::tangent));
             else if (in.thirdSnap.has_value())
-                static_cast<void>(addTangencyReference(id, in.thirdSnap->element));
+                static_cast<void>(
+                    relate([&] { return addTangencyReference(id, in.thirdSnap->element); }));
         } else if (in.relation == SketchAutoRelation::equal) {
             static_cast<void>(radial(SketchConstraintKind::equal));
         }
         break;
     }
-    case SketchDrawingTool::threePointArc: {
-        // The arc runs counterclockwise; which input point became its start depends on the
-        // turn direction, so the snaps follow the stored arc.
-        const auto match = std::ranges::find(elements_.values, id, &document::SketchElement::id);
-        const auto& arc = std::get<document::SketchArc>(match->geometry);
-        const SketchPoint arcStart{arc.center.x + arc.radius * std::cos(arc.startAngle),
-                                   arc.center.y + arc.radius * std::sin(arc.startAngle)};
-        const SketchPoint last = in.third.value_or(in.second);
-        const bool inputStartsArc =
-            std::hypot(arcStart.x - in.first.x, arcStart.y - in.first.y) < 1.0e-6;
-        snapTo({id, SketchPointPosition::start}, inputStartsArc ? in.firstSnap : in.thirdSnap,
-               inputStartsArc ? in.first : last);
-        snapTo({id, SketchPointPosition::end}, inputStartsArc ? in.thirdSnap : in.firstSnap,
-               inputStartsArc ? last : in.first);
+    case SketchDrawingTool::threePointArc:
+        // The middle pick only lies on the arc; it binds nothing.
+        snap(SketchCreationPoint::arcStart, in.firstSnap, in.first);
+        snap(SketchCreationPoint::arcEnd, in.thirdSnap, last);
         break;
-    }
     case SketchDrawingTool::slot:
-        if (const auto cap = result->find(SketchCreationRole::slotFirstCap))
-            snapTo({*cap, SketchPointPosition::center}, in.firstSnap, in.first);
-        if (const auto cap = result->find(SketchCreationRole::slotSecondCap))
-            snapTo({*cap, SketchPointPosition::center}, in.secondSnap, in.second);
+        // The width pick binds nothing.
+        snap(SketchCreationPoint::slotFirstCenter, in.firstSnap, in.first);
+        snap(SketchCreationPoint::slotSecondCenter, in.secondSnap, in.second);
         break;
     case SketchDrawingTool::polygon:
-        snapTo({id, SketchPointPosition::start}, in.secondSnap, in.second);
+        // No center element yet, so a snapped center pick binds nothing (S06).
+        snap(SketchCreationPoint::polygonVertex, in.secondSnap, in.second);
         break;
     case SketchDrawingTool::rectangle:
-        snapTo({id, SketchPointPosition::start}, in.firstSnap, in.first);
-        if (const auto opposite = result->find(SketchCreationRole::rectangleFromSecondCorner))
-            snapTo({*opposite, SketchPointPosition::start}, in.secondSnap, in.second);
+        snap(SketchCreationPoint::rectangleFirstCorner, in.firstSnap, in.first);
+        snap(SketchCreationPoint::rectangleSecondCorner, in.secondSnap, in.second);
         break;
     case SketchDrawingTool::select:
         break;

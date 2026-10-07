@@ -193,6 +193,12 @@ SketchEditorInteraction::interactionPoint(int x, int y) const {
         for (const SceneSketchPoint& start : snapPoints_) {
             if (start.elementId == 0 || start.kind != SketchPointKind::start)
                 continue;
+            // Point on object binds to lines only (S01); an arc's chord is not on the arc.
+            if (std::ranges::any_of(snapPoints_, [&](const auto& candidate) {
+                    return candidate.elementId == start.elementId &&
+                           candidate.kind == SketchPointKind::center;
+                }))
+                continue;
             const auto end = std::ranges::find_if(snapPoints_, [&](const auto& candidate) {
                 return candidate.elementId == start.elementId &&
                        candidate.kind == SketchPointKind::end;

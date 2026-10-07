@@ -12,6 +12,7 @@ SketchEditorSession::confirmRectangle(const document::SketchRectangle& rectangle
         rectangle.second,
         document::SketchPoint{rectangle.first.x, rectangle.second.y},
     };
+    const std::uint64_t firstConstraint = constraints_.nextId;
     std::array<document::SketchElementId, 4> ids{
         document::SketchElementId{elements_.nextId++},
         document::SketchElementId{elements_.nextId++},
@@ -44,10 +45,18 @@ SketchEditorSession::confirmRectangle(const document::SketchRectangle& rectangle
     selectedElement_ = ids.front();
     selectedReferences_.clear();
     static_cast<void>(solveConstraints());
-    return {{{ids[0], SketchCreationRole::rectangleFromFirstCorner},
-             {ids[1], SketchCreationRole::rectangleToSecondCorner},
-             {ids[2], SketchCreationRole::rectangleFromSecondCorner},
-             {ids[3], SketchCreationRole::rectangleToFirstCorner}}};
+    SketchCreationResult result{{{ids[0], SketchCreationRole::rectangleFromFirstCorner},
+                                 {ids[1], SketchCreationRole::rectangleToSecondCorner},
+                                 {ids[2], SketchCreationRole::rectangleFromSecondCorner},
+                                 {ids[3], SketchCreationRole::rectangleToFirstCorner}},
+                                {{SketchCreationPoint::rectangleFirstCorner,
+                                  {ids[0], document::SketchPointPosition::start}},
+                                 {SketchCreationPoint::rectangleSecondCorner,
+                                  {ids[2], document::SketchPointPosition::start}}}};
+    for (const auto& constraint : constraints_.values)
+        if (constraint.id.value() >= firstConstraint)
+            result.constraints.push_back({constraint.id, SketchConstraintOrigin::shape});
+    return result;
 }
 
 } // namespace voelund::application
