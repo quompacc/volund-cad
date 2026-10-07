@@ -92,3 +92,26 @@ freigegeben.
   ihre Referenz aus `get_context` gewählt (wie T01). Die Extrusion endet auf ihr und folgt
   ihr bei Änderungen.
 - Schemaänderung wie T02; Panel und MCP; Aufnahmen werden vorgelegt.
+
+## T04 – Drücken/Ziehen auf Körperflächen
+
+Nutzerentscheidung vom 07.10.2026, Anlass war der Vergleich mit SketchUp und IngeTrazo.
+
+- **Modell:** „Fläche als Profil“. Eine ebene Körperfläche ist direkt das Profil eines
+  Features „Extrusion“, ohne Skizze. Ziehen vereinigt, Drücken zieht ab. Das Feature
+  folgt der Fläche, wenn sich der Körper ändert (stabile Referenz wie T03). Schema 10.
+- **Bedienung:** „Pfeil ziehen + Maßfeld“. Fläche anklicken; ein Pfeil entlang der
+  Flächennormalen lässt sich mit der Maus ziehen (Fangraster wie beim Verschieben). Das
+  Maßfeld im schwebenden Werkzeugpanel nimmt die Strecke getippt an. Die Vorschau läuft
+  live, Enter/OK übernimmt.
+- **Zeitpunkt:** als nächstes Paket, danach weiter nach Plan (S03, S08).
+- Sichtbare Ergänzung zu ADR 0012: ein Befehl in der Kontextleiste bei gewählter
+  ebener Fläche. Die Aufnahmen werden vorgelegt.
+
+Schritte:
+
+| Schritt | Inhalt |
+|---|---|
+| T04a | Flächenprofil im Modell: `ExtrusionParameters::faceProfile` (Körper + semantische Herkunft), Extrusion ohne Skizzeneingang, Auswertung über den Körperstand vor dem Feature, Deckfläche mit eigener stabiler Herkunft; Schema 10; Aktion, Bearbeiten der Strecke, MCP `push_pull_face` |
+| T04b | Seiten- und Bodenflächen von Extrusionen stabil nach `ExtrusionSideKey`/`ExtrusionCapKey` ([Vertrag](../subshape-reference-contract.md)), damit sie Skizzen tragen und gedrückt/gezogen werden können |
+| T04c | Oberfläche: Befehl „Drücken/Ziehen“ in der Kontextleiste, Pfeil im Viewport, Maßfeld, Live-Vorschau über `previewAction`; Aufnahmen |
