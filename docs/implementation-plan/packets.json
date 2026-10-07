@@ -1790,12 +1790,14 @@
       ],
       "acceptance": "Failed/Conflicting können nicht als gültig bestätigt werden. Unterbestimmte gültige Skizze kann entsprechend Vertrag akzeptiert werden. Cancel/Reopen/Undo stellen Auswahl und Solve-Status konsistent her.",
       "boundary": "Keine automatische Vollbestimmung als versteckte Voraussetzung offener Skizzen.",
-      "status": "planned",
+      "status": "done",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/S02.md"
+      ],
+      "completedCommit": "be2e69c"
     },
     {
       "id": "S03",
