@@ -1762,12 +1762,14 @@
       ],
       "acceptance": "Jede Werkzeugfamilie liefert eindeutige Rollen; umgekehrter Arc tauscht die richtigen Endpunkte, Slot-Snaps verwenden Kappenmitten. Unzulässige Rolle liefert Fehler statt ungültigem Constraint.",
       "boundary": "Keine UI-spezifischen IDs im Resultat.",
-      "status": "planned",
+      "status": "done",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/S01.md"
+      ],
+      "completedCommit": "0519e88"
     },
     {
       "id": "S02",
