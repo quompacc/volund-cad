@@ -68,13 +68,33 @@ void CadSession::saveDocumentUsing(const std::filesystem::path& path,
 }
 
 void CadSession::loadDocument(const std::filesystem::path& path) {
-    if (generation_ == std::numeric_limits<std::uint64_t>::max())
-        throw std::overflow_error("Document generation exhausted");
     auto preparedPath = std::filesystem::absolute(path);
     std::ifstream input(preparedPath, std::ios::binary);
     if (!input)
         throw std::runtime_error("Could not open the document for reading");
+    loadFrom(input, std::move(preparedPath), true);
+}
+
+std::optional<std::size_t> CadSession::savedFeatureCount() const {
+    if (!cleanDocumentState_ || currentFile_.empty())
+        return std::nullopt;
+    return cleanDocumentState_->features().size();
+}
+
+void CadSession::restoreDocument(std::string_view bytes, document::DocumentId expected) {
+    std::istringstream input{std::string(bytes)};
+    loadFrom(input, {}, false, expected);
+}
+
+void CadSession::loadFrom(std::istream& input, std::filesystem::path preparedPath,
+                          bool keepCleanState, std::optional<document::DocumentId> expected) {
+    if (generation_ == std::numeric_limits<std::uint64_t>::max())
+        throw std::overflow_error("Document generation exhausted");
     auto candidate = prepareLoad(input);
+    if (expected && candidate.document.documentId() != *expected)
+        throw std::runtime_error("The recovery snapshot belongs to another document");
+    if (!keepCleanState)
+        candidate.clean.reset(); // A restored snapshot is unsaved work.
     // The prepared document already has its persisted native ID or a fresh legacy ID.
     const bool valid = std::ranges::all_of(candidate.states, [](const auto& state) {
         return state.status == FeatureRuntimeStatus::current;

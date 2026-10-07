@@ -19,6 +19,9 @@ inline void isolateSettings() {
     QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, directory.path());
     QSettings::setPath(QSettings::IniFormat, QSettings::SystemScope, directory.path());
     QCoreApplication::setOrganizationName(QStringLiteral("VoelundTest"));
+    // L05: autosave of a test window never writes into the user's recovery directory.
+    if (qEnvironmentVariableIsEmpty("VOELUND_RECOVERY_DIR"))
+        qputenv("VOELUND_RECOVERY_DIR", (directory.path() + QStringLiteral("/recovery")).toUtf8());
 }
 
 } // namespace voelund::test

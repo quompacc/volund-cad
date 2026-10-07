@@ -1,4 +1,6 @@
 #pragma once
+#include "AutosaveController.hpp"
+#include "RecoveryStore.hpp"
 #include "CommandActions.hpp"
 #include "CommandPalette.hpp"
 #include "ContextBar.hpp"
@@ -93,6 +95,9 @@ class MainWindow::Impl final {
     workspaces::CommandRegistry commandRegistry;
     std::unique_ptr<CommandActions> commandActions;
     std::unique_ptr<DocumentActions> documentActions;
+    // L05: recovery entries and the autosave that writes them.
+    std::unique_ptr<RecoveryStore> recoveryStore;
+    std::unique_ptr<AutosaveController> autosave;
     // AI04c: local Claude access (MCP).
     std::unique_ptr<McpAccess> mcp;
     QAction* mcpAction{nullptr};

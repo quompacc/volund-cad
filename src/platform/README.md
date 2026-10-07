@@ -58,3 +58,30 @@ run unprivileged on POSIX so its permission assertion is meaningful.
 API references: [Microsoft MoveFileExW](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-movefileexw),
 [FreeBSD rename(2)](https://man.freebsd.org/cgi/man.cgi?query=rename&sektion=2).
 The FreeBSD manual was also read directly on the actual test host.
+
+## Recovery (L05)
+
+Autosave never writes the user's file. `RecoveryStore` (desktop) keeps one entry per
+document ID in its own directory: `VOELUND_RECOVERY_DIR`, else
+`QStandardPaths::AppLocalDataLocation/recovery`.
+
+- `<id>.volund` holds the native bytes and `<id>.meta` the original path, the UTC time
+  and the feature counts. Both are written with `AtomicFileStore::write`, data first.
+  Metadata without matching data is a damaged entry.
+- A running instance holds `<id>.lock` (`QLockFile`, no age limit) for every entry it
+  writes or offers. A second instance neither overwrites nor offers it. The lock of a
+  crashed process names a dead PID; it is stale, and the entry is offered at the next
+  start.
+- At start, temporary files of interrupted writes (`.voelund-save-*.tmp`) older than
+  10 minutes are removed, and only in the recovery directory. The no-wildcard rule above
+  still holds for user directories.
+- Restoring opens the entry as an unsaved document without a file
+  (`CadSession::restoreDocument`). Only a confirmed Save As writes it. A snapshot whose
+  document ID differs from its metadata is rejected before the active document changes.
+- An instance removes only entries it wrote or restored: after a successful Save, after
+  New/Open/Duplicate past the unsaved-changes question, or on a confirmed close. Entries
+  of other documents are never removed silently.
+- A failed write is reported once in the status bar and retried; it never blocks
+  editing.
+
+Verified by `desktop.recovery` (A-RECOVERY-01).

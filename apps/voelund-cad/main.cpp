@@ -228,6 +228,11 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    // L05: unsaved work of an interrupted run is offered first (not in the smoke test, which
+    // starts from a clean, unmodified document).
+    if (!isSmokeTest)
+        mainWindow.offerRecovery();
+
     // U07: a document given on the command line (desktop file association) opens through the
     // same safe Open action; a failure shows its error and keeps the new document.
     const auto arguments = QCoreApplication::arguments();

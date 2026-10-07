@@ -142,6 +142,23 @@ void DocumentActions::openFile(const QString& fileName) {
         load(fileName);
 }
 
+bool DocumentActions::restore(const std::function<void()>& apply) {
+    if (!confirmSaveChanges())
+        return false;
+    try {
+        apply();
+        refreshHandler_();
+        syncWindowTitle();
+        window_.statusBar()->showMessage(
+            QObject::tr("Ungespeicherte Arbeit wiederhergestellt – mit „Speichern unter“ sichern"),
+            8000);
+        return true;
+    } catch (const std::exception& error) {
+        showError(QObject::tr("Wiederherstellen fehlgeschlagen"), error);
+        return false;
+    }
+}
+
 void DocumentActions::load(const QString& fileName) {
     try {
         session_.loadDocument(nativePath(fileName));

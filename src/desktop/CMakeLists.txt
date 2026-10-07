@@ -13,8 +13,12 @@ add_library(
     MainWindowAssistant.cpp
     MainWindowCommands.cpp
     MainWindowParameters.cpp
+    MainWindowRecovery.cpp
     MainWindowReferenceRepair.cpp
     ReferenceRepairDialog.cpp
+    RecoveryDialog.cpp
+    RecoveryStore.cpp
+    AutosaveController.cpp
     DocumentRepairDialog.cpp
     ReferenceRepairPreview.cpp
     MainWindowSupport.cpp
@@ -55,6 +59,7 @@ target_link_libraries(
     PUBLIC
         voelund_project_options
         Voelund::Application
+        Voelund::Platform
         Voelund::Viewport
         Voelund::ModuleSolid
         Voelund::Mcp

@@ -30,11 +30,14 @@ class MainWindow final : public QMainWindow {
     [[nodiscard]] QString mcpConnectCommand() const;
     // U07: a file argument (desktop association) takes the same safe path as File > Open.
     void openFile(const QString& fileName);
+    // L05: offers unsaved work of an earlier, interrupted run (dialog at start).
+    void offerRecovery();
 
   protected:
     void closeEvent(QCloseEvent* event) override;
 
   private:
+    void createRecovery();
     void repairReferences();
     void repairAllReferences();
     void syncGeometryStatus();

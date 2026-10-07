@@ -63,6 +63,7 @@ MainWindow::MainWindow(application::CadSession& session, QWidget* parent)
     createCommandSurfaces();
     createTimeline();
     createAssistant();
+    createRecovery();
     // The shell layout is fixed (ADR 0012): no floating, closing or dragging of panels.
     for (auto* dock : findChildren<QDockWidget*>())
         dock->setFeatures(QDockWidget::NoDockWidgetFeatures);
@@ -83,6 +84,8 @@ void MainWindow::openFile(const QString& fileName) {
 
 void MainWindow::closeEvent(QCloseEvent* event) {
     event->setAccepted(impl_->documentActions->confirmClose());
+    if (event->isAccepted() && impl_->autosave)
+        impl_->autosave->forgetCurrent(); // Saved or discarded on purpose.
 }
 
 void MainWindow::createViewport() {

@@ -16,6 +16,7 @@
 #include <array>
 #include <filesystem>
 #include <functional>
+#include <iosfwd>
 #include <optional>
 #include <span>
 #include <string>
@@ -279,6 +280,14 @@ class CadSession final {
     void newDocument();
     void saveDocument(const std::filesystem::path& path);
     void loadDocument(const std::filesystem::path& path);
+    // L05: the document as native bytes for a recovery snapshot; changes nothing.
+    [[nodiscard]] std::string recoverySnapshot() const { return serializedDocument(); }
+    // L05: features of the last saved state; nullopt for a document never saved.
+    [[nodiscard]] std::optional<std::size_t> savedFeatureCount() const;
+    // L05: opens a recovery snapshot as an unsaved document without a file, so only a
+    // confirmed Save As writes it; the original file is never touched. A snapshot of another
+    // document than `expected` is rejected before anything changes.
+    void restoreDocument(std::string_view bytes, document::DocumentId expected);
     // Provenance of the last successful import; editing/saving does not resolve its issues.
     [[nodiscard]] const std::optional<document::MigrationReport>&
     lastImportReport() const noexcept {
@@ -303,6 +312,8 @@ class CadSession final {
     [[nodiscard]] bool recompute();
     void normalizeSelection() noexcept;
     [[nodiscard]] std::string serializedDocument() const;
+    void loadFrom(std::istream& input, std::filesystem::path file, bool keepCleanState,
+                  std::optional<document::DocumentId> expected = std::nullopt);
 
     document::ModelDocument document_;
     features::FeatureGraph featureGraph_;
