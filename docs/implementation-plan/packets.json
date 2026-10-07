@@ -2935,13 +2935,15 @@
         "Stale-Tempdateien, mehrere Appinstanzen und Schreibfehler behandeln; Originalspeicherung bleibt AtomicFileStore."
       ],
       "acceptance": "A-RECOVERY-01: Abbruch nach Änderungen führt zu verfügbarem Recovery, Original bleibt unverändert; Restore kann als neue Datei gespeichert werden. Beschädigter Snapshot blockiert normales Öffnen nicht.",
-      "boundary": "Kein stilles Überschreiben der letzten manuell gespeicherten Datei.",
-      "status": "planned",
+      "boundary": "Kein stilles Überschreiben der letzten manuell gespeicherten Datei. Nutzerentscheidung 2026-10-07: Dialog beim Start; Sicherung 30 s nach der letzten Änderung, spätestens alle 2 min; offener Skizzenentwurf getrennt gesichert und im Editor wiederhergestellt.",
+      "status": "done",
       "gate": "G4",
       "chapter": "06-plattform-release.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/L05.md"
+      ],
+      "completedCommit": "777aa80"
     },
     {
       "id": "L06",

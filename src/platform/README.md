@@ -81,6 +81,10 @@ document ID in its own directory: `VOELUND_RECOVERY_DIR`, else
 - An instance removes only entries it wrote or restored: after a successful Save, after
   New/Open/Duplicate past the unsaved-changes question, or on a confirmed close. Entries
   of other documents are never removed silently.
+- An open sketch draft with changes (L05b) is written apart as `<id>.draft`: the document
+  with the draft applied in the native format, named in the metadata by feature ID. It
+  is written even while the document itself is unchanged, and restored into the editor
+  after the document.
 - A failed write is reported once in the status bar and retried; it never blocks
   editing.
 

@@ -53,3 +53,34 @@ U11 (automatischer Test des ganzen UI-Ablaufs) wartet zusätzlich auf S03/S07.
 - Spiegelzellen per RegionId (Nutzerentscheidung nötig).
 - PAR02 (Parameter-UI).
 - GitHub-Spiegel nicht aktuell; nur auf Wunsch synchronisieren.
+
+## Nachtrag 7. Oktober 2026 (abends)
+
+Die Nutzerfreigabe lautete „S01, S02 und L05 frei“. Alle drei sind abgenommen:
+
+| Paket | Inhalt | Nachweis |
+|---|---|---|
+| S01 | Erzeugungsergebnis mit Punktrollen, Bogenrichtung, Polygonindex und erzeugten Bedingungen; unpassender Fang ist ein Fehler | [S01](implementation-plan/evidence/S01.md) |
+| S02 | Ein Editorzustand für Undo, Ziehen und Rollback; `canAccept` mit expliziten Zuständen | [S02](implementation-plan/evidence/S02.md) |
+| L05 | Autosave und Wiederherstellung mit Startdialog; Skizzenentwurf getrennt gesichert (L05a + L05b) | [L05](implementation-plan/evidence/L05.md) |
+
+**Nutzerentscheidung L05 (07.10.2026):**
+- Dialog beim Start.
+- Sicherung 30 s nach der letzten Änderung, spätestens alle 2 min.
+- Ein offener Skizzenentwurf wird getrennt gesichert und im Editor wiederhergestellt.
+
+Windows hat 127 Tests (neu: `application.sketch_editor_state`, `desktop.recovery`).
+Fenstertests setzen `VOELUND_RECOVERY_DIR` über `IsolatedSettings.hpp`.
+
+**Jetzt frei (Abhängigkeiten erfüllt):**
+- **S03** Skizze aus leerem Dokument auf Basisebene.
+- **S08** Transformationen und Mehrfachauswahl.
+- **A02** braucht weiterhin Designarbeit.
+
+**Offen zur Entscheidung durch den Nutzer** (Gespräch 07.10.2026):
+- **Reihenfolge Richtung „produktiv“:** Messen (M12) und STEP (M17) früher? Die Kette
+  dorthin ist M11 → M12 → M17. Abrunden (M05) hängt an M03.
+- **Vorschlag „Drücken/Ziehen auf Körperflächen“:** Push/Pull im Stil von SketchUp, das
+  ein normales Extrusions-Feature erzeugt. Das ist eine sichtbare Ergänzung zu ADR 0012
+  und braucht Freigabe. Anlass war der Vergleich mit IngeTrazo, einem SketchUp-ähnlichen
+  Modellierer ohne Parametrik und ohne Volumenkernel.
