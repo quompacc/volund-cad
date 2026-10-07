@@ -5,6 +5,9 @@
 #include <QAction>
 #include <QApplication>
 #include <QDir>
+#include <QLabel>
+#include <QPushButton>
+#include <QToolButton>
 #include <QElapsedTimer>
 #include <QStatusBar>
 #include <QThread>
@@ -68,8 +71,53 @@ void inspectWindow(application::CadSession& session) {
         QApplication::processEvents();
         require(window.grab().save(directory + "/feature-failed-blocked.png"), "capture tree");
     }
+    // U10: markers, the error card with its way out, and the stale banner.
+    require(!row(2)->icon(0).isNull() && !row(3)->icon(0).isNull() && row(5)->icon(0).isNull(),
+            "Tree markers for failed and blocked features");
+    const auto steps = window.findChildren<QToolButton*>(QStringLiteral("timelineStep"));
+    const auto stepState = [&](std::size_t index) {
+        for (auto* step : steps)
+            if (step->isVisible() &&
+                step->property("featureId").toULongLong() == session.features()[index].id.value())
+                return step->property("featureState").toString();
+        return QString{};
+    };
+    require(stepState(2) == QStringLiteral("error") && stepState(3) == QStringLiteral("blocked") &&
+                stepState(5).isEmpty(),
+            "Timeline markers for failed and blocked features");
+    auto* banner = window.findChild<QWidget*>(QStringLiteral("staleGeometryBanner"));
+    require(banner && banner->isVisible(), "Stale geometry banner shown");
+    auto* card = window.findChild<QWidget*>(QStringLiteral("featureErrorCard"));
+    const auto label = [&](const char* name) {
+        return card->findChild<QLabel*>(QLatin1String(name))->text();
+    };
+    const auto button = [&](const char* name) {
+        return card->findChild<QPushButton*>(QLatin1String(name));
+    };
+    tree->setCurrentItem(row(3));
+    QApplication::processEvents();
+    require(card->isVisible() && label("featureErrorTitle").contains(QStringLiteral("Blockiert")) &&
+                button("featureErrorCause")->isVisible() && !button("featureErrorEdit")->isVisible(),
+            "A blocked feature names its cause");
+    if (!directory.isEmpty())
+        require(window.grab().save(directory + "/u10-blocked.png"), "capture blocked");
+    button("featureErrorCause")->click();
+    QApplication::processEvents();
+    // The failed feature is the extrusion of the opened sketch; its properties are the editor,
+    // so the card offers no extra button.
+    require(session.selectedFeature() == session.features()[2].id && card->isVisible() &&
+                label("featureErrorTitle").contains(QStringLiteral("Fehler")) &&
+                !label("featureErrorMessage").isEmpty() && !button("featureErrorCause")->isVisible(),
+            "The cause is the failed extrusion with its message");
+    if (!directory.isEmpty())
+        require(window.grab().save(directory + "/u10-failed.png"), "capture failed");
+    window.refreshAfterExternalChange();
+    QApplication::processEvents();
+    require(card->isVisible() && banner->isVisible() && !row(2)->icon(0).isNull(),
+            "A refresh does not clear the error");
     tree->setCurrentItem(row(5));
     QApplication::processEvents();
+    require(!card->isVisible(), "A current feature shows no error card");
     require(session.selectedFeature() == document::FeatureId{6} &&
                 session.canTransformFeature(document::FeatureId{6}),
             "Independent tree selection/editing was disabled");
@@ -121,6 +169,17 @@ void run(const std::filesystem::path& directory) {
     require(session.redo().status() == application::CommandStatus::committed &&
                 session.sceneStatus().isCurrent(),
             "redo repair");
+    {
+        // U10: after the real repair the banner and the markers are gone.
+        desktop::MainWindow repaired(session);
+        repaired.show();
+        QApplication::processEvents();
+        auto* banner = repaired.findChild<QWidget*>(QStringLiteral("staleGeometryBanner"));
+        auto* tree = repaired.findChild<QTreeWidget*>();
+        require(banner && !banner->isVisible() &&
+                    test::featureRow(*tree, session, 2)->icon(0).isNull(),
+                "Repair clears banner and markers");
+    }
     for (const auto& state : session.featureStates())
         require(state.status == application::FeatureRuntimeStatus::current && state.message.empty(),
                 "repair retained error status");

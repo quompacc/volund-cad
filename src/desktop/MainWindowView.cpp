@@ -81,6 +81,7 @@ void MainWindow::syncTimeline() {
         return;
     const auto features = impl_->session.features();
     impl_->timeline->showFeatures(features, impl_->session.selectedFeature());
+    impl_->timeline->showStates(impl_->session.featureStates());
 }
 
 void MainWindow::openTimelineStep(std::uint64_t featureId) {

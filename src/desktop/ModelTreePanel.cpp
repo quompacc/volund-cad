@@ -1,4 +1,5 @@
 #include "ModelTreePanel.hpp"
+#include "FeatureErrorCard.hpp"
 
 #include <QHeaderView>
 #include <QBrush>
@@ -145,6 +146,7 @@ void ModelTreePanel::showStatuses(std::span<const application::FeatureRuntimeSta
                                    : name);
         item->setToolTip(0,
                          hasError || blocked ? QString::fromStdString(state.message) : QString{});
+        item->setIcon(0, featureStatusIcon(state.status)); // U10
     }
 }
 

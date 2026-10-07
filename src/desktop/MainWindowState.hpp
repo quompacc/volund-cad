@@ -9,6 +9,8 @@
 #include "ShellState.hpp"
 #include "SketchEditorToolController.hpp"
 #include "SketchExtrusionToolController.hpp"
+#include "FeatureErrorCard.hpp"
+#include "StaleBanner.hpp"
 #include "SketchToolActions.hpp"
 #include "Theme.hpp"
 #include "TimelineBar.hpp"
@@ -58,6 +60,8 @@ class MainWindow::Impl final {
     ModelTreePanel* modelTree{nullptr};
     FeaturePropertiesPanel* propertyPanel{nullptr};
     FloatingCard* propertyCard{nullptr};
+    FeatureErrorCard* errorCard{nullptr};
+    StaleBanner* staleBanner{nullptr};
     ToolPanelHost* toolPanel{nullptr};
     std::unique_ptr<SketchEditorToolController> sketchEditorTool;
     std::unique_ptr<SketchExtrusionToolController> sketchExtrusionTool;

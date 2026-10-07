@@ -95,7 +95,7 @@ ToolPanelHost::ToolPanelHost(QWidget* host)
     cancelButton_ = new QPushButton(tr("Abbrechen"), content_);
     acceptButton_->setObjectName(QStringLiteral("toolAcceptButton"));
     cancelButton_->setObjectName(QStringLiteral("toolCancelButton"));
-    errorCommitButton_ = new QPushButton(tr("Bearbeitbare Fehler behalten"), content_);
+    errorCommitButton_ = new QPushButton(tr("Mit Folgefehlern übernehmen"), content_);
     errorCommitButton_->setObjectName(QStringLiteral("keepSketchErrorsButton"));
     errorCommitButton_->hide();
     connect(errorCommitButton_, &QPushButton::clicked, this, [this] {

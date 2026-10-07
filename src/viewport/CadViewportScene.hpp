@@ -124,6 +124,8 @@ class CadViewportScene {
         for (const SceneBody& body : pendingBodies) {
             occ::handle<AIS_Shape> presentation = new AIS_Shape(body.shape);
             presentation->SetColor(occtColor(theme.body));
+            if (body.stale)
+                presentation->SetTransparency(0.6);
             showEdges(presentation);
             context->Display(presentation, false);
             context->Activate(presentation, AIS_Shape::SelectionMode(TopAbs_FACE));

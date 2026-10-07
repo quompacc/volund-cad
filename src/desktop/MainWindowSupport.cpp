@@ -12,18 +12,10 @@ std::vector<viewport::SceneBody> makeSceneBodies(const application::CadSession& 
         if (hiddenBodies.contains(body.bodyId.value()))
             continue;
         bodies.push_back({body.sourceFeature.value(), body.shape,
-                          session.canTransformFeature(body.sourceFeature)});
+                          session.canTransformFeature(body.sourceFeature),
+                          !session.sceneStatus().isCurrent()});
     }
     return bodies;
-}
-
-QString featureErrorText(const application::CadSession& session, document::FeatureId featureId) {
-    for (const application::FeatureRuntimeState& state : session.featureStates()) {
-        if (state.id == featureId && state.status != application::FeatureRuntimeStatus::current) {
-            return QString::fromStdString(state.message);
-        }
-    }
-    return {};
 }
 
 int resultModeIndex(document::CylinderResultMode mode) {

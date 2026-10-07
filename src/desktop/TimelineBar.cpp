@@ -1,4 +1,9 @@
 #include "TimelineBar.hpp"
+#include "FeatureErrorCard.hpp"
+
+#include <voelund/application/CadSession.hpp>
+
+#include <algorithm>
 #include "ShellIcons.hpp"
 
 #include <QHBoxLayout>
@@ -89,6 +94,25 @@ void TimelineBar::showFeatures(std::span<const document::FeatureDescriptor> feat
     empty_->setVisible(features.empty());
     end_->setVisible(!features.empty());
     setTheme(mode_);
+}
+
+void TimelineBar::showStates(std::span<const application::FeatureRuntimeState> states) {
+    for (QToolButton* button : buttons_) {
+        const auto id = button->property("featureId").toULongLong();
+        const auto state = std::ranges::find(states, document::FeatureId{id},
+                                             &application::FeatureRuntimeState::id);
+        const bool marked =
+            state != states.end() && state->status != application::FeatureRuntimeStatus::current;
+        button->setProperty("featureState",
+                            !marked ? QString{}
+                            : state->status == application::FeatureRuntimeStatus::error
+                                ? QStringLiteral("error")
+                                : QStringLiteral("blocked"));
+        if (marked) {
+            button->setIcon(featureStatusIcon(state->status));
+            button->setToolTip(QString::fromStdString(state->message));
+        }
+    }
 }
 
 void TimelineBar::setTheme(ThemeMode mode) {

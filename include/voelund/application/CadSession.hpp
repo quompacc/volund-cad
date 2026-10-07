@@ -243,6 +243,8 @@ class CadSession final {
     extrusionParameters(document::FeatureId featureId) const;
     [[nodiscard]] kernel::RigidTransform selectedFeaturePlacement() const;
     [[nodiscard]] std::span<const FeatureRuntimeState> featureStates() const noexcept;
+    // U10: for a blocked feature, the failed feature among its (indirect) inputs.
+    [[nodiscard]] std::optional<document::FeatureId> errorCause(document::FeatureId feature) const;
     // PAR01 document parameters. Every command is one transaction and one undo step.
     [[nodiscard]] const document::ParameterTable& parameterTable() const noexcept;
     [[nodiscard]] std::size_t parameterUseCount(document::ParameterId id) const;

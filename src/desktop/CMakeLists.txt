@@ -1,5 +1,6 @@
 add_library(
     voelund_desktop STATIC
+    FeatureErrorCard.cpp
     FeaturePropertiesPanel.cpp
     FloatingCard.cpp
     DocumentActions.cpp
@@ -36,6 +37,7 @@ add_library(
     ShellState.cpp
     SketchToolActions.cpp
     SketchViewAdapter.cpp
+    StaleBanner.cpp
     Theme.cpp
     ToolPanelHost.cpp
     TimelineBar.cpp

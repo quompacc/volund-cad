@@ -38,7 +38,7 @@ FeaturePropertiesPanel::FeaturePropertiesPanel(QWidget* parent) : QStackedWidget
     addWidget(emptyPanel_);
     QWidget* pages[] = {boxPanel_, cylinderPanel_, extrusionPanel_};
     for (int index = 0; index < 3; ++index) {
-        auto* button = new QPushButton(tr("Bearbeitbare Fehler behalten"), pages[index]);
+        auto* button = new QPushButton(tr("Mit Folgefehlern übernehmen"), pages[index]);
         button->setObjectName(QStringLiteral("keepEditableErrorsButton"));
         button->setToolTip(tr("Die abgelehnte Änderung als reparierbaren Fehler behalten. "
                               "Rückgängig bleibt möglich."));

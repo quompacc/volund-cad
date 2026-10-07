@@ -36,6 +36,7 @@ struct SceneBody final {
     std::uint64_t id;
     TopoDS_Shape shape;
     bool transformable;
+    bool stale{false}; // U10: last valid geometry of a model with errors, drawn faded
 };
 
 /** Read-only lifecycle counters for diagnostics and native desktop tests. */

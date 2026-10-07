@@ -22,8 +22,6 @@ namespace voelund::desktop {
 [[nodiscard]] std::vector<viewport::SceneBody>
 makeSceneBodies(const application::CadSession& session,
                 const std::set<std::uint64_t>& hiddenBodies = {});
-[[nodiscard]] QString featureErrorText(const application::CadSession& session,
-                                       document::FeatureId featureId);
 [[nodiscard]] int resultModeIndex(document::CylinderResultMode mode);
 [[nodiscard]] document::CylinderResultMode resultModeFromIndex(int index);
 // Every user-visible action carries a stable command ID (U01 command table in

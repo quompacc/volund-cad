@@ -118,7 +118,29 @@ void MainWindow::createPropertiesPanel() {
         new FloatingCard(*impl_->viewport, QStringLiteral("featurePropertiesCard"));
     impl_->propertyCard->setTitle(tr("Eigenschaften"));
     impl_->propertyPanel = new FeaturePropertiesPanel(impl_->propertyCard);
+    // U10: errors of the selected feature sit above its properties, with the way out.
+    impl_->errorCard = new FeatureErrorCard(impl_->propertyCard);
+    impl_->errorCard->setHandlers(
+        {[this] {
+             if (const auto selected = impl_->session.selectedFeature())
+                 if (const auto cause = impl_->session.errorCause(*selected))
+                     selectFeature(cause->value());
+         },
+         [this] {
+             if (QAction* edit = impl_->commandActions->action("solid.modify.edit_sketch"))
+                 edit->trigger();
+         },
+         [this] { repairReferences(); }});
+    impl_->propertyCard->body().addWidget(impl_->errorCard);
     impl_->propertyCard->body().addWidget(impl_->propertyPanel);
+    impl_->staleBanner = new StaleBanner(*impl_->viewport);
+    impl_->staleBanner->setOpenErrorHandler([this] {
+        for (const auto& state : impl_->session.featureStates())
+            if (state.status == application::FeatureRuntimeStatus::error) {
+                selectFeature(state.id.value());
+                return;
+            }
+    });
 }
 
 void MainWindow::createHistoryActions() {
@@ -385,8 +407,13 @@ void MainWindow::syncProperties() {
     impl_->propertyPanel->setErrorCommitHandler({});
     const ShellState shell = impl_->shell();
     const std::optional<document::FeatureId> selected = shell.feature;
-    impl_->repairAllAction->setEnabled(!impl_->session.features().empty());
+    const auto states = impl_->session.featureStates();
+    // U10: repair is offered while something is broken.
+    impl_->repairAllAction->setEnabled(std::ranges::any_of(states, [](const auto& state) {
+        return state.status != application::FeatureRuntimeStatus::current;
+    }));
     impl_->repairAction->setEnabled(shell.canEditSketch());
+    syncErrorCard(selected);
     if (!selected.has_value()) {
         impl_->propertyPanel->showNone();
         syncTransformTool();
@@ -394,26 +421,52 @@ void MainWindow::syncProperties() {
         impl_->documentActions->syncWindowTitle();
         return;
     }
+    // The state message of a failed feature is in the error card above (U10).
     const document::FeatureDescriptor& feature = impl_->session.selectedFeatureDescriptor();
     if (feature.kind == document::FeatureKind::box) {
         impl_->propertyPanel->showBox(impl_->session.selectedBoxParameters());
     } else if (feature.kind == document::FeatureKind::cylinder) {
         const document::CylinderParameters& parameters =
             impl_->session.selectedCylinderParameters();
-        impl_->propertyPanel->showCylinder(parameters,
-                                           featureErrorText(impl_->session, feature.id));
+        impl_->propertyPanel->showCylinder(parameters, {});
     } else if (feature.kind == document::FeatureKind::extrusion) {
-        impl_->propertyPanel->showExtrusion(impl_->session.selectedExtrusionParameters(),
-                                            featureErrorText(impl_->session, feature.id));
+        impl_->propertyPanel->showExtrusion(impl_->session.selectedExtrusionParameters(), {});
     } else {
         const QString title = feature.kind == document::FeatureKind::sketch
                                   ? sketchSelectionSummary(impl_->session)
                                   : tr("Feature");
-        impl_->propertyPanel->showFeatureInfo(title, featureErrorText(impl_->session, feature.id));
+        impl_->propertyPanel->showFeatureInfo(title, {});
     }
+    impl_->propertyCard->refit(); // The error card changes the height (U10).
     syncTransformTool();
     syncShell();
     impl_->documentActions->syncWindowTitle();
+}
+
+void MainWindow::syncErrorCard(std::optional<document::FeatureId> selected) {
+    const auto states = impl_->session.featureStates();
+    const auto state =
+        selected ? std::ranges::find(states, *selected, &application::FeatureRuntimeState::id)
+                 : states.end();
+    if (state == states.end() || state->status == application::FeatureRuntimeStatus::current) {
+        impl_->errorCard->clear();
+        return;
+    }
+    const auto features = impl_->session.features();
+    const auto descriptor = std::ranges::find(features, *selected, &document::FeatureDescriptor::id);
+    const bool sketch = descriptor != features.end() &&
+                        descriptor->kind == document::FeatureKind::sketch;
+    FeatureErrorCard::Content content;
+    content.blocked = state->status == application::FeatureRuntimeStatus::blocked;
+    content.message = QString::fromStdString(state->message);
+    if (const auto cause = impl_->session.errorCause(*selected)) {
+        const auto found = std::ranges::find(features, *cause, &document::FeatureDescriptor::id);
+        if (found != features.end())
+            content.cause = QString::fromStdString(found->name);
+    }
+    content.canEdit = !content.blocked && sketch;
+    content.canRepair = content.canEdit && descriptor->inputFeature.has_value();
+    impl_->errorCard->showError(content);
 }
 
 void MainWindow::syncTreeStatus() {

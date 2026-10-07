@@ -62,6 +62,7 @@ class MainWindow final : public QMainWindow {
     void openTimelineStep(std::uint64_t featureId);
     void syncProperties();
     void syncTreeStatus();
+    void syncErrorCard(std::optional<document::FeatureId> selected);
     void syncSketchPresentation();
     void syncTransformTool();
     void refreshScene();

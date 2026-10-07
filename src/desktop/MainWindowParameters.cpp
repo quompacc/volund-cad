@@ -30,6 +30,10 @@ void MainWindow::applyHistoryCommand(bool forward) {
 void MainWindow::syncGeometryStatus() {
     const auto state = impl_->session.sceneStatus();
     impl_->geometryStatus->setVisible(!state.isCurrent());
+    impl_->staleBanner->showText(
+        state.isCurrent() ? QString{}
+        : state.geometry  ? tr("Zeigt den letzten gültigen Stand – das Modell hat Fehler")
+                          : tr("Keine gültige Geometrie – das Modell hat Fehler"));
     if (state.isCurrent()) {
         impl_->geometryStatus->clear();
         return;

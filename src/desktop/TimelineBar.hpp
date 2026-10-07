@@ -16,6 +16,10 @@ class QHBoxLayout;
 class QLabel;
 class QToolButton;
 
+namespace voelund::application {
+struct FeatureRuntimeState;
+}
+
 namespace voelund::desktop {
 
 // U06: the timeline at the bottom of the window (ADR 0012). It shows every feature in
@@ -29,6 +33,8 @@ class TimelineBar final : public QFrame {
     void showFeatures(std::span<const document::FeatureDescriptor> features,
                       std::optional<document::FeatureId> selected);
     void setTheme(ThemeMode mode);
+    // U10: red (error) or amber (blocked) markers with the message as tooltip.
+    void showStates(std::span<const application::FeatureRuntimeState> states);
 
   private:
     QHBoxLayout* steps_{nullptr};

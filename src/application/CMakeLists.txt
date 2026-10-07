@@ -14,6 +14,7 @@ add_library(voelund_application STATIC
     CadSessionSketchProfiles.cpp
     CadSessionSketchSupport.cpp
     CadSessionEdgeProjection.cpp
+    CadSessionErrors.cpp
     CadSessionReferenceInspection.cpp
     CadSessionReferenceRepair.cpp
     CadSessionBatchRepair.cpp
