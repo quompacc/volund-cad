@@ -73,13 +73,11 @@ void SketchEditorToolController::confirmElement(const viewport::SketchElementInt
     previewAutomatic_.reset();
     if (!editor_)
         return;
-    auto previous = std::make_unique<application::SketchEditorSession>(*editor_);
     std::optional<application::SketchCreationResult> created;
     try {
+        // A rejected step leaves the editor unchanged (S02).
         created = editor_->create(creationInput(intent, toolIndex_ == centerRectangleTool));
     } catch (const std::invalid_argument& error) {
-        editor_ = std::move(previous);
-        editor_->clearPreview();
         panel_.setAcceptEnabled(editor_->canAccept());
         refreshPresentation();
         statusChanged_(QString::fromUtf8(error.what()));

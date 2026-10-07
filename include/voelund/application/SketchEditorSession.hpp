@@ -52,8 +52,7 @@ class SketchEditorSession final {
     [[nodiscard]] std::optional<SketchCreationResult> confirmCreation();
     // U08: one creation step of the active tool with its snaps and automatic relations, as
     // the interactive editor performs it (SketchCreation.hpp). nullopt for an invalid size; a
-    // rejected reference throws std::invalid_argument and leaves partial changes, so a caller
-    // keeps a copy of the session to restore.
+    // rejected reference throws std::invalid_argument and leaves the editor as before (S02).
     [[nodiscard]] std::optional<SketchCreationResult> create(const SketchCreationInput& input);
     [[nodiscard]] bool selectElement(document::SketchElementId elementId) noexcept;
     [[nodiscard]] bool selectNearestReference(document::SketchElementId elementId,
@@ -152,6 +151,8 @@ class SketchEditorSession final {
     [[nodiscard]] const features::SketchSolveResult& lastSolveResult() const noexcept;
     [[nodiscard]] std::vector<features::EvaluatedSketchElement> evaluatedElements() const;
     [[nodiscard]] std::size_t closedProfileCount() const;
+    // S02: a successful solve of nonempty geometry, also under-determined (open sketches are
+    // valid); never a conflicting or failed solve, nor during a drag.
     [[nodiscard]] bool canAccept() const noexcept;
     [[nodiscard]] CommandResult tryAccept(ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] document::SketchParameters draftParameters() const { return parameters(false); }
@@ -168,9 +169,38 @@ class SketchEditorSession final {
     [[nodiscard]] bool setConstraintInternalValue(document::SketchConstraintId constraintId,
                                                   double value);
     friend class SketchSolverGateTestAccess;
-    struct HistoryState final {
+    // S02: everything an undo step, a drag or a failed operation restores. An undo step keeps
+    // the selection with its geometry; its solve result is derived again when it returns.
+    struct EditorState final {
         document::SketchElements elements;
         document::SketchConstraints constraints;
+        std::optional<document::SketchElementId> selectedElement;
+        std::vector<document::SketchGeometryReference> selectedReferences;
+        std::optional<document::SketchPoint> selectionPoint;
+        features::SketchSolveResult solve;
+    };
+    [[nodiscard]] EditorState snapshot() const;
+    void restore(EditorState state) noexcept;
+    // Puts the selection of `state` back where its elements still exist.
+    void restoreSelection(const EditorState& state);
+    // Restores the state from its construction unless keep() is called, so an operation that
+    // fails or throws after a change leaves nothing half changed (S02).
+    class Rollback final {
+      public:
+        explicit Rollback(SketchEditorSession& editor)
+            : editor_(editor), saved_(editor.snapshot()) {}
+        Rollback(const Rollback&) = delete;
+        Rollback& operator=(const Rollback&) = delete;
+        ~Rollback() {
+            if (!kept_)
+                editor_.restore(std::move(saved_));
+        }
+        void keep() noexcept { kept_ = true; }
+
+      private:
+        SketchEditorSession& editor_;
+        EditorState saved_;
+        bool kept_{false};
     };
     // S01: what the preview's items mean; points name an item by its position in preview_.
     struct PreviewPoint final {
@@ -187,6 +217,7 @@ class SketchEditorSession final {
     confirmRectangle(const document::SketchRectangle& rectangle);
     void snapTo(document::SketchGeometryReference created, const std::optional<SketchSnap>& snap,
                 document::SketchPoint point);
+    [[nodiscard]] std::optional<SketchCreationResult> createStep(const SketchCreationInput& input);
     [[nodiscard]] std::optional<SketchCreationResult> createCentered(const SketchCreationInput& input);
     // Adds the constraints from `firstConstraint` on that the result does not list yet.
     void record(SketchCreationResult& result, std::uint64_t firstConstraint,
@@ -195,7 +226,13 @@ class SketchEditorSession final {
     geometry(document::SketchPoint first, document::SketchPoint second,
              std::optional<document::SketchPoint> third, PreviewShape& shape) const;
     [[nodiscard]] document::SketchParameters parameters(bool includePreview) const;
+    // Solves the current state and records the result; on success the solved geometry is
+    // kept. An exception or a changed support counts as failed, never as the last success.
     [[nodiscard]] bool solveConstraints();
+    // The solve result of the current state without changing its geometry (undo, reopen).
+    void refreshSolve();
+    // Ends an operation that added geometry: keeps it if it is valid and solves.
+    [[nodiscard]] bool keepIfValid(Rollback& rollback);
 
     CadSession& session_;
     std::optional<document::FeatureId> supportFeature_;
@@ -218,11 +255,11 @@ class SketchEditorSession final {
     std::optional<document::SketchElementId> selectedElement_;
     std::vector<document::SketchGeometryReference> selectedReferences_;
     std::optional<document::SketchPoint> selectionPoint_;
-    features::SketchSolveResult lastSolveResult_{features::SketchSolveStatus::success, -1, {}};
+    features::SketchSolveResult lastSolveResult_{features::SketchSolveStatus::success, 0, {}};
     int polygonSides_{6};
-    std::vector<HistoryState> history_;
+    std::vector<EditorState> history_;
     std::size_t historyIndex_{0};
-    std::optional<HistoryState> dragStart_;
+    std::optional<EditorState> dragStart_;
     bool active_{true};
 };
 

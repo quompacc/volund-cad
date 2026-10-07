@@ -150,6 +150,21 @@ SketchEditorSession::createCentered(const SketchCreationInput& input) {
 }
 
 std::optional<SketchCreationResult> SketchEditorSession::create(const SketchCreationInput& in) {
+    // S02: a rejected snap leaves the editor as before the step, tool included.
+    const SketchDrawingTool tool = tool_;
+    Rollback rollback(*this);
+    try {
+        auto result = createStep(in);
+        rollback.keep();
+        return result;
+    } catch (...) {
+        tool_ = tool;
+        clearPreview();
+        throw;
+    }
+}
+
+std::optional<SketchCreationResult> SketchEditorSession::createStep(const SketchCreationInput& in) {
     if (in.centered) {
         if (tool_ != SketchDrawingTool::rectangle)
             return std::nullopt;

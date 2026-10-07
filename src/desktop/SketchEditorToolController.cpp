@@ -244,11 +244,19 @@ void SketchEditorToolController::showPanel() {
             } else if (id == "remove_constraint") {
                 removeLastConstraint();
             } else if (id == "undo_sketch") {
-                if (editor_->undo())
+                if (editor_->undo()) {
+                    // S02: selection and solve status come back with the step.
+                    syncSelectedDimensionInputs();
+                    syncConstraintState();
                     refreshPresentation();
+                }
             } else if (id == "redo_sketch") {
-                if (editor_->redo())
+                if (editor_->redo()) {
+                    // S02: selection and solve status come back with the step.
+                    syncSelectedDimensionInputs();
+                    syncConstraintState();
                     refreshPresentation();
+                }
             } else if (id == "trim" || id == "extend" || id == "split" || id == "fillet" ||
                        id == "offset" || id == "mirror" || id == "linear_pattern" ||
                        id == "circular_pattern") {

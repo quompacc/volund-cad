@@ -140,8 +140,7 @@ bool SketchEditorSession::trimSelected() {
     }
     if (!cut.has_value())
         return false;
-    const auto previousElements = elements_;
-    const auto previousConstraints = constraints_;
+    Rollback rollback(*this);
     const bool trimStart = picked < *cut;
     (trimStart ? line->start : line->end) = interpolate(*line, *cut);
     const auto endpoint = trimStart ? document::SketchPointPosition::start
@@ -154,11 +153,10 @@ bool SketchEditorSession::trimSelected() {
                (constraint.second.has_value() && affected(*constraint.second)) ||
                (constraint.third.has_value() && affected(*constraint.third));
     });
-    if (solveConstraints())
-        return true;
-    elements_ = previousElements;
-    constraints_ = previousConstraints;
-    return false;
+    if (!solveConstraints())
+        return false;
+    rollback.keep();
+    return true;
 }
 
 bool SketchEditorSession::extendSelected() {
@@ -188,12 +186,12 @@ bool SketchEditorSession::extendSelected() {
     }
     if (!target.has_value())
         return false;
-    const auto previous = elements_;
+    Rollback rollback(*this);
     (extendStart ? line->start : line->end) = interpolate(*line, *target);
-    if (solveConstraints())
-        return true;
-    elements_ = previous;
-    return false;
+    if (!solveConstraints())
+        return false;
+    rollback.keep();
+    return true;
 }
 
 bool SketchEditorSession::splitSelected() {
@@ -210,8 +208,7 @@ bool SketchEditorSession::splitSelected() {
     const double parameter = std::clamp(projectionParameter(*line, *selectionPoint_), 0.0, 1.0);
     if (parameter <= 1.0e-6 || parameter >= 1.0 - 1.0e-6)
         return false;
-    const auto previousElements = elements_;
-    const auto previousConstraints = constraints_;
+    Rollback rollback(*this);
     const SketchElementId originalId = match->id;
     const bool construction = match->construction;
     const auto directionConstraint = line->constraint;
@@ -242,11 +239,10 @@ bool SketchEditorSession::splitSelected() {
                                    document::SketchGeometryReference{
                                        newId, document::SketchPointPosition::start}});
     selectedElement_ = newId;
-    if (solveConstraints())
-        return true;
-    elements_ = previousElements;
-    constraints_ = previousConstraints;
-    return false;
+    if (!solveConstraints())
+        return false;
+    rollback.keep();
+    return true;
 }
 
 bool SketchEditorSession::offsetSelected(double distance) {
@@ -273,17 +269,11 @@ bool SketchEditorSession::offsetSelected(double distance) {
     } else {
         return false;
     }
-    const auto previous = elements_;
+    Rollback rollback(*this);
     const SketchElementId id{elements_.nextId++};
     elements_.values.push_back({id, std::move(result), match->construction});
     selectedElement_ = id;
-    try {
-        document::validateSketchElements(elements_);
-    } catch (const std::invalid_argument&) {
-        elements_ = previous;
-        return false;
-    }
-    return true;
+    return keepIfValid(rollback);
 }
 
 bool SketchEditorSession::mirrorSelected() {
@@ -296,6 +286,7 @@ bool SketchEditorSession::mirrorSelected() {
     const auto* axis = std::get_if<SketchLine>(&axisMatch->geometry);
     if (axis == nullptr)
         return false;
+    Rollback rollback(*this);
     for (std::size_t index = 0; index + 1 < ids.size(); ++index) {
         const auto source = std::ranges::find(elements_.values, ids[index], &SketchElement::id);
         if (source == elements_.values.end())
@@ -337,7 +328,7 @@ bool SketchEditorSession::mirrorSelected() {
         elements_.values.push_back(
             {SketchElementId{elements_.nextId++}, std::move(geometry), source->construction});
     }
-    return true;
+    return keepIfValid(rollback);
 }
 
 bool SketchEditorSession::linearPatternSelected(int count, double spacing) {
@@ -348,6 +339,7 @@ bool SketchEditorSession::linearPatternSelected(int count, double spacing) {
                                          static_cast<std::uint64_t>(count - 1)))
         return false;
     const auto original = elements_.values;
+    Rollback rollback(*this);
     for (int copy = 1; copy < count; ++copy)
         for (SketchElementId id : ids) {
             const auto source = std::ranges::find(original, id, &SketchElement::id);
@@ -356,7 +348,7 @@ bool SketchEditorSession::linearPatternSelected(int count, double spacing) {
                                             translatedGeometry(source->geometry, spacing * copy, 0.0),
                                             source->construction});
         }
-    return true;
+    return keepIfValid(rollback);
 }
 
 bool SketchEditorSession::circularPatternSelected(int count, double angleDegrees) {
@@ -368,6 +360,7 @@ bool SketchEditorSession::circularPatternSelected(int count, double angleDegrees
                                          static_cast<std::uint64_t>(count - 1)))
         return false;
     const auto original = elements_.values;
+    Rollback rollback(*this);
     for (int copy = 1; copy < count; ++copy)
         for (SketchElementId id : ids) {
             const auto source = std::ranges::find(original, id, &SketchElement::id);
@@ -379,7 +372,7 @@ bool SketchEditorSession::circularPatternSelected(int count, double angleDegrees
                                          (static_cast<double>(copy) / count)),
                      source->construction});
         }
-    return true;
+    return keepIfValid(rollback);
 }
 
 bool SketchEditorSession::filletSelected(double radius) {
@@ -427,8 +420,7 @@ bool SketchEditorSession::filletSelected(double radius) {
                                             bisectorLength * centerDistance,
                              vertex.y + (firstDirection.y + secondDirection.y) /
                                             bisectorLength * centerDistance};
-    const auto previousElements = elements_;
-    const auto previousConstraints = constraints_;
+    Rollback rollback(*this);
     const auto firstEndpoint = std::hypot(first->start.x - vertex.x, first->start.y - vertex.y) <
                                        std::hypot(first->end.x - vertex.x, first->end.y - vertex.y)
                                    ? document::SketchPointPosition::start
@@ -475,11 +467,10 @@ bool SketchEditorSession::filletSelected(double radius) {
                   {ids[1], document::SketchPointPosition::start},
                   {arcId, document::SketchPointPosition::start});
     selectedElement_ = arcId;
-    if (solveConstraints())
-        return true;
-    elements_ = previousElements;
-    constraints_ = previousConstraints;
-    return false;
+    if (!solveConstraints())
+        return false;
+    rollback.keep();
+    return true;
 }
 
 } // namespace voelund::application

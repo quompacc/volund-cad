@@ -166,6 +166,7 @@ bool SketchEditorSession::canAddSelectedRelation(
 bool SketchEditorSession::addSelectedRelation(document::SketchConstraintKind kind) {
     if (!canAddSelectedRelation(kind) || !canAllocateIds(0, 1))
         return false;
+    Rollback rollback(*this);
     std::optional<document::SketchGeometryReference> secondReference;
     if (kind != document::SketchConstraintKind::diameter &&
         kind != document::SketchConstraintKind::fixed)
@@ -213,11 +214,16 @@ bool SketchEditorSession::addSelectedRelation(document::SketchConstraintKind kin
     }
     if (kind == document::SketchConstraintKind::symmetric)
         constraint.third = selectedReferences_[2];
+    // A conflicting relation stays visible so it can be removed; canAccept is false meanwhile.
+    // An invalid one is not added (S02).
     constraints_.values.push_back(constraint);
-    document::SketchParameters sketch{plane_, elements_, constraints_};
-    lastSolveResult_ = features::solveSketchConstraints(sketch);
-    if (lastSolveResult_.status == features::SketchSolveStatus::success)
-        elements_ = std::move(sketch.elements);
+    try {
+        document::validateSketchConstraints(elements_, constraints_);
+    } catch (const std::invalid_argument&) {
+        return false;
+    }
+    static_cast<void>(solveConstraints());
+    rollback.keep();
     return true;
 }
 
