@@ -1645,12 +1645,14 @@
       ],
       "acceptance": "A-TXN-03: 100 MouseMoves → ein Undo; Escape während Drag → Ausgangszustand; bloßes Refresh → null Schritte. Wiederholtes Redraw verändert Dirty nicht.",
       "boundary": "Keine Zeitdebounce-Heuristik als Ersatz für echte Eingabegrenzen.",
-      "status": "planned",
+      "status": "done",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/U09.md"
+      ],
+      "completedCommit": "e387583"
     },
     {
       "id": "U10",
@@ -1671,7 +1673,7 @@
         "Explizites Übernehmen mit Folgefehlern aus K03 und Referenzneuzuweisung integrieren."
       ],
       "acceptance": "A-ERR-01 und A-REF-03 im UI bedienbar; Fehler verschwindet nach echter Reparatur, nicht nach Refresh. Undo der Reparatur stellt Fehlzustand wieder her.",
-      "boundary": "Keine generischen zusätzlichen Bestätigungsdialoge bei jedem gültigen Edit.",
+      "boundary": "Keine generischen zusätzlichen Bestätigungsdialoge bei jedem gültigen Edit. Nutzerentscheidung 2026-10-07: Fehlerkarte mit Ursache, Bearbeiten/Reparieren und Markern in Baum und Timeline; veraltete Geometrie mit Hinweisband und blass gezeichneten Körpern.",
       "status": "planned",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
@@ -4188,5 +4190,5 @@
     "statusSource": "packets.json ist die einzige Statusquelle; README und Statusseiten verweisen nur darauf und nennen keine Testzahlen.",
     "frozen": "G5 einschließlich AI02 beginnt erst nach G3-Abnahme."
   },
-  "updatedDate": "2026-10-06"
+  "updatedDate": "2026-10-07"
 }
