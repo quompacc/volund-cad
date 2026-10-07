@@ -106,6 +106,10 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
                        const document::FeatureDescriptor& descriptor,
                        std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
                        std::vector<EvaluatedBody>& referenceBodies) {
+    if (const auto& own = document.extrusionParameters(descriptor.id); own.faceProfile) {
+        evaluateFaceExtrusion(document, descriptor, own, outputs, bodies, referenceBodies);
+        return;
+    }
     if (!descriptor.inputFeature.has_value()) {
         throw GeometryEvaluationError("Extrusion requires a sketch input");
     }

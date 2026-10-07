@@ -192,6 +192,11 @@ class CadSession final {
     createDatumSketchExtrusion(const document::SketchParameters& sketch,
                                std::span<const document::SketchRegionId> regions,
                                double distance, const ExtrusionMode& mode = {});
+    // T04: push/pull of a planar face of `support`'s current result as one extrusion feature
+    // (positive distance joins outward, negative cuts inward).
+    [[nodiscard]] CommandResult pushPullFace(document::FeatureId support,
+                                             const features::SupportOrigin& face,
+                                             double distance);
     [[nodiscard]] bool canAddCylinder() const noexcept;
     [[nodiscard]] bool canAddCylinder(document::FeatureId inputFeature) const noexcept;
     // The feature whose placement moves this feature's result, if any.

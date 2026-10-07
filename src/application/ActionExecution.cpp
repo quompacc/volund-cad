@@ -160,6 +160,10 @@ class Validation final {
         quantity(action.distance, QuantityUnit::millimetre);
         regions(action.sketch.elements.values, action.regions);
     }
+    void operator()(const PushPullFaceAction& action) {
+        if (target(action.support, ActionKind::pushPullFace))
+            quantity(action.distance, QuantityUnit::millimetre);
+    }
     void operator()(const SetExtrusionDistanceAction& action) {
         static_cast<void>(target(action.extrusion, ActionKind::setExtrusionDistance));
         quantity(action.distance, QuantityUnit::millimetre);
@@ -297,6 +301,9 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot,
             },
             [&](const EditExtrusionParametersAction& a) {
                 return session.editExtrusionParameters(a.extrusion, a.parameters, reject);
+            },
+            [&](const PushPullFaceAction& a) {
+                return session.pushPullFace(a.support, a.face, a.distance.value);
             }},
         request.action);
 }

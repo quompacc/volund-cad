@@ -61,11 +61,14 @@ std::vector<ActionKind> availableActions(const CadSession& session,
     }
     if (session.placementFeature(feature))
         actions.push_back(ActionKind::setPlacement);
-    // A current result offers faces to sketch on and an input for a cylinder.
+    // A current result offers faces to sketch on or to push/pull, and an input for a
+    // cylinder.
     if (session.canAddCylinder(feature)) {
         actions.push_back(ActionKind::createCylinder);
-        if (descriptor->kind != FeatureKind::sketch)
+        if (descriptor->kind != FeatureKind::sketch) {
             actions.push_back(ActionKind::createSketch);
+            actions.push_back(ActionKind::pushPullFace);
+        }
     }
     return actions;
 }

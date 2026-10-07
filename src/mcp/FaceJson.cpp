@@ -7,12 +7,13 @@
 #include <stdexcept>
 
 // T01: faces of a body as stable semantic references (docs/subshape-reference-contract.md):
-// the producing feature plus a box/cylinder role or an extrusion's end-cap boundary. No
-// shape index leaves Völund.
+// the producing feature plus a box/cylinder role or an extrusion's end-cap boundary; T04: or
+// the end cap of a push/pull ("cap": "end"). No shape index leaves Völund.
 namespace voelund::mcp::detail {
 namespace {
 // Parallel to kernel::PrimitiveRole; box roles are in the box's own axes.
 constexpr const char* roleNames[] = {"-x", "+x", "-y", "+y", "-z", "+z", "start", "end", "side"};
+constexpr const char* capNames[] = {"end"}; // T04: the end cap of a push/pull
 
 // Clean output: 1e-9 mm is far below any modelling tolerance.
 double clean(double value) {
@@ -31,6 +32,8 @@ QJsonObject encodeFaceOrigin(const features::SupportOrigin& origin) {
         boundary.append(static_cast<double>(element.value()));
     if (!boundary.isEmpty())
         json.insert("boundary", boundary);
+    if (origin.faceExtrusionCap)
+        json.insert("cap", "end");
     return json;
 }
 
@@ -54,10 +57,15 @@ QJsonObject encodeFace(const features::SupportFaceFrame& face) {
 
 features::SupportOrigin decodeFaceOrigin(const JsonReader& reader) {
     features::SupportOrigin origin{document::FeatureId{reader.id("feature")}, std::nullopt};
-    if (reader.has("role") == reader.has("boundary"))
+    if ((reader.has("role") ? 1 : 0) + (reader.has("boundary") ? 1 : 0) +
+            (reader.has("cap") ? 1 : 0) !=
+        1)
         throw ArgumentError(reader.field("role"),
-                            "A face has either a role or a boundary, as in get_context");
-    if (reader.has("role"))
+                            "A face has a role, a boundary or a cap, as in get_context");
+    if (reader.has("cap")) {
+        static_cast<void>(reader.choice("cap", capNames));
+        origin.faceExtrusionCap = true;
+    } else if (reader.has("role"))
         origin.role = static_cast<kernel::PrimitiveRole>(reader.choice("role", roleNames));
     else {
         const auto values = reader.array("boundary");

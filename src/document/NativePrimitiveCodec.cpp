@@ -307,11 +307,14 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
             const bool box = kind == "box";
             const bool sketch = kind == "sketch";
             const bool extrusion = kind == "extrusion";
-            // A base-plane sketch (schema 6) has no input reference child 5.
+            // A base-plane sketch (schema 6) and a face extrusion (schema 10) have no input
+            // reference child 5.
             const bool standaloneSketch =
                 sketch && native.FindChild(5, false).IsNull() && metadata.schemaVersion >= 6;
+            const bool standaloneExtrusion =
+                extrusion && native.FindChild(5, false).IsNull() && metadata.schemaVersion >= 10;
             require((box || sketch || extrusion || kind == "cylinder") &&
-                    native.NbChildren() == (box || standaloneSketch ? 4
+                    native.NbChildren() == (box || standaloneSketch || standaloneExtrusion ? 4
                                             : (sketch || extrusion) ? 5
                                                                     : 6));
             labels.emplace(entry(native), records.size());

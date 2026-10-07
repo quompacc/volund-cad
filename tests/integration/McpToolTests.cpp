@@ -112,10 +112,10 @@ void catalog() {
                 "Every tool has an object schema and a description");
         names.insert(tool.name);
     }
-    require(names.size() == 17 && names.contains("get_context") &&
+    require(names.size() == 18 && names.contains("get_context") &&
                 names.contains("create_sketch_extrusion") && names.contains("set_placement") &&
-                names.contains("create_sketch_on_face"),
-            "Version 1 has get_context and 16 action tools with unique names");
+                names.contains("create_sketch_on_face") && names.contains("push_pull_face"),
+            "Version 1 has get_context and 17 action tools with unique names");
 }
 
 void plateWithBore() {
@@ -394,6 +394,44 @@ void boxFaces() {
             "Six box sides with their roles: " + text(QJsonObject{{"faces", faces}}));
 }
 
+// T04: push/pull through MCP. Faces are chosen by their outward normal from get_context; the
+// end face of a pull comes back as {"cap": "end"} and can be pulled again; the bottom face
+// faces down and pushing it cuts into the box.
+void pushPull() {
+    application::CadSession session;
+    session.newDocument();
+    Client client(session);
+    client.committed("create_box", {{"width", mm(30)}, {"depth", mm(20)}, {"height", mm(10)}});
+    const auto faceFacing = [&](double z) {
+        const auto bodies = client.context().value("bodies").toArray();
+        const auto body = bodies.at(0).toObject();
+        for (const auto& item : body.value("faces").toArray())
+            if (near(coordinate(item.toObject().value("normal"), 2), z))
+                return std::pair{body.value("supportId").toInt(), item.toObject()};
+        throw std::runtime_error("No face facing z = " + std::to_string(z));
+    };
+    const auto pullUp = [&](double distance) {
+        const auto [support, face] = faceFacing(1);
+        return client.committed("push_pull_face", {{"supportId", support},
+                                                   {"face", face.value("face")},
+                                                   {"distance", mm(distance)}});
+    };
+    const auto first = pullUp(5).value("feature").toInt();
+    const auto [support, top] = faceFacing(1);
+    require(near(test::volumeOf(session.currentShape()), 30 * 20 * 15) && support == first &&
+                top.value("face").toObject() ==
+                    QJsonObject{{"feature", first}, {"cap", "end"}},
+            "A pull joins and offers its end face as a cap: " + text(top));
+    pullUp(2);
+    const auto [current, bottom] = faceFacing(-1);
+    client.committed("push_pull_face", {{"supportId", current},
+                                        {"face", bottom.value("face")},
+                                        {"distance", mm(-3)}});
+    require(session.validBodies().size() == 1 &&
+                near(test::volumeOf(session.currentShape()), 30 * 20 * 14),
+            "The bottom faces down; pushing it cuts 3 mm into the box");
+}
+
 void rejections() {
     application::CadSession session;
     session.newDocument();
@@ -476,6 +514,7 @@ int main() {
         ribOnPlate();
         extrusionOperations();
         boxFaces();
+        pushPull();
         rejections();
         return EXIT_SUCCESS;
     } catch (const std::exception& error) {

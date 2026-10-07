@@ -132,6 +132,12 @@ const ToolDecoder decoders[] = {
      [](const JsonReader& r, const CadSession& s) -> Action {
          return application::CreateDatumSketchAction{newSketch(r, s)};
      }},
+    {"push_pull_face",
+     [](const JsonReader& r, const CadSession&) -> Action {
+         return application::PushPullFaceAction{feature(r, "supportId"),
+                                                detail::decodeFaceOrigin(r.object("face")),
+                                                readQuantity(r, "distance")};
+     }},
     {"create_sketch_on_face",
      [](const JsonReader& r, const CadSession& s) -> Action {
          const auto support = feature(r, "supportId");

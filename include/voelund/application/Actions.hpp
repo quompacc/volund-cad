@@ -140,6 +140,14 @@ struct CreateSketchExtrusionAction final {
     ExtrusionMode mode{}; // T02
     bool operator==(const CreateSketchExtrusionAction&) const = default;
 };
+// T04: push/pull. A planar face of `support`'s current result is swept along its outward
+// normal: a positive distance pulls (joins), a negative one pushes into the body (cuts).
+struct PushPullFaceAction final {
+    document::FeatureId support;
+    document::SubshapeOrigin face;
+    Quantity distance;
+    bool operator==(const PushPullFaceAction&) const = default;
+};
 struct SetPlacementAction final {
     document::FeatureId feature;
     Quantity x;
@@ -159,7 +167,7 @@ using Action = std::variant<CreateParameterAction, SetParameterValueAction, Rena
                             SetCylinderSizeAction, SetPlacementAction,
                             CreateSketchExtrusionAction, CreateSketchAction,
                             EditBoxParametersAction, EditCylinderParametersAction,
-                            EditExtrusionParametersAction>;
+                            EditExtrusionParametersAction, PushPullFaceAction>;
 // Parallel to the alternatives of Action.
 enum class ActionKind {
     createParameter,
@@ -180,7 +188,8 @@ enum class ActionKind {
     createSketch,
     editBoxParameters,
     editCylinderParameters,
-    editExtrusionParameters
+    editExtrusionParameters,
+    pushPullFace
 };
 [[nodiscard]] ActionKind actionKind(const Action& action) noexcept;
 

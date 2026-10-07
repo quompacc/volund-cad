@@ -91,7 +91,8 @@ int readInteger(const TDF_Label& label) {
 }
 std::size_t nativeExtrusionRecords(const ExtrusionParameters& parameters) {
     std::size_t records = parameters.profiles.size() + parameters.regions.size() +
-        (parameters.upToFace ? parameters.upToFace->origin.extrusionBoundary.size() : 0);
+        (parameters.upToFace ? parameters.upToFace->origin.extrusionBoundary.size() : 0) +
+        (parameters.faceProfile ? parameters.faceProfile->origin.extrusionBoundary.size() : 0);
     for (const auto& region : parameters.regions)
         records += chunkCount(region);
     return records;
@@ -109,7 +110,8 @@ void validateNativeExtrusion(const ExtrusionParameters& parameters) {
         require(regions.insert(region.text()).second);
     require(!parameters.target || parameters.target->value() != 0);
     require(std::isfinite(parameters.offset) &&
-        (!parameters.upToFace || parameters.upToFace->body.value() != 0));
+        (!parameters.upToFace || parameters.upToFace->body.value() != 0) &&
+        (!parameters.faceProfile || parameters.faceProfile->body.value() != 0));
 }
 void writeNativeExtrusion(const TDF_Label& label, const ExtrusionParameters& parameters) {
     TDataStd_Real::Set(label, parameters.distance);
@@ -139,6 +141,12 @@ void writeNativeExtrusion(const TDF_Label& label, const ExtrusionParameters& par
             std::to_string(parameters.upToFace->body.value()).c_str());
         writeNativeSubshapeOrigin(face, parameters.upToFace->origin);
     }
+    if (parameters.faceProfile) {
+        const auto face = label.FindChild(10);
+        TDataStd_AsciiString::Set(face.FindChild(1),
+            std::to_string(parameters.faceProfile->body.value()).c_str());
+        writeNativeSubshapeOrigin(face, parameters.faceProfile->origin);
+    }
 }
 ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t remainingRecords,
                                         int schemaVersion) {
@@ -155,14 +163,17 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
     const auto offset = label.FindChild(7, false);
     const auto offsetBinding = label.FindChild(8, false);
     const auto endFace = label.FindChild(9, false);
+    // Schema 10 (T04) adds the profile face (10) of a push/pull.
+    const auto profileFace = label.FindChild(10, false);
     const int t02 = (operation.IsNull() ? 0 : 1) + (reversed.IsNull() ? 0 : 1) +
         (target.IsNull() ? 0 : 1);
     const int t03 = (offset.IsNull() ? 0 : 1) + (offsetBinding.IsNull() ? 0 : 1) +
         (endFace.IsNull() ? 0 : 1);
     require((regions.IsNull() || schemaVersion >= 5) && (binding.IsNull() || schemaVersion >= 7) &&
         (t02 == 0 || schemaVersion >= 8) && (t03 == 0 || schemaVersion >= 9) &&
-        label.NbChildren() ==
-            1 + (regions.IsNull() ? 0 : 1) + (binding.IsNull() ? 0 : 1) + t02 + t03);
+        (profileFace.IsNull() || schemaVersion >= 10) &&
+        label.NbChildren() == 1 + (regions.IsNull() ? 0 : 1) + (binding.IsNull() ? 0 : 1) + t02 +
+                                  t03 + (profileFace.IsNull() ? 0 : 1));
     Handle(TDataStd_Real) distance;
     require(label.FindAttribute(TDataStd_Real::GetID(), distance));
     const auto profiles = child(label, 1);
@@ -215,7 +226,14 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
     if (!endFace.IsNull()) {
         require(endFace.NbChildren() == 4);
         const BodyId body{readDecimal(child(endFace, 1))};
-        result.upToFace = BodyFaceReference{body, readNativeSubshapeOrigin(endFace, remainingRecords)};
+        result.upToFace = BodyFaceReference{
+            body, readNativeSubshapeOrigin(endFace, remainingRecords, schemaVersion)};
+    }
+    if (!profileFace.IsNull()) {
+        require(profileFace.NbChildren() == 4);
+        const BodyId body{readDecimal(child(profileFace, 1))};
+        result.faceProfile = BodyFaceReference{
+            body, readNativeSubshapeOrigin(profileFace, remainingRecords, schemaVersion)};
     }
     validateNativeExtrusion(result);
     return result;

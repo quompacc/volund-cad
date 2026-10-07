@@ -218,7 +218,8 @@ SketchParameters readNativeSketchGeometry(const TDF_Label& label, std::size_t re
     if (!binding.IsNull())
         sketch.supportBinding = readNativeSketchSupport(
             child(label, 11),
-            remainingElements - sketch.elements.values.size() - sketch.constraints.values.size());
+            remainingElements - sketch.elements.values.size() - sketch.constraints.values.size(),
+            schemaVersion);
     if (!repair.IsNull()) {
         require(repair.NbChildren() == 0 && repair.NbAttributes() == 1);
         sketch.repairReason = static_cast<SketchRepairReason>(integer(repair));

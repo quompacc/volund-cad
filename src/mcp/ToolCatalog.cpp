@@ -90,6 +90,20 @@ QJsonObject sketchSchema(bool withPlane) {
                   "regions; a contour inside another one makes a hole.");
 }
 
+// T01/T04: a face reference as get_context gives it.
+QJsonObject faceSchema() {
+    return object(
+        {{"feature", typed("integer", "Feature that produced the face")},
+         {"role", choice({"-x", "+x", "-y", "+y", "-z", "+z", "start", "end"},
+                         "Box side in the box's own axes, or cylinder end")},
+         {"boundary", QJsonObject{{"type", "array"},
+                                  {"items", typed("integer")},
+                                  {"description", "Sketch elements bounding an extrusion's end "
+                                                  "face"}}},
+         {"cap", choice({"end"}, "End face of a push/pull")}},
+        {"feature"}, "A face reference copied from bodies[].faces[].face");
+}
+
 // T02: what a new extrusion does; all optional.
 void insertExtrusionMode(QJsonObject& properties) {
     properties.insert(
@@ -185,18 +199,19 @@ std::vector<ToolDefinition> makeCatalog() {
         "get_context: world point = origin + x * xDirection + y * yDirection; min/max give "
         "the face extent in these coordinates.",
         {{"supportId", featureId("supportId of the body in get_context")},
-         {"face",
-          object({{"feature", typed("integer", "Feature that produced the face")},
-                  {"role", choice({"-x", "+x", "-y", "+y", "-z", "+z", "start", "end"},
-                                  "Box side in the box's own axes, or cylinder end")},
-                  {"boundary", QJsonObject{{"type", "array"},
-                                           {"items", typed("integer")},
-                                           {"description",
-                                            "Sketch elements bounding an extrusion's end "
-                                            "face"}}}},
-                 {"feature"}, "A face reference copied from bodies[].faces[].face")},
+         {"face", faceSchema()},
          {"sketch", sketchSchema(false)}},
         {"supportId", "face", "sketch"}));
+    tools.push_back(action(
+        "push_pull_face",
+        "Push or pull a planar face of a body, as one extrusion of that face: a positive "
+        "distance pulls it out (joins), a negative one pushes it into the body (cuts). The "
+        "extrusion follows the face when the body changes, and its end face can be pushed "
+        "or pulled again.",
+        {{"supportId", featureId("supportId of the body in get_context")},
+         {"face", faceSchema()},
+         {"distance", length("Along the face's outward normal; negative pushes into the body")}},
+        {"supportId", "face", "distance"}));
     tools.push_back(action("edit_sketch",
                            "Replace elements and constraints of a sketch; its plane stays.",
                            {{"sketchId", featureId("sketch")}, {"sketch", sketchSchema(false)}},

@@ -165,12 +165,12 @@ ExtrusionSelectionState CadSession::inspectExtrusionSelection(document::FeatureI
     const auto descriptors = document_.features();
     const auto descriptor =
         std::ranges::find(descriptors, extrusion, &document::FeatureDescriptor::id);
-    if (descriptor == descriptors.end() || descriptor->kind != document::FeatureKind::extrusion ||
-        !descriptor->inputFeature)
+    if (descriptor == descriptors.end() || descriptor->kind != document::FeatureKind::extrusion)
         throw std::invalid_argument("Selection inspection requires an extrusion");
     const auto& parameters = document_.extrusionParameters(extrusion);
     ExtrusionSelectionState state{parameters.profiles, {}};
-    if (parameters.regions.empty())
+    // T04: a face extrusion selects no sketch regions.
+    if (parameters.regions.empty() || !descriptor->inputFeature)
         return state;
     const auto& elements = document_.sketchParameters(*descriptor->inputFeature).elements.values;
     const auto identities = features::identifySketchRegions(elements);
@@ -221,6 +221,37 @@ CadSession::createSketchProfileExtrusion(document::FeatureId sketchFeature,
     const auto input = detail::prepareInput([&] {
         return candidate.addExtrusionFeature("Extrusion " + std::to_string(sequence), sketchFeature,
                                              newExtrusionParameters(distance, selected, mode));
+    });
+    if (!input.value)
+        return CommandResult::invalidInput(input.diagnostic);
+    return finishCandidate(transaction, *input.value, CommandKind::newFeature,
+                           ErrorDisposition::reject, true);
+}
+
+CommandResult CadSession::pushPullFace(document::FeatureId support,
+                                       const features::SupportOrigin& face, double distance) {
+    if (!std::isfinite(distance) || distance == 0.0)
+        return CommandResult::invalidInput("Push/pull requires a nonzero finite distance");
+    std::optional<document::BodyFaceReference> profile;
+    try {
+        profile = faceReference(support, face);
+    } catch (const std::invalid_argument& error) {
+        return CommandResult::invalidInput(error.what());
+    }
+    std::size_t sequence = 1;
+    for (const document::FeatureDescriptor& feature : document_.features())
+        if (feature.kind == document::FeatureKind::extrusion)
+            ++sequence;
+    document::ExtrusionParameters parameters{std::abs(distance), {}};
+    parameters.operation =
+        distance > 0.0 ? document::ExtrusionOperation::join : document::ExtrusionOperation::cut;
+    parameters.reversed = distance < 0.0;
+    parameters.faceProfile = profile;
+    document::DocumentTransaction transaction(document_);
+    auto& candidate = transaction.edit();
+    const auto input = detail::prepareInput([&] {
+        return candidate.addFaceExtrusionFeature("Extrusion " + std::to_string(sequence),
+                                                 parameters);
     });
     if (!input.value)
         return CommandResult::invalidInput(input.diagnostic);

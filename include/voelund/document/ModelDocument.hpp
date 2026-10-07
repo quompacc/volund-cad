@@ -126,6 +126,10 @@ struct ExtrusionParameters final {
     // T03: the prism ends on this face, parallel to the sketch, instead of after `distance`
     // (which stays stored as the last value).
     std::optional<BodyFaceReference> upToFace{};
+    // T04 (schema 10): push/pull. The profile is this planar body face instead of a sketch;
+    // the extrusion then has no input feature, sweeps along the face's outward normal
+    // (into the body when reversed) and joins or cuts the face's body.
+    std::optional<BodyFaceReference> faceProfile{};
 
     [[nodiscard]] bool operator==(const ExtrusionParameters&) const = default;
 };
@@ -176,6 +180,9 @@ class ModelDocument final {
                                              const SketchParameters& parameters);
     [[nodiscard]] FeatureId addExtrusionFeature(std::string name, FeatureId sketchFeature,
                                                 const ExtrusionParameters& parameters);
+    // T04: push/pull of a body face; parameters.faceProfile must be set.
+    [[nodiscard]] FeatureId addFaceExtrusionFeature(std::string name,
+                                                    const ExtrusionParameters& parameters);
     [[nodiscard]] const kernel::BoxDimensions& boxDimensions(FeatureId featureId) const;
     [[nodiscard]] const BoxParameters& boxParameters(FeatureId featureId) const;
     [[nodiscard]] bool setBoxDimensions(FeatureId featureId,

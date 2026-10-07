@@ -20,4 +20,11 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
                        const document::FeatureDescriptor& descriptor,
                        std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
                        std::vector<EvaluatedBody>& referenceBodies);
+// T04 (FaceExtrusionEvaluation.cpp): an extrusion whose profile is a body face.
+void evaluateFaceExtrusion(const document::DocumentSnapshot& document,
+                           const document::FeatureDescriptor& descriptor,
+                           const document::ExtrusionParameters& parameters,
+                           std::vector<EvaluatedFeature>& outputs,
+                           std::vector<EvaluatedBody>& bodies,
+                           std::vector<EvaluatedBody>& referenceBodies);
 } // namespace voelund::features::detail

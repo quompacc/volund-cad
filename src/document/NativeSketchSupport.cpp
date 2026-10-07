@@ -37,22 +37,29 @@ int integer(const TDF_Label& label) {
     return value->Get();
 }
 } // namespace
+constexpr int faceExtrusionCapRole = -2;
+
 void writeNativeSubshapeOrigin(const TDF_Label& label, const SubshapeOrigin& origin) {
     validateSubshapeOrigin(origin);
     TDataStd_AsciiString::Set(label.FindChild(2), std::to_string(origin.feature.value()).c_str());
-    TDataStd_Integer::Set(label.FindChild(3), origin.role ? static_cast<int>(*origin.role) : -1);
+    TDataStd_Integer::Set(label.FindChild(3), origin.faceExtrusionCap ? faceExtrusionCapRole
+                                              : origin.role ? static_cast<int>(*origin.role)
+                                                            : -1);
     const auto boundary = label.FindChild(4);
     TDataStd_Integer::Set(boundary, static_cast<int>(origin.extrusionBoundary.size()));
     int index = 0;
     for (const auto id : origin.extrusionBoundary)
         TDataStd_AsciiString::Set(boundary.FindChild(++index), std::to_string(id.value()).c_str());
 }
-SubshapeOrigin readNativeSubshapeOrigin(const TDF_Label& label, std::size_t& remainingElements) {
+SubshapeOrigin readNativeSubshapeOrigin(const TDF_Label& label, std::size_t& remainingElements,
+                                        int schemaVersion) {
     SubshapeOrigin origin{FeatureId{number(child(label, 2))}, std::nullopt};
     const int role = integer(child(label, 3));
-    require(role >= -1 && role <= static_cast<int>(kernel::PrimitiveRole::cylinderSide));
+    require((role >= -1 || (role == faceExtrusionCapRole && schemaVersion >= 10)) &&
+            role <= static_cast<int>(kernel::PrimitiveRole::cylinderSide));
     if (role >= 0)
         origin.role = static_cast<kernel::PrimitiveRole>(role);
+    origin.faceExtrusionCap = role == faceExtrusionCapRole;
     const auto boundary = child(label, 4);
     const int count = integer(boundary);
     require(count >= 0 && static_cast<std::size_t>(count) <= remainingElements &&
@@ -77,9 +84,9 @@ void writeNativeSketchSupport(const TDF_Label& label, const SketchSupportBinding
         data->SetValue(i, values[i - 1]);
 }
 SketchSupportBinding readNativeSketchSupport(const TDF_Label& label,
-                                             std::size_t remainingElements) {
+                                             std::size_t remainingElements, int schemaVersion) {
     require(label.NbChildren() == 5);
-    const auto origin = readNativeSubshapeOrigin(label, remainingElements);
+    const auto origin = readNativeSubshapeOrigin(label, remainingElements, schemaVersion);
     Handle(TDataStd_RealArray) data;
     require(child(label, 5).FindAttribute(TDataStd_RealArray::GetID(), data) &&
             data->Lower() == 1 && data->Upper() == 9);

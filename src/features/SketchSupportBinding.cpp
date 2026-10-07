@@ -85,7 +85,19 @@ std::vector<SupportFaceFrame> supportFaceFrames(const EvaluatedFeature& support)
                                            [&](const auto& shape) { return shape.IsSame(face); });
             }) != 1)
             continue;
-        const auto f = frame(face);
+        // The reported frame faces out of the body: provenance keeps the face without the
+        // orientation of its occurrence in the solid (T04). Stored bindings use frame(face)
+        // and are unaffected.
+        auto f = frame(face);
+        for (TopExp_Explorer explorer(support.shape, TopAbs_FACE); explorer.More();
+             explorer.Next())
+            if (explorer.Current().IsSame(face)) {
+                if (explorer.Current().Orientation() != face.Orientation()) {
+                    f.z.Reverse();
+                    f.y.Reverse();
+                }
+                break;
+            }
         gp_Trsf toFrame;
         toFrame.SetTransformation(gp_Ax3(f.origin, gp_Dir(f.z), gp_Dir(f.x)));
         Bnd_Box bounds;

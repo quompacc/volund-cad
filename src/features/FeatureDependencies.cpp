@@ -62,6 +62,16 @@ FeatureDependencies FeatureDependencies::from(const document::DocumentSnapshot& 
     for (const auto& feature : snapshot.features()) {
         FeatureInputs node{feature.id, {}};
         if (feature.inputFeature) node.inputs.push_back(*feature.inputFeature);
+        // T04: a face extrusion works on the bodies of its profile face (and end face) as
+        // they were before it.
+        if (feature.kind == document::FeatureKind::extrusion && !feature.inputFeature) {
+            const auto& parameters = snapshot.extrusionParameters(feature.id);
+            for (const auto& face : {parameters.faceProfile, parameters.upToFace})
+                if (face)
+                    if (const auto producer = bodyProducerBefore(snapshot, feature.id, face->body);
+                        producer && std::ranges::find(node.inputs, *producer) == node.inputs.end())
+                        node.inputs.push_back(*producer);
+        }
         if (feature.kind == document::FeatureKind::extrusion && feature.inputFeature) {
             const auto features = snapshot.features();
             const auto sketch = std::ranges::find(features, *feature.inputFeature, &document::FeatureDescriptor::id);

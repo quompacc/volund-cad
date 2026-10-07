@@ -34,10 +34,13 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
     }
     if (!matches)
         throw std::invalid_argument("Legacy body identity: feature parameter kind mismatch");
-    // Boxes and base-plane (datum) sketches stand alone; every other feature has an input.
+    // Boxes, base-plane (datum) sketches and face extrusions (T04) stand alone; every other
+    // feature has an input.
     const bool standalone =
         feature.kind == FeatureKind::box ||
-        (feature.kind == FeatureKind::sketch && std::get<SketchParameters>(parameters).datum);
+        (feature.kind == FeatureKind::sketch && std::get<SketchParameters>(parameters).datum) ||
+        (feature.kind == FeatureKind::extrusion &&
+         std::get<ExtrusionParameters>(parameters).faceProfile);
     if (standalone == feature.inputFeature.has_value())
         throw std::invalid_argument("Legacy body identity: invalid input presence");
 }
@@ -78,7 +81,7 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
     const auto createsBody = [&](std::size_t index) {
         const auto& feature = features[index];
         if (const auto* prism = extrusion(index))
-            return inputs[*inputs[index]].has_value() &&
+            return !prism->faceProfile && inputs[*inputs[index]].has_value() &&
                    effectiveOperation(*prism, false) == ExtrusionOperation::newBody;
         return feature.kind == FeatureKind::box ||
                (feature.kind == FeatureKind::sketch && !inputs[index]) ||
@@ -96,7 +99,10 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
         const auto* prism = extrusion(index);
         if (prism == nullptr)
             continue;
-        if (prism->target && (inputs[*inputs[index]] || !isBody(*prism->target)))
+        if (prism->faceProfile && !isBody(prism->faceProfile->body))
+            throw std::invalid_argument("Extrusion profile face is not on a body of this document");
+        if (prism->target && (prism->faceProfile || inputs[*inputs[index]] ||
+                              !isBody(*prism->target)))
             throw std::invalid_argument("Extrusion target is not a body of this document");
         if (prism->upToFace && !isBody(prism->upToFace->body))
             throw std::invalid_argument("Extrusion end face is not on a body of this document");
@@ -123,7 +129,9 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
             // A datum sketch opens a body; its extrusion produces the body's first solid.
             if (createsBody(index))
                 context[index] = BodyId{feature.id.value()};
-            else if (const auto* prism = extrusion(index); prism && prism->target)
+            else if (const auto* prism = extrusion(index); prism && prism->faceProfile)
+                context[index] = prism->faceProfile->body;
+            else if (prism && prism->target)
                 context[index] = prism->target;
             else
                 context[index] = context[*inputs[index]];

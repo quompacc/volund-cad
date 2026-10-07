@@ -30,7 +30,8 @@ const QString instructions = QStringLiteral(
     "is one undo step for the user. A sketch on a base plane starts a new body; to add to a "
     "body (e.g. a rib on a plate), sketch on one of its faces with create_sketch_on_face, "
     "and the extrusion joins that body. For a pocket or a hole, extrude with operation cut "
-    "and direction reversed (into the body).");
+    "and direction reversed (into the body). To make a body thicker or longer, or to push a "
+    "face in, use push_pull_face on that face.");
 } // namespace
 
 const QStringList& McpProtocol::supportedVersions() {

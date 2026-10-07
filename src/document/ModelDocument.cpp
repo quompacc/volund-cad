@@ -74,6 +74,14 @@ void validateExtrusion(const ExtrusionParameters& parameters) {
         throw std::invalid_argument(kernel::modelRangeDiagnostic);
     if (parameters.upToFace)
         validateSubshapeOrigin(parameters.upToFace->origin);
+    if (parameters.faceProfile) {
+        validateSubshapeOrigin(parameters.faceProfile->origin);
+        if (!parameters.profiles.empty() || !parameters.regions.empty() || parameters.target ||
+            (parameters.operation != ExtrusionOperation::join &&
+             parameters.operation != ExtrusionOperation::cut))
+            throw std::invalid_argument(
+                "A face extrusion joins or cuts its face's body and selects no sketch regions");
+    }
 }
 
 } // namespace
@@ -209,11 +217,29 @@ FeatureId ModelDocument::addSketchFeature(std::string name, FeatureId supportFea
     return id;
 }
 
+FeatureId ModelDocument::addFaceExtrusionFeature(std::string name,
+                                                 const ExtrusionParameters& parameters) {
+    if (!parameters.faceProfile)
+        throw std::invalid_argument("Face extrusion requires a profile face");
+    validateExtrusion(parameters);
+    const FeatureId id = nextFeatureId();
+    auto candidate = currentState();
+    ++candidate.nextFeatureId;
+    candidate.features.push_back(
+        FeatureDescriptor{id, FeatureKind::extrusion, std::move(name), std::nullopt});
+    candidate.parameters.emplace_back(parameters);
+    static_cast<void>(featureBodyContexts(candidate.features, candidate.parameters));
+    commitState(std::move(candidate));
+    return id;
+}
+
 FeatureId ModelDocument::addExtrusionFeature(std::string name, FeatureId sketchFeature,
                                              const ExtrusionParameters& parameters) {
     if (!contains(sketchFeature))
         throw std::invalid_argument("Extrusion requires an existing sketch");
     validateExtrusion(parameters);
+    if (parameters.faceProfile)
+        throw std::invalid_argument("A sketch extrusion has no profile face");
     if (impl_->view().features()[featureIndex(sketchFeature)].kind != FeatureKind::sketch) {
         throw std::invalid_argument("Extrusion input feature must be a sketch");
     }

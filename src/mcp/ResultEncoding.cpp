@@ -18,7 +18,7 @@ constexpr const char* toolNames[] = {
     "create_box",             "set_box_dimensions",     "create_cylinder",
     "set_cylinder_size",      "set_placement",          "create_sketch_extrusion",
     "create_sketch_on_face",  nullptr,                  nullptr,
-    nullptr};
+    nullptr,                  "push_pull_face"};
 constexpr const char* statusNames[] = {"rejected", "committed", "committedWithErrors"};
 constexpr const char* rejectionNames[] = {
     "none",     "foreignDocument", "staleStamp",          "unknownTarget",    "unsupportedTarget",
@@ -110,8 +110,11 @@ void insertExtrusionMode(QJsonObject& json, const document::DocumentSnapshot& sn
                          const document::FeatureDescriptor& feature) {
     const auto& extrusion = snapshot.extrusionParameters(feature.id);
     const auto features = snapshot.features();
+    // T04: a face extrusion has no sketch; it joins or cuts its face's body.
     const auto sketch =
-        std::ranges::find(features, *feature.inputFeature, &document::FeatureDescriptor::id);
+        feature.inputFeature
+            ? std::ranges::find(features, *feature.inputFeature, &document::FeatureDescriptor::id)
+            : features.end();
     const bool baseSketch = sketch != features.end() && !sketch->inputFeature;
     auto parameters = json.value("parameters").toObject();
     parameters.insert("operation",
@@ -126,6 +129,10 @@ void insertExtrusionMode(QJsonObject& json, const document::DocumentSnapshot& sn
         parameters.insert("upToFace",
                           QJsonObject{{"bodyId", id(extrusion.upToFace->body.value())},
                                       {"face", detail::encodeFaceOrigin(extrusion.upToFace->origin)}});
+    if (extrusion.faceProfile)
+        parameters.insert("profileFace",
+                          QJsonObject{{"bodyId", id(extrusion.faceProfile->body.value())},
+                                      {"face", detail::encodeFaceOrigin(extrusion.faceProfile->origin)}});
     json.insert("parameters", parameters);
 }
 

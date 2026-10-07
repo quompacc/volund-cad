@@ -4,8 +4,9 @@
 
 namespace voelund::document {
 void validateSubshapeOrigin(const SubshapeOrigin& origin) {
-    if (!hasIdCapacity(origin.feature.value(), 1) ||
-        origin.role.has_value() == !origin.extrusionBoundary.empty())
+    const int representations = (origin.role ? 1 : 0) + (origin.extrusionBoundary.empty() ? 0 : 1) +
+                                (origin.faceExtrusionCap ? 1 : 0);
+    if (!hasIdCapacity(origin.feature.value(), 1) || representations != 1)
         throw std::invalid_argument("Invalid support origin");
     if (origin.role) {
         const auto role = static_cast<int>(*origin.role);

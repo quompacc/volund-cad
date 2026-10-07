@@ -333,10 +333,54 @@ void extrusionModes(const Handle(TDocStd_Application)& app) {
     std::cout << "schema 8/9 extrusion operation, direction, target, offset and end face "
                  "round-trip and gates passed\n";
 }
+// T04, schema 10: push/pull. A face extrusion has no input feature; its profile is a box
+// side, and the next one pulls the first one's end cap (role -2 in the file).
+void faceExtrusions(const Handle(TDocStd_Application)& app) {
+    auto model = ModelDocument::empty();
+    const auto box = model.addBoxFeature("Box", {10, 10, 10});
+    ExtrusionParameters pull{5, {}};
+    pull.operation = ExtrusionOperation::join;
+    pull.faceProfile = BodyFaceReference{BodyId{box.value()},
+                                         {box, kernel::PrimitiveRole::boxPositiveZ}};
+    const auto first = model.addFaceExtrusionFeature("Pull", pull);
+    auto again = pull;
+    again.distance = 3;
+    again.faceProfile->origin = {first, std::nullopt, {}, true};
+    (void)model.addFaceExtrusionFeature("Again", again);
+    auto targeted = pull;
+    targeted.target = BodyId{box.value()};
+    rejected([&] { (void)model.addFaceExtrusionFeature("Target", targeted); });
+    auto newBody = pull;
+    newBody.operation = ExtrusionOperation::newBody;
+    rejected([&] { (void)model.addFaceExtrusionFeature("New", newBody); });
+    auto foreign = pull;
+    foreign.faceProfile->body = BodyId{99};
+    rejected([&] { (void)model.addFaceExtrusionFeature("Foreign", foreign); });
+    const auto expected =
+        IdentifiedDocumentSnapshot::restore(DocumentId{3, 7}, DocumentSnapshot::capture(model));
+    Handle(TDocStd_Document) doc = fresh(app);
+    NativePrimitiveCodec::write(doc, expected);
+    std::stringstream bytes(std::ios::in | std::ios::out | std::ios::binary);
+    save(app, doc, bytes);
+    Handle(TDocStd_Document) loaded = open(app, bytes);
+    require(NativePrimitiveCodec::read(loaded) == expected, "Face extrusion roundtrip");
+    app->Close(loaded);
+    const auto result = features::FeatureGraph{}.evaluate(expected.snapshot().toDocument());
+    GProp_GProps properties;
+    BRepGProp::VolumeProperties(result.resultShape, properties);
+    require(result.bodies.size() == 1 && std::abs(properties.Mass() - 1800) < 1e-6,
+            "Two pulls on a box: one body of 10 x 10 x 18");
+    TDataStd_Integer::Set(doc->Main().FindChild(2), 9);
+    rejected([&] { (void)NativePrimitiveCodec::read(doc); }); // T04 children need schema 10
+    app->Close(doc);
+    std::cout << "schema 10 face extrusion and push/pull cap round-trip and gate passed"
+              << std::endl;
+}
 void regressions(const Handle(TDocStd_Application)& app) {
     historicalProfiles(app);
     datumSketches(app);
     extrusionModes(app);
+    faceExtrusions(app);
     regionSelections(app);
     auto doc = fresh(app);
     const auto expected = fixture();
