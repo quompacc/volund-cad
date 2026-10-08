@@ -80,6 +80,7 @@ void SketchEditorToolController::showPanel() {
     toolIndex_ = 1;
     translationX_ = 0.0;
     translationY_ = 0.0;
+    viewport_.setSketchAutomaticRelations(automaticRelations_);
     panel_.begin(ToolPanelDefinition{
         QObject::tr("Skizzeneditor"),
         QObject::tr("Wähle ein Werkzeug und setze seine Punkte. Füge beliebig viele Elemente hinzu "
@@ -104,7 +105,12 @@ void SketchEditorToolController::showPanel() {
            QObject::tr("Polygon"), QObject::tr("Rechteck (Mitte)")},
           1,
           {"select", "line", "polyline", "rectangle", "circle", "center_arc", "three_point_arc",
-           "ellipse", "slot", "polygon", "center_rectangle"}}},
+           "ellipse", "slot", "polygon", "center_rectangle"}},
+         // S04: snapped points and suggested relations become constraints, or nothing does.
+         {"relations",
+          QObject::tr("Beziehungen"),
+          {QObject::tr("Automatisch"), QObject::tr("Keine")},
+          automaticRelations_ ? 0 : 1}},
         {{"horizontal", QObject::tr("Linie waagrecht festlegen"), QObject::tr("Linien")},
          {"vertical", QObject::tr("Linie senkrecht festlegen"), QObject::tr("Linien")},
          {"free", QObject::tr("Richtungsbedingung der Linie entfernen"), QObject::tr("Linien")},
@@ -187,6 +193,10 @@ void SketchEditorToolController::showPanel() {
         [this](const std::string& id, int index) {
             if (id == "tool")
                 setTool(index);
+            else if (id == "relations") {
+                automaticRelations_ = index == 0;
+                viewport_.setSketchAutomaticRelations(automaticRelations_);
+            }
         },
         [this](const std::string& id) {
             if (id == "horizontal") {

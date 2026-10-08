@@ -31,6 +31,9 @@ class SketchEditorInteraction final {
     void setSnapPoints(std::span<const SceneSketchPoint> points);
     // Ctrl held: no point, axis or object snapping for this pointer position.
     void setSnapBypass(bool bypass) noexcept { bypass_ = bypass; }
+    // S04: off, a step still lands on the snapped points but binds none of them and suggests
+    // no relation; a continued polyline stays joined to its previous segment.
+    void setAutomaticRelations(bool enabled) noexcept { automaticRelations_ = enabled; }
     [[nodiscard]] SnapFeedback snapFeedback(int x, int y) const;
     [[nodiscard]] bool isActive() const noexcept;
     [[nodiscard]] bool isDrawing() const noexcept;
@@ -62,6 +65,20 @@ class SketchEditorInteraction final {
                        std::pair<double, double> radialPoint) const;
     [[nodiscard]] bool
     isRadialCenterReference(const std::optional<SketchPointReferenceIntent>& reference) const;
+    [[nodiscard]] SketchElementIntent related(SketchElementIntent intent) const noexcept {
+        if (automaticRelations_)
+            return intent;
+        intent.automaticConstraint.reset();
+        intent.automaticTargetId.reset();
+        const bool continued = tool_ == SketchElementTool::polyline && continued_.has_value() &&
+                               intent.firstReference.has_value() &&
+                               intent.firstReference->elementId == *continued_;
+        if (!continued)
+            intent.firstReference.reset();
+        intent.secondReference.reset();
+        intent.thirdReference.reset();
+        return intent;
+    }
 
     PlanarFaceSelection support_{};
     SketchElementTool tool_{SketchElementTool::line};
@@ -76,6 +93,8 @@ class SketchEditorInteraction final {
     bool snapping_{true};
     bool bypass_{false};
     bool active_{false};
+    bool automaticRelations_{true};
+    std::optional<std::uint64_t> continued_; // the polyline segment the next one continues
 };
 
 } // namespace voelund::viewport

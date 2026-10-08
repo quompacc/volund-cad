@@ -97,6 +97,7 @@ class SketchEditorToolController final {
     double patternAngle_{360.0};
     int toolIndex_{1};
     bool editing_{false};
+    bool automaticRelations_{true}; // S04: kept for the next sketch
     // L05b: how the open editor was started, for its recovery draft.
     std::optional<document::FeatureId> draftEdited_;
     std::optional<document::FeatureId> draftSupport_;

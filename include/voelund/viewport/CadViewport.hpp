@@ -258,6 +258,8 @@ class CadViewport final : public CadViewportBase {
     [[nodiscard]] bool cancelSketchElementDrag();
     void beginSketchEditor(const PlanarFaceSelection& support, SketchElementTool tool);
     void setSketchEditorTool(SketchElementTool tool);
+    // S04: whether drawing binds snapped points and adds suggested relations.
+    void setSketchAutomaticRelations(bool enabled);
     void continueSketchPolyline(double x, double y, std::uint64_t elementId);
     [[nodiscard]] bool cancelSketchEditorStep();
     void cancelSketch();

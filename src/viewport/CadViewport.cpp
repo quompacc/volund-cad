@@ -209,6 +209,10 @@ void CadViewport::beginSketchEditor(const PlanarFaceSelection& support, SketchEl
     });
 }
 
+void CadViewport::setSketchAutomaticRelations(bool enabled) {
+    impl_->sketchEditor.setAutomaticRelations(enabled);
+}
+
 void CadViewport::setSketchEditorTool(SketchElementTool tool) {
     performViewportOperation(*this, impl_->ready, [&] {
         impl_->sketchEditor.setTool(tool);

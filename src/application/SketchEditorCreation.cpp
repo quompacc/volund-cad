@@ -185,8 +185,18 @@ std::optional<SketchCreationResult> SketchEditorSession::createStep(const Sketch
         record(*result, start, SketchConstraintOrigin::snap);
     };
     const auto relate = [&](auto&& add) {
+        if (!in.automaticRelations)
+            return false;
         const std::uint64_t start = constraints_.nextId;
+        static_cast<void>(solveConstraints());
+        const int freedom = lastSolveResult_.degreesOfFreedom;
+        Rollback redundant(*this);
         const bool added = add();
+        // S04: a suggested relation that the snaps already imply is not added on top: it
+        // would be redundant and leave the sketch one relation from a conflict.
+        if (added && freedom >= 0 && lastSolveResult_.degreesOfFreedom >= freedom)
+            return false;
+        redundant.keep();
         record(*result, start, SketchConstraintOrigin::relation);
         return added;
     };

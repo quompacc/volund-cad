@@ -51,7 +51,7 @@ application::SketchAutoRelation relation(viewport::SketchAutomaticConstraint con
 // U08: the viewport's intent as the application's creation input; nothing else is decided
 // here.
 application::SketchCreationInput creationInput(const viewport::SketchElementIntent& intent,
-                                               bool centered) {
+                                               bool centered, bool automaticRelations) {
     application::SketchCreationInput input{{intent.firstX, intent.firstY},
                                            {intent.secondX, intent.secondY}};
     if (intent.third)
@@ -64,6 +64,7 @@ application::SketchCreationInput creationInput(const viewport::SketchElementInte
     if (intent.automaticTargetId)
         input.relationTarget = document::SketchElementId{*intent.automaticTargetId};
     input.centered = centered;
+    input.automaticRelations = automaticRelations;
     return input;
 }
 
@@ -76,7 +77,8 @@ void SketchEditorToolController::confirmElement(const viewport::SketchElementInt
     std::optional<application::SketchCreationResult> created;
     try {
         // A rejected step leaves the editor unchanged (S02).
-        created = editor_->create(creationInput(intent, toolIndex_ == centerRectangleTool));
+        created = editor_->create(
+            creationInput(intent, toolIndex_ == centerRectangleTool, automaticRelations_));
     } catch (const std::invalid_argument& error) {
         panel_.setAcceptEnabled(editor_->canAccept());
         refreshPresentation();

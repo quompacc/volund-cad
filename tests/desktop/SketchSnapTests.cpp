@@ -2,6 +2,7 @@
 #include "ViewportLifecycleSupport.hpp"
 #include <QAction>
 #include <QApplication>
+#include <QComboBox>
 #include <QDir>
 #include <QDoubleSpinBox>
 #include <QLabel>
@@ -16,7 +17,8 @@
 
 // S04a: every drawing tool shows snap markers; the point the cursor snaps to lights up and a
 // label names the relation a click creates; Ctrl suppresses snapping. A rectangle drawn from
-// its center on the origin stays centered when its size changes.
+// its center on the origin stays centered when its size changes. S04: with "Beziehungen:
+// Keine" a line still lands on the origin but adds no constraint; "Automatisch" adds them.
 namespace {
 using namespace voelund;
 using test::require;
@@ -153,6 +155,59 @@ void run() {
             "The rectangle stays centered on the origin after the width change");
     std::cout << "PASS snap markers for every drawing tool and centered rectangle\n";
 }
+void relationsSwitch() {
+    application::CadSession session;
+    session.newDocument();
+    desktop::MainWindow window(session);
+    window.resize(1300, 860);
+    window.show();
+    auto* viewport = dynamic_cast<viewport::CadViewport*>(window.centralWidget());
+    require(viewport != nullptr, "viewport");
+    test::render(*viewport);
+    viewport->setCameraView(viewport::CameraView::isometric);
+    test::render(*viewport);
+    click(*viewport, 30, 30);
+    command(window, "solid.create.sketch").trigger();
+    settle();
+    test::render(*viewport);
+    auto* overlay = viewport->findChild<QWidget*>(QStringLiteral("sketchSnapOverlay"));
+    auto* panel = window.findChild<QWidget*>(QStringLiteral("activeToolPanel"));
+    QComboBox* relations = nullptr;
+    for (auto* box : panel->findChildren<QComboBox*>(QStringLiteral("toolChoice_relations")))
+        if (box->isVisible())
+            relations = box;
+    require(relations != nullptr && relations->currentIndex() == 0,
+            "The panel offers Beziehungen, automatic by default");
+
+    relations->setCurrentIndex(1); // Keine
+    settle();
+    command(window, "sketch.tool.line").trigger();
+    settle();
+    click(*viewport, 0, 0);
+    move(*viewport, 30, 0.6);
+    require(overlay->property("snapLabel").toString() != QStringLiteral("Waagrecht"),
+            "Without automatic relations no relation is announced");
+    click(*viewport, 30, 0.6);
+    relations->setCurrentIndex(0); // Automatisch
+    settle();
+    click(*viewport, 0, 20);
+    click(*viewport, 30, 20.6);
+    panel->findChild<QPushButton*>(QStringLiteral("toolAcceptButton"))->click();
+    settle();
+    require(session.features().size() == 1, "Sketch created");
+    const auto sketch = session.sketchParameters(session.features()[0].id);
+    require(sketch.elements.values.size() == 2, "Two lines");
+    const auto first = sketch.elements.values[0].id;
+    const auto& line = std::get<document::SketchLine>(sketch.elements.values[0].geometry);
+    require(std::hypot(line.start.x, line.start.y) < 1e-9,
+            "The first line still lands on the origin");
+    require(!sketch.constraints.values.empty(), "The second line has its relations");
+    for (const auto& constraint : sketch.constraints.values)
+        require(constraint.first.element != first &&
+                    (!constraint.second || constraint.second->element != first),
+                "The line drawn with Keine has no constraint");
+    std::cout << "PASS Beziehungen: Keine binds nothing, Automatisch binds\n";
+}
 } // namespace
 
 int main(int argc, char** argv) {
@@ -160,6 +215,7 @@ int main(int argc, char** argv) {
     voelund::test::isolateSettings();
     try {
         run();
+        relationsSwitch();
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';
         return 1;

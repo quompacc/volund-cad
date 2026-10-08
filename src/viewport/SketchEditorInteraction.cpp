@@ -66,6 +66,7 @@ void SketchEditorInteraction::cancel() noexcept {
 
 void SketchEditorInteraction::setTool(SketchElementTool tool) noexcept {
     tool_ = tool;
+    continued_.reset();
     firstPoint_.reset();
     secondPoint_.reset();
     firstReference_.reset();
@@ -78,6 +79,7 @@ void SketchEditorInteraction::continuePolyline(double x, double y,
     if (active_ && tool_ == SketchElementTool::polyline) {
         firstPoint_ = std::pair{x, y};
         firstReference_ = SketchPointReferenceIntent{elementId, SketchPointKind::end};
+        continued_ = elementId;
     }
 }
 
@@ -474,7 +476,7 @@ std::optional<SketchElementIntent> SketchEditorInteraction::move(int x, int y) c
                                      secondPoint_.has_value() ? reference : std::nullopt,
                                      automaticConstraint,
                                      automaticTargetId};
-    return valid(intent) ? std::optional{intent} : std::nullopt;
+    return valid(intent) ? std::optional{related(intent)} : std::nullopt;
 }
 
 std::optional<SketchElementIntent> SketchEditorInteraction::click(int x, int y) {
@@ -545,7 +547,7 @@ std::optional<SketchElementIntent> SketchEditorInteraction::click(int x, int y) 
     secondPoint_.reset();
     firstReference_.reset();
     secondReference_.reset();
-    return intent;
+    return related(intent);
 }
 
 bool SketchEditorInteraction::beginElementDrag(int x, int y) {
@@ -577,6 +579,7 @@ bool SketchEditorInteraction::cancelStep() noexcept {
     if (firstPoint_.has_value()) {
         firstPoint_.reset();
         firstReference_.reset();
+        continued_.reset();
         return true;
     }
     return false;

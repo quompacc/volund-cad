@@ -45,6 +45,9 @@ struct SketchCreationInput final {
     std::optional<document::SketchElementId> relationTarget{};
     // Rectangle tool only (S04a): `first` is the center, `second` a corner.
     bool centered{false};
+    // S04: false adds no relation of its own (no suggested and no inferred parallel or
+    // perpendicular); snaps the caller passes still bind.
+    bool automaticRelations{true};
 };
 
 enum class SketchCreationRole {
