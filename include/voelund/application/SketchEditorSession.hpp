@@ -1,6 +1,7 @@
 #pragma once
 #include <voelund/application/CommandTransaction.hpp>
 #include <voelund/application/SketchCreation.hpp>
+#include <voelund/application/SketchCurveEdit.hpp>
 #include <voelund/application/SceneStatus.hpp>
 
 #include <voelund/document/ModelDocument.hpp>
@@ -106,6 +107,12 @@ class SketchEditorSession final {
     [[nodiscard]] bool removeLastConstraint();
     [[nodiscard]] bool removeConstraint(document::SketchConstraintId id);
     [[nodiscard]] bool removeSelected();
+    // S10: trims, extends or splits the selected element at the picked point as one step
+    // (tool matrix and relation rules in SketchCurveEdit.hpp). Throws std::invalid_argument
+    // with the reason and changes nothing when it cannot.
+    [[nodiscard]] SketchCurveEditResult editCurve(SketchCurveEdit edit);
+    // Whether the edit supports the selected element's curve type.
+    [[nodiscard]] bool canEditCurve(SketchCurveEdit edit) const noexcept;
     [[nodiscard]] bool trimSelected();
     [[nodiscard]] bool extendSelected();
     [[nodiscard]] bool splitSelected();

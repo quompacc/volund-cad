@@ -37,9 +37,10 @@ void SketchEditorToolController::syncConstraintState() {
     panel_.setActionEnabled("unlock_point", editor_->isSelectedReferenceLocked());
     panel_.setActionEnabled("construction", editor_->selectedElement().has_value());
     const bool hasSelection = editor_->selectedElement().has_value();
-    panel_.setActionEnabled("trim", hasSelection);
-    panel_.setActionEnabled("extend", hasSelection);
-    panel_.setActionEnabled("split", hasSelection);
+    // S10: only for the curve types each edit supports (SketchCurveEdit.hpp).
+    panel_.setActionEnabled("trim", editor_->canEditCurve(application::SketchCurveEdit::trim));
+    panel_.setActionEnabled("extend", editor_->canEditCurve(application::SketchCurveEdit::extend));
+    panel_.setActionEnabled("split", editor_->canEditCurve(application::SketchCurveEdit::split));
     panel_.setActionEnabled("offset", hasSelection);
     panel_.setActionEnabled("linear_pattern", hasSelection);
     panel_.setActionEnabled("circular_pattern", hasSelection);

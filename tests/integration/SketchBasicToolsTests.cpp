@@ -154,7 +154,7 @@ bool lineEditingOperationsWork() {
     SketchEditorSession split(session, support, plane);
     if (!addLine(split, {0.0, 0.0}, {10.0, 0.0}) ||
         !split.selectNearestReference(SketchElementId{1}, {4.0, 0.0}, false) ||
-        !split.splitSelected() || split.elements().size() != 2 || split.constraints().size() != 1)
+        !split.splitSelected() || split.elements().size() != 2 || split.constraints().size() != 2)
         return false;
     return std::abs(std::get<SketchLine>(split.elements()[0].geometry).end.x - 4.0) < 1.0e-6;
 }

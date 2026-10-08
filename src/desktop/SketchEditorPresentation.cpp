@@ -5,26 +5,92 @@
 #include "ToolPanelHost.hpp"
 
 #include <QObject>
+#include <QStringList>
 
 #include <algorithm>
 #include <cmath>
+#include <stdexcept>
 #include <vector>
 
 namespace voelund::desktop {
+namespace {
+
+QString relationName(document::SketchConstraintKind kind) {
+    using Kind = document::SketchConstraintKind;
+    switch (kind) {
+    case Kind::horizontal: return QObject::tr("Waagrecht");
+    case Kind::vertical: return QObject::tr("Senkrecht");
+    case Kind::distance: return QObject::tr("Länge");
+    case Kind::radius: return QObject::tr("Radius");
+    case Kind::diameter: return QObject::tr("Durchmesser");
+    case Kind::coincident: return QObject::tr("Deckungsgleich");
+    case Kind::parallel: return QObject::tr("Parallel");
+    case Kind::perpendicular: return QObject::tr("Rechtwinklig");
+    case Kind::coordinateX: return QObject::tr("Koordinate X");
+    case Kind::coordinateY: return QObject::tr("Koordinate Y");
+    case Kind::pointOnObject: return QObject::tr("Punkt auf Objekt");
+    case Kind::equal: return QObject::tr("Gleich");
+    case Kind::tangent: return QObject::tr("Tangential");
+    case Kind::symmetric: return QObject::tr("Symmetrisch");
+    case Kind::pointDistance: return QObject::tr("Distanz");
+    case Kind::angle: return QObject::tr("Winkel");
+    case Kind::pointDistanceX: return QObject::tr("Abstand X");
+    case Kind::pointDistanceY: return QObject::tr("Abstand Y");
+    case Kind::midpoint: return QObject::tr("Mittelpunkt");
+    case Kind::perpendicularBisector: return QObject::tr("Halbierend");
+    case Kind::concentric: return QObject::tr("Konzentrisch");
+    case Kind::collinear: return QObject::tr("Kollinear");
+    case Kind::horizontalPoints: return QObject::tr("Waagrecht ausgerichtet");
+    case Kind::verticalPoints: return QObject::tr("Senkrecht ausgerichtet");
+    case Kind::fixed: return QObject::tr("Fixiert");
+    case Kind::pointLineDistance: return QObject::tr("Punkt–Linie");
+    }
+    return {};
+}
+
+} // namespace
+
+// S10: the reason when the edit cannot run; after it, the relations it had to remove.
+void SketchEditorToolController::applyCurveEdit(application::SketchCurveEdit edit) {
+    application::SketchCurveEditResult result;
+    try {
+        result = editor_->editCurve(edit);
+    } catch (const std::invalid_argument& error) {
+        statusChanged_(QString::fromStdString(error.what()));
+        return;
+    }
+    resetTranslationInputs();
+    syncSelectedDimensionInputs();
+    syncConstraintState();
+    refreshPresentation();
+    if (result.removed.empty()) {
+        statusChanged_(QObject::tr("Skizzenoperation abgeschlossen"));
+        return;
+    }
+    QStringList names;
+    for (const auto& constraint : result.removed)
+        names << relationName(constraint.kind);
+    statusChanged_(QObject::tr("Skizzenoperation abgeschlossen; entfernte Bedingungen, die nicht "
+                               "mehr gelten: %1")
+                       .arg(names.join(QStringLiteral(", "))));
+}
 
 void SketchEditorToolController::applyEditOperation(const std::string& id) {
     if (!editor_)
         return;
+    if (id == "trim" || id == "extend" || id == "split") {
+        applyCurveEdit(id == "trim"     ? application::SketchCurveEdit::trim
+                       : id == "extend" ? application::SketchCurveEdit::extend
+                                        : application::SketchCurveEdit::split);
+        return;
+    }
     if (id == "offset") {
         if (const auto problem = editor_->offsetProblem(offsetDistance_)) {
             statusChanged_(QString::fromStdString(*problem));
             return;
         }
     }
-    const bool changed = id == "trim"     ? editor_->trimSelected()
-                         : id == "extend" ? editor_->extendSelected()
-                         : id == "split"  ? editor_->splitSelected()
-                         : id == "fillet" ? editor_->filletSelected(filletRadius_)
+    const bool changed = id == "fillet" ? editor_->filletSelected(filletRadius_)
                          : id == "offset" ? editor_->offsetSelected(offsetDistance_)
                          : id == "mirror" ? editor_->mirrorSelected()
                          : id == "linear_pattern"

@@ -30,6 +30,8 @@ add_library(voelund_application STATIC
     SketchEditorOperations.cpp
     SketchGeometryTransform.cpp
     SketchOffset.cpp
+    SketchCurveEditPlan.cpp
+    SketchEditorCurveEdit.cpp
     SketchEditorPointConstraints.cpp
     SketchEditorRelations.cpp
     SketchEditorRectangle.cpp

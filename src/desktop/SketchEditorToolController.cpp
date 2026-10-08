@@ -158,11 +158,15 @@ void SketchEditorToolController::showPanel() {
           QObject::tr("Bearbeiten")},
          {"undo_sketch", QObject::tr("Skizzenschritt rückgängig"), QObject::tr("Bearbeiten")},
          {"redo_sketch", QObject::tr("Skizzenschritt wiederholen"), QObject::tr("Bearbeiten")},
-         {"trim", QObject::tr("Gewählte Linie am nächsten Schnittpunkt stutzen"),
+         {"trim",
+          QObject::tr("Angeklicktes Stück einer Linie, eines Bogens oder Kreises bis zu den "
+                      "nächsten Schnittpunkten entfernen"),
           QObject::tr("Bearbeiten")},
-         {"extend", QObject::tr("Gewählte Linie bis zum nächsten Schnittpunkt verlängern"),
+         {"extend",
+          QObject::tr("Linie oder Bogen am angeklickten Ende bis zur nächsten Geometrie "
+                      "verlängern"),
           QObject::tr("Bearbeiten")},
-         {"split", QObject::tr("Gewählte Linie an der gepickten Stelle teilen"),
+         {"split", QObject::tr("Linie oder Bogen an der angeklickten Stelle teilen"),
           QObject::tr("Bearbeiten")},
          {"fillet", QObject::tr("Zwei gewählte Linien abrunden"), QObject::tr("Bearbeiten")},
          {"offset", QObject::tr("Gewählte Geometrie versetzen"), QObject::tr("Bearbeiten")},
