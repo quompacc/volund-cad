@@ -14,7 +14,11 @@ inline kernel::ShapeOperationResult placePrimitive(const kernel::ShapeOperationR
         if (found == result.history.end() || found->coverage != kernel::HistoryCoverage::complete ||
             found->modified.size() != 1)
             throw std::logic_error("Rigid primitive placement lost semantic face provenance");
-        result.origins.push_back({origin.role, found->modified.front()});
+        // S03: keep the source orientation. A rotation can return the moved face without
+        // it; its frame (frameFace) would then face the other way than in the unplaced
+        // reference result, and a bound sketch would flip between the two evaluations.
+        result.origins.push_back(
+            {origin.role, found->modified.front().Oriented(origin.shape.Orientation())});
     }
     return result;
 }

@@ -198,6 +198,8 @@ void CadViewport::beginSketchEditor(const PlanarFaceSelection& support, SketchEl
     performViewportOperation(*this, impl_->ready, [&] {
         impl_->manipulator.setEnabled(false);
         impl_->manipulator.detach();
+        if (!impl_->activeSketchSupport && !impl_->view.IsNull())
+            impl_->sketchReturnCamera = new Graphic3d_Camera(impl_->view->Camera());
         impl_->activeSketchSupport = support;
         if (!impl_->context.IsNull())
             impl_->basePlanes.hide(impl_->context);
@@ -236,6 +238,11 @@ bool CadViewport::cancelSketchElementDrag() {
 void CadViewport::cancelSketch() {
     performViewportOperation(*this, impl_->ready, [&] {
         impl_->activeSketchSupport.reset();
+        if (!impl_->sketchReturnCamera.IsNull() && !impl_->view.IsNull()) {
+            impl_->view->Camera()->Copy(impl_->sketchReturnCamera);
+            impl_->view->Invalidate();
+        }
+        impl_->sketchReturnCamera.Nullify();
         impl_->snapOverlay->clear();
         impl_->sketchEditor.cancel();
         impl_->sketchPresentation.setReferences(impl_->context, {}, false);

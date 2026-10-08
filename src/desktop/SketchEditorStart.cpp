@@ -2,8 +2,11 @@
 #include "SketchViewAdapter.hpp"
 #include "ToolPanelHost.hpp"
 #include <QObject>
+#include <gp_Dir.hxx>
 #include <voelund/application/CadSession.hpp>
 #include <voelund/document/SketchPlaneValidation.hpp>
+
+#include <cmath>
 
 namespace voelund::desktop {
 namespace {
@@ -13,43 +16,19 @@ document::SketchPlane sketchPlane(const viewport::PlanarFaceSelection& support) 
             support.xDirectionX, support.xDirectionY, support.xDirectionZ};
 }
 
-} // namespace
-
-void SketchEditorToolController::begin(const viewport::PlanarFaceSelection& support) {
-    std::optional<document::SketchSupportBinding> binding;
-    auto drawingSupport = support;
-    try {
-        binding = session_.bindSelectedSupport(document::FeatureId{support.bodyId},
-                                               support.selectedFace, sketchPlane(support));
-        setSupportProjection(drawingSupport, session_.projectSketchSupport(
-                                                 document::FeatureId{support.bodyId}, *binding));
-    } catch (const std::exception& error) {
-        statusChanged_(QString::fromUtf8(error.what()));
-        return;
-    }
-    startOnSupport(drawingSupport, document::FeatureId{support.bodyId}, sketchPlane(support),
-                   *binding);
+// S03: a new sketch on a face stands upright: its y axis follows world Z, or world Y on a
+// nearly horizontal face, so the editor shows the face the way the model stands.
+document::SketchPlane uprightSketchPlane(const viewport::PlanarFaceSelection& support) {
+    const gp_Dir normal(support.normalX, support.normalY, support.normalZ);
+    const gp_Dir preferredUp = std::abs(normal.Z()) < 0.95 ? gp_Dir(0.0, 0.0, 1.0)
+                                                           : gp_Dir(0.0, 1.0, 0.0);
+    const gp_Dir x = preferredUp.Crossed(normal); // y = normal x x lies along preferredUp
+    return {support.originX, support.originY, support.originZ, normal.X(), normal.Y(),
+            normal.Z(),      x.X(),           x.Y(),           x.Z()};
 }
 
-void SketchEditorToolController::startOnSupport(const viewport::PlanarFaceSelection& drawing,
-                                                document::FeatureId support,
-                                                const document::SketchPlane& plane,
-                                                const document::SketchSupportBinding& binding) {
-    editing_ = false;
-    draftEdited_.reset();
-    draftSupport_ = support;
-    editor_ = std::make_unique<application::SketchEditorSession>(session_, support, plane, binding);
-    showPanel();
-    panel_.setAcceptEnabled(editor_->canAccept());
-    viewport_.beginSketchEditor(drawing, viewport::SketchElementTool::line);
-    refreshPresentation();
-    statusChanged_(QObject::tr("Skizzeneditor: zwei Punkte für eine Linie setzen"));
-}
-
-// The drawing frame of a base plane; bodyId 0 because no body supports it.
-viewport::PlanarFaceSelection basePlaneSupport(document::DatumPlane datum) {
-    const auto plane = document::datumSketchPlane(datum);
-    return {0,
+viewport::PlanarFaceSelection drawingFrame(std::uint64_t bodyId, const document::SketchPlane& plane) {
+    return {bodyId,
             plane.originX,
             plane.originY,
             plane.originZ,
@@ -61,16 +40,58 @@ viewport::PlanarFaceSelection basePlaneSupport(document::DatumPlane datum) {
             plane.xDirectionZ};
 }
 
-void SketchEditorToolController::beginOnBasePlane(document::DatumPlane datum) {
-    editing_ = false;
-    draftEdited_.reset();
-    draftSupport_.reset();
-    editor_ = std::make_unique<application::SketchEditorSession>(session_, datum);
+// The drawing frame of a base plane; bodyId 0 because no body supports it.
+viewport::PlanarFaceSelection basePlaneSupport(document::DatumPlane datum) {
+    return drawingFrame(0, document::datumSketchPlane(datum));
+}
+
+} // namespace
+
+// S03: every start (new on a plane or face, editing, recovery) opens the editor here, so
+// orientation, return camera and panel follow one path.
+void SketchEditorToolController::open(std::unique_ptr<application::SketchEditorSession> editor,
+                                      const viewport::PlanarFaceSelection& drawing,
+                                      std::optional<document::FeatureId> edited,
+                                      std::optional<document::FeatureId> support) {
+    editing_ = edited.has_value();
+    draftEdited_ = edited;
+    draftSupport_ = support;
+    editor_ = std::move(editor);
     showPanel();
     panel_.setAcceptEnabled(editor_->canAccept());
-    viewport_.beginSketchEditor(basePlaneSupport(datum), viewport::SketchElementTool::line);
+    viewport_.beginSketchEditor(drawing, viewport::SketchElementTool::line);
     refreshPresentation();
-    statusChanged_(QObject::tr("Skizzeneditor: zwei Punkte für eine Linie setzen"));
+    statusChanged_(editing_ ? QObject::tr("Vorhandene Skizze wird bearbeitet")
+                            : QObject::tr("Skizzeneditor: zwei Punkte für eine Linie setzen"));
+}
+
+void SketchEditorToolController::begin(const viewport::PlanarFaceSelection& support) {
+    std::optional<document::SketchSupportBinding> binding;
+    const auto plane = uprightSketchPlane(support);
+    auto drawingSupport = support;
+    try {
+        binding = session_.bindSelectedSupport(document::FeatureId{support.bodyId},
+                                               support.selectedFace, plane);
+        setSupportProjection(drawingSupport, session_.projectSketchSupport(
+                                                 document::FeatureId{support.bodyId}, *binding));
+    } catch (const std::exception& error) {
+        statusChanged_(QString::fromUtf8(error.what()));
+        return;
+    }
+    startOnSupport(drawingSupport, document::FeatureId{support.bodyId}, plane, *binding);
+}
+
+void SketchEditorToolController::startOnSupport(const viewport::PlanarFaceSelection& drawing,
+                                                document::FeatureId support,
+                                                const document::SketchPlane& plane,
+                                                const document::SketchSupportBinding& binding) {
+    open(std::make_unique<application::SketchEditorSession>(session_, support, plane, binding),
+         drawing, std::nullopt, support);
+}
+
+void SketchEditorToolController::beginOnBasePlane(document::DatumPlane datum) {
+    open(std::make_unique<application::SketchEditorSession>(session_, datum),
+         basePlaneSupport(datum), std::nullopt, std::nullopt);
 }
 
 bool SketchEditorToolController::beginSelectedSketch() {
@@ -84,17 +105,9 @@ bool SketchEditorToolController::beginSelectedSketch() {
     if (!descriptor.inputFeature.has_value()) {
         if (!parameters.datum)
             return false;
-        editing_ = true;
-        draftEdited_ = *selected;
-        draftSupport_.reset();
-        editor_ =
-            std::make_unique<application::SketchEditorSession>(session_, *selected, parameters);
-        showPanel();
-        panel_.setAcceptEnabled(editor_->canAccept());
-        viewport_.beginSketchEditor(basePlaneSupport(*parameters.datum),
-                                    viewport::SketchElementTool::line);
-        refreshPresentation();
-        statusChanged_(QObject::tr("Vorhandene Skizze wird bearbeitet"));
+        const auto datum = *parameters.datum;
+        open(std::make_unique<application::SketchEditorSession>(session_, *selected, parameters),
+             basePlaneSupport(datum), *selected, std::nullopt);
         return true;
     }
     try {
@@ -104,12 +117,7 @@ bool SketchEditorToolController::beginSelectedSketch() {
         statusChanged_(QString::fromUtf8(error.what()));
         return false;
     }
-    const auto& persistedPlane = parameters.plane;
-    const viewport::PlanarFaceSelection persistedSupport{
-        descriptor.inputFeature->value(), persistedPlane.originX,     persistedPlane.originY,
-        persistedPlane.originZ,           persistedPlane.normalX,     persistedPlane.normalY,
-        persistedPlane.normalZ,           persistedPlane.xDirectionX, persistedPlane.xDirectionY,
-        persistedPlane.xDirectionZ};
+    const auto persistedSupport = drawingFrame(descriptor.inputFeature->value(), parameters.plane);
     viewport::PlanarFaceSelection support = persistedSupport;
     if (const auto shape = session_.featureShape(*descriptor.inputFeature);
         !parameters.supportBinding && shape.has_value()) {
@@ -128,16 +136,9 @@ bool SketchEditorToolController::beginSelectedSketch() {
             return false;
         }
     }
-    editing_ = true;
-    draftEdited_ = *selected;
-    draftSupport_ = *descriptor.inputFeature;
-    editor_ = std::make_unique<application::SketchEditorSession>(
-        session_, *selected, *descriptor.inputFeature, parameters);
-    showPanel();
-    panel_.setAcceptEnabled(editor_->canAccept());
-    viewport_.beginSketchEditor(support, viewport::SketchElementTool::line);
-    refreshPresentation();
-    statusChanged_(QObject::tr("Vorhandene Skizze wird bearbeitet"));
+    open(std::make_unique<application::SketchEditorSession>(session_, *selected,
+                                                            *descriptor.inputFeature, parameters),
+         support, *selected, *descriptor.inputFeature);
     return true;
 }
 

@@ -296,6 +296,8 @@ class CadViewportScene {
     bool gridVisible{true};
     occ::handle<Graphic3d_Camera> savedCamera;
     std::optional<PlanarFaceSelection> activeSketchSupport;
+    // S03: the view before the sketch editor oriented it; restored when the editor ends.
+    occ::handle<Graphic3d_Camera> sketchReturnCamera;
 };
 
 } // namespace voelund::viewport

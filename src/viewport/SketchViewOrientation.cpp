@@ -1,19 +1,17 @@
 #include "SketchViewOrientation.hpp"
 
 #include <gp_Dir.hxx>
-#include <gp_Vec.hxx>
-
-#include <cmath>
 
 namespace voelund::viewport {
 
 void orientSketchView(const PlanarFaceSelection& support, const occ::handle<V3d_View>& view) {
     if (view.IsNull())
         return;
+    // S03: the sketch frame decides the screen axes, x to the right and y upwards, so a
+    // horizontal sketch line is horizontal on screen on every plane and support face.
     const gp_Dir normal(support.normalX, support.normalY, support.normalZ);
-    const gp_Vec preferredUp = std::abs(normal.Z()) < 0.95 ? gp_Vec(0.0, 0.0, 1.0)
-                                                           : gp_Vec(0.0, 1.0, 0.0);
-    const gp_Vec up = preferredUp - gp_Vec(normal) * preferredUp.Dot(gp_Vec(normal));
+    const gp_Dir xDirection(support.xDirectionX, support.xDirectionY, support.xDirectionZ);
+    const gp_Dir up = normal.Crossed(xDirection);
     view->SetProj(normal.X(), normal.Y(), normal.Z());
     view->SetUp(up.X(), up.Y(), up.Z());
     view->FitAll(0.08, false);

@@ -72,6 +72,10 @@ class SketchEditorToolController final {
     void refreshPresentation();
     void accept(application::ErrorDisposition disposition = application::ErrorDisposition::reject);
     void stepBack();
+    void open(std::unique_ptr<application::SketchEditorSession> editor,
+              const viewport::PlanarFaceSelection& drawing,
+              std::optional<document::FeatureId> edited,
+              std::optional<document::FeatureId> support);
     void startOnSupport(const viewport::PlanarFaceSelection& drawing, document::FeatureId support,
                         const document::SketchPlane& plane,
                         const document::SketchSupportBinding& binding);
