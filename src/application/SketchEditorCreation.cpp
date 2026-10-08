@@ -1,6 +1,7 @@
 #include <voelund/application/SketchEditorSession.hpp>
 
 #include <algorithm>
+#include <cmath>
 #include <span>
 #include <stdexcept>
 #include <string>
@@ -50,6 +51,59 @@ void checkSnapTarget(std::span<const document::SketchElement> elements, const Sk
                                   std::holds_alternative<document::SketchEllipse>(geometry)));
     if (!fits)
         rejectSnap(snap.element, "das Element hat keinen solchen Punkt");
+}
+
+// S05: why the picks give no valid element, named for the tool. Points closer than this
+// count as the same point.
+std::string creationProblem(SketchDrawingTool tool, const SketchCreationInput& in) {
+    constexpr double same = 1e-9;
+    const auto apart = [](SketchPoint a, SketchPoint b) { return std::hypot(a.x - b.x, a.y - b.y); };
+    const SketchPoint last = in.third.value_or(in.second);
+    switch (tool) {
+    case SketchDrawingTool::line:
+    case SketchDrawingTool::polyline:
+        if (apart(in.first, in.second) <= same)
+            return "Linie: Anfangs- und Endpunkt fallen zusammen";
+        break;
+    case SketchDrawingTool::rectangle:
+        if (std::abs(in.second.x - in.first.x) <= same || std::abs(in.second.y - in.first.y) <= same)
+            return in.centered ? "Rechteck aus dem Mittelpunkt: Breite oder Höhe ist null"
+                               : "Rechteck: Breite oder Höhe ist null";
+        break;
+    case SketchDrawingTool::circle:
+        if (apart(in.first, in.second) <= same)
+            return "Kreis: Der Radius ist null";
+        break;
+    case SketchDrawingTool::arc:
+        if (apart(in.first, in.second) <= same)
+            return "Bogen: Der Anfangspunkt liegt im Mittelpunkt";
+        if (apart(in.first, last) <= same)
+            return "Bogen: Der Endpunkt liegt im Mittelpunkt";
+        if (std::abs(std::atan2(in.second.y - in.first.y, in.second.x - in.first.x) -
+                     std::atan2(last.y - in.first.y, last.x - in.first.x)) <= same)
+            return "Bogen: Anfangs- und Endpunkt fallen zusammen";
+        break;
+    case SketchDrawingTool::threePointArc:
+        if (apart(in.first, last) <= same || apart(in.first, in.second) <= same ||
+            apart(in.second, last) <= same)
+            return "Dreipunktbogen: Zwei Punkte fallen zusammen";
+        return "Dreipunktbogen: Die drei Punkte liegen auf einer Geraden";
+    case SketchDrawingTool::ellipse:
+        if (apart(in.first, in.second) <= same)
+            return "Ellipse: Die große Halbachse ist null";
+        return "Ellipse: Die kleine Halbachse ist null";
+    case SketchDrawingTool::slot:
+        if (apart(in.first, in.second) <= same)
+            return "Langloch: Die beiden Mittelpunkte fallen zusammen";
+        return "Langloch: Die Breite ist null";
+    case SketchDrawingTool::polygon:
+        if (apart(in.first, in.second) <= same)
+            return "Polygon: Der Eckpunkt liegt im Mittelpunkt";
+        break;
+    case SketchDrawingTool::select:
+        break;
+    }
+    return "Die Punkte ergeben kein gültiges Skizzenelement";
 }
 
 SketchGeometryReference required(const SketchCreationResult& result, SketchCreationPoint role) {
@@ -112,7 +166,7 @@ SketchEditorSession::createCentered(const SketchCreationInput& input) {
     const SketchPoint corner = input.second;
     const SketchPoint opposite{2 * center.x - corner.x, 2 * center.y - corner.y};
     if (!setPreview(opposite, corner))
-        return std::nullopt;
+        throw std::invalid_argument(creationProblem(SketchDrawingTool::rectangle, input));
     auto result = confirmCreation();
     if (!result)
         return std::nullopt;
@@ -170,8 +224,12 @@ std::optional<SketchCreationResult> SketchEditorSession::createStep(const Sketch
             return std::nullopt;
         return createCentered(in);
     }
-    if (!setPreview(in.first, in.second, in.third))
-        return std::nullopt;
+    // S05: degenerate picks are refused with the reason; the caller's editor stays as it was.
+    if (!setPreview(in.first, in.second, in.third)) {
+        if (!active_ || tool_ == SketchDrawingTool::select)
+            return std::nullopt;
+        throw std::invalid_argument(creationProblem(tool_, in));
+    }
     auto result = confirmCreation();
     if (!result)
         return std::nullopt;
@@ -249,12 +307,10 @@ std::optional<SketchCreationResult> SketchEditorSession::createStep(const Sketch
             snap(SketchCreationPoint::center, in.firstSnap, in.first);
         snap(SketchCreationPoint::arcStart, in.secondSnap, in.second);
         snap(SketchCreationPoint::arcEnd, in.thirdSnap, last);
-        if (in.relation == SketchAutoRelation::tangent) {
-            if (in.relationTarget.has_value())
-                static_cast<void>(radial(SketchConstraintKind::tangent));
-            else if (in.thirdSnap.has_value())
-                static_cast<void>(
-                    relate([&] { return addTangencyReference(id, in.thirdSnap->element); }));
+        // S05: tangent to a circle or arc only; an arc ending on a line keeps that end binding,
+        // and tangency there is not supported by the solver adapter, so it is not claimed.
+        if (in.relation == SketchAutoRelation::tangent && in.relationTarget.has_value()) {
+            static_cast<void>(radial(SketchConstraintKind::tangent));
         } else if (in.relation == SketchAutoRelation::equal) {
             static_cast<void>(radial(SketchConstraintKind::equal));
         }

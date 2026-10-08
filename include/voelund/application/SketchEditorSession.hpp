@@ -51,8 +51,9 @@ class SketchEditorSession final {
     // U08: confirmPreview with every created element by role.
     [[nodiscard]] std::optional<SketchCreationResult> confirmCreation();
     // U08: one creation step of the active tool with its snaps and automatic relations, as
-    // the interactive editor performs it (SketchCreation.hpp). nullopt for an invalid size; a
-    // rejected reference throws std::invalid_argument and leaves the editor as before (S02).
+    // the interactive editor performs it (SketchCreation.hpp). nullopt while a needed point is
+    // missing; degenerate picks (S05) and a rejected reference throw std::invalid_argument
+    // with the reason and leave the editor as before (S02).
     [[nodiscard]] std::optional<SketchCreationResult> create(const SketchCreationInput& input);
     [[nodiscard]] bool selectElement(document::SketchElementId elementId) noexcept;
     [[nodiscard]] bool selectNearestReference(document::SketchElementId elementId,

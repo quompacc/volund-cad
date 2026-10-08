@@ -451,13 +451,11 @@ std::optional<SketchElementIntent> SketchEditorInteraction::move(int x, int y) c
     } else if (tool_ == SketchElementTool::circle)
         std::tie(adjustedPoint, automaticConstraint, automaticTargetId) =
             relatedRadialPoint(*firstPoint_, point);
-    if (tool_ == SketchElementTool::arc && secondPoint_.has_value() &&
-        tangentToReferencedLine(*firstPoint_, point, reference))
-        automaticConstraint = SketchAutomaticConstraint::tangent;
     std::pair<double, double> intentSecond =
         secondPoint_.has_value() ? *secondPoint_ : adjustedPoint;
-    if (tool_ == SketchElementTool::arc && secondPoint_.has_value() &&
-        automaticConstraint != SketchAutomaticConstraint::tangent) {
+    // S05: an arc ending on a line is not announced tangent; the solver adapter has no
+    // tangency at an end point (end on the line plus tangency is redundant there).
+    if (tool_ == SketchElementTool::arc && secondPoint_.has_value()) {
         if (isRadialCenterReference(firstReference_)) {
             automaticConstraint = SketchAutomaticConstraint::concentric;
             automaticTargetId = firstReference_->elementId;
@@ -515,13 +513,11 @@ std::optional<SketchElementIntent> SketchEditorInteraction::click(int x, int y) 
     } else if (tool_ == SketchElementTool::circle)
         std::tie(adjustedPoint, automaticConstraint, automaticTargetId) =
             relatedRadialPoint(*firstPoint_, point);
-    if (tool_ == SketchElementTool::arc && secondPoint_.has_value() &&
-        tangentToReferencedLine(*firstPoint_, point, reference))
-        automaticConstraint = SketchAutomaticConstraint::tangent;
     std::pair<double, double> intentSecond =
         secondPoint_.has_value() ? *secondPoint_ : adjustedPoint;
-    if (tool_ == SketchElementTool::arc && secondPoint_.has_value() &&
-        automaticConstraint != SketchAutomaticConstraint::tangent) {
+    // S05: an arc ending on a line is not announced tangent; the solver adapter has no
+    // tangency at an end point (end on the line plus tangency is redundant there).
+    if (tool_ == SketchElementTool::arc && secondPoint_.has_value()) {
         if (isRadialCenterReference(firstReference_)) {
             automaticConstraint = SketchAutomaticConstraint::concentric;
             automaticTargetId = firstReference_->elementId;
