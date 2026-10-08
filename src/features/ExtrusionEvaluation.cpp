@@ -81,6 +81,18 @@ Prism makePrism(document::FeatureId extrusion, document::FeatureId sketchId,
                                {cap},
                                kernel::HistoryCoverage::complete,
                                cap});
+        // T04b: the start cap, and each side face named by the contour edge it was swept
+        // from (ExtrusionCapKey / ExtrusionSideKey).
+        document::SubshapeOrigin start{extrusion, std::nullopt, profile.boundary};
+        start.extrusionFace = document::ExtrusionFace::start;
+        addSupportFace(result.caps, start, prism.FirstShape(profile.face));
+        for (const auto& edge : profile.edges) {
+            document::SubshapeOrigin side{extrusion, std::nullopt, profile.boundary};
+            side.extrusionFace = document::ExtrusionFace::side;
+            side.sweptEdge = document::ContourEdgeOrigin{sketchId, edge.element, edge.role};
+            for (const auto& face : prism.Generated(edge.edge))
+                addSupportFace(result.caps, side, face);
+        }
     }
     return result;
 }

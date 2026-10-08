@@ -7,13 +7,58 @@
 #include <stdexcept>
 
 // T01: faces of a body as stable semantic references (docs/subshape-reference-contract.md):
-// the producing feature plus a box/cylinder role or an extrusion's end-cap boundary; T04: or
-// the end cap of a push/pull ("cap": "end"). No shape index leaves Völund.
+// the producing feature plus a box/cylinder role or an extrusion's profile boundary; T04: a
+// push/pull has no boundary. Extrusion faces add "cap": "start" (the end cap is the default
+// of a boundary, "cap": "end" for a push/pull) or "side": the edge the face was swept from.
+// No shape index leaves Völund.
 namespace voelund::mcp::detail {
 namespace {
 // Parallel to kernel::PrimitiveRole; box roles are in the box's own axes.
 constexpr const char* roleNames[] = {"-x", "+x", "-y", "+y", "-z", "+z", "start", "end", "side"};
-constexpr const char* capNames[] = {"end"}; // T04: the end cap of a push/pull
+constexpr const char* capNames[] = {"end", "start"}; // parallel to ExtrusionFace
+// Parallel to document::ContourRole and ContourStage.
+constexpr const char* contourRoles[] = {"line",           "circle",          "arc",
+                                        "ellipse",        "rectangleFirst",  "rectangleSecond",
+                                        "rectangleThird", "rectangleFourth"};
+constexpr const char* contourStages[] = {"sketch", "start", "end"};
+
+QJsonObject encodeEdge(const document::EdgeOrigin& edge) {
+    if (const auto* primitive = std::get_if<document::PrimitiveEdgeOrigin>(&edge.value))
+        return {{"feature", static_cast<double>(primitive->feature.value())},
+                {"between", QJsonArray{roleNames[static_cast<std::size_t>(primitive->first)],
+                                       roleNames[static_cast<std::size_t>(primitive->second)]}}};
+    const auto& contour = std::get<document::ContourEdgeOrigin>(edge.value);
+    QJsonObject json{{"sketch", static_cast<double>(contour.sketch.value())},
+                     {"element", static_cast<double>(contour.element.value())},
+                     {"role", contourRoles[static_cast<std::size_t>(contour.role)]},
+                     {"stage", contourStages[static_cast<std::size_t>(contour.stage)]}};
+    if (contour.extrusion)
+        json.insert("extrusion", static_cast<double>(contour.extrusion->value()));
+    return json;
+}
+
+document::EdgeOrigin decodeEdge(const JsonReader& reader) {
+    if (reader.has("between")) {
+        const auto roles = reader.array("between");
+        if (roles.size() != 2)
+            throw ArgumentError(reader.field("between"), "Expected two face roles");
+        const auto role = [&](int index) {
+            const auto text = roles.at(index).toString();
+            const auto found = std::ranges::find(roleNames, text);
+            if (found == std::end(roleNames))
+                throw ArgumentError(reader.field("between"), "Unknown face role");
+            return static_cast<kernel::PrimitiveRole>(found - std::begin(roleNames));
+        };
+        return document::PrimitiveEdgeOrigin{document::FeatureId{reader.id("feature")}, role(0),
+                                             role(1)};
+    }
+    const auto extrusion = reader.optionalId("extrusion");
+    return document::ContourEdgeOrigin{
+        document::FeatureId{reader.id("sketch")}, document::SketchElementId{reader.id("element")},
+        static_cast<document::ContourRole>(reader.choice("role", contourRoles)),
+        extrusion ? std::optional{document::FeatureId{*extrusion}} : std::nullopt,
+        static_cast<document::ContourStage>(reader.choice("stage", contourStages))};
+}
 
 // Clean output: 1e-9 mm is far below any modelling tolerance.
 double clean(double value) {
@@ -32,8 +77,10 @@ QJsonObject encodeFaceOrigin(const features::SupportOrigin& origin) {
         boundary.append(static_cast<double>(element.value()));
     if (!boundary.isEmpty())
         json.insert("boundary", boundary);
-    if (origin.faceExtrusionCap)
-        json.insert("cap", "end");
+    if (origin.sweptEdge)
+        json.insert("side", encodeEdge(*origin.sweptEdge));
+    else if (origin.faceExtrusion || origin.extrusionFace == document::ExtrusionFace::start)
+        json.insert("cap", capNames[static_cast<std::size_t>(origin.extrusionFace)]);
     return json;
 }
 
@@ -57,15 +104,22 @@ QJsonObject encodeFace(const features::SupportFaceFrame& face) {
 
 features::SupportOrigin decodeFaceOrigin(const JsonReader& reader) {
     features::SupportOrigin origin{document::FeatureId{reader.id("feature")}, std::nullopt};
-    if ((reader.has("role") ? 1 : 0) + (reader.has("boundary") ? 1 : 0) +
-            (reader.has("cap") ? 1 : 0) !=
-        1)
+    const bool extrusionFace = reader.has("cap") || reader.has("side");
+    if ((reader.has("role") && (reader.has("boundary") || extrusionFace)) ||
+        (!reader.has("role") && !reader.has("boundary") && !extrusionFace) ||
+        (reader.has("cap") && reader.has("side")))
         throw ArgumentError(reader.field("role"),
-                            "A face has a role, a boundary or a cap, as in get_context");
-    if (reader.has("cap")) {
-        static_cast<void>(reader.choice("cap", capNames));
-        origin.faceExtrusionCap = true;
-    } else if (reader.has("role"))
+                            "A face has a role, a boundary and/or a cap or side, as in "
+                            "get_context");
+    if (reader.has("cap"))
+        origin.extrusionFace = static_cast<document::ExtrusionFace>(reader.choice("cap", capNames));
+    if (reader.has("side")) {
+        origin.extrusionFace = document::ExtrusionFace::side;
+        origin.sweptEdge = decodeEdge(reader.object("side"));
+    }
+    if (!reader.has("role") && !reader.has("boundary"))
+        origin.faceExtrusion = true;
+    else if (reader.has("role"))
         origin.role = static_cast<kernel::PrimitiveRole>(reader.choice("role", roleNames));
     else {
         const auto values = reader.array("boundary");

@@ -347,6 +347,14 @@ void faceExtrusions(const Handle(TDocStd_Application)& app) {
     again.distance = 3;
     again.faceProfile->origin = {first, std::nullopt, {}, true};
     (void)model.addFaceExtrusionFeature("Again", again);
+    // T04b: the +x side of the first pull, named by the box edge it was swept from.
+    auto sideways = pull;
+    sideways.distance = 2;
+    sideways.faceProfile->origin = {first, std::nullopt, {}, true};
+    sideways.faceProfile->origin.extrusionFace = ExtrusionFace::side;
+    sideways.faceProfile->origin.sweptEdge = PrimitiveEdgeOrigin{
+        box, kernel::PrimitiveRole::boxPositiveX, kernel::PrimitiveRole::boxPositiveZ};
+    (void)model.addFaceExtrusionFeature("Sideways", sideways);
     auto targeted = pull;
     targeted.target = BodyId{box.value()};
     rejected([&] { (void)model.addFaceExtrusionFeature("Target", targeted); });
@@ -368,8 +376,8 @@ void faceExtrusions(const Handle(TDocStd_Application)& app) {
     const auto result = features::FeatureGraph{}.evaluate(expected.snapshot().toDocument());
     GProp_GProps properties;
     BRepGProp::VolumeProperties(result.resultShape, properties);
-    require(result.bodies.size() == 1 && std::abs(properties.Mass() - 1800) < 1e-6,
-            "Two pulls on a box: one body of 10 x 10 x 18");
+    require(result.bodies.size() == 1 && std::abs(properties.Mass() - 1900) < 1e-6,
+            "Two pulls on a box and one on the first pull's side: 1800 + 2 x 10 x 5");
     TDataStd_Integer::Set(doc->Main().FindChild(2), 9);
     rejected([&] { (void)NativePrimitiveCodec::read(doc); }); // T04 children need schema 10
     app->Close(doc);

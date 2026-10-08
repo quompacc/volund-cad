@@ -100,7 +100,9 @@ QJsonObject faceSchema() {
                                   {"items", typed("integer")},
                                   {"description", "Sketch elements bounding an extrusion's end "
                                                   "face"}}},
-         {"cap", choice({"end"}, "End face of a push/pull")}},
+         {"cap", choice({"end", "start"}, "End or start face of an extrusion")},
+         {"side", typed("object", "Side face of an extrusion: the edge it was swept from, "
+                                  "as in get_context")}},
         {"feature"}, "A face reference copied from bodies[].faces[].face");
 }
 

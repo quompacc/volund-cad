@@ -94,7 +94,7 @@ void pushAndPull() {
     require(std::ranges::equal(session.identifiedSnapshot().snapshot().parameters(),
                                snapshot.parameters()) &&
                 near(volume(session), 10 * 10 * 30 - 2 * 10 * 20) &&
-                session.extrusionParameters(again).faceProfile->origin.faceExtrusionCap &&
+                session.extrusionParameters(again).faceProfile->origin.faceExtrusion &&
                 !session.features().back().inputFeature,
             "Save and open keep push/pulls");
     static_cast<void>(pushed);
@@ -141,6 +141,69 @@ void rejections() {
                 session.identifiedSnapshot() == before,
             "Pushing the whole body away is not committed");
 }
+
+// T04b: the faces of `support`'s result facing (nx, ny, nz) whose origin is of `kind`.
+std::vector<features::SupportOrigin> facing(const application::CadSession& session,
+                                            document::FeatureId support, double nx, double ny,
+                                            double nz, document::ExtrusionFace kind) {
+    std::vector<features::SupportOrigin> result;
+    for (const auto& item : session.supportFaces(support))
+        if (!item.origin.role && item.origin.extrusionFace == kind &&
+            near(item.plane.normalX, nx) && near(item.plane.normalY, ny) &&
+            near(item.plane.normalZ, nz))
+            result.push_back(item.origin);
+    return result;
+}
+
+// T04b: start and side faces of extrusions are stable and can be pushed or pulled: the side
+// and the bottom of a sketched plate, and the side of a pull named by the box edge it was
+// swept from. Save/open keeps the side origins.
+void startAndSideFaces() {
+    application::CadSession session;
+    session.newDocument();
+    document::SketchParameters plate{
+        document::datumSketchPlane(document::DatumPlane::xy),
+        {{{document::SketchElementId{1}, document::SketchRectangle{-40, -20, 40, 20}}}, 2}};
+    plate.datum = document::DatumPlane::xy;
+    const auto extrusion = committed(session.createDatumSketchExtrusion(plate, {}, 10));
+    require(near(volume(session), 32000), "plate");
+    using document::ExtrusionFace;
+    const auto right = facing(session, extrusion, 1, 0, 0, ExtrusionFace::side);
+    require(right.size() == 1 && right.front().sweptEdge, "The plate offers its +x side");
+    const auto wider = committed(session.pushPullFace(extrusion, right.front(), 5));
+    require(near(volume(session), 32000 + 5 * 40 * 10), "Pulling the plate's side widens it");
+    const auto bottom = facing(session, wider, 0, 0, -1, ExtrusionFace::start);
+    require(bottom.size() == 1, "The plate offers its bottom (start) face");
+    static_cast<void>(committed(session.pushPullFace(wider, bottom.front(), -2)));
+    require(near(volume(session), 34000 - 80 * 40 * 2),
+            "Pushing the bottom in cuts 2 mm from the original plate face");
+
+    // The sides of a pull are named by the box edges they were swept from.
+    const auto box = committed(session.createBoxFeature({10, 10, 10}));
+    const double boxes = volume(session);
+    const auto pulled = committed(session.pushPullFace(
+        box, face(session, box, side(box, kernel::PrimitiveRole::boxPositiveZ)), 5));
+    const auto pullSide = facing(session, pulled, 1, 0, 0, ExtrusionFace::side);
+    require(pullSide.size() == 1 && pullSide.front().faceExtrusion &&
+                std::holds_alternative<document::PrimitiveEdgeOrigin>(
+                    pullSide.front().sweptEdge->value),
+            "The side of a pull is named by its box edge");
+    static_cast<void>(committed(session.pushPullFace(pulled, pullSide.front(), 2)));
+    require(near(volume(session), boxes + 10 * 10 * 5 + 2 * 10 * 5),
+            "Pulling the side of a pull widens it");
+
+    const auto path = std::filesystem::temp_directory_path() / "voelund-t04b-sides.volund";
+    const auto snapshot = session.identifiedSnapshot().snapshot();
+    const double before = volume(session);
+    session.saveDocument(path);
+    session.newDocument();
+    session.loadDocument(path);
+    std::filesystem::remove(path);
+    require(std::ranges::equal(session.identifiedSnapshot().snapshot().parameters(),
+                               snapshot.parameters()) &&
+                near(volume(session), before),
+            "Save and open keep start and side origins");
+}
 } // namespace
 
 int main() {
@@ -148,7 +211,8 @@ int main() {
         pushAndPull();
         outwardFrames();
         rejections();
-        std::cout << "PASS T04a push/pull of body faces\n";
+        startAndSideFaces();
+        std::cout << "PASS T04a/T04b push/pull of body faces, start and side faces\n";
         return EXIT_SUCCESS;
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';

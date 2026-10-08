@@ -55,5 +55,6 @@ struct ProjectedEdgeReference final {
     EdgePointSelection selection;
     bool operator==(const ProjectedEdgeReference&) const = default;
 };
+void validateEdgeOrigin(const EdgeOrigin& origin);
 void validateProjectedEdgeReference(const ProjectedEdgeReference& reference);
 } // namespace voelund::document

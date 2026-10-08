@@ -54,6 +54,16 @@ std::vector<SupportProvenance> continueSupportOrigins(std::span<const SupportPro
         result.push_back(continueOrigin(origin, operation, operand));
     return result;
 }
+void addSupportFace(std::vector<SupportProvenance>& origins, const SupportOrigin& origin,
+                    const TopoDS_Shape& face) {
+    const auto found = std::ranges::find(origins, origin, &SupportProvenance::origin);
+    if (found == origins.end()) {
+        origins.push_back({origin, {face}, kernel::HistoryCoverage::complete, face});
+        return;
+    }
+    if (std::ranges::none_of(found->faces, [&](const auto& item) { return item.IsSame(face); }))
+        found->faces.push_back(face);
+}
 SupportResolution resolveSupportOrigin(std::span<const SupportProvenance> origins,
                                        SupportOrigin requested) {
     const auto found = std::ranges::find(origins, requested, &SupportProvenance::origin);

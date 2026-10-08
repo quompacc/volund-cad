@@ -423,12 +423,28 @@ void pushPull() {
                     QJsonObject{{"feature", first}, {"cap", "end"}},
             "A pull joins and offers its end face as a cap: " + text(top));
     pullUp(2);
+    // T04b: a side of a pull comes as {"side": edge} and can be pulled. Only the first pull's
+    // sides are named (by the box edges); the second pull's edges have no names yet.
+    {
+        const auto body = client.context().value("bodies").toArray().at(0).toObject();
+        QJsonObject side;
+        for (const auto& item : body.value("faces").toArray())
+            if (near(coordinate(item.toObject().value("normal"), 0), 1) &&
+                item.toObject().value("face").toObject().contains("side"))
+                side = item.toObject().value("face").toObject();
+        require(!side.isEmpty(), "A pull offers its sides by edge: " + text(body));
+        client.committed("push_pull_face", {{"supportId", body.value("supportId")},
+                                            {"face", side},
+                                            {"distance", mm(1)}});
+        require(near(test::volumeOf(session.currentShape()), 30 * 20 * 17 + 1 * 20 * 5),
+                "Pulling the side of the first pull adds 1 x 20 x 5");
+    }
     const auto [current, bottom] = faceFacing(-1);
     client.committed("push_pull_face", {{"supportId", current},
                                         {"face", bottom.value("face")},
                                         {"distance", mm(-3)}});
     require(session.validBodies().size() == 1 &&
-                near(test::volumeOf(session.currentShape()), 30 * 20 * 14),
+                near(test::volumeOf(session.currentShape()), 30 * 20 * 14 + 1 * 20 * 5),
             "The bottom faces down; pushing it cuts 3 mm into the box");
 }
 

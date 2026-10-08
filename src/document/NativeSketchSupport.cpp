@@ -1,4 +1,5 @@
 #include "NativeSketchSupport.hpp"
+#include "NativeProjectedEdge.hpp"
 #include <TDataStd_AsciiString.hxx>
 #include <TDataStd_Integer.hxx>
 #include <TDataStd_RealArray.hxx>
@@ -37,12 +38,12 @@ int integer(const TDF_Label& label) {
     return value->Get();
 }
 } // namespace
-constexpr int faceExtrusionCapRole = -2;
+constexpr int faceExtrusionRole = -2;
 
 void writeNativeSubshapeOrigin(const TDF_Label& label, const SubshapeOrigin& origin) {
     validateSubshapeOrigin(origin);
     TDataStd_AsciiString::Set(label.FindChild(2), std::to_string(origin.feature.value()).c_str());
-    TDataStd_Integer::Set(label.FindChild(3), origin.faceExtrusionCap ? faceExtrusionCapRole
+    TDataStd_Integer::Set(label.FindChild(3), origin.faceExtrusion ? faceExtrusionRole
                                               : origin.role ? static_cast<int>(*origin.role)
                                                             : -1);
     const auto boundary = label.FindChild(4);
@@ -50,16 +51,25 @@ void writeNativeSubshapeOrigin(const TDF_Label& label, const SubshapeOrigin& ori
     int index = 0;
     for (const auto id : origin.extrusionBoundary)
         TDataStd_AsciiString::Set(boundary.FindChild(++index), std::to_string(id.value()).c_str());
+    if (origin.extrusionFace != ExtrusionFace::end) {
+        const auto extension = label.FindChild(6);
+        TDataStd_Integer::Set(extension.FindChild(1), static_cast<int>(origin.extrusionFace));
+        if (origin.sweptEdge)
+            writeNativeEdgeOrigin(extension.FindChild(2), *origin.sweptEdge);
+    }
+}
+int nativeSubshapeOriginExtension(const TDF_Label& label) {
+    return label.FindChild(6, false).IsNull() ? 0 : 1;
 }
 SubshapeOrigin readNativeSubshapeOrigin(const TDF_Label& label, std::size_t& remainingElements,
                                         int schemaVersion) {
     SubshapeOrigin origin{FeatureId{number(child(label, 2))}, std::nullopt};
     const int role = integer(child(label, 3));
-    require((role >= -1 || (role == faceExtrusionCapRole && schemaVersion >= 10)) &&
+    require((role >= -1 || (role == faceExtrusionRole && schemaVersion >= 10)) &&
             role <= static_cast<int>(kernel::PrimitiveRole::cylinderSide));
     if (role >= 0)
         origin.role = static_cast<kernel::PrimitiveRole>(role);
-    origin.faceExtrusionCap = role == faceExtrusionCapRole;
+    origin.faceExtrusion = role == faceExtrusionRole;
     const auto boundary = child(label, 4);
     const int count = integer(boundary);
     require(count >= 0 && static_cast<std::size_t>(count) <= remainingElements &&
@@ -67,6 +77,22 @@ SubshapeOrigin readNativeSubshapeOrigin(const TDF_Label& label, std::size_t& rem
     remainingElements -= static_cast<std::size_t>(count);
     for (int i = 1; i <= count; ++i)
         origin.extrusionBoundary.emplace_back(number(child(boundary, i)));
+    if (const auto extension = label.FindChild(6, false); !extension.IsNull()) {
+        require(schemaVersion >= 10);
+        const int face = integer(child(extension, 1));
+        require(face == static_cast<int>(ExtrusionFace::start) ||
+                face == static_cast<int>(ExtrusionFace::side));
+        origin.extrusionFace = static_cast<ExtrusionFace>(face);
+        if (origin.extrusionFace == ExtrusionFace::side) {
+            const auto edge = extension.FindChild(2, false);
+            require(!edge.IsNull() && extension.NbChildren() == 2);
+            origin.sweptEdge = readNativeEdgeOrigin(edge);
+            require(edge.NbChildren() ==
+                    (std::holds_alternative<PrimitiveEdgeOrigin>(origin.sweptEdge->value) ? 4 : 6));
+        } else {
+            require(extension.NbChildren() == 1);
+        }
+    }
     validateSubshapeOrigin(origin);
     return origin;
 }
@@ -85,7 +111,7 @@ void writeNativeSketchSupport(const TDF_Label& label, const SketchSupportBinding
 }
 SketchSupportBinding readNativeSketchSupport(const TDF_Label& label,
                                              std::size_t remainingElements, int schemaVersion) {
-    require(label.NbChildren() == 5);
+    require(label.NbChildren() == 5 + nativeSubshapeOriginExtension(label));
     const auto origin = readNativeSubshapeOrigin(label, remainingElements, schemaVersion);
     Handle(TDataStd_RealArray) data;
     require(child(label, 5).FindAttribute(TDataStd_RealArray::GetID(), data) &&

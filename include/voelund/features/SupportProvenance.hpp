@@ -30,5 +30,10 @@ continueSupportOrigins(std::span<const SupportProvenance> previous,
                        kernel::HistoryOperand operand = kernel::HistoryOperand::first);
 [[nodiscard]] SupportResolution resolveSupportOrigin(std::span<const SupportProvenance> origins,
                                                      SupportOrigin requested);
+// T04b: adds `face` under `origin`, next to faces already named so (e.g. several fragments
+// swept from one contour element). An origin with more than one face is ambiguous and is
+// not offered as a support (supportFaceFrames).
+void addSupportFace(std::vector<SupportProvenance>& origins, const SupportOrigin& origin,
+                    const TopoDS_Shape& face);
 
 } // namespace voelund::features

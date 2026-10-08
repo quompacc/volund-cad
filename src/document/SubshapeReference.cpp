@@ -5,9 +5,14 @@
 namespace voelund::document {
 void validateSubshapeOrigin(const SubshapeOrigin& origin) {
     const int representations = (origin.role ? 1 : 0) + (origin.extrusionBoundary.empty() ? 0 : 1) +
-                                (origin.faceExtrusionCap ? 1 : 0);
-    if (!hasIdCapacity(origin.feature.value(), 1) || representations != 1)
+                                (origin.faceExtrusion ? 1 : 0);
+    if (!hasIdCapacity(origin.feature.value(), 1) || representations != 1 ||
+        (origin.role && origin.extrusionFace != ExtrusionFace::end) ||
+        (origin.extrusionFace < ExtrusionFace::end || origin.extrusionFace > ExtrusionFace::side) ||
+        (origin.extrusionFace == ExtrusionFace::side) != origin.sweptEdge.has_value())
         throw std::invalid_argument("Invalid support origin");
+    if (origin.sweptEdge)
+        validateEdgeOrigin(*origin.sweptEdge);
     if (origin.role) {
         const auto role = static_cast<int>(*origin.role);
         if (role < 0 || role > static_cast<int>(kernel::PrimitiveRole::cylinderSide))

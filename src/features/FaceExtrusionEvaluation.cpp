@@ -11,6 +11,9 @@
 #include <BRepBuilderAPI_Transform.hxx>
 #include <BRepPrimAPI_MakePrism.hxx>
 #include <TopExp_Explorer.hxx>
+#include <memory>
+#include <optional>
+#include <span>
 #include <TopoDS.hxx>
 #include <algorithm>
 #include <cmath>
@@ -66,23 +69,60 @@ double lengthToFace(const gp_Pnt& start, const gp_Vec& along, const SupportFaceF
     return length;
 }
 
+// T04b: the name of an edge of the profile face from the body's edge provenance; none when
+// the edge has no name or more than one.
+std::optional<document::EdgeOrigin> edgeName(std::span<const EdgeProvenance> origins,
+                                             const TopoDS_Shape& edge) {
+    std::optional<document::EdgeOrigin> name;
+    for (const auto& item : origins)
+        if (item.coverage == kernel::HistoryCoverage::complete &&
+            std::ranges::any_of(item.edges,
+                                [&](const auto& candidate) { return candidate.IsSame(edge); })) {
+            if (name)
+                return std::nullopt;
+            name = item.origin;
+        }
+    return name;
+}
+
 FacePrism makePrism(document::FeatureId extrusion, const TopoDS_Shape& body,
-                    const SupportFaceFrame& face, const document::ExtrusionParameters& parameters,
+                    std::span<const EdgeProvenance> edges, const SupportFaceFrame& face,
+                    const document::ExtrusionParameters& parameters,
                     const SupportFaceFrame* endFace) {
     const gp_Vec along = sweep(body, face, parameters);
     TopoDS_Shape start = face.face;
     gp_Pnt origin(face.plane.originX, face.plane.originY, face.plane.originZ);
+    std::unique_ptr<BRepBuilderAPI_Transform> shifted;
     if (parameters.offset != 0.0) {
         gp_Trsf shift;
         shift.SetTranslation(along * parameters.offset);
-        start = BRepBuilderAPI_Transform(face.face, shift, true).Shape();
+        shifted = std::make_unique<BRepBuilderAPI_Transform>(face.face, shift, true);
+        start = shifted->Shape();
         origin.Translate(along * parameters.offset);
     }
     const double length = endFace ? lengthToFace(origin, along, *endFace) : parameters.distance;
     BRepPrimAPI_MakePrism prism(start, along * length);
     const auto cap = prism.LastShape(start);
-    return {prism.Shape(),
-            {{{extrusion, std::nullopt, {}, true}, {cap}, kernel::HistoryCoverage::complete, cap}}};
+    FacePrism result{prism.Shape(),
+                     {{{extrusion, std::nullopt, {}, true},
+                       {cap},
+                       kernel::HistoryCoverage::complete,
+                       cap}}};
+    // T04b: side faces named by the body edge they were swept from (through the offset
+    // copy's history when the start is shifted).
+    for (TopExp_Explorer explorer(face.face, TopAbs_EDGE); explorer.More(); explorer.Next()) {
+        const auto name = edgeName(edges, explorer.Current());
+        if (!name)
+            continue;
+        document::SubshapeOrigin side{extrusion, std::nullopt, {}, true};
+        side.extrusionFace = document::ExtrusionFace::side;
+        side.sweptEdge = *name;
+        const TopoDS_Shape swept =
+            shifted ? shifted->ModifiedShape(explorer.Current()) : explorer.Current();
+        for (const auto& generated : prism.Generated(swept))
+            addSupportFace(result.caps, side, generated);
+    }
+    return result;
 }
 
 // The reference evaluation of an output, as its own evaluated feature.
@@ -122,8 +162,8 @@ void evaluateFaceExtrusion(const document::DocumentSnapshot& document,
     if (endOwner)
         end = profileFace(supportFaceFrames(findFeature(outputs, *endOwner)),
                           parameters.upToFace->origin);
-    const auto prism =
-        makePrism(descriptor.id, owner.shape, face, parameters, end ? &*end : nullptr);
+    const auto prism = makePrism(descriptor.id, owner.shape, owner.edgeOrigins, face, parameters,
+                                 end ? &*end : nullptr);
 
     // The reference prism sweeps the reference face by the same length.
     const auto referenceOwner = referenceOf(owner);
@@ -136,8 +176,8 @@ void evaluateFaceExtrusion(const document::DocumentSnapshot& document,
         referenceParameters.distance = lengthToFace(start, along, *end);
     }
     const auto referencePrism =
-        makePrism(descriptor.id, owner.referenceShape, profileFace(referenceFaces, profile.origin),
-                  referenceParameters, nullptr);
+        makePrism(descriptor.id, owner.referenceShape, owner.referenceEdgeOrigins,
+                  profileFace(referenceFaces, profile.origin), referenceParameters, nullptr);
 
     const auto operation = document::effectiveOperation(parameters, false);
     EvaluatedBody& body = findBody(bodies, outputs, *producer);

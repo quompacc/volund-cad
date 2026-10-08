@@ -8,6 +8,8 @@ namespace voelund::document::detail {
 void writeNativeSubshapeOrigin(const TDF_Label& label, const SubshapeOrigin& origin);
 SubshapeOrigin readNativeSubshapeOrigin(const TDF_Label& label, std::size_t& remainingElements,
                                         int schemaVersion);
+// T04b: 1 when the host carries the extrusion face extension (child 6), else 0.
+[[nodiscard]] int nativeSubshapeOriginExtension(const TDF_Label& label);
 void writeNativeSketchSupport(const TDF_Label&, const SketchSupportBinding&);
 SketchSupportBinding readNativeSketchSupport(const TDF_Label&, std::size_t remainingElements,
                                              int schemaVersion);

@@ -38,17 +38,14 @@ int integer(const TDF_Label& label) {
     return value->Get();
 }
 } // namespace
-void writeNativeProjectedEdge(const TDF_Label& label, const ProjectedEdgeReference& ref) {
-    validateProjectedEdgeReference(ref);
-    TDataStd_AsciiString::Set(label, documentIdToHex(ref.document).c_str());
-    number(label.FindChild(1), ref.body.value());
-    if (const auto* primitive = std::get_if<PrimitiveEdgeOrigin>(&ref.origin.value)) {
+void writeNativeEdgeOrigin(const TDF_Label& label, const EdgeOrigin& origin) {
+    if (const auto* primitive = std::get_if<PrimitiveEdgeOrigin>(&origin.value)) {
         TDataStd_Integer::Set(label.FindChild(2), 1);
         number(label.FindChild(3), primitive->feature.value());
         TDataStd_Integer::Set(label.FindChild(4), static_cast<int>(primitive->first));
         TDataStd_Integer::Set(label.FindChild(5), static_cast<int>(primitive->second));
     } else {
-        const auto& contour = std::get<ContourEdgeOrigin>(ref.origin.value);
+        const auto& contour = std::get<ContourEdgeOrigin>(origin.value);
         TDataStd_Integer::Set(label.FindChild(2), 2);
         number(label.FindChild(3), contour.sketch.value());
         number(label.FindChild(4), contour.element.value());
@@ -56,6 +53,26 @@ void writeNativeProjectedEdge(const TDF_Label& label, const ProjectedEdgeReferen
         TDataStd_Integer::Set(label.FindChild(6), static_cast<int>(contour.stage));
         number(label.FindChild(7), contour.extrusion ? contour.extrusion->value() : 0);
     }
+}
+EdgeOrigin readNativeEdgeOrigin(const TDF_Label& label) {
+    const int kind = integer(child(label, 2));
+    require(kind == 1 || kind == 2);
+    const auto feature = FeatureId{number(child(label, 3))};
+    if (kind == 1)
+        return PrimitiveEdgeOrigin{feature,
+                                   static_cast<kernel::PrimitiveRole>(integer(child(label, 4))),
+                                   static_cast<kernel::PrimitiveRole>(integer(child(label, 5)))};
+    const auto extrusion = number(child(label, 7));
+    return ContourEdgeOrigin{feature, SketchElementId{number(child(label, 4))},
+                             static_cast<ContourRole>(integer(child(label, 5))),
+                             extrusion ? std::optional{FeatureId{extrusion}} : std::nullopt,
+                             static_cast<ContourStage>(integer(child(label, 6)))};
+}
+void writeNativeProjectedEdge(const TDF_Label& label, const ProjectedEdgeReference& ref) {
+    validateProjectedEdgeReference(ref);
+    TDataStd_AsciiString::Set(label, documentIdToHex(ref.document).c_str());
+    number(label.FindChild(1), ref.body.value());
+    writeNativeEdgeOrigin(label, ref.origin);
     TDataStd_Integer::Set(label.FindChild(8), static_cast<int>(ref.selection.kind));
     TDataStd_Real::Set(label.FindChild(9), ref.selection.parameter);
 }
@@ -63,20 +80,7 @@ ProjectedEdgeReference readNativeProjectedEdge(const TDF_Label& label) {
     const int kind = integer(child(label, 2));
     require(kind == 1 || kind == 2);
     require(label.NbChildren() == (kind == 1 ? 7 : 9));
-    const auto feature = FeatureId{number(child(label, 3))};
-    EdgeOrigin origin{feature, kernel::PrimitiveRole::boxNegativeX,
-                      kernel::PrimitiveRole::boxNegativeY};
-    if (kind == 1) {
-        origin = PrimitiveEdgeOrigin{feature,
-                                     static_cast<kernel::PrimitiveRole>(integer(child(label, 4))),
-                                     static_cast<kernel::PrimitiveRole>(integer(child(label, 5)))};
-    } else {
-        const auto extrusion = number(child(label, 7));
-        origin = ContourEdgeOrigin{feature, SketchElementId{number(child(label, 4))},
-                                   static_cast<ContourRole>(integer(child(label, 5))),
-                                   extrusion ? std::optional{FeatureId{extrusion}} : std::nullopt,
-                                   static_cast<ContourStage>(integer(child(label, 6)))};
-    }
+    const auto origin = readNativeEdgeOrigin(label);
     Handle(TDataStd_Real) parameter;
     require(child(label, 9).FindAttribute(TDataStd_Real::GetID(), parameter));
     ProjectedEdgeReference result{

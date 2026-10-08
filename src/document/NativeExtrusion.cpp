@@ -224,13 +224,13 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
     if (!offsetBinding.IsNull())
         result.offsetParameter = readNativeParameterBinding(offsetBinding);
     if (!endFace.IsNull()) {
-        require(endFace.NbChildren() == 4);
+        require(endFace.NbChildren() == 4 + nativeSubshapeOriginExtension(endFace));
         const BodyId body{readDecimal(child(endFace, 1))};
         result.upToFace = BodyFaceReference{
             body, readNativeSubshapeOrigin(endFace, remainingRecords, schemaVersion)};
     }
     if (!profileFace.IsNull()) {
-        require(profileFace.NbChildren() == 4);
+        require(profileFace.NbChildren() == 4 + nativeSubshapeOriginExtension(profileFace));
         const BodyId body{readDecimal(child(profileFace, 1))};
         result.faceProfile = BodyFaceReference{
             body, readNativeSubshapeOrigin(profileFace, remainingRecords, schemaVersion)};
