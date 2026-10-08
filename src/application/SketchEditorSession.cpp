@@ -1,3 +1,4 @@
+#include "SketchGeometryTransform.hpp"
 #include <voelund/application/SketchEditorSession.hpp>
 #include <voelund/document/SketchPlaneValidation.hpp>
 #include <voelund/kernel/NumericPolicy.hpp>
@@ -138,12 +139,16 @@ bool SketchEditorSession::selectNearestReference(document::SketchElementId eleme
                               ? document::SketchPointPosition::center
                           : startDistance <= endDistance ? document::SketchPointPosition::start
                                                          : document::SketchPointPosition::end;
-    } else {
+    } else if (!additive) {
         return selectElement(elementId);
-    }
+    } // S08: a rectangle joins a multiple selection as a whole element.
 
     if (!additive)
         selectedReferences_.clear();
+    // S08: an element selected as a whole stays in the selection the next pick extends.
+    if (additive && selectedReferences_.empty() && selectedElement_.has_value() &&
+        *selectedElement_ != elementId)
+        selectedReferences_.push_back({*selectedElement_, document::SketchPointPosition::start});
     const auto selected = std::ranges::find(selectedReferences_, reference);
     if (additive && selected != selectedReferences_.end()) {
         selectedReferences_.erase(selected);
@@ -170,6 +175,7 @@ bool SketchEditorSession::translateSelected(double deltaX, double deltaY) {
     const bool pointSelection =
         selectedReferences_.size() == 1 && selectedReferences_.front().element == *selectedElement_;
     if (pointSelection) {
+        // S08: every variant a point reference can name moves; anything else is refused.
         const auto reference = selectedReferences_.front();
         if (auto* line = std::get_if<document::SketchLine>(&match->geometry)) {
             document::SketchPoint& point =
@@ -198,27 +204,29 @@ bool SketchEditorSession::translateSelected(double deltaX, double deltaY) {
                         angle -= 2.0 * std::numbers::pi;
                 }
             }
+        } else if (auto* ellipse = std::get_if<document::SketchEllipse>(&match->geometry)) {
+            ellipse->center.x += deltaX;
+            ellipse->center.y += deltaY;
+        } else {
+            return false;
         }
     } else {
-        std::visit(
-            [deltaX, deltaY](auto& geometry) {
-                using Geometry = std::decay_t<decltype(geometry)>;
-                if constexpr (std::is_same_v<Geometry, document::SketchLine>) {
-                    geometry.start.x += deltaX;
-                    geometry.start.y += deltaY;
-                    geometry.end.x += deltaX;
-                    geometry.end.y += deltaY;
-                } else if constexpr (std::is_same_v<Geometry, document::SketchRectangle>) {
-                    geometry.first.x += deltaX;
-                    geometry.first.y += deltaY;
-                    geometry.second.x += deltaX;
-                    geometry.second.y += deltaY;
-                } else {
-                    geometry.center.x += deltaX;
-                    geometry.center.y += deltaY;
-                }
-            },
-            match->geometry);
+        // S08: a selection over several elements moves all of them as a whole.
+        std::vector<document::SketchElementId> ids{*selectedElement_};
+        for (const auto& reference : selectedReferences_)
+            if (std::ranges::find(ids, reference.element) == ids.end())
+                ids.push_back(reference.element);
+        for (const auto id : ids) {
+            const auto element =
+                std::ranges::find(elements_.values, id, &document::SketchElement::id);
+            if (element == elements_.values.end())
+                return false;
+            // A translation keeps the axes, so every variant stays itself.
+            element->geometry =
+                detail::transformedCopy(element->geometry,
+                                        detail::PlanarTransform::translation(deltaX, deltaY))
+                    .elements.front();
+        }
     }
     if ((deltaX == 0.0 && deltaY == 0.0) || !solveConstraints())
         return false;
@@ -469,16 +477,25 @@ bool SketchEditorSession::removeConstraint(document::SketchConstraintId id) {
 bool SketchEditorSession::removeSelected() {
     if (!active_ || !selectedElement_.has_value())
         return false;
-    const auto match =
-        std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);
-    if (match == elements_.values.end())
-        return false;
-    std::erase_if(constraints_.values, [id = *selectedElement_](const auto& constraint) {
-        return constraint.first.element == id ||
-               (constraint.second.has_value() && constraint.second->element == id) ||
-               (constraint.third.has_value() && constraint.third->element == id);
+    // S08: the whole selection, with every constraint that names one of its elements.
+    std::vector<document::SketchElementId> ids{*selectedElement_};
+    for (const auto& reference : selectedReferences_)
+        if (std::ranges::find(ids, reference.element) == ids.end())
+            ids.push_back(reference.element);
+    for (const auto id : ids)
+        if (std::ranges::find(elements_.values, id, &document::SketchElement::id) ==
+            elements_.values.end())
+            return false;
+    const auto named = [&ids](document::SketchElementId id) {
+        return std::ranges::find(ids, id) != ids.end();
+    };
+    std::erase_if(constraints_.values, [&named](const auto& constraint) {
+        return named(constraint.first.element) ||
+               (constraint.second.has_value() && named(constraint.second->element)) ||
+               (constraint.third.has_value() && named(constraint.third->element));
     });
-    elements_.values.erase(match);
+    std::erase_if(elements_.values,
+                  [&named](const document::SketchElement& element) { return named(element.id); });
     selectedElement_.reset();
     selectedReferences_.clear();
     clearPreview();

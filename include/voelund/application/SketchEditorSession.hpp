@@ -237,6 +237,9 @@ class SketchEditorSession final {
     void refreshSolve();
     // Ends an operation that added geometry: keeps it if it is valid and solves.
     [[nodiscard]] bool keepIfValid(Rollback& rollback);
+    // S08: transformed copies (mirror, pattern), SketchEditorOperations.cpp.
+    struct Copy;
+    [[nodiscard]] bool appendCopies(std::span<const Copy> copies);
 
     CadSession& session_;
     std::optional<document::FeatureId> supportFeature_;

@@ -28,6 +28,7 @@ add_library(voelund_application STATIC
     SketchEditorHistory.cpp
     SketchEditorIdCapacity.cpp
     SketchEditorOperations.cpp
+    SketchGeometryTransform.cpp
     SketchEditorPointConstraints.cpp
     SketchEditorRelations.cpp
     SketchEditorRectangle.cpp
