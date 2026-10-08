@@ -179,8 +179,12 @@ void SketchEditorToolController::showPanel() {
                 editor_->setPolygonSides(static_cast<int>(std::lround(value)));
             else if (id == "fillet_radius")
                 filletRadius_ = value;
-            else if (id == "offset_distance")
+            else if (id == "offset_distance") {
                 offsetDistance_ = value;
+                // S09: the preview is the geometry "Versetzen" adds.
+                static_cast<void>(editor_->previewOffset(value));
+                refreshPresentation();
+            }
             else if (id == "pattern_count")
                 patternCount_ = value;
             else if (id == "pattern_spacing")
@@ -360,6 +364,7 @@ bool SketchEditorToolController::selectElement(const viewport::SketchSelectionIn
         !editor_->selectNearestReference(document::SketchElementId{intent.elementId},
                                          {intent.localX, intent.localY}, intent.additive))
         return false;
+    editor_->clearPreview(); // S09: an offset preview belongs to the previous selection
     resetTranslationInputs();
     syncSelectedDimensionInputs();
     syncConstraintState();
@@ -380,6 +385,7 @@ void SketchEditorToolController::clearSelection() {
     if (!editor_)
         return;
     editor_->clearSelection();
+    editor_->clearPreview();
     resetTranslationInputs();
     syncSelectedDimensionInputs();
     syncConstraintState();

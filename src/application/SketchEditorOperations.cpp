@@ -1,4 +1,5 @@
 #include "SketchGeometryTransform.hpp"
+#include "SketchOffset.hpp"
 #include <voelund/application/SketchEditorSession.hpp>
 #include <voelund/document/IdCapacity.hpp>
 
@@ -213,34 +214,69 @@ bool SketchEditorSession::splitSelected() {
     return true;
 }
 
-bool SketchEditorSession::offsetSelected(double distance) {
-    if (!canAllocateIds(1, 0))
+// S09: the selection's geometry in selection order, for the offset.
+std::vector<SketchGeometry> SketchEditorSession::selectedGeometry() const {
+    std::vector<SketchGeometry> result;
+    for (const SketchElementId id : selectedIds(selectedReferences_, selectedElement_)) {
+        const auto match = std::ranges::find(elements_.values, id, &SketchElement::id);
+        if (match != elements_.values.end())
+            result.push_back(match->geometry);
+    }
+    return result;
+}
+
+std::optional<std::string> SketchEditorSession::offsetProblem(double distance) const {
+    if (!active_)
+        return "Versatz: Der Skizzeneditor ist nicht aktiv";
+    try {
+        static_cast<void>(detail::offsetGeometry(selectedGeometry(), distance));
+    } catch (const std::invalid_argument& error) {
+        return error.what();
+    }
+    return std::nullopt;
+}
+
+bool SketchEditorSession::previewOffset(double distance) {
+    clearPreview();
+    if (!active_)
         return false;
-    if (!active_ || !selectedElement_.has_value() || !std::isfinite(distance) || distance == 0.0)
-        return false;
-    const auto match = std::ranges::find(elements_.values, *selectedElement_, &SketchElement::id);
-    if (match == elements_.values.end())
-        return false;
-    SketchGeometry result = match->geometry;
-    if (auto* line = std::get_if<SketchLine>(&result)) {
-        const double dx = line->end.x - line->start.x;
-        const double dy = line->end.y - line->start.y;
-        const double length = std::hypot(dx, dy);
-        result = translatedGeometry(result, -dy * distance / length, dx * distance / length);
-    } else if (auto* circle = std::get_if<document::SketchCircle>(&result)) {
-        circle->radius += distance;
-    } else if (auto* arc = std::get_if<document::SketchArc>(&result)) {
-        arc->radius += distance;
-    } else if (auto* ellipse = std::get_if<document::SketchEllipse>(&result)) {
-        ellipse->majorRadius += distance;
-        ellipse->minorRadius += distance;
-    } else {
+    try {
+        preview_ = detail::offsetGeometry(selectedGeometry(), distance).elements;
+    } catch (const std::invalid_argument&) {
         return false;
     }
+    return true;
+}
+
+bool SketchEditorSession::offsetSelected(double distance) {
+    if (!active_ || !selectedElement_.has_value())
+        return false;
+    detail::SketchOffsetResult offset;
+    try {
+        offset = detail::offsetGeometry(selectedGeometry(), distance);
+    } catch (const std::invalid_argument&) {
+        return false;
+    }
+    if (!canAllocateIds(offset.elements.size(), offset.joints.size()))
+        return false;
+    const auto source = std::ranges::find(elements_.values, *selectedElement_, &SketchElement::id);
+    const bool construction = source != elements_.values.end() && source->construction;
     Rollback rollback(*this);
-    const SketchElementId id{elements_.nextId++};
-    elements_.values.push_back({id, std::move(result), match->construction});
-    selectedElement_ = id;
+    clearPreview();
+    // The same geometry the preview showed; joints keep the offset contour closed.
+    std::vector<SketchElementId> ids;
+    for (auto& geometry : offset.elements) {
+        ids.push_back(SketchElementId{elements_.nextId++});
+        elements_.values.push_back({ids.back(), std::move(geometry), construction});
+    }
+    for (const auto& joint : offset.joints)
+        constraints_.values.push_back({document::SketchConstraintId{constraints_.nextId++},
+                                       document::SketchConstraintKind::coincident,
+                                       {ids[joint.first], joint.firstPoint},
+                                       document::SketchGeometryReference{ids[joint.second],
+                                                                         joint.secondPoint}});
+    selectedElement_ = ids.front();
+    selectedReferences_.clear();
     return keepIfValid(rollback);
 }
 

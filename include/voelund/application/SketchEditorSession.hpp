@@ -9,6 +9,7 @@
 #include <voelund/features/SketchEvaluation.hpp>
 
 #include <optional>
+#include <string>
 #include <span>
 #include <vector>
 
@@ -110,6 +111,10 @@ class SketchEditorSession final {
     [[nodiscard]] bool splitSelected();
     [[nodiscard]] bool filletSelected(double radius);
     [[nodiscard]] bool offsetSelected(double distance);
+    // S09: why the selection cannot be offset by `distance`, or nothing when it can.
+    [[nodiscard]] std::optional<std::string> offsetProblem(double distance) const;
+    // S09: the offset offsetSelected would add, shown as preview; false clears the preview.
+    bool previewOffset(double distance);
     [[nodiscard]] bool mirrorSelected();
     [[nodiscard]] bool linearPatternSelected(int count, double spacing);
     [[nodiscard]] bool circularPatternSelected(int count, double angleDegrees);
@@ -238,6 +243,7 @@ class SketchEditorSession final {
     void refreshSolve();
     // Ends an operation that added geometry: keeps it if it is valid and solves.
     [[nodiscard]] bool keepIfValid(Rollback& rollback);
+    [[nodiscard]] std::vector<document::SketchGeometry> selectedGeometry() const;
     // S08: transformed copies (mirror, pattern), SketchEditorOperations.cpp.
     struct Copy;
     [[nodiscard]] bool appendCopies(std::span<const Copy> copies);

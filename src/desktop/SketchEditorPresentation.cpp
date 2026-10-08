@@ -15,6 +15,12 @@ namespace voelund::desktop {
 void SketchEditorToolController::applyEditOperation(const std::string& id) {
     if (!editor_)
         return;
+    if (id == "offset") {
+        if (const auto problem = editor_->offsetProblem(offsetDistance_)) {
+            statusChanged_(QString::fromStdString(*problem));
+            return;
+        }
+    }
     const bool changed = id == "trim"     ? editor_->trimSelected()
                          : id == "extend" ? editor_->extendSelected()
                          : id == "split"  ? editor_->splitSelected()
