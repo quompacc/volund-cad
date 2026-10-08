@@ -95,6 +95,18 @@ void MainWindow::createCommands() {
     services.canEditSketch = [this]() { return impl_->shell().canSketch(); };
     services.canEditExistingSketch = [this]() { return impl_->shell().canEditSketch(); };
     services.canExtrudeProfiles = [this]() { return impl_->shell().canExtrude(); };
+    // T04c: push/pull of the picked planar face.
+    services.pushPull = [this]() {
+        if (!impl_->selectedPlanarFace)
+            return;
+        if (impl_->sketchExtrusionTool->isActive())
+            impl_->sketchExtrusionTool->cancel();
+        impl_->pushPullTool->begin(*impl_->selectedPlanarFace);
+        syncShell();
+    };
+    services.canPushPull = [this]() {
+        return impl_->selectedPlanarFace.has_value() && impl_->shell().canSketch();
+    };
     services.canTransform = [this]() {
         const auto selected = impl_->session.selectedFeature();
         return selected.has_value() && impl_->session.canTransformFeature(*selected) &&

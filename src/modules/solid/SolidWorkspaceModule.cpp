@@ -67,6 +67,17 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                          simpleCommand(std::move(services.editSketch)),
                          std::move(services.canEditExistingSketch),
                          "Bearbeiten"});
+    if (services.pushPull)
+        commands_.push_back({"solid.modify.push_pull",
+                             "Drücken/Ziehen",
+                             "Gewählte ebene Fläche herausziehen oder in den Körper drücken",
+                             {},
+                             workspaces::CommandGroup::modify,
+                             true,
+                             false,
+                             simpleCommand(std::move(services.pushPull)),
+                             std::move(services.canPushPull),
+                             "Ziehen"});
 }
 
 std::string SolidWorkspaceModule::id() const { return "solid"; }

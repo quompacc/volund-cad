@@ -29,6 +29,7 @@ void CadViewport::cleanupGlResources() noexcept {
         impl_->selectionBand->hide();
         unsetCursor();
         impl_->manipulator.resetPresentation();
+        impl_->pushPull.reset();
         if (ownsCurrent && !impl_->context.IsNull())
             impl_->context->RemoveAll(false);
         impl_->sketchPresentation.clear({});

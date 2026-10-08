@@ -22,6 +22,7 @@ enum class ShellIcon {
     extrude,
     transform,
     editSketch,
+    pushPull,
     repair,
     eye,
     eyeOff,

@@ -269,6 +269,13 @@ class CadViewport final : public CadViewportBase {
     void setTransformToolEnabled(bool enabled);
     void setTransformTarget(std::optional<std::uint64_t> bodyId);
     void setTransformSnapping(bool enabled, double linearStep, double angularStep);
+    // T04c: push/pull on a picked planar face: a highlighted copy of the face with an arrow
+    // along its outward normal. The handler gets the distance while the arrow is dragged and
+    // once more when the drag ends; a typed distance moves copy and arrow.
+    void beginPushPull(const PlanarFaceSelection& face);
+    void setPushPullDistance(double distance);
+    void endPushPull();
+    void setPushPullHandler(std::function<void(double, bool)> handler);
     void setTheme(const ViewportTheme& theme);
     // U06: view state from the model tree; no document change. Index 0 = XY, 1 = XZ, 2 = YZ.
     void setBasePlaneVisibility(std::array<bool, 3> visible);

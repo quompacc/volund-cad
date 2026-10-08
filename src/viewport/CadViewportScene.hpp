@@ -9,6 +9,7 @@
 #include "PlanarFaceSelection.hpp"
 #include "SketchPresentation.hpp"
 #include "SketchSnapOverlay.hpp"
+#include "PushPullHandle.hpp"
 #include "TransformManipulator.hpp"
 #include "ViewportHighlightStyle.hpp"
 
@@ -58,7 +59,7 @@ namespace voelund::viewport {
 
 class CadViewportScene {
   public:
-    enum class Gesture { none, pan, rotate, moveAxis, selectBox };
+    enum class Gesture { none, pan, rotate, moveAxis, pushPull, selectBox };
 
     struct BodyPresentation final {
         std::uint64_t id;
@@ -261,6 +262,7 @@ class CadViewportScene {
     occ::handle<AIS_InteractiveContext> context;
     occ::handle<V3d_View> view;
     TransformManipulator manipulator;
+    PushPullHandle pushPull; // T04c
     SketchEditorInteraction sketchEditor;
     SketchPresentation sketchPresentation;
     SketchConstraintPresentation sketchConstraintPresentation;

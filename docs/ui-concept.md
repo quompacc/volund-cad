@@ -165,6 +165,7 @@ in U04 an dieselben IDs.
 | `solid.create.extrude_profiles` | Werkzeugleiste, Kontextleiste (Bereich, primär), Suche | SketchExtrusionToolController | Skizzenbereich gewählt | region_selection_acceptance |
 | `solid.modify.transform` | Werkzeugleiste („Bewegen“), Kontextleiste (Feature), M, Suche | Viewport-Gizmo | getrennter Körper gewählt | viewport_startup |
 | `solid.modify.edit_sketch` | Werkzeugleiste („Bearbeiten“), Kontextleiste (Skizze, primär), Suche | SketchEditorToolController | Skizze gewählt | support_binding_flow |
+| `solid.modify.push_pull` | Werkzeugleiste („Ziehen“), Kontextleiste (ebene Fläche), Suche | PushPullToolController (T04) | ebene Fläche gewählt, Modell aktuell | push_pull_panel |
 | `assistant.mcp` | Kopfzeile (Claude-Chip), Suche | McpAccess | immer; zeigt an/aus | mcp_shell |
 | `assistant.mcp_copy_command` | Kopfzeile (Claude-Chip), Suche | McpAccess | Zugang an | mcp_shell |
 | `assistant.mcp_new_token` | Kopfzeile (Claude-Chip), Suche | McpAccess | KI-Funktionen erlaubt | command_inventory |
@@ -190,12 +191,12 @@ Die Kontextleiste zeigt je Auswahl (`ContextCommands`):
 |---|---|---|
 | nichts | Ebene oder Fläche anklicken | Skizze, Quader, Zylinder |
 | Basisebene | XY-/XZ-/YZ-Ebene | **Skizze** |
-| ebene Fläche | Ebene Fläche | **Skizze** |
+| ebene Fläche | Ebene Fläche | **Skizze**, Drücken/Ziehen |
 | Skizzenbereich | Skizzenbereich | **Extrudieren**, Bearbeiten |
 | Skizze, Skizzenelement | Skizze | **Bearbeiten**, Referenzen reparieren |
 | Feature | Quader/Zylinder/Extrusion | Bewegen, Zylinder |
 | Werkzeug Verschieben/Drehen | Verschieben/Drehen | Fangen, Bewegen, Fangwerte |
-| Skizzeneditor, Extrusion | – (Leiste aus; das Panel trägt die Bedienung) | – |
+| Skizzeneditor, Extrusion, Drücken/Ziehen | – (Leiste aus; das Panel trägt die Bedienung) | – |
 
 Bereinigt in U01:
 

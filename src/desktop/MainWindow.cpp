@@ -113,6 +113,9 @@ void MainWindow::createToolPanel() {
     impl_->sketchExtrusionTool = std::make_unique<SketchExtrusionToolController>(
         impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
         [this](const QString& message) { statusBar()->showMessage(message); });
+    impl_->pushPullTool = std::make_unique<PushPullToolController>(
+        impl_->session, *impl_->viewport, *impl_->toolPanel, [this]() { refreshScene(); },
+        [this](const QString& message) { statusBar()->showMessage(message); });
 }
 
 void MainWindow::createPropertiesPanel() {
@@ -211,6 +214,8 @@ void MainWindow::connectInteractions() {
     impl_->viewport->setBodySelectionHandler([this](std::uint64_t id) { selectFeature(id); });
     impl_->viewport->setPlanarFaceSelectionHandler(
         [this](const viewport::PlanarFaceSelection& selection) {
+            if (impl_->pushPullTool->isActive())
+                return; // T04c: the face of a running push/pull stays.
             // T03: while the extrusion waits for its end face, the pick goes to the tool.
             if (impl_->sketchExtrusionTool->awaitsEndFace()) {
                 impl_->sketchExtrusionTool->pickEndFace(document::FeatureId{selection.bodyId},

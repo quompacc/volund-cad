@@ -238,9 +238,14 @@ CommandResult CadSession::pushPullFace(document::FeatureId support,
     } catch (const std::invalid_argument& error) {
         return CommandResult::invalidInput(error.what());
     }
+    // Named after what it does (user decision 2026-10-08): "Ziehen 2", "Drücken 1".
+    const bool pull = distance > 0.0;
     std::size_t sequence = 1;
     for (const document::FeatureDescriptor& feature : document_.features())
-        if (feature.kind == document::FeatureKind::extrusion)
+        if (feature.kind == document::FeatureKind::extrusion &&
+            document_.extrusionParameters(feature.id).faceProfile &&
+            (document_.extrusionParameters(feature.id).operation ==
+             document::ExtrusionOperation::join) == pull)
             ++sequence;
     document::ExtrusionParameters parameters{std::abs(distance), {}};
     parameters.operation =
@@ -250,8 +255,8 @@ CommandResult CadSession::pushPullFace(document::FeatureId support,
     document::DocumentTransaction transaction(document_);
     auto& candidate = transaction.edit();
     const auto input = detail::prepareInput([&] {
-        return candidate.addFaceExtrusionFeature("Extrusion " + std::to_string(sequence),
-                                                 parameters);
+        return candidate.addFaceExtrusionFeature(
+            (pull ? "Ziehen " : "Drücken ") + std::to_string(sequence), parameters);
     });
     if (!input.value)
         return CommandResult::invalidInput(input.diagnostic);

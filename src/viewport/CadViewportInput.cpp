@@ -51,6 +51,9 @@ void CadViewport::mouseMoveEvent(QMouseEvent* event) {
         } else if (impl_->gesture == Impl::Gesture::moveAxis) {
             impl_->manipulator.update(position.x(), position.y(), impl_->view,
                                       event->modifiers().testFlag(Qt::ControlModifier));
+        } else if (impl_->gesture == Impl::Gesture::pushPull) {
+            impl_->pushPull.update(position.x(), position.y(), impl_->view,
+                                   event->modifiers().testFlag(Qt::ControlModifier));
         } else if (impl_->gesture != Impl::Gesture::selectBox) {
             impl_->context->MoveTo(position.x(), position.y(), impl_->view, false);
         }
@@ -111,6 +114,12 @@ void CadViewport::mousePressEvent(QMouseEvent* event) {
             }
             const occ::handle<AIS_InteractiveObject> detected =
                 impl_->context->DetectedInteractive();
+            if (impl_->pushPull.matches(detected) && impl_->pushPull.hasActiveMode()) {
+                impl_->gesture = Impl::Gesture::pushPull;
+                impl_->pushPull.start(position.x(), position.y(), impl_->view);
+                setCursor(Qt::ClosedHandCursor);
+                return;
+            }
             if (impl_->manipulator.matches(detected) && impl_->manipulator.hasActiveMode()) {
                 impl_->gesture = Impl::Gesture::moveAxis;
                 impl_->manipulator.start(position.x(), position.y(), impl_->view);
@@ -147,6 +156,14 @@ void CadViewport::mouseDoubleClickEvent(QMouseEvent* event) {
 
 void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
     performViewportOperation(*this, impl_->ready, [&] {
+        if (impl_->ready && event->button() == Qt::LeftButton &&
+            impl_->gesture == Impl::Gesture::pushPull) {
+            impl_->pushPull.finish();
+            impl_->gesture = Impl::Gesture::none;
+            unsetCursor();
+            update();
+            return;
+        }
         if (impl_->ready && event->button() == Qt::LeftButton &&
             impl_->gesture == Impl::Gesture::moveAxis) {
             impl_->manipulator.finish();

@@ -31,6 +31,7 @@ list(APPEND voelund_viewport_sources
     SketchBoxSelection.cpp
     SketchPresentation.cpp
     TransformManipulator.cpp
+    PushPullHandle.cpp
     ViewportHighlightStyle.cpp
 )
 

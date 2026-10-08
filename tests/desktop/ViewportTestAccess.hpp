@@ -52,6 +52,14 @@ class ViewportTestAccess {
                v.impl_->selectedSketchElements == std::vector<std::uint64_t>{7} &&
                v.displayedSketchElementCount() == 1 && v.displayedSketchConstraintCount() == 1;
     }
+    // T04c: the pointer rests on the push/pull arrow (after a MouseMove).
+    static bool pushPullArrowHovered(CadViewport& v) {
+        const auto& context = v.impl_->context;
+        return context->HasDetected() && v.impl_->pushPull.matches(context->DetectedInteractive()) &&
+               v.impl_->pushPull.hasActiveMode();
+    }
+    static std::size_t bodyCount(CadViewport& v) { return v.impl_->presentations.size(); }
+    static double pushPullArrowZ(CadViewport& v) { return v.impl_->pushPull.arrowDirection().Z(); }
     static QPoint project(CadViewport& v, double x, double y, double z) {
         int px = 0, py = 0;
         v.impl_->view->Convert(x, y, z, px, py);

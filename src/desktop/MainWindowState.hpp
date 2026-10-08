@@ -9,6 +9,7 @@
 #include "FloatingCard.hpp"
 #include "ShellHeader.hpp"
 #include "ShellState.hpp"
+#include "PushPullToolController.hpp"
 #include "SketchEditorToolController.hpp"
 #include "SketchExtrusionToolController.hpp"
 #include "FeatureErrorCard.hpp"
@@ -46,8 +47,9 @@ class MainWindow::Impl final {
         inputs.planarFace = selectedPlanarFace.has_value();
         if (sketchEditorTool && sketchEditorTool->isActive())
             inputs.tool = ShellTool::sketchEditor;
-        else if (sketchExtrusionTool && sketchExtrusionTool->isActive())
-            inputs.tool = ShellTool::extrusion;
+        else if ((sketchExtrusionTool && sketchExtrusionTool->isActive()) ||
+                 (pushPullTool && pushPullTool->isActive()))
+            inputs.tool = ShellTool::extrusion; // Its panel carries the controls (T04c).
         else if (transformAction && transformAction->isChecked())
             inputs.tool = ShellTool::transform;
         return projectShell(session, inputs);
@@ -67,6 +69,7 @@ class MainWindow::Impl final {
     ToolPanelHost* toolPanel{nullptr};
     std::unique_ptr<SketchEditorToolController> sketchEditorTool;
     std::unique_ptr<SketchExtrusionToolController> sketchExtrusionTool;
+    std::unique_ptr<PushPullToolController> pushPullTool; // T04c
     ShellHeader* header{nullptr};
     ViewCube* viewCube{nullptr};
     QAction* themeAction{nullptr};

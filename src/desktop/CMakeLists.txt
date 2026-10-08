@@ -37,6 +37,7 @@ add_library(
     SketchIcons.cpp
     SketchEditorStart.cpp
     SketchExtrusionToolController.cpp
+    PushPullToolController.cpp
     ShellHeader.cpp
     ShellIcons.cpp
     ShellState.cpp

@@ -85,7 +85,8 @@ void surfaces() {
         railIds.insert(id(action));
     const std::set<std::string> solid{"solid.create.box",       "solid.create.cylinder",
                                       "solid.create.sketch",    "solid.create.extrude_profiles",
-                                      "solid.modify.transform", "solid.modify.edit_sketch"};
+                                      "solid.modify.transform", "solid.modify.edit_sketch",
+                                      "solid.modify.push_pull"};
     require(railIds == solid, "The rail shows every solid command");
     require(!command(window, "solid.create.sketch")->isEnabled(),
             "Unfitting commands stay visible but disabled");

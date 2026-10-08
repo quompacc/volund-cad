@@ -258,9 +258,44 @@ void CadViewport::setTransformToolEnabled(bool enabled) {
     });
 }
 
+void CadViewport::beginPushPull(const PlanarFaceSelection& face) {
+    performViewportOperation(*this, impl_->ready, [&] {
+        if (!impl_->ready)
+            return;
+        impl_->pushPull.show(impl_->context, face.selectedFace,
+                             gp_Dir(face.normalX, face.normalY, face.normalZ),
+                             occtColor(impl_->theme.selection));
+        update();
+    });
+}
+
+void CadViewport::setPushPullDistance(double distance) {
+    performViewportOperation(*this, impl_->ready, [&] {
+        if (!impl_->ready)
+            return;
+        impl_->pushPull.setDistance(distance);
+        update();
+    });
+}
+
+void CadViewport::endPushPull() {
+    performViewportOperation(*this, impl_->ready, [&] {
+        if (impl_->gesture == Impl::Gesture::pushPull)
+            impl_->gesture = Impl::Gesture::none;
+        impl_->pushPull.hide();
+        if (impl_->ready)
+            update();
+    });
+}
+
+void CadViewport::setPushPullHandler(std::function<void(double, bool)> handler) {
+    impl_->pushPull.setHandler(std::move(handler));
+}
+
 void CadViewport::setTransformSnapping(bool enabled, double linearStep, double angularStep) {
     performViewportOperation(*this, impl_->ready, [&] {
         impl_->manipulator.setSnapping(enabled, linearStep, angularStep);
+        impl_->pushPull.setSnapping(enabled, linearStep);
         impl_->sketchEditor.setSnapping(enabled, linearStep);
     });
 }

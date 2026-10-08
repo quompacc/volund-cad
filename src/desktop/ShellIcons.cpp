@@ -118,6 +118,17 @@ void draw(QPainter& painter, ShellIcon icon, const QColor& ink, const QColor& ac
         painter.drawLine(QPointF(18, 9), QPointF(21, 12));
         painter.drawLine(QPointF(18, 15), QPointF(21, 12));
         break;
+    case ShellIcon::pushPull:
+        // A face with an arrow out of it and one into it (T04c).
+        painter.drawLine(QPointF(3, 15), QPointF(15, 15));
+        painter.drawLine(QPointF(15, 15), QPointF(21, 9));
+        painter.drawLine(QPointF(21, 9), QPointF(9, 9));
+        painter.drawLine(QPointF(9, 9), QPointF(3, 15));
+        painter.drawLine(QPointF(12, 12), QPointF(12, 2));
+        painter.drawLine(QPointF(9, 5), QPointF(12, 2));
+        painter.drawLine(QPointF(15, 5), QPointF(12, 2));
+        painter.drawLine(QPointF(12, 15), QPointF(12, 22));
+        break;
     case ShellIcon::editSketch:
         painter.drawRect(QRectF(3.5, 6.5, 12, 12));
         painter.drawLine(QPointF(11, 15), QPointF(20, 6));

@@ -63,7 +63,7 @@ ContextCommands contextCommands(const ShellState& state) {
         break;
     case ShellSelection::planarFace:
         result.title = QObject::tr("Ebene Fläche");
-        result.commands = {"solid.create.sketch"};
+        result.commands = {"solid.create.sketch", "solid.modify.push_pull"};
         result.primary = "solid.create.sketch";
         break;
     case ShellSelection::sketchRegion:

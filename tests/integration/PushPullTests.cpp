@@ -57,6 +57,8 @@ void pushAndPull() {
     const auto end = face(session, pulled, cap(pulled)); // its own stable origin
     const auto again = committed(session.pushPullFace(pulled, end, 3));
     require(near(volume(session), 1800), "The end face can be pulled again");
+    require(session.features().back().name == "Ziehen 2",
+            "A pull is named after what it does");
     const auto pushed = committed(session.pushPullFace(again, face(session, again, side(box, kernel::PrimitiveRole::boxNegativeX)), -2));
     // Coplanar faces of a join stay separate faces: the box side is still 10 x 10.
     require(near(volume(session), 1800 - 2 * 10 * 10) && session.validBodies().size() == 1,

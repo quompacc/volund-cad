@@ -21,6 +21,9 @@ struct SolidCommandServices final {
     std::function<bool()> canTransform;
     // Optional; primitives are always available when empty (U05 blocks them during a tool).
     std::function<bool()> canAddBox{};
+    // T04c: push/pull of the picked planar face; absent services publish no command.
+    std::function<void()> pushPull{};
+    std::function<bool()> canPushPull{};
 };
 
 class SolidWorkspaceModule final : public workspaces::WorkspaceModule {
