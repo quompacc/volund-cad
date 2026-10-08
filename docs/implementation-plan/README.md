@@ -3,7 +3,7 @@
 ## Aktueller Stand – 4. Oktober 2026
 
 [`packets.json`](packets.json) ist die einzige Statusquelle; dieser Abschnitt fasst
-sie nur zusammen. **136 Pakete, 67 abgeschlossen, 69 offen** (68 geplant,
+sie nur zusammen. **136 Pakete, 68 abgeschlossen, 68 offen** (67 geplant,
 A02 mit Designbedarf). Teilblöcke wie D12a–e zählen nicht als Hauptpakete; die
 Paketanzahl ist kein Maß für Restaufwand oder Fertigstellungszeit.
 
