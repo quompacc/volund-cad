@@ -2046,12 +2046,14 @@
       ],
       "acceptance": "Line/Line und freigegebene weitere Kombinationen liefern richtige Stücke; Unsupported-Kurve wird vor Mutation abgewiesen. Folgeconstraints werden korrekt erhalten oder lokalisiert reparaturbedürftig. Undo ist ein Schritt.",
       "boundary": "Keine Dokumentation als allgemeines Trim/Extend, solange nur Linien unterstützt sind.",
-      "status": "planned",
+      "status": "done",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/S10.md"
+      ],
+      "completedCommit": "f7b21cc"
     },
     {
       "id": "S11",

@@ -9,10 +9,10 @@ Git-Historie dieser Datei.
 ## Stand des Repos
 
 - Branch `ux01`. `main` folgt nach jeder grünen Abnahme per Fast-Forward.
-- Letztes Paket: S09 (Code `35a040c`, CI-Lauf 481). Der Abnahme-Commit enthält diese
+- Letztes Paket: S10 (Code `f7b21cc`, CI-Lauf 484). Der Abnahme-Commit enthält diese
   Datei. Vor dem Weiterarbeiten prüfen, ob `main` auf ihm steht; sonst seinen CI-Lauf
   prüfen und `main` nachziehen (siehe Arbeitsregeln).
-- **Windows:** 135 Tests. **Fedora (GCC, ohne Desktop):** 98. Desktop-Tests laufen in der
+- **Windows:** 137 Tests. **Fedora (GCC, ohne Desktop):** 99. Desktop-Tests laufen in der
   CI.
 - **Schema der Dokumente:** unverändert 10.
 
@@ -25,6 +25,7 @@ Git-Historie dieser Datei.
 | S04 | Fangmatrix für Linie/Polylinie/Rechteck; keine überflüssigen Beziehungen; Schalter „Beziehungen: Automatisch / Keine“ im Skizzenpanel | [S04](implementation-plan/evidence/S04.md) |
 | S05 | Kurvenbeziehungen nur für unterstützte Paare; keine angekündigte Tangente am Bogenende auf einer Linie; entartete Picks mit genauer Meldung | [S05](implementation-plan/evidence/S05.md) |
 | S09 | Exakter Versatz für Elemente und Konturen, Vorschau = Übernahme, Ellipse als nicht unterstützt gemeldet | [S09](implementation-plan/evidence/S09.md) |
+| S10 | Stutzen/Verlängern/Teilen für Linie, Bogen (Stutzen auch Kreis); Stück zwischen zwei Schnitten; entfernte Bedingungen in der Statuszeile; neue Enden an die Schnittkante gebunden | [S10](implementation-plan/evidence/S10.md) |
 
 ## Nutzerentscheidungen dieses Blocks
 
@@ -41,21 +42,16 @@ Git-Historie dieser Datei.
 
 ## Nächste freie Pakete
 
-- **S10** Stutzen, Verlängern, Teilen mit klarer Werkzeugmatrix (G2). Nächstes Paket.
-- **S06** Polygon und Langloch mit verbindlicher Semantik (G2).
+- **S06** Polygon und Langloch mit verbindlicher Semantik (G2). Nächstes Paket.
 - **S07** Bedingungsbeschriftungen, Freiheitsgrade und Maßbindung vereinheitlichen (G2).
 - **T05** Koplanare Flächen verschmelzen (G3). Laut Nutzer „später“; nicht ohne Rückfrage.
 - **A02** braucht weiterhin Designarbeit.
 
-Hinweise für S10 aus diesem Block:
+Hinweise aus S10 für S11 (Verrundung, braucht S07):
 
-- `trimSelected`, `extendSelected`, `splitSelected` stehen in
-  `src/application/SketchEditorOperations.cpp` (Datei nahe 600 Zeilen; Neues in eigene
-  Dateien, wie `SketchGeometryTransform.cpp` und `SketchOffset.cpp`).
-- Die Auswahl: `selectedIds(selectedReferences_, selectedElement_)` liefert die Elemente in
-  Auswahlreihenfolge. Ein Klick wählt Element + nächsten Punkt, Strg erweitert.
-- Bedingungen, die gelöschte oder geteilte Elemente nennen, müssen erhalten, umgehängt oder
-  sichtbar reparaturbedürftig werden (Paketgrenze).
+- Die Regeln für Bedingungen bei Kürzen/Teilen stehen in
+  `src/application/SketchEditorCurveEdit.cpp`; die Verrundung kann sie übernehmen.
+- Schnitte Linie/Kreis/Bogen: `src/application/SketchCurveEditPlan.cpp`.
 
 ## Offene Punkte
 
@@ -68,6 +64,8 @@ Hinweise für S10 aus diesem Block:
   - Die Vorschau kündigt „waagrecht“ auch an, wenn die Beziehung als überflüssig entfällt;
     die Linie bleibt über die Fänge waagrecht (S04).
   - `sketch_on_face` über MCP nutzt den Flächenrahmen, nicht den aufrechten Rahmen (S03).
+  - Ellipsen schneiden beim Stutzen/Verlängern nicht; ein Ende im Inneren eines Bogens wird
+    nicht gebunden, weil es „Punkt auf Bogen“ im Format nicht gibt (S10).
 - **Unverändert offen:** Spiegelzellen per RegionId, PAR02 (Parameter-UI), GitHub-Spiegel
   nicht aktuell (nur auf Wunsch), Ursache von CI-Lauf 453.
 
