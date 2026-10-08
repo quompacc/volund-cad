@@ -149,3 +149,16 @@ Schritte:
   `linux-desktop`. Der vorhandene Proxmox-Runner ist ein Docker-Runner mit Ubuntu-Labels
   und taugt dafür nicht direkt (Qt 6.11, OCCT 7.9.3 nötig). Nutzer: „morgen entscheiden,
   laufendes System nicht anfassen“.
+
+## T05 – Koplanare Flächen nach Drücken/Ziehen verschmelzen
+
+Nutzerentscheidung vom 08.10.2026: „später als eigenes Paket“.
+
+- **Anlass (T04):** Nach dem Vereinigen bleiben koplanare Flächen getrennt. An den Seiten
+  steht eine Nahtlinie, und Drücken der Quaderseite wirkt nur auf die ursprüngliche Seite.
+  SketchUp und Fusion zeigen hier eine Fläche.
+- **Ziel:** Koplanare, angrenzende Flächen eines Körpers werden nach einer Boolean-Operation
+  zu einer Fläche. Die verschmolzene Fläche behält eine stabile, eindeutige Herkunft, damit
+  Skizzen und Drücken/Ziehen darauf bestehen bleiben.
+- **Dazu gehört:** Kanten einer gezogenen Deckfläche bekommen Namen, damit die Seiten
+  weiterer Züge benannt sind.

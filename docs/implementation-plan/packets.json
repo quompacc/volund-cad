@@ -4,8 +4,8 @@
   "auditedCommit": "1b78229",
   "status": "implementation-started",
   "counts": {
-    "total": 135,
-    "throughG4": 105,
+    "total": 136,
+    "throughG4": 106,
     "g5": 30
   },
   "globalGates": [
@@ -80,6 +80,7 @@
     "T02",
     "T03",
     "T04",
+    "T05",
     "U07",
     "U08",
     "U09",
@@ -4170,6 +4171,33 @@
       ],
       "acceptance": "Fläche eines Quaders und einer Extrusion (Deck-, Seiten-, Bodenfläche) ziehen und drücken: ein Körper, Volumen stimmt; Ergebnis erneut ziehbar; Strecke nachträglich änderbar; folgt der Fläche bei Änderung des Körpers; Undo und Speichern/Öffnen erhalten alles; über MCP gleich.",
       "boundary": "Nutzerentscheidung 2026-10-07: Fläche als Profil (ein Feature), Pfeil ziehen + Maßfeld, als nächstes Paket; Zuschnitt in T-plan.md. Nur ebene Flächen.",
+      "status": "done",
+      "gate": "G3",
+      "chapter": "05-solid-historie.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [
+        "docs/implementation-plan/evidence/T04.md"
+      ],
+      "completedCommit": "0679b0c"
+    },
+    {
+      "id": "T05",
+      "title": "Koplanare Flächen nach Drücken/Ziehen verschmelzen",
+      "deps": [
+        "T04"
+      ],
+      "files": [
+        "src/features/FaceExtrusionEvaluation.cpp",
+        "src/features/SupportProvenance.cpp",
+        "src/features/ContourProvenance.cpp"
+      ],
+      "steps": [
+        "Koplanare, angrenzende Flächen eines Körpers nach Boolean-Operationen zu einer Fläche verschmelzen.",
+        "Die verschmolzene Fläche behält eine stabile, eindeutige Herkunft; Skizzen und Drücken/Ziehen darauf bleiben gültig.",
+        "Kanten einer gezogenen Deckfläche benennen, damit die Seiten weiterer Züge benannt sind."
+      ],
+      "acceptance": "Nach dem Ziehen der Quaderoberseite ist jede Seite eine Fläche ohne Naht; Drücken dieser Seite wirkt auf die ganze Seite; Seiten eines zweiten Zugs lassen sich drücken/ziehen; bestehende Bindungen bleiben gültig.",
+      "boundary": "Nutzerentscheidung 2026-10-08: später als eigenes Paket nach T04; Zuschnitt in T-plan.md.",
       "status": "planned",
       "gate": "G3",
       "chapter": "05-solid-historie.md",
@@ -4227,5 +4255,5 @@
     "statusSource": "packets.json ist die einzige Statusquelle; README und Statusseiten verweisen nur darauf und nennen keine Testzahlen.",
     "frozen": "G5 einschließlich AI02 beginnt erst nach G3-Abnahme."
   },
-  "updatedDate": "2026-10-07"
+  "updatedDate": "2026-10-08"
 }
