@@ -1,5 +1,7 @@
 # Fortsetzung – 7. Oktober 2026
 
+> **Abgelöst durch [session-checkpoint-2026-10-08.md](session-checkpoint-2026-10-08.md).**
+
 **Einstieg für die nächste Sitzung:** Dieses Dokument zuerst lesen. Arbeitsregeln,
 Werkzeuge und Zugänge stehen unverändert in
 [session-checkpoint-2026-10-04.md](session-checkpoint-2026-10-04.md).
