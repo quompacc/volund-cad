@@ -2019,12 +2019,14 @@
       ],
       "acceptance": "Linie hält Normalabstand d, Kreis Radius r±d, kollabierender Innenoffset wird abgewiesen. Ellipse wird ausdrücklich als nicht unterstützt erklärt. Preview und Commit geometrisch identisch.",
       "boundary": "Keine neue Spline-Repräsentation in diesem Paket; späteres Surface-/Curve-Paket darf den Umfang erweitern.",
-      "status": "planned",
+      "status": "done",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/S09.md"
+      ],
+      "completedCommit": "35a040c"
     },
     {
       "id": "S10",
