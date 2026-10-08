@@ -1882,12 +1882,14 @@
       ],
       "acceptance": "Jeder Snaptyp an erster und zweiter Ecke geprüft; Checkbox aus erzeugt keine automatische Beziehung. Entfernte Projektion wird Referenzfehler statt falscher neuer Bindung.",
       "boundary": "Keine UI-Vorschau, die andere Constraints verspricht als anschließend gespeichert werden.",
-      "status": "planned",
+      "status": "done",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/S04.md"
+      ],
+      "completedCommit": "0e314a7"
     },
     {
       "id": "S05",
