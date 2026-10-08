@@ -1823,12 +1823,14 @@
       ],
       "acceptance": "Leeres Dokument→XY→Rechteck→OK funktioniert ohne Boxtrick. XZ/YZ und rotierte Stützfläche zeigen richtige Achsen; Cancel erzeugt kein Feature. A-UI-01 Skizzengrundlage besteht.",
       "boundary": "Keine allgemeine gekrümmte Supportfläche.",
-      "status": "planned",
+      "status": "done",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/S03.md"
+      ],
+      "completedCommit": "9cfb33d"
     },
     {
       "id": "S04a",
