@@ -8,6 +8,7 @@
 #include <voelund/viewport/CadViewport.hpp>
 
 #include <QAction>
+#include <QSignalBlocker>
 #include <QStatusBar>
 #include <QToolBar>
 
@@ -20,6 +21,61 @@ void MainWindow::syncVisibility() {
     impl_->viewport->setBodies(makeSceneBodies(impl_->session, impl_->visibility.hiddenBodies));
     impl_->viewport->setBasePlaneVisibility(impl_->visibility.visiblePlanes(hasBodies));
     impl_->viewport->setGridVisible(impl_->visibility.grid);
+    syncViewSwitches();
+}
+
+// S13: four view switches as commands; none of them touches the document (no undo, no
+// modified state). The grid also follows the model tree eye; the sketch switches mirror the
+// sketch panel's choices.
+void MainWindow::createViewSwitches() {
+    impl_->gridAction = new QAction(tr("Raster anzeigen"), this);
+    impl_->gridAction->setCheckable(true);
+    impl_->gridAction->setChecked(impl_->visibility.grid);
+    setCommandId(*impl_->gridAction, "view.grid");
+    addAction(impl_->gridAction);
+    connect(impl_->gridAction, &QAction::toggled, this, [this](bool on) {
+        if (impl_->visibility.grid == on)
+            return;
+        impl_->visibility.grid = on;
+        syncVisibility();
+        syncModelTree();
+    });
+    impl_->sketchEditorTool->setGridSwitch([this] { return impl_->visibility.grid; },
+                                           [this](bool on) { impl_->gridAction->setChecked(on); });
+    const std::pair<const char*, QString> switches[] = {
+        {"show_dimensions", tr("Bemaßungen anzeigen")},
+        {"show_projected", tr("Projizierte Geometrie anzeigen")},
+        {"relations", tr("Beziehungen automatisch setzen")}};
+    for (const auto& [id, text] : switches) {
+        auto* action = new QAction(text, this);
+        action->setCheckable(true);
+        setCommandId(*action, std::string(id) == "relations"
+                                  ? "sketch.auto_relations"
+                                  : ("sketch." + std::string(id)).c_str());
+        addAction(action);
+        connect(action, &QAction::triggered, this, [this, key = std::string(id)](bool on) {
+            impl_->sketchEditorTool->setViewSwitch(key, on);
+        });
+        impl_->sketchSwitchActions.emplace_back(id, action);
+    }
+    impl_->sketchEditorTool->setSwitchHandler([this] { syncViewSwitches(); });
+    syncViewSwitches();
+}
+
+void MainWindow::syncViewSwitches() {
+    if (impl_->gridAction == nullptr || !impl_->sketchEditorTool)
+        return;
+    {
+        const QSignalBlocker blocker(impl_->gridAction);
+        impl_->gridAction->setChecked(impl_->visibility.grid);
+    }
+    impl_->sketchEditorTool->syncGridChoice();
+    const bool sketching = impl_->sketchEditorTool->isActive();
+    for (const auto& [id, action] : impl_->sketchSwitchActions) {
+        const QSignalBlocker blocker(action);
+        action->setEnabled(sketching);
+        action->setChecked(impl_->sketchEditorTool->viewSwitch(id));
+    }
 }
 
 void MainWindow::toggleVisibility(int kind, std::uint64_t id) {

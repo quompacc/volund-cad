@@ -50,6 +50,15 @@ class SketchEditorToolController final {
     // S13: box selection and a relation picked at its label.
     void selectElements(const std::vector<std::uint64_t>& ids, bool additive);
     void selectConstraint(std::uint64_t id);
+    // S13: the four switches ("relations", "show_grid", "show_dimensions",
+    // "show_projected") from the panel or a command; the grid belongs to the window.
+    void setGridSwitch(std::function<bool()> shown, std::function<void(bool)> show);
+    // Called after a switch changed, so the window keeps its commands in step.
+    void setSwitchHandler(std::function<void()> handler) { switchChanged_ = std::move(handler); }
+    void setViewSwitch(const std::string& id, bool on);
+    [[nodiscard]] bool viewSwitch(const std::string& id) const;
+    // The panel's grid choice follows a change from the model tree.
+    void syncGridChoice();
     void editConstraint(std::uint64_t constraintId);
     [[nodiscard]] bool isActive() const noexcept;
     void cancel();
@@ -80,6 +89,7 @@ class SketchEditorToolController final {
     // S13: Cancel asks before discarding changes; Enter ends a polyline.
     void requestCancel();
     bool removeSelectedConstraint();
+    void applyViewSwitch(const std::string& id, bool on);
     void finishStep();
     void open(std::unique_ptr<application::SketchEditorSession> editor,
               const viewport::PlanarFaceSelection& drawing,
@@ -107,6 +117,11 @@ class SketchEditorToolController final {
     int toolIndex_{1};
     bool editing_{false};
     bool automaticRelations_{true}; // S04: kept for the next sketch
+    bool showDimensions_{true};     // S13: view switches, kept for the next sketch
+    bool showProjected_{true};
+    std::function<bool()> gridShown_;
+    std::function<void(bool)> showGrid_;
+    std::function<void()> switchChanged_;
     // L05b: how the open editor was started, for its recovery draft.
     std::optional<document::FeatureId> draftEdited_;
     std::optional<document::FeatureId> draftSupport_;

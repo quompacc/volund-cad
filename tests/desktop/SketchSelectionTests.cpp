@@ -85,22 +85,23 @@ void run() {
     click(*viewport, -20, -10);
     click(*viewport, 20, 10);
     command(window, "sketch.tool.circle").trigger();
-    click(*viewport, 40, 0);
-    click(*viewport, 46, 0);
+    // Every box starts far from any curve, so the press never picks an element.
+    click(*viewport, 60, 0);
+    click(*viewport, 75, 0);
     command(window, "sketch.tool.select").trigger();
     settle();
 
     box(*viewport, -26, -16, 26, 16);
     require(selectedCount(*viewport) == 4, "Window: the four sides, not the circle (" +
                                                std::to_string(selectedCount(*viewport)) + ")");
-    box(*viewport, 37, -3, 43, 3);
+    box(*viewport, 56, -4, 64, 4);
     require(selectedCount(*viewport) == 0,
             "A window around the circle's center alone takes nothing and clears");
-    box(*viewport, 47, 1, 45, -1);
+    box(*viewport, 80, 6, 70, -6);
     require(selectedCount(*viewport) == 1, "Crossing: a box touching the circle's curve");
     box(*viewport, -26, -16, 26, 16, Qt::ControlModifier);
     require(selectedCount(*viewport) == 5, "Ctrl adds the sides");
-    box(*viewport, 60, 30, 70, 40);
+    box(*viewport, 90, 30, 100, 40);
     require(selectedCount(*viewport) == 0, "An empty box clears the selection");
 
     // The bottom side's [H] label sits on its middle; a click there selects the side.

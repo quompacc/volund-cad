@@ -109,7 +109,14 @@ void SketchEditorToolController::showPanel() {
          {"relations",
           QObject::tr("Beziehungen"),
           {QObject::tr("Automatisch"), QObject::tr("Keine")},
-          automaticRelations_ ? 0 : 1}},
+          automaticRelations_ ? 0 : 1},
+         // S13: view switches; they change no document state.
+         {"show_grid", QObject::tr("Raster"), {QObject::tr("Ein"), QObject::tr("Aus")},
+          gridShown_ && gridShown_() ? 0 : 1},
+         {"show_dimensions", QObject::tr("Bemaßungen"), {QObject::tr("Ein"), QObject::tr("Aus")},
+          showDimensions_ ? 0 : 1},
+         {"show_projected", QObject::tr("Projizierte Geometrie"),
+          {QObject::tr("Ein"), QObject::tr("Aus")}, showProjected_ ? 0 : 1}},
         {{"horizontal", QObject::tr("Linie waagrecht festlegen"), QObject::tr("Linien")},
          {"vertical", QObject::tr("Linie senkrecht festlegen"), QObject::tr("Linien")},
          {"free", QObject::tr("Richtungsbedingung der Linie entfernen"), QObject::tr("Linien")},
@@ -211,10 +218,8 @@ void SketchEditorToolController::showPanel() {
         [this](const std::string& id, int index) {
             if (id == "tool")
                 setTool(index);
-            else if (id == "relations") {
-                automaticRelations_ = index == 0;
-                viewport_.setSketchAutomaticRelations(automaticRelations_);
-            }
+            else
+                applyViewSwitch(id, index == 0);
         },
         [this](const std::string& id) {
             if (id == "horizontal") {
@@ -310,6 +315,7 @@ void SketchEditorToolController::setTool(int index) {
         return;
     editor_->setTool(applicationTool(index));
     toolIndex_ = index;
+    problemElements_.clear(); // S13: red marks belong to the last refused edit
     viewport_.setSketchEditorTool(viewportTool(index));
     syncSelectedDimensionInputs();
     refreshPresentation();
@@ -323,43 +329,6 @@ void SketchEditorToolController::setTool(int index) {
             ? QObject::tr("Rechteck aus dem Mittelpunkt: Mittelpunkt, dann eine Ecke")
             : QObject::tr("Skizzenwerkzeug gewechselt");
     statusChanged_(guidance);
-}
-
-void SketchEditorToolController::stepBack() {
-    if (!editor_)
-        return;
-    // U09: Escape during a drag restores the state before it and keeps the editor open.
-    if (editor_->isDragging()) {
-        static_cast<void>(viewport_.cancelSketchElementDrag());
-        editor_->cancelDrag();
-        translationX_ = dragBaseX_;
-        translationY_ = dragBaseY_;
-        panel_.setLengthValue("translation_x", translationX_);
-        panel_.setLengthValue("translation_y", translationY_);
-        syncConstraintState();
-        refreshPresentation();
-        statusChanged_(QObject::tr("Verschieben abgebrochen"));
-        return;
-    }
-    if (viewport_.cancelSketchEditorStep()) {
-        editor_->clearPreview();
-        refreshPresentation();
-        statusChanged_(QObject::tr("Aktueller Skizzenschritt abgebrochen"));
-        return;
-    }
-    // S13: then the drawing tool, then the selection; Escape never discards the sketch.
-    if (toolIndex_ != 0) {
-        panel_.chooseOption("tool", 0);
-        statusChanged_(QObject::tr("Auswahlwerkzeug"));
-        return;
-    }
-    if (editor_->selectedElement().has_value() || !editor_->selectedReferences().empty()) {
-        clearSelection();
-        statusChanged_(QObject::tr("Auswahl aufgehoben"));
-        return;
-    }
-    statusChanged_(QObject::tr("Skizze mit OK (Strg+Enter) übernehmen oder mit Abbrechen "
-                               "verwerfen"));
 }
 
 void SketchEditorToolController::updatePreview(
@@ -440,8 +409,15 @@ void SketchEditorToolController::applyElementDimension(const std::string& id, do
         changed = editor_->setSelectedCircleRadius(value);
         label = QObject::tr("Kreis-/Bogenradius");
     }
-    if (!changed)
+    if (!changed) {
+        // S13: a refused value says so and the field shows the current value again.
+        syncSelectedDimensionInputs();
+        if (!label.isEmpty())
+            statusChanged_(QObject::tr("%1: %2 mm nicht übernommen (ungültig oder nicht lösbar)")
+                               .arg(label)
+                               .arg(value, 0, 'f', 3));
         return;
+    }
     syncConstraintState();
     refreshPresentation();
     statusChanged_(QObject::tr("%1 auf %2 mm gesetzt").arg(label).arg(value, 0, 'f', 3));

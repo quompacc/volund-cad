@@ -74,6 +74,14 @@ class ViewportTestAccess {
         return v.impl_->view->Window()->DevicePixelRatio();
     }
     static QRect selectionBand(CadViewport& v) { return v.impl_->selectionBand->geometry(); }
+    // S13: what the view switches change.
+    static bool gridVisible(CadViewport& v) { return v.impl_->gridVisible; }
+    static std::size_t constraintLabels(CadViewport& v) {
+        return v.impl_->sketchConstraintPresentation.size();
+    }
+    static std::size_t projectedEdges(CadViewport& v) {
+        return v.impl_->sketchPresentation.projectedEdgeCount();
+    }
     static bool bindFramebuffer(CadViewport& v, double ratio) {
         return qtgl::bindCurrentFramebuffer(v.impl_->view, ratio);
     }

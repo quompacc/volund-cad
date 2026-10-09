@@ -180,6 +180,7 @@ void MainWindow::createCommandSurfaces() {
     impl_->angularSnapInput->setMaximumWidth(170);
     settings.layout()->addWidget(impl_->linearSnapInput);
     settings.layout()->addWidget(impl_->angularSnapInput);
+    createViewSwitches();
     // Controllers flip their active flag around the panel calls; read the state afterwards.
     impl_->toolPanel->setActivityHandler(
         [this] { QMetaObject::invokeMethod(this, [this] { syncShell(); }, Qt::QueuedConnection); });
@@ -187,6 +188,7 @@ void MainWindow::createCommandSurfaces() {
 
 void MainWindow::syncShell() {
     impl_->commandActions->refreshEnabled();
+    syncViewSwitches();
     const ShellState shell = impl_->shell();
     // U13: the rail shows the tools of the active function.
     if (impl_->sketchActions != nullptr && impl_->toolRail != nullptr) {

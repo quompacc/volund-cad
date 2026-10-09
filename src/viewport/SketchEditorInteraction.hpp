@@ -34,6 +34,9 @@ class SketchEditorInteraction final {
     // S04: off, a step still lands on the snapped points but binds none of them and suggests
     // no relation; a continued polyline stays joined to its previous segment.
     void setAutomaticRelations(bool enabled) noexcept { automaticRelations_ = enabled; }
+    // S13: hidden projected geometry is not snapped to either.
+    void setProjectedVisible(bool visible) noexcept { projectedVisible_ = visible; }
+    [[nodiscard]] bool projectedVisible() const noexcept { return projectedVisible_; }
     [[nodiscard]] SnapFeedback snapFeedback(int x, int y) const;
     [[nodiscard]] bool isActive() const noexcept;
     [[nodiscard]] bool isDrawing() const noexcept;
@@ -94,6 +97,7 @@ class SketchEditorInteraction final {
     bool bypass_{false};
     bool active_{false};
     bool automaticRelations_{true};
+    bool projectedVisible_{true};
     std::optional<std::uint64_t> continued_; // the polyline segment the next one continues
 };
 

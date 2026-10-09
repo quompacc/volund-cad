@@ -241,6 +241,8 @@ class CadViewport final : public CadViewportBase {
     void setSelectedSketchElement(std::optional<std::uint64_t> elementId);
     void setSelectedSketchElements(std::span<const std::uint64_t> elementIds);
     void setSketchConstraints(std::span<const SceneSketchConstraint> constraints);
+    // S13: projected geometry of the support (drawn and snapped) on or off; view state.
+    void setSketchProjectedGeometryVisible(bool visible);
     void setSketchConstraintEditHandler(std::function<void(std::uint64_t)> handler);
     // S13: a single click on a constraint label where no element lies.
     void setSketchConstraintSelectionHandler(std::function<void(std::uint64_t)> handler);

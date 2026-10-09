@@ -159,6 +159,7 @@ in U04 an dieselben IDs.
 | `view.theme` | Kopfzeile (Sonne/Mond), Suche | MainWindow | immer | command_inventory |
 | `view.command_search` | Kopfzeile (Suchfeld), Strg+K | CommandPalette | immer | command_surfaces |
 | `view.tool_rail` | Kopfzeile (Werkzeugleiste), Suche | MainWindow | immer | command_surfaces |
+| `view.grid` | Suche, Skizzenpanel (Raster), Modellbaum (Auge) | MainWindow | immer; Ansichtszustand ohne Undo und ohne „geändert“ | sketch_view_switches |
 | `solid.create.box` | Werkzeugleiste, Kontextleiste (leer), Suche | CadSession | immer | command_inventory, command_surfaces |
 | `solid.create.cylinder` | Werkzeugleiste, Kontextleiste (leer, Feature), Suche | CadSession | ein letztes Feature mit Geometrie existiert | command_inventory |
 | `solid.create.sketch` | Werkzeugleiste, Kontextleiste (Ebene/Fläche, primär), Suche | SketchEditorToolController | Ebene oder ebene Fläche gewählt, Modell aktuell | base_planes |
@@ -183,7 +184,30 @@ Kürzel erreichen; außerhalb einer Skizze sind sie gesperrt.
 | Punkte | `sketch.coincident`, `.horizontal_points`, `.vertical_points`, `.symmetric`, `.midpoint`, `.perpendicular_bisector`, `.point_on_object` | – |
 | Beziehungen | `sketch.fixed`, `.equal`, `.tangent`, `.concentric` | – |
 | Bemaßungen | `sketch.diameter`, `.point_distance`, `.point_line_distance`, `.point_distance_x`, `.point_distance_y`, `.angle` | – |
-| Bearbeiten | `sketch.construction`, `.lock_point`, `.unlock_point`, `.remove_constraint`, `.undo_sketch`, `.redo_sketch`, `.trim`, `.extend`, `.split`, `.fillet`, `.offset`, `.mirror`, `.linear_pattern`, `.circular_pattern`, `.delete` | Strg+Z/Strg+Y für Rückgängig/Wiederholen im Werkzeug |
+| Bearbeiten | `sketch.construction`, `.lock_point`, `.unlock_point`, `.remove_constraint`, `.undo_sketch`, `.redo_sketch`, `.trim`, `.extend`, `.split`, `.fillet`, `.offset`, `.mirror`, `.linear_pattern`, `.circular_pattern`, `.edit_pattern`, `.dissolve_pattern`, `.delete` | Strg+Z/Strg+Y für Rückgängig/Wiederholen im Werkzeug; Entf löscht |
+| Anzeige (S13) | `sketch.show_dimensions`, `.show_projected`, `.auto_relations` (dazu `view.grid`) | Suche und Skizzenpanel; Ansichtszustand ohne Undo und ohne „geändert“ |
+
+Bedienregeln im Skizzeneditor (S13, Nutzerentscheidung 09.10.2026):
+
+- **Escape** geht schrittweise zurück: laufendes Ziehen abbrechen, dann Vorschaupunkte
+  zurücknehmen, dann vom Zeichenwerkzeug zur Auswahl, dann die Auswahl aufheben. Escape
+  verwirft die Skizze nie.
+- **Abbrechen** fragt bei Änderungen „Änderungen an der Skizze verwerfen?“ („Verwerfen“ /
+  „Weiter bearbeiten“).
+- **Enter** übernimmt im Eingabefeld den Wert und beendet im Ansichtsfenster eine laufende
+  Polylinie. **Strg+Enter** oder OK übernimmt die Skizze. In anderen Werkzeugen bleibt
+  Enter = OK.
+- **Wiederholtes Zeichnen:** Das Werkzeug bleibt nach einem Element aktiv; die Polylinie
+  setzt am letzten Endpunkt fort, bis Enter oder Escape sie beendet.
+- **Rahmenauswahl:** links → rechts ein Fenster (durchgezogen: Elemente ganz im Rahmen),
+  rechts → links ein Kreuzen-Rahmen (gestrichelt: Elemente, die er berührt). Es werden
+  ganze Elemente gewählt, Kurven zählen über ihren Verlauf. Strg fügt hinzu; ein leerer
+  Rahmen ohne Strg hebt die Auswahl auf.
+- **Element vor Beschriftung:** Ein Klick wählt das Element unter der Beschriftung. Ein
+  Doppelklick auf ein Maß öffnet den Wertdialog, auf eine Beziehung wählt er sie (orange);
+  Entf oder „Bedingung entfernen“ löscht sie. Gelbe Beschriftungen sind überflüssig.
+- **Fehler** stehen in der Statuszeile; Elemente, die eine Ablehnung verursachen, sind rot,
+  bis sich die Auswahl ändert.
 
 Die Kontextleiste zeigt je Auswahl (`ContextCommands`):
 

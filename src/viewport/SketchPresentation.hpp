@@ -32,6 +32,7 @@ class SketchPresentation final {
     void setColors(const Quantity_Color& free, const Quantity_Color& determined);
     // For tests: whether the element is drawn dashed, and its color.
     [[nodiscard]] std::optional<bool> dashed(std::uint64_t id) const;
+    [[nodiscard]] std::size_t projectedEdgeCount() const noexcept { return projectedEdges_.size(); }
     [[nodiscard]] std::optional<Quantity_Color> color(std::uint64_t id) const;
 
   private:

@@ -93,10 +93,11 @@ void SketchEditorInteraction::setSnapPoints(std::span<const SceneSketchPoint> po
     if (active_) {
         snapPoints_.push_back({0, SketchPointKind::origin, 0.0, 0.0, support_.originX,
                                support_.originY, support_.originZ});
-        snapPoints_.insert(snapPoints_.end(), support_.referencePoints.begin(),
-                           support_.referencePoints.end());
+        if (projectedVisible_)
+            snapPoints_.insert(snapPoints_.end(), support_.referencePoints.begin(),
+                               support_.referencePoints.end());
         for (const PlanarReferenceSegment& segment : support_.referenceSegments) {
-            if (support_.stableReferences)
+            if (support_.stableReferences || !projectedVisible_)
                 break;
             snapPoints_.push_back({0, SketchPointKind::projected, segment.firstX, segment.firstY,
                                    segment.firstWorldX, segment.firstWorldY, segment.firstWorldZ,

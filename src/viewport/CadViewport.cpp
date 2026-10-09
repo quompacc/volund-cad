@@ -204,7 +204,27 @@ void CadViewport::beginSketchEditor(const PlanarFaceSelection& support, SketchEl
         if (!impl_->context.IsNull())
             impl_->basePlanes.hide(impl_->context);
         impl_->sketchEditor.begin(support, tool, impl_->view);
-        impl_->sketchPresentation.setReferences(impl_->context, support, true);
+        auto shown = support;
+        if (!impl_->sketchEditor.projectedVisible())
+            shown.referenceSegments.clear();
+        impl_->sketchPresentation.setReferences(impl_->context, shown, true);
+        update();
+    });
+}
+
+void CadViewport::setSketchProjectedGeometryVisible(bool visible) {
+    performViewportOperation(*this, impl_->ready, [&] {
+        impl_->sketchEditor.setProjectedVisible(visible);
+        if (!impl_->activeSketchSupport)
+            return;
+        auto shown = *impl_->activeSketchSupport;
+        if (!visible)
+            shown.referenceSegments.clear();
+        impl_->sketchPresentation.setReferences(impl_->context, shown, true);
+        std::vector<SceneSketchPoint> points;
+        for (const SceneSketchElement& element : impl_->pendingSketchElements)
+            points.insert(points.end(), element.points.begin(), element.points.end());
+        impl_->sketchEditor.setSnapPoints(points);
         update();
     });
 }

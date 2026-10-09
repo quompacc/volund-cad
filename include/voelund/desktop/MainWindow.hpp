@@ -53,6 +53,8 @@ class MainWindow final : public QMainWindow {
     void createToolPanel();
     void createHistoryActions();
     void createCommandSurfaces();
+    void createViewSwitches();
+    void syncViewSwitches();
     void syncShell();
     void createHeader();
     void applyTheme(ThemeMode mode);

@@ -33,6 +33,10 @@ const std::set<std::string> commandTable{"document.new",
                                          "view.theme",
                                          "view.command_search",
                                          "view.tool_rail",
+                                         "view.grid",
+                                         "sketch.show_dimensions",
+                                         "sketch.show_projected",
+                                         "sketch.auto_relations",
                                          "solid.create.box",
                                          "solid.create.cylinder",
                                          "solid.create.sketch",
@@ -101,7 +105,8 @@ void emptyDocumentOffersOnlyApplicableCommands(application::CadSession& session,
     const std::set<std::string> expected{
         "document.new",       "document.open",   "document.save", "document.save_as",
         "document.duplicate", "transform.snap",  "view.theme",    "view.command_search",
-        "view.tool_rail",     "solid.create.box", "assistant.mcp", "assistant.mcp_new_token",
+        "view.tool_rail",     "view.grid",       "solid.create.box", "assistant.mcp",
+        "assistant.mcp_new_token",
         "assistant.allow", "assistant.panel"};
     require(enabled == expected, "Empty document enables only document commands and Box");
     const auto before = session.sceneStatus().document;
