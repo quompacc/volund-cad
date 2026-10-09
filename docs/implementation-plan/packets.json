@@ -2106,12 +2106,14 @@
       ],
       "acceptance": "Änderung am Master wirkt nur bei ausdrücklich assoziativem Modus; Einmalkopie bleibt unabhängig. Anzahlgrenzen, zyklische Abhängigkeit und Save/Open sind geprüft.",
       "boundary": "Keine stillschweigende Ausweitung des Skizzenformats; neues Schema über D13-Migrationsregeln.",
-      "status": "planned",
+      "status": "done",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
       "kind": "design-and-proof",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/S12.md"
+      ],
+      "completedCommit": "5a0c7fb"
     },
     {
       "id": "S13",

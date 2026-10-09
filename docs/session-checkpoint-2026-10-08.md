@@ -9,12 +9,12 @@ Git-Historie dieser Datei.
 ## Stand des Repos
 
 - Branch `ux01`. `main` folgt nach jeder grünen Abnahme per Fast-Forward.
-- Letztes Paket: S11 (Code `67b45d4`, CI-Lauf 495). Der Abnahme-Commit enthält diese
+- Letztes Paket: S12 (Code `da96108` + `5a0c7fb`, CI-Läufe 499 und 500). Der Abnahme-Commit enthält diese
   Datei. Vor dem Weiterarbeiten prüfen, ob `main` auf ihm steht; sonst seinen CI-Lauf
   prüfen und `main` nachziehen (siehe Arbeitsregeln).
-- **Windows:** 141 Tests. **Fedora (GCC, ohne Desktop):** 102. Desktop-Tests laufen in der
+- **Windows:** 143 Tests. **Fedora (GCC, ohne Desktop):** 104. Desktop-Tests laufen in der
   CI.
-- **Schema der Dokumente:** unverändert 10.
+- **Schema der Dokumente:** 11 (S12: assoziative Skizzenmuster).
 
 ## Erledigt am 08.10.2026 (zweiter Block)
 
@@ -25,6 +25,7 @@ Git-Historie dieser Datei.
 | S04 | Fangmatrix für Linie/Polylinie/Rechteck; keine überflüssigen Beziehungen; Schalter „Beziehungen: Automatisch / Keine“ im Skizzenpanel | [S04](implementation-plan/evidence/S04.md) |
 | S05 | Kurvenbeziehungen nur für unterstützte Paare; keine angekündigte Tangente am Bogenende auf einer Linie; entartete Picks mit genauer Meldung | [S05](implementation-plan/evidence/S05.md) |
 | S09 | Exakter Versatz für Elemente und Konturen, Vorschau = Übernahme, Ellipse als nicht unterstützt gemeldet | [S09](implementation-plan/evidence/S09.md) |
+| S12 (09.10.) | Assoziative Skizzenmuster (linear, Kreis, Spiegelung), Schema 11; Kopien folgen dem Original, schreibgeschützt; Muster ändern/auflösen | [S12](implementation-plan/evidence/S12.md) |
 | S11 (09.10.) | Verrundung mit virtueller Ecke: Eckmaße bleiben, Bestimmtheit bleibt; abgewiesene Linien rot mit größtem Radius | [S11](implementation-plan/evidence/S11.md) |
 | S07 (09.10.) | Eine Beschriftungsprojektion für alle Bedingungsarten; überflüssige Bedingungen gemeldet; Maß ändern als geprüfter Befehl, gebundene Maße verweisen auf den Parameter | [S07](implementation-plan/evidence/S07.md) |
 | S06 (09.10.) | Polygon regelmäßig über Hilfskreis (Umkreisradius, Mittelpunkt bindet), Langloch mit Hilfsachse (Länge, Ausrichtung); Endpunkt-Tangente im Löser | [S06](implementation-plan/evidence/S06.md) |
@@ -45,9 +46,8 @@ Git-Historie dieser Datei.
 
 ## Nächste freie Pakete
 
-- **S12** Skizzenmuster/Spiegeln: Der Nutzer tendiert (09.10.2026) zum assoziativen Muster.
-  Das ändert das Schema; Datenobjekt (Master/Instanzen, Anzahl/Abstand/Winkel) vor der
-  Umsetzung mit ihm abstimmen. Nächstes Paket in der Skizzenkette (danach S13, S14).
+- **S13** Skizzen-UX und Auswahlmodi abschließen (G2). Nächstes Paket der Skizzenkette;
+  danach S14 (Gesamtabnahme Skizze).
 - **T05** Koplanare Flächen verschmelzen (G3). Laut Nutzer „später“; nicht ohne Rückfrage.
 - **A02** braucht weiterhin Designarbeit.
 
