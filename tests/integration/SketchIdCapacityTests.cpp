@@ -57,7 +57,7 @@ void drawing() {
     using Tool = application::SketchDrawingTool;
     struct Case { Tool tool; std::uint64_t elements; std::uint64_t constraints; };
     for (const auto test : std::array{Case{Tool::line, 1, 0}, Case{Tool::rectangle, 4, 8},
-                                      Case{Tool::slot, 4, 10}, Case{Tool::polygon, 6, 11}}) {
+                                      Case{Tool::slot, 5, 11}, Case{Tool::polygon, 7, 17}}) {
         application::CadSession session;
         auto shortElements = editor(session, limit - test.elements, 10);
         shortElements.setTool(test.tool);

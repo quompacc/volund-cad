@@ -43,15 +43,14 @@ bool compoundDrawingToolsCreateProfiles() {
     const auto support = voelund::test::requireCommittedFeature(session.createBoxFeature());
     SketchEditorSession polygon(session, support, plane);
     polygon.setTool(SketchDrawingTool::polygon);
-    polygon.setPolygonSides(6);
-    if (!polygon.setPreview({0.0, 0.0}, {8.0, 0.0}) || !polygon.confirmPreview().has_value() ||
-        polygon.elements().size() != 6 || polygon.closedProfileCount() != 1 || !polygon.canAccept())
+    if (!polygon.setPolygonSides(6) || !polygon.setPreview({0.0, 0.0}, {8.0, 0.0}) ||
+        !polygon.confirmPreview().has_value() || polygon.elements().size() != 7 || polygon.closedProfileCount() != 1 || !polygon.canAccept())
         return reportCompoundFailure("polygon", polygon);
 
     SketchEditorSession slot(session, support, plane);
     slot.setTool(SketchDrawingTool::slot);
     if (!slot.setPreview({0.0, 0.0}, {12.0, 0.0}, SketchPoint{0.0, 3.0}) ||
-        !slot.confirmPreview().has_value() || slot.elements().size() != 4 ||
+        !slot.confirmPreview().has_value() || slot.elements().size() != 5 ||
         slot.closedProfileCount() != 1 || !slot.canAccept())
         return reportCompoundFailure("slot", slot);
     const auto& rightCap = std::get<voelund::document::SketchArc>(slot.elements()[1].geometry);
@@ -111,7 +110,7 @@ bool everyDrawingToolHasLivePreview() {
         !previewCount(SketchDrawingTool::polyline, std::nullopt, 1) ||
         !previewCount(SketchDrawingTool::rectangle, std::nullopt, 1) ||
         !previewCount(SketchDrawingTool::circle, std::nullopt, 1) ||
-        !previewCount(SketchDrawingTool::polygon, std::nullopt, 6))
+        !previewCount(SketchDrawingTool::polygon, std::nullopt, 7))
         return false;
 
     for (const auto tool : {SketchDrawingTool::arc, SketchDrawingTool::threePointArc,
@@ -127,7 +126,7 @@ bool everyDrawingToolHasLivePreview() {
     return previewCount(SketchDrawingTool::arc, SketchPoint{0.0, 8.0}, 1) &&
            previewCount(SketchDrawingTool::threePointArc, SketchPoint{8.0, 8.0}, 1) &&
            previewCount(SketchDrawingTool::ellipse, SketchPoint{0.0, 3.0}, 1) &&
-           previewCount(SketchDrawingTool::slot, SketchPoint{0.0, 3.0}, 4);
+           previewCount(SketchDrawingTool::slot, SketchPoint{0.0, 3.0}, 5);
 }
 
 bool lineEditingOperationsWork() {

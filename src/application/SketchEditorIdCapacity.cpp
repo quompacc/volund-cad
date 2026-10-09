@@ -16,13 +16,16 @@ bool SketchEditorSession::canAllocatePreviewIds(
     if (std::holds_alternative<document::SketchRectangle>(preview.front()))
         return canAllocateIds(4, 8);
     const auto count = static_cast<std::uint64_t>(preview.size());
-    if (tool_ == SketchDrawingTool::slot && count == 4)
-        return canAllocateIds(4, 10);
+    if (tool_ == SketchDrawingTool::slot && count == 5)
+        return canAllocateIds(5, 11);
     if (tool_ == SketchDrawingTool::polygon && count > 1) {
-        // Check multiplication before forming the complete count (2*n - 1).
+        // n sides and the circle: n joints, n - 1 equal sides, n vertices on the circle. Each
+        // part is checked before the next is added, so the sum cannot overflow.
+        const std::uint64_t sides = count - 1;
         return document::hasIdCapacity(elements_.nextId, count) &&
-               document::hasIdCapacity(constraints_.nextId, count) &&
-               document::hasIdCapacity(constraints_.nextId + count, count - 1);
+               document::hasIdCapacity(constraints_.nextId, sides) &&
+               document::hasIdCapacity(constraints_.nextId + sides, sides) &&
+               document::hasIdCapacity(constraints_.nextId + 2 * sides, sides - 1);
     }
     return canAllocateIds(count, 0);
 }

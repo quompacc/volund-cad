@@ -20,6 +20,9 @@ SketchPoint referencePoint(const voelund::application::SketchEditorSession& edit
     const auto element =
         std::ranges::find(elements, reference.element, &voelund::document::SketchElement::id);
     const bool start = reference.point == voelund::document::SketchPointPosition::start;
+    if (const auto* arc = std::get_if<SketchArc>(&element->geometry);
+        arc && reference.point == voelund::document::SketchPointPosition::center)
+        return arc->center;
     if (const auto* line = std::get_if<voelund::document::SketchLine>(&element->geometry))
         return start ? line->start : line->end;
     const auto& arc = std::get<SketchArc>(element->geometry);
@@ -53,7 +56,7 @@ bool preservesSlotDimensions(double angle) {
     const SketchPoint second{first.x + 12 * std::cos(angle), first.y + 12 * std::sin(angle)};
     const SketchPoint width{first.x - 3 * std::sin(angle), first.y + 3 * std::cos(angle)};
     if (!editor.setPreview(first, second, width) || !editor.confirmPreview() ||
-        editor.elements().size() != 4 || !editor.canAccept() || editor.closedProfileCount() != 1)
+        editor.elements().size() != 5 || !editor.canAccept() || editor.closedProfileCount() != 1)
         return false;
     const auto& right = std::get<SketchArc>(editor.elements()[1].geometry);
     const auto& left = std::get<SketchArc>(editor.elements()[3].geometry);

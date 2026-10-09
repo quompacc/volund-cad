@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <memory>
 #include <numbers>
+#include <optional>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
@@ -186,6 +187,29 @@ GCS::Point& point(const document::SketchGeometryReference& reference, const Line
     return reference.point == document::SketchPointPosition::start ? line.first : line.second;
 }
 
+// S06: the end point a coincident relation shares between two lines or arcs, as a reference
+// to `second`. Tangency there is a tangent joint: as a tangent to the full circle on top of the
+// coincidence it is degenerate at the joint, and the solver counts it as redundant.
+std::optional<document::SketchGeometryReference>
+sharedEnd(const document::SketchConstraints& constraints, std::uint64_t first,
+          std::uint64_t second) {
+    const auto isEnd = [](document::SketchPointPosition position) {
+        return position != document::SketchPointPosition::center;
+    };
+    for (const auto& constraint : constraints.values) {
+        if (constraint.kind != document::SketchConstraintKind::coincident ||
+            !isEnd(constraint.first.point) || !isEnd(constraint.second->point))
+            continue;
+        const auto a = constraint.first.element.value();
+        const auto b = constraint.second->element.value();
+        if (a == first && b == second)
+            return *constraint.second;
+        if (a == second && b == first)
+            return constraint.first;
+    }
+    return std::nullopt;
+}
+
 } // namespace
 
 SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
@@ -239,6 +263,9 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
     fixedValues.reserve(sketch.constraints.values.size());
     std::vector<document::SketchConstraintId> tags;
     tags.reserve(sketch.constraints.values.size());
+    // Reserved once: the solver keeps pointers to the angles of tangent joints.
+    std::vector<double> jointAngles;
+    jointAngles.reserve(sketch.constraints.values.size());
     for (const document::SketchConstraint& constraint : sketch.constraints.values) {
         values.push_back(constraint.kind == document::SketchConstraintKind::angle
                              ? constraint.angleValue.value()
@@ -388,7 +415,20 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
         } else if (constraint.kind == document::SketchConstraintKind::tangent) {
             const auto firstId = constraint.first.element.value();
             const auto secondId = constraint.second->element.value();
-            if (lines.contains(firstId))
+            const auto curve = [&](std::uint64_t id) -> GCS::Curve& {
+                if (lines.contains(id))
+                    return lines.at(id)->line;
+                return arcs.at(id)->arc;
+            };
+            if (const auto joint = sharedEnd(sketch.constraints, firstId, secondId)) {
+                // Same or opposite direction at the joint, whichever the geometry has now.
+                GCS::Point& at = point(*joint, lines, circles, arcs, centers);
+                const double current =
+                    system.calculateAngleViaPoint(curve(firstId), curve(secondId), at);
+                jointAngles.push_back(std::cos(current) >= 0.0 ? 0.0 : std::numbers::pi);
+                static_cast<void>(system.addConstraintAngleViaPoint(
+                    curve(firstId), curve(secondId), at, &jointAngles.back(), tag));
+            } else if (lines.contains(firstId))
                 static_cast<void>(arcs.contains(secondId)
                                       ? system.addConstraintTangent(lines.at(firstId)->line,
                                                                     arcs.at(secondId)->arc, tag)

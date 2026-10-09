@@ -180,7 +180,7 @@ void SketchEditorToolController::showPanel() {
             if (id == "translation_x" || id == "translation_y")
                 applyTranslation(id, value);
             else if (id == "polygon_sides")
-                editor_->setPolygonSides(static_cast<int>(std::lround(value)));
+                static_cast<void>(editor_->setPolygonSides(static_cast<int>(std::lround(value))));
             else if (id == "fillet_radius")
                 filletRadius_ = value;
             else if (id == "offset_distance") {

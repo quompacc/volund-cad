@@ -161,7 +161,8 @@ void rectangleContour() {
 
 void slotContour() {
     Fixture f;
-    const auto slot = f.create(SketchDrawingTool::slot, {{0, 0}, {20, 0}, SketchPoint{0, 3}});
+    auto slot = f.create(SketchDrawingTool::slot, {{0, 0}, {20, 0}, SketchPoint{0, 3}});
+    slot.pop_back(); // the contour without the construction axis (S06)
     f.select(slot);
     require(f.editor->offsetSelected(1), "Offset the slot outwards");
     const auto grown = f.added(4);

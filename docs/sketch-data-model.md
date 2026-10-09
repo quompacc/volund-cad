@@ -84,7 +84,18 @@ OCCT evaluation through `SketchEvaluation` and `SketchProfiles`.
 
 The drawing set additionally contains continuous polylines, three-point arcs,
 ellipses, obround slots and regular polygons. Compound tools decompose into ordinary
-lines and arcs with stable IDs and persistent internal relations. Trim, extend,
+lines and arcs with stable IDs and persistent internal relations (S06):
+
+- A regular polygon (3 to 64 sides) is its sides plus a construction circle through all
+  vertices: sides joined and equal, every vertex on the circle. The circle's center is the
+  polygon center, its radius the circumradius; rotation stays free.
+- A slot is two sides, two caps and a construction axis between the cap centers: caps
+  equal, sides tangent to the caps at the joints. Width is twice the cap radius, length the
+  axis length; a horizontal or vertical axis orients the slot, otherwise it is free.
+- Tangency at a shared end point (slot joints, fillets) is solved at that point, not
+  against the full circle.
+
+Trim, extend,
 split, fillet, offset, mirror and linear/circular patterns operate on those ordinary
 elements. Local Undo/Redo, stepwise Escape and visible box selection keep these edits
 inside the temporary session.

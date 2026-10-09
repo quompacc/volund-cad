@@ -67,7 +67,13 @@ enum class SketchCreationRole {
     slotSecondCap,
     slotSecondSide,
     slotFirstCap,
-    polygonSide // `index` counts the sides from the picked vertex, counterclockwise
+    // S06: construction axis from the first to the second cap center; its length is the
+    // slot's center distance, a horizontal/vertical relation on it orients the slot.
+    slotAxis,
+    polygonSide, // `index` counts the sides from the picked vertex, counterclockwise
+    // S06: construction circle through all vertices; its radius is the polygon's
+    // circumradius, its center the polygon's center.
+    polygonCircle
 };
 struct SketchCreatedElement final {
     document::SketchElementId id;
@@ -90,7 +96,8 @@ enum class SketchCreationPoint {
     rectangleCenter, // centered rectangle only
     slotFirstCenter, // cap centers, at the first and second pick
     slotSecondCenter,
-    polygonVertex // the picked vertex; the polygon has no center element (S06)
+    polygonVertex, // the picked vertex
+    polygonCenter  // the center of the construction circle (S06)
 };
 struct SketchCreatedPoint final {
     SketchCreationPoint role;
@@ -101,6 +108,14 @@ enum class SketchArcDirection { counterclockwise, clockwise };
 
 // Why a constraint of the step exists: the tool's own shape (rectangle corners, slot
 // tangencies, polygon sides), a snapped pick, or the suggested relation.
+//
+// S06: what the shape relations keep under any dimension change:
+// - Regular polygon: consecutive sides joined, all sides equal, every vertex on the
+//   construction circle. Equal sides alone would allow a rhombus; with the vertices on one
+//   circle the polygon stays regular. Free: center, circumradius, rotation (4 DOF).
+// - Slot: sides and caps joined, caps equal, each side tangent to both caps, the axis ends on
+//   the cap centers. Free: both centers and the radius (5 DOF); width = 2 x cap radius,
+//   length = center distance (axis length).
 enum class SketchConstraintOrigin { shape, snap, relation };
 struct SketchCreatedConstraint final {
     document::SketchConstraintId id;

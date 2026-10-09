@@ -117,7 +117,10 @@ SketchEditorSession::geometry(document::SketchPoint first, document::SketchPoint
     if (tool_ == SketchDrawingTool::polygon) {
         auto sides = polygonGeometry(first, second, polygonSides_);
         shape.roles.assign(sides.size(), SketchCreationRole::polygonSide);
-        shape.points = {{polygonVertex, 0, Position::start}};
+        shape.roles.push_back(SketchCreationRole::polygonCircle);
+        shape.points = {{polygonVertex, 0, Position::start},
+                        {polygonCenter, sides.size(), Position::center}};
+        sides.push_back(document::SketchCircle{first, radius});
         return sides;
     }
     if (!third.has_value()) {
@@ -127,11 +130,15 @@ SketchEditorSession::geometry(document::SketchPoint first, document::SketchPoint
     }
     if (tool_ == SketchDrawingTool::slot) {
         // Order of slotGeometry: side, cap around `second`, side back, cap around `first`.
+        // The construction axis follows the contour.
         shape.roles = {SketchCreationRole::slotFirstSide, SketchCreationRole::slotSecondCap,
-                       SketchCreationRole::slotSecondSide, SketchCreationRole::slotFirstCap};
+                       SketchCreationRole::slotSecondSide, SketchCreationRole::slotFirstCap,
+                       SketchCreationRole::slotAxis};
         shape.points = {{slotFirstCenter, 3, Position::center},
                         {slotSecondCenter, 1, Position::center}};
-        return slotGeometry(first, second, *third);
+        auto slot = slotGeometry(first, second, *third);
+        slot.push_back(document::SketchLine{first, second});
+        return slot;
     }
     if (tool_ == SketchDrawingTool::threePointArc) {
         bool reversed = false;
@@ -209,12 +216,19 @@ std::optional<SketchCreationResult> SketchEditorSession::confirmCreation() {
     const document::SketchElementId firstId{elements_.nextId};
     const std::uint64_t firstConstraint = constraints_.nextId;
     std::vector<document::SketchElementId> ids;
-    for (document::SketchGeometry& item : preview_) {
+    for (std::size_t index = 0; index < preview_.size(); ++index) {
+        const auto role = index < previewShape_.roles.size() ? previewShape_.roles[index]
+                                                             : SketchCreationRole::element;
         ids.push_back(document::SketchElementId{elements_.nextId++});
-        elements_.values.push_back({ids.back(), std::move(item)});
+        // S06: the polygon's circle and the slot's axis are construction geometry.
+        elements_.values.push_back({ids.back(), std::move(preview_[index]),
+                                    role == SketchCreationRole::polygonCircle ||
+                                        role == SketchCreationRole::slotAxis});
     }
     if ((tool_ == SketchDrawingTool::slot || tool_ == SketchDrawingTool::polygon) && ids.size() > 1) {
-        for (std::size_t index = 0; index < ids.size(); ++index) {
+        // The contour: every item but the trailing construction circle or axis.
+        const std::size_t contour = ids.size() - 1;
+        for (std::size_t index = 0; index < contour; ++index) {
             // Slot caps run counterclockwise, opposite to the contour traversal.
             const bool currentIsReversed = tool_ == SketchDrawingTool::slot && index % 2 == 1;
             const bool nextIsReversed = tool_ == SketchDrawingTool::slot && index % 2 == 0;
@@ -226,27 +240,35 @@ std::optional<SketchCreationResult> SketchEditorSession::confirmCreation() {
                 {document::SketchConstraintId{constraints_.nextId++},
                  document::SketchConstraintKind::coincident,
                  {ids[index], outgoing},
-                 document::SketchGeometryReference{ids[(index + 1) % ids.size()],
-                                                   incoming}});
+                 document::SketchGeometryReference{ids[(index + 1) % contour], incoming}});
         }
+        using Position = document::SketchPointPosition;
         const auto addRelation = [this, &ids](document::SketchConstraintKind kind,
-                                             std::size_t first, std::size_t second) {
+                                             std::size_t first, std::size_t second,
+                                             Position firstPoint = Position::start,
+                                             Position secondPoint = Position::start) {
             constraints_.values.push_back(
                 {document::SketchConstraintId{constraints_.nextId++}, kind,
-                 {ids[first], document::SketchPointPosition::start},
-                 document::SketchGeometryReference{ids[second],
-                                                   document::SketchPointPosition::start}});
+                 {ids[first], firstPoint},
+                 document::SketchGeometryReference{ids[second], secondPoint}});
         };
-        if (tool_ == SketchDrawingTool::slot && ids.size() == 4) {
-            addRelation(document::SketchConstraintKind::parallel, 0, 2);
+        if (tool_ == SketchDrawingTool::slot && ids.size() == 5) {
+            // With equal caps the tangent sides are parallel already (S06: no redundant
+            // parallel relation).
             addRelation(document::SketchConstraintKind::equal, 1, 3);
             addRelation(document::SketchConstraintKind::tangent, 0, 1);
             addRelation(document::SketchConstraintKind::tangent, 1, 2);
             addRelation(document::SketchConstraintKind::tangent, 2, 3);
             addRelation(document::SketchConstraintKind::tangent, 3, 0);
+            addRelation(document::SketchConstraintKind::coincident, 4, 3, Position::start,
+                        Position::center);
+            addRelation(document::SketchConstraintKind::coincident, 4, 1, Position::end,
+                        Position::center);
         } else if (tool_ == SketchDrawingTool::polygon) {
-            for (std::size_t index = 1; index < ids.size(); ++index)
+            for (std::size_t index = 1; index < contour; ++index)
                 addRelation(document::SketchConstraintKind::equal, 0, index);
+            for (std::size_t index = 0; index < contour; ++index)
+                addRelation(document::SketchConstraintKind::pointOnObject, index, contour);
         }
     }
     preview_.clear();
@@ -272,9 +294,13 @@ std::optional<SketchCreationResult> SketchEditorSession::confirmCreation() {
     return result;
 }
 
-void SketchEditorSession::setPolygonSides(int sides) noexcept {
-    polygonSides_ = std::clamp(sides, 3, 64);
+bool SketchEditorSession::setPolygonSides(int sides) noexcept {
+    // S06: a side count outside 3..64 is refused, not silently clamped.
+    if (sides < 3 || sides > 64)
+        return false;
+    polygonSides_ = sides;
     clearPreview();
+    return true;
 }
 
 } // namespace voelund::application

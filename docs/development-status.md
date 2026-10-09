@@ -204,7 +204,8 @@ gehören nicht zum Produktpfad.
   Arc-Regeln. Gemischte geschlossene Linien-Bogen-Konturen sind als Profile extrudierbar.
 - Polylinien, Dreipunktbögen, Ellipsen, Langlöcher und regelmäßige Polygone ergänzen
   die Zeichenwerkzeuge. Langlöcher und Polygone werden in einzeln bearbeitbare Linien
-  und Bögen mit parametrischen Binnenrelationen zerlegt.
+  und Bögen mit parametrischen Binnenrelationen zerlegt. Seit S06 hält ein Hilfskreis
+  das Polygon regelmäßig, und eine Hilfsachse trägt Länge und Ausrichtung des Langlochs.
 - Trimmen, Verlängern, Teilen, Verrunden, Versetzen, Spiegeln sowie lineare und
   kreisförmige Muster arbeiten im temporären Editor. Eine sichtbare Rahmenauswahl,
   schrittweises Escape und lokales Strg-Z/Strg-Y vervollständigen den Bedienablauf.

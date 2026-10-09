@@ -325,9 +325,22 @@ std::optional<SketchCreationResult> SketchEditorSession::createStep(const Sketch
         // The width pick binds nothing.
         snap(SketchCreationPoint::slotFirstCenter, in.firstSnap, in.first);
         snap(SketchCreationPoint::slotSecondCenter, in.secondSnap, in.second);
+        // S06: a requested horizontal or vertical slot holds its axis that way.
+        if (in.relation == SketchAutoRelation::horizontal ||
+            in.relation == SketchAutoRelation::vertical) {
+            const auto axis = result->find(SketchCreationRole::slotAxis);
+            static_cast<void>(relate([&] {
+                return axis && selectElement(*axis) &&
+                       setSelectedLineConstraint(in.relation == SketchAutoRelation::horizontal
+                                                     ? document::SketchLineConstraint::horizontal
+                                                     : document::SketchLineConstraint::vertical);
+            }));
+            static_cast<void>(selectElement(id));
+        }
         break;
     case SketchDrawingTool::polygon:
-        // No center element yet, so a snapped center pick binds nothing (S06).
+        // S06: the center pick binds the construction circle's center.
+        snap(SketchCreationPoint::polygonCenter, in.firstSnap, in.first);
         snap(SketchCreationPoint::polygonVertex, in.secondSnap, in.second);
         break;
     case SketchDrawingTool::rectangle:

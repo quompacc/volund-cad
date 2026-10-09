@@ -143,7 +143,8 @@ class SketchEditorSession final {
     [[nodiscard]] bool canRedo() const noexcept;
     [[nodiscard]] bool undo();
     [[nodiscard]] bool redo();
-    void setPolygonSides(int sides) noexcept;
+    // S06: 3 to 64 sides; anything else is refused and keeps the current count.
+    [[nodiscard]] bool setPolygonSides(int sides) noexcept;
     [[nodiscard]] std::optional<document::SketchElementId> selectedElement() const noexcept;
     [[nodiscard]] std::span<const document::SketchGeometryReference>
     selectedReferences() const noexcept;

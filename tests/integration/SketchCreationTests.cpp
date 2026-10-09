@@ -205,7 +205,8 @@ void everyFamilyNamesItsPoints(application::CadSession& session) {
          {{center, {0, 0}}}},
         {"slot", SketchDrawingTool::slot, {{0, 0}, {10, 0}, SketchPoint{0, 2}},
          {{slotFirstCenter, {0, 0}}, {slotSecondCenter, {10, 0}}}},
-        {"polygon", SketchDrawingTool::polygon, {{0, 0}, {6, 0}}, {{polygonVertex, {6, 0}}}},
+        {"polygon", SketchDrawingTool::polygon, {{0, 0}, {6, 0}},
+         {{polygonVertex, {6, 0}}, {polygonCenter, {0, 0}}}},
     };
     for (const auto& family : families) {
         SketchEditorSession editor(session, document::DatumPlane::xy);
@@ -236,7 +237,8 @@ void everyFamilyNamesItsPoints(application::CadSession& session) {
     SketchEditorSession polygon(session, document::DatumPlane::xy);
     polygon.setTool(SketchDrawingTool::polygon);
     const auto sides = polygon.create({{0, 0}, {6, 0}});
-    require(sides && sides->elements.size() == 6, "polygon sides");
+    require(sides && sides->elements.size() == 7 && sides->find(SketchCreationRole::polygonCircle),
+            "polygon sides and its construction circle");
     for (std::uint32_t index = 0; index < 6; ++index) {
         const auto side = sides->find(SketchCreationRole::polygonSide, index);
         const auto previous = sides->find(SketchCreationRole::polygonSide, (index + 5) % 6);
