@@ -9,11 +9,11 @@ Git-Historie dieser Datei.
 ## Stand des Repos
 
 - Branch `ux01`. `main` folgt nach jeder grünen Abnahme per Fast-Forward.
-- Letztes Paket: U11 (Code `7747346`, CI-Lauf 508). Der Abnahme-Commit enthält diese
+- Letztes Paket: U12 (Code `2aae44e`, CI-Lauf 511). Der Abnahme-Commit enthält diese
   Datei. Vor dem Weiterarbeiten prüfen, ob `main` auf ihm steht; sonst seinen CI-Lauf
   prüfen und `main` nachziehen (siehe Arbeitsregeln).
-- **Windows:** 150 Tests. **Fedora (GCC, ohne Desktop):** 104; Desktop unter virtuellem
-  Wayland 44 (Skript `/tmp/voelund-desktop.sh` auf Fedora, wie `~/repro-snap.sh`). Desktop-Tests laufen in der
+- **Windows:** 151 Tests. **Fedora (GCC, ohne Desktop):** 104; Desktop unter virtuellem
+  Wayland 45 (Skript `/tmp/voelund-desktop.sh` auf Fedora, wie `~/repro-snap.sh`). Desktop-Tests laufen in der
   CI.
 - **Schema der Dokumente:** 11 (S12: assoziative Skizzenmuster).
 
@@ -26,6 +26,7 @@ Git-Historie dieser Datei.
 | S04 | Fangmatrix für Linie/Polylinie/Rechteck; keine überflüssigen Beziehungen; Schalter „Beziehungen: Automatisch / Keine“ im Skizzenpanel | [S04](implementation-plan/evidence/S04.md) |
 | S05 | Kurvenbeziehungen nur für unterstützte Paare; keine angekündigte Tangente am Bogenende auf einer Linie; entartete Picks mit genauer Meldung | [S05](implementation-plan/evidence/S05.md) |
 | S09 | Exakter Versatz für Elemente und Konturen, Vorschau = Übernahme, Ellipse als nicht unterstützt gemeldet | [S09](implementation-plan/evidence/S09.md) |
+| U12 (09.10.) | Ein Composition Root (`startProduct`) für Produkt und UI-Tests; Installation trägt die getestete Laufzeit (Windows-DLLs, Linux-OCCT mit `$ORIGIN`), `desktop.installed_product` startet die installierte Datei; ungenutzte APIs entfernt; README auf den Produkteinstieg | [U12](implementation-plan/evidence/U12.md) |
 | U11 (09.10.) | Echte UI-Abläufe als Tests (Skizze, Panels, Dokument über Dateimenü, Gegenprobe abgetrennter Handler); Bildprüfung: FreeType unter Windows, Beschriftungen neben dem Punkt, Einheiten, Skizze in freier Fläche, schmale Kopfzeile, Extrusionsvorschau | [U11](implementation-plan/evidence/U11.md) |
 | S13 (09.10.) | Escape schrittweise ohne Verwerfen, Abbrechen fragt, Enter/Strg+Enter; Rahmen Fenster/Kreuzen; Element vor Beschriftung; vier Ansichtsschalter als Befehle | [S13](implementation-plan/evidence/S13.md) |
 | S12 (09.10.) | Assoziative Skizzenmuster (linear, Kreis, Spiegelung), Schema 11; Kopien folgen dem Original, schreibgeschützt; Muster ändern/auflösen | [S12](implementation-plan/evidence/S12.md) |
@@ -49,10 +50,9 @@ Git-Historie dieser Datei.
 
 ## Nächste freie Pakete
 
-- **U12** Composition Root und Installation von `voelund-cad` (G2). Nächstes Paket (U11
-  erledigt).
-- **S14** Skizzenumfang als Ganzes abnehmen (G2) wartet auf U12. Die Skizzenkette
-  S01–S13 ist sonst vollständig.
+- **S14** Skizzenumfang als Ganzes abnehmen (G2). Nächstes Paket; U11 und U12 sind
+  erledigt, die Skizzenkette S01–S13 ist vollständig.
+- **PAR02** Parametertabelle in der Oberfläche (G2), seit U11 ebenfalls frei.
 - **T05** Koplanare Flächen verschmelzen (G3). Laut Nutzer „später“; nicht ohne Rückfrage.
 - **A02** braucht weiterhin Designarbeit.
 

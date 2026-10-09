@@ -1740,12 +1740,14 @@
       ],
       "acceptance": "Installiertes Produkt startet dieselbe getestete Shell. Kein zweiter SketchBackend mit eigenen Regeln, keine Fake-Timeline. Ein kompletter New/Sketch/Save/Open-Fluss besteht.",
       "boundary": "Die Vorschau ist mit U12a entfernt (Nutzerentscheidung 2026-10-04); ihre Gestaltung war seit ADR 0012 keine Vergleichsbasis mehr.",
-      "status": "planned",
+      "status": "done",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/U12.md"
+      ],
+      "completedCommit": "2aae44e"
     },
     {
       "id": "S01",
