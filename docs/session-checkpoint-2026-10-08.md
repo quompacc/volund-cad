@@ -9,10 +9,10 @@ Git-Historie dieser Datei.
 ## Stand des Repos
 
 - Branch `ux01`. `main` folgt nach jeder grünen Abnahme per Fast-Forward.
-- Letztes Paket: S10 (Code `f7b21cc`, CI-Lauf 484). Der Abnahme-Commit enthält diese
+- Letztes Paket: S06 (Code `728312f`, CI-Lauf 488). Der Abnahme-Commit enthält diese
   Datei. Vor dem Weiterarbeiten prüfen, ob `main` auf ihm steht; sonst seinen CI-Lauf
   prüfen und `main` nachziehen (siehe Arbeitsregeln).
-- **Windows:** 137 Tests. **Fedora (GCC, ohne Desktop):** 99. Desktop-Tests laufen in der
+- **Windows:** 138 Tests. **Fedora (GCC, ohne Desktop):** 100. Desktop-Tests laufen in der
   CI.
 - **Schema der Dokumente:** unverändert 10.
 
@@ -25,6 +25,7 @@ Git-Historie dieser Datei.
 | S04 | Fangmatrix für Linie/Polylinie/Rechteck; keine überflüssigen Beziehungen; Schalter „Beziehungen: Automatisch / Keine“ im Skizzenpanel | [S04](implementation-plan/evidence/S04.md) |
 | S05 | Kurvenbeziehungen nur für unterstützte Paare; keine angekündigte Tangente am Bogenende auf einer Linie; entartete Picks mit genauer Meldung | [S05](implementation-plan/evidence/S05.md) |
 | S09 | Exakter Versatz für Elemente und Konturen, Vorschau = Übernahme, Ellipse als nicht unterstützt gemeldet | [S09](implementation-plan/evidence/S09.md) |
+| S06 (09.10.) | Polygon regelmäßig über Hilfskreis (Umkreisradius, Mittelpunkt bindet), Langloch mit Hilfsachse (Länge, Ausrichtung); Endpunkt-Tangente im Löser | [S06](implementation-plan/evidence/S06.md) |
 | S10 | Stutzen/Verlängern/Teilen für Linie, Bogen (Stutzen auch Kreis); Stück zwischen zwei Schnitten; entfernte Bedingungen in der Statuszeile; neue Enden an die Schnittkante gebunden | [S10](implementation-plan/evidence/S10.md) |
 
 ## Nutzerentscheidungen dieses Blocks
@@ -42,8 +43,8 @@ Git-Historie dieser Datei.
 
 ## Nächste freie Pakete
 
-- **S06** Polygon und Langloch mit verbindlicher Semantik (G2). Nächstes Paket.
-- **S07** Bedingungsbeschriftungen, Freiheitsgrade und Maßbindung vereinheitlichen (G2).
+- **S07** Bedingungsbeschriftungen, Freiheitsgrade und Maßbindung vereinheitlichen (G2). Nächstes
+  Paket; danach S11 und S12.
 - **T05** Koplanare Flächen verschmelzen (G3). Laut Nutzer „später“; nicht ohne Rückfrage.
 - **A02** braucht weiterhin Designarbeit.
 
@@ -58,8 +59,8 @@ Hinweise aus S10 für S11 (Verrundung, braucht S07):
 - **CI-Runner umziehen** (Fedora-Laptop → Fedora-44-VM auf Proxmox): weiter offen, der
   Nutzer entscheidet. **Am Runner nichts ändern.**
 - **Aus diesem Block bekannte Grenzen:**
-  - Tangente im Endpunkt eines Bogens an eine Linie (glatter Übergang) fehlt im
-    Löseradapter (S05). Fällt beim Zeichnen von Konturen mit Rundungen auf.
+  - Tangente im Endpunkt eines Bogens an eine Linie: Der Löser kann sie seit S06
+    (Winkel am gemeinsamen Punkt); beim Zeichnen wird sie weiter nicht angeboten (S05).
   - Versatz einer Kontur mit Knick zwischen Linie und Bogen wird abgewiesen (S09).
   - Die Vorschau kündigt „waagrecht“ auch an, wenn die Beziehung als überflüssig entfällt;
     die Linie bleibt über die Fänge waagrecht (S04).
