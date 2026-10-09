@@ -117,6 +117,7 @@ void validateSketchParameters(const SketchParameters& parameters) {
     validateCanonicalSketchPlane(parameters.plane);
     validateSketchElements(parameters.elements);
     validateSketchConstraints(parameters.elements, parameters.constraints);
+    validateSketchPatterns(parameters.elements, parameters.constraints, parameters.patterns);
     if (parameters.supportBinding) {
         validateSubshapeOrigin(parameters.supportBinding->reference.origin);
         validateCanonicalSketchPlane(parameters.supportBinding->localPlane);

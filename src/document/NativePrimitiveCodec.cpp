@@ -4,6 +4,7 @@
 #include "NativeExtrusion.hpp"
 #include "NativeParameters.hpp"
 #include "NativeSketchGeometry.hpp"
+#include "NativeSketchPatterns.hpp"
 #include <TDF_Reference.hxx>
 #include <TDF_Tool.hxx>
 #include <TDataStd_AsciiString.hxx>
@@ -145,6 +146,8 @@ std::vector<FeatureBodyIdentity> validate(std::span<const FeatureDescriptor> fea
                 require(size <= remainingElements);
                 remainingElements -= size;
             }
+            require(nativeSketchPatternRecords(sketch.patterns) <= remainingElements);
+            remainingElements -= nativeSketchPatternRecords(sketch.patterns);
             continue;
         }
         require((box || feature.kind == FeatureKind::cylinder) &&
@@ -331,6 +334,7 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
                 if (data.supportBinding)
                     remainingElements -=
                         data.supportBinding->reference.origin.extrusionBoundary.size();
+                remainingElements -= nativeSketchPatternRecords(data.patterns);
             }
             if (extrusion)
                 remainingElements -= nativeExtrusionRecords(std::get<ExtrusionParameters>(decoded));

@@ -4,6 +4,7 @@
 #include <voelund/document/DocumentParameters.hpp>
 #include <voelund/document/FeatureId.hpp>
 #include <voelund/document/SketchGeometry.hpp>
+#include <voelund/document/SketchPattern.hpp>
 #include <voelund/document/SketchRegionId.hpp>
 #include <voelund/document/SubshapeReference.hpp>
 #include <voelund/kernel/ShapeFactory.hpp>
@@ -79,6 +80,8 @@ struct SketchParameters final {
     std::optional<SketchRepairReason> repairReason{};
     // Set exactly for sketches without a support feature; the plane equals the datum's.
     std::optional<DatumPlane> datum{};
+    // S12: associative patterns; their instances are derived from the sources.
+    SketchPatterns patterns{};
 
     SketchParameters() = default;
     SketchParameters(SketchPlane sketchPlane, SketchElements sketchElements,

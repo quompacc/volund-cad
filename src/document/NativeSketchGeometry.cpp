@@ -1,6 +1,7 @@
 #include "NativeSketchGeometry.hpp"
 #include "DocumentSerializationDetail.hpp"
 #include "NativeSketchConstraints.hpp"
+#include "NativeSketchPatterns.hpp"
 #include "NativeSketchSupport.hpp"
 #include <TDataStd_AsciiString.hxx>
 #include <TDataStd_Integer.hxx>
@@ -158,6 +159,7 @@ void validateNativeSketchGeometry(const SketchParameters& sketch) {
     validateSketchPlane(sketch.plane);
     validateSketchElements(sketch.elements);
     validateNativeSketchConstraints(sketch);
+    validateSketchPatterns(sketch.elements, sketch.constraints, sketch.patterns);
     for (const auto& constraint : sketch.constraints.values)
         if (constraint.projectedEdge && !sketch.supportBinding)
             throw std::invalid_argument(
@@ -188,16 +190,20 @@ void writeNativeSketchGeometry(const TDF_Label& label, const SketchParameters& s
         TDataStd_Integer::Set(label.FindChild(12), static_cast<int>(*sketch.repairReason));
     if (sketch.datum)
         TDataStd_Integer::Set(label.FindChild(13), static_cast<int>(*sketch.datum));
+    // S12: written only with patterns, so sketches without keep their schema 10 encoding.
+    if (!sketch.patterns.values.empty())
+        writeNativeSketchPatterns(label.FindChild(14), sketch.patterns);
 }
 SketchParameters readNativeSketchGeometry(const TDF_Label& label, std::size_t remainingElements,
                                           int schemaVersion) {
     const auto binding = label.FindChild(11, false);
     const auto repair = label.FindChild(12, false);
     const auto datum = label.FindChild(13, false);
+    const auto patterns = label.FindChild(14, false);
     require((binding.IsNull() || schemaVersion >= 2) && (repair.IsNull() || schemaVersion >= 4) &&
-            (datum.IsNull() || schemaVersion >= 6));
+            (datum.IsNull() || schemaVersion >= 6) && (patterns.IsNull() || schemaVersion >= 11));
     require(label.NbChildren() == 4 + (binding.IsNull() ? 0 : 1) + (repair.IsNull() ? 0 : 1) +
-                                      (datum.IsNull() ? 0 : 1));
+                                      (datum.IsNull() ? 0 : 1) + (patterns.IsNull() ? 0 : 1));
     const auto plane = reals(label, 9);
     const auto elements = child(label, 10);
     const int count = integer(elements);
@@ -229,6 +235,13 @@ SketchParameters readNativeSketchGeometry(const TDF_Label& label, std::size_t re
         const int value = integer(datum);
         require(value >= 1 && value <= 3);
         sketch.datum = static_cast<DatumPlane>(value);
+    }
+    if (!patterns.IsNull()) {
+        std::size_t used = sketch.elements.values.size() + sketch.constraints.values.size();
+        if (sketch.supportBinding)
+            used += sketch.supportBinding->reference.origin.extrusionBoundary.size();
+        require(used <= remainingElements);
+        sketch.patterns = readNativeSketchPatterns(patterns, remainingElements - used);
     }
     validateNativeSketchGeometry(sketch);
     return sketch;

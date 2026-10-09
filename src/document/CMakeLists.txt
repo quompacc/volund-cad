@@ -20,6 +20,7 @@ add_library(voelund_document STATIC
     NativeAttributeValues.cpp
     NativeExtrusion.cpp
     NativeSketchGeometry.cpp
+    NativeSketchPatterns.cpp
     NativeSketchConstraints.cpp
     DocumentSerializerSupport.cpp
     DocumentSerializerWriter.cpp
@@ -31,6 +32,7 @@ add_library(voelund_document STATIC
     DocumentTransaction.cpp
     SketchConstraintSerialization.cpp
     SketchGeometry.cpp
+    SketchPattern.cpp
     SketchRegionId.cpp
 )
 

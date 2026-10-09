@@ -222,6 +222,9 @@ void evaluateSketch(const document::DocumentSnapshot& document,
         // result stays visible as an error instead of stale geometry.
         if (solveSketchConstraints(parameters).status != SketchSolveStatus::success)
             throw GeometryEvaluationError("Sketch parameters cannot be solved");
+    } else {
+        // S12: stored geometry unsolved; instances still follow their sources.
+        document::regenerateSketchPatterns(parameters.elements, parameters.patterns);
     }
     TopoDS_Compound geometry;
     BRep_Builder builder;

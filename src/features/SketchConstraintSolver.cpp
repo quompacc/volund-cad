@@ -228,6 +228,9 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
     // Unknowns of each element, to tell free from fully determined elements.
     std::vector<std::pair<document::SketchElementId, std::size_t>> unknownStarts;
     for (document::SketchElement& element : sketch.elements.values) {
+        // S12: pattern instances are derived after the solve, never unknowns.
+        if (document::isSketchPatternInstance(sketch.patterns, element.id))
+            continue;
         unknownStarts.emplace_back(element.id, unknowns.size());
         if (std::holds_alternative<document::SketchLine>(element.geometry)) {
             auto& state = states.emplace_back(std::in_place_type<LineState>, element);
@@ -488,6 +491,16 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
         if (tag > 0 && static_cast<std::size_t>(tag) <= tags.size())
             result.conflictingConstraints.push_back(tags[static_cast<std::size_t>(tag - 1)]);
     }
+    // An instance is free while its source or the mirror axis is.
+    for (const auto& pattern : sketch.patterns.values) {
+        const auto free = [&](document::SketchElementId id) {
+            return std::ranges::find(result.freeElements, id) != result.freeElements.end();
+        };
+        const bool axisFree = pattern.axis && free(*pattern.axis);
+        for (std::size_t index = 0; index < pattern.instances.size(); ++index)
+            if (axisFree || free(pattern.sources[index % pattern.sources.size()]))
+                result.freeElements.push_back(pattern.instances[index]);
+    }
     GCS::VEC_I redundantTags;
     system.getRedundant(redundantTags);
     for (int tag : redundantTags) {
@@ -508,6 +521,7 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
     system.applySolution();
     for (const auto& state : states)
         std::visit([](const auto& element) { element.writeBack(); }, state);
+    document::regenerateSketchPatterns(sketch.elements, sketch.patterns);
     try {
         document::validateSketchParameters(sketch);
     } catch (const std::invalid_argument&) {

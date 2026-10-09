@@ -319,6 +319,19 @@ Schema 4 adds optional sketch child 12 containing one integer attribute:
 and at least one legacy coordinate attachment). Unknown values, inconsistent
 states, extra payload and this child under schemas 1–3 are rejected.
 
+Schema 11 (S12) adds optional sketch child 14 for associative patterns, written only when a
+sketch has one, so sketches without patterns keep their schema 10 encoding. Layout: integer =
+pattern count; child 1 = next pattern ID (decimal text); child 1 + i = pattern i with a real
+array (step x/y, center x/y, angle) and children 1 ID, 2 kind (1 linear, 2 circular,
+3 mirror), 3 count, 4 axis element ID (0 = none), 5 sources, 6 instances (integer n plus n
+decimal element IDs). Rules (`SketchPattern.hpp`): count 2–1000 (mirror 2); instances =
+(count − 1) × sources, ordered by position, then source; sources are no legacy rectangles;
+an instance is no source or axis of any pattern (no dependent patterns, so no cycles) and
+carries no relations. Instance geometry is derived: the solver leaves instances out of its
+unknowns and regenerates them after every solve, the evaluation does so for unsolved
+sketches. Each pattern costs 1 + sources + instances records of the document budget. The
+child under schemas 1–10, unknown kinds and extra payload are rejected.
+
 Support and edge repairs require current document identity, generation/revision,
 original slot contents and a verified current candidate. A geometric match is
 only a proposal. Repair is a single document transaction with the existing

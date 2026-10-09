@@ -132,6 +132,12 @@ target_link_libraries(voelund_native_extrusion_tests PRIVATE
 add_test(NAME document.native_extrusions COMMAND voelund_native_extrusion_tests)
 set_tests_properties(document.native_extrusions PROPERTIES
     LABELS "integration;document;native;regression" TIMEOUT 60)
+add_executable(voelund_sketch_pattern_tests integration/SketchPatternTests.cpp)
+target_link_libraries(voelund_sketch_pattern_tests PRIVATE
+    voelund_project_options Voelund::Features TKBin)
+add_test(NAME document.sketch_patterns COMMAND voelund_sketch_pattern_tests)
+set_tests_properties(document.sketch_patterns PROPERTIES
+    LABELS "integration;document;native;sketch;regression" TIMEOUT 60)
 add_executable(voelund_native_parameter_tests integration/NativeParameterTests.cpp)
 target_link_libraries(voelund_native_parameter_tests PRIVATE
     voelund_project_options Voelund::Features TKBin)
