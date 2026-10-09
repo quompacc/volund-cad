@@ -113,6 +113,16 @@ void MainWindow::createToolPanel() {
     impl_->sketchExtrusionTool = std::make_unique<SketchExtrusionToolController>(
         impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
         [this](const QString& message) { statusBar()->showMessage(message); });
+    impl_->sketchExtrusionTool->setPreviewHandler([this](const auto* bodies) {
+        if (bodies == nullptr) {
+            syncVisibility(); // the model's bodies again
+            return;
+        }
+        std::vector<viewport::SceneBody> scene;
+        for (const auto& body : *bodies)
+            scene.push_back({body.sourceFeature.value(), body.shape, false, false});
+        impl_->viewport->setBodies(scene);
+    });
     impl_->pushPullTool = std::make_unique<PushPullToolController>(
         impl_->session, *impl_->viewport, *impl_->toolPanel, [this]() { refreshScene(); },
         [this](const QString& message) { statusBar()->showMessage(message); });

@@ -107,6 +107,8 @@ class CadViewportScene {
         refreshBasePlanes();
         sketchPresentation.setColors(occtColor(theme.sketchFree), occtColor(theme.sketchDetermined));
         sketchPresentation.select(context, selectedSketchElements);
+        sketchConstraintPresentation.setLabelColor(occtColor(theme.sketchLabel));
+        sketchConstraintPresentation.setConstraints(context, pendingSketchConstraints);
     }
 
     void displayPendingBodies() {

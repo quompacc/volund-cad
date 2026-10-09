@@ -29,6 +29,7 @@ QString planeName(int index) {
 
 ModelTreePanel::ModelTreePanel(QWidget* parent) : QTreeWidget(parent) {
     setObjectName(QStringLiteral("modelTree"));
+    setMinimumWidth(190); // U11: names stay readable in the smallest window
     setHeaderHidden(true);
     setColumnCount(2);
     header()->setStretchLastSection(false);

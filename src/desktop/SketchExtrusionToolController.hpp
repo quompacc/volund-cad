@@ -1,5 +1,6 @@
 #pragma once
 
+#include <voelund/application/Actions.hpp>
 #include <voelund/application/SceneStatus.hpp>
 #include <voelund/document/ModelDocument.hpp>
 
@@ -31,9 +32,15 @@ class SketchExtrusionToolController final {
     // T03: with "Bis Fläche" chosen, a face picked in the viewport becomes the end face.
     [[nodiscard]] bool awaitsEndFace() const noexcept;
     void pickEndFace(document::FeatureId support, const TopoDS_Shape& face);
+    // U11 (A-UI-02): the candidate bodies of the current values, shown while the panel is open;
+    // nullptr asks for the model itself again.
+    void setPreviewHandler(
+        std::function<void(const std::vector<features::EvaluatedBody>*)> handler);
 
   private:
     void setDistance(double distance);
+    [[nodiscard]] application::Action extrusion() const;
+    void preview();
     void choose(const std::string& choice, int index);
     void accept();
 
@@ -41,6 +48,8 @@ class SketchExtrusionToolController final {
     ToolPanelHost& panel_;
     std::function<void()> sceneChanged_;
     std::function<void(const QString&)> statusChanged_;
+    std::function<void(const std::vector<features::EvaluatedBody>*)> previewChanged_;
+    bool previewShown_{false};
     std::optional<document::FeatureId> profileSketch_;
     std::optional<application::DocumentStamp> supportStamp_;
     std::vector<document::SketchRegionId> profileIds_;

@@ -5,6 +5,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QMenu>
+#include <QResizeEvent>
 #include <QStyle>
 #include <QTimer>
 #include <QToolButton>
@@ -84,6 +85,19 @@ ShellHeader::ShellHeader(QWidget* parent) : QWidget(parent) {
 }
 
 void ShellHeader::setFileMenu(QMenu& menu) { fileButton_->setMenu(&menu); }
+
+// U11 (A-VIS-01): in narrow windows the search and the rail switch show their symbols only,
+// so no header control covers another one.
+void ShellHeader::resizeEvent(QResizeEvent* event) {
+    QWidget::resizeEvent(event);
+    const bool compact = width() < 1250;
+    if (compact == compact_)
+        return;
+    compact_ = compact;
+    for (QToolButton* button : {searchButton_, railButton_})
+        button->setToolButtonStyle(compact ? Qt::ToolButtonIconOnly : Qt::ToolButtonTextBesideIcon);
+    searchButton_->setMinimumWidth(compact ? 0 : 320);
+}
 
 void ShellHeader::setActions(QAction& undo, QAction& redo, QAction& theme) {
     undoButton_->setDefaultAction(&undo);

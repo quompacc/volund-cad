@@ -85,16 +85,16 @@ void CadViewport::mousePressEvent(QMouseEvent* event) {
                 if (impl_->sketchEditor.isDrawing())
                     return;
                 // S13: an element under the pointer wins over a constraint label on it.
-                std::optional<std::uint64_t> element, constraint;
+                std::optional<std::uint64_t> element;
                 for (impl_->context->InitDetected(); impl_->context->MoreDetected();
                      impl_->context->NextDetected()) {
                     const auto object = occ::handle<AIS_InteractiveObject>::DownCast(
                         impl_->context->DetectedCurrentOwner()->Selectable());
                     if (!element)
                         element = impl_->sketchPresentation.detectedElement(object);
-                    if (!constraint)
-                        constraint = impl_->sketchConstraintPresentation.detectedConstraint(object);
                 }
+                const auto constraint = impl_->sketchConstraintPresentation.constraintAt(
+                    impl_->view, position.x(), position.y());
                 if (!element && constraint && *constraint != 0) {
                     if (impl_->sketchConstraintSelectionHandler)
                         impl_->sketchConstraintSelectionHandler(*constraint);
@@ -160,18 +160,11 @@ void CadViewport::mouseDoubleClickEvent(QMouseEvent* event) {
         if (!impl_->ready || event->button() != Qt::LeftButton)
             return;
         const QPoint position = framebufferPoint(*this, event->position());
-        impl_->context->MoveTo(position.x(), position.y(), impl_->view, false);
         // S13: a label anywhere under the pointer, also over its element.
-        for (impl_->context->InitDetected(); impl_->context->MoreDetected();
-             impl_->context->NextDetected()) {
-            const auto id = impl_->sketchConstraintPresentation.detectedConstraint(
-                occ::handle<AIS_InteractiveObject>::DownCast(
-                    impl_->context->DetectedCurrentOwner()->Selectable()));
-            if (id.has_value() && *id != 0 && impl_->sketchConstraintEditHandler) {
-                impl_->sketchConstraintEditHandler(*id);
-                return;
-            }
-        }
+        const auto id =
+            impl_->sketchConstraintPresentation.constraintAt(impl_->view, position.x(), position.y());
+        if (id.has_value() && *id != 0 && impl_->sketchConstraintEditHandler)
+            impl_->sketchConstraintEditHandler(*id);
     });
 }
 

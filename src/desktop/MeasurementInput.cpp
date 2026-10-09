@@ -26,4 +26,13 @@ QDoubleSpinBox* makeAngleInput(QWidget* parent)
     return input;
 }
 
+QDoubleSpinBox* makeCountInput(QWidget* parent)
+{
+    auto* input = new QDoubleSpinBox(parent);
+    input->setDecimals(0);
+    input->setSingleStep(1.0);
+    input->setKeyboardTracking(false);
+    return input;
+}
+
 } // namespace voelund::desktop

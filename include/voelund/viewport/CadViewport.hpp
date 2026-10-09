@@ -204,6 +204,8 @@ struct ViewportTheme final {
     // determined. Conflicts stay red, selection orange; construction geometry is dashed.
     QColor sketchFree{0x1F, 0x6F, 0xEB};
     QColor sketchDetermined{0x1B, 0x20, 0x26};
+    // U11: constraint labels, readable on the background.
+    QColor sketchLabel{0x0B, 0x4F, 0x9C};
 };
 // Base planes offered in the viewport (V01b); values match document::DatumPlane.
 enum class BasePlane { xy = 1, xz = 2, yz = 3 };
@@ -243,6 +245,8 @@ class CadViewport final : public CadViewportBase {
     void setSketchConstraints(std::span<const SceneSketchConstraint> constraints);
     // S13: projected geometry of the support (drawn and snapped) on or off; view state.
     void setSketchProjectedGeometryVisible(bool visible);
+    // U11: fits the open sketch into the part of the view rail and panel leave free.
+    void fitSketchIntoFreeArea();
     void setSketchConstraintEditHandler(std::function<void(std::uint64_t)> handler);
     // S13: a single click on a constraint label where no element lies.
     void setSketchConstraintSelectionHandler(std::function<void(std::uint64_t)> handler);

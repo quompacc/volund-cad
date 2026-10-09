@@ -200,6 +200,9 @@ int main(int argc, char* argv[]) {
     const bool isSmokeTest = QCoreApplication::arguments().contains("--smoke-test");
     const bool uninitializedSmoke =
         QCoreApplication::arguments().contains("--smoke-test-uninitialized");
+    // U11 (A-UI-03): opens the document given on the command line the way a desktop file
+    // association does, then quits: 0 when it opened, 12 when not.
+    const bool openCheck = QCoreApplication::arguments().contains("--smoke-test-open");
     if (isSmokeTest || uninitializedSmoke)
         voelund::apps::enableSmokeLogging();
     if (uninitializedSmoke) {
@@ -230,7 +233,7 @@ int main(int argc, char* argv[]) {
 
     // L05: unsaved work of an interrupted run is offered first (not in the smoke test, which
     // starts from a clean, unmodified document).
-    if (!isSmokeTest)
+    if (!isSmokeTest && !openCheck)
         mainWindow.offerRecovery();
 
     // U07: a document given on the command line (desktop file association) opens through the
@@ -242,6 +245,12 @@ int main(int argc, char* argv[]) {
             break;
         }
 
+    if (openCheck) {
+        QTimer::singleShot(0, &application, [&application, &session] {
+            application.exit(session.features().empty() || session.currentFile().empty() ? 12 : 0);
+        });
+        return application.exec();
+    }
     if (isSmokeTest)
         startCadSmoke(mainWindow, session);
     return application.exec();

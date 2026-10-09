@@ -41,6 +41,9 @@
 #include <QShowEvent>
 #include <QTimer>
 #endif
+#include <BRepBndLib.hxx>
+#include <Bnd_Box.hxx>
+#include <QTimer>
 #include "SelectionBand.hpp"
 #include <QWheelEvent>
 #include <Quantity_Color.hxx>
@@ -208,6 +211,52 @@ void CadViewport::beginSketchEditor(const PlanarFaceSelection& support, SketchEl
         if (!impl_->sketchEditor.projectedVisible())
             shown.referenceSegments.clear();
         impl_->sketchPresentation.setReferences(impl_->context, shown, true);
+        update();
+    });
+    // U11: once the panel is open, the sketch moves into the area rail and panel leave free.
+    QTimer::singleShot(0, this, [this] { fitSketchIntoFreeArea(); });
+}
+
+// U11 (A-VIS-01): the tool rail (left) and the tool panel (right) lie over the view; a plain
+// fit put an edited sketch under both. The sketch's own extent is fitted into the free part.
+void CadViewport::fitSketchIntoFreeArea() {
+    performViewportOperation(*this, impl_->ready, [&] {
+        if (!impl_->ready || !impl_->activeSketchSupport || impl_->pendingSketchElements.empty())
+            return;
+        Bnd_Box extent;
+        for (const SceneSketchElement& element : impl_->pendingSketchElements)
+            if (!element.shape.IsNull())
+                BRepBndLib::Add(element.shape, extent);
+        if (extent.IsVoid())
+            return;
+        int left = 0, right = width();
+        for (QObject* object : children()) {
+            auto* widget = qobject_cast<QWidget*>(object);
+            if (widget == nullptr || !widget->isVisible() || widget->height() < height() / 3)
+                continue;
+            const QRect area = widget->geometry();
+            if (area.center().x() < width() / 2)
+                left = std::max(left, area.right());
+            else
+                right = std::min(right, area.left());
+        }
+        // A small window leaves too little room between both overlays: then the content stays
+        // right of the left one at least, partly under the panel.
+        if (right - left < width() / 4)
+            right = width();
+        if (right - left < width() / 4)
+            return;
+        impl_->view->FitAll(extent, 0.1, false);
+        const occ::handle<Graphic3d_Camera> camera = impl_->view->Camera();
+        const double share = static_cast<double>(right - left) / width();
+        camera->SetScale(camera->Scale() / std::max(0.2, share * 0.85));
+        // Move the content from the view's middle to the free area's middle.
+        const double worldPerPixel = camera->Scale() / std::max(1, height());
+        const double shift = ((left + right) / 2.0 - width() / 2.0) * worldPerPixel;
+        const gp_Vec rightward = gp_Vec(camera->Direction()).Crossed(gp_Vec(camera->Up()));
+        const gp_Vec move = rightward.Normalized() * -shift;
+        camera->SetEyeAndCenter(camera->Eye().Translated(move), camera->Center().Translated(move));
+        impl_->view->ZFitAll();
         update();
     });
 }

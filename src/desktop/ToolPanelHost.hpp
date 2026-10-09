@@ -20,12 +20,16 @@ namespace voelund::desktop {
 // Short button label for a tool action (panel and tool rail, U13).
 [[nodiscard]] QString compactActionLabel(const std::string& id, const QString& fallback);
 
+// U11 (A-VIS-01): what a numeric field holds, so its unit is right.
+enum class ToolValueKind { length, count, angle };
+
 struct ToolLengthParameter final {
     std::string id;
     QString label;
     double value;
     double minimum;
     double maximum;
+    ToolValueKind kind{ToolValueKind::length};
 };
 
 struct ToolChoiceParameter final {

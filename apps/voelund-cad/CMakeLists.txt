@@ -70,6 +70,20 @@ if(BUILD_TESTING AND VOELUND_BUILD_DESKTOP)
         add_test(NAME desktop.viewport_startup COMMAND voelund-cad --smoke-test)
         set_tests_properties(desktop.viewport_startup PROPERTIES TIMEOUT 15 LABELS "windows;desktop;platform")
     endif()
+    # U11 (A-UI-03): the product opens a document given as its argument (file association).
+    set(file_argument_fixture "${PROJECT_SOURCE_DIR}/tests/fixtures/documents/v09.volund")
+    if(VOELUND_NATIVE_WAYLAND)
+        add_test(NAME desktop.file_argument
+            COMMAND /usr/bin/env -u DISPLAY QT_QPA_PLATFORM=wayland
+                $<TARGET_FILE:voelund-cad> --smoke-test-open "${file_argument_fixture}")
+    elseif(WIN32)
+        add_test(NAME desktop.file_argument
+            COMMAND voelund-cad --smoke-test-open "${file_argument_fixture}")
+    endif()
+    if(VOELUND_NATIVE_WAYLAND OR WIN32)
+        set_tests_properties(desktop.file_argument PROPERTIES
+            TIMEOUT 30 LABELS "desktop;platform;acceptance")
+    endif()
 endif()
 
 target_sources(voelund-cad PRIVATE "${PROJECT_SOURCE_DIR}/apps/SmokeSupport.cpp")

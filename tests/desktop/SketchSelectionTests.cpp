@@ -104,11 +104,16 @@ void run() {
     box(*viewport, 90, 30, 100, 40);
     require(selectedCount(*viewport) == 0, "An empty box clears the selection");
 
-    // The bottom side's [H] label sits on its middle; a click there selects the side.
-    click(*viewport, 0, -10);
+    // The bottom side's [H] label sits 12 px right of its middle (U11), over the side; a click
+    // where both are selects the side.
+    const QPoint middle = at(*viewport, 0, -10) + QPoint(20, 0);
+    send(*viewport, QEvent::MouseMove, middle, Qt::NoButton);
+    send(*viewport, QEvent::MouseButtonPress, middle, Qt::LeftButton);
+    send(*viewport, QEvent::MouseButtonRelease, middle, Qt::NoButton);
+    test::render(*viewport);
+    settle();
     require(selectedCount(*viewport) == 1 && status(window).startsWith(QStringLiteral("Skizze")),
             "An element wins over its label, got " + status(window).toStdString());
-    const QPoint middle = at(*viewport, 0, -10);
     send(*viewport, QEvent::MouseButtonPress, middle, Qt::LeftButton);
     send(*viewport, QEvent::MouseButtonRelease, middle, Qt::NoButton);
     send(*viewport, QEvent::MouseButtonDblClick, middle, Qt::LeftButton);

@@ -38,7 +38,11 @@ class ShellHeader final : public QWidget {
     void setAssistantVisible(bool visible);
     void setTheme(ThemeMode mode);
 
+  protected:
+    void resizeEvent(QResizeEvent* event) override;
+
   private:
+    bool compact_{false};
     QLabel* brand_{nullptr};
     QLabel* documentName_{nullptr};
     QLabel* saveState_{nullptr};

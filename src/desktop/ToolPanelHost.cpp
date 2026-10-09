@@ -176,7 +176,10 @@ void ToolPanelHost::begin(ToolPanelDefinition definition) {
     guidance_->setText(definition_.guidance);
     setStatus({});
     for (const ToolLengthParameter& parameter : definition_.lengthParameters) {
-        QDoubleSpinBox* input = makeLengthInput(content_);
+        QDoubleSpinBox* input = parameter.kind == ToolValueKind::angle ? makeAngleInput(content_)
+                                : parameter.kind == ToolValueKind::count
+                                    ? makeCountInput(content_)
+                                    : makeLengthInput(content_);
         input->setRange(parameter.minimum, parameter.maximum);
         input->setValue(parameter.value);
         const std::string parameterId = parameter.id;

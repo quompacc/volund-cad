@@ -6,7 +6,10 @@
   "dependencies": [
     {
       "name": "opencascade",
-      "default-features": false
+      "default-features": false,
+      "features": [
+        "freetype"
+      ]
     },
     "boost-graph",
     "eigen3"

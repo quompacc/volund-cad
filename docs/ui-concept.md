@@ -208,6 +208,13 @@ Bedienregeln im Skizzeneditor (S13, Nutzerentscheidung 09.10.2026):
   Entf oder „Bedingung entfernen“ löscht sie. Gelbe Beschriftungen sind überflüssig.
 - **Fehler** stehen in der Statuszeile; Elemente, die eine Ablehnung verursachen, sind rot,
   bis sich die Auswahl ändert.
+- **Beschriftungen** (U11) stehen 12 px rechts neben ihrem Punkt. Mehrere am selben Punkt
+  stehen untereinander, in jeder Zoomstufe. Die Grundfarbe folgt dem Theme (dunkelblau auf
+  hell, hellblau auf dunkel). Getroffen wird der Textkasten selbst.
+- **Bearbeiten einer Skizze** (U11) rückt sie in die freie Fläche zwischen Palette und
+  Panel. Ist das Fenster dafür zu schmal, steht sie rechts neben der Palette.
+- **Schmale Fenster** (U11): Unter 1250 px Breite zeigen Suche und Werkzeugleisten-Schalter
+  in der Kopfzeile nur ihr Symbol. Der Modellbaum ist mindestens 190 px breit.
 
 Die Kontextleiste zeigt je Auswahl (`ContextCommands`):
 

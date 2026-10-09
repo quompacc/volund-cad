@@ -78,17 +78,64 @@ void SketchExtrusionToolController::beginSelectedProfiles() {
                 setDistance(value);
             else if (id == "offset")
                 offset_ = value;
+            preview();
         },
-        [this](const std::string& id, int index) { choose(id, index); },
+        [this](const std::string& id, int index) {
+            choose(id, index);
+            preview();
+        },
         {},
         [this]() { accept(); },
         [this]() { cancel(); },
         {}});
     panel_.setAcceptEnabled(true);
+    preview();
     statusChanged_(QObject::tr("Extrusion bereit: %1 Bereich(e)").arg(profileIds_.size()));
 }
 
 void SketchExtrusionToolController::setDistance(double distance) { distance_ = distance; }
+
+void SketchExtrusionToolController::setPreviewHandler(
+    std::function<void(const std::vector<features::EvaluatedBody>*)> handler) {
+    previewChanged_ = std::move(handler);
+}
+
+application::Action SketchExtrusionToolController::extrusion() const {
+    const bool named = baseSketch_ && operation_ != document::ExtrusionOperation::newBody;
+    return application::CreateProfileExtrusionAction{
+        *profileSketch_, profileIds_, millimetres(distance_),
+        {operation_, reversed_, named ? target_ : std::nullopt, offset_,
+         upToFace_ ? endFace_ : std::nullopt}};
+}
+
+// U11 (A-UI-02, A-VIS-01): the extrusion the values would give, on an isolated copy; the
+// document stays unchanged until OK. An invalid combination says why and disables OK.
+void SketchExtrusionToolController::preview() {
+    if (!active_ || !profileSketch_ || !previewChanged_)
+        return;
+    // Without a valid candidate the view shows the model itself (faces stay pickable).
+    const auto showModel = [this] {
+        if (previewShown_)
+            previewChanged_(nullptr);
+        previewShown_ = false;
+    };
+    if (upToFace_ && !endFace_) {
+        showModel();
+        return;
+    }
+    const auto candidate = application::previewAction(
+        session_, application::prepareRequest(session_, extrusion(), supportStamp_));
+    const auto& result = candidate.result.command;
+    const bool ok = result.status() == application::CommandStatus::committed;
+    panel_.setAcceptEnabled(ok);
+    if (!ok) {
+        panel_.setGuidance(commandFeedbackMessage(result));
+        showModel();
+        return;
+    }
+    previewChanged_(&candidate.bodies);
+    previewShown_ = true;
+}
 
 void SketchExtrusionToolController::choose(const std::string& choice, int index) {
     if (choice == "end") {
@@ -123,16 +170,7 @@ void SketchExtrusionToolController::accept() {
     if (!profileSketch_.has_value())
         return;
     if (!runCommand(
-            [this] {
-                const bool named =
-                    baseSketch_ && operation_ != document::ExtrusionOperation::newBody;
-                return runAction(session_,
-                                 application::CreateProfileExtrusionAction{
-                                     *profileSketch_, profileIds_, millimetres(distance_),
-                                     {operation_, reversed_, named ? target_ : std::nullopt,
-                                      offset_, upToFace_ ? endFace_ : std::nullopt}},
-                                 supportStamp_);
-            },
+            [this] { return runAction(session_, extrusion(), supportStamp_); },
             [this](const QString& message) {
                 panel_.setGuidance(message);
                 statusChanged_(message);
@@ -151,6 +189,9 @@ void SketchExtrusionToolController::cancel() {
     profileSketch_.reset();
     profileIds_.clear();
     active_ = false;
+    if (previewShown_ && previewChanged_)
+        previewChanged_(nullptr); // the model again instead of the preview
+    previewShown_ = false;
     statusChanged_(QObject::tr("Werkzeug abgebrochen"));
 }
 
@@ -169,6 +210,7 @@ void SketchExtrusionToolController::pickEndFace(document::FeatureId support,
     }
     panel_.setAcceptEnabled(true);
     panel_.setGuidance(QObject::tr("Endfläche gewählt. Eine andere Fläche ersetzt sie."));
+    preview();
     statusChanged_(QObject::tr("Endfläche gewählt"));
 }
 
