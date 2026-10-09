@@ -3,6 +3,7 @@
 
 #include <GCS.h>
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdint>
@@ -486,6 +487,15 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
     for (int tag : conflictingTags) {
         if (tag > 0 && static_cast<std::size_t>(tag) <= tags.size())
             result.conflictingConstraints.push_back(tags[static_cast<std::size_t>(tag - 1)]);
+    }
+    GCS::VEC_I redundantTags;
+    system.getRedundant(redundantTags);
+    for (int tag : redundantTags) {
+        if (tag > 0 && static_cast<std::size_t>(tag) <= tags.size() &&
+            std::ranges::find(result.redundantConstraints,
+                              tags[static_cast<std::size_t>(tag - 1)]) ==
+                result.redundantConstraints.end())
+            result.redundantConstraints.push_back(tags[static_cast<std::size_t>(tag - 1)]);
     }
     if (!result.conflictingConstraints.empty()) {
         result.status = SketchSolveStatus::conflicting;

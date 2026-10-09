@@ -1,6 +1,5 @@
 #include "IsolatedSettings.hpp"
 #include "../../src/desktop/FeaturePropertiesPanel.hpp"
-#include "../../src/desktop/SketchConstraintLabel.hpp"
 #include "../../src/desktop/SketchEditorToolController.hpp"
 #include "../../src/desktop/ToolPanelHost.hpp"
 #include "../../src/viewport/RotationInput.hpp"
@@ -65,10 +64,9 @@ void panel() {
         near(kernel::toDegrees(panel.cylinderParameters().placement.rotationZ).value(), degrees + 5,
              "cylinder preview wrapped complete turns");
     }
-    const features::SketchConstraintAnnotation annotation{document::SketchConstraintId{1},
-                                                          document::SketchConstraintKind::angle,
-                                                          gp_Pnt{}, -std::numbers::pi / 3};
-    require(desktop::sketchConstraintLabel(annotation).find("-60.000") != std::string::npos,
+    require(features::sketchConstraintLabel(document::SketchConstraintKind::angle,
+                                            -std::numbers::pi / 3)
+                    .find("-60.000") != std::string::npos,
             "angle annotation no longer displays signed degrees");
 }
 void window() {

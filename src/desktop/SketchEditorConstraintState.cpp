@@ -62,6 +62,12 @@ void SketchEditorToolController::syncConstraintState() {
         panel_.setStatus(QObject::tr("Löser fehlgeschlagen"));
         panel_.setGuidance(QObject::tr("Korrigiere die Skizze oder mache rückgängig; OK ist "
                                        "gesperrt."));
+    } else if (!result.redundantConstraints.empty()) {
+        // S07: redundant relations take no freedom; the count would not reach zero.
+        panel_.setStatus(QObject::tr("Überflüssig: %1 Bedingung(en)")
+                             .arg(result.redundantConstraints.size()));
+        panel_.setGuidance(QObject::tr("Orange Bedingungen folgen schon aus anderen. Entferne "
+                                       "sie, dann stimmen die Freiheitsgrade."));
     } else if (editor_->elements().empty()) {
         panel_.setStatus({});
         panel_.setGuidance(QObject::tr("Zeichne Skizzengeometrie, um zu beginnen."));

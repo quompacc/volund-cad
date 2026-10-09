@@ -109,6 +109,7 @@ struct SceneSketchConstraint final {
     double z;
     bool conflicting;
     bool editable;
+    bool redundant{false}; // S07: implied by other relations
 };
 
 struct PlanarReferenceSegment final {

@@ -26,12 +26,12 @@ add_library(
     McpAccess.cpp
     MeasurementInput.cpp
     ModelTreePanel.cpp
-    SketchConstraintLabel.cpp
     SketchEditorConstraintState.cpp
     SketchEditorCommand.cpp
     SketchEditorCreation.cpp
     SketchEditorDrag.cpp
     SketchEditorPresentation.cpp
+    SketchEditorDimensionEdit.cpp
     SketchEditorRecovery.cpp
     SketchEditorToolController.cpp
     SketchIcons.cpp

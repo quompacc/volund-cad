@@ -2,7 +2,6 @@
 #include "CommandFeedback.hpp"
 #include <voelund/document/SketchPlaneValidation.hpp>
 
-#include "SketchConstraintLabel.hpp"
 #include "SketchViewAdapter.hpp"
 #include "ToolPanelHost.hpp"
 
@@ -394,48 +393,6 @@ void SketchEditorToolController::clearSelection() {
     syncSelectedDimensionInputs();
     syncConstraintState();
     refreshPresentation();
-}
-
-void SketchEditorToolController::editConstraint(std::uint64_t constraintId) {
-    if (!editor_)
-        return;
-    const document::SketchConstraintId id{constraintId};
-    const auto currentAngle = editor_->constraintAngle(id);
-    const auto current = currentAngle
-                             ? std::optional<double>{kernel::toDegrees(*currentAngle).value()}
-                             : editor_->constraintValue(id);
-    if (!current.has_value()) {
-        if (editor_->removeConstraint(id)) {
-            syncConstraintState();
-            refreshPresentation();
-            statusChanged_(QObject::tr("Skizzenbedingung entfernt"));
-        }
-        return;
-    }
-    const auto annotations = editor_->evaluatedConstraints();
-    const auto annotation =
-        std::ranges::find(annotations, id, &features::SketchConstraintAnnotation::id);
-    const bool angle = currentAngle.has_value();
-    const bool directional = annotation != annotations.end() &&
-                             (annotation->kind == document::SketchConstraintKind::pointDistanceX ||
-                              annotation->kind == document::SketchConstraintKind::pointDistanceY);
-    bool accepted = false;
-    const double value = QInputDialog::getDouble(
-        &panel_, QObject::tr("Skizzenmaß bearbeiten"),
-        angle ? QObject::tr("Winkel (Grad)") : QObject::tr("Wert (mm)"), *current,
-        angle         ? -179.999
-        : directional ? -1'000'000.0
-                      : 0.001,
-        angle ? 179.999 : 1'000'000.0, 3, &accepted);
-    if (!accepted ||
-        !(angle ? editor_->setConstraintAngle(id, kernel::toRadians(kernel::Degrees(value)))
-                : editor_->setConstraintValue(id, value)))
-        return;
-    syncSelectedDimensionInputs();
-    syncConstraintState();
-    refreshPresentation();
-    statusChanged_(angle ? QObject::tr("Skizzenwinkel auf %1° gesetzt").arg(value, 0, 'f', 3)
-                         : QObject::tr("Skizzenmaß auf %1 mm gesetzt").arg(value, 0, 'f', 3));
 }
 
 void SketchEditorToolController::applyElementDimension(const std::string& id, double value) {

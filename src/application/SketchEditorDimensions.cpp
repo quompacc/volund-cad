@@ -1,10 +1,28 @@
 #include <voelund/kernel/NumericPolicy.hpp>
+#include <voelund/application/CadSession.hpp>
 #include <voelund/application/SketchEditorSession.hpp>
 
 #include <algorithm>
 #include <cmath>
+#include <stdexcept>
 
 namespace voelund::application {
+namespace {
+
+using document::SketchConstraintKind;
+
+bool isCoordinate(SketchConstraintKind kind) {
+    return kind == SketchConstraintKind::coordinateX ||
+           kind == SketchConstraintKind::coordinateY ||
+           kind == SketchConstraintKind::pointDistanceX ||
+           kind == SketchConstraintKind::pointDistanceY;
+}
+
+[[noreturn]] void refuse(const std::string& reason) {
+    throw std::invalid_argument("Maß: " + reason);
+}
+
+} // namespace
 
 bool SketchEditorSession::isConstraintConflicting(
     document::SketchConstraintId constraintId) const noexcept {
@@ -12,79 +30,108 @@ bool SketchEditorSession::isConstraintConflicting(
            lastSolveResult_.conflictingConstraints.end();
 }
 
+bool SketchEditorSession::isConstraintRedundant(
+    document::SketchConstraintId constraintId) const noexcept {
+    return std::ranges::find(lastSolveResult_.redundantConstraints, constraintId) !=
+           lastSolveResult_.redundantConstraints.end();
+}
+
 std::optional<double>
 SketchEditorSession::constraintValue(document::SketchConstraintId constraintId) const noexcept {
     const auto match =
         std::ranges::find(constraints_.values, constraintId, &document::SketchConstraint::id);
-    if (match == constraints_.values.end() ||
-        (match->kind != document::SketchConstraintKind::distance &&
-         match->kind != document::SketchConstraintKind::radius &&
-         match->kind != document::SketchConstraintKind::diameter &&
-         match->kind != document::SketchConstraintKind::pointDistance &&
-         match->kind != document::SketchConstraintKind::pointLineDistance &&
-         match->kind != document::SketchConstraintKind::pointDistanceX &&
-         match->kind != document::SketchConstraintKind::pointDistanceY))
+    if (match == constraints_.values.end() || match->kind == SketchConstraintKind::angle ||
+        features::sketchAnnotationCategory(match->kind) !=
+            features::SketchAnnotationCategory::dimension)
         return std::nullopt;
     return match->value;
-}
-
-bool SketchEditorSession::setConstraintValue(document::SketchConstraintId constraintId,
-                                             double value) {
-    return constraintValue(constraintId).has_value() &&
-           setConstraintInternalValue(constraintId, value);
 }
 
 std::optional<kernel::Radians>
 SketchEditorSession::constraintAngle(document::SketchConstraintId constraintId) const noexcept {
     const auto match =
         std::ranges::find(constraints_.values, constraintId, &document::SketchConstraint::id);
-    if (match == constraints_.values.end() || match->kind != document::SketchConstraintKind::angle)
+    if (match == constraints_.values.end() || match->kind != SketchConstraintKind::angle)
         return std::nullopt;
     return match->angleValue;
 }
 
-bool SketchEditorSession::setConstraintAngle(document::SketchConstraintId constraintId,
-                                             kernel::Radians angle) {
-    return constraintAngle(constraintId).has_value() &&
-           setConstraintInternalValue(constraintId, angle.value());
-}
-
-bool SketchEditorSession::setConstraintInternalValue(document::SketchConstraintId constraintId,
-                                                     double value) {
-    if (!active_ || !std::isfinite(value))
-        return false;
+std::optional<std::string>
+SketchEditorSession::dimensionProblem(document::SketchConstraintId constraintId) const {
+    if (!active_)
+        return "Maß: Der Skizzeneditor ist nicht aktiv";
     const auto match =
         std::ranges::find(constraints_.values, constraintId, &document::SketchConstraint::id);
     if (match == constraints_.values.end())
+        return "Maß: Die Bedingung gibt es nicht mehr";
+    if (features::sketchAnnotationCategory(match->kind) !=
+        features::SketchAnnotationCategory::dimension)
+        return "Maß: Eine Beziehung hat keinen Wert";
+    if (match->parameter.has_value()) {
+        const auto& table = session_.parameterTable().values;
+        const auto parameter =
+            std::ranges::find(table, *match->parameter, &document::DocumentParameter::id);
+        return "Maß: Gebunden an den Parameter „" +
+               (parameter != table.end() ? parameter->name : std::string("?")) +
+               "“; den Parameter ändern";
+    }
+    if (match->projectedEdge.has_value() || !match->auxiliaryValues.empty())
+        return "Maß: Die Koordinate folgt einer Referenzkante";
+    return std::nullopt;
+}
+
+bool SketchEditorSession::editDimension(document::SketchConstraintId constraintId, double value) {
+    if (const auto problem = dimensionProblem(constraintId))
+        throw std::invalid_argument(*problem);
+    const auto match =
+        std::ranges::find(constraints_.values, constraintId, &document::SketchConstraint::id);
+    const bool angle = match->kind == SketchConstraintKind::angle;
+    if (!std::isfinite(value))
+        refuse("Der Wert ist keine Zahl");
+    if (angle) {
+        if (std::abs(value) <= kernel::toRadians(kernel::Degrees(1.0e-9)).value() ||
+            std::abs(value) >= std::numbers::pi)
+            refuse("Ein Winkel liegt zwischen 0° und 180°, beide ausgenommen");
+    } else if (isCoordinate(match->kind)) {
+        if (!kernel::modelCoordinate(value))
+            refuse(kernel::modelRangeDiagnostic);
+    } else if (!kernel::modelLength(value)) {
+        refuse(value <= 0.0 ? "Eine Länge muss größer als 0 sein"
+                            : std::string(kernel::modelRangeDiagnostic));
+    }
+    if ((angle ? match->angleValue.value() : match->value) == value)
         return false;
-    const bool angle = match->kind == document::SketchConstraintKind::angle;
-    const bool directional = match->kind == document::SketchConstraintKind::pointDistanceX ||
-                             match->kind == document::SketchConstraintKind::pointDistanceY;
-    const bool dimensional = match->kind == document::SketchConstraintKind::distance ||
-                             match->kind == document::SketchConstraintKind::radius ||
-                             match->kind == document::SketchConstraintKind::diameter ||
-                             match->kind == document::SketchConstraintKind::pointDistance ||
-                             match->kind == document::SketchConstraintKind::pointLineDistance ||
-                             directional || angle;
-    if (!dimensional ||
-        (angle         ? std::abs(value) <= kernel::toRadians(kernel::Degrees(1.0e-9)).value() ||
-                             std::abs(value) >= std::numbers::pi
-         : directional ? !kernel::modelCoordinate(value)
-                       : !kernel::modelLength(value)) ||
-        (angle ? match->angleValue.value() : match->value) == value)
-        return false;
-    const document::SketchElements originalElements = elements_;
-    const auto originalConstraint = *match;
+    Rollback rollback(*this);
     if (angle)
         match->angleValue = kernel::Radians(value);
     else
         match->value = value;
-    if (solveConstraints())
-        return true;
-    elements_ = originalElements;
-    *match = originalConstraint;
-    static_cast<void>(solveConstraints());
-    return false;
+    if (!solveConstraints())
+        refuse("Mit diesem Wert lässt sich die Skizze nicht lösen; nichts geändert");
+    rollback.keep();
+    return true;
+}
+
+bool SketchEditorSession::setConstraintValue(document::SketchConstraintId constraintId,
+                                             double value) {
+    if (!constraintValue(constraintId).has_value())
+        return false;
+    try {
+        return editDimension(constraintId, value);
+    } catch (const std::invalid_argument&) {
+        return false;
+    }
+}
+
+bool SketchEditorSession::setConstraintAngle(document::SketchConstraintId constraintId,
+                                             kernel::Radians angle) {
+    if (!constraintAngle(constraintId).has_value())
+        return false;
+    try {
+        return editDimension(constraintId, angle.value());
+    } catch (const std::invalid_argument&) {
+        return false;
+    }
 }
 
 std::vector<features::SketchConstraintAnnotation>

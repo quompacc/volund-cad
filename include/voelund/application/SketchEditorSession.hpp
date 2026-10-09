@@ -155,6 +155,17 @@ class SketchEditorSession final {
     [[nodiscard]] bool isElementDetermined(document::SketchElementId elementId) const noexcept;
     [[nodiscard]] bool
     isConstraintConflicting(document::SketchConstraintId constraintId) const noexcept;
+    // S07: a redundant relation (implied by others) after the last solve.
+    [[nodiscard]] bool
+    isConstraintRedundant(document::SketchConstraintId constraintId) const noexcept;
+    // S07: changes a dimension as one step (value in internal units: millimetres, radians for
+    // angles). Throws std::invalid_argument with the reason and changes nothing for a
+    // relation, a parameter-bound or reference dimension, a value out of range, or a value the
+    // sketch cannot be solved with. The same value is no change and returns false.
+    bool editDimension(document::SketchConstraintId constraintId, double value);
+    // Why the dimension cannot be edited at all, or nothing.
+    [[nodiscard]] std::optional<std::string>
+    dimensionProblem(document::SketchConstraintId constraintId) const;
     // Linear dimensions/coordinates only; angles require the typed accessors.
     [[nodiscard]] std::optional<double>
     constraintValue(document::SketchConstraintId constraintId) const noexcept;
@@ -184,8 +195,6 @@ class SketchEditorSession final {
     canAllocatePreviewIds(std::span<const document::SketchGeometry> preview) const noexcept;
     [[nodiscard]] bool canUpsertUnaryConstraint(document::SketchElementId element,
                                                 document::SketchConstraintKind kind) const noexcept;
-    [[nodiscard]] bool setConstraintInternalValue(document::SketchConstraintId constraintId,
-                                                  double value);
     friend class SketchSolverGateTestAccess;
     // S02: everything an undo step, a drag or a failed operation restores. An undo step keeps
     // the selection with its geometry; its solve result is derived again when it returns.

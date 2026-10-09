@@ -1,6 +1,5 @@
 #include "SketchEditorToolController.hpp"
 
-#include "SketchConstraintLabel.hpp"
 #include "SketchViewAdapter.hpp"
 #include "ToolPanelHost.hpp"
 
@@ -185,21 +184,12 @@ void SketchEditorToolController::refreshPresentation() {
     const auto annotations = editor_->evaluatedConstraints();
     std::vector<viewport::SceneSketchConstraint> constraints;
     constraints.reserve(annotations.size());
-    for (const features::SketchConstraintAnnotation& annotation : annotations) {
-        const bool editable =
-            annotation.kind == document::SketchConstraintKind::distance ||
-            annotation.kind == document::SketchConstraintKind::radius ||
-            annotation.kind == document::SketchConstraintKind::diameter ||
-            annotation.kind == document::SketchConstraintKind::pointDistance ||
-            annotation.kind == document::SketchConstraintKind::pointLineDistance ||
-            annotation.kind == document::SketchConstraintKind::pointDistanceX ||
-            annotation.kind == document::SketchConstraintKind::pointDistanceY ||
-            annotation.kind == document::SketchConstraintKind::angle;
-        constraints.push_back({annotation.id.value(), sketchConstraintLabel(annotation),
-                               annotation.position.X(), annotation.position.Y(),
-                               annotation.position.Z(),
-                               editor_->isConstraintConflicting(annotation.id), editable});
-    }
+    // S07: label, value and editability come from one projection (SketchConstraintAnnotations).
+    for (const features::SketchConstraintAnnotation& annotation : annotations)
+        constraints.push_back({annotation.id.value(), annotation.label, annotation.position.X(),
+                               annotation.position.Y(), annotation.position.Z(),
+                               editor_->isConstraintConflicting(annotation.id),
+                               annotation.editable, editor_->isConstraintRedundant(annotation.id)});
     if (previewAutomatic_.has_value() && evaluated.size() > editor_->elements().size() &&
         !evaluated.back().points.empty()) {
         const auto& first = evaluated.back().points[0].world;
