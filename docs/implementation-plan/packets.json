@@ -1708,12 +1708,14 @@
       ],
       "acceptance": "A-UI-01 Skizzenteil und A-UI-02/03 bestehen. Absichtlich abgetrennter Handler macht Test rot. Extrude-Teil wird in M04 ergänzt. A-VIS-01 bestanden: Bilder tatsächlich selbst betrachtet, Layout-/Overlayfehler korrigiert und mit neuer Aufnahme nachgeprüft.",
       "boundary": "Kein Test, der nur Backendmethoden aufruft und danach Fenstersichtbarkeit bestätigt.",
-      "status": "planned",
+      "status": "done",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/U11.md"
+      ],
+      "completedCommit": "7747346"
     },
     {
       "id": "U12",
