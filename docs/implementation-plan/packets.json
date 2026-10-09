@@ -2138,12 +2138,14 @@
       ],
       "acceptance": "Alle vier Schalter verändern den benannten Zustand; Ansichtsänderungen erzeugen kein Dirty. Auswahl mit Ellipse/Arc und Constraint-Label kollidiert nicht. Escape beendet zuerst Vorschau, dann Werkzeug nach dokumentierter Regel.",
       "boundary": "Kein eigenes Skizzen-Ribbon: Skizzenwerkzeuge sitzen nach ADR 0012 in der Kontextleiste; keine versteckten Fachregeln in Eventhandlern.",
-      "status": "planned",
+      "status": "done",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/S13.md"
+      ],
+      "completedCommit": "82b13f5"
     },
     {
       "id": "S14",

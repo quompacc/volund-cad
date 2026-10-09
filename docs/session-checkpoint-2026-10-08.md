@@ -9,10 +9,11 @@ Git-Historie dieser Datei.
 ## Stand des Repos
 
 - Branch `ux01`. `main` folgt nach jeder grünen Abnahme per Fast-Forward.
-- Letztes Paket: S12 (Code `da96108` + `5a0c7fb`, CI-Läufe 499 und 500). Der Abnahme-Commit enthält diese
+- Letztes Paket: S13 (Code `ccd415c`, `52a9a29`, `82b13f5`; CI-Läufe 503 und 505). Der Abnahme-Commit enthält diese
   Datei. Vor dem Weiterarbeiten prüfen, ob `main` auf ihm steht; sonst seinen CI-Lauf
   prüfen und `main` nachziehen (siehe Arbeitsregeln).
-- **Windows:** 143 Tests. **Fedora (GCC, ohne Desktop):** 104. Desktop-Tests laufen in der
+- **Windows:** 146 Tests. **Fedora (GCC, ohne Desktop):** 104; Desktop unter virtuellem
+  Wayland 39 (Skript `/tmp/voelund-desktop.sh` auf Fedora, wie `~/repro-snap.sh`). Desktop-Tests laufen in der
   CI.
 - **Schema der Dokumente:** 11 (S12: assoziative Skizzenmuster).
 
@@ -25,6 +26,7 @@ Git-Historie dieser Datei.
 | S04 | Fangmatrix für Linie/Polylinie/Rechteck; keine überflüssigen Beziehungen; Schalter „Beziehungen: Automatisch / Keine“ im Skizzenpanel | [S04](implementation-plan/evidence/S04.md) |
 | S05 | Kurvenbeziehungen nur für unterstützte Paare; keine angekündigte Tangente am Bogenende auf einer Linie; entartete Picks mit genauer Meldung | [S05](implementation-plan/evidence/S05.md) |
 | S09 | Exakter Versatz für Elemente und Konturen, Vorschau = Übernahme, Ellipse als nicht unterstützt gemeldet | [S09](implementation-plan/evidence/S09.md) |
+| S13 (09.10.) | Escape schrittweise ohne Verwerfen, Abbrechen fragt, Enter/Strg+Enter; Rahmen Fenster/Kreuzen; Element vor Beschriftung; vier Ansichtsschalter als Befehle | [S13](implementation-plan/evidence/S13.md) |
 | S12 (09.10.) | Assoziative Skizzenmuster (linear, Kreis, Spiegelung), Schema 11; Kopien folgen dem Original, schreibgeschützt; Muster ändern/auflösen | [S12](implementation-plan/evidence/S12.md) |
 | S11 (09.10.) | Verrundung mit virtueller Ecke: Eckmaße bleiben, Bestimmtheit bleibt; abgewiesene Linien rot mit größtem Radius | [S11](implementation-plan/evidence/S11.md) |
 | S07 (09.10.) | Eine Beschriftungsprojektion für alle Bedingungsarten; überflüssige Bedingungen gemeldet; Maß ändern als geprüfter Befehl, gebundene Maße verweisen auf den Parameter | [S07](implementation-plan/evidence/S07.md) |
@@ -46,8 +48,8 @@ Git-Historie dieser Datei.
 
 ## Nächste freie Pakete
 
-- **S13** Skizzen-UX und Auswahlmodi abschließen (G2). Nächstes Paket der Skizzenkette;
-  danach S14 (Gesamtabnahme Skizze).
+- **S14** Skizzenumfang als Ganzes abnehmen (G2) wartet auf **U12** (Composition Root,
+  Installation; offen). Die Skizzenkette S01–S13 ist sonst vollständig.
 - **T05** Koplanare Flächen verschmelzen (G3). Laut Nutzer „später“; nicht ohne Rückfrage.
 - **A02** braucht weiterhin Designarbeit.
 
