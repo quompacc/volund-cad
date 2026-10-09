@@ -139,6 +139,9 @@ ToolPanelHost::ToolPanelHost(QWidget* host)
     };
     connect(undoShortcut_, &QShortcut::activated, this,
             [triggerAction]() { triggerAction("undo_sketch"); });
+    // S13: Delete removes the selected sketch elements or relation.
+    connect(new QShortcut(QKeySequence::Delete, this), &QShortcut::activated, this,
+            [triggerAction]() { triggerAction("delete"); });
     connect(redoShortcut_, &QShortcut::activated, this,
             [triggerAction]() { triggerAction("redo_sketch"); });
     acceptButton_->setDefault(true);

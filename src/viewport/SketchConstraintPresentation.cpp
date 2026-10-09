@@ -10,7 +10,9 @@ namespace {
 
 const Quantity_Color regularColor(0.2, 0.85, 1.0, Quantity_TOC_RGB);
 const Quantity_Color conflictingColor(1.0, 0.15, 0.12, Quantity_TOC_RGB);
-const Quantity_Color redundantColor(1.0, 0.65, 0.0, Quantity_TOC_RGB);
+// S13: yellow, so a redundant label differs from a selected (orange) one.
+const Quantity_Color redundantColor(0.95, 0.85, 0.1, Quantity_TOC_RGB);
+const Quantity_Color selectedColor(1.0, 0.55, 0.05, Quantity_TOC_RGB);
 
 } // namespace
 
@@ -25,10 +27,11 @@ void SketchConstraintPresentation::setConstraints(
         occ::handle<AIS_TextLabel> label = new AIS_TextLabel();
         label->SetText(TCollection_ExtendedString(constraint.label.c_str(), true));
         label->SetPosition(gp_Pnt(constraint.x, constraint.y, constraint.z));
-        label->SetColor(constraint.conflicting ? conflictingColor
-                        : constraint.redundant ? redundantColor
-                                               : regularColor);
-        label->SetHeight(15.0);
+        label->SetColor(constraint.selected      ? selectedColor
+                        : constraint.conflicting ? conflictingColor
+                        : constraint.redundant   ? redundantColor
+                                                 : regularColor);
+        label->SetHeight(constraint.selected ? 19.0 : 15.0);
         label->SetZoomable(false);
         context->Display(label, false);
         context->Activate(label, 0);

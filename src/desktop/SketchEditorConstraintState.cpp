@@ -52,6 +52,7 @@ void SketchEditorToolController::syncConstraintState() {
     panel_.setActionEnabled("fillet", editor_->selectedReferences().size() >= 2);
     panel_.setActionEnabled("mirror", editor_->selectedReferences().size() >= 2);
     panel_.setActionEnabled("remove_constraint", !editor_->constraints().empty());
+    panel_.setActionEnabled("delete", hasSelection || editor_->selectedConstraint().has_value());
     panel_.setActionEnabled("undo_sketch", editor_->canUndo());
     panel_.setActionEnabled("redo_sketch", editor_->canRedo());
     panel_.setAcceptEnabled(editor_->canAccept());
@@ -71,7 +72,7 @@ void SketchEditorToolController::syncConstraintState() {
         // S07: redundant relations take no freedom; the count would not reach zero.
         panel_.setStatus(QObject::tr("Überflüssig: %1 Bedingung(en)")
                              .arg(result.redundantConstraints.size()));
-        panel_.setGuidance(QObject::tr("Orange Bedingungen folgen schon aus anderen. Entferne "
+        panel_.setGuidance(QObject::tr("Gelbe Bedingungen folgen schon aus anderen. Entferne "
                                        "sie, dann stimmen die Freiheitsgrade."));
     } else if (editor_->elements().empty()) {
         panel_.setStatus({});

@@ -58,6 +58,12 @@ class SketchEditorSession final {
     // with the reason and leave the editor as before (S02).
     [[nodiscard]] std::optional<SketchCreationResult> create(const SketchCreationInput& input);
     [[nodiscard]] bool selectElement(document::SketchElementId elementId) noexcept;
+    // S13: whole elements (selection box); additive keeps the current selection.
+    [[nodiscard]] bool selectElements(std::span<const document::SketchElementId> ids,
+                                      bool additive) noexcept;
+    // S13: a relation picked at its label; it replaces the element selection.
+    [[nodiscard]] bool selectConstraint(document::SketchConstraintId id) noexcept;
+    [[nodiscard]] std::optional<document::SketchConstraintId> selectedConstraint() const noexcept;
     [[nodiscard]] bool selectNearestReference(document::SketchElementId elementId,
                                               document::SketchPoint position,
                                               bool additive) noexcept;
@@ -316,6 +322,7 @@ class SketchEditorSession final {
     std::optional<document::SketchElementId> selectedElement_;
     std::vector<document::SketchGeometryReference> selectedReferences_;
     std::optional<document::SketchPoint> selectionPoint_;
+    std::optional<document::SketchConstraintId> selectedConstraint_; // S13: view state
     features::SketchSolveResult lastSolveResult_{features::SketchSolveStatus::success, 0, {}};
     int polygonSides_{6};
     std::vector<EditorState> history_;

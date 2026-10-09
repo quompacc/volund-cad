@@ -21,11 +21,8 @@ void SketchEditorToolController::editConstraint(std::uint64_t constraintId) {
                              ? std::optional<double>{kernel::toDegrees(*currentAngle).value()}
                              : editor_->constraintValue(id);
     if (!current.has_value()) {
-        if (editor_->removeConstraint(id)) {
-            syncConstraintState();
-            refreshPresentation();
-            statusChanged_(QObject::tr("Skizzenbedingung entfernt"));
-        }
+        // S13: a relation is selected, not removed at once (Delete removes it).
+        selectConstraint(constraintId);
         return;
     }
     // S07: a bound or reference dimension says why it cannot be edited here.
@@ -73,6 +70,50 @@ void SketchEditorToolController::editConstraint(std::uint64_t constraintId) {
     refreshPresentation();
     statusChanged_(angle ? QObject::tr("Skizzenwinkel auf %1° gesetzt").arg(value, 0, 'f', 3)
                          : QObject::tr("Skizzenmaß auf %1 mm gesetzt").arg(value, 0, 'f', 3));
+}
+
+void SketchEditorToolController::selectElements(const std::vector<std::uint64_t>& ids,
+                                                bool additive) {
+    if (!editor_)
+        return;
+    std::vector<document::SketchElementId> elements;
+    for (const auto id : ids)
+        elements.emplace_back(id);
+    if (!editor_->selectElements(elements, additive))
+        return;
+    editor_->clearPreview();
+    problemElements_.clear();
+    resetTranslationInputs();
+    syncSelectedDimensionInputs();
+    syncConstraintState();
+    refreshPresentation();
+    statusChanged_(QObject::tr("%n Skizzenelement(e) gewählt", nullptr,
+                               static_cast<int>(editor_->selectedReferences().empty()
+                                                    ? 1
+                                                    : editor_->selectedReferences().size())));
+}
+
+void SketchEditorToolController::selectConstraint(std::uint64_t id) {
+    if (!editor_ || !editor_->selectConstraint(document::SketchConstraintId{id}))
+        return;
+    problemElements_.clear();
+    resetTranslationInputs();
+    syncSelectedDimensionInputs();
+    syncConstraintState();
+    refreshPresentation();
+    statusChanged_(QObject::tr("Bedingung gewählt; Entf entfernt sie"));
+}
+
+bool SketchEditorToolController::removeSelectedConstraint() {
+    const auto selected = editor_->selectedConstraint();
+    if (!selected || !editor_->removeConstraint(*selected))
+        return false;
+    editor_->clearSelection();
+    syncSelectedDimensionInputs();
+    syncConstraintState();
+    refreshPresentation();
+    statusChanged_(QObject::tr("Skizzenbedingung entfernt"));
+    return true;
 }
 
 } // namespace voelund::desktop

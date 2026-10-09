@@ -41,7 +41,7 @@
 #include <QShowEvent>
 #include <QTimer>
 #endif
-#include <QRubberBand>
+#include "SelectionBand.hpp"
 #include <QWheelEvent>
 #include <Quantity_Color.hxx>
 #include <Quantity_TypeOfColor.hxx>
@@ -75,7 +75,7 @@ CadViewport::CadViewport(QWidget* parent)
     setMouseTracking(true);
     impl_->snapOverlay = new SketchSnapOverlay(*this);
     setMinimumSize(640, 480);
-    impl_->selectionBand = new QRubberBand(QRubberBand::Rectangle, this);
+    impl_->selectionBand = new SelectionBand(this);
 }
 
 CadViewport::~CadViewport() {

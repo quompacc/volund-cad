@@ -153,7 +153,7 @@ void SketchEditorToolController::showPanel() {
           QObject::tr("Bearbeiten")},
          {"lock_point", QObject::tr("Gewählten Punkt sperren"), QObject::tr("Bearbeiten")},
          {"unlock_point", QObject::tr("Gewählten Punkt freigeben"), QObject::tr("Bearbeiten")},
-         {"remove_constraint", QObject::tr("Letzte Bedingung entfernen"),
+         {"remove_constraint", QObject::tr("Gewählte, sonst die letzte Bedingung entfernen"),
           QObject::tr("Bearbeiten")},
          {"undo_sketch", QObject::tr("Skizzenschritt rückgängig"), QObject::tr("Bearbeiten")},
          {"redo_sketch", QObject::tr("Skizzenschritt wiederholen"), QObject::tr("Bearbeiten")},
@@ -184,7 +184,8 @@ void SketchEditorToolController::showPanel() {
          {"dissolve_pattern",
           QObject::tr("Muster auflösen: Die Kopien werden unabhängige Elemente"),
           QObject::tr("Bearbeiten")},
-         {"delete", QObject::tr("Gewähltes Element löschen"), QObject::tr("Bearbeiten")}},
+         {"delete", QObject::tr("Gewählte Elemente oder Bedingung löschen (Entf)"),
+          QObject::tr("Bearbeiten")}},
         [this](const std::string& id, double value) {
             if (id == "translation_x" || id == "translation_y")
                 applyTranslation(id, value);
@@ -534,7 +535,7 @@ void SketchEditorToolController::unlockSelectedReference() {
 }
 
 void SketchEditorToolController::removeSelected() {
-    if (!editor_)
+    if (!editor_ || removeSelectedConstraint())
         return;
     if (const auto lock = editor_->patternLock(true)) {
         statusChanged_(QString::fromStdString(*lock));
@@ -550,7 +551,7 @@ void SketchEditorToolController::removeSelected() {
 }
 
 void SketchEditorToolController::removeLastConstraint() {
-    if (!editor_ || !editor_->removeLastConstraint())
+    if (!editor_ || removeSelectedConstraint() || !editor_->removeLastConstraint())
         return;
     syncSelectedDimensionInputs();
     syncConstraintState();

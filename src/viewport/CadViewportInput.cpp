@@ -18,6 +18,7 @@ void CadViewport::mouseMoveEvent(QMouseEvent* event) {
 
         const QPoint position = framebufferPoint(*this, event->position());
         if (impl_->gesture == Impl::Gesture::selectBox) {
+            impl_->selectionBand->setCrossing(position.x() < impl_->gestureOrigin.x());
             impl_->selectionBand->setGeometry(
                 logicalRectangle(*this, impl_->gestureOrigin, position));
             return;
@@ -83,27 +84,42 @@ void CadViewport::mousePressEvent(QMouseEvent* event) {
                 impl_->sketchElementPressed = false;
                 if (impl_->sketchEditor.isDrawing())
                     return;
-                if (impl_->context->HasDetected()) {
-                    const auto detected = impl_->context->DetectedInteractive();
-                    if (impl_->sketchConstraintPresentation.detectedConstraint(detected))
-                        return;
-                    if (const auto id = impl_->sketchPresentation.detectedElement(detected)) {
-                        const bool additive = event->modifiers().testFlag(Qt::ControlModifier);
-                        impl_->sketchElementPressed = !additive;
-                        if (!additive)
-                            static_cast<void>(
-                                impl_->sketchEditor.beginElementDrag(position.x(), position.y()));
-                        if (impl_->sketchElementSelectionHandler) {
-                            const auto local =
-                                impl_->sketchEditor.projectPoint(position.x(), position.y());
-                            if (local.has_value())
-                                impl_->sketchElementSelectionHandler(
-                                    {*id, local->first, local->second, additive});
-                        }
-                        update();
+                // S13: an element under the pointer wins over a constraint label on it.
+                std::optional<std::uint64_t> element, constraint;
+                for (impl_->context->InitDetected(); impl_->context->MoreDetected();
+                     impl_->context->NextDetected()) {
+                    const auto object = occ::handle<AIS_InteractiveObject>::DownCast(
+                        impl_->context->DetectedCurrentOwner()->Selectable());
+                    if (!element)
+                        element = impl_->sketchPresentation.detectedElement(object);
+                    if (!constraint)
+                        constraint = impl_->sketchConstraintPresentation.detectedConstraint(object);
+                }
+                if (!element && constraint && *constraint != 0) {
+                    if (impl_->sketchConstraintSelectionHandler)
+                        impl_->sketchConstraintSelectionHandler(*constraint);
+                    update();
+                    return;
+                }
+                if (element) {
+                    const bool additive = event->modifiers().testFlag(Qt::ControlModifier);
+                    impl_->sketchElementPressed = !additive;
+                    if (!additive)
+                        static_cast<void>(
+                            impl_->sketchEditor.beginElementDrag(position.x(), position.y()));
+                    if (impl_->sketchElementSelectionHandler) {
+                        const auto local =
+                            impl_->sketchEditor.projectPoint(position.x(), position.y());
+                        if (local.has_value())
+                            impl_->sketchElementSelectionHandler(
+                                {*element, local->first, local->second, additive});
                     }
+                    update();
                 } else {
+                    // S13: the box starts anywhere without an element or label, also over a
+                    // body face or an axis.
                     impl_->gesture = Impl::Gesture::selectBox;
+                    impl_->selectionBand->setCrossing(false);
                     impl_->selectionBand->setGeometry(QRect(event->position().toPoint(), QSize{}));
                     impl_->selectionBand->show();
                 }
@@ -145,12 +161,17 @@ void CadViewport::mouseDoubleClickEvent(QMouseEvent* event) {
             return;
         const QPoint position = framebufferPoint(*this, event->position());
         impl_->context->MoveTo(position.x(), position.y(), impl_->view, false);
-        if (!impl_->context->HasDetected())
-            return;
-        const auto id = impl_->sketchConstraintPresentation.detectedConstraint(
-            impl_->context->DetectedInteractive());
-        if (id.has_value() && impl_->sketchConstraintEditHandler)
-            impl_->sketchConstraintEditHandler(*id);
+        // S13: a label anywhere under the pointer, also over its element.
+        for (impl_->context->InitDetected(); impl_->context->MoreDetected();
+             impl_->context->NextDetected()) {
+            const auto id = impl_->sketchConstraintPresentation.detectedConstraint(
+                occ::handle<AIS_InteractiveObject>::DownCast(
+                    impl_->context->DetectedCurrentOwner()->Selectable()));
+            if (id.has_value() && *id != 0 && impl_->sketchConstraintEditHandler) {
+                impl_->sketchConstraintEditHandler(*id);
+                return;
+            }
+        }
     });
 }
 
@@ -176,17 +197,19 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
             const QPoint position = framebufferPoint(*this, event->position());
             if (impl_->sketchEditor.isActive()) {
                 if (impl_->gesture == Impl::Gesture::selectBox) {
+                    // S13 (user decision 2026-10-09): left to right a window, right to left a
+                    // crossing box; whole elements; Ctrl adds; an empty box (or a click on
+                    // nothing) without Ctrl clears the selection.
                     const QRect rectangle(impl_->gestureOrigin, position);
+                    const bool crossing = position.x() < impl_->gestureOrigin.x();
+                    const bool additive = event->modifiers().testFlag(Qt::ControlModifier);
                     impl_->gesture = Impl::Gesture::none;
                     impl_->selectionBand->hide();
-                    const auto intents = boxSelectionIntents(impl_->pendingSketchElements,
-                                                             impl_->view, rectangle.normalized());
-                    if (impl_->sketchElementSelectionHandler)
-                        for (const auto& selection : intents)
-                            impl_->sketchElementSelectionHandler(selection);
-                    // A plain click on nothing clears the sketch selection.
-                    if (intents.empty() && rectangle.normalized().width() < 4 &&
-                        rectangle.normalized().height() < 4 && impl_->emptySelectionHandler)
+                    const auto ids = boxSelection(impl_->pendingSketchElements, impl_->view,
+                                                  rectangle.normalized(), crossing);
+                    if (!ids.empty() && impl_->sketchBoxSelectionHandler)
+                        impl_->sketchBoxSelectionHandler(ids, additive);
+                    else if (ids.empty() && !additive && impl_->emptySelectionHandler)
                         impl_->emptySelectionHandler();
                     update();
                     return;

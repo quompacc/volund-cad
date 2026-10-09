@@ -1,24 +1,75 @@
 #include "SketchBoxSelection.hpp"
 
+#include <BRepAdaptor_Curve.hxx>
+#include <QLineF>
+#include <TopExp_Explorer.hxx>
+#include <TopoDS.hxx>
+
 #include <algorithm>
 
 namespace voelund::viewport {
+namespace {
 
-std::vector<SketchSelectionIntent>
-boxSelectionIntents(std::span<const SceneSketchElement> elements,
-                    const occ::handle<V3d_View>& view, const QRect& rectangle) {
-    std::vector<SketchSelectionIntent> result;
-    if (view.IsNull())
+// Screen points along every edge of the element's shape.
+std::vector<std::vector<QPointF>> screenCurves(const TopoDS_Shape& shape,
+                                               const occ::handle<V3d_View>& view) {
+    constexpr int samples = 48;
+    std::vector<std::vector<QPointF>> curves;
+    for (TopExp_Explorer edges(shape, TopAbs_EDGE); edges.More(); edges.Next()) {
+        const BRepAdaptor_Curve curve(TopoDS::Edge(edges.Current()));
+        std::vector<QPointF> points;
+        for (int index = 0; index <= samples; ++index) {
+            const double parameter = curve.FirstParameter() +
+                                     (curve.LastParameter() - curve.FirstParameter()) * index /
+                                         samples;
+            const gp_Pnt world = curve.Value(parameter);
+            int x = 0, y = 0;
+            view->Convert(world.X(), world.Y(), world.Z(), x, y);
+            points.emplace_back(x, y);
+        }
+        curves.push_back(std::move(points));
+    }
+    return curves;
+}
+
+bool crosses(const QLineF& segment, const QRectF& box) {
+    const QPointF corners[] = {box.topLeft(), box.topRight(), box.bottomRight(),
+                               box.bottomLeft()};
+    for (int side = 0; side < 4; ++side) {
+        QPointF hit;
+        if (segment.intersects(QLineF(corners[side], corners[(side + 1) % 4]), &hit) ==
+            QLineF::BoundedIntersection)
+            return true;
+    }
+    return false;
+}
+
+} // namespace
+
+std::vector<std::uint64_t> boxSelection(std::span<const SceneSketchElement> elements,
+                                        const occ::handle<V3d_View>& view,
+                                        const QRect& rectangle, bool crossing) {
+    std::vector<std::uint64_t> result;
+    if (view.IsNull() || rectangle.isEmpty())
         return result;
+    const QRectF box(rectangle);
     for (const SceneSketchElement& element : elements) {
-        const auto point = std::ranges::find_if(element.points, [&](const SceneSketchPoint& item) {
-            int x = 0;
-            int y = 0;
-            view->Convert(item.worldX, item.worldY, item.worldZ, x, y);
-            return rectangle.contains(x, y);
-        });
-        if (point != element.points.end())
-            result.push_back({element.id, point->localX, point->localY, !result.empty()});
+        if (element.shape.IsNull())
+            continue;
+        const auto curves = screenCurves(element.shape, view);
+        if (curves.empty())
+            continue;
+        bool inside = true;
+        bool touched = false;
+        for (const auto& points : curves)
+            for (std::size_t index = 0; index < points.size(); ++index) {
+                const bool contained = box.contains(points[index]);
+                inside = inside && contained;
+                touched = touched || contained ||
+                          (index > 0 && crosses({points[index - 1], points[index]}, box));
+            }
+        if (crossing ? touched : inside)
+            result.push_back(element.id);
     }
     return result;
 }

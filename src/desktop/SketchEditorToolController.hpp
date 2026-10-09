@@ -47,6 +47,9 @@ class SketchEditorToolController final {
     void finishDrag();
     [[nodiscard]] bool selectElement(const viewport::SketchSelectionIntent& intent);
     void clearSelection();
+    // S13: box selection and a relation picked at its label.
+    void selectElements(const std::vector<std::uint64_t>& ids, bool additive);
+    void selectConstraint(std::uint64_t id);
     void editConstraint(std::uint64_t constraintId);
     [[nodiscard]] bool isActive() const noexcept;
     void cancel();
@@ -76,6 +79,7 @@ class SketchEditorToolController final {
     void stepBack();
     // S13: Cancel asks before discarding changes; Enter ends a polyline.
     void requestCancel();
+    bool removeSelectedConstraint();
     void finishStep();
     void open(std::unique_ptr<application::SketchEditorSession> editor,
               const viewport::PlanarFaceSelection& drawing,

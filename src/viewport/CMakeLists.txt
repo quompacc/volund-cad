@@ -29,6 +29,7 @@ list(APPEND voelund_viewport_sources
     SketchViewOrientation.cpp
     SketchConstraintPresentation.cpp
     SketchBoxSelection.cpp
+    SelectionBand.cpp
     SketchPresentation.cpp
     TransformManipulator.cpp
     PushPullHandle.cpp

@@ -266,6 +266,12 @@ void MainWindow::connectInteractions() {
     });
     impl_->viewport->setSketchConstraintEditHandler(
         [this](std::uint64_t id) { impl_->sketchEditorTool->editConstraint(id); });
+    impl_->viewport->setSketchConstraintSelectionHandler(
+        [this](std::uint64_t id) { impl_->sketchEditorTool->selectConstraint(id); });
+    impl_->viewport->setSketchBoxSelectionHandler(
+        [this](const std::vector<std::uint64_t>& ids, bool additive) {
+            impl_->sketchEditorTool->selectElements(ids, additive);
+        });
     // A picked sketch region shows its boundary elements as selected.
     const auto showSelectedProfiles = [this] {
         const auto selectedElements = impl_->session.selectedSketchProfileElements();

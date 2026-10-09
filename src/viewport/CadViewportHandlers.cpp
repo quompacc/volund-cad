@@ -9,6 +9,15 @@ void CadViewport::setSketchConstraintEditHandler(std::function<void(std::uint64_
     impl_->sketchConstraintEditHandler = std::move(handler);
 }
 
+void CadViewport::setSketchConstraintSelectionHandler(std::function<void(std::uint64_t)> handler) {
+    impl_->sketchConstraintSelectionHandler = std::move(handler);
+}
+
+void CadViewport::setSketchBoxSelectionHandler(
+    std::function<void(const std::vector<std::uint64_t>&, bool)> handler) {
+    impl_->sketchBoxSelectionHandler = std::move(handler);
+}
+
 void CadViewport::setSketchElementSelectionHandler(
     std::function<void(const SketchSelectionIntent&)> handler) {
     impl_->sketchElementSelectionHandler = std::move(handler);

@@ -107,6 +107,7 @@ bool SketchEditorSession::selectElement(document::SketchElementId elementId) noe
     }
     selectedElement_ = elementId;
     selectedReferences_.clear();
+    selectedConstraint_.reset();
     return true;
 }
 
@@ -117,6 +118,7 @@ bool SketchEditorSession::selectNearestReference(document::SketchElementId eleme
     if (match == elements_.values.end())
         return false;
     selectionPoint_ = position;
+    selectedConstraint_.reset();
     document::SketchGeometryReference reference{elementId, document::SketchPointPosition::start};
     if (const auto* line = std::get_if<document::SketchLine>(&match->geometry)) {
         const double startDistance =

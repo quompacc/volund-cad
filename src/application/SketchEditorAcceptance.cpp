@@ -8,6 +8,7 @@ namespace voelund::application {
 void SketchEditorSession::clearSelection() noexcept {
     selectedElement_.reset();
     selectedReferences_.clear();
+    selectedConstraint_.reset();
 }
 
 std::optional<document::SketchParameters>

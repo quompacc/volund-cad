@@ -258,7 +258,8 @@ void SketchEditorToolController::refreshPresentation() {
         constraints.push_back({annotation.id.value(), annotation.label, annotation.position.X(),
                                annotation.position.Y(), annotation.position.Z(),
                                editor_->isConstraintConflicting(annotation.id),
-                               annotation.editable, editor_->isConstraintRedundant(annotation.id)});
+                               annotation.editable, editor_->isConstraintRedundant(annotation.id),
+                               editor_->selectedConstraint() == annotation.id});
     if (previewAutomatic_.has_value() && evaluated.size() > editor_->elements().size() &&
         !evaluated.back().points.empty()) {
         const auto& first = evaluated.back().points[0].world;

@@ -110,6 +110,7 @@ struct SceneSketchConstraint final {
     bool conflicting;
     bool editable;
     bool redundant{false}; // S07: implied by other relations
+    bool selected{false};  // S13: picked at its label
 };
 
 struct PlanarReferenceSegment final {
@@ -241,6 +242,11 @@ class CadViewport final : public CadViewportBase {
     void setSelectedSketchElements(std::span<const std::uint64_t> elementIds);
     void setSketchConstraints(std::span<const SceneSketchConstraint> constraints);
     void setSketchConstraintEditHandler(std::function<void(std::uint64_t)> handler);
+    // S13: a single click on a constraint label where no element lies.
+    void setSketchConstraintSelectionHandler(std::function<void(std::uint64_t)> handler);
+    // S13: the whole elements in a selection box (window or crossing); additive with Ctrl.
+    void setSketchBoxSelectionHandler(
+        std::function<void(const std::vector<std::uint64_t>&, bool additive)> handler);
     void setBodySelectionHandler(std::function<void(std::uint64_t)> handler);
     void setPlanarFaceSelectionHandler(std::function<void(const PlanarFaceSelection&)> handler);
     void setBasePlaneSelectionHandler(std::function<void(BasePlane)> handler);

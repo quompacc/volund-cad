@@ -35,6 +35,7 @@ add_library(voelund_application STATIC
     SketchFilletPlan.cpp
     SketchEditorFillet.cpp
     SketchEditorPatterns.cpp
+    SketchEditorSelection.cpp
     SketchEditorPointConstraints.cpp
     SketchEditorRelations.cpp
     SketchEditorRectangle.cpp

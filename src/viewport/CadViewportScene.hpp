@@ -35,7 +35,7 @@
 #include <QMetaObject>
 #include <QMouseEvent>
 #include <QOpenGLContext>
-#include <QRubberBand>
+#include "SelectionBand.hpp"
 #include <QWheelEvent>
 #include <Quantity_Color.hxx>
 #include <Quantity_TypeOfColor.hxx>
@@ -284,11 +284,13 @@ class CadViewportScene {
     std::function<void()> sketchEditorDragEndHandler;
     std::function<void(const SketchSelectionIntent&)> sketchElementSelectionHandler;
     std::function<void(std::uint64_t)> sketchConstraintEditHandler;
+    std::function<void(std::uint64_t)> sketchConstraintSelectionHandler;
+    std::function<void(const std::vector<std::uint64_t>&, bool)> sketchBoxSelectionHandler;
     std::optional<std::uint64_t> transformTarget;
     QPoint gestureOrigin;
     Gesture gesture{Gesture::none};
     bool sketchElementPressed{false};
-    QRubberBand* selectionBand{nullptr};
+    SelectionBand* selectionBand{nullptr};
     bool ready{false};
     ViewportTheme theme;
     SketchSnapOverlay* snapOverlay{nullptr}; // S04a, child widget of the viewport
