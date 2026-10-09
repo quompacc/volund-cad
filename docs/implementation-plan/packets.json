@@ -2078,12 +2078,14 @@
       ],
       "acceptance": "Rechtwinklige Linien erzeugen analytisch richtigen Kreisbogen und tangentiale Übergänge; große/negative Radien werden ohne Teiländerung abgewiesen. Solve und Undo bleiben konsistent.",
       "boundary": "Keine allgemeine Splineverrundung.",
-      "status": "planned",
+      "status": "done",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/S11.md"
+      ],
+      "completedCommit": "67b45d4"
     },
     {
       "id": "S12",

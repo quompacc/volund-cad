@@ -9,10 +9,10 @@ Git-Historie dieser Datei.
 ## Stand des Repos
 
 - Branch `ux01`. `main` folgt nach jeder grünen Abnahme per Fast-Forward.
-- Letztes Paket: S07 (Code `35b853c`, CI-Lauf 492). Der Abnahme-Commit enthält diese
+- Letztes Paket: S11 (Code `67b45d4`, CI-Lauf 495). Der Abnahme-Commit enthält diese
   Datei. Vor dem Weiterarbeiten prüfen, ob `main` auf ihm steht; sonst seinen CI-Lauf
   prüfen und `main` nachziehen (siehe Arbeitsregeln).
-- **Windows:** 140 Tests. **Fedora (GCC, ohne Desktop):** 101. Desktop-Tests laufen in der
+- **Windows:** 141 Tests. **Fedora (GCC, ohne Desktop):** 102. Desktop-Tests laufen in der
   CI.
 - **Schema der Dokumente:** unverändert 10.
 
@@ -25,6 +25,7 @@ Git-Historie dieser Datei.
 | S04 | Fangmatrix für Linie/Polylinie/Rechteck; keine überflüssigen Beziehungen; Schalter „Beziehungen: Automatisch / Keine“ im Skizzenpanel | [S04](implementation-plan/evidence/S04.md) |
 | S05 | Kurvenbeziehungen nur für unterstützte Paare; keine angekündigte Tangente am Bogenende auf einer Linie; entartete Picks mit genauer Meldung | [S05](implementation-plan/evidence/S05.md) |
 | S09 | Exakter Versatz für Elemente und Konturen, Vorschau = Übernahme, Ellipse als nicht unterstützt gemeldet | [S09](implementation-plan/evidence/S09.md) |
+| S11 (09.10.) | Verrundung mit virtueller Ecke: Eckmaße bleiben, Bestimmtheit bleibt; abgewiesene Linien rot mit größtem Radius | [S11](implementation-plan/evidence/S11.md) |
 | S07 (09.10.) | Eine Beschriftungsprojektion für alle Bedingungsarten; überflüssige Bedingungen gemeldet; Maß ändern als geprüfter Befehl, gebundene Maße verweisen auf den Parameter | [S07](implementation-plan/evidence/S07.md) |
 | S06 (09.10.) | Polygon regelmäßig über Hilfskreis (Umkreisradius, Mittelpunkt bindet), Langloch mit Hilfsachse (Länge, Ausrichtung); Endpunkt-Tangente im Löser | [S06](implementation-plan/evidence/S06.md) |
 | S10 | Stutzen/Verlängern/Teilen für Linie, Bogen (Stutzen auch Kreis); Stück zwischen zwei Schnitten; entfernte Bedingungen in der Statuszeile; neue Enden an die Schnittkante gebunden | [S10](implementation-plan/evidence/S10.md) |
@@ -44,18 +45,11 @@ Git-Historie dieser Datei.
 
 ## Nächste freie Pakete
 
-- **S11** Skizzenverrundung, Beziehungen nach Operationen erhalten (G2). Nächstes Paket.
 - **S12** Skizzenmuster/Spiegeln: Der Nutzer tendiert (09.10.2026) zum assoziativen Muster.
   Das ändert das Schema; Datenobjekt (Master/Instanzen, Anzahl/Abstand/Winkel) vor der
-  Umsetzung mit ihm abstimmen.
+  Umsetzung mit ihm abstimmen. Nächstes Paket in der Skizzenkette (danach S13, S14).
 - **T05** Koplanare Flächen verschmelzen (G3). Laut Nutzer „später“; nicht ohne Rückfrage.
 - **A02** braucht weiterhin Designarbeit.
-
-Hinweise aus S10 für S11 (Verrundung, braucht S07):
-
-- Die Regeln für Bedingungen bei Kürzen/Teilen stehen in
-  `src/application/SketchEditorCurveEdit.cpp`; die Verrundung kann sie übernehmen.
-- Schnitte Linie/Kreis/Bogen: `src/application/SketchCurveEditPlan.cpp`.
 
 ## Offene Punkte
 
