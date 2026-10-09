@@ -74,6 +74,9 @@ class SketchEditorToolController final {
     void refreshPresentation();
     void accept(application::ErrorDisposition disposition = application::ErrorDisposition::reject);
     void stepBack();
+    // S13: Cancel asks before discarding changes; Enter ends a polyline.
+    void requestCancel();
+    void finishStep();
     void open(std::unique_ptr<application::SketchEditorSession> editor,
               const viewport::PlanarFaceSelection& drawing,
               std::optional<document::FeatureId> edited,

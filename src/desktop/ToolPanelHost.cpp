@@ -109,11 +109,22 @@ ToolPanelHost::ToolPanelHost(QWidget* host)
     undoShortcut_ = new QShortcut(QKeySequence::Undo, this);
     redoShortcut_ = new QShortcut(QKeySequence::Redo, this);
     // Enter confirms like OK when the tool allows it (K04); a spin box first applies its value.
-    acceptShortcut_ = new QShortcut(QKeySequence(Qt::Key_Return), this);
-    connect(acceptShortcut_, &QShortcut::activated, this, [this]() {
+    // S13: a tool with its own Enter step (sketch: end the polyline) confirms with Ctrl+Enter.
+    const auto accept = [this]() {
         if (acceptButton_->isEnabled())
             acceptButton_->click();
-    });
+    };
+    const auto enter = [this, accept]() {
+        if (definition_.returnPressed)
+            definition_.returnPressed();
+        else
+            accept();
+    };
+    acceptShortcut_ = new QShortcut(QKeySequence(Qt::Key_Return), this);
+    connect(acceptShortcut_, &QShortcut::activated, this, enter);
+    connect(new QShortcut(QKeySequence(Qt::Key_Enter), this), &QShortcut::activated, this, enter);
+    for (const auto key : {Qt::CTRL | Qt::Key_Return, Qt::CTRL | Qt::Key_Enter})
+        connect(new QShortcut(QKeySequence(key), this), &QShortcut::activated, this, accept);
     connect(escapeShortcut_, &QShortcut::activated, this, [this]() {
         if (definition_.stepBack)
             definition_.stepBack();

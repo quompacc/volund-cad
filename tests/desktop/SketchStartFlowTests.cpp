@@ -1,4 +1,5 @@
 #include "IsolatedSettings.hpp"
+#include "DiscardPrompt.hpp"
 #include "ViewportLifecycleSupport.hpp"
 #include <QAction>
 #include <QApplication>
@@ -81,19 +82,6 @@ void enter(QWidget& window, const char* id, double value) {
     field->setValue(value);
     emit field->editingFinished();
     settle();
-}
-
-void escape(QWidget& window, viewport::CadViewport& viewport) {
-    QKeyEvent key(QEvent::KeyPress, Qt::Key_Escape, Qt::NoModifier);
-    QApplication::sendEvent(&viewport, &key);
-    settle();
-    if (window.findChild<QWidget*>(QStringLiteral("activeToolPanel")) != nullptr &&
-        toolPanel(window).isVisible()) {
-        QKeyEvent again(QEvent::KeyPress, Qt::Key_Escape, Qt::NoModifier);
-        QApplication::sendEvent(&viewport, &again);
-        settle();
-    }
-    test::render(viewport);
 }
 
 void requireEditor(QWidget& window, const char* what) {
@@ -234,7 +222,10 @@ void xyRectangle() {
     test::render(*w.viewport);
     requireEditor(w.main(), "Edit XY");
     requireAxes(*w.viewport, {0, 0, 0}, {1, 0, 0}, {0, 1, 0}, "Edit XY");
-    escape(w.main(), *w.viewport);
+    // S13: Escape no longer leaves the editor; Cancel without changes asks nothing.
+    panelButton(w.main(), "toolCancelButton").click();
+    settle();
+    test::render(*w.viewport);
     require(w.session.features().size() == 1 &&
                 w.session.sketchParameters(features.front().id) == sketch,
             "Cancel of Edit Sketch changes nothing");
@@ -276,10 +267,13 @@ void sidePlanes() {
         };
         at(0, 0);
         at(15, 5);
+        bool asked = false;
+        test::answerDiscardQuestion(QStringLiteral("Verwerfen"), &asked);
         panelButton(w.main(), "toolCancelButton").click();
         settle();
         test::render(*w.viewport);
-        require(w.session.features().empty(), std::string(item.name) + ": Cancel adds nothing");
+        require(asked && w.session.features().empty(),
+                std::string(item.name) + ": Cancel asks, then adds nothing");
         requireSameView(*w.viewport, before, item.name);
     }
     std::cout << "PASS S03 XZ/YZ: axes, Cancel without a feature, return camera\n";

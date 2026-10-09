@@ -293,8 +293,9 @@ void SketchEditorToolController::showPanel() {
                 removeSelected();
         },
         [this]() { accept(); },
-        [this]() { cancel(); },
+        [this]() { requestCancel(); },
         [this]() { stepBack(); },
+        [this]() { finishStep(); },
         [this](const std::string& id) {
             if (id == "translation_x" || id == "translation_y")
                 finishDrag();
@@ -345,7 +346,19 @@ void SketchEditorToolController::stepBack() {
         statusChanged_(QObject::tr("Aktueller Skizzenschritt abgebrochen"));
         return;
     }
-    cancel();
+    // S13: then the drawing tool, then the selection; Escape never discards the sketch.
+    if (toolIndex_ != 0) {
+        panel_.chooseOption("tool", 0);
+        statusChanged_(QObject::tr("Auswahlwerkzeug"));
+        return;
+    }
+    if (editor_->selectedElement().has_value() || !editor_->selectedReferences().empty()) {
+        clearSelection();
+        statusChanged_(QObject::tr("Auswahl aufgehoben"));
+        return;
+    }
+    statusChanged_(QObject::tr("Skizze mit OK (Strg+Enter) übernehmen oder mit Abbrechen "
+                               "verwerfen"));
 }
 
 void SketchEditorToolController::updatePreview(

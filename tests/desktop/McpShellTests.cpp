@@ -1,4 +1,5 @@
 #include "../McpTestClient.hpp"
+#include "DiscardPrompt.hpp"
 #include "IsolatedSettings.hpp"
 #include "ViewportLifecycleSupport.hpp"
 
@@ -178,6 +179,7 @@ void run() {
     auto* panel = window.findChild<QWidget*>(QStringLiteral("activeToolPanel"));
     auto* cancel = panel->findChild<QPushButton*>(QStringLiteral("toolCancelButton"));
     check(cancel != nullptr, "Cancel button");
+    test::answerDiscardQuestion(QStringLiteral("Verwerfen")); // S13: the user's draft changed
     cancel->click();
     settle();
 

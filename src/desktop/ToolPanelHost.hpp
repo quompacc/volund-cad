@@ -55,6 +55,9 @@ struct ToolPanelDefinition final {
     std::function<void()> accept;
     std::function<void()> cancel;
     std::function<void()> stepBack;
+    // S13: when set, Enter calls this instead of OK (the sketch editor ends a polyline);
+    // Ctrl+Enter confirms like OK in every tool.
+    std::function<void()> returnPressed{};
     // U09: Enter or focus loss ends the editing of a length input (one user action).
     std::function<void(const std::string&)> parameterFinished{};
 };

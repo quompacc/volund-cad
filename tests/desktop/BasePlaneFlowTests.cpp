@@ -3,6 +3,7 @@
 #include "ViewportLifecycleSupport.hpp"
 #include <QAction>
 #include <QApplication>
+#include <QPushButton>
 #include <QDir>
 #include <QStatusBar>
 #include <QTreeWidget>
@@ -108,9 +109,11 @@ void basePlanes() {
     test::render(*viewport);
     require(viewport->displayedBasePlaneCount() == 0, "Base planes are hidden while sketching");
     capture(*viewport, window, "sketch-on-xy");
-    QKeyEvent escape(QEvent::KeyPress, Qt::Key_Escape, Qt::NoModifier);
-    QApplication::sendEvent(&window, &escape);
-    QApplication::sendEvent(viewport, &escape);
+    // S13: Escape steps back but never leaves the editor; Cancel does (nothing drawn).
+    window.findChild<QWidget*>(QStringLiteral("activeToolPanel"))
+        ->findChild<QPushButton*>(QStringLiteral("toolCancelButton"))
+        ->click();
+    QApplication::processEvents();
     test::render(*viewport);
 
     auto* box = window.findChild<QAction*>(QStringLiteral("addBoxAction"));
