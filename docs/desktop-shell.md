@@ -6,9 +6,17 @@ anderen lesen ihn über die Shell-Projektion oder bekommen ihn als Argument.
 
 ## Composition Root
 
-`apps/voelund-cad/main.cpp` erzeugt genau eine `CadSession` und ein `MainWindow`. Die
-Session lebt länger als das Fenster und wird nur als Referenz weitergegeben. Es gibt keine
-zweite Session pro Ansicht.
+`voelund::desktop::startProduct` ([ProductShell.hpp](../include/voelund/desktop/ProductShell.hpp),
+U12) ist der Composition Root. Er beginnt ein neues Dokument in der übergebenen
+`CadSession`, erzeugt genau ein `MainWindow`, zeigt es und wendet die Startoptionen an:
+Claude-Zugang (`--mcp`), Wiederherstellung, Datei aus der Befehlszeile.
+`configureProductApplication` setzt vorher Name, Organisation, Desktop-Datei und
+Oberflächenformat.
+
+`apps/voelund-cad/main.cpp` ruft nur diese beiden Funktionen auf (plus die Smoke-Modi).
+Die UI-Ablauftests (`desktop.ui_flow`) starten die Shell über denselben Weg, also genau
+die Shell des Produkts. Die Session lebt länger als das Fenster und wird nur als Referenz
+weitergegeben. Es gibt keine zweite Session pro Ansicht.
 
 `MainWindow` baut die Shell zusammen und besitzt über `MainWindow::Impl` (in
 `MainWindowState.hpp`) alle Panels, Controller, Aktionen und die Registry. Qt-Widgets
@@ -53,6 +61,6 @@ gehören über die Parent-Kette dem Fenster; Controller und Registry gehören de
 | Werkzeugleiste, Kontextleiste, Befehlssuche | `ToolRail`, `ContextBar` (`ContextCommands`), `CommandPalette` auf `CommandActions` | U04 erledigt |
 | Werkzeugpanel | `ToolPanelHost` als schwebende `FloatingCard` | U05 erledigt |
 | Eigenschaften | `FeaturePropertiesPanel` in einer `FloatingCard` am selben Platz | U05 erledigt |
-| Timeline | – | U06 (Projektion), M15 (Bearbeitung) |
+| Timeline | `TimelineBar` (Schritte öffnen ihren Editor) | U06 erledigt, M15 (Bearbeitung) |
 | Parameter | – | PAR02 |
 | Viewport | `CadViewport` | U03 (Farben), U06 (Ursprünge, Raster) |

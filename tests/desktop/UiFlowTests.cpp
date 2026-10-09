@@ -19,6 +19,7 @@
 #include <string>
 #include <voelund/application/CadSession.hpp>
 #include <voelund/desktop/MainWindow.hpp>
+#include <voelund/desktop/ProductShell.hpp>
 
 // U11 (A-UI-01 sketch part, A-VIS-01 captures): the whole product path through the real UI,
 // run inside the started event loop. Buttons of context bar, rail, panel, timeline and the file
@@ -38,8 +39,10 @@ struct Window final {
     std::unique_ptr<desktop::MainWindow> main;
     viewport::CadViewport* viewport{nullptr};
     Window() {
-        session.newDocument();
-        main = std::make_unique<desktop::MainWindow>(session);
+        // U12: the product's composition root, without the recovery question.
+        desktop::ProductOptions options;
+        options.offerRecovery = false;
+        main = desktop::startProduct(session, options);
         main->resize(1300, 860);
         main->show();
         viewport = dynamic_cast<viewport::CadViewport*>(main->centralWidget());
@@ -298,6 +301,7 @@ int run() {
 
 int main(int argc, char** argv) {
     QApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
+    voelund::desktop::configureProductApplication();
     QApplication application(argc, argv);
     voelund::test::isolateSettings();
     // U11: the flow runs inside the started event loop, as a user's clicks would.

@@ -116,12 +116,12 @@ void MainWindow::createCommands() {
         std::make_unique<modules::solid::SolidWorkspaceModule>(std::move(services)));
     impl_->commandActions =
         std::make_unique<CommandActions>(*this, impl_->commandRegistry.module("solid"));
-    impl_->addBoxAction = impl_->commandActions->action("solid.create.box");
-    impl_->addCylinderAction = impl_->commandActions->action("solid.create.cylinder");
-    impl_->addCylinderAction->setObjectName(QStringLiteral("addCylinderAction"));
-    impl_->sketchEditorAction = impl_->commandActions->action("solid.create.sketch");
-    impl_->sketchEditorAction->setObjectName(QStringLiteral("sketchEditorAction"));
-    impl_->addBoxAction->setObjectName(QStringLiteral("addBoxAction"));
+    // Names for the smoke test and older desktop tests.
+    impl_->commandActions->action("solid.create.box")->setObjectName(QStringLiteral("addBoxAction"));
+    impl_->commandActions->action("solid.create.cylinder")
+        ->setObjectName(QStringLiteral("addCylinderAction"));
+    impl_->commandActions->action("solid.create.sketch")
+        ->setObjectName(QStringLiteral("sketchEditorAction"));
     impl_->transformAction = impl_->commandActions->action("solid.modify.transform");
     impl_->transformAction->setObjectName(QStringLiteral("transformAction"));
 }

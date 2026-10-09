@@ -3,7 +3,9 @@
 Stand 04.10.2026. Teil 1 ist die Bestandsaufnahme. Teil 2, das Zielbild, wird mit dem
 Nutzer erarbeitet und erst nach seiner ausdrücklichen Freigabe als ADR festgehalten.
 Aufnahmen liegen in `artifacts/ux01-inventory/` (nicht versioniert). Erzeugt werden sie
-mit `voelund_ui_inventory_capture` und dem Smoke-Test der Vorschau.
+mit `voelund_ui_inventory_capture` und dem Smoke-Test der Vorschau. Aktuelle Aufnahmen des
+Produkts (hell/dunkel, normale und Mindestgröße) erzeugt seit U12 `desktop.ui_flow` über den
+Composition Root des Produkts, mit `VOELUND_UI_FLOW_ARTIFACT_DIR=<verzeichnis>`.
 
 ## Teil 1 – Bestandsaufnahme
 

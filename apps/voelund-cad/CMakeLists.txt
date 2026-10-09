@@ -41,7 +41,32 @@ if(WIN32)
     endif()
 endif()
 
-install(TARGETS voelund-cad RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+# U12: the installed product carries the runtime the tests use. On Linux the OpenCASCADE
+# libraries (project-local build) go beside it in the library directory; Qt and the rest
+# come from the system. On Windows it is exactly the set beside the build's executable: Qt,
+# OpenCASCADE, FreeType and their dependencies, and the platform plugin.
+if(UNIX AND NOT APPLE)
+    set_target_properties(voelund-cad PROPERTIES
+        INSTALL_RPATH "$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+    install(TARGETS voelund-cad
+        RUNTIME_DEPENDENCY_SET voelund_occt_runtime
+        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+    install(RUNTIME_DEPENDENCY_SET voelund_occt_runtime
+        POST_INCLUDE_REGEXES "libTK[A-Za-z0-9]+\\.so"
+        POST_EXCLUDE_REGEXES ".*"
+        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+else()
+    install(TARGETS voelund-cad RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+endif()
+if(WIN32)
+    install(
+        DIRECTORY "$<TARGET_FILE_DIR:voelund-cad>/"
+        DESTINATION "${CMAKE_INSTALL_BINDIR}"
+        FILES_MATCHING
+        PATTERN "*.dll"
+        PATTERN "CMakeFiles" EXCLUDE
+    )
+endif()
 
 if(UNIX AND NOT APPLE)
     install(
@@ -83,6 +108,17 @@ if(BUILD_TESTING AND VOELUND_BUILD_DESKTOP)
     if(VOELUND_NATIVE_WAYLAND OR WIN32)
         set_tests_properties(desktop.file_argument PROPERTIES
             TIMEOUT 30 LABELS "desktop;platform;acceptance")
+        # U12: the installed product, not the build tree's executable.
+        add_test(NAME desktop.installed_product
+            COMMAND "${CMAKE_COMMAND}"
+                "-DVOELUND_BUILD_DIR=${PROJECT_BINARY_DIR}"
+                "-DVOELUND_INSTALL_DIR=${PROJECT_BINARY_DIR}/installed-product-test"
+                "-DVOELUND_CONFIG=$<CONFIG>"
+                "-DVOELUND_FIXTURE=${file_argument_fixture}"
+                "-DVOELUND_REQUIRE_WAYLAND=${VOELUND_NATIVE_WAYLAND}"
+                -P "${PROJECT_SOURCE_DIR}/tools/cmake/RunInstalledProduct.cmake")
+        set_tests_properties(desktop.installed_product PROPERTIES
+            TIMEOUT 180 RUN_SERIAL TRUE LABELS "desktop;platform;acceptance")
     endif()
 endif()
 

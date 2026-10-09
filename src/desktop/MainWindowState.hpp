@@ -83,9 +83,6 @@ class MainWindow::Impl final {
     QAction* redoAction{nullptr};
     QAction* repairAction{nullptr};
     QAction* repairAllAction{nullptr};
-    QAction* addBoxAction{nullptr};
-    QAction* addCylinderAction{nullptr};
-    QAction* sketchEditorAction{nullptr};
     QAction* transformAction{nullptr};
     QAction* snapAction{nullptr};
     // S13: view switches as commands (grid everywhere, the others in the sketch editor).

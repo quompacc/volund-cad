@@ -391,7 +391,6 @@ void CadViewport::setTheme(const ViewportTheme& theme) {
     });
 }
 
-const ViewportTheme& CadViewport::theme() const noexcept { return impl_->theme; }
 
 void CadViewport::setBasePlaneVisibility(std::array<bool, 3> visible) {
     impl_->planeVisibility = visible;
@@ -482,17 +481,6 @@ void CadViewport::rollView(double radians) {
         if (!impl_->ready)
             return;
         impl_->view->Rotate(0.0, 0.0, radians, true);
-        update();
-    });
-}
-
-void CadViewport::setPerspectiveProjection(bool enabled) {
-    performViewportOperation(*this, impl_->ready, [&] {
-        if (!impl_->ready)
-            return;
-        impl_->view->Camera()->SetProjectionType(enabled
-                                                     ? Graphic3d_Camera::Projection_Perspective
-                                                     : Graphic3d_Camera::Projection_Orthographic);
         update();
     });
 }

@@ -2,6 +2,7 @@
 
 #include <voelund/application/CadSession.hpp>
 #include <voelund/desktop/MainWindow.hpp>
+#include <voelund/desktop/ProductShell.hpp>
 #include <voelund/document/ModelDocument.hpp>
 #include <voelund/features/SketchEvaluation.hpp>
 #include <voelund/viewport/CadViewport.hpp>
@@ -12,16 +13,11 @@
 #include <QCoreApplication>
 #include <QDebug>
 #include <QElapsedTimer>
-#include <QGuiApplication>
 #include <QMouseEvent>
-#include <QSurfaceFormat>
 #include <QTimer>
 #include <QWheelEvent>
 
-#include <QDir>
 #include <QDoubleSpinBox>
-#include <QFile>
-#include <QStandardPaths>
 #include <QKeyEvent>
 #include <cmath>
 
@@ -181,28 +177,14 @@ void startCadSmoke(MainWindow& mainWindow, CadSession& session) {
 } // namespace
 
 int main(int argc, char* argv[]) {
-#if defined(VOELUND_OCCT_GLES)
-    QSurfaceFormat surfaceFormat;
-    surfaceFormat.setRenderableType(QSurfaceFormat::OpenGLES);
-    surfaceFormat.setVersion(3, 0);
-    surfaceFormat.setDepthBufferSize(24);
-    surfaceFormat.setStencilBufferSize(8);
-    QSurfaceFormat::setDefaultFormat(surfaceFormat);
-#endif
-    QCoreApplication::setApplicationName(QStringLiteral("Völund CAD"));
-    QCoreApplication::setApplicationVersion(QStringLiteral("0.1.0"));
-    QCoreApplication::setOrganizationName(QStringLiteral("QuompaCC"));
-    QCoreApplication::setOrganizationDomain(QStringLiteral("quompacc.github.io"));
-    QGuiApplication::setDesktopFileName(QStringLiteral("io.github.quompacc.Voelund"));
+    voelund::desktop::configureProductApplication();
     QApplication application(argc, argv);
-    voelund::application::CadSession session;
-    session.newDocument();
-    const bool isSmokeTest = QCoreApplication::arguments().contains("--smoke-test");
-    const bool uninitializedSmoke =
-        QCoreApplication::arguments().contains("--smoke-test-uninitialized");
+    const auto arguments = QCoreApplication::arguments();
+    const bool isSmokeTest = arguments.contains("--smoke-test");
+    const bool uninitializedSmoke = arguments.contains("--smoke-test-uninitialized");
     // U11 (A-UI-03): opens the document given on the command line the way a desktop file
     // association does, then quits: 0 when it opened, 12 when not.
-    const bool openCheck = QCoreApplication::arguments().contains("--smoke-test-open");
+    const bool openCheck = arguments.contains("--smoke-test-open");
     if (isSmokeTest || uninitializedSmoke)
         voelund::apps::enableSmokeLogging();
     if (uninitializedSmoke) {
@@ -212,39 +194,10 @@ int main(int argc, char* argv[]) {
         });
         return application.exec();
     }
-    voelund::desktop::MainWindow mainWindow(session);
-    mainWindow.show();
-    // AI04c: --mcp switches the Claude access (MCP) on, as the chip in the header does; the
-    // connect command also goes to the log and to mcp-connect.txt in the configuration
-    // directory.
-    if (QCoreApplication::arguments().contains(QStringLiteral("--mcp"))) {
-        if (mainWindow.setMcpAccessEnabled(true)) {
-            const auto directory =
-                QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
-            QDir().mkpath(directory);
-            QFile file(directory + QStringLiteral("/mcp-connect.txt"));
-            if (file.open(QIODevice::WriteOnly | QIODevice::Truncate))
-                file.write(mainWindow.mcpConnectCommand().toUtf8() + '\n');
-            qInfo().noquote() << "MCP:" << mainWindow.mcpConnectCommand();
-        } else {
-            qWarning() << "MCP server could not listen";
-        }
-    }
-
-    // L05: unsaved work of an interrupted run is offered first (not in the smoke test, which
-    // starts from a clean, unmodified document).
-    if (!isSmokeTest && !openCheck)
-        mainWindow.offerRecovery();
-
-    // U07: a document given on the command line (desktop file association) opens through the
-    // same safe Open action; a failure shows its error and keeps the new document.
-    const auto arguments = QCoreApplication::arguments();
-    for (qsizetype index = 1; index < arguments.size(); ++index)
-        if (!arguments[index].startsWith(QLatin1Char('-'))) {
-            mainWindow.openFile(arguments[index]);
-            break;
-        }
-
+    // U12: the same composition root as the UI flow tests.
+    voelund::application::CadSession session;
+    const auto mainWindow =
+        voelund::desktop::startProduct(session, voelund::desktop::productOptions(arguments));
     if (openCheck) {
         QTimer::singleShot(0, &application, [&application, &session] {
             application.exit(session.features().empty() || session.currentFile().empty() ? 12 : 0);
@@ -252,6 +205,6 @@ int main(int argc, char* argv[]) {
         return application.exec();
     }
     if (isSmokeTest)
-        startCadSmoke(mainWindow, session);
+        startCadSmoke(*mainWindow, session);
     return application.exec();
 }

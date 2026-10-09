@@ -296,14 +296,12 @@ class CadViewport final : public CadViewportBase {
     void setBasePlaneVisibility(std::array<bool, 3> visible);
     void setGridVisible(bool visible);
     [[nodiscard]] bool isGridVisible() const noexcept;
-    [[nodiscard]] const ViewportTheme& theme() const noexcept;
     void setCameraView(CameraView view);
     // View cube: read and set any direction (center and zoom stay), orbit and roll.
     [[nodiscard]] CameraFrame cameraFrame() const;
     void setCameraFrame(const CameraFrame& frame);
     void orbitBy(double horizontalRadians, double verticalRadians);
     void rollView(double radians);
-    void setPerspectiveProjection(bool enabled);
     void fitView();
     [[nodiscard]] bool isRenderingReady() const noexcept;
     [[nodiscard]] std::size_t displayedSketchElementCount() const noexcept;

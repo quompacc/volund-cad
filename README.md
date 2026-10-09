@@ -14,20 +14,28 @@ D12d integrates OCAF as the product model authority, including transactions, his
 
 ## Current state
 
-The repository contains a working native CAD vertical slice:
+The product is one application, `voelund-cad`, with the shell of
+[ADR 0012](docs/adr/0012-ui-shell-concept.md):
 
-- native C++20/Qt 6 shell with an OCCT AIS/V3d viewport;
-- face preselection and selection, orbit, pan and zoom;
-- parametric box, cylinder, sketch and extrusion features;
-- Join, Cut, Intersect and Separate cylinder results;
-- an always-visible connection mode that controls the current cylinder operation and
-  supplies the mode for the next cylinder;
-- combined Move/Rotate manipulator with snapping and live properties;
-- feature tree, exact dirty-state tracking, Undo/Redo and `.volund` persistence;
-- planar-face rectangle sketching followed by direct Push/Pull extrusion;
-- reusable tool panel with preview, parameters, OK and Cancel;
-- modular workspace and command registry with `Solid` as the first product module;
-- native C++ tests and an enforced 600-line source-file limit.
+- header with file menu, Undo/Redo, command search (Ctrl+K), tool-rail and theme switches
+  (light and dark);
+- model tree with origin, base planes, grid, bodies, sketches and features; a timeline of
+  the history whose steps open their editor;
+- tool rail and a context bar that offers the commands of the current selection;
+- floating tool panel with live preview, values, OK and Cancel; feature properties in the
+  same place;
+- OCCT AIS/V3d viewport with view cube, standard views, face picking, orbit, pan
+  and zoom;
+- sketch editor on base planes and planar faces: lines, polylines, rectangles, circles,
+  arcs, ellipses, slots, polygons; relations and dimensions solved by PlaneGCS; trim,
+  extend, split, fillet, offset, mirror and associative patterns; window/crossing
+  selection;
+- extrusion of sketch regions (new body, join, cut, up to a face), push/pull of planar
+  faces, box and cylinder primitives, move/rotate;
+- native OCAF documents (`.volund`) with Undo/Redo, autosave and recovery after a crash;
+- optional Claude access over MCP and an assistant panel;
+- native C++ tests including end-to-end UI flows through the real buttons, and an
+  enforced 600-line source-file limit.
 
 D13c switches product Save/Open to native BinOcaf persistence and retains document
 identity. The baseline passes **76/76 Windows** and **73/73 FreeBSD/Sway** tests;
@@ -120,18 +128,40 @@ first on a mature FreeBSD Wayland desktop as a control and then under Meridian.
 
 Local dependency builds are stored below `.tools/` and are intentionally excluded from version control.
 
+## Install and start
+
+`voelund-cad` is the only application. `main()` and the UI flow tests start the same shell
+through one composition root (`voelund::desktop::startProduct`, see
+[desktop-shell.md](docs/desktop-shell.md)).
+
+```sh
+cmake --install build/<preset> --prefix <directory>
+<directory>/bin/voelund-cad [file.volund]
+```
+
+The installation carries the runtime the tests use: on Windows the Qt, OpenCASCADE and
+FreeType libraries and the Qt platform plugin beside the executable; on Linux the
+project-local OpenCASCADE libraries in the library directory (found through
+`$ORIGIN`), Qt from the system, plus the desktop file and MIME type. The test
+`desktop.installed_product` installs into an empty directory and starts the installed
+executable. A document given on the command line opens like a double-clicked file;
+`--mcp` switches the Claude access on.
+
 ## Viewport controls
 
-- move the pointer over the body to preselect faces;
-- left click to select a face;
-- drag with the middle mouse button to pan;
-- drag with the right mouse button to orbit;
-- use the mouse wheel to zoom.
-- choose Join, Cut, Intersect or Separate from the persistent Connection toolbar;
-- enable Move/Rotate and drag an axis or rotation ring; a Separate result moves only
-  that body, while a joined result moves as one body from either contributing feature;
-- select a planar face, choose Sketch Rectangle, set two corners, pull the extrusion
-  preview and confirm it in the temporary tool panel.
+- move the pointer over the body to preselect faces; left click selects a face, a base
+  plane, a sketch region or an element;
+- drag with the middle mouse button to pan, with the right mouse button to orbit; the
+  mouse wheel zooms; the view cube switches to standard views;
+- select a base plane or planar face and choose Sketch in the context bar; draw with the
+  sketch tools, set values in the panel and finish with OK (Ctrl+Enter);
+- select a closed sketch region and choose Extrude; the panel previews the body;
+- in a sketch, a box from left to right selects elements inside it, from right to left
+  everything it touches; Escape steps back (drag, preview points, tool, selection) and
+  never discards the sketch.
+
+The rules of the shell and the sketch editor are described in
+[ui-concept.md](docs/ui-concept.md).
 
 ## Product structure
 

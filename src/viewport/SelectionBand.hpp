@@ -10,7 +10,6 @@ class SelectionBand final : public QWidget {
   public:
     explicit SelectionBand(QWidget* parent);
     void setCrossing(bool crossing);
-    [[nodiscard]] bool isCrossing() const noexcept { return crossing_; }
 
   protected:
     void paintEvent(QPaintEvent* event) override;

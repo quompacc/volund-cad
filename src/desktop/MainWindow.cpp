@@ -142,10 +142,7 @@ void MainWindow::createPropertiesPanel() {
                  if (const auto cause = impl_->session.errorCause(*selected))
                      selectFeature(cause->value());
          },
-         [this] {
-             if (QAction* edit = impl_->commandActions->action("solid.modify.edit_sketch"))
-                 edit->trigger();
-         },
+         [this] { impl_->commandActions->action("solid.modify.edit_sketch")->trigger(); },
          [this] { repairReferences(); }});
     impl_->propertyCard->body().addWidget(impl_->errorCard);
     impl_->propertyCard->body().addWidget(impl_->propertyPanel);

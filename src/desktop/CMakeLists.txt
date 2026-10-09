@@ -9,6 +9,7 @@ add_library(
     ContextBar.cpp
     ContextCommands.cpp
     MainWindow.cpp
+    ProductShell.cpp
     AssistantPanel.cpp
     MainWindowAssistant.cpp
     MainWindowCommands.cpp

@@ -171,11 +171,6 @@ void ModelTreePanel::flashFeatures(std::span<const document::FeatureId> features
     });
 }
 
-bool ModelTreePanel::isFlashed(document::FeatureId feature) const {
-    const auto* item = featureItem(feature);
-    return item != nullptr && item->font(0).bold();
-}
-
 void ModelTreePanel::paintFlash(bool on) {
     for (const auto id : flashed_) {
         auto* item = featureItem(id);

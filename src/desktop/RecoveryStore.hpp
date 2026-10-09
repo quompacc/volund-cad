@@ -57,7 +57,6 @@ class RecoveryStore final {
     RecoveryStore(const RecoveryStore&) = delete;
     RecoveryStore& operator=(const RecoveryStore&) = delete;
 
-    [[nodiscard]] const QString& directory() const noexcept { return directory_; }
     // Writes data, then metadata, each atomically; throws on a write error. An entry locked
     // by another running instance is not written (returns false).
     bool write(const RecoverySnapshot& snapshot);
