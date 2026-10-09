@@ -44,6 +44,11 @@ void SketchEditorToolController::syncConstraintState() {
     panel_.setActionEnabled("offset", hasSelection);
     panel_.setActionEnabled("linear_pattern", hasSelection);
     panel_.setActionEnabled("circular_pattern", hasSelection);
+    // S12: a selected source or copy names its pattern.
+    const auto pattern = editor_->selectedPattern();
+    panel_.setActionEnabled("edit_pattern",
+                            pattern && pattern->kind != document::SketchPatternKind::mirror);
+    panel_.setActionEnabled("dissolve_pattern", pattern.has_value());
     panel_.setActionEnabled("fillet", editor_->selectedReferences().size() >= 2);
     panel_.setActionEnabled("mirror", editor_->selectedReferences().size() >= 2);
     panel_.setActionEnabled("remove_constraint", !editor_->constraints().empty());

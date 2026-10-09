@@ -133,6 +133,21 @@ void run() {
     require(rounded.startsWith(QStringLiteral("Skizzenoperation abgeschlossen")) &&
                 redElements(*viewport) == 0,
             "A valid radius rounds the corner, got " + rounded.toStdString());
+    // S12: a linear pattern of the top side; a copy cannot be deleted, its pattern dissolves.
+    select(window, *viewport, 0, 10);
+    const QString patterned = run(window, *viewport, "sketch.linear_pattern");
+    require(patterned.contains(QStringLiteral("Muster angelegt")),
+            "Pattern created, got " + patterned.toStdString());
+    select(window, *viewport, 35, 10);
+    require(enabled(window, "sketch.dissolve_pattern") && enabled(window, "sketch.edit_pattern"),
+            "A copy names its pattern");
+    const QString locked = run(window, *viewport, "sketch.delete");
+    require(locked.contains(QStringLiteral("Kopie folgt")),
+            "A copy is not deleted, got " + locked.toStdString());
+    const QString dissolved = run(window, *viewport, "sketch.dissolve_pattern");
+    require(dissolved.contains(QStringLiteral("aufgelöst")) &&
+                !enabled(window, "sketch.dissolve_pattern"),
+            "Dissolved, got " + dissolved.toStdString());
     std::cout << "PASS sketch curve edit flow\n";
 }
 } // namespace

@@ -70,6 +70,11 @@ SketchCurveEditResult SketchEditorSession::filletCorner(double radius) {
     }
     if (!notLines.empty())
         refuse("Nur zwischen zwei Linien (UnsupportedCurve)", notLines);
+    for (const auto& pick : picks)
+        if (isPatternInstance(pick.element))
+            refuse("Eine Kopie folgt ihrem Original; das Original verrunden oder das Muster "
+                   "auflösen",
+                   {pick.element});
     const auto plan = detail::planFillet(picks[0].element, lines[0], picks[0].point,
                                          picks[1].element, lines[1], picks[1].point, radius);
     const bool corner = plan.first.movedFromCorner || plan.second.movedFromCorner;

@@ -44,6 +44,10 @@ SketchCurveEditResult SketchEditorSession::editCurve(SketchCurveEdit edit) {
         throw std::invalid_argument(name + ": Zuerst das Element an der gewünschten Stelle "
                                            "anklicken");
     const SketchElementId target = *selectedElement_;
+    if (isPatternInstance(target))
+        throw SketchEditRefusal(name + ": Eine Kopie folgt ihrem Original; das Original ändern "
+                                       "oder das Muster auflösen",
+                                {target});
     const auto plan = detail::planCurveEdit(edit, elements_.values, target, *selectionPoint_);
     const bool newPiece = plan.piece.has_value();
     const bool pieceOfLine = std::holds_alternative<document::SketchLine>(plan.edited);
@@ -115,6 +119,8 @@ SketchCurveEditResult SketchEditorSession::editCurve(SketchCurveEdit edit) {
         }
     }
     for (const auto& binding : plan.bindings) {
+        if (isPatternInstance(binding.cutter)) // S12: copies carry no relations
+            continue;
         const SketchGeometryReference end{binding.piece == 0 ? target : *piece, binding.point};
         if (binding.cutterEnd.has_value())
             relate(SketchConstraintKind::coincident, end, {binding.cutter, *binding.cutterEnd});

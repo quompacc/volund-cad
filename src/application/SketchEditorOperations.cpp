@@ -125,7 +125,8 @@ bool SketchEditorSession::offsetSelected(double distance) {
     return keepIfValid(rollback);
 }
 
-bool SketchEditorSession::mirrorSelected() {
+// S12: one-time copies, only for selections with a legacy rectangle (no pattern source).
+bool SketchEditorSession::copyMirrored() {
     const auto ids = selectedIds(selectedReferences_, selectedElement_);
     if (!active_ || ids.size() < 2)
         return false;
@@ -148,7 +149,7 @@ bool SketchEditorSession::mirrorSelected() {
     return appendCopies(copies);
 }
 
-bool SketchEditorSession::linearPatternSelected(int count, double spacing) {
+bool SketchEditorSession::copyLinear(int count, double spacing) {
     const auto ids = selectedIds(selectedReferences_, selectedElement_);
     if (!active_ || ids.empty() || count < 2 || !std::isfinite(spacing) || spacing == 0.0)
         return false;
@@ -168,7 +169,7 @@ bool SketchEditorSession::linearPatternSelected(int count, double spacing) {
     return keepIfValid(rollback);
 }
 
-bool SketchEditorSession::circularPatternSelected(int count, double angleDegrees) {
+bool SketchEditorSession::copyCircular(int count, double angleDegrees) {
     const auto ids = selectedIds(selectedReferences_, selectedElement_);
     if (!active_ || ids.empty() || count < 2 || !std::isfinite(angleDegrees) ||
         angleDegrees == 0.0)

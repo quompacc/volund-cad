@@ -62,7 +62,8 @@ SketchEditorSession::SketchEditorSession(CadSession& session, document::FeatureI
                                          document::SketchParameters parameters)
     : session_(session), supportFeature_(supportFeature), plane_(parameters.plane),
       supportBinding_(parameters.supportBinding), elements_(std::move(parameters.elements)),
-      constraints_(std::move(parameters.constraints)), editingFeature_(sketchFeature) {
+      constraints_(std::move(parameters.constraints)),
+      patterns_(std::move(parameters.patterns)), editingFeature_(sketchFeature) {
     if (parameters.repairReason)
         throw std::invalid_argument(
             "MigrationNeedsRepair: repair sketch references before editing");
@@ -83,7 +84,7 @@ SketchEditorSession::SketchEditorSession(CadSession& session, document::FeatureI
                                          document::SketchParameters parameters)
     : session_(session), datum_(parameters.datum), plane_(parameters.plane),
       elements_(std::move(parameters.elements)), constraints_(std::move(parameters.constraints)),
-      editingFeature_(sketchFeature) {
+      patterns_(std::move(parameters.patterns)), editingFeature_(sketchFeature) {
     if (!datum_)
         throw std::invalid_argument("Only base-plane sketches are edited without a support");
     editedBaseline_ = storedSketch(session, sketchFeature);
@@ -165,7 +166,7 @@ bool SketchEditorSession::selectNearestReference(document::SketchElementId eleme
 
 bool SketchEditorSession::translateSelected(double deltaX, double deltaY) {
     if (!active_ || !selectedElement_.has_value() || !std::isfinite(deltaX) ||
-        !std::isfinite(deltaY))
+        !std::isfinite(deltaY) || patternLock(false)) // S12: copies follow their pattern
         return false;
     const auto match =
         std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);
@@ -475,7 +476,7 @@ bool SketchEditorSession::removeConstraint(document::SketchConstraintId id) {
 }
 
 bool SketchEditorSession::removeSelected() {
-    if (!active_ || !selectedElement_.has_value())
+    if (!active_ || !selectedElement_.has_value() || patternLock(true))
         return false;
     // S08: the whole selection, with every constraint that names one of its elements.
     std::vector<document::SketchElementId> ids{*selectedElement_};
@@ -551,6 +552,7 @@ document::SketchParameters SketchEditorSession::parameters(bool includePreview) 
     document::SketchParameters sketch{plane_, std::move(result), constraints_};
     sketch.supportBinding = supportBinding_;
     sketch.datum = datum_;
+    sketch.patterns = patterns_;
     return sketch;
 }
 

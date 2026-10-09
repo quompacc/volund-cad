@@ -172,10 +172,17 @@ void SketchEditorToolController::showPanel() {
                       "virtuellen Ecke"),
           QObject::tr("Bearbeiten")},
          {"offset", QObject::tr("Gewählte Geometrie versetzen"), QObject::tr("Bearbeiten")},
-         {"mirror", QObject::tr("Auswahl an der zuletzt gewählten Linie spiegeln"),
+         {"mirror",
+          QObject::tr("Auswahl an der zuletzt gewählten Linie spiegeln (assoziativ)"),
           QObject::tr("Bearbeiten")},
-         {"linear_pattern", QObject::tr("Lineares Muster anlegen"), QObject::tr("Bearbeiten")},
-         {"circular_pattern", QObject::tr("Kreismuster um den Ursprung anlegen"),
+         {"linear_pattern", QObject::tr("Lineares Muster anlegen (assoziativ)"),
+          QObject::tr("Bearbeiten")},
+         {"circular_pattern", QObject::tr("Kreismuster um den Ursprung anlegen (assoziativ)"),
+          QObject::tr("Bearbeiten")},
+         {"edit_pattern", QObject::tr("Anzahl, Abstand und Winkel des gewählten Musters ändern"),
+          QObject::tr("Bearbeiten")},
+         {"dissolve_pattern",
+          QObject::tr("Muster auflösen: Die Kopien werden unabhängige Elemente"),
           QObject::tr("Bearbeiten")},
          {"delete", QObject::tr("Gewähltes Element löschen"), QObject::tr("Bearbeiten")}},
         [this](const std::string& id, double value) {
@@ -279,7 +286,8 @@ void SketchEditorToolController::showPanel() {
                 }
             } else if (id == "trim" || id == "extend" || id == "split" || id == "fillet" ||
                        id == "offset" || id == "mirror" || id == "linear_pattern" ||
-                       id == "circular_pattern") {
+                       id == "circular_pattern" || id == "edit_pattern" ||
+                       id == "dissolve_pattern") {
                 applyEditOperation(id);
             } else if (id == "delete")
                 removeSelected();
@@ -513,7 +521,13 @@ void SketchEditorToolController::unlockSelectedReference() {
 }
 
 void SketchEditorToolController::removeSelected() {
-    if (!editor_ || !editor_->removeSelected())
+    if (!editor_)
+        return;
+    if (const auto lock = editor_->patternLock(true)) {
+        statusChanged_(QString::fromStdString(*lock));
+        return;
+    }
+    if (!editor_->removeSelected())
         return;
     resetTranslationInputs();
     syncSelectedDimensionInputs();

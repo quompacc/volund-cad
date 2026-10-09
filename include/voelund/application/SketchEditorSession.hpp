@@ -127,6 +127,24 @@ class SketchEditorSession final {
     [[nodiscard]] std::optional<std::string> offsetProblem(double distance) const;
     // S09: the offset offsetSelected would add, shown as preview; false clears the preview.
     bool previewOffset(double distance);
+    // S12: an associative pattern of the selection (SketchPattern.hpp): linear along +x with
+    // `spacing`, circular about the origin over `totalAngleDegrees` in `count` steps, or mirrored
+    // at the last selected line. Returns its ID; nullopt when the selection holds a legacy
+    // rectangle, which is copied once instead (no pattern). Throws SketchEditRefusal with the
+    // reason (count 2..1000, a copy as source, ...) and changes nothing.
+    std::optional<std::uint64_t> createPattern(document::SketchPatternKind kind, int count,
+                                               double spacing, double totalAngleDegrees);
+    // The pattern the selected element belongs to (as source or instance).
+    [[nodiscard]] std::optional<document::SketchPattern> selectedPattern() const;
+    // Changes count, spacing or total angle (as for createPattern) as one step; throws like it.
+    bool editPattern(std::uint64_t pattern, int count, double spacing, double totalAngleDegrees);
+    // The instances stay as independent elements.
+    [[nodiscard]] bool dissolvePattern(std::uint64_t pattern);
+    [[nodiscard]] std::span<const document::SketchPattern> patterns() const noexcept;
+    [[nodiscard]] bool isPatternInstance(document::SketchElementId element) const noexcept;
+    // Why the selection cannot be moved, deleted or changed directly (a pattern copy, or a
+    // source to delete), or nothing.
+    [[nodiscard]] std::optional<std::string> patternLock(bool deleting) const;
     [[nodiscard]] bool mirrorSelected();
     [[nodiscard]] bool linearPatternSelected(int count, double spacing);
     [[nodiscard]] bool circularPatternSelected(int count, double angleDegrees);
@@ -135,7 +153,8 @@ class SketchEditorSession final {
     // L05b: a recovered draft replaces the content as one undo step, solved as it was saved
     // (also under-determined or conflicting). An invalid draft changes nothing.
     [[nodiscard]] bool loadDraft(document::SketchElements elements,
-                                 document::SketchConstraints constraints);
+                                 document::SketchConstraints constraints,
+                                 document::SketchPatterns patterns = {});
     // U09: a drag or a typed translation of the selection is one user action. dragSelected
     // moves from the state at beginDrag by the total offset (the candidate); endDrag records
     // one step, cancelDrag restores the starting state.
@@ -206,6 +225,7 @@ class SketchEditorSession final {
     struct EditorState final {
         document::SketchElements elements;
         document::SketchConstraints constraints;
+        document::SketchPatterns patterns;
         std::optional<document::SketchElementId> selectedElement;
         std::vector<document::SketchGeometryReference> selectedReferences;
         std::optional<document::SketchPoint> selectionPoint;
@@ -269,6 +289,10 @@ class SketchEditorSession final {
     // S08: transformed copies (mirror, pattern), SketchEditorOperations.cpp.
     struct Copy;
     [[nodiscard]] bool appendCopies(std::span<const Copy> copies);
+    [[nodiscard]] bool copyMirrored();
+    [[nodiscard]] bool copyLinear(int count, double spacing);
+    [[nodiscard]] bool copyCircular(int count, double angleDegrees);
+    [[nodiscard]] std::vector<document::SketchElementId> selectedElementIds() const;
 
     CadSession& session_;
     std::optional<document::FeatureId> supportFeature_;
@@ -278,6 +302,7 @@ class SketchEditorSession final {
     std::optional<DocumentStamp> supportStamp_;
     document::SketchElements elements_;
     document::SketchConstraints constraints_;
+    document::SketchPatterns patterns_; // S12
     std::optional<document::FeatureId> editingFeature_;
     // AI04c: the stored sketch when editing began; a change from outside (MCP) is not
     // overwritten silently. Empty for a sketch the session does not hold.

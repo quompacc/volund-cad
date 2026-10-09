@@ -203,6 +203,38 @@ QJsonObject encodeSketch(const document::SketchParameters& sketch) {
     for (const auto& constraint : sketch.constraints.values)
         constraints.append(encodeConstraint(constraint));
     QJsonObject json{{"elements", elements}, {"constraints", constraints}};
+    // S12: associative patterns, read-only here: their instances follow the sources and carry
+    // no constraints; an edit must keep every instance element.
+    if (!sketch.patterns.values.empty()) {
+        QJsonArray patterns;
+        const auto ids = [](const std::vector<document::SketchElementId>& values) {
+            QJsonArray result;
+            for (const auto id : values)
+                result.append(static_cast<double>(id.value()));
+            return result;
+        };
+        for (const auto& pattern : sketch.patterns.values) {
+            QJsonObject entry{{"kind", pattern.kind == document::SketchPatternKind::linear
+                                           ? "linear"
+                                       : pattern.kind == document::SketchPatternKind::circular
+                                           ? "circular"
+                                           : "mirror"},
+                              {"count", static_cast<int>(pattern.count)},
+                              {"sources", ids(pattern.sources)},
+                              {"instances", ids(pattern.instances)}};
+            if (pattern.kind == document::SketchPatternKind::linear)
+                entry.insert("step", point(pattern.step));
+            if (pattern.kind == document::SketchPatternKind::circular) {
+                entry.insert("center", point(pattern.center));
+                entry.insert("angle_deg",
+                             kernel::toDegrees(kernel::Radians(pattern.angle)).value());
+            }
+            if (pattern.axis)
+                entry.insert("axis", static_cast<double>(pattern.axis->value()));
+            patterns.append(entry);
+        }
+        json.insert("patterns", patterns);
+    }
     // Sketches on body faces have no base plane; their plane follows the support.
     json.insert("plane", sketch.datum ? QJsonValue(planeNames[static_cast<int>(*sketch.datum) - 1])
                                       : QJsonValue(QStringLiteral("face")));

@@ -13,7 +13,7 @@ bool SketchEditorSession::isSelectedConstruction() const noexcept {
 }
 
 bool SketchEditorSession::toggleSelectedConstruction() {
-    if (!active_ || !selectedElement_.has_value())
+    if (!active_ || !selectedElement_.has_value() || patternLock(false))
         return false;
     const auto match =
         std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);

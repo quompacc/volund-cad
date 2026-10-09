@@ -65,6 +65,8 @@ QString compactActionLabel(const std::string& id, const QString& fallback) {
         {"mirror", QObject::tr("Spiegeln")},
         {"linear_pattern", QObject::tr("Lineares Muster")},
         {"circular_pattern", QObject::tr("Kreismuster")},
+        {"edit_pattern", QObject::tr("Muster ändern")},
+        {"dissolve_pattern", QObject::tr("Muster auflösen")},
         {"delete", QObject::tr("Löschen")}};
     const auto match = std::ranges::find(labels, id, &decltype(labels)::value_type::first);
     return match == labels.end() ? fallback : match->second;

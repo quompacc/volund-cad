@@ -84,6 +84,47 @@ void SketchEditorToolController::applyCurveEdit(
                        .arg(names.join(QStringLiteral(", "))));
 }
 
+// S12: associative patterns; a refusal names its reason, a legacy rectangle is copied once.
+void SketchEditorToolController::applyPatternOperation(const std::string& id) {
+    const int count = static_cast<int>(std::lround(patternCount_));
+    QString done;
+    problemElements_.clear();
+    try {
+        if (id == "dissolve_pattern" || id == "edit_pattern") {
+            const auto pattern = editor_->selectedPattern();
+            if (!pattern)
+                return;
+            if (id == "dissolve_pattern") {
+                if (!editor_->dissolvePattern(pattern->id))
+                    return;
+                done = QObject::tr("Muster aufgelöst; die Kopien sind unabhängige Elemente");
+            } else {
+                if (!editor_->editPattern(pattern->id, count, patternSpacing_, patternAngle_))
+                    return;
+                done = QObject::tr("Muster geändert");
+            }
+        } else {
+            const auto kind = id == "mirror"           ? document::SketchPatternKind::mirror
+                              : id == "linear_pattern" ? document::SketchPatternKind::linear
+                                                       : document::SketchPatternKind::circular;
+            done = editor_->createPattern(kind, count, patternSpacing_, patternAngle_)
+                       ? QObject::tr("Muster angelegt; die Kopien folgen dem Original")
+                       : QObject::tr("Alt-Rechteck einmalig kopiert (kein Muster)");
+        }
+    } catch (const application::SketchEditRefusal& refusal) {
+        for (const auto element : refusal.elements())
+            problemElements_.push_back(element.value());
+        refreshPresentation();
+        statusChanged_(QString::fromStdString(refusal.what()));
+        return;
+    }
+    resetTranslationInputs();
+    syncSelectedDimensionInputs();
+    syncConstraintState();
+    refreshPresentation();
+    statusChanged_(done);
+}
+
 void SketchEditorToolController::applyEditOperation(const std::string& id) {
     if (!editor_)
         return;
@@ -98,21 +139,18 @@ void SketchEditorToolController::applyEditOperation(const std::string& id) {
         applyCurveEdit([this] { return editor_->filletCorner(filletRadius_); });
         return;
     }
+    if (id == "mirror" || id == "linear_pattern" || id == "circular_pattern" ||
+        id == "edit_pattern" || id == "dissolve_pattern") {
+        applyPatternOperation(id);
+        return;
+    }
     if (id == "offset") {
         if (const auto problem = editor_->offsetProblem(offsetDistance_)) {
             statusChanged_(QString::fromStdString(*problem));
             return;
         }
     }
-    const bool changed = id == "offset" ? editor_->offsetSelected(offsetDistance_)
-                         : id == "mirror" ? editor_->mirrorSelected()
-                         : id == "linear_pattern"
-                             ? editor_->linearPatternSelected(
-                                   static_cast<int>(std::lround(patternCount_)), patternSpacing_)
-                         : id == "circular_pattern"
-                             ? editor_->circularPatternSelected(
-                                   static_cast<int>(std::lround(patternCount_)), patternAngle_)
-                             : false;
+    const bool changed = id == "offset" && editor_->offsetSelected(offsetDistance_);
     if (!changed)
         return;
     resetTranslationInputs();
@@ -144,6 +182,20 @@ void SketchEditorToolController::syncSelectedDimensionInputs() {
     panel_.setLengthVisible("pattern_count", selecting && hasSelection);
     panel_.setLengthVisible("pattern_spacing", selecting && hasSelection);
     panel_.setLengthVisible("pattern_angle", selecting && hasSelection);
+    // S12: a selected source or copy shows its pattern's values for "Muster ändern".
+    if (const auto pattern = editor_->selectedPattern();
+        pattern && pattern->kind != document::SketchPatternKind::mirror) {
+        patternCount_ = pattern->count;
+        panel_.setLengthValue("pattern_count", patternCount_);
+        if (pattern->kind == document::SketchPatternKind::linear) {
+            patternSpacing_ = std::hypot(pattern->step.x, pattern->step.y);
+            panel_.setLengthValue("pattern_spacing", patternSpacing_);
+        } else {
+            patternAngle_ =
+                kernel::toDegrees(kernel::Radians(pattern->angle)).value() * pattern->count;
+            panel_.setLengthValue("pattern_angle", patternAngle_);
+        }
+    }
     panel_.setLengthEnabled("line_length", length.has_value());
     panel_.setLengthEnabled("rectangle_width", width.has_value());
     panel_.setLengthEnabled("rectangle_height", height.has_value());

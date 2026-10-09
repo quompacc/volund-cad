@@ -395,6 +395,20 @@ const QHash<QString, Drawing>& drawings() {
                  p.painter.drawRect(QRectF(16.5, 9, 5, 6));
              });
          }},
+        {"edit_pattern",
+         [](const Pens& p) {
+             p.painter.drawRect(QRectF(2.5, 9, 5, 6));
+             p.painter.drawRect(QRectF(9.5, 9, 5, 6));
+             p.accented([&] { p.line(13, 21, 21, 3); });
+         }},
+        {"dissolve_pattern",
+         [](const Pens& p) {
+             p.painter.drawRect(QRectF(2.5, 9, 5, 6));
+             p.dashed([&] {
+                 p.painter.drawRect(QRectF(9.5, 9, 5, 6));
+                 p.painter.drawRect(QRectF(16.5, 9, 5, 6));
+             });
+         }},
         {"circular_pattern",
          [](const Pens& p) {
              p.dashed([&] { p.painter.drawEllipse(QPointF(12, 12), 7, 7); });

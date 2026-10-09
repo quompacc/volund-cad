@@ -42,7 +42,7 @@ bool SketchEditorToolController::restoreDraft(const application::CadSession::Ske
         statusChanged_(QString::fromUtf8(error.what()));
         return false;
     }
-    if (!editor_ || !editor_->loadDraft(sketch.elements, sketch.constraints)) {
+    if (!editor_ || !editor_->loadDraft(sketch.elements, sketch.constraints, sketch.patterns)) {
         cancel();
         return false;
     }

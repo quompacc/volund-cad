@@ -65,6 +65,7 @@ class SketchEditorToolController final {
     void removeSelected();
     void removeLastConstraint();
     void applyEditOperation(const std::string& id);
+    void applyPatternOperation(const std::string& id);
     void applyCurveEdit(const std::function<application::SketchCurveEditResult()>& edit);
     void resetTranslationInputs();
     void syncSelectedDimensionInputs();
