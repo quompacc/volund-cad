@@ -65,7 +65,7 @@ class SketchEditorToolController final {
     void removeSelected();
     void removeLastConstraint();
     void applyEditOperation(const std::string& id);
-    void applyCurveEdit(application::SketchCurveEdit edit);
+    void applyCurveEdit(const std::function<application::SketchCurveEditResult()>& edit);
     void resetTranslationInputs();
     void syncSelectedDimensionInputs();
     void syncConstraintState();
@@ -103,6 +103,8 @@ class SketchEditorToolController final {
     std::optional<document::FeatureId> draftEdited_;
     std::optional<document::FeatureId> draftSupport_;
     std::optional<viewport::SketchAutomaticConstraint> previewAutomatic_;
+    // S11: elements a refused edit points at; red until the selection changes.
+    std::vector<std::uint64_t> problemElements_;
 };
 
 } // namespace voelund::desktop

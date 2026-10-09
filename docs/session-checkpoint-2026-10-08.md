@@ -45,8 +45,9 @@ Git-Historie dieser Datei.
 ## Nächste freie Pakete
 
 - **S11** Skizzenverrundung, Beziehungen nach Operationen erhalten (G2). Nächstes Paket.
-- **S12** Skizzenmuster/Spiegeln: Einmalkopie oder assoziativ ist eine Nutzerentscheidung
-  (assoziativ ändert das Schema).
+- **S12** Skizzenmuster/Spiegeln: Der Nutzer tendiert (09.10.2026) zum assoziativen Muster.
+  Das ändert das Schema; Datenobjekt (Master/Instanzen, Anzahl/Abstand/Winkel) vor der
+  Umsetzung mit ihm abstimmen.
 - **T05** Koplanare Flächen verschmelzen (G3). Laut Nutzer „später“; nicht ohne Rückfrage.
 - **A02** braucht weiterhin Designarbeit.
 

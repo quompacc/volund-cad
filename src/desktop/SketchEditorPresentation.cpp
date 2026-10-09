@@ -49,12 +49,22 @@ QString relationName(document::SketchConstraintKind kind) {
 
 } // namespace
 
-// S10: the reason when the edit cannot run; after it, the relations it had to remove.
-void SketchEditorToolController::applyCurveEdit(application::SketchCurveEdit edit) {
+// S10/S11: the reason when the edit cannot run, with the elements causing it shown in red;
+// after it, the relations it had to remove.
+void SketchEditorToolController::applyCurveEdit(
+    const std::function<application::SketchCurveEditResult()>& edit) {
     application::SketchCurveEditResult result;
+    problemElements_.clear();
     try {
-        result = editor_->editCurve(edit);
+        result = edit();
+    } catch (const application::SketchEditRefusal& refusal) {
+        for (const auto id : refusal.elements())
+            problemElements_.push_back(id.value());
+        refreshPresentation();
+        statusChanged_(QString::fromStdString(refusal.what()));
+        return;
     } catch (const std::invalid_argument& error) {
+        refreshPresentation();
         statusChanged_(QString::fromStdString(error.what()));
         return;
     }
@@ -78,9 +88,14 @@ void SketchEditorToolController::applyEditOperation(const std::string& id) {
     if (!editor_)
         return;
     if (id == "trim" || id == "extend" || id == "split") {
-        applyCurveEdit(id == "trim"     ? application::SketchCurveEdit::trim
-                       : id == "extend" ? application::SketchCurveEdit::extend
-                                        : application::SketchCurveEdit::split);
+        const auto edit = id == "trim"     ? application::SketchCurveEdit::trim
+                          : id == "extend" ? application::SketchCurveEdit::extend
+                                           : application::SketchCurveEdit::split;
+        applyCurveEdit([this, edit] { return editor_->editCurve(edit); });
+        return;
+    }
+    if (id == "fillet") {
+        applyCurveEdit([this] { return editor_->filletCorner(filletRadius_); });
         return;
     }
     if (id == "offset") {
@@ -89,8 +104,7 @@ void SketchEditorToolController::applyEditOperation(const std::string& id) {
             return;
         }
     }
-    const bool changed = id == "fillet" ? editor_->filletSelected(filletRadius_)
-                         : id == "offset" ? editor_->offsetSelected(offsetDistance_)
+    const bool changed = id == "offset" ? editor_->offsetSelected(offsetDistance_)
                          : id == "mirror" ? editor_->mirrorSelected()
                          : id == "linear_pattern"
                              ? editor_->linearPatternSelected(
@@ -166,7 +180,10 @@ void SketchEditorToolController::refreshPresentation() {
     elements.reserve(evaluated.size());
     for (const features::EvaluatedSketchElement& element : evaluated) {
         auto presentation =
-            makeSceneSketchElement(element, editor_->isElementConflicting(element.id),
+            makeSceneSketchElement(element,
+                                   editor_->isElementConflicting(element.id) ||
+                                       std::ranges::find(problemElements_, element.id.value()) !=
+                                           problemElements_.end(),
                                    editor_->isElementDetermined(element.id));
         if (std::ranges::find(editor_->elements(), element.id, &document::SketchElement::id) ==
             editor_->elements().end())

@@ -3,6 +3,8 @@
 
 #include <QAction>
 #include <QApplication>
+#include <QDoubleSpinBox>
+#include <QMouseEvent>
 #include <QStatusBar>
 #include <iostream>
 #include <string>
@@ -45,6 +47,27 @@ QString run(QWidget& window, viewport::CadViewport& viewport, const char* id) {
     return window.findChild<QStatusBar*>()->currentMessage();
 }
 bool enabled(QWidget& window, const char* id) { return command(window, id).isEnabled(); }
+// S11: Ctrl-click adds to the selection.
+void addClick(viewport::CadViewport& viewport, double x, double y) {
+    const QPoint point = viewport::ViewportTestAccess::project(viewport, x, y, 0);
+    for (const auto type : {QEvent::MouseButtonPress, QEvent::MouseButtonRelease}) {
+        QMouseEvent event(type, QPointF(point), QPointF(viewport.mapToGlobal(point)),
+                          Qt::LeftButton,
+                          type == QEvent::MouseButtonPress ? Qt::LeftButton : Qt::NoButton,
+                          Qt::ControlModifier);
+        QApplication::sendEvent(&viewport, &event);
+    }
+    test::render(viewport);
+    settle();
+}
+int redElements(viewport::CadViewport& viewport) {
+    int count = 0;
+    for (std::uint64_t id = 1; id <= 16; ++id)
+        if (const auto color = viewport::ViewportTestAccess::sketchElementColor(viewport, id))
+            if (color->Red() > 0.9 && color->Green() < 0.3)
+                ++count;
+    return count;
+}
 
 void run() {
     application::CadSession session;
@@ -95,6 +118,21 @@ void run() {
     require(split == QStringLiteral("Skizzenoperation abgeschlossen"),
             "Undo brought the side back; it splits without removing relations, got " +
                 split.toStdString());
+    // S11: a radius too large names the limit and shows both sides in red; a valid one rounds.
+    select(window, *viewport, -10, -10);
+    addClick(*viewport, -20, -5);
+    auto* radius = window.findChild<QDoubleSpinBox*>(QStringLiteral("toolLength_fillet_radius"));
+    require(radius != nullptr && enabled(window, "sketch.fillet"), "Fillet ready for two sides");
+    radius->setValue(50);
+    const QString tooLarge = run(window, *viewport, "sketch.fillet");
+    require(tooLarge.contains(QStringLiteral("zu groß")) && redElements(*viewport) == 2,
+            "Too large: reason and both sides red, got " + tooLarge.toStdString() + ", " +
+                std::to_string(redElements(*viewport)) + " red");
+    radius->setValue(3);
+    const QString rounded = run(window, *viewport, "sketch.fillet");
+    require(rounded.startsWith(QStringLiteral("Skizzenoperation abgeschlossen")) &&
+                redElements(*viewport) == 0,
+            "A valid radius rounds the corner, got " + rounded.toStdString());
     std::cout << "PASS sketch curve edit flow\n";
 }
 } // namespace

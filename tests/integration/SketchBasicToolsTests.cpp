@@ -189,7 +189,7 @@ bool remainingOperationsAndReferencesWork() {
     if (!addLine(fillet, {0.0, 0.0}, {10.0, 0.0}) || !addLine(fillet, {10.0, 0.0}, {10.0, 10.0}) ||
         !fillet.selectNearestReference(SketchElementId{1}, {9.0, 0.0}, false) ||
         !fillet.selectNearestReference(SketchElementId{2}, {10.0, 1.0}, true) ||
-        !fillet.filletSelected(2.0) || fillet.elements().size() != 3)
+        !fillet.filletSelected(2.0) || fillet.elements().size() != 5)
         return false;
 
     SketchEditorSession mirror(session, support, plane);

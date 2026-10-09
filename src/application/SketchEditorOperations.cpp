@@ -17,25 +17,6 @@ using document::SketchGeometry;
 using document::SketchLine;
 using document::SketchPoint;
 
-SketchPoint interpolate(const SketchLine& line, double parameter) {
-    return {line.start.x + (line.end.x - line.start.x) * parameter,
-            line.start.y + (line.end.y - line.start.y) * parameter};
-}
-
-std::optional<std::pair<double, double>> lineIntersection(const SketchLine& first,
-                                                          const SketchLine& second) {
-    const double ax = first.end.x - first.start.x;
-    const double ay = first.end.y - first.start.y;
-    const double bx = second.end.x - second.start.x;
-    const double by = second.end.y - second.start.y;
-    const double divisor = ax * by - ay * bx;
-    if (std::abs(divisor) <= 1.0e-10)
-        return std::nullopt;
-    const double cx = second.start.x - first.start.x;
-    const double cy = second.start.y - first.start.y;
-    return std::pair{(cx * by - cy * bx) / divisor, (cx * ay - cy * ax) / divisor};
-}
-
 std::vector<SketchElementId> selectedIds(
     std::span<const document::SketchGeometryReference> references,
     std::optional<SketchElementId> selected) {
@@ -235,103 +216,6 @@ bool SketchEditorSession::appendCopies(std::span<const Copy> copies) {
                  document::SketchGeometryReference{ids[relation.second], relation.secondPoint}});
     }
     return keepIfValid(rollback);
-}
-
-bool SketchEditorSession::filletSelected(double radius) {
-    if (!canAllocateIds(1, 4))
-        return false;
-    const auto ids = selectedIds(selectedReferences_, selectedElement_);
-    if (!active_ || ids.size() != 2 || !std::isfinite(radius) || radius <= 1.0e-9)
-        return false;
-    auto firstMatch = std::ranges::find(elements_.values, ids[0], &SketchElement::id);
-    auto secondMatch = std::ranges::find(elements_.values, ids[1], &SketchElement::id);
-    if (firstMatch == elements_.values.end() || secondMatch == elements_.values.end())
-        return false;
-    auto* first = std::get_if<SketchLine>(&firstMatch->geometry);
-    auto* second = std::get_if<SketchLine>(&secondMatch->geometry);
-    if (first == nullptr || second == nullptr)
-        return false;
-    const auto intersection = lineIntersection(*first, *second);
-    if (!intersection.has_value())
-        return false;
-    const SketchPoint vertex = interpolate(*first, intersection->first);
-    const auto outward = [vertex](const SketchLine& line) {
-        const SketchPoint target = std::hypot(line.start.x - vertex.x, line.start.y - vertex.y) >
-                                           std::hypot(line.end.x - vertex.x, line.end.y - vertex.y)
-                                       ? line.start
-                                       : line.end;
-        const double length = std::hypot(target.x - vertex.x, target.y - vertex.y);
-        return SketchPoint{(target.x - vertex.x) / length, (target.y - vertex.y) / length};
-    };
-    const SketchPoint firstDirection = outward(*first);
-    const SketchPoint secondDirection = outward(*second);
-    const double theta = std::acos(std::clamp(
-        firstDirection.x * secondDirection.x + firstDirection.y * secondDirection.y, -1.0, 1.0));
-    if (theta <= 1.0e-6 || theta >= std::numbers::pi - 1.0e-6)
-        return false;
-    const double tangentDistance = radius / std::tan(theta / 2.0);
-    const SketchPoint firstTangent{vertex.x + firstDirection.x * tangentDistance,
-                                   vertex.y + firstDirection.y * tangentDistance};
-    const SketchPoint secondTangent{vertex.x + secondDirection.x * tangentDistance,
-                                    vertex.y + secondDirection.y * tangentDistance};
-    const double bisectorLength =
-        std::hypot(firstDirection.x + secondDirection.x, firstDirection.y + secondDirection.y);
-    const double centerDistance = radius / std::sin(theta / 2.0);
-    const SketchPoint center{
-        vertex.x + (firstDirection.x + secondDirection.x) / bisectorLength * centerDistance,
-        vertex.y + (firstDirection.y + secondDirection.y) / bisectorLength * centerDistance};
-    Rollback rollback(*this);
-    const auto firstEndpoint = std::hypot(first->start.x - vertex.x, first->start.y - vertex.y) <
-                                       std::hypot(first->end.x - vertex.x, first->end.y - vertex.y)
-                                   ? document::SketchPointPosition::start
-                                   : document::SketchPointPosition::end;
-    const auto secondEndpoint =
-        std::hypot(second->start.x - vertex.x, second->start.y - vertex.y) <
-                std::hypot(second->end.x - vertex.x, second->end.y - vertex.y)
-            ? document::SketchPointPosition::start
-            : document::SketchPointPosition::end;
-    (firstEndpoint == document::SketchPointPosition::start ? first->start : first->end) =
-        firstTangent;
-    (secondEndpoint == document::SketchPointPosition::start ? second->start : second->end) =
-        secondTangent;
-    double startAngle = std::atan2(firstTangent.y - center.y, firstTangent.x - center.x);
-    double endAngle = std::atan2(secondTangent.y - center.y, secondTangent.x - center.x);
-    double sweep =
-        std::fmod(endAngle - startAngle + 2.0 * std::numbers::pi, 2.0 * std::numbers::pi);
-    if (sweep > std::numbers::pi) {
-        std::swap(startAngle, endAngle);
-        sweep = 2.0 * std::numbers::pi - sweep;
-    }
-    const SketchElementId arcId{elements_.nextId++};
-    elements_.values.push_back(
-        {arcId, document::SketchArc{center, radius, startAngle, startAngle + sweep}});
-    const SketchPoint arcStart{center.x + radius * std::cos(startAngle),
-                               center.y + radius * std::sin(startAngle)};
-    const bool firstIsArcStart =
-        std::hypot(arcStart.x - firstTangent.x, arcStart.y - firstTangent.y) < radius * 1.0e-6;
-    const auto addConstraint = [this](document::SketchConstraintKind kind,
-                                      document::SketchGeometryReference firstReference,
-                                      document::SketchGeometryReference secondReference) {
-        constraints_.values.push_back({document::SketchConstraintId{constraints_.nextId++}, kind,
-                                       firstReference, secondReference});
-    };
-    addConstraint(document::SketchConstraintKind::coincident, {ids[0], firstEndpoint},
-                  {arcId, firstIsArcStart ? document::SketchPointPosition::start
-                                          : document::SketchPointPosition::end});
-    addConstraint(document::SketchConstraintKind::coincident, {ids[1], secondEndpoint},
-                  {arcId, firstIsArcStart ? document::SketchPointPosition::end
-                                          : document::SketchPointPosition::start});
-    addConstraint(document::SketchConstraintKind::tangent,
-                  {ids[0], document::SketchPointPosition::start},
-                  {arcId, document::SketchPointPosition::start});
-    addConstraint(document::SketchConstraintKind::tangent,
-                  {ids[1], document::SketchPointPosition::start},
-                  {arcId, document::SketchPointPosition::start});
-    selectedElement_ = arcId;
-    if (!solveConstraints())
-        return false;
-    rollback.keep();
-    return true;
 }
 
 } // namespace voelund::application

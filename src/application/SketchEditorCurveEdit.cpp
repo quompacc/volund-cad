@@ -1,3 +1,4 @@
+#include "SketchConstraintRoles.hpp"
 #include "SketchCurveEditPlan.hpp"
 #include <voelund/application/SketchEditorSession.hpp>
 
@@ -22,61 +23,8 @@ using document::SketchElementId;
 using document::SketchGeometryReference;
 using Position = document::SketchPointPosition;
 
-// Whether the first or second reference of the relation names a point (not a whole element).
-bool firstIsPoint(SketchConstraintKind kind) {
-    switch (kind) {
-    case SketchConstraintKind::coincident:
-    case SketchConstraintKind::pointDistance:
-    case SketchConstraintKind::pointDistanceX:
-    case SketchConstraintKind::pointDistanceY:
-    case SketchConstraintKind::horizontalPoints:
-    case SketchConstraintKind::verticalPoints:
-    case SketchConstraintKind::coordinateX:
-    case SketchConstraintKind::coordinateY:
-    case SketchConstraintKind::symmetric:
-    case SketchConstraintKind::pointOnObject:
-    case SketchConstraintKind::midpoint:
-    case SketchConstraintKind::pointLineDistance:
-        return true;
-    default:
-        return false;
-    }
-}
-bool secondIsPoint(SketchConstraintKind kind) {
-    return firstIsPoint(kind) && kind != SketchConstraintKind::coordinateX &&
-           kind != SketchConstraintKind::coordinateY &&
-           kind != SketchConstraintKind::pointOnObject &&
-           kind != SketchConstraintKind::midpoint &&
-           kind != SketchConstraintKind::pointLineDistance;
-}
-
-template <typename Visit> void visitPoints(SketchConstraint& constraint, Visit visit) {
-    if (firstIsPoint(constraint.kind))
-        visit(constraint.first);
-    if (secondIsPoint(constraint.kind) && constraint.second.has_value())
-        visit(*constraint.second);
-}
-
-bool names(const SketchConstraint& constraint, SketchElementId element) {
-    return constraint.first.element == element ||
-           (constraint.second.has_value() && constraint.second->element == element);
-}
-
-// Relations that fix the length or extent of a line.
-bool bindsLength(const SketchConstraint& constraint, SketchElementId line) {
-    switch (constraint.kind) {
-    case SketchConstraintKind::distance:
-    case SketchConstraintKind::fixed:
-        return constraint.first.element == line;
-    case SketchConstraintKind::equal:
-    case SketchConstraintKind::perpendicularBisector:
-        return names(constraint, line);
-    case SketchConstraintKind::midpoint:
-        return constraint.second->element == line;
-    default:
-        return false;
-    }
-}
+using detail::bindsLength;
+using detail::visitPoints;
 
 } // namespace
 

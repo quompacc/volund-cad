@@ -167,7 +167,10 @@ void SketchEditorToolController::showPanel() {
           QObject::tr("Bearbeiten")},
          {"split", QObject::tr("Linie oder Bogen an der angeklickten Stelle teilen"),
           QObject::tr("Bearbeiten")},
-         {"fillet", QObject::tr("Zwei gewählte Linien abrunden"), QObject::tr("Bearbeiten")},
+         {"fillet",
+          QObject::tr("Ecke zweier gewählter Linien abrunden; Maße der Ecke bleiben an einer "
+                      "virtuellen Ecke"),
+          QObject::tr("Bearbeiten")},
          {"offset", QObject::tr("Gewählte Geometrie versetzen"), QObject::tr("Bearbeiten")},
          {"mirror", QObject::tr("Auswahl an der zuletzt gewählten Linie spiegeln"),
           QObject::tr("Bearbeiten")},
@@ -368,6 +371,7 @@ bool SketchEditorToolController::selectElement(const viewport::SketchSelectionIn
                                          {intent.localX, intent.localY}, intent.additive))
         return false;
     editor_->clearPreview(); // S09: an offset preview belongs to the previous selection
+    problemElements_.clear();
     resetTranslationInputs();
     syncSelectedDimensionInputs();
     syncConstraintState();
@@ -389,6 +393,7 @@ void SketchEditorToolController::clearSelection() {
         return;
     editor_->clearSelection();
     editor_->clearPreview();
+    problemElements_.clear();
     resetTranslationInputs();
     syncSelectedDimensionInputs();
     syncConstraintState();

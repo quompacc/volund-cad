@@ -116,6 +116,11 @@ class SketchEditorSession final {
     [[nodiscard]] bool trimSelected();
     [[nodiscard]] bool extendSelected();
     [[nodiscard]] bool splitSelected();
+    // S11: rounds the corner of the two selected lines with an arc of `radius` as one step.
+    // Relations of the corner move to a virtual corner of two construction lines; what cannot
+    // keep its meaning is removed and listed. Throws SketchEditRefusal naming the lines (parallel,
+    // radius too large) and changes nothing.
+    [[nodiscard]] SketchCurveEditResult filletCorner(double radius);
     [[nodiscard]] bool filletSelected(double radius);
     [[nodiscard]] bool offsetSelected(double distance);
     // S09: why the selection cannot be offset by `distance`, or nothing when it can.

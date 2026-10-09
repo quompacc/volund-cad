@@ -3,6 +3,9 @@
 #include <voelund/document/SketchGeometry.hpp>
 
 #include <optional>
+#include <stdexcept>
+#include <string>
+#include <utility>
 #include <vector>
 
 namespace voelund::application {
@@ -22,12 +25,26 @@ namespace voelund::application {
 enum class SketchCurveEdit { trim, extend, split };
 
 struct SketchCurveEditResult final {
-    // The second piece of a trim in the middle or of a split; it keeps the element's end.
+    // The second piece of a trim in the middle or of a split; it keeps the element's end. For
+    // a fillet: the arc.
     std::optional<document::SketchElementId> created;
     // Relations that bound the moved end or the old length; they no longer hold and are gone.
     std::vector<document::SketchConstraint> removed;
     // Relations that tie the pieces together and the new ends to their cutting edges.
     std::vector<document::SketchConstraintId> added;
+};
+
+// S11: a refused edit naming the elements that cause it, so they can be shown.
+class SketchEditRefusal final : public std::invalid_argument {
+  public:
+    SketchEditRefusal(const std::string& reason, std::vector<document::SketchElementId> elements)
+        : std::invalid_argument(reason), elements_(std::move(elements)) {}
+    [[nodiscard]] const std::vector<document::SketchElementId>& elements() const noexcept {
+        return elements_;
+    }
+
+  private:
+    std::vector<document::SketchElementId> elements_;
 };
 
 } // namespace voelund::application
