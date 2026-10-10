@@ -111,6 +111,20 @@ class CadViewportScene {
         sketchConstraintPresentation.setConstraints(context, pendingSketchConstraints);
     }
 
+    // S14: while the sketch editor is open only sketch geometry is picked; a later feature's
+    // body over the sketch (edited from the timeline) must not hide its elements.
+    void setBodiesPickable(bool pickable) {
+        if (context.IsNull())
+            return;
+        for (const BodyPresentation& presentation : presentations) {
+            if (pickable) {
+                context->Activate(presentation.shape, presentation.shape->GlobalSelectionMode());
+                context->Activate(presentation.shape, AIS_Shape::SelectionMode(TopAbs_FACE));
+            } else {
+                context->Deactivate(presentation.shape);
+            }
+        }
+    }
     void displayPendingBodies() {
         if (!ready) {
             return;
@@ -131,9 +145,9 @@ class CadViewportScene {
                 presentation->SetTransparency(0.6);
             showEdges(presentation);
             context->Display(presentation, false);
-            context->Activate(presentation, AIS_Shape::SelectionMode(TopAbs_FACE));
             presentations.push_back(BodyPresentation{body.id, presentation, body.transformable});
         }
+        setBodiesPickable(!sketchEditor.isActive());
         sketchPresentation.setElements(context, pendingSketchElements, selectedSketchElements,
                                        sketchEditor.isActive());
         sketchConstraintPresentation.setConstraints(context, pendingSketchConstraints);

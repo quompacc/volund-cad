@@ -323,7 +323,11 @@ void MainWindow::connectInteractions() {
             crossings.emplace_back(distance, feature.id);
         }
         std::ranges::sort(crossings, {}, &std::pair<double, document::FeatureId>::first);
+        // S14: a sketch on the clicked face lies at its distance; one behind the face is hidden.
+        const double reach = ray.nearestSurface + 1.0e-6 * (1.0 + std::abs(ray.nearestSurface));
         for (const auto& [distance, sketch] : crossings) {
+            if (distance > reach)
+                break;
             const std::array<double, 3> point{ray.origin[0] + distance * ray.direction[0],
                                               ray.origin[1] + distance * ray.direction[1],
                                               ray.origin[2] + distance * ray.direction[2]};

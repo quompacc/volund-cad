@@ -207,6 +207,7 @@ void CadViewport::beginSketchEditor(const PlanarFaceSelection& support, SketchEl
         if (!impl_->context.IsNull())
             impl_->basePlanes.hide(impl_->context);
         impl_->sketchEditor.begin(support, tool, impl_->view);
+        impl_->setBodiesPickable(false);
         auto shown = support;
         if (!impl_->sketchEditor.projectedVisible())
             shown.referenceSegments.clear();
@@ -318,6 +319,7 @@ void CadViewport::cancelSketch() {
         impl_->sketchReturnCamera.Nullify();
         impl_->snapOverlay->clear();
         impl_->sketchEditor.cancel();
+        impl_->setBodiesPickable(true);
         impl_->sketchPresentation.setReferences(impl_->context, {}, false);
         impl_->refreshBasePlanes();
         update();

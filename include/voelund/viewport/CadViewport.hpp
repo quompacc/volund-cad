@@ -17,6 +17,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <span>
@@ -187,6 +188,9 @@ struct ViewRay final {
     double origin[3];
     double direction[3];
     bool additive; // Ctrl held
+    // S14: distance along the ray to the body face the click hit; a sketch region behind it
+    // is hidden, one on it (a face sketch) or in front of it wins.
+    double nearestSurface{std::numeric_limits<double>::infinity()};
 };
 
 // U03: colors of the 3D view, supplied by the desktop theme (ADR 0012). Defaults are the

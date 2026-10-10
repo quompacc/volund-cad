@@ -1,6 +1,10 @@
 #include "ViewportContextGuard.hpp"
 #include "ViewportPixels.hpp"
 #include <QDebug>
+#include <StdSelect_ViewerSelector3d.hxx>
+#include <gp_Pnt.hxx>
+#include <gp_Vec.hxx>
+#include <optional>
 #include <stdexcept>
 #if defined(VOELUND_VIEWPORT_QT_OPENGL)
 #include "CadViewportQtOpenGlBackend.hpp"
@@ -228,15 +232,22 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
             }
             // The area of a sketch region wins over the base plane behind it and over empty
             // space (user report 2026-10-05).
-            const auto areaClick = [&] {
-                if (!impl_->areaClickHandler)
-                    return false;
+            const auto clickRay = [&] {
                 double x = 0, y = 0, z = 0, vx = 0, vy = 0, vz = 0, ex = 0, ey = 0, ez = 0;
                 impl_->view->ConvertWithProj(position.x(), position.y(), x, y, z, vx, vy, vz);
                 impl_->view->Proj(ex, ey, ez);
-                const ViewRay ray{{x, y, z},
-                                  {-ex, -ey, -ez},
-                                  event->modifiers().testFlag(Qt::ControlModifier)};
+                return ViewRay{{x, y, z},
+                               {-ex, -ey, -ez},
+                               event->modifiers().testFlag(Qt::ControlModifier)};
+            };
+            const auto areaClick = [&](std::optional<gp_Pnt> surface = std::nullopt) {
+                if (!impl_->areaClickHandler)
+                    return false;
+                ViewRay ray = clickRay();
+                if (surface)
+                    ray.nearestSurface =
+                        gp_Vec(gp_Pnt(ray.origin[0], ray.origin[1], ray.origin[2]), *surface)
+                            .Dot(gp_Vec(ray.direction[0], ray.direction[1], ray.direction[2]));
                 if (!impl_->areaClickHandler(ray))
                     return false;
                 impl_->context->ClearSelected(false);
@@ -280,6 +291,15 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
                     impl_->gesture = Impl::Gesture::none;
                     unsetCursor();
                     update();
+                    return;
+                }
+                // S14: a sketch region on the clicked body face (a face sketch) wins over the
+                // face, as on a base plane; regions behind the face stay hidden.
+                if (!impl_->detectedBodyOwner().IsNull() &&
+                    impl_->context->MainSelector()->NbPicked() > 0 &&
+                    areaClick(impl_->context->MainSelector()->PickedPoint(1))) {
+                    impl_->gesture = Impl::Gesture::none;
+                    unsetCursor();
                     return;
                 }
                 impl_->notifyDetectedBody(true);
