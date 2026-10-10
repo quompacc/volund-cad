@@ -1,5 +1,6 @@
 #include "SketchExtrusionToolController.hpp"
 #include "CommandFeedback.hpp"
+#include "MainWindowSupport.hpp"
 
 #include "ToolPanelHost.hpp"
 
@@ -43,15 +44,14 @@ void SketchExtrusionToolController::beginSelectedProfiles() {
     // A base-plane sketch joins or cuts a named body; the field shows when there is a choice.
     targets_.clear();
     std::vector<QString> targetNames;
-    int number = 1;
-    for (const auto& body : session_.modelOutline().bodies) {
-        const int bodyNumber = number++; // Numbered as in the model tree.
+    const auto outline = session_.modelOutline();
+    for (const auto& body : outline.bodies) {
         if (!baseSketch_ || std::ranges::find(session_.validBodies(), body.id,
                                               &features::EvaluatedBody::bodyId) ==
                                 session_.validBodies().end())
             continue;
         targets_.push_back(body.id);
-        targetNames.push_back(QObject::tr("Körper %1").arg(bodyNumber));
+        targetNames.push_back(bodyLabel(outline, body.id)); // M01: named as in the tree
     }
     target_ = targets_.empty() ? std::nullopt : std::optional{targets_.front()};
     std::vector<ToolChoiceParameter> choices{

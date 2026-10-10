@@ -585,6 +585,15 @@ if(VOELUND_BUILD_DESKTOP)
         if(VOELUND_NATIVE_WAYLAND)
             set_tests_properties(desktop.reference_sketch_flow PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
         endif()
+        # M01: several bodies through the shell (A-BODY-01, A-BODY-03).
+        add_executable(voelund_body_flow_tests desktop/BodyFlowTests.cpp)
+        target_link_libraries(voelund_body_flow_tests PRIVATE voelund_project_options Voelund::Desktop)
+        add_test(NAME desktop.body_flow COMMAND voelund_body_flow_tests)
+        set_tests_properties(desktop.body_flow PROPERTIES
+            LABELS "desktop;qt-opengl;acceptance" TIMEOUT 120 RUN_SERIAL TRUE)
+        if(VOELUND_NATIVE_WAYLAND)
+            set_tests_properties(desktop.body_flow PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
+        endif()
         # S14: A-TXN-03 in the shell (sketch element and body manipulator drags).
         add_executable(voelund_drag_flow_tests desktop/DragFlowTests.cpp)
         target_link_libraries(voelund_drag_flow_tests PRIVATE voelund_project_options Voelund::Desktop)
@@ -1012,6 +1021,11 @@ add_executable(voelund_action_request_tests integration/ActionRequestTests.cpp)
 target_link_libraries(voelund_action_request_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME application.action_requests COMMAND voelund_action_request_tests)
 set_tests_properties(application.action_requests PROPERTIES LABELS "integration;application;regression" TIMEOUT 90)
+# M01: A-DAG-01 with two sketch-and-extrusion bodies.
+add_executable(voelund_body_dag_tests integration/BodyDagTests.cpp)
+target_link_libraries(voelund_body_dag_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.body_dag COMMAND voelund_body_dag_tests)
+set_tests_properties(application.body_dag PROPERTIES LABELS "integration;application;regression" TIMEOUT 90)
 # M01: body names and visibility (stored, rename undoable, hide without undo step).
 add_executable(voelund_body_attribute_tests integration/BodyAttributeTests.cpp)
 target_link_libraries(voelund_body_attribute_tests PRIVATE voelund_project_options Voelund::Application)
