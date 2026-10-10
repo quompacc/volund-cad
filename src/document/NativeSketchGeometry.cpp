@@ -191,7 +191,8 @@ void writeNativeSketchGeometry(const TDF_Label& label, const SketchParameters& s
     if (sketch.datum)
         TDataStd_Integer::Set(label.FindChild(13), static_cast<int>(*sketch.datum));
     // S12: written only with patterns, so sketches without keep their schema 10 encoding.
-    if (!sketch.patterns.values.empty())
+    // S14: also after the last pattern was dissolved, so its ID is not handed out again.
+    if (!sketch.patterns.values.empty() || sketch.patterns.nextId != SketchPatterns{}.nextId)
         writeNativeSketchPatterns(label.FindChild(14), sketch.patterns);
 }
 SketchParameters readNativeSketchGeometry(const TDF_Label& label, std::size_t remainingElements,

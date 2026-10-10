@@ -87,11 +87,13 @@ void writeNativeSketchPatterns(const TDF_Label& label, const SketchPatterns& pat
 
 SketchPatterns readNativeSketchPatterns(const TDF_Label& label, std::size_t remainingRecords) {
     const int count = integer(label);
-    require(count > 0 && static_cast<std::size_t>(count) <= maximumSketchElementCount &&
+    // S14: an empty list keeps the counter of dissolved patterns (written only then).
+    require(count >= 0 && static_cast<std::size_t>(count) <= maximumSketchElementCount &&
             static_cast<std::size_t>(count) <= remainingRecords &&
             label.NbChildren() == count + 1 && label.NbAttributes() == 1);
     SketchPatterns patterns;
     patterns.nextId = number(child(label, 1), true);
+    require(count > 0 || patterns.nextId > 1);
     for (int index = 2; index <= count + 1; ++index) {
         const auto entry = child(label, index);
         require(entry.NbChildren() == 6 && remainingRecords > 0);
