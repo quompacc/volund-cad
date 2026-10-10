@@ -257,10 +257,11 @@ std::vector<ToolDefinition> makeCatalog() {
                            {"boxId", "width", "depth", "height"}));
     tools.push_back(action("create_cylinder",
                            "Add a cylinder on the result of a feature: joined, cut, "
-                           "intersected or as a separate body.",
+                           "intersected or as a separate body. Without inputId it is a new, "
+                           "independent body at the origin (mode separate).",
                            {{"inputId", featureId("input")},
                             {"mode", choice({"join", "cut", "intersect", "separate"})}},
-                           {"inputId", "mode"}));
+                           {"mode"}));
     tools.push_back(action("set_cylinder_size", "Change radius and height of a cylinder.",
                            {{"cylinderId", featureId("cylinder")},
                             {"radius", length("radius")},

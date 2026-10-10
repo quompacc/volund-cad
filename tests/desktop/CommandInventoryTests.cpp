@@ -105,10 +105,12 @@ void emptyDocumentOffersOnlyApplicableCommands(application::CadSession& session,
     const std::set<std::string> expected{
         "document.new",       "document.open",   "document.save", "document.save_as",
         "document.duplicate", "transform.snap",  "view.theme",    "view.command_search",
-        "view.tool_rail",     "view.grid",       "solid.create.box", "assistant.mcp",
+        "view.tool_rail",     "view.grid",       "solid.create.box",
+        "solid.create.cylinder", // M01: as a new body
+        "assistant.mcp",
         "assistant.mcp_new_token",
         "assistant.allow", "assistant.panel"};
-    require(enabled == expected, "Empty document enables only document commands and Box");
+    require(enabled == expected, "Empty document enables only document commands, Box and Cylinder");
     const auto before = session.sceneStatus().document;
     for (const std::string& id : commandTable) {
         if (enabled.contains(id))

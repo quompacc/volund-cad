@@ -44,6 +44,8 @@ CylinderFeature::evaluateToolWithHistory(const document::DocumentSnapshot& docum
 }
 
 gp_Pnt CylinderFeature::attachmentOrigin(const TopoDS_Shape& inputShape, double cylinderHeight) {
+    if (inputShape.IsNull())
+        return gp_Pnt(0.0, 0.0, 0.0); // M01: a new body without input stands at the origin.
     Bnd_Box bounds;
     BRepBndLib::AddOptimal(inputShape, bounds, false, false);
     if (bounds.IsVoid()) {

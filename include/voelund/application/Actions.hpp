@@ -98,7 +98,8 @@ struct SetBoxDimensionsAction final {
 };
 // The input needs a current result; `separate` opens a new body beside it.
 struct CreateCylinderAction final {
-    document::FeatureId input;
+    // M01: the body's current feature to join, cut or intersect; none = a new body.
+    std::optional<document::FeatureId> input;
     document::CylinderResultMode mode;
     bool operator==(const CreateCylinderAction&) const = default;
 };

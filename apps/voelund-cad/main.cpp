@@ -45,8 +45,9 @@ bool verifyCadControls(MainWindow& mainWindow) {
         qCritical() << "Properties and tool panel do not share the floating slot";
         return false;
     }
-    // The product starts with an empty document: only creating a primitive is possible (U01).
-    if (!addBoxAction->isEnabled() || addCylinderAction->isEnabled() ||
+    // The product starts with an empty document: only creating a primitive is possible (U01);
+    // since M01 the cylinder too, as a new body.
+    if (!addBoxAction->isEnabled() || !addCylinderAction->isEnabled() ||
         transformAction->isEnabled()) {
         qCritical() << "Empty-document command availability is wrong";
         return false;

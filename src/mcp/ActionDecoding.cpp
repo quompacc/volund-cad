@@ -203,7 +203,7 @@ const ToolDecoder decoders[] = {
     {"create_cylinder",
      [](const JsonReader& r, const CadSession&) -> Action {
          return application::CreateCylinderAction{
-             feature(r, "inputId"),
+             r.has("inputId") ? std::optional{feature(r, "inputId")} : std::nullopt,
              static_cast<document::CylinderResultMode>(r.choice("mode", cylinderModes))};
      }},
     {"set_cylinder_size",

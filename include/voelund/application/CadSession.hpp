@@ -170,6 +170,8 @@ class CadSession final {
         document::CylinderResultMode resultMode = document::CylinderResultMode::separate);
     [[nodiscard]] CommandResult createCylinderFeature(document::FeatureId inputFeature,
                                                       document::CylinderResultMode resultMode);
+    // M01: a cylinder as a new, independent body at the origin (no input, separate).
+    [[nodiscard]] CommandResult createNewBodyCylinder();
     [[nodiscard]] CommandResult createSketchExtrusion(document::FeatureId supportFeature,
                                                       const document::SketchPlane& plane,
                                                       const document::SketchRectangle& rectangle,
@@ -197,7 +199,11 @@ class CadSession final {
     [[nodiscard]] CommandResult pushPullFace(document::FeatureId support,
                                              const features::SupportOrigin& face,
                                              double distance);
+    // M01: a cylinder is always possible: on the selected body or as a new body.
     [[nodiscard]] bool canAddCylinder() const noexcept;
+    // M01: the current producer of the selected feature's body (the input a join, cut or
+    // intersect names); none without a selected body with a solid.
+    [[nodiscard]] std::optional<document::FeatureId> selectedBodyProducer() const;
     [[nodiscard]] bool canAddCylinder(document::FeatureId inputFeature) const noexcept;
     // The feature whose placement moves this feature's result, if any.
     [[nodiscard]] std::optional<document::FeatureId>

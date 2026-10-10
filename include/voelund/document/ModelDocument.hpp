@@ -174,7 +174,9 @@ class ModelDocument final {
     [[nodiscard]] bool contains(FeatureId featureId) const noexcept;
     [[nodiscard]] FeatureId addBoxFeature(std::string name,
                                           const kernel::BoxDimensions& dimensions);
-    [[nodiscard]] FeatureId addCylinderFeature(std::string name, FeatureId inputFeature,
+    // M01: without input the cylinder is a new body at the origin (separate mode only).
+    [[nodiscard]] FeatureId addCylinderFeature(std::string name,
+                                               std::optional<FeatureId> inputFeature,
                                                const CylinderParameters& parameters);
     // V01: a sketch on a base plane; parameters.datum must be set.
     [[nodiscard]] FeatureId addDatumSketchFeature(std::string name,

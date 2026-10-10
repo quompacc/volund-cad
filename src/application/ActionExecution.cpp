@@ -177,7 +177,8 @@ class Validation final {
         lengths({action.width, action.depth, action.height});
     }
     void operator()(const CreateCylinderAction& action) {
-        static_cast<void>(target(action.input, ActionKind::createCylinder));
+        if (action.input)
+            static_cast<void>(target(*action.input, ActionKind::createCylinder));
     }
     void operator()(const SetCylinderSizeAction& action) {
         static_cast<void>(target(action.cylinder, ActionKind::setCylinderSize));
@@ -271,7 +272,12 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot,
                     a.box, {a.width.value, a.depth.value, a.height.value}, reject);
             },
             [&](const CreateCylinderAction& a) {
-                return session.createCylinderFeature(a.input, a.mode);
+                if (a.input)
+                    return session.createCylinderFeature(*a.input, a.mode);
+                if (a.mode != document::CylinderResultMode::separate)
+                    return CommandResult::invalidInput(
+                        "A cylinder without input is a new body (mode separate)");
+                return session.createNewBodyCylinder();
             },
             [&](const SetCylinderSizeAction& a) {
                 auto parameters = snapshot.cylinderParameters(a.cylinder);

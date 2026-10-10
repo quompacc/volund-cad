@@ -124,14 +124,16 @@ void evaluateCylinder(const document::DocumentSnapshot& document,
                       const document::FeatureDescriptor& descriptor,
                       std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
                       std::vector<EvaluatedBody>& referenceBodies) {
-    if (!descriptor.inputFeature.has_value()) {
-        throw GeometryEvaluationError("Cylinder feature requires an input feature");
-    }
-    const document::FeatureId inputId = *descriptor.inputFeature;
-    const TopoDS_Shape& inputShape = findOutput(outputs, inputId);
-    const TopoDS_Shape& referenceInputShape = findOutput(outputs, inputId, true);
     const CylinderFeature cylinder(descriptor.id);
     const document::CylinderParameters& parameters = document.cylinderParameters(descriptor.id);
+    // M01: a new-body cylinder without input stands at the origin.
+    static const TopoDS_Shape none;
+    if (!descriptor.inputFeature.has_value() &&
+        parameters.resultMode != document::CylinderResultMode::separate)
+        throw GeometryEvaluationError("Cylinder feature requires an input feature");
+    const auto input = descriptor.inputFeature;
+    const TopoDS_Shape& inputShape = input ? findOutput(outputs, *input) : none;
+    const TopoDS_Shape& referenceInputShape = input ? findOutput(outputs, *input, true) : none;
     if (parameters.resultMode == document::CylinderResultMode::separate) {
         const auto evaluatedTool = cylinder.evaluateToolWithHistory(document, referenceInputShape);
         const TopoDS_Shape tool = evaluatedTool.shape;
@@ -152,6 +154,7 @@ void evaluateCylinder(const document::DocumentSnapshot& document,
         referenceBodies.push_back(EvaluatedBody{bodyId, descriptor.id, referenceTool});
         return;
     }
+    const document::FeatureId inputId = *input; // checked above for the boolean modes
 
     EvaluatedBody& inputBody = findBody(bodies, outputs, inputId);
     EvaluatedBody& referenceInputBody = findBody(referenceBodies, outputs, inputId);

@@ -316,10 +316,14 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
                 sketch && native.FindChild(5, false).IsNull() && metadata.schemaVersion >= 6;
             const bool standaloneExtrusion =
                 extrusion && native.FindChild(5, false).IsNull() && metadata.schemaVersion >= 10;
+            // M01: a new-body cylinder (schema 12) has no input child 5 either.
+            const bool standaloneCylinder = kind == "cylinder" &&
+                                            native.FindChild(5, false).IsNull() &&
+                                            metadata.schemaVersion >= 12;
             require((box || sketch || extrusion || kind == "cylinder") &&
                     native.NbChildren() == (box || standaloneSketch || standaloneExtrusion ? 4
-                                            : (sketch || extrusion) ? 5
-                                                                    : 6));
+                                            : (sketch || extrusion || standaloneCylinder) ? 5
+                                                                                           : 6));
             labels.emplace(entry(native), records.size());
             FeatureParameters decoded =
                 sketch ? FeatureParameters{readNativeSketchGeometry(

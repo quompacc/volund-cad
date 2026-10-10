@@ -42,14 +42,13 @@ void MainWindow::createCommands() {
     services.addCylinder = [this]() {
         if (!runCommand(
                 [this] {
-                    // The request names the input the command offered: the last feature.
-                    const auto features = impl_->session.features();
-                    if (features.empty())
-                        return application::CommandResult::invalidInput(
-                            "A cylinder requires a current input feature");
+                    // M01 (user decision 2026-10-10): joined to the selected body; without
+                    // one a new body. Never the last feature of the document.
+                    const auto body = impl_->session.selectedBodyProducer();
                     return runAction(impl_->session,
                                      application::CreateCylinderAction{
-                                         features.back().id, document::CylinderResultMode::join});
+                                         body, body ? document::CylinderResultMode::join
+                                                    : document::CylinderResultMode::separate});
                 },
                 [this](const QString& message) { statusBar()->showMessage(message); }))
             return;

@@ -169,11 +169,14 @@ FeatureId ModelDocument::addBoxFeature(std::string name, const kernel::BoxDimens
     return id;
 }
 
-FeatureId ModelDocument::addCylinderFeature(std::string name, FeatureId inputFeature,
+FeatureId ModelDocument::addCylinderFeature(std::string name,
+                                            std::optional<FeatureId> inputFeature,
                                             const CylinderParameters& parameters) {
-    if (!contains(inputFeature)) {
+    if (inputFeature && !contains(*inputFeature)) {
         throw std::invalid_argument("Cylinder input feature does not exist");
     }
+    if (!inputFeature && parameters.resultMode != CylinderResultMode::separate)
+        throw std::invalid_argument("A cylinder without input is a new body");
     validateCylinderParameters(parameters);
     const FeatureId id = nextFeatureId();
     auto candidate = currentState();

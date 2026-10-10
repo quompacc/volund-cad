@@ -64,8 +64,20 @@ CadSession::CadSession() {
     cleanDocumentState_ = document::DocumentSnapshot::capture(document_);
 }
 
-bool CadSession::canAddCylinder() const noexcept {
-    return !document_.features().empty() && canAddCylinder(document_.features().back().id);
+// M01: on the selected body or as a new body, while the geometry is current.
+bool CadSession::canAddCylinder() const noexcept { return sceneStatus().isCurrent(); }
+
+std::optional<document::FeatureId> CadSession::selectedBodyProducer() const {
+    if (!selectedFeature_ || !evaluation_)
+        return std::nullopt;
+    const auto& outputs = evaluation_->result.features;
+    const auto selected = std::ranges::find(outputs, *selectedFeature_, &features::EvaluatedFeature::id);
+    if (selected == outputs.end() || !selected->bodyId)
+        return std::nullopt;
+    for (const auto& body : evaluation_->result.bodies)
+        if (body.bodyId == *selected->bodyId)
+            return body.sourceFeature;
+    return std::nullopt;
 }
 
 bool CadSession::canAddCylinder(document::FeatureId inputFeature) const noexcept {
@@ -292,14 +304,16 @@ CommandResult CadSession::editCylinderParameters(document::FeatureId featureId,
     if (descriptor == descriptors.end() || descriptor->kind != document::FeatureKind::cylinder) {
         return CommandResult::invalidInput("Feature is not a cylinder");
     }
-    if (!descriptor->inputFeature.has_value()) {
-        throw std::logic_error("Cylinder feature has no input");
-    }
     const document::CylinderParameters& current = cylinderParameters(featureId);
+    if (!descriptor->inputFeature.has_value() &&
+        parameters.resultMode != document::CylinderResultMode::separate)
+        return CommandResult::invalidInput(
+            "A new-body cylinder has no body to join, cut or intersect");
     document::CylinderParameters adjusted = parameters;
     const bool wasSeparate = current.resultMode == document::CylinderResultMode::separate;
     const bool becomesSeparate = adjusted.resultMode == document::CylinderResultMode::separate;
-    if (wasSeparate != becomesSeparate && !featureShape(*descriptor->inputFeature)) {
+    if (wasSeparate != becomesSeparate && descriptor->inputFeature &&
+        !featureShape(*descriptor->inputFeature)) {
         features::EvaluationReport report;
         report.features.push_back(
             {featureId,
@@ -309,7 +323,7 @@ CommandResult CadSession::editCylinderParameters(document::FeatureId featureId,
              {}});
         return {CommandStatus::rejected, RejectionReason::incompleteEvaluation, std::move(report)};
     }
-    if (wasSeparate != becomesSeparate) {
+    if (wasSeparate != becomesSeparate && descriptor->inputFeature) {
         translateCylinderBetweenInputAndReference(
             adjusted, evaluatedFeature(evaluation_->result.features, *descriptor->inputFeature),
             becomesSeparate ? 1.0 : -1.0);

@@ -41,7 +41,11 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
         (feature.kind == FeatureKind::sketch && std::get<SketchParameters>(parameters).datum) ||
         (feature.kind == FeatureKind::extrusion &&
          std::get<ExtrusionParameters>(parameters).faceProfile);
-    if (standalone == feature.inputFeature.has_value())
+    // M01: a separate cylinder may also stand alone, as a new body at the origin.
+    const bool optionalInput = feature.kind == FeatureKind::cylinder &&
+                               std::get<CylinderParameters>(parameters).resultMode ==
+                                   CylinderResultMode::separate;
+    if (!optionalInput && standalone == feature.inputFeature.has_value())
         throw std::invalid_argument("Legacy body identity: invalid input presence");
 }
 

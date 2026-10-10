@@ -54,7 +54,7 @@ bool newDocumentIsEmptyCleanAndReadyForItsFirstFeature() {
     session.newDocument();
     if (!session.features().empty() || !session.currentBodies().empty() ||
         !session.currentShape().IsNull() || session.selectedFeature().has_value() ||
-        session.isModified() || session.canAddCylinder()) {
+        session.isModified() || !session.canAddCylinder()) { // M01: a new-body cylinder
         return false;
     }
     const voelund::document::FeatureId firstId =

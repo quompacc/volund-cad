@@ -22,7 +22,7 @@ CommandResult CadSession::createBoxFeature(const kernel::BoxDimensions& dimensio
 }
 
 CommandResult CadSession::createCylinderFeature(document::CylinderResultMode resultMode) {
-    if (!canAddCylinder())
+    if (document_.features().empty() || !canAddCylinder(document_.features().back().id))
         return CommandResult::invalidInput("A cylinder requires a current input feature");
     return createCylinderFeature(document_.features().back().id, resultMode);
 }
@@ -51,6 +51,24 @@ CommandResult CadSession::createCylinderFeature(document::FeatureId inputFeature
     const auto id = *idInput.value;
     return finishCandidate(transaction, id, CommandKind::newFeature, ErrorDisposition::reject,
                            true);
+}
+
+CommandResult CadSession::createNewBodyCylinder() {
+    document::DocumentTransaction transaction(document_);
+    auto& candidate = transaction.edit();
+    const std::size_t sequence =
+        featureCount(document_.features(), document::FeatureKind::cylinder) + 1;
+    const document::CylinderParameters parameters{
+        8.0, 25.0, kernel::RigidTransform{0.0, 0.0, 0.0, {}, {}, {}},
+        document::CylinderResultMode::separate};
+    const auto idInput = detail::prepareInput([&] {
+        return candidate.addCylinderFeature("Zylinder " + std::to_string(sequence), std::nullopt,
+                                            parameters);
+    });
+    if (!idInput.value)
+        return CommandResult::invalidInput(idInput.diagnostic);
+    return finishCandidate(transaction, *idInput.value, CommandKind::newFeature,
+                           ErrorDisposition::reject, true);
 }
 
 CommandResult CadSession::createSketchExtrusion(document::FeatureId supportFeature,
