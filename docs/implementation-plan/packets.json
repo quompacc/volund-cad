@@ -2200,12 +2200,14 @@
       ],
       "acceptance": "Zwei unabhängige Körper lassen sich erstellen und gezielt verändern; dazwischen angelegte Skizze verändert Zielwahl nicht. A-BODY-01 und A-DAG-01 bestehen.",
       "boundary": "Keine Baugruppeninstanzen; Body ist im Dokument modellierte Geometrie.",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "chapter": "05-solid-historie.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/M01.md"
+      ],
+      "completedCommit": "924d357"
     },
     {
       "id": "M02",
