@@ -59,7 +59,8 @@ namespace voelund::viewport {
 
 class CadViewportScene {
   public:
-    enum class Gesture { none, pan, rotate, moveAxis, pushPull, selectBox };
+    // cancelled: a body drag ended with Escape; the button's release is no click (S14).
+    enum class Gesture { none, pan, rotate, moveAxis, pushPull, selectBox, cancelled };
 
     struct BodyPresentation final {
         std::uint64_t id;

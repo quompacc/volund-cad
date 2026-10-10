@@ -34,6 +34,8 @@ public:
     void start(int x, int y, const occ::handle<V3d_View>& view);
     void update(int x, int y, const occ::handle<V3d_View>& view, bool bypassSnapping);
     void finish();
+    // S14 (A-TXN-03): ends the drag without a move; the preview returns to the start.
+    void cancel();
 
     void setMoveHandler(MoveHandler handler);
     void setMovePreviewHandler(MoveHandler handler);

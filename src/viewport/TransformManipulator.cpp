@@ -209,6 +209,13 @@ void TransformManipulator::finish()
     impl_->commit(mode, axisIndex, transformation);
 }
 
+void TransformManipulator::cancel()
+{
+    impl_->notifyPreview(gp_Trsf());
+    impl_->manipulator->StopTransform(false);
+    impl_->manipulator->DeactivateCurrentMode();
+}
+
 void TransformManipulator::setMoveHandler(MoveHandler handler)
 {
     impl_->moveHandler = std::move(handler);

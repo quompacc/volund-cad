@@ -1,6 +1,7 @@
 #include "ViewportContextGuard.hpp"
 #include "ViewportPixels.hpp"
 #include <QDebug>
+#include <QKeyEvent>
 #include <StdSelect_ViewerSelector3d.hxx>
 #include <gp_Pnt.hxx>
 #include <gp_Vec.hxx>
@@ -108,9 +109,6 @@ void CadViewport::mousePressEvent(QMouseEvent* event) {
                 if (element) {
                     const bool additive = event->modifiers().testFlag(Qt::ControlModifier);
                     impl_->sketchElementPressed = !additive;
-                    if (!additive)
-                        static_cast<void>(
-                            impl_->sketchEditor.beginElementDrag(position.x(), position.y()));
                     if (impl_->sketchElementSelectionHandler) {
                         const auto local =
                             impl_->sketchEditor.projectPoint(position.x(), position.y());
@@ -118,6 +116,11 @@ void CadViewport::mousePressEvent(QMouseEvent* event) {
                             impl_->sketchElementSelectionHandler(
                                 {*element, local->first, local->second, additive});
                     }
+                    // S14: after the selection, whose refresh resets the tool state; started
+                    // before it, the drag point was lost and the element did not follow.
+                    if (!additive)
+                        static_cast<void>(
+                            impl_->sketchEditor.beginElementDrag(position.x(), position.y()));
                     update();
                 } else {
                     // S13: the box starts anywhere without an element or label, also over a
@@ -180,6 +183,10 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
             impl_->gesture = Impl::Gesture::none;
             unsetCursor();
             update();
+            return;
+        }
+        if (impl_->gesture == Impl::Gesture::cancelled) {
+            impl_->gesture = Impl::Gesture::none;
             return;
         }
         if (impl_->ready && event->button() == Qt::LeftButton &&
@@ -321,6 +328,22 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
         impl_->gesture = Impl::Gesture::none;
         unsetCursor();
     });
+}
+
+// S14 (A-TXN-03): Escape during a body drag ends it without a move: no document change and no
+// undo step. Other keys (and Escape otherwise) go on to the window's shortcuts.
+void CadViewport::keyPressEvent(QKeyEvent* event) {
+    if (event->key() == Qt::Key_Escape && impl_->gesture == Impl::Gesture::moveAxis) {
+        performViewportOperation(*this, impl_->ready, [&] {
+            impl_->manipulator.cancel();
+            impl_->gesture = Impl::Gesture::cancelled;
+            unsetCursor();
+            update();
+        });
+        event->accept();
+        return;
+    }
+    QWidget::keyPressEvent(event);
 }
 
 void CadViewport::wheelEvent(QWheelEvent* event) {

@@ -79,6 +79,14 @@ class ViewportTestAccess {
     static std::size_t constraintLabels(CadViewport& v) {
         return v.impl_->sketchConstraintPresentation.size();
     }
+    // S14: the shown points of the sketch elements (local coordinates), to compare positions.
+    static std::vector<std::pair<double, double>> sketchPoints(CadViewport& v) {
+        std::vector<std::pair<double, double>> points;
+        for (const auto& element : v.impl_->pendingSketchElements)
+            for (const auto& point : element.points)
+                points.emplace_back(point.localX, point.localY);
+        return points;
+    }
     static std::size_t projectedEdges(CadViewport& v) {
         return v.impl_->sketchPresentation.projectedEdgeCount();
     }
