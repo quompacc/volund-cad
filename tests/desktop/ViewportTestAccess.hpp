@@ -1,6 +1,8 @@
 #pragma once
 #include "../../src/viewport/CadViewportQtOpenGlBackend.hpp"
 #include <AIS_Manipulator.hxx>
+#include <BRepGProp.hxx>
+#include <GProp_GProps.hxx>
 #include <Aspect_Window.hxx>
 #include <StdSelect_BRepOwner.hxx>
 #include <TopAbs_ShapeEnum.hxx>
@@ -59,6 +61,16 @@ class ViewportTestAccess {
                v.impl_->pushPull.hasActiveMode();
     }
     static std::size_t bodyCount(CadViewport& v) { return v.impl_->presentations.size(); }
+    // S14: the volume of the bodies shown (model or tool preview).
+    static double displayedVolume(CadViewport& v) {
+        double total = 0.0;
+        for (const auto& presentation : v.impl_->presentations) {
+            GProp_GProps properties;
+            BRepGProp::VolumeProperties(presentation.shape->Shape(), properties);
+            total += properties.Mass();
+        }
+        return total;
+    }
     static double pushPullArrowZ(CadViewport& v) { return v.impl_->pushPull.arrowDirection().Z(); }
     static QPoint project(CadViewport& v, double x, double y, double z) {
         int px = 0, py = 0;

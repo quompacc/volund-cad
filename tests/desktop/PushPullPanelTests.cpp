@@ -2,6 +2,7 @@
 #include "ViewportLifecycleSupport.hpp"
 #include <QAction>
 #include <QApplication>
+#include <QElapsedTimer>
 #include <QDir>
 #include <QDoubleSpinBox>
 #include <QPushButton>
@@ -140,9 +141,17 @@ void run() {
             grip = candidate;
     }
     require(grip.has_value(), "The arrow points out of the face");
+    const double previewed = viewport::ViewportTestAccess::displayedVolume(*viewport);
     test::mouse(*viewport, QEvent::MouseButtonPress, *grip, Qt::LeftButton, Qt::LeftButton);
     test::mouse(*viewport, QEvent::MouseMove, *grip + (direction * 40).toPoint(), Qt::NoButton,
                 Qt::LeftButton);
+    // S14 (user report): the body follows the arrow while the button is still down.
+    QElapsedTimer waiting;
+    waiting.start();
+    while (waiting.elapsed() < 200)
+        QApplication::processEvents(QEventLoop::AllEvents, 20);
+    require(viewport::ViewportTestAccess::displayedVolume(*viewport) > previewed + 1.0,
+            "The preview body grows during the drag, before the release");
     test::mouse(*viewport, QEvent::MouseButtonRelease, *grip + (direction * 40).toPoint(),
                 Qt::LeftButton, Qt::NoButton);
     test::render(*viewport);

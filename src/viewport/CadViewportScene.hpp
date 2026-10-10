@@ -31,6 +31,8 @@
 #include <OpenGl_GraphicDriver.hxx>
 #include <Prs3d_Drawer.hxx>
 #include <Prs3d_LineAspect.hxx>
+#include <Prs3d_ShadingAspect.hxx>
+#include <Aspect_PolygonOffsetMode.hxx>
 #include <QDebug>
 #include <QMetaObject>
 #include <QMouseEvent>
@@ -144,6 +146,13 @@ class CadViewportScene {
             presentation->SetColor(occtColor(theme.body));
             if (body.stale)
                 presentation->SetTransparency(0.6);
+            // S14: the shaded faces lie a little behind what is drawn exactly on them (the
+            // lines and regions of a face sketch, the hover highlight); without it the face
+            // hid a sketch on itself.
+            if (!presentation->Attributes()->HasOwnShadingAspect())
+                presentation->Attributes()->SetupOwnShadingAspect();
+            presentation->Attributes()->ShadingAspect()->Aspect()->SetPolygonOffsets(
+                Aspect_POM_Fill, 1.0F, 2.0F);
             showEdges(presentation);
             context->Display(presentation, false);
             presentations.push_back(BodyPresentation{body.id, presentation, body.transformable});

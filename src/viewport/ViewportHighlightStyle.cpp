@@ -2,6 +2,7 @@
 
 #include <AIS_DisplayMode.hxx>
 #include <Graphic3d_NameOfMaterial.hxx>
+#include <Graphic3d_ZLayerId.hxx>
 #include <Prs3d_Drawer.hxx>
 #include <Prs3d_ShadingAspect.hxx>
 #include <Prs3d_TypeOfHighlight.hxx>
@@ -18,6 +19,9 @@ void setHighlightColor(const occ::handle<AIS_InteractiveContext>& context,
     style->SetColor(color);
     style->SetTransparency(transparency);
     style->SetDisplayMode(AIS_Shaded);
+    // S14: in the object's own layer, so a highlighted face stays behind what is in front of
+    // it (OCCT draws hover highlights over everything by default).
+    style->SetZLayer(Graphic3d_ZLayerId_UNKNOWN);
     // Matte, so a face lit head-on keeps the highlight color instead of washing out to white
     // on the light theme (U03).
     style->SetupOwnShadingAspect();

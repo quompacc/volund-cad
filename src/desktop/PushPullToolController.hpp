@@ -48,6 +48,8 @@ class PushPullToolController final {
     std::optional<application::DocumentStamp> stamp_;
     double distance_{10.0};
     bool active_{false};
+    // S14: a drag shows the body live; previews are bundled to one per 40 ms.
+    bool previewPending_{false};
 };
 
 } // namespace voelund::desktop

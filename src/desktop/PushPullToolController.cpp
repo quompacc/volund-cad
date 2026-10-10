@@ -7,6 +7,7 @@
 #include <voelund/application/CadSession.hpp>
 
 #include <QObject>
+#include <QTimer>
 
 #include <exception>
 #include <utility>
@@ -69,8 +70,19 @@ void PushPullToolController::dragged(double distance, bool finished) {
         return;
     distance_ = distance;
     panel_.setLengthValue("distance", distance);
-    if (finished)
+    if (finished) {
         preview();
+        return;
+    }
+    // S14 (user report 2026-10-10): the body follows the arrow while dragging, not only at
+    // the release.
+    if (previewPending_)
+        return;
+    previewPending_ = true;
+    QTimer::singleShot(40, &panel_, [this] {
+        previewPending_ = false;
+        preview();
+    });
 }
 
 void PushPullToolController::typed(double distance) {

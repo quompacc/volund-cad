@@ -5,6 +5,7 @@
 #include <BRepGProp.hxx>
 #include <GProp_GProps.hxx>
 #include <QApplication>
+#include <QDir>
 #include <QDoubleSpinBox>
 #include <QLabel>
 #include <QPushButton>
@@ -101,6 +102,24 @@ struct Window final {
                     main->findChild<QStatusBar*>()->currentMessage().toStdString());
         return selected.front();
     }
+    // With VOELUND_UI_FLOW_ARTIFACT_DIR: the window as the user sees it.
+    void capture(const char* name) {
+        const QString directory = qEnvironmentVariable("VOELUND_UI_FLOW_ARTIFACT_DIR");
+        if (directory.isEmpty())
+            return;
+        require(QDir().mkpath(directory), "capture directory");
+        test::render(*viewport);
+        require(main->grab().save(directory + QLatin1Char('/') + QLatin1String(name) +
+                                  QStringLiteral(".png")),
+                std::string("capture ") + name);
+    }
+    void iso(const char* name) {
+        viewport->setCameraView(viewport::CameraView::isometric);
+        test::render(*viewport);
+        capture(name);
+        viewport->setCameraView(viewport::CameraView::top);
+        test::render(*viewport);
+    }
     [[nodiscard]] double volume() const {
         double total = 0.0;
         for (const auto& body : session.currentBodies()) {
@@ -144,6 +163,7 @@ int run() {
         w.click(16.5, 10);
         press(w.panelButton("toolAcceptButton"));
         require(w.session.features().size() == 2, "The reference sketch is stored");
+        w.iso("s14-face-sketch"); // the sketch lines on the face stay visible
 
         // A-REG-01: rectangle, ring and inner disc are three regions; the ring is not filled.
         // The regions lie on the box face and win the click over it.
@@ -159,6 +179,16 @@ int run() {
         press(w.panelButton("toolAcceptButton"));
         require(w.session.features().size() == 3, "Extrusion of the ring");
         requireVolume(w, outerArea - 4.0 * pi, "Ring extrusion");
+        {
+            // Hover over the box face beside the ring body: the highlight stays behind it.
+            w.viewport->setCameraView(viewport::CameraView::isometric);
+            test::render(*w.viewport);
+            const QPoint corner = viewport::ViewportTestAccess::project(*w.viewport, 1, 1, top);
+            test::mouse(*w.viewport, QEvent::MouseMove, corner, Qt::NoButton, Qt::NoButton);
+            w.capture("s14-hover-face");
+            w.viewport->setCameraView(viewport::CameraView::top);
+            test::render(*w.viewport);
+        }
 
         user.file = path;
         w.file("document.save_as");
