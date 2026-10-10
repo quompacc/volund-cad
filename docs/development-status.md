@@ -1,6 +1,16 @@
 # Entwicklungsstand – 12. September 2026
 
-## Aktueller Stand – 4. Oktober 2026
+## Aktueller Stand – 10. Oktober 2026
+
+**Einstieg:** [Fortsetzungsnotiz](session-checkpoint-2026-10-08.md) (Arbeitsregeln in der
+vom 04.10.). Die Skizzenkette S01–S14 ist abgenommen; Umfang, unterstützte Operationen und
+Grenzen stehen gesammelt in [sketch-data-model.md](sketch-data-model.md) („Supported
+operations and limitations“), die Matrix je Werkzeug im
+[S14-Nachweis](implementation-plan/evidence/S14.md). Alles darunter ist historisch; dort
+genannte Skizzenregeln (Escape verwirft, Profil-ID aus der kleinsten Element-ID, Tangente
+nur Linie–Kreis, Panel-Reiter) gelten nicht mehr.
+
+## Stand – 4. Oktober 2026
 
 **Einstieg:** [Fortsetzungsnotiz vom 04.10.2026](session-checkpoint-2026-10-04.md). Sie
 nennt den Stand, die Arbeitsregeln, Zugänge und den nächsten Schritt (**AI02a** laut

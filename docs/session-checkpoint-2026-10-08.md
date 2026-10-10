@@ -9,11 +9,12 @@ Git-Historie dieser Datei.
 ## Stand des Repos
 
 - Branch `ux01`. `main` folgt nach jeder grünen Abnahme per Fast-Forward.
-- Letztes Paket: U12 (Code `2aae44e`, CI-Lauf 511). Der Abnahme-Commit enthält diese
+- Letztes Paket: S14 (Code `d12dcd1`, `1f3df72`, `c918c42`, `3677ba4`; CI-Lauf 521). Der Abnahme-Commit enthält diese
   Datei. Vor dem Weiterarbeiten prüfen, ob `main` auf ihm steht; sonst seinen CI-Lauf
   prüfen und `main` nachziehen (siehe Arbeitsregeln).
-- **Windows:** 151 Tests. **Fedora (GCC, ohne Desktop):** 104; Desktop unter virtuellem
-  Wayland 45 (Skript `/tmp/voelund-desktop.sh` auf Fedora, wie `~/repro-snap.sh`). Desktop-Tests laufen in der
+- **Tests:** Fedora (GCC, ohne Desktop) 105; Desktop unter virtuellem Wayland 47. **Windows:
+  nur bauen**, keine Desktop-Tests auf dem Rechner des Nutzers (Nutzerwunsch 10.10.2026:
+  aufblitzende Fenster stören). Desktop-Tests auf Fedora (Skript `/tmp/voelund-desktop.sh` auf Fedora, wie `~/repro-snap.sh`). Desktop-Tests laufen in der
   CI.
 - **Schema der Dokumente:** 11 (S12: assoziative Skizzenmuster).
 
@@ -26,6 +27,7 @@ Git-Historie dieser Datei.
 | S04 | Fangmatrix für Linie/Polylinie/Rechteck; keine überflüssigen Beziehungen; Schalter „Beziehungen: Automatisch / Keine“ im Skizzenpanel | [S04](implementation-plan/evidence/S04.md) |
 | S05 | Kurvenbeziehungen nur für unterstützte Paare; keine angekündigte Tangente am Bogenende auf einer Linie; entartete Picks mit genauer Meldung | [S05](implementation-plan/evidence/S05.md) |
 | S09 | Exakter Versatz für Elemente und Konturen, Vorschau = Übernahme, Ellipse als nicht unterstützt gemeldet | [S09](implementation-plan/evidence/S09.md) |
+| S14 (10.10.) | Matrix je Werkzeug/Operation (`sketch_tool_matrix`), Referenzskizze durch die Shell, Ziehen nach A-TXN-03 mit Maus; fünf gefundene Fehler behoben (Muster auflösen + speichern, Bereich auf Fläche wählen, Editor unter Körpern, Element mit Maus ziehen, Escape am Manipulator); Grenzen gesammelt in sketch-data-model.md. Dazu: Dreipunktbogen-Reihenfolge, Skizze auf Extrusionsdeckfläche, Werkzeugleiste in Familien | [S14](implementation-plan/evidence/S14.md) |
 | U12 (09.10.) | Ein Composition Root (`startProduct`) für Produkt und UI-Tests; Installation trägt die getestete Laufzeit (Windows-DLLs, Linux-OCCT mit `$ORIGIN`), `desktop.installed_product` startet die installierte Datei; ungenutzte APIs entfernt; README auf den Produkteinstieg | [U12](implementation-plan/evidence/U12.md) |
 | U11 (09.10.) | Echte UI-Abläufe als Tests (Skizze, Panels, Dokument über Dateimenü, Gegenprobe abgetrennter Handler); Bildprüfung: FreeType unter Windows, Beschriftungen neben dem Punkt, Einheiten, Skizze in freier Fläche, schmale Kopfzeile, Extrusionsvorschau | [U11](implementation-plan/evidence/U11.md) |
 | S13 (09.10.) | Escape schrittweise ohne Verwerfen, Abbrechen fragt, Enter/Strg+Enter; Rahmen Fenster/Kreuzen; Element vor Beschriftung; vier Ansichtsschalter als Befehle | [S13](implementation-plan/evidence/S13.md) |
@@ -50,9 +52,10 @@ Git-Historie dieser Datei.
 
 ## Nächste freie Pakete
 
-- **S14** Skizzenumfang als Ganzes abnehmen (G2). Nächstes Paket; U11 und U12 sind
-  erledigt, die Skizzenkette S01–S13 ist vollständig.
-- **PAR02** Parametertabelle in der Oberfläche (G2), seit U11 ebenfalls frei.
+- **M01** Körpermodell und erster unabhängiger Solid (G3). Nächstes Paket nach Plan; die
+  Skizzenkette S01–S14 ist abgenommen. Danach M02–M04, dann Verrundung M05–M07 (der
+  Nutzer wartet auf 3D-Verrundung und Kantenauswahl).
+- **PAR02** Parametertabelle in der Oberfläche (G2), frei.
 - **T05** Koplanare Flächen verschmelzen (G3). Laut Nutzer „später“; nicht ohne Rückfrage.
 - **A02** braucht weiterhin Designarbeit.
 

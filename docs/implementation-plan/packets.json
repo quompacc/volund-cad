@@ -2171,12 +2171,14 @@
       ],
       "acceptance": "A-SKETCH-01/02, A-REG-01/02 und A-TXN-03 bestehen. Kein aktives Werkzeug ohne vollständige Zeile in der Matrix. Bekannte Begrenzungen sind in UI und Datenmodelldokument gleich beschrieben.",
       "boundary": "Kein „Sketch fertig“ allein aus Backend-Smokes ableiten.",
-      "status": "planned",
+      "status": "done",
       "gate": "G2",
       "chapter": "04-oberflaeche-skizze.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/S14.md"
+      ],
+      "completedCommit": "3677ba4"
     },
     {
       "id": "M01",
