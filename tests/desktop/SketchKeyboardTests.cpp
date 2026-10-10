@@ -1,5 +1,6 @@
 #include "DiscardPrompt.hpp"
 #include "IsolatedSettings.hpp"
+#include "UiDriver.hpp"
 #include "ViewportLifecycleSupport.hpp"
 
 #include <QAction>
@@ -39,6 +40,8 @@ void click(viewport::CadViewport& viewport, double x, double y) {
 }
 QString key(QWidget& window, viewport::CadViewport& viewport, int code,
             Qt::KeyboardModifiers modifiers = Qt::NoModifier) {
+    // Window shortcuts need the active window; after the question dialog it may not be yet.
+    test::activate(window);
     QKeyEvent press(QEvent::KeyPress, code, modifiers);
     QApplication::sendEvent(&viewport, &press);
     settle();
