@@ -281,12 +281,9 @@ void MainWindow::connectInteractions() {
         });
     // A picked sketch region shows its boundary elements as selected.
     const auto showSelectedProfiles = [this] {
-        const auto selectedElements = impl_->session.selectedSketchProfileElements();
-        std::vector<std::uint64_t> selectedIds;
-        selectedIds.reserve(selectedElements.size());
-        for (document::SketchElementId selected : selectedElements)
-            selectedIds.push_back(selected.value());
-        impl_->viewport->setSelectedSketchElements(selectedIds);
+        // S14 (user report 2026-10-10): the picked region's sketch itself is shown, not only
+        // the selection; picked in the view (not in the tree) it stayed invisible.
+        syncSketchPresentation();
         impl_->selectedDatum.reset();
         impl_->selectedPlanarFace.reset();
         impl_->modelTree->selectFeature(*impl_->session.selectedFeature());

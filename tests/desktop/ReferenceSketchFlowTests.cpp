@@ -167,7 +167,13 @@ int run() {
 
         // A-REG-01: rectangle, ring and inner disc are three regions; the ring is not filled.
         // The regions lie on the box face and win the click over it.
+        // Picked in the view after another selection, the sketch is shown with its region.
+        w.click(-30, -30);
+        require(viewport::ViewportTestAccess::sketchPoints(*w.viewport).empty(),
+                "Nothing selected: no sketch shown");
         const auto plain = w.region(5, 10);
+        require(!viewport::ViewportTestAccess::sketchPoints(*w.viewport).empty(),
+                "The picked region's sketch is shown");
         const auto ring = w.region(12, 4);
         const auto disc = w.region(14.5, 10);
         require(plain != ring && ring != disc && plain != disc, "Three separate regions");
