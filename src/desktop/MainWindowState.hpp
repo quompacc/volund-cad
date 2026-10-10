@@ -7,6 +7,7 @@
 #include "DocumentActions.hpp"
 #include "FeaturePropertiesPanel.hpp"
 #include "FloatingCard.hpp"
+#include "MainWindowSupport.hpp"
 #include "ShellHeader.hpp"
 #include "ShellState.hpp"
 #include "PushPullToolController.hpp"
@@ -45,6 +46,14 @@ class MainWindow::Impl final {
         ShellInputs inputs;
         inputs.basePlane = selectedDatum;
         inputs.planarFace = selectedPlanarFace.has_value();
+        if (selectedBody) {
+            inputs.body = selectedBody;
+            const auto outline = session.modelOutline();
+            inputs.bodyName = bodyLabel(outline, *selectedBody);
+            for (const auto& body : outline.bodies)
+                if (body.id == *selectedBody)
+                    inputs.bodyHidden = body.hidden;
+        }
         if (sketchEditorTool && sketchEditorTool->isActive())
             inputs.tool = ShellTool::sketchEditor;
         else if ((sketchExtrusionTool && sketchExtrusionTool->isActive()) ||
@@ -92,6 +101,10 @@ class MainWindow::Impl final {
     QDoubleSpinBox* angularSnapInput{nullptr};
     std::optional<viewport::PlanarFaceSelection> selectedPlanarFace;
     std::optional<document::DatumPlane> selectedDatum; // V01b: base plane picked in viewport.
+    // M01: a whole body picked in the model tree (view state, like a base plane).
+    std::optional<document::BodyId> selectedBody;
+    QAction* renameBodyAction{nullptr};
+    QAction* bodyVisibilityAction{nullptr};
     ViewVisibility visibility;                         // U06: model tree eyes (view state)
     TimelineBar* timeline{nullptr};
     std::unique_ptr<SketchToolActions> sketchActions; // U13

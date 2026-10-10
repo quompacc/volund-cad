@@ -44,6 +44,8 @@ class NativeModelState final {
     [[nodiscard]] bool canUndo() const noexcept;
     [[nodiscard]] bool canRedo() const noexcept;
     [[nodiscard]] Prepared prepare(const IdentifiedDocumentSnapshot& replacement, bool recordHistory = true) const;
+    // M01: body visibility only; no undo entry, the redo history stays.
+    [[nodiscard]] Prepared prepareViewChange(const IdentifiedDocumentSnapshot& replacement) const;
     [[nodiscard]] Prepared prepareUndo() const;
     [[nodiscard]] Prepared prepareRedo() const;
     // A successful prepared commit only swaps owners; no allocation/native mutation.

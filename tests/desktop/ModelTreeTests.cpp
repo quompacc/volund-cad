@@ -15,7 +15,7 @@
 
 // U06: the model tree projects the real document — document origin with planes and grid,
 // bodies with their own origin and features, German default names — and its eyes change
-// only the view: no undo step and no unsaved state.
+// only the view (no undo step, no unsaved state), except the body eye, which is stored (M01).
 namespace {
 using namespace voelund;
 using test::require;
@@ -131,8 +131,14 @@ void run() {
             "A body origin shows the planes");
     emit tree->itemClicked(find(*tree, Kind::plane, QStringLiteral("XZ-Ebene")), 1);
     require(viewport->displayedBasePlaneCount() == 2 && unchanged(), "Plane eye hides one plane");
+    // M01 (user decision 2026-10-10): the body eye is stored with the document: modified,
+    // but no undo step.
     emit tree->itemClicked(find(*tree, Kind::body, QStringLiteral("Körper 2")), 1);
-    require(unchanged(), "Body eye is view state");
+    bool hidden = false;
+    for (const auto& body : session.modelOutline().bodies)
+        hidden = hidden || body.hidden;
+    require(hidden && session.isModified() && session.canUndo() == canUndo,
+            "Body eye is stored: modified, no undo step");
 
     // A plane row picks the plane like the viewport does.
     emit tree->itemClicked(find(*tree, Kind::plane, QStringLiteral("YZ-Ebene")), 0);

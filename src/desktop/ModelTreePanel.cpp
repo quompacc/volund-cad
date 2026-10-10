@@ -51,11 +51,30 @@ ModelTreePanel::ModelTreePanel(QWidget* parent) : QTreeWidget(parent) {
     });
     connect(this, &QTreeWidget::currentItemChanged, this,
             [this](QTreeWidgetItem* current, QTreeWidgetItem*) {
-                if (current == nullptr || !handlers_.featureSelected ||
-                    static_cast<Kind>(current->data(0, kindRole).toInt()) != Kind::feature)
+                if (current == nullptr)
                     return;
-                handlers_.featureSelected(current->data(0, idRole).toULongLong());
+                const auto kind = static_cast<Kind>(current->data(0, kindRole).toInt());
+                const auto id = current->data(0, idRole).toULongLong();
+                if (kind == Kind::feature && handlers_.featureSelected)
+                    handlers_.featureSelected(id);
+                else if (kind == Kind::body && handlers_.bodySelected)
+                    handlers_.bodySelected(id);
             });
+    // M01: a body row is renamed in place; an unchanged or emptied text changes nothing
+    // (an empty name would bring back the numbered default only through the command).
+    setEditTriggers(QAbstractItemView::DoubleClicked | QAbstractItemView::EditKeyPressed);
+    connect(this, &QTreeWidget::itemChanged, this, [this](QTreeWidgetItem* item, int column) {
+        if (column != 0 || static_cast<Kind>(item->data(0, kindRole).toInt()) != Kind::body ||
+            !handlers_.bodyRenamed)
+            return;
+        const QString name = item->text(0).trimmed();
+        if (name.isEmpty() || name == item->data(0, nameRole).toString()) {
+            const QSignalBlocker blocker(this);
+            item->setText(0, item->data(0, nameRole).toString());
+            return;
+        }
+        handlers_.bodyRenamed(item->data(0, idRole).toULongLong(), name);
+    });
 }
 
 void ModelTreePanel::setHandlers(Handlers handlers) { handlers_ = std::move(handlers); }
@@ -121,8 +140,12 @@ void ModelTreePanel::showModel(const application::ModelOutline& outline,
     int number = 1;
     for (const application::OutlineBody& body : outline.bodies) {
         const auto bodyId = body.id.value();
-        auto* item = addItem(nullptr, Kind::body, bodyId, tr("Körper %1").arg(number++),
-                             !visibility.hiddenBodies.contains(bodyId));
+        // M01: the user's name and the stored visibility.
+        const QString name = body.name.empty() ? tr("Körper %1").arg(number)
+                                               : QString::fromStdString(body.name);
+        ++number;
+        auto* item = addItem(nullptr, Kind::body, bodyId, name, !body.hidden);
+        item->setFlags(item->flags() | Qt::ItemIsEditable);
         addItem(item, Kind::bodyOrigin, bodyId, tr("Ursprung"),
                 visibility.shownBodyOrigins.contains(bodyId));
         for (const document::FeatureId feature : body.features)
@@ -132,6 +155,23 @@ void ModelTreePanel::showModel(const application::ModelOutline& outline,
     for (const document::FeatureId feature : outline.loose)
         addFeature(nullptr, feature);
     paintFlash(true); // A rebuild during a running mark keeps it.
+}
+
+void ModelTreePanel::selectBody(document::BodyId body) {
+    for (QTreeWidgetItemIterator it(this); *it != nullptr; ++it)
+        if (static_cast<Kind>((*it)->data(0, kindRole).toInt()) == Kind::body &&
+            (*it)->data(0, idRole).toULongLong() == body.value()) {
+            const QSignalBlocker blocker(this);
+            setCurrentItem(*it);
+            return;
+        }
+}
+
+void ModelTreePanel::editBody(document::BodyId body) {
+    selectBody(body);
+    if (QTreeWidgetItem* item = currentItem();
+        item != nullptr && static_cast<Kind>(item->data(0, kindRole).toInt()) == Kind::body)
+        editItem(item, 0);
 }
 
 void ModelTreePanel::showStatuses(std::span<const application::FeatureRuntimeState> states) {

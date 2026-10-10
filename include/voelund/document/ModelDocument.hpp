@@ -1,5 +1,6 @@
 #pragma once
 
+#include <voelund/document/BodyAttributes.hpp>
 #include <voelund/document/DocumentId.hpp>
 #include <voelund/document/DocumentParameters.hpp>
 #include <voelund/document/FeatureId.hpp>
@@ -209,6 +210,11 @@ class ModelDocument final {
     // Replaces the whole table; bindings are validated against it. Values are not mirrored
     // here: the application re-solves bound sketches in the same transaction.
     [[nodiscard]] bool setParameterTable(const ParameterTable& table);
+    // M01: name and visibility of bodies (BodyAttributes.hpp). Renaming is one undo step;
+    // hiding is stored but makes no undo step, and undo/redo keep the current visibility.
+    [[nodiscard]] const BodyAttributeTable& bodyAttributes() const noexcept;
+    [[nodiscard]] bool renameBody(BodyId body, std::string name);
+    [[nodiscard]] bool setBodyHidden(BodyId body, bool hidden);
     [[nodiscard]] bool canUndo() const noexcept;
     [[nodiscard]] bool canRedo() const noexcept;
     [[nodiscard]] bool undo();

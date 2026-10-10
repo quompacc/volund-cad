@@ -1012,6 +1012,11 @@ add_executable(voelund_action_request_tests integration/ActionRequestTests.cpp)
 target_link_libraries(voelund_action_request_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME application.action_requests COMMAND voelund_action_request_tests)
 set_tests_properties(application.action_requests PROPERTIES LABELS "integration;application;regression" TIMEOUT 90)
+# M01: body names and visibility (stored, rename undoable, hide without undo step).
+add_executable(voelund_body_attribute_tests integration/BodyAttributeTests.cpp)
+target_link_libraries(voelund_body_attribute_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.body_attributes COMMAND voelund_body_attribute_tests)
+set_tests_properties(application.body_attributes PROPERTIES LABELS "integration;application;regression" TIMEOUT 90)
 # M01: a cylinder as a new body or on the selected body.
 add_executable(voelund_new_body_cylinder_tests integration/NewBodyCylinderTests.cpp)
 target_link_libraries(voelund_new_body_cylinder_tests PRIVATE voelund_project_options Voelund::Application)

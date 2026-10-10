@@ -138,6 +138,11 @@ ModelOutline CadSession::modelOutline() const {
             body = outline.bodies.insert(outline.bodies.end(), {*contexts[index], {}});
         body->features.push_back(feature);
     }
+    for (auto& body : outline.bodies) {
+        const auto attributes = document::bodyAttributes(snapshot.bodyAttributes(), body.id.value());
+        body.name = attributes.name;
+        body.hidden = attributes.hidden;
+    }
     return outline;
 }
 

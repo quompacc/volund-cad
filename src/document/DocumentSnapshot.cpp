@@ -63,7 +63,8 @@ bool DocumentSnapshot::matchesContent(const ModelDocument& document) const {
     const auto& view = document.impl_->view();
     return std::ranges::equal(features_, view.features()) &&
            std::ranges::equal(parameters_, view.parameters()) &&
-           parameterTable_ == view.parameterTable();
+           parameterTable_ == view.parameterTable() &&
+           bodyAttributes_ == view.bodyAttributes();
 }
 const FeatureParameters& DocumentSnapshot::featureParameters(FeatureId id) const {
     const auto found = std::ranges::find(features_, id, &FeatureDescriptor::id);

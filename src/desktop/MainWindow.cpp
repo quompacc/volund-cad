@@ -57,6 +57,7 @@ MainWindow::MainWindow(application::CadSession& session, QWidget* parent)
     createToolPanel();
     createHistoryActions();
     createCommands();
+    createBodyCommands();
     impl_->documentActions =
         std::make_unique<DocumentActions>(*this, impl_->session, [this]() { refreshScene(); });
     createHeader();
@@ -217,6 +218,10 @@ void MainWindow::connectInteractions() {
                                    [this](int plane) { selectBasePlane(plane); },
                                    [this](ModelTreePanel::Kind kind, std::uint64_t id) {
                                        toggleVisibility(static_cast<int>(kind), id);
+                                   },
+                                   [this](std::uint64_t id) { selectBody(id); },
+                                   [this](std::uint64_t id, const QString& name) {
+                                       renameBody(id, name);
                                    }});
     impl_->viewport->setBodySelectionHandler([this](std::uint64_t id) { selectFeature(id); });
     impl_->viewport->setPlanarFaceSelectionHandler(
@@ -230,6 +235,7 @@ void MainWindow::connectInteractions() {
                 return;
             }
             impl_->selectedDatum.reset();
+            impl_->selectedBody.reset();
             if (impl_->session.sceneStatus().isCurrent()) {
                 impl_->selectedPlanarFace = selection;
                 statusBar()->showMessage(tr("Ebene Fläche gewählt"), 2000);
@@ -251,6 +257,7 @@ void MainWindow::connectInteractions() {
         if (impl_->shell().toolBlocksCommands())
             return;
         impl_->selectedDatum.reset();
+        impl_->selectedBody.reset();
         impl_->selectedPlanarFace.reset();
         impl_->session.clearSelection();
         syncModelTree();
@@ -285,6 +292,7 @@ void MainWindow::connectInteractions() {
         // the selection; picked in the view (not in the tree) it stayed invisible.
         syncSketchPresentation();
         impl_->selectedDatum.reset();
+        impl_->selectedBody.reset();
         impl_->selectedPlanarFace.reset();
         impl_->modelTree->selectFeature(*impl_->session.selectedFeature());
         syncTimeline();
@@ -534,6 +542,7 @@ void MainWindow::refreshScene() {
     }
     impl_->selectedPlanarFace.reset();
     impl_->selectedDatum.reset();
+    impl_->selectedBody.reset();
     impl_->viewport->cancelSketch();
     impl_->toolPanel->end();
     syncVisibility();

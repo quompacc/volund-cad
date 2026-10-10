@@ -142,6 +142,20 @@ CommandResult CadSession::setParameterValue(document::ParameterId id, double val
         disposition);
 }
 
+CommandResult CadSession::renameBody(document::BodyId body, std::string name) {
+    return commitParameterEdit(
+        [&](document::ModelDocument& candidate) { return candidate.renameBody(body, std::move(name)); },
+        ErrorDisposition::reject);
+}
+
+bool CadSession::setBodyHidden(document::BodyId body, bool hidden) {
+    if (!document_.setBodyHidden(body, hidden))
+        return false;
+    // The revision moved without a geometric change; the evaluation reuses every result.
+    static_cast<void>(recompute());
+    return true;
+}
+
 CommandResult CadSession::renameParameter(document::ParameterId id, std::string name) {
     return commitParameterEdit(
         [&](document::ModelDocument& candidate) {

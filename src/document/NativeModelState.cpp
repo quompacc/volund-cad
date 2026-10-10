@@ -1,4 +1,5 @@
 #include "NativeModelState.hpp"
+#include "NativeBodyAttributes.hpp"
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
@@ -57,12 +58,55 @@ NativeModelState::Prepared NativeModelState::prepareHistory(bool undo) const {
     content.nextFeatureId_ = std::max(content.nextFeatureId_, before.snapshot().nextFeatureId());
     content.parameterTable_.nextId =
         std::max(content.parameterTable_.nextId, before.snapshot().parameterTable().nextId);
+    // M01: undo and redo restore names, never the visibility the user set since.
+    {
+        BodyAttributeTable carried;
+        for (auto entry : content.bodyAttributes_) {
+            entry.attributes.hidden = false;
+            setBodyAttributes(carried, entry.body, std::move(entry.attributes));
+        }
+        for (const auto& entry : before.snapshot().bodyAttributes())
+            if (entry.attributes.hidden &&
+                std::ranges::find(content.features_, FeatureId{entry.body},
+                                  &FeatureDescriptor::id) != content.features_.end()) {
+                auto attributes = bodyAttributes(carried, entry.body);
+                attributes.hidden = true;
+                setBodyAttributes(carried, entry.body, std::move(attributes));
+            }
+        try {
+            validateBodyAttributes(carried, content.features_, content.parameters_);
+        } catch (const std::invalid_argument&) {
+            // A carried visibility on a feature that no longer creates a body: names only.
+            BodyAttributeTable names;
+            for (auto entry : carried) {
+                entry.attributes.hidden = false;
+                setBodyAttributes(names, entry.body, std::move(entry.attributes));
+            }
+            carried = std::move(names);
+        }
+        content.bodyAttributes_ = std::move(carried);
+    }
     const auto restored = IdentifiedDocumentSnapshot::restore(before.id(), std::move(content));
     auto next = std::make_unique<State>(*state_);
     next->current = encode(restored);
     next->view = std::make_shared<const IdentifiedDocumentSnapshot>(NativePrimitiveCodec::read(next->current));
     (undo ? next->redo : next->undo).push_back(state_->current);
     (undo ? next->undo : next->redo).pop_back();
+    ++next->revision;
+    return Prepared(this, revision(), std::move(next));
+}
+NativeModelState::Prepared
+NativeModelState::prepareViewChange(const IdentifiedDocumentSnapshot& replacement) const {
+    const auto& before = view();
+    if (replacement.id() != before.id() ||
+        replacement.snapshot().nextFeatureId() != before.snapshot().nextFeatureId())
+        throw std::invalid_argument("A view change keeps identity and IDs");
+    if (replacement == before)
+        return Prepared(this, revision(), nullptr);
+    checkRevisionAvailable();
+    auto next = std::make_unique<State>(*state_);
+    next->current = encode(replacement);
+    next->view = std::make_shared<const IdentifiedDocumentSnapshot>(NativePrimitiveCodec::read(next->current));
     ++next->revision;
     return Prepared(this, revision(), std::move(next));
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <voelund/application/CadSession.hpp>
 #include <voelund/document/ModelDocument.hpp>
 #include <voelund/viewport/CadViewport.hpp>
 
@@ -17,6 +18,9 @@ class CadSession;
 }
 
 namespace voelund::desktop {
+
+// M01: a body's name in the shell: the user's name, else "Körper N" by its position.
+[[nodiscard]] QString bodyLabel(const application::ModelOutline& outline, document::BodyId body);
 
 // Bodies listed in hiddenBodies (model tree eyes, U06) are left out of the scene.
 [[nodiscard]] std::vector<viewport::SceneBody>

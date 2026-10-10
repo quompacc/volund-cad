@@ -21,6 +21,7 @@ enum class ShellSelection {
     nothing,
     basePlane,
     planarFace,
+    body, // M01: a whole body, picked by its row in the model tree
     sketchRegion,
     sketchElement,
     sketch,
@@ -35,6 +36,10 @@ struct ShellInputs final {
     std::optional<document::DatumPlane> basePlane;
     bool planarFace{false};
     ShellTool tool{ShellTool::none};
+    // M01: a body picked by its tree row, with its shown name and visibility.
+    std::optional<document::BodyId> body{};
+    QString bodyName{};
+    bool bodyHidden{false};
 };
 
 struct ShellState final {
@@ -47,6 +52,9 @@ struct ShellState final {
     std::optional<document::FeatureId> feature;
     std::optional<document::FeatureKind> featureKind;
     std::optional<document::DatumPlane> basePlane;
+    std::optional<document::BodyId> body;
+    QString bodyName;
+    bool bodyHidden{false};
     bool regionExtrudable{false};
     ShellTool tool{ShellTool::none};
 

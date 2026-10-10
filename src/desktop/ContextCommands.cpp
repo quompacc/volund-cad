@@ -66,6 +66,13 @@ ContextCommands contextCommands(const ShellState& state) {
         result.commands = {"solid.create.sketch", "solid.modify.push_pull"};
         result.primary = "solid.create.sketch";
         break;
+    case ShellSelection::body:
+        // M01 (user decision 2026-10-10): rename, show/hide, move where possible, and a
+        // cylinder on this body.
+        result.title = state.bodyName;
+        result.commands = {"body.rename", "body.visibility", "solid.modify.transform",
+                           "solid.create.cylinder"};
+        break;
     case ShellSelection::sketchRegion:
         result.title = QObject::tr("Skizzenbereich");
         result.commands = {"solid.create.extrude_profiles", "solid.modify.edit_sketch"};

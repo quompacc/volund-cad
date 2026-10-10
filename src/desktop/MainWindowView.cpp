@@ -18,6 +18,11 @@ namespace voelund::desktop {
 
 void MainWindow::syncVisibility() {
     const bool hasBodies = !impl_->session.displayBodies().empty();
+    // M01: body visibility is stored with the document.
+    impl_->visibility.hiddenBodies.clear();
+    for (const auto& body : impl_->session.modelOutline().bodies)
+        if (body.hidden)
+            impl_->visibility.hiddenBodies.insert(body.id.value());
     impl_->viewport->setBodies(makeSceneBodies(impl_->session, impl_->visibility.hiddenBodies));
     impl_->viewport->setBasePlaneVisibility(impl_->visibility.visiblePlanes(hasBodies));
     impl_->viewport->setGridVisible(impl_->visibility.grid);
@@ -96,9 +101,15 @@ void MainWindow::toggleVisibility(int kind, std::uint64_t id) {
     case ModelTreePanel::Kind::grid:
         visibility.grid = !visibility.grid;
         break;
-    case ModelTreePanel::Kind::body:
-        toggle(visibility.hiddenBodies, id);
-        break;
+    case ModelTreePanel::Kind::body: {
+        // M01: stored with the document and modified, without an undo step.
+        const bool hidden = visibility.hiddenBodies.contains(id);
+        static_cast<void>(impl_->session.setBodyHidden(document::BodyId{id}, !hidden));
+        syncVisibility();
+        syncModelTree();
+        syncShell();
+        return;
+    }
     case ModelTreePanel::Kind::bodyOrigin:
         toggle(visibility.shownBodyOrigins, id);
         break;
@@ -147,6 +158,7 @@ void MainWindow::openTimelineStep(std::uint64_t featureId) {
         return;
     }
     impl_->selectedDatum.reset();
+    impl_->selectedBody.reset();
     impl_->selectedPlanarFace.reset();
     selectFeature(featureId);
     // Sketches open their editor; other features are edited in the properties card.

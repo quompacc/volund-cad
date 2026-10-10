@@ -187,6 +187,7 @@ void MainWindow::createCommandSurfaces() {
 
 void MainWindow::syncShell() {
     impl_->commandActions->refreshEnabled();
+    syncBodyCommands();
     syncViewSwitches();
     const ShellState shell = impl_->shell();
     // U13: the rail shows the tools of the active function.

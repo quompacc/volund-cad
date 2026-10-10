@@ -1,4 +1,5 @@
 #include "NativePrimitiveCodec.hpp"
+#include "NativeBodyAttributes.hpp"
 #include "DocumentSerializationDetail.hpp"
 #include "NativeDocumentMetadata.hpp"
 #include "NativeExtrusion.hpp"
@@ -271,6 +272,10 @@ void NativePrimitiveCodec::write(const Handle(TDocStd_Document) & document,
     if (!(snapshot.parameterTable() == ParameterTable{}))
         writeNativeParameterTable(document->Main().FindChild(nativeParameterSlot),
                                   snapshot.parameterTable());
+    validateBodyAttributes(snapshot.bodyAttributes(), snapshot.features(), snapshot.parameters());
+    if (!snapshot.bodyAttributes().empty())
+        writeNativeBodyAttributes(document->Main().FindChild(nativeBodyAttributeSlot),
+                                  snapshot.bodyAttributes());
     for (const auto& feature : snapshot.features())
         if (feature.inputFeature)
             TDF_Reference::Set(featureLabels.at(feature.id.value()).FindChild(5),
@@ -281,8 +286,11 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
     const auto metadata = readNativeMetadata(document);
     const auto root = document->Main();
     const auto parameterLabel = root.FindChild(nativeParameterSlot, false);
-    require(root.NbChildren() == (parameterLabel.IsNull() ? 6 : 7) &&
-            (parameterLabel.IsNull() || metadata.schemaVersion >= 7));
+    const auto attributeLabel = root.FindChild(nativeBodyAttributeSlot, false);
+    require(root.NbChildren() ==
+                6 + (parameterLabel.IsNull() ? 0 : 1) + (attributeLabel.IsNull() ? 0 : 1) &&
+            (parameterLabel.IsNull() || metadata.schemaVersion >= 7) &&
+            (attributeLabel.IsNull() || metadata.schemaVersion >= 12));
     const auto bodies = child(root, 10);
     const auto order = child(root, 20);
     require(text(bodies) == "Primitives.v1");
@@ -387,8 +395,11 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
                     require(constraint.projectedEdge->document == metadata.id &&
                             assignments[i].body == constraint.projectedEdge->body);
         }
+    auto attributes = attributeLabel.IsNull() ? BodyAttributeTable{}
+                                              : readNativeBodyAttributes(attributeLabel);
+    validateBodyAttributes(attributes, features, data);
     return IdentifiedDocumentSnapshot::restore(
-        metadata.id,
-        DocumentSnapshot{std::move(features), std::move(data), metadata.nextFeatureId, table});
+        metadata.id, DocumentSnapshot{std::move(features), std::move(data),
+                                      metadata.nextFeatureId, table, std::move(attributes)});
 }
 } // namespace voelund::document::detail

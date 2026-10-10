@@ -25,6 +25,9 @@ class ModelTreePanel final : public QTreeWidget {
         std::function<void(std::uint64_t)> featureSelected;
         std::function<void(int)> planeSelected; // 1 = XY, 2 = XZ, 3 = YZ
         std::function<void(Kind, std::uint64_t)> visibilityToggled;
+        // M01: a body row picked, and a body row renamed in place (double-click or F2).
+        std::function<void(std::uint64_t)> bodySelected;
+        std::function<void(std::uint64_t, const QString&)> bodyRenamed;
     };
 
     explicit ModelTreePanel(QWidget* parent = nullptr);
@@ -39,6 +42,9 @@ class ModelTreePanel final : public QTreeWidget {
                    const ViewVisibility& visibility);
     void showStatuses(std::span<const application::FeatureRuntimeState> states);
     void selectFeature(document::FeatureId featureId);
+    // M01: marks a body row as the current one, and opens its name for editing.
+    void selectBody(document::BodyId body);
+    void editBody(document::BodyId body);
     [[nodiscard]] QTreeWidgetItem* featureItem(document::FeatureId featureId) const;
     // AI04c: briefly marks features changed from outside the shell (MCP) with bold text in
     // the given color; the style sheet paints item backgrounds itself.

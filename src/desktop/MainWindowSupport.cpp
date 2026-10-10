@@ -4,6 +4,17 @@
 
 namespace voelund::desktop {
 
+QString bodyLabel(const application::ModelOutline& outline, document::BodyId body) {
+    int number = 1;
+    for (const auto& item : outline.bodies) {
+        if (item.id == body)
+            return item.name.empty() ? QObject::tr("Körper %1").arg(number)
+                                     : QString::fromStdString(item.name);
+        ++number;
+    }
+    return QObject::tr("Körper");
+}
+
 std::vector<viewport::SceneBody> makeSceneBodies(const application::CadSession& session,
                                                  const std::set<std::uint64_t>& hiddenBodies) {
     std::vector<viewport::SceneBody> bodies;

@@ -159,6 +159,8 @@ in U04 an dieselben IDs.
 | `repair.all` | Suche; später am Feature (U10) | DocumentRepairDialog | Dokument hat Features | document_repair_flow |
 | `transform.snap` | Kontextleiste (Verschieben/Drehen), Suche | Viewport | immer | command_surfaces |
 | `view.theme` | Kopfzeile (Sonne/Mond), Suche | MainWindow | immer | command_inventory |
+| `body.rename` | Kontextleiste (Körper), Doppelklick/F2 auf die Körperzeile, Suche | CadSession::renameBody | Körperzeile im Baum gewählt (M01); ein Rückgängig-Schritt | body_flow |
+| `body.visibility` | Kontextleiste (Körper), Auge im Baum, Suche | CadSession::setBodyHidden | Körperzeile im Baum gewählt (M01); gespeichert, „geändert“, kein Rückgängig-Schritt | body_flow |
 | `view.command_search` | Kopfzeile (Suchfeld), Strg+K | CommandPalette | immer | command_surfaces |
 | `view.tool_rail` | Kopfzeile (Werkzeugleiste), Suche | MainWindow | immer | command_surfaces |
 | `view.grid` | Suche, Skizzenpanel (Raster), Modellbaum (Auge) | MainWindow | immer; Ansichtszustand ohne Undo und ohne „geändert“ | sketch_view_switches |

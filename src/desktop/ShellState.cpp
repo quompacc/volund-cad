@@ -62,6 +62,11 @@ ShellState projectShell(const application::CadSession& session, const ShellInput
         state.basePlane = inputs.basePlane;
     } else if (inputs.planarFace) {
         state.selection = ShellSelection::planarFace;
+    } else if (inputs.body.has_value()) {
+        state.selection = ShellSelection::body;
+        state.body = inputs.body;
+        state.bodyName = inputs.bodyName;
+        state.bodyHidden = inputs.bodyHidden;
     } else if (!session.selectedSketchProfiles().empty()) {
         state.selection = ShellSelection::sketchRegion;
     } else if (session.selectedSketchElement().has_value()) {
