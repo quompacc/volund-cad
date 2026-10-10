@@ -141,8 +141,10 @@ SketchEditorSession::geometry(document::SketchPoint first, document::SketchPoint
         return slot;
     }
     if (tool_ == SketchDrawingTool::threePointArc) {
+        // Picks as in other CAD tools: start, end, then a point on the arc, so the arc bulges
+        // towards the pointer.
         bool reversed = false;
-        auto arc = threePointArc(first, second, *third, reversed);
+        auto arc = threePointArc(first, *third, second, reversed);
         single({{center, 0, Position::center},
                 {arcStart, 0, reversed ? Position::end : Position::start},
                 {arcEnd, 0, reversed ? Position::start : Position::end}});

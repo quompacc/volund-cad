@@ -322,7 +322,7 @@ void SketchEditorToolController::setTool(int index) {
     refreshPresentation();
     const QString guidance =
         index == 5   ? QObject::tr("Mittelpunktbogen: Mittelpunkt, Radiuspunkt, Endpunkt")
-        : index == 6 ? QObject::tr("Dreipunktbogen: Anfang, Punkt auf dem Bogen, Ende")
+        : index == 6 ? QObject::tr("Dreipunktbogen: Anfang, Ende, Punkt auf dem Bogen")
         : index == 7 ? QObject::tr("Ellipse: Mittelpunkt, großer Radius, kleiner Radius")
         : index == 8 ? QObject::tr("Langloch: Mittellinie Anfang, Mittellinie Ende, Breite")
         : index == 9 ? QObject::tr("Polygon: Mittelpunkt und erste Ecke")

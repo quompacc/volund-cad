@@ -64,6 +64,18 @@ const SupportProvenance& requireOrigin(const EvaluatedFeature& support,
         throw GeometryEvaluationError("Sketch support face is ambiguous");
     return *found;
 }
+// History can name a face in its construction orientation (an extrusion's end cap), while the
+// solid uses it reversed. The outward side is that of the body's own face.
+TopoDS_Shape inBody(const TopoDS_Shape& face, const EvaluatedFeature& support) {
+    for (const TopoDS_Shape* body : {&support.shape, &support.referenceShape}) {
+        if (body->IsNull())
+            continue;
+        for (TopExp_Explorer faces(*body, TopAbs_FACE); faces.More(); faces.Next())
+            if (faces.Current().IsSame(face))
+                return faces.Current();
+    }
+    return face;
+}
 void requirePlane(const document::SketchPlane& p, const TopoDS_Shape& face) {
     const auto f = frame(face);
     const auto scale = std::max({std::abs(p.originX), std::abs(p.originY), std::abs(p.originZ)});
@@ -144,7 +156,7 @@ void resolveBoundSketchSupport(document::SketchParameters& sketch,
         throw GeometryEvaluationError("Sketch support body identity changed");
     const auto& resolved = requireOrigin(support, binding.reference.origin);
     const auto current = convert(binding.localPlane, frame(resolved.frameFace), false);
-    requirePlane(current, resolved.faces.front());
+    requirePlane(current, inBody(resolved.faces.front(), support));
     for (const auto& constraint : sketch.constraints.values)
         if ((constraint.kind == document::SketchConstraintKind::coordinateX ||
              constraint.kind == document::SketchConstraintKind::coordinateY) &&

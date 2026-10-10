@@ -317,9 +317,9 @@ std::optional<SketchCreationResult> SketchEditorSession::createStep(const Sketch
         break;
     }
     case SketchDrawingTool::threePointArc:
-        // The middle pick only lies on the arc; it binds nothing.
+        // Picks: start, end, point on the arc; the last one binds nothing.
         snap(SketchCreationPoint::arcStart, in.firstSnap, in.first);
-        snap(SketchCreationPoint::arcEnd, in.thirdSnap, last);
+        snap(SketchCreationPoint::arcEnd, in.secondSnap, in.second);
         break;
     case SketchDrawingTool::slot:
         // The width pick binds nothing.

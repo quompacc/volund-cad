@@ -57,7 +57,7 @@ void plainStepsMatch(application::CadSession& session) {
         {"rectangle", SketchDrawingTool::rectangle, {{1, 2}, {9, 7}}},
         {"circle", SketchDrawingTool::circle, {{2, 2}, {6, 2}}},
         {"arc", SketchDrawingTool::arc, {{0, 0}, {5, 0}, SketchPoint{0, 5}}},
-        {"three-point arc", SketchDrawingTool::threePointArc, {{5, 0}, {0, 5}, SketchPoint{-5, 0}}},
+        {"three-point arc", SketchDrawingTool::threePointArc, {{5, 0}, {-5, 0}, SketchPoint{0, 5}}},
         {"ellipse", SketchDrawingTool::ellipse, {{0, 0}, {8, 0}, SketchPoint{0, 3}}},
         {"slot", SketchDrawingTool::slot, {{0, 0}, {10, 0}, SketchPoint{0, 2}}},
         {"polygon", SketchDrawingTool::polygon, {{0, 0}, {6, 0}}},
@@ -199,7 +199,7 @@ void everyFamilyNamesItsPoints(application::CadSession& session) {
         {"circle", SketchDrawingTool::circle, {{2, 2}, {6, 2}}, {{center, {2, 2}}}},
         {"arc", SketchDrawingTool::arc, {{0, 0}, {5, 0}, SketchPoint{0, 5}},
          {{center, {0, 0}}, {arcStart, {5, 0}}, {arcEnd, {0, 5}}}},
-        {"three-point arc", SketchDrawingTool::threePointArc, {{5, 0}, {0, 5}, SketchPoint{-5, 0}},
+        {"three-point arc", SketchDrawingTool::threePointArc, {{5, 0}, {-5, 0}, SketchPoint{0, 5}},
          {{center, {0, 0}}, {arcStart, {5, 0}}, {arcEnd, {-5, 0}}}},
         {"ellipse", SketchDrawingTool::ellipse, {{0, 0}, {8, 0}, SketchPoint{0, 3}},
          {{center, {0, 0}}}},
@@ -258,7 +258,7 @@ void reversedArcSwapsEnds(application::CadSession& session) {
     editor.setTool(SketchDrawingTool::line);
     const auto anchor = editor.create({{-9, 0}, {-5, 0}});
     editor.setTool(SketchDrawingTool::threePointArc);
-    SketchCreationInput clockwise{{-5, 0}, {0, 5}, SketchPoint{5, 0}};
+    SketchCreationInput clockwise{{-5, 0}, {5, 0}, SketchPoint{0, 5}};
     clockwise.firstSnap = SketchSnap{SketchSnapKind::end, anchor->primary()};
     const auto arc = editor.create(clockwise);
     const auto start = arc->point(SketchCreationPoint::arcStart);
@@ -273,7 +273,7 @@ void reversedArcSwapsEnds(application::CadSession& session) {
 
     SketchEditorSession forward(session, document::DatumPlane::xy);
     forward.setTool(SketchDrawingTool::threePointArc);
-    const auto ccw = forward.create({{5, 0}, {0, 5}, SketchPoint{-5, 0}});
+    const auto ccw = forward.create({{5, 0}, {-5, 0}, SketchPoint{0, 5}});
     require(ccw->arcDirection == application::SketchArcDirection::counterclockwise &&
                 ccw->point(SketchCreationPoint::arcStart)->point == SketchPointPosition::start,
             "A counterclockwise arc keeps its stored start");

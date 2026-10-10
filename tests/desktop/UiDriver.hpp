@@ -8,6 +8,7 @@
 #include <QMenu>
 #include <QMessageBox>
 #include <QMouseEvent>
+#include <QThread>
 #include <QTimer>
 #include <QToolButton>
 
@@ -24,6 +25,19 @@ namespace voelund::test {
 inline void settleEvents() {
     for (int i = 0; i < 4; ++i)
         QApplication::processEvents();
+}
+
+// Window shortcuts (Escape, Enter of a tool panel) fire only in the active window, as when a
+// user presses the key. Another window of the desktop may hold the activation; take it back.
+inline void activate(QWidget& window) {
+    for (int attempt = 0; attempt < 200 && QApplication::activeWindow() != &window; ++attempt) {
+        window.raise();
+        window.activateWindow();
+        QThread::msleep(10);
+        settleEvents();
+    }
+    if (QApplication::activeWindow() != &window)
+        throw std::runtime_error("The window does not become active; keys cannot be tested");
 }
 
 // A left click at the widget's center, as the mouse would send it.

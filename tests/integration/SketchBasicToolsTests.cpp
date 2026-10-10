@@ -67,7 +67,7 @@ bool compoundDrawingToolsCreateProfiles() {
 
     SketchEditorSession arc(session, support, plane);
     arc.setTool(SketchDrawingTool::threePointArc);
-    if (!arc.setPreview({-5.0, 0.0}, {0.0, 5.0}, SketchPoint{5.0, 0.0}) ||
+    if (!arc.setPreview({-5.0, 0.0}, {5.0, 0.0}, SketchPoint{0.0, 5.0}) ||
         !arc.confirmPreview().has_value() ||
         !std::holds_alternative<voelund::document::SketchArc>(arc.elements().front().geometry))
         return reportCompoundFailure("three-point arc", arc);

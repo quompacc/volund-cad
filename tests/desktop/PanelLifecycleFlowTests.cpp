@@ -7,6 +7,7 @@
 #include <QDoubleSpinBox>
 #include <QKeyEvent>
 #include <QPushButton>
+#include <QStatusBar>
 #include <iostream>
 #include <string>
 #include <voelund/application/CadSession.hpp>
@@ -28,6 +29,12 @@ struct Snapshot final {
     std::size_t features;
     bool operator==(const Snapshot&) const = default;
 };
+std::string describe(const Snapshot& s) {
+    return "generation " + std::to_string(s.stamp.generation) + ", revision " +
+           std::to_string(s.stamp.revision) + ", modified " +
+           std::to_string(s.modified) + ", undo " + std::to_string(s.canUndo) + ", features " +
+           std::to_string(s.features);
+}
 Snapshot snapshot(const application::CadSession& session) {
     return {session.sceneStatus().document, session.isModified(), session.canUndo(),
             session.features().size()};
@@ -82,6 +89,7 @@ struct Fixture final {
         test::settleEvents();
     }
     void escape() {
+        test::activate(*window);
         QKeyEvent key(QEvent::KeyPress, Qt::Key_Escape, Qt::NoModifier);
         QApplication::sendEvent(viewport, &key);
         test::settleEvents();
@@ -162,7 +170,10 @@ void pushPull(Fixture& f) {
     pick();
     f.type("distance", 4);
     f.escape();
-    require(!f.panelOpen() && snapshot(f.session) == start, "Push/pull Escape: starting state");
+    require(!f.panelOpen(), "Push/pull Escape closes the panel");
+    require(snapshot(f.session) == start, "Push/pull Escape: starting state, got " +
+                                              describe(snapshot(f.session)) + " instead of " +
+                                              describe(start));
     pick();
     f.type("distance", 4);
     press(f.panelButton("toolAcceptButton"));
@@ -171,11 +182,30 @@ void pushPull(Fixture& f) {
     require(f.session.features().size() == start.features, "Push/pull OK is one undo step");
 }
 
+// A sketch on the extrusion's top face, started from the context bar.
+void sketchOnFace(Fixture& f) {
+    f.click(12, 7, 8);
+    const QString picked = f.window->findChild<QStatusBar*>()->currentMessage();
+    press(f.context("solid.create.sketch"));
+    require(f.panelOpen(), "A sketch starts on the extrusion's top face (after: " +
+                               picked.toStdString() + ", now: " +
+                               f.window->findChild<QStatusBar*>()->currentMessage().toStdString() +
+                               ")");
+    press(f.rail("sketch.tool.rectangle"));
+    f.click(6, 4, 8);
+    f.click(16, 10, 8);
+    const auto features = f.session.features().size();
+    press(f.panelButton("toolAcceptButton"));
+    require(!f.panelOpen() && f.session.features().size() == features + 1,
+            "The face sketch is stored");
+}
+
 int run() {
     Fixture f;
     sketch(f);
     extrusion(f);
     pushPull(f);
+    sketchOnFace(f);
     std::cout << "PASS U11 panel lifecycle (A-UI-02): sketch, extrusion, push/pull\n";
     return 0;
 }
