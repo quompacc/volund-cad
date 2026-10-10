@@ -60,7 +60,7 @@ QString compactActionLabel(const std::string& id, const QString& fallback) {
         {"trim", QObject::tr("Stutzen")},
         {"extend", QObject::tr("Verlängern")},
         {"split", QObject::tr("Teilen")},
-        {"fillet", QObject::tr("Abrunden")},
+        {"fillet", QObject::tr("Verrunden")},
         {"offset", QObject::tr("Versetzen")},
         {"mirror", QObject::tr("Spiegeln")},
         {"linear_pattern", QObject::tr("Lineares Muster")},

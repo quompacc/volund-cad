@@ -97,11 +97,14 @@ lines and arcs with stable IDs and persistent internal relations (S06):
 
 Trim, extend,
 split, fillet, offset, mirror and linear/circular patterns operate on those ordinary
-elements. Local Undo/Redo, stepwise Escape and visible box selection keep these edits
-inside the temporary session.
+elements, within the limits listed under "Supported operations and limitations".
+Local Undo/Redo, stepwise Escape and visible box selection keep these edits inside the
+temporary session.
 
-OK writes the complete element collection as one sketch-feature transaction. Cancel
-or Escape discards the editor session without adding a feature or history entry.
+OK (or Ctrl+Enter) writes the complete element collection as one sketch-feature
+transaction. Escape steps back (drag, preview points, tool, selection) and never discards
+the sketch (S13); Cancel asks before it discards changes, and adds no feature or history
+entry.
 Sketches containing only open geometry are valid document features and survive
 Save/Load. The feature graph evaluates their element geometry without requiring a
 face; only an extrusion evaluates profile faces and reports an error when no closed
@@ -192,8 +195,9 @@ PlaneGCS therefore retains the remaining tangential degree of freedom instead of
 collapsing the relation into a one-time geometric move.
 
 Two selected lines can share one driving length, and two selected circles can share
-one radius through an equal relation. Tangency is available for a line and circle or
-for two circles. Both relations remain in the sketch, are solved by PlaneGCS after
+one radius through an equal relation. Tangency is available for a line and a circle or
+arc, and for two circles or arcs (S05); ellipses take no tangent, equal or concentric
+relation. Both relations remain in the sketch, are solved by PlaneGCS after
 every edit and appear as `[=]` and `[T]` glyphs in the viewport.
 
 A symmetric relation uses three ordered references: two points followed by a line
@@ -320,8 +324,9 @@ and at least one legacy coordinate attachment). Unknown values, inconsistent
 states, extra payload and this child under schemas 1–3 are rejected.
 
 Schema 11 (S12) adds optional sketch child 14 for associative patterns, written only when a
-sketch has one, so sketches without patterns keep their schema 10 encoding. Layout: integer =
-pattern count; child 1 = next pattern ID (decimal text); child 1 + i = pattern i with a real
+sketch has one or once had one (its counter moved, S14), so sketches without patterns keep
+their schema 10 encoding and a dissolved pattern's ID is not handed out again. Layout:
+integer = pattern count (0 only with a next ID above 1); child 1 = next pattern ID (decimal text); child 1 + i = pattern i with a real
 array (step x/y, center x/y, angle) and children 1 ID, 2 kind (1 linear, 2 circular,
 3 mirror), 3 count, 4 axis element ID (0 = none), 5 sources, 6 instances (integer n plus n
 decimal element IDs). Rules (`SketchPattern.hpp`): count 2–1000 (mirror 2); instances =
@@ -371,3 +376,38 @@ Fläche ist eine eigene, nicht automatisch ausgewählte Region. Vektorindizes
 sind keine dauerhaften IDs. R09 führt Identität/Auswahl und Migration ein.
 R10 übernimmt den produktiven Face-Weg. Bei ungültiger Topologie liefert der
 Regionsvertrag Diagnosen mit Element-IDs, aber keine verwendbaren Regionen.
+
+## Supported operations and limitations (S14)
+
+One list for the editor, the panel tooltips and this document. A combination that is not
+supported is refused before anything changes; the editor names the reason in the status
+line or the panel (texts quoted as the UI shows them). The tool matrix of A-SKETCH-01 is
+`application.sketch_tool_matrix`; the evidence `docs/implementation-plan/evidence/S14.md`
+names the test per cell.
+
+| Operation | Supported | Refused (UI text) |
+|---|---|---|
+| Trim | lines, arcs, circles | ellipses: "Ellipsen werden nicht unterstützt (UnsupportedCurve)"; legacy rectangles: "Alt-Rechtecke werden nicht unterstützt (UnsupportedCurve)" |
+| Extend | lines, arcs | circles: "Kreise sind geschlossen und lassen sich nicht verlängern (UnsupportedCurve)"; ellipses as for trim |
+| Split | lines, arcs | circles: "Kreise haben keinen Endpunkt zum Teilen; zuerst stutzen (UnsupportedCurve)"; ellipses as for trim |
+| Fillet | the corner of two lines | other curves: "Nur zwischen zwei Linien (UnsupportedCurve)"; pattern copies |
+| Offset | lines, arcs, circles, connected contours of lines and arcs | ellipses: "Ellipsen werden nicht unterstützt (UnsupportedCurve)"; a line–arc kink: "Ein Knick zwischen Linie und Bogen wird nicht unterstützt"; circles and rectangles only alone: "Kreise und Rechtecke nur einzeln, Ellipsen gar nicht" |
+| Mirror | every element type; the axis is the last selected line | an axis that is no line; a copy as source or axis; a legacy rectangle is copied once ("Alt-Rechteck einmalig kopiert (kein Muster)") |
+| Linear pattern | along +X of the sketch, 2–1000 positions | other directions; a copy as source |
+| Circular pattern | about the sketch origin, 2–1000 positions | other centers; a copy as source |
+| Pattern copies | follow their source; read-only | move, delete, trim, split, fillet of a copy: refused with the pattern named |
+| Rotate | no tool; rotation by a circular pattern (S08) | — |
+| Relations | lines, points, circles, arcs | ellipses: no tangent, equal or concentric relation |
+| Snaps | end, mid, center points, curves, projected edges | the point on a three-point arc and the slot width point bind nothing; a snap to a pattern copy is dropped |
+
+Further limits of the current state:
+
+- Undo granularity: the editor records one step per refresh that changed the sketch, not
+  per command (F15); a drag is one step (A-TXN-03).
+- Pressing an element selects its nearest end point (or a circle's center); a drag moves
+  that reference and the solver moves the rest. A drag that breaks a relation (for example
+  an end point of a horizontal line moved upwards) is refused.
+- Evaluation diagnostics that reach the panel or the status line, such as "Extrusion
+  region needs repair: the sketch regions are invalid [elements 8 9]", are English
+  technical messages naming the elements; a German wording is open.
+- In the smallest window the tool panel covers part of the sketch (U11).

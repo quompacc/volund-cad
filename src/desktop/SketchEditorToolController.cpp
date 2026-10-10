@@ -176,14 +176,17 @@ void SketchEditorToolController::showPanel() {
          {"split", QObject::tr("Linie oder Bogen an der angeklickten Stelle teilen"),
           QObject::tr("Bearbeiten")},
          {"fillet",
-          QObject::tr("Ecke zweier gewählter Linien abrunden; Maße der Ecke bleiben an einer "
-                      "virtuellen Ecke"),
+          QObject::tr("Ecke zweier gewählter Linien verrunden (nur Linien); Maße der Ecke "
+                      "bleiben an einer virtuellen Ecke"),
           QObject::tr("Bearbeiten")},
-         {"offset", QObject::tr("Gewählte Geometrie versetzen"), QObject::tr("Bearbeiten")},
+         {"offset",
+          QObject::tr("Gewählte Linien, Bögen, Kreise oder Konturen versetzen (keine Ellipsen; "
+                      "Kreise und Rechtecke einzeln)"),
+          QObject::tr("Bearbeiten")},
          {"mirror",
           QObject::tr("Auswahl an der zuletzt gewählten Linie spiegeln (assoziativ)"),
           QObject::tr("Bearbeiten")},
-         {"linear_pattern", QObject::tr("Lineares Muster anlegen (assoziativ)"),
+         {"linear_pattern", QObject::tr("Lineares Muster entlang +X anlegen (assoziativ)"),
           QObject::tr("Bearbeiten")},
          {"circular_pattern", QObject::tr("Kreismuster um den Ursprung anlegen (assoziativ)"),
           QObject::tr("Bearbeiten")},
