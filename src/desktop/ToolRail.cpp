@@ -10,6 +10,7 @@
 #include <QEvent>
 #include <QGridLayout>
 #include <QLabel>
+#include <QMenu>
 #include <QScrollArea>
 #include <QToolButton>
 #include <QVBoxLayout>
@@ -114,9 +115,9 @@ void ToolRail::showSolid() {
     place();
 }
 
-void ToolRail::showSketch(const std::vector<SketchToolActions::Group>& groups) {
+void ToolRail::showSketch(const std::vector<SketchToolActions::Section>& sections) {
     if (sketchPage_ == nullptr)
-        buildSketchPage(groups);
+        buildSketchPage(sections);
     if (sketchShown_)
         return;
     sketchShown_ = true;
@@ -125,7 +126,7 @@ void ToolRail::showSketch(const std::vector<SketchToolActions::Group>& groups) {
     place();
 }
 
-void ToolRail::buildSketchPage(const std::vector<SketchToolActions::Group>& groups) {
+void ToolRail::buildSketchPage(const std::vector<SketchToolActions::Section>& sections) {
     sketchPage_ = new QScrollArea(this);
     sketchPage_->setObjectName(QStringLiteral("sketchToolPage"));
     sketchPage_->setFrameShape(QFrame::NoFrame);
@@ -136,21 +137,41 @@ void ToolRail::buildSketchPage(const std::vector<SketchToolActions::Group>& grou
     auto* layout = new QVBoxLayout(content);
     layout->setContentsMargins(0, 0, 4, 0);
     layout->setSpacing(4);
-    for (const SketchToolActions::Group& group : groups) {
-        auto* title = new QLabel(group.title, content);
+    for (const SketchToolActions::Section& section : sections) {
+        auto* title = new QLabel(section.title, content);
         title->setObjectName(QStringLiteral("railGroupTitle"));
         layout->addWidget(title);
         // User decision 2026-10-05: symbols only, name and shortcut in the tooltip.
+        // S14 (2026-10-10): one button per family; the arrow opens the other variants and
+        // the button keeps the one used last.
         auto* grid = new QGridLayout;
         grid->setSpacing(2);
         constexpr int columns = 4;
-        for (std::size_t index = 0; index < group.actions.size(); ++index) {
+        for (std::size_t index = 0; index < section.families.size(); ++index) {
+            const auto& family = section.families[index];
             auto* button = new QToolButton(content);
-            button->setDefaultAction(group.actions[index]);
+            button->setDefaultAction(family.front());
             button->setToolButtonStyle(Qt::ToolButtonIconOnly);
             button->setIconSize(QSize(22, 22));
-            button->setFixedSize(38, 38);
+            button->setFixedSize(48, 38);
             button->setAutoRaise(true);
+            if (family.size() > 1) {
+                auto* menu = new QMenu(button);
+                for (QAction* action : family) {
+                    menu->addAction(action);
+                    const auto use = [button, action] {
+                        button->setDefaultAction(action);
+                        button->setPopupMode(QToolButton::MenuButtonPopup);
+                    };
+                    connect(action, &QAction::triggered, button, use);
+                    connect(action, &QAction::toggled, button, [use](bool on) {
+                        if (on)
+                            use();
+                    });
+                }
+                button->setMenu(menu);
+                button->setPopupMode(QToolButton::MenuButtonPopup);
+            }
             grid->addWidget(button, static_cast<int>(index / columns),
                             static_cast<int>(index % columns));
         }

@@ -24,7 +24,7 @@ class ToolRail final : public QFrame {
 
     // U13: the rail shows the tools of the active function.
     void showSolid();
-    void showSketch(const std::vector<SketchToolActions::Group>& groups);
+    void showSketch(const std::vector<SketchToolActions::Section>& sections);
     [[nodiscard]] bool showsSketch() const noexcept { return sketchShown_; }
 
   protected:
@@ -33,7 +33,7 @@ class ToolRail final : public QFrame {
 
   private:
     void place();
-    void buildSketchPage(const std::vector<SketchToolActions::Group>& groups);
+    void buildSketchPage(const std::vector<SketchToolActions::Section>& sections);
 
     viewport::CadViewport& viewport_;
     QWidget* solidPage_{nullptr};

@@ -191,8 +191,9 @@ void sketchOnFace(Fixture& f) {
                                picked.toStdString() + ", now: " +
                                f.window->findChild<QStatusBar*>()->currentMessage().toStdString() +
                                ")");
-    press(f.rail("sketch.tool.rectangle"));
-    f.click(6, 4, 8);
+    // The center rectangle, a variant behind the rectangle button's arrow (S14).
+    test::chooseFromMenu(f.rail("sketch.tool.rectangle"), "sketch.tool.center_rectangle");
+    f.click(11, 7, 8);
     f.click(16, 10, 8);
     const auto features = f.session.features().size();
     press(f.panelButton("toolAcceptButton"));

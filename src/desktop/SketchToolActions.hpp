@@ -22,6 +22,12 @@ class SketchToolActions final {
         QString title;
         std::vector<QAction*> actions;
     };
+    // S14 (user decision 2026-10-10): the rail shows one button per family; its arrow opens
+    // the other variants (two rectangles, line and polyline, …).
+    struct Section final {
+        QString title;
+        std::vector<std::vector<QAction*>> families;
+    };
 
     SketchToolActions(QWidget& window, ToolPanelHost& host);
 
@@ -29,6 +35,9 @@ class SketchToolActions final {
     void sync();
     [[nodiscard]] bool sketchActive() const;
     [[nodiscard]] const std::vector<Group>& groups() const noexcept { return groups_; }
+    // The rail's arrangement of the same actions. Commands without a place in the rail
+    // (sketch undo/redo: Ctrl+Z/Ctrl+Y and the command search) are left out.
+    [[nodiscard]] std::vector<Section> sections() const;
 
   private:
     void build();

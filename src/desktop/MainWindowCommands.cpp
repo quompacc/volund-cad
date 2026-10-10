@@ -197,7 +197,7 @@ void MainWindow::syncShell() {
             // Sketch commands exist from the first sketch on; they get their symbols then.
             if (!impl_->toolRail->showsSketch())
                 applyCommandIcons(*this, impl_->themeMode);
-            impl_->toolRail->showSketch(impl_->sketchActions->groups());
+            impl_->toolRail->showSketch(impl_->sketchActions->sections());
         }
         else
             impl_->toolRail->showSolid();

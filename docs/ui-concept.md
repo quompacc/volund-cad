@@ -179,6 +179,16 @@ Skizzenbefehle (U13): Solange der Skizzeneditor offen ist, zeigt die Werkzeuglei
 Volumenwerkzeuge die Skizzenwerkzeuge. Jedes ist ein Befehl mit Command-ID, den auch Suche und
 Kürzel erreichen; außerhalb einer Skizze sind sie gesperrt.
 
+Anordnung in der Werkzeugleiste (S14, Nutzerentscheidung 10.10.2026): je Familie ein Knopf.
+Er zeigt die zuletzt benutzte Variante, sein Pfeil öffnet die anderen. Abschnitte und
+Familien: **Zeichnen** (Auswahl · Linie/Polylinie · Rechteck/Mittelpunkt-Rechteck ·
+Kreis/Ellipse · Mittelpunkt-/Dreipunktbogen · Langloch · Polygon), **Beziehungen**
+(Richtung · parallel/rechtwinklig/kollinear · Punkte · fix/gleich/tangential/konzentrisch),
+**Bemaßungen** (Abstände · Durchmesser · Winkel), **Bearbeiten** (stutzen/verlängern/teilen ·
+Verrundung · Versatz · Spiegeln/Muster · Punkt sperren/freigeben · Konstruktion ·
+Löschen/Bedingung entfernen). Rückgängig/Wiederholen im Werkzeug: Strg+Z/Strg+Y und Suche.
+Der Dreipunktbogen nimmt Anfang, Ende und dann einen Punkt auf dem Bogen.
+
 | Gruppe | Command-IDs | Kürzel |
 |---|---|---|
 | Zeichnen | `sketch.tool.select`, `.line`, `.polyline`, `.rectangle`, `.circle`, `.center_arc`, `.three_point_arc`, `.ellipse`, `.slot`, `.polygon`, `.center_rectangle` | S, L, P, R, C, A, T, E, N, G, Umschalt+R |

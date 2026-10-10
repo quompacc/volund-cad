@@ -4,6 +4,7 @@
 #include "ViewportLifecycleSupport.hpp"
 #include <QAction>
 #include <QApplication>
+#include <QMenu>
 #include <QPushButton>
 #include <QToolButton>
 #include <QTreeWidget>
@@ -68,6 +69,28 @@ void run() {
           "sketch.trim", "sketch.linear_pattern", "sketch.delete"})
         require(command(window, QString::fromLatin1(id)) != nullptr,
                 (std::string("Sketch command missing: ") + id).c_str());
+
+    // S14: one button per family; the second rectangle is a variant of the first.
+    QToolButton* family = nullptr;
+    int buttons = 0;
+    for (auto* button : sketchPage->findChildren<QToolButton*>())
+        if (button->isVisible()) {
+            ++buttons;
+            if (button->menu() != nullptr &&
+                button->menu()->actions().contains(
+                    command(window, QStringLiteral("sketch.tool.center_rectangle"))))
+                family = button;
+        }
+    require(family != nullptr && family->defaultAction() ==
+                                     command(window, QStringLiteral("sketch.tool.rectangle")),
+            "Both rectangles share one button, the two-point rectangle first");
+    require(buttons <= 25, ("The rail groups its tools (" + std::to_string(buttons) +
+                            " buttons)").c_str());
+    command(window, QStringLiteral("sketch.tool.center_rectangle"))->trigger();
+    settle();
+    require(family->defaultAction() ==
+                command(window, QStringLiteral("sketch.tool.center_rectangle")),
+            "The family button keeps the variant used last");
 
     QAction* rectangle = command(window, QStringLiteral("sketch.tool.rectangle"));
     require(rectangle->isEnabled() && rectangle->shortcut() == QKeySequence(QStringLiteral("R")),

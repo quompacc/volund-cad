@@ -98,7 +98,18 @@ inline void chooseFromMenu(QToolButton& menuButton, const char* commandId) {
         menu->close();
     };
     QTimer::singleShot(0, *attempt);
-    press(menuButton);
+    if (menuButton.popupMode() == QToolButton::MenuButtonPopup) {
+        // A family button of the rail: its arrow, at the right edge, opens the variants.
+        const QPoint arrow(menuButton.width() - 4, menuButton.height() / 2);
+        QMouseEvent down(QEvent::MouseButtonPress, arrow, menuButton.mapToGlobal(arrow),
+                         Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+        QMouseEvent up(QEvent::MouseButtonRelease, arrow, menuButton.mapToGlobal(arrow),
+                       Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
+        QApplication::sendEvent(&menuButton, &down);
+        QApplication::sendEvent(&menuButton, &up);
+    } else {
+        press(menuButton);
+    }
     for (int wait = 0; !chosen && wait < 300; ++wait) {
         QApplication::processEvents(QEventLoop::AllEvents, 10);
         if (QApplication::activePopupWidget() == nullptr && attempts >= 200)

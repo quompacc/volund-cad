@@ -7,6 +7,7 @@
 #include <QKeySequence>
 #include <QWidget>
 
+#include <algorithm>
 #include <map>
 #include <string>
 
@@ -36,6 +37,47 @@ QString toolShortcut(const std::string& id) {
     const auto match = keys.find(id);
     return match == keys.end() ? QString{} : match->second;
 }
+
+// Sections and families of the rail, by command ID; the first entry of a family is its
+// button until another variant is used.
+struct RailSection {
+    const char* title;
+    std::vector<std::vector<const char*>> families;
+};
+const std::vector<RailSection>& railSections() {
+    static const std::vector<RailSection> sections{
+        {QT_TR_NOOP("Zeichnen"),
+         {{"sketch.tool.select"},
+          {"sketch.tool.line", "sketch.tool.polyline"},
+          {"sketch.tool.rectangle", "sketch.tool.center_rectangle"},
+          {"sketch.tool.circle", "sketch.tool.ellipse"},
+          {"sketch.tool.center_arc", "sketch.tool.three_point_arc"},
+          {"sketch.tool.slot"},
+          {"sketch.tool.polygon"}}},
+        {QT_TR_NOOP("Beziehungen"),
+         {{"sketch.horizontal", "sketch.vertical", "sketch.free"},
+          {"sketch.parallel", "sketch.perpendicular", "sketch.collinear"},
+          {"sketch.coincident", "sketch.midpoint", "sketch.point_on_object",
+           "sketch.horizontal_points", "sketch.vertical_points", "sketch.symmetric",
+           "sketch.perpendicular_bisector"},
+          {"sketch.fixed", "sketch.equal", "sketch.tangent", "sketch.concentric"}}},
+        {QT_TR_NOOP("Bemaßungen"),
+         {{"sketch.point_distance", "sketch.point_distance_x", "sketch.point_distance_y",
+           "sketch.point_line_distance"},
+          {"sketch.diameter"},
+          {"sketch.angle"}}},
+        {QT_TR_NOOP("Bearbeiten"),
+         {{"sketch.trim", "sketch.extend", "sketch.split"},
+          {"sketch.fillet"},
+          {"sketch.offset"},
+          {"sketch.mirror", "sketch.linear_pattern", "sketch.circular_pattern",
+           "sketch.edit_pattern", "sketch.dissolve_pattern"},
+          {"sketch.lock_point", "sketch.unlock_point"},
+          {"sketch.construction"},
+          {"sketch.delete", "sketch.remove_constraint"}}}};
+    return sections;
+}
+const char* const withoutRailPlace[]{"sketch.undo_sketch", "sketch.redo_sketch"};
 
 } // namespace
 
@@ -83,6 +125,40 @@ void SketchToolActions::build() {
         window_.addAction(action);
         group->actions.push_back(action);
     }
+}
+
+std::vector<SketchToolActions::Section> SketchToolActions::sections() const {
+    std::map<QString, QAction*> byId;
+    for (const Group& group : groups_)
+        for (QAction* action : group.actions)
+            byId.emplace(action->property(commandIdProperty).toString(), action);
+    std::vector<Section> result;
+    for (const RailSection& section : railSections()) {
+        Section placed{QObject::tr(section.title), {}};
+        for (const auto& family : section.families) {
+            std::vector<QAction*> actions;
+            for (const char* id : family)
+                if (const auto found = byId.find(QString::fromLatin1(id)); found != byId.end()) {
+                    actions.push_back(found->second);
+                    byId.erase(found);
+                }
+            if (!actions.empty())
+                placed.families.push_back(std::move(actions));
+        }
+        result.push_back(std::move(placed));
+    }
+    for (const char* id : withoutRailPlace)
+        byId.erase(QString::fromLatin1(id));
+    // A command the table does not know yet still gets a button, at the end of its group.
+    for (const Group& group : groups_)
+        for (QAction* action : group.actions)
+            if (byId.contains(action->property(commandIdProperty).toString())) {
+                auto section = std::ranges::find(result, group.title, &Section::title);
+                if (section == result.end())
+                    section = result.insert(result.end(), Section{group.title, {}});
+                section->families.push_back({action});
+            }
+    return result;
 }
 
 void SketchToolActions::sync() {
