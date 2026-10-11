@@ -384,11 +384,63 @@ void faceExtrusions(const Handle(TDocStd_Application)& app) {
     std::cout << "schema 10 face extrusion and push/pull cap round-trip and gate passed"
               << std::endl;
 }
+// M02, schema 13: a symmetric intersect of a second base-plane sketch with the first body
+// round-trips; a schema 12 reader refuses the symmetric child and operation 4; the model
+// refuses symmetric with a direction or an offset.
+void symmetricIntersect(const Handle(TDocStd_Application)& app) {
+    auto model = ModelDocument::empty();
+    SketchParameters plate{datumSketchPlane(DatumPlane::xy),
+                           {{{SketchElementId{1}, SketchRectangle{0, 0, 4, 3}}}, 2}};
+    plate.datum = DatumPlane::xy;
+    const auto plateSketch = model.addDatumSketchFeature("Plate", plate);
+    ExtrusionParameters body{2, {}, {region("o:1.0,1.1,1.2,1.3")}};
+    body.operation = ExtrusionOperation::newBody;
+    (void)model.addExtrusionFeature("Body", plateSketch, body);
+    SketchParameters tool{datumSketchPlane(DatumPlane::xy),
+                          {{{SketchElementId{1}, SketchRectangle{1, 1, 3, 2}}}, 2}};
+    tool.datum = DatumPlane::xy;
+    const auto toolSketch = model.addDatumSketchFeature("Tool", tool);
+    ExtrusionParameters common{2, {}, {region("o:1.0,1.1,1.2,1.3")}};
+    common.operation = ExtrusionOperation::intersect;
+    common.target = BodyId{plateSketch.value()};
+    common.symmetric = true;
+    const auto commonId = model.addExtrusionFeature("Common", toolSketch, common);
+    for (const auto change : {+[](ExtrusionParameters& p) { p.reversed = true; },
+                              +[](ExtrusionParameters& p) { p.offset = 1; }}) {
+        auto bad = common;
+        change(bad);
+        rejected([&] { (void)model.setExtrusionParameters(commonId, bad); });
+    }
+    const auto expected =
+        IdentifiedDocumentSnapshot::restore(DocumentId{3, 7}, DocumentSnapshot::capture(model));
+    Handle(TDocStd_Document) doc = fresh(app);
+    NativePrimitiveCodec::write(doc, expected);
+    std::stringstream bytes(std::ios::in | std::ios::out | std::ios::binary);
+    save(app, doc, bytes);
+    Handle(TDocStd_Document) loaded = open(app, bytes);
+    require(NativePrimitiveCodec::read(loaded) == expected, "Symmetric intersect roundtrip");
+    app->Close(loaded);
+    TDataStd_Integer::Set(doc->Main().FindChild(2), 12);
+    rejected([&] { (void)NativePrimitiveCodec::read(doc); }); // schema 13 children
+    app->Close(doc);
+    // Intersect alone (no symmetric child) also needs schema 13.
+    common.symmetric = false;
+    require(model.setExtrusionParameters(commonId, common), "Plain intersect set");
+    Handle(TDocStd_Document) plain = fresh(app);
+    NativePrimitiveCodec::write(
+        plain, IdentifiedDocumentSnapshot::restore(DocumentId{3, 8}, DocumentSnapshot::capture(model)));
+    TDataStd_Integer::Set(plain->Main().FindChild(2), 12);
+    rejected([&] { (void)NativePrimitiveCodec::read(plain); }); // operation 4
+    app->Close(plain);
+    std::cout << "schema 13 symmetric intersect round-trip and gate passed\n";
+}
+
 void regressions(const Handle(TDocStd_Application)& app) {
     historicalProfiles(app);
     datumSketches(app);
     extrusionModes(app);
     faceExtrusions(app);
+    symmetricIntersect(app);
     regionSelections(app);
     auto doc = fresh(app);
     const auto expected = fixture();
