@@ -38,6 +38,7 @@ void SketchExtrusionToolController::beginSelectedProfiles() {
     operation_ = baseSketch_ ? document::ExtrusionOperation::newBody
                              : document::ExtrusionOperation::join;
     reversed_ = false;
+    symmetric_ = false;
     offset_ = 0.0;
     upToFace_ = false;
     endFace_.reset();
@@ -58,11 +59,14 @@ void SketchExtrusionToolController::beginSelectedProfiles() {
         {"end", QObject::tr("Ende"), {QObject::tr("Distanz"), QObject::tr("Bis Fläche")}, 0},
         {"direction",
          QObject::tr("Richtung"),
-         {QObject::tr("Entlang Normale"), QObject::tr("Entgegen Normale")},
+         // M02 (user decision 2026-10-11): symmetric = the distance as total length.
+         {QObject::tr("Entlang Normale"), QObject::tr("Entgegen Normale"),
+          QObject::tr("Symmetrisch")},
          0},
         {"operation",
          QObject::tr("Ergebnis"),
-         {QObject::tr("Neuer Körper"), QObject::tr("Vereinigen"), QObject::tr("Abziehen")},
+         {QObject::tr("Neuer Körper"), QObject::tr("Vereinigen"), QObject::tr("Abziehen"),
+          QObject::tr("Schneiden")},
          static_cast<int>(operation_) - 1}};
     if (targets_.size() > 1)
         choices.push_back({"target", QObject::tr("Zielkörper"), targetNames, 0});
@@ -105,7 +109,7 @@ application::Action SketchExtrusionToolController::extrusion() const {
     return application::CreateProfileExtrusionAction{
         *profileSketch_, profileIds_, millimetres(distance_),
         {operation_, reversed_, named ? target_ : std::nullopt, offset_,
-         upToFace_ ? endFace_ : std::nullopt}};
+         upToFace_ ? endFace_ : std::nullopt, symmetric_}};
 }
 
 // U11 (A-UI-02, A-VIS-01): the extrusion the values would give, on an isolated copy; the
@@ -148,6 +152,7 @@ void SketchExtrusionToolController::choose(const std::string& choice, int index)
                                      .arg(profileIds_.size()));
     } else if (choice == "direction") {
         reversed_ = index == 1;
+        symmetric_ = index == 2;
     } else if (choice == "operation") {
         operation_ = static_cast<document::ExtrusionOperation>(index + 1);
         // A cut goes into the material; the panel shows the changed direction.

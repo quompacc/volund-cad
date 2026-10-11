@@ -110,16 +110,19 @@ QJsonObject faceSchema() {
 void insertExtrusionMode(QJsonObject& properties) {
     properties.insert(
         "operation",
-        choice({"newBody", "join", "cut"},
-               "newBody, join or cut. Default: a base-plane sketch makes a new body, a face "
-               "sketch joins its body. A join must touch the body, a cut must remove material"));
+        choice({"newBody", "join", "cut", "intersect"},
+               "newBody, join, cut or intersect (keeps only what prism and body share). "
+               "Default: a base-plane sketch makes a new body, a face sketch joins its body. "
+               "A join must touch the body, a cut must remove material"));
     properties.insert("direction",
-                      choice({"normal", "reversed"},
-                             "Along the sketch normal (default) or against it, e.g. a cut "
-                             "from a face into its body"));
+                      choice({"normal", "reversed", "symmetric"},
+                             "Along the sketch normal (default), against it (e.g. a cut from a "
+                             "face into its body), or symmetric: the distance is the total "
+                             "length, centred on the sketch plane; no offset or upToFace then"));
     properties.insert("targetBodyId",
-                      typed("integer", "Join or cut of a base-plane sketch: the body id from "
-                                       "get_context. A face sketch always works on its body"));
+                      typed("integer", "Join, cut or intersect of a base-plane sketch: the body "
+                                       "id from get_context. A face sketch always works on its "
+                                       "body"));
     properties.insert("offset", length("Start offset along the extrusion direction, may be "
                                        "negative; default 0"));
     properties.insert(

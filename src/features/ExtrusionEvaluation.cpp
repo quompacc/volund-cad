@@ -33,10 +33,12 @@ gp_Vec direction(const document::SketchParameters& sketch,
     const gp_Vec normal(sketch.plane.normalX, sketch.plane.normalY, sketch.plane.normalZ);
     return parameters.reversed ? -normal : normal;
 }
-// T03: the sketch moved by the start offset along the sweep direction.
+// T03: the sketch moved by the start offset along the sweep direction. M02: a symmetric
+// prism starts half its total length behind the sketch plane.
 document::SketchParameters startSketch(document::SketchParameters sketch,
                                        const document::ExtrusionParameters& parameters) {
-    const auto shift = direction(sketch, parameters) * parameters.offset;
+    const double start = parameters.symmetric ? -0.5 * parameters.distance : parameters.offset;
+    const auto shift = direction(sketch, parameters) * start;
     sketch.plane.originX += shift.X();
     sketch.plane.originY += shift.Y();
     sketch.plane.originZ += shift.Z();
@@ -101,9 +103,14 @@ Prism makePrism(document::FeatureId extrusion, document::FeatureId sketchId,
 
 kernel::ShapeOperationResult combine(document::ExtrusionOperation operation,
                                      const TopoDS_Shape& body, const TopoDS_Shape& tool) {
-    return operation == document::ExtrusionOperation::cut
-               ? kernel::ShapeOperations::cutWithHistory(body, tool)
-               : kernel::ShapeOperations::fuseWithHistory(body, tool);
+    switch (operation) {
+    case document::ExtrusionOperation::cut:
+        return kernel::ShapeOperations::cutWithHistory(body, tool);
+    case document::ExtrusionOperation::intersect:
+        return kernel::ShapeOperations::intersectWithHistory(body, tool);
+    default:
+        return kernel::ShapeOperations::fuseWithHistory(body, tool);
+    }
 }
 
 template <class Origins>

@@ -35,7 +35,7 @@ inkompatible Änderungen daran erhöhen dann die Major-Version.
 | Git-Commit | genaue Quellrevision |
 | VOLUND 1–16 | historische Textformate, weiterhin lesbar; kein Produktwriter mehr |
 | OCAF-Speicherformat 12 | native Container-Schreibversion aus ADR 0008 |
-| natives Anwendungsschema 12 | 12: Zylinder als eigener Körper ohne Eingang, Körpernamen und -sichtbarkeit (M01); 11: assoziative Skizzenmuster (S12); 10: Extrusion bis Fläche/Versatz (T04); 7: Parametertabelle und Bindungen (PAR01); 6: Skizzen auf Basisebenen ohne Stützkörper (V01a); 5: Regionsauswahl der Extrusion (R09b); 4: persistenter Reparaturgrund für Legacy-Skizzen (R06b). Schema 1–11 bleiben lesbar; typisierte Stützflächen-/Kantenreferenzen aus Schema 2/3 bleiben erhalten. |
+| natives Anwendungsschema 13 | 13: symmetrische Extrusion und Operation „Schneiden“ (M02); 12: Zylinder als eigener Körper ohne Eingang, Körpernamen und -sichtbarkeit (M01); 11: assoziative Skizzenmuster (S12); 10: Extrusion bis Fläche/Versatz (T04); 7: Parametertabelle und Bindungen (PAR01); 6: Skizzen auf Basisebenen ohne Stützkörper (V01a); 5: Regionsauswahl der Extrusion (R09b); 4: persistenter Reparaturgrund für Legacy-Skizzen (R06b). Schema 1–12 bleiben lesbar; typisierte Stützflächen-/Kantenreferenzen aus Schema 2/3 bleiben erhalten. |
 | DocumentId | Identität eines Dokuments über seine Revisionen hinweg |
 
 Eine neue Produktversion erhöht keine dieser anderen Kennungen automatisch.

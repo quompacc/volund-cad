@@ -57,6 +57,7 @@ class SketchExtrusionToolController final {
     // T02: result, direction and, for a base-plane sketch, the body a join or cut works on.
     document::ExtrusionOperation operation_{document::ExtrusionOperation::newBody};
     bool reversed_{false};
+    bool symmetric_{false}; // M02
     bool baseSketch_{false};
     std::vector<document::BodyId> targets_;
     std::optional<document::BodyId> target_;

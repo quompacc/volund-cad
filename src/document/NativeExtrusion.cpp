@@ -141,6 +141,8 @@ void writeNativeExtrusion(const TDF_Label& label, const ExtrusionParameters& par
             std::to_string(parameters.upToFace->body.value()).c_str());
         writeNativeSubshapeOrigin(face, parameters.upToFace->origin);
     }
+    if (parameters.symmetric)
+        TDataStd_Integer::Set(label.FindChild(11), 1);
     if (parameters.faceProfile) {
         const auto face = label.FindChild(10);
         TDataStd_AsciiString::Set(face.FindChild(1),
@@ -165,6 +167,8 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
     const auto endFace = label.FindChild(9, false);
     // Schema 10 (T04) adds the profile face (10) of a push/pull.
     const auto profileFace = label.FindChild(10, false);
+    // Schema 13 (M02) adds the symmetric extent (11) and the intersect operation (4 = 4).
+    const auto symmetric = label.FindChild(11, false);
     const int t02 = (operation.IsNull() ? 0 : 1) + (reversed.IsNull() ? 0 : 1) +
         (target.IsNull() ? 0 : 1);
     const int t03 = (offset.IsNull() ? 0 : 1) + (offsetBinding.IsNull() ? 0 : 1) +
@@ -172,8 +176,10 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
     require((regions.IsNull() || schemaVersion >= 5) && (binding.IsNull() || schemaVersion >= 7) &&
         (t02 == 0 || schemaVersion >= 8) && (t03 == 0 || schemaVersion >= 9) &&
         (profileFace.IsNull() || schemaVersion >= 10) &&
+        (symmetric.IsNull() || schemaVersion >= 13) &&
         label.NbChildren() == 1 + (regions.IsNull() ? 0 : 1) + (binding.IsNull() ? 0 : 1) + t02 +
-                                  t03 + (profileFace.IsNull() ? 0 : 1));
+                                  t03 + (profileFace.IsNull() ? 0 : 1) +
+                                  (symmetric.IsNull() ? 0 : 1));
     Handle(TDataStd_Real) distance;
     require(label.FindAttribute(TDataStd_Real::GetID(), distance));
     const auto profiles = child(label, 1);
@@ -206,12 +212,17 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
     if (!operation.IsNull()) {
         const int value = readInteger(operation);
         require(value >= static_cast<int>(ExtrusionOperation::newBody) &&
-            value <= static_cast<int>(ExtrusionOperation::cut));
+            value <= static_cast<int>(schemaVersion >= 13 ? ExtrusionOperation::intersect
+                                                          : ExtrusionOperation::cut));
         result.operation = static_cast<ExtrusionOperation>(value);
     }
     if (!reversed.IsNull()) {
         require(readInteger(reversed) == 1); // Written only when set.
         result.reversed = true;
+    }
+    if (!symmetric.IsNull()) {
+        require(symmetric.NbChildren() == 0 && readInteger(symmetric) == 1);
+        result.symmetric = true;
     }
     if (!target.IsNull())
         result.target = BodyId{readDecimal(target)};

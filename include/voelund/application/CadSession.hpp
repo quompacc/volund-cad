@@ -65,6 +65,7 @@ struct ExtrusionMode final {
     std::optional<document::BodyId> target{};
     double offset{0.0};                                  // T03
     std::optional<document::BodyFaceReference> upToFace{}; // T03
+    bool symmetric{false};                                  // M02: distance = total length
     bool operator==(const ExtrusionMode&) const = default;
 };
 

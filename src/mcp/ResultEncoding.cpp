@@ -32,7 +32,7 @@ constexpr const char* featureKinds[] = {"box", "cylinder", "sketch", "extrusion"
 constexpr const char* runtimeNames[] = {"current", "error", "blocked"};
 constexpr const char* cylinderModes[] = {"join", "cut", "intersect", "separate"};
 // Indexed by ExtrusionOperation (newBody = 1).
-constexpr const char* operationNames[] = {"", "newBody", "join", "cut"};
+constexpr const char* operationNames[] = {"", "newBody", "join", "cut", "intersect"};
 
 template <class Enum, std::size_t N> const char* name(const char* const (&names)[N], Enum value) {
     return names[static_cast<std::size_t>(value)];
@@ -119,7 +119,9 @@ void insertExtrusionMode(QJsonObject& json, const document::DocumentSnapshot& sn
     auto parameters = json.value("parameters").toObject();
     parameters.insert("operation",
                       name(operationNames, document::effectiveOperation(extrusion, baseSketch)));
-    parameters.insert("direction", extrusion.reversed ? "reversed" : "normal");
+    parameters.insert("direction", extrusion.symmetric  ? "symmetric"
+                                   : extrusion.reversed ? "reversed"
+                                                        : "normal");
     if (extrusion.target)
         parameters.insert("targetBodyId", id(extrusion.target->value()));
     parameters.insert("offset", detail::quantity(extrusion.offset, "mm"));

@@ -119,8 +119,9 @@ Vom Nutzer am 04.10.2026 freigegeben; verbindlich festgehalten in
    schließt den Modus.
 4. Ein Klick auf einen Bereich der Skizze wählt ihn; danach sind „Extrudieren“ und
    „Drehen“ möglich.
-5. Das Extrusionspanel bietet Distanz (auch `=D`), Richtung und Ergebnis (neuer Körper,
-   vereinigen, abziehen) mit Live-Vorschau sowie OK/Abbrechen.
+5. Das Extrusionspanel bietet Distanz (auch `=D`), Richtung (entlang/entgegen der Normale,
+   symmetrisch: Distanz = Gesamtlänge) und Ergebnis (neuer Körper, vereinigen, abziehen,
+   schneiden) mit Live-Vorschau sowie OK/Abbrechen (M02, Nutzerentscheidung 11.10.2026).
 6. Danach stehen der Körper mit Ursprung, Skizze und Feature im Baum, und die Timeline
    zeigt „Skizze 1“ und „Extrusion 1“. Ein Klick öffnet den jeweiligen Schritt.
 

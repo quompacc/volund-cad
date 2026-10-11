@@ -103,8 +103,9 @@ struct BodyFaceReference final {
     [[nodiscard]] bool operator==(const BodyFaceReference&) const = default;
 };
 
-// T02: what an extrusion's prism does to a body.
-enum class ExtrusionOperation { newBody = 1, join = 2, cut = 3 };
+// T02: what an extrusion's prism does to a body. M02 (schema 13): intersect keeps only what
+// the prism and the target body have in common.
+enum class ExtrusionOperation { newBody = 1, join = 2, cut = 3, intersect = 4 };
 
 struct ExtrusionParameters final {
     double distance;
@@ -120,7 +121,10 @@ struct ExtrusionParameters final {
     std::optional<ExtrusionOperation> operation{};
     // Extrude against the sketch normal, e.g. a cut into the face the sketch lies on.
     bool reversed{false};
-    // Join or cut of a base-plane sketch names the body it works on (its creating feature's
+    // M02 (schema 13, user decision 2026-10-11): `distance` is the total length, centred on
+    // the sketch plane (8 gives -4..+4). Not combined with reversed, offset or an end face.
+    bool symmetric{false};
+    // Join, cut or intersect of a base-plane sketch names the body it works on (its creating feature's
     // ID). A face sketch always works on its support's body and names none.
     std::optional<BodyId> target{};
     // T03 (schema 9): the prism starts this far along its direction from the sketch plane

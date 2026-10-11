@@ -165,6 +165,27 @@ void joinFromBasePlane(desktop::MainWindow& window, application::CadSession& ses
             "OK joins the rectangle to body 1");
 }
 
+// M02 (user decisions 2026-10-11): "Symmetrisch" takes the distance as total length and
+// "Schneiden" keeps what the prism and the plate share: a 20 x 10 rectangle, 6 mm symmetric
+// about z = 0, intersected with the plate (z 0..10) leaves 20 x 10 x 3.
+void symmetricIntersect(desktop::MainWindow& window, application::CadSession& session) {
+    session.newDocument();
+    static_cast<void>(plate(session, -40, 40));
+    const auto created = session.createDatumSketchFeature(onXy(-10, -5, 10, 5));
+    require(created.feature().has_value(), "Base-plane sketch");
+    openExtrusion(window, session, *created.feature());
+    require(choice(window, "direction").itemText(2) == QStringLiteral("Symmetrisch") &&
+                choice(window, "operation").itemText(3) == QStringLiteral("Schneiden"),
+            "The panel offers Symmetrisch and Schneiden");
+    choice(window, "direction").setCurrentIndex(2);
+    choice(window, "operation").setCurrentIndex(3);
+    setDistance(window, 6);
+    acceptPanel(window);
+    settle();
+    require(session.validBodies().size() == 1 && matches(volume(session), 20 * 10 * 3),
+            "OK keeps the 600 mm^3 the symmetric prism shares with the plate");
+}
+
 // T03: a start offset lifts a new body; "Bis Fläche" waits for a face picked in the
 // viewport, then ends the column on the top of a box above the plate.
 void offsetAndEndFace(desktop::MainWindow& window, application::CadSession& session,
@@ -229,6 +250,7 @@ void run() {
     test::render(*viewport);
     pocketFromFace(window, session);
     joinFromBasePlane(window, session);
+    symmetricIntersect(window, session);
     viewport->setCameraView(viewport::CameraView::isometric);
     offsetAndEndFace(window, session, *viewport);
     std::cout << "PASS T02/T03 extrusion panel: defaults, cut direction, target, offset, up to face\n";

@@ -60,8 +60,8 @@ document::SketchParameters editedSketch(const JsonReader& reader, const CadSessi
     return sketch;
 }
 
-constexpr const char* operationNames[] = {"newBody", "join", "cut"};
-constexpr const char* directionNames[] = {"normal", "reversed"};
+constexpr const char* operationNames[] = {"newBody", "join", "cut", "intersect"};
+constexpr const char* directionNames[] = {"normal", "reversed", "symmetric"};
 constexpr const char* extrusionLengths[] = {"distance", "offset"};
 // T02/T03: optional operation, direction, target body, start offset and end face.
 application::ExtrusionMode extrusionMode(const JsonReader& reader, const CadSession& session) {
@@ -69,7 +69,10 @@ application::ExtrusionMode extrusionMode(const JsonReader& reader, const CadSess
     if (reader.has("operation"))
         mode.operation =
             static_cast<document::ExtrusionOperation>(reader.choice("operation", operationNames) + 1);
-    mode.reversed = reader.has("direction") && reader.choice("direction", directionNames) == 1;
+    const std::size_t direction =
+        reader.has("direction") ? reader.choice("direction", directionNames) : 0;
+    mode.reversed = direction == 1;
+    mode.symmetric = direction == 2; // M02: the distance is the total length
     if (const auto target = reader.optionalId("targetBodyId"))
         mode.target = document::BodyId{*target};
     if (reader.has("offset"))

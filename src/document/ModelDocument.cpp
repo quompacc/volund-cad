@@ -65,11 +65,17 @@ void validateExtrusion(const ExtrusionParameters& parameters) {
         }
     }
     if (parameters.operation && (*parameters.operation < ExtrusionOperation::newBody ||
-                                 *parameters.operation > ExtrusionOperation::cut))
+                                 *parameters.operation > ExtrusionOperation::intersect))
         throw std::invalid_argument("Unknown extrusion operation");
     if (parameters.target && parameters.operation != ExtrusionOperation::join &&
-        parameters.operation != ExtrusionOperation::cut)
-        throw std::invalid_argument("Only a join or cut names a target body");
+        parameters.operation != ExtrusionOperation::cut &&
+        parameters.operation != ExtrusionOperation::intersect)
+        throw std::invalid_argument("Only a join, cut or intersect names a target body");
+    if (parameters.symmetric &&
+        (parameters.reversed || parameters.offset != 0.0 || parameters.offsetParameter ||
+         parameters.upToFace || parameters.faceProfile))
+        throw std::invalid_argument(
+            "A symmetric extrusion has no direction, start offset or end face");
     if (!kernel::modelCoordinate(parameters.offset))
         throw std::invalid_argument(kernel::modelRangeDiagnostic);
     if (parameters.upToFace)

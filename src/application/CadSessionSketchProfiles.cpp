@@ -190,6 +190,7 @@ document::ExtrusionParameters newExtrusionParameters(double distance,
     parameters.target = mode.target;
     parameters.offset = mode.offset;
     parameters.upToFace = mode.upToFace;
+    parameters.symmetric = mode.symmetric;
     return parameters;
 }
 } // namespace

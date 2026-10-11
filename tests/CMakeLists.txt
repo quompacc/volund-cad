@@ -1021,6 +1021,11 @@ add_executable(voelund_action_request_tests integration/ActionRequestTests.cpp)
 target_link_libraries(voelund_action_request_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME application.action_requests COMMAND voelund_action_request_tests)
 set_tests_properties(application.action_requests PROPERTIES LABELS "integration;application;regression" TIMEOUT 90)
+# M02: A-EXT-01 directions, symmetric and intersect extrusions.
+add_executable(voelund_extrusion_direction_tests integration/ExtrusionDirectionTests.cpp)
+target_link_libraries(voelund_extrusion_direction_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.extrusion_directions COMMAND voelund_extrusion_direction_tests)
+set_tests_properties(application.extrusion_directions PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
 # M01: A-DAG-01 with two sketch-and-extrusion bodies.
 add_executable(voelund_body_dag_tests integration/BodyDagTests.cpp)
 target_link_libraries(voelund_body_dag_tests PRIVATE voelund_project_options Voelund::Application)
