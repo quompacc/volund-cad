@@ -72,9 +72,10 @@ ShapeOperationResult buildShape(KernelOperation operation, Build&& build) {
 
 } // namespace
 
-KernelError::KernelError(KernelOperation operation, std::string diagnostic)
+KernelError::KernelError(KernelOperation operation, std::string diagnostic,
+                         BooleanFailure failure)
     : std::runtime_error(std::string(kernelOperationName(operation)) + ": " + diagnostic),
-      operation_(operation), diagnostic_(std::move(diagnostic)) {}
+      operation_(operation), diagnostic_(std::move(diagnostic)), failure_(failure) {}
 
 KernelOperation KernelError::operation() const noexcept { return operation_; }
 

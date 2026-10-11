@@ -209,8 +209,25 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
     }
     EvaluatedBody& body = findBody(bodies, outputs, *input);
     EvaluatedBody& referenceBody = findBody(referenceBodies, outputs, *input);
-    const auto evaluated = combine(operation, body.shape, prism.shape);
-    const auto reference = combine(operation, referenceBody.shape, referencePrism.shape);
+    // M03: a refused Boolean names its target body and regions; the body stays as it was.
+    const auto named = [&](auto&& run) {
+        try {
+            return run();
+        } catch (const kernel::KernelError& error) {
+            if (error.failure() == kernel::BooleanFailure::none)
+                throw;
+            std::string regions;
+            for (const auto& region : parameters.regions)
+                regions += (regions.empty() ? "" : ", ") + region.text();
+            throw GeometryEvaluationError(
+                std::string(error.what()) + " [body " + std::to_string(body.bodyId.value()) +
+                    (regions.empty() ? std::string{} : ", regions " + regions) + "]",
+                kernel::booleanFailureCode(error.failure()));
+        }
+    };
+    const auto evaluated = named([&] { return combine(operation, body.shape, prism.shape); });
+    const auto reference =
+        named([&] { return combine(operation, referenceBody.shape, referencePrism.shape); });
     const auto& inputOutput = findFeature(outputs, *input);
     const auto supportOrigins = [](const auto& previous, const auto& result, auto operand) {
         return continueSupportOrigins(previous, result, operand);

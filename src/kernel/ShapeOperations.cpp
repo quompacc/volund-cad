@@ -58,7 +58,8 @@ ShapeOperationResult ShapeOperations::fuseWithHistory(const TopoDS_Shape& left,
         const TopoDS_Shape result = operation.Shape();
         if (solidCountOf(result) != 1) {
             throw KernelError(KernelOperation::fuse,
-                              "join requires the tool to intersect its input body");
+                              "join requires the tool to intersect its input body",
+                              BooleanFailure::disjointJoin);
         }
         requireValidResult(KernelOperation::fuse, result);
         return detail::booleanResult(operation, left, right);
@@ -87,7 +88,8 @@ ShapeOperationResult ShapeOperations::cutWithHistory(const TopoDS_Shape& input,
         }
         const TopoDS_Shape result = operation.Shape();
         if (solidCountOf(result) == 0) {
-            throw KernelError(KernelOperation::cut, "cut removed the entire input body");
+            throw KernelError(KernelOperation::cut, "cut removed the entire input body",
+                              BooleanFailure::wholeBodyRemoved);
         }
         requireValidResult(KernelOperation::cut, result);
         return detail::booleanResult(operation, input, tool);
@@ -95,8 +97,12 @@ ShapeOperationResult ShapeOperations::cutWithHistory(const TopoDS_Shape& input,
         if (error.operation() == KernelOperation::cut) {
             throw;
         }
+        // M03: a tool that misses the body or only touches it removes no material.
         throw KernelError(KernelOperation::cut,
-                          std::string("overlap validation failed: ") + error.what());
+                          std::string("overlap validation failed: ") + error.what(),
+                          error.failure() == BooleanFailure::emptyIntersection
+                              ? BooleanFailure::noMaterialRemoved
+                              : error.failure());
     } catch (const Standard_OutOfMemory&) {
         throw;
     } catch (const Standard_ProgramError&) {
@@ -120,7 +126,8 @@ ShapeOperationResult ShapeOperations::intersectWithHistory(const TopoDS_Shape& l
         const TopoDS_Shape result = operation.Shape();
         if (solidCountOf(result) == 0) {
             throw KernelError(KernelOperation::intersect,
-                              "intersect requires the tool to overlap its input body");
+                              "intersect requires the tool to overlap its input body",
+                              BooleanFailure::emptyIntersection);
         }
         requireValidResult(KernelOperation::intersect, result);
         return detail::booleanResult(operation, left, right);

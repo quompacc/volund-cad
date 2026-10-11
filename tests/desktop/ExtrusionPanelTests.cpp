@@ -7,6 +7,7 @@
 #include <QComboBox>
 #include <QDir>
 #include <QDoubleSpinBox>
+#include <QLabel>
 #include <QPushButton>
 #include <cmath>
 #include <iostream>
@@ -186,6 +187,24 @@ void symmetricIntersect(desktop::MainWindow& window, application::CadSession& se
             "OK keeps the 600 mm^3 the symmetric prism shares with the plate");
 }
 
+// M03: a join that does not touch its target says so in the panel and keeps OK disabled.
+void separateJoinExplained(desktop::MainWindow& window, application::CadSession& session) {
+    session.newDocument();
+    static_cast<void>(plate(session, -40, 40));
+    const auto created = session.createDatumSketchFeature(onXy(200, 0, 210, 10));
+    require(created.feature().has_value(), "Far base-plane sketch");
+    openExtrusion(window, session, *created.feature());
+    choice(window, "operation").setCurrentIndex(1);
+    settle();
+    auto* guidance = panel(window).findChild<QLabel*>(QStringLiteral("toolGuidance"));
+    auto* accept = panel(window).findChild<QPushButton*>(QStringLiteral("toolAcceptButton"));
+    require(guidance != nullptr && accept != nullptr && !accept->isEnabled() &&
+                guidance->text().contains(QStringLiteral("berührt den Zielkörper nicht")),
+            "A separate join is explained and cannot be accepted");
+    panel(window).findChild<QPushButton*>(QStringLiteral("toolCancelButton"))->click();
+    settle();
+}
+
 // T03: a start offset lifts a new body; "Bis Fläche" waits for a face picked in the
 // viewport, then ends the column on the top of a box above the plate.
 void offsetAndEndFace(desktop::MainWindow& window, application::CadSession& session,
@@ -251,6 +270,7 @@ void run() {
     pocketFromFace(window, session);
     joinFromBasePlane(window, session);
     symmetricIntersect(window, session);
+    separateJoinExplained(window, session);
     viewport->setCameraView(viewport::CameraView::isometric);
     offsetAndEndFace(window, session, *viewport);
     std::cout << "PASS T02/T03 extrusion panel: defaults, cut direction, target, offset, up to face\n";

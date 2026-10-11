@@ -315,17 +315,17 @@ void runChecked(const document::DocumentSnapshot& document,
                 const document::FeatureDescriptor& descriptor, EvaluationIssue& issue,
                 std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
                 std::vector<EvaluatedBody>& references) {
-    const auto failure = [&](const std::string& message) {
+    const auto failure = [&](const std::string& message, const std::string& code = {}) {
         issue.status = EvaluationStatus::failed;
-        issue.code = "feature-evaluation-failed";
+        issue.code = code.empty() ? "feature-evaluation-failed" : code;
         issue.message = message;
     };
     try {
         runFeature(document, descriptor, outputs, bodies, references);
     } catch (const GeometryEvaluationError& error) {
-        failure(error.what());
+        failure(error.what(), error.code());
     } catch (const kernel::KernelError& error) {
-        failure(error.what());
+        failure(error.what(), kernel::booleanFailureCode(error.failure()));
     } catch (const Standard_OutOfMemory&) {
         throw;
     } catch (const Standard_ProgramError&) {

@@ -1021,6 +1021,11 @@ add_executable(voelund_action_request_tests integration/ActionRequestTests.cpp)
 target_link_libraries(voelund_action_request_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME application.action_requests COMMAND voelund_action_request_tests)
 set_tests_properties(application.action_requests PROPERTIES LABELS "integration;application;regression" TIMEOUT 90)
+# M03: A-EXT-02 join, cut/pocket and intersect with explained refusals.
+add_executable(voelund_boolean_extrusion_tests integration/BooleanExtrusionTests.cpp)
+target_link_libraries(voelund_boolean_extrusion_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.boolean_extrusions COMMAND voelund_boolean_extrusion_tests)
+set_tests_properties(application.boolean_extrusions PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
 # M02: A-EXT-01 directions, symmetric and intersect extrusions.
 add_executable(voelund_extrusion_direction_tests integration/ExtrusionDirectionTests.cpp)
 target_link_libraries(voelund_extrusion_direction_tests PRIVATE voelund_project_options Voelund::Application)
