@@ -2230,12 +2230,14 @@
       ],
       "acceptance": "Rechteckextrusion hat analytisches Volumen und richtige Orientierung auf XY/XZ/YZ. Symmetrisch verteilt Gesamtlänge entsprechend dokumentiertem Vertrag. A-EXT-01 besteht ohne vorhandenen Körper.",
       "boundary": "Taper und weitere Endbedingungen zunächst deaktiviert; keinen heimlichen Overlap als universelle Lösung.",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "chapter": "05-solid-historie.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/M02.md"
+      ],
+      "completedCommit": "659da12"
     },
     {
       "id": "M03",

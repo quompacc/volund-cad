@@ -9,14 +9,14 @@ Git-Historie dieser Datei.
 ## Stand des Repos
 
 - Branch `ux01`. `main` folgt nach jeder grünen Abnahme per Fast-Forward.
-- Letztes Paket: M01 (Code `d49fcbf`, `45465e9`, `924d357`; CI-Lauf 530). Der Abnahme-Commit enthält diese
+- Letztes Paket: M02 (Code `75b7ffb`, `beff14d`, `659da12`; CI-Lauf 538). Der Abnahme-Commit enthält diese
   Datei. Vor dem Weiterarbeiten prüfen, ob `main` auf ihm steht; sonst seinen CI-Lauf
   prüfen und `main` nachziehen (siehe Arbeitsregeln).
-- **Tests:** Fedora (GCC, ohne Desktop) 108; Desktop unter virtuellem Wayland 48. **Windows:
+- **Tests:** Fedora (GCC, ohne Desktop) 109; Desktop unter virtuellem Wayland 48. **Windows:
   nur bauen**, keine Desktop-Tests auf dem Rechner des Nutzers (Nutzerwunsch 10.10.2026:
   aufblitzende Fenster stören). Desktop-Tests auf Fedora (Skript `/tmp/voelund-desktop.sh` auf Fedora, wie `~/repro-snap.sh`). Desktop-Tests laufen in der
   CI.
-- **Schema der Dokumente:** 12 (M01: Zylinder ohne Eingang, Körpernamen und -sichtbarkeit).
+- **Schema der Dokumente:** 13 (M02: symmetrische Extrusion, Schneiden; M01: Zylinder ohne Eingang, Körpernamen und -sichtbarkeit).
 
 ## Erledigt am 08.10.2026 (zweiter Block)
 
@@ -27,6 +27,7 @@ Git-Historie dieser Datei.
 | S04 | Fangmatrix für Linie/Polylinie/Rechteck; keine überflüssigen Beziehungen; Schalter „Beziehungen: Automatisch / Keine“ im Skizzenpanel | [S04](implementation-plan/evidence/S04.md) |
 | S05 | Kurvenbeziehungen nur für unterstützte Paare; keine angekündigte Tangente am Bogenende auf einer Linie; entartete Picks mit genauer Meldung | [S05](implementation-plan/evidence/S05.md) |
 | S09 | Exakter Versatz für Elemente und Konturen, Vorschau = Übernahme, Ellipse als nicht unterstützt gemeldet | [S09](implementation-plan/evidence/S09.md) |
+| M02 (11.10.) | Ein geprüftes Prisma in der Kernel-Schicht (`kernel::Prism`); symmetrische Extrusion (Distanz = Gesamtlänge) und „Schneiden“ in Modell, Panel und MCP, Schema 13; A-EXT-01 auf XY/XZ/YZ | [M02](implementation-plan/evidence/M02.md) |
 | M01 (10.10.) | Mehrere unabhängige Körper durch die Shell: Zylinder auf gewähltem Körper, sonst neuer Körper; Körpernamen (umbenennbar, ein Rückgängig-Schritt) und Sichtbarkeit (gespeichert, ohne Rückgängig-Schritt) im Dokument, Schema 12; Körperzeile im Baum wählt den Körper; A-BODY-01/03, A-DAG-01 | [M01](implementation-plan/evidence/M01.md) |
 | S14 (10.10.) | Matrix je Werkzeug/Operation (`sketch_tool_matrix`), Referenzskizze durch die Shell, Ziehen nach A-TXN-03 mit Maus; fünf gefundene Fehler behoben (Muster auflösen + speichern, Bereich auf Fläche wählen, Editor unter Körpern, Element mit Maus ziehen, Escape am Manipulator); Grenzen gesammelt in sketch-data-model.md. Dazu: Dreipunktbogen-Reihenfolge, Skizze auf Extrusionsdeckfläche, Werkzeugleiste in Familien | [S14](implementation-plan/evidence/S14.md) |
 | U12 (09.10.) | Ein Composition Root (`startProduct`) für Produkt und UI-Tests; Installation trägt die getestete Laufzeit (Windows-DLLs, Linux-OCCT mit `$ORIGIN`), `desktop.installed_product` startet die installierte Datei; ungenutzte APIs entfernt; README auf den Produkteinstieg | [U12](implementation-plan/evidence/U12.md) |
@@ -53,10 +54,11 @@ Git-Historie dieser Datei.
 
 ## Nächste freie Pakete
 
-- **M02** Extrusionsparameter und Kernel-Auswertung vollständig definieren (G3). Nächstes
-  Paket nach Plan; danach M03, M04, dann Verrundung M05–M07 (der Nutzer wartet auf
-  3D-Verrundung und Kantenauswahl). M01 ist abgenommen; seine Entscheidungen stehen im
-  [M01-Nachweis](implementation-plan/evidence/M01.md).
+- **M03** Join, Pocket/Cut und Intersect robust auswerten (G3). Nächstes Paket nach Plan;
+  danach M04, dann Verrundung M05–M07 (der Nutzer wartet auf 3D-Verrundung und
+  Kantenauswahl). M01 und M02 sind abgenommen; ihre Entscheidungen stehen in den
+  Nachweisen [M01](implementation-plan/evidence/M01.md) und
+  [M02](implementation-plan/evidence/M02.md).
 - **PAR02** Parametertabelle in der Oberfläche (G2), frei.
 - **T05** Koplanare Flächen verschmelzen (G3). Laut Nutzer „später“; nicht ohne Rückfrage.
 - **A02** braucht weiterhin Designarbeit.
