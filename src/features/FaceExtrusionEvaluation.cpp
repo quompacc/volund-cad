@@ -9,7 +9,7 @@
 
 #include <BRepAdaptor_Surface.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
-#include <BRepPrimAPI_MakePrism.hxx>
+#include <voelund/kernel/Prism.hpp>
 #include <TopExp_Explorer.hxx>
 #include <memory>
 #include <optional>
@@ -101,9 +101,10 @@ FacePrism makePrism(document::FeatureId extrusion, const TopoDS_Shape& body,
         origin.Translate(along * parameters.offset);
     }
     const double length = endFace ? lengthToFace(origin, along, *endFace) : parameters.distance;
-    BRepPrimAPI_MakePrism prism(start, along * length);
-    const auto cap = prism.LastShape(start);
-    FacePrism result{prism.Shape(),
+    // M02: the kernel's prism checks the sweep and its solid.
+    const kernel::Prism prism(start, along.X(), along.Y(), along.Z(), length);
+    const auto cap = prism.endOf(start);
+    FacePrism result{prism.shape(),
                      {{{extrusion, std::nullopt, {}, true},
                        {cap},
                        kernel::HistoryCoverage::complete,
@@ -119,7 +120,7 @@ FacePrism makePrism(document::FeatureId extrusion, const TopoDS_Shape& body,
         side.sweptEdge = *name;
         const TopoDS_Shape swept =
             shifted ? shifted->ModifiedShape(explorer.Current()) : explorer.Current();
-        for (const auto& generated : prism.Generated(swept))
+        for (const auto& generated : prism.generated(swept))
             addSupportFace(result.caps, side, generated);
     }
     return result;

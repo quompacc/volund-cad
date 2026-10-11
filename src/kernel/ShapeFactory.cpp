@@ -96,6 +96,8 @@ const char* kernelOperationName(KernelOperation operation) noexcept {
         return "intersect";
     case KernelOperation::compound:
         return "compound";
+    case KernelOperation::makePrism:
+        return "makePrism";
     }
     return "unknown";
 }

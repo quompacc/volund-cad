@@ -1,5 +1,5 @@
 #pragma once
-#include <BRepPrimAPI_MakePrism.hxx>
+#include <voelund/kernel/Prism.hpp>
 #include <voelund/features/SketchEvaluation.hpp>
 
 namespace voelund::features {
@@ -9,5 +9,5 @@ sketchEdgeOrigins(document::FeatureId sketch, std::span<const EvaluatedSketchEle
 // Boolean intersection edges need their own creation contract before selection.
 [[nodiscard]] std::vector<EdgeProvenance>
 extrusionEdgeOrigins(document::FeatureId extrusion, document::FeatureId sketch,
-                     std::span<const EvaluatedProfileFace> profiles, BRepPrimAPI_MakePrism& prism);
+                     std::span<const EvaluatedProfileFace> profiles, const kernel::Prism& prism);
 } // namespace voelund::features

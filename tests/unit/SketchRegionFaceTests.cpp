@@ -6,7 +6,7 @@
 
 #include <BRepCheck_Analyzer.hxx>
 #include <BRepGProp.hxx>
-#include <BRepPrimAPI_MakePrism.hxx>
+#include <voelund/kernel/Prism.hpp>
 #include <GProp_GProps.hxx>
 #include <TopAbs_ShapeEnum.hxx>
 #include <TopExp_Explorer.hxx>
@@ -235,7 +235,7 @@ void capReferences() {
                             (edge.role == ContourRole::circle && edge.domain &&
                              near(edge.domain->second - edge.domain->first, 2 * pi)),
                         "Fragment keeps its element, role and whole domain");
-        BRepPrimAPI_MakePrism prism(profiles.front().face, gp_Vec(0, 0, 5));
+        const voelund::kernel::Prism prism(profiles.front().face, 0, 0, 1, 5);
         const auto origins = extrusionEdgeOrigins(FeatureId{2}, FeatureId{9}, profiles, prism);
         const ContourEdgeOrigin cap{FeatureId{9}, SketchElementId{1}, ContourRole::circle,
                                     FeatureId{2}, ContourStage::extrusionEnd};

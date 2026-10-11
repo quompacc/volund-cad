@@ -10,7 +10,7 @@
 #include <voelund/kernel/NumericPolicy.hpp>
 #include <voelund/kernel/ShapeOperations.hpp>
 
-#include <BRepPrimAPI_MakePrism.hxx>
+#include <voelund/kernel/Prism.hpp>
 #include <BRep_Builder.hxx>
 #include <TopoDS_Compound.hxx>
 #include <algorithm>
@@ -73,10 +73,12 @@ Prism makePrism(document::FeatureId extrusion, document::FeatureId sketchId,
         builder.Add(faces, profile.face);
     // Exact support-plane contact: preserve both the start plane and the requested
     // end plane. OCCT's Boolean classifies the coincident faces; no length padding.
-    BRepPrimAPI_MakePrism prism(faces, direction(sketch, parameters) * length);
-    Prism result{prism.Shape(), {}, extrusionEdgeOrigins(extrusion, sketchId, profiles, prism)};
+    // M02: the kernel's prism checks the sweep and its solid before anything uses it.
+    const gp_Vec along = direction(sketch, parameters);
+    const kernel::Prism prism(faces, along.X(), along.Y(), along.Z(), length);
+    Prism result{prism.shape(), {}, extrusionEdgeOrigins(extrusion, sketchId, profiles, prism)};
     for (const auto& profile : profiles) {
-        const auto cap = prism.LastShape(profile.face);
+        const auto cap = prism.endOf(profile.face);
         result.caps.push_back({{extrusion, std::nullopt, profile.boundary},
                                {cap},
                                kernel::HistoryCoverage::complete,
@@ -85,12 +87,12 @@ Prism makePrism(document::FeatureId extrusion, document::FeatureId sketchId,
         // from (ExtrusionCapKey / ExtrusionSideKey).
         document::SubshapeOrigin start{extrusion, std::nullopt, profile.boundary};
         start.extrusionFace = document::ExtrusionFace::start;
-        addSupportFace(result.caps, start, prism.FirstShape(profile.face));
+        addSupportFace(result.caps, start, prism.startOf(profile.face));
         for (const auto& edge : profile.edges) {
             document::SubshapeOrigin side{extrusion, std::nullopt, profile.boundary};
             side.extrusionFace = document::ExtrusionFace::side;
             side.sweptEdge = document::ContourEdgeOrigin{sketchId, edge.element, edge.role};
-            for (const auto& face : prism.Generated(edge.edge))
+            for (const auto& face : prism.generated(edge.edge))
                 addSupportFace(result.caps, side, face);
         }
     }

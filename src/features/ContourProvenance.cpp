@@ -58,16 +58,16 @@ std::vector<EdgeProvenance> sketchEdgeOrigins(document::FeatureId sketch,
 std::vector<EdgeProvenance> extrusionEdgeOrigins(document::FeatureId extrusion,
                                                  document::FeatureId sketch,
                                                  std::span<const EvaluatedProfileFace> profiles,
-                                                 BRepPrimAPI_MakePrism& prism) {
+                                                 const kernel::Prism& prism) {
     std::vector<EdgeProvenance> result;
     for (const auto& profile : profiles)
         for (const auto& edge : profile.edges) {
             result.push_back(provenance(
                 {sketch, edge.element, edge.role, extrusion, ContourStage::extrusionStart}, edge,
-                prism.FirstShape(edge.edge), prism.Shape()));
+                prism.startOf(edge.edge), prism.shape()));
             result.push_back(
                 provenance({sketch, edge.element, edge.role, extrusion, ContourStage::extrusionEnd},
-                           edge, prism.LastShape(edge.edge), prism.Shape()));
+                           edge, prism.endOf(edge.edge), prism.shape()));
         }
     return result;
 }

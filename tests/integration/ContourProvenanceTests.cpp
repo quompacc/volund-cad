@@ -91,7 +91,7 @@ void connectedCurvesAndPrism() {
                         10}};
     const auto profiles = evaluateNamedProfileFaces(p, {});
     require(profiles.size() == 1 && profiles.front().edges.size() == 2, "Mixed profile missing");
-    BRepPrimAPI_MakePrism prism(profiles.front().face, gp_Vec(0, 0, 5));
+    const voelund::kernel::Prism prism(profiles.front().face, 0, 0, 1, 5);
     auto edges = extrusionEdgeOrigins(FeatureId{3}, FeatureId{2}, profiles, prism);
     require(edges.size() == 4, "Unexpected prism contour count");
     const ContourEdgeOrigin arc{FeatureId{2}, SketchElementId{9}, ContourRole::arc, FeatureId{3},
@@ -108,14 +108,14 @@ void connectedCurvesAndPrism() {
     }
     // Exact prism subshape membership, even though MakeWire joined copied vertices.
     for (const auto& edge : edges)
-        require(contains(prism.Shape(), edge.source), "Prism origin is foreign");
+        require(contains(prism.shape(), edge.source), "Prism origin is foreign");
     const auto cutTool = kernel::ShapeFactory::applyTransform(
         kernel::ShapeFactory::makeBox({1, 5, 2}), 0, 0, 0, {-0.5, -1, 4, {}, {}, {}});
-    const auto cut = kernel::ShapeOperations::cutWithHistory(prism.Shape(), cutTool);
+    const auto cut = kernel::ShapeOperations::cutWithHistory(prism.shape(), cutTool);
     const auto split = continueEdgeOrigins(edges, cut);
     require(resolveEdgePoint(split, arc, {}).status == EdgeResolutionStatus::ambiguous,
             "Split contour guessed a successor");
-    const auto unknown = continueEdgeOrigins(edges, {prism.Shape(), {}, {}});
+    const auto unknown = continueEdgeOrigins(edges, {prism.shape(), {}, {}});
     require(resolveEdgePoint(unknown, arc, {}).status == EdgeResolutionStatus::unavailable,
             "Missing contour history was accepted");
     std::cout << "connected line/arc builder identity, reversed wire orientation, prism caps, "

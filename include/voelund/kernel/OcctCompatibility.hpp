@@ -28,6 +28,7 @@ enum class KernelOperation {
     cut,
     intersect,
     compound,
+    makePrism,
 };
 
 class KernelError final : public std::runtime_error {
