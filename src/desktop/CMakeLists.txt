@@ -41,6 +41,7 @@ add_library(
     SketchEditorStart.cpp
     SketchExtrusionToolController.cpp
     PushPullToolController.cpp
+    FilletToolController.cpp
     ShellHeader.cpp
     ShellIcons.cpp
     ShellState.cpp

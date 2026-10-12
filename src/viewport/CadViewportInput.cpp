@@ -262,6 +262,46 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
                 return true;
             };
             impl_->context->MoveTo(position.x(), position.y(), impl_->view, false);
+            // M06: an open fillet takes edges only; a click elsewhere changes nothing.
+            if (impl_->edgePicking) {
+                // A chosen edge drawn over the preview wins and is reported with body 0.
+                occ::handle<StdSelect_BRepOwner> chosen;
+                for (impl_->context->InitDetected(); impl_->context->MoreDetected();
+                     impl_->context->NextDetected()) {
+                    const auto candidate = occ::handle<StdSelect_BRepOwner>::DownCast(
+                        impl_->context->DetectedCurrentOwner());
+                    if (!candidate.IsNull() && !impl_->edgeHighlights[0].IsNull() &&
+                        candidate->Selectable() == impl_->edgeHighlights[0]) {
+                        chosen = candidate;
+                        break;
+                    }
+                }
+                if (!chosen.IsNull() && impl_->edgeSelectionHandler) {
+                    const auto handler = impl_->edgeSelectionHandler;
+                    handler(0, chosen->Shape());
+                    impl_->gesture = Impl::Gesture::none;
+                    unsetCursor();
+                    update();
+                    return;
+                }
+                const auto owner =
+                    occ::handle<StdSelect_BRepOwner>::DownCast(impl_->detectedBodyOwner());
+                if (!owner.IsNull() && owner->Shape().ShapeType() == TopAbs_EDGE &&
+                    impl_->edgeSelectionHandler) {
+                    const auto object =
+                        occ::handle<AIS_InteractiveObject>::DownCast(owner->Selectable());
+                    for (const auto& presentation : impl_->presentations)
+                        if (presentation.shape == object) {
+                            const auto handler = impl_->edgeSelectionHandler;
+                            handler(presentation.id, owner->Shape());
+                            break;
+                        }
+                }
+                impl_->gesture = Impl::Gesture::none;
+                unsetCursor();
+                update();
+                return;
+            }
             if (impl_->context->HasDetected()) {
                 const occ::handle<AIS_InteractiveObject> detected =
                     impl_->context->DetectedInteractive();

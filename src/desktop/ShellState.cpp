@@ -33,7 +33,8 @@ bool ShellState::canEditSketch() const noexcept {
 }
 
 bool ShellState::canEditFeature() const noexcept {
-    return canEditSketch() || (extrusionEditable && !toolBlocksCommands());
+    return canEditSketch() ||
+           ((extrusionEditable || filletEditable) && !toolBlocksCommands());
 }
 
 QString ShellState::windowTitle() const {
@@ -60,6 +61,7 @@ ShellState projectShell(const application::CadSession& session, const ShellInput
     if (state.feature.has_value())
         state.featureKind = session.selectedFeatureDescriptor().kind;
     state.regionExtrudable = session.canExtrudeSelectedSketchProfiles();
+    state.filletEditable = state.featureKind == document::FeatureKind::fillet;
     if (state.featureKind == document::FeatureKind::extrusion)
         state.extrusionEditable =
             !session.identifiedSnapshot().snapshot().extrusionParameters(*state.feature).faceProfile;

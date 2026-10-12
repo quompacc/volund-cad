@@ -114,8 +114,7 @@ void MainWindow::createToolPanel() {
     impl_->sketchExtrusionTool = std::make_unique<SketchExtrusionToolController>(
         impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
         [this](const QString& message) { statusBar()->showMessage(message); });
-    impl_->sketchExtrusionTool->setPreviewHandler([this](const auto* bodies) {
-        syncSketchPresentation(); // M04: contour elements of an invalid region turn red
+    const auto showPreview = [this](const std::vector<features::EvaluatedBody>* bodies) {
         if (bodies == nullptr) {
             syncVisibility(); // the model's bodies again
             return;
@@ -124,10 +123,18 @@ void MainWindow::createToolPanel() {
         for (const auto& body : *bodies)
             scene.push_back({body.sourceFeature.value(), body.shape, false, false});
         impl_->viewport->setBodies(scene);
+    };
+    impl_->sketchExtrusionTool->setPreviewHandler([this, showPreview](const auto* bodies) {
+        syncSketchPresentation(); // M04: contour elements of an invalid region turn red
+        showPreview(bodies);
     });
     impl_->pushPullTool = std::make_unique<PushPullToolController>(
         impl_->session, *impl_->viewport, *impl_->toolPanel, [this]() { refreshScene(); },
         [this](const QString& message) { statusBar()->showMessage(message); });
+    impl_->filletTool = std::make_unique<FilletToolController>(
+        impl_->session, *impl_->viewport, *impl_->toolPanel, [this]() { refreshScene(); },
+        [this](const QString& message) { statusBar()->showMessage(message); });
+    impl_->filletTool->setPreviewHandler(showPreview);
 }
 
 void MainWindow::createPropertiesPanel() {

@@ -295,6 +295,14 @@ class CadViewport final : public CadViewportBase {
     void setPushPullDistance(double distance);
     void endPushPull();
     void setPushPullHandler(std::function<void(double, bool)> handler);
+    // M06: while a fillet is open, bodies offer their edges instead of faces; a click on an
+    // edge reports the body (its source feature) and the edge. Highlighted edges are drawn
+    // over the body: chosen ones in the selection color, failing ones red. A chosen edge
+    // stays clickable over the preview and is reported with body 0.
+    void setEdgePicking(bool enabled);
+    void setEdgeSelectionHandler(std::function<void(std::uint64_t, const TopoDS_Shape&)> handler);
+    void setHighlightedEdges(std::span<const TopoDS_Shape> chosen,
+                             std::span<const TopoDS_Shape> failing = {});
     void setTheme(const ViewportTheme& theme);
     // U06: view state from the model tree; no document change. Index 0 = XY, 1 = XZ, 2 = YZ.
     void setBasePlaneVisibility(std::array<bool, 3> visible);

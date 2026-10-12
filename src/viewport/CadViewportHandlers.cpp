@@ -4,7 +4,67 @@
 #include "CadViewportNativeBackend.hpp"
 #endif
 
+#include "ViewportContextGuard.hpp"
+#include <BRep_Builder.hxx>
+#include <Graphic3d_ZLayerId.hxx>
+#include <TopoDS_Compound.hxx>
+
 namespace voelund::viewport {
+void CadViewport::setEdgePicking(bool enabled) {
+    performViewportOperation(*this, impl_->ready, [&] {
+        impl_->edgePicking = enabled;
+        if (!impl_->ready)
+            return;
+        impl_->context->ClearSelected(false);
+        impl_->setBodiesPickable(!impl_->sketchEditor.isActive());
+        if (const auto& chosen = impl_->edgeHighlights[0]; !chosen.IsNull()) {
+            impl_->context->Deactivate(chosen);
+            if (enabled)
+                impl_->context->Activate(chosen, AIS_Shape::SelectionMode(TopAbs_EDGE));
+        }
+        update();
+    });
+}
+
+void CadViewport::setEdgeSelectionHandler(
+    std::function<void(std::uint64_t, const TopoDS_Shape&)> handler) {
+    impl_->edgeSelectionHandler = std::move(handler);
+}
+
+void CadViewport::setHighlightedEdges(std::span<const TopoDS_Shape> chosen,
+                                      std::span<const TopoDS_Shape> failing) {
+    performViewportOperation(*this, impl_->ready, [&] {
+        if (!impl_->ready)
+            return;
+        const std::array<std::span<const TopoDS_Shape>, 2> groups{chosen, failing};
+        const std::array<Quantity_Color, 2> colors{
+            occtColor(impl_->theme.selection), Quantity_Color(1.0, 0.15, 0.12, Quantity_TOC_RGB)};
+        for (std::size_t group = 0; group < groups.size(); ++group) {
+            auto& highlight = impl_->edgeHighlights[group];
+            if (!highlight.IsNull())
+                impl_->context->Remove(highlight, false);
+            highlight.Nullify();
+            if (groups[group].empty())
+                continue;
+            TopoDS_Compound edges;
+            BRep_Builder builder;
+            builder.MakeCompound(edges);
+            for (const auto& edge : groups[group])
+                builder.Add(edges, edge);
+            highlight = new AIS_Shape(edges);
+            highlight->SetColor(colors[group]);
+            highlight->SetWidth(4.0);
+            // Drawn over the body's own edge lines; never picked itself.
+            highlight->SetZLayer(Graphic3d_ZLayerId_Topmost);
+            impl_->context->Display(highlight, false);
+            impl_->context->Deactivate(highlight);
+            if (group == 0 && impl_->edgePicking)
+                impl_->context->Activate(highlight, AIS_Shape::SelectionMode(TopAbs_EDGE));
+        }
+        update();
+    });
+}
+
 void CadViewport::setSketchConstraintEditHandler(std::function<void(std::uint64_t)> handler) {
     impl_->sketchConstraintEditHandler = std::move(handler);
 }

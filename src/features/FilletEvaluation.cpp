@@ -2,6 +2,7 @@
 
 #include <voelund/document/DocumentSnapshot.hpp>
 #include <voelund/features/FeatureDependencies.hpp>
+#include <voelund/features/FilletEdges.hpp>
 #include <voelund/features/GeometryEvaluationError.hpp>
 #include <voelund/kernel/ShapeOperations.hpp>
 
@@ -17,28 +18,75 @@
 // edge is named by its two adjacent faces; their names follow the faces through the body's
 // history, and the edge is where the faces meet now. A missing face or a radius the kernel
 // cannot build fails the feature with the edges at fault; the body keeps its earlier shape.
+namespace voelund::features {
+namespace {
+using EdgeMap = NCollection_IndexedMap<TopoDS_Shape, TopTools_ShapeMapHasher>;
+const SupportProvenance* named(std::span<const SupportProvenance> origins,
+                               const document::SubshapeOrigin& origin) {
+    const auto found = std::ranges::find(origins, origin, &SupportProvenance::origin);
+    return found == origins.end() || found->faces.empty() ||
+                   found->coverage != kernel::HistoryCoverage::complete
+               ? nullptr
+               : &*found;
+}
+} // namespace
+
+std::optional<document::FilletEdge> filletEdgeAt(std::span<const SupportProvenance> origins,
+                                                 const TopoDS_Shape& edge) {
+    std::vector<const SupportProvenance*> adjacent;
+    for (const auto& origin : origins) {
+        if (origin.coverage != kernel::HistoryCoverage::complete)
+            continue;
+        const bool contains = std::ranges::any_of(origin.faces, [&](const auto& face) {
+            EdgeMap edges;
+            TopExp::MapShapes(face, TopAbs_EDGE, edges);
+            return edges.Contains(edge);
+        });
+        if (contains)
+            adjacent.push_back(&origin);
+    }
+    if (adjacent.size() != 2 || adjacent[0]->origin == adjacent[1]->origin)
+        return std::nullopt;
+    return document::FilletEdge{adjacent[0]->origin, adjacent[1]->origin};
+}
+
+std::vector<TopoDS_Edge> filletEdgeShapes(std::span<const SupportProvenance> origins,
+                                          const document::FilletEdge& edge) {
+    std::vector<TopoDS_Edge> result;
+    const auto* first = named(origins, edge.first);
+    const auto* second = named(origins, edge.second);
+    if (first == nullptr || second == nullptr)
+        return result;
+    EdgeMap firstEdges;
+    for (const auto& face : first->faces)
+        TopExp::MapShapes(face, TopAbs_EDGE, firstEdges);
+    for (const auto& face : second->faces) {
+        EdgeMap secondEdges;
+        TopExp::MapShapes(face, TopAbs_EDGE, secondEdges);
+        for (int item = 1; item <= secondEdges.Extent(); ++item) {
+            const TopoDS_Edge shared = TopoDS::Edge(secondEdges(item));
+            if (firstEdges.Contains(shared) &&
+                std::ranges::none_of(result, [&](const auto& known) { return known.IsSame(shared); }))
+                result.push_back(shared);
+        }
+    }
+    return result;
+}
+
+bool sameFilletEdge(const document::FilletEdge& a, const document::FilletEdge& b) noexcept {
+    return (a.first == b.first && a.second == b.second) ||
+           (a.first == b.second && a.second == b.first);
+}
+} // namespace voelund::features
+
 namespace voelund::features::detail {
 namespace {
-
-using EdgeMap = NCollection_IndexedMap<TopoDS_Shape, TopTools_ShapeMapHasher>;
 
 std::string edgeList(const std::vector<std::uint64_t>& edges) {
     std::string text = " [edges";
     for (const auto edge : edges)
         text += " " + std::to_string(edge);
     return text + "]";
-}
-
-const std::vector<TopoDS_Shape>& faceOf(std::span<const SupportProvenance> origins,
-                                        const document::SubshapeOrigin& origin,
-                                        std::uint64_t edgeNumber) {
-    const auto found = std::ranges::find(origins, origin, &SupportProvenance::origin);
-    if (found == origins.end() || found->faces.empty() ||
-        found->coverage != kernel::HistoryCoverage::complete)
-        throw GeometryEvaluationError("A face of the rounded edge no longer exists" +
-                                          edgeList({edgeNumber}),
-                                      "fillet-edge-missing", {edgeNumber});
-    return found->faces;
 }
 
 // The body edges where the two named faces meet (a split face may meet in several pieces).
@@ -51,30 +99,18 @@ ResolvedEdges resolveEdges(std::span<const SupportProvenance> origins,
     ResolvedEdges result;
     for (std::size_t index = 0; index < parameters.edges.size(); ++index) {
         const auto number = static_cast<std::uint64_t>(index + 1);
-        const auto& edge = parameters.edges[index];
-        EdgeMap first;
-        for (const auto& face : faceOf(origins, edge.first, number))
-            TopExp::MapShapes(face, TopAbs_EDGE, first);
-        std::size_t found = 0;
-        for (const auto& face : faceOf(origins, edge.second, number)) {
-            EdgeMap second;
-            TopExp::MapShapes(face, TopAbs_EDGE, second);
-            for (int item = 1; item <= second.Extent(); ++item) {
-                if (!first.Contains(second(item)))
-                    continue;
-                const TopoDS_Edge shared = TopoDS::Edge(second(item));
-                if (std::ranges::any_of(result.edges,
-                                        [&](const auto& known) { return known.IsSame(shared); }))
-                    continue;
-                result.edges.push_back(shared);
-                result.owners.push_back(number);
-                ++found;
-            }
-        }
-        if (found == 0)
-            throw GeometryEvaluationError("The faces of the rounded edge no longer meet" +
-                                              edgeList({number}),
+        const auto shapes = filletEdgeShapes(origins, parameters.edges[index]);
+        if (shapes.empty())
+            throw GeometryEvaluationError("The faces of the rounded edge are gone or no longer "
+                                          "meet" + edgeList({number}),
                                           "fillet-edge-missing", {number});
+        for (const auto& shared : shapes) {
+            if (std::ranges::any_of(result.edges,
+                                    [&](const auto& known) { return known.IsSame(shared); }))
+                continue;
+            result.edges.push_back(shared);
+            result.owners.push_back(number);
+        }
     }
     return result;
 }

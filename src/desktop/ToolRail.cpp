@@ -33,6 +33,7 @@ std::optional<ShellIcon> iconFor(const QString& id) {
         {QStringLiteral("solid.modify.transform"), ShellIcon::transform},
         {QStringLiteral("solid.modify.edit_sketch"), ShellIcon::editSketch},
         {QStringLiteral("solid.modify.push_pull"), ShellIcon::pushPull},
+        {QStringLiteral("solid.modify.fillet"), ShellIcon::fillet},
         {QStringLiteral("repair.references"), ShellIcon::repair},
         {QStringLiteral("repair.all"), ShellIcon::repair},
         {QStringLiteral("view.command_search"), ShellIcon::search},

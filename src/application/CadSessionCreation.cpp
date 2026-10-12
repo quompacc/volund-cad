@@ -1,5 +1,6 @@
 #include "CadSessionGeometryDetail.hpp"
 #include "CommandInput.hpp"
+#include <voelund/features/FilletEdges.hpp>
 #include <cmath>
 #include <string>
 
@@ -93,6 +94,27 @@ CommandResult CadSession::editFilletParameters(document::FeatureId featureId,
 
 document::FilletParameters CadSession::filletParameters(document::FeatureId featureId) const {
     return document_.filletParameters(featureId);
+}
+
+std::optional<document::FilletEdge> CadSession::filletEdge(document::FeatureId support,
+                                                           const TopoDS_Shape& edge) const {
+    if (!canAddCylinder(support) || edge.IsNull() || edge.ShapeType() != TopAbs_EDGE)
+        return std::nullopt;
+    return features::filletEdgeAt(
+        evaluatedFeature(evaluation_->result.features, support).supportOrigins, edge);
+}
+
+std::vector<TopoDS_Shape>
+CadSession::filletEdgeShapes(document::FeatureId support,
+                             std::span<const document::FilletEdge> edges) const {
+    std::vector<TopoDS_Shape> result;
+    if (!canAddCylinder(support))
+        return result;
+    const auto& origins = evaluatedFeature(evaluation_->result.features, support).supportOrigins;
+    for (const auto& edge : edges)
+        for (const auto& shape : features::filletEdgeShapes(origins, edge))
+            result.push_back(shape);
+    return result;
 }
 
 CommandResult CadSession::createNewBodyCylinder() {

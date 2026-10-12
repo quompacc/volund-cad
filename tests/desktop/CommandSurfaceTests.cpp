@@ -86,7 +86,7 @@ void surfaces() {
     const std::set<std::string> solid{"solid.create.box",       "solid.create.cylinder",
                                       "solid.create.sketch",    "solid.create.extrude_profiles",
                                       "solid.modify.transform", "solid.modify.edit_sketch",
-                                      "solid.modify.push_pull"};
+                                      "solid.modify.push_pull", "solid.modify.fillet"};
     require(railIds == solid, "The rail shows every solid command");
     require(!command(window, "solid.create.sketch")->isEnabled(),
             "Unfitting commands stay visible but disabled");
@@ -116,7 +116,8 @@ void surfaces() {
     std::set<std::string> afterBox;
     for (QAction* action : buttons(*bar))
         afterBox.insert(id(action));
-    require(afterBox == std::set<std::string>{"solid.modify.transform", "solid.create.cylinder"},
+    require(afterBox == std::set<std::string>{"solid.modify.transform", "solid.modify.fillet",
+                                              "solid.create.cylinder"},
             "Context bar follows the selection");
 
     QAction* search = command(window, "view.command_search");

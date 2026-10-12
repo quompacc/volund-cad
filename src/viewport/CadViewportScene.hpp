@@ -120,11 +120,13 @@ class CadViewportScene {
         if (context.IsNull())
             return;
         for (const BodyPresentation& presentation : presentations) {
-            if (pickable) {
+            context->Deactivate(presentation.shape);
+            if (pickable && edgePicking) {
+                // M06: only edges while a fillet is open.
+                context->Activate(presentation.shape, AIS_Shape::SelectionMode(TopAbs_EDGE));
+            } else if (pickable) {
                 context->Activate(presentation.shape, presentation.shape->GlobalSelectionMode());
                 context->Activate(presentation.shape, AIS_Shape::SelectionMode(TopAbs_FACE));
-            } else {
-                context->Deactivate(presentation.shape);
             }
         }
     }
@@ -312,6 +314,10 @@ class CadViewportScene {
     std::function<void(std::uint64_t)> sketchConstraintEditHandler;
     std::function<void(std::uint64_t)> sketchConstraintSelectionHandler;
     std::function<void(const std::vector<std::uint64_t>&, bool)> sketchBoxSelectionHandler;
+    // M06: edge picking of an open fillet and the highlighted edges.
+    bool edgePicking{false};
+    std::function<void(std::uint64_t, const TopoDS_Shape&)> edgeSelectionHandler;
+    std::array<occ::handle<AIS_Shape>, 2> edgeHighlights;
     std::optional<std::uint64_t> transformTarget;
     QPoint gestureOrigin;
     Gesture gesture{Gesture::none};

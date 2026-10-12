@@ -73,12 +73,18 @@ void MainWindow::createCommands() {
         if (impl_->sketchExtrusionTool->isActive()) {
             impl_->sketchExtrusionTool->cancel();
         }
-        // M04: an extrusion reopens its panel; a sketch its editor.
+        // M04: an extrusion reopens its panel; M06: a fillet its panel; a sketch its editor.
         const auto selected = impl_->session.selectedFeature();
-        if (selected && impl_->session.selectedFeatureDescriptor().kind ==
-                            document::FeatureKind::extrusion) {
+        const auto kind = selected ? std::optional{impl_->session.selectedFeatureDescriptor().kind}
+                                   : std::nullopt;
+        if (kind == document::FeatureKind::extrusion) {
             impl_->sketchExtrusionTool->beginEdit(*selected);
             syncSketchPresentation();
+            syncShell();
+            return;
+        }
+        if (kind == document::FeatureKind::fillet) {
+            impl_->filletTool->beginEdit(*selected);
             syncShell();
             return;
         }
@@ -114,6 +120,23 @@ void MainWindow::createCommands() {
     };
     services.canPushPull = [this]() {
         return impl_->selectedPlanarFace.has_value() && impl_->shell().canSketch();
+    };
+    // M06: rounds edges of the selected body's current result.
+    services.fillet = [this]() {
+        const auto producer = impl_->session.selectedBodyProducer();
+        if (!producer)
+            return;
+        if (impl_->sketchExtrusionTool->isActive())
+            impl_->sketchExtrusionTool->cancel();
+        impl_->filletTool->begin(*producer);
+        syncShell();
+    };
+    services.canFillet = [this]() {
+        const auto selected = impl_->session.selectedFeature();
+        return selected &&
+               impl_->session.selectedFeatureDescriptor().kind != document::FeatureKind::sketch &&
+               impl_->session.selectedBodyProducer().has_value() &&
+               impl_->session.sceneStatus().isCurrent() && !impl_->shell().toolBlocksCommands();
     };
     services.canTransform = [this]() {
         const auto selected = impl_->session.selectedFeature();

@@ -59,7 +59,7 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                          "Bewegen"});
     commands_.push_back({"solid.modify.edit_sketch",
                          "Bearbeiten",
-                         "Gewählte Skizze oder Extrusion bearbeiten",
+                         "Gewählte Skizze, Extrusion oder Verrundung bearbeiten",
                          {},
                          workspaces::CommandGroup::modify,
                          true,
@@ -78,6 +78,17 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                              simpleCommand(std::move(services.pushPull)),
                              std::move(services.canPushPull),
                              "Ziehen"});
+    if (services.fillet)
+        commands_.push_back({"solid.modify.fillet",
+                             "Verrunden",
+                             "Kanten des gewählten Körpers verrunden",
+                             {},
+                             workspaces::CommandGroup::modify,
+                             true,
+                             false,
+                             simpleCommand(std::move(services.fillet)),
+                             std::move(services.canFillet),
+                             "Verrunden"});
 }
 
 std::string SolidWorkspaceModule::id() const { return "solid"; }

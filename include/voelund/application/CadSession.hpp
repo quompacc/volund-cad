@@ -215,6 +215,12 @@ class CadSession final {
     editFilletParameters(document::FeatureId featureId, const document::FilletParameters& parameters,
                          ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] document::FilletParameters filletParameters(document::FeatureId featureId) const;
+    // M06: the named edge of `support`'s current result at a picked edge (between two named
+    // faces), and back the result's edges of named edges, e.g. to highlight them.
+    [[nodiscard]] std::optional<document::FilletEdge> filletEdge(document::FeatureId support,
+                                                                 const TopoDS_Shape& edge) const;
+    [[nodiscard]] std::vector<TopoDS_Shape>
+    filletEdgeShapes(document::FeatureId support, std::span<const document::FilletEdge> edges) const;
     // M01: a cylinder is always possible: on the selected body or as a new body.
     [[nodiscard]] bool canAddCylinder() const noexcept;
     // M01: the current producer of the selected feature's body (the input a join, cut or

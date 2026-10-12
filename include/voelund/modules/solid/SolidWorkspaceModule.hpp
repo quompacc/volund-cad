@@ -24,6 +24,9 @@ struct SolidCommandServices final {
     // T04c: push/pull of the picked planar face; absent services publish no command.
     std::function<void()> pushPull{};
     std::function<bool()> canPushPull{};
+    // M06: rounds edges of the selected body; absent services publish no command.
+    std::function<void()> fillet{};
+    std::function<bool()> canFillet{};
 };
 
 class SolidWorkspaceModule final : public workspaces::WorkspaceModule {
