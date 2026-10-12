@@ -2287,12 +2287,15 @@
       ],
       "acceptance": "A-UI-01 vollständig: neu→Skizze→Extrude→Maß ändern→Undo/Redo→Save/Open. Parameteränderung verändert Preview messbar; Cancel verändert Dokument nicht. G2-Abnahme protokollieren.",
       "boundary": "Keine ungebundenen Taper-/Direction-Felder im aktiven Panel.",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "chapter": "05-solid-historie.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/M04.md",
+        "docs/implementation-plan/evidence/G2.md"
+      ],
+      "completedCommit": "c6e3cdc"
     },
     {
       "id": "M05",
