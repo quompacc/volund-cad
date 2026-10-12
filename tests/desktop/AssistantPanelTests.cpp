@@ -150,8 +150,14 @@ void run(const QString& work) {
     QFile::remove(trigger);
 
     // Another document during a run ends run and conversation; no late change.
+    // The run waits for the trigger after reading the model; "⋯" is only a passing state,
+    // so wait for a further "Modell gelesen" while the run is active (flaky in CI 524, 541).
+    const auto modelReads = [&] {
+        return history(window).filter(QStringLiteral("Modell gelesen")).size();
+    };
+    const auto readsBefore = modelReads();
     say(window, QStringLiteral("Noch einmal"));
-    spinUntil([&] { return !idle(window) && contains(history(window), "⋯"); }, "run before new");
+    spinUntil([&] { return !idle(window) && modelReads() > readsBefore; }, "run before new");
     QTimer responder;
     QObject::connect(&responder, &QTimer::timeout, [] {
         if (auto* box = qobject_cast<QMessageBox*>(QApplication::activeModalWidget()))
