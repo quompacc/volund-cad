@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <voelund/document/FeatureId.hpp>
@@ -12,6 +13,8 @@ struct EvaluationIssue final {
     std::string code;
     std::string message;
     std::string technicalDetails;
+    // M04: sketch elements of a failed region's contour (GeometryEvaluationError::elements).
+    std::vector<std::uint64_t> elements{};
 };
 struct EvaluationReport final {
     std::vector<EvaluationIssue> features;

@@ -5,6 +5,10 @@
 
 #include <QString>
 
+#include <array>
+#include <cstdint>
+#include <optional>
+#include <set>
 #include <vector>
 
 namespace voelund::application {
@@ -22,5 +26,19 @@ makeSceneSketchElement(const features::EvaluatedSketchElement& element, bool con
 [[nodiscard]] std::vector<viewport::SceneSketchElement>
 makeSceneSketchElements(const application::CadSession& session);
 [[nodiscard]] QString sketchSelectionSummary(const application::CadSession& session);
+
+// Where a view ray crosses a sketch's plane: the distance along the ray and the point; none
+// when the ray runs along the plane.
+struct SketchPlaneCrossing final {
+    double distance;
+    std::array<double, 3> point;
+};
+[[nodiscard]] std::optional<SketchPlaneCrossing>
+sketchPlaneCrossing(const application::CadSession& session, document::FeatureId sketch,
+                    const viewport::ViewRay& ray);
+// A click into the area of a visible sketch region picks it (user report 2026-10-05); a
+// sketch behind the clicked face stays hidden (S14).
+[[nodiscard]] bool pickSketchArea(application::CadSession& session, const viewport::ViewRay& ray,
+                                  const std::set<std::uint64_t>& hiddenBodies);
 
 } // namespace voelund::desktop

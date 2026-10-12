@@ -161,7 +161,8 @@ void MainWindow::openTimelineStep(std::uint64_t featureId) {
     impl_->selectedBody.reset();
     impl_->selectedPlanarFace.reset();
     selectFeature(featureId);
-    // Sketches open their editor; other features are edited in the properties card.
+    // Sketches open their editor, sketch extrusions their panel (M04); other features are
+    // edited in the properties card.
     QAction* edit = impl_->commandActions->action("solid.modify.edit_sketch");
     if (impl_->session.selectedFeature() == document::FeatureId{featureId} && edit->isEnabled())
         edit->trigger();

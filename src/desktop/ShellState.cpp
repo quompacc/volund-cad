@@ -32,6 +32,10 @@ bool ShellState::canEditSketch() const noexcept {
            !toolBlocksCommands();
 }
 
+bool ShellState::canEditFeature() const noexcept {
+    return canEditSketch() || (extrusionEditable && !toolBlocksCommands());
+}
+
 QString ShellState::windowTitle() const {
     return QStringLiteral("%1%2 — Völund CAD")
         .arg(documentName, modified ? QStringLiteral(" *") : QString{});
@@ -56,6 +60,9 @@ ShellState projectShell(const application::CadSession& session, const ShellInput
     if (state.feature.has_value())
         state.featureKind = session.selectedFeatureDescriptor().kind;
     state.regionExtrudable = session.canExtrudeSelectedSketchProfiles();
+    if (state.featureKind == document::FeatureKind::extrusion)
+        state.extrusionEditable =
+            !session.identifiedSnapshot().snapshot().extrusionParameters(*state.feature).faceProfile;
     // View picks are more specific than the document selection they sit on.
     if (inputs.basePlane.has_value()) {
         state.selection = ShellSelection::basePlane;

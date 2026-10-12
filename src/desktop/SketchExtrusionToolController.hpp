@@ -3,10 +3,12 @@
 #include <voelund/application/Actions.hpp>
 #include <voelund/application/SceneStatus.hpp>
 #include <voelund/document/ModelDocument.hpp>
+#include <voelund/viewport/CadViewport.hpp>
 
 #include <QString>
 #include <TopoDS_Shape.hxx>
 
+#include <cstdint>
 #include <functional>
 #include <optional>
 #include <string>
@@ -27,11 +29,21 @@ class SketchExtrusionToolController final {
                                   std::function<void(const QString&)> statusChanged);
 
     void beginSelectedProfiles();
+    // M04 (user decision 2026-10-12): reopens an existing sketch extrusion with its values;
+    // OK changes it as one undo step, Cancel changes nothing.
+    void beginEdit(document::FeatureId extrusion);
     [[nodiscard]] bool isActive() const noexcept;
     void cancel();
     // T03: with "Bis Fläche" chosen, a face picked in the viewport becomes the end face.
     [[nodiscard]] bool awaitsEndFace() const noexcept;
     void pickEndFace(document::FeatureId support, const TopoDS_Shape& face);
+    // M04 (user decision 2026-10-12): while the panel is open, a click on a region of its
+    // sketch toggles that region; the session's region selection mirrors the panel's.
+    [[nodiscard]] std::optional<document::FeatureId> regionSketch() const noexcept;
+    [[nodiscard]] bool toggleRegionAt(const viewport::ViewRay& ray);
+    [[nodiscard]] bool toggleRegionByElement(document::SketchElementId element);
+    // M04: elements of the contour an invalid region fails on, marked red in the sketch.
+    [[nodiscard]] const std::vector<std::uint64_t>& problemElements() const noexcept;
     // U11 (A-UI-02): the candidate bodies of the current values, shown while the panel is open;
     // nullptr asks for the model itself again.
     void setPreviewHandler(
@@ -39,9 +51,16 @@ class SketchExtrusionToolController final {
 
   private:
     void setDistance(double distance);
+    void regionsToggled();
+    void open(document::FeatureId sketch, std::vector<document::SketchRegionId> regions,
+              const document::ExtrusionParameters& values);
     [[nodiscard]] application::Action extrusion() const;
     void preview();
     void choose(const std::string& choice, int index);
+    // M04: fields that do not apply to the current choices are disabled or hidden.
+    void syncFields();
+    // M04: what the extrusion does and on which body, or what it waits for.
+    [[nodiscard]] QString guidance() const;
     void accept();
 
     application::CadSession& session_;
@@ -58,12 +77,18 @@ class SketchExtrusionToolController final {
     document::ExtrusionOperation operation_{document::ExtrusionOperation::newBody};
     bool reversed_{false};
     bool symmetric_{false}; // M02
+    // M04: the direction was turned for a cut by the panel, not by the user.
+    bool autoReversed_{false};
+    // M04: the extrusion being edited, with its stored values; none for a new one.
+    std::optional<document::FeatureId> editing_;
+    std::optional<document::ExtrusionParameters> stored_;
     bool baseSketch_{false};
     std::vector<document::BodyId> targets_;
     std::optional<document::BodyId> target_;
     double offset_{0.0};
     bool upToFace_{false};
     std::optional<document::BodyFaceReference> endFace_;
+    std::vector<std::uint64_t> problemElements_;
     bool active_{false};
 };
 

@@ -32,6 +32,17 @@ inline QString booleanFailureText(const std::string& code) {
     if (code == "intersect-empty")
         return QObject::tr("Schneiden: Werkzeug und Zielkörper haben kein gemeinsames "
                            "Volumen; das Ergebnis wäre leer.");
+    // M04: an invalid region names its contour; the shell marks the elements red.
+    if (code == "region-needs-repair")
+        return QObject::tr("Bereich: Die Kontur dieses Bereichs wurde in der Skizze geändert "
+                           "(Element entfernt, geteilt oder verbunden). Die rot markierten "
+                           "Elemente gehören dazu; wähle die Bereiche neu.");
+    if (code == "region-open")
+        return QObject::tr("Bereich: Die Kontur ist nicht geschlossen. Prüfe die rot "
+                           "markierten Elemente auf Lücken.");
+    if (code == "region-overlap")
+        return QObject::tr("Bereiche: Die gewählten Bereiche überlappen sich entlang einer "
+                           "Kante; wähle sie einzeln.");
     return {};
 }
 

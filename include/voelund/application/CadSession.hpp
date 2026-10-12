@@ -113,6 +113,10 @@ class CadSession final {
     // contains the point (model coordinates, on the sketch plane). Selects the sketch.
     [[nodiscard]] bool selectSketchProfileAt(document::FeatureId sketch,
                                              const std::array<double, 3>& point, bool additive);
+    // M04: selects `sketch` with exactly these regions (the open extrusion panel's); view
+    // state only.
+    [[nodiscard]] bool selectSketchRegions(document::FeatureId sketch,
+                                           std::span<const document::SketchRegionId> regions);
     [[nodiscard]] std::vector<document::SketchElementId> selectedSketchProfileElements() const;
     [[nodiscard]] bool canExtrudeSelectedSketchProfiles() const noexcept;
     // R09 projection of an extrusion's selection: unmigrated legacy profiles and the

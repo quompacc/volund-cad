@@ -406,6 +406,24 @@ void ToolPanelHost::setLengthVisible(const std::string& parameterId, bool visibl
     }
 }
 
+void ToolPanelHost::setChoiceEnabled(const std::string& choiceId, bool enabled) {
+    for (const auto& [id, input] : choiceInputs_)
+        if (id == choiceId)
+            input->setEnabled(enabled);
+}
+
+void ToolPanelHost::setChoiceVisible(const std::string& choiceId, bool visible) {
+    for (const auto& [id, input] : choiceInputs_) {
+        if (id != choiceId)
+            continue;
+        input->setVisible(visible);
+        if (QWidget* label = parameterLayout_->labelForField(input))
+            label->setVisible(visible);
+        syncParameterGroup();
+        return;
+    }
+}
+
 void ToolPanelHost::setActionEnabled(const std::string& actionId, bool enabled) {
     for (const auto& [id, input] : actionInputs_) {
         if (id == actionId) {

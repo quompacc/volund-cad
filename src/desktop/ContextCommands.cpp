@@ -87,6 +87,10 @@ ContextCommands contextCommands(const ShellState& state) {
     case ShellSelection::feature:
         result.title = featureName(state);
         result.commands = {"solid.modify.transform", "solid.create.cylinder"};
+        if (state.extrusionEditable) {
+            result.commands.insert(result.commands.begin(), "solid.modify.edit_sketch");
+            result.primary = "solid.modify.edit_sketch";
+        }
         break;
     }
     return result;

@@ -107,6 +107,143 @@ void openExtrusion(QWidget& window, application::CadSession& session, document::
     settle();
 }
 
+QString guidance(QWidget& window) {
+    auto* label = panel(window).findChild<QLabel*>(QStringLiteral("toolGuidance"));
+    require(label != nullptr, "Guidance label");
+    return label->text();
+}
+void cancelPanel(QWidget& window) {
+    panel(window).findChild<QPushButton*>(QStringLiteral("toolCancelButton"))->click();
+    settle();
+}
+void click(viewport::CadViewport& viewport, double x, double y, double z) {
+    test::render(viewport);
+    const QPoint point = viewport::ViewportTestAccess::project(viewport, x, y, z);
+    test::mouse(viewport, QEvent::MouseMove, point, Qt::NoButton, Qt::NoButton);
+    test::mouse(viewport, QEvent::MouseButtonPress, point, Qt::LeftButton, Qt::LeftButton);
+    test::mouse(viewport, QEvent::MouseButtonRelease, point, Qt::LeftButton, Qt::NoButton);
+    test::render(viewport);
+    settle();
+}
+
+// M04: fields that do not apply are off or hidden; the guidance names the result body; a cut
+// turns the direction and leaving the cut turns it back.
+void fieldRules(desktop::MainWindow& window, application::CadSession& session) {
+    session.newDocument();
+    static_cast<void>(plate(session, -40, 40));
+    const auto created = session.createDatumSketchFeature(onXy(-10, -5, 10, 5));
+    require(created.feature().has_value(), "Base-plane sketch");
+    openExtrusion(window, session, *created.feature());
+    require(field<QComboBox>(window, QStringLiteral("toolChoice_target")) == nullptr &&
+                guidance(window).contains(QStringLiteral("neuer Körper")),
+            "A new body has no target field and says so");
+    choice(window, "operation").setCurrentIndex(1);
+    settle();
+    require(guidance(window).contains(QStringLiteral("Ziel: Körper 1")),
+            "A join names its only target body");
+    choice(window, "direction").setCurrentIndex(2);
+    settle();
+    require(!field<QDoubleSpinBox>(window, QStringLiteral("toolLength_offset"))->isEnabled() &&
+                !choice(window, "end").isEnabled(),
+            "Symmetric has no offset and no end face");
+    choice(window, "direction").setCurrentIndex(0);
+    choice(window, "operation").setCurrentIndex(2);
+    settle();
+    require(choice(window, "direction").currentIndex() == 1, "A cut turns into the material");
+    choice(window, "operation").setCurrentIndex(1);
+    settle();
+    require(choice(window, "direction").currentIndex() == 0,
+            "Leaving the cut turns the direction back");
+    cancelPanel(window);
+}
+
+// M04 (user decision 2026-10-12): "Bearbeiten" on an extrusion reopens its panel with its
+// values; the preview follows the distance, Cancel keeps the document, OK is one undo step.
+void editExtrusion(desktop::MainWindow& window, application::CadSession& session,
+                   viewport::CadViewport& viewport) {
+    session.newDocument();
+    const auto extrusion = plate(session, -40, 40);
+    require(session.selectFeature(extrusion), "Extrusion selected");
+    window.refreshAfterExternalChange();
+    QAction& edit = command(window, "solid.modify.edit_sketch");
+    require(edit.isEnabled(), "Bearbeiten offered for the extrusion");
+    edit.trigger();
+    settle();
+    auto* distance = field<QDoubleSpinBox>(window, QStringLiteral("toolLength_distance"));
+    require(distance != nullptr && matches(distance->value(), 10),
+            "The panel opens with the stored distance");
+    setDistance(window, 12);
+    settle();
+    require(matches(viewport::ViewportTestAccess::displayedVolume(viewport), 80 * 40 * 12),
+            "The preview shows 12 mm");
+    cancelPanel(window);
+    require(matches(volume(session), 32000), "Cancel keeps the document");
+    require(session.selectFeature(extrusion), "Extrusion selected again");
+    window.refreshAfterExternalChange();
+    command(window, "solid.modify.edit_sketch").trigger();
+    settle();
+    setDistance(window, 12);
+    acceptPanel(window);
+    settle();
+    require(matches(volume(session), 80 * 40 * 12), "OK changes the extrusion to 12 mm");
+    require(session.undo().status() == application::CommandStatus::committed &&
+                matches(volume(session), 32000) && session.canUndo(),
+            "One undo returns to 10 mm; the plate's creation is the step before");
+    require(session.redo().status() == application::CommandStatus::committed &&
+                matches(volume(session), 80 * 40 * 12),
+            "Redo returns to 12 mm");
+}
+
+// M04 (user decision 2026-10-12): with the panel open, a click into a region toggles it.
+void toggleRegions(desktop::MainWindow& window, application::CadSession& session,
+                   viewport::CadViewport& viewport) {
+    session.newDocument();
+    auto sketch = onXy(-30, -5, -10, 5);
+    sketch.elements = {{{document::SketchElementId{1}, document::SketchRectangle{-30, -5, -10, 5}},
+                        {document::SketchElementId{2}, document::SketchRectangle{10, -5, 30, 5}}},
+                       3};
+    const auto created = session.createDatumSketchFeature(sketch);
+    require(created.feature().has_value(), "Two-rectangle sketch");
+    openExtrusion(window, session, *created.feature());
+    require(guidance(window).startsWith(QStringLiteral("1 ")), "One region at first");
+    click(viewport, 20, 0, 0);
+    require(guidance(window).startsWith(QStringLiteral("2 ")) &&
+                matches(viewport::ViewportTestAccess::displayedVolume(viewport), 2 * 2000),
+            "A click adds the second region to the preview");
+    click(viewport, 20, 0, 0);
+    require(guidance(window).startsWith(QStringLiteral("1 ")) &&
+                matches(viewport::ViewportTestAccess::displayedVolume(viewport), 2000),
+            "A second click removes it again");
+    click(viewport, 20, 0, 0);
+    acceptPanel(window);
+    settle();
+    require(matches(volume(session), 2 * 2000), "OK extrudes both regions");
+}
+
+// M04: a region whose contour changed is explained in German and its elements turn red.
+void invalidRegionExplained(desktop::MainWindow& window, application::CadSession& session,
+                            viewport::CadViewport& viewport) {
+    session.newDocument();
+    const auto extrusion = plate(session, -40, 40);
+    const auto sketch = session.features().front().id;
+    auto split = session.sketchParameters(sketch);
+    split.elements.values.push_back(
+        {document::SketchElementId{2}, document::SketchLine{{0, -20}, {0, 20}}});
+    split.elements.nextId = 3;
+    static_cast<void>(session.editSketchParameters(
+        sketch, split, application::ErrorDisposition::keepEditableErrors));
+    require(session.selectFeature(extrusion), "Extrusion selected");
+    window.refreshAfterExternalChange();
+    command(window, "solid.modify.edit_sketch").trigger();
+    settle();
+    test::render(viewport);
+    const auto color = viewport::ViewportTestAccess::sketchElementColor(viewport, 1);
+    require(guidance(window).contains(QStringLiteral("Kontur dieses Bereichs")) &&
+                color.has_value() && color->Red() > 0.9 && color->Green() < 0.3,
+            "The changed contour is explained and marked red");
+    cancelPanel(window);
+}
+
 // A 20 x 10 rectangle in the middle of the plate's top face, as a sketch on that face.
 document::FeatureId faceSketch(application::CadSession& session, document::FeatureId support) {
     const auto faces = session.supportFaces(support);
@@ -151,11 +288,13 @@ void joinFromBasePlane(desktop::MainWindow& window, application::CadSession& ses
     const auto created = session.createDatumSketchFeature(onXy(30, -5, 60, 5));
     require(created.feature().has_value(), "Base-plane sketch");
     openExtrusion(window, session, *created.feature());
-    auto& target = choice(window, "target");
-    require(choice(window, "operation").currentIndex() == 0 && target.count() == 2 &&
-                target.itemText(0) == QStringLiteral("Körper 1"),
-            "A base-plane sketch defaults to a new body; two bodies to choose from");
+    require(choice(window, "operation").currentIndex() == 0,
+            "A base-plane sketch defaults to a new body");
     choice(window, "operation").setCurrentIndex(1);
+    settle();
+    auto& target = choice(window, "target");
+    require(target.count() == 2 && target.itemText(0) == QStringLiteral("Körper 1"),
+            "A join offers the two bodies");
     target.setCurrentIndex(0);
     setDistance(window, 10);
     capture(window, "t02-base-join.png");
@@ -271,9 +410,14 @@ void run() {
     joinFromBasePlane(window, session);
     symmetricIntersect(window, session);
     separateJoinExplained(window, session);
+    fieldRules(window, session);
     viewport->setCameraView(viewport::CameraView::isometric);
     offsetAndEndFace(window, session, *viewport);
-    std::cout << "PASS T02/T03 extrusion panel: defaults, cut direction, target, offset, up to face\n";
+    editExtrusion(window, session, *viewport);
+    toggleRegions(window, session, *viewport);
+    invalidRegionExplained(window, session, *viewport);
+    std::cout << "PASS T02/T03/M04 extrusion panel: defaults, field rules, target, offset, up to "
+                 "face, edit, region toggle, invalid region\n";
 }
 } // namespace
 

@@ -58,8 +58,8 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                          std::move(services.transform), std::move(services.canTransform),
                          "Bewegen"});
     commands_.push_back({"solid.modify.edit_sketch",
-                         "Skizze bearbeiten",
-                         "Geometrie der gewählten Skizze bearbeiten",
+                         "Bearbeiten",
+                         "Gewählte Skizze oder Extrusion bearbeiten",
                          {},
                          workspaces::CommandGroup::modify,
                          true,

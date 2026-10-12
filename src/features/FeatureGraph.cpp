@@ -324,6 +324,7 @@ void runChecked(const document::DocumentSnapshot& document,
         runFeature(document, descriptor, outputs, bodies, references);
     } catch (const GeometryEvaluationError& error) {
         failure(error.what(), error.code());
+        issue.elements = error.elements();
     } catch (const kernel::KernelError& error) {
         failure(error.what(), kernel::booleanFailureCode(error.failure()));
     } catch (const Standard_OutOfMemory&) {

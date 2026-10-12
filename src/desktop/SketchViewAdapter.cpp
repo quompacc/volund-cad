@@ -8,6 +8,7 @@
 #include <QObject>
 
 #include <algorithm>
+#include <cmath>
 #include <gp_Vec.hxx>
 
 namespace voelund::desktop {
@@ -143,6 +144,50 @@ QString sketchSelectionSummary(const application::CadSession& session) {
         return summary + QObject::tr("\n\nGewählt: %1 #%2").arg(kind).arg(element.id.value());
     }
     return summary;
+}
+
+std::optional<SketchPlaneCrossing> sketchPlaneCrossing(const application::CadSession& session,
+                                                       document::FeatureId sketch,
+                                                       const viewport::ViewRay& ray) {
+    const auto& plane = session.sketchParameters(sketch).plane;
+    const double along = plane.normalX * ray.direction[0] + plane.normalY * ray.direction[1] +
+                         plane.normalZ * ray.direction[2];
+    if (std::abs(along) < 1e-9)
+        return std::nullopt; // Looking along the plane.
+    const double distance = (plane.normalX * (plane.originX - ray.origin[0]) +
+                             plane.normalY * (plane.originY - ray.origin[1]) +
+                             plane.normalZ * (plane.originZ - ray.origin[2])) /
+                            along;
+    return SketchPlaneCrossing{distance,
+                               {ray.origin[0] + distance * ray.direction[0],
+                                ray.origin[1] + distance * ray.direction[1],
+                                ray.origin[2] + distance * ray.direction[2]}};
+}
+
+bool pickSketchArea(application::CadSession& session, const viewport::ViewRay& ray,
+                    const std::set<std::uint64_t>& hiddenBodies) {
+    const auto outline = session.modelOutline();
+    const auto hidden = [&](document::FeatureId feature) {
+        for (const auto& body : outline.bodies)
+            if (std::ranges::find(body.features, feature) != body.features.end())
+                return hiddenBodies.contains(body.id.value());
+        return false;
+    };
+    std::vector<std::pair<SketchPlaneCrossing, document::FeatureId>> crossings;
+    for (const auto& feature : session.features())
+        if (feature.kind == document::FeatureKind::sketch && !hidden(feature.id))
+            if (const auto crossing = sketchPlaneCrossing(session, feature.id, ray))
+                crossings.emplace_back(*crossing, feature.id);
+    std::ranges::sort(crossings, {}, [](const auto& item) { return item.first.distance; });
+    // S14: a sketch on the clicked face lies at its distance; one behind the face is hidden.
+    const double reach = ray.nearestSurface + 1.0e-6 * (1.0 + std::abs(ray.nearestSurface));
+    for (const auto& [crossing, sketch] : crossings) {
+        if (crossing.distance > reach)
+            break;
+        if (session.selectSketchProfileAt(sketch, crossing.point, ray.additive))
+            return true;
+    }
+    return false;
 }
 
 } // namespace voelund::desktop

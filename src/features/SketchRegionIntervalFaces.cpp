@@ -120,11 +120,17 @@ double walkAngle(const Context& context, RegionHalfEdge half, bool atEnd) {
     return std::atan2(direction.Y(), direction.X());
 }
 
-std::string elementList(const Context& context, const std::vector<RegionHalfEdge>& walk) {
+std::set<std::uint64_t> walkElements(const Context& context,
+                                     const std::vector<RegionHalfEdge>& walk) {
     std::set<std::uint64_t> ids;
     for (const RegionHalfEdge half : walk)
         ids.insert(context.regions.split.pieces[context.regions.split.intervals[half.interval].piece]
                        .element.value());
+    return ids;
+}
+
+std::string elementList(const Context& context, const std::vector<RegionHalfEdge>& walk) {
+    const auto ids = walkElements(context, walk);
     std::string text = " [elements";
     for (const std::uint64_t id : ids)
         text += " " + std::to_string(id);
@@ -153,7 +159,8 @@ std::vector<RegionHalfEdge> unionBoundary(const SketchRegionResult& regions,
         if (uses.size() == 1)
             continue;
         if (uses.size() != 2 || halves[uses[0]].reversed == halves[uses[1]].reversed)
-            throw GeometryEvaluationError("Selected regions overlap along a boundary");
+            throw GeometryEvaluationError("Selected regions overlap along a boundary",
+                                          "region-overlap");
         cancelled[uses[0]] = cancelled[uses[1]] = true;
     }
     std::vector<RegionHalfEdge> result;
@@ -195,9 +202,12 @@ std::vector<std::vector<RegionHalfEdge>> loops(const Context& context,
                     next = index;
                 }
             }
-            if (!next)
+            if (!next) {
+                const auto ids = walkElements(context, walk);
                 throw GeometryEvaluationError("Region boundary is not closed" +
-                                              elementList(context, walk));
+                                                  elementList(context, walk),
+                                              "region-open", {ids.begin(), ids.end()});
+            }
             if (*next == start)
                 break;
             current = *next;

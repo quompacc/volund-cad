@@ -56,6 +56,8 @@ struct ShellState final {
     QString bodyName;
     bool bodyHidden{false};
     bool regionExtrudable{false};
+    // M04: the selected feature is a sketch extrusion its panel can reopen.
+    bool extrusionEditable{false};
     ShellTool tool{ShellTool::none};
 
     // An open sketch or extrusion owns the document until OK, Cancel or Escape (K04, U05):
@@ -65,6 +67,8 @@ struct ShellState final {
     [[nodiscard]] bool canSketch() const noexcept;
     [[nodiscard]] bool canExtrude() const noexcept;
     [[nodiscard]] bool canEditSketch() const noexcept;
+    // M04 (user decision 2026-10-12): "Bearbeiten" reopens a sketch or a sketch extrusion.
+    [[nodiscard]] bool canEditFeature() const noexcept;
     [[nodiscard]] QString windowTitle() const;
 };
 

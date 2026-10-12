@@ -114,7 +114,8 @@ EvaluatedProfileFace loopFace(const document::SketchParameters& sketch,
             return evaluateNamedProfileFaces(sketch, id).front();
         }
     }
-    throw GeometryEvaluationError("Region boundary is no closed loop" + elementList(elements));
+    throw GeometryEvaluationError("Region boundary is no closed loop" + elementList(elements),
+                                  "region-open", {elements.begin(), elements.end()});
 }
 
 } // namespace
@@ -130,11 +131,13 @@ evaluateRegionFaces(const document::SketchParameters& sketch,
     std::vector<std::size_t> selected;
     for (const document::SketchRegionId& id : regions) {
         const auto resolved = resolveSketchRegion(identities, sketch.elements.values, id);
-        if (resolved.status != SketchRegionReferenceStatus::resolved)
+        if (resolved.status != SketchRegionReferenceStatus::resolved) {
+            const auto failing =
+                failingElements(identities, sketch.elements.values, id, resolved.status);
             throw GeometryEvaluationError(
-                "Extrusion region needs repair: " + reason(resolved.status) +
-                elementList(
-                    failingElements(identities, sketch.elements.values, id, resolved.status)));
+                "Extrusion region needs repair: " + reason(resolved.status) + elementList(failing),
+                "region-needs-repair", {failing.begin(), failing.end()});
+        }
         selected.push_back(*resolved.region);
     }
     // R10b: cells of crossing or branching contours are no whole closed loops; build them

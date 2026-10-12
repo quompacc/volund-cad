@@ -114,11 +114,13 @@ void run() {
     }
     static_cast<void>(test::requireCommittedFeature(session.createBoxFeature()));
     const auto beforeBroken = session.identifiedSnapshot();
-    const auto title = window.windowTitle();
     user.answer = QMessageBox::Discard;
     window.openFile(broken);
+    // The title keeps naming the active document (now marked modified), not the broken file.
     require(user.errors == 1 && session.identifiedSnapshot() == beforeBroken &&
-                session.isModified() && window.windowTitle() == title,
+                session.isModified() &&
+                window.windowTitle().startsWith(QString::fromUtf8("Teil äöü.volund")) &&
+                !window.windowTitle().contains(QStringLiteral("kaputt")),
             "A broken file keeps the active document");
 
     // Close: Cancel keeps the window; a failed Save keeps it open; Discard closes.

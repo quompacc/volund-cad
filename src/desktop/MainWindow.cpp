@@ -115,6 +115,7 @@ void MainWindow::createToolPanel() {
         impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
         [this](const QString& message) { statusBar()->showMessage(message); });
     impl_->sketchExtrusionTool->setPreviewHandler([this](const auto* bodies) {
+        syncSketchPresentation(); // M04: contour elements of an invalid region turn red
         if (bodies == nullptr) {
             syncVisibility(); // the model's bodies again
             return;
@@ -302,46 +303,18 @@ void MainWindow::connectInteractions() {
     };
     // A click into the area of a visible sketch region picks it (user report 2026-10-05).
     impl_->viewport->setAreaClickHandler([this, showSelectedProfiles](const viewport::ViewRay& ray) {
-        if (impl_->shell().toolBlocksCommands())
-            return false;
-        const auto outline = impl_->session.modelOutline();
-        const auto hidden = [&](document::FeatureId feature) {
-            for (const auto& body : outline.bodies)
-                if (std::ranges::find(body.features, feature) != body.features.end())
-                    return impl_->visibility.hiddenBodies.contains(body.id.value());
-            return false;
-        };
-        std::vector<std::pair<double, document::FeatureId>> crossings;
-        for (const auto& feature : impl_->session.features()) {
-            if (feature.kind != document::FeatureKind::sketch || hidden(feature.id))
-                continue;
-            const auto& plane = impl_->session.sketchParameters(feature.id).plane;
-            const double normal[3]{plane.normalX, plane.normalY, plane.normalZ};
-            const double along = normal[0] * ray.direction[0] + normal[1] * ray.direction[1] +
-                                 normal[2] * ray.direction[2];
-            if (std::abs(along) < 1e-9)
-                continue; // Looking along the plane.
-            const double distance = (normal[0] * (plane.originX - ray.origin[0]) +
-                                     normal[1] * (plane.originY - ray.origin[1]) +
-                                     normal[2] * (plane.originZ - ray.origin[2])) /
-                                    along;
-            crossings.emplace_back(distance, feature.id);
+        // M04: with the extrusion panel open, a click into a region of its sketch toggles it.
+        if (impl_->sketchExtrusionTool->regionSketch()) {
+            if (!impl_->sketchExtrusionTool->toggleRegionAt(ray))
+                return false;
+            syncSketchPresentation();
+            return true;
         }
-        std::ranges::sort(crossings, {}, &std::pair<double, document::FeatureId>::first);
-        // S14: a sketch on the clicked face lies at its distance; one behind the face is hidden.
-        const double reach = ray.nearestSurface + 1.0e-6 * (1.0 + std::abs(ray.nearestSurface));
-        for (const auto& [distance, sketch] : crossings) {
-            if (distance > reach)
-                break;
-            const std::array<double, 3> point{ray.origin[0] + distance * ray.direction[0],
-                                              ray.origin[1] + distance * ray.direction[1],
-                                              ray.origin[2] + distance * ray.direction[2]};
-            if (impl_->session.selectSketchProfileAt(sketch, point, ray.additive)) {
-                showSelectedProfiles();
-                return true;
-            }
-        }
-        return false;
+        if (impl_->shell().toolBlocksCommands() ||
+            !pickSketchArea(impl_->session, ray, impl_->visibility.hiddenBodies))
+            return false;
+        showSelectedProfiles();
+        return true;
     });
     impl_->viewport->setSketchElementSelectionHandler(
         [this, showSelectedProfiles](const viewport::SketchSelectionIntent& intent) {
@@ -350,6 +323,14 @@ void MainWindow::connectInteractions() {
                 return;
             }
             const std::uint64_t id = intent.elementId;
+            // M04: the open extrusion panel owns the region selection; a boundary click
+            // toggles the region it bounds and never selects anything else.
+            if (impl_->sketchExtrusionTool->isActive()) {
+                if (impl_->sketchExtrusionTool->toggleRegionByElement(
+                        document::SketchElementId{id}))
+                    syncSketchPresentation();
+                return;
+            }
             if (impl_->session.selectSketchProfileByElement(document::SketchElementId{id},
                                                             intent.additive)) {
                 showSelectedProfiles();
@@ -505,8 +486,13 @@ void MainWindow::syncTreeStatus() {
 }
 
 void MainWindow::syncSketchPresentation() {
-    const std::vector<viewport::SceneSketchElement> elements =
-        makeSceneSketchElements(impl_->session);
+    std::vector<viewport::SceneSketchElement> elements = makeSceneSketchElements(impl_->session);
+    if (impl_->sketchExtrusionTool && impl_->sketchExtrusionTool->isActive()) {
+        const auto& problems = impl_->sketchExtrusionTool->problemElements();
+        for (auto& element : elements)
+            if (std::ranges::find(problems, element.id) != problems.end())
+                element.conflicting = true;
+    }
     impl_->viewport->setSketchElements(elements);
     const auto profileElements = impl_->session.selectedSketchProfileElements();
     std::vector<std::uint64_t> selectedIds;

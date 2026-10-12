@@ -54,16 +54,27 @@ void timeline(application::CadSession& session, desktop::MainWindow& window) {
                 step(*bar, 1).text().endsWith(QStringLiteral("Extrusion 1")) &&
                 step(*bar, 2).text().endsWith(QStringLiteral("Quader 1")),
             "Steps follow the document order");
+    const auto stamp = session.sceneStatus().document;
+    // M04 (user decision 2026-10-12): a sketch extrusion's step reopens its panel; Cancel
+    // returns to the selected extrusion and its properties.
     step(*bar, 1).click();
     QApplication::processEvents();
+    auto* panel = window.findChild<QWidget*>(QStringLiteral("activeToolPanel"));
+    require(panel->isVisible(), "An extrusion step opens the extrusion panel");
+    panel->findChild<QPushButton*>(QStringLiteral("toolCancelButton"))->click();
+    QApplication::processEvents();
+    QApplication::processEvents();
     auto* properties = window.findChild<QWidget*>(QStringLiteral("featurePropertiesCard"));
-    require(session.selectedFeature() == features[1].id && properties->isVisible() &&
-                step(*bar, 1).isChecked(),
+    require(!panel->isVisible() && session.selectedFeature() == features[1].id &&
+                properties->isVisible() && session.sceneStatus().document == stamp,
+            "Cancel selects the extrusion, shows its properties, keeps the document");
+    step(*bar, 2).click();
+    QApplication::processEvents();
+    require(session.selectedFeature() == features[2].id && properties->isVisible() &&
+                step(*bar, 2).isChecked(),
             "A feature step selects the feature and shows its properties");
-    const auto stamp = session.sceneStatus().document;
     step(*bar, 0).click();
     QApplication::processEvents();
-    auto* panel = window.findChild<QWidget*>(QStringLiteral("activeToolPanel"));
     require(panel->isVisible() && session.selectedFeature() == features[0].id,
             "A sketch step opens the sketch editor");
     panel->findChild<QPushButton*>(QStringLiteral("toolCancelButton"))->click();

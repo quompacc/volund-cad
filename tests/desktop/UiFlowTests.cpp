@@ -4,8 +4,13 @@
 #include "UiDriver.hpp"
 #include "ViewportLifecycleSupport.hpp"
 
+#include <BRepGProp.hxx>
+#include <GProp_GProps.hxx>
 #include <QApplication>
+#include <QComboBox>
 #include <QDir>
+#include <QFile>
+#include <QFileInfo>
 #include <QDoubleSpinBox>
 #include <QLabel>
 #include <QPushButton>
@@ -21,11 +26,15 @@
 #include <voelund/desktop/MainWindow.hpp>
 #include <voelund/desktop/ProductShell.hpp>
 
-// U11 (A-UI-01 sketch part, A-VIS-01 captures): the whole product path through the real UI,
+// U11 (A-UI-01 sketch part, A-VIS-01 captures) and M04 (extrusion part): the whole product
+// path through the real UI,
 // run inside the started event loop. Buttons of context bar, rail, panel, timeline and the file
 // menu are clicked with the mouse; fields are typed. New -> XY sketch -> rectangle 20 x 10 ->
 // fixed relation -> OK -> edit from the timeline -> Cancel -> Undo/Redo -> Save -> Close ->
-// Open, checking tree, timeline, document revision and rendering. A counter-check detaches
+// Open, checking tree, timeline, document revision and rendering. M04 goes on in the opened
+// window: extrude 8 -> preview 12 -> 8 -> OK (1600 mm^3), edit from the timeline to 10 mm,
+// Undo/Redo, a sketch on the top face and a 3 mm pocket from it, Save -> Close -> Open
+// (1850 mm^3). A counter-check detaches
 // one handler and shows that its button then does nothing, so a lost connection turns the
 // flow red. With VOELUND_UI_FLOW_ARTIFACT_DIR set, the states of A-VIS-01 are captured in
 // both themes and at the smallest window size.
@@ -67,8 +76,8 @@ struct Window final {
     void file(const char* id) {
         test::chooseFromMenu(*main->findChild<QToolButton*>(QStringLiteral("fileMenuButton")), id);
     }
-    void click(double x, double y) {
-        const QPoint point = viewport::ViewportTestAccess::project(*viewport, x, y, 0);
+    void click(double x, double y, double z = 0) {
+        const QPoint point = viewport::ViewportTestAccess::project(*viewport, x, y, z);
         test::mouse(*viewport, QEvent::MouseMove, point, Qt::NoButton, Qt::NoButton);
         test::mouse(*viewport, QEvent::MouseButtonPress, point, Qt::LeftButton, Qt::LeftButton);
         test::mouse(*viewport, QEvent::MouseButtonRelease, point, Qt::LeftButton, Qt::NoButton);
@@ -95,6 +104,16 @@ struct Window final {
         input->setValue(value);
         emit input->editingFinished();
         test::settleEvents();
+    }
+    QComboBox& choice(const char* id) {
+        auto* box = child("activeToolPanel")
+                        .findChild<QComboBox*>(QStringLiteral("toolChoice_") + QLatin1String(id));
+        require(box != nullptr && box->isVisible(), std::string("Choice ") + id);
+        return *box;
+    }
+    [[nodiscard]] double preview() {
+        test::render(*viewport);
+        return viewport::ViewportTestAccess::displayedVolume(*viewport);
     }
     [[nodiscard]] bool editing() {
         auto* panel = main->findChild<QWidget*>(QStringLiteral("activeToolPanel"));
@@ -147,6 +166,80 @@ void requireRectangle(const application::CadSession& session, const char* what) 
                 std::abs(maxY - minY - 10) < 1e-6 && locks == 2 && std::abs(minX - 2) < 1e-6 &&
                 std::abs(minY - 2) < 1e-6,
             std::string(what) + ": rectangle 20 x 10 with its corner locked at (2, 2)");
+}
+
+double volume(const application::CadSession& session) {
+    double total = 0;
+    for (const auto& body : session.validBodies()) {
+        GProp_GProps properties;
+        BRepGProp::VolumeProperties(body.shape, properties);
+        total += properties.Mass();
+    }
+    return total;
+}
+bool closeTo(double value, double expected) { return std::abs(value - expected) < 1e-6 * expected; }
+
+// M04 (A-UI-01 extrusion part) in the opened window: only clicks and fields.
+void extrusionPath(Window& w, test::DialogAnswers& user) {
+    w.click(12, 7); // the rectangle's area
+    press(w.context("solid.create.extrude_profiles"));
+    require(w.editing(), "The context bar opens the extrusion panel");
+    w.type("distance", 8);
+    const double eight = w.preview();
+    w.type("distance", 12);
+    const double twelve = w.preview();
+    w.type("distance", 8);
+    require(closeTo(eight, 1600) && closeTo(twelve, 2400) && closeTo(w.preview(), 1600),
+            "The preview follows 8 -> 12 -> 8 mm");
+    const auto beforeOk = w.session.sceneStatus().document;
+    press(w.panelButton("toolAcceptButton"));
+    require(!w.editing() && w.timelineSteps() == 2 && closeTo(volume(w.session), 1600) &&
+                w.session.validBodies().size() == 1 &&
+                w.session.sceneStatus().document.revision > beforeOk.revision,
+            "OK: a new body of 1600 mm^3, a second timeline step, a new revision");
+    auto* tree = w.main->findChild<QTreeWidget*>(QStringLiteral("modelTree"));
+    require(tree != nullptr && test::featureRow(*tree, w.session, 1) != nullptr,
+            "The extrusion has its tree row");
+
+    // Edit from the timeline: the same panel with 8 mm; Cancel keeps it, OK changes it.
+    press(w.timelineStep(1));
+    require(w.editing(), "The timeline step reopens the extrusion panel");
+    w.type("distance", 12);
+    press(w.panelButton("toolCancelButton"));
+    require(!w.editing() && closeTo(volume(w.session), 1600), "Cancel keeps 8 mm");
+    press(w.timelineStep(1));
+    w.type("distance", 10);
+    press(w.panelButton("toolAcceptButton"));
+    require(closeTo(volume(w.session), 2000) && w.timelineSteps() == 2,
+            "OK changes the extrusion to 10 mm, no new step");
+    press(w.header("history.undo"));
+    require(closeTo(volume(w.session), 1600), "Undo returns to 8 mm");
+    press(w.header("history.redo"));
+    require(closeTo(volume(w.session), 2000), "Redo returns to 10 mm");
+
+    // A sketch on the top face and a pocket from it.
+    w.click(12, 7, 10);
+    press(w.context("solid.create.sketch"));
+    require(w.editing(), "The top face opens the sketch editor");
+    press(w.rail("sketch.tool.rectangle"));
+    w.click(7, 4, 10);
+    w.click(17, 9, 10);
+    press(w.panelButton("toolAcceptButton"));
+    require(!w.editing() && w.timelineSteps() == 3, "The face sketch is a third step");
+    w.click(12, 6.5, 10); // its area on the face
+    press(w.context("solid.create.extrude_profiles"));
+    require(w.choice("operation").currentIndex() == 1, "A face sketch defaults to join");
+    w.choice("operation").setCurrentIndex(2);
+    test::settleEvents();
+    require(w.choice("direction").currentIndex() == 1, "Abziehen goes into the material");
+    w.type("distance", 3);
+    require(closeTo(w.preview(), 2000 - 150), "The pocket preview");
+    press(w.panelButton("toolAcceptButton"));
+    require(w.timelineSteps() == 4 && closeTo(volume(w.session), 1850) &&
+                w.session.validBodies().size() == 1,
+            "OK pockets 10 x 5 x 3 out of the body");
+    w.file("document.save");
+    require(!w.session.isModified() && user.errors == 0, "Saved again");
 }
 
 void productPath(const QString& path) {
@@ -206,6 +299,9 @@ void productPath(const QString& path) {
     user.file = path;
     w.file("document.save");
     require(user.fileDialogs == 1 && !w.session.isModified() && user.errors == 0, "Saved");
+    // A-VIS-01 captures start from the sketch alone.
+    const QString sketchOnly = QFileInfo(path).dir().filePath(QStringLiteral("U11 Skizze.volund"));
+    require(QFile::copy(path, sketchOnly), "Sketch-only copy for the captures");
     require(w.main->close(), "Close after saving asks nothing");
     first.reset();
 
@@ -219,18 +315,27 @@ void productPath(const QString& path) {
     require(reopenedTree != nullptr && test::featureRow(*reopenedTree, again.session, 0) != nullptr,
             "The reopened sketch has its tree row");
 
+    extrusionPath(again, user);
+    require(again.main->close(), "Close after saving asks nothing");
+    Window third;
+    third.file("document.open");
+    require(!third.session.isModified() && third.timelineSteps() == 4 &&
+                third.session.features().size() == 4 && closeTo(volume(third.session), 1850) &&
+                third.viewport->isRenderingReady(),
+            "Opened: four steps, 1850 mm^3, unmodified, rendered");
+
     // Counter-check: a button whose handler is detached does nothing.
-    again.click(60, 60); // nothing selected
-    press(again.rail("solid.create.box"));
-    require(again.session.features().size() == 2, "The box button creates a box");
-    press(again.header("history.undo"));
-    QAction* box = again.rail("solid.create.box").defaultAction();
+    third.click(60, 60); // nothing selected
+    press(third.rail("solid.create.box"));
+    require(third.session.features().size() == 5, "The box button creates a box");
+    press(third.header("history.undo"));
+    QAction* box = third.rail("solid.create.box").defaultAction();
     QObject::disconnect(box, &QAction::triggered, nullptr, nullptr);
-    press(again.rail("solid.create.box"));
-    require(again.session.features().size() == 1,
+    press(third.rail("solid.create.box"));
+    require(third.session.features().size() == 4,
             "With its handler detached the box button does nothing");
     user.answer = QMessageBox::Discard;
-    require(again.main->close(), "Close");
+    require(third.main->close(), "Close");
 }
 
 // A-VIS-01: selected part, sketch with labels, extrusion panel with preview, an error, the
@@ -293,8 +398,8 @@ int run() {
     require(directory.isValid(), "temporary directory");
     const QString path = directory.path() + QStringLiteral("/U11 Ablauf.volund");
     productPath(path);
-    captures(path);
-    std::cout << "PASS U11 product path through the real UI (A-UI-01 sketch part)\n";
+    captures(directory.path() + QStringLiteral("/U11 Skizze.volund"));
+    std::cout << "PASS U11/M04 product path through the real UI (A-UI-01)\n";
     return 0;
 }
 } // namespace

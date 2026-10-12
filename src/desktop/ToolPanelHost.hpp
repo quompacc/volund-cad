@@ -83,6 +83,9 @@ class ToolPanelHost final : public FloatingCard {
     void setLengthValue(const std::string& parameterId, double value);
     void setLengthEnabled(const std::string& parameterId, bool enabled);
     void setLengthVisible(const std::string& parameterId, bool visible);
+    // M04: choices that do not apply are disabled or hidden, never left misleading.
+    void setChoiceEnabled(const std::string& choiceId, bool enabled);
+    void setChoiceVisible(const std::string& choiceId, bool visible);
     void setActionEnabled(const std::string& actionId, bool enabled);
 
     // U13: the tool rail offers the session's tool choice and actions; the panel then keeps

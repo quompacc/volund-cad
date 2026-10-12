@@ -73,6 +73,15 @@ void MainWindow::createCommands() {
         if (impl_->sketchExtrusionTool->isActive()) {
             impl_->sketchExtrusionTool->cancel();
         }
+        // M04: an extrusion reopens its panel; a sketch its editor.
+        const auto selected = impl_->session.selectedFeature();
+        if (selected && impl_->session.selectedFeatureDescriptor().kind ==
+                            document::FeatureKind::extrusion) {
+            impl_->sketchExtrusionTool->beginEdit(*selected);
+            syncSketchPresentation();
+            syncShell();
+            return;
+        }
         static_cast<void>(impl_->sketchEditorTool->beginSelectedSketch());
     };
     services.extrudeProfiles = [this]() {
@@ -92,7 +101,7 @@ void MainWindow::createCommands() {
     services.canAddBox = [this]() { return !impl_->shell().toolBlocksCommands(); };
     // Enables "Sketch": a picked planar face or a picked base plane (V01b).
     services.canEditSketch = [this]() { return impl_->shell().canSketch(); };
-    services.canEditExistingSketch = [this]() { return impl_->shell().canEditSketch(); };
+    services.canEditExistingSketch = [this]() { return impl_->shell().canEditFeature(); };
     services.canExtrudeProfiles = [this]() { return impl_->shell().canExtrude(); };
     // T04c: push/pull of the picked planar face.
     services.pushPull = [this]() {
@@ -182,7 +191,22 @@ void MainWindow::createCommandSurfaces() {
     createViewSwitches();
     // Controllers flip their active flag around the panel calls; read the state afterwards.
     impl_->toolPanel->setActivityHandler(
-        [this] { QMetaObject::invokeMethod(this, [this] { syncShell(); }, Qt::QueuedConnection); });
+        [this] {
+            QMetaObject::invokeMethod(
+                this,
+                [this] {
+                    // M04: an extrusion panel shows its sketch while open; afterwards tree,
+                    // timeline, properties and view follow the selection again (an edited
+                    // extrusion).
+                    const auto selected = impl_->session.selectedFeature();
+                    if (!impl_->shell().toolBlocksCommands() && selected)
+                        selectFeature(selected->value());
+                    else if (!impl_->sketchEditorTool->isActive())
+                        syncSketchPresentation();
+                    syncShell();
+                },
+                Qt::QueuedConnection);
+        });
 }
 
 void MainWindow::syncShell() {

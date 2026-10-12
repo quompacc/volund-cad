@@ -142,6 +142,16 @@ bool CadSession::selectSketchProfileAt(document::FeatureId sketch,
     return true;
 }
 
+bool CadSession::selectSketchRegions(document::FeatureId sketch,
+                                     std::span<const document::SketchRegionId> regions) {
+    if (!isSketch(document_, sketch))
+        return false;
+    selectedFeature_ = sketch;
+    selectedSketchProfiles_.assign(regions.begin(), regions.end());
+    selectedSketchElement_.reset();
+    return true;
+}
+
 std::vector<document::SketchElementId> CadSession::selectedSketchProfileElements() const {
     std::vector<document::SketchElementId> result;
     if (!selectedFeature_.has_value() || selectedSketchProfiles_.empty())
