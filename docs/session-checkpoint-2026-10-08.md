@@ -9,10 +9,10 @@ Git-Historie dieser Datei.
 ## Stand des Repos
 
 - Branch `ux01`. `main` folgt nach jeder grünen Abnahme per Fast-Forward.
-- Letztes Paket: M04 (Code `c6e3cdc`; CI-Lauf 548). Der Abnahme-Commit enthält diese
+- Letztes Paket: M05 (Code `8336214`; CI-Lauf 551). Der Abnahme-Commit enthält diese
   Datei. Vor dem Weiterarbeiten prüfen, ob `main` auf ihm steht; sonst seinen CI-Lauf
   prüfen und `main` nachziehen (siehe Arbeitsregeln).
-- **Tests:** Fedora (GCC, ohne Desktop) 110; Desktop unter virtuellem Wayland 47 (Lauf `^desktop`). **Windows:
+- **Tests:** Fedora (GCC, ohne Desktop) 111; Desktop unter virtuellem Wayland 47 (Lauf `^desktop`). **Windows:
   nur bauen**, keine Desktop-Tests auf dem Rechner des Nutzers (Nutzerwunsch 10.10.2026:
   aufblitzende Fenster stören). Desktop-Tests auf Fedora (Skript `/tmp/voelund-desktop.sh` auf Fedora, wie `~/repro-snap.sh`). Desktop-Tests laufen in der
   CI.
@@ -27,6 +27,7 @@ Git-Historie dieser Datei.
 | S04 | Fangmatrix für Linie/Polylinie/Rechteck; keine überflüssigen Beziehungen; Schalter „Beziehungen: Automatisch / Keine“ im Skizzenpanel | [S04](implementation-plan/evidence/S04.md) |
 | S05 | Kurvenbeziehungen nur für unterstützte Paare; keine angekündigte Tangente am Bogenende auf einer Linie; entartete Picks mit genauer Meldung | [S05](implementation-plan/evidence/S05.md) |
 | S09 | Exakter Versatz für Elemente und Konturen, Vorschau = Übernahme, Ellipse als nicht unterstützt gemeldet | [S09](implementation-plan/evidence/S09.md) |
+| M05 (12.10.) | Verrundung als Feature (Schema 14): Kante als Paar benannter Flächen, ein Radius, mehrere Kanten; Kernel mit Historie und Rückführung des Fehlers auf Kanten; A-FILLET-01; Linux-OCCT um `TKFillet` ergänzt | [M05](implementation-plan/evidence/M05.md) |
 | M04 (12.10.) | Produktives Extrusionspanel: Feldregeln, Ziel im Hinweis, Bearbeiten öffnet das Panel wieder (Timeline/„Bearbeiten“), Bereiche per Klick umschalten, ungültige Bereiche deutsch erklärt und rot markiert; A-UI-01 vollständig in `desktop.ui_flow`; G2 protokolliert (PAR02 offen) | [M04](implementation-plan/evidence/M04.md), [G2](implementation-plan/evidence/G2.md) |
 | M03 (12.10.) | Vereinigen/Abziehen/Schneiden mit festem Vertrag: abgelehnte Fälle mit Code (getrennt, kein Material, ganzer Körper, leerer Schnitt), Körper und Bereich, deutsch erklärt im Panel; A-EXT-02 | [M03](implementation-plan/evidence/M03.md) |
 | M02 (11.10.) | Ein geprüftes Prisma in der Kernel-Schicht (`kernel::Prism`); symmetrische Extrusion (Distanz = Gesamtlänge) und „Schneiden“ in Modell, Panel und MCP, Schema 13; A-EXT-01 auf XY/XZ/YZ | [M02](implementation-plan/evidence/M02.md) |
@@ -56,9 +57,10 @@ Git-Historie dieser Datei.
 
 ## Nächste freie Pakete
 
-- **M05** Fillet-Kerneloperation und Referenzhistory (G3). Nächstes Paket nach Plan;
-  danach M06 (Verrundung im Werkzeugpanel) und M07 (Fase). Der Nutzer wartet auf
-  3D-Verrundung und Kantenauswahl. G2 ist bis auf PAR02 erreicht ([G2](implementation-plan/evidence/G2.md)). M01 und M02 sind abgenommen; ihre Entscheidungen stehen in den
+- **M06** Verrundung über den Werkzeughost (G3): Kantenauswahl im Ansichtsfenster,
+  Panel mit Radius, Vorschau, OK/Abbrechen/Bearbeiten. Nächstes Paket nach Plan; danach M07
+  (Fase). Entscheidungen zu M05 (Kante als Flächenpaar, ein Feature mit Kantenliste,
+  Schema 14) stehen in [M05](implementation-plan/evidence/M05.md). G2 ist bis auf PAR02 erreicht ([G2](implementation-plan/evidence/G2.md)). M01 und M02 sind abgenommen; ihre Entscheidungen stehen in den
   Nachweisen [M01](implementation-plan/evidence/M01.md) und
   [M02](implementation-plan/evidence/M02.md).
 - **PAR02** Parametertabelle in der Oberfläche (G2), frei.

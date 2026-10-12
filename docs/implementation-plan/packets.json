@@ -2316,12 +2316,14 @@
       ],
       "acceptance": "A-FILLET-01: einzelner gerader Boxrand mit kleinem Radius erzeugt validen Solid und erwartete Volumenänderung. Zu großer Radius wird als Fehler behandelt. Nach Basismaßänderung Referenz korrekt oder explizit reparaturbedürftig.",
       "boundary": "Keine Variable-Radius-/allgemeine Flächenverrundung in diesem Paket.",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "chapter": "05-solid-historie.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/M05.md"
+      ],
+      "completedCommit": "8336214"
     },
     {
       "id": "M06",
