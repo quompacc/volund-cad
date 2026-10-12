@@ -19,6 +19,7 @@ add_library(voelund_document STATIC
     NativeContainerStructure.cpp
     NativeAttributeValues.cpp
     NativeExtrusion.cpp
+    NativeFillet.cpp
     NativeSketchGeometry.cpp
     NativeSketchPatterns.cpp
     NativeSketchConstraints.cpp

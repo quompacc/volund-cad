@@ -18,7 +18,8 @@ constexpr const char* toolNames[] = {
     "create_box",             "set_box_dimensions",     "create_cylinder",
     "set_cylinder_size",      "set_placement",          "create_sketch_extrusion",
     "create_sketch_on_face",  nullptr,                  nullptr,
-    nullptr,                  "push_pull_face"};
+    nullptr,                  "push_pull_face",         nullptr,
+    nullptr};
 constexpr const char* statusNames[] = {"rejected", "committed", "committedWithErrors"};
 constexpr const char* rejectionNames[] = {
     "none",     "foreignDocument", "staleStamp",          "unknownTarget",    "unsupportedTarget",
@@ -28,7 +29,7 @@ constexpr const char* reasonNames[] = {"none",           "cancelled",           
                                        "alreadyFinished"};
 constexpr const char* evaluationNames[] = {"valid", "dirty", "failed", "blockedByDependency",
                                            "suppressed"};
-constexpr const char* featureKinds[] = {"box", "cylinder", "sketch", "extrusion"};
+constexpr const char* featureKinds[] = {"box", "cylinder", "sketch", "extrusion", "fillet"};
 constexpr const char* runtimeNames[] = {"current", "error", "blocked"};
 constexpr const char* cylinderModes[] = {"join", "cut", "intersect", "separate"};
 // Indexed by ExtrusionOperation (newBody = 1).
@@ -85,6 +86,12 @@ QJsonObject featureParameters(const document::FeatureParameters& parameters) {
                 if (!extrusion.profiles.empty())
                     json.insert("needsRepair", true); // Unmigrated legacy profiles.
                 return json;
+            },
+            [](const document::FilletParameters& fillet) -> QJsonObject {
+                // M05: the faces of each edge are shown with M06's tool; here their count.
+                return {{"radius", detail::quantity(fillet.radius, "mm")},
+                        {"bodyId", id(fillet.body.value())},
+                        {"edgeCount", static_cast<int>(fillet.edges.size())}};
             }},
         parameters);
 }

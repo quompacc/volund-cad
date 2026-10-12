@@ -99,6 +99,8 @@ const char* kernelOperationName(KernelOperation operation) noexcept {
         return "compound";
     case KernelOperation::makePrism:
         return "makePrism";
+    case KernelOperation::fillet:
+        return "fillet";
     }
     return "unknown";
 }

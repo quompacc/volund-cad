@@ -129,6 +129,12 @@ void draw(QPainter& painter, ShellIcon icon, const QColor& ink, const QColor& ac
         painter.drawLine(QPointF(15, 5), QPointF(12, 2));
         painter.drawLine(QPointF(12, 15), QPointF(12, 22));
         break;
+    case ShellIcon::fillet:
+        // A body corner rounded by a quarter circle.
+        painter.drawLine(QPointF(4, 20), QPointF(4, 12));
+        painter.drawArc(QRectF(4, 4, 16, 16), 90 * 16, 90 * 16);
+        painter.drawLine(QPointF(12, 4), QPointF(20, 4));
+        break;
     case ShellIcon::editSketch:
         painter.drawRect(QRectF(3.5, 6.5, 12, 12));
         painter.drawLine(QPointF(11, 15), QPointF(20, 6));

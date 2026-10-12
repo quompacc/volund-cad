@@ -29,6 +29,7 @@ enum class KernelOperation {
     intersect,
     compound,
     makePrism,
+    fillet, // M05
 };
 
 // M03: why a Boolean refused its result, beyond a failing kernel.
@@ -38,6 +39,7 @@ enum class BooleanFailure {
     noMaterialRemoved, // the cut tool misses the body or only touches it
     wholeBodyRemoved,  // the cut would remove the entire body
     emptyIntersection, // tool and body share no volume
+    filletFailed,      // M05: the kernel cannot round these edges with this radius
 };
 
 class KernelError final : public std::runtime_error {
@@ -66,6 +68,8 @@ class KernelError final : public std::runtime_error {
         return "cut-whole-body";
     case BooleanFailure::emptyIntersection:
         return "intersect-empty";
+    case BooleanFailure::filletFailed:
+        return "fillet-failed";
     case BooleanFailure::none:
         break;
     }

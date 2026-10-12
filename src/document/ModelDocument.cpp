@@ -92,6 +92,28 @@ void validateExtrusion(const ExtrusionParameters& parameters) {
 
 } // namespace
 
+void validateFilletParameters(const FilletParameters& parameters) {
+    if (!kernel::modelLength(parameters.radius))
+        throw std::invalid_argument(kernel::modelRangeDiagnostic);
+    if (parameters.body.value() == 0)
+        throw std::invalid_argument("A fillet names its body");
+    if (parameters.edges.empty() || parameters.edges.size() > maximumFilletEdges)
+        throw std::invalid_argument("A fillet rounds between 1 and 256 edges");
+    for (std::size_t index = 0; index < parameters.edges.size(); ++index) {
+        const FilletEdge& edge = parameters.edges[index];
+        validateSubshapeOrigin(edge.first);
+        validateSubshapeOrigin(edge.second);
+        if (edge.first == edge.second)
+            throw std::invalid_argument("A fillet edge lies between two different faces");
+        for (std::size_t prior = 0; prior < index; ++prior) {
+            const FilletEdge& other = parameters.edges[prior];
+            if ((other.first == edge.first && other.second == edge.second) ||
+                (other.first == edge.second && other.second == edge.first))
+                throw std::invalid_argument("Fillet edges must be unique");
+        }
+    }
+}
+
 ExtrusionOperation effectiveOperation(const ExtrusionParameters& parameters,
                                       bool baseSketch) noexcept {
     return parameters.operation.value_or(baseSketch ? ExtrusionOperation::newBody
@@ -243,6 +265,19 @@ FeatureId ModelDocument::addFaceExtrusionFeature(std::string name,
     return id;
 }
 
+FeatureId ModelDocument::addFilletFeature(std::string name, const FilletParameters& parameters) {
+    validateFilletParameters(parameters);
+    const FeatureId id = nextFeatureId();
+    auto candidate = currentState();
+    ++candidate.nextFeatureId;
+    candidate.features.push_back(
+        FeatureDescriptor{id, FeatureKind::fillet, std::move(name), std::nullopt});
+    candidate.parameters.emplace_back(parameters);
+    static_cast<void>(featureBodyContexts(candidate.features, candidate.parameters));
+    commitState(std::move(candidate));
+    return id;
+}
+
 FeatureId ModelDocument::addExtrusionFeature(std::string name, FeatureId sketchFeature,
                                              const ExtrusionParameters& parameters) {
     if (!contains(sketchFeature))
@@ -383,6 +418,29 @@ bool ModelDocument::setExtrusionParameters(FeatureId featureId,
     }
     auto candidate = currentState();
     *std::get_if<ExtrusionParameters>(&candidate.parameters.at(index)) = parameters;
+    static_cast<void>(featureBodyContexts(candidate.features, candidate.parameters));
+    commitState(std::move(candidate));
+    return true;
+}
+
+const FilletParameters& ModelDocument::filletParameters(FeatureId featureId) const {
+    const auto* value =
+        std::get_if<FilletParameters>(&impl_->view().parameters()[featureIndex(featureId)]);
+    if (value == nullptr)
+        throw std::out_of_range("Feature is not a fillet");
+    return *value;
+}
+
+bool ModelDocument::setFilletParameters(FeatureId featureId, const FilletParameters& parameters) {
+    validateFilletParameters(parameters);
+    const std::size_t index = featureIndex(featureId);
+    auto* current = std::get_if<FilletParameters>(&impl_->view().parameters()[index]);
+    if (current == nullptr)
+        throw std::out_of_range("Feature is not a fillet");
+    if (*current == parameters)
+        return false;
+    auto candidate = currentState();
+    *std::get_if<FilletParameters>(&candidate.parameters.at(index)) = parameters;
     static_cast<void>(featureBodyContexts(candidate.features, candidate.parameters));
     commitState(std::move(candidate));
     return true;

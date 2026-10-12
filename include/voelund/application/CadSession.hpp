@@ -207,6 +207,14 @@ class CadSession final {
     [[nodiscard]] CommandResult pushPullFace(document::FeatureId support,
                                              const features::SupportOrigin& face,
                                              double distance);
+    // M05: rounds edges of `support`'s current body ("Verrundung N"), one undo step.
+    [[nodiscard]] CommandResult createFillet(document::FeatureId support,
+                                             std::span<const document::FilletEdge> edges,
+                                             double radius);
+    [[nodiscard]] CommandResult
+    editFilletParameters(document::FeatureId featureId, const document::FilletParameters& parameters,
+                         ErrorDisposition disposition = ErrorDisposition::reject);
+    [[nodiscard]] document::FilletParameters filletParameters(document::FeatureId featureId) const;
     // M01: a cylinder is always possible: on the selected body or as a new body.
     [[nodiscard]] bool canAddCylinder() const noexcept;
     // M01: the current producer of the selected feature's body (the input a join, cut or

@@ -3,6 +3,7 @@
 #include "DocumentSerializationDetail.hpp"
 #include "NativeDocumentMetadata.hpp"
 #include "NativeExtrusion.hpp"
+#include "NativeFillet.hpp"
 #include "NativeParameters.hpp"
 #include "NativeSketchGeometry.hpp"
 #include "NativeSketchPatterns.hpp"
@@ -132,6 +133,16 @@ std::vector<FeatureBodyIdentity> validate(std::span<const FeatureDescriptor> fea
             validateNativeExtrusion(extrusion);
             continue;
         }
+        if (feature.kind == FeatureKind::fillet) {
+            require(std::holds_alternative<FilletParameters>(parameters[index]) &&
+                    feature.id.value() < next && feature.name.size() <= maximumNameBytes &&
+                    feature.name.find('\0') == std::string::npos);
+            const auto& fillet = std::get<FilletParameters>(parameters[index]);
+            require(nativeFilletRecords(fillet) <= remainingElements);
+            remainingElements -= nativeFilletRecords(fillet);
+            validateFilletParameters(fillet);
+            continue;
+        }
         if (feature.kind == FeatureKind::sketch) {
             require(std::holds_alternative<SketchParameters>(parameters[index]) &&
                     feature.id.value() < next && feature.name.size() <= maximumNameBytes &&
@@ -242,9 +253,11 @@ void NativePrimitiveCodec::write(const Handle(TDocStd_Document) & document,
         const bool box = feature.kind == FeatureKind::box;
         const bool sketch = feature.kind == FeatureKind::sketch;
         const bool extrusion = feature.kind == FeatureKind::extrusion;
+        const bool fillet = feature.kind == FeatureKind::fillet;
         TDataStd_AsciiString::Set(native.FindChild(1), box         ? "box"
                                                        : sketch    ? "sketch"
                                                        : extrusion ? "extrusion"
+                                                       : fillet    ? "fillet"
                                                                    : "cylinder");
         TDataStd_AsciiString::Set(native.FindChild(2), std::to_string(feature.id.value()).c_str());
         TDataStd_AsciiString::Set(native.FindChild(3), feature.name.c_str());
@@ -254,6 +267,9 @@ void NativePrimitiveCodec::write(const Handle(TDocStd_Document) & document,
         } else if (extrusion) {
             writeNativeExtrusion(native.FindChild(4),
                                  std::get<ExtrusionParameters>(snapshot.parameters()[index]));
+        } else if (fillet) {
+            writeNativeFillet(native.FindChild(4),
+                              std::get<FilletParameters>(snapshot.parameters()[index]));
         } else {
             const auto data = values(snapshot.parameters()[index]);
             auto array =
@@ -318,6 +334,8 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
             const bool box = kind == "box";
             const bool sketch = kind == "sketch";
             const bool extrusion = kind == "extrusion";
+            // M05 (schema 14): a fillet names its body and has no input reference child 5.
+            const bool fillet = kind == "fillet" && metadata.schemaVersion >= 14;
             // A base-plane sketch (schema 6) and a face extrusion (schema 10) have no input
             // reference child 5.
             const bool standaloneSketch =
@@ -328,8 +346,10 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
             const bool standaloneCylinder = kind == "cylinder" &&
                                             native.FindChild(5, false).IsNull() &&
                                             metadata.schemaVersion >= 12;
-            require((box || sketch || extrusion || kind == "cylinder") &&
-                    native.NbChildren() == (box || standaloneSketch || standaloneExtrusion ? 4
+            require((box || sketch || extrusion || fillet || kind == "cylinder") &&
+                    native.NbChildren() == (box || fillet || standaloneSketch ||
+                                                    standaloneExtrusion
+                                                ? 4
                                             : (sketch || extrusion || standaloneCylinder) ? 5
                                                                                            : 6));
             labels.emplace(entry(native), records.size());
@@ -339,7 +359,9 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
                 : extrusion
                     ? FeatureParameters{readNativeExtrusion(child(native, 4), remainingElements,
                                                             metadata.schemaVersion)}
-                    : parameters(native, box);
+                : fillet ? FeatureParameters{readNativeFillet(child(native, 4), remainingElements,
+                                                              metadata.schemaVersion)}
+                         : parameters(native, box);
             if (sketch) {
                 const auto& data = std::get<SketchParameters>(decoded);
                 remainingElements -= data.elements.values.size() + data.constraints.values.size();
@@ -350,12 +372,15 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
             }
             if (extrusion)
                 remainingElements -= nativeExtrusionRecords(std::get<ExtrusionParameters>(decoded));
+            if (fillet)
+                remainingElements -= nativeFilletRecords(std::get<FilletParameters>(decoded));
             records.push_back({native,
                                bodyId,
                                {FeatureId{id(child(native, 2))},
                                 box         ? FeatureKind::box
                                 : sketch    ? FeatureKind::sketch
                                 : extrusion ? FeatureKind::extrusion
+                                : fillet    ? FeatureKind::fillet
                                             : FeatureKind::cylinder,
                                 text(child(native, 3)), std::nullopt},
                                std::move(decoded)});

@@ -7,6 +7,7 @@
 #include <BRepAlgoAPI_Common.hxx>
 #include <BRepAlgoAPI_Cut.hxx>
 #include <BRepAlgoAPI_Fuse.hxx>
+#include <BRepFilletAPI_MakeFillet.hxx>
 #include <BRepCheck_Analyzer.hxx>
 #include <BRep_Builder.hxx>
 #include <TopAbs_ShapeEnum.hxx>
@@ -43,6 +44,57 @@ void requireValidResult(KernelOperation operation, const TopoDS_Shape& shape) {
 }
 
 } // namespace
+
+ShapeOperationResult ShapeOperations::filletWithHistory(const TopoDS_Shape& input,
+                                                        std::span<const TopoDS_Edge> edges,
+                                                        double radius) {
+    requireInput(KernelOperation::fillet, input, "input");
+    if (edges.empty())
+        throw KernelError(KernelOperation::fillet, "a fillet needs at least one edge");
+    if (!(radius > 0.0))
+        throw KernelError(KernelOperation::fillet, "fillet radius must be positive");
+    try {
+        BRepFilletAPI_MakeFillet operation(input);
+        for (const TopoDS_Edge& edge : edges)
+            operation.Add(radius, edge);
+        operation.Build();
+        if (!operation.IsDone() || operation.Shape().IsNull() ||
+            solidCountOf(operation.Shape()) != solidCountOf(input) ||
+            !BRepCheck_Analyzer(operation.Shape()).IsValid())
+            throw KernelError(KernelOperation::fillet,
+                              "the edges cannot be rounded with this radius",
+                              BooleanFailure::filletFailed);
+        ShapeOperationResult result{operation.Shape(), {}, {}};
+        detail::appendHistory(result, operation, true, input, HistoryOperand::first);
+        return result;
+    } catch (const KernelError&) {
+        throw;
+    } catch (const Standard_OutOfMemory&) {
+        throw;
+    } catch (const Standard_ProgramError&) {
+        throw;
+    } catch (const Standard_Failure& failure) {
+        throw KernelError(KernelOperation::fillet, occtFailureDiagnostic(failure),
+                          BooleanFailure::filletFailed);
+    }
+}
+
+std::vector<std::size_t> ShapeOperations::failingFilletEdges(const TopoDS_Shape& input,
+                                                             std::span<const TopoDS_Edge> edges,
+                                                             double radius) {
+    std::vector<std::size_t> failing;
+    for (std::size_t index = 0; index < edges.size(); ++index) {
+        try {
+            static_cast<void>(filletWithHistory(input, edges.subspan(index, 1), radius));
+        } catch (const KernelError&) {
+            failing.push_back(index);
+        }
+    }
+    if (failing.empty())
+        for (std::size_t index = 0; index < edges.size(); ++index)
+            failing.push_back(index);
+    return failing;
+}
 
 ShapeOperationResult ShapeOperations::fuseWithHistory(const TopoDS_Shape& left,
                                                       const TopoDS_Shape& right) {

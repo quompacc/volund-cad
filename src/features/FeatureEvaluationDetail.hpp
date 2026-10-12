@@ -27,4 +27,9 @@ void evaluateFaceExtrusion(const document::DocumentSnapshot& document,
                            std::vector<EvaluatedFeature>& outputs,
                            std::vector<EvaluatedBody>& bodies,
                            std::vector<EvaluatedBody>& referenceBodies);
+// M05 (FilletEvaluation.cpp): rounds edges of a body named by their adjacent faces.
+void evaluateFillet(const document::DocumentSnapshot& document,
+                    const document::FeatureDescriptor& descriptor,
+                    std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
+                    std::vector<EvaluatedBody>& referenceBodies);
 } // namespace voelund::features::detail

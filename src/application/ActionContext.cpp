@@ -58,6 +58,9 @@ std::vector<ActionKind> availableActions(const CadSession& session,
         if (!snapshot.extrusionParameters(feature).distanceParameter)
             actions.push_back(ActionKind::setExtrusionDistance);
         break;
+    case FeatureKind::fillet:
+        actions = {ActionKind::editFilletParameters};
+        break;
     }
     if (session.placementFeature(feature))
         actions.push_back(ActionKind::setPlacement);
@@ -68,6 +71,7 @@ std::vector<ActionKind> availableActions(const CadSession& session,
         if (descriptor->kind != FeatureKind::sketch) {
             actions.push_back(ActionKind::createSketch);
             actions.push_back(ActionKind::pushPullFace);
+            actions.push_back(ActionKind::createFillet);
         }
     }
     return actions;

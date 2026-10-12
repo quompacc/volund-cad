@@ -282,6 +282,9 @@ void runFeature(const document::DocumentSnapshot& document,
     case document::FeatureKind::extrusion:
         detail::evaluateExtrusion(document, descriptor, outputs, bodies, references);
         break;
+    case document::FeatureKind::fillet:
+        detail::evaluateFillet(document, descriptor, outputs, bodies, references);
+        break;
     }
 }
 void restoreOutput(const EvaluatedFeature& output, std::vector<EvaluatedFeature>& outputs,

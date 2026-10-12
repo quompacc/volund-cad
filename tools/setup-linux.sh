@@ -52,7 +52,9 @@ setup_desktop() {
         exit 1
     fi
 
-    if [[ ! -f "${repository_root}/.tools/occt-linux/install/lib/cmake/opencascade/OpenCASCADEConfig.cmake" ]]; then
+    # M05: a cached build from before TKFillet is completed incrementally.
+    if [[ ! -f "${repository_root}/.tools/occt-linux/install/lib/cmake/opencascade/OpenCASCADEConfig.cmake" ||
+          -z "$(ls "${repository_root}"/.tools/occt-linux/install/lib/libTKFillet.so* 2>/dev/null)" ]]; then
         sh "${repository_root}/tools/build-lean-occt.sh"
     fi
     cd "${repository_root}"

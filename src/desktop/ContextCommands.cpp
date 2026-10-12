@@ -29,6 +29,8 @@ QString featureName(const ShellState& state) {
         return QObject::tr("Extrusion");
     case document::FeatureKind::sketch:
         return QObject::tr("Skizze");
+    case document::FeatureKind::fillet:
+        return QObject::tr("Verrundung");
     }
     return QObject::tr("Feature");
 }

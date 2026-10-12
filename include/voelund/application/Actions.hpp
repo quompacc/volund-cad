@@ -149,6 +149,19 @@ struct PushPullFaceAction final {
     Quantity distance;
     bool operator==(const PushPullFaceAction&) const = default;
 };
+// M05: rounds edges of `support`'s current body with one radius; each edge is named by its
+// two adjacent faces (user decision 2026-10-12).
+struct CreateFilletAction final {
+    document::FeatureId support;
+    std::vector<document::FilletEdge> edges;
+    Quantity radius;
+    bool operator==(const CreateFilletAction&) const = default;
+};
+struct EditFilletParametersAction final {
+    document::FeatureId fillet;
+    document::FilletParameters parameters;
+    bool operator==(const EditFilletParametersAction&) const = default;
+};
 struct SetPlacementAction final {
     document::FeatureId feature;
     Quantity x;
@@ -168,7 +181,8 @@ using Action = std::variant<CreateParameterAction, SetParameterValueAction, Rena
                             SetCylinderSizeAction, SetPlacementAction,
                             CreateSketchExtrusionAction, CreateSketchAction,
                             EditBoxParametersAction, EditCylinderParametersAction,
-                            EditExtrusionParametersAction, PushPullFaceAction>;
+                            EditExtrusionParametersAction, PushPullFaceAction,
+                            CreateFilletAction, EditFilletParametersAction>;
 // Parallel to the alternatives of Action.
 enum class ActionKind {
     createParameter,
@@ -190,7 +204,9 @@ enum class ActionKind {
     editBoxParameters,
     editCylinderParameters,
     editExtrusionParameters,
-    pushPullFace
+    pushPullFace,
+    createFillet,
+    editFilletParameters
 };
 [[nodiscard]] ActionKind actionKind(const Action& action) noexcept;
 

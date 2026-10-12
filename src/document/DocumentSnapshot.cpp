@@ -84,6 +84,9 @@ const SketchParameters& DocumentSnapshot::sketchParameters(FeatureId id) const {
 const ExtrusionParameters& DocumentSnapshot::extrusionParameters(FeatureId id) const {
     return std::get<ExtrusionParameters>(featureParameters(id));
 }
+const FilletParameters& DocumentSnapshot::filletParameters(FeatureId id) const {
+    return std::get<FilletParameters>(featureParameters(id));
+}
 const kernel::BoxDimensions& DocumentSnapshot::boxDimensions(FeatureId id) const {
     return boxParameters(id).dimensions;
 }

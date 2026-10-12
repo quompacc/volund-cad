@@ -209,6 +209,14 @@ class Validation final {
         static_cast<void>(target(action.extrusion, ActionKind::editExtrusionParameters));
         finite({action.parameters.distance});
     }
+    void operator()(const CreateFilletAction& action) {
+        static_cast<void>(target(action.support, ActionKind::createFillet));
+        lengths({action.radius});
+    }
+    void operator()(const EditFilletParametersAction& action) {
+        static_cast<void>(target(action.fillet, ActionKind::editFilletParameters));
+        finite({action.parameters.radius});
+    }
 
     [[nodiscard]] const Findings& findings() const noexcept { return findings_; }
 
@@ -310,6 +318,12 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot,
             },
             [&](const PushPullFaceAction& a) {
                 return session.pushPullFace(a.support, a.face, a.distance.value);
+            },
+            [&](const CreateFilletAction& a) {
+                return session.createFillet(a.support, a.edges, a.radius.value);
+            },
+            [&](const EditFilletParametersAction& a) {
+                return session.editFilletParameters(a.fillet, a.parameters, reject);
             }},
         request.action);
 }

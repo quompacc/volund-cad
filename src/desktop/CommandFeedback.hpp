@@ -32,6 +32,13 @@ inline QString booleanFailureText(const std::string& code) {
     if (code == "intersect-empty")
         return QObject::tr("Schneiden: Werkzeug und Zielkörper haben kein gemeinsames "
                            "Volumen; das Ergebnis wäre leer.");
+    // M05: a fillet names the edges at fault (EvaluationIssue::elements are edge numbers).
+    if (code == "fillet-failed")
+        return QObject::tr("Verrunden: Diese Kanten lassen sich mit dem Radius nicht "
+                           "verrunden; der Radius ist zu groß für die angrenzenden Flächen.");
+    if (code == "fillet-edge-missing")
+        return QObject::tr("Verrunden: Eine verrundete Kante gibt es so nicht mehr, ihre "
+                           "Flächen wurden entfernt oder berühren sich nicht mehr.");
     // M04: an invalid region names its contour; the shell marks the elements red.
     if (code == "region-needs-repair")
         return QObject::tr("Bereich: Die Kontur dieses Bereichs wurde in der Skizze geändert "

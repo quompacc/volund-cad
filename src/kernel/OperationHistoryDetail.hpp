@@ -1,6 +1,7 @@
 #pragma once
 
 #include <BRepAlgoAPI_BooleanOperation.hxx>
+#include <BRepBuilderAPI_MakeShape.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
 #include <NCollection_IndexedMap.hxx>
 #include <NCollection_List.hxx>
@@ -36,13 +37,14 @@ inline void configureBoolean(BRepAlgoAPI_BooleanOperation& operation, const Topo
     operation.SetToFillHistory(true);
     operation.Build();
 }
-inline void appendHistory(ShapeOperationResult& result, BRepAlgoAPI_BooleanOperation& operation,
-                          const TopoDS_Shape& input, HistoryOperand operand) {
+// M05: any OCCT builder with Modified/Generated/IsDeleted (Booleans, fillets).
+inline void appendHistory(ShapeOperationResult& result, BRepBuilderAPI_MakeShape& operation,
+                          bool hasHistory, const TopoDS_Shape& input, HistoryOperand operand) {
     NCollection_IndexedMap<TopoDS_Shape, TopTools_ShapeMapHasher> outputs;
     TopExp::MapShapes(result.shape, outputs);
     for (const auto& source : uniqueSubshapes(input)) {
         SubshapeHistory entry{operand, source, {}, {}};
-        bool complete = operation.HasHistory();
+        bool complete = hasHistory;
         for (const auto& shape : operation.Modified(source)) {
             if (outputs.Contains(shape) && shape.ShapeType() == source.ShapeType())
                 appendUnique(entry.modified, shape);
@@ -68,8 +70,8 @@ inline void appendHistory(ShapeOperationResult& result, BRepAlgoAPI_BooleanOpera
 inline ShapeOperationResult booleanResult(BRepAlgoAPI_BooleanOperation& operation,
                                           const TopoDS_Shape& first, const TopoDS_Shape& second) {
     ShapeOperationResult result{operation.Shape(), {}, {}};
-    appendHistory(result, operation, first, HistoryOperand::first);
-    appendHistory(result, operation, second, HistoryOperand::second);
+    appendHistory(result, operation, operation.HasHistory(), first, HistoryOperand::first);
+    appendHistory(result, operation, operation.HasHistory(), second, HistoryOperand::second);
     return result;
 }
 inline ShapeOperationResult transformInput(const TopoDS_Shape& source) {

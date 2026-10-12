@@ -31,6 +31,7 @@ class DocumentSnapshot final {
     [[nodiscard]] const CylinderParameters& cylinderParameters(FeatureId id) const;
     [[nodiscard]] const SketchParameters& sketchParameters(FeatureId id) const;
     [[nodiscard]] const ExtrusionParameters& extrusionParameters(FeatureId id) const;
+    [[nodiscard]] const FilletParameters& filletParameters(FeatureId id) const;
     [[nodiscard]] const kernel::BoxDimensions& boxDimensions(FeatureId id) const;
     [[nodiscard]] ModelDocument toDocument() const;
     [[nodiscard]] ModelDocument toDocument(DocumentId id) const;

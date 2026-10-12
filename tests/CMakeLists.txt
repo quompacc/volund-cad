@@ -1026,6 +1026,11 @@ add_executable(voelund_boolean_extrusion_tests integration/BooleanExtrusionTests
 target_link_libraries(voelund_boolean_extrusion_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME application.boolean_extrusions COMMAND voelund_boolean_extrusion_tests)
 set_tests_properties(application.boolean_extrusions PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
+# M05: A-FILLET-01 fillet of a box edge and an extrusion side edge.
+add_executable(voelund_fillet_tests integration/FilletTests.cpp)
+target_link_libraries(voelund_fillet_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.fillet COMMAND voelund_fillet_tests)
+set_tests_properties(application.fillet PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
 # M02: A-EXT-01 directions, symmetric and intersect extrusions.
 add_executable(voelund_extrusion_direction_tests integration/ExtrusionDirectionTests.cpp)
 target_link_libraries(voelund_extrusion_direction_tests PRIVATE voelund_project_options Voelund::Application)

@@ -16,6 +16,7 @@ target_link_libraries(
         voelund_project_options
         TKPrim
         TKBO
+        TKFillet
 )
 
 add_library(Voelund::Kernel ALIAS voelund_kernel)

@@ -26,7 +26,7 @@ class DocumentSerializer;
 class DocumentTransaction;
 class DocumentSnapshot;
 
-enum class FeatureKind { box, cylinder, sketch, extrusion };
+enum class FeatureKind { box, cylinder, sketch, extrusion, fillet };
 enum class CylinderResultMode { join, cut, intersect, separate };
 
 struct BoxParameters final {
@@ -141,6 +141,23 @@ struct ExtrusionParameters final {
 
     [[nodiscard]] bool operator==(const ExtrusionParameters&) const = default;
 };
+// M05 (schema 14, user decision 2026-10-12): an edge of a body, named by its two adjacent
+// faces. Their names follow the faces through later Booleans; the edge is where they meet.
+struct FilletEdge final {
+    SubshapeOrigin first;
+    SubshapeOrigin second;
+    [[nodiscard]] bool operator==(const FilletEdge&) const = default;
+};
+inline constexpr std::size_t maximumFilletEdges = 256;
+// M05: one constant radius on edges of one body; one feature, one undo step.
+struct FilletParameters final {
+    BodyId body;
+    std::vector<FilletEdge> edges;
+    double radius;
+    [[nodiscard]] bool operator==(const FilletParameters&) const = default;
+};
+void validateFilletParameters(const FilletParameters& parameters);
+
 // The operation in effect, with the earlier rule for an unset one.
 [[nodiscard]] ExtrusionOperation effectiveOperation(const ExtrusionParameters& parameters,
                                                     bool baseSketch) noexcept;
@@ -153,8 +170,8 @@ struct FeatureDescriptor final {
     [[nodiscard]] bool operator==(const FeatureDescriptor&) const = default;
 };
 
-using FeatureParameters =
-    std::variant<BoxParameters, CylinderParameters, SketchParameters, ExtrusionParameters>;
+using FeatureParameters = std::variant<BoxParameters, CylinderParameters, SketchParameters,
+                                       ExtrusionParameters, FilletParameters>;
 
 // PAR01: every binding names an existing parameter of a matching unit, only dimensional
 // constraints bind, and the table itself is valid. Throws std::invalid_argument.
@@ -193,6 +210,8 @@ class ModelDocument final {
     // T04: push/pull of a body face; parameters.faceProfile must be set.
     [[nodiscard]] FeatureId addFaceExtrusionFeature(std::string name,
                                                     const ExtrusionParameters& parameters);
+    // M05: rounds edges of an existing body; no input feature, the body names its producer.
+    [[nodiscard]] FeatureId addFilletFeature(std::string name, const FilletParameters& parameters);
     [[nodiscard]] const kernel::BoxDimensions& boxDimensions(FeatureId featureId) const;
     [[nodiscard]] const BoxParameters& boxParameters(FeatureId featureId) const;
     [[nodiscard]] bool setBoxDimensions(FeatureId featureId,
@@ -207,6 +226,8 @@ class ModelDocument final {
     [[nodiscard]] const ExtrusionParameters& extrusionParameters(FeatureId featureId) const;
     [[nodiscard]] bool setExtrusionParameters(FeatureId featureId,
                                               const ExtrusionParameters& parameters);
+    [[nodiscard]] const FilletParameters& filletParameters(FeatureId featureId) const;
+    [[nodiscard]] bool setFilletParameters(FeatureId featureId, const FilletParameters& parameters);
     [[nodiscard]] const kernel::RigidTransform& featurePlacement(FeatureId featureId) const;
     [[nodiscard]] bool setFeaturePlacement(FeatureId featureId,
                                            const kernel::RigidTransform& placement);

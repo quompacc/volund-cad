@@ -53,6 +53,48 @@ CommandResult CadSession::createCylinderFeature(document::FeatureId inputFeature
                            true);
 }
 
+CommandResult CadSession::createFillet(document::FeatureId support,
+                                       std::span<const document::FilletEdge> edges,
+                                       double radius) {
+    if (!canAddCylinder(support))
+        return CommandResult::invalidInput("A fillet requires a body with a current result");
+    const auto body = evaluatedFeature(evaluation_->result.features, support).bodyId;
+    if (!body)
+        return CommandResult::invalidInput("A fillet requires a body with a current result");
+    const std::size_t sequence =
+        featureCount(document_.features(), document::FeatureKind::fillet) + 1;
+    document::DocumentTransaction transaction(document_);
+    auto& candidate = transaction.edit();
+    const auto idInput = detail::prepareInput([&] {
+        return candidate.addFilletFeature(
+            "Verrundung " + std::to_string(sequence),
+            document::FilletParameters{*body, {edges.begin(), edges.end()}, radius});
+    });
+    if (!idInput.value)
+        return CommandResult::invalidInput(idInput.diagnostic);
+    return finishCandidate(transaction, *idInput.value, CommandKind::newFeature,
+                           ErrorDisposition::reject, true);
+}
+
+CommandResult CadSession::editFilletParameters(document::FeatureId featureId,
+                                               const document::FilletParameters& parameters,
+                                               ErrorDisposition disposition) {
+    document::DocumentTransaction transaction(document_);
+    auto& candidate = transaction.edit();
+    const auto input = detail::prepareInput(
+        [&] { return candidate.setFilletParameters(featureId, parameters); });
+    if (!input.value)
+        return CommandResult::invalidInput(input.diagnostic);
+    if (!*input.value)
+        return {CommandStatus::rejected, RejectionReason::noChange};
+    return finishCandidate(transaction, selectedFeature_, CommandKind::editFeature, disposition,
+                           false);
+}
+
+document::FilletParameters CadSession::filletParameters(document::FeatureId featureId) const {
+    return document_.filletParameters(featureId);
+}
+
 CommandResult CadSession::createNewBodyCylinder() {
     document::DocumentTransaction transaction(document_);
     auto& candidate = transaction.edit();

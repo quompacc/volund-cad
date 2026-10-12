@@ -31,13 +31,16 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
     case FeatureKind::extrusion:
         matches = std::holds_alternative<ExtrusionParameters>(parameters);
         break;
+    case FeatureKind::fillet:
+        matches = std::holds_alternative<FilletParameters>(parameters);
+        break;
     }
     if (!matches)
         throw std::invalid_argument("Legacy body identity: feature parameter kind mismatch");
-    // Boxes, base-plane (datum) sketches and face extrusions (T04) stand alone; every other
-    // feature has an input.
+    // Boxes, base-plane (datum) sketches, face extrusions (T04) and fillets (M05) stand
+    // alone; every other feature has an input.
     const bool standalone =
-        feature.kind == FeatureKind::box ||
+        feature.kind == FeatureKind::box || feature.kind == FeatureKind::fillet ||
         (feature.kind == FeatureKind::sketch && std::get<SketchParameters>(parameters).datum) ||
         (feature.kind == FeatureKind::extrusion &&
          std::get<ExtrusionParameters>(parameters).faceProfile);
@@ -111,6 +114,15 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
         if (prism->upToFace && !isBody(prism->upToFace->body))
             throw std::invalid_argument("Extrusion end face is not on a body of this document");
     }
+    // M05: a fillet rounds edges of a body some feature creates.
+    const auto fillet = [&](std::size_t index) -> const FilletParameters* {
+        return features[index].kind == FeatureKind::fillet
+                   ? &std::get<FilletParameters>(parameters[index])
+                   : nullptr;
+    };
+    for (std::size_t index = 0; index < features.size(); ++index)
+        if (const auto* rounded = fillet(index); rounded && !isBody(rounded->body))
+            throw std::invalid_argument("Fillet body is not a body of this document");
     // Iterative traversal also handles long legacy chains without recursive stack growth.
     std::vector<unsigned char> state(features.size(), 0);
     std::vector<std::optional<BodyId>> context(features.size());
@@ -137,6 +149,8 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
                 context[index] = prism->faceProfile->body;
             else if (prism && prism->target)
                 context[index] = prism->target;
+            else if (const auto* rounded = fillet(index))
+                context[index] = rounded->body;
             else
                 context[index] = context[*inputs[index]];
             state[index] = 2;
