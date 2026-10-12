@@ -2344,12 +2344,14 @@
       ],
       "acceptance": "Fillet erzeugen, Radius ändern, Cancel, Undo/Redo, Save/Open über echte UI funktionieren. Ungültige Auswahl hält korrigierbares Panel offen. A-UI-02 auf Fillet angewendet.",
       "boundary": "Keine direkte Kerneloperation aus dem Widget.",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "chapter": "05-solid-historie.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/M06.md"
+      ],
+      "completedCommit": "b6cdb2e"
     },
     {
       "id": "M07",
