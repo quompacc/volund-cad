@@ -2372,12 +2372,14 @@
       ],
       "acceptance": "Ein Boxrand erhält erwartete ebene Fase; negativer/zu großer Abstand rejected; Edit/Undo/Save/Open erhält Referenzen. A-FILLET-01 analoge Chamferfälle bestehen.",
       "boundary": "Asymmetrische/Winkelfase ist ein späterer eigener Auftrag.",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "chapter": "05-solid-historie.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/M07.md"
+      ],
+      "completedCommit": "7164b2f"
     },
     {
       "id": "M08",
