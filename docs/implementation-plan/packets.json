@@ -2258,12 +2258,14 @@
       ],
       "acceptance": "A-EXT-02: analytischer Durchbruch und Sacktasche korrekt; getrenntes Join nach festgelegtem Vertrag abgewiesen; Intersect ohne Schnitt erklärt leeres Ergebnis. Alter Zielkörper bleibt bei Reject unverändert.",
       "boundary": "Keine versteckte automatische Änderung von NewBody zu Join oder Zielkörperwechsel.",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "chapter": "05-solid-historie.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/M03.md"
+      ],
+      "completedCommit": "bd2fe6c"
     },
     {
       "id": "M04",

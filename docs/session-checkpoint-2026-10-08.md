@@ -9,10 +9,10 @@ Git-Historie dieser Datei.
 ## Stand des Repos
 
 - Branch `ux01`. `main` folgt nach jeder grünen Abnahme per Fast-Forward.
-- Letztes Paket: M02 (Code `75b7ffb`, `beff14d`, `659da12`; CI-Lauf 538). Der Abnahme-Commit enthält diese
+- Letztes Paket: M03 (Code `bd2fe6c`, Testfix `de1d2fe`; CI-Lauf 544). Der Abnahme-Commit enthält diese
   Datei. Vor dem Weiterarbeiten prüfen, ob `main` auf ihm steht; sonst seinen CI-Lauf
   prüfen und `main` nachziehen (siehe Arbeitsregeln).
-- **Tests:** Fedora (GCC, ohne Desktop) 109; Desktop unter virtuellem Wayland 48. **Windows:
+- **Tests:** Fedora (GCC, ohne Desktop) 110; Desktop unter virtuellem Wayland 48. **Windows:
   nur bauen**, keine Desktop-Tests auf dem Rechner des Nutzers (Nutzerwunsch 10.10.2026:
   aufblitzende Fenster stören). Desktop-Tests auf Fedora (Skript `/tmp/voelund-desktop.sh` auf Fedora, wie `~/repro-snap.sh`). Desktop-Tests laufen in der
   CI.
@@ -27,6 +27,7 @@ Git-Historie dieser Datei.
 | S04 | Fangmatrix für Linie/Polylinie/Rechteck; keine überflüssigen Beziehungen; Schalter „Beziehungen: Automatisch / Keine“ im Skizzenpanel | [S04](implementation-plan/evidence/S04.md) |
 | S05 | Kurvenbeziehungen nur für unterstützte Paare; keine angekündigte Tangente am Bogenende auf einer Linie; entartete Picks mit genauer Meldung | [S05](implementation-plan/evidence/S05.md) |
 | S09 | Exakter Versatz für Elemente und Konturen, Vorschau = Übernahme, Ellipse als nicht unterstützt gemeldet | [S09](implementation-plan/evidence/S09.md) |
+| M03 (12.10.) | Vereinigen/Abziehen/Schneiden mit festem Vertrag: abgelehnte Fälle mit Code (getrennt, kein Material, ganzer Körper, leerer Schnitt), Körper und Bereich, deutsch erklärt im Panel; A-EXT-02 | [M03](implementation-plan/evidence/M03.md) |
 | M02 (11.10.) | Ein geprüftes Prisma in der Kernel-Schicht (`kernel::Prism`); symmetrische Extrusion (Distanz = Gesamtlänge) und „Schneiden“ in Modell, Panel und MCP, Schema 13; A-EXT-01 auf XY/XZ/YZ | [M02](implementation-plan/evidence/M02.md) |
 | M01 (10.10.) | Mehrere unabhängige Körper durch die Shell: Zylinder auf gewähltem Körper, sonst neuer Körper; Körpernamen (umbenennbar, ein Rückgängig-Schritt) und Sichtbarkeit (gespeichert, ohne Rückgängig-Schritt) im Dokument, Schema 12; Körperzeile im Baum wählt den Körper; A-BODY-01/03, A-DAG-01 | [M01](implementation-plan/evidence/M01.md) |
 | S14 (10.10.) | Matrix je Werkzeug/Operation (`sketch_tool_matrix`), Referenzskizze durch die Shell, Ziehen nach A-TXN-03 mit Maus; fünf gefundene Fehler behoben (Muster auflösen + speichern, Bereich auf Fläche wählen, Editor unter Körpern, Element mit Maus ziehen, Escape am Manipulator); Grenzen gesammelt in sketch-data-model.md. Dazu: Dreipunktbogen-Reihenfolge, Skizze auf Extrusionsdeckfläche, Werkzeugleiste in Familien | [S14](implementation-plan/evidence/S14.md) |
@@ -54,8 +55,10 @@ Git-Historie dieser Datei.
 
 ## Nächste freie Pakete
 
-- **M03** Join, Pocket/Cut und Intersect robust auswerten (G3). Nächstes Paket nach Plan;
-  danach M04, dann Verrundung M05–M07 (der Nutzer wartet auf 3D-Verrundung und
+- **M04** Produktives Extrude/Pocket-Panel und kompletter erster CAD-Fluss (G3). Nächstes
+  Paket nach Plan; Entscheidungen vom 12.10.: Panel zum Bearbeiten wieder öffnen, Bereiche
+  per Klick im offenen Panel, keine eigene Tasche, Platzieren extrudierter Körper bleibt
+  bei M11; danach Verrundung M05–M07 (der Nutzer wartet auf 3D-Verrundung und
   Kantenauswahl). M01 und M02 sind abgenommen; ihre Entscheidungen stehen in den
   Nachweisen [M01](implementation-plan/evidence/M01.md) und
   [M02](implementation-plan/evidence/M02.md).
