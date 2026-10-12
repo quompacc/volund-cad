@@ -34,34 +34,38 @@ SubshapeOrigin readFace(const TDF_Label& face, std::size_t& remainingRecords, in
     require(face.NbChildren() == 3 + nativeSubshapeOriginExtension(face));
     return readNativeSubshapeOrigin(face, remainingRecords, schemaVersion);
 }
-} // namespace
 
-std::size_t nativeFilletRecords(const FilletParameters& parameters) {
-    std::size_t records = parameters.edges.size();
-    for (const auto& edge : parameters.edges)
+std::size_t edgeRecords(const std::vector<FilletEdge>& edges) {
+    std::size_t records = edges.size();
+    for (const auto& edge : edges)
         records += edge.first.extrusionBoundary.size() + edge.second.extrusionBoundary.size();
     return records;
 }
 
-void writeNativeFillet(const TDF_Label& label, const FilletParameters& parameters) {
-    validateFilletParameters(parameters);
-    TDataStd_Real::Set(label, parameters.radius);
-    TDataStd_AsciiString::Set(label.FindChild(1), std::to_string(parameters.body.value()).c_str());
-    const auto edges = label.FindChild(2);
-    TDataStd_Integer::Set(edges, static_cast<int>(parameters.edges.size()));
-    for (std::size_t index = 0; index < parameters.edges.size(); ++index) {
-        const auto edge = edges.FindChild(static_cast<int>(index + 1));
-        writeNativeSubshapeOrigin(edge.FindChild(1), parameters.edges[index].first);
-        writeNativeSubshapeOrigin(edge.FindChild(2), parameters.edges[index].second);
+// M05/M07: the value (radius or distance) on the label, body (1), edges (2).
+void writeEdges(const TDF_Label& label, BodyId body, const std::vector<FilletEdge>& edges,
+                double value) {
+    TDataStd_Real::Set(label, value);
+    TDataStd_AsciiString::Set(label.FindChild(1), std::to_string(body.value()).c_str());
+    const auto list = label.FindChild(2);
+    TDataStd_Integer::Set(list, static_cast<int>(edges.size()));
+    for (std::size_t index = 0; index < edges.size(); ++index) {
+        const auto edge = list.FindChild(static_cast<int>(index + 1));
+        writeNativeSubshapeOrigin(edge.FindChild(1), edges[index].first);
+        writeNativeSubshapeOrigin(edge.FindChild(2), edges[index].second);
     }
 }
 
-FilletParameters readNativeFillet(const TDF_Label& label, std::size_t remainingRecords,
-                                  int schemaVersion) {
-    require(schemaVersion >= 14 && label.NbChildren() == 2);
-    Handle(TDataStd_Real) radius;
-    require(label.FindAttribute(TDataStd_Real::GetID(), radius));
-    FilletParameters result{BodyId{readDecimal(child(label, 1))}, {}, radius->Get()};
+struct DecodedEdges final {
+    BodyId body;
+    std::vector<FilletEdge> edges;
+    double value;
+};
+DecodedEdges readEdges(const TDF_Label& label, std::size_t remainingRecords, int schemaVersion) {
+    require(label.NbChildren() == 2);
+    Handle(TDataStd_Real) value;
+    require(label.FindAttribute(TDataStd_Real::GetID(), value));
+    DecodedEdges result{BodyId{readDecimal(child(label, 1))}, {}, value->Get()};
     const auto edges = child(label, 2);
     Handle(TDataStd_Integer) size;
     require(edges.FindAttribute(TDataStd_Integer::GetID(), size));
@@ -76,7 +80,43 @@ FilletParameters readNativeFillet(const TDF_Label& label, std::size_t remainingR
         auto second = readFace(child(edge, 2), remainingRecords, schemaVersion);
         result.edges.push_back({std::move(first), std::move(second)});
     }
+    return result;
+}
+} // namespace
+
+std::size_t nativeFilletRecords(const FilletParameters& parameters) {
+    return edgeRecords(parameters.edges);
+}
+
+void writeNativeFillet(const TDF_Label& label, const FilletParameters& parameters) {
+    validateFilletParameters(parameters);
+    writeEdges(label, parameters.body, parameters.edges, parameters.radius);
+}
+
+FilletParameters readNativeFillet(const TDF_Label& label, std::size_t remainingRecords,
+                                  int schemaVersion) {
+    require(schemaVersion >= 14);
+    auto decoded = readEdges(label, remainingRecords, schemaVersion);
+    FilletParameters result{decoded.body, std::move(decoded.edges), decoded.value};
     validateFilletParameters(result);
+    return result;
+}
+
+std::size_t nativeChamferRecords(const ChamferParameters& parameters) {
+    return edgeRecords(parameters.edges);
+}
+
+void writeNativeChamfer(const TDF_Label& label, const ChamferParameters& parameters) {
+    validateChamferParameters(parameters);
+    writeEdges(label, parameters.body, parameters.edges, parameters.distance);
+}
+
+ChamferParameters readNativeChamfer(const TDF_Label& label, std::size_t remainingRecords,
+                                    int schemaVersion) {
+    require(schemaVersion >= 15);
+    auto decoded = readEdges(label, remainingRecords, schemaVersion);
+    ChamferParameters result{decoded.body, std::move(decoded.edges), decoded.value};
+    validateChamferParameters(result);
     return result;
 }
 } // namespace voelund::document::detail

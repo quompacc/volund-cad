@@ -162,6 +162,18 @@ struct EditFilletParametersAction final {
     document::FilletParameters parameters;
     bool operator==(const EditFilletParametersAction&) const = default;
 };
+// M07: a symmetric chamfer of edges of `support`'s current body (user decision 2026-10-12).
+struct CreateChamferAction final {
+    document::FeatureId support;
+    std::vector<document::FilletEdge> edges;
+    Quantity distance;
+    bool operator==(const CreateChamferAction&) const = default;
+};
+struct EditChamferParametersAction final {
+    document::FeatureId chamfer;
+    document::ChamferParameters parameters;
+    bool operator==(const EditChamferParametersAction&) const = default;
+};
 struct SetPlacementAction final {
     document::FeatureId feature;
     Quantity x;
@@ -182,7 +194,8 @@ using Action = std::variant<CreateParameterAction, SetParameterValueAction, Rena
                             CreateSketchExtrusionAction, CreateSketchAction,
                             EditBoxParametersAction, EditCylinderParametersAction,
                             EditExtrusionParametersAction, PushPullFaceAction,
-                            CreateFilletAction, EditFilletParametersAction>;
+                            CreateFilletAction, EditFilletParametersAction,
+                            CreateChamferAction, EditChamferParametersAction>;
 // Parallel to the alternatives of Action.
 enum class ActionKind {
     createParameter,
@@ -206,7 +219,9 @@ enum class ActionKind {
     editExtrusionParameters,
     pushPullFace,
     createFillet,
-    editFilletParameters
+    editFilletParameters,
+    createChamfer,
+    editChamferParameters
 };
 [[nodiscard]] ActionKind actionKind(const Action& action) noexcept;
 

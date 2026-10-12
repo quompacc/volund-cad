@@ -24,6 +24,7 @@ enum class ShellIcon {
     editSketch,
     pushPull,
     fillet, // M05
+    chamfer, // M07
     repair,
     eye,
     eyeOff,

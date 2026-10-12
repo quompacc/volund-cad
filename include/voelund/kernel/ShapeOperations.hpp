@@ -31,6 +31,14 @@ class ShapeOperations final {
     [[nodiscard]] static std::vector<std::size_t>
     failingFilletEdges(const TopoDS_Shape& input, std::span<const TopoDS_Edge> edges,
                        double radius);
+    // M07: a symmetric chamfer with one distance on each face, the same contract as above
+    // (BooleanFailure::chamferFailed).
+    [[nodiscard]] static ShapeOperationResult chamferWithHistory(const TopoDS_Shape& input,
+                                                                 std::span<const TopoDS_Edge> edges,
+                                                                 double distance);
+    [[nodiscard]] static std::vector<std::size_t>
+    failingChamferEdges(const TopoDS_Shape& input, std::span<const TopoDS_Edge> edges,
+                        double distance);
     // Invalid inputs and failed OCCT operations throw KernelError. Its operation
     // identifies the public entry point, including failures of internal checks.
     [[nodiscard]] static TopoDS_Shape fuse(const TopoDS_Shape& left, const TopoDS_Shape& right);

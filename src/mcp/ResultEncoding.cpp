@@ -19,7 +19,7 @@ constexpr const char* toolNames[] = {
     "set_cylinder_size",      "set_placement",          "create_sketch_extrusion",
     "create_sketch_on_face",  nullptr,                  nullptr,
     nullptr,                  "push_pull_face",         nullptr,
-    nullptr};
+    nullptr,                  nullptr,                  nullptr};
 constexpr const char* statusNames[] = {"rejected", "committed", "committedWithErrors"};
 constexpr const char* rejectionNames[] = {
     "none",     "foreignDocument", "staleStamp",          "unknownTarget",    "unsupportedTarget",
@@ -29,7 +29,8 @@ constexpr const char* reasonNames[] = {"none",           "cancelled",           
                                        "alreadyFinished"};
 constexpr const char* evaluationNames[] = {"valid", "dirty", "failed", "blockedByDependency",
                                            "suppressed"};
-constexpr const char* featureKinds[] = {"box", "cylinder", "sketch", "extrusion", "fillet"};
+constexpr const char* featureKinds[] = {"box",      "cylinder", "sketch",
+                                        "extrusion", "fillet",   "chamfer"};
 constexpr const char* runtimeNames[] = {"current", "error", "blocked"};
 constexpr const char* cylinderModes[] = {"join", "cut", "intersect", "separate"};
 // Indexed by ExtrusionOperation (newBody = 1).
@@ -92,6 +93,11 @@ QJsonObject featureParameters(const document::FeatureParameters& parameters) {
                 return {{"radius", detail::quantity(fillet.radius, "mm")},
                         {"bodyId", id(fillet.body.value())},
                         {"edgeCount", static_cast<int>(fillet.edges.size())}};
+            },
+            [](const document::ChamferParameters& chamfer) -> QJsonObject {
+                return {{"distance", detail::quantity(chamfer.distance, "mm")},
+                        {"bodyId", id(chamfer.body.value())},
+                        {"edgeCount", static_cast<int>(chamfer.edges.size())}};
             }},
         parameters);
 }

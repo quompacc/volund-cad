@@ -89,21 +89,41 @@ std::string edgeList(const std::vector<std::uint64_t>& edges) {
     return text + "]";
 }
 
+// M05/M07: what treats the edges and how its failures are named.
+struct Treatment final {
+    const char* prefix; // code prefix: fillet / chamfer
+    const char* verb;   // for the technical message
+    kernel::BooleanFailure failure;
+    kernel::ShapeOperationResult (*apply)(const TopoDS_Shape&, std::span<const TopoDS_Edge>,
+                                          double);
+    std::vector<std::size_t> (*failing)(const TopoDS_Shape&, std::span<const TopoDS_Edge>,
+                                        double);
+};
+constexpr Treatment rounding{"fillet", "rounded", kernel::BooleanFailure::filletFailed,
+                             &kernel::ShapeOperations::filletWithHistory,
+                             &kernel::ShapeOperations::failingFilletEdges};
+constexpr Treatment chamfering{"chamfer", "chamfered", kernel::BooleanFailure::chamferFailed,
+                               &kernel::ShapeOperations::chamferWithHistory,
+                               &kernel::ShapeOperations::failingChamferEdges};
+
 // The body edges where the two named faces meet (a split face may meet in several pieces).
 struct ResolvedEdges final {
     std::vector<TopoDS_Edge> edges;
     std::vector<std::uint64_t> owners; // 1-based FilletEdge number of each kernel edge
 };
 ResolvedEdges resolveEdges(std::span<const SupportProvenance> origins,
-                           const document::FilletParameters& parameters) {
+                           const std::vector<document::FilletEdge>& edges,
+                           const Treatment& treatment) {
     ResolvedEdges result;
-    for (std::size_t index = 0; index < parameters.edges.size(); ++index) {
+    for (std::size_t index = 0; index < edges.size(); ++index) {
         const auto number = static_cast<std::uint64_t>(index + 1);
-        const auto shapes = filletEdgeShapes(origins, parameters.edges[index]);
+        const auto shapes = filletEdgeShapes(origins, edges[index]);
         if (shapes.empty())
-            throw GeometryEvaluationError("The faces of the rounded edge are gone or no longer "
-                                          "meet" + edgeList({number}),
-                                          "fillet-edge-missing", {number});
+            throw GeometryEvaluationError(std::string("The faces of the ") + treatment.verb +
+                                              " edge are gone or no longer meet" +
+                                              edgeList({number}),
+                                          std::string(treatment.prefix) + "-edge-missing",
+                                          {number});
         for (const auto& shared : shapes) {
             if (std::ranges::any_of(result.edges,
                                     [&](const auto& known) { return known.IsSame(shared); }))
@@ -115,45 +135,43 @@ ResolvedEdges resolveEdges(std::span<const SupportProvenance> origins,
     return result;
 }
 
-kernel::ShapeOperationResult round(const TopoDS_Shape& body, const ResolvedEdges& resolved,
-                                   double radius) {
+kernel::ShapeOperationResult treat(const TopoDS_Shape& body, const ResolvedEdges& resolved,
+                                   double value, const Treatment& treatment) {
     try {
-        return kernel::ShapeOperations::filletWithHistory(body, resolved.edges, radius);
+        return treatment.apply(body, resolved.edges, value);
     } catch (const kernel::KernelError& error) {
-        if (error.failure() != kernel::BooleanFailure::filletFailed)
+        if (error.failure() != treatment.failure)
             throw;
         std::vector<std::uint64_t> failing;
-        for (const auto index :
-             kernel::ShapeOperations::failingFilletEdges(body, resolved.edges, radius))
+        for (const auto index : treatment.failing(body, resolved.edges, value))
             if (std::ranges::find(failing, resolved.owners[index]) == failing.end())
                 failing.push_back(resolved.owners[index]);
         std::ranges::sort(failing);
-        throw GeometryEvaluationError(std::string("The edges cannot be rounded with radius ") +
-                                          std::to_string(radius) + edgeList(failing),
-                                      "fillet-failed", failing);
+        throw GeometryEvaluationError(std::string("The edges cannot be ") + treatment.verb +
+                                          " with " + std::to_string(value) + edgeList(failing),
+                                      std::string(treatment.prefix) + "-failed", failing);
     }
 }
 
-} // namespace
-
-void evaluateFillet(const document::DocumentSnapshot& document,
-                    const document::FeatureDescriptor& descriptor,
-                    std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
-                    std::vector<EvaluatedBody>& referenceBodies) {
-    const auto& parameters = document.filletParameters(descriptor.id);
-    const auto producer = bodyProducerBefore(document, descriptor.id, parameters.body);
+void evaluateEdgeTreatment(const document::DocumentSnapshot& document,
+                           const document::FeatureDescriptor& descriptor, document::BodyId target,
+                           const std::vector<document::FilletEdge>& edges, double value,
+                           const Treatment& treatment, std::vector<EvaluatedFeature>& outputs,
+                           std::vector<EvaluatedBody>& bodies,
+                           std::vector<EvaluatedBody>& referenceBodies) {
+    const auto producer = bodyProducerBefore(document, descriptor.id, target);
     if (!producer)
-        throw GeometryEvaluationError("The fillet's body has no solid before it");
+        throw GeometryEvaluationError("The body has no solid before this feature");
     const auto& owner = findFeature(outputs, *producer);
     EvaluatedBody& body = findBody(bodies, outputs, *producer);
     EvaluatedBody& referenceBody = findBody(referenceBodies, outputs, *producer);
     const auto evaluated =
-        round(body.shape, resolveEdges(owner.supportOrigins, parameters), parameters.radius);
-    const auto reference = round(referenceBody.shape,
-                                 resolveEdges(owner.referenceSupportOrigins, parameters),
-                                 parameters.radius);
-    // Fillet faces are generated and stay unnamed in M05; the body's other faces and edges
-    // keep their names.
+        treat(body.shape, resolveEdges(owner.supportOrigins, edges, treatment), value, treatment);
+    const auto reference =
+        treat(referenceBody.shape, resolveEdges(owner.referenceSupportOrigins, edges, treatment),
+              value, treatment);
+    // Fillet and chamfer faces are generated and stay unnamed; the other faces and edges of
+    // the body keep their names.
     outputs.push_back(EvaluatedFeature{
         descriptor.id, evaluated.shape, reference.shape, body.bodyId,
         continueSupportOrigins(owner.supportOrigins, evaluated, kernel::HistoryOperand::first),
@@ -166,6 +184,26 @@ void evaluateFillet(const document::DocumentSnapshot& document,
     body.shape = evaluated.shape;
     referenceBody.sourceFeature = descriptor.id;
     referenceBody.shape = reference.shape;
+}
+
+} // namespace
+
+void evaluateFillet(const document::DocumentSnapshot& document,
+                    const document::FeatureDescriptor& descriptor,
+                    std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
+                    std::vector<EvaluatedBody>& referenceBodies) {
+    const auto& parameters = document.filletParameters(descriptor.id);
+    evaluateEdgeTreatment(document, descriptor, parameters.body, parameters.edges,
+                          parameters.radius, rounding, outputs, bodies, referenceBodies);
+}
+
+void evaluateChamfer(const document::DocumentSnapshot& document,
+                     const document::FeatureDescriptor& descriptor,
+                     std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
+                     std::vector<EvaluatedBody>& referenceBodies) {
+    const auto& parameters = document.chamferParameters(descriptor.id);
+    evaluateEdgeTreatment(document, descriptor, parameters.body, parameters.edges,
+                          parameters.distance, chamfering, outputs, bodies, referenceBodies);
 }
 
 } // namespace voelund::features::detail

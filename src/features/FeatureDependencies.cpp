@@ -72,11 +72,15 @@ FeatureDependencies FeatureDependencies::from(const document::DocumentSnapshot& 
                         producer && std::ranges::find(node.inputs, *producer) == node.inputs.end())
                         node.inputs.push_back(*producer);
         }
-        // M05: a fillet works on its body as it was before it.
-        if (feature.kind == document::FeatureKind::fillet)
-            if (const auto producer = bodyProducerBefore(
-                    snapshot, feature.id, snapshot.filletParameters(feature.id).body))
+        // M05/M07: a fillet or chamfer works on its body as it was before it.
+        if (feature.kind == document::FeatureKind::fillet ||
+            feature.kind == document::FeatureKind::chamfer) {
+            const auto body = feature.kind == document::FeatureKind::fillet
+                                  ? snapshot.filletParameters(feature.id).body
+                                  : snapshot.chamferParameters(feature.id).body;
+            if (const auto producer = bodyProducerBefore(snapshot, feature.id, body))
                 node.inputs.push_back(*producer);
+        }
         if (feature.kind == document::FeatureKind::extrusion && feature.inputFeature) {
             const auto features = snapshot.features();
             const auto sketch = std::ranges::find(features, *feature.inputFeature, &document::FeatureDescriptor::id);

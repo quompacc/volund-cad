@@ -96,6 +96,48 @@ document::FilletParameters CadSession::filletParameters(document::FeatureId feat
     return document_.filletParameters(featureId);
 }
 
+CommandResult CadSession::createChamfer(document::FeatureId support,
+                                        std::span<const document::FilletEdge> edges,
+                                        double distance) {
+    if (!canAddCylinder(support))
+        return CommandResult::invalidInput("A chamfer requires a body with a current result");
+    const auto body = evaluatedFeature(evaluation_->result.features, support).bodyId;
+    if (!body)
+        return CommandResult::invalidInput("A chamfer requires a body with a current result");
+    const std::size_t sequence =
+        featureCount(document_.features(), document::FeatureKind::chamfer) + 1;
+    document::DocumentTransaction transaction(document_);
+    auto& candidate = transaction.edit();
+    const auto idInput = detail::prepareInput([&] {
+        return candidate.addChamferFeature(
+            "Fase " + std::to_string(sequence),
+            document::ChamferParameters{*body, {edges.begin(), edges.end()}, distance});
+    });
+    if (!idInput.value)
+        return CommandResult::invalidInput(idInput.diagnostic);
+    return finishCandidate(transaction, *idInput.value, CommandKind::newFeature,
+                           ErrorDisposition::reject, true);
+}
+
+CommandResult CadSession::editChamferParameters(document::FeatureId featureId,
+                                                const document::ChamferParameters& parameters,
+                                                ErrorDisposition disposition) {
+    document::DocumentTransaction transaction(document_);
+    auto& candidate = transaction.edit();
+    const auto input = detail::prepareInput(
+        [&] { return candidate.setChamferParameters(featureId, parameters); });
+    if (!input.value)
+        return CommandResult::invalidInput(input.diagnostic);
+    if (!*input.value)
+        return {CommandStatus::rejected, RejectionReason::noChange};
+    return finishCandidate(transaction, selectedFeature_, CommandKind::editFeature, disposition,
+                           false);
+}
+
+document::ChamferParameters CadSession::chamferParameters(document::FeatureId featureId) const {
+    return document_.chamferParameters(featureId);
+}
+
 std::optional<document::FilletEdge> CadSession::filletEdge(document::FeatureId support,
                                                            const TopoDS_Shape& edge) const {
     if (!canAddCylinder(support) || edge.IsNull() || edge.ShapeType() != TopAbs_EDGE)

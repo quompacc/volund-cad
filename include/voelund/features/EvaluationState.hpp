@@ -14,7 +14,7 @@ struct EvaluationIssue final {
     std::string message;
     std::string technicalDetails;
     // M04: sketch elements of a failed region's contour (GeometryEvaluationError::elements);
-    // M05: for fillet-* codes the 1-based numbers of the fillet's edges at fault.
+    // M05/M07: for fillet-* and chamfer-* codes the 1-based numbers of the edges at fault.
     std::vector<std::uint64_t> elements{};
 };
 struct EvaluationReport final {

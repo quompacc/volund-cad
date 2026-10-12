@@ -101,6 +101,8 @@ const char* kernelOperationName(KernelOperation operation) noexcept {
         return "makePrism";
     case KernelOperation::fillet:
         return "fillet";
+    case KernelOperation::chamfer:
+        return "chamfer";
     }
     return "unknown";
 }

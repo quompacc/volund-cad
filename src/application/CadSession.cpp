@@ -216,7 +216,8 @@ bool CadSession::canTransformFeature(document::FeatureId featureId) const noexce
     }
     if (feature->kind == document::FeatureKind::sketch ||
         feature->kind == document::FeatureKind::extrusion ||
-        feature->kind == document::FeatureKind::fillet) {
+        feature->kind == document::FeatureKind::fillet ||
+        feature->kind == document::FeatureKind::chamfer) {
         return false;
     }
     if (!transformBodyForFeature(featureId).has_value()) {

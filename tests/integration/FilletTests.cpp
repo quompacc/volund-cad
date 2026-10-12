@@ -125,6 +125,66 @@ void boxEdge() {
     std::filesystem::remove_all(directory);
 }
 
+// M07 (user decisions 2026-10-12): a symmetric chamfer "Fase N" on the same named edge. A
+// 1 mm chamfer of a 10 mm edge removes 10 / 2 = 5 mm^3, 2 mm removes 20; too large is refused
+// with chamfer-failed and edge 1; the box grows and the edge stays; Save/Open (schema 15).
+void chamferEdge() {
+    application::CadSession session;
+    session.newDocument();
+    const auto created = session.createBoxFeature({20, 20, 10});
+    require(created.status() == CommandStatus::committed, "Box");
+    const auto box = *created.feature();
+    const auto edge = corner(session, box);
+
+    const auto tooLarge = session.createChamfer(box, std::span(&edge, 1), 25);
+    bool explained = false;
+    for (const auto& issue : tooLarge.evaluation().features)
+        explained = explained || (issue.code == "chamfer-failed" &&
+                                  issue.elements == std::vector<std::uint64_t>{1});
+    require(tooLarge.status() == CommandStatus::rejected && explained &&
+                session.features().size() == 1 && near(volume(session), 4000),
+            "A distance the edge cannot take is refused with chamfer-failed and edge 1");
+
+    const auto result = application::executeAction(
+        session, application::prepareRequest(
+                     session, application::CreateChamferAction{
+                                  box, {edge}, {1, application::QuantityUnit::millimetre}}));
+    require(result.command.status() == CommandStatus::committed &&
+                session.features().back().name == "Fase 1" &&
+                session.features().back().kind == document::FeatureKind::chamfer &&
+                near(volume(session), 4000 - 5) && valid(session),
+            "Distance 1 removes 5 mm^3, valid solid");
+    const auto chamfer = session.features().back().id;
+    require(session.undo().status() == CommandStatus::committed && near(volume(session), 4000) &&
+                session.redo().status() == CommandStatus::committed &&
+                near(volume(session), 4000 - 5),
+            "Undo and redo the chamfer");
+
+    auto bigger = session.identifiedSnapshot().snapshot().boxParameters(box);
+    bigger.dimensions.width = 30;
+    require(session.editBoxParameters(box, bigger).status() == CommandStatus::committed &&
+                near(volume(session), 6000 - 5) && valid(session),
+            "After the box grows the edge is still chamfered");
+    auto parameters = session.chamferParameters(chamfer);
+    parameters.distance = 2;
+    require(session.editChamferParameters(chamfer, parameters).status() ==
+                    CommandStatus::committed &&
+                near(volume(session), 6000 - 20),
+            "Distance 2 removes 20 mm^3");
+
+    const auto directory = std::filesystem::temp_directory_path() / "voelund-m07-chamfer";
+    std::filesystem::remove_all(directory);
+    std::filesystem::create_directories(directory);
+    const auto path = directory / "chamfer.volund";
+    session.saveDocument(path);
+    application::CadSession reopened;
+    reopened.loadDocument(path);
+    require(reopened.chamferParameters(chamfer) == session.chamferParameters(chamfer) &&
+                near(volume(reopened), 6000 - 20),
+            "Open restores the chamfer");
+    std::filesystem::remove_all(directory);
+}
+
 void extrusionSideEdge() {
     application::CadSession session;
     session.newDocument();
@@ -154,8 +214,9 @@ void extrusionSideEdge() {
 int main() {
     try {
         boxEdge();
+        chamferEdge();
         extrusionSideEdge();
-        std::cout << "PASS M05 fillet: box edge 10 (1 - pi/4), refused radius, base change, "
+        std::cout << "PASS M05/M07 fillet and chamfer: box edge 10 (1 - pi/4) and 5, refused, base change, "
                      "edit, save/open, extrusion side edge\n";
         return 0;
     } catch (const std::exception& error) {

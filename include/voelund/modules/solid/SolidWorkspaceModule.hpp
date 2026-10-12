@@ -27,6 +27,8 @@ struct SolidCommandServices final {
     // M06: rounds edges of the selected body; absent services publish no command.
     std::function<void()> fillet{};
     std::function<bool()> canFillet{};
+    // M07: a symmetric chamfer of edges of the selected body, enabled like the fillet.
+    std::function<void()> chamfer{};
 };
 
 class SolidWorkspaceModule final : public workspaces::WorkspaceModule {

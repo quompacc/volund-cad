@@ -32,4 +32,9 @@ void evaluateFillet(const document::DocumentSnapshot& document,
                     const document::FeatureDescriptor& descriptor,
                     std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
                     std::vector<EvaluatedBody>& referenceBodies);
+// M07: the same for a symmetric chamfer.
+void evaluateChamfer(const document::DocumentSnapshot& document,
+                     const document::FeatureDescriptor& descriptor,
+                     std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
+                     std::vector<EvaluatedBody>& referenceBodies);
 } // namespace voelund::features::detail

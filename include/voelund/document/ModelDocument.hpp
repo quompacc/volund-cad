@@ -26,7 +26,7 @@ class DocumentSerializer;
 class DocumentTransaction;
 class DocumentSnapshot;
 
-enum class FeatureKind { box, cylinder, sketch, extrusion, fillet };
+enum class FeatureKind { box, cylinder, sketch, extrusion, fillet, chamfer };
 enum class CylinderResultMode { join, cut, intersect, separate };
 
 struct BoxParameters final {
@@ -157,6 +157,15 @@ struct FilletParameters final {
     [[nodiscard]] bool operator==(const FilletParameters&) const = default;
 };
 void validateFilletParameters(const FilletParameters& parameters);
+// M07 (schema 15, user decision 2026-10-12): a symmetric chamfer, `distance` on both faces of
+// each edge; edges named as for the fillet.
+struct ChamferParameters final {
+    BodyId body;
+    std::vector<FilletEdge> edges;
+    double distance;
+    [[nodiscard]] bool operator==(const ChamferParameters&) const = default;
+};
+void validateChamferParameters(const ChamferParameters& parameters);
 
 // The operation in effect, with the earlier rule for an unset one.
 [[nodiscard]] ExtrusionOperation effectiveOperation(const ExtrusionParameters& parameters,
@@ -171,7 +180,7 @@ struct FeatureDescriptor final {
 };
 
 using FeatureParameters = std::variant<BoxParameters, CylinderParameters, SketchParameters,
-                                       ExtrusionParameters, FilletParameters>;
+                                       ExtrusionParameters, FilletParameters, ChamferParameters>;
 
 // PAR01: every binding names an existing parameter of a matching unit, only dimensional
 // constraints bind, and the table itself is valid. Throws std::invalid_argument.
@@ -212,6 +221,8 @@ class ModelDocument final {
                                                     const ExtrusionParameters& parameters);
     // M05: rounds edges of an existing body; no input feature, the body names its producer.
     [[nodiscard]] FeatureId addFilletFeature(std::string name, const FilletParameters& parameters);
+    [[nodiscard]] FeatureId addChamferFeature(std::string name,
+                                              const ChamferParameters& parameters);
     [[nodiscard]] const kernel::BoxDimensions& boxDimensions(FeatureId featureId) const;
     [[nodiscard]] const BoxParameters& boxParameters(FeatureId featureId) const;
     [[nodiscard]] bool setBoxDimensions(FeatureId featureId,
@@ -228,6 +239,9 @@ class ModelDocument final {
                                               const ExtrusionParameters& parameters);
     [[nodiscard]] const FilletParameters& filletParameters(FeatureId featureId) const;
     [[nodiscard]] bool setFilletParameters(FeatureId featureId, const FilletParameters& parameters);
+    [[nodiscard]] const ChamferParameters& chamferParameters(FeatureId featureId) const;
+    [[nodiscard]] bool setChamferParameters(FeatureId featureId,
+                                            const ChamferParameters& parameters);
     [[nodiscard]] const kernel::RigidTransform& featurePlacement(FeatureId featureId) const;
     [[nodiscard]] bool setFeaturePlacement(FeatureId featureId,
                                            const kernel::RigidTransform& placement);

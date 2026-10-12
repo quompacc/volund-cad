@@ -34,6 +34,9 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
     case FeatureKind::fillet:
         matches = std::holds_alternative<FilletParameters>(parameters);
         break;
+    case FeatureKind::chamfer:
+        matches = std::holds_alternative<ChamferParameters>(parameters);
+        break;
     }
     if (!matches)
         throw std::invalid_argument("Legacy body identity: feature parameter kind mismatch");
@@ -41,6 +44,7 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
     // alone; every other feature has an input.
     const bool standalone =
         feature.kind == FeatureKind::box || feature.kind == FeatureKind::fillet ||
+        feature.kind == FeatureKind::chamfer ||
         (feature.kind == FeatureKind::sketch && std::get<SketchParameters>(parameters).datum) ||
         (feature.kind == FeatureKind::extrusion &&
          std::get<ExtrusionParameters>(parameters).faceProfile);
@@ -114,15 +118,17 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
         if (prism->upToFace && !isBody(prism->upToFace->body))
             throw std::invalid_argument("Extrusion end face is not on a body of this document");
     }
-    // M05: a fillet rounds edges of a body some feature creates.
-    const auto fillet = [&](std::size_t index) -> const FilletParameters* {
-        return features[index].kind == FeatureKind::fillet
-                   ? &std::get<FilletParameters>(parameters[index])
-                   : nullptr;
+    // M05/M07: a fillet or chamfer treats edges of a body some feature creates.
+    const auto treatedBody = [&](std::size_t index) -> std::optional<BodyId> {
+        if (features[index].kind == FeatureKind::fillet)
+            return std::get<FilletParameters>(parameters[index]).body;
+        if (features[index].kind == FeatureKind::chamfer)
+            return std::get<ChamferParameters>(parameters[index]).body;
+        return std::nullopt;
     };
     for (std::size_t index = 0; index < features.size(); ++index)
-        if (const auto* rounded = fillet(index); rounded && !isBody(rounded->body))
-            throw std::invalid_argument("Fillet body is not a body of this document");
+        if (const auto body = treatedBody(index); body && !isBody(*body))
+            throw std::invalid_argument("Fillet or chamfer body is not a body of this document");
     // Iterative traversal also handles long legacy chains without recursive stack growth.
     std::vector<unsigned char> state(features.size(), 0);
     std::vector<std::optional<BodyId>> context(features.size());
@@ -149,8 +155,8 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
                 context[index] = prism->faceProfile->body;
             else if (prism && prism->target)
                 context[index] = prism->target;
-            else if (const auto* rounded = fillet(index))
-                context[index] = rounded->body;
+            else if (const auto body = treatedBody(index))
+                context[index] = body;
             else
                 context[index] = context[*inputs[index]];
             state[index] = 2;

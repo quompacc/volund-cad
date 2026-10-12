@@ -217,6 +217,14 @@ class Validation final {
         static_cast<void>(target(action.fillet, ActionKind::editFilletParameters));
         finite({action.parameters.radius});
     }
+    void operator()(const CreateChamferAction& action) {
+        static_cast<void>(target(action.support, ActionKind::createChamfer));
+        lengths({action.distance});
+    }
+    void operator()(const EditChamferParametersAction& action) {
+        static_cast<void>(target(action.chamfer, ActionKind::editChamferParameters));
+        finite({action.parameters.distance});
+    }
 
     [[nodiscard]] const Findings& findings() const noexcept { return findings_; }
 
@@ -324,6 +332,12 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot,
             },
             [&](const EditFilletParametersAction& a) {
                 return session.editFilletParameters(a.fillet, a.parameters, reject);
+            },
+            [&](const CreateChamferAction& a) {
+                return session.createChamfer(a.support, a.edges, a.distance.value);
+            },
+            [&](const EditChamferParametersAction& a) {
+                return session.editChamferParameters(a.chamfer, a.parameters, reject);
             }},
         request.action);
 }

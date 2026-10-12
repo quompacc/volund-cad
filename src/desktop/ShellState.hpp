@@ -58,7 +58,7 @@ struct ShellState final {
     bool regionExtrudable{false};
     // M04: the selected feature is a sketch extrusion its panel can reopen.
     bool extrusionEditable{false};
-    // M06: the selected feature is a fillet its panel can reopen.
+    // M06/M07: the selected feature is a fillet or chamfer its panel can reopen.
     bool filletEditable{false};
     ShellTool tool{ShellTool::none};
 

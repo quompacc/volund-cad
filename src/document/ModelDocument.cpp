@@ -92,26 +92,37 @@ void validateExtrusion(const ExtrusionParameters& parameters) {
 
 } // namespace
 
-void validateFilletParameters(const FilletParameters& parameters) {
-    if (!kernel::modelLength(parameters.radius))
+namespace {
+// M05/M07: the body, 1-256 distinct edges between two different faces, a model length.
+void validateEdgeTreatment(BodyId body, const std::vector<FilletEdge>& edges, double value) {
+    if (!kernel::modelLength(value))
         throw std::invalid_argument(kernel::modelRangeDiagnostic);
-    if (parameters.body.value() == 0)
-        throw std::invalid_argument("A fillet names its body");
-    if (parameters.edges.empty() || parameters.edges.size() > maximumFilletEdges)
-        throw std::invalid_argument("A fillet rounds between 1 and 256 edges");
-    for (std::size_t index = 0; index < parameters.edges.size(); ++index) {
-        const FilletEdge& edge = parameters.edges[index];
+    if (body.value() == 0)
+        throw std::invalid_argument("A fillet or chamfer names its body");
+    if (edges.empty() || edges.size() > maximumFilletEdges)
+        throw std::invalid_argument("A fillet or chamfer treats between 1 and 256 edges");
+    for (std::size_t index = 0; index < edges.size(); ++index) {
+        const FilletEdge& edge = edges[index];
         validateSubshapeOrigin(edge.first);
         validateSubshapeOrigin(edge.second);
         if (edge.first == edge.second)
             throw std::invalid_argument("A fillet edge lies between two different faces");
         for (std::size_t prior = 0; prior < index; ++prior) {
-            const FilletEdge& other = parameters.edges[prior];
+            const FilletEdge& other = edges[prior];
             if ((other.first == edge.first && other.second == edge.second) ||
                 (other.first == edge.second && other.second == edge.first))
-                throw std::invalid_argument("Fillet edges must be unique");
+                throw std::invalid_argument("Fillet and chamfer edges must be unique");
         }
     }
+}
+} // namespace
+
+void validateFilletParameters(const FilletParameters& parameters) {
+    validateEdgeTreatment(parameters.body, parameters.edges, parameters.radius);
+}
+
+void validateChamferParameters(const ChamferParameters& parameters) {
+    validateEdgeTreatment(parameters.body, parameters.edges, parameters.distance);
 }
 
 ExtrusionOperation effectiveOperation(const ExtrusionParameters& parameters,
@@ -272,6 +283,20 @@ FeatureId ModelDocument::addFilletFeature(std::string name, const FilletParamete
     ++candidate.nextFeatureId;
     candidate.features.push_back(
         FeatureDescriptor{id, FeatureKind::fillet, std::move(name), std::nullopt});
+    candidate.parameters.emplace_back(parameters);
+    static_cast<void>(featureBodyContexts(candidate.features, candidate.parameters));
+    commitState(std::move(candidate));
+    return id;
+}
+
+FeatureId ModelDocument::addChamferFeature(std::string name,
+                                           const ChamferParameters& parameters) {
+    validateChamferParameters(parameters);
+    const FeatureId id = nextFeatureId();
+    auto candidate = currentState();
+    ++candidate.nextFeatureId;
+    candidate.features.push_back(
+        FeatureDescriptor{id, FeatureKind::chamfer, std::move(name), std::nullopt});
     candidate.parameters.emplace_back(parameters);
     static_cast<void>(featureBodyContexts(candidate.features, candidate.parameters));
     commitState(std::move(candidate));
@@ -441,6 +466,30 @@ bool ModelDocument::setFilletParameters(FeatureId featureId, const FilletParamet
         return false;
     auto candidate = currentState();
     *std::get_if<FilletParameters>(&candidate.parameters.at(index)) = parameters;
+    static_cast<void>(featureBodyContexts(candidate.features, candidate.parameters));
+    commitState(std::move(candidate));
+    return true;
+}
+
+const ChamferParameters& ModelDocument::chamferParameters(FeatureId featureId) const {
+    const auto* value =
+        std::get_if<ChamferParameters>(&impl_->view().parameters()[featureIndex(featureId)]);
+    if (value == nullptr)
+        throw std::out_of_range("Feature is not a chamfer");
+    return *value;
+}
+
+bool ModelDocument::setChamferParameters(FeatureId featureId,
+                                         const ChamferParameters& parameters) {
+    validateChamferParameters(parameters);
+    const std::size_t index = featureIndex(featureId);
+    auto* current = std::get_if<ChamferParameters>(&impl_->view().parameters()[index]);
+    if (current == nullptr)
+        throw std::out_of_range("Feature is not a chamfer");
+    if (*current == parameters)
+        return false;
+    auto candidate = currentState();
+    *std::get_if<ChamferParameters>(&candidate.parameters.at(index)) = parameters;
     static_cast<void>(featureBodyContexts(candidate.features, candidate.parameters));
     commitState(std::move(candidate));
     return true;

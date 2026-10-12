@@ -208,6 +208,26 @@ void run() {
                 matches(volume(session), 4000 - one),
             "Open restores the fillet");
     std::filesystem::remove_all(directory);
+
+    // M07: "Fase" uses the same panel with a distance; 1 mm removes 5 mm^3.
+    require(session.selectFeature(box), "Box selected");
+    window.refreshAfterExternalChange();
+    QAction& chamfer = command(window, "solid.modify.chamfer");
+    require(chamfer.isEnabled(), "Fase offered for the selected box");
+    chamfer.trigger();
+    settle();
+    require(panel(window) != nullptr &&
+                guidance(window).contains(QStringLiteral("angefast werden")),
+            "The chamfer panel opens and waits for an edge");
+    click(*viewport, {edge.x, edge.y - 20, edge.z});
+    require(guidance(window).contains(QStringLiteral("Abstand 1 mm")),
+            "A clicked edge is chamfered with distance 1");
+    button(window, "toolAcceptButton").click();
+    settle();
+    require(session.features().size() == 3 &&
+                session.features().back().kind == document::FeatureKind::chamfer &&
+                matches(volume(session), 4000 - one - 5),
+            "OK chamfers the edge as a chamfer feature");
     std::cout << "PASS M06 fillet panel: edge pick, preview, radius, refusal, cancel, OK, "
                  "undo, edit, remove edge, open\n";
 }

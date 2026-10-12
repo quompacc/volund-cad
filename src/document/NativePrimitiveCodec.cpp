@@ -143,6 +143,16 @@ std::vector<FeatureBodyIdentity> validate(std::span<const FeatureDescriptor> fea
             validateFilletParameters(fillet);
             continue;
         }
+        if (feature.kind == FeatureKind::chamfer) {
+            require(std::holds_alternative<ChamferParameters>(parameters[index]) &&
+                    feature.id.value() < next && feature.name.size() <= maximumNameBytes &&
+                    feature.name.find('\0') == std::string::npos);
+            const auto& chamfer = std::get<ChamferParameters>(parameters[index]);
+            require(nativeChamferRecords(chamfer) <= remainingElements);
+            remainingElements -= nativeChamferRecords(chamfer);
+            validateChamferParameters(chamfer);
+            continue;
+        }
         if (feature.kind == FeatureKind::sketch) {
             require(std::holds_alternative<SketchParameters>(parameters[index]) &&
                     feature.id.value() < next && feature.name.size() <= maximumNameBytes &&
@@ -254,10 +264,12 @@ void NativePrimitiveCodec::write(const Handle(TDocStd_Document) & document,
         const bool sketch = feature.kind == FeatureKind::sketch;
         const bool extrusion = feature.kind == FeatureKind::extrusion;
         const bool fillet = feature.kind == FeatureKind::fillet;
+        const bool chamfer = feature.kind == FeatureKind::chamfer;
         TDataStd_AsciiString::Set(native.FindChild(1), box         ? "box"
                                                        : sketch    ? "sketch"
                                                        : extrusion ? "extrusion"
                                                        : fillet    ? "fillet"
+                                                       : chamfer   ? "chamfer"
                                                                    : "cylinder");
         TDataStd_AsciiString::Set(native.FindChild(2), std::to_string(feature.id.value()).c_str());
         TDataStd_AsciiString::Set(native.FindChild(3), feature.name.c_str());
@@ -270,6 +282,9 @@ void NativePrimitiveCodec::write(const Handle(TDocStd_Document) & document,
         } else if (fillet) {
             writeNativeFillet(native.FindChild(4),
                               std::get<FilletParameters>(snapshot.parameters()[index]));
+        } else if (chamfer) {
+            writeNativeChamfer(native.FindChild(4),
+                               std::get<ChamferParameters>(snapshot.parameters()[index]));
         } else {
             const auto data = values(snapshot.parameters()[index]);
             auto array =
@@ -336,6 +351,8 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
             const bool extrusion = kind == "extrusion";
             // M05 (schema 14): a fillet names its body and has no input reference child 5.
             const bool fillet = kind == "fillet" && metadata.schemaVersion >= 14;
+            // M07 (schema 15): a chamfer in the same form.
+            const bool chamfer = kind == "chamfer" && metadata.schemaVersion >= 15;
             // A base-plane sketch (schema 6) and a face extrusion (schema 10) have no input
             // reference child 5.
             const bool standaloneSketch =
@@ -346,8 +363,8 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
             const bool standaloneCylinder = kind == "cylinder" &&
                                             native.FindChild(5, false).IsNull() &&
                                             metadata.schemaVersion >= 12;
-            require((box || sketch || extrusion || fillet || kind == "cylinder") &&
-                    native.NbChildren() == (box || fillet || standaloneSketch ||
+            require((box || sketch || extrusion || fillet || chamfer || kind == "cylinder") &&
+                    native.NbChildren() == (box || fillet || chamfer || standaloneSketch ||
                                                     standaloneExtrusion
                                                 ? 4
                                             : (sketch || extrusion || standaloneCylinder) ? 5
@@ -361,7 +378,10 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
                                                             metadata.schemaVersion)}
                 : fillet ? FeatureParameters{readNativeFillet(child(native, 4), remainingElements,
                                                               metadata.schemaVersion)}
-                         : parameters(native, box);
+                : chamfer
+                    ? FeatureParameters{readNativeChamfer(child(native, 4), remainingElements,
+                                                          metadata.schemaVersion)}
+                    : parameters(native, box);
             if (sketch) {
                 const auto& data = std::get<SketchParameters>(decoded);
                 remainingElements -= data.elements.values.size() + data.constraints.values.size();
@@ -374,6 +394,8 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
                 remainingElements -= nativeExtrusionRecords(std::get<ExtrusionParameters>(decoded));
             if (fillet)
                 remainingElements -= nativeFilletRecords(std::get<FilletParameters>(decoded));
+            if (chamfer)
+                remainingElements -= nativeChamferRecords(std::get<ChamferParameters>(decoded));
             records.push_back({native,
                                bodyId,
                                {FeatureId{id(child(native, 2))},
@@ -381,6 +403,7 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
                                 : sketch    ? FeatureKind::sketch
                                 : extrusion ? FeatureKind::extrusion
                                 : fillet    ? FeatureKind::fillet
+                                : chamfer   ? FeatureKind::chamfer
                                             : FeatureKind::cylinder,
                                 text(child(native, 3)), std::nullopt},
                                std::move(decoded)});

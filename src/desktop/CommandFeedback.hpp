@@ -39,6 +39,13 @@ inline QString booleanFailureText(const std::string& code) {
     if (code == "fillet-edge-missing")
         return QObject::tr("Verrunden: Eine verrundete Kante gibt es so nicht mehr, ihre "
                            "Flächen wurden entfernt oder berühren sich nicht mehr.");
+    // M07: the same for a chamfer.
+    if (code == "chamfer-failed")
+        return QObject::tr("Fase: Diese Kanten lassen sich mit dem Abstand nicht anfasen; "
+                           "der Abstand ist zu groß für die angrenzenden Flächen.");
+    if (code == "chamfer-edge-missing")
+        return QObject::tr("Fase: Eine angefaste Kante gibt es so nicht mehr, ihre Flächen "
+                           "wurden entfernt oder berühren sich nicht mehr.");
     // M04: an invalid region names its contour; the shell marks the elements red.
     if (code == "region-needs-repair")
         return QObject::tr("Bereich: Die Kontur dieses Bereichs wurde in der Skizze geändert "

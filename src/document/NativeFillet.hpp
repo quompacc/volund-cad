@@ -8,4 +8,9 @@ FilletParameters readNativeFillet(const TDF_Label& label, std::size_t remainingR
                                   int schemaVersion);
 // Records a fillet consumes from the document budget: its edges and their face boundaries.
 std::size_t nativeFilletRecords(const FilletParameters& parameters);
+// M07 (schema 15): a chamfer in the same encoding, its distance on the label.
+void writeNativeChamfer(const TDF_Label& label, const ChamferParameters& parameters);
+ChamferParameters readNativeChamfer(const TDF_Label& label, std::size_t remainingRecords,
+                                    int schemaVersion);
+std::size_t nativeChamferRecords(const ChamferParameters& parameters);
 }

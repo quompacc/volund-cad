@@ -215,6 +215,16 @@ class CadSession final {
     editFilletParameters(document::FeatureId featureId, const document::FilletParameters& parameters,
                          ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] document::FilletParameters filletParameters(document::FeatureId featureId) const;
+    // M07: a symmetric chamfer ("Fase N"), one undo step, on the same named edges.
+    [[nodiscard]] CommandResult createChamfer(document::FeatureId support,
+                                              std::span<const document::FilletEdge> edges,
+                                              double distance);
+    [[nodiscard]] CommandResult
+    editChamferParameters(document::FeatureId featureId,
+                          const document::ChamferParameters& parameters,
+                          ErrorDisposition disposition = ErrorDisposition::reject);
+    [[nodiscard]] document::ChamferParameters
+    chamferParameters(document::FeatureId featureId) const;
     // M06: the named edge of `support`'s current result at a picked edge (between two named
     // faces), and back the result's edges of named edges, e.g. to highlight them.
     [[nodiscard]] std::optional<document::FilletEdge> filletEdge(document::FeatureId support,

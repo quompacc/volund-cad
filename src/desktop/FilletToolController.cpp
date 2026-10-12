@@ -29,42 +29,65 @@ void FilletToolController::setPreviewHandler(
     previewChanged_ = std::move(handler);
 }
 
-void FilletToolController::begin(document::FeatureId support) {
+void FilletToolController::begin(document::FeatureId support, EdgeTreatment treatment) {
     if (!session_.canAddCylinder(support))
         return;
+    treatment_ = treatment;
     editing_.reset();
     stored_.reset();
     open(support, {}, 1.0);
 }
 
-void FilletToolController::beginEdit(document::FeatureId fillet) {
+void FilletToolController::beginEdit(document::FeatureId feature) {
     const auto snapshot = session_.identifiedSnapshot().snapshot();
-    const auto& values = snapshot.filletParameters(fillet);
-    // The edges are named on the body as it was before the fillet.
-    const auto producer = features::bodyProducerBefore(snapshot, fillet, values.body);
+    const auto features = snapshot.features();
+    const auto descriptor = std::ranges::find(features, feature, &document::FeatureDescriptor::id);
+    if (descriptor == features.end())
+        return;
+    std::optional<Stored> found;
+    if (descriptor->kind == document::FeatureKind::fillet) {
+        const auto& fillet = snapshot.filletParameters(feature);
+        found = Stored{fillet.body, fillet.edges, fillet.radius};
+        treatment_ = EdgeTreatment::fillet;
+    } else if (descriptor->kind == document::FeatureKind::chamfer) {
+        const auto& chamfer = snapshot.chamferParameters(feature);
+        found = Stored{chamfer.body, chamfer.edges, chamfer.distance};
+        treatment_ = EdgeTreatment::chamfer;
+    } else {
+        return;
+    }
+    const Stored& values = *found;
+    // The edges are named on the body as it was before the feature.
+    const auto producer = features::bodyProducerBefore(snapshot, feature, values.body);
     if (!producer || !session_.canAddCylinder(*producer))
         return;
-    editing_ = fillet;
+    editing_ = feature;
     stored_ = values;
-    open(*producer, values.edges, values.radius);
+    open(*producer, values.edges, values.value);
 }
 
 void FilletToolController::open(document::FeatureId support,
-                                std::vector<document::FilletEdge> edges, double radius) {
+                                std::vector<document::FilletEdge> edges, double value) {
+    const bool chamfer = treatment_ == EdgeTreatment::chamfer;
     active_ = true;
     support_ = support;
     edges_ = std::move(edges);
-    radius_ = radius;
+    value_ = value;
     stamp_ = session_.sceneStatus().document;
+    const QString title = chamfer ? (editing_ ? QObject::tr("Fase bearbeiten") : QObject::tr("Fase"))
+                                  : (editing_ ? QObject::tr("Verrundung bearbeiten")
+                                              : QObject::tr("Verrunden"));
+    const std::string field = chamfer ? "distance" : "radius";
     panel_.begin(ToolPanelDefinition{
-        editing_ ? QObject::tr("Verrundung bearbeiten") : QObject::tr("Verrunden"),
+        title,
         guidance(),
-        {{"radius", QObject::tr("Radius"), radius_, 0.001, 1'000'000.0}},
+        {{field, chamfer ? QObject::tr("Abstand") : QObject::tr("Radius"), value_, 0.001,
+          1'000'000.0}},
         {},
         {},
-        [this](const std::string& id, double value) {
-            if (id == "radius") {
-                radius_ = value;
+        [this, field](const std::string& id, double changed) {
+            if (id == field) {
+                value_ = changed;
                 preview();
             }
         },
@@ -75,16 +98,21 @@ void FilletToolController::open(document::FeatureId support,
         {}});
     viewport_.setEdgePicking(true);
     preview();
-    statusChanged_(QObject::tr("Verrunden: Kanten anklicken, Radius eingeben"));
+    statusChanged_(chamfer ? QObject::tr("Fase: Kanten anklicken, Abstand eingeben")
+                           : QObject::tr("Verrunden: Kanten anklicken, Radius eingeben"));
 }
 
 QString FilletToolController::guidance() const {
+    const bool chamfer = treatment_ == EdgeTreatment::chamfer;
     if (edges_.empty())
-        return QObject::tr("Klicke die Kanten an, die verrundet werden sollen.");
-    return QObject::tr("%1 Kante(n) mit Radius %2 mm. Ein Klick auf eine weitere Kante nimmt "
-                       "sie dazu, auf eine gewählte nimmt sie heraus.")
+        return chamfer ? QObject::tr("Klicke die Kanten an, die angefast werden sollen.")
+                       : QObject::tr("Klicke die Kanten an, die verrundet werden sollen.");
+    return (chamfer ? QObject::tr("%1 Kante(n) mit Abstand %2 mm. Ein Klick auf eine weitere "
+                                  "Kante nimmt sie dazu, auf eine gewählte nimmt sie heraus.")
+                    : QObject::tr("%1 Kante(n) mit Radius %2 mm. Ein Klick auf eine weitere "
+                                  "Kante nimmt sie dazu, auf eine gewählte nimmt sie heraus."))
         .arg(edges_.size())
-        .arg(radius_);
+        .arg(value_);
 }
 
 void FilletToolController::picked(std::uint64_t body, const TopoDS_Shape& edge) {
@@ -103,8 +131,8 @@ void FilletToolController::picked(std::uint64_t body, const TopoDS_Shape& edge) 
     }
     const auto named = session_.filletEdge(support_, edge);
     if (!named) {
-        const auto message = QObject::tr("Diese Kante gehört nicht zum Körper der Verrundung "
-                                         "oder liegt nicht zwischen zwei seiner Flächen.");
+        const auto message = QObject::tr("Diese Kante gehört nicht zum gewählten Körper oder "
+                                         "liegt nicht zwischen zwei seiner Flächen.");
         panel_.setGuidance(message);
         statusChanged_(message);
         return;
@@ -158,9 +186,10 @@ void FilletToolController::preview() {
     const auto& result = candidate.result.command;
     const bool ok = result.status() == application::CommandStatus::committed;
     panel_.setAcceptEnabled(ok);
+    const std::string prefix = treatment_ == EdgeTreatment::chamfer ? "chamfer-" : "fillet-";
     std::vector<std::uint64_t> failing;
     for (const auto& issue : result.evaluation().features)
-        if (issue.code.starts_with("fillet-"))
+        if (issue.code.starts_with(prefix))
             failing.insert(failing.end(), issue.elements.begin(), issue.elements.end());
     highlight(failing);
     if (!ok) {
@@ -176,14 +205,20 @@ void FilletToolController::preview() {
 }
 
 application::Action FilletToolController::action() const {
+    if (treatment_ == EdgeTreatment::chamfer) {
+        if (editing_ && stored_)
+            return application::EditChamferParametersAction{
+                *editing_, document::ChamferParameters{stored_->body, edges_, value_}};
+        return application::CreateChamferAction{support_, edges_, millimetres(value_)};
+    }
     if (editing_ && stored_)
         return application::EditFilletParametersAction{
-            *editing_, document::FilletParameters{stored_->body, edges_, radius_}};
-    return application::CreateFilletAction{support_, edges_, millimetres(radius_)};
+            *editing_, document::FilletParameters{stored_->body, edges_, value_}};
+    return application::CreateFilletAction{support_, edges_, millimetres(value_)};
 }
 
 bool FilletToolController::unchanged() const {
-    return stored_ && stored_->edges == edges_ && stored_->radius == radius_;
+    return stored_ && stored_->edges == edges_ && stored_->value == value_;
 }
 
 void FilletToolController::accept() {
@@ -200,8 +235,11 @@ void FilletToolController::accept() {
                     }))
         return;
     const bool edited = editing_.has_value();
+    const bool chamfer = treatment_ == EdgeTreatment::chamfer;
     finish();
-    statusChanged_(edited ? QObject::tr("Verrundung geändert") : QObject::tr("Kanten verrundet"));
+    statusChanged_(chamfer ? (edited ? QObject::tr("Fase geändert") : QObject::tr("Kanten angefast"))
+                           : (edited ? QObject::tr("Verrundung geändert")
+                                     : QObject::tr("Kanten verrundet")));
 }
 
 void FilletToolController::cancel() {

@@ -22,6 +22,9 @@ namespace voelund::desktop {
 
 class ToolPanelHost;
 
+// M07: the same panel rounds (fillet) or chamfers the edges.
+enum class EdgeTreatment { fillet, chamfer };
+
 // M06: rounds edges of one body. The panel holds the radius; while it is open the view offers
 // edges, and a click on an edge adds it or (on a chosen one) removes it, as regions in the
 // extrusion panel (user decision 2026-10-12). The preview uses the same evaluation as OK; a
@@ -34,9 +37,9 @@ class FilletToolController final {
                          std::function<void(const QString&)> statusChanged);
 
     // On the current result of `support`'s body.
-    void begin(document::FeatureId support);
-    // Reopens a fillet with its edges and radius; OK is one undo step.
-    void beginEdit(document::FeatureId fillet);
+    void begin(document::FeatureId support, EdgeTreatment treatment = EdgeTreatment::fillet);
+    // Reopens a fillet or chamfer with its edges and value; OK is one undo step.
+    void beginEdit(document::FeatureId feature);
     [[nodiscard]] bool isActive() const noexcept { return active_; }
     void cancel();
     // The candidate bodies while the preview is valid; nullptr asks for the model again.
@@ -44,7 +47,7 @@ class FilletToolController final {
 
   private:
     void open(document::FeatureId support, std::vector<document::FilletEdge> edges,
-              double radius);
+              double value);
     void picked(std::uint64_t body, const TopoDS_Shape& edge);
     void preview();
     void highlight(const std::vector<std::uint64_t>& failing);
@@ -62,10 +65,17 @@ class FilletToolController final {
     std::function<void(const QString&)> statusChanged_;
     std::function<void(const std::vector<features::EvaluatedBody>*)> previewChanged_;
     document::FeatureId support_{1};
+    // The values of the feature being edited.
+    struct Stored final {
+        document::BodyId body;
+        std::vector<document::FilletEdge> edges;
+        double value;
+    };
+    EdgeTreatment treatment_{EdgeTreatment::fillet};
     std::optional<document::FeatureId> editing_;
-    std::optional<document::FilletParameters> stored_;
+    std::optional<Stored> stored_;
     std::vector<document::FilletEdge> edges_;
-    double radius_{1.0};
+    double value_{1.0}; // radius or distance
     std::optional<application::DocumentStamp> stamp_;
     bool active_{false};
     bool previewShown_{false};

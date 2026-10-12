@@ -31,6 +31,8 @@ QString featureName(const ShellState& state) {
         return QObject::tr("Skizze");
     case document::FeatureKind::fillet:
         return QObject::tr("Verrundung");
+    case document::FeatureKind::chamfer:
+        return QObject::tr("Fase");
     }
     return QObject::tr("Feature");
 }
@@ -73,7 +75,7 @@ ContextCommands contextCommands(const ShellState& state) {
         // cylinder on this body.
         result.title = state.bodyName;
         result.commands = {"body.rename", "body.visibility", "solid.modify.transform",
-                           "solid.modify.fillet", "solid.create.cylinder"};
+                           "solid.modify.fillet", "solid.modify.chamfer", "solid.create.cylinder"};
         break;
     case ShellSelection::sketchRegion:
         result.title = QObject::tr("Skizzenbereich");
@@ -89,7 +91,7 @@ ContextCommands contextCommands(const ShellState& state) {
     case ShellSelection::feature:
         result.title = featureName(state);
         result.commands = {"solid.modify.transform", "solid.modify.fillet",
-                           "solid.create.cylinder"};
+                           "solid.modify.chamfer", "solid.create.cylinder"};
         if (state.extrusionEditable || state.filletEditable) {
             result.commands.insert(result.commands.begin(), "solid.modify.edit_sketch");
             result.primary = "solid.modify.edit_sketch";

@@ -83,7 +83,7 @@ void MainWindow::createCommands() {
             syncShell();
             return;
         }
-        if (kind == document::FeatureKind::fillet) {
+        if (kind == document::FeatureKind::fillet || kind == document::FeatureKind::chamfer) {
             impl_->filletTool->beginEdit(*selected);
             syncShell();
             return;
@@ -122,15 +122,17 @@ void MainWindow::createCommands() {
         return impl_->selectedPlanarFace.has_value() && impl_->shell().canSketch();
     };
     // M06: rounds edges of the selected body's current result.
-    services.fillet = [this]() {
+    const auto treatEdges = [this](EdgeTreatment treatment) {
         const auto producer = impl_->session.selectedBodyProducer();
         if (!producer)
             return;
         if (impl_->sketchExtrusionTool->isActive())
             impl_->sketchExtrusionTool->cancel();
-        impl_->filletTool->begin(*producer);
+        impl_->filletTool->begin(*producer, treatment);
         syncShell();
     };
+    services.fillet = [treatEdges]() { treatEdges(EdgeTreatment::fillet); };
+    services.chamfer = [treatEdges]() { treatEdges(EdgeTreatment::chamfer); }; // M07
     services.canFillet = [this]() {
         const auto selected = impl_->session.selectedFeature();
         return selected &&

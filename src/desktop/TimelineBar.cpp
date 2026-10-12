@@ -28,6 +28,8 @@ ShellIcon iconFor(document::FeatureKind kind) {
         return ShellIcon::extrude;
     case document::FeatureKind::fillet:
         return ShellIcon::fillet;
+    case document::FeatureKind::chamfer:
+        return ShellIcon::chamfer;
     }
     return ShellIcon::box;
 }

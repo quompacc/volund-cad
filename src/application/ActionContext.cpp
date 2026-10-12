@@ -61,6 +61,9 @@ std::vector<ActionKind> availableActions(const CadSession& session,
     case FeatureKind::fillet:
         actions = {ActionKind::editFilletParameters};
         break;
+    case FeatureKind::chamfer:
+        actions = {ActionKind::editChamferParameters};
+        break;
     }
     if (session.placementFeature(feature))
         actions.push_back(ActionKind::setPlacement);
@@ -72,6 +75,7 @@ std::vector<ActionKind> availableActions(const CadSession& session,
             actions.push_back(ActionKind::createSketch);
             actions.push_back(ActionKind::pushPullFace);
             actions.push_back(ActionKind::createFillet);
+            actions.push_back(ActionKind::createChamfer);
         }
     }
     return actions;
