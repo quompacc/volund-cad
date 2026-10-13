@@ -244,7 +244,8 @@ void adjacentEdges() {
     require(failures == 0, std::to_string(failures) + " adjacent edge combinations failed");
 }
 
-// User report 2026-10-13 (second): the two long top edges rounded, a vertical edge chamfered,
+// User report 2026-10-13 (second and third): the two long top edges rounded (r 2), a vertical
+// edge chamfered or rounded (3),
 // then all four bottom edges at once - a closed loop whose corners meet the chamfer and each
 // other. Every loop, every mix and each treatment alone must work; on a box and an extrusion.
 void edgeLoops() {
@@ -257,7 +258,8 @@ void edgeLoops() {
     std::string report;
     for (const bool extrusionBody : {false, true})
         for (const int prior : {0, 1, 2, 3})
-            for (const bool loopChamfer : {false, true}) {
+            for (const bool loopChamfer : {false, true})
+                for (const double size : {1.0, 2.0, 3.0}) {
                 application::CadSession session;
                 session.newDocument();
                 document::FeatureId body{1};
@@ -285,7 +287,7 @@ void edgeLoops() {
                     const std::vector<document::FilletEdge> tops{
                         edgeOf(session, support, {0, 1, 0}, {0, 0, 1}),
                         edgeOf(session, support, {0, -1, 0}, {0, 0, 1})};
-                    require(session.createFillet(support, tops, 1).status() ==
+                    require(session.createFillet(support, tops, 2).status() ==
                                 CommandStatus::committed,
                             "Top edges rounded");
                     support = session.features().back().id;
@@ -293,8 +295,8 @@ void edgeLoops() {
                 if (prior >= 2) {
                     const auto vertical = edgeOf(session, support, {1, 0, 0}, {0, 1, 0});
                     const auto made =
-                        prior == 2 ? session.createChamfer(support, std::span(&vertical, 1), 1)
-                                   : session.createFillet(support, std::span(&vertical, 1), 1);
+                        prior == 2 ? session.createChamfer(support, std::span(&vertical, 1), 3)
+                                   : session.createFillet(support, std::span(&vertical, 1), 3);
                     require(made.status() == CommandStatus::committed, "Vertical edge treated");
                     support = session.features().back().id;
                 }
@@ -303,17 +305,17 @@ void edgeLoops() {
                     edgeOf(session, support, {1, 0, 0}, {0, 0, -1}),
                     edgeOf(session, support, {0, -1, 0}, {0, 0, -1}),
                     edgeOf(session, support, {-1, 0, 0}, {0, 0, -1})};
-                const auto result = loopChamfer ? session.createChamfer(support, loop, 1)
-                                                : session.createFillet(support, loop, 1);
+                const auto result = loopChamfer ? session.createChamfer(support, loop, size)
+                                                : session.createFillet(support, loop, size);
                 if (result.status() != CommandStatus::committed || !valid(session)) {
                     ++failures;
                     report += std::string(extrusionBody ? "extrusion" : "box") + ", prior " +
                               std::to_string(prior) + ", bottom loop " +
-                              (loopChamfer ? "chamfer" : "fillet") + "\n";
+                              (loopChamfer ? "chamfer " : "fillet ") + std::to_string(size) + "\n";
                     for (const auto& issue : result.evaluation().features)
                         report += "  " + issue.code + " " + issue.message + "\n";
                 }
-            }
+                }
     if (failures != 0)
         std::cerr << report;
     require(failures == 0, std::to_string(failures) + " edge loop cases failed");

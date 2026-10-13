@@ -39,6 +39,8 @@
 
 namespace voelund::kernel {
 namespace {
+using AncestorMap =
+    NCollection_IndexedDataMap<TopoDS_Shape, NCollection_List<TopoDS_Shape>, TopTools_ShapeMapHasher>;
 
 int solidCountOf(const TopoDS_Shape& shape) {
     int count = 0;
@@ -170,7 +172,61 @@ ShapeOperationResult treatEdgesOneByOne(KernelOperation operation, BooleanFailur
     detail::appendHistory(result, merged, true, input, HistoryOperand::first);
     return result;
 }
-// All edges in one step, else one after the other.
+// User report 2026-10-13 (third): a loop of chosen edges broken by a short unchosen edge at a
+// treated corner (the bottom edge of a chamfer) cannot be rounded beyond a small radius; the
+// loop is closed by that edge, as CAD systems do for an edge chain. Bridges are unchosen edges
+// whose two ends each meet a chosen edge on a face the three share.
+std::vector<TopoDS_Edge> withBridges(const TopoDS_Shape& input, std::span<const TopoDS_Edge> edges) {
+    AncestorMap edgesAt, facesOf;
+    TopExp::MapShapesAndAncestors(input, TopAbs_VERTEX, TopAbs_EDGE, edgesAt);
+    TopExp::MapShapesAndAncestors(input, TopAbs_EDGE, TopAbs_FACE, facesOf);
+    const auto chosen = [&](const TopoDS_Shape& edge) {
+        return std::ranges::any_of(edges, [&](const auto& item) { return item.IsSame(edge); });
+    };
+    const auto sharesFace = [&](const TopoDS_Shape& a, const TopoDS_Shape& b,
+                                const TopoDS_Shape& face) {
+        const auto onFace = [&](const TopoDS_Shape& edge) {
+            if (!facesOf.Contains(edge))
+                return false;
+            for (const auto& candidate : facesOf.FindFromKey(edge))
+                if (candidate.IsSame(face))
+                    return true;
+            return false;
+        };
+        return onFace(a) && onFace(b);
+    };
+    std::vector<TopoDS_Edge> result(edges.begin(), edges.end());
+    for (TopExp_Explorer explorer(input, TopAbs_EDGE); explorer.More(); explorer.Next()) {
+        const TopoDS_Edge candidate = TopoDS::Edge(explorer.Current());
+        if (chosen(candidate) || BRep_Tool::Degenerated(candidate) ||
+            std::ranges::any_of(result, [&](const auto& item) { return item.IsSame(candidate); }) ||
+            !facesOf.Contains(candidate))
+            continue;
+        TopoDS_Vertex first, last;
+        TopExp::Vertices(candidate, first, last);
+        if (first.IsNull() || last.IsNull() || first.IsSame(last))
+            continue;
+        bool bridges = false;
+        for (const auto& face : facesOf.FindFromKey(candidate)) {
+            const auto chosenAt = [&](const TopoDS_Vertex& vertex) {
+                if (!edgesAt.Contains(vertex))
+                    return false;
+                for (const auto& neighbour : edgesAt.FindFromKey(vertex))
+                    if (!neighbour.IsSame(candidate) && chosen(neighbour) &&
+                        sharesFace(neighbour, candidate, face))
+                        return true;
+                return false;
+            };
+            if (chosenAt(first) && chosenAt(last))
+                bridges = true;
+        }
+        if (bridges)
+            result.push_back(candidate);
+    }
+    return result;
+}
+
+// All edges in one step, else one after the other, else with the loop closed by bridges.
 template <class Builder>
 ShapeOperationResult treatEdgesRobustly(KernelOperation operation, BooleanFailure failure,
                                         const TopoDS_Shape& input,
@@ -182,6 +238,17 @@ ShapeOperationResult treatEdgesRobustly(KernelOperation operation, BooleanFailur
             throw;
         try {
             return treatEdgesOneByOne<Builder>(operation, failure, input, edges, value);
+        } catch (const KernelError&) {
+        }
+        const auto bridged = withBridges(input, edges);
+        if (bridged.size() == edges.size())
+            throw together;
+        try {
+            return treatEdges<Builder>(operation, failure, input, bridged, value);
+        } catch (const KernelError&) {
+        }
+        try {
+            return treatEdgesOneByOne<Builder>(operation, failure, input, bridged, value);
         } catch (const KernelError&) {
             throw together;
         }
@@ -219,8 +286,6 @@ std::vector<std::size_t> ShapeOperations::failingFilletEdges(const TopoDS_Shape&
 }
 
 namespace {
-using AncestorMap =
-    NCollection_IndexedDataMap<TopoDS_Shape, NCollection_List<TopoDS_Shape>, TopTools_ShapeMapHasher>;
 // User report 2026-10-13: OCCT's chamfer builder refuses an edge that runs into a rounding
 // smaller than the chamfer. A straight edge between two planar faces is then chamfered by
 // cutting a wedge with legs `distance` along both faces; at an end on a curved face (a
