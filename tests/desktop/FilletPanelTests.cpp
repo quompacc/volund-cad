@@ -9,7 +9,10 @@
 #include <QDir>
 #include <QDoubleSpinBox>
 #include <QLabel>
+#include <QStatusBar>
 #include <QPushButton>
+#include <QScrollArea>
+#include <QScrollBar>
 #include <QToolButton>
 #include <cmath>
 #include <filesystem>
@@ -91,12 +94,15 @@ Corner corner(const application::CadSession& session) {
     box.Get(x0, y0, z0, x1, y1, z1);
     return {x1, y1, (z0 + z1) / 2};
 }
-void click(viewport::CadViewport& viewport, const Corner& at) {
+void click(viewport::CadViewport& viewport, const Corner& at,
+           Qt::KeyboardModifiers modifiers = Qt::NoModifier) {
     test::render(viewport);
     const QPoint point = viewport::ViewportTestAccess::project(viewport, at.x, at.y, at.z);
     test::mouse(viewport, QEvent::MouseMove, point, Qt::NoButton, Qt::NoButton);
-    test::mouse(viewport, QEvent::MouseButtonPress, point, Qt::LeftButton, Qt::LeftButton);
-    test::mouse(viewport, QEvent::MouseButtonRelease, point, Qt::LeftButton, Qt::NoButton);
+    test::mouse(viewport, QEvent::MouseButtonPress, point, Qt::LeftButton, Qt::LeftButton,
+                modifiers);
+    test::mouse(viewport, QEvent::MouseButtonRelease, point, Qt::LeftButton, Qt::NoButton,
+                modifiers);
     test::render(viewport);
     settle();
 }
@@ -148,12 +154,38 @@ void run() {
     require(panel(window) != nullptr && !button(window, "toolAcceptButton").isEnabled() &&
                 guidance(window).contains(QStringLiteral("lassen sich mit dem Radius nicht")),
             "A radius too large keeps the panel open, explained, OK disabled");
+    // User report 2026-10-13: the card grows with its text; nothing hides behind a scroll.
+    settle();
+    auto* scroll = panel(window)->findChild<QScrollArea*>();
+    require(scroll != nullptr && scroll->verticalScrollBar()->maximum() == 0,
+            "The long explanation and the fields fit into the card");
     setRadius(window, 1);
     button(window, "toolCancelButton").click();
     settle();
     require(panel(window) == nullptr && session.features().size() == 1 &&
                 matches(volume(session), 4000),
             "Cancel keeps the box");
+
+    // User request 2026-10-13: edges are picked before the tool, Ctrl adds one; "Verrunden"
+    // takes them over.
+    click(*viewport, edge);
+    click(*viewport, {edge.x, edge.y - 20, edge.z}, Qt::ControlModifier);
+    QAction& preselected = command(window, "solid.modify.fillet");
+    require(panel(window) == nullptr && preselected.isEnabled() &&
+                window.statusBar()->currentMessage().startsWith(QStringLiteral("2 Kante")),
+            "Two edges picked without a tool");
+    preselected.trigger();
+    settle();
+    require(panel(window) != nullptr && guidance(window).startsWith(QStringLiteral("2 Kante")) &&
+                matches(shown(*viewport), 4000 - 2 * one),
+            "Verrunden takes over the picked edges");
+    click(*viewport, {edge.x - 20, edge.y - 20, edge.z});
+    require(guidance(window).startsWith(QStringLiteral("3 Kante")) &&
+                matches(shown(*viewport), 4000 - 3 * one),
+            "A third edge is added in the panel");
+    button(window, "toolCancelButton").click();
+    settle();
+    require(matches(volume(session), 4000), "Cancel keeps the box");
 
     // User report 2026-10-12: further edges are picked on the previewed body; each one adds,
     // a click on a chosen one removes it again.

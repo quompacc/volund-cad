@@ -27,7 +27,7 @@ void CadViewport::setEdgePicking(bool enabled) {
 }
 
 void CadViewport::setEdgeSelectionHandler(
-    std::function<void(std::uint64_t, const TopoDS_Shape&)> handler) {
+    std::function<void(std::uint64_t, const TopoDS_Shape&, bool)> handler) {
     impl_->edgeSelectionHandler = std::move(handler);
 }
 

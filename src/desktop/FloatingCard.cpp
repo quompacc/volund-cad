@@ -2,6 +2,7 @@
 
 #include <QEvent>
 #include <QLabel>
+#include <QLayout>
 #include <QScrollArea>
 #include <QVBoxLayout>
 
@@ -43,13 +44,17 @@ FloatingCard::FloatingCard(QWidget& host, const QString& objectName) : QFrame(&h
     footer_->setSpacing(6);
     layout->addLayout(footer_);
     host.installEventFilter(this);
+    // User report 2026-10-13: a new guidance or error text inside the scroll area changes the
+    // content's layout, not the card's; the card is measured again then too.
+    content_->installEventFilter(this);
     hide();
 }
 
 void FloatingCard::setTitle(const QString& title) { title_->setText(title); }
 
 bool FloatingCard::eventFilter(QObject* watched, QEvent* event) {
-    if (watched == &host_ && event->type() == QEvent::Resize)
+    if ((watched == &host_ && event->type() == QEvent::Resize) ||
+        (watched == content_ && event->type() == QEvent::LayoutRequest && isVisible()))
         place();
     return QFrame::eventFilter(watched, event);
 }
@@ -66,8 +71,19 @@ void FloatingCard::place() {
     // As tall as the content needs, but never past the bottom of the host.
     const int y = host_.height() > 2 * top ? top : margin;
     const int available = std::max(160, host_.height() - y - margin);
-    const int wanted = content_->sizeHint().height() + title_->sizeHint().height() +
-                       footer_->sizeHint().height() + 48;
+    // User report 2026-10-13: wrapped text (guidance, errors) is measured at the card's real
+    // width; sizeHint() guessed a wider line, cut the text and hid the fields below a scroll.
+    const auto heightAt = [](QLayout& layout, QWidget* owner, int width) {
+        return layout.hasHeightForWidth() ? layout.totalHeightForWidth(width)
+                                          : (owner != nullptr ? owner->sizeHint().height()
+                                                              : layout.sizeHint().height());
+    };
+    const int inner = cardWidth - 14 - 6;
+    const int wanted = heightAt(*body_, content_, inner - 14) +
+                       (title_->hasHeightForWidth() ? title_->heightForWidth(inner)
+                                                    : title_->sizeHint().height()) +
+                       heightAt(*footer_, nullptr, inner - 8) +
+                       48;
     setFixedHeight(std::min(available, wanted));
     move(host_.width() - cardWidth - margin, y);
     raise();

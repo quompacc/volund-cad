@@ -124,6 +124,7 @@ void MainWindow::toggleVisibility(int kind, std::uint64_t id) {
 void MainWindow::selectBasePlane(int plane) {
     if (plane < 1 || plane > 3)
         return;
+    clearEdgeSelection();
     impl_->selectedPlanarFace.reset();
     impl_->selectedDatum = static_cast<document::DatumPlane>(plane);
     static const char* const names[]{"XY", "XZ", "YZ"};

@@ -19,23 +19,21 @@ FilletToolController::FilletToolController(
     application::CadSession& session, viewport::CadViewport& viewport, ToolPanelHost& panel,
     std::function<void()> sceneChanged, std::function<void(const QString&)> statusChanged)
     : session_(session), viewport_(viewport), panel_(panel),
-      sceneChanged_(std::move(sceneChanged)), statusChanged_(std::move(statusChanged)) {
-    viewport_.setEdgeSelectionHandler(
-        [this](std::uint64_t body, const TopoDS_Shape& edge) { picked(body, edge); });
-}
+      sceneChanged_(std::move(sceneChanged)), statusChanged_(std::move(statusChanged)) {}
 
 void FilletToolController::setPreviewHandler(
     std::function<void(const std::vector<features::EvaluatedBody>*)> handler) {
     previewChanged_ = std::move(handler);
 }
 
-void FilletToolController::begin(document::FeatureId support, EdgeTreatment treatment) {
+void FilletToolController::begin(document::FeatureId support, EdgeTreatment treatment,
+                                 std::vector<document::FilletEdge> edges) {
     if (!session_.canAddCylinder(support))
         return;
     treatment_ = treatment;
     editing_.reset();
     stored_.reset();
-    open(support, {}, 1.0);
+    open(support, std::move(edges), 1.0);
 }
 
 void FilletToolController::beginEdit(document::FeatureId feature) {

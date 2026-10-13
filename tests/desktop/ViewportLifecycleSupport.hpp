@@ -29,9 +29,9 @@ inline void render(CadViewport& v) {
     throw std::runtime_error("No new ready/rendered frame within 5 seconds");
 }
 inline void mouse(CadViewport& v, QEvent::Type type, QPoint point, Qt::MouseButton button,
-                  Qt::MouseButtons buttons) {
+                  Qt::MouseButtons buttons, Qt::KeyboardModifiers modifiers = Qt::NoModifier) {
     QMouseEvent event(type, QPointF(point), QPointF(v.mapToGlobal(point)), button, buttons,
-                      Qt::NoModifier);
+                      modifiers);
     QApplication::sendEvent(&v, &event);
 }
 inline void drag(CadViewport& v, Qt::MouseButton button, QPoint from, QPoint to) {

@@ -48,6 +48,7 @@ class MainWindow::Impl final {
         ShellInputs inputs;
         inputs.basePlane = selectedDatum;
         inputs.planarFace = selectedPlanarFace.has_value();
+        inputs.edges = selectedEdges.size();
         if (selectedBody) {
             inputs.body = selectedBody;
             const auto outline = session.modelOutline();
@@ -85,6 +86,9 @@ class MainWindow::Impl final {
     std::unique_ptr<PushPullToolController> pushPullTool; // T04c
     std::unique_ptr<FilletToolController> filletTool;     // M06
     std::unique_ptr<HoleToolController> holeTool;         // M08
+    // User request 2026-10-13: edges picked before a tool, on the body `edgeSupport` names.
+    std::optional<document::FeatureId> edgeSupport;
+    std::vector<document::FilletEdge> selectedEdges;
     ShellHeader* header{nullptr};
     ViewCube* viewCube{nullptr};
     QAction* themeAction{nullptr};

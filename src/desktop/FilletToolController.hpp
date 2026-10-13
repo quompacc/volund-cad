@@ -37,8 +37,12 @@ class FilletToolController final {
                          ToolPanelHost& panel, std::function<void()> sceneChanged,
                          std::function<void(const QString&)> statusChanged);
 
-    // On the current result of `support`'s body.
-    void begin(document::FeatureId support, EdgeTreatment treatment = EdgeTreatment::fillet);
+    // On the current result of `support`'s body, with edges picked before (user request
+    // 2026-10-13).
+    void begin(document::FeatureId support, EdgeTreatment treatment = EdgeTreatment::fillet,
+               std::vector<document::FilletEdge> edges = {});
+    // An edge clicked while the panel is open (body 0: a chosen edge over the preview).
+    void picked(std::uint64_t body, const TopoDS_Shape& edge);
     // Reopens a fillet or chamfer with its edges and value; OK is one undo step.
     void beginEdit(document::FeatureId feature);
     [[nodiscard]] bool isActive() const noexcept { return active_; }
@@ -49,7 +53,6 @@ class FilletToolController final {
   private:
     void open(document::FeatureId support, std::vector<document::FilletEdge> edges,
               double value);
-    void picked(std::uint64_t body, const TopoDS_Shape& edge);
     void preview();
     void highlight(const std::vector<std::uint64_t>& failing);
     void showModel();

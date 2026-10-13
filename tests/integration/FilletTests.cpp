@@ -185,6 +185,64 @@ void chamferEdge() {
     std::filesystem::remove_all(directory);
 }
 
+// User report 2026-10-13: after the top edge is rounded, the short vertical edge that ends on
+// that rounding must still take a fillet or a chamfer, of equal or different size, on a box
+// and on a sketch extrusion, in every order.
+void adjacentEdges() {
+    const auto top = [](const application::CadSession& session, document::FeatureId support) {
+        return document::FilletEdge{face(session, support, 0, 1, 0),
+                                    face(session, support, 0, 0, 1)};
+    };
+    int failures = 0;
+    std::string report;
+    for (const bool extrusionBody : {false, true})
+        for (const bool firstChamfer : {false, true})
+            for (const bool secondChamfer : {false, true})
+                for (const double second : {1.0, 0.5, 2.0}) {
+                    application::CadSession session;
+                    session.newDocument();
+                    document::FeatureId body{1};
+                    if (extrusionBody) {
+                        document::SketchParameters sketch{
+                            document::datumSketchPlane(document::DatumPlane::xy),
+                            {{{document::SketchElementId{1},
+                               document::SketchRectangle{-40, -20, 40, 20}}},
+                             2}};
+                        sketch.datum = document::DatumPlane::xy;
+                        body = application::executeAction(
+                                   session,
+                                   application::prepareRequest(
+                                       session, application::CreateSketchExtrusionAction{
+                                                    sketch, {}, {10, application::QuantityUnit::millimetre}}))
+                                   .createdFeatures.back();
+                    } else {
+                        body = *session.createBoxFeature({20, 20, 10}).feature();
+                    }
+                    const auto first = top(session, body);
+                    const auto made = firstChamfer
+                                          ? session.createChamfer(body, std::span(&first, 1), 1)
+                                          : session.createFillet(body, std::span(&first, 1), 1);
+                    require(made.status() == CommandStatus::committed, "First edge treated");
+                    const auto support = session.features().back().id;
+                    const auto vertical = corner(session, support);
+                    const auto result =
+                        secondChamfer ? session.createChamfer(support, std::span(&vertical, 1), second)
+                                      : session.createFillet(support, std::span(&vertical, 1), second);
+                    if (result.status() != CommandStatus::committed || !valid(session)) {
+                        ++failures;
+                        report += std::string(extrusionBody ? "extrusion" : "box") + ", top " +
+                                  (firstChamfer ? "chamfer" : "fillet") + " 1, vertical " +
+                                  (secondChamfer ? "chamfer " : "fillet ") + std::to_string(second) +
+                                  ": " + result.diagnostic() + "\n";
+                        for (const auto& issue : result.evaluation().features)
+                            report += "  " + issue.code + " " + issue.message + "\n";
+                    }
+                }
+    if (failures != 0)
+        std::cerr << report;
+    require(failures == 0, std::to_string(failures) + " adjacent edge combinations failed");
+}
+
 void extrusionSideEdge() {
     application::CadSession session;
     session.newDocument();
@@ -215,6 +273,7 @@ int main() {
     try {
         boxEdge();
         chamferEdge();
+        adjacentEdges();
         extrusionSideEdge();
         std::cout << "PASS M05/M07 fillet and chamfer: box edge 10 (1 - pi/4) and 5, refused, base change, "
                      "edit, save/open, extrusion side edge\n";

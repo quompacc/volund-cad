@@ -278,7 +278,7 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
                 }
                 if (!chosen.IsNull() && impl_->edgeSelectionHandler) {
                     const auto handler = impl_->edgeSelectionHandler;
-                    handler(0, chosen->Shape());
+                    handler(0, chosen->Shape(), false);
                     impl_->gesture = Impl::Gesture::none;
                     unsetCursor();
                     update();
@@ -293,7 +293,7 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
                     for (const auto& presentation : impl_->presentations)
                         if (presentation.shape == object) {
                             const auto handler = impl_->edgeSelectionHandler;
-                            handler(presentation.id, owner->Shape());
+                            handler(presentation.id, owner->Shape(), false);
                             break;
                         }
                 }
@@ -310,6 +310,23 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
                     unsetCursor();
                     update();
                     return;
+                }
+                // User request 2026-10-13: a body edge is picked without a tool, as in any CAD.
+                if (const auto edge = occ::handle<StdSelect_BRepOwner>::DownCast(
+                        impl_->context->DetectedOwner());
+                    !edge.IsNull() && edge->Shape().ShapeType() == TopAbs_EDGE &&
+                    impl_->edgeSelectionHandler) {
+                    for (const auto& presentation : impl_->presentations)
+                        if (presentation.shape == edge->Selectable()) {
+                            impl_->context->ClearSelected(false);
+                            const auto handler = impl_->edgeSelectionHandler;
+                            handler(presentation.id, edge->Shape(),
+                                    event->modifiers().testFlag(Qt::ControlModifier));
+                            impl_->gesture = Impl::Gesture::none;
+                            unsetCursor();
+                            update();
+                            return;
+                        }
                 }
                 // U06: a body behind a translucent base plane wins the click.
                 if (impl_->basePlanes.plane(detected).has_value()) {

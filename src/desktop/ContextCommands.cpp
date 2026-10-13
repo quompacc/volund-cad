@@ -72,6 +72,11 @@ ContextCommands contextCommands(const ShellState& state) {
         result.commands = {"solid.create.sketch", "solid.modify.push_pull", "solid.modify.hole"};
         result.primary = "solid.create.sketch";
         break;
+    case ShellSelection::edges:
+        result.title = QObject::tr("%1 Kante(n)").arg(state.edgeCount);
+        result.commands = {"solid.modify.fillet", "solid.modify.chamfer"};
+        result.primary = "solid.modify.fillet";
+        break;
     case ShellSelection::body:
         // M01 (user decision 2026-10-10): rename, show/hide, move where possible, and a
         // cylinder on this body.

@@ -71,6 +71,9 @@ ShellState projectShell(const application::CadSession& session, const ShellInput
     if (inputs.basePlane.has_value()) {
         state.selection = ShellSelection::basePlane;
         state.basePlane = inputs.basePlane;
+    } else if (inputs.edges > 0) {
+        state.selection = ShellSelection::edges;
+        state.edgeCount = inputs.edges;
     } else if (inputs.planarFace) {
         state.selection = ShellSelection::planarFace;
     } else if (inputs.body.has_value()) {

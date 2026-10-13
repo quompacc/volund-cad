@@ -128,12 +128,16 @@ void MainWindow::createCommands() {
     };
     // M06: rounds edges of the selected body's current result.
     const auto treatEdges = [this](EdgeTreatment treatment) {
-        const auto producer = impl_->session.selectedBodyProducer();
+        // Edges picked before (user request 2026-10-13) are taken over.
+        auto edges = impl_->selectedEdges;
+        const auto producer = edges.empty() ? impl_->session.selectedBodyProducer()
+                                            : impl_->edgeSupport;
         if (!producer)
             return;
         if (impl_->sketchExtrusionTool->isActive())
             impl_->sketchExtrusionTool->cancel();
-        impl_->filletTool->begin(*producer, treatment);
+        clearEdgeSelection();
+        impl_->filletTool->begin(*producer, treatment, std::move(edges));
         syncShell();
     };
     services.fillet = [treatEdges]() { treatEdges(EdgeTreatment::fillet); };

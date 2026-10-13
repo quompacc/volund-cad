@@ -81,6 +81,7 @@ ToolPanelHost::ToolPanelHost(QWidget* host)
     layout->setSpacing(7);
     status_ = new QLabel(content_);
     status_->setObjectName(QStringLiteral("toolStatus"));
+    status_->setWordWrap(true);
     status_->hide();
     guidance_ = new QLabel(content_);
     guidance_->setWordWrap(true);

@@ -9,6 +9,23 @@
 #include <BRepAlgoAPI_Fuse.hxx>
 #include <BRepFilletAPI_MakeChamfer.hxx>
 #include <BRepFilletAPI_MakeFillet.hxx>
+#include <BRepAdaptor_Curve.hxx>
+#include <BRepAdaptor_Surface.hxx>
+#include <BRepBuilderAPI_MakeFace.hxx>
+#include <BRepBuilderAPI_MakePolygon.hxx>
+#include <BRepClass_FaceClassifier.hxx>
+#include <BRepPrimAPI_MakePrism.hxx>
+#include <TopExp.hxx>
+#include <NCollection_IndexedDataMap.hxx>
+#include <NCollection_List.hxx>
+#include <TopTools_ShapeMapHasher.hxx>
+#include <BRep_Tool.hxx>
+#include <TopoDS.hxx>
+#include <TopoDS_Face.hxx>
+#include <TopoDS_Vertex.hxx>
+#include <gp_Pnt.hxx>
+#include <gp_Vec.hxx>
+#include <optional>
 #include <BRepCheck_Analyzer.hxx>
 #include <BRep_Builder.hxx>
 #include <TopAbs_ShapeEnum.hxx>
@@ -109,11 +126,124 @@ std::vector<std::size_t> ShapeOperations::failingFilletEdges(const TopoDS_Shape&
     return failingEdges(edges, [&](auto one) { return filletWithHistory(input, one, radius); });
 }
 
+namespace {
+using AncestorMap =
+    NCollection_IndexedDataMap<TopoDS_Shape, NCollection_List<TopoDS_Shape>, TopTools_ShapeMapHasher>;
+// User report 2026-10-13: OCCT's chamfer builder refuses an edge that runs into a rounding
+// smaller than the chamfer. A straight edge between two planar faces is then chamfered by
+// cutting a wedge with legs `distance` along both faces; at an end on a curved face (a
+// rounding) the wedge goes on by `distance`, so the chamfer passes through the rounding.
+std::optional<TopoDS_Shape> chamferWedge(const TopoDS_Edge& edge,
+                                         double distance,
+                                         const AncestorMap& faces,
+                                         const AncestorMap& corners) {
+    const BRepAdaptor_Curve curve(edge);
+    if (curve.GetType() != GeomAbs_Line || !faces.Contains(edge))
+        return std::nullopt;
+    gp_Pnt start = curve.Value(curve.FirstParameter());
+    gp_Pnt end = curve.Value(curve.LastParameter());
+    gp_Vec along(start, end);
+    if (along.Magnitude() < 1e-9)
+        return std::nullopt;
+    along.Normalize();
+    std::vector<gp_Vec> legs;
+    for (const auto& adjacent : faces.FindFromKey(edge)) {
+        const TopoDS_Face face = TopoDS::Face(adjacent);
+        const BRepAdaptor_Surface surface(face);
+        if (surface.GetType() != GeomAbs_Plane)
+            return std::nullopt;
+        gp_Vec outward(surface.Plane().Axis().Direction());
+        if (face.Orientation() == TopAbs_REVERSED)
+            outward.Reverse();
+        gp_Vec leg = outward.Crossed(along);
+        const gp_Pnt middle = curve.Value((curve.FirstParameter() + curve.LastParameter()) / 2);
+        const gp_Pnt probe = middle.Translated(leg * (distance * 0.01));
+        if (BRepClass_FaceClassifier(face, probe, 1e-7).State() != TopAbs_IN)
+            leg.Reverse();
+        leg.Normalize();
+        // The chamfer must end on this face; a larger distance is refused, as by the builder.
+        const auto reach =
+            BRepClass_FaceClassifier(face, middle.Translated(leg * distance), 1e-7).State();
+        if (reach != TopAbs_IN && reach != TopAbs_ON)
+            return std::nullopt;
+        legs.push_back(leg);
+    }
+    if (legs.size() != 2)
+        return std::nullopt;
+    const auto onCurvedFace = [&](const TopoDS_Shape& vertex) {
+        if (!corners.Contains(vertex))
+            return false;
+        for (const auto& face : corners.FindFromKey(vertex))
+            if (BRepAdaptor_Surface(TopoDS::Face(face)).GetType() != GeomAbs_Plane)
+                return true;
+        return false;
+    };
+    TopoDS_Vertex first, last;
+    TopExp::Vertices(edge, first, last, true);
+    const gp_Pnt firstPoint = BRep_Tool::Pnt(first);
+    const bool startIsFirst = firstPoint.Distance(start) < firstPoint.Distance(end);
+    if (onCurvedFace(startIsFirst ? first : last))
+        start.Translate(-along * distance);
+    if (onCurvedFace(startIsFirst ? last : first))
+        end.Translate(along * distance);
+    BRepBuilderAPI_MakePolygon triangle(start, start.Translated(legs[0] * distance),
+                                        start.Translated(legs[1] * distance), true);
+    if (!triangle.IsDone())
+        return std::nullopt;
+    BRepBuilderAPI_MakeFace profile(triangle.Wire(), true);
+    if (!profile.IsDone())
+        return std::nullopt;
+    BRepPrimAPI_MakePrism wedge(profile.Face(), gp_Vec(start, end));
+    if (!wedge.IsDone())
+        return std::nullopt;
+    return wedge.Shape();
+}
+
+ShapeOperationResult chamferByCut(const TopoDS_Shape& input, std::span<const TopoDS_Edge> edges,
+                                  double distance) {
+    AncestorMap faces, corners;
+    TopExp::MapShapesAndAncestors(input, TopAbs_EDGE, TopAbs_FACE, faces);
+    TopExp::MapShapesAndAncestors(input, TopAbs_VERTEX, TopAbs_FACE, corners);
+    std::vector<TopoDS_Shape> wedges;
+    for (const TopoDS_Edge& edge : edges) {
+        const auto wedge = chamferWedge(edge, distance, faces, corners);
+        if (!wedge)
+            throw KernelError(KernelOperation::chamfer,
+                              "the edge is no straight edge between two planar faces",
+                              BooleanFailure::chamferFailed);
+        wedges.push_back(*wedge);
+    }
+    const TopoDS_Shape tool =
+        wedges.size() == 1 ? wedges.front() : ShapeOperations::compound(wedges);
+    try {
+        auto result = ShapeOperations::cutWithHistory(input, tool);
+        if (solidCountOf(result.shape) != solidCountOf(input))
+            throw KernelError(KernelOperation::chamfer, "the chamfer would split the body",
+                              BooleanFailure::chamferFailed);
+        return result;
+    } catch (const KernelError& error) {
+        if (error.operation() == KernelOperation::chamfer)
+            throw;
+        throw KernelError(KernelOperation::chamfer, error.what(), BooleanFailure::chamferFailed);
+    }
+}
+} // namespace
+
 ShapeOperationResult ShapeOperations::chamferWithHistory(const TopoDS_Shape& input,
                                                          std::span<const TopoDS_Edge> edges,
                                                          double distance) {
-    return treatEdges<BRepFilletAPI_MakeChamfer>(
-        KernelOperation::chamfer, BooleanFailure::chamferFailed, input, edges, distance);
+    try {
+        return treatEdges<BRepFilletAPI_MakeChamfer>(
+            KernelOperation::chamfer, BooleanFailure::chamferFailed, input, edges, distance);
+    } catch (const KernelError& builderError) {
+        if (builderError.failure() != BooleanFailure::chamferFailed)
+            throw;
+        try {
+            return chamferByCut(input, edges, distance);
+        } catch (const KernelError&) {
+            throw builderError; // the builder's reason stays the one reported
+        }
+    }
 }
 
 std::vector<std::size_t> ShapeOperations::failingChamferEdges(const TopoDS_Shape& input,

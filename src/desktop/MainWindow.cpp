@@ -106,41 +106,6 @@ void MainWindow::createModelTree() {
     syncModelTree();
 }
 
-void MainWindow::createToolPanel() {
-    impl_->toolPanel = new ToolPanelHost(impl_->viewport);
-    impl_->sketchEditorTool = std::make_unique<SketchEditorToolController>(
-        impl_->session, *impl_->viewport, *impl_->toolPanel, [this]() { refreshScene(); },
-        [this](const QString& message) { statusBar()->showMessage(message); });
-    impl_->sketchExtrusionTool = std::make_unique<SketchExtrusionToolController>(
-        impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
-        [this](const QString& message) { statusBar()->showMessage(message); });
-    const auto showPreview = [this](const std::vector<features::EvaluatedBody>* bodies) {
-        if (bodies == nullptr) {
-            syncVisibility(); // the model's bodies again
-            return;
-        }
-        std::vector<viewport::SceneBody> scene;
-        for (const auto& body : *bodies)
-            scene.push_back({body.sourceFeature.value(), body.shape, false, false});
-        impl_->viewport->setBodies(scene);
-    };
-    impl_->sketchExtrusionTool->setPreviewHandler([this, showPreview](const auto* bodies) {
-        syncSketchPresentation(); // M04: contour elements of an invalid region turn red
-        showPreview(bodies);
-    });
-    impl_->pushPullTool = std::make_unique<PushPullToolController>(
-        impl_->session, *impl_->viewport, *impl_->toolPanel, [this]() { refreshScene(); },
-        [this](const QString& message) { statusBar()->showMessage(message); });
-    impl_->filletTool = std::make_unique<FilletToolController>(
-        impl_->session, *impl_->viewport, *impl_->toolPanel, [this]() { refreshScene(); },
-        [this](const QString& message) { statusBar()->showMessage(message); });
-    impl_->filletTool->setPreviewHandler(showPreview);
-    impl_->holeTool = std::make_unique<HoleToolController>( // M08
-        impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
-        [this](const QString& message) { statusBar()->showMessage(message); });
-    impl_->holeTool->setPreviewHandler(showPreview);
-}
-
 void MainWindow::createPropertiesPanel() {
     // U05: properties of the selected feature float in the same slot as the tool panel.
     impl_->propertyCard =
@@ -242,6 +207,7 @@ void MainWindow::connectInteractions() {
                 return; // T04c: the face of a running push/pull stays.
             if (impl_->holeTool->isActive())
                 return impl_->holeTool->place(selection); // M08: moves the hole there
+            clearEdgeSelection();
             // T03: while the extrusion waits for its end face, the pick goes to the tool.
             if (impl_->sketchExtrusionTool->awaitsEndFace()) {
                 impl_->sketchExtrusionTool->pickEndFace(document::FeatureId{selection.bodyId},
@@ -270,6 +236,7 @@ void MainWindow::connectInteractions() {
         }
         if (impl_->shell().toolBlocksCommands())
             return;
+        clearEdgeSelection();
         impl_->selectedDatum.reset();
         impl_->selectedBody.reset();
         impl_->selectedPlanarFace.reset();
@@ -536,6 +503,7 @@ void MainWindow::syncTransformTool() {
 }
 
 void MainWindow::refreshScene() {
+    clearEdgeSelection();
     if (impl_->sketchEditorTool->isActive()) {
         impl_->sketchEditorTool->cancel();
     }
@@ -583,6 +551,9 @@ void MainWindow::previewBodyRotation(std::uint64_t id, int axisIndex, double ang
 
 void MainWindow::selectFeature(std::uint64_t rawId) {
     const document::FeatureId id{rawId};
+    // Another feature replaces picked edges; the tree echoing this one's selection does not.
+    if (impl_->edgeSupport != id)
+        clearEdgeSelection();
     if (!impl_->session.selectFeature(id)) {
         return;
     }

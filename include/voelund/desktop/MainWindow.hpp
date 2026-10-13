@@ -8,6 +8,7 @@
 #include <memory>
 
 class QCloseEvent;
+class TopoDS_Shape;
 
 namespace voelund::application {
 class CadSession;
@@ -84,6 +85,9 @@ class MainWindow final : public QMainWindow {
     void previewBodyMove(std::uint64_t id, double deltaX, double deltaY, double deltaZ);
     void previewBodyRotation(std::uint64_t id, int axisIndex, double angleDegrees);
     void selectFeature(std::uint64_t rawId);
+    // User request 2026-10-13: edges picked before a fillet or chamfer.
+    void pickEdge(std::uint64_t body, const TopoDS_Shape& edge, bool additive);
+    void clearEdgeSelection();
     void createAssistant();
     void createAssistantPanel();
     void syncAssistant();
