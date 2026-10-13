@@ -129,10 +129,13 @@ void FilletToolController::picked(std::uint64_t body, const TopoDS_Shape& edge) 
         preview();
         return;
     }
-    const auto named = session_.filletEdge(support_, edge);
+    auto named = session_.filletEdge(support_, edge);
+    if (!named && previewSession_ && previewFeature_)
+        named = previewSession_->filletEdge(*previewFeature_, edge);
     if (!named) {
-        const auto message = QObject::tr("Diese Kante gehört nicht zum gewählten Körper oder "
-                                         "liegt nicht zwischen zwei seiner Flächen.");
+        const auto message = QObject::tr("Diese Kante lässt sich nicht wählen: Sie gehört nicht "
+                                         "zum gewählten Körper oder grenzt an eine neue "
+                                         "Rundungs- oder Fasenfläche.");
         panel_.setGuidance(message);
         statusChanged_(message);
         return;
@@ -161,6 +164,8 @@ void FilletToolController::showModel() {
     if (previewShown_ && previewChanged_)
         previewChanged_(nullptr);
     previewShown_ = false;
+    previewSession_.reset();
+    previewFeature_.reset();
 }
 
 void FilletToolController::preview() {
@@ -198,6 +203,11 @@ void FilletToolController::preview() {
         return;
     }
     panel_.setGuidance(guidance());
+    previewSession_ = candidate.candidate;
+    previewFeature_ = editing_ ? editing_
+                      : candidate.result.createdFeatures.empty()
+                          ? std::nullopt
+                          : std::optional{candidate.result.createdFeatures.front()};
     if (previewChanged_) {
         previewChanged_(&candidate.bodies);
         previewShown_ = true;
@@ -255,6 +265,8 @@ void FilletToolController::finish() {
     editing_.reset();
     stored_.reset();
     previewShown_ = false;
+    previewSession_.reset();
+    previewFeature_.reset();
     viewport_.setHighlightedEdges({}, {});
     viewport_.setEdgePicking(false);
     panel_.end();

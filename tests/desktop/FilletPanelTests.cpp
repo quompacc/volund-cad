@@ -155,6 +155,25 @@ void run() {
                 matches(volume(session), 4000),
             "Cancel keeps the box");
 
+    // User report 2026-10-12: further edges are picked on the previewed body; each one adds,
+    // a click on a chosen one removes it again.
+    openFillet(window, session, box);
+    const Corner second{edge.x, edge.y - 20, edge.z};
+    const Corner third{edge.x - 20, edge.y - 20, edge.z};
+    click(*viewport, edge);
+    click(*viewport, second);
+    click(*viewport, third);
+    require(guidance(window).startsWith(QStringLiteral("3 Kante")) &&
+                matches(shown(*viewport), 4000 - 3 * one),
+            "Three edges picked one after the other over the preview");
+    click(*viewport, second);
+    require(guidance(window).startsWith(QStringLiteral("2 Kante")) &&
+                matches(shown(*viewport), 4000 - 2 * one),
+            "A click on a chosen edge removes it");
+    button(window, "toolCancelButton").click();
+    settle();
+    require(matches(volume(session), 4000), "Cancel keeps the box");
+
     openFillet(window, session, box);
     click(*viewport, edge);
     button(window, "toolAcceptButton").click();

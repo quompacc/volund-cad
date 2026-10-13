@@ -11,6 +11,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <vector>
 
@@ -79,6 +80,10 @@ class FilletToolController final {
     std::optional<application::DocumentStamp> stamp_;
     bool active_{false};
     bool previewShown_{false};
+    // The shown preview and its feature: an edge picked on the previewed body is named by
+    // the faces there (user report 2026-10-12: a second edge was refused).
+    std::shared_ptr<const application::CadSession> previewSession_;
+    std::optional<document::FeatureId> previewFeature_;
 };
 
 } // namespace voelund::desktop

@@ -11,6 +11,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <deque>
+#include <memory>
 #include <optional>
 #include <string>
 #include <variant>
@@ -278,6 +279,9 @@ struct ActionResult final {
 struct ActionPreview final {
     ActionResult result;
     std::vector<features::EvaluatedBody> bodies; // Valid bodies of the candidate.
+    // M06 (user report 2026-10-12): the candidate itself, read-only, e.g. to name an edge
+    // picked on the previewed body.
+    std::shared_ptr<const CadSession> candidate{};
 };
 [[nodiscard]] ActionPreview previewAction(const CadSession& session, const ActionRequest& request);
 

@@ -7,12 +7,13 @@ namespace voelund::application {
 ActionPreview previewAction(const CadSession& session, const ActionRequest& request) {
     // The copy shares immutable document states and the evaluation cache; its commits never
     // reach the session it was copied from.
-    CadSession candidate = session;
-    ActionPreview preview{executeAction(candidate, request), {}};
+    auto candidate = std::make_shared<CadSession>(session);
+    ActionPreview preview{executeAction(*candidate, request), {}};
     preview.result.stamp = session.sceneStatus().document;
     if (preview.result.command.status() != CommandStatus::rejected) {
-        const auto bodies = candidate.validBodies();
+        const auto bodies = candidate->validBodies();
         preview.bodies.assign(bodies.begin(), bodies.end());
+        preview.candidate = std::move(candidate);
     }
     return preview;
 }
