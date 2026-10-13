@@ -9,14 +9,16 @@ Git-Historie dieser Datei.
 ## Stand des Repos
 
 - Branch `ux01`. `main` folgt nach jeder grünen Abnahme per Fast-Forward.
-- Letztes Paket: M08 (Code `d872d05`; CI-Lauf 563). Der Abnahme-Commit enthält diese
-  Datei. Vor dem Weiterarbeiten prüfen, ob `main` auf ihm steht; sonst seinen CI-Lauf
+- Letztes Paket: M08 (Code `d872d05`; CI-Lauf 563). Danach Korrekturen nach Nutzertests
+  vom 13.10. (`5a47096` bis `dd89158`, siehe
+  [Nachtrag](implementation-plan/evidence/M05-M08-Nachtrag-2026-10-13.md)). Der
+  Nachtrags-Commit enthält diese Datei. Vor dem Weiterarbeiten prüfen, ob `main` auf ihm steht; sonst seinen CI-Lauf
   prüfen und `main` nachziehen (siehe Arbeitsregeln).
 - **Tests:** Fedora (GCC, ohne Desktop) 112; Desktop unter virtuellem Wayland 49 (Lauf `^desktop`). **Windows:
   nur bauen**, keine Desktop-Tests auf dem Rechner des Nutzers (Nutzerwunsch 10.10.2026:
   aufblitzende Fenster stören). Desktop-Tests auf Fedora (Skript `~/bin/voelund-desktop.sh` auf Fedora, wie `~/repro-snap.sh`). Desktop-Tests laufen in der
   CI.
-- **Schema der Dokumente:** 13 (M02: symmetrische Extrusion, Schneiden; M01: Zylinder ohne Eingang, Körpernamen und -sichtbarkeit).
+- **Schema der Dokumente:** 17 (17: benannte Rundungs-/Fasenflächen und Kanten-IDs; 16: Bohrung; 15: Fase; 14: Verrundung; 13: symmetrische Extrusion, Schneiden; Verlauf in `docs/versioning.md`).
 
 ## Erledigt am 08.10.2026 (zweiter Block)
 
@@ -27,6 +29,7 @@ Git-Historie dieser Datei.
 | S04 | Fangmatrix für Linie/Polylinie/Rechteck; keine überflüssigen Beziehungen; Schalter „Beziehungen: Automatisch / Keine“ im Skizzenpanel | [S04](implementation-plan/evidence/S04.md) |
 | S05 | Kurvenbeziehungen nur für unterstützte Paare; keine angekündigte Tangente am Bogenende auf einer Linie; entartete Picks mit genauer Meldung | [S05](implementation-plan/evidence/S05.md) |
 | S09 | Exakter Versatz für Elemente und Konturen, Vorschau = Übernahme, Ellipse als nicht unterstützt gemeldet | [S09](implementation-plan/evidence/S09.md) |
+| Nachtrag (13.10.) | Nach Nutzertests: Kanten vorwählen (Strg ergänzt), Greifer für Radius/Abstand, Karten wachsen mit dem Text, Fase durch angrenzende Rundung, Kantenringe um behandelte Ecken (auch 2–3 mm), benannte Rundungs-/Fasenflächen (Schema 17). Grenze: kein Überlauf großer Rundungen („Kissen“ wie in Fusion) – OCCT-Grenze | [Nachtrag](implementation-plan/evidence/M05-M08-Nachtrag-2026-10-13.md) |
 | M08 (13.10.) | Bohrung (Schema 16): Klick auf ebene Fläche, X/Y im Flächenrahmen, Durchmesser, Tiefe oder durchgehend; weitere Klicks versetzen sie (auch über die Vorschau); A-HOLE-01. Dazu Fix M06/M07: weitere Kanten über die Vorschau wählbar (`5a47096`) | [M08](implementation-plan/evidence/M08.md) |
 | M07 (12.10.) | Fase als eigenes Feature „Fase N“ (Schema 15): Flächenpaar-Kanten, symmetrischer Abstand, eigener Befehl neben „Verrunden“ im selben Panel; Kernel/Auswertung mit der Verrundung geteilt | [M07](implementation-plan/evidence/M07.md) |
 | M06 (12.10.) | Verrunden im Werkzeugpanel: Kanten im Ansichtsfenster anklicken (gewählte orange, wieder anklickbar), Radius, Vorschau aus derselben Auswertung, abgelehnter Radius erklärt mit roten Kanten, OK/Abbrechen, Bearbeiten über Timeline; A-UI-02 für die Verrundung | [M06](implementation-plan/evidence/M06.md) |
@@ -60,6 +63,10 @@ Git-Historie dieser Datei.
 
 ## Nächste freie Pakete
 
+- **Zuerst mit dem Nutzer (14.10.):** Wie weiter mit großen, überlaufenden Rundungen?
+  Optionen: eigene Kehlen-Konstruktion als Notweg für innenliegende Kanten, oder
+  Freiform/Unterteilungsflächen (G5) für organische Formen. Einschätzung im
+  [Nachtrag](implementation-plan/evidence/M05-M08-Nachtrag-2026-10-13.md).
 - **M09** Parametrische Körperspiegelung (G3). Nächstes Paket nach Plan. Verrundung, Fase
   und Bohrung sind fertig (M05–M08, Schema 16); ihre Entscheidungen stehen in
   [M05](implementation-plan/evidence/M05.md), [M07](implementation-plan/evidence/M07.md) und
