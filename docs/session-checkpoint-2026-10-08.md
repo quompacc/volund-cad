@@ -63,10 +63,12 @@ Git-Historie dieser Datei.
 
 ## Nächste freie Pakete
 
-- **Zuerst mit dem Nutzer (14.10.):** Wie weiter mit großen, überlaufenden Rundungen?
-  Optionen: eigene Kehlen-Konstruktion als Notweg für innenliegende Kanten, oder
-  Freiform/Unterteilungsflächen (G5) für organische Formen. Einschätzung im
-  [Nachtrag](implementation-plan/evidence/M05-M08-Nachtrag-2026-10-13.md).
+- **Zuerst mit dem Nutzer (14.10.):** Verrundung bleibt beim Maschinenbau-Standardsatz
+  (Nutzer, 13.10.); kein Nachbau überlaufender Rundungen. Vorschlag des Nutzers für freie
+  Formen: Querschnitt zeichnen und **drehen** (Revolve, 360° oder Winkel) bzw. an einem
+  Pfad **folgen lassen** (Sweep). Beides steht noch nicht als Paket im Plan (nur X06 Loft
+  und X19 in G5). Zu klären: Drehen (und ggf. Folgen) als G3-Pakete aufnehmen und wann.
+  Einschätzung im [Nachtrag](implementation-plan/evidence/M05-M08-Nachtrag-2026-10-13.md).
 - **M09** Parametrische Körperspiegelung (G3). Nächstes Paket nach Plan. Verrundung, Fase
   und Bohrung sind fertig (M05–M08, Schema 16); ihre Entscheidungen stehen in
   [M05](implementation-plan/evidence/M05.md), [M07](implementation-plan/evidence/M07.md) und
