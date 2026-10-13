@@ -33,6 +33,8 @@ QString featureName(const ShellState& state) {
         return QObject::tr("Verrundung");
     case document::FeatureKind::chamfer:
         return QObject::tr("Fase");
+    case document::FeatureKind::hole:
+        return QObject::tr("Bohrung");
     }
     return QObject::tr("Feature");
 }
@@ -67,7 +69,7 @@ ContextCommands contextCommands(const ShellState& state) {
         break;
     case ShellSelection::planarFace:
         result.title = QObject::tr("Ebene Fläche");
-        result.commands = {"solid.create.sketch", "solid.modify.push_pull"};
+        result.commands = {"solid.create.sketch", "solid.modify.push_pull", "solid.modify.hole"};
         result.primary = "solid.create.sketch";
         break;
     case ShellSelection::body:

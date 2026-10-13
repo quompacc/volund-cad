@@ -59,7 +59,7 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                          "Bewegen"});
     commands_.push_back({"solid.modify.edit_sketch",
                          "Bearbeiten",
-                         "Gewählte Skizze, Extrusion, Verrundung oder Fase bearbeiten",
+                         "Gewähltes Feature bearbeiten (Skizze, Extrusion, Verrundung, Fase, Bohrung)",
                          {},
                          workspaces::CommandGroup::modify,
                          true,
@@ -100,6 +100,17 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                              simpleCommand(std::move(services.chamfer)),
                              std::move(services.canFillet),
                              "Fase"});
+    if (services.hole)
+        commands_.push_back({"solid.modify.hole",
+                             "Bohrung",
+                             "Bohrung an der angeklickten Stelle der gewählten Fläche",
+                             {},
+                             workspaces::CommandGroup::modify,
+                             true,
+                             false,
+                             simpleCommand(std::move(services.hole)),
+                             std::move(services.canHole),
+                             "Bohrung"});
 }
 
 std::string SolidWorkspaceModule::id() const { return "solid"; }

@@ -144,6 +144,8 @@ struct PlanarFaceSelection final {
     TopoDS_Shape selectedFace{};
     bool stableReferences{false};
     std::vector<SceneSketchPoint> referencePoints{};
+    // M08: where the click hit the face (model coordinates), when picked with the mouse.
+    std::optional<std::array<double, 3>> pickedPoint{};
 };
 
 [[nodiscard]] std::optional<PlanarFaceSelection>

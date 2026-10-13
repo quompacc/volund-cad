@@ -88,6 +88,11 @@ void MainWindow::createCommands() {
             syncShell();
             return;
         }
+        if (kind == document::FeatureKind::hole) {
+            impl_->holeTool->beginEdit(*selected);
+            syncShell();
+            return;
+        }
         static_cast<void>(impl_->sketchEditorTool->beginSelectedSketch());
     };
     services.extrudeProfiles = [this]() {
@@ -133,6 +138,18 @@ void MainWindow::createCommands() {
     };
     services.fillet = [treatEdges]() { treatEdges(EdgeTreatment::fillet); };
     services.chamfer = [treatEdges]() { treatEdges(EdgeTreatment::chamfer); }; // M07
+    // M08: a hole at the clicked point of the picked planar face.
+    services.hole = [this]() {
+        if (!impl_->selectedPlanarFace)
+            return;
+        if (impl_->sketchExtrusionTool->isActive())
+            impl_->sketchExtrusionTool->cancel();
+        impl_->holeTool->begin(*impl_->selectedPlanarFace);
+        syncShell();
+    };
+    services.canHole = [this]() {
+        return impl_->selectedPlanarFace.has_value() && impl_->shell().canSketch();
+    };
     services.canFillet = [this]() {
         const auto selected = impl_->session.selectedFeature();
         return selected &&

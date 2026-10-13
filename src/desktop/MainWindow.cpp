@@ -135,6 +135,10 @@ void MainWindow::createToolPanel() {
         impl_->session, *impl_->viewport, *impl_->toolPanel, [this]() { refreshScene(); },
         [this](const QString& message) { statusBar()->showMessage(message); });
     impl_->filletTool->setPreviewHandler(showPreview);
+    impl_->holeTool = std::make_unique<HoleToolController>( // M08
+        impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
+        [this](const QString& message) { statusBar()->showMessage(message); });
+    impl_->holeTool->setPreviewHandler(showPreview);
 }
 
 void MainWindow::createPropertiesPanel() {
@@ -236,6 +240,8 @@ void MainWindow::connectInteractions() {
         [this](const viewport::PlanarFaceSelection& selection) {
             if (impl_->pushPullTool->isActive())
                 return; // T04c: the face of a running push/pull stays.
+            if (impl_->holeTool->isActive())
+                return impl_->holeTool->place(selection); // M08: moves the hole there
             // T03: while the extrusion waits for its end face, the pick goes to the tool.
             if (impl_->sketchExtrusionTool->awaitsEndFace()) {
                 impl_->sketchExtrusionTool->pickEndFace(document::FeatureId{selection.bodyId},

@@ -44,6 +44,7 @@
 #include <SelectMgr_EntityOwner.hxx>
 #include <Standard_Failure.hxx>
 #include <StdSelect_BRepOwner.hxx>
+#include <StdSelect_ViewerSelector3d.hxx>
 #include <TopAbs_ShapeEnum.hxx>
 #include <TopoDS_Shape.hxx>
 #include <V3d_TypeOfOrientation.hxx>
@@ -276,6 +277,10 @@ class CadViewportScene {
                 const auto owner = occ::handle<StdSelect_BRepOwner>::DownCast(detectedOwner);
                 if (!owner.IsNull())
                     selection = planarFaceSelection(bodyId, owner->Shape());
+                if (selection && context->MainSelector()->NbPicked() > 0) {
+                    const gp_Pnt point = context->MainSelector()->PickedPoint(1);
+                    selection->pickedPoint = std::array<double, 3>{point.X(), point.Y(), point.Z()};
+                }
             }
             // The application callback may rebuild presentations; retain no vector reference.
             bodyHandler(bodyId);

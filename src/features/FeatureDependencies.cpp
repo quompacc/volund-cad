@@ -74,10 +74,13 @@ FeatureDependencies FeatureDependencies::from(const document::DocumentSnapshot& 
         }
         // M05/M07: a fillet or chamfer works on its body as it was before it.
         if (feature.kind == document::FeatureKind::fillet ||
-            feature.kind == document::FeatureKind::chamfer) {
+            feature.kind == document::FeatureKind::chamfer ||
+            feature.kind == document::FeatureKind::hole) {
             const auto body = feature.kind == document::FeatureKind::fillet
                                   ? snapshot.filletParameters(feature.id).body
-                                  : snapshot.chamferParameters(feature.id).body;
+                              : feature.kind == document::FeatureKind::chamfer
+                                  ? snapshot.chamferParameters(feature.id).body
+                                  : snapshot.holeParameters(feature.id).face.body;
             if (const auto producer = bodyProducerBefore(snapshot, feature.id, body))
                 node.inputs.push_back(*producer);
         }

@@ -13,4 +13,10 @@ void writeNativeChamfer(const TDF_Label& label, const ChamferParameters& paramet
 ChamferParameters readNativeChamfer(const TDF_Label& label, std::size_t remainingRecords,
                                     int schemaVersion);
 std::size_t nativeChamferRecords(const ChamferParameters& parameters);
+// M08 (schema 16): diameter on the label, body (1), face origin (2), x/y (3), depth (4,
+// absent for through all).
+void writeNativeHole(const TDF_Label& label, const HoleParameters& parameters);
+HoleParameters readNativeHole(const TDF_Label& label, std::size_t remainingRecords,
+                              int schemaVersion);
+std::size_t nativeHoleRecords(const HoleParameters& parameters);
 }

@@ -20,6 +20,7 @@ add_library(voelund_document STATIC
     NativeAttributeValues.cpp
     NativeExtrusion.cpp
     NativeFillet.cpp
+    FeatureTreatmentValidation.cpp
     NativeSketchGeometry.cpp
     NativeSketchPatterns.cpp
     NativeSketchConstraints.cpp

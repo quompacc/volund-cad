@@ -175,6 +175,22 @@ struct EditChamferParametersAction final {
     document::ChamferParameters parameters;
     bool operator==(const EditChamferParametersAction&) const = default;
 };
+// M08: a hole into a planar face of `support`'s current result at (x, y) of the face's
+// frame; no depth means through all (user decision 2026-10-13).
+struct CreateHoleAction final {
+    document::FeatureId support;
+    document::SubshapeOrigin face;
+    Quantity x;
+    Quantity y;
+    Quantity diameter;
+    std::optional<Quantity> depth;
+    bool operator==(const CreateHoleAction&) const = default;
+};
+struct EditHoleParametersAction final {
+    document::FeatureId hole;
+    document::HoleParameters parameters;
+    bool operator==(const EditHoleParametersAction&) const = default;
+};
 struct SetPlacementAction final {
     document::FeatureId feature;
     Quantity x;
@@ -196,7 +212,8 @@ using Action = std::variant<CreateParameterAction, SetParameterValueAction, Rena
                             EditBoxParametersAction, EditCylinderParametersAction,
                             EditExtrusionParametersAction, PushPullFaceAction,
                             CreateFilletAction, EditFilletParametersAction,
-                            CreateChamferAction, EditChamferParametersAction>;
+                            CreateChamferAction, EditChamferParametersAction,
+                            CreateHoleAction, EditHoleParametersAction>;
 // Parallel to the alternatives of Action.
 enum class ActionKind {
     createParameter,
@@ -222,7 +239,9 @@ enum class ActionKind {
     createFillet,
     editFilletParameters,
     createChamfer,
-    editChamferParameters
+    editChamferParameters,
+    createHole,
+    editHoleParameters
 };
 [[nodiscard]] ActionKind actionKind(const Action& action) noexcept;
 

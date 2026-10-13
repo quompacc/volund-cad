@@ -92,39 +92,6 @@ void validateExtrusion(const ExtrusionParameters& parameters) {
 
 } // namespace
 
-namespace {
-// M05/M07: the body, 1-256 distinct edges between two different faces, a model length.
-void validateEdgeTreatment(BodyId body, const std::vector<FilletEdge>& edges, double value) {
-    if (!kernel::modelLength(value))
-        throw std::invalid_argument(kernel::modelRangeDiagnostic);
-    if (body.value() == 0)
-        throw std::invalid_argument("A fillet or chamfer names its body");
-    if (edges.empty() || edges.size() > maximumFilletEdges)
-        throw std::invalid_argument("A fillet or chamfer treats between 1 and 256 edges");
-    for (std::size_t index = 0; index < edges.size(); ++index) {
-        const FilletEdge& edge = edges[index];
-        validateSubshapeOrigin(edge.first);
-        validateSubshapeOrigin(edge.second);
-        if (edge.first == edge.second)
-            throw std::invalid_argument("A fillet edge lies between two different faces");
-        for (std::size_t prior = 0; prior < index; ++prior) {
-            const FilletEdge& other = edges[prior];
-            if ((other.first == edge.first && other.second == edge.second) ||
-                (other.first == edge.second && other.second == edge.first))
-                throw std::invalid_argument("Fillet and chamfer edges must be unique");
-        }
-    }
-}
-} // namespace
-
-void validateFilletParameters(const FilletParameters& parameters) {
-    validateEdgeTreatment(parameters.body, parameters.edges, parameters.radius);
-}
-
-void validateChamferParameters(const ChamferParameters& parameters) {
-    validateEdgeTreatment(parameters.body, parameters.edges, parameters.distance);
-}
-
 ExtrusionOperation effectiveOperation(const ExtrusionParameters& parameters,
                                       bool baseSketch) noexcept {
     return parameters.operation.value_or(baseSketch ? ExtrusionOperation::newBody
@@ -297,6 +264,19 @@ FeatureId ModelDocument::addChamferFeature(std::string name,
     ++candidate.nextFeatureId;
     candidate.features.push_back(
         FeatureDescriptor{id, FeatureKind::chamfer, std::move(name), std::nullopt});
+    candidate.parameters.emplace_back(parameters);
+    static_cast<void>(featureBodyContexts(candidate.features, candidate.parameters));
+    commitState(std::move(candidate));
+    return id;
+}
+
+FeatureId ModelDocument::addHoleFeature(std::string name, const HoleParameters& parameters) {
+    validateHoleParameters(parameters);
+    const FeatureId id = nextFeatureId();
+    auto candidate = currentState();
+    ++candidate.nextFeatureId;
+    candidate.features.push_back(
+        FeatureDescriptor{id, FeatureKind::hole, std::move(name), std::nullopt});
     candidate.parameters.emplace_back(parameters);
     static_cast<void>(featureBodyContexts(candidate.features, candidate.parameters));
     commitState(std::move(candidate));
@@ -490,6 +470,29 @@ bool ModelDocument::setChamferParameters(FeatureId featureId,
         return false;
     auto candidate = currentState();
     *std::get_if<ChamferParameters>(&candidate.parameters.at(index)) = parameters;
+    static_cast<void>(featureBodyContexts(candidate.features, candidate.parameters));
+    commitState(std::move(candidate));
+    return true;
+}
+
+const HoleParameters& ModelDocument::holeParameters(FeatureId featureId) const {
+    const auto* value =
+        std::get_if<HoleParameters>(&impl_->view().parameters()[featureIndex(featureId)]);
+    if (value == nullptr)
+        throw std::out_of_range("Feature is not a hole");
+    return *value;
+}
+
+bool ModelDocument::setHoleParameters(FeatureId featureId, const HoleParameters& parameters) {
+    validateHoleParameters(parameters);
+    const std::size_t index = featureIndex(featureId);
+    auto* current = std::get_if<HoleParameters>(&impl_->view().parameters()[index]);
+    if (current == nullptr)
+        throw std::out_of_range("Feature is not a hole");
+    if (*current == parameters)
+        return false;
+    auto candidate = currentState();
+    *std::get_if<HoleParameters>(&candidate.parameters.at(index)) = parameters;
     static_cast<void>(featureBodyContexts(candidate.features, candidate.parameters));
     commitState(std::move(candidate));
     return true;

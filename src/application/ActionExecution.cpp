@@ -225,6 +225,16 @@ class Validation final {
         static_cast<void>(target(action.chamfer, ActionKind::editChamferParameters));
         finite({action.parameters.distance});
     }
+    void operator()(const CreateHoleAction& action) {
+        static_cast<void>(target(action.support, ActionKind::createHole));
+        lengths({action.x, action.y, action.diameter});
+        if (action.depth)
+            lengths({*action.depth});
+    }
+    void operator()(const EditHoleParametersAction& action) {
+        static_cast<void>(target(action.hole, ActionKind::editHoleParameters));
+        finite({action.parameters.x, action.parameters.y, action.parameters.diameter});
+    }
 
     [[nodiscard]] const Findings& findings() const noexcept { return findings_; }
 
@@ -338,6 +348,14 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot,
             },
             [&](const EditChamferParametersAction& a) {
                 return session.editChamferParameters(a.chamfer, a.parameters, reject);
+            },
+            [&](const CreateHoleAction& a) {
+                return session.createHole(
+                    a.support, a.face, a.x.value, a.y.value, a.diameter.value,
+                    a.depth ? std::optional{a.depth->value} : std::nullopt);
+            },
+            [&](const EditHoleParametersAction& a) {
+                return session.editHoleParameters(a.hole, a.parameters, reject);
             }},
         request.action);
 }

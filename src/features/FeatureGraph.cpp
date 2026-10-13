@@ -288,6 +288,9 @@ void runFeature(const document::DocumentSnapshot& document,
     case document::FeatureKind::chamfer:
         detail::evaluateChamfer(document, descriptor, outputs, bodies, references);
         break;
+    case document::FeatureKind::hole:
+        detail::evaluateHole(document, descriptor, outputs, bodies, references);
+        break;
     }
 }
 void restoreOutput(const EvaluatedFeature& output, std::vector<EvaluatedFeature>& outputs,

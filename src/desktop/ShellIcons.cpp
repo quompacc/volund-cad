@@ -141,6 +141,13 @@ void draw(QPainter& painter, ShellIcon icon, const QColor& ink, const QColor& ac
         painter.drawLine(QPointF(4, 11), QPointF(11, 4));
         painter.drawLine(QPointF(11, 4), QPointF(20, 4));
         break;
+    case ShellIcon::hole:
+        // A block with a drilled hole seen from the side.
+        painter.drawRect(QRectF(3.5, 8.5, 17, 11));
+        painter.drawLine(QPointF(9.5, 8.5), QPointF(9.5, 19.5));
+        painter.drawLine(QPointF(14.5, 8.5), QPointF(14.5, 19.5));
+        painter.drawLine(QPointF(12, 2), QPointF(12, 6));
+        break;
     case ShellIcon::editSketch:
         painter.drawRect(QRectF(3.5, 6.5, 12, 12));
         painter.drawLine(QPointF(11, 15), QPointF(20, 6));

@@ -26,7 +26,7 @@ class DocumentSerializer;
 class DocumentTransaction;
 class DocumentSnapshot;
 
-enum class FeatureKind { box, cylinder, sketch, extrusion, fillet, chamfer };
+enum class FeatureKind { box, cylinder, sketch, extrusion, fillet, chamfer, hole };
 enum class CylinderResultMode { join, cut, intersect, separate };
 
 struct BoxParameters final {
@@ -166,6 +166,18 @@ struct ChamferParameters final {
     [[nodiscard]] bool operator==(const ChamferParameters&) const = default;
 };
 void validateChamferParameters(const ChamferParameters& parameters);
+// M08 (schema 16, user decision 2026-10-13): a cylindrical hole into a planar body face. It
+// sits at (x, y) in the face's frame (the frame a sketch on that face gets) and runs along
+// the inward normal, `depth` deep with a flat bottom, or through the whole body without one.
+struct HoleParameters final {
+    BodyFaceReference face;
+    double x;
+    double y;
+    double diameter;
+    std::optional<double> depth{};
+    [[nodiscard]] bool operator==(const HoleParameters&) const = default;
+};
+void validateHoleParameters(const HoleParameters& parameters);
 
 // The operation in effect, with the earlier rule for an unset one.
 [[nodiscard]] ExtrusionOperation effectiveOperation(const ExtrusionParameters& parameters,
@@ -179,8 +191,9 @@ struct FeatureDescriptor final {
     [[nodiscard]] bool operator==(const FeatureDescriptor&) const = default;
 };
 
-using FeatureParameters = std::variant<BoxParameters, CylinderParameters, SketchParameters,
-                                       ExtrusionParameters, FilletParameters, ChamferParameters>;
+using FeatureParameters =
+    std::variant<BoxParameters, CylinderParameters, SketchParameters, ExtrusionParameters,
+                 FilletParameters, ChamferParameters, HoleParameters>;
 
 // PAR01: every binding names an existing parameter of a matching unit, only dimensional
 // constraints bind, and the table itself is valid. Throws std::invalid_argument.
@@ -223,6 +236,7 @@ class ModelDocument final {
     [[nodiscard]] FeatureId addFilletFeature(std::string name, const FilletParameters& parameters);
     [[nodiscard]] FeatureId addChamferFeature(std::string name,
                                               const ChamferParameters& parameters);
+    [[nodiscard]] FeatureId addHoleFeature(std::string name, const HoleParameters& parameters);
     [[nodiscard]] const kernel::BoxDimensions& boxDimensions(FeatureId featureId) const;
     [[nodiscard]] const BoxParameters& boxParameters(FeatureId featureId) const;
     [[nodiscard]] bool setBoxDimensions(FeatureId featureId,
@@ -242,6 +256,8 @@ class ModelDocument final {
     [[nodiscard]] const ChamferParameters& chamferParameters(FeatureId featureId) const;
     [[nodiscard]] bool setChamferParameters(FeatureId featureId,
                                             const ChamferParameters& parameters);
+    [[nodiscard]] const HoleParameters& holeParameters(FeatureId featureId) const;
+    [[nodiscard]] bool setHoleParameters(FeatureId featureId, const HoleParameters& parameters);
     [[nodiscard]] const kernel::RigidTransform& featurePlacement(FeatureId featureId) const;
     [[nodiscard]] bool setFeaturePlacement(FeatureId featureId,
                                            const kernel::RigidTransform& placement);

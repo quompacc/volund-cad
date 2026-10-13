@@ -30,6 +30,8 @@ ShellIcon iconFor(document::FeatureKind kind) {
         return ShellIcon::fillet;
     case document::FeatureKind::chamfer:
         return ShellIcon::chamfer;
+    case document::FeatureKind::hole:
+        return ShellIcon::hole;
     }
     return ShellIcon::box;
 }

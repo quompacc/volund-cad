@@ -46,6 +46,10 @@ inline QString booleanFailureText(const std::string& code) {
     if (code == "chamfer-edge-missing")
         return QObject::tr("Fase: Eine angefaste Kante gibt es so nicht mehr, ihre Flächen "
                            "wurden entfernt oder berühren sich nicht mehr.");
+    // M08: a hole whose face is gone.
+    if (code == "hole-face-missing")
+        return QObject::tr("Bohrung: Die Fläche der Bohrung gibt es so nicht mehr. Wähle die "
+                           "Bohrung neu auf einer Fläche des Körpers.");
     // M04: an invalid region names its contour; the shell marks the elements red.
     if (code == "region-needs-repair")
         return QObject::tr("Bereich: Die Kontur dieses Bereichs wurde in der Skizze geändert "

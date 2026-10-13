@@ -62,7 +62,8 @@ ShellState projectShell(const application::CadSession& session, const ShellInput
         state.featureKind = session.selectedFeatureDescriptor().kind;
     state.regionExtrudable = session.canExtrudeSelectedSketchProfiles();
     state.filletEditable = state.featureKind == document::FeatureKind::fillet ||
-                           state.featureKind == document::FeatureKind::chamfer;
+                           state.featureKind == document::FeatureKind::chamfer ||
+                           state.featureKind == document::FeatureKind::hole;
     if (state.featureKind == document::FeatureKind::extrusion)
         state.extrusionEditable =
             !session.identifiedSnapshot().snapshot().extrusionParameters(*state.feature).faceProfile;

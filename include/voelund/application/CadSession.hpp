@@ -225,6 +225,16 @@ class CadSession final {
                           ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] document::ChamferParameters
     chamferParameters(document::FeatureId featureId) const;
+    // M08: a hole into a planar face of `support`'s current result ("Bohrung N"), at (x, y)
+    // of the face's frame; no depth means through all. One undo step.
+    [[nodiscard]] CommandResult createHole(document::FeatureId support,
+                                           const document::SubshapeOrigin& face, double x,
+                                           double y, double diameter,
+                                           std::optional<double> depth);
+    [[nodiscard]] CommandResult
+    editHoleParameters(document::FeatureId featureId, const document::HoleParameters& parameters,
+                       ErrorDisposition disposition = ErrorDisposition::reject);
+    [[nodiscard]] document::HoleParameters holeParameters(document::FeatureId featureId) const;
     // M06: the named edge of `support`'s current result at a picked edge (between two named
     // faces), and back the result's edges of named edges, e.g. to highlight them.
     [[nodiscard]] std::optional<document::FilletEdge> filletEdge(document::FeatureId support,

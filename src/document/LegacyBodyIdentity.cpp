@@ -37,6 +37,9 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
     case FeatureKind::chamfer:
         matches = std::holds_alternative<ChamferParameters>(parameters);
         break;
+    case FeatureKind::hole:
+        matches = std::holds_alternative<HoleParameters>(parameters);
+        break;
     }
     if (!matches)
         throw std::invalid_argument("Legacy body identity: feature parameter kind mismatch");
@@ -44,7 +47,7 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
     // alone; every other feature has an input.
     const bool standalone =
         feature.kind == FeatureKind::box || feature.kind == FeatureKind::fillet ||
-        feature.kind == FeatureKind::chamfer ||
+        feature.kind == FeatureKind::chamfer || feature.kind == FeatureKind::hole ||
         (feature.kind == FeatureKind::sketch && std::get<SketchParameters>(parameters).datum) ||
         (feature.kind == FeatureKind::extrusion &&
          std::get<ExtrusionParameters>(parameters).faceProfile);
@@ -124,6 +127,9 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
             return std::get<FilletParameters>(parameters[index]).body;
         if (features[index].kind == FeatureKind::chamfer)
             return std::get<ChamferParameters>(parameters[index]).body;
+        // M08: a hole cuts the body of its face.
+        if (features[index].kind == FeatureKind::hole)
+            return std::get<HoleParameters>(parameters[index]).face.body;
         return std::nullopt;
     };
     for (std::size_t index = 0; index < features.size(); ++index)

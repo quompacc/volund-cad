@@ -90,6 +90,9 @@ const FilletParameters& DocumentSnapshot::filletParameters(FeatureId id) const {
 const ChamferParameters& DocumentSnapshot::chamferParameters(FeatureId id) const {
     return std::get<ChamferParameters>(featureParameters(id));
 }
+const HoleParameters& DocumentSnapshot::holeParameters(FeatureId id) const {
+    return std::get<HoleParameters>(featureParameters(id));
+}
 const kernel::BoxDimensions& DocumentSnapshot::boxDimensions(FeatureId id) const {
     return boxParameters(id).dimensions;
 }

@@ -3,6 +3,7 @@
 #include <TDataStd_AsciiString.hxx>
 #include <TDataStd_Integer.hxx>
 #include <TDataStd_Real.hxx>
+#include <TDataStd_RealArray.hxx>
 #include <charconv>
 #include <string>
 
@@ -117,6 +118,45 @@ ChamferParameters readNativeChamfer(const TDF_Label& label, std::size_t remainin
     auto decoded = readEdges(label, remainingRecords, schemaVersion);
     ChamferParameters result{decoded.body, std::move(decoded.edges), decoded.value};
     validateChamferParameters(result);
+    return result;
+}
+std::size_t nativeHoleRecords(const HoleParameters& parameters) {
+    return parameters.face.origin.extrusionBoundary.size();
+}
+
+void writeNativeHole(const TDF_Label& label, const HoleParameters& parameters) {
+    validateHoleParameters(parameters);
+    TDataStd_Real::Set(label, parameters.diameter);
+    TDataStd_AsciiString::Set(label.FindChild(1),
+                              std::to_string(parameters.face.body.value()).c_str());
+    writeNativeSubshapeOrigin(label.FindChild(2), parameters.face.origin);
+    auto position = TDataStd_RealArray::Set(label.FindChild(3), 1, 2);
+    position->SetValue(1, parameters.x);
+    position->SetValue(2, parameters.y);
+    if (parameters.depth)
+        TDataStd_Real::Set(label.FindChild(4), *parameters.depth);
+}
+
+HoleParameters readNativeHole(const TDF_Label& label, std::size_t remainingRecords,
+                              int schemaVersion) {
+    const auto depth = label.FindChild(4, false);
+    require(schemaVersion >= 16 && label.NbChildren() == (depth.IsNull() ? 3 : 4));
+    Handle(TDataStd_Real) diameter;
+    require(label.FindAttribute(TDataStd_Real::GetID(), diameter));
+    const BodyId body{readDecimal(child(label, 1))};
+    auto origin = readFace(child(label, 2), remainingRecords, schemaVersion);
+    Handle(TDataStd_RealArray) position;
+    const auto at = child(label, 3);
+    require(at.NbChildren() == 0 && at.FindAttribute(TDataStd_RealArray::GetID(), position) &&
+            position->Lower() == 1 && position->Upper() == 2);
+    HoleParameters result{BodyFaceReference{body, std::move(origin)}, position->Value(1),
+                          position->Value(2), diameter->Get()};
+    if (!depth.IsNull()) {
+        Handle(TDataStd_Real) value;
+        require(depth.NbChildren() == 0 && depth.FindAttribute(TDataStd_Real::GetID(), value));
+        result.depth = value->Get();
+    }
+    validateHoleParameters(result);
     return result;
 }
 } // namespace voelund::document::detail

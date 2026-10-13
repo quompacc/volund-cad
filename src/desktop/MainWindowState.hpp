@@ -11,6 +11,7 @@
 #include "ShellHeader.hpp"
 #include "ShellState.hpp"
 #include "FilletToolController.hpp"
+#include "HoleToolController.hpp"
 #include "PushPullToolController.hpp"
 #include "SketchEditorToolController.hpp"
 #include "SketchExtrusionToolController.hpp"
@@ -59,7 +60,8 @@ class MainWindow::Impl final {
             inputs.tool = ShellTool::sketchEditor;
         else if ((sketchExtrusionTool && sketchExtrusionTool->isActive()) ||
                  (pushPullTool && pushPullTool->isActive()) ||
-                 (filletTool && filletTool->isActive()))
+                 (filletTool && filletTool->isActive()) ||
+                 (holeTool && holeTool->isActive()))
             inputs.tool = ShellTool::extrusion; // Its panel carries the controls (T04c).
         else if (transformAction && transformAction->isChecked())
             inputs.tool = ShellTool::transform;
@@ -82,6 +84,7 @@ class MainWindow::Impl final {
     std::unique_ptr<SketchExtrusionToolController> sketchExtrusionTool;
     std::unique_ptr<PushPullToolController> pushPullTool; // T04c
     std::unique_ptr<FilletToolController> filletTool;     // M06
+    std::unique_ptr<HoleToolController> holeTool;         // M08
     ShellHeader* header{nullptr};
     ViewCube* viewCube{nullptr};
     QAction* themeAction{nullptr};

@@ -29,6 +29,9 @@ struct SolidCommandServices final {
     std::function<bool()> canFillet{};
     // M07: a symmetric chamfer of edges of the selected body, enabled like the fillet.
     std::function<void()> chamfer{};
+    // M08: a hole at the clicked point of the picked planar face.
+    std::function<void()> hole{};
+    std::function<bool()> canHole{};
 };
 
 class SolidWorkspaceModule final : public workspaces::WorkspaceModule {

@@ -87,7 +87,7 @@ void surfaces() {
                                       "solid.create.sketch",    "solid.create.extrude_profiles",
                                       "solid.modify.transform", "solid.modify.edit_sketch",
                                       "solid.modify.push_pull", "solid.modify.fillet",
-                                      "solid.modify.chamfer"};
+                                      "solid.modify.chamfer", "solid.modify.hole"};
     require(railIds == solid, "The rail shows every solid command");
     require(!command(window, "solid.create.sketch")->isEnabled(),
             "Unfitting commands stay visible but disabled");
