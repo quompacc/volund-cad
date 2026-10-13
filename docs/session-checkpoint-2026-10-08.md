@@ -9,10 +9,10 @@ Git-Historie dieser Datei.
 ## Stand des Repos
 
 - Branch `ux01`. `main` folgt nach jeder grünen Abnahme per Fast-Forward.
-- Letztes Paket: M07 (Code `7164b2f`; CI-Lauf 558). Der Abnahme-Commit enthält diese
+- Letztes Paket: M08 (Code `d872d05`; CI-Lauf 563). Der Abnahme-Commit enthält diese
   Datei. Vor dem Weiterarbeiten prüfen, ob `main` auf ihm steht; sonst seinen CI-Lauf
   prüfen und `main` nachziehen (siehe Arbeitsregeln).
-- **Tests:** Fedora (GCC, ohne Desktop) 111; Desktop unter virtuellem Wayland 48 (Lauf `^desktop`). **Windows:
+- **Tests:** Fedora (GCC, ohne Desktop) 112; Desktop unter virtuellem Wayland 49 (Lauf `^desktop`). **Windows:
   nur bauen**, keine Desktop-Tests auf dem Rechner des Nutzers (Nutzerwunsch 10.10.2026:
   aufblitzende Fenster stören). Desktop-Tests auf Fedora (Skript `~/bin/voelund-desktop.sh` auf Fedora, wie `~/repro-snap.sh`). Desktop-Tests laufen in der
   CI.
@@ -27,6 +27,7 @@ Git-Historie dieser Datei.
 | S04 | Fangmatrix für Linie/Polylinie/Rechteck; keine überflüssigen Beziehungen; Schalter „Beziehungen: Automatisch / Keine“ im Skizzenpanel | [S04](implementation-plan/evidence/S04.md) |
 | S05 | Kurvenbeziehungen nur für unterstützte Paare; keine angekündigte Tangente am Bogenende auf einer Linie; entartete Picks mit genauer Meldung | [S05](implementation-plan/evidence/S05.md) |
 | S09 | Exakter Versatz für Elemente und Konturen, Vorschau = Übernahme, Ellipse als nicht unterstützt gemeldet | [S09](implementation-plan/evidence/S09.md) |
+| M08 (13.10.) | Bohrung (Schema 16): Klick auf ebene Fläche, X/Y im Flächenrahmen, Durchmesser, Tiefe oder durchgehend; weitere Klicks versetzen sie (auch über die Vorschau); A-HOLE-01. Dazu Fix M06/M07: weitere Kanten über die Vorschau wählbar (`5a47096`) | [M08](implementation-plan/evidence/M08.md) |
 | M07 (12.10.) | Fase als eigenes Feature „Fase N“ (Schema 15): Flächenpaar-Kanten, symmetrischer Abstand, eigener Befehl neben „Verrunden“ im selben Panel; Kernel/Auswertung mit der Verrundung geteilt | [M07](implementation-plan/evidence/M07.md) |
 | M06 (12.10.) | Verrunden im Werkzeugpanel: Kanten im Ansichtsfenster anklicken (gewählte orange, wieder anklickbar), Radius, Vorschau aus derselben Auswertung, abgelehnter Radius erklärt mit roten Kanten, OK/Abbrechen, Bearbeiten über Timeline; A-UI-02 für die Verrundung | [M06](implementation-plan/evidence/M06.md) |
 | M05 (12.10.) | Verrundung als Feature (Schema 14): Kante als Paar benannter Flächen, ein Radius, mehrere Kanten; Kernel mit Historie und Rückführung des Fehlers auf Kanten; A-FILLET-01; Linux-OCCT um `TKFillet` ergänzt | [M05](implementation-plan/evidence/M05.md) |
@@ -59,9 +60,10 @@ Git-Historie dieser Datei.
 
 ## Nächste freie Pakete
 
-- **M08** Parametrische einfache Bohrung (G3). Nächstes Paket nach Plan. Verrundung und
-  Fase sind fertig (M05–M07, Schema 15); ihre Entscheidungen stehen in
-  [M05](implementation-plan/evidence/M05.md) und [M07](implementation-plan/evidence/M07.md). Entscheidungen zu M05 (Kante als Flächenpaar, ein Feature mit Kantenliste,
+- **M09** Parametrische Körperspiegelung (G3). Nächstes Paket nach Plan. Verrundung, Fase
+  und Bohrung sind fertig (M05–M08, Schema 16); ihre Entscheidungen stehen in
+  [M05](implementation-plan/evidence/M05.md), [M07](implementation-plan/evidence/M07.md) und
+  [M08](implementation-plan/evidence/M08.md). Entscheidungen zu M05 (Kante als Flächenpaar, ein Feature mit Kantenliste,
   Schema 14) stehen in [M05](implementation-plan/evidence/M05.md). G2 ist bis auf PAR02 erreicht ([G2](implementation-plan/evidence/G2.md)). M01 und M02 sind abgenommen; ihre Entscheidungen stehen in den
   Nachweisen [M01](implementation-plan/evidence/M01.md) und
   [M02](implementation-plan/evidence/M02.md).

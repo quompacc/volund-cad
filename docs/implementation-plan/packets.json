@@ -2401,12 +2401,14 @@
       ],
       "acceptance": "Zylinderbohrung durch Quader hat analytisch korrektes Volumen; Blindtiefe endet richtig, ThroughAll bleibt nach Körperdickenänderung durchgehend. A-HOLE-01 besteht.",
       "boundary": "Gewinde, Senkung und Normteilkatalog erst nach eigenem Fachvertrag; keine bloße kosmetische Gewindebehauptung.",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "chapter": "05-solid-historie.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "docs/implementation-plan/evidence/M08.md"
+      ],
+      "completedCommit": "d872d05"
     },
     {
       "id": "M09",
