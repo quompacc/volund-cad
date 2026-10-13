@@ -56,6 +56,10 @@ class FilletToolController final {
     void preview();
     void highlight(const std::vector<std::uint64_t>& failing);
     void showModel();
+    // User request 2026-10-13: a grip on the first edge, dragged into the corner, sets the
+    // radius or distance.
+    void placeGrip();
+    void dragged(double value, bool finished);
     [[nodiscard]] application::Action action() const;
     [[nodiscard]] bool unchanged() const;
     void accept();
@@ -87,6 +91,8 @@ class FilletToolController final {
     // the faces there (user report 2026-10-12: a second edge was refused).
     std::shared_ptr<const application::CadSession> previewSession_;
     std::optional<document::FeatureId> previewFeature_;
+    std::optional<document::FilletEdge> gripEdge_;
+    bool previewPending_{false};
 };
 
 } // namespace voelund::desktop

@@ -8,6 +8,7 @@
 #include <QApplication>
 #include <QDir>
 #include <QDoubleSpinBox>
+#include <QElapsedTimer>
 #include <QLabel>
 #include <QStatusBar>
 #include <QPushButton>
@@ -18,6 +19,7 @@
 #include <filesystem>
 #include <iostream>
 #include <numbers>
+#include <optional>
 #include <string>
 #include <voelund/application/CadSession.hpp>
 #include <voelund/desktop/MainWindow.hpp>
@@ -186,6 +188,51 @@ void run() {
     button(window, "toolCancelButton").click();
     settle();
     require(matches(volume(session), 4000), "Cancel keeps the box");
+
+    // User request 2026-10-13: a grip on the edge, dragged into the corner, sets the radius;
+    // the preview follows while the button is down.
+    openFillet(window, session, box);
+    click(*viewport, edge);
+    const double half = std::sqrt(0.5);
+    const QPoint base = viewport::ViewportTestAccess::project(*viewport, edge.x - half,
+                                                              edge.y - half, edge.z);
+    const QPoint inward = viewport::ViewportTestAccess::project(
+        *viewport, edge.x - half - 15 * half, edge.y - half - 15 * half, edge.z);
+    const QPointF direction =
+        QPointF(inward - base) / std::hypot(inward.x() - base.x(), inward.y() - base.y());
+    std::optional<QPoint> grip;
+    for (int step = 0; step <= 120 && !grip; step += 2) {
+        const QPoint candidate = base + (direction * step).toPoint();
+        test::mouse(*viewport, QEvent::MouseMove, candidate, Qt::NoButton, Qt::NoButton);
+        if (viewport::ViewportTestAccess::pushPullArrowHovered(*viewport))
+            grip = candidate;
+    }
+    require(grip.has_value(), "The grip arrow sits on the chosen edge");
+    const double before = shown(*viewport);
+    test::mouse(*viewport, QEvent::MouseButtonPress, *grip, Qt::LeftButton, Qt::LeftButton);
+    test::mouse(*viewport, QEvent::MouseMove, *grip + (direction * 30).toPoint(), Qt::NoButton,
+                Qt::LeftButton);
+    QElapsedTimer waiting;
+    waiting.start();
+    while (waiting.elapsed() < 200)
+        QApplication::processEvents(QEventLoop::AllEvents, 20);
+    require(shown(*viewport) < before - 0.1, "The rounding grows while the grip is dragged");
+    test::mouse(*viewport, QEvent::MouseButtonRelease, *grip + (direction * 30).toPoint(),
+                Qt::LeftButton, Qt::NoButton);
+    settle();
+    QDoubleSpinBox* radius = nullptr;
+    for (auto* candidate :
+         panel(window)->findChildren<QDoubleSpinBox*>(QStringLiteral("toolLength_radius")))
+        if (candidate->isVisible())
+            radius = candidate;
+    require(radius != nullptr && radius->value() > 1.5 &&
+                std::abs(radius->value() - std::round(radius->value())) < 1e-9,
+            "Dragging the grip sets a larger radius in snapped steps");
+    const double r = radius->value();
+    require(matches(shown(*viewport), 4000 - 10 * r * r * (1 - pi / 4)),
+            "The preview shows the dragged radius");
+    button(window, "toolCancelButton").click();
+    settle();
 
     // User report 2026-10-12: further edges are picked on the previewed body; each one adds,
     // a click on a chosen one removes it again.

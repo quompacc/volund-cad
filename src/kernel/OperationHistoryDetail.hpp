@@ -2,6 +2,7 @@
 
 #include <BRepAlgoAPI_BooleanOperation.hxx>
 #include <BRepBuilderAPI_MakeShape.hxx>
+#include <BRepTools_History.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
 #include <NCollection_IndexedMap.hxx>
 #include <NCollection_List.hxx>
@@ -37,9 +38,22 @@ inline void configureBoolean(BRepAlgoAPI_BooleanOperation& operation, const Topo
     operation.SetToFillHistory(true);
     operation.Build();
 }
-// M05: any OCCT builder with Modified/Generated/IsDeleted (Booleans, fillets).
-inline void appendHistory(ShapeOperationResult& result, BRepBuilderAPI_MakeShape& operation,
-                          bool hasHistory, const TopoDS_Shape& input, HistoryOperand operand) {
+// User report 2026-10-13: several steps merged into one history (BRepTools_History).
+struct MergedHistory final {
+    BRepTools_History& history;
+    const NCollection_List<TopoDS_Shape>& Modified(const TopoDS_Shape& shape) {
+        return history.Modified(shape);
+    }
+    const NCollection_List<TopoDS_Shape>& Generated(const TopoDS_Shape& shape) {
+        return history.Generated(shape);
+    }
+    bool IsDeleted(const TopoDS_Shape& shape) { return history.IsRemoved(shape); }
+};
+// M05: any OCCT builder with Modified/Generated/IsDeleted (Booleans, fillets), or a merged
+// history.
+template <class Operation>
+inline void appendHistory(ShapeOperationResult& result, Operation& operation, bool hasHistory,
+                          const TopoDS_Shape& input, HistoryOperand operand) {
     NCollection_IndexedMap<TopoDS_Shape, TopTools_ShapeMapHasher> outputs;
     TopExp::MapShapes(result.shape, outputs);
     for (const auto& source : uniqueSubshapes(input)) {

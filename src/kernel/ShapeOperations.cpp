@@ -23,6 +23,8 @@
 #include <TopoDS.hxx>
 #include <TopoDS_Face.hxx>
 #include <TopoDS_Vertex.hxx>
+#include <GeomAPI_ProjectPointOnCurve.hxx>
+#include <Geom_Curve.hxx>
 #include <gp_Pnt.hxx>
 #include <gp_Vec.hxx>
 #include <optional>
@@ -96,6 +98,96 @@ ShapeOperationResult treatEdges(KernelOperation operation, BooleanFailure failur
         throw KernelError(operation, occtFailureDiagnostic(error), failure);
     }
 }
+// The edges of `shape` that are pieces of `original` (shortened or split by an earlier step):
+// their middle lies on the original curve within its range.
+std::vector<TopoDS_Edge> piecesOf(const TopoDS_Shape& shape, const TopoDS_Edge& original) {
+    std::vector<TopoDS_Edge> pieces;
+    double first = 0.0, last = 0.0;
+    const Handle(Geom_Curve) curve = BRep_Tool::Curve(original, first, last);
+    if (curve.IsNull())
+        return pieces;
+    for (TopExp_Explorer explorer(shape, TopAbs_EDGE); explorer.More(); explorer.Next()) {
+        const TopoDS_Edge candidate = TopoDS::Edge(explorer.Current());
+        if (BRep_Tool::Degenerated(candidate) ||
+            std::ranges::any_of(pieces, [&](const auto& known) { return known.IsSame(candidate); }))
+            continue;
+        const BRepAdaptor_Curve adaptor(candidate);
+        const gp_Pnt middle =
+            adaptor.Value((adaptor.FirstParameter() + adaptor.LastParameter()) / 2);
+        GeomAPI_ProjectPointOnCurve projection(middle, curve, first, last);
+        if (projection.NbPoints() > 0 && projection.LowerDistance() < 1e-6)
+            pieces.push_back(candidate);
+    }
+    return pieces;
+}
+
+// User report 2026-10-13: OCCT refuses several edges at once where their corners meet other
+// treatments (a loop around a chamfered corner), although each edge alone works. The edges
+// are then treated one after the other in the same feature; the histories are merged so
+// names follow through all steps.
+template <class Builder>
+ShapeOperationResult treatEdgesOneByOne(KernelOperation operation, BooleanFailure failure,
+                                        const TopoDS_Shape& input,
+                                        std::span<const TopoDS_Edge> edges, double value) {
+    TopoDS_Shape current = input;
+    Handle(BRepTools_History) history;
+    try {
+        for (const TopoDS_Edge& original : edges) {
+            // Earlier steps shorten neighbouring edges into new shapes; find them on the curve.
+            const auto pieces = history.IsNull() ? std::vector<TopoDS_Edge>{original}
+                                                 : piecesOf(current, original);
+            if (pieces.empty())
+                throw KernelError(operation, "an edge vanished in an earlier step", failure);
+            Builder builder(current);
+            for (const TopoDS_Edge& piece : pieces)
+                builder.Add(value, piece);
+            builder.Build();
+            if (!builder.IsDone() || builder.Shape().IsNull() ||
+                solidCountOf(builder.Shape()) != solidCountOf(input) ||
+                !BRepCheck_Analyzer(builder.Shape()).IsValid())
+                throw KernelError(operation, "the edges cannot take this radius or distance",
+                                  failure);
+            NCollection_List<TopoDS_Shape> arguments;
+            arguments.Append(current);
+            Handle(BRepTools_History) step = new BRepTools_History(arguments, builder);
+            if (history.IsNull())
+                history = step;
+            else
+                history->Merge(step);
+            current = builder.Shape();
+        }
+    } catch (const KernelError&) {
+        throw;
+    } catch (const Standard_OutOfMemory&) {
+        throw;
+    } catch (const Standard_ProgramError&) {
+        throw;
+    } catch (const Standard_Failure& error) {
+        throw KernelError(operation, occtFailureDiagnostic(error), failure);
+    }
+    ShapeOperationResult result{current, {}, {}};
+    detail::MergedHistory merged{*history};
+    detail::appendHistory(result, merged, true, input, HistoryOperand::first);
+    return result;
+}
+// All edges in one step, else one after the other.
+template <class Builder>
+ShapeOperationResult treatEdgesRobustly(KernelOperation operation, BooleanFailure failure,
+                                        const TopoDS_Shape& input,
+                                        std::span<const TopoDS_Edge> edges, double value) {
+    try {
+        return treatEdges<Builder>(operation, failure, input, edges, value);
+    } catch (const KernelError& together) {
+        if (together.failure() != failure || edges.size() < 2)
+            throw;
+        try {
+            return treatEdgesOneByOne<Builder>(operation, failure, input, edges, value);
+        } catch (const KernelError&) {
+            throw together;
+        }
+    }
+}
+
 template <class Treat>
 std::vector<std::size_t> failingEdges(std::span<const TopoDS_Edge> edges, Treat treat) {
     std::vector<std::size_t> failing;
@@ -116,8 +208,8 @@ std::vector<std::size_t> failingEdges(std::span<const TopoDS_Edge> edges, Treat 
 ShapeOperationResult ShapeOperations::filletWithHistory(const TopoDS_Shape& input,
                                                         std::span<const TopoDS_Edge> edges,
                                                         double radius) {
-    return treatEdges<BRepFilletAPI_MakeFillet>(KernelOperation::fillet,
-                                                BooleanFailure::filletFailed, input, edges, radius);
+    return treatEdgesRobustly<BRepFilletAPI_MakeFillet>(
+        KernelOperation::fillet, BooleanFailure::filletFailed, input, edges, radius);
 }
 
 std::vector<std::size_t> ShapeOperations::failingFilletEdges(const TopoDS_Shape& input,
@@ -233,7 +325,7 @@ ShapeOperationResult ShapeOperations::chamferWithHistory(const TopoDS_Shape& inp
                                                          std::span<const TopoDS_Edge> edges,
                                                          double distance) {
     try {
-        return treatEdges<BRepFilletAPI_MakeChamfer>(
+        return treatEdgesRobustly<BRepFilletAPI_MakeChamfer>(
             KernelOperation::chamfer, BooleanFailure::chamferFailed, input, edges, distance);
     } catch (const KernelError& builderError) {
         if (builderError.failure() != BooleanFailure::chamferFailed)

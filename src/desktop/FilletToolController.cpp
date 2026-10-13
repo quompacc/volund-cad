@@ -9,6 +9,11 @@
 #include <voelund/features/FilletEdges.hpp>
 
 #include <QObject>
+#include <QTimer>
+
+#include <BRep_Builder.hxx>
+#include <TopoDS_Compound.hxx>
+#include <cmath>
 
 #include <algorithm>
 #include <utility>
@@ -95,6 +100,8 @@ void FilletToolController::open(document::FeatureId support,
         [this]() { cancel(); },
         {}});
     viewport_.setEdgePicking(true);
+    viewport_.setPushPullHandler([this](double to, bool finished) { dragged(to, finished); });
+    gripEdge_.reset();
     preview();
     statusChanged_(chamfer ? QObject::tr("Fase: Kanten anklicken, Abstand eingeben")
                            : QObject::tr("Verrunden: Kanten anklicken, Radius eingeben"));
@@ -147,6 +154,64 @@ void FilletToolController::picked(std::uint64_t body, const TopoDS_Shape& edge) 
     preview();
 }
 
+void FilletToolController::placeGrip() {
+    if (edges_.empty()) {
+        if (gripEdge_)
+            viewport_.endPushPull();
+        gripEdge_.reset();
+        return;
+    }
+    if (gripEdge_ && features::sameFilletEdge(*gripEdge_, edges_.front())) {
+        viewport_.setPushPullDistance(value_);
+        return;
+    }
+    // Into the corner: against the sum of the two faces' outward normals.
+    std::array<double, 3> direction{0, 0, 0};
+    int found = 0;
+    for (const auto& face : session_.supportFaces(support_))
+        if (face.origin == edges_.front().first || face.origin == edges_.front().second) {
+            direction[0] -= face.plane.normalX;
+            direction[1] -= face.plane.normalY;
+            direction[2] -= face.plane.normalZ;
+            ++found;
+        }
+    const double length = std::hypot(direction[0], direction[1], direction[2]);
+    const auto shapes = session_.filletEdgeShapes(support_, std::span(&edges_.front(), 1));
+    if (gripEdge_)
+        viewport_.endPushPull();
+    gripEdge_.reset();
+    if (found != 2 || length < 1e-9 || shapes.empty())
+        return; // a curved face: the value is typed only
+    TopoDS_Compound compound;
+    BRep_Builder builder;
+    builder.MakeCompound(compound);
+    for (const auto& shape : shapes)
+        builder.Add(compound, shape);
+    viewport_.beginEdgeGrip(compound,
+                            {direction[0] / length, direction[1] / length, direction[2] / length});
+    viewport_.setPushPullDistance(value_);
+    gripEdge_ = edges_.front();
+}
+
+void FilletToolController::dragged(double value, bool finished) {
+    if (!active_ || !gripEdge_)
+        return;
+    value_ = std::max(value, 0.01);
+    panel_.setLengthValue(treatment_ == EdgeTreatment::chamfer ? "distance" : "radius", value_);
+    if (finished) {
+        preview();
+        return;
+    }
+    // The body follows the grip while dragging; previews are bundled to one per 40 ms.
+    if (previewPending_)
+        return;
+    previewPending_ = true;
+    QTimer::singleShot(40, &panel_, [this] {
+        previewPending_ = false;
+        preview();
+    });
+}
+
 void FilletToolController::highlight(const std::vector<std::uint64_t>& failing) {
     std::vector<TopoDS_Shape> chosen;
     std::vector<TopoDS_Shape> faulty;
@@ -169,6 +234,7 @@ void FilletToolController::showModel() {
 void FilletToolController::preview() {
     if (!active_)
         return;
+    placeGrip();
     if (edges_.empty()) {
         panel_.setAcceptEnabled(false);
         panel_.setGuidance(guidance());
@@ -265,6 +331,9 @@ void FilletToolController::finish() {
     previewShown_ = false;
     previewSession_.reset();
     previewFeature_.reset();
+    if (gripEdge_)
+        viewport_.endPushPull();
+    gripEdge_.reset();
     viewport_.setHighlightedEdges({}, {});
     viewport_.setEdgePicking(false);
     panel_.end();

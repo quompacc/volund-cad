@@ -370,6 +370,18 @@ void CadViewport::endPushPull() {
     });
 }
 
+void CadViewport::beginEdgeGrip(const TopoDS_Shape& edges,
+                                const std::array<double, 3>& direction) {
+    performViewportOperation(*this, impl_->ready, [&] {
+        if (!impl_->ready)
+            return;
+        impl_->pushPull.show(impl_->context, edges,
+                             gp_Dir(direction[0], direction[1], direction[2]),
+                             occtColor(impl_->theme.selection));
+        update();
+    });
+}
+
 void CadViewport::setPushPullHandler(std::function<void(double, bool)> handler) {
     impl_->pushPull.setHandler(std::move(handler));
 }

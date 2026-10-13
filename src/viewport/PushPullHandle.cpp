@@ -4,6 +4,7 @@
 #include <AIS_Shape.hxx>
 #include <BRepGProp.hxx>
 #include <GProp_GProps.hxx>
+#include <TopExp_Explorer.hxx>
 #include <TopLoc_Location.hxx>
 #include <gp_Ax2.hxx>
 #include <gp_Trsf.hxx>
@@ -56,7 +57,11 @@ void PushPullHandle::show(const occ::handle<AIS_InteractiveContext>& context,
     impl.normal = normal;
     impl.distance = 0.0;
     GProp_GProps properties;
-    BRepGProp::SurfaceProperties(face, properties);
+    // User request 2026-10-13: the grip of a fillet or chamfer sits on edges, not a face.
+    if (TopExp_Explorer(face, TopAbs_FACE).More())
+        BRepGProp::SurfaceProperties(face, properties);
+    else
+        BRepGProp::LinearProperties(face, properties);
     impl.center = properties.CentreOfMass();
     impl.face = new AIS_Shape(face);
     impl.face->SetColor(color);

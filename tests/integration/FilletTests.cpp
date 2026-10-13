@@ -9,6 +9,7 @@
 #include <numbers>
 #include <stdexcept>
 #include <string>
+#include <array>
 #include <vector>
 
 // M05 (A-FILLET-01, user decisions 2026-10-12): a fillet rounds edges of one body with one
@@ -243,6 +244,81 @@ void adjacentEdges() {
     require(failures == 0, std::to_string(failures) + " adjacent edge combinations failed");
 }
 
+// User report 2026-10-13 (second): the two long top edges rounded, a vertical edge chamfered,
+// then all four bottom edges at once - a closed loop whose corners meet the chamfer and each
+// other. Every loop, every mix and each treatment alone must work; on a box and an extrusion.
+void edgeLoops() {
+    const auto edgeOf = [](const application::CadSession& session, document::FeatureId support,
+                           std::array<double, 3> a, std::array<double, 3> b) {
+        return document::FilletEdge{face(session, support, a[0], a[1], a[2]),
+                                    face(session, support, b[0], b[1], b[2])};
+    };
+    int failures = 0;
+    std::string report;
+    for (const bool extrusionBody : {false, true})
+        for (const int prior : {0, 1, 2, 3})
+            for (const bool loopChamfer : {false, true}) {
+                application::CadSession session;
+                session.newDocument();
+                document::FeatureId body{1};
+                if (extrusionBody) {
+                    document::SketchParameters sketch{
+                        document::datumSketchPlane(document::DatumPlane::xy),
+                        {{{document::SketchElementId{1},
+                           document::SketchRectangle{-40, -20, 40, 20}}},
+                         2}};
+                    sketch.datum = document::DatumPlane::xy;
+                    body = application::executeAction(
+                               session, application::prepareRequest(
+                                            session, application::CreateSketchExtrusionAction{
+                                                         sketch,
+                                                         {},
+                                                         {10, application::QuantityUnit::millimetre}}))
+                               .createdFeatures.back();
+                } else {
+                    body = *session.createBoxFeature({40, 30, 10}).feature();
+                }
+                auto support = body;
+                // prior 1: two long top edges rounded; 2: and a vertical edge chamfered;
+                // 3: and that vertical edge rounded instead.
+                if (prior >= 1) {
+                    const std::vector<document::FilletEdge> tops{
+                        edgeOf(session, support, {0, 1, 0}, {0, 0, 1}),
+                        edgeOf(session, support, {0, -1, 0}, {0, 0, 1})};
+                    require(session.createFillet(support, tops, 1).status() ==
+                                CommandStatus::committed,
+                            "Top edges rounded");
+                    support = session.features().back().id;
+                }
+                if (prior >= 2) {
+                    const auto vertical = edgeOf(session, support, {1, 0, 0}, {0, 1, 0});
+                    const auto made =
+                        prior == 2 ? session.createChamfer(support, std::span(&vertical, 1), 1)
+                                   : session.createFillet(support, std::span(&vertical, 1), 1);
+                    require(made.status() == CommandStatus::committed, "Vertical edge treated");
+                    support = session.features().back().id;
+                }
+                const std::vector<document::FilletEdge> loop{
+                    edgeOf(session, support, {0, 1, 0}, {0, 0, -1}),
+                    edgeOf(session, support, {1, 0, 0}, {0, 0, -1}),
+                    edgeOf(session, support, {0, -1, 0}, {0, 0, -1}),
+                    edgeOf(session, support, {-1, 0, 0}, {0, 0, -1})};
+                const auto result = loopChamfer ? session.createChamfer(support, loop, 1)
+                                                : session.createFillet(support, loop, 1);
+                if (result.status() != CommandStatus::committed || !valid(session)) {
+                    ++failures;
+                    report += std::string(extrusionBody ? "extrusion" : "box") + ", prior " +
+                              std::to_string(prior) + ", bottom loop " +
+                              (loopChamfer ? "chamfer" : "fillet") + "\n";
+                    for (const auto& issue : result.evaluation().features)
+                        report += "  " + issue.code + " " + issue.message + "\n";
+                }
+            }
+    if (failures != 0)
+        std::cerr << report;
+    require(failures == 0, std::to_string(failures) + " edge loop cases failed");
+}
+
 void extrusionSideEdge() {
     application::CadSession session;
     session.newDocument();
@@ -274,6 +350,7 @@ int main() {
         boxEdge();
         chamferEdge();
         adjacentEdges();
+        edgeLoops();
         extrusionSideEdge();
         std::cout << "PASS M05/M07 fillet and chamfer: box edge 10 (1 - pi/4) and 5, refused, base change, "
                      "edit, save/open, extrusion side edge\n";

@@ -297,6 +297,10 @@ class CadViewport final : public CadViewportBase {
     void setPushPullDistance(double distance);
     void endPushPull();
     void setPushPullHandler(std::function<void(double, bool)> handler);
+    // User request 2026-10-13: the same grip on edges (a fillet radius or chamfer distance):
+    // a copy of `edges` with an arrow along `direction`, dragged like the push/pull arrow;
+    // setPushPullDistance moves it, endPushPull removes it, the push/pull handler reports.
+    void beginEdgeGrip(const TopoDS_Shape& edges, const std::array<double, 3>& direction);
     // M06: while a fillet is open, bodies offer only their edges; otherwise edges and faces
     // (user request 2026-10-13: edges are picked before a tool, as in any CAD; near an edge
     // the edge wins). A click on an edge reports the body (its source feature), the edge and

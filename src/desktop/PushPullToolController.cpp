@@ -25,10 +25,7 @@ PushPullToolController::PushPullToolController(
     application::CadSession& session, viewport::CadViewport& viewport, ToolPanelHost& panel,
     std::function<void()> sceneChanged, std::function<void(const QString&)> statusChanged)
     : session_(session), viewport_(viewport), panel_(panel),
-      sceneChanged_(std::move(sceneChanged)), statusChanged_(std::move(statusChanged)) {
-    viewport_.setPushPullHandler(
-        [this](double distance, bool finished) { dragged(distance, finished); });
-}
+      sceneChanged_(std::move(sceneChanged)), statusChanged_(std::move(statusChanged)) {}
 
 void PushPullToolController::begin(const viewport::PlanarFaceSelection& face) {
     // The viewport names a face by the body's latest result (its source feature).
@@ -43,6 +40,9 @@ void PushPullToolController::begin(const viewport::PlanarFaceSelection& face) {
     active_ = true;
     support_ = support;
     stamp_ = session_.sceneStatus().document;
+    // The grip is shared with the fillet and chamfer panel; the open tool owns it.
+    viewport_.setPushPullHandler(
+        [this](double distance, bool finished) { dragged(distance, finished); });
     distance_ = 10.0;
     panel_.begin(ToolPanelDefinition{
         QObject::tr("Drücken/Ziehen"),
