@@ -39,11 +39,13 @@ int integer(const TDF_Label& label) {
 }
 } // namespace
 constexpr int faceExtrusionRole = -2;
+constexpr int treatedEdgeRole = -3; // schema 17: a fillet or chamfer face
 
 void writeNativeSubshapeOrigin(const TDF_Label& label, const SubshapeOrigin& origin) {
     validateSubshapeOrigin(origin);
     TDataStd_AsciiString::Set(label.FindChild(2), std::to_string(origin.feature.value()).c_str());
     TDataStd_Integer::Set(label.FindChild(3), origin.faceExtrusion ? faceExtrusionRole
+                                              : origin.treatedEdge ? treatedEdgeRole
                                               : origin.role ? static_cast<int>(*origin.role)
                                                             : -1);
     const auto boundary = label.FindChild(4);
@@ -51,6 +53,9 @@ void writeNativeSubshapeOrigin(const TDF_Label& label, const SubshapeOrigin& ori
     int index = 0;
     for (const auto id : origin.extrusionBoundary)
         TDataStd_AsciiString::Set(boundary.FindChild(++index), std::to_string(id.value()).c_str());
+    if (origin.treatedEdge)
+        TDataStd_AsciiString::Set(label.FindChild(6).FindChild(1),
+                                  std::to_string(*origin.treatedEdge).c_str());
     if (origin.extrusionFace != ExtrusionFace::end) {
         const auto extension = label.FindChild(6);
         TDataStd_Integer::Set(extension.FindChild(1), static_cast<int>(origin.extrusionFace));
@@ -65,7 +70,8 @@ SubshapeOrigin readNativeSubshapeOrigin(const TDF_Label& label, std::size_t& rem
                                         int schemaVersion) {
     SubshapeOrigin origin{FeatureId{number(child(label, 2))}, std::nullopt};
     const int role = integer(child(label, 3));
-    require((role >= -1 || (role == faceExtrusionRole && schemaVersion >= 10)) &&
+    require((role >= -1 || (role == faceExtrusionRole && schemaVersion >= 10) ||
+             (role == treatedEdgeRole && schemaVersion >= 17)) &&
             role <= static_cast<int>(kernel::PrimitiveRole::cylinderSide));
     if (role >= 0)
         origin.role = static_cast<kernel::PrimitiveRole>(role);
@@ -77,7 +83,11 @@ SubshapeOrigin readNativeSubshapeOrigin(const TDF_Label& label, std::size_t& rem
     remainingElements -= static_cast<std::size_t>(count);
     for (int i = 1; i <= count; ++i)
         origin.extrusionBoundary.emplace_back(number(child(boundary, i)));
-    if (const auto extension = label.FindChild(6, false); !extension.IsNull()) {
+    if (role == treatedEdgeRole) {
+        const auto extension = label.FindChild(6, false);
+        require(!extension.IsNull() && extension.NbChildren() == 1);
+        origin.treatedEdge = number(child(extension, 1));
+    } else if (const auto extension = label.FindChild(6, false); !extension.IsNull()) {
         require(schemaVersion >= 10);
         const int face = integer(child(extension, 1));
         require(face == static_cast<int>(ExtrusionFace::start) ||

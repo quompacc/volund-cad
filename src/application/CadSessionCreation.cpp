@@ -64,12 +64,13 @@ CommandResult CadSession::createFillet(document::FeatureId support,
         return CommandResult::invalidInput("A fillet requires a body with a current result");
     const std::size_t sequence =
         featureCount(document_.features(), document::FeatureKind::fillet) + 1;
+    std::vector<document::FilletEdge> numbered(edges.begin(), edges.end());
+    features::numberFilletEdges(numbered);
     document::DocumentTransaction transaction(document_);
     auto& candidate = transaction.edit();
     const auto idInput = detail::prepareInput([&] {
-        return candidate.addFilletFeature(
-            "Verrundung " + std::to_string(sequence),
-            document::FilletParameters{*body, {edges.begin(), edges.end()}, radius});
+        return candidate.addFilletFeature("Verrundung " + std::to_string(sequence),
+                                          document::FilletParameters{*body, numbered, radius});
     });
     if (!idInput.value)
         return CommandResult::invalidInput(idInput.diagnostic);
@@ -106,12 +107,13 @@ CommandResult CadSession::createChamfer(document::FeatureId support,
         return CommandResult::invalidInput("A chamfer requires a body with a current result");
     const std::size_t sequence =
         featureCount(document_.features(), document::FeatureKind::chamfer) + 1;
+    std::vector<document::FilletEdge> numbered(edges.begin(), edges.end());
+    features::numberFilletEdges(numbered);
     document::DocumentTransaction transaction(document_);
     auto& candidate = transaction.edit();
     const auto idInput = detail::prepareInput([&] {
-        return candidate.addChamferFeature(
-            "Fase " + std::to_string(sequence),
-            document::ChamferParameters{*body, {edges.begin(), edges.end()}, distance});
+        return candidate.addChamferFeature("Fase " + std::to_string(sequence),
+                                           document::ChamferParameters{*body, numbered, distance});
     });
     if (!idInput.value)
         return CommandResult::invalidInput(idInput.diagnostic);

@@ -23,6 +23,9 @@ filletEdgeAt(std::span<const SupportProvenance> origins, const TopoDS_Shape& edg
 [[nodiscard]] std::vector<TopoDS_Edge> filletEdgeShapes(std::span<const SupportProvenance> origins,
                                                         const document::FilletEdge& edge);
 
+// Schema 17: gives every edge without an id (0) the next free one; ids already set stay.
+void numberFilletEdges(std::vector<document::FilletEdge>& edges);
+
 // The same edge in either face order.
 [[nodiscard]] bool sameFilletEdge(const document::FilletEdge& a,
                                   const document::FilletEdge& b) noexcept;

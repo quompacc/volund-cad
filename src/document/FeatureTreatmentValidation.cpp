@@ -20,10 +20,12 @@ void validateEdgeTreatment(BodyId body, const std::vector<FilletEdge>& edges, do
         validateSubshapeOrigin(edge.second);
         if (edge.first == edge.second)
             throw std::invalid_argument("A fillet edge lies between two different faces");
+        if (edge.id == 0)
+            throw std::invalid_argument("A fillet or chamfer edge has an id");
         for (std::size_t prior = 0; prior < index; ++prior) {
             const FilletEdge& other = edges[prior];
             if ((other.first == edge.first && other.second == edge.second) ||
-                (other.first == edge.second && other.second == edge.first))
+                (other.first == edge.second && other.second == edge.first) || other.id == edge.id)
                 throw std::invalid_argument("Fillet and chamfer edges must be unique");
         }
     }

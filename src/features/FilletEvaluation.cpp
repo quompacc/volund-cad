@@ -73,6 +73,15 @@ std::vector<TopoDS_Edge> filletEdgeShapes(std::span<const SupportProvenance> ori
     return result;
 }
 
+void numberFilletEdges(std::vector<document::FilletEdge>& edges) {
+    std::uint64_t next = 1;
+    for (const auto& edge : edges)
+        next = std::max(next, edge.id + 1);
+    for (auto& edge : edges)
+        if (edge.id == 0)
+            edge.id = next++;
+}
+
 bool sameFilletEdge(const document::FilletEdge& a, const document::FilletEdge& b) noexcept {
     return (a.first == b.first && a.second == b.second) ||
            (a.first == b.second && a.second == b.first);
@@ -165,19 +174,33 @@ void evaluateEdgeTreatment(const document::DocumentSnapshot& document,
     const auto& owner = findFeature(outputs, *producer);
     EvaluatedBody& body = findBody(bodies, outputs, *producer);
     EvaluatedBody& referenceBody = findBody(referenceBodies, outputs, *producer);
-    const auto evaluated =
-        treat(body.shape, resolveEdges(owner.supportOrigins, edges, treatment), value, treatment);
-    const auto reference =
-        treat(referenceBody.shape, resolveEdges(owner.referenceSupportOrigins, edges, treatment),
-              value, treatment);
-    // Fillet and chamfer faces are generated and stay unnamed; the other faces and edges of
-    // the body keep their names.
+    const auto resolved = resolveEdges(owner.supportOrigins, edges, treatment);
+    const auto referenceResolved = resolveEdges(owner.referenceSupportOrigins, edges, treatment);
+    const auto evaluated = treat(body.shape, resolved, value, treatment);
+    const auto reference = treat(referenceBody.shape, referenceResolved, value, treatment);
+    // The other faces and edges of the body keep their names; schema 17 (user decision
+    // 2026-10-13): each face an edge generates is named {feature, edge id}.
+    const auto named = [&](std::vector<SupportProvenance> origins, const ResolvedEdges& from,
+                           const kernel::ShapeOperationResult& result) {
+        for (std::size_t index = 0; index < from.edges.size(); ++index) {
+            document::SubshapeOrigin origin{descriptor.id, std::nullopt};
+            origin.treatedEdge = edges[from.owners[index] - 1].id;
+            for (const auto& entry : result.history)
+                if (entry.source.IsSame(from.edges[index]))
+                    for (const auto& face : entry.generated)
+                        if (face.ShapeType() == TopAbs_FACE)
+                            addSupportFace(origins, origin, face);
+        }
+        return origins;
+    };
     outputs.push_back(EvaluatedFeature{
         descriptor.id, evaluated.shape, reference.shape, body.bodyId,
-        continueSupportOrigins(owner.supportOrigins, evaluated, kernel::HistoryOperand::first),
+        named(continueSupportOrigins(owner.supportOrigins, evaluated, kernel::HistoryOperand::first),
+              resolved, evaluated),
         {},
-        continueSupportOrigins(owner.referenceSupportOrigins, reference,
-                               kernel::HistoryOperand::first),
+        named(continueSupportOrigins(owner.referenceSupportOrigins, reference,
+                                     kernel::HistoryOperand::first),
+              referenceResolved, reference),
         continueEdgeOrigins(owner.edgeOrigins, evaluated, kernel::HistoryOperand::first),
         continueEdgeOrigins(owner.referenceEdgeOrigins, reference, kernel::HistoryOperand::first)});
     body.sourceFeature = descriptor.id;

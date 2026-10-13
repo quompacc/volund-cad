@@ -146,6 +146,9 @@ struct ExtrusionParameters final {
 struct FilletEdge final {
     SubshapeOrigin first;
     SubshapeOrigin second;
+    // Schema 17: unique and nonzero within its feature, kept when other edges are removed;
+    // the faces the edge generates are named by it (SubshapeOrigin::treatedEdge).
+    std::uint64_t id{0};
     [[nodiscard]] bool operator==(const FilletEdge&) const = default;
 };
 inline constexpr std::size_t maximumFilletEdges = 256;

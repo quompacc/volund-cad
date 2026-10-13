@@ -75,6 +75,7 @@ void FilletToolController::open(document::FeatureId support,
     active_ = true;
     support_ = support;
     edges_ = std::move(edges);
+    features::numberFilletEdges(edges_);
     value_ = value;
     stamp_ = session_.sceneStatus().document;
     const QString title = chamfer ? (editing_ ? QObject::tr("Fase bearbeiten") : QObject::tr("Fase"))
@@ -151,6 +152,7 @@ void FilletToolController::picked(std::uint64_t body, const TopoDS_Shape& edge) 
         edges_.erase(known);
     else
         edges_.push_back(*named);
+    features::numberFilletEdges(edges_); // a new edge gets the next free id
     preview();
 }
 

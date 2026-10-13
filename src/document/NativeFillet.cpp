@@ -30,6 +30,16 @@ std::uint64_t readDecimal(const TDF_Label& label) {
             text == std::to_string(id));
     return id;
 }
+std::uint64_t decimal(const Handle(TDataStd_AsciiString) & value) {
+    require(value->Get().Length() <= 20);
+    const std::string text{value->Get().ToCString(),
+                           static_cast<std::size_t>(value->Get().Length())};
+    std::uint64_t id = 0;
+    const auto parsed = std::from_chars(text.data(), text.data() + text.size(), id);
+    require(parsed.ec == std::errc{} && parsed.ptr == text.data() + text.size() && id != 0 &&
+            text == std::to_string(id));
+    return id;
+}
 SubshapeOrigin readFace(const TDF_Label& face, std::size_t& remainingRecords, int schemaVersion) {
     // Children 2, 3, 4 and the optional extension 6 of the shared origin encoding.
     require(face.NbChildren() == 3 + nativeSubshapeOriginExtension(face));
@@ -54,6 +64,7 @@ void writeEdges(const TDF_Label& label, BodyId body, const std::vector<FilletEdg
         const auto edge = list.FindChild(static_cast<int>(index + 1));
         writeNativeSubshapeOrigin(edge.FindChild(1), edges[index].first);
         writeNativeSubshapeOrigin(edge.FindChild(2), edges[index].second);
+        TDataStd_AsciiString::Set(edge, std::to_string(edges[index].id).c_str()); // schema 17
     }
 }
 
@@ -79,7 +90,12 @@ DecodedEdges readEdges(const TDF_Label& label, std::size_t remainingRecords, int
         require(edge.NbChildren() == 2);
         auto first = readFace(child(edge, 1), remainingRecords, schemaVersion);
         auto second = readFace(child(edge, 2), remainingRecords, schemaVersion);
-        result.edges.push_back({std::move(first), std::move(second)});
+        // Schema 17 stores each edge's id; earlier files number the edges in order.
+        Handle(TDataStd_AsciiString) id;
+        const bool stored = edge.FindAttribute(TDataStd_AsciiString::GetID(), id);
+        require(stored == (schemaVersion >= 17));
+        result.edges.push_back({std::move(first), std::move(second),
+                                stored ? decimal(id) : static_cast<std::uint64_t>(index)});
     }
     return result;
 }

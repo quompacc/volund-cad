@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <voelund/document/BodyId.hpp>
 #include <voelund/document/DocumentId.hpp>
 #include <voelund/document/EdgeReference.hpp>
@@ -22,6 +23,9 @@ struct SubshapeOrigin final {
     bool faceExtrusion{false};
     ExtrusionFace extrusionFace{ExtrusionFace::end};
     std::optional<EdgeOrigin> sweptEdge{};
+    // Schema 17 (user decision 2026-10-13): the face a fillet or chamfer `feature` generated
+    // from its edge with this id (FilletEdge::id).
+    std::optional<std::uint64_t> treatedEdge{};
     bool operator==(const SubshapeOrigin&) const = default;
 };
 struct SubshapeRef final {

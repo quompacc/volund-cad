@@ -321,6 +321,63 @@ void edgeLoops() {
     require(failures == 0, std::to_string(failures) + " edge loop cases failed");
 }
 
+// Schema 17 (user decision 2026-10-13): fillet and chamfer faces are named {feature, edge id},
+// so edges next to them can be treated and saved. A chamfer face is planar and offered as a
+// face; the edge between it and the end face is rounded. The arc edge at the end of a
+// rounding is chamfered. Save/Open keeps both.
+void treatedFaceEdges() {
+    application::CadSession session;
+    session.newDocument();
+    const auto box = *session.createBoxFeature({20, 20, 10}).feature();
+    const document::FilletEdge top{face(session, box, 0, 1, 0), face(session, box, 0, 0, 1)};
+    require(session.createChamfer(box, std::span(&top, 1), 2).status() ==
+                CommandStatus::committed,
+            "Top edge chamfered");
+    const auto chamfer = session.features().back().id;
+    require(session.chamferParameters(chamfer).edges.front().id == 1, "The edge got id 1");
+    document::SubshapeOrigin chamferFace{chamfer, std::nullopt};
+    chamferFace.treatedEdge = 1;
+    bool offered = false;
+    for (const auto& candidate : session.supportFaces(chamfer))
+        offered = offered || candidate.origin == chamferFace;
+    require(offered, "The chamfer face is a named planar face");
+    const document::FilletEdge end{chamferFace, face(session, chamfer, 1, 0, 0)};
+    require(session.createFillet(chamfer, std::span(&end, 1), 0.5).status() ==
+                    CommandStatus::committed &&
+                valid(session),
+            "The edge between the chamfer face and the end face is rounded");
+
+    application::CadSession rounded;
+    rounded.newDocument();
+    const auto block = *rounded.createBoxFeature({20, 20, 10}).feature();
+    const document::FilletEdge upper{face(rounded, block, 0, 1, 0), face(rounded, block, 0, 0, 1)};
+    require(rounded.createFillet(block, std::span(&upper, 1), 2).status() ==
+                CommandStatus::committed,
+            "Top edge rounded");
+    const auto fillet = rounded.features().back().id;
+    document::SubshapeOrigin roundFace{fillet, std::nullopt};
+    roundFace.treatedEdge = 1;
+    const document::FilletEdge arc{roundFace, face(rounded, fillet, 1, 0, 0)};
+    require(rounded.createChamfer(fillet, std::span(&arc, 1), 0.3).status() ==
+                    CommandStatus::committed &&
+                valid(rounded),
+            "The arc edge at the end of the rounding is chamfered");
+    const double before = volume(rounded);
+
+    const auto directory = std::filesystem::temp_directory_path() / "voelund-schema17";
+    std::filesystem::remove_all(directory);
+    std::filesystem::create_directories(directory);
+    const auto path = directory / "named.volund";
+    rounded.saveDocument(path);
+    application::CadSession reopened;
+    reopened.loadDocument(path);
+    require(reopened.features().size() == 3 && near(volume(reopened), before) &&
+                reopened.chamferParameters(reopened.features().back().id).edges.front().first ==
+                    roundFace,
+            "Open keeps the edge named by the rounding face");
+    std::filesystem::remove_all(directory);
+}
+
 void extrusionSideEdge() {
     application::CadSession session;
     session.newDocument();
@@ -353,6 +410,7 @@ int main() {
         chamferEdge();
         adjacentEdges();
         edgeLoops();
+        treatedFaceEdges();
         extrusionSideEdge();
         std::cout << "PASS M05/M07 fillet and chamfer: box edge 10 (1 - pi/4) and 5, refused, base change, "
                      "edit, save/open, extrusion side edge\n";

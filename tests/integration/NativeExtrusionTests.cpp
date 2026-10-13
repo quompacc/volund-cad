@@ -435,7 +435,67 @@ void symmetricIntersect(const Handle(TDocStd_Application)& app) {
     std::cout << "schema 13 symmetric intersect round-trip and gate passed\n";
 }
 
+// Schema 17 (user decision 2026-10-13): fillet edges carry ids and may name a rounding face; a
+// schema 16 file has none and Open numbers them 1..n; schema 17 data read as 16 is refused.
+void treatedEdgeIds(const Handle(TDocStd_Application)& app) {
+    ModelDocument model;
+    const auto box = model.addBoxFeature("Box", {20, 20, 10});
+    const auto side = [&](kernel::PrimitiveRole role) { return SubshapeOrigin{box, role}; };
+    FilletParameters fillet{BodyId{box.value()},
+                            {{side(kernel::PrimitiveRole::boxPositiveY),
+                              side(kernel::PrimitiveRole::boxPositiveZ), 4},
+                             {side(kernel::PrimitiveRole::boxNegativeY),
+                              side(kernel::PrimitiveRole::boxPositiveZ), 7}},
+                            1.0};
+    const auto rounded = model.addFilletFeature("Rounding", fillet);
+    SubshapeOrigin roundFace{rounded, std::nullopt};
+    roundFace.treatedEdge = 4;
+    static_cast<void>(model.addChamferFeature(
+        "Chamfer", ChamferParameters{BodyId{box.value()},
+                                     {{roundFace, side(kernel::PrimitiveRole::boxPositiveX), 1}},
+                                     0.3}));
+    const auto expected =
+        IdentifiedDocumentSnapshot::restore(DocumentId{3, 9}, DocumentSnapshot::capture(model));
+    Handle(TDocStd_Document) doc = fresh(app);
+    NativePrimitiveCodec::write(doc, expected);
+    std::stringstream bytes(std::ios::in | std::ios::out | std::ios::binary);
+    save(app, doc, bytes);
+    Handle(TDocStd_Document) loaded = open(app, bytes);
+    require(NativePrimitiveCodec::read(loaded) == expected, "Edge ids and rounding faces round-trip");
+    app->Close(loaded);
+    TDataStd_Integer::Set(doc->Main().FindChild(2), 16);
+    rejected([&] { (void)NativePrimitiveCodec::read(doc); }); // ids need schema 17
+    app->Close(doc);
+
+    // A schema 16 file: the fillet alone, without ids.
+    auto older = ModelDocument::empty();
+    const auto block = older.addBoxFeature("Box", {20, 20, 10});
+    fillet.body = BodyId{block.value()};
+    for (auto& edge : fillet.edges) {
+        edge.first.feature = block;
+        edge.second.feature = block;
+    }
+    static_cast<void>(older.addFilletFeature("Rounding", fillet));
+    Handle(TDocStd_Document) legacy = fresh(app);
+    NativePrimitiveCodec::write(
+        legacy, IdentifiedDocumentSnapshot::restore(DocumentId{3, 10}, DocumentSnapshot::capture(older)));
+    const auto edges = feature(legacy, 2).FindChild(4).FindChild(2);
+    legacy->OpenCommand();
+    for (int index = 1; index <= 2; ++index)
+        require(edges.FindChild(index).ForgetAttribute(TDataStd_AsciiString::GetID()),
+                "Edge id removed for the schema 16 fixture");
+    legacy->CommitCommand();
+    TDataStd_Integer::Set(legacy->Main().FindChild(2), 16);
+    const auto read = NativePrimitiveCodec::read(legacy);
+    const auto& numbered = read.snapshot().filletParameters(read.snapshot().features()[1].id);
+    require(numbered.edges.size() == 2 && numbered.edges[0].id == 1 && numbered.edges[1].id == 2,
+            "A schema 16 fillet gets edge ids 1..n");
+    app->Close(legacy);
+    std::cout << "schema 17 edge ids, rounding faces and schema 16 numbering passed\n";
+}
+
 void regressions(const Handle(TDocStd_Application)& app) {
+    treatedEdgeIds(app);
     historicalProfiles(app);
     datumSketches(app);
     extrusionModes(app);
