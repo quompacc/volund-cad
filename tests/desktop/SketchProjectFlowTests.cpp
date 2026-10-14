@@ -11,8 +11,8 @@
 #include <voelund/application/CadSession.hpp>
 #include <voelund/desktop/MainWindow.hpp>
 
-// S17 (user decision 2026-10-14): in a sketch on XY beside a box, "Projizieren" turns edge
-// picking on; two box edges clicked in a row become two construction lines, a third click on
+// S17 (user decision 2026-10-14): in a sketch on the top face of a box, "Projizieren" turns
+// edge picking on; two box edges clicked in a row become two construction lines, a third click on
 // the first edge (now under its projection) adds nothing; "Projizieren" again ends it, and OK
 // stores both projections.
 namespace {
@@ -52,16 +52,18 @@ void run() {
     require(viewport != nullptr, "viewport");
     window.refreshAfterExternalChange();
     test::render(*viewport);
-    viewport->setCameraView(viewport::CameraView::isometric);
+    viewport->setCameraView(viewport::CameraView::top);
     test::render(*viewport);
 
     Bnd_Box bounds;
     BRepBndLib::Add(session.validBodies().front().shape, bounds);
     double x0 = 0, y0 = 0, z0 = 0, x1 = 0, y1 = 0, z1 = 0;
     bounds.Get(x0, y0, z0, x1, y1, z1);
+    const double xMiddle = (x0 + x1) / 2, yMiddle = (y0 + y1) / 2;
 
-    // The XY base plane beside the box carries the sketch.
-    click(*viewport, x1 + 15, y1 + 15, 0);
+    // The sketch lies on the top face; its own edges are picked from above.
+    session.clearSelection();
+    click(*viewport, xMiddle, yMiddle, z1);
     command(window, "solid.create.sketch").trigger();
     settle();
     test::render(*viewport);
@@ -70,7 +72,6 @@ void run() {
     project.trigger();
     settle();
 
-    const double xMiddle = (x0 + x1) / 2, yMiddle = (y0 + y1) / 2;
     click(*viewport, xMiddle, y0, z1);
     require(viewport->displayedSketchElementCount() == 1, "The first edge is projected");
     click(*viewport, x1, yMiddle, z1);
