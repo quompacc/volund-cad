@@ -47,10 +47,13 @@ if [ "$(git -C "$source_dir" rev-parse HEAD)" != "$occt_commit" ]; then
     exit 1
 fi
 
-# A build configured through another (workspace) path is configured anew; its objects stay.
-if [ -f "$build_dir/CMakeCache.txt" ] &&
-    ! grep -qx "CMAKE_CACHEFILE_DIR:INTERNAL=$build_dir" "$build_dir/CMakeCache.txt"; then
-    rm -rf "$build_dir/CMakeCache.txt" "$build_dir/CMakeFiles"
+# A build configured through another (workspace) path is built anew: its cache and the
+# forwarding headers OCCT generates under build/include name the old source path.
+forwarding="$build_dir/include/opencascade/Standard.hxx"
+if { [ -f "$build_dir/CMakeCache.txt" ] &&
+     ! grep -qx "CMAKE_CACHEFILE_DIR:INTERNAL=$build_dir" "$build_dir/CMakeCache.txt"; } ||
+   { [ -f "$forwarding" ] && ! grep -qF "\"$source_dir/" "$forwarding"; }; then
+    rm -rf "$build_dir"
 fi
 
 cmake -S "$source_dir" -B "$build_dir" -G Ninja \
