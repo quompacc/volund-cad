@@ -21,6 +21,10 @@ esac
 
 repository_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 occt_root="${VOELUND_OCCT_WORK_ROOT:-$repository_root/.tools/occt-$platform}"
+# The CI shares one OCCT cache between workspaces through a symlink. CMake works on the
+# physical path, so the cache is the same from every workspace (M22).
+mkdir -p "$occt_root"
+occt_root=$(CDPATH= cd -- "$occt_root" && pwd -P)
 source_dir="${VOELUND_OCCT_SOURCE_DIR:-$occt_root/src}"
 build_dir="$occt_root/build"
 install_dir="$occt_root/install"
@@ -41,6 +45,12 @@ fi
 if [ "$(git -C "$source_dir" rev-parse HEAD)" != "$occt_commit" ]; then
     echo "Unexpected OCCT source revision in $source_dir" >&2
     exit 1
+fi
+
+# A build configured through another (workspace) path is configured anew; its objects stay.
+if [ -f "$build_dir/CMakeCache.txt" ] &&
+    ! grep -qx "CMAKE_CACHEFILE_DIR:INTERNAL=$build_dir" "$build_dir/CMakeCache.txt"; then
+    rm -rf "$build_dir/CMakeCache.txt" "$build_dir/CMakeFiles"
 fi
 
 cmake -S "$source_dir" -B "$build_dir" -G Ninja \
