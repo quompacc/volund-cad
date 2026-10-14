@@ -203,6 +203,8 @@ document::ExtrusionParameters newExtrusionParameters(double distance,
     parameters.upToFace = mode.upToFace;
     parameters.symmetric = mode.symmetric;
     parameters.revolve = mode.revolve;
+    parameters.sweep = mode.sweep;
+    parameters.loft = mode.loft;
     return parameters;
 }
 } // namespace
@@ -223,13 +225,16 @@ CadSession::createSketchProfileExtrusion(document::FeatureId sketchFeature,
             features::SketchRegionReferenceStatus::resolved)
             return CommandResult::invalidInput("Profile extrusion references an unknown profile");
     }
-    // M20: revolves are numbered apart from prisms ("Drehung N").
+    // M20/M23: revolves and sweeps are numbered apart from prisms ("Drehung N", "Folgen N").
     std::size_t sequence = 1;
     const auto snapshot = document::DocumentSnapshot::capture(document_);
     for (const document::FeatureDescriptor& feature : document_.features()) {
-        if (feature.kind == document::FeatureKind::extrusion &&
-            snapshot.extrusionParameters(feature.id).revolve.has_value() ==
-                mode.revolve.has_value())
+        if (feature.kind != document::FeatureKind::extrusion)
+            continue;
+        const auto& existing = snapshot.extrusionParameters(feature.id);
+        if (existing.revolve.has_value() == mode.revolve.has_value() &&
+            existing.sweep.has_value() == mode.sweep.has_value() &&
+            existing.loft.has_value() == mode.loft.has_value())
             ++sequence;
     }
     document::DocumentTransaction transaction(document_);
@@ -237,7 +242,12 @@ CadSession::createSketchProfileExtrusion(document::FeatureId sketchFeature,
     const std::vector<document::SketchRegionId> selected(profileIds.begin(), profileIds.end());
     const auto input = detail::prepareInput([&] {
         return candidate.addExtrusionFeature(
-            (mode.revolve ? "Drehung " : "Extrusion ") + std::to_string(sequence), sketchFeature,
+            (mode.revolve ? "Drehung "
+             : mode.sweep ? "Folgen "
+             : mode.loft  ? "Ausformung "
+                          : "Extrusion ") +
+                std::to_string(sequence),
+            sketchFeature,
             newExtrusionParameters(distance, selected, mode));
     });
     if (!input.value)

@@ -181,6 +181,21 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
                 features[found->second].kind != FeatureKind::datumAxis)
                 throw std::invalid_argument("Revolve axis is not an earlier construction axis");
         }
+        // M23: a sweep follows a path in an earlier sketch.
+        if (prism && prism->sweep) {
+            const auto found = indices.find(prism->sweep->sketch.value());
+            if (found == indices.end() || found->second >= index ||
+                features[found->second].kind != FeatureKind::sketch)
+                throw std::invalid_argument("Sweep path is not an earlier sketch");
+        }
+        // M24: loft sections are earlier sketches.
+        if (prism && prism->loft)
+            for (const auto& section : prism->loft->sections) {
+                const auto found = indices.find(section.sketch.value());
+                if (found == indices.end() || found->second >= index ||
+                    features[found->second].kind != FeatureKind::sketch)
+                    throw std::invalid_argument("Loft section is not an earlier sketch");
+            }
         const auto* sketch = std::get_if<SketchParameters>(&parameters[index]);
         // S17: projected edges lie on bodies of the document.
         if (sketch)

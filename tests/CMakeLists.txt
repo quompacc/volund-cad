@@ -731,6 +731,22 @@ if(VOELUND_BUILD_DESKTOP)
         if(VOELUND_NATIVE_WAYLAND)
             set_tests_properties(desktop.primitive_panel PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
         endif()
+        add_executable(voelund_sweep_panel_tests desktop/SweepPanelTests.cpp)
+        target_link_libraries(voelund_sweep_panel_tests PRIVATE voelund_project_options Voelund::Desktop)
+        add_test(NAME desktop.sweep_panel COMMAND voelund_sweep_panel_tests)
+        set_tests_properties(desktop.sweep_panel PROPERTIES
+            LABELS "desktop;qt-opengl;regression" TIMEOUT 60 RUN_SERIAL TRUE)
+        if(VOELUND_NATIVE_WAYLAND)
+            set_tests_properties(desktop.sweep_panel PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
+        endif()
+        add_executable(voelund_loft_panel_tests desktop/LoftPanelTests.cpp)
+        target_link_libraries(voelund_loft_panel_tests PRIVATE voelund_project_options Voelund::Desktop)
+        add_test(NAME desktop.loft_panel COMMAND voelund_loft_panel_tests)
+        set_tests_properties(desktop.loft_panel PROPERTIES
+            LABELS "desktop;qt-opengl;regression" TIMEOUT 60 RUN_SERIAL TRUE)
+        if(VOELUND_NATIVE_WAYLAND)
+            set_tests_properties(desktop.loft_panel PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
+        endif()
         add_executable(voelund_shell_panel_tests desktop/ShellPanelTests.cpp)
         target_link_libraries(voelund_shell_panel_tests PRIVATE voelund_project_options Voelund::Desktop)
         add_test(NAME desktop.shell_panel COMMAND voelund_shell_panel_tests)
@@ -1216,3 +1232,15 @@ add_executable(voelund_primitive_solid_tests integration/PrimitiveSolidTests.cpp
 target_link_libraries(voelund_primitive_solid_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME application.primitive_solids COMMAND voelund_primitive_solid_tests)
 set_tests_properties(application.primitive_solids PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
+
+# M23: sweeps along a path.
+add_executable(voelund_sweep_tests integration/SweepTests.cpp)
+target_link_libraries(voelund_sweep_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.sweep COMMAND voelund_sweep_tests)
+set_tests_properties(application.sweep PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
+
+# M24: lofts through sections.
+add_executable(voelund_loft_tests integration/LoftTests.cpp)
+target_link_libraries(voelund_loft_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.loft COMMAND voelund_loft_tests)
+set_tests_properties(application.loft PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)

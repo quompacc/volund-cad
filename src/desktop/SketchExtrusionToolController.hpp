@@ -30,6 +30,10 @@ class SketchExtrusionToolController final {
 
     // M20: with `revolve` the regions turn about an axis ("Drehen") instead.
     void beginSelectedProfiles(bool revolve = false);
+    // M23: the regions swept along a path, all drawn elements of an earlier sketch ("Folgen").
+    void beginSelectedSweep();
+    // M24: the one picked region lofted to the first region of another sketch ("Ausformung").
+    void beginSelectedLoft();
     // M04 (user decision 2026-10-12): reopens an existing sketch extrusion with its values;
     // OK changes it as one undo step, Cancel changes nothing.
     void beginEdit(document::FeatureId extrusion);
@@ -65,6 +69,8 @@ class SketchExtrusionToolController final {
     void accept();
     // M20: the axes the panel offers; the first is a line picked in the sketch.
     void collectAxes();
+    void collectPaths(); // M23: earlier sketches with drawn elements
+    void collectSections(); // M24: other sketches with a region (SketchExtrusionModes.cpp)
     [[nodiscard]] int axisIndex() const;
     [[nodiscard]] bool pickAxisLine(document::SketchElementId element);
 
@@ -99,6 +105,10 @@ class SketchExtrusionToolController final {
     // on a line of the sketch makes it the axis.
     std::optional<document::RevolveParameters> revolve_;
     std::vector<std::pair<QString, document::RevolveAxis>> axes_;
+    std::optional<document::SweepPath> sweep_; // M23
+    std::vector<std::pair<QString, document::SweepPath>> paths_;
+    std::optional<document::LoftParameters> loft_; // M24
+    std::vector<std::pair<QString, document::LoftSection>> sections_;
     bool axisPick_{false};
     double angleDegrees_{360.0};
 };

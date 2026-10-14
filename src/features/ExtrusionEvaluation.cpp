@@ -12,6 +12,12 @@
 
 #include <voelund/kernel/Prism.hpp>
 #include <voelund/kernel/Revolution.hpp>
+#include <voelund/kernel/Sweep.hpp>
+#include <voelund/kernel/Loft.hpp>
+#include <BRepTools.hxx>
+#include <BRepBuilderAPI_MakeWire.hxx>
+#include <TopExp_Explorer.hxx>
+#include <TopoDS.hxx>
 #include <gp_Ax1.hxx>
 #include <gp_Dir.hxx>
 #include <BRep_Builder.hxx>
@@ -195,6 +201,140 @@ Prism makeRevolution(document::FeatureId extrusion, document::FeatureId sketchId
     return result;
 }
 
+// M23: the selected regions swept along the path of an earlier sketch. Faces are named as for
+// a prism: start, end (none on a closed path) and the sides each contour edge sweeps; the
+// path may bend, so its contour edges are not named.
+Prism makeSweep(document::FeatureId extrusion, const document::SketchParameters& sketch,
+                const document::ExtrusionParameters& parameters,
+                const std::vector<EvaluatedFeature>& outputs, document::FeatureId sketchId) {
+    const auto& path = *parameters.sweep;
+    const auto& pathOutput = findFeature(outputs, path.sketch);
+    if (!pathOutput.resolvedSketch)
+        throw GeometryEvaluationError("The sweep path sketch has no geometry");
+    const auto elements = evaluateSketchElements(*pathOutput.resolvedSketch);
+    std::vector<TopoDS_Edge> edges;
+    for (const auto id : path.elements) {
+        const auto element = std::ranges::find(elements, id, &EvaluatedSketchElement::id);
+        if (element == elements.end())
+            throw GeometryEvaluationError("A sweep path element is missing", "sweep-path-missing",
+                                          {id.value()});
+        for (TopExp_Explorer it(element->shape, TopAbs_EDGE); it.More(); it.Next())
+            edges.push_back(TopoDS::Edge(it.Current()));
+    }
+    // The chain in any order: each pass adds the edges that touch the wire so far.
+    BRepBuilderAPI_MakeWire wire;
+    std::vector<bool> used(edges.size(), false);
+    for (bool added = true; added;) {
+        added = false;
+        for (std::size_t index = 0; index < edges.size(); ++index) {
+            if (used[index])
+                continue;
+            wire.Add(edges[index]);
+            if (wire.Error() == BRepBuilderAPI_WireDone) {
+                used[index] = true;
+                added = true;
+            }
+        }
+    }
+    if (std::ranges::find(used, false) != used.end() || !wire.IsDone())
+        throw GeometryEvaluationError("The sweep path is not one connected chain",
+                                      "sweep-path-disconnected");
+    const auto profiles = evaluateExtrusionFaces(sketch, parameters);
+    TopoDS_Compound faces;
+    BRep_Builder builder;
+    builder.MakeCompound(faces);
+    for (const auto& profile : profiles)
+        builder.Add(faces, profile.face);
+    const kernel::Sweep swept(faces, wire.Wire());
+    Prism result{swept.shape(), {}, {}};
+    for (const auto& profile : profiles) {
+        if (const auto cap = swept.endOf(profile.face); !cap.IsNull()) {
+            result.caps.push_back({{extrusion, std::nullopt, profile.boundary},
+                                   {cap},
+                                   kernel::HistoryCoverage::complete,
+                                   cap});
+            document::SubshapeOrigin start{extrusion, std::nullopt, profile.boundary};
+            start.extrusionFace = document::ExtrusionFace::start;
+            addSupportFace(result.caps, start, swept.startOf(profile.face));
+        }
+        for (const auto& edge : profile.edges) {
+            document::SubshapeOrigin side{extrusion, std::nullopt, profile.boundary};
+            side.extrusionFace = document::ExtrusionFace::side;
+            side.sweptEdge = document::ContourEdgeOrigin{sketchId, edge.element, edge.role};
+            for (const auto& face : swept.generated(edge.edge))
+                addSupportFace(result.caps, side, face);
+        }
+    }
+    return result;
+}
+
+// M24: the one selected region lofted through one region of each further sketch, in order.
+// Faces: start on the first section, end on the last, the sides by the first section's edges.
+Prism makeLoft(document::FeatureId extrusion, const document::SketchParameters& sketch,
+               const document::ExtrusionParameters& parameters,
+               const std::vector<EvaluatedFeature>& outputs, document::FeatureId sketchId) {
+    const auto profiles = evaluateExtrusionFaces(sketch, parameters);
+    if (profiles.size() != 1)
+        throw GeometryEvaluationError("A loft starts from exactly one region");
+    const auto outer = [](const TopoDS_Shape& shape) {
+        const TopoDS_Face face = TopoDS::Face(shape);
+        int wires = 0;
+        for (TopExp_Explorer it(face, TopAbs_WIRE); it.More(); it.Next())
+            ++wires;
+        if (wires != 1)
+            throw GeometryEvaluationError("A loft section has no holes", "loft-section-hole");
+        return TopoDS_Shape(BRepTools::OuterWire(face));
+    };
+    const auto inOnePlane = [](const document::SketchPlane& a, const document::SketchPlane& b) {
+        const gp_Vec normal(a.normalX, a.normalY, a.normalZ);
+        const gp_Vec offset(gp_Pnt(a.originX, a.originY, a.originZ),
+                            gp_Pnt(b.originX, b.originY, b.originZ));
+        return normal.CrossMagnitude(gp_Vec(b.normalX, b.normalY, b.normalZ)) < 1e-9 &&
+               std::abs(offset.Dot(normal)) < 1e-6;
+    };
+    std::vector<TopoDS_Shape> wires{outer(profiles.front().face)};
+    document::SketchPlane previous = sketch.plane;
+    for (const auto& section : parameters.loft->sections) {
+        const auto& output = findFeature(outputs, section.sketch);
+        if (!output.resolvedSketch)
+            throw GeometryEvaluationError("A loft section sketch has no geometry");
+        document::ExtrusionParameters one{0.0, {}, {section.region}};
+        std::vector<EvaluatedProfileFace> faces;
+        try {
+            faces = evaluateExtrusionFaces(*output.resolvedSketch, one);
+        } catch (const GeometryEvaluationError&) {
+            throw GeometryEvaluationError("A loft section region is missing",
+                                          "loft-section-missing");
+        }
+        if (faces.size() != 1)
+            throw GeometryEvaluationError("A loft section region is missing",
+                                          "loft-section-missing");
+        if (inOnePlane(previous, output.resolvedSketch->plane))
+            throw GeometryEvaluationError("Loft sections lie in one plane", "loft-coplanar");
+        previous = output.resolvedSketch->plane;
+        wires.push_back(outer(faces.front().face));
+    }
+    const kernel::Loft loft(wires, parameters.loft->ruled);
+    Prism result{loft.shape(), {}, {}};
+    const auto& profile = profiles.front();
+    if (const auto cap = loft.endFace(); !cap.IsNull())
+        result.caps.push_back({{extrusion, std::nullopt, profile.boundary},
+                               {cap},
+                               kernel::HistoryCoverage::complete,
+                               cap});
+    document::SubshapeOrigin start{extrusion, std::nullopt, profile.boundary};
+    start.extrusionFace = document::ExtrusionFace::start;
+    addSupportFace(result.caps, start, loft.startFace());
+    for (const auto& edge : profile.edges) {
+        document::SubshapeOrigin side{extrusion, std::nullopt, profile.boundary};
+        side.extrusionFace = document::ExtrusionFace::side;
+        side.sweptEdge = document::ContourEdgeOrigin{sketchId, edge.element, edge.role};
+        if (const auto face = loft.generated(edge.edge); !face.IsNull())
+            addSupportFace(result.caps, side, face);
+    }
+    return result;
+}
+
 kernel::ShapeOperationResult combine(document::ExtrusionOperation operation,
                                      const TopoDS_Shape& body, const TopoDS_Shape& tool) {
     switch (operation) {
@@ -249,7 +389,9 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
             throw GeometryEvaluationError("End face body has no solid before this extrusion");
     }
     // M20: a revolve turns the sketch itself; start offsets belong to prisms.
-    const auto start = parameters.revolve ? sketch : startSketch(sketch, parameters);
+    const auto start = parameters.revolve || parameters.sweep || parameters.loft
+                           ? sketch
+                           : startSketch(sketch, parameters);
     // The reference prism keeps this length: reference results are unplaced primitives, so
     // the end face's reference position says nothing about the current extent.
     const double length =
@@ -257,9 +399,10 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
                                  parameters.upToFace->origin)
                   : parameters.distance;
     const auto sweep = [&](const document::SketchParameters& at) {
-        return parameters.revolve
-                   ? makeRevolution(descriptor.id, sketchId, at, parameters, outputs)
-                   : makePrism(descriptor.id, sketchId, at, parameters, length);
+        return parameters.revolve ? makeRevolution(descriptor.id, sketchId, at, parameters, outputs)
+               : parameters.sweep ? makeSweep(descriptor.id, at, parameters, outputs, sketchId)
+               : parameters.loft  ? makeLoft(descriptor.id, at, parameters, outputs, sketchId)
+                                  : makePrism(descriptor.id, sketchId, at, parameters, length);
     };
     const auto prism = sweep(start);
 
@@ -281,11 +424,15 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
             throw GeometryEvaluationError("Reference sketch projected edges cannot be solved");
     }
     const auto referenceStart =
-        parameters.revolve ? referenceSketch : startSketch(referenceSketch, parameters);
+        parameters.revolve || parameters.sweep || parameters.loft
+            ? referenceSketch
+            : startSketch(referenceSketch, parameters);
     // M20: a base or construction axis lies in model coordinates, which the unplaced
     // reference of a face sketch need not share; the reference then keeps the current turn.
     const auto referencePrism = [&] {
-        if (!parameters.revolve || parameters.revolve->axis.sketchLine)
+        // M23: a sweep path, too, lies in model coordinates.
+        if ((!parameters.revolve && !parameters.sweep && !parameters.loft) ||
+            (parameters.revolve && parameters.revolve->axis.sketchLine))
             return sweep(referenceStart);
         try {
             return sweep(referenceStart);

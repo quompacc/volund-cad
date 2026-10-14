@@ -35,6 +35,8 @@ std::optional<ShellIcon> iconFor(const QString& id) {
         {QStringLiteral("solid.create.sketch"), ShellIcon::sketch},
         {QStringLiteral("solid.create.extrude_profiles"), ShellIcon::extrude},
         {QStringLiteral("solid.create.revolve"), ShellIcon::revolve},
+        {QStringLiteral("solid.create.sweep"), ShellIcon::sweep}, // M23
+        {QStringLiteral("solid.create.loft"), ShellIcon::loft},   // M24
         {QStringLiteral("solid.modify.transform"), ShellIcon::transform},
         {QStringLiteral("solid.modify.edit_sketch"), ShellIcon::editSketch},
         {QStringLiteral("solid.modify.push_pull"), ShellIcon::pushPull},

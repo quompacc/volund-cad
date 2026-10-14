@@ -197,6 +197,23 @@ void draw(QPainter& painter, ShellIcon icon, const QColor& ink, const QColor& ac
         painter.drawArc(QRectF(4, 7, 16, 10), 200 * 16, 300 * 16);
         painter.drawLine(QPointF(17, 7.5), QPointF(20, 9));
         break;
+    case ShellIcon::sweep: {
+        // A circle travelling along a bent dashed path.
+        painter.drawEllipse(QRectF(2.5, 14.5, 7, 7));
+        QPainterPath path;
+        path.moveTo(6, 14);
+        path.cubicTo(6, 6, 12, 4, 21, 4);
+        painter.drawPath(path);
+        painter.drawEllipse(QRectF(18, 1.5, 3, 5));
+        break;
+    }
+    case ShellIcon::loft:
+        // A wide section below, a small one above, joined by straight sides.
+        painter.drawEllipse(QRectF(3, 15, 18, 6));
+        painter.drawEllipse(QRectF(8, 3, 8, 3.5));
+        painter.drawLine(QPointF(3, 18), QPointF(8, 4.75));
+        painter.drawLine(QPointF(21, 18), QPointF(16, 4.75));
+        break;
     case ShellIcon::datumAxis:
         // A long axis through a small ring.
         painter.drawLine(QPointF(4, 20), QPointF(20, 4));

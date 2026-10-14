@@ -74,6 +74,28 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                          false,
                          simpleCommand(std::move(services.extrudeProfiles)),
                          services.canExtrudeProfiles});
+    if (services.loft)
+        commands_.push_back({"solid.create.loft",
+                             "Ausformung",
+                             "Gewählten Skizzenbereich zu einem Bereich einer anderen Skizze ausformen",
+                             {},
+                             workspaces::CommandGroup::create,
+                             true,
+                             false,
+                             simpleCommand(std::move(services.loft)),
+                             services.canExtrudeProfiles,
+                             "Ausformen"});
+    if (services.sweep)
+        commands_.push_back({"solid.create.sweep",
+                             "Folgen",
+                             "Gewählte Skizzenbereiche entlang einer früheren Skizze führen",
+                             {},
+                             workspaces::CommandGroup::create,
+                             true,
+                             false,
+                             simpleCommand(std::move(services.sweep)),
+                             services.canExtrudeProfiles,
+                             "Folgen"});
     if (services.revolve)
         commands_.push_back({"solid.create.revolve",
                              "Drehen",

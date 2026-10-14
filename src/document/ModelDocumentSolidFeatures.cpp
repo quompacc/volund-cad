@@ -96,6 +96,46 @@ bool ModelDocument::setCombineParameters(FeatureId featureId,
     return true;
 }
 
+void validateSweepPath(const SweepPath& path) {
+    if (path.sketch.value() == 0 || path.elements.empty() ||
+        path.elements.size() > maximumSweepPathElements)
+        throw std::invalid_argument("A sweep path names a sketch and 1 to 256 elements");
+    for (std::size_t index = 0; index < path.elements.size(); ++index)
+        if (path.elements[index].value() == 0 ||
+            std::find(path.elements.begin(), path.elements.begin() + static_cast<std::ptrdiff_t>(index),
+                      path.elements[index]) != path.elements.begin() + static_cast<std::ptrdiff_t>(index))
+            throw std::invalid_argument("Sweep path elements are named once");
+}
+
+void validateLoftParameters(const LoftParameters& parameters) {
+    if (parameters.sections.empty() || parameters.sections.size() > maximumLoftSections)
+        throw std::invalid_argument("A loft has 1 to 15 further sections");
+    for (std::size_t index = 0; index < parameters.sections.size(); ++index) {
+        const auto sketch = parameters.sections[index].sketch;
+        if (sketch.value() == 0)
+            throw std::invalid_argument("A loft section names a sketch");
+        for (std::size_t other = 0; other < index; ++other)
+            if (parameters.sections[other].sketch == sketch)
+                throw std::invalid_argument("Each loft section is another sketch");
+    }
+}
+
+void validateSweepExtrusion(const ExtrusionParameters& parameters) {
+    if (!parameters.sweep && !parameters.loft)
+        return;
+    if (parameters.sweep)
+        validateSweepPath(*parameters.sweep);
+    if (parameters.loft) {
+        validateLoftParameters(*parameters.loft);
+        if (parameters.sweep || parameters.regions.size() != 1 || !parameters.profiles.empty())
+            throw std::invalid_argument("A loft starts from exactly one region");
+    }
+    if (parameters.revolve || parameters.symmetric || parameters.reversed ||
+        parameters.offset != 0.0 || parameters.offsetParameter || parameters.upToFace ||
+        parameters.faceProfile || parameters.distanceParameter)
+        throw std::invalid_argument("A sweep or loft follows its path or sections only");
+}
+
 void validateRevolveParameters(const RevolveParameters& parameters) {
     const auto& axis = parameters.axis;
     if (axis.sketchLine.has_value() + axis.baseAxis.has_value() + axis.datumAxis.has_value() != 1)

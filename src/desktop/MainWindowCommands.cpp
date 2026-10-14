@@ -167,6 +167,20 @@ void MainWindow::createCommands() {
             impl_->sketchExtrusionTool->cancel();
         impl_->sketchExtrusionTool->beginSelectedProfiles(true);
     };
+    services.loft = [this]() { // M24
+        if (impl_->sketchEditorTool->isActive())
+            impl_->sketchEditorTool->cancel();
+        if (impl_->sketchExtrusionTool->isActive())
+            impl_->sketchExtrusionTool->cancel();
+        impl_->sketchExtrusionTool->beginSelectedLoft();
+    };
+    services.sweep = [this]() { // M23
+        if (impl_->sketchEditorTool->isActive())
+            impl_->sketchEditorTool->cancel();
+        if (impl_->sketchExtrusionTool->isActive())
+            impl_->sketchExtrusionTool->cancel();
+        impl_->sketchExtrusionTool->beginSelectedSweep();
+    };
     // T04c: push/pull of the picked planar face.
     services.pushPull = [this]() {
         if (!impl_->selectedPlanarFace)

@@ -184,6 +184,33 @@ struct RevolveParameters final {
     [[nodiscard]] bool operator==(const RevolveParameters&) const = default;
 };
 void validateRevolveParameters(const RevolveParameters& parameters);
+// M23 (schema 26, user decision 2026-10-14): a sweep ("Folgen") along connected elements of an
+// earlier sketch, which form one chain (open or closed).
+struct SweepPath final {
+    FeatureId sketch;
+    std::vector<SketchElementId> elements;
+    [[nodiscard]] bool operator==(const SweepPath&) const = default;
+};
+inline constexpr std::size_t maximumSweepPathElements = 256;
+void validateSweepPath(const SweepPath& path);
+// M24 (schema 27, user decision 2026-10-14): a loft ("Ausformung") from the extrusion's one
+// region through one region of each further sketch, in order; ruled or smooth.
+struct LoftSection final {
+    FeatureId sketch;
+    SketchRegionId region;
+    [[nodiscard]] bool operator==(const LoftSection&) const = default;
+};
+struct LoftParameters final {
+    std::vector<LoftSection> sections;
+    bool ruled{false};
+    [[nodiscard]] bool operator==(const LoftParameters&) const = default;
+};
+inline constexpr std::size_t maximumLoftSections = 15;
+void validateLoftParameters(const LoftParameters& parameters);
+struct ExtrusionParameters;
+// The sweep (M23) or loft (M24) part of an extrusion: valid, alone, and nothing else a prism
+// uses.
+void validateSweepExtrusion(const ExtrusionParameters& parameters);
 
 struct ExtrusionParameters final {
     double distance;
@@ -220,6 +247,12 @@ struct ExtrusionParameters final {
     // target, reversed and symmetric; distance stays stored but unused; no offset, end face or
     // face profile.
     std::optional<RevolveParameters> revolve{};
+    // M23: a sweep along a path instead of a prism; keeps regions, operation and target;
+    // distance stays stored but unused; no direction, offset, end face, revolve or face profile.
+    std::optional<SweepPath> sweep{};
+    // M24: a loft through further sections instead of a prism; its own regions name exactly one
+    // region, the first section; like a sweep otherwise.
+    std::optional<LoftParameters> loft{};
 
     [[nodiscard]] bool operator==(const ExtrusionParameters&) const = default;
 };

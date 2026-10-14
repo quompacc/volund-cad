@@ -95,6 +95,11 @@ std::size_t nativeExtrusionRecords(const ExtrusionParameters& parameters) {
         (parameters.faceProfile ? parameters.faceProfile->origin.extrusionBoundary.size() : 0);
     for (const auto& region : parameters.regions)
         records += chunkCount(region);
+    if (parameters.sweep) // M23: path elements
+        records += parameters.sweep->elements.size();
+    if (parameters.loft) // M24: each section region and its chunks
+        for (const auto& section : parameters.loft->sections)
+            records += 1 + chunkCount(section.region);
     return records;
 }
 void validateNativeExtrusion(const ExtrusionParameters& parameters) {
@@ -161,6 +166,30 @@ void writeNativeExtrusion(const TDF_Label& label, const ExtrusionParameters& par
                                                     : axis.datumAxis->value();
         TDataStd_AsciiString::Set(revolve.FindChild(2), std::to_string(value).c_str());
     }
+    // M24 (schema 27): child 14 holds ruled (0/1) and each section (1..): its sketch (1) and
+    // region (2, as the region list).
+    if (parameters.loft) {
+        const auto loft = label.FindChild(14);
+        TDataStd_Integer::Set(loft, parameters.loft->ruled ? 1 : 0);
+        for (std::size_t index = 0; index < parameters.loft->sections.size(); ++index) {
+            const auto& section = parameters.loft->sections[index];
+            const auto node = loft.FindChild(static_cast<int>(index + 1));
+            TDataStd_AsciiString::Set(node.FindChild(1),
+                                      std::to_string(section.sketch.value()).c_str());
+            writeRegions(node.FindChild(2), {section.region});
+        }
+    }
+    // M23 (schema 26): child 13 holds the path sketch (1) and the path elements (children of 2).
+    if (parameters.sweep) {
+        const auto sweep = label.FindChild(13);
+        TDataStd_AsciiString::Set(sweep.FindChild(1),
+                                  std::to_string(parameters.sweep->sketch.value()).c_str());
+        const auto elements = sweep.FindChild(2);
+        for (std::size_t index = 0; index < parameters.sweep->elements.size(); ++index)
+            TDataStd_AsciiString::Set(
+                elements.FindChild(static_cast<int>(index + 1)),
+                std::to_string(parameters.sweep->elements[index].value()).c_str());
+    }
 }
 ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t remainingRecords,
                                         int schemaVersion) {
@@ -183,6 +212,10 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
     const auto symmetric = label.FindChild(11, false);
     // Schema 20 (M20) adds the revolve (12).
     const auto revolve = label.FindChild(12, false);
+    // Schema 26 (M23) adds the sweep path (13).
+    const auto sweep = label.FindChild(13, false);
+    // Schema 27 (M24) adds the loft (14).
+    const auto loft = label.FindChild(14, false);
     const int t02 = (operation.IsNull() ? 0 : 1) + (reversed.IsNull() ? 0 : 1) +
         (target.IsNull() ? 0 : 1);
     const int t03 = (offset.IsNull() ? 0 : 1) + (offsetBinding.IsNull() ? 0 : 1) +
@@ -191,9 +224,11 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
         (t02 == 0 || schemaVersion >= 8) && (t03 == 0 || schemaVersion >= 9) &&
         (profileFace.IsNull() || schemaVersion >= 10) &&
         (symmetric.IsNull() || schemaVersion >= 13) && (revolve.IsNull() || schemaVersion >= 20) &&
+        (sweep.IsNull() || schemaVersion >= 26) && (loft.IsNull() || schemaVersion >= 27) &&
         label.NbChildren() == 1 + (regions.IsNull() ? 0 : 1) + (binding.IsNull() ? 0 : 1) + t02 +
                                   t03 + (profileFace.IsNull() ? 0 : 1) +
-                                  (symmetric.IsNull() ? 0 : 1) + (revolve.IsNull() ? 0 : 1));
+                                  (symmetric.IsNull() ? 0 : 1) + (revolve.IsNull() ? 0 : 1) +
+                                  (sweep.IsNull() ? 0 : 1) + (loft.IsNull() ? 0 : 1));
     Handle(TDataStd_Real) distance;
     require(label.FindAttribute(TDataStd_Real::GetID(), distance));
     const auto profiles = child(label, 1);
@@ -276,6 +311,40 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
             axis.datumAxis = FeatureId{value};
         result.revolve = RevolveParameters{axis, kernel::Radians{angle->Get()}};
         validateRevolveParameters(*result.revolve);
+    }
+    if (!sweep.IsNull()) {
+        require(sweep.NbChildren() == 2);
+        const auto elements = child(sweep, 2);
+        const int pathLength = elements.NbChildren();
+        require(pathLength >= 1 &&
+                static_cast<std::size_t>(pathLength) <= maximumSweepPathElements &&
+                static_cast<std::size_t>(pathLength) <= remainingRecords);
+        SweepPath path{FeatureId{readDecimal(child(sweep, 1))}, {}};
+        for (int index = 1; index <= pathLength; ++index)
+            path.elements.push_back(SketchElementId{readDecimal(child(elements, index))});
+        validateSweepPath(path);
+        result.sweep = std::move(path);
+    }
+    if (!loft.IsNull()) {
+        const int ruled = [&] {
+            Handle(TDataStd_Integer) value;
+            require(loft.FindAttribute(TDataStd_Integer::GetID(), value));
+            return value->Get();
+        }();
+        const int sections = loft.NbChildren();
+        require((ruled == 0 || ruled == 1) && sections >= 1 &&
+                static_cast<std::size_t>(sections) <= maximumLoftSections);
+        LoftParameters parameters{{}, ruled == 1};
+        for (int index = 1; index <= sections; ++index) {
+            const auto node = child(loft, index);
+            require(node.NbChildren() == 2);
+            auto regionList = readRegions(child(node, 2), remainingRecords);
+            require(regionList.size() == 1);
+            parameters.sections.push_back(
+                {FeatureId{readDecimal(child(node, 1))}, std::move(regionList.front())});
+        }
+        validateLoftParameters(parameters);
+        result.loft = std::move(parameters);
     }
     validateNativeExtrusion(result);
     return result;

@@ -127,6 +127,13 @@ FeatureDependencies FeatureDependencies::from(const document::DocumentSnapshot& 
                 revolve && revolve->axis.datumAxis)
                 node.inputs.push_back(*revolve->axis.datumAxis);
             else if (const auto producer = targetProducer(snapshot, feature.id)) node.inputs.push_back(*producer);
+            // M23: a sweep follows its path sketch.
+            if (const auto& sweep = snapshot.extrusionParameters(feature.id).sweep)
+                node.inputs.push_back(sweep->sketch);
+            // M24: a loft follows its section sketches.
+            if (const auto& loft = snapshot.extrusionParameters(feature.id).loft)
+                for (const auto& section : loft->sections)
+                    node.inputs.push_back(section.sketch);
             // T03: the body of the end face, as it was before this extrusion.
             if (const auto face = snapshot.extrusionParameters(feature.id).upToFace)
                 if (const auto producer = bodyProducerBefore(snapshot, feature.id, face->body);

@@ -93,6 +93,7 @@ void validateExtrusion(const ExtrusionParameters& parameters) {
          parameters.upToFace || parameters.faceProfile))
         throw std::invalid_argument(
             "A symmetric extrusion has no direction, start offset or end face");
+    validateSweepExtrusion(parameters); // M23
     if (parameters.revolve) {
         validateRevolveParameters(*parameters.revolve);
         if (parameters.offset != 0.0 || parameters.offsetParameter || parameters.upToFace ||

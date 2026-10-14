@@ -37,6 +37,8 @@ enum class KernelOperation {
     makeCone,
     makeTorus,
     makeWedge,
+    makePipe,       // M23
+    loft,           // M24
 };
 
 // M03: why a Boolean refused its result, beyond a failing kernel.

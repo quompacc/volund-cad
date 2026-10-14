@@ -135,6 +135,12 @@ void SketchExtrusionToolController::open(document::FeatureId sketchId,
     offset_ = values.offset;
     upToFace_ = values.upToFace.has_value();
     endFace_ = values.upToFace;
+    sweep_ = values.sweep;
+    if (sweep_)
+        collectPaths();
+    loft_ = values.loft;
+    if (loft_)
+        collectSections();
     revolve_ = values.revolve;
     if (revolve_) {
         angleDegrees_ = revolve_->angle.value() * 180.0 / std::numbers::pi;
@@ -191,8 +197,40 @@ void SketchExtrusionToolController::open(document::FeatureId sketchId,
         lengths = {{"angle", QObject::tr("Winkel"), angleDegrees_, 0.001, 360.0,
                     ToolValueKind::angle}};
     }
+    if (sweep_) {
+        // M23: the path instead of end, direction and lengths.
+        choices.erase(choices.begin(), choices.begin() + 2);
+        std::vector<QString> pathNames;
+        int pathIndex = 0;
+        for (std::size_t index = 0; index < paths_.size(); ++index) {
+            pathNames.push_back(paths_[index].first);
+            if (paths_[index].second.sketch == sweep_->sketch)
+                pathIndex = static_cast<int>(index);
+        }
+        choices.insert(choices.begin(), {"path", QObject::tr("Pfad"), pathNames, pathIndex});
+        lengths.clear();
+    }
+    if (loft_) {
+        // M24: the second section and the transition instead of end, direction and lengths.
+        choices.erase(choices.begin(), choices.begin() + 2);
+        std::vector<QString> sectionNames;
+        int sectionIndex = 0;
+        for (std::size_t index = 0; index < sections_.size(); ++index) {
+            sectionNames.push_back(sections_[index].first);
+            if (sections_[index].second.sketch == loft_->sections.front().sketch)
+                sectionIndex = static_cast<int>(index);
+        }
+        choices.insert(choices.begin(),
+                       {{"section", QObject::tr("Zweites Profil"), sectionNames, sectionIndex},
+                        {"transition", QObject::tr("Übergang"),
+                         {QObject::tr("Geradlinig"), QObject::tr("Glatt")},
+                         loft_->ruled ? 0 : 1}});
+        lengths.clear();
+    }
     panel_.begin(ToolPanelDefinition{
-        revolve_ ? (editing_ ? QObject::tr("Drehung bearbeiten") : QObject::tr("Drehen"))
+        revolve_  ? (editing_ ? QObject::tr("Drehung bearbeiten") : QObject::tr("Drehen"))
+        : sweep_ ? (editing_ ? QObject::tr("Folgen bearbeiten") : QObject::tr("Folgen"))
+        : loft_  ? (editing_ ? QObject::tr("Ausformung bearbeiten") : QObject::tr("Ausformung"))
                  : (editing_ ? QObject::tr("Extrusion bearbeiten") : QObject::tr("Extrudieren")),
         QObject::tr("%1 gewählte(n) Skizzenbereich(e) extrudieren.").arg(profileIds_.size()),
         std::move(lengths),
@@ -250,12 +288,14 @@ application::Action SketchExtrusionToolController::extrusion() const {
         values.target = named ? target_ : std::nullopt;
         values.upToFace = upToFace_ ? endFace_ : std::nullopt;
         values.revolve = revolve_;
+        values.sweep = sweep_;
+        values.loft = loft_;
         return application::EditExtrusionParametersAction{*editing_, values};
     }
     return application::CreateProfileExtrusionAction{
         *profileSketch_, profileIds_, millimetres(distance_),
         {operation_, reversed_, named ? target_ : std::nullopt, offset_,
-         upToFace_ ? endFace_ : std::nullopt, symmetric_, revolve_}};
+         upToFace_ ? endFace_ : std::nullopt, symmetric_, revolve_, sweep_, loft_}};
 }
 
 // U11 (A-UI-02, A-VIS-01): the extrusion the values would give, on an isolated copy; the
@@ -311,12 +351,21 @@ void SketchExtrusionToolController::choose(const std::string& choice, int index)
         axisPick_ = index == 0;
         if (index != 0)
             revolve_->axis = axes_[static_cast<std::size_t>(index)].second;
+    } else if (choice == "path" && sweep_ && index >= 0 &&
+               static_cast<std::size_t>(index) < paths_.size()) {
+        sweep_ = paths_[static_cast<std::size_t>(index)].second; // M23
+    } else if (choice == "section" && loft_ && index >= 0 &&
+               static_cast<std::size_t>(index) < sections_.size()) {
+        loft_->sections = {sections_[static_cast<std::size_t>(index)].second}; // M24
+    } else if (choice == "transition" && loft_) {
+        loft_->ruled = index == 0;
     } else if (choice == "operation") {
         operation_ = static_cast<document::ExtrusionOperation>(index + 1);
         // A cut goes into the material; the panel shows the changed direction and turns it
         // back when the cut is left again (M04), unless the user chose it. A revolve's
         // direction is the turning sense, which a cut does not change.
-        if (!revolve_ && operation_ == document::ExtrusionOperation::cut && !reversed_ &&
+        if (!revolve_ && !sweep_ && !loft_ && operation_ == document::ExtrusionOperation::cut &&
+            !reversed_ &&
             !symmetric_) {
             panel_.chooseOption("direction", 1);
             autoReversed_ = true;

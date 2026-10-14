@@ -115,6 +115,10 @@ const char* kernelOperationName(KernelOperation operation) noexcept {
         return "makeTorus";
     case KernelOperation::makeWedge:
         return "makeWedge";
+    case KernelOperation::makePipe:
+        return "makePipe";
+    case KernelOperation::loft:
+        return "loft";
     }
     return "unknown";
 }

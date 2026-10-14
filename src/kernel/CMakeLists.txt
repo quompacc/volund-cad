@@ -1,4 +1,4 @@
-add_library(voelund_kernel STATIC ShapeFactory.cpp ShapeOperations.cpp Prism.cpp Revolution.cpp ShellOperation.cpp SolidPrimitives.cpp)
+add_library(voelund_kernel STATIC ShapeFactory.cpp ShapeOperations.cpp Prism.cpp Revolution.cpp ShellOperation.cpp SolidPrimitives.cpp Sweep.cpp Loft.cpp)
 
 target_include_directories(
     voelund_kernel
