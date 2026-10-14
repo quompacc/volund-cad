@@ -48,7 +48,8 @@ void checkSnapTarget(std::span<const document::SketchElement> elements, const Sk
     const bool fits = std::holds_alternative<document::SketchArc>(geometry) ||
                       (line && !center) ||
                       (center && (std::holds_alternative<document::SketchCircle>(geometry) ||
-                                  std::holds_alternative<document::SketchEllipse>(geometry)));
+                                  std::holds_alternative<document::SketchEllipse>(geometry) ||
+                                  std::holds_alternative<document::SketchPointGeometry>(geometry)));
     if (!fits)
         rejectSnap(snap.element, "das Element hat keinen solchen Punkt");
 }
@@ -101,6 +102,7 @@ std::string creationProblem(SketchDrawingTool tool, const SketchCreationInput& i
             return "Polygon: Der Eckpunkt liegt im Mittelpunkt";
         break;
     case SketchDrawingTool::select:
+    case SketchDrawingTool::point:
         break;
     }
     return "Die Punkte ergeben kein gültiges Skizzenelement";
@@ -280,6 +282,9 @@ std::optional<SketchCreationResult> SketchEditorSession::createStep(const Sketch
         else if (in.relation == SketchAutoRelation::parallel ||
                  in.relation == SketchAutoRelation::perpendicular || !in.relation.has_value())
             static_cast<void>(relate([&] { return addAutomaticLineRelation(id).has_value(); }));
+        break;
+    case SketchDrawingTool::point: // S15: snapped like a circle's center
+        snap(SketchCreationPoint::center, in.firstSnap, in.first);
         break;
     case SketchDrawingTool::circle:
     case SketchDrawingTool::ellipse: {

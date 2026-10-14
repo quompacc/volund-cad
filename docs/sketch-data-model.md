@@ -398,6 +398,7 @@ names the test per cell.
 | Pattern copies | follow their source; read-only | move, delete, trim, split, fillet of a copy: refused with the pattern named |
 | Rotate | no tool; rotation by a circular pattern (S08) | — |
 | Relations | lines, points, circles, arcs | ellipses: no tangent, equal or concentric relation |
+| Points (S15) | one click; snapped to the origin, axes and points; coincident, on object, distances, locked; moved, mirrored, copied in patterns | trim, extend, split, fillet: "Ein Punkt ist keine Kurve (UnsupportedCurve)"; offset: "Ein Punkt lässt sich nicht versetzen"; a point is always construction geometry and bounds no region |
 | Snaps | end, mid, center points, curves, projected edges | the point on a three-point arc and the slot width point bind nothing; a snap to a pattern copy is dropped |
 
 Further limits of the current state:

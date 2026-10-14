@@ -132,7 +132,8 @@ bool SketchEditorSession::selectNearestReference(document::SketchElementId eleme
         reference.point = startDistance <= endDistance ? document::SketchPointPosition::start
                                                        : document::SketchPointPosition::end;
     } else if (std::holds_alternative<document::SketchCircle>(match->geometry) ||
-               std::holds_alternative<document::SketchEllipse>(match->geometry)) {
+               std::holds_alternative<document::SketchEllipse>(match->geometry) ||
+               std::holds_alternative<document::SketchPointGeometry>(match->geometry)) {
         reference.point = document::SketchPointPosition::center;
     } else if (const auto* arc = std::get_if<document::SketchArc>(&match->geometry)) {
         const document::SketchPoint start{arc->center.x + arc->radius * std::cos(arc->startAngle),
@@ -215,6 +216,9 @@ bool SketchEditorSession::translateSelected(double deltaX, double deltaY) {
         } else if (auto* ellipse = std::get_if<document::SketchEllipse>(&match->geometry)) {
             ellipse->center.x += deltaX;
             ellipse->center.y += deltaY;
+        } else if (auto* point = std::get_if<document::SketchPointGeometry>(&match->geometry)) {
+            point->position.x += deltaX; // S15
+            point->position.y += deltaY;
         } else {
             return false;
         }
@@ -279,19 +283,6 @@ std::optional<double> SketchEditorSession::selectedRectangleHeight() const noexc
     return rectangle == nullptr
                ? std::nullopt
                : std::optional<double>{std::abs(rectangle->second.y - rectangle->first.y)};
-}
-
-std::optional<double> SketchEditorSession::selectedCircleRadius() const noexcept {
-    if (!selectedElement_.has_value())
-        return std::nullopt;
-    const auto match =
-        std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);
-    if (match == elements_.values.end())
-        return std::nullopt;
-    if (const auto* circle = std::get_if<document::SketchCircle>(&match->geometry))
-        return circle->radius;
-    const auto* arc = std::get_if<document::SketchArc>(&match->geometry);
-    return arc == nullptr ? std::nullopt : std::optional<double>{arc->radius};
 }
 
 std::optional<document::SketchLineConstraint>

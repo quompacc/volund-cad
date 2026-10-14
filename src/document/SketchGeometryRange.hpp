@@ -14,6 +14,8 @@ inline void validateGeometryRange(const SketchGeometry& geometry) {
         if constexpr (std::is_same_v<T, SketchLine>) {
             return point(shape.start) && point(shape.end) && kernel::modelLength(
                 std::hypot(shape.end.x - shape.start.x, shape.end.y - shape.start.y));
+        } else if constexpr (std::is_same_v<T, SketchPointGeometry>) {
+            return point(shape.position);
         } else if constexpr (std::is_same_v<T, SketchRectangle>) {
             return point(shape.first) && point(shape.second) &&
                    kernel::modelLength(std::abs(shape.second.x - shape.first.x)) &&

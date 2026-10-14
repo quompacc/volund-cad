@@ -162,9 +162,29 @@ struct EllipseState final {
     }
 };
 
+// S15: a single point; it is referenced as its center.
+struct PointState final {
+    document::SketchElement* element;
+    double x;
+    double y;
+    GCS::Point point;
+
+    explicit PointState(document::SketchElement& source)
+        : element(&source), x(std::get<document::SketchPointGeometry>(source.geometry).position.x),
+          y(std::get<document::SketchPointGeometry>(source.geometry).position.y) {
+        point = {&x, &y};
+    }
+
+    void appendUnknowns(GCS::VEC_pD& unknowns) { unknowns.insert(unknowns.end(), {&x, &y}); }
+
+    void writeBack() const {
+        std::get<document::SketchPointGeometry>(element->geometry).position = {x, y};
+    }
+};
+
 // PlaneGCS orders unknowns by their addresses. All states share one storage in element order so
 // an underdetermined sketch solves the same way in every run, independent of heap layout.
-using ElementState = std::variant<LineState, CircleState, ArcState, EllipseState>;
+using ElementState = std::variant<LineState, CircleState, ArcState, EllipseState, PointState>;
 
 using LineMap = std::unordered_map<std::uint64_t, LineState*>;
 using CircleMap = std::unordered_map<std::uint64_t, CircleState*>;
@@ -255,6 +275,11 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
             auto& ellipse = std::get<EllipseState>(state);
             ellipse.appendUnknowns(unknowns);
             centers.emplace(element.id.value(), &ellipse.ellipse.center);
+        } else if (std::holds_alternative<document::SketchPointGeometry>(element.geometry)) {
+            auto& state = states.emplace_back(std::in_place_type<PointState>, element);
+            auto& point = std::get<PointState>(state);
+            point.appendUnknowns(unknowns);
+            centers.emplace(element.id.value(), &point.point);
         }
     }
 

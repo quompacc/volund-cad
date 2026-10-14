@@ -483,6 +483,11 @@ std::optional<SketchElementIntent> SketchEditorInteraction::click(int x, int y) 
     if (!resolved.has_value())
         return std::nullopt;
     auto [point, reference] = *resolved;
+    // S15: a point is complete with its one click.
+    if (tool_ == SketchElementTool::point)
+        return SketchElementIntent{point.first, point.second, point.first, point.second,
+                                   std::nullopt, reference, std::nullopt, std::nullopt,
+                                   std::nullopt, std::nullopt};
     if (!firstPoint_.has_value()) {
         firstPoint_ = point;
         firstReference_ = reference;

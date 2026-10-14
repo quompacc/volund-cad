@@ -46,6 +46,8 @@ SketchPoint referencePoint(const document::SketchParameters& sketch,
     }
     if (const auto* ellipse = std::get_if<document::SketchEllipse>(&geometry))
         return ellipse->center;
+    if (const auto* point = std::get_if<document::SketchPointGeometry>(&geometry))
+        return point->position; // S15
     const auto& rectangle = std::get<document::SketchRectangle>(geometry);
     if (reference.point == Position::center)
         return middle(rectangle.first, rectangle.second);
@@ -63,6 +65,8 @@ SketchPoint elementPoint(const document::SketchParameters& sketch, document::Ske
         return onCircle(arc->center, arc->radius, (arc->startAngle + arc->endAngle) * 0.5);
     if (const auto* ellipse = std::get_if<document::SketchEllipse>(&geometry))
         return onCircle(ellipse->center, ellipse->majorRadius, ellipse->rotation);
+    if (const auto* point = std::get_if<document::SketchPointGeometry>(&geometry))
+        return point->position;
     const auto& rectangle = std::get<document::SketchRectangle>(geometry);
     return middle(rectangle.first, rectangle.second);
 }

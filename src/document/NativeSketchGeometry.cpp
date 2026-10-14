@@ -96,6 +96,9 @@ void writeElement(const TDF_Label& label, const SketchElement& element) {
     } else if (const auto* arc = std::get_if<SketchArc>(&element.geometry)) {
         kind = "arc";
         values = {arc->center.x, arc->center.y, arc->radius, arc->startAngle, arc->endAngle};
+    } else if (const auto* point = std::get_if<SketchPointGeometry>(&element.geometry)) {
+        kind = "point"; // S15 (schema 22)
+        values = {point->position.x, point->position.y};
     } else {
         const auto& ellipse = std::get<SketchEllipse>(element.geometry);
         kind = "ellipse";
@@ -105,7 +108,7 @@ void writeElement(const TDF_Label& label, const SketchElement& element) {
     TDataStd_AsciiString::Set(label.FindChild(2), kind);
     writeReals(label.FindChild(4), values);
 }
-SketchElement readElement(const TDF_Label& label) {
+SketchElement readElement(const TDF_Label& label, int schemaVersion) {
     const auto kind = text(child(label, 2));
     const bool line = kind == "line";
     require(label.NbChildren() == (line ? 5 : 4));
@@ -123,6 +126,11 @@ SketchElement readElement(const TDF_Label& label) {
         if (kind == "circle") {
             const auto data = reals(child(label, 4), 3);
             return SketchCircle{{data->Value(1), data->Value(2)}, data->Value(3)};
+        }
+        if (kind == "point") {
+            require(schemaVersion >= 22);
+            const auto data = reals(child(label, 4), 2);
+            return SketchPointGeometry{{data->Value(1), data->Value(2)}};
         }
         require(kind == "arc" || kind == "ellipse");
         const auto data = reals(child(label, 4), 5);
@@ -227,7 +235,7 @@ SketchParameters readNativeSketchGeometry(const TDF_Label& label, std::size_t re
     sketch.elements.nextId = number(child(label, 1), true);
     sketch.constraints.nextId = number(child(label, 2), true);
     for (int index = 1; index <= count; ++index)
-        sketch.elements.values.push_back(readElement(child(elements, index)));
+        sketch.elements.values.push_back(readElement(child(elements, index), schemaVersion));
     sketch.constraints = readNativeSketchConstraints(
         child(label, 3), elements, sketch.elements, sketch.constraints.nextId,
         remainingElements - static_cast<std::size_t>(count), schemaVersion);

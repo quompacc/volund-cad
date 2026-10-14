@@ -87,17 +87,27 @@ struct SketchEllipse final {
     [[nodiscard]] bool operator==(const SketchEllipse&) const = default;
 };
 
-using SketchGeometry =
-    std::variant<SketchLine, SketchRectangle, SketchCircle, SketchArc, SketchEllipse>;
+// S15 (schema 22): a single point, referenced as its center. It never bounds a region: a
+// point element is always construction geometry.
+struct SketchPointGeometry final {
+    SketchPoint position;
+
+    [[nodiscard]] bool operator==(const SketchPointGeometry&) const = default;
+};
+
+using SketchGeometry = std::variant<SketchLine, SketchRectangle, SketchCircle, SketchArc,
+                                    SketchEllipse, SketchPointGeometry>;
 
 struct SketchElement final {
     SketchElementId id;
     SketchGeometry geometry;
     bool construction{false};
 
+    // S15: a point is always construction geometry.
     SketchElement(SketchElementId elementId, SketchGeometry elementGeometry,
                   bool isConstruction = false) noexcept
-        : id(elementId), geometry(std::move(elementGeometry)), construction(isConstruction) {}
+        : id(elementId), geometry(std::move(elementGeometry)),
+          construction(isConstruction || std::holds_alternative<SketchPointGeometry>(geometry)) {}
 
     [[nodiscard]] bool operator==(const SketchElement&) const = default;
 };

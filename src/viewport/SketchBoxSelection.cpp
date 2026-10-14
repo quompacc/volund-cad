@@ -1,6 +1,8 @@
 #include "SketchBoxSelection.hpp"
 
 #include <BRepAdaptor_Curve.hxx>
+#include <BRep_Tool.hxx>
+#include <TopoDS_Vertex.hxx>
 #include <QLineF>
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
@@ -15,6 +17,14 @@ std::vector<std::vector<QPointF>> screenCurves(const TopoDS_Shape& shape,
                                                const occ::handle<V3d_View>& view) {
     constexpr int samples = 48;
     std::vector<std::vector<QPointF>> curves;
+    // S15: a sketch point is a curve of one point.
+    if (shape.ShapeType() == TopAbs_VERTEX) {
+        const gp_Pnt world = BRep_Tool::Pnt(TopoDS::Vertex(shape));
+        int x = 0, y = 0;
+        view->Convert(world.X(), world.Y(), world.Z(), x, y);
+        curves.push_back({QPointF(x, y)});
+        return curves;
+    }
     for (TopExp_Explorer edges(shape, TopAbs_EDGE); edges.More(); edges.Next()) {
         const BRepAdaptor_Curve curve(TopoDS::Edge(edges.Current()));
         std::vector<QPointF> points;

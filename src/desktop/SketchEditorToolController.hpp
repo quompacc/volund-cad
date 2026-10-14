@@ -16,6 +16,7 @@ namespace voelund::desktop {
 
 // Index of "Rechteck (Mitte)" in the tool choice (S04a).
 inline constexpr int centerRectangleTool = 10;
+inline constexpr int pointTool = 11; // S15
 
 class ToolPanelHost;
 

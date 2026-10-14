@@ -139,4 +139,17 @@ SketchEditorSession::evaluatedConstraints() const {
     return features::evaluateSketchConstraintAnnotations(parameters(false));
 }
 
+std::optional<double> SketchEditorSession::selectedCircleRadius() const noexcept {
+    if (!selectedElement_.has_value())
+        return std::nullopt;
+    const auto match =
+        std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);
+    if (match == elements_.values.end())
+        return std::nullopt;
+    if (const auto* circle = std::get_if<document::SketchCircle>(&match->geometry))
+        return circle->radius;
+    const auto* arc = std::get_if<document::SketchArc>(&match->geometry);
+    return arc == nullptr ? std::nullopt : std::optional<double>{arc->radius};
+}
+
 } // namespace voelund::application

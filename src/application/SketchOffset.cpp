@@ -161,6 +161,10 @@ SketchOffsetResult offsetGeometry(std::span<const document::SketchGeometry> sele
     if (!std::isfinite(offset) || std::abs(offset) <= tolerance)
         refuse("Der Abstand muss endlich und ungleich null sein");
     if (std::ranges::any_of(selected, [](const auto& geometry) {
+            return std::holds_alternative<document::SketchPointGeometry>(geometry);
+        }))
+        refuse("Ein Punkt lässt sich nicht versetzen");
+    if (std::ranges::any_of(selected, [](const auto& geometry) {
             return std::holds_alternative<document::SketchEllipse>(geometry);
         }))
         refuse("Ellipsen werden nicht unterstützt (UnsupportedCurve); ihr Versatz ist keine "

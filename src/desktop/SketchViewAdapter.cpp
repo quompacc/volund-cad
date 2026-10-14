@@ -140,6 +140,8 @@ QString sketchSelectionSummary(const application::CadSession& session) {
             kind = QObject::tr("Bogen");
         } else if (std::holds_alternative<document::SketchEllipse>(element.geometry)) {
             kind = QObject::tr("Ellipse");
+        } else if (std::holds_alternative<document::SketchPointGeometry>(element.geometry)) {
+            kind = QObject::tr("Punkt");
         }
         return summary + QObject::tr("\n\nGewählt: %1 #%2").arg(kind).arg(element.id.value());
     }

@@ -45,6 +45,8 @@ void applyStyle(const occ::handle<AIS_Shape>& shape, bool isSelected, bool confl
     drawer->SetLineAspect(new Prs3d_LineAspect(color, type, width));
     drawer->SetFreeBoundaryAspect(new Prs3d_LineAspect(color, type, width));
     drawer->SetUnFreeBoundaryAspect(new Prs3d_LineAspect(color, type, width));
+    // S15: a sketch point is drawn as a filled marker in the same color.
+    drawer->SetPointAspect(new Prs3d_PointAspect(Aspect_TOM_BALL, color, 3.0 + width));
 }
 
 } // namespace
@@ -64,7 +66,11 @@ void SketchPresentation::setElements(const occ::handle<AIS_InteractiveContext>& 
         if (showPoints)
             presentation->SetZLayer(Graphic3d_ZLayerId_Topmost);
         context->Display(presentation, false);
-        context->Activate(presentation, AIS_Shape::SelectionMode(TopAbs_EDGE));
+        // S15: a point is a vertex and is picked as one.
+        context->Activate(presentation,
+                          AIS_Shape::SelectionMode(element.shape.ShapeType() == TopAbs_VERTEX
+                                                       ? TopAbs_VERTEX
+                                                       : TopAbs_EDGE));
         std::vector<occ::handle<AIS_Point>> points;
         if (showPoints) {
             points.reserve(element.points.size());

@@ -85,6 +85,10 @@ QJsonObject encodeElement(const document::SketchElement& element) {
                 json.insert("majorRadius", ellipse.majorRadius);
                 json.insert("minorRadius", ellipse.minorRadius);
                 json.insert("rotation", ellipse.rotation);
+            },
+            [&](const document::SketchPointGeometry& value) { // S15
+                json.insert("type", "point");
+                json.insert("position", point(value.position));
             }},
         element.geometry);
     return json;

@@ -33,7 +33,8 @@ QString toolShortcut(const std::string& id) {
         {"ellipse", QStringLiteral("E")},
         {"slot", QStringLiteral("N")},
         {"polygon", QStringLiteral("G")},
-        {"center_rectangle", QStringLiteral("Shift+R")}};
+        {"center_rectangle", QStringLiteral("Shift+R")},
+        {"point", QStringLiteral("O")}};
     const auto match = keys.find(id);
     return match == keys.end() ? QString{} : match->second;
 }
@@ -53,7 +54,8 @@ const std::vector<RailSection>& railSections() {
           {"sketch.tool.circle", "sketch.tool.ellipse"},
           {"sketch.tool.center_arc", "sketch.tool.three_point_arc"},
           {"sketch.tool.slot"},
-          {"sketch.tool.polygon"}}},
+          {"sketch.tool.polygon"},
+          {"sketch.tool.point"}}},
         {QT_TR_NOOP("Beziehungen"),
          {{"sketch.horizontal", "sketch.vertical", "sketch.free"},
           {"sketch.parallel", "sketch.perpendicular", "sketch.collinear"},

@@ -132,6 +132,8 @@ TransformedCopy transformedCopy(const document::SketchGeometry& geometry,
                 if (sweep >= 2.0 * std::numbers::pi - 1e-12)
                     arc.endAngle = arc.startAngle + sweep;
                 result.elements.push_back(arc);
+            } else if constexpr (std::is_same_v<Geometry, document::SketchPointGeometry>) {
+                result.elements.push_back(document::SketchPointGeometry{t.apply(value.position)});
             } else if constexpr (std::is_same_v<Geometry, document::SketchEllipse>) {
                 document::SketchEllipse ellipse = value;
                 ellipse.center = t.apply(value.center);

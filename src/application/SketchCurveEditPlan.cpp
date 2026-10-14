@@ -175,6 +175,8 @@ double scaleOf(std::span<const SketchElement> elements) {
                 } else if constexpr (std::is_same_v<Geometry, document::SketchEllipse>) {
                     grow(value.center);
                     scale = std::max(scale, value.majorRadius);
+                } else if constexpr (std::is_same_v<Geometry, document::SketchPointGeometry>) {
+                    grow(value.position);
                 } else {
                     grow(value.center);
                     scale = std::max(scale, value.radius);
@@ -389,6 +391,8 @@ const char* unsupported(SketchCurveEdit edit, const SketchGeometry& geometry) {
         return "Ellipsen werden nicht unterstützt (UnsupportedCurve)";
     if (std::holds_alternative<document::SketchRectangle>(geometry))
         return "Alt-Rechtecke werden nicht unterstützt (UnsupportedCurve)";
+    if (std::holds_alternative<document::SketchPointGeometry>(geometry))
+        return "Ein Punkt ist keine Kurve (UnsupportedCurve)";
     return edit == SketchCurveEdit::extend
                ? "Kreise sind geschlossen und lassen sich nicht verlängern (UnsupportedCurve)"
                : "Kreise haben keinen Endpunkt zum Teilen; zuerst stutzen (UnsupportedCurve)";

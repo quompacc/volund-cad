@@ -40,6 +40,8 @@ application::SketchDrawingTool applicationTool(int index) {
         return application::SketchDrawingTool::polygon;
     if (index == centerRectangleTool)
         return application::SketchDrawingTool::rectangle;
+    if (index == pointTool)
+        return application::SketchDrawingTool::point;
     return application::SketchDrawingTool::select;
 }
 
@@ -64,6 +66,8 @@ viewport::SketchElementTool viewportTool(int index) {
         return viewport::SketchElementTool::polygon;
     if (index == centerRectangleTool)
         return viewport::SketchElementTool::centerRectangle;
+    if (index == pointTool)
+        return viewport::SketchElementTool::point;
     return viewport::SketchElementTool::select;
 }
 
@@ -102,10 +106,10 @@ void SketchEditorToolController::showPanel() {
           {QObject::tr("Auswählen"), QObject::tr("Linie"), QObject::tr("Polylinie"),
            QObject::tr("Rechteck"), QObject::tr("Kreis"), QObject::tr("Bogen (Mitte)"),
            QObject::tr("Dreipunktbogen"), QObject::tr("Ellipse"), QObject::tr("Langloch"),
-           QObject::tr("Polygon"), QObject::tr("Rechteck (Mitte)")},
+           QObject::tr("Polygon"), QObject::tr("Rechteck (Mitte)"), QObject::tr("Punkt")},
           1,
           {"select", "line", "polyline", "rectangle", "circle", "center_arc", "three_point_arc",
-           "ellipse", "slot", "polygon", "center_rectangle"}},
+           "ellipse", "slot", "polygon", "center_rectangle", "point"}},
          // S04: snapped points and suggested relations become constraints, or nothing does.
          {"relations",
           QObject::tr("Beziehungen"),
@@ -335,6 +339,7 @@ void SketchEditorToolController::setTool(int index) {
         : index == 9 ? QObject::tr("Polygon: Mittelpunkt und erste Ecke")
         : index == centerRectangleTool
             ? QObject::tr("Rechteck aus dem Mittelpunkt: Mittelpunkt, dann eine Ecke")
+        : index == pointTool ? QObject::tr("Punkt: ein Klick setzt ihn")
             : QObject::tr("Skizzenwerkzeug gewechselt");
     statusChanged_(guidance);
 }

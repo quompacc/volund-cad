@@ -66,7 +66,7 @@ void run() {
     for (const char* id :
          {"sketch.tool.select", "sketch.tool.line", "sketch.tool.rectangle", "sketch.tool.circle",
           "sketch.tool.polygon", "sketch.parallel", "sketch.coincident", "sketch.diameter",
-          "sketch.radius",
+          "sketch.radius", "sketch.tool.point",
           "sketch.trim", "sketch.linear_pattern", "sketch.delete"})
         require(command(window, QString::fromLatin1(id)) != nullptr,
                 (std::string("Sketch command missing: ") + id).c_str());

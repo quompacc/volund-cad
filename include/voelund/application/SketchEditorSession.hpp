@@ -28,7 +28,8 @@ enum class SketchDrawingTool {
     threePointArc,
     ellipse,
     slot,
-    polygon
+    polygon,
+    point // S15
 };
 enum class SketchAxisReference { origin, xAxis, yAxis };
 

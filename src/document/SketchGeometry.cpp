@@ -60,6 +60,11 @@ void validateGeometry(const SketchGeometry& geometry) {
             throw std::invalid_argument("Sketch ellipse must have finite positive radii");
         return;
     }
+    if (const auto* point = std::get_if<SketchPointGeometry>(&geometry)) {
+        if (!finite(point->position))
+            throw std::invalid_argument("Sketch point must be finite");
+        return;
+    }
     const SketchArc& arc = std::get<SketchArc>(geometry);
     const double sweep = arc.endAngle - arc.startAngle;
     if (!finite(arc.center) || !std::isfinite(arc.radius) || arc.radius <= minimumLength ||
@@ -84,6 +89,8 @@ void validateSketchElements(const SketchElements& elements) {
             throw std::invalid_argument("Sketch element ID must not be zero");
         }
         validateGeometry(element.geometry);
+        if (std::holds_alternative<SketchPointGeometry>(element.geometry) && !element.construction)
+            throw std::invalid_argument("A sketch point is construction geometry");
         maximumId = std::max(maximumId, element.id.value());
         ids.push_back(element.id.value());
     }
@@ -126,7 +133,8 @@ void validateSketchConstraints(const SketchElements& elements,
         if (std::holds_alternative<SketchCircle>(geometry) &&
             reference.point == SketchPointPosition::center)
             return;
-        if (std::holds_alternative<SketchEllipse>(geometry) &&
+        if ((std::holds_alternative<SketchEllipse>(geometry) ||
+             std::holds_alternative<SketchPointGeometry>(geometry)) &&
             reference.point == SketchPointPosition::center)
             return;
         if (std::holds_alternative<SketchArc>(geometry))

@@ -107,6 +107,10 @@ SketchEditorSession::geometry(document::SketchPoint first, document::SketchPoint
         single({{lineStart, 0, Position::start}, {lineEnd, 0, Position::end}});
         return {document::SketchLine{first, second}};
     }
+    if (tool_ == SketchDrawingTool::point) { // S15: one pick
+        single({{center, 0, Position::center}});
+        return {document::SketchPointGeometry{first}};
+    }
     if (tool_ == SketchDrawingTool::rectangle) // confirmRectangle names its own items
         return {document::SketchRectangle{first.x, first.y, second.x, second.y}};
     const double radius = std::hypot(second.x - first.x, second.y - first.y);

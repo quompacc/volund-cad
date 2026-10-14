@@ -172,7 +172,8 @@ enum class SketchElementTool {
     ellipse,
     slot,
     polygon,
-    centerRectangle // S04a: first click is the center, second a corner
+    centerRectangle, // S04a: first click is the center, second a corner
+    point            // S15: one click
 };
 
 enum class SketchAutomaticConstraint {

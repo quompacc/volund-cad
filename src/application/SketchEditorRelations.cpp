@@ -31,6 +31,11 @@ bool arc(const document::SketchElement* element) {
 
 bool radial(const document::SketchElement* element) { return circle(element) || arc(element); }
 
+// S15: a single sketch point.
+bool sketchPoint(const document::SketchElement* element) {
+    return element && std::holds_alternative<document::SketchPointGeometry>(element->geometry);
+}
+
 std::optional<document::SketchPoint>
 referencePoint(const document::SketchElements& elements,
                const document::SketchGeometryReference& reference) {
@@ -42,6 +47,8 @@ referencePoint(const document::SketchElements& elements,
     }
     if (circle(element) && reference.point == document::SketchPointPosition::center)
         return std::get<document::SketchCircle>(element->geometry).center;
+    if (sketchPoint(element) && reference.point == document::SketchPointPosition::center)
+        return std::get<document::SketchPointGeometry>(element->geometry).position;
     if (arc(element)) {
         const auto& geometry = std::get<document::SketchArc>(element->geometry);
         if (reference.point == document::SketchPointPosition::center)
@@ -157,7 +164,7 @@ bool SketchEditorSession::canAddSelectedRelation(
                std::abs(value.value()) < std::numbers::pi;
     }
     if (kind == document::SketchConstraintKind::pointOnObject)
-        return (line(firstElement) || circle(firstElement)) &&
+        return (line(firstElement) || circle(firstElement) || sketchPoint(firstElement)) &&
                (line(secondElement) || circle(secondElement));
     if (kind == document::SketchConstraintKind::equal)
         return (line(firstElement) && line(secondElement)) ||

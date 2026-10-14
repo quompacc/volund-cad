@@ -10,6 +10,7 @@
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepBuilderAPI_MakePolygon.hxx>
+#include <BRepBuilderAPI_MakeVertex.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
 #include <BRepCheck_Analyzer.hxx>
 #include <BRep_Builder.hxx>
@@ -56,6 +57,8 @@ std::vector<EvaluatedSketchPoint> elementPoints(const document::SketchParameters
         points = {{document::SketchPointPosition::center, circle->center}};
     } else if (const auto* ellipse = std::get_if<document::SketchEllipse>(&geometry)) {
         points = {{document::SketchPointPosition::center, ellipse->center}};
+    } else if (const auto* point = std::get_if<document::SketchPointGeometry>(&geometry)) {
+        points = {{document::SketchPointPosition::center, point->position}}; // S15
     } else {
         const auto& arc = std::get<document::SketchArc>(geometry);
         points = {{document::SketchPointPosition::center, arc.center},
@@ -246,6 +249,9 @@ TopoDS_Shape elementShape(const document::SketchParameters& sketch,
     const auto& geometry = element.geometry;
     if (const auto* rectangle = std::get_if<document::SketchRectangle>(&geometry))
         return rectangleWire(sketch, *rectangle, element.id, edges);
+    // S15: a point is a vertex; it has no contour edge.
+    if (const auto* point = std::get_if<document::SketchPointGeometry>(&geometry))
+        return BRepBuilderAPI_MakeVertex(worldPoint(sketch.plane, point->position)).Vertex();
     TopoDS_Edge edge;
     if (const auto* line = std::get_if<document::SketchLine>(&geometry)) {
         edge = BRepBuilderAPI_MakeEdge(worldPoint(sketch.plane, line->start),

@@ -62,6 +62,8 @@ SketchGeometry moved(const SketchGeometry& geometry, const Motion& motion, bool 
         const double start = motion.turn - arc->endAngle;
         return SketchArc{center, arc->radius, start, start + sweep};
     }
+    if (const auto* point = std::get_if<SketchPointGeometry>(&geometry))
+        return SketchPointGeometry{motion.apply(point->position)};
     const auto& ellipse = std::get<SketchEllipse>(geometry);
     return SketchEllipse{motion.apply(ellipse.center), ellipse.majorRadius, ellipse.minorRadius,
                          motion.reflects ? motion.turn - ellipse.rotation

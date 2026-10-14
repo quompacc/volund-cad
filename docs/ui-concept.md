@@ -190,7 +190,7 @@ Kürzel erreichen; außerhalb einer Skizze sind sie gesperrt.
 Anordnung in der Werkzeugleiste (S14, Nutzerentscheidung 10.10.2026): je Familie ein Knopf.
 Er zeigt die zuletzt benutzte Variante, sein Pfeil öffnet die anderen. Abschnitte und
 Familien: **Zeichnen** (Auswahl · Linie/Polylinie · Rechteck/Mittelpunkt-Rechteck ·
-Kreis/Ellipse · Mittelpunkt-/Dreipunktbogen · Langloch · Polygon), **Beziehungen**
+Kreis/Ellipse · Mittelpunkt-/Dreipunktbogen · Langloch · Polygon · Punkt), **Beziehungen**
 (Richtung · parallel/rechtwinklig/kollinear · Punkte · fix/gleich/tangential/konzentrisch),
 **Bemaßungen** (Abstände · Durchmesser/Radius · Winkel), **Bearbeiten** (stutzen/verlängern/teilen ·
 Verrundung · Versatz · Spiegeln/Muster · Punkt sperren/freigeben · Konstruktion ·
@@ -199,7 +199,7 @@ Der Dreipunktbogen nimmt Anfang, Ende und dann einen Punkt auf dem Bogen.
 
 | Gruppe | Command-IDs | Kürzel |
 |---|---|---|
-| Zeichnen | `sketch.tool.select`, `.line`, `.polyline`, `.rectangle`, `.circle`, `.center_arc`, `.three_point_arc`, `.ellipse`, `.slot`, `.polygon`, `.center_rectangle` | S, L, P, R, C, A, T, E, N, G, Umschalt+R |
+| Zeichnen | `sketch.tool.select`, `.line`, `.polyline`, `.rectangle`, `.circle`, `.center_arc`, `.three_point_arc`, `.ellipse`, `.slot`, `.polygon`, `.center_rectangle`, `.point` | S, L, P, R, C, A, T, E, N, G, Umschalt+R, O |
 | Linien | `sketch.horizontal`, `.vertical`, `.free`, `.parallel`, `.perpendicular`, `.collinear` | – |
 | Punkte | `sketch.coincident`, `.horizontal_points`, `.vertical_points`, `.symmetric`, `.midpoint`, `.perpendicular_bisector`, `.point_on_object` | – |
 | Beziehungen | `sketch.fixed`, `.equal`, `.tangent`, `.concentric` | – |

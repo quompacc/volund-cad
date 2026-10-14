@@ -43,6 +43,9 @@ SketchGeometry translatedGeometry(SketchGeometry geometry, double dx, double dy)
                 value.first.y += dy;
                 value.second.x += dx;
                 value.second.y += dy;
+            } else if constexpr (std::is_same_v<Geometry, document::SketchPointGeometry>) {
+                value.position.x += dx;
+                value.position.y += dy;
             } else {
                 value.center.x += dx;
                 value.center.y += dy;

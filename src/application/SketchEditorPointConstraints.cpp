@@ -22,6 +22,10 @@ referencePoint(std::span<const document::SketchElement> elements,
         if (reference.point == document::SketchPointPosition::center)
             return circle->center;
     }
+    if (const auto* point = std::get_if<document::SketchPointGeometry>(&match->geometry)) {
+        if (reference.point == document::SketchPointPosition::center)
+            return point->position; // S15
+    }
     if (const auto* arc = std::get_if<document::SketchArc>(&match->geometry)) {
         if (reference.point == document::SketchPointPosition::center)
             return arc->center;
