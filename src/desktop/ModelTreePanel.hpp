@@ -49,6 +49,8 @@ class ModelTreePanel final : public QTreeWidget {
     // AI04c: briefly marks features changed from outside the shell (MCP) with bold text in
     // the given color; the style sheet paints item backgrounds itself.
     void flashFeatures(std::span<const document::FeatureId> features, const QColor& color);
+    // U14: height of all shown rows, so the tree card is no taller than its content.
+    [[nodiscard]] int contentHeight() const;
 
     static constexpr int idRole = Qt::UserRole;
     static constexpr int nameRole = Qt::UserRole + 1;

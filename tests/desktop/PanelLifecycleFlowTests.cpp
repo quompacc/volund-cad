@@ -66,7 +66,7 @@ struct Fixture final {
         require(button != nullptr && button->isVisible(), name);
         return *button;
     }
-    QToolButton& rail(const char* id) { return test::commandButton(named("toolRail"), id); }
+    QToolButton& rail(const char* id) { return test::railButton(named("toolRail"), id); }
     QToolButton& context(const char* id) { return test::commandButton(named("contextBar"), id); }
     QToolButton& header(const char* id) { return test::commandButton(named("shellHeader"), id); }
     void click(double x, double y, double z = 0) {

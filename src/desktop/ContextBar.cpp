@@ -1,4 +1,5 @@
 #include "ContextBar.hpp"
+#include "OverlayCard.hpp"
 
 #include <voelund/viewport/CadViewport.hpp>
 
@@ -9,15 +10,10 @@
 #include <QStyle>
 #include <QToolButton>
 
+#include <algorithm>
 #include <utility>
 
 namespace voelund::desktop {
-namespace {
-
-constexpr int margin = 16;
-
-} // namespace
-
 ContextBar::ContextBar(viewport::CadViewport& viewport, ActionLookup lookup)
     : QFrame(&viewport), viewport_(viewport), lookup_(std::move(lookup)) {
     setObjectName(QStringLiteral("contextBar"));
@@ -90,7 +86,18 @@ bool ContextBar::event(QEvent* event) {
 
 void ContextBar::place() {
     adjustSize();
-    move((viewport_.width() - width()) / 2, viewport_.height() - height() - margin);
+    // U14: right above the timeline, centred but clear of an open tool panel card.
+    bool cardShown = false;
+    for (const QObject* child : viewport_.children())
+        if (const auto* widget = qobject_cast<const QWidget*>(child))
+            cardShown = cardShown || (widget->property("floatingCard").toBool() &&
+                                      widget->isVisible());
+    const int limit = cardShown ? viewport_.width() - overlay::margin -
+                                      overlay::rightColumnWidth - overlay::gap - width()
+                                : viewport_.width();
+    const int x = std::max(overlay::margin, std::min((viewport_.width() - width()) / 2, limit));
+    move(x, viewport_.height() - height() - overlay::margin - overlay::timelineHeight -
+                overlay::gap);
     raise();
 }
 

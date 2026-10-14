@@ -49,6 +49,9 @@ gehören über die Parent-Kette dem Fenster; Controller und Registry gehören de
 - Ein offener Skizzeneditor oder eine offene Extrusion sperren andere Werkzeuge,
   Grundkörper und das Dokument-Undo, bis OK, Abbrechen oder Escape (K04, U05). Die Karte
   rechts zeigt entweder das aktive Werkzeug oder die Eigenschaften des gewählten Features.
+- U14: Alle Shell-Teile liegen als Karten über dem Viewport (`OverlayCard`, `FloatingCard`,
+  `ToolRail`, `ContextBar`, `ViewCube`). Ihre Plätze stehen fest in `overlay::`
+  (`OverlayCard.hpp`); neue Karten bekommen dort einen Platz, statt sich selbst zu suchen.
 - Nach jeder Dokumentänderung ruft der Besitzer der Aktion `refreshScene()` auf. Es
   verwirft Ansichtspicks und aktive Werkzeuge und synchronisiert alle Ansichten.
 
@@ -56,11 +59,11 @@ gehören über die Parent-Kette dem Fenster; Controller und Registry gehören de
 
 | Bereich (ADR 0012) | Komponente heute | Paket |
 |---|---|---|
-| Kopfzeile | `ShellHeader` mit Dateimenü, Undo/Redo, Suchfeld, Werkzeugleisten- und Theme-Schalter | U03, U04 erledigt |
-| Modellbaum | `ModelTreePanel` | U06 |
-| Werkzeugleiste, Kontextleiste, Befehlssuche | `ToolRail`, `ContextBar` (`ContextCommands`), `CommandPalette` auf `CommandActions` | U04 erledigt |
+| Kopfzeile | `ShellHeader`: Projektkarte oben links (Dateimenü, Dokument, Speicherzustand) und Kopfkarte oben rechts (Undo/Redo, Suchfeld, Werkzeugleisten- und Theme-Schalter, Claude) | U03, U04, U14 erledigt |
+| Modellbaum | `ModelTreePanel` in der Karte `modelCard` links | U06, U14 |
+| Werkzeugleiste, Kontextleiste, Befehlssuche | `ToolRail` (Gruppen mit Flyouts), `ContextBar` (`ContextCommands`), `CommandPalette` auf `CommandActions` | U04 erledigt, U14 |
 | Werkzeugpanel | `ToolPanelHost` als schwebende `FloatingCard` | U05 erledigt |
 | Eigenschaften | `FeaturePropertiesPanel` in einer `FloatingCard` am selben Platz | U05 erledigt |
-| Timeline | `TimelineBar` (Schritte öffnen ihren Editor) | U06 erledigt, M15 (Bearbeitung) |
+| Timeline | `TimelineBar` als Karte unten mittig, Symbol-Chips (Schritte öffnen ihren Editor) | U06 erledigt, U14, M15 (Bearbeitung) |
 | Parameter | – | PAR02 |
 | Viewport | `CadViewport` | U03 (Farben), U06 (Ursprünge, Raster) |

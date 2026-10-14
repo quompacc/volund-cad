@@ -1,4 +1,5 @@
 #include "FloatingCard.hpp"
+#include "OverlayCard.hpp"
 
 #include <QEvent>
 #include <QLabel>
@@ -11,9 +12,9 @@
 namespace voelund::desktop {
 namespace {
 
-constexpr int margin = 16;
-constexpr int top = 196; // below the view cube and its buttons
-constexpr int cardWidth = 344;
+constexpr int margin = overlay::margin;
+constexpr int top = overlay::rightColumnTop; // U14: below the header card and the view cube
+constexpr int cardWidth = overlay::rightColumnWidth;
 
 } // namespace
 
@@ -69,7 +70,8 @@ bool FloatingCard::event(QEvent* event) {
 
 void FloatingCard::place() {
     // As tall as the content needs, but never past the bottom of the host.
-    const int y = host_.height() > 2 * top ? top : margin;
+    // A short host gives up the cube's place, never the header card's.
+    const int y = host_.height() > 2 * top ? top : overlay::columnTop;
     const int available = std::max(160, host_.height() - y - margin);
     // User report 2026-10-13: wrapped text (guidance, errors) is measured at the card's real
     // width; sizeHint() guessed a wider line, cut the text and hid the fields below a scroll.

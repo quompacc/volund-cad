@@ -97,9 +97,10 @@ Corner corner(const application::CadSession& session) {
     return {x1, y1, (z0 + z1) / 2};
 }
 void click(viewport::CadViewport& viewport, const Corner& at,
-           Qt::KeyboardModifiers modifiers = Qt::NoModifier) {
+           Qt::KeyboardModifiers modifiers = Qt::NoModifier, QPoint nudge = {}) {
     test::render(viewport);
-    const QPoint point = viewport::ViewportTestAccess::project(viewport, at.x, at.y, at.z);
+    const QPoint point =
+        viewport::ViewportTestAccess::project(viewport, at.x, at.y, at.z) + nudge;
     test::mouse(viewport, QEvent::MouseMove, point, Qt::NoButton, Qt::NoButton);
     test::mouse(viewport, QEvent::MouseButtonPress, point, Qt::LeftButton, Qt::LeftButton,
                 modifiers);
@@ -170,8 +171,18 @@ void run() {
 
     // User request 2026-10-13: edges are picked before the tool, Ctrl adds one; "Verrunden"
     // takes them over.
-    click(*viewport, edge);
-    click(*viewport, {edge.x, edge.y - 20, edge.z}, Qt::ControlModifier);
+    // Without a tool a click right on a silhouette edge may round onto its face; like the
+    // user, the test clicks just outside the body there (U14: the body now fills the view).
+    const auto outward = [&](const Corner& at) {
+        const QPoint middle = viewport::ViewportTestAccess::project(*viewport, 10, 10, 5);
+        const QPoint point = viewport::ViewportTestAccess::project(*viewport, at.x, at.y, at.z);
+        const QPointF away(point - middle);
+        const double length = std::max(1.0, std::hypot(away.x(), away.y()));
+        return QPoint(qRound(2 * away.x() / length), qRound(2 * away.y() / length));
+    };
+    click(*viewport, edge, Qt::NoModifier, outward(edge));
+    const Corner front{edge.x, edge.y - 20, edge.z};
+    click(*viewport, front, Qt::ControlModifier, outward(front));
     QAction& preselected = command(window, "solid.modify.fillet");
     require(panel(window) == nullptr && preselected.isEnabled() &&
                 window.statusBar()->currentMessage().startsWith(QStringLiteral("2 Kante")),

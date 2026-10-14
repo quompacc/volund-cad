@@ -70,6 +70,23 @@ inline QToolButton& commandButton(QWidget& root, const char* commandId) {
     throw std::runtime_error(std::string("No visible button for ") + commandId);
 }
 
+// U14: the rail shows groups; a command in a closed group is reached by clicking its group
+// button first, as the user does.
+inline QToolButton& railButton(QWidget& rail, const char* commandId) {
+    for (auto* button : rail.findChildren<QToolButton*>())
+        if (!button->isVisible() && button->defaultAction() != nullptr &&
+            button->defaultAction()->property("commandId").toString() ==
+                QLatin1String(commandId))
+            for (auto* group : rail.findChildren<QToolButton*>(QStringLiteral("railGroupButton")))
+                if (group->isVisible() &&
+                    group->property("railGroup") == button->property("railGroup")) {
+                    if (!group->isChecked())
+                        press(*group);
+                    break;
+                }
+    return commandButton(rail, commandId);
+}
+
 // Opens `menuButton`'s popup and clicks the entry carrying `commandId` there.
 inline void chooseFromMenu(QToolButton& menuButton, const char* commandId) {
     // The popup may appear later (Wayland), so the entry is looked for until it is there.

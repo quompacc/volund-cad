@@ -80,9 +80,11 @@ void surfaces() {
     require(rail != nullptr && bar != nullptr && rail->isVisible() && bar->isVisible(),
             "Tool rail and context bar are shown");
 
+    // U14: most commands sit in the flyouts of the rail's groups, hidden until opened.
     std::set<std::string> railIds;
-    for (QAction* action : buttons(*rail))
-        railIds.insert(id(action));
+    for (auto* button : rail->findChildren<QToolButton*>())
+        if (button->defaultAction() != nullptr)
+            railIds.insert(id(button->defaultAction()));
     const std::set<std::string> solid{"solid.create.box",       "solid.create.cylinder",
                                       "solid.create.sphere",    "solid.create.cone",
                                       "solid.create.torus",     "solid.create.wedge",

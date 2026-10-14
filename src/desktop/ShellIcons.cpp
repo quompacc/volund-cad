@@ -44,16 +44,17 @@ void draw(QPainter& painter, ShellIcon icon, const QColor& ink, const QColor& ac
             painter.translate(24, 0);
             painter.scale(-1, 1);
         }
+        // U14: centred in the 24 box (arrow and tail span y 5..20).
         QPainterPath path;
-        path.moveTo(9, 7);
-        path.lineTo(4, 12);
-        path.lineTo(9, 17);
+        path.moveTo(9, 5);
+        path.lineTo(4, 10);
+        path.lineTo(9, 15);
         painter.drawPath(path);
         QPainterPath tail;
-        tail.moveTo(4, 12);
-        tail.lineTo(15, 12);
-        tail.arcTo(QRectF(10, 12, 10, 10), 90, -180);
-        tail.lineTo(12, 22);
+        tail.moveTo(4, 10);
+        tail.lineTo(15, 10);
+        tail.arcTo(QRectF(10, 10, 10, 10), 90, -180);
+        tail.lineTo(12, 20);
         painter.drawPath(tail);
         break;
     }

@@ -96,3 +96,29 @@ Die einfache Oberfläche ist eine Darstellungsfrage, keine Einschränkung des Mo
   Durchsicht vorgelegt. Abweichungen vom Prototyp werden vorher abgestimmt.
 - Prototyp: Design-Artefakt „Völund UI-Konzept“ (Quelle `artifacts/ux01-mockup/`, nicht
   versioniert).
+
+## Nachtrag 14.10.2026: Viewport-first (U14)
+
+Der Nutzer hat neue Mockups vorgelegt: Der 3D-Viewport bildet die ganze Fläche, die Shell
+schwebt als abgerundete Karten darüber. Die Mockups sind Richtung, keine 1:1-Vorlage.
+Entscheidungen des Nutzers:
+
+- **Kein Modusschalter** (Arbeitsfläche/Auswahl/Skizze/Parametrik). Der Kontext bleibt
+  auswahlgetrieben wie oben beschrieben.
+- **Timeline unten mittig** als kompakte Symbol-Chips; Nummer und Name im Tooltip,
+  Auswahl hervorgehoben, Fehler und blockierte Schritte markiert, seitlich scrollend,
+  ohne Pfeile. Ein Klick öffnet den Schritt wie bisher.
+- Übernommen: Projektkarte oben links (Dateimenü, Dokument, Speicherzustand), Modellbaum als
+  Karte darunter, Kopfkarte oben rechts (Rückgängig/Wiederholen, Befehlssuche,
+  Werkzeugleiste, hell/dunkel, Claude), ViewCube darunter, Werkzeugpanel als Karte rechts,
+  Kontextleiste über der Timeline, Statuszeile flach am unteren Rand.
+- Die Werkzeugleiste wird schlank und gruppiert: Erstellen, Skizze, Bearbeiten, Bewegen,
+  Mehr. Eine Gruppe öffnet ihre Befehle in einem Flyout neben der Leiste. Gesperrte Befehle
+  bleiben sichtbar (gesperrt statt versteckt gilt im Flyout). Im Skizzenmodus zeigt die
+  Leiste weiter die Skizzenwerkzeuge (U13); sie wandern nicht in eine untere Leiste.
+- Keine Knöpfe für Funktionen, die es noch nicht gibt (Teilen, Schnitt, Messen).
+
+Das ändert die Anordnung, nicht die Regeln dieses ADR: Kein Befehl ist nur über die
+Kontextleiste erreichbar; Werkzeugleiste, Befehlssuche und Kürzel führen zu denselben
+Befehlen. Die Plätze der Karten sind fest (`overlay::` in `OverlayCard.hpp`), damit sich
+keine Karten überdecken.

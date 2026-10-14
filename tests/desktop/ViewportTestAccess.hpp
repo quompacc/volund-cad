@@ -1,5 +1,6 @@
 #pragma once
 #include "../../src/viewport/CadViewportQtOpenGlBackend.hpp"
+#include <algorithm>
 #include <AIS_Manipulator.hxx>
 #include <BRepGProp.hxx>
 #include <GProp_GProps.hxx>
@@ -112,9 +113,15 @@ class ViewportTestAccess {
     static std::optional<QPoint> translationHandle(CadViewport& v) {
         v.makeCurrent();
         const QPoint center = project(v, 10, 10, 10);
-        for (int y = -90; y <= 90; y += 3) {
-            for (int x = -90; x <= 90; x += 3) {
-                const QPoint point = center + QPoint(x, y);
+        // U14: the viewport fills the window, so the handles of a fitted body may lie farther
+        // out; the search runs in rings from the centre and takes the nearest handle point.
+        for (int ring = 0; ring <= 200; ring += 3) {
+            for (int index = 0; index < std::max(1, 8 * ring / 3); ++index) {
+                const int side = std::max(1, 2 * ring / 3);
+                const int step = index % side * 3 - ring;
+                const QPoint offsets[] = {
+                    {step, -ring}, {ring, step}, {-step, ring}, {-ring, -step}};
+                const QPoint point = center + offsets[index / side % 4];
                 const QPoint physical = (QPointF(point) * v.devicePixelRatioF()).toPoint();
                 v.impl_->context->MoveTo(physical.x(), physical.y(), v.impl_->view, false);
                 const auto detected = v.impl_->context->DetectedInteractive();

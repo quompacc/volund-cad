@@ -1,4 +1,5 @@
 #include "ViewCube.hpp"
+#include "OverlayCard.hpp"
 
 #include <QEvent>
 #include <QMouseEvent>
@@ -118,7 +119,7 @@ QPointF centroid(const QPolygonF& polygon) {
 ViewCube::ViewCube(viewport::CadViewport& viewport)
     : QWidget(&viewport), viewport_(viewport), tokens_(themeTokens(ThemeMode::light)) {
     setObjectName(QStringLiteral("viewCube"));
-    setFixedSize(144, 178);
+    setFixedSize(144, overlay::cubeHeight);
     setMouseTracking(true);
     setAttribute(Qt::WA_TranslucentBackground);
     setToolTip(tr("Ansicht: Fläche, Kante oder Ecke anklicken, ziehen zum Drehen"));
@@ -155,7 +156,7 @@ bool ViewCube::eventFilter(QObject* watched, QEvent* event) {
 }
 
 void ViewCube::placeInCorner() {
-    move(viewport_.width() - width() - 12, 12);
+    move(viewport_.width() - width() - 12, overlay::cubeTop); // U14: below the header card
     raise();
 }
 

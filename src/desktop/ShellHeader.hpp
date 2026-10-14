@@ -1,9 +1,8 @@
 #pragma once
 
+#include "OverlayCard.hpp"
 #include "ShellState.hpp"
 #include "Theme.hpp"
-
-#include <QWidget>
 
 #include <functional>
 
@@ -16,12 +15,14 @@ namespace voelund::desktop {
 
 // U03: the slim header of ADR 0012 — brand, document name with saved state, file menu,
 // undo/redo and the theme switch. It shows ShellState and triggers registered actions only.
+// U14: two cards over the viewport — the project card top left (file menu, brand, document,
+// saved state) and this header card top right (undo/redo, search, rail, theme, Claude).
 // AI04c: state of the local Claude access (MCP).
 enum class AssistantState { off, ready, connected };
 
-class ShellHeader final : public QWidget {
+class ShellHeader final : public OverlayCard {
   public:
-    explicit ShellHeader(QWidget* parent = nullptr);
+    explicit ShellHeader(QWidget& host);
 
     void setFileMenu(QMenu& menu);
     void setActions(QAction& undo, QAction& redo, QAction& theme);
@@ -38,11 +39,14 @@ class ShellHeader final : public QWidget {
     void setAssistantVisible(bool visible);
     void setTheme(ThemeMode mode);
 
-  protected:
-    void resizeEvent(QResizeEvent* event) override;
-
   private:
+    void setCompact(bool compact);
+    void showAssistantDot();
+
     bool compact_{false};
+    ThemeMode mode_{ThemeMode::light};
+    AssistantState assistant_{AssistantState::off};
+    OverlayCard* project_{nullptr};
     QLabel* brand_{nullptr};
     QLabel* documentName_{nullptr};
     QLabel* saveState_{nullptr};

@@ -9,6 +9,7 @@
 #include <QTreeWidgetItemIterator>
 #include <QVariant>
 
+#include <algorithm>
 #include <map>
 #include <vector>
 #include <utility>
@@ -234,6 +235,21 @@ QTreeWidgetItem* ModelTreePanel::featureItem(document::FeatureId featureId) cons
             return item;
     }
     return nullptr;
+}
+
+int ModelTreePanel::contentHeight() const {
+    const int row = sizeHintForRow(0) > 0 ? sizeHintForRow(0) : 28;
+    int rows = 0;
+    for (QTreeWidgetItemIterator it(const_cast<ModelTreePanel*>(this),
+                                    QTreeWidgetItemIterator::NotHidden);
+         *it != nullptr; ++it) {
+        bool shown = true;
+        for (const QTreeWidgetItem* parent = (*it)->parent(); parent != nullptr;
+             parent = parent->parent())
+            shown = shown && parent->isExpanded();
+        rows += shown ? 1 : 0;
+    }
+    return rows * row + 2 * frameWidth() + 4;
 }
 
 } // namespace voelund::desktop

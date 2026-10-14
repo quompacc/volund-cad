@@ -1,4 +1,5 @@
 #include "StaleBanner.hpp"
+#include "OverlayCard.hpp"
 
 #include <QEvent>
 #include <QHBoxLayout>
@@ -49,7 +50,7 @@ bool StaleBanner::eventFilter(QObject* watched, QEvent* event) {
 
 void StaleBanner::place() {
     const auto* host = parentWidget();
-    move(std::max(0, (host->width() - width()) / 2), 10);
+    move(std::max(0, (host->width() - width()) / 2), overlay::columnTop); // U14: below the cards
 }
 
 } // namespace voelund::desktop

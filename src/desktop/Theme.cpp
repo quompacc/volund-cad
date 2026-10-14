@@ -78,13 +78,16 @@ QWidget { color: @ink; font-family: "@ui"; font-size: 13px; }
 QMainWindow::separator { background: @line; width: 1px; height: 1px; }
 QToolTip { background: @ink; color: @panel; border: 0; padding: 4px 8px; }
 
-#shellHeader { background: @panel; border-bottom: 1px solid @line; }
-#shellHeader QLabel#brandName { font-weight: 700; font-size: 15px; }
-#shellHeader QLabel#documentName { font-weight: 600; }
-#shellHeader QLabel#pathSeparator { color: @faint; }
-#shellHeader QLabel#saveState { color: @muted; background: @soft; border-radius: 9px;
+/* U14: the shell floats over the viewport as rounded cards. */
+QFrame[overlayCard="true"] { background: @panel; border: 1px solid @line; border-radius: 14px; }
+#overlayTitle { color: @muted; font-size: 11px; font-weight: 600; letter-spacing: 1px;
+    padding: 0 6px; }
+#projectCard QLabel#brandName { font-weight: 700; font-size: 15px; }
+#projectCard QLabel#documentName { font-weight: 600; }
+#projectCard QLabel#pathSeparator { color: @faint; }
+#projectCard QLabel#saveState { color: @muted; background: @soft; border-radius: 9px;
     padding: 2px 10px; font-size: 12px; }
-#shellHeader QLabel#saveState[modified="true"] { color: @accentInk; background: @accentSoft; }
+#projectCard QLabel#saveState[modified="true"] { color: @accentInk; background: @accentSoft; }
 QLabel#toolStatus { font-weight: 600; color: @ink; }
 QLabel#toolStatus[good="true"] { color: @accentInk; }
 
@@ -97,12 +100,20 @@ QToolButton:disabled { color: @faint; }
 QToolButton::menu-indicator { image: none; width: 0; }
 QToolButton:focus { border-color: @accent; }
 /* AI04c: Claude access chip; it lights up once for every change made over MCP. */
-#shellHeader QToolButton#assistantChip { color: @muted; background: @soft; border-radius: 9px;
-    padding: 2px 10px; min-height: 20px; font-size: 12px; }
+#shellHeader QToolButton#assistantChip { color: @muted; background: transparent;
+    border: 1px solid @line; border-radius: 16px; padding: 0 26px 0 6px; min-height: 0;
+    font-size: 12px; font-weight: 600; }
+#shellHeader QToolButton#assistantChip:hover { background: @soft; }
+#shellHeader QToolButton#assistantChip::menu-button { border: 0; width: 22px; }
+#shellHeader QToolButton#assistantChip::menu-arrow { image: none; width: 0; height: 0; }
 #shellHeader QToolButton#assistantChip[state="ready"] { color: @ink; }
 #shellHeader QToolButton#assistantChip[state="connected"] { color: @accentInk;
-    background: @accentSoft; }
-#shellHeader QToolButton#assistantChip[flash="true"] { color: @onAccent; background: @accent; }
+    background: @accentSoft; border-color: @accentSoft; }
+#shellHeader QToolButton#assistantChip[flash="true"] { color: @onAccent; background: @accent;
+    border-color: @accent; }
+/* U14: square symbol buttons of the cards; the symbol sits in the middle. */
+QToolButton[cardIcon="true"] { padding: 0; min-height: 0; border-radius: 8px; }
+#headerDivider { background: @line; }
 
 QFrame[floatingCard="true"] { background: @panel; border: 1px solid @line; border-radius: 14px; }
 QFrame[floatingCard="true"] QScrollArea, #cardContent { background: transparent; border: 0; }
@@ -113,17 +124,20 @@ QFrame[floatingCard="true"] QPushButton { padding: 6px 6px; }
 QFrame[floatingCard="true"] QToolButton { padding: 5px 4px; }
 QGroupBox::title { subcontrol-origin: margin; left: 0; color: @muted; font-size: 12px; }
 #toolGuidance { color: @muted; }
-#timeline { background: @panel; }
-QToolBar#timelineToolbar { border-top: 1px solid @line; border-bottom: 0; padding: 0; }
-#timelineTitle { color: @muted; font-size: 11px; letter-spacing: 1px; }
-#timelineEmpty { color: @muted; }
-#timelineEnd { color: @accentInk; border-left: 3px solid @accent; padding-left: 6px; }
-QToolButton#timelineStep { border: 1px solid @line; border-radius: 9px; padding: 4px 10px; }
-QToolButton#timelineStep:checked { border-color: @accent; background: @accentSoft;
-    color: @accentInk; }
-#toolRail, #contextBar, #commandSearch { background: @panel; border: 1px solid @line;
+#timelineScroll, #timelineContent { background: transparent; border: 0; }
+#timelineEmpty { color: @muted; padding: 0 8px; }
+QToolButton#timelineStep { background: @panel; border: 1px solid @line; border-radius: 15px;
+    padding: 0; min-height: 0; }
+QToolButton#timelineStep:hover { background: @soft; }
+QToolButton#timelineStep:checked { border-color: @accent; background: @accentSoft; }
+QToolButton#timelineStep[featureState="error"] { border-color: @error; background: @errorSoft; }
+QToolButton#timelineStep[featureState="blocked"] { border-color: @faint; }
+#timeline QScrollBar:horizontal { height: 4px; }
+#toolRail { background: transparent; border: 0; }
+#contextBar, #commandSearch { background: @panel; border: 1px solid @line;
     border-radius: 14px; }
 #toolRail QToolButton { font-size: 11px; padding: 6px 2px; }
+#railFlyout QToolButton { font-size: 13px; padding: 5px 10px; text-align: left; }
 #toolRailSeparator, #contextDivider { background: @line; }
 #railGroupTitle { color: @muted; font-size: 11px; padding: 6px 4px 0 4px; }
 #sketchToolPage, #sketchToolContent { background: transparent; }
@@ -133,7 +147,8 @@ QToolButton[primary="true"] { background: @accent; color: @onAccent; border-colo
 QToolButton[primary="true"]:hover { background: @accentHover; }
 QToolButton[primary="true"]:disabled { background: @accentSoft; color: @muted; }
 #commandSearchButton { background: @field; border: 1px solid @line; color: @muted;
-    text-align: left; padding: 5px 12px; }
+    text-align: left; padding: 0 12px; min-height: 0; border-radius: 8px; }
+#commandSearchButton[compact="true"] { padding: 0; }
 #commandSearch QListWidget { background: @panel; border: 0; outline: 0; }
 #commandSearch QListWidget::item { min-height: 30px; border-radius: 6px; padding: 0 6px; }
 #commandSearch QListWidget::item:selected { background: @accentSoft; color: @accentInk; }
@@ -186,7 +201,7 @@ QMenu::item:selected { background: @soft; }
 QMenu::item:disabled { color: @faint; }
 QMenu::separator { height: 1px; background: @line; margin: 4px 8px; }
 
-QStatusBar { background: @panel; color: @muted; border-top: 1px solid @line; }
+QStatusBar { background: @bg; color: @muted; border: 0; min-height: 26px; }
 QStatusBar QLabel#geometryStatus { color: @accentInk; background: @accentSoft;
     border-radius: 6px; padding: 2px 8px; }
 
@@ -210,6 +225,8 @@ QScrollBar::add-page, QScrollBar::sub-page { background: none; }
                                                       {"@accentInk", hex(t.accentInk)},
                                                       {"@accent", hex(t.accent)},
                                                       {"@onAccent", hex(t.onAccent)},
+                                                      {"@errorSoft", hex(t.errorSoft)},
+                                                      {"@error", hex(t.error)},
                                                       {"@ui", uiFontFamily()},
                                                       {"@value", valueFontFamily()}};
     // Longer names first so "@accent" does not clobber "@accentSoft".

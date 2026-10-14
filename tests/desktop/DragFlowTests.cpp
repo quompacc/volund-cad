@@ -60,7 +60,7 @@ struct Window final {
         require(widget != nullptr && widget->isVisible(), std::string("Visible widget ") + name);
         return *widget;
     }
-    QToolButton& rail(const char* id) { return test::commandButton(child("toolRail"), id); }
+    QToolButton& rail(const char* id) { return test::railButton(child("toolRail"), id); }
     QToolButton& context(const char* id) { return test::commandButton(child("contextBar"), id); }
     QAction& command(const char* id) {
         for (auto* action : main->findChildren<QAction*>())

@@ -4,8 +4,8 @@
   "auditedCommit": "1b78229",
   "status": "implementation-started",
   "counts": {
-    "total": 152,
-    "throughG4": 122,
+    "total": 153,
+    "throughG4": 123,
     "g5": 30
   },
   "globalGates": [
@@ -126,6 +126,7 @@
     "M26",
     "M25",
     "S21",
+    "U14",
     "M09",
     "M10",
     "M11",
@@ -4722,6 +4723,38 @@
       ],
       "completedCommit": "436be3a",
       "completedDate": "2026-10-14"
+    },
+    {
+      "id": "U14",
+      "title": "Viewport-first: Shell als schwebende Karten, gruppierte Werkzeugleiste, Timeline als Symbole",
+      "deps": [
+        "U13",
+        "U06",
+        "U05"
+      ],
+      "files": [
+        "src/desktop/OverlayCard.cpp",
+        "src/desktop/ShellHeader.cpp",
+        "src/desktop/ToolRail.cpp",
+        "src/desktop/TimelineBar.cpp",
+        "src/desktop/MainWindow.cpp",
+        "src/desktop/Theme.cpp",
+        "tests/desktop/"
+      ],
+      "steps": [
+        "Der Viewport füllt das Fenster; Projektkarte (Dateimenü, Name, Speicherzustand) oben links, Kopfkarte (Rückgängig/Wiederholen, Suche, Werkzeugleiste, Theme, Claude) oben rechts, ViewCube darunter.",
+        "Modellbaum als Karte links unter der Projektkarte, so hoch wie sein Inhalt; rechts daneben die Werkzeugleiste.",
+        "Werkzeugleiste gruppiert (Erstellen, Skizze, Bearbeiten, Bewegen, Mehr); eine Gruppe öffnet ihre Befehle in einem Flyout, ein Befehl schließt es. Skizzenwerkzeuge bleiben in der Leiste (U13).",
+        "Timeline unten mittig als Symbol-Chips: Nummer und Name im Tooltip, Auswahl hervorgehoben, Fehler/blockiert markiert, seitlich scrollend, Klick öffnet den Schritt. Kontextleiste direkt darüber."
+      ],
+      "acceptance": "Alle Desktop-Tests grün mit der neuen Anordnung; jeder Volumenbefehl über die Leiste (Gruppe → Flyout) erreichbar; Aufnahmen hell/dunkel, Flyout, Skizzenmodus und Timeline gesichtet und vorgelegt.",
+      "boundary": "Nutzerentscheidung 2026-10-14 nach den Mockups: kein Modusschalter (Kontext bleibt auswahlgetrieben), Timeline unten mittig, keine Knöpfe für fehlende Funktionen (Teilen, Schnitt, Messen). Keine neuen Funktionen; Nachtrag zu ADR 0012.",
+      "status": "planned",
+      "gate": "G2",
+      "chapter": "04-oberflaeche-skizze.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
     }
   ],
   "executionPolicy": {

@@ -40,7 +40,7 @@ struct Fixture final {
     void box() {
         auto* rail = window->findChild<QWidget*>(QStringLiteral("toolRail"));
         require(rail != nullptr, "rail");
-        press(test::commandButton(*rail, "solid.create.box"));
+        press(test::railButton(*rail, "solid.create.box"));
         require(session.isModified(), "A box dirties the document");
     }
 };

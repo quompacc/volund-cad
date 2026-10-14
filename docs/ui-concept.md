@@ -107,6 +107,9 @@ Vom Nutzer am 04.10.2026 freigegeben; verbindlich festgehalten in
 - Nach U05: Die Werkzeugleiste soll sich dem aktiven Modus anpassen und die Werkzeuge der
   gerade genutzten Funktion zeigen. Im Skizzenmodus sind das Skizzenelemente,
   Beziehungen, Bemaßungen usw. Umsetzung in U13.
+- 14.10.2026, neue Mockups: Viewport-first mit schwebenden Karten; Timeline als Symbole
+  unten mittig; kein Modusschalter; gruppierte Werkzeugleiste mit Flyouts. Umsetzung in
+  U14, Nachtrag zu ADR 0012.
 
 ### Ablauf im Zielbild
 
@@ -138,6 +141,7 @@ Vom Nutzer am 04.10.2026 freigegeben; verbindlich festgehalten in
 | V01 | UI-Test des ganzen Ablaufs (V01c) in der neuen Oberfläche |
 | PAR02 | Parameterpanel rechts, `=Name` in Maßfeldern |
 | M15 | Timeline mit Rückrollmarke, Fehlern und Umordnen |
+| U14 | Viewport-first: Karten über dem Viewport, gruppierte Werkzeugleiste, Timeline als Symbole |
 
 ## Teil 3 – Befehlstabelle (U01)
 

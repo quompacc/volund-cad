@@ -145,6 +145,7 @@ class MainWindow::Impl final {
     // AI03b: Claude panel and its backend (Claude Code against the server above).
     QAction* assistantPanelAction{nullptr};
     QDockWidget* assistantDock{nullptr};
+    OverlayCard* modelCard{nullptr}; // U14
     class AssistantPanel* assistantPanel{nullptr};
     std::unique_ptr<assistant::ClaudeCodeBackend> assistantBackend;
     std::uint64_t assistantGeneration{0};

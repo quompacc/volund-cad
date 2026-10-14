@@ -3,6 +3,7 @@ add_library(
     FeatureErrorCard.cpp
     FeaturePropertiesPanel.cpp
     FloatingCard.cpp
+    OverlayCard.cpp
     DocumentActions.cpp
     CommandActions.cpp
     CommandPalette.cpp

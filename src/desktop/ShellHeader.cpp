@@ -5,98 +5,168 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QMenu>
-#include <QResizeEvent>
+#include <QPainter>
+#include <QPainterPath>
 #include <QStyle>
 #include <QTimer>
 #include <QToolButton>
 
+#include <algorithm>
+
 namespace voelund::desktop {
 namespace {
+
+// U14 (user report 2026-10-14): every control of the cards is one square size, so the
+// symbols sit in the middle and the row lines up.
+constexpr int controlSize = 32;
 
 QToolButton* iconButton(QWidget* parent, const char* name) {
     auto* button = new QToolButton(parent);
     button->setObjectName(QLatin1String(name));
+    button->setProperty("cardIcon", true);
     button->setToolButtonStyle(Qt::ToolButtonIconOnly);
     button->setIconSize(QSize(18, 18));
+    button->setFixedSize(controlSize, controlSize);
     button->setAutoRaise(true);
     return button;
 }
 
+QFrame* divider(QWidget* parent) {
+    auto* line = new QFrame(parent);
+    line->setObjectName(QStringLiteral("headerDivider"));
+    line->setFixedSize(1, 20);
+    return line;
+}
+
+// The Claude chip: status dot, name and a chevron for its menu. The chevron is painted, so
+// it looks like the other symbols instead of the style's arrow.
+class AssistantChip final : public QToolButton {
+  public:
+    using QToolButton::QToolButton;
+
+  protected:
+    void paintEvent(QPaintEvent* event) override {
+        QToolButton::paintEvent(event);
+        if (menu() == nullptr)
+            return;
+        QPainter painter(this);
+        painter.setRenderHint(QPainter::Antialiasing);
+        painter.setPen(QPen(palette().color(QPalette::ButtonText), 1.6, Qt::SolidLine,
+                            Qt::RoundCap, Qt::RoundJoin));
+        const QPointF center(width() - 13.0, height() / 2.0 + 1.0);
+        QPainterPath chevron;
+        chevron.moveTo(center + QPointF(-3.5, -2));
+        chevron.lineTo(center + QPointF(0, 1.5));
+        chevron.lineTo(center + QPointF(3.5, -2));
+        painter.drawPath(chevron);
+    }
+};
+
+QIcon statusDot(const QColor& color, bool filled) {
+    QPixmap pixmap(QSize(20, 20) * 2);
+    pixmap.setDevicePixelRatio(2);
+    pixmap.fill(Qt::transparent);
+    QPainter painter(&pixmap);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setPen(QPen(color, 1.6));
+    painter.setBrush(filled ? QBrush(color) : QBrush(Qt::NoBrush));
+    painter.drawEllipse(QPointF(10, 10), 4, 4);
+    return QIcon(pixmap);
+}
+
 } // namespace
 
-ShellHeader::ShellHeader(QWidget* parent) : QWidget(parent) {
-    setObjectName(QStringLiteral("shellHeader"));
-    setAttribute(Qt::WA_StyledBackground);
+ShellHeader::ShellHeader(QWidget& host) : OverlayCard(host, QStringLiteral("shellHeader")) {
+    project_ = new OverlayCard(host, QStringLiteral("projectCard"), [this](const QWidget& area) {
+        const int width = std::min(project_->sizeHint().width(), area.width() / 2 - 40);
+        return QRect(overlay::margin, overlay::margin, std::max(120, width), overlay::barHeight);
+    });
+    auto* projectLayout = new QHBoxLayout(project_);
+    projectLayout->setContentsMargins(8, 6, 12, 6);
+    projectLayout->setSpacing(8);
     auto* layout = new QHBoxLayout(this);
-    layout->setContentsMargins(12, 6, 12, 6);
-    layout->setSpacing(8);
+    layout->setContentsMargins(8, 0, 8, 0);
+    layout->setSpacing(4);
 
-    fileButton_ = iconButton(this, "fileMenuButton");
+    QWidget* const card = project_;
+    fileButton_ = iconButton(card, "fileMenuButton");
     fileButton_->setPopupMode(QToolButton::InstantPopup);
     fileButton_->setToolTip(tr("Datei"));
     fileButton_->setAccessibleName(tr("Datei"));
-    layout->addWidget(fileButton_);
+    projectLayout->addWidget(fileButton_);
 
-    brand_ = new QLabel(this);
+    brand_ = new QLabel(card);
     brand_->setObjectName(QStringLiteral("brandMark"));
-    layout->addWidget(brand_);
-    auto* brandName = new QLabel(QStringLiteral("Völund"), this);
+    projectLayout->addWidget(brand_);
+    auto* brandName = new QLabel(QStringLiteral("Völund"), card);
     brandName->setObjectName(QStringLiteral("brandName"));
-    layout->addWidget(brandName);
-    auto* separator = new QLabel(QStringLiteral("/"), this);
+    projectLayout->addWidget(brandName);
+    auto* separator = new QLabel(QStringLiteral("/"), card);
     separator->setObjectName(QStringLiteral("pathSeparator"));
-    layout->addWidget(separator);
-    documentName_ = new QLabel(this);
+    projectLayout->addWidget(separator);
+    documentName_ = new QLabel(card);
     documentName_->setObjectName(QStringLiteral("documentName"));
-    layout->addWidget(documentName_);
-    saveState_ = new QLabel(this);
+    documentName_->setMaximumWidth(260);
+    projectLayout->addWidget(documentName_, 1);
+    saveState_ = new QLabel(card);
     saveState_->setObjectName(QStringLiteral("saveState"));
     saveState_->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    layout->addWidget(saveState_, 0, Qt::AlignVCenter);
-    layout->addSpacing(12);
+    projectLayout->addWidget(saveState_, 0, Qt::AlignVCenter);
 
     undoButton_ = iconButton(this, "undoButton");
     redoButton_ = iconButton(this, "redoButton");
     layout->addWidget(undoButton_);
     layout->addWidget(redoButton_);
-    layout->addStretch(1);
+    layout->addSpacing(4);
+    layout->addWidget(divider(this));
+    layout->addSpacing(4);
     searchButton_ = new QToolButton(this);
     searchButton_->setObjectName(QStringLiteral("commandSearchButton"));
     searchButton_->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     searchButton_->setIconSize(QSize(16, 16));
-    searchButton_->setMinimumWidth(320);
+    searchButton_->setFixedHeight(controlSize);
+    searchButton_->setMinimumWidth(240);
     layout->addWidget(searchButton_);
-    layout->addStretch(1);
-    railButton_ = new QToolButton(this);
-    railButton_->setObjectName(QStringLiteral("toolRailButton"));
-    railButton_->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    railButton_->setIconSize(QSize(18, 18));
+    layout->addSpacing(4);
+    layout->addWidget(divider(this));
+    layout->addSpacing(4);
+    railButton_ = iconButton(this, "toolRailButton");
     layout->addWidget(railButton_);
     themeButton_ = iconButton(this, "themeButton");
     layout->addWidget(themeButton_);
-    assistantButton_ = new QToolButton(this);
+    layout->addSpacing(4);
+    assistantButton_ = new AssistantChip(this);
     assistantButton_->setObjectName(QStringLiteral("assistantChip"));
-    assistantButton_->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    assistantButton_->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    assistantButton_->setIconSize(QSize(20, 20));
+    assistantButton_->setFixedHeight(controlSize);
     assistantButton_->setPopupMode(QToolButton::InstantPopup);
-    assistantButton_->setToolTip(tr("Claude-Zugang (MCP)"));
     layout->addWidget(assistantButton_);
     showAssistant(AssistantState::off);
     setTheme(ThemeMode::light);
+    setPlacement([this](const QWidget& area) {
+        setCompact(area.width() < 1100);
+        const int width = sizeHint().width();
+        return QRect(area.width() - width - overlay::margin, overlay::margin, width,
+                     overlay::barHeight);
+    });
 }
 
 void ShellHeader::setFileMenu(QMenu& menu) { fileButton_->setMenu(&menu); }
 
-// U11 (A-VIS-01): in narrow windows the search and the rail switch show their symbols only,
-// so no header control covers another one.
-void ShellHeader::resizeEvent(QResizeEvent* event) {
-    QWidget::resizeEvent(event);
-    const bool compact = width() < 1250;
+// U11 (A-VIS-01): in narrow windows the search shows its symbol only, so the header card
+// does not reach the project card.
+void ShellHeader::setCompact(bool compact) {
     if (compact == compact_)
         return;
     compact_ = compact;
-    for (QToolButton* button : {searchButton_, railButton_})
-        button->setToolButtonStyle(compact ? Qt::ToolButtonIconOnly : Qt::ToolButtonTextBesideIcon);
-    searchButton_->setMinimumWidth(compact ? 0 : 320);
+    searchButton_->setToolButtonStyle(compact ? Qt::ToolButtonIconOnly
+                                              : Qt::ToolButtonTextBesideIcon);
+    searchButton_->setMinimumWidth(compact ? controlSize : 240);
+    searchButton_->setMaximumWidth(compact ? controlSize : QWIDGETSIZE_MAX);
+    searchButton_->setProperty("compact", compact); // no side padding around the symbol
+    searchButton_->style()->unpolish(searchButton_);
+    searchButton_->style()->polish(searchButton_);
 }
 
 void ShellHeader::setActions(QAction& undo, QAction& redo, QAction& theme) {
@@ -130,11 +200,24 @@ void ShellHeader::showAssistant(AssistantState state) {
     static constexpr const char* names[] = {"off", "ready", "connected"};
     const QString texts[] = {tr("Claude: aus"), tr("Claude: bereit"), tr("Claude: verbunden")};
     const auto index = static_cast<std::size_t>(state);
-    assistantButton_->setText(texts[index]);
+    assistant_ = state;
+    // U14: the chip names Claude; the dot shows the state, the tooltip says it.
+    assistantButton_->setText(QStringLiteral("Claude"));
     assistantButton_->setAccessibleName(texts[index]);
+    assistantButton_->setToolTip(texts[index] + QStringLiteral(" – ") +
+                                 tr("Klick öffnet Claude, der Pfeil den Zugang (MCP)"));
     assistantButton_->setProperty("state", QString::fromLatin1(names[index]));
     assistantButton_->style()->unpolish(assistantButton_);
     assistantButton_->style()->polish(assistantButton_);
+    showAssistantDot();
+}
+
+void ShellHeader::showAssistantDot() {
+    const ThemeTokens& tokens = themeTokens(mode_);
+    const bool connected = assistant_ == AssistantState::connected;
+    assistantButton_->setIcon(assistant_ == AssistantState::off
+                                  ? statusDot(tokens.faint, false)
+                                  : statusDot(tokens.accent, connected));
 }
 
 void ShellHeader::setAssistantVisible(bool visible) { assistantButton_->setVisible(visible); }
@@ -150,6 +233,8 @@ void ShellHeader::flashAssistant() {
 }
 
 void ShellHeader::setTheme(ThemeMode mode) {
+    mode_ = mode;
+    showAssistantDot();
     const ThemeTokens& tokens = themeTokens(mode);
     const auto icon = [&](ShellIcon kind) { return shellIcon(kind, tokens.ink, tokens.accent); };
     brand_->setPixmap(icon(ShellIcon::brand).pixmap(QSize(24, 24), devicePixelRatioF()));

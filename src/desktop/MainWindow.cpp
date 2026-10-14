@@ -8,6 +8,7 @@
 #include "MainWindowSupport.hpp"
 #include "MeasurementInput.hpp"
 #include "ModelTreePanel.hpp"
+#include "OverlayCard.hpp"
 #include "ShellHeader.hpp"
 #include "ShellActions.hpp"
 #include "ShellIcons.hpp"
@@ -97,12 +98,28 @@ void MainWindow::createViewport() {
 }
 
 void MainWindow::createModelTree() {
-    impl_->modelTree = new ModelTreePanel(this);
-    auto* dock = new QDockWidget(tr("Modell"), this);
-    dock->setObjectName(QStringLiteral("modelDock"));
-    dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-    dock->setWidget(impl_->modelTree);
-    addDockWidget(Qt::LeftDockWidgetArea, dock);
+    // U14: the model tree is a card over the viewport, below the project card; it is as tall
+    // as its rows need.
+    impl_->modelCard = new OverlayCard(*impl_->viewport, QStringLiteral("modelCard"));
+    auto* layout = new QVBoxLayout(impl_->modelCard);
+    layout->setContentsMargins(8, 10, 8, 8);
+    layout->setSpacing(4);
+    auto* title = new QLabel(tr("Modell"), impl_->modelCard);
+    title->setObjectName(QStringLiteral("overlayTitle"));
+    layout->addWidget(title);
+    impl_->modelTree = new ModelTreePanel(impl_->modelCard);
+    layout->addWidget(impl_->modelTree);
+    impl_->modelCard->setPlacement([tree = impl_->modelTree](const QWidget& area) {
+        // It ends above the bottom band of context bar and timeline, and scrolls beyond.
+        const int available = area.height() - overlay::columnTop - overlay::bottomBand;
+        const int wanted = tree->contentHeight() + 40;
+        return QRect(overlay::margin, overlay::columnTop, overlay::treeWidth,
+                     std::max(120, std::min(available, wanted)));
+    });
+    for (const auto signal : {&QTreeWidget::itemExpanded, &QTreeWidget::itemCollapsed})
+        connect(impl_->modelTree, signal, impl_->modelCard, [card = impl_->modelCard] {
+            card->place();
+        });
     syncModelTree();
 }
 
@@ -162,10 +179,9 @@ void MainWindow::createHeader() {
         storeThemeMode(next);
         applyTheme(next);
     });
-    impl_->header = new ShellHeader(this);
+    impl_->header = new ShellHeader(*impl_->viewport);
     impl_->header->setFileMenu(impl_->documentActions->menu());
     impl_->header->setActions(*impl_->undoAction, *impl_->redoAction, *impl_->themeAction);
-    setMenuWidget(impl_->header);
     impl_->documentActions->setShellChangedHandler(
         [this] { impl_->header->display(impl_->shell()); });
 }
@@ -191,6 +207,7 @@ void MainWindow::syncModelTree() {
     const auto features = impl_->session.features();
     impl_->modelTree->showModel(impl_->session.modelOutline(), features,
                                 impl_->session.selectedFeature(), impl_->visibility);
+    impl_->modelCard->place();
     syncTimeline();
 }
 

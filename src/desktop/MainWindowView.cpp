@@ -10,7 +10,6 @@
 #include <QAction>
 #include <QSignalBlocker>
 #include <QStatusBar>
-#include <QToolBar>
 
 // U06: view state from the model tree (origins, planes, grid, body visibility) and picks of
 // base planes from the tree or the viewport.
@@ -135,13 +134,8 @@ void MainWindow::selectBasePlane(int plane) {
 }
 
 void MainWindow::createTimeline() {
-    impl_->timeline = new TimelineBar(this);
+    impl_->timeline = new TimelineBar(*impl_->viewport);
     impl_->timeline->setOpenHandler([this](std::uint64_t id) { openTimelineStep(id); });
-    auto* bar = new QToolBar(tr("Timeline"), this);
-    bar->setObjectName(QStringLiteral("timelineToolbar"));
-    bar->setMovable(false);
-    bar->addWidget(impl_->timeline);
-    addToolBar(Qt::BottomToolBarArea, bar);
     syncTimeline();
 }
 
@@ -149,13 +143,27 @@ void MainWindow::syncTimeline() {
     if (impl_->timeline == nullptr)
         return;
     const auto features = impl_->session.features();
-    std::vector<document::FeatureId> revolves; // M20
+    // M20/U14: revolves, helixes, sweeps, lofts and primitives show their own symbol.
+    std::vector<TimelineBar::IconOverride> icons;
     const auto snapshot = impl_->session.identifiedSnapshot().snapshot();
     for (const auto& feature : features)
-        if (feature.kind == document::FeatureKind::extrusion &&
-            snapshot.extrusionParameters(feature.id).revolve)
-            revolves.push_back(feature.id);
-    impl_->timeline->showFeatures(features, impl_->session.selectedFeature(), revolves);
+        if (feature.kind == document::FeatureKind::extrusion) {
+            const auto& extrusion = snapshot.extrusionParameters(feature.id);
+            if (extrusion.revolve)
+                icons.emplace_back(feature.id, extrusion.revolve->pitch.has_value()
+                                                   ? ShellIcon::helix
+                                                   : ShellIcon::revolve);
+            else if (extrusion.sweep)
+                icons.emplace_back(feature.id, ShellIcon::sweep);
+            else if (extrusion.loft)
+                icons.emplace_back(feature.id, ShellIcon::loft);
+        } else if (feature.kind == document::FeatureKind::primitive) {
+            static constexpr ShellIcon shapes[]{ShellIcon::sphere, ShellIcon::cone,
+                                                ShellIcon::torus, ShellIcon::wedge};
+            icons.emplace_back(feature.id, shapes[static_cast<std::size_t>(
+                                               snapshot.primitiveParameters(feature.id).shape)]);
+        }
+    impl_->timeline->showFeatures(features, impl_->session.selectedFeature(), icons);
     impl_->timeline->showStates(impl_->session.featureStates());
 }
 

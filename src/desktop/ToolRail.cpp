@@ -1,4 +1,5 @@
 #include "ToolRail.hpp"
+#include "OverlayCard.hpp"
 #include "CommandActions.hpp"
 #include "MainWindowSupport.hpp"
 #include "ShellIcons.hpp"
@@ -9,20 +10,22 @@
 #include <QAction>
 #include <QEvent>
 #include <QGridLayout>
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QMenu>
 #include <QScrollArea>
 #include <QToolButton>
+#include <QRegion>
 #include <QVBoxLayout>
 
 #include <algorithm>
 #include <map>
 #include <optional>
+#include <vector>
 
 namespace voelund::desktop {
 namespace {
 
-constexpr int margin = 16;
 
 std::optional<ShellIcon> iconFor(const QString& id) {
     static const std::map<QString, ShellIcon> icons{
@@ -59,39 +62,138 @@ std::optional<ShellIcon> iconFor(const QString& id) {
     return match == icons.end() ? std::nullopt : std::optional{match->second};
 }
 
+struct RailGroup {
+    const char* title;
+    ShellIcon icon;
+    std::vector<QString> commands;
+};
+
+// U14: the groups of the slim rail; a command missing here lands in "Mehr".
+const std::vector<RailGroup>& railGroups() {
+    static const std::vector<RailGroup> groups{
+        {QT_TRANSLATE_NOOP("ToolRail", "Erstellen"),
+         ShellIcon::box,
+         {QStringLiteral("solid.create.box"), QStringLiteral("solid.create.cylinder"),
+          QStringLiteral("solid.create.sphere"), QStringLiteral("solid.create.cone"),
+          QStringLiteral("solid.create.torus"), QStringLiteral("solid.create.wedge")}},
+        {QT_TRANSLATE_NOOP("ToolRail", "Skizze"),
+         ShellIcon::sketch,
+         {QStringLiteral("solid.create.sketch"), QStringLiteral("solid.modify.edit_sketch"),
+          QStringLiteral("solid.create.extrude_profiles"), QStringLiteral("solid.create.revolve"),
+          QStringLiteral("solid.create.sweep"), QStringLiteral("solid.create.loft"),
+          QStringLiteral("solid.create.helix")}},
+        {QT_TRANSLATE_NOOP("ToolRail", "Bearbeiten"),
+         ShellIcon::fillet,
+         {QStringLiteral("solid.modify.push_pull"), QStringLiteral("solid.modify.fillet"),
+          QStringLiteral("solid.modify.chamfer"), QStringLiteral("solid.modify.hole"),
+          QStringLiteral("solid.modify.shell"), QStringLiteral("solid.modify.draft"),
+          QStringLiteral("solid.modify.combine")}},
+        {QT_TRANSLATE_NOOP("ToolRail", "Bewegen"),
+         ShellIcon::transform,
+         {QStringLiteral("solid.modify.transform")}},
+        {QT_TRANSLATE_NOOP("ToolRail", "Mehr"),
+         ShellIcon::datumPlane,
+         {QStringLiteral("solid.create.datum_plane"), QStringLiteral("solid.create.datum_axis")}}};
+    return groups;
+}
+
+QFrame* card(QWidget* parent, const char* name) {
+    auto* frame = new QFrame(parent);
+    frame->setObjectName(QLatin1String(name));
+    frame->setProperty("overlayCard", true);
+    frame->setAttribute(Qt::WA_StyledBackground);
+    return frame;
+}
+
 } // namespace
 
 ToolRail::ToolRail(viewport::CadViewport& viewport, const CommandActions& commands)
     : QFrame(&viewport), viewport_(viewport) {
     setObjectName(QStringLiteral("toolRail"));
-    setAttribute(Qt::WA_StyledBackground);
-    auto* outer = new QVBoxLayout(this);
-    outer->setContentsMargins(6, 6, 6, 6);
-    outer->setSpacing(0);
-    solidPage_ = new QWidget(this);
+    auto* outer = new QHBoxLayout(this);
+    outer->setContentsMargins(0, 0, 0, 0);
+    outer->setSpacing(8);
+    column_ = card(this, "railColumn");
+    auto* columnLayout = new QVBoxLayout(column_);
+    columnLayout->setContentsMargins(5, 5, 5, 5);
+    columnLayout->setSpacing(0);
+    solidPage_ = new QWidget(column_);
     auto* layout = new QVBoxLayout(solidPage_);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(2);
-    outer->addWidget(solidPage_);
-    std::optional<workspaces::CommandGroup> previous;
+    columnLayout->addWidget(solidPage_);
+    outer->addWidget(column_, 0, Qt::AlignTop);
+    flyout_ = card(this, "railFlyout");
+    auto* flyoutLayout = new QVBoxLayout(flyout_);
+    flyoutLayout->setContentsMargins(6, 8, 6, 6);
+    flyoutLayout->setSpacing(0);
+    outer->addWidget(flyout_, 0, Qt::AlignTop);
+    flyout_->hide();
+
+    const auto& groups = railGroups();
+    std::vector<std::vector<QAction*>> members(groups.size());
     for (QAction* action : commands.ordered()) {
-        const auto group = commands.group(*action);
-        if (previous.has_value() && *previous != group) {
-            auto* line = new QFrame(solidPage_);
-            line->setObjectName(QStringLiteral("toolRailSeparator"));
-            line->setFixedHeight(1);
-            layout->addWidget(line);
-        }
-        previous = group;
+        const QString id = action->property(commandIdProperty).toString();
+        std::size_t index = groups.size() - 1;
+        for (std::size_t group = 0; group < groups.size(); ++group)
+            if (std::ranges::find(groups[group].commands, id) != groups[group].commands.end())
+                index = group;
+        members[index].push_back(action);
+    }
+    for (std::size_t group = 0; group < groups.size(); ++group) {
+        groupButtons_.push_back(nullptr);
+        flyoutPages_.push_back(nullptr);
+        if (members[group].empty())
+            continue;
         auto* button = new QToolButton(solidPage_);
-        button->setDefaultAction(action);
         button->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
         button->setIconSize(QSize(22, 22));
-        button->setFixedWidth(84);
+        button->setFixedWidth(66);
         button->setAutoRaise(true);
         layout->addWidget(button);
+        if (members[group].size() == 1) { // a group of one is its command
+            button->setDefaultAction(members[group].front());
+            continue;
+        }
+        button->setObjectName(QStringLiteral("railGroupButton"));
+        button->setText(tr(groups[group].title));
+        button->setToolTip(tr(groups[group].title));
+        button->setCheckable(true);
+        button->setProperty("railGroup", static_cast<int>(group));
+        button->setProperty("railIcon", static_cast<int>(groups[group].icon));
+        const int index = static_cast<int>(group);
+        connect(button, &QToolButton::clicked, this, [this, index] {
+            if (openGroup_ == index)
+                closeFlyout();
+            else
+                openFlyout(index);
+        });
+        groupButtons_.back() = button;
+
+        auto* page = new QWidget(flyout_);
+        auto* pageLayout = new QVBoxLayout(page);
+        pageLayout->setContentsMargins(0, 0, 0, 0);
+        pageLayout->setSpacing(1);
+        auto* title = new QLabel(tr(groups[group].title), page);
+        title->setObjectName(QStringLiteral("railGroupTitle"));
+        pageLayout->addWidget(title);
+        for (QAction* action : members[group]) {
+            auto* command = new QToolButton(page);
+            command->setDefaultAction(action);
+            command->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+            command->setIconSize(QSize(20, 20));
+            command->setMinimumWidth(184);
+            command->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+            command->setAutoRaise(true);
+            command->setProperty("railGroup", index);
+            pageLayout->addWidget(command);
+            // Choosing a command closes the flyout; the command's panel takes over.
+            connect(action, &QAction::triggered, this, [this] { closeFlyout(); });
+        }
+        flyoutLayout->addWidget(page);
+        page->hide();
+        flyoutPages_.back() = page;
     }
-    adjustSize();
     viewport.installEventFilter(this);
     place();
 }
@@ -99,26 +201,61 @@ ToolRail::ToolRail(viewport::CadViewport& viewport, const CommandActions& comman
 bool ToolRail::eventFilter(QObject* watched, QEvent* event) {
     if (watched == &viewport_ && event->type() == QEvent::Resize)
         place();
+    // A click into the view closes an open flyout, like a menu.
+    if (watched == &viewport_ && event->type() == QEvent::MouseButtonPress && openGroup_ >= 0)
+        closeFlyout();
     return QFrame::eventFilter(watched, event);
 }
 
 bool ToolRail::event(QEvent* event) {
     // Sizes depend on the style sheet, which arrives after construction.
+    const bool result = QFrame::event(event);
     if (event->type() == QEvent::StyleChange || event->type() == QEvent::LayoutRequest)
-        adjustSize();
-    return QFrame::event(event);
+        place();
+    return result;
 }
 
 void ToolRail::place() {
     if (sketchPage_ != nullptr && sketchPage_->widget() != nullptr) {
         // As tall as the tools need, up to the viewport's height; scroll beyond that.
-        const int available = std::max(160, viewport_.height() - 2 * margin - 12);
+        const int available =
+            std::max(160, viewport_.height() - overlay::columnTop - overlay::margin - 12);
         sketchPage_->setFixedHeight(
             std::min(available, sketchPage_->widget()->sizeHint().height() + 4));
     }
+    layout()->activate();
     adjustSize();
-    move(margin, margin);
+    // Only the cards take clicks; the gap beside a short flyout belongs to the view.
+    QRegion cards(column_->geometry());
+    if (flyout_->isVisible())
+        cards += flyout_->geometry();
+    setMask(cards);
+    move(overlay::railLeft, overlay::columnTop);
     raise();
+}
+
+void ToolRail::openFlyout(int group) {
+    for (std::size_t index = 0; index < flyoutPages_.size(); ++index) {
+        const bool open = static_cast<int>(index) == group;
+        if (flyoutPages_[index] != nullptr)
+            flyoutPages_[index]->setVisible(open);
+        if (groupButtons_[index] != nullptr)
+            groupButtons_[index]->setChecked(open);
+    }
+    openGroup_ = group;
+    flyout_->show();
+    place();
+}
+
+void ToolRail::closeFlyout() {
+    for (QToolButton* button : groupButtons_)
+        if (button != nullptr)
+            button->setChecked(false);
+    const bool wasOpen = openGroup_ >= 0;
+    openGroup_ = -1;
+    flyout_->hide();
+    if (wasOpen)
+        place();
 }
 
 void ToolRail::showSolid() {
@@ -132,6 +269,7 @@ void ToolRail::showSolid() {
 }
 
 void ToolRail::showSketch(const std::vector<SketchToolActions::Section>& sections) {
+    closeFlyout();
     if (sketchPage_ == nullptr)
         buildSketchPage(sections);
     if (sketchShown_)
@@ -143,7 +281,7 @@ void ToolRail::showSketch(const std::vector<SketchToolActions::Section>& section
 }
 
 void ToolRail::buildSketchPage(const std::vector<SketchToolActions::Section>& sections) {
-    sketchPage_ = new QScrollArea(this);
+    sketchPage_ = new QScrollArea(column_);
     sketchPage_->setObjectName(QStringLiteral("sketchToolPage"));
     sketchPage_->setFrameShape(QFrame::NoFrame);
     sketchPage_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -196,7 +334,7 @@ void ToolRail::buildSketchPage(const std::vector<SketchToolActions::Section>& se
     layout->addStretch(1);
     sketchPage_->setWidget(content);
     sketchPage_->setFixedWidth(content->sizeHint().width() + 14);
-    static_cast<QVBoxLayout*>(this->layout())->addWidget(sketchPage_);
+    static_cast<QVBoxLayout*>(column_->layout())->addWidget(sketchPage_);
     sketchPage_->hide();
 }
 
@@ -209,6 +347,10 @@ void applyCommandIcons(QWidget& window, ThemeMode mode) {
         else if (const auto sketch = sketchIcon(id, tokens.ink, tokens.accent))
             action->setIcon(*sketch);
     }
+    // U14: the rail's group buttons carry no command, only a symbol.
+    for (QToolButton* button : window.findChildren<QToolButton*>(QStringLiteral("railGroupButton")))
+        button->setIcon(shellIcon(static_cast<ShellIcon>(button->property("railIcon").toInt()),
+                                  tokens.ink, tokens.accent));
 }
 
 } // namespace voelund::desktop
