@@ -169,6 +169,9 @@ struct SketchConstraint final {
     std::optional<ProjectedEdgeReference> projectedEdge{};
     // PAR01: the value mirrors this document parameter while bound.
     std::optional<ParameterId> parameter{};
+    // S18 (schema 24): a reference dimension determines nothing; the solve stores what the
+    // geometry measures. Dimensions only, never bound to a parameter.
+    bool reference{false};
 
     SketchConstraint(SketchConstraintId constraintId, SketchConstraintKind constraintKind,
                      SketchGeometryReference firstReference,

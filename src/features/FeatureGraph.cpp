@@ -252,6 +252,7 @@ void evaluateSketch(const document::DocumentSnapshot& document,
     } else {
         // S12: stored geometry unsolved; instances still follow their sources.
         document::regenerateSketchPatterns(parameters.elements, parameters.patterns);
+        measureReferenceDimensions(parameters); // S18
     }
     TopoDS_Compound geometry;
     BRep_Builder builder;

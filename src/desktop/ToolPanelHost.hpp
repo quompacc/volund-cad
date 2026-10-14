@@ -21,7 +21,7 @@ namespace voelund::desktop {
 [[nodiscard]] QString compactActionLabel(const std::string& id, const QString& fallback);
 
 // U11 (A-VIS-01): what a numeric field holds, so its unit is right.
-enum class ToolValueKind { length, count, angle };
+enum class ToolValueKind { length, count, angle, factor }; // factor: S20, no unit
 
 struct ToolLengthParameter final {
     std::string id;

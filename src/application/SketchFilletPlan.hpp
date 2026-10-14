@@ -6,7 +6,10 @@
 // meet. Each line keeps the part away from the corner: the far end when the corner lies at or
 // beyond an end, the selected end when the lines cross. The arc of the given radius touches
 // both kept parts. Anything that cannot be filleted throws SketchEditRefusal naming the lines.
+// S19: a chamfer cuts the corner with a line between the points `size` from it on each line.
 namespace voelund::application::detail {
+
+enum class SketchCornerKind { fillet, chamfer };
 
 struct SketchFilletLine final {
     document::SketchElementId id;
@@ -17,17 +20,18 @@ struct SketchFilletLine final {
 
 struct SketchFilletPlan final {
     SketchFilletLine first, second;
-    document::SketchArc arc;
-    bool arcStartOnFirst; // the arc starts where the first line ends on it
+    document::SketchArc arc; // fillet
+    bool arcStartOnFirst;    // the arc starts where the first line ends on it
+    document::SketchLine chamfer; // from the first line's touch to the second's
     document::SketchPoint corner;
 };
 
-[[nodiscard]] SketchFilletPlan planFillet(document::SketchElementId firstId,
+[[nodiscard]] SketchFilletPlan planCorner(SketchCornerKind kind, document::SketchElementId firstId,
                                           const document::SketchLine& first,
                                           document::SketchPointPosition firstSelected,
                                           document::SketchElementId secondId,
                                           const document::SketchLine& second,
                                           document::SketchPointPosition secondSelected,
-                                          double radius);
+                                          double size);
 
 } // namespace voelund::application::detail

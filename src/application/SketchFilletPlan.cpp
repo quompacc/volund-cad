@@ -18,10 +18,6 @@ using Position = document::SketchPointPosition;
 
 constexpr double nullSegment = kernel::minimumModelLength;
 
-[[noreturn]] void refuse(const std::string& reason, std::vector<SketchElementId> elements) {
-    throw SketchEditRefusal("Verrunden: " + reason, std::move(elements));
-}
-
 double distance(SketchPoint a, SketchPoint b) { return std::hypot(a.x - b.x, a.y - b.y); }
 SketchPoint point(const SketchLine& line, Position position) {
     return position == Position::start ? line.start : line.end;
@@ -54,11 +50,19 @@ Position keptEnd(const SketchLine& line, SketchPoint corner, Position selected) 
 
 } // namespace
 
-SketchFilletPlan planFillet(SketchElementId firstId, const SketchLine& first,
+SketchFilletPlan planCorner(SketchCornerKind kind, SketchElementId firstId, const SketchLine& first,
                             Position firstSelected, SketchElementId secondId,
-                            const SketchLine& second, Position secondSelected, double radius) {
-    if (!std::isfinite(radius) || radius <= nullSegment)
-        refuse("Der Radius muss größer als 0 sein", {});
+                            const SketchLine& second, Position secondSelected, double size) {
+    const bool chamfer = kind == SketchCornerKind::chamfer;
+    const std::string prefix = chamfer ? "Fasen: " : "Verrunden: ";
+    const auto refuse = [&prefix](const std::string& reason,
+                                  std::vector<SketchElementId> elements) {
+        throw SketchEditRefusal(prefix + reason, std::move(elements));
+    };
+    const std::string sizeName = chamfer ? "Der Abstand " : "Der Radius ";
+    const double radius = size;
+    if (!std::isfinite(size) || size <= nullSegment)
+        refuse(sizeName + "muss größer als 0 sein", {});
     const double ax = first.end.x - first.start.x, ay = first.end.y - first.start.y;
     const double bx = second.end.x - second.start.x, by = second.end.y - second.start.y;
     const double cross = ax * by - ay * bx;
@@ -89,19 +93,20 @@ SketchFilletPlan planFillet(SketchElementId firstId, const SketchLine& first,
     if (theta <= 1.0e-6)
         refuse("Die Linien liegen übereinander", {firstId, secondId});
 
-    // The arc touches each line `reach` from the corner; each kept part must be longer.
-    const double reach = radius / std::tan(theta / 2.0);
+    // The arc touches each line `reach` from the corner; each kept part must be longer. A
+    // chamfer cuts at its distance.
+    const double reach = chamfer ? size : radius / std::tan(theta / 2.0);
     std::vector<SketchElementId> tooShort;
     if (reach > firstLength - nullSegment)
         tooShort.push_back(firstId);
     if (reach > secondLength - nullSegment)
         tooShort.push_back(secondId);
     if (!tooShort.empty()) {
-        const double largest =
-            std::max(0.0, std::min(firstLength, secondLength) - nullSegment) * std::tan(theta / 2.0);
+        const double largest = std::max(0.0, std::min(firstLength, secondLength) - nullSegment) *
+                               (chamfer ? 1.0 : std::tan(theta / 2.0));
         // The reason first: argument order is unspecified, and the list is moved.
         const std::string reason =
-            "Der Radius " + millimetres(radius) + " ist zu groß; höchstens " +
+            sizeName + millimetres(size) + " ist zu groß; höchstens " +
             millimetres(largest) +
             (tooShort.size() == 2          ? " (beide Linien sind zu kurz)"
              : tooShort.front() == firstId ? " (die erste Linie ist zu kurz)"
@@ -137,6 +142,7 @@ SketchFilletPlan planFillet(SketchElementId firstId, const SketchLine& first,
              distance(point(second, secondMoved), corner) < nullSegment},
             document::SketchArc{center, radius, startAngle, startAngle + sweep},
             arcStartOnFirst,
+            SketchLine{firstTouch, secondTouch},
             corner};
 }
 

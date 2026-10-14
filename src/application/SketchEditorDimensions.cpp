@@ -1,6 +1,7 @@
 #include <voelund/kernel/NumericPolicy.hpp>
 #include <voelund/application/CadSession.hpp>
 #include <voelund/application/SketchEditorSession.hpp>
+#include <voelund/features/SketchConstraintSolver.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -77,7 +78,36 @@ SketchEditorSession::dimensionProblem(document::SketchConstraintId constraintId)
     }
     if (match->projectedEdge.has_value() || !match->auxiliaryValues.empty())
         return "Maß: Die Koordinate folgt einer Referenzkante";
+    if (match->reference)
+        return "Maß: Ein Referenzmaß zeigt nur den Wert; erst auf treibend umschalten";
     return std::nullopt;
+}
+
+bool SketchEditorSession::isReferenceDimension(
+    document::SketchConstraintId constraintId) const noexcept {
+    const auto match =
+        std::ranges::find(constraints_.values, constraintId, &document::SketchConstraint::id);
+    return match != constraints_.values.end() && match->reference;
+}
+
+void SketchEditorSession::toggleReference(document::SketchConstraintId constraintId) {
+    if (!active_)
+        refuse("Der Skizzeneditor ist nicht aktiv");
+    const auto match =
+        std::ranges::find(constraints_.values, constraintId, &document::SketchConstraint::id);
+    if (match == constraints_.values.end() || !features::isSketchDimension(match->kind))
+        refuse("Nur eine Bemaßung kann Referenz sein");
+    if (match->parameter || match->projectedEdge || !match->auxiliaryValues.empty())
+        refuse("Ein gebundenes Maß bleibt treibend");
+    Rollback rollback(*this);
+    const bool driving = match->reference;
+    const auto before = overdetermination();
+    match->reference = !driving;
+    // The solver may name another dimension of the redundant set, so the count decides.
+    if (!solveConstraints() || (driving && overdetermination() > before))
+        refuse("Treibend würde es die Skizze überbestimmen; nichts geändert");
+    rollback.keep();
+    commitHistory();
 }
 
 bool SketchEditorSession::editDimension(document::SketchConstraintId constraintId, double value) {

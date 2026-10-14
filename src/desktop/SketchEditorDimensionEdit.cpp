@@ -27,6 +27,8 @@ void SketchEditorToolController::editConstraint(std::uint64_t constraintId) {
     }
     // S07: a bound or reference dimension says why it cannot be edited here.
     if (const auto problem = editor_->dimensionProblem(id)) {
+        if (editor_->isReferenceDimension(id)) // S18: selected, to switch it back
+            selectConstraint(constraintId);
         statusChanged_(QString::fromStdString(*problem));
         return;
     }
@@ -114,6 +116,25 @@ bool SketchEditorToolController::removeSelectedConstraint() {
     refreshPresentation();
     statusChanged_(QObject::tr("Skizzenbedingung entfernt"));
     return true;
+}
+
+// S18 (user decision 2026-10-14): the selected dimension between driving and reference.
+void SketchEditorToolController::toggleReference() {
+    const auto selected = editor_ ? editor_->selectedConstraint() : std::nullopt;
+    if (!selected)
+        return;
+    try {
+        editor_->toggleReference(*selected);
+    } catch (const std::invalid_argument& refusal) {
+        statusChanged_(QString::fromStdString(refusal.what()));
+        return;
+    }
+    syncSelectedDimensionInputs();
+    syncConstraintState();
+    refreshPresentation();
+    statusChanged_(editor_->isReferenceDimension(*selected)
+                       ? QObject::tr("Referenzmaß: zeigt den Wert, bestimmt nichts")
+                       : QObject::tr("Treibendes Maß"));
 }
 
 } // namespace voelund::desktop

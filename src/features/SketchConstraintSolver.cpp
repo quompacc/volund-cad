@@ -309,6 +309,8 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
                              : constraint.value);
         tags.push_back(constraint.id);
         const int tag = static_cast<int>(tags.size());
+        if (constraint.reference) // S18: measured after the solve, never an equation
+            continue;
         LineState* firstLine = lines.contains(constraint.first.element.value())
                                    ? lines.at(constraint.first.element.value())
                                    : nullptr;
@@ -555,10 +557,13 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
     for (const auto& state : states)
         std::visit([](const auto& element) { element.writeBack(); }, state);
     document::regenerateSketchPatterns(sketch.elements, sketch.patterns);
+    const auto originalConstraints = sketch.constraints;
+    measureReferenceDimensions(sketch);
     try {
         document::validateSketchParameters(sketch);
     } catch (const std::invalid_argument&) {
         sketch.elements = originalElements;
+        sketch.constraints = originalConstraints;
         return result;
     }
     result.status = SketchSolveStatus::success;

@@ -43,6 +43,8 @@ void SketchEditorToolController::syncConstraintState() {
     panel_.setActionEnabled("extend", editor_->canEditCurve(application::SketchCurveEdit::extend));
     panel_.setActionEnabled("split", editor_->canEditCurve(application::SketchCurveEdit::split));
     panel_.setActionEnabled("offset", hasSelection);
+    panel_.setActionEnabled("rotate", hasSelection); // S20
+    panel_.setActionEnabled("scale", hasSelection);
     panel_.setActionEnabled("linear_pattern", hasSelection);
     panel_.setActionEnabled("circular_pattern", hasSelection);
     // S12: a selected source or copy names its pattern.
@@ -51,8 +53,13 @@ void SketchEditorToolController::syncConstraintState() {
                             pattern && pattern->kind != document::SketchPatternKind::mirror);
     panel_.setActionEnabled("dissolve_pattern", pattern.has_value());
     panel_.setActionEnabled("fillet", editor_->selectedReferences().size() >= 2);
+    panel_.setActionEnabled("chamfer", editor_->selectedReferences().size() >= 2);
     panel_.setActionEnabled("mirror", editor_->selectedReferences().size() >= 2);
     panel_.setActionEnabled("remove_constraint", !editor_->constraints().empty());
+    const auto constraint = editor_->selectedConstraint();
+    panel_.setActionEnabled("toggle_reference",
+                            constraint && (editor_->isReferenceDimension(*constraint) ||
+                                           !editor_->dimensionProblem(*constraint)));
     panel_.setActionEnabled("delete", hasSelection || editor_->selectedConstraint().has_value());
     panel_.setActionEnabled("undo_sketch", editor_->canUndo());
     panel_.setActionEnabled("redo_sketch", editor_->canRedo());

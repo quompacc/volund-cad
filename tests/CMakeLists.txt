@@ -699,6 +699,30 @@ if(VOELUND_BUILD_DESKTOP)
         if(VOELUND_NATIVE_WAYLAND)
             set_tests_properties(desktop.sketch_project_flow PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
         endif()
+        add_executable(voelund_sketch_reference_flow_tests desktop/SketchReferenceDimensionFlowTests.cpp)
+        target_link_libraries(voelund_sketch_reference_flow_tests PRIVATE voelund_project_options Voelund::Desktop)
+        add_test(NAME desktop.sketch_reference_flow COMMAND voelund_sketch_reference_flow_tests)
+        set_tests_properties(desktop.sketch_reference_flow PROPERTIES
+            LABELS "desktop;qt-opengl;regression;sketch" TIMEOUT 60 RUN_SERIAL TRUE)
+        if(VOELUND_NATIVE_WAYLAND)
+            set_tests_properties(desktop.sketch_reference_flow PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
+        endif()
+        add_executable(voelund_sketch_chamfer_flow_tests desktop/SketchChamferFlowTests.cpp)
+        target_link_libraries(voelund_sketch_chamfer_flow_tests PRIVATE voelund_project_options Voelund::Desktop)
+        add_test(NAME desktop.sketch_chamfer_flow COMMAND voelund_sketch_chamfer_flow_tests)
+        set_tests_properties(desktop.sketch_chamfer_flow PROPERTIES
+            LABELS "desktop;qt-opengl;regression;sketch" TIMEOUT 60 RUN_SERIAL TRUE)
+        if(VOELUND_NATIVE_WAYLAND)
+            set_tests_properties(desktop.sketch_chamfer_flow PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
+        endif()
+        add_executable(voelund_sketch_rotate_scale_flow_tests desktop/SketchRotateScaleFlowTests.cpp)
+        target_link_libraries(voelund_sketch_rotate_scale_flow_tests PRIVATE voelund_project_options Voelund::Desktop)
+        add_test(NAME desktop.sketch_rotate_scale_flow COMMAND voelund_sketch_rotate_scale_flow_tests)
+        set_tests_properties(desktop.sketch_rotate_scale_flow PROPERTIES
+            LABELS "desktop;qt-opengl;regression;sketch" TIMEOUT 60 RUN_SERIAL TRUE)
+        if(VOELUND_NATIVE_WAYLAND)
+            set_tests_properties(desktop.sketch_rotate_scale_flow PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
+        endif()
         add_executable(voelund_shell_panel_tests desktop/ShellPanelTests.cpp)
         target_link_libraries(voelund_shell_panel_tests PRIVATE voelund_project_options Voelund::Desktop)
         add_test(NAME desktop.shell_panel COMMAND voelund_shell_panel_tests)
@@ -1160,3 +1184,21 @@ add_executable(voelund_action_candidate_tests integration/ActionCandidateTests.c
 target_link_libraries(voelund_action_candidate_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME application.action_candidates COMMAND voelund_action_candidate_tests)
 set_tests_properties(application.action_candidates PROPERTIES LABELS "integration;application;regression" TIMEOUT 90)
+
+# S18: reference dimensions.
+add_executable(voelund_sketch_reference_dimension_tests integration/SketchReferenceDimensionTests.cpp)
+target_link_libraries(voelund_sketch_reference_dimension_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.sketch_reference_dimensions COMMAND voelund_sketch_reference_dimension_tests)
+set_tests_properties(application.sketch_reference_dimensions PROPERTIES LABELS "integration;application;sketch" TIMEOUT 120)
+
+# S19: sketch chamfer.
+add_executable(voelund_sketch_chamfer_tests integration/SketchChamferTests.cpp)
+target_link_libraries(voelund_sketch_chamfer_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.sketch_chamfer COMMAND voelund_sketch_chamfer_tests)
+set_tests_properties(application.sketch_chamfer PROPERTIES LABELS "integration;application;sketch" TIMEOUT 120)
+
+# S20: turning and scaling in the sketch.
+add_executable(voelund_sketch_rotate_scale_tests integration/SketchRotateScaleTests.cpp)
+target_link_libraries(voelund_sketch_rotate_scale_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.sketch_rotate_scale COMMAND voelund_sketch_rotate_scale_tests)
+set_tests_properties(application.sketch_rotate_scale PROPERTIES LABELS "integration;application;sketch" TIMEOUT 120)

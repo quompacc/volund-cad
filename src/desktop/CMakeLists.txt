@@ -34,6 +34,7 @@ add_library(
     SketchEditorDrag.cpp
     SketchEditorPresentation.cpp
     SketchEditorDimensionEdit.cpp
+    SketchEditorParameters.cpp
     SketchEditorClosing.cpp
     SketchEditorRecovery.cpp
     SketchEditorToolController.cpp

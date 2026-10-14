@@ -54,6 +54,19 @@ PlanarTransform PlanarTransform::rotation(double angle) {
     return {snap(c), snap(-s), snap(s), snap(c), 0.0, 0.0};
 }
 
+PlanarTransform PlanarTransform::rotation(SketchPoint center, double angle) {
+    PlanarTransform result = rotation(angle);
+    const SketchPoint image = result.apply(center);
+    result.tx = center.x - image.x;
+    result.ty = center.y - image.y;
+    return result;
+}
+
+PlanarTransform PlanarTransform::scaling(SketchPoint center, double factor) {
+    return {factor, 0.0, 0.0, factor, center.x * (1.0 - factor), center.y * (1.0 - factor),
+            factor};
+}
+
 PlanarTransform PlanarTransform::reflection(const document::SketchLine& axis) {
     const double dx = axis.end.x - axis.start.x, dy = axis.end.y - axis.start.y;
     const double length = std::hypot(dx, dy);
@@ -73,6 +86,10 @@ SketchPoint PlanarTransform::apply(SketchPoint point) const noexcept {
 }
 
 bool PlanarTransform::mirrors() const noexcept { return xx * yy - xy * yx < 0.0; }
+
+bool PlanarTransform::keepsAxes() const noexcept {
+    return axisImage(*this) == AxisImage::keepsAxes;
+}
 
 bool PlanarTransform::translatesOnly() const noexcept {
     return xx == 1.0 && yy == 1.0 && xy == 0.0 && yx == 0.0;
@@ -117,6 +134,7 @@ TransformedCopy transformedCopy(const document::SketchGeometry& geometry,
                                       value.center.y + value.radius * std::sin(value.endAngle)};
                 document::SketchArc arc = value;
                 arc.center = t.apply(value.center);
+                arc.radius = value.radius * t.scale;
                 if (t.translatesOnly()) { // angles stay exactly as they are
                     result.elements.push_back(arc);
                     return;
@@ -137,6 +155,8 @@ TransformedCopy transformedCopy(const document::SketchGeometry& geometry,
             } else if constexpr (std::is_same_v<Geometry, document::SketchEllipse>) {
                 document::SketchEllipse ellipse = value;
                 ellipse.center = t.apply(value.center);
+                ellipse.majorRadius = value.majorRadius * t.scale;
+                ellipse.minorRadius = value.minorRadius * t.scale;
                 if (t.translatesOnly()) {
                     result.elements.push_back(ellipse);
                     return;
@@ -148,6 +168,7 @@ TransformedCopy transformedCopy(const document::SketchGeometry& geometry,
             } else {
                 document::SketchCircle circle = value;
                 circle.center = t.apply(value.center);
+                circle.radius = value.radius * t.scale;
                 result.elements.push_back(circle);
             }
         },

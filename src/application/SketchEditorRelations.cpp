@@ -240,7 +240,13 @@ bool SketchEditorSession::addSelectedRelation(document::SketchConstraintKind kin
     } catch (const std::invalid_argument&) {
         return false;
     }
+    const auto before = overdetermination();
     static_cast<void>(solveConstraints());
+    // S18: a dimension that would overdetermine the sketch is kept as a reference.
+    if (features::isSketchDimension(kind) && overdetermination() > before) {
+        constraints_.values.back().reference = true;
+        static_cast<void>(solveConstraints());
+    }
     rollback.keep();
     return true;
 }

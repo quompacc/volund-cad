@@ -171,6 +171,8 @@ void writeNativeSketchConstraints(const TDF_Label& label, const TDF_Label& eleme
             writeNativeProjectedEdge(native.FindChild(8), *constraint.projectedEdge);
         if (constraint.parameter)
             writeNativeParameterBinding(native.FindChild(9), *constraint.parameter);
+        if (constraint.reference) // S18
+            TDataStd_Integer::Set(native.FindChild(10), 1);
         TDataStd_AsciiString::Set(native.FindChild(1),
                                   std::to_string(constraint.id.value()).c_str());
         TDataStd_AsciiString::Set(native.FindChild(2), name(constraint.kind).data());
@@ -204,11 +206,15 @@ SketchConstraints readNativeSketchConstraints(const TDF_Label& label, const TDF_
     SketchConstraints result{{}, nextId};
     for (int index = 1; index <= count; ++index) {
         const auto native = child(label, index);
-        // Optional children: 8 projected edge (schema 3), 9 parameter binding (schema 7).
+        // Optional children: 8 projected edge (schema 3), 9 parameter binding (schema 7),
+        // 10 reference dimension (schema 24).
         const bool projected = !native.FindChild(8, false).IsNull();
         const bool bound = !native.FindChild(9, false).IsNull();
-        require(native.NbChildren() == 7 + (projected ? 1 : 0) + (bound ? 1 : 0) &&
-                (!projected || schemaVersion >= 3) && (!bound || schemaVersion >= 7));
+        const bool reference = !native.FindChild(10, false).IsNull();
+        require(native.NbChildren() ==
+                    7 + (projected ? 1 : 0) + (bound ? 1 : 0) + (reference ? 1 : 0) &&
+                (!projected || schemaVersion >= 3) && (!bound || schemaVersion >= 7) &&
+                (!reference || (schemaVersion >= 24 && integer(child(native, 10)) == 1)));
         const auto first = readReference(child(native, 3), elements, labels);
         require(first.has_value());
         const auto second = readReference(child(native, 4), elements, labels);
@@ -238,6 +244,7 @@ SketchConstraints readNativeSketchConstraints(const TDF_Label& label, const TDF_
             constraint.projectedEdge = readNativeProjectedEdge(child(native, 8));
         if (bound)
             constraint.parameter = readNativeParameterBinding(child(native, 9));
+        constraint.reference = reference;
         result.values.push_back(std::move(constraint));
     }
     return result;

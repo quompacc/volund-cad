@@ -144,6 +144,8 @@ QJsonObject encodeConstraint(const document::SketchConstraint& constraint) {
     }
     if (constraint.parameter)
         json.insert("parameterId", static_cast<double>(constraint.parameter->value()));
+    if (constraint.reference)
+        json.insert("reference", true);
     return json;
 }
 
@@ -159,7 +161,7 @@ document::SketchConstraint decodeConstraint(const detail::JsonReader& reader,
                             : std::nullopt;
     const auto unit = valueUnit(kind);
     if (!unit) {
-        if (reader.has("value") || reader.has("parameterId"))
+        if (reader.has("value") || reader.has("parameterId") || reader.has("reference"))
             throw ArgumentError(reader.field("value"), "This constraint has no value");
         return {id, kind, first, second};
     }
@@ -186,6 +188,12 @@ document::SketchConstraint decodeConstraint(const detail::JsonReader& reader,
             throw ArgumentError(reader.field("value"), "The value differs from the parameter");
         value = given;
     }
+    // S18: a reference shows what the geometry measures; its value may be left out.
+    const bool reference = reader.boolean("reference", false);
+    if (reference && bound)
+        throw ArgumentError(reader.field("reference"), "A reference cannot be bound");
+    if (!value && reference)
+        value = 0.0;
     if (!value)
         throw ArgumentError(reader.field("value"), "A dimension needs a value or a parameter");
     auto constraint = *unit == document::ParameterUnit::angle
@@ -193,6 +201,7 @@ document::SketchConstraint decodeConstraint(const detail::JsonReader& reader,
                                                        kernel::Radians(*value)}
                           : document::SketchConstraint{id, kind, first, second, *value};
     constraint.parameter = bound;
+    constraint.reference = reference;
     return constraint;
 }
 

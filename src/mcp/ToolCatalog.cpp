@@ -74,7 +74,9 @@ QJsonObject sketchSchema(bool withPlane) {
                             "Value of a dimension or coordinate: mm for lengths and "
                             "coordinates, rad for angles. Optional when parameterId is set")},
          {"parameterId", typed("integer", "Bind this dimension to a document parameter "
-                                          "(not coordinates)")}},
+                                          "(not coordinates)")},
+         {"reference", typed("boolean", "A reference dimension: shows the measured value, "
+                                         "determines nothing; value optional, not bound")}},
         {"id", "kind", "first"});
     QJsonObject properties{
         {"elements", QJsonObject{{"type", "array"}, {"items", element}}},

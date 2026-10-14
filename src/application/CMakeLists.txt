@@ -9,6 +9,7 @@ add_library(voelund_application STATIC
     CadSessionCreation.cpp
     CadSessionSolidFeatures.cpp
     SketchEditorProjections.cpp
+    SketchEditorTransform.cpp
     CadSessionTargetedEdits.cpp
     CadSessionTransactions.cpp
     CadSessionParameters.cpp

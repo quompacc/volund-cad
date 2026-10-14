@@ -232,7 +232,7 @@ SketchAnnotationCategory sketchAnnotationCategory(SketchConstraintKind kind) noe
 bool isEditableDimension(const document::SketchConstraint& constraint) noexcept {
     return sketchAnnotationCategory(constraint.kind) == SketchAnnotationCategory::dimension &&
            !constraint.parameter.has_value() && !constraint.projectedEdge.has_value() &&
-           constraint.auxiliaryValues.empty();
+           constraint.auxiliaryValues.empty() && !constraint.reference;
 }
 
 std::string sketchConstraintLabel(SketchConstraintKind kind, double value) {
@@ -261,7 +261,9 @@ evaluateSketchConstraintAnnotations(const document::SketchParameters& sketch) {
         result.push_back({constraint.id, constraint.kind,
                           worldPoint(sketch.plane, annotationPoint(sketch, constraint)), value,
                           category, isEditableDimension(constraint), constraint.parameter,
-                          sketchConstraintLabel(constraint.kind, value)});
+                          constraint.reference // S18: a reference in parentheses
+                              ? "(" + sketchConstraintLabel(constraint.kind, value) + ")"
+                              : sketchConstraintLabel(constraint.kind, value)});
     }
     return result;
 }

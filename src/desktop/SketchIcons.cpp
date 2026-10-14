@@ -388,10 +388,50 @@ const QHash<QString, Drawing>& drawings() {
                  p.line(4, 20, 12, 20);
              });
          }},
+        {"rotate", // S20: a square turned about a point
+         [](const Pens& p) {
+             p.painter.drawRect(QRectF(4, 10, 9, 9));
+             p.accented([&] {
+                 p.painter.drawArc(QRectF(6, 3, 15, 15), 0, 120 * 16);
+                 p.line(21, 10.5, 21, 6);
+                 p.line(21, 10.5, 17.5, 8.5);
+             });
+         }},
+        {"scale", // S20: a small square and its larger image
+         [](const Pens& p) {
+             p.painter.drawRect(QRectF(3, 13, 7, 7));
+             p.accented([&] {
+                 p.painter.drawRect(QRectF(3, 4, 17, 16));
+                 p.line(10, 13, 18, 6);
+             });
+         }},
+        {"chamfer", // S19: a corner cut by a straight line
+         [](const Pens& p) {
+             QPainterPath corner;
+             corner.moveTo(4, 4);
+             corner.lineTo(4, 13);
+             corner.lineTo(11, 20);
+             corner.lineTo(20, 20);
+             p.painter.drawPath(corner);
+             p.dashed([&] {
+                 p.line(4, 13, 4, 20);
+                 p.line(4, 20, 11, 20);
+             });
+         }},
         {"offset",
          [](const Pens& p) {
              p.painter.drawArc(QRectF(3, 9, 18, 18), 20 * 16, 140 * 16);
              p.accented([&] { p.painter.drawArc(QRectF(7, 13, 10, 10), 20 * 16, 140 * 16); });
+         }},
+        {"toggle_reference", // S18: a dimension in parentheses
+         [](const Pens& p) {
+             p.line(6, 14, 18, 14);
+             p.line(6, 11, 6, 17);
+             p.line(18, 11, 18, 17);
+             p.accented([&] {
+                 p.painter.drawArc(QRectF(1, 6, 6, 16), 100 * 16, 160 * 16);
+                 p.painter.drawArc(QRectF(17, 6, 6, 16), -80 * 16, 160 * 16);
+             });
          }},
         {"project", // S17: a body edge dropped onto the sketch
          [](const Pens& p) {

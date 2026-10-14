@@ -74,6 +74,7 @@ class SketchEditorToolController final {
     friend class SketchSolverGateTestAccess;
     void setTool(int index);
     void applyTranslation(const std::string& id, double value);
+    void applyParameter(const std::string& id, double value); // SketchEditorParameters.cpp
     [[nodiscard]] bool dragTo(double translationX, double translationY);
     void applyElementDimension(const std::string& id, double value);
     void applyLineConstraint(document::SketchLineConstraint constraint);
@@ -83,6 +84,7 @@ class SketchEditorToolController final {
     void unlockSelectedReference();
     void removeSelected();
     void removeLastConstraint();
+    void toggleReference(); // S18
     void applyEditOperation(const std::string& id);
     void applyPatternOperation(const std::string& id);
     void applyCurveEdit(const std::function<application::SketchCurveEditResult()>& edit);
@@ -117,6 +119,10 @@ class SketchEditorToolController final {
     double translationX_{0.0};
     double translationY_{0.0};
     double filletRadius_{2.0};
+    double chamferDistance_{2.0}; // S19
+    document::SketchPoint transformCenter_{}; // S20
+    double rotateAngle_{90.0};
+    double scaleFactor_{2.0};
     double offsetDistance_{1.0};
     double patternCount_{3.0};
     double patternSpacing_{10.0};

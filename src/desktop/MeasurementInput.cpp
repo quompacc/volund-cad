@@ -26,6 +26,15 @@ QDoubleSpinBox* makeAngleInput(QWidget* parent)
     return input;
 }
 
+QDoubleSpinBox* makeFactorInput(QWidget* parent)
+{
+    auto* input = new QDoubleSpinBox(parent);
+    input->setDecimals(4);
+    input->setSingleStep(0.1);
+    input->setKeyboardTracking(false);
+    return input;
+}
+
 QDoubleSpinBox* makeCountInput(QWidget* parent)
 {
     auto* input = new QDoubleSpinBox(parent);

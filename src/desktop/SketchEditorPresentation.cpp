@@ -139,6 +139,20 @@ void SketchEditorToolController::applyEditOperation(const std::string& id) {
         applyCurveEdit([this] { return editor_->filletCorner(filletRadius_); });
         return;
     }
+    if (id == "chamfer") { // S19
+        applyCurveEdit([this] { return editor_->chamferCorner(chamferDistance_); });
+        return;
+    }
+    if (id == "rotate" || id == "scale") { // S20
+        applyCurveEdit([this, &id] {
+            return id == "rotate"
+                       ? editor_->rotateSelected(transformCenter_,
+                                                 kernel::toRadians(kernel::Degrees(rotateAngle_))
+                                                     .value())
+                       : editor_->scaleSelected(transformCenter_, scaleFactor_);
+        });
+        return;
+    }
     if (id == "project") {
         setProjecting(!projecting_);
         return;
@@ -182,7 +196,18 @@ void SketchEditorToolController::syncSelectedDimensionInputs() {
     panel_.setLengthVisible("polygon_sides", toolIndex_ == 9);
     panel_.setLengthVisible("fillet_radius",
                             selecting && editor_->selectedReferences().size() >= 2);
+    panel_.setLengthVisible("chamfer_distance",
+                            selecting && editor_->selectedReferences().size() >= 2);
     panel_.setLengthVisible("offset_distance", selecting && hasSelection);
+    // S20: the center starts at the middle of the selection.
+    for (const char* field : {"transform_center_x", "transform_center_y", "rotate_angle",
+                              "scale_factor"})
+        panel_.setLengthVisible(field, selecting && hasSelection);
+    if (const auto center = selecting ? editor_->selectionCenter() : std::nullopt) {
+        transformCenter_ = *center;
+        panel_.setLengthValue("transform_center_x", center->x);
+        panel_.setLengthValue("transform_center_y", center->y);
+    }
     panel_.setLengthVisible("pattern_count", selecting && hasSelection);
     panel_.setLengthVisible("pattern_spacing", selecting && hasSelection);
     panel_.setLengthVisible("pattern_angle", selecting && hasSelection);

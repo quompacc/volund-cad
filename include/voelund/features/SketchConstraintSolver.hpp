@@ -22,4 +22,9 @@ struct SketchSolveResult final {
 
 [[nodiscard]] SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch);
 
+// S18 (SketchReferenceDimensions.cpp): dimensions that can be references, and the measured
+// values of the reference dimensions of `sketch` (called after each successful solve).
+[[nodiscard]] bool isSketchDimension(document::SketchConstraintKind kind) noexcept;
+void measureReferenceDimensions(document::SketchParameters& sketch);
+
 } // namespace voelund::features

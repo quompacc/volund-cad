@@ -91,6 +91,10 @@ class ViewportTestAccess {
     static std::size_t constraintLabels(CadViewport& v) {
         return v.impl_->sketchConstraintPresentation.size();
     }
+    // S18: the labels as shown, with their world positions.
+    static std::vector<SceneSketchConstraint> shownConstraints(CadViewport& v) {
+        return v.impl_->pendingSketchConstraints;
+    }
     // S14: the shown points of the sketch elements (local coordinates), to compare positions.
     static std::vector<std::pair<double, double>> sketchPoints(CadViewport& v) {
         std::vector<std::pair<double, double>> points;

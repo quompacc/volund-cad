@@ -156,6 +156,16 @@ void validateSketchConstraints(const SketchElements& elements,
                 throw std::invalid_argument("Projected edges require a unary coordinate constraint "
                                             "without legacy attachment");
         }
+        if (constraint.reference &&
+            ((kind != SketchConstraintKind::distance && kind != SketchConstraintKind::radius &&
+              kind != SketchConstraintKind::diameter &&
+              kind != SketchConstraintKind::pointDistance &&
+              kind != SketchConstraintKind::pointLineDistance &&
+              kind != SketchConstraintKind::pointDistanceX &&
+              kind != SketchConstraintKind::pointDistanceY &&
+              kind != SketchConstraintKind::angle) ||
+             constraint.parameter || constraint.projectedEdge))
+            throw std::invalid_argument("Only an unbound dimension can be a reference");
         if ((kind == SketchConstraintKind::coordinateX ||
              kind == SketchConstraintKind::coordinateY ||
              kind == SketchConstraintKind::pointDistanceX ||
@@ -166,7 +176,7 @@ void validateSketchConstraints(const SketchElements& elements,
              kind == SketchConstraintKind::diameter ||
              kind == SketchConstraintKind::pointDistance ||
              kind == SketchConstraintKind::pointLineDistance) &&
-            !kernel::modelLength(constraint.value))
+            !constraint.reference && !kernel::modelLength(constraint.value))
             throw std::invalid_argument(kernel::modelRangeDiagnostic);
         if (!std::isfinite(constraint.value))
             throw std::invalid_argument("Sketch constraint value must be finite");
@@ -187,6 +197,8 @@ void validateSketchConstraints(const SketchElements& elements,
         if (constraint.kind != SketchConstraintKind::symmetric && constraint.third.has_value())
             throw std::invalid_argument("Only symmetric constraints accept a third reference");
 
+        // S18: a reference shows what the geometry measures, also zero.
+        const bool positive = constraint.reference || constraint.value > minimumLength;
         if (constraint.kind == SketchConstraintKind::fixed) {
             const SketchGeometry& geometry = findElement(constraint.first.element).geometry;
             const bool line = std::holds_alternative<SketchLine>(geometry);
@@ -220,7 +232,7 @@ void validateSketchConstraints(const SketchElements& elements,
             if (constraint.second.has_value())
                 throw std::invalid_argument("Unary sketch constraint has a second reference");
             if (constraint.kind == SketchConstraintKind::distance &&
-                constraint.value <= minimumLength)
+                !positive)
                 throw std::invalid_argument("Sketch distance constraint must be positive");
         } else if (constraint.kind == SketchConstraintKind::radius ||
                    constraint.kind == SketchConstraintKind::diameter) {
@@ -228,7 +240,7 @@ void validateSketchConstraints(const SketchElements& elements,
             if (!std::holds_alternative<SketchCircle>(geometry) &&
                 !std::holds_alternative<SketchArc>(geometry))
                 throw std::invalid_argument("Sketch radial constraint requires a circle or arc");
-            if (constraint.second.has_value() || constraint.value <= minimumLength)
+            if (constraint.second.has_value() || !positive)
                 throw std::invalid_argument("Sketch radial constraint must be unary and positive");
         } else {
             if (!constraint.second.has_value())
@@ -239,14 +251,14 @@ void validateSketchConstraints(const SketchElements& elements,
             } else if (constraint.kind == SketchConstraintKind::pointDistance) {
                 requirePoint(constraint.first);
                 requirePoint(*constraint.second);
-                if (constraint.first == *constraint.second || constraint.value <= minimumLength)
+                if (constraint.first == *constraint.second || !positive)
                     throw std::invalid_argument(
                         "Point distance constraint needs two points and a positive value");
             } else if (constraint.kind == SketchConstraintKind::pointLineDistance) {
                 requirePoint(constraint.first);
                 requireLine(*constraint.second);
                 if (constraint.first.element == constraint.second->element ||
-                    constraint.value <= minimumLength)
+                    !positive)
                     throw std::invalid_argument(
                         "Point-line distance constraint needs a point, a different line and a "
                         "positive value");
@@ -269,9 +281,10 @@ void validateSketchConstraints(const SketchElements& elements,
                 requireLine(*constraint.second);
                 if (constraint.first.element == constraint.second->element ||
                     constraint.value != 0.0 ||
-                    std::abs(constraint.angleValue.value()) <=
-                        kernel::toRadians(kernel::Degrees(minimumLength)).value() ||
-                    std::abs(constraint.angleValue.value()) >= std::numbers::pi)
+                    (!constraint.reference && // S18: a reference shows also 0 or 180
+                     (std::abs(constraint.angleValue.value()) <=
+                          kernel::toRadians(kernel::Degrees(minimumLength)).value() ||
+                      std::abs(constraint.angleValue.value()) >= std::numbers::pi)))
                     throw std::invalid_argument("Angle constraint needs two different lines and an "
                                                 "angle below 180 degrees");
             } else if (constraint.kind == SketchConstraintKind::symmetric) {

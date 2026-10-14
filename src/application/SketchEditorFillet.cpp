@@ -15,6 +15,8 @@
 // - What cannot keep its meaning is removed and named: relations of an end that was no corner
 //   (crossing lines), equal lengths, midpoints and bisectors of a shortened line.
 // - The arc is tangent to both lines at the joints and keeps the entered radius.
+// S19: a chamfer is the same corner treatment with a line instead of the arc; where the corner
+// stays virtual, both chamfer ends keep the entered distance from it.
 namespace voelund::application {
 namespace {
 
@@ -23,10 +25,6 @@ using document::SketchConstraintKind;
 using document::SketchElementId;
 using document::SketchGeometryReference;
 using Position = document::SketchPointPosition;
-
-[[noreturn]] void refuse(const std::string& reason, std::vector<SketchElementId> elements = {}) {
-    throw SketchEditRefusal("Verrunden: " + reason, std::move(elements));
-}
 
 Position other(Position position) {
     return position == Position::start ? Position::end : Position::start;
@@ -43,6 +41,19 @@ struct Leg final {
 } // namespace
 
 SketchCurveEditResult SketchEditorSession::filletCorner(double radius) {
+    return treatCorner(false, radius);
+}
+
+SketchCurveEditResult SketchEditorSession::chamferCorner(double distance) {
+    return treatCorner(true, distance);
+}
+
+SketchCurveEditResult SketchEditorSession::treatCorner(bool chamfer, double size) {
+    const std::string name = chamfer ? "Fasen: " : "Verrunden: ";
+    const auto refuse = [&name](const std::string& reason,
+                                std::vector<SketchElementId> elements = {}) {
+        throw SketchEditRefusal(name + reason, std::move(elements));
+    };
     if (!active_)
         refuse("Der Skizzeneditor ist nicht aktiv");
     std::vector<SketchGeometryReference> picks;
@@ -75,11 +86,13 @@ SketchCurveEditResult SketchEditorSession::filletCorner(double radius) {
             refuse("Eine projizierte Kante folgt ihrem Körper", {pick.element});
     for (const auto& pick : picks)
         if (isPatternInstance(pick.element))
-            refuse("Eine Kopie folgt ihrem Original; das Original verrunden oder das Muster "
-                   "auflösen",
+            refuse(std::string("Eine Kopie folgt ihrem Original; das Original ") +
+                       (chamfer ? "fasen" : "verrunden") + " oder das Muster auflösen",
                    {pick.element});
-    const auto plan = detail::planFillet(picks[0].element, lines[0], picks[0].point,
-                                         picks[1].element, lines[1], picks[1].point, radius);
+    const auto plan = detail::planCorner(
+        chamfer ? detail::SketchCornerKind::chamfer : detail::SketchCornerKind::fillet,
+        picks[0].element, lines[0], picks[0].point, picks[1].element, lines[1], picks[1].point,
+        size);
     const bool corner = plan.first.movedFromCorner || plan.second.movedFromCorner;
     if (!canAllocateIds(corner ? 3 : 1, corner ? 18 : 13))
         refuse("Die Skizze hat keine freien IDs mehr");
@@ -90,7 +103,8 @@ SketchCurveEditResult SketchEditorSession::filletCorner(double radius) {
         std::ranges::find(elements_.values, leg->id, &document::SketchElement::id)->geometry =
             leg->line;
     const SketchElementId arc{elements_.nextId++};
-    elements_.values.push_back({arc, plan.arc, construction});
+    elements_.values.push_back(chamfer ? document::SketchElement{arc, plan.chamfer, construction}
+                                       : document::SketchElement{arc, plan.arc, construction});
     Leg first{plan.first, std::nullopt}, second{plan.second, std::nullopt};
     if (corner)
         for (Leg* leg : {&first, &second}) {
@@ -179,16 +193,21 @@ SketchCurveEditResult SketchEditorSession::filletCorner(double radius) {
         result.added.push_back(document::SketchConstraintId{constraints_.nextId++});
         constraints_.values.push_back({result.added.back(), kind, a, b, value});
     };
-    const Position firstOnArc = plan.arcStartOnFirst ? Position::start : Position::end;
+    // The chamfer line runs from the first line's joint to the second's.
+    const Position firstOnArc =
+        chamfer || plan.arcStartOnFirst ? Position::start : Position::end;
     relate(SketchConstraintKind::coincident, {plan.first.id, plan.first.moved}, {arc, firstOnArc});
     relate(SketchConstraintKind::coincident, {plan.second.id, plan.second.moved},
            {arc, other(firstOnArc)});
-    relate(SketchConstraintKind::tangent, {plan.first.id, Position::start}, {arc, Position::start});
-    relate(SketchConstraintKind::tangent, {plan.second.id, Position::start},
-           {arc, Position::start});
-    result.added.push_back(document::SketchConstraintId{constraints_.nextId++});
-    constraints_.values.push_back({result.added.back(), SketchConstraintKind::radius,
-                                   {arc, Position::center}, std::nullopt, radius});
+    if (!chamfer) {
+        relate(SketchConstraintKind::tangent, {plan.first.id, Position::start},
+               {arc, Position::start});
+        relate(SketchConstraintKind::tangent, {plan.second.id, Position::start},
+               {arc, Position::start});
+        result.added.push_back(document::SketchConstraintId{constraints_.nextId++});
+        constraints_.values.push_back({result.added.back(), SketchConstraintKind::radius,
+                                       {arc, Position::center}, std::nullopt, size});
+    }
     if (corner) {
         for (const Leg* leg : {&first, &second}) {
             relate(SketchConstraintKind::coincident, {*leg->virtualLine, Position::start},
@@ -197,6 +216,10 @@ SketchCurveEditResult SketchEditorSession::filletCorner(double radius) {
                    {leg->plan.id, Position::start});
         }
         relate(SketchConstraintKind::coincident, first.corner(), second.corner());
+        if (chamfer)
+            for (const auto& [end, leg] : {std::pair{Position::start, &first},
+                                           std::pair{Position::end, &second}})
+                relate(SketchConstraintKind::pointDistance, {arc, end}, leg->corner(), size);
     }
 
     selectedElement_ = arc;
@@ -206,6 +229,15 @@ SketchCurveEditResult SketchEditorSession::filletCorner(double radius) {
         refuse("Das Ergebnis lässt sich nicht lösen; nichts geändert",
                {plan.first.id, plan.second.id});
     return result;
+}
+
+bool SketchEditorSession::chamferSelected(double distance) {
+    try {
+        static_cast<void>(chamferCorner(distance));
+        return true;
+    } catch (const std::invalid_argument&) {
+        return false;
+    }
 }
 
 bool SketchEditorSession::filletSelected(double radius) {

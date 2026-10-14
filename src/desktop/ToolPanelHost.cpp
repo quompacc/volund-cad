@@ -181,6 +181,8 @@ void ToolPanelHost::begin(ToolPanelDefinition definition) {
         QDoubleSpinBox* input = parameter.kind == ToolValueKind::angle ? makeAngleInput(content_)
                                 : parameter.kind == ToolValueKind::count
                                     ? makeCountInput(content_)
+                                : parameter.kind == ToolValueKind::factor
+                                    ? makeFactorInput(content_)
                                     : makeLengthInput(content_);
         input->setRange(parameter.minimum, parameter.maximum);
         input->setValue(parameter.value);

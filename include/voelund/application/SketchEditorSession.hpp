@@ -135,6 +135,18 @@ class SketchEditorSession final {
     // radius too large) and changes nothing.
     [[nodiscard]] SketchCurveEditResult filletCorner(double radius);
     [[nodiscard]] bool filletSelected(double radius);
+    // S19: cuts the corner of the two selected lines with a line `distance` from it on each,
+    // relations kept as for a fillet; refusals as for filletCorner, named "Fasen".
+    [[nodiscard]] SketchCurveEditResult chamferCorner(double distance);
+    [[nodiscard]] bool chamferSelected(double distance);
+    // S20: turns or scales the selected elements about `center` as one step. Relations stay
+    // where they keep their meaning: turning removes horizontal/vertical and axis-bound ones,
+    // scaling multiplies lengths inside the selection. SketchEditRefusal ("Drehen"/"Skalieren")
+    // names why not; removed relations are listed in the result.
+    [[nodiscard]] SketchCurveEditResult rotateSelected(document::SketchPoint center, double angle);
+    [[nodiscard]] SketchCurveEditResult scaleSelected(document::SketchPoint center, double factor);
+    // The middle of the selection's bounds, as the default center; none without a selection.
+    [[nodiscard]] std::optional<document::SketchPoint> selectionCenter() const;
     [[nodiscard]] bool offsetSelected(double distance);
     // S09: why the selection cannot be offset by `distance`, or nothing when it can.
     [[nodiscard]] std::optional<std::string> offsetProblem(double distance) const;
@@ -207,6 +219,15 @@ class SketchEditorSession final {
     [[nodiscard]] std::optional<double>
     constraintValue(document::SketchConstraintId constraintId) const noexcept;
     [[nodiscard]] bool setConstraintValue(document::SketchConstraintId constraintId, double value);
+    // S18: a dimension between driving and reference, as one step. Throws std::invalid_argument
+    // with the reason (a relation, a bound dimension, or a driving one would overdetermine).
+    void toggleReference(document::SketchConstraintId constraintId);
+    [[nodiscard]] bool isReferenceDimension(document::SketchConstraintId constraintId) const noexcept;
+    // S18: conflicting plus redundant constraints of the last solve.
+    [[nodiscard]] std::size_t overdetermination() const noexcept {
+        return lastSolveResult_.conflictingConstraints.size() +
+               lastSolveResult_.redundantConstraints.size();
+    }
     [[nodiscard]] std::optional<kernel::Radians>
     constraintAngle(document::SketchConstraintId constraintId) const noexcept;
     [[nodiscard]] bool setConstraintAngle(document::SketchConstraintId constraintId,
@@ -253,6 +274,11 @@ class SketchEditorSession final {
     [[nodiscard]] EditorState snapshot() const;
     // S17: projected elements as the current model evaluates them (their edges may have moved).
     void refreshProjectedGeometry();
+    // S11/S19: the shared fillet and chamfer step.
+    SketchCurveEditResult treatCorner(bool chamfer, double size);
+    SketchCurveEditResult transformSelection(bool scale, document::SketchPoint center,
+                                             double value);
+    [[nodiscard]] std::vector<document::SketchElementId> selectionIds() const;
     void restore(EditorState state) noexcept;
     // Puts the selection of `state` back where its elements still exist.
     void restoreSelection(const EditorState& state);

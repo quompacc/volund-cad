@@ -10,16 +10,22 @@
 // rectangle turned off its axes becomes four lines held by constraints.
 namespace voelund::application::detail {
 
-// p -> (xx * x + xy * y + tx, yx * x + yy * y + ty); the linear part is orthogonal.
+// p -> (xx * x + xy * y + tx, yx * x + yy * y + ty); the linear part is orthogonal times the
+// uniform factor `scale` (S20), which also multiplies radii.
 struct PlanarTransform final {
     double xx{1.0}, xy{0.0}, yx{0.0}, yy{1.0}, tx{0.0}, ty{0.0};
+    double scale{1.0};
 
     [[nodiscard]] static PlanarTransform translation(double dx, double dy);
     [[nodiscard]] static PlanarTransform rotation(double angle); // about the sketch origin
+    // S20: about `center`; a factor above 0.
+    [[nodiscard]] static PlanarTransform rotation(document::SketchPoint center, double angle);
+    [[nodiscard]] static PlanarTransform scaling(document::SketchPoint center, double factor);
     [[nodiscard]] static PlanarTransform reflection(const document::SketchLine& axis);
     [[nodiscard]] document::SketchPoint apply(document::SketchPoint point) const noexcept;
     [[nodiscard]] bool mirrors() const noexcept;
     [[nodiscard]] bool translatesOnly() const noexcept;
+    [[nodiscard]] bool keepsAxes() const noexcept; // no turn off the sketch axes
 };
 
 // A constraint between two elements of one transformed copy, by their index in `elements`.

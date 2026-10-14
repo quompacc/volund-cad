@@ -96,6 +96,11 @@ void SketchEditorToolController::showPanel() {
          {"circle_radius", QObject::tr("Kreis-/Bogenradius"), 1.0, 0.001, 1'000'000.0},
          {"polygon_sides", QObject::tr("Polygonseiten"), 6.0, 3.0, 64.0, ToolValueKind::count},
          {"fillet_radius", QObject::tr("Rundungsradius"), 2.0, 0.001, 1'000'000.0},
+         {"chamfer_distance", QObject::tr("Fasenabstand"), 2.0, 0.001, 1'000'000.0},
+         {"transform_center_x", QObject::tr("Bezugspunkt X"), 0.0, -1'000'000.0, 1'000'000.0},
+         {"transform_center_y", QObject::tr("Bezugspunkt Y"), 0.0, -1'000'000.0, 1'000'000.0},
+         {"rotate_angle", QObject::tr("Drehwinkel"), 90.0, -3600.0, 3600.0, ToolValueKind::angle},
+         {"scale_factor", QObject::tr("Skalierfaktor"), 2.0, 0.001, 1000.0, ToolValueKind::factor},
          {"offset_distance", QObject::tr("Versatzabstand"), 1.0, -1'000'000.0, 1'000'000.0},
          {"pattern_count", QObject::tr("Anzahl im Muster"), 3.0, 2.0, 1000.0, ToolValueKind::count},
          {"pattern_spacing", QObject::tr("Linearer Abstand"), 10.0, -1'000'000.0, 1'000'000.0},
@@ -163,6 +168,9 @@ void SketchEditorToolController::showPanel() {
           QObject::tr("Bemaßungen")},
          {"angle", QObject::tr("Winkel zwischen den gewählten Linien bemaßen"),
           QObject::tr("Bemaßungen")},
+         {"toggle_reference",
+          QObject::tr("Gewähltes Maß zwischen treibend und Referenz umschalten"),
+          QObject::tr("Bemaßungen")},
          {"construction", QObject::tr("Konstruktionsgeometrie der Auswahl umschalten"),
           QObject::tr("Bearbeiten")},
          {"lock_point", QObject::tr("Gewählten Punkt sperren"), QObject::tr("Bearbeiten")},
@@ -185,6 +193,10 @@ void SketchEditorToolController::showPanel() {
           QObject::tr("Ecke zweier gewählter Linien verrunden (nur Linien); Maße der Ecke "
                       "bleiben an einer virtuellen Ecke"),
           QObject::tr("Bearbeiten")},
+         {"chamfer",
+          QObject::tr("Ecke zweier gewählter Linien fasen (gleicher Abstand, nur Linien); Maße "
+                      "der Ecke bleiben an einer virtuellen Ecke"),
+          QObject::tr("Bearbeiten")},
          {"offset",
           QObject::tr("Gewählte Linien, Bögen, Kreise oder Konturen versetzen (keine Ellipsen; "
                       "Kreise und Rechtecke einzeln)"),
@@ -192,6 +204,8 @@ void SketchEditorToolController::showPanel() {
          {"project",
           QObject::tr("Körperkanten in die Skizze projizieren (an/aus; Kante anklicken)"),
           QObject::tr("Bearbeiten")},
+         {"rotate", QObject::tr("Auswahl um den Bezugspunkt drehen"), QObject::tr("Bearbeiten")},
+         {"scale", QObject::tr("Auswahl um den Bezugspunkt skalieren"), QObject::tr("Bearbeiten")},
          {"mirror",
           QObject::tr("Auswahl an der zuletzt gewählten Linie spiegeln (assoziativ)"),
           QObject::tr("Bearbeiten")},
@@ -206,28 +220,7 @@ void SketchEditorToolController::showPanel() {
           QObject::tr("Bearbeiten")},
          {"delete", QObject::tr("Gewählte Elemente oder Bedingung löschen (Entf)"),
           QObject::tr("Bearbeiten")}},
-        [this](const std::string& id, double value) {
-            if (id == "translation_x" || id == "translation_y")
-                applyTranslation(id, value);
-            else if (id == "polygon_sides")
-                static_cast<void>(editor_->setPolygonSides(static_cast<int>(std::lround(value))));
-            else if (id == "fillet_radius")
-                filletRadius_ = value;
-            else if (id == "offset_distance") {
-                offsetDistance_ = value;
-                // S09: the preview is the geometry "Versetzen" adds.
-                static_cast<void>(editor_->previewOffset(value));
-                refreshPresentation();
-            }
-            else if (id == "pattern_count")
-                patternCount_ = value;
-            else if (id == "pattern_spacing")
-                patternSpacing_ = value;
-            else if (id == "pattern_angle")
-                patternAngle_ = value;
-            else
-                applyElementDimension(id, value);
-        },
+        [this](const std::string& id, double value) { applyParameter(id, value); },
         [this](const std::string& id, int index) {
             if (id == "tool")
                 setTool(index);
@@ -306,11 +299,14 @@ void SketchEditorToolController::showPanel() {
                     refreshPresentation();
                 }
             } else if (id == "trim" || id == "extend" || id == "split" || id == "fillet" ||
+                       id == "chamfer" || id == "rotate" || id == "scale" ||
                        id == "offset" || id == "mirror" || id == "linear_pattern" ||
                        id == "circular_pattern" || id == "edit_pattern" ||
                        id == "dissolve_pattern" || id == "project") {
                 applyEditOperation(id);
-            } else if (id == "delete")
+            } else if (id == "toggle_reference")
+                toggleReference();
+            else if (id == "delete")
                 removeSelected();
         },
         [this]() { accept(); },

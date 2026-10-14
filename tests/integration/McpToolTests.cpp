@@ -523,6 +523,40 @@ void rejections() {
 }
 } // namespace
 
+// S18: a reference diameter without a value; the evaluation measures it.
+void referenceDimension() {
+    application::CadSession session;
+    session.newDocument();
+    Client client(session);
+    const QJsonObject diameter{{"id", 1},
+                               {"kind", "diameter"},
+                               {"first", QJsonObject{{"element", 1}, {"point", "center"}}},
+                               {"reference", true}};
+    client.committed("create_sketch_extrusion",
+                     {{"sketch", QJsonObject{{"plane", "xy"},
+                                             {"elements", QJsonArray{circle(1, 0, 10)}},
+                                             {"constraints", QJsonArray{diameter}}}},
+                      {"distance", mm(5)}});
+    const auto sketch = session.features().front().id;
+    const auto evaluated = session.evaluatedSketch(sketch);
+    require(session.sketchParameters(sketch).constraints.values.front().reference &&
+                evaluated && std::abs(evaluated->constraints.values.front().value - 20) < 1e-9,
+            "The reference diameter measures 20");
+    const auto bound = client.call(
+        "create_sketch_extrusion",
+        {{"sketch", QJsonObject{{"plane", "xy"},
+                                {"elements", QJsonArray{circle(1, 0, 10)}},
+                                {"constraints", QJsonArray{QJsonObject{
+                                                    {"id", 1},
+                                                    {"kind", "diameter"},
+                                                    {"first", QJsonObject{{"element", 1},
+                                                                          {"point", "center"}}},
+                                                    {"parameterId", 1},
+                                                    {"reference", true}}}}}},
+         {"distance", mm(5)}});
+    require(client.isError, "A bound reference is refused: " + text(bound));
+}
+
 int main() {
     try {
         catalog();
@@ -532,6 +566,7 @@ int main() {
         boxFaces();
         pushPull();
         rejections();
+        referenceDimension();
         return EXIT_SUCCESS;
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';
