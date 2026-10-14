@@ -4574,11 +4574,14 @@
       "acceptance": "Geschlossene Kontur aus B-Spline und Linie extrudiert gültig; Kontrollpunkt verschieben ändert die Kurve; Rückgängig, Speichern/Öffnen.",
       "boundary": "Kein Stutzen/Versatz von B-Splines in diesem Paket; keine Interpolationssplines. Nutzerentscheidung 2026-10-14: Gruppe 2, aus X19 vorgezogen.",
       "chapter": "04-oberflaeche-skizze.md",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/S21.md"
+      ],
+      "completedCommit": "a57a5e9",
+      "completedDate": "2026-10-14"
     },
     {
       "id": "M23",
