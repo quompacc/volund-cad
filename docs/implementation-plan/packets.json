@@ -4655,11 +4655,14 @@
       "acceptance": "Quaderseiten mit 5° auf Grundfläche geneigt: Volumen analytisch; Winkel ändern → folgt; Rückgängig, Speichern/Öffnen.",
       "boundary": "Keine Trennlinien-Formschräge. Nutzerentscheidung 2026-10-14: Gruppe 2, aus X19 vorgezogen.",
       "chapter": "05-solid-historie.md",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/M25.md"
+      ],
+      "completedCommit": "82d80b6",
+      "completedDate": "2026-10-14"
     },
     {
       "id": "M26",
@@ -4680,11 +4683,14 @@
       "acceptance": "Kreisprofil Ø2 im Abstand 10, Steigung 5, Höhe 20 → Feder mit Volumen innerhalb 1 % des analytischen Werts; Schneiden als Gewindenut; Rückgängig, Speichern/Öffnen.",
       "boundary": "Keine kegelige Wendel, kein Normgewinde. Nutzerentscheidung 2026-10-14: Gruppe 2, aus X19 vorgezogen.",
       "chapter": "05-solid-historie.md",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/M26.md"
+      ],
+      "completedCommit": "82d80b6",
+      "completedDate": "2026-10-14"
     },
     {
       "id": "M27",
