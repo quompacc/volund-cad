@@ -4345,11 +4345,14 @@
       "acceptance": "Kante eines zweiten Körpers projizieren, daran fangen und bemaßen; Quellkörper ändern → projizierte Linie folgt; Quelle weg → lokalisierter Fehler; Rückgängig, Speichern/Öffnen.",
       "boundary": "Kein Schnitt der Skizzenebene mit Körpern (Schnittkurven) in diesem Paket. Nutzerentscheidung 2026-10-14: Gruppe 1, gehört zu v1 (G3).",
       "chapter": "04-oberflaeche-skizze.md",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/S17.md"
+      ],
+      "completedCommit": "436be3a",
+      "completedDate": "2026-10-14"
     },
     {
       "id": "M19",
@@ -4489,11 +4492,14 @@
       "acceptance": "Referenzmaß zeigt den Wert; Geometrie ändern → Referenzwert folgt; Umschalten auf treibend löst; Rückgängig, Speichern/Öffnen.",
       "boundary": "Referenzmaße sind nicht an Parameter bindbar. Nutzerentscheidung 2026-10-14: Gruppe 2, aus X19 vorgezogen.",
       "chapter": "04-oberflaeche-skizze.md",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/S18.md"
+      ],
+      "completedCommit": "436be3a",
+      "completedDate": "2026-10-14"
     },
     {
       "id": "S19",
@@ -4512,11 +4518,14 @@
       "acceptance": "Rechteckecke fasen (Abstand 3) → neue Linie, Rechteck bleibt geschlossen und extrudierbar; zu großer Abstand abgewiesen; Rückgängig, Speichern/Öffnen.",
       "boundary": "Nur zwischen zwei Linien, wie die Skizzenverrundung. Nutzerentscheidung 2026-10-14: Gruppe 2, aus X19 vorgezogen.",
       "chapter": "04-oberflaeche-skizze.md",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/S19.md"
+      ],
+      "completedCommit": "436be3a",
+      "completedDate": "2026-10-14"
     },
     {
       "id": "S20",
@@ -4536,11 +4545,14 @@
       "acceptance": "Rechteck 30° drehen → Ecken analytisch; Faktor 2 → Kantenlängen doppelt; Rückgängig, Speichern/Öffnen.",
       "boundary": "Keine Kopie beim Drehen (dafür Kreismuster). Nutzerentscheidung 2026-10-14: Gruppe 2, aus X19 vorgezogen.",
       "chapter": "04-oberflaeche-skizze.md",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/S20.md"
+      ],
+      "completedCommit": "436be3a",
+      "completedDate": "2026-10-14"
     },
     {
       "id": "S21",
@@ -4587,11 +4599,14 @@
       "acceptance": "Kreis Ø6 entlang geradem Pfad ergibt analytisches Volumen, entlang L-Pfad mit Bogen gültig; Pfad ändern → Ergebnis folgt; Schneiden als Nut; Rückgängig, Speichern/Öffnen.",
       "boundary": "Keine Führungskurven, keine Skalierung entlang des Pfads. Nutzerentscheidung 2026-10-14: Gruppe 2, aus X19 vorgezogen.",
       "chapter": "05-solid-historie.md",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/M23.md"
+      ],
+      "completedCommit": "436be3a",
+      "completedDate": "2026-10-14"
     },
     {
       "id": "M24",
@@ -4612,11 +4627,14 @@
       "acceptance": "Quadrat 20 auf XY zu Quadrat 10 auf Bezugsebene z=30 geradlinig ergibt Pyramidenstumpfvolumen; Profilmaß ändern → folgt; Profile in derselben Ebene abgewiesen; Rückgängig, Speichern/Öffnen.",
       "boundary": "Keine Führungskurven, keine Punktprofile. Nutzerentscheidung 2026-10-14: Gruppe 2, aus X19 vorgezogen.",
       "chapter": "05-solid-historie.md",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/M24.md"
+      ],
+      "completedCommit": "436be3a",
+      "completedDate": "2026-10-14"
     },
     {
       "id": "M25",
@@ -4687,11 +4705,14 @@
       "acceptance": "Volumen je Grundkörper analytisch; Kugel von Quader abgezogen; Maß ändern, Rückgängig, Speichern/Öffnen.",
       "boundary": "Keine Ellipsoide/Prismen mit freiem Querschnitt (dafür Skizze + Extrusion). Nutzerentscheidung 2026-10-14: Gruppe 2, aus X19 vorgezogen.",
       "chapter": "05-solid-historie.md",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/M27.md"
+      ],
+      "completedCommit": "436be3a",
+      "completedDate": "2026-10-14"
     }
   ],
   "executionPolicy": {
