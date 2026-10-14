@@ -63,12 +63,7 @@ Git-Historie dieser Datei.
 
 ## Nächste freie Pakete
 
-- **Zuerst mit dem Nutzer (14.10.):** Verrundung bleibt beim Maschinenbau-Standardsatz
-  (Nutzer, 13.10.); kein Nachbau überlaufender Rundungen. Vorschlag des Nutzers für freie
-  Formen: Querschnitt zeichnen und **drehen** (Revolve, 360° oder Winkel) bzw. an einem
-  Pfad **folgen lassen** (Sweep). Beides steht noch nicht als Paket im Plan (nur X06 Loft
-  und X19 in G5). Zu klären: Drehen (und ggf. Folgen) als G3-Pakete aufnehmen und wann.
-  Einschätzung im [Nachtrag](implementation-plan/evidence/M05-M08-Nachtrag-2026-10-13.md).
+- **Werkzeugpakete vom 14.10.2026 (vor M09):** Abgleich mit FreeCAD 1.1, Nutzer: Gruppe 1 und 2 aufnehmen und ohne Rückfragen umsetzen. Reihenfolge S15, S16, M21, M19, M20, M22, S17, S18, S19, S20, M27, M23, M24, M26, M25, S21 (`packets.json`). Pakete in Kapitel 04/05 unter „Ergänzung vom 14.10.2026“. Verrundung bleibt beim Maschinenbau-Standardsatz (13.10.); freie Formen über Drehen (M20) und Folgen (M23).
 - **M09** Parametrische Körperspiegelung (G3). Nächstes Paket nach Plan. Verrundung, Fase
   und Bohrung sind fertig (M05–M08, Schema 16); ihre Entscheidungen stehen in
   [M05](implementation-plan/evidence/M05.md), [M07](implementation-plan/evidence/M07.md) und

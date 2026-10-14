@@ -214,3 +214,105 @@ ablehnen, auch wenn eine letzte gültige Darstellung vorhanden ist (A-ERR-01).
   Reparatur/Undo und produktiven Exportpfad vollständig wiederholen. Die vorherigen
   Teilnachweise allein schließen die Produktabnahme nicht ab.
 - **Grenze:** G3 ist noch keine Plattform-/Releasefreigabe; L-Pakete bleiben Pflicht.
+
+## Ergänzung vom 14.10.2026: fehlende Werkzeuge
+
+Abgleich mit den Werkzeugleisten von FreeCAD 1.1 (Sketcher und Part Design). Nutzerentscheidung vom 14.10.2026: Gruppe 1 gehört zu v1, Gruppe 2 wird aus X19 vorgezogen; beide werden vor M09 umgesetzt (Reihenfolge in `packets.json`, `topologicalOrder`).
+
+## M19 – Bezugsebene und Bezugsachse
+
+- **Voraussetzungen:** M04.
+- **Pflichtlektüre/Einstieg:** Kapitel 02 K01–K08; `include/voelund/document/ModelDocument.hpp`, `src/features/FeatureGraph.cpp`, `src/document/NativePrimitiveCodec.cpp`, `src/desktop/MainWindowCommands.cpp`.
+- **Auftrag:**
+  1. Feature Bezugsebene: versetzt zu Basisebene oder ebener Körperfläche (Abstand), optional um eine Achse gedreht (Winkel); Feature Bezugsachse: Basisachse, gerade Körperkante oder Achse einer Zylinderfläche.
+  2. Bezüge folgen ihrer Quelle über Namen; fehlende Quelle wird lokalisiert gemeldet. Bezüge erscheinen im Baum und in der Timeline.
+  3. Skizze auf Bezugsebene; Bezugsachse ist Achse für Drehen (M20) und Wendel (M26).
+- **Abnahme:** Ebene 25 mm über XY: Skizze darauf extrudiert beginnt bei z=25; Abstand ändern → Körper folgt; Ebene versetzt zu Quaderdeckfläche folgt der Quaderhöhe; Achse aus Zylindermantel; Rückgängig, Speichern/Öffnen.
+- **Grenze:** Keine Ebene durch drei Punkte oder tangential an Flächen in diesem Paket; kein Bezugskoordinatensystem. Nutzerentscheidung 2026-10-14: Gruppe 1, gehört zu v1 (G3).
+
+## M20 – Drehen (Revolve) und Nut
+
+- **Voraussetzungen:** M19, M04.
+- **Pflichtlektüre/Einstieg:** Kapitel 02 K01–K08; `include/voelund/document/ModelDocument.hpp`, `src/features/ExtrusionEvaluation.cpp`, `src/kernel/ShapeOperations.cpp`, `src/desktop/SketchExtrusionToolController.cpp`.
+- **Auftrag:**
+  1. Feature Drehen: Skizzenbereiche, Achse (Skizzenlinie, Basisachse oder Bezugsachse), Winkel bis 360°, einseitig/umgekehrt/symmetrisch, Operation Neuer Körper/Verbinden/Schneiden/Schnitt mit Zielkörper.
+  2. Kernel BRepPrimAPI_MakeRevol mit History; Start-, End- und Mantelflächen semantisch benennen, damit Skizzen, Verrundung und Bohrung darauf greifen.
+  3. Ein Befehl solid.create.revolve mit Panel (wie Extrusion); Nut ist Drehen mit Schneiden, kein eigener Befehl. Achse, die das Profil schneidet, wird abgewiesen.
+- **Abnahme:** Rechteck 10×20 im Abstand 5 von der Achse, 360° → Hohlzylinder mit Volumen π(15²−5²)·20; 90° → ein Viertel; Nut schneidet Ring aus Welle; Profilmaß ändern → Ergebnis folgt; Achse durch das Profil abgewiesen; Rückgängig, Speichern/Öffnen.
+- **Grenze:** Keine Endbedingung bis Fläche; kein Drehen von Körperflächen. Nutzerentscheidung 2026-10-14: Gruppe 1, gehört zu v1 (G3).
+
+## M21 – Boolesche Operation zwischen Körpern
+
+- **Voraussetzungen:** M03.
+- **Pflichtlektüre/Einstieg:** Kapitel 02 K01–K08; `include/voelund/document/ModelDocument.hpp`, `src/features/FeatureGraph.cpp`, `src/kernel/ShapeOperations.cpp`, `src/desktop/MainWindowCommands.cpp`.
+- **Auftrag:**
+  1. Feature Kombinieren: Zielkörper, ein oder mehrere Werkzeugkörper, Operation Verbinden/Abziehen/Schnitt, Werkzeuge behalten ja/nein.
+  2. Werkzeugkörper ohne Behalten verschwinden als eigenständige Körper, bleiben aber über die Historie editierbar; ihre Flächen behalten Namen im Ergebnis.
+  3. Panel solid.modify.combine: Ziel und Werkzeuge im Viewport oder Baum wählen; leeres Ergebnis wird erklärt.
+- **Abnahme:** Quader minus Zylinder ergibt das analytische Volumen; Werkzeug behalten lässt beide Körper sichtbar; Zylinderradius ändern → Ergebnis folgt; Schnitt ohne Überlappung abgewiesen; Rückgängig, Speichern/Öffnen.
+- **Grenze:** Keine Baugruppen- oder Komponentenlogik. Nutzerentscheidung 2026-10-14: Gruppe 1, gehört zu v1 (G3).
+
+## M22 – Wandstärke (Schale)
+
+- **Voraussetzungen:** M05, M21.
+- **Pflichtlektüre/Einstieg:** Kapitel 02 K01–K08; `include/voelund/document/ModelDocument.hpp`, `src/kernel/ShapeOperations.cpp`, `src/features/FeatureGraph.cpp`, `src/desktop/MainWindowCommands.cpp`.
+- **Auftrag:**
+  1. Feature Wandstärke: Körper, zu öffnende Flächen (über Namen), Dicke, nach innen/außen.
+  2. Kernel BRepOffsetAPI_MakeThickSolid mit History; Innenflächen benennen; zu große Dicke wird lokalisiert gemeldet.
+  3. Panel solid.modify.shell: Flächen anklicken (mehrfach, auch über der Vorschau), Dicke ändern.
+- **Abnahme:** Quader 40×30×20 mit offener Deckfläche, Dicke 2 → Volumen analytisch; zweite Fläche öffnen; Dicke 20 abgewiesen; Quadermaß ändern → Schale folgt; Rückgängig, Speichern/Öffnen.
+- **Grenze:** Keine unterschiedlichen Dicken je Fläche. Nutzerentscheidung 2026-10-14: Gruppe 1, gehört zu v1 (G3).
+
+## M23 – Folgen (Sweep) entlang eines Pfades
+
+- **Voraussetzungen:** M20.
+- **Pflichtlektüre/Einstieg:** Kapitel 02 K01–K08; `include/voelund/document/ModelDocument.hpp`, `src/kernel/ShapeOperations.cpp`, `src/features/FeatureGraph.cpp`.
+- **Auftrag:**
+  1. Feature Folgen: Profilbereiche einer Skizze, Pfad aus zusammenhängenden Elementen einer anderen Skizze, Operation wie Extrusion.
+  2. Kernel BRepOffsetAPI_MakePipe(Shell) mit korrigierter Ausrichtung; Flächen benennen.
+  3. Panel solid.create.sweep: Profil wählen, Pfad wählen.
+- **Abnahme:** Kreis Ø6 entlang geradem Pfad ergibt analytisches Volumen, entlang L-Pfad mit Bogen gültig; Pfad ändern → Ergebnis folgt; Schneiden als Nut; Rückgängig, Speichern/Öffnen.
+- **Grenze:** Keine Führungskurven, keine Skalierung entlang des Pfads. Nutzerentscheidung 2026-10-14: Gruppe 2, aus X19 vorgezogen.
+
+## M24 – Ausformung (Loft) zwischen Profilen
+
+- **Voraussetzungen:** M19.
+- **Pflichtlektüre/Einstieg:** Kapitel 02 K01–K08; `include/voelund/document/ModelDocument.hpp`, `src/kernel/ShapeOperations.cpp`, `src/features/FeatureGraph.cpp`.
+- **Auftrag:**
+  1. Feature Ausformung: zwei oder mehr Profile (je ein Bereich aus Skizzen auf verschiedenen Ebenen), glatt oder geradlinig, Operation wie Extrusion.
+  2. Kernel BRepOffsetAPI_ThruSections; Anfang/Ende/Mantel benennen.
+  3. Panel solid.create.loft: Profile in Reihenfolge wählen.
+- **Abnahme:** Quadrat 20 auf XY zu Quadrat 10 auf Bezugsebene z=30 geradlinig ergibt Pyramidenstumpfvolumen; Profilmaß ändern → folgt; Profile in derselben Ebene abgewiesen; Rückgängig, Speichern/Öffnen.
+- **Grenze:** Keine Führungskurven, keine Punktprofile. Nutzerentscheidung 2026-10-14: Gruppe 2, aus X19 vorgezogen.
+
+## M25 – Formschräge
+
+- **Voraussetzungen:** M22.
+- **Pflichtlektüre/Einstieg:** Kapitel 02 K01–K08; `include/voelund/document/ModelDocument.hpp`, `src/kernel/ShapeOperations.cpp`, `src/features/FeatureGraph.cpp`.
+- **Auftrag:**
+  1. Feature Formschräge: Flächen eines Körpers, neutrale ebene Fläche, Winkel.
+  2. Kernel BRepOffsetAPI_DraftAngle mit History; nicht neigbare Flächen lokalisiert melden.
+  3. Panel solid.modify.draft: Flächen anklicken, neutrale Fläche wählen, Winkel.
+- **Abnahme:** Quaderseiten mit 5° auf Grundfläche geneigt: Volumen analytisch; Winkel ändern → folgt; Rückgängig, Speichern/Öffnen.
+- **Grenze:** Keine Trennlinien-Formschräge. Nutzerentscheidung 2026-10-14: Gruppe 2, aus X19 vorgezogen.
+
+## M26 – Wendel (Helix)
+
+- **Voraussetzungen:** M23.
+- **Pflichtlektüre/Einstieg:** Kapitel 02 K01–K08; `include/voelund/document/ModelDocument.hpp`, `src/kernel/ShapeOperations.cpp`, `src/features/FeatureGraph.cpp`.
+- **Auftrag:**
+  1. Feature Wendel: Profilbereich, Achse (Skizzenlinie/Basis-/Bezugsachse), Steigung, Höhe, links/rechts, Operation wie Extrusion.
+  2. Helixpfad auf Zylinderfläche, Sweep mit Hilfsfläche; Flächen benennen.
+  3. Panel solid.create.helix.
+- **Abnahme:** Kreisprofil Ø2 im Abstand 10, Steigung 5, Höhe 20 → Feder mit Volumen innerhalb 1 % des analytischen Werts; Schneiden als Gewindenut; Rückgängig, Speichern/Öffnen.
+- **Grenze:** Keine kegelige Wendel, kein Normgewinde. Nutzerentscheidung 2026-10-14: Gruppe 2, aus X19 vorgezogen.
+
+## M27 – Weitere Grundkörper
+
+- **Voraussetzungen:** M01.
+- **Pflichtlektüre/Einstieg:** Kapitel 02 K01–K08; `include/voelund/document/ModelDocument.hpp`, `src/kernel/ShapeFactory.cpp`, `src/features/FeatureGraph.cpp`, `src/desktop/MainWindowCommands.cpp`.
+- **Auftrag:**
+  1. Kugel, Kegel(-stumpf), Torus und Keil als Grundkörper mit Platzierung und Ergebnis Neuer Körper/Verbinden/Schneiden/Schnitt wie der Zylinder.
+  2. Flächen semantisch benennen; Panel je Grundkörper mit seinen Maßen.
+- **Abnahme:** Volumen je Grundkörper analytisch; Kugel von Quader abgezogen; Maß ändern, Rückgängig, Speichern/Öffnen.
+- **Grenze:** Keine Ellipsoide/Prismen mit freiem Querschnitt (dafür Skizze + Extrusion). Nutzerentscheidung 2026-10-14: Gruppe 2, aus X19 vorgezogen.

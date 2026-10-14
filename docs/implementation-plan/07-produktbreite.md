@@ -232,7 +232,7 @@ eine komplette FreeCAD-/Python-Runtime bleibt ausgeschlossen.
 - **Voraussetzungen:** L10.
 - **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08; `src/modules/solid/SolidWorkspaceModule.cpp`, `src/features/FeatureGraph.cpp`, `include/voelund/document/ModelDocument.hpp`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
 - **Auftrag:**
-  1. Nächste konkrete Features jeweils getrennt spezifizieren: Revolve, Shell, Draft/Taper, Sweep, weitere Fillet-/Chamfer-/Holevarianten und Featuremuster.
+  1. Nächste konkrete Features jeweils getrennt spezifizieren: weitere Fillet-/Chamfer-/Holevarianten, Taper an der Extrusion und Featuremuster. Drehen, Wandstärke, Formschräge, Folgen, Ausformung, Wendel und weitere Grundkörper sind seit 14.10.2026 eigene Pakete (M19–M27).
   2. Benannte Parameter/Ausdrücke mit Einheiten, Zyklenerkennung, Abhängigkeitsverfolgung und Fehlerdiagnose als eigenes Daten-/Evaluatorpaket entwerfen.
   3. Pro Feature die bereits verwendete Kette Spec→Kernel→History→Store→Controller→Edit→Abnahme mit analytischen Fixtures und Dateieinstiegen ausschreiben.
 - **Abnahme:** Jeder tatsächlich eingeplante Befehl erhält eigenständige kleine IDs, positive/negative Fixtures und Freigabegrenze; sichtbare Schaltfläche bleibt bis vollständiger Umsetzung deaktiviert.

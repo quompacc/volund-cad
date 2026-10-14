@@ -4,8 +4,8 @@
   "auditedCommit": "1b78229",
   "status": "implementation-started",
   "counts": {
-    "total": 136,
-    "throughG4": 106,
+    "total": 152,
+    "throughG4": 122,
     "g5": 30
   },
   "globalGates": [
@@ -110,6 +110,22 @@
     "M06",
     "M07",
     "M08",
+    "S15",
+    "S16",
+    "M21",
+    "M19",
+    "M20",
+    "M22",
+    "S17",
+    "S18",
+    "S19",
+    "S20",
+    "M27",
+    "M23",
+    "M24",
+    "M26",
+    "M25",
+    "S21",
     "M09",
     "M10",
     "M11",
@@ -4249,6 +4265,415 @@
       "kind": "implementation-or-acceptance",
       "evidence": [],
       "completedCommit": null
+    },
+    {
+      "id": "S15",
+      "title": "Punkt als eigenes Skizzenelement",
+      "deps": [
+        "S14"
+      ],
+      "files": [
+        "include/voelund/document/SketchGeometry.hpp",
+        "src/document/NativeSketchGeometry.cpp",
+        "src/features/SketchConstraintSolver.cpp",
+        "src/viewport/SketchEditorInteraction.cpp"
+      ],
+      "steps": [
+        "Geometrieart Punkt mit eigener Element-ID und Persistenz (neues Schema) ergänzen; Punkte erzeugen keine Regionsgrenzen.",
+        "Werkzeug sketch.tool.point mit Fang, Auto-Beziehungen (Koinzidenz, Punkt auf Objekt) und Bemaßungen (Abstand, X/Y) anbinden.",
+        "Löschen, Verschieben, Spiegeln und Muster für Punkte in die Werkzeugmatrix aufnehmen."
+      ],
+      "acceptance": "Punkt setzen, an Ursprung und Kante fangen, mit X/Y-Abstand voll bestimmen (DOF 0); Rückgängig, Speichern/Öffnen; ein Punkt allein ergibt keine Region und blockiert keine Extrusion.",
+      "boundary": "Bohrung an Skizzenpunkten ist ein eigener späterer Schritt. Nutzerentscheidung 2026-10-14: Gruppe 1, gehört zu v1 (G3).",
+      "chapter": "04-oberflaeche-skizze.md",
+      "status": "planned",
+      "gate": "G3",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "S16",
+      "title": "Radiusmaß für Kreise und Bögen",
+      "deps": [
+        "S14"
+      ],
+      "files": [
+        "include/voelund/document/SketchConstraint.hpp",
+        "src/document/NativeSketchConstraints.cpp",
+        "src/features/SketchConstraintSolver.cpp",
+        "src/desktop/SketchEditorToolController.cpp"
+      ],
+      "steps": [
+        "Bemaßung Radius als eigene Bedingung neben Durchmesser definieren und speichern.",
+        "Befehl sketch.radius in der Familie Bemaßungen; Kreise und Bögen, an Parameter bindbar wie alle Längen.",
+        "Beschriftung R… am Element; Bearbeiten wie andere Maße."
+      ],
+      "acceptance": "Bogen mit R 12 bemaßt hat Radius 12; Maßänderung auf 20 löst neu; Bindung an Parameter, Rückgängig, Speichern/Öffnen; Linie als Ziel abgewiesen.",
+      "boundary": "Kein automatisches Umwandeln vorhandener Durchmessermaße. Nutzerentscheidung 2026-10-14: Gruppe 1, gehört zu v1 (G3).",
+      "chapter": "04-oberflaeche-skizze.md",
+      "status": "planned",
+      "gate": "G3",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "S17",
+      "title": "Kanten bewusst in die Skizze projizieren",
+      "deps": [
+        "S14",
+        "M19"
+      ],
+      "files": [
+        "src/document/NativeProjectedEdge.cpp",
+        "src/features/SketchSupportBinding.cpp",
+        "src/viewport/SketchEditorInteraction.cpp",
+        "src/desktop/SketchEditorToolController.cpp"
+      ],
+      "steps": [
+        "Befehl sketch.project: Kanten beliebiger Körper anklicken; sie werden senkrecht auf die Skizzenebene projiziert und als assoziative Bezugsgeometrie gespeichert.",
+        "Gerade Kanten werden Linien, Kreise und Bögen parallel zur Ebene bleiben Kreise/Bögen; andere Fälle werden mit Grund abgewiesen.",
+        "Projizierte Elemente folgen ihrer Quelle bei jeder Neuberechnung; fehlende Quelle wird als reparaturbedürftig angezeigt."
+      ],
+      "acceptance": "Kante eines zweiten Körpers projizieren, daran fangen und bemaßen; Quellkörper ändern → projizierte Linie folgt; Quelle weg → lokalisierter Fehler; Rückgängig, Speichern/Öffnen.",
+      "boundary": "Kein Schnitt der Skizzenebene mit Körpern (Schnittkurven) in diesem Paket. Nutzerentscheidung 2026-10-14: Gruppe 1, gehört zu v1 (G3).",
+      "chapter": "04-oberflaeche-skizze.md",
+      "status": "planned",
+      "gate": "G3",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "M19",
+      "title": "Bezugsebene und Bezugsachse",
+      "deps": [
+        "M04"
+      ],
+      "files": [
+        "include/voelund/document/ModelDocument.hpp",
+        "src/features/FeatureGraph.cpp",
+        "src/document/NativePrimitiveCodec.cpp",
+        "src/desktop/MainWindowCommands.cpp"
+      ],
+      "steps": [
+        "Feature Bezugsebene: versetzt zu Basisebene oder ebener Körperfläche (Abstand), optional um eine Achse gedreht (Winkel); Feature Bezugsachse: Basisachse, gerade Körperkante oder Achse einer Zylinderfläche.",
+        "Bezüge folgen ihrer Quelle über Namen; fehlende Quelle wird lokalisiert gemeldet. Bezüge erscheinen im Baum und in der Timeline.",
+        "Skizze auf Bezugsebene; Bezugsachse ist Achse für Drehen (M20) und Wendel (M26)."
+      ],
+      "acceptance": "Ebene 25 mm über XY: Skizze darauf extrudiert beginnt bei z=25; Abstand ändern → Körper folgt; Ebene versetzt zu Quaderdeckfläche folgt der Quaderhöhe; Achse aus Zylindermantel; Rückgängig, Speichern/Öffnen.",
+      "boundary": "Keine Ebene durch drei Punkte oder tangential an Flächen in diesem Paket; kein Bezugskoordinatensystem. Nutzerentscheidung 2026-10-14: Gruppe 1, gehört zu v1 (G3).",
+      "chapter": "05-solid-historie.md",
+      "status": "planned",
+      "gate": "G3",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "M20",
+      "title": "Drehen (Revolve) und Nut",
+      "deps": [
+        "M19",
+        "M04"
+      ],
+      "files": [
+        "include/voelund/document/ModelDocument.hpp",
+        "src/features/ExtrusionEvaluation.cpp",
+        "src/kernel/ShapeOperations.cpp",
+        "src/desktop/SketchExtrusionToolController.cpp"
+      ],
+      "steps": [
+        "Feature Drehen: Skizzenbereiche, Achse (Skizzenlinie, Basisachse oder Bezugsachse), Winkel bis 360°, einseitig/umgekehrt/symmetrisch, Operation Neuer Körper/Verbinden/Schneiden/Schnitt mit Zielkörper.",
+        "Kernel BRepPrimAPI_MakeRevol mit History; Start-, End- und Mantelflächen semantisch benennen, damit Skizzen, Verrundung und Bohrung darauf greifen.",
+        "Ein Befehl solid.create.revolve mit Panel (wie Extrusion); Nut ist Drehen mit Schneiden, kein eigener Befehl. Achse, die das Profil schneidet, wird abgewiesen."
+      ],
+      "acceptance": "Rechteck 10×20 im Abstand 5 von der Achse, 360° → Hohlzylinder mit Volumen π(15²−5²)·20; 90° → ein Viertel; Nut schneidet Ring aus Welle; Profilmaß ändern → Ergebnis folgt; Achse durch das Profil abgewiesen; Rückgängig, Speichern/Öffnen.",
+      "boundary": "Keine Endbedingung bis Fläche; kein Drehen von Körperflächen. Nutzerentscheidung 2026-10-14: Gruppe 1, gehört zu v1 (G3).",
+      "chapter": "05-solid-historie.md",
+      "status": "planned",
+      "gate": "G3",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "M21",
+      "title": "Boolesche Operation zwischen Körpern",
+      "deps": [
+        "M03"
+      ],
+      "files": [
+        "include/voelund/document/ModelDocument.hpp",
+        "src/features/FeatureGraph.cpp",
+        "src/kernel/ShapeOperations.cpp",
+        "src/desktop/MainWindowCommands.cpp"
+      ],
+      "steps": [
+        "Feature Kombinieren: Zielkörper, ein oder mehrere Werkzeugkörper, Operation Verbinden/Abziehen/Schnitt, Werkzeuge behalten ja/nein.",
+        "Werkzeugkörper ohne Behalten verschwinden als eigenständige Körper, bleiben aber über die Historie editierbar; ihre Flächen behalten Namen im Ergebnis.",
+        "Panel solid.modify.combine: Ziel und Werkzeuge im Viewport oder Baum wählen; leeres Ergebnis wird erklärt."
+      ],
+      "acceptance": "Quader minus Zylinder ergibt das analytische Volumen; Werkzeug behalten lässt beide Körper sichtbar; Zylinderradius ändern → Ergebnis folgt; Schnitt ohne Überlappung abgewiesen; Rückgängig, Speichern/Öffnen.",
+      "boundary": "Keine Baugruppen- oder Komponentenlogik. Nutzerentscheidung 2026-10-14: Gruppe 1, gehört zu v1 (G3).",
+      "chapter": "05-solid-historie.md",
+      "status": "planned",
+      "gate": "G3",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "M22",
+      "title": "Wandstärke (Schale)",
+      "deps": [
+        "M05",
+        "M21"
+      ],
+      "files": [
+        "include/voelund/document/ModelDocument.hpp",
+        "src/kernel/ShapeOperations.cpp",
+        "src/features/FeatureGraph.cpp",
+        "src/desktop/MainWindowCommands.cpp"
+      ],
+      "steps": [
+        "Feature Wandstärke: Körper, zu öffnende Flächen (über Namen), Dicke, nach innen/außen.",
+        "Kernel BRepOffsetAPI_MakeThickSolid mit History; Innenflächen benennen; zu große Dicke wird lokalisiert gemeldet.",
+        "Panel solid.modify.shell: Flächen anklicken (mehrfach, auch über der Vorschau), Dicke ändern."
+      ],
+      "acceptance": "Quader 40×30×20 mit offener Deckfläche, Dicke 2 → Volumen analytisch; zweite Fläche öffnen; Dicke 20 abgewiesen; Quadermaß ändern → Schale folgt; Rückgängig, Speichern/Öffnen.",
+      "boundary": "Keine unterschiedlichen Dicken je Fläche. Nutzerentscheidung 2026-10-14: Gruppe 1, gehört zu v1 (G3).",
+      "chapter": "05-solid-historie.md",
+      "status": "planned",
+      "gate": "G3",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "S18",
+      "title": "Referenzmaße (nicht treibend)",
+      "deps": [
+        "S16"
+      ],
+      "files": [
+        "include/voelund/document/SketchConstraint.hpp",
+        "src/document/NativeSketchConstraints.cpp",
+        "src/features/SketchConstraintSolver.cpp",
+        "src/viewport/SketchConstraintPresentation.cpp"
+      ],
+      "steps": [
+        "Jedes Maß kann treibend oder Referenz sein; ein Referenzmaß zeigt den aktuellen Wert und bestimmt nichts.",
+        "Befehl sketch.toggle_reference; Referenzmaße in Klammern.",
+        "Ein Maß, das die Skizze überbestimmen würde, kann als Referenz angelegt werden."
+      ],
+      "acceptance": "Referenzmaß zeigt den Wert; Geometrie ändern → Referenzwert folgt; Umschalten auf treibend löst; Rückgängig, Speichern/Öffnen.",
+      "boundary": "Referenzmaße sind nicht an Parameter bindbar. Nutzerentscheidung 2026-10-14: Gruppe 2, aus X19 vorgezogen.",
+      "chapter": "04-oberflaeche-skizze.md",
+      "status": "planned",
+      "gate": "G3",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "S19",
+      "title": "Skizzenfase",
+      "deps": [
+        "S14"
+      ],
+      "files": [
+        "src/application/SketchEditorSession.cpp",
+        "src/desktop/SketchEditorToolController.cpp"
+      ],
+      "steps": [
+        "Ecke zweier Linien durch eine Fasenlinie mit gleichem Abstand ersetzen; Beziehungen wie bei der Skizzenverrundung erhalten.",
+        "Befehl sketch.chamfer in der Familie Bearbeiten neben der Verrundung."
+      ],
+      "acceptance": "Rechteckecke fasen (Abstand 3) → neue Linie, Rechteck bleibt geschlossen und extrudierbar; zu großer Abstand abgewiesen; Rückgängig, Speichern/Öffnen.",
+      "boundary": "Nur zwischen zwei Linien, wie die Skizzenverrundung. Nutzerentscheidung 2026-10-14: Gruppe 2, aus X19 vorgezogen.",
+      "chapter": "04-oberflaeche-skizze.md",
+      "status": "planned",
+      "gate": "G3",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "S20",
+      "title": "Drehen und Skalieren in der Skizze",
+      "deps": [
+        "S14"
+      ],
+      "files": [
+        "src/application/SketchEditorSession.cpp",
+        "src/document/SketchGeometry.cpp",
+        "src/desktop/SketchEditorToolController.cpp"
+      ],
+      "steps": [
+        "Auswahl um einen Punkt um einen Winkel drehen; Auswahl um einen Punkt mit Faktor skalieren; beides als eine Transaktion.",
+        "Beziehungen bleiben, wo sie gültig bleiben (Drehen: horizontal/vertikal werden entfernt); Längenmaße skalieren mit."
+      ],
+      "acceptance": "Rechteck 30° drehen → Ecken analytisch; Faktor 2 → Kantenlängen doppelt; Rückgängig, Speichern/Öffnen.",
+      "boundary": "Keine Kopie beim Drehen (dafür Kreismuster). Nutzerentscheidung 2026-10-14: Gruppe 2, aus X19 vorgezogen.",
+      "chapter": "04-oberflaeche-skizze.md",
+      "status": "planned",
+      "gate": "G3",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "S21",
+      "title": "B-Spline über Kontrollpunkte",
+      "deps": [
+        "S14"
+      ],
+      "files": [
+        "include/voelund/document/SketchGeometry.hpp",
+        "src/document/NativeSketchGeometry.cpp",
+        "src/features/SketchConstraintSolver.cpp",
+        "src/features/SketchRegions.cpp"
+      ],
+      "steps": [
+        "Offener kubischer B-Spline über Kontrollpunkte als Geometrieart; Endpunkte fangen und koinzident mit anderen Elementen.",
+        "Regionen mit B-Spline-Kanten; Extrusion und Drehen darüber.",
+        "Werkzeug sketch.tool.bspline (Klicks setzen Kontrollpunkte, Enter beendet)."
+      ],
+      "acceptance": "Geschlossene Kontur aus B-Spline und Linie extrudiert gültig; Kontrollpunkt verschieben ändert die Kurve; Rückgängig, Speichern/Öffnen.",
+      "boundary": "Kein Stutzen/Versatz von B-Splines in diesem Paket; keine Interpolationssplines. Nutzerentscheidung 2026-10-14: Gruppe 2, aus X19 vorgezogen.",
+      "chapter": "04-oberflaeche-skizze.md",
+      "status": "planned",
+      "gate": "G3",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "M23",
+      "title": "Folgen (Sweep) entlang eines Pfades",
+      "deps": [
+        "M20"
+      ],
+      "files": [
+        "include/voelund/document/ModelDocument.hpp",
+        "src/kernel/ShapeOperations.cpp",
+        "src/features/FeatureGraph.cpp"
+      ],
+      "steps": [
+        "Feature Folgen: Profilbereiche einer Skizze, Pfad aus zusammenhängenden Elementen einer anderen Skizze, Operation wie Extrusion.",
+        "Kernel BRepOffsetAPI_MakePipe(Shell) mit korrigierter Ausrichtung; Flächen benennen.",
+        "Panel solid.create.sweep: Profil wählen, Pfad wählen."
+      ],
+      "acceptance": "Kreis Ø6 entlang geradem Pfad ergibt analytisches Volumen, entlang L-Pfad mit Bogen gültig; Pfad ändern → Ergebnis folgt; Schneiden als Nut; Rückgängig, Speichern/Öffnen.",
+      "boundary": "Keine Führungskurven, keine Skalierung entlang des Pfads. Nutzerentscheidung 2026-10-14: Gruppe 2, aus X19 vorgezogen.",
+      "chapter": "05-solid-historie.md",
+      "status": "planned",
+      "gate": "G3",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "M24",
+      "title": "Ausformung (Loft) zwischen Profilen",
+      "deps": [
+        "M19"
+      ],
+      "files": [
+        "include/voelund/document/ModelDocument.hpp",
+        "src/kernel/ShapeOperations.cpp",
+        "src/features/FeatureGraph.cpp"
+      ],
+      "steps": [
+        "Feature Ausformung: zwei oder mehr Profile (je ein Bereich aus Skizzen auf verschiedenen Ebenen), glatt oder geradlinig, Operation wie Extrusion.",
+        "Kernel BRepOffsetAPI_ThruSections; Anfang/Ende/Mantel benennen.",
+        "Panel solid.create.loft: Profile in Reihenfolge wählen."
+      ],
+      "acceptance": "Quadrat 20 auf XY zu Quadrat 10 auf Bezugsebene z=30 geradlinig ergibt Pyramidenstumpfvolumen; Profilmaß ändern → folgt; Profile in derselben Ebene abgewiesen; Rückgängig, Speichern/Öffnen.",
+      "boundary": "Keine Führungskurven, keine Punktprofile. Nutzerentscheidung 2026-10-14: Gruppe 2, aus X19 vorgezogen.",
+      "chapter": "05-solid-historie.md",
+      "status": "planned",
+      "gate": "G3",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "M25",
+      "title": "Formschräge",
+      "deps": [
+        "M22"
+      ],
+      "files": [
+        "include/voelund/document/ModelDocument.hpp",
+        "src/kernel/ShapeOperations.cpp",
+        "src/features/FeatureGraph.cpp"
+      ],
+      "steps": [
+        "Feature Formschräge: Flächen eines Körpers, neutrale ebene Fläche, Winkel.",
+        "Kernel BRepOffsetAPI_DraftAngle mit History; nicht neigbare Flächen lokalisiert melden.",
+        "Panel solid.modify.draft: Flächen anklicken, neutrale Fläche wählen, Winkel."
+      ],
+      "acceptance": "Quaderseiten mit 5° auf Grundfläche geneigt: Volumen analytisch; Winkel ändern → folgt; Rückgängig, Speichern/Öffnen.",
+      "boundary": "Keine Trennlinien-Formschräge. Nutzerentscheidung 2026-10-14: Gruppe 2, aus X19 vorgezogen.",
+      "chapter": "05-solid-historie.md",
+      "status": "planned",
+      "gate": "G3",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "M26",
+      "title": "Wendel (Helix)",
+      "deps": [
+        "M23"
+      ],
+      "files": [
+        "include/voelund/document/ModelDocument.hpp",
+        "src/kernel/ShapeOperations.cpp",
+        "src/features/FeatureGraph.cpp"
+      ],
+      "steps": [
+        "Feature Wendel: Profilbereich, Achse (Skizzenlinie/Basis-/Bezugsachse), Steigung, Höhe, links/rechts, Operation wie Extrusion.",
+        "Helixpfad auf Zylinderfläche, Sweep mit Hilfsfläche; Flächen benennen.",
+        "Panel solid.create.helix."
+      ],
+      "acceptance": "Kreisprofil Ø2 im Abstand 10, Steigung 5, Höhe 20 → Feder mit Volumen innerhalb 1 % des analytischen Werts; Schneiden als Gewindenut; Rückgängig, Speichern/Öffnen.",
+      "boundary": "Keine kegelige Wendel, kein Normgewinde. Nutzerentscheidung 2026-10-14: Gruppe 2, aus X19 vorgezogen.",
+      "chapter": "05-solid-historie.md",
+      "status": "planned",
+      "gate": "G3",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "M27",
+      "title": "Weitere Grundkörper",
+      "deps": [
+        "M01"
+      ],
+      "files": [
+        "include/voelund/document/ModelDocument.hpp",
+        "src/kernel/ShapeFactory.cpp",
+        "src/features/FeatureGraph.cpp",
+        "src/desktop/MainWindowCommands.cpp"
+      ],
+      "steps": [
+        "Kugel, Kegel(-stumpf), Torus und Keil als Grundkörper mit Platzierung und Ergebnis Neuer Körper/Verbinden/Schneiden/Schnitt wie der Zylinder.",
+        "Flächen semantisch benennen; Panel je Grundkörper mit seinen Maßen."
+      ],
+      "acceptance": "Volumen je Grundkörper analytisch; Kugel von Quader abgezogen; Maß ändern, Rückgängig, Speichern/Öffnen.",
+      "boundary": "Keine Ellipsoide/Prismen mit freiem Querschnitt (dafür Skizze + Extrusion). Nutzerentscheidung 2026-10-14: Gruppe 2, aus X19 vorgezogen.",
+      "chapter": "05-solid-historie.md",
+      "status": "planned",
+      "gate": "G3",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
     }
   ],
   "executionPolicy": {
@@ -4300,5 +4725,5 @@
     "statusSource": "packets.json ist die einzige Statusquelle; README und Statusseiten verweisen nur darauf und nennen keine Testzahlen.",
     "frozen": "G5 einschließlich AI02 beginnt erst nach G3-Abnahme."
   },
-  "updatedDate": "2026-10-08"
+  "updatedDate": "2026-10-14"
 }

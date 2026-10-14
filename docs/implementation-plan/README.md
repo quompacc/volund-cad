@@ -43,12 +43,12 @@ Paketanzahl ist kein Maß für Restaufwand oder Fertigstellungszeit.
 | G0 – Basis | 2 |
 | G1 – Dokument und Referenzen | 0 |
 | G2 – zusammenhängender CAD-Workflow | 15 |
-| G3 – mechanisches CAD v1 | 19 |
+| G3 – mechanisches CAD v1 | 35 |
 | G4 – veröffentlichbare v1 | 9 |
 | G5 – spätere Produktfamilie | 27 |
-| Gesamt | 72 |
+| Gesamt | 88 |
 
-Bis einschließlich G4 bleiben 45 Hauptpakete. G2 ist der erste durchgängige
+Bis einschließlich G4 bleiben 61 Hauptpakete (seit 14.10.2026 mit den 16 Werkzeugpaketen S15–S21 und M19–M27). G2 ist der erste durchgängige
 Bedienablauf, G3 der begrenzte mechanische Funktionsumfang. G5 umfasst zusätzliche
 Bereiche wie Baugruppen und Zeichnungen. Nutzbarkeit wird an diesen Abläufen
 abgenommen, nicht am Erreichen einer Prozentzahl.

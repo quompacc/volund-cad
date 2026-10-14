@@ -321,3 +321,82 @@ Grundlage der Oberfläche ist [ADR 0012](../adr/0012-ui-shell-concept.md) (freig
   3. Referenzskizzen mit mehreren Regionen und projizierten Kanten durch die produktive Shell prüfen.
 - **Abnahme:** A-SKETCH-01/02, A-REG-01/02 und A-TXN-03 bestehen. Kein aktives Werkzeug ohne vollständige Zeile in der Matrix. Bekannte Begrenzungen sind in UI und Datenmodelldokument gleich beschrieben.
 - **Grenze:** Kein „Sketch fertig“ allein aus Backend-Smokes ableiten.
+
+## Ergänzung vom 14.10.2026: fehlende Werkzeuge
+
+Abgleich mit den Werkzeugleisten von FreeCAD 1.1 (Sketcher und Part Design). Nutzerentscheidung vom 14.10.2026: Gruppe 1 gehört zu v1, Gruppe 2 wird aus X19 vorgezogen; beide werden vor M09 umgesetzt (Reihenfolge in `packets.json`, `topologicalOrder`).
+
+## S15 – Punkt als eigenes Skizzenelement
+
+- **Voraussetzungen:** S14.
+- **Pflichtlektüre/Einstieg:** Kapitel 02 K01–K08; `include/voelund/document/SketchGeometry.hpp`, `src/document/NativeSketchGeometry.cpp`, `src/features/SketchConstraintSolver.cpp`, `src/viewport/SketchEditorInteraction.cpp`.
+- **Auftrag:**
+  1. Geometrieart Punkt mit eigener Element-ID und Persistenz (neues Schema) ergänzen; Punkte erzeugen keine Regionsgrenzen.
+  2. Werkzeug sketch.tool.point mit Fang, Auto-Beziehungen (Koinzidenz, Punkt auf Objekt) und Bemaßungen (Abstand, X/Y) anbinden.
+  3. Löschen, Verschieben, Spiegeln und Muster für Punkte in die Werkzeugmatrix aufnehmen.
+- **Abnahme:** Punkt setzen, an Ursprung und Kante fangen, mit X/Y-Abstand voll bestimmen (DOF 0); Rückgängig, Speichern/Öffnen; ein Punkt allein ergibt keine Region und blockiert keine Extrusion.
+- **Grenze:** Bohrung an Skizzenpunkten ist ein eigener späterer Schritt. Nutzerentscheidung 2026-10-14: Gruppe 1, gehört zu v1 (G3).
+
+## S16 – Radiusmaß für Kreise und Bögen
+
+- **Voraussetzungen:** S14.
+- **Pflichtlektüre/Einstieg:** Kapitel 02 K01–K08; `include/voelund/document/SketchConstraint.hpp`, `src/document/NativeSketchConstraints.cpp`, `src/features/SketchConstraintSolver.cpp`, `src/desktop/SketchEditorToolController.cpp`.
+- **Auftrag:**
+  1. Bemaßung Radius als eigene Bedingung neben Durchmesser definieren und speichern.
+  2. Befehl sketch.radius in der Familie Bemaßungen; Kreise und Bögen, an Parameter bindbar wie alle Längen.
+  3. Beschriftung R… am Element; Bearbeiten wie andere Maße.
+- **Abnahme:** Bogen mit R 12 bemaßt hat Radius 12; Maßänderung auf 20 löst neu; Bindung an Parameter, Rückgängig, Speichern/Öffnen; Linie als Ziel abgewiesen.
+- **Grenze:** Kein automatisches Umwandeln vorhandener Durchmessermaße. Nutzerentscheidung 2026-10-14: Gruppe 1, gehört zu v1 (G3).
+
+## S17 – Kanten bewusst in die Skizze projizieren
+
+- **Voraussetzungen:** S14, M19.
+- **Pflichtlektüre/Einstieg:** Kapitel 02 K01–K08; `src/document/NativeProjectedEdge.cpp`, `src/features/SketchSupportBinding.cpp`, `src/viewport/SketchEditorInteraction.cpp`, `src/desktop/SketchEditorToolController.cpp`.
+- **Auftrag:**
+  1. Befehl sketch.project: Kanten beliebiger Körper anklicken; sie werden senkrecht auf die Skizzenebene projiziert und als assoziative Bezugsgeometrie gespeichert.
+  2. Gerade Kanten werden Linien, Kreise und Bögen parallel zur Ebene bleiben Kreise/Bögen; andere Fälle werden mit Grund abgewiesen.
+  3. Projizierte Elemente folgen ihrer Quelle bei jeder Neuberechnung; fehlende Quelle wird als reparaturbedürftig angezeigt.
+- **Abnahme:** Kante eines zweiten Körpers projizieren, daran fangen und bemaßen; Quellkörper ändern → projizierte Linie folgt; Quelle weg → lokalisierter Fehler; Rückgängig, Speichern/Öffnen.
+- **Grenze:** Kein Schnitt der Skizzenebene mit Körpern (Schnittkurven) in diesem Paket. Nutzerentscheidung 2026-10-14: Gruppe 1, gehört zu v1 (G3).
+
+## S18 – Referenzmaße (nicht treibend)
+
+- **Voraussetzungen:** S16.
+- **Pflichtlektüre/Einstieg:** Kapitel 02 K01–K08; `include/voelund/document/SketchConstraint.hpp`, `src/document/NativeSketchConstraints.cpp`, `src/features/SketchConstraintSolver.cpp`, `src/viewport/SketchConstraintPresentation.cpp`.
+- **Auftrag:**
+  1. Jedes Maß kann treibend oder Referenz sein; ein Referenzmaß zeigt den aktuellen Wert und bestimmt nichts.
+  2. Befehl sketch.toggle_reference; Referenzmaße in Klammern.
+  3. Ein Maß, das die Skizze überbestimmen würde, kann als Referenz angelegt werden.
+- **Abnahme:** Referenzmaß zeigt den Wert; Geometrie ändern → Referenzwert folgt; Umschalten auf treibend löst; Rückgängig, Speichern/Öffnen.
+- **Grenze:** Referenzmaße sind nicht an Parameter bindbar. Nutzerentscheidung 2026-10-14: Gruppe 2, aus X19 vorgezogen.
+
+## S19 – Skizzenfase
+
+- **Voraussetzungen:** S14.
+- **Pflichtlektüre/Einstieg:** Kapitel 02 K01–K08; `src/application/SketchEditorSession.cpp`, `src/desktop/SketchEditorToolController.cpp`.
+- **Auftrag:**
+  1. Ecke zweier Linien durch eine Fasenlinie mit gleichem Abstand ersetzen; Beziehungen wie bei der Skizzenverrundung erhalten.
+  2. Befehl sketch.chamfer in der Familie Bearbeiten neben der Verrundung.
+- **Abnahme:** Rechteckecke fasen (Abstand 3) → neue Linie, Rechteck bleibt geschlossen und extrudierbar; zu großer Abstand abgewiesen; Rückgängig, Speichern/Öffnen.
+- **Grenze:** Nur zwischen zwei Linien, wie die Skizzenverrundung. Nutzerentscheidung 2026-10-14: Gruppe 2, aus X19 vorgezogen.
+
+## S20 – Drehen und Skalieren in der Skizze
+
+- **Voraussetzungen:** S14.
+- **Pflichtlektüre/Einstieg:** Kapitel 02 K01–K08; `src/application/SketchEditorSession.cpp`, `src/document/SketchGeometry.cpp`, `src/desktop/SketchEditorToolController.cpp`.
+- **Auftrag:**
+  1. Auswahl um einen Punkt um einen Winkel drehen; Auswahl um einen Punkt mit Faktor skalieren; beides als eine Transaktion.
+  2. Beziehungen bleiben, wo sie gültig bleiben (Drehen: horizontal/vertikal werden entfernt); Längenmaße skalieren mit.
+- **Abnahme:** Rechteck 30° drehen → Ecken analytisch; Faktor 2 → Kantenlängen doppelt; Rückgängig, Speichern/Öffnen.
+- **Grenze:** Keine Kopie beim Drehen (dafür Kreismuster). Nutzerentscheidung 2026-10-14: Gruppe 2, aus X19 vorgezogen.
+
+## S21 – B-Spline über Kontrollpunkte
+
+- **Voraussetzungen:** S14.
+- **Pflichtlektüre/Einstieg:** Kapitel 02 K01–K08; `include/voelund/document/SketchGeometry.hpp`, `src/document/NativeSketchGeometry.cpp`, `src/features/SketchConstraintSolver.cpp`, `src/features/SketchRegions.cpp`.
+- **Auftrag:**
+  1. Offener kubischer B-Spline über Kontrollpunkte als Geometrieart; Endpunkte fangen und koinzident mit anderen Elementen.
+  2. Regionen mit B-Spline-Kanten; Extrusion und Drehen darüber.
+  3. Werkzeug sketch.tool.bspline (Klicks setzen Kontrollpunkte, Enter beendet).
+- **Abnahme:** Geschlossene Kontur aus B-Spline und Linie extrudiert gültig; Kontrollpunkt verschieben ändert die Kurve; Rückgängig, Speichern/Öffnen.
+- **Grenze:** Kein Stutzen/Versatz von B-Splines in diesem Paket; keine Interpolationssplines. Nutzerentscheidung 2026-10-14: Gruppe 2, aus X19 vorgezogen.
