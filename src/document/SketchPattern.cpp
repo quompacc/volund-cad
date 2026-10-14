@@ -64,6 +64,12 @@ SketchGeometry moved(const SketchGeometry& geometry, const Motion& motion, bool 
     }
     if (const auto* point = std::get_if<SketchPointGeometry>(&geometry))
         return SketchPointGeometry{motion.apply(point->position)};
+    if (const auto* spline = std::get_if<SketchBSpline>(&geometry)) { // S21
+        SketchBSpline image;
+        for (const auto& pole : spline->poles)
+            image.poles.push_back(motion.apply(pole));
+        return image;
+    }
     const auto& ellipse = std::get<SketchEllipse>(geometry);
     return SketchEllipse{motion.apply(ellipse.center), ellipse.majorRadius, ellipse.minorRadius,
                          motion.reflects ? motion.turn - ellipse.rotation

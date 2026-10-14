@@ -152,6 +152,18 @@ const QHash<QString, Drawing>& drawings() {
              p.dot(7, 12, 1.5);
              p.dot(17, 12, 1.5);
          }},
+        {"tool.bspline", // S21: a smooth curve over its dashed control polygon
+         [](const Pens& p) {
+             p.dashed([&] {
+                 p.line(3, 19, 7, 5);
+                 p.line(7, 5, 17, 5);
+                 p.line(17, 5, 21, 19);
+             });
+             QPainterPath curve;
+             curve.moveTo(3, 19);
+             curve.cubicTo(7, 5, 17, 5, 21, 19);
+             p.painter.drawPath(curve);
+         }},
         {"tool.polygon",
          [](const Pens& p) {
              QPolygonF hexagon;

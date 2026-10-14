@@ -142,6 +142,8 @@ QString sketchSelectionSummary(const application::CadSession& session) {
             kind = QObject::tr("Ellipse");
         } else if (std::holds_alternative<document::SketchPointGeometry>(element.geometry)) {
             kind = QObject::tr("Punkt");
+        } else if (std::holds_alternative<document::SketchBSpline>(element.geometry)) {
+            kind = QObject::tr("B-Spline");
         }
         return summary + QObject::tr("\n\nGewählt: %1 #%2").arg(kind).arg(element.id.value());
     }

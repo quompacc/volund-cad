@@ -33,6 +33,8 @@ std::optional<SketchPoint> pointOf(const document::SketchElements& elements,
         return ellipse->center;
     if (const auto* point = std::get_if<document::SketchPointGeometry>(&element->geometry))
         return point->position;
+    if (const auto* spline = std::get_if<document::SketchBSpline>(&element->geometry))
+        return start ? spline->poles.front() : spline->poles.back(); // S21
     if (const auto* arc = std::get_if<document::SketchArc>(&element->geometry)) {
         if (reference.point == document::SketchPointPosition::center)
             return arc->center;

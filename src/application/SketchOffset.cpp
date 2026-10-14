@@ -165,6 +165,10 @@ SketchOffsetResult offsetGeometry(std::span<const document::SketchGeometry> sele
         }))
         refuse("Ein Punkt lässt sich nicht versetzen");
     if (std::ranges::any_of(selected, [](const auto& geometry) {
+            return std::holds_alternative<document::SketchBSpline>(geometry);
+        }))
+        refuse("B-Splines lassen sich nicht versetzen (UnsupportedCurve)"); // S21
+    if (std::ranges::any_of(selected, [](const auto& geometry) {
             return std::holds_alternative<document::SketchEllipse>(geometry);
         }))
         refuse("Ellipsen werden nicht unterstützt (UnsupportedCurve); ihr Versatz ist keine "

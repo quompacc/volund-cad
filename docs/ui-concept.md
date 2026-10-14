@@ -195,7 +195,7 @@ Kürzel erreichen; außerhalb einer Skizze sind sie gesperrt.
 Anordnung in der Werkzeugleiste (S14, Nutzerentscheidung 10.10.2026): je Familie ein Knopf.
 Er zeigt die zuletzt benutzte Variante, sein Pfeil öffnet die anderen. Abschnitte und
 Familien: **Zeichnen** (Auswahl · Linie/Polylinie · Rechteck/Mittelpunkt-Rechteck ·
-Kreis/Ellipse · Mittelpunkt-/Dreipunktbogen · Langloch · Polygon · Punkt), **Beziehungen**
+Kreis/Ellipse · Mittelpunkt-/Dreipunktbogen · Langloch · Polygon · Punkt · B-Spline), **Beziehungen**
 (Richtung · parallel/rechtwinklig/kollinear · Punkte · fix/gleich/tangential/konzentrisch),
 **Bemaßungen** (Abstände · Durchmesser/Radius · Winkel · Referenz umschalten), **Bearbeiten** (stutzen/verlängern/teilen ·
 Verrundung/Fase · Versatz · Drehen/Skalieren · Projizieren · Spiegeln/Muster · Punkt sperren/freigeben · Konstruktion ·

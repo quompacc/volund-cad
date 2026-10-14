@@ -147,6 +147,14 @@ class SketchEditorSession final {
     [[nodiscard]] SketchCurveEditResult scaleSelected(document::SketchPoint center, double factor);
     // The middle of the selection's bounds, as the default center; none without a selection.
     [[nodiscard]] std::optional<document::SketchPoint> selectionCenter() const;
+    // S21 (SketchEditorBSpline.cpp): an open cubic B-spline over 4 to 64 control points as one
+    // step; ends placed on ends of lines, arcs or B-splines are joined to them. None when the
+    // points make no valid curve.
+    [[nodiscard]] std::optional<document::SketchElementId>
+    addBSpline(std::span<const document::SketchPoint> poles, bool construction = false);
+    // S21: moves one control point as one step; false when it cannot be solved.
+    [[nodiscard]] bool moveBSplinePole(document::SketchElementId element, std::size_t pole,
+                                       document::SketchPoint position);
     [[nodiscard]] bool offsetSelected(double distance);
     // S09: why the selection cannot be offset by `distance`, or nothing when it can.
     [[nodiscard]] std::optional<std::string> offsetProblem(double distance) const;

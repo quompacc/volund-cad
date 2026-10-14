@@ -165,6 +165,11 @@ TransformedCopy transformedCopy(const document::SketchGeometry& geometry,
                 ellipse.rotation =
                     std::atan2(t.yx * major.x + t.yy * major.y, t.xx * major.x + t.xy * major.y);
                 result.elements.push_back(ellipse);
+            } else if constexpr (std::is_same_v<Geometry, document::SketchBSpline>) {
+                document::SketchBSpline spline; // S21: the image of each control point
+                for (const auto& pole : value.poles)
+                    spline.poles.push_back(t.apply(pole));
+                result.elements.push_back(spline);
             } else {
                 document::SketchCircle circle = value;
                 circle.center = t.apply(value.center);

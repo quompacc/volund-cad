@@ -1,4 +1,9 @@
 #include "SketchRegionGeometry.hpp"
+#include "SketchBSplineCurves.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <gp_Vec2d.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
@@ -28,6 +33,28 @@ double boundaryArea(const SketchIntersectionResult& split,
             const long double x = interval.start.x - anchor.x, y = interval.start.y - anchor.y;
             const long double u = interval.end.x - anchor.x, v = interval.end.y - anchor.y;
             contribution = x * v - y * u;
+        } else if (const auto* spline = std::get_if<document::SketchBSpline>(&geometry)) {
+            // S21: Gauss-Legendre over each knot span the interval touches.
+            const auto curve = bsplineCurve2d(*spline);
+            constexpr double nodes[] = {-0.9061798459386640, -0.5384693101056831, 0.0,
+                                        0.5384693101056831, 0.9061798459386640};
+            constexpr double weights[] = {0.2369268850561891, 0.4786286704993665,
+                                          0.5688888888888889, 0.4786286704993665,
+                                          0.2369268850561891};
+            const double first = interval.firstParameter, last = interval.lastParameter;
+            for (double low = std::floor(first); low < last; low += 1) {
+                const double a = std::max(low, first), b = std::min(low + 1, last);
+                if (b <= a)
+                    continue;
+                for (int k = 0; k < 5; ++k) {
+                    const double u = (a + b) / 2 + (b - a) / 2 * nodes[k];
+                    gp_Pnt2d p;
+                    gp_Vec2d d;
+                    curve->D1(u, p, d);
+                    contribution += static_cast<long double>(weights[k] * (b - a) / 2) *
+                                    ((p.X() - anchor.x) * d.Y() - (p.Y() - anchor.y) * d.X());
+                }
+            }
         } else {
             document::SketchPoint center;
             double product;

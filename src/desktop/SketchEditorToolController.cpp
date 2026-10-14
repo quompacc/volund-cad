@@ -42,6 +42,8 @@ application::SketchDrawingTool applicationTool(int index) {
         return application::SketchDrawingTool::rectangle;
     if (index == pointTool)
         return application::SketchDrawingTool::point;
+    if (index == bsplineTool)
+        return application::SketchDrawingTool::line; // S21: the controller collects points
     return application::SketchDrawingTool::select;
 }
 
@@ -68,6 +70,8 @@ viewport::SketchElementTool viewportTool(int index) {
         return viewport::SketchElementTool::centerRectangle;
     if (index == pointTool)
         return viewport::SketchElementTool::point;
+    if (index == bsplineTool)
+        return viewport::SketchElementTool::polyline; // S21: a click per control point
     return viewport::SketchElementTool::select;
 }
 
@@ -111,10 +115,11 @@ void SketchEditorToolController::showPanel() {
           {QObject::tr("Auswählen"), QObject::tr("Linie"), QObject::tr("Polylinie"),
            QObject::tr("Rechteck"), QObject::tr("Kreis"), QObject::tr("Bogen (Mitte)"),
            QObject::tr("Dreipunktbogen"), QObject::tr("Ellipse"), QObject::tr("Langloch"),
-           QObject::tr("Polygon"), QObject::tr("Rechteck (Mitte)"), QObject::tr("Punkt")},
+           QObject::tr("Polygon"), QObject::tr("Rechteck (Mitte)"), QObject::tr("Punkt"),
+           QObject::tr("B-Spline")},
           1,
           {"select", "line", "polyline", "rectangle", "circle", "center_arc", "three_point_arc",
-           "ellipse", "slot", "polygon", "center_rectangle", "point"}},
+           "ellipse", "slot", "polygon", "center_rectangle", "point", "bspline"}},
          // S04: snapped points and suggested relations become constraints, or nothing does.
          {"relations",
           QObject::tr("Beziehungen"),
@@ -326,6 +331,7 @@ void SketchEditorToolController::setTool(int index) {
         return;
     editor_->setTool(applicationTool(index));
     toolIndex_ = index;
+    bsplinePoles_.clear();
     setProjecting(false);
     problemElements_.clear(); // S13: red marks belong to the last refused edit
     viewport_.setSketchEditorTool(viewportTool(index));
@@ -340,6 +346,8 @@ void SketchEditorToolController::setTool(int index) {
         : index == centerRectangleTool
             ? QObject::tr("Rechteck aus dem Mittelpunkt: Mittelpunkt, dann eine Ecke")
         : index == pointTool ? QObject::tr("Punkt: ein Klick setzt ihn")
+        : index == bsplineTool
+            ? QObject::tr("B-Spline: Kontrollpunkte anklicken (mindestens 4), Enter beendet")
             : QObject::tr("Skizzenwerkzeug gewechselt");
     statusChanged_(guidance);
 }

@@ -65,6 +65,15 @@ void validateGeometry(const SketchGeometry& geometry) {
             throw std::invalid_argument("Sketch point must be finite");
         return;
     }
+    if (const auto* spline = std::get_if<SketchBSpline>(&geometry)) { // S21
+        const auto& poles = spline->poles;
+        if (poles.size() < minimumBSplinePoles || poles.size() > maximumBSplinePoles ||
+            !std::ranges::all_of(poles, [](const SketchPoint& pole) { return finite(pole); }) ||
+            squaredDistance(poles.front(), poles.back()) <= minimumLength * minimumLength)
+            throw std::invalid_argument(
+                "Sketch B-spline needs 4 to 64 finite control points and two distinct ends");
+        return;
+    }
     const SketchArc& arc = std::get<SketchArc>(geometry);
     const double sweep = arc.endAngle - arc.startAngle;
     if (!finite(arc.center) || !std::isfinite(arc.radius) || arc.radius <= minimumLength ||
@@ -138,6 +147,9 @@ void validateSketchConstraints(const SketchElements& elements,
             reference.point == SketchPointPosition::center)
             return;
         if (std::holds_alternative<SketchArc>(geometry))
+            return;
+        if (std::holds_alternative<SketchBSpline>(geometry) && // S21: its two ends
+            reference.point != SketchPointPosition::center)
             return;
         throw std::invalid_argument("Sketch constraint reference is not a supported point");
     };

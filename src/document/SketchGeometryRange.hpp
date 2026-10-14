@@ -1,6 +1,8 @@
 #pragma once
 #include <voelund/document/SketchGeometry.hpp>
 #include <voelund/kernel/NumericPolicy.hpp>
+#include <algorithm>
+#include <cmath>
 #include <stdexcept>
 #include <type_traits>
 
@@ -16,6 +18,12 @@ inline void validateGeometryRange(const SketchGeometry& geometry) {
                 std::hypot(shape.end.x - shape.start.x, shape.end.y - shape.start.y));
         } else if constexpr (std::is_same_v<T, SketchPointGeometry>) {
             return point(shape.position);
+        } else if constexpr (std::is_same_v<T, SketchBSpline>) {
+            double length = 0;
+            for (std::size_t index = 1; index < shape.poles.size(); ++index)
+                length += std::hypot(shape.poles[index].x - shape.poles[index - 1].x,
+                                     shape.poles[index].y - shape.poles[index - 1].y);
+            return std::ranges::all_of(shape.poles, point) && kernel::modelLength(length);
         } else if constexpr (std::is_same_v<T, SketchRectangle>) {
             return point(shape.first) && point(shape.second) &&
                    kernel::modelLength(std::abs(shape.second.x - shape.first.x)) &&

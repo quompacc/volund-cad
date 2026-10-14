@@ -11,6 +11,7 @@ add_library(voelund_application STATIC
     CadSessionSolidFeatures.cpp
     SketchEditorProjections.cpp
     SketchEditorTransform.cpp
+    SketchEditorBSpline.cpp
     CadSessionTargetedEdits.cpp
     CadSessionTransactions.cpp
     CadSessionParameters.cpp

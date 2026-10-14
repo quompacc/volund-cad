@@ -2,6 +2,7 @@
 #include "SketchPlaneGuard.hpp"
 #include <voelund/features/GeometryEvaluationError.hpp>
 #include <voelund/features/SketchEvaluation.hpp>
+#include "SketchBSplineCurves.hpp"
 
 #include <voelund/features/SketchContourGraph.hpp>
 #include <voelund/features/SketchProfiles.hpp>
@@ -59,6 +60,9 @@ std::vector<EvaluatedSketchPoint> elementPoints(const document::SketchParameters
         points = {{document::SketchPointPosition::center, ellipse->center}};
     } else if (const auto* point = std::get_if<document::SketchPointGeometry>(&geometry)) {
         points = {{document::SketchPointPosition::center, point->position}}; // S15
+    } else if (const auto* spline = std::get_if<document::SketchBSpline>(&geometry)) {
+        points = {{document::SketchPointPosition::start, spline->poles.front()}, // S21
+                  {document::SketchPointPosition::end, spline->poles.back()}};
     } else {
         const auto& arc = std::get<document::SketchArc>(geometry);
         points = {{document::SketchPointPosition::center, arc.center},
@@ -175,6 +179,8 @@ std::pair<document::SketchPoint, document::SketchPoint>
 curveEndpoints(const document::SketchGeometry& geometry) {
     if (const auto* line = std::get_if<document::SketchLine>(&geometry))
         return {line->start, line->end};
+    if (const auto* spline = std::get_if<document::SketchBSpline>(&geometry))
+        return {spline->poles.front(), spline->poles.back()}; // S21
     const auto& arc = std::get<document::SketchArc>(geometry);
     return {{arc.center.x + arc.radius * std::cos(arc.startAngle),
              arc.center.y + arc.radius * std::sin(arc.startAngle)},
@@ -189,11 +195,15 @@ TopoDS_Face curveProfileFace(const document::SketchParameters& sketch, const Ske
     for (document::SketchElementId id : profile.elementIds) {
         const auto& geometry = findElement(sketch, id).geometry;
         auto points = curveEndpoints(geometry);
-        TopoDS_Edge edge = std::holds_alternative<document::SketchLine>(geometry)
-                               ? BRepBuilderAPI_MakeEdge(worldPoint(sketch.plane, points.first),
-                                                         worldPoint(sketch.plane, points.second))
-                                     .Edge()
-                               : arcEdge(sketch, std::get<document::SketchArc>(geometry));
+        const auto* spline = std::get_if<document::SketchBSpline>(&geometry);
+        TopoDS_Edge edge =
+            std::holds_alternative<document::SketchLine>(geometry)
+                ? BRepBuilderAPI_MakeEdge(worldPoint(sketch.plane, points.first),
+                                          worldPoint(sketch.plane, points.second))
+                      .Edge()
+            : spline != nullptr
+                ? BRepBuilderAPI_MakeEdge(detail::bsplineCurve3d(*spline, sketch.plane)).Edge()
+                : arcEdge(sketch, std::get<document::SketchArc>(geometry));
         if (profile.reversed.at(contourIndex++)) {
             edge.Reverse();
             std::swap(points.first, points.second);
@@ -210,6 +220,7 @@ TopoDS_Face curveProfileFace(const document::SketchParameters& sketch, const Ske
             throw GeometryEvaluationError("Sketch profile wire could not be connected");
         recordEdge(edges, id,
                    std::holds_alternative<document::SketchLine>(geometry) ? ContourRole::line
+                   : spline != nullptr                                    ? ContourRole::bspline
                                                                           : ContourRole::arc,
                    edge, wire.Edge());
     }
@@ -261,13 +272,16 @@ TopoDS_Shape elementShape(const document::SketchParameters& sketch,
         edge = circleEdge(sketch, *circle);
     else if (const auto* arc = std::get_if<document::SketchArc>(&geometry))
         edge = arcEdge(sketch, *arc);
+    else if (const auto* spline = std::get_if<document::SketchBSpline>(&geometry))
+        edge = BRepBuilderAPI_MakeEdge(detail::bsplineCurve3d(*spline, sketch.plane)).Edge(); // S21
     else
         edge = ellipseEdge(sketch, std::get<document::SketchEllipse>(geometry));
     const auto role =
-        std::holds_alternative<document::SketchLine>(geometry)     ? ContourRole::line
-        : std::holds_alternative<document::SketchCircle>(geometry) ? ContourRole::circle
-        : std::holds_alternative<document::SketchArc>(geometry)    ? ContourRole::arc
-                                                                   : ContourRole::ellipse;
+        std::holds_alternative<document::SketchLine>(geometry)      ? ContourRole::line
+        : std::holds_alternative<document::SketchCircle>(geometry)  ? ContourRole::circle
+        : std::holds_alternative<document::SketchArc>(geometry)     ? ContourRole::arc
+        : std::holds_alternative<document::SketchBSpline>(geometry) ? ContourRole::bspline
+                                                                    : ContourRole::ellipse;
     recordEdge(edges, element.id, role, edge, edge);
     return edge;
 }

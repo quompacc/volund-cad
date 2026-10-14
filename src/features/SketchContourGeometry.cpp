@@ -1,4 +1,5 @@
 #include "SketchContourGeometry.hpp"
+#include "SketchBSplineCurves.hpp"
 #include "SketchConnection.hpp"
 #include <algorithm>
 #include <cmath>
@@ -71,6 +72,10 @@ std::vector<ContourPiece> contourPieces(std::span<const SketchElement> elements)
         } else if (auto* c = std::get_if<SketchCircle>(&e.geometry)) {
             const auto p = radial(c->center, c->radius, 0);
             add(*c, p, p, 0, true);
+        } else if (auto* s = std::get_if<document::SketchBSpline>(&e.geometry)) {
+            add(*s, s->poles.front(), s->poles.back()); // S21: open, ends at its end poles
+        } else if (std::holds_alternative<document::SketchPointGeometry>(e.geometry)) {
+            continue; // construction anyway
         } else {
             const auto& ellipse = std::get<SketchEllipse>(e.geometry);
             const auto p = radial(ellipse.center, ellipse.majorRadius, ellipse.rotation);
@@ -82,6 +87,10 @@ std::vector<ContourPiece> contourPieces(std::span<const SketchElement> elements)
 SketchPoint contourMiddle(const ContourPiece& p) {
     if (auto* a = std::get_if<SketchArc>(&p.geometry))
         return radial(a->center, a->radius, (a->startAngle + a->endAngle) / 2);
+    if (auto* s = std::get_if<document::SketchBSpline>(&p.geometry)) {
+        const auto middle = bsplineCurve2d(*s)->Value(bsplineLastParameter(*s) / 2);
+        return {middle.X(), middle.Y()};
+    }
     return {(p.start.x + p.end.x) / 2, (p.start.y + p.end.y) / 2};
 }
 bool contourInterior(const ContourPiece& p, SketchPoint q) {

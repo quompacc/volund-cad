@@ -99,6 +99,10 @@ void writeElement(const TDF_Label& label, const SketchElement& element) {
     } else if (const auto* point = std::get_if<SketchPointGeometry>(&element.geometry)) {
         kind = "point"; // S15 (schema 22)
         values = {point->position.x, point->position.y};
+    } else if (const auto* spline = std::get_if<SketchBSpline>(&element.geometry)) {
+        kind = "bspline"; // S21 (schema 30): x, y of each control point
+        for (const auto& pole : spline->poles)
+            values.insert(values.end(), {pole.x, pole.y});
     } else {
         const auto& ellipse = std::get<SketchEllipse>(element.geometry);
         kind = "ellipse";
@@ -126,6 +130,18 @@ SketchElement readElement(const TDF_Label& label, int schemaVersion) {
         if (kind == "circle") {
             const auto data = reals(child(label, 4), 3);
             return SketchCircle{{data->Value(1), data->Value(2)}, data->Value(3)};
+        }
+        if (kind == "bspline") {
+            require(schemaVersion >= 30);
+            Handle(TDataStd_RealArray) data;
+            require(child(label, 4).FindAttribute(TDataStd_RealArray::GetID(), data) &&
+                    data->Lower() == 1 && data->Upper() % 2 == 0 &&
+                    data->Upper() >= 2 * static_cast<int>(minimumBSplinePoles) &&
+                    data->Upper() <= 2 * static_cast<int>(maximumBSplinePoles));
+            SketchBSpline spline;
+            for (int index = 1; index < data->Upper(); index += 2)
+                spline.poles.push_back({data->Value(index), data->Value(index + 1)});
+            return spline;
         }
         if (kind == "point") {
             require(schemaVersion >= 22);

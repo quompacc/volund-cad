@@ -17,6 +17,7 @@ namespace voelund::desktop {
 // Index of "Rechteck (Mitte)" in the tool choice (S04a).
 inline constexpr int centerRectangleTool = 10;
 inline constexpr int pointTool = 11; // S15
+inline constexpr int bsplineTool = 12; // S21
 
 class ToolPanelHost;
 
@@ -120,6 +121,7 @@ class SketchEditorToolController final {
     double translationY_{0.0};
     double filletRadius_{2.0};
     double chamferDistance_{2.0}; // S19
+    std::vector<document::SketchPoint> bsplinePoles_; // S21: clicked so far
     document::SketchPoint transformCenter_{}; // S20
     double rotateAngle_{90.0};
     double scaleFactor_{2.0};

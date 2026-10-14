@@ -74,6 +74,15 @@ void SketchEditorToolController::confirmElement(const viewport::SketchElementInt
     previewAutomatic_.reset();
     if (!editor_)
         return;
+    if (toolIndex_ == bsplineTool) { // S21: each click adds a control point
+        if (bsplinePoles_.empty())
+            bsplinePoles_.push_back({intent.firstX, intent.firstY});
+        bsplinePoles_.push_back({intent.secondX, intent.secondY});
+        viewport_.continueSketchPolyline(intent.secondX, intent.secondY, 0);
+        statusChanged_(QObject::tr("B-Spline: %1 Kontrollpunkte; Enter beendet")
+                           .arg(bsplinePoles_.size()));
+        return;
+    }
     std::optional<application::SketchCreationResult> created;
     try {
         // A rejected step leaves the editor unchanged (S02).

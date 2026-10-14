@@ -89,6 +89,13 @@ QJsonObject encodeElement(const document::SketchElement& element) {
             [&](const document::SketchPointGeometry& value) { // S15
                 json.insert("type", "point");
                 json.insert("position", point(value.position));
+            },
+            [&](const document::SketchBSpline& spline) { // S21: output only
+                json.insert("type", "bspline");
+                QJsonArray poles;
+                for (const auto& pole : spline.poles)
+                    poles.append(point(pole));
+                json.insert("poles", poles);
             }},
         element.geometry);
     return json;

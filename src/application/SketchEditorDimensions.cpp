@@ -182,4 +182,43 @@ std::optional<double> SketchEditorSession::selectedCircleRadius() const noexcept
     return arc == nullptr ? std::nullopt : std::optional<double>{arc->radius};
 }
 
+std::optional<double> SketchEditorSession::selectedLineLength() const noexcept {
+    if (!selectedElement_.has_value())
+        return std::nullopt;
+    const auto match =
+        std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);
+    if (match == elements_.values.end())
+        return std::nullopt;
+    const auto* line = std::get_if<document::SketchLine>(&match->geometry);
+    if (line == nullptr)
+        return std::nullopt;
+    return std::hypot(line->end.x - line->start.x, line->end.y - line->start.y);
+}
+
+std::optional<double> SketchEditorSession::selectedRectangleWidth() const noexcept {
+    if (!selectedElement_.has_value())
+        return std::nullopt;
+    const auto match =
+        std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);
+    if (match == elements_.values.end())
+        return std::nullopt;
+    const auto* rectangle = std::get_if<document::SketchRectangle>(&match->geometry);
+    return rectangle == nullptr
+               ? std::nullopt
+               : std::optional<double>{std::abs(rectangle->second.x - rectangle->first.x)};
+}
+
+std::optional<double> SketchEditorSession::selectedRectangleHeight() const noexcept {
+    if (!selectedElement_.has_value())
+        return std::nullopt;
+    const auto match =
+        std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);
+    if (match == elements_.values.end())
+        return std::nullopt;
+    const auto* rectangle = std::get_if<document::SketchRectangle>(&match->geometry);
+    return rectangle == nullptr
+               ? std::nullopt
+               : std::optional<double>{std::abs(rectangle->second.y - rectangle->first.y)};
+}
+
 } // namespace voelund::application

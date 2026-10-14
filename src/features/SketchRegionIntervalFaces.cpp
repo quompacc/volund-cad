@@ -1,6 +1,7 @@
 #include "SketchConnection.hpp"
 #include "SketchRegionGeometry.hpp"
 #include "SketchRegionIntervalFaces.hpp"
+#include "SketchBSplineCurves.hpp"
 #include <voelund/features/GeometryEvaluationError.hpp>
 
 #include <BRepBuilderAPI_MakeEdge.hxx>
@@ -67,6 +68,8 @@ Handle(Geom_Curve) sourceCurve(Context& context, std::size_t piece) {
                                 circle->radius);
     } else if (const auto* arc = std::get_if<document::SketchArc>(&geometry)) {
         curve = new Geom_Circle(gp_Ax2(worldPoint(plane, arc->center), normal, x), arc->radius);
+    } else if (const auto* spline = std::get_if<document::SketchBSpline>(&geometry)) {
+        curve = bsplineCurve3d(*spline, plane); // S21: same parameters as the planar curve
     } else {
         const auto& ellipse = std::get<document::SketchEllipse>(geometry);
         const gp_Dir y = normal.Crossed(x);
@@ -94,6 +97,8 @@ ContourRole role(const Context& context, std::size_t piece) {
         return ContourRole::circle;
     if (std::holds_alternative<document::SketchArc>(source.geometry))
         return ContourRole::arc;
+    if (std::holds_alternative<document::SketchBSpline>(source.geometry))
+        return ContourRole::bspline;
     return ContourRole::ellipse;
 }
 

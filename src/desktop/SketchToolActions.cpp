@@ -34,7 +34,8 @@ QString toolShortcut(const std::string& id) {
         {"slot", QStringLiteral("N")},
         {"polygon", QStringLiteral("G")},
         {"center_rectangle", QStringLiteral("Shift+R")},
-        {"point", QStringLiteral("O")}};
+        {"point", QStringLiteral("O")},
+        {"bspline", QStringLiteral("B")}};
     const auto match = keys.find(id);
     return match == keys.end() ? QString{} : match->second;
 }
@@ -55,7 +56,8 @@ const std::vector<RailSection>& railSections() {
           {"sketch.tool.center_arc", "sketch.tool.three_point_arc"},
           {"sketch.tool.slot"},
           {"sketch.tool.polygon"},
-          {"sketch.tool.point"}}},
+          {"sketch.tool.point"},
+          {"sketch.tool.bspline"}}},
         {QT_TR_NOOP("Beziehungen"),
          {{"sketch.horizontal", "sketch.vertical", "sketch.free"},
           {"sketch.parallel", "sketch.perpendicular", "sketch.collinear"},

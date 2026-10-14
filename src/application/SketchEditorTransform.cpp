@@ -102,6 +102,9 @@ std::optional<document::SketchPoint> SketchEditorSession::selectionCenter() cons
                     add(geometry.center, geometry.majorRadius);
                 } else if constexpr (std::is_same_v<Geometry, document::SketchPointGeometry>) {
                     add(geometry.position);
+                } else if constexpr (std::is_same_v<Geometry, document::SketchBSpline>) {
+                    for (const auto& pole : geometry.poles)
+                        add(pole);
                 } else {
                     add(geometry.center, geometry.radius); // circle, arc
                 }

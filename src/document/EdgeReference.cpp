@@ -19,7 +19,7 @@ void validateEdgeOrigin(const EdgeOrigin& origin) {
         const auto& contour = std::get<ContourEdgeOrigin>(origin.value);
         require(hasIdCapacity(contour.sketch.value(), 1) &&
                 hasIdCapacity(contour.element.value(), 1));
-        require(contour.role >= ContourRole::line && contour.role <= ContourRole::rectangleFourth);
+        require(contour.role >= ContourRole::line && contour.role <= ContourRole::bspline);
         require(contour.stage == ContourStage::sketch ||
                 contour.stage == ContourStage::extrusionStart ||
                 contour.stage == ContourStage::extrusionEnd);

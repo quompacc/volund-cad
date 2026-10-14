@@ -135,6 +135,14 @@ bool SketchEditorSession::selectNearestReference(document::SketchElementId eleme
         const double endDistance = std::hypot(position.x - line->end.x, position.y - line->end.y);
         reference.point = startDistance <= endDistance ? document::SketchPointPosition::start
                                                        : document::SketchPointPosition::end;
+    } else if (const auto* spline = std::get_if<document::SketchBSpline>(&match->geometry)) {
+        // S21: the nearer end.
+        const auto& first = spline->poles.front();
+        const auto& last = spline->poles.back();
+        reference.point = std::hypot(position.x - first.x, position.y - first.y) <=
+                                  std::hypot(position.x - last.x, position.y - last.y)
+                              ? document::SketchPointPosition::start
+                              : document::SketchPointPosition::end;
     } else if (std::holds_alternative<document::SketchCircle>(match->geometry) ||
                std::holds_alternative<document::SketchEllipse>(match->geometry) ||
                std::holds_alternative<document::SketchPointGeometry>(match->geometry)) {
@@ -220,6 +228,12 @@ bool SketchEditorSession::translateSelected(double deltaX, double deltaY) {
         } else if (auto* ellipse = std::get_if<document::SketchEllipse>(&match->geometry)) {
             ellipse->center.x += deltaX;
             ellipse->center.y += deltaY;
+        } else if (auto* spline = std::get_if<document::SketchBSpline>(&match->geometry)) {
+            auto& end = reference.point == document::SketchPointPosition::end
+                            ? spline->poles.back()
+                            : spline->poles.front(); // S21: an end control point
+            end.x += deltaX;
+            end.y += deltaY;
         } else if (auto* point = std::get_if<document::SketchPointGeometry>(&match->geometry)) {
             point->position.x += deltaX; // S15
             point->position.y += deltaY;
@@ -248,45 +262,6 @@ bool SketchEditorSession::translateSelected(double deltaX, double deltaY) {
         return false;
     rollback.keep();
     return true;
-}
-
-std::optional<double> SketchEditorSession::selectedLineLength() const noexcept {
-    if (!selectedElement_.has_value())
-        return std::nullopt;
-    const auto match =
-        std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);
-    if (match == elements_.values.end())
-        return std::nullopt;
-    const auto* line = std::get_if<document::SketchLine>(&match->geometry);
-    if (line == nullptr)
-        return std::nullopt;
-    return std::hypot(line->end.x - line->start.x, line->end.y - line->start.y);
-}
-
-std::optional<double> SketchEditorSession::selectedRectangleWidth() const noexcept {
-    if (!selectedElement_.has_value())
-        return std::nullopt;
-    const auto match =
-        std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);
-    if (match == elements_.values.end())
-        return std::nullopt;
-    const auto* rectangle = std::get_if<document::SketchRectangle>(&match->geometry);
-    return rectangle == nullptr
-               ? std::nullopt
-               : std::optional<double>{std::abs(rectangle->second.x - rectangle->first.x)};
-}
-
-std::optional<double> SketchEditorSession::selectedRectangleHeight() const noexcept {
-    if (!selectedElement_.has_value())
-        return std::nullopt;
-    const auto match =
-        std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);
-    if (match == elements_.values.end())
-        return std::nullopt;
-    const auto* rectangle = std::get_if<document::SketchRectangle>(&match->geometry);
-    return rectangle == nullptr
-               ? std::nullopt
-               : std::optional<double>{std::abs(rectangle->second.y - rectangle->first.y)};
 }
 
 std::optional<document::SketchLineConstraint>

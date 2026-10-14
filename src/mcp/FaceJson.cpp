@@ -20,7 +20,7 @@ constexpr const char* capNames[] = {"end", "start"}; // parallel to ExtrusionFac
 // Parallel to document::ContourRole and ContourStage.
 constexpr const char* contourRoles[] = {"line",           "circle",          "arc",
                                         "ellipse",        "rectangleFirst",  "rectangleSecond",
-                                        "rectangleThird", "rectangleFourth"};
+                                        "rectangleThird", "rectangleFourth", "bspline"};
 constexpr const char* contourStages[] = {"sketch", "start", "end"};
 
 QJsonObject encodeEdge(const document::EdgeOrigin& edge) {

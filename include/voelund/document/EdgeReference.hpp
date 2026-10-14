@@ -23,7 +23,8 @@ enum class ContourRole {
     rectangleFirst,
     rectangleSecond,
     rectangleThird,
-    rectangleFourth
+    rectangleFourth,
+    bspline // S21 (schema 30)
 };
 enum class ContourStage { sketch, extrusionStart, extrusionEnd };
 struct ContourEdgeOrigin final {

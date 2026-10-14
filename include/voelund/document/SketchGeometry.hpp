@@ -95,8 +95,18 @@ struct SketchPointGeometry final {
     [[nodiscard]] bool operator==(const SketchPointGeometry&) const = default;
 };
 
+// S21 (schema 30, user decision 2026-10-14): an open, clamped, uniform cubic B-spline over its
+// control points (4 to 64); it starts at the first and ends at the last one.
+inline constexpr std::size_t minimumBSplinePoles = 4;
+inline constexpr std::size_t maximumBSplinePoles = 64;
+struct SketchBSpline final {
+    std::vector<SketchPoint> poles;
+
+    [[nodiscard]] bool operator==(const SketchBSpline&) const = default;
+};
+
 using SketchGeometry = std::variant<SketchLine, SketchRectangle, SketchCircle, SketchArc,
-                                    SketchEllipse, SketchPointGeometry>;
+                                    SketchEllipse, SketchPointGeometry, SketchBSpline>;
 
 struct SketchElement final {
     SketchElementId id;

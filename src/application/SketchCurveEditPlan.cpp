@@ -177,6 +177,9 @@ double scaleOf(std::span<const SketchElement> elements) {
                     scale = std::max(scale, value.majorRadius);
                 } else if constexpr (std::is_same_v<Geometry, document::SketchPointGeometry>) {
                     grow(value.position);
+                } else if constexpr (std::is_same_v<Geometry, document::SketchBSpline>) {
+                    for (const auto& pole : value.poles)
+                        grow(pole);
                 } else {
                     grow(value.center);
                     scale = std::max(scale, value.radius);
@@ -393,6 +396,8 @@ const char* unsupported(SketchCurveEdit edit, const SketchGeometry& geometry) {
         return "Alt-Rechtecke werden nicht unterstützt (UnsupportedCurve)";
     if (std::holds_alternative<document::SketchPointGeometry>(geometry))
         return "Ein Punkt ist keine Kurve (UnsupportedCurve)";
+    if (std::holds_alternative<document::SketchBSpline>(geometry)) // S21
+        return "B-Splines werden nicht gestutzt, verlängert oder geteilt (UnsupportedCurve)";
     return edit == SketchCurveEdit::extend
                ? "Kreise sind geschlossen und lassen sich nicht verlängern (UnsupportedCurve)"
                : "Kreise haben keinen Endpunkt zum Teilen; zuerst stutzen (UnsupportedCurve)";

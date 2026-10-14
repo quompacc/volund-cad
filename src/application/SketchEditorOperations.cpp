@@ -46,6 +46,11 @@ SketchGeometry translatedGeometry(SketchGeometry geometry, double dx, double dy)
             } else if constexpr (std::is_same_v<Geometry, document::SketchPointGeometry>) {
                 value.position.x += dx;
                 value.position.y += dy;
+            } else if constexpr (std::is_same_v<Geometry, document::SketchBSpline>) {
+                for (auto& pole : value.poles) { // S21
+                    pole.x += dx;
+                    pole.y += dy;
+                }
             } else {
                 value.center.x += dx;
                 value.center.y += dy;

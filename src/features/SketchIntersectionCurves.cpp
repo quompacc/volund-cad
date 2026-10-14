@@ -1,4 +1,5 @@
 #include "SketchIntersectionCurves.hpp"
+#include "SketchBSplineCurves.hpp"
 #include <Geom2d_Circle.hxx>
 #include <Geom2d_Ellipse.hxx>
 #include <Geom2d_Line.hxx>
@@ -39,6 +40,12 @@ PlanarCurve planarCurve(const ContourPiece& piece) {
                                            {std::cos(e->rotation), std::sin(e->rotation)}),
                                    e->majorRadius, e->minorRadius),
                 0, tau, true, scale(e->center) + e->majorRadius};
+    }
+    if (auto* s = std::get_if<SketchBSpline>(&piece.geometry)) { // S21
+        double extent = 0;
+        for (const auto& pole : s->poles)
+            extent = std::max(extent, scale(pole));
+        return {bsplineCurve2d(*s), 0, bsplineLastParameter(*s), false, extent};
     }
     throw std::logic_error("Rectangle must be expanded into contour pieces");
 }
