@@ -37,6 +37,8 @@ enum class ShellIcon {
     wedge,
     sweep,      // M23
     loft,       // M24
+    helix,      // M26
+    draft,      // M25
     repair,
     eye,
     eyeOff,

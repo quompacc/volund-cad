@@ -29,7 +29,8 @@ class SketchExtrusionToolController final {
                                   std::function<void(const QString&)> statusChanged);
 
     // M20: with `revolve` the regions turn about an axis ("Drehen") instead.
-    void beginSelectedProfiles(bool revolve = false);
+    // M26: with `helix` as well, a helix ("Wendel") about that axis: pitch 5, height 20.
+    void beginSelectedProfiles(bool revolve = false, bool helix = false);
     // M23: the regions swept along a path, all drawn elements of an earlier sketch ("Folgen").
     void beginSelectedSweep();
     // M24: the one picked region lofted to the first region of another sketch ("Ausformung").

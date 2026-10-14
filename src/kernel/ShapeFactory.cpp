@@ -119,6 +119,10 @@ const char* kernelOperationName(KernelOperation operation) noexcept {
         return "makePipe";
     case KernelOperation::loft:
         return "loft";
+    case KernelOperation::helix:
+        return "helix";
+    case KernelOperation::draft:
+        return "draft";
     }
     return "unknown";
 }

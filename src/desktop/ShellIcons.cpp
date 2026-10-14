@@ -207,6 +207,25 @@ void draw(QPainter& painter, ShellIcon icon, const QColor& ink, const QColor& ac
         painter.drawEllipse(QRectF(18, 1.5, 3, 5));
         break;
     }
+    case ShellIcon::helix: {
+        // A coil: slanted loops along an upright axis.
+        QPainterPath coil;
+        coil.moveTo(5, 19);
+        for (int turn = 0; turn < 3; ++turn) {
+            const double y = 19 - 5.5 * turn;
+            coil.cubicTo(5, y - 4, 19, y - 2, 19, y - 3);
+            coil.cubicTo(19, y - 5, 5, y - 4, 5, y - 5.5);
+        }
+        painter.drawPath(coil);
+        break;
+    }
+    case ShellIcon::draft:
+        // A block whose sides lean in towards the top, over its neutral base line.
+        painter.drawLine(QPointF(3, 20), QPointF(21, 20));
+        painter.drawLine(QPointF(6, 20), QPointF(9, 5));
+        painter.drawLine(QPointF(18, 20), QPointF(15, 5));
+        painter.drawLine(QPointF(9, 5), QPointF(15, 5));
+        break;
     case ShellIcon::loft:
         // A wide section below, a small one above, joined by straight sides.
         painter.drawEllipse(QRectF(3, 15, 18, 6));

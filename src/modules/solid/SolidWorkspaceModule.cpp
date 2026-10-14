@@ -74,6 +74,17 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                          false,
                          simpleCommand(std::move(services.extrudeProfiles)),
                          services.canExtrudeProfiles});
+    if (services.helix)
+        commands_.push_back({"solid.create.helix",
+                             "Wendel",
+                             "Gewählten Skizzenbereich als Wendel um eine Achse führen (Feder, Gewindenut)",
+                             {},
+                             workspaces::CommandGroup::create,
+                             true,
+                             false,
+                             simpleCommand(std::move(services.helix)),
+                             services.canExtrudeProfiles,
+                             "Wendel"});
     if (services.loft)
         commands_.push_back({"solid.create.loft",
                              "Ausformung",
@@ -201,6 +212,17 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                              simpleCommand(std::move(services.hole)),
                              services.canHole,
                              "Bohrung"});
+    if (services.draft)
+        commands_.push_back({"solid.modify.draft",
+                             "Formschräge",
+                             "Flächen um die gewählte neutrale Fläche neigen",
+                             {},
+                             workspaces::CommandGroup::modify,
+                             true,
+                             false,
+                             simpleCommand(std::move(services.draft)),
+                             services.canHole,
+                             "Formschräge"});
     if (services.shell)
         commands_.push_back({"solid.modify.shell",
                              "Wandstärke",

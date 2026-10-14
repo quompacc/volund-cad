@@ -36,6 +36,7 @@ add_library(
     SketchEditorDimensionEdit.cpp
     SketchEditorParameters.cpp
     SketchExtrusionModes.cpp
+    DraftToolController.cpp
     SketchEditorClosing.cpp
     SketchEditorRecovery.cpp
     SketchEditorToolController.cpp

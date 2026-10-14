@@ -257,6 +257,19 @@ struct EditShellParametersAction final {
     document::ShellParameters parameters;
     bool operator==(const EditShellParametersAction&) const = default;
 };
+// M25: a draft of faces of `support`'s body about the neutral face (angle in rad).
+struct CreateDraftAction final {
+    document::FeatureId support;
+    std::vector<document::SubshapeOrigin> faces;
+    document::SubshapeOrigin neutral;
+    Quantity angle;
+    bool operator==(const CreateDraftAction&) const = default;
+};
+struct EditDraftParametersAction final {
+    document::FeatureId draft;
+    document::DraftParameters parameters;
+    bool operator==(const EditDraftParametersAction&) const = default;
+};
 struct SetPlacementAction final {
     document::FeatureId feature;
     Quantity x;
@@ -284,7 +297,8 @@ using Action = std::variant<CreateParameterAction, SetParameterValueAction, Rena
                             CreateDatumPlaneAction, EditDatumPlaneParametersAction,
                             CreateDatumAxisAction, EditDatumAxisParametersAction,
                             CreateShellAction, EditShellParametersAction,
-                            CreatePrimitiveAction, EditPrimitiveParametersAction>;
+                            CreatePrimitiveAction, EditPrimitiveParametersAction,
+                            CreateDraftAction, EditDraftParametersAction>;
 // Parallel to the alternatives of Action.
 enum class ActionKind {
     createParameter,
@@ -322,7 +336,9 @@ enum class ActionKind {
     createShell,
     editShellParameters,
     createPrimitive, // M27
-    editPrimitiveParameters
+    editPrimitiveParameters,
+    createDraft, // M25
+    editDraftParameters
 };
 [[nodiscard]] ActionKind actionKind(const Action& action) noexcept;
 

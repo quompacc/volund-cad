@@ -14,6 +14,7 @@
 #include <voelund/kernel/Revolution.hpp>
 #include <voelund/kernel/Sweep.hpp>
 #include <voelund/kernel/Loft.hpp>
+#include <voelund/kernel/Helix.hpp>
 #include <BRepTools.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
 #include <TopExp_Explorer.hxx>
@@ -145,6 +146,41 @@ gp_Ax1 revolveAxis(const document::SketchParameters& sketch, const document::Rev
                                       "revolve-axis-missing");
     return gp_Ax1(start, gp_Dir(gp_Vec(start, end)));
 }
+// M26: the one selected region swept along a helix about the revolve axis; reversed is
+// left-handed. Faces: start, end and the sides each contour edge sweeps.
+Prism makeHelix(document::FeatureId extrusion, document::FeatureId sketchId,
+                const document::SketchParameters& sketch,
+                const document::ExtrusionParameters& parameters,
+                const std::vector<EvaluatedFeature>& outputs) {
+    const gp_Ax1 axis = revolveAxis(sketch, parameters.revolve->axis, outputs);
+    const auto profiles = evaluateExtrusionFaces(sketch, parameters);
+    if (profiles.size() != 1)
+        throw GeometryEvaluationError("A helix sweeps exactly one region", "helix-one-region");
+    const auto& location = axis.Location();
+    const auto& direction = axis.Direction();
+    const kernel::Helix helix(profiles.front().face, {location.X(), location.Y(), location.Z()},
+                              {direction.X(), direction.Y(), direction.Z()},
+                              *parameters.revolve->pitch, parameters.revolve->angle.value(),
+                              parameters.reversed);
+    Prism result{helix.shape(), {}, {}};
+    const auto& profile = profiles.front();
+    if (const auto cap = helix.endFace(); !cap.IsNull())
+        result.caps.push_back({{extrusion, std::nullopt, profile.boundary},
+                               {cap},
+                               kernel::HistoryCoverage::complete,
+                               cap});
+    document::SubshapeOrigin start{extrusion, std::nullopt, profile.boundary};
+    start.extrusionFace = document::ExtrusionFace::start;
+    addSupportFace(result.caps, start, helix.startFace());
+    for (const auto& edge : profile.edges) {
+        document::SubshapeOrigin side{extrusion, std::nullopt, profile.boundary};
+        side.extrusionFace = document::ExtrusionFace::side;
+        side.sweptEdge = document::ContourEdgeOrigin{sketchId, edge.element, edge.role};
+        for (const auto& face : helix.generated(edge.edge))
+            addSupportFace(result.caps, side, face);
+    }
+    return result;
+}
 // M20: the selected regions turned about the axis; reversed turns the other way, symmetric
 // starts half the angle behind the sketch plane. Faces are named as for a prism: start, end
 // (none for a full turn) and the side each contour edge turns into.
@@ -152,6 +188,8 @@ Prism makeRevolution(document::FeatureId extrusion, document::FeatureId sketchId
                      document::SketchParameters sketch,
                      const document::ExtrusionParameters& parameters,
                      const std::vector<EvaluatedFeature>& outputs) {
+    if (parameters.revolve->pitch) // M26
+        return makeHelix(extrusion, sketchId, sketch, parameters, outputs);
     gp_Ax1 axis = revolveAxis(sketch, parameters.revolve->axis, outputs);
     if (parameters.reversed)
         axis.Reverse();

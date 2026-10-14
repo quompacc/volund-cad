@@ -71,6 +71,8 @@ void MainWindow::connectInteractions() {
                 return impl_->holeTool->place(selection); // M08: moves the hole there
             if (impl_->shellTool->isActive())
                 return impl_->shellTool->picked(selection); // M22: opens or closes the face
+            if (impl_->draftTool->isActive())
+                return impl_->draftTool->picked(selection); // M25: tilts the face or not
             clearEdgeSelection();
             // T03: while the extrusion waits for its end face, the pick goes to the tool.
             if (impl_->sketchExtrusionTool->awaitsEndFace()) {

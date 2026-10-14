@@ -274,6 +274,14 @@ class Validation final {
         static_cast<void>(target(action.shell, ActionKind::editShellParameters));
         finite({action.parameters.thickness});
     }
+    void operator()(const CreateDraftAction& action) {
+        static_cast<void>(target(action.support, ActionKind::createDraft));
+        quantity(action.angle, QuantityUnit::radian);
+    }
+    void operator()(const EditDraftParametersAction& action) {
+        static_cast<void>(target(action.draft, ActionKind::editDraftParameters));
+        finite({action.parameters.angle.value()});
+    }
     void operator()(const CreatePrimitiveAction& action) {
         if (action.input)
             static_cast<void>(target(*action.input, ActionKind::createPrimitive));
@@ -430,6 +438,12 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot,
             },
             [&](const EditShellParametersAction& a) {
                 return session.editShellParameters(a.shell, a.parameters, reject);
+            },
+            [&](const CreateDraftAction& a) {
+                return session.createDraft(a.support, a.faces, a.neutral, a.angle.value);
+            },
+            [&](const EditDraftParametersAction& a) {
+                return session.editDraftParameters(a.draft, a.parameters, reject);
             },
             [&](const CreatePrimitiveAction& a) {
                 return session.createPrimitive(a.shape, a.input, a.mode);

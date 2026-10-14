@@ -37,6 +37,7 @@ std::optional<ShellIcon> iconFor(const QString& id) {
         {QStringLiteral("solid.create.revolve"), ShellIcon::revolve},
         {QStringLiteral("solid.create.sweep"), ShellIcon::sweep}, // M23
         {QStringLiteral("solid.create.loft"), ShellIcon::loft},   // M24
+        {QStringLiteral("solid.create.helix"), ShellIcon::helix}, // M26
         {QStringLiteral("solid.modify.transform"), ShellIcon::transform},
         {QStringLiteral("solid.modify.edit_sketch"), ShellIcon::editSketch},
         {QStringLiteral("solid.modify.push_pull"), ShellIcon::pushPull},
@@ -45,6 +46,7 @@ std::optional<ShellIcon> iconFor(const QString& id) {
         {QStringLiteral("solid.modify.hole"), ShellIcon::hole},
         {QStringLiteral("solid.modify.combine"), ShellIcon::combine},
         {QStringLiteral("solid.modify.shell"), ShellIcon::shell},
+        {QStringLiteral("solid.modify.draft"), ShellIcon::draft}, // M25
         {QStringLiteral("solid.create.datum_plane"), ShellIcon::datumPlane},
         {QStringLiteral("solid.create.datum_axis"), ShellIcon::datumAxis},
         {QStringLiteral("repair.references"), ShellIcon::repair},

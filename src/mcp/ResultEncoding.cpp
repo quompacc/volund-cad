@@ -23,7 +23,8 @@ constexpr const char* toolNames[] = {
     nullptr,                  nullptr,                  nullptr,
     nullptr,                  nullptr,                  nullptr,
     nullptr,                  nullptr,                  nullptr,
-    nullptr,                  nullptr,                  nullptr}; // M27: no tools yet
+    nullptr,                  nullptr,                  nullptr,  // M27: no tools yet
+    nullptr,                  nullptr}; // M25: no tools yet
 constexpr const char* statusNames[] = {"rejected", "committed", "committedWithErrors"};
 constexpr const char* rejectionNames[] = {
     "none",     "foreignDocument", "staleStamp",          "unknownTarget",    "unsupportedTarget",
@@ -35,7 +36,7 @@ constexpr const char* evaluationNames[] = {"valid", "dirty", "failed", "blockedB
                                            "suppressed"};
 constexpr const char* featureKinds[] = {"box",    "cylinder", "sketch", "extrusion",
                                         "fillet", "chamfer",  "hole",   "combine",
-                                        "datumPlane", "datumAxis", "shell", "primitive"};
+                                        "datumPlane", "datumAxis", "shell", "primitive", "draft"};
 constexpr const char* primitiveShapes[] = {"sphere", "cone", "torus", "wedge"};
 constexpr const char* basePlaneNames[] = {"", "xy", "xz", "yz"};
 constexpr const char* baseAxisNames[] = {"", "x", "y", "z"};
@@ -83,6 +84,11 @@ QJsonObject featureParameters(const document::FeatureParameters& parameters) {
                         {"height", detail::quantity(cylinder.height, "mm")},
                         {"mode", name(cylinderModes, cylinder.resultMode)},
                         {"placement", placement(cylinder.placement)}};
+            },
+            [](const document::DraftParameters& draft) -> QJsonObject { // M25
+                return {{"angle", detail::quantity(draft.angle.value(), "rad")},
+                        {"bodyId", id(draft.body.value())},
+                        {"faceCount", static_cast<int>(draft.faces.size())}};
             },
             [](const document::PrimitiveParameters& primitive) -> QJsonObject { // M27
                 QJsonArray sizes;

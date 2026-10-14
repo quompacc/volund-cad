@@ -50,6 +50,11 @@ void evaluateDatumAxis(const document::DocumentSnapshot& document,
                        const document::FeatureDescriptor& descriptor,
                        std::vector<EvaluatedFeature>& outputs);
 // M22 (ShellEvaluation.cpp): walls of one thickness with named faces opened.
+// M25 (DraftEvaluation.cpp): tilts named faces of a body.
+void evaluateDraft(const document::DocumentSnapshot& document,
+                   const document::FeatureDescriptor& descriptor,
+                   std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
+                   std::vector<EvaluatedBody>& referenceBodies);
 void evaluateShell(const document::DocumentSnapshot& document,
                    const document::FeatureDescriptor& descriptor,
                    std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,

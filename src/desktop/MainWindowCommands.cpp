@@ -133,6 +133,11 @@ void MainWindow::createCommands() {
             syncShell();
             return;
         }
+        if (kind == document::FeatureKind::draft) { // M25
+            impl_->draftTool->beginEdit(*selected);
+            syncShell();
+            return;
+        }
         if (kind == document::FeatureKind::datumPlane ||
             kind == document::FeatureKind::datumAxis) {
             impl_->datumTool->beginEdit(*selected);
@@ -166,6 +171,13 @@ void MainWindow::createCommands() {
         if (impl_->sketchExtrusionTool->isActive())
             impl_->sketchExtrusionTool->cancel();
         impl_->sketchExtrusionTool->beginSelectedProfiles(true);
+    };
+    services.helix = [this]() { // M26
+        if (impl_->sketchEditorTool->isActive())
+            impl_->sketchEditorTool->cancel();
+        if (impl_->sketchExtrusionTool->isActive())
+            impl_->sketchExtrusionTool->cancel();
+        impl_->sketchExtrusionTool->beginSelectedProfiles(true, true);
     };
     services.loft = [this]() { // M24
         if (impl_->sketchEditorTool->isActive())
@@ -278,6 +290,15 @@ void MainWindow::createCommands() {
         if (impl_->sketchExtrusionTool->isActive())
             impl_->sketchExtrusionTool->cancel();
         impl_->shellTool->begin(*impl_->selectedPlanarFace);
+        syncShell();
+    };
+    // M25: a draft about the picked planar face as the neutral face.
+    services.draft = [this]() {
+        if (!impl_->selectedPlanarFace)
+            return;
+        if (impl_->sketchExtrusionTool->isActive())
+            impl_->sketchExtrusionTool->cancel();
+        impl_->draftTool->begin(*impl_->selectedPlanarFace);
         syncShell();
     };
     services.canHole = [this]() {

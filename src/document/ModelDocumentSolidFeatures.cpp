@@ -121,6 +121,8 @@ void validateLoftParameters(const LoftParameters& parameters) {
 }
 
 void validateSweepExtrusion(const ExtrusionParameters& parameters) {
+    if (parameters.revolve && parameters.revolve->pitch && parameters.symmetric)
+        throw std::invalid_argument("A helix is not symmetric"); // M26
     if (!parameters.sweep && !parameters.loft)
         return;
     if (parameters.sweep)
@@ -146,6 +148,12 @@ void validateRevolveParameters(const RevolveParameters& parameters) {
          (static_cast<int>(*axis.baseAxis) < 1 || static_cast<int>(*axis.baseAxis) > 3)))
         throw std::invalid_argument("Unknown revolve axis");
     const double angle = parameters.angle.value();
+    if (parameters.pitch) {
+        if (!kernel::modelLength(*parameters.pitch) || !(angle > 1e-9) ||
+            angle > 2000.0 * std::numbers::pi)
+            throw std::invalid_argument("A helix has a positive pitch and up to 1000 turns");
+        return;
+    }
     if (!(angle > 1e-9) || angle > 2.0 * std::numbers::pi + 1e-12)
         throw std::invalid_argument("A revolve turns by more than 0 and at most 360 degrees");
 }

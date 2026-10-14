@@ -6,11 +6,23 @@
 #include <TopoDS_Edge.hxx>
 #include <TopoDS_Shape.hxx>
 
+#include <array>
 #include <cstddef>
+#include <stdexcept>
 #include <span>
 #include <vector>
 
 namespace voelund::kernel {
+
+// M25: a face a draft cannot tilt, by its index in the list given.
+class DraftFaceError final : public std::runtime_error {
+  public:
+    explicit DraftFaceError(std::size_t face);
+    [[nodiscard]] std::size_t face() const noexcept { return face_; }
+
+  private:
+    std::size_t face_;
+};
 
 class ShapeOperations final {
   public:
@@ -45,6 +57,14 @@ class ShapeOperations final {
     [[nodiscard]] static ShapeOperationResult
     shellWithHistory(const TopoDS_Shape& input, std::span<const TopoDS_Shape> openFaces,
                      double thickness, bool outward);
+    // M25 (DraftOperation.cpp): tilts the faces by `angle` (radians, |angle| below 90 degrees)
+    // about their line on the neutral plane through `neutralOrigin`, normal to the pull
+    // direction. Faces keep their history. A face that cannot be tilted throws DraftFaceError;
+    // other failures KernelError.
+    [[nodiscard]] static ShapeOperationResult
+    draftWithHistory(const TopoDS_Shape& input, std::span<const TopoDS_Shape> faces,
+                     const std::array<double, 3>& neutralOrigin,
+                     const std::array<double, 3>& pullDirection, double angle);
     // Invalid inputs and failed OCCT operations throw KernelError. Its operation
     // identifies the public entry point, including failures of internal checks.
     [[nodiscard]] static TopoDS_Shape fuse(const TopoDS_Shape& left, const TopoDS_Shape& right);

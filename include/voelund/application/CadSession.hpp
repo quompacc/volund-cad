@@ -281,6 +281,15 @@ class CadSession final {
     editShellParameters(document::FeatureId featureId, const document::ShellParameters& parameters,
                         ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] document::ShellParameters shellParameters(document::FeatureId featureId) const;
+    // M25: tilts the named faces of `support`'s current body by `angle` (radians) about the
+    // plane of the neutral face ("Formschräge N"); one undo step.
+    [[nodiscard]] CommandResult createDraft(document::FeatureId support,
+                                            std::span<const document::SubshapeOrigin> faces,
+                                            const document::SubshapeOrigin& neutral, double angle);
+    [[nodiscard]] CommandResult
+    editDraftParameters(document::FeatureId featureId, const document::DraftParameters& parameters,
+                        ErrorDisposition disposition = ErrorDisposition::reject);
+    [[nodiscard]] document::DraftParameters draftParameters(document::FeatureId featureId) const;
     // M27 (CadSessionPrimitives.cpp): a sphere, cone, torus or wedge ("Kugel N" ...), added as
     // a cylinder is: on `input` (join, cut, intersect, or separate beside it) or as a new body
     // at the origin; one undo step.

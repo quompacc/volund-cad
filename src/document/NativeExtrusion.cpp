@@ -165,6 +165,8 @@ void writeNativeExtrusion(const TDF_Label& label, const ExtrusionParameters& par
                                     : axis.baseAxis ? static_cast<std::uint64_t>(*axis.baseAxis)
                                                     : axis.datumAxis->value();
         TDataStd_AsciiString::Set(revolve.FindChild(2), std::to_string(value).c_str());
+        if (parameters.revolve->pitch) // M26 (schema 28)
+            TDataStd_Real::Set(revolve.FindChild(3), *parameters.revolve->pitch);
     }
     // M24 (schema 27): child 14 holds ruled (0/1) and each section (1..): its sketch (1) and
     // region (2, as the region list).
@@ -297,7 +299,9 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
     }
     if (!revolve.IsNull()) {
         Handle(TDataStd_Real) angle;
-        require(revolve.NbChildren() == 2 &&
+        const auto pitch = revolve.FindChild(3, false);
+        require(revolve.NbChildren() == (pitch.IsNull() ? 2 : 3) &&
+                (pitch.IsNull() || schemaVersion >= 28) &&
                 revolve.FindAttribute(TDataStd_Real::GetID(), angle));
         const int kind = readInteger(child(revolve, 1));
         const std::uint64_t value = readDecimal(child(revolve, 2));
@@ -310,6 +314,12 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
         else
             axis.datumAxis = FeatureId{value};
         result.revolve = RevolveParameters{axis, kernel::Radians{angle->Get()}};
+        if (!pitch.IsNull()) {
+            Handle(TDataStd_Real) stored;
+            require(pitch.NbChildren() == 0 &&
+                    pitch.FindAttribute(TDataStd_Real::GetID(), stored));
+            result.revolve->pitch = stored->Get();
+        }
         validateRevolveParameters(*result.revolve);
     }
     if (!sweep.IsNull()) {

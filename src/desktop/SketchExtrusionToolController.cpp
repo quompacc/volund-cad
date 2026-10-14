@@ -25,7 +25,7 @@ SketchExtrusionToolController::SketchExtrusionToolController(
     : session_(session), panel_(panel), sceneChanged_(std::move(sceneChanged)),
       statusChanged_(std::move(statusChanged)) {}
 
-void SketchExtrusionToolController::beginSelectedProfiles(bool revolve) {
+void SketchExtrusionToolController::beginSelectedProfiles(bool revolve, bool helix) {
     if (!session_.canExtrudeSelectedSketchProfiles())
         return;
     editing_.reset();
@@ -38,6 +38,10 @@ void SketchExtrusionToolController::beginSelectedProfiles(bool revolve) {
         // M20: a full turn about the sketch's first construction line, else about a base axis
         // in the sketch plane; without one the panel waits for a picked line.
         values.revolve = document::RevolveParameters{{}, kernel::Radians{2 * std::numbers::pi}};
+        if (helix) {
+            values.revolve->pitch = 5.0;
+            values.revolve->angle = kernel::Radians{8 * std::numbers::pi};
+        }
         const auto sketch = session_.sketchParameters(*session_.selectedFeature());
         for (const auto& element : sketch.elements.values)
             if (element.construction && std::holds_alternative<document::SketchLine>(element.geometry)) {
@@ -196,6 +200,18 @@ void SketchExtrusionToolController::open(document::FeatureId sketchId,
         choices.insert(choices.begin(), {"axis", QObject::tr("Achse"), axisNames, axisIndex()});
         lengths = {{"angle", QObject::tr("Winkel"), angleDegrees_, 0.001, 360.0,
                     ToolValueKind::angle}};
+        if (revolve_->pitch) {
+            // M26: pitch and height instead of the angle; the direction is the hand.
+            const double height =
+                *revolve_->pitch * revolve_->angle.value() / (2 * std::numbers::pi);
+            lengths = {{"pitch", QObject::tr("Steigung"), *revolve_->pitch, 0.001, 1'000'000.0},
+                       {"height", QObject::tr("Höhe"), height, 0.001, 1'000'000.0}};
+            for (auto& choice : choices)
+                if (choice.id == "direction") {
+                    choice.choices = {QObject::tr("Rechtsgängig"), QObject::tr("Linksgängig")};
+                    choice.currentIndex = reversed_ ? 1 : 0;
+                }
+        }
     }
     if (sweep_) {
         // M23: the path instead of end, direction and lengths.
@@ -228,7 +244,9 @@ void SketchExtrusionToolController::open(document::FeatureId sketchId,
         lengths.clear();
     }
     panel_.begin(ToolPanelDefinition{
-        revolve_  ? (editing_ ? QObject::tr("Drehung bearbeiten") : QObject::tr("Drehen"))
+        revolve_ && revolve_->pitch
+            ? (editing_ ? QObject::tr("Wendel bearbeiten") : QObject::tr("Wendel"))
+        : revolve_ ? (editing_ ? QObject::tr("Drehung bearbeiten") : QObject::tr("Drehen"))
         : sweep_ ? (editing_ ? QObject::tr("Folgen bearbeiten") : QObject::tr("Folgen"))
         : loft_  ? (editing_ ? QObject::tr("Ausformung bearbeiten") : QObject::tr("Ausformung"))
                  : (editing_ ? QObject::tr("Extrusion bearbeiten") : QObject::tr("Extrudieren")),
@@ -244,6 +262,13 @@ void SketchExtrusionToolController::open(document::FeatureId sketchId,
             else if (id == "angle" && revolve_) {
                 angleDegrees_ = value;
                 revolve_->angle = kernel::Radians{value * std::numbers::pi / 180.0};
+            } else if (revolve_ && revolve_->pitch && (id == "pitch" || id == "height")) {
+                // M26: the height stays when the pitch changes.
+                const double turns = revolve_->angle.value() / (2 * std::numbers::pi);
+                const double height = id == "height" ? value : *revolve_->pitch * turns;
+                if (id == "pitch")
+                    revolve_->pitch = value;
+                revolve_->angle = kernel::Radians{height / *revolve_->pitch * 2 * std::numbers::pi};
             }
             preview();
         },

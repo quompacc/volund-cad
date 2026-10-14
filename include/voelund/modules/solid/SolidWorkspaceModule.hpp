@@ -42,6 +42,10 @@ struct SolidCommandServices final {
     std::function<void()> sweep{};
     // M24: lofts the one selected region to another sketch; enabled like the extrusion.
     std::function<void()> loft{};
+    // M26: a helix of the selected region about an axis; enabled like the extrusion.
+    std::function<void()> helix{};
+    // M25: a draft about the picked planar face; enabled like the hole.
+    std::function<void()> draft{};
     // M19: construction planes and axes.
     std::function<void()> datumPlane{};
     std::function<void()> datumAxis{};

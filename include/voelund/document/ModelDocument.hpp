@@ -40,7 +40,8 @@ enum class FeatureKind {
     datumPlane,
     datumAxis,
     shell,
-    primitive // M27: sphere, cone, torus, wedge
+    primitive, // M27: sphere, cone, torus, wedge
+    draft      // M25
 };
 enum class CylinderResultMode { join, cut, intersect, separate };
 
@@ -181,6 +182,9 @@ struct RevolveAxis final {
 struct RevolveParameters final {
     RevolveAxis axis;
     kernel::Radians angle;
+    // M26 (schema 28): a helix ("Wendel") advances this far along the axis per turn; `angle`
+    // is then the whole turn (up to 1000 turns), reversed means left-handed, never symmetric.
+    std::optional<double> pitch{};
     [[nodiscard]] bool operator==(const RevolveParameters&) const = default;
 };
 void validateRevolveParameters(const RevolveParameters& parameters);
@@ -331,6 +335,17 @@ struct ShellParameters final {
     [[nodiscard]] bool operator==(const ShellParameters&) const = default;
 };
 void validateShellParameters(const ShellParameters& parameters);
+// M25 (schema 29, user decision 2026-10-14): a draft ("Formschräge") tilts the named faces of a
+// body by `angle` about their line on the plane of the neutral face, pulled along its normal.
+inline constexpr std::size_t maximumDraftFaces = 256;
+struct DraftParameters final {
+    BodyId body;
+    std::vector<SubshapeOrigin> faces;
+    SubshapeOrigin neutral;
+    kernel::Radians angle;
+    [[nodiscard]] bool operator==(const DraftParameters&) const = default;
+};
+void validateDraftParameters(const DraftParameters& parameters);
 
 // The operation in effect, with the earlier rule for an unset one.
 [[nodiscard]] ExtrusionOperation effectiveOperation(const ExtrusionParameters& parameters,
@@ -348,7 +363,7 @@ using FeatureParameters =
     std::variant<BoxParameters, CylinderParameters, SketchParameters, ExtrusionParameters,
                  FilletParameters, ChamferParameters, HoleParameters, CombineParameters,
                  DatumPlaneParameters, DatumAxisParameters, ShellParameters,
-                 PrimitiveParameters>;
+                 PrimitiveParameters, DraftParameters>;
 
 // PAR01: every binding names an existing parameter of a matching unit, only dimensional
 // constraints bind, and the table itself is valid. Throws std::invalid_argument.
@@ -405,6 +420,10 @@ class ModelDocument final {
                                                 std::optional<FeatureId> inputFeature,
                                                 const PrimitiveParameters& parameters);
     [[nodiscard]] const PrimitiveParameters& primitiveParameters(FeatureId featureId) const;
+    // M25 (ModelDocumentDraft.cpp).
+    [[nodiscard]] FeatureId addDraftFeature(std::string name, const DraftParameters& parameters);
+    [[nodiscard]] const DraftParameters& draftParameters(FeatureId featureId) const;
+    [[nodiscard]] bool setDraftParameters(FeatureId featureId, const DraftParameters& parameters);
     [[nodiscard]] bool setPrimitiveParameters(FeatureId featureId,
                                               const PrimitiveParameters& parameters);
     [[nodiscard]] const kernel::BoxDimensions& boxDimensions(FeatureId featureId) const;

@@ -208,4 +208,45 @@ document::ShellParameters CadSession::shellParameters(document::FeatureId featur
     return document_.shellParameters(featureId);
 }
 
+CommandResult CadSession::createDraft(document::FeatureId support,
+                                     std::span<const document::SubshapeOrigin> faces,
+                                     const document::SubshapeOrigin& neutral, double angle) {
+    const auto body = resultBody(support);
+    if (!body)
+        return CommandResult::invalidInput("A draft needs a current body");
+    const std::size_t sequence =
+        featureCount(document_.features(), document::FeatureKind::draft) + 1;
+    document::DocumentTransaction transaction(document_);
+    auto& candidate = transaction.edit();
+    const auto idInput = detail::prepareInput([&] {
+        return candidate.addDraftFeature(
+            "Formschräge " + std::to_string(sequence),
+            document::DraftParameters{*body, {faces.begin(), faces.end()}, neutral,
+                                      kernel::Radians{angle}});
+    });
+    if (!idInput.value)
+        return CommandResult::invalidInput(idInput.diagnostic);
+    return finishCandidate(transaction, *idInput.value, CommandKind::newFeature,
+                           ErrorDisposition::reject, true);
+}
+
+CommandResult CadSession::editDraftParameters(document::FeatureId featureId,
+                                              const document::DraftParameters& parameters,
+                                              ErrorDisposition disposition) {
+    document::DocumentTransaction transaction(document_);
+    auto& candidate = transaction.edit();
+    const auto input = detail::prepareInput(
+        [&] { return candidate.setDraftParameters(featureId, parameters); });
+    if (!input.value)
+        return CommandResult::invalidInput(input.diagnostic);
+    if (!*input.value)
+        return {CommandStatus::rejected, RejectionReason::noChange};
+    return finishCandidate(transaction, selectedFeature_, CommandKind::editFeature, disposition,
+                           false);
+}
+
+document::DraftParameters CadSession::draftParameters(document::FeatureId featureId) const {
+    return document_.draftParameters(featureId);
+}
+
 } // namespace voelund::application

@@ -63,6 +63,9 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
     case FeatureKind::primitive: // M27
         matches = std::holds_alternative<PrimitiveParameters>(parameters);
         break;
+    case FeatureKind::draft: // M25
+        matches = std::holds_alternative<DraftParameters>(parameters);
+        break;
     }
     if (!matches)
         throw std::invalid_argument("Legacy body identity: feature parameter kind mismatch");
@@ -73,6 +76,7 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
         feature.kind == FeatureKind::chamfer || feature.kind == FeatureKind::hole ||
         feature.kind == FeatureKind::combine || feature.kind == FeatureKind::datumPlane ||
         feature.kind == FeatureKind::datumAxis || feature.kind == FeatureKind::shell ||
+        feature.kind == FeatureKind::draft ||
         (feature.kind == FeatureKind::sketch && (std::get<SketchParameters>(parameters).datum ||
                                                  std::get<SketchParameters>(parameters)
                                                      .constructionPlane)) ||
@@ -160,6 +164,9 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
         // M22: a shell hollows its body.
         if (features[index].kind == FeatureKind::shell)
             return std::get<ShellParameters>(parameters[index]).body;
+        // M25: a draft tilts faces of its body.
+        if (features[index].kind == FeatureKind::draft)
+            return std::get<DraftParameters>(parameters[index]).body;
         return std::nullopt;
     };
     for (std::size_t index = 0; index < features.size(); ++index)

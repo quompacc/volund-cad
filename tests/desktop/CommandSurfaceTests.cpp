@@ -88,12 +88,12 @@ void surfaces() {
                                       "solid.create.torus",     "solid.create.wedge",
                                       "solid.create.sketch",    "solid.create.extrude_profiles",
                                       "solid.create.revolve", "solid.create.sweep",
-                                      "solid.create.loft",
+                                      "solid.create.loft",       "solid.create.helix",
                                       "solid.modify.transform", "solid.modify.edit_sketch",
                                       "solid.modify.push_pull", "solid.modify.fillet",
                                       "solid.modify.chamfer", "solid.modify.hole",
                                       "solid.modify.combine",   "solid.create.datum_plane",
-                                      "solid.modify.shell",
+                                      "solid.modify.shell",     "solid.modify.draft",
                                       "solid.create.datum_axis"};
     require(railIds == solid, "The rail shows every solid command");
     require(!command(window, "solid.create.sketch")->isEnabled(),

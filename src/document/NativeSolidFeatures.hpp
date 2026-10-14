@@ -31,6 +31,11 @@ void writeNativeDatumAxis(const TDF_Label& label, const DatumAxisParameters& par
 DatumAxisParameters readNativeDatumAxis(const TDF_Label& label, std::size_t remainingRecords,
                                         int schemaVersion);
 std::size_t nativeDatumAxisRecords(const DatumAxisParameters& parameters);
+// M25 (NativeDraft.cpp).
+void writeNativeDraft(const TDF_Label& label, const DraftParameters& parameters);
+DraftParameters readNativeDraft(const TDF_Label& label, std::size_t remainingRecords,
+                                int schemaVersion);
+std::size_t nativeDraftRecords(const DraftParameters& parameters);
 // M27 (NativePrimitiveSolid.cpp).
 void writeNativePrimitive(const TDF_Label& label, const PrimitiveParameters& parameters);
 PrimitiveParameters readNativePrimitive(const TDF_Label& label, int schemaVersion);

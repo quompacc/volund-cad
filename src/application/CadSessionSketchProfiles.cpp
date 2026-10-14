@@ -232,7 +232,11 @@ CadSession::createSketchProfileExtrusion(document::FeatureId sketchFeature,
         if (feature.kind != document::FeatureKind::extrusion)
             continue;
         const auto& existing = snapshot.extrusionParameters(feature.id);
+        const auto helix = [](const std::optional<document::RevolveParameters>& revolve) {
+            return revolve && revolve->pitch;
+        };
         if (existing.revolve.has_value() == mode.revolve.has_value() &&
+            helix(existing.revolve) == helix(mode.revolve) &&
             existing.sweep.has_value() == mode.sweep.has_value() &&
             existing.loft.has_value() == mode.loft.has_value())
             ++sequence;
@@ -242,7 +246,8 @@ CadSession::createSketchProfileExtrusion(document::FeatureId sketchFeature,
     const std::vector<document::SketchRegionId> selected(profileIds.begin(), profileIds.end());
     const auto input = detail::prepareInput([&] {
         return candidate.addExtrusionFeature(
-            (mode.revolve ? "Drehung "
+            (mode.revolve && mode.revolve->pitch ? "Wendel "
+             : mode.revolve                      ? "Drehung "
              : mode.sweep ? "Folgen "
              : mode.loft  ? "Ausformung "
                           : "Extrusion ") +

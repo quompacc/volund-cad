@@ -81,6 +81,9 @@ const CylinderParameters& DocumentSnapshot::cylinderParameters(FeatureId id) con
 const PrimitiveParameters& DocumentSnapshot::primitiveParameters(FeatureId id) const {
     return std::get<PrimitiveParameters>(featureParameters(id));
 }
+const DraftParameters& DocumentSnapshot::draftParameters(FeatureId id) const {
+    return std::get<DraftParameters>(featureParameters(id));
+}
 const SketchParameters& DocumentSnapshot::sketchParameters(FeatureId id) const {
     return std::get<SketchParameters>(featureParameters(id));
 }

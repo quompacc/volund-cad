@@ -81,6 +81,9 @@ std::vector<ActionKind> availableActions(const CadSession& session,
     case FeatureKind::primitive:
         actions = {ActionKind::editPrimitiveParameters};
         break;
+    case FeatureKind::draft:
+        actions = {ActionKind::editDraftParameters};
+        break;
     }
     if (session.placementFeature(feature))
         actions.push_back(ActionKind::setPlacement);
@@ -99,6 +102,7 @@ std::vector<ActionKind> availableActions(const CadSession& session,
             actions.push_back(ActionKind::createDatumPlane);
             actions.push_back(ActionKind::createDatumAxis);
             actions.push_back(ActionKind::createShell);
+            actions.push_back(ActionKind::createDraft);
         }
     }
     return actions;
