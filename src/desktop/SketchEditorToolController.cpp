@@ -146,6 +146,8 @@ void SketchEditorToolController::showPanel() {
           QObject::tr("Beziehungen")},
          {"diameter", QObject::tr("Durchmesser des gewählten Kreises bemaßen"),
           QObject::tr("Bemaßungen")},
+         {"radius", QObject::tr("Radius des gewählten Kreises oder Bogens bemaßen"),
+          QObject::tr("Bemaßungen")},
          {"point_distance", QObject::tr("Abstand der gewählten Punkte bemaßen"),
           QObject::tr("Bemaßungen")},
          {"point_line_distance",
@@ -260,6 +262,8 @@ void SketchEditorToolController::showPanel() {
                 applyRelation(document::SketchConstraintKind::concentric);
             } else if (id == "diameter") {
                 applyRelation(document::SketchConstraintKind::diameter);
+            } else if (id == "radius") {
+                applyRelation(document::SketchConstraintKind::radius);
             } else if (id == "point_distance") {
                 applyRelation(document::SketchConstraintKind::pointDistance);
             } else if (id == "point_line_distance") {
@@ -475,6 +479,8 @@ void SketchEditorToolController::applyRelation(document::SketchConstraintKind ki
                            ? QT_TRANSLATE_NOOP("QObject", "Konzentrisch-Bedingung hinzugefügt")
                        : kind == document::SketchConstraintKind::diameter
                            ? QT_TRANSLATE_NOOP("QObject", "Durchmessermaß hinzugefügt")
+                       : kind == document::SketchConstraintKind::radius
+                           ? QT_TRANSLATE_NOOP("QObject", "Radiusmaß hinzugefügt")
                        : kind == document::SketchConstraintKind::pointDistance
                            ? QT_TRANSLATE_NOOP("QObject", "Punktabstand hinzugefügt")
                        : kind == document::SketchConstraintKind::pointLineDistance

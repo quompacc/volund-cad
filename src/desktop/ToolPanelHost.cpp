@@ -46,6 +46,7 @@ QString compactActionLabel(const std::string& id, const QString& fallback) {
         {"tangent", QObject::tr("Tangential")},
         {"concentric", QObject::tr("Konzentrisch")},
         {"diameter", QObject::tr("Durchmesser")},
+        {"radius", QObject::tr("Radius")},
         {"point_distance", QObject::tr("Distanz")},
         {"point_line_distance", QObject::tr("Punkt–Linie")},
         {"point_distance_x", QObject::tr("Abstand X")},

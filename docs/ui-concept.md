@@ -187,7 +187,7 @@ Er zeigt die zuletzt benutzte Variante, sein Pfeil öffnet die anderen. Abschnit
 Familien: **Zeichnen** (Auswahl · Linie/Polylinie · Rechteck/Mittelpunkt-Rechteck ·
 Kreis/Ellipse · Mittelpunkt-/Dreipunktbogen · Langloch · Polygon), **Beziehungen**
 (Richtung · parallel/rechtwinklig/kollinear · Punkte · fix/gleich/tangential/konzentrisch),
-**Bemaßungen** (Abstände · Durchmesser · Winkel), **Bearbeiten** (stutzen/verlängern/teilen ·
+**Bemaßungen** (Abstände · Durchmesser/Radius · Winkel), **Bearbeiten** (stutzen/verlängern/teilen ·
 Verrundung · Versatz · Spiegeln/Muster · Punkt sperren/freigeben · Konstruktion ·
 Löschen/Bedingung entfernen). Rückgängig/Wiederholen im Werkzeug: Strg+Z/Strg+Y und Suche.
 Der Dreipunktbogen nimmt Anfang, Ende und dann einen Punkt auf dem Bogen.
@@ -198,7 +198,7 @@ Der Dreipunktbogen nimmt Anfang, Ende und dann einen Punkt auf dem Bogen.
 | Linien | `sketch.horizontal`, `.vertical`, `.free`, `.parallel`, `.perpendicular`, `.collinear` | – |
 | Punkte | `sketch.coincident`, `.horizontal_points`, `.vertical_points`, `.symmetric`, `.midpoint`, `.perpendicular_bisector`, `.point_on_object` | – |
 | Beziehungen | `sketch.fixed`, `.equal`, `.tangent`, `.concentric` | – |
-| Bemaßungen | `sketch.diameter`, `.point_distance`, `.point_line_distance`, `.point_distance_x`, `.point_distance_y`, `.angle` | – |
+| Bemaßungen | `sketch.diameter`, `.radius`, `.point_distance`, `.point_line_distance`, `.point_distance_x`, `.point_distance_y`, `.angle` | – |
 | Bearbeiten | `sketch.construction`, `.lock_point`, `.unlock_point`, `.remove_constraint`, `.undo_sketch`, `.redo_sketch`, `.trim`, `.extend`, `.split`, `.fillet`, `.offset`, `.mirror`, `.linear_pattern`, `.circular_pattern`, `.edit_pattern`, `.dissolve_pattern`, `.delete` | Strg+Z/Strg+Y für Rückgängig/Wiederholen im Werkzeug; Entf löscht |
 | Anzeige (S13) | `sketch.show_dimensions`, `.show_projected`, `.auto_relations` (dazu `view.grid`) | Suche und Skizzenpanel; Ansichtszustand ohne Undo und ohne „geändert“ |
 

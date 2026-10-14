@@ -78,12 +78,20 @@ bool SketchEditorSession::canAddSelectedRelation(
     if (!active_)
         return false;
     if (kind == document::SketchConstraintKind::diameter ||
+        kind == document::SketchConstraintKind::radius ||
         kind == document::SketchConstraintKind::fixed) {
         if (selectedReferences_.size() != 1)
             return false;
         const auto* element = findElement(elements_, selectedReferences_.front().element);
         if (kind == document::SketchConstraintKind::diameter)
             return radial(element);
+        // S16: one radius per element; the panel's radius field edits the same constraint.
+        if (kind == document::SketchConstraintKind::radius)
+            return radial(element) &&
+                   std::ranges::none_of(constraints_.values, [&](const auto& constraint) {
+                       return constraint.kind == document::SketchConstraintKind::radius &&
+                              constraint.first.element == element->id;
+                   });
         return (line(element) || circle(element)) &&
                std::ranges::none_of(constraints_.values, [&](const auto& constraint) {
                    return constraint.kind == document::SketchConstraintKind::fixed &&
@@ -169,16 +177,19 @@ bool SketchEditorSession::addSelectedRelation(document::SketchConstraintKind kin
     Rollback rollback(*this);
     std::optional<document::SketchGeometryReference> secondReference;
     if (kind != document::SketchConstraintKind::diameter &&
+        kind != document::SketchConstraintKind::radius &&
         kind != document::SketchConstraintKind::fixed)
         secondReference = selectedReferences_[1];
     document::SketchConstraint constraint{document::SketchConstraintId{constraints_.nextId++}, kind,
                                           selectedReferences_[0], secondReference, 0.0};
-    if (kind == document::SketchConstraintKind::diameter) {
+    if (kind == document::SketchConstraintKind::diameter ||
+        kind == document::SketchConstraintKind::radius) {
         const auto* element = findElement(elements_, selectedReferences_[0].element);
+        const double factor = kind == document::SketchConstraintKind::diameter ? 2.0 : 1.0;
         if (const auto* circleGeometry = std::get_if<document::SketchCircle>(&element->geometry))
-            constraint.value = circleGeometry->radius * 2.0;
+            constraint.value = circleGeometry->radius * factor;
         else
-            constraint.value = std::get<document::SketchArc>(element->geometry).radius * 2.0;
+            constraint.value = std::get<document::SketchArc>(element->geometry).radius * factor;
     } else if (kind == document::SketchConstraintKind::fixed) {
         const auto* element = findElement(elements_, selectedReferences_[0].element);
         if (const auto* geometry = std::get_if<document::SketchLine>(&element->geometry)) {

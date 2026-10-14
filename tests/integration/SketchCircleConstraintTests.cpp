@@ -84,9 +84,75 @@ bool centerArcIsParametricAndDiameterRemainsEditable() {
            solved.endAngle - solved.startAngle < 2.0 * std::numbers::pi;
 }
 
+// S16: a radius dimension on an arc or circle; one per element, never on a line.
+bool radiusDimensionDrivesArcAndCircle() {
+    using namespace voelund;
+    application::CadSession session;
+    session.newDocument();
+    application::SketchEditorSession editor(
+        session, voelund::test::requireCommittedFeature(session.createBoxFeature()), plane);
+    editor.setTool(application::SketchDrawingTool::arc);
+    if (!editor.setPreview({0.0, 0.0}, {4.0, 0.0}, document::SketchPoint{0.0, 4.0}) ||
+        editor.confirmPreview() != document::SketchElementId{1}) {
+        std::cerr << "arc not created\n";
+        return false;
+    }
+    editor.setTool(application::SketchDrawingTool::circle);
+    if (!addCircle(editor, {20.0, 0.0}, {23.0, 0.0}, 2)) {
+        std::cerr << "circle not created\n";
+        return false;
+    }
+    editor.setTool(application::SketchDrawingTool::line);
+    if (!editor.setPreview({0.0, -10.0}, {10.0, -10.0}) ||
+        editor.confirmPreview() != document::SketchElementId{3}) {
+        std::cerr << "line not created\n";
+        return false;
+    }
+    if (!editor.selectNearestReference(document::SketchElementId{3}, {0.0, -10.0}, false) ||
+        editor.canAddSelectedRelation(document::SketchConstraintKind::radius)) {
+        std::cerr << "radius offered on a line\n";
+        return false;
+    }
+    const auto arc = std::get<document::SketchArc>(editor.elements()[0].geometry);
+    if (!editor.selectNearestReference(document::SketchElementId{1}, arc.center, false) ||
+        !editor.addSelectedRelation(document::SketchConstraintKind::radius) ||
+        editor.constraints().back().kind != document::SketchConstraintKind::radius ||
+        std::abs(editor.constraints().back().value - 4.0) > 1.0e-9 ||
+        editor.canAddSelectedRelation(document::SketchConstraintKind::radius)) {
+        std::cerr << "arc radius not added once\n";
+        return false;
+    }
+    const auto arcRadius = editor.constraints().back().id;
+    if (!editor.setConstraintValue(arcRadius, 12.0) ||
+        std::abs(std::get<document::SketchArc>(editor.elements()[0].geometry).radius - 12.0) >
+            1.0e-7) {
+        std::cerr << "arc radius edit failed\n";
+        return false;
+    }
+    if (!editor.selectNearestReference(document::SketchElementId{2}, {20.0, 0.0}, false) ||
+        !editor.addSelectedRelation(document::SketchConstraintKind::radius) ||
+        !editor.setConstraintValue(editor.constraints().back().id, 20.0) ||
+        std::abs(std::get<document::SketchCircle>(editor.elements()[1].geometry).radius - 20.0) >
+            1.0e-7) {
+        std::cerr << "circle radius failed\n";
+        return false;
+    }
+    // The circle's radius leaves the arc's alone.
+    if (std::abs(std::get<document::SketchArc>(editor.elements()[0].geometry).radius - 12.0) >
+        1.0e-7) {
+        std::cerr << "the arc lost its radius\n";
+        return false;
+    }
+    return true;
+}
+
 } // namespace
 
 int main() {
+    if (!radiusDimensionDrivesArcAndCircle()) {
+        std::cerr << "Radius dimension failed\n";
+        return 1;
+    }
     if (!circlesBecomeConcentricAndDiameterRemainsEditable()) {
         std::cerr << "Concentric or diameter editor relation failed\n";
         return 1;

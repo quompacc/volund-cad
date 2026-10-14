@@ -64,7 +64,7 @@ const std::vector<RailSection>& railSections() {
         {QT_TR_NOOP("Bemaßungen"),
          {{"sketch.point_distance", "sketch.point_distance_x", "sketch.point_distance_y",
            "sketch.point_line_distance"},
-          {"sketch.diameter"},
+          {"sketch.diameter", "sketch.radius"},
           {"sketch.angle"}}},
         {QT_TR_NOOP("Bearbeiten"),
          {{"sketch.trim", "sketch.extend", "sketch.split"},

@@ -28,6 +28,7 @@ void SketchEditorToolController::syncConstraintState() {
     enable("perpendicular_bisector", document::SketchConstraintKind::perpendicularBisector);
     enable("concentric", document::SketchConstraintKind::concentric);
     enable("diameter", document::SketchConstraintKind::diameter);
+    enable("radius", document::SketchConstraintKind::radius);
     enable("point_distance", document::SketchConstraintKind::pointDistance);
     enable("point_distance_x", document::SketchConstraintKind::pointDistanceX);
     enable("point_distance_y", document::SketchConstraintKind::pointDistanceY);

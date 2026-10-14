@@ -343,6 +343,12 @@ const QHash<QString, Drawing>& drawings() {
              p.dot(11, 13, 1.5);
              p.dimension(11, 13, 16.6, 7.4);
          }},
+        {"radius",
+         [](const Pens& p) {
+             p.painter.drawArc(QRectF(3, 5, 16, 16), 0, 180 * 16);
+             p.dot(11, 13, 1.5);
+             p.dimension(11, 13, 16.6, 7.4);
+         }},
         {"diameter",
          [](const Pens& p) {
              p.painter.drawEllipse(QPointF(12, 12), 8, 8);
