@@ -215,6 +215,12 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
         if (impl_->ready && event->button() == Qt::LeftButton) {
             const QPoint position = framebufferPoint(*this, event->position());
             if (impl_->sketchEditor.isActive()) {
+                // S17: while edges are projected the press took the edge; the release draws
+                // nothing (it would start a line of the active tool).
+                if (impl_->edgePicking) {
+                    update();
+                    return;
+                }
                 if (impl_->gesture == Impl::Gesture::selectBox) {
                     // S13 (user decision 2026-10-09): left to right a window, right to left a
                     // crossing box; whole elements; Ctrl adds; an empty box (or a click on
