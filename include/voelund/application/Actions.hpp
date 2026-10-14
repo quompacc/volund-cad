@@ -232,6 +232,19 @@ struct EditDatumAxisParametersAction final {
     document::DatumAxisParameters parameters;
     bool operator==(const EditDatumAxisParametersAction&) const = default;
 };
+// M22: walls of `support`'s current body with the named faces opened.
+struct CreateShellAction final {
+    document::FeatureId support;
+    std::vector<document::SubshapeOrigin> faces;
+    Quantity thickness;
+    bool outward{false};
+    bool operator==(const CreateShellAction&) const = default;
+};
+struct EditShellParametersAction final {
+    document::FeatureId shell;
+    document::ShellParameters parameters;
+    bool operator==(const EditShellParametersAction&) const = default;
+};
 struct SetPlacementAction final {
     document::FeatureId feature;
     Quantity x;
@@ -257,7 +270,8 @@ using Action = std::variant<CreateParameterAction, SetParameterValueAction, Rena
                             CreateHoleAction, EditHoleParametersAction,
                             CreateCombineAction, EditCombineParametersAction,
                             CreateDatumPlaneAction, EditDatumPlaneParametersAction,
-                            CreateDatumAxisAction, EditDatumAxisParametersAction>;
+                            CreateDatumAxisAction, EditDatumAxisParametersAction,
+                            CreateShellAction, EditShellParametersAction>;
 // Parallel to the alternatives of Action.
 enum class ActionKind {
     createParameter,
@@ -291,7 +305,9 @@ enum class ActionKind {
     createDatumPlane,
     editDatumPlaneParameters,
     createDatumAxis,
-    editDatumAxisParameters
+    editDatumAxisParameters,
+    createShell,
+    editShellParameters
 };
 [[nodiscard]] ActionKind actionKind(const Action& action) noexcept;
 

@@ -266,6 +266,14 @@ class Validation final {
     void operator()(const EditDatumAxisParametersAction& action) {
         static_cast<void>(target(action.axis, ActionKind::editDatumAxisParameters));
     }
+    void operator()(const CreateShellAction& action) {
+        static_cast<void>(target(action.support, ActionKind::createShell));
+        lengths({action.thickness});
+    }
+    void operator()(const EditShellParametersAction& action) {
+        static_cast<void>(target(action.shell, ActionKind::editShellParameters));
+        finite({action.parameters.thickness});
+    }
 
     [[nodiscard]] const Findings& findings() const noexcept { return findings_; }
 
@@ -406,6 +414,12 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot,
             },
             [&](const EditDatumAxisParametersAction& a) {
                 return session.editDatumAxisParameters(a.axis, a.parameters, reject);
+            },
+            [&](const CreateShellAction& a) {
+                return session.createShell(a.support, a.faces, a.thickness.value, a.outward);
+            },
+            [&](const EditShellParametersAction& a) {
+                return session.editShellParameters(a.shell, a.parameters, reject);
             }},
         request.action);
 }

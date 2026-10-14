@@ -162,4 +162,120 @@ CombineParameters readNativeCombine(const TDF_Label& label, std::size_t remainin
     return result;
 }
 
+// M22 (schema 21): thickness on the label, body (1), open faces (2), outward (3).
+std::size_t nativeShellRecords(const ShellParameters& parameters) {
+    std::size_t records = parameters.openFaces.size();
+    for (const auto& face : parameters.openFaces)
+        records += face.extrusionBoundary.size();
+    return records;
+}
+
+void writeNativeShell(const TDF_Label& label, const ShellParameters& parameters) {
+    validateShellParameters(parameters);
+    TDataStd_Real::Set(label, parameters.thickness);
+    writeBody(label.FindChild(1), parameters.body);
+    const auto faces = label.FindChild(2);
+    TDataStd_Integer::Set(faces, static_cast<int>(parameters.openFaces.size()));
+    for (std::size_t index = 0; index < parameters.openFaces.size(); ++index)
+        writeNativeSubshapeOrigin(faces.FindChild(static_cast<int>(index + 1)),
+                                  parameters.openFaces[index]);
+    TDataStd_Integer::Set(label.FindChild(3), parameters.outward ? 1 : 0);
+}
+
+ShellParameters readNativeShell(const TDF_Label& label, std::size_t remainingRecords,
+                                int schemaVersion) {
+    require(schemaVersion >= 21 && label.NbChildren() == 3);
+    ShellParameters result{readBody(child(label, 1)), {}, real(label), false};
+    const auto faces = child(label, 2);
+    const int count = integer(faces);
+    require(count > 0 && static_cast<std::size_t>(count) <= maximumShellFaces &&
+            static_cast<std::size_t>(count) <= remainingRecords && faces.NbChildren() == count);
+    remainingRecords -= static_cast<std::size_t>(count);
+    for (int index = 1; index <= count; ++index)
+        result.openFaces.push_back(readOrigin(child(faces, index), remainingRecords, schemaVersion));
+    const int outward = integer(child(label, 3));
+    require(outward == 0 || outward == 1);
+    result.outward = outward == 1;
+    validateShellParameters(result);
+    return result;
+}
+
+namespace {
+struct SolidKind final {
+    FeatureKind kind;
+    const char* name;
+    int schema;
+};
+constexpr SolidKind solidKinds[]{{FeatureKind::combine, "combine", 18},
+                                 {FeatureKind::datumPlane, "datum_plane", 19},
+                                 {FeatureKind::datumAxis, "datum_axis", 19},
+                                 {FeatureKind::shell, "shell", 21}};
+} // namespace
+
+const char* nativeSolidKindName(FeatureKind kind) noexcept {
+    for (const auto& item : solidKinds)
+        if (item.kind == kind)
+            return item.name;
+    return nullptr;
+}
+
+std::optional<FeatureKind> nativeSolidKind(std::string_view name, int schemaVersion) {
+    for (const auto& item : solidKinds)
+        if (name == item.name && schemaVersion >= item.schema)
+            return item.kind;
+    return std::nullopt;
+}
+
+std::size_t nativeSolidRecords(FeatureKind kind, const FeatureParameters& parameters) {
+    switch (kind) {
+    case FeatureKind::combine:
+        require(std::holds_alternative<CombineParameters>(parameters));
+        validateCombineParameters(std::get<CombineParameters>(parameters));
+        return nativeCombineRecords(std::get<CombineParameters>(parameters));
+    case FeatureKind::datumPlane:
+        require(std::holds_alternative<DatumPlaneParameters>(parameters));
+        validateDatumPlaneParameters(std::get<DatumPlaneParameters>(parameters));
+        return nativeDatumPlaneRecords(std::get<DatumPlaneParameters>(parameters));
+    case FeatureKind::datumAxis:
+        require(std::holds_alternative<DatumAxisParameters>(parameters));
+        validateDatumAxisParameters(std::get<DatumAxisParameters>(parameters));
+        return nativeDatumAxisRecords(std::get<DatumAxisParameters>(parameters));
+    case FeatureKind::shell:
+        require(std::holds_alternative<ShellParameters>(parameters));
+        validateShellParameters(std::get<ShellParameters>(parameters));
+        return nativeShellRecords(std::get<ShellParameters>(parameters));
+    default:
+        break;
+    }
+    throw std::invalid_argument("Not a natively stored solid feature");
+}
+
+void writeNativeSolid(const TDF_Label& label, const FeatureParameters& parameters) {
+    if (const auto* combine = std::get_if<CombineParameters>(&parameters))
+        writeNativeCombine(label, *combine);
+    else if (const auto* plane = std::get_if<DatumPlaneParameters>(&parameters))
+        writeNativeDatumPlane(label, *plane);
+    else if (const auto* shell = std::get_if<ShellParameters>(&parameters))
+        writeNativeShell(label, *shell);
+    else
+        writeNativeDatumAxis(label, std::get<DatumAxisParameters>(parameters));
+}
+
+FeatureParameters readNativeSolid(const TDF_Label& label, FeatureKind kind,
+                                  std::size_t remainingRecords, int schemaVersion) {
+    switch (kind) {
+    case FeatureKind::combine:
+        return readNativeCombine(label, remainingRecords, schemaVersion);
+    case FeatureKind::datumPlane:
+        return readNativeDatumPlane(label, remainingRecords, schemaVersion);
+    case FeatureKind::datumAxis:
+        return readNativeDatumAxis(label, remainingRecords, schemaVersion);
+    case FeatureKind::shell:
+        return readNativeShell(label, remainingRecords, schemaVersion);
+    default:
+        break;
+    }
+    throw std::invalid_argument("Not a natively stored solid feature");
+}
+
 } // namespace voelund::document::detail

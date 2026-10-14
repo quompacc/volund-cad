@@ -32,6 +32,8 @@ struct SolidCommandServices final {
     // M08: a hole at the clicked point of the picked planar face.
     std::function<void()> hole{};
     std::function<bool()> canHole{};
+    // M22: walls with the picked planar face opened; enabled like the hole.
+    std::function<void()> shell{};
     // M21: combines the selected body with clicked tool bodies; enabled like the fillet.
     std::function<void()> combine{};
     // M20: turns the selected sketch regions about an axis; enabled like the extrusion.

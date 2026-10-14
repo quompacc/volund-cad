@@ -155,8 +155,19 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                              true,
                              false,
                              simpleCommand(std::move(services.hole)),
-                             std::move(services.canHole),
+                             services.canHole,
                              "Bohrung"});
+    if (services.shell)
+        commands_.push_back({"solid.modify.shell",
+                             "Wandstärke",
+                             "Körper aushöhlen; die gewählte Fläche bleibt offen",
+                             {},
+                             workspaces::CommandGroup::modify,
+                             true,
+                             false,
+                             simpleCommand(std::move(services.shell)),
+                             services.canHole,
+                             "Wandstärke"});
 }
 
 std::string SolidWorkspaceModule::id() const { return "solid"; }

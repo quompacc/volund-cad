@@ -22,7 +22,8 @@ constexpr const char* toolNames[] = {
     nullptr,                  nullptr,                  nullptr,
     nullptr,                  nullptr,                  nullptr,
     nullptr,                  nullptr,                  nullptr,
-    nullptr,                  nullptr};
+    nullptr,                  nullptr,                  nullptr,
+    nullptr};
 constexpr const char* statusNames[] = {"rejected", "committed", "committedWithErrors"};
 constexpr const char* rejectionNames[] = {
     "none",     "foreignDocument", "staleStamp",          "unknownTarget",    "unsupportedTarget",
@@ -34,7 +35,7 @@ constexpr const char* evaluationNames[] = {"valid", "dirty", "failed", "blockedB
                                            "suppressed"};
 constexpr const char* featureKinds[] = {"box",    "cylinder", "sketch", "extrusion",
                                         "fillet", "chamfer",  "hole",   "combine",
-                                        "datumPlane", "datumAxis"};
+                                        "datumPlane", "datumAxis", "shell"};
 constexpr const char* basePlaneNames[] = {"", "xy", "xz", "yz"};
 constexpr const char* baseAxisNames[] = {"", "x", "y", "z"};
 constexpr const char* rotationAxisNames[] = {"none", "x", "y"};
@@ -147,6 +148,12 @@ QJsonObject featureParameters(const document::FeatureParameters& parameters) {
                 else
                     json.insert("bodyId", id(plane.face->body.value()));
                 return json;
+            },
+            [](const document::ShellParameters& shell) -> QJsonObject {
+                return {{"thickness", detail::quantity(shell.thickness, "mm")},
+                        {"bodyId", id(shell.body.value())},
+                        {"openFaceCount", static_cast<int>(shell.openFaces.size())},
+                        {"outward", shell.outward}};
             },
             [](const document::DatumAxisParameters& axis) -> QJsonObject {
                 if (axis.baseAxis)

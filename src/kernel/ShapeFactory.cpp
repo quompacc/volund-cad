@@ -105,6 +105,8 @@ const char* kernelOperationName(KernelOperation operation) noexcept {
         return "chamfer";
     case KernelOperation::makeRevolution:
         return "makeRevolution";
+    case KernelOperation::shell:
+        return "shell";
     }
     return "unknown";
 }

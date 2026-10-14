@@ -30,6 +30,7 @@ enum class ShellIcon {
     datumPlane, // M19
     datumAxis,  // M19
     revolve,    // M20
+    shell,      // M22
     repair,
     eye,
     eyeOff,

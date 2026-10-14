@@ -50,6 +50,13 @@ inline QString booleanFailureText(const std::string& code) {
     if (code == "hole-face-missing")
         return QObject::tr("Bohrung: Die Fläche der Bohrung gibt es so nicht mehr. Wähle die "
                            "Bohrung neu auf einer Fläche des Körpers.");
+    // M22: walls the body cannot take, or an opened face that is gone.
+    if (code == "shell-failed")
+        return QObject::tr("Wandstärke: Der Körper lässt sich mit dieser Dicke nicht aushöhlen; "
+                           "die Wände würden sich durchdringen.");
+    if (code == "shell-face-missing")
+        return QObject::tr("Wandstärke: Eine offene Fläche gibt es so nicht mehr. Wähle die "
+                           "Flächen neu.");
     // M20: the axis of a revolve is gone.
     if (code == "revolve-axis-missing")
         return QObject::tr("Drehen: Die Drehachse gibt es so nicht mehr. Wähle die Achse neu.");

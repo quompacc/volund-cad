@@ -38,6 +38,8 @@ ShellIcon iconFor(document::FeatureKind kind) {
         return ShellIcon::datumPlane;
     case document::FeatureKind::datumAxis:
         return ShellIcon::datumAxis;
+    case document::FeatureKind::shell:
+        return ShellIcon::shell;
     }
     return ShellIcon::box;
 }

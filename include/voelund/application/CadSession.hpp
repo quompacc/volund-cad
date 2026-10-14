@@ -270,6 +270,15 @@ class CadSession final {
     editDatumAxisParameters(document::FeatureId featureId,
                             const document::DatumAxisParameters& parameters,
                             ErrorDisposition disposition = ErrorDisposition::reject);
+    // M22: walls of `support`'s current body ("Wandstärke N"), with the named faces opened;
+    // one undo step.
+    [[nodiscard]] CommandResult createShell(document::FeatureId support,
+                                            std::span<const document::SubshapeOrigin> faces,
+                                            double thickness, bool outward);
+    [[nodiscard]] CommandResult
+    editShellParameters(document::FeatureId featureId, const document::ShellParameters& parameters,
+                        ErrorDisposition disposition = ErrorDisposition::reject);
+    [[nodiscard]] document::ShellParameters shellParameters(document::FeatureId featureId) const;
     // The current frame of a construction plane or axis; none when it failed.
     [[nodiscard]] std::optional<document::SketchPlane>
     datumFrame(document::FeatureId feature) const;

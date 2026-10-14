@@ -1,4 +1,4 @@
-add_library(voelund_kernel STATIC ShapeFactory.cpp ShapeOperations.cpp Prism.cpp Revolution.cpp)
+add_library(voelund_kernel STATIC ShapeFactory.cpp ShapeOperations.cpp Prism.cpp Revolution.cpp ShellOperation.cpp)
 
 target_include_directories(
     voelund_kernel
@@ -17,6 +17,7 @@ target_link_libraries(
         TKPrim
         TKBO
         TKFillet
+        TKOffset
 )
 
 add_library(Voelund::Kernel ALIAS voelund_kernel)

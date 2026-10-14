@@ -39,6 +39,12 @@ class ShapeOperations final {
     [[nodiscard]] static std::vector<std::size_t>
     failingChamferEdges(const TopoDS_Shape& input, std::span<const TopoDS_Edge> edges,
                         double distance);
+    // M22: walls `thickness` thick, inward (outer faces stay) or outward; `openFaces` are
+    // removed. Faces keep their history (HistoryOperand::first). A body that cannot take the
+    // walls throws KernelError with BooleanFailure::shellFailed.
+    [[nodiscard]] static ShapeOperationResult
+    shellWithHistory(const TopoDS_Shape& input, std::span<const TopoDS_Shape> openFaces,
+                     double thickness, bool outward);
     // Invalid inputs and failed OCCT operations throw KernelError. Its operation
     // identifies the public entry point, including failures of internal checks.
     [[nodiscard]] static TopoDS_Shape fuse(const TopoDS_Shape& left, const TopoDS_Shape& right);

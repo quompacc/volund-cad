@@ -32,6 +32,7 @@ enum class KernelOperation {
     fillet,  // M05
     chamfer, // M07
     makeRevolution, // M20
+    shell,          // M22
 };
 
 // M03: why a Boolean refused its result, beyond a failing kernel.
@@ -43,6 +44,7 @@ enum class BooleanFailure {
     emptyIntersection, // tool and body share no volume
     filletFailed,      // M05: the kernel cannot round these edges with this radius
     chamferFailed,     // M07: the kernel cannot chamfer these edges with this distance
+    shellFailed,       // M22: the body cannot take walls of this thickness
 };
 
 class KernelError final : public std::runtime_error {
@@ -75,6 +77,8 @@ class KernelError final : public std::runtime_error {
         return "fillet-failed";
     case BooleanFailure::chamferFailed:
         return "chamfer-failed";
+    case BooleanFailure::shellFailed:
+        return "shell-failed";
     case BooleanFailure::none:
         break;
     }

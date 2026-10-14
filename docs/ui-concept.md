@@ -173,6 +173,7 @@ in U04 an dieselben IDs.
 | `solid.modify.edit_sketch` | Werkzeugleiste („Bearbeiten“), Kontextleiste (Skizze, primär), Suche | SketchEditorToolController | Skizze gewählt | support_binding_flow |
 | `solid.modify.push_pull` | Werkzeugleiste („Ziehen“), Kontextleiste (ebene Fläche), Suche | PushPullToolController (T04) | ebene Fläche gewählt, Modell aktuell | push_pull_panel |
 | `solid.create.revolve` | Werkzeugleiste („Drehen“), Kontextleiste (Bereich), Suche | SketchExtrusionToolController im Drehmodus (M20) | Skizzenbereich gewählt; Achse: Skizzenlinie (anklicken), X/Y/Z oder Bezugsachse | revolve_panel |
+| `solid.modify.shell` | Werkzeugleiste („Wandstärke“), Kontextleiste (ebene Fläche), Suche | ShellToolController (M22) | ebene Fläche gewählt; Klicks öffnen weitere Flächen | shell_panel |
 | `solid.modify.combine` | Werkzeugleiste („Kombinieren“), Kontextleiste (Körper), Suche | CombineToolController (M21) | Körper gewählt; Klicks auf andere Körper wählen die Werkzeuge | combine_panel |
 | `solid.create.datum_plane` | Werkzeugleiste („Bezugsebene“), Kontextleiste (Grundebene, ebene Fläche), Suche | DatumToolController (M19) | kein Werkzeug offen; Bezug ist die gewählte Grundebene oder Fläche, sonst XY | datum_panel |
 | `solid.create.datum_axis` | Werkzeugleiste („Bezugsachse“), Kontextleiste (eine Kante), Suche | DatumToolController (M19) | kein Werkzeug offen; eine gewählte Kante wird sofort zur Achse, sonst Grundachse im Panel | datum_panel |

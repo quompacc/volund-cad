@@ -158,6 +158,15 @@ void draw(QPainter& painter, ShellIcon icon, const QColor& ink, const QColor& ac
         painter.drawLine(QPointF(9, 6), QPointF(12, 3));
         painter.drawLine(QPointF(15, 6), QPointF(12, 3));
         break;
+    case ShellIcon::shell:
+        // An open box seen from the side: walls around a hollow.
+        painter.drawLine(QPointF(4, 6), QPointF(4, 20));
+        painter.drawLine(QPointF(4, 20), QPointF(20, 20));
+        painter.drawLine(QPointF(20, 20), QPointF(20, 6));
+        painter.drawLine(QPointF(8, 6), QPointF(8, 16));
+        painter.drawLine(QPointF(8, 16), QPointF(16, 16));
+        painter.drawLine(QPointF(16, 16), QPointF(16, 6));
+        break;
     case ShellIcon::revolve:
         // A profile turned about a dashed axis: an arc arrow around it.
         painter.drawLine(QPointF(12, 2), QPointF(12, 22));

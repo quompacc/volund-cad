@@ -159,4 +159,44 @@ CommandResult CadSession::editDatumAxisParameters(document::FeatureId featureId,
                            false);
 }
 
+CommandResult CadSession::createShell(document::FeatureId support,
+                                     std::span<const document::SubshapeOrigin> faces,
+                                     double thickness, bool outward) {
+    const auto body = resultBody(support);
+    if (!body)
+        return CommandResult::invalidInput("A shell needs a current body");
+    const std::size_t sequence =
+        featureCount(document_.features(), document::FeatureKind::shell) + 1;
+    document::DocumentTransaction transaction(document_);
+    auto& candidate = transaction.edit();
+    const auto idInput = detail::prepareInput([&] {
+        return candidate.addShellFeature(
+            "Wandstärke " + std::to_string(sequence),
+            document::ShellParameters{*body, {faces.begin(), faces.end()}, thickness, outward});
+    });
+    if (!idInput.value)
+        return CommandResult::invalidInput(idInput.diagnostic);
+    return finishCandidate(transaction, *idInput.value, CommandKind::newFeature,
+                           ErrorDisposition::reject, true);
+}
+
+CommandResult CadSession::editShellParameters(document::FeatureId featureId,
+                                              const document::ShellParameters& parameters,
+                                              ErrorDisposition disposition) {
+    document::DocumentTransaction transaction(document_);
+    auto& candidate = transaction.edit();
+    const auto input = detail::prepareInput(
+        [&] { return candidate.setShellParameters(featureId, parameters); });
+    if (!input.value)
+        return CommandResult::invalidInput(input.diagnostic);
+    if (!*input.value)
+        return {CommandStatus::rejected, RejectionReason::noChange};
+    return finishCandidate(transaction, selectedFeature_, CommandKind::editFeature, disposition,
+                           false);
+}
+
+document::ShellParameters CadSession::shellParameters(document::FeatureId featureId) const {
+    return document_.shellParameters(featureId);
+}
+
 } // namespace voelund::application

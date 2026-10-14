@@ -37,6 +37,7 @@ class DocumentSnapshot final {
     [[nodiscard]] const CombineParameters& combineParameters(FeatureId id) const;
     [[nodiscard]] const DatumPlaneParameters& datumPlaneParameters(FeatureId id) const;
     [[nodiscard]] const DatumAxisParameters& datumAxisParameters(FeatureId id) const;
+    [[nodiscard]] const ShellParameters& shellParameters(FeatureId id) const;
     [[nodiscard]] const kernel::BoxDimensions& boxDimensions(FeatureId id) const;
     [[nodiscard]] ModelDocument toDocument() const;
     [[nodiscard]] ModelDocument toDocument(DocumentId id) const;

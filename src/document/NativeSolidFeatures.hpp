@@ -1,7 +1,19 @@
 #pragma once
 #include <voelund/document/ModelDocument.hpp>
 #include <TDF_Label.hxx>
+#include <optional>
+#include <string_view>
 namespace voelund::document::detail {
+// The feature kinds added on 2026-10-14 share one dispatch in the primitive codec: their
+// stored name (none for other kinds), the kind of a stored name in a schema, the records
+// a feature takes from the document budget (after checking its parameters), and reading and
+// writing their parameters below child 4 of the feature label.
+[[nodiscard]] const char* nativeSolidKindName(FeatureKind kind) noexcept;
+[[nodiscard]] std::optional<FeatureKind> nativeSolidKind(std::string_view name, int schemaVersion);
+[[nodiscard]] std::size_t nativeSolidRecords(FeatureKind kind, const FeatureParameters& parameters);
+void writeNativeSolid(const TDF_Label& label, const FeatureParameters& parameters);
+[[nodiscard]] FeatureParameters readNativeSolid(const TDF_Label& label, FeatureKind kind,
+                                                std::size_t remainingRecords, int schemaVersion);
 // M21 (schema 18): operation code on the label, target body (1), tool bodies (2), keep (3).
 void writeNativeCombine(const TDF_Label& label, const CombineParameters& parameters);
 CombineParameters readNativeCombine(const TDF_Label& label, std::size_t remainingRecords,

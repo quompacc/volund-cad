@@ -205,4 +205,55 @@ bool ModelDocument::setDatumAxisParameters(FeatureId featureId,
     return true;
 }
 
+void validateShellParameters(const ShellParameters& parameters) {
+    if (!kernel::modelLength(parameters.thickness))
+        throw std::invalid_argument(kernel::modelRangeDiagnostic);
+    if (parameters.body.value() == 0)
+        throw std::invalid_argument("A shell names its body");
+    if (parameters.openFaces.empty() || parameters.openFaces.size() > maximumShellFaces)
+        throw std::invalid_argument("A shell opens between 1 and 256 faces");
+    for (std::size_t index = 0; index < parameters.openFaces.size(); ++index) {
+        validateSubshapeOrigin(parameters.openFaces[index]);
+        if (std::find(parameters.openFaces.begin(), parameters.openFaces.begin() + index,
+                      parameters.openFaces[index]) != parameters.openFaces.begin() + index)
+            throw std::invalid_argument("Each open face is named once");
+    }
+}
+
+FeatureId ModelDocument::addShellFeature(std::string name, const ShellParameters& parameters) {
+    validateShellParameters(parameters);
+    const FeatureId id = nextFeatureId();
+    auto candidate = currentState();
+    ++candidate.nextFeatureId;
+    candidate.features.push_back(
+        FeatureDescriptor{id, FeatureKind::shell, std::move(name), std::nullopt});
+    candidate.parameters.emplace_back(parameters);
+    static_cast<void>(featureBodyContexts(candidate.features, candidate.parameters));
+    commitState(std::move(candidate));
+    return id;
+}
+
+const ShellParameters& ModelDocument::shellParameters(FeatureId featureId) const {
+    const auto* value =
+        std::get_if<ShellParameters>(&impl_->view().parameters()[featureIndex(featureId)]);
+    if (value == nullptr)
+        throw std::out_of_range("Feature is not a shell");
+    return *value;
+}
+
+bool ModelDocument::setShellParameters(FeatureId featureId, const ShellParameters& parameters) {
+    validateShellParameters(parameters);
+    const std::size_t index = featureIndex(featureId);
+    const auto* current = std::get_if<ShellParameters>(&impl_->view().parameters()[index]);
+    if (current == nullptr)
+        throw std::out_of_range("Feature is not a shell");
+    if (*current == parameters)
+        return false;
+    auto candidate = currentState();
+    *std::get_if<ShellParameters>(&candidate.parameters.at(index)) = parameters;
+    static_cast<void>(featureBodyContexts(candidate.features, candidate.parameters));
+    commitState(std::move(candidate));
+    return true;
+}
+
 } // namespace voelund::document

@@ -108,6 +108,11 @@ void MainWindow::createCommands() {
             syncShell();
             return;
         }
+        if (kind == document::FeatureKind::shell) {
+            impl_->shellTool->beginEdit(*selected);
+            syncShell();
+            return;
+        }
         if (kind == document::FeatureKind::datumPlane ||
             kind == document::FeatureKind::datumAxis) {
             impl_->datumTool->beginEdit(*selected);
@@ -232,6 +237,15 @@ void MainWindow::createCommands() {
         syncShell();
     };
     services.canDatum = [this]() { return !impl_->shell().toolBlocksCommands(); };
+    // M22: walls with the picked planar face opened.
+    services.shell = [this]() {
+        if (!impl_->selectedPlanarFace)
+            return;
+        if (impl_->sketchExtrusionTool->isActive())
+            impl_->sketchExtrusionTool->cancel();
+        impl_->shellTool->begin(*impl_->selectedPlanarFace);
+        syncShell();
+    };
     services.canHole = [this]() {
         return impl_->selectedPlanarFace.has_value() && impl_->shell().canSketch();
     };

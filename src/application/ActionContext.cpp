@@ -75,6 +75,9 @@ std::vector<ActionKind> availableActions(const CadSession& session,
         return {ActionKind::editDatumPlaneParameters};
     case FeatureKind::datumAxis:
         return {ActionKind::editDatumAxisParameters};
+    case FeatureKind::shell:
+        actions = {ActionKind::editShellParameters};
+        break;
     }
     if (session.placementFeature(feature))
         actions.push_back(ActionKind::setPlacement);
@@ -91,6 +94,7 @@ std::vector<ActionKind> availableActions(const CadSession& session,
             actions.push_back(ActionKind::createCombine);
             actions.push_back(ActionKind::createDatumPlane);
             actions.push_back(ActionKind::createDatumAxis);
+            actions.push_back(ActionKind::createShell);
         }
     }
     return actions;

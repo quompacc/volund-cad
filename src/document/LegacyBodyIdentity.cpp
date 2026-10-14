@@ -49,6 +49,9 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
     case FeatureKind::datumAxis:
         matches = std::holds_alternative<DatumAxisParameters>(parameters);
         break;
+    case FeatureKind::shell:
+        matches = std::holds_alternative<ShellParameters>(parameters);
+        break;
     }
     if (!matches)
         throw std::invalid_argument("Legacy body identity: feature parameter kind mismatch");
@@ -58,7 +61,7 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
         feature.kind == FeatureKind::box || feature.kind == FeatureKind::fillet ||
         feature.kind == FeatureKind::chamfer || feature.kind == FeatureKind::hole ||
         feature.kind == FeatureKind::combine || feature.kind == FeatureKind::datumPlane ||
-        feature.kind == FeatureKind::datumAxis ||
+        feature.kind == FeatureKind::datumAxis || feature.kind == FeatureKind::shell ||
         (feature.kind == FeatureKind::sketch && (std::get<SketchParameters>(parameters).datum ||
                                                  std::get<SketchParameters>(parameters)
                                                      .constructionPlane)) ||
@@ -146,6 +149,9 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
         // M21: a combination's result belongs to its target body.
         if (features[index].kind == FeatureKind::combine)
             return std::get<CombineParameters>(parameters[index]).target;
+        // M22: a shell hollows its body.
+        if (features[index].kind == FeatureKind::shell)
+            return std::get<ShellParameters>(parameters[index]).body;
         return std::nullopt;
     };
     for (std::size_t index = 0; index < features.size(); ++index)

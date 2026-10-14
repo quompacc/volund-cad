@@ -307,6 +307,9 @@ void runFeature(const document::DocumentSnapshot& document,
     case document::FeatureKind::datumAxis:
         detail::evaluateDatumAxis(document, descriptor, outputs);
         break;
+    case document::FeatureKind::shell:
+        detail::evaluateShell(document, descriptor, outputs, bodies, references);
+        break;
     }
 }
 void restoreOutput(const EvaluatedFeature& output, std::vector<EvaluatedFeature>& outputs,

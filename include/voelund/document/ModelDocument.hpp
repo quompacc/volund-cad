@@ -36,7 +36,8 @@ enum class FeatureKind {
     hole,
     combine,
     datumPlane,
-    datumAxis
+    datumAxis,
+    shell
 };
 enum class CylinderResultMode { join, cut, intersect, separate };
 
@@ -252,6 +253,17 @@ struct DatumAxisParameters final {
     [[nodiscard]] bool operator==(const DatumAxisParameters&) const = default;
 };
 void validateDatumAxisParameters(const DatumAxisParameters& parameters);
+// M22 (schema 21, user decision 2026-10-14): hollows a body to walls `thickness` thick and
+// opens the named faces (at least one). Inward keeps the outer size, outward grows the body.
+inline constexpr std::size_t maximumShellFaces = 256;
+struct ShellParameters final {
+    BodyId body;
+    std::vector<SubshapeOrigin> openFaces;
+    double thickness;
+    bool outward{false};
+    [[nodiscard]] bool operator==(const ShellParameters&) const = default;
+};
+void validateShellParameters(const ShellParameters& parameters);
 
 // The operation in effect, with the earlier rule for an unset one.
 [[nodiscard]] ExtrusionOperation effectiveOperation(const ExtrusionParameters& parameters,
@@ -268,7 +280,7 @@ struct FeatureDescriptor final {
 using FeatureParameters =
     std::variant<BoxParameters, CylinderParameters, SketchParameters, ExtrusionParameters,
                  FilletParameters, ChamferParameters, HoleParameters, CombineParameters,
-                 DatumPlaneParameters, DatumAxisParameters>;
+                 DatumPlaneParameters, DatumAxisParameters, ShellParameters>;
 
 // PAR01: every binding names an existing parameter of a matching unit, only dimensional
 // constraints bind, and the table itself is valid. Throws std::invalid_argument.
@@ -319,6 +331,7 @@ class ModelDocument final {
                                                  const DatumPlaneParameters& parameters);
     [[nodiscard]] FeatureId addDatumAxisFeature(std::string name,
                                                 const DatumAxisParameters& parameters);
+    [[nodiscard]] FeatureId addShellFeature(std::string name, const ShellParameters& parameters);
     [[nodiscard]] const kernel::BoxDimensions& boxDimensions(FeatureId featureId) const;
     [[nodiscard]] const BoxParameters& boxParameters(FeatureId featureId) const;
     [[nodiscard]] bool setBoxDimensions(FeatureId featureId,
@@ -349,6 +362,8 @@ class ModelDocument final {
     [[nodiscard]] const DatumAxisParameters& datumAxisParameters(FeatureId featureId) const;
     [[nodiscard]] bool setDatumAxisParameters(FeatureId featureId,
                                               const DatumAxisParameters& parameters);
+    [[nodiscard]] const ShellParameters& shellParameters(FeatureId featureId) const;
+    [[nodiscard]] bool setShellParameters(FeatureId featureId, const ShellParameters& parameters);
     [[nodiscard]] const kernel::RigidTransform& featurePlacement(FeatureId featureId) const;
     [[nodiscard]] bool setFeaturePlacement(FeatureId featureId,
                                            const kernel::RigidTransform& placement);

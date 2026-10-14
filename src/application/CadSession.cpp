@@ -231,7 +231,8 @@ bool CadSession::canTransformFeature(document::FeatureId featureId) const noexce
         feature->kind == document::FeatureKind::hole ||
         feature->kind == document::FeatureKind::combine ||
         feature->kind == document::FeatureKind::datumPlane ||
-        feature->kind == document::FeatureKind::datumAxis) {
+        feature->kind == document::FeatureKind::datumAxis ||
+        feature->kind == document::FeatureKind::shell) {
         return false;
     }
     if (!transformBodyForFeature(featureId).has_value()) {

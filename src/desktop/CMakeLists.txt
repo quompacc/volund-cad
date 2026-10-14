@@ -45,7 +45,9 @@ add_library(
     HoleToolController.cpp
     CombineToolController.cpp
     DatumToolController.cpp
+    ShellToolController.cpp
     MainWindowTools.cpp
+    MainWindowInteractions.cpp
     ShellHeader.cpp
     ShellIcons.cpp
     ShellState.cpp

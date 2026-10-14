@@ -90,6 +90,7 @@ void surfaces() {
                                       "solid.modify.push_pull", "solid.modify.fillet",
                                       "solid.modify.chamfer", "solid.modify.hole",
                                       "solid.modify.combine",   "solid.create.datum_plane",
+                                      "solid.modify.shell",
                                       "solid.create.datum_axis"};
     require(railIds == solid, "The rail shows every solid command");
     require(!command(window, "solid.create.sketch")->isEnabled(),

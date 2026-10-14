@@ -41,6 +41,8 @@ QString featureName(const ShellState& state) {
         return QObject::tr("Bezugsebene");
     case document::FeatureKind::datumAxis:
         return QObject::tr("Bezugsachse");
+    case document::FeatureKind::shell:
+        return QObject::tr("Wandstärke");
     }
     return QObject::tr("Feature");
 }
@@ -76,7 +78,7 @@ ContextCommands contextCommands(const ShellState& state) {
     case ShellSelection::planarFace:
         result.title = QObject::tr("Ebene Fläche");
         result.commands = {"solid.create.sketch", "solid.modify.push_pull", "solid.modify.hole",
-                           "solid.create.datum_plane"};
+                           "solid.modify.shell", "solid.create.datum_plane"};
         result.primary = "solid.create.sketch";
         break;
     case ShellSelection::edges:
