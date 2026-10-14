@@ -72,7 +72,9 @@ SubshapeOrigin readNativeSubshapeOrigin(const TDF_Label& label, std::size_t& rem
     const int role = integer(child(label, 3));
     require((role >= -1 || (role == faceExtrusionRole && schemaVersion >= 10) ||
              (role == treatedEdgeRole && schemaVersion >= 17)) &&
-            role <= static_cast<int>(kernel::PrimitiveRole::cylinderSide));
+            (role <= static_cast<int>(kernel::PrimitiveRole::cylinderSide) ||
+             (role <= static_cast<int>(kernel::PrimitiveRole::torusSurface) &&
+              schemaVersion >= 25))); // M27: sphere and torus surfaces
     if (role >= 0)
         origin.role = static_cast<kernel::PrimitiveRole>(role);
     origin.faceExtrusion = role == faceExtrusionRole;

@@ -31,6 +31,10 @@ enum class ShellIcon {
     datumAxis,  // M19
     revolve,    // M20
     shell,      // M22
+    sphere,     // M27
+    cone,
+    torus,
+    wedge,
     repair,
     eye,
     eyeOff,

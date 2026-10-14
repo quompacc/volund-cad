@@ -6,6 +6,14 @@
 namespace voelund::document {
 namespace {
 
+// A cylinder or M27 primitive that makes a body of its own.
+bool separatePrimitive(const FeatureDescriptor& feature, const FeatureParameters& parameters) {
+    if (feature.kind == FeatureKind::cylinder)
+        return std::get<CylinderParameters>(parameters).resultMode == CylinderResultMode::separate;
+    return feature.kind == FeatureKind::primitive &&
+           std::get<PrimitiveParameters>(parameters).resultMode == CylinderResultMode::separate;
+}
+
 void validateKind(const FeatureDescriptor& feature, const FeatureParameters& parameters) {
     bool matches = false;
     switch (feature.kind) {
@@ -52,6 +60,9 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
     case FeatureKind::shell:
         matches = std::holds_alternative<ShellParameters>(parameters);
         break;
+    case FeatureKind::primitive: // M27
+        matches = std::holds_alternative<PrimitiveParameters>(parameters);
+        break;
     }
     if (!matches)
         throw std::invalid_argument("Legacy body identity: feature parameter kind mismatch");
@@ -68,9 +79,8 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
         (feature.kind == FeatureKind::extrusion &&
          std::get<ExtrusionParameters>(parameters).faceProfile);
     // M01: a separate cylinder may also stand alone, as a new body at the origin.
-    const bool optionalInput = feature.kind == FeatureKind::cylinder &&
-                               std::get<CylinderParameters>(parameters).resultMode ==
-                                   CylinderResultMode::separate;
+    // M27: so may a separate primitive.
+    const bool optionalInput = separatePrimitive(feature, parameters);
     if (!optionalInput && standalone == feature.inputFeature.has_value())
         throw std::invalid_argument("Legacy body identity: invalid input presence");
 }
@@ -115,9 +125,7 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
                    effectiveOperation(*prism, false) == ExtrusionOperation::newBody;
         return feature.kind == FeatureKind::box ||
                (feature.kind == FeatureKind::sketch && !inputs[index]) ||
-               (feature.kind == FeatureKind::cylinder &&
-                std::get<CylinderParameters>(parameters[index]).resultMode ==
-                    CylinderResultMode::separate);
+               separatePrimitive(feature, parameters[index]);
     };
     // T02: a join or cut of a base-plane sketch names a body that some feature creates;
     // T03: so does the face an extrusion ends on.

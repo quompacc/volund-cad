@@ -78,6 +78,9 @@ std::vector<ActionKind> availableActions(const CadSession& session,
     case FeatureKind::shell:
         actions = {ActionKind::editShellParameters};
         break;
+    case FeatureKind::primitive:
+        actions = {ActionKind::editPrimitiveParameters};
+        break;
     }
     if (session.placementFeature(feature))
         actions.push_back(ActionKind::setPlacement);
@@ -85,6 +88,7 @@ std::vector<ActionKind> availableActions(const CadSession& session,
     // cylinder.
     if (session.canAddCylinder(feature)) {
         actions.push_back(ActionKind::createCylinder);
+        actions.push_back(ActionKind::createPrimitive);
         if (descriptor->kind != FeatureKind::sketch) {
             actions.push_back(ActionKind::createSketch);
             actions.push_back(ActionKind::pushPullFace);

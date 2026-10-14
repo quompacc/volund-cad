@@ -28,6 +28,10 @@ std::optional<ShellIcon> iconFor(const QString& id) {
     static const std::map<QString, ShellIcon> icons{
         {QStringLiteral("solid.create.box"), ShellIcon::box},
         {QStringLiteral("solid.create.cylinder"), ShellIcon::cylinder},
+        {QStringLiteral("solid.create.sphere"), ShellIcon::sphere}, // M27
+        {QStringLiteral("solid.create.cone"), ShellIcon::cone},
+        {QStringLiteral("solid.create.torus"), ShellIcon::torus},
+        {QStringLiteral("solid.create.wedge"), ShellIcon::wedge},
         {QStringLiteral("solid.create.sketch"), ShellIcon::sketch},
         {QStringLiteral("solid.create.extrude_profiles"), ShellIcon::extrude},
         {QStringLiteral("solid.create.revolve"), ShellIcon::revolve},

@@ -7,7 +7,9 @@
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
+#include <type_traits>
 #include <utility>
+#include <variant>
 
 namespace voelund::document {
 namespace {
@@ -44,6 +46,20 @@ void validatePlacement(const kernel::RigidTransform& placement) {
           placement.rotationX.value(), placement.rotationY.value(), placement.rotationZ.value()})
         if (!std::isfinite(value))
             throw std::invalid_argument("Placement must contain finite values");
+}
+
+// Box, cylinder and the M27 primitives carry a rigid placement; nothing else does.
+template <typename Parameters> auto* placementOf(Parameters& parameters) {
+    using Pointer = std::conditional_t<std::is_const_v<Parameters>, const kernel::RigidTransform*,
+                                       kernel::RigidTransform*>;
+    return std::visit(
+        [](auto& value) -> Pointer {
+            if constexpr (requires { value.placement.rotationX; })
+                return &value.placement;
+            else
+                return nullptr;
+        },
+        parameters);
 }
 
 void validateExtrusion(const ExtrusionParameters& parameters) {
@@ -107,6 +123,13 @@ ExtrusionOperation effectiveOperation(const ExtrusionParameters& parameters,
 
 void validateCylinderParameters(const CylinderParameters& parameters) {
     validateCylinder(parameters);
+    validatePlacement(parameters.placement);
+}
+
+void validatePrimitiveParameters(const PrimitiveParameters& parameters) { // M27
+    if (const char* problem = kernel::primitiveSizeProblem(parameters.definition()))
+        throw std::invalid_argument(problem);
+    validateCylinder({1.0, 1.0, parameters.placement, parameters.resultMode});
     validatePlacement(parameters.placement);
 }
 
@@ -520,15 +543,10 @@ bool ModelDocument::setHoleParameters(FeatureId featureId, const HoleParameters&
 }
 
 const kernel::RigidTransform& ModelDocument::featurePlacement(FeatureId featureId) const {
-    const FeatureParameters& parameters = impl_->view().parameters()[featureIndex(featureId)];
-    if (const auto* box = std::get_if<BoxParameters>(&parameters)) {
-        return box->placement;
-    }
-    const auto* cylinder = std::get_if<CylinderParameters>(&parameters);
-    if (cylinder == nullptr) {
+    const auto* placement = placementOf(impl_->view().parameters()[featureIndex(featureId)]);
+    if (placement == nullptr)
         throw std::out_of_range("Feature has no rigid placement");
-    }
-    return cylinder->placement;
+    return *placement;
 }
 
 bool ModelDocument::setFeaturePlacement(FeatureId featureId,
@@ -536,13 +554,10 @@ bool ModelDocument::setFeaturePlacement(FeatureId featureId,
     validatePlacement(placement);
     const std::size_t index = featureIndex(featureId);
     FeatureParameters changed = impl_->view().parameters()[index];
-    if (auto* box = std::get_if<BoxParameters>(&changed)) {
-        box->placement = placement;
-    } else if (auto* cylinder = std::get_if<CylinderParameters>(&changed)) {
-        cylinder->placement = placement;
-    } else {
+    auto* target = placementOf(changed);
+    if (target == nullptr)
         throw std::out_of_range("Feature has no rigid placement");
-    }
+    *target = placement;
     if (changed == impl_->view().parameters()[index]) {
         return false;
     }

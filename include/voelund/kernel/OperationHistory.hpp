@@ -14,7 +14,9 @@ enum class PrimitiveRole {
     boxPositiveZ,
     cylinderStart,
     cylinderEnd,
-    cylinderSide
+    cylinderSide,
+    sphereSurface, // M27 (schema 25)
+    torusSurface
 };
 struct PrimitiveOrigin final {
     PrimitiveRole role;

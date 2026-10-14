@@ -78,6 +78,9 @@ const BoxParameters& DocumentSnapshot::boxParameters(FeatureId id) const {
 const CylinderParameters& DocumentSnapshot::cylinderParameters(FeatureId id) const {
     return std::get<CylinderParameters>(featureParameters(id));
 }
+const PrimitiveParameters& DocumentSnapshot::primitiveParameters(FeatureId id) const {
+    return std::get<PrimitiveParameters>(featureParameters(id));
+}
 const SketchParameters& DocumentSnapshot::sketchParameters(FeatureId id) const {
     return std::get<SketchParameters>(featureParameters(id));
 }

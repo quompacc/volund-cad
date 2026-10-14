@@ -34,6 +34,8 @@ add_library(voelund_document STATIC
     NativeBodyAttributes.cpp
     ModelDocumentHistory.cpp
     ModelDocumentSolidFeatures.cpp
+    ModelDocumentPrimitives.cpp
+    NativePrimitiveSolid.cpp
     DocumentTransaction.cpp
     SketchConstraintSerialization.cpp
     SketchGeometry.cpp

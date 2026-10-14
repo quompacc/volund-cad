@@ -25,6 +25,26 @@ constexpr const char* rotationLabels[] = {
     QT_TRANSLATE_NOOP("voelund::desktop::FeaturePropertiesPanel", "Drehen Y"),
     QT_TRANSLATE_NOOP("voelund::desktop::FeaturePropertiesPanel", "Drehen Z")};
 
+// M27: the size fields of each primitive shape, in the order of PrimitiveParameters::sizes.
+QStringList sizeLabels(std::optional<kernel::PrimitiveShape> shape) {
+    using kernel::PrimitiveShape;
+    using Panel = FeaturePropertiesPanel;
+    if (!shape)
+        return {Panel::tr("Radius"), Panel::tr("Höhe")};
+    switch (*shape) {
+    case PrimitiveShape::sphere:
+        return {Panel::tr("Radius")};
+    case PrimitiveShape::cone:
+        return {Panel::tr("Grundradius"), Panel::tr("Deckradius"), Panel::tr("Höhe")};
+    case PrimitiveShape::torus:
+        return {Panel::tr("Ringradius"), Panel::tr("Rohrradius")};
+    case PrimitiveShape::wedge:
+        return {Panel::tr("Breite"), Panel::tr("Tiefe"), Panel::tr("Höhe"),
+                Panel::tr("Oberbreite")};
+    }
+    return {};
+}
+
 } // namespace
 
 FeaturePropertiesPanel::FeaturePropertiesPanel(QWidget* parent) : QStackedWidget(parent) {
@@ -136,6 +156,13 @@ void FeaturePropertiesPanel::createCylinderPanel() {
 
     cylinderLayout->addRow(tr("Radius"), radiusInput_);
     cylinderLayout->addRow(tr("Höhe"), cylinderHeightInput_);
+    for (int index = 0; index < 2; ++index) {
+        extraSizeInputs_[index] = makeLengthInput(cylinderPanel_);
+        extraSizeInputs_[index]->setObjectName(
+            QStringLiteral("primitiveSize%1Input").arg(index + 2));
+        cylinderLayout->addRow(QStringLiteral("-"), extraSizeInputs_[index]);
+        cylinderLayout->setRowVisible(extraSizeInputs_[index], false);
+    }
     cylinderLayout->addRow(tr("Verbindung"), cylinderResultModeInput_);
     for (int index = 0; index < 3; ++index) {
         cylinderLayout->addRow(tr(moveLabels[index]), translationInputs_[index]);
@@ -158,7 +185,8 @@ void FeaturePropertiesPanel::connectEditors() {
         });
     }
     for (QDoubleSpinBox* input :
-         {radiusInput_, cylinderHeightInput_, translationInputs_[0], translationInputs_[1],
+         {radiusInput_, cylinderHeightInput_, extraSizeInputs_[0], extraSizeInputs_[1],
+          translationInputs_[0], translationInputs_[1],
           translationInputs_[2], rotationInputs_[0], rotationInputs_[1], rotationInputs_[2]}) {
         connect(input, &QDoubleSpinBox::editingFinished, this, [this]() {
             if (cylinderChangeHandler_) {
@@ -254,29 +282,70 @@ void FeaturePropertiesPanel::showBox(const document::BoxParameters& parameters) 
 
 void FeaturePropertiesPanel::showCylinder(const document::CylinderParameters& parameters,
                                           const QString& errorText) {
-    setCurrentWidget(cylinderPanel_);
-    const QSignalBlocker blockers[] = {
-        QSignalBlocker(radiusInput_),          QSignalBlocker(cylinderHeightInput_),
-        QSignalBlocker(translationInputs_[0]), QSignalBlocker(translationInputs_[1]),
-        QSignalBlocker(translationInputs_[2]), QSignalBlocker(rotationInputs_[0]),
-        QSignalBlocker(rotationInputs_[1]),    QSignalBlocker(rotationInputs_[2])};
-    const QSignalBlocker modeBlocker(cylinderResultModeInput_);
+    primitiveShape_.reset();
+    const QSignalBlocker blockers[] = {QSignalBlocker(radiusInput_),
+                                       QSignalBlocker(cylinderHeightInput_),
+                                       QSignalBlocker(cylinderResultModeInput_)};
     cylinderResultModeInput_->setCurrentIndex(resultModeIndex(parameters.resultMode));
+    showPlacement(parameters.placement, errorText); // labels and fields of a cylinder
     radiusInput_->setValue(parameters.radius);
     cylinderHeightInput_->setValue(parameters.height);
-    const double translations[] = {parameters.placement.translationX,
-                                   parameters.placement.translationY,
-                                   parameters.placement.translationZ};
-    const double rotations[] = {kernel::toDegrees(parameters.placement.rotationX).value(),
-                                kernel::toDegrees(parameters.placement.rotationY).value(),
-                                kernel::toDegrees(parameters.placement.rotationZ).value()};
+    static_cast<void>(blockers);
+}
+
+void FeaturePropertiesPanel::showPrimitive(const document::PrimitiveParameters& parameters,
+                                           const QString& errorText) {
+    primitiveShape_ = parameters.shape;
+    QDoubleSpinBox* sizes[] = {radiusInput_, cylinderHeightInput_, extraSizeInputs_[0],
+                               extraSizeInputs_[1]};
+    const QSignalBlocker blockers[] = {QSignalBlocker(sizes[0]), QSignalBlocker(sizes[1]),
+                                       QSignalBlocker(sizes[2]), QSignalBlocker(sizes[3]),
+                                       QSignalBlocker(cylinderResultModeInput_)};
+    cylinderResultModeInput_->setCurrentIndex(resultModeIndex(parameters.resultMode));
+    showPlacement(parameters.placement, errorText);
+    for (int index = 0; index < 4; ++index)
+        sizes[index]->setValue(parameters.sizes[static_cast<std::size_t>(index)]);
+    static_cast<void>(blockers);
+}
+
+void FeaturePropertiesPanel::showPlacement(const kernel::RigidTransform& placement,
+                                           const QString& errorText) {
+    setCurrentWidget(cylinderPanel_);
+    auto* layout = static_cast<QFormLayout*>(cylinderPanel_->layout());
+    QDoubleSpinBox* sizes[] = {radiusInput_, cylinderHeightInput_, extraSizeInputs_[0],
+                               extraSizeInputs_[1]};
+    const auto labels = sizeLabels(primitiveShape_);
+    for (int index = 0; index < 4; ++index) {
+        const bool shown = index < labels.size();
+        layout->setRowVisible(sizes[index], shown);
+        if (shown)
+            static_cast<QLabel*>(layout->labelForField(sizes[index]))->setText(labels[index]);
+        // A cone may end in an apex (radius 0); every other size is a positive length.
+        sizes[index]->setMinimum(
+            primitiveShape_ == kernel::PrimitiveShape::cone && index < 2 ? 0.0 : 0.01);
+    }
+    const double translations[] = {placement.translationX, placement.translationY,
+                                   placement.translationZ};
+    const double rotations[] = {kernel::toDegrees(placement.rotationX).value(),
+                                kernel::toDegrees(placement.rotationY).value(),
+                                kernel::toDegrees(placement.rotationZ).value()};
     for (int index = 0; index < 3; ++index) {
+        const QSignalBlocker translation(translationInputs_[index]);
+        const QSignalBlocker rotation(rotationInputs_[index]);
         translationInputs_[index]->setValue(translations[index]);
         rotationInputs_[index]->setValue(rotations[index]);
     }
     errorLabel_->setText(errorText);
     errorLabel_->setVisible(!errorText.isEmpty());
-    static_cast<void>(blockers);
+}
+
+document::PrimitiveParameters FeaturePropertiesPanel::primitiveParameters() const {
+    const auto cylinder = cylinderParameters();
+    return {primitiveShape_.value_or(kernel::PrimitiveShape::sphere),
+            {radiusInput_->value(), cylinderHeightInput_->value(), extraSizeInputs_[0]->value(),
+             extraSizeInputs_[1]->value()},
+            cylinder.placement,
+            cylinder.resultMode};
 }
 
 void FeaturePropertiesPanel::showExtrusion(const document::ExtrusionParameters& parameters,

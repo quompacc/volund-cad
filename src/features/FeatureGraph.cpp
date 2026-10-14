@@ -1,4 +1,5 @@
 #include "FeatureEvaluationDetail.hpp"
+#include "PrimitivePlacement.hpp"
 #include <Standard_OutOfMemory.hxx>
 #include <Standard_ProgramError.hxx>
 #include <voelund/features/FeatureGraph.hpp>
@@ -16,11 +17,13 @@
 #include <voelund/features/SketchSupportResolver.hpp>
 #include <voelund/kernel/ShapeFactory.hpp>
 #include <voelund/kernel/ShapeOperations.hpp>
+#include <voelund/kernel/SolidPrimitives.hpp>
 
 #include <BRepBuilderAPI_Transform.hxx>
 #include <BRep_Builder.hxx>
 #include <TopoDS_Compound.hxx>
 #include <algorithm>
+#include <functional>
 #include <gp_Trsf.hxx>
 #include <stdexcept>
 #include <utility>
@@ -120,25 +123,28 @@ kernel::ShapeOperationResult combineCylinder(document::CylinderResultMode mode,
     throw std::logic_error("Separate cylinders are not boolean operations");
 }
 
-void evaluateCylinder(const document::DocumentSnapshot& document,
-                      const document::FeatureDescriptor& descriptor,
-                      std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
-                      std::vector<EvaluatedBody>& referenceBodies) {
-    const CylinderFeature cylinder(descriptor.id);
-    const document::CylinderParameters& parameters = document.cylinderParameters(descriptor.id);
+// A cylinder or M27 primitive: a tool built on its input (or at the origin), placed, and
+// either a body of its own or joined to, cut from or intersected with the input body.
+using PrimitiveTool =
+    std::function<kernel::ShapeOperationResult(const TopoDS_Shape& input, bool applyPlacement)>;
+void evaluatePrimitiveTool(document::CylinderResultMode mode, const PrimitiveTool& build,
+                           const document::FeatureDescriptor& descriptor,
+                           std::vector<EvaluatedFeature>& outputs,
+                           std::vector<EvaluatedBody>& bodies,
+                           std::vector<EvaluatedBody>& referenceBodies) {
     // M01: a new-body cylinder without input stands at the origin.
     static const TopoDS_Shape none;
-    if (!descriptor.inputFeature.has_value() &&
-        parameters.resultMode != document::CylinderResultMode::separate)
-        throw GeometryEvaluationError("Cylinder feature requires an input feature");
+    if (!descriptor.inputFeature.has_value() && mode != document::CylinderResultMode::separate)
+        throw GeometryEvaluationError(descriptor.kind == document::FeatureKind::cylinder
+                                          ? "Cylinder feature requires an input feature"
+                                          : "Primitive feature requires an input feature");
     const auto input = descriptor.inputFeature;
     const TopoDS_Shape& inputShape = input ? findOutput(outputs, *input) : none;
     const TopoDS_Shape& referenceInputShape = input ? findOutput(outputs, *input, true) : none;
-    if (parameters.resultMode == document::CylinderResultMode::separate) {
-        const auto evaluatedTool = cylinder.evaluateToolWithHistory(document, referenceInputShape);
+    if (mode == document::CylinderResultMode::separate) {
+        const auto evaluatedTool = build(referenceInputShape, true);
         const TopoDS_Shape tool = evaluatedTool.shape;
-        const auto reference =
-            cylinder.evaluateToolWithHistory(document, referenceInputShape, false);
+        const auto reference = build(referenceInputShape, false);
         const TopoDS_Shape referenceTool = reference.shape;
         const document::BodyId bodyId{descriptor.id.value()};
         outputs.push_back(EvaluatedFeature{descriptor.id,
@@ -158,13 +164,13 @@ void evaluateCylinder(const document::DocumentSnapshot& document,
 
     EvaluatedBody& inputBody = findBody(bodies, outputs, inputId);
     EvaluatedBody& referenceInputBody = findBody(referenceBodies, outputs, inputId);
-    const auto evaluatedTool = cylinder.evaluateToolWithHistory(document, inputShape);
+    const auto evaluatedTool = build(inputShape, true);
     const TopoDS_Shape tool = evaluatedTool.shape;
-    const auto referenceTool = cylinder.evaluateToolWithHistory(document, referenceInputShape);
-    const auto evaluated = combineCylinder(parameters.resultMode, inputShape, tool);
+    const auto referenceTool = build(referenceInputShape, true);
+    const auto evaluated = combineCylinder(mode, inputShape, tool);
     const TopoDS_Shape result = evaluated.shape;
     const auto reference =
-        combineCylinder(parameters.resultMode, referenceInputShape, referenceTool.shape);
+        combineCylinder(mode, referenceInputShape, referenceTool.shape);
     const TopoDS_Shape referenceResult = reference.shape;
     auto referenceOrigins =
         continueSupportOrigins(findFeature(outputs, inputId).referenceSupportOrigins, reference);
@@ -201,6 +207,43 @@ void evaluateCylinder(const document::DocumentSnapshot& document,
     inputBody.shape = result;
     referenceInputBody.sourceFeature = descriptor.id;
     referenceInputBody.shape = referenceResult;
+}
+
+void evaluateCylinder(const document::DocumentSnapshot& document,
+                      const document::FeatureDescriptor& descriptor,
+                      std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
+                      std::vector<EvaluatedBody>& referenceBodies) {
+    const CylinderFeature cylinder(descriptor.id);
+    evaluatePrimitiveTool(
+        document.cylinderParameters(descriptor.id).resultMode,
+        [&](const TopoDS_Shape& input, bool place) {
+            return cylinder.evaluateToolWithHistory(document, input, place);
+        },
+        descriptor, outputs, bodies, referenceBodies);
+}
+
+// M27: sphere, cone, torus and wedge stand where a cylinder would.
+void evaluatePrimitive(const document::DocumentSnapshot& document,
+                       const document::FeatureDescriptor& descriptor,
+                       std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
+                       std::vector<EvaluatedBody>& referenceBodies) {
+    const auto& parameters = document.primitiveParameters(descriptor.id);
+    evaluatePrimitiveTool(
+        parameters.resultMode,
+        [&](const TopoDS_Shape& input, bool place) {
+            auto definition = parameters.definition();
+            const double height = kernel::primitiveHeight(definition);
+            const gp_Pnt origin = CylinderFeature::attachmentOrigin(input, height);
+            definition.originX = origin.X();
+            definition.originY = origin.Y();
+            definition.originZ = origin.Z();
+            auto shape = kernel::makeSolidPrimitiveWithHistory(definition);
+            if (!place)
+                return shape;
+            return detail::placePrimitive(shape, origin.X(), origin.Y(),
+                                          origin.Z() + height * 0.5, parameters.placement);
+        },
+        descriptor, outputs, bodies, referenceBodies);
 }
 
 // M19: a sketch on a construction plane lies where the plane is now.
@@ -327,6 +370,9 @@ void runFeature(const document::DocumentSnapshot& document,
         break;
     case document::FeatureKind::shell:
         detail::evaluateShell(document, descriptor, outputs, bodies, references);
+        break;
+    case document::FeatureKind::primitive:
+        evaluatePrimitive(document, descriptor, outputs, bodies, references);
         break;
     }
 }

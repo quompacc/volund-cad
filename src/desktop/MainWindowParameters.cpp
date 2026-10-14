@@ -126,6 +126,18 @@ void MainWindow::applyBoxParameters() {
     });
 }
 void MainWindow::applyCylinderParameters() {
+    if (impl_->propertyPanel->showsPrimitive()) { // M27: the same page edits a primitive
+        const auto primitive = impl_->propertyPanel->primitiveParameters();
+        applyParameterCommand([this, primitive](ErrorDisposition disposition) {
+            return runOnSelected(
+                impl_->session,
+                [&](document::FeatureId feature) {
+                    return application::EditPrimitiveParametersAction{feature, primitive};
+                },
+                disposition);
+        });
+        return;
+    }
     const auto parameters = impl_->propertyPanel->cylinderParameters();
     applyParameterCommand([this, parameters](ErrorDisposition disposition) {
         return runOnSelected(

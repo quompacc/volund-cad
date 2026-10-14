@@ -274,6 +274,16 @@ class Validation final {
         static_cast<void>(target(action.shell, ActionKind::editShellParameters));
         finite({action.parameters.thickness});
     }
+    void operator()(const CreatePrimitiveAction& action) {
+        if (action.input)
+            static_cast<void>(target(*action.input, ActionKind::createPrimitive));
+    }
+    void operator()(const EditPrimitiveParametersAction& action) {
+        static_cast<void>(target(action.primitive, ActionKind::editPrimitiveParameters));
+        const auto& sizes = action.parameters.sizes;
+        finite({sizes[0], sizes[1], sizes[2], sizes[3]});
+        placement(action.parameters.placement);
+    }
 
     [[nodiscard]] const Findings& findings() const noexcept { return findings_; }
 
@@ -420,6 +430,12 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot,
             },
             [&](const EditShellParametersAction& a) {
                 return session.editShellParameters(a.shell, a.parameters, reject);
+            },
+            [&](const CreatePrimitiveAction& a) {
+                return session.createPrimitive(a.shape, a.input, a.mode);
+            },
+            [&](const EditPrimitiveParametersAction& a) {
+                return session.editPrimitiveParameters(a.primitive, a.parameters, reject);
             }},
         request.action);
 }

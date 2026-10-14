@@ -6,6 +6,7 @@
 #include <QStackedWidget>
 
 #include <functional>
+#include <optional>
 #include <vector>
 
 class QComboBox;
@@ -28,6 +29,10 @@ class FeaturePropertiesPanel final : public QStackedWidget {
     void showFeatureInfo(const QString& title, const QString& errorText);
     void showBox(const document::BoxParameters& parameters);
     void showCylinder(const document::CylinderParameters& parameters, const QString& errorText);
+    // M27: a sphere, cone, torus or wedge on the cylinder page, with its own size fields.
+    void showPrimitive(const document::PrimitiveParameters& parameters, const QString& errorText);
+    [[nodiscard]] bool showsPrimitive() const noexcept { return primitiveShape_.has_value(); }
+    [[nodiscard]] document::PrimitiveParameters primitiveParameters() const;
     void showExtrusion(const document::ExtrusionParameters& parameters, const QString& errorText);
     [[nodiscard]] document::BoxParameters boxParameters() const;
     [[nodiscard]] document::CylinderParameters cylinderParameters() const;
@@ -41,6 +46,7 @@ class FeaturePropertiesPanel final : public QStackedWidget {
     void createCylinderPanel();
     void createExtrusionPanel();
     void connectEditors();
+    void showPlacement(const kernel::RigidTransform& placement, const QString& errorText);
 
     QWidget* boxPanel_{nullptr};
     QWidget* cylinderPanel_{nullptr};
@@ -54,6 +60,8 @@ class FeaturePropertiesPanel final : public QStackedWidget {
     QDoubleSpinBox* radiusInput_{nullptr};
     QDoubleSpinBox* cylinderHeightInput_{nullptr};
     QComboBox* cylinderResultModeInput_{nullptr};
+    QDoubleSpinBox* extraSizeInputs_[2]{}; // M27: third and fourth size of a primitive
+    std::optional<kernel::PrimitiveShape> primitiveShape_;
     QDoubleSpinBox* translationInputs_[3]{};
     QDoubleSpinBox* rotationInputs_[3]{};
     QLabel* errorLabel_{nullptr};

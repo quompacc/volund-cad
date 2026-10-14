@@ -40,6 +40,8 @@ ShellIcon iconFor(document::FeatureKind kind) {
         return ShellIcon::datumAxis;
     case document::FeatureKind::shell:
         return ShellIcon::shell;
+    case document::FeatureKind::primitive:
+        return ShellIcon::sphere; // M27
     }
     return ShellIcon::box;
 }

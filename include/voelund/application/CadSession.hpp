@@ -279,6 +279,19 @@ class CadSession final {
     editShellParameters(document::FeatureId featureId, const document::ShellParameters& parameters,
                         ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] document::ShellParameters shellParameters(document::FeatureId featureId) const;
+    // M27 (CadSessionPrimitives.cpp): a sphere, cone, torus or wedge ("Kugel N" ...), added as
+    // a cylinder is: on `input` (join, cut, intersect, or separate beside it) or as a new body
+    // at the origin; one undo step.
+    [[nodiscard]] CommandResult createPrimitive(kernel::PrimitiveShape shape,
+                                                std::optional<document::FeatureId> input,
+                                                document::CylinderResultMode mode);
+    [[nodiscard]] CommandResult
+    editPrimitiveParameters(document::FeatureId featureId,
+                            const document::PrimitiveParameters& parameters,
+                            ErrorDisposition disposition = ErrorDisposition::reject);
+    [[nodiscard]] std::optional<document::PrimitiveParameters> selectedPrimitiveParameters() const;
+    // M27: the shape name in features ("Kugel", "Kegel", "Torus", "Keil").
+    [[nodiscard]] static const char* primitiveShapeName(kernel::PrimitiveShape shape) noexcept;
     // S17: a sketch as the current evaluation solved it (projected edges up to date).
     [[nodiscard]] std::optional<document::SketchParameters>
     evaluatedSketch(document::FeatureId sketch) const;

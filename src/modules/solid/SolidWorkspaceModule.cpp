@@ -34,6 +34,28 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                          false,
                          simpleCommand(std::move(services.addCylinder)),
                          std::move(services.canAddCylinder)});
+    if (services.primitive) {
+        struct Primitive final {
+            const char* id;
+            const char* name;
+            const char* tip;
+        };
+        const Primitive primitives[]{
+            {"solid.create.sphere", "Kugel", "Kugel anlegen (auf dem gewählten Körper verbunden)"},
+            {"solid.create.cone", "Kegel", "Kegel oder Kegelstumpf anlegen"},
+            {"solid.create.torus", "Torus", "Torus (Ring) anlegen"},
+            {"solid.create.wedge", "Keil", "Keil anlegen (oben schmaler)"}};
+        for (int index = 0; index < 4; ++index)
+            commands_.push_back({primitives[index].id,
+                                 primitives[index].name,
+                                 primitives[index].tip,
+                                 {},
+                                 workspaces::CommandGroup::create,
+                                 true,
+                                 false,
+                                 simpleCommand([run = services.primitive, index] { run(index); }),
+                                 services.canPrimitive ? services.canPrimitive : alwaysEnabled()});
+    }
     commands_.push_back({"solid.create.sketch",
                          "Skizze",
                          "Skizze auf einer Ebene oder ebenen Fläche anlegen",

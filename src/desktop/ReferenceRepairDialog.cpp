@@ -51,6 +51,10 @@ QString role(const document::SubshapeOrigin& origin) {
         return QObject::tr("Zylinderende");
     case PrimitiveRole::cylinderSide:
         return QObject::tr("Zylindermantel");
+    case PrimitiveRole::sphereSurface: // M27
+        return QObject::tr("Kugelfläche");
+    case PrimitiveRole::torusSurface:
+        return QObject::tr("Torusfläche");
     }
     return {};
 }

@@ -42,6 +42,9 @@ struct SolidCommandServices final {
     std::function<void()> datumPlane{};
     std::function<void()> datumAxis{};
     std::function<bool()> canDatum{};
+    // M27: sphere (0), cone (1), torus (2) and wedge (3), enabled like the cylinder.
+    std::function<void(int)> primitive{};
+    std::function<bool()> canPrimitive{};
 };
 
 class SolidWorkspaceModule final : public workspaces::WorkspaceModule {

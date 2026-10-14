@@ -33,6 +33,10 @@ enum class KernelOperation {
     chamfer, // M07
     makeRevolution, // M20
     shell,          // M22
+    makeSphere,     // M27
+    makeCone,
+    makeTorus,
+    makeWedge,
 };
 
 // M03: why a Boolean refused its result, beyond a failing kernel.

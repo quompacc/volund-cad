@@ -33,10 +33,14 @@ std::optional<document::FeatureId> placementOwner(const document::ModelDocument&
         if (descriptor->kind == document::FeatureKind::box) {
             return featureId;
         }
-        if (descriptor->kind != document::FeatureKind::cylinder) {
+        if (descriptor->kind != document::FeatureKind::cylinder &&
+            descriptor->kind != document::FeatureKind::primitive) {
             return std::nullopt;
         }
-        if (document.cylinderParameters(featureId).resultMode ==
+        // M27: a primitive is placed like a cylinder.
+        if ((descriptor->kind == document::FeatureKind::cylinder
+                 ? document.cylinderParameters(featureId).resultMode
+                 : document.primitiveParameters(featureId).resultMode) ==
             document::CylinderResultMode::separate) {
             return featureId;
         }

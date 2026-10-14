@@ -209,7 +209,8 @@ struct SolidKind final {
 constexpr SolidKind solidKinds[]{{FeatureKind::combine, "combine", 18},
                                  {FeatureKind::datumPlane, "datum_plane", 19},
                                  {FeatureKind::datumAxis, "datum_axis", 19},
-                                 {FeatureKind::shell, "shell", 21}};
+                                 {FeatureKind::shell, "shell", 21},
+                                 {FeatureKind::primitive, "primitive", 25}};
 } // namespace
 
 const char* nativeSolidKindName(FeatureKind kind) noexcept {
@@ -244,6 +245,10 @@ std::size_t nativeSolidRecords(FeatureKind kind, const FeatureParameters& parame
         require(std::holds_alternative<ShellParameters>(parameters));
         validateShellParameters(std::get<ShellParameters>(parameters));
         return nativeShellRecords(std::get<ShellParameters>(parameters));
+    case FeatureKind::primitive: // M27: no records beyond the feature
+        require(std::holds_alternative<PrimitiveParameters>(parameters));
+        validatePrimitiveParameters(std::get<PrimitiveParameters>(parameters));
+        return 0;
     default:
         break;
     }
@@ -257,6 +262,8 @@ void writeNativeSolid(const TDF_Label& label, const FeatureParameters& parameter
         writeNativeDatumPlane(label, *plane);
     else if (const auto* shell = std::get_if<ShellParameters>(&parameters))
         writeNativeShell(label, *shell);
+    else if (const auto* primitive = std::get_if<PrimitiveParameters>(&parameters))
+        writeNativePrimitive(label, *primitive);
     else
         writeNativeDatumAxis(label, std::get<DatumAxisParameters>(parameters));
 }
@@ -272,6 +279,8 @@ FeatureParameters readNativeSolid(const TDF_Label& label, FeatureKind kind,
         return readNativeDatumAxis(label, remainingRecords, schemaVersion);
     case FeatureKind::shell:
         return readNativeShell(label, remainingRecords, schemaVersion);
+    case FeatureKind::primitive:
+        return readNativePrimitive(label, schemaVersion);
     default:
         break;
     }

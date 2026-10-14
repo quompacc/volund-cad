@@ -55,6 +55,26 @@ void MainWindow::createCommands() {
         refreshScene();
         statusBar()->showMessage(tr("Zylinder angelegt"), 2000);
     };
+    services.primitive = [this](int shape) { // M27
+        const auto kind = static_cast<kernel::PrimitiveShape>(shape);
+        if (!runCommand(
+                [this, kind] {
+                    const auto body = impl_->session.selectedBodyProducer();
+                    return runAction(impl_->session,
+                                     application::CreatePrimitiveAction{
+                                         kind, body,
+                                         body ? document::CylinderResultMode::join
+                                              : document::CylinderResultMode::separate});
+                },
+                [this](const QString& message) { statusBar()->showMessage(message); }))
+            return;
+        refreshScene();
+        statusBar()->showMessage(
+            tr("%1 angelegt").arg(tr(application::CadSession::primitiveShapeName(kind))), 2000);
+    };
+    services.canPrimitive = [this]() {
+        return impl_->session.canAddCylinder() && !impl_->shell().toolBlocksCommands();
+    };
     services.sketchEditor = [this]() {
         // M19: a sketch on the selected construction plane.
         if (const auto selected = impl_->session.selectedFeature();

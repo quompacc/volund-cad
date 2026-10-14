@@ -43,6 +43,8 @@ QString featureName(const ShellState& state) {
         return QObject::tr("Bezugsachse");
     case document::FeatureKind::shell:
         return QObject::tr("Wandstärke");
+    case document::FeatureKind::primitive:
+        return QObject::tr("Grundkörper"); // M27
     }
     return QObject::tr("Feature");
 }

@@ -107,6 +107,14 @@ const char* kernelOperationName(KernelOperation operation) noexcept {
         return "makeRevolution";
     case KernelOperation::shell:
         return "shell";
+    case KernelOperation::makeSphere:
+        return "makeSphere";
+    case KernelOperation::makeCone:
+        return "makeCone";
+    case KernelOperation::makeTorus:
+        return "makeTorus";
+    case KernelOperation::makeWedge:
+        return "makeWedge";
     }
     return "unknown";
 }

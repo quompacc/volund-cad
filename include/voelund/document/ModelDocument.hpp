@@ -9,6 +9,8 @@
 #include <voelund/document/SketchRegionId.hpp>
 #include <voelund/document/SubshapeReference.hpp>
 #include <voelund/kernel/ShapeFactory.hpp>
+#include <voelund/kernel/SolidPrimitives.hpp>
+#include <array>
 
 #include <cstddef>
 #include <cstdint>
@@ -37,7 +39,8 @@ enum class FeatureKind {
     combine,
     datumPlane,
     datumAxis,
-    shell
+    shell,
+    primitive // M27: sphere, cone, torus, wedge
 };
 enum class CylinderResultMode { join, cut, intersect, separate };
 
@@ -55,6 +58,21 @@ struct CylinderParameters final {
     CylinderResultMode resultMode;
 
     [[nodiscard]] bool operator==(const CylinderParameters&) const = default;
+};
+
+// M27 (schema 25, user decision 2026-10-14): a further primitive solid, joined to, cut from or
+// intersected with its input body like a cylinder, or a body of its own. `sizes` follow
+// kernel::SolidPrimitiveDefinition (first .. fourth).
+struct PrimitiveParameters final {
+    kernel::PrimitiveShape shape;
+    std::array<double, 4> sizes;
+    kernel::RigidTransform placement;
+    CylinderResultMode resultMode;
+
+    [[nodiscard]] kernel::SolidPrimitiveDefinition definition() const noexcept {
+        return {shape, sizes[0], sizes[1], sizes[2], sizes[3]};
+    }
+    [[nodiscard]] bool operator==(const PrimitiveParameters&) const = default;
 };
 
 struct SketchPlane final {
@@ -136,6 +154,7 @@ struct SketchParameters final {
 
 void validateSketchParameters(const SketchParameters& parameters);
 void validateCylinderParameters(const CylinderParameters& parameters);
+void validatePrimitiveParameters(const PrimitiveParameters& parameters); // M27
 
 // T03: a planar face of one of this document's bodies, named by its semantic origin.
 struct BodyFaceReference final {
@@ -295,7 +314,8 @@ struct FeatureDescriptor final {
 using FeatureParameters =
     std::variant<BoxParameters, CylinderParameters, SketchParameters, ExtrusionParameters,
                  FilletParameters, ChamferParameters, HoleParameters, CombineParameters,
-                 DatumPlaneParameters, DatumAxisParameters, ShellParameters>;
+                 DatumPlaneParameters, DatumAxisParameters, ShellParameters,
+                 PrimitiveParameters>;
 
 // PAR01: every binding names an existing parameter of a matching unit, only dimensional
 // constraints bind, and the table itself is valid. Throws std::invalid_argument.
@@ -347,6 +367,13 @@ class ModelDocument final {
     [[nodiscard]] FeatureId addDatumAxisFeature(std::string name,
                                                 const DatumAxisParameters& parameters);
     [[nodiscard]] FeatureId addShellFeature(std::string name, const ShellParameters& parameters);
+    // M27: as addCylinderFeature (ModelDocumentPrimitives.cpp).
+    [[nodiscard]] FeatureId addPrimitiveFeature(std::string name,
+                                                std::optional<FeatureId> inputFeature,
+                                                const PrimitiveParameters& parameters);
+    [[nodiscard]] const PrimitiveParameters& primitiveParameters(FeatureId featureId) const;
+    [[nodiscard]] bool setPrimitiveParameters(FeatureId featureId,
+                                              const PrimitiveParameters& parameters);
     [[nodiscard]] const kernel::BoxDimensions& boxDimensions(FeatureId featureId) const;
     [[nodiscard]] const BoxParameters& boxParameters(FeatureId featureId) const;
     [[nodiscard]] bool setBoxDimensions(FeatureId featureId,

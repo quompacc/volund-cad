@@ -167,6 +167,7 @@ in U04 an dieselben IDs.
 | `view.grid` | Suche, Skizzenpanel (Raster), Modellbaum (Auge) | MainWindow | immer; Ansichtszustand ohne Undo und ohne „geändert“ | sketch_view_switches |
 | `solid.create.box` | Werkzeugleiste, Kontextleiste (leer), Suche | CadSession | immer | command_inventory, command_surfaces |
 | `solid.create.cylinder` | Werkzeugleiste, Kontextleiste (leer, Feature), Suche | CadSession | Geometrie aktuell; verbindet sich mit dem gewählten Körper, ohne Auswahl ein neuer Körper im Ursprung (M01, Nutzerentscheidung 10.10.2026) | command_inventory |
+| `solid.create.sphere`, `.cone`, `.torus`, `.wedge` | Werkzeugleiste, Suche | CadSession | wie der Zylinder: mit dem gewählten Körper verbunden, ohne Auswahl ein neuer Körper im Ursprung; Maße, Verbindung und Lage auf der Zylinderseite des Eigenschaftspanels (M27, Nutzerentscheidung 14.10.2026) | primitive_panel, command_inventory |
 | `solid.create.sketch` | Werkzeugleiste, Kontextleiste (Ebene/Fläche, primär), Suche | SketchEditorToolController | Ebene oder ebene Fläche gewählt, Modell aktuell | base_planes |
 | `solid.create.extrude_profiles` | Werkzeugleiste, Kontextleiste (Bereich, primär), Suche | SketchExtrusionToolController | Skizzenbereich gewählt | region_selection_acceptance |
 | `solid.modify.transform` | Werkzeugleiste („Bewegen“), Kontextleiste (Feature), M, Suche | Viewport-Gizmo | getrennter Körper gewählt | viewport_startup |

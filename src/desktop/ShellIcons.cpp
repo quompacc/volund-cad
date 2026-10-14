@@ -98,6 +98,30 @@ void draw(QPainter& painter, ShellIcon icon, const QColor& ink, const QColor& ac
         painter.drawLine(QPointF(19, 6), QPointF(19, 18));
         painter.drawArc(QRectF(5, 15.5, 14, 5), 180 * 16, 180 * 16);
         break;
+    case ShellIcon::sphere: // M27
+        painter.drawEllipse(QRectF(4, 4, 16, 16));
+        painter.drawArc(QRectF(4, 10, 16, 5), 180 * 16, 180 * 16);
+        break;
+    case ShellIcon::cone:
+        painter.drawLine(QPointF(12, 3.5), QPointF(4.5, 17.5));
+        painter.drawLine(QPointF(12, 3.5), QPointF(19.5, 17.5));
+        painter.drawEllipse(QRectF(4.5, 15, 15, 5));
+        break;
+    case ShellIcon::torus:
+        painter.drawEllipse(QRectF(2.5, 6.5, 19, 11));
+        painter.drawEllipse(QRectF(8.5, 10, 7, 4));
+        break;
+    case ShellIcon::wedge: {
+        QPainterPath path;
+        path.moveTo(3.5, 19);
+        path.lineTo(20.5, 19);
+        path.lineTo(20.5, 15);
+        path.lineTo(9, 5.5);
+        path.lineTo(3.5, 5.5);
+        path.closeSubpath();
+        painter.drawPath(path);
+        break;
+    }
     case ShellIcon::sketch:
         painter.drawLine(QPointF(4, 20), QPointF(20, 20));
         painter.drawLine(QPointF(6, 17), QPointF(15, 8));

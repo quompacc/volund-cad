@@ -128,6 +128,18 @@ struct EditCylinderParametersAction final {
     document::CylinderParameters parameters;
     bool operator==(const EditCylinderParametersAction&) const = default;
 };
+// M27: a primitive on `input` (none = a new body, mode separate) and its full parameters.
+struct CreatePrimitiveAction final {
+    kernel::PrimitiveShape shape;
+    std::optional<document::FeatureId> input;
+    document::CylinderResultMode mode;
+    bool operator==(const CreatePrimitiveAction&) const = default;
+};
+struct EditPrimitiveParametersAction final {
+    document::FeatureId primitive;
+    document::PrimitiveParameters parameters;
+    bool operator==(const EditPrimitiveParametersAction&) const = default;
+};
 struct EditExtrusionParametersAction final {
     document::FeatureId extrusion;
     document::ExtrusionParameters parameters;
@@ -271,7 +283,8 @@ using Action = std::variant<CreateParameterAction, SetParameterValueAction, Rena
                             CreateCombineAction, EditCombineParametersAction,
                             CreateDatumPlaneAction, EditDatumPlaneParametersAction,
                             CreateDatumAxisAction, EditDatumAxisParametersAction,
-                            CreateShellAction, EditShellParametersAction>;
+                            CreateShellAction, EditShellParametersAction,
+                            CreatePrimitiveAction, EditPrimitiveParametersAction>;
 // Parallel to the alternatives of Action.
 enum class ActionKind {
     createParameter,
@@ -307,7 +320,9 @@ enum class ActionKind {
     createDatumAxis,
     editDatumAxisParameters,
     createShell,
-    editShellParameters
+    editShellParameters,
+    createPrimitive, // M27
+    editPrimitiveParameters
 };
 [[nodiscard]] ActionKind actionKind(const Action& action) noexcept;
 

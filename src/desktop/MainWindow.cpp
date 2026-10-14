@@ -223,6 +223,8 @@ void MainWindow::syncProperties() {
         const document::CylinderParameters& parameters =
             impl_->session.selectedCylinderParameters();
         impl_->propertyPanel->showCylinder(parameters, {});
+    } else if (const auto primitive = impl_->session.selectedPrimitiveParameters()) { // M27
+        impl_->propertyPanel->showPrimitive(*primitive, {});
     } else if (feature.kind == document::FeatureKind::extrusion) {
         impl_->propertyPanel->showExtrusion(impl_->session.selectedExtrusionParameters(), {});
     } else {

@@ -18,7 +18,7 @@ void validateSubshapeOrigin(const SubshapeOrigin& origin) {
         throw std::invalid_argument("Invalid fillet or chamfer face origin");
     if (origin.role) {
         const auto role = static_cast<int>(*origin.role);
-        if (role < 0 || role > static_cast<int>(kernel::PrimitiveRole::cylinderSide))
+        if (role < 0 || role > static_cast<int>(kernel::PrimitiveRole::torusSurface))
             throw std::invalid_argument("Unknown support face role");
     }
     std::uint64_t previous = 0;

@@ -29,6 +29,7 @@ class DocumentSnapshot final {
     [[nodiscard]] const FeatureParameters& featureParameters(FeatureId id) const;
     [[nodiscard]] const BoxParameters& boxParameters(FeatureId id) const;
     [[nodiscard]] const CylinderParameters& cylinderParameters(FeatureId id) const;
+    [[nodiscard]] const PrimitiveParameters& primitiveParameters(FeatureId id) const; // M27
     [[nodiscard]] const SketchParameters& sketchParameters(FeatureId id) const;
     [[nodiscard]] const ExtrusionParameters& extrusionParameters(FeatureId id) const;
     [[nodiscard]] const FilletParameters& filletParameters(FeatureId id) const;

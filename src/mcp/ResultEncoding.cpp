@@ -23,7 +23,7 @@ constexpr const char* toolNames[] = {
     nullptr,                  nullptr,                  nullptr,
     nullptr,                  nullptr,                  nullptr,
     nullptr,                  nullptr,                  nullptr,
-    nullptr};
+    nullptr,                  nullptr,                  nullptr}; // M27: no tools yet
 constexpr const char* statusNames[] = {"rejected", "committed", "committedWithErrors"};
 constexpr const char* rejectionNames[] = {
     "none",     "foreignDocument", "staleStamp",          "unknownTarget",    "unsupportedTarget",
@@ -35,7 +35,8 @@ constexpr const char* evaluationNames[] = {"valid", "dirty", "failed", "blockedB
                                            "suppressed"};
 constexpr const char* featureKinds[] = {"box",    "cylinder", "sketch", "extrusion",
                                         "fillet", "chamfer",  "hole",   "combine",
-                                        "datumPlane", "datumAxis", "shell"};
+                                        "datumPlane", "datumAxis", "shell", "primitive"};
+constexpr const char* primitiveShapes[] = {"sphere", "cone", "torus", "wedge"};
 constexpr const char* basePlaneNames[] = {"", "xy", "xz", "yz"};
 constexpr const char* baseAxisNames[] = {"", "x", "y", "z"};
 constexpr const char* rotationAxisNames[] = {"none", "x", "y"};
@@ -82,6 +83,15 @@ QJsonObject featureParameters(const document::FeatureParameters& parameters) {
                         {"height", detail::quantity(cylinder.height, "mm")},
                         {"mode", name(cylinderModes, cylinder.resultMode)},
                         {"placement", placement(cylinder.placement)}};
+            },
+            [](const document::PrimitiveParameters& primitive) -> QJsonObject { // M27
+                QJsonArray sizes;
+                for (const double size : primitive.sizes)
+                    sizes.append(size);
+                return {{"shape", name(primitiveShapes, primitive.shape)},
+                        {"sizes", sizes},
+                        {"mode", name(cylinderModes, primitive.resultMode)},
+                        {"placement", placement(primitive.placement)}};
             },
             [](const document::SketchParameters& sketch) -> QJsonObject {
                 return {{"sketch", encodeSketch(sketch)}};

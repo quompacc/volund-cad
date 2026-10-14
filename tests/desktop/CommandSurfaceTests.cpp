@@ -84,6 +84,8 @@ void surfaces() {
     for (QAction* action : buttons(*rail))
         railIds.insert(id(action));
     const std::set<std::string> solid{"solid.create.box",       "solid.create.cylinder",
+                                      "solid.create.sphere",    "solid.create.cone",
+                                      "solid.create.torus",     "solid.create.wedge",
                                       "solid.create.sketch",    "solid.create.extrude_profiles",
                                       "solid.create.revolve",
                                       "solid.modify.transform", "solid.modify.edit_sketch",

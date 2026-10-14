@@ -398,13 +398,16 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
             const bool standaloneCylinder = kind == "cylinder" &&
                                             native.FindChild(5, false).IsNull() &&
                                             metadata.schemaVersion >= 12;
+            // M27: a primitive joined to (or placed by) an input names it in child 5.
+            const bool solidInput = solid && !native.FindChild(5, false).IsNull();
             require((box || sketch || extrusion || fillet || chamfer || hole || solid ||
                      kind == "cylinder") &&
-                    native.NbChildren() == (box || fillet || chamfer || hole || solid ||
-                                                    standaloneSketch || standaloneExtrusion
-                                                ? 4
-                                            : (sketch || extrusion || standaloneCylinder) ? 5
-                                                                                           : 6));
+                    native.NbChildren() ==
+                        (box || fillet || chamfer || hole || (solid && !solidInput) ||
+                                 standaloneSketch || standaloneExtrusion
+                             ? 4
+                         : (sketch || extrusion || standaloneCylinder || solidInput) ? 5
+                                                                                      : 6));
             labels.emplace(entry(native), records.size());
             FeatureParameters decoded =
                 sketch ? FeatureParameters{readNativeSketchGeometry(
