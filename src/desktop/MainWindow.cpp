@@ -200,10 +200,17 @@ void MainWindow::connectInteractions() {
                                    [this](std::uint64_t id, const QString& name) {
                                        renameBody(id, name);
                                    }});
-    impl_->viewport->setBodySelectionHandler([this](std::uint64_t id) { selectFeature(id); });
+    impl_->viewport->setBodySelectionHandler([this](std::uint64_t id) {
+        if (!impl_->combineTool->isActive()) // M21: the panel takes clicks instead
+            selectFeature(id);
+    });
+    impl_->viewport->setBodyClickHandler([this](std::uint64_t id) {
+        if (impl_->combineTool->isActive()) // M21: a click adds or removes a tool body
+            impl_->combineTool->picked(document::FeatureId{id});
+    });
     impl_->viewport->setPlanarFaceSelectionHandler(
         [this](const viewport::PlanarFaceSelection& selection) {
-            if (impl_->pushPullTool->isActive())
+            if (impl_->pushPullTool->isActive() || impl_->combineTool->isActive())
                 return; // T04c: the face of a running push/pull stays.
             if (impl_->holeTool->isActive())
                 return impl_->holeTool->place(selection); // M08: moves the hole there

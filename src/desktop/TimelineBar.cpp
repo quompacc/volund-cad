@@ -32,6 +32,8 @@ ShellIcon iconFor(document::FeatureKind kind) {
         return ShellIcon::chamfer;
     case document::FeatureKind::hole:
         return ShellIcon::hole;
+    case document::FeatureKind::combine:
+        return ShellIcon::combine;
     }
     return ShellIcon::box;
 }

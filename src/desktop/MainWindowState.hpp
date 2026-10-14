@@ -11,6 +11,7 @@
 #include "ShellHeader.hpp"
 #include "ShellState.hpp"
 #include "FilletToolController.hpp"
+#include "CombineToolController.hpp"
 #include "HoleToolController.hpp"
 #include "PushPullToolController.hpp"
 #include "SketchEditorToolController.hpp"
@@ -62,7 +63,8 @@ class MainWindow::Impl final {
         else if ((sketchExtrusionTool && sketchExtrusionTool->isActive()) ||
                  (pushPullTool && pushPullTool->isActive()) ||
                  (filletTool && filletTool->isActive()) ||
-                 (holeTool && holeTool->isActive()))
+                 (holeTool && holeTool->isActive()) ||
+                 (combineTool && combineTool->isActive()))
             inputs.tool = ShellTool::extrusion; // Its panel carries the controls (T04c).
         else if (transformAction && transformAction->isChecked())
             inputs.tool = ShellTool::transform;
@@ -86,6 +88,7 @@ class MainWindow::Impl final {
     std::unique_ptr<PushPullToolController> pushPullTool; // T04c
     std::unique_ptr<FilletToolController> filletTool;     // M06
     std::unique_ptr<HoleToolController> holeTool;         // M08
+    std::unique_ptr<CombineToolController> combineTool;   // M21
     // User request 2026-10-13: edges picked before a tool, on the body `edgeSupport` names.
     std::optional<document::FeatureId> edgeSupport;
     std::vector<document::FilletEdge> selectedEdges;

@@ -37,6 +37,11 @@ void evaluateChamfer(const document::DocumentSnapshot& document,
                      const document::FeatureDescriptor& descriptor,
                      std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
                      std::vector<EvaluatedBody>& referenceBodies);
+// M21 (CombineEvaluation.cpp): a Boolean of whole bodies into the target body.
+void evaluateCombine(const document::DocumentSnapshot& document,
+                     const document::FeatureDescriptor& descriptor,
+                     std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
+                     std::vector<EvaluatedBody>& referenceBodies);
 // M08 (HoleEvaluation.cpp): a cylindrical hole into a named planar face.
 void evaluateHole(const document::DocumentSnapshot& document,
                   const document::FeatureDescriptor& descriptor,

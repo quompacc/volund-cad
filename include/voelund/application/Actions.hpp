@@ -191,6 +191,19 @@ struct EditHoleParametersAction final {
     document::HoleParameters parameters;
     bool operator==(const EditHoleParametersAction&) const = default;
 };
+// M21: a Boolean of whole bodies, named by their current results (target and tools).
+struct CreateCombineAction final {
+    document::FeatureId target;
+    std::vector<document::FeatureId> tools;
+    document::CombineOperation operation{document::CombineOperation::join};
+    bool keepTools{false};
+    bool operator==(const CreateCombineAction&) const = default;
+};
+struct EditCombineParametersAction final {
+    document::FeatureId combine;
+    document::CombineParameters parameters;
+    bool operator==(const EditCombineParametersAction&) const = default;
+};
 struct SetPlacementAction final {
     document::FeatureId feature;
     Quantity x;
@@ -213,7 +226,8 @@ using Action = std::variant<CreateParameterAction, SetParameterValueAction, Rena
                             EditExtrusionParametersAction, PushPullFaceAction,
                             CreateFilletAction, EditFilletParametersAction,
                             CreateChamferAction, EditChamferParametersAction,
-                            CreateHoleAction, EditHoleParametersAction>;
+                            CreateHoleAction, EditHoleParametersAction,
+                            CreateCombineAction, EditCombineParametersAction>;
 // Parallel to the alternatives of Action.
 enum class ActionKind {
     createParameter,
@@ -241,7 +255,9 @@ enum class ActionKind {
     createChamfer,
     editChamferParameters,
     createHole,
-    editHoleParameters
+    editHoleParameters,
+    createCombine,
+    editCombineParameters
 };
 [[nodiscard]] ActionKind actionKind(const Action& action) noexcept;
 

@@ -84,6 +84,16 @@ FeatureDependencies FeatureDependencies::from(const document::DocumentSnapshot& 
             if (const auto producer = bodyProducerBefore(snapshot, feature.id, body))
                 node.inputs.push_back(*producer);
         }
+        // M21: a combination works on its target and tool bodies as they were before it.
+        if (feature.kind == document::FeatureKind::combine) {
+            const auto& parameters = snapshot.combineParameters(feature.id);
+            std::vector<document::BodyId> bodies{parameters.target};
+            bodies.insert(bodies.end(), parameters.tools.begin(), parameters.tools.end());
+            for (const auto body : bodies)
+                if (const auto producer = bodyProducerBefore(snapshot, feature.id, body);
+                    producer && std::ranges::find(node.inputs, *producer) == node.inputs.end())
+                    node.inputs.push_back(*producer);
+        }
         if (feature.kind == document::FeatureKind::extrusion && feature.inputFeature) {
             const auto features = snapshot.features();
             const auto sketch = std::ranges::find(features, *feature.inputFeature, &document::FeatureDescriptor::id);

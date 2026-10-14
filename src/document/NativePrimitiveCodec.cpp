@@ -4,6 +4,7 @@
 #include "NativeDocumentMetadata.hpp"
 #include "NativeExtrusion.hpp"
 #include "NativeFillet.hpp"
+#include "NativeSolidFeatures.hpp"
 #include "NativeParameters.hpp"
 #include "NativeSketchGeometry.hpp"
 #include "NativeSketchPatterns.hpp"
@@ -163,6 +164,16 @@ std::vector<FeatureBodyIdentity> validate(std::span<const FeatureDescriptor> fea
             validateHoleParameters(hole);
             continue;
         }
+        if (feature.kind == FeatureKind::combine) {
+            require(std::holds_alternative<CombineParameters>(parameters[index]) &&
+                    feature.id.value() < next && feature.name.size() <= maximumNameBytes &&
+                    feature.name.find('\0') == std::string::npos);
+            const auto& combine = std::get<CombineParameters>(parameters[index]);
+            require(nativeCombineRecords(combine) <= remainingElements);
+            remainingElements -= nativeCombineRecords(combine);
+            validateCombineParameters(combine);
+            continue;
+        }
         if (feature.kind == FeatureKind::sketch) {
             require(std::holds_alternative<SketchParameters>(parameters[index]) &&
                     feature.id.value() < next && feature.name.size() <= maximumNameBytes &&
@@ -276,12 +287,14 @@ void NativePrimitiveCodec::write(const Handle(TDocStd_Document) & document,
         const bool fillet = feature.kind == FeatureKind::fillet;
         const bool chamfer = feature.kind == FeatureKind::chamfer;
         const bool hole = feature.kind == FeatureKind::hole;
+        const bool combine = feature.kind == FeatureKind::combine;
         TDataStd_AsciiString::Set(native.FindChild(1), box         ? "box"
                                                        : sketch    ? "sketch"
                                                        : extrusion ? "extrusion"
                                                        : fillet    ? "fillet"
                                                        : chamfer   ? "chamfer"
                                                        : hole      ? "hole"
+                                                       : combine   ? "combine"
                                                                    : "cylinder");
         TDataStd_AsciiString::Set(native.FindChild(2), std::to_string(feature.id.value()).c_str());
         TDataStd_AsciiString::Set(native.FindChild(3), feature.name.c_str());
@@ -300,6 +313,9 @@ void NativePrimitiveCodec::write(const Handle(TDocStd_Document) & document,
         } else if (hole) {
             writeNativeHole(native.FindChild(4),
                             std::get<HoleParameters>(snapshot.parameters()[index]));
+        } else if (combine) {
+            writeNativeCombine(native.FindChild(4),
+                               std::get<CombineParameters>(snapshot.parameters()[index]));
         } else {
             const auto data = values(snapshot.parameters()[index]);
             auto array =
@@ -370,6 +386,8 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
             const bool chamfer = kind == "chamfer" && metadata.schemaVersion >= 15;
             // M08 (schema 16): a hole names its face.
             const bool hole = kind == "hole" && metadata.schemaVersion >= 16;
+            // M21 (schema 18): a combination names its bodies.
+            const bool combine = kind == "combine" && metadata.schemaVersion >= 18;
             // A base-plane sketch (schema 6) and a face extrusion (schema 10) have no input
             // reference child 5.
             const bool standaloneSketch =
@@ -380,10 +398,10 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
             const bool standaloneCylinder = kind == "cylinder" &&
                                             native.FindChild(5, false).IsNull() &&
                                             metadata.schemaVersion >= 12;
-            require((box || sketch || extrusion || fillet || chamfer || hole ||
+            require((box || sketch || extrusion || fillet || chamfer || hole || combine ||
                      kind == "cylinder") &&
-                    native.NbChildren() == (box || fillet || chamfer || hole || standaloneSketch ||
-                                                    standaloneExtrusion
+                    native.NbChildren() == (box || fillet || chamfer || hole || combine ||
+                                                    standaloneSketch || standaloneExtrusion
                                                 ? 4
                                             : (sketch || extrusion || standaloneCylinder) ? 5
                                                                                            : 6));
@@ -400,6 +418,9 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
                     ? FeatureParameters{readNativeChamfer(child(native, 4), remainingElements,
                                                           metadata.schemaVersion)}
                 : hole ? FeatureParameters{readNativeHole(child(native, 4), remainingElements,
+                                                          metadata.schemaVersion)}
+                : combine
+                    ? FeatureParameters{readNativeCombine(child(native, 4), remainingElements,
                                                           metadata.schemaVersion)}
                        : parameters(native, box);
             if (sketch) {
@@ -418,6 +439,8 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
                 remainingElements -= nativeChamferRecords(std::get<ChamferParameters>(decoded));
             if (hole)
                 remainingElements -= nativeHoleRecords(std::get<HoleParameters>(decoded));
+            if (combine)
+                remainingElements -= nativeCombineRecords(std::get<CombineParameters>(decoded));
             records.push_back({native,
                                bodyId,
                                {FeatureId{id(child(native, 2))},
@@ -427,6 +450,7 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
                                 : fillet    ? FeatureKind::fillet
                                 : chamfer   ? FeatureKind::chamfer
                                 : hole      ? FeatureKind::hole
+                                : combine   ? FeatureKind::combine
                                             : FeatureKind::cylinder,
                                 text(child(native, 3)), std::nullopt},
                                std::move(decoded)});

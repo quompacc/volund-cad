@@ -148,6 +148,11 @@ void draw(QPainter& painter, ShellIcon icon, const QColor& ink, const QColor& ac
         painter.drawLine(QPointF(14.5, 8.5), QPointF(14.5, 19.5));
         painter.drawLine(QPointF(12, 2), QPointF(12, 6));
         break;
+    case ShellIcon::combine:
+        // Two overlapping bodies, the second one dashed: a Boolean of whole bodies.
+        painter.drawRect(QRectF(3.5, 9.5, 11, 11));
+        painter.drawRect(QRectF(9.5, 3.5, 11, 11));
+        break;
     case ShellIcon::editSketch:
         painter.drawRect(QRectF(3.5, 6.5, 12, 12));
         painter.drawLine(QPointF(11, 15), QPointF(20, 6));

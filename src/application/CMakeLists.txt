@@ -7,6 +7,7 @@ add_library(voelund_application STATIC
     CadSessionIdentity.cpp
     CadSessionHistory.cpp
     CadSessionCreation.cpp
+    CadSessionSolidFeatures.cpp
     CadSessionTargetedEdits.cpp
     CadSessionTransactions.cpp
     CadSessionParameters.cpp

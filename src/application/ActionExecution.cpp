@@ -235,6 +235,15 @@ class Validation final {
         static_cast<void>(target(action.hole, ActionKind::editHoleParameters));
         finite({action.parameters.x, action.parameters.y, action.parameters.diameter});
     }
+    // M21: every body is named by a current result.
+    void operator()(const CreateCombineAction& action) {
+        static_cast<void>(target(action.target, ActionKind::createCombine));
+        for (const auto tool : action.tools)
+            static_cast<void>(target(tool, ActionKind::createCombine));
+    }
+    void operator()(const EditCombineParametersAction& action) {
+        static_cast<void>(target(action.combine, ActionKind::editCombineParameters));
+    }
 
     [[nodiscard]] const Findings& findings() const noexcept { return findings_; }
 
@@ -356,6 +365,12 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot,
             },
             [&](const EditHoleParametersAction& a) {
                 return session.editHoleParameters(a.hole, a.parameters, reject);
+            },
+            [&](const CreateCombineAction& a) {
+                return session.createCombine(a.target, a.tools, a.operation, a.keepTools);
+            },
+            [&](const EditCombineParametersAction& a) {
+                return session.editCombineParameters(a.combine, a.parameters, reject);
             }},
         request.action);
 }

@@ -93,6 +93,9 @@ const ChamferParameters& DocumentSnapshot::chamferParameters(FeatureId id) const
 const HoleParameters& DocumentSnapshot::holeParameters(FeatureId id) const {
     return std::get<HoleParameters>(featureParameters(id));
 }
+const CombineParameters& DocumentSnapshot::combineParameters(FeatureId id) const {
+    return std::get<CombineParameters>(featureParameters(id));
+}
 const kernel::BoxDimensions& DocumentSnapshot::boxDimensions(FeatureId id) const {
     return boxParameters(id).dimensions;
 }

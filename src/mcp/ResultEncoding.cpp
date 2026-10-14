@@ -20,7 +20,8 @@ constexpr const char* toolNames[] = {
     "create_sketch_on_face",  nullptr,                  nullptr,
     nullptr,                  "push_pull_face",         nullptr,
     nullptr,                  nullptr,                  nullptr,
-    nullptr,                  nullptr};
+    nullptr,                  nullptr,                  nullptr,
+    nullptr};
 constexpr const char* statusNames[] = {"rejected", "committed", "committedWithErrors"};
 constexpr const char* rejectionNames[] = {
     "none",     "foreignDocument", "staleStamp",          "unknownTarget",    "unsupportedTarget",
@@ -31,7 +32,9 @@ constexpr const char* reasonNames[] = {"none",           "cancelled",           
 constexpr const char* evaluationNames[] = {"valid", "dirty", "failed", "blockedByDependency",
                                            "suppressed"};
 constexpr const char* featureKinds[] = {"box",    "cylinder", "sketch", "extrusion",
-                                        "fillet", "chamfer",  "hole"};
+                                        "fillet", "chamfer",  "hole",   "combine"};
+// Indexed by CombineOperation (join = 1).
+constexpr const char* combineOperations[] = {"", "join", "cut", "intersect"};
 constexpr const char* runtimeNames[] = {"current", "error", "blocked"};
 constexpr const char* cylinderModes[] = {"join", "cut", "intersect", "separate"};
 // Indexed by ExtrusionOperation (newBody = 1).
@@ -109,6 +112,15 @@ QJsonObject featureParameters(const document::FeatureParameters& parameters) {
                 if (hole.depth)
                     json.insert("depth", detail::quantity(*hole.depth, "mm"));
                 return json;
+            },
+            [](const document::CombineParameters& combine) -> QJsonObject {
+                QJsonArray tools;
+                for (const auto tool : combine.tools)
+                    tools.append(id(tool.value()));
+                return {{"targetBodyId", id(combine.target.value())},
+                        {"toolBodyIds", tools},
+                        {"operation", name(combineOperations, combine.operation)},
+                        {"keepTools", combine.keepTools}};
             }},
         parameters);
 }

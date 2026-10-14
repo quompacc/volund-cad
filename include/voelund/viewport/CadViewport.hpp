@@ -260,6 +260,9 @@ class CadViewport final : public CadViewportBase {
     void setSketchBoxSelectionHandler(
         std::function<void(const std::vector<std::uint64_t>&, bool additive)> handler);
     void setBodySelectionHandler(std::function<void(std::uint64_t)> handler);
+    // M21: a completed click on a body (on release, once per click); the selection handler
+    // above also runs on press so that a drag can start.
+    void setBodyClickHandler(std::function<void(std::uint64_t)> handler);
     void setPlanarFaceSelectionHandler(std::function<void(const PlanarFaceSelection&)> handler);
     void setBasePlaneSelectionHandler(std::function<void(BasePlane)> handler);
     // A click outside the sketch editor that hits nothing.

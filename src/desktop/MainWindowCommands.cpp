@@ -93,6 +93,11 @@ void MainWindow::createCommands() {
             syncShell();
             return;
         }
+        if (kind == document::FeatureKind::combine) {
+            impl_->combineTool->beginEdit(*selected);
+            syncShell();
+            return;
+        }
         static_cast<void>(impl_->sketchEditorTool->beginSelectedSketch());
     };
     services.extrudeProfiles = [this]() {
@@ -149,6 +154,17 @@ void MainWindow::createCommands() {
         if (impl_->sketchExtrusionTool->isActive())
             impl_->sketchExtrusionTool->cancel();
         impl_->holeTool->begin(*impl_->selectedPlanarFace);
+        syncShell();
+    };
+    // M21: the selected body takes the result; other bodies are clicked as tools.
+    services.combine = [this]() {
+        const auto producer = impl_->session.selectedBodyProducer();
+        if (!producer)
+            return;
+        if (impl_->sketchExtrusionTool->isActive())
+            impl_->sketchExtrusionTool->cancel();
+        clearEdgeSelection();
+        impl_->combineTool->begin(*producer);
         syncShell();
     };
     services.canHole = [this]() {

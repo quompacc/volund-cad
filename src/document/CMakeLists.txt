@@ -20,6 +20,7 @@ add_library(voelund_document STATIC
     NativeAttributeValues.cpp
     NativeExtrusion.cpp
     NativeFillet.cpp
+    NativeSolidFeatures.cpp
     FeatureTreatmentValidation.cpp
     NativeSketchGeometry.cpp
     NativeSketchPatterns.cpp
@@ -32,6 +33,7 @@ add_library(voelund_document STATIC
     NativeParameters.cpp
     NativeBodyAttributes.cpp
     ModelDocumentHistory.cpp
+    ModelDocumentSolidFeatures.cpp
     DocumentTransaction.cpp
     SketchConstraintSerialization.cpp
     SketchGeometry.cpp

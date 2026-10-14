@@ -50,6 +50,10 @@ void MainWindow::createToolPanel() {
         impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
         [this](const QString& message) { statusBar()->showMessage(message); });
     impl_->holeTool->setPreviewHandler(showPreview);
+    impl_->combineTool = std::make_unique<CombineToolController>( // M21
+        impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
+        [this](const QString& message) { statusBar()->showMessage(message); });
+    impl_->combineTool->setPreviewHandler(showPreview);
     impl_->viewport->setEdgeSelectionHandler(
         [this](std::uint64_t body, const TopoDS_Shape& edge, bool additive) {
             pickEdge(body, edge, additive);

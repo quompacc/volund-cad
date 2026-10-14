@@ -141,11 +141,14 @@ void ModelTreePanel::showModel(const application::ModelOutline& outline,
     for (const application::OutlineBody& body : outline.bodies) {
         const auto bodyId = body.id.value();
         // M01: the user's name and the stored visibility.
-        const QString name = body.name.empty() ? tr("Körper %1").arg(number)
-                                               : QString::fromStdString(body.name);
+        QString name = body.name.empty() ? tr("Körper %1").arg(number)
+                                         : QString::fromStdString(body.name);
+        if (body.consumed) // M21: taken into another body by a combination
+            name += tr(" (aufgenommen)");
         ++number;
         auto* item = addItem(nullptr, Kind::body, bodyId, name, !body.hidden);
-        item->setFlags(item->flags() | Qt::ItemIsEditable);
+        if (!body.consumed) // the suffix is no part of the name
+            item->setFlags(item->flags() | Qt::ItemIsEditable);
         addItem(item, Kind::bodyOrigin, bodyId, tr("Ursprung"),
                 visibility.shownBodyOrigins.contains(bodyId));
         for (const document::FeatureId feature : body.features)

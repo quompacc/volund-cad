@@ -43,6 +43,7 @@ add_library(
     PushPullToolController.cpp
     FilletToolController.cpp
     HoleToolController.cpp
+    CombineToolController.cpp
     MainWindowTools.cpp
     ShellHeader.cpp
     ShellIcons.cpp

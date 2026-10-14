@@ -35,6 +35,8 @@ QString featureName(const ShellState& state) {
         return QObject::tr("Fase");
     case document::FeatureKind::hole:
         return QObject::tr("Bohrung");
+    case document::FeatureKind::combine:
+        return QObject::tr("Kombinieren");
     }
     return QObject::tr("Feature");
 }
@@ -82,7 +84,8 @@ ContextCommands contextCommands(const ShellState& state) {
         // cylinder on this body.
         result.title = state.bodyName;
         result.commands = {"body.rename", "body.visibility", "solid.modify.transform",
-                           "solid.modify.fillet", "solid.modify.chamfer", "solid.create.cylinder"};
+                           "solid.modify.fillet", "solid.modify.chamfer", "solid.modify.combine",
+                           "solid.create.cylinder"};
         break;
     case ShellSelection::sketchRegion:
         result.title = QObject::tr("Skizzenbereich");

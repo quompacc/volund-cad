@@ -40,6 +40,9 @@ struct EvaluatedFeature final {
     std::vector<SupportProvenance> referenceSupportOrigins{};
     std::vector<EdgeProvenance> edgeOrigins{};
     std::vector<EdgeProvenance> referenceEdgeOrigins{};
+    // M21: bodies this feature took into its own (tools of a combination); they are no
+    // longer separate results after it.
+    std::vector<document::BodyId> consumedBodies{};
 };
 
 struct FeatureGraphResult final {

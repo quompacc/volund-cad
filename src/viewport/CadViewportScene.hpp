@@ -273,6 +273,7 @@ class CadViewportScene {
             const auto bodyId = presentation.id;
             const auto bodyHandler = bodySelectionHandler;
             const auto faceHandler = planarFaceSelectionHandler;
+            const auto clickHandler = includeFace ? bodyClickHandler : nullptr;
             std::optional<PlanarFaceSelection> selection;
             if (includeFace && faceHandler) {
                 const auto owner = occ::handle<StdSelect_BRepOwner>::DownCast(detectedOwner);
@@ -287,6 +288,8 @@ class CadViewportScene {
             bodyHandler(bodyId);
             if (selection && faceHandler)
                 faceHandler(*selection);
+            if (clickHandler)
+                clickHandler(bodyId);
             return;
         }
     }
@@ -306,6 +309,7 @@ class CadViewportScene {
     std::vector<SceneSketchConstraint> pendingSketchConstraints;
     std::vector<std::uint64_t> selectedSketchElements;
     std::function<void(std::uint64_t)> bodySelectionHandler;
+    std::function<void(std::uint64_t)> bodyClickHandler; // M21
     std::function<void(const PlanarFaceSelection&)> planarFaceSelectionHandler;
     std::function<void(BasePlane)> basePlaneSelectionHandler;
     std::function<void()> emptySelectionHandler;

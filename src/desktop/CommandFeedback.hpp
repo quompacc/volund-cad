@@ -50,6 +50,10 @@ inline QString booleanFailureText(const std::string& code) {
     if (code == "hole-face-missing")
         return QObject::tr("Bohrung: Die Fläche der Bohrung gibt es so nicht mehr. Wähle die "
                            "Bohrung neu auf einer Fläche des Körpers.");
+    // M21: a body of a combination has no solid before it.
+    if (code == "combine-body-missing")
+        return QObject::tr("Kombinieren: Ein beteiligter Körper hat vor der Kombination keinen "
+                           "Volumenkörper mehr.");
     // M04: an invalid region names its contour; the shell marks the elements red.
     if (code == "region-needs-repair")
         return QObject::tr("Bereich: Die Kontur dieses Bereichs wurde in der Skizze geändert "

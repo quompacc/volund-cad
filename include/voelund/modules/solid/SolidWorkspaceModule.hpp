@@ -32,6 +32,8 @@ struct SolidCommandServices final {
     // M08: a hole at the clicked point of the picked planar face.
     std::function<void()> hole{};
     std::function<bool()> canHole{};
+    // M21: combines the selected body with clicked tool bodies; enabled like the fillet.
+    std::function<void()> combine{};
 };
 
 class SolidWorkspaceModule final : public workspaces::WorkspaceModule {

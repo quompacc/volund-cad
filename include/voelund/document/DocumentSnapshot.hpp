@@ -34,6 +34,7 @@ class DocumentSnapshot final {
     [[nodiscard]] const FilletParameters& filletParameters(FeatureId id) const;
     [[nodiscard]] const ChamferParameters& chamferParameters(FeatureId id) const;
     [[nodiscard]] const HoleParameters& holeParameters(FeatureId id) const;
+    [[nodiscard]] const CombineParameters& combineParameters(FeatureId id) const;
     [[nodiscard]] const kernel::BoxDimensions& boxDimensions(FeatureId id) const;
     [[nodiscard]] ModelDocument toDocument() const;
     [[nodiscard]] ModelDocument toDocument(DocumentId id) const;

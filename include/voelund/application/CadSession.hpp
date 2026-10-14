@@ -51,6 +51,8 @@ struct OutlineBody final {
     // M01: the user's name (empty: the shell numbers it) and the stored visibility.
     std::string name{};
     bool hidden{false};
+    // M21: a combination took this body into another one (its tools are not kept).
+    bool consumed{false};
 };
 struct ModelOutline final {
     std::vector<OutlineBody> bodies;
@@ -235,6 +237,20 @@ class CadSession final {
     editHoleParameters(document::FeatureId featureId, const document::HoleParameters& parameters,
                        ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] document::HoleParameters holeParameters(document::FeatureId featureId) const;
+    // M21: a Boolean of whole bodies ("Kombinieren N"), each body named by its current
+    // result; one undo step. Unless kept, the tools are no separate bodies afterwards.
+    [[nodiscard]] CommandResult createCombine(document::FeatureId target,
+                                              std::span<const document::FeatureId> tools,
+                                              document::CombineOperation operation,
+                                              bool keepTools);
+    [[nodiscard]] CommandResult
+    editCombineParameters(document::FeatureId featureId,
+                          const document::CombineParameters& parameters,
+                          ErrorDisposition disposition = ErrorDisposition::reject);
+    [[nodiscard]] document::CombineParameters
+    combineParameters(document::FeatureId featureId) const;
+    // The body a feature's current result belongs to; none for sketches and failed features.
+    [[nodiscard]] std::optional<document::BodyId> resultBody(document::FeatureId feature) const;
     // M06: the named edge of `support`'s current result at a picked edge (between two named
     // faces), and back the result's edges of named edges, e.g. to highlight them.
     [[nodiscard]] std::optional<document::FilletEdge> filletEdge(document::FeatureId support,

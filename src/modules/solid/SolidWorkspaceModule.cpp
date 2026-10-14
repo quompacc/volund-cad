@@ -98,8 +98,20 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                              true,
                              false,
                              simpleCommand(std::move(services.chamfer)),
-                             std::move(services.canFillet),
+                             services.canFillet,
                              "Fase"});
+    if (services.combine)
+        commands_.push_back({"solid.modify.combine",
+                             "Kombinieren",
+                             "Gewählten Körper mit anderen Körpern vereinigen, von ihnen "
+                             "abziehen oder schneiden",
+                             {},
+                             workspaces::CommandGroup::modify,
+                             true,
+                             false,
+                             simpleCommand(std::move(services.combine)),
+                             services.canFillet,
+                             "Kombinieren"});
     if (services.hole)
         commands_.push_back({"solid.modify.hole",
                              "Bohrung",

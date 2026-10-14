@@ -291,11 +291,18 @@ void runFeature(const document::DocumentSnapshot& document,
     case document::FeatureKind::hole:
         detail::evaluateHole(document, descriptor, outputs, bodies, references);
         break;
+    case document::FeatureKind::combine:
+        detail::evaluateCombine(document, descriptor, outputs, bodies, references);
+        break;
     }
 }
 void restoreOutput(const EvaluatedFeature& output, std::vector<EvaluatedFeature>& outputs,
                    std::vector<EvaluatedBody>& bodies, std::vector<EvaluatedBody>& references) {
     outputs.push_back(output);
+    for (const auto consumed : output.consumedBodies) {
+        std::erase_if(bodies, [&](const auto& body) { return body.bodyId == consumed; });
+        std::erase_if(references, [&](const auto& body) { return body.bodyId == consumed; });
+    }
     if (!output.bodyId)
         return;
     const auto restore = [&](auto& list, const auto& shape) {

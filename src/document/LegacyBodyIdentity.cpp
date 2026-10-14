@@ -40,6 +40,9 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
     case FeatureKind::hole:
         matches = std::holds_alternative<HoleParameters>(parameters);
         break;
+    case FeatureKind::combine:
+        matches = std::holds_alternative<CombineParameters>(parameters);
+        break;
     }
     if (!matches)
         throw std::invalid_argument("Legacy body identity: feature parameter kind mismatch");
@@ -48,6 +51,7 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
     const bool standalone =
         feature.kind == FeatureKind::box || feature.kind == FeatureKind::fillet ||
         feature.kind == FeatureKind::chamfer || feature.kind == FeatureKind::hole ||
+        feature.kind == FeatureKind::combine ||
         (feature.kind == FeatureKind::sketch && std::get<SketchParameters>(parameters).datum) ||
         (feature.kind == FeatureKind::extrusion &&
          std::get<ExtrusionParameters>(parameters).faceProfile);
@@ -130,11 +134,19 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
         // M08: a hole cuts the body of its face.
         if (features[index].kind == FeatureKind::hole)
             return std::get<HoleParameters>(parameters[index]).face.body;
+        // M21: a combination's result belongs to its target body.
+        if (features[index].kind == FeatureKind::combine)
+            return std::get<CombineParameters>(parameters[index]).target;
         return std::nullopt;
     };
     for (std::size_t index = 0; index < features.size(); ++index)
         if (const auto body = treatedBody(index); body && !isBody(*body))
             throw std::invalid_argument("Fillet or chamfer body is not a body of this document");
+    for (std::size_t index = 0; index < features.size(); ++index)
+        if (features[index].kind == FeatureKind::combine)
+            for (const BodyId tool : std::get<CombineParameters>(parameters[index]).tools)
+                if (!isBody(tool))
+                    throw std::invalid_argument("Combine tool is not a body of this document");
     // Iterative traversal also handles long legacy chains without recursive stack growth.
     std::vector<unsigned char> state(features.size(), 0);
     std::vector<std::optional<BodyId>> context(features.size());

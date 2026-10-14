@@ -143,6 +143,13 @@ ModelOutline CadSession::modelOutline() const {
         body.name = attributes.name;
         body.hidden = attributes.hidden;
     }
+    for (std::size_t index = 0; index < contexts.size(); ++index)
+        if (const auto* combine =
+                std::get_if<document::CombineParameters>(&snapshot.parameters()[index]);
+            combine && !combine->keepTools)
+            for (auto& body : outline.bodies)
+                if (std::ranges::find(combine->tools, body.id) != combine->tools.end())
+                    body.consumed = true;
     return outline;
 }
 
@@ -218,7 +225,8 @@ bool CadSession::canTransformFeature(document::FeatureId featureId) const noexce
         feature->kind == document::FeatureKind::extrusion ||
         feature->kind == document::FeatureKind::fillet ||
         feature->kind == document::FeatureKind::chamfer ||
-        feature->kind == document::FeatureKind::hole) {
+        feature->kind == document::FeatureKind::hole ||
+        feature->kind == document::FeatureKind::combine) {
         return false;
     }
     if (!transformBodyForFeature(featureId).has_value()) {

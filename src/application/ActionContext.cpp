@@ -67,6 +67,9 @@ std::vector<ActionKind> availableActions(const CadSession& session,
     case FeatureKind::hole:
         actions = {ActionKind::editHoleParameters};
         break;
+    case FeatureKind::combine:
+        actions = {ActionKind::editCombineParameters};
+        break;
     }
     if (session.placementFeature(feature))
         actions.push_back(ActionKind::setPlacement);
@@ -80,6 +83,7 @@ std::vector<ActionKind> availableActions(const CadSession& session,
             actions.push_back(ActionKind::createFillet);
             actions.push_back(ActionKind::createChamfer);
             actions.push_back(ActionKind::createHole);
+            actions.push_back(ActionKind::createCombine);
         }
     }
     return actions;
