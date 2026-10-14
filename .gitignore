@@ -1,6 +1,7 @@
 .tools/
 artifacts/
 build/
+/Installer/
 __pycache__/
 *.pyc
 CMakeUserPresets.json

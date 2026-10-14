@@ -1,4 +1,5 @@
 #include "ShellHeader.hpp"
+#include "PillButton.hpp"
 #include "ShellIcons.hpp"
 
 #include <QAction>
@@ -6,7 +7,6 @@
 #include <QLabel>
 #include <QMenu>
 #include <QPainter>
-#include <QPainterPath>
 #include <QStyle>
 #include <QTimer>
 #include <QToolButton>
@@ -37,30 +37,6 @@ QFrame* divider(QWidget* parent) {
     line->setFixedSize(1, 20);
     return line;
 }
-
-// The Claude chip: status dot, name and a chevron for its menu. The chevron is painted, so
-// it looks like the other symbols instead of the style's arrow.
-class AssistantChip final : public QToolButton {
-  public:
-    using QToolButton::QToolButton;
-
-  protected:
-    void paintEvent(QPaintEvent* event) override {
-        QToolButton::paintEvent(event);
-        if (menu() == nullptr)
-            return;
-        QPainter painter(this);
-        painter.setRenderHint(QPainter::Antialiasing);
-        painter.setPen(QPen(palette().color(QPalette::ButtonText), 1.6, Qt::SolidLine,
-                            Qt::RoundCap, Qt::RoundJoin));
-        const QPointF center(width() - 13.0, height() / 2.0 + 1.0);
-        QPainterPath chevron;
-        chevron.moveTo(center + QPointF(-3.5, -2));
-        chevron.lineTo(center + QPointF(0, 1.5));
-        chevron.lineTo(center + QPointF(3.5, -2));
-        painter.drawPath(chevron);
-    }
-};
 
 QIcon statusDot(const QColor& color, bool filled) {
     QPixmap pixmap(QSize(20, 20) * 2);
@@ -135,7 +111,7 @@ ShellHeader::ShellHeader(QWidget& host) : OverlayCard(host, QStringLiteral("shel
     themeButton_ = iconButton(this, "themeButton");
     layout->addWidget(themeButton_);
     layout->addSpacing(4);
-    assistantButton_ = new AssistantChip(this);
+    assistantButton_ = new PillButton(this); // U14: status dot, name and menu chevron
     assistantButton_->setObjectName(QStringLiteral("assistantChip"));
     assistantButton_->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     assistantButton_->setIconSize(QSize(20, 20));

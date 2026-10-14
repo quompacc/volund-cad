@@ -164,6 +164,14 @@ const QHash<QString, Drawing>& drawings() {
              curve.cubicTo(7, 5, 17, 5, 21, 19);
              p.painter.drawPath(curve);
          }},
+        {"tool.point", // S15/U14: a point with its cross, not the word "Punkt"
+         [](const Pens& p) {
+             p.line(12, 4, 12, 8);
+             p.line(12, 16, 12, 20);
+             p.line(4, 12, 8, 12);
+             p.line(16, 12, 20, 12);
+             p.dot(12, 12, 2.2);
+         }},
         {"tool.polygon",
          [](const Pens& p) {
              QPolygonF hexagon;

@@ -1,5 +1,32 @@
 # Testrechner
 
+## Build-Orte (Nutzerentscheidung 14.10.2026)
+
+Es gibt genau diese Orte; neue Build-Ordner werden nicht angelegt:
+
+| Zweck | Ort |
+|---|---|
+| Startbares Programm (Windows) | `Installer\` im Projekt, `Installer\bin\voelund-cad.exe`, mit allen DLLs und Qt-Plugins |
+| Zwischendateien des Compilers (Windows) | `build\p02-qt-final` (Debug, MSVC, vcpkg); nur über `subst V:` bauen |
+| GCC-Prüfung und Desktop-Tests | Fedora `~/repro/par01/build/linux-desktop` |
+| Abnahme | CI auf dem Gitea-Runner |
+
+Beide lokalen Ordner stehen in `.gitignore`. Ablauf unter Windows:
+
+```bat
+subst V: "D:\300_Projekte\310_Aktiv\volund-cad"
+call "C:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\vcvars64.bat"
+V:
+cd \
+cmake --build build/p02-qt-final
+cmake --install build/p02-qt-final --prefix Installer
+Installer\bin\voelund-cad.exe
+```
+
+Tests legen ihre Hilfsdateien nur für die eigene Laufzeit an und räumen sie wieder weg
+(am 14.10.2026 lagen 235 vergessene Ordner eines PowerShell-Tests und rund 70 alte
+Paket-Builds mit zusammen etwa 24 GB in `build\`; gelöscht).
+
 ## Aktuell: Fedora (seit Oktober 2026)
 
 Der Testrechner läuft laut Nutzer seit Anfang Oktober 2026 nativ mit Fedora und

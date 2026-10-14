@@ -117,6 +117,9 @@ Entscheidungen des Nutzers:
   bleiben sichtbar (gesperrt statt versteckt gilt im Flyout). Im Skizzenmodus zeigt die
   Leiste weiter die Skizzenwerkzeuge (U13); sie wandern nicht in eine untere Leiste.
 - Keine Knöpfe für Funktionen, die es noch nicht gibt (Teilen, Schnitt, Messen).
+- Nach der Durchsicht am selben Tag: Alle Werkzeugleisten (Volumen und Skizze) stehen
+  waagerecht oben mittig zwischen Projekt- und Kopfkarte; links bleibt nur der Baum.
+  Knöpfe haben die Pillenform des Claude-Chips (Rahmen, rund, eine Höhe).
 
 Das ändert die Anordnung, nicht die Regeln dieses ADR: Kein Befehl ist nur über die
 Kontextleiste erreichbar; Werkzeugleiste, Befehlssuche und Kürzel führen zu denselben

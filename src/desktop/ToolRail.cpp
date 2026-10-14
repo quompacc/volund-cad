@@ -1,5 +1,6 @@
 #include "ToolRail.hpp"
 #include "OverlayCard.hpp"
+#include "PillButton.hpp"
 #include "CommandActions.hpp"
 #include "MainWindowSupport.hpp"
 #include "ShellIcons.hpp"
@@ -9,14 +10,15 @@
 
 #include <QAction>
 #include <QEvent>
-#include <QGridLayout>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QMenu>
 #include <QScrollArea>
+#include <QScrollBar>
 #include <QToolButton>
 #include <QRegion>
 #include <QVBoxLayout>
+#include <QWheelEvent>
 
 #include <algorithm>
 #include <map>
@@ -105,29 +107,49 @@ QFrame* card(QWidget* parent, const char* name) {
     return frame;
 }
 
+QFrame* divider(QWidget* parent) {
+    auto* line = new QFrame(parent);
+    line->setObjectName(QStringLiteral("railDivider"));
+    line->setFixedSize(1, 22);
+    return line;
+}
+
+constexpr int barPadding = 7;
+constexpr int pillHeight = 34;
+
 } // namespace
 
 ToolRail::ToolRail(viewport::CadViewport& viewport, const CommandActions& commands)
     : QFrame(&viewport), viewport_(viewport) {
     setObjectName(QStringLiteral("toolRail"));
-    auto* outer = new QHBoxLayout(this);
-    outer->setContentsMargins(0, 0, 0, 0);
-    outer->setSpacing(8);
-    column_ = card(this, "railColumn");
-    auto* columnLayout = new QVBoxLayout(column_);
-    columnLayout->setContentsMargins(5, 5, 5, 5);
-    columnLayout->setSpacing(0);
-    solidPage_ = new QWidget(column_);
-    auto* layout = new QVBoxLayout(solidPage_);
+    bar_ = card(this, "railBar");
+    auto* barLayout = new QHBoxLayout(bar_);
+    barLayout->setContentsMargins(barPadding, 0, barPadding, 0);
+    barLayout->setSpacing(0);
+    scroll_ = new QScrollArea(bar_);
+    scroll_->setObjectName(QStringLiteral("railScroll"));
+    scroll_->setFrameShape(QFrame::NoFrame);
+    scroll_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scroll_->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scroll_->setWidgetResizable(true);
+    auto* content = new QWidget(scroll_);
+    content->setObjectName(QStringLiteral("railContent"));
+    auto* pages = new QHBoxLayout(content);
+    pages->setContentsMargins(0, 0, 0, 0);
+    pages->setSpacing(0);
+    solidPage_ = new QWidget(content);
+    auto* layout = new QHBoxLayout(solidPage_);
     layout->setContentsMargins(0, 0, 0, 0);
-    layout->setSpacing(2);
-    columnLayout->addWidget(solidPage_);
-    outer->addWidget(column_, 0, Qt::AlignTop);
+    layout->setSpacing(4);
+    pages->addWidget(solidPage_);
+    scroll_->setWidget(content);
+    barLayout->addWidget(scroll_);
+    // The wheel scrolls a bar that does not fit sideways.
+    scroll_->viewport()->installEventFilter(this);
     flyout_ = card(this, "railFlyout");
     auto* flyoutLayout = new QVBoxLayout(flyout_);
     flyoutLayout->setContentsMargins(6, 8, 6, 6);
     flyoutLayout->setSpacing(0);
-    outer->addWidget(flyout_, 0, Qt::AlignTop);
     flyout_->hide();
 
     const auto& groups = railGroups();
@@ -145,11 +167,11 @@ ToolRail::ToolRail(viewport::CadViewport& viewport, const CommandActions& comman
         flyoutPages_.push_back(nullptr);
         if (members[group].empty())
             continue;
-        auto* button = new QToolButton(solidPage_);
-        button->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
-        button->setIconSize(QSize(22, 22));
-        button->setFixedWidth(66);
-        button->setAutoRaise(true);
+        auto* button = new PillButton(solidPage_);
+        button->setProperty("railPill", true);
+        button->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+        button->setIconSize(QSize(18, 18));
+        button->setFixedHeight(pillHeight);
         layout->addWidget(button);
         if (members[group].size() == 1) { // a group of one is its command
             button->setDefaultAction(members[group].front());
@@ -159,6 +181,7 @@ ToolRail::ToolRail(viewport::CadViewport& viewport, const CommandActions& comman
         button->setText(tr(groups[group].title));
         button->setToolTip(tr(groups[group].title));
         button->setCheckable(true);
+        button->setChevron(true);
         button->setProperty("railGroup", static_cast<int>(group));
         button->setProperty("railIcon", static_cast<int>(groups[group].icon));
         const int index = static_cast<int>(group);
@@ -199,7 +222,16 @@ ToolRail::ToolRail(viewport::CadViewport& viewport, const CommandActions& comman
 }
 
 bool ToolRail::eventFilter(QObject* watched, QEvent* event) {
-    if (watched == &viewport_ && event->type() == QEvent::Resize)
+    if (scroll_ != nullptr && watched == scroll_->viewport() && event->type() == QEvent::Wheel) {
+        const QPoint delta = static_cast<QWheelEvent*>(event)->angleDelta();
+        QScrollBar* bar = scroll_->horizontalScrollBar();
+        bar->setValue(bar->value() - (delta.y() != 0 ? delta.y() : delta.x()) / 3);
+        return true;
+    }
+    // The bar follows the viewport and the two cards it sits between.
+    if ((watched == &viewport_ && event->type() == QEvent::Resize) ||
+        (watched != &viewport_ &&
+         (event->type() == QEvent::Resize || event->type() == QEvent::Move)))
         place();
     // A click into the view closes an open flyout, like a menu.
     if (watched == &viewport_ && event->type() == QEvent::MouseButtonPress && openGroup_ >= 0)
@@ -215,23 +247,54 @@ bool ToolRail::event(QEvent* event) {
     return result;
 }
 
-void ToolRail::place() {
-    if (sketchPage_ != nullptr && sketchPage_->widget() != nullptr) {
-        // As tall as the tools need, up to the viewport's height; scroll beyond that.
-        const int available =
-            std::max(160, viewport_.height() - overlay::columnTop - overlay::margin - 12);
-        sketchPage_->setFixedHeight(
-            std::min(available, sketchPage_->widget()->sizeHint().height() + 4));
+std::pair<int, int> ToolRail::freeRow() {
+    int left = overlay::margin;
+    int right = viewport_.width() - overlay::margin;
+    for (const char* name : {"projectCard", "shellHeader"}) {
+        auto* card = viewport_.findChild<QWidget*>(QLatin1String(name),
+                                                    Qt::FindDirectChildrenOnly);
+        if (card == nullptr)
+            continue;
+        if (std::ranges::find(watchedCards_, card) == watchedCards_.end()) {
+            card->installEventFilter(this);
+            watchedCards_.push_back(card);
+        }
+        if (card->geometry().center().x() < viewport_.width() / 2)
+            left = std::max(left, card->geometry().right() + 1 + overlay::gap);
+        else
+            right = std::min(right, card->geometry().left() - overlay::gap);
     }
-    layout()->activate();
-    adjustSize();
-    // Only the cards take clicks; the gap beside a short flyout belongs to the view.
-    QRegion cards(column_->geometry());
+    return {left, right};
+}
+
+void ToolRail::place() {
+    if (placing_)
+        return;
+    placing_ = true;
+    const auto [left, right] = freeRow();
+    QWidget* page = sketchShown_ && sketchPage_ != nullptr ? sketchPage_ : solidPage_;
+    const int wanted = page->sizeHint().width() + 2 * barPadding + 2;
+    const int width = std::max(120, std::min(wanted, right - left));
+    // Centred in the window when it fits there, else in the free stretch.
+    const int x = std::clamp((viewport_.width() - width) / 2, left, std::max(left, right - width));
+    bar_->setGeometry(0, 0, width, overlay::barHeight);
+    QRect area(0, 0, width, overlay::barHeight);
+    if (flyout_->isVisible() && openGroup_ >= 0 && groupButtons_[openGroup_] != nullptr) {
+        flyout_->adjustSize();
+        const int below =
+            std::max(0, groupButtons_[openGroup_]->mapTo(bar_, QPoint(0, 0)).x() - 6);
+        flyout_->setGeometry(below, overlay::barHeight + 6, flyout_->sizeHint().width(),
+                             flyout_->sizeHint().height());
+        area = area.united(flyout_->geometry());
+    }
+    setGeometry(x, overlay::margin, area.width(), area.height());
+    // Only the cards take clicks; the space beside a narrow flyout belongs to the view.
+    QRegion cards(bar_->geometry());
     if (flyout_->isVisible())
         cards += flyout_->geometry();
     setMask(cards);
-    move(overlay::railLeft, overlay::columnTop);
     raise();
+    placing_ = false;
 }
 
 void ToolRail::openFlyout(int group) {
@@ -281,34 +344,34 @@ void ToolRail::showSketch(const std::vector<SketchToolActions::Section>& section
 }
 
 void ToolRail::buildSketchPage(const std::vector<SketchToolActions::Section>& sections) {
-    sketchPage_ = new QScrollArea(column_);
+    QWidget* content = scroll_->widget();
+    sketchPage_ = new QWidget(content);
     sketchPage_->setObjectName(QStringLiteral("sketchToolPage"));
-    sketchPage_->setFrameShape(QFrame::NoFrame);
-    sketchPage_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    sketchPage_->setWidgetResizable(true);
-    auto* content = new QWidget(sketchPage_);
-    content->setObjectName(QStringLiteral("sketchToolContent"));
-    auto* layout = new QVBoxLayout(content);
-    layout->setContentsMargins(0, 0, 4, 0);
-    layout->setSpacing(4);
+    auto* layout = new QHBoxLayout(sketchPage_);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(2);
+    bool first = true;
     for (const SketchToolActions::Section& section : sections) {
-        auto* title = new QLabel(section.title, content);
-        title->setObjectName(QStringLiteral("railGroupTitle"));
-        layout->addWidget(title);
+        // U14: the sections follow each other in one row, parted by a line; the section's
+        // name stays as the buttons' accessible description.
+        if (!first) {
+            layout->addSpacing(6);
+            layout->addWidget(divider(sketchPage_));
+            layout->addSpacing(6);
+        }
+        first = false;
         // User decision 2026-10-05: symbols only, name and shortcut in the tooltip.
-        // S14 (2026-10-10): one button per family; the arrow opens the other variants and
+        // S14 (2026-10-10): one button per family; the chevron opens the other variants and
         // the button keeps the one used last.
-        auto* grid = new QGridLayout;
-        grid->setSpacing(2);
-        constexpr int columns = 4;
-        for (std::size_t index = 0; index < section.families.size(); ++index) {
-            const auto& family = section.families[index];
-            auto* button = new QToolButton(content);
+        for (const auto& family : section.families) {
+            auto* button = new PillButton(sketchPage_);
+            button->setProperty("sketchTool", true);
+            button->setAccessibleDescription(section.title);
             button->setDefaultAction(family.front());
             button->setToolButtonStyle(Qt::ToolButtonIconOnly);
-            button->setIconSize(QSize(22, 22));
-            button->setFixedSize(48, 38);
-            button->setAutoRaise(true);
+            button->setIconSize(QSize(20, 20));
+            button->setFixedSize(family.size() > 1 ? 46 : pillHeight, pillHeight);
+            button->setChevronInset(7); // middle of the 14 px menu part
             if (family.size() > 1) {
                 auto* menu = new QMenu(button);
                 for (QAction* action : family) {
@@ -326,15 +389,10 @@ void ToolRail::buildSketchPage(const std::vector<SketchToolActions::Section>& se
                 button->setMenu(menu);
                 button->setPopupMode(QToolButton::MenuButtonPopup);
             }
-            grid->addWidget(button, static_cast<int>(index / columns),
-                            static_cast<int>(index % columns));
+            layout->addWidget(button);
         }
-        layout->addLayout(grid);
     }
-    layout->addStretch(1);
-    sketchPage_->setWidget(content);
-    sketchPage_->setFixedWidth(content->sizeHint().width() + 14);
-    static_cast<QVBoxLayout*>(column_->layout())->addWidget(sketchPage_);
+    static_cast<QHBoxLayout*>(content->layout())->addWidget(sketchPage_);
     sketchPage_->hide();
 }
 

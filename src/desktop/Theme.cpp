@@ -98,6 +98,7 @@ QToolButton:pressed, QToolButton:checked { background: @accentSoft; color: @acce
     border-color: @accentSoft; }
 QToolButton:disabled { color: @faint; }
 QToolButton::menu-indicator { image: none; width: 0; }
+QToolButton::menu-arrow { image: none; width: 0; height: 0; } /* PillButton paints it */
 QToolButton:focus { border-color: @accent; }
 /* AI04c: Claude access chip; it lights up once for every change made over MCP. */
 #shellHeader QToolButton#assistantChip { color: @muted; background: transparent;
@@ -105,22 +106,37 @@ QToolButton:focus { border-color: @accent; }
     font-size: 12px; font-weight: 600; }
 #shellHeader QToolButton#assistantChip:hover { background: @soft; }
 #shellHeader QToolButton#assistantChip::menu-button { border: 0; width: 22px; }
-#shellHeader QToolButton#assistantChip::menu-arrow { image: none; width: 0; height: 0; }
 #shellHeader QToolButton#assistantChip[state="ready"] { color: @ink; }
 #shellHeader QToolButton#assistantChip[state="connected"] { color: @accentInk;
     background: @accentSoft; border-color: @accentSoft; }
 #shellHeader QToolButton#assistantChip[flash="true"] { color: @onAccent; background: @accent;
     border-color: @accent; }
-/* U14: square symbol buttons of the cards; the symbol sits in the middle. */
-QToolButton[cardIcon="true"] { padding: 0; min-height: 0; border-radius: 8px; }
-#headerDivider { background: @line; }
+/* U14 (user decision 2026-10-14): the pill of the Claude chip is the button look of the
+   shell: a thin line around, fully rounded, one height. */
+QToolButton[cardIcon="true"] { padding: 0; min-height: 0; border: 1px solid @line;
+    border-radius: 16px; }
+QToolButton[cardIcon="true"]:checked { background: @accentSoft; border-color: @accent; }
+QToolButton[railPill="true"] { border: 1px solid @line; border-radius: 17px;
+    padding: 0 14px 0 10px; min-height: 0; font-size: 12px; font-weight: 600; }
+QToolButton[railPill="true"][chevron="true"] { padding-right: 28px; }
+QToolButton[railPill="true"]:checked { background: @accentSoft; border-color: @accent;
+    color: @accentInk; }
+QToolButton[sketchTool="true"] { border: 1px solid transparent; border-radius: 17px;
+    padding: 0; min-height: 0; }
+QToolButton[sketchTool="true"]:hover { border-color: @line; background: @soft; }
+QToolButton[sketchTool="true"]:checked { border-color: @accent; background: @accentSoft; }
+QToolButton[sketchTool="true"]::menu-button { border: 0; width: 14px; }
+#contextBar QToolButton { border: 1px solid @line; border-radius: 16px; padding: 0 14px;
+    min-height: 30px; }
+#contextBar QToolButton[primary="true"] { border-color: @accent; }
+#headerDivider, #railDivider { background: @line; }
 
 QFrame[floatingCard="true"] { background: @panel; border: 1px solid @line; border-radius: 14px; }
 QFrame[floatingCard="true"] QScrollArea, #cardContent { background: transparent; border: 0; }
 #cardTitle { font-weight: 700; font-size: 15px; }
 QGroupBox { border: 0; margin-top: 18px; padding: 0; }
 QFrame[floatingCard="true"] QTabBar::tab { padding: 6px 8px; }
-QFrame[floatingCard="true"] QPushButton { padding: 6px 6px; }
+QFrame[floatingCard="true"] QPushButton { padding: 6px 14px; }
 QFrame[floatingCard="true"] QToolButton { padding: 5px 4px; }
 QGroupBox::title { subcontrol-origin: margin; left: 0; color: @muted; font-size: 12px; }
 #toolGuidance { color: @muted; }
@@ -136,26 +152,25 @@ QToolButton#timelineStep[featureState="blocked"] { border-color: @faint; }
 #toolRail { background: transparent; border: 0; }
 #contextBar, #commandSearch { background: @panel; border: 1px solid @line;
     border-radius: 14px; }
-#toolRail QToolButton { font-size: 11px; padding: 6px 2px; }
-#railFlyout QToolButton { font-size: 13px; padding: 5px 10px; text-align: left; }
+#railScroll, #railContent, #sketchToolPage { background: transparent; border: 0; }
+#railFlyout QToolButton { font-size: 13px; padding: 5px 10px; text-align: left;
+    border-radius: 16px; }
 #toolRailSeparator, #contextDivider { background: @line; }
 #railGroupTitle { color: @muted; font-size: 11px; padding: 6px 4px 0 4px; }
-#sketchToolPage, #sketchToolContent { background: transparent; }
-#sketchToolContent QToolButton { font-size: 12px; padding: 4px 4px; text-align: left; }
 #contextTitle { font-weight: 600; padding: 0 8px; }
 QToolButton[primary="true"] { background: @accent; color: @onAccent; border-color: @accent; }
 QToolButton[primary="true"]:hover { background: @accentHover; }
 QToolButton[primary="true"]:disabled { background: @accentSoft; color: @muted; }
 #commandSearchButton { background: @field; border: 1px solid @line; color: @muted;
-    text-align: left; padding: 0 12px; min-height: 0; border-radius: 8px; }
+    text-align: left; padding: 0 12px; min-height: 0; border-radius: 16px; }
 #commandSearchButton[compact="true"] { padding: 0; }
 #commandSearch QListWidget { background: @panel; border: 0; outline: 0; }
 #commandSearch QListWidget::item { min-height: 30px; border-radius: 6px; padding: 0 6px; }
 #commandSearch QListWidget::item:selected { background: @accentSoft; color: @accentInk; }
 #commandSearch QListWidget::item:disabled { color: @faint; }
 
-QPushButton { background: @panel; border: 1px solid @line; border-radius: 8px;
-    padding: 6px 14px; min-height: 22px; }
+QPushButton { background: @panel; border: 1px solid @line; border-radius: 16px;
+    padding: 6px 16px; min-height: 20px; }
 QPushButton:hover { background: @soft; }
 QPushButton:default { background: @accent; color: @onAccent; border-color: @accent; }
 QPushButton:default:hover { background: @accentHover; }

@@ -6,6 +6,8 @@ Import-Module (Join-Path $root 'tools/PlatformReportValidation.psm1') -Force
 Import-Module (Join-Path $root 'tools/PlatformReportExecution.psm1') -Force
 $work = Join-Path $root ('build/platform-report-tests-' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $work | Out-Null
+# The fixtures live only as long as the test; 235 leftover folders filled build/ (2026-10-14).
+try {
 . (Join-Path $PSScriptRoot 'PlatformReportFixtures.ps1')
 $valid = New-PlatformReportFixture $work
 $script:count = 0
@@ -68,5 +70,8 @@ $validPath = Join-Path $work 'valid.json'
 $valid | ConvertTo-Json -Depth 40 | Set-Content -LiteralPath $validPath
 & (Join-Path $PSHOME 'pwsh.exe') -NoProfile -File (Join-Path $root 'tools/Test-PlatformReport.ps1') -ReportPath $validPath -RequirePlatformAcceptance *> (Join-Path $work 'cli.log')
 if ($LASTEXITCODE -ne 2) { Get-Content (Join-Path $work 'cli.log'); throw 'Acceptance exit must be 2 for blocked platforms.' }
-Write-Output "Platform report regressions passed: $script:count cases plus blocked acceptance exit code. Fixtures: $work"
+Write-Output "Platform report regressions passed: $script:count cases plus blocked acceptance exit code."
 . (Join-Path $PSScriptRoot 'PlatformReportExecution.Tests.ps1')
+} finally {
+    Remove-Item -LiteralPath $work -Recurse -Force -ErrorAction SilentlyContinue
+}

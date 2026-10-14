@@ -216,7 +216,7 @@ void ViewCube::paintEvent(QPaintEvent*) {
         const bool lit = hovered_.button == button;
         painter.setPen(QPen(lit ? tokens_.accent : tokens_.line, 1));
         painter.setBrush(lit ? tokens_.accentSoft : tokens_.panel);
-        painter.drawRoundedRect(box, 7, 7);
+        painter.drawRoundedRect(box, box.height() / 2, box.height() / 2); // U14: pills
         painter.setPen(QPen(lit ? tokens_.accentInk : tokens_.ink, 1.5, Qt::SolidLine,
                             Qt::RoundCap, Qt::RoundJoin));
         painter.setBrush(Qt::NoBrush);

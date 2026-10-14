@@ -4,6 +4,7 @@ add_library(
     FeaturePropertiesPanel.cpp
     FloatingCard.cpp
     OverlayCard.cpp
+    PillButton.cpp
     DocumentActions.cpp
     CommandActions.cpp
     CommandPalette.cpp
