@@ -4286,11 +4286,14 @@
       "acceptance": "Punkt setzen, an Ursprung und Kante fangen, mit X/Y-Abstand voll bestimmen (DOF 0); Rückgängig, Speichern/Öffnen; ein Punkt allein ergibt keine Region und blockiert keine Extrusion.",
       "boundary": "Bohrung an Skizzenpunkten ist ein eigener späterer Schritt. Nutzerentscheidung 2026-10-14: Gruppe 1, gehört zu v1 (G3).",
       "chapter": "04-oberflaeche-skizze.md",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/S15.md"
+      ],
+      "completedCommit": "f6e2b77",
+      "completedDate": "2026-10-14"
     },
     {
       "id": "S16",
@@ -4368,11 +4371,14 @@
       "acceptance": "Ebene 25 mm über XY: Skizze darauf extrudiert beginnt bei z=25; Abstand ändern → Körper folgt; Ebene versetzt zu Quaderdeckfläche folgt der Quaderhöhe; Achse aus Zylindermantel; Rückgängig, Speichern/Öffnen.",
       "boundary": "Keine Ebene durch drei Punkte oder tangential an Flächen in diesem Paket; kein Bezugskoordinatensystem. Nutzerentscheidung 2026-10-14: Gruppe 1, gehört zu v1 (G3).",
       "chapter": "05-solid-historie.md",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/M19.md"
+      ],
+      "completedCommit": "f6e2b77",
+      "completedDate": "2026-10-14"
     },
     {
       "id": "M20",
@@ -4395,11 +4401,14 @@
       "acceptance": "Rechteck 10×20 im Abstand 5 von der Achse, 360° → Hohlzylinder mit Volumen π(15²−5²)·20; 90° → ein Viertel; Nut schneidet Ring aus Welle; Profilmaß ändern → Ergebnis folgt; Achse durch das Profil abgewiesen; Rückgängig, Speichern/Öffnen.",
       "boundary": "Keine Endbedingung bis Fläche; kein Drehen von Körperflächen. Nutzerentscheidung 2026-10-14: Gruppe 1, gehört zu v1 (G3).",
       "chapter": "05-solid-historie.md",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/M20.md"
+      ],
+      "completedCommit": "f6e2b77",
+      "completedDate": "2026-10-14"
     },
     {
       "id": "M21",
@@ -4451,11 +4460,14 @@
       "acceptance": "Quader 40×30×20 mit offener Deckfläche, Dicke 2 → Volumen analytisch; zweite Fläche öffnen; Dicke 20 abgewiesen; Quadermaß ändern → Schale folgt; Rückgängig, Speichern/Öffnen.",
       "boundary": "Keine unterschiedlichen Dicken je Fläche. Nutzerentscheidung 2026-10-14: Gruppe 1, gehört zu v1 (G3).",
       "chapter": "05-solid-historie.md",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/M22.md"
+      ],
+      "completedCommit": "f6e2b77",
+      "completedDate": "2026-10-14"
     },
     {
       "id": "S18",
