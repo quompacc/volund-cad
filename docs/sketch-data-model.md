@@ -398,6 +398,7 @@ names the test per cell.
 | Pattern copies | follow their source; read-only | move, delete, trim, split, fillet of a copy: refused with the pattern named |
 | Rotate | no tool; rotation by a circular pattern (S08) | — |
 | Relations | lines, points, circles, arcs | ellipses: no tangent, equal or concentric relation |
+| Projected edges (S17) | `sketch.project` on, then a click on a body edge: a straight edge becomes a line, a circle or arc parallel to the plane a circle or arc; construction, fixed in the solver, follows its edge on every evaluation; snapped and dimensioned like any element; deleting the element removes the projection | twice the same edge: "Diese Kante ist schon projiziert"; an edge across the plane or not parallel: refused with the reason; trim, extend, split, fillet: "Eine projizierte Kante folgt ihrem Körper"; edge gone: `projection-missing` on the sketch and the element |
 | Points (S15) | one click; snapped to the origin, axes and points; coincident, on object, distances, locked; moved, mirrored, copied in patterns | trim, extend, split, fillet: "Ein Punkt ist keine Kurve (UnsupportedCurve)"; offset: "Ein Punkt lässt sich nicht versetzen"; a point is always construction geometry and bounds no region |
 | Snaps | end, mid, center points, curves, projected edges | the point on a three-point arc and the slot width point bind nothing; a snap to a pattern copy is dropped |
 

@@ -11,6 +11,30 @@
 // Features added on 2026-10-14 (M19-M27): their parameters, validation and document access.
 namespace voelund::document {
 
+void validateSketchProjections(const SketchParameters& parameters) {
+    if (parameters.projections.size() > maximumSketchProjections)
+        throw std::invalid_argument("A sketch projects at most 256 edges");
+    for (std::size_t index = 0; index < parameters.projections.size(); ++index) {
+        const auto& projection = parameters.projections[index];
+        const auto element = std::find_if(
+            parameters.elements.values.begin(), parameters.elements.values.end(),
+            [&](const SketchElement& item) { return item.id == projection.element; });
+        if (element == parameters.elements.values.end() || !element->construction ||
+            !(std::holds_alternative<SketchLine>(element->geometry) ||
+              std::holds_alternative<SketchCircle>(element->geometry) ||
+              std::holds_alternative<SketchArc>(element->geometry)))
+            throw std::invalid_argument(
+                "A projected edge is a construction line, circle or arc of its sketch");
+        if (projection.body.value() == 0 || projection.edge.first == projection.edge.second)
+            throw std::invalid_argument("A projected edge names a body edge");
+        validateSubshapeOrigin(projection.edge.first);
+        validateSubshapeOrigin(projection.edge.second);
+        for (std::size_t prior = 0; prior < index; ++prior)
+            if (parameters.projections[prior].element == projection.element)
+                throw std::invalid_argument("Each element projects one edge");
+    }
+}
+
 void validateCombineParameters(const CombineParameters& parameters) {
     if (parameters.target.value() == 0)
         throw std::invalid_argument("A combination names its target body");

@@ -319,6 +319,7 @@ void CadViewport::cancelSketch() {
         impl_->sketchReturnCamera.Nullify();
         impl_->snapOverlay->clear();
         impl_->sketchEditor.cancel();
+        impl_->edgePicking = false; // S17: projecting ends with the sketch
         impl_->setBodiesPickable(true);
         impl_->sketchPresentation.setReferences(impl_->context, {}, false);
         impl_->refreshBasePlanes();

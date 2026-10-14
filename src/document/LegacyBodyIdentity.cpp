@@ -174,6 +174,11 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
                 throw std::invalid_argument("Revolve axis is not an earlier construction axis");
         }
         const auto* sketch = std::get_if<SketchParameters>(&parameters[index]);
+        // S17: projected edges lie on bodies of the document.
+        if (sketch)
+            for (const auto& projection : sketch->projections)
+                if (!isBody(projection.body))
+                    throw std::invalid_argument("Projected edge is not on a body of this document");
         if (sketch && sketch->constructionPlane) {
             const auto found = indices.find(sketch->constructionPlane->value());
             if (found == indices.end() || found->second >= index ||

@@ -57,6 +57,7 @@ void SketchEditorToolController::open(std::unique_ptr<application::SketchEditorS
     draftEdited_ = edited;
     draftSupport_ = support;
     editor_ = std::move(editor);
+    projecting_ = false;
     showPanel();
     panel_.setAcceptEnabled(editor_->canAccept());
     viewport_.beginSketchEditor(drawing, viewport::SketchElementTool::line);

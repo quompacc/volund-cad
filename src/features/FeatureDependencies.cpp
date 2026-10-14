@@ -98,9 +98,15 @@ FeatureDependencies FeatureDependencies::from(const document::DocumentSnapshot& 
         if (datumBody)
             if (const auto producer = bodyProducerBefore(snapshot, feature.id, *datumBody))
                 node.inputs.push_back(*producer);
-        if (feature.kind == document::FeatureKind::sketch)
+        if (feature.kind == document::FeatureKind::sketch) {
             if (const auto plane = snapshot.sketchParameters(feature.id).constructionPlane)
                 node.inputs.push_back(*plane);
+            // S17: projected edges follow their bodies as they were before the sketch.
+            for (const auto& projection : snapshot.sketchParameters(feature.id).projections)
+                if (const auto producer = bodyProducerBefore(snapshot, feature.id, projection.body);
+                    producer && std::ranges::find(node.inputs, *producer) == node.inputs.end())
+                    node.inputs.push_back(*producer);
+        }
         // M21: a combination works on its target and tool bodies as they were before it.
         if (feature.kind == document::FeatureKind::combine) {
             const auto& parameters = snapshot.combineParameters(feature.id);

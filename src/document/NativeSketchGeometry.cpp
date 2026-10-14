@@ -171,6 +171,7 @@ void validateNativeSketchGeometry(const SketchParameters& sketch) {
     validateSketchElements(sketch.elements);
     validateNativeSketchConstraints(sketch);
     validateSketchPatterns(sketch.elements, sketch.constraints, sketch.patterns);
+    validateSketchProjections(sketch);
     for (const auto& constraint : sketch.constraints.values)
         if (constraint.projectedEdge && !sketch.supportBinding)
             throw std::invalid_argument(
@@ -182,6 +183,13 @@ void validateNativeSketchGeometry(const SketchParameters& sketch) {
     for (const auto& element : sketch.elements.values)
         if (const auto* line = std::get_if<SketchLine>(&element.geometry))
             (void)lineMode(line->constraint);
+}
+std::size_t nativeSketchProjectionRecords(const SketchParameters& sketch) noexcept {
+    std::size_t records = sketch.projections.size();
+    for (const auto& projection : sketch.projections)
+        records += projection.edge.first.extrusionBoundary.size() +
+                   projection.edge.second.extrusionBoundary.size();
+    return records;
 }
 void writeNativeSketchGeometry(const TDF_Label& label, const SketchParameters& sketch) {
     const auto& plane = sketch.plane;
@@ -208,6 +216,19 @@ void writeNativeSketchGeometry(const TDF_Label& label, const SketchParameters& s
     // M19 (schema 19): the construction plane the sketch lies on.
     if (sketch.constructionPlane)
         writeNumber(label.FindChild(15), sketch.constructionPlane->value());
+    // S17 (schema 23): per projection its element (1), body (2) and edge faces (3, 4).
+    if (!sketch.projections.empty()) {
+        const auto list = label.FindChild(16);
+        TDataStd_Integer::Set(list, static_cast<int>(sketch.projections.size()));
+        for (std::size_t index = 0; index < sketch.projections.size(); ++index) {
+            const auto& projection = sketch.projections[index];
+            const auto item = list.FindChild(static_cast<int>(index + 1));
+            writeNumber(item.FindChild(1), projection.element.value());
+            writeNumber(item.FindChild(2), projection.body.value());
+            writeNativeSubshapeOrigin(item.FindChild(3), projection.edge.first);
+            writeNativeSubshapeOrigin(item.FindChild(4), projection.edge.second);
+        }
+    }
 }
 SketchParameters readNativeSketchGeometry(const TDF_Label& label, std::size_t remainingElements,
                                           int schemaVersion) {
@@ -216,12 +237,15 @@ SketchParameters readNativeSketchGeometry(const TDF_Label& label, std::size_t re
     const auto datum = label.FindChild(13, false);
     const auto patterns = label.FindChild(14, false);
     const auto construction = label.FindChild(15, false);
+    const auto projections = label.FindChild(16, false);
     require((binding.IsNull() || schemaVersion >= 2) && (repair.IsNull() || schemaVersion >= 4) &&
             (datum.IsNull() || schemaVersion >= 6) && (patterns.IsNull() || schemaVersion >= 11) &&
-            (construction.IsNull() || schemaVersion >= 19));
+            (construction.IsNull() || schemaVersion >= 19) &&
+            (projections.IsNull() || schemaVersion >= 23));
     require(label.NbChildren() == 4 + (binding.IsNull() ? 0 : 1) + (repair.IsNull() ? 0 : 1) +
                                       (datum.IsNull() ? 0 : 1) + (patterns.IsNull() ? 0 : 1) +
-                                      (construction.IsNull() ? 0 : 1));
+                                      (construction.IsNull() ? 0 : 1) +
+                                      (projections.IsNull() ? 0 : 1));
     const auto plane = reals(label, 9);
     const auto elements = child(label, 10);
     const int count = integer(elements);
@@ -263,6 +287,28 @@ SketchParameters readNativeSketchGeometry(const TDF_Label& label, std::size_t re
     }
     if (!construction.IsNull())
         sketch.constructionPlane = FeatureId{number(construction, false)};
+    if (!projections.IsNull()) {
+        const int projected = integer(projections);
+        std::size_t remaining = remainingElements;
+        require(projected > 0 && static_cast<std::size_t>(projected) <= maximumSketchProjections &&
+                static_cast<std::size_t>(projected) <= remaining &&
+                projections.NbChildren() == projected);
+        remaining -= static_cast<std::size_t>(projected);
+        for (int index = 1; index <= projected; ++index) {
+            const auto item = child(projections, index);
+            require(item.NbChildren() == 4);
+            const auto face = [&](int tag) {
+                const auto origin = child(item, tag);
+                require(origin.NbChildren() == 3 + nativeSubshapeOriginExtension(origin));
+                return readNativeSubshapeOrigin(origin, remaining, schemaVersion);
+            };
+            auto first = face(3);
+            auto second = face(4);
+            sketch.projections.push_back({SketchElementId{number(child(item, 1), false)},
+                                          BodyId{number(child(item, 2), false)},
+                                          {std::move(first), std::move(second), 1}});
+        }
+    }
     validateNativeSketchGeometry(sketch);
     return sketch;
 }

@@ -190,6 +190,8 @@ std::vector<FeatureBodyIdentity> validate(std::span<const FeatureDescriptor> fea
             }
             require(nativeSketchPatternRecords(sketch.patterns) <= remainingElements);
             remainingElements -= nativeSketchPatternRecords(sketch.patterns);
+            require(nativeSketchProjectionRecords(sketch) <= remainingElements);
+            remainingElements -= nativeSketchProjectionRecords(sketch);
             continue;
         }
         require((box || feature.kind == FeatureKind::cylinder) &&
@@ -427,6 +429,7 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
                     remainingElements -=
                         data.supportBinding->reference.origin.extrusionBoundary.size();
                 remainingElements -= nativeSketchPatternRecords(data.patterns);
+                remainingElements -= nativeSketchProjectionRecords(data);
             }
             if (extrusion)
                 remainingElements -= nativeExtrusionRecords(std::get<ExtrusionParameters>(decoded));

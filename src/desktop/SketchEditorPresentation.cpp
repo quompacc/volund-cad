@@ -139,6 +139,10 @@ void SketchEditorToolController::applyEditOperation(const std::string& id) {
         applyCurveEdit([this] { return editor_->filletCorner(filletRadius_); });
         return;
     }
+    if (id == "project") {
+        setProjecting(!projecting_);
+        return;
+    }
     if (id == "mirror" || id == "linear_pattern" || id == "circular_pattern" ||
         id == "edit_pattern" || id == "dissolve_pattern") {
         applyPatternOperation(id);
@@ -286,4 +290,22 @@ void SketchEditorToolController::refreshPresentation() {
     viewport_.setSketchConstraints(constraints);
 }
 
+} // namespace voelund::desktop
+
+namespace voelund::desktop {
+void SketchEditorToolController::setProjecting(bool on) {
+    if (!editor_ || projecting_ == on)
+        return;
+    projecting_ = on;
+    viewport_.setEdgePicking(on);
+    statusChanged_(on ? QObject::tr("Projizieren: Körperkante anklicken; erneut wählen beendet")
+                      : QObject::tr("Projizieren beendet"));
+}
+
+void SketchEditorToolController::projectEdge(std::uint64_t bodyResult, const TopoDS_Shape& edge) {
+    if (!projecting())
+        return;
+    applyCurveEdit(
+        [&] { return editor_->projectEdge(document::FeatureId{bodyResult}, edge); });
+}
 } // namespace voelund::desktop

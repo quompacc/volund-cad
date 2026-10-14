@@ -8,14 +8,15 @@
 namespace voelund::application {
 
 SketchEditorSession::EditorState SketchEditorSession::snapshot() const {
-    return {elements_,          constraints_,    patterns_,       selectedElement_,
-            selectedReferences_, selectionPoint_, lastSolveResult_};
+    return {elements_,       constraints_,        patterns_,       projections_,
+            selectedElement_, selectedReferences_, selectionPoint_, lastSolveResult_};
 }
 
 void SketchEditorSession::restore(EditorState state) noexcept {
     elements_ = std::move(state.elements);
     constraints_ = std::move(state.constraints);
     patterns_ = std::move(state.patterns);
+    projections_ = std::move(state.projections);
     selectedElement_ = state.selectedElement;
     selectedReferences_ = std::move(state.selectedReferences);
     selectionPoint_ = state.selectionPoint;
@@ -120,7 +121,8 @@ void SketchEditorSession::commitHistory() {
         return;
     if (!history_.empty() && history_[historyIndex_].elements == elements_ &&
         history_[historyIndex_].constraints == constraints_ &&
-        history_[historyIndex_].patterns == patterns_) {
+        history_[historyIndex_].patterns == patterns_ &&
+        history_[historyIndex_].projections == projections_) {
         // Same geometry: the step keeps the latest selection.
         history_[historyIndex_] = snapshot();
         return;
@@ -143,6 +145,7 @@ bool SketchEditorSession::dragSelected(double totalX, double totalY) {
     elements_ = dragStart_->elements;
     constraints_ = dragStart_->constraints;
     patterns_ = dragStart_->patterns;
+    projections_ = dragStart_->projections;
     lastSolveResult_ = dragStart_->solve;
     if (totalX == 0.0 && totalY == 0.0)
         return true;
@@ -175,6 +178,7 @@ bool SketchEditorSession::undo() {
     elements_ = history_[historyIndex_].elements;
     constraints_ = history_[historyIndex_].constraints;
     patterns_ = history_[historyIndex_].patterns;
+    projections_ = history_[historyIndex_].projections;
     clearPreview();
     restoreSelection(history_[historyIndex_]);
     refreshSolve();
@@ -188,6 +192,7 @@ bool SketchEditorSession::redo() {
     elements_ = history_[historyIndex_].elements;
     constraints_ = history_[historyIndex_].constraints;
     patterns_ = history_[historyIndex_].patterns;
+    projections_ = history_[historyIndex_].projections;
     clearPreview();
     restoreSelection(history_[historyIndex_]);
     refreshSolve();

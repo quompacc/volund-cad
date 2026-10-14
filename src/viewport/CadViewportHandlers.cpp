@@ -16,7 +16,7 @@ void CadViewport::setEdgePicking(bool enabled) {
         if (!impl_->ready)
             return;
         impl_->context->ClearSelected(false);
-        impl_->setBodiesPickable(!impl_->sketchEditor.isActive());
+        impl_->setBodiesPickable(!impl_->sketchEditor.isActive() || enabled);
         if (const auto& chosen = impl_->edgeHighlights[0]; !chosen.IsNull()) {
             impl_->context->Deactivate(chosen);
             if (enabled)

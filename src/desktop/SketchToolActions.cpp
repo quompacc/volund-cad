@@ -72,6 +72,7 @@ const std::vector<RailSection>& railSections() {
          {{"sketch.trim", "sketch.extend", "sketch.split"},
           {"sketch.fillet"},
           {"sketch.offset"},
+          {"sketch.project"},
           {"sketch.mirror", "sketch.linear_pattern", "sketch.circular_pattern",
            "sketch.edit_pattern", "sketch.dissolve_pattern"},
           {"sketch.lock_point", "sketch.unlock_point"},

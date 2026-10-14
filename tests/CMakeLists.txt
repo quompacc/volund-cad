@@ -691,6 +691,14 @@ if(VOELUND_BUILD_DESKTOP)
         if(VOELUND_NATIVE_WAYLAND)
             set_tests_properties(desktop.sketch_point_flow PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
         endif()
+        add_executable(voelund_sketch_project_flow_tests desktop/SketchProjectFlowTests.cpp)
+        target_link_libraries(voelund_sketch_project_flow_tests PRIVATE voelund_project_options Voelund::Desktop)
+        add_test(NAME desktop.sketch_project_flow COMMAND voelund_sketch_project_flow_tests)
+        set_tests_properties(desktop.sketch_project_flow PROPERTIES
+            LABELS "desktop;qt-opengl;regression;sketch" TIMEOUT 60 RUN_SERIAL TRUE)
+        if(VOELUND_NATIVE_WAYLAND)
+            set_tests_properties(desktop.sketch_project_flow PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
+        endif()
         add_executable(voelund_shell_panel_tests desktop/ShellPanelTests.cpp)
         target_link_libraries(voelund_shell_panel_tests PRIVATE voelund_project_options Voelund::Desktop)
         add_test(NAME desktop.shell_panel COMMAND voelund_shell_panel_tests)
@@ -810,6 +818,12 @@ add_executable(voelund_sketch_point_tests integration/SketchPointTests.cpp)
 target_link_libraries(voelund_sketch_point_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME application.sketch_points COMMAND voelund_sketch_point_tests)
 set_tests_properties(application.sketch_points PROPERTIES LABELS "integration;application;sketch" TIMEOUT 120)
+
+# S17: body edges projected into a sketch.
+add_executable(voelund_sketch_projection_tests integration/SketchProjectionTests.cpp)
+target_link_libraries(voelund_sketch_projection_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.sketch_projections COMMAND voelund_sketch_projection_tests)
+set_tests_properties(application.sketch_projections PROPERTIES LABELS "integration;application;sketch" TIMEOUT 120)
 
 add_executable(voelund_sketch_alignment_tests integration/SketchAlignmentTests.cpp)
 target_link_libraries(

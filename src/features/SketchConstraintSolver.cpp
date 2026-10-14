@@ -252,33 +252,41 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
         if (document::isSketchPatternInstance(sketch.patterns, element.id))
             continue;
         unknownStarts.emplace_back(element.id, unknowns.size());
+        // S17: a projected edge is fixed; its parameters are constants for the solver.
+        GCS::VEC_pD ignored;
+        auto& into = std::ranges::find(sketch.projections, element.id,
+                                       &document::SketchProjection::element) !=
+                             sketch.projections.end()
+                         ? ignored
+                         : unknowns;
         if (std::holds_alternative<document::SketchLine>(element.geometry)) {
             auto& state = states.emplace_back(std::in_place_type<LineState>, element);
             auto& line = std::get<LineState>(state);
-            line.appendUnknowns(unknowns);
+            line.appendUnknowns(into);
             lines.emplace(element.id.value(), &line);
         } else if (std::holds_alternative<document::SketchCircle>(element.geometry)) {
             auto& state = states.emplace_back(std::in_place_type<CircleState>, element);
             auto& circle = std::get<CircleState>(state);
-            circle.appendUnknowns(unknowns);
+            circle.appendUnknowns(into);
             circles.emplace(element.id.value(), &circle);
             centers.emplace(element.id.value(), &circle.circle.center);
         } else if (std::holds_alternative<document::SketchArc>(element.geometry)) {
             auto& state = states.emplace_back(std::in_place_type<ArcState>, element);
             auto& arc = std::get<ArcState>(state);
-            arc.appendUnknowns(unknowns);
+            arc.appendUnknowns(into);
             arcs.emplace(element.id.value(), &arc);
             centers.emplace(element.id.value(), &arc.arc.center);
-            arcStates.push_back(&arc);
+            if (&into == &unknowns)
+                arcStates.push_back(&arc); // a fixed arc already keeps its rules
         } else if (std::holds_alternative<document::SketchEllipse>(element.geometry)) {
             auto& state = states.emplace_back(std::in_place_type<EllipseState>, element);
             auto& ellipse = std::get<EllipseState>(state);
-            ellipse.appendUnknowns(unknowns);
+            ellipse.appendUnknowns(into);
             centers.emplace(element.id.value(), &ellipse.ellipse.center);
         } else if (std::holds_alternative<document::SketchPointGeometry>(element.geometry)) {
             auto& state = states.emplace_back(std::in_place_type<PointState>, element);
             auto& point = std::get<PointState>(state);
-            point.appendUnknowns(unknowns);
+            point.appendUnknowns(into);
             centers.emplace(element.id.value(), &point.point);
         }
     }

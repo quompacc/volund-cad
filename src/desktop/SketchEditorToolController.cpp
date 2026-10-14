@@ -189,6 +189,9 @@ void SketchEditorToolController::showPanel() {
           QObject::tr("Gewählte Linien, Bögen, Kreise oder Konturen versetzen (keine Ellipsen; "
                       "Kreise und Rechtecke einzeln)"),
           QObject::tr("Bearbeiten")},
+         {"project",
+          QObject::tr("Körperkanten in die Skizze projizieren (an/aus; Kante anklicken)"),
+          QObject::tr("Bearbeiten")},
          {"mirror",
           QObject::tr("Auswahl an der zuletzt gewählten Linie spiegeln (assoziativ)"),
           QObject::tr("Bearbeiten")},
@@ -305,7 +308,7 @@ void SketchEditorToolController::showPanel() {
             } else if (id == "trim" || id == "extend" || id == "split" || id == "fillet" ||
                        id == "offset" || id == "mirror" || id == "linear_pattern" ||
                        id == "circular_pattern" || id == "edit_pattern" ||
-                       id == "dissolve_pattern") {
+                       id == "dissolve_pattern" || id == "project") {
                 applyEditOperation(id);
             } else if (id == "delete")
                 removeSelected();
@@ -327,6 +330,7 @@ void SketchEditorToolController::setTool(int index) {
         return;
     editor_->setTool(applicationTool(index));
     toolIndex_ = index;
+    setProjecting(false);
     problemElements_.clear(); // S13: red marks belong to the last refused edit
     viewport_.setSketchEditorTool(viewportTool(index));
     syncSelectedDimensionInputs();

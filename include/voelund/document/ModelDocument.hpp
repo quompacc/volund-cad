@@ -85,6 +85,30 @@ enum class DatumPlane { xy = 1, xz = 2, yz = 3 };
 // Canonical frames: XY normal +Z; XZ x along +X, sketch y along +Z (normal -Y); YZ x along
 // +Y, sketch y along +Z (normal +X). All pass through the origin.
 [[nodiscard]] SketchPlane datumSketchPlane(DatumPlane datum);
+// M05 (schema 14, user decision 2026-10-12): an edge of a body, named by its two adjacent
+// faces. Their names follow the faces through later Booleans; the edge is where they meet.
+struct FilletEdge final {
+    SubshapeOrigin first;
+    SubshapeOrigin second;
+    // Schema 17: unique and nonzero within its feature, kept when other edges are removed;
+    // the faces the edge generates are named by it (SubshapeOrigin::treatedEdge).
+    std::uint64_t id{0};
+    [[nodiscard]] bool operator==(const FilletEdge&) const = default;
+};
+inline constexpr std::size_t maximumFilletEdges = 256;
+// S17 (schema 23, user decision 2026-10-14): a body edge projected onto the sketch plane. Its
+// element is construction geometry (a line, circle or arc), follows the edge on every
+// evaluation and is fixed in the solver; dimensions and snaps use it like any element.
+struct SketchProjection final {
+    SketchElementId element;
+    BodyId body;
+    FilletEdge edge;
+    [[nodiscard]] bool operator==(const SketchProjection&) const = default;
+};
+inline constexpr std::size_t maximumSketchProjections = 256;
+struct SketchParameters;
+// Each projection names its own construction line, circle or arc of the sketch and a body edge.
+void validateSketchProjections(const SketchParameters& parameters);
 struct SketchParameters final {
     SketchPlane plane;
     SketchElements elements;
@@ -98,6 +122,8 @@ struct SketchParameters final {
     // M19 (schema 19): a sketch on a construction plane (a datumPlane feature). Like a
     // base-plane sketch it has no support and opens a body; its plane follows the feature.
     std::optional<FeatureId> constructionPlane{};
+    // S17: projected body edges.
+    std::vector<SketchProjection> projections{};
 
     SketchParameters() = default;
     SketchParameters(SketchPlane sketchPlane, SketchElements sketchElements,
@@ -178,17 +204,6 @@ struct ExtrusionParameters final {
 
     [[nodiscard]] bool operator==(const ExtrusionParameters&) const = default;
 };
-// M05 (schema 14, user decision 2026-10-12): an edge of a body, named by its two adjacent
-// faces. Their names follow the faces through later Booleans; the edge is where they meet.
-struct FilletEdge final {
-    SubshapeOrigin first;
-    SubshapeOrigin second;
-    // Schema 17: unique and nonzero within its feature, kept when other edges are removed;
-    // the faces the edge generates are named by it (SubshapeOrigin::treatedEdge).
-    std::uint64_t id{0};
-    [[nodiscard]] bool operator==(const FilletEdge&) const = default;
-};
-inline constexpr std::size_t maximumFilletEdges = 256;
 // M05: one constant radius on edges of one body; one feature, one undo step.
 struct FilletParameters final {
     BodyId body;

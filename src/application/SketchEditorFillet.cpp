@@ -71,6 +71,9 @@ SketchCurveEditResult SketchEditorSession::filletCorner(double radius) {
     if (!notLines.empty())
         refuse("Nur zwischen zwei Linien (UnsupportedCurve)", notLines);
     for (const auto& pick : picks)
+        if (isProjected(pick.element)) // S17
+            refuse("Eine projizierte Kante folgt ihrem Körper", {pick.element});
+    for (const auto& pick : picks)
         if (isPatternInstance(pick.element))
             refuse("Eine Kopie folgt ihrem Original; das Original verrunden oder das Muster "
                    "auflösen",

@@ -75,6 +75,10 @@ void MainWindow::createToolPanel() {
 // edge of a body, Ctrl+click adds or removes one; "Verrunden"/"Fase" take them over. While a
 // fillet or chamfer panel is open its own edge picking runs instead.
 void MainWindow::pickEdge(std::uint64_t body, const TopoDS_Shape& edge, bool additive) {
+    if (impl_->sketchEditorTool->projecting()) { // S17
+        impl_->sketchEditorTool->projectEdge(body, edge);
+        return;
+    }
     if (impl_->filletTool->isActive()) {
         impl_->filletTool->picked(body, edge);
         return;

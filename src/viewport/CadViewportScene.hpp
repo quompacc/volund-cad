@@ -162,7 +162,7 @@ class CadViewportScene {
             context->Display(presentation, false);
             presentations.push_back(BodyPresentation{body.id, presentation, body.transformable});
         }
-        setBodiesPickable(!sketchEditor.isActive());
+        setBodiesPickable(!sketchEditor.isActive() || edgePicking);
         sketchPresentation.setElements(context, pendingSketchElements, selectedSketchElements,
                                        sketchEditor.isActive());
         sketchConstraintPresentation.setConstraints(context, pendingSketchConstraints);

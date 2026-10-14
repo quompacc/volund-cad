@@ -203,6 +203,30 @@ void evaluateCylinder(const document::DocumentSnapshot& document,
     referenceInputBody.shape = referenceResult;
 }
 
+// M19: a sketch on a construction plane lies where the plane is now.
+void setConstructionPlane(document::SketchParameters& parameters,
+                          const std::vector<EvaluatedFeature>& outputs) {
+    if (!parameters.constructionPlane)
+        return;
+    const auto& frame = findFeature(outputs, *parameters.constructionPlane).datumFrame;
+    if (!frame)
+        throw GeometryEvaluationError("The construction plane of the sketch is missing");
+    parameters.plane = *frame;
+}
+
+// A sketch without support: its construction plane and projected edges are brought up to
+// date; true when the sketch then needs a solve (projections or bound parameters).
+bool prepareStandaloneSketch(document::SketchParameters& parameters,
+                             const document::DocumentSnapshot& document,
+                             document::FeatureId sketch,
+                             const std::vector<EvaluatedFeature>& outputs) {
+    setConstructionPlane(parameters, outputs);
+    detail::refreshSketchProjections(parameters, document, sketch, outputs);
+    return !parameters.projections.empty() ||
+           std::ranges::any_of(parameters.constraints.values,
+                               [](const auto& constraint) { return constraint.parameter.has_value(); });
+}
+
 void evaluateSketch(const document::DocumentSnapshot& document,
                     const document::FeatureDescriptor& descriptor,
                     std::vector<EvaluatedFeature>& outputs) {
@@ -216,25 +240,18 @@ void evaluateSketch(const document::DocumentSnapshot& document,
         else if (!updateSketchSupportReferences(parameters,
                                                 findOutput(outputs, *descriptor.inputFeature)))
             throw GeometryEvaluationError("Sketch support face is no longer available");
+        detail::refreshSketchProjections(parameters, document, descriptor.id, outputs);
         if (solveSketchConstraints(parameters).status != SketchSolveStatus::success)
             throw GeometryEvaluationError("Sketch support references cannot be solved");
-    } else if (std::ranges::any_of(parameters.constraints.values, [](const auto& constraint) {
-                   return constraint.parameter.has_value();
-               })) {
+    } else if (prepareStandaloneSketch(parameters, document, descriptor.id, outputs)) {
         // PAR01: a table change mirrors values without an editor solve; an unsolvable
-        // result stays visible as an error instead of stale geometry.
+        // result stays visible as an error instead of stale geometry. S17: projected edges
+        // move the elements bound to them.
         if (solveSketchConstraints(parameters).status != SketchSolveStatus::success)
             throw GeometryEvaluationError("Sketch parameters cannot be solved");
     } else {
         // S12: stored geometry unsolved; instances still follow their sources.
         document::regenerateSketchPatterns(parameters.elements, parameters.patterns);
-    }
-    // M19: a sketch on a construction plane lies where the plane is now.
-    if (parameters.constructionPlane) {
-        const auto& frame = findFeature(outputs, *parameters.constructionPlane).datumFrame;
-        if (!frame)
-            throw GeometryEvaluationError("The construction plane of the sketch is missing");
-        parameters.plane = *frame;
     }
     TopoDS_Compound geometry;
     BRep_Builder builder;

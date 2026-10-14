@@ -61,6 +61,15 @@ document::CombineParameters CadSession::combineParameters(document::FeatureId fe
     return document_.combineParameters(featureId);
 }
 
+std::optional<document::SketchParameters>
+CadSession::evaluatedSketch(document::FeatureId sketch) const {
+    if (!evaluation_)
+        return std::nullopt;
+    const auto& outputs = evaluation_->result.features;
+    const auto output = std::ranges::find(outputs, sketch, &features::EvaluatedFeature::id);
+    return output == outputs.end() ? std::nullopt : output->resolvedSketch;
+}
+
 std::optional<document::SketchPlane> CadSession::datumFrame(document::FeatureId feature) const {
     if (!evaluation_)
         return std::nullopt;

@@ -63,7 +63,9 @@ SketchEditorSession::SketchEditorSession(CadSession& session, document::FeatureI
     : session_(session), supportFeature_(supportFeature), plane_(parameters.plane),
       supportBinding_(parameters.supportBinding), elements_(std::move(parameters.elements)),
       constraints_(std::move(parameters.constraints)),
-      patterns_(std::move(parameters.patterns)), editingFeature_(sketchFeature) {
+      patterns_(std::move(parameters.patterns)), projections_(std::move(parameters.projections)),
+      editingFeature_(sketchFeature) {
+    refreshProjectedGeometry();
     if (parameters.repairReason)
         throw std::invalid_argument(
             "MigrationNeedsRepair: repair sketch references before editing");
@@ -89,7 +91,9 @@ SketchEditorSession::SketchEditorSession(CadSession& session, document::FeatureI
     : session_(session), datum_(parameters.datum),
       constructionPlane_(parameters.constructionPlane), plane_(parameters.plane),
       elements_(std::move(parameters.elements)), constraints_(std::move(parameters.constraints)),
-      patterns_(std::move(parameters.patterns)), editingFeature_(sketchFeature) {
+      patterns_(std::move(parameters.patterns)), projections_(std::move(parameters.projections)),
+      editingFeature_(sketchFeature) {
+    refreshProjectedGeometry();
     if (!datum_ && !constructionPlane_)
         throw std::invalid_argument("Only base-plane sketches are edited without a support");
     editedBaseline_ = storedSketch(session, sketchFeature);
@@ -495,6 +499,7 @@ bool SketchEditorSession::removeSelected() {
     });
     std::erase_if(elements_.values,
                   [&named](const document::SketchElement& element) { return named(element.id); });
+    std::erase_if(projections_, [&named](const auto& projection) { return named(projection.element); });
     selectedElement_.reset();
     selectedReferences_.clear();
     clearPreview();
@@ -551,6 +556,7 @@ document::SketchParameters SketchEditorSession::parameters(bool includePreview) 
     sketch.supportBinding = supportBinding_;
     sketch.datum = datum_;
     sketch.constructionPlane = constructionPlane_;
+    sketch.projections = projections_;
     sketch.patterns = patterns_;
     return sketch;
 }

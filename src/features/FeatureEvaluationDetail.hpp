@@ -37,6 +37,11 @@ void evaluateChamfer(const document::DocumentSnapshot& document,
                      const document::FeatureDescriptor& descriptor,
                      std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
                      std::vector<EvaluatedBody>& referenceBodies);
+// S17 (SketchProjection.cpp): projected elements follow their body edges.
+void refreshSketchProjections(document::SketchParameters& sketch,
+                              const document::DocumentSnapshot& document,
+                              document::FeatureId sketchId,
+                              const std::vector<EvaluatedFeature>& outputs);
 // M19 (DatumEvaluation.cpp): construction planes and axes; no body.
 void evaluateDatumPlane(const document::DocumentSnapshot& document,
                         const document::FeatureDescriptor& descriptor,

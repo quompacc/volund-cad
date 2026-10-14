@@ -87,6 +87,21 @@ void CadViewport::mousePressEvent(QMouseEvent* event) {
             impl_->context->MoveTo(position.x(), position.y(), impl_->view, false);
             if (impl_->sketchEditor.isActive()) {
                 impl_->sketchElementPressed = false;
+                // S17: while edges are projected a click takes a body edge only.
+                if (impl_->edgePicking) {
+                    const auto owner =
+                        occ::handle<StdSelect_BRepOwner>::DownCast(impl_->detectedBodyOwner());
+                    if (!owner.IsNull() && owner->Shape().ShapeType() == TopAbs_EDGE &&
+                        impl_->edgeSelectionHandler)
+                        for (const auto& presentation : impl_->presentations)
+                            if (presentation.shape == owner->Selectable()) {
+                                const auto handler = impl_->edgeSelectionHandler;
+                                handler(presentation.id, owner->Shape(), false);
+                                break;
+                            }
+                    update();
+                    return;
+                }
                 if (impl_->sketchEditor.isDrawing())
                     return;
                 // S13: an element under the pointer wins over a constraint label on it.

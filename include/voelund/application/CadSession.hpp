@@ -279,6 +279,9 @@ class CadSession final {
     editShellParameters(document::FeatureId featureId, const document::ShellParameters& parameters,
                         ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] document::ShellParameters shellParameters(document::FeatureId featureId) const;
+    // S17: a sketch as the current evaluation solved it (projected edges up to date).
+    [[nodiscard]] std::optional<document::SketchParameters>
+    evaluatedSketch(document::FeatureId sketch) const;
     // The current frame of a construction plane or axis; none when it failed.
     [[nodiscard]] std::optional<document::SketchPlane>
     datumFrame(document::FeatureId feature) const;

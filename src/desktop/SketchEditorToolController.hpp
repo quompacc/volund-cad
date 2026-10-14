@@ -64,6 +64,10 @@ class SketchEditorToolController final {
     void syncGridChoice();
     void editConstraint(std::uint64_t constraintId);
     [[nodiscard]] bool isActive() const noexcept;
+    // S17: while on, a body edge clicked in the viewport is projected into the sketch.
+    [[nodiscard]] bool projecting() const noexcept { return editor_ && projecting_; }
+    void setProjecting(bool on);
+    void projectEdge(std::uint64_t bodyResult, const TopoDS_Shape& edge);
     void cancel();
 
   private:
@@ -122,6 +126,7 @@ class SketchEditorToolController final {
     bool automaticRelations_{true}; // S04: kept for the next sketch
     bool showDimensions_{true};     // S13: view switches, kept for the next sketch
     bool showProjected_{true};
+    bool projecting_{false}; // S17
     std::function<bool()> gridShown_;
     std::function<void(bool)> showGrid_;
     std::function<void()> switchChanged_;

@@ -9,6 +9,8 @@
 #include <voelund/features/SketchConstraintSolver.hpp>
 #include <voelund/features/SketchEvaluation.hpp>
 
+#include <TopoDS_Shape.hxx>
+
 #include <optional>
 #include <string>
 #include <span>
@@ -218,6 +220,11 @@ class SketchEditorSession final {
     // S02: a successful solve of nonempty geometry, also under-determined (open sketches are
     // valid); never a conflicting or failed solve, nor during a drag.
     [[nodiscard]] bool canAccept() const noexcept;
+    // S17: projects the body edge `edge` of the current result `bodyResult` into the sketch as
+    // a fixed construction element; SketchEditRefusal names why not.
+    SketchCurveEditResult projectEdge(document::FeatureId bodyResult, const TopoDS_Shape& edge);
+    [[nodiscard]] bool isProjected(document::SketchElementId element) const noexcept;
+    [[nodiscard]] std::span<const document::SketchProjection> projections() const noexcept;
     [[nodiscard]] CommandResult tryAccept(ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] document::SketchParameters draftParameters() const { return parameters(false); }
     void cancel() noexcept;
@@ -237,12 +244,15 @@ class SketchEditorSession final {
         document::SketchElements elements;
         document::SketchConstraints constraints;
         document::SketchPatterns patterns;
+        std::vector<document::SketchProjection> projections; // S17
         std::optional<document::SketchElementId> selectedElement;
         std::vector<document::SketchGeometryReference> selectedReferences;
         std::optional<document::SketchPoint> selectionPoint;
         features::SketchSolveResult solve;
     };
     [[nodiscard]] EditorState snapshot() const;
+    // S17: projected elements as the current model evaluates them (their edges may have moved).
+    void refreshProjectedGeometry();
     void restore(EditorState state) noexcept;
     // Puts the selection of `state` back where its elements still exist.
     void restoreSelection(const EditorState& state);
@@ -315,6 +325,7 @@ class SketchEditorSession final {
     document::SketchElements elements_;
     document::SketchConstraints constraints_;
     document::SketchPatterns patterns_; // S12
+    std::vector<document::SketchProjection> projections_; // S17
     std::optional<document::FeatureId> editingFeature_;
     // AI04c: the stored sketch when editing began; a change from outside (MCP) is not
     // overwritten silently. Empty for a sketch the session does not hold.

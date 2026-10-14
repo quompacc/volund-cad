@@ -44,6 +44,8 @@ SketchCurveEditResult SketchEditorSession::editCurve(SketchCurveEdit edit) {
         throw std::invalid_argument(name + ": Zuerst das Element an der gewünschten Stelle "
                                            "anklicken");
     const SketchElementId target = *selectedElement_;
+    if (isProjected(target)) // S17
+        throw SketchEditRefusal(name + ": Eine projizierte Kante folgt ihrem Körper", {target});
     if (isPatternInstance(target))
         throw SketchEditRefusal(name + ": Eine Kopie folgt ihrem Original; das Original ändern "
                                        "oder das Muster auflösen",

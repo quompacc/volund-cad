@@ -1,0 +1,17 @@
+#pragma once
+
+#include <voelund/document/ModelDocument.hpp>
+
+#include <TopoDS_Shape.hxx>
+
+#include <optional>
+
+namespace voelund::features {
+
+// S17: a body edge projected orthogonally onto the sketch plane, in sketch coordinates: a
+// line, or a circle or arc when the edge's circle lies parallel to the plane. None for other
+// curves and for a line that projects to a point.
+[[nodiscard]] std::optional<document::SketchGeometry>
+projectSketchEdge(const document::SketchPlane& plane, const TopoDS_Shape& edge);
+
+} // namespace voelund::features

@@ -393,6 +393,14 @@ const QHash<QString, Drawing>& drawings() {
              p.painter.drawArc(QRectF(3, 9, 18, 18), 20 * 16, 140 * 16);
              p.accented([&] { p.painter.drawArc(QRectF(7, 13, 10, 10), 20 * 16, 140 * 16); });
          }},
+        {"project", // S17: a body edge dropped onto the sketch
+         [](const Pens& p) {
+             p.painter.drawRect(QRectF(5, 3, 14, 7));
+             p.line(12, 11, 12, 17);
+             p.line(9.5, 14.5, 12, 17);
+             p.line(14.5, 14.5, 12, 17);
+             p.accented([&] { p.line(4, 21, 20, 21); });
+         }},
         {"linear_pattern",
          [](const Pens& p) {
              p.painter.drawRect(QRectF(2.5, 9, 5, 6));
