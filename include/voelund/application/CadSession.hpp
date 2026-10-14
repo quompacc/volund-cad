@@ -249,6 +249,29 @@ class CadSession final {
                           ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] document::CombineParameters
     combineParameters(document::FeatureId featureId) const;
+    // M19: a construction plane ("Bezugsebene N") on a base plane or a planar face of
+    // `support`'s current result, and a construction axis ("Bezugsachse N") on a base axis or
+    // an edge of `support`'s current result. One undo step each.
+    [[nodiscard]] CommandResult createDatumPlane(std::optional<document::DatumPlane> basePlane,
+                                                 std::optional<document::FeatureId> support,
+                                                 std::optional<document::SubshapeOrigin> face,
+                                                 double offset,
+                                                 document::DatumRotationAxis rotationAxis,
+                                                 double angle);
+    [[nodiscard]] CommandResult
+    editDatumPlaneParameters(document::FeatureId featureId,
+                             const document::DatumPlaneParameters& parameters,
+                             ErrorDisposition disposition = ErrorDisposition::reject);
+    [[nodiscard]] CommandResult createDatumAxis(std::optional<document::BaseAxis> baseAxis,
+                                                std::optional<document::FeatureId> support,
+                                                std::optional<document::FilletEdge> edge);
+    [[nodiscard]] CommandResult
+    editDatumAxisParameters(document::FeatureId featureId,
+                            const document::DatumAxisParameters& parameters,
+                            ErrorDisposition disposition = ErrorDisposition::reject);
+    // The current frame of a construction plane or axis; none when it failed.
+    [[nodiscard]] std::optional<document::SketchPlane>
+    datumFrame(document::FeatureId feature) const;
     // The body a feature's current result belongs to; none for sketches and failed features.
     [[nodiscard]] std::optional<document::BodyId> resultBody(document::FeatureId feature) const;
     // M06: the named edge of `support`'s current result at a picked edge (between two named

@@ -43,6 +43,10 @@ class SketchEditorSession final {
     SketchEditorSession(CadSession& session, document::DatumPlane datum);
     SketchEditorSession(CadSession& session, document::FeatureId sketchFeature,
                         document::SketchParameters parameters);
+    // M19: a new sketch on a construction plane, at its current frame. Editing one uses the
+    // constructor above (parameters.constructionPlane set).
+    SketchEditorSession(CadSession& session, document::SketchPlane plane,
+                        document::FeatureId constructionPlane);
 
     void setTool(SketchDrawingTool tool) noexcept;
     [[nodiscard]] SketchDrawingTool tool() const noexcept;
@@ -303,6 +307,7 @@ class SketchEditorSession final {
     CadSession& session_;
     std::optional<document::FeatureId> supportFeature_;
     std::optional<document::DatumPlane> datum_;
+    std::optional<document::FeatureId> constructionPlane_; // M19
     document::SketchPlane plane_;
     std::optional<document::SketchSupportBinding> supportBinding_;
     std::optional<DocumentStamp> supportStamp_;

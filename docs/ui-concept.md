@@ -172,6 +172,9 @@ in U04 an dieselben IDs.
 | `solid.modify.transform` | Werkzeugleiste („Bewegen“), Kontextleiste (Feature), M, Suche | Viewport-Gizmo | getrennter Körper gewählt | viewport_startup |
 | `solid.modify.edit_sketch` | Werkzeugleiste („Bearbeiten“), Kontextleiste (Skizze, primär), Suche | SketchEditorToolController | Skizze gewählt | support_binding_flow |
 | `solid.modify.push_pull` | Werkzeugleiste („Ziehen“), Kontextleiste (ebene Fläche), Suche | PushPullToolController (T04) | ebene Fläche gewählt, Modell aktuell | push_pull_panel |
+| `solid.modify.combine` | Werkzeugleiste („Kombinieren“), Kontextleiste (Körper), Suche | CombineToolController (M21) | Körper gewählt; Klicks auf andere Körper wählen die Werkzeuge | combine_panel |
+| `solid.create.datum_plane` | Werkzeugleiste („Bezugsebene“), Kontextleiste (Grundebene, ebene Fläche), Suche | DatumToolController (M19) | kein Werkzeug offen; Bezug ist die gewählte Grundebene oder Fläche, sonst XY | datum_panel |
+| `solid.create.datum_axis` | Werkzeugleiste („Bezugsachse“), Kontextleiste (eine Kante), Suche | DatumToolController (M19) | kein Werkzeug offen; eine gewählte Kante wird sofort zur Achse, sonst Grundachse im Panel | datum_panel |
 | `assistant.mcp` | Kopfzeile (Claude-Chip), Suche | McpAccess | immer; zeigt an/aus | mcp_shell |
 | `assistant.mcp_copy_command` | Kopfzeile (Claude-Chip), Suche | McpAccess | Zugang an | mcp_shell |
 | `assistant.mcp_new_token` | Kopfzeile (Claude-Chip), Suche | McpAccess | KI-Funktionen erlaubt | command_inventory |

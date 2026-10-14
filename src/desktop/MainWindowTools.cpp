@@ -1,6 +1,7 @@
 #include <voelund/desktop/MainWindow.hpp>
 
 #include "MainWindowState.hpp"
+#include "MainWindowSupport.hpp"
 #include "SketchEditorToolController.hpp"
 #include "SketchExtrusionToolController.hpp"
 #include "ToolPanelHost.hpp"
@@ -54,6 +55,12 @@ void MainWindow::createToolPanel() {
         impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
         [this](const QString& message) { statusBar()->showMessage(message); });
     impl_->combineTool->setPreviewHandler(showPreview);
+    impl_->datumTool = std::make_unique<DatumToolController>( // M19
+        impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
+        [this](const QString& message) { statusBar()->showMessage(message); });
+    impl_->datumTool->setPreviewHandler([this](const application::CadSession* candidate) {
+        impl_->viewport->setDatums(makeSceneDatums(candidate ? *candidate : impl_->session));
+    });
     impl_->viewport->setEdgeSelectionHandler(
         [this](std::uint64_t body, const TopoDS_Shape& edge, bool additive) {
             pickEdge(body, edge, additive);

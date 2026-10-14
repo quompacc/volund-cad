@@ -37,6 +37,13 @@ void evaluateChamfer(const document::DocumentSnapshot& document,
                      const document::FeatureDescriptor& descriptor,
                      std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
                      std::vector<EvaluatedBody>& referenceBodies);
+// M19 (DatumEvaluation.cpp): construction planes and axes; no body.
+void evaluateDatumPlane(const document::DocumentSnapshot& document,
+                        const document::FeatureDescriptor& descriptor,
+                        std::vector<EvaluatedFeature>& outputs);
+void evaluateDatumAxis(const document::DocumentSnapshot& document,
+                       const document::FeatureDescriptor& descriptor,
+                       std::vector<EvaluatedFeature>& outputs);
 // M21 (CombineEvaluation.cpp): a Boolean of whole bodies into the target body.
 void evaluateCombine(const document::DocumentSnapshot& document,
                      const document::FeatureDescriptor& descriptor,

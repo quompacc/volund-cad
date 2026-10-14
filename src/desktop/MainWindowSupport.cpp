@@ -29,6 +29,22 @@ std::vector<viewport::SceneBody> makeSceneBodies(const application::CadSession& 
     return bodies;
 }
 
+std::vector<viewport::SceneDatum> makeSceneDatums(const application::CadSession& session) {
+    std::vector<viewport::SceneDatum> datums;
+    for (const auto& feature : session.features()) {
+        const bool axis = feature.kind == document::FeatureKind::datumAxis;
+        if (!axis && feature.kind != document::FeatureKind::datumPlane)
+            continue;
+        if (const auto frame = session.datumFrame(feature.id))
+            datums.push_back({feature.id.value(),
+                              axis,
+                              {frame->originX, frame->originY, frame->originZ},
+                              {frame->normalX, frame->normalY, frame->normalZ},
+                              {frame->xDirectionX, frame->xDirectionY, frame->xDirectionZ}});
+    }
+    return datums;
+}
+
 int resultModeIndex(document::CylinderResultMode mode) {
     switch (mode) {
     case document::CylinderResultMode::join:

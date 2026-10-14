@@ -4,6 +4,7 @@
 #include <voelund/document/ModelDocument.hpp>
 #include <voelund/document/SketchPlaneValidation.hpp>
 
+#include <algorithm>
 #include <cmath>
 #include <stdexcept>
 #include <utility>
@@ -120,6 +121,10 @@ void validateSketchParameters(const SketchParameters& parameters) {
         (parameters.supportBinding || parameters.repairReason ||
          !(parameters.plane == datumSketchPlane(*parameters.datum))))
         throw std::invalid_argument("A datum sketch lies exactly on its unbound base plane");
+    if (parameters.constructionPlane &&
+        (parameters.datum || parameters.supportBinding || parameters.repairReason ||
+         parameters.constructionPlane->value() == 0))
+        throw std::invalid_argument("A sketch on a construction plane has no other support");
     validateCanonicalSketchPlane(parameters.plane);
     validateSketchElements(parameters.elements);
     validateSketchConstraints(parameters.elements, parameters.constraints);
@@ -196,9 +201,18 @@ FeatureId ModelDocument::addCylinderFeature(std::string name,
 
 FeatureId ModelDocument::addDatumSketchFeature(std::string name,
                                                const SketchParameters& parameters) {
-    if (!parameters.datum)
+    if (!parameters.datum && !parameters.constructionPlane)
         throw std::invalid_argument("A sketch without support requires a base plane");
     validateSketchParameters(parameters);
+    if (parameters.constructionPlane) {
+        const auto features = impl_->view().features();
+        const auto plane =
+            std::find_if(features.begin(), features.end(), [&](const FeatureDescriptor& feature) {
+                return feature.id == *parameters.constructionPlane;
+            });
+        if (plane == features.end() || plane->kind != FeatureKind::datumPlane)
+            throw std::invalid_argument("The construction plane does not exist");
+    }
     const FeatureId id = nextFeatureId();
     auto candidate = currentState();
     ++candidate.nextFeatureId;
@@ -214,7 +228,7 @@ FeatureId ModelDocument::addSketchFeature(std::string name, FeatureId supportFea
     if (!contains(supportFeature)) {
         throw std::invalid_argument("Sketch support feature does not exist");
     }
-    if (parameters.datum)
+    if (parameters.datum || parameters.constructionPlane)
         throw std::invalid_argument("A supported sketch cannot also lie on a base plane");
     validateSketchParameters(parameters);
     const FeatureId id = nextFeatureId();

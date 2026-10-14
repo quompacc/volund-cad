@@ -56,6 +56,16 @@ void MainWindow::createCommands() {
         statusBar()->showMessage(tr("Zylinder angelegt"), 2000);
     };
     services.sketchEditor = [this]() {
+        // M19: a sketch on the selected construction plane.
+        if (const auto selected = impl_->session.selectedFeature();
+            selected && !impl_->selectedDatum && !impl_->selectedPlanarFace &&
+            impl_->session.selectedFeatureDescriptor().kind ==
+                document::FeatureKind::datumPlane) {
+            if (impl_->sketchExtrusionTool->isActive())
+                impl_->sketchExtrusionTool->cancel();
+            impl_->sketchEditorTool->beginOnConstructionPlane(*selected);
+            return;
+        }
         if (impl_->selectedDatum.has_value()) {
             if (impl_->sketchExtrusionTool->isActive())
                 impl_->sketchExtrusionTool->cancel();
@@ -95,6 +105,12 @@ void MainWindow::createCommands() {
         }
         if (kind == document::FeatureKind::combine) {
             impl_->combineTool->beginEdit(*selected);
+            syncShell();
+            return;
+        }
+        if (kind == document::FeatureKind::datumPlane ||
+            kind == document::FeatureKind::datumAxis) {
+            impl_->datumTool->beginEdit(*selected);
             syncShell();
             return;
         }
@@ -167,6 +183,48 @@ void MainWindow::createCommands() {
         impl_->combineTool->begin(*producer);
         syncShell();
     };
+    // M19: a construction plane on the picked base plane or planar face (XY without one), and
+    // a construction axis: on the one picked edge at once, else a base axis in the panel.
+    services.datumPlane = [this]() {
+        if (impl_->sketchExtrusionTool->isActive())
+            impl_->sketchExtrusionTool->cancel();
+        if (impl_->selectedPlanarFace) {
+            const document::FeatureId support{impl_->selectedPlanarFace->bodyId};
+            std::optional<document::SubshapeOrigin> face;
+            try {
+                face = impl_->session.faceReference(support, impl_->selectedPlanarFace->selectedFace)
+                           .origin;
+            } catch (const std::exception&) {
+                statusBar()->showMessage(tr("Diese Fläche hat keinen festen Namen."), 3000);
+                return;
+            }
+            impl_->datumTool->beginPlane(std::nullopt, support, face);
+        } else {
+            impl_->datumTool->beginPlane(impl_->selectedDatum, std::nullopt, std::nullopt);
+        }
+        syncShell();
+    };
+    services.datumAxis = [this]() {
+        if (impl_->selectedEdges.size() == 1 && impl_->edgeSupport) {
+            const auto edge = impl_->selectedEdges.front();
+            const auto support = *impl_->edgeSupport;
+            if (!runCommand(
+                    [&] {
+                        return runAction(impl_->session,
+                                         application::CreateDatumAxisAction{std::nullopt,
+                                                                            support, edge});
+                    },
+                    [this](const QString& message) { statusBar()->showMessage(message); }))
+                return;
+            clearEdgeSelection();
+            refreshScene();
+            statusBar()->showMessage(tr("Bezugsachse angelegt"), 2000);
+            return;
+        }
+        impl_->datumTool->beginAxis();
+        syncShell();
+    };
+    services.canDatum = [this]() { return !impl_->shell().toolBlocksCommands(); };
     services.canHole = [this]() {
         return impl_->selectedPlanarFace.has_value() && impl_->shell().canSketch();
     };

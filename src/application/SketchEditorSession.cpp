@@ -80,12 +80,17 @@ SketchEditorSession::SketchEditorSession(CadSession& session, document::DatumPla
     commitHistory();
 }
 
+SketchEditorSession::SketchEditorSession(CadSession& session, document::SketchPlane plane,
+                                         document::FeatureId constructionPlane)
+    : session_(session), constructionPlane_(constructionPlane), plane_(plane) { commitHistory(); }
+
 SketchEditorSession::SketchEditorSession(CadSession& session, document::FeatureId sketchFeature,
                                          document::SketchParameters parameters)
-    : session_(session), datum_(parameters.datum), plane_(parameters.plane),
+    : session_(session), datum_(parameters.datum),
+      constructionPlane_(parameters.constructionPlane), plane_(parameters.plane),
       elements_(std::move(parameters.elements)), constraints_(std::move(parameters.constraints)),
       patterns_(std::move(parameters.patterns)), editingFeature_(sketchFeature) {
-    if (!datum_)
+    if (!datum_ && !constructionPlane_)
         throw std::invalid_argument("Only base-plane sketches are edited without a support");
     editedBaseline_ = storedSketch(session, sketchFeature);
     document::validateSketchParameters(this->parameters(false));
@@ -554,6 +559,7 @@ document::SketchParameters SketchEditorSession::parameters(bool includePreview) 
     document::SketchParameters sketch{plane_, std::move(result), constraints_};
     sketch.supportBinding = supportBinding_;
     sketch.datum = datum_;
+    sketch.constructionPlane = constructionPlane_;
     sketch.patterns = patterns_;
     return sketch;
 }

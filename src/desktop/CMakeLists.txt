@@ -44,6 +44,7 @@ add_library(
     FilletToolController.cpp
     HoleToolController.cpp
     CombineToolController.cpp
+    DatumToolController.cpp
     MainWindowTools.cpp
     ShellHeader.cpp
     ShellIcons.cpp

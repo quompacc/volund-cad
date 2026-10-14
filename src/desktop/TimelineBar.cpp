@@ -34,6 +34,10 @@ ShellIcon iconFor(document::FeatureKind kind) {
         return ShellIcon::hole;
     case document::FeatureKind::combine:
         return ShellIcon::combine;
+    case document::FeatureKind::datumPlane:
+        return ShellIcon::datumPlane;
+    case document::FeatureKind::datumAxis:
+        return ShellIcon::datumAxis;
     }
     return ShellIcon::box;
 }

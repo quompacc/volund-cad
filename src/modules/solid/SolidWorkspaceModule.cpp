@@ -100,6 +100,29 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                              simpleCommand(std::move(services.chamfer)),
                              services.canFillet,
                              "Fase"});
+    if (services.datumPlane)
+        commands_.push_back({"solid.create.datum_plane",
+                             "Bezugsebene",
+                             "Ebene parallel zur gewählten Grundebene oder Fläche, versetzt "
+                             "oder gedreht",
+                             {},
+                             workspaces::CommandGroup::create,
+                             true,
+                             false,
+                             simpleCommand(std::move(services.datumPlane)),
+                             services.canDatum,
+                             "Bezugsebene"});
+    if (services.datumAxis)
+        commands_.push_back({"solid.create.datum_axis",
+                             "Bezugsachse",
+                             "Achse auf der gewählten Kante oder einer Grundachse",
+                             {},
+                             workspaces::CommandGroup::create,
+                             true,
+                             false,
+                             simpleCommand(std::move(services.datumAxis)),
+                             services.canDatum,
+                             "Bezugsachse"});
     if (services.combine)
         commands_.push_back({"solid.modify.combine",
                              "Kombinieren",

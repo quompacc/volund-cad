@@ -235,6 +235,15 @@ void MainWindow::connectInteractions() {
         });
     impl_->viewport->setBasePlaneSelectionHandler(
         [this](viewport::BasePlane plane) { selectBasePlane(static_cast<int>(plane)); });
+    impl_->viewport->setDatumSelectionHandler([this](std::uint64_t id) { // M19
+        if (impl_->shell().toolBlocksCommands())
+            return;
+        impl_->selectedDatum.reset();
+        impl_->selectedBody.reset();
+        impl_->selectedPlanarFace.reset();
+        selectFeature(id);
+        syncShell();
+    });
     // A click into empty space selects nothing: no plane, face or feature (user report).
     impl_->viewport->setEmptySelectionHandler([this] {
         if (impl_->sketchEditorTool->isActive()) {

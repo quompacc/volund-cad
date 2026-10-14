@@ -21,7 +21,8 @@ constexpr const char* toolNames[] = {
     nullptr,                  "push_pull_face",         nullptr,
     nullptr,                  nullptr,                  nullptr,
     nullptr,                  nullptr,                  nullptr,
-    nullptr};
+    nullptr,                  nullptr,                  nullptr,
+    nullptr,                  nullptr};
 constexpr const char* statusNames[] = {"rejected", "committed", "committedWithErrors"};
 constexpr const char* rejectionNames[] = {
     "none",     "foreignDocument", "staleStamp",          "unknownTarget",    "unsupportedTarget",
@@ -32,7 +33,11 @@ constexpr const char* reasonNames[] = {"none",           "cancelled",           
 constexpr const char* evaluationNames[] = {"valid", "dirty", "failed", "blockedByDependency",
                                            "suppressed"};
 constexpr const char* featureKinds[] = {"box",    "cylinder", "sketch", "extrusion",
-                                        "fillet", "chamfer",  "hole",   "combine"};
+                                        "fillet", "chamfer",  "hole",   "combine",
+                                        "datumPlane", "datumAxis"};
+constexpr const char* basePlaneNames[] = {"", "xy", "xz", "yz"};
+constexpr const char* baseAxisNames[] = {"", "x", "y", "z"};
+constexpr const char* rotationAxisNames[] = {"none", "x", "y"};
 // Indexed by CombineOperation (join = 1).
 constexpr const char* combineOperations[] = {"", "join", "cut", "intersect"};
 constexpr const char* runtimeNames[] = {"current", "error", "blocked"};
@@ -121,6 +126,21 @@ QJsonObject featureParameters(const document::FeatureParameters& parameters) {
                         {"toolBodyIds", tools},
                         {"operation", name(combineOperations, combine.operation)},
                         {"keepTools", combine.keepTools}};
+            },
+            [](const document::DatumPlaneParameters& plane) -> QJsonObject {
+                QJsonObject json{{"offset", detail::quantity(plane.offset, "mm")},
+                                 {"rotationAxis", name(rotationAxisNames, plane.rotationAxis)},
+                                 {"angle", detail::quantity(plane.angle.value(), "rad")}};
+                if (plane.basePlane)
+                    json.insert("basePlane", name(basePlaneNames, *plane.basePlane));
+                else
+                    json.insert("bodyId", id(plane.face->body.value()));
+                return json;
+            },
+            [](const document::DatumAxisParameters& axis) -> QJsonObject {
+                if (axis.baseAxis)
+                    return {{"baseAxis", name(baseAxisNames, *axis.baseAxis)}};
+                return {{"bodyId", id(axis.body->value())}};
             }},
         parameters);
 }

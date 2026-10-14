@@ -154,6 +154,9 @@ void validateNativeSketchGeometry(const SketchParameters& sketch) {
         require(value >= 1 && value <= 3 && !sketch.supportBinding && !sketch.repairReason &&
                 sketch.plane == datumSketchPlane(*sketch.datum));
     }
+    if (sketch.constructionPlane)
+        require(!sketch.datum && !sketch.supportBinding && !sketch.repairReason &&
+                sketch.constructionPlane->value() != 0);
     require(sketch.elements.values.size() <= maximumSketchElementCount);
     // Preserve legacy axis magnitudes; canonicalization remains an explicit edit.
     validateSketchPlane(sketch.plane);
@@ -194,6 +197,9 @@ void writeNativeSketchGeometry(const TDF_Label& label, const SketchParameters& s
     // S14: also after the last pattern was dissolved, so its ID is not handed out again.
     if (!sketch.patterns.values.empty() || sketch.patterns.nextId != SketchPatterns{}.nextId)
         writeNativeSketchPatterns(label.FindChild(14), sketch.patterns);
+    // M19 (schema 19): the construction plane the sketch lies on.
+    if (sketch.constructionPlane)
+        writeNumber(label.FindChild(15), sketch.constructionPlane->value());
 }
 SketchParameters readNativeSketchGeometry(const TDF_Label& label, std::size_t remainingElements,
                                           int schemaVersion) {
@@ -201,10 +207,13 @@ SketchParameters readNativeSketchGeometry(const TDF_Label& label, std::size_t re
     const auto repair = label.FindChild(12, false);
     const auto datum = label.FindChild(13, false);
     const auto patterns = label.FindChild(14, false);
+    const auto construction = label.FindChild(15, false);
     require((binding.IsNull() || schemaVersion >= 2) && (repair.IsNull() || schemaVersion >= 4) &&
-            (datum.IsNull() || schemaVersion >= 6) && (patterns.IsNull() || schemaVersion >= 11));
+            (datum.IsNull() || schemaVersion >= 6) && (patterns.IsNull() || schemaVersion >= 11) &&
+            (construction.IsNull() || schemaVersion >= 19));
     require(label.NbChildren() == 4 + (binding.IsNull() ? 0 : 1) + (repair.IsNull() ? 0 : 1) +
-                                      (datum.IsNull() ? 0 : 1) + (patterns.IsNull() ? 0 : 1));
+                                      (datum.IsNull() ? 0 : 1) + (patterns.IsNull() ? 0 : 1) +
+                                      (construction.IsNull() ? 0 : 1));
     const auto plane = reals(label, 9);
     const auto elements = child(label, 10);
     const int count = integer(elements);
@@ -244,6 +253,8 @@ SketchParameters readNativeSketchGeometry(const TDF_Label& label, std::size_t re
         require(used <= remainingElements);
         sketch.patterns = readNativeSketchPatterns(patterns, remainingElements - used);
     }
+    if (!construction.IsNull())
+        sketch.constructionPlane = FeatureId{number(construction, false)};
     validateNativeSketchGeometry(sketch);
     return sketch;
 }

@@ -148,6 +148,21 @@ void draw(QPainter& painter, ShellIcon icon, const QColor& ink, const QColor& ac
         painter.drawLine(QPointF(14.5, 8.5), QPointF(14.5, 19.5));
         painter.drawLine(QPointF(12, 2), QPointF(12, 6));
         break;
+    case ShellIcon::datumPlane:
+        // A plane in perspective with a dashed offset arrow.
+        painter.drawLine(QPointF(3, 17), QPointF(15, 17));
+        painter.drawLine(QPointF(15, 17), QPointF(21, 11));
+        painter.drawLine(QPointF(21, 11), QPointF(9, 11));
+        painter.drawLine(QPointF(9, 11), QPointF(3, 17));
+        painter.drawLine(QPointF(12, 14), QPointF(12, 3));
+        painter.drawLine(QPointF(9, 6), QPointF(12, 3));
+        painter.drawLine(QPointF(15, 6), QPointF(12, 3));
+        break;
+    case ShellIcon::datumAxis:
+        // A long axis through a small ring.
+        painter.drawLine(QPointF(4, 20), QPointF(20, 4));
+        painter.drawEllipse(QPointF(12, 12), 4, 4);
+        break;
     case ShellIcon::combine:
         // Two overlapping bodies, the second one dashed: a Boolean of whole bodies.
         painter.drawRect(QRectF(3.5, 9.5, 11, 11));

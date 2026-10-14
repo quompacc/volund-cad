@@ -129,7 +129,10 @@ ModelOutline CadSession::modelOutline() const {
     }
     for (std::size_t index = 0; index < contexts.size(); ++index) {
         const document::FeatureId feature = snapshot.features()[index].id;
-        if (!contexts[index]) {
+        // M19: construction features belong to no body.
+        const auto kind = snapshot.features()[index].kind;
+        if (!contexts[index] || kind == document::FeatureKind::datumPlane ||
+            kind == document::FeatureKind::datumAxis) {
             outline.loose.push_back(feature);
             continue;
         }
@@ -226,7 +229,9 @@ bool CadSession::canTransformFeature(document::FeatureId featureId) const noexce
         feature->kind == document::FeatureKind::fillet ||
         feature->kind == document::FeatureKind::chamfer ||
         feature->kind == document::FeatureKind::hole ||
-        feature->kind == document::FeatureKind::combine) {
+        feature->kind == document::FeatureKind::combine ||
+        feature->kind == document::FeatureKind::datumPlane ||
+        feature->kind == document::FeatureKind::datumAxis) {
         return false;
     }
     if (!transformBodyForFeature(featureId).has_value()) {

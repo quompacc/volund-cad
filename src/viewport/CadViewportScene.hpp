@@ -3,6 +3,7 @@
 #include <voelund/viewport/CadViewport.hpp>
 
 #include "BasePlanePresentation.hpp"
+#include "DatumPresentation.hpp"
 #include "SketchBoxSelection.hpp"
 #include "SketchConstraintPresentation.hpp"
 #include "SketchEditorInteraction.hpp"
@@ -183,6 +184,7 @@ class CadViewportScene {
             return; // Not initialized yet; the first rebuild shows the planes.
         if (sketchEditor.isActive() || activeSketchSupport) {
             basePlanes.hide(context);
+            datums.hide(context);
             return;
         }
         double halfSize = 50.0;
@@ -197,6 +199,7 @@ class CadViewportScene {
             }
         }
         basePlanes.show(context, presentations.empty(), halfSize, theme, planeVisibility);
+        datums.show(context, pendingDatums, halfSize, theme); // M19
     }
 
     void setTransformToolEnabled(bool enabled) {
@@ -337,6 +340,9 @@ class CadViewportScene {
     ViewportTheme theme;
     SketchSnapOverlay* snapOverlay{nullptr}; // S04a, child widget of the viewport
     std::array<bool, 3> planeVisibility{true, true, true};
+    DatumPresentation datums;               // M19
+    std::vector<SceneDatum> pendingDatums; // M19
+    std::function<void(std::uint64_t)> datumSelectionHandler;
     bool gridVisible{true};
     occ::handle<Graphic3d_Camera> savedCamera;
     std::optional<PlanarFaceSelection> activeSketchSupport;

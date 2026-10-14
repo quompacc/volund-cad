@@ -43,6 +43,12 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
     case FeatureKind::combine:
         matches = std::holds_alternative<CombineParameters>(parameters);
         break;
+    case FeatureKind::datumPlane:
+        matches = std::holds_alternative<DatumPlaneParameters>(parameters);
+        break;
+    case FeatureKind::datumAxis:
+        matches = std::holds_alternative<DatumAxisParameters>(parameters);
+        break;
     }
     if (!matches)
         throw std::invalid_argument("Legacy body identity: feature parameter kind mismatch");
@@ -51,8 +57,11 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
     const bool standalone =
         feature.kind == FeatureKind::box || feature.kind == FeatureKind::fillet ||
         feature.kind == FeatureKind::chamfer || feature.kind == FeatureKind::hole ||
-        feature.kind == FeatureKind::combine ||
-        (feature.kind == FeatureKind::sketch && std::get<SketchParameters>(parameters).datum) ||
+        feature.kind == FeatureKind::combine || feature.kind == FeatureKind::datumPlane ||
+        feature.kind == FeatureKind::datumAxis ||
+        (feature.kind == FeatureKind::sketch && (std::get<SketchParameters>(parameters).datum ||
+                                                 std::get<SketchParameters>(parameters)
+                                                     .constructionPlane)) ||
         (feature.kind == FeatureKind::extrusion &&
          std::get<ExtrusionParameters>(parameters).faceProfile);
     // M01: a separate cylinder may also stand alone, as a new body at the origin.
@@ -142,6 +151,22 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
     for (std::size_t index = 0; index < features.size(); ++index)
         if (const auto body = treatedBody(index); body && !isBody(*body))
             throw std::invalid_argument("Fillet or chamfer body is not a body of this document");
+    // M19: construction features refer to bodies of the document; a sketch names an earlier
+    // construction plane.
+    for (std::size_t index = 0; index < features.size(); ++index) {
+        const auto* plane = std::get_if<DatumPlaneParameters>(&parameters[index]);
+        const auto* axis = std::get_if<DatumAxisParameters>(&parameters[index]);
+        if ((plane && plane->face && !isBody(plane->face->body)) ||
+            (axis && axis->body && !isBody(*axis->body)))
+            throw std::invalid_argument("Construction reference is not a body of this document");
+        const auto* sketch = std::get_if<SketchParameters>(&parameters[index]);
+        if (sketch && sketch->constructionPlane) {
+            const auto found = indices.find(sketch->constructionPlane->value());
+            if (found == indices.end() || found->second >= index ||
+                features[found->second].kind != FeatureKind::datumPlane)
+                throw std::invalid_argument("Sketch construction plane is not an earlier plane");
+        }
+    }
     for (std::size_t index = 0; index < features.size(); ++index)
         if (features[index].kind == FeatureKind::combine)
             for (const BodyId tool : std::get<CombineParameters>(parameters[index]).tools)
@@ -168,6 +193,11 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
             const auto& feature = features[index];
             // A datum sketch opens a body; its extrusion produces the body's first solid.
             if (createsBody(index))
+                context[index] = BodyId{feature.id.value()};
+            // M19: a construction feature belongs to no body; it is stored in a group of its
+            // own, under its own id (the shell lists it apart from the bodies).
+            else if (feature.kind == FeatureKind::datumPlane ||
+                     feature.kind == FeatureKind::datumAxis)
                 context[index] = BodyId{feature.id.value()};
             else if (const auto* prism = extrusion(index); prism && prism->faceProfile)
                 context[index] = prism->faceProfile->body;

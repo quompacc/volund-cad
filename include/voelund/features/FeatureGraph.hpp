@@ -43,6 +43,9 @@ struct EvaluatedFeature final {
     // M21: bodies this feature took into its own (tools of a combination); they are no
     // longer separate results after it.
     std::vector<document::BodyId> consumedBodies{};
+    // M19: the frame of a construction plane (origin, normal, x) or axis (a point on it, its
+    // direction as normal, any x across it).
+    std::optional<document::SketchPlane> datumFrame{};
 };
 
 struct FeatureGraphResult final {

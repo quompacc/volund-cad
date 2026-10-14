@@ -311,6 +311,19 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
                     update();
                     return;
                 }
+                // M19: a construction plane or axis; a body behind a plane wins, as for the
+                // base planes.
+                if (const auto datum = impl_->datums.datum(detected)) {
+                    const auto bodyOwner = impl_->detectedBodyOwner();
+                    if (!bodyOwner.IsNull())
+                        impl_->notifyBodyOwner(bodyOwner, true);
+                    else if (impl_->datumSelectionHandler)
+                        impl_->datumSelectionHandler(*datum);
+                    impl_->gesture = Impl::Gesture::none;
+                    unsetCursor();
+                    update();
+                    return;
+                }
                 // User request 2026-10-13: a body edge is picked without a tool, as in any CAD.
                 if (const auto edge = occ::handle<StdSelect_BRepOwner>::DownCast(
                         impl_->context->DetectedOwner());

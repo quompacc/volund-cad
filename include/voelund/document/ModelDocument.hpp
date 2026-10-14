@@ -26,7 +26,18 @@ class DocumentSerializer;
 class DocumentTransaction;
 class DocumentSnapshot;
 
-enum class FeatureKind { box, cylinder, sketch, extrusion, fillet, chamfer, hole, combine };
+enum class FeatureKind {
+    box,
+    cylinder,
+    sketch,
+    extrusion,
+    fillet,
+    chamfer,
+    hole,
+    combine,
+    datumPlane,
+    datumAxis
+};
 enum class CylinderResultMode { join, cut, intersect, separate };
 
 struct BoxParameters final {
@@ -83,6 +94,9 @@ struct SketchParameters final {
     std::optional<DatumPlane> datum{};
     // S12: associative patterns; their instances are derived from the sources.
     SketchPatterns patterns{};
+    // M19 (schema 19): a sketch on a construction plane (a datumPlane feature). Like a
+    // base-plane sketch it has no support and opens a body; its plane follows the feature.
+    std::optional<FeatureId> constructionPlane{};
 
     SketchParameters() = default;
     SketchParameters(SketchPlane sketchPlane, SketchElements sketchElements,
@@ -194,6 +208,29 @@ struct CombineParameters final {
     [[nodiscard]] bool operator==(const CombineParameters&) const = default;
 };
 void validateCombineParameters(const CombineParameters& parameters);
+// M19 (schema 19, user decision 2026-10-14): a construction plane `offset` along the normal
+// of its reference, a base plane or a planar body face. A rotation first turns the reference
+// frame by `angle` about its x or y axis. It belongs to no body.
+enum class DatumRotationAxis { none = 0, x = 1, y = 2 };
+struct DatumPlaneParameters final {
+    std::optional<DatumPlane> basePlane{};
+    std::optional<BodyFaceReference> face{};
+    double offset{0.0};
+    DatumRotationAxis rotationAxis{DatumRotationAxis::none};
+    kernel::Radians angle{};
+    [[nodiscard]] bool operator==(const DatumPlaneParameters&) const = default;
+};
+void validateDatumPlaneParameters(const DatumPlaneParameters& parameters);
+// M19: a construction axis, a base axis or the line of a body edge: a straight edge itself, a
+// circular edge's axis through its centre. It belongs to no body.
+enum class BaseAxis { x = 1, y = 2, z = 3 };
+struct DatumAxisParameters final {
+    std::optional<BaseAxis> baseAxis{};
+    std::optional<BodyId> body{};
+    std::optional<FilletEdge> edge{};
+    [[nodiscard]] bool operator==(const DatumAxisParameters&) const = default;
+};
+void validateDatumAxisParameters(const DatumAxisParameters& parameters);
 
 // The operation in effect, with the earlier rule for an unset one.
 [[nodiscard]] ExtrusionOperation effectiveOperation(const ExtrusionParameters& parameters,
@@ -209,7 +246,8 @@ struct FeatureDescriptor final {
 
 using FeatureParameters =
     std::variant<BoxParameters, CylinderParameters, SketchParameters, ExtrusionParameters,
-                 FilletParameters, ChamferParameters, HoleParameters, CombineParameters>;
+                 FilletParameters, ChamferParameters, HoleParameters, CombineParameters,
+                 DatumPlaneParameters, DatumAxisParameters>;
 
 // PAR01: every binding names an existing parameter of a matching unit, only dimensional
 // constraints bind, and the table itself is valid. Throws std::invalid_argument.
@@ -238,7 +276,8 @@ class ModelDocument final {
     [[nodiscard]] FeatureId addCylinderFeature(std::string name,
                                                std::optional<FeatureId> inputFeature,
                                                const CylinderParameters& parameters);
-    // V01: a sketch on a base plane; parameters.datum must be set.
+    // V01: a sketch on a base plane; parameters.datum must be set. M19: or on a construction
+    // plane, parameters.constructionPlane naming an earlier datumPlane feature.
     [[nodiscard]] FeatureId addDatumSketchFeature(std::string name,
                                                   const SketchParameters& parameters);
     [[nodiscard]] FeatureId addSketchFeature(std::string name, FeatureId supportFeature,
@@ -255,6 +294,10 @@ class ModelDocument final {
     [[nodiscard]] FeatureId addHoleFeature(std::string name, const HoleParameters& parameters);
     [[nodiscard]] FeatureId addCombineFeature(std::string name,
                                               const CombineParameters& parameters);
+    [[nodiscard]] FeatureId addDatumPlaneFeature(std::string name,
+                                                 const DatumPlaneParameters& parameters);
+    [[nodiscard]] FeatureId addDatumAxisFeature(std::string name,
+                                                const DatumAxisParameters& parameters);
     [[nodiscard]] const kernel::BoxDimensions& boxDimensions(FeatureId featureId) const;
     [[nodiscard]] const BoxParameters& boxParameters(FeatureId featureId) const;
     [[nodiscard]] bool setBoxDimensions(FeatureId featureId,
@@ -279,6 +322,12 @@ class ModelDocument final {
     [[nodiscard]] const CombineParameters& combineParameters(FeatureId featureId) const;
     [[nodiscard]] bool setCombineParameters(FeatureId featureId,
                                             const CombineParameters& parameters);
+    [[nodiscard]] const DatumPlaneParameters& datumPlaneParameters(FeatureId featureId) const;
+    [[nodiscard]] bool setDatumPlaneParameters(FeatureId featureId,
+                                               const DatumPlaneParameters& parameters);
+    [[nodiscard]] const DatumAxisParameters& datumAxisParameters(FeatureId featureId) const;
+    [[nodiscard]] bool setDatumAxisParameters(FeatureId featureId,
+                                              const DatumAxisParameters& parameters);
     [[nodiscard]] const kernel::RigidTransform& featurePlacement(FeatureId featureId) const;
     [[nodiscard]] bool setFeaturePlacement(FeatureId featureId,
                                            const kernel::RigidTransform& placement);

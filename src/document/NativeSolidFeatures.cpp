@@ -1,6 +1,8 @@
 #include "NativeSolidFeatures.hpp"
+#include "NativeSketchSupport.hpp"
 #include <TDataStd_AsciiString.hxx>
 #include <TDataStd_Integer.hxx>
+#include <TDataStd_Real.hxx>
 #include <charconv>
 #include <stdexcept>
 #include <string>
@@ -37,7 +39,92 @@ BodyId readBody(const TDF_Label& label) {
             text == std::to_string(id));
     return BodyId{id};
 }
+double real(const TDF_Label& label) {
+    Handle(TDataStd_Real) value;
+    require(label.FindAttribute(TDataStd_Real::GetID(), value));
+    return value->Get();
+}
+SubshapeOrigin readOrigin(const TDF_Label& label, std::size_t& remainingRecords,
+                          int schemaVersion) {
+    require(label.NbChildren() == 3 + nativeSubshapeOriginExtension(label));
+    return readNativeSubshapeOrigin(label, remainingRecords, schemaVersion);
+}
 } // namespace
+
+std::size_t nativeDatumPlaneRecords(const DatumPlaneParameters& parameters) {
+    return parameters.face ? parameters.face->origin.extrusionBoundary.size() : 0;
+}
+
+void writeNativeDatumPlane(const TDF_Label& label, const DatumPlaneParameters& parameters) {
+    validateDatumPlaneParameters(parameters);
+    TDataStd_Real::Set(label, parameters.offset);
+    TDataStd_Integer::Set(label.FindChild(1),
+                          parameters.basePlane ? static_cast<int>(*parameters.basePlane) : 0);
+    if (parameters.face) {
+        writeBody(label.FindChild(2), parameters.face->body);
+        writeNativeSubshapeOrigin(label.FindChild(3), parameters.face->origin);
+    }
+    TDataStd_Integer::Set(label.FindChild(4), static_cast<int>(parameters.rotationAxis));
+    TDataStd_Real::Set(label.FindChild(5), parameters.angle.value());
+}
+
+DatumPlaneParameters readNativeDatumPlane(const TDF_Label& label, std::size_t remainingRecords,
+                                          int schemaVersion) {
+    const int base = integer(child(label, 1));
+    require(schemaVersion >= 19 && base >= 0 && base <= 3 &&
+            label.NbChildren() == (base == 0 ? 5 : 3));
+    DatumPlaneParameters result;
+    result.offset = real(label);
+    if (base != 0)
+        result.basePlane = static_cast<DatumPlane>(base);
+    else
+        result.face = BodyFaceReference{readBody(child(label, 2)),
+                                        readOrigin(child(label, 3), remainingRecords,
+                                                   schemaVersion)};
+    const int axis = integer(child(label, 4));
+    require(axis >= 0 && axis <= 2);
+    result.rotationAxis = static_cast<DatumRotationAxis>(axis);
+    result.angle = kernel::Radians{real(child(label, 5))};
+    validateDatumPlaneParameters(result);
+    return result;
+}
+
+std::size_t nativeDatumAxisRecords(const DatumAxisParameters& parameters) {
+    return parameters.edge ? parameters.edge->first.extrusionBoundary.size() +
+                                 parameters.edge->second.extrusionBoundary.size()
+                           : 0;
+}
+
+void writeNativeDatumAxis(const TDF_Label& label, const DatumAxisParameters& parameters) {
+    validateDatumAxisParameters(parameters);
+    TDataStd_Integer::Set(label,
+                          parameters.baseAxis ? static_cast<int>(*parameters.baseAxis) : 0);
+    if (!parameters.edge)
+        return;
+    writeBody(label.FindChild(1), *parameters.body);
+    writeNativeSubshapeOrigin(label.FindChild(2), parameters.edge->first);
+    writeNativeSubshapeOrigin(label.FindChild(3), parameters.edge->second);
+    TDataStd_AsciiString::Set(label.FindChild(4), std::to_string(parameters.edge->id).c_str());
+}
+
+DatumAxisParameters readNativeDatumAxis(const TDF_Label& label, std::size_t remainingRecords,
+                                        int schemaVersion) {
+    const int base = integer(label);
+    require(schemaVersion >= 19 && base >= 0 && base <= 3 &&
+            label.NbChildren() == (base == 0 ? 4 : 0));
+    DatumAxisParameters result;
+    if (base != 0) {
+        result.baseAxis = static_cast<BaseAxis>(base);
+    } else {
+        result.body = readBody(child(label, 1));
+        auto first = readOrigin(child(label, 2), remainingRecords, schemaVersion);
+        auto second = readOrigin(child(label, 3), remainingRecords, schemaVersion);
+        result.edge = FilletEdge{std::move(first), std::move(second),
+                                 readBody(child(label, 4)).value()};
+    }
+    validateDatumAxisParameters(result);
+    return result;
+}
 
 std::size_t nativeCombineRecords(const CombineParameters& parameters) {
     return parameters.tools.size();

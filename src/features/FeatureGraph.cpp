@@ -229,6 +229,13 @@ void evaluateSketch(const document::DocumentSnapshot& document,
         // S12: stored geometry unsolved; instances still follow their sources.
         document::regenerateSketchPatterns(parameters.elements, parameters.patterns);
     }
+    // M19: a sketch on a construction plane lies where the plane is now.
+    if (parameters.constructionPlane) {
+        const auto& frame = findFeature(outputs, *parameters.constructionPlane).datumFrame;
+        if (!frame)
+            throw GeometryEvaluationError("The construction plane of the sketch is missing");
+        parameters.plane = *frame;
+    }
     TopoDS_Compound geometry;
     BRep_Builder builder;
     builder.MakeCompound(geometry);
@@ -293,6 +300,12 @@ void runFeature(const document::DocumentSnapshot& document,
         break;
     case document::FeatureKind::combine:
         detail::evaluateCombine(document, descriptor, outputs, bodies, references);
+        break;
+    case document::FeatureKind::datumPlane:
+        detail::evaluateDatumPlane(document, descriptor, outputs);
+        break;
+    case document::FeatureKind::datumAxis:
+        detail::evaluateDatumAxis(document, descriptor, outputs);
         break;
     }
 }

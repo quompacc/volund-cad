@@ -8,7 +8,7 @@ DocumentSnapshot DocumentSnapshot::markLegacySketchReferencesForRepair() const {
     auto result = *this;
     for (auto& parameter : result.parameters_) {
         auto* sketch = std::get_if<SketchParameters>(&parameter);
-        if (!sketch || sketch->repairReason || sketch->datum)
+        if (!sketch || sketch->repairReason || sketch->datum || sketch->constructionPlane)
             continue; // Base-plane sketches have no support to repair.
         if (!sketch->supportBinding)
             sketch->repairReason = SketchRepairReason::legacySupport;
@@ -95,6 +95,12 @@ const HoleParameters& DocumentSnapshot::holeParameters(FeatureId id) const {
 }
 const CombineParameters& DocumentSnapshot::combineParameters(FeatureId id) const {
     return std::get<CombineParameters>(featureParameters(id));
+}
+const DatumPlaneParameters& DocumentSnapshot::datumPlaneParameters(FeatureId id) const {
+    return std::get<DatumPlaneParameters>(featureParameters(id));
+}
+const DatumAxisParameters& DocumentSnapshot::datumAxisParameters(FeatureId id) const {
+    return std::get<DatumAxisParameters>(featureParameters(id));
 }
 const kernel::BoxDimensions& DocumentSnapshot::boxDimensions(FeatureId id) const {
     return boxParameters(id).dimensions;

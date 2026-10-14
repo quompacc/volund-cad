@@ -27,6 +27,8 @@ enum class ShellIcon {
     chamfer, // M07
     hole,    // M08
     combine, // M21
+    datumPlane, // M19
+    datumAxis,  // M19
     repair,
     eye,
     eyeOff,

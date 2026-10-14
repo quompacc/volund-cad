@@ -174,6 +174,23 @@ std::vector<FeatureBodyIdentity> validate(std::span<const FeatureDescriptor> fea
             validateCombineParameters(combine);
             continue;
         }
+        if (feature.kind == FeatureKind::datumPlane || feature.kind == FeatureKind::datumAxis) {
+            require(feature.id.value() < next && feature.name.size() <= maximumNameBytes &&
+                    feature.name.find('\0') == std::string::npos);
+            std::size_t records = 0;
+            if (feature.kind == FeatureKind::datumPlane) {
+                require(std::holds_alternative<DatumPlaneParameters>(parameters[index]));
+                records = nativeDatumPlaneRecords(std::get<DatumPlaneParameters>(parameters[index]));
+                validateDatumPlaneParameters(std::get<DatumPlaneParameters>(parameters[index]));
+            } else {
+                require(std::holds_alternative<DatumAxisParameters>(parameters[index]));
+                records = nativeDatumAxisRecords(std::get<DatumAxisParameters>(parameters[index]));
+                validateDatumAxisParameters(std::get<DatumAxisParameters>(parameters[index]));
+            }
+            require(records <= remainingElements);
+            remainingElements -= records;
+            continue;
+        }
         if (feature.kind == FeatureKind::sketch) {
             require(std::holds_alternative<SketchParameters>(parameters[index]) &&
                     feature.id.value() < next && feature.name.size() <= maximumNameBytes &&
@@ -288,6 +305,8 @@ void NativePrimitiveCodec::write(const Handle(TDocStd_Document) & document,
         const bool chamfer = feature.kind == FeatureKind::chamfer;
         const bool hole = feature.kind == FeatureKind::hole;
         const bool combine = feature.kind == FeatureKind::combine;
+        const bool datumPlane = feature.kind == FeatureKind::datumPlane;
+        const bool datumAxis = feature.kind == FeatureKind::datumAxis;
         TDataStd_AsciiString::Set(native.FindChild(1), box         ? "box"
                                                        : sketch    ? "sketch"
                                                        : extrusion ? "extrusion"
@@ -295,6 +314,8 @@ void NativePrimitiveCodec::write(const Handle(TDocStd_Document) & document,
                                                        : chamfer   ? "chamfer"
                                                        : hole      ? "hole"
                                                        : combine   ? "combine"
+                                                       : datumPlane ? "datum_plane"
+                                                       : datumAxis  ? "datum_axis"
                                                                    : "cylinder");
         TDataStd_AsciiString::Set(native.FindChild(2), std::to_string(feature.id.value()).c_str());
         TDataStd_AsciiString::Set(native.FindChild(3), feature.name.c_str());
@@ -316,6 +337,12 @@ void NativePrimitiveCodec::write(const Handle(TDocStd_Document) & document,
         } else if (combine) {
             writeNativeCombine(native.FindChild(4),
                                std::get<CombineParameters>(snapshot.parameters()[index]));
+        } else if (datumPlane) {
+            writeNativeDatumPlane(native.FindChild(4),
+                                  std::get<DatumPlaneParameters>(snapshot.parameters()[index]));
+        } else if (datumAxis) {
+            writeNativeDatumAxis(native.FindChild(4),
+                                 std::get<DatumAxisParameters>(snapshot.parameters()[index]));
         } else {
             const auto data = values(snapshot.parameters()[index]);
             auto array =
@@ -388,6 +415,9 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
             const bool hole = kind == "hole" && metadata.schemaVersion >= 16;
             // M21 (schema 18): a combination names its bodies.
             const bool combine = kind == "combine" && metadata.schemaVersion >= 18;
+            // M19 (schema 19): construction planes and axes.
+            const bool datumPlane = kind == "datum_plane" && metadata.schemaVersion >= 19;
+            const bool datumAxis = kind == "datum_axis" && metadata.schemaVersion >= 19;
             // A base-plane sketch (schema 6) and a face extrusion (schema 10) have no input
             // reference child 5.
             const bool standaloneSketch =
@@ -399,8 +429,9 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
                                             native.FindChild(5, false).IsNull() &&
                                             metadata.schemaVersion >= 12;
             require((box || sketch || extrusion || fillet || chamfer || hole || combine ||
-                     kind == "cylinder") &&
+                     datumPlane || datumAxis || kind == "cylinder") &&
                     native.NbChildren() == (box || fillet || chamfer || hole || combine ||
+                                                    datumPlane || datumAxis ||
                                                     standaloneSketch || standaloneExtrusion
                                                 ? 4
                                             : (sketch || extrusion || standaloneCylinder) ? 5
@@ -422,6 +453,12 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
                 : combine
                     ? FeatureParameters{readNativeCombine(child(native, 4), remainingElements,
                                                           metadata.schemaVersion)}
+                : datumPlane
+                    ? FeatureParameters{readNativeDatumPlane(child(native, 4), remainingElements,
+                                                             metadata.schemaVersion)}
+                : datumAxis
+                    ? FeatureParameters{readNativeDatumAxis(child(native, 4), remainingElements,
+                                                            metadata.schemaVersion)}
                        : parameters(native, box);
             if (sketch) {
                 const auto& data = std::get<SketchParameters>(decoded);
@@ -441,6 +478,11 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
                 remainingElements -= nativeHoleRecords(std::get<HoleParameters>(decoded));
             if (combine)
                 remainingElements -= nativeCombineRecords(std::get<CombineParameters>(decoded));
+            if (datumPlane)
+                remainingElements -=
+                    nativeDatumPlaneRecords(std::get<DatumPlaneParameters>(decoded));
+            if (datumAxis)
+                remainingElements -= nativeDatumAxisRecords(std::get<DatumAxisParameters>(decoded));
             records.push_back({native,
                                bodyId,
                                {FeatureId{id(child(native, 2))},
@@ -451,6 +493,8 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
                                 : chamfer   ? FeatureKind::chamfer
                                 : hole      ? FeatureKind::hole
                                 : combine   ? FeatureKind::combine
+                                : datumPlane ? FeatureKind::datumPlane
+                                : datumAxis  ? FeatureKind::datumAxis
                                             : FeatureKind::cylinder,
                                 text(child(native, 3)), std::nullopt},
                                std::move(decoded)});

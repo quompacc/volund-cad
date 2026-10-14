@@ -26,6 +26,8 @@ bool SketchEditorToolController::restoreDraft(const application::CadSession::Ske
                 return false;
         } else if (sketch.datum) {
             beginOnBasePlane(*sketch.datum);
+        } else if (sketch.constructionPlane) {
+            beginOnConstructionPlane(*sketch.constructionPlane);
         } else if (draft.support && sketch.supportBinding) {
             const auto& plane = sketch.plane;
             viewport::PlanarFaceSelection drawing{

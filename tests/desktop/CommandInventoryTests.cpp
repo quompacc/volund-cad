@@ -50,6 +50,8 @@ const std::set<std::string> commandTable{"document.new",
                                          "solid.modify.chamfer",
                                          "solid.modify.hole",
                                          "solid.modify.combine",
+                                         "solid.create.datum_plane",
+                                         "solid.create.datum_axis",
                                          "assistant.mcp",
                                          "assistant.mcp_copy_command",
                                          "assistant.mcp_new_token",
@@ -113,10 +115,11 @@ void emptyDocumentOffersOnlyApplicableCommands(application::CadSession& session,
         "document.duplicate", "transform.snap",  "view.theme",    "view.command_search",
         "view.tool_rail",     "view.grid",       "solid.create.box",
         "solid.create.cylinder", // M01: as a new body
+        "solid.create.datum_plane", "solid.create.datum_axis", // M19: on XY or a base axis
         "assistant.mcp",
         "assistant.mcp_new_token",
         "assistant.allow", "assistant.panel"};
-    require(enabled == expected, "Empty document enables only document commands, Box and Cylinder");
+    require(enabled == expected, "Empty document enables only document commands, primitives and construction features");
     const auto before = session.sceneStatus().document;
     for (const std::string& id : commandTable) {
         if (enabled.contains(id))

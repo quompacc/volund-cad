@@ -37,6 +37,10 @@ QString featureName(const ShellState& state) {
         return QObject::tr("Bohrung");
     case document::FeatureKind::combine:
         return QObject::tr("Kombinieren");
+    case document::FeatureKind::datumPlane:
+        return QObject::tr("Bezugsebene");
+    case document::FeatureKind::datumAxis:
+        return QObject::tr("Bezugsachse");
     }
     return QObject::tr("Feature");
 }
@@ -66,17 +70,20 @@ ContextCommands contextCommands(const ShellState& state) {
         break;
     case ShellSelection::basePlane:
         result.title = planeName(*state.basePlane);
-        result.commands = {"solid.create.sketch"};
+        result.commands = {"solid.create.sketch", "solid.create.datum_plane"};
         result.primary = "solid.create.sketch";
         break;
     case ShellSelection::planarFace:
         result.title = QObject::tr("Ebene Fläche");
-        result.commands = {"solid.create.sketch", "solid.modify.push_pull", "solid.modify.hole"};
+        result.commands = {"solid.create.sketch", "solid.modify.push_pull", "solid.modify.hole",
+                           "solid.create.datum_plane"};
         result.primary = "solid.create.sketch";
         break;
     case ShellSelection::edges:
         result.title = QObject::tr("%1 Kante(n)").arg(state.edgeCount);
         result.commands = {"solid.modify.fillet", "solid.modify.chamfer"};
+        if (state.edgeCount == 1)
+            result.commands.push_back("solid.create.datum_axis"); // M19
         result.primary = "solid.modify.fillet";
         break;
     case ShellSelection::body:
@@ -100,6 +107,16 @@ ContextCommands contextCommands(const ShellState& state) {
         break;
     case ShellSelection::feature:
         result.title = featureName(state);
+        // M19: a construction plane carries sketches; both kinds reopen their panel.
+        if (state.featureKind == document::FeatureKind::datumPlane ||
+            state.featureKind == document::FeatureKind::datumAxis) {
+            result.commands = {"solid.modify.edit_sketch"};
+            if (state.featureKind == document::FeatureKind::datumPlane) {
+                result.commands.insert(result.commands.begin(), "solid.create.sketch");
+                result.primary = "solid.create.sketch";
+            }
+            break;
+        }
         result.commands = {"solid.modify.transform", "solid.modify.fillet",
                            "solid.modify.chamfer", "solid.create.cylinder"};
         if (state.extrusionEditable || state.filletEditable) {

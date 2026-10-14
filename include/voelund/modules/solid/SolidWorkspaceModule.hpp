@@ -34,6 +34,10 @@ struct SolidCommandServices final {
     std::function<bool()> canHole{};
     // M21: combines the selected body with clicked tool bodies; enabled like the fillet.
     std::function<void()> combine{};
+    // M19: construction planes and axes.
+    std::function<void()> datumPlane{};
+    std::function<void()> datumAxis{};
+    std::function<bool()> canDatum{};
 };
 
 class SolidWorkspaceModule final : public workspaces::WorkspaceModule {

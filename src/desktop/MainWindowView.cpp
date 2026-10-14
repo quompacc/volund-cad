@@ -24,6 +24,7 @@ void MainWindow::syncVisibility() {
         if (body.hidden)
             impl_->visibility.hiddenBodies.insert(body.id.value());
     impl_->viewport->setBodies(makeSceneBodies(impl_->session, impl_->visibility.hiddenBodies));
+    impl_->viewport->setDatums(makeSceneDatums(impl_->session)); // M19
     impl_->viewport->setBasePlaneVisibility(impl_->visibility.visiblePlanes(hasBodies));
     impl_->viewport->setGridVisible(impl_->visibility.grid);
     syncViewSwitches();

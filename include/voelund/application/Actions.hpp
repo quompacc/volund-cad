@@ -204,6 +204,34 @@ struct EditCombineParametersAction final {
     document::CombineParameters parameters;
     bool operator==(const EditCombineParametersAction&) const = default;
 };
+// M19: a construction plane on a base plane, or on a planar face of `support`'s current
+// result; `offset` along its normal after turning by `angle` about the frame's x or y axis.
+struct CreateDatumPlaneAction final {
+    std::optional<document::DatumPlane> basePlane;
+    std::optional<document::FeatureId> support;
+    std::optional<document::SubshapeOrigin> face;
+    Quantity offset;
+    document::DatumRotationAxis rotationAxis{document::DatumRotationAxis::none};
+    Quantity angle{0.0, QuantityUnit::radian};
+    bool operator==(const CreateDatumPlaneAction&) const = default;
+};
+struct EditDatumPlaneParametersAction final {
+    document::FeatureId plane;
+    document::DatumPlaneParameters parameters;
+    bool operator==(const EditDatumPlaneParametersAction&) const = default;
+};
+// M19: a construction axis on a base axis or on an edge of `support`'s current result.
+struct CreateDatumAxisAction final {
+    std::optional<document::BaseAxis> baseAxis;
+    std::optional<document::FeatureId> support;
+    std::optional<document::FilletEdge> edge;
+    bool operator==(const CreateDatumAxisAction&) const = default;
+};
+struct EditDatumAxisParametersAction final {
+    document::FeatureId axis;
+    document::DatumAxisParameters parameters;
+    bool operator==(const EditDatumAxisParametersAction&) const = default;
+};
 struct SetPlacementAction final {
     document::FeatureId feature;
     Quantity x;
@@ -227,7 +255,9 @@ using Action = std::variant<CreateParameterAction, SetParameterValueAction, Rena
                             CreateFilletAction, EditFilletParametersAction,
                             CreateChamferAction, EditChamferParametersAction,
                             CreateHoleAction, EditHoleParametersAction,
-                            CreateCombineAction, EditCombineParametersAction>;
+                            CreateCombineAction, EditCombineParametersAction,
+                            CreateDatumPlaneAction, EditDatumPlaneParametersAction,
+                            CreateDatumAxisAction, EditDatumAxisParametersAction>;
 // Parallel to the alternatives of Action.
 enum class ActionKind {
     createParameter,
@@ -257,7 +287,11 @@ enum class ActionKind {
     createHole,
     editHoleParameters,
     createCombine,
-    editCombineParameters
+    editCombineParameters,
+    createDatumPlane,
+    editDatumPlaneParameters,
+    createDatumAxis,
+    editDatumAxisParameters
 };
 [[nodiscard]] ActionKind actionKind(const Action& action) noexcept;
 

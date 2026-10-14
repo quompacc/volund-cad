@@ -50,6 +50,12 @@ inline QString booleanFailureText(const std::string& code) {
     if (code == "hole-face-missing")
         return QObject::tr("Bohrung: Die Fläche der Bohrung gibt es so nicht mehr. Wähle die "
                            "Bohrung neu auf einer Fläche des Körpers.");
+    // M19: a construction plane or axis lost its face or edge.
+    if (code == "datum-reference-missing")
+        return QObject::tr("Bezug: Die Fläche oder Kante, auf der die Bezugsebene oder -achse "
+                           "liegt, gibt es so nicht mehr.");
+    if (code == "datum-axis-edge")
+        return QObject::tr("Bezugsachse: Nur gerade oder kreisförmige Kanten ergeben eine Achse.");
     // M21: a body of a combination has no solid before it.
     if (code == "combine-body-missing")
         return QObject::tr("Kombinieren: Ein beteiligter Körper hat vor der Kombination keinen "

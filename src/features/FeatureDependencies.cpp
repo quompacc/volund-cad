@@ -84,6 +84,20 @@ FeatureDependencies FeatureDependencies::from(const document::DocumentSnapshot& 
             if (const auto producer = bodyProducerBefore(snapshot, feature.id, body))
                 node.inputs.push_back(*producer);
         }
+        // M19: a construction plane or axis on a body reads it as it was before; a sketch
+        // on a construction plane follows the plane.
+        std::optional<document::BodyId> datumBody;
+        if (feature.kind == document::FeatureKind::datumPlane &&
+            snapshot.datumPlaneParameters(feature.id).face)
+            datumBody = snapshot.datumPlaneParameters(feature.id).face->body;
+        if (feature.kind == document::FeatureKind::datumAxis)
+            datumBody = snapshot.datumAxisParameters(feature.id).body;
+        if (datumBody)
+            if (const auto producer = bodyProducerBefore(snapshot, feature.id, *datumBody))
+                node.inputs.push_back(*producer);
+        if (feature.kind == document::FeatureKind::sketch)
+            if (const auto plane = snapshot.sketchParameters(feature.id).constructionPlane)
+                node.inputs.push_back(*plane);
         // M21: a combination works on its target and tool bodies as they were before it.
         if (feature.kind == document::FeatureKind::combine) {
             const auto& parameters = snapshot.combineParameters(feature.id);

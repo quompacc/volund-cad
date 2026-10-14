@@ -28,8 +28,9 @@ std::vector<ActionKind> availableActions(const CadSession& session,
                                          const document::DocumentSnapshot& snapshot,
                                          const ActionTarget& target) {
     if (std::holds_alternative<std::monostate>(target))
-        return {ActionKind::createParameter, ActionKind::createDatumSketch,
-                ActionKind::createBox, ActionKind::createSketchExtrusion};
+        return {ActionKind::createParameter,  ActionKind::createDatumSketch,
+                ActionKind::createBox,        ActionKind::createSketchExtrusion,
+                ActionKind::createDatumPlane, ActionKind::createDatumAxis};
     if (const auto* parameter = std::get_if<document::ParameterId>(&target)) {
         if (document::findParameter(snapshot.parameterTable(), *parameter) == nullptr)
             return {};
@@ -70,6 +71,10 @@ std::vector<ActionKind> availableActions(const CadSession& session,
     case FeatureKind::combine:
         actions = {ActionKind::editCombineParameters};
         break;
+    case FeatureKind::datumPlane:
+        return {ActionKind::editDatumPlaneParameters};
+    case FeatureKind::datumAxis:
+        return {ActionKind::editDatumAxisParameters};
     }
     if (session.placementFeature(feature))
         actions.push_back(ActionKind::setPlacement);
@@ -84,6 +89,8 @@ std::vector<ActionKind> availableActions(const CadSession& session,
             actions.push_back(ActionKind::createChamfer);
             actions.push_back(ActionKind::createHole);
             actions.push_back(ActionKind::createCombine);
+            actions.push_back(ActionKind::createDatumPlane);
+            actions.push_back(ActionKind::createDatumAxis);
         }
     }
     return actions;

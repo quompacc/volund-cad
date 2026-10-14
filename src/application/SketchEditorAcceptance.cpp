@@ -36,7 +36,8 @@ CommandResult SketchEditorSession::tryAccept(ErrorDisposition disposition) {
     auto sketch = parameters(false);
     Action action = editingFeature_.has_value()
                         ? Action{EditSketchAction{*editingFeature_, std::move(sketch)}}
-                    : datum_ ? Action{CreateDatumSketchAction{std::move(sketch)}}
+                    : datum_ || constructionPlane_
+                        ? Action{CreateDatumSketchAction{std::move(sketch)}}
                              : Action{CreateSketchAction{*supportFeature_, std::move(sketch)}};
     auto result =
         executeAction(session_, prepareRequest(session_, std::move(action), supportStamp_,

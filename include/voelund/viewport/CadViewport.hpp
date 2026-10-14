@@ -40,6 +40,16 @@ struct SceneBody final {
     bool stale{false}; // U10: last valid geometry of a model with errors, drawn faded
 };
 
+// M19: a construction plane (origin, normal, x direction) or axis (a point, its direction as
+// normal) to show; `id` is its feature.
+struct SceneDatum final {
+    std::uint64_t id;
+    bool axis;
+    std::array<double, 3> origin;
+    std::array<double, 3> normal;
+    std::array<double, 3> xDirection;
+};
+
 /** Read-only lifecycle counters for diagnostics and native desktop tests. */
 struct ViewportLifecycleDiagnostics final {
     std::uint64_t contextGeneration;
@@ -265,6 +275,10 @@ class CadViewport final : public CadViewportBase {
     void setBodyClickHandler(std::function<void(std::uint64_t)> handler);
     void setPlanarFaceSelectionHandler(std::function<void(const PlanarFaceSelection&)> handler);
     void setBasePlaneSelectionHandler(std::function<void(BasePlane)> handler);
+    // M19: construction planes and axes; a click reports the feature.
+    void setDatums(std::span<const SceneDatum> datums);
+    void setDatumSelectionHandler(std::function<void(std::uint64_t)> handler);
+    [[nodiscard]] std::size_t displayedDatumCount() const noexcept;
     // A click outside the sketch editor that hits nothing.
     void setEmptySelectionHandler(std::function<void()> handler);
     // A click that hits nothing or only a base plane; returning true consumes it (e.g. the

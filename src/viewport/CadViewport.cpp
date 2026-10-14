@@ -406,6 +406,20 @@ void CadViewport::setTheme(const ViewportTheme& theme) {
 }
 
 
+void CadViewport::setDatums(std::span<const SceneDatum> datums) {
+    impl_->pendingDatums.assign(datums.begin(), datums.end());
+    performViewportOperation(*this, impl_->ready, [&] {
+        if (!impl_->ready)
+            return;
+        impl_->refreshBasePlanes();
+        update();
+    });
+}
+
+std::size_t CadViewport::displayedDatumCount() const noexcept {
+    return impl_->datums.displayedCount();
+}
+
 void CadViewport::setBasePlaneVisibility(std::array<bool, 3> visible) {
     impl_->planeVisibility = visible;
     performViewportOperation(*this, impl_->ready, [&] {

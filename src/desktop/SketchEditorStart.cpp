@@ -94,6 +94,14 @@ void SketchEditorToolController::beginOnBasePlane(document::DatumPlane datum) {
          basePlaneSupport(datum), std::nullopt, std::nullopt);
 }
 
+void SketchEditorToolController::beginOnConstructionPlane(document::FeatureId plane) {
+    const auto frame = session_.datumFrame(plane);
+    if (!frame)
+        return;
+    open(std::make_unique<application::SketchEditorSession>(session_, *frame, plane),
+         drawingFrame(0, *frame), std::nullopt, std::nullopt);
+}
+
 bool SketchEditorToolController::beginSelectedSketch() {
     const auto selected = session_.selectedFeature();
     if (!selected.has_value())
@@ -102,6 +110,16 @@ bool SketchEditorToolController::beginSelectedSketch() {
     if (descriptor.kind != document::FeatureKind::sketch)
         return false;
     document::SketchParameters parameters = session_.sketchParameters(*selected);
+    if (!descriptor.inputFeature.has_value() && parameters.constructionPlane) {
+        // M19: the plane may have moved since the sketch was stored.
+        const auto frame = session_.datumFrame(*parameters.constructionPlane);
+        if (!frame)
+            return false;
+        parameters.plane = *frame;
+        open(std::make_unique<application::SketchEditorSession>(session_, *selected, parameters),
+             drawingFrame(0, *frame), *selected, std::nullopt);
+        return true;
+    }
     if (!descriptor.inputFeature.has_value()) {
         if (!parameters.datum)
             return false;

@@ -22,6 +22,7 @@ endif()
 
 list(APPEND voelund_viewport_sources
     BasePlanePresentation.cpp
+    DatumPresentation.cpp
     CadViewportHandlers.cpp
     SketchEditorInteraction.cpp
     PlanarFaceSelection.cpp

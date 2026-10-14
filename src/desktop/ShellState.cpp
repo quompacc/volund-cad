@@ -20,7 +20,9 @@ bool ShellState::toolBlocksCommands() const noexcept {
 
 bool ShellState::canSketch() const noexcept {
     return modelCurrent && !toolBlocksCommands() &&
-           (selection == ShellSelection::basePlane || selection == ShellSelection::planarFace);
+           (selection == ShellSelection::basePlane || selection == ShellSelection::planarFace ||
+            (selection == ShellSelection::feature &&
+             featureKind == document::FeatureKind::datumPlane)); // M19
 }
 
 bool ShellState::canExtrude() const noexcept {
@@ -64,7 +66,9 @@ ShellState projectShell(const application::CadSession& session, const ShellInput
     state.filletEditable = state.featureKind == document::FeatureKind::fillet ||
                            state.featureKind == document::FeatureKind::chamfer ||
                            state.featureKind == document::FeatureKind::hole ||
-                           state.featureKind == document::FeatureKind::combine;
+                           state.featureKind == document::FeatureKind::combine ||
+                           state.featureKind == document::FeatureKind::datumPlane ||
+                           state.featureKind == document::FeatureKind::datumAxis;
     if (state.featureKind == document::FeatureKind::extrusion)
         state.extrusionEditable =
             !session.identifiedSnapshot().snapshot().extrusionParameters(*state.feature).faceProfile;

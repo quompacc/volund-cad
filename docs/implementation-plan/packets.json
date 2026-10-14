@@ -4312,11 +4312,14 @@
       "acceptance": "Bogen mit R 12 bemaßt hat Radius 12; Maßänderung auf 20 löst neu; Bindung an Parameter, Rückgängig, Speichern/Öffnen; Linie als Ziel abgewiesen.",
       "boundary": "Kein automatisches Umwandeln vorhandener Durchmessermaße. Nutzerentscheidung 2026-10-14: Gruppe 1, gehört zu v1 (G3).",
       "chapter": "04-oberflaeche-skizze.md",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/S16.md"
+      ],
+      "completedCommit": "347ac1f",
+      "completedDate": "2026-10-14"
     },
     {
       "id": "S17",
@@ -4418,11 +4421,14 @@
       "acceptance": "Quader minus Zylinder ergibt das analytische Volumen; Werkzeug behalten lässt beide Körper sichtbar; Zylinderradius ändern → Ergebnis folgt; Schnitt ohne Überlappung abgewiesen; Rückgängig, Speichern/Öffnen.",
       "boundary": "Keine Baugruppen- oder Komponentenlogik. Nutzerentscheidung 2026-10-14: Gruppe 1, gehört zu v1 (G3).",
       "chapter": "05-solid-historie.md",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/M21.md"
+      ],
+      "completedCommit": "b463752",
+      "completedDate": "2026-10-14"
     },
     {
       "id": "M22",

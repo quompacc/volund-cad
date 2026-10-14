@@ -27,6 +27,8 @@ class SketchEditorToolController final {
 
     void begin(const viewport::PlanarFaceSelection& support);
     void beginOnBasePlane(document::DatumPlane datum);
+    // M19: a new sketch on a construction plane, at its current frame.
+    void beginOnConstructionPlane(document::FeatureId plane);
     [[nodiscard]] bool beginSelectedSketch();
     // L05b: the open draft for its recovery file, once it has changes.
     struct RecoveryDraft final {

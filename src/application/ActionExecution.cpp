@@ -244,6 +244,28 @@ class Validation final {
     void operator()(const EditCombineParametersAction& action) {
         static_cast<void>(target(action.combine, ActionKind::editCombineParameters));
     }
+    // M19: a face or edge reference names a current result; base references need none.
+    void operator()(const CreateDatumPlaneAction& action) {
+        if (action.support)
+            static_cast<void>(target(*action.support, ActionKind::createDatumPlane));
+        else
+            static_cast<void>(target(std::monostate{}, ActionKind::createDatumPlane));
+        quantity(action.offset, QuantityUnit::millimetre);
+        quantity(action.angle, QuantityUnit::radian);
+    }
+    void operator()(const EditDatumPlaneParametersAction& action) {
+        static_cast<void>(target(action.plane, ActionKind::editDatumPlaneParameters));
+        finite({action.parameters.offset});
+    }
+    void operator()(const CreateDatumAxisAction& action) {
+        if (action.support)
+            static_cast<void>(target(*action.support, ActionKind::createDatumAxis));
+        else
+            static_cast<void>(target(std::monostate{}, ActionKind::createDatumAxis));
+    }
+    void operator()(const EditDatumAxisParametersAction& action) {
+        static_cast<void>(target(action.axis, ActionKind::editDatumAxisParameters));
+    }
 
     [[nodiscard]] const Findings& findings() const noexcept { return findings_; }
 
@@ -371,6 +393,19 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot,
             },
             [&](const EditCombineParametersAction& a) {
                 return session.editCombineParameters(a.combine, a.parameters, reject);
+            },
+            [&](const CreateDatumPlaneAction& a) {
+                return session.createDatumPlane(a.basePlane, a.support, a.face, a.offset.value,
+                                                a.rotationAxis, a.angle.value);
+            },
+            [&](const EditDatumPlaneParametersAction& a) {
+                return session.editDatumPlaneParameters(a.plane, a.parameters, reject);
+            },
+            [&](const CreateDatumAxisAction& a) {
+                return session.createDatumAxis(a.baseAxis, a.support, a.edge);
+            },
+            [&](const EditDatumAxisParametersAction& a) {
+                return session.editDatumAxisParameters(a.axis, a.parameters, reject);
             }},
         request.action);
 }

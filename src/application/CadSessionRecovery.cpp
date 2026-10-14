@@ -21,7 +21,7 @@ CadSession::sketchDraftSnapshot(std::optional<document::FeatureId> edited,
         if (!copy.setSketchParameters(*edited, draft))
             throw std::invalid_argument("The sketch draft does not fit the edited sketch");
         feature = *edited;
-    } else if (draft.datum) {
+    } else if (draft.datum || draft.constructionPlane) {
         feature = copy.addDatumSketchFeature("Skizzenentwurf", draft);
     } else if (support) {
         feature = copy.addSketchFeature("Skizzenentwurf", *support, draft);
