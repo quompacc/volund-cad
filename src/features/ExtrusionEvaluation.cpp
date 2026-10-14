@@ -11,6 +11,9 @@
 #include <voelund/kernel/ShapeOperations.hpp>
 
 #include <voelund/kernel/Prism.hpp>
+#include <voelund/kernel/Revolution.hpp>
+#include <gp_Ax1.hxx>
+#include <gp_Dir.hxx>
 #include <BRep_Builder.hxx>
 #include <TopoDS_Compound.hxx>
 #include <algorithm>
@@ -101,6 +104,97 @@ Prism makePrism(document::FeatureId extrusion, document::FeatureId sketchId,
     return result;
 }
 
+// M20: the revolve axis in model coordinates: a line of the sketch, a base axis or the frame
+// of a construction axis.
+gp_Ax1 revolveAxis(const document::SketchParameters& sketch, const document::RevolveAxis& axis,
+                   const std::vector<EvaluatedFeature>& outputs) {
+    if (axis.baseAxis)
+        return gp_Ax1(gp_Pnt(0, 0, 0), *axis.baseAxis == document::BaseAxis::x   ? gp_Dir(1, 0, 0)
+                                       : *axis.baseAxis == document::BaseAxis::y ? gp_Dir(0, 1, 0)
+                                                                                 : gp_Dir(0, 0, 1));
+    if (axis.datumAxis) {
+        const auto& frame = findFeature(outputs, *axis.datumAxis).datumFrame;
+        if (!frame)
+            throw GeometryEvaluationError("The revolve axis is no construction axis",
+                                          "revolve-axis-missing");
+        return gp_Ax1(gp_Pnt(frame->originX, frame->originY, frame->originZ),
+                      gp_Dir(frame->normalX, frame->normalY, frame->normalZ));
+    }
+    const auto element = std::ranges::find(sketch.elements.values, *axis.sketchLine,
+                                           &document::SketchElement::id);
+    const auto* line = element == sketch.elements.values.end()
+                           ? nullptr
+                           : std::get_if<document::SketchLine>(&element->geometry);
+    if (line == nullptr)
+        throw GeometryEvaluationError("The revolve axis is no line of its sketch",
+                                      "revolve-axis-missing");
+    const auto& plane = sketch.plane;
+    const gp_Vec x(plane.xDirectionX, plane.xDirectionY, plane.xDirectionZ);
+    const gp_Vec y = gp_Vec(plane.normalX, plane.normalY, plane.normalZ).Crossed(x);
+    const gp_Pnt origin(plane.originX, plane.originY, plane.originZ);
+    const gp_Pnt start = origin.Translated(x * line->start.x + y * line->start.y);
+    const gp_Pnt end = origin.Translated(x * line->end.x + y * line->end.y);
+    if (start.Distance(end) < 1e-9)
+        throw GeometryEvaluationError("The revolve axis line has no length",
+                                      "revolve-axis-missing");
+    return gp_Ax1(start, gp_Dir(gp_Vec(start, end)));
+}
+// M20: the selected regions turned about the axis; reversed turns the other way, symmetric
+// starts half the angle behind the sketch plane. Faces are named as for a prism: start, end
+// (none for a full turn) and the side each contour edge turns into.
+Prism makeRevolution(document::FeatureId extrusion, document::FeatureId sketchId,
+                     document::SketchParameters sketch,
+                     const document::ExtrusionParameters& parameters,
+                     const std::vector<EvaluatedFeature>& outputs) {
+    gp_Ax1 axis = revolveAxis(sketch, parameters.revolve->axis, outputs);
+    if (parameters.reversed)
+        axis.Reverse();
+    const double angle = parameters.revolve->angle.value();
+    if (parameters.symmetric) {
+        auto& plane = sketch.plane;
+        gp_Pnt origin(plane.originX, plane.originY, plane.originZ);
+        gp_Dir normal(plane.normalX, plane.normalY, plane.normalZ);
+        gp_Dir x(plane.xDirectionX, plane.xDirectionY, plane.xDirectionZ);
+        origin.Rotate(axis, -angle / 2);
+        normal.Rotate(axis, -angle / 2);
+        x.Rotate(axis, -angle / 2);
+        plane = {origin.X(), origin.Y(), origin.Z(), normal.X(), normal.Y(),
+                 normal.Z(), x.X(),      x.Y(),      x.Z()};
+    }
+    const auto profiles = evaluateExtrusionFaces(sketch, parameters);
+    TopoDS_Compound faces;
+    BRep_Builder builder;
+    builder.MakeCompound(faces);
+    for (const auto& profile : profiles)
+        builder.Add(faces, profile.face);
+    const auto& location = axis.Location();
+    const auto& direction = axis.Direction();
+    const kernel::Revolution revolution(faces, {location.X(), location.Y(), location.Z()},
+                                        {direction.X(), direction.Y(), direction.Z()}, angle);
+    Prism result{revolution.shape(), {},
+                 extrusionEdgeOrigins(extrusion, sketchId, profiles, revolution)};
+    for (const auto& profile : profiles) {
+        if (!revolution.full()) {
+            const auto cap = revolution.endOf(profile.face);
+            result.caps.push_back({{extrusion, std::nullopt, profile.boundary},
+                                   {cap},
+                                   kernel::HistoryCoverage::complete,
+                                   cap});
+            document::SubshapeOrigin start{extrusion, std::nullopt, profile.boundary};
+            start.extrusionFace = document::ExtrusionFace::start;
+            addSupportFace(result.caps, start, revolution.startOf(profile.face));
+        }
+        for (const auto& edge : profile.edges) {
+            document::SubshapeOrigin side{extrusion, std::nullopt, profile.boundary};
+            side.extrusionFace = document::ExtrusionFace::side;
+            side.sweptEdge = document::ContourEdgeOrigin{sketchId, edge.element, edge.role};
+            for (const auto& face : revolution.generated(edge.edge))
+                addSupportFace(result.caps, side, face);
+        }
+    }
+    return result;
+}
+
 kernel::ShapeOperationResult combine(document::ExtrusionOperation operation,
                                      const TopoDS_Shape& body, const TopoDS_Shape& tool) {
     switch (operation) {
@@ -154,14 +248,20 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
         if (!faceOwner)
             throw GeometryEvaluationError("End face body has no solid before this extrusion");
     }
-    const auto start = startSketch(sketch, parameters);
+    // M20: a revolve turns the sketch itself; start offsets belong to prisms.
+    const auto start = parameters.revolve ? sketch : startSketch(sketch, parameters);
     // The reference prism keeps this length: reference results are unplaced primitives, so
     // the end face's reference position says nothing about the current extent.
     const double length =
         faceOwner ? lengthToFace(start, parameters, findFeature(outputs, *faceOwner),
                                  parameters.upToFace->origin)
                   : parameters.distance;
-    const auto prism = makePrism(descriptor.id, sketchId, start, parameters, length);
+    const auto sweep = [&](const document::SketchParameters& at) {
+        return parameters.revolve
+                   ? makeRevolution(descriptor.id, sketchId, at, parameters, outputs)
+                   : makePrism(descriptor.id, sketchId, at, parameters, length);
+    };
+    const auto prism = sweep(start);
 
     // The reference evaluation resolves a bound face sketch on the support's reference
     // result; a base-plane sketch is its own reference.
@@ -180,9 +280,19 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
         if (solveSketchConstraints(referenceSketch).status != SketchSolveStatus::success)
             throw GeometryEvaluationError("Reference sketch projected edges cannot be solved");
     }
-    const auto referenceStart = startSketch(referenceSketch, parameters);
-    const auto referencePrism =
-        makePrism(descriptor.id, sketchId, referenceStart, parameters, length);
+    const auto referenceStart =
+        parameters.revolve ? referenceSketch : startSketch(referenceSketch, parameters);
+    // M20: a base or construction axis lies in model coordinates, which the unplaced
+    // reference of a face sketch need not share; the reference then keeps the current turn.
+    const auto referencePrism = [&] {
+        if (!parameters.revolve || parameters.revolve->axis.sketchLine)
+            return sweep(referenceStart);
+        try {
+            return sweep(referenceStart);
+        } catch (const kernel::KernelError&) {
+            return prism;
+        }
+    }();
 
     if (operation == document::ExtrusionOperation::newBody) {
         // V01: a base-plane sketch opened its own body (BodyId = sketch FeatureId); T02: a

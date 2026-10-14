@@ -50,6 +50,9 @@ inline QString booleanFailureText(const std::string& code) {
     if (code == "hole-face-missing")
         return QObject::tr("Bohrung: Die Fläche der Bohrung gibt es so nicht mehr. Wähle die "
                            "Bohrung neu auf einer Fläche des Körpers.");
+    // M20: the axis of a revolve is gone.
+    if (code == "revolve-axis-missing")
+        return QObject::tr("Drehen: Die Drehachse gibt es so nicht mehr. Wähle die Achse neu.");
     // M19: a construction plane or axis lost its face or edge.
     if (code == "datum-reference-missing")
         return QObject::tr("Bezug: Die Fläche oder Kante, auf der die Bezugsebene oder -achse "

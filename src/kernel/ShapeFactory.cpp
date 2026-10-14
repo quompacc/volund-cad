@@ -103,6 +103,8 @@ const char* kernelOperationName(KernelOperation operation) noexcept {
         return "fillet";
     case KernelOperation::chamfer:
         return "chamfer";
+    case KernelOperation::makeRevolution:
+        return "makeRevolution";
     }
     return "unknown";
 }

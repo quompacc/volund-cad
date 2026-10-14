@@ -149,7 +149,13 @@ void MainWindow::syncTimeline() {
     if (impl_->timeline == nullptr)
         return;
     const auto features = impl_->session.features();
-    impl_->timeline->showFeatures(features, impl_->session.selectedFeature());
+    std::vector<document::FeatureId> revolves; // M20
+    const auto snapshot = impl_->session.identifiedSnapshot().snapshot();
+    for (const auto& feature : features)
+        if (feature.kind == document::FeatureKind::extrusion &&
+            snapshot.extrusionParameters(feature.id).revolve)
+            revolves.push_back(feature.id);
+    impl_->timeline->showFeatures(features, impl_->session.selectedFeature(), revolves);
     impl_->timeline->showStates(impl_->session.featureStates());
 }
 

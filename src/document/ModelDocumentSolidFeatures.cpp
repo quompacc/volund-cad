@@ -72,6 +72,20 @@ bool ModelDocument::setCombineParameters(FeatureId featureId,
     return true;
 }
 
+void validateRevolveParameters(const RevolveParameters& parameters) {
+    const auto& axis = parameters.axis;
+    if (axis.sketchLine.has_value() + axis.baseAxis.has_value() + axis.datumAxis.has_value() != 1)
+        throw std::invalid_argument("A revolve has one axis");
+    if ((axis.sketchLine && axis.sketchLine->value() == 0) ||
+        (axis.datumAxis && axis.datumAxis->value() == 0) ||
+        (axis.baseAxis &&
+         (static_cast<int>(*axis.baseAxis) < 1 || static_cast<int>(*axis.baseAxis) > 3)))
+        throw std::invalid_argument("Unknown revolve axis");
+    const double angle = parameters.angle.value();
+    if (!(angle > 1e-9) || angle > 2.0 * std::numbers::pi + 1e-12)
+        throw std::invalid_argument("A revolve turns by more than 0 and at most 360 degrees");
+}
+
 void validateDatumPlaneParameters(const DatumPlaneParameters& parameters) {
     if (parameters.basePlane.has_value() == parameters.face.has_value())
         throw std::invalid_argument("A construction plane has one reference");

@@ -51,7 +51,18 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                          true,
                          false,
                          simpleCommand(std::move(services.extrudeProfiles)),
-                         std::move(services.canExtrudeProfiles)});
+                         services.canExtrudeProfiles});
+    if (services.revolve)
+        commands_.push_back({"solid.create.revolve",
+                             "Drehen",
+                             "Gewählte Skizzenbereiche um eine Achse drehen (mit Abziehen: Nut)",
+                             {},
+                             workspaces::CommandGroup::create,
+                             true,
+                             false,
+                             simpleCommand(std::move(services.revolve)),
+                             services.canExtrudeProfiles,
+                             "Drehen"});
     commands_.push_back({"solid.modify.transform", "Verschieben/Drehen",
                          "Gewählten getrennten Körper verschieben oder drehen", "M",
                          workspaces::CommandGroup::modify, true, true,

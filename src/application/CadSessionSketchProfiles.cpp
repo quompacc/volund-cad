@@ -1,5 +1,6 @@
 #include "CommandInput.hpp"
 #include <voelund/application/CadSession.hpp>
+#include <voelund/document/DocumentSnapshot.hpp>
 
 #include <voelund/features/SketchEvaluation.hpp>
 #include <voelund/features/SketchRegionIdentity.hpp>
@@ -201,6 +202,7 @@ document::ExtrusionParameters newExtrusionParameters(double distance,
     parameters.offset = mode.offset;
     parameters.upToFace = mode.upToFace;
     parameters.symmetric = mode.symmetric;
+    parameters.revolve = mode.revolve;
     return parameters;
 }
 } // namespace
@@ -221,17 +223,22 @@ CadSession::createSketchProfileExtrusion(document::FeatureId sketchFeature,
             features::SketchRegionReferenceStatus::resolved)
             return CommandResult::invalidInput("Profile extrusion references an unknown profile");
     }
+    // M20: revolves are numbered apart from prisms ("Drehung N").
     std::size_t sequence = 1;
+    const auto snapshot = document::DocumentSnapshot::capture(document_);
     for (const document::FeatureDescriptor& feature : document_.features()) {
-        if (feature.kind == document::FeatureKind::extrusion)
+        if (feature.kind == document::FeatureKind::extrusion &&
+            snapshot.extrusionParameters(feature.id).revolve.has_value() ==
+                mode.revolve.has_value())
             ++sequence;
     }
     document::DocumentTransaction transaction(document_);
     auto& candidate = transaction.edit();
     const std::vector<document::SketchRegionId> selected(profileIds.begin(), profileIds.end());
     const auto input = detail::prepareInput([&] {
-        return candidate.addExtrusionFeature("Extrusion " + std::to_string(sequence), sketchFeature,
-                                             newExtrusionParameters(distance, selected, mode));
+        return candidate.addExtrusionFeature(
+            (mode.revolve ? "Drehung " : "Extrusion ") + std::to_string(sequence), sketchFeature,
+            newExtrusionParameters(distance, selected, mode));
     });
     if (!input.value)
         return CommandResult::invalidInput(input.diagnostic);

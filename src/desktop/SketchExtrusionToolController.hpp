@@ -28,7 +28,8 @@ class SketchExtrusionToolController final {
                                   std::function<void()> sceneChanged,
                                   std::function<void(const QString&)> statusChanged);
 
-    void beginSelectedProfiles();
+    // M20: with `revolve` the regions turn about an axis ("Drehen") instead.
+    void beginSelectedProfiles(bool revolve = false);
     // M04 (user decision 2026-10-12): reopens an existing sketch extrusion with its values;
     // OK changes it as one undo step, Cancel changes nothing.
     void beginEdit(document::FeatureId extrusion);
@@ -62,6 +63,10 @@ class SketchExtrusionToolController final {
     // M04: what the extrusion does and on which body, or what it waits for.
     [[nodiscard]] QString guidance() const;
     void accept();
+    // M20: the axes the panel offers; the first is a line picked in the sketch.
+    void collectAxes();
+    [[nodiscard]] int axisIndex() const;
+    [[nodiscard]] bool pickAxisLine(document::SketchElementId element);
 
     application::CadSession& session_;
     ToolPanelHost& panel_;
@@ -90,6 +95,12 @@ class SketchExtrusionToolController final {
     std::optional<document::BodyFaceReference> endFace_;
     std::vector<std::uint64_t> problemElements_;
     bool active_{false};
+    // M20: the revolve's axis and angle; none for a prism. While `axisPick_` is set, a click
+    // on a line of the sketch makes it the axis.
+    std::optional<document::RevolveParameters> revolve_;
+    std::vector<std::pair<QString, document::RevolveAxis>> axes_;
+    bool axisPick_{false};
+    double angleDegrees_{360.0};
 };
 
 } // namespace voelund::desktop

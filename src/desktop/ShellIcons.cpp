@@ -158,6 +158,12 @@ void draw(QPainter& painter, ShellIcon icon, const QColor& ink, const QColor& ac
         painter.drawLine(QPointF(9, 6), QPointF(12, 3));
         painter.drawLine(QPointF(15, 6), QPointF(12, 3));
         break;
+    case ShellIcon::revolve:
+        // A profile turned about a dashed axis: an arc arrow around it.
+        painter.drawLine(QPointF(12, 2), QPointF(12, 22));
+        painter.drawArc(QRectF(4, 7, 16, 10), 200 * 16, 300 * 16);
+        painter.drawLine(QPointF(17, 7.5), QPointF(20, 9));
+        break;
     case ShellIcon::datumAxis:
         // A long axis through a small ring.
         painter.drawLine(QPointF(4, 20), QPointF(20, 4));

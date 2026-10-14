@@ -31,6 +31,7 @@ enum class KernelOperation {
     makePrism,
     fillet,  // M05
     chamfer, // M07
+    makeRevolution, // M20
 };
 
 // M03: why a Boolean refused its result, beyond a failing kernel.

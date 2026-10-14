@@ -68,6 +68,7 @@ struct ExtrusionMode final {
     double offset{0.0};                                  // T03
     std::optional<document::BodyFaceReference> upToFace{}; // T03
     bool symmetric{false};                                  // M02: distance = total length
+    std::optional<document::RevolveParameters> revolve{};   // M20: "Drehung N"
     bool operator==(const ExtrusionMode&) const = default;
 };
 

@@ -121,6 +121,24 @@ struct BodyFaceReference final {
 // the prism and the target body have in common.
 enum class ExtrusionOperation { newBody = 1, join = 2, cut = 3, intersect = 4 };
 
+enum class BaseAxis { x = 1, y = 2, z = 3 };
+// M20 (schema 20, user decision 2026-10-14): the regions turn about an axis instead of being
+// swept along the sketch normal: a line of the same sketch, a base axis or a construction
+// axis (exactly one). `angle` in (0, 2 pi]; a full turn has no start and end faces. Reversed
+// turns the other way; symmetric splits the angle around the sketch plane.
+struct RevolveAxis final {
+    std::optional<SketchElementId> sketchLine{};
+    std::optional<BaseAxis> baseAxis{};
+    std::optional<FeatureId> datumAxis{};
+    [[nodiscard]] bool operator==(const RevolveAxis&) const = default;
+};
+struct RevolveParameters final {
+    RevolveAxis axis;
+    kernel::Radians angle;
+    [[nodiscard]] bool operator==(const RevolveParameters&) const = default;
+};
+void validateRevolveParameters(const RevolveParameters& parameters);
+
 struct ExtrusionParameters final {
     double distance;
     // Pre-R09 selection by minimum loop element ID. Kept only until Open migrates it to
@@ -152,6 +170,10 @@ struct ExtrusionParameters final {
     // the extrusion then has no input feature, sweeps along the face's outward normal
     // (into the body when reversed) and joins or cuts the face's body.
     std::optional<BodyFaceReference> faceProfile{};
+    // M20: a revolve ("Drehen", a groove when it cuts). It keeps regions, operation,
+    // target, reversed and symmetric; distance stays stored but unused; no offset, end face or
+    // face profile.
+    std::optional<RevolveParameters> revolve{};
 
     [[nodiscard]] bool operator==(const ExtrusionParameters&) const = default;
 };
@@ -223,7 +245,6 @@ struct DatumPlaneParameters final {
 void validateDatumPlaneParameters(const DatumPlaneParameters& parameters);
 // M19: a construction axis, a base axis or the line of a body edge: a straight edge itself, a
 // circular edge's axis through its centre. It belongs to no body.
-enum class BaseAxis { x = 1, y = 2, z = 3 };
 struct DatumAxisParameters final {
     std::optional<BaseAxis> baseAxis{};
     std::optional<BodyId> body{};

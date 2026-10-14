@@ -85,6 +85,7 @@ void surfaces() {
         railIds.insert(id(action));
     const std::set<std::string> solid{"solid.create.box",       "solid.create.cylinder",
                                       "solid.create.sketch",    "solid.create.extrude_profiles",
+                                      "solid.create.revolve",
                                       "solid.modify.transform", "solid.modify.edit_sketch",
                                       "solid.modify.push_pull", "solid.modify.fillet",
                                       "solid.modify.chamfer", "solid.modify.hole",

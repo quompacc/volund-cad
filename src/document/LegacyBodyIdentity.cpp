@@ -159,6 +159,14 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
         if ((plane && plane->face && !isBody(plane->face->body)) ||
             (axis && axis->body && !isBody(*axis->body)))
             throw std::invalid_argument("Construction reference is not a body of this document");
+        // M20: a revolve names an earlier construction axis.
+        const auto* prism = std::get_if<ExtrusionParameters>(&parameters[index]);
+        if (prism && prism->revolve && prism->revolve->axis.datumAxis) {
+            const auto found = indices.find(prism->revolve->axis.datumAxis->value());
+            if (found == indices.end() || found->second >= index ||
+                features[found->second].kind != FeatureKind::datumAxis)
+                throw std::invalid_argument("Revolve axis is not an earlier construction axis");
+        }
         const auto* sketch = std::get_if<SketchParameters>(&parameters[index]);
         if (sketch && sketch->constructionPlane) {
             const auto found = indices.find(sketch->constructionPlane->value());

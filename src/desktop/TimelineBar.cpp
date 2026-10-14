@@ -71,14 +71,15 @@ void TimelineBar::setOpenHandler(std::function<void(std::uint64_t)> handler) {
 }
 
 void TimelineBar::showFeatures(std::span<const document::FeatureDescriptor> features,
-                               std::optional<document::FeatureId> selected) {
+                               std::optional<document::FeatureId> selected,
+                               std::span<const document::FeatureId> revolves) {
     for (QToolButton* button : buttons_) {
         steps_->removeWidget(button);
         button->hide();
         button->deleteLater(); // a button may be rebuilding the bar from its own click
     }
     buttons_.clear();
-    kinds_.clear();
+    icons_.clear();
     int number = 1;
     for (const document::FeatureDescriptor& feature : features) {
         auto* button = new QToolButton(this);
@@ -101,7 +102,9 @@ void TimelineBar::showFeatures(std::span<const document::FeatureDescriptor> feat
         steps_->addWidget(button);
         button->show();
         buttons_.push_back(button);
-        kinds_.push_back(feature.kind);
+        icons_.push_back(std::ranges::find(revolves, feature.id) != revolves.end()
+                             ? ShellIcon::revolve
+                             : iconFor(feature.kind));
     }
     empty_->setVisible(features.empty());
     end_->setVisible(!features.empty());
@@ -131,7 +134,7 @@ void TimelineBar::setTheme(ThemeMode mode) {
     mode_ = mode;
     const ThemeTokens& tokens = themeTokens(mode);
     for (std::size_t index = 0; index < buttons_.size(); ++index)
-        buttons_[index]->setIcon(shellIcon(iconFor(kinds_[index]), tokens.ink, tokens.accent));
+        buttons_[index]->setIcon(shellIcon(icons_[index], tokens.ink, tokens.accent));
 }
 
 } // namespace voelund::desktop

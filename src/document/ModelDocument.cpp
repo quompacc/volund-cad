@@ -77,6 +77,12 @@ void validateExtrusion(const ExtrusionParameters& parameters) {
          parameters.upToFace || parameters.faceProfile))
         throw std::invalid_argument(
             "A symmetric extrusion has no direction, start offset or end face");
+    if (parameters.revolve) {
+        validateRevolveParameters(*parameters.revolve);
+        if (parameters.offset != 0.0 || parameters.offsetParameter || parameters.upToFace ||
+            parameters.faceProfile || parameters.distanceParameter)
+            throw std::invalid_argument("A revolve has no offset, end face or face profile");
+    }
     if (!kernel::modelCoordinate(parameters.offset))
         throw std::invalid_argument(kernel::modelRangeDiagnostic);
     if (parameters.upToFace)

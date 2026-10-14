@@ -113,6 +113,10 @@ FeatureDependencies FeatureDependencies::from(const document::DocumentSnapshot& 
             const auto sketch = std::ranges::find(features, *feature.inputFeature, &document::FeatureDescriptor::id);
             if (sketch == features.end()) throw std::invalid_argument("Missing extrusion sketch");
             if (sketch->inputFeature) node.inputs.push_back(*sketch->inputFeature);
+            // M20: a revolve follows its construction axis.
+            if (const auto& revolve = snapshot.extrusionParameters(feature.id).revolve;
+                revolve && revolve->axis.datumAxis)
+                node.inputs.push_back(*revolve->axis.datumAxis);
             else if (const auto producer = targetProducer(snapshot, feature.id)) node.inputs.push_back(*producer);
             // T03: the body of the end face, as it was before this extrusion.
             if (const auto face = snapshot.extrusionParameters(feature.id).upToFace)

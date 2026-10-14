@@ -34,6 +34,8 @@ struct SolidCommandServices final {
     std::function<bool()> canHole{};
     // M21: combines the selected body with clicked tool bodies; enabled like the fillet.
     std::function<void()> combine{};
+    // M20: turns the selected sketch regions about an axis; enabled like the extrusion.
+    std::function<void()> revolve{};
     // M19: construction planes and axes.
     std::function<void()> datumPlane{};
     std::function<void()> datumAxis{};

@@ -13,6 +13,8 @@
 #include <QObject>
 
 #include <algorithm>
+#include <cmath>
+#include <numbers>
 #include <utility>
 
 namespace voelund::desktop {
@@ -23,7 +25,7 @@ SketchExtrusionToolController::SketchExtrusionToolController(
     : session_(session), panel_(panel), sceneChanged_(std::move(sceneChanged)),
       statusChanged_(std::move(statusChanged)) {}
 
-void SketchExtrusionToolController::beginSelectedProfiles() {
+void SketchExtrusionToolController::beginSelectedProfiles(bool revolve) {
     if (!session_.canExtrudeSelectedSketchProfiles())
         return;
     editing_.reset();
@@ -31,8 +33,70 @@ void SketchExtrusionToolController::beginSelectedProfiles() {
     const auto selected = session_.selectedSketchProfiles();
     // T02 defaults (operation unset): a face sketch joins its body, a base-plane sketch makes
     // a new one.
-    open(*session_.selectedFeature(), {selected.begin(), selected.end()},
-         document::ExtrusionParameters{10.0, {}});
+    document::ExtrusionParameters values{10.0, {}};
+    if (revolve) {
+        // M20: a full turn about the sketch's first construction line, else about a base axis
+        // in the sketch plane; without one the panel waits for a picked line.
+        values.revolve = document::RevolveParameters{{}, kernel::Radians{2 * std::numbers::pi}};
+        const auto sketch = session_.sketchParameters(*session_.selectedFeature());
+        for (const auto& element : sketch.elements.values)
+            if (element.construction && std::holds_alternative<document::SketchLine>(element.geometry)) {
+                values.revolve->axis.sketchLine = element.id;
+                break;
+            }
+        const std::pair<document::BaseAxis, double> inPlane[]{
+            {document::BaseAxis::z, sketch.plane.normalZ},
+            {document::BaseAxis::y, sketch.plane.normalY},
+            {document::BaseAxis::x, sketch.plane.normalX}};
+        if (!values.revolve->axis.sketchLine)
+            for (const auto& [axis, along] : inPlane)
+                if (std::abs(along) < 1e-9) {
+                    values.revolve->axis.baseAxis = axis;
+                    break;
+                }
+    }
+    open(*session_.selectedFeature(), {selected.begin(), selected.end()}, values);
+}
+
+void SketchExtrusionToolController::collectAxes() {
+    axes_.clear();
+    axes_.push_back({QObject::tr("Linie der Skizze"), {}});
+    axes_.push_back({QObject::tr("X-Achse"), {std::nullopt, document::BaseAxis::x, std::nullopt}});
+    axes_.push_back({QObject::tr("Y-Achse"), {std::nullopt, document::BaseAxis::y, std::nullopt}});
+    axes_.push_back({QObject::tr("Z-Achse"), {std::nullopt, document::BaseAxis::z, std::nullopt}});
+    // Construction axes before the sketch (M19).
+    for (const auto& feature : session_.features()) {
+        if (feature.id == *profileSketch_)
+            break;
+        if (feature.kind == document::FeatureKind::datumAxis)
+            axes_.push_back({QString::fromStdString(feature.name),
+                             {std::nullopt, std::nullopt, feature.id}});
+    }
+}
+
+int SketchExtrusionToolController::axisIndex() const {
+    if (!revolve_ || revolve_->axis.sketchLine)
+        return 0;
+    for (std::size_t index = 1; index < axes_.size(); ++index)
+        if (axes_[index].second == revolve_->axis)
+            return static_cast<int>(index);
+    return 0;
+}
+
+// M20: a click on a line of the sketch while the axis waits for one.
+bool SketchExtrusionToolController::pickAxisLine(document::SketchElementId element) {
+    if (!revolve_ || !axisPick_ || !profileSketch_)
+        return false;
+    const auto sketch = session_.sketchParameters(*profileSketch_);
+    const auto found = std::ranges::find(sketch.elements.values, element,
+                                         &document::SketchElement::id);
+    if (found == sketch.elements.values.end() ||
+        !std::holds_alternative<document::SketchLine>(found->geometry))
+        return false;
+    revolve_->axis = {element, std::nullopt, std::nullopt};
+    axisPick_ = false;
+    preview();
+    return true;
 }
 
 void SketchExtrusionToolController::beginEdit(document::FeatureId extrusion) {
@@ -45,6 +109,7 @@ void SketchExtrusionToolController::beginEdit(document::FeatureId extrusion) {
     const auto& values = snapshot.extrusionParameters(extrusion);
     if (values.faceProfile || !values.profiles.empty())
         return; // push/pull and an unrepaired legacy selection keep their properties card
+    // M20: a revolve reopens in its own mode.
     editing_ = extrusion;
     stored_ = values;
     open(*feature->inputFeature, values.regions, values);
@@ -70,6 +135,13 @@ void SketchExtrusionToolController::open(document::FeatureId sketchId,
     offset_ = values.offset;
     upToFace_ = values.upToFace.has_value();
     endFace_ = values.upToFace;
+    revolve_ = values.revolve;
+    if (revolve_) {
+        angleDegrees_ = revolve_->angle.value() * 180.0 / std::numbers::pi;
+        collectAxes();
+        const auto& axis = revolve_->axis;
+        axisPick_ = !axis.sketchLine && !axis.baseAxis && !axis.datumAxis;
+    }
     // A base-plane sketch joins or cuts a named body; the field shows when there is a choice.
     targets_.clear();
     std::vector<QString> targetNames;
@@ -106,11 +178,24 @@ void SketchExtrusionToolController::open(document::FeatureId sketchId,
          static_cast<int>(operation_) - 1}};
     if (targets_.size() > 1)
         choices.push_back({"target", QObject::tr("Zielkörper"), targetNames, targetIndex});
+    std::vector<ToolLengthParameter> lengths{
+        {"distance", QObject::tr("Distanz"), distance_, 0.001, 1'000'000.0},
+        {"offset", QObject::tr("Versatz"), offset_, -1'000'000.0, 1'000'000.0}};
+    if (revolve_) {
+        // M20: angle and axis instead of length, offset and end face.
+        choices.erase(choices.begin());
+        std::vector<QString> axisNames;
+        for (const auto& axis : axes_)
+            axisNames.push_back(axis.first);
+        choices.insert(choices.begin(), {"axis", QObject::tr("Achse"), axisNames, axisIndex()});
+        lengths = {{"angle", QObject::tr("Winkel"), angleDegrees_, 0.001, 360.0,
+                    ToolValueKind::angle}};
+    }
     panel_.begin(ToolPanelDefinition{
-        editing_ ? QObject::tr("Extrusion bearbeiten") : QObject::tr("Extrudieren"),
+        revolve_ ? (editing_ ? QObject::tr("Drehung bearbeiten") : QObject::tr("Drehen"))
+                 : (editing_ ? QObject::tr("Extrusion bearbeiten") : QObject::tr("Extrudieren")),
         QObject::tr("%1 gewählte(n) Skizzenbereich(e) extrudieren.").arg(profileIds_.size()),
-        {{"distance", QObject::tr("Distanz"), distance_, 0.001, 1'000'000.0},
-         {"offset", QObject::tr("Versatz"), offset_, -1'000'000.0, 1'000'000.0}},
+        std::move(lengths),
         std::move(choices),
         {},
         [this](const std::string& id, double value) {
@@ -118,6 +203,10 @@ void SketchExtrusionToolController::open(document::FeatureId sketchId,
                 setDistance(value);
             else if (id == "offset")
                 offset_ = value;
+            else if (id == "angle" && revolve_) {
+                angleDegrees_ = value;
+                revolve_->angle = kernel::Radians{value * std::numbers::pi / 180.0};
+            }
             preview();
         },
         [this](const std::string& id, int index) {
@@ -160,12 +249,13 @@ application::Action SketchExtrusionToolController::extrusion() const {
         values.symmetric = symmetric_;
         values.target = named ? target_ : std::nullopt;
         values.upToFace = upToFace_ ? endFace_ : std::nullopt;
+        values.revolve = revolve_;
         return application::EditExtrusionParametersAction{*editing_, values};
     }
     return application::CreateProfileExtrusionAction{
         *profileSketch_, profileIds_, millimetres(distance_),
         {operation_, reversed_, named ? target_ : std::nullopt, offset_,
-         upToFace_ ? endFace_ : std::nullopt, symmetric_}};
+         upToFace_ ? endFace_ : std::nullopt, symmetric_, revolve_}};
 }
 
 // U11 (A-UI-02, A-VIS-01): the extrusion the values would give, on an isolated copy; the
@@ -179,7 +269,9 @@ void SketchExtrusionToolController::preview() {
             previewChanged_(nullptr);
         previewShown_ = false;
     };
-    if (upToFace_ && !endFace_) {
+    if ((upToFace_ && !endFace_) || axisPick_) {
+        panel_.setAcceptEnabled(false);
+        panel_.setGuidance(guidance());
         showModel();
         return;
     }
@@ -213,11 +305,19 @@ void SketchExtrusionToolController::choose(const std::string& choice, int index)
         reversed_ = index == 1;
         symmetric_ = index == 2;
         autoReversed_ = false; // the user's own direction stays
+    } else if (choice == "axis" && revolve_ && index >= 0 &&
+               static_cast<std::size_t>(index) < axes_.size()) {
+        // M20: the first entry waits for a line clicked in the sketch.
+        axisPick_ = index == 0;
+        if (index != 0)
+            revolve_->axis = axes_[static_cast<std::size_t>(index)].second;
     } else if (choice == "operation") {
         operation_ = static_cast<document::ExtrusionOperation>(index + 1);
         // A cut goes into the material; the panel shows the changed direction and turns it
-        // back when the cut is left again (M04), unless the user chose it.
-        if (operation_ == document::ExtrusionOperation::cut && !reversed_ && !symmetric_) {
+        // back when the cut is left again (M04), unless the user chose it. A revolve's
+        // direction is the turning sense, which a cut does not change.
+        if (!revolve_ && operation_ == document::ExtrusionOperation::cut && !reversed_ &&
+            !symmetric_) {
             panel_.chooseOption("direction", 1);
             autoReversed_ = true;
         } else if (operation_ != document::ExtrusionOperation::cut && autoReversed_) {
@@ -246,8 +346,13 @@ void SketchExtrusionToolController::syncFields() {
 QString SketchExtrusionToolController::guidance() const {
     if (upToFace_ && !endFace_)
         return QObject::tr("Wähle im Modell die Fläche, an der die Extrusion endet.");
-    QString text = QObject::tr("%1 gewählte(n) Skizzenbereich(e) extrudieren.")
-                       .arg(profileIds_.size());
+    if (axisPick_)
+        return QObject::tr("Klicke eine Linie der Skizze als Drehachse an.");
+    QString text = revolve_ ? QObject::tr("%1 gewählte(n) Skizzenbereich(e) um %2° drehen.")
+                                  .arg(profileIds_.size())
+                                  .arg(angleDegrees_)
+                            : QObject::tr("%1 gewählte(n) Skizzenbereich(e) extrudieren.")
+                                  .arg(profileIds_.size());
     if (operation_ == document::ExtrusionOperation::newBody)
         return text + QObject::tr(" Ergebnis: neuer Körper.");
     // M04 (A-BODY-03 step 4): the body the operation works on, by its name.
@@ -284,18 +389,25 @@ void SketchExtrusionToolController::accept() {
     profileIds_.clear();
     active_ = false;
     const bool edited = editing_.has_value();
+    const bool turned = revolve_.has_value();
+    revolve_.reset();
+    axisPick_ = false;
     problemElements_.clear();
     if (editing_)
         static_cast<void>(session_.selectFeature(*editing_));
     editing_.reset();
     stored_.reset();
     sceneChanged_();
-    statusChanged_(edited ? QObject::tr("Extrusion geändert")
-                          : QObject::tr("Gewählte Bereiche extrudiert"));
+    statusChanged_(turned ? (edited ? QObject::tr("Drehung geändert")
+                                    : QObject::tr("Gewählte Bereiche gedreht"))
+                          : (edited ? QObject::tr("Extrusion geändert")
+                                    : QObject::tr("Gewählte Bereiche extrudiert")));
 }
 
 void SketchExtrusionToolController::cancel() {
     problemElements_.clear();
+    revolve_.reset();
+    axisPick_ = false;
     if (editing_)
         static_cast<void>(session_.selectFeature(*editing_));
     editing_.reset();
@@ -334,6 +446,8 @@ bool SketchExtrusionToolController::toggleRegionAt(const viewport::ViewRay& ray)
 }
 
 bool SketchExtrusionToolController::toggleRegionByElement(document::SketchElementId element) {
+    if (pickAxisLine(element))
+        return true;
     if (!regionSketch() || !session_.selectSketchProfileByElement(element, true))
         return false;
     regionsToggled();

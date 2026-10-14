@@ -55,10 +55,11 @@ std::vector<EdgeProvenance> sketchEdgeOrigins(document::FeatureId sketch,
     }
     return result;
 }
-std::vector<EdgeProvenance> extrusionEdgeOrigins(document::FeatureId extrusion,
-                                                 document::FeatureId sketch,
-                                                 std::span<const EvaluatedProfileFace> profiles,
-                                                 const kernel::Prism& prism) {
+namespace {
+template <class Sweep>
+std::vector<EdgeProvenance> sweptEdgeOrigins(document::FeatureId extrusion, document::FeatureId sketch,
+                                             std::span<const EvaluatedProfileFace> profiles,
+                                             const Sweep& prism) {
     std::vector<EdgeProvenance> result;
     for (const auto& profile : profiles)
         for (const auto& edge : profile.edges) {
@@ -70,5 +71,20 @@ std::vector<EdgeProvenance> extrusionEdgeOrigins(document::FeatureId extrusion,
                            edge, prism.endOf(edge.edge), prism.shape()));
         }
     return result;
+}
+} // namespace
+std::vector<EdgeProvenance> extrusionEdgeOrigins(document::FeatureId extrusion,
+                                                 document::FeatureId sketch,
+                                                 std::span<const EvaluatedProfileFace> profiles,
+                                                 const kernel::Prism& prism) {
+    return sweptEdgeOrigins(extrusion, sketch, profiles, prism);
+}
+std::vector<EdgeProvenance> extrusionEdgeOrigins(document::FeatureId extrusion,
+                                                 document::FeatureId sketch,
+                                                 std::span<const EvaluatedProfileFace> profiles,
+                                                 const kernel::Revolution& revolution) {
+    if (revolution.full())
+        return {};
+    return sweptEdgeOrigins(extrusion, sketch, profiles, revolution);
 }
 } // namespace voelund::features

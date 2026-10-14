@@ -149,6 +149,18 @@ void writeNativeExtrusion(const TDF_Label& label, const ExtrusionParameters& par
             std::to_string(parameters.faceProfile->body.value()).c_str());
         writeNativeSubshapeOrigin(face, parameters.faceProfile->origin);
     }
+    // M20 (schema 20): angle on child 12, its axis kind (1 line, 2 base, 3 construction) and
+    // value below.
+    if (parameters.revolve) {
+        const auto revolve = label.FindChild(12);
+        const auto& axis = parameters.revolve->axis;
+        TDataStd_Real::Set(revolve, parameters.revolve->angle.value());
+        TDataStd_Integer::Set(revolve.FindChild(1), axis.sketchLine ? 1 : axis.baseAxis ? 2 : 3);
+        const std::uint64_t value = axis.sketchLine   ? axis.sketchLine->value()
+                                    : axis.baseAxis ? static_cast<std::uint64_t>(*axis.baseAxis)
+                                                    : axis.datumAxis->value();
+        TDataStd_AsciiString::Set(revolve.FindChild(2), std::to_string(value).c_str());
+    }
 }
 ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t remainingRecords,
                                         int schemaVersion) {
@@ -169,6 +181,8 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
     const auto profileFace = label.FindChild(10, false);
     // Schema 13 (M02) adds the symmetric extent (11) and the intersect operation (4 = 4).
     const auto symmetric = label.FindChild(11, false);
+    // Schema 20 (M20) adds the revolve (12).
+    const auto revolve = label.FindChild(12, false);
     const int t02 = (operation.IsNull() ? 0 : 1) + (reversed.IsNull() ? 0 : 1) +
         (target.IsNull() ? 0 : 1);
     const int t03 = (offset.IsNull() ? 0 : 1) + (offsetBinding.IsNull() ? 0 : 1) +
@@ -176,10 +190,10 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
     require((regions.IsNull() || schemaVersion >= 5) && (binding.IsNull() || schemaVersion >= 7) &&
         (t02 == 0 || schemaVersion >= 8) && (t03 == 0 || schemaVersion >= 9) &&
         (profileFace.IsNull() || schemaVersion >= 10) &&
-        (symmetric.IsNull() || schemaVersion >= 13) &&
+        (symmetric.IsNull() || schemaVersion >= 13) && (revolve.IsNull() || schemaVersion >= 20) &&
         label.NbChildren() == 1 + (regions.IsNull() ? 0 : 1) + (binding.IsNull() ? 0 : 1) + t02 +
                                   t03 + (profileFace.IsNull() ? 0 : 1) +
-                                  (symmetric.IsNull() ? 0 : 1));
+                                  (symmetric.IsNull() ? 0 : 1) + (revolve.IsNull() ? 0 : 1));
     Handle(TDataStd_Real) distance;
     require(label.FindAttribute(TDataStd_Real::GetID(), distance));
     const auto profiles = child(label, 1);
@@ -245,6 +259,23 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
         const BodyId body{readDecimal(child(profileFace, 1))};
         result.faceProfile = BodyFaceReference{
             body, readNativeSubshapeOrigin(profileFace, remainingRecords, schemaVersion)};
+    }
+    if (!revolve.IsNull()) {
+        Handle(TDataStd_Real) angle;
+        require(revolve.NbChildren() == 2 &&
+                revolve.FindAttribute(TDataStd_Real::GetID(), angle));
+        const int kind = readInteger(child(revolve, 1));
+        const std::uint64_t value = readDecimal(child(revolve, 2));
+        require(kind >= 1 && kind <= 3 && (kind != 2 || value <= 3));
+        RevolveAxis axis;
+        if (kind == 1)
+            axis.sketchLine = SketchElementId{value};
+        else if (kind == 2)
+            axis.baseAxis = static_cast<BaseAxis>(value);
+        else
+            axis.datumAxis = FeatureId{value};
+        result.revolve = RevolveParameters{axis, kernel::Radians{angle->Get()}};
+        validateRevolveParameters(*result.revolve);
     }
     validateNativeExtrusion(result);
     return result;

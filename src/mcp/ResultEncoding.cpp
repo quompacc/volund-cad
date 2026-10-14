@@ -95,6 +95,17 @@ QJsonObject featureParameters(const document::FeatureParameters& parameters) {
                     json.insert("distanceParameterId", id(extrusion.distanceParameter->value()));
                 if (!extrusion.profiles.empty())
                     json.insert("needsRepair", true); // Unmigrated legacy profiles.
+                if (extrusion.revolve) { // M20: a revolve; its distance is unused
+                    const auto& axis = extrusion.revolve->axis;
+                    json.insert("revolveAngle",
+                                detail::quantity(extrusion.revolve->angle.value(), "rad"));
+                    if (axis.sketchLine)
+                        json.insert("revolveAxisElementId", id(axis.sketchLine->value()));
+                    else if (axis.baseAxis)
+                        json.insert("revolveBaseAxis", name(baseAxisNames, *axis.baseAxis));
+                    else
+                        json.insert("revolveAxisFeatureId", id(axis.datumAxis->value()));
+                }
                 return json;
             },
             [](const document::FilletParameters& fillet) -> QJsonObject {

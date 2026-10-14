@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ShellIcons.hpp"
 #include "Theme.hpp"
 
 #include <voelund/document/ModelDocument.hpp>
@@ -30,8 +31,10 @@ class TimelineBar final : public QFrame {
     explicit TimelineBar(QWidget* parent = nullptr);
 
     void setOpenHandler(std::function<void(std::uint64_t)> handler);
+    // M20: `revolves` are extrusions that turn; they get the revolve icon.
     void showFeatures(std::span<const document::FeatureDescriptor> features,
-                      std::optional<document::FeatureId> selected);
+                      std::optional<document::FeatureId> selected,
+                      std::span<const document::FeatureId> revolves = {});
     void setTheme(ThemeMode mode);
     // U10: red (error) or amber (blocked) markers with the message as tooltip.
     void showStates(std::span<const application::FeatureRuntimeState> states);
@@ -41,7 +44,7 @@ class TimelineBar final : public QFrame {
     QLabel* empty_{nullptr};
     QLabel* end_{nullptr};
     std::vector<QToolButton*> buttons_;
-    std::vector<document::FeatureKind> kinds_;
+    std::vector<ShellIcon> icons_;
     std::function<void(std::uint64_t)> open_;
     ThemeMode mode_{ThemeMode::light};
 };

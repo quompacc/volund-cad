@@ -135,6 +135,13 @@ void MainWindow::createCommands() {
     services.canEditSketch = [this]() { return impl_->shell().canSketch(); };
     services.canEditExistingSketch = [this]() { return impl_->shell().canEditFeature(); };
     services.canExtrudeProfiles = [this]() { return impl_->shell().canExtrude(); };
+    services.revolve = [this]() { // M20
+        if (impl_->sketchEditorTool->isActive())
+            impl_->sketchEditorTool->cancel();
+        if (impl_->sketchExtrusionTool->isActive())
+            impl_->sketchExtrusionTool->cancel();
+        impl_->sketchExtrusionTool->beginSelectedProfiles(true);
+    };
     // T04c: push/pull of the picked planar face.
     services.pushPull = [this]() {
         if (!impl_->selectedPlanarFace)

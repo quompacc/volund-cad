@@ -29,6 +29,7 @@ enum class ShellIcon {
     combine, // M21
     datumPlane, // M19
     datumAxis,  // M19
+    revolve,    // M20
     repair,
     eye,
     eyeOff,

@@ -96,7 +96,8 @@ ContextCommands contextCommands(const ShellState& state) {
         break;
     case ShellSelection::sketchRegion:
         result.title = QObject::tr("Skizzenbereich");
-        result.commands = {"solid.create.extrude_profiles", "solid.modify.edit_sketch"};
+        result.commands = {"solid.create.extrude_profiles", "solid.create.revolve",
+                           "solid.modify.edit_sketch"};
         result.primary = "solid.create.extrude_profiles";
         break;
     case ShellSelection::sketchElement:
