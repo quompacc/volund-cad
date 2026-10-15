@@ -119,7 +119,7 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                              services.canExtrudeProfiles,
                              "Drehen"});
     commands_.push_back({"solid.modify.transform", "Verschieben/Drehen",
-                         "Gewählten getrennten Körper verschieben oder drehen", "M",
+                         "Gewählten Körper verschieben oder drehen", "M",
                          workspaces::CommandGroup::modify, true, true,
                          std::move(services.transform), std::move(services.canTransform),
                          "Bewegen"});
@@ -189,6 +189,17 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                              simpleCommand(std::move(services.datumAxis)),
                              services.canDatum,
                              "Bezugsachse"});
+    if (services.measure)
+        commands_.push_back({"solid.inspect.measure",
+                             "Messen",
+                             "Längen, Flächen, Volumen, Abstände und Winkel messen",
+                             "I",
+                             workspaces::CommandGroup::construct,
+                             true,
+                             false,
+                             simpleCommand(std::move(services.measure)),
+                             services.canMeasure,
+                             "Messen"});
     if (services.combine)
         commands_.push_back({"solid.modify.combine",
                              "Kombinieren",

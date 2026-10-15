@@ -54,6 +54,7 @@ add_library(
     MirrorToolController.cpp
     PatternToolController.cpp
     MoveToolController.cpp
+    MeasureToolController.cpp
     MainWindowTools.cpp
     MainWindowInteractions.cpp
     ShellHeader.cpp

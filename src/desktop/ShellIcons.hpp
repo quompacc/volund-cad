@@ -42,6 +42,7 @@ enum class ShellIcon {
     mirror,     // M09
     patternLinear, // M10
     patternCircular,
+    measure,    // M12
     repair,
     eye,
     eyeOff,

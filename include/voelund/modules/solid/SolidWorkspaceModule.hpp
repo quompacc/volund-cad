@@ -43,6 +43,9 @@ struct SolidCommandServices final {
     std::function<void()> patternLinear{};
     std::function<void()> patternCircular{};
     std::function<bool()> canPattern{};
+    // M12: measures picked edges and faces; enabled while the model is current.
+    std::function<void()> measure{};
+    std::function<bool()> canMeasure{};
     // M20: turns the selected sketch regions about an axis; enabled like the extrusion.
     std::function<void()> revolve{};
     // M23: sweeps the selected sketch regions along an earlier sketch; enabled like the extrusion.

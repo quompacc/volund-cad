@@ -43,6 +43,7 @@ enum class KernelOperation {
     draft,          // M25
     mirror,         // M09
     pattern,        // M10
+    measure,        // M12
 };
 
 // M03: why a Boolean refused its result, beyond a failing kernel.

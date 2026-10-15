@@ -129,6 +129,8 @@ const char* kernelOperationName(KernelOperation operation) noexcept {
         return "mirror";
     case KernelOperation::pattern:
         return "pattern";
+    case KernelOperation::measure:
+        return "measure";
     }
     return "unknown";
 }

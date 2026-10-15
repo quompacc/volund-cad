@@ -55,6 +55,7 @@ std::optional<ShellIcon> iconFor(const QString& id) {
         {QStringLiteral("solid.modify.mirror"), ShellIcon::mirror}, // M09
         {QStringLiteral("solid.modify.pattern_linear"), ShellIcon::patternLinear}, // M10
         {QStringLiteral("solid.modify.pattern_circular"), ShellIcon::patternCircular},
+        {QStringLiteral("solid.inspect.measure"), ShellIcon::measure}, // M12
         {QStringLiteral("solid.create.datum_plane"), ShellIcon::datumPlane},
         {QStringLiteral("solid.create.datum_axis"), ShellIcon::datumAxis},
         {QStringLiteral("repair.references"), ShellIcon::repair},
@@ -100,7 +101,8 @@ const std::vector<RailGroup>& railGroups() {
          {QStringLiteral("solid.modify.transform")}},
         {QT_TRANSLATE_NOOP("ToolRail", "Mehr"),
          ShellIcon::datumPlane,
-         {QStringLiteral("solid.create.datum_plane"), QStringLiteral("solid.create.datum_axis")}}};
+         {QStringLiteral("solid.create.datum_plane"), QStringLiteral("solid.create.datum_axis"),
+          QStringLiteral("solid.inspect.measure")}}};
     return groups;
 }
 

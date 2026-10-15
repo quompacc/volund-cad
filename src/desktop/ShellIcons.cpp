@@ -240,6 +240,12 @@ void draw(QPainter& painter, ShellIcon icon, const QColor& ink, const QColor& ac
         painter.drawLine(QPointF(12, 2), QPointF(12, 22));
         break;
     }
+    case ShellIcon::measure:
+        // A ruler with marks.
+        painter.drawRect(QRectF(2.5, 8.5, 19, 7));
+        for (const double x : {6.0, 10.0, 14.0, 18.0})
+            painter.drawLine(QPointF(x, 8.5), QPointF(x, x == 10.0 || x == 18.0 ? 13 : 11));
+        break;
     case ShellIcon::patternLinear:
         // Three blocks in a row, the copies drawn in the accent colour.
         painter.drawRect(QRectF(2.5, 8.5, 5, 7));

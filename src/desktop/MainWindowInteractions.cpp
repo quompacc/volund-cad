@@ -75,6 +75,8 @@ void MainWindow::connectInteractions() {
                 return impl_->draftTool->picked(selection); // M25: tilts the face or not
             if (impl_->mirrorTool->isActive())
                 return impl_->mirrorTool->picked(selection); // M09: the mirror plane
+            if (impl_->measureTool->isActive())
+                return impl_->measureTool->pickedFace(selection); // M12: measured only
             clearEdgeSelection();
             // T03: while the extrusion waits for its end face, the pick goes to the tool.
             if (impl_->sketchExtrusionTool->awaitsEndFace()) {

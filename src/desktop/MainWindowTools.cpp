@@ -75,6 +75,9 @@ void MainWindow::createToolPanel() {
         impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
         [this](const QString& message) { statusBar()->showMessage(message); });
     impl_->moveTool->setPreviewHandler(showPreview);
+    impl_->measureTool = std::make_unique<MeasureToolController>( // M12
+        impl_->session, *impl_->viewport, *impl_->toolPanel,
+        [this](const QString& message) { statusBar()->showMessage(message); });
     impl_->datumTool = std::make_unique<DatumToolController>( // M19
         impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
         [this](const QString& message) { statusBar()->showMessage(message); });
@@ -101,6 +104,10 @@ void MainWindow::pickEdge(std::uint64_t body, const TopoDS_Shape& edge, bool add
     }
     if (impl_->patternTool->isActive()) { // M10: the direction or axis
         impl_->patternTool->picked(body, edge);
+        return;
+    }
+    if (impl_->measureTool->isActive()) { // M12: measured, nothing selected
+        impl_->measureTool->pickedEdge(body, edge);
         return;
     }
     if (impl_->shell().toolBlocksCommands())

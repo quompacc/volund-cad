@@ -13,6 +13,7 @@
 #include "FilletToolController.hpp"
 #include "CombineToolController.hpp"
 #include "MirrorToolController.hpp"
+#include "MeasureToolController.hpp"
 #include "MoveToolController.hpp"
 #include "PatternToolController.hpp"
 #include "DatumToolController.hpp"
@@ -76,7 +77,8 @@ class MainWindow::Impl final {
                  (draftTool && draftTool->isActive()) ||
                  (mirrorTool && mirrorTool->isActive()) ||
                  (patternTool && patternTool->isActive()) ||
-                 (moveTool && moveTool->isActive()))
+                 (moveTool && moveTool->isActive()) ||
+                 (measureTool && measureTool->isActive()))
             inputs.tool = ShellTool::extrusion; // Its panel carries the controls (T04c).
         else if (transformAction && transformAction->isChecked())
             inputs.tool = ShellTool::transform;
@@ -107,6 +109,7 @@ class MainWindow::Impl final {
     std::unique_ptr<MirrorToolController> mirrorTool;     // M09
     std::unique_ptr<PatternToolController> patternTool;   // M10
     std::unique_ptr<MoveToolController> moveTool;         // M11
+    std::unique_ptr<MeasureToolController> measureTool;   // M12
     // User request 2026-10-13: edges picked before a tool, on the body `edgeSupport` names.
     std::optional<document::FeatureId> edgeSupport;
     std::vector<document::FilletEdge> selectedEdges;
