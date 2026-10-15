@@ -2535,12 +2535,15 @@
       ],
       "acceptance": "A-MEASURE-01 vergleicht Box, Zylinder, Ring und bekannte Winkel mit analytischen Werten. Kamera/DPI verändern Messung nicht. Auswahl-/Messvorgang macht Dokument nicht dirty.",
       "boundary": "Keine Toleranzprüfung/Zeichnungsbemaßung als vermeintlich identische Funktion.",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "chapter": "05-solid-historie.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/M12.md"
+      ],
+      "completedCommit": "b3c6bca",
+      "completedDate": "2026-10-15"
     },
     {
       "id": "M13",
