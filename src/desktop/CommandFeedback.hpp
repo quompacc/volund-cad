@@ -76,6 +76,9 @@ inline QString booleanFailureText(const std::string& code) {
                            "Grundebene, Bezugsebene oder ebene Fläche neu.");
     if (code == "mirror-body-missing")
         return QObject::tr("Spiegeln: Der Körper hat vor dem Spiegeln keinen Volumenkörper mehr.");
+    // M11: the body of a move is gone.
+    if (code == "move-body-missing")
+        return QObject::tr("Bewegen: Der Körper hat vor dem Bewegen keinen Volumenkörper mehr.");
     // M10: the axis or the body of a pattern is gone.
     if (code == "pattern-axis-missing")
         return QObject::tr("Muster: Die Richtung oder Achse gibt es so nicht mehr. Wähle eine "

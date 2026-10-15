@@ -76,13 +76,16 @@ FeatureDependencies FeatureDependencies::from(const document::DocumentSnapshot& 
         if (feature.kind == document::FeatureKind::fillet ||
             feature.kind == document::FeatureKind::chamfer ||
             feature.kind == document::FeatureKind::hole ||
-            feature.kind == document::FeatureKind::shell) {
+            feature.kind == document::FeatureKind::shell ||
+            feature.kind == document::FeatureKind::move) {
             const auto body = feature.kind == document::FeatureKind::fillet
                                   ? snapshot.filletParameters(feature.id).body
                               : feature.kind == document::FeatureKind::chamfer
                                   ? snapshot.chamferParameters(feature.id).body
                               : feature.kind == document::FeatureKind::shell // M22
                                   ? snapshot.shellParameters(feature.id).body
+                              : feature.kind == document::FeatureKind::move // M11
+                                  ? snapshot.moveParameters(feature.id).body
                                   : snapshot.holeParameters(feature.id).face.body;
             if (const auto producer = bodyProducerBefore(snapshot, feature.id, body))
                 node.inputs.push_back(*producer);

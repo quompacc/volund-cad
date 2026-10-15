@@ -143,6 +143,11 @@ void MainWindow::createCommands() {
             syncShell();
             return;
         }
+        if (kind == document::FeatureKind::move) { // M11
+            impl_->moveTool->beginEdit(*selected);
+            syncShell();
+            return;
+        }
         // M10: a pattern, also through one of its copies.
         if (kind == document::FeatureKind::pattern ||
             kind == document::FeatureKind::patternCopy) {

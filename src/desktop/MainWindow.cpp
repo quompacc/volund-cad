@@ -354,7 +354,9 @@ void MainWindow::refreshAfterExternalChange() {
 
 void MainWindow::previewBodyMove(std::uint64_t id, double deltaX, double deltaY, double deltaZ) {
     const document::FeatureId featureId{id};
-    if (!selectTransformFeatureForBody(impl_->session, featureId)) {
+    // M11: the placement fields preview a primitive's own placement only.
+    if (!selectTransformFeatureForBody(impl_->session, featureId) ||
+        !impl_->session.placementFeature(*impl_->session.selectedFeature())) {
         return;
     }
     impl_->propertyPanel->previewMove(impl_->session.selectedFeaturePlacement(), deltaX, deltaY,
@@ -364,7 +366,7 @@ void MainWindow::previewBodyMove(std::uint64_t id, double deltaX, double deltaY,
 void MainWindow::previewBodyRotation(std::uint64_t id, int axisIndex, double angleDegrees) {
     const document::FeatureId featureId{id};
     if (!selectTransformFeatureForBody(impl_->session, featureId) || axisIndex < 0 ||
-        axisIndex > 2) {
+        axisIndex > 2 || !impl_->session.placementFeature(*impl_->session.selectedFeature())) {
         return;
     }
     impl_->propertyPanel->previewRotation(impl_->session.selectedFeaturePlacement(), axisIndex,

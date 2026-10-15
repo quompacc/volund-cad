@@ -297,6 +297,22 @@ struct EditPatternParametersAction final {
     document::PatternParameters parameters;
     bool operator==(const EditPatternParametersAction&) const = default;
 };
+// M11: moves the body of `feature`, turned about X, Y or Z through its middle when
+// `rotationAxis` is set (angle in rad).
+struct MoveBodyAction final {
+    document::FeatureId feature;
+    Quantity x;
+    Quantity y;
+    Quantity z;
+    std::optional<int> rotationAxis;
+    Quantity angle{0.0, QuantityUnit::radian};
+    bool operator==(const MoveBodyAction&) const = default;
+};
+struct EditMoveParametersAction final {
+    document::FeatureId move;
+    document::MoveParameters parameters;
+    bool operator==(const EditMoveParametersAction&) const = default;
+};
 struct SetPlacementAction final {
     document::FeatureId feature;
     Quantity x;
@@ -327,7 +343,8 @@ using Action = std::variant<CreateParameterAction, SetParameterValueAction, Rena
                             CreatePrimitiveAction, EditPrimitiveParametersAction,
                             CreateDraftAction, EditDraftParametersAction,
                             CreateMirrorAction, EditMirrorParametersAction,
-                            CreatePatternAction, EditPatternParametersAction>;
+                            CreatePatternAction, EditPatternParametersAction,
+                            MoveBodyAction, EditMoveParametersAction>;
 // Parallel to the alternatives of Action.
 enum class ActionKind {
     createParameter,
@@ -371,7 +388,9 @@ enum class ActionKind {
     createMirror, // M09
     editMirrorParameters,
     createPattern, // M10
-    editPatternParameters
+    editPatternParameters,
+    moveBody, // M11
+    editMoveParameters
 };
 [[nodiscard]] ActionKind actionKind(const Action& action) noexcept;
 

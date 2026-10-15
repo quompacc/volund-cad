@@ -214,7 +214,8 @@ constexpr SolidKind solidKinds[]{{FeatureKind::combine, "combine", 18},
                                  {FeatureKind::draft, "draft", 29},
                                  {FeatureKind::mirror, "mirror", 31},
                                  {FeatureKind::pattern, "pattern", 32},
-                                 {FeatureKind::patternCopy, "pattern_copy", 32}};
+                                 {FeatureKind::patternCopy, "pattern_copy", 32},
+                                 {FeatureKind::move, "move", 33}};
 } // namespace
 
 const char* nativeSolidKindName(FeatureKind kind) noexcept {
@@ -264,6 +265,10 @@ std::size_t nativeSolidRecords(FeatureKind kind, const FeatureParameters& parame
     case FeatureKind::patternCopy:
         require(std::holds_alternative<PatternCopyParameters>(parameters));
         return 0;
+    case FeatureKind::move: // M11: no records beyond the feature
+        require(std::holds_alternative<MoveParameters>(parameters));
+        validateMoveParameters(std::get<MoveParameters>(parameters));
+        return 0;
     case FeatureKind::primitive: // M27: no records beyond the feature
         require(std::holds_alternative<PrimitiveParameters>(parameters));
         validatePrimitiveParameters(std::get<PrimitiveParameters>(parameters));
@@ -291,6 +296,8 @@ void writeNativeSolid(const TDF_Label& label, const FeatureParameters& parameter
         writeNativePattern(label, *pattern);
     else if (const auto* copy = std::get_if<PatternCopyParameters>(&parameters))
         writeNativePatternCopy(label, *copy);
+    else if (const auto* move = std::get_if<MoveParameters>(&parameters))
+        writeNativeMove(label, *move);
     else
         writeNativeDatumAxis(label, std::get<DatumAxisParameters>(parameters));
 }
@@ -316,6 +323,8 @@ FeatureParameters readNativeSolid(const TDF_Label& label, FeatureKind kind,
         return readNativePattern(label, remainingRecords, schemaVersion);
     case FeatureKind::patternCopy:
         return readNativePatternCopy(label, schemaVersion);
+    case FeatureKind::move:
+        return readNativeMove(label, schemaVersion);
     default:
         break;
     }

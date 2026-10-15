@@ -55,6 +55,8 @@ ShellIcon iconFor(document::FeatureKind kind) {
     case document::FeatureKind::pattern:
     case document::FeatureKind::patternCopy:
         return ShellIcon::patternLinear; // M10
+    case document::FeatureKind::move:
+        return ShellIcon::transform; // M11
     }
     return ShellIcon::box;
 }

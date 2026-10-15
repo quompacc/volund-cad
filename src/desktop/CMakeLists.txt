@@ -53,6 +53,7 @@ add_library(
     ShellToolController.cpp
     MirrorToolController.cpp
     PatternToolController.cpp
+    MoveToolController.cpp
     MainWindowTools.cpp
     MainWindowInteractions.cpp
     ShellHeader.cpp

@@ -73,7 +73,8 @@ ShellState projectShell(const application::CadSession& session, const ShellInput
                            state.featureKind == document::FeatureKind::draft ||
                            state.featureKind == document::FeatureKind::mirror ||
                            state.featureKind == document::FeatureKind::pattern ||
-                           state.featureKind == document::FeatureKind::patternCopy;
+                           state.featureKind == document::FeatureKind::patternCopy ||
+                           state.featureKind == document::FeatureKind::move;
     if (state.featureKind == document::FeatureKind::extrusion)
         state.extrusionEditable =
             !session.identifiedSnapshot().snapshot().extrusionParameters(*state.feature).faceProfile;

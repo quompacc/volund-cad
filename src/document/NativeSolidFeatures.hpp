@@ -48,6 +48,9 @@ PatternParameters readNativePattern(const TDF_Label& label, std::size_t remainin
 std::size_t nativePatternRecords(const PatternParameters& parameters);
 void writeNativePatternCopy(const TDF_Label& label, const PatternCopyParameters& parameters);
 PatternCopyParameters readNativePatternCopy(const TDF_Label& label, int schemaVersion);
+// M11 (NativeMove.cpp).
+void writeNativeMove(const TDF_Label& label, const MoveParameters& parameters);
+MoveParameters readNativeMove(const TDF_Label& label, int schemaVersion);
 // M27 (NativePrimitiveSolid.cpp).
 void writeNativePrimitive(const TDF_Label& label, const PrimitiveParameters& parameters);
 PrimitiveParameters readNativePrimitive(const TDF_Label& label, int schemaVersion);

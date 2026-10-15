@@ -28,7 +28,8 @@ constexpr const char* toolNames[] = {
     nullptr,                  nullptr,                  nullptr,  // M27: no tools yet
     nullptr,                  nullptr,  // M25: no tools yet
     nullptr,                  nullptr,  // M09: no tools yet
-    nullptr,                  nullptr}; // M10: no tools yet
+    nullptr,                  nullptr,  // M10: no tools yet
+    nullptr,                  nullptr}; // M11: no tools yet
 static_assert(std::size(toolNames) == std::variant_size_v<application::Action>,
               "One tool name (or none) per action kind");
 constexpr const char* statusNames[] = {"rejected", "committed", "committedWithErrors"};
@@ -43,7 +44,7 @@ constexpr const char* evaluationNames[] = {"valid", "dirty", "failed", "blockedB
 constexpr const char* featureKinds[] = {"box",    "cylinder", "sketch", "extrusion",
                                         "fillet", "chamfer",  "hole",   "combine",
                                         "datumPlane", "datumAxis", "shell", "primitive", "draft",
-                                        "mirror", "pattern", "patternCopy"};
+                                        "mirror", "pattern", "patternCopy", "move"};
 static_assert(std::size(featureKinds) == std::variant_size_v<document::FeatureParameters>,
               "One name per feature kind");
 constexpr const char* primitiveShapes[] = {"sphere", "cone", "torus", "wedge"};
@@ -130,6 +131,14 @@ QJsonObject featureParameters(const document::FeatureParameters& parameters) {
                 else
                     json.insert("edgeBodyId", id(pattern.axis.body->value()));
                 return json;
+            },
+            [](const document::MoveParameters& move) -> QJsonObject { // M11
+                QJsonArray pivot;
+                for (const double value : move.pivot)
+                    pivot.append(value);
+                return {{"bodyId", id(move.body.value())},
+                        {"placement", placement(move.transform)},
+                        {"pivot", pivot}};
             },
             [](const document::PatternCopyParameters& copy) -> QJsonObject {
                 return {{"patternId", id(copy.pattern.value())},

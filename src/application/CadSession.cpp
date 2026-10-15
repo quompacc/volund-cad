@@ -228,18 +228,10 @@ bool CadSession::canTransformFeature(document::FeatureId featureId) const noexce
     if (feature == descriptors.end()) {
         return false;
     }
+    // M11: every body moves; sketches and construction features have none.
     if (feature->kind == document::FeatureKind::sketch ||
-        feature->kind == document::FeatureKind::extrusion ||
-        feature->kind == document::FeatureKind::fillet ||
-        feature->kind == document::FeatureKind::chamfer ||
-        feature->kind == document::FeatureKind::hole ||
-        feature->kind == document::FeatureKind::combine ||
         feature->kind == document::FeatureKind::datumPlane ||
-        feature->kind == document::FeatureKind::datumAxis ||
-        feature->kind == document::FeatureKind::shell ||
-        feature->kind == document::FeatureKind::mirror ||
-        feature->kind == document::FeatureKind::pattern ||
-        feature->kind == document::FeatureKind::patternCopy) {
+        feature->kind == document::FeatureKind::datumAxis) {
         return false;
     }
     if (!transformBodyForFeature(featureId).has_value()) {
@@ -255,17 +247,16 @@ bool CadSession::canTransformFeature(document::FeatureId featureId) const noexce
 
 std::optional<document::FeatureId>
 CadSession::transformBodyForFeature(document::FeatureId featureId) const noexcept {
-    if (!featureShape(featureId))
+    // M11: the current producer of the feature's body.
+    if (!featureShape(featureId) || !evaluation_)
         return std::nullopt;
-    const std::optional<document::FeatureId> owner = placementOwner(document_, featureId);
-    if (!owner.has_value()) {
+    const auto& outputs = evaluation_->result.features;
+    const auto output = std::ranges::find(outputs, featureId, &features::EvaluatedFeature::id);
+    if (output == outputs.end() || !output->bodyId)
         return std::nullopt;
-    }
-    for (const features::EvaluatedBody& body : validBodies()) {
-        if (placementOwner(document_, body.sourceFeature) == owner) {
+    for (const features::EvaluatedBody& body : validBodies())
+        if (body.bodyId == *output->bodyId)
             return body.sourceFeature;
-        }
-    }
     return std::nullopt;
 }
 

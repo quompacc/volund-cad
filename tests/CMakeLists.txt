@@ -1210,6 +1210,11 @@ add_executable(voelund_pattern_tests integration/PatternTests.cpp)
 target_link_libraries(voelund_pattern_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME application.pattern COMMAND voelund_pattern_tests)
 set_tests_properties(application.pattern PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
+# M11: moving any body.
+add_executable(voelund_move_tests integration/MoveTests.cpp)
+target_link_libraries(voelund_move_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.move COMMAND voelund_move_tests)
+set_tests_properties(application.move PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
 # M20: revolves and grooves.
 add_executable(voelund_revolve_tests integration/RevolveTests.cpp)
 target_link_libraries(voelund_revolve_tests PRIVATE voelund_project_options Voelund::Application)

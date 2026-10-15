@@ -200,21 +200,19 @@ void MainWindow::connectInteractions() {
                 statusBar()->showMessage(tr("Skizzenelement gewählt"), 2000);
             }
         });
+    // M11: a drag moves any body (CadSession::moveBody picks the primitive's placement, the
+    // body's last move or a new one); one drag is one undo step.
     impl_->viewport->setBodyMoveHandler(
         [this](std::uint64_t id, double deltaX, double deltaY, double deltaZ) {
             if (!selectTransformFeatureForBody(impl_->session, document::FeatureId{id})) {
                 return;
             }
-            kernel::RigidTransform placement = impl_->session.selectedFeaturePlacement();
-            placement.translationX += deltaX;
-            placement.translationY += deltaY;
-            placement.translationZ += deltaZ;
-            applyParameterCommand([this, placement](application::ErrorDisposition disposition) {
-                return runOnSelected(
-                    impl_->session,
-                    [&](document::FeatureId feature) { return placementAction(feature, placement); },
-                    disposition);
-            });
+            const auto feature = *impl_->session.selectedFeature();
+            applyParameterCommand(
+                [this, feature, deltaX, deltaY, deltaZ](application::ErrorDisposition disposition) {
+                    return impl_->session.moveBody(feature, {deltaX, deltaY, deltaZ},
+                                                   std::nullopt, 0.0, disposition);
+                });
         });
     impl_->viewport->setBodyMovePreviewHandler(
         [this](std::uint64_t id, double deltaX, double deltaY, double deltaZ) {
@@ -237,21 +235,16 @@ void MainWindow::connectInteractions() {
             if (!selectTransformFeatureForBody(impl_->session, document::FeatureId{id})) {
                 return;
             }
-            kernel::RigidTransform placement = impl_->session.selectedFeaturePlacement();
-            kernel::Radians* rotations[] = {&placement.rotationX, &placement.rotationY,
-                                            &placement.rotationZ};
             if (axisIndex < 0 || axisIndex > 2) {
                 return;
             }
-            *rotations[axisIndex] =
-                kernel::Radians(rotations[axisIndex]->value() +
-                                kernel::toRadians(kernel::Degrees(angleDegrees)).value());
-            applyParameterCommand([this, placement](application::ErrorDisposition disposition) {
-                return runOnSelected(
-                    impl_->session,
-                    [&](document::FeatureId feature) { return placementAction(feature, placement); },
-                    disposition);
-            });
+            const auto feature = *impl_->session.selectedFeature();
+            const double angle = kernel::toRadians(kernel::Degrees(angleDegrees)).value();
+            applyParameterCommand(
+                [this, feature, axisIndex, angle](application::ErrorDisposition disposition) {
+                    return impl_->session.moveBody(feature, {0.0, 0.0, 0.0}, axisIndex, angle,
+                                                   disposition);
+                });
         });
     impl_->viewport->setBodyRotationPreviewHandler(
         [this](std::uint64_t id, int axisIndex, double angleDegrees) {

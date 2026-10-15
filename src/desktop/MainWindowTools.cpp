@@ -71,6 +71,10 @@ void MainWindow::createToolPanel() {
         impl_->session, *impl_->viewport, *impl_->toolPanel, [this]() { refreshScene(); },
         [this](const QString& message) { statusBar()->showMessage(message); });
     impl_->patternTool->setPreviewHandler(showPreview);
+    impl_->moveTool = std::make_unique<MoveToolController>( // M11
+        impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
+        [this](const QString& message) { statusBar()->showMessage(message); });
+    impl_->moveTool->setPreviewHandler(showPreview);
     impl_->datumTool = std::make_unique<DatumToolController>( // M19
         impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
         [this](const QString& message) { statusBar()->showMessage(message); });

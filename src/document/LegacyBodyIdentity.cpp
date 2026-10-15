@@ -78,6 +78,9 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
     case FeatureKind::patternCopy:
         matches = std::holds_alternative<PatternCopyParameters>(parameters);
         break;
+    case FeatureKind::move: // M11
+        matches = std::holds_alternative<MoveParameters>(parameters);
+        break;
     }
     if (!matches)
         throw std::invalid_argument("Legacy body identity: feature parameter kind mismatch");
@@ -90,6 +93,7 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
         feature.kind == FeatureKind::datumAxis || feature.kind == FeatureKind::shell ||
         feature.kind == FeatureKind::draft || feature.kind == FeatureKind::mirror ||
         feature.kind == FeatureKind::pattern || feature.kind == FeatureKind::patternCopy ||
+        feature.kind == FeatureKind::move ||
         (feature.kind == FeatureKind::sketch && (std::get<SketchParameters>(parameters).datum ||
                                                  std::get<SketchParameters>(parameters)
                                                      .constructionPlane)) ||
@@ -185,6 +189,9 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
         // M25: a draft tilts faces of its body.
         if (features[index].kind == FeatureKind::draft)
             return std::get<DraftParameters>(parameters[index]).body;
+        // M11: a move moves its body.
+        if (const auto* move = std::get_if<MoveParameters>(&parameters[index]))
+            return move->body;
         // M10: a pattern passes its body on, or joins the copies into it.
         if (const auto* pattern = std::get_if<PatternParameters>(&parameters[index]))
             return pattern->body;

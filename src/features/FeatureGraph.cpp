@@ -386,6 +386,9 @@ void runFeature(const document::DocumentSnapshot& document,
     case document::FeatureKind::patternCopy:
         detail::evaluatePatternCopy(document, descriptor, outputs, bodies, references);
         break;
+    case document::FeatureKind::move:
+        detail::evaluateMove(document, descriptor, outputs, bodies, references);
+        break;
     }
 }
 void restoreOutput(const EvaluatedFeature& output, std::vector<EvaluatedFeature>& outputs,

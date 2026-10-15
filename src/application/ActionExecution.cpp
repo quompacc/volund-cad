@@ -291,6 +291,17 @@ class Validation final {
     void operator()(const EditMirrorParametersAction& action) {
         static_cast<void>(target(action.mirror, ActionKind::editMirrorParameters));
     }
+    void operator()(const MoveBodyAction& action) {
+        static_cast<void>(target(action.feature, ActionKind::moveBody));
+        lengths({action.x, action.y, action.z});
+        quantity(action.angle, QuantityUnit::radian);
+    }
+    void operator()(const EditMoveParametersAction& action) {
+        static_cast<void>(target(action.move, ActionKind::editMoveParameters));
+        const auto& t = action.parameters.transform;
+        finite({t.translationX, t.translationY, t.translationZ, t.rotationX.value(),
+                t.rotationY.value(), t.rotationZ.value()});
+    }
     // M10: the edge of the axis lies on a current result too.
     void operator()(const CreatePatternAction& action) {
         static_cast<void>(target(action.support, ActionKind::createPattern));
@@ -473,6 +484,13 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot,
                 return session.editMirrorParameters(a.mirror, a.parameters, reject);
             },
             [&](const CreatePatternAction& a) { return session.createPattern(a.support, a.input); },
+            [&](const MoveBodyAction& a) {
+                return session.moveBody(a.feature, {a.x.value, a.y.value, a.z.value},
+                                        a.rotationAxis, a.angle.value);
+            },
+            [&](const EditMoveParametersAction& a) {
+                return session.editMoveParameters(a.move, a.parameters, reject);
+            },
             [&](const EditPatternParametersAction& a) {
                 return session.editPatternParameters(a.pattern, a.parameters, reject);
             },

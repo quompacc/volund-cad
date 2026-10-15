@@ -10,6 +10,8 @@
 #include <QKeyEvent>
 #include <QPushButton>
 #include <QStatusBar>
+#include <algorithm>
+#include <array>
 #include <cmath>
 #include <iostream>
 #include <memory>
@@ -19,11 +21,14 @@
 #include <voelund/application/CadSession.hpp>
 #include <voelund/desktop/MainWindow.hpp>
 #include <voelund/desktop/ProductShell.hpp>
+#include <voelund/features/SketchRegionIdentity.hpp>
 
 // S14 (A-TXN-03) in the product shell with real mouse events: a sketch element dragged with
 // 100 moves is one sketch undo step; a second drag ended with Escape changes nothing and adds
 // no step; 100 redraws change neither history nor the modified flag. The same for the body
 // manipulator: 100 moves are one document undo step; Escape ends a drag without a change.
+// M11: an extrusion drags the same way; its first drag adds "Bewegen 1", the next one changes
+// it, and one undo takes back the last drag only.
 namespace {
 using namespace voelund;
 using test::press;
@@ -191,11 +196,73 @@ void bodyDrag(Window& w) {
             "Escape during a body drag changes nothing and adds no step");
 }
 
+void extrusionDrag(Window& w) {
+    document::SketchParameters rectangle{document::datumSketchPlane(document::DatumPlane::xy),
+                                         {}};
+    rectangle.datum = document::DatumPlane::xy;
+    rectangle.elements.values.push_back(
+        {document::SketchElementId{1}, document::SketchRectangle{60, 0, 80, 10}});
+    rectangle.elements.nextId = 2;
+    const auto regions = features::identifySketchRegions(rectangle.elements.values).ids;
+    require(w.session.createDatumSketchExtrusion(rectangle, regions, 10).status() ==
+                application::CommandStatus::committed,
+            "An extrusion beside the box");
+    const auto extrusion = w.session.features().back().id;
+    const auto body = *w.session.resultBody(extrusion);
+    const auto center = [&] {
+        Bnd_Box box;
+        for (const auto& item : w.session.currentBodies())
+            if (item.bodyId == body)
+                BRepBndLib::Add(item.shape, box);
+        double x0 = 0, y0 = 0, z0 = 0, x1 = 0, y1 = 0, z1 = 0;
+        box.Get(x0, y0, z0, x1, y1, z1);
+        return std::array<double, 3>{(x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2};
+    };
+    // The handle found may be any of the three arrows.
+    const auto apart = [](const std::array<double, 3>& a, const std::array<double, 3>& b) {
+        return std::hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+    };
+    const auto moves = [&] {
+        return std::ranges::count(w.session.features(), document::FeatureKind::move,
+                                  &document::FeatureDescriptor::kind);
+    };
+    require(w.session.selectFeature(extrusion), "Extrusion selected");
+    w.main->refreshAfterExternalChange();
+    test::render(*w.viewport);
+    require(w.command("solid.modify.transform").isEnabled(), "An extrusion can be moved");
+    if (!w.command("solid.modify.transform").isChecked())
+        w.command("solid.modify.transform").trigger();
+    test::render(*w.viewport);
+    const auto start = center();
+    const auto drag = [&] {
+        const auto handle = viewport::ViewportTestAccess::translationHandle(*w.viewport, center());
+        require(handle.has_value(), "The move handle is on the extrusion");
+        w.drag(*handle, viewport::ViewportTestAccess::translationDestination(*w.viewport, *handle),
+               false);
+    };
+    drag();
+    const auto first = center();
+    require(apart(first, start) > 1e-3 && moves() == 1 &&
+                w.session.features().back().name == "Bewegen 1",
+            "The first drag adds Bewegen 1");
+    test::render(*w.viewport);
+    drag();
+    const auto second = center();
+    require(apart(second, first) > 1e-3 && moves() == 1,
+            "The second drag changes the same move");
+    require(w.session.undo().status() == application::CommandStatus::committed &&
+                apart(center(), first) < 1e-9 &&
+                moves() == 1,
+            "One undo takes back the second drag only");
+}
+
 int run() {
     Window w;
     sketchDrag(w);
     bodyDrag(w);
-    std::cout << "PASS S14 drags in the shell (A-TXN-03): sketch and body, one undo step, "
+    extrusionDrag(w);
+    std::cout << "PASS S14/M11 drags in the shell (A-TXN-03): sketch, box and extrusion, one undo "
+                 "step, one move per body, "
                  "Escape without change, redraws without history\n";
     return 0;
 }

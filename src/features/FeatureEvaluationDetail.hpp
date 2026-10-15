@@ -73,6 +73,11 @@ void evaluatePatternCopy(const document::DocumentSnapshot& document,
                          std::vector<EvaluatedFeature>& outputs,
                          std::vector<EvaluatedBody>& bodies,
                          std::vector<EvaluatedBody>& referenceBodies);
+// M11 (MoveEvaluation.cpp): moves and turns a body about its stored pivot.
+void evaluateMove(const document::DocumentSnapshot& document,
+                  const document::FeatureDescriptor& descriptor,
+                  std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
+                  std::vector<EvaluatedBody>& referenceBodies);
 // M22 (ShellEvaluation.cpp): walls of one thickness with named faces opened.
 // M25 (DraftEvaluation.cpp): tilts named faces of a body.
 void evaluateDraft(const document::DocumentSnapshot& document,

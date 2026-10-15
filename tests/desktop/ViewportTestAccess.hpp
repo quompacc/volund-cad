@@ -1,6 +1,7 @@
 #pragma once
 #include "../../src/viewport/CadViewportQtOpenGlBackend.hpp"
 #include <algorithm>
+#include <array>
 #include <AIS_Manipulator.hxx>
 #include <BRepGProp.hxx>
 #include <GProp_GProps.hxx>
@@ -110,9 +111,11 @@ class ViewportTestAccess {
     static bool bindFramebuffer(CadViewport& v, double ratio) {
         return qtgl::bindCurrentFramebuffer(v.impl_->view, ratio);
     }
-    static std::optional<QPoint> translationHandle(CadViewport& v) {
+    // M11: searched around `around` (model coordinates), by default the test box's corner.
+    static std::optional<QPoint> translationHandle(CadViewport& v,
+                                                   std::array<double, 3> around = {10, 10, 10}) {
         v.makeCurrent();
-        const QPoint center = project(v, 10, 10, 10);
+        const QPoint center = project(v, around[0], around[1], around[2]);
         // U14: the viewport fills the window, so the handles of a fitted body may lie farther
         // out; the search runs in rings from the centre and takes the nearest handle point.
         for (int ring = 0; ring <= 200; ring += 3) {
@@ -124,6 +127,8 @@ class ViewportTestAccess {
                 const QPoint point = center + offsets[index / side % 4];
                 const QPoint physical = (QPointF(point) * v.devicePixelRatioF()).toPoint();
                 v.impl_->context->MoveTo(physical.x(), physical.y(), v.impl_->view, false);
+                if (!v.impl_->context->HasDetected())
+                    continue;
                 const auto detected = v.impl_->context->DetectedInteractive();
                 const auto manipulator = occ::handle<AIS_Manipulator>::DownCast(detected);
                 if (!manipulator.IsNull() && manipulator->ActiveMode() == AIS_MM_Translation) {

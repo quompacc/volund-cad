@@ -92,9 +92,14 @@ std::vector<ActionKind> availableActions(const CadSession& session,
         break;
     case FeatureKind::patternCopy: // edited through its pattern
         break;
+    case FeatureKind::move:
+        actions = {ActionKind::editMoveParameters};
+        break;
     }
     if (session.placementFeature(feature))
         actions.push_back(ActionKind::setPlacement);
+    if (session.canTransformFeature(feature)) // M11
+        actions.push_back(ActionKind::moveBody);
     // A current result offers faces to sketch on or to push/pull, and an input for a
     // cylinder.
     if (session.canAddCylinder(feature)) {

@@ -44,7 +44,8 @@ enum class FeatureKind {
     draft,     // M25
     mirror,    // M09
     pattern,   // M10
-    patternCopy
+    patternCopy,
+    move       // M11
 };
 enum class CylinderResultMode { join, cut, intersect, separate };
 
@@ -390,6 +391,16 @@ struct PatternParameters final {
     [[nodiscard]] bool operator==(const PatternParameters&) const = default;
 };
 void validatePatternParameters(const PatternParameters& parameters);
+// M11 (schema 33, user decision 2026-10-15): moves and turns a body where it stands in the
+// history ("Bewegen"): turned about `pivot` like a primitive's placement (about X, then Y, then
+// Z), then shifted. The pivot is the middle of the body when the move was made.
+struct MoveParameters final {
+    BodyId body;
+    kernel::RigidTransform transform;
+    std::array<double, 3> pivot;
+    [[nodiscard]] bool operator==(const MoveParameters&) const = default;
+};
+void validateMoveParameters(const MoveParameters& parameters);
 // One copy of a new-body pattern: its own body, `index` steps from the original.
 struct PatternCopyParameters final {
     FeatureId pattern;
@@ -414,7 +425,7 @@ using FeatureParameters =
                  FilletParameters, ChamferParameters, HoleParameters, CombineParameters,
                  DatumPlaneParameters, DatumAxisParameters, ShellParameters,
                  PrimitiveParameters, DraftParameters, MirrorParameters, PatternParameters,
-                 PatternCopyParameters>;
+                 PatternCopyParameters, MoveParameters>;
 
 // PAR01: every binding names an existing parameter of a matching unit, only dimensional
 // constraints bind, and the table itself is valid. Throws std::invalid_argument.
@@ -486,6 +497,10 @@ class ModelDocument final {
     [[nodiscard]] const PatternParameters& patternParameters(FeatureId featureId) const;
     [[nodiscard]] bool setPatternParameters(FeatureId featureId,
                                             const PatternParameters& parameters);
+    // M11 (ModelDocumentMove.cpp).
+    [[nodiscard]] FeatureId addMoveFeature(std::string name, const MoveParameters& parameters);
+    [[nodiscard]] const MoveParameters& moveParameters(FeatureId featureId) const;
+    [[nodiscard]] bool setMoveParameters(FeatureId featureId, const MoveParameters& parameters);
     [[nodiscard]] bool setPrimitiveParameters(FeatureId featureId,
                                               const PrimitiveParameters& parameters);
     [[nodiscard]] const kernel::BoxDimensions& boxDimensions(FeatureId featureId) const;

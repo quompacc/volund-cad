@@ -329,6 +329,18 @@ class CadSession final {
                           const document::PatternParameters& parameters,
                           ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] document::PatternParameters patternParameters(document::FeatureId featureId) const;
+    // M11 (CadSessionMove.cpp): moves the body of `feature` by `translation` and turns it by
+    // `angle` (radians) about X, Y or Z (`rotationAxis` 0..2) through its middle. A primitive
+    // that is the last feature of its body changes its own placement, a body whose last feature
+    // is a move changes that move, any other gets a new "Bewegen N". One undo step.
+    [[nodiscard]] CommandResult moveBody(document::FeatureId feature,
+                                         const std::array<double, 3>& translation,
+                                         std::optional<int> rotationAxis, double angle,
+                                         ErrorDisposition disposition = ErrorDisposition::reject);
+    [[nodiscard]] CommandResult
+    editMoveParameters(document::FeatureId featureId, const document::MoveParameters& parameters,
+                       ErrorDisposition disposition = ErrorDisposition::reject);
+    [[nodiscard]] document::MoveParameters moveParameters(document::FeatureId featureId) const;
     // M27 (CadSessionPrimitives.cpp): a sphere, cone, torus or wedge ("Kugel N" ...), added as
     // a cylinder is: on `input` (join, cut, intersect, or separate beside it) or as a new body
     // at the origin; one undo step.
