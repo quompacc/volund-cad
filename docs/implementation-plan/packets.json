@@ -2476,12 +2476,15 @@
       ],
       "acceptance": "3× lineares Muster mit Abstand20 und 4× Kreis über360° erzeugt richtige Anzahl/Position ohne doppelte erste Instanz. Count0/zu groß rejected. Masteredit, Undo und Save/Open erhalten Instanzreferenzen.",
       "boundary": "Kein allgemeines parametrisches Feature-Replay-Muster ohne separate Input-Neuzuordnung.",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "chapter": "05-solid-historie.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/M10.md"
+      ],
+      "completedCommit": "5460d56",
+      "completedDate": "2026-10-15"
     },
     {
       "id": "M11",
