@@ -70,6 +70,12 @@ inline QString booleanFailureText(const std::string& code) {
     if (code == "combine-body-missing")
         return QObject::tr("Kombinieren: Ein beteiligter Körper hat vor der Kombination keinen "
                            "Volumenkörper mehr.");
+    // M09: the plane or the body of a mirror is gone.
+    if (code == "mirror-plane-missing")
+        return QObject::tr("Spiegeln: Die Spiegelebene gibt es so nicht mehr. Wähle eine "
+                           "Grundebene, Bezugsebene oder ebene Fläche neu.");
+    if (code == "mirror-body-missing")
+        return QObject::tr("Spiegeln: Der Körper hat vor dem Spiegeln keinen Volumenkörper mehr.");
     // M04: an invalid region names its contour; the shell marks the elements red.
     if (code == "region-needs-repair")
         return QObject::tr("Bereich: Die Kontur dieses Bereichs wurde in der Skizze geändert "

@@ -211,7 +211,8 @@ constexpr SolidKind solidKinds[]{{FeatureKind::combine, "combine", 18},
                                  {FeatureKind::datumAxis, "datum_axis", 19},
                                  {FeatureKind::shell, "shell", 21},
                                  {FeatureKind::primitive, "primitive", 25},
-                                 {FeatureKind::draft, "draft", 29}};
+                                 {FeatureKind::draft, "draft", 29},
+                                 {FeatureKind::mirror, "mirror", 31}};
 } // namespace
 
 const char* nativeSolidKindName(FeatureKind kind) noexcept {
@@ -250,6 +251,10 @@ std::size_t nativeSolidRecords(FeatureKind kind, const FeatureParameters& parame
         require(std::holds_alternative<DraftParameters>(parameters));
         validateDraftParameters(std::get<DraftParameters>(parameters));
         return nativeDraftRecords(std::get<DraftParameters>(parameters));
+    case FeatureKind::mirror: // M09
+        require(std::holds_alternative<MirrorParameters>(parameters));
+        validateMirrorParameters(std::get<MirrorParameters>(parameters));
+        return nativeMirrorRecords(std::get<MirrorParameters>(parameters));
     case FeatureKind::primitive: // M27: no records beyond the feature
         require(std::holds_alternative<PrimitiveParameters>(parameters));
         validatePrimitiveParameters(std::get<PrimitiveParameters>(parameters));
@@ -271,6 +276,8 @@ void writeNativeSolid(const TDF_Label& label, const FeatureParameters& parameter
         writeNativePrimitive(label, *primitive);
     else if (const auto* draft = std::get_if<DraftParameters>(&parameters))
         writeNativeDraft(label, *draft);
+    else if (const auto* mirror = std::get_if<MirrorParameters>(&parameters))
+        writeNativeMirror(label, *mirror);
     else
         writeNativeDatumAxis(label, std::get<DatumAxisParameters>(parameters));
 }
@@ -290,6 +297,8 @@ FeatureParameters readNativeSolid(const TDF_Label& label, FeatureKind kind,
         return readNativePrimitive(label, schemaVersion);
     case FeatureKind::draft:
         return readNativeDraft(label, remainingRecords, schemaVersion);
+    case FeatureKind::mirror:
+        return readNativeMirror(label, remainingRecords, schemaVersion);
     default:
         break;
     }

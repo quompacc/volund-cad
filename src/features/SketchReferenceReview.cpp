@@ -1,3 +1,4 @@
+#include <voelund/kernel/PlaneNormal.hpp>
 #include <BRepAdaptor_Surface.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
@@ -91,9 +92,7 @@ SketchReferenceReview reviewSketchReferences(document::DocumentId document,
         if (surface.GetType() != GeomAbs_Plane)
             continue;
         const auto p = surface.Plane();
-        gp_Vec normal(p.Axis().Direction());
-        if (origin.faces.front().Orientation() == TopAbs_REVERSED)
-            normal.Reverse();
+        const gp_Vec normal(kernel::planeNormal(p, origin.faces.front().Orientation()));
         auto position = p.Location();
         gp_Vec x(p.XAxis().Direction());
         bool matches = false;

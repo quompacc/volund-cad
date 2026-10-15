@@ -1,3 +1,4 @@
+#include <voelund/kernel/PlaneNormal.hpp>
 #include "FeatureEvaluationDetail.hpp"
 
 #include <voelund/document/DocumentSnapshot.hpp>
@@ -57,9 +58,7 @@ kernel::ShapeOperationResult holeTool(const EvaluatedFeature& owner, const TopoD
         if (!explorer.Current().IsSame(frame->face))
             continue;
         const BRepAdaptor_Surface surface(TopoDS::Face(explorer.Current()));
-        inward = gp_Vec(surface.Plane().Axis().Direction());
-        if (explorer.Current().Orientation() != TopAbs_REVERSED)
-            inward.Reverse();
+        inward = -gp_Vec(kernel::planeNormal(surface.Plane(), explorer.Current().Orientation()));
         break;
     }
     if (inward.Magnitude() < 0.5)

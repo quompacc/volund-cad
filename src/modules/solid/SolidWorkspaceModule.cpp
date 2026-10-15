@@ -201,6 +201,17 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                              simpleCommand(std::move(services.combine)),
                              services.canFillet,
                              "Kombinieren"});
+    if (services.mirror)
+        commands_.push_back({"solid.modify.mirror",
+                             "Spiegeln",
+                             "Gewählten Körper an einer Ebene oder Fläche spiegeln",
+                             {},
+                             workspaces::CommandGroup::modify,
+                             true,
+                             false,
+                             simpleCommand(std::move(services.mirror)),
+                             services.canMirror,
+                             "Spiegeln"});
     if (services.hole)
         commands_.push_back({"solid.modify.hole",
                              "Bohrung",

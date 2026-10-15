@@ -1,3 +1,4 @@
+#include <voelund/kernel/PlaneNormal.hpp>
 #include "SketchPlaneGuard.hpp"
 #include <voelund/features/SketchSupportResolver.hpp>
 
@@ -44,9 +45,7 @@ std::optional<ResolvedFace> resolveSupportFace(const document::SketchPlane& prev
         if (surface.GetType() != GeomAbs_Plane)
             continue;
         const gp_Pln candidate = surface.Plane();
-        gp_Dir normal = candidate.Axis().Direction();
-        if (face.Orientation() == TopAbs_REVERSED)
-            normal.Reverse();
+        const gp_Dir normal = kernel::planeNormal(candidate, face.Orientation());
         if (previousNormal.Dot(gp_Vec(normal)) < 0.999)
             continue;
         const double signedDistance =

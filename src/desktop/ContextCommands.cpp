@@ -47,6 +47,8 @@ QString featureName(const ShellState& state) {
         return QObject::tr("Grundkörper"); // M27
     case document::FeatureKind::draft:
         return QObject::tr("Formschräge"); // M25
+    case document::FeatureKind::mirror:
+        return QObject::tr("Spiegeln"); // M09
     }
     return QObject::tr("Feature");
 }
@@ -98,7 +100,7 @@ ContextCommands contextCommands(const ShellState& state) {
         result.title = state.bodyName;
         result.commands = {"body.rename", "body.visibility", "solid.modify.transform",
                            "solid.modify.fillet", "solid.modify.chamfer", "solid.modify.combine",
-                           "solid.create.cylinder"};
+                           "solid.modify.mirror", "solid.create.cylinder"};
         break;
     case ShellSelection::sketchRegion:
         result.title = QObject::tr("Skizzenbereich");

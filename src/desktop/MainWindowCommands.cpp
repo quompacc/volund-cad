@@ -138,6 +138,11 @@ void MainWindow::createCommands() {
             syncShell();
             return;
         }
+        if (kind == document::FeatureKind::mirror) { // M09
+            impl_->mirrorTool->beginEdit(*selected);
+            syncShell();
+            return;
+        }
         if (kind == document::FeatureKind::datumPlane ||
             kind == document::FeatureKind::datumAxis) {
             impl_->datumTool->beginEdit(*selected);
@@ -240,6 +245,24 @@ void MainWindow::createCommands() {
         clearEdgeSelection();
         impl_->combineTool->begin(*producer);
         syncShell();
+    };
+    // M09: mirrors the selected body; a picked planar face is its body and the plane.
+    services.mirror = [this]() {
+        const auto face = impl_->selectedPlanarFace;
+        const auto producer = face ? std::optional{document::FeatureId{face->bodyId}}
+                                   : impl_->session.selectedBodyProducer();
+        if (!producer)
+            return;
+        if (impl_->sketchExtrusionTool->isActive())
+            impl_->sketchExtrusionTool->cancel();
+        clearEdgeSelection();
+        impl_->mirrorTool->begin(*producer, face);
+        syncShell();
+    };
+    services.canMirror = [this]() {
+        return (impl_->selectedPlanarFace.has_value() && impl_->shell().canSketch()) ||
+               (impl_->session.selectedBodyProducer().has_value() &&
+                impl_->session.sceneStatus().isCurrent() && !impl_->shell().toolBlocksCommands());
     };
     // M19: a construction plane on the picked base plane or planar face (XY without one), and
     // a construction axis: on the one picked edge at once, else a base axis in the panel.

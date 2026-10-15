@@ -1,3 +1,4 @@
+#include <voelund/kernel/PlaneNormal.hpp>
 #include "FeatureEvaluationDetail.hpp"
 
 #include <voelund/document/DocumentSnapshot.hpp>
@@ -49,9 +50,8 @@ gp_Vec sweep(const TopoDS_Shape& body, const SupportFaceFrame& face,
         if (!explorer.Current().IsSame(face.face))
             continue;
         const BRepAdaptor_Surface surface(TopoDS::Face(explorer.Current()));
-        gp_Vec normal(surface.Plane().Axis().Direction());
-        if (explorer.Current().Orientation() == TopAbs_REVERSED)
-            normal.Reverse();
+        const gp_Vec normal(
+            kernel::planeNormal(surface.Plane(), explorer.Current().Orientation()));
         return parameters.reversed ? -normal : normal;
     }
     throw GeometryEvaluationError("Profile face is not a face of its body");

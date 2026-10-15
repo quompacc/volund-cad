@@ -5,6 +5,8 @@
 #include <QJsonArray>
 
 #include <algorithm>
+#include <iterator>
+#include <variant>
 
 namespace voelund::mcp {
 namespace {
@@ -24,7 +26,10 @@ constexpr const char* toolNames[] = {
     nullptr,                  nullptr,                  nullptr,
     nullptr,                  nullptr,                  nullptr,
     nullptr,                  nullptr,                  nullptr,  // M27: no tools yet
-    nullptr,                  nullptr}; // M25: no tools yet
+    nullptr,                  nullptr,  // M25: no tools yet
+    nullptr,                  nullptr}; // M09: no tools yet
+static_assert(std::size(toolNames) == std::variant_size_v<application::Action>,
+              "One tool name (or none) per action kind");
 constexpr const char* statusNames[] = {"rejected", "committed", "committedWithErrors"};
 constexpr const char* rejectionNames[] = {
     "none",     "foreignDocument", "staleStamp",          "unknownTarget",    "unsupportedTarget",
@@ -36,7 +41,10 @@ constexpr const char* evaluationNames[] = {"valid", "dirty", "failed", "blockedB
                                            "suppressed"};
 constexpr const char* featureKinds[] = {"box",    "cylinder", "sketch", "extrusion",
                                         "fillet", "chamfer",  "hole",   "combine",
-                                        "datumPlane", "datumAxis", "shell", "primitive", "draft"};
+                                        "datumPlane", "datumAxis", "shell", "primitive", "draft",
+                                        "mirror"};
+static_assert(std::size(featureKinds) == std::variant_size_v<document::FeatureParameters>,
+              "One name per feature kind");
 constexpr const char* primitiveShapes[] = {"sphere", "cone", "torus", "wedge"};
 constexpr const char* basePlaneNames[] = {"", "xy", "xz", "yz"};
 constexpr const char* baseAxisNames[] = {"", "x", "y", "z"};
@@ -47,6 +55,8 @@ constexpr const char* runtimeNames[] = {"current", "error", "blocked"};
 constexpr const char* cylinderModes[] = {"join", "cut", "intersect", "separate"};
 // Indexed by ExtrusionOperation (newBody = 1).
 constexpr const char* operationNames[] = {"", "newBody", "join", "cut", "intersect"};
+// Indexed by MirrorMode (newBody = 1).
+constexpr const char* mirrorModes[] = {"", "newBody", "join"};
 
 template <class Enum, std::size_t N> const char* name(const char* const (&names)[N], Enum value) {
     return names[static_cast<std::size_t>(value)];
@@ -89,6 +99,17 @@ QJsonObject featureParameters(const document::FeatureParameters& parameters) {
                 return {{"angle", detail::quantity(draft.angle.value(), "rad")},
                         {"bodyId", id(draft.body.value())},
                         {"faceCount", static_cast<int>(draft.faces.size())}};
+            },
+            [](const document::MirrorParameters& mirror) -> QJsonObject { // M09
+                QJsonObject json{{"bodyId", id(mirror.body.value())},
+                                 {"mode", name(mirrorModes, mirror.mode)}};
+                if (mirror.plane.basePlane)
+                    json.insert("basePlane", name(basePlaneNames, *mirror.plane.basePlane));
+                else if (mirror.plane.constructionPlane)
+                    json.insert("constructionPlaneId", id(mirror.plane.constructionPlane->value()));
+                else
+                    json.insert("faceBodyId", id(mirror.plane.face->body.value()));
+                return json;
             },
             [](const document::PrimitiveParameters& primitive) -> QJsonObject { // M27
                 QJsonArray sizes;

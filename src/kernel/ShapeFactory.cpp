@@ -9,6 +9,8 @@
 
 #include <BRepBuilderAPI_Transform.hxx>
 #include <BRepCheck_Analyzer.hxx>
+#include <BRepGProp.hxx>
+#include <GProp_GProps.hxx>
 #include <BRepPrimAPI_MakeBox.hxx>
 #include <BRepPrimAPI_MakeCylinder.hxx>
 #include <gp_Ax1.hxx>
@@ -123,6 +125,8 @@ const char* kernelOperationName(KernelOperation operation) noexcept {
         return "helix";
     case KernelOperation::draft:
         return "draft";
+    case KernelOperation::mirror:
+        return "mirror";
     }
     return "unknown";
 }
@@ -218,6 +222,32 @@ ShapeOperationResult ShapeFactory::applyTransformWithHistory(const TopoDS_Shape&
         translation.SetTranslation(
             gp_Vec(definition.translationX, definition.translationY, definition.translationZ));
         detail::transformStep(shape, translation);
+        return shape;
+    });
+}
+
+ShapeOperationResult ShapeFactory::mirrorWithHistory(const TopoDS_Shape& source,
+                                                     const std::array<double, 3>& origin,
+                                                     const std::array<double, 3>& normal) {
+    if (source.IsNull())
+        throw KernelError(KernelOperation::mirror, "source shape must not be null");
+    for (const double value : origin)
+        if (!modelCoordinate(value))
+            throw KernelError(KernelOperation::mirror, modelRangeDiagnostic);
+    const double length = std::hypot(normal[0], normal[1], normal[2]);
+    if (!std::isfinite(length) || length < 1e-12)
+        throw KernelError(KernelOperation::mirror, "mirror plane normal must not be zero");
+    return buildShape(KernelOperation::mirror, [&] {
+        auto shape = detail::transformInput(source);
+        gp_Trsf mirror;
+        mirror.SetMirror(gp_Ax2(gp_Pnt(origin[0], origin[1], origin[2]),
+                                gp_Dir(normal[0], normal[1], normal[2])));
+        detail::transformStep(shape, mirror);
+        // A reflection turns the handedness; the copy must still enclose its volume.
+        GProp_GProps properties;
+        BRepGProp::VolumeProperties(shape.shape, properties);
+        if (properties.Mass() < 0.0)
+            shape.shape.Reverse();
         return shape;
     });
 }

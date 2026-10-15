@@ -107,6 +107,20 @@ FeatureDependencies FeatureDependencies::from(const document::DocumentSnapshot& 
                     producer && std::ranges::find(node.inputs, *producer) == node.inputs.end())
                     node.inputs.push_back(*producer);
         }
+        // M09: a mirror reads its body, and the body of its face or its construction plane,
+        // as they were before it.
+        if (feature.kind == document::FeatureKind::mirror) {
+            const auto& parameters = snapshot.mirrorParameters(feature.id);
+            std::vector<document::BodyId> bodies{parameters.body};
+            if (parameters.plane.face)
+                bodies.push_back(parameters.plane.face->body);
+            for (const auto body : bodies)
+                if (const auto producer = bodyProducerBefore(snapshot, feature.id, body);
+                    producer && std::ranges::find(node.inputs, *producer) == node.inputs.end())
+                    node.inputs.push_back(*producer);
+            if (parameters.plane.constructionPlane)
+                node.inputs.push_back(*parameters.plane.constructionPlane);
+        }
         // M21: a combination works on its target and tool bodies as they were before it.
         if (feature.kind == document::FeatureKind::combine) {
             const auto& parameters = snapshot.combineParameters(feature.id);

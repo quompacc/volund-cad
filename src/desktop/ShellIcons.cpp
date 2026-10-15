@@ -227,6 +227,19 @@ void draw(QPainter& painter, ShellIcon icon, const QColor& ink, const QColor& ac
         painter.drawLine(QPointF(18, 20), QPointF(15, 5));
         painter.drawLine(QPointF(9, 5), QPointF(15, 5));
         break;
+    case ShellIcon::mirror: {
+        // A body and its mirror image on both sides of a dashed plane line.
+        painter.drawPolyline(QPolygonF{QPointF(10, 19), QPointF(3, 19), QPointF(3, 5),
+                                       QPointF(10, 12)});
+        painter.drawPolyline(QPolygonF{QPointF(14, 19), QPointF(21, 19), QPointF(21, 5),
+                                       QPointF(14, 12)});
+        QPen plane = painter.pen();
+        plane.setColor(accent);
+        plane.setStyle(Qt::DashLine);
+        painter.setPen(plane);
+        painter.drawLine(QPointF(12, 2), QPointF(12, 22));
+        break;
+    }
     case ShellIcon::loft:
         // A wide section below, a small one above, joined by straight sides.
         painter.drawEllipse(QRectF(3, 15, 18, 6));

@@ -39,6 +39,7 @@ enum class ShellIcon {
     loft,       // M24
     helix,      // M26
     draft,      // M25
+    mirror,     // M09
     repair,
     eye,
     eyeOff,

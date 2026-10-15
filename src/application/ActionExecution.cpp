@@ -282,6 +282,15 @@ class Validation final {
         static_cast<void>(target(action.draft, ActionKind::editDraftParameters));
         finite({action.parameters.angle.value()});
     }
+    // M09: the face of the plane lies on a current result too.
+    void operator()(const CreateMirrorAction& action) {
+        static_cast<void>(target(action.support, ActionKind::createMirror));
+        if (action.faceSupport)
+            static_cast<void>(target(*action.faceSupport, ActionKind::createMirror));
+    }
+    void operator()(const EditMirrorParametersAction& action) {
+        static_cast<void>(target(action.mirror, ActionKind::editMirrorParameters));
+    }
     void operator()(const CreatePrimitiveAction& action) {
         if (action.input)
             static_cast<void>(target(*action.input, ActionKind::createPrimitive));
@@ -444,6 +453,13 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot,
             },
             [&](const EditDraftParametersAction& a) {
                 return session.editDraftParameters(a.draft, a.parameters, reject);
+            },
+            [&](const CreateMirrorAction& a) {
+                return session.createMirror(a.support, a.basePlane, a.constructionPlane,
+                                            a.faceSupport, a.face, a.mode);
+            },
+            [&](const EditMirrorParametersAction& a) {
+                return session.editMirrorParameters(a.mirror, a.parameters, reject);
             },
             [&](const CreatePrimitiveAction& a) {
                 return session.createPrimitive(a.shape, a.input, a.mode);

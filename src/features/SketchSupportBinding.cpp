@@ -1,3 +1,4 @@
+#include <voelund/kernel/PlaneNormal.hpp>
 #include <BRepAdaptor_Surface.hxx>
 #include <BRepBndLib.hxx>
 #include <Bnd_Box.hxx>
@@ -28,9 +29,7 @@ Frame frame(const TopoDS_Shape& face) {
     if (surface.GetType() != GeomAbs_Plane)
         throw GeometryEvaluationError("Sketch support must be planar");
     const auto plane = surface.Plane();
-    gp_Vec z(plane.Axis().Direction());
-    if (face.Orientation() == TopAbs_REVERSED)
-        z.Reverse();
+    const gp_Vec z(kernel::planeNormal(plane, face.Orientation()));
     const gp_Vec x(plane.XAxis().Direction());
     return {plane.Location(), x, z.Crossed(x), z};
 }

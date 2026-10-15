@@ -36,6 +36,9 @@ struct SolidCommandServices final {
     std::function<void()> shell{};
     // M21: combines the selected body with clicked tool bodies; enabled like the fillet.
     std::function<void()> combine{};
+    // M09: mirrors the selected body (about the picked planar face, if any).
+    std::function<void()> mirror{};
+    std::function<bool()> canMirror{};
     // M20: turns the selected sketch regions about an axis; enabled like the extrusion.
     std::function<void()> revolve{};
     // M23: sweeps the selected sketch regions along an earlier sketch; enabled like the extrusion.

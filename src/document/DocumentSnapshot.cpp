@@ -84,6 +84,9 @@ const PrimitiveParameters& DocumentSnapshot::primitiveParameters(FeatureId id) c
 const DraftParameters& DocumentSnapshot::draftParameters(FeatureId id) const {
     return std::get<DraftParameters>(featureParameters(id));
 }
+const MirrorParameters& DocumentSnapshot::mirrorParameters(FeatureId id) const {
+    return std::get<MirrorParameters>(featureParameters(id));
+}
 const SketchParameters& DocumentSnapshot::sketchParameters(FeatureId id) const {
     return std::get<SketchParameters>(featureParameters(id));
 }

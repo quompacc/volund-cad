@@ -377,6 +377,9 @@ void runFeature(const document::DocumentSnapshot& document,
     case document::FeatureKind::draft:
         detail::evaluateDraft(document, descriptor, outputs, bodies, references);
         break;
+    case document::FeatureKind::mirror:
+        detail::evaluateMirror(document, descriptor, outputs, bodies, references);
+        break;
     }
 }
 void restoreOutput(const EvaluatedFeature& output, std::vector<EvaluatedFeature>& outputs,

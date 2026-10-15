@@ -62,9 +62,21 @@ void writeNativeSubshapeOrigin(const TDF_Label& label, const SubshapeOrigin& ori
         if (origin.sweptEdge)
             writeNativeEdgeOrigin(extension.FindChild(2), *origin.sweptEdge);
     }
+    // M09 (schema 31): the copies of a mirrored face, each its feature and copy index.
+    if (!origin.instances.empty()) {
+        const auto instances = label.FindChild(7);
+        TDataStd_Integer::Set(instances, static_cast<int>(origin.instances.size()));
+        int position = 0;
+        for (const auto& instance : origin.instances) {
+            const auto item = instances.FindChild(++position);
+            TDataStd_AsciiString::Set(item, std::to_string(instance.feature.value()).c_str());
+            TDataStd_Integer::Set(item, static_cast<int>(instance.index));
+        }
+    }
 }
 int nativeSubshapeOriginExtension(const TDF_Label& label) {
-    return label.FindChild(6, false).IsNull() ? 0 : 1;
+    return (label.FindChild(6, false).IsNull() ? 0 : 1) +
+           (label.FindChild(7, false).IsNull() ? 0 : 1);
 }
 SubshapeOrigin readNativeSubshapeOrigin(const TDF_Label& label, std::size_t& remainingElements,
                                         int schemaVersion) {
@@ -103,6 +115,19 @@ SubshapeOrigin readNativeSubshapeOrigin(const TDF_Label& label, std::size_t& rem
                     (std::holds_alternative<PrimitiveEdgeOrigin>(origin.sweptEdge->value) ? 4 : 6));
         } else {
             require(extension.NbChildren() == 1);
+        }
+    }
+    if (const auto instances = label.FindChild(7, false); !instances.IsNull()) {
+        const int copies = integer(instances);
+        require(schemaVersion >= 31 && copies > 0 &&
+                static_cast<std::size_t>(copies) <= maximumSubshapeInstances &&
+                instances.NbChildren() == copies);
+        for (int i = 1; i <= copies; ++i) {
+            const auto item = child(instances, i);
+            const int index = integer(item);
+            require(item.NbChildren() == 0 && index > 0);
+            origin.instances.push_back(
+                {FeatureId{number(item)}, static_cast<std::uint32_t>(index)});
         }
     }
     validateSubshapeOrigin(origin);

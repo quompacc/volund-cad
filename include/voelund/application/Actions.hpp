@@ -270,6 +270,22 @@ struct EditDraftParametersAction final {
     document::DraftParameters parameters;
     bool operator==(const EditDraftParametersAction&) const = default;
 };
+// M09: the mirror image of `support`'s current body about a base plane, an existing
+// construction plane or a planar face of `faceSupport`'s current result (exactly one).
+struct CreateMirrorAction final {
+    document::FeatureId support;
+    std::optional<document::DatumPlane> basePlane;
+    std::optional<document::FeatureId> constructionPlane;
+    std::optional<document::FeatureId> faceSupport;
+    std::optional<document::SubshapeOrigin> face;
+    document::MirrorMode mode{document::MirrorMode::newBody};
+    bool operator==(const CreateMirrorAction&) const = default;
+};
+struct EditMirrorParametersAction final {
+    document::FeatureId mirror;
+    document::MirrorParameters parameters;
+    bool operator==(const EditMirrorParametersAction&) const = default;
+};
 struct SetPlacementAction final {
     document::FeatureId feature;
     Quantity x;
@@ -298,7 +314,8 @@ using Action = std::variant<CreateParameterAction, SetParameterValueAction, Rena
                             CreateDatumAxisAction, EditDatumAxisParametersAction,
                             CreateShellAction, EditShellParametersAction,
                             CreatePrimitiveAction, EditPrimitiveParametersAction,
-                            CreateDraftAction, EditDraftParametersAction>;
+                            CreateDraftAction, EditDraftParametersAction,
+                            CreateMirrorAction, EditMirrorParametersAction>;
 // Parallel to the alternatives of Action.
 enum class ActionKind {
     createParameter,
@@ -338,7 +355,9 @@ enum class ActionKind {
     createPrimitive, // M27
     editPrimitiveParameters,
     createDraft, // M25
-    editDraftParameters
+    editDraftParameters,
+    createMirror, // M09
+    editMirrorParameters
 };
 [[nodiscard]] ActionKind actionKind(const Action& action) noexcept;
 

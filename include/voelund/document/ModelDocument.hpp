@@ -41,7 +41,8 @@ enum class FeatureKind {
     datumAxis,
     shell,
     primitive, // M27: sphere, cone, torus, wedge
-    draft      // M25
+    draft,     // M25
+    mirror     // M09
 };
 enum class CylinderResultMode { join, cut, intersect, separate };
 
@@ -346,6 +347,24 @@ struct DraftParameters final {
     [[nodiscard]] bool operator==(const DraftParameters&) const = default;
 };
 void validateDraftParameters(const DraftParameters& parameters);
+// M09 (schema 31, user decision 2026-10-15): mirrors a body about a plane: a base plane, an
+// earlier construction plane or a planar body face (exactly one). A new body keeps the
+// original and makes the mirror image a body of its own; join fuses the image with the
+// original. Mirrored faces carry the copy step (SubshapeOrigin::instances).
+enum class MirrorMode { newBody = 1, join = 2 };
+struct MirrorPlane final {
+    std::optional<DatumPlane> basePlane{};
+    std::optional<FeatureId> constructionPlane{};
+    std::optional<BodyFaceReference> face{};
+    [[nodiscard]] bool operator==(const MirrorPlane&) const = default;
+};
+struct MirrorParameters final {
+    BodyId body;
+    MirrorPlane plane;
+    MirrorMode mode{MirrorMode::newBody};
+    [[nodiscard]] bool operator==(const MirrorParameters&) const = default;
+};
+void validateMirrorParameters(const MirrorParameters& parameters);
 
 // The operation in effect, with the earlier rule for an unset one.
 [[nodiscard]] ExtrusionOperation effectiveOperation(const ExtrusionParameters& parameters,
@@ -363,7 +382,7 @@ using FeatureParameters =
     std::variant<BoxParameters, CylinderParameters, SketchParameters, ExtrusionParameters,
                  FilletParameters, ChamferParameters, HoleParameters, CombineParameters,
                  DatumPlaneParameters, DatumAxisParameters, ShellParameters,
-                 PrimitiveParameters, DraftParameters>;
+                 PrimitiveParameters, DraftParameters, MirrorParameters>;
 
 // PAR01: every binding names an existing parameter of a matching unit, only dimensional
 // constraints bind, and the table itself is valid. Throws std::invalid_argument.
@@ -424,6 +443,10 @@ class ModelDocument final {
     [[nodiscard]] FeatureId addDraftFeature(std::string name, const DraftParameters& parameters);
     [[nodiscard]] const DraftParameters& draftParameters(FeatureId featureId) const;
     [[nodiscard]] bool setDraftParameters(FeatureId featureId, const DraftParameters& parameters);
+    // M09 (ModelDocumentMirror.cpp).
+    [[nodiscard]] FeatureId addMirrorFeature(std::string name, const MirrorParameters& parameters);
+    [[nodiscard]] const MirrorParameters& mirrorParameters(FeatureId featureId) const;
+    [[nodiscard]] bool setMirrorParameters(FeatureId featureId, const MirrorParameters& parameters);
     [[nodiscard]] bool setPrimitiveParameters(FeatureId featureId,
                                               const PrimitiveParameters& parameters);
     [[nodiscard]] const kernel::BoxDimensions& boxDimensions(FeatureId featureId) const;

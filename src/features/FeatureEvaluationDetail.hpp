@@ -64,6 +64,11 @@ void evaluateCombine(const document::DocumentSnapshot& document,
                      const document::FeatureDescriptor& descriptor,
                      std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
                      std::vector<EvaluatedBody>& referenceBodies);
+// M09 (MirrorEvaluation.cpp): the mirror image of a body, as a body or joined to it.
+void evaluateMirror(const document::DocumentSnapshot& document,
+                    const document::FeatureDescriptor& descriptor,
+                    std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
+                    std::vector<EvaluatedBody>& referenceBodies);
 // M08 (HoleEvaluation.cpp): a cylindrical hole into a named planar face.
 void evaluateHole(const document::DocumentSnapshot& document,
                   const document::FeatureDescriptor& descriptor,

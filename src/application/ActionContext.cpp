@@ -84,6 +84,9 @@ std::vector<ActionKind> availableActions(const CadSession& session,
     case FeatureKind::draft:
         actions = {ActionKind::editDraftParameters};
         break;
+    case FeatureKind::mirror:
+        actions = {ActionKind::editMirrorParameters};
+        break;
     }
     if (session.placementFeature(feature))
         actions.push_back(ActionKind::setPlacement);
@@ -103,6 +106,7 @@ std::vector<ActionKind> availableActions(const CadSession& session,
             actions.push_back(ActionKind::createDatumAxis);
             actions.push_back(ActionKind::createShell);
             actions.push_back(ActionKind::createDraft);
+            actions.push_back(ActionKind::createMirror);
         }
     }
     return actions;

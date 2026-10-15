@@ -50,6 +50,8 @@ ShellIcon iconFor(document::FeatureKind kind) {
         return ShellIcon::sphere; // M27
     case document::FeatureKind::draft:
         return ShellIcon::draft; // M25
+    case document::FeatureKind::mirror:
+        return ShellIcon::mirror; // M09
     }
     return ShellIcon::box;
 }

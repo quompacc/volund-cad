@@ -1,3 +1,4 @@
+#include <voelund/kernel/PlaneNormal.hpp>
 #include "PlanarFaceSelection.hpp"
 
 #include <BRepAdaptor_Curve.hxx>
@@ -30,10 +31,7 @@ std::optional<PlanarFaceSelection> planarFaceSelection(std::uint64_t bodyId,
         return std::nullopt;
     }
     const gp_Pln plane = surface.Plane();
-    gp_Dir normal = plane.Axis().Direction();
-    if (face.Orientation() == TopAbs_REVERSED) {
-        normal.Reverse();
-    }
+    const gp_Dir normal = kernel::planeNormal(plane, face.Orientation());
     const gp_Pnt origin = plane.Location();
     const gp_Dir xDirection = plane.XAxis().Direction();
     const gp_Dir yDirection = normal.Crossed(xDirection);

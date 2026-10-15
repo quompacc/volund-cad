@@ -70,7 +70,8 @@ ShellState projectShell(const application::CadSession& session, const ShellInput
                            state.featureKind == document::FeatureKind::datumPlane ||
                            state.featureKind == document::FeatureKind::datumAxis ||
                            state.featureKind == document::FeatureKind::shell ||
-                           state.featureKind == document::FeatureKind::draft;
+                           state.featureKind == document::FeatureKind::draft ||
+                           state.featureKind == document::FeatureKind::mirror;
     if (state.featureKind == document::FeatureKind::extrusion)
         state.extrusionEditable =
             !session.identifiedSnapshot().snapshot().extrusionParameters(*state.feature).faceProfile;

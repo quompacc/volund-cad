@@ -96,7 +96,7 @@ void surfaces() {
                                       "solid.modify.chamfer", "solid.modify.hole",
                                       "solid.modify.combine",   "solid.create.datum_plane",
                                       "solid.modify.shell",     "solid.modify.draft",
-                                      "solid.create.datum_axis"};
+                                      "solid.create.datum_axis", "solid.modify.mirror"};
     require(railIds == solid, "The rail shows every solid command");
     require(!command(window, "solid.create.sketch")->isEnabled(),
             "Unfitting commands stay visible but disabled");

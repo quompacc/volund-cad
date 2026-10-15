@@ -6,6 +6,8 @@
 
 #include <TopoDS_Shape.hxx>
 
+#include <array>
+
 namespace voelund::kernel {
 
 struct BoxDimensions final {
@@ -47,6 +49,11 @@ class ShapeFactory final {
     [[nodiscard]] static ShapeOperationResult
     applyTransformWithHistory(const TopoDS_Shape& shape, double pivotX, double pivotY,
                               double pivotZ, const RigidTransform& transform);
+    // M09: the mirror image of `shape` about the plane through `origin` with `normal`, as a
+    // copy with history (HistoryOperand::first). The copy encloses a positive volume.
+    [[nodiscard]] static ShapeOperationResult
+    mirrorWithHistory(const TopoDS_Shape& shape, const std::array<double, 3>& origin,
+                      const std::array<double, 3>& normal);
     // All entry points reject invalid inputs and throw KernelError when OCCT
     // rejects an operation or produces an invalid result.
     [[nodiscard]] static TopoDS_Shape makeBox(const BoxDimensions& dimensions);

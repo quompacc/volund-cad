@@ -66,6 +66,9 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
     case FeatureKind::draft: // M25
         matches = std::holds_alternative<DraftParameters>(parameters);
         break;
+    case FeatureKind::mirror: // M09
+        matches = std::holds_alternative<MirrorParameters>(parameters);
+        break;
     }
     if (!matches)
         throw std::invalid_argument("Legacy body identity: feature parameter kind mismatch");
@@ -76,7 +79,7 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
         feature.kind == FeatureKind::chamfer || feature.kind == FeatureKind::hole ||
         feature.kind == FeatureKind::combine || feature.kind == FeatureKind::datumPlane ||
         feature.kind == FeatureKind::datumAxis || feature.kind == FeatureKind::shell ||
-        feature.kind == FeatureKind::draft ||
+        feature.kind == FeatureKind::draft || feature.kind == FeatureKind::mirror ||
         (feature.kind == FeatureKind::sketch && (std::get<SketchParameters>(parameters).datum ||
                                                  std::get<SketchParameters>(parameters)
                                                      .constructionPlane)) ||
@@ -127,6 +130,9 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
         if (const auto* prism = extrusion(index))
             return !prism->faceProfile && inputs[*inputs[index]].has_value() &&
                    effectiveOperation(*prism, false) == ExtrusionOperation::newBody;
+        // M09: so does a mirror image of its own.
+        if (const auto* mirror = std::get_if<MirrorParameters>(&parameters[index]))
+            return mirror->mode == MirrorMode::newBody;
         return feature.kind == FeatureKind::box ||
                (feature.kind == FeatureKind::sketch && !inputs[index]) ||
                separatePrimitive(feature, parameters[index]);
@@ -167,6 +173,10 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
         // M25: a draft tilts faces of its body.
         if (features[index].kind == FeatureKind::draft)
             return std::get<DraftParameters>(parameters[index]).body;
+        // M09: a mirror joined to its body changes that body.
+        if (const auto* mirror = std::get_if<MirrorParameters>(&parameters[index]);
+            mirror && mirror->mode == MirrorMode::join)
+            return mirror->body;
         return std::nullopt;
     };
     for (std::size_t index = 0; index < features.size(); ++index)
@@ -214,6 +224,21 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
             if (found == indices.end() || found->second >= index ||
                 features[found->second].kind != FeatureKind::datumPlane)
                 throw std::invalid_argument("Sketch construction plane is not an earlier plane");
+        }
+    }
+    // M09: a mirror reads a body of the document, about a face of one or an earlier
+    // construction plane.
+    for (std::size_t index = 0; index < features.size(); ++index) {
+        const auto* mirror = std::get_if<MirrorParameters>(&parameters[index]);
+        if (mirror == nullptr)
+            continue;
+        if (!isBody(mirror->body) || (mirror->plane.face && !isBody(mirror->plane.face->body)))
+            throw std::invalid_argument("Mirror body is not a body of this document");
+        if (mirror->plane.constructionPlane) {
+            const auto found = indices.find(mirror->plane.constructionPlane->value());
+            if (found == indices.end() || found->second >= index ||
+                features[found->second].kind != FeatureKind::datumPlane)
+                throw std::invalid_argument("Mirror plane is not an earlier construction plane");
         }
     }
     for (std::size_t index = 0; index < features.size(); ++index)

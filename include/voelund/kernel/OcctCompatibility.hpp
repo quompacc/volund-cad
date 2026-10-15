@@ -41,6 +41,7 @@ enum class KernelOperation {
     loft,           // M24
     helix,          // M26
     draft,          // M25
+    mirror,         // M09
 };
 
 // M03: why a Boolean refused its result, beyond a failing kernel.

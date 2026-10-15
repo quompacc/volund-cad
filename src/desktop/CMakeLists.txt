@@ -51,6 +51,7 @@ add_library(
     CombineToolController.cpp
     DatumToolController.cpp
     ShellToolController.cpp
+    MirrorToolController.cpp
     MainWindowTools.cpp
     MainWindowInteractions.cpp
     ShellHeader.cpp

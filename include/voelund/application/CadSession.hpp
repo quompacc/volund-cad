@@ -290,6 +290,20 @@ class CadSession final {
     editDraftParameters(document::FeatureId featureId, const document::DraftParameters& parameters,
                         ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] document::DraftParameters draftParameters(document::FeatureId featureId) const;
+    // M09 (CadSessionMirror.cpp): the mirror image of `support`'s current body ("Spiegeln N")
+    // about a base plane, an existing construction plane or a planar face of `faceSupport`'s
+    // current result; a body of its own or joined to the original. One undo step.
+    [[nodiscard]] CommandResult createMirror(document::FeatureId support,
+                                             std::optional<document::DatumPlane> basePlane,
+                                             std::optional<document::FeatureId> constructionPlane,
+                                             std::optional<document::FeatureId> faceSupport,
+                                             std::optional<document::SubshapeOrigin> face,
+                                             document::MirrorMode mode);
+    [[nodiscard]] CommandResult
+    editMirrorParameters(document::FeatureId featureId,
+                         const document::MirrorParameters& parameters,
+                         ErrorDisposition disposition = ErrorDisposition::reject);
+    [[nodiscard]] document::MirrorParameters mirrorParameters(document::FeatureId featureId) const;
     // M27 (CadSessionPrimitives.cpp): a sphere, cone, torus or wedge ("Kugel N" ...), added as
     // a cylinder is: on `input` (join, cut, intersect, or separate beside it) or as a new body
     // at the origin; one undo step.

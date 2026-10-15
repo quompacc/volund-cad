@@ -36,6 +36,11 @@ void writeNativeDraft(const TDF_Label& label, const DraftParameters& parameters)
 DraftParameters readNativeDraft(const TDF_Label& label, std::size_t remainingRecords,
                                 int schemaVersion);
 std::size_t nativeDraftRecords(const DraftParameters& parameters);
+// M09 (NativeMirror.cpp).
+void writeNativeMirror(const TDF_Label& label, const MirrorParameters& parameters);
+MirrorParameters readNativeMirror(const TDF_Label& label, std::size_t remainingRecords,
+                                  int schemaVersion);
+std::size_t nativeMirrorRecords(const MirrorParameters& parameters);
 // M27 (NativePrimitiveSolid.cpp).
 void writeNativePrimitive(const TDF_Label& label, const PrimitiveParameters& parameters);
 PrimitiveParameters readNativePrimitive(const TDF_Label& label, int schemaVersion);

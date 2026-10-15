@@ -1,3 +1,4 @@
+#include <voelund/kernel/PlaneNormal.hpp>
 #include "OperationHistoryDetail.hpp"
 #include <Standard_OutOfMemory.hxx>
 #include <Standard_ProgramError.hxx>
@@ -309,9 +310,7 @@ std::optional<TopoDS_Shape> chamferWedge(const TopoDS_Edge& edge,
         const BRepAdaptor_Surface surface(face);
         if (surface.GetType() != GeomAbs_Plane)
             return std::nullopt;
-        gp_Vec outward(surface.Plane().Axis().Direction());
-        if (face.Orientation() == TopAbs_REVERSED)
-            outward.Reverse();
+        const gp_Vec outward(planeNormal(surface.Plane(), face.Orientation()));
         gp_Vec leg = outward.Crossed(along);
         const gp_Pnt middle = curve.Value((curve.FirstParameter() + curve.LastParameter()) / 2);
         const gp_Pnt probe = middle.Translated(leg * (distance * 0.01));
