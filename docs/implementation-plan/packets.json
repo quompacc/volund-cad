@@ -2505,12 +2505,15 @@
       ],
       "acceptance": "Extrudiertes und primitives Teil lassen sich identisch verschieben/rotieren; aufgesetzte Skizze bleibt korrekt. Undo eines Drags stellt gesamten Zustand her. A-BODY-02 besteht.",
       "boundary": "Keine Einzelkopie der Weltgeometrie als Ersatz für parametrische Platzierung.",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "chapter": "05-solid-historie.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/M11.md"
+      ],
+      "completedCommit": "1afabf8",
+      "completedDate": "2026-10-15"
     },
     {
       "id": "M12",
