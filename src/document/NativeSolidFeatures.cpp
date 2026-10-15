@@ -212,7 +212,9 @@ constexpr SolidKind solidKinds[]{{FeatureKind::combine, "combine", 18},
                                  {FeatureKind::shell, "shell", 21},
                                  {FeatureKind::primitive, "primitive", 25},
                                  {FeatureKind::draft, "draft", 29},
-                                 {FeatureKind::mirror, "mirror", 31}};
+                                 {FeatureKind::mirror, "mirror", 31},
+                                 {FeatureKind::pattern, "pattern", 32},
+                                 {FeatureKind::patternCopy, "pattern_copy", 32}};
 } // namespace
 
 const char* nativeSolidKindName(FeatureKind kind) noexcept {
@@ -255,6 +257,13 @@ std::size_t nativeSolidRecords(FeatureKind kind, const FeatureParameters& parame
         require(std::holds_alternative<MirrorParameters>(parameters));
         validateMirrorParameters(std::get<MirrorParameters>(parameters));
         return nativeMirrorRecords(std::get<MirrorParameters>(parameters));
+    case FeatureKind::pattern: // M10
+        require(std::holds_alternative<PatternParameters>(parameters));
+        validatePatternParameters(std::get<PatternParameters>(parameters));
+        return nativePatternRecords(std::get<PatternParameters>(parameters));
+    case FeatureKind::patternCopy:
+        require(std::holds_alternative<PatternCopyParameters>(parameters));
+        return 0;
     case FeatureKind::primitive: // M27: no records beyond the feature
         require(std::holds_alternative<PrimitiveParameters>(parameters));
         validatePrimitiveParameters(std::get<PrimitiveParameters>(parameters));
@@ -278,6 +287,10 @@ void writeNativeSolid(const TDF_Label& label, const FeatureParameters& parameter
         writeNativeDraft(label, *draft);
     else if (const auto* mirror = std::get_if<MirrorParameters>(&parameters))
         writeNativeMirror(label, *mirror);
+    else if (const auto* pattern = std::get_if<PatternParameters>(&parameters))
+        writeNativePattern(label, *pattern);
+    else if (const auto* copy = std::get_if<PatternCopyParameters>(&parameters))
+        writeNativePatternCopy(label, *copy);
     else
         writeNativeDatumAxis(label, std::get<DatumAxisParameters>(parameters));
 }
@@ -299,6 +312,10 @@ FeatureParameters readNativeSolid(const TDF_Label& label, FeatureKind kind,
         return readNativeDraft(label, remainingRecords, schemaVersion);
     case FeatureKind::mirror:
         return readNativeMirror(label, remainingRecords, schemaVersion);
+    case FeatureKind::pattern:
+        return readNativePattern(label, remainingRecords, schemaVersion);
+    case FeatureKind::patternCopy:
+        return readNativePatternCopy(label, schemaVersion);
     default:
         break;
     }

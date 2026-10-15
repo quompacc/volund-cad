@@ -78,6 +78,22 @@ struct ExtrusionMode final {
 // switched to their current fixed values (docs/parameter-table.md, rule 6).
 enum class ParameterDeletion { refuseWhenUsed, unbindUses };
 
+// M10: what a new pattern is given; the axis is a base axis, an existing construction axis or
+// an edge of `edgeSupport`'s current result (exactly one).
+struct PatternInput final {
+    document::PatternKind kind{document::PatternKind::linear};
+    std::optional<document::BaseAxis> baseAxis{};
+    std::optional<document::FeatureId> datumAxis{};
+    std::optional<document::FeatureId> edgeSupport{};
+    std::optional<document::FilletEdge> edge{};
+    bool reversed{false};
+    std::uint32_t count{2};
+    double spacing{10.0};
+    double angle{0.0};
+    document::PatternMode mode{document::PatternMode::newBodies};
+    bool operator==(const PatternInput&) const = default;
+};
+
 class CadSession final {
   public:
     CadSession();
@@ -304,6 +320,15 @@ class CadSession final {
                          const document::MirrorParameters& parameters,
                          ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] document::MirrorParameters mirrorParameters(document::FeatureId featureId) const;
+    // M10 (CadSessionPattern.cpp): copies of `support`'s current body ("Muster N"); as new
+    // bodies with one copy feature each. One undo step.
+    [[nodiscard]] CommandResult createPattern(document::FeatureId support,
+                                              const PatternInput& input);
+    [[nodiscard]] CommandResult
+    editPatternParameters(document::FeatureId featureId,
+                          const document::PatternParameters& parameters,
+                          ErrorDisposition disposition = ErrorDisposition::reject);
+    [[nodiscard]] document::PatternParameters patternParameters(document::FeatureId featureId) const;
     // M27 (CadSessionPrimitives.cpp): a sphere, cone, torus or wedge ("Kugel N" ...), added as
     // a cylinder is: on `input` (join, cut, intersect, or separate beside it) or as a new body
     // at the origin; one undo step.

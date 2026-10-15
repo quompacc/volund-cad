@@ -291,6 +291,17 @@ class Validation final {
     void operator()(const EditMirrorParametersAction& action) {
         static_cast<void>(target(action.mirror, ActionKind::editMirrorParameters));
     }
+    // M10: the edge of the axis lies on a current result too.
+    void operator()(const CreatePatternAction& action) {
+        static_cast<void>(target(action.support, ActionKind::createPattern));
+        if (action.input.edgeSupport)
+            static_cast<void>(target(*action.input.edgeSupport, ActionKind::createPattern));
+        finite({action.input.spacing, action.input.angle});
+    }
+    void operator()(const EditPatternParametersAction& action) {
+        static_cast<void>(target(action.pattern, ActionKind::editPatternParameters));
+        finite({action.parameters.spacing, action.parameters.angle.value()});
+    }
     void operator()(const CreatePrimitiveAction& action) {
         if (action.input)
             static_cast<void>(target(*action.input, ActionKind::createPrimitive));
@@ -460,6 +471,10 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot,
             },
             [&](const EditMirrorParametersAction& a) {
                 return session.editMirrorParameters(a.mirror, a.parameters, reject);
+            },
+            [&](const CreatePatternAction& a) { return session.createPattern(a.support, a.input); },
+            [&](const EditPatternParametersAction& a) {
+                return session.editPatternParameters(a.pattern, a.parameters, reject);
             },
             [&](const CreatePrimitiveAction& a) {
                 return session.createPrimitive(a.shape, a.input, a.mode);

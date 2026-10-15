@@ -240,6 +240,22 @@ void draw(QPainter& painter, ShellIcon icon, const QColor& ink, const QColor& ac
         painter.drawLine(QPointF(12, 2), QPointF(12, 22));
         break;
     }
+    case ShellIcon::patternLinear:
+        // Three blocks in a row, the copies drawn in the accent colour.
+        painter.drawRect(QRectF(2.5, 8.5, 5, 7));
+        painter.setPen(QPen(accent, 1.8, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        painter.drawRect(QRectF(9.5, 8.5, 5, 7));
+        painter.drawRect(QRectF(16.5, 8.5, 5, 7));
+        break;
+    case ShellIcon::patternCircular:
+        // Blocks around a centre point, the copies in the accent colour.
+        painter.drawPoint(QPointF(12, 12));
+        painter.drawRect(QRectF(9.5, 2.5, 5, 5));
+        painter.setPen(QPen(accent, 1.8, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        painter.drawRect(QRectF(16.5, 9.5, 5, 5));
+        painter.drawRect(QRectF(9.5, 16.5, 5, 5));
+        painter.drawRect(QRectF(2.5, 9.5, 5, 5));
+        break;
     case ShellIcon::loft:
         // A wide section below, a small one above, joined by straight sides.
         painter.drawEllipse(QRectF(3, 15, 18, 6));

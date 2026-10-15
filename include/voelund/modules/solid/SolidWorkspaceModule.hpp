@@ -39,6 +39,10 @@ struct SolidCommandServices final {
     // M09: mirrors the selected body (about the picked planar face, if any).
     std::function<void()> mirror{};
     std::function<bool()> canMirror{};
+    // M10: linear and circular patterns of the selected body.
+    std::function<void()> patternLinear{};
+    std::function<void()> patternCircular{};
+    std::function<bool()> canPattern{};
     // M20: turns the selected sketch regions about an axis; enabled like the extrusion.
     std::function<void()> revolve{};
     // M23: sweeps the selected sketch regions along an earlier sketch; enabled like the extrusion.

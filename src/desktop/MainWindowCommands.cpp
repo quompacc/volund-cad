@@ -143,6 +143,17 @@ void MainWindow::createCommands() {
             syncShell();
             return;
         }
+        // M10: a pattern, also through one of its copies.
+        if (kind == document::FeatureKind::pattern ||
+            kind == document::FeatureKind::patternCopy) {
+            impl_->patternTool->beginEdit(
+                kind == document::FeatureKind::pattern
+                    ? *selected
+                    : impl_->session.identifiedSnapshot().snapshot().patternCopyParameters(
+                          *selected).pattern);
+            syncShell();
+            return;
+        }
         if (kind == document::FeatureKind::datumPlane ||
             kind == document::FeatureKind::datumAxis) {
             impl_->datumTool->beginEdit(*selected);
@@ -259,11 +270,35 @@ void MainWindow::createCommands() {
         impl_->mirrorTool->begin(*producer, face);
         syncShell();
     };
+    services.canPattern = [this]() {
+        return (impl_->selectedPlanarFace.has_value() && impl_->shell().canSketch()) ||
+               ((impl_->session.selectedBodyProducer().has_value() || impl_->edgeSupport) &&
+                impl_->session.sceneStatus().isCurrent() && !impl_->shell().toolBlocksCommands());
+    };
     services.canMirror = [this]() {
         return (impl_->selectedPlanarFace.has_value() && impl_->shell().canSketch()) ||
                (impl_->session.selectedBodyProducer().has_value() &&
                 impl_->session.sceneStatus().isCurrent() && !impl_->shell().toolBlocksCommands());
     };
+    // M10: copies of the selected body; one edge picked before is the direction or axis.
+    const auto pattern = [this](document::PatternKind kind) {
+        const auto face = impl_->selectedPlanarFace;
+        const auto producer = face ? std::optional{document::FeatureId{face->bodyId}}
+                              : impl_->edgeSupport ? impl_->edgeSupport
+                                                   : impl_->session.selectedBodyProducer();
+        if (!producer)
+            return;
+        if (impl_->sketchExtrusionTool->isActive())
+            impl_->sketchExtrusionTool->cancel();
+        const bool oneEdge = impl_->selectedEdges.size() == 1 && impl_->edgeSupport;
+        const auto edge = oneEdge ? std::optional{impl_->selectedEdges.front()} : std::nullopt;
+        const auto edgeSupport = oneEdge ? impl_->edgeSupport : std::nullopt;
+        clearEdgeSelection();
+        impl_->patternTool->begin(*producer, kind, edgeSupport, edge);
+        syncShell();
+    };
+    services.patternLinear = [pattern]() { pattern(document::PatternKind::linear); };
+    services.patternCircular = [pattern]() { pattern(document::PatternKind::circular); };
     // M19: a construction plane on the picked base plane or planar face (XY without one), and
     // a construction axis: on the one picked edge at once, else a base axis in the panel.
     services.datumPlane = [this]() {

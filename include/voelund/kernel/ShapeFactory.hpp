@@ -54,6 +54,12 @@ class ShapeFactory final {
     [[nodiscard]] static ShapeOperationResult
     mirrorWithHistory(const TopoDS_Shape& shape, const std::array<double, 3>& origin,
                       const std::array<double, 3>& normal);
+    // M10: a copy of `shape` turned by `angle` (radians) about the axis through `origin` along
+    // `direction`, then moved by `translation`, with history (HistoryOperand::first).
+    [[nodiscard]] static ShapeOperationResult
+    copyWithHistory(const TopoDS_Shape& shape, const std::array<double, 3>& origin,
+                    const std::array<double, 3>& direction, double angle,
+                    const std::array<double, 3>& translation);
     // All entry points reject invalid inputs and throw KernelError when OCCT
     // rejects an operation or produces an invalid result.
     [[nodiscard]] static TopoDS_Shape makeBox(const BoxDimensions& dimensions);

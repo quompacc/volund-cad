@@ -1,7 +1,10 @@
 #include <voelund/document/LegacyBodyIdentity.hpp>
 
+#include <algorithm>
 #include <map>
 #include <stdexcept>
+#include <utility>
+#include <vector>
 
 namespace voelund::document {
 namespace {
@@ -69,6 +72,12 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
     case FeatureKind::mirror: // M09
         matches = std::holds_alternative<MirrorParameters>(parameters);
         break;
+    case FeatureKind::pattern: // M10
+        matches = std::holds_alternative<PatternParameters>(parameters);
+        break;
+    case FeatureKind::patternCopy:
+        matches = std::holds_alternative<PatternCopyParameters>(parameters);
+        break;
     }
     if (!matches)
         throw std::invalid_argument("Legacy body identity: feature parameter kind mismatch");
@@ -80,6 +89,7 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
         feature.kind == FeatureKind::combine || feature.kind == FeatureKind::datumPlane ||
         feature.kind == FeatureKind::datumAxis || feature.kind == FeatureKind::shell ||
         feature.kind == FeatureKind::draft || feature.kind == FeatureKind::mirror ||
+        feature.kind == FeatureKind::pattern || feature.kind == FeatureKind::patternCopy ||
         (feature.kind == FeatureKind::sketch && (std::get<SketchParameters>(parameters).datum ||
                                                  std::get<SketchParameters>(parameters)
                                                      .constructionPlane)) ||
@@ -130,9 +140,11 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
         if (const auto* prism = extrusion(index))
             return !prism->faceProfile && inputs[*inputs[index]].has_value() &&
                    effectiveOperation(*prism, false) == ExtrusionOperation::newBody;
-        // M09: so does a mirror image of its own.
+        // M09: so does a mirror image of its own; M10: and every copy of a pattern.
         if (const auto* mirror = std::get_if<MirrorParameters>(&parameters[index]))
             return mirror->mode == MirrorMode::newBody;
+        if (feature.kind == FeatureKind::patternCopy)
+            return true;
         return feature.kind == FeatureKind::box ||
                (feature.kind == FeatureKind::sketch && !inputs[index]) ||
                separatePrimitive(feature, parameters[index]);
@@ -173,6 +185,9 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
         // M25: a draft tilts faces of its body.
         if (features[index].kind == FeatureKind::draft)
             return std::get<DraftParameters>(parameters[index]).body;
+        // M10: a pattern passes its body on, or joins the copies into it.
+        if (const auto* pattern = std::get_if<PatternParameters>(&parameters[index]))
+            return pattern->body;
         // M09: a mirror joined to its body changes that body.
         if (const auto* mirror = std::get_if<MirrorParameters>(&parameters[index]);
             mirror && mirror->mode == MirrorMode::join)
@@ -240,6 +255,34 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
                 features[found->second].kind != FeatureKind::datumPlane)
                 throw std::invalid_argument("Mirror plane is not an earlier construction plane");
         }
+    }
+    // M10: a pattern copies a body of the document along an edge of one or an earlier
+    // construction axis; each copy names an earlier new-body pattern and one index of it.
+    std::vector<std::pair<std::uint64_t, std::uint32_t>> copies;
+    for (std::size_t index = 0; index < features.size(); ++index) {
+        if (const auto* pattern = std::get_if<PatternParameters>(&parameters[index])) {
+            if (!isBody(pattern->body) || (pattern->axis.body && !isBody(*pattern->axis.body)))
+                throw std::invalid_argument("Pattern body is not a body of this document");
+            if (pattern->datumAxis) {
+                const auto found = indices.find(pattern->datumAxis->value());
+                if (found == indices.end() || found->second >= index ||
+                    features[found->second].kind != FeatureKind::datumAxis)
+                    throw std::invalid_argument("Pattern axis is not an earlier construction axis");
+            }
+        }
+        const auto* copy = std::get_if<PatternCopyParameters>(&parameters[index]);
+        if (copy == nullptr)
+            continue;
+        const auto found = indices.find(copy->pattern.value());
+        const auto* pattern = found == indices.end() || found->second >= index
+                                  ? nullptr
+                                  : std::get_if<PatternParameters>(&parameters[found->second]);
+        if (pattern == nullptr || pattern->mode != PatternMode::newBodies || copy->index == 0 ||
+            copy->index >= pattern->count ||
+            std::ranges::find(copies, std::pair{copy->pattern.value(), copy->index}) !=
+                copies.end())
+            throw std::invalid_argument("Pattern copy does not belong to an earlier pattern");
+        copies.emplace_back(copy->pattern.value(), copy->index);
     }
     for (std::size_t index = 0; index < features.size(); ++index)
         if (features[index].kind == FeatureKind::combine)

@@ -49,6 +49,10 @@ QString featureName(const ShellState& state) {
         return QObject::tr("Formschräge"); // M25
     case document::FeatureKind::mirror:
         return QObject::tr("Spiegeln"); // M09
+    case document::FeatureKind::pattern:
+        return QObject::tr("Muster"); // M10
+    case document::FeatureKind::patternCopy:
+        return QObject::tr("Musterkopie");
     }
     return QObject::tr("Feature");
 }

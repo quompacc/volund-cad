@@ -286,6 +286,17 @@ struct EditMirrorParametersAction final {
     document::MirrorParameters parameters;
     bool operator==(const EditMirrorParametersAction&) const = default;
 };
+// M10: copies of `support`'s current body along or about an axis.
+struct CreatePatternAction final {
+    document::FeatureId support;
+    PatternInput input;
+    bool operator==(const CreatePatternAction&) const = default;
+};
+struct EditPatternParametersAction final {
+    document::FeatureId pattern;
+    document::PatternParameters parameters;
+    bool operator==(const EditPatternParametersAction&) const = default;
+};
 struct SetPlacementAction final {
     document::FeatureId feature;
     Quantity x;
@@ -315,7 +326,8 @@ using Action = std::variant<CreateParameterAction, SetParameterValueAction, Rena
                             CreateShellAction, EditShellParametersAction,
                             CreatePrimitiveAction, EditPrimitiveParametersAction,
                             CreateDraftAction, EditDraftParametersAction,
-                            CreateMirrorAction, EditMirrorParametersAction>;
+                            CreateMirrorAction, EditMirrorParametersAction,
+                            CreatePatternAction, EditPatternParametersAction>;
 // Parallel to the alternatives of Action.
 enum class ActionKind {
     createParameter,
@@ -357,7 +369,9 @@ enum class ActionKind {
     createDraft, // M25
     editDraftParameters,
     createMirror, // M09
-    editMirrorParameters
+    editMirrorParameters,
+    createPattern, // M10
+    editPatternParameters
 };
 [[nodiscard]] ActionKind actionKind(const Action& action) noexcept;
 

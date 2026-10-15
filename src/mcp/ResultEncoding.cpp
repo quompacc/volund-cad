@@ -27,7 +27,8 @@ constexpr const char* toolNames[] = {
     nullptr,                  nullptr,                  nullptr,
     nullptr,                  nullptr,                  nullptr,  // M27: no tools yet
     nullptr,                  nullptr,  // M25: no tools yet
-    nullptr,                  nullptr}; // M09: no tools yet
+    nullptr,                  nullptr,  // M09: no tools yet
+    nullptr,                  nullptr}; // M10: no tools yet
 static_assert(std::size(toolNames) == std::variant_size_v<application::Action>,
               "One tool name (or none) per action kind");
 constexpr const char* statusNames[] = {"rejected", "committed", "committedWithErrors"};
@@ -42,7 +43,7 @@ constexpr const char* evaluationNames[] = {"valid", "dirty", "failed", "blockedB
 constexpr const char* featureKinds[] = {"box",    "cylinder", "sketch", "extrusion",
                                         "fillet", "chamfer",  "hole",   "combine",
                                         "datumPlane", "datumAxis", "shell", "primitive", "draft",
-                                        "mirror"};
+                                        "mirror", "pattern", "patternCopy"};
 static_assert(std::size(featureKinds) == std::variant_size_v<document::FeatureParameters>,
               "One name per feature kind");
 constexpr const char* primitiveShapes[] = {"sphere", "cone", "torus", "wedge"};
@@ -57,6 +58,9 @@ constexpr const char* cylinderModes[] = {"join", "cut", "intersect", "separate"}
 constexpr const char* operationNames[] = {"", "newBody", "join", "cut", "intersect"};
 // Indexed by MirrorMode (newBody = 1).
 constexpr const char* mirrorModes[] = {"", "newBody", "join"};
+// Indexed by PatternKind and PatternMode (linear and newBodies = 1).
+constexpr const char* patternKinds[] = {"", "linear", "circular"};
+constexpr const char* patternModes[] = {"", "newBodies", "join"};
 
 template <class Enum, std::size_t N> const char* name(const char* const (&names)[N], Enum value) {
     return names[static_cast<std::size_t>(value)];
@@ -110,6 +114,26 @@ QJsonObject featureParameters(const document::FeatureParameters& parameters) {
                 else
                     json.insert("faceBodyId", id(mirror.plane.face->body.value()));
                 return json;
+            },
+            [](const document::PatternParameters& pattern) -> QJsonObject { // M10
+                QJsonObject json{{"bodyId", id(pattern.body.value())},
+                                 {"kind", name(patternKinds, pattern.kind)},
+                                 {"count", static_cast<int>(pattern.count)},
+                                 {"spacing", detail::quantity(pattern.spacing, "mm")},
+                                 {"angle", detail::quantity(pattern.angle.value(), "rad")},
+                                 {"reversed", pattern.reversed},
+                                 {"mode", name(patternModes, pattern.mode)}};
+                if (pattern.datumAxis)
+                    json.insert("constructionAxisId", id(pattern.datumAxis->value()));
+                else if (pattern.axis.baseAxis)
+                    json.insert("baseAxis", name(baseAxisNames, *pattern.axis.baseAxis));
+                else
+                    json.insert("edgeBodyId", id(pattern.axis.body->value()));
+                return json;
+            },
+            [](const document::PatternCopyParameters& copy) -> QJsonObject {
+                return {{"patternId", id(copy.pattern.value())},
+                        {"index", static_cast<int>(copy.index)}};
             },
             [](const document::PrimitiveParameters& primitive) -> QJsonObject { // M27
                 QJsonArray sizes;

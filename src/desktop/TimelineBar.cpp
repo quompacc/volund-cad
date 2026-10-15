@@ -52,6 +52,9 @@ ShellIcon iconFor(document::FeatureKind kind) {
         return ShellIcon::draft; // M25
     case document::FeatureKind::mirror:
         return ShellIcon::mirror; // M09
+    case document::FeatureKind::pattern:
+    case document::FeatureKind::patternCopy:
+        return ShellIcon::patternLinear; // M10
     }
     return ShellIcon::box;
 }
@@ -175,6 +178,9 @@ void TimelineBar::showFeatures(std::span<const document::FeatureDescriptor> feat
     int number = 1;
     QToolButton* current = nullptr;
     for (const document::FeatureDescriptor& feature : features) {
+        // M10: the copies of a pattern are one step, the pattern's.
+        if (feature.kind == document::FeatureKind::patternCopy)
+            continue;
         auto* button = new QToolButton(content_);
         button->setObjectName(QStringLiteral("timelineStep"));
         // The text stays for accessibility and lookups; the chip shows its symbol only.

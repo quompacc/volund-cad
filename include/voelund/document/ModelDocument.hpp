@@ -42,7 +42,9 @@ enum class FeatureKind {
     shell,
     primitive, // M27: sphere, cone, torus, wedge
     draft,     // M25
-    mirror     // M09
+    mirror,    // M09
+    pattern,   // M10
+    patternCopy
 };
 enum class CylinderResultMode { join, cut, intersect, separate };
 
@@ -365,6 +367,35 @@ struct MirrorParameters final {
     [[nodiscard]] bool operator==(const MirrorParameters&) const = default;
 };
 void validateMirrorParameters(const MirrorParameters& parameters);
+// M10 (schema 32, user decision 2026-10-15): copies of a body along a direction (linear) or
+// about an axis (circular). The direction or axis is a base axis or a body edge (as for a
+// construction axis) or an earlier construction axis (exactly one). `count` includes the
+// original. Linear copies stand `spacing` apart; circular ones share `angle`: a full turn
+// evenly without a doubled end, a part with both ends included. As new bodies every copy is
+// a patternCopy feature of its own body, kept in step with the pattern by the document; joined
+// they fuse with the original. Copied faces carry {pattern, index}.
+enum class PatternKind { linear = 1, circular = 2 };
+enum class PatternMode { newBodies = 1, join = 2 };
+inline constexpr std::uint32_t maximumPatternCount = 100;
+struct PatternParameters final {
+    BodyId body;
+    PatternKind kind{PatternKind::linear};
+    DatumAxisParameters axis{};
+    std::optional<FeatureId> datumAxis{};
+    bool reversed{false};
+    std::uint32_t count{2};
+    double spacing{10.0};
+    kernel::Radians angle{0.0};
+    PatternMode mode{PatternMode::newBodies};
+    [[nodiscard]] bool operator==(const PatternParameters&) const = default;
+};
+void validatePatternParameters(const PatternParameters& parameters);
+// One copy of a new-body pattern: its own body, `index` steps from the original.
+struct PatternCopyParameters final {
+    FeatureId pattern;
+    std::uint32_t index;
+    [[nodiscard]] bool operator==(const PatternCopyParameters&) const = default;
+};
 
 // The operation in effect, with the earlier rule for an unset one.
 [[nodiscard]] ExtrusionOperation effectiveOperation(const ExtrusionParameters& parameters,
@@ -382,7 +413,8 @@ using FeatureParameters =
     std::variant<BoxParameters, CylinderParameters, SketchParameters, ExtrusionParameters,
                  FilletParameters, ChamferParameters, HoleParameters, CombineParameters,
                  DatumPlaneParameters, DatumAxisParameters, ShellParameters,
-                 PrimitiveParameters, DraftParameters, MirrorParameters>;
+                 PrimitiveParameters, DraftParameters, MirrorParameters, PatternParameters,
+                 PatternCopyParameters>;
 
 // PAR01: every binding names an existing parameter of a matching unit, only dimensional
 // constraints bind, and the table itself is valid. Throws std::invalid_argument.
@@ -447,6 +479,13 @@ class ModelDocument final {
     [[nodiscard]] FeatureId addMirrorFeature(std::string name, const MirrorParameters& parameters);
     [[nodiscard]] const MirrorParameters& mirrorParameters(FeatureId featureId) const;
     [[nodiscard]] bool setMirrorParameters(FeatureId featureId, const MirrorParameters& parameters);
+    // M10 (ModelDocumentPattern.cpp): adding or changing a pattern adds or removes its copy
+    // features in the same step.
+    [[nodiscard]] FeatureId addPatternFeature(std::string name,
+                                              const PatternParameters& parameters);
+    [[nodiscard]] const PatternParameters& patternParameters(FeatureId featureId) const;
+    [[nodiscard]] bool setPatternParameters(FeatureId featureId,
+                                            const PatternParameters& parameters);
     [[nodiscard]] bool setPrimitiveParameters(FeatureId featureId,
                                               const PrimitiveParameters& parameters);
     [[nodiscard]] const kernel::BoxDimensions& boxDimensions(FeatureId featureId) const;

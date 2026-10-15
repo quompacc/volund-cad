@@ -42,6 +42,7 @@ enum class KernelOperation {
     helix,          // M26
     draft,          // M25
     mirror,         // M09
+    pattern,        // M10
 };
 
 // M03: why a Boolean refused its result, beyond a failing kernel.

@@ -41,6 +41,13 @@ void writeNativeMirror(const TDF_Label& label, const MirrorParameters& parameter
 MirrorParameters readNativeMirror(const TDF_Label& label, std::size_t remainingRecords,
                                   int schemaVersion);
 std::size_t nativeMirrorRecords(const MirrorParameters& parameters);
+// M10 (NativePattern.cpp).
+void writeNativePattern(const TDF_Label& label, const PatternParameters& parameters);
+PatternParameters readNativePattern(const TDF_Label& label, std::size_t remainingRecords,
+                                    int schemaVersion);
+std::size_t nativePatternRecords(const PatternParameters& parameters);
+void writeNativePatternCopy(const TDF_Label& label, const PatternCopyParameters& parameters);
+PatternCopyParameters readNativePatternCopy(const TDF_Label& label, int schemaVersion);
 // M27 (NativePrimitiveSolid.cpp).
 void writeNativePrimitive(const TDF_Label& label, const PrimitiveParameters& parameters);
 PrimitiveParameters readNativePrimitive(const TDF_Label& label, int schemaVersion);

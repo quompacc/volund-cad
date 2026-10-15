@@ -143,7 +143,8 @@ void MainWindow::syncTimeline() {
     if (impl_->timeline == nullptr)
         return;
     const auto features = impl_->session.features();
-    // M20/U14: revolves, helixes, sweeps, lofts and primitives show their own symbol.
+    // M20/U14: revolves, helixes, sweeps, lofts, primitives and circular patterns (M10) show
+    // their own symbol.
     std::vector<TimelineBar::IconOverride> icons;
     const auto snapshot = impl_->session.identifiedSnapshot().snapshot();
     for (const auto& feature : features)
@@ -162,6 +163,10 @@ void MainWindow::syncTimeline() {
                                                 ShellIcon::torus, ShellIcon::wedge};
             icons.emplace_back(feature.id, shapes[static_cast<std::size_t>(
                                                snapshot.primitiveParameters(feature.id).shape)]);
+        } else if (feature.kind == document::FeatureKind::pattern &&
+                   snapshot.patternParameters(feature.id).kind ==
+                       document::PatternKind::circular) { // M10
+            icons.emplace_back(feature.id, ShellIcon::patternCircular);
         }
     impl_->timeline->showFeatures(features, impl_->session.selectedFeature(), icons);
     impl_->timeline->showStates(impl_->session.featureStates());

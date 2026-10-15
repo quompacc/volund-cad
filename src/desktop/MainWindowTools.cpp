@@ -67,6 +67,10 @@ void MainWindow::createToolPanel() {
         impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
         [this](const QString& message) { statusBar()->showMessage(message); });
     impl_->mirrorTool->setPreviewHandler(showPreview);
+    impl_->patternTool = std::make_unique<PatternToolController>( // M10
+        impl_->session, *impl_->viewport, *impl_->toolPanel, [this]() { refreshScene(); },
+        [this](const QString& message) { statusBar()->showMessage(message); });
+    impl_->patternTool->setPreviewHandler(showPreview);
     impl_->datumTool = std::make_unique<DatumToolController>( // M19
         impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
         [this](const QString& message) { statusBar()->showMessage(message); });
@@ -89,6 +93,10 @@ void MainWindow::pickEdge(std::uint64_t body, const TopoDS_Shape& edge, bool add
     }
     if (impl_->filletTool->isActive()) {
         impl_->filletTool->picked(body, edge);
+        return;
+    }
+    if (impl_->patternTool->isActive()) { // M10: the direction or axis
+        impl_->patternTool->picked(body, edge);
         return;
     }
     if (impl_->shell().toolBlocksCommands())

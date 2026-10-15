@@ -53,6 +53,8 @@ std::optional<ShellIcon> iconFor(const QString& id) {
         {QStringLiteral("solid.modify.shell"), ShellIcon::shell},
         {QStringLiteral("solid.modify.draft"), ShellIcon::draft}, // M25
         {QStringLiteral("solid.modify.mirror"), ShellIcon::mirror}, // M09
+        {QStringLiteral("solid.modify.pattern_linear"), ShellIcon::patternLinear}, // M10
+        {QStringLiteral("solid.modify.pattern_circular"), ShellIcon::patternCircular},
         {QStringLiteral("solid.create.datum_plane"), ShellIcon::datumPlane},
         {QStringLiteral("solid.create.datum_axis"), ShellIcon::datumAxis},
         {QStringLiteral("repair.references"), ShellIcon::repair},
@@ -90,7 +92,9 @@ const std::vector<RailGroup>& railGroups() {
          {QStringLiteral("solid.modify.push_pull"), QStringLiteral("solid.modify.fillet"),
           QStringLiteral("solid.modify.chamfer"), QStringLiteral("solid.modify.hole"),
           QStringLiteral("solid.modify.shell"), QStringLiteral("solid.modify.draft"),
-          QStringLiteral("solid.modify.combine"), QStringLiteral("solid.modify.mirror")}},
+          QStringLiteral("solid.modify.combine"), QStringLiteral("solid.modify.mirror"),
+          QStringLiteral("solid.modify.pattern_linear"),
+          QStringLiteral("solid.modify.pattern_circular")}},
         {QT_TRANSLATE_NOOP("ToolRail", "Bewegen"),
          ShellIcon::transform,
          {QStringLiteral("solid.modify.transform")}},

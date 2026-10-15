@@ -121,6 +121,22 @@ FeatureDependencies FeatureDependencies::from(const document::DocumentSnapshot& 
             if (parameters.plane.constructionPlane)
                 node.inputs.push_back(*parameters.plane.constructionPlane);
         }
+        // M10: a pattern reads its body, the body of its edge or its construction axis as
+        // they were before it; a copy follows its pattern.
+        if (feature.kind == document::FeatureKind::pattern) {
+            const auto& parameters = snapshot.patternParameters(feature.id);
+            std::vector<document::BodyId> bodies{parameters.body};
+            if (parameters.axis.body)
+                bodies.push_back(*parameters.axis.body);
+            for (const auto body : bodies)
+                if (const auto producer = bodyProducerBefore(snapshot, feature.id, body);
+                    producer && std::ranges::find(node.inputs, *producer) == node.inputs.end())
+                    node.inputs.push_back(*producer);
+            if (parameters.datumAxis)
+                node.inputs.push_back(*parameters.datumAxis);
+        }
+        if (feature.kind == document::FeatureKind::patternCopy)
+            node.inputs.push_back(snapshot.patternCopyParameters(feature.id).pattern);
         // M21: a combination works on its target and tool bodies as they were before it.
         if (feature.kind == document::FeatureKind::combine) {
             const auto& parameters = snapshot.combineParameters(feature.id);

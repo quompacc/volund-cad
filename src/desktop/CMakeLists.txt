@@ -52,6 +52,7 @@ add_library(
     DatumToolController.cpp
     ShellToolController.cpp
     MirrorToolController.cpp
+    PatternToolController.cpp
     MainWindowTools.cpp
     MainWindowInteractions.cpp
     ShellHeader.cpp

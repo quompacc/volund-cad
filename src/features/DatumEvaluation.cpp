@@ -51,6 +51,30 @@ document::SketchPlane referencePlane(const document::DocumentSnapshot& document,
 
 } // namespace
 
+AxisLine datumAxisLine(const document::DocumentSnapshot& document, document::FeatureId feature,
+                       const document::DatumAxisParameters& parameters,
+                       const std::vector<EvaluatedFeature>& outputs) {
+    if (parameters.baseAxis)
+        return {gp_Pnt(0, 0, 0), *parameters.baseAxis == document::BaseAxis::x   ? gp_Dir(1, 0, 0)
+                                 : *parameters.baseAxis == document::BaseAxis::y ? gp_Dir(0, 1, 0)
+                                                                                 : gp_Dir(0, 0, 1)};
+    const auto producer = bodyProducerBefore(document, feature, *parameters.body);
+    if (!producer)
+        throw GeometryEvaluationError("The body of the axis has no solid",
+                                      "datum-reference-missing");
+    const auto edges =
+        filletEdgeShapes(findFeature(outputs, *producer).supportOrigins, *parameters.edge);
+    if (edges.size() != 1)
+        throw GeometryEvaluationError("The edge of the axis is gone", "datum-reference-missing");
+    const BRepAdaptor_Curve curve(edges.front());
+    if (curve.GetType() == GeomAbs_Line)
+        return {curve.Value(curve.FirstParameter()), curve.Line().Direction()};
+    if (curve.GetType() == GeomAbs_Circle)
+        return {curve.Circle().Location(), curve.Circle().Axis().Direction()};
+    throw GeometryEvaluationError("An axis lies on a straight or circular edge",
+                                  "datum-axis-edge");
+}
+
 void evaluateDatumPlane(const document::DocumentSnapshot& document,
                         const document::FeatureDescriptor& descriptor,
                         std::vector<EvaluatedFeature>& outputs) {
@@ -80,35 +104,8 @@ void evaluateDatumPlane(const document::DocumentSnapshot& document,
 void evaluateDatumAxis(const document::DocumentSnapshot& document,
                        const document::FeatureDescriptor& descriptor,
                        std::vector<EvaluatedFeature>& outputs) {
-    const auto& parameters = document.datumAxisParameters(descriptor.id);
-    gp_Pnt origin(0, 0, 0);
-    gp_Dir direction(0, 0, 1);
-    if (parameters.baseAxis) {
-        direction = *parameters.baseAxis == document::BaseAxis::x   ? gp_Dir(1, 0, 0)
-                    : *parameters.baseAxis == document::BaseAxis::y ? gp_Dir(0, 1, 0)
-                                                                    : gp_Dir(0, 0, 1);
-    } else {
-        const auto producer = bodyProducerBefore(document, descriptor.id, *parameters.body);
-        if (!producer)
-            throw GeometryEvaluationError("The body of the construction axis has no solid",
-                                          "datum-reference-missing");
-        const auto edges =
-            filletEdgeShapes(findFeature(outputs, *producer).supportOrigins, *parameters.edge);
-        if (edges.size() != 1)
-            throw GeometryEvaluationError("The edge of the construction axis is gone",
-                                          "datum-reference-missing");
-        const BRepAdaptor_Curve curve(edges.front());
-        if (curve.GetType() == GeomAbs_Line) {
-            origin = curve.Value(curve.FirstParameter());
-            direction = curve.Line().Direction();
-        } else if (curve.GetType() == GeomAbs_Circle) {
-            origin = curve.Circle().Location();
-            direction = curve.Circle().Axis().Direction();
-        } else {
-            throw GeometryEvaluationError(
-                "A construction axis lies on a straight or circular edge", "datum-axis-edge");
-        }
-    }
+    const auto [origin, direction] =
+        datumAxisLine(document, descriptor.id, document.datumAxisParameters(descriptor.id), outputs);
     // Any direction across the axis completes the frame.
     const gp_Dir across = std::abs(direction.Z()) < 0.9 ? gp_Dir(0, 0, 1).Crossed(direction)
                                                         : gp_Dir(1, 0, 0).Crossed(direction);

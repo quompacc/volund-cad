@@ -76,6 +76,12 @@ inline QString booleanFailureText(const std::string& code) {
                            "Grundebene, Bezugsebene oder ebene Fläche neu.");
     if (code == "mirror-body-missing")
         return QObject::tr("Spiegeln: Der Körper hat vor dem Spiegeln keinen Volumenkörper mehr.");
+    // M10: the axis or the body of a pattern is gone.
+    if (code == "pattern-axis-missing")
+        return QObject::tr("Muster: Die Richtung oder Achse gibt es so nicht mehr. Wähle eine "
+                           "Achse oder Kante neu.");
+    if (code == "pattern-body-missing")
+        return QObject::tr("Muster: Der Körper hat vor dem Muster keinen Volumenkörper mehr.");
     // M04: an invalid region names its contour; the shell marks the elements red.
     if (code == "region-needs-repair")
         return QObject::tr("Bereich: Die Kontur dieses Bereichs wurde in der Skizze geändert "

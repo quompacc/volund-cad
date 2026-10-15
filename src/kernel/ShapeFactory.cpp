@@ -127,6 +127,8 @@ const char* kernelOperationName(KernelOperation operation) noexcept {
         return "draft";
     case KernelOperation::mirror:
         return "mirror";
+    case KernelOperation::pattern:
+        return "pattern";
     }
     return "unknown";
 }
@@ -248,6 +250,35 @@ ShapeOperationResult ShapeFactory::mirrorWithHistory(const TopoDS_Shape& source,
         BRepGProp::VolumeProperties(shape.shape, properties);
         if (properties.Mass() < 0.0)
             shape.shape.Reverse();
+        return shape;
+    });
+}
+
+ShapeOperationResult ShapeFactory::copyWithHistory(const TopoDS_Shape& source,
+                                                   const std::array<double, 3>& origin,
+                                                   const std::array<double, 3>& direction,
+                                                   double angle,
+                                                   const std::array<double, 3>& translation) {
+    if (source.IsNull())
+        throw KernelError(KernelOperation::pattern, "source shape must not be null");
+    for (const double value : {origin[0], origin[1], origin[2], translation[0], translation[1],
+                               translation[2]})
+        if (!modelCoordinate(value))
+            throw KernelError(KernelOperation::pattern, modelRangeDiagnostic);
+    const double length = std::hypot(direction[0], direction[1], direction[2]);
+    if (!std::isfinite(length) || length < 1e-12 || !std::isfinite(angle))
+        throw KernelError(KernelOperation::pattern, "pattern axis must not be zero");
+    return buildShape(KernelOperation::pattern, [&] {
+        auto shape = detail::transformInput(source);
+        gp_Trsf move;
+        if (angle != 0.0)
+            move.SetRotation(gp_Ax1(gp_Pnt(origin[0], origin[1], origin[2]),
+                                    gp_Dir(direction[0], direction[1], direction[2])),
+                             angle);
+        gp_Trsf shift;
+        shift.SetTranslation(gp_Vec(translation[0], translation[1], translation[2]));
+        // One copy step, so the copy is a new shape even for a pure translation.
+        detail::transformStep(shape, shift * move);
         return shape;
     });
 }

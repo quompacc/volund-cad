@@ -2,6 +2,9 @@
 #include <voelund/document/FeatureId.hpp>
 #include <voelund/features/FeatureGraph.hpp>
 
+#include <gp_Dir.hxx>
+#include <gp_Pnt.hxx>
+
 #include <vector>
 
 namespace voelund::features::detail {
@@ -49,6 +52,27 @@ void evaluateDatumPlane(const document::DocumentSnapshot& document,
 void evaluateDatumAxis(const document::DocumentSnapshot& document,
                        const document::FeatureDescriptor& descriptor,
                        std::vector<EvaluatedFeature>& outputs);
+// M19/M10 (DatumEvaluation.cpp): the line of a base axis or of a body edge as `feature` sees
+// it: a straight edge itself, a circular edge's axis through its centre.
+struct AxisLine final {
+    gp_Pnt origin;
+    gp_Dir direction;
+};
+[[nodiscard]] AxisLine datumAxisLine(const document::DocumentSnapshot& document,
+                                     document::FeatureId feature,
+                                     const document::DatumAxisParameters& parameters,
+                                     const std::vector<EvaluatedFeature>& outputs);
+// M10 (PatternEvaluation.cpp): a pattern passes its body on (new bodies) or joins the copies
+// into it; every copy of a new-body pattern is a body of its own.
+void evaluatePattern(const document::DocumentSnapshot& document,
+                     const document::FeatureDescriptor& descriptor,
+                     std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
+                     std::vector<EvaluatedBody>& referenceBodies);
+void evaluatePatternCopy(const document::DocumentSnapshot& document,
+                         const document::FeatureDescriptor& descriptor,
+                         std::vector<EvaluatedFeature>& outputs,
+                         std::vector<EvaluatedBody>& bodies,
+                         std::vector<EvaluatedBody>& referenceBodies);
 // M22 (ShellEvaluation.cpp): walls of one thickness with named faces opened.
 // M25 (DraftEvaluation.cpp): tilts named faces of a body.
 void evaluateDraft(const document::DocumentSnapshot& document,

@@ -40,6 +40,8 @@ enum class ShellIcon {
     helix,      // M26
     draft,      // M25
     mirror,     // M09
+    patternLinear, // M10
+    patternCircular,
     repair,
     eye,
     eyeOff,

@@ -22,6 +22,7 @@ add_library(voelund_document STATIC
     NativeFillet.cpp
     NativeSolidFeatures.cpp
     NativeMirror.cpp
+    NativePattern.cpp
     FeatureTreatmentValidation.cpp
     NativeSketchGeometry.cpp
     NativeSketchPatterns.cpp
@@ -39,6 +40,7 @@ add_library(voelund_document STATIC
     NativePrimitiveSolid.cpp
     ModelDocumentDraft.cpp
     ModelDocumentMirror.cpp
+    ModelDocumentPattern.cpp
     NativeDraft.cpp
     DocumentTransaction.cpp
     SketchConstraintSerialization.cpp
