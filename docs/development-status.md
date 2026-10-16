@@ -1,6 +1,13 @@
 # Entwicklungsstand – 12. September 2026
 
-## Aktueller Stand – 10. Oktober 2026
+## Aktueller Stand – 16. Oktober 2026
+
+**Einstieg:** [Fortsetzungsnotiz](session-checkpoint-2026-10-16.md). G3 (mechanisches CAD v1)
+ist bis auf T05 erreicht ([G3-Bericht](implementation-plan/evidence/G3.md)). Umfang und Grenzen
+für Anwender stehen im [Handbuch](handbuch.md). Als Nächstes entscheidet der Nutzer zwischen
+T05, PAR02 und A02. Alles darunter ist historisch.
+
+## Stand – 10. Oktober 2026
 
 **Einstieg:** [Fortsetzungsnotiz](session-checkpoint-2026-10-08.md) (Arbeitsregeln in der
 vom 04.10.). Die Skizzenkette S01–S14 ist abgenommen; Umfang, unterstützte Operationen und
