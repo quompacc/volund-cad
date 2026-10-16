@@ -141,7 +141,15 @@ void MainWindow::createTimeline() {
     impl_->timeline->setOpenHandler([this](std::uint64_t id) { openTimelineStep(id); });
     impl_->timeline->setMenuHandler(
         [this](std::uint64_t id, QPoint at) { showTimelineMenu(id, at); }); // M14
-    impl_->timeline->setRollForwardHandler([this] { moveRollback(std::nullopt); });
+    impl_->timeline->setRollbackHandler([this](std::optional<std::uint64_t> after) {
+        moveRollback(after ? std::optional{document::FeatureId{*after}} : std::nullopt);
+    });
+    impl_->timeline->setSelectHandler([this](std::uint64_t id) { // M15: keyboard
+        if (impl_->shell().toolBlocksCommands())
+            return;
+        selectFeature(id);
+        syncShell();
+    });
     syncTimeline();
 }
 

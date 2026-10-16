@@ -7,6 +7,8 @@
 #include "ShellIcons.hpp"
 
 #include <QHBoxLayout>
+#include <QKeyEvent>
+#include <QMouseEvent>
 #include <QLabel>
 #include <QPainter>
 #include <QScrollArea>
@@ -16,6 +18,8 @@
 #include <QVariant>
 #include <QWheelEvent>
 
+#include <cmath>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -82,6 +86,8 @@ class TimelineTrack final : public QWidget {
         rollback_ = after;
         update();
     }
+    // M15: where a dragged marker was let go: the number of steps before it.
+    void setDropHandler(std::function<void(std::size_t)> handler) { drop_ = std::move(handler); }
 
   protected:
     void paintEvent(QPaintEvent* event) override {
@@ -106,7 +112,12 @@ class TimelineTrack final : public QWidget {
         painter.setPen(QPen(axis_, 2));
         painter.drawLine(QPointF(chips.front().center().x(), y), QPointF(endX, y));
         QColor endColor = end_;
-        if (rollback_ && *rollback_ < chips.size()) {
+        if (dragX_) {
+            // M15: the marker follows the mouse while it is dragged.
+            painter.setPen(QPen(end_, 3, Qt::SolidLine, Qt::RoundCap));
+            painter.drawLine(QPointF(*dragX_, y - 11), QPointF(*dragX_, y + 11));
+            endColor = axis_;
+        } else if (rollback_ && *rollback_ < chips.size()) {
             // M14: the marker between the last evaluated step and the next; the end is pale.
             const double markerX = (chips[*rollback_ - 1].right() + chips[*rollback_].left()) / 2.0;
             painter.setPen(QPen(end_, 3, Qt::SolidLine, Qt::RoundCap));
@@ -126,7 +137,63 @@ class TimelineTrack final : public QWidget {
         }
     }
 
+    // M15: a press on the marker (or on the end marker) starts a drag along the axis.
+    void mousePressEvent(QMouseEvent* event) override {
+        const auto chips = chipRects();
+        if (chips.empty() || event->button() != Qt::LeftButton)
+            return QWidget::mousePressEvent(event);
+        const double x = event->position().x();
+        if (std::abs(x - markerX(chips)) <= 8) {
+            dragX_ = x;
+            update();
+            event->accept();
+            return;
+        }
+        QWidget::mousePressEvent(event);
+    }
+    void mouseMoveEvent(QMouseEvent* event) override {
+        if (!dragX_)
+            return QWidget::mouseMoveEvent(event);
+        dragX_ = event->position().x();
+        update();
+    }
+    void mouseReleaseEvent(QMouseEvent* event) override {
+        if (!dragX_)
+            return QWidget::mouseReleaseEvent(event);
+        const auto chips = chipRects();
+        const double x = *dragX_;
+        dragX_.reset();
+        update();
+        // The gap is the number of steps whose middle lies left of the drop; at least one.
+        const auto before = static_cast<std::size_t>(std::ranges::count_if(
+            chips, [x](const QRect& chip) { return chip.center().x() < x; }));
+        if (drop_ && !chips.empty())
+            drop_(std::max<std::size_t>(1, before));
+    }
+
   private:
+    [[nodiscard]] std::vector<QRect> chipRects() const {
+        std::vector<QRect> chips;
+        for (const QToolButton* chip : findChildren<QToolButton*>(QStringLiteral("timelineStep"),
+                                                                  Qt::FindDirectChildrenOnly))
+            if (chip->isVisibleTo(this))
+                chips.push_back(chip->geometry());
+        std::ranges::sort(chips, {}, &QRect::left);
+        return chips;
+    }
+    // The marker's x: between two steps when rolled back, else on the end marker.
+    [[nodiscard]] double markerX(const std::vector<QRect>& chips) const {
+        if (rollback_ && *rollback_ < chips.size())
+            return (chips[*rollback_ - 1].right() + chips[*rollback_].left()) / 2.0;
+        const auto* endButton = findChild<QToolButton*>(QStringLiteral("timelineEnd"),
+                                                         Qt::FindDirectChildrenOnly);
+        return endButton != nullptr && endButton->isVisibleTo(this)
+                   ? endButton->geometry().center().x()
+                   : chips.back().right() + endGap;
+    }
+
+    std::optional<double> dragX_;
+    std::function<void(std::size_t)> drop_;
     std::optional<std::size_t> rollback_;
     QColor axis_{Qt::gray};
     QColor number_{Qt::gray};
@@ -159,6 +226,12 @@ TimelineBar::TimelineBar(QWidget& host) : OverlayCard(host, QStringLiteral("time
     end_->setStyleSheet(QStringLiteral("background: transparent; border: none;"));
     end_->setEnabled(false);
     end_->setFixedSize(16, chipSize);
+    connect(end_, &QToolButton::clicked, this, [this] {
+        if (rollback_)
+            rollback_(std::nullopt);
+    });
+    static_cast<TimelineTrack*>(content_)->setDropHandler(
+        [this](std::size_t stepsBefore) { markerDropped(stepsBefore); });
     empty_ = new QLabel(tr("Noch keine Schritte"), content_);
     empty_->setObjectName(QStringLiteral("timelineEmpty"));
     steps_->addWidget(empty_);
@@ -181,6 +254,40 @@ QRect TimelineBar::placement(const QWidget& host) const {
 }
 
 bool TimelineBar::eventFilter(QObject* watched, QEvent* event) {
+    // M15: Left/Right/Home/End select a step, Enter opens it.
+    if (event->type() == QEvent::KeyPress) {
+        const auto button = std::ranges::find(buttons_, watched);
+        if (button != buttons_.end()) {
+            const auto index = button - buttons_.begin();
+            const auto last = static_cast<std::ptrdiff_t>(buttons_.size()) - 1;
+            const int key = static_cast<QKeyEvent*>(event)->key();
+            std::optional<std::ptrdiff_t> target;
+            if (key == Qt::Key_Left)
+                target = std::max<std::ptrdiff_t>(0, index - 1);
+            else if (key == Qt::Key_Right)
+                target = std::min(last, index + 1);
+            else if (key == Qt::Key_Home)
+                target = 0;
+            else if (key == Qt::Key_End)
+                target = last;
+            if (target) {
+                QToolButton* chosen = buttons_[static_cast<std::size_t>(*target)];
+                const auto id = chosen->property("featureId").toULongLong();
+                if (select_)
+                    select_(id); // rebuilds the steps
+                for (QToolButton* step : buttons_)
+                    if (step->property("featureId").toULongLong() == id) {
+                        step->setFocus(Qt::TabFocusReason);
+                        scroll_->ensureWidgetVisible(step, 8, 0);
+                    }
+                return true;
+            }
+            if ((key == Qt::Key_Return || key == Qt::Key_Enter) && open_) {
+                open_((*button)->property("featureId").toULongLong());
+                return true;
+            }
+        }
+    }
     if (scroll_ != nullptr && watched == scroll_->viewport() && event->type() == QEvent::Wheel) {
         const QPoint delta = static_cast<QWheelEvent*>(event)->angleDelta();
         QScrollBar* bar = scroll_->horizontalScrollBar();
@@ -198,11 +305,22 @@ void TimelineBar::setMenuHandler(std::function<void(std::uint64_t, QPoint)> hand
     menu_ = std::move(handler);
 }
 
-void TimelineBar::setRollForwardHandler(std::function<void()> handler) {
-    connect(end_, &QToolButton::clicked, this, [handler = std::move(handler)] {
-        if (handler)
-            handler();
-    });
+void TimelineBar::setRollbackHandler(std::function<void(std::optional<std::uint64_t>)> handler) {
+    rollback_ = std::move(handler);
+}
+
+void TimelineBar::setSelectHandler(std::function<void(std::uint64_t)> handler) {
+    select_ = std::move(handler);
+}
+
+// M15: steps before the gap; all of them means the end.
+void TimelineBar::markerDropped(std::size_t stepsBefore) {
+    if (!rollback_ || buttons_.empty())
+        return;
+    if (stepsBefore >= buttons_.size())
+        rollback_(std::nullopt);
+    else
+        rollback_(buttons_[stepsBefore - 1]->property("featureId").toULongLong());
 }
 
 void TimelineBar::showFeatures(std::span<const document::FeatureDescriptor> features,
@@ -245,6 +363,8 @@ void TimelineBar::showFeatures(std::span<const document::FeatureDescriptor> feat
             if (open_)
                 open_(id);
         });
+        button->setFocusPolicy(Qt::StrongFocus);
+        button->installEventFilter(this); // M15: keyboard
         button->setContextMenuPolicy(Qt::CustomContextMenu);
         connect(button, &QWidget::customContextMenuRequested, this,
                 [this, id, button](const QPoint& at) {
@@ -309,6 +429,7 @@ void TimelineBar::showStates(std::span<const application::FeatureRuntimeState> s
         rolledBack ? std::optional{static_cast<std::size_t>(first - buttons_.begin())}
                    : std::nullopt);
     end_->setEnabled(rolledBack);
+    end_->setAttribute(Qt::WA_TransparentForMouseEvents, !rolledBack);
 }
 
 void TimelineBar::setTheme(ThemeMode mode) {

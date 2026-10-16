@@ -29,6 +29,8 @@ namespace voelund::desktop {
 // others). Rollback, reordering and error marks follow in M15.
 // U14 (user decision 2026-10-14): a card at the bottom centre of the viewport with one symbol
 // chip per step; number and name are in the tooltip. Long histories scroll sideways.
+// M15: the rollback marker (and the end marker) can be dragged into any gap between steps; Left
+// and Right select the neighbouring step, Home and End the first and last, Enter opens it.
 class TimelineBar final : public OverlayCard {
   public:
     explicit TimelineBar(QWidget& host);
@@ -36,8 +38,11 @@ class TimelineBar final : public OverlayCard {
     void setOpenHandler(std::function<void(std::uint64_t)> handler);
     // M14: a right click on a step asks for its menu at that screen point.
     void setMenuHandler(std::function<void(std::uint64_t, QPoint)> handler);
-    // M14: the end marker, while the model is rolled back, moves the marker to the end.
-    void setRollForwardHandler(std::function<void()> handler);
+    // M14/M15: the marker after a step (its feature), or at the end (nullopt): a click on the
+    // end marker while rolled back, or a drag of the marker.
+    void setRollbackHandler(std::function<void(std::optional<std::uint64_t>)> handler);
+    // M15: a step chosen with the keyboard is selected, not opened.
+    void setSelectHandler(std::function<void(std::uint64_t)> handler);
     // M20/U14: `icons` overrides the kind's icon, e.g. revolve, sweep or the primitive's shape.
     using IconOverride = std::pair<document::FeatureId, ShellIcon>;
     void showFeatures(std::span<const document::FeatureDescriptor> features,
@@ -61,7 +66,11 @@ class TimelineBar final : public OverlayCard {
     std::vector<ShellIcon> icons_;
     std::function<void(std::uint64_t)> open_;
     std::function<void(std::uint64_t, QPoint)> menu_;
+    std::function<void(std::optional<std::uint64_t>)> rollback_;
+    std::function<void(std::uint64_t)> select_;
     QToolButton* end_{nullptr};
+    // M15: the gap the marker was dropped in (steps before it), from the track.
+    void markerDropped(std::size_t stepsBefore);
     ThemeMode mode_{ThemeMode::light};
 };
 
