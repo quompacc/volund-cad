@@ -73,7 +73,8 @@ Bereit sind nur noch drei Pakete:
 
 - **T05** – Koplanare Flächen nach Drücken/Ziehen verschmelzen. Das ist das letzte offene
   G3-Paket. Laut Nutzer „später“; nicht ohne Rückfrage beginnen.
-- **PAR02** – Parametertabelle in der Oberfläche. Das ist das letzte offene G2-Paket.
+- ~~**PAR02**~~ – Parametertabelle in der Oberfläche: am 16.10.2026 nach der Pause umgesetzt und
+  abgenommen (`618f685`, CI 646); G2 ist damit geschlossen. Siehe [PAR02](implementation-plan/evidence/PAR02.md).
 - **A02** – Verbindlichen Prüfumfang definieren. Dafür braucht es erst Designarbeit.
 
 Die G4-Pakete (L-Pakete) hängen an diesen. Beim Wiedereinstieg den Nutzer fragen, womit es

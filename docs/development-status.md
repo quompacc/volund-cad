@@ -4,8 +4,9 @@
 
 **Einstieg:** [Fortsetzungsnotiz](session-checkpoint-2026-10-16.md). G3 (mechanisches CAD v1)
 ist bis auf T05 erreicht ([G3-Bericht](implementation-plan/evidence/G3.md)). Umfang und Grenzen
-für Anwender stehen im [Handbuch](handbuch.md). Als Nächstes entscheidet der Nutzer zwischen
-T05, PAR02 und A02. Alles darunter ist historisch.
+für Anwender stehen im [Handbuch](handbuch.md). G2 ist seit PAR02 (Parametertabelle,
+16.10.2026) geschlossen. Als Nächstes entscheidet der Nutzer zwischen T05 und A02. Alles darunter
+ist historisch.
 
 ## Stand – 10. Oktober 2026
 
