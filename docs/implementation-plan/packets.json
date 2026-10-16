@@ -2653,12 +2653,15 @@
       ],
       "acceptance": "Gültige unabhängige Umordnung funktioniert; Feature vor seinen Input ziehen wird abgewiesen. Delete mit Abhängigkeiten verliert nichts ohne die gewählte Aktion. Undo stellt Graph und Auswahl wieder her.",
       "boundary": "Keine generische 'alle späteren Features löschen'-Heuristik.",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "chapter": "05-solid-historie.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/M16.md"
+      ],
+      "completedCommit": "4ba2071",
+      "completedDate": "2026-10-16"
     },
     {
       "id": "M17",
