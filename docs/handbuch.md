@@ -88,6 +88,24 @@ umgesetzte Funktionen. Was hier nicht steht, gibt es noch nicht.
   bewusst neu zuordnen.
 - **Grenzen:** Umordnen und Löschen immer nur für einen Schritt.
 
+## Parameter
+
+- Die **Parametertabelle** ist eine Karte unter dem Modellbaum. Man öffnet sie mit dem Knopf
+  „Parameter“ in der Kopfzeile oder mit Strg+P.
+  - Sie zeigt Name, Wert und wie oft ein Parameter verwendet wird.
+  - Name und Wert ändert man direkt in der Zeile.
+  - „+ Länge“ und „+ Winkel“ legen einen Parameter an.
+- **Binden:** Statt einer Zahl `=A` eingeben, mit Vorschlägen beim Tippen. Das geht im
+  Wertedialog eines Skizzenmaßes, in „Linienlänge“ und „Kreis-/Bogenradius“ der gewählten
+  Skizzengeometrie und in „Distanz“ und „Versatz“ der Extrusion.
+  - Einen unbekannten Namen legt Völund nach kurzer Frage mit dem bisherigen Wert an.
+  - Gebundene Maße zeigen `A = 20,000 mm`.
+  - Eine Zahl im Feld löst die Bindung.
+- **Ändern:** Ändert man einen Wert in der Tabelle, rechnet das ganze Modell neu, als ein
+  Rückgängig-Schritt.
+- **Löschen:** Einen benutzten Parameter löscht Völund nur nach Rückfrage. Die Maße behalten
+  dann ihren aktuellen Wert als feste Zahl.
+
 ## Messen
 
 - „Messen“ (Taste I) mit zwei Klicks: Länge, Radius, Fläche, Volumen eines Elements; Abstand und
@@ -117,7 +135,8 @@ umgesetzte Funktionen. Was hier nicht steht, gibt es noch nicht.
 
 ## Weitere Grenzen von v1
 
-- Keine Parametertabelle in der Oberfläche (Parameter gibt es im Dokumentkern).
+- Parameter binden bisher Skizzenmaße und Extrusionen (Distanz, Versatz), keine Bohrungen,
+  Verrundungen, Fasen, Muster oder Grundkörper; keine Ausdrücke wie `A * 2`.
 - Keine Baugruppen, keine Zeichnungen, keine Blechfunktionen, keine Freiformflächen.
 - Mehrfachauswahl gibt es für Kanten und Skizzenelemente, nicht für ganze Körper beim Bewegen.
 - Technische Kernelmeldungen sind teils englisch; die häufigen Fälle sind deutsch erklärt.

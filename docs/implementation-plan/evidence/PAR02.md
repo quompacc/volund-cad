@@ -1,7 +1,8 @@
 # PAR02 – Parametertabelle in der Oberfläche
 
-**Status:** umgesetzt am 16.10.2026; Abnahme nach grünem CI-Lauf und Sichtung der Aufnahmen
-durch den Nutzer.
+**Status:** abgenommen am 16.10.2026 nach grünem CI-Lauf 646 (`618f685`); der Nutzer hat die
+Oberfläche im installierten Produkt gesichtet („sieht nicht schlecht aus, lassen wir erstmal
+so“).
 
 ## Entscheidungen (Nutzer, 16.10.2026)
 
