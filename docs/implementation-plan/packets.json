@@ -2714,12 +2714,16 @@
       ],
       "acceptance": "A-PART-01/02, A-STEP-01, A-HISTORY-01/02, A-UI-01 komplett bestanden. Handbuch nennt tatsächlich umgesetzte Varianten und Grenzen. Keine aktive Attrappe im v1-Umfang. A-ERR-01 vollständig über gemeinsame Shell, Timeline, Repair/Undo und produktiven Exportpfad abnehmen.",
       "boundary": "G3 ist noch keine Plattform-/Releasefreigabe; L-Pakete bleiben Pflicht.",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "chapter": "05-solid-historie.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/M18.md",
+        "evidence/G3.md"
+      ],
+      "completedCommit": "9ecd22c",
+      "completedDate": "2026-10-16"
     },
     {
       "id": "P01",
