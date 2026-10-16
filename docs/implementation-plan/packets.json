@@ -2567,12 +2567,15 @@
       ],
       "acceptance": "Frühe Skizzenbreite an Teil mit Pocket/Fillet ändern aktualisiert Kette; unabhängiger Körper unverändert. Cancel stellt gesamte Kette wieder her. A-HISTORY-01 besteht.",
       "boundary": "Nicht die gesamte spätere Timeline heimlich löschen, um Edit einfach zu machen.",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "chapter": "05-solid-historie.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/M13.md"
+      ],
+      "completedCommit": "6c5c57f",
+      "completedDate": "2026-10-16"
     },
     {
       "id": "M14",
