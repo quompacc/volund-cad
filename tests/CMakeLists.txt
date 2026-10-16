@@ -585,6 +585,9 @@ if(VOELUND_BUILD_DESKTOP)
         if(VOELUND_NATIVE_WAYLAND)
             set_tests_properties(desktop.reference_sketch_flow PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
         endif()
+        # README pictures (not a test): VOELUND_SHOWCASE_DIR=docs/images voelund_showcase_capture
+        add_executable(voelund_showcase_capture desktop/ShowcaseCapture.cpp)
+        target_link_libraries(voelund_showcase_capture PRIVATE voelund_project_options Voelund::Desktop)
         # M18: the reference plate A-PART-01 through the shell, with history and STEP.
         add_executable(voelund_reference_part_flow_tests desktop/ReferencePartFlowTests.cpp)
         target_link_libraries(voelund_reference_part_flow_tests PRIVATE voelund_project_options Voelund::Desktop)

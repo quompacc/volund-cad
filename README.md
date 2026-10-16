@@ -1,61 +1,83 @@
 # Völund CAD
 
-Völund CAD is a native C++20 parametric CAD application built on Qt 6 and OpenCASCADE Technology (OCCT/OCAF). Its desktop targets are Linux (native Wayland, reference: Fedora), FreeBSD with Meridian, and Windows; see [ADR 0011](docs/adr/0011-linux-desktop-and-ci-runner.md). FreeCAD is a reference implementation and test oracle, not a runtime dependency.
+**A native parametric CAD application for mechanical parts – C++20, Qt 6 and OpenCASCADE,
+Wayland-first, no Python, no web view.**
 
-The binding engineering rules are defined in the [architecture and code contract](docs/architecture-and-code-contract.md).
+![Völund CAD: a plate with through hole, pocket and rounded edge beside a ring – model tree,
+grouped tool bar, view cube and feature timeline](docs/images/01-modell-hell.png)
 
-The [audited completion plan (German, 13 September 2026)](docs/implementation-plan/README.md)
-records the implementation gaps and defines 110 bounded work packages, dependencies,
-architecture decisions, acceptance scenarios, and an execution template for smaller models.
-The current package states and acceptance evidence are tracked in
-[`packets.json`](docs/implementation-plan/packets.json). D10 is complete;
-D11 identity acceptance is complete; see the [acceptance matrix](docs/implementation-plan/evidence/D11-review.md).
-D12d integrates OCAF as the product model authority, including transactions, history and document identity; see [evidence](docs/implementation-plan/evidence/D12d.md). D12 is complete; see the [acceptance matrix](docs/implementation-plan/evidence/D12e.md). Native product persistence is complete; see [D13 acceptance](docs/implementation-plan/evidence/D13d.md).
+Völund builds solids from sketches and features, keeps the whole history editable, and saves it
+in native OCAF documents. Everything in the screenshots on this page was built by a program that
+drives the real product shell with clicks and typed values – the same way the acceptance tests do
+([`ShowcaseCapture.cpp`](tests/desktop/ShowcaseCapture.cpp)).
 
-## Current state
+The user interface is German; the code and its documentation are in English and German.
 
-The product is one application, `voelund-cad`, with the shell of
-[ADR 0012](docs/adr/0012-ui-shell-concept.md):
+## What it does today
 
-- header with file menu, Undo/Redo, command search (Ctrl+K), tool-rail and theme switches
-  (light and dark);
-- model tree with origin, base planes, grid, bodies, sketches and features; a timeline of
-  the history whose steps open their editor;
-- tool rail and a context bar that offers the commands of the current selection;
-- floating tool panel with live preview, values, OK and Cancel; feature properties in the
-  same place;
-- OCCT AIS/V3d viewport with view cube, standard views, face picking, orbit, pan
-  and zoom;
-- sketch editor on base planes and planar faces: lines, polylines, rectangles, circles,
-  arcs, ellipses, slots, polygons; relations and dimensions solved by PlaneGCS; trim,
-  extend, split, fillet, offset, mirror and associative patterns; window/crossing
-  selection;
-- extrusion of sketch regions (new body, join, cut, up to a face), push/pull of planar
-  faces, box and cylinder primitives, move/rotate;
-- native OCAF documents (`.volund`) with Undo/Redo, autosave and recovery after a crash;
-- optional Claude access over MCP and an assistant panel;
-- native C++ tests including end-to-end UI flows through the real buttons, and an
-  enforced 600-line source-file limit.
+| | |
+|---|---|
+| ![Sketch editor with a rectangle, its relations and the panel showing the degrees of freedom](docs/images/03-skizze.png) | **Sketches with a real solver.** Lines, polylines, rectangles, polygons, circles, arcs, ellipses, slots, points and B-splines on base planes, construction planes or body faces. Relations and dimensions are solved by PlaneGCS; free geometry stays blue until it is fully determined. Trim, extend, split, offset, mirror, patterns, sketch fillet and chamfer. |
+| ![Hole panel: an 8 mm through hole previewed in the plate](docs/images/04-bohrung.png) | **Features with live preview.** Extrude (new body, join, cut, intersect, symmetric, up to a face), push/pull, revolve and groove, sweep, loft, helix, holes, shell, draft, mirror, linear and circular patterns, primitives, combine and move. Every tool opens one panel; OK is one undo step, Cancel leaves the document untouched. |
+| ![Fillet panel with a 4 mm rounded edge and a drag grip](docs/images/05-verrundung.png) | **Fillets and chamfers on named edges.** Edges are picked in the view, Ctrl adds more, a grip drags the radius. Edges are named by their adjacent faces, so the fillet survives when earlier features change. |
+| ![Measure panel: area, volume, distance and angle of two faces](docs/images/06-messen.png) | **Measuring without changing anything.** Two clicks give length, radius, area, volume, distance and angle; values copy at full precision. |
+| ![A fillet radius too large: the change is refused, the edge marked red and the reason explained](docs/images/07-fehler-erklaert.png) | **Errors are explained, never hidden.** An impossible change keeps the panel open, marks the cause in red and says why. A change that only breaks later features can be kept on purpose; nothing is ever deleted silently. |
+| ![The same model in the dark theme](docs/images/02-modell-dunkel.png) | **A history you can work with.** The timeline at the bottom reopens any step, suppresses it, rolls the model back to it (drag the marker), reorders steps by dragging and deletes with a list of what depends on them. Light and dark themes, command search (Ctrl+K), autosave and crash recovery. |
 
-D13c switches product Save/Open to native BinOcaf persistence and retains document
-identity. The baseline passes **76/76 Windows** and **73/73 FreeBSD/Sway** tests;
-318 source hashes match. See [D13c evidence](docs/implementation-plan/evidence/D13c.md).
-D13d completes bidirectional product-file exchange and D13 acceptance: 77/77 Windows, 74/74 FreeBSD/Sway, 319 matching source hashes. See [D13d evidence](docs/implementation-plan/evidence/D13d.md). D14 migration acceptance is complete: 79/79 Windows and 76/76 FreeBSD/Sway tests, including all legacy versions and all 26 constraint kinds. See [D14 evidence](docs/implementation-plan/evidence/D14.md). R01 implements dependency ordering, incremental parameter evaluation and independent error branches (80/80 Windows and 77/77 FreeBSD/Sway tests; 325 matching source/fixture hashes). See [R01 status](docs/implementation-plan/evidence/R01.md). R02 defines the [SubshapeRef contract](docs/subshape-reference-contract.md), with all 26 symbolic fixtures passing on Windows and FreeBSD; the three prototype source hashes match. R03 exposes real primitive/Boolean/transform history: 81/81 Windows and 78/78 FreeBSD tests pass, with matching history outcomes and 328 identical source/fixture hashes. See [R03 status](docs/implementation-plan/evidence/R03.md). R04 is complete: persistent support binding and product integration pass 84/84 Windows and 81/81 FreeBSD tests, with 341 matching source/fixture hashes and reviewed UI captures on both platforms. See [R04 acceptance](docs/implementation-plan/evidence/R04.md). R05 is complete, including persistent projected edges and product integration: 88/88 Windows and 85/85 FreeBSD tests. See [R05 acceptance](docs/implementation-plan/evidence/R05.md). R06 is complete: persistent repair state, explicit transactions and a product repair dialog pass A-REF-03. 91/91 Windows and 88/88 FreeBSD tests, 371 matching source hashes, bidirectional file exchange and reviewed UI captures. See [R06 acceptance](docs/implementation-plan/evidence/R06.md). R06d adds document-wide multi-selection and immediate Auto repair of unique support matches, with one Undo for the batch and unresolved cases left for review. See [R06d evidence](docs/implementation-plan/evidence/R06d.md). R07 adds deterministic contour traversal and localized boundary diagnostics: 93/93 Windows, 90/90 FreeBSD tests and 380 matching source hashes. See [R07 acceptance](docs/implementation-plan/evidence/R07.md). R08a adds analytic intersection splitting (94/94 Windows, 91/91 FreeBSD tests; 385 matching hashes). [R08a evidence](docs/implementation-plan/evidence/R08a.md). R08b completes derived region/containment results with separate holes and inner regions: 95/95 Windows, 92/92 FreeBSD tests and 390 matching hashes. [R08 acceptance](docs/implementation-plan/evidence/R08.md). R09–R10 and Meridian remain open. Project file transfers and tests on the dedicated FreeBSD host have standing user authorization.
+**Exchange:** STEP import and export (File menu, Ctrl+I / Ctrl+E) with units and product names;
+imported solids are embedded in the document and stay editable. **Assistant:** optional Claude
+access over MCP, working through the same commands as the user.
+
+The complete list of implemented variants and their limits is in the
+[handbook (German)](docs/handbuch.md).
+
+## The DNA
+
+What Völund is built on – the rules every change has to follow
+([architecture and code contract](docs/architecture-and-code-contract.md), [ADRs](docs/adr/)):
+
+- **Native all the way down.** C++20, Qt 6 Widgets, OpenCASCADE for geometry, OCAF for documents.
+  No Python, no Electron or web view, no FreeCAD at runtime – FreeCAD is only a reference and
+  test oracle.
+- **Wayland first.** A native Wayland client on Linux and FreeBSD (Meridian); Qt owns the window
+  and the OpenGL context, OCCT renders into it ([ADR 0001](docs/adr/0001-wayland-first-linux-viewport.md),
+  [ADR 0006](docs/adr/0006-qt-owned-opengl-viewport.md)). Windows is a full development and test
+  platform.
+- **Stable names instead of indices.** Faces and edges are named by where they came from (a sketch
+  element, a primitive role, a fillet's edge), never by a traversal index, so later features find
+  them again after earlier ones change ([subshape reference contract](docs/subshape-reference-contract.md)).
+- **One transaction per user intent.** Every command runs as one document transaction with one
+  undo step; previews never touch the document ([command transaction contract](docs/command-transaction-contract.md)).
+- **Explicit over clever.** No guessed repairs, no silent deletion, no automatic re-mapping of
+  references: when something breaks, Völund shows where and lets the user decide.
+- **One application core for every caller.** The shell, the tests and the Claude assistant use
+  the same targeted actions ([ADR 0010](docs/adr/0010-native-actions-and-analysis-extension.md)).
+- **Tested through the real product.** End-to-end tests click the real buttons, type into the real
+  fields and use the real file dialogs on a virtual Wayland desktop in CI; every source file stays
+  under 600 lines.
+- **Planned in the open.** Work runs in bounded packages with acceptance scenarios and evidence
+  ([plan](docs/implementation-plan/README.md), [`packets.json`](docs/implementation-plan/packets.json)).
+
+## Status
+
+Version `0.1.0`, not yet released. The mechanical v1 scope (gate G3) is reached except for one
+package (merging coplanar faces after push/pull); see the [G3 report](docs/implementation-plan/evidence/G3.md).
+Next come the parameter table in the UI and the release packages (installer matrix, platform
+acceptance on FreeBSD/Meridian). The current hand-off state is in
+[`docs/development-status.md`](docs/development-status.md).
 
 ## Versions and changes
 
-The current base version is `0.1.0`; no versioned release is tagged yet.
 Changes are collected under `Unreleased` in the [Changelog](CHANGELOG.md).
-[Versioning and release rules](docs/versioning.md) distinguish product releases,
-Git revisions and document formats. New saves use BinOcaf container version 12
-with native application schema 2 (schema 1 remains readable); VOLUND 1–16 remain readable legacy formats.
+[Versioning and release rules](docs/versioning.md) distinguish product releases, Git revisions
+and document formats. New saves use BinOcaf container version 12 with native application schema
+35; all earlier schemas and the legacy text formats VOLUND 1–16 remain readable.
 
-The detailed hand-off state and next development slice are recorded in
-[`docs/development-status.md`](docs/development-status.md).
+The approved dependency budget and the distinction between build-time and shipped components are
+recorded in [`docs/dependencies.md`](docs/dependencies.md).
 
-The approved dependency budget and the distinction between build-time and shipped components are recorded in [`docs/dependencies.md`](docs/dependencies.md).
-
-The earlier FreeCAD/Python feasibility work is frozen under [`spikes/phase-0-freecad/`](spikes/phase-0-freecad/). It is not part of the product build.
+The earlier FreeCAD/Python feasibility work is frozen under
+[`spikes/phase-0-freecad/`](spikes/phase-0-freecad/). It is not part of the product build.
 
 ## Prerequisites
 
