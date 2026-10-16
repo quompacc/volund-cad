@@ -41,7 +41,7 @@ constexpr const char* reasonNames[] = {"none",           "cancelled",           
                                        "invalidInput",   "evaluationFailed",    "incompleteEvaluation",
                                        "alreadyFinished"};
 constexpr const char* evaluationNames[] = {"valid", "dirty", "failed", "blockedByDependency",
-                                           "suppressed"};
+                                           "suppressed", "rolledBack"};
 constexpr const char* featureKinds[] = {"box",    "cylinder", "sketch", "extrusion",
                                         "fillet", "chamfer",  "hole",   "combine",
                                         "datumPlane", "datumAxis", "shell", "primitive", "draft",

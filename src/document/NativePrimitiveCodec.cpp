@@ -347,12 +347,17 @@ void NativePrimitiveCodec::write(const Handle(TDocStd_Document) & document,
     for (const auto& feature : snapshot.features())
         if (feature.suppressed)
             suppressed.push_back(feature.id.value());
-    if (!suppressed.empty()) {
+    if (!suppressed.empty() || snapshot.rollbackAfter()) {
         const auto history = document->Main().FindChild(nativeHistoryStateSlot);
-        TDataStd_Integer::Set(history, static_cast<int>(suppressed.size()));
-        for (std::size_t index = 0; index < suppressed.size(); ++index)
-            TDataStd_AsciiString::Set(history.FindChild(static_cast<int>(index + 1)),
-                                      std::to_string(suppressed[index]).c_str());
+        if (!suppressed.empty()) {
+            const auto list = history.FindChild(1);
+            TDataStd_Integer::Set(list, static_cast<int>(suppressed.size()));
+            for (std::size_t index = 0; index < suppressed.size(); ++index)
+                TDataStd_AsciiString::Set(list.FindChild(static_cast<int>(index + 1)),
+                                          std::to_string(suppressed[index]).c_str());
+        }
+        if (const auto marker = snapshot.rollbackAfter())
+            TDataStd_AsciiString::Set(history.FindChild(2), std::to_string(marker->value()).c_str());
     }
 }
 
@@ -508,18 +513,31 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
                     require(constraint.projectedEdge->document == metadata.id &&
                             assignments[i].body == constraint.projectedEdge->body);
         }
+    std::optional<FeatureId> rollbackAfter;
     if (!historyLabel.IsNull()) {
-        Handle(TDataStd_Integer) count;
-        require(historyLabel.FindAttribute(TDataStd_Integer::GetID(), count) &&
-                count->Get() > 0 && historyLabel.NbChildren() == count->Get() &&
-                static_cast<std::size_t>(count->Get()) <= features.size());
-        for (int index = 1; index <= count->Get(); ++index) {
-            const auto item = child(historyLabel, index);
-            require(item.NbChildren() == 0);
-            const auto feature = std::ranges::find(features, FeatureId{id(item)},
-                                                   &FeatureDescriptor::id);
-            require(feature != features.end() && !feature->suppressed);
-            feature->suppressed = true;
+        const auto list = historyLabel.FindChild(1, false);
+        const auto marker = historyLabel.FindChild(2, false);
+        require((!list.IsNull() || !marker.IsNull()) &&
+                historyLabel.NbChildren() == (list.IsNull() ? 0 : 1) + (marker.IsNull() ? 0 : 1));
+        if (!list.IsNull()) {
+            Handle(TDataStd_Integer) count;
+            require(list.FindAttribute(TDataStd_Integer::GetID(), count) && count->Get() > 0 &&
+                    list.NbChildren() == count->Get() &&
+                    static_cast<std::size_t>(count->Get()) <= features.size());
+            for (int index = 1; index <= count->Get(); ++index) {
+                const auto item = child(list, index);
+                require(item.NbChildren() == 0);
+                const auto feature = std::ranges::find(features, FeatureId{id(item)},
+                                                       &FeatureDescriptor::id);
+                require(feature != features.end() && !feature->suppressed);
+                feature->suppressed = true;
+            }
+        }
+        if (!marker.IsNull()) {
+            require(marker.NbChildren() == 0);
+            rollbackAfter = FeatureId{id(marker)};
+            const auto feature = std::ranges::find(features, *rollbackAfter, &FeatureDescriptor::id);
+            require(feature != features.end() && feature + 1 != features.end());
         }
     }
     auto attributes = attributeLabel.IsNull() ? BodyAttributeTable{}
@@ -527,6 +545,7 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
     validateBodyAttributes(attributes, features, data);
     return IdentifiedDocumentSnapshot::restore(
         metadata.id, DocumentSnapshot{std::move(features), std::move(data),
-                                      metadata.nextFeatureId, table, std::move(attributes)});
+                                      metadata.nextFeatureId, table, std::move(attributes),
+                                      rollbackAfter});
 }
 } // namespace voelund::document::detail

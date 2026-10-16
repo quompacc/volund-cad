@@ -23,7 +23,9 @@ namespace detail {
 inline constexpr int nativeBodyAttributeSlot = 31;
 void writeNativeBodyAttributes(const TDF_Label& label, const BodyAttributeTable& table);
 // M14 (schema 34), optional child 32 of the main label, written only when a feature is
-// suppressed: integer = count; child i = a suppressed feature's ID (decimal text).
+// suppressed or the rollback marker stands before the end. Child 1 (when any): integer =
+// count, child i = a suppressed feature's ID (decimal text); child 2 (when set): the ID of the
+// feature the rollback marker follows.
 inline constexpr int nativeHistoryStateSlot = 32;
 [[nodiscard]] BodyAttributeTable readNativeBodyAttributes(const TDF_Label& label);
 } // namespace detail

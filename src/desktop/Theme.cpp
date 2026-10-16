@@ -149,6 +149,7 @@ QToolButton#timelineStep:checked { border-color: @accent; background: @accentSof
 QToolButton#timelineStep[featureState="error"] { border-color: @error; background: @errorSoft; }
 QToolButton#timelineStep[featureState="blocked"] { border-color: @faint; }
 QToolButton#timelineStep[featureState="suppressed"] { border-style: dashed; border-color: @faint; background: transparent; }
+QToolButton#timelineStep[featureState="rolledBack"] { border-color: @faint; background: transparent; color: @faint; }
 #timeline QScrollBar:horizontal { height: 4px; }
 #toolRail { background: transparent; border: 0; }
 #contextBar, #commandSearch { background: @panel; border: 1px solid @line;

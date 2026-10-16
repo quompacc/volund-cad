@@ -187,9 +187,11 @@ void ModelTreePanel::showStatuses(std::span<const application::FeatureRuntimeSta
         const bool hasError = state.status == application::FeatureRuntimeStatus::error;
         const bool blocked = state.status == application::FeatureRuntimeStatus::blocked;
         const bool suppressed = state.status == application::FeatureRuntimeStatus::suppressed;
+        const bool rolledBack = state.status == application::FeatureRuntimeStatus::rolledBack;
         item->setText(0, hasError     ? tr("%1 [Fehler]").arg(name)
                          : blocked    ? tr("%1 [blockiert]").arg(name)
                          : suppressed ? tr("%1 [unterdrückt]").arg(name) // M14
+                         : rolledBack ? tr("%1 [zurückgerollt]").arg(name)
                                       : name);
         item->setToolTip(0,
                          hasError || blocked ? QString::fromStdString(state.message) : QString{});

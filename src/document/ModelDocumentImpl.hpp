@@ -10,6 +10,7 @@ struct ModelDocument::State final {
     std::uint64_t nextFeatureId;
     ParameterTable parameterTable{};
     BodyAttributeTable bodyAttributes{};
+    std::optional<FeatureId> rollbackAfter{}; // M14
     [[nodiscard]] bool operator==(const State&) const = default;
 };
 struct ModelDocument::Impl final {

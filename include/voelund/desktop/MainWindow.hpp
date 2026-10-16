@@ -75,6 +75,7 @@ class MainWindow final : public QMainWindow {
     void openTimelineStep(std::uint64_t featureId);
     void showTimelineMenu(std::uint64_t featureId, QPoint at); // M14
     void toggleSuppression();
+    void moveRollback(std::optional<document::FeatureId> after);
     void syncProperties();
     void syncTreeStatus();
     void syncErrorCard(std::optional<document::FeatureId> selected);

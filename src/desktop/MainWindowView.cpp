@@ -141,6 +141,7 @@ void MainWindow::createTimeline() {
     impl_->timeline->setOpenHandler([this](std::uint64_t id) { openTimelineStep(id); });
     impl_->timeline->setMenuHandler(
         [this](std::uint64_t id, QPoint at) { showTimelineMenu(id, at); }); // M14
+    impl_->timeline->setRollForwardHandler([this] { moveRollback(std::nullopt); });
     syncTimeline();
 }
 
@@ -186,6 +187,8 @@ void MainWindow::showTimelineMenu(std::uint64_t featureId, QPoint at) {
     QMenu menu(this);
     menu.setObjectName(QStringLiteral("timelineMenu"));
     menu.addAction(impl_->suppressAction);
+    menu.addAction(impl_->rollbackAction);
+    menu.addAction(impl_->rollForwardAction);
     menu.exec(at);
 }
 
@@ -207,6 +210,17 @@ void MainWindow::toggleSuppression() {
         return;
     refreshScene();
     statusBar()->showMessage(suppress ? tr("Feature unterdrückt") : tr("Feature aktiviert"), 2000);
+}
+
+// M14: the marker moves without an undo step and without an unsaved change.
+void MainWindow::moveRollback(std::optional<document::FeatureId> after) {
+    if (impl_->shell().toolBlocksCommands())
+        return;
+    if (!impl_->session.setRollback(after))
+        return;
+    refreshScene();
+    statusBar()->showMessage(after ? tr("Zurückgerollt") : tr("Historie bis zum Ende berechnet"),
+                             2000);
 }
 
 void MainWindow::openTimelineStep(std::uint64_t featureId) {

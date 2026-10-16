@@ -131,7 +131,8 @@ void surfaces() {
         afterBox.insert(id(action));
     require(afterBox == std::set<std::string>{"solid.modify.transform", "solid.modify.fillet",
                                               "solid.modify.chamfer", "solid.create.cylinder",
-                                              "history.suppress"}, // M14
+                                              "history.suppress",
+                                              "history.rollback_here"}, // M14
             "Context bar follows the selection");
 
     QAction* search = command(window, "view.command_search");

@@ -28,6 +28,9 @@
 // the fillet; a chamfer on a pocket edge then fails rather than guessing another edge; the
 // state survives save/open with all IDs and parameters, and reactivating restores the plate.
 // Suppressing the plate's extrusion removes the body and blocks its features; the box stays.
+// Rolling back after the hole evaluates the plate up to it, without an unsaved change; an early
+// edit and its undo keep the marker; a new hole is inserted at the marker; rolling forward
+// evaluates the whole chain with it; the marker survives save/open.
 namespace {
 using namespace voelund;
 using application::CommandStatus;
@@ -295,16 +298,75 @@ void suppression() {
             "Without the plate's extrusion the body is gone, its features blocked; the box stays");
 }
 
+void rollback() {
+    using application::FeatureRuntimeStatus;
+    application::CadSession session;
+    const auto plate = referencePlate(session);
+    const auto directory = std::filesystem::temp_directory_path() / "voelund-m14-rollback";
+    std::filesystem::remove_all(directory);
+    std::filesystem::create_directories(directory);
+    const auto path = directory / "plate.volund";
+    session.saveDocument(path);
+    require(!session.isModified(), "Saved");
+
+    require(session.setRollback(plate.hole) && session.rollbackAfter() == plate.hole &&
+                !session.isModified() &&
+                stateOf(session, plate.pocket) == FeatureRuntimeStatus::rolledBack &&
+                stateOf(session, plate.fillet) == FeatureRuntimeStatus::rolledBack &&
+                near(test::volumeOf(bodyOf(session, plate.body)), 24000 - 160 * pi),
+            "Rolled back after the hole: plate and hole only, no unsaved change");
+    const auto before = session.features().size();
+
+    require(session.editSketchParameters(plate.sketch, plateSketch(35)).status() ==
+                    CommandStatus::committed &&
+                near(test::volumeOf(bodyOf(session, plate.body)), 28000 - 160 * pi) &&
+                session.undo().status() == CommandStatus::committed &&
+                session.rollbackAfter() == plate.hole &&
+                near(test::volumeOf(bodyOf(session, plate.body)), 24000 - 160 * pi),
+            "An early edit and its undo keep the marker");
+
+    // A second hole of 8 at (20, 12), made while rolled back, stands at the marker.
+    const auto face = top(session, plate.hole);
+    const auto [hx, hy] = face.local(20, 12);
+    require(session.createHole(plate.hole, face.origin, hx, hy, 8, std::nullopt).status() ==
+                CommandStatus::committed,
+            "A hole made at the marker");
+    const auto features = session.features();
+    const auto at = std::ranges::find(features, plate.hole, &document::FeatureDescriptor::id);
+    const auto added = (at + 1)->id;
+    require(features.size() == before + 1 && (at + 1)->kind == document::FeatureKind::hole &&
+                session.rollbackAfter() == added &&
+                near(test::volumeOf(bodyOf(session, plate.body)), 24000 - 320 * pi),
+            "The new hole stands right after the first one; the marker follows it");
+
+    require(session.setRollback(std::nullopt) && !session.rollbackAfter() &&
+                near(test::volumeOf(bodyOf(session, plate.body)), finished(60) - 160 * pi) &&
+                stateOf(session, plate.fillet) == FeatureRuntimeStatus::current,
+            "Rolled forward: the whole chain with the new hole");
+
+    require(session.setRollback(plate.hole), "Rolled back again");
+    session.saveDocument(path);
+    application::CadSession reopened;
+    reopened.loadDocument(path);
+    require(reopened.rollbackAfter() == plate.hole && !reopened.isModified() &&
+                stateOf(reopened, plate.fillet) == FeatureRuntimeStatus::rolledBack &&
+                near(test::volumeOf(bodyOf(reopened, plate.body)), 24000 - 160 * pi),
+            "Open keeps the marker");
+    std::filesystem::remove_all(directory);
+}
+
 } // namespace
 
 int main() {
     try {
         earlyChange();
         suppression();
+        rollback();
         std::cout << "PASS M13 history (A-HISTORY-01): reference plate, width 60 -> 70 through "
                      "hole, pocket and fillet, box unchanged, preview without change, undo, "
                      "too narrow refused or kept with errors; suppress (A-HISTORY-02): pass-through, no "
-                     "guessed edge, save/open, reactivate, body creator\n";
+                     "guessed edge, save/open, reactivate, body creator; rollback: no unsaved change, edit "
+                     "and undo keep it, insert at the marker, roll forward, save/open\n";
         return 0;
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';

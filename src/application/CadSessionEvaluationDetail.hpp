@@ -8,6 +8,7 @@ inline std::vector<FeatureRuntimeState> runtimeStates(const features::Evaluation
             issue.status == features::EvaluationStatus::valid ? FeatureRuntimeStatus::current :
             issue.status == features::EvaluationStatus::failed ? FeatureRuntimeStatus::error :
             issue.status == features::EvaluationStatus::suppressed ? FeatureRuntimeStatus::suppressed // M14
+            : issue.status == features::EvaluationStatus::rolledBack ? FeatureRuntimeStatus::rolledBack
                                                                    : FeatureRuntimeStatus::blocked,
             issue.message});
     return states;

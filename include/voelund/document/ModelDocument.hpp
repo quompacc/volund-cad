@@ -543,6 +543,11 @@ class ModelDocument final {
                                            const kernel::RigidTransform& placement);
     // M14: suppresses or reactivates a feature; one undo step.
     [[nodiscard]] bool setFeatureSuppressed(FeatureId featureId, bool suppressed);
+    // M14 (user decision 2026-10-16): the rollback marker after `featureId`, or at the end
+    // (nullopt). Stored, but no undo step and no model change; undo and redo keep it. New
+    // features are inserted at the marker, which then stands after them.
+    [[nodiscard]] bool setRollback(std::optional<FeatureId> featureId);
+    [[nodiscard]] std::optional<FeatureId> rollbackAfter() const noexcept;
     [[nodiscard]] const ParameterTable& parameterTable() const noexcept;
     // Replaces the whole table; bindings are validated against it. Values are not mirrored
     // here: the application re-solves bound sketches in the same transaction.

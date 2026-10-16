@@ -156,6 +156,19 @@ bool CadSession::setBodyHidden(document::BodyId body, bool hidden) {
     return true;
 }
 
+// M14: the marker moves without an undo step; the model is evaluated up to it.
+bool CadSession::setRollback(std::optional<document::FeatureId> featureId) {
+    if (!document_.setRollback(featureId))
+        return false;
+    normalizeSelection();
+    static_cast<void>(recompute());
+    return true;
+}
+
+std::optional<document::FeatureId> CadSession::rollbackAfter() const noexcept {
+    return document_.rollbackAfter();
+}
+
 CommandResult CadSession::renameParameter(document::ParameterId id, std::string name) {
     return commitParameterEdit(
         [&](document::ModelDocument& candidate) {

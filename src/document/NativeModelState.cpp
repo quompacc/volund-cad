@@ -86,6 +86,14 @@ NativeModelState::Prepared NativeModelState::prepareHistory(bool undo) const {
         }
         content.bodyAttributes_ = std::move(carried);
     }
+    // M14: undo and redo keep the rollback marker where the user put it, while its feature is
+    // still there (and not the last one).
+    content.rollbackAfter_ = before.snapshot().rollbackAfter();
+    if (content.rollbackAfter_ &&
+        (std::ranges::find(content.features_, *content.rollbackAfter_, &FeatureDescriptor::id) ==
+             content.features_.end() ||
+         content.features_.back().id == *content.rollbackAfter_))
+        content.rollbackAfter_.reset();
     const auto restored = IdentifiedDocumentSnapshot::restore(before.id(), std::move(content));
     auto next = std::make_unique<State>(*state_);
     next->current = encode(restored);

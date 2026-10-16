@@ -19,7 +19,8 @@ const QColor blockedColor{0xE0, 0x8E, 0x0B};
 
 QIcon featureStatusIcon(application::FeatureRuntimeStatus status) {
     if (status == application::FeatureRuntimeStatus::current ||
-        status == application::FeatureRuntimeStatus::suppressed) // M14: on purpose, no error
+        status == application::FeatureRuntimeStatus::suppressed ||
+        status == application::FeatureRuntimeStatus::rolledBack) // M14: on purpose, no error
         return {};
     QPixmap pixmap(32, 32);
     pixmap.fill(Qt::transparent);

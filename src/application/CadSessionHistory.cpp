@@ -20,6 +20,8 @@ CommandResult CadSession::restoreHistory(bool forward) {
                                 ? features::EvaluationStatus::valid
                             : state.status == FeatureRuntimeStatus::suppressed // M14
                                 ? features::EvaluationStatus::suppressed
+                            : state.status == FeatureRuntimeStatus::rolledBack
+                                ? features::EvaluationStatus::rolledBack
                             : state.status == FeatureRuntimeStatus::blocked
                                 ? features::EvaluationStatus::blockedByDependency
                                 : features::EvaluationStatus::failed;
@@ -28,6 +30,7 @@ CommandResult CadSession::restoreHistory(bool forward) {
              status,
              state.status == FeatureRuntimeStatus::current      ? ""
              : state.status == FeatureRuntimeStatus::suppressed ? "suppressed"
+             : state.status == FeatureRuntimeStatus::rolledBack ? "rolled-back"
                                                                 : "restored-feature-error",
              state.message,
              {}});

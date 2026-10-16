@@ -98,7 +98,8 @@ void CadSession::loadFrom(std::istream& input, std::filesystem::path preparedPat
     // The prepared document already has its persisted native ID or a fresh legacy ID.
     const bool valid = std::ranges::all_of(candidate.states, [](const auto& state) {
         return state.status == FeatureRuntimeStatus::current ||
-               state.status == FeatureRuntimeStatus::suppressed; // M14
+               state.status == FeatureRuntimeStatus::suppressed || // M14
+               state.status == FeatureRuntimeStatus::rolledBack;
     });
     const auto selection = candidate.document.features().empty()
                                ? std::optional<document::FeatureId>{}

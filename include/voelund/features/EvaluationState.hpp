@@ -6,7 +6,8 @@
 
 namespace voelund::features {
 // Per-node evaluation report; published together with the matching document revision.
-enum class EvaluationStatus { valid, dirty, failed, blockedByDependency, suppressed };
+// M14: rolledBack stands behind the rollback marker and is not evaluated.
+enum class EvaluationStatus { valid, dirty, failed, blockedByDependency, suppressed, rolledBack };
 struct EvaluationIssue final {
     document::FeatureId feature;
     EvaluationStatus status;

@@ -330,7 +330,8 @@ bool FeatureGraphEvaluation::valid() const noexcept {
         report.features, [](const auto& issue) {
             // M14: a suppressed feature is skipped on purpose, not an error.
             return issue.status == EvaluationStatus::valid ||
-                   issue.status == EvaluationStatus::suppressed;
+                   issue.status == EvaluationStatus::suppressed ||
+                   issue.status == EvaluationStatus::rolledBack;
         });
 }
 
@@ -417,7 +418,9 @@ void restoreOutput(const EvaluatedFeature& output, std::vector<EvaluatedFeature>
 std::vector<bool> dirtyNodes(const FeatureGraphEvaluation& next,
                              const std::shared_ptr<const FeatureGraphEvaluation>& previous) {
     const auto features = next.snapshot.features();
-    if (!previous || !std::ranges::equal(next.dependencies.nodes(), previous->dependencies.nodes()))
+    // M14: a moved rollback marker changes which features are evaluated at all.
+    if (!previous || !std::ranges::equal(next.dependencies.nodes(), previous->dependencies.nodes()) ||
+        next.snapshot.rollbackAfter() != previous->snapshot.rollbackAfter())
         return std::vector<bool>(features.size(), true);
     std::vector<document::FeatureId> changed;
     for (std::size_t i = 0; i < features.size(); ++i)
@@ -462,9 +465,21 @@ std::shared_ptr<const FeatureGraphEvaluation> FeatureGraph::evaluateDetailed(
     std::vector<EvaluatedBody> references;
     for (const auto& feature : document.features())
         next->report.features.push_back({feature.id, EvaluationStatus::valid, {}, {}, {}});
+    // M14: features behind the rollback marker are not evaluated.
+    std::size_t evaluated = document.features().size();
+    if (const auto marker = document.rollbackAfter())
+        evaluated = static_cast<std::size_t>(
+                        std::ranges::find(document.features(), *marker,
+                                          &document::FeatureDescriptor::id) -
+                        document.features().begin()) +
+                    1;
     for (const auto index : next->dependencies.order()) {
         const auto& descriptor = document.features()[index];
         auto& issue = next->report.features[index];
+        if (index >= evaluated) {
+            issue = {descriptor.id, EvaluationStatus::rolledBack, "rolled-back", "Rolled back", {}};
+            continue;
+        }
         for (const auto input : next->dependencies.nodes()[index].inputs) {
             const auto found =
                 std::ranges::find(next->report.features, input, &EvaluationIssue::feature);
@@ -501,7 +516,8 @@ std::shared_ptr<const FeatureGraphEvaluation> FeatureGraph::evaluateDetailed(
         document::legacyBodyIdentities(document.features(), document.parameters());
     for (std::size_t i = 0; i < identities.size(); ++i)
         if (identities[i].body && next->report.features[i].status != EvaluationStatus::valid &&
-            next->report.features[i].status != EvaluationStatus::suppressed)
+            next->report.features[i].status != EvaluationStatus::suppressed &&
+            next->report.features[i].status != EvaluationStatus::rolledBack)
             std::erase_if(result.bodies,
                           [&](const auto& body) { return body.bodyId == identities[i].body; });
     if (!result.bodies.empty())

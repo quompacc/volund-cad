@@ -163,6 +163,20 @@ void MainWindow::createHistoryActions() {
     impl_->suppressAction->setToolTip(tr("Gewähltes Feature unterdrücken oder wieder aktivieren"));
     setCommandId(*impl_->suppressAction, "history.suppress");
     connect(impl_->suppressAction, &QAction::triggered, this, [this] { toggleSuppression(); });
+    // M14: the rollback marker after the selected feature, and back to the end.
+    impl_->rollbackAction = new QAction(tr("Zurückrollen bis hier"), this);
+    impl_->rollbackAction->setToolTip(
+        tr("Die Historie nach dem gewählten Feature vorübergehend nicht berechnen"));
+    setCommandId(*impl_->rollbackAction, "history.rollback_here");
+    connect(impl_->rollbackAction, &QAction::triggered, this, [this] {
+        if (const auto selected = impl_->session.selectedFeature())
+            moveRollback(selected);
+    });
+    impl_->rollForwardAction = new QAction(tr("Ans Ende"), this);
+    impl_->rollForwardAction->setToolTip(tr("Die ganze Historie wieder berechnen"));
+    setCommandId(*impl_->rollForwardAction, "history.roll_forward");
+    connect(impl_->rollForwardAction, &QAction::triggered, this,
+            [this] { moveRollback(std::nullopt); });
     // Undo/Redo sit in the shell header. Repair is offered by the context bar and the command
     // search until U10 moves it to the feature.
     impl_->repairAction = new QAction(tr("Referenzen reparieren…"), this);
@@ -237,6 +251,14 @@ void MainWindow::syncProperties() {
                               suppressed->status == application::FeatureRuntimeStatus::suppressed;
     impl_->suppressAction->setText(isSuppressed ? tr("Aktivieren") : tr("Unterdrücken"));
     impl_->suppressAction->setEnabled(selected.has_value() && !shell.toolBlocksCommands());
+    // M14: roll back to the selected feature unless the marker already follows it or it is the
+    // last one; roll forward while rolled back.
+    const auto features = impl_->session.features();
+    const auto marker = impl_->session.rollbackAfter();
+    impl_->rollbackAction->setEnabled(selected.has_value() && !shell.toolBlocksCommands() &&
+                                      marker != selected && !features.empty() &&
+                                      features.back().id != *selected);
+    impl_->rollForwardAction->setEnabled(marker.has_value() && !shell.toolBlocksCommands());
     impl_->repairAction->setEnabled(shell.canEditSketch());
     syncErrorCard(selected);
     if (!selected.has_value()) {
@@ -276,7 +298,8 @@ void MainWindow::syncErrorCard(std::optional<document::FeatureId> selected) {
         selected ? std::ranges::find(states, *selected, &application::FeatureRuntimeState::id)
                  : states.end();
     if (state == states.end() || state->status == application::FeatureRuntimeStatus::current ||
-        state->status == application::FeatureRuntimeStatus::suppressed) {
+        state->status == application::FeatureRuntimeStatus::suppressed ||
+        state->status == application::FeatureRuntimeStatus::rolledBack) {
         impl_->errorCard->clear();
         return;
     }

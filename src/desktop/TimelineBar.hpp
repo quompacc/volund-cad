@@ -36,6 +36,8 @@ class TimelineBar final : public OverlayCard {
     void setOpenHandler(std::function<void(std::uint64_t)> handler);
     // M14: a right click on a step asks for its menu at that screen point.
     void setMenuHandler(std::function<void(std::uint64_t, QPoint)> handler);
+    // M14: the end marker, while the model is rolled back, moves the marker to the end.
+    void setRollForwardHandler(std::function<void()> handler);
     // M20/U14: `icons` overrides the kind's icon, e.g. revolve, sweep or the primitive's shape.
     using IconOverride = std::pair<document::FeatureId, ShellIcon>;
     void showFeatures(std::span<const document::FeatureDescriptor> features,
@@ -59,6 +61,7 @@ class TimelineBar final : public OverlayCard {
     std::vector<ShellIcon> icons_;
     std::function<void(std::uint64_t)> open_;
     std::function<void(std::uint64_t, QPoint)> menu_;
+    QToolButton* end_{nullptr};
     ThemeMode mode_{ThemeMode::light};
 };
 

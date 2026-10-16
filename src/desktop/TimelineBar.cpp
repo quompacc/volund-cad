@@ -77,6 +77,11 @@ class TimelineTrack final : public QWidget {
         end_ = end;
         update();
     }
+    // M14: the rollback marker stands after this many steps; none at the end.
+    void setRollback(std::optional<std::size_t> after) {
+        rollback_ = after;
+        update();
+    }
 
   protected:
     void paintEvent(QPaintEvent* event) override {
@@ -92,10 +97,23 @@ class TimelineTrack final : public QWidget {
         QPainter painter(this);
         painter.setRenderHint(QPainter::Antialiasing);
         const double y = chips.front().center().y() + 0.5;
-        const double endX = chips.back().right() + endGap;
+        // The end marker stands where its button is (M14), else just after the last step.
+        const auto* endButton = findChild<QToolButton*>(QStringLiteral("timelineEnd"),
+                                                         Qt::FindDirectChildrenOnly);
+        const double endX = endButton != nullptr && endButton->isVisibleTo(this)
+                                ? endButton->geometry().center().x()
+                                : chips.back().right() + endGap;
         painter.setPen(QPen(axis_, 2));
         painter.drawLine(QPointF(chips.front().center().x(), y), QPointF(endX, y));
-        painter.setPen(QPen(end_, 3, Qt::SolidLine, Qt::RoundCap));
+        QColor endColor = end_;
+        if (rollback_ && *rollback_ < chips.size()) {
+            // M14: the marker between the last evaluated step and the next; the end is pale.
+            const double markerX = (chips[*rollback_ - 1].right() + chips[*rollback_].left()) / 2.0;
+            painter.setPen(QPen(end_, 3, Qt::SolidLine, Qt::RoundCap));
+            painter.drawLine(QPointF(markerX, y - 11), QPointF(markerX, y + 11));
+            endColor = axis_;
+        }
+        painter.setPen(QPen(endColor, 3, Qt::SolidLine, Qt::RoundCap));
         painter.drawLine(QPointF(endX, y - 9), QPointF(endX, y + 9));
         QFont small = font();
         small.setPixelSize(10);
@@ -109,6 +127,7 @@ class TimelineTrack final : public QWidget {
     }
 
   private:
+    std::optional<std::size_t> rollback_;
     QColor axis_{Qt::gray};
     QColor number_{Qt::gray};
     QColor end_{Qt::darkGray};
@@ -132,6 +151,14 @@ TimelineBar::TimelineBar(QWidget& host) : OverlayCard(host, QStringLiteral("time
     // Room below the nodes for their numbers, right of them for the end marker.
     steps_->setContentsMargins(2, 4, endGap + 6, 14);
     steps_->setSpacing(14);
+    // M14: a click on the end marker rolls forward; it is hit over the painted marker.
+    end_ = new QToolButton(content_);
+    end_->setObjectName(QStringLiteral("timelineEnd"));
+    end_->setToolTip(tr("Ans Ende"));
+    end_->setAutoRaise(true);
+    end_->setStyleSheet(QStringLiteral("background: transparent; border: none;"));
+    end_->setEnabled(false);
+    end_->setFixedSize(16, chipSize);
     empty_ = new QLabel(tr("Noch keine Schritte"), content_);
     empty_->setObjectName(QStringLiteral("timelineEmpty"));
     steps_->addWidget(empty_);
@@ -169,6 +196,13 @@ void TimelineBar::setOpenHandler(std::function<void(std::uint64_t)> handler) {
 
 void TimelineBar::setMenuHandler(std::function<void(std::uint64_t, QPoint)> handler) {
     menu_ = std::move(handler);
+}
+
+void TimelineBar::setRollForwardHandler(std::function<void()> handler) {
+    connect(end_, &QToolButton::clicked, this, [handler = std::move(handler)] {
+        if (handler)
+            handler();
+    });
 }
 
 void TimelineBar::showFeatures(std::span<const document::FeatureDescriptor> features,
@@ -224,6 +258,9 @@ void TimelineBar::showFeatures(std::span<const document::FeatureDescriptor> feat
         icons_.push_back(special != icons.end() ? special->second : iconFor(feature.kind));
     }
     empty_->setVisible(features.empty());
+    steps_->removeWidget(end_);
+    steps_->addWidget(end_); // the end marker follows the last step
+    end_->setVisible(!features.empty());
     setTheme(mode_);
     place();
     // The selected step, else the newest one, is in view.
@@ -240,10 +277,13 @@ void TimelineBar::showStates(std::span<const application::FeatureRuntimeState> s
                                              &application::FeatureRuntimeState::id);
         const bool suppressed =
             state != states.end() && state->status == application::FeatureRuntimeStatus::suppressed;
-        const bool marked = !suppressed && state != states.end() &&
+        const bool rolledBack =
+            state != states.end() && state->status == application::FeatureRuntimeStatus::rolledBack;
+        const bool marked = !suppressed && !rolledBack && state != states.end() &&
                             state->status != application::FeatureRuntimeStatus::current;
         button->setProperty("featureState",
-                            suppressed ? QStringLiteral("suppressed") // M14
+                            rolledBack   ? QStringLiteral("rolledBack") // M14
+                            : suppressed ? QStringLiteral("suppressed")
                             : !marked  ? QString{}
                             : state->status == application::FeatureRuntimeStatus::error
                                 ? QStringLiteral("error")
@@ -252,12 +292,23 @@ void TimelineBar::showStates(std::span<const application::FeatureRuntimeState> s
         button->style()->polish(button);
         if (suppressed)
             button->setToolTip(button->text() + QLatin1Char('\n') + tr("Unterdrückt"));
+        if (rolledBack)
+            button->setToolTip(button->text() + QLatin1Char('\n') + tr("Zurückgerollt"));
         if (marked) {
             button->setIcon(featureStatusIcon(state->status));
             button->setToolTip(button->text() + QLatin1Char('\n') +
                                QString::fromStdString(state->message));
         }
     }
+    // M14: the marker after the last evaluated step; the end marker then rolls forward.
+    const auto first = std::ranges::find_if(buttons_, [](const QToolButton* button) {
+        return button->property("featureState").toString() == QStringLiteral("rolledBack");
+    });
+    const bool rolledBack = first != buttons_.end() && first != buttons_.begin();
+    static_cast<TimelineTrack*>(content_)->setRollback(
+        rolledBack ? std::optional{static_cast<std::size_t>(first - buttons_.begin())}
+                   : std::nullopt);
+    end_->setEnabled(rolledBack);
 }
 
 void TimelineBar::setTheme(ThemeMode mode) {

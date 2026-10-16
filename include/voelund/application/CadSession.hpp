@@ -26,7 +26,7 @@
 namespace voelund::application {
 
 // M14: suppressed is no error; the feature is skipped on purpose.
-enum class FeatureRuntimeStatus { current, error, blocked, suppressed };
+enum class FeatureRuntimeStatus { current, error, blocked, suppressed, rolledBack };
 
 struct FeatureRuntimeState final {
     document::FeatureId id;
@@ -347,6 +347,10 @@ class CadSession final {
     [[nodiscard]] CommandResult
     setFeatureSuppressed(document::FeatureId featureId, bool suppressed,
                          ErrorDisposition disposition = ErrorDisposition::keepEditableErrors);
+    // M14: the rollback marker after `featureId` (nullopt: at the end). No undo step and no
+    // unsaved change; the model shows the state at the marker.
+    [[nodiscard]] bool setRollback(std::optional<document::FeatureId> featureId);
+    [[nodiscard]] std::optional<document::FeatureId> rollbackAfter() const noexcept;
     // M27 (CadSessionPrimitives.cpp): a sphere, cone, torus or wedge ("Kugel N" ...), added as
     // a cylinder is: on `input` (join, cut, intersect, or separate beside it) or as a new body
     // at the origin; one undo step.

@@ -27,7 +27,9 @@
 // plate.
 // M14 (user decision 2026-10-16): "Unterdrücken" in the fillet's context bar suppresses it (the
 // plate keeps its full volume, the timeline step is marked suppressed, the command now says
-// "Aktivieren"); the timeline step's right-click menu reactivates it.
+// "Aktivieren"); the timeline step's right-click menu reactivates it. "Zurückrollen bis hier"
+// from the extrusion step's menu leaves the fillet pale behind the marker, without an unsaved
+// change; a click on the end marker rolls forward.
 namespace {
 using namespace voelund;
 using test::require;
@@ -172,9 +174,38 @@ void run() {
     require(matches(volume(session), plateVolume(10)) &&
                 timelineStep(window, 2).property("featureState").toString().isEmpty(),
             "The timeline menu reactivates the fillet");
+
+    // M14: roll back from the extrusion step's menu, forward with the end marker.
+    const auto pick = [](const QString& text) {
+        QTimer::singleShot(0, [text] {
+            for (auto* widget : QApplication::topLevelWidgets())
+                if (auto* menu = qobject_cast<QMenu*>(widget); menu && menu->isVisible()) {
+                    for (auto* action : menu->actions())
+                        if (action->text() == text && action->isEnabled())
+                            action->trigger();
+                    menu->close();
+                }
+        });
+    };
+    const bool modified = session.isModified();
+    pick(QStringLiteral("Zurückrollen bis hier"));
+    auto& extrusionStep = timelineStep(window, 1);
+    emit extrusionStep.customContextMenuRequested(extrusionStep.rect().center());
+    settle();
+    auto* end = window.findChild<QToolButton*>(QStringLiteral("timelineEnd"));
+    require(session.rollbackAfter() == extrusion && matches(volume(session), 4000) &&
+                timelineStep(window, 2).property("featureState") == QStringLiteral("rolledBack") &&
+                session.isModified() == modified && end != nullptr && end->isEnabled(),
+            "Rolled back after the extrusion: the fillet is pale, no unsaved change");
+    end->click();
+    settle();
+    require(!session.rollbackAfter() && matches(volume(session), plateVolume(10)) &&
+                !window.findChild<QToolButton*>(QStringLiteral("timelineEnd"))->isEnabled(),
+            "The end marker rolls forward");
     std::cout << "PASS M13/M14 history edit: early extrusion reopened, successor error offered, "
                  "cancel unchanged, kept with errors, nothing deleted, undo; suppress from the "
-                 "context bar, reactivate from the timeline menu" << std::endl;
+                 "context bar, reactivate from the timeline menu; roll back from the menu, forward at "
+                 "the end marker" << std::endl;
 }
 } // namespace
 
