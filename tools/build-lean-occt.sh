@@ -68,7 +68,7 @@ cmake -S "$source_dir" -B "$build_dir" -G Ninja \
     -DBUILD_MODULE_DataExchange=OFF \
     -DBUILD_MODULE_DETools=OFF \
     -DBUILD_MODULE_Draw=OFF \
-    "-DBUILD_ADDITIONAL_TOOLKITS=TKBO;TKPrim;TKFillet;TKOffset;TKV3d;TKMesh;TKShHealing;TKHLR;TKOpenGles;TKBin" \
+    "-DBUILD_ADDITIONAL_TOOLKITS=TKBO;TKPrim;TKFillet;TKOffset;TKV3d;TKMesh;TKShHealing;TKHLR;TKOpenGles;TKBin;TKDESTEP;TKXCAF" \
     -DBUILD_SAMPLES_QT=OFF \
     -DBUILD_Inspector=OFF \
     -DBUILD_DOC_Overview=OFF \

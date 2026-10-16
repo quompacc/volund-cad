@@ -178,6 +178,9 @@ FeatureDependencies FeatureDependencies::from(const document::DocumentSnapshot& 
         }
         if (feature.kind == document::FeatureKind::patternCopy)
             node.inputs.push_back(snapshot.patternCopyParameters(feature.id).pattern);
+        // M17: a part belongs to its import.
+        if (feature.kind == document::FeatureKind::importPart)
+            node.inputs.push_back(snapshot.importPartParameters(feature.id).import);
         // M21: a combination works on its target and tool bodies as they were before it.
         if (feature.kind == document::FeatureKind::combine) {
             const auto& parameters = snapshot.combineParameters(feature.id);

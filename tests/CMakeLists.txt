@@ -1239,6 +1239,11 @@ add_executable(voelund_move_tests integration/MoveTests.cpp)
 target_link_libraries(voelund_move_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME application.move COMMAND voelund_move_tests)
 set_tests_properties(application.move PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
+# M17: STEP import and export.
+add_executable(voelund_step_tests integration/StepTests.cpp)
+target_link_libraries(voelund_step_tests PRIVATE voelund_project_options Voelund::Application TKDESTEP)
+add_test(NAME application.step COMMAND voelund_step_tests)
+set_tests_properties(application.step PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
 # M12: measuring.
 add_executable(voelund_measure_tests integration/MeasureTests.cpp)
 target_link_libraries(voelund_measure_tests PRIVATE voelund_project_options Voelund::Application)

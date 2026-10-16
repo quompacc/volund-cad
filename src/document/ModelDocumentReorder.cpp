@@ -172,6 +172,8 @@ FeatureReferences featureReferences(const FeatureDescriptor& feature,
                     addEdge(geometric, *values.axis.edge);
             } else if constexpr (std::is_same_v<Type, PatternCopyParameters>) {
                 structural.push_back(values.pattern);
+            } else if constexpr (std::is_same_v<Type, ImportPartParameters>) {
+                structural.push_back(values.import);
             } else if constexpr (std::is_same_v<Type, MoveParameters>) {
                 body(values.body);
             }
@@ -186,13 +188,12 @@ FeatureReferences featureReferences(const FeatureDescriptor& feature,
 bool ModelDocument::moveFeature(FeatureId featureId, std::optional<FeatureId> after) {
     auto candidate = currentState();
     const auto from = indexOf(candidate.features, featureId);
-    if (candidate.features[from].kind == FeatureKind::patternCopy)
-        throw std::invalid_argument("A pattern copy moves with its pattern");
-    // The feature and the copies of a pattern move as one block.
+    if (isCompanion(candidate.features[from].kind))
+        throw std::invalid_argument("A pattern copy or import part moves with its feature");
+    // The feature and its companions (a pattern's copies, an import's parts) move as one block.
     std::set<std::uint64_t> block{featureId.value()};
     for (std::size_t index = 0; index < candidate.parameters.size(); ++index)
-        if (const auto* copy = std::get_if<PatternCopyParameters>(&candidate.parameters[index]);
-            copy && copy->pattern == featureId)
+        if (companionOwner(candidate.parameters[index]) == featureId)
             block.insert(candidate.features[index].id.value());
     if (after && block.contains(after->value()))
         throw std::invalid_argument("A feature cannot move after itself");
@@ -248,10 +249,10 @@ bool ModelDocument::deleteFeatures(std::span<const FeatureId> featureIds) {
     std::set<std::uint64_t> removed;
     for (const auto id : featureIds)
         removed.insert(candidate.features[indexOf(candidate.features, id)].id.value());
-    // A pattern's copies go with it.
+    // A pattern's copies and an import's parts go with it.
     for (std::size_t index = 0; index < candidate.parameters.size(); ++index)
-        if (const auto* copy = std::get_if<PatternCopyParameters>(&candidate.parameters[index]);
-            copy && removed.contains(copy->pattern.value()))
+        if (const auto owner = companionOwner(candidate.parameters[index]);
+            owner && removed.contains(owner->value()))
             removed.insert(candidate.features[index].id.value());
     const auto bodies = inputBodies(candidate.features, candidate.parameters);
     std::vector<FeatureDescriptor> kept;

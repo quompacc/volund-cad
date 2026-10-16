@@ -52,9 +52,7 @@ DeletionPlan CadSession::deletionPlan(document::FeatureId featureId) const {
     // extrusions, the features of a body it creates, ...), transitively.
     std::set<std::uint64_t> removed{featureId.value()};
     for (std::size_t index = 0; index < features.size(); ++index)
-        if (const auto* copy =
-                std::get_if<document::PatternCopyParameters>(&snapshot.parameters()[index]);
-            copy && copy->pattern == featureId)
+        if (document::companionOwner(snapshot.parameters()[index]) == featureId)
             removed.insert(features[index].id.value());
     const auto creates = document::featureBodyContexts(features, snapshot.parameters());
     for (bool grew = true; grew;) {
@@ -88,9 +86,8 @@ DeletionPlan CadSession::deletionPlan(document::FeatureId featureId) const {
                 return true;
             const auto found = std::ranges::find(features, document::FeatureId{id},
                                                  &document::FeatureDescriptor::id);
-            const auto* copy = std::get_if<document::PatternCopyParameters>(
-                &snapshot.parameters()[static_cast<std::size_t>(found - features.begin())]);
-            return copy != nullptr && copy->pattern == featureId;
+            return document::companionOwner(snapshot.parameters()[static_cast<std::size_t>(
+                       found - features.begin())]) == featureId;
         });
     // Then what would fail without them, repeated until nothing new fails.
     const auto before = evaluation_ ? evaluation_->report : features::EvaluationReport{};
@@ -114,7 +111,7 @@ DeletionPlan CadSession::deletionPlan(document::FeatureId featureId) const {
     }
     for (const auto& feature : features)
         if (removed.contains(feature.id.value()) && feature.id != featureId &&
-            feature.kind != document::FeatureKind::patternCopy)
+            !document::isCompanion(feature.kind))
             plan.dependents.push_back(feature.id);
     // The cascade removes them all; without them only the feature (with its copies).
     for (const auto& feature : features)

@@ -48,9 +48,12 @@ template <class State> void placeAtRollback(State& state, std::span<const Featur
                 values.push_back(std::move(state.parameters[index]));
             }
             if (!added.empty()) {
-                const auto at = std::ranges::find(kept, *state.rollbackAfter,
-                                                  &FeatureDescriptor::id) -
-                                kept.begin() + 1;
+                auto at = std::ranges::find(kept, *state.rollbackAfter,
+                                            &FeatureDescriptor::id) -
+                          kept.begin() + 1;
+                // M10/M17: never between a pattern and its copies or an import and its parts.
+                while (at < std::ssize(kept) && isCompanion(kept[static_cast<std::size_t>(at)].kind))
+                    ++at;
                 const auto count = static_cast<std::ptrdiff_t>(added.size());
                 state.rollbackAfter = added.back().id;
                 kept.insert(kept.begin() + at, std::make_move_iterator(added.begin()),
@@ -150,6 +153,10 @@ bool ModelDocument::setFeatureSuppressed(FeatureId featureId, bool suppressed) {
     if (candidate.features[index].suppressed == suppressed)
         return false;
     candidate.features[index].suppressed = suppressed;
+    // M10/M17: a pattern's copies and an import's parts are suppressed with it.
+    for (std::size_t other = 0; other < candidate.features.size(); ++other)
+        if (companionOwner(candidate.parameters[other]) == featureId)
+            candidate.features[other].suppressed = suppressed;
     commitState(std::move(candidate));
     return true;
 }

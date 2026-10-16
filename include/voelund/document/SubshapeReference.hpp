@@ -37,6 +37,8 @@ struct SubshapeOrigin final {
     std::optional<std::uint64_t> treatedEdge{};
     // M09: the copies this face went through, oldest first; empty for the face itself.
     std::vector<SubshapeInstance> instances{};
+    // M17 (schema 35): face number (from 1) of an imported solid, as stored with the import.
+    std::optional<std::uint32_t> importedFace{};
     bool operator==(const SubshapeOrigin&) const = default;
 };
 struct SubshapeRef final {

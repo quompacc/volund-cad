@@ -73,6 +73,8 @@ QJsonObject encodeFaceOrigin(const features::SupportOrigin& origin) {
     QJsonObject json{{"feature", static_cast<double>(origin.feature.value())}};
     if (origin.role)
         json.insert("role", roleNames[static_cast<std::size_t>(*origin.role)]);
+    if (origin.importedFace) // M17
+        json.insert("importedFace", static_cast<double>(*origin.importedFace));
     QJsonArray boundary;
     for (const auto element : origin.extrusionBoundary)
         boundary.append(static_cast<double>(element.value()));

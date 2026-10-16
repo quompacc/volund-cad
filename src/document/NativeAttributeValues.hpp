@@ -4,9 +4,10 @@
 #include <string_view>
 
 namespace voelund::document::detail {
-enum class NativeAttributeKind { ascii, integer, realArray, reference, real };
+// M17: byteArray holds the BRep of an imported solid.
+enum class NativeAttributeKind { ascii, integer, realArray, reference, real, byteArray };
 struct NativeAttributeTypes final {
-    std::array<NativeAttributeKind, 5> values{};
+    std::array<NativeAttributeKind, 6> values{};
     std::size_t count{};
 };
 [[nodiscard]] NativeAttributeTypes readNativeAttributeTypes(std::string_view bytes);

@@ -10,6 +10,7 @@
 #include <voelund/document/SubshapeReference.hpp>
 #include <voelund/kernel/ShapeFactory.hpp>
 #include <voelund/kernel/SolidPrimitives.hpp>
+#include <TopoDS_Shape.hxx>
 #include <array>
 
 #include <cstddef>
@@ -45,7 +46,9 @@ enum class FeatureKind {
     mirror,    // M09
     pattern,   // M10
     patternCopy,
-    move       // M11
+    move,      // M11
+    stepImport, // M17
+    importPart
 };
 enum class CylinderResultMode { join, cut, intersect, separate };
 
@@ -407,6 +410,37 @@ struct PatternCopyParameters final {
     std::uint32_t index;
     [[nodiscard]] bool operator==(const PatternCopyParameters&) const = default;
 };
+// M17 (schema 35, user decision 2026-10-16): the solids of a STEP file, embedded in the
+// document in mm; the file is not needed again. The import feature is the body of the first
+// solid; every further solid is an importPart feature of its own body that moves, is deleted and
+// is shown with the import. Faces are named by their index in the stored solid.
+struct ImportedSolid final {
+    std::string name;                        // the STEP product's name, UTF-8; may be empty
+    std::shared_ptr<const std::string> brep; // OCCT binary BRep as stored
+    TopoDS_Shape solid;                      // read from `brep`
+    [[nodiscard]] bool operator==(const ImportedSolid& other) const {
+        return name == other.name &&
+               (brep == other.brep || (brep && other.brep && *brep == *other.brep));
+    }
+};
+// The stored form of a solid, and the solid as read back from it, so an import evaluates as it
+// will after saving. Throws std::invalid_argument for data that is no valid solid.
+[[nodiscard]] ImportedSolid importedSolid(const TopoDS_Shape& solid, std::string name);
+[[nodiscard]] ImportedSolid importedSolid(std::string brep, std::string name);
+inline constexpr std::size_t maximumImportedSolids = 1000;
+struct ImportParameters final {
+    std::string fileName{};   // where it came from, for information only
+    std::string sourceUnit{}; // the file's length unit as it names it
+    std::vector<ImportedSolid> solids;
+    [[nodiscard]] bool operator==(const ImportParameters&) const = default;
+};
+void validateImportParameters(const ImportParameters& parameters);
+// One further solid of an import: solid `index` (from 1) of it, a body of its own.
+struct ImportPartParameters final {
+    FeatureId import;
+    std::uint32_t index;
+    [[nodiscard]] bool operator==(const ImportPartParameters&) const = default;
+};
 
 // The operation in effect, with the earlier rule for an unset one.
 [[nodiscard]] ExtrusionOperation effectiveOperation(const ExtrusionParameters& parameters,
@@ -428,7 +462,14 @@ using FeatureParameters =
                  FilletParameters, ChamferParameters, HoleParameters, CombineParameters,
                  DatumPlaneParameters, DatumAxisParameters, ShellParameters,
                  PrimitiveParameters, DraftParameters, MirrorParameters, PatternParameters,
-                 PatternCopyParameters, MoveParameters>;
+                 PatternCopyParameters, MoveParameters, ImportParameters,
+                 ImportPartParameters>;
+// M10/M17: the feature a companion belongs to (a pattern copy's pattern, an import part's
+// import); it moves, is deleted and is shown with that feature.
+[[nodiscard]] std::optional<FeatureId> companionOwner(const FeatureParameters& parameters) noexcept;
+[[nodiscard]] constexpr bool isCompanion(FeatureKind kind) noexcept {
+    return kind == FeatureKind::patternCopy || kind == FeatureKind::importPart;
+}
 
 // M16: what a feature refers to. Structural references must stand earlier and exist (its input,
 // the bodies it works on, sketches, construction features, a copy's pattern); geometric ones name
@@ -514,6 +555,10 @@ class ModelDocument final {
     [[nodiscard]] FeatureId addMoveFeature(std::string name, const MoveParameters& parameters);
     [[nodiscard]] const MoveParameters& moveParameters(FeatureId featureId) const;
     [[nodiscard]] bool setMoveParameters(FeatureId featureId, const MoveParameters& parameters);
+    // M17 (ModelDocumentImport.cpp): the import and its parts in one step; every body is named
+    // after its solid, else "<name>.<n>".
+    [[nodiscard]] FeatureId addImportFeature(std::string name, ImportParameters parameters);
+    [[nodiscard]] const ImportParameters& importParameters(FeatureId featureId) const;
     [[nodiscard]] bool setPrimitiveParameters(FeatureId featureId,
                                               const PrimitiveParameters& parameters);
     [[nodiscard]] const kernel::BoxDimensions& boxDimensions(FeatureId featureId) const;

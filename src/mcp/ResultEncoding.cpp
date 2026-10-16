@@ -45,7 +45,8 @@ constexpr const char* evaluationNames[] = {"valid", "dirty", "failed", "blockedB
 constexpr const char* featureKinds[] = {"box",    "cylinder", "sketch", "extrusion",
                                         "fillet", "chamfer",  "hole",   "combine",
                                         "datumPlane", "datumAxis", "shell", "primitive", "draft",
-                                        "mirror", "pattern", "patternCopy", "move"};
+                                        "mirror", "pattern", "patternCopy", "move", "stepImport",
+                                        "importPart"};
 static_assert(std::size(featureKinds) == std::variant_size_v<document::FeatureParameters>,
               "One name per feature kind");
 constexpr const char* primitiveShapes[] = {"sphere", "cone", "torus", "wedge"};
@@ -144,6 +145,18 @@ QJsonObject featureParameters(const document::FeatureParameters& parameters) {
             [](const document::PatternCopyParameters& copy) -> QJsonObject {
                 return {{"patternId", id(copy.pattern.value())},
                         {"index", static_cast<int>(copy.index)}};
+            },
+            [](const document::ImportParameters& import) -> QJsonObject { // M17
+                QJsonArray names;
+                for (const auto& solid : import.solids)
+                    names.append(QString::fromStdString(solid.name));
+                return {{"fileName", QString::fromStdString(import.fileName)},
+                        {"sourceUnit", QString::fromStdString(import.sourceUnit)},
+                        {"solidNames", names}};
+            },
+            [](const document::ImportPartParameters& part) -> QJsonObject {
+                return {{"importId", id(part.import.value())},
+                        {"index", static_cast<int>(part.index)}};
             },
             [](const document::PrimitiveParameters& primitive) -> QJsonObject { // M27
                 QJsonArray sizes;

@@ -37,11 +37,12 @@ NativeAttributeTypes readNativeAttributeTypes(std::string_view bytes) {
     for (const auto width : {1U, 1U, 1U, 1U, 2U, 1U, 2U}) (void)text(bytes, at, width);
     const auto count = integer(bytes, at);
     at += 4;
-    if (count < 6 || count > 10 || text(bytes, at) != "FILE_FORMAT: BinOcaf" ||
+    if (count < 6 || count > 11 || text(bytes, at) != "FILE_FORMAT: BinOcaf" ||
         text(bytes, at) != "REFERENCE_COUNTER: 0" || text(bytes, at) != "MODIFICATION_COUNTER: 1" ||
         text(bytes, at) != "START_TYPES") invalidAttribute();
-    constexpr std::array<std::string_view, 5> names{
-        "TDataStd_AsciiString", "TDataStd_Integer", "TDataStd_RealArray", "TDF_Reference", "TDataStd_Real"};
+    constexpr std::array<std::string_view, 6> names{
+        "TDataStd_AsciiString", "TDataStd_Integer", "TDataStd_RealArray", "TDF_Reference", "TDataStd_Real",
+        "TDataStd_ByteArray"};
     NativeAttributeTypes result;
     unsigned seen = 0;
     for (std::uint64_t i = 0; i < count - 5; ++i) {
@@ -75,6 +76,14 @@ std::size_t validateNativeAttributeValue(NativeAttributeKind kind, std::string_v
             upper > (bytes.size() - 8) / 8 || bytes.size() != 9 + upper * 8 || bytes.back() != '\0')
             invalidAttribute();
         for (std::uint64_t i = 0; i < upper; ++i) finiteReal(bytes, 8 + static_cast<std::size_t>(i) * 8);
+        break;
+    }
+    case NativeAttributeKind::byteArray: {
+        // M17: first and last index (always 1..n), the bytes, no delta mode, default GUID.
+        const auto lower = integer(bytes, 0), upper = integer(bytes, 4);
+        if (lower != 1 || upper == 0 || upper > maximumImportedBytes ||
+            bytes.size() != 9 + upper || bytes.back() != '\0')
+            invalidAttribute();
         break;
     }
     case NativeAttributeKind::reference: {

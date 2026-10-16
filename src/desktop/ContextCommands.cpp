@@ -55,6 +55,10 @@ QString featureName(const ShellState& state) {
         return QObject::tr("Musterkopie");
     case document::FeatureKind::move:
         return QObject::tr("Bewegen"); // M11
+    case document::FeatureKind::stepImport:
+        return QObject::tr("Import"); // M17
+    case document::FeatureKind::importPart:
+        return QObject::tr("Importteil");
     }
     return QObject::tr("Feature");
 }

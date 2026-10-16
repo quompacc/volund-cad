@@ -15,6 +15,8 @@ inline constexpr std::size_t maximumSketchElementCount = 1'000'000;
 inline constexpr std::size_t maximumSketchConstraintCount = 2'000'000;
 inline constexpr std::size_t maximumExtrusionProfileCount = 1'000'000;
 inline constexpr std::size_t maximumDocumentBytes = 64 * 1024 * 1024;
+// M17: the stored BRep of all solids of one import; the document must still fit.
+inline constexpr std::size_t maximumImportedBytes = 48 * 1024 * 1024;
 inline constexpr std::size_t maximumLineBytes = 64 * 1024;
 inline constexpr std::size_t maximumNameBytes = 4096;
 inline constexpr std::size_t maximumDocumentRecords = 200'000;

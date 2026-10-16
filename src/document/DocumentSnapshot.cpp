@@ -96,6 +96,12 @@ const PatternCopyParameters& DocumentSnapshot::patternCopyParameters(FeatureId i
 const MoveParameters& DocumentSnapshot::moveParameters(FeatureId id) const {
     return std::get<MoveParameters>(featureParameters(id));
 }
+const ImportParameters& DocumentSnapshot::importParameters(FeatureId id) const {
+    return std::get<ImportParameters>(featureParameters(id));
+}
+const ImportPartParameters& DocumentSnapshot::importPartParameters(FeatureId id) const {
+    return std::get<ImportPartParameters>(featureParameters(id));
+}
 const SketchParameters& DocumentSnapshot::sketchParameters(FeatureId id) const {
     return std::get<SketchParameters>(featureParameters(id));
 }

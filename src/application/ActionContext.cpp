@@ -95,6 +95,9 @@ std::vector<ActionKind> availableActions(const CadSession& session,
     case FeatureKind::move:
         actions = {ActionKind::editMoveParameters};
         break;
+    case FeatureKind::stepImport: // M17: the stored solids are not edited
+    case FeatureKind::importPart:
+        break;
     }
     if (session.placementFeature(feature))
         actions.push_back(ActionKind::setPlacement);

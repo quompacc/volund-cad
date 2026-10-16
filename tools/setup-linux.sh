@@ -52,10 +52,11 @@ setup_desktop() {
         exit 1
     fi
 
-    # M05/M22: a cached build from before TKFillet or TKOffset is completed incrementally.
+    # M05/M22/M17: a cached build from before TKFillet, TKOffset or TKDESTEP is completed incrementally.
     if [[ ! -f "${repository_root}/.tools/occt-linux/install/lib/cmake/opencascade/OpenCASCADEConfig.cmake" ||
           -z "$(ls "${repository_root}"/.tools/occt-linux/install/lib/libTKFillet.so* 2>/dev/null)" ||
-          -z "$(ls "${repository_root}"/.tools/occt-linux/install/lib/libTKOffset.so* 2>/dev/null)" ]]; then
+          -z "$(ls "${repository_root}"/.tools/occt-linux/install/lib/libTKOffset.so* 2>/dev/null)" ||
+          -z "$(ls "${repository_root}"/.tools/occt-linux/install/lib/libTKDESTEP.so* 2>/dev/null)" ]]; then
         sh "${repository_root}/tools/build-lean-occt.sh"
     fi
     cd "${repository_root}"

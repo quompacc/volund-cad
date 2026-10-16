@@ -51,6 +51,13 @@ PatternCopyParameters readNativePatternCopy(const TDF_Label& label, int schemaVe
 // M11 (NativeMove.cpp).
 void writeNativeMove(const TDF_Label& label, const MoveParameters& parameters);
 MoveParameters readNativeMove(const TDF_Label& label, int schemaVersion);
+// M17 (NativeImport.cpp).
+void writeNativeImport(const TDF_Label& label, const ImportParameters& parameters);
+ImportParameters readNativeImport(const TDF_Label& label, std::size_t remainingRecords,
+                                  int schemaVersion);
+std::size_t nativeImportRecords(const ImportParameters& parameters);
+void writeNativeImportPart(const TDF_Label& label, const ImportPartParameters& parameters);
+ImportPartParameters readNativeImportPart(const TDF_Label& label, int schemaVersion);
 // M27 (NativePrimitiveSolid.cpp).
 void writeNativePrimitive(const TDF_Label& label, const PrimitiveParameters& parameters);
 PrimitiveParameters readNativePrimitive(const TDF_Label& label, int schemaVersion);

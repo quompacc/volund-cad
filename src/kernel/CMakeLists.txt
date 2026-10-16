@@ -1,4 +1,4 @@
-add_library(voelund_kernel STATIC ShapeFactory.cpp ShapeOperations.cpp Prism.cpp Revolution.cpp ShellOperation.cpp SolidPrimitives.cpp Sweep.cpp Loft.cpp Helix.cpp DraftOperation.cpp Measurement.cpp)
+add_library(voelund_kernel STATIC ShapeFactory.cpp ShapeOperations.cpp Prism.cpp Revolution.cpp ShellOperation.cpp SolidPrimitives.cpp Sweep.cpp Loft.cpp Helix.cpp DraftOperation.cpp Measurement.cpp StepExchange.cpp)
 
 target_include_directories(
     voelund_kernel
@@ -18,6 +18,14 @@ target_link_libraries(
         TKBO
         TKFillet
         TKOffset
+    PRIVATE
+        # M17: STEP with names and units through an XCAF document.
+        TKDESTEP
+        TKXCAF
+        TKDE
+        TKXSBase
+        TKLCAF
+        TKCAF
 )
 
 add_library(Voelund::Kernel ALIAS voelund_kernel)

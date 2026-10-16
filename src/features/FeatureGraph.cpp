@@ -394,6 +394,12 @@ void runFeature(const document::DocumentSnapshot& document,
     case document::FeatureKind::move:
         detail::evaluateMove(document, descriptor, outputs, bodies, references);
         break;
+    case document::FeatureKind::stepImport:
+        detail::evaluateImport(document, descriptor, outputs, bodies, references);
+        break;
+    case document::FeatureKind::importPart:
+        detail::evaluateImportPart(document, descriptor, outputs, bodies, references);
+        break;
     }
 }
 void restoreOutput(const EvaluatedFeature& output, std::vector<EvaluatedFeature>& outputs,
@@ -473,11 +479,20 @@ std::shared_ptr<const FeatureGraphEvaluation> FeatureGraph::evaluateDetailed(
                                           &document::FeatureDescriptor::id) -
                         document.features().begin()) +
                     1;
+    // M10/M17: a pattern's copies and an import's parts follow it directly and stand with it.
+    while (evaluated < document.features().size() &&
+           document::isCompanion(document.features()[evaluated].kind))
+        ++evaluated;
     for (const auto index : next->dependencies.order()) {
         const auto& descriptor = document.features()[index];
         auto& issue = next->report.features[index];
         if (index >= evaluated) {
             issue = {descriptor.id, EvaluationStatus::rolledBack, "rolled-back", "Rolled back", {}};
+            continue;
+        }
+        // M14: a suppressed feature is skipped; later ones get the body without it, whatever its inputs.
+        if (descriptor.suppressed) {
+            issue = {descriptor.id, EvaluationStatus::suppressed, "suppressed", "Suppressed", {}};
             continue;
         }
         for (const auto input : next->dependencies.nodes()[index].inputs) {
@@ -494,11 +509,6 @@ std::shared_ptr<const FeatureGraphEvaluation> FeatureGraph::evaluateDetailed(
         }
         if (issue.status != EvaluationStatus::valid)
             continue;
-        // M14: a suppressed feature is skipped; later ones get the body without it.
-        if (descriptor.suppressed) {
-            issue = {descriptor.id, EvaluationStatus::suppressed, "suppressed", "Suppressed", {}};
-            continue;
-        }
         if (!dirty[index]) {
             issue = previous->report.features[index];
             if (issue.status == EvaluationStatus::valid)

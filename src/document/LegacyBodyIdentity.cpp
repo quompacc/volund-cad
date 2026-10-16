@@ -81,6 +81,12 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
     case FeatureKind::move: // M11
         matches = std::holds_alternative<MoveParameters>(parameters);
         break;
+    case FeatureKind::stepImport: // M17
+        matches = std::holds_alternative<ImportParameters>(parameters);
+        break;
+    case FeatureKind::importPart:
+        matches = std::holds_alternative<ImportPartParameters>(parameters);
+        break;
     }
     if (!matches)
         throw std::invalid_argument("Legacy body identity: feature parameter kind mismatch");
@@ -93,7 +99,8 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
         feature.kind == FeatureKind::datumAxis || feature.kind == FeatureKind::shell ||
         feature.kind == FeatureKind::draft || feature.kind == FeatureKind::mirror ||
         feature.kind == FeatureKind::pattern || feature.kind == FeatureKind::patternCopy ||
-        feature.kind == FeatureKind::move ||
+        feature.kind == FeatureKind::move || feature.kind == FeatureKind::stepImport ||
+        feature.kind == FeatureKind::importPart ||
         (feature.kind == FeatureKind::sketch && (std::get<SketchParameters>(parameters).datum ||
                                                  std::get<SketchParameters>(parameters)
                                                      .constructionPlane)) ||
@@ -148,6 +155,9 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
         if (const auto* mirror = std::get_if<MirrorParameters>(&parameters[index]))
             return mirror->mode == MirrorMode::newBody;
         if (feature.kind == FeatureKind::patternCopy)
+            return true;
+        // M17: every imported solid is a body.
+        if (feature.kind == FeatureKind::stepImport || feature.kind == FeatureKind::importPart)
             return true;
         return feature.kind == FeatureKind::box ||
                (feature.kind == FeatureKind::sketch && !inputs[index]) ||
@@ -290,6 +300,21 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
                 copies.end())
             throw std::invalid_argument("Pattern copy does not belong to an earlier pattern");
         copies.emplace_back(copy->pattern.value(), copy->index);
+    }
+    // M17: each part names an earlier import and one further solid of it.
+    std::vector<std::pair<std::uint64_t, std::uint32_t>> parts;
+    for (std::size_t index = 0; index < features.size(); ++index) {
+        const auto* part = std::get_if<ImportPartParameters>(&parameters[index]);
+        if (part == nullptr)
+            continue;
+        const auto found = indices.find(part->import.value());
+        const auto* import = found == indices.end() || found->second >= index
+                                 ? nullptr
+                                 : std::get_if<ImportParameters>(&parameters[found->second]);
+        if (import == nullptr || part->index == 0 || part->index >= import->solids.size() ||
+            std::ranges::find(parts, std::pair{part->import.value(), part->index}) != parts.end())
+            throw std::invalid_argument("Import part does not belong to an earlier import");
+        parts.emplace_back(part->import.value(), part->index);
     }
     for (std::size_t index = 0; index < features.size(); ++index)
         if (features[index].kind == FeatureKind::combine)

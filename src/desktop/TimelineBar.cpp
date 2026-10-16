@@ -61,6 +61,9 @@ ShellIcon iconFor(document::FeatureKind kind) {
         return ShellIcon::patternLinear; // M10
     case document::FeatureKind::move:
         return ShellIcon::transform; // M11
+    case document::FeatureKind::stepImport:
+    case document::FeatureKind::importPart:
+        return ShellIcon::box; // M17; M18 brings the import into the shell
     }
     return ShellIcon::box;
 }
@@ -396,8 +399,8 @@ void TimelineBar::showFeatures(std::span<const document::FeatureDescriptor> feat
     int number = 1;
     QToolButton* current = nullptr;
     for (const document::FeatureDescriptor& feature : features) {
-        // M10: the copies of a pattern are one step, the pattern's.
-        if (feature.kind == document::FeatureKind::patternCopy)
+        // M10/M17: the copies of a pattern are one step, the pattern's; so are an import's parts.
+        if (document::isCompanion(feature.kind))
             continue;
         auto* button = new QToolButton(content_);
         button->setObjectName(QStringLiteral("timelineStep"));
