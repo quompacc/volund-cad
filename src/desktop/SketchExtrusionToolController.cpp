@@ -130,6 +130,8 @@ void SketchExtrusionToolController::open(document::FeatureId sketchId,
     // The sketch and its regions are shown and picked like a region selection (M04).
     static_cast<void>(session_.selectSketchRegions(sketchId, profileIds_));
     distance_ = values.distance;
+    distanceParameter_ = values.distanceParameter; // PAR02
+    offsetParameter_ = values.offsetParameter;
     const auto features = session_.features();
     const auto sketch = std::ranges::find(features, *profileSketch_, &document::FeatureDescriptor::id);
     baseSketch_ = sketch != features.end() && !sketch->inputFeature;
@@ -189,9 +191,16 @@ void SketchExtrusionToolController::open(document::FeatureId sketchId,
          static_cast<int>(operation_) - 1}};
     if (targets_.size() > 1)
         choices.push_back({"target", QObject::tr("Zielkörper"), targetNames, targetIndex});
+    // PAR02: distance and offset take length parameters ("=Name").
+    const auto boundName = [this](std::optional<document::ParameterId> id) -> std::optional<QString> {
+        const auto* parameter = id ? document::findParameter(session_.parameterTable(), *id) : nullptr;
+        return parameter ? std::optional{QString::fromStdString(parameter->name)} : std::nullopt;
+    };
     std::vector<ToolLengthParameter> lengths{
-        {"distance", QObject::tr("Distanz"), distance_, 0.001, 1'000'000.0},
-        {"offset", QObject::tr("Versatz"), offset_, -1'000'000.0, 1'000'000.0}};
+        {"distance", QObject::tr("Distanz"), distance_, 0.001, 1'000'000.0, ToolValueKind::length,
+         true, boundName(distanceParameter_)},
+        {"offset", QObject::tr("Versatz"), offset_, -1'000'000.0, 1'000'000.0,
+         ToolValueKind::length, true, boundName(offsetParameter_)}};
     if (revolve_) {
         // M20: angle and axis instead of length, offset and end face.
         choices.erase(choices.begin());
@@ -244,7 +253,7 @@ void SketchExtrusionToolController::open(document::FeatureId sketchId,
                          loft_->ruled ? 0 : 1}});
         lengths.clear();
     }
-    panel_.begin(ToolPanelDefinition{
+    ToolPanelDefinition definition{
         revolve_ && revolve_->pitch
             ? (editing_ ? QObject::tr("Wendel bearbeiten") : QObject::tr("Wendel"))
         : revolve_ ? (editing_ ? QObject::tr("Drehung bearbeiten") : QObject::tr("Drehen"))
@@ -256,6 +265,11 @@ void SketchExtrusionToolController::open(document::FeatureId sketchId,
         std::move(choices),
         {},
         [this](const std::string& id, double value) {
+            // PAR02: a typed number leaves the parameter (docs/parameter-table.md, rule 7).
+            if (id == "distance" || id == "offset") {
+                (id == "distance" ? distanceParameter_ : offsetParameter_).reset();
+                panel_.setLengthBinding(id, std::nullopt);
+            }
             if (id == "distance")
                 setDistance(value);
             else if (id == "offset")
@@ -280,7 +294,12 @@ void SketchExtrusionToolController::open(document::FeatureId sketchId,
         {},
         [this]() { accept(); },
         [this]() { cancel(); },
-        {}});
+        {}};
+    definition.parameterBound = [this](const std::string& id,
+                                       std::optional<ResolvedParameter> bound) {
+        bindLength(id, bound);
+    };
+    panel_.begin(std::move(definition));
     panel_.setAcceptEnabled(true);
     panel_.setLengthEnabled("distance", !upToFace_);
     syncFields();
@@ -301,10 +320,8 @@ application::Action SketchExtrusionToolController::extrusion() const {
         // M04: the stored extrusion with the panel's values; a changed length leaves its
         // parameter binding.
         auto values = *stored_;
-        if (distance_ != values.distance)
-            values.distanceParameter.reset();
-        if (offset_ != values.offset)
-            values.offsetParameter.reset();
+        values.distanceParameter = distanceParameter_; // PAR02
+        values.offsetParameter = offsetParameter_;
         values.distance = distance_;
         values.offset = offset_;
         values.regions = profileIds_;
@@ -321,7 +338,8 @@ application::Action SketchExtrusionToolController::extrusion() const {
     return application::CreateProfileExtrusionAction{
         *profileSketch_, profileIds_, millimetres(distance_),
         {operation_, reversed_, named ? target_ : std::nullopt, offset_,
-         upToFace_ ? endFace_ : std::nullopt, symmetric_, revolve_, sweep_, loft_}};
+         upToFace_ ? endFace_ : std::nullopt, symmetric_, revolve_, sweep_, loft_,
+         distanceParameter_, offsetParameter_}};
 }
 
 // U11 (A-UI-02, A-VIS-01): the extrusion the values would give, on an isolated copy; the
@@ -415,9 +433,11 @@ void SketchExtrusionToolController::choose(const std::string& choice, int index)
 void SketchExtrusionToolController::syncFields() {
     // Symmetric (M02): the distance is the total length; no start offset and no end face.
     panel_.setLengthEnabled("offset", !symmetric_);
-    if (symmetric_ && offset_ != 0.0) {
+    if (symmetric_ && (offset_ != 0.0 || offsetParameter_)) {
         offset_ = 0.0;
+        offsetParameter_.reset(); // PAR02: no offset, no binding
         panel_.setLengthValue("offset", 0.0);
+        panel_.setLengthBinding("offset", std::nullopt);
     }
     panel_.setChoiceEnabled("end", !symmetric_);
     // A new body has no target.

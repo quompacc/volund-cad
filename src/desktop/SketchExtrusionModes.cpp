@@ -1,4 +1,5 @@
 #include "SketchExtrusionToolController.hpp"
+#include "ToolPanelHost.hpp"
 
 #include <voelund/features/SketchRegionIdentity.hpp>
 
@@ -75,6 +76,32 @@ void SketchExtrusionToolController::collectSections() {
             sections_.push_back(
                 {QString::fromStdString(feature.name), {feature.id, regions.front()}});
     }
+}
+
+// PAR02: "=Name" in the distance or offset field binds it to a length parameter; a number
+// there (nullopt) unbinds it.
+void SketchExtrusionToolController::bindLength(const std::string& id,
+                                               std::optional<ResolvedParameter> bound) {
+    if (id != "distance" && id != "offset")
+        return;
+    auto& member = id == "distance" ? distanceParameter_ : offsetParameter_;
+    if (!bound) {
+        member.reset();
+        panel_.setLengthBinding(id, std::nullopt);
+        preview();
+        return;
+    }
+    const auto* parameter = document::findParameter(session_.parameterTable(), bound->id);
+    if (parameter == nullptr)
+        return;
+    // A parameter created just now changed only the table; the model is the same.
+    if (bound->created)
+        supportStamp_ = session_.sceneStatus().document;
+    member = bound->id;
+    (id == "distance" ? distance_ : offset_) = parameter->value;
+    panel_.setLengthValue(id, parameter->value);
+    panel_.setLengthBinding(id, QString::fromStdString(parameter->name));
+    preview();
 }
 
 } // namespace voelund::desktop

@@ -2,7 +2,13 @@
 
 #include "FloatingCard.hpp"
 
+#include <voelund/document/DocumentParameters.hpp>
+
+#include <QString>
+#include <QStringList>
+
 #include <functional>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -30,6 +36,16 @@ struct ToolLengthParameter final {
     double minimum;
     double maximum;
     ToolValueKind kind{ToolValueKind::length};
+    // PAR02: the field also takes "=Name" of a document parameter (lengths and angles only);
+    // `boundName` shows an existing binding.
+    bool bindable{false};
+    std::optional<QString> boundName{};
+};
+
+// PAR02: a parameter named in a field, found or created on request.
+struct ResolvedParameter final {
+    document::ParameterId id;
+    bool created{false}; // created now: only the parameter table changed
 };
 
 struct ToolChoiceParameter final {
@@ -64,6 +80,8 @@ struct ToolPanelDefinition final {
     std::function<void()> returnPressed{};
     // U09: Enter or focus loss ends the editing of a length input (one user action).
     std::function<void(const std::string&)> parameterFinished{};
+    // PAR02: a bindable field was bound to a parameter, or (nullopt) unbound by a number.
+    std::function<void(const std::string&, std::optional<ResolvedParameter>)> parameterBound{};
 };
 
 // U05: the floating tool panel of ADR 0012; it owns at most one active tool session.
@@ -81,6 +99,17 @@ class ToolPanelHost final : public FloatingCard {
     void setStatus(const QString& status, bool good = false);
     void setErrorCommitHandler(std::function<void()> handler);
     void setLengthValue(const std::string& parameterId, double value);
+    // PAR02: shows a bindable field as bound to `name`, or (nullopt) as a plain number.
+    void setLengthBinding(const std::string& parameterId, std::optional<QString> name);
+    // PAR02: finds the parameter of that name and unit or offers to create it with `value`;
+    // nullopt when there is none, the unit differs or the user declined (set by the shell).
+    using ParameterResolver = std::function<std::optional<ResolvedParameter>(
+        const QString& name, ToolValueKind kind, double value)>;
+    void setParameterResolver(ParameterResolver resolver);
+    void setParameterNames(std::function<QStringList(ToolValueKind)> names);
+    [[nodiscard]] std::optional<ResolvedParameter> resolveParameter(const QString& name,
+                                                                    ToolValueKind kind,
+                                                                    double value) const;
     void setLengthEnabled(const std::string& parameterId, bool enabled);
     void setLengthVisible(const std::string& parameterId, bool visible);
     // M04: choices that do not apply are disabled or hidden, never left misleading.
@@ -128,6 +157,8 @@ class ToolPanelHost final : public FloatingCard {
     std::vector<std::pair<std::string, QComboBox*>> choiceInputs_;
     std::vector<std::pair<std::string, QPushButton*>> actionInputs_;
     ToolPanelDefinition definition_;
+    ParameterResolver resolver_;
+    std::function<QStringList(ToolValueKind)> names_;
 };
 
 } // namespace voelund::desktop

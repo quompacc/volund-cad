@@ -47,6 +47,7 @@ class QDoubleSpinBox;
 class QLabel;
 namespace voelund::desktop {
 class ModelTreePanel;
+class ParameterPanel;
 class MainWindow::Impl final {
   public:
     explicit Impl(application::CadSession& cadSession) : session(cadSession) {}
@@ -162,6 +163,9 @@ class MainWindow::Impl final {
     QAction* assistantPanelAction{nullptr};
     QDockWidget* assistantDock{nullptr};
     OverlayCard* modelCard{nullptr}; // U14
+    OverlayCard* parameterCard{nullptr}; // PAR02: under the model tree
+    ParameterPanel* parameterPanel{nullptr};
+    QAction* parametersAction{nullptr};
     class AssistantPanel* assistantPanel{nullptr};
     std::unique_ptr<assistant::ClaudeCodeBackend> assistantBackend;
     std::uint64_t assistantGeneration{0};

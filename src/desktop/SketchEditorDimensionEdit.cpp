@@ -2,7 +2,10 @@
 
 #include "ToolPanelHost.hpp"
 
+#include <QCompleter>
 #include <QInputDialog>
+#include <QLineEdit>
+#include <QLocale>
 #include <QObject>
 
 #include <algorithm>
@@ -25,42 +28,79 @@ void SketchEditorToolController::editConstraint(std::uint64_t constraintId) {
         selectConstraint(constraintId);
         return;
     }
-    // S07: a bound or reference dimension says why it cannot be edited here.
+    // S07: a reference or edge-bound dimension says why it cannot be edited here.
     if (const auto problem = editor_->dimensionProblem(id)) {
         if (editor_->isReferenceDimension(id)) // S18: selected, to switch it back
             selectConstraint(constraintId);
         statusChanged_(QString::fromStdString(*problem));
         return;
     }
-    const auto annotations = editor_->evaluatedConstraints();
-    const auto annotation =
-        std::ranges::find(annotations, id, &features::SketchConstraintAnnotation::id);
     const bool angle = currentAngle.has_value();
-    const bool signedValue =
-        annotation != annotations.end() &&
-        (annotation->kind == document::SketchConstraintKind::pointDistanceX ||
-         annotation->kind == document::SketchConstraintKind::pointDistanceY ||
-         annotation->kind == document::SketchConstraintKind::coordinateX ||
-         annotation->kind == document::SketchConstraintKind::coordinateY);
     // S07: a refused value comes back with its reason, ready to be corrected.
-    double value = *current;
+    // PAR02: the field also takes "=Name" of a document parameter of the dimension's unit; a
+    // bound dimension opens with its name, a number unbinds it.
+    const auto bound = editor_->dimensionParameter(id);
+    const auto* boundParameter =
+        bound ? document::findParameter(session_.parameterTable(), *bound) : nullptr;
+    QString text = boundParameter
+                       ? QStringLiteral("=") + QString::fromStdString(boundParameter->name)
+                       : QString::number(*current, 'g', 12);
+    QStringList names;
+    for (const auto& parameter : session_.parameterTable().values)
+        if (parameter.unit == (angle ? document::ParameterUnit::angle
+                                     : document::ParameterUnit::length))
+            names.append(QStringLiteral("=") + QString::fromStdString(parameter.name));
     QString reason;
+    QString applied;
     for (;;) {
-        bool accepted = false;
-        const QString prompt = angle ? QObject::tr("Winkel (Grad)") : QObject::tr("Wert (mm)");
-        value = QInputDialog::getDouble(
-            &panel_, QObject::tr("Skizzenmaß bearbeiten"),
-            reason.isEmpty() ? prompt : reason + QStringLiteral("\n\n") + prompt, value,
-            angle        ? -179.999
-            : signedValue ? -1'000'000.0
-                          : 0.001,
-            angle ? 179.999 : 1'000'000.0, 3, &accepted);
-        if (!accepted)
+        const QString prompt = (angle ? QObject::tr("Winkel (Grad)") : QObject::tr("Wert (mm)")) +
+                               QObject::tr(" oder =Name eines Parameters");
+        QInputDialog dialog(&panel_);
+        dialog.setObjectName(QStringLiteral("dimensionValueDialog"));
+        dialog.setWindowTitle(QObject::tr("Skizzenmaß bearbeiten"));
+        dialog.setInputMode(QInputDialog::TextInput);
+        dialog.setLabelText(reason.isEmpty() ? prompt : reason + QStringLiteral("\n\n") + prompt);
+        dialog.setTextValue(text);
+        if (auto* field = dialog.findChild<QLineEdit*>()) {
+            auto* completer = new QCompleter(names, &dialog);
+            completer->setCaseSensitivity(Qt::CaseInsensitive);
+            field->setCompleter(completer);
+        }
+        if (dialog.exec() != QDialog::Accepted)
             return;
+        text = dialog.textValue().trimmed();
         try {
+            if (text.startsWith(QLatin1Char('='))) {
+                const QString name = text.mid(1).trimmed();
+                const auto resolved = panel_.resolveParameter(
+                    name, angle ? ToolValueKind::angle : ToolValueKind::length, *current);
+                if (!resolved)
+                    return; // declined, or the reason is in the status line
+                if (resolved->created)
+                    editor_->acceptParameterTableChange(); // only the table changed
+                if (!editor_->bindDimension(id, resolved->id))
+                    return;
+                applied = QObject::tr("Skizzenmaß an den Parameter „%1“ gebunden").arg(name);
+                break;
+            }
+            QString number = text;
+            for (const QString& unit : {QStringLiteral("mm"), QStringLiteral("°")})
+                if (number.endsWith(unit))
+                    number = number.chopped(unit.size()).trimmed();
+            bool ok = false;
+            double value = QLocale::c().toDouble(number, &ok);
+            if (!ok)
+                value = QLocale().toDouble(number, &ok);
+            if (!ok) {
+                reason = QObject::tr("„%1“ ist weder eine Zahl noch =Name").arg(text);
+                statusChanged_(reason);
+                continue;
+            }
             if (!editor_->editDimension(
                     id, angle ? kernel::toRadians(kernel::Degrees(value)).value() : value))
                 return;
+            applied = angle ? QObject::tr("Skizzenwinkel auf %1° gesetzt").arg(value, 0, 'f', 3)
+                            : QObject::tr("Skizzenmaß auf %1 mm gesetzt").arg(value, 0, 'f', 3);
             break;
         } catch (const std::invalid_argument& error) {
             reason = QString::fromStdString(error.what());
@@ -70,8 +110,44 @@ void SketchEditorToolController::editConstraint(std::uint64_t constraintId) {
     syncSelectedDimensionInputs();
     syncConstraintState();
     refreshPresentation();
-    statusChanged_(angle ? QObject::tr("Skizzenwinkel auf %1° gesetzt").arg(value, 0, 'f', 3)
-                         : QObject::tr("Skizzenmaß auf %1 mm gesetzt").arg(value, 0, 'f', 3));
+    statusChanged_(applied);
+}
+
+// PAR02: "=Name" in the length or radius field of the selected element binds its dimension
+// (created with the parameter's value when it has none); a number there unbinds it.
+void SketchEditorToolController::bindElementDimension(const std::string& id,
+                                                      std::optional<ResolvedParameter> bound) {
+    if (!editor_ || (id != "line_length" && id != "circle_radius"))
+        return;
+    const bool line = id == "line_length";
+    const auto kind =
+        line ? document::SketchConstraintKind::distance : document::SketchConstraintKind::radius;
+    try {
+        if (!bound) {
+            if (const auto constraint = editor_->selectedDimension(kind))
+                static_cast<void>(editor_->bindDimension(*constraint, std::nullopt));
+        } else {
+            if (bound->created)
+                editor_->acceptParameterTableChange(); // only the table changed
+            const auto* parameter = document::findParameter(session_.parameterTable(), bound->id);
+            if (parameter == nullptr)
+                return;
+            static_cast<void>(line ? editor_->setSelectedLineLength(parameter->value)
+                                   : editor_->setSelectedCircleRadius(parameter->value));
+            const auto constraint = editor_->selectedDimension(kind);
+            if (!constraint)
+                throw std::invalid_argument("Maß: Das Element lässt sich nicht bemaßen");
+            static_cast<void>(editor_->bindDimension(*constraint, bound->id));
+            statusChanged_(QObject::tr("%1 an den Parameter „%2“ gebunden")
+                               .arg(line ? QObject::tr("Linienlänge") : QObject::tr("Radius"),
+                                    QString::fromStdString(parameter->name)));
+        }
+    } catch (const std::invalid_argument& error) {
+        statusChanged_(QString::fromStdString(error.what()));
+    }
+    syncSelectedDimensionInputs();
+    syncConstraintState();
+    refreshPresentation();
 }
 
 void SketchEditorToolController::selectElements(const std::vector<std::uint64_t>& ids,

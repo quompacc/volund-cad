@@ -42,16 +42,29 @@ keine Tabellenkalkulation wie FreeCAD-Spreadsheet oder VarSet.
 - **v2 (später, eigenes Paket):** einfache Ausdrücke wie `A * 2` oder `B + 5 mm`, mit
   Zyklenprüfung. Erst wenn v1 im Alltag trägt.
 
-## Bedienung (PAR02, Gestaltung im UI-Konzept UX01 abstimmen)
+## Bedienung (PAR02, Nutzerentscheidung vom 16.10.2026)
 
-- Tabelle über den Knopf „Parameter“ in der Kopfzeile oder ein Tastenkürzel erreichbar,
-  als Seitenpanel rechts (ADR 0012).
-  Einträge werden direkt in der Zeile bearbeitet.
-- Im Maßfeld einer Skizze oder Extrusion statt einer Zahl `=A` eingeben, mit
-  Autovervollständigung der Parameternamen. Ein noch unbekannter Name kann direkt als neuer
-  Parameter angelegt werden.
-- Gebundene Maße zeigen im Viewport und im Panel `A = 10 mm`. Die Tabelle zeigt je
-  Parameter die Anzahl der Verwendungen.
+- Die Tabelle ist eine Karte **links unter dem Modellbaum**. Rechts bleibt Platz für die
+  Werkzeug-Panels.
+- Man öffnet und schließt sie mit dem Knopf „Parameter“ in der Kopfzeile (neben der
+  Befehlssuche), mit **Strg+P** oder über die Befehlssuche (`view.parameters`).
+- Die Zeilen zeigen Name, Wert mit Einheit und die Zahl der Verwendungen.
+  - Name und Wert werden direkt in der Zeile bearbeitet.
+  - „+ Länge“ und „+ Winkel“ legen einen Parameter an (`P1`, `P2`, …).
+  - „Entfernen“ (oder Entf) löscht ihn. Ist er in Gebrauch, fragt Völund: „Lösen und
+    entfernen“ (die Maße behalten ihren Wert als feste Zahl) oder Abbrechen.
+- Solange ein Werkzeug offen ist, bleibt die Tabelle fest.
+- Statt einer Zahl `=A` eingeben, mit Vorschlägen der passenden Namen. Das geht in diesen
+  Feldern:
+  - im Wertedialog eines Skizzenmaßes;
+  - in den Feldern „Linienlänge“ und „Kreis-/Bogenradius“ der gewählten Skizzengeometrie;
+  - in „Distanz“ und „Versatz“ der Extrusion.
+- Ein noch unbekannter Name führt zur Frage „Den Parameter „A“ = 20 mm anlegen?“. Ja legt ihn
+  mit dem bisherigen Feldwert an und bindet das Feld.
+  - Das Anlegen ist ein eigener Rückgängig-Schritt.
+  - Die Bindung gehört zum OK des Werkzeugs.
+- Gebundene Maße zeigen im Viewport und im Feld `A = 20.000 mm`. Eine Zahl im Feld löst die
+  Bindung (Regel 7).
 
 ## Geltungsbereich
 

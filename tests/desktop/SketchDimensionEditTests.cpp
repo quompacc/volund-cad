@@ -72,12 +72,12 @@ void run() {
         }
         ++dialogs;
         if (dialogs == 1) {
-            dialog->setDoubleValue(30);
+            dialog->setTextValue(QStringLiteral("30"));
             QTimer::singleShot(0, answer);
         } else {
             secondPrompt = dialog->labelText();
-            secondValue = dialog->doubleValue();
-            dialog->setDoubleValue(7);
+            secondValue = dialog->textValue().toDouble();
+            dialog->setTextValue(QStringLiteral("7"));
         }
         dialog->accept();
     };

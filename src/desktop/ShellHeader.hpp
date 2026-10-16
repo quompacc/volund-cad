@@ -28,6 +28,8 @@ class ShellHeader final : public OverlayCard {
     void setActions(QAction& undo, QAction& redo, QAction& theme);
     // U04: command search field and the tool rail switch.
     void setViewActions(QAction& search, QAction& toolRail);
+    // PAR02: the switch of the parameter card, beside the search.
+    void setParametersAction(QAction& parameters);
     void display(const ShellState& state);
     // AI04c: the Claude chip right of the theme switch and its menu.
     void setAssistantMenu(QMenu& menu);
@@ -55,6 +57,7 @@ class ShellHeader final : public OverlayCard {
     QToolButton* redoButton_{nullptr};
     QToolButton* themeButton_{nullptr};
     QToolButton* searchButton_{nullptr};
+    QToolButton* parametersButton_{nullptr};
     QToolButton* railButton_{nullptr};
     QToolButton* assistantButton_{nullptr};
 };

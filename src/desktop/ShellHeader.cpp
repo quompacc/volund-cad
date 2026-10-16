@@ -103,6 +103,14 @@ ShellHeader::ShellHeader(QWidget& host) : OverlayCard(host, QStringLiteral("shel
     searchButton_->setFixedHeight(controlSize);
     searchButton_->setMinimumWidth(240);
     layout->addWidget(searchButton_);
+    // PAR02 (user decision 2026-10-16): "Parameter" opens the table under the model tree.
+    parametersButton_ = new QToolButton(this);
+    parametersButton_->setObjectName(QStringLiteral("parametersButton"));
+    parametersButton_->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    parametersButton_->setIconSize(QSize(16, 16));
+    parametersButton_->setFixedHeight(controlSize);
+    parametersButton_->setAutoRaise(true);
+    layout->addWidget(parametersButton_);
     layout->addSpacing(4);
     layout->addWidget(divider(this));
     layout->addSpacing(4);
@@ -141,6 +149,8 @@ void ShellHeader::setCompact(bool compact) {
     searchButton_->setMinimumWidth(compact ? controlSize : 240);
     searchButton_->setMaximumWidth(compact ? controlSize : QWIDGETSIZE_MAX);
     searchButton_->setProperty("compact", compact); // no side padding around the symbol
+    parametersButton_->setToolButtonStyle(compact ? Qt::ToolButtonIconOnly
+                                                  : Qt::ToolButtonTextBesideIcon);
     searchButton_->style()->unpolish(searchButton_);
     searchButton_->style()->polish(searchButton_);
 }
@@ -154,6 +164,11 @@ void ShellHeader::setActions(QAction& undo, QAction& redo, QAction& theme) {
 void ShellHeader::setViewActions(QAction& search, QAction& toolRail) {
     searchButton_->setDefaultAction(&search);
     railButton_->setDefaultAction(&toolRail);
+}
+
+void ShellHeader::setParametersAction(QAction& parameters) {
+    parametersButton_->setDefaultAction(&parameters);
+    setTheme(mode_);
 }
 
 void ShellHeader::display(const ShellState& state) {
@@ -219,6 +234,8 @@ void ShellHeader::setTheme(ThemeMode mode) {
         action->setIcon(icon(ShellIcon::undo));
     if (auto* action = redoButton_->defaultAction())
         action->setIcon(icon(ShellIcon::redo));
+    if (auto* action = parametersButton_->defaultAction())
+        action->setIcon(icon(ShellIcon::parameters));
     // The switch shows the theme it leads to.
     if (auto* action = themeButton_->defaultAction())
         action->setIcon(icon(mode == ThemeMode::dark ? ShellIcon::sun : ShellIcon::moon));

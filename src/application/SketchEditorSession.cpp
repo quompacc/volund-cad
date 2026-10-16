@@ -24,7 +24,10 @@ bool upsertUnaryConstraint(document::SketchConstraints& constraints,
         return item.kind == kind && item.first.element == element && !item.second.has_value();
     });
     if (match != constraints.values.end()) {
-        if (match->value == value)
+        // PAR02 (docs/parameter-table.md, rule 7): a typed value leaves the parameter.
+        const bool bound = match->parameter.has_value();
+        match->parameter.reset();
+        if (match->value == value && !bound)
             return false;
         match->value = value;
         return true;
@@ -284,6 +287,17 @@ SketchEditorSession::selectedLineConstraint() const noexcept {
             return document::SketchLineConstraint::vertical;
     }
     return line->constraint;
+}
+
+std::optional<document::SketchConstraintId>
+SketchEditorSession::selectedDimension(document::SketchConstraintKind kind) const noexcept {
+    if (!selectedElement_)
+        return std::nullopt;
+    const auto match = std::ranges::find_if(constraints_.values, [&](const auto& item) {
+        return item.kind == kind && item.first.element == *selectedElement_ &&
+               !item.second.has_value();
+    });
+    return match == constraints_.values.end() ? std::nullopt : std::optional{match->id};
 }
 
 bool SketchEditorSession::setSelectedLineLength(double length) {

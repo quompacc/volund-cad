@@ -20,6 +20,7 @@ inline constexpr int pointTool = 11; // S15
 inline constexpr int bsplineTool = 12; // S21
 
 class ToolPanelHost;
+struct ResolvedParameter;
 
 class SketchEditorToolController final {
   public:
@@ -64,6 +65,8 @@ class SketchEditorToolController final {
     // The panel's grid choice follows a change from the model tree.
     void syncGridChoice();
     void editConstraint(std::uint64_t constraintId);
+    // PAR02: "=Name" (or a number, nullopt) in the length or radius field of an element.
+    void bindElementDimension(const std::string& id, std::optional<ResolvedParameter> bound);
     [[nodiscard]] bool isActive() const noexcept;
     // S17: while on, a body edge clicked in the viewport is projected into the sketch.
     [[nodiscard]] bool projecting() const noexcept { return editor_ && projecting_; }

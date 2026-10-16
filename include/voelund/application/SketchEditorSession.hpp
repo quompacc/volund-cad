@@ -82,6 +82,9 @@ class SketchEditorSession final {
     [[nodiscard]] std::optional<document::SketchLineConstraint>
     selectedLineConstraint() const noexcept;
     [[nodiscard]] bool setSelectedLineLength(double length);
+    // PAR02: the length (distance) or radius dimension of the selected element, if it has one.
+    [[nodiscard]] std::optional<document::SketchConstraintId>
+    selectedDimension(document::SketchConstraintKind kind) const noexcept;
     [[nodiscard]] bool setSelectedRectangleWidth(double width);
     [[nodiscard]] bool setSelectedRectangleHeight(double height);
     [[nodiscard]] bool setSelectedCircleRadius(double radius);
@@ -219,7 +222,20 @@ class SketchEditorSession final {
     // angles). Throws std::invalid_argument with the reason and changes nothing for a
     // relation, a parameter-bound or reference dimension, a value out of range, or a value the
     // sketch cannot be solved with. The same value is no change and returns false.
+    // PAR02: a number on a parameter-bound dimension unbinds it (docs/parameter-table.md,
+    // rule 7).
     bool editDimension(document::SketchConstraintId constraintId, double value);
+    // PAR02: binds a dimension to a document parameter of its unit (its value follows the
+    // parameter) or, with nullopt, keeps its current value as a fixed one; one step. Throws
+    // std::invalid_argument with the reason and changes nothing for a relation, a reference
+    // dimension, a parameter of the other unit or a value the sketch cannot be solved with.
+    bool bindDimension(document::SketchConstraintId constraintId,
+                       std::optional<document::ParameterId> parameter);
+    [[nodiscard]] std::optional<document::ParameterId>
+    dimensionParameter(document::SketchConstraintId constraintId) const noexcept;
+    // PAR02: a parameter was created while the editor is open; only the parameter table changed,
+    // so the editor still accepts on the model it started from.
+    void acceptParameterTableChange() noexcept;
     // Why the dimension cannot be edited at all, or nothing.
     [[nodiscard]] std::optional<std::string>
     dimensionProblem(document::SketchConstraintId constraintId) const;

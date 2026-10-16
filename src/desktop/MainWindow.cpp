@@ -62,6 +62,7 @@ MainWindow::MainWindow(application::CadSession& session, QWidget* parent)
     impl_->documentActions =
         std::make_unique<DocumentActions>(*this, impl_->session, [this]() { refreshScene(); });
     createHeader();
+    createParameterCard();
     createCommandSurfaces();
     createTimeline();
     createAssistant();
@@ -109,9 +110,12 @@ void MainWindow::createModelTree() {
     layout->addWidget(title);
     impl_->modelTree = new ModelTreePanel(impl_->modelCard);
     layout->addWidget(impl_->modelTree);
-    impl_->modelCard->setPlacement([tree = impl_->modelTree](const QWidget& area) {
+    impl_->modelCard->setPlacement([this, tree = impl_->modelTree](const QWidget& area) {
         // It ends above the bottom band of context bar and timeline, and scrolls beyond.
-        const int available = area.height() - overlay::columnTop - overlay::bottomBand;
+        int available = area.height() - overlay::columnTop - overlay::bottomBand;
+        // PAR02: the parameter card below it takes up to half of the column.
+        if (impl_->parameterCard != nullptr && impl_->parameterCard->isVisible())
+            available -= parameterCardHeight(available) + overlay::gap;
         const int wanted = tree->contentHeight() + 40;
         return QRect(overlay::margin, overlay::columnTop, overlay::treeWidth,
                      std::max(120, std::min(available, wanted)));
@@ -238,6 +242,7 @@ void MainWindow::syncModelTree() {
                                 impl_->session.selectedFeature(), impl_->visibility);
     impl_->modelCard->place();
     syncTimeline();
+    syncParameters();
 }
 
 void MainWindow::syncProperties() {

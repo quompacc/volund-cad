@@ -94,10 +94,13 @@ void SketchEditorToolController::showPanel() {
                     "und bestätige dann."),
         {{"translation_x", QObject::tr("Gewählt ΔX"), 0.0, -1'000'000.0, 1'000'000.0},
          {"translation_y", QObject::tr("Gewählt ΔY"), 0.0, -1'000'000.0, 1'000'000.0},
-         {"line_length", QObject::tr("Linienlänge"), 1.0, 0.001, 1'000'000.0},
+         // PAR02: length and radius of the selected element also take "=Name".
+         {"line_length", QObject::tr("Linienlänge"), 1.0, 0.001, 1'000'000.0,
+          ToolValueKind::length, true},
          {"rectangle_width", QObject::tr("Rechteckbreite"), 1.0, 0.001, 1'000'000.0},
          {"rectangle_height", QObject::tr("Rechteckhöhe"), 1.0, 0.001, 1'000'000.0},
-         {"circle_radius", QObject::tr("Kreis-/Bogenradius"), 1.0, 0.001, 1'000'000.0},
+         {"circle_radius", QObject::tr("Kreis-/Bogenradius"), 1.0, 0.001, 1'000'000.0,
+          ToolValueKind::length, true},
          {"polygon_sides", QObject::tr("Polygonseiten"), 6.0, 3.0, 64.0, ToolValueKind::count},
          {"fillet_radius", QObject::tr("Rundungsradius"), 2.0, 0.001, 1'000'000.0},
          {"chamfer_distance", QObject::tr("Fasenabstand"), 2.0, 0.001, 1'000'000.0},
@@ -321,6 +324,9 @@ void SketchEditorToolController::showPanel() {
         [this](const std::string& id) {
             if (id == "translation_x" || id == "translation_y")
                 finishDrag();
+        },
+        [this](const std::string& id, std::optional<ResolvedParameter> bound) {
+            bindElementDimension(id, bound);
         }});
     syncSelectedDimensionInputs();
     syncConstraintState();

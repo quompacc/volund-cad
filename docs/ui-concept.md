@@ -159,6 +159,7 @@ in U04 an dieselben IDs.
 | `document.save_as` | Dateimenü, Suche | DocumentActions | immer | document_actions |
 | `document.duplicate` | Dateimenü, Suche | DocumentActions | immer | document_actions |
 | `document.import_step` | Dateimenü, Strg+I, Suche | DocumentActions | kein Werkzeug offen | step_exchange |
+| `view.parameters` | Kopfzeile „Parameter“, Strg+P, Suche | MainWindow | immer | parameter_flow |
 | `document.export_step` | Dateimenü, Strg+E, Suche | DocumentActions | gültiger Körper, kein Werkzeug offen | step_exchange |
 | `history.undo` | Kopfzeile, Strg+Z, Suche | MainWindow | Historie hat einen Schritt | command_inventory |
 | `history.redo` | Kopfzeile, Strg+Y, Suche | MainWindow | Historie hat einen Schritt | command_inventory |

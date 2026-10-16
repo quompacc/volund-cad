@@ -74,6 +74,9 @@ struct ExtrusionMode final {
     std::optional<document::RevolveParameters> revolve{};   // M20: "Drehung N"
     std::optional<document::SweepPath> sweep{};             // M23: "Folgen N"
     std::optional<document::LoftParameters> loft{};        // M24: "Ausformung N"
+    // PAR02: distance and start offset bound to length parameters; their values follow them.
+    std::optional<document::ParameterId> distanceParameter{};
+    std::optional<document::ParameterId> offsetParameter{};
     bool operator==(const ExtrusionMode&) const = default;
 };
 

@@ -67,6 +67,11 @@ class MainWindow final : public QMainWindow {
     void createCommands();
     void connectInteractions();
     void syncModelTree();
+    // PAR02: the parameter card under the model tree (MainWindowDocumentParameters.cpp).
+    void createParameterCard();
+    void syncParameters();
+    // Height of the parameter card in a left column of `column` pixels.
+    [[nodiscard]] int parameterCardHeight(int column) const;
     void syncVisibility();
     void toggleVisibility(int kind, std::uint64_t id);
     void selectBasePlane(int plane);

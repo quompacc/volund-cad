@@ -597,6 +597,15 @@ if(VOELUND_BUILD_DESKTOP)
         if(VOELUND_NATIVE_WAYLAND)
             set_tests_properties(desktop.reference_part PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
         endif()
+        # PAR02: the parameter table and "=Name" in the fields (user flow of the packet).
+        add_executable(voelund_parameter_flow_tests desktop/ParameterFlowTests.cpp)
+        target_link_libraries(voelund_parameter_flow_tests PRIVATE voelund_project_options Voelund::Desktop)
+        add_test(NAME desktop.parameter_flow COMMAND voelund_parameter_flow_tests)
+        set_tests_properties(desktop.parameter_flow PROPERTIES
+            LABELS "desktop;qt-opengl;acceptance" TIMEOUT 120 RUN_SERIAL TRUE)
+        if(VOELUND_NATIVE_WAYLAND)
+            set_tests_properties(desktop.parameter_flow PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
+        endif()
         # M18: STEP import and export through the file menu (A-STEP-01, A-ERR-01).
         add_executable(voelund_step_exchange_tests desktop/StepExchangeTests.cpp)
         target_link_libraries(voelund_step_exchange_tests PRIVATE voelund_project_options Voelund::Desktop TKDESTEP)
@@ -1260,6 +1269,11 @@ add_executable(voelund_move_tests integration/MoveTests.cpp)
 target_link_libraries(voelund_move_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME application.move COMMAND voelund_move_tests)
 set_tests_properties(application.move PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
+# PAR02: binding parameters in the sketch editor and in a new extrusion.
+add_executable(voelund_parameter_binding_tests integration/ParameterBindingTests.cpp)
+target_link_libraries(voelund_parameter_binding_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.parameter_binding COMMAND voelund_parameter_binding_tests)
+set_tests_properties(application.parameter_binding PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
 # M18: A-PART-02, the ring and an independent box.
 add_executable(voelund_reference_ring_tests integration/ReferenceRingTests.cpp)
 target_link_libraries(voelund_reference_ring_tests PRIVATE voelund_project_options Voelund::Application)

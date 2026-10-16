@@ -6,6 +6,7 @@
 #include <QComboBox>
 #include <QSignalBlocker>
 #include <QDoubleSpinBox>
+#include "ParameterInput.hpp"
 #include <QFormLayout>
 #include <QGridLayout>
 #include <QGroupBox>
@@ -178,12 +179,15 @@ void ToolPanelHost::begin(ToolPanelDefinition definition) {
     guidance_->setText(definition_.guidance);
     setStatus({});
     for (const ToolLengthParameter& parameter : definition_.lengthParameters) {
-        QDoubleSpinBox* input = parameter.kind == ToolValueKind::angle ? makeAngleInput(content_)
-                                : parameter.kind == ToolValueKind::count
-                                    ? makeCountInput(content_)
-                                : parameter.kind == ToolValueKind::factor
-                                    ? makeFactorInput(content_)
-                                    : makeLengthInput(content_);
+        const bool bindable =
+            parameter.bindable && (parameter.kind == ToolValueKind::length ||
+                                   parameter.kind == ToolValueKind::angle);
+        QDoubleSpinBox* input =
+            bindable ? makeParameterInput(content_, parameter.kind == ToolValueKind::angle)
+            : parameter.kind == ToolValueKind::angle  ? makeAngleInput(content_)
+            : parameter.kind == ToolValueKind::count  ? makeCountInput(content_)
+            : parameter.kind == ToolValueKind::factor ? makeFactorInput(content_)
+                                                      : makeLengthInput(content_);
         input->setRange(parameter.minimum, parameter.maximum);
         input->setValue(parameter.value);
         const std::string parameterId = parameter.id;
@@ -196,6 +200,22 @@ void ToolPanelHost::begin(ToolPanelDefinition definition) {
             if (definition_.parameterFinished)
                 definition_.parameterFinished(parameterId);
         });
+        if (auto* bound = dynamic_cast<ParameterSpinBox*>(input)) {
+            const auto kind = parameter.kind;
+            bound->setNamesProvider([this, kind] { return names_ ? names_(kind) : QStringList{}; });
+            bound->setBound(parameter.boundName);
+            bound->setBindingRequested(
+                [this, parameterId, kind, bound](std::optional<QString> name) {
+                    if (!definition_.parameterBound)
+                        return;
+                    if (!name) {
+                        definition_.parameterBound(parameterId, std::nullopt);
+                        return;
+                    }
+                    if (const auto resolved = resolveParameter(*name, kind, bound->value()))
+                        definition_.parameterBound(parameterId, resolved);
+                });
+        }
         input->setObjectName(QString::fromStdString("toolLength_" + parameter.id));
         parameterLayout_->addRow(parameter.label, input);
         lengthInputs_.emplace_back(parameter.id, input);
@@ -387,6 +407,30 @@ void ToolPanelHost::setLengthValue(const std::string& parameterId, double value)
             return;
         }
     }
+}
+
+void ToolPanelHost::setLengthBinding(const std::string& parameterId,
+                                     std::optional<QString> name) {
+    for (const auto& [id, input] : lengthInputs_)
+        if (auto* bound = dynamic_cast<ParameterSpinBox*>(input); bound && id == parameterId) {
+            const QSignalBlocker blocker(input);
+            bound->setBound(std::move(name));
+            return;
+        }
+}
+
+void ToolPanelHost::setParameterResolver(ParameterResolver resolver) {
+    resolver_ = std::move(resolver);
+}
+
+void ToolPanelHost::setParameterNames(std::function<QStringList(ToolValueKind)> names) {
+    names_ = std::move(names);
+}
+
+std::optional<ResolvedParameter> ToolPanelHost::resolveParameter(const QString& name,
+                                                                 ToolValueKind kind,
+                                                                 double value) const {
+    return resolver_ ? resolver_(name, kind, value) : std::nullopt;
 }
 
 void ToolPanelHost::setLengthEnabled(const std::string& parameterId, bool enabled) {

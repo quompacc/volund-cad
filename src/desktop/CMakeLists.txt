@@ -29,6 +29,9 @@ add_library(
     MainWindowView.cpp
     McpAccess.cpp
     MeasurementInput.cpp
+    ParameterInput.cpp
+    ParameterPanel.cpp
+    MainWindowDocumentParameters.cpp
     ModelTreePanel.cpp
     SketchEditorConstraintState.cpp
     SketchEditorCommand.cpp

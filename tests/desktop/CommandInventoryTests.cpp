@@ -40,6 +40,7 @@ const std::set<std::string> commandTable{"document.new",
                                          "transform.snap",
                                          "view.theme",
                                          "view.command_search",
+                                         "view.parameters",
                                          "view.tool_rail",
                                          "view.grid",
                                          "sketch.show_dimensions",
@@ -133,7 +134,7 @@ void emptyDocumentOffersOnlyApplicableCommands(application::CadSession& session,
     const std::set<std::string> expected{
         "document.new",       "document.open",   "document.save", "document.save_as",
         "document.duplicate", "document.import_step", // M18: export needs a body
-        "transform.snap",  "view.theme",    "view.command_search",
+        "transform.snap",  "view.theme",    "view.command_search", "view.parameters",
         "view.tool_rail",     "view.grid",       "solid.create.box",
         "solid.create.cylinder", // M01: as a new body
         "solid.create.sphere", "solid.create.cone", "solid.create.torus",

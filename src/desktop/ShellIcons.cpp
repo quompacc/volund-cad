@@ -240,6 +240,16 @@ void draw(QPainter& painter, ShellIcon icon, const QColor& ink, const QColor& ac
         painter.drawLine(QPointF(12, 2), QPointF(12, 22));
         break;
     }
+    case ShellIcon::parameters: {
+        // A small table: a name column and two rows, the "=" in the accent colour.
+        painter.drawRoundedRect(QRectF(3.5, 4.5, 17, 15), 2, 2);
+        painter.drawLine(QPointF(3.5, 9.5), QPointF(20.5, 9.5));
+        painter.drawLine(QPointF(10.5, 4.5), QPointF(10.5, 19.5));
+        painter.setPen(QPen(accent, 1.8, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        painter.drawLine(QPointF(13.5, 12.5), QPointF(17.5, 12.5));
+        painter.drawLine(QPointF(13.5, 16), QPointF(17.5, 16));
+        break;
+    }
     case ShellIcon::importFile:
         // An open tray with an arrow coming down into it, the arrow in the accent colour.
         painter.drawPolyline(QPolygonF{QPointF(3.5, 13.5), QPointF(3.5, 20.5), QPointF(20.5, 20.5),

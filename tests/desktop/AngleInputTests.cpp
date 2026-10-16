@@ -161,8 +161,8 @@ void dimensionDialog() {
         if (!dialog)
             return;
         displayedDegrees =
-            std::abs(dialog->doubleValue() + 60) < 1e-10 && dialog->labelText().contains("Grad");
-        dialog->setDoubleValue(60);
+            std::abs(dialog->textValue().toDouble() + 60) < 1e-10 && dialog->labelText().contains("Grad");
+        dialog->setTextValue(QStringLiteral("60"));
         const auto directory = qEnvironmentVariable("VOELUND_ANGLE_ARTIFACT_DIR");
         if (!directory.isEmpty())
             captured = QDir().mkpath(directory) &&

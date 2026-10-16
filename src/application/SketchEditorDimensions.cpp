@@ -1,4 +1,5 @@
 #include <voelund/kernel/NumericPolicy.hpp>
+#include <voelund/kernel/Angle.hpp>
 #include <voelund/application/CadSession.hpp>
 #include <voelund/application/SketchEditorSession.hpp>
 #include <voelund/features/SketchConstraintSolver.hpp>
@@ -68,14 +69,6 @@ SketchEditorSession::dimensionProblem(document::SketchConstraintId constraintId)
     if (features::sketchAnnotationCategory(match->kind) !=
         features::SketchAnnotationCategory::dimension)
         return "Maß: Eine Beziehung hat keinen Wert";
-    if (match->parameter.has_value()) {
-        const auto& table = session_.parameterTable().values;
-        const auto parameter =
-            std::ranges::find(table, *match->parameter, &document::DocumentParameter::id);
-        return "Maß: Gebunden an den Parameter „" +
-               (parameter != table.end() ? parameter->name : std::string("?")) +
-               "“; den Parameter ändern";
-    }
     if (match->projectedEdge.has_value() || !match->auxiliaryValues.empty())
         return "Maß: Die Koordinate folgt einer Referenzkante";
     if (match->reference)
@@ -129,9 +122,12 @@ bool SketchEditorSession::editDimension(document::SketchConstraintId constraintI
         refuse(value <= 0.0 ? "Eine Länge muss größer als 0 sein"
                             : std::string(kernel::modelRangeDiagnostic));
     }
-    if ((angle ? match->angleValue.value() : match->value) == value)
+    // PAR02 (docs/parameter-table.md, rule 7): a number on a bound dimension unbinds it.
+    const bool bound = match->parameter.has_value();
+    if (!bound && (angle ? match->angleValue.value() : match->value) == value)
         return false;
     Rollback rollback(*this);
+    match->parameter.reset();
     if (angle)
         match->angleValue = kernel::Radians(value);
     else
@@ -140,6 +136,48 @@ bool SketchEditorSession::editDimension(document::SketchConstraintId constraintI
         refuse("Mit diesem Wert lässt sich die Skizze nicht lösen; nichts geändert");
     rollback.keep();
     return true;
+}
+
+bool SketchEditorSession::bindDimension(document::SketchConstraintId constraintId,
+                                        std::optional<document::ParameterId> parameter) {
+    if (const auto problem = dimensionProblem(constraintId))
+        throw std::invalid_argument(*problem);
+    const auto match =
+        std::ranges::find(constraints_.values, constraintId, &document::SketchConstraint::id);
+    if (match->parameter == parameter)
+        return false;
+    Rollback rollback(*this);
+    if (parameter) {
+        const auto* entry = document::findParameter(session_.parameterTable(), *parameter);
+        if (entry == nullptr)
+            refuse("Den Parameter gibt es nicht");
+        if (document::dimensionUnit(match->kind) != entry->unit)
+            refuse(entry->unit == document::ParameterUnit::angle
+                       ? "Ein Winkelparameter passt nicht an eine Länge"
+                       : "Ein Längenparameter passt nicht an einen Winkel");
+        if (match->kind == SketchConstraintKind::angle)
+            match->angleValue = kernel::toRadians(kernel::Degrees(entry->value));
+        else
+            match->value = entry->value;
+    }
+    match->parameter = parameter;
+    if (!solveConstraints())
+        refuse("Mit dem Wert des Parameters lässt sich die Skizze nicht lösen; nichts geändert");
+    rollback.keep();
+    commitHistory();
+    return true;
+}
+
+void SketchEditorSession::acceptParameterTableChange() noexcept {
+    if (supportStamp_)
+        supportStamp_ = session_.sceneStatus().document;
+}
+
+std::optional<document::ParameterId>
+SketchEditorSession::dimensionParameter(document::SketchConstraintId constraintId) const noexcept {
+    const auto match =
+        std::ranges::find(constraints_.values, constraintId, &document::SketchConstraint::id);
+    return match == constraints_.values.end() ? std::nullopt : match->parameter;
 }
 
 bool SketchEditorSession::setConstraintValue(document::SketchConstraintId constraintId,

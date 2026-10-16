@@ -482,6 +482,7 @@ void MainWindow::createCommandSurfaces() {
 
 void MainWindow::syncShell() {
     impl_->commandActions->refreshEnabled();
+    syncParameters(); // PAR02: the table stays fixed while a tool is open
     syncBodyCommands();
     syncViewSwitches();
     const ShellState shell = impl_->shell();

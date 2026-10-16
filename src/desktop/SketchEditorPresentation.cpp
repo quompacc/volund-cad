@@ -234,6 +234,18 @@ void SketchEditorToolController::syncSelectedDimensionInputs() {
     panel_.setActionEnabled("free", length.has_value());
     if (length.has_value())
         panel_.setLengthValue("line_length", *length);
+    // PAR02: a bound length or radius shows its parameter.
+    const auto boundName = [this](document::SketchConstraintKind kind) -> std::optional<QString> {
+        const auto constraint = editor_->selectedDimension(kind);
+        const auto parameter = constraint ? editor_->dimensionParameter(*constraint) : std::nullopt;
+        const auto* entry =
+            parameter ? document::findParameter(session_.parameterTable(), *parameter) : nullptr;
+        return entry ? std::optional{QString::fromStdString(entry->name)} : std::nullopt;
+    };
+    panel_.setLengthBinding("line_length", length ? boundName(document::SketchConstraintKind::distance)
+                                                  : std::nullopt);
+    panel_.setLengthBinding("circle_radius", radius ? boundName(document::SketchConstraintKind::radius)
+                                                    : std::nullopt);
     if (width.has_value())
         panel_.setLengthValue("rectangle_width", *width);
     if (height.has_value())
@@ -287,7 +299,13 @@ void SketchEditorToolController::refreshPresentation() {
         // S13: "Bemaßungen: Aus" hides the dimensions, relations stay.
         if (!showDimensions_ && annotation.category == features::SketchAnnotationCategory::dimension)
             continue;
-        constraints.push_back({annotation.id.value(), annotation.label, annotation.position.X(),
+        // PAR02: a bound dimension shows its parameter, "A = 60.000 mm".
+        std::string label = annotation.label;
+        if (annotation.parameter)
+            if (const auto* parameter =
+                    document::findParameter(session_.parameterTable(), *annotation.parameter))
+                label = parameter->name + " = " + label;
+        constraints.push_back({annotation.id.value(), label, annotation.position.X(),
                                annotation.position.Y(), annotation.position.Z(),
                                editor_->isConstraintConflicting(annotation.id),
                                annotation.editable, editor_->isConstraintRedundant(annotation.id),

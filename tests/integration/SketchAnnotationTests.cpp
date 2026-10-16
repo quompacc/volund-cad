@@ -180,7 +180,8 @@ void everyKind() {
 
     // Refusals before any change.
     f.refused(6, 1, "Beziehung hat keinen Wert");
-    f.refused(27, 12, "Parameter „Breite“");
+    // PAR02 (rule 7): a bound dimension takes a number, which unbinds it.
+    require(!f.editor->dimensionProblem(SketchConstraintId{27}), "A bound dimension can be edited");
     f.refused(28, 3, "Referenzkante");
 }
 

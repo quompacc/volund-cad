@@ -19,6 +19,7 @@ class CadSession;
 }
 
 namespace voelund::desktop {
+struct ResolvedParameter;
 
 class ToolPanelHost;
 
@@ -56,6 +57,7 @@ class SketchExtrusionToolController final {
         std::function<void(const std::vector<features::EvaluatedBody>*)> handler);
 
   private:
+    void bindLength(const std::string& id, std::optional<ResolvedParameter> bound);
     void setDistance(double distance);
     void regionsToggled();
     void open(document::FeatureId sketch, std::vector<document::SketchRegionId> regions,
@@ -100,6 +102,9 @@ class SketchExtrusionToolController final {
     std::vector<document::BodyId> targets_;
     std::optional<document::BodyId> target_;
     double offset_{0.0};
+    // PAR02: distance and offset bound to document parameters.
+    std::optional<document::ParameterId> distanceParameter_;
+    std::optional<document::ParameterId> offsetParameter_;
     bool upToFace_{false};
     std::optional<document::BodyFaceReference> endFace_;
     std::vector<std::uint64_t> problemElements_;
