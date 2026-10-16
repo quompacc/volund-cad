@@ -22,6 +22,9 @@ namespace detail {
 // 2 name (UTF-8 text), 3 hidden (integer 0/1).
 inline constexpr int nativeBodyAttributeSlot = 31;
 void writeNativeBodyAttributes(const TDF_Label& label, const BodyAttributeTable& table);
+// M14 (schema 34), optional child 32 of the main label, written only when a feature is
+// suppressed: integer = count; child i = a suppressed feature's ID (decimal text).
+inline constexpr int nativeHistoryStateSlot = 32;
 [[nodiscard]] BodyAttributeTable readNativeBodyAttributes(const TDF_Label& label);
 } // namespace detail
 

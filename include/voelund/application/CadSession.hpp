@@ -25,7 +25,8 @@
 
 namespace voelund::application {
 
-enum class FeatureRuntimeStatus { current, error, blocked };
+// M14: suppressed is no error; the feature is skipped on purpose.
+enum class FeatureRuntimeStatus { current, error, blocked, suppressed };
 
 struct FeatureRuntimeState final {
     document::FeatureId id;
@@ -341,6 +342,11 @@ class CadSession final {
     editMoveParameters(document::FeatureId featureId, const document::MoveParameters& parameters,
                        ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] document::MoveParameters moveParameters(document::FeatureId featureId) const;
+    // M14 (user decision 2026-10-16): suppresses or reactivates a feature, one undo step. Later
+    // features that need what it made show their error; by default that is kept.
+    [[nodiscard]] CommandResult
+    setFeatureSuppressed(document::FeatureId featureId, bool suppressed,
+                         ErrorDisposition disposition = ErrorDisposition::keepEditableErrors);
     // M27 (CadSessionPrimitives.cpp): a sphere, cone, torus or wedge ("Kugel N" ...), added as
     // a cylinder is: on `input` (join, cut, intersect, or separate beside it) or as a new body
     // at the origin; one undo step.

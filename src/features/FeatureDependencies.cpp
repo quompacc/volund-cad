@@ -15,10 +15,30 @@ std::optional<document::FeatureId> bodyProducerBefore(const document::DocumentSn
     if (found == features.end())
         return std::nullopt;
     const auto contexts = document::featureBodyContexts(features, snapshot.parameters());
+    // M14: a suppressed feature passes the body on as it got it.
     for (auto index = static_cast<std::size_t>(found - features.begin()); index-- > 0;)
-        if (features[index].kind != document::FeatureKind::sketch && contexts[index] == body)
+        if (features[index].kind != document::FeatureKind::sketch && contexts[index] == body &&
+            !features[index].suppressed)
             return features[index].id;
     return std::nullopt;
+}
+std::optional<document::FeatureId> effectiveInput(const document::DocumentSnapshot& snapshot,
+                                                  document::FeatureId feature) {
+    const auto features = snapshot.features();
+    const auto found = std::ranges::find(features, feature, &document::FeatureDescriptor::id);
+    if (found == features.end() || !found->inputFeature)
+        return std::nullopt;
+    const auto input = std::ranges::find(features, *found->inputFeature,
+                                         &document::FeatureDescriptor::id);
+    if (input == features.end() || !input->suppressed)
+        return found->inputFeature;
+    const auto contexts = document::featureBodyContexts(features, snapshot.parameters());
+    const auto body = contexts[static_cast<std::size_t>(input - features.begin())];
+    if (!body || input->kind == document::FeatureKind::sketch)
+        return found->inputFeature;
+    if (const auto before = bodyProducerBefore(snapshot, input->id, *body))
+        return before;
+    return found->inputFeature;
 }
 std::optional<document::FeatureId> targetProducer(const document::DocumentSnapshot& snapshot,
                                                   document::FeatureId extrusion) {
@@ -57,18 +77,36 @@ FeatureDependencies::FeatureDependencies(std::vector<FeatureInputs> nodes) : nod
     }
     if (order_.size() != nodes_.size()) throw std::invalid_argument("Cyclic feature dependencies");
 }
+namespace {
+// M14: the producer a feature depends on; when only suppressed features made the body (its
+// creator is suppressed), that one, so the feature is blocked rather than failing.
+std::optional<document::FeatureId> inputProducer(const document::DocumentSnapshot& snapshot,
+                                                 document::FeatureId feature,
+                                                 document::BodyId body) {
+    if (const auto producer = bodyProducerBefore(snapshot, feature, body))
+        return producer;
+    const auto features = snapshot.features();
+    const auto found = std::ranges::find(features, feature, &document::FeatureDescriptor::id);
+    const auto contexts = document::featureBodyContexts(features, snapshot.parameters());
+    for (auto index = static_cast<std::size_t>(found - features.begin()); index-- > 0;)
+        if (features[index].kind != document::FeatureKind::sketch && contexts[index] == body &&
+            features[index].suppressed)
+            return features[index].id;
+    return std::nullopt;
+}
+} // namespace
 FeatureDependencies FeatureDependencies::from(const document::DocumentSnapshot& snapshot) {
     std::vector<FeatureInputs> nodes;
     for (const auto& feature : snapshot.features()) {
         FeatureInputs node{feature.id, {}};
-        if (feature.inputFeature) node.inputs.push_back(*feature.inputFeature);
+        if (feature.inputFeature) node.inputs.push_back(*effectiveInput(snapshot, feature.id));
         // T04: a face extrusion works on the bodies of its profile face (and end face) as
         // they were before it.
         if (feature.kind == document::FeatureKind::extrusion && !feature.inputFeature) {
             const auto& parameters = snapshot.extrusionParameters(feature.id);
             for (const auto& face : {parameters.faceProfile, parameters.upToFace})
                 if (face)
-                    if (const auto producer = bodyProducerBefore(snapshot, feature.id, face->body);
+                    if (const auto producer = inputProducer(snapshot, feature.id, face->body);
                         producer && std::ranges::find(node.inputs, *producer) == node.inputs.end())
                         node.inputs.push_back(*producer);
         }
@@ -87,7 +125,7 @@ FeatureDependencies FeatureDependencies::from(const document::DocumentSnapshot& 
                               : feature.kind == document::FeatureKind::move // M11
                                   ? snapshot.moveParameters(feature.id).body
                                   : snapshot.holeParameters(feature.id).face.body;
-            if (const auto producer = bodyProducerBefore(snapshot, feature.id, body))
+            if (const auto producer = inputProducer(snapshot, feature.id, body))
                 node.inputs.push_back(*producer);
         }
         // M19: a construction plane or axis on a body reads it as it was before; a sketch
@@ -99,14 +137,14 @@ FeatureDependencies FeatureDependencies::from(const document::DocumentSnapshot& 
         if (feature.kind == document::FeatureKind::datumAxis)
             datumBody = snapshot.datumAxisParameters(feature.id).body;
         if (datumBody)
-            if (const auto producer = bodyProducerBefore(snapshot, feature.id, *datumBody))
+            if (const auto producer = inputProducer(snapshot, feature.id, *datumBody))
                 node.inputs.push_back(*producer);
         if (feature.kind == document::FeatureKind::sketch) {
             if (const auto plane = snapshot.sketchParameters(feature.id).constructionPlane)
                 node.inputs.push_back(*plane);
             // S17: projected edges follow their bodies as they were before the sketch.
             for (const auto& projection : snapshot.sketchParameters(feature.id).projections)
-                if (const auto producer = bodyProducerBefore(snapshot, feature.id, projection.body);
+                if (const auto producer = inputProducer(snapshot, feature.id, projection.body);
                     producer && std::ranges::find(node.inputs, *producer) == node.inputs.end())
                     node.inputs.push_back(*producer);
         }
@@ -118,7 +156,7 @@ FeatureDependencies FeatureDependencies::from(const document::DocumentSnapshot& 
             if (parameters.plane.face)
                 bodies.push_back(parameters.plane.face->body);
             for (const auto body : bodies)
-                if (const auto producer = bodyProducerBefore(snapshot, feature.id, body);
+                if (const auto producer = inputProducer(snapshot, feature.id, body);
                     producer && std::ranges::find(node.inputs, *producer) == node.inputs.end())
                     node.inputs.push_back(*producer);
             if (parameters.plane.constructionPlane)
@@ -132,7 +170,7 @@ FeatureDependencies FeatureDependencies::from(const document::DocumentSnapshot& 
             if (parameters.axis.body)
                 bodies.push_back(*parameters.axis.body);
             for (const auto body : bodies)
-                if (const auto producer = bodyProducerBefore(snapshot, feature.id, body);
+                if (const auto producer = inputProducer(snapshot, feature.id, body);
                     producer && std::ranges::find(node.inputs, *producer) == node.inputs.end())
                     node.inputs.push_back(*producer);
             if (parameters.datumAxis)
@@ -146,7 +184,7 @@ FeatureDependencies FeatureDependencies::from(const document::DocumentSnapshot& 
             std::vector<document::BodyId> bodies{parameters.target};
             bodies.insert(bodies.end(), parameters.tools.begin(), parameters.tools.end());
             for (const auto body : bodies)
-                if (const auto producer = bodyProducerBefore(snapshot, feature.id, body);
+                if (const auto producer = inputProducer(snapshot, feature.id, body);
                     producer && std::ranges::find(node.inputs, *producer) == node.inputs.end())
                     node.inputs.push_back(*producer);
         }
@@ -154,7 +192,11 @@ FeatureDependencies FeatureDependencies::from(const document::DocumentSnapshot& 
             const auto features = snapshot.features();
             const auto sketch = std::ranges::find(features, *feature.inputFeature, &document::FeatureDescriptor::id);
             if (sketch == features.end()) throw std::invalid_argument("Missing extrusion sketch");
-            if (sketch->inputFeature) node.inputs.push_back(*sketch->inputFeature);
+            if (sketch->inputFeature) {
+                const auto support = *effectiveInput(snapshot, sketch->id);
+                if (std::ranges::find(node.inputs, support) == node.inputs.end())
+                    node.inputs.push_back(support);
+            }
             // M20: a revolve follows its construction axis.
             if (const auto& revolve = snapshot.extrusionParameters(feature.id).revolve;
                 revolve && revolve->axis.datumAxis)
@@ -169,7 +211,7 @@ FeatureDependencies FeatureDependencies::from(const document::DocumentSnapshot& 
                     node.inputs.push_back(section.sketch);
             // T03: the body of the end face, as it was before this extrusion.
             if (const auto face = snapshot.extrusionParameters(feature.id).upToFace)
-                if (const auto producer = bodyProducerBefore(snapshot, feature.id, face->body);
+                if (const auto producer = inputProducer(snapshot, feature.id, face->body);
                     producer && std::ranges::find(node.inputs, *producer) == node.inputs.end())
                     node.inputs.push_back(*producer);
         }

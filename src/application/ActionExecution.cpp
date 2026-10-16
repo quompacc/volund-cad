@@ -291,6 +291,9 @@ class Validation final {
     void operator()(const EditMirrorParametersAction& action) {
         static_cast<void>(target(action.mirror, ActionKind::editMirrorParameters));
     }
+    void operator()(const SetFeatureSuppressedAction& action) {
+        static_cast<void>(target(action.feature, ActionKind::setFeatureSuppressed));
+    }
     void operator()(const MoveBodyAction& action) {
         static_cast<void>(target(action.feature, ActionKind::moveBody));
         lengths({action.x, action.y, action.z});
@@ -490,6 +493,11 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot,
             },
             [&](const EditMoveParametersAction& a) {
                 return session.editMoveParameters(a.move, a.parameters, reject);
+            },
+            [&](const SetFeatureSuppressedAction& a) {
+                return session.setFeatureSuppressed(
+                    a.feature, a.suppressed,
+                    request.disposition.value_or(ErrorDisposition::keepEditableErrors));
             },
             [&](const EditPatternParametersAction& a) {
                 return session.editPatternParameters(a.pattern, a.parameters, reject);

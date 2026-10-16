@@ -117,7 +117,7 @@ ContextCommands contextCommands(const ShellState& state) {
     case ShellSelection::sketchElement:
     case ShellSelection::sketch:
         result.title = QObject::tr("Skizze");
-        result.commands = {"solid.modify.edit_sketch", "repair.references"};
+        result.commands = {"solid.modify.edit_sketch", "repair.references", "history.suppress"};
         result.primary = "solid.modify.edit_sketch";
         break;
     case ShellSelection::feature:
@@ -125,7 +125,7 @@ ContextCommands contextCommands(const ShellState& state) {
         // M19: a construction plane carries sketches; both kinds reopen their panel.
         if (state.featureKind == document::FeatureKind::datumPlane ||
             state.featureKind == document::FeatureKind::datumAxis) {
-            result.commands = {"solid.modify.edit_sketch"};
+            result.commands = {"solid.modify.edit_sketch", "history.suppress"};
             if (state.featureKind == document::FeatureKind::datumPlane) {
                 result.commands.insert(result.commands.begin(), "solid.create.sketch");
                 result.primary = "solid.create.sketch";
@@ -133,7 +133,7 @@ ContextCommands contextCommands(const ShellState& state) {
             break;
         }
         result.commands = {"solid.modify.transform", "solid.modify.fillet",
-                           "solid.modify.chamfer", "solid.create.cylinder"};
+                           "solid.modify.chamfer", "solid.create.cylinder", "history.suppress"};
         if (state.extrusionEditable || state.filletEditable) {
             result.commands.insert(result.commands.begin(), "solid.modify.edit_sketch");
             result.primary = "solid.modify.edit_sketch";

@@ -34,6 +34,8 @@ class TimelineBar final : public OverlayCard {
     explicit TimelineBar(QWidget& host);
 
     void setOpenHandler(std::function<void(std::uint64_t)> handler);
+    // M14: a right click on a step asks for its menu at that screen point.
+    void setMenuHandler(std::function<void(std::uint64_t, QPoint)> handler);
     // M20/U14: `icons` overrides the kind's icon, e.g. revolve, sweep or the primitive's shape.
     using IconOverride = std::pair<document::FeatureId, ShellIcon>;
     void showFeatures(std::span<const document::FeatureDescriptor> features,
@@ -56,6 +58,7 @@ class TimelineBar final : public OverlayCard {
     std::vector<QToolButton*> buttons_;
     std::vector<ShellIcon> icons_;
     std::function<void(std::uint64_t)> open_;
+    std::function<void(std::uint64_t, QPoint)> menu_;
     ThemeMode mode_{ThemeMode::light};
 };
 

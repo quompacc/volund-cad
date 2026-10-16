@@ -18,13 +18,17 @@ CommandResult CadSession::restoreHistory(bool forward) {
     for (const auto& state : candidate.featureStates_) {
         const auto status = state.status == FeatureRuntimeStatus::current
                                 ? features::EvaluationStatus::valid
+                            : state.status == FeatureRuntimeStatus::suppressed // M14
+                                ? features::EvaluationStatus::suppressed
                             : state.status == FeatureRuntimeStatus::blocked
                                 ? features::EvaluationStatus::blockedByDependency
                                 : features::EvaluationStatus::failed;
         report.features.push_back(
             {state.id,
              status,
-             state.status == FeatureRuntimeStatus::current ? "" : "restored-feature-error",
+             state.status == FeatureRuntimeStatus::current      ? ""
+             : state.status == FeatureRuntimeStatus::suppressed ? "suppressed"
+                                                                : "restored-feature-error",
              state.message,
              {}});
     }

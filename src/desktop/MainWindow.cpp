@@ -158,6 +158,11 @@ void MainWindow::createHistoryActions() {
     impl_->redoAction->setShortcuts(QKeySequence::Redo);
     setCommandId(*impl_->undoAction, "history.undo");
     setCommandId(*impl_->redoAction, "history.redo");
+    // M14 (user decision 2026-10-16): suppress or reactivate the selected feature.
+    impl_->suppressAction = new QAction(tr("Unterdrücken"), this);
+    impl_->suppressAction->setToolTip(tr("Gewähltes Feature unterdrücken oder wieder aktivieren"));
+    setCommandId(*impl_->suppressAction, "history.suppress");
+    connect(impl_->suppressAction, &QAction::triggered, this, [this] { toggleSuppression(); });
     // Undo/Redo sit in the shell header. Repair is offered by the context bar and the command
     // search until U10 moves it to the feature.
     impl_->repairAction = new QAction(tr("Referenzen reparieren…"), this);
@@ -221,8 +226,17 @@ void MainWindow::syncProperties() {
     const auto states = impl_->session.featureStates();
     // U10: repair is offered while something is broken.
     impl_->repairAllAction->setEnabled(std::ranges::any_of(states, [](const auto& state) {
-        return state.status != application::FeatureRuntimeStatus::current;
+        return state.status == application::FeatureRuntimeStatus::error ||
+               state.status == application::FeatureRuntimeStatus::blocked;
     }));
+    // M14: the selected feature can be suppressed or reactivated.
+    const auto suppressed =
+        selected ? std::ranges::find(states, *selected, &application::FeatureRuntimeState::id)
+                 : states.end();
+    const bool isSuppressed = suppressed != states.end() &&
+                              suppressed->status == application::FeatureRuntimeStatus::suppressed;
+    impl_->suppressAction->setText(isSuppressed ? tr("Aktivieren") : tr("Unterdrücken"));
+    impl_->suppressAction->setEnabled(selected.has_value() && !shell.toolBlocksCommands());
     impl_->repairAction->setEnabled(shell.canEditSketch());
     syncErrorCard(selected);
     if (!selected.has_value()) {
@@ -261,7 +275,8 @@ void MainWindow::syncErrorCard(std::optional<document::FeatureId> selected) {
     const auto state =
         selected ? std::ranges::find(states, *selected, &application::FeatureRuntimeState::id)
                  : states.end();
-    if (state == states.end() || state->status == application::FeatureRuntimeStatus::current) {
+    if (state == states.end() || state->status == application::FeatureRuntimeStatus::current ||
+        state->status == application::FeatureRuntimeStatus::suppressed) {
         impl_->errorCard->clear();
         return;
     }

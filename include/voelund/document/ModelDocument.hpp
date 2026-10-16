@@ -417,6 +417,9 @@ struct FeatureDescriptor final {
     FeatureKind kind;
     std::string name;
     std::optional<FeatureId> inputFeature;
+    // M14 (schema 34, user decision 2026-10-16): skipped in evaluation; later features work on
+    // the body without it. Not a visibility switch and not a deletion.
+    bool suppressed{false};
     [[nodiscard]] bool operator==(const FeatureDescriptor&) const = default;
 };
 
@@ -538,6 +541,8 @@ class ModelDocument final {
     [[nodiscard]] const kernel::RigidTransform& featurePlacement(FeatureId featureId) const;
     [[nodiscard]] bool setFeaturePlacement(FeatureId featureId,
                                            const kernel::RigidTransform& placement);
+    // M14: suppresses or reactivates a feature; one undo step.
+    [[nodiscard]] bool setFeatureSuppressed(FeatureId featureId, bool suppressed);
     [[nodiscard]] const ParameterTable& parameterTable() const noexcept;
     // Replaces the whole table; bindings are validated against it. Values are not mirrored
     // here: the application re-solves bound sketches in the same transaction.

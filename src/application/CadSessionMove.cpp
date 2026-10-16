@@ -85,6 +85,20 @@ CommandResult CadSession::editMoveParameters(document::FeatureId featureId,
                            false);
 }
 
+CommandResult CadSession::setFeatureSuppressed(document::FeatureId featureId, bool suppressed,
+                                               ErrorDisposition disposition) {
+    document::DocumentTransaction transaction(document_);
+    auto& candidate = transaction.edit();
+    const auto input = detail::prepareInput(
+        [&] { return candidate.setFeatureSuppressed(featureId, suppressed); });
+    if (!input.value)
+        return CommandResult::invalidInput(input.diagnostic);
+    if (!*input.value)
+        return {CommandStatus::rejected, RejectionReason::noChange};
+    return finishCandidate(transaction, selectedFeature_, CommandKind::editFeature, disposition,
+                           false);
+}
+
 document::MoveParameters CadSession::moveParameters(document::FeatureId featureId) const {
     return document_.moveParameters(featureId);
 }

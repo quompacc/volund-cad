@@ -71,6 +71,15 @@ bool ModelDocument::setBodyHidden(BodyId body, bool hidden) {
         IdentifiedDocumentSnapshot::restore(documentId(), snapshot));
     return impl_->native.commit(std::move(prepared));
 }
+bool ModelDocument::setFeatureSuppressed(FeatureId featureId, bool suppressed) {
+    const std::size_t index = featureIndex(featureId);
+    auto candidate = currentState();
+    if (candidate.features[index].suppressed == suppressed)
+        return false;
+    candidate.features[index].suppressed = suppressed;
+    commitState(std::move(candidate));
+    return true;
+}
 bool ModelDocument::canUndo() const noexcept { return impl_->native.canUndo(); }
 bool ModelDocument::canRedo() const noexcept { return impl_->native.canRedo(); }
 bool ModelDocument::undo() { return impl_->native.commit(impl_->native.prepareUndo()); }

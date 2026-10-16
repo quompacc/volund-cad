@@ -327,7 +327,11 @@ FeatureGraphResult FeatureGraph::evaluate(const document::ModelDocument& documen
 
 bool FeatureGraphEvaluation::valid() const noexcept {
     return std::ranges::all_of(
-        report.features, [](const auto& issue) { return issue.status == EvaluationStatus::valid; });
+        report.features, [](const auto& issue) {
+            // M14: a suppressed feature is skipped on purpose, not an error.
+            return issue.status == EvaluationStatus::valid ||
+                   issue.status == EvaluationStatus::suppressed;
+        });
 }
 
 namespace {
@@ -475,19 +479,29 @@ std::shared_ptr<const FeatureGraphEvaluation> FeatureGraph::evaluateDetailed(
         }
         if (issue.status != EvaluationStatus::valid)
             continue;
+        // M14: a suppressed feature is skipped; later ones get the body without it.
+        if (descriptor.suppressed) {
+            issue = {descriptor.id, EvaluationStatus::suppressed, "suppressed", "Suppressed", {}};
+            continue;
+        }
         if (!dirty[index]) {
             issue = previous->report.features[index];
             if (issue.status == EvaluationStatus::valid)
                 restoreOutput(findFeature(previous->result.features, descriptor.id),
                               result.features, result.bodies, references);
-        } else
-            runChecked(document, descriptor, issue, result.features, result.bodies, references);
+        } else {
+            // M14: evaluated on its input as it is past suppressed features.
+            auto effective = descriptor;
+            effective.inputFeature = effectiveInput(document, descriptor.id);
+            runChecked(document, effective, issue, result.features, result.bodies, references);
+        }
     }
     // A failed body modifier must not expose an older producer as a current final body.
     const auto identities =
         document::legacyBodyIdentities(document.features(), document.parameters());
     for (std::size_t i = 0; i < identities.size(); ++i)
-        if (identities[i].body && next->report.features[i].status != EvaluationStatus::valid)
+        if (identities[i].body && next->report.features[i].status != EvaluationStatus::valid &&
+            next->report.features[i].status != EvaluationStatus::suppressed)
             std::erase_if(result.bodies,
                           [&](const auto& body) { return body.bodyId == identities[i].body; });
     if (!result.bodies.empty())

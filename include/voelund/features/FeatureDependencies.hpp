@@ -15,6 +15,10 @@ bodyProducerBefore(const document::DocumentSnapshot& snapshot, document::Feature
 // feature left it; nullopt without a target or before the body's first solid.
 [[nodiscard]] std::optional<document::FeatureId>
 targetProducer(const document::DocumentSnapshot& snapshot, document::FeatureId extrusion);
+// M14: the input a feature evaluates on. Past a suppressed input the body is taken as the latest
+// earlier feature that is not suppressed left it; an input without a body (a sketch) stays.
+[[nodiscard]] std::optional<document::FeatureId>
+effectiveInput(const document::DocumentSnapshot& snapshot, document::FeatureId feature);
 struct FeatureInputs final {
     document::FeatureId feature;
     std::vector<document::FeatureId> inputs;

@@ -313,6 +313,12 @@ struct EditMoveParametersAction final {
     document::MoveParameters parameters;
     bool operator==(const EditMoveParametersAction&) const = default;
 };
+// M14: suppresses or reactivates a feature; later errors are kept unless the request rejects.
+struct SetFeatureSuppressedAction final {
+    document::FeatureId feature;
+    bool suppressed;
+    bool operator==(const SetFeatureSuppressedAction&) const = default;
+};
 struct SetPlacementAction final {
     document::FeatureId feature;
     Quantity x;
@@ -344,7 +350,8 @@ using Action = std::variant<CreateParameterAction, SetParameterValueAction, Rena
                             CreateDraftAction, EditDraftParametersAction,
                             CreateMirrorAction, EditMirrorParametersAction,
                             CreatePatternAction, EditPatternParametersAction,
-                            MoveBodyAction, EditMoveParametersAction>;
+                            MoveBodyAction, EditMoveParametersAction,
+                            SetFeatureSuppressedAction>;
 // Parallel to the alternatives of Action.
 enum class ActionKind {
     createParameter,
@@ -390,7 +397,8 @@ enum class ActionKind {
     createPattern, // M10
     editPatternParameters,
     moveBody, // M11
-    editMoveParameters
+    editMoveParameters,
+    setFeatureSuppressed // M14
 };
 [[nodiscard]] ActionKind actionKind(const Action& action) noexcept;
 

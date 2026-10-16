@@ -6,7 +6,9 @@ inline std::vector<FeatureRuntimeState> runtimeStates(const features::Evaluation
     for (const auto& issue : report.features)
         states.push_back({issue.feature,
             issue.status == features::EvaluationStatus::valid ? FeatureRuntimeStatus::current :
-            issue.status == features::EvaluationStatus::failed ? FeatureRuntimeStatus::error : FeatureRuntimeStatus::blocked,
+            issue.status == features::EvaluationStatus::failed ? FeatureRuntimeStatus::error :
+            issue.status == features::EvaluationStatus::suppressed ? FeatureRuntimeStatus::suppressed // M14
+                                                                   : FeatureRuntimeStatus::blocked,
             issue.message});
     return states;
 }

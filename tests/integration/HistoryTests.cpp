@@ -10,6 +10,7 @@
 #include <TopoDS.hxx>
 #include <algorithm>
 #include <cmath>
+#include <filesystem>
 #include <iostream>
 #include <numbers>
 #include <stdexcept>
@@ -23,6 +24,10 @@
 // A preview of the change leaves the document as it was; undo restores the whole chain. A width
 // that leaves hole and pocket off the plate is refused, or kept with errors on request; no later
 // feature is deleted, and undo restores the plate.
+// M14 (A-HISTORY-02, user decision 2026-10-16): suppressing the pocket passes the plate on to
+// the fillet; a chamfer on a pocket edge then fails rather than guessing another edge; the
+// state survives save/open with all IDs and parameters, and reactivating restores the plate.
+// Suppressing the plate's extrusion removes the body and blocks its features; the box stays.
 namespace {
 using namespace voelund;
 using application::CommandStatus;
@@ -76,6 +81,10 @@ struct Plate final {
     document::FeatureId sketch;
     document::BodyId body;
     document::BodyId box;
+    document::FeatureId extrusion{1};
+    document::FeatureId hole{1};
+    document::FeatureId pocket{1};
+    document::FeatureId fillet{1};
 };
 
 Plate referencePlate(application::CadSession& session) {
@@ -91,8 +100,9 @@ Plate referencePlate(application::CadSession& session) {
                     .status() == CommandStatus::committed,
             "Plate 60 x 40 x 10");
     const auto extrusion = session.features().back().id;
-    const Plate plate{session.features()[session.features().size() - 2].id,
-                      *session.resultBody(extrusion), *session.resultBody(box)};
+    Plate plate{session.features()[session.features().size() - 2].id,
+                *session.resultBody(extrusion), *session.resultBody(box)};
+    plate.extrusion = extrusion;
     require(near(test::volumeOf(bodyOf(session, plate.body)), 24000), "24000");
 
     const auto face = top(session, extrusion);
@@ -133,6 +143,8 @@ Plate referencePlate(application::CadSession& session) {
                     .status() == CommandStatus::committed,
             "Pocket 4 deep");
     const auto cut = session.features().back().id;
+    plate.hole = hole;
+    plate.pocket = cut;
     require(near(test::volumeOf(bodyOf(session, plate.body)), 22880 - 160 * pi),
             "22880 - 160 pi");
 
@@ -152,6 +164,7 @@ Plate referencePlate(application::CadSession& session) {
     require(near(test::volumeOf(bodyOf(session, plate.body)),
                  22880 - 160 * pi - 10 * (1 - pi / 4)),
             "22880 - 160 pi - 10 (1 - pi / 4)");
+    plate.fillet = session.features().back().id;
     return plate;
 }
 
@@ -208,14 +221,90 @@ void earlyChange() {
             "Undo restores the valid plate");
 }
 
+application::FeatureRuntimeStatus stateOf(const application::CadSession& session,
+                                          document::FeatureId feature) {
+    for (const auto& state : session.featureStates())
+        if (state.id == feature)
+            return state.status;
+    throw std::runtime_error("Feature state missing");
+}
+
+void suppression() {
+    using application::FeatureRuntimeStatus;
+    application::CadSession session;
+    const auto plate = referencePlate(session);
+    const double withoutPocket = finished(60) + 1120;
+    require(session.setFeatureSuppressed(plate.pocket, true).status() == CommandStatus::committed &&
+                stateOf(session, plate.pocket) == FeatureRuntimeStatus::suppressed &&
+                stateOf(session, plate.fillet) == FeatureRuntimeStatus::current &&
+                near(test::volumeOf(bodyOf(session, plate.body)), withoutPocket),
+            "Without the pocket the fillet still rounds the corner");
+    require(session.undo().status() == CommandStatus::committed &&
+                stateOf(session, plate.pocket) == FeatureRuntimeStatus::current &&
+                near(test::volumeOf(bodyOf(session, plate.body)), finished(60)),
+            "Suppressing is one undo step");
+
+    // A chamfer on a rim edge of the pocket.
+    std::optional<document::FilletEdge> rim;
+    for (TopExp_Explorer explorer(bodyOf(session, plate.body), TopAbs_EDGE); explorer.More();
+         explorer.Next()) {
+        const BRepAdaptor_Curve curve(TopoDS::Edge(explorer.Current()));
+        const auto middle = curve.Value((curve.FirstParameter() + curve.LastParameter()) / 2);
+        if (near(middle.X(), -17) && near(middle.Y(), -10) && near(middle.Z(), 10))
+            rim = session.filletEdge(plate.fillet, explorer.Current());
+    }
+    require(rim && session.createChamfer(plate.fillet, std::span{&*rim, 1}, 0.5).status() ==
+                       CommandStatus::committed,
+            "A chamfer on the pocket rim");
+    const auto chamfer = session.features().back().id;
+    const auto all = session.features(); // one copy: begin and end of the same range
+    const std::vector<document::FeatureDescriptor> features(all.begin(), all.end());
+    require(session.setFeatureSuppressed(plate.pocket, true).status() ==
+                    CommandStatus::committedWithErrors &&
+                stateOf(session, chamfer) == FeatureRuntimeStatus::error &&
+                stateOf(session, plate.fillet) == FeatureRuntimeStatus::current,
+            "Without the pocket its rim is gone: the chamfer fails, no other edge is guessed");
+
+    const auto directory = std::filesystem::temp_directory_path() / "voelund-m14-suppress";
+    std::filesystem::remove_all(directory);
+    std::filesystem::create_directories(directory);
+    const auto path = directory / "plate.volund";
+    session.saveDocument(path);
+    application::CadSession reopened;
+    reopened.loadDocument(path);
+    const auto restored = reopened.features();
+    require(std::ranges::equal(restored, features,
+                               [](const auto& a, const auto& b) {
+                                   return a.id == b.id && a.kind == b.kind;
+                               }) &&
+                stateOf(reopened, plate.pocket) == FeatureRuntimeStatus::suppressed &&
+                stateOf(reopened, chamfer) == FeatureRuntimeStatus::error,
+            "Open keeps the suppressed pocket, all IDs and the chamfer's error");
+    require(reopened.setFeatureSuppressed(plate.pocket, false).status() ==
+                    CommandStatus::committed &&
+                stateOf(reopened, chamfer) == FeatureRuntimeStatus::current &&
+                reopened.extrusionParameters(plate.pocket) == session.extrusionParameters(plate.pocket),
+            "Reactivated: pocket and chamfer are back with their parameters");
+    std::filesystem::remove_all(directory);
+
+    require(reopened.setFeatureSuppressed(plate.extrusion, true).status() ==
+                    CommandStatus::committedWithErrors &&
+                reopened.validBodies().size() == 1 &&
+                near(test::volumeOf(bodyOf(reopened, plate.box)), 1000) &&
+                stateOf(reopened, plate.hole) == FeatureRuntimeStatus::blocked,
+            "Without the plate's extrusion the body is gone, its features blocked; the box stays");
+}
+
 } // namespace
 
 int main() {
     try {
         earlyChange();
+        suppression();
         std::cout << "PASS M13 history (A-HISTORY-01): reference plate, width 60 -> 70 through "
                      "hole, pocket and fillet, box unchanged, preview without change, undo, "
-                     "too narrow refused or kept with errors\n";
+                     "too narrow refused or kept with errors; suppress (A-HISTORY-02): pass-through, no "
+                     "guessed edge, save/open, reactivate, body creator\n";
         return 0;
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';

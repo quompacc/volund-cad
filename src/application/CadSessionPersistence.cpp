@@ -97,7 +97,8 @@ void CadSession::loadFrom(std::istream& input, std::filesystem::path preparedPat
         candidate.clean.reset(); // A restored snapshot is unsaved work.
     // The prepared document already has its persisted native ID or a fresh legacy ID.
     const bool valid = std::ranges::all_of(candidate.states, [](const auto& state) {
-        return state.status == FeatureRuntimeStatus::current;
+        return state.status == FeatureRuntimeStatus::current ||
+               state.status == FeatureRuntimeStatus::suppressed; // M14
     });
     const auto selection = candidate.document.features().empty()
                                ? std::optional<document::FeatureId>{}

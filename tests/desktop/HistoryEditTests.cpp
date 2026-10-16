@@ -3,7 +3,10 @@
 #include <BRepAdaptor_Curve.hxx>
 #include <BRepGProp.hxx>
 #include <GProp_GProps.hxx>
+#include <QAction>
 #include <QApplication>
+#include <QMenu>
+#include <QTimer>
 #include <QDoubleSpinBox>
 #include <QPushButton>
 #include <QToolButton>
@@ -22,6 +25,9 @@
 // and the panel offers "Mit Folgefehlern übernehmen". Cancel leaves the document untouched;
 // keeping the change commits it with the fillet in error, nothing is deleted; undo restores the
 // plate.
+// M14 (user decision 2026-10-16): "Unterdrücken" in the fillet's context bar suppresses it (the
+// plate keeps its full volume, the timeline step is marked suppressed, the command now says
+// "Aktivieren"); the timeline step's right-click menu reactivates it.
 namespace {
 using namespace voelund;
 using test::require;
@@ -132,8 +138,43 @@ void run() {
     require(session.undo().status() == application::CommandStatus::committed &&
                 matches(volume(session), plateVolume(10)),
             "Undo restores the plate with its fillet");
-    std::cout << "PASS M13 history edit: early extrusion reopened, successor error offered, "
-                 "cancel unchanged, kept with errors, nothing deleted, undo" << std::endl;
+
+    // M14: suppress from the context bar, reactivate from the timeline menu.
+    const auto fillet = session.features().back().id;
+    require(session.selectFeature(fillet), "Fillet selected");
+    window.refreshAfterExternalChange();
+    QAction* suppress = nullptr;
+    for (auto* action : window.findChildren<QAction*>())
+        if (action->property("commandId").toString() == QStringLiteral("history.suppress"))
+            suppress = action;
+    require(suppress != nullptr && suppress->isEnabled() &&
+                suppress->text() == QStringLiteral("Unterdrücken"),
+            "Unterdrücken offered for the fillet");
+    suppress->trigger();
+    settle();
+    require(matches(volume(session), 4000) && timelineStep(window, 2).property("featureState") ==
+                                                  QStringLiteral("suppressed") &&
+                suppress->text() == QStringLiteral("Aktivieren"),
+            "Suppressed: full plate, step marked, the command reactivates");
+    // The menu of the step: its action is triggered as a user would pick it.
+    QTimer::singleShot(0, [] {
+        for (auto* widget : QApplication::topLevelWidgets())
+            if (auto* menu = qobject_cast<QMenu*>(widget); menu && menu->isVisible()) {
+                for (auto* action : menu->actions())
+                    if (action->text() == QStringLiteral("Aktivieren"))
+                        action->trigger();
+                menu->close();
+            }
+    });
+    auto& step = timelineStep(window, 2);
+    emit step.customContextMenuRequested(step.rect().center());
+    settle();
+    require(matches(volume(session), plateVolume(10)) &&
+                timelineStep(window, 2).property("featureState").toString().isEmpty(),
+            "The timeline menu reactivates the fillet");
+    std::cout << "PASS M13/M14 history edit: early extrusion reopened, successor error offered, "
+                 "cancel unchanged, kept with errors, nothing deleted, undo; suppress from the "
+                 "context bar, reactivate from the timeline menu" << std::endl;
 }
 } // namespace
 

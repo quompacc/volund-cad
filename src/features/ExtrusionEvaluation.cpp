@@ -417,7 +417,7 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
         std::ranges::find(descriptors, sketchId, &document::FeatureDescriptor::id);
     if (sketchDescriptor == descriptors.end())
         throw GeometryEvaluationError("Extrusion sketch is missing");
-    const auto support = sketchDescriptor->inputFeature;
+    const auto support = effectiveInput(document, sketchId); // M14
     const auto operation = document::effectiveOperation(parameters, !support);
     // T03: the end face's body as it was before this extrusion, current and reference.
     std::optional<document::FeatureId> faceOwner;

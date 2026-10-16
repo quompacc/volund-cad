@@ -342,6 +342,18 @@ void NativePrimitiveCodec::write(const Handle(TDocStd_Document) & document,
         if (feature.inputFeature)
             TDF_Reference::Set(featureLabels.at(feature.id.value()).FindChild(5),
                                featureLabels.at(feature.inputFeature->value()));
+    // M14: the suppressed features.
+    std::vector<std::uint64_t> suppressed;
+    for (const auto& feature : snapshot.features())
+        if (feature.suppressed)
+            suppressed.push_back(feature.id.value());
+    if (!suppressed.empty()) {
+        const auto history = document->Main().FindChild(nativeHistoryStateSlot);
+        TDataStd_Integer::Set(history, static_cast<int>(suppressed.size()));
+        for (std::size_t index = 0; index < suppressed.size(); ++index)
+            TDataStd_AsciiString::Set(history.FindChild(static_cast<int>(index + 1)),
+                                      std::to_string(suppressed[index]).c_str());
+    }
 }
 
 IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Document) & document) {
@@ -349,8 +361,11 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
     const auto root = document->Main();
     const auto parameterLabel = root.FindChild(nativeParameterSlot, false);
     const auto attributeLabel = root.FindChild(nativeBodyAttributeSlot, false);
+    const auto historyLabel = root.FindChild(nativeHistoryStateSlot, false);
     require(root.NbChildren() ==
-                6 + (parameterLabel.IsNull() ? 0 : 1) + (attributeLabel.IsNull() ? 0 : 1) &&
+                6 + (parameterLabel.IsNull() ? 0 : 1) + (attributeLabel.IsNull() ? 0 : 1) +
+                        (historyLabel.IsNull() ? 0 : 1) &&
+            (historyLabel.IsNull() || metadata.schemaVersion >= 34) &&
             (parameterLabel.IsNull() || metadata.schemaVersion >= 7) &&
             (attributeLabel.IsNull() || metadata.schemaVersion >= 12));
     const auto bodies = child(root, 10);
@@ -493,6 +508,20 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
                     require(constraint.projectedEdge->document == metadata.id &&
                             assignments[i].body == constraint.projectedEdge->body);
         }
+    if (!historyLabel.IsNull()) {
+        Handle(TDataStd_Integer) count;
+        require(historyLabel.FindAttribute(TDataStd_Integer::GetID(), count) &&
+                count->Get() > 0 && historyLabel.NbChildren() == count->Get() &&
+                static_cast<std::size_t>(count->Get()) <= features.size());
+        for (int index = 1; index <= count->Get(); ++index) {
+            const auto item = child(historyLabel, index);
+            require(item.NbChildren() == 0);
+            const auto feature = std::ranges::find(features, FeatureId{id(item)},
+                                                   &FeatureDescriptor::id);
+            require(feature != features.end() && !feature->suppressed);
+            feature->suppressed = true;
+        }
+    }
     auto attributes = attributeLabel.IsNull() ? BodyAttributeTable{}
                                               : readNativeBodyAttributes(attributeLabel);
     validateBodyAttributes(attributes, features, data);

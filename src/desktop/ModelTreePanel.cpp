@@ -186,9 +186,11 @@ void ModelTreePanel::showStatuses(std::span<const application::FeatureRuntimeSta
         const QString name = item->data(0, nameRole).toString();
         const bool hasError = state.status == application::FeatureRuntimeStatus::error;
         const bool blocked = state.status == application::FeatureRuntimeStatus::blocked;
-        item->setText(0, hasError  ? tr("%1 [Fehler]").arg(name)
-                         : blocked ? tr("%1 [blockiert]").arg(name)
-                                   : name);
+        const bool suppressed = state.status == application::FeatureRuntimeStatus::suppressed;
+        item->setText(0, hasError     ? tr("%1 [Fehler]").arg(name)
+                         : blocked    ? tr("%1 [blockiert]").arg(name)
+                         : suppressed ? tr("%1 [unterdrückt]").arg(name) // M14
+                                      : name);
         item->setToolTip(0,
                          hasError || blocked ? QString::fromStdString(state.message) : QString{});
         item->setIcon(0, featureStatusIcon(state.status)); // U10

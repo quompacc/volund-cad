@@ -167,6 +167,10 @@ void TimelineBar::setOpenHandler(std::function<void(std::uint64_t)> handler) {
     open_ = std::move(handler);
 }
 
+void TimelineBar::setMenuHandler(std::function<void(std::uint64_t, QPoint)> handler) {
+    menu_ = std::move(handler);
+}
+
 void TimelineBar::showFeatures(std::span<const document::FeatureDescriptor> features,
                                std::optional<document::FeatureId> selected,
                                std::span<const IconOverride> icons) {
@@ -207,6 +211,12 @@ void TimelineBar::showFeatures(std::span<const document::FeatureDescriptor> feat
             if (open_)
                 open_(id);
         });
+        button->setContextMenuPolicy(Qt::CustomContextMenu);
+        connect(button, &QWidget::customContextMenuRequested, this,
+                [this, id, button](const QPoint& at) {
+                    if (menu_)
+                        menu_(id, button->mapToGlobal(at));
+                });
         steps_->addWidget(button);
         button->show();
         buttons_.push_back(button);
@@ -228,15 +238,20 @@ void TimelineBar::showStates(std::span<const application::FeatureRuntimeState> s
         const auto id = button->property("featureId").toULongLong();
         const auto state = std::ranges::find(states, document::FeatureId{id},
                                              &application::FeatureRuntimeState::id);
-        const bool marked =
-            state != states.end() && state->status != application::FeatureRuntimeStatus::current;
+        const bool suppressed =
+            state != states.end() && state->status == application::FeatureRuntimeStatus::suppressed;
+        const bool marked = !suppressed && state != states.end() &&
+                            state->status != application::FeatureRuntimeStatus::current;
         button->setProperty("featureState",
-                            !marked ? QString{}
+                            suppressed ? QStringLiteral("suppressed") // M14
+                            : !marked  ? QString{}
                             : state->status == application::FeatureRuntimeStatus::error
                                 ? QStringLiteral("error")
                                 : QStringLiteral("blocked"));
         button->style()->unpolish(button);
         button->style()->polish(button);
+        if (suppressed)
+            button->setToolTip(button->text() + QLatin1Char('\n') + tr("Unterdrückt"));
         if (marked) {
             button->setIcon(featureStatusIcon(state->status));
             button->setToolTip(button->text() + QLatin1Char('\n') +

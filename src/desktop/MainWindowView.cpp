@@ -7,7 +7,10 @@
 #include <voelund/application/CadSession.hpp>
 #include <voelund/viewport/CadViewport.hpp>
 
+#include "CommandFeedback.hpp"
+#include "ShellActions.hpp"
 #include <QAction>
+#include <QMenu>
 #include <QSignalBlocker>
 #include <QStatusBar>
 
@@ -136,6 +139,8 @@ void MainWindow::selectBasePlane(int plane) {
 void MainWindow::createTimeline() {
     impl_->timeline = new TimelineBar(*impl_->viewport);
     impl_->timeline->setOpenHandler([this](std::uint64_t id) { openTimelineStep(id); });
+    impl_->timeline->setMenuHandler(
+        [this](std::uint64_t id, QPoint at) { showTimelineMenu(id, at); }); // M14
     syncTimeline();
 }
 
@@ -170,6 +175,38 @@ void MainWindow::syncTimeline() {
         }
     impl_->timeline->showFeatures(features, impl_->session.selectedFeature(), icons);
     impl_->timeline->showStates(impl_->session.featureStates());
+}
+
+// M14: the step's menu acts on that feature; it is selected first, like a click.
+void MainWindow::showTimelineMenu(std::uint64_t featureId, QPoint at) {
+    if (impl_->shell().toolBlocksCommands())
+        return;
+    selectFeature(featureId);
+    syncShell();
+    QMenu menu(this);
+    menu.setObjectName(QStringLiteral("timelineMenu"));
+    menu.addAction(impl_->suppressAction);
+    menu.exec(at);
+}
+
+// M14: suppresses the selected feature, or reactivates it; one undo step.
+void MainWindow::toggleSuppression() {
+    const auto selected = impl_->session.selectedFeature();
+    if (!selected || impl_->shell().toolBlocksCommands())
+        return;
+    const auto states = impl_->session.featureStates();
+    const auto state = std::ranges::find(states, *selected, &application::FeatureRuntimeState::id);
+    const bool suppress =
+        state == states.end() || state->status != application::FeatureRuntimeStatus::suppressed;
+    if (!runCommand(
+            [&] {
+                return runAction(impl_->session,
+                                 application::SetFeatureSuppressedAction{*selected, suppress});
+            },
+            [this](const QString& message) { statusBar()->showMessage(message); }))
+        return;
+    refreshScene();
+    statusBar()->showMessage(suppress ? tr("Feature unterdrückt") : tr("Feature aktiviert"), 2000);
 }
 
 void MainWindow::openTimelineStep(std::uint64_t featureId) {

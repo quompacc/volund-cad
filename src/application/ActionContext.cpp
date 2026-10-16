@@ -72,9 +72,9 @@ std::vector<ActionKind> availableActions(const CadSession& session,
         actions = {ActionKind::editCombineParameters};
         break;
     case FeatureKind::datumPlane:
-        return {ActionKind::editDatumPlaneParameters};
+        return {ActionKind::editDatumPlaneParameters, ActionKind::setFeatureSuppressed};
     case FeatureKind::datumAxis:
-        return {ActionKind::editDatumAxisParameters};
+        return {ActionKind::editDatumAxisParameters, ActionKind::setFeatureSuppressed};
     case FeatureKind::shell:
         actions = {ActionKind::editShellParameters};
         break;
@@ -98,6 +98,7 @@ std::vector<ActionKind> availableActions(const CadSession& session,
     }
     if (session.placementFeature(feature))
         actions.push_back(ActionKind::setPlacement);
+    actions.push_back(ActionKind::setFeatureSuppressed); // M14: every feature
     if (session.canTransformFeature(feature)) // M11
         actions.push_back(ActionKind::moveBody);
     // A current result offers faces to sketch on or to push/pull, and an input for a
