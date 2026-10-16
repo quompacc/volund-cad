@@ -63,6 +63,8 @@ class CombineToolController final {
     document::CombineOperation operation_{document::CombineOperation::join};
     bool keepTools_{false};
     std::optional<document::FeatureId> editing_;
+    // M13: set while an edit is kept with errors at later features.
+    std::optional<application::ErrorDisposition> keep_;
     std::optional<document::CombineParameters> stored_;
     std::optional<application::DocumentStamp> stamp_;
     bool active_{false};

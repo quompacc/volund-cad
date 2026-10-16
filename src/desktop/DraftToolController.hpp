@@ -63,6 +63,8 @@ class DraftToolController final {
     double angleDegrees_{5.0};
     bool pickNeutral_{false};
     std::optional<document::FeatureId> editing_;
+    // M13: set while an edit is kept with errors at later features.
+    std::optional<application::ErrorDisposition> keep_;
     std::optional<document::DraftParameters> stored_;
     std::optional<application::DocumentStamp> stamp_;
     bool active_{false};

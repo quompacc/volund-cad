@@ -2,6 +2,7 @@
 
 #include "CommandFeedback.hpp"
 #include "ShellActions.hpp"
+#include "SuccessorErrors.hpp"
 #include "ToolPanelHost.hpp"
 
 #include <voelund/application/CadSession.hpp>
@@ -92,10 +93,16 @@ void MoveToolController::preview() {
                       stamp_));
     const auto& result = candidate.result.command;
     const bool ok = result.status() == application::CommandStatus::committed;
+    panel_.setErrorCommitHandler({});
     panel_.setAcceptEnabled(ok);
     panel_.setGuidance(ok ? QObject::tr("Verschiebung und Drehung um die Mitte des Körpers.")
                           : commandFeedbackMessage(result));
     if (!ok) {
+        offerKeepingSuccessorErrors(panel_, result, editing_, [this] {
+            keep_ = application::ErrorDisposition::keepEditableErrors;
+            accept();
+            keep_.reset();
+        });
         showModel();
         return;
     }
@@ -114,7 +121,7 @@ void MoveToolController::accept() {
             [&] {
                 return runAction(session_,
                                  application::EditMoveParametersAction{*editing_, parameters()},
-                                 stamp_);
+                                 stamp_, keep_);
             },
             [this](const QString& message) {
                 panel_.setGuidance(message);

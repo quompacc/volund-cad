@@ -66,6 +66,8 @@ class DatumToolController final {
     // Axis: the base axis.
     document::BaseAxis baseAxis_{document::BaseAxis::z};
     std::optional<document::FeatureId> editing_;
+    // M13: set while an edit is kept with errors at later features.
+    std::optional<application::ErrorDisposition> keep_;
     std::optional<document::DatumPlaneParameters> storedPlane_;
     std::optional<document::DatumAxisParameters> storedAxis_;
     std::optional<application::DocumentStamp> stamp_;

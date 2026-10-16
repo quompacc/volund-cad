@@ -50,6 +50,8 @@ class MoveToolController final {
     // X, Y, Z in mm, then the turns about X, Y, Z in degrees.
     std::array<double, 6> values_{};
     std::optional<document::FeatureId> editing_;
+    // M13: set while an edit is kept with errors at later features.
+    std::optional<application::ErrorDisposition> keep_;
     std::optional<document::MoveParameters> stored_;
     std::optional<application::DocumentStamp> stamp_;
     bool active_{false};

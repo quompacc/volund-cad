@@ -2,6 +2,7 @@
 
 #include "CommandFeedback.hpp"
 #include "ShellActions.hpp"
+#include "SuccessorErrors.hpp"
 #include "ToolPanelHost.hpp"
 
 #include <voelund/application/CadSession.hpp>
@@ -225,9 +226,15 @@ void HoleToolController::preview() {
         session_, application::prepareRequest(session_, action(), stamp_));
     const auto& result = candidate.result.command;
     const bool ok = result.status() == application::CommandStatus::committed;
+    panel_.setErrorCommitHandler({});
     panel_.setAcceptEnabled(ok);
     if (!ok) {
         panel_.setGuidance(commandFeedbackMessage(result));
+        offerKeepingSuccessorErrors(panel_, result, editing_, [this] {
+            keep_ = application::ErrorDisposition::keepEditableErrors;
+            accept();
+            keep_.reset();
+        });
         showModel();
         return;
     }
@@ -250,7 +257,7 @@ void HoleToolController::accept() {
         finish();
         return;
     }
-    if (!runCommand([&] { return runAction(session_, action(), stamp_); },
+    if (!runCommand([&] { return runAction(session_, action(), stamp_, keep_); },
                     [this](const QString& message) {
                         panel_.setGuidance(message);
                         statusChanged_(message);

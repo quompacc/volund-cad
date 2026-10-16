@@ -81,6 +81,8 @@ class FilletToolController final {
     };
     EdgeTreatment treatment_{EdgeTreatment::fillet};
     std::optional<document::FeatureId> editing_;
+    // M13: set while an edit is kept with errors at later features.
+    std::optional<application::ErrorDisposition> keep_;
     std::optional<Stored> stored_;
     std::vector<document::FilletEdge> edges_;
     double value_{1.0}; // radius or distance

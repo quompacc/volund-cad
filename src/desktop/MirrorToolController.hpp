@@ -71,6 +71,8 @@ class MirrorToolController final {
     std::optional<PickedFace> face_;
     document::MirrorMode mode_{document::MirrorMode::newBody};
     std::optional<document::FeatureId> editing_;
+    // M13: set while an edit is kept with errors at later features.
+    std::optional<application::ErrorDisposition> keep_;
     std::optional<document::MirrorParameters> stored_;
     std::optional<application::DocumentStamp> stamp_;
     bool active_{false};

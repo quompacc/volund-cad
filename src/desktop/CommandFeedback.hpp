@@ -129,7 +129,9 @@ bool runCommand(Execute execute, Report report, bool acceptNoChange = false) {
         [&] {
             const auto result = execute();
             using application::CommandStatus;
-            if (result.status() == CommandStatus::committed)
+            // M13: a commit with errors happens only when it was asked for.
+            if (result.status() == CommandStatus::committed ||
+                result.status() == CommandStatus::committedWithErrors)
                 return true;
             if (result.status() == CommandStatus::rejected &&
                 result.reason() == application::RejectionReason::noChange)

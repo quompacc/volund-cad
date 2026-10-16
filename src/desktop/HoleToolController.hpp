@@ -66,6 +66,8 @@ class HoleToolController final {
     double depth_{10.0};
     bool through_{false};
     std::optional<document::FeatureId> editing_;
+    // M13: set while an edit is kept with errors at later features.
+    std::optional<application::ErrorDisposition> keep_;
     std::optional<document::HoleParameters> stored_;
     std::optional<application::DocumentStamp> stamp_;
     bool active_{false};

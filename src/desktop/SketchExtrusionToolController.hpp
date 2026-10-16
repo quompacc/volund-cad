@@ -93,6 +93,8 @@ class SketchExtrusionToolController final {
     bool autoReversed_{false};
     // M04: the extrusion being edited, with its stored values; none for a new one.
     std::optional<document::FeatureId> editing_;
+    // M13: set while an edit is kept with errors at later features.
+    std::optional<application::ErrorDisposition> keep_;
     std::optional<document::ExtrusionParameters> stored_;
     bool baseSketch_{false};
     std::vector<document::BodyId> targets_;

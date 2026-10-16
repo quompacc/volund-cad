@@ -3,6 +3,7 @@
 #include "CommandFeedback.hpp"
 #include "MainWindowSupport.hpp"
 
+#include "SuccessorErrors.hpp"
 #include "ToolPanelHost.hpp"
 
 #include "ShellActions.hpp"
@@ -344,6 +345,7 @@ void SketchExtrusionToolController::preview() {
         session_, application::prepareRequest(session_, extrusion(), supportStamp_));
     const auto& result = candidate.result.command;
     const bool ok = result.status() == application::CommandStatus::committed;
+    panel_.setErrorCommitHandler({});
     panel_.setAcceptEnabled(ok);
     problemElements_.clear();
     for (const auto& issue : result.evaluation().features)
@@ -352,6 +354,11 @@ void SketchExtrusionToolController::preview() {
                                     issue.elements.end());
     if (!ok) {
         panel_.setGuidance(commandFeedbackMessage(result));
+        offerKeepingSuccessorErrors(panel_, result, editing_, [this] {
+            keep_ = application::ErrorDisposition::keepEditableErrors;
+            accept();
+            keep_.reset();
+        });
         showModel();
         return;
     }
@@ -452,7 +459,7 @@ void SketchExtrusionToolController::accept() {
     if (!profileSketch_.has_value())
         return;
     if (!runCommand(
-            [this] { return runAction(session_, extrusion(), supportStamp_); },
+            [this] { return runAction(session_, extrusion(), supportStamp_, keep_); },
             [this](const QString& message) {
                 panel_.setGuidance(message);
                 statusChanged_(message);

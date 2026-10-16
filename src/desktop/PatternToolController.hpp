@@ -85,6 +85,8 @@ class PatternToolController final {
     double angleDegrees_{360.0};
     document::PatternMode mode_{document::PatternMode::newBodies};
     std::optional<document::FeatureId> editing_;
+    // M13: set while an edit is kept with errors at later features.
+    std::optional<application::ErrorDisposition> keep_;
     std::optional<document::PatternParameters> stored_;
     std::optional<application::DocumentStamp> stamp_;
     bool active_{false};
