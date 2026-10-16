@@ -2684,12 +2684,15 @@
       ],
       "acceptance": "A-STEP-01: eigenes Mehrkörperteil exportieren/importieren, Solidanzahl, Boundingbox und Volumen innerhalb Toleranz vergleichen. Inches-Fixture korrekt in mm; kaputte STEP-Datei liefert Fehler ohne aktives Dokument zu ersetzen. A-ERR-01: Export der fehlerhaften aktuellen Revision trotz vorhandener letzter gültiger Darstellung ablehnen.",
       "boundary": "Kein Versprechen einer parametrischen Timeline aus STEP; Assemblystruktur/XDE-Ausbau separat X01.",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "chapter": "05-solid-historie.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/M17.md"
+      ],
+      "completedCommit": "536a328",
+      "completedDate": "2026-10-16"
     },
     {
       "id": "M18",
