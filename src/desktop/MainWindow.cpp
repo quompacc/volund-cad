@@ -208,6 +208,11 @@ void MainWindow::createHeader() {
     impl_->header->setActions(*impl_->undoAction, *impl_->redoAction, *impl_->themeAction);
     impl_->documentActions->setShellChangedHandler(
         [this] { impl_->header->display(impl_->shell()); });
+    // M18: the body picked in the model tree is exported alone; without one, all visible.
+    impl_->documentActions->setExportSelection([this] {
+        return impl_->selectedBody ? std::vector<document::BodyId>{*impl_->selectedBody}
+                                   : std::vector<document::BodyId>{};
+    });
 }
 
 void MainWindow::applyTheme(ThemeMode mode) {
@@ -266,6 +271,7 @@ void MainWindow::syncProperties() {
     impl_->rollForwardAction->setEnabled(marker.has_value() && !shell.toolBlocksCommands());
     impl_->deleteAction->setEnabled(selected.has_value() && !shell.toolBlocksCommands()); // M16
     impl_->repairAction->setEnabled(shell.canEditSketch());
+    impl_->documentActions->syncExchange(shell.toolBlocksCommands()); // M18
     syncErrorCard(selected);
     if (!selected.has_value()) {
         impl_->propertyPanel->showNone();

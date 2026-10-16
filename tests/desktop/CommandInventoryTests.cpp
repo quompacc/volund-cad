@@ -25,6 +25,8 @@ const std::set<std::string> commandTable{"document.new",
                                          "document.save",
                                          "document.save_as",
                                          "document.duplicate",
+                                         "document.import_step",
+                                         "document.export_step",
                                          "history.undo",
                                          "history.redo",
                                          "repair.references",
@@ -130,7 +132,8 @@ void emptyDocumentOffersOnlyApplicableCommands(application::CadSession& session,
             enabled.insert(commandId(*action));
     const std::set<std::string> expected{
         "document.new",       "document.open",   "document.save", "document.save_as",
-        "document.duplicate", "transform.snap",  "view.theme",    "view.command_search",
+        "document.duplicate", "document.import_step", // M18: export needs a body
+        "transform.snap",  "view.theme",    "view.command_search",
         "view.tool_rail",     "view.grid",       "solid.create.box",
         "solid.create.cylinder", // M01: as a new body
         "solid.create.sphere", "solid.create.cone", "solid.create.torus",

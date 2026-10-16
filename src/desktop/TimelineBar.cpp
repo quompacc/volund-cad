@@ -63,7 +63,7 @@ ShellIcon iconFor(document::FeatureKind kind) {
         return ShellIcon::transform; // M11
     case document::FeatureKind::stepImport:
     case document::FeatureKind::importPart:
-        return ShellIcon::box; // M17; M18 brings the import into the shell
+        return ShellIcon::importFile; // M17/M18
     }
     return ShellIcon::box;
 }

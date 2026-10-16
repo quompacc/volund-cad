@@ -2,13 +2,18 @@
 
 #include <QString>
 
+#include <voelund/document/BodyId.hpp>
+
 #include <exception>
 #include <functional>
+#include <vector>
 
+class QAction;
 class QMainWindow;
 class QMenu;
 namespace voelund::application {
 class CadSession;
+struct StepImportResult;
 }
 
 namespace voelund::desktop {
@@ -28,6 +33,10 @@ class DocumentActions final {
     void syncWindowTitle();
     // Called whenever the title changes, so the shell header can follow (U03).
     void setShellChangedHandler(std::function<void()> handler);
+    // M18: the bodies chosen for an export; none exports every visible body.
+    void setExportSelection(std::function<std::vector<document::BodyId>()> selection);
+    // M18: import and export wait while a tool is open; export needs a current body.
+    void syncExchange(bool toolOpen);
 
   private:
     void newDocument();
@@ -40,12 +49,19 @@ class DocumentActions final {
     [[nodiscard]] bool saveAs();
     [[nodiscard]] bool saveTo(const QString& fileName);
     void showError(const QString& operation, const std::exception& error);
+    // M18 (user decision 2026-10-16): STEP import into the open document and export.
+    void importStep();
+    void exportStep();
+    void reportImport(const application::StepImportResult& result);
 
     QMainWindow& window_;
     application::CadSession& session_;
     std::function<void()> refreshHandler_;
     QMenu* fileMenu_{nullptr};
+    QAction* importAction_{nullptr};
+    QAction* exportAction_{nullptr};
     std::function<void()> shellChanged_;
+    std::function<std::vector<document::BodyId>()> exportSelection_;
 };
 
 } // namespace voelund::desktop

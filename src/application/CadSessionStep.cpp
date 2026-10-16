@@ -16,7 +16,17 @@ namespace voelund::application {
 using namespace detail;
 
 StepImportResult CadSession::importStep(const std::filesystem::path& path) {
+    return addImport(path, kernel::readStep(path));
+}
+
+StepImportResult CadSession::openStep(const std::filesystem::path& path) {
     auto read = kernel::readStep(path);
+    if (!read.error)
+        newDocument();
+    return addImport(path, std::move(read));
+}
+
+StepImportResult CadSession::addImport(const std::filesystem::path& path, kernel::StepImport read) {
     StepImportResult result{StepImportStatus::imported, read.message, std::nullopt,
                             read.solids.size(), read.skippedShapes, read.invalidSolids,
                             read.sourceUnit};

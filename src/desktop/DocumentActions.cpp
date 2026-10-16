@@ -14,6 +14,7 @@
 #include <QStatusBar>
 #include <QString>
 
+#include <algorithm>
 #include <exception>
 #include <filesystem>
 #include <utility>
@@ -22,6 +23,16 @@ namespace voelund::desktop {
 namespace {
 
 QString documentFilter() { return QObject::tr("Völund-CAD-Dokument (*.volund)"); }
+QString stepFilter() { return QObject::tr("STEP-Datei (*.step *.stp)"); }
+// M18: Open takes a STEP file as well, as a new document holding its import.
+QString openFilter() {
+    return QObject::tr("Völund-CAD-Dokument oder STEP (*.volund *.step *.stp)") +
+           QStringLiteral(";;") + documentFilter() + QStringLiteral(";;") + stepFilter();
+}
+bool isStepFile(const QString& fileName) {
+    return fileName.endsWith(QStringLiteral(".step"), Qt::CaseInsensitive) ||
+           fileName.endsWith(QStringLiteral(".stp"), Qt::CaseInsensitive);
+}
 
 std::filesystem::path nativePath(const QString& fileName) {
 #ifdef _WIN32
@@ -51,6 +62,21 @@ DocumentActions::DocumentActions(QMainWindow& window, application::CadSession& s
     QAction* duplicateAction = fileMenu->addAction(QObject::tr("&Duplizieren"));
     duplicateAction->setToolTip(
         QObject::tr("Ungespeicherte Kopie des aktuellen Dokuments anlegen"));
+    // M18 (user decision 2026-10-16): STEP exchange in the file menu.
+    fileMenu->addSeparator();
+    QAction* importAction = fileMenu->addAction(QObject::tr("&Importieren (STEP)…"));
+    importAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_I));
+    importAction->setToolTip(QObject::tr("Volumenkörper einer STEP-Datei ins Dokument übernehmen"));
+    QAction* exportAction = fileMenu->addAction(QObject::tr("&Exportieren (STEP)…"));
+    exportAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_E));
+    exportAction->setToolTip(
+        QObject::tr("Gewählten Körper, sonst alle sichtbaren Körper als STEP (mm) schreiben"));
+    setCommandId(*importAction, "document.import_step");
+    setCommandId(*exportAction, "document.export_step");
+    importAction_ = importAction;
+    exportAction_ = exportAction;
+    QObject::connect(importAction, &QAction::triggered, &window_, [this]() { importStep(); });
+    QObject::connect(exportAction, &QAction::triggered, &window_, [this]() { exportStep(); });
     // Shortcuts need the actions on the window; the menu itself is only shown on demand.
     window_.addActions(fileMenu_->actions());
     setCommandId(*newAction, "document.new");
@@ -130,7 +156,7 @@ void DocumentActions::open() {
         return;
     }
     const QString fileName = QFileDialog::getOpenFileName(
-        &window_, QObject::tr("Völund-Dokument öffnen"), {}, documentFilter());
+        &window_, QObject::tr("Völund-Dokument öffnen"), {}, openFilter());
     if (fileName.isEmpty()) {
         return;
     }
@@ -160,6 +186,19 @@ bool DocumentActions::restore(const std::function<void()>& apply) {
 }
 
 void DocumentActions::load(const QString& fileName) {
+    if (isStepFile(fileName)) {
+        try {
+            const auto result = session_.openStep(nativePath(fileName));
+            if (result.status == application::StepImportStatus::imported) {
+                refreshHandler_();
+                syncWindowTitle();
+            }
+            reportImport(result);
+        } catch (const std::exception& error) {
+            showError(QObject::tr("Öffnen fehlgeschlagen"), error);
+        }
+        return;
+    }
     try {
         session_.loadDocument(nativePath(fileName));
         refreshHandler_();
@@ -217,6 +256,131 @@ bool DocumentActions::saveTo(const QString& fileName) {
 
 void DocumentActions::showError(const QString& operation, const std::exception& error) {
     QMessageBox::critical(&window_, operation, QString::fromUtf8(error.what()));
+}
+
+void DocumentActions::syncExchange(bool toolOpen) {
+    importAction_->setEnabled(!toolOpen);
+    exportAction_->setEnabled(!toolOpen && !session_.validBodies().empty());
+}
+
+void DocumentActions::setExportSelection(
+    std::function<std::vector<document::BodyId>()> selection) {
+    exportSelection_ = std::move(selection);
+}
+
+namespace {
+// The file's unit when it is not mm, as the user reads it.
+QString convertedUnit(const std::string& unit) {
+    const QString name = QString::fromStdString(unit).toLower();
+    if (name.isEmpty() || name.contains(QStringLiteral("milli")))
+        return {};
+    if (name.contains(QStringLiteral("inch")))
+        return QObject::tr("Zoll");
+    if (name.contains(QStringLiteral("foot")) || name.contains(QStringLiteral("feet")))
+        return QObject::tr("Fuß");
+    if (name.contains(QStringLiteral("centi")))
+        return QObject::tr("Zentimeter");
+    if (name == QStringLiteral("metre") || name == QStringLiteral("meter"))
+        return QObject::tr("Meter");
+    return name;
+}
+} // namespace
+
+void DocumentActions::reportImport(const application::StepImportResult& result) {
+    using application::StepImportStatus;
+    if (result.status != StepImportStatus::imported) {
+        const QString reason =
+            result.status == StepImportStatus::noSolids
+                ? QObject::tr("Die Datei enthält keinen gültigen Volumenkörper.")
+            : result.status == StepImportStatus::unreadable
+                ? QObject::tr("Die Datei ist keine lesbare STEP-Datei.")
+                : QObject::tr("Die Volumenkörper lassen sich nicht übernehmen.");
+        QMessageBox::critical(&window_, QObject::tr("Import fehlgeschlagen"),
+                              reason + QStringLiteral("\n\n") +
+                                  QString::fromStdString(result.message));
+        return;
+    }
+    QString message = QObject::tr("Importiert: %1 Körper").arg(result.solids);
+    if (const auto unit = convertedUnit(result.sourceUnit); !unit.isEmpty())
+        message += QObject::tr(" – Datei in %1, in mm umgerechnet").arg(unit);
+    window_.statusBar()->showMessage(message, 8000);
+    if (result.skippedShapes == 0 && result.invalidSolids == 0)
+        return;
+    QString hints = message + QStringLiteral(".");
+    if (result.skippedShapes > 0)
+        hints += QStringLiteral("\n") +
+                 QObject::tr("Übersprungen, weil keine Volumenkörper: %1 Flächen, Schalen oder "
+                             "Kurven.")
+                     .arg(result.skippedShapes);
+    if (result.invalidSolids > 0)
+        hints += QStringLiteral("\n") +
+                 QObject::tr("Nicht übernommen, weil ungültig: %1 Volumenkörper.")
+                     .arg(result.invalidSolids);
+    QMessageBox::information(&window_, QObject::tr("Import mit Hinweisen"), hints);
+}
+
+void DocumentActions::importStep() {
+    const QString fileName = QFileDialog::getOpenFileName(
+        &window_, QObject::tr("STEP-Datei importieren"), {}, stepFilter());
+    if (fileName.isEmpty())
+        return;
+    try {
+        const auto result = session_.importStep(nativePath(fileName));
+        if (result.status == application::StepImportStatus::imported)
+            refreshHandler_();
+        reportImport(result);
+    } catch (const std::exception& error) {
+        showError(QObject::tr("Import fehlgeschlagen"), error);
+    }
+}
+
+void DocumentActions::exportStep() {
+    // A-ERR-01: a model with errors is not exported, not even from its last valid display.
+    const auto states = session_.featureStates();
+    if (std::ranges::any_of(states, [](const application::FeatureRuntimeState& state) {
+            return state.status == application::FeatureRuntimeStatus::error ||
+                   state.status == application::FeatureRuntimeStatus::blocked;
+        })) {
+        QMessageBox::critical(&window_, QObject::tr("Export nicht möglich"),
+                              QObject::tr("Das Modell hat Fehler. Beheben Sie sie vor dem "
+                                          "Export; die angezeigte ältere Form wird nicht "
+                                          "exportiert."));
+        return;
+    }
+    const auto bodies = exportSelection_ ? exportSelection_() : std::vector<document::BodyId>{};
+    QString suggestion = QStringLiteral("Teil.step");
+    if (!session_.currentFile().empty())
+        suggestion =
+            nativeDisplayPath(std::filesystem::path(session_.currentFile()).replace_extension(".step"));
+    QString fileName = QFileDialog::getSaveFileName(
+        &window_, QObject::tr("Als STEP exportieren"), suggestion, stepFilter());
+    if (fileName.isEmpty())
+        return;
+    if (!isStepFile(fileName))
+        fileName += QStringLiteral(".step");
+    try {
+        const auto result = session_.exportStep(nativePath(fileName), bodies);
+        using application::StepExportStatus;
+        if (result.status == StepExportStatus::written) {
+            window_.statusBar()->showMessage(
+                (bodies.empty() ? QObject::tr("Als STEP (mm) exportiert: %1 sichtbare(r) Körper")
+                                : QObject::tr("Als STEP (mm) exportiert: %1 gewählte(r) Körper"))
+                    .arg(result.solids),
+                8000);
+            return;
+        }
+        const QString reason =
+            result.status == StepExportStatus::invalidRevision
+                ? QObject::tr("Das Modell hat Fehler.")
+            : result.status == StepExportStatus::noBodies
+                ? QObject::tr("Es ist kein Körper sichtbar.")
+                : QObject::tr("Die Datei konnte nicht geschrieben werden.");
+        QMessageBox::critical(&window_, QObject::tr("Export fehlgeschlagen"),
+                              reason + QStringLiteral("\n\n") +
+                                  QString::fromStdString(result.message));
+    } catch (const std::exception& error) {
+        showError(QObject::tr("Export fehlgeschlagen"), error);
+    }
 }
 
 } // namespace voelund::desktop

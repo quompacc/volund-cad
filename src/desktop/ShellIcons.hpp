@@ -43,6 +43,7 @@ enum class ShellIcon {
     patternLinear, // M10
     patternCircular,
     measure,    // M12
+    importFile, // M18: a STEP import in the timeline
     repair,
     eye,
     eyeOff,

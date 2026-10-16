@@ -158,6 +158,8 @@ in U04 an dieselben IDs.
 | `document.save` | Dateimenü, Strg+S, Suche | DocumentActions | immer | document_actions |
 | `document.save_as` | Dateimenü, Suche | DocumentActions | immer | document_actions |
 | `document.duplicate` | Dateimenü, Suche | DocumentActions | immer | document_actions |
+| `document.import_step` | Dateimenü, Strg+I, Suche | DocumentActions | kein Werkzeug offen | step_exchange |
+| `document.export_step` | Dateimenü, Strg+E, Suche | DocumentActions | gültiger Körper, kein Werkzeug offen | step_exchange |
 | `history.undo` | Kopfzeile, Strg+Z, Suche | MainWindow | Historie hat einen Schritt | command_inventory |
 | `history.redo` | Kopfzeile, Strg+Y, Suche | MainWindow | Historie hat einen Schritt | command_inventory |
 | `repair.references` | Kontextleiste (Skizze), Suche; später am Feature (U10) | ReferenceRepairDialog | Skizze gewählt | reference_repair_flow |
