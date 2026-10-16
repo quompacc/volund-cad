@@ -43,8 +43,12 @@ CommandResult CadSession::finishCandidate(document::DocumentTransaction& transac
             changed.push_back(feature.id);
     }
     const auto affected = evaluation->dependencies.affected(changed);
+    // M16: a deletion or a new order changes which features there are and what they take in;
+    // then every error counts, not only those behind changed parameters.
+    const bool structural =
+        !std::ranges::equal(transaction.candidate().features(), document_.features());
     for (std::size_t i = 0; i < report.features.size(); ++i)
-        if (kind != CommandKind::newFeature && !affected[i])
+        if (kind != CommandKind::newFeature && !structural && !affected[i])
             report.features[i].status = features::EvaluationStatus::valid;
     CommandResult published(evaluation->valid() ? CommandStatus::committed : CommandStatus::committedWithErrors,
         RejectionReason::none, evaluation->report);

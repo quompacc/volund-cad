@@ -31,6 +31,11 @@
 // Rolling back after the hole evaluates the plate up to it, without an unsaved change; an early
 // edit and its undo keep the marker; a new hole is inserted at the marker; rolling forward
 // evaluates the whole chain with it; the marker survives save/open.
+// M16 (A-HISTORY-02, user decision 2026-10-16): the fillet moves before the pocket and the box
+// to the end, IDs kept; an extrusion before its sketch and a hole before its body are refused
+// before anything changes. The pocket goes alone; its sketch only with the pocket; the plate's
+// extrusion lists hole, pocket and fillet, which stay with errors when it goes alone. Undo
+// restores the graph.
 namespace {
 using namespace voelund;
 using application::CommandStatus;
@@ -355,6 +360,81 @@ void rollback() {
     std::filesystem::remove_all(directory);
 }
 
+std::vector<document::FeatureId> order(const application::CadSession& session) {
+    std::vector<document::FeatureId> ids;
+    for (const auto& feature : session.features())
+        ids.push_back(feature.id);
+    return ids;
+}
+
+void reorderAndDelete() {
+    application::CadSession session;
+    const auto plate = referencePlate(session);
+    const auto original = order(session);
+    const auto box = original.front();
+    const auto pocketSketch = original[4];
+
+    require(session.moveFeature(plate.fillet, plate.hole).status() == CommandStatus::committed &&
+                order(session)[4] == plate.fillet &&
+                near(test::volumeOf(bodyOf(session, plate.body)), finished(60)),
+            "The fillet moves before the pocket; the plate stays the same");
+    require(session.moveFeature(box, plate.fillet).status() == CommandStatus::committed &&
+                near(test::volumeOf(bodyOf(session, plate.box)), 1000),
+            "The independent box moves later");
+    auto moved = order(session);
+    std::ranges::sort(moved, {}, &document::FeatureId::value);
+    auto sorted = original;
+    std::ranges::sort(sorted, {}, &document::FeatureId::value);
+    require(moved == sorted, "Reordering keeps every ID");
+    require(session.undo().status() == CommandStatus::committed &&
+                session.undo().status() == CommandStatus::committed && order(session) == original,
+            "Undo restores the order");
+
+    const auto refusedSketch = session.moveFeature(plate.extrusion, std::nullopt);
+    const auto refusedHole = session.moveFeature(plate.hole, std::nullopt);
+    require(refusedSketch.status() == CommandStatus::rejected &&
+                refusedHole.status() == CommandStatus::rejected && order(session) == original,
+            "An extrusion before its sketch and a hole before its body are refused");
+
+    const auto pocketPlan = session.deletionPlan(plate.pocket);
+    require(pocketPlan.dependents.empty() && pocketPlan.onlyThisPossible,
+            "Nothing needs the pocket");
+    const std::vector<document::FeatureId> pocket{plate.pocket};
+    require(session.deleteFeatures(pocket).status() == CommandStatus::committed &&
+                near(test::volumeOf(bodyOf(session, plate.body)), finished(60) + 1120) &&
+                session.undo().status() == CommandStatus::committed && order(session) == original,
+            "The pocket goes alone; undo brings it back");
+
+    const auto sketchPlan = session.deletionPlan(pocketSketch);
+    require(sketchPlan.dependents == std::vector{plate.pocket} && !sketchPlan.onlyThisPossible,
+            "The pocket sketch goes only with its pocket");
+    require(session.deleteFeatures(sketchPlan.cascade).status() == CommandStatus::committed &&
+                near(test::volumeOf(bodyOf(session, plate.body)), finished(60) + 1120) &&
+                session.undo().status() == CommandStatus::committed && order(session) == original,
+            "Cascade: sketch and pocket go; undo restores both");
+
+    const auto platePlan = session.deletionPlan(plate.extrusion);
+    const auto lists = [&](document::FeatureId id) {
+        return std::ranges::find(platePlan.dependents, id) != platePlan.dependents.end();
+    };
+    require(platePlan.onlyThisPossible && lists(plate.hole) && lists(plate.pocket) &&
+                lists(plate.fillet) && !lists(box),
+            "The plate's extrusion lists hole, pocket and fillet, not the box");
+    const std::vector<document::FeatureId> extrusion{plate.extrusion};
+    require(session.deleteFeatures(extrusion).status() == CommandStatus::rejected &&
+                order(session) == original,
+            "Alone it is refused by default");
+    require(session.deleteFeatures(extrusion, application::ErrorDisposition::keepEditableErrors)
+                        .status() == CommandStatus::committedWithErrors &&
+                order(session).size() == original.size() - 1 &&
+                stateOf(session, plate.fillet) != application::FeatureRuntimeStatus::current &&
+                near(test::volumeOf(bodyOf(session, plate.box)), 1000),
+            "Kept on request: the later features stay with errors, the box stays");
+    require(session.undo().status() == CommandStatus::committed && order(session) == original &&
+                near(test::volumeOf(bodyOf(session, plate.body)), finished(60)),
+            "Undo restores the whole graph");
+}
+
 } // namespace
 
 int main() {
@@ -362,11 +442,13 @@ int main() {
         earlyChange();
         suppression();
         rollback();
+        reorderAndDelete();
         std::cout << "PASS M13 history (A-HISTORY-01): reference plate, width 60 -> 70 through "
                      "hole, pocket and fillet, box unchanged, preview without change, undo, "
                      "too narrow refused or kept with errors; suppress (A-HISTORY-02): pass-through, no "
                      "guessed edge, save/open, reactivate, body creator; rollback: no unsaved change, edit "
-                     "and undo keep it, insert at the marker, roll forward, save/open\n";
+                     "and undo keep it, insert at the marker, roll forward, save/open; reorder and delete "
+                     "(A-HISTORY-02)\n";
         return 0;
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';

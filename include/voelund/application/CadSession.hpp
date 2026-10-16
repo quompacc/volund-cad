@@ -95,6 +95,15 @@ struct PatternInput final {
     bool operator==(const PatternInput&) const = default;
 };
 
+// M16: what deleting a feature takes along. `dependents` lists the features that need it or
+// would fail without it; `cascade` is it with its copies and all of them. Without dependents, or
+// when they can stay with errors (onlyThisPossible), the feature alone can go.
+struct DeletionPlan final {
+    std::vector<document::FeatureId> dependents;
+    std::vector<document::FeatureId> cascade;
+    bool onlyThisPossible{true};
+};
+
 class CadSession final {
   public:
     CadSession();
@@ -351,6 +360,16 @@ class CadSession final {
     // unsaved change; the model shows the state at the marker.
     [[nodiscard]] bool setRollback(std::optional<document::FeatureId> featureId);
     [[nodiscard]] std::optional<document::FeatureId> rollbackAfter() const noexcept;
+    // M16 (CadSessionHistoryEdit.cpp): moves a feature after `after` (or to the front); refused
+    // when it would stand before what it needs or when a feature would fail. One undo step.
+    [[nodiscard]] CommandResult moveFeature(document::FeatureId featureId,
+                                            std::optional<document::FeatureId> after);
+    [[nodiscard]] DeletionPlan deletionPlan(document::FeatureId featureId) const;
+    // Deletes the features (a pattern's copies too); one undo step. Kept dependents fail and
+    // stay editable when `disposition` keeps errors.
+    [[nodiscard]] CommandResult
+    deleteFeatures(std::span<const document::FeatureId> featureIds,
+                   ErrorDisposition disposition = ErrorDisposition::reject);
     // M27 (CadSessionPrimitives.cpp): a sphere, cone, torus or wedge ("Kugel N" ...), added as
     // a cylinder is: on `input` (join, cut, intersect, or separate beside it) or as a new body
     // at the origin; one undo step.

@@ -12,6 +12,7 @@ add_library(voelund_application STATIC
     CadSessionMirror.cpp
     CadSessionPattern.cpp
     CadSessionMove.cpp
+    CadSessionHistoryEdit.cpp
     SketchEditorProjections.cpp
     SketchEditorTransform.cpp
     SketchEditorBSpline.cpp

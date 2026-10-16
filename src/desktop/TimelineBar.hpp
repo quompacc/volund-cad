@@ -31,6 +31,7 @@ namespace voelund::desktop {
 // chip per step; number and name are in the tooltip. Long histories scroll sideways.
 // M15: the rollback marker (and the end marker) can be dragged into any gap between steps; Left
 // and Right select the neighbouring step, Home and End the first and last, Enter opens it.
+// M16: a step dragged into another gap moves there; Delete deletes it.
 class TimelineBar final : public OverlayCard {
   public:
     explicit TimelineBar(QWidget& host);
@@ -43,6 +44,10 @@ class TimelineBar final : public OverlayCard {
     void setRollbackHandler(std::function<void(std::optional<std::uint64_t>)> handler);
     // M15: a step chosen with the keyboard is selected, not opened.
     void setSelectHandler(std::function<void(std::uint64_t)> handler);
+    // M16: a step dragged into another gap asks to move after that step (none: to the front);
+    // Delete on a step asks to delete it.
+    void setReorderHandler(std::function<void(std::uint64_t, std::optional<std::uint64_t>)> handler);
+    void setDeleteHandler(std::function<void(std::uint64_t)> handler);
     // M20/U14: `icons` overrides the kind's icon, e.g. revolve, sweep or the primitive's shape.
     using IconOverride = std::pair<document::FeatureId, ShellIcon>;
     void showFeatures(std::span<const document::FeatureDescriptor> features,
@@ -68,6 +73,12 @@ class TimelineBar final : public OverlayCard {
     std::function<void(std::uint64_t, QPoint)> menu_;
     std::function<void(std::optional<std::uint64_t>)> rollback_;
     std::function<void(std::uint64_t)> select_;
+    std::function<void(std::uint64_t, std::optional<std::uint64_t>)> reorder_;
+    std::function<void(std::uint64_t)> delete_;
+    // M16: a step being dragged, from where it was pressed (content coordinates).
+    std::optional<std::uint64_t> pressedStep_;
+    QPoint pressedAt_;
+    bool draggingStep_{false};
     QToolButton* end_{nullptr};
     // M15: the gap the marker was dropped in (steps before it), from the track.
     void markerDropped(std::size_t stepsBefore);

@@ -430,6 +430,16 @@ using FeatureParameters =
                  PrimitiveParameters, DraftParameters, MirrorParameters, PatternParameters,
                  PatternCopyParameters, MoveParameters>;
 
+// M16: what a feature refers to. Structural references must stand earlier and exist (its input,
+// the bodies it works on, sketches, construction features, a copy's pattern); geometric ones name
+// faces and edges by the features that made them, which may later fail without them.
+struct FeatureReferences final {
+    std::vector<FeatureId> structural;
+    std::vector<FeatureId> geometric;
+};
+[[nodiscard]] FeatureReferences featureReferences(const FeatureDescriptor& feature,
+                                                  const FeatureParameters& parameters);
+
 // PAR01: every binding names an existing parameter of a matching unit, only dimensional
 // constraints bind, and the table itself is valid. Throws std::invalid_argument.
 void validateParameterBindings(std::span<const FeatureParameters> parameters,
@@ -548,6 +558,12 @@ class ModelDocument final {
     // features are inserted at the marker, which then stands after them.
     [[nodiscard]] bool setRollback(std::optional<FeatureId> featureId);
     [[nodiscard]] std::optional<FeatureId> rollbackAfter() const noexcept;
+    // M16 (ModelDocumentReorder.cpp): moves a feature (a pattern with its copies) after `after`,
+    // or to the front; deletes features (a pattern's copies go with it). Body inputs follow
+    // explicitly; a feature that would stand before or without what it needs throws
+    // std::invalid_argument. One undo step each.
+    [[nodiscard]] bool moveFeature(FeatureId featureId, std::optional<FeatureId> after);
+    [[nodiscard]] bool deleteFeatures(std::span<const FeatureId> featureIds);
     [[nodiscard]] const ParameterTable& parameterTable() const noexcept;
     // Replaces the whole table; bindings are validated against it. Values are not mirrored
     // here: the application re-solves bound sketches in the same transaction.

@@ -129,6 +129,7 @@ class MainWindow::Impl final {
     QAction* suppressAction{nullptr}; // M14
     QAction* rollbackAction{nullptr};
     QAction* rollForwardAction{nullptr};
+    QAction* deleteAction{nullptr}; // M16
     QAction* transformAction{nullptr};
     QAction* snapAction{nullptr};
     // S13: view switches as commands (grid everywhere, the others in the sketch editor).

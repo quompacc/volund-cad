@@ -118,7 +118,7 @@ ContextCommands contextCommands(const ShellState& state) {
     case ShellSelection::sketch:
         result.title = QObject::tr("Skizze");
         result.commands = {"solid.modify.edit_sketch", "repair.references", "history.suppress",
-                           "history.rollback_here"};
+                           "history.rollback_here", "history.delete"};
         result.primary = "solid.modify.edit_sketch";
         break;
     case ShellSelection::feature:
@@ -127,7 +127,7 @@ ContextCommands contextCommands(const ShellState& state) {
         if (state.featureKind == document::FeatureKind::datumPlane ||
             state.featureKind == document::FeatureKind::datumAxis) {
             result.commands = {"solid.modify.edit_sketch", "history.suppress",
-                               "history.rollback_here"};
+                               "history.rollback_here", "history.delete"};
             if (state.featureKind == document::FeatureKind::datumPlane) {
                 result.commands.insert(result.commands.begin(), "solid.create.sketch");
                 result.primary = "solid.create.sketch";
@@ -136,7 +136,7 @@ ContextCommands contextCommands(const ShellState& state) {
         }
         result.commands = {"solid.modify.transform", "solid.modify.fillet",
                            "solid.modify.chamfer", "solid.create.cylinder", "history.suppress",
-                           "history.rollback_here"};
+                           "history.rollback_here", "history.delete"};
         if (state.extrusionEditable || state.filletEditable) {
             result.commands.insert(result.commands.begin(), "solid.modify.edit_sketch");
             result.primary = "solid.modify.edit_sketch";

@@ -43,6 +43,7 @@ add_library(voelund_document STATIC
     ModelDocumentMirror.cpp
     ModelDocumentPattern.cpp
     ModelDocumentMove.cpp
+    ModelDocumentReorder.cpp
     NativeDraft.cpp
     DocumentTransaction.cpp
     SketchConstraintSerialization.cpp

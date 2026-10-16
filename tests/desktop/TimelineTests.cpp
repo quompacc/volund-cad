@@ -4,6 +4,8 @@
 #include <BRepAdaptor_Curve.hxx>
 #include <QApplication>
 #include <QKeyEvent>
+#include <QMessageBox>
+#include <QTimer>
 #include <QMouseEvent>
 #include <QPushButton>
 #include <QToolButton>
@@ -12,6 +14,8 @@
 #include <algorithm>
 #include <cmath>
 #include <filesystem>
+#include <functional>
+#include <memory>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -24,6 +28,9 @@
 // End and Home select steps from the keyboard; Enter opens the extrusion's panel. The end
 // marker dragged into the gap after the extrusion rolls back there; the marker dragged back to
 // the end rolls forward; neither is an undo step.
+// M16 (user decision 2026-10-16): a box made apart is dragged to the front; the fillet dragged
+// before the extrusion is refused and nothing changes; Delete on the extrusion asks, naming the
+// fillet, and "Mit Abhängigen löschen" removes both; undo restores them.
 namespace {
 using namespace voelund;
 using test::require;
@@ -48,6 +55,45 @@ void key(QWidget& widget, int code) {
 QWidget* panel(QWidget& window) {
     auto* found = window.findChild<QWidget*>(QStringLiteral("activeToolPanel"));
     return found != nullptr && found->isVisible() ? found : nullptr;
+}
+// M16: drags a step by mouse from one point of the track to another.
+void dragStep(QToolButton& step, QPoint to) {
+    auto* track = step.parentWidget();
+    const QPoint from = step.rect().center();
+    const auto send = [&](QEvent::Type type, QPoint local, Qt::MouseButton button,
+                          Qt::MouseButtons buttons) {
+        QMouseEvent event(type, QPointF(local), QPointF(step.mapToGlobal(local)), button, buttons,
+                          Qt::NoModifier);
+        QApplication::sendEvent(&step, &event);
+    };
+    send(QEvent::MouseButtonPress, from, Qt::LeftButton, Qt::LeftButton);
+    const QPoint target = step.mapFrom(track, to);
+    for (int i = 1; i <= 10; ++i)
+        send(QEvent::MouseMove, from + (target - from) * i / 10, Qt::NoButton, Qt::LeftButton);
+    send(QEvent::MouseButtonRelease, target, Qt::LeftButton, Qt::NoButton);
+    settle();
+}
+// Answers the next delete question with `button`; `asked` holds its text.
+void answerDelete(const QString& button, QString* asked) {
+    auto attempt = std::make_shared<std::function<void()>>();
+    *attempt = [button, asked, attempt] {
+        auto* box = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+        if (box == nullptr || box->objectName() != QStringLiteral("deleteFeatureQuestion")) {
+            QTimer::singleShot(10, *attempt);
+            return;
+        }
+        *asked = box->text();
+        for (auto* candidate : box->buttons())
+            if (candidate->text() == button)
+                candidate->click();
+    };
+    QTimer::singleShot(0, *attempt);
+}
+std::vector<std::uint64_t> stepIds(QWidget& window) {
+    std::vector<std::uint64_t> ids;
+    for (auto* step : steps(window))
+        ids.push_back(step->property("featureId").toULongLong());
+    return ids;
 }
 // A drag on the timeline's track, in its own coordinates.
 void dragMarker(QWidget& track, QPoint from, QPoint to) {
@@ -146,9 +192,40 @@ void run() {
     require(!session.rollbackAfter() && session.canUndo() == undo &&
                 steps(window)[2]->property("featureState").toString().isEmpty(),
             "Dragged back to the end it rolls forward");
+
+    // M16: reorder by dragging steps; delete with the question.
+    require(session.createBoxFeature({5, 5, 5}).feature().has_value(), "A box apart");
+    window.refreshAfterExternalChange();
+    settle();
+    auto ids = stepIds(window);
+    const auto box = ids.back();
+    shown = steps(window);
+    dragStep(*shown.back(), QPoint(shown[0]->geometry().left() - 6, y));
+    require(stepIds(window).front() == box && session.features().front().id.value() == box,
+            "The box dragged to the front");
+    const auto before = stepIds(window);
+    shown = steps(window);
+    // The fillet (last step) before the extrusion (third): refused.
+    dragStep(*shown.back(), QPoint((shown[1]->geometry().right() + shown[2]->geometry().left()) / 2, y));
+    require(stepIds(window) == before, "The fillet before the extrusion is refused; nothing moved");
+
+    QString asked;
+    answerDelete(QStringLiteral("Mit Abhängigen löschen"), &asked);
+    shown = steps(window);
+    shown[2]->setFocus();
+    key(*shown[2], Qt::Key_Delete);
+    require(asked.contains(QString::fromStdString(features.back().name)) &&
+                session.features().size() == before.size() - 2,
+            "Delete asks, naming the fillet; the cascade removes extrusion and fillet");
+    require(session.undo().status() == application::CommandStatus::committed, "Undo");
+    window.refreshAfterExternalChange();
+    settle();
+    require(stepIds(window) == before,
+            "Undo restores both");
     std::filesystem::remove_all(directory);
-    std::cout << "PASS M15 timeline: steps are the saved features in order, keyboard selection "
-                 "and Enter, marker dragged back and forward without undo steps"
+    std::cout << "PASS M15/M16 timeline: steps are the saved features in order, keyboard selection "
+                 "and Enter, marker dragged back and forward without undo steps; step dragged to the "
+                 "front, refused move, delete with question, undo"
               << std::endl;
 }
 } // namespace

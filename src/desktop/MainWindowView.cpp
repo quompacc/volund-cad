@@ -11,6 +11,9 @@
 #include "ShellActions.hpp"
 #include <QAction>
 #include <QMenu>
+#include <QMessageBox>
+#include <QPushButton>
+#include <QStringList>
 #include <QSignalBlocker>
 #include <QStatusBar>
 
@@ -144,6 +147,18 @@ void MainWindow::createTimeline() {
     impl_->timeline->setRollbackHandler([this](std::optional<std::uint64_t> after) {
         moveRollback(after ? std::optional{document::FeatureId{*after}} : std::nullopt);
     });
+    impl_->timeline->setReorderHandler( // M16
+        [this](std::uint64_t id, std::optional<std::uint64_t> after) {
+            moveFeatureAfter(document::FeatureId{id},
+                             after ? std::optional{document::FeatureId{*after}} : std::nullopt);
+        });
+    impl_->timeline->setDeleteHandler([this](std::uint64_t id) {
+        if (impl_->shell().toolBlocksCommands())
+            return;
+        selectFeature(id);
+        syncShell();
+        deleteSelectedFeature();
+    });
     impl_->timeline->setSelectHandler([this](std::uint64_t id) { // M15: keyboard
         if (impl_->shell().toolBlocksCommands())
             return;
@@ -197,6 +212,8 @@ void MainWindow::showTimelineMenu(std::uint64_t featureId, QPoint at) {
     menu.addAction(impl_->suppressAction);
     menu.addAction(impl_->rollbackAction);
     menu.addAction(impl_->rollForwardAction);
+    menu.addSeparator();
+    menu.addAction(impl_->deleteAction);
     menu.exec(at);
 }
 
@@ -229,6 +246,79 @@ void MainWindow::moveRollback(std::optional<document::FeatureId> after) {
     refreshScene();
     statusBar()->showMessage(after ? tr("Zurückgerollt") : tr("Historie bis zum Ende berechnet"),
                              2000);
+}
+
+// M16 (user decision 2026-10-16): without dependents the feature goes at once; otherwise a
+// question names them and offers the cascade, the feature alone (they stay with errors) or
+// nothing. One undo step either way.
+void MainWindow::deleteSelectedFeature() {
+    const auto selected = impl_->session.selectedFeature();
+    if (!selected || impl_->shell().toolBlocksCommands())
+        return;
+    const auto features = impl_->session.features();
+    const auto nameOf = [&](document::FeatureId id) {
+        const auto found = std::ranges::find(features, id, &document::FeatureDescriptor::id);
+        return found == features.end() ? QString{} : QString::fromStdString(found->name);
+    };
+    const auto plan = impl_->session.deletionPlan(*selected);
+    std::vector<document::FeatureId> doomed{*selected};
+    auto disposition = application::ErrorDisposition::reject;
+    if (!plan.dependents.empty()) {
+        QStringList names;
+        for (const auto id : plan.dependents)
+            names << QStringLiteral("• ") + nameOf(id);
+        QMessageBox question(QMessageBox::Question, tr("Feature löschen"),
+                             tr("„%1“ wird von diesen Features gebraucht, oder sie schlagen ohne "
+                                "es fehl:\n%2")
+                                 .arg(nameOf(*selected), names.join(QLatin1Char('\n'))),
+                             QMessageBox::NoButton, this);
+        question.setObjectName(QStringLiteral("deleteFeatureQuestion"));
+        auto* cascade = question.addButton(tr("Mit Abhängigen löschen"), QMessageBox::AcceptRole);
+        auto* alone = question.addButton(tr("Nur dieses löschen"), QMessageBox::DestructiveRole);
+        alone->setEnabled(plan.onlyThisPossible);
+        if (!plan.onlyThisPossible)
+            alone->setToolTip(tr("Die Abhängigen können ohne dieses Feature nicht bestehen."));
+        question.addButton(tr("Abbrechen"), QMessageBox::RejectRole);
+        question.exec();
+        if (question.clickedButton() == cascade) {
+            doomed = plan.cascade;
+        } else if (question.clickedButton() == alone && plan.onlyThisPossible) {
+            disposition = application::ErrorDisposition::keepEditableErrors;
+        } else {
+            return;
+        }
+    }
+    if (!runCommand([&] { return impl_->session.deleteFeatures(doomed, disposition); },
+                    [this](const QString& message) { statusBar()->showMessage(message); }))
+        return;
+    refreshScene();
+    statusBar()->showMessage(tr("%n Feature(s) gelöscht", nullptr, static_cast<int>(doomed.size())),
+                             2000);
+}
+
+// M16: refused before anything changes when the feature would stand before what it needs or
+// when a feature would fail; the reason is shown.
+void MainWindow::moveFeatureAfter(document::FeatureId feature,
+                                  std::optional<document::FeatureId> after) {
+    if (impl_->shell().toolBlocksCommands())
+        return;
+    const auto result = impl_->session.moveFeature(feature, after);
+    using application::CommandStatus;
+    if (result.status() == CommandStatus::committed) {
+        refreshScene();
+        statusBar()->showMessage(tr("Feature verschoben"), 2000);
+        return;
+    }
+    if (result.status() == CommandStatus::rejected &&
+        result.reason() == application::RejectionReason::noChange)
+        return;
+    const auto message =
+        result.reason() == application::RejectionReason::invalidInput
+            ? tr("Dort kann das Feature nicht stehen: Es käme vor etwas, das es braucht (etwa eine "
+                 "Extrusion vor ihre Skizze oder eine Verrundung vor ihren Körper).")
+            : tr("Verschieben abgelehnt: %1").arg(commandFeedbackMessage(result));
+    statusBar()->showMessage(message, 6000);
+    syncTimeline();
 }
 
 void MainWindow::openTimelineStep(std::uint64_t featureId) {

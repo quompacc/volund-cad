@@ -177,6 +177,11 @@ void MainWindow::createHistoryActions() {
     setCommandId(*impl_->rollForwardAction, "history.roll_forward");
     connect(impl_->rollForwardAction, &QAction::triggered, this,
             [this] { moveRollback(std::nullopt); });
+    // M16: delete the selected feature; dependents are named before anything goes.
+    impl_->deleteAction = new QAction(tr("Löschen"), this);
+    impl_->deleteAction->setToolTip(tr("Gewähltes Feature löschen"));
+    setCommandId(*impl_->deleteAction, "history.delete");
+    connect(impl_->deleteAction, &QAction::triggered, this, [this] { deleteSelectedFeature(); });
     // Undo/Redo sit in the shell header. Repair is offered by the context bar and the command
     // search until U10 moves it to the feature.
     impl_->repairAction = new QAction(tr("Referenzen reparieren…"), this);
@@ -259,6 +264,7 @@ void MainWindow::syncProperties() {
                                       marker != selected && !features.empty() &&
                                       features.back().id != *selected);
     impl_->rollForwardAction->setEnabled(marker.has_value() && !shell.toolBlocksCommands());
+    impl_->deleteAction->setEnabled(selected.has_value() && !shell.toolBlocksCommands()); // M16
     impl_->repairAction->setEnabled(shell.canEditSketch());
     syncErrorCard(selected);
     if (!selected.has_value()) {

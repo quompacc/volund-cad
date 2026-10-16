@@ -88,6 +88,11 @@ class TimelineTrack final : public QWidget {
     }
     // M15: where a dragged marker was let go: the number of steps before it.
     void setDropHandler(std::function<void(std::size_t)> handler) { drop_ = std::move(handler); }
+    // M16: where a dragged step would go, drawn as a line; none hides it.
+    void setDropIndicator(std::optional<double> x) {
+        indicator_ = x;
+        update();
+    }
 
   protected:
     void paintEvent(QPaintEvent* event) override {
@@ -112,6 +117,10 @@ class TimelineTrack final : public QWidget {
         painter.setPen(QPen(axis_, 2));
         painter.drawLine(QPointF(chips.front().center().x(), y), QPointF(endX, y));
         QColor endColor = end_;
+        if (indicator_) {
+            painter.setPen(QPen(end_, 2, Qt::DashLine, Qt::RoundCap));
+            painter.drawLine(QPointF(*indicator_, y - 14), QPointF(*indicator_, y + 14));
+        }
         if (dragX_) {
             // M15: the marker follows the mouse while it is dragged.
             painter.setPen(QPen(end_, 3, Qt::SolidLine, Qt::RoundCap));
@@ -193,6 +202,7 @@ class TimelineTrack final : public QWidget {
     }
 
     std::optional<double> dragX_;
+    std::optional<double> indicator_;
     std::function<void(std::size_t)> drop_;
     std::optional<std::size_t> rollback_;
     QColor axis_{Qt::gray};
@@ -254,6 +264,43 @@ QRect TimelineBar::placement(const QWidget& host) const {
 }
 
 bool TimelineBar::eventFilter(QObject* watched, QEvent* event) {
+    // M16: a step pressed and moved far enough is dragged; let go in a gap it moves there.
+    if (const auto step = std::ranges::find(buttons_, watched); step != buttons_.end()) {
+        auto* track = static_cast<TimelineTrack*>(content_);
+        const auto id = (*step)->property("featureId").toULongLong();
+        if (event->type() == QEvent::MouseButtonPress &&
+            static_cast<QMouseEvent*>(event)->button() == Qt::LeftButton) {
+            pressedStep_ = id;
+            pressedAt_ = (*step)->mapTo(content_, static_cast<QMouseEvent*>(event)->position().toPoint());
+            draggingStep_ = false;
+        } else if (event->type() == QEvent::MouseMove && pressedStep_ == id &&
+                   (static_cast<QMouseEvent*>(event)->buttons() & Qt::LeftButton)) {
+            const QPoint at =
+                (*step)->mapTo(content_, static_cast<QMouseEvent*>(event)->position().toPoint());
+            if (draggingStep_ || (at - pressedAt_).manhattanLength() > 10) {
+                draggingStep_ = true;
+                track->setDropIndicator(at.x());
+                return true;
+            }
+        } else if (event->type() == QEvent::MouseButtonRelease && pressedStep_ == id) {
+            const bool dragged = draggingStep_;
+            const QPoint at =
+                (*step)->mapTo(content_, static_cast<QMouseEvent*>(event)->position().toPoint());
+            pressedStep_.reset();
+            draggingStep_ = false;
+            track->setDropIndicator(std::nullopt);
+            if (dragged) {
+                // The new place is after the last other step whose middle lies left of the drop.
+                std::optional<std::uint64_t> after;
+                for (QToolButton* other : buttons_)
+                    if (other != *step && other->geometry().center().x() < at.x())
+                        after = other->property("featureId").toULongLong();
+                if (reorder_)
+                    reorder_(id, after);
+                return true; // no click
+            }
+        }
+    }
     // M15: Left/Right/Home/End select a step, Enter opens it.
     if (event->type() == QEvent::KeyPress) {
         const auto button = std::ranges::find(buttons_, watched);
@@ -286,6 +333,10 @@ bool TimelineBar::eventFilter(QObject* watched, QEvent* event) {
                 open_((*button)->property("featureId").toULongLong());
                 return true;
             }
+            if (key == Qt::Key_Delete && delete_) { // M16
+                delete_((*button)->property("featureId").toULongLong());
+                return true;
+            }
         }
     }
     if (scroll_ != nullptr && watched == scroll_->viewport() && event->type() == QEvent::Wheel) {
@@ -311,6 +362,15 @@ void TimelineBar::setRollbackHandler(std::function<void(std::optional<std::uint6
 
 void TimelineBar::setSelectHandler(std::function<void(std::uint64_t)> handler) {
     select_ = std::move(handler);
+}
+
+void TimelineBar::setReorderHandler(
+    std::function<void(std::uint64_t, std::optional<std::uint64_t>)> handler) {
+    reorder_ = std::move(handler);
+}
+
+void TimelineBar::setDeleteHandler(std::function<void(std::uint64_t)> handler) {
+    delete_ = std::move(handler);
 }
 
 // M15: steps before the gap; all of them means the end.
