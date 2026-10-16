@@ -2624,12 +2624,15 @@
       ],
       "acceptance": "Timeline des gespeicherten Referenzteils entspricht tatsächlichen IDs/Reihenfolge. Rechtsklick/Edit und Undo funktionieren; keine festen Sketch/Pad/Fillet-Labels bleiben. A-HISTORY-01/02 über UI bestehen. A-ERR-01-Timeline-Stufe aus Kapitel 08 nachweisen.",
       "boundary": "Kein erneuter eigener Auswertungszustand in Timelinewidgets.",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "chapter": "05-solid-historie.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/M15.md"
+      ],
+      "completedCommit": "2c4600c",
+      "completedDate": "2026-10-16"
     },
     {
       "id": "M16",
