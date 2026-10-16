@@ -2595,12 +2595,15 @@
       ],
       "acceptance": "Suppress→Save/Open→Unsuppress und Rollback→Edit→Rollforward erhalten IDs und Parameter. Abhängige Referenzen werden nicht neu geraten. A-HISTORY-02 besteht.",
       "boundary": "Rollback ist kein Löschen und Suppression keine bloße Sichtbarkeit.",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "chapter": "05-solid-historie.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/M14.md"
+      ],
+      "completedCommit": "5a313f8",
+      "completedDate": "2026-10-16"
     },
     {
       "id": "M15",
