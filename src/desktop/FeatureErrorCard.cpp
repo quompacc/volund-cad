@@ -94,13 +94,21 @@ FeatureErrorCard::FeatureErrorCard(QWidget* parent) : QFrame(parent) {
 
 void FeatureErrorCard::setHandlers(Handlers handlers) { handlers_ = std::move(handlers); }
 
+// The evaluation's own text for a blocked step is technical English; the card says it in the
+// UI's words.
+QString FeatureErrorCard::blockedMessage(const QString& cause) {
+    return cause.isEmpty()
+               ? tr("Dieser Schritt wartet auf einen fehlerhaften früheren Schritt.")
+               : tr("Dieser Schritt wird wieder berechnet, sobald „%1“ fehlerfrei ist.").arg(cause);
+}
+
 void FeatureErrorCard::showError(const Content& content) {
     setProperty("blocked", content.blocked);
     style()->unpolish(this);
     style()->polish(this);
     title_->setText(content.blocked ? tr("Blockiert durch %1").arg(content.cause)
                                     : tr("Fehler in diesem Feature"));
-    message_->setText(content.message);
+    message_->setText(content.blocked ? blockedMessage(content.cause) : content.message);
     cause_->setVisible(content.blocked && !content.cause.isEmpty());
     edit_->setVisible(content.canEdit);
     repair_->setVisible(content.canRepair);

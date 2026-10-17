@@ -42,6 +42,7 @@ class FeatureErrorCard final : public QFrame {
     void clear();
 
   private:
+    [[nodiscard]] static QString blockedMessage(const QString& cause);
     QLabel* title_{nullptr};
     QLabel* message_{nullptr};
     QPushButton* cause_{nullptr};

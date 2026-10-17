@@ -39,11 +39,8 @@ void MainWindow::syncGeometryStatus() {
         return;
     }
     impl_->geometryStatus->setText(
-        state.geometry
-            ? tr("Letzte gültige Geometrie r%1 — Modell r%2 hat Fehler")
-                  .arg(state.geometry->revision)
-                  .arg(state.document.revision)
-            : tr("Keine gültige Geometrie — Modell r%1 hat Fehler").arg(state.document.revision));
+        state.geometry ? tr("Letzte gültige Geometrie angezeigt — Modell hat Fehler")
+                       : tr("Keine gültige Geometrie — Modell hat Fehler"));
 }
 
 void MainWindow::applyParameterCommand(

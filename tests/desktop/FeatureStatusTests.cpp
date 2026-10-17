@@ -97,6 +97,8 @@ void inspectWindow(application::CadSession& session) {
     tree->setCurrentItem(row(3));
     QApplication::processEvents();
     require(card->isVisible() && label("featureErrorTitle").contains(QStringLiteral("Blockiert")) &&
+                label("featureErrorMessage").contains(QStringLiteral("sobald")) &&
+                !label("featureErrorMessage").contains(QStringLiteral("Blocked")) &&
                 button("featureErrorCause")->isVisible() &&
                 !button("featureErrorEdit")->isVisible(),
             "A blocked feature names its cause");
