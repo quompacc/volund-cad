@@ -2,7 +2,8 @@
 # Not part of the CAD product; built on its own against the distribution's Clang:
 #   cmake -S tools/cyclomatic -B <dir> -G Ninja && cmake --build <dir> && ctest --test-dir <dir>
 cmake_minimum_required(VERSION 3.25)
-project(voelund_cyclomatic LANGUAGES CXX)
+# C as well: LLVMConfig looks for libedit with check_include_file.
+project(voelund_cyclomatic LANGUAGES C CXX)
 
 # Clang's C++ API changes between major versions; the tool is tested against 22 only.
 find_package(Clang REQUIRED CONFIG)
@@ -39,4 +40,20 @@ add_test(NAME quality.cyclomatic_fixtures
         "-DVOELUND_SOURCE_ROOT=${voelund_source_root}"
         "-DVOELUND_TEST_ROOT=${CMAKE_CURRENT_BINARY_DIR}/fixtures"
         "-DVOELUND_CYCLOMATIC_TOOL=$<TARGET_FILE:voelund-cyclomatic>"
+        "-DVOELUND_TIDY_PLUGIN=$<$<TARGET_EXISTS:VoelundTidyPlugin>:$<TARGET_FILE:VoelundTidyPlugin>>"
         -P "${voelund_source_root}/tests/cmake/CyclomaticComplexityTests.cmake")
+
+# clang-tidy plugin (A04): needs clang-tidy's headers (Fedora: clang-tools-extra-devel). Its
+# clang and LLVM symbols come from the loading clang-tidy, so it links nothing itself.
+find_path(VOELUND_CLANG_TIDY_INCLUDE clang-tidy/ClangTidyModule.h HINTS ${CLANG_INCLUDE_DIRS})
+if(VOELUND_CLANG_TIDY_INCLUDE)
+    add_library(VoelundTidyPlugin MODULE TidyPlugin.cpp CyclomaticComplexity.cpp)
+    target_include_directories(VoelundTidyPlugin SYSTEM PRIVATE
+        ${VOELUND_CLANG_TIDY_INCLUDE} ${LLVM_INCLUDE_DIRS} ${CLANG_INCLUDE_DIRS})
+    target_compile_definitions(VoelundTidyPlugin PRIVATE ${LLVM_DEFINITIONS})
+    if(NOT LLVM_ENABLE_RTTI)
+        target_compile_options(VoelundTidyPlugin PRIVATE -fno-rtti)
+    endif()
+else()
+    message(WARNING "clang-tidy headers not found; VoelundTidyPlugin is not built")
+endif()

@@ -19,6 +19,10 @@ set_property(CACHE VOELUND_VIEWPORT_BACKEND PROPERTY STRINGS native qt-opengl)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tools/cmake")
 include(VoelundWarnings)
+include(VoelundLayers)
+
+# A04: clang-format of LLVM 22 for the format check (Visual Studio ships it with its LLVM tools).
+find_program(VOELUND_CLANG_FORMAT clang-format HINTS "$ENV{VCINSTALLDIR}Tools/Llvm/x64/bin")
 
 find_package(OpenCASCADE CONFIG REQUIRED)
 find_package(Eigen3 CONFIG REQUIRED)
@@ -83,9 +87,31 @@ if(VOELUND_BUILD_DESKTOP)
     add_subdirectory(apps/voelund-cad)
 endif()
 
+# K01: link edges between the layer targets (VoelundLayers.cmake).
+voelund_check_layer_links()
+
 if(BUILD_TESTING)
     add_subdirectory(tests)
 endif()
+
+add_custom_target(
+    format-check
+    COMMAND
+        "${CMAKE_COMMAND}"
+        "-DVOELUND_SOURCE_ROOT=${CMAKE_CURRENT_SOURCE_DIR}"
+        "-DVOELUND_CLANG_FORMAT=${VOELUND_CLANG_FORMAT}"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/tools/cmake/CheckFormat.cmake"
+    VERBATIM
+)
+
+add_custom_target(
+    layer-check
+    COMMAND
+        "${CMAKE_COMMAND}"
+        "-DVOELUND_SOURCE_ROOT=${CMAKE_CURRENT_SOURCE_DIR}"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/tools/cmake/CheckLayerIncludes.cmake"
+    VERBATIM
+)
 
 add_custom_target(
     check-source-limits

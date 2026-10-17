@@ -1075,6 +1075,33 @@ set_tests_properties(
     PROPERTIES LABELS "architecture;regression"
 )
 
+# A04: format and K01 layer includes over the tree, plus their failing fixtures. A missing
+# clang-format fails these tests instead of skipping them.
+add_test(NAME architecture.format
+    COMMAND "${CMAKE_COMMAND}" "-DVOELUND_SOURCE_ROOT=${PROJECT_SOURCE_DIR}"
+        "-DVOELUND_CLANG_FORMAT=${VOELUND_CLANG_FORMAT}"
+        -P "${PROJECT_SOURCE_DIR}/tools/cmake/CheckFormat.cmake")
+add_test(NAME architecture.layer_includes
+    COMMAND "${CMAKE_COMMAND}" "-DVOELUND_SOURCE_ROOT=${PROJECT_SOURCE_DIR}"
+        -P "${PROJECT_SOURCE_DIR}/tools/cmake/CheckLayerIncludes.cmake")
+add_test(NAME architecture.layer_and_format_regression
+    COMMAND "${CMAKE_COMMAND}" "-DVOELUND_SOURCE_ROOT=${PROJECT_SOURCE_DIR}"
+        "-DVOELUND_TEST_ROOT=${CMAKE_CURRENT_BINARY_DIR}/layer-format-fixtures"
+        "-DVOELUND_CLANG_FORMAT=${VOELUND_CLANG_FORMAT}"
+        "-DVOELUND_GENERATOR=${CMAKE_GENERATOR}" "-DVOELUND_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}"
+        -P "${PROJECT_SOURCE_DIR}/tests/cmake/LayerAndFormatTests.cmake")
+add_test(NAME architecture.function_limits_regression
+    COMMAND "${CMAKE_COMMAND}" "-DVOELUND_SOURCE_ROOT=${PROJECT_SOURCE_DIR}"
+        "-DVOELUND_TEST_ROOT=${CMAKE_CURRENT_BINARY_DIR}/function-limit-fixtures"
+        -P "${PROJECT_SOURCE_DIR}/tests/cmake/FunctionLimitsTests.cmake")
+set_tests_properties(
+    architecture.format
+    architecture.layer_includes
+    architecture.layer_and_format_regression
+    architecture.function_limits_regression
+    PROPERTIES LABELS "architecture;regression"
+)
+
 add_test(
     NAME architecture.ctest_label_runner
     COMMAND

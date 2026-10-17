@@ -2,6 +2,7 @@
 
 #include <clang/AST/ASTContext.h>
 #include <clang/AST/Decl.h>
+#include <clang/AST/DeclCXX.h>
 #include <clang/AST/StmtCXX.h>
 #include <clang/Analysis/CFG.h>
 
@@ -40,7 +41,7 @@ bool countsAsEdge(const clang::CFGBlock& from, const clang::CFGBlock& to) {
 }
 
 class Walk {
-public:
+  public:
     void enter(const clang::CFGBlock* block) {
         if (seen_.insert(block).second)
             pending_.push_back(block);
@@ -63,7 +64,7 @@ public:
     void addEdge() { ++edges_; }
     long complexity() const { return edges_ - static_cast<long>(seen_.size()) + 2; }
 
-private:
+  private:
     std::set<const clang::CFGBlock*> seen_;
     std::vector<const clang::CFGBlock*> pending_;
     long edges_{0};
@@ -110,6 +111,15 @@ unsigned measuredBody(const clang::FunctionDecl& function, clang::ASTContext& co
 unsigned cyclomaticComplexity(const clang::FunctionDecl& function, clang::ASTContext& context) {
     const auto value = measuredBody(function, context);
     return value != 0 ? value : measuredInstantiations(function, context);
+}
+
+std::string functionName(const clang::FunctionDecl& function) {
+    const auto* method = llvm::dyn_cast<clang::CXXMethodDecl>(&function);
+    if (method == nullptr || !method->getParent()->isLambda())
+        return function.getQualifiedNameAsString();
+    const auto* scope = llvm::dyn_cast_or_null<clang::NamedDecl>(
+        clang::Decl::castFromDeclContext(method->getParent()->getDeclContext()));
+    return (scope != nullptr ? scope->getQualifiedNameAsString() : std::string()) + "::(lambda)";
 }
 
 } // namespace voelund::quality

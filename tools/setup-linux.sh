@@ -37,6 +37,8 @@ setup_desktop() {
         qt6-qtbase-devel qt6-qtwayland
         boost-devel eigen3-devel
         freetype-devel libglvnd-devel mesa-libEGL-devel
+        # A02/A04 quality checks (build-only): format, clang-tidy and its cyclomatic plugin.
+        clang-tools-extra clang-tools-extra-devel clang-devel llvm-devel jq
     )
     require_commands git g++ cmake ninja rpm
     local missing=()

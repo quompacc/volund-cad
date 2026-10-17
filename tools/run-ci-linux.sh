@@ -78,3 +78,7 @@ esac
 } >"$report_dir/session.txt"
 
 sh tools/run-linux-desktop.sh
+
+# A04: function limits (clang-tidy readability-function-size + cyclomatic plugin) against the
+# visible exception list; a missing tool or analysis error fails like a violation.
+sh tools/run-static-analysis.sh build/linux-desktop "$report_dir/static-analysis"

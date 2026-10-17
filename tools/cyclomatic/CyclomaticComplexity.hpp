@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 namespace clang {
 class ASTContext;
 class FunctionDecl;
@@ -12,5 +14,8 @@ namespace voelund::quality {
 // no CFG counts its highest instantiation. Returns 0 when there is still no CFG (an analysis
 // error, not a measurement).
 unsigned cyclomaticComplexity(const clang::FunctionDecl& function, clang::ASTContext& context);
+
+// Qualified name for reports and the exception list; a lambda is "<enclosing>::(lambda)".
+std::string functionName(const clang::FunctionDecl& function);
 
 } // namespace voelund::quality

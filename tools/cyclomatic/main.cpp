@@ -27,10 +27,11 @@ namespace {
 llvm::cl::OptionCategory category("voelund-cyclomatic options");
 llvm::cl::opt<unsigned> limit("limit", llvm::cl::desc("Highest allowed complexity"),
                               llvm::cl::init(10), llvm::cl::cat(category));
-llvm::cl::list<std::string> roots(
-    "root", llvm::cl::desc("Measure functions declared under this directory (repeatable); "
-                           "without any root only functions of the main files count"),
-    llvm::cl::cat(category));
+llvm::cl::list<std::string>
+    roots("root",
+          llvm::cl::desc("Measure functions declared under this directory (repeatable); "
+                         "without any root only functions of the main files count"),
+          llvm::cl::cat(category));
 llvm::cl::list<std::string> excludes("exclude",
                                      llvm::cl::desc("Skip functions under this directory"),
                                      llvm::cl::cat(category));
@@ -67,7 +68,7 @@ bool underAny(const std::string& path, const std::vector<std::string>& directori
 }
 
 class Visitor : public clang::RecursiveASTVisitor<Visitor> {
-public:
+  public:
     Visitor(clang::ASTContext& context, Collector& collector)
         : context_(context), collector_(collector) {}
 
@@ -75,20 +76,18 @@ public:
         if (function->isImplicit() || function->isDefaulted() ||
             !function->doesThisDeclarationHaveABody())
             return true;
-        measure(*function, function->getQualifiedNameAsString());
+        measure(*function, voelund::quality::functionName(*function));
         return true;
     }
 
     // A lambda's body is its own function; the enclosing function's CFG skips it.
     bool VisitLambdaExpr(clang::LambdaExpr* lambda) {
-        const auto* scope = clang::dyn_cast_or_null<clang::NamedDecl>(
-            clang::Decl::castFromDeclContext(lambda->getLambdaClass()->getDeclContext()));
-        const auto owner = scope != nullptr ? scope->getQualifiedNameAsString() : std::string();
-        measure(*lambda->getCallOperator(), owner + "::(lambda)");
+        const auto* call = lambda->getCallOperator();
+        measure(*call, voelund::quality::functionName(*call));
         return true;
     }
 
-private:
+  private:
     bool owned(clang::SourceLocation location, const std::string& path) const {
         const auto& sources = context_.getSourceManager();
         if (sources.isInSystemHeader(location))
@@ -119,36 +118,36 @@ private:
 };
 
 class Consumer : public clang::ASTConsumer {
-public:
+  public:
     explicit Consumer(Collector& collector) : collector_(collector) {}
     void HandleTranslationUnit(clang::ASTContext& context) override {
         Visitor(context, collector_).TraverseDecl(context.getTranslationUnitDecl());
     }
 
-private:
+  private:
     Collector& collector_;
 };
 
 class Action : public clang::ASTFrontendAction {
-public:
+  public:
     explicit Action(Collector& collector) : collector_(collector) {}
     std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance&,
                                                           llvm::StringRef) override {
         return std::make_unique<Consumer>(collector_);
     }
 
-private:
+  private:
     Collector& collector_;
 };
 
 class Factory : public clang::tooling::FrontendActionFactory {
-public:
+  public:
     explicit Factory(Collector& collector) : collector_(collector) {}
     std::unique_ptr<clang::FrontendAction> create() override {
         return std::make_unique<Action>(collector_);
     }
 
-private:
+  private:
     Collector& collector_;
 };
 
@@ -173,8 +172,8 @@ int report(const Collector& collector) {
         } else if (measurement.value > limit) {
             ++over;
             llvm::errs() << measurement.location << ": error: cyclomatic complexity "
-                         << measurement.value << " of '" << measurement.name
-                         << "' exceeds limit " << limit << "\n";
+                         << measurement.value << " of '" << measurement.name << "' exceeds limit "
+                         << limit << "\n";
         }
     }
     llvm::errs() << "voelund-cyclomatic: " << collector.measurements.size()

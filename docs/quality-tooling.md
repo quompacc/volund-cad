@@ -1,6 +1,6 @@
 # Verbindlicher Umfang der Qualitätsprüfung
 
-Stand: 13. September 2026, Zyklomatik 17. Oktober 2026. Dieser Text ist die Ausführungsentscheidung aus A02;
+Stand: 13. September 2026, Zyklomatik und Pflichtprüfungen (A02/A04) 17. Oktober 2026. Dieser Text ist die Ausführungsentscheidung aus A02;
 die maschinenlesbaren Pfade und Ausnahmen stehen in
 [`tools/cmake/QualityScope.cmake`](../tools/cmake/QualityScope.cmake).
 
@@ -132,3 +132,62 @@ cmake --build <dir> && ctest --test-dir <dir>      # quality.cyclomatic_fixtures
 `tests/cmake/QualityRulesTests.cmake` enthält je eine saubere Fixture sowie
 absichtliche Verstöße für Dateilänge, Funktionslänge, Parameter,
 Verschachtelung sowie den Fehlerpfad der Zyklomatik ohne Werkzeug.
+
+## Pflichtprüfungen (A04)
+
+| Prüfung | Lokal | CTest | CI |
+|---|---|---|---|
+| Format | `cmake --build <build> --target format-check` | `architecture.format` | über CTest |
+| Schichten (Includes) | `cmake --build <build> --target layer-check` | `architecture.layer_includes` | über CTest |
+| Schichten (Links) | beim Konfigurieren (`voelund_check_layer_links`) | – | Konfiguration |
+| Funktionsgrenzen | `sh tools/run-static-analysis.sh <build> [<ausgabe>]` (Linux) | – | eigener Schritt nach CTest |
+| Fixtures | – | `architecture.layer_and_format_regression`, `architecture.function_limits_regression` | über CTest |
+
+**Format.**
+
+- `CheckFormat.cmake` prüft alle C++-Dateien der eigenen Wurzeln mit `clang-format --dry-run --Werror`.
+- Verlangt ist `clang-format` 22, unter Windows aus Visual Studio, unter Fedora aus dem
+  Distributionspaket. Ein fehlendes Werkzeug lässt den Test scheitern, statt ihn auszulassen.
+- Der Altbestand wurde einmal in einem reinen Format-Commit bereinigt. Neue Abweichungen schlagen
+  sofort fehl.
+
+**Schichten (K01).**
+
+- Die Regeln stehen in `tools/cmake/VoelundLayers.cmake`: welche Schicht welche einbinden und
+  linken darf.
+- Unterhalb der Oberfläche gibt es kein Qt, also in `kernel`, `platform`, `document`, `features`,
+  `application`, `workspaces` und `modules`.
+- Relative Includes aus dem eigenen Verzeichnis heraus sind verboten.
+- `CheckLayerIncludes.cmake` liest die `#include`-Zeilen von `src/<schicht>` und
+  `include/voelund/<schicht>`.
+- `voelund_check_layer_links()` prüft beim Konfigurieren die Link-Kanten der Schichtziele.
+
+**Funktionsgrenzen.**
+
+- `tools/run-static-analysis.sh` baut `tools/cyclomatic` mit dem Plugin `VoelundTidyPlugin`.
+- Danach läuft `clang-tidy` einmal über alle eigenen Übersetzungseinheiten der Compile-Datenbank,
+  mit `readability-function-size` und `voelund-cyclomatic-complexity`. Das Plugin nutzt
+  denselben Messcode wie `voelund-cyclomatic`; die Fixtures prüfen den Gleichstand.
+- Header zählen mit: `HeaderFilterRegex` passt auf absolute Pfade der eigenen Wurzeln.
+- Fedora braucht dafür `clang-tools-extra-devel` (Header für `clang-tidy`-Plugins, Build-only).
+- `CheckFunctionLimits.cmake` vergleicht das Ergebnis mit der sichtbaren Ausnahmeliste
+  [`tools/quality/function-limits.txt`](../tools/quality/function-limits.txt).
+- Die Liste hat das Format `regel | pfad | funktion | wert | grund`.
+- Regeln und Werte:
+  - `lines`: Funktionszeilen;
+  - `parameters`: Anzahl der Parameter;
+  - `nesting`: Stellen tiefer als 4;
+  - `cyclomatic`: McCabe-Wert.
+
+**Was scheitert** (Nutzerentscheid 17.10.2026):
+
+- eine neue Funktion über einer Grenze;
+- ein gelisteter Wert, der steigt;
+- ein gelisteter Eintrag, der nicht mehr gemessen wird, weil er behoben, umbenannt oder gelöscht
+  ist. Die Liste schrumpft so nur mit dem Code.
+- ein Analysefehler;
+- ein fehlendes Werkzeug.
+
+**Abbau.** Die Liste wird schrittweise abgebaut, zuerst die höchsten Werte im Produktcode.
+`<ausgabe>/function-limits-current.txt` enthält nach jedem Lauf den gemessenen Stand im
+Listenformat. Daraus lässt sich die Liste nach einer Bereinigung übernehmen.

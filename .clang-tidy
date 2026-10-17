@@ -9,7 +9,10 @@ Checks: >
   readability-*,
   -readability-function-cognitive-complexity
 WarningsAsErrors: ''
-HeaderFilterRegex: '^(apps|include|src|tests)/'
+# clang-tidy matches absolute header paths (A04): own roots, never build output, the OCCT
+# toolchain copy, PlaneGCS upstream or system headers.
+HeaderFilterRegex: '/(apps|include|src|tests|tools|third_party/planegcs/compat)/'
+ExcludeHeaderFilterRegex: '(/(build|\.tools|third_party/planegcs/upstream)/|^/usr/)'
 CheckOptions:
   readability-function-size.LineThreshold: 80
   readability-function-size.NestingThreshold: 4

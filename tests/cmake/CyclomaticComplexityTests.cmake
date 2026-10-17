@@ -112,6 +112,25 @@ if(NOT measured_count EQUAL expected_count)
     message(FATAL_ERROR "Expected ${expected_count} functions (instantiations not repeated), got:\n${flow_output}")
 endif()
 
+# The clang-tidy plugin measures the same: with threshold 1 it reports every value above 1.
+if(DEFINED VOELUND_TIDY_PLUGIN AND NOT VOELUND_TIDY_PLUGIN STREQUAL "")
+    find_program(clang_tidy clang-tidy REQUIRED)
+    execute_process(
+        COMMAND "${clang_tidy}" "--load=${VOELUND_TIDY_PLUGIN}" "--checks=-*,voelund-*"
+            "--config={CheckOptions: {voelund-cyclomatic-complexity.Threshold: 1}}"
+            "${VOELUND_TEST_ROOT}/flow.cpp" -- -std=c++20
+        RESULT_VARIABLE plugin_result OUTPUT_VARIABLE plugin_output ERROR_VARIABLE plugin_error)
+    foreach(value IN LISTS expected)
+        if(value MATCHES "^(.+): ([0-9]+)$" AND NOT CMAKE_MATCH_2 EQUAL 1)
+            set(name "${CMAKE_MATCH_1}")
+            set(number "${CMAKE_MATCH_2}")
+            if(NOT plugin_output MATCHES "cyclomatic complexity ${number} of '${name}' exceeds limit 1")
+                message(FATAL_ERROR "The plugin disagrees on ${value}:\n${plugin_output}\n${plugin_error}")
+            endif()
+        endif()
+    endforeach()
+endif()
+
 function(run_check file out_result out_text)
     execute_process(
         COMMAND "${CMAKE_COMMAND}" "-DVOELUND_SOURCE_FILE=${file}"
