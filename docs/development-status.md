@@ -1,12 +1,13 @@
 # Entwicklungsstand – 12. September 2026
 
-## Aktueller Stand – 16. Oktober 2026
+## Aktueller Stand – 17. Oktober 2026
 
 **Einstieg:** [Fortsetzungsnotiz](session-checkpoint-2026-10-16.md). G3 (mechanisches CAD v1)
-ist bis auf T05 erreicht ([G3-Bericht](implementation-plan/evidence/G3.md)). Umfang und Grenzen
-für Anwender stehen im [Handbuch](handbuch.md). G2 ist seit PAR02 (Parametertabelle,
-16.10.2026) geschlossen. Als Nächstes entscheidet der Nutzer zwischen T05 und A02. Alles darunter
-ist historisch.
+ist seit T05 (Nähte nach Drücken/Ziehen, 17.10.2026) formal geschlossen
+([G3-Bericht](implementation-plan/evidence/G3.md)). Umfang und Grenzen für Anwender stehen im
+[Handbuch](handbuch.md). G2 ist seit PAR02 (Parametertabelle, 16.10.2026) geschlossen. Als
+Nächstes folgen A02 (Messung der zyklomatischen Komplexität) und A04. Alles darunter ist
+historisch.
 
 ## Stand – 10. Oktober 2026
 

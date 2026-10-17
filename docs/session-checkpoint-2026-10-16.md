@@ -71,8 +71,9 @@ Die Einzelheiten stehen jeweils im Nachweis unter „Entscheidungen“. Kurz:
 
 Bereit sind nur noch drei Pakete:
 
-- **T05** – Koplanare Flächen nach Drücken/Ziehen verschmelzen. Das ist das letzte offene
-  G3-Paket. Laut Nutzer „später“; nicht ohne Rückfrage beginnen.
+- ~~**T05**~~ – Koplanare Flächen nach Drücken/Ziehen verschmelzen: am 17.10.2026 umgesetzt
+  (Nutzerentscheid „nur neue Züge“) und abgenommen (`f63127f`, CI 653); G3 ist damit formal
+  geschlossen. Siehe [T05](implementation-plan/evidence/T05.md).
 - ~~**PAR02**~~ – Parametertabelle in der Oberfläche: am 16.10.2026 nach der Pause umgesetzt und
   abgenommen (`618f685`, CI 646); G2 ist damit geschlossen. Siehe [PAR02](implementation-plan/evidence/PAR02.md).
 - **A02** – Verbindlichen Prüfumfang definieren. Dafür braucht es erst Designarbeit.

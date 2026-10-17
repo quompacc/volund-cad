@@ -4294,12 +4294,16 @@
       ],
       "acceptance": "Nach dem Ziehen der Quaderoberseite ist jede Seite eine Fläche ohne Naht; Drücken dieser Seite wirkt auf die ganze Seite; Seiten eines zweiten Zugs lassen sich drücken/ziehen; bestehende Bindungen bleiben gültig.",
       "boundary": "Nutzerentscheidung 2026-10-08: später als eigenes Paket nach T04; Zuschnitt in T-plan.md.",
-      "status": "planned",
+      "status": "done",
       "gate": "G3",
       "chapter": "05-solid-historie.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/T05.md",
+        "evidence/G3.md"
+      ],
+      "completedCommit": "f63127f",
+      "completedDate": "2026-10-17"
     },
     {
       "id": "S15",

@@ -60,9 +60,9 @@ What Völund is built on – the rules every change has to follow
 
 ## Status
 
-Version `0.1.0`, not yet released. The mechanical v1 scope (gate G3) is reached except for one
-package (merging coplanar faces after push/pull); see the [G3 report](docs/implementation-plan/evidence/G3.md).
-Next come the parameter table in the UI and the release packages (installer matrix, platform
+Version `0.1.0`, not yet released. The mechanical v1 scope (gate G3) is complete; see the
+[G3 report](docs/implementation-plan/evidence/G3.md).
+Next come the remaining quality checks (cyclomatic complexity, static analysis) and the release packages (installer matrix, platform
 acceptance on FreeBSD/Meridian). The current hand-off state is in
 [`docs/development-status.md`](docs/development-status.md).
 
