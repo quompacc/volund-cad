@@ -1,6 +1,6 @@
 # L02 (Linux): the installed package, registered for a private user by install-user.sh, opens a
 # .volund document with umlauts and spaces in its path the way the desktop does: the type comes
-# from the MIME database, the program from the registered desktop entry's Exec line.
+# from the user's MIME database, the program from the registered desktop entry's Exec line.
 cmake_policy(SET CMP0007 NEW)
 foreach(required VOELUND_BUILD_DIR VOELUND_TEST_ROOT VOELUND_FIXTURE)
     if(NOT DEFINED ${required} OR "${${required}}" STREQUAL "")
@@ -30,9 +30,11 @@ set(document "${root}/Prüf Ordner/Teil mit Ä.volund")
 file(MAKE_DIRECTORY "${root}/Prüf Ordner")
 file(COPY_FILE "${VOELUND_FIXTURE}" "${document}")
 
-run("MIME type" ${user_env} xdg-mime query filetype "${document}")
-if(NOT run_output STREQUAL "application/x-voelund")
-    message(FATAL_ERROR "The document's type is '${run_output}', not application/x-voelund")
+# The MIME database update-mime-database built for this user. (xdg-mime query filetype falls
+# back to file(1) outside a desktop session and reports text/plain there.)
+file(STRINGS "${xdg}/mime/globs2" globs REGEX "application/x-voelund:\\*\\.volund")
+if(NOT globs)
+    message(FATAL_ERROR "The user's MIME database does not map *.volund to application/x-voelund")
 endif()
 run("Default application" ${user_env} xdg-mime query default application/x-voelund)
 if(NOT run_output STREQUAL "io.github.quompacc.Voelund.desktop")
