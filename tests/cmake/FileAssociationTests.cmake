@@ -41,7 +41,9 @@ if(NOT run_output STREQUAL "io.github.quompacc.Voelund.desktop")
     message(FATAL_ERROR "The default application is '${run_output}'")
 endif()
 
-file(STRINGS "${xdg}/applications/io.github.quompacc.Voelund.desktop" exec REGEX "^Exec=")
+# UTF-8: without it file(STRINGS) stops at the umlaut of the package folder.
+file(STRINGS "${xdg}/applications/io.github.quompacc.Voelund.desktop" exec ENCODING UTF-8
+    REGEX "^Exec=")
 if(NOT exec MATCHES "^Exec=\"([^\"]+)\" %F$")
     message(FATAL_ERROR "Unexpected Exec line: ${exec}")
 endif()
