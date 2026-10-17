@@ -2959,12 +2959,15 @@
       ],
       "acceptance": "Clean checkout ohne bestehendes build/ baut reproduzierbar auf vorhandenen Runnern. Fehler in einem Pflichtcheck blockiert Freigabe; JUnit/Logs/Umgebungsmanifest werden je Commit archiviert. UI-Bilder und visuelle Vergleichsbefunde werden soweit betroffen mit Szenario/Umgebung archiviert; automatisch erzeugte Bilder nicht als bereits betrachtet kennzeichnen.",
       "boundary": "Kein grünes Badge mit fehlenden Pflichtplattformen; Netzwerk-/Runnerzugang ist explizite externe Voraussetzung.",
-      "status": "planned",
+      "status": "done",
       "gate": "G4",
       "chapter": "06-plattform-release.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/L01.md"
+      ],
+      "completedCommit": "7e4863a",
+      "completedDate": "2026-10-17"
     },
     {
       "id": "L02",
