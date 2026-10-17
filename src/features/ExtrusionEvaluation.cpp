@@ -32,6 +32,11 @@
 
 namespace voelund::features::detail {
 namespace {
+
+// U15: a coded evaluation failure in one line.
+[[noreturn]] void fail(const char* message, const char* code) {
+    throw GeometryEvaluationError(message, code);
+}
 struct Prism final {
     TopoDS_Shape shape;
     std::vector<SupportProvenance> caps;
@@ -427,8 +432,7 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
     if (parameters.upToFace) {
         faceOwner = bodyProducerBefore(document, descriptor.id, parameters.upToFace->body);
         if (!faceOwner)
-            throw GeometryEvaluationError("End face body has no solid before this extrusion",
-                                          "body-missing");
+            fail("End face body has no solid before this extrusion", "body-missing");
     }
     // M20: a revolve turns the sketch itself; start offsets belong to prisms.
     const auto start = parameters.revolve || parameters.sweep || parameters.loft
@@ -463,8 +467,7 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
                                                 supportOutput.referenceEdgeOrigins};
         resolveBoundSketchSupport(referenceSketch, referenceSupport);
         if (solveSketchConstraints(referenceSketch).status != SketchSolveStatus::success)
-            throw GeometryEvaluationError("Reference sketch projected edges cannot be solved",
-                                          "sketch-unsolved");
+            fail("Reference sketch projected edges cannot be solved", "sketch-unsolved");
     }
     const auto referenceStart = parameters.revolve || parameters.sweep || parameters.loft
                                     ? referenceSketch
@@ -488,8 +491,7 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
         // new body on a face is the extrusion's own. Nothing is fused and nothing is guessed.
         const document::BodyId bodyId{support ? descriptor.id.value() : sketchId.value()};
         if (std::ranges::find(bodies, bodyId, &EvaluatedBody::bodyId) != bodies.end())
-            throw GeometryEvaluationError("Base-plane body already has a solid",
-                                          "base-body-exists");
+            fail("Base-plane body already has a solid", "base-body-exists");
         outputs.push_back(EvaluatedFeature{descriptor.id,
                                            prism.shape,
                                            referencePrism.shape,
@@ -508,12 +510,10 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
     std::optional<document::FeatureId> input = support;
     if (!input) {
         if (!parameters.target)
-            throw GeometryEvaluationError("Join or cut of a base-plane sketch needs a target body",
-                                          "extrusion-needs-target");
+            fail("Join or cut of a base-plane sketch needs a target body", "needs-target");
         input = targetProducer(document, descriptor.id);
         if (!input)
-            throw GeometryEvaluationError("Target body has no solid before this extrusion",
-                                          "body-missing");
+            fail("Target body has no solid before this extrusion", "body-missing");
     }
     EvaluatedBody& body = findBody(bodies, outputs, *input);
     EvaluatedBody& referenceBody = findBody(referenceBodies, outputs, *input);

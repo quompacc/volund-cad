@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
             "profile-invalid", "sketch-unsolved", "sketch-support-missing",
             "sketch-support-unsolved", "sketch-plane-missing", "sketch-needs-repair",
             "end-face-missing", "end-face-not-parallel", "end-face-behind", "profile-face-missing",
-            "body-missing", "base-body-exists", "extrusion-needs-target", "blocked-by-dependency",
+            "body-missing", "base-body-exists", "needs-target", "blocked-by-dependency",
             "rolled-back", "stale-input"};
         for (const auto& code : codes)
             require(!voelund::desktop::issueText(code).isEmpty(), "German text for " + code);

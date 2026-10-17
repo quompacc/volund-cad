@@ -46,6 +46,19 @@ void checkReport(const application::CommandResult& result) {
                 states[5].status == features::EvaluationStatus::valid,
             "History/command report lost blocked status");
 }
+// U15: a blocked step names its cause in German, without the evaluation's English text.
+bool blockedCard(const QWidget& card) {
+    const auto text = [&card](const char* name) {
+        const auto* label = card.findChild<QLabel*>(QLatin1String(name));
+        return label != nullptr ? label->text() : QString{};
+    };
+    const QString title = text("featureErrorTitle");
+    const QString message = text("featureErrorMessage");
+    return title.contains(QStringLiteral("Blockiert")) &&
+           message.contains(QStringLiteral("sobald")) &&
+           !message.contains(QStringLiteral("Blocked"));
+}
+
 void inspectWindow(application::CadSession& session) {
     desktop::MainWindow window(session);
     window.show();
@@ -96,10 +109,7 @@ void inspectWindow(application::CadSession& session) {
     };
     tree->setCurrentItem(row(3));
     QApplication::processEvents();
-    require(card->isVisible() && label("featureErrorTitle").contains(QStringLiteral("Blockiert")) &&
-                label("featureErrorMessage").contains(QStringLiteral("sobald")) &&
-                !label("featureErrorMessage").contains(QStringLiteral("Blocked")) &&
-                button("featureErrorCause")->isVisible() &&
+    require(card->isVisible() && blockedCard(*card) && button("featureErrorCause")->isVisible() &&
                 !button("featureErrorEdit")->isVisible(),
             "A blocked feature names its cause");
     if (!directory.isEmpty())

@@ -113,7 +113,7 @@ cyclomatic | src/desktop/MainWindowCommands.cpp | voelund::desktop::MainWindow::
 cyclomatic | src/document/DocumentParameters.cpp | voelund::document::validateParameterTable | 17 | Altbestand vor A04
 cyclomatic | src/document/LegacyDocumentImporter.cpp | voelund::document::(anonymous namespace)::readConstraint | 17 | Altbestand vor A04
 cyclomatic | src/document/NativeContainerHeader.cpp | voelund::document::detail::validateNativeContainerHeader | 17 | Altbestand vor A04
-cyclomatic | src/features/SketchEvaluation.cpp | voelund::features::evaluateNamedProfileFaces | 17 | Altbestand vor A04
+cyclomatic | src/features/SketchEvaluation.cpp | voelund::features::evaluateNamedProfileFaces | 14 | Altbestand vor A04
 cyclomatic | src/kernel/ShapeOperations.cpp | voelund::kernel::(anonymous namespace)::chamferWedge | 17 | Altbestand vor A04
 cyclomatic | src/mcp/McpHttpServer.cpp | voelund::mcp::McpHttpServer::read | 17 | Altbestand vor A04
 cyclomatic | src/application/CadSessionBatchRepair.cpp | voelund::application::CadSession::repairSketchSupports | 16 | Altbestand vor A04

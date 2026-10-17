@@ -180,7 +180,7 @@ constexpr std::array issueTexts{
     IssueText{"stale-input",
               QT_TRANSLATE_NOOP("FeatureIssue", "Ein Eingang dieses Schritts ist noch nicht "
                                                 "neu berechnet.")},
-    IssueText{"extrusion-needs-target",
+    IssueText{"needs-target",
               QT_TRANSLATE_NOOP("FeatureIssue", "Extrusion: Vereinigen und Abziehen brauchen "
                                                 "einen Zielkörper.")},
 };
