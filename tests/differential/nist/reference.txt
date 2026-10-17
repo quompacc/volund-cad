@@ -1,0 +1,14 @@
+# Q01: geometric validation properties of the NIST MBE PMI test parts, as written into each
+# AP242 file by the CAD system that exported it (docs/provenance/nist-pmi-step.md).
+#
+# file | volume mm3 | wetted area mm2 or - | centroid x y z mm | note
+#
+# Values in inch (FTC-07) are converted with 25.4 mm/in exactly; the original value follows in
+# the note. Völund must match within 1e-5 (volume, area) and 0.01 mm (centroid).
+nist_ctc_01_asme1_ap242-e1.stp | 14644822.6361138 | 807080.802199914 | -2.29264395139875 -1.36345168588643 -32.2974419857648 | #639/#640, mm
+nist_ctc_02_asme1_ap242-e2.stp | 47106788.0321802 | 2480624.4791306 | -0.00415567842900755 358.620787544608 -178.169662485763 | #1702/#1703, mm
+nist_ctc_03_asme1_ap242-e2.stp | 332122.9076263 | 354787.650175344 | -118.329746932968 242.86422820302 69.31685776493 | mm
+nist_ctc_04_asme1_ap242-e1.stp | 17519780.2203940004 | - | -0.0079803627 360.9458561866 -7.8767441293 | no area property, mm
+nist_ftc_06_asme1_ap242-e2.stp | 3323556.50526143 | 283413.011089723 | 8.44667839028049E-5 29.008906494 -109.600480952032 | mm
+nist_ftc_07_asme1_ap242-e2.stp | 1726247.5707237597 | 391371.39402984 | 0.767530382640 -64.556288225240 0.035132518 | #13291 105.34209 in3, #13288 606.626874 in2, centroid (0.0302177316,-2.5415861506,0.00138317) in
+nist_stc_08_asme1_ap242-e3.stp | 503592.175239539 | 191687.873141661 | 2.53109307374693 -0.0591847313749045 25.3789167065934 | mm

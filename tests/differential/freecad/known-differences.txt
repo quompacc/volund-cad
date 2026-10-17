@@ -1,0 +1,6 @@
+# Q01: where Völund knowingly differs from the FreeCAD reference. A listed value is what
+# Völund must produce instead; when Völund reaches the reference, the test fails until the
+# entry is removed here.
+#
+# part | faces N | reason
+mirrored | faces 12 | Spiegeln mit Vereinigen hinterlässt Nähte an der Spiegelebene; Nähte verschwinden bisher nur beim Drücken/Ziehen (T05-Grenze)

@@ -1311,6 +1311,27 @@ add_executable(voelund_step_tests integration/StepTests.cpp)
 target_link_libraries(voelund_step_tests PRIVATE voelund_project_options Voelund::Application TKDESTEP)
 add_test(NAME application.step COMMAND voelund_step_tests)
 set_tests_properties(application.step PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
+# Q01: NIST test parts as an outside reference for STEP import.
+add_executable(voelund_nist_step_tests differential/NistStepTests.cpp)
+target_link_libraries(voelund_nist_step_tests PRIVATE voelund_project_options Voelund::Kernel TKDESTEP)
+add_test(NAME differential.nist_step
+    COMMAND voelund_nist_step_tests "${CMAKE_CURRENT_SOURCE_DIR}/differential/nist"
+        "${CMAKE_CURRENT_SOURCE_DIR}/differential/nist/reference.txt")
+set_tests_properties(differential.nist_step PROPERTIES
+    LABELS "differential;kernel;acceptance" TIMEOUT 600)
+add_executable(voelund_freecad_reference_tests differential/FreecadReferenceTests.cpp)
+target_link_libraries(voelund_freecad_reference_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME differential.freecad_parts
+    COMMAND voelund_freecad_reference_tests "${CMAKE_CURRENT_SOURCE_DIR}/differential/freecad/reference.txt"
+        "${CMAKE_CURRENT_SOURCE_DIR}/differential/freecad/known-differences.txt")
+set_tests_properties(differential.freecad_parts PROPERTIES
+    LABELS "differential;application;acceptance" TIMEOUT 120)
+# The comparison must be able to fail: a table with CTC-03 1e-4 off.
+add_test(NAME differential.nist_step_detects
+    COMMAND voelund_nist_step_tests "${CMAKE_CURRENT_SOURCE_DIR}/differential/nist"
+        "${CMAKE_CURRENT_SOURCE_DIR}/differential/nist/reference-wrong.txt")
+set_tests_properties(differential.nist_step_detects PROPERTIES
+    LABELS "differential;kernel;regression" WILL_FAIL TRUE TIMEOUT 300)
 # M12: measuring.
 add_executable(voelund_measure_tests integration/MeasureTests.cpp)
 target_link_libraries(voelund_measure_tests PRIVATE voelund_project_options Voelund::Application)

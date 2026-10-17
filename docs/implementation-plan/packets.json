@@ -4,8 +4,8 @@
   "auditedCommit": "1b78229",
   "status": "implementation-started",
   "counts": {
-    "total": 153,
-    "throughG4": 123,
+    "total": 154,
+    "throughG4": 124,
     "g5": 30
   },
   "globalGates": [
@@ -137,6 +137,7 @@
     "M16",
     "M17",
     "M18",
+    "Q01",
     "L01",
     "L02",
     "L03",
@@ -321,6 +322,33 @@
       ],
       "completedCommit": "7e7bd95",
       "completedDate": "2026-10-17"
+    },
+    {
+      "id": "Q01",
+      "title": "Fremdreferenzen: NIST-Testteile und FreeCAD-Vergleichsteile",
+      "deps": [
+        "M17",
+        "A04"
+      ],
+      "files": [
+        "tests/differential/NistStepTests.cpp",
+        "tests/differential/FreecadReferenceTests.cpp",
+        "tools/reference-freecad/make_references.py",
+        "docs/provenance/nist-pmi-step.md"
+      ],
+      "steps": [
+        "NIST MBE PMI AP242-Teile mit den Geometric Validation Properties der schreibenden CAD-Systeme als unabhängige Referenz für Import und Export einchecken; Herkunft, Nutzungsbedingungen und Prüfsummen dokumentieren.",
+        "Vergleichsteile außerhalb des Produktbuilds in FreeCAD erzeugen (Skript im Repo, nur Zahlen eingecheckt) und mit Völunds Features nachbauen; bekannte Abweichungen sichtbar mit Grund führen.",
+        "Nachweisen, dass der Vergleich scheitern kann (verfälschte Referenz)."
+      ],
+      "acceptance": "Völunds STEP-Import trifft Volumen und Fläche der NIST-Teile auf 1e-5 und den Schwerpunkt auf 0,01 mm; Export und Re-Import bleiben in dieser Toleranz. Die FreeCAD-Teile stimmen in Volumen, Fläche, Schwerpunkt und Flächenzahl überein oder stehen mit Grund in der Abweichungsliste. Ein verfälschter Referenzwert lässt den Test scheitern.",
+      "boundary": "Nutzerentscheidung 2026-10-17 (vor L01 eingeschoben). Kein FreeCAD und kein Python im Testlauf; Referenzen nur mit belegter Herkunft.",
+      "status": "planned",
+      "gate": "G4",
+      "chapter": "06-plattform-release.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
     },
     {
       "id": "A05",
@@ -4851,5 +4879,5 @@
     "statusSource": "packets.json ist die einzige Statusquelle; README und Statusseiten verweisen nur darauf und nennen keine Testzahlen.",
     "frozen": "G5 einschließlich AI02 beginnt erst nach G3-Abnahme."
   },
-  "updatedDate": "2026-10-14"
+  "updatedDate": "2026-10-17"
 }
