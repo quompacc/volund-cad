@@ -39,7 +39,7 @@ Dateien sind byte-genau eingecheckt (`.gitattributes`: `-text`).
 | Angabe | Wert |
 |---|---|
 | Werkzeug | FreeCAD 1.1.4 (LGPL-2.0+), lokal installiert. Nur der Erzeuger der Zahlen; nichts davon geht in den Build. |
-| Skript | `tools/reference-freecad/make_references.py`, Aufruf `freecadcmd tools/reference-freecad/make_references.py <tabelle>` |
+| Skript | `tools/reference-freecad/make_references.py`, Aufruf `VOELUND_REFERENCE_TABLE=<tabelle> freecadcmd tools/reference-freecad/make_references.py` |
 | Ergebnis | `tests/differential/freecad/reference.txt` (nur Zahlen) |
 | Bekannte Abweichungen | `tests/differential/freecad/known-differences.txt` |
 

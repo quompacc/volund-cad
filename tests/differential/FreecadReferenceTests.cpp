@@ -5,6 +5,7 @@
 //   voelund_freecad_reference_tests <table> <known differences>
 
 #include <voelund/application/CadSession.hpp>
+#include <voelund/features/SketchRegionIdentity.hpp>
 #include <voelund/features/SketchSupportBinding.hpp>
 
 #include <BRepCheck_Analyzer.hxx>
@@ -22,6 +23,7 @@
 #include <iomanip>
 #include <iostream>
 #include <map>
+#include <numbers>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -106,8 +108,45 @@ void mirrored(application::CadSession& session) {
                     "Mirror");
 }
 
+void patterned(application::CadSession& session) {
+    const auto box = committed(session.createBoxFeature({10, 10, 5}), "Box");
+    application::PatternInput input;
+    input.kind = document::PatternKind::linear;
+    input.baseAxis = document::BaseAxis::x;
+    input.count = 4;
+    input.spacing = 8;
+    input.mode = document::PatternMode::join;
+    (void)committed(session.createPattern(box, input), "Pattern");
+}
+
+void shelled(application::CadSession& session) {
+    const auto box = committed(session.createBoxFeature({40, 30, 20}), "Box");
+    const auto top = face(session, box, 0, 0, 1).origin;
+    (void)committed(session.createShell(box, std::span(&top, 1), 2, false), "Shell");
+}
+
+void revolved(application::CadSession& session) {
+    // XZ sketch: x along +X, sketch y along +Z. The distance is unused by a revolve but must
+    // be positive.
+    document::SketchParameters sketch{document::datumSketchPlane(document::DatumPlane::xz), {}};
+    sketch.datum = document::DatumPlane::xz;
+    sketch.elements.values.push_back(
+        {document::SketchElementId{1}, document::SketchRectangle{10, 0, 20, 15}});
+    sketch.elements.nextId = 2;
+    const auto identities = features::identifySketchRegions(sketch.elements.values);
+    if (identities.ids.size() != 1)
+        throw std::runtime_error("One rectangle region");
+    application::ExtrusionMode mode;
+    mode.revolve = document::RevolveParameters{
+        document::RevolveAxis{std::nullopt, document::BaseAxis::z, std::nullopt},
+        kernel::Radians{2 * std::numbers::pi}};
+    (void)committed(session.createDatumSketchExtrusion(sketch, identities.ids, 1, mode), "Revolve");
+}
+
 const std::map<std::string, std::function<void(application::CadSession&)>> builders{
-    {"plate", plate}, {"blind_hole", blindHole}, {"chamfered", chamfered}, {"mirrored", mirrored}};
+    {"plate", plate},       {"blind_hole", blindHole}, {"chamfered", chamfered},
+    {"mirrored", mirrored}, {"patterned", patterned},  {"shelled", shelled},
+    {"revolved", revolved}};
 
 struct Reference {
     std::string part;

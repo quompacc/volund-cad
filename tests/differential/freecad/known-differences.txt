@@ -4,3 +4,4 @@
 #
 # part | faces N | reason
 mirrored | faces 12 | Spiegeln mit Vereinigen hinterlässt Nähte an der Spiegelebene; Nähte verschwinden bisher nur beim Drücken/Ziehen (T05-Grenze)
+patterned | faces 30 | Muster mit Vereinigen hinterlässt Nähte an jeder Überlappung der Kopien; gleiche T05-Grenze wie beim Spiegeln
