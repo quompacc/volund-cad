@@ -26,7 +26,9 @@ Geltungsgrund sind unzulässig.
 `.gitea/workflows/ci.yml` läuft bei jedem Push und Pull Request auf dem
 Fedora-Runner (`runs-on: linux-desktop`) und führt `tools/run-ci-linux.sh` aus:
 Konfiguration `linux-desktop`, Quellgrenzen (`check-source-limits`), Build und
-vollständiger CTest in einer headless Wayland-Sitzung (`kwin_wayland --virtual`).
+vollständiger CTest in einer headless Wayland-Sitzung (`kwin_wayland --virtual`), danach die
+statische Analyse (A04) und derselbe Build- und Testlauf in `linux-desktop-release` (L01). Die
+Plattformmatrix mit den offenen Pflichtplattformen steht in [release-matrix.md](release-matrix.md).
 Logs, JUnit, EGL-/Hostdaten und Smoke-Aufnahmen stehen als Artefakt
 `linux-desktop-<sha>` am Lauf; die Sitzungsart steht in `session.txt`. Ein headless
 Lauf ist kein Compositor- oder Displaynachweis. `main` wird nur mit grünem Lauf

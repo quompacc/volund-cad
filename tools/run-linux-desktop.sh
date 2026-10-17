@@ -14,7 +14,7 @@ fi
 
 build_preset=${1:-linux-desktop}
 repository_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-report_dir="$repository_root/artifacts/linux-desktop"
+report_dir="$repository_root/artifacts/$build_preset"
 mkdir -p "$report_dir"
 smoke_dir="${VOELUND_SMOKE_ARTIFACT_DIR:-$report_dir/smoke}"
 mkdir -p "$smoke_dir"
@@ -23,6 +23,10 @@ export VOELUND_SMOKE_ARTIFACT_DIR="$smoke_dir"
 {
     echo "timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     echo "build_preset=$build_preset"
+    echo "commit=$(git -C "$repository_root" rev-parse HEAD 2>/dev/null || echo unknown)"
+    sed -n 's/^CMAKE_BUILD_TYPE:STRING=/build_type=/p' \
+        "$repository_root/build/$build_preset/CMakeCache.txt" 2>/dev/null || true
+    sed -n 's/^OpenCASCADE_DIR:PATH=/occt_dir=/p' "$repository_root/build/$build_preset/CMakeCache.txt" 2>/dev/null || true
     echo "wayland_display=$WAYLAND_DISPLAY"
     echo "xdg_session_type=${XDG_SESSION_TYPE:-}"
     echo "xdg_current_desktop=${XDG_CURRENT_DESKTOP:-}"

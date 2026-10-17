@@ -82,3 +82,8 @@ sh tools/run-linux-desktop.sh
 # A04: function limits (clang-tidy readability-function-size + cyclomatic plugin) against the
 # visible exception list; a missing tool or analysis error fails like a violation.
 sh tools/run-static-analysis.sh build/linux-desktop "$report_dir/static-analysis"
+
+# L01 (user decision 2026-10-17): the same gate in Release on every push, with its own
+# report directory artifacts/linux-desktop-release.
+cmake --preset linux-desktop-release
+sh tools/run-linux-desktop.sh linux-desktop-release

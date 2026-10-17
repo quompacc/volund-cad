@@ -59,7 +59,8 @@ Native Wayland-Läufe über SSH setzen `XDG_RUNTIME_DIR=/run/user/1000` und
 Desktop-Prüfweg (P05): `tools/setup-linux.sh` (Fedora-Pakete prüfen, projektlokales
 OCCT 7.9.3 bauen, Preset `linux-desktop` konfigurieren), danach in der aktiven
 Wayland-Sitzung `sh tools/run-linux-desktop.sh`. Es schreibt Hostinventar, EGL-Info,
-Bibliotheksliste und CTest/JUnit nach `artifacts/linux-desktop/`.
+Bibliotheksliste und CTest/JUnit nach `artifacts/<preset>/`; ohne Argument ist das Preset
+`linux-desktop`, für Release `sh tools/run-linux-desktop.sh linux-desktop-release`.
 
 Der SSH-Alias `volund` (`192.168.1.19`, `volund-lxc`) ist ein Debian-Container eines
 anderen Projekts und **nicht** der Testrechner.

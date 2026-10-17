@@ -10,11 +10,13 @@ jobs:
     timeout-minutes: 150
     steps:
       - uses: actions/checkout@v4
-      - name: Build, source limits and complete CTest under headless Wayland
+      - name: Debug and Release builds, quality checks and complete CTest under headless Wayland
         run: sh tools/run-ci-linux.sh
       - name: Upload logs, JUnit and captures
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: linux-desktop-${{ github.sha }}
-          path: artifacts/linux-desktop
+          path: |
+            artifacts/linux-desktop
+            artifacts/linux-desktop-release
