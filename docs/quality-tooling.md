@@ -1,6 +1,6 @@
 # Verbindlicher Umfang der Qualitätsprüfung
 
-Stand: 13. September 2026. Dieser Text ist die Ausführungsentscheidung aus A02;
+Stand: 13. September 2026, Zyklomatik 17. Oktober 2026. Dieser Text ist die Ausführungsentscheidung aus A02;
 die maschinenlesbaren Pfade und Ausnahmen stehen in
 [`tools/cmake/QualityScope.cmake`](../tools/cmake/QualityScope.cmake).
 
@@ -42,7 +42,7 @@ FreeBSD läuft nicht je Push, sondern an Gate-Abnahmen.
 | Funktionszeilen | 80 | `clang-tidy` `readability-function-size.LineThreshold` |
 | Parameter | 5 | `clang-tidy` `readability-function-size.ParameterThreshold` |
 | Verschachtelung | 4 | `clang-tidy` `readability-function-size.NestingThreshold` |
-| Zyklomatische Komplexität (McCabe) | 10 | Clang-AST/CFG-Consumer, noch verpflichtend nicht verfügbar |
+| Zyklomatische Komplexität (McCabe) | 10 | `voelund-cyclomatic` (Clang-CFG, `tools/cyclomatic`) über `CheckCyclomaticComplexity.cmake` |
 
 Die lokale Inventur ergab LLVM `clang-tidy` 22.1.3 und `clang-format` 22.1.3
 unter dem Visual-Studio-LLVM-Pfad. Beide stammen aus LLVM und stehen unter der
@@ -53,16 +53,82 @@ Prüfung `readability-function-cognitive-complexity` ist eine **kognitive** Metr
 und wurde deaktiviert: Sie ist nicht McCabes zyklomatische Komplexität und darf
 nicht unter diesem Namen als Vertragserfüllung erscheinen.
 
-Weder ein `clang++`-Frontend noch `clang-check` oder `clang-query` war in der
-geprüften Installation vorhanden. Textsuche in CMake wäre wegen C++-Makros,
-Kommentaren, Strings, Templates und unevaluierter Ausdrücke keine echte
-zyklomatische Messung und wurde bewusst nicht eingeführt. Der verpflichtende
-Prüfpfad `CheckCyclomaticComplexity.cmake` schlägt deshalb mit einer klaren
-Meldung fehl, bis ein zugelassener LLVM-22+-Clang-AST/CFG-Consumer konfiguriert
-ist. A04 verdrahtet diesen Consumer erst dann in das gesamte Pflichtziel; es
-darf keine ersatzweise grüne Qualitätsprüfung geben.
+## Zyklomatische Komplexität (A02)
+
+**Werkzeug.** `tools/cyclomatic` ist ein kleines eigenes Build-Werkzeug,
+`voelund-cyclomatic`. Es gehört nicht zum CAD-Produkt und wird nicht installiert.
+
+- Es nutzt Clangs LibTooling: Parser, AST und `clang::CFG` aus `clang-cpp`/LLVM.
+- Lizenz: Apache License 2.0 mit LLVM Exceptions.
+- Bezugsweg sind die Distributionspakete `clang-devel` und `llvm-devel`. Geprüft ist es auf
+  Fedora 44 mit LLVM 22.1.8.
+- Die Version ist auf **LLVM 22** festgelegt. Clangs C++-API ist zwischen Hauptversionen nicht
+  stabil; ein Wechsel heißt neu bauen und die Fixtures erneut laufen lassen.
+- Windows hat derzeit keine Clang-Entwicklungsbibliotheken (nur `clang-tidy`/`clang-format`
+  aus Visual Studio). Die Prüfung läuft deshalb auf Fedora.
+
+```
+cmake -S tools/cyclomatic -B <dir> -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build <dir> && ctest --test-dir <dir>      # quality.cyclomatic_fixtures
+```
+
+**Aufruf.** Die Optionen sind die gewohnten von Clang-Tools.
+
+- `voelund-cyclomatic [--limit=10] [--root=<dir>]... [--exclude=<dir>]... [--report-all] -p <build> <dateien>`.
+- `-p` nimmt `compile_commands.json`. Mit `-- <compilerargumente>` statt `-p` geht es ohne
+  Datenbank.
+- Mit `--root` zählen alle Funktionen, die unter einer der Wurzeln deklariert sind, auch in
+  Headern. Sie zählen je Ort einmal, egal in wie vielen Übersetzungseinheiten sie vorkommen.
+  Ohne `--root` zählen nur Funktionen der übergebenen Dateien; Systemheader nie.
+- Ausgabe: je Verstoß `pfad:zeile:spalte: error: cyclomatic complexity N of 'name' exceeds limit 10`
+  auf stderr. `--report-all` gibt jeden Wert aus (`pfad:zeile:spalte: name: N`), dazu eine
+  Summenzeile.
+- Exitcodes:
+  - `0`: alles innerhalb der Grenze;
+  - `1`: mindestens ein Verstoß;
+  - `2`: Analysefehler. Eine Übersetzungseinheit parst nicht oder für eine Funktion entsteht kein
+    CFG.
+
+  Analysefehler und Grenzverletzung sind damit getrennt.
+- `CheckCyclomaticComplexity.cmake` ist der Pflichtpfad. Es scheitert ohne
+  `VOELUND_CYCLOMATIC_TOOL`; einen Textersatz gibt es nicht.
+
+**Metrik.**
+
+- Gemessen wird McCabe als **M = E − N + 2** über den vom Eintrittsblock erreichbaren Teil von
+  Clangs CFG. Das ergibt 1 plus je eine Entscheidung.
+- Als Entscheidung zählt jedes `if`, jede Schleife (`for`, Bereichs-`for`, `while`, `do`), jedes
+  `case`, jedes `catch`, `&&`, `||` und `?:`.
+- `switch` ohne `default` zählt wie mit `default`: jeder `case` eins.
+- Bedingungen mit konstantem Wert zählen trotzdem (`PruneTriviallyFalseEdges` aus).
+- Implizite Destruktor- und Ausnahmekanten des CFG zählen nicht; sie sind kein geschriebener
+  Kontrollfluss.
+- Ein `try` gilt einmal als betreten, jeder Handler ist ein Zweig. Der Weg „kein Handler passt“
+  zählt nicht.
+- Unerreichbarer Code, zum Beispiel nach `return`, zählt nicht.
+- `for (;;)` ohne Bedingung ist keine Entscheidung; nur ihr Ausstieg über ein `if` zählt.
+- **Lambdas** sind eigene Funktionen (`umgebend::(lambda)`). Die umgebende Funktion zählt sie nicht.
+- **Templates** werden einmal am ungebundenen Muster gemessen; Instanziierungen nicht noch einmal.
+  Für manche Muster baut Clang kein CFG, etwa bei einer Bereichs-`for`-Schleife über einen
+  abhängigen Typ. Dann zählt die höchste Instanziierung der Übersetzungseinheit. Ohne
+  Instanziierung ist das ein Analysefehler.
+- `=default`- und implizite Funktionen zählen nicht.
+- **Makros** zählen expandiert.
+- **Präprozessor:** gemessen wird unter der Konfiguration der jeweiligen
+  Compile-Datenbank, also genau die Zweige, die dieser Build übersetzt.
+
+**Nachweis.** `tests/cmake/CyclomaticComplexityTests.cmake` legt die Sollwerte vorab fest.
+
+- Geprüft werden 18 Kontrollflussfälle mit exakten Werten: gerade Funktion 1, `if` 2,
+  `(a && b) || c` 4, `?:` 2, `switch` mit/ohne `default` 4/3, vier Schleifenarten 5, Lambda 2
+  (umgebend 1), Template 2 (ohne Instanzdoppel), Template mit abhängiger Bereichs-`for`-Schleife 2, `try` mit zwei `catch` 3, Code nach `return` 1,
+  `if (true)` 2, Makro mit `?:` 2, Endlosschleife mit `if` 2.
+- Über das Pflichtskript: genau 10 besteht, 11 scheitert mit Wert und Name. Ein Parse-Fehler
+  scheitert als Analysefehler, nicht als Verstoß. Ein fehlendes Werkzeug scheitert eigens.
+- `QualityRulesTests.cmake` prüft weiterhin den Fehlerpfad ohne Werkzeug neben den
+  `clang-tidy`-Regeln.
+- Die Anbindung an das Gesamtziel und an die CI gehört zu A04.
 
 `tests/cmake/QualityRulesTests.cmake` enthält je eine saubere Fixture sowie
 absichtliche Verstöße für Dateilänge, Funktionslänge, Parameter,
-Verschachtelung und Zyklomatik. Ohne CFG-Consumer bestätigt die letzte Fixture
-den korrekten Pflichtfehler statt eine nicht vorhandene Messung zu simulieren.
+Verschachtelung sowie den Fehlerpfad der Zyklomatik ohne Werkzeug.

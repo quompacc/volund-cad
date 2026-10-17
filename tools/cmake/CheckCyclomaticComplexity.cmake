@@ -1,41 +1,57 @@
-if(NOT DEFINED VOELUND_SOURCE_FILE OR VOELUND_SOURCE_FILE STREQUAL "")
-    message(FATAL_ERROR "VOELUND_SOURCE_FILE is required for cyclomatic-complexity checking")
+# Mandatory McCabe cyclomatic-complexity check (limit 10) through the build-only
+# voelund-cyclomatic tool (tools/cyclomatic), which measures on Clang's CFG.
+#
+#   -DVOELUND_CYCLOMATIC_TOOL=<path to voelund-cyclomatic>
+#   -DVOELUND_SOURCE_FILES=<file;file...>   (or VOELUND_SOURCE_FILE for one file)
+#   -DVOELUND_BUILD_DIR=<dir with compile_commands.json>   optional; without it the
+#       files are parsed as plain C++20
+#   -DVOELUND_CYCLOMATIC_ROOTS=<dir;dir...> / -DVOELUND_CYCLOMATIC_EXCLUDES=<...> optional
+#
+# A missing tool fails; there is no textual fallback, which could not tell control flow
+# from comments, strings, macros or templates.
+if(NOT DEFINED VOELUND_SOURCE_FILES AND DEFINED VOELUND_SOURCE_FILE)
+    set(VOELUND_SOURCE_FILES "${VOELUND_SOURCE_FILE}")
 endif()
-if(NOT EXISTS "${VOELUND_SOURCE_FILE}")
-    message(FATAL_ERROR "VOELUND_SOURCE_FILE does not exist: ${VOELUND_SOURCE_FILE}")
+if(NOT DEFINED VOELUND_SOURCE_FILES OR VOELUND_SOURCE_FILES STREQUAL "")
+    message(FATAL_ERROR "VOELUND_SOURCE_FILES is required for cyclomatic-complexity checking")
 endif()
-if(NOT DEFINED VOELUND_CLANGXX OR VOELUND_CLANGXX STREQUAL "")
+foreach(source IN LISTS VOELUND_SOURCE_FILES)
+    if(NOT EXISTS "${source}")
+        message(FATAL_ERROR "Source file does not exist: ${source}")
+    endif()
+endforeach()
+if(NOT DEFINED VOELUND_CYCLOMATIC_TOOL OR VOELUND_CYCLOMATIC_TOOL STREQUAL "")
     message(FATAL_ERROR
-        "Cyclomatic-complexity checking requires an LLVM clang++ frontend (version 22 or newer). "
-        "clang-tidy's readability-function-cognitive-complexity is not a substitute."
+        "Cyclomatic-complexity checking requires the voelund-cyclomatic Clang CFG tool "
+        "(tools/cyclomatic, LLVM 22). clang-tidy's cognitive complexity is not a substitute."
     )
 endif()
-if(NOT EXISTS "${VOELUND_CLANGXX}")
-    message(FATAL_ERROR "VOELUND_CLANGXX does not exist: ${VOELUND_CLANGXX}")
+if(NOT EXISTS "${VOELUND_CYCLOMATIC_TOOL}")
+    message(FATAL_ERROR "VOELUND_CYCLOMATIC_TOOL does not exist: ${VOELUND_CYCLOMATIC_TOOL}")
+endif()
+
+set(tool_arguments --limit=10)
+foreach(root IN LISTS VOELUND_CYCLOMATIC_ROOTS)
+    list(APPEND tool_arguments "--root=${root}")
+endforeach()
+foreach(exclude IN LISTS VOELUND_CYCLOMATIC_EXCLUDES)
+    list(APPEND tool_arguments "--exclude=${exclude}")
+endforeach()
+if(DEFINED VOELUND_BUILD_DIR AND NOT VOELUND_BUILD_DIR STREQUAL "")
+    list(APPEND tool_arguments -p "${VOELUND_BUILD_DIR}" ${VOELUND_SOURCE_FILES})
+else()
+    list(APPEND tool_arguments ${VOELUND_SOURCE_FILES} -- -std=c++20)
 endif()
 
 execute_process(
-    COMMAND "${VOELUND_CLANGXX}" --version
-    RESULT_VARIABLE clang_version_result
-    OUTPUT_VARIABLE clang_version_output
-    ERROR_VARIABLE clang_version_error
+    COMMAND "${VOELUND_CYCLOMATIC_TOOL}" ${tool_arguments}
+    RESULT_VARIABLE check_result
+    OUTPUT_VARIABLE check_output
+    ERROR_VARIABLE check_error
 )
-if(NOT clang_version_result EQUAL 0)
-    message(FATAL_ERROR "Unable to query VOELUND_CLANGXX: ${clang_version_error}")
+if(check_result EQUAL 1)
+    message(FATAL_ERROR "Cyclomatic complexity over 10:\n${check_error}")
+elseif(NOT check_result EQUAL 0)
+    message(FATAL_ERROR "Cyclomatic-complexity analysis failed (${check_result}):\n${check_output}\n${check_error}")
 endif()
-if(NOT clang_version_output MATCHES "clang version ([0-9]+)")
-    message(FATAL_ERROR "VOELUND_CLANGXX is not an LLVM clang frontend: ${clang_version_output}")
-endif()
-if(CMAKE_MATCH_1 LESS 22)
-    message(FATAL_ERROR "VOELUND_CLANGXX must be version 22 or newer: ${clang_version_output}")
-endif()
-
-# A Clang AST/CFG consumer is intentionally required here.  CMake's text
-# processing cannot distinguish C++ control flow from comments, strings,
-# macros, templates, or unevaluated expressions and must not claim to measure
-# McCabe complexity.  A02 records the missing consumer; A04 wires the selected
-# consumer into the mandatory quality target after the toolchain is available.
-message(FATAL_ERROR
-    "No approved Clang CFG consumer is configured. Cyclomatic-complexity checking remains mandatory; "
-    "see docs/quality-tooling.md for the required tool contract."
-)
+message(STATUS "${check_error}")

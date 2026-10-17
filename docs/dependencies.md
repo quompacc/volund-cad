@@ -29,6 +29,7 @@ The C++ standard library is used for general containers, strings, algorithms, er
 | vcpkg | pin and build external sources | no |
 | MSVC / GCC / Clang | compile and link | no |
 | CTest | discover and run native tests | no |
+| Clang/LLVM 22 development libraries (`clang-devel`, `llvm-devel`) | `voelund-cyclomatic` in `tools/cyclomatic`: McCabe cyclomatic complexity on Clang's CFG (A02, `docs/quality-tooling.md`); Apache-2.0 with LLVM Exceptions | no; built on its own, never linked into the product |
 
 On Windows, Qt Base is taken from Qt's official prebuilt archive instead of being built through vcpkg. This avoids vcpkg's large Qt host-tool dependency graph. On FreeBSD, system packages are the initial build input; release packaging must derive its library list from the final executable dependency graph, never from a complete SDK directory.
 

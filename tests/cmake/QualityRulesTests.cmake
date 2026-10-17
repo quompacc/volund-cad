@@ -110,11 +110,11 @@ execute_process(
     ERROR_VARIABLE cyclomatic_error
 )
 if(cyclomatic_result EQUAL 0)
-    message(FATAL_ERROR "Cyclomatic-complexity check unexpectedly passed without an approved Clang CFG consumer")
+    message(FATAL_ERROR "Cyclomatic-complexity check unexpectedly passed without the voelund-cyclomatic tool")
 endif()
 set(cyclomatic_combined "${cyclomatic_output}\n${cyclomatic_error}")
-if(NOT cyclomatic_combined MATCHES "requires an LLVM clang\\+\\+ frontend")
+if(NOT cyclomatic_combined MATCHES "requires the voelund-cyclomatic")
     message(FATAL_ERROR "Cyclomatic-complexity failure did not explain the missing mandatory tool:\n${cyclomatic_combined}")
 endif()
 
-message(STATUS "Quality-rule fixtures passed; cyclomatic checking correctly rejected the unavailable mandatory Clang CFG tool")
+message(STATUS "Quality-rule fixtures passed; cyclomatic checking without its tool correctly fails (values: CyclomaticComplexityTests.cmake)")
