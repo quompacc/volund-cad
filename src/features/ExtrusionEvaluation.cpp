@@ -61,16 +61,19 @@ double lengthToFace(const document::SketchParameters& start,
     const auto faces = supportFaceFrames(faceOwner);
     const auto face = std::ranges::find(faces, origin, &SupportFaceFrame::origin);
     if (face == faces.end())
-        throw GeometryEvaluationError("End face is no longer a unique planar face of its body");
+        throw GeometryEvaluationError("End face is no longer a unique planar face of its body",
+                                      "end-face-missing");
     const auto along = direction(start, parameters);
     const gp_Vec normal(face->plane.normalX, face->plane.normalY, face->plane.normalZ);
     if (along.CrossMagnitude(normal) > std::sin(kernel::angularTolerance.radians))
-        throw GeometryEvaluationError("End face must be parallel to the sketch");
+        throw GeometryEvaluationError("End face must be parallel to the sketch",
+                                      "end-face-not-parallel");
     const gp_Vec offset(gp_Pnt(start.plane.originX, start.plane.originY, start.plane.originZ),
                         gp_Pnt(face->plane.originX, face->plane.originY, face->plane.originZ));
     const double length = offset.Dot(along);
     if (length <= 1e-6)
-        throw GeometryEvaluationError("End face does not lie ahead in the extrusion direction");
+        throw GeometryEvaluationError("End face does not lie ahead in the extrusion direction",
+                                      "end-face-behind");
     return length;
 }
 // The selected regions swept along the sketch normal, against it when reversed.
@@ -424,7 +427,8 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
     if (parameters.upToFace) {
         faceOwner = bodyProducerBefore(document, descriptor.id, parameters.upToFace->body);
         if (!faceOwner)
-            throw GeometryEvaluationError("End face body has no solid before this extrusion");
+            throw GeometryEvaluationError("End face body has no solid before this extrusion",
+                                          "body-missing");
     }
     // M20: a revolve turns the sketch itself; start offsets belong to prisms.
     const auto start = parameters.revolve || parameters.sweep || parameters.loft
@@ -459,7 +463,8 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
                                                 supportOutput.referenceEdgeOrigins};
         resolveBoundSketchSupport(referenceSketch, referenceSupport);
         if (solveSketchConstraints(referenceSketch).status != SketchSolveStatus::success)
-            throw GeometryEvaluationError("Reference sketch projected edges cannot be solved");
+            throw GeometryEvaluationError("Reference sketch projected edges cannot be solved",
+                                          "sketch-unsolved");
     }
     const auto referenceStart = parameters.revolve || parameters.sweep || parameters.loft
                                     ? referenceSketch
@@ -483,7 +488,8 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
         // new body on a face is the extrusion's own. Nothing is fused and nothing is guessed.
         const document::BodyId bodyId{support ? descriptor.id.value() : sketchId.value()};
         if (std::ranges::find(bodies, bodyId, &EvaluatedBody::bodyId) != bodies.end())
-            throw GeometryEvaluationError("Base-plane body already has a solid");
+            throw GeometryEvaluationError("Base-plane body already has a solid",
+                                          "base-body-exists");
         outputs.push_back(EvaluatedFeature{descriptor.id,
                                            prism.shape,
                                            referencePrism.shape,
@@ -502,10 +508,12 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
     std::optional<document::FeatureId> input = support;
     if (!input) {
         if (!parameters.target)
-            throw GeometryEvaluationError("Join or cut of a base-plane sketch needs a target body");
+            throw GeometryEvaluationError("Join or cut of a base-plane sketch needs a target body",
+                                          "extrusion-needs-target");
         input = targetProducer(document, descriptor.id);
         if (!input)
-            throw GeometryEvaluationError("Target body has no solid before this extrusion");
+            throw GeometryEvaluationError("Target body has no solid before this extrusion",
+                                          "body-missing");
     }
     EvaluatedBody& body = findBody(bodies, outputs, *input);
     EvaluatedBody& referenceBody = findBody(referenceBodies, outputs, *input);

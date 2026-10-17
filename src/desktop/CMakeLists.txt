@@ -1,6 +1,7 @@
 add_library(
     voelund_desktop STATIC
     FeatureErrorCard.cpp
+    FeatureIssueText.cpp
     FeaturePropertiesPanel.cpp
     FloatingCard.cpp
     OverlayCard.cpp

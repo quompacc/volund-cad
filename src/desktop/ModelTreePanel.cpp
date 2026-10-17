@@ -1,5 +1,6 @@
 #include "ModelTreePanel.hpp"
 #include "FeatureErrorCard.hpp"
+#include "FeatureIssueText.hpp"
 
 #include <QBrush>
 #include <QHeaderView>
@@ -193,8 +194,8 @@ void ModelTreePanel::showStatuses(std::span<const application::FeatureRuntimeSta
                          : suppressed ? tr("%1 [unterdrückt]").arg(name) // M14
                          : rolledBack ? tr("%1 [zurückgerollt]").arg(name)
                                       : name);
-        item->setToolTip(0,
-                         hasError || blocked ? QString::fromStdString(state.message) : QString{});
+        item->setToolTip(0, hasError || blocked ? issueExplanation(state.code, state.message)
+                                                : QString{});
         item->setIcon(0, featureStatusIcon(state.status)); // U10
     }
 }

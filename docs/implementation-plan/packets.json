@@ -4,8 +4,8 @@
   "auditedCommit": "1b78229",
   "status": "implementation-started",
   "counts": {
-    "total": 154,
-    "throughG4": 124,
+    "total": 155,
+    "throughG4": 125,
     "g5": 30
   },
   "globalGates": [
@@ -140,6 +140,7 @@
     "Q01",
     "L01",
     "L02",
+    "U15",
     "L03",
     "L04",
     "L05",
@@ -2990,6 +2991,33 @@
       ],
       "acceptance": "Installiertes voelund-cad öffnet per Dateizuordnung eine .volund-Datei mit Umlaut/Leerzeichen. Keine Abhängigkeit auf .tools oder Entwicklerarbeitsverzeichnis. Fehlende Runtime wird im Pakettest erkannt.",
       "boundary": "Installationsform je Plattform (Windows, Linux, FreeBSD) vorab konkret festlegen; keine ungeprüften DLL-/SO-Sammelkopien.",
+      "status": "planned",
+      "gate": "G4",
+      "chapter": "06-plattform-release.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "U15",
+      "title": "Fehlermeldungen in der Oberfläche auf Deutsch",
+      "deps": [
+        "U10",
+        "M13"
+      ],
+      "files": [
+        "src/desktop/FeatureIssueText.cpp",
+        "src/desktop/FeatureErrorCard.cpp",
+        "src/desktop/ModelTreePanel.cpp",
+        "src/desktop/CommandFeedback.hpp"
+      ],
+      "steps": [
+        "Fehlerkarte, Baum-Tooltip und Befehlsrückmeldung erklären einen Fehler über seinen stabilen Code auf Deutsch; die technische englische Meldung folgt in Klammern und bleibt für Protokolle, MCP und Assistent.",
+        "Die häufigsten Fehler ohne Code bekommen einen; für alle übrigen gilt ein allgemeiner deutscher Satz.",
+        "Ein Test verlangt für jeden heute erzeugten Code einen deutschen Text."
+      ],
+      "acceptance": "Kein englischer Fehlertext ohne deutsche Erklärung in Fehlerkarte, Baum oder Befehlsrückmeldung; blockierte Schritte nennen ihre Ursache; die Statuszeile zeigt keine internen Revisionen.",
+      "boundary": "Anlass: Nutzerprüfung von L02 am 17.10.2026 (englisches „Blocked by failed input“). Technische Meldungen bleiben unverändert.",
       "status": "planned",
       "gate": "G4",
       "chapter": "06-plattform-release.md",

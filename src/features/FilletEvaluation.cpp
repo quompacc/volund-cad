@@ -169,7 +169,7 @@ void evaluateEdgeTreatment(const document::DocumentSnapshot& document,
                            std::vector<EvaluatedBody>& referenceBodies) {
     const auto producer = bodyProducerBefore(document, descriptor.id, target);
     if (!producer)
-        throw GeometryEvaluationError("The body has no solid before this feature");
+        throw GeometryEvaluationError("The body has no solid before this feature", "body-missing");
     const auto& owner = findFeature(outputs, *producer);
     EvaluatedBody& body = findBody(bodies, outputs, *producer);
     EvaluatedBody& referenceBody = findBody(referenceBodies, outputs, *producer);

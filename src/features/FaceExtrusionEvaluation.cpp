@@ -88,7 +88,8 @@ const SupportFaceFrame& profileFace(const std::vector<SupportFaceFrame>& faces,
                                     const document::SubshapeOrigin& origin) {
     const auto face = std::ranges::find(faces, origin, &SupportFaceFrame::origin);
     if (face == faces.end())
-        throw GeometryEvaluationError("Profile face is no longer a unique planar face of its body");
+        throw GeometryEvaluationError("Profile face is no longer a unique planar face of its body",
+                                      "profile-face-missing");
     return *face;
 }
 
@@ -110,11 +111,13 @@ gp_Vec sweep(const TopoDS_Shape& body, const SupportFaceFrame& face,
 double lengthToFace(const gp_Pnt& start, const gp_Vec& along, const SupportFaceFrame& end) {
     const gp_Vec normal(end.plane.normalX, end.plane.normalY, end.plane.normalZ);
     if (along.CrossMagnitude(normal) > std::sin(kernel::angularTolerance.radians))
-        throw GeometryEvaluationError("End face must be parallel to the profile face");
+        throw GeometryEvaluationError("End face must be parallel to the profile face",
+                                      "end-face-not-parallel");
     const double length =
         gp_Vec(start, gp_Pnt(end.plane.originX, end.plane.originY, end.plane.originZ)).Dot(along);
     if (length <= 1e-6)
-        throw GeometryEvaluationError("End face does not lie ahead in the extrusion direction");
+        throw GeometryEvaluationError("End face does not lie ahead in the extrusion direction",
+                                      "end-face-behind");
     return length;
 }
 
@@ -198,12 +201,14 @@ void evaluateFaceExtrusion(const document::DocumentSnapshot& document,
     const auto& profile = *parameters.faceProfile;
     const auto producer = bodyProducerBefore(document, descriptor.id, profile.body);
     if (!producer)
-        throw GeometryEvaluationError("Profile face body has no solid before this extrusion");
+        throw GeometryEvaluationError("Profile face body has no solid before this extrusion",
+                                      "body-missing");
     std::optional<document::FeatureId> endOwner;
     if (parameters.upToFace) {
         endOwner = bodyProducerBefore(document, descriptor.id, parameters.upToFace->body);
         if (!endOwner)
-            throw GeometryEvaluationError("End face body has no solid before this extrusion");
+            throw GeometryEvaluationError("End face body has no solid before this extrusion",
+                                          "body-missing");
     }
     const auto& owner = findFeature(outputs, *producer);
     const auto faces = supportFaceFrames(owner);

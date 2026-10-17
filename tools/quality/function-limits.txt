@@ -61,7 +61,6 @@ cyclomatic | src/mcp/McpHttpServer.cpp | voelund::mcp::McpHttpServer::respond | 
 cyclomatic | src/application/CadSessionReferenceRepair.cpp | voelund::application::CadSession::repairSketchEdgeReferences | 24 | Altbestand vor A04
 cyclomatic | src/application/SketchCurveEditPlan.cpp | voelund::application::detail::(anonymous namespace)::trim | 24 | Altbestand vor A04
 cyclomatic | src/application/SketchEditorPatterns.cpp | voelund::application::SketchEditorSession::createPattern | 24 | Altbestand vor A04
-cyclomatic | src/desktop/CommandFeedback.hpp | voelund::desktop::booleanFailureText | 24 | Altbestand vor A04
 cyclomatic | src/document/ModelDocumentPattern.cpp | voelund::document::validatePatternParameters | 24 | Altbestand vor A04
 cyclomatic | src/document/NativeExtrusion.cpp | voelund::document::detail::writeNativeExtrusion | 24 | Altbestand vor A04
 cyclomatic | src/features/SketchReferenceReview.cpp | voelund::features::reviewSketchReferences | 24 | Altbestand vor A04

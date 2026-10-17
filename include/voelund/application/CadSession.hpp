@@ -34,6 +34,7 @@ struct FeatureRuntimeState final {
     document::FeatureId id;
     FeatureRuntimeStatus status;
     std::string message;
+    std::string code{}; // U15: features::EvaluationIssue::code, for the shell's own wording
 };
 
 struct ExtrusionRegionState final {

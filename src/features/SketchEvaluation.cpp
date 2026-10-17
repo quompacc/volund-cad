@@ -217,7 +217,8 @@ TopoDS_Face curveProfileFace(const document::SketchParameters& sketch, const Ske
             builder.UpdateVertex(TopoDS::Vertex(vertex.Current()), tolerance);
         wire.Add(edge);
         if (!wire.IsDone())
-            throw GeometryEvaluationError("Sketch profile wire could not be connected");
+            throw GeometryEvaluationError("Sketch profile wire could not be connected",
+                                          "profile-invalid");
         recordEdge(edges, id,
                    std::holds_alternative<document::SketchLine>(geometry) ? ContourRole::line
                    : spline != nullptr                                    ? ContourRole::bspline
@@ -226,7 +227,8 @@ TopoDS_Face curveProfileFace(const document::SketchParameters& sketch, const Ske
     }
     BRepBuilderAPI_MakeFace face(wire.Wire());
     if (!face.IsDone() || !BRepCheck_Analyzer(face.Face()).IsValid())
-        throw GeometryEvaluationError("Sketch profile did not produce a valid face");
+        throw GeometryEvaluationError("Sketch profile did not produce a valid face",
+                                      "profile-invalid");
     return face.Face();
 }
 

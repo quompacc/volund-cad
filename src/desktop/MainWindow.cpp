@@ -3,6 +3,7 @@
 #include "AssistantPanel.hpp"
 #include "CommandFeedback.hpp"
 #include "DocumentActions.hpp"
+#include "FeatureIssueText.hpp"
 #include "FeaturePropertiesPanel.hpp"
 #include "MainWindowState.hpp"
 #include "MainWindowSupport.hpp"
@@ -324,7 +325,7 @@ void MainWindow::syncErrorCard(std::optional<document::FeatureId> selected) {
         descriptor != features.end() && descriptor->kind == document::FeatureKind::sketch;
     FeatureErrorCard::Content content;
     content.blocked = state->status == application::FeatureRuntimeStatus::blocked;
-    content.message = QString::fromStdString(state->message);
+    content.message = issueExplanation(state->code, state->message);
     if (const auto cause = impl_->session.errorCause(*selected)) {
         const auto found = std::ranges::find(features, *cause, &document::FeatureDescriptor::id);
         if (found != features.end())

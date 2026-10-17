@@ -35,7 +35,8 @@ void evaluateShell(const document::DocumentSnapshot& document,
     const auto& parameters = document.shellParameters(descriptor.id);
     const auto producer = bodyProducerBefore(document, descriptor.id, parameters.body);
     if (!producer)
-        throw GeometryEvaluationError("The body of the shell has no solid before it");
+        throw GeometryEvaluationError("The body of the shell has no solid before it",
+                                      "body-missing");
     const auto& owner = findFeature(outputs, *producer);
     EvaluatedBody& body = findBody(bodies, outputs, *producer);
     EvaluatedBody& referenceBody = findBody(referenceBodies, outputs, *producer);

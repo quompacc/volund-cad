@@ -252,7 +252,8 @@ void setConstructionPlane(document::SketchParameters& parameters,
         return;
     const auto& frame = findFeature(outputs, *parameters.constructionPlane).datumFrame;
     if (!frame)
-        throw GeometryEvaluationError("The construction plane of the sketch is missing");
+        throw GeometryEvaluationError("The construction plane of the sketch is missing",
+                                      "sketch-plane-missing");
     parameters.plane = *frame;
 }
 
@@ -275,22 +276,25 @@ void evaluateSketch(const document::DocumentSnapshot& document,
     document::SketchParameters parameters = document.sketchParameters(descriptor.id);
     if (parameters.repairReason)
         throw GeometryEvaluationError(
-            "MigrationNeedsRepair: explicit sketch reference repair required");
+            "MigrationNeedsRepair: explicit sketch reference repair required",
+            "sketch-needs-repair");
     if (descriptor.inputFeature.has_value()) {
         if (parameters.supportBinding)
             resolveBoundSketchSupport(parameters, findFeature(outputs, *descriptor.inputFeature));
         else if (!updateSketchSupportReferences(parameters,
                                                 findOutput(outputs, *descriptor.inputFeature)))
-            throw GeometryEvaluationError("Sketch support face is no longer available");
+            throw GeometryEvaluationError("Sketch support face is no longer available",
+                                          "sketch-support-missing");
         detail::refreshSketchProjections(parameters, document, descriptor.id, outputs);
         if (solveSketchConstraints(parameters).status != SketchSolveStatus::success)
-            throw GeometryEvaluationError("Sketch support references cannot be solved");
+            throw GeometryEvaluationError("Sketch support references cannot be solved",
+                                          "sketch-support-unsolved");
     } else if (prepareStandaloneSketch(parameters, document, descriptor.id, outputs)) {
         // PAR01: a table change mirrors values without an editor solve; an unsolvable
         // result stays visible as an error instead of stale geometry. S17: projected edges
         // move the elements bound to them.
         if (solveSketchConstraints(parameters).status != SketchSolveStatus::success)
-            throw GeometryEvaluationError("Sketch parameters cannot be solved");
+            throw GeometryEvaluationError("Sketch parameters cannot be solved", "sketch-unsolved");
     } else {
         // S12: stored geometry unsolved; instances still follow their sources.
         document::regenerateSketchPatterns(parameters.elements, parameters.patterns);

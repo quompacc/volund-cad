@@ -104,7 +104,8 @@ void evaluateHole(const document::DocumentSnapshot& document,
     const auto& parameters = document.holeParameters(descriptor.id);
     const auto producer = bodyProducerBefore(document, descriptor.id, parameters.face.body);
     if (!producer)
-        throw GeometryEvaluationError("The body of the hole has no solid before it");
+        throw GeometryEvaluationError("The body of the hole has no solid before it",
+                                      "body-missing");
     const auto& owner = findFeature(outputs, *producer);
     EvaluatedBody& body = findBody(bodies, outputs, *producer);
     EvaluatedBody& referenceBody = findBody(referenceBodies, outputs, *producer);

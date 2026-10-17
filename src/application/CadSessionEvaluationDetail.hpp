@@ -13,7 +13,7 @@ inline std::vector<FeatureRuntimeState> runtimeStates(const features::Evaluation
              : issue.status == features::EvaluationStatus::rolledBack
                  ? FeatureRuntimeStatus::rolledBack
                  : FeatureRuntimeStatus::blocked,
-             issue.message});
+             issue.message, issue.code});
     return states;
 }
 } // namespace voelund::application::detail

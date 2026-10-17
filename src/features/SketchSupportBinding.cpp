@@ -149,7 +149,8 @@ void resolveBoundSketchSupport(document::SketchParameters& sketch,
                                const EvaluatedFeature& support) {
     if (sketch.repairReason)
         throw GeometryEvaluationError(
-            "MigrationNeedsRepair: explicit sketch reference repair required");
+            "MigrationNeedsRepair: explicit sketch reference repair required",
+            "sketch-needs-repair");
     if (!sketch.supportBinding)
         throw std::logic_error("Missing explicit sketch binding");
     const auto& binding = *sketch.supportBinding;

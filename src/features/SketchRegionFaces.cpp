@@ -98,7 +98,7 @@ TopoDS_Face withHole(const TopoDS_Face& outer, const TopoDS_Face& hole) {
             std::abs(area(result) - expected) <= 1e-9 * std::max(1.0, area(outer)))
             return result;
     }
-    throw GeometryEvaluationError("Region did not produce a valid face");
+    throw GeometryEvaluationError("Region did not produce a valid face", "profile-invalid");
 }
 
 // The legacy loop face whose loop carries exactly these elements; the bridge's only source.
