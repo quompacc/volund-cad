@@ -7,6 +7,11 @@ project(
     LANGUAGES CXX
 )
 
+# CMake 4.2+: install(RUNTIME_DEPENDENCY_SET) matches normalised paths (L02).
+if(POLICY CMP0207)
+    cmake_policy(SET CMP0207 NEW)
+endif()
+
 include(CTest)
 include(GNUInstallDirs)
 
@@ -121,3 +126,22 @@ add_custom_target(
         -P "${CMAKE_CURRENT_SOURCE_DIR}/tools/cmake/CheckSourceLimits.cmake"
     VERBATIM
 )
+
+# L02 (user decision 2026-10-17): a portable ZIP on Windows and a tarball on Linux, each
+# registered per user by the scripts at its top level (docs/packaging.md).
+if(VOELUND_BUILD_DESKTOP)
+    set(CPACK_PACKAGE_NAME "voelund-cad")
+    set(CPACK_PACKAGE_VENDOR "QuompaCC")
+    set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+    set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${PROJECT_DESCRIPTION}")
+    set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY ON)
+    if(WIN32)
+        set(CPACK_GENERATOR ZIP)
+        set(CPACK_PACKAGE_FILE_NAME "voelund-cad-${PROJECT_VERSION}-windows-x64")
+    else()
+        set(CPACK_GENERATOR TGZ)
+        set(CPACK_PACKAGE_FILE_NAME
+            "voelund-cad-${PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
+    endif()
+    include(CPack)
+endif()

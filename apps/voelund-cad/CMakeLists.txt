@@ -55,17 +55,25 @@ if(UNIX AND NOT APPLE)
         POST_INCLUDE_REGEXES "libTK[A-Za-z0-9]+\\.so"
         POST_EXCLUDE_REGEXES ".*"
         LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+elseif(WIN32)
+    # L02: exactly the DLLs the executable's dependency graph resolves (Qt, OpenCASCADE,
+    # FreeType and theirs) from the build output, which the post-build steps fill; system DLLs
+    # stay out. The platform plugin is loaded at run time and installed by name, the MSVC
+    # runtime by CMake's InstallRequiredSystemLibraries.
+    install(TARGETS voelund-cad
+        RUNTIME_DEPENDENCY_SET voelund_windows_runtime
+        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+    install(RUNTIME_DEPENDENCY_SET voelund_windows_runtime
+        DIRECTORIES "$<TARGET_FILE_DIR:voelund-cad>"
+        PRE_EXCLUDE_REGEXES "^api-ms-" "^ext-ms-"
+        POST_EXCLUDE_REGEXES "^[A-Za-z]:[/\\\\][Ww][Ii][Nn][Dd][Oo][Ww][Ss][/\\\\]"
+        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+    install(FILES "$<TARGET_FILE:Qt6::QWindowsIntegrationPlugin>"
+        DESTINATION "${CMAKE_INSTALL_BINDIR}/platforms")
+    set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION "${CMAKE_INSTALL_BINDIR}")
+    include(InstallRequiredSystemLibraries)
 else()
     install(TARGETS voelund-cad RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
-endif()
-if(WIN32)
-    install(
-        DIRECTORY "$<TARGET_FILE_DIR:voelund-cad>/"
-        DESTINATION "${CMAKE_INSTALL_BINDIR}"
-        FILES_MATCHING
-        PATTERN "*.dll"
-        PATTERN "CMakeFiles" EXCLUDE
-    )
 endif()
 
 if(UNIX AND NOT APPLE)
@@ -76,6 +84,20 @@ if(UNIX AND NOT APPLE)
     install(
         FILES "${PROJECT_SOURCE_DIR}/packaging/unix/io.github.quompacc.Voelund.xml"
         DESTINATION "${CMAKE_INSTALL_DATADIR}/mime/packages"
+    )
+    # L02: per-user registration of the unpacked tarball (desktop entry and MIME type).
+    install(
+        PROGRAMS "${PROJECT_SOURCE_DIR}/packaging/unix/install-user.sh"
+            "${PROJECT_SOURCE_DIR}/packaging/unix/uninstall-user.sh"
+        DESTINATION .
+    )
+endif()
+if(WIN32)
+    # L02: per-user .volund association of the portable folder (HKCU, no administrator).
+    install(
+        FILES "${PROJECT_SOURCE_DIR}/packaging/windows/register-file-type.ps1"
+            "${PROJECT_SOURCE_DIR}/packaging/windows/unregister-file-type.ps1"
+        DESTINATION .
     )
 endif()
 
@@ -119,6 +141,18 @@ if(BUILD_TESTING AND VOELUND_BUILD_DESKTOP)
                 -P "${PROJECT_SOURCE_DIR}/tools/cmake/RunInstalledProduct.cmake")
         set_tests_properties(desktop.installed_product PROPERTIES
             TIMEOUT 180 RUN_SERIAL TRUE LABELS "desktop;platform;acceptance")
+
+        # L02: the tarball registered per user opens a document through its association.
+        if(VOELUND_NATIVE_WAYLAND)
+            add_test(NAME desktop.file_association
+                COMMAND "${CMAKE_COMMAND}"
+                    "-DVOELUND_BUILD_DIR=${PROJECT_BINARY_DIR}"
+                    "-DVOELUND_TEST_ROOT=${PROJECT_BINARY_DIR}/file-association-test"
+                    "-DVOELUND_FIXTURE=${file_argument_fixture}"
+                    -P "${PROJECT_SOURCE_DIR}/tests/cmake/FileAssociationTests.cmake")
+            set_tests_properties(desktop.file_association PROPERTIES
+                TIMEOUT 180 RUN_SERIAL TRUE LABELS "desktop;platform;package;acceptance")
+        endif()
     endif()
 endif()
 

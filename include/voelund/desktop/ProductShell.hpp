@@ -26,6 +26,9 @@ struct ProductOptions final {
     bool offerRecovery{true};
     // U07: a document given on the command line (desktop file association).
     std::optional<QString> file;
+    // L02: further documents on the command line. A window holds one document, so they are
+    // named in the status bar instead of being opened.
+    QStringList ignoredFiles;
 };
 
 // Smoke-test switches (`--smoke-test…`) start from a clean document without recovery.

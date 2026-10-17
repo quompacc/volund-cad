@@ -7,8 +7,10 @@
 #include <QDebug>
 #include <QDir>
 #include <QFile>
+#include <QFileInfo>
 #include <QGuiApplication>
 #include <QStandardPaths>
+#include <QStatusBar>
 #include <QSurfaceFormat>
 
 namespace voelund::desktop {
@@ -36,8 +38,12 @@ ProductOptions productOptions(const QStringList& arguments) {
         const QString& argument = arguments[index];
         if (argument.startsWith(QStringLiteral("--smoke-test")))
             options.offerRecovery = false;
-        else if (!argument.startsWith(QLatin1Char('-')) && !options.file)
+        else if (argument.startsWith(QLatin1Char('-')))
+            continue;
+        else if (!options.file)
             options.file = argument;
+        else
+            options.ignoredFiles.push_back(argument);
     }
     return options;
 }
@@ -68,6 +74,13 @@ std::unique_ptr<MainWindow> startProduct(application::CadSession& session,
     // new document.
     if (options.file)
         window->openFile(*options.file);
+    if (!options.ignoredFiles.isEmpty()) {
+        QStringList names;
+        for (const auto& path : options.ignoredFiles)
+            names.push_back(QFileInfo(path).fileName());
+        window->statusBar()->showMessage(QObject::tr("Ein Dokument je Fenster – nicht geöffnet: %1")
+                                             .arg(names.join(QStringLiteral(", "))));
+    }
     return window;
 }
 

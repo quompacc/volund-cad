@@ -624,6 +624,16 @@ if(VOELUND_BUILD_DESKTOP)
         if(VOELUND_NATIVE_WAYLAND)
             set_tests_properties(desktop.body_flow PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
         endif()
+        # L02: documents on the command line (first opens, umlaut/space path; further named).
+        add_executable(voelund_product_arguments_tests desktop/ProductArgumentsTests.cpp)
+        target_link_libraries(voelund_product_arguments_tests PRIVATE voelund_project_options Voelund::Desktop)
+        add_test(NAME desktop.product_arguments COMMAND voelund_product_arguments_tests
+            "${PROJECT_SOURCE_DIR}/tests/fixtures/documents/v09.volund")
+        set_tests_properties(desktop.product_arguments PROPERTIES
+            LABELS "desktop;qt-opengl;acceptance" TIMEOUT 60 RUN_SERIAL TRUE)
+        if(VOELUND_NATIVE_WAYLAND)
+            set_tests_properties(desktop.product_arguments PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
+        endif()
         # S14: A-TXN-03 in the shell (sketch element and body manipulator drags).
         add_executable(voelund_drag_flow_tests desktop/DragFlowTests.cpp)
         target_link_libraries(voelund_drag_flow_tests PRIVATE voelund_project_options Voelund::Desktop)
@@ -1311,6 +1321,16 @@ add_executable(voelund_step_tests integration/StepTests.cpp)
 target_link_libraries(voelund_step_tests PRIVATE voelund_project_options Voelund::Application TKDESTEP)
 add_test(NAME application.step COMMAND voelund_step_tests)
 set_tests_properties(application.step PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
+# L02: the installed runtime is complete and self-contained; a missing library is named.
+if(VOELUND_BUILD_DESKTOP AND (WIN32 OR VOELUND_NATIVE_WAYLAND))
+    add_test(NAME platform.package_runtime
+        COMMAND "${CMAKE_COMMAND}" "-DVOELUND_SOURCE_ROOT=${PROJECT_SOURCE_DIR}"
+            "-DVOELUND_BUILD_DIR=${PROJECT_BINARY_DIR}" "-DVOELUND_CONFIG=$<CONFIG>"
+            "-DVOELUND_TEST_ROOT=${CMAKE_CURRENT_BINARY_DIR}/package-runtime"
+            -P "${PROJECT_SOURCE_DIR}/tests/cmake/PackageRuntimeTests.cmake")
+    set_tests_properties(platform.package_runtime PROPERTIES
+        LABELS "platform;package;acceptance" TIMEOUT 300 RUN_SERIAL TRUE)
+endif()
 # Q01: NIST test parts as an outside reference for STEP import.
 add_executable(voelund_nist_step_tests differential/NistStepTests.cpp)
 target_link_libraries(voelund_nist_step_tests PRIVATE voelund_project_options Voelund::Kernel TKDESTEP)
