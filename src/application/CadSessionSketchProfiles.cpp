@@ -299,6 +299,7 @@ CommandResult CadSession::pushPullFace(document::FeatureId support,
         distance > 0.0 ? document::ExtrusionOperation::join : document::ExtrusionOperation::cut;
     parameters.reversed = distance < 0.0;
     parameters.faceProfile = profile;
+    parameters.mergeSeams = true; // T05: new push/pulls leave no seam
     document::DocumentTransaction transaction(document_);
     auto& candidate = transaction.edit();
     const auto input = detail::prepareInput([&] {

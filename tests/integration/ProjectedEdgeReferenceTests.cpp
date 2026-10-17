@@ -177,7 +177,7 @@ void codecNegatives() {
     const auto identified =
         IdentifiedDocumentSnapshot::restore(m.documentId(), DocumentSnapshot::capture(m));
     detail::NativePrimitiveCodec::write(doc, identified);
-    for (int old : {1, 2, 36}) {
+    for (int old : {1, 2, 37}) {
         TDataStd_Integer::Set(doc->Main().FindChild(2), old);
         rejected([&] { (void)detail::NativePrimitiveCodec::read(doc); });
     }

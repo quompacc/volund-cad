@@ -10,6 +10,7 @@
 #include <vector>
 
 class QComboBox;
+class QCheckBox;
 class QDoubleSpinBox;
 class QLabel;
 class QPushButton;
@@ -70,6 +71,7 @@ class FeaturePropertiesPanel final : public QStackedWidget {
     std::function<void()> errorCommitHandler_;
     QDoubleSpinBox* extrusionDistanceInput_{nullptr};
     QLabel* extrusionErrorLabel_{nullptr};
+    QCheckBox* extrusionSeamsInput_{nullptr}; // T05: push/pulls that join
     document::ExtrusionParameters extrusionSelection_{0.0, {}};
     std::function<void()> boxChangeHandler_;
     std::function<void()> cylinderChangeHandler_;

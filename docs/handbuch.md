@@ -42,7 +42,10 @@ umgesetzte Funktionen. Was hier nicht steht, gibt es noch nicht.
 - **Extrusion** von Skizzenbereichen. Ergebnis als neuer Körper, vereinigt, abgezogen (Tasche)
   oder geschnitten. Richtung umkehrbar, symmetrisch (Länge = Gesamtlänge), Startversatz, bis
   zu einer ebenen, parallelen Fläche. Bereiche werden durch Anklicken an- und abgewählt.
-- **Drücken/Ziehen** einer ebenen Körperfläche.
+- **Drücken/Ziehen** einer ebenen Körperfläche. Ein Zug, der eine Fläche des Körpers eben
+  fortsetzt, hinterlässt keine Naht (der Quader mit gezogener Oberseite hat glatte Seiten); im
+  Eigenschaften-Panel lässt sich das pro Zug abschalten („Naht entfernen“). Züge aus älteren
+  Dateien behalten ihre Nähte, bis man es einschaltet.
 - **Drehen** (Revolve) und **Nut** um eine Skizzenlinie, Grund- oder Bezugsachse.
 - **Folgen** (Sweep) entlang einer Pfadskizze, **Ausformung** (Loft) zwischen zwei Profilen,
   **Wendel** (Helix).
@@ -68,7 +71,7 @@ umgesetzte Funktionen. Was hier nicht steht, gibt es noch nicht.
 - **Grenzen:** Kein variabler Radius, keine asymmetrische oder Winkelfase. Bohrung ohne
   Gewinde, Senkung oder Bohrspitze. Wandstärke nur mit einer Dicke. Formschräge ohne
   Trennlinie. Muster nur von Körpern, nicht von Features; kein Raster und kein Muster entlang
-  einer Kurve. Nach Drücken/Ziehen bleiben koplanare Flächen getrennt (Nahtlinie).
+  einer Kurve. Nähte verschwinden nur beim Drücken/Ziehen, nicht beim Extrudieren aus Skizzen.
 
 ## Historie
 

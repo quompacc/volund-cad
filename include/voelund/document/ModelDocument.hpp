@@ -264,6 +264,10 @@ struct ExtrusionParameters final {
     // M24: a loft through further sections instead of a prism; its own regions name exactly one
     // region, the first section; like a sweep otherwise.
     std::optional<LoftParameters> loft{};
+    // T05 (schema 36, user decision 2026-10-17): a push/pull that joins leaves no seam where it
+    // continues a face of its body. New push/pulls set it; older ones read without it and stay
+    // as they were.
+    bool mergeSeams{false};
 
     [[nodiscard]] bool operator==(const ExtrusionParameters&) const = default;
 };

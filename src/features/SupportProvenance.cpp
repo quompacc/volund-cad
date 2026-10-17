@@ -13,7 +13,8 @@ void appendUnique(std::vector<TopoDS_Shape>& faces, const TopoDS_Shape& face) {
 SupportProvenance continueOrigin(const SupportProvenance& previous,
                                  const kernel::ShapeOperationResult& operation,
                                  kernel::HistoryOperand operand) {
-    SupportProvenance next{previous.origin, {}, previous.coverage, previous.frameFace};
+    SupportProvenance next{previous.origin, {}, previous.coverage, previous.frameFace,
+                           previous.secondary};
     for (const auto& source : previous.faces) {
         const auto entry = std::ranges::find_if(operation.history, [&](const auto& item) {
             return item.operand == operand && item.source.IsSame(source);

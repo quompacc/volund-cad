@@ -15,6 +15,7 @@ struct SupportFaceFrame final {
     TopoDS_Shape face;
     document::SketchPlane plane;
     double minX, minY, maxX, maxY;
+    bool secondary{false}; // T05: a second name of a merged face; picks take the first
 };
 // Planar faces with complete history and exactly one current face per origin; a face that
 // more than one origin claims is left out because a binding to it would be ambiguous.

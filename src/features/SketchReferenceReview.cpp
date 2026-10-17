@@ -78,7 +78,8 @@ SketchReferenceReview reviewSketchReferences(document::DocumentId document,
         const auto aliases = std::ranges::count_if(support->supportOrigins, [&](const auto& other) {
             if (other.origin == origin.origin)
                 return true;
-            return origin.faces.size() == 1 &&
+            // T05: second names of a merged face are no aliases.
+            return origin.faces.size() == 1 && !other.secondary &&
                    std::ranges::any_of(other.faces, [&](const auto& face) {
                        return face.IsSame(origin.faces.front());
                    });

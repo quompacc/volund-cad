@@ -282,6 +282,8 @@ void insertExtrusionMode(QJsonObject& json, const document::DocumentSnapshot& sn
                                                         : "normal");
     if (extrusion.target)
         parameters.insert("targetBodyId", id(extrusion.target->value()));
+    if (extrusion.mergeSeams)
+        parameters.insert("mergeSeams", true); // T05
     parameters.insert("offset", detail::quantity(extrusion.offset, "mm"));
     if (extrusion.offsetParameter)
         parameters.insert("offsetParameterId", id(extrusion.offsetParameter->value()));

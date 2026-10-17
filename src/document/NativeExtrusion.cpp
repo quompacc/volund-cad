@@ -104,7 +104,8 @@ std::size_t nativeExtrusionRecords(const ExtrusionParameters& parameters) {
 }
 void validateNativeExtrusion(const ExtrusionParameters& parameters) {
     require(kernel::modelLength(parameters.distance) &&
-        parameters.profiles.size() <= maximumExtrusionProfileCount);
+        parameters.profiles.size() <= maximumExtrusionProfileCount &&
+        (!parameters.mergeSeams || parameters.faceProfile)); // T05: only a push/pull merges
     std::set<std::uint64_t> ids;
     for (const auto id : parameters.profiles)
         require(id.value() != 0 && ids.insert(id.value()).second);
@@ -181,6 +182,9 @@ void writeNativeExtrusion(const TDF_Label& label, const ExtrusionParameters& par
             writeRegions(node.FindChild(2), {section.region});
         }
     }
+    // T05 (schema 36): child 15 is 1 when a push/pull merges its seams; absent otherwise.
+    if (parameters.mergeSeams)
+        TDataStd_Integer::Set(label.FindChild(15), 1);
     // M23 (schema 26): child 13 holds the path sketch (1) and the path elements (children of 2).
     if (parameters.sweep) {
         const auto sweep = label.FindChild(13);
@@ -218,6 +222,8 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
     const auto sweep = label.FindChild(13, false);
     // Schema 27 (M24) adds the loft (14).
     const auto loft = label.FindChild(14, false);
+    // Schema 36 (T05) adds the seam merge of a push/pull (15).
+    const auto seams = label.FindChild(15, false);
     const int t02 = (operation.IsNull() ? 0 : 1) + (reversed.IsNull() ? 0 : 1) +
         (target.IsNull() ? 0 : 1);
     const int t03 = (offset.IsNull() ? 0 : 1) + (offsetBinding.IsNull() ? 0 : 1) +
@@ -227,10 +233,12 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
         (profileFace.IsNull() || schemaVersion >= 10) &&
         (symmetric.IsNull() || schemaVersion >= 13) && (revolve.IsNull() || schemaVersion >= 20) &&
         (sweep.IsNull() || schemaVersion >= 26) && (loft.IsNull() || schemaVersion >= 27) &&
+        (seams.IsNull() || schemaVersion >= 36) &&
         label.NbChildren() == 1 + (regions.IsNull() ? 0 : 1) + (binding.IsNull() ? 0 : 1) + t02 +
                                   t03 + (profileFace.IsNull() ? 0 : 1) +
                                   (symmetric.IsNull() ? 0 : 1) + (revolve.IsNull() ? 0 : 1) +
-                                  (sweep.IsNull() ? 0 : 1) + (loft.IsNull() ? 0 : 1));
+                                  (sweep.IsNull() ? 0 : 1) + (loft.IsNull() ? 0 : 1) +
+                                  (seams.IsNull() ? 0 : 1));
     Handle(TDataStd_Real) distance;
     require(label.FindAttribute(TDataStd_Real::GetID(), distance));
     const auto profiles = child(label, 1);
@@ -274,6 +282,10 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
     if (!symmetric.IsNull()) {
         require(symmetric.NbChildren() == 0 && readInteger(symmetric) == 1);
         result.symmetric = true;
+    }
+    if (!seams.IsNull()) {
+        require(seams.NbChildren() == 0 && readInteger(seams) == 1); // Written only when set.
+        result.mergeSeams = true;
     }
     if (!target.IsNull())
         result.target = BodyId{readDecimal(target)};

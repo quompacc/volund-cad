@@ -3,6 +3,7 @@
 #include "MeasurementInput.hpp"
 
 #include <QComboBox>
+#include <QCheckBox>
 #include <QDoubleSpinBox>
 #include <QFormLayout>
 #include <QLabel>
@@ -94,6 +95,12 @@ void FeaturePropertiesPanel::createExtrusionPanel() {
         QStringLiteral("QLabel { color: #ffb4ab; background: #4b2024; border: 1px solid #b94a55; "
                        "border-radius: 3px; padding: 6px; }"));
     layout->addRow(tr("Distanz"), extrusionDistanceInput_);
+    // T05 (user decision 2026-10-17): a pulling push/pull merges its seams; older ones can.
+    extrusionSeamsInput_ = new QCheckBox(tr("Naht entfernen"), extrusionPanel_);
+    extrusionSeamsInput_->setObjectName(QStringLiteral("extrusionMergeSeamsInput"));
+    extrusionSeamsInput_->setToolTip(
+        tr("Flächen, die der Zug eben fortsetzt, werden mit dem Körper zu einer Fläche"));
+    layout->addRow(extrusionSeamsInput_);
     layout->addRow(extrusionErrorLabel_);
 }
 
@@ -203,6 +210,10 @@ void FeaturePropertiesPanel::connectEditors() {
         if (extrusionChangeHandler_) {
             extrusionChangeHandler_();
         }
+    });
+    connect(extrusionSeamsInput_, &QCheckBox::toggled, this, [this](bool) {
+        if (extrusionChangeHandler_)
+            extrusionChangeHandler_();
     });
 }
 
@@ -354,6 +365,12 @@ void FeaturePropertiesPanel::showExtrusion(const document::ExtrusionParameters& 
     const QSignalBlocker blocker(extrusionDistanceInput_);
     extrusionDistanceInput_->setValue(parameters.distance);
     extrusionSelection_ = parameters;
+    {
+        const QSignalBlocker seams(extrusionSeamsInput_);
+        extrusionSeamsInput_->setChecked(parameters.mergeSeams);
+    }
+    extrusionSeamsInput_->setVisible(parameters.faceProfile.has_value() &&
+                                     parameters.operation == document::ExtrusionOperation::join);
     extrusionErrorLabel_->setText(errorText);
     extrusionErrorLabel_->setVisible(!errorText.isEmpty());
 }
@@ -383,6 +400,8 @@ document::ExtrusionParameters FeaturePropertiesPanel::extrusionParameters() cons
     // Only the distance is edited here; the legacy or region selection passes through.
     auto parameters = extrusionSelection_;
     parameters.distance = extrusionDistanceInput_->value();
+    if (parameters.faceProfile && parameters.operation == document::ExtrusionOperation::join)
+        parameters.mergeSeams = extrusionSeamsInput_->isChecked();
     return parameters;
 }
 

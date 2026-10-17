@@ -330,8 +330,7 @@ void extrusionModes(const Handle(TDocStd_Application)& app) {
     TDataStd_Integer::Set(doc->Main().FindChild(2), 8);
     rejected([&] { (void)NativePrimitiveCodec::read(doc); }); // T03 children need schema 9
     app->Close(doc);
-    std::cout << "schema 8/9 extrusion operation, direction, target, offset and end face "
-                 "round-trip and gates passed\n";
+    std::cout << "schema 8/9 operation, direction, target, offset, end face and gates passed\n";
 }
 // T04, schema 10: push/pull. A face extrusion has no input feature; its profile is a box
 // side, and the next one pulls the first one's end cap (role -2 in the file).
@@ -354,6 +353,7 @@ void faceExtrusions(const Handle(TDocStd_Application)& app) {
     sideways.faceProfile->origin.extrusionFace = ExtrusionFace::side;
     sideways.faceProfile->origin.sweptEdge = PrimitiveEdgeOrigin{
         box, kernel::PrimitiveRole::boxPositiveX, kernel::PrimitiveRole::boxPositiveZ};
+    sideways.mergeSeams = true; // T05 (schema 36): merging changes no volume
     (void)model.addFaceExtrusionFeature("Sideways", sideways);
     auto targeted = pull;
     targeted.target = BodyId{box.value()};
@@ -378,11 +378,12 @@ void faceExtrusions(const Handle(TDocStd_Application)& app) {
     BRepGProp::VolumeProperties(result.resultShape, properties);
     require(result.bodies.size() == 1 && std::abs(properties.Mass() - 1900) < 1e-6,
             "Two pulls on a box and one on the first pull's side: 1800 + 2 x 10 x 5");
+    TDataStd_Integer::Set(doc->Main().FindChild(2), 35); // T05: child 15 needs schema 36
+    rejected([&] { (void)NativePrimitiveCodec::read(doc); });
     TDataStd_Integer::Set(doc->Main().FindChild(2), 9);
     rejected([&] { (void)NativePrimitiveCodec::read(doc); }); // T04 children need schema 10
     app->Close(doc);
-    std::cout << "schema 10 face extrusion and push/pull cap round-trip and gate passed"
-              << std::endl;
+    std::cout << "schema 10/36 push/pull cap, seams round-trip and gates passed" << std::endl;
 }
 // M02, schema 13: a symmetric intersect of a second base-plane sketch with the first body
 // round-trips; a schema 12 reader refuses the symmetric child and operation 4; the model
@@ -434,7 +435,6 @@ void symmetricIntersect(const Handle(TDocStd_Application)& app) {
     app->Close(plain);
     std::cout << "schema 13 symmetric intersect round-trip and gate passed\n";
 }
-
 // Schema 17 (user decision 2026-10-13): fillet edges carry ids and may name a rounding face; a
 // schema 16 file has none and Open numbers them 1..n; schema 17 data read as 16 is refused.
 void treatedEdgeIds(const Handle(TDocStd_Application)& app) {

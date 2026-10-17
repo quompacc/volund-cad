@@ -1,3 +1,5 @@
+#include <QCheckBox>
+#include <TopExp_Explorer.hxx>
 #include "IsolatedSettings.hpp"
 #include "ViewportLifecycleSupport.hpp"
 #include <QAction>
@@ -170,6 +172,34 @@ void run() {
                 matches(volume(session), boxVolume + 40 * 40 * 5),
             "OK pulls the top face 5 mm out");
 
+    // T05 (user decision 2026-10-17): the new pull leaves no seams; "Naht entfernen" in its
+    // properties brings them back and removes them again, the volume stays.
+    const auto faces = [&session] {
+        int count = 0;
+        for (TopExp_Explorer explorer(session.currentShape(), TopAbs_FACE); explorer.More();
+             explorer.Next())
+            ++count;
+        return count;
+    };
+    require(faces() == 6, "Pulling the top leaves six faces, no seams");
+    const auto pull = session.features().back().id;
+    require(session.selectFeature(pull), "The pull selected");
+    window.refreshAfterExternalChange();
+    settle();
+    auto* seams = window.findChild<QCheckBox*>(QStringLiteral("extrusionMergeSeamsInput"));
+    require(seams != nullptr && seams->isVisible() && seams->isChecked(),
+            "The pull's properties offer \"Naht entfernen\", switched on");
+    seams->click();
+    settle();
+    require(faces() == 10 && matches(volume(session), boxVolume + 40 * 40 * 5) &&
+                !session.extrusionParameters(pull).mergeSeams,
+            "Switched off, the seams are back");
+    seams = window.findChild<QCheckBox*>(QStringLiteral("extrusionMergeSeamsInput"));
+    seams->click();
+    settle();
+    require(faces() == 6 && session.extrusionParameters(pull).mergeSeams,
+            "Switched on again, they are gone");
+
     // The new top (the pull's end face) is pushed 3 mm back in.
     openOnTop(window, *viewport, session, session.features().back().id);
     distanceField(window).setValue(-3);
@@ -184,7 +214,7 @@ void run() {
                 session.features().back().name == "Drücken 1",
             "A negative distance pushes the face in; both are named after what they do");
     std::cout << "PASS T04c push/pull in the window: context command, arrow, field, cancel, "
-                 "pull and push\n";
+                 "pull and push, seams removed and back\n";
 }
 } // namespace
 

@@ -11,7 +11,11 @@
 #include <BRepAdaptor_Surface.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
 #include <voelund/kernel/Prism.hpp>
+#include <BRep_Tool.hxx>
 #include <TopExp_Explorer.hxx>
+#include <TopoDS_Edge.hxx>
+#include <utility>
+#include <vector>
 #include <memory>
 #include <optional>
 #include <span>
@@ -32,7 +36,53 @@ namespace {
 struct FacePrism final {
     TopoDS_Shape shape;
     std::vector<SupportProvenance> caps;
+    // T05: the end cap's copy of each named profile edge.
+    std::vector<std::pair<document::EdgeOrigin, TopoDS_Shape>> capEdges{};
 };
+
+// T05: a face named twice after the seams went (the box side and the pulled side) is picked by
+// the first name, the older one (the body's names come before the prism's); the later name
+// stays as a second name, so stored references to it remain valid.
+void markSecondNames(std::vector<SupportProvenance>& origins) {
+    std::vector<TopoDS_Shape> named;
+    for (auto& item : origins) {
+        if (std::ranges::any_of(item.faces, [&](const TopoDS_Shape& face) {
+                return std::ranges::any_of(named,
+                                           [&](const auto& other) { return other.IsSame(face); });
+            }))
+            item.secondary = true;
+        named.insert(named.end(), item.faces.begin(), item.faces.end());
+    }
+}
+
+// T05: a profile edge that the join removed (its seam went) lives on as the end cap's copy of
+// it, so the sides of a further pull from the cap are named. An edge that is still there
+// keeps its name alone.
+void nameCapEdges(std::vector<EdgeProvenance>& edges, const FacePrism& prism,
+                  const kernel::ShapeOperationResult& joined) {
+    for (const auto& [name, cap] : prism.capEdges) {
+        const auto item = std::ranges::find(edges, name, &EdgeProvenance::origin);
+        if (item == edges.end() || !item->edges.empty() ||
+            item->coverage != kernel::HistoryCoverage::complete)
+            continue;
+        const auto entry = std::ranges::find_if(joined.history, [&](const auto& history) {
+            return history.operand == kernel::HistoryOperand::second && history.source.IsSame(cap);
+        });
+        if (entry == joined.history.end() || entry->coverage != kernel::HistoryCoverage::complete)
+            continue;
+        std::vector<TopoDS_Edge> images;
+        if (entry->unchanged)
+            images.push_back(TopoDS::Edge(cap));
+        for (const auto& image : entry->modified)
+            images.push_back(TopoDS::Edge(image));
+        if (images.empty())
+            continue;
+        item->source = TopoDS::Edge(cap);
+        BRep_Tool::Range(item->source, item->startParameter, item->endParameter);
+        item->edges = std::move(images);
+        item->parameterMapping = true;
+    }
+}
 
 const SupportFaceFrame& profileFace(const std::vector<SupportFaceFrame>& faces,
                                     const document::SubshapeOrigin& origin) {
@@ -122,6 +172,8 @@ FacePrism makePrism(document::FeatureId extrusion, const TopoDS_Shape& body,
             shifted ? shifted->ModifiedShape(explorer.Current()) : explorer.Current();
         for (const auto& generated : prism.generated(swept))
             addSupportFace(result.caps, side, generated);
+        if (const auto capEdge = prism.endOf(swept); !capEdge.IsNull())
+            result.capEdges.emplace_back(*name, capEdge);
     }
     return result;
 }
@@ -183,10 +235,14 @@ void evaluateFaceExtrusion(const document::DocumentSnapshot& document,
     const auto operation = document::effectiveOperation(parameters, false);
     EvaluatedBody& body = findBody(bodies, outputs, *producer);
     EvaluatedBody& referenceBody = findBody(referenceBodies, outputs, *producer);
-    const auto combine = [operation](const TopoDS_Shape& target, const TopoDS_Shape& tool) {
+    // T05: a join leaves no seam where the prism continues a face or an edge of the body.
+    // Only push/pulls made so (schema 36) merge; older ones keep their seams.
+    const bool merge = parameters.mergeSeams;
+    const auto combine = [operation, merge](const TopoDS_Shape& target, const TopoDS_Shape& tool) {
         return operation == document::ExtrusionOperation::cut
                    ? kernel::ShapeOperations::cutWithHistory(target, tool)
-                   : kernel::ShapeOperations::fuseWithHistory(target, tool);
+               : merge ? kernel::ShapeOperations::fuseMergingWithHistory(target, tool)
+                       : kernel::ShapeOperations::fuseWithHistory(target, tool);
     };
     const auto evaluated = combine(body.shape, prism.shape);
     const auto reference = combine(referenceBody.shape, referencePrism.shape);
@@ -194,14 +250,19 @@ void evaluateFaceExtrusion(const document::DocumentSnapshot& document,
         auto origins = continueSupportOrigins(previous, result, kernel::HistoryOperand::first);
         auto added = continueSupportOrigins(tool, result, kernel::HistoryOperand::second);
         origins.insert(origins.end(), added.begin(), added.end());
+        markSecondNames(origins);
         return origins;
     };
+    auto edges = continueEdgeOrigins(owner.edgeOrigins, evaluated, kernel::HistoryOperand::first);
+    nameCapEdges(edges, prism, evaluated);
+    auto referenceEdges =
+        continueEdgeOrigins(owner.referenceEdgeOrigins, reference, kernel::HistoryOperand::first);
+    nameCapEdges(referenceEdges, referencePrism, reference);
     outputs.push_back(EvaluatedFeature{
         descriptor.id, evaluated.shape, reference.shape, body.bodyId,
         joined(owner.supportOrigins, prism.caps, evaluated), {},
         joined(owner.referenceSupportOrigins, referencePrism.caps, reference),
-        continueEdgeOrigins(owner.edgeOrigins, evaluated, kernel::HistoryOperand::first),
-        continueEdgeOrigins(owner.referenceEdgeOrigins, reference, kernel::HistoryOperand::first)});
+        std::move(edges), std::move(referenceEdges)});
     body.sourceFeature = descriptor.id;
     body.shape = evaluated.shape;
     referenceBody.sourceFeature = descriptor.id;

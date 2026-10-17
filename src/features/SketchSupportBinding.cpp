@@ -91,8 +91,10 @@ std::vector<SupportFaceFrame> supportFaceFrames(const EvaluatedFeature& support)
             BRepAdaptor_Surface(TopoDS::Face(item.faces.front())).GetType() != GeomAbs_Plane)
             continue;
         const auto& face = item.faces.front();
+        // T05: second names of a merged face do not make it ambiguous.
         if (std::ranges::count_if(support.supportOrigins, [&](const SupportProvenance& other) {
-                return std::ranges::any_of(other.faces,
+                return !other.secondary && // one first name; second names come along
+                       std::ranges::any_of(other.faces,
                                            [&](const auto& shape) { return shape.IsSame(face); });
             }) != 1)
             continue;
@@ -122,7 +124,8 @@ std::vector<SupportFaceFrame> supportFaceFrames(const EvaluatedFeature& support)
                           xMin,
                           yMin,
                           xMax,
-                          yMax});
+                          yMax,
+                          item.secondary});
     }
     return result;
 }

@@ -16,7 +16,7 @@ CadSession::bindSelectedSupport(document::FeatureId support, const TopoDS_Shape&
     std::optional<features::SupportOrigin> origin;
     for (const auto& item : found->supportOrigins) {
         if (item.coverage != kernel::HistoryCoverage::complete || item.faces.size() != 1 ||
-            !item.faces.front().IsSame(face))
+            !item.faces.front().IsSame(face) || item.secondary) // T05: the older name binds
             continue;
         if (origin)
             throw std::invalid_argument("Selected face has ambiguous ancestry");
@@ -45,8 +45,10 @@ CadSession::faceReference(document::FeatureId support, const features::SupportOr
 document::BodyFaceReference CadSession::faceReference(document::FeatureId support,
                                                       const TopoDS_Shape& face) const {
     const auto faces = supportFaces(support);
-    const auto found = std::ranges::find_if(
-        faces, [&](const features::SupportFaceFrame& item) { return item.face.IsSame(face); });
+    // T05: a merged face is picked by its older name.
+    const auto found = std::ranges::find_if(faces, [&](const features::SupportFaceFrame& item) {
+        return item.face.IsSame(face) && !item.secondary;
+    });
     if (found == faces.end())
         throw std::invalid_argument("Pick a planar face with a stable origin");
     return faceReference(support, found->origin);

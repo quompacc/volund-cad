@@ -423,8 +423,8 @@ void pushPull() {
                     QJsonObject{{"feature", first}, {"cap", "end"}},
             "A pull joins and offers its end face as a cap: " + text(top));
     pullUp(2);
-    // T04b: a side of a pull comes as {"side": edge} and can be pulled. Only the first pull's
-    // sides are named (by the box edges); the second pull's edges have no names yet.
+    // T04b: a side of a pull comes as {"side": edge} and can be pulled. T05: the pull merged
+    // with the box side, so that name is a second name of the whole +x side (17 high).
     {
         const auto body = client.context().value("bodies").toArray().at(0).toObject();
         QJsonObject side;
@@ -436,16 +436,16 @@ void pushPull() {
         client.committed("push_pull_face", {{"supportId", body.value("supportId")},
                                             {"face", side},
                                             {"distance", mm(1)}});
-        require(near(test::volumeOf(session.currentShape()), 30 * 20 * 17 + 1 * 20 * 5),
-                "Pulling the side of the first pull adds 1 x 20 x 5");
+        require(near(test::volumeOf(session.currentShape()), 30 * 20 * 17 + 1 * 20 * 17),
+                "Pulling the side of the first pull adds 1 x 20 x 17");
     }
     const auto [current, bottom] = faceFacing(-1);
     client.committed("push_pull_face", {{"supportId", current},
                                         {"face", bottom.value("face")},
                                         {"distance", mm(-3)}});
     require(session.validBodies().size() == 1 &&
-                near(test::volumeOf(session.currentShape()), 30 * 20 * 14 + 1 * 20 * 5),
-            "The bottom faces down; pushing it cuts 3 mm into the box");
+                near(test::volumeOf(session.currentShape()), 31 * 20 * 14),
+            "The bottom faces down; pushing it cuts 3 mm from the whole bottom (31 x 20)");
 }
 
 void rejections() {

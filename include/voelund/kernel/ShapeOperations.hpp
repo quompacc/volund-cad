@@ -28,6 +28,12 @@ class ShapeOperations final {
   public:
     [[nodiscard]] static ShapeOperationResult fuseWithHistory(const TopoDS_Shape& left,
                                                               const TopoDS_Shape& right);
+    // T05 (MergingFuse.cpp): a join without seams where the right shape continues a face or an
+    // edge of the left one; coplanar faces and collinear edges of the two are unified and the
+    // history follows. Falls back to the plain join where two shapes of the left one would
+    // merge with each other.
+    [[nodiscard]] static ShapeOperationResult fuseMergingWithHistory(const TopoDS_Shape& left,
+                                                                     const TopoDS_Shape& right);
     [[nodiscard]] static ShapeOperationResult cutWithHistory(const TopoDS_Shape& input,
                                                              const TopoDS_Shape& tool);
     [[nodiscard]] static ShapeOperationResult intersectWithHistory(const TopoDS_Shape& left,

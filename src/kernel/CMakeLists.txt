@@ -1,4 +1,4 @@
-add_library(voelund_kernel STATIC ShapeFactory.cpp ShapeOperations.cpp Prism.cpp Revolution.cpp ShellOperation.cpp SolidPrimitives.cpp Sweep.cpp Loft.cpp Helix.cpp DraftOperation.cpp Measurement.cpp StepExchange.cpp)
+add_library(voelund_kernel STATIC ShapeFactory.cpp ShapeOperations.cpp Prism.cpp Revolution.cpp ShellOperation.cpp SolidPrimitives.cpp Sweep.cpp Loft.cpp Helix.cpp DraftOperation.cpp Measurement.cpp StepExchange.cpp MergingFuse.cpp)
 
 target_include_directories(
     voelund_kernel
@@ -19,6 +19,7 @@ target_link_libraries(
         TKFillet
         TKOffset
     PRIVATE
+        TKShHealing # T05: ShapeUpgrade_UnifySameDomain
         # M17: STEP with names and units through an XCAF document.
         TKDESTEP
         TKXCAF

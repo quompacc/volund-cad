@@ -15,6 +15,9 @@ struct SupportProvenance final {
     // Source coordinate frame is carried unchanged through Booleans.
     // Primitive placement and prism generation supply the already transformed face.
     TopoDS_Shape frameFace{};
+    // T05: the face also carries an older name (a seam between them went). This name still
+    // resolves, so stored references stay valid; new picks take the older name.
+    bool secondary{false};
 };
 enum class SupportResolutionStatus { resolved, missing, ambiguous, unavailable };
 struct SupportResolution final {

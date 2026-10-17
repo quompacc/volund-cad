@@ -102,6 +102,8 @@ QJsonObject encodeFace(const features::SupportFaceFrame& face) {
     json.insert("face", encodeFaceOrigin(face.origin));
     json.insert("min", QJsonArray{clean(face.minX), clean(face.minY)});
     json.insert("max", QJsonArray{clean(face.maxX), clean(face.maxY)});
+    if (face.secondary) // T05: a second name of a merged face; picks take the first one
+        json.insert("secondary", true);
     return json;
 }
 
