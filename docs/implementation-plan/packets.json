@@ -312,12 +312,15 @@
       ],
       "acceptance": "Formatverletzung, verbotene Schichtkante und ausgeschalteter Analysepfad machen die jeweilige Pflichtprüfung rot. Keine Änderung an Upstream. Vorgeschlagene Zielnamen und lokale Befehle sind dokumentiert.",
       "boundary": "Kein vollständiger Quellbaum-Reformat in einem Featurecommit; nötige Altlasten separat mit Paket-IDs abarbeiten.",
-      "status": "planned",
+      "status": "done",
       "gate": "G0",
       "chapter": "03-fundament.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/A04.md"
+      ],
+      "completedCommit": "7e7bd95",
+      "completedDate": "2026-10-17"
     },
     {
       "id": "A05",

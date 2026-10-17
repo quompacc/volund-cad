@@ -5,9 +5,10 @@
 **Einstieg:** [Fortsetzungsnotiz](session-checkpoint-2026-10-16.md). G3 (mechanisches CAD v1)
 ist seit T05 (Nähte nach Drücken/Ziehen, 17.10.2026) formal geschlossen
 ([G3-Bericht](implementation-plan/evidence/G3.md)). Umfang und Grenzen für Anwender stehen im
-[Handbuch](handbuch.md). G2 ist seit PAR02 (Parametertabelle, 16.10.2026) geschlossen. Als
-Nächstes folgen A02 (Messung der zyklomatischen Komplexität) und A04. Alles darunter ist
-historisch.
+[Handbuch](handbuch.md). G2 ist seit PAR02 (Parametertabelle, 16.10.2026) geschlossen. A02
+(Zyklomatik) und A04 (Format-, Schichten- und Funktionsgrenzen-Pflichtprüfung, sichtbare
+Ausnahmeliste `tools/quality/function-limits.txt`) sind seit 17.10.2026 abgenommen. Alles darunter
+ist historisch.
 
 ## Stand – 10. Oktober 2026
 
