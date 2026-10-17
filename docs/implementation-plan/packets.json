@@ -343,12 +343,15 @@
       ],
       "acceptance": "Völunds STEP-Import trifft Volumen und Fläche der NIST-Teile auf 1e-5 und den Schwerpunkt auf 0,01 mm; Export und Re-Import bleiben in dieser Toleranz. Die FreeCAD-Teile stimmen in Volumen, Fläche, Schwerpunkt und Flächenzahl überein oder stehen mit Grund in der Abweichungsliste. Ein verfälschter Referenzwert lässt den Test scheitern.",
       "boundary": "Nutzerentscheidung 2026-10-17 (vor L01 eingeschoben). Kein FreeCAD und kein Python im Testlauf; Referenzen nur mit belegter Herkunft.",
-      "status": "planned",
+      "status": "done",
       "gate": "G4",
       "chapter": "06-plattform-release.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/Q01.md"
+      ],
+      "completedCommit": "bc6d22c",
+      "completedDate": "2026-10-17"
     },
     {
       "id": "A05",
