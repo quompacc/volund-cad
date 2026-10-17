@@ -18,7 +18,8 @@ trap 'rm -rf "$work"' EXIT
 
 {
     echo "# A-PERF-01 $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-    echo "# commit $(git -C "$repository_root" rev-parse HEAD 2>/dev/null || echo unknown)"
+    # VOELUND_PERF_COMMIT names the measured state when the tree is not a plain checkout.
+    echo "# commit ${VOELUND_PERF_COMMIT:-$(git -C "$repository_root" rev-parse HEAD 2>/dev/null || echo unknown)}"
     echo "# build $(sed -n 's/^CMAKE_BUILD_TYPE:STRING=//p' "$build/CMakeCache.txt")"
     echo "# cpu $(sed -n 's/^model name[^:]*: //p' /proc/cpuinfo | head -n 1), $(nproc) threads"
     echo "# memory $(awk '/MemTotal/ {printf "%.1f GiB", $2 / 1048576}' /proc/meminfo)"
@@ -27,7 +28,11 @@ trap 'rm -rf "$work"' EXIT
 for stage in sketch-100 sketch-1000 features-10 features-100 features-500 bodies-1 bodies-10 \
     bodies-100; do
     echo "running $stage" >&2
-    "$bench" "$stage" "$work" 2>&1 | grep -E '^stage=|failed' >>"$report" ||
-        echo "stage=$stage failed" >>"$report"
+    # A stage that does not finish within the limit is itself a result (e.g. features-500).
+    if ! timeout "${VOELUND_PERF_STAGE_LIMIT:-900}" "$bench" "$stage" "$work" >"$work/out.txt" 2>&1; then
+        limit=${VOELUND_PERF_STAGE_LIMIT:-900}
+        echo "stage=$stage metric=aborted_after value=$limit unit=s" >>"$report"
+    fi
+    grep -E '^stage=|failed' "$work/out.txt" >>"$report" || true
 done
 cat "$report"

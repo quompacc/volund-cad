@@ -1,6 +1,7 @@
 #include "SketchBSplineCurves.hpp"
 #include "SketchConnection.hpp"
 #include "SketchPlaneGuard.hpp"
+#include "SketchProfileFace.hpp"
 #include <voelund/features/GeometryEvaluationError.hpp>
 #include <voelund/features/SketchEvaluation.hpp>
 
@@ -323,6 +324,22 @@ evaluateSketchProfileFaces(const document::SketchParameters& sketch,
     return faces;
 }
 
+EvaluatedProfileFace detail::profileFaceOf(const document::SketchParameters& sketch,
+                                           const SketchProfile& profile) {
+    auto boundary = profile.elementIds;
+    std::ranges::sort(boundary, {}, &document::SketchElementId::value);
+    std::vector<EvaluatedContourEdge> edges;
+    const auto face = profileFace(sketch, profile, edges);
+    for (const auto& edge : edges) {
+        bool present = false;
+        for (TopExp_Explorer it(face, TopAbs_EDGE); it.More(); it.Next())
+            present |= it.Current().IsSame(edge.edge);
+        if (!present)
+            throw GeometryEvaluationError("Named contour edge is absent from the built profile");
+    }
+    return {std::move(boundary), face, std::move(edges)};
+}
+
 std::vector<EvaluatedProfileFace>
 evaluateNamedProfileFaces(const document::SketchParameters& sketch,
                           std::span<const document::SketchProfileId> selectedProfiles) {
@@ -365,19 +382,7 @@ evaluateNamedProfileFaces(const document::SketchParameters& sketch,
             std::ranges::find(selectedProfiles, profile.id) == selectedProfiles.end()) {
             continue;
         }
-        auto boundary = profile.elementIds;
-        std::ranges::sort(boundary, {}, &document::SketchElementId::value);
-        std::vector<EvaluatedContourEdge> edges;
-        const auto face = profileFace(sketch, profile, edges);
-        for (const auto& edge : edges) {
-            bool present = false;
-            for (TopExp_Explorer it(face, TopAbs_EDGE); it.More(); it.Next())
-                present |= it.Current().IsSame(edge.edge);
-            if (!present)
-                throw GeometryEvaluationError(
-                    "Named contour edge is absent from the built profile");
-        }
-        faces.push_back({std::move(boundary), face, std::move(edges)});
+        faces.push_back(detail::profileFaceOf(sketch, profile));
         ++selectedCount;
     }
     if (!selectedProfiles.empty() && selectedCount != selectedProfiles.size())

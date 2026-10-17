@@ -1,4 +1,5 @@
 #include "SketchPlaneGuard.hpp"
+#include "SketchProfileFace.hpp"
 #include "SketchRegionIntervalFaces.hpp"
 #include <voelund/features/GeometryEvaluationError.hpp>
 #include <voelund/features/SketchEvaluation.hpp>
@@ -102,6 +103,8 @@ TopoDS_Face withHole(const TopoDS_Face& outer, const TopoDS_Face& hole) {
 }
 
 // The legacy loop face whose loop carries exactly these elements; the bridge's only source.
+// L06: built from the loops evaluateRegionFaces detected once, not by detecting them again
+// for every region (quadratic in the number of regions).
 EvaluatedProfileFace loopFace(const document::SketchParameters& sketch,
                               std::span<const SketchProfile> loops,
                               const std::set<std::uint64_t>& elements) {
@@ -109,10 +112,8 @@ EvaluatedProfileFace loopFace(const document::SketchParameters& sketch,
         std::set<std::uint64_t> loopElements;
         for (document::SketchElementId element : loop.elementIds)
             loopElements.insert(element.value());
-        if (loopElements == elements) {
-            const document::SketchProfileId id[]{loop.id};
-            return evaluateNamedProfileFaces(sketch, id).front();
-        }
+        if (loopElements == elements)
+            return detail::profileFaceOf(sketch, loop);
     }
     throw GeometryEvaluationError("Region boundary is no closed loop" + elementList(elements),
                                   "region-open", {elements.begin(), elements.end()});
@@ -160,6 +161,7 @@ evaluateRegionFaces(const document::SketchParameters& sketch,
         detail::requireCanonicalPlane(sketch.plane);
         return detail::intervalRegionFaces(sketch, identities.regions, selected);
     }
+    detail::requireCanonicalPlane(sketch.plane); // once for all loop faces below
     const auto innerRegion = [&](std::size_t hole) -> std::optional<std::size_t> {
         const auto found = std::ranges::find(cells, hole, &SketchRegion::outer);
         if (found == cells.end())
