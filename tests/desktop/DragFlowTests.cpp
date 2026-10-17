@@ -3,8 +3,8 @@
 #include "UiDriver.hpp"
 #include "ViewportLifecycleSupport.hpp"
 
-#include <Bnd_Box.hxx>
 #include <BRepBndLib.hxx>
+#include <Bnd_Box.hxx>
 #include <QAction>
 #include <QApplication>
 #include <QKeyEvent>
@@ -33,7 +33,9 @@ namespace {
 using namespace voelund;
 using test::press;
 using Points = std::vector<std::pair<double, double>>;
-void require(bool condition, const std::string& message) { test::require(condition, message.c_str()); }
+void require(bool condition, const std::string& message) {
+    test::require(condition, message.c_str());
+}
 
 bool samePoints(const Points& a, const Points& b) {
     if (a.size() != b.size())
@@ -154,7 +156,8 @@ void sketchDrag(Window& w) {
             "100 redraws change neither history nor the document");
 
     test::answerDiscardQuestion(QStringLiteral("Verwerfen"));
-    auto* cancel = w.child("activeToolPanel").findChild<QPushButton*>(QStringLiteral("toolCancelButton"));
+    auto* cancel =
+        w.child("activeToolPanel").findChild<QPushButton*>(QStringLiteral("toolCancelButton"));
     press(*cancel);
 }
 
@@ -197,8 +200,7 @@ void bodyDrag(Window& w) {
 }
 
 void extrusionDrag(Window& w) {
-    document::SketchParameters rectangle{document::datumSketchPlane(document::DatumPlane::xy),
-                                         {}};
+    document::SketchParameters rectangle{document::datumSketchPlane(document::DatumPlane::xy), {}};
     rectangle.datum = document::DatumPlane::xy;
     rectangle.elements.values.push_back(
         {document::SketchElementId{1}, document::SketchRectangle{60, 0, 80, 10}});
@@ -248,11 +250,9 @@ void extrusionDrag(Window& w) {
     test::render(*w.viewport);
     drag();
     const auto second = center();
-    require(apart(second, first) > 1e-3 && moves() == 1,
-            "The second drag changes the same move");
+    require(apart(second, first) > 1e-3 && moves() == 1, "The second drag changes the same move");
     require(w.session.undo().status() == application::CommandStatus::committed &&
-                apart(center(), first) < 1e-9 &&
-                moves() == 1,
+                apart(center(), first) < 1e-9 && moves() == 1,
             "One undo takes back the second drag only");
 }
 

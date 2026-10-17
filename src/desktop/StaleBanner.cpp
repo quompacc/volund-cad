@@ -10,9 +10,9 @@ namespace voelund::desktop {
 
 StaleBanner::StaleBanner(QWidget& viewport) : QFrame(&viewport) {
     setObjectName(QStringLiteral("staleGeometryBanner"));
-    setStyleSheet(QStringLiteral(
-        "#staleGeometryBanner { background: #fff4e5; border: 1px solid #e08e0b; "
-        "border-radius: 8px; } #staleGeometryBanner QLabel { color: #5c3b00; }"));
+    setStyleSheet(
+        QStringLiteral("#staleGeometryBanner { background: #fff4e5; border: 1px solid #e08e0b; "
+                       "border-radius: 8px; } #staleGeometryBanner QLabel { color: #5c3b00; }"));
     auto* layout = new QHBoxLayout(this);
     layout->setContentsMargins(12, 4, 6, 4);
     text_ = new QLabel(this);

@@ -1,5 +1,5 @@
-#include "IsolatedSettings.hpp"
 #include "../../src/features/FeatureEvaluationDetail.hpp"
+#include "IsolatedSettings.hpp"
 #include <QAction>
 #include <QApplication>
 #include <QDir>

@@ -1,8 +1,8 @@
 #include "ModelTreePanel.hpp"
 #include "FeatureErrorCard.hpp"
 
-#include <QHeaderView>
 #include <QBrush>
+#include <QHeaderView>
 #include <QSignalBlocker>
 #include <QTimer>
 #include <QTreeWidgetItem>
@@ -11,8 +11,8 @@
 
 #include <algorithm>
 #include <map>
-#include <vector>
 #include <utility>
+#include <vector>
 
 namespace voelund::desktop {
 namespace {
@@ -142,8 +142,8 @@ void ModelTreePanel::showModel(const application::ModelOutline& outline,
     for (const application::OutlineBody& body : outline.bodies) {
         const auto bodyId = body.id.value();
         // M01: the user's name and the stored visibility.
-        QString name = body.name.empty() ? tr("Körper %1").arg(number)
-                                         : QString::fromStdString(body.name);
+        QString name =
+            body.name.empty() ? tr("Körper %1").arg(number) : QString::fromStdString(body.name);
         if (body.consumed) // M21: taken into another body by a combination
             name += tr(" (aufgenommen)");
         ++number;

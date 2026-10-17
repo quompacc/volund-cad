@@ -97,8 +97,7 @@ void run() {
     require(matches(shown(*viewport), pi * 9 * 50), "The first path previews 50");
     panel(window)->findChild<QPushButton*>(QStringLiteral("toolAcceptButton"))->click();
     settle();
-    require(session.features().back().name == "Folgen 1" &&
-                matches(volume(session), pi * 9 * 50),
+    require(session.features().back().name == "Folgen 1" && matches(volume(session), pi * 9 * 50),
             "OK keeps the sweep");
     command(window, "history.undo").trigger();
     settle();

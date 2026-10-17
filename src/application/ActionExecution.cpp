@@ -101,8 +101,8 @@ class Validation final {
                 Findings::note(findings_.nonFinite, "The value is not finite");
     }
     void placement(const kernel::RigidTransform& value) {
-        finite({value.translationX, value.translationY, value.translationZ,
-                value.rotationX.value(), value.rotationY.value(), value.rotationZ.value()});
+        finite({value.translationX, value.translationY, value.translationZ, value.rotationX.value(),
+                value.rotationY.value(), value.rotationZ.value()});
     }
     void lengths(std::initializer_list<Quantity> values) {
         for (const auto& value : values)
@@ -373,8 +373,8 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot,
                 return session.editSketchParameters(a.sketch, a.parameters, reject);
             },
             [&](const CreateProfileExtrusionAction& a) {
-                return session.createSketchProfileExtrusion(a.sketch, a.regions,
-                                                            a.distance.value, a.mode);
+                return session.createSketchProfileExtrusion(a.sketch, a.regions, a.distance.value,
+                                                            a.mode);
             },
             [&](const SetExtrusionDistanceAction& a) {
                 auto parameters = snapshot.extrusionParameters(a.extrusion);
@@ -408,9 +408,9 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot,
             },
             [&](const SetPlacementAction& a) {
                 return session.editFeaturePlacement(
-                    a.feature, {a.x.value, a.y.value, a.z.value, kernel::Radians(a.rotationX.value),
-                                kernel::Radians(a.rotationY.value),
-                                kernel::Radians(a.rotationZ.value)},
+                    a.feature,
+                    {a.x.value, a.y.value, a.z.value, kernel::Radians(a.rotationX.value),
+                     kernel::Radians(a.rotationY.value), kernel::Radians(a.rotationZ.value)},
                     reject);
             },
             [&](const CreateSketchAction& a) {
@@ -441,9 +441,8 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot,
                 return session.editChamferParameters(a.chamfer, a.parameters, reject);
             },
             [&](const CreateHoleAction& a) {
-                return session.createHole(
-                    a.support, a.face, a.x.value, a.y.value, a.diameter.value,
-                    a.depth ? std::optional{a.depth->value} : std::nullopt);
+                return session.createHole(a.support, a.face, a.x.value, a.y.value, a.diameter.value,
+                                          a.depth ? std::optional{a.depth->value} : std::nullopt);
             },
             [&](const EditHoleParametersAction& a) {
                 return session.editHoleParameters(a.hole, a.parameters, reject);
@@ -524,7 +523,8 @@ void recordChanges(ActionResult& result, const DocumentSnapshot& before,
     }
     const auto& parameters = before.parameterTable().values;
     for (const auto& parameter : after.parameterTable().values) {
-        const auto old = std::ranges::find(parameters, parameter.id, &document::DocumentParameter::id);
+        const auto old =
+            std::ranges::find(parameters, parameter.id, &document::DocumentParameter::id);
         if (old == parameters.end())
             result.createdParameters.push_back(parameter.id);
         else if (*old != parameter)

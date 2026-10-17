@@ -22,7 +22,8 @@ constexpr double tolerance = 1e-9;
 
 double distance(SketchPoint a, SketchPoint b) { return std::hypot(a.x - b.x, a.y - b.y); }
 SketchPoint onArc(const SketchArc& arc, double angle) {
-    return {arc.center.x + arc.radius * std::cos(angle), arc.center.y + arc.radius * std::sin(angle)};
+    return {arc.center.x + arc.radius * std::cos(angle),
+            arc.center.y + arc.radius * std::sin(angle)};
 }
 
 // One element of the contour as it is traversed; `reversed` runs against its stored order.

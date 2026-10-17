@@ -1,10 +1,10 @@
-#include "IsolatedSettings.hpp"
 #include "../../src/desktop/ModelTreePanel.hpp"
+#include "IsolatedSettings.hpp"
 #include "ViewportLifecycleSupport.hpp"
 #include <QAction>
 #include <QApplication>
-#include <QPushButton>
 #include <QDir>
+#include <QPushButton>
 #include <QStatusBar>
 #include <QTreeWidget>
 #include <iostream>

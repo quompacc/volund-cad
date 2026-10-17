@@ -1,31 +1,31 @@
 #pragma once
 #include "AutosaveController.hpp"
-#include "RecoveryStore.hpp"
+#include "CombineToolController.hpp"
 #include "CommandActions.hpp"
 #include "CommandPalette.hpp"
 #include "ContextBar.hpp"
+#include "DatumToolController.hpp"
 #include "DocumentActions.hpp"
+#include "DraftToolController.hpp"
+#include "FeatureErrorCard.hpp"
 #include "FeaturePropertiesPanel.hpp"
-#include "FloatingCard.hpp"
-#include "MainWindowSupport.hpp"
-#include "ShellHeader.hpp"
-#include "ShellState.hpp"
 #include "FilletToolController.hpp"
-#include "CombineToolController.hpp"
-#include "MirrorToolController.hpp"
+#include "FloatingCard.hpp"
+#include "HoleToolController.hpp"
+#include "MainWindowSupport.hpp"
 #include "MeasureToolController.hpp"
+#include "MirrorToolController.hpp"
 #include "MoveToolController.hpp"
 #include "PatternToolController.hpp"
-#include "DatumToolController.hpp"
-#include "ShellToolController.hpp"
-#include "DraftToolController.hpp"
-#include "HoleToolController.hpp"
 #include "PushPullToolController.hpp"
+#include "RecoveryStore.hpp"
+#include "ShellHeader.hpp"
+#include "ShellState.hpp"
+#include "ShellToolController.hpp"
 #include "SketchEditorToolController.hpp"
 #include "SketchExtrusionToolController.hpp"
-#include "FeatureErrorCard.hpp"
-#include "StaleBanner.hpp"
 #include "SketchToolActions.hpp"
+#include "StaleBanner.hpp"
 #include "Theme.hpp"
 #include "TimelineBar.hpp"
 #include "ToolPanelHost.hpp"
@@ -38,8 +38,8 @@
 #include <memory>
 #include <optional>
 #include <voelund/application/CadSession.hpp>
-#include <voelund/desktop/MainWindow.hpp>
 #include <voelund/assistant/Assistant.hpp>
+#include <voelund/desktop/MainWindow.hpp>
 #include <voelund/desktop/McpAccess.hpp>
 #include <voelund/workspaces/CommandRegistry.hpp>
 class QDockWidget;
@@ -70,15 +70,11 @@ class MainWindow::Impl final {
             inputs.tool = ShellTool::sketchEditor;
         else if ((sketchExtrusionTool && sketchExtrusionTool->isActive()) ||
                  (pushPullTool && pushPullTool->isActive()) ||
-                 (filletTool && filletTool->isActive()) ||
-                 (holeTool && holeTool->isActive()) ||
-                 (combineTool && combineTool->isActive()) ||
-                 (datumTool && datumTool->isActive()) ||
-                 (shellTool && shellTool->isActive()) ||
-                 (draftTool && draftTool->isActive()) ||
+                 (filletTool && filletTool->isActive()) || (holeTool && holeTool->isActive()) ||
+                 (combineTool && combineTool->isActive()) || (datumTool && datumTool->isActive()) ||
+                 (shellTool && shellTool->isActive()) || (draftTool && draftTool->isActive()) ||
                  (mirrorTool && mirrorTool->isActive()) ||
-                 (patternTool && patternTool->isActive()) ||
-                 (moveTool && moveTool->isActive()) ||
+                 (patternTool && patternTool->isActive()) || (moveTool && moveTool->isActive()) ||
                  (measureTool && measureTool->isActive()))
             inputs.tool = ShellTool::extrusion; // Its panel carries the controls (T04c).
         else if (transformAction && transformAction->isChecked())
@@ -144,7 +140,7 @@ class MainWindow::Impl final {
     std::optional<document::BodyId> selectedBody;
     QAction* renameBodyAction{nullptr};
     QAction* bodyVisibilityAction{nullptr};
-    ViewVisibility visibility;                         // U06: model tree eyes (view state)
+    ViewVisibility visibility; // U06: model tree eyes (view state)
     TimelineBar* timeline{nullptr};
     std::unique_ptr<SketchToolActions> sketchActions; // U13
     workspaces::CommandRegistry commandRegistry;
@@ -162,7 +158,7 @@ class MainWindow::Impl final {
     // AI03b: Claude panel and its backend (Claude Code against the server above).
     QAction* assistantPanelAction{nullptr};
     QDockWidget* assistantDock{nullptr};
-    OverlayCard* modelCard{nullptr}; // U14
+    OverlayCard* modelCard{nullptr};     // U14
     OverlayCard* parameterCard{nullptr}; // PAR02: under the model tree
     ParameterPanel* parameterPanel{nullptr};
     QAction* parametersAction{nullptr};

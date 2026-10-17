@@ -54,16 +54,16 @@ std::optional<QJsonObject> McpProtocol::handle(const QJsonObject& message) {
 
     if (method == QLatin1String("initialize")) {
         const auto requested = params.value("protocolVersion").toString();
-        const auto version = supportedVersions().contains(requested)
-                                 ? requested
-                                 : supportedVersions().front();
+        const auto version =
+            supportedVersions().contains(requested) ? requested : supportedVersions().front();
         return success(
-            id, {{"protocolVersion", version},
-                 {"capabilities", QJsonObject{{"tools", QJsonObject{{"listChanged", false}}}}},
-                 {"serverInfo", QJsonObject{{"name", "volund-cad"},
-                                            {"title", "Völund CAD"},
-                                            {"version", QStringLiteral("tools-%1").arg(toolVersion)}}},
-                 {"instructions", instructions}});
+            id,
+            {{"protocolVersion", version},
+             {"capabilities", QJsonObject{{"tools", QJsonObject{{"listChanged", false}}}}},
+             {"serverInfo", QJsonObject{{"name", "volund-cad"},
+                                        {"title", "Völund CAD"},
+                                        {"version", QStringLiteral("tools-%1").arg(toolVersion)}}},
+             {"instructions", instructions}});
     }
     if (method == QLatin1String("ping"))
         return success(id, {});

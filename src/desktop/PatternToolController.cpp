@@ -24,12 +24,11 @@ constexpr double degree = std::numbers::pi / 180.0;
 } // namespace
 
 PatternToolController::PatternToolController(application::CadSession& session,
-                                             viewport::CadViewport& viewport,
-                                             ToolPanelHost& panel,
+                                             viewport::CadViewport& viewport, ToolPanelHost& panel,
                                              std::function<void()> sceneChanged,
                                              std::function<void(const QString&)> statusChanged)
-    : session_(session), viewport_(viewport), panel_(panel),
-      sceneChanged_(std::move(sceneChanged)), statusChanged_(std::move(statusChanged)) {}
+    : session_(session), viewport_(viewport), panel_(panel), sceneChanged_(std::move(sceneChanged)),
+      statusChanged_(std::move(statusChanged)) {}
 
 void PatternToolController::setPreviewHandler(
     std::function<void(const std::vector<features::EvaluatedBody>*)> handler) {
@@ -122,12 +121,18 @@ void PatternToolController::open() {
         {{"count", QObject::tr("Anzahl"), count_, 2.0, 100.0, ToolValueKind::count},
          {"spacing", QObject::tr("Abstand"), spacing_, 0.001, 1'000'000.0},
          {"angle", QObject::tr("Winkel"), angleDegrees_, 0.001, 360.0, ToolValueKind::angle}},
-        {{"kind", QObject::tr("Art"), {QObject::tr("Linear"), QObject::tr("Kreisförmig")},
+        {{"kind",
+          QObject::tr("Art"),
+          {QObject::tr("Linear"), QObject::tr("Kreisförmig")},
           kind_ == document::PatternKind::circular ? 1 : 0},
          {"axis", QObject::tr("Richtung/Achse"), axes, axisIndex_},
-         {"direction", QObject::tr("Richtung"), {QObject::tr("Normal"), QObject::tr("Umgekehrt")},
+         {"direction",
+          QObject::tr("Richtung"),
+          {QObject::tr("Normal"), QObject::tr("Umgekehrt")},
           reversed_ ? 1 : 0},
-         {"mode", QObject::tr("Ergebnis"), {QObject::tr("Neue Körper"), QObject::tr("Vereinigen")},
+         {"mode",
+          QObject::tr("Ergebnis"),
+          {QObject::tr("Neue Körper"), QObject::tr("Vereinigen")},
           mode_ == document::PatternMode::join ? 1 : 0}},
         {},
         [this](const std::string& id, double value) {
@@ -141,15 +146,14 @@ void PatternToolController::open() {
         },
         [this](const std::string& id, int index) {
             if (id == "kind")
-                kind_ = index == 1 ? document::PatternKind::circular
-                                   : document::PatternKind::linear;
+                kind_ =
+                    index == 1 ? document::PatternKind::circular : document::PatternKind::linear;
             if (id == "axis")
                 axisIndex_ = index;
             if (id == "direction")
                 reversed_ = index == 1;
             if (id == "mode")
-                mode_ = index == 1 ? document::PatternMode::join
-                                   : document::PatternMode::newBodies;
+                mode_ = index == 1 ? document::PatternMode::join : document::PatternMode::newBodies;
             syncFields();
             preview();
             highlightEdge();
@@ -196,9 +200,8 @@ void PatternToolController::picked(std::uint64_t body, const TopoDS_Shape& edge)
             if (const auto owner = session_.resultBody(support_))
                 picked = PickedEdge{support_, *owner, *named};
     const auto ownCopy = [&](const document::SubshapeOrigin& origin) {
-        return std::ranges::any_of(origin.instances, [&](const auto& instance) {
-            return instance.feature == editing_;
-        });
+        return std::ranges::any_of(
+            origin.instances, [&](const auto& instance) { return instance.feature == editing_; });
     };
     if (!picked || ownCopy(picked->edge.first) || ownCopy(picked->edge.second)) {
         const auto message =
@@ -213,14 +216,10 @@ void PatternToolController::picked(std::uint64_t body, const TopoDS_Shape& edge)
 }
 
 document::PatternParameters PatternToolController::parameters(document::BodyId body) const {
-    document::PatternParameters result{body,
-                                       kind_,
-                                       {},
-                                       std::nullopt,
-                                       reversed_,
-                                       static_cast<std::uint32_t>(count_),
-                                       spacing_,
-                                       kernel::Radians{angleDegrees_ * degree},
+    document::PatternParameters result{body,      kind_,
+                                       {},        std::nullopt,
+                                       reversed_, static_cast<std::uint32_t>(count_),
+                                       spacing_,  kernel::Radians{angleDegrees_ * degree},
                                        mode_};
     if (axisIndex_ < baseAxisCount) {
         result.axis.baseAxis = static_cast<document::BaseAxis>(axisIndex_ + 1);
@@ -237,13 +236,12 @@ document::PatternParameters PatternToolController::parameters(document::BodyId b
 QString PatternToolController::guidance() const {
     if (!hasAxis())
         return QObject::tr("Klicke eine gerade oder kreisförmige Kante an.");
-    const QString copies = kind_ == document::PatternKind::linear
-                               ? QObject::tr("%1 Exemplare im Abstand von %2 mm")
-                                     .arg(static_cast<int>(count_))
-                                     .arg(spacing_)
-                               : QObject::tr("%1 Exemplare über %2°")
-                                     .arg(static_cast<int>(count_))
-                                     .arg(angleDegrees_);
+    const QString copies =
+        kind_ == document::PatternKind::linear
+            ? QObject::tr("%1 Exemplare im Abstand von %2 mm")
+                  .arg(static_cast<int>(count_))
+                  .arg(spacing_)
+            : QObject::tr("%1 Exemplare über %2°").arg(static_cast<int>(count_)).arg(angleDegrees_);
     return mode_ == document::PatternMode::join
                ? QObject::tr("%1, mit dem Körper vereinigt.").arg(copies)
                : QObject::tr("%1, jede Kopie ein eigener Körper.").arg(copies);

@@ -15,8 +15,7 @@ runAction(application::CadSession& session, application::Action action,
           std::optional<application::DocumentStamp> stamp = std::nullopt,
           std::optional<application::ErrorDisposition> disposition = std::nullopt) {
     return application::executeAction(
-               session,
-               application::prepareRequest(session, std::move(action), stamp, disposition))
+               session, application::prepareRequest(session, std::move(action), stamp, disposition))
         .command;
 }
 

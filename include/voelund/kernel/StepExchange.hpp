@@ -26,9 +26,9 @@ enum class StepImportError {
 };
 struct StepImport final {
     std::vector<StepSolid> solids;
-    std::string sourceUnit{};       // the file's length unit as it names it ("MILLIMETRE", "INCH")
-    std::size_t skippedShapes{0};   // shells, faces and curves that are no solid
-    std::size_t invalidSolids{0};   // solids still invalid after shape healing
+    std::string sourceUnit{};     // the file's length unit as it names it ("MILLIMETRE", "INCH")
+    std::size_t skippedShapes{0}; // shells, faces and curves that are no solid
+    std::size_t invalidSolids{0}; // solids still invalid after shape healing
     std::optional<StepImportError> error{};
     std::string message{};
 };

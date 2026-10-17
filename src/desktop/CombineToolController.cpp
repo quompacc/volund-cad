@@ -16,14 +16,11 @@
 namespace voelund::desktop {
 namespace {
 
-int operationIndex(document::CombineOperation operation) {
-    return static_cast<int>(operation) - 1;
-}
+int operationIndex(document::CombineOperation operation) { return static_cast<int>(operation) - 1; }
 
 } // namespace
 
-CombineToolController::CombineToolController(application::CadSession& session,
-                                             ToolPanelHost& panel,
+CombineToolController::CombineToolController(application::CadSession& session, ToolPanelHost& panel,
                                              std::function<void()> sceneChanged,
                                              std::function<void(const QString&)> statusChanged)
     : session_(session), panel_(panel), sceneChanged_(std::move(sceneChanged)),
@@ -212,8 +209,7 @@ void CombineToolController::accept() {
         return;
     const bool edited = editing_.has_value();
     finish();
-    statusChanged_(edited ? QObject::tr("Kombination geändert")
-                          : QObject::tr("Körper kombiniert"));
+    statusChanged_(edited ? QObject::tr("Kombination geändert") : QObject::tr("Körper kombiniert"));
 }
 
 void CombineToolController::cancel() {

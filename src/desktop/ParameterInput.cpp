@@ -32,9 +32,9 @@ void ParameterSpinBox::setBound(std::optional<QString> name) {
     bound_ = std::move(name);
     // The shown text follows at once, also while the value stays the same.
     lineEdit()->setText(textFromValue(value()) + suffix());
-    setToolTip(bound_ ? tr("Gebunden an den Parameter „%1“; eine Zahl löst die Bindung")
-                            .arg(*bound_)
-                      : tr("Zahl oder =Name eines Parameters"));
+    setToolTip(bound_
+                   ? tr("Gebunden an den Parameter „%1“; eine Zahl löst die Bindung").arg(*bound_)
+                   : tr("Zahl oder =Name eines Parameters"));
 }
 
 void ParameterSpinBox::setBindingRequested(std::function<void(std::optional<QString>)> requested) {

@@ -16,8 +16,8 @@ CommandResult CadSession::createMirror(document::FeatureId support,
     const auto body = resultBody(support);
     if (!body)
         return CommandResult::invalidInput("A mirror needs a current body");
-    document::MirrorParameters parameters{*body, {basePlane, constructionPlane, std::nullopt},
-                                          mode};
+    document::MirrorParameters parameters{
+        *body, {basePlane, constructionPlane, std::nullopt}, mode};
     if (faceSupport || face) {
         if (!faceSupport || !face)
             return CommandResult::invalidInput("A mirror face names its result and face");
@@ -45,8 +45,8 @@ CommandResult CadSession::editMirrorParameters(document::FeatureId featureId,
                                                ErrorDisposition disposition) {
     document::DocumentTransaction transaction(document_);
     auto& candidate = transaction.edit();
-    const auto input = detail::prepareInput(
-        [&] { return candidate.setMirrorParameters(featureId, parameters); });
+    const auto input =
+        detail::prepareInput([&] { return candidate.setMirrorParameters(featureId, parameters); });
     if (!input.value)
         return CommandResult::invalidInput(input.diagnostic);
     if (!*input.value)

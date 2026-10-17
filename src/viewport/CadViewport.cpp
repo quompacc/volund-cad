@@ -8,10 +8,10 @@
 #include "CadViewportNativeBackend.hpp"
 #endif
 
+#include "PlanarFaceSelection.hpp"
 #include "SketchBoxSelection.hpp"
 #include "SketchConstraintPresentation.hpp"
 #include "SketchEditorInteraction.hpp"
-#include "PlanarFaceSelection.hpp"
 #include "SketchPresentation.hpp"
 #include "TransformManipulator.hpp"
 #include "ViewportHighlightStyle.hpp"
@@ -41,10 +41,10 @@
 #include <QShowEvent>
 #include <QTimer>
 #endif
+#include "SelectionBand.hpp"
 #include <BRepBndLib.hxx>
 #include <Bnd_Box.hxx>
 #include <QTimer>
-#include "SelectionBand.hpp"
 #include <QWheelEvent>
 #include <Quantity_Color.hxx>
 #include <Quantity_TypeOfColor.hxx>
@@ -371,8 +371,7 @@ void CadViewport::endPushPull() {
     });
 }
 
-void CadViewport::beginEdgeGrip(const TopoDS_Shape& edges,
-                                const std::array<double, 3>& direction) {
+void CadViewport::beginEdgeGrip(const TopoDS_Shape& edges, const std::array<double, 3>& direction) {
     performViewportOperation(*this, impl_->ready, [&] {
         if (!impl_->ready)
             return;
@@ -405,7 +404,6 @@ void CadViewport::setTheme(const ViewportTheme& theme) {
         update();
     });
 }
-
 
 void CadViewport::setDatums(std::span<const SceneDatum> datums) {
     impl_->pendingDatums.assign(datums.begin(), datums.end());

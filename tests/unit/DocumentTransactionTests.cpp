@@ -80,7 +80,8 @@ void compoundAndHistory() {
     {
         DocumentTransaction cancelled(document);
         require(cancelled.edit().addBoxFeature("Cancelled", {1, 2, 3}) ==
-                    FeatureId{extrusionId.value() + 1}, "candidate reused published ID");
+                    FeatureId{extrusionId.value() + 1},
+                "candidate reused published ID");
         cancelled.rollback();
         mustThrow([&] { static_cast<void>(cancelled.commit()); });
     }
@@ -98,7 +99,8 @@ void compoundAndHistory() {
             "exception after first partial edit leaked");
     DocumentTransaction branch(document);
     require(branch.edit().addBoxFeature("Replacement", {3, 4, 5}) ==
-                FeatureId{extrusionId.value() + 1}, "aborted IDs not restored");
+                FeatureId{extrusionId.value() + 1},
+            "aborted IDs not restored");
     require(branch.commit() && !document.canRedo(), "branch did not discard redo");
 }
 void independentCopiesAndMoves() {
@@ -237,9 +239,7 @@ void allocationSweep(const char* name, Setup setup, Operation operation) {
     ModelDocument copySource;
     static_cast<void>(copySource.addBoxFeature("Copy source history", {9, 8, 7}));
     const auto sourceBefore = fingerprint(copySource);
-    allocationSweep("copy assignment", initial, [&](auto& document) {
-        document = copySource;
-    });
+    allocationSweep("copy assignment", initial, [&](auto& document) { document = copySource; });
     require(fingerprint(copySource) == sourceBefore, "copy assignment changed its source");
     allocationSweep("single mutation", initial, [](auto& document) {
         static_cast<void>(document.addBoxFeature(std::string(200, 'b'), {3, 4, 5}));

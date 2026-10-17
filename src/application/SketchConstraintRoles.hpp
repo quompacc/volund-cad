@@ -33,8 +33,7 @@ inline bool firstIsPoint(SketchConstraintKind kind) {
 inline bool secondIsPoint(SketchConstraintKind kind) {
     return firstIsPoint(kind) && kind != SketchConstraintKind::coordinateX &&
            kind != SketchConstraintKind::coordinateY &&
-           kind != SketchConstraintKind::pointOnObject &&
-           kind != SketchConstraintKind::midpoint &&
+           kind != SketchConstraintKind::pointOnObject && kind != SketchConstraintKind::midpoint &&
            kind != SketchConstraintKind::pointLineDistance;
 }
 

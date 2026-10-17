@@ -72,8 +72,7 @@ bool RecoveryStore::write(const RecoverySnapshot& snapshot) {
         return false;
     platform::AtomicFileStore::write(nativePath(path(id, ".volund")), snapshot.bytes);
     QStringList lines{
-        QStringLiteral("format=%1").arg(metadataFormat),
-        QStringLiteral("document=%1").arg(id),
+        QStringLiteral("format=%1").arg(metadataFormat), QStringLiteral("document=%1").arg(id),
         QStringLiteral("saved=%1").arg(QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs)),
         QStringLiteral("features=%1").arg(snapshot.features),
         QStringLiteral("file=%1").arg(snapshot.originalFile)};
@@ -85,10 +84,9 @@ bool RecoveryStore::write(const RecoverySnapshot& snapshot) {
         lines.append(QStringLiteral("draftFeature=%1").arg(snapshot.draftFeature));
         lines.append(QStringLiteral("draftEdits=%1").arg(snapshot.draftEdits ? 1 : 0));
     }
-    platform::AtomicFileStore::write(nativePath(path(id, ".meta")),
-                                     (lines.join(QLatin1Char('\n')) + QLatin1Char('\n'))
-                                         .toUtf8()
-                                         .toStdString());
+    platform::AtomicFileStore::write(
+        nativePath(path(id, ".meta")),
+        (lines.join(QLatin1Char('\n')) + QLatin1Char('\n')).toUtf8().toStdString());
     if (!snapshot.draft)
         QFile::remove(path(id, ".draft"));
     return true;
@@ -107,8 +105,8 @@ void RecoveryStore::remove(const std::string& documentId) {
 void RecoveryStore::removeStaleTemporaryFiles() const {
     const QDir directory(directory_);
     const auto now = QDateTime::currentDateTimeUtc();
-    for (const QFileInfo& file : directory.entryInfoList(
-             {QStringLiteral(".voelund-save-*.tmp")}, QDir::Files | QDir::Hidden))
+    for (const QFileInfo& file : directory.entryInfoList({QStringLiteral(".voelund-save-*.tmp")},
+                                                         QDir::Files | QDir::Hidden))
         if (file.lastModified().toUTC().secsTo(now) > staleTemporarySeconds)
             QFile::remove(file.absoluteFilePath());
 }
@@ -143,7 +141,8 @@ std::vector<RecoveryEntry> RecoveryStore::candidates() {
             }
             bool countOk = false;
             entry.features = values[QStringLiteral("features")].toULongLong(&countOk);
-            entry.savedAt = QDateTime::fromString(values[QStringLiteral("saved")], Qt::ISODateWithMs);
+            entry.savedAt =
+                QDateTime::fromString(values[QStringLiteral("saved")], Qt::ISODateWithMs);
             entry.originalFile = values[QStringLiteral("file")];
             if (values.contains(QStringLiteral("savedFeatures")))
                 entry.savedFeatures = values[QStringLiteral("savedFeatures")].toULongLong();
@@ -155,8 +154,7 @@ std::vector<RecoveryEntry> RecoveryStore::candidates() {
             }
             entry.damaged = values[QStringLiteral("format")] != QString::number(metadataFormat) ||
                             values[QStringLiteral("document")] != id || !countOk ||
-                            !entry.savedAt.isValid() ||
-                            QFileInfo(path(id, ".volund")).size() == 0;
+                            !entry.savedAt.isValid() || QFileInfo(path(id, ".volund")).size() == 0;
         }
         if (!entry.damaged && !entry.originalFile.isEmpty()) {
             const QFileInfo original(entry.originalFile);

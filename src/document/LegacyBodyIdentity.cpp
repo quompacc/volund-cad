@@ -101,9 +101,9 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
         feature.kind == FeatureKind::pattern || feature.kind == FeatureKind::patternCopy ||
         feature.kind == FeatureKind::move || feature.kind == FeatureKind::stepImport ||
         feature.kind == FeatureKind::importPart ||
-        (feature.kind == FeatureKind::sketch && (std::get<SketchParameters>(parameters).datum ||
-                                                 std::get<SketchParameters>(parameters)
-                                                     .constructionPlane)) ||
+        (feature.kind == FeatureKind::sketch &&
+         (std::get<SketchParameters>(parameters).datum ||
+          std::get<SketchParameters>(parameters).constructionPlane)) ||
         (feature.kind == FeatureKind::extrusion &&
          std::get<ExtrusionParameters>(parameters).faceProfile);
     // M01: a separate cylinder may also stand alone, as a new body at the origin.
@@ -175,8 +175,8 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
             continue;
         if (prism->faceProfile && !isBody(prism->faceProfile->body))
             throw std::invalid_argument("Extrusion profile face is not on a body of this document");
-        if (prism->target && (prism->faceProfile || inputs[*inputs[index]] ||
-                              !isBody(*prism->target)))
+        if (prism->target &&
+            (prism->faceProfile || inputs[*inputs[index]] || !isBody(*prism->target)))
             throw std::invalid_argument("Extrusion target is not a body of this document");
         if (prism->upToFace && !isBody(prism->upToFace->body))
             throw std::invalid_argument("Extrusion end face is not on a body of this document");

@@ -1,13 +1,13 @@
 #pragma once
 #include "../../src/viewport/CadViewportQtOpenGlBackend.hpp"
-#include <algorithm>
-#include <array>
 #include <AIS_Manipulator.hxx>
+#include <Aspect_Window.hxx>
 #include <BRepGProp.hxx>
 #include <GProp_GProps.hxx>
-#include <Aspect_Window.hxx>
 #include <StdSelect_BRepOwner.hxx>
 #include <TopAbs_ShapeEnum.hxx>
+#include <algorithm>
+#include <array>
 #include <cmath>
 #include <stdexcept>
 
@@ -59,7 +59,8 @@ class ViewportTestAccess {
     // T04c: the pointer rests on the push/pull arrow (after a MouseMove).
     static bool pushPullArrowHovered(CadViewport& v) {
         const auto& context = v.impl_->context;
-        return context->HasDetected() && v.impl_->pushPull.matches(context->DetectedInteractive()) &&
+        return context->HasDetected() &&
+               v.impl_->pushPull.matches(context->DetectedInteractive()) &&
                v.impl_->pushPull.hasActiveMode();
     }
     static std::size_t bodyCount(CadViewport& v) { return v.impl_->presentations.size(); }

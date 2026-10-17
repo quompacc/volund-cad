@@ -39,17 +39,17 @@ int integer(const TDF_Label& label) {
 }
 } // namespace
 constexpr int faceExtrusionRole = -2;
-constexpr int treatedEdgeRole = -3; // schema 17: a fillet or chamfer face
+constexpr int treatedEdgeRole = -3;  // schema 17: a fillet or chamfer face
 constexpr int importedFaceRole = -4; // M17 (schema 35): a face of an imported solid
 
 void writeNativeSubshapeOrigin(const TDF_Label& label, const SubshapeOrigin& origin) {
     validateSubshapeOrigin(origin);
     TDataStd_AsciiString::Set(label.FindChild(2), std::to_string(origin.feature.value()).c_str());
-    TDataStd_Integer::Set(label.FindChild(3), origin.faceExtrusion ? faceExtrusionRole
-                                              : origin.treatedEdge ? treatedEdgeRole
+    TDataStd_Integer::Set(label.FindChild(3), origin.faceExtrusion  ? faceExtrusionRole
+                                              : origin.treatedEdge  ? treatedEdgeRole
                                               : origin.importedFace ? importedFaceRole
-                                              : origin.role ? static_cast<int>(*origin.role)
-                                                            : -1);
+                                              : origin.role         ? static_cast<int>(*origin.role)
+                                                                    : -1);
     const auto boundary = label.FindChild(4);
     TDataStd_Integer::Set(boundary, static_cast<int>(origin.extrusionBoundary.size()));
     int index = 0;
@@ -158,8 +158,8 @@ void writeNativeSketchSupport(const TDF_Label& label, const SketchSupportBinding
     for (int i = 1; i <= 9; ++i)
         data->SetValue(i, values[i - 1]);
 }
-SketchSupportBinding readNativeSketchSupport(const TDF_Label& label,
-                                             std::size_t remainingElements, int schemaVersion) {
+SketchSupportBinding readNativeSketchSupport(const TDF_Label& label, std::size_t remainingElements,
+                                             int schemaVersion) {
     require(label.NbChildren() == 5 + nativeSubshapeOriginExtension(label));
     const auto origin = readNativeSubshapeOrigin(label, remainingElements, schemaVersion);
     Handle(TDataStd_RealArray) data;

@@ -38,8 +38,8 @@ void emptyDocumentCylinder() {
     application::CadSession session;
     session.newDocument();
     require(session.canAddCylinder(), "An empty document offers a cylinder");
-    const auto result = act(session, application::CreateCylinderAction{
-                                         std::nullopt, CylinderResultMode::separate});
+    const auto result =
+        act(session, application::CreateCylinderAction{std::nullopt, CylinderResultMode::separate});
     require(result.command.status() == CommandStatus::committed,
             "New-body cylinder: " + result.command.diagnostic());
     require(session.features().size() == 1 && !session.features().front().inputFeature &&
@@ -47,23 +47,21 @@ void emptyDocumentCylinder() {
             "One cylinder without input, one body");
     double x0 = 0, y0 = 0, z0 = 0, x1 = 0, y1 = 0, z1 = 0;
     bounds(session.validBodies().front().shape).Get(x0, y0, z0, x1, y1, z1);
-    require(std::abs((x0 + x1) / 2) < 1e-6 && std::abs((y0 + y1) / 2) < 1e-6 &&
-                std::abs(z0) < 1e-3,
+    require(std::abs((x0 + x1) / 2) < 1e-6 && std::abs((y0 + y1) / 2) < 1e-6 && std::abs(z0) < 1e-3,
             "It stands on the origin");
 
     // A join without input is refused, the document unchanged.
-    const auto join = act(session, application::CreateCylinderAction{std::nullopt,
-                                                                     CylinderResultMode::join});
-    require(join.command.status() != CommandStatus::committed &&
-                session.features().size() == 1,
+    const auto join =
+        act(session, application::CreateCylinderAction{std::nullopt, CylinderResultMode::join});
+    require(join.command.status() != CommandStatus::committed && session.features().size() == 1,
             "A join needs a body");
     const auto cylinder = session.features().front().id;
     auto parameters = session.cylinderParameters(cylinder);
     parameters.resultMode = CylinderResultMode::join;
-    require(session.editCylinderParameters(cylinder, parameters,
-                                           application::ErrorDisposition::reject)
-                    .status() != CommandStatus::committed,
-            "A new-body cylinder cannot be switched to join");
+    require(
+        session.editCylinderParameters(cylinder, parameters, application::ErrorDisposition::reject)
+                .status() != CommandStatus::committed,
+        "A new-body cylinder cannot be switched to join");
 
     const auto path = test::temporaryFilePath("voelund-m01-cylinder.volund");
     session.saveDocument(path);
@@ -88,8 +86,7 @@ void selectedBodyIsTheTarget() {
     require(act(session, application::CreateCylinderAction{producer, CylinderResultMode::join})
                     .command.status() == CommandStatus::committed,
             "Join to A");
-    require(session.validBodies().size() == 2 &&
-                session.features().back().inputFeature == a,
+    require(session.validBodies().size() == 2 && session.features().back().inputFeature == a,
             "The cylinder joined A; B untouched");
 }
 } // namespace

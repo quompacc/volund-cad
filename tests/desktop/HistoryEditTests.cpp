@@ -5,10 +5,10 @@
 #include <GProp_GProps.hxx>
 #include <QAction>
 #include <QApplication>
-#include <QMenu>
-#include <QTimer>
 #include <QDoubleSpinBox>
+#include <QMenu>
 #include <QPushButton>
+#include <QTimer>
 #include <QToolButton>
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
@@ -73,9 +73,7 @@ QToolButton& timelineStep(QWidget& window, int index) {
             return *step;
     throw std::runtime_error("Timeline step missing");
 }
-double plateVolume(double height) {
-    return 400 * height - 20 * 16 * (1 - std::numbers::pi / 4);
-}
+double plateVolume(double height) { return 400 * height - 20 * 16 * (1 - std::numbers::pi / 4); }
 
 void run() {
     application::CadSession session;
@@ -92,7 +90,7 @@ void run() {
         {document::SketchElementId{1}, document::SketchRectangle{0, 0, 20, 20}});
     square.elements.nextId = 2;
     require(session.createDatumSketchExtrusion(
-                    square, features::identifySketchRegions(square.elements.values).ids, 10)
+                       square, features::identifySketchRegions(square.elements.values).ids, 10)
                     .status() == application::CommandStatus::committed,
             "Plate 20 x 20 x 10");
     const auto extrusion = session.features().back().id;
@@ -135,7 +133,8 @@ void run() {
     for (const auto& state : session.featureStates())
         filletFails = filletFails || state.status != application::FeatureRuntimeStatus::current;
     require(panel(window) == nullptr && session.features().size() == 3 && filletFails &&
-                session.identifiedSnapshot().snapshot().extrusionParameters(extrusion).distance == 3,
+                session.identifiedSnapshot().snapshot().extrusionParameters(extrusion).distance ==
+                    3,
             "Kept with the fillet in error; nothing is deleted");
     require(session.undo().status() == application::CommandStatus::committed &&
                 matches(volume(session), plateVolume(10)),
@@ -154,8 +153,8 @@ void run() {
             "Unterdrücken offered for the fillet");
     suppress->trigger();
     settle();
-    require(matches(volume(session), 4000) && timelineStep(window, 2).property("featureState") ==
-                                                  QStringLiteral("suppressed") &&
+    require(matches(volume(session), 4000) &&
+                timelineStep(window, 2).property("featureState") == QStringLiteral("suppressed") &&
                 suppress->text() == QStringLiteral("Aktivieren"),
             "Suppressed: full plate, step marked, the command reactivates");
     // The menu of the step: its action is triggered as a user would pick it.
@@ -202,10 +201,12 @@ void run() {
     require(!session.rollbackAfter() && matches(volume(session), plateVolume(10)) &&
                 !window.findChild<QToolButton*>(QStringLiteral("timelineEnd"))->isEnabled(),
             "The end marker rolls forward");
-    std::cout << "PASS M13/M14 history edit: early extrusion reopened, successor error offered, "
-                 "cancel unchanged, kept with errors, nothing deleted, undo; suppress from the "
-                 "context bar, reactivate from the timeline menu; roll back from the menu, forward at "
-                 "the end marker" << std::endl;
+    std::cout
+        << "PASS M13/M14 history edit: early extrusion reopened, successor error offered, "
+           "cancel unchanged, kept with errors, nothing deleted, undo; suppress from the "
+           "context bar, reactivate from the timeline menu; roll back from the menu, forward at "
+           "the end marker"
+        << std::endl;
 }
 } // namespace
 

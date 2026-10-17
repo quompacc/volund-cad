@@ -17,7 +17,9 @@
 // corner right after with 2; OK stores six lines.
 namespace {
 using namespace voelund;
-void require(bool condition, const std::string& message) { test::require(condition, message.c_str()); }
+void require(bool condition, const std::string& message) {
+    test::require(condition, message.c_str());
+}
 
 QAction& command(QWidget& window, const char* id) {
     for (auto* action : window.findChildren<QAction*>())
@@ -34,10 +36,9 @@ void click(viewport::CadViewport& viewport, double x, double y,
     const QPoint point = viewport::ViewportTestAccess::project(viewport, x, y, 0);
     test::mouse(viewport, QEvent::MouseMove, point, Qt::NoButton, Qt::NoButton);
     for (const auto type : {QEvent::MouseButtonPress, QEvent::MouseButtonRelease}) {
-        QMouseEvent event(type, QPointF(point), QPointF(viewport.mapToGlobal(point)),
-                          Qt::LeftButton,
-                          type == QEvent::MouseButtonPress ? Qt::LeftButton : Qt::NoButton,
-                          modifiers);
+        QMouseEvent event(
+            type, QPointF(point), QPointF(viewport.mapToGlobal(point)), Qt::LeftButton,
+            type == QEvent::MouseButtonPress ? Qt::LeftButton : Qt::NoButton, modifiers);
         QApplication::sendEvent(&viewport, &event);
     }
     test::render(viewport);
@@ -104,8 +105,8 @@ void run() {
     int lines = 0;
     for (const auto& element :
          session.sketchParameters(session.features().back().id).elements.values)
-        lines += std::holds_alternative<document::SketchLine>(element.geometry) &&
-                 !element.construction;
+        lines +=
+            std::holds_alternative<document::SketchLine>(element.geometry) && !element.construction;
     require(lines == 6, "OK stores six lines, got " + std::to_string(lines));
     std::cout << "PASS S19 sketch chamfer flow: refused, two corners, OK\n";
 }

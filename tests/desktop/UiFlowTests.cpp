@@ -9,9 +9,9 @@
 #include <QApplication>
 #include <QComboBox>
 #include <QDir>
+#include <QDoubleSpinBox>
 #include <QFile>
 #include <QFileInfo>
-#include <QDoubleSpinBox>
 #include <QLabel>
 #include <QPushButton>
 #include <QStatusBar>
@@ -41,7 +41,9 @@
 namespace {
 using namespace voelund;
 using test::press;
-void require(bool condition, const std::string& message) { test::require(condition, message.c_str()); }
+void require(bool condition, const std::string& message) {
+    test::require(condition, message.c_str());
+}
 
 struct Window final {
     application::CadSession session;
@@ -97,9 +99,9 @@ struct Window final {
         test::settleEvents();
     }
     void type(const char* field, double value) {
-        auto* input = child("activeToolPanel")
-                          .findChild<QDoubleSpinBox*>(QStringLiteral("toolLength_") +
-                                                      QLatin1String(field));
+        auto* input =
+            child("activeToolPanel")
+                .findChild<QDoubleSpinBox*>(QStringLiteral("toolLength_") + QLatin1String(field));
         require(input != nullptr && input->isVisible(), std::string("Field ") + field);
         input->setValue(value);
         emit input->editingFinished();

@@ -1,47 +1,47 @@
-#include <voelund/kernel/PlaneNormal.hpp>
 #include "OperationHistoryDetail.hpp"
 #include <Standard_OutOfMemory.hxx>
 #include <Standard_ProgramError.hxx>
 #include <voelund/kernel/OcctCompatibility.hpp>
+#include <voelund/kernel/PlaneNormal.hpp>
 #include <voelund/kernel/ShapeOperations.hpp>
 
+#include <BRepAdaptor_Curve.hxx>
+#include <BRepAdaptor_Surface.hxx>
 #include <BRepAlgoAPI_Common.hxx>
 #include <BRepAlgoAPI_Cut.hxx>
 #include <BRepAlgoAPI_Fuse.hxx>
-#include <BRepFilletAPI_MakeChamfer.hxx>
-#include <BRepFilletAPI_MakeFillet.hxx>
-#include <BRepAdaptor_Curve.hxx>
-#include <BRepAdaptor_Surface.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepBuilderAPI_MakePolygon.hxx>
+#include <BRepCheck_Analyzer.hxx>
 #include <BRepClass_FaceClassifier.hxx>
+#include <BRepFilletAPI_MakeChamfer.hxx>
+#include <BRepFilletAPI_MakeFillet.hxx>
 #include <BRepPrimAPI_MakePrism.hxx>
-#include <TopExp.hxx>
-#include <NCollection_IndexedDataMap.hxx>
-#include <NCollection_List.hxx>
-#include <TopTools_ShapeMapHasher.hxx>
+#include <BRep_Builder.hxx>
 #include <BRep_Tool.hxx>
-#include <TopoDS.hxx>
-#include <TopoDS_Face.hxx>
-#include <TopoDS_Vertex.hxx>
 #include <GeomAPI_ProjectPointOnCurve.hxx>
 #include <Geom_Curve.hxx>
+#include <NCollection_IndexedDataMap.hxx>
+#include <NCollection_List.hxx>
+#include <TopAbs_ShapeEnum.hxx>
+#include <TopExp.hxx>
+#include <TopExp_Explorer.hxx>
+#include <TopTools_ShapeMapHasher.hxx>
+#include <TopoDS.hxx>
+#include <TopoDS_Compound.hxx>
+#include <TopoDS_Face.hxx>
+#include <TopoDS_Vertex.hxx>
 #include <gp_Pnt.hxx>
 #include <gp_Vec.hxx>
 #include <optional>
-#include <BRepCheck_Analyzer.hxx>
-#include <BRep_Builder.hxx>
-#include <TopAbs_ShapeEnum.hxx>
-#include <TopExp_Explorer.hxx>
-#include <TopoDS_Compound.hxx>
 
 #include <array>
 #include <string>
 
 namespace voelund::kernel {
 namespace {
-using AncestorMap =
-    NCollection_IndexedDataMap<TopoDS_Shape, NCollection_List<TopoDS_Shape>, TopTools_ShapeMapHasher>;
+using AncestorMap = NCollection_IndexedDataMap<TopoDS_Shape, NCollection_List<TopoDS_Shape>,
+                                               TopTools_ShapeMapHasher>;
 
 int solidCountOf(const TopoDS_Shape& shape) {
     int count = 0;
@@ -137,8 +137,8 @@ ShapeOperationResult treatEdgesOneByOne(KernelOperation operation, BooleanFailur
     try {
         for (const TopoDS_Edge& original : edges) {
             // Earlier steps shorten neighbouring edges into new shapes; find them on the curve.
-            const auto pieces = history.IsNull() ? std::vector<TopoDS_Edge>{original}
-                                                 : piecesOf(current, original);
+            const auto pieces =
+                history.IsNull() ? std::vector<TopoDS_Edge>{original} : piecesOf(current, original);
             if (pieces.empty())
                 throw KernelError(operation, "an edge vanished in an earlier step", failure);
             Builder builder(current);
@@ -177,7 +177,8 @@ ShapeOperationResult treatEdgesOneByOne(KernelOperation operation, BooleanFailur
 // treated corner (the bottom edge of a chamfer) cannot be rounded beyond a small radius; the
 // loop is closed by that edge, as CAD systems do for an edge chain. Bridges are unchosen edges
 // whose two ends each meet a chosen edge on a face the three share.
-std::vector<TopoDS_Edge> withBridges(const TopoDS_Shape& input, std::span<const TopoDS_Edge> edges) {
+std::vector<TopoDS_Edge> withBridges(const TopoDS_Shape& input,
+                                     std::span<const TopoDS_Edge> edges) {
     AncestorMap edgesAt, facesOf;
     TopExp::MapShapesAndAncestors(input, TopAbs_VERTEX, TopAbs_EDGE, edgesAt);
     TopExp::MapShapesAndAncestors(input, TopAbs_EDGE, TopAbs_FACE, facesOf);
@@ -291,10 +292,8 @@ namespace {
 // smaller than the chamfer. A straight edge between two planar faces is then chamfered by
 // cutting a wedge with legs `distance` along both faces; at an end on a curved face (a
 // rounding) the wedge goes on by `distance`, so the chamfer passes through the rounding.
-std::optional<TopoDS_Shape> chamferWedge(const TopoDS_Edge& edge,
-                                         double distance,
-                                         const AncestorMap& faces,
-                                         const AncestorMap& corners) {
+std::optional<TopoDS_Shape> chamferWedge(const TopoDS_Edge& edge, double distance,
+                                         const AncestorMap& faces, const AncestorMap& corners) {
     const BRepAdaptor_Curve curve(edge);
     if (curve.GetType() != GeomAbs_Line || !faces.Contains(edge))
         return std::nullopt;
@@ -462,11 +461,10 @@ ShapeOperationResult ShapeOperations::cutWithHistory(const TopoDS_Shape& input,
             throw;
         }
         // M03: a tool that misses the body or only touches it removes no material.
-        throw KernelError(KernelOperation::cut,
-                          std::string("overlap validation failed: ") + error.what(),
-                          error.failure() == BooleanFailure::emptyIntersection
-                              ? BooleanFailure::noMaterialRemoved
-                              : error.failure());
+        throw KernelError(
+            KernelOperation::cut, std::string("overlap validation failed: ") + error.what(),
+            error.failure() == BooleanFailure::emptyIntersection ? BooleanFailure::noMaterialRemoved
+                                                                 : error.failure());
     } catch (const Standard_OutOfMemory&) {
         throw;
     } catch (const Standard_ProgramError&) {

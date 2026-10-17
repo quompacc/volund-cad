@@ -40,7 +40,9 @@ double volume(const application::CadSession& session) {
     BRepGProp::VolumeProperties(session.currentShape(), properties);
     return properties.Mass();
 }
-bool approximately(double a, double b) { return std::abs(a - b) < 1e-4 * std::max(1.0, std::abs(b)); }
+bool approximately(double a, double b) {
+    return std::abs(a - b) < 1e-4 * std::max(1.0, std::abs(b));
+}
 QAction& command(QWidget& window, const char* id) {
     for (auto* action : window.findChildren<QAction*>())
         if (action->property("commandId").toString() == QLatin1String(id))
@@ -77,8 +79,8 @@ QJsonObject claude(const QString& config, const QString& prompt,
 }
 
 void report(const QJsonObject& run) {
-    std::cout << "  Claude (" << run.value("num_turns").toInt() << " turns): "
-              << run.value("result").toString().trimmed().toStdString() << '\n';
+    std::cout << "  Claude (" << run.value("num_turns").toInt()
+              << " turns): " << run.value("result").toString().trimmed().toStdString() << '\n';
 }
 
 void run(const QString& workDirectory) {
@@ -100,16 +102,17 @@ void run(const QString& workDirectory) {
     QFile file(config);
     if (!file.open(QIODevice::WriteOnly))
         throw std::runtime_error("Cannot write the MCP config");
-    file.write(QJsonDocument(QJsonObject{
-                                 {"mcpServers",
-                                  QJsonObject{{"volund",
-                                               QJsonObject{{"type", "http"},
-                                                           {"url", match.captured(1)},
-                                                           {"headers",
-                                                            QJsonObject{{"Authorization",
-                                                                         "Bearer " +
-                                                                             match.captured(2)}}}}}}}})
-                   .toJson());
+    file.write(
+        QJsonDocument(
+            QJsonObject{
+                {"mcpServers",
+                 QJsonObject{
+                     {"volund",
+                      QJsonObject{{"type", "http"},
+                                  {"url", match.captured(1)},
+                                  {"headers", QJsonObject{{"Authorization",
+                                                           "Bearer " + match.captured(2)}}}}}}}})
+            .toJson());
     file.close();
 
     std::cout << "Run 1: plate with a bore bound to A; the user adds a box meanwhile\n";
@@ -154,8 +157,8 @@ void run(const QString& workDirectory) {
     a = parameterA(session);
     check(a != nullptr && a->value == 10, "Parameter A = 10 mm");
     check(approximately(volume(session), (3200.0 - 100.0 * std::numbers::pi) * 12.0 + box),
-          "Volume: plate 12 mm with bore r = 10 plus the box (" +
-              std::to_string(volume(session)) + ")");
+          "Volume: plate 12 mm with bore r = 10 plus the box (" + std::to_string(volume(session)) +
+              ")");
     const auto steps = session.sceneStatus().document.revision - revision;
     for (std::uint64_t step = 0; step < steps; ++step)
         command(window, "history.undo").trigger();

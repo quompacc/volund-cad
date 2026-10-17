@@ -66,8 +66,8 @@ document::FeatureId extrude(application::CadSession& session, document::FeatureI
                                                         session.selectedSketchProfiles().end());
     return created(session.createSketchProfileExtrusion(sketch, regions, distance));
 }
-ParameterId create(application::CadSession& session, const std::string& name,
-                   ParameterUnit unit, double value) {
+ParameterId create(application::CadSession& session, const std::string& name, ParameterUnit unit,
+                   double value) {
     committed(session.createParameter(name, unit, value), "Create " + name);
     const auto* parameter = document::findParameter(session.parameterTable(), name);
     require(parameter != nullptr && parameter->value == value, "Created parameter " + name);
@@ -178,8 +178,7 @@ void unsolvableIsVisible() {
     require(std::ranges::any_of(session.featureStates(),
                                 [&](const auto& state) {
                                     return state.id == sketch &&
-                                           state.status ==
-                                               application::FeatureRuntimeStatus::error;
+                                           state.status == application::FeatureRuntimeStatus::error;
                                 }),
             "The unsolvable sketch shows as an error");
     require(session.sketchParameters(sketch).constraints.values.front().value == 15,

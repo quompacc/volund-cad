@@ -1,6 +1,6 @@
-#include "IsolatedSettings.hpp"
 #include "../../src/desktop/ModelTreePanel.hpp"
 #include "../CommandResultAssertions.hpp"
+#include "IsolatedSettings.hpp"
 #include "ViewportLifecycleSupport.hpp"
 #include <QAction>
 #include <QApplication>

@@ -77,9 +77,9 @@ ParameterTable readNativeParameterTable(const TDF_Label& label, std::size_t rema
                 unit == static_cast<int>(ParameterUnit::angle));
         Handle(TDataStd_Real) value;
         require(child(native, 4).FindAttribute(TDataStd_Real::GetID(), value));
-        table.values.push_back({ParameterId{decimal(child(native, 1), 1)},
-                                text(child(native, 2)), static_cast<ParameterUnit>(unit),
-                                value->Get(), text(child(native, 5))});
+        table.values.push_back({ParameterId{decimal(child(native, 1), 1)}, text(child(native, 2)),
+                                static_cast<ParameterUnit>(unit), value->Get(),
+                                text(child(native, 5))});
     }
     // A stored table is never the default one; that is encoded by its absence.
     require(!(table == ParameterTable{}));

@@ -1,8 +1,8 @@
 #include "CadSessionGeometryDetail.hpp"
 #include "CommandInput.hpp"
-#include <voelund/features/FilletEdges.hpp>
 #include <cmath>
 #include <string>
+#include <voelund/features/FilletEdges.hpp>
 
 namespace voelund::application {
 using namespace detail;
@@ -55,8 +55,7 @@ CommandResult CadSession::createCylinderFeature(document::FeatureId inputFeature
 }
 
 CommandResult CadSession::createFillet(document::FeatureId support,
-                                       std::span<const document::FilletEdge> edges,
-                                       double radius) {
+                                       std::span<const document::FilletEdge> edges, double radius) {
     if (!canAddCylinder(support))
         return CommandResult::invalidInput("A fillet requires a body with a current result");
     const auto body = evaluatedFeature(evaluation_->result.features, support).bodyId;
@@ -83,8 +82,8 @@ CommandResult CadSession::editFilletParameters(document::FeatureId featureId,
                                                ErrorDisposition disposition) {
     document::DocumentTransaction transaction(document_);
     auto& candidate = transaction.edit();
-    const auto input = detail::prepareInput(
-        [&] { return candidate.setFilletParameters(featureId, parameters); });
+    const auto input =
+        detail::prepareInput([&] { return candidate.setFilletParameters(featureId, parameters); });
     if (!input.value)
         return CommandResult::invalidInput(input.diagnostic);
     if (!*input.value)
@@ -126,8 +125,8 @@ CommandResult CadSession::editChamferParameters(document::FeatureId featureId,
                                                 ErrorDisposition disposition) {
     document::DocumentTransaction transaction(document_);
     auto& candidate = transaction.edit();
-    const auto input = detail::prepareInput(
-        [&] { return candidate.setChamferParameters(featureId, parameters); });
+    const auto input =
+        detail::prepareInput([&] { return candidate.setChamferParameters(featureId, parameters); });
     if (!input.value)
         return CommandResult::invalidInput(input.diagnostic);
     if (!*input.value)
@@ -154,9 +153,9 @@ CommandResult CadSession::createHole(document::FeatureId support,
     document::DocumentTransaction transaction(document_);
     auto& candidate = transaction.edit();
     const auto idInput = detail::prepareInput([&] {
-        return candidate.addHoleFeature("Bohrung " + std::to_string(sequence),
-                                        document::HoleParameters{*reference, x, y, diameter,
-                                                                 depth});
+        return candidate.addHoleFeature(
+            "Bohrung " + std::to_string(sequence),
+            document::HoleParameters{*reference, x, y, diameter, depth});
     });
     if (!idInput.value)
         return CommandResult::invalidInput(idInput.diagnostic);
@@ -169,8 +168,8 @@ CommandResult CadSession::editHoleParameters(document::FeatureId featureId,
                                              ErrorDisposition disposition) {
     document::DocumentTransaction transaction(document_);
     auto& candidate = transaction.edit();
-    const auto input = detail::prepareInput(
-        [&] { return candidate.setHoleParameters(featureId, parameters); });
+    const auto input =
+        detail::prepareInput([&] { return candidate.setHoleParameters(featureId, parameters); });
     if (!input.value)
         return CommandResult::invalidInput(input.diagnostic);
     if (!*input.value)
@@ -209,9 +208,9 @@ CommandResult CadSession::createNewBodyCylinder() {
     auto& candidate = transaction.edit();
     const std::size_t sequence =
         featureCount(document_.features(), document::FeatureKind::cylinder) + 1;
-    const document::CylinderParameters parameters{
-        8.0, 25.0, kernel::RigidTransform{0.0, 0.0, 0.0, {}, {}, {}},
-        document::CylinderResultMode::separate};
+    const document::CylinderParameters parameters{8.0, 25.0,
+                                                  kernel::RigidTransform{0.0, 0.0, 0.0, {}, {}, {}},
+                                                  document::CylinderResultMode::separate};
     const auto idInput = detail::prepareInput([&] {
         return candidate.addCylinderFeature("Zylinder " + std::to_string(sequence), std::nullopt,
                                             parameters);

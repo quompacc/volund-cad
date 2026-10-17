@@ -13,40 +13,68 @@ namespace {
 using application::ActionKind;
 
 // Parallel to ActionKind; shell-only actions have no tool.
-constexpr const char* toolNames[] = {
-    "create_parameter",       "set_parameter_value",    "rename_parameter",
-    "bind_sketch_dimension",  "bind_extrusion_distance", "create_sketch",
-    "edit_sketch",            "create_profile_extrusion", "set_extrusion_distance",
-    "create_box",             "set_box_dimensions",     "create_cylinder",
-    "set_cylinder_size",      "set_placement",          "create_sketch_extrusion",
-    "create_sketch_on_face",  nullptr,                  nullptr,
-    nullptr,                  "push_pull_face",         nullptr,
-    nullptr,                  nullptr,                  nullptr,
-    nullptr,                  nullptr,                  nullptr,
-    nullptr,                  nullptr,                  nullptr,
-    nullptr,                  nullptr,                  nullptr,
-    nullptr,                  nullptr,                  nullptr,  // M27: no tools yet
-    nullptr,                  nullptr,  // M25: no tools yet
-    nullptr,                  nullptr,  // M09: no tools yet
-    nullptr,                  nullptr,  // M10: no tools yet
-    nullptr,                  nullptr,  // M11: no tools yet
-    nullptr};                           // M14: no tool yet
+constexpr const char* toolNames[] = {"create_parameter",
+                                     "set_parameter_value",
+                                     "rename_parameter",
+                                     "bind_sketch_dimension",
+                                     "bind_extrusion_distance",
+                                     "create_sketch",
+                                     "edit_sketch",
+                                     "create_profile_extrusion",
+                                     "set_extrusion_distance",
+                                     "create_box",
+                                     "set_box_dimensions",
+                                     "create_cylinder",
+                                     "set_cylinder_size",
+                                     "set_placement",
+                                     "create_sketch_extrusion",
+                                     "create_sketch_on_face",
+                                     nullptr,
+                                     nullptr,
+                                     nullptr,
+                                     "push_pull_face",
+                                     nullptr,
+                                     nullptr,
+                                     nullptr,
+                                     nullptr,
+                                     nullptr,
+                                     nullptr,
+                                     nullptr,
+                                     nullptr,
+                                     nullptr,
+                                     nullptr,
+                                     nullptr,
+                                     nullptr,
+                                     nullptr,
+                                     nullptr,
+                                     nullptr,
+                                     nullptr, // M27: no tools yet
+                                     nullptr,
+                                     nullptr, // M25: no tools yet
+                                     nullptr,
+                                     nullptr, // M09: no tools yet
+                                     nullptr,
+                                     nullptr, // M10: no tools yet
+                                     nullptr,
+                                     nullptr,  // M11: no tools yet
+                                     nullptr}; // M14: no tool yet
 static_assert(std::size(toolNames) == std::variant_size_v<application::Action>,
               "One tool name (or none) per action kind");
 constexpr const char* statusNames[] = {"rejected", "committed", "committedWithErrors"};
 constexpr const char* rejectionNames[] = {
-    "none",     "foreignDocument", "staleStamp",          "unknownTarget",    "unsupportedTarget",
-    "invalidUnit", "nonFinite",    "unresolvedReference", "missingRequestId", "requestConflict"};
-constexpr const char* reasonNames[] = {"none",           "cancelled",           "noChange",
-                                       "invalidInput",   "evaluationFailed",    "incompleteEvaluation",
+    "none",           "foreignDocument",     "staleStamp",
+    "unknownTarget",  "unsupportedTarget",   "invalidUnit",
+    "nonFinite",      "unresolvedReference", "missingRequestId",
+    "requestConflict"};
+constexpr const char* reasonNames[] = {"none",           "cancelled",        "noChange",
+                                       "invalidInput",   "evaluationFailed", "incompleteEvaluation",
                                        "alreadyFinished"};
-constexpr const char* evaluationNames[] = {"valid", "dirty", "failed", "blockedByDependency",
-                                           "suppressed", "rolledBack"};
-constexpr const char* featureKinds[] = {"box",    "cylinder", "sketch", "extrusion",
-                                        "fillet", "chamfer",  "hole",   "combine",
-                                        "datumPlane", "datumAxis", "shell", "primitive", "draft",
-                                        "mirror", "pattern", "patternCopy", "move", "stepImport",
-                                        "importPart"};
+constexpr const char* evaluationNames[] = {
+    "valid", "dirty", "failed", "blockedByDependency", "suppressed", "rolledBack"};
+constexpr const char* featureKinds[] = {
+    "box",     "cylinder",    "sketch",    "extrusion",  "fillet",    "chamfer", "hole",
+    "combine", "datumPlane",  "datumAxis", "shell",      "primitive", "draft",   "mirror",
+    "pattern", "patternCopy", "move",      "stepImport", "importPart"};
 static_assert(std::size(featureKinds) == std::variant_size_v<document::FeatureParameters>,
               "One name per feature kind");
 constexpr const char* primitiveShapes[] = {"sphere", "cone", "torus", "wedge"};
@@ -180,7 +208,7 @@ QJsonObject featureParameters(const document::FeatureParameters& parameters) {
                     json.insert("distanceParameterId", id(extrusion.distanceParameter->value()));
                 if (!extrusion.profiles.empty())
                     json.insert("needsRepair", true); // Unmigrated legacy profiles.
-                if (extrusion.revolve) { // M20: a revolve; its distance is unused
+                if (extrusion.revolve) {              // M20: a revolve; its distance is unused
                     const auto& axis = extrusion.revolve->axis;
                     json.insert("revolveAngle",
                                 detail::quantity(extrusion.revolve->angle.value(), "rad"));
@@ -269,10 +297,9 @@ void insertExtrusionMode(QJsonObject& json, const document::DocumentSnapshot& sn
     const auto& extrusion = snapshot.extrusionParameters(feature.id);
     const auto features = snapshot.features();
     // T04: a face extrusion has no sketch; it joins or cuts its face's body.
-    const auto sketch =
-        feature.inputFeature
-            ? std::ranges::find(features, *feature.inputFeature, &document::FeatureDescriptor::id)
-            : features.end();
+    const auto sketch = feature.inputFeature ? std::ranges::find(features, *feature.inputFeature,
+                                                                 &document::FeatureDescriptor::id)
+                                             : features.end();
     const bool baseSketch = sketch != features.end() && !sketch->inputFeature;
     auto parameters = json.value("parameters").toObject();
     parameters.insert("operation",
@@ -288,13 +315,15 @@ void insertExtrusionMode(QJsonObject& json, const document::DocumentSnapshot& sn
     if (extrusion.offsetParameter)
         parameters.insert("offsetParameterId", id(extrusion.offsetParameter->value()));
     if (extrusion.upToFace)
-        parameters.insert("upToFace",
-                          QJsonObject{{"bodyId", id(extrusion.upToFace->body.value())},
-                                      {"face", detail::encodeFaceOrigin(extrusion.upToFace->origin)}});
+        parameters.insert(
+            "upToFace",
+            QJsonObject{{"bodyId", id(extrusion.upToFace->body.value())},
+                        {"face", detail::encodeFaceOrigin(extrusion.upToFace->origin)}});
     if (extrusion.faceProfile)
-        parameters.insert("profileFace",
-                          QJsonObject{{"bodyId", id(extrusion.faceProfile->body.value())},
-                                      {"face", detail::encodeFaceOrigin(extrusion.faceProfile->origin)}});
+        parameters.insert(
+            "profileFace",
+            QJsonObject{{"bodyId", id(extrusion.faceProfile->body.value())},
+                        {"face", detail::encodeFaceOrigin(extrusion.faceProfile->origin)}});
     json.insert("parameters", parameters);
 }
 
@@ -405,19 +434,17 @@ QJsonObject encodeContext(const application::CadSession& session) {
             {"id", id(parameter.id.value())},
             {"name", QString::fromStdString(parameter.name)},
             {"unit", parameter.unit == document::ParameterUnit::length ? "length" : "angle"},
-            {"value", detail::quantity(parameter.value, parameter.unit ==
-                                                                document::ParameterUnit::length
-                                                            ? "mm"
-                                                            : "deg")},
+            {"value",
+             detail::quantity(parameter.value,
+                              parameter.unit == document::ParameterUnit::length ? "mm" : "deg")},
             {"comment", QString::fromStdString(parameter.comment)}});
     return {{"toolVersion", toolVersion},
             {"documentId", QString::fromStdString(document::documentIdToHex(context.document))},
             {"stamp", stamp(context.stamp)},
-            {"units",
-             QJsonObject{{"length", "mm"},
-                         {"sketchCoordinates", "mm"},
-                         {"sketchAngle", "rad"},
-                         {"angleParameter", "deg"}}},
+            {"units", QJsonObject{{"length", "mm"},
+                                  {"sketchCoordinates", "mm"},
+                                  {"sketchAngle", "rad"},
+                                  {"angleParameter", "deg"}}},
             {"features", featureList},
             {"bodies", bodies},
             {"looseFeatures", ids(context.outline.loose)},

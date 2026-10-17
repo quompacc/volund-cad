@@ -120,7 +120,7 @@ void MainWindow::pickEdge(std::uint64_t body, const TopoDS_Shape& edge, bool add
         return;
     }
     auto edges = additive && impl_->edgeSupport == support ? impl_->selectedEdges
-                                                          : std::vector<document::FilletEdge>{};
+                                                           : std::vector<document::FilletEdge>{};
     impl_->selectedPlanarFace.reset();
     impl_->selectedDatum.reset();
     impl_->selectedBody.reset();

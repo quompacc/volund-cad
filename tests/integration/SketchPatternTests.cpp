@@ -51,15 +51,37 @@ SketchParameters patterned() {
     sketch.datum = DatumPlane::xy;
     const SketchLine line{{0, 0}, {4, 0}};
     const SketchArc arc{{10, 0}, 2, 0, pi / 2};
-    sketch.elements.values = {{id(1), line}, {id(2), arc}, {id(3), SketchLine{{20, -10}, {20, 10}}},
+    sketch.elements.values = {{id(1), line},
+                              {id(2), arc},
+                              {id(3), SketchLine{{20, -10}, {20, 10}}},
                               // linear: 4 line, 5 arc, 6 line, 7 arc; circular 8-10; mirror 11
-                              {id(4), line}, {id(5), arc}, {id(6), line}, {id(7), arc},
-                              {id(8), line}, {id(9), line}, {id(10), line}, {id(11), arc}};
+                              {id(4), line},
+                              {id(5), arc},
+                              {id(6), line},
+                              {id(7), arc},
+                              {id(8), line},
+                              {id(9), line},
+                              {id(10), line},
+                              {id(11), arc}};
     sketch.elements.nextId = 12;
     sketch.patterns.values = {
-        {1, SketchPatternKind::linear, {id(1), id(2)}, 3, {0, 5}, {}, 0, std::nullopt,
+        {1,
+         SketchPatternKind::linear,
+         {id(1), id(2)},
+         3,
+         {0, 5},
+         {},
+         0,
+         std::nullopt,
          {id(4), id(5), id(6), id(7)}},
-        {2, SketchPatternKind::circular, {id(1)}, 4, {}, {0, 0}, pi / 2, std::nullopt,
+        {2,
+         SketchPatternKind::circular,
+         {id(1)},
+         4,
+         {},
+         {0, 0},
+         pi / 2,
+         std::nullopt,
          {id(8), id(9), id(10)}},
         {3, SketchPatternKind::mirror, {id(2)}, 2, {}, {}, 0, id(3), {id(11)}}};
     sketch.patterns.nextId = 4;
@@ -108,8 +130,10 @@ void rules() {
             "A legacy rectangle as source");
     refuses(
         [](auto& s) {
-            s.constraints.values.push_back({SketchConstraintId{1}, SketchConstraintKind::horizontal,
-                                            {id(6), SketchPointPosition::start}, std::nullopt});
+            s.constraints.values.push_back({SketchConstraintId{1},
+                                            SketchConstraintKind::horizontal,
+                                            {id(6), SketchPointPosition::start},
+                                            std::nullopt});
             s.constraints.nextId = 2;
         },
         "A relation on an instance");
@@ -117,20 +141,31 @@ void rules() {
 
 void solving() {
     auto sketch = patterned();
-    sketch.constraints = {{{SketchConstraintId{1}, SketchConstraintKind::horizontal,
-                            {id(1), SketchPointPosition::start}, std::nullopt},
-                           {SketchConstraintId{2}, SketchConstraintKind::coordinateX,
-                            {id(1), SketchPointPosition::start}, std::nullopt, 0},
-                           {SketchConstraintId{3}, SketchConstraintKind::coordinateY,
-                            {id(1), SketchPointPosition::start}, std::nullopt, 0},
-                           {SketchConstraintId{4}, SketchConstraintKind::distance,
-                            {id(1), SketchPointPosition::start}, std::nullopt, 6}},
+    sketch.constraints = {{{SketchConstraintId{1},
+                            SketchConstraintKind::horizontal,
+                            {id(1), SketchPointPosition::start},
+                            std::nullopt},
+                           {SketchConstraintId{2},
+                            SketchConstraintKind::coordinateX,
+                            {id(1), SketchPointPosition::start},
+                            std::nullopt,
+                            0},
+                           {SketchConstraintId{3},
+                            SketchConstraintKind::coordinateY,
+                            {id(1), SketchPointPosition::start},
+                            std::nullopt,
+                            0},
+                           {SketchConstraintId{4},
+                            SketchConstraintKind::distance,
+                            {id(1), SketchPointPosition::start},
+                            std::nullopt,
+                            6}},
                           5};
     const auto result = features::solveSketchConstraints(sketch);
     require(result.status == features::SketchSolveStatus::success, "Solved");
     // Arc 2 (5) and axis 3 (4) stay free; line 1 is fixed; instances add no unknowns.
-    require(result.degreesOfFreedom == 9, "Instances are no unknowns, got " +
-                                              std::to_string(result.degreesOfFreedom));
+    require(result.degreesOfFreedom == 9,
+            "Instances are no unknowns, got " + std::to_string(result.degreesOfFreedom));
     require(near(std::get<SketchLine>(geometry(sketch, 4)).end, {6, 5}),
             "The instance follows the source's new length");
     const auto free = [&](std::uint64_t element) {
@@ -140,14 +175,14 @@ void solving() {
             "An instance is free exactly while a source or the axis is");
 }
 
-Handle(TDocStd_Document) fresh(const Handle(TDocStd_Application)& app) {
+Handle(TDocStd_Document) fresh(const Handle(TDocStd_Application) & app) {
     Handle(TDocStd_Document) doc;
     app->NewDocument("BinOcaf", doc);
     doc->ChangeStorageFormatVersion(TDocStd_FormatVersion_VERSION_12);
     return doc;
 }
 
-void persistence(const Handle(TDocStd_Application)& app) {
+void persistence(const Handle(TDocStd_Application) & app) {
     auto model = ModelDocument::empty();
     auto sketch = patterned();
     regenerateSketchPatterns(sketch.elements, sketch.patterns);

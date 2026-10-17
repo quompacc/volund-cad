@@ -7,9 +7,9 @@
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
 #include <cmath>
+#include <filesystem>
 #include <functional>
 #include <iostream>
-#include <filesystem>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -85,10 +85,9 @@ void projection() {
     require(refused([&] { static_cast<void>(editor.projectEdge(box, boxEdge(session, true))); }),
             "An edge across the sketch plane is refused");
     const auto start = std::get<document::SketchLine>(line.geometry).start;
-    require(editor.selectNearestReference(*projected, start, false) &&
-                refused([&] {
-                    static_cast<void>(editor.editCurve(application::SketchCurveEdit::split));
-                }),
+    require(editor.selectNearestReference(*projected, start, false) && refused([&] {
+                static_cast<void>(editor.editCurve(application::SketchCurveEdit::split));
+            }),
             "A projected line is not split");
 
     require(editor.undo() && editor.projections().empty() && editor.elements().empty() &&
@@ -105,7 +104,8 @@ void projection() {
                 editor.selectNearestReference(*projected, start, true) &&
                 editor.addSelectedRelation(document::SketchConstraintKind::coincident),
             "The drawn line ends on the projection");
-    const auto& joined = std::get<document::SketchLine>(element(editor.elements(), drawn.value()).geometry);
+    const auto& joined =
+        std::get<document::SketchLine>(element(editor.elements(), drawn.value()).geometry);
     require(near(joined.end.x, start.x) && near(joined.end.y, start.y),
             "The drawn line moved, not the projection");
     require(editor.tryAccept().status() == CommandStatus::committed, "The sketch is accepted");
@@ -118,10 +118,10 @@ void projection() {
     require(session.editBoxParameters(box, wider).status() == CommandStatus::committed,
             "Widen the box");
     const auto evaluated = session.evaluatedSketch(sketch);
-    require(evaluated.has_value() &&
-                near(lengthOf(element(evaluated->elements.values, projected->value()).geometry),
-                     50),
-            "The projection follows the box");
+    require(
+        evaluated.has_value() &&
+            near(lengthOf(element(evaluated->elements.values, projected->value()).geometry), 50),
+        "The projection follows the box");
     const auto& follow = std::get<document::SketchLine>(
         element(evaluated->elements.values, projected->value()).geometry);
     const auto& end =
@@ -178,8 +178,8 @@ void missingSource() {
     const auto sketch = session.features().back().id;
 
     auto circle = session.sketchParameters(profile);
-    circle.elements.values = {{document::SketchElementId{circle.elements.nextId},
-                               document::SketchCircle{{20, 15}, 10}}};
+    circle.elements.values = {
+        {document::SketchElementId{circle.elements.nextId}, document::SketchCircle{{20, 15}, 10}}};
     ++circle.elements.nextId;
     circle.constraints.values.clear();
     const auto changed = session.editSketchParameters(

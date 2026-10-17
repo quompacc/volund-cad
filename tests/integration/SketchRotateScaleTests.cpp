@@ -87,8 +87,8 @@ void rotateAndScale() {
     const auto turned = editor.rotateSelected({0, 0}, angle);
     const double c = std::cos(angle), s = std::sin(angle);
     const auto points = corners(editor);
-    for (const SketchPoint corner : {SketchPoint{0, 0}, SketchPoint{20, 0}, SketchPoint{20, 10},
-                                     SketchPoint{0, 10}})
+    for (const SketchPoint corner :
+         {SketchPoint{0, 0}, SketchPoint{20, 0}, SketchPoint{20, 10}, SketchPoint{0, 10}})
         require(has(points, {c * corner.x - s * corner.y, s * corner.x + c * corner.y}),
                 "Corner turned by 30 degrees");
     bool axisBound = false;

@@ -132,15 +132,17 @@ void ellipseCentre() {
     SketchCreationInput onCircle{{30, 30}, {40, 30}, SketchPoint{30, 34}};
     onCircle.firstSnap = SketchSnap{SketchSnapKind::center, circle};
     const auto first = e.create(SketchDrawingTool::ellipse, onCircle);
-    require(std::ranges::any_of(first.constraints,
-                                [](const auto& c) { return c.origin == SketchConstraintOrigin::snap; }) &&
+    require(std::ranges::any_of(
+                first.constraints,
+                [](const auto& c) { return c.origin == SketchConstraintOrigin::snap; }) &&
                 solved(e),
             "The ellipse centre binds to the circle centre");
     SketchCreationInput onEllipse{{30, 30}, {36, 33}, SketchPoint{31, 32}};
     onEllipse.firstSnap = SketchSnap{SketchSnapKind::center, first.primary()};
     const auto second = e.create(SketchDrawingTool::ellipse, onEllipse);
-    require(std::ranges::any_of(second.constraints,
-                                [](const auto& c) { return c.origin == SketchConstraintOrigin::snap; }) &&
+    require(std::ranges::any_of(
+                second.constraints,
+                [](const auto& c) { return c.origin == SketchConstraintOrigin::snap; }) &&
                 solved(e),
             "An ellipse centre binds to another ellipse centre");
     const auto& moved = std::get<document::SketchEllipse>(e.geometry(second.primary()));
@@ -158,8 +160,7 @@ void unsupportedNotClaimed() {
         input.relation = relation;
         input.relationTarget = ellipse;
         const auto circle = e.create(SketchDrawingTool::circle, input);
-        require(relations(e, circle).empty() && solved(e),
-                "No relation to an ellipse is claimed");
+        require(relations(e, circle).empty() && solved(e), "No relation to an ellipse is claimed");
     }
     SketchCreationInput onEllipse{{30, 20}, {35, 20}};
     onEllipse.relation = SketchAutoRelation::tangent;
@@ -182,11 +183,15 @@ void degenerate() {
     SketchCreationInput centered{{3, 3}, {3, 9}};
     centered.centered = true;
     const std::vector<Case> cases{
-        {SketchDrawingTool::arc, {{0, 0}, {5, 0}, SketchPoint{5, 0}}, "Bogen: Anfangs- und Endpunkt"},
+        {SketchDrawingTool::arc,
+         {{0, 0}, {5, 0}, SketchPoint{5, 0}},
+         "Bogen: Anfangs- und Endpunkt"},
         {SketchDrawingTool::arc, {{0, 0}, {0, 0}, SketchPoint{5, 0}}, "Bogen: Der Anfangspunkt"},
-        {SketchDrawingTool::threePointArc, {{0, 0}, {5, 0}, SketchPoint{10, 0}},
+        {SketchDrawingTool::threePointArc,
+         {{0, 0}, {5, 0}, SketchPoint{10, 0}},
          "Dreipunktbogen: Die drei Punkte"},
-        {SketchDrawingTool::threePointArc, {{0, 0}, {0, 0}, SketchPoint{10, 0}},
+        {SketchDrawingTool::threePointArc,
+         {{0, 0}, {0, 0}, SketchPoint{10, 0}},
          "Dreipunktbogen: Zwei Punkte"},
         {SketchDrawingTool::circle, {{1, 1}, {1, 1}}, "Kreis: Der Radius"},
         {SketchDrawingTool::line, {{2, 2}, {2, 2}}, "Linie: Anfangs- und Endpunkt"},

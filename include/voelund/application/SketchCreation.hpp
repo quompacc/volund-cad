@@ -13,7 +13,17 @@
 namespace voelund::application {
 
 // What a picked point snapped to.
-enum class SketchSnapKind { start, end, center, midpoint, origin, xAxis, yAxis, projected, onObject };
+enum class SketchSnapKind {
+    start,
+    end,
+    center,
+    midpoint,
+    origin,
+    xAxis,
+    yAxis,
+    projected,
+    onObject
+};
 struct SketchSnap final {
     SketchSnapKind kind;
     document::SketchElementId element{0}; // 0 for origin, axes and support edges

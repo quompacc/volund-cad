@@ -69,9 +69,9 @@ void SketchExtrusionToolController::collectSections() {
     for (const auto& feature : session_.features()) {
         if (feature.id == *profileSketch_ || feature.kind != document::FeatureKind::sketch)
             continue;
-        const auto regions = features::identifySketchRegions(
-                                 session_.sketchParameters(feature.id).elements.values)
-                                 .ids;
+        const auto regions =
+            features::identifySketchRegions(session_.sketchParameters(feature.id).elements.values)
+                .ids;
         if (!regions.empty())
             sections_.push_back(
                 {QString::fromStdString(feature.name), {feature.id, regions.front()}});

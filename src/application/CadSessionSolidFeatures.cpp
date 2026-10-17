@@ -47,8 +47,8 @@ CommandResult CadSession::editCombineParameters(document::FeatureId featureId,
                                                 ErrorDisposition disposition) {
     document::DocumentTransaction transaction(document_);
     auto& candidate = transaction.edit();
-    const auto input = detail::prepareInput(
-        [&] { return candidate.setCombineParameters(featureId, parameters); });
+    const auto input =
+        detail::prepareInput([&] { return candidate.setCombineParameters(featureId, parameters); });
     if (!input.value)
         return CommandResult::invalidInput(input.diagnostic);
     if (!*input.value)
@@ -144,8 +144,7 @@ CommandResult CadSession::createDatumAxis(std::optional<document::BaseAxis> base
     document::DocumentTransaction transaction(document_);
     auto& candidate = transaction.edit();
     const auto idInput = detail::prepareInput([&] {
-        return candidate.addDatumAxisFeature("Bezugsachse " + std::to_string(sequence),
-                                             parameters);
+        return candidate.addDatumAxisFeature("Bezugsachse " + std::to_string(sequence), parameters);
     });
     if (!idInput.value)
         return CommandResult::invalidInput(idInput.diagnostic);
@@ -169,8 +168,8 @@ CommandResult CadSession::editDatumAxisParameters(document::FeatureId featureId,
 }
 
 CommandResult CadSession::createShell(document::FeatureId support,
-                                     std::span<const document::SubshapeOrigin> faces,
-                                     double thickness, bool outward) {
+                                      std::span<const document::SubshapeOrigin> faces,
+                                      double thickness, bool outward) {
     const auto body = resultBody(support);
     if (!body)
         return CommandResult::invalidInput("A shell needs a current body");
@@ -194,8 +193,8 @@ CommandResult CadSession::editShellParameters(document::FeatureId featureId,
                                               ErrorDisposition disposition) {
     document::DocumentTransaction transaction(document_);
     auto& candidate = transaction.edit();
-    const auto input = detail::prepareInput(
-        [&] { return candidate.setShellParameters(featureId, parameters); });
+    const auto input =
+        detail::prepareInput([&] { return candidate.setShellParameters(featureId, parameters); });
     if (!input.value)
         return CommandResult::invalidInput(input.diagnostic);
     if (!*input.value)
@@ -209,8 +208,8 @@ document::ShellParameters CadSession::shellParameters(document::FeatureId featur
 }
 
 CommandResult CadSession::createDraft(document::FeatureId support,
-                                     std::span<const document::SubshapeOrigin> faces,
-                                     const document::SubshapeOrigin& neutral, double angle) {
+                                      std::span<const document::SubshapeOrigin> faces,
+                                      const document::SubshapeOrigin& neutral, double angle) {
     const auto body = resultBody(support);
     if (!body)
         return CommandResult::invalidInput("A draft needs a current body");
@@ -221,8 +220,8 @@ CommandResult CadSession::createDraft(document::FeatureId support,
     const auto idInput = detail::prepareInput([&] {
         return candidate.addDraftFeature(
             "Formschräge " + std::to_string(sequence),
-            document::DraftParameters{*body, {faces.begin(), faces.end()}, neutral,
-                                      kernel::Radians{angle}});
+            document::DraftParameters{
+                *body, {faces.begin(), faces.end()}, neutral, kernel::Radians{angle}});
     });
     if (!idInput.value)
         return CommandResult::invalidInput(idInput.diagnostic);
@@ -235,8 +234,8 @@ CommandResult CadSession::editDraftParameters(document::FeatureId featureId,
                                               ErrorDisposition disposition) {
     document::DocumentTransaction transaction(document_);
     auto& candidate = transaction.edit();
-    const auto input = detail::prepareInput(
-        [&] { return candidate.setDraftParameters(featureId, parameters); });
+    const auto input =
+        detail::prepareInput([&] { return candidate.setDraftParameters(featureId, parameters); });
     if (!input.value)
         return CommandResult::invalidInput(input.diagnostic);
     if (!*input.value)

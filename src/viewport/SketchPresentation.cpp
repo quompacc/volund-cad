@@ -127,10 +127,10 @@ void SketchPresentation::setReferences(const occ::handle<AIS_InteractiveContext>
                             Quantity_Color(0.2, 0.65, 1.0, Quantity_TOC_RGB)};
     for (std::size_t index = 0; index < directions.size(); ++index) {
         const gp_Vec offset(directions[index]);
-        occ::handle<AIS_Shape> axis = new AIS_Shape(
-            BRepBuilderAPI_MakeEdge(origin.Translated(offset * -extent),
-                                    origin.Translated(offset * extent))
-                .Edge());
+        occ::handle<AIS_Shape> axis =
+            new AIS_Shape(BRepBuilderAPI_MakeEdge(origin.Translated(offset * -extent),
+                                                  origin.Translated(offset * extent))
+                              .Edge());
         axis->SetColor(colors[index]);
         axis->SetWidth(1.5);
         axis->SetZLayer(Graphic3d_ZLayerId_Topmost);
@@ -139,10 +139,9 @@ void SketchPresentation::setReferences(const occ::handle<AIS_InteractiveContext>
     }
     for (const PlanarReferenceSegment& segment : support.referenceSegments) {
         occ::handle<AIS_Shape> edge = new AIS_Shape(
-            BRepBuilderAPI_MakeEdge(gp_Pnt(segment.firstWorldX, segment.firstWorldY,
-                                          segment.firstWorldZ),
-                                    gp_Pnt(segment.secondWorldX, segment.secondWorldY,
-                                          segment.secondWorldZ))
+            BRepBuilderAPI_MakeEdge(
+                gp_Pnt(segment.firstWorldX, segment.firstWorldY, segment.firstWorldZ),
+                gp_Pnt(segment.secondWorldX, segment.secondWorldY, segment.secondWorldZ))
                 .Edge());
         edge->SetColor(Quantity_Color(0.75, 0.45, 1.0, Quantity_TOC_RGB));
         edge->SetWidth(2.0);

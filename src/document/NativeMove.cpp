@@ -20,8 +20,7 @@ TDF_Label child(const TDF_Label& label, int tag) {
 }
 std::uint64_t readId(const TDF_Label& label) {
     Handle(TDataStd_AsciiString) value;
-    require(label.NbChildren() == 0 &&
-            label.FindAttribute(TDataStd_AsciiString::GetID(), value) &&
+    require(label.NbChildren() == 0 && label.FindAttribute(TDataStd_AsciiString::GetID(), value) &&
             value->Get().Length() <= 20);
     const std::string text{value->Get().ToCString(),
                            static_cast<std::size_t>(value->Get().Length())};
@@ -37,8 +36,8 @@ void writeNativeMove(const TDF_Label& label, const MoveParameters& parameters) {
     validateMoveParameters(parameters);
     TDataStd_AsciiString::Set(label.FindChild(1), std::to_string(parameters.body.value()).c_str());
     const auto& t = parameters.transform;
-    const double values[] = {t.translationX,       t.translationY,       t.translationZ,
-                             t.rotationX.value(),  t.rotationY.value(),  t.rotationZ.value(),
+    const double values[] = {t.translationX,      t.translationY,      t.translationZ,
+                             t.rotationX.value(), t.rotationY.value(), t.rotationZ.value(),
                              parameters.pivot[0], parameters.pivot[1], parameters.pivot[2]};
     const auto data = TDataStd_RealArray::Set(label.FindChild(2), 1, 9);
     for (int i = 1; i <= 9; ++i)

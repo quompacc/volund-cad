@@ -5,7 +5,9 @@
 
 namespace voelund::document {
 DocumentTransaction::DocumentTransaction(ModelDocument& target)
-    : target_(target), candidate_(DocumentSnapshot::capture(target).toDocument(target.documentId())), baseRevision_(target.revision()) {
+    : target_(target),
+      candidate_(DocumentSnapshot::capture(target).toDocument(target.documentId())),
+      baseRevision_(target.revision()) {
     if (target.impl_->transactionCandidate_)
         throw std::logic_error("Nested document transactions are not supported");
     candidate_.impl_->transactionCandidate_ = true;
@@ -35,8 +37,8 @@ bool DocumentTransaction::prepare() {
     if (!(before == after)) {
         target_.checkRevisionAvailable();
         auto prepared = std::make_unique<ModelDocument::Impl>(*target_.impl_);
-        const auto replacement = IdentifiedDocumentSnapshot::restore(target_.documentId(),
-            DocumentSnapshot::capture(candidate_));
+        const auto replacement = IdentifiedDocumentSnapshot::restore(
+            target_.documentId(), DocumentSnapshot::capture(candidate_));
         (void)prepared->native.commit(prepared->native.prepare(replacement));
         after_ = std::move(prepared);
     }

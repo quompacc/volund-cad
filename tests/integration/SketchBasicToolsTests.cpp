@@ -44,7 +44,8 @@ bool compoundDrawingToolsCreateProfiles() {
     SketchEditorSession polygon(session, support, plane);
     polygon.setTool(SketchDrawingTool::polygon);
     if (!polygon.setPolygonSides(6) || !polygon.setPreview({0.0, 0.0}, {8.0, 0.0}) ||
-        !polygon.confirmPreview().has_value() || polygon.elements().size() != 7 || polygon.closedProfileCount() != 1 || !polygon.canAccept())
+        !polygon.confirmPreview().has_value() || polygon.elements().size() != 7 ||
+        polygon.closedProfileCount() != 1 || !polygon.canAccept())
         return reportCompoundFailure("polygon", polygon);
 
     SketchEditorSession slot(session, support, plane);

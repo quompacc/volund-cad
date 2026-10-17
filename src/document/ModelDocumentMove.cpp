@@ -13,13 +13,13 @@ void validateMoveParameters(const MoveParameters& parameters) {
     if (parameters.body.value() == 0)
         throw std::invalid_argument("A move names its body");
     const auto& transform = parameters.transform;
-    for (const double value : {transform.translationX, transform.translationY,
-                               transform.translationZ, parameters.pivot[0], parameters.pivot[1],
-                               parameters.pivot[2]})
+    for (const double value :
+         {transform.translationX, transform.translationY, transform.translationZ,
+          parameters.pivot[0], parameters.pivot[1], parameters.pivot[2]})
         if (!kernel::modelCoordinate(value))
             throw std::invalid_argument(kernel::modelRangeDiagnostic);
-    for (const double value : {transform.rotationX.value(), transform.rotationY.value(),
-                               transform.rotationZ.value()})
+    for (const double value :
+         {transform.rotationX.value(), transform.rotationY.value(), transform.rotationZ.value()})
         if (!std::isfinite(value))
             throw std::invalid_argument("A move turns by finite angles");
 }

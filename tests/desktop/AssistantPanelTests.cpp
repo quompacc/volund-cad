@@ -134,9 +134,12 @@ void run(const QString& work) {
     qputenv("FAKE_CLAUDE_SCENARIO", "late");
     const auto parameters = session.parameterTable().values.size();
     say(window, QStringLiteral("Lege noch etwas an"));
-    spinUntil([&] { return contains(history(window), "✓ Modell gelesen") &&
-                           history(window).count() > lines.count() + 2; },
-              "late run reads the model");
+    spinUntil(
+        [&] {
+            return contains(history(window), "✓ Modell gelesen") &&
+                   history(window).count() > lines.count() + 2;
+        },
+        "late run reads the model");
     child<QPushButton>(window, "assistantStopButton").click();
     static_cast<void>(QFile(trigger).open(QIODevice::WriteOnly));
     spinUntil([&] { return idle(window); }, "stopped run");
@@ -161,9 +164,8 @@ void run(const QString& work) {
     QTimer responder;
     QObject::connect(&responder, &QTimer::timeout, [] {
         if (auto* box = qobject_cast<QMessageBox*>(QApplication::activeModalWidget()))
-            box->button(box->standardButtons().testFlag(QMessageBox::Discard)
-                            ? QMessageBox::Discard
-                            : QMessageBox::Ok)
+            box->button(box->standardButtons().testFlag(QMessageBox::Discard) ? QMessageBox::Discard
+                                                                              : QMessageBox::Ok)
                 ->click();
     });
     responder.start(50);

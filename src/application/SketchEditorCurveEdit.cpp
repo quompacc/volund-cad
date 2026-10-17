@@ -90,11 +90,10 @@ SketchCurveEditResult SketchEditorSession::editCurve(SketchCurveEdit edit) {
             constraint.value *= *plan.keptShare;
         const bool drop =
             moved || (lengthChanged && !scaled && bindsLength(constraint, target)) ||
-            (circleToArc &&
-             ((constraint.kind == SketchConstraintKind::pointOnObject &&
-               constraint.second->element == target) ||
-              (constraint.kind == SketchConstraintKind::fixed &&
-               constraint.first.element == target)));
+            (circleToArc && ((constraint.kind == SketchConstraintKind::pointOnObject &&
+                              constraint.second->element == target) ||
+                             (constraint.kind == SketchConstraintKind::fixed &&
+                              constraint.first.element == target)));
         (drop ? result.removed : kept).push_back(std::move(constraint));
     }
     constraints_.values = std::move(kept);
@@ -127,8 +126,7 @@ SketchCurveEditResult SketchEditorSession::editCurve(SketchCurveEdit edit) {
         if (binding.cutterEnd.has_value())
             relate(SketchConstraintKind::coincident, end, {binding.cutter, *binding.cutterEnd});
         else
-            relate(SketchConstraintKind::pointOnObject, end,
-                   {binding.cutter, Position::start});
+            relate(SketchConstraintKind::pointOnObject, end, {binding.cutter, Position::start});
     }
 
     // A trimmed piece is gone from under the pick; a split selects the new piece.

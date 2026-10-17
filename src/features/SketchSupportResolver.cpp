@@ -1,6 +1,6 @@
-#include <voelund/kernel/PlaneNormal.hpp>
 #include "SketchPlaneGuard.hpp"
 #include <voelund/features/SketchSupportResolver.hpp>
+#include <voelund/kernel/PlaneNormal.hpp>
 
 #include <BRepAdaptor_Curve.hxx>
 #include <BRepAdaptor_Surface.hxx>

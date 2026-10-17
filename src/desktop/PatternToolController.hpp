@@ -32,8 +32,7 @@ class ToolPanelHost;
 class PatternToolController final {
   public:
     PatternToolController(application::CadSession& session, viewport::CadViewport& viewport,
-                          ToolPanelHost& panel,
-                          std::function<void()> sceneChanged,
+                          ToolPanelHost& panel, std::function<void()> sceneChanged,
                           std::function<void(const QString&)> statusChanged);
 
     // `support` is the body's current result; `edge` an edge picked on `edgeSupport` before.
@@ -45,7 +44,8 @@ class PatternToolController final {
     // An edge clicked while the panel is open: the direction or axis.
     void picked(std::uint64_t body, const TopoDS_Shape& edge);
     void cancel();
-    void setPreviewHandler(std::function<void(const std::vector<features::EvaluatedBody>*)> handler);
+    void
+    setPreviewHandler(std::function<void(const std::vector<features::EvaluatedBody>*)> handler);
 
   private:
     struct PickedEdge final {

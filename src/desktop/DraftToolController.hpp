@@ -37,7 +37,8 @@ class DraftToolController final {
     // A planar face picked while the panel is open: tilted (or not again), or the neutral face.
     void picked(const viewport::PlanarFaceSelection& face);
     void cancel();
-    void setPreviewHandler(std::function<void(const std::vector<features::EvaluatedBody>*)> handler);
+    void
+    setPreviewHandler(std::function<void(const std::vector<features::EvaluatedBody>*)> handler);
 
   private:
     [[nodiscard]] std::optional<document::SubshapeOrigin>

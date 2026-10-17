@@ -1,48 +1,55 @@
 #pragma once
-#include <voelund/document/SketchGeometry.hpp>
-#include <voelund/kernel/NumericPolicy.hpp>
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
 #include <type_traits>
+#include <voelund/document/SketchGeometry.hpp>
+#include <voelund/kernel/NumericPolicy.hpp>
 
 namespace voelund::document::detail {
 inline void validateGeometryRange(const SketchGeometry& geometry) {
     const auto point = [](const SketchPoint& p) {
         return kernel::modelCoordinate(p.x) && kernel::modelCoordinate(p.y);
     };
-    const bool valid = std::visit([&](const auto& shape) {
-        using T = std::decay_t<decltype(shape)>;
-        if constexpr (std::is_same_v<T, SketchLine>) {
-            return point(shape.start) && point(shape.end) && kernel::modelLength(
-                std::hypot(shape.end.x - shape.start.x, shape.end.y - shape.start.y));
-        } else if constexpr (std::is_same_v<T, SketchPointGeometry>) {
-            return point(shape.position);
-        } else if constexpr (std::is_same_v<T, SketchBSpline>) {
-            double length = 0;
-            for (std::size_t index = 1; index < shape.poles.size(); ++index)
-                length += std::hypot(shape.poles[index].x - shape.poles[index - 1].x,
-                                     shape.poles[index].y - shape.poles[index - 1].y);
-            return std::ranges::all_of(shape.poles, point) && kernel::modelLength(length);
-        } else if constexpr (std::is_same_v<T, SketchRectangle>) {
-            return point(shape.first) && point(shape.second) &&
-                   kernel::modelLength(std::abs(shape.second.x - shape.first.x)) &&
-                   kernel::modelLength(std::abs(shape.second.y - shape.first.y));
-        } else {
-            const double radius = [&] {
-                if constexpr (std::is_same_v<T, SketchEllipse>) return shape.majorRadius;
-                else return shape.radius;
-            }();
-            bool radii = kernel::modelLength(radius);
-            if constexpr (std::is_same_v<T, SketchEllipse>)
-                radii = radii && kernel::modelLength(shape.minorRadius);
-            if constexpr (std::is_same_v<T, SketchArc>)
-                radii = radii && kernel::modelLength(radius * (shape.endAngle - shape.startAngle));
-            return point(shape.center) && radii &&
-                   point({shape.center.x - radius, shape.center.y - radius}) &&
-                   point({shape.center.x + radius, shape.center.y + radius});
-        }
-    }, geometry);
-    if (!valid) throw std::invalid_argument(kernel::modelRangeDiagnostic);
+    const bool valid = std::visit(
+        [&](const auto& shape) {
+            using T = std::decay_t<decltype(shape)>;
+            if constexpr (std::is_same_v<T, SketchLine>) {
+                return point(shape.start) && point(shape.end) &&
+                       kernel::modelLength(
+                           std::hypot(shape.end.x - shape.start.x, shape.end.y - shape.start.y));
+            } else if constexpr (std::is_same_v<T, SketchPointGeometry>) {
+                return point(shape.position);
+            } else if constexpr (std::is_same_v<T, SketchBSpline>) {
+                double length = 0;
+                for (std::size_t index = 1; index < shape.poles.size(); ++index)
+                    length += std::hypot(shape.poles[index].x - shape.poles[index - 1].x,
+                                         shape.poles[index].y - shape.poles[index - 1].y);
+                return std::ranges::all_of(shape.poles, point) && kernel::modelLength(length);
+            } else if constexpr (std::is_same_v<T, SketchRectangle>) {
+                return point(shape.first) && point(shape.second) &&
+                       kernel::modelLength(std::abs(shape.second.x - shape.first.x)) &&
+                       kernel::modelLength(std::abs(shape.second.y - shape.first.y));
+            } else {
+                const double radius = [&] {
+                    if constexpr (std::is_same_v<T, SketchEllipse>)
+                        return shape.majorRadius;
+                    else
+                        return shape.radius;
+                }();
+                bool radii = kernel::modelLength(radius);
+                if constexpr (std::is_same_v<T, SketchEllipse>)
+                    radii = radii && kernel::modelLength(shape.minorRadius);
+                if constexpr (std::is_same_v<T, SketchArc>)
+                    radii =
+                        radii && kernel::modelLength(radius * (shape.endAngle - shape.startAngle));
+                return point(shape.center) && radii &&
+                       point({shape.center.x - radius, shape.center.y - radius}) &&
+                       point({shape.center.x + radius, shape.center.y + radius});
+            }
+        },
+        geometry);
+    if (!valid)
+        throw std::invalid_argument(kernel::modelRangeDiagnostic);
 }
 } // namespace voelund::document::detail

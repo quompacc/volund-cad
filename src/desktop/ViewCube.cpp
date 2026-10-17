@@ -23,7 +23,9 @@ struct Vec final {
 Vec operator+(Vec a, Vec b) { return {a.x + b.x, a.y + b.y, a.z + b.z}; }
 Vec operator*(double s, Vec v) { return {s * v.x, s * v.y, s * v.z}; }
 double dot(Vec a, Vec b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
-Vec cross(Vec a, Vec b) { return {a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x}; }
+Vec cross(Vec a, Vec b) {
+    return {a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x};
+}
 Vec normalized(Vec v) {
     const double length = std::sqrt(dot(v, v));
     return length > 0.0 ? (1.0 / length) * v : v;
@@ -39,11 +41,11 @@ struct Face final {
     const char* label;
 };
 const std::array<Face, 6> faces{{{{0, 0, 1}, {1, 0, 0}, {0, 1, 0}, "OBEN"},
-                                  {{0, 0, -1}, {-1, 0, 0}, {0, 1, 0}, "UNTEN"},
-                                  {{0, -1, 0}, {1, 0, 0}, {0, 0, 1}, "VORNE"},
-                                  {{0, 1, 0}, {-1, 0, 0}, {0, 0, 1}, "HINTEN"},
-                                  {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}, "RECHTS"},
-                                  {{-1, 0, 0}, {0, -1, 0}, {0, 0, 1}, "LINKS"}}};
+                                 {{0, 0, -1}, {-1, 0, 0}, {0, 1, 0}, "UNTEN"},
+                                 {{0, -1, 0}, {1, 0, 0}, {0, 0, 1}, "VORNE"},
+                                 {{0, 1, 0}, {-1, 0, 0}, {0, 0, 1}, "HINTEN"},
+                                 {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}, "RECHTS"},
+                                 {{-1, 0, 0}, {0, -1, 0}, {0, 0, 1}, "LINKS"}}};
 constexpr double bands[4] = {-1.0, -0.6, 0.6, 1.0}; // Corner, middle and corner cells.
 
 constexpr QPointF cubeCenter{72, 82};
@@ -69,8 +71,9 @@ Vec facePoint(const Face& face, double s, double t) {
     return vec(face.n) + s * vec(face.a) + t * vec(face.b);
 }
 QPolygonF faceQuad(const Basis& b, const Face& face, double low, double high) {
-    return QPolygonF{{project(b, facePoint(face, low, high)), project(b, facePoint(face, high, high)),
-                      project(b, facePoint(face, high, low)), project(b, facePoint(face, low, low))}};
+    return QPolygonF{
+        {project(b, facePoint(face, low, high)), project(b, facePoint(face, high, high)),
+         project(b, facePoint(face, high, low)), project(b, facePoint(face, low, low))}};
 }
 
 struct Cell final {
@@ -97,11 +100,10 @@ std::vector<Cell> visibleCells(const Basis& b) {
                         face->n[static_cast<std::size_t>(axis)] +
                         (i - 1) * face->a[static_cast<std::size_t>(axis)] +
                         (j - 1) * face->b[static_cast<std::size_t>(axis)];
-                const QPolygonF polygon{
-                    {project(b, facePoint(*face, bands[i], bands[j + 1])),
-                     project(b, facePoint(*face, bands[i + 1], bands[j + 1])),
-                     project(b, facePoint(*face, bands[i + 1], bands[j])),
-                     project(b, facePoint(*face, bands[i], bands[j]))}};
+                const QPolygonF polygon{{project(b, facePoint(*face, bands[i], bands[j + 1])),
+                                         project(b, facePoint(*face, bands[i + 1], bands[j + 1])),
+                                         project(b, facePoint(*face, bands[i + 1], bands[j])),
+                                         project(b, facePoint(*face, bands[i], bands[j]))}};
                 cells.push_back({polygon, direction, face});
             }
     return cells;
@@ -217,8 +219,8 @@ void ViewCube::paintEvent(QPaintEvent*) {
         painter.setPen(QPen(lit ? tokens_.accent : tokens_.line, 1));
         painter.setBrush(lit ? tokens_.accentSoft : tokens_.panel);
         painter.drawRoundedRect(box, box.height() / 2, box.height() / 2); // U14: pills
-        painter.setPen(QPen(lit ? tokens_.accentInk : tokens_.ink, 1.5, Qt::SolidLine,
-                            Qt::RoundCap, Qt::RoundJoin));
+        painter.setPen(QPen(lit ? tokens_.accentInk : tokens_.ink, 1.5, Qt::SolidLine, Qt::RoundCap,
+                            Qt::RoundJoin));
         painter.setBrush(Qt::NoBrush);
     };
     const auto rollArrow = [&](const QRectF& box, bool left) {

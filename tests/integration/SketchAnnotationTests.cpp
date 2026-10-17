@@ -73,32 +73,58 @@ struct Fixture final {
 // The expected label prefix of each kind; a new kind fails to compile here (-Wswitch).
 const char* expectedPrefix(Kind kind) {
     switch (kind) {
-    case Kind::horizontal: return "[H]";
-    case Kind::vertical: return "[V]";
-    case Kind::distance: return "L ";
-    case Kind::radius: return "R ";
-    case Kind::coincident: return "[C]";
-    case Kind::parallel: return "[||]";
-    case Kind::perpendicular: return "[90]";
-    case Kind::coordinateX: return "X ";
-    case Kind::coordinateY: return "Y ";
-    case Kind::pointOnObject: return "[O]";
-    case Kind::equal: return "[=]";
-    case Kind::tangent: return "[T]";
-    case Kind::symmetric: return "[S]";
-    case Kind::pointDistance: return "D ";
-    case Kind::angle: return "A ";
-    case Kind::pointDistanceX: return "DX ";
-    case Kind::pointDistanceY: return "DY ";
-    case Kind::midpoint: return "[M]";
-    case Kind::perpendicularBisector: return "[PB]";
-    case Kind::concentric: return "[CC]";
-    case Kind::diameter: return "Ø ";
-    case Kind::collinear: return "[CL]";
-    case Kind::horizontalPoints: return "[HP]";
-    case Kind::verticalPoints: return "[VP]";
-    case Kind::fixed: return "[F]";
-    case Kind::pointLineDistance: return "PL ";
+    case Kind::horizontal:
+        return "[H]";
+    case Kind::vertical:
+        return "[V]";
+    case Kind::distance:
+        return "L ";
+    case Kind::radius:
+        return "R ";
+    case Kind::coincident:
+        return "[C]";
+    case Kind::parallel:
+        return "[||]";
+    case Kind::perpendicular:
+        return "[90]";
+    case Kind::coordinateX:
+        return "X ";
+    case Kind::coordinateY:
+        return "Y ";
+    case Kind::pointOnObject:
+        return "[O]";
+    case Kind::equal:
+        return "[=]";
+    case Kind::tangent:
+        return "[T]";
+    case Kind::symmetric:
+        return "[S]";
+    case Kind::pointDistance:
+        return "D ";
+    case Kind::angle:
+        return "A ";
+    case Kind::pointDistanceX:
+        return "DX ";
+    case Kind::pointDistanceY:
+        return "DY ";
+    case Kind::midpoint:
+        return "[M]";
+    case Kind::perpendicularBisector:
+        return "[PB]";
+    case Kind::concentric:
+        return "[CC]";
+    case Kind::diameter:
+        return "Ø ";
+    case Kind::collinear:
+        return "[CL]";
+    case Kind::horizontalPoints:
+        return "[HP]";
+    case Kind::verticalPoints:
+        return "[VP]";
+    case Kind::fixed:
+        return "[F]";
+    case Kind::pointLineDistance:
+        return "PL ";
     }
     return "";
 }
@@ -141,8 +167,13 @@ void everyKind() {
         relation(26, Kind::pointLineDistance, ref(5), ref(1), 5),
         // Not editable: bound to a parameter, following a support edge.
         relation(27, Kind::distance, ref(5), std::nullopt, 10),
-        {SketchConstraintId{28}, Kind::coordinateY, ref(2, Position::end), std::nullopt, 8,
-         std::nullopt, {1, 0.5}}};
+        {SketchConstraintId{28},
+         Kind::coordinateY,
+         ref(2, Position::end),
+         std::nullopt,
+         8,
+         std::nullopt,
+         {1, 0.5}}};
     all[26].parameter = parameter;
     document::SketchElements elements{f.editor->draftParameters().elements};
     document::SketchConstraints constraints{all, all.size() + 1};
@@ -159,11 +190,10 @@ void everyKind() {
         require(annotation.label.starts_with(expectedPrefix(constraint.kind)),
                 name + ": label " + annotation.label);
         const bool dimension = annotation.category == SketchAnnotationCategory::dimension;
-        const bool withUnit =
-            annotation.label.ends_with(" mm") || annotation.label.ends_with("°");
+        const bool withUnit = annotation.label.ends_with(" mm") || annotation.label.ends_with("°");
         require(dimension == withUnit && dimension != annotation.label.starts_with("["),
                 name + ": a dimension shows a value with unit, a relation a symbol");
-        const double expected = !dimension                   ? 0.0
+        const double expected = !dimension                       ? 0.0
                                 : constraint.kind == Kind::angle ? constraint.angleValue.value()
                                                                  : constraint.value;
         require(near(annotation.value, expected), name + ": value");
@@ -210,10 +240,10 @@ void editing() {
     f.refused(1, std::nan(""), "keine Zahl");
 
     // A dimension the sketch cannot satisfy is refused and leaves the sketch solved.
-    Fixture fixed({SketchLine{{0, 0}, {10, 0}}},
-                  {{SketchConstraintId{1}, Kind::fixed, ref(1), std::nullopt, 0, std::nullopt,
-                    {0, 10, 0}},
-                   relation(2, Kind::distance, ref(1), std::nullopt, 10)});
+    Fixture fixed(
+        {SketchLine{{0, 0}, {10, 0}}},
+        {{SketchConstraintId{1}, Kind::fixed, ref(1), std::nullopt, 0, std::nullopt, {0, 10, 0}},
+         relation(2, Kind::distance, ref(1), std::nullopt, 10)});
     require(!fixed.editor->lastSolveResult().redundantConstraints.empty() &&
                 fixed.editor->isConstraintRedundant(SketchConstraintId{2}),
             "A length on a fixed line is redundant and reported");
@@ -227,9 +257,9 @@ void states() {
     require(free.editor->lastSolveResult().degreesOfFreedom == 3 &&
                 free.editor->lastSolveResult().redundantConstraints.empty(),
             "A horizontal line keeps three degrees of freedom");
-    Fixture determined({SketchLine{{0, 0}, {10, 0}}},
-                       {{SketchConstraintId{1}, Kind::fixed, ref(1), std::nullopt, 0,
-                         std::nullopt, {0, 10, 0}}});
+    Fixture determined(
+        {SketchLine{{0, 0}, {10, 0}}},
+        {{SketchConstraintId{1}, Kind::fixed, ref(1), std::nullopt, 0, std::nullopt, {0, 10, 0}}});
     require(determined.editor->lastSolveResult().degreesOfFreedom == 0 &&
                 determined.editor->lastSolveResult().redundantConstraints.empty() &&
                 determined.editor->isElementDetermined(SketchElementId{1}),

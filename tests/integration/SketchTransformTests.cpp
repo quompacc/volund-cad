@@ -59,8 +59,8 @@ SketchPoint reflect(const SketchLine& axis, SketchPoint p) {
     return {2 * foot.x - p.x, 2 * foot.y - p.y};
 }
 std::size_t count(const SketchEditorSession& editor, Kind kind) {
-    return static_cast<std::size_t>(std::ranges::count(editor.constraints(), kind,
-                                                       &document::SketchConstraint::kind));
+    return static_cast<std::size_t>(
+        std::ranges::count(editor.constraints(), kind, &document::SketchConstraint::kind));
 }
 // Selects the elements in order; the last one is the mirror axis where it matters.
 void selectAll(SketchEditorSession& editor, const std::vector<SketchElementId>& ids) {
@@ -155,9 +155,9 @@ void legacyRectangle() {
             "The mirrored rectangle spans x 40..60");
 
     // A circular pattern in quarter turns keeps rectangles; in thirds it migrates them.
-    require(editor.loadDraft({{{SketchElementId{1}, document::SketchRectangle{10, 0, 20, 5}}}, 2},
-                             {}),
-            "Legacy rectangle for the pattern");
+    require(
+        editor.loadDraft({{{SketchElementId{1}, document::SketchRectangle{10, 0, 20, 5}}}, 2}, {}),
+        "Legacy rectangle for the pattern");
     require(editor.selectNearestReference(SketchElementId{1}, {10, 0}, true) &&
                 editor.circularPatternSelected(4, 360),
             "Pattern in quarter turns");
@@ -233,9 +233,9 @@ void translateAndDelete() {
             "Rectangle");
     editor.commitHistory();
     const State before = state(editor);
-    const auto sides = std::vector<SketchElementId>(
-        {editor.elements()[editor.elements().size() - 4].id,
-         editor.elements()[editor.elements().size() - 3].id});
+    const auto sides =
+        std::vector<SketchElementId>({editor.elements()[editor.elements().size() - 4].id,
+                                      editor.elements()[editor.elements().size() - 3].id});
     selectAll(editor, sides);
     require(editor.removeSelected(), "Delete two sides");
     require(editor.elements().size() == before.elements.size() - 2, "Both sides are gone");

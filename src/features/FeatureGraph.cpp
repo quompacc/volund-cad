@@ -169,8 +169,7 @@ void evaluatePrimitiveTool(document::CylinderResultMode mode, const PrimitiveToo
     const auto referenceTool = build(referenceInputShape, true);
     const auto evaluated = combineCylinder(mode, inputShape, tool);
     const TopoDS_Shape result = evaluated.shape;
-    const auto reference =
-        combineCylinder(mode, referenceInputShape, referenceTool.shape);
+    const auto reference = combineCylinder(mode, referenceInputShape, referenceTool.shape);
     const TopoDS_Shape referenceResult = reference.shape;
     auto referenceOrigins =
         continueSupportOrigins(findFeature(outputs, inputId).referenceSupportOrigins, reference);
@@ -240,8 +239,8 @@ void evaluatePrimitive(const document::DocumentSnapshot& document,
             auto shape = kernel::makeSolidPrimitiveWithHistory(definition);
             if (!place)
                 return shape;
-            return detail::placePrimitive(shape, origin.X(), origin.Y(),
-                                          origin.Z() + height * 0.5, parameters.placement);
+            return detail::placePrimitive(shape, origin.X(), origin.Y(), origin.Z() + height * 0.5,
+                                          parameters.placement);
         },
         descriptor, outputs, bodies, referenceBodies);
 }
@@ -260,14 +259,14 @@ void setConstructionPlane(document::SketchParameters& parameters,
 // A sketch without support: its construction plane and projected edges are brought up to
 // date; true when the sketch then needs a solve (projections or bound parameters).
 bool prepareStandaloneSketch(document::SketchParameters& parameters,
-                             const document::DocumentSnapshot& document,
-                             document::FeatureId sketch,
+                             const document::DocumentSnapshot& document, document::FeatureId sketch,
                              const std::vector<EvaluatedFeature>& outputs) {
     setConstructionPlane(parameters, outputs);
     detail::refreshSketchProjections(parameters, document, sketch, outputs);
     return !parameters.projections.empty() ||
-           std::ranges::any_of(parameters.constraints.values,
-                               [](const auto& constraint) { return constraint.parameter.has_value(); });
+           std::ranges::any_of(parameters.constraints.values, [](const auto& constraint) {
+               return constraint.parameter.has_value();
+           });
 }
 
 void evaluateSketch(const document::DocumentSnapshot& document,
@@ -326,13 +325,12 @@ FeatureGraphResult FeatureGraph::evaluate(const document::ModelDocument& documen
 }
 
 bool FeatureGraphEvaluation::valid() const noexcept {
-    return std::ranges::all_of(
-        report.features, [](const auto& issue) {
-            // M14: a suppressed feature is skipped on purpose, not an error.
-            return issue.status == EvaluationStatus::valid ||
-                   issue.status == EvaluationStatus::suppressed ||
-                   issue.status == EvaluationStatus::rolledBack;
-        });
+    return std::ranges::all_of(report.features, [](const auto& issue) {
+        // M14: a suppressed feature is skipped on purpose, not an error.
+        return issue.status == EvaluationStatus::valid ||
+               issue.status == EvaluationStatus::suppressed ||
+               issue.status == EvaluationStatus::rolledBack;
+    });
 }
 
 namespace {
@@ -425,7 +423,8 @@ std::vector<bool> dirtyNodes(const FeatureGraphEvaluation& next,
                              const std::shared_ptr<const FeatureGraphEvaluation>& previous) {
     const auto features = next.snapshot.features();
     // M14: a moved rollback marker changes which features are evaluated at all.
-    if (!previous || !std::ranges::equal(next.dependencies.nodes(), previous->dependencies.nodes()) ||
+    if (!previous ||
+        !std::ranges::equal(next.dependencies.nodes(), previous->dependencies.nodes()) ||
         next.snapshot.rollbackAfter() != previous->snapshot.rollbackAfter())
         return std::vector<bool>(features.size(), true);
     std::vector<document::FeatureId> changed;
@@ -474,10 +473,9 @@ std::shared_ptr<const FeatureGraphEvaluation> FeatureGraph::evaluateDetailed(
     // M14: features behind the rollback marker are not evaluated.
     std::size_t evaluated = document.features().size();
     if (const auto marker = document.rollbackAfter())
-        evaluated = static_cast<std::size_t>(
-                        std::ranges::find(document.features(), *marker,
-                                          &document::FeatureDescriptor::id) -
-                        document.features().begin()) +
+        evaluated = static_cast<std::size_t>(std::ranges::find(document.features(), *marker,
+                                                               &document::FeatureDescriptor::id) -
+                                             document.features().begin()) +
                     1;
     // M10/M17: a pattern's copies and an import's parts follow it directly and stand with it.
     while (evaluated < document.features().size() &&
@@ -490,7 +488,8 @@ std::shared_ptr<const FeatureGraphEvaluation> FeatureGraph::evaluateDetailed(
             issue = {descriptor.id, EvaluationStatus::rolledBack, "rolled-back", "Rolled back", {}};
             continue;
         }
-        // M14: a suppressed feature is skipped; later ones get the body without it, whatever its inputs.
+        // M14: a suppressed feature is skipped; later ones get the body without it, whatever its
+        // inputs.
         if (descriptor.suppressed) {
             issue = {descriptor.id, EvaluationStatus::suppressed, "suppressed", "Suppressed", {}};
             continue;

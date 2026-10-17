@@ -17,8 +17,8 @@ char lower(char value) noexcept {
     return value >= 'A' && value <= 'Z' ? static_cast<char>(value - 'A' + 'a') : value;
 }
 // Units and words later expressions (v2) will need.
-constexpr std::array<std::string_view, 12> reservedNames{
-    "mm", "cm", "m", "um", "in", "ft", "deg", "rad", "pi", "e", "inf", "nan"};
+constexpr std::array<std::string_view, 12> reservedNames{"mm",  "cm",  "m",  "um", "in",  "ft",
+                                                         "deg", "rad", "pi", "e",  "inf", "nan"};
 } // namespace
 
 bool sameParameterName(std::string_view left, std::string_view right) noexcept {
@@ -30,8 +30,8 @@ bool isValidParameterName(std::string_view name) noexcept {
         return false;
     if (!std::ranges::all_of(name, [](char c) { return letter(c) || digit(c) || c == '_'; }))
         return false;
-    return std::ranges::none_of(reservedNames,
-                                [&](std::string_view word) { return sameParameterName(word, name); });
+    return std::ranges::none_of(
+        reservedNames, [&](std::string_view word) { return sameParameterName(word, name); });
 }
 
 void validateParameterTable(const ParameterTable& table) {
@@ -45,12 +45,11 @@ void validateParameterTable(const ParameterTable& table) {
             throw std::invalid_argument("Invalid parameter name: " + parameter.name);
         if (parameter.unit != ParameterUnit::length && parameter.unit != ParameterUnit::angle)
             throw std::invalid_argument("Unknown parameter unit");
-        if (parameter.unit == ParameterUnit::length ? !kernel::modelCoordinate(parameter.value)
-                                                    : !std::isfinite(parameter.value) ||
-                                                          std::abs(parameter.value) > 360.0)
+        if (parameter.unit == ParameterUnit::length
+                ? !kernel::modelCoordinate(parameter.value)
+                : !std::isfinite(parameter.value) || std::abs(parameter.value) > 360.0)
             throw std::invalid_argument("Parameter value is out of range: " + parameter.name);
-        if (parameter.comment.size() > 4096 ||
-            parameter.comment.find('\0') != std::string::npos)
+        if (parameter.comment.size() > 4096 || parameter.comment.find('\0') != std::string::npos)
             throw std::invalid_argument("Invalid parameter comment");
         for (std::size_t prior = 0; prior < index; ++prior) {
             if (table.values[prior].id == parameter.id)

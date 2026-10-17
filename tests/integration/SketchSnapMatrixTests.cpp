@@ -191,7 +191,8 @@ void noRedundantRelation() {
 void removedProjection() {
     application::CadSession session;
     session.newDocument();
-    require(session.createBoxFeature({40, 30, 20}).status() == application::CommandStatus::committed,
+    require(session.createBoxFeature({40, 30, 20}).status() ==
+                application::CommandStatus::committed,
             "Box");
     const auto box = session.features().front().id;
     const auto faces = session.supportFaces(box);
@@ -219,8 +220,8 @@ void removedProjection() {
     // The edge's generating feature is gone (a well-formed reference to nothing).
     std::get<document::PrimitiveEdgeOrigin>(stored->projectedEdge->origin.value).feature =
         document::FeatureId{999};
-    const auto edited = session.editSketchParameters(sketchId, broken,
-                                                     application::ErrorDisposition::keepEditableErrors);
+    const auto edited = session.editSketchParameters(
+        sketchId, broken, application::ErrorDisposition::keepEditableErrors);
     require(edited.status() == application::CommandStatus::committedWithErrors,
             "A vanished edge is a reference error, got status " +
                 std::to_string(static_cast<int>(edited.status())) + " reason " +

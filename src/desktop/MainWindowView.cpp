@@ -13,9 +13,9 @@
 #include <QMenu>
 #include <QMessageBox>
 #include <QPushButton>
-#include <QStringList>
 #include <QSignalBlocker>
 #include <QStatusBar>
+#include <QStringList>
 
 // U06: view state from the model tree (origins, planes, grid, body visibility) and picks of
 // base planes from the tree or the viewport.
@@ -190,8 +190,9 @@ void MainWindow::syncTimeline() {
         } else if (feature.kind == document::FeatureKind::primitive) {
             static constexpr ShellIcon shapes[]{ShellIcon::sphere, ShellIcon::cone,
                                                 ShellIcon::torus, ShellIcon::wedge};
-            icons.emplace_back(feature.id, shapes[static_cast<std::size_t>(
-                                               snapshot.primitiveParameters(feature.id).shape)]);
+            icons.emplace_back(
+                feature.id,
+                shapes[static_cast<std::size_t>(snapshot.primitiveParameters(feature.id).shape)]);
         } else if (feature.kind == document::FeatureKind::pattern &&
                    snapshot.patternParameters(feature.id).kind ==
                        document::PatternKind::circular) { // M10

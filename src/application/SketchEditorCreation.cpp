@@ -45,8 +45,7 @@ void checkSnapTarget(std::span<const document::SketchElement> elements, const Sk
         return;
     }
     const bool center = snap.kind == SketchSnapKind::center;
-    const bool fits = std::holds_alternative<document::SketchArc>(geometry) ||
-                      (line && !center) ||
+    const bool fits = std::holds_alternative<document::SketchArc>(geometry) || (line && !center) ||
                       (center && (std::holds_alternative<document::SketchCircle>(geometry) ||
                                   std::holds_alternative<document::SketchEllipse>(geometry) ||
                                   std::holds_alternative<document::SketchPointGeometry>(geometry)));
@@ -58,7 +57,9 @@ void checkSnapTarget(std::span<const document::SketchElement> elements, const Sk
 // count as the same point.
 std::string creationProblem(SketchDrawingTool tool, const SketchCreationInput& in) {
     constexpr double same = 1e-9;
-    const auto apart = [](SketchPoint a, SketchPoint b) { return std::hypot(a.x - b.x, a.y - b.y); };
+    const auto apart = [](SketchPoint a, SketchPoint b) {
+        return std::hypot(a.x - b.x, a.y - b.y);
+    };
     const SketchPoint last = in.third.value_or(in.second);
     switch (tool) {
     case SketchDrawingTool::line:
@@ -67,7 +68,8 @@ std::string creationProblem(SketchDrawingTool tool, const SketchCreationInput& i
             return "Linie: Anfangs- und Endpunkt fallen zusammen";
         break;
     case SketchDrawingTool::rectangle:
-        if (std::abs(in.second.x - in.first.x) <= same || std::abs(in.second.y - in.first.y) <= same)
+        if (std::abs(in.second.x - in.first.x) <= same ||
+            std::abs(in.second.y - in.first.y) <= same)
             return in.centered ? "Rechteck aus dem Mittelpunkt: Breite oder Höhe ist null"
                                : "Rechteck: Breite oder Höhe ist null";
         break;
@@ -137,11 +139,11 @@ void SketchEditorSession::snapTo(SketchGeometryReference created,
                     throw std::invalid_argument("Anbindung an die projizierte Kante abgelehnt");
                 return;
             }
-            static_cast<void>(
-                addSupportReference(created, point, snap->supportReference, snap->supportParameter));
+            static_cast<void>(addSupportReference(created, point, snap->supportReference,
+                                                  snap->supportParameter));
             return;
         }
-        const auto axis = snap->kind == SketchSnapKind::origin ? SketchAxisReference::origin
+        const auto axis = snap->kind == SketchSnapKind::origin  ? SketchAxisReference::origin
                           : snap->kind == SketchSnapKind::xAxis ? SketchAxisReference::xAxis
                                                                 : SketchAxisReference::yAxis;
         static_cast<void>(addAxisReference(created, axis));
@@ -261,9 +263,8 @@ std::optional<SketchCreationResult> SketchEditorSession::createStep(const Sketch
         return added;
     };
     const auto radial = [&](SketchConstraintKind kind) {
-        return in.relationTarget.has_value() && relate([&] {
-                   return addAutomaticRadialRelation(id, *in.relationTarget, kind);
-               });
+        return in.relationTarget.has_value() &&
+               relate([&] { return addAutomaticRadialRelation(id, *in.relationTarget, kind); });
     };
     const SketchPoint last = in.third.value_or(in.second);
     switch (tool_) {
@@ -289,9 +290,8 @@ std::optional<SketchCreationResult> SketchEditorSession::createStep(const Sketch
     case SketchDrawingTool::circle:
     case SketchDrawingTool::ellipse: {
         const bool circle = tool_ == SketchDrawingTool::circle;
-        const bool centerRelated =
-            circle && in.relation == SketchAutoRelation::concentric &&
-            radial(SketchConstraintKind::concentric);
+        const bool centerRelated = circle && in.relation == SketchAutoRelation::concentric &&
+                                   radial(SketchConstraintKind::concentric);
         if (!centerRelated)
             snap(SketchCreationPoint::center, in.firstSnap, in.first);
         if (circle && in.relation == SketchAutoRelation::tangent) {

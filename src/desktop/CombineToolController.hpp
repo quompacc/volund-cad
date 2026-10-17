@@ -38,7 +38,8 @@ class CombineToolController final {
     // A body clicked while the panel is open (its current result, possibly the preview's).
     void picked(document::FeatureId body);
     void cancel();
-    void setPreviewHandler(std::function<void(const std::vector<features::EvaluatedBody>*)> handler);
+    void
+    setPreviewHandler(std::function<void(const std::vector<features::EvaluatedBody>*)> handler);
 
   private:
     void open();

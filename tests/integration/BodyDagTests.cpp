@@ -58,13 +58,13 @@ std::vector<std::uint64_t> bodies(const application::CadSession& session) {
 void run() {
     application::CadSession session;
     session.newDocument();
-    const auto sketchA = committed(
-        session.createDatumSketchFeature(onDatum(DatumPlane::xy, {0, 0, 20, 10})));
+    const auto sketchA =
+        committed(session.createDatumSketchFeature(onDatum(DatumPlane::xy, {0, 0, 20, 10})));
     const auto prismA = extrude(session, sketchA, 10);
     const auto cylinderA =
         committed(session.createCylinderFeature(prismA, document::CylinderResultMode::join));
-    const auto sketchB = committed(
-        session.createDatumSketchFeature(onDatum(DatumPlane::xz, {40, 0, 50, 5})));
+    const auto sketchB =
+        committed(session.createDatumSketchFeature(onDatum(DatumPlane::xz, {40, 0, 50, 5})));
     const auto prismB = extrude(session, sketchB, 4);
     const auto ids = bodies(session);
     require(ids.size() == 2 && session.validBodies().size() == 2, "Two bodies A and B");

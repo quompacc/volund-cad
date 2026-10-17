@@ -47,7 +47,7 @@ SketchPoint referencePoint(const document::SketchParameters& sketch,
     if (const auto* ellipse = std::get_if<document::SketchEllipse>(&geometry))
         return ellipse->center;
     if (const auto* point = std::get_if<document::SketchPointGeometry>(&geometry))
-        return point->position; // S15
+        return point->position;                                               // S15
     if (const auto* spline = std::get_if<document::SketchBSpline>(&geometry)) // S21
         return reference.point == Position::end ? spline->poles.back() : spline->poles.front();
     const auto& rectangle = std::get<document::SketchRectangle>(geometry);
@@ -183,32 +183,58 @@ gp_Pnt worldPoint(const document::SketchPlane& plane, const SketchPoint& point) 
 
 const char* symbol(SketchConstraintKind kind) {
     switch (kind) {
-    case SketchConstraintKind::horizontal: return "[H]";
-    case SketchConstraintKind::vertical: return "[V]";
-    case SketchConstraintKind::coincident: return "[C]";
-    case SketchConstraintKind::parallel: return "[||]";
-    case SketchConstraintKind::perpendicular: return "[90]";
-    case SketchConstraintKind::collinear: return "[CL]";
-    case SketchConstraintKind::horizontalPoints: return "[HP]";
-    case SketchConstraintKind::verticalPoints: return "[VP]";
-    case SketchConstraintKind::fixed: return "[F]";
-    case SketchConstraintKind::pointOnObject: return "[O]";
-    case SketchConstraintKind::equal: return "[=]";
-    case SketchConstraintKind::tangent: return "[T]";
-    case SketchConstraintKind::symmetric: return "[S]";
-    case SketchConstraintKind::midpoint: return "[M]";
-    case SketchConstraintKind::perpendicularBisector: return "[PB]";
-    case SketchConstraintKind::concentric: return "[CC]";
-    case SketchConstraintKind::distance: return "L";
-    case SketchConstraintKind::radius: return "R";
-    case SketchConstraintKind::diameter: return "Ø";
-    case SketchConstraintKind::pointDistance: return "D";
-    case SketchConstraintKind::pointLineDistance: return "PL";
-    case SketchConstraintKind::pointDistanceX: return "DX";
-    case SketchConstraintKind::pointDistanceY: return "DY";
-    case SketchConstraintKind::coordinateX: return "X";
-    case SketchConstraintKind::coordinateY: return "Y";
-    case SketchConstraintKind::angle: return "A";
+    case SketchConstraintKind::horizontal:
+        return "[H]";
+    case SketchConstraintKind::vertical:
+        return "[V]";
+    case SketchConstraintKind::coincident:
+        return "[C]";
+    case SketchConstraintKind::parallel:
+        return "[||]";
+    case SketchConstraintKind::perpendicular:
+        return "[90]";
+    case SketchConstraintKind::collinear:
+        return "[CL]";
+    case SketchConstraintKind::horizontalPoints:
+        return "[HP]";
+    case SketchConstraintKind::verticalPoints:
+        return "[VP]";
+    case SketchConstraintKind::fixed:
+        return "[F]";
+    case SketchConstraintKind::pointOnObject:
+        return "[O]";
+    case SketchConstraintKind::equal:
+        return "[=]";
+    case SketchConstraintKind::tangent:
+        return "[T]";
+    case SketchConstraintKind::symmetric:
+        return "[S]";
+    case SketchConstraintKind::midpoint:
+        return "[M]";
+    case SketchConstraintKind::perpendicularBisector:
+        return "[PB]";
+    case SketchConstraintKind::concentric:
+        return "[CC]";
+    case SketchConstraintKind::distance:
+        return "L";
+    case SketchConstraintKind::radius:
+        return "R";
+    case SketchConstraintKind::diameter:
+        return "Ø";
+    case SketchConstraintKind::pointDistance:
+        return "D";
+    case SketchConstraintKind::pointLineDistance:
+        return "PL";
+    case SketchConstraintKind::pointDistanceX:
+        return "DX";
+    case SketchConstraintKind::pointDistanceY:
+        return "DY";
+    case SketchConstraintKind::coordinateX:
+        return "X";
+    case SketchConstraintKind::coordinateY:
+        return "Y";
+    case SketchConstraintKind::angle:
+        return "A";
     }
     return "?";
 }

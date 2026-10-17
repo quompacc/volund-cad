@@ -157,13 +157,14 @@ std::vector<SketchElement> sketchPatternInstances(const SketchElements& elements
         else if (pattern.kind == SketchPatternKind::circular)
             motion = Motion::rotation(pattern.center, pattern.angle * position);
         else
-            motion = Motion::reflection(std::get<SketchLine>(find(elements, *pattern.axis)->geometry));
+            motion =
+                Motion::reflection(std::get<SketchLine>(find(elements, *pattern.axis)->geometry));
         for (const SketchElementId source : pattern.sources) {
             const auto* element = find(elements, source);
-            result.push_back({pattern.instances[next++],
-                              moved(element->geometry, motion,
-                                    pattern.kind == SketchPatternKind::linear),
-                              element->construction});
+            result.push_back(
+                {pattern.instances[next++],
+                 moved(element->geometry, motion, pattern.kind == SketchPatternKind::linear),
+                 element->construction});
         }
     }
     return result;

@@ -79,8 +79,8 @@ void SketchEditorToolController::confirmElement(const viewport::SketchElementInt
             bsplinePoles_.push_back({intent.firstX, intent.firstY});
         bsplinePoles_.push_back({intent.secondX, intent.secondY});
         viewport_.continueSketchPolyline(intent.secondX, intent.secondY, 0);
-        statusChanged_(QObject::tr("B-Spline: %1 Kontrollpunkte; Enter beendet")
-                           .arg(bsplinePoles_.size()));
+        statusChanged_(
+            QObject::tr("B-Spline: %1 Kontrollpunkte; Enter beendet").arg(bsplinePoles_.size()));
         return;
     }
     std::optional<application::SketchCreationResult> created;

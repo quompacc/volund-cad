@@ -68,11 +68,11 @@ struct ExtrusionMode final {
     std::optional<document::ExtrusionOperation> operation{};
     bool reversed{false};
     std::optional<document::BodyId> target{};
-    double offset{0.0};                                  // T03
+    double offset{0.0};                                    // T03
     std::optional<document::BodyFaceReference> upToFace{}; // T03
-    bool symmetric{false};                                  // M02: distance = total length
-    std::optional<document::RevolveParameters> revolve{};   // M20: "Drehung N"
-    std::optional<document::SweepPath> sweep{};             // M23: "Folgen N"
+    bool symmetric{false};                                 // M02: distance = total length
+    std::optional<document::RevolveParameters> revolve{};  // M20: "Drehung N"
+    std::optional<document::SweepPath> sweep{};            // M23: "Folgen N"
     std::optional<document::LoftParameters> loft{};        // M24: "Ausformung N"
     // PAR02: distance and start offset bound to length parameters; their values follow them.
     std::optional<document::ParameterId> distanceParameter{};
@@ -108,7 +108,6 @@ struct DeletionPlan final {
     std::vector<document::FeatureId> cascade;
     bool onlyThisPossible{true};
 };
-
 
 class CadSession final {
   public:
@@ -237,19 +236,19 @@ class CadSession final {
     // the outer region, not the inside of its holes, again islands inside those.
     [[nodiscard]] CommandResult
     createDatumSketchExtrusion(const document::SketchParameters& sketch,
-                               std::span<const document::SketchRegionId> regions,
-                               double distance, const ExtrusionMode& mode = {});
+                               std::span<const document::SketchRegionId> regions, double distance,
+                               const ExtrusionMode& mode = {});
     // T04: push/pull of a planar face of `support`'s current result as one extrusion feature
     // (positive distance joins outward, negative cuts inward).
     [[nodiscard]] CommandResult pushPullFace(document::FeatureId support,
-                                             const features::SupportOrigin& face,
-                                             double distance);
+                                             const features::SupportOrigin& face, double distance);
     // M05: rounds edges of `support`'s current body ("Verrundung N"), one undo step.
     [[nodiscard]] CommandResult createFillet(document::FeatureId support,
                                              std::span<const document::FilletEdge> edges,
                                              double radius);
     [[nodiscard]] CommandResult
-    editFilletParameters(document::FeatureId featureId, const document::FilletParameters& parameters,
+    editFilletParameters(document::FeatureId featureId,
+                         const document::FilletParameters& parameters,
                          ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] document::FilletParameters filletParameters(document::FeatureId featureId) const;
     // M07: a symmetric chamfer ("Fase N"), one undo step, on the same named edges.
@@ -265,9 +264,8 @@ class CadSession final {
     // M08: a hole into a planar face of `support`'s current result ("Bohrung N"), at (x, y)
     // of the face's frame; no depth means through all. One undo step.
     [[nodiscard]] CommandResult createHole(document::FeatureId support,
-                                           const document::SubshapeOrigin& face, double x,
-                                           double y, double diameter,
-                                           std::optional<double> depth);
+                                           const document::SubshapeOrigin& face, double x, double y,
+                                           double diameter, std::optional<double> depth);
     [[nodiscard]] CommandResult
     editHoleParameters(document::FeatureId featureId, const document::HoleParameters& parameters,
                        ErrorDisposition disposition = ErrorDisposition::reject);
@@ -276,8 +274,7 @@ class CadSession final {
     // result; one undo step. Unless kept, the tools are no separate bodies afterwards.
     [[nodiscard]] CommandResult createCombine(document::FeatureId target,
                                               std::span<const document::FeatureId> tools,
-                                              document::CombineOperation operation,
-                                              bool keepTools);
+                                              document::CombineOperation operation, bool keepTools);
     [[nodiscard]] CommandResult
     editCombineParameters(document::FeatureId featureId,
                           const document::CombineParameters& parameters,
@@ -344,7 +341,8 @@ class CadSession final {
     editPatternParameters(document::FeatureId featureId,
                           const document::PatternParameters& parameters,
                           ErrorDisposition disposition = ErrorDisposition::reject);
-    [[nodiscard]] document::PatternParameters patternParameters(document::FeatureId featureId) const;
+    [[nodiscard]] document::PatternParameters
+    patternParameters(document::FeatureId featureId) const;
     // M11 (CadSessionMove.cpp): moves the body of `feature` by `translation` and turns it by
     // `angle` (radians) about X, Y or Z (`rotationAxis` 0..2) through its middle. A primitive
     // that is the last feature of its body changes its own placement, a body whose last feature
@@ -413,7 +411,8 @@ class CadSession final {
     [[nodiscard]] std::optional<document::FilletEdge> filletEdge(document::FeatureId support,
                                                                  const TopoDS_Shape& edge) const;
     [[nodiscard]] std::vector<TopoDS_Shape>
-    filletEdgeShapes(document::FeatureId support, std::span<const document::FilletEdge> edges) const;
+    filletEdgeShapes(document::FeatureId support,
+                     std::span<const document::FilletEdge> edges) const;
     // M01: a cylinder is always possible: on the selected body or as a new body.
     [[nodiscard]] bool canAddCylinder() const noexcept;
     // M01: the current producer of the selected feature's body (the input a join, cut or
@@ -487,8 +486,7 @@ class CadSession final {
     [[nodiscard]] CommandResult renameBody(document::BodyId body, std::string name);
     // M01: shows or hides a body; stored and modified, but no undo step.
     [[nodiscard]] bool setBodyHidden(document::BodyId body, bool hidden);
-    [[nodiscard]] CommandResult setParameterComment(document::ParameterId id,
-                                                    std::string comment);
+    [[nodiscard]] CommandResult setParameterComment(document::ParameterId id, std::string comment);
     [[nodiscard]] CommandResult
     deleteParameter(document::ParameterId id,
                     ParameterDeletion mode = ParameterDeletion::refuseWhenUsed);

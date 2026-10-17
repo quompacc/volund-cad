@@ -1,4 +1,3 @@
-#include <voelund/kernel/PlaneNormal.hpp>
 #include <BRepAdaptor_Surface.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
@@ -12,6 +11,7 @@
 #include <voelund/features/SketchReferenceReview.hpp>
 #include <voelund/features/SketchSupportBinding.hpp>
 #include <voelund/kernel/NumericPolicy.hpp>
+#include <voelund/kernel/PlaneNormal.hpp>
 
 namespace voelund::features {
 namespace {

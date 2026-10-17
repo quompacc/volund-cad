@@ -2,8 +2,8 @@
 
 #include <BRepAlgoAPI_BooleanOperation.hxx>
 #include <BRepBuilderAPI_MakeShape.hxx>
-#include <BRepTools_History.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
+#include <BRepTools_History.hxx>
 #include <NCollection_IndexedMap.hxx>
 #include <NCollection_List.hxx>
 #include <TopExp.hxx>

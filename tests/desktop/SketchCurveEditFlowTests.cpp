@@ -16,7 +16,9 @@
 // reason and changes nothing.
 namespace {
 using namespace voelund;
-void require(bool condition, const std::string& message) { test::require(condition, message.c_str()); }
+void require(bool condition, const std::string& message) {
+    test::require(condition, message.c_str());
+}
 
 QAction& command(QWidget& window, const char* id) {
     for (auto* action : window.findChildren<QAction*>())
@@ -51,10 +53,9 @@ bool enabled(QWidget& window, const char* id) { return command(window, id).isEna
 void addClick(viewport::CadViewport& viewport, double x, double y) {
     const QPoint point = viewport::ViewportTestAccess::project(viewport, x, y, 0);
     for (const auto type : {QEvent::MouseButtonPress, QEvent::MouseButtonRelease}) {
-        QMouseEvent event(type, QPointF(point), QPointF(viewport.mapToGlobal(point)),
-                          Qt::LeftButton,
-                          type == QEvent::MouseButtonPress ? Qt::LeftButton : Qt::NoButton,
-                          Qt::ControlModifier);
+        QMouseEvent event(
+            type, QPointF(point), QPointF(viewport.mapToGlobal(point)), Qt::LeftButton,
+            type == QEvent::MouseButtonPress ? Qt::LeftButton : Qt::NoButton, Qt::ControlModifier);
         QApplication::sendEvent(&viewport, &event);
     }
     test::render(viewport);

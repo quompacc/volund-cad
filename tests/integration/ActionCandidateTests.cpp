@@ -31,8 +31,7 @@ Quantity mm(double value) { return {value, QuantityUnit::millimetre}; }
 
 ActionRequest request(const application::CadSession& session, std::string id,
                       application::Action action) {
-    return {std::move(id), session.documentId(), session.sceneStatus().document,
-            std::move(action)};
+    return {std::move(id), session.documentId(), session.sceneStatus().document, std::move(action)};
 }
 document::SketchParameters datumSketch(std::vector<document::SketchElement> elements) {
     const auto next = elements.size() + 1;
@@ -42,8 +41,7 @@ document::SketchParameters datumSketch(std::vector<document::SketchElement> elem
     return sketch;
 }
 document::SketchParameters circle(double radius) {
-    return datumSketch(
-        {{document::SketchElementId{1}, document::SketchCircle{{0, 0}, radius}}});
+    return datumSketch({{document::SketchElementId{1}, document::SketchCircle{{0, 0}, radius}}});
 }
 application::CreateSketchExtrusionAction plate(double radius, double distance,
                                                std::vector<document::SketchRegionId> regions = {}) {
@@ -103,8 +101,9 @@ void failureInStepTwo() {
     application::CadSession session;
     session.newDocument();
     ActionDispatcher dispatcher(session);
-    require(dispatcher.execute(request(session, "box", application::CreateBoxAction{
-                                                          mm(10), mm(10), mm(10)}))
+    require(dispatcher
+                    .execute(request(session, "box",
+                                     application::CreateBoxAction{mm(10), mm(10), mm(10)}))
                     .command.status() == CommandStatus::committed,
             "Starting body");
     const Unchanged state(session);
@@ -115,8 +114,8 @@ void failureInStepTwo() {
                 result.rejection == ActionRejection::none,
             "A negative distance fails in step 2");
     state.check("Negative distance");
-    const auto line = datumSketch(
-        {{document::SketchElementId{1}, document::SketchLine{{0, 0}, {10, 0}}}});
+    const auto line =
+        datumSketch({{document::SketchElementId{1}, document::SketchLine{{0, 0}, {10, 0}}}});
     result = dispatcher.execute(
         request(session, "open", application::CreateSketchExtrusionAction{line, {}, mm(5)}));
     require(result.command.status() == CommandStatus::rejected &&
@@ -160,9 +159,9 @@ void requestIds() {
     application::CadSession session;
     session.newDocument();
     ActionDispatcher dispatcher(session);
-    const auto create = request(session, "A",
-                                application::CreateParameterAction{
-                                    "A", document::ParameterUnit::length, mm(10), {}});
+    const auto create = request(
+        session, "A",
+        application::CreateParameterAction{"A", document::ParameterUnit::length, mm(10), {}});
     const auto first = dispatcher.execute(create);
     require(first.command.status() == CommandStatus::committed && !first.repeated,
             "First execution");
@@ -183,9 +182,9 @@ void requestIds() {
     require(dispatcher.execute(changed).rejection == ActionRejection::requestConflict,
             "Another stamp is other content too");
     require(dispatcher
-                    .execute(request(session, "",
-                                     application::RenameParameterAction{
-                                         first.createdParameters.front(), "B"}))
+                    .execute(request(
+                        session, "",
+                        application::RenameParameterAction{first.createdParameters.front(), "B"}))
                     .rejection == ActionRejection::missingRequestId,
             "A request needs an ID");
     state.check("Conflicts");
@@ -202,14 +201,14 @@ void requestIds() {
     state.check("Bounded table");
 
     // A new document generation starts an empty table.
-    const auto reused = request(session, "reused",
-                                application::CreateParameterAction{
-                                    "C", document::ParameterUnit::length, mm(1), {}});
+    const auto reused = request(
+        session, "reused",
+        application::CreateParameterAction{"C", document::ParameterUnit::length, mm(1), {}});
     require(dispatcher.execute(reused).command.status() == CommandStatus::committed, "Reused 1");
     session.newDocument();
-    const auto again = request(session, "reused",
-                               application::CreateParameterAction{
-                                   "D", document::ParameterUnit::length, mm(2), {}});
+    const auto again = request(
+        session, "reused",
+        application::CreateParameterAction{"D", document::ParameterUnit::length, mm(2), {}});
     require(dispatcher.execute(again).command.status() == CommandStatus::committed,
             "The ID is free again in the next generation");
 }

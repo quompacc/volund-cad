@@ -16,20 +16,28 @@ using kernel::PrimitiveShape;
 
 const char* shapeName(PrimitiveShape shape) {
     switch (shape) {
-    case PrimitiveShape::sphere: return "Kugel";
-    case PrimitiveShape::cone: return "Kegel";
-    case PrimitiveShape::torus: return "Torus";
-    case PrimitiveShape::wedge: return "Keil";
+    case PrimitiveShape::sphere:
+        return "Kugel";
+    case PrimitiveShape::cone:
+        return "Kegel";
+    case PrimitiveShape::torus:
+        return "Torus";
+    case PrimitiveShape::wedge:
+        return "Keil";
     }
     return "Grundkörper";
 }
 
 std::array<double, 4> defaultSizes(PrimitiveShape shape) {
     switch (shape) {
-    case PrimitiveShape::sphere: return {10.0, 0.0, 0.0, 0.0};
-    case PrimitiveShape::cone: return {10.0, 4.0, 20.0, 0.0};
-    case PrimitiveShape::torus: return {15.0, 4.0, 0.0, 0.0};
-    case PrimitiveShape::wedge: return {20.0, 20.0, 20.0, 10.0};
+    case PrimitiveShape::sphere:
+        return {10.0, 0.0, 0.0, 0.0};
+    case PrimitiveShape::cone:
+        return {10.0, 4.0, 20.0, 0.0};
+    case PrimitiveShape::torus:
+        return {15.0, 4.0, 0.0, 0.0};
+    case PrimitiveShape::wedge:
+        return {20.0, 20.0, 20.0, 10.0};
     }
     return {};
 }
@@ -94,7 +102,8 @@ CommandResult CadSession::editPrimitiveParameters(document::FeatureId featureId,
         std::ranges::find(descriptors, featureId, &document::FeatureDescriptor::id);
     if (descriptor == descriptors.end() || descriptor->kind != document::FeatureKind::primitive)
         return CommandResult::invalidInput("Feature is not a primitive");
-    if (!descriptor->inputFeature && parameters.resultMode != document::CylinderResultMode::separate)
+    if (!descriptor->inputFeature &&
+        parameters.resultMode != document::CylinderResultMode::separate)
         return CommandResult::invalidInput(
             "A new-body primitive has no body to join, cut or intersect");
     document::DocumentTransaction transaction(document_);
@@ -108,7 +117,8 @@ CommandResult CadSession::editPrimitiveParameters(document::FeatureId featureId,
             return CommandResult::invalidInput(
                 "Repair current geometry before changing the connection mode");
         shiftBetweenInputAndReference(
-            adjusted, detail::evaluatedFeature(evaluation_->result.features, *descriptor->inputFeature),
+            adjusted,
+            detail::evaluatedFeature(evaluation_->result.features, *descriptor->inputFeature),
             becomesSeparate ? 1.0 : -1.0);
     }
     const auto changed =

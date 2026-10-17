@@ -1,7 +1,7 @@
-#include "IsolatedSettings.hpp"
 #include "../../src/desktop/SketchEditorToolController.hpp"
 #include "../../src/desktop/ToolPanelHost.hpp"
 #include "../CommandResultAssertions.hpp"
+#include "IsolatedSettings.hpp"
 #include <QApplication>
 #include <QDir>
 #include <QLabel>
@@ -107,12 +107,12 @@ void run() {
     application::SketchSolverGateTestAccess::set(active, features::SketchSolveStatus::conflicting,
                                                  0);
     desktop::SketchSolverGateTestAccess::sync(controller);
-    require(!accept->isEnabled() && guidance->text().contains("Widerspruch"),
-            "conflict caption");
+    require(!accept->isEnabled() && guidance->text().contains("Widerspruch"), "conflict caption");
     require(active.selectElement(document::SketchElementId{1}) && active.setSelectedLineLength(9),
             "repair failed");
     desktop::SketchSolverGateTestAccess::sync(controller);
-    require(active.canAccept() && accept->isEnabled() && guidance->text().contains("Freiheitsgrade"),
+    require(active.canAccept() && accept->isEnabled() &&
+                guidance->text().contains("Freiheitsgrade"),
             "repair did not enable OK");
     if (!directory.isEmpty()) {
         QApplication::processEvents();

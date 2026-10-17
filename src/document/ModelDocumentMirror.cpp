@@ -11,8 +11,8 @@ void validateMirrorParameters(const MirrorParameters& parameters) {
     if (parameters.body.value() == 0)
         throw std::invalid_argument("A mirror names its body");
     const auto& plane = parameters.plane;
-    const int references = (plane.basePlane ? 1 : 0) + (plane.constructionPlane ? 1 : 0) +
-                           (plane.face ? 1 : 0);
+    const int references =
+        (plane.basePlane ? 1 : 0) + (plane.constructionPlane ? 1 : 0) + (plane.face ? 1 : 0);
     if (references != 1)
         throw std::invalid_argument(
             "A mirror plane is a base plane, a construction plane or a body face");

@@ -29,21 +29,21 @@ enum class KernelOperation {
     intersect,
     compound,
     makePrism,
-    fillet,  // M05
-    chamfer, // M07
+    fillet,         // M05
+    chamfer,        // M07
     makeRevolution, // M20
     shell,          // M22
     makeSphere,     // M27
     makeCone,
     makeTorus,
     makeWedge,
-    makePipe,       // M23
-    loft,           // M24
-    helix,          // M26
-    draft,          // M25
-    mirror,         // M09
-    pattern,        // M10
-    measure,        // M12
+    makePipe, // M23
+    loft,     // M24
+    helix,    // M26
+    draft,    // M25
+    mirror,   // M09
+    pattern,  // M10
+    measure,  // M12
 };
 
 // M03: why a Boolean refused its result, beyond a failing kernel.

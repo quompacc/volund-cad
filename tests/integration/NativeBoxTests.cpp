@@ -1,70 +1,78 @@
 #include "../../src/document/NativePrimitiveCodec.hpp"
-#include <voelund/document/LegacyDocumentImporter.hpp>
-#include <voelund/features/FeatureGraph.hpp>
-#include <BinDrivers.hxx>
 #include <BRepCheck_Analyzer.hxx>
+#include <BinDrivers.hxx>
+#include <PCDM_ReaderStatus.hxx>
+#include <PCDM_StoreStatus.hxx>
 #include <TDataStd_AsciiString.hxx>
 #include <TDataStd_Integer.hxx>
 #include <TDataStd_RealArray.hxx>
 #include <TDocStd_Application.hxx>
-#include <PCDM_ReaderStatus.hxx>
-#include <PCDM_StoreStatus.hxx>
 #include <fstream>
 #include <iostream>
 #include <limits>
 #include <sstream>
+#include <voelund/document/LegacyDocumentImporter.hpp>
+#include <voelund/features/FeatureGraph.hpp>
 
 namespace {
 using namespace voelund;
 using namespace document;
 using detail::NativePrimitiveCodec;
 void require(bool value, const char* message) {
-    if (!value) throw std::runtime_error(message);
+    if (!value)
+        throw std::runtime_error(message);
 }
-template<class Action> void rejected(Action action) {
+template <class Action> void rejected(Action action) {
     bool failed = false;
-    try { action(); } catch (const std::invalid_argument&) { failed = true; }
+    try {
+        action();
+    } catch (const std::invalid_argument&) {
+        failed = true;
+    }
     require(failed, "Invalid or unsupported box data accepted");
 }
 IdentifiedDocumentSnapshot fixture() {
-    std::istringstream legacy("VOLUND 16\nNEXT_ID 18446744073709551614\nFEATURES 2\n"
+    std::istringstream legacy(
+        "VOLUND 16\nNEXT_ID 18446744073709551614\nFEATURES 2\n"
         "BOX 18446744073709551613 \"Körper Ω \\\"A\\\"\" 2 3 4 1 -2 3 90 -45 360\n"
         "BOX 7 \"Körper Ω \\\"A\\\"\" 5 6 7 -8 9 10 0 0 0\n");
     return IdentifiedDocumentSnapshot::restore(DocumentId{UINT64_MAX, UINT64_MAX},
                                                LegacyDocumentImporter::read(legacy).snapshot);
 }
-Handle(TDocStd_Document) fresh(const Handle(TDocStd_Application)& app) {
+Handle(TDocStd_Document) fresh(const Handle(TDocStd_Application) & app) {
     Handle(TDocStd_Document) doc;
     app->NewDocument("BinOcaf", doc);
     doc->ChangeStorageFormatVersion(TDocStd_FormatVersion_VERSION_12);
     return doc;
 }
-void save(const Handle(TDocStd_Application)& app, const Handle(TDocStd_Document)& doc,
+void save(const Handle(TDocStd_Application) & app, const Handle(TDocStd_Document) & doc,
           std::ostream& output) {
     require(app->SaveAs(doc, output) == PCDM_SS_OK && output.good(), "Native save failed");
 }
-Handle(TDocStd_Document) open(const Handle(TDocStd_Application)& app, std::istream& input) {
+Handle(TDocStd_Document) open(const Handle(TDocStd_Application) & app, std::istream& input) {
     Handle(TDocStd_Document) doc;
     require(app->Open(input, doc) == PCDM_RS_OK && !doc.IsNull(), "Native open failed");
     doc->ChangeStorageFormatVersion(TDocStd_FormatVersion_VERSION_12);
     return doc;
 }
-void check(const Handle(TDocStd_Document)& doc, const IdentifiedDocumentSnapshot& expected) {
+void check(const Handle(TDocStd_Document) & doc, const IdentifiedDocumentSnapshot& expected) {
     const auto actual = NativePrimitiveCodec::read(doc);
     require(actual == expected, "Native box snapshot lost identity, order, names or parameters");
     const auto model = actual.snapshot().toDocument();
     require(!model.canUndo() && !model.canRedo(), "Transient history leaked into native snapshot");
-    if (expected.snapshot().features().empty()) return;
+    if (expected.snapshot().features().empty())
+        return;
     const auto evaluated = features::FeatureGraph{}.evaluate(model);
     require(evaluated.bodies.size() == expected.snapshot().features().size(), "Body count changed");
     for (std::size_t index = 0; index < evaluated.bodies.size(); ++index) {
         const auto& body = evaluated.bodies[index];
         require(body.bodyId.value() == expected.snapshot().features()[index].id.value() &&
                     body.sourceFeature == expected.snapshot().features()[index].id &&
-                    BRepCheck_Analyzer(body.shape).IsValid(), "Body identity or rebuilt BRep changed");
+                    BRepCheck_Analyzer(body.shape).IsValid(),
+                "Body identity or rebuilt BRep changed");
     }
 }
-void regressions(const Handle(TDocStd_Application)& app) {
+void regressions(const Handle(TDocStd_Application) & app) {
     const auto expected = fixture();
     auto doc = fresh(app);
     NativePrimitiveCodec::write(doc, expected);
@@ -85,8 +93,8 @@ void regressions(const Handle(TDocStd_Application)& app) {
     dimensions->SetValue(1, 3);
     require(doc->CommitCommand(), "Native box edit did not commit");
     const auto edited = NativePrimitiveCodec::read(doc);
-    require(edited.id() == expected.id() && edited.snapshot() != expected.snapshot() &&
-                doc->Undo(), "Native box edit changed identity or failed undo");
+    require(edited.id() == expected.id() && edited.snapshot() != expected.snapshot() && doc->Undo(),
+            "Native box edit changed identity or failed undo");
     check(doc, expected);
     require(doc->Redo() && NativePrimitiveCodec::read(doc) == edited && doc->Undo(),
             "Native box redo failed");
@@ -121,14 +129,15 @@ void regressions(const Handle(TDocStd_Application)& app) {
     });
     app->Close(doc);
     auto empty = fresh(app);
-    const auto emptySnapshot = IdentifiedDocumentSnapshot::create(
-        DocumentSnapshot::capture(ModelDocument::empty()));
+    const auto emptySnapshot =
+        IdentifiedDocumentSnapshot::create(DocumentSnapshot::capture(ModelDocument::empty()));
     NativePrimitiveCodec::write(empty, emptySnapshot);
     check(empty, emptySnapshot);
     app->Close(empty);
     auto unsupported = fresh(app);
     auto mixedModel = ModelDocument{};
-    const auto unsupportedSketch = mixedModel.addSketchFeature("Sketch", ModelDocument::initialBoxId(),
+    const auto unsupportedSketch = mixedModel.addSketchFeature(
+        "Sketch", ModelDocument::initialBoxId(),
         {{0, 0, 0, 0, 0, 1, 1, 0, 0},
          SketchElements{{SketchElement{SketchElementId{1}, SketchRectangle{0, 0, 2, 3}}}, 2}});
     (void)mixedModel.addExtrusionFeature("Unsupported", unsupportedSketch, {2, {}});
@@ -142,7 +151,8 @@ int main(int argc, char** argv) {
     try {
         Handle(TDocStd_Application) app = new TDocStd_Application;
         BinDrivers::DefineFormat(app);
-        if (argc == 1) regressions(app);
+        if (argc == 1)
+            regressions(app);
         else {
             require(argc == 3 || argc == 4, "Usage: create FILE | read FILE [REWRITE]");
             Handle(TDocStd_Document) doc;

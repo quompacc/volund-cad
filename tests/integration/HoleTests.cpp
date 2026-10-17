@@ -46,8 +46,8 @@ bool solidAt(const application::CadSession& session, double x, double y, double 
 
 struct Top final {
     document::SubshapeOrigin origin;
-    double x, y;          // the face centre in the face's frame
-    double cx, cy;        // the face centre in model coordinates
+    double x, y;   // the face centre in the face's frame
+    double cx, cy; // the face centre in model coordinates
 };
 Top top(const application::CadSession& session, document::FeatureId support) {
     for (const auto& face : session.supportFaces(support))
@@ -57,8 +57,7 @@ Top top(const application::CadSession& session, document::FeatureId support) {
                               face.plane.normalZ * face.plane.xDirectionY;
             const double yy = face.plane.normalZ * face.plane.xDirectionX -
                               face.plane.normalX * face.plane.xDirectionZ;
-            return {face.origin, fx, fy,
-                    face.plane.originX + fx * face.plane.xDirectionX + fy * yx,
+            return {face.origin, fx, fy, face.plane.originX + fx * face.plane.xDirectionX + fy * yx,
                     face.plane.originY + fx * face.plane.xDirectionY + fy * yy};
         }
     throw std::runtime_error("Top face missing");
@@ -73,11 +72,14 @@ void throughAndBlind() {
     const auto face = top(session, box);
 
     const auto through = application::executeAction(
-        session, application::prepareRequest(
-                     session, application::CreateHoleAction{
-                                  box, face.origin, {face.x, application::QuantityUnit::millimetre},
-                                  {face.y, application::QuantityUnit::millimetre},
-                                  {6, application::QuantityUnit::millimetre}, std::nullopt}));
+        session,
+        application::prepareRequest(
+            session, application::CreateHoleAction{box,
+                                                   face.origin,
+                                                   {face.x, application::QuantityUnit::millimetre},
+                                                   {face.y, application::QuantityUnit::millimetre},
+                                                   {6, application::QuantityUnit::millimetre},
+                                                   std::nullopt}));
     require(through.command.status() == CommandStatus::committed &&
                 session.features().back().name == "Bohrung 1" &&
                 near(volume(session), 12000 - 90 * pi) && valid(session),
@@ -121,7 +123,8 @@ void throughAndBlind() {
             "A hole that would remove the whole body is refused");
 
     require(session.undo().status() == CommandStatus::committed &&
-                near(volume(session), 24000 - 180 * pi) && solidAt(session, face.cx + 10, face.cy, 10),
+                near(volume(session), 24000 - 180 * pi) &&
+                solidAt(session, face.cx + 10, face.cy, 10),
             "Undo moves the box back");
 
     const auto directory = std::filesystem::temp_directory_path() / "voelund-m08-hole";

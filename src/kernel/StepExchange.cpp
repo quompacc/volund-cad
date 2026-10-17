@@ -7,12 +7,12 @@
 #include <DESTEP_Parameters.hxx>
 #include <GProp_GProps.hxx>
 #include <IFSelect_ReturnStatus.hxx>
+#include <NCollection_Sequence.hxx>
 #include <STEPCAFControl_Reader.hxx>
 #include <STEPCAFControl_Writer.hxx>
 #include <STEPControl_Reader.hxx>
 #include <ShapeFix_Shape.hxx>
 #include <Standard_Failure.hxx>
-#include <NCollection_Sequence.hxx>
 #include <TCollection_AsciiString.hxx>
 #include <TCollection_ExtendedString.hxx>
 #include <TDF_Label.hxx>
@@ -222,19 +222,20 @@ StepExport writeStep(const std::filesystem::path& path, std::span<const StepSoli
             }
             DESTEP_Parameters parameters;
             parameters.InitFromStatic();
-            parameters.WriteUnit = unit == StepLengthUnit::inch ? UnitsMethods_LengthUnit_Inch
-                                                                : UnitsMethods_LengthUnit_Millimeter;
+            parameters.WriteUnit = unit == StepLengthUnit::inch
+                                       ? UnitsMethods_LengthUnit_Inch
+                                       : UnitsMethods_LengthUnit_Millimeter;
             STEPCAFControl_Writer writer;
             writer.SetNameMode(true);
             writer.SetColorMode(false);
             writer.SetLayerMode(false);
             if (!writer.Transfer(document.get(), parameters, STEPControl_AsIs) ||
                 writer.WriteStream(buffer) != IFSelect_RetDone)
-                return fail(StepExportError::writeFailed, "The solids cannot be translated to STEP");
+                return fail(StepExportError::writeFailed,
+                            "The solids cannot be translated to STEP");
         } catch (const Standard_Failure& failure) {
-            return fail(StepExportError::writeFailed,
-                        "The solids cannot be translated to STEP: " +
-                            occtFailureDiagnostic(failure));
+            return fail(StepExportError::writeFailed, "The solids cannot be translated to STEP: " +
+                                                          occtFailureDiagnostic(failure));
         }
     }
     std::ofstream file(path, std::ios::binary | std::ios::trunc);
@@ -260,8 +261,7 @@ TopoDS_Shape readShapeBytes(std::string_view bytes) {
     } catch (const Standard_Failure&) {
         return {};
     }
-    if (shape.IsNull() || shape.ShapeType() != TopAbs_SOLID ||
-        !BRepCheck_Analyzer(shape).IsValid())
+    if (shape.IsNull() || shape.ShapeType() != TopAbs_SOLID || !BRepCheck_Analyzer(shape).IsValid())
         return {};
     return shape;
 }

@@ -34,7 +34,7 @@ void MainWindow::createCommands() {
                                      application::CreateBoxAction{
                                          millimetres(20.0), millimetres(20.0), millimetres(40.0)});
                 },
-                        [this](const QString& message) { statusBar()->showMessage(message); }))
+                [this](const QString& message) { statusBar()->showMessage(message); }))
             return;
         refreshScene();
         statusBar()->showMessage(tr("Quader angelegt"), 2000);
@@ -79,8 +79,7 @@ void MainWindow::createCommands() {
         // M19: a sketch on the selected construction plane.
         if (const auto selected = impl_->session.selectedFeature();
             selected && !impl_->selectedDatum && !impl_->selectedPlanarFace &&
-            impl_->session.selectedFeatureDescriptor().kind ==
-                document::FeatureKind::datumPlane) {
+            impl_->session.selectedFeatureDescriptor().kind == document::FeatureKind::datumPlane) {
             if (impl_->sketchExtrusionTool->isActive())
                 impl_->sketchExtrusionTool->cancel();
             impl_->sketchEditorTool->beginOnConstructionPlane(*selected);
@@ -149,18 +148,17 @@ void MainWindow::createCommands() {
             return;
         }
         // M10: a pattern, also through one of its copies.
-        if (kind == document::FeatureKind::pattern ||
-            kind == document::FeatureKind::patternCopy) {
-            impl_->patternTool->beginEdit(
-                kind == document::FeatureKind::pattern
-                    ? *selected
-                    : impl_->session.identifiedSnapshot().snapshot().patternCopyParameters(
-                          *selected).pattern);
+        if (kind == document::FeatureKind::pattern || kind == document::FeatureKind::patternCopy) {
+            impl_->patternTool->beginEdit(kind == document::FeatureKind::pattern
+                                              ? *selected
+                                              : impl_->session.identifiedSnapshot()
+                                                    .snapshot()
+                                                    .patternCopyParameters(*selected)
+                                                    .pattern);
             syncShell();
             return;
         }
-        if (kind == document::FeatureKind::datumPlane ||
-            kind == document::FeatureKind::datumAxis) {
+        if (kind == document::FeatureKind::datumPlane || kind == document::FeatureKind::datumAxis) {
             impl_->datumTool->beginEdit(*selected);
             syncShell();
             return;
@@ -230,8 +228,8 @@ void MainWindow::createCommands() {
     const auto treatEdges = [this](EdgeTreatment treatment) {
         // Edges picked before (user request 2026-10-13) are taken over.
         auto edges = impl_->selectedEdges;
-        const auto producer = edges.empty() ? impl_->session.selectedBodyProducer()
-                                            : impl_->edgeSupport;
+        const auto producer =
+            edges.empty() ? impl_->session.selectedBodyProducer() : impl_->edgeSupport;
         if (!producer)
             return;
         if (impl_->sketchExtrusionTool->isActive())
@@ -325,8 +323,9 @@ void MainWindow::createCommands() {
             const document::FeatureId support{impl_->selectedPlanarFace->bodyId};
             std::optional<document::SubshapeOrigin> face;
             try {
-                face = impl_->session.faceReference(support, impl_->selectedPlanarFace->selectedFace)
-                           .origin;
+                face =
+                    impl_->session.faceReference(support, impl_->selectedPlanarFace->selectedFace)
+                        .origin;
             } catch (const std::exception&) {
                 statusBar()->showMessage(tr("Diese Fläche hat keinen festen Namen."), 3000);
                 return;
@@ -343,9 +342,8 @@ void MainWindow::createCommands() {
             const auto support = *impl_->edgeSupport;
             if (!runCommand(
                     [&] {
-                        return runAction(impl_->session,
-                                         application::CreateDatumAxisAction{std::nullopt,
-                                                                            support, edge});
+                        return runAction(impl_->session, application::CreateDatumAxisAction{
+                                                             std::nullopt, support, edge});
                     },
                     [this](const QString& message) { statusBar()->showMessage(message); }))
                 return;
@@ -396,7 +394,8 @@ void MainWindow::createCommands() {
     impl_->commandActions =
         std::make_unique<CommandActions>(*this, impl_->commandRegistry.module("solid"));
     // Names for the smoke test and older desktop tests.
-    impl_->commandActions->action("solid.create.box")->setObjectName(QStringLiteral("addBoxAction"));
+    impl_->commandActions->action("solid.create.box")
+        ->setObjectName(QStringLiteral("addBoxAction"));
     impl_->commandActions->action("solid.create.cylinder")
         ->setObjectName(QStringLiteral("addCylinderAction"));
     impl_->commandActions->action("solid.create.sketch")
@@ -461,23 +460,22 @@ void MainWindow::createCommandSurfaces() {
     settings.layout()->addWidget(impl_->angularSnapInput);
     createViewSwitches();
     // Controllers flip their active flag around the panel calls; read the state afterwards.
-    impl_->toolPanel->setActivityHandler(
-        [this] {
-            QMetaObject::invokeMethod(
-                this,
-                [this] {
-                    // M04: an extrusion panel shows its sketch while open; afterwards tree,
-                    // timeline, properties and view follow the selection again (an edited
-                    // extrusion).
-                    const auto selected = impl_->session.selectedFeature();
-                    if (!impl_->shell().toolBlocksCommands() && selected)
-                        selectFeature(selected->value());
-                    else if (!impl_->sketchEditorTool->isActive())
-                        syncSketchPresentation();
-                    syncShell();
-                },
-                Qt::QueuedConnection);
-        });
+    impl_->toolPanel->setActivityHandler([this] {
+        QMetaObject::invokeMethod(
+            this,
+            [this] {
+                // M04: an extrusion panel shows its sketch while open; afterwards tree,
+                // timeline, properties and view follow the selection again (an edited
+                // extrusion).
+                const auto selected = impl_->session.selectedFeature();
+                if (!impl_->shell().toolBlocksCommands() && selected)
+                    selectFeature(selected->value());
+                else if (!impl_->sketchEditorTool->isActive())
+                    syncSketchPresentation();
+                syncShell();
+            },
+            Qt::QueuedConnection);
+    });
 }
 
 void MainWindow::syncShell() {
@@ -494,8 +492,7 @@ void MainWindow::syncShell() {
             if (!impl_->toolRail->showsSketch())
                 applyCommandIcons(*this, impl_->themeMode);
             impl_->toolRail->showSketch(impl_->sketchActions->sections());
-        }
-        else
+        } else
             impl_->toolRail->showSolid();
     }
     // Undo/Redo follow the document history, not the selection (U01), and wait for an open

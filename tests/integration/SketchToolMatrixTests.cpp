@@ -39,8 +39,7 @@ void require(bool condition, const std::string& message) {
 }
 
 bool same(const document::SketchParameters& a, const document::SketchParameters& b) {
-    return a.elements == b.elements && a.constraints == b.constraints &&
-           a.patterns == b.patterns;
+    return a.elements == b.elements && a.constraints == b.constraints && a.patterns == b.patterns;
 }
 
 // Accept, save, open, reopen: the stored sketch and a new editor on it equal the accepted one.
@@ -91,8 +90,7 @@ void drawingRow(const DrawingRow& row) {
     require(editor.elements().empty(), std::string(row.name) + ": the preview is no element");
 
     const auto created = editor.create(row.input);
-    require(created.has_value() && !editor.elements().empty(),
-            std::string(row.name) + ": created");
+    require(created.has_value() && !editor.elements().empty(), std::string(row.name) + ": created");
     editor.commitHistory(); // as the shell does after each step
     solved(editor, row.name);
     const auto afterCreate = editor.draftParameters();
@@ -187,51 +185,72 @@ int run() {
     const SketchLine base{{0, 0}, {10, 0}};
     const SketchLine cross{{6, -5}, {6, 5}};
     const std::vector<OperationRow> operations{
-        {"trim", {base, cross}, [](auto& e) {
+        {"trim",
+         {base, cross},
+         [](auto& e) {
              pick(e, 1, {9, 0});
              static_cast<void>(e.editCurve(SketchCurveEdit::trim));
          }},
-        {"extend", {SketchLine{{0, 0}, {4, 0}}, cross}, [](auto& e) {
+        {"extend",
+         {SketchLine{{0, 0}, {4, 0}}, cross},
+         [](auto& e) {
              pick(e, 1, {4, 0});
              static_cast<void>(e.editCurve(SketchCurveEdit::extend));
          }},
-        {"split", {base}, [](auto& e) {
+        {"split",
+         {base},
+         [](auto& e) {
              pick(e, 1, {3, 0});
              static_cast<void>(e.editCurve(SketchCurveEdit::split));
          }},
-        {"fillet", {base, SketchLine{{0, 0}, {0, 10}}}, [](auto& e) {
+        {"fillet",
+         {base, SketchLine{{0, 0}, {0, 10}}},
+         [](auto& e) {
              pick(e, 1, {5, 0});
              pick(e, 2, {0, 5}, true);
              static_cast<void>(e.filletCorner(2.0));
          }},
-        {"offset", {base}, [](auto& e) {
+        {"offset",
+         {base},
+         [](auto& e) {
              pick(e, 1, {5, 0});
              require(e.offsetSelected(2.0), "Offset");
          }},
-        {"mirror", {base, SketchLine{{-5, 5}, {15, 5}}}, [](auto& e) {
+        {"mirror",
+         {base, SketchLine{{-5, 5}, {15, 5}}},
+         [](auto& e) {
              pick(e, 1, {5, 0});
              pick(e, 2, {5, 5}, true);
              require(e.mirrorSelected(), "Mirror");
          }},
-        {"linear pattern", {base},
+        {"linear pattern",
+         {base},
          [](auto& e) { pattern(e, SketchPatternKind::linear, 3, 15.0, 0.0); }},
-        {"circular pattern", {base},
+        {"circular pattern",
+         {base},
          [](auto& e) { pattern(e, SketchPatternKind::circular, 4, 0.0, 360.0); }},
-        {"edit pattern", {base},
+        {"edit pattern",
+         {base},
          [](auto& e) { require(e.editPattern(e.patterns().front().id, 4, 12.0, 0.0), "Edit"); },
          [](auto& e) { pattern(e, SketchPatternKind::linear, 2, 15.0, 0.0); }},
-        {"dissolve pattern", {base},
+        {"dissolve pattern",
+         {base},
          [](auto& e) { require(e.dissolvePattern(e.patterns().front().id), "Dissolve"); },
          [](auto& e) { pattern(e, SketchPatternKind::linear, 3, 15.0, 0.0); }},
-        {"construction", {base}, [](auto& e) {
+        {"construction",
+         {base},
+         [](auto& e) {
              pick(e, 1, {5, 0});
              require(e.toggleSelectedConstruction(), "Construction");
          }},
-        {"lock point", {base}, [](auto& e) {
+        {"lock point",
+         {base},
+         [](auto& e) {
              pick(e, 1, {0, 0});
              require(e.lockSelectedReference(), "Lock");
          }},
-        {"unlock point", {base},
+        {"unlock point",
+         {base},
          [](auto& e) {
              pick(e, 1, {0, 0});
              require(e.unlockSelectedReference(), "Unlock");
@@ -240,33 +259,44 @@ int run() {
              pick(e, 1, {0, 0});
              require(e.lockSelectedReference(), "Lock first");
          }},
-        {"relation", {SketchLine{{0, 0}, {10, 1}}}, [](auto& e) {
+        {"relation",
+         {SketchLine{{0, 0}, {10, 1}}},
+         [](auto& e) {
              require(e.selectElement(id(1)), "Select the line");
              require(e.setSelectedLineConstraint(document::SketchLineConstraint::horizontal),
                      "Horizontal");
          }},
-        {"parallel", {base, SketchLine{{0, 5}, {10, 7}}}, [](auto& e) {
+        {"parallel",
+         {base, SketchLine{{0, 5}, {10, 7}}},
+         [](auto& e) {
              require(e.selectElement(id(1)), "First line");
              require(e.selectNearestReference(id(2), {5, 6}, true), "Second line");
              require(e.addSelectedRelation(Kind::parallel), "Parallel");
          }},
-        {"remove relation", {SketchLine{{0, 0}, {10, 1}}},
+        {"remove relation",
+         {SketchLine{{0, 0}, {10, 1}}},
          [](auto& e) { require(e.removeConstraint(e.constraints().back().id), "Remove"); },
          [](auto& e) {
              require(e.selectElement(id(1)), "Select the line");
              require(e.setSelectedLineConstraint(document::SketchLineConstraint::horizontal),
                      "Horizontal first");
          }},
-        {"delete", {base, cross}, [](auto& e) {
+        {"delete",
+         {base, cross},
+         [](auto& e) {
              pick(e, 2, {6, 0});
              require(e.removeSelected(), "Delete");
          }},
-        {"move", {base}, [](auto& e) {
+        {"move",
+         {base},
+         [](auto& e) {
              pick(e, 1, {5, 0});
              require(e.translateSelected(3.0, 4.0), "Move");
          }},
         // A-TXN-03 in the editor: 100 drag updates are one undo step.
-        {"drag", {base}, [](auto& e) {
+        {"drag",
+         {base},
+         [](auto& e) {
              pick(e, 1, {5, 0});
              e.beginDrag();
              for (int step = 1; step <= 100; ++step)

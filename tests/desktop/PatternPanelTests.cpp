@@ -199,7 +199,8 @@ void run() {
     std::filesystem::remove_all(directory);
     std::cout << "PASS M10 pattern panel: linear count and spacing, joined refused and "
                  "overlapping, copy edge refused, corner edge, circular, joined, OK, undo, "
-                 "timeline, copy reopens, open" << std::endl;
+                 "timeline, copy reopens, open"
+              << std::endl;
 }
 } // namespace
 

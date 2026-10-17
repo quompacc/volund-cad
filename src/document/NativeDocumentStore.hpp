@@ -1,7 +1,7 @@
 #pragma once
-#include <voelund/document/IdentifiedDocumentSnapshot.hpp>
 #include <string>
 #include <string_view>
+#include <voelund/document/IdentifiedDocumentSnapshot.hpp>
 
 namespace voelund::document::detail {
 // Private BinOcaf payload adapter. Product dispatch and atomic replacement are separate.

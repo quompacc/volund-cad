@@ -48,11 +48,11 @@ class FilletToolController final {
     [[nodiscard]] bool isActive() const noexcept { return active_; }
     void cancel();
     // The candidate bodies while the preview is valid; nullptr asks for the model again.
-    void setPreviewHandler(std::function<void(const std::vector<features::EvaluatedBody>*)> handler);
+    void
+    setPreviewHandler(std::function<void(const std::vector<features::EvaluatedBody>*)> handler);
 
   private:
-    void open(document::FeatureId support, std::vector<document::FilletEdge> edges,
-              double value);
+    void open(document::FeatureId support, std::vector<document::FilletEdge> edges, double value);
     void preview();
     void highlight(const std::vector<std::uint64_t>& failing);
     void showModel();

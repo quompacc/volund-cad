@@ -1,6 +1,6 @@
-#include "IsolatedSettings.hpp"
 #include "../../src/desktop/DocumentActions.hpp"
 #include "../CommandResultAssertions.hpp"
+#include "IsolatedSettings.hpp"
 #include <QAbstractButton>
 #include <QAction>
 #include <QApplication>

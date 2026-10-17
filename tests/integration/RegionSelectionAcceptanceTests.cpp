@@ -107,8 +107,8 @@ void ringSelection() {
     edited(f.session.editSketchParameters(f.sketch, [&] {
         auto p = f.session.identifiedSnapshot().snapshot().sketchParameters(f.sketch);
         std::ranges::reverse(p.elements.values);
-        p.elements.values.push_back({document::SketchElementId{3},
-                                     document::SketchLine{{2.0, 3.0}, {8.0, 9.0}}, true});
+        p.elements.values.push_back(
+            {document::SketchElementId{3}, document::SketchLine{{2.0, 3.0}, {8.0, 9.0}}, true});
         p.elements.nextId = 4;
         return p;
     }()));

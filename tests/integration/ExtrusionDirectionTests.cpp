@@ -50,8 +50,8 @@ FeatureId sketchOn(application::CadSession& session, DatumPlane datum,
     require(result.status() == CommandStatus::committed, "Sketch: " + result.diagnostic());
     return *result.feature();
 }
-std::vector<document::SketchRegionId> regionOf(application::CadSession& session,
-                                               FeatureId sketch, SketchElementId element) {
+std::vector<document::SketchRegionId> regionOf(application::CadSession& session, FeatureId sketch,
+                                               SketchElementId element) {
     require(session.selectFeature(sketch) && session.selectSketchProfileByElement(element, false),
             "Select a region");
     return {session.selectedSketchProfiles().begin(), session.selectedSketchProfiles().end()};
@@ -99,8 +99,8 @@ void directions() {
             const double to = plane.sign > 0 ? c.to : -c.from;
             require(session.validBodies().size() == 1 && near(test::volumeOf(body), 1600) &&
                         near(low, from) && near(high, to),
-                    std::string(c.name) + " on plane " + std::to_string(plane.axis) +
-                        ": range " + std::to_string(low) + ".." + std::to_string(high));
+                    std::string(c.name) + " on plane " + std::to_string(plane.axis) + ": range " +
+                        std::to_string(low) + ".." + std::to_string(high));
         }
     }
 }
@@ -108,10 +108,9 @@ void directions() {
 void ringAndRefusals() {
     application::CadSession session;
     session.newDocument();
-    const auto ring =
-        sketchOn(session, DatumPlane::xy,
-                 {{SketchElementId{1}, document::SketchCircle{{0, 0}, 20}},
-                  {SketchElementId{2}, document::SketchCircle{{0, 0}, 10}}});
+    const auto ring = sketchOn(session, DatumPlane::xy,
+                               {{SketchElementId{1}, document::SketchCircle{{0, 0}, 20}},
+                                {SketchElementId{2}, document::SketchCircle{{0, 0}, 10}}});
     const auto ringRegion = regionOf(session, ring, SketchElementId{1});
     require(session.createSketchProfileExtrusion(ring, ringRegion, 8).status() ==
                     CommandStatus::committed &&
@@ -144,7 +143,8 @@ void ringAndRefusals() {
     require(session.createSketchProfileExtrusion(rect, rectRegion, 8, bad).status() ==
                 CommandStatus::rejected,
             "Symmetric with a direction is refused");
-    require(session.features().size() == before + 3, "Refusals added no extrusion (three sketches)");
+    require(session.features().size() == before + 3,
+            "Refusals added no extrusion (three sketches)");
 }
 
 void intersectAndRoundTrip() {
@@ -172,8 +172,8 @@ void intersectAndRoundTrip() {
     const auto far = sketchOn(session, DatumPlane::xy,
                               {{SketchElementId{1}, document::SketchRectangle{60, 0, 70, 10}}});
     const auto count = session.features().size();
-    require(session.createSketchProfileExtrusion(far, regionOf(session, far, SketchElementId{1}),
-                                                 8, intersect)
+    require(session.createSketchProfileExtrusion(far, regionOf(session, far, SketchElementId{1}), 8,
+                                                 intersect)
                         .status() == CommandStatus::rejected &&
                 session.features().size() == count &&
                 near(test::volumeOf(session.validBodies().front().shape), 400),
@@ -185,7 +185,8 @@ void intersectAndRoundTrip() {
     loaded.loadDocument(path);
     std::error_code ignored;
     std::filesystem::remove(path, ignored);
-    const auto saved = loaded.identifiedSnapshot().snapshot().extrusionParameters(*result.feature());
+    const auto saved =
+        loaded.identifiedSnapshot().snapshot().extrusionParameters(*result.feature());
     require(saved.symmetric && saved.operation == document::ExtrusionOperation::intersect &&
                 near(test::volumeOf(loaded.validBodies().front().shape), 400),
             "Symmetric intersect survives Save/Open");

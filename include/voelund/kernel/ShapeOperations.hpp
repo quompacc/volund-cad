@@ -8,8 +8,8 @@
 
 #include <array>
 #include <cstddef>
-#include <stdexcept>
 #include <span>
+#include <stdexcept>
 #include <vector>
 
 namespace voelund::kernel {
@@ -41,9 +41,8 @@ class ShapeOperations final {
     // M05: rounds the edges of a solid with one constant radius. The edges' faces are
     // modified, each rounded edge generates its fillet face (HistoryOperand::first). A radius
     // the edges cannot take throws KernelError with BooleanFailure::filletFailed.
-    [[nodiscard]] static ShapeOperationResult filletWithHistory(const TopoDS_Shape& input,
-                                                                std::span<const TopoDS_Edge> edges,
-                                                                double radius);
+    [[nodiscard]] static ShapeOperationResult
+    filletWithHistory(const TopoDS_Shape& input, std::span<const TopoDS_Edge> edges, double radius);
     // M05: after a failed fillet, the edges that fail on their own (indices into `edges`);
     // all of them when only the combination fails.
     [[nodiscard]] static std::vector<std::size_t>

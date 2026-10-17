@@ -1,6 +1,6 @@
 #pragma once
-#include <voelund/document/ModelDocument.hpp>
 #include <TDF_Label.hxx>
+#include <voelund/document/ModelDocument.hpp>
 namespace voelund::document::detail {
 // M05 (schema 14): radius on the label, body (1), edges (2) as pairs of face origins.
 void writeNativeFillet(const TDF_Label& label, const FilletParameters& parameters);
@@ -19,4 +19,4 @@ void writeNativeHole(const TDF_Label& label, const HoleParameters& parameters);
 HoleParameters readNativeHole(const TDF_Label& label, std::size_t remainingRecords,
                               int schemaVersion);
 std::size_t nativeHoleRecords(const HoleParameters& parameters);
-}
+} // namespace voelund::document::detail

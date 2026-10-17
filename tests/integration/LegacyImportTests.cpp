@@ -75,7 +75,8 @@ void formats() {
     }
     std::istringstream empty("VOLUND 16\nNEXT_ID 1\nFEATURES 0\n");
     const auto result = DocumentSerializer::readWithReport(empty);
-    require(result.snapshot.features().empty() && result.report && result.report->referenceIssues.empty(),
+    require(result.snapshot.features().empty() && result.report &&
+                result.report->referenceIssues.empty(),
             "Empty import fabricated references");
 }
 void session(const std::filesystem::path& fixtures, const std::filesystem::path& work) {

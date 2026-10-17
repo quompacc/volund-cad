@@ -95,8 +95,8 @@ void SketchEditorToolController::showPanel() {
         {{"translation_x", QObject::tr("Gewählt ΔX"), 0.0, -1'000'000.0, 1'000'000.0},
          {"translation_y", QObject::tr("Gewählt ΔY"), 0.0, -1'000'000.0, 1'000'000.0},
          // PAR02: length and radius of the selected element also take "=Name".
-         {"line_length", QObject::tr("Linienlänge"), 1.0, 0.001, 1'000'000.0,
-          ToolValueKind::length, true},
+         {"line_length", QObject::tr("Linienlänge"), 1.0, 0.001, 1'000'000.0, ToolValueKind::length,
+          true},
          {"rectangle_width", QObject::tr("Rechteckbreite"), 1.0, 0.001, 1'000'000.0},
          {"rectangle_height", QObject::tr("Rechteckhöhe"), 1.0, 0.001, 1'000'000.0},
          {"circle_radius", QObject::tr("Kreis-/Bogenradius"), 1.0, 0.001, 1'000'000.0,
@@ -129,12 +129,18 @@ void SketchEditorToolController::showPanel() {
           {QObject::tr("Automatisch"), QObject::tr("Keine")},
           automaticRelations_ ? 0 : 1},
          // S13: view switches; they change no document state.
-         {"show_grid", QObject::tr("Raster"), {QObject::tr("Ein"), QObject::tr("Aus")},
+         {"show_grid",
+          QObject::tr("Raster"),
+          {QObject::tr("Ein"), QObject::tr("Aus")},
           gridShown_ && gridShown_() ? 0 : 1},
-         {"show_dimensions", QObject::tr("Bemaßungen"), {QObject::tr("Ein"), QObject::tr("Aus")},
+         {"show_dimensions",
+          QObject::tr("Bemaßungen"),
+          {QObject::tr("Ein"), QObject::tr("Aus")},
           showDimensions_ ? 0 : 1},
-         {"show_projected", QObject::tr("Projizierte Geometrie"),
-          {QObject::tr("Ein"), QObject::tr("Aus")}, showProjected_ ? 0 : 1}},
+         {"show_projected",
+          QObject::tr("Projizierte Geometrie"),
+          {QObject::tr("Ein"), QObject::tr("Aus")},
+          showProjected_ ? 0 : 1}},
         {{"horizontal", QObject::tr("Linie waagrecht festlegen"), QObject::tr("Linien")},
          {"vertical", QObject::tr("Linie senkrecht festlegen"), QObject::tr("Linien")},
          {"free", QObject::tr("Richtungsbedingung der Linie entfernen"), QObject::tr("Linien")},
@@ -214,8 +220,7 @@ void SketchEditorToolController::showPanel() {
           QObject::tr("Bearbeiten")},
          {"rotate", QObject::tr("Auswahl um den Bezugspunkt drehen"), QObject::tr("Bearbeiten")},
          {"scale", QObject::tr("Auswahl um den Bezugspunkt skalieren"), QObject::tr("Bearbeiten")},
-         {"mirror",
-          QObject::tr("Auswahl an der zuletzt gewählten Linie spiegeln (assoziativ)"),
+         {"mirror", QObject::tr("Auswahl an der zuletzt gewählten Linie spiegeln (assoziativ)"),
           QObject::tr("Bearbeiten")},
          {"linear_pattern", QObject::tr("Lineares Muster entlang +X anlegen (assoziativ)"),
           QObject::tr("Bearbeiten")},
@@ -307,10 +312,9 @@ void SketchEditorToolController::showPanel() {
                     refreshPresentation();
                 }
             } else if (id == "trim" || id == "extend" || id == "split" || id == "fillet" ||
-                       id == "chamfer" || id == "rotate" || id == "scale" ||
-                       id == "offset" || id == "mirror" || id == "linear_pattern" ||
-                       id == "circular_pattern" || id == "edit_pattern" ||
-                       id == "dissolve_pattern" || id == "project") {
+                       id == "chamfer" || id == "rotate" || id == "scale" || id == "offset" ||
+                       id == "mirror" || id == "linear_pattern" || id == "circular_pattern" ||
+                       id == "edit_pattern" || id == "dissolve_pattern" || id == "project") {
                 applyEditOperation(id);
             } else if (id == "toggle_reference")
                 toggleReference();

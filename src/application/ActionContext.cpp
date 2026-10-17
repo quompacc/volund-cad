@@ -102,7 +102,7 @@ std::vector<ActionKind> availableActions(const CadSession& session,
     if (session.placementFeature(feature))
         actions.push_back(ActionKind::setPlacement);
     actions.push_back(ActionKind::setFeatureSuppressed); // M14: every feature
-    if (session.canTransformFeature(feature)) // M11
+    if (session.canTransformFeature(feature))            // M11
         actions.push_back(ActionKind::moveBody);
     // A current result offers faces to sketch on or to push/pull, and an input for a
     // cylinder.

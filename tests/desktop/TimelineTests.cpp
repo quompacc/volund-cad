@@ -5,9 +5,9 @@
 #include <QApplication>
 #include <QKeyEvent>
 #include <QMessageBox>
-#include <QTimer>
 #include <QMouseEvent>
 #include <QPushButton>
+#include <QTimer>
 #include <QToolButton>
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
@@ -15,8 +15,8 @@
 #include <cmath>
 #include <filesystem>
 #include <functional>
-#include <memory>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <vector>
 #include <voelund/application/CadSession.hpp>
@@ -118,8 +118,7 @@ void run() {
     {
         application::CadSession builder;
         builder.newDocument();
-        document::SketchParameters square{document::datumSketchPlane(document::DatumPlane::xy),
-                                          {}};
+        document::SketchParameters square{document::datumSketchPlane(document::DatumPlane::xy), {}};
         square.datum = document::DatumPlane::xy;
         square.elements.values.push_back(
             {document::SketchElementId{1}, document::SketchRectangle{0, 0, 40, 20}});
@@ -206,7 +205,8 @@ void run() {
     const auto before = stepIds(window);
     shown = steps(window);
     // The fillet (last step) before the extrusion (third): refused.
-    dragStep(*shown.back(), QPoint((shown[1]->geometry().right() + shown[2]->geometry().left()) / 2, y));
+    dragStep(*shown.back(),
+             QPoint((shown[1]->geometry().right() + shown[2]->geometry().left()) / 2, y));
     require(stepIds(window) == before, "The fillet before the extrusion is refused; nothing moved");
 
     QString asked;
@@ -220,13 +220,13 @@ void run() {
     require(session.undo().status() == application::CommandStatus::committed, "Undo");
     window.refreshAfterExternalChange();
     settle();
-    require(stepIds(window) == before,
-            "Undo restores both");
+    require(stepIds(window) == before, "Undo restores both");
     std::filesystem::remove_all(directory);
-    std::cout << "PASS M15/M16 timeline: steps are the saved features in order, keyboard selection "
-                 "and Enter, marker dragged back and forward without undo steps; step dragged to the "
-                 "front, refused move, delete with question, undo"
-              << std::endl;
+    std::cout
+        << "PASS M15/M16 timeline: steps are the saved features in order, keyboard selection "
+           "and Enter, marker dragged back and forward without undo steps; step dragged to the "
+           "front, refused move, delete with question, undo"
+        << std::endl;
 }
 } // namespace
 

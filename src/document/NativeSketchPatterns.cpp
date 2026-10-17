@@ -33,8 +33,7 @@ std::uint64_t number(const TDF_Label& label, bool zero) {
     std::uint64_t result{};
     const auto parsed = std::from_chars(encoded.data(), encoded.data() + encoded.size(), result);
     require(parsed.ec == std::errc{} && parsed.ptr == encoded.data() + encoded.size() &&
-            encoded == std::to_string(result) &&
-            (result == 0 ? zero : hasIdCapacity(result, 0)));
+            encoded == std::to_string(result) && (result == 0 ? zero : hasIdCapacity(result, 0)));
     return result;
 }
 void writeNumber(const TDF_Label& label, std::uint64_t value) {
@@ -99,17 +98,21 @@ SketchPatterns readNativeSketchPatterns(const TDF_Label& label, std::size_t rema
         require(entry.NbChildren() == 6 && remainingRecords > 0);
         --remainingRecords;
         Handle(TDataStd_RealArray) values;
-        require(entry.FindAttribute(TDataStd_RealArray::GetID(), values) &&
-                values->Lower() == 1 && values->Upper() == 5);
+        require(entry.FindAttribute(TDataStd_RealArray::GetID(), values) && values->Lower() == 1 &&
+                values->Upper() == 5);
         const int kind = integer(child(entry, 2));
         const int positions = integer(child(entry, 3));
         require(kind >= 1 && kind <= 3 && positions >= 2 &&
                 positions <= static_cast<int>(maximumSketchPatternCount));
-        SketchPattern pattern{number(child(entry, 1), false), static_cast<SketchPatternKind>(kind),
-                              {}, static_cast<std::uint32_t>(positions),
+        SketchPattern pattern{number(child(entry, 1), false),
+                              static_cast<SketchPatternKind>(kind),
+                              {},
+                              static_cast<std::uint32_t>(positions),
                               {values->Value(1), values->Value(2)},
-                              {values->Value(3), values->Value(4)}, values->Value(5),
-                              std::nullopt, {}};
+                              {values->Value(3), values->Value(4)},
+                              values->Value(5),
+                              std::nullopt,
+                              {}};
         if (const auto axis = number(child(entry, 4), true); axis != 0)
             pattern.axis = SketchElementId{axis};
         pattern.sources = readIds(child(entry, 5), remainingRecords);

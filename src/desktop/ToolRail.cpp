@@ -1,8 +1,8 @@
 #include "ToolRail.hpp"
-#include "OverlayCard.hpp"
-#include "PillButton.hpp"
 #include "CommandActions.hpp"
 #include "MainWindowSupport.hpp"
+#include "OverlayCard.hpp"
+#include "PillButton.hpp"
 #include "ShellIcons.hpp"
 #include "SketchIcons.hpp"
 
@@ -13,10 +13,10 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QMenu>
+#include <QRegion>
 #include <QScrollArea>
 #include <QScrollBar>
 #include <QToolButton>
-#include <QRegion>
 #include <QVBoxLayout>
 #include <QWheelEvent>
 
@@ -27,7 +27,6 @@
 
 namespace voelund::desktop {
 namespace {
-
 
 std::optional<ShellIcon> iconFor(const QString& id) {
     static const std::map<QString, ShellIcon> icons{
@@ -51,8 +50,8 @@ std::optional<ShellIcon> iconFor(const QString& id) {
         {QStringLiteral("solid.modify.hole"), ShellIcon::hole},
         {QStringLiteral("solid.modify.combine"), ShellIcon::combine},
         {QStringLiteral("solid.modify.shell"), ShellIcon::shell},
-        {QStringLiteral("solid.modify.draft"), ShellIcon::draft}, // M25
-        {QStringLiteral("solid.modify.mirror"), ShellIcon::mirror}, // M09
+        {QStringLiteral("solid.modify.draft"), ShellIcon::draft},                  // M25
+        {QStringLiteral("solid.modify.mirror"), ShellIcon::mirror},                // M09
         {QStringLiteral("solid.modify.pattern_linear"), ShellIcon::patternLinear}, // M10
         {QStringLiteral("solid.modify.pattern_circular"), ShellIcon::patternCircular},
         {QStringLiteral("solid.inspect.measure"), ShellIcon::measure}, // M12
@@ -258,8 +257,7 @@ std::pair<int, int> ToolRail::freeRow() {
     int left = overlay::margin;
     int right = viewport_.width() - overlay::margin;
     for (const char* name : {"projectCard", "shellHeader"}) {
-        auto* card = viewport_.findChild<QWidget*>(QLatin1String(name),
-                                                    Qt::FindDirectChildrenOnly);
+        auto* card = viewport_.findChild<QWidget*>(QLatin1String(name), Qt::FindDirectChildrenOnly);
         if (card == nullptr)
             continue;
         if (std::ranges::find(watchedCards_, card) == watchedCards_.end()) {
@@ -288,8 +286,7 @@ void ToolRail::place() {
     QRect area(0, 0, width, overlay::barHeight);
     if (flyout_->isVisible() && openGroup_ >= 0 && groupButtons_[openGroup_] != nullptr) {
         flyout_->adjustSize();
-        const int below =
-            std::max(0, groupButtons_[openGroup_]->mapTo(bar_, QPoint(0, 0)).x() - 6);
+        const int below = std::max(0, groupButtons_[openGroup_]->mapTo(bar_, QPoint(0, 0)).x() - 6);
         flyout_->setGeometry(below, overlay::barHeight + 6, flyout_->sizeHint().width(),
                              flyout_->sizeHint().height());
         area = area.united(flyout_->geometry());

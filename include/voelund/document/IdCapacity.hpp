@@ -9,11 +9,9 @@ namespace voelund::document {
     constexpr auto limit = std::numeric_limits<std::uint64_t>::max();
     return next != 0 && next < limit && count < limit - next;
 }
-[[nodiscard]] constexpr bool hasRepeatedIdCapacity(std::uint64_t next,
-                                                   std::uint64_t perCopy,
+[[nodiscard]] constexpr bool hasRepeatedIdCapacity(std::uint64_t next, std::uint64_t perCopy,
                                                    std::uint64_t copies) noexcept {
     constexpr auto limit = std::numeric_limits<std::uint64_t>::max();
-    return hasIdCapacity(next, 0) &&
-           (perCopy == 0 || copies <= (limit - 1 - next) / perCopy);
+    return hasIdCapacity(next, 0) && (perCopy == 0 || copies <= (limit - 1 - next) / perCopy);
 }
 } // namespace voelund::document

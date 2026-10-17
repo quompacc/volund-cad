@@ -2,10 +2,10 @@
 
 #include <BRepAdaptor_Curve.hxx>
 #include <BRep_Tool.hxx>
-#include <TopoDS_Vertex.hxx>
 #include <QLineF>
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
+#include <TopoDS_Vertex.hxx>
 
 #include <algorithm>
 
@@ -29,9 +29,9 @@ std::vector<std::vector<QPointF>> screenCurves(const TopoDS_Shape& shape,
         const BRepAdaptor_Curve curve(TopoDS::Edge(edges.Current()));
         std::vector<QPointF> points;
         for (int index = 0; index <= samples; ++index) {
-            const double parameter = curve.FirstParameter() +
-                                     (curve.LastParameter() - curve.FirstParameter()) * index /
-                                         samples;
+            const double parameter =
+                curve.FirstParameter() +
+                (curve.LastParameter() - curve.FirstParameter()) * index / samples;
             const gp_Pnt world = curve.Value(parameter);
             int x = 0, y = 0;
             view->Convert(world.X(), world.Y(), world.Z(), x, y);
@@ -43,8 +43,7 @@ std::vector<std::vector<QPointF>> screenCurves(const TopoDS_Shape& shape,
 }
 
 bool crosses(const QLineF& segment, const QRectF& box) {
-    const QPointF corners[] = {box.topLeft(), box.topRight(), box.bottomRight(),
-                               box.bottomLeft()};
+    const QPointF corners[] = {box.topLeft(), box.topRight(), box.bottomRight(), box.bottomLeft()};
     for (int side = 0; side < 4; ++side) {
         QPointF hit;
         if (segment.intersects(QLineF(corners[side], corners[(side + 1) % 4]), &hit) ==
@@ -57,8 +56,8 @@ bool crosses(const QLineF& segment, const QRectF& box) {
 } // namespace
 
 std::vector<std::uint64_t> boxSelection(std::span<const SceneSketchElement> elements,
-                                        const occ::handle<V3d_View>& view,
-                                        const QRect& rectangle, bool crossing) {
+                                        const occ::handle<V3d_View>& view, const QRect& rectangle,
+                                        bool crossing) {
     std::vector<std::uint64_t> result;
     if (view.IsNull() || rectangle.isEmpty())
         return result;

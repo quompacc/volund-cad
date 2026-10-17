@@ -39,8 +39,8 @@ class OffsetLabel final : public AIS_TextLabel {
         // Zoom and rotation persistent: local units are screen pixels around the anchor.
         SetTransformPersistence(
             new Graphic3d_TransformPers(Graphic3d_TMF_ZoomRotatePers, Position()));
-        const auto text = Prs3d_Text::Draw(presentation->CurrentGroup(), myDrawer->TextAspect(),
-                                           Text(), offset_);
+        const auto text =
+            Prs3d_Text::Draw(presentation->CurrentGroup(), myDrawer->TextAspect(), Text(), offset_);
         static_cast<void>(text);
     }
     // Picked by SketchConstraintPresentation::constraintAt, not by OCCT.
@@ -102,14 +102,13 @@ void SketchConstraintPresentation::clear(const occ::handle<AIS_InteractiveContex
 std::size_t SketchConstraintPresentation::size() const noexcept { return constraints_.size(); }
 
 std::optional<std::uint64_t>
-SketchConstraintPresentation::constraintAt(const occ::handle<V3d_View>& view, int x,
-                                           int y) const {
+SketchConstraintPresentation::constraintAt(const occ::handle<V3d_View>& view, int x, int y) const {
     if (view.IsNull())
         return std::nullopt;
     for (const ConstraintPresentation& constraint : constraints_) {
         int anchorX = 0, anchorY = 0;
-        view->Convert(constraint.anchor.X(), constraint.anchor.Y(), constraint.anchor.Z(),
-                      anchorX, anchorY);
+        view->Convert(constraint.anchor.X(), constraint.anchor.Y(), constraint.anchor.Z(), anchorX,
+                      anchorY);
         // The text box in pixels (screen y downwards): the baseline at the offset, the text
         // above it, a descender below, about 0.6 of the height per character wide; a few
         // pixels of tolerance around it.

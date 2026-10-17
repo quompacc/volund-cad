@@ -2,33 +2,33 @@
 
 #include <voelund/document/DocumentSnapshot.hpp>
 #include <voelund/features/ContourProvenance.hpp>
+#include <voelund/features/FeatureDependencies.hpp>
 #include <voelund/features/GeometryEvaluationError.hpp>
 #include <voelund/features/SketchConstraintSolver.hpp>
 #include <voelund/features/SketchEvaluation.hpp>
-#include <voelund/features/FeatureDependencies.hpp>
 #include <voelund/features/SketchSupportBinding.hpp>
 #include <voelund/kernel/NumericPolicy.hpp>
 #include <voelund/kernel/ShapeOperations.hpp>
 
-#include <voelund/kernel/Prism.hpp>
-#include <voelund/kernel/Revolution.hpp>
-#include <voelund/kernel/Sweep.hpp>
-#include <voelund/kernel/Loft.hpp>
-#include <voelund/kernel/Helix.hpp>
-#include <BRepTools.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
+#include <BRepTools.hxx>
+#include <BRep_Builder.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
-#include <gp_Ax1.hxx>
-#include <gp_Dir.hxx>
-#include <BRep_Builder.hxx>
 #include <TopoDS_Compound.hxx>
 #include <algorithm>
 #include <cmath>
+#include <gp_Ax1.hxx>
+#include <gp_Dir.hxx>
 #include <gp_Pnt.hxx>
 #include <gp_Vec.hxx>
 #include <utility>
 #include <vector>
+#include <voelund/kernel/Helix.hpp>
+#include <voelund/kernel/Loft.hpp>
+#include <voelund/kernel/Prism.hpp>
+#include <voelund/kernel/Revolution.hpp>
+#include <voelund/kernel/Sweep.hpp>
 
 namespace voelund::features::detail {
 namespace {
@@ -127,8 +127,8 @@ gp_Ax1 revolveAxis(const document::SketchParameters& sketch, const document::Rev
         return gp_Ax1(gp_Pnt(frame->originX, frame->originY, frame->originZ),
                       gp_Dir(frame->normalX, frame->normalY, frame->normalZ));
     }
-    const auto element = std::ranges::find(sketch.elements.values, *axis.sketchLine,
-                                           &document::SketchElement::id);
+    const auto element =
+        std::ranges::find(sketch.elements.values, *axis.sketchLine, &document::SketchElement::id);
     const auto* line = element == sketch.elements.values.end()
                            ? nullptr
                            : std::get_if<document::SketchLine>(&element->geometry);
@@ -215,8 +215,8 @@ Prism makeRevolution(document::FeatureId extrusion, document::FeatureId sketchId
     const auto& direction = axis.Direction();
     const kernel::Revolution revolution(faces, {location.X(), location.Y(), location.Z()},
                                         {direction.X(), direction.Y(), direction.Z()}, angle);
-    Prism result{revolution.shape(), {},
-                 extrusionEdgeOrigins(extrusion, sketchId, profiles, revolution)};
+    Prism result{
+        revolution.shape(), {}, extrusionEdgeOrigins(extrusion, sketchId, profiles, revolution)};
     for (const auto& profile : profiles) {
         if (!revolution.full()) {
             const auto cap = revolution.endOf(profile.face);
@@ -432,10 +432,10 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
                            : startSketch(sketch, parameters);
     // The reference prism keeps this length: reference results are unplaced primitives, so
     // the end face's reference position says nothing about the current extent.
-    const double length =
-        faceOwner ? lengthToFace(start, parameters, findFeature(outputs, *faceOwner),
-                                 parameters.upToFace->origin)
-                  : parameters.distance;
+    const double length = faceOwner
+                              ? lengthToFace(start, parameters, findFeature(outputs, *faceOwner),
+                                             parameters.upToFace->origin)
+                              : parameters.distance;
     const auto sweep = [&](const document::SketchParameters& at) {
         return parameters.revolve ? makeRevolution(descriptor.id, sketchId, at, parameters, outputs)
                : parameters.sweep ? makeSweep(descriptor.id, at, parameters, outputs, sketchId)
@@ -461,10 +461,9 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
         if (solveSketchConstraints(referenceSketch).status != SketchSolveStatus::success)
             throw GeometryEvaluationError("Reference sketch projected edges cannot be solved");
     }
-    const auto referenceStart =
-        parameters.revolve || parameters.sweep || parameters.loft
-            ? referenceSketch
-            : startSketch(referenceSketch, parameters);
+    const auto referenceStart = parameters.revolve || parameters.sweep || parameters.loft
+                                    ? referenceSketch
+                                    : startSketch(referenceSketch, parameters);
     // M20: a base or construction axis lies in model coordinates, which the unplaced
     // reference of a face sketch need not share; the reference then keeps the current turn.
     const auto referencePrism = [&] {
@@ -485,9 +484,15 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
         const document::BodyId bodyId{support ? descriptor.id.value() : sketchId.value()};
         if (std::ranges::find(bodies, bodyId, &EvaluatedBody::bodyId) != bodies.end())
             throw GeometryEvaluationError("Base-plane body already has a solid");
-        outputs.push_back(EvaluatedFeature{descriptor.id, prism.shape, referencePrism.shape,
-                                           bodyId, prism.caps, {}, referencePrism.caps,
-                                           prism.edges, referencePrism.edges});
+        outputs.push_back(EvaluatedFeature{descriptor.id,
+                                           prism.shape,
+                                           referencePrism.shape,
+                                           bodyId,
+                                           prism.caps,
+                                           {},
+                                           referencePrism.caps,
+                                           prism.edges,
+                                           referencePrism.edges});
         bodies.push_back({bodyId, descriptor.id, prism.shape});
         referenceBodies.push_back({bodyId, descriptor.id, referencePrism.shape});
         return;
@@ -534,8 +539,8 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
     auto referenceOrigins = continued(inputOutput.referenceSupportOrigins, referencePrism.caps,
                                       reference, supportOrigins);
     auto edges = continued(inputOutput.edgeOrigins, prism.edges, evaluated, edgeOrigins);
-    auto referenceEdges = continued(inputOutput.referenceEdgeOrigins, referencePrism.edges,
-                                    reference, edgeOrigins);
+    auto referenceEdges =
+        continued(inputOutput.referenceEdgeOrigins, referencePrism.edges, reference, edgeOrigins);
     outputs.push_back(EvaluatedFeature{descriptor.id,
                                        evaluated.shape,
                                        reference.shape,

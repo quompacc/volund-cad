@@ -1,19 +1,19 @@
-#include <QCheckBox>
-#include <TopExp_Explorer.hxx>
+#include "../integration/CadSessionTestSupport.hpp"
 #include "IsolatedSettings.hpp"
 #include "ViewportLifecycleSupport.hpp"
 #include <QAction>
 #include <QApplication>
-#include <QElapsedTimer>
+#include <QCheckBox>
 #include <QDir>
 #include <QDoubleSpinBox>
+#include <QElapsedTimer>
 #include <QPushButton>
+#include <TopExp_Explorer.hxx>
 #include <cmath>
 #include <iostream>
 #include <string>
 #include <voelund/application/CadSession.hpp>
 #include <voelund/desktop/MainWindow.hpp>
-#include "../integration/CadSessionTestSupport.hpp"
 
 // T04c (user decision 2026-10-07: "Pfeil ziehen + Maßfeld"): a click on a planar face in the
 // real window offers "Drücken/Ziehen"; the panel and the arrow in the viewport set the same
@@ -90,8 +90,8 @@ void click(viewport::CadViewport& viewport, QPoint point) {
 void openOnTop(QWidget& window, viewport::CadViewport& viewport,
                const application::CadSession& session, document::FeatureId support) {
     const auto center = topCenter(session, support);
-    click(viewport, viewport::ViewportTestAccess::project(viewport, center.X(), center.Y(),
-                                                          center.Z()));
+    click(viewport,
+          viewport::ViewportTestAccess::project(viewport, center.X(), center.Y(), center.Z()));
     QAction& pushPull = command(window, "solid.modify.push_pull");
     require(pushPull.isEnabled(), "A picked planar face offers push/pull");
     pushPull.trigger();
@@ -130,10 +130,10 @@ void run() {
     // The arrow: find it above the face's middle and drag it upward.
     openOnTop(window, *viewport, session, *box.feature());
     const auto center = topCenter(session, *box.feature());
-    const QPoint base = viewport::ViewportTestAccess::project(*viewport, center.X(), center.Y(),
-                                                              center.Z() + 10);
-    const QPoint up = viewport::ViewportTestAccess::project(*viewport, center.X(), center.Y(),
-                                                            center.Z() + 30);
+    const QPoint base =
+        viewport::ViewportTestAccess::project(*viewport, center.X(), center.Y(), center.Z() + 10);
+    const QPoint up =
+        viewport::ViewportTestAccess::project(*viewport, center.X(), center.Y(), center.Z() + 30);
     const QPointF direction = QPointF(up - base) / std::hypot(up.x() - base.x(), up.y() - base.y());
     std::optional<QPoint> grip;
     for (int step = 0; step <= 90 && !grip; step += 3) {

@@ -21,11 +21,13 @@ QString guidance() {
 }
 } // namespace
 
-PushPullToolController::PushPullToolController(
-    application::CadSession& session, viewport::CadViewport& viewport, ToolPanelHost& panel,
-    std::function<void()> sceneChanged, std::function<void(const QString&)> statusChanged)
-    : session_(session), viewport_(viewport), panel_(panel),
-      sceneChanged_(std::move(sceneChanged)), statusChanged_(std::move(statusChanged)) {}
+PushPullToolController::PushPullToolController(application::CadSession& session,
+                                               viewport::CadViewport& viewport,
+                                               ToolPanelHost& panel,
+                                               std::function<void()> sceneChanged,
+                                               std::function<void(const QString&)> statusChanged)
+    : session_(session), viewport_(viewport), panel_(panel), sceneChanged_(std::move(sceneChanged)),
+      statusChanged_(std::move(statusChanged)) {}
 
 void PushPullToolController::begin(const viewport::PlanarFaceSelection& face) {
     // The viewport names a face by the body's latest result (its source feature).
@@ -120,10 +122,10 @@ void PushPullToolController::accept() {
         return;
     if (!runCommand(
             [this] {
-                return runAction(session_,
-                                 application::PushPullFaceAction{support_, *face_,
-                                                                 millimetres(distance_)},
-                                 stamp_);
+                return runAction(
+                    session_,
+                    application::PushPullFaceAction{support_, *face_, millimetres(distance_)},
+                    stamp_);
             },
             [this](const QString& message) {
                 panel_.setGuidance(message);

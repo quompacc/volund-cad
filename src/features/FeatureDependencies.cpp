@@ -1,10 +1,10 @@
-#include <voelund/features/FeatureDependencies.hpp>
-#include <voelund/document/DocumentSnapshot.hpp>
-#include <voelund/document/LegacyBodyIdentity.hpp>
 #include <algorithm>
 #include <map>
 #include <set>
 #include <stdexcept>
+#include <voelund/document/DocumentSnapshot.hpp>
+#include <voelund/document/LegacyBodyIdentity.hpp>
+#include <voelund/features/FeatureDependencies.hpp>
 
 namespace voelund::features {
 std::optional<document::FeatureId> bodyProducerBefore(const document::DocumentSnapshot& snapshot,
@@ -28,8 +28,8 @@ std::optional<document::FeatureId> effectiveInput(const document::DocumentSnapsh
     const auto found = std::ranges::find(features, feature, &document::FeatureDescriptor::id);
     if (found == features.end() || !found->inputFeature)
         return std::nullopt;
-    const auto input = std::ranges::find(features, *found->inputFeature,
-                                         &document::FeatureDescriptor::id);
+    const auto input =
+        std::ranges::find(features, *found->inputFeature, &document::FeatureDescriptor::id);
     if (input == features.end() || !input->suppressed)
         return found->inputFeature;
     const auto contexts = document::featureBodyContexts(features, snapshot.parameters());
@@ -49,7 +49,8 @@ std::optional<document::FeatureId> targetProducer(const document::DocumentSnapsh
     const auto target = snapshot.extrusionParameters(extrusion).target;
     return target ? bodyProducerBefore(snapshot, extrusion, *target) : std::nullopt;
 }
-FeatureDependencies::FeatureDependencies(std::vector<FeatureInputs> nodes) : nodes_(std::move(nodes)) {
+FeatureDependencies::FeatureDependencies(std::vector<FeatureInputs> nodes)
+    : nodes_(std::move(nodes)) {
     std::map<std::uint64_t, std::size_t> indices;
     for (std::size_t i = 0; i < nodes_.size(); ++i)
         if (nodes_[i].feature.value() == 0 || !indices.emplace(nodes_[i].feature.value(), i).second)
@@ -66,16 +67,19 @@ FeatureDependencies::FeatureDependencies(std::vector<FeatureInputs> nodes) : nod
             successors[found->second].push_back(i);
             ++remaining[i];
         }
-        if (remaining[i] == 0) ready.insert(i);
+        if (remaining[i] == 0)
+            ready.insert(i);
     }
     while (!ready.empty()) {
         const auto index = *ready.begin();
         ready.erase(ready.begin());
         order_.push_back(index);
         for (const auto next : successors[index])
-            if (--remaining[next] == 0) ready.insert(next);
+            if (--remaining[next] == 0)
+                ready.insert(next);
     }
-    if (order_.size() != nodes_.size()) throw std::invalid_argument("Cyclic feature dependencies");
+    if (order_.size() != nodes_.size())
+        throw std::invalid_argument("Cyclic feature dependencies");
 }
 namespace {
 // M14: the producer a feature depends on; when only suppressed features made the body (its
@@ -99,7 +103,8 @@ FeatureDependencies FeatureDependencies::from(const document::DocumentSnapshot& 
     std::vector<FeatureInputs> nodes;
     for (const auto& feature : snapshot.features()) {
         FeatureInputs node{feature.id, {}};
-        if (feature.inputFeature) node.inputs.push_back(*effectiveInput(snapshot, feature.id));
+        if (feature.inputFeature)
+            node.inputs.push_back(*effectiveInput(snapshot, feature.id));
         // T04: a face extrusion works on the bodies of its profile face (and end face) as
         // they were before it.
         if (feature.kind == document::FeatureKind::extrusion && !feature.inputFeature) {
@@ -122,9 +127,9 @@ FeatureDependencies FeatureDependencies::from(const document::DocumentSnapshot& 
                                   ? snapshot.chamferParameters(feature.id).body
                               : feature.kind == document::FeatureKind::shell // M22
                                   ? snapshot.shellParameters(feature.id).body
-                              : feature.kind == document::FeatureKind::move // M11
-                                  ? snapshot.moveParameters(feature.id).body
-                                  : snapshot.holeParameters(feature.id).face.body;
+                                  : feature.kind == document::FeatureKind::move // M11
+                                        ? snapshot.moveParameters(feature.id).body
+                                        : snapshot.holeParameters(feature.id).face.body;
             if (const auto producer = inputProducer(snapshot, feature.id, body))
                 node.inputs.push_back(*producer);
         }
@@ -193,8 +198,10 @@ FeatureDependencies FeatureDependencies::from(const document::DocumentSnapshot& 
         }
         if (feature.kind == document::FeatureKind::extrusion && feature.inputFeature) {
             const auto features = snapshot.features();
-            const auto sketch = std::ranges::find(features, *feature.inputFeature, &document::FeatureDescriptor::id);
-            if (sketch == features.end()) throw std::invalid_argument("Missing extrusion sketch");
+            const auto sketch = std::ranges::find(features, *feature.inputFeature,
+                                                  &document::FeatureDescriptor::id);
+            if (sketch == features.end())
+                throw std::invalid_argument("Missing extrusion sketch");
             if (sketch->inputFeature) {
                 const auto support = *effectiveInput(snapshot, sketch->id);
                 if (std::ranges::find(node.inputs, support) == node.inputs.end())
@@ -204,7 +211,8 @@ FeatureDependencies FeatureDependencies::from(const document::DocumentSnapshot& 
             if (const auto& revolve = snapshot.extrusionParameters(feature.id).revolve;
                 revolve && revolve->axis.datumAxis)
                 node.inputs.push_back(*revolve->axis.datumAxis);
-            else if (const auto producer = targetProducer(snapshot, feature.id)) node.inputs.push_back(*producer);
+            else if (const auto producer = targetProducer(snapshot, feature.id))
+                node.inputs.push_back(*producer);
             // M23: a sweep follows its path sketch.
             if (const auto& sweep = snapshot.extrusionParameters(feature.id).sweep)
                 node.inputs.push_back(sweep->sketch);
@@ -222,7 +230,8 @@ FeatureDependencies FeatureDependencies::from(const document::DocumentSnapshot& 
     }
     return FeatureDependencies(std::move(nodes));
 }
-std::vector<bool> FeatureDependencies::affected(std::span<const document::FeatureId> changed) const {
+std::vector<bool>
+FeatureDependencies::affected(std::span<const document::FeatureId> changed) const {
     std::map<std::uint64_t, bool> dirty;
     for (const auto id : changed) {
         if (std::ranges::find(nodes_, id, &FeatureInputs::feature) == nodes_.end())
@@ -233,10 +242,11 @@ std::vector<bool> FeatureDependencies::affected(std::span<const document::Featur
     for (const auto index : order_) {
         const auto& node = nodes_[index];
         bool value = dirty[node.feature.value()];
-        for (const auto input : node.inputs) value = value || dirty[input.value()];
+        for (const auto input : node.inputs)
+            value = value || dirty[input.value()];
         result[index] = value;
         dirty[node.feature.value()] = value;
     }
     return result;
 }
-}
+} // namespace voelund::features

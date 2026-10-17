@@ -18,10 +18,18 @@ inline constexpr const char* modelRangeDiagnostic =
     return std::isfinite(value) && std::abs(value) <= maximumModelLength;
 }
 
-struct ConnectionTolerance final { double millimetres; };
-struct AngularTolerance final { double radians; };
-struct ModelComparisonTolerance final { double relative; };
-struct PickingTolerance final { int pixels; };
+struct ConnectionTolerance final {
+    double millimetres;
+};
+struct AngularTolerance final {
+    double radians;
+};
+struct ModelComparisonTolerance final {
+    double relative;
+};
+struct PickingTolerance final {
+    int pixels;
+};
 
 // The floor comes from the OCCT headers used by this build, never a copied constant.
 // Relative allowance: one part in 10^12 of the local coordinate magnitude.

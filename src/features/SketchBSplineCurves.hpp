@@ -46,8 +46,8 @@ inline Handle(Geom2d_BSplineCurve) bsplineCurve2d(const document::SketchBSpline&
     return new Geom2d_BSplineCurve(poles, knots, multiplicities, bsplineDegree(spline));
 }
 
-inline Handle(Geom_BSplineCurve) bsplineCurve3d(const document::SketchBSpline& spline,
-                                                const document::SketchPlane& plane) {
+inline Handle(Geom_BSplineCurve)
+    bsplineCurve3d(const document::SketchBSpline& spline, const document::SketchPlane& plane) {
     const gp_Vec normal(plane.normalX, plane.normalY, plane.normalZ);
     const gp_Vec x(plane.xDirectionX, plane.xDirectionY, plane.xDirectionZ);
     const gp_Vec y = normal.Crossed(x);

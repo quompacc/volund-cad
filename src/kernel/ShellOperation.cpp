@@ -7,10 +7,10 @@
 #include <BRepGProp.hxx>
 #include <BRepOffsetAPI_MakeThickSolid.hxx>
 #include <GProp_GProps.hxx>
+#include <NCollection_List.hxx>
 #include <Standard_OutOfMemory.hxx>
 #include <Standard_ProgramError.hxx>
 #include <TopExp_Explorer.hxx>
-#include <NCollection_List.hxx>
 #include <TopoDS_Shape.hxx>
 
 // M22: a shell ("Wandstärke") of a solid; ShapeOperations' other members are in

@@ -1,10 +1,10 @@
 #include "../../src/document/DocumentIdGeneration.hpp"
-#include <voelund/document/IdentifiedDocumentSnapshot.hpp>
-#include <voelund/document/LegacyBodyIdentity.hpp>
 #include <array>
 #include <future>
 #include <iostream>
 #include <set>
+#include <voelund/document/IdentifiedDocumentSnapshot.hpp>
+#include <voelund/document/LegacyBodyIdentity.hpp>
 
 namespace {
 using namespace voelund::document;
@@ -18,28 +18,35 @@ void deterministicGeneration() {
     for (unsigned index = 0; index < ordered.size(); ++index)
         ordered[index] = static_cast<std::uint8_t>(index * 17);
     require(documentIdToHex(detail::generateDocumentIdUsing([&] { return ordered; })) ==
-                "00112233445566778899aabbccddeeff", "Entropy byte order changed");
+                "00112233445566778899aabbccddeeff",
+            "Entropy byte order changed");
     Bytes maximum{};
     maximum.fill(255);
     require(detail::generateDocumentIdUsing([&] { return maximum; }) ==
-                DocumentId{UINT64_MAX, UINT64_MAX}, "Generation masked identity bits");
+                DocumentId{UINT64_MAX, UINT64_MAX},
+            "Generation masked identity bits");
     unsigned calls = 0;
-    const auto afterZero = detail::generateDocumentIdUsing([&] {
-        return ++calls == 1 ? Bytes{} : ordered;
-    });
+    const auto afterZero =
+        detail::generateDocumentIdUsing([&] { return ++calls == 1 ? Bytes{} : ordered; });
     require(calls == 2 && afterZero == documentIdFromHex("00112233445566778899aabbccddeeff"),
             "Null identity was accepted or fallback substituted");
     calls = 0;
-    const auto afterCollision = detail::generateDocumentIdUsing([&] {
-        return ++calls == 1 ? ordered : maximum;
-    }, afterZero);
+    const auto afterCollision = detail::generateDocumentIdUsing(
+        [&] { return ++calls == 1 ? ordered : maximum; }, afterZero);
     require(calls == 2 && afterCollision != afterZero, "Duplicate retained source namespace");
     for (const auto candidate : {Bytes{}, ordered}) {
         calls = 0;
         bool rejected = false;
         try {
-            (void)detail::generateDocumentIdUsing([&] { ++calls; return candidate; }, afterZero);
-        } catch (const std::runtime_error&) { rejected = true; }
+            (void)detail::generateDocumentIdUsing(
+                [&] {
+                    ++calls;
+                    return candidate;
+                },
+                afterZero);
+        } catch (const std::runtime_error&) {
+            rejected = true;
+        }
         require(rejected && calls == 16, "Invalid generator did not terminate without fallback");
     }
     calls = 0;
@@ -49,7 +56,9 @@ void deterministicGeneration() {
             ++calls;
             throw std::logic_error("Injected entropy failure");
         });
-    } catch (const std::logic_error&) { propagated = true; }
+    } catch (const std::logic_error&) {
+        propagated = true;
+    }
     require(propagated && calls == 1, "Entropy failure retried or swallowed");
 }
 void nativeGeneration() {
@@ -89,11 +98,11 @@ void lifecycle() {
         documentIdFromHex(documentIdToHex(original.id())), payload);
     require(restored == original, "Restore generated an identity or changed payload");
     const auto duplicate = original.duplicate();
-    require(duplicate.id() != original.id() && duplicate.snapshot() == payload &&
-                original == copy, "Explicit duplicate changed source or local identities");
+    require(duplicate.id() != original.id() && duplicate.snapshot() == payload && original == copy,
+            "Explicit duplicate changed source or local identities");
     const auto originalBodies = legacyBodyIdentities(payload.features(), payload.parameters());
-    const auto duplicateBodies = legacyBodyIdentities(duplicate.snapshot().features(),
-                                                     duplicate.snapshot().parameters());
+    const auto duplicateBodies =
+        legacyBodyIdentities(duplicate.snapshot().features(), duplicate.snapshot().parameters());
     require(originalBodies == duplicateBodies, "Duplicate renumbered document-local bodies");
     auto duplicateModel = duplicate.snapshot().toDocument();
     require(!duplicateModel.canUndo() && !duplicateModel.canRedo() &&
@@ -102,20 +111,25 @@ void lifecycle() {
     const auto third = duplicateModel.addBoxFeature("New", {2, 3, 4});
     require(third.value() > second.value(), "Duplicate reused reserved local feature ID");
     const auto edited = duplicate.revised(DocumentSnapshot::capture(duplicateModel));
-    require(edited.id() == duplicate.id() && edited.snapshot() != payload &&
-                original == copy, "Revision changed namespace or source snapshot");
+    require(edited.id() == duplicate.id() && edited.snapshot() != payload && original == copy,
+            "Revision changed namespace or source snapshot");
     require(duplicateModel.undo(), "Revision undo failed");
     const auto undone = edited.revised(DocumentSnapshot::capture(duplicateModel));
     require(undone.id() == duplicate.id() && undone.snapshot().matchesContent(model) &&
                 undone.snapshot().nextFeatureId() > payload.nextFeatureId(),
             "Undo lost identity, content or allocation watermark");
     bool rejected = false;
-    try { (void)edited.revised(payload); }
-    catch (const std::invalid_argument&) { rejected = true; }
-    require(rejected && original == copy && edited.snapshot().nextFeatureId() >
-                payload.nextFeatureId(), "Stale revision lowered watermark or changed source");
-    require(IdentifiedDocumentSnapshot::restore(DocumentId{UINT64_MAX, UINT64_MAX}, payload).id()
-                == DocumentId{UINT64_MAX, UINT64_MAX}, "Restore narrowed stored identity");
+    try {
+        (void)edited.revised(payload);
+    } catch (const std::invalid_argument&) {
+        rejected = true;
+    }
+    require(rejected && original == copy &&
+                edited.snapshot().nextFeatureId() > payload.nextFeatureId(),
+            "Stale revision lowered watermark or changed source");
+    require(IdentifiedDocumentSnapshot::restore(DocumentId{UINT64_MAX, UINT64_MAX}, payload).id() ==
+                DocumentId{UINT64_MAX, UINT64_MAX},
+            "Restore narrowed stored identity");
 }
 } // namespace
 int main(int argc, char** argv) {

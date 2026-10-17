@@ -106,8 +106,7 @@ void run() {
     button(window, "toolAcceptButton").click();
     settle();
     require(panel(window) == nullptr && session.features().size() == 1 &&
-                std::abs(planeHeight(session) - 25) < 1e-9 &&
-                viewport->displayedDatumCount() == 1,
+                std::abs(planeHeight(session) - 25) < 1e-9 && viewport->displayedDatumCount() == 1,
             "OK creates the plane 25 above XY");
 
     // The timeline reopens it; two changes in one session, one undo step.
@@ -134,9 +133,8 @@ void run() {
     require(sketch.isEnabled(), "Skizze is offered on the plane");
     sketch.trigger();
     settle();
-    require(panel(window) != nullptr && !command(window, "sketch.tool.line").property("commandId")
-                                            .toString()
-                                            .isEmpty(),
+    require(panel(window) != nullptr &&
+                !command(window, "sketch.tool.line").property("commandId").toString().isEmpty(),
             "The sketch editor opens on the plane");
     panel(window)->findChild<QPushButton*>(QStringLiteral("toolCancelButton"))->click();
     settle();

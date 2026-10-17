@@ -17,8 +17,7 @@ void require(bool value, const char* message) {
         throw std::runtime_error(message);
 }
 void committed(const application::CommandResult& result) {
-    require(result.status() == application::CommandStatus::committed,
-            "Expected command commit");
+    require(result.status() == application::CommandStatus::committed, "Expected command commit");
 }
 std::string bytes(const ModelDocument& document) {
     std::ostringstream output;
@@ -34,13 +33,15 @@ void historyAndSnapshot() {
     require(empty.matchesContent(document) && DocumentSnapshot::capture(document) != empty,
             "Content comparison confused allocation state with model content");
     require(document.redo() && document.features().back().id == first && document.redo() &&
-                document.features().back().id == second, "Redo changed existing identities");
+                document.features().back().id == second,
+            "Redo changed existing identities");
     require(document.undo() && document.undo(), "Undo before branch");
     const auto captured = DocumentSnapshot::capture(document);
     auto restored = captured.toDocument();
     require(captured == DocumentSnapshot::capture(restored), "Snapshot lost allocation state");
     const auto third = restored.addBoxFeature("Branch", {3, 4, 5});
-    require(third.value() > second.value() && !restored.contains(first) && !restored.contains(second),
+    require(third.value() > second.value() && !restored.contains(first) &&
+                !restored.contains(second),
             "Snapshot branch reused published ID");
     const auto branch = document.addBoxFeature("Branch", {3, 4, 5});
     require(branch == third && !document.canRedo(), "Live branch counter differs from snapshot");
@@ -64,7 +65,8 @@ void candidateIsolation() {
         transaction.rollback();
     }
     require(DocumentSnapshot::capture(document) == before && document.revision() == revision &&
-                document.canRedo(), "Rollback consumed live IDs or history");
+                document.canRedo(),
+            "Rollback consumed live IDs or history");
     DocumentTransaction winner(document);
     DocumentTransaction stale(document);
     const auto winnerId = winner.edit().addBoxFeature("Winner", {2, 3, 4});
@@ -73,32 +75,40 @@ void candidateIsolation() {
     require(stale.prepare() && winner.commit(), "Commit winner");
     const auto committed = DocumentSnapshot::capture(document);
     bool rejected = false;
-    try { (void)stale.commit(); } catch (const std::logic_error&) { rejected = true; }
+    try {
+        (void)stale.commit();
+    } catch (const std::logic_error&) {
+        rejected = true;
+    }
     require(rejected && committed == DocumentSnapshot::capture(document),
             "Stale commit changed ID allocation");
-    require(document.undo() && document.addBoxFeature("After winner", {3, 4, 5}).value() >
-                winnerId.value(), "Committed candidate ID was reused");
+    require(document.undo() &&
+                document.addBoxFeature("After winner", {3, 4, 5}).value() > winnerId.value(),
+            "Committed candidate ID was reused");
 }
 void exhaustedAfterUndo() {
     const auto limit = std::numeric_limits<std::uint64_t>::max();
-    std::istringstream input("VOLUND 16\nNEXT_ID " + std::to_string(limit - 2) +
-                             "\nFEATURES 0\n");
+    std::istringstream input("VOLUND 16\nNEXT_ID " + std::to_string(limit - 2) + "\nFEATURES 0\n");
     auto document = DocumentSerializer::read(input);
     const auto finalId = document.addBoxFeature("Last", {1, 2, 3});
     require(finalId.value() == limit - 2 && document.undo(), "Final valid ID setup");
     const auto before = bytes(document);
     const auto revision = document.revision();
     bool rejected = false;
-    try { (void)document.addBoxFeature("Overflow", {1, 2, 3}); }
-    catch (const std::overflow_error&) { rejected = true; }
+    try {
+        (void)document.addBoxFeature("Overflow", {1, 2, 3});
+    } catch (const std::overflow_error&) {
+        rejected = true;
+    }
     require(rejected && bytes(document) == before && document.revision() == revision &&
-                document.canRedo(), "Undo reopened exhausted ID space or rejection mutated state");
+                document.canRedo(),
+            "Undo reopened exhausted ID space or rejection mutated state");
     require(document.redo() && document.features().back().id == finalId,
             "Exhaustion prevented restoration of an existing ID");
 }
 struct Files {
-    std::filesystem::path first = test::temporaryFilePath(
-        "d11b-" + std::to_string(std::random_device{}()) + ".volund");
+    std::filesystem::path first =
+        test::temporaryFilePath("d11b-" + std::to_string(std::random_device{}()) + ".volund");
     std::filesystem::path second = first.string() + ".copy.volund";
     ~Files() {
         std::error_code error;
@@ -121,7 +131,8 @@ void sessionSaveAndSelection() {
     session.loadDocument(files.second);
     const auto nextId = test::requireCommittedFeature(session.createBoxFeature());
     require(nextId.value() > oldId.value() && !session.selectFeature(oldId) &&
-                session.selectedFeature() == nextId, "Old selection aliased a replacement feature");
+                session.selectedFeature() == nextId,
+            "Old selection aliased a replacement feature");
     session.saveDocument(files.second);
     require(session.selectFeature(nextId), "Select saved box");
     committed(session.editSelectedBoxDimensions({2, 3, 4}));

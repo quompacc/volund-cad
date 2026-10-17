@@ -1,5 +1,5 @@
-#include "IsolatedSettings.hpp"
 #include "../BoundSketchFixture.hpp"
+#include "IsolatedSettings.hpp"
 #include <QAction>
 #include <QApplication>
 #include <QCheckBox>

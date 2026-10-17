@@ -139,13 +139,13 @@ void otherAxes() {
     {
         application::CadSession session;
         session.newDocument();
-        require(session.createDatumAxis(document::BaseAxis::z, std::nullopt, std::nullopt)
-                        .status() == CommandStatus::committed,
-                "Construction axis");
+        require(
+            session.createDatumAxis(document::BaseAxis::z, std::nullopt, std::nullopt).status() ==
+                CommandStatus::committed,
+            "Construction axis");
         application::ExtrusionMode mode;
         mode.revolve = about({std::nullopt, std::nullopt, session.features().back().id}, 180);
-        require(revolve(session, rectangle(5, 0, 15, 20), mode) &&
-                    near(volume(session), 2000 * pi),
+        require(revolve(session, rectangle(5, 0, 15, 20), mode) && near(volume(session), 2000 * pi),
                 "Half a turn about a construction axis");
     }
     {
@@ -153,8 +153,7 @@ void otherAxes() {
         session.newDocument();
         application::ExtrusionMode mode;
         mode.revolve = about({std::nullopt, document::BaseAxis::z, std::nullopt});
-        require(!revolve(session, rectangle(-5, 0, 5, 20), mode) &&
-                    session.validBodies().empty(),
+        require(!revolve(session, rectangle(-5, 0, 5, 20), mode) && session.validBodies().empty(),
                 "A profile across the axis is refused");
     }
 }
@@ -175,8 +174,8 @@ void groove() {
     mode.target = body;
     mode.revolve = about({std::nullopt, document::BaseAxis::z, std::nullopt});
     require(revolve(session, rectangle(15, 10, 25, 15), mode) &&
-                session.validBodies().size() == 1 &&
-                near(volume(session), 12000 * pi - 875 * pi) && valid(session),
+                session.validBodies().size() == 1 && near(volume(session), 12000 * pi - 875 * pi) &&
+                valid(session),
             "The groove takes a ring out of the cylinder");
 }
 

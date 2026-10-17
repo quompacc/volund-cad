@@ -36,7 +36,9 @@ namespace {
 using namespace voelund;
 using test::press;
 constexpr double pi = std::numbers::pi;
-void require(bool condition, const std::string& message) { test::require(condition, message.c_str()); }
+void require(bool condition, const std::string& message) {
+    test::require(condition, message.c_str());
+}
 
 struct Window final {
     application::CadSession session;
@@ -85,17 +87,18 @@ struct Window final {
         test::settleEvents();
     }
     void type(const char* field, double value) {
-        auto* input = child("activeToolPanel")
-                          .findChild<QDoubleSpinBox*>(QStringLiteral("toolLength_") +
-                                                      QLatin1String(field));
+        auto* input =
+            child("activeToolPanel")
+                .findChild<QDoubleSpinBox*>(QStringLiteral("toolLength_") + QLatin1String(field));
         require(input != nullptr && input->isVisible(), std::string("Field ") + field);
         input->setValue(value);
         emit input->editingFinished();
         test::settleEvents();
     }
     void choose(const char* field, int index) {
-        auto* box = child("activeToolPanel")
-                        .findChild<QComboBox*>(QStringLiteral("toolChoice_") + QLatin1String(field));
+        auto* box =
+            child("activeToolPanel")
+                .findChild<QComboBox*>(QStringLiteral("toolChoice_") + QLatin1String(field));
         require(box != nullptr && box->isVisible() && index < box->count(),
                 std::string("Choice ") + field);
         box->setCurrentIndex(index);
@@ -179,7 +182,8 @@ int run() {
     press(w.context("solid.create.extrude_profiles"));
     w.type("distance", 10);
     w.ok();
-    require(closeTo(w.volume(), plate) && w.steps() == 2, "Plate 60 x 40 x 10: " + std::to_string(w.volume()));
+    require(closeTo(w.volume(), plate) && w.steps() == 2,
+            "Plate 60 x 40 x 10: " + std::to_string(w.volume()));
 
     // 2. Through hole of 8 on the top face near (12, 0).
     w.click(12, 0, 10);
@@ -187,7 +191,8 @@ int run() {
     w.type("diameter", 8);
     w.choose("end", 1);
     w.ok();
-    require(closeTo(w.volume(), drilled) && w.steps() == 3, "Through hole: " + std::to_string(w.volume()));
+    require(closeTo(w.volume(), drilled) && w.steps() == 3,
+            "Through hole: " + std::to_string(w.volume()));
 
     // 3. Pocket from a sketch on the top face.
     w.click(-17, 0, 10);
@@ -201,7 +206,8 @@ int run() {
     w.choose("operation", 2);
     w.type("distance", 4);
     w.ok();
-    require(closeTo(w.volume(), pocketed) && w.steps() == 5, "Pocket: " + std::to_string(w.volume()));
+    require(closeTo(w.volume(), pocketed) && w.steps() == 5,
+            "Pocket: " + std::to_string(w.volume()));
 
     // 4. The vertical edge at (-30, -20), radius 1.
     w.view(viewport::CameraView::front);
@@ -210,7 +216,8 @@ int run() {
     w.click(-30, -20, 5);
     w.type("radius", 1);
     w.ok();
-    require(closeTo(w.volume(), rounded) && w.steps() == 6, "Rounded edge: " + std::to_string(w.volume()));
+    require(closeTo(w.volume(), rounded) && w.steps() == 6,
+            "Rounded edge: " + std::to_string(w.volume()));
 
     // 5. Save, New, Open.
     user.file = directory.path() + QStringLiteral("/Referenzplatte.volund");
@@ -226,7 +233,8 @@ int run() {
     press(w.step(1));
     w.type("distance", 12);
     w.ok();
-    require(closeTo(w.volume(), twelve), "Height 12 through the chain: " + std::to_string(w.volume()));
+    require(closeTo(w.volume(), twelve),
+            "Height 12 through the chain: " + std::to_string(w.volume()));
     press(w.header("history.undo"));
     require(closeTo(w.volume(), rounded), "Undo");
     press(w.header("history.redo"));

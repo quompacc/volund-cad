@@ -1,5 +1,5 @@
-#include <voelund/kernel/PlaneNormal.hpp>
 #include "FeatureEvaluationDetail.hpp"
+#include <voelund/kernel/PlaneNormal.hpp>
 
 #include <voelund/document/DocumentSnapshot.hpp>
 #include <voelund/features/FeatureDependencies.hpp>
@@ -10,21 +10,21 @@
 
 #include <BRepAdaptor_Surface.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
-#include <voelund/kernel/Prism.hpp>
 #include <BRep_Tool.hxx>
 #include <TopExp_Explorer.hxx>
-#include <TopoDS_Edge.hxx>
-#include <utility>
-#include <vector>
-#include <memory>
-#include <optional>
-#include <span>
 #include <TopoDS.hxx>
+#include <TopoDS_Edge.hxx>
 #include <algorithm>
 #include <cmath>
 #include <gp_Pnt.hxx>
 #include <gp_Trsf.hxx>
 #include <gp_Vec.hxx>
+#include <memory>
+#include <optional>
+#include <span>
+#include <utility>
+#include <vector>
+#include <voelund/kernel/Prism.hpp>
 
 // T04: push/pull. The profile of the extrusion is a planar face of a body as it was before
 // this feature, named by its semantic origin, so the prism follows the face when the body
@@ -100,8 +100,7 @@ gp_Vec sweep(const TopoDS_Shape& body, const SupportFaceFrame& face,
         if (!explorer.Current().IsSame(face.face))
             continue;
         const BRepAdaptor_Surface surface(TopoDS::Face(explorer.Current()));
-        const gp_Vec normal(
-            kernel::planeNormal(surface.Plane(), explorer.Current().Orientation()));
+        const gp_Vec normal(kernel::planeNormal(surface.Plane(), explorer.Current().Orientation()));
         return parameters.reversed ? -normal : normal;
     }
     throw GeometryEvaluationError("Profile face is not a face of its body");
@@ -154,11 +153,9 @@ FacePrism makePrism(document::FeatureId extrusion, const TopoDS_Shape& body,
     // M02: the kernel's prism checks the sweep and its solid.
     const kernel::Prism prism(start, along.X(), along.Y(), along.Z(), length);
     const auto cap = prism.endOf(start);
-    FacePrism result{prism.shape(),
-                     {{{extrusion, std::nullopt, {}, true},
-                       {cap},
-                       kernel::HistoryCoverage::complete,
-                       cap}}};
+    FacePrism result{
+        prism.shape(),
+        {{{extrusion, std::nullopt, {}, true}, {cap}, kernel::HistoryCoverage::complete, cap}}};
     // T04b: side faces named by the body edge they were swept from (through the offset
     // copy's history when the start is shifted).
     for (TopExp_Explorer explorer(face.face, TopAbs_EDGE); explorer.More(); explorer.Next()) {
@@ -258,11 +255,16 @@ void evaluateFaceExtrusion(const document::DocumentSnapshot& document,
     auto referenceEdges =
         continueEdgeOrigins(owner.referenceEdgeOrigins, reference, kernel::HistoryOperand::first);
     nameCapEdges(referenceEdges, referencePrism, reference);
-    outputs.push_back(EvaluatedFeature{
-        descriptor.id, evaluated.shape, reference.shape, body.bodyId,
-        joined(owner.supportOrigins, prism.caps, evaluated), {},
-        joined(owner.referenceSupportOrigins, referencePrism.caps, reference),
-        std::move(edges), std::move(referenceEdges)});
+    outputs.push_back(
+        EvaluatedFeature{descriptor.id,
+                         evaluated.shape,
+                         reference.shape,
+                         body.bodyId,
+                         joined(owner.supportOrigins, prism.caps, evaluated),
+                         {},
+                         joined(owner.referenceSupportOrigins, referencePrism.caps, reference),
+                         std::move(edges),
+                         std::move(referenceEdges)});
     body.sourceFeature = descriptor.id;
     body.shape = evaluated.shape;
     referenceBody.sourceFeature = descriptor.id;

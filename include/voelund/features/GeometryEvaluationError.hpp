@@ -18,9 +18,7 @@ class GeometryEvaluationError final : public std::runtime_error {
                             std::vector<std::uint64_t> elements)
         : std::runtime_error(message), code_(std::move(code)), elements_(std::move(elements)) {}
     [[nodiscard]] const std::string& code() const noexcept { return code_; }
-    [[nodiscard]] const std::vector<std::uint64_t>& elements() const noexcept {
-        return elements_;
-    }
+    [[nodiscard]] const std::vector<std::uint64_t>& elements() const noexcept { return elements_; }
 
   private:
     std::string code_;

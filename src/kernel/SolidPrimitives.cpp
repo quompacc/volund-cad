@@ -3,11 +3,11 @@
 #include <voelund/kernel/SolidPrimitives.hpp>
 
 #include <BRepCheck_Analyzer.hxx>
-#include <BRepPrim_Wedge.hxx>
 #include <BRepPrimAPI_MakeCone.hxx>
 #include <BRepPrimAPI_MakeSphere.hxx>
 #include <BRepPrimAPI_MakeTorus.hxx>
 #include <BRepPrimAPI_MakeWedge.hxx>
+#include <BRepPrim_Wedge.hxx>
 #include <Standard_Failure.hxx>
 #include <Standard_OutOfMemory.hxx>
 #include <Standard_ProgramError.hxx>
@@ -24,10 +24,14 @@ namespace {
 
 KernelOperation operationOf(PrimitiveShape shape) {
     switch (shape) {
-    case PrimitiveShape::sphere: return KernelOperation::makeSphere;
-    case PrimitiveShape::cone: return KernelOperation::makeCone;
-    case PrimitiveShape::torus: return KernelOperation::makeTorus;
-    case PrimitiveShape::wedge: return KernelOperation::makeWedge;
+    case PrimitiveShape::sphere:
+        return KernelOperation::makeSphere;
+    case PrimitiveShape::cone:
+        return KernelOperation::makeCone;
+    case PrimitiveShape::torus:
+        return KernelOperation::makeTorus;
+    case PrimitiveShape::wedge:
+        return KernelOperation::makeWedge;
     }
     return KernelOperation::makeSphere;
 }
@@ -61,10 +65,14 @@ const char* primitiveSizeProblem(const SolidPrimitiveDefinition& d) noexcept {
 
 double primitiveHeight(const SolidPrimitiveDefinition& d) noexcept {
     switch (d.shape) {
-    case PrimitiveShape::sphere: return 2.0 * d.first;
-    case PrimitiveShape::cone: return d.third;
-    case PrimitiveShape::torus: return 2.0 * d.second;
-    case PrimitiveShape::wedge: return d.third;
+    case PrimitiveShape::sphere:
+        return 2.0 * d.first;
+    case PrimitiveShape::cone:
+        return d.third;
+    case PrimitiveShape::torus:
+        return 2.0 * d.second;
+    case PrimitiveShape::wedge:
+        return d.third;
     }
     return 0.0;
 }

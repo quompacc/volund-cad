@@ -32,7 +32,9 @@
 namespace {
 using namespace voelund;
 using test::press;
-void require(bool condition, const std::string& message) { test::require(condition, message.c_str()); }
+void require(bool condition, const std::string& message) {
+    test::require(condition, message.c_str());
+}
 
 struct Window final {
     application::CadSession session;
@@ -74,9 +76,9 @@ struct Window final {
         test::settleEvents();
     }
     QDoubleSpinBox& field(const char* id) {
-        auto* input = child("activeToolPanel")
-                          .findChild<QDoubleSpinBox*>(QStringLiteral("toolLength_") +
-                                                      QLatin1String(id));
+        auto* input =
+            child("activeToolPanel")
+                .findChild<QDoubleSpinBox*>(QStringLiteral("toolLength_") + QLatin1String(id));
         require(input != nullptr && input->isVisible(), std::string("Field ") + id);
         return *input;
     }

@@ -23,8 +23,11 @@ void require(bool condition, const char* message) {
         throw std::runtime_error(message);
 }
 template <class Action> void rejected(Action action) {
-    try { action(); }
-    catch (const std::invalid_argument&) { return; }
+    try {
+        action();
+    } catch (const std::invalid_argument&) {
+        return;
+    }
     throw std::runtime_error("Invalid identity input accepted");
 }
 void fixtures(const std::filesystem::path& directory) {
@@ -43,7 +46,7 @@ void fixtures(const std::filesystem::path& directory) {
         std::istringstream reopened(saved.str());
         const auto roundtrip = DocumentSerializer::readWithReport(reopened);
         require(expected == legacyBodyIdentities(roundtrip.snapshot.features(),
-                                                roundtrip.snapshot.parameters()),
+                                                 roundtrip.snapshot.parameters()),
                 "Legacy roundtrip changed body mapping");
         auto features = std::vector(snapshot.features().begin(), snapshot.features().end());
         auto parameters = std::vector(snapshot.parameters().begin(), snapshot.parameters().end());
@@ -99,22 +102,29 @@ void invalidGraphs() {
         rejected([&] { (void)BodyId{invalid}; });
     }
     features = original;
-    features[1].id = FeatureId{1}; rejects();
+    features[1].id = FeatureId{1};
+    rejects();
     features = original;
-    features[1].inputFeature = FeatureId{99}; rejects();
-    features[1].inputFeature = FeatureId{2}; rejects();
+    features[1].inputFeature = FeatureId{99};
+    rejects();
+    features[1].inputFeature = FeatureId{2};
+    rejects();
     features = original;
     features[0].kind = FeatureKind::cylinder;
     features[0].inputFeature = FeatureId{2};
-    parameters[0] = CylinderParameters{}; rejects(); // two-node cycle
+    parameters[0] = CylinderParameters{};
+    rejects(); // two-node cycle
     features = original;
     rejects(); // parameter kind mismatch
     parameters[0] = BoxParameters{};
-    features[0].inputFeature = FeatureId{2}; rejects();
+    features[0].inputFeature = FeatureId{2};
+    rejects();
     features = original;
-    features[1].inputFeature.reset(); rejects();
+    features[1].inputFeature.reset();
+    rejects();
     features = original;
-    parameters.pop_back(); rejects();
+    parameters.pop_back();
+    rejects();
     rejected([] { (void)DocumentId{0, 0}; });
     require(legacyBodyIdentities({}, {}).empty(), "Empty document gained a body");
 }
@@ -129,9 +139,10 @@ void longChain() {
     std::ranges::reverse(features);
     std::ranges::reverse(parameters);
     const auto result = legacyBodyIdentities(features, parameters);
-    require(result.size() == count && std::ranges::all_of(result, [](const auto& item) {
-        return item.body == BodyId{1};
-    }), "Long reverse-ordered chain changed body identity");
+    require(
+        result.size() == count &&
+            std::ranges::all_of(result, [](const auto& item) { return item.body == BodyId{1}; }),
+        "Long reverse-ordered chain changed body identity");
 }
 } // namespace
 

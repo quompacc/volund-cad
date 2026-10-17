@@ -1,8 +1,8 @@
 #pragma once
 #include "NativePrimitiveCodec.hpp"
 #include <memory>
-#include <vector>
 #include <utility>
+#include <vector>
 
 namespace voelund::document::detail {
 // Private OCAF authority; immutable read views are derived before publication.
@@ -16,6 +16,7 @@ class NativeModelState final {
         std::vector<Handle(TDocStd_Document)> redo;
         std::uint64_t revision{0};
     };
+
   public:
     class Prepared final {
       public:
@@ -25,6 +26,7 @@ class NativeModelState final {
         Prepared& operator=(Prepared&&) = delete;
         Prepared(const Prepared&) = delete;
         Prepared& operator=(const Prepared&) = delete;
+
       private:
         friend class NativeModelState;
         Prepared(const NativeModelState* owner, std::uint64_t revision,
@@ -43,13 +45,15 @@ class NativeModelState final {
     [[nodiscard]] std::uint64_t revision() const noexcept;
     [[nodiscard]] bool canUndo() const noexcept;
     [[nodiscard]] bool canRedo() const noexcept;
-    [[nodiscard]] Prepared prepare(const IdentifiedDocumentSnapshot& replacement, bool recordHistory = true) const;
+    [[nodiscard]] Prepared prepare(const IdentifiedDocumentSnapshot& replacement,
+                                   bool recordHistory = true) const;
     // M01: body visibility only; no undo entry, the redo history stays.
     [[nodiscard]] Prepared prepareViewChange(const IdentifiedDocumentSnapshot& replacement) const;
     [[nodiscard]] Prepared prepareUndo() const;
     [[nodiscard]] Prepared prepareRedo() const;
     // A successful prepared commit only swaps owners; no allocation/native mutation.
     [[nodiscard]] bool commit(Prepared&& prepared);
+
   private:
     [[nodiscard]] Prepared prepareHistory(bool undo) const;
     static Handle(TDocStd_Document) encode(const IdentifiedDocumentSnapshot& value);

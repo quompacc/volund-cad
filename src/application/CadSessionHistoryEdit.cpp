@@ -19,8 +19,8 @@ std::vector<document::FeatureId> newlyFailing(const features::EvaluationReport& 
         if (issue.status != features::EvaluationStatus::failed &&
             issue.status != features::EvaluationStatus::blockedByDependency)
             continue;
-        const auto earlier = std::ranges::find(before.features, issue.feature,
-                                               &features::EvaluationIssue::feature);
+        const auto earlier =
+            std::ranges::find(before.features, issue.feature, &features::EvaluationIssue::feature);
         if (earlier != before.features.end() &&
             (earlier->status == features::EvaluationStatus::valid))
             failing.push_back(issue.feature);
@@ -61,34 +61,37 @@ DeletionPlan CadSession::deletionPlan(document::FeatureId featureId) const {
             const auto& feature = features[index];
             if (removed.contains(feature.id.value()))
                 continue;
-            const auto references = document::featureReferences(feature, snapshot.parameters()[index]);
-            const bool needs = std::ranges::any_of(references.structural, [&](document::FeatureId id) {
-                if (!removed.contains(id.value()))
-                    return false;
-                // A body input is taken over by the body's earlier state, unless the body
-                // itself is gone with its creator.
-                if (feature.inputFeature != id)
-                    return true;
-                const auto input = std::ranges::find(features, id, &document::FeatureDescriptor::id);
-                const auto body = creates[static_cast<std::size_t>(input - features.begin())];
-                return input->kind == document::FeatureKind::sketch || !body ||
-                       removed.contains(body->value());
-            });
+            const auto references =
+                document::featureReferences(feature, snapshot.parameters()[index]);
+            const bool needs =
+                std::ranges::any_of(references.structural, [&](document::FeatureId id) {
+                    if (!removed.contains(id.value()))
+                        return false;
+                    // A body input is taken over by the body's earlier state, unless the body
+                    // itself is gone with its creator.
+                    if (feature.inputFeature != id)
+                        return true;
+                    const auto input =
+                        std::ranges::find(features, id, &document::FeatureDescriptor::id);
+                    const auto body = creates[static_cast<std::size_t>(input - features.begin())];
+                    return input->kind == document::FeatureKind::sketch || !body ||
+                           removed.contains(body->value());
+                });
             if (needs) {
                 removed.insert(feature.id.value());
                 grew = true;
             }
         }
     }
-    plan.onlyThisPossible =
-        std::ranges::all_of(removed, [&](std::uint64_t id) {
-            if (id == featureId.value())
-                return true;
-            const auto found = std::ranges::find(features, document::FeatureId{id},
-                                                 &document::FeatureDescriptor::id);
-            return document::companionOwner(snapshot.parameters()[static_cast<std::size_t>(
-                       found - features.begin())]) == featureId;
-        });
+    plan.onlyThisPossible = std::ranges::all_of(removed, [&](std::uint64_t id) {
+        if (id == featureId.value())
+            return true;
+        const auto found =
+            std::ranges::find(features, document::FeatureId{id}, &document::FeatureDescriptor::id);
+        return document::companionOwner(
+                   snapshot.parameters()[static_cast<std::size_t>(found - features.begin())]) ==
+               featureId;
+    });
     // Then what would fail without them, repeated until nothing new fails.
     const auto before = evaluation_ ? evaluation_->report : features::EvaluationReport{};
     for (int round = 0; round < 32; ++round) {
@@ -124,14 +127,12 @@ CommandResult CadSession::deleteFeatures(std::span<const document::FeatureId> fe
                                          ErrorDisposition disposition) {
     document::DocumentTransaction transaction(document_);
     auto& candidate = transaction.edit();
-    const auto input =
-        detail::prepareInput([&] { return candidate.deleteFeatures(featureIds); });
+    const auto input = detail::prepareInput([&] { return candidate.deleteFeatures(featureIds); });
     if (!input.value)
         return CommandResult::invalidInput(input.diagnostic);
     if (!*input.value)
         return {CommandStatus::rejected, RejectionReason::noChange};
-    return finishCandidate(transaction, std::nullopt, CommandKind::editFeature, disposition,
-                           false);
+    return finishCandidate(transaction, std::nullopt, CommandKind::editFeature, disposition, false);
 }
 
 } // namespace voelund::application

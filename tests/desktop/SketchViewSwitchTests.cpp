@@ -17,7 +17,9 @@
 namespace {
 using namespace voelund;
 using viewport::ViewportTestAccess;
-void require(bool condition, const std::string& message) { test::require(condition, message.c_str()); }
+void require(bool condition, const std::string& message) {
+    test::require(condition, message.c_str());
+}
 
 QAction& command(QWidget& window, const char* id) {
     for (auto* action : window.findChildren<QAction*>())
@@ -77,11 +79,13 @@ void run() {
 
     choice(window, "show_grid").setCurrentIndex(1);
     settle();
-    require(!ViewportTestAccess::gridVisible(*viewport) && !command(window, "view.grid").isChecked(),
+    require(!ViewportTestAccess::gridVisible(*viewport) &&
+                !command(window, "view.grid").isChecked(),
             "Panel grid off: grid hidden, command unchecked");
     command(window, "view.grid").trigger();
     settle();
-    require(ViewportTestAccess::gridVisible(*viewport) && choice(window, "show_grid").currentIndex() == 0,
+    require(ViewportTestAccess::gridVisible(*viewport) &&
+                choice(window, "show_grid").currentIndex() == 0,
             "Command grid on: panel follows");
 
     command(window, "sketch.show_projected").trigger();

@@ -1,20 +1,21 @@
 #include "../../src/features/FeatureEvaluationDetail.hpp"
-#include <voelund/application/CadSession.hpp>
-#include <voelund/document/DocumentSnapshot.hpp>
-#include <voelund/features/FeatureGraph.hpp>
-#include <voelund/kernel/OcctCompatibility.hpp>
 #include <BRepGProp.hxx>
 #include <GProp_GProps.hxx>
 #include <cmath>
 #include <iostream>
 #include <stdexcept>
 #include <type_traits>
+#include <voelund/application/CadSession.hpp>
+#include <voelund/document/DocumentSnapshot.hpp>
+#include <voelund/features/FeatureGraph.hpp>
+#include <voelund/kernel/OcctCompatibility.hpp>
 
 namespace {
 using namespace voelund;
 using namespace document;
 void require(bool condition, const char* message) {
-    if (!condition) throw std::runtime_error(message);
+    if (!condition)
+        throw std::runtime_error(message);
 }
 double volume(const TopoDS_Shape& shape) {
     GProp_GProps properties;
@@ -24,9 +25,10 @@ double volume(const TopoDS_Shape& shape) {
 DocumentSnapshot detachedSnapshot() {
     auto model = ModelDocument::empty();
     const auto box = model.addBoxFeature("Box", {10, 20, 30});
-    static_cast<void>(model.addCylinderFeature(
-        "Separate", box, {2, 5, {}, CylinderResultMode::separate}));
-    const auto sketch = model.addSketchFeature("Sketch", box,
+    static_cast<void>(
+        model.addCylinderFeature("Separate", box, {2, 5, {}, CylinderResultMode::separate}));
+    const auto sketch = model.addSketchFeature(
+        "Sketch", box,
         {{0, 0, 30, 0, 0, 1, 1, 0, 0},
          SketchElements{{{SketchElementId{1}, SketchRectangle{1, 1, 4, 4}}}, 2}});
     static_cast<void>(model.addExtrusionFeature("Extrude", sketch, {3, {}}));
@@ -42,13 +44,20 @@ void detachedQueries() {
     auto restored = snapshot.toDocument();
     require(restored.setBoxDimensions(FeatureId{1}, {12, 20, 30}), "edit restored document");
     require(snapshot.boxDimensions(FeatureId{1}).width == 10 && restored.undo() &&
-                snapshot.matchesContent(restored), "Snapshot shares mutable restored state");
+                snapshot.matchesContent(restored),
+            "Snapshot shares mutable restored state");
     bool missing = false;
-    try { (void)snapshot.featureParameters(FeatureId{99}); }
-    catch (const std::out_of_range&) { missing = true; }
+    try {
+        (void)snapshot.featureParameters(FeatureId{99});
+    } catch (const std::out_of_range&) {
+        missing = true;
+    }
     bool wrongKind = false;
-    try { (void)snapshot.sketchParameters(FeatureId{1}); }
-    catch (const std::bad_variant_access&) { wrongKind = true; }
+    try {
+        (void)snapshot.sketchParameters(FeatureId{1});
+    } catch (const std::bad_variant_access&) {
+        wrongKind = true;
+    }
     require(missing && wrongKind, "Snapshot accepted unknown ID or wrong parameter kind");
     const auto evaluated = features::FeatureGraph{}.evaluate(snapshot);
     require(evaluated.features.size() == 4 && evaluated.bodies.size() == 2,
@@ -56,7 +65,8 @@ void detachedQueries() {
 }
 ModelDocument* mutationTarget = nullptr;
 void mutateDuringEvaluation(FeatureId) {
-    if (!mutationTarget) return;
+    if (!mutationTarget)
+        return;
     auto* target = mutationTarget;
     mutationTarget = nullptr;
     *target = ModelDocument::empty();
@@ -69,7 +79,10 @@ void oneCapturedState() {
     const auto previous = features::detail::beforeFeatureEvaluation;
     struct RestoreHook {
         decltype(previous) value;
-        ~RestoreHook() { features::detail::beforeFeatureEvaluation = value; mutationTarget = nullptr; }
+        ~RestoreHook() {
+            features::detail::beforeFeatureEvaluation = value;
+            mutationTarget = nullptr;
+        }
     } restore{previous};
     mutationTarget = &model;
     features::detail::beforeFeatureEvaluation = mutateDuringEvaluation;
@@ -107,6 +120,8 @@ int main() {
         return 0;
     } catch (const Standard_Failure& error) {
         std::cerr << kernel::occtFailureDiagnostic(error) << '\n';
-    } catch (const std::exception& error) { std::cerr << error.what() << '\n'; }
+    } catch (const std::exception& error) {
+        std::cerr << error.what() << '\n';
+    }
     return 1;
 }

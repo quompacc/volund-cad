@@ -1,6 +1,6 @@
+#include "../CommandResultAssertions.hpp"
 #include "IsolatedSettings.hpp"
 #include "ViewportLifecycleSupport.hpp"
-#include "../CommandResultAssertions.hpp"
 #include <QAbstractButton>
 #include <QAction>
 #include <QApplication>

@@ -38,8 +38,8 @@ ModelDocument mixed() {
                                  11}});
     (void)model.addCylinderFeature("C", b,
                                    {2, 5, {60, 0, 0, {}, {}, {}}, CylinderResultMode::separate});
-    (void)model.addExtrusionFeature(
-        "A erweitert", sketch, {3, {}, {*SketchRegionId::parse("o:9.0,9.1,9.2,9.3")}});
+    (void)model.addExtrusionFeature("A erweitert", sketch,
+                                    {3, {}, {*SketchRegionId::parse("o:9.0,9.1,9.2,9.3")}});
     test::bindTop(model, sketch);
     const DocumentId identity{UINT64_MAX, 0x0123456789abcdefULL};
     return DocumentSnapshot::capture(model)

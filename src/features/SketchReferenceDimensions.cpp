@@ -102,7 +102,8 @@ void measureReferenceDimensions(document::SketchParameters& sketch) {
                 const double ax = first->end.x - first->start.x, ay = first->end.y - first->start.y;
                 const double bx = second->end.x - second->start.x,
                              by = second->end.y - second->start.y;
-                constraint.angleValue = kernel::Radians(std::atan2(ax * by - ay * bx, ax * bx + ay * by));
+                constraint.angleValue =
+                    kernel::Radians(std::atan2(ax * by - ay * bx, ax * bx + ay * by));
             }
         } else if (kind == SketchConstraintKind::pointLineDistance) {
             const auto point = pointOf(elements, constraint.first);
@@ -112,9 +113,9 @@ void measureReferenceDimensions(document::SketchParameters& sketch) {
                 const double x = line->end.x - line->start.x, y = line->end.y - line->start.y;
                 const double length = std::hypot(x, y);
                 if (length > 0)
-                    constraint.value = std::abs(x * (point->y - line->start.y) -
-                                                y * (point->x - line->start.x)) /
-                                       length;
+                    constraint.value =
+                        std::abs(x * (point->y - line->start.y) - y * (point->x - line->start.x)) /
+                        length;
             }
         } else if (constraint.second) {
             const auto first = pointOf(elements, constraint.first);

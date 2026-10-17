@@ -84,7 +84,9 @@ void ShellToolController::open() {
         editing_ ? QObject::tr("Wandstärke bearbeiten") : QObject::tr("Wandstärke"),
         guidance(),
         {{"thickness", QObject::tr("Dicke"), thickness_, 0.001, 1'000'000.0}},
-        {{"direction", QObject::tr("Wände"), {QObject::tr("Nach innen"), QObject::tr("Nach außen")},
+        {{"direction",
+          QObject::tr("Wände"),
+          {QObject::tr("Nach innen"), QObject::tr("Nach außen")},
           outward_ ? 1 : 0}},
         {{"reset_faces", QObject::tr("Offene Flächen zurücksetzen"), QObject::tr("Wandstärke")}},
         [this](const std::string& id, double value) {

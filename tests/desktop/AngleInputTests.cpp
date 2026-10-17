@@ -1,8 +1,8 @@
-#include "IsolatedSettings.hpp"
 #include "../../src/desktop/FeaturePropertiesPanel.hpp"
 #include "../../src/desktop/SketchEditorToolController.hpp"
 #include "../../src/desktop/ToolPanelHost.hpp"
 #include "../../src/viewport/RotationInput.hpp"
+#include "IsolatedSettings.hpp"
 #include <QAction>
 #include <QApplication>
 #include <QDir>
@@ -160,8 +160,8 @@ void dimensionDialog() {
         auto* dialog = qobject_cast<QInputDialog*>(QApplication::activeModalWidget());
         if (!dialog)
             return;
-        displayedDegrees =
-            std::abs(dialog->textValue().toDouble() + 60) < 1e-10 && dialog->labelText().contains("Grad");
+        displayedDegrees = std::abs(dialog->textValue().toDouble() + 60) < 1e-10 &&
+                           dialog->labelText().contains("Grad");
         dialog->setTextValue(QStringLiteral("60"));
         const auto directory = qEnvironmentVariable("VOELUND_ANGLE_ARTIFACT_DIR");
         if (!directory.isEmpty())

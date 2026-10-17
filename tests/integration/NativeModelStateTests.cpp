@@ -1,11 +1,11 @@
 #include "../../src/document/NativeModelState.hpp"
 #include "../unit/AllocationFailure.hpp"
-#include <voelund/kernel/OcctCompatibility.hpp>
+#include <Standard_OutOfMemory.hxx>
 #include <iostream>
 #include <limits>
 #include <stdexcept>
 #include <string_view>
-#include <Standard_OutOfMemory.hxx>
+#include <voelund/kernel/OcctCompatibility.hpp>
 
 namespace voelund::document::detail {
 struct NativeModelStateTestAccess {
@@ -13,17 +13,22 @@ struct NativeModelStateTestAccess {
         state.state_->revision = std::numeric_limits<std::uint64_t>::max();
     }
 };
-}
+} // namespace voelund::document::detail
 namespace {
 using namespace voelund;
 using namespace document;
 using detail::NativeModelState;
 void require(bool condition, const char* message) {
-    if (!condition) throw std::runtime_error(message);
+    if (!condition)
+        throw std::runtime_error(message);
 }
-template<class Action> void rejected(Action action) {
+template <class Action> void rejected(Action action) {
     bool failed = false;
-    try { action(); } catch (const std::exception&) { failed = true; }
+    try {
+        action();
+    } catch (const std::exception&) {
+        failed = true;
+    }
     require(failed, "Expected rejected native state change");
 }
 IdentifiedDocumentSnapshot initial() {
@@ -34,8 +39,9 @@ IdentifiedDocumentSnapshot initial() {
 IdentifiedDocumentSnapshot mixed(const IdentifiedDocumentSnapshot& base) {
     auto model = base.snapshot().toDocument();
     static_cast<void>(model.addCylinderFeature("Cylinder", FeatureId{1},
-        {2, 5, {}, CylinderResultMode::separate}));
-    const auto sketch = model.addSketchFeature("Sketch", FeatureId{1},
+                                               {2, 5, {}, CylinderResultMode::separate}));
+    const auto sketch = model.addSketchFeature(
+        "Sketch", FeatureId{1},
         {{0, 0, 30, 0, 0, 1, 1, 0, 0},
          SketchElements{{{SketchElementId{1}, SketchRectangle{1, 1, 4, 4}}}, 2}});
     static_cast<void>(model.addExtrusionFeature("Extrusion", sketch, {3, {}}));
@@ -45,7 +51,9 @@ void lifecycle() {
     const auto base = initial(), all = mixed(base);
     NativeModelState state(base);
     require(state.snapshot() == base && !state.canUndo(), "Initial parity");
-    { auto cancelled = state.prepare(all); }
+    {
+        auto cancelled = state.prepare(all);
+    }
     require(state.snapshot() == base && state.revision() == 0, "Abandoned preparation published");
     auto prepared = state.prepare(all);
     require(state.snapshot() == base, "Prepare published early");
@@ -65,7 +73,8 @@ void lifecycle() {
     const auto replacement = branch.addBoxFeature("Branch", {3, 4, 5});
     require(replacement.value() >= all.snapshot().nextFeatureId(), "Reused published ID");
     require(state.commit(state.prepare(undone.revised(DocumentSnapshot::capture(branch)))) &&
-                !state.canRedo(), "New branch retained redo");
+                !state.canRedo(),
+            "New branch retained redo");
     const auto before = state.snapshot();
     const auto revision = state.revision();
     require(!state.commit(state.prepare(before)) && state.revision() == revision,
@@ -100,26 +109,35 @@ void allocations() {
         int failures = 0;
         for (int allocation = 0; allocation < 10000; ++allocation) {
             NativeModelState state(base);
-            if (operation > 0) (void)state.commit(state.prepare(changed));
-            if (operation > 1) (void)state.commit(state.prepareUndo());
+            if (operation > 0)
+                (void)state.commit(state.prepare(changed));
+            if (operation > 1)
+                (void)state.commit(state.prepareUndo());
             const auto before = state.snapshot();
             const auto revision = state.revision();
             const bool undo = state.canUndo(), redo = state.canRedo();
             bool failed = false;
             test::failAllocationAfter(allocation);
             try {
-                auto prepared = operation == 0 ? state.prepare(changed) :
-                    operation == 1 ? state.prepareUndo() : state.prepareRedo();
+                auto prepared = operation == 0   ? state.prepare(changed)
+                                : operation == 1 ? state.prepareUndo()
+                                                 : state.prepareRedo();
                 test::disableAllocationFailure();
                 test::failAllocationAfter(0);
                 (void)state.commit(std::move(prepared));
                 test::disableAllocationFailure();
                 completed = true;
-            } catch (const std::bad_alloc&) { failed = true; }
-            catch (const Standard_OutOfMemory&) { failed = true; }
-            catch (...) { test::disableAllocationFailure(); throw; }
+            } catch (const std::bad_alloc&) {
+                failed = true;
+            } catch (const Standard_OutOfMemory&) {
+                failed = true;
+            } catch (...) {
+                test::disableAllocationFailure();
+                throw;
+            }
             test::disableAllocationFailure();
-            if (completed) break;
+            if (completed)
+                break;
             require(failed && state.snapshot() == before && state.revision() == revision &&
                         state.canUndo() == undo && state.canRedo() == redo,
                     "Allocation failure changed native model/history");
@@ -139,7 +157,10 @@ int main(int argc, char** argv) {
 #else
             allocations();
 #endif
-        } else { require(argc == 1, "Unknown arguments"); lifecycle(); }
+        } else {
+            require(argc == 1, "Unknown arguments");
+            lifecycle();
+        }
         std::cout << "PASS isolated native model state\n";
         return 0;
     } catch (const Standard_Failure& error) {

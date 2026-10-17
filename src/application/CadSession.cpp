@@ -75,7 +75,8 @@ std::optional<document::FeatureId> CadSession::selectedBodyProducer() const {
     if (!selectedFeature_ || !evaluation_)
         return std::nullopt;
     const auto& outputs = evaluation_->result.features;
-    const auto selected = std::ranges::find(outputs, *selectedFeature_, &features::EvaluatedFeature::id);
+    const auto selected =
+        std::ranges::find(outputs, *selectedFeature_, &features::EvaluatedFeature::id);
     if (selected == outputs.end() || !selected->bodyId)
         return std::nullopt;
     for (const auto& body : evaluation_->result.bodies)
@@ -146,7 +147,8 @@ ModelOutline CadSession::modelOutline() const {
         body->features.push_back(feature);
     }
     for (auto& body : outline.bodies) {
-        const auto attributes = document::bodyAttributes(snapshot.bodyAttributes(), body.id.value());
+        const auto attributes =
+            document::bodyAttributes(snapshot.bodyAttributes(), body.id.value());
         body.name = attributes.name;
         body.hidden = attributes.hidden;
     }
@@ -370,8 +372,7 @@ CadSession::editSelectedExtrusionParameters(const document::ExtrusionParameters&
     return editExtrusionParameters(selectedFeature_.value(), parameters, disposition);
 }
 
-document::ExtrusionParameters
-CadSession::extrusionParameters(document::FeatureId featureId) const {
+document::ExtrusionParameters CadSession::extrusionParameters(document::FeatureId featureId) const {
     return document_.extrusionParameters(featureId);
 }
 

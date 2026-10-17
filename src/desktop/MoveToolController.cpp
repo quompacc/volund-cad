@@ -33,8 +33,11 @@ void MoveToolController::setPreviewHandler(
 void MoveToolController::beginEdit(document::FeatureId move) {
     const auto values = session_.moveParameters(move);
     const auto& t = values.transform;
-    values_ = {t.translationX,          t.translationY,          t.translationZ,
-               t.rotationX.value() / degree, t.rotationY.value() / degree,
+    values_ = {t.translationX,
+               t.translationY,
+               t.translationZ,
+               t.rotationX.value() / degree,
+               t.rotationY.value() / degree,
                t.rotationZ.value() / degree};
     editing_ = move;
     stored_ = values;
@@ -88,9 +91,9 @@ void MoveToolController::preview() {
         return;
     }
     const auto candidate = application::previewAction(
-        session_, application::prepareRequest(
-                      session_, application::EditMoveParametersAction{*editing_, parameters()},
-                      stamp_));
+        session_,
+        application::prepareRequest(
+            session_, application::EditMoveParametersAction{*editing_, parameters()}, stamp_));
     const auto& result = candidate.result.command;
     const bool ok = result.status() == application::CommandStatus::committed;
     panel_.setErrorCommitHandler({});

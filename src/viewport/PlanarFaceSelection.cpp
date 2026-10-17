@@ -1,5 +1,5 @@
-#include <voelund/kernel/PlaneNormal.hpp>
 #include "PlanarFaceSelection.hpp"
+#include <voelund/kernel/PlaneNormal.hpp>
 
 #include <BRepAdaptor_Curve.hxx>
 #include <BRepAdaptor_Surface.hxx>

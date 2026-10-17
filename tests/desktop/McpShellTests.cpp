@@ -9,9 +9,9 @@
 #include <QPushButton>
 #include <QRegularExpression>
 #include <QSettings>
+#include <QStatusBar>
 #include <QTcpSocket>
 #include <QToolButton>
-#include <QStatusBar>
 #include <QTreeWidget>
 #include <QUrl>
 #include <iostream>
@@ -106,20 +106,20 @@ void run() {
 
     // Meanwhile Claude adds a box over MCP.
     auto context = structured(client.call("get_context", {}));
-    const auto box = structured(client.call(
-        "create_box", {{"requestId", "box-1"},
-                       {"documentId", context.value("documentId")},
-                       {"stamp", context.value("stamp")},
-                       {"width", QJsonObject{{"value", 10}, {"unit", "mm"}}},
-                       {"depth", QJsonObject{{"value", 10}, {"unit", "mm"}}},
-                       {"height", QJsonObject{{"value", 10}, {"unit", "mm"}}}}));
+    const auto box = structured(
+        client.call("create_box", {{"requestId", "box-1"},
+                                   {"documentId", context.value("documentId")},
+                                   {"stamp", context.value("stamp")},
+                                   {"width", QJsonObject{{"value", 10}, {"unit", "mm"}}},
+                                   {"depth", QJsonObject{{"value", 10}, {"unit", "mm"}}},
+                                   {"height", QJsonObject{{"value", 10}, {"unit", "mm"}}}}));
     settle();
     check(box.value("status") == QLatin1String("committed") && session.features().size() == 1,
           "The box exists");
     auto* tree = window.findChild<QTreeWidget*>(QStringLiteral("modelTree"));
     const auto treeItem = [&](const std::string& name) {
-        const auto items = tree->findItems(QString::fromStdString(name),
-                                           Qt::MatchRecursive | Qt::MatchExactly);
+        const auto items =
+            tree->findItems(QString::fromStdString(name), Qt::MatchRecursive | Qt::MatchExactly);
         return items.isEmpty() ? nullptr : items.front();
     };
     check(tree != nullptr && treeItem(session.features().front().name) != nullptr,
@@ -162,11 +162,12 @@ void run() {
                                 {"center", QJsonArray{0, 0}},
                                 {"radius", 4}});
     content.insert("elements", elements);
-    const auto edited = structured(client.call("edit_sketch", {{"requestId", "edit-1"},
-                                                               {"documentId", context.value("documentId")},
-                                                               {"stamp", context.value("stamp")},
-                                                               {"sketchId", static_cast<double>(sketch.id.value())},
-                                                               {"sketch", content}}));
+    const auto edited =
+        structured(client.call("edit_sketch", {{"requestId", "edit-1"},
+                                               {"documentId", context.value("documentId")},
+                                               {"stamp", context.value("stamp")},
+                                               {"sketchId", static_cast<double>(sketch.id.value())},
+                                               {"sketch", content}}));
     settle();
     const auto claudes = stored();
     check(edited.value("status") == QLatin1String("committed") &&
@@ -174,7 +175,8 @@ void run() {
           "Claude's edit is stored: " + QJsonDocument(edited).toJson().toStdString());
     acceptButton(window)->click();
     settle();
-    check(stored() == claudes && acceptButton(window) != nullptr && acceptButton(window)->isVisible(),
+    check(stored() == claudes && acceptButton(window) != nullptr &&
+              acceptButton(window)->isVisible(),
           "The user's older draft does not overwrite Claude's edit; the editor stays open");
     auto* panel = window.findChild<QWidget*>(QStringLiteral("activeToolPanel"));
     auto* cancel = panel->findChild<QPushButton*>(QStringLiteral("toolCancelButton"));

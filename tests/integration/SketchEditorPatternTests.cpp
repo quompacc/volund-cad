@@ -16,8 +16,8 @@
 // accept, reopen and the evaluation keep the pattern; a legacy rectangle is copied once.
 namespace {
 using namespace voelund;
-using application::SketchEditRefusal;
 using application::SketchEditorSession;
+using application::SketchEditRefusal;
 using document::SketchArc;
 using document::SketchElementId;
 using document::SketchLine;

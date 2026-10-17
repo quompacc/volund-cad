@@ -47,8 +47,8 @@ void SketchEditorToolController::editConstraint(std::uint64_t constraintId) {
                        : QString::number(*current, 'g', 12);
     QStringList names;
     for (const auto& parameter : session_.parameterTable().values)
-        if (parameter.unit == (angle ? document::ParameterUnit::angle
-                                     : document::ParameterUnit::length))
+        if (parameter.unit ==
+            (angle ? document::ParameterUnit::angle : document::ParameterUnit::length))
             names.append(QStringLiteral("=") + QString::fromStdString(parameter.name));
     QString reason;
     QString applied;

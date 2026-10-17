@@ -75,27 +75,29 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                          simpleCommand(std::move(services.extrudeProfiles)),
                          services.canExtrudeProfiles});
     if (services.helix)
-        commands_.push_back({"solid.create.helix",
-                             "Wendel",
-                             "Gewählten Skizzenbereich als Wendel um eine Achse führen (Feder, Gewindenut)",
-                             {},
-                             workspaces::CommandGroup::create,
-                             true,
-                             false,
-                             simpleCommand(std::move(services.helix)),
-                             services.canExtrudeProfiles,
-                             "Wendel"});
+        commands_.push_back(
+            {"solid.create.helix",
+             "Wendel",
+             "Gewählten Skizzenbereich als Wendel um eine Achse führen (Feder, Gewindenut)",
+             {},
+             workspaces::CommandGroup::create,
+             true,
+             false,
+             simpleCommand(std::move(services.helix)),
+             services.canExtrudeProfiles,
+             "Wendel"});
     if (services.loft)
-        commands_.push_back({"solid.create.loft",
-                             "Ausformung",
-                             "Gewählten Skizzenbereich zu einem Bereich einer anderen Skizze ausformen",
-                             {},
-                             workspaces::CommandGroup::create,
-                             true,
-                             false,
-                             simpleCommand(std::move(services.loft)),
-                             services.canExtrudeProfiles,
-                             "Ausformen"});
+        commands_.push_back(
+            {"solid.create.loft",
+             "Ausformung",
+             "Gewählten Skizzenbereich zu einem Bereich einer anderen Skizze ausformen",
+             {},
+             workspaces::CommandGroup::create,
+             true,
+             false,
+             simpleCommand(std::move(services.loft)),
+             services.canExtrudeProfiles,
+             "Ausformen"});
     if (services.sweep)
         commands_.push_back({"solid.create.sweep",
                              "Folgen",
@@ -118,21 +120,21 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                              simpleCommand(std::move(services.revolve)),
                              services.canExtrudeProfiles,
                              "Drehen"});
-    commands_.push_back({"solid.modify.transform", "Verschieben/Drehen",
-                         "Gewählten Körper verschieben oder drehen", "M",
-                         workspaces::CommandGroup::modify, true, true,
-                         std::move(services.transform), std::move(services.canTransform),
-                         "Bewegen"});
-    commands_.push_back({"solid.modify.edit_sketch",
-                         "Bearbeiten",
-                         "Gewähltes Feature bearbeiten (Skizze, Extrusion, Verrundung, Fase, Bohrung)",
-                         {},
-                         workspaces::CommandGroup::modify,
-                         true,
-                         false,
-                         simpleCommand(std::move(services.editSketch)),
-                         std::move(services.canEditExistingSketch),
-                         "Bearbeiten"});
+    commands_.push_back(
+        {"solid.modify.transform", "Verschieben/Drehen", "Gewählten Körper verschieben oder drehen",
+         "M", workspaces::CommandGroup::modify, true, true, std::move(services.transform),
+         std::move(services.canTransform), "Bewegen"});
+    commands_.push_back(
+        {"solid.modify.edit_sketch",
+         "Bearbeiten",
+         "Gewähltes Feature bearbeiten (Skizze, Extrusion, Verrundung, Fase, Bohrung)",
+         {},
+         workspaces::CommandGroup::modify,
+         true,
+         false,
+         simpleCommand(std::move(services.editSketch)),
+         std::move(services.canEditExistingSketch),
+         "Bearbeiten"});
     if (services.pushPull)
         commands_.push_back({"solid.modify.push_pull",
                              "Drücken/Ziehen",
@@ -190,15 +192,10 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                              services.canDatum,
                              "Bezugsachse"});
     if (services.measure)
-        commands_.push_back({"solid.inspect.measure",
-                             "Messen",
-                             "Längen, Flächen, Volumen, Abstände und Winkel messen",
-                             "I",
-                             workspaces::CommandGroup::construct,
-                             true,
-                             false,
-                             simpleCommand(std::move(services.measure)),
-                             services.canMeasure,
+        commands_.push_back({"solid.inspect.measure", "Messen",
+                             "Längen, Flächen, Volumen, Abstände und Winkel messen", "I",
+                             workspaces::CommandGroup::construct, true, false,
+                             simpleCommand(std::move(services.measure)), services.canMeasure,
                              "Messen"});
     if (services.combine)
         commands_.push_back({"solid.modify.combine",

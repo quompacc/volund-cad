@@ -47,7 +47,8 @@ void rejectedPlane(const document::SketchPlane& plane) {
     } catch (const std::invalid_argument&) {
         rejected = true;
     }
-    require(rejected && document::DocumentSnapshot::capture(doc) == before && doc.revision() == revision && !doc.canUndo(),
+    require(rejected && document::DocumentSnapshot::capture(doc) == before &&
+                doc.revision() == revision && !doc.canUndo(),
             "Invalid plane mutated document or history");
     std::istringstream input(legacy(plane));
     rejected = false;
@@ -117,7 +118,8 @@ void planes() {
         } catch (const std::invalid_argument&) {
             rejected = true;
         }
-        require(rejected && document::DocumentSnapshot::capture(doc) == snapshot, "Rejected plane edit changed document");
+        require(rejected && document::DocumentSnapshot::capture(doc) == snapshot,
+                "Rejected plane edit changed document");
     }
 }
 void cylinderDirections() {

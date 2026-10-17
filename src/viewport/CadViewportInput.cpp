@@ -183,8 +183,8 @@ void CadViewport::mouseDoubleClickEvent(QMouseEvent* event) {
             return;
         const QPoint position = framebufferPoint(*this, event->position());
         // S13: a label anywhere under the pointer, also over its element.
-        const auto id =
-            impl_->sketchConstraintPresentation.constraintAt(impl_->view, position.x(), position.y());
+        const auto id = impl_->sketchConstraintPresentation.constraintAt(impl_->view, position.x(),
+                                                                         position.y());
         if (id.has_value() && *id != 0 && impl_->sketchConstraintEditHandler)
             impl_->sketchConstraintEditHandler(*id);
     });
@@ -264,9 +264,8 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
                 double x = 0, y = 0, z = 0, vx = 0, vy = 0, vz = 0, ex = 0, ey = 0, ez = 0;
                 impl_->view->ConvertWithProj(position.x(), position.y(), x, y, z, vx, vy, vz);
                 impl_->view->Proj(ex, ey, ez);
-                return ViewRay{{x, y, z},
-                               {-ex, -ey, -ez},
-                               event->modifiers().testFlag(Qt::ControlModifier)};
+                return ViewRay{
+                    {x, y, z}, {-ex, -ey, -ez}, event->modifiers().testFlag(Qt::ControlModifier)};
             };
             const auto areaClick = [&](std::optional<gp_Pnt> surface = std::nullopt) {
                 if (!impl_->areaClickHandler)
@@ -346,8 +345,8 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
                     return;
                 }
                 // User request 2026-10-13: a body edge is picked without a tool, as in any CAD.
-                if (const auto edge = occ::handle<StdSelect_BRepOwner>::DownCast(
-                        impl_->context->DetectedOwner());
+                if (const auto edge =
+                        occ::handle<StdSelect_BRepOwner>::DownCast(impl_->context->DetectedOwner());
                     !edge.IsNull() && edge->Shape().ShapeType() == TopAbs_EDGE &&
                     impl_->edgeSelectionHandler) {
                     for (const auto& presentation : impl_->presentations)

@@ -84,7 +84,8 @@ void requireNeedsEarlier(std::span<const FeatureDescriptor> features,
             const auto found = std::ranges::find(features, id, &FeatureDescriptor::id);
             if (found == features.end())
                 throw std::invalid_argument("A feature needs a feature that is gone");
-            if (static_cast<std::size_t>(found - features.begin()) >= index && id != features[index].id)
+            if (static_cast<std::size_t>(found - features.begin()) >= index &&
+                id != features[index].id)
                 throw std::invalid_argument("A feature cannot stand before what it needs");
         }
     }
@@ -207,7 +208,8 @@ bool ModelDocument::moveFeature(FeatureId featureId, std::optional<FeatureId> af
     for (std::size_t index = 0; index < candidate.features.size(); ++index) {
         const bool inBlock = block.contains(candidate.features[index].id.value());
         (inBlock ? moved : kept).push_back(std::move(candidate.features[index]));
-        (inBlock ? movedParameters : keptParameters).push_back(std::move(candidate.parameters[index]));
+        (inBlock ? movedParameters : keptParameters)
+            .push_back(std::move(candidate.parameters[index]));
         (inBlock ? movedBodies : keptBodies).push_back(bodies[index]);
     }
     const std::size_t at = after ? indexOf(kept, *after) + 1 : 0;
@@ -269,8 +271,7 @@ bool ModelDocument::deleteFeatures(std::span<const FeatureId> featureIds) {
     std::vector<bool> lostInput(kept.size(), false);
     for (std::size_t index = 0; index < kept.size(); ++index)
         lostInput[index] = kept[index].inputFeature &&
-                           removed.contains(kept[index].inputFeature->value()) &&
-                           keptBodies[index];
+                           removed.contains(kept[index].inputFeature->value()) && keptBodies[index];
     // In order, so the features before each one already form a valid list.
     for (std::size_t index = 0; index < kept.size(); ++index) {
         if (!lostInput[index])

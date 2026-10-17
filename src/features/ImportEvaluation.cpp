@@ -3,8 +3,8 @@
 #include <voelund/document/DocumentSnapshot.hpp>
 #include <voelund/features/GeometryEvaluationError.hpp>
 
-#include <TopExp.hxx>
 #include <NCollection_IndexedMap.hxx>
+#include <TopExp.hxx>
 #include <TopTools_ShapeMapHasher.hxx>
 
 // M17: an imported solid is a body as stored with its import. Its faces are named by their
@@ -44,8 +44,7 @@ void evaluateImport(const document::DocumentSnapshot& document,
 
 void evaluateImportPart(const document::DocumentSnapshot& document,
                         const document::FeatureDescriptor& descriptor,
-                        std::vector<EvaluatedFeature>& outputs,
-                        std::vector<EvaluatedBody>& bodies,
+                        std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
                         std::vector<EvaluatedBody>& referenceBodies) {
     const auto& part = document.importPartParameters(descriptor.id);
     const auto& parameters = document.importParameters(part.import);

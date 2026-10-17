@@ -53,8 +53,8 @@ class SketchExtrusionToolController final {
     [[nodiscard]] const std::vector<std::uint64_t>& problemElements() const noexcept;
     // U11 (A-UI-02): the candidate bodies of the current values, shown while the panel is open;
     // nullptr asks for the model itself again.
-    void setPreviewHandler(
-        std::function<void(const std::vector<features::EvaluatedBody>*)> handler);
+    void
+    setPreviewHandler(std::function<void(const std::vector<features::EvaluatedBody>*)> handler);
 
   private:
     void bindLength(const std::string& id, std::optional<ResolvedParameter> bound);
@@ -72,7 +72,7 @@ class SketchExtrusionToolController final {
     void accept();
     // M20: the axes the panel offers; the first is a line picked in the sketch.
     void collectAxes();
-    void collectPaths(); // M23: earlier sketches with drawn elements
+    void collectPaths();    // M23: earlier sketches with drawn elements
     void collectSections(); // M24: other sketches with a region (SketchExtrusionModes.cpp)
     [[nodiscard]] int axisIndex() const;
     [[nodiscard]] bool pickAxisLine(document::SketchElementId element);

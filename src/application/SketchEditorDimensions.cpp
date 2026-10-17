@@ -1,8 +1,8 @@
-#include <voelund/kernel/NumericPolicy.hpp>
-#include <voelund/kernel/Angle.hpp>
 #include <voelund/application/CadSession.hpp>
 #include <voelund/application/SketchEditorSession.hpp>
 #include <voelund/features/SketchConstraintSolver.hpp>
+#include <voelund/kernel/Angle.hpp>
+#include <voelund/kernel/NumericPolicy.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -14,8 +14,7 @@ namespace {
 using document::SketchConstraintKind;
 
 bool isCoordinate(SketchConstraintKind kind) {
-    return kind == SketchConstraintKind::coordinateX ||
-           kind == SketchConstraintKind::coordinateY ||
+    return kind == SketchConstraintKind::coordinateX || kind == SketchConstraintKind::coordinateY ||
            kind == SketchConstraintKind::pointDistanceX ||
            kind == SketchConstraintKind::pointDistanceY;
 }

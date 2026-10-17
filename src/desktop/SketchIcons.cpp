@@ -105,7 +105,8 @@ const QHash<QString, Drawing>& drawings() {
              path.lineTo(15, 16);
              path.lineTo(20.5, 6);
              p.painter.drawPath(path);
-             for (const auto& [x, y] : {std::pair{3.5, 18.0}, {9.0, 8.0}, {15.0, 16.0}, {20.5, 6.0}})
+             for (const auto& [x, y] :
+                  {std::pair{3.5, 18.0}, {9.0, 8.0}, {15.0, 16.0}, {20.5, 6.0}})
                  p.dot(x, y, 1.6);
          }},
         {"tool.rectangle",
@@ -561,10 +562,10 @@ std::optional<QIcon> sketchIcon(const QString& commandId, const QColor& ink, con
     if (found == drawings().end())
         return std::nullopt;
     const Drawing drawing = redo ? Drawing([&](const Pens& p) {
-                                       p.painter.translate(24, 0);
-                                       p.painter.scale(-1, 1);
-                                       found.value()(p);
-                                   })
+        p.painter.translate(24, 0);
+        p.painter.scale(-1, 1);
+        found.value()(p);
+    })
                                  : found.value();
     QIcon icon;
     QColor disabled = ink;

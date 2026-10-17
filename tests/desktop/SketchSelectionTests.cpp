@@ -17,7 +17,9 @@
 // click on a relation selects it and Delete removes it.
 namespace {
 using namespace voelund;
-void require(bool condition, const std::string& message) { test::require(condition, message.c_str()); }
+void require(bool condition, const std::string& message) {
+    test::require(condition, message.c_str());
+}
 
 QAction& command(QWidget& window, const char* id) {
     for (auto* action : window.findChildren<QAction*>())

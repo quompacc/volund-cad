@@ -77,8 +77,7 @@ void plainStepsMatch(application::CadSession& session) {
         // create() also lists the automatic relation of the free line; the shape is the same.
         require(created && confirmed && created->elements == confirmed->elements &&
                     created->points == confirmed->points &&
-                    created->arcDirection == confirmed->arcDirection &&
-                    same(viaCreate, viaSteps),
+                    created->arcDirection == confirmed->arcDirection && same(viaCreate, viaSteps),
                 std::string(item.name) + ": create() differs from the plain steps");
     }
 }
@@ -89,19 +88,21 @@ void rolesNameGeometry(application::CadSession& session) {
     editor.setTool(SketchDrawingTool::rectangle);
     const auto rectangle = editor.create({{1, 2}, {9, 7}});
     const auto fromSecond = rectangle->find(SketchCreationRole::rectangleFromSecondCorner);
-    require(rectangle->elements.size() == 4 && fromSecond &&
-                near(std::get<document::SketchLine>(geometryOf(editor, *fromSecond)).start, {9, 7}) &&
-                near(std::get<document::SketchLine>(geometryOf(editor, rectangle->primary())).start,
-                     {1, 2}),
-            "Rectangle roles name the corner edges");
+    require(
+        rectangle->elements.size() == 4 && fromSecond &&
+            near(std::get<document::SketchLine>(geometryOf(editor, *fromSecond)).start, {9, 7}) &&
+            near(std::get<document::SketchLine>(geometryOf(editor, rectangle->primary())).start,
+                 {1, 2}),
+        "Rectangle roles name the corner edges");
     editor.setTool(SketchDrawingTool::slot);
     const auto slot = editor.create({{20, 0}, {30, 0}, SketchPoint{20, 2}});
     const auto firstCap = slot->find(SketchCreationRole::slotFirstCap);
     const auto secondCap = slot->find(SketchCreationRole::slotSecondCap);
-    require(firstCap && secondCap &&
-                near(std::get<document::SketchArc>(geometryOf(editor, *firstCap)).center, {20, 0}) &&
-                near(std::get<document::SketchArc>(geometryOf(editor, *secondCap)).center, {30, 0}),
-            "Slot roles name the caps around each center");
+    require(
+        firstCap && secondCap &&
+            near(std::get<document::SketchArc>(geometryOf(editor, *firstCap)).center, {20, 0}) &&
+            near(std::get<document::SketchArc>(geometryOf(editor, *secondCap)).center, {30, 0}),
+        "Slot roles name the caps around each center");
 }
 
 // Snaps become the same references as the explicit editor calls.
@@ -142,7 +143,8 @@ void snapsMatchExplicitReferences(application::CadSession& session) {
 
 // S01: points of the created geometry by role, after solving.
 bool close(SketchPoint a, SketchPoint b) { return std::hypot(a.x - b.x, a.y - b.y) < 1e-6; }
-SketchPoint pointOf(const SketchEditorSession& editor, document::SketchGeometryReference reference) {
+SketchPoint pointOf(const SketchEditorSession& editor,
+                    document::SketchGeometryReference reference) {
     const auto& geometry = geometryOf(editor, reference.element);
     if (const auto* line = std::get_if<document::SketchLine>(&geometry))
         return reference.point == SketchPointPosition::end ? line->end : line->start;
@@ -191,21 +193,38 @@ void everyFamilyNamesItsPoints(application::CadSession& session) {
         std::vector<Expected> points;
     };
     const Family families[] = {
-        {"line", SketchDrawingTool::line, {{0, 0}, {10, 3}}, {{lineStart, {0, 0}}, {lineEnd, {10, 3}}}},
-        {"polyline", SketchDrawingTool::polyline, {{1, 1}, {4, 5}},
+        {"line",
+         SketchDrawingTool::line,
+         {{0, 0}, {10, 3}},
+         {{lineStart, {0, 0}}, {lineEnd, {10, 3}}}},
+        {"polyline",
+         SketchDrawingTool::polyline,
+         {{1, 1}, {4, 5}},
          {{lineStart, {1, 1}}, {lineEnd, {4, 5}}}},
-        {"rectangle", SketchDrawingTool::rectangle, {{1, 2}, {9, 7}},
+        {"rectangle",
+         SketchDrawingTool::rectangle,
+         {{1, 2}, {9, 7}},
          {{rectangleFirstCorner, {1, 2}}, {rectangleSecondCorner, {9, 7}}}},
         {"circle", SketchDrawingTool::circle, {{2, 2}, {6, 2}}, {{center, {2, 2}}}},
-        {"arc", SketchDrawingTool::arc, {{0, 0}, {5, 0}, SketchPoint{0, 5}},
+        {"arc",
+         SketchDrawingTool::arc,
+         {{0, 0}, {5, 0}, SketchPoint{0, 5}},
          {{center, {0, 0}}, {arcStart, {5, 0}}, {arcEnd, {0, 5}}}},
-        {"three-point arc", SketchDrawingTool::threePointArc, {{5, 0}, {-5, 0}, SketchPoint{0, 5}},
+        {"three-point arc",
+         SketchDrawingTool::threePointArc,
+         {{5, 0}, {-5, 0}, SketchPoint{0, 5}},
          {{center, {0, 0}}, {arcStart, {5, 0}}, {arcEnd, {-5, 0}}}},
-        {"ellipse", SketchDrawingTool::ellipse, {{0, 0}, {8, 0}, SketchPoint{0, 3}},
+        {"ellipse",
+         SketchDrawingTool::ellipse,
+         {{0, 0}, {8, 0}, SketchPoint{0, 3}},
          {{center, {0, 0}}}},
-        {"slot", SketchDrawingTool::slot, {{0, 0}, {10, 0}, SketchPoint{0, 2}},
+        {"slot",
+         SketchDrawingTool::slot,
+         {{0, 0}, {10, 0}, SketchPoint{0, 2}},
          {{slotFirstCenter, {0, 0}}, {slotSecondCenter, {10, 0}}}},
-        {"polygon", SketchDrawingTool::polygon, {{0, 0}, {6, 0}},
+        {"polygon",
+         SketchDrawingTool::polygon,
+         {{0, 0}, {6, 0}},
          {{polygonVertex, {6, 0}}, {polygonCenter, {0, 0}}}},
     };
     for (const auto& family : families) {
@@ -293,12 +312,12 @@ void slotSnapsUseCapCenters(application::CadSession& session) {
     input.firstSnap = SketchSnap{SketchSnapKind::center, circle->primary()};
     const auto slot = editor.create(input);
     const auto first = slot->point(SketchCreationPoint::slotFirstCenter);
-    require(first && first->point == SketchPointPosition::center &&
-                first->element == *slot->find(SketchCreationRole::slotFirstCap) &&
-                close(pointOf(editor, *first), {20, 0}) &&
-                close(pointOf(editor, *slot->point(SketchCreationPoint::slotSecondCenter)),
-                      {10, 0}),
-            "Slot centers name the caps");
+    require(
+        first && first->point == SketchPointPosition::center &&
+            first->element == *slot->find(SketchCreationRole::slotFirstCap) &&
+            close(pointOf(editor, *first), {20, 0}) &&
+            close(pointOf(editor, *slot->point(SketchCreationPoint::slotSecondCenter)), {10, 0}),
+        "Slot centers name the caps");
     require(coincident(editor, *first, {circle->primary(), SketchPointPosition::center}),
             "The snap binds the cap center");
 }
@@ -322,7 +341,8 @@ void unfitSnapIsAnError(application::CadSession& session) {
         {"end of a circle", SketchDrawingTool::line, {SketchSnapKind::end, circle}},
         {"midpoint of a circle", SketchDrawingTool::line, {SketchSnapKind::midpoint, circle}},
         {"on an arc", SketchDrawingTool::line, {SketchSnapKind::onObject, arc}},
-        {"unknown element", SketchDrawingTool::line,
+        {"unknown element",
+         SketchDrawingTool::line,
          {SketchSnapKind::start, document::SketchElementId{999}}},
     };
     for (const auto& item : cases) {

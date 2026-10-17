@@ -1,5 +1,5 @@
-#include "../../src/document/NativePrimitiveCodec.hpp"
 #include "../../src/document/NativeParameters.hpp"
+#include "../../src/document/NativePrimitiveCodec.hpp"
 #include <BinDrivers.hxx>
 #include <PCDM_ReaderStatus.hxx>
 #include <PCDM_StoreStatus.hxx>
@@ -28,7 +28,7 @@ template <class Action> void rejected(Action action, const char* message) {
     }
     require(failed, message);
 }
-Handle(TDocStd_Document) fresh(const Handle(TDocStd_Application)& app) {
+Handle(TDocStd_Document) fresh(const Handle(TDocStd_Application) & app) {
     Handle(TDocStd_Document) doc;
     app->NewDocument("BinOcaf", doc);
     doc->ChangeStorageFormatVersion(TDocStd_FormatVersion_VERSION_12);
@@ -47,8 +47,11 @@ IdentifiedDocumentSnapshot fixture(bool bindConstraint, bool bindExtrusion) {
                          4};
     require(model.setParameterTable(table), "Table set");
     auto sketch = circleOnXy();
-    sketch.constraints = {{{SketchConstraintId{1}, SketchConstraintKind::radius,
-                            {SketchElementId{1}, SketchPointPosition::center}, std::nullopt, 10}},
+    sketch.constraints = {{{SketchConstraintId{1},
+                            SketchConstraintKind::radius,
+                            {SketchElementId{1}, SketchPointPosition::center},
+                            std::nullopt,
+                            10}},
                           2};
     if (bindConstraint)
         sketch.constraints.values.front().parameter = ParameterId{1};
@@ -60,7 +63,7 @@ IdentifiedDocumentSnapshot fixture(bool bindConstraint, bool bindExtrusion) {
     return IdentifiedDocumentSnapshot::restore(DocumentId{5, 6}, DocumentSnapshot::capture(model));
 }
 
-void roundTripAndGates(const Handle(TDocStd_Application)& app) {
+void roundTripAndGates(const Handle(TDocStd_Application) & app) {
     for (const auto [constraint, extrusion] : {std::pair{true, true}, std::pair{false, true},
                                                std::pair{true, false}, std::pair{false, false}}) {
         const auto expected = fixture(constraint, extrusion);
@@ -92,7 +95,7 @@ void roundTripAndGates(const Handle(TDocStd_Application)& app) {
     std::cout << "schema 7 parameter table and bindings round-trip; schema 6 gate passed\n";
 }
 
-void corruptions(const Handle(TDocStd_Application)& app) {
+void corruptions(const Handle(TDocStd_Application) & app) {
     const auto expected = fixture(true, true);
     const auto corrupt = [&](auto change, const char* message) {
         auto doc = fresh(app);
@@ -101,7 +104,7 @@ void corruptions(const Handle(TDocStd_Application)& app) {
         rejected([&] { (void)NativePrimitiveCodec::read(doc); }, message);
         app->Close(doc);
     };
-    const auto parameter = [](const Handle(TDocStd_Document)& doc, int index) {
+    const auto parameter = [](const Handle(TDocStd_Document) & doc, int index) {
         return doc->Main().FindChild(detail::nativeParameterSlot).FindChild(2).FindChild(index);
     };
     corrupt([&](auto doc) { TDataStd_AsciiString::Set(parameter(doc, 2).FindChild(2), "a"); },

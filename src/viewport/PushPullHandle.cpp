@@ -27,8 +27,8 @@ class PushPullHandle::Impl final {
     void place(double value) {
         distance = value;
         context->SetLocation(face, TopLoc_Location(along(value)));
-        manipulator->SetPosition(
-            gp_Ax2(center.Translated(gp_Vec(normal) * value), value < 0 ? normal.Reversed() : normal));
+        manipulator->SetPosition(gp_Ax2(center.Translated(gp_Vec(normal) * value),
+                                        value < 0 ? normal.Reversed() : normal));
         context->Redisplay(manipulator, false);
     }
 
@@ -113,8 +113,7 @@ void PushPullHandle::setDistance(double distance) {
 }
 
 gp_Dir PushPullHandle::arrowDirection() const {
-    return impl_->manipulator.IsNull() ? impl_->normal
-                                       : impl_->manipulator->Position().Direction();
+    return impl_->manipulator.IsNull() ? impl_->normal : impl_->manipulator->Position().Direction();
 }
 
 bool PushPullHandle::matches(const occ::handle<AIS_InteractiveObject>& object) const noexcept {
@@ -130,8 +129,7 @@ void PushPullHandle::start(int x, int y, const occ::handle<V3d_View>& view) {
     impl_->manipulator->StartTransform(x, y, view);
 }
 
-void PushPullHandle::update(int x, int y, const occ::handle<V3d_View>& view,
-                            bool bypassSnapping) {
+void PushPullHandle::update(int x, int y, const occ::handle<V3d_View>& view, bool bypassSnapping) {
     auto& impl = *impl_;
     gp_Trsf delta;
     if (!impl.manipulator->ObjectTransformation(x, y, view, delta))

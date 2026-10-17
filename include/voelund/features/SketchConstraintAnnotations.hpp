@@ -35,8 +35,7 @@ sketchAnnotationCategory(document::SketchConstraintKind kind) noexcept;
 [[nodiscard]] bool isEditableDimension(const document::SketchConstraint& constraint) noexcept;
 // "[=]" for a relation; "L 12.000 mm", "R 5.000 mm", "Ø 10.000 mm", "A 60.000°" ... for a
 // dimension (value in internal units).
-[[nodiscard]] std::string sketchConstraintLabel(document::SketchConstraintKind kind,
-                                                double value);
+[[nodiscard]] std::string sketchConstraintLabel(document::SketchConstraintKind kind, double value);
 
 // One annotation per constraint, placed on the geometry it binds, from the given (solved)
 // geometry.

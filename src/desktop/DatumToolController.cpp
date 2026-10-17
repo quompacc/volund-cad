@@ -36,7 +36,8 @@ void DatumToolController::beginPlane(std::optional<document::DatumPlane> basePla
                                      std::optional<document::FeatureId> support,
                                      std::optional<document::SubshapeOrigin> face) {
     axis_ = false;
-    basePlane_ = support ? std::nullopt : std::optional{basePlane.value_or(document::DatumPlane::xy)};
+    basePlane_ =
+        support ? std::nullopt : std::optional{basePlane.value_or(document::DatumPlane::xy)};
     support_ = support;
     face_ = face;
     faceBody_ = support ? session_.resultBody(*support) : std::nullopt;
@@ -137,8 +138,7 @@ void DatumToolController::open() {
                   : QObject::tr("Ebene parallel zur gewählten Grundebene, um den Abstand "
                                 "versetzt."),
             {{"offset", QObject::tr("Abstand"), offset_, -1'000'000.0, 1'000'000.0},
-             {"angle", QObject::tr("Winkel"), angleDegrees_, -180.0, 180.0,
-              ToolValueKind::angle}},
+             {"angle", QObject::tr("Winkel"), angleDegrees_, -180.0, 180.0, ToolValueKind::angle}},
             {{"rotation",
               QObject::tr("Drehen um"),
               {QObject::tr("Nicht drehen"), QObject::tr("X-Achse der Ebene"),
@@ -172,12 +172,9 @@ application::Action DatumToolController::action() const {
         parameters.angle = kernel::Radians{angle};
         return application::EditDatumPlaneParametersAction{*editing_, parameters};
     }
-    return application::CreateDatumPlaneAction{basePlane_,
-                                               support_,
-                                               face_,
-                                               millimetres(offset_),
-                                               rotationAxis_,
-                                               {angle, application::QuantityUnit::radian}};
+    return application::CreateDatumPlaneAction{
+        basePlane_,           support_,      face_,
+        millimetres(offset_), rotationAxis_, {angle, application::QuantityUnit::radian}};
 }
 
 bool DatumToolController::unchanged() const {
@@ -242,10 +239,10 @@ void DatumToolController::accept() {
     const bool edited = editing_.has_value();
     const bool axis = axis_;
     finish();
-    statusChanged_(axis ? (edited ? QObject::tr("Bezugsachse geändert")
-                                  : QObject::tr("Bezugsachse angelegt"))
-                        : (edited ? QObject::tr("Bezugsebene geändert")
-                                  : QObject::tr("Bezugsebene angelegt")));
+    statusChanged_(
+        axis
+            ? (edited ? QObject::tr("Bezugsachse geändert") : QObject::tr("Bezugsachse angelegt"))
+            : (edited ? QObject::tr("Bezugsebene geändert") : QObject::tr("Bezugsebene angelegt")));
 }
 
 void DatumToolController::cancel() {

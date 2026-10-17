@@ -1,5 +1,7 @@
 #pragma once
 
+#include <TopoDS_Shape.hxx>
+#include <array>
 #include <voelund/document/BodyAttributes.hpp>
 #include <voelund/document/DocumentId.hpp>
 #include <voelund/document/DocumentParameters.hpp>
@@ -10,8 +12,6 @@
 #include <voelund/document/SubshapeReference.hpp>
 #include <voelund/kernel/ShapeFactory.hpp>
 #include <voelund/kernel/SolidPrimitives.hpp>
-#include <TopoDS_Shape.hxx>
-#include <array>
 
 #include <cstddef>
 #include <cstdint>
@@ -46,7 +46,7 @@ enum class FeatureKind {
     mirror,    // M09
     pattern,   // M10
     patternCopy,
-    move,      // M11
+    move,       // M11
     stepImport, // M17
     importPart
 };
@@ -240,8 +240,8 @@ struct ExtrusionParameters final {
     // M02 (schema 13, user decision 2026-10-11): `distance` is the total length, centred on
     // the sketch plane (8 gives -4..+4). Not combined with reversed, offset or an end face.
     bool symmetric{false};
-    // Join, cut or intersect of a base-plane sketch names the body it works on (its creating feature's
-    // ID). A face sketch always works on its support's body and names none.
+    // Join, cut or intersect of a base-plane sketch names the body it works on (its creating
+    // feature's ID). A face sketch always works on its support's body and names none.
     std::optional<BodyId> target{};
     // T03 (schema 9): the prism starts this far along its direction from the sketch plane
     // (mm, may be negative); bindable like the distance.
@@ -464,10 +464,9 @@ struct FeatureDescriptor final {
 using FeatureParameters =
     std::variant<BoxParameters, CylinderParameters, SketchParameters, ExtrusionParameters,
                  FilletParameters, ChamferParameters, HoleParameters, CombineParameters,
-                 DatumPlaneParameters, DatumAxisParameters, ShellParameters,
-                 PrimitiveParameters, DraftParameters, MirrorParameters, PatternParameters,
-                 PatternCopyParameters, MoveParameters, ImportParameters,
-                 ImportPartParameters>;
+                 DatumPlaneParameters, DatumAxisParameters, ShellParameters, PrimitiveParameters,
+                 DraftParameters, MirrorParameters, PatternParameters, PatternCopyParameters,
+                 MoveParameters, ImportParameters, ImportPartParameters>;
 // M10/M17: the feature a companion belongs to (a pattern copy's pattern, an import part's
 // import); it moves, is deleted and is shown with that feature.
 [[nodiscard]] std::optional<FeatureId> companionOwner(const FeatureParameters& parameters) noexcept;

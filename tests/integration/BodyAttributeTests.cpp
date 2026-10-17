@@ -80,8 +80,7 @@ void run() {
     std::error_code ignored;
     std::filesystem::remove(path, ignored);
     require(body(loaded, a).name == "Grundplatte" && body(loaded, b).hidden &&
-                !body(loaded, a).hidden && loaded.validBodies().size() == 2 &&
-                !loaded.isModified(),
+                !body(loaded, a).hidden && loaded.validBodies().size() == 2 && !loaded.isModified(),
             "Save/Open keeps the name, the visibility and both bodies");
 }
 } // namespace

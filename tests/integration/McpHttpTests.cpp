@@ -94,8 +94,11 @@ void run() {
     require(client.raw("POST", body, withHeader("Mcp-Session-Id", "unknown")).status == 404,
             "Unknown session");
     require(client.raw("GET", {}, client.base()).status == 405, "No server push stream");
-    require(client.raw("POST", "{not json", client.base()).json().value("error").toObject().value(
-                "code") == -32700,
+    require(client.raw("POST", "{not json", client.base())
+                    .json()
+                    .value("error")
+                    .toObject()
+                    .value("code") == -32700,
             "Parse error");
     require(client.raw("POST", "[]", client.base()).status == 400, "No batches");
     unchanged("Refusals");
@@ -111,8 +114,9 @@ void run() {
     QByteArray oversized = "POST /mcp HTTP/1.1\r\n";
     for (const auto& [name, value] : client.base())
         oversized += name + ": " + value + "\r\n";
-    oversized += "Content-Length: " +
-                 QByteArray::number(mcp::McpHttpServer::maximumRequestBytes + 1) + "\r\n\r\n";
+    oversized +=
+        "Content-Length: " + QByteArray::number(mcp::McpHttpServer::maximumRequestBytes + 1) +
+        "\r\n\r\n";
     require(large.sendRaw(oversized, "POST").status == 413, "Oversized request");
     require(client.raw("DELETE", {}, client.base()).status == 200 &&
                 client.post(client.request("ping", {})).status == 404,

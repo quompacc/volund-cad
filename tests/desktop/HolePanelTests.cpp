@@ -131,7 +131,8 @@ void run() {
 
     // Further clicks move it, also on the previewed body.
     click(*viewport, x0 + 30, y0 + 20, z1);
-    require(std::abs(length(window, "x") - firstX) > 15 && matches(shown(*viewport), 12000 - 36 * pi),
+    require(std::abs(length(window, "x") - firstX) > 15 &&
+                matches(shown(*viewport), 12000 - 36 * pi),
             "A second click moves the hole across the face");
     click(*viewport, x0 + 25, y0 + 15, z1);
     require(matches(shown(*viewport), 12000 - 36 * pi), "A third click moves it again");
@@ -146,7 +147,8 @@ void run() {
     require(panel(window) == nullptr && session.features().size() == 2 &&
                 session.features().back().kind == document::FeatureKind::hole &&
                 matches(volume(session), 12000 - 90 * pi) &&
-                !solidAt(shape, x0 + 25, y0 + 15, z0 + 1) && solidAt(shape, x0 + 10, y0 + 10, z0 + 1),
+                !solidAt(shape, x0 + 25, y0 + 15, z0 + 1) &&
+                solidAt(shape, x0 + 10, y0 + 10, z0 + 1),
             "OK drills through at the last click point");
     require(session.undo().status() == application::CommandStatus::committed &&
                 matches(volume(session), 12000) &&

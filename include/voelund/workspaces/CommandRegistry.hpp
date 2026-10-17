@@ -10,12 +10,12 @@
 namespace voelund::workspaces {
 
 class CommandRegistry final {
-public:
+  public:
     void registerModule(std::unique_ptr<WorkspaceModule> module);
     [[nodiscard]] std::span<const std::unique_ptr<WorkspaceModule>> modules() const noexcept;
     [[nodiscard]] const WorkspaceModule& module(std::string_view id) const;
 
-private:
+  private:
     std::vector<std::unique_ptr<WorkspaceModule>> modules_;
 };
 

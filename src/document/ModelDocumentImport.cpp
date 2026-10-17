@@ -1,5 +1,5 @@
-#include "ModelDocumentImpl.hpp"
 #include "DocumentSerializationDetail.hpp"
+#include "ModelDocumentImpl.hpp"
 #include "NativeBodyAttributes.hpp"
 #include <voelund/document/IdCapacity.hpp>
 #include <voelund/document/LegacyBodyIdentity.hpp>

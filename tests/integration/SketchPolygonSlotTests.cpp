@@ -116,8 +116,8 @@ void polygon() {
     require(near(f.get<SketchCircle>(circleId).center, {2, 1}) &&
                 near(f.get<SketchCircle>(circleId).radius, 6),
             "The circle runs through the vertices around the picked center");
-    require(f.solved() && f.freedom() == 4, "Free: center, circumradius and rotation (" +
-                                                std::to_string(f.freedom()) + ")");
+    require(f.solved() && f.freedom() == 4,
+            "Free: center, circumradius and rotation (" + std::to_string(f.freedom()) + ")");
     requireRegular(f, hexagon, "drawn");
     require(f.editor->closedProfileCount() == 1, "The construction circle is no profile");
 
@@ -189,8 +189,7 @@ double lineDistance(const SketchLine& line, SketchPoint point) {
 
 // Caps on the axis ends with one radius, both sides tangent to both caps and as long as the
 // axis: a slot of that length and width.
-void requireSlot(const Fixture& f, const Slot& s, double length, double radius,
-                 const char* what) {
+void requireSlot(const Fixture& f, const Slot& s, double length, double radius, const char* what) {
     const auto axis = f.get<SketchLine>(s.axis);
     const auto first = f.get<SketchArc>(s.firstCap);
     const auto second = f.get<SketchArc>(s.secondCap);

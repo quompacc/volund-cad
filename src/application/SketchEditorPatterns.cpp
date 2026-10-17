@@ -119,9 +119,9 @@ std::optional<std::uint64_t> SketchEditorSession::createPattern(SketchPatternKin
         if (isPatternInstance(id))
             copies.push_back(id);
         const auto match = std::ranges::find(elements_.values, id, &document::SketchElement::id);
-        legacyRectangle = legacyRectangle || (match != elements_.values.end() &&
-                                              std::holds_alternative<document::SketchRectangle>(
-                                                  match->geometry));
+        legacyRectangle =
+            legacyRectangle || (match != elements_.values.end() &&
+                                std::holds_alternative<document::SketchRectangle>(match->geometry));
     }
     if (axis && isPatternInstance(*axis))
         copies.push_back(*axis);
@@ -150,8 +150,8 @@ std::optional<std::uint64_t> SketchEditorSession::createPattern(SketchPatternKin
             const auto match =
                 std::ranges::find(elements_.values, source, &document::SketchElement::id);
             pattern.instances.emplace_back(elements_.nextId++);
-            elements_.values.push_back({pattern.instances.back(), match->geometry,
-                                        match->construction});
+            elements_.values.push_back(
+                {pattern.instances.back(), match->geometry, match->construction});
         }
     ++patterns_.nextId;
     patterns_.values.push_back(pattern);
@@ -185,8 +185,8 @@ bool SketchEditorSession::editPattern(std::uint64_t id, int count, double spacin
             selectedElement_ = changed.sources.front();
     }
     while (changed.instances.size() < wanted) {
-        const SketchElementId source = changed.sources[changed.instances.size() %
-                                                       changed.sources.size()];
+        const SketchElementId source =
+            changed.sources[changed.instances.size() % changed.sources.size()];
         const auto from = std::ranges::find(elements_.values, source, &document::SketchElement::id);
         changed.instances.emplace_back(elements_.nextId++);
         elements_.values.push_back({changed.instances.back(), from->geometry, from->construction});
@@ -204,11 +204,12 @@ bool SketchEditorSession::editPattern(std::uint64_t id, int count, double spacin
 }
 
 bool SketchEditorSession::dissolvePattern(std::uint64_t id) {
-    if (!active_ || std::ranges::find(patterns_.values, id, &SketchPattern::id) ==
-                        patterns_.values.end())
+    if (!active_ ||
+        std::ranges::find(patterns_.values, id, &SketchPattern::id) == patterns_.values.end())
         return false;
     Rollback rollback(*this);
-    std::erase_if(patterns_.values, [id](const SketchPattern& pattern) { return pattern.id == id; });
+    std::erase_if(patterns_.values,
+                  [id](const SketchPattern& pattern) { return pattern.id == id; });
     return keepIfValid(rollback);
 }
 

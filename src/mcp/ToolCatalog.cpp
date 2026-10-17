@@ -44,19 +44,19 @@ QJsonObject point(const QString& description) {
 }
 
 QJsonObject sketchSchema(bool withPlane) {
-    const QJsonObject element = object(
-        {{"id", typed("integer", "Unique element id within the sketch, starting at 1")},
-         {"type", choice({"line", "rectangle", "circle", "arc"})},
-         {"construction", typed("boolean", "Construction geometry is not part of regions")},
-         {"start", point("line start")},
-         {"end", point("line end")},
-         {"first", point("rectangle corner")},
-         {"second", point("opposite rectangle corner")},
-         {"center", point("circle or arc center")},
-         {"radius", typed("number", "circle or arc radius in mm")},
-         {"startAngle", typed("number", "arc start angle in rad, counter-clockwise")},
-         {"endAngle", typed("number", "arc end angle in rad")}},
-        {"id", "type"});
+    const QJsonObject element =
+        object({{"id", typed("integer", "Unique element id within the sketch, starting at 1")},
+                {"type", choice({"line", "rectangle", "circle", "arc"})},
+                {"construction", typed("boolean", "Construction geometry is not part of regions")},
+                {"start", point("line start")},
+                {"end", point("line end")},
+                {"first", point("rectangle corner")},
+                {"second", point("opposite rectangle corner")},
+                {"center", point("circle or arc center")},
+                {"radius", typed("number", "circle or arc radius in mm")},
+                {"startAngle", typed("number", "arc start angle in rad, counter-clockwise")},
+                {"endAngle", typed("number", "arc end angle in rad")}},
+               {"id", "type"});
     const QJsonObject reference =
         object({{"element", typed("integer")},
                 {"point", choice({"start", "end", "center"},
@@ -64,23 +64,22 @@ QJsonObject sketchSchema(bool withPlane) {
                {"element"});
     const QJsonObject constraint = object(
         {{"id", typed("integer", "Unique constraint id within the sketch, starting at 1")},
-         {"kind", choice({"horizontal", "vertical", "coincident", "parallel", "perpendicular",
-                          "equal", "concentric", "distance", "radius", "diameter",
-                          "pointDistance", "pointDistanceX", "pointDistanceY", "coordinateX",
-                          "coordinateY", "angle"})},
+         {"kind",
+          choice({"horizontal", "vertical", "coincident", "parallel", "perpendicular", "equal",
+                  "concentric", "distance", "radius", "diameter", "pointDistance", "pointDistanceX",
+                  "pointDistanceY", "coordinateX", "coordinateY", "angle"})},
          {"first", reference},
          {"second", reference},
-         {"value", quantity({"mm", "rad"},
-                            "Value of a dimension or coordinate: mm for lengths and "
-                            "coordinates, rad for angles. Optional when parameterId is set")},
+         {"value",
+          quantity({"mm", "rad"}, "Value of a dimension or coordinate: mm for lengths and "
+                                  "coordinates, rad for angles. Optional when parameterId is set")},
          {"parameterId", typed("integer", "Bind this dimension to a document parameter "
                                           "(not coordinates)")},
          {"reference", typed("boolean", "A reference dimension: shows the measured value, "
-                                         "determines nothing; value optional, not bound")}},
+                                        "determines nothing; value optional, not bound")}},
         {"id", "kind", "first"});
-    QJsonObject properties{
-        {"elements", QJsonObject{{"type", "array"}, {"items", element}}},
-        {"constraints", QJsonObject{{"type", "array"}, {"items", constraint}}}};
+    QJsonObject properties{{"elements", QJsonObject{{"type", "array"}, {"items", element}}},
+                           {"constraints", QJsonObject{{"type", "array"}, {"items", constraint}}}};
     QStringList required{"elements"};
     if (withPlane) {
         properties.insert("plane", choice({"xy", "xz", "yz"}, "Base plane of the sketch"));
@@ -153,8 +152,7 @@ ToolDefinition action(const char* name, const QString& description, QJsonObject 
     properties.insert("preview", typed("boolean", "true: evaluate on a copy and report the "
                                                   "result without changing the document"));
     required.append({"requestId", "documentId", "stamp"});
-    return {name,
-            description + " Every executed change is one undo step in Völund.",
+    return {name, description + " Every executed change is one undo step in Völund.",
             object(properties, required)};
 }
 
@@ -183,13 +181,13 @@ std::vector<ToolDefinition> makeCatalog() {
     tools.push_back(action("rename_parameter", "Rename a parameter; bindings stay.",
                            {{"parameterId", typed("integer")}, {"name", typed("string")}},
                            {"parameterId", "name"}));
-    tools.push_back(action(
-        "bind_sketch_dimension",
-        "Bind a sketch dimension to a parameter, or unbind it (parameterId omitted).",
-        {{"sketchId", featureId("sketch")},
-         {"constraintId", typed("integer", "Dimension constraint id within the sketch")},
-         {"parameterId", typed("integer")}},
-        {"sketchId", "constraintId"}));
+    tools.push_back(
+        action("bind_sketch_dimension",
+               "Bind a sketch dimension to a parameter, or unbind it (parameterId omitted).",
+               {{"sketchId", featureId("sketch")},
+                {"constraintId", typed("integer", "Dimension constraint id within the sketch")},
+                {"parameterId", typed("integer")}},
+               {"sketchId", "constraintId"}));
     tools.push_back(action("bind_extrusion_distance",
                            "Bind an extrusion distance (or its start offset) to a length "
                            "parameter, or unbind it.",
@@ -199,16 +197,16 @@ std::vector<ToolDefinition> makeCatalog() {
                            {"extrusionId"}));
     tools.push_back(action("create_sketch", "Create a sketch on a base plane; opens a new body.",
                            {{"sketch", sketchSchema(true)}}, {"sketch"}));
-    tools.push_back(action(
-        "create_sketch_on_face",
-        "Create a sketch on a planar face of a body (e.g. a rib on top of a plate). An "
-        "extrusion of it joins that body. Sketch coordinates are in the face's frame from "
-        "get_context: world point = origin + x * xDirection + y * yDirection; min/max give "
-        "the face extent in these coordinates.",
-        {{"supportId", featureId("supportId of the body in get_context")},
-         {"face", faceSchema()},
-         {"sketch", sketchSchema(false)}},
-        {"supportId", "face", "sketch"}));
+    tools.push_back(
+        action("create_sketch_on_face",
+               "Create a sketch on a planar face of a body (e.g. a rib on top of a plate). An "
+               "extrusion of it joins that body. Sketch coordinates are in the face's frame from "
+               "get_context: world point = origin + x * xDirection + y * yDirection; min/max give "
+               "the face extent in these coordinates.",
+               {{"supportId", featureId("supportId of the body in get_context")},
+                {"face", faceSchema()},
+                {"sketch", sketchSchema(false)}},
+               {"supportId", "face", "sketch"}));
     tools.push_back(action(
         "push_pull_face",
         "Push or pull a planar face of a body, as one extrusion of that face: a positive "
@@ -233,9 +231,10 @@ std::vector<ToolDefinition> makeCatalog() {
                            "Extrude regions of an existing sketch: a new body, joined to a body "
                            "or cut from it.",
                            profileExtrusion, {"sketchId", "regions", "distance"}));
-    QJsonObject sketchExtrusion{{"sketch", sketchSchema(true)},
-                                {"regions", QJsonObject{{"type", "array"}, {"items", typed("string")}}},
-                                {"distance", length("extrusion distance")}};
+    QJsonObject sketchExtrusion{
+        {"sketch", sketchSchema(true)},
+        {"regions", QJsonObject{{"type", "array"}, {"items", typed("string")}}},
+        {"distance", length("extrusion distance")}};
     insertExtrusionMode(sketchExtrusion);
     tools.push_back(action(
         "create_sketch_extrusion",
@@ -243,17 +242,16 @@ std::vector<ToolDefinition> makeCatalog() {
         "regions, nested contours alternate as in a drawing: the outer contour is filled and "
         "a contour inside it makes a hole (e.g. a plate with bores).",
         sketchExtrusion, {"sketch", "distance"}));
-    tools.push_back(action("set_extrusion_distance",
-                           "Change an unbound extrusion distance (bound ones follow their "
-                           "parameter).",
-                           {{"extrusionId", featureId("extrusion")},
-                            {"distance", length("distance")}},
-                           {"extrusionId", "distance"}));
-    tools.push_back(action("create_box", "Create a box as a new body.",
-                           {{"width", length("width")},
-                            {"depth", length("depth")},
-                            {"height", length("height")}},
-                           {"width", "depth", "height"}));
+    tools.push_back(
+        action("set_extrusion_distance",
+               "Change an unbound extrusion distance (bound ones follow their "
+               "parameter).",
+               {{"extrusionId", featureId("extrusion")}, {"distance", length("distance")}},
+               {"extrusionId", "distance"}));
+    tools.push_back(action(
+        "create_box", "Create a box as a new body.",
+        {{"width", length("width")}, {"depth", length("depth")}, {"height", length("height")}},
+        {"width", "depth", "height"}));
     tools.push_back(action("set_box_dimensions", "Change the dimensions of a box.",
                            {{"boxId", featureId("box")},
                             {"width", length("width")},
@@ -272,17 +270,16 @@ std::vector<ToolDefinition> makeCatalog() {
                             {"radius", length("radius")},
                             {"height", length("height")}},
                            {"cylinderId", "radius", "height"}));
-    tools.push_back(action(
-        "set_placement",
-        "Set the absolute placement of the body that places a feature's result.",
-        {{"featureId", featureId("feature")},
-         {"x", length("x")},
-         {"y", length("y")},
-         {"z", length("z")},
-         {"rotationX", quantity({"rad"}, "rotation about x (rad)")},
-         {"rotationY", quantity({"rad"}, "rotation about y (rad)")},
-         {"rotationZ", quantity({"rad"}, "rotation about z (rad)")}},
-        {"featureId", "x", "y", "z", "rotationX", "rotationY", "rotationZ"}));
+    tools.push_back(action("set_placement",
+                           "Set the absolute placement of the body that places a feature's result.",
+                           {{"featureId", featureId("feature")},
+                            {"x", length("x")},
+                            {"y", length("y")},
+                            {"z", length("z")},
+                            {"rotationX", quantity({"rad"}, "rotation about x (rad)")},
+                            {"rotationY", quantity({"rad"}, "rotation about y (rad)")},
+                            {"rotationZ", quantity({"rad"}, "rotation about z (rad)")}},
+                           {"featureId", "x", "y", "z", "rotationX", "rotationY", "rotationZ"}));
     return tools;
 }
 } // namespace

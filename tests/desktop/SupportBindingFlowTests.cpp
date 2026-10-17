@@ -1,8 +1,8 @@
-#include "IsolatedSettings.hpp"
 #include "../../src/desktop/SketchEditorToolController.hpp"
 #include "../../src/desktop/ToolPanelHost.hpp"
 #include "../../src/viewport/PlanarFaceSelection.hpp"
 #include "../CommandResultAssertions.hpp"
+#include "IsolatedSettings.hpp"
 #include "ModelTreeLookup.hpp"
 #include <BRepGProp.hxx>
 #include <GProp_GProps.hxx>

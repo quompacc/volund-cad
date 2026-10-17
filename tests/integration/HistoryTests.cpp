@@ -103,10 +103,11 @@ Plate referencePlate(application::CadSession& session) {
     require(session.editBoxParameters(box, apart).status() == CommandStatus::committed,
             "A box apart");
     const auto rectangle = plateSketch(30);
-    require(session.createDatumSketchExtrusion(
-                    rectangle, features::identifySketchRegions(rectangle.elements.values).ids, 10)
-                    .status() == CommandStatus::committed,
-            "Plate 60 x 40 x 10");
+    require(
+        session.createDatumSketchExtrusion(
+                   rectangle, features::identifySketchRegions(rectangle.elements.values).ids, 10)
+                .status() == CommandStatus::committed,
+        "Plate 60 x 40 x 10");
     const auto extrusion = session.features().back().id;
     Plate plate{session.features()[session.features().size() - 2].id,
                 *session.resultBody(extrusion), *session.resultBody(box)};
@@ -125,10 +126,10 @@ Plate referencePlate(application::CadSession& session) {
     auto pocket = session.sketchOnFace(hole, pocketFace.origin);
     const auto toPocket = [&](double x, double y) {
         const double dx = x - pocket.plane.originX, dy = y - pocket.plane.originY;
-        const double yX =
-            pocket.plane.normalY * pocket.plane.xDirectionZ - pocket.plane.normalZ * pocket.plane.xDirectionY;
-        const double yY =
-            pocket.plane.normalZ * pocket.plane.xDirectionX - pocket.plane.normalX * pocket.plane.xDirectionZ;
+        const double yX = pocket.plane.normalY * pocket.plane.xDirectionZ -
+                          pocket.plane.normalZ * pocket.plane.xDirectionY;
+        const double yY = pocket.plane.normalZ * pocket.plane.xDirectionX -
+                          pocket.plane.normalX * pocket.plane.xDirectionZ;
         return std::pair{dx * pocket.plane.xDirectionX + dy * pocket.plane.xDirectionY,
                          dx * yX + dy * yY};
     };
@@ -141,20 +142,18 @@ Plate referencePlate(application::CadSession& session) {
     require(session.createSketchFeature(hole, pocket).status() == CommandStatus::committed,
             "Pocket sketch");
     const auto pocketSketch = session.features().back().id;
-    require(session
-                    .createSketchProfileExtrusion(
-                        pocketSketch,
-                        features::identifySketchRegions(
-                            session.sketchParameters(pocketSketch).elements.values)
-                            .ids,
-                        4, ExtrusionMode{document::ExtrusionOperation::cut, true})
+    require(session.createSketchProfileExtrusion(
+                       pocketSketch,
+                       features::identifySketchRegions(
+                           session.sketchParameters(pocketSketch).elements.values)
+                           .ids,
+                       4, ExtrusionMode{document::ExtrusionOperation::cut, true})
                     .status() == CommandStatus::committed,
             "Pocket 4 deep");
     const auto cut = session.features().back().id;
     plate.hole = hole;
     plate.pocket = cut;
-    require(near(test::volumeOf(bodyOf(session, plate.body)), 22880 - 160 * pi),
-            "22880 - 160 pi");
+    require(near(test::volumeOf(bodyOf(session, plate.body)), 22880 - 160 * pi), "22880 - 160 pi");
 
     // The vertical edge at (-30, -20), named by its two faces.
     std::optional<document::FilletEdge> corner;
@@ -169,8 +168,7 @@ Plate referencePlate(application::CadSession& session) {
     require(session.createFillet(cut, std::span{&*corner, 1}, 1).status() ==
                 CommandStatus::committed,
             "Fillet 1 on the corner");
-    require(near(test::volumeOf(bodyOf(session, plate.body)),
-                 22880 - 160 * pi - 10 * (1 - pi / 4)),
+    require(near(test::volumeOf(bodyOf(session, plate.body)), 22880 - 160 * pi - 10 * (1 - pi / 4)),
             "22880 - 160 pi - 10 (1 - pi / 4)");
     plate.fillet = session.features().back().id;
     return plate;
@@ -216,8 +214,8 @@ void earlyChange() {
     require(refused.status() == CommandStatus::rejected && session.features().size() == features &&
                 near(test::volumeOf(bodyOf(session, plate.body)), finished(60)),
             "A width that loses hole and pocket is refused");
-    const auto kept = session.editSketchParameters(plate.sketch, plateSketch(8),
-                                                   application::ErrorDisposition::keepEditableErrors);
+    const auto kept = session.editSketchParameters(
+        plate.sketch, plateSketch(8), application::ErrorDisposition::keepEditableErrors);
     std::size_t failed = 0;
     for (const auto& state : session.featureStates())
         failed += state.status != application::FeatureRuntimeStatus::current ? 1 : 0;
@@ -281,18 +279,17 @@ void suppression() {
     application::CadSession reopened;
     reopened.loadDocument(path);
     const auto restored = reopened.features();
-    require(std::ranges::equal(restored, features,
-                               [](const auto& a, const auto& b) {
-                                   return a.id == b.id && a.kind == b.kind;
-                               }) &&
+    require(std::ranges::equal(
+                restored, features,
+                [](const auto& a, const auto& b) { return a.id == b.id && a.kind == b.kind; }) &&
                 stateOf(reopened, plate.pocket) == FeatureRuntimeStatus::suppressed &&
                 stateOf(reopened, chamfer) == FeatureRuntimeStatus::error,
             "Open keeps the suppressed pocket, all IDs and the chamfer's error");
-    require(reopened.setFeatureSuppressed(plate.pocket, false).status() ==
-                    CommandStatus::committed &&
-                stateOf(reopened, chamfer) == FeatureRuntimeStatus::current &&
-                reopened.extrusionParameters(plate.pocket) == session.extrusionParameters(plate.pocket),
-            "Reactivated: pocket and chamfer are back with their parameters");
+    require(
+        reopened.setFeatureSuppressed(plate.pocket, false).status() == CommandStatus::committed &&
+            stateOf(reopened, chamfer) == FeatureRuntimeStatus::current &&
+            reopened.extrusionParameters(plate.pocket) == session.extrusionParameters(plate.pocket),
+        "Reactivated: pocket and chamfer are back with their parameters");
     std::filesystem::remove_all(directory);
 
     require(reopened.setFeatureSuppressed(plate.extrusion, true).status() ==
@@ -443,12 +440,15 @@ int main() {
         suppression();
         rollback();
         reorderAndDelete();
-        std::cout << "PASS M13 history (A-HISTORY-01): reference plate, width 60 -> 70 through "
-                     "hole, pocket and fillet, box unchanged, preview without change, undo, "
-                     "too narrow refused or kept with errors; suppress (A-HISTORY-02): pass-through, no "
-                     "guessed edge, save/open, reactivate, body creator; rollback: no unsaved change, edit "
-                     "and undo keep it, insert at the marker, roll forward, save/open; reorder and delete "
-                     "(A-HISTORY-02)\n";
+        std::cout
+            << "PASS M13 history (A-HISTORY-01): reference plate, width 60 -> 70 through "
+               "hole, pocket and fillet, box unchanged, preview without change, undo, "
+               "too narrow refused or kept with errors; suppress (A-HISTORY-02): pass-through, no "
+               "guessed edge, save/open, reactivate, body creator; rollback: no unsaved change, "
+               "edit "
+               "and undo keep it, insert at the marker, roll forward, save/open; reorder and "
+               "delete "
+               "(A-HISTORY-02)\n";
         return 0;
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';

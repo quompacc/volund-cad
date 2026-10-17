@@ -3,13 +3,13 @@
 
 #include <voelund/application/CadSession.hpp>
 
-#include <algorithm>
 #include "ShellIcons.hpp"
+#include <algorithm>
 
 #include <QHBoxLayout>
 #include <QKeyEvent>
-#include <QMouseEvent>
 #include <QLabel>
+#include <QMouseEvent>
 #include <QPainter>
 #include <QScrollArea>
 #include <QScrollBar>
@@ -101,8 +101,8 @@ class TimelineTrack final : public QWidget {
     void paintEvent(QPaintEvent* event) override {
         QWidget::paintEvent(event);
         std::vector<QRect> chips;
-        for (const QToolButton* chip : findChildren<QToolButton*>(QStringLiteral("timelineStep"),
-                                                                  Qt::FindDirectChildrenOnly))
+        for (const QToolButton* chip :
+             findChildren<QToolButton*>(QStringLiteral("timelineStep"), Qt::FindDirectChildrenOnly))
             if (chip->isVisibleTo(this))
                 chips.push_back(chip->geometry());
         if (chips.empty())
@@ -112,8 +112,8 @@ class TimelineTrack final : public QWidget {
         painter.setRenderHint(QPainter::Antialiasing);
         const double y = chips.front().center().y() + 0.5;
         // The end marker stands where its button is (M14), else just after the last step.
-        const auto* endButton = findChild<QToolButton*>(QStringLiteral("timelineEnd"),
-                                                         Qt::FindDirectChildrenOnly);
+        const auto* endButton =
+            findChild<QToolButton*>(QStringLiteral("timelineEnd"), Qt::FindDirectChildrenOnly);
         const double endX = endButton != nullptr && endButton->isVisibleTo(this)
                                 ? endButton->geometry().center().x()
                                 : chips.back().right() + endGap;
@@ -177,8 +177,8 @@ class TimelineTrack final : public QWidget {
         dragX_.reset();
         update();
         // The gap is the number of steps whose middle lies left of the drop; at least one.
-        const auto before = static_cast<std::size_t>(std::ranges::count_if(
-            chips, [x](const QRect& chip) { return chip.center().x() < x; }));
+        const auto before = static_cast<std::size_t>(
+            std::ranges::count_if(chips, [x](const QRect& chip) { return chip.center().x() < x; }));
         if (drop_ && !chips.empty())
             drop_(std::max<std::size_t>(1, before));
     }
@@ -186,8 +186,8 @@ class TimelineTrack final : public QWidget {
   private:
     [[nodiscard]] std::vector<QRect> chipRects() const {
         std::vector<QRect> chips;
-        for (const QToolButton* chip : findChildren<QToolButton*>(QStringLiteral("timelineStep"),
-                                                                  Qt::FindDirectChildrenOnly))
+        for (const QToolButton* chip :
+             findChildren<QToolButton*>(QStringLiteral("timelineStep"), Qt::FindDirectChildrenOnly))
             if (chip->isVisibleTo(this))
                 chips.push_back(chip->geometry());
         std::ranges::sort(chips, {}, &QRect::left);
@@ -197,8 +197,8 @@ class TimelineTrack final : public QWidget {
     [[nodiscard]] double markerX(const std::vector<QRect>& chips) const {
         if (rollback_ && *rollback_ < chips.size())
             return (chips[*rollback_ - 1].right() + chips[*rollback_].left()) / 2.0;
-        const auto* endButton = findChild<QToolButton*>(QStringLiteral("timelineEnd"),
-                                                         Qt::FindDirectChildrenOnly);
+        const auto* endButton =
+            findChild<QToolButton*>(QStringLiteral("timelineEnd"), Qt::FindDirectChildrenOnly);
         return endButton != nullptr && endButton->isVisibleTo(this)
                    ? endButton->geometry().center().x()
                    : chips.back().right() + endGap;
@@ -274,7 +274,8 @@ bool TimelineBar::eventFilter(QObject* watched, QEvent* event) {
         if (event->type() == QEvent::MouseButtonPress &&
             static_cast<QMouseEvent*>(event)->button() == Qt::LeftButton) {
             pressedStep_ = id;
-            pressedAt_ = (*step)->mapTo(content_, static_cast<QMouseEvent*>(event)->position().toPoint());
+            pressedAt_ =
+                (*step)->mapTo(content_, static_cast<QMouseEvent*>(event)->position().toPoint());
             draggingStep_ = false;
         } else if (event->type() == QEvent::MouseMove && pressedStep_ == id &&
                    (static_cast<QMouseEvent*>(event)->buttons() & Qt::LeftButton)) {
@@ -467,7 +468,7 @@ void TimelineBar::showStates(std::span<const application::FeatureRuntimeState> s
         button->setProperty("featureState",
                             rolledBack   ? QStringLiteral("rolledBack") // M14
                             : suppressed ? QStringLiteral("suppressed")
-                            : !marked  ? QString{}
+                            : !marked    ? QString{}
                             : state->status == application::FeatureRuntimeStatus::error
                                 ? QStringLiteral("error")
                                 : QStringLiteral("blocked"));

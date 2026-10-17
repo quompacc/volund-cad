@@ -18,7 +18,9 @@ std::optional<ParameterId> optionalParameter(const JsonReader& reader) {
     const auto id = reader.optionalId("parameterId");
     return id ? std::optional{ParameterId{*id}} : std::nullopt;
 }
-FeatureId feature(const JsonReader& reader, const QString& key) { return FeatureId{reader.id(key)}; }
+FeatureId feature(const JsonReader& reader, const QString& key) {
+    return FeatureId{reader.id(key)};
+}
 
 std::vector<document::SketchRegionId> regions(const JsonReader& reader) {
     std::vector<document::SketchRegionId> result;
@@ -67,8 +69,8 @@ constexpr const char* extrusionLengths[] = {"distance", "offset"};
 application::ExtrusionMode extrusionMode(const JsonReader& reader, const CadSession& session) {
     application::ExtrusionMode mode;
     if (reader.has("operation"))
-        mode.operation =
-            static_cast<document::ExtrusionOperation>(reader.choice("operation", operationNames) + 1);
+        mode.operation = static_cast<document::ExtrusionOperation>(
+            reader.choice("operation", operationNames) + 1);
     const std::size_t direction =
         reader.has("direction") ? reader.choice("direction", directionNames) : 0;
     mode.reversed = direction == 1;
@@ -177,15 +179,13 @@ const ToolDecoder decoders[] = {
      }},
     {"create_profile_extrusion",
      [](const JsonReader& r, const CadSession& s) -> Action {
-         return application::CreateProfileExtrusionAction{feature(r, "sketchId"), regions(r),
-                                                           readQuantity(r, "distance"),
-                                                           extrusionMode(r, s)};
+         return application::CreateProfileExtrusionAction{
+             feature(r, "sketchId"), regions(r), readQuantity(r, "distance"), extrusionMode(r, s)};
      }},
     {"create_sketch_extrusion",
      [](const JsonReader& r, const CadSession& s) -> Action {
-         return application::CreateSketchExtrusionAction{newSketch(r, s), regions(r),
-                                                          readQuantity(r, "distance"),
-                                                          extrusionMode(r, s)};
+         return application::CreateSketchExtrusionAction{
+             newSketch(r, s), regions(r), readQuantity(r, "distance"), extrusionMode(r, s)};
      }},
     {"set_extrusion_distance",
      [](const JsonReader& r, const CadSession&) -> Action {
@@ -217,8 +217,8 @@ const ToolDecoder decoders[] = {
     {"set_placement",
      [](const JsonReader& r, const CadSession&) -> Action {
          return application::SetPlacementAction{
-             feature(r, "featureId"),     readQuantity(r, "x"),
-             readQuantity(r, "y"),        readQuantity(r, "z"),
+             feature(r, "featureId"),      readQuantity(r, "x"),
+             readQuantity(r, "y"),         readQuantity(r, "z"),
              readQuantity(r, "rotationX"), readQuantity(r, "rotationY"),
              readQuantity(r, "rotationZ")};
      }},
@@ -227,9 +227,8 @@ const ToolDecoder decoders[] = {
 
 namespace detail {
 bool isActionTool(const QString& name) {
-    return std::ranges::any_of(decoders, [&](const ToolDecoder& decoder) {
-        return name == QLatin1String(decoder.name);
-    });
+    return std::ranges::any_of(
+        decoders, [&](const ToolDecoder& decoder) { return name == QLatin1String(decoder.name); });
 }
 } // namespace detail
 

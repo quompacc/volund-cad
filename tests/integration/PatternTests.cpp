@@ -73,13 +73,11 @@ void linearPattern() {
     require(create(session, box, input).status() == CommandStatus::committed &&
                 session.features()[1].name == "Muster 1" && copies(session).size() == 2 &&
                 session.features()[2].name == "Muster 1 Kopie 1" &&
-                session.validBodies().size() == 3 && near(volume(session), 3000) &&
-                valid(session),
+                session.validBodies().size() == 3 && near(volume(session), 3000) && valid(session),
             "Three cubes as three bodies");
     const auto pattern = session.features()[1].id;
-    require(solidAt(session, 5, 5, 5) && solidAt(session, 25, 5, 5) &&
-                solidAt(session, 45, 5, 5) && !solidAt(session, 15, 5, 5) &&
-                !solidAt(session, 65, 5, 5),
+    require(solidAt(session, 5, 5, 5) && solidAt(session, 25, 5, 5) && solidAt(session, 45, 5, 5) &&
+                !solidAt(session, 15, 5, 5) && !solidAt(session, 65, 5, 5),
             "The cubes stand at 0, 20 and 40");
 
     auto values = session.patternParameters(pattern);

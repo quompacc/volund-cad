@@ -83,18 +83,21 @@ struct Resolution {
 inline bool validKey(const SubshapeRef& ref) {
     if (ref.originFeature.value() == 0)
         return false;
-    return std::visit([&](const auto& key) {
-        using T = std::decay_t<decltype(key)>;
-        if constexpr (std::is_same_v<T, BoxFaceKey>)
-            return ref.topology == Topology::face;
-        else if constexpr (std::is_same_v<T, ExtrusionCapKey>)
-            return ref.topology == Topology::face && !key.region.empty();
-        else if constexpr (std::is_same_v<T, ContourEdgeKey>)
-            return ref.topology == Topology::edge && key.sketch.value() != 0 && key.element != 0;
-        else
-            return ref.topology == Topology::face && !key.region.empty() &&
-                   key.boundary.sketch.value() != 0 && key.boundary.element != 0;
-    }, ref.origin);
+    return std::visit(
+        [&](const auto& key) {
+            using T = std::decay_t<decltype(key)>;
+            if constexpr (std::is_same_v<T, BoxFaceKey>)
+                return ref.topology == Topology::face;
+            else if constexpr (std::is_same_v<T, ExtrusionCapKey>)
+                return ref.topology == Topology::face && !key.region.empty();
+            else if constexpr (std::is_same_v<T, ContourEdgeKey>)
+                return ref.topology == Topology::edge && key.sketch.value() != 0 &&
+                       key.element != 0;
+            else
+                return ref.topology == Topology::face && !key.region.empty() &&
+                       key.boundary.sketch.value() != 0 && key.boundary.element != 0;
+        },
+        ref.origin);
 }
 
 // Classification oracle for R02: R03/R04 must produce and validate actual kernel lineage.

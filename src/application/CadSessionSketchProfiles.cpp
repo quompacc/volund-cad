@@ -193,9 +193,9 @@ ExtrusionSelectionState CadSession::inspectExtrusionSelection(document::FeatureI
 
 namespace {
 document::ExtrusionParameters newExtrusionParameters(double distance,
-                                                  std::vector<document::SketchRegionId> regions,
-                                                  const ExtrusionMode& mode,
-                                                  const document::ParameterTable& table) {
+                                                     std::vector<document::SketchRegionId> regions,
+                                                     const ExtrusionMode& mode,
+                                                     const document::ParameterTable& table) {
     // PAR02: a bound length takes the parameter's value; validation checks the unit.
     const auto bound = [&](std::optional<document::ParameterId> id, double value) {
         if (!id)
@@ -205,8 +205,8 @@ document::ExtrusionParameters newExtrusionParameters(double distance,
             throw std::invalid_argument("Unknown parameter");
         return parameter->value;
     };
-    document::ExtrusionParameters parameters{bound(mode.distanceParameter, distance), {},
-                                             std::move(regions)};
+    document::ExtrusionParameters parameters{
+        bound(mode.distanceParameter, distance), {}, std::move(regions)};
     parameters.distanceParameter = mode.distanceParameter;
     parameters.offsetParameter = mode.offsetParameter;
     parameters.operation = mode.operation;
@@ -261,13 +261,12 @@ CadSession::createSketchProfileExtrusion(document::FeatureId sketchFeature,
         return candidate.addExtrusionFeature(
             (mode.revolve && mode.revolve->pitch ? "Wendel "
              : mode.revolve                      ? "Drehung "
-             : mode.sweep ? "Folgen "
-             : mode.loft  ? "Ausformung "
-                          : "Extrusion ") +
+             : mode.sweep                        ? "Folgen "
+             : mode.loft                         ? "Ausformung "
+                                                 : "Extrusion ") +
                 std::to_string(sequence),
             sketchFeature,
-            newExtrusionParameters(distance, selected, mode,
-                                   candidate.parameterTable()));
+            newExtrusionParameters(distance, selected, mode, candidate.parameterTable()));
     });
     if (!input.value)
         return CommandResult::invalidInput(input.diagnostic);
@@ -341,9 +340,9 @@ CadSession::createDatumSketchExtrusion(const document::SketchParameters& sketch,
             features::SketchRegionReferenceStatus::resolved)
             return CommandResult::invalidInput("Profile extrusion references an unknown profile");
     const auto extrusionId = detail::prepareInput([&] {
-        return candidate.addExtrusionFeature(extrusionName, *sketchId.value,
-                                             newExtrusionParameters(distance, selected, mode,
-                                   candidate.parameterTable()));
+        return candidate.addExtrusionFeature(
+            extrusionName, *sketchId.value,
+            newExtrusionParameters(distance, selected, mode, candidate.parameterTable()));
     });
     if (!extrusionId.value)
         return CommandResult::invalidInput(extrusionId.diagnostic);

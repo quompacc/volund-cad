@@ -16,9 +16,9 @@ void validateSketchProjections(const SketchParameters& parameters) {
         throw std::invalid_argument("A sketch projects at most 256 edges");
     for (std::size_t index = 0; index < parameters.projections.size(); ++index) {
         const auto& projection = parameters.projections[index];
-        const auto element = std::find_if(
-            parameters.elements.values.begin(), parameters.elements.values.end(),
-            [&](const SketchElement& item) { return item.id == projection.element; });
+        const auto element =
+            std::find_if(parameters.elements.values.begin(), parameters.elements.values.end(),
+                         [&](const SketchElement& item) { return item.id == projection.element; });
         if (element == parameters.elements.values.end() || !element->construction ||
             !(std::holds_alternative<SketchLine>(element->geometry) ||
               std::holds_alternative<SketchCircle>(element->geometry) ||
@@ -58,8 +58,7 @@ void validateCombineParameters(const CombineParameters& parameters) {
     }
 }
 
-FeatureId ModelDocument::addCombineFeature(std::string name,
-                                           const CombineParameters& parameters) {
+FeatureId ModelDocument::addCombineFeature(std::string name, const CombineParameters& parameters) {
     validateCombineParameters(parameters);
     const FeatureId id = nextFeatureId();
     auto candidate = currentState();
@@ -80,8 +79,7 @@ const CombineParameters& ModelDocument::combineParameters(FeatureId featureId) c
     return *value;
 }
 
-bool ModelDocument::setCombineParameters(FeatureId featureId,
-                                         const CombineParameters& parameters) {
+bool ModelDocument::setCombineParameters(FeatureId featureId, const CombineParameters& parameters) {
     validateCombineParameters(parameters);
     const std::size_t index = featureIndex(featureId);
     const auto* current = std::get_if<CombineParameters>(&impl_->view().parameters()[index]);
@@ -102,8 +100,9 @@ void validateSweepPath(const SweepPath& path) {
         throw std::invalid_argument("A sweep path names a sketch and 1 to 256 elements");
     for (std::size_t index = 0; index < path.elements.size(); ++index)
         if (path.elements[index].value() == 0 ||
-            std::find(path.elements.begin(), path.elements.begin() + static_cast<std::ptrdiff_t>(index),
-                      path.elements[index]) != path.elements.begin() + static_cast<std::ptrdiff_t>(index))
+            std::find(
+                path.elements.begin(), path.elements.begin() + static_cast<std::ptrdiff_t>(index),
+                path.elements[index]) != path.elements.begin() + static_cast<std::ptrdiff_t>(index))
             throw std::invalid_argument("Sweep path elements are named once");
 }
 

@@ -1,10 +1,12 @@
 #pragma once
-#include <voelund/document/BodyId.hpp>
-#include <voelund/document/FeatureId.hpp>
+#include <optional>
 #include <span>
 #include <vector>
-#include <optional>
-namespace voelund::document { class DocumentSnapshot; }
+#include <voelund/document/BodyId.hpp>
+#include <voelund/document/FeatureId.hpp>
+namespace voelund::document {
+class DocumentSnapshot;
+}
 namespace voelund::features {
 // T02/T03: the latest feature before `feature` (document order) that produced `body`'s
 // solid; nullopt before the body's first solid.
@@ -26,14 +28,15 @@ struct FeatureInputs final {
 };
 // Validates IDs and edges before returning a deterministic, stable topological order.
 class FeatureDependencies final {
-public:
+  public:
     explicit FeatureDependencies(std::vector<FeatureInputs> nodes);
     [[nodiscard]] static FeatureDependencies from(const document::DocumentSnapshot& snapshot);
     [[nodiscard]] std::span<const FeatureInputs> nodes() const noexcept { return nodes_; }
     [[nodiscard]] std::span<const std::size_t> order() const noexcept { return order_; }
     [[nodiscard]] std::vector<bool> affected(std::span<const document::FeatureId> changed) const;
-private:
+
+  private:
     std::vector<FeatureInputs> nodes_;
     std::vector<std::size_t> order_;
 };
-}
+} // namespace voelund::features

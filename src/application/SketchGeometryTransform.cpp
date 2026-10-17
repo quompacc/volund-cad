@@ -63,8 +63,7 @@ PlanarTransform PlanarTransform::rotation(SketchPoint center, double angle) {
 }
 
 PlanarTransform PlanarTransform::scaling(SketchPoint center, double factor) {
-    return {factor, 0.0, 0.0, factor, center.x * (1.0 - factor), center.y * (1.0 - factor),
-            factor};
+    return {factor, 0.0, 0.0, factor, center.x * (1.0 - factor), center.y * (1.0 - factor), factor};
 }
 
 PlanarTransform PlanarTransform::reflection(const document::SketchLine& axis) {

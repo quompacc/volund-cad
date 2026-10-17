@@ -19,8 +19,7 @@ namespace voelund::kernel {
 class Helix final {
   public:
     Helix(const TopoDS_Shape& profileFace, const std::array<double, 3>& axisOrigin,
-          const std::array<double, 3>& axisDirection, double pitch, double angle,
-          bool leftHanded);
+          const std::array<double, 3>& axisDirection, double pitch, double angle, bool leftHanded);
     ~Helix();
     Helix(Helix&&) noexcept;
     Helix& operator=(Helix&&) noexcept;

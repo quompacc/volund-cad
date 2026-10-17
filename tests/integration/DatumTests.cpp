@@ -46,10 +46,12 @@ void planeCarriesSketch() {
     application::CadSession session;
     session.newDocument();
     const auto created = application::executeAction(
-        session, application::prepareRequest(
-                     session, application::CreateDatumPlaneAction{
-                                  document::DatumPlane::xy, std::nullopt, std::nullopt,
-                                  {25, application::QuantityUnit::millimetre}}));
+        session,
+        application::prepareRequest(session, application::CreateDatumPlaneAction{
+                                                 document::DatumPlane::xy,
+                                                 std::nullopt,
+                                                 std::nullopt,
+                                                 {25, application::QuantityUnit::millimetre}}));
     require(created.command.status() == CommandStatus::committed &&
                 session.features().back().name == "Bezugsebene 1" &&
                 session.features().back().kind == document::FeatureKind::datumPlane &&
@@ -73,8 +75,7 @@ void planeCarriesSketch() {
         for (const auto& issue : extruded.evaluation().features)
             std::cerr << issue.feature.value() << ' ' << issue.message << std::endl;
     }
-    require(extruded.status() == CommandStatus::committed &&
-                session.validBodies().size() == 1 &&
+    require(extruded.status() == CommandStatus::committed && session.validBodies().size() == 1 &&
                 near(test::volumeOf(session.validBodies().front().shape), 250 * pi),
             "The sketch extrudes into a new body");
     auto range = heightRange(session.validBodies().front().shape);
@@ -125,10 +126,10 @@ void planeOnFaceAndAxes() {
         if (face.plane.normalZ > 0.5)
             top = face.origin;
     require(top.has_value(), "Top face");
-    require(session.createDatumPlane(std::nullopt, box, top, 5, document::DatumRotationAxis::none,
-                                     0)
-                    .status() == CommandStatus::committed,
-            "Plane on the top face");
+    require(
+        session.createDatumPlane(std::nullopt, box, top, 5, document::DatumRotationAxis::none, 0)
+                .status() == CommandStatus::committed,
+        "Plane on the top face");
     const auto plane = session.features().back().id;
     require(near(frame(session, plane).originZ, 15), "5 above the top face");
     auto taller = session.identifiedSnapshot().snapshot().boxParameters(box);
@@ -167,7 +168,7 @@ void planeOnFaceAndAxes() {
                     circle = session.filletEdge(cylinder, edges.Current());
     require(circle.has_value(), "A named circular edge");
     require(session.createDatumAxis(std::nullopt, cylinder, circle).status() ==
-                    CommandStatus::committed,
+                CommandStatus::committed,
             "Axis on a circular edge");
     const auto axis = frame(session, session.features().back().id);
     require(near(std::abs(axis.normalZ), 1) && std::abs(axis.originX) < 1e-9 &&

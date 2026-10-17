@@ -1,12 +1,12 @@
+#include <BRepCheck_Analyzer.hxx>
+#include <voelund/application/CadSession.hpp>
 #include <voelund/document/DocumentSerializer.hpp>
 #include <voelund/document/LegacyBodyIdentity.hpp>
 #include <voelund/features/FeatureGraph.hpp>
-#include <voelund/application/CadSession.hpp>
-#include <BRepCheck_Analyzer.hxx>
 
 #include <algorithm>
-#include <iostream>
 #include <filesystem>
+#include <iostream>
 #include <random>
 #include <set>
 #include <sstream>
@@ -43,8 +43,8 @@ features::FeatureGraphResult checked(const ModelDocument& document) {
     std::set<std::uint64_t> bodies;
     for (const auto& body : result.bodies) {
         require(bodies.insert(body.bodyId.value()).second, "Independent bodies share an identity");
-        const auto producer = std::ranges::find(result.features, body.sourceFeature,
-                                                &features::EvaluatedFeature::id);
+        const auto producer =
+            std::ranges::find(result.features, body.sourceFeature, &features::EvaluatedFeature::id);
         require(producer != result.features.end() && producer->bodyId == body.bodyId &&
                     producer->shape.IsSame(body.shape) && BRepCheck_Analyzer(body.shape).IsValid(),
                 "Body producer, identity and current geometry disagree");
@@ -58,9 +58,9 @@ void modifiersAndModeChanges() {
                 initial.bodies.front().sourceFeature == FeatureId{2},
             "Boolean output replaced body identity with producer ID");
     auto cylinder = document.cylinderParameters(FeatureId{2});
-    for (auto mode : {CylinderResultMode::separate, CylinderResultMode::cut,
-                      CylinderResultMode::intersect, CylinderResultMode::join,
-                      CylinderResultMode::separate}) {
+    for (auto mode :
+         {CylinderResultMode::separate, CylinderResultMode::cut, CylinderResultMode::intersect,
+          CylinderResultMode::join, CylinderResultMode::separate}) {
         cylinder.resultMode = mode;
         require(document.setCylinderParameters(FeatureId{2}, cylinder), "Mode change was a no-op");
         const auto result = checked(document);
@@ -80,12 +80,15 @@ void namesAndOrder() {
     auto document = ModelDocument::empty();
     const auto first = document.addBoxFeature("Same", {40, 30, 20});
     const auto second = document.addBoxFeature("Same", {3, 4, 5});
-    const auto separate = document.addCylinderFeature(
-        "Same", first, {2, 5, {}, CylinderResultMode::separate});
+    const auto separate =
+        document.addCylinderFeature("Same", first, {2, 5, {}, CylinderResultMode::separate});
     const auto expected = identities(checked(document));
-    require(expected == std::vector<std::pair<std::uint64_t, std::uint64_t>>{
-                            {first.value(), first.value()}, {second.value(), second.value()},
-                            {separate.value(), separate.value()}}, "New body origin assignment");
+    require(expected ==
+                std::vector<std::pair<std::uint64_t, std::uint64_t>>{
+                    {first.value(), first.value()},
+                    {second.value(), second.value()},
+                    {separate.value(), separate.value()}},
+            "New body origin assignment");
     // Explicit legacy fixture: renamed independent roots in reversed order.
     // Product output is binary; never edit it as if it were legacy text.
     std::ostringstream reordered;
@@ -96,13 +99,13 @@ void namesAndOrder() {
               << " 2 5 0 0 0 0 0 0 SEPARATE\n";
     std::istringstream input(reordered.str());
     const auto loaded = DocumentSerializer::read(input);
-    require(loaded.features().front().id == second &&
-                identities(checked(loaded)) == expected,
+    require(loaded.features().front().id == second && identities(checked(loaded)) == expected,
             "Rename/reorder changed body identity or merged bodies");
     std::istringstream native(bytes(loaded));
     const auto reopened = DocumentSerializer::read(native);
     require(DocumentSnapshot::capture(reopened) == DocumentSnapshot::capture(loaded) &&
-                reopened.documentId() == loaded.documentId() && identities(checked(reopened)) == expected,
+                reopened.documentId() == loaded.documentId() &&
+                identities(checked(reopened)) == expected,
             "Native roundtrip lost reordered content, document or body identities");
 }
 void newBranchDoesNotReuseBody() {
@@ -116,21 +119,23 @@ void newBranchDoesNotReuseBody() {
 }
 void historicalInputsRemainExplicitlyUnsupported() {
     ModelDocument document;
-    const auto input = document.addCylinderFeature(
-        "Historical input", FeatureId{1}, {2, 5, {}, CylinderResultMode::join});
+    const auto input = document.addCylinderFeature("Historical input", FeatureId{1},
+                                                   {2, 5, {}, CylinderResultMode::join});
     const auto before = DocumentSnapshot::capture(document);
     bool rejected = false;
-    try { (void)features::FeatureGraph{}.evaluate(document); }
-    catch (const features::FeatureEvaluationError& error) {
+    try {
+        (void)features::FeatureGraph{}.evaluate(document);
+    } catch (const features::FeatureEvaluationError& error) {
         rejected = error.featureId() == input &&
-            std::string(error.what()).find("earlier feature result") != std::string::npos;
+                   std::string(error.what()).find("earlier feature result") != std::string::npos;
     }
     require(rejected && before == DocumentSnapshot::capture(document),
             "Body identity silently selected historical geometry or mutated the document");
 }
 void applicationSaveAs() {
     struct Files {
-        std::filesystem::path first = std::filesystem::temp_directory_path() /
+        std::filesystem::path first =
+            std::filesystem::temp_directory_path() /
             ("d11c-" + std::to_string(std::random_device{}()) + ".volund");
         std::filesystem::path second = first.string() + ".copy.volund";
         ~Files() {
@@ -153,7 +158,8 @@ void applicationSaveAs() {
                 session.currentBodies().front().bodyId == originalBody &&
                 session.currentBodies().back().bodyId == addedBody &&
                 session.currentBodies().back().sourceFeature == *created.feature() &&
-                !session.isModified(), "Application Save-As/open changed body identity");
+                !session.isModified(),
+            "Application Save-As/open changed body identity");
 }
 } // namespace
 int main() {

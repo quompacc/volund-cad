@@ -68,8 +68,8 @@ void SketchEditorToolController::syncConstraintState() {
     // request 2026-10-05). Geometry is colored by the same state.
     const auto& result = editor_->lastSolveResult();
     if (result.status == features::SketchSolveStatus::conflicting) {
-        panel_.setStatus(QObject::tr("Widerspruch: %1 Bedingung(en)")
-                             .arg(result.conflictingConstraints.size()));
+        panel_.setStatus(
+            QObject::tr("Widerspruch: %1 Bedingung(en)").arg(result.conflictingConstraints.size()));
         panel_.setGuidance(QObject::tr("Rote Geometrie widerspricht sich. Entferne eine "
                                        "Bedingung oder mache rückgängig."));
     } else if (result.status == features::SketchSolveStatus::failed) {
@@ -78,8 +78,8 @@ void SketchEditorToolController::syncConstraintState() {
                                        "gesperrt."));
     } else if (!result.redundantConstraints.empty()) {
         // S07: redundant relations take no freedom; the count would not reach zero.
-        panel_.setStatus(QObject::tr("Überflüssig: %1 Bedingung(en)")
-                             .arg(result.redundantConstraints.size()));
+        panel_.setStatus(
+            QObject::tr("Überflüssig: %1 Bedingung(en)").arg(result.redundantConstraints.size()));
         panel_.setGuidance(QObject::tr("Gelbe Bedingungen folgen schon aus anderen. Entferne "
                                        "sie, dann stimmen die Freiheitsgrade."));
     } else if (editor_->elements().empty()) {

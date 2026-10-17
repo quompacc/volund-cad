@@ -20,20 +20,20 @@ CommandResult CadSession::restoreHistory(bool forward) {
                                 ? features::EvaluationStatus::valid
                             : state.status == FeatureRuntimeStatus::suppressed // M14
                                 ? features::EvaluationStatus::suppressed
-                            : state.status == FeatureRuntimeStatus::rolledBack
-                                ? features::EvaluationStatus::rolledBack
-                            : state.status == FeatureRuntimeStatus::blocked
-                                ? features::EvaluationStatus::blockedByDependency
-                                : features::EvaluationStatus::failed;
-        report.features.push_back(
-            {state.id,
-             status,
-             state.status == FeatureRuntimeStatus::current      ? ""
-             : state.status == FeatureRuntimeStatus::suppressed ? "suppressed"
-             : state.status == FeatureRuntimeStatus::rolledBack ? "rolled-back"
-                                                                : "restored-feature-error",
-             state.message,
-             {}});
+                                : state.status == FeatureRuntimeStatus::rolledBack
+                                      ? features::EvaluationStatus::rolledBack
+                                  : state.status == FeatureRuntimeStatus::blocked
+                                      ? features::EvaluationStatus::blockedByDependency
+                                      : features::EvaluationStatus::failed;
+        report.features.push_back({state.id,
+                                   status,
+                                   state.status == FeatureRuntimeStatus::current      ? ""
+                                   : state.status == FeatureRuntimeStatus::suppressed ? "suppressed"
+                                   : state.status == FeatureRuntimeStatus::rolledBack
+                                       ? "rolled-back"
+                                       : "restored-feature-error",
+                                   state.message,
+                                   {}});
     }
     CommandResult result(valid ? CommandStatus::committed : CommandStatus::committedWithErrors,
                          RejectionReason::none, std::move(report));

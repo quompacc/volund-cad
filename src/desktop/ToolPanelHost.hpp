@@ -107,9 +107,8 @@ class ToolPanelHost final : public FloatingCard {
         const QString& name, ToolValueKind kind, double value)>;
     void setParameterResolver(ParameterResolver resolver);
     void setParameterNames(std::function<QStringList(ToolValueKind)> names);
-    [[nodiscard]] std::optional<ResolvedParameter> resolveParameter(const QString& name,
-                                                                    ToolValueKind kind,
-                                                                    double value) const;
+    [[nodiscard]] std::optional<ResolvedParameter>
+    resolveParameter(const QString& name, ToolValueKind kind, double value) const;
     void setLengthEnabled(const std::string& parameterId, bool enabled);
     void setLengthVisible(const std::string& parameterId, bool visible);
     // M04: choices that do not apply are disabled or hidden, never left misleading.

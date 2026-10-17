@@ -83,8 +83,7 @@ void points() {
     require(editor.setPreview({30, 30}, {30, 30}) && editor.confirmPreview().has_value(),
             "Second point");
     const auto free = editor.elements().back().id;
-    require(editor.selectNearestReference(free, {30, 30}, false) &&
-                editor.lockSelectedReference(),
+    require(editor.selectNearestReference(free, {30, 30}, false) && editor.lockSelectedReference(),
             "Lock the point");
     require(std::ranges::find(editor.lastSolveResult().freeElements, free) ==
                 editor.lastSolveResult().freeElements.end(),

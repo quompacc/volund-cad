@@ -1,5 +1,5 @@
-#include <voelund/kernel/PlaneNormal.hpp>
 #include "FeatureEvaluationDetail.hpp"
+#include <voelund/kernel/PlaneNormal.hpp>
 
 #include <voelund/document/DocumentSnapshot.hpp>
 #include <voelund/features/FeatureDependencies.hpp>
@@ -73,9 +73,9 @@ kernel::ShapeOperationResult holeTool(const EvaluatedFeature& owner, const TopoD
         box.Get(x0, y0, z0, x1, y1, z1);
         length = 2.0 * std::hypot(x1 - x0, y1 - y0, z1 - z0) + 1.0;
     }
-    return kernel::ShapeFactory::makeCylinderWithHistory(
-        {parameters.diameter / 2.0, length, centre.X(), centre.Y(), centre.Z(), inward.X(),
-         inward.Y(), inward.Z()});
+    return kernel::ShapeFactory::makeCylinderWithHistory({parameters.diameter / 2.0, length,
+                                                          centre.X(), centre.Y(), centre.Z(),
+                                                          inward.X(), inward.Y(), inward.Z()});
 }
 
 std::vector<SupportProvenance> joined(std::span<const SupportProvenance> previous,
@@ -115,7 +115,10 @@ void evaluateHole(const document::DocumentSnapshot& document,
     const auto reference =
         kernel::ShapeOperations::cutWithHistory(referenceBody.shape, referenceTool.shape);
     outputs.push_back(EvaluatedFeature{
-        descriptor.id, evaluated.shape, reference.shape, body.bodyId,
+        descriptor.id,
+        evaluated.shape,
+        reference.shape,
+        body.bodyId,
         joined(owner.supportOrigins, primitiveSupportOrigins(descriptor.id, tool), evaluated),
         {},
         joined(owner.referenceSupportOrigins, primitiveSupportOrigins(descriptor.id, referenceTool),

@@ -34,8 +34,8 @@ CadSession::supportFaces(document::FeatureId support) const {
     return features::supportFaceFrames(
         *std::ranges::find(outputs, support, &features::EvaluatedFeature::id));
 }
-document::BodyFaceReference
-CadSession::faceReference(document::FeatureId support, const features::SupportOrigin& face) const {
+document::BodyFaceReference CadSession::faceReference(document::FeatureId support,
+                                                      const features::SupportOrigin& face) const {
     const auto faces = supportFaces(support);
     if (std::ranges::find(faces, face, &features::SupportFaceFrame::origin) == faces.end())
         throw std::invalid_argument("Not a current planar face of this support");

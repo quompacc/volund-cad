@@ -263,8 +263,7 @@ void DocumentActions::syncExchange(bool toolOpen) {
     exportAction_->setEnabled(!toolOpen && !session_.validBodies().empty());
 }
 
-void DocumentActions::setExportSelection(
-    std::function<std::vector<document::BodyId>()> selection) {
+void DocumentActions::setExportSelection(std::function<std::vector<document::BodyId>()> selection) {
     exportSelection_ = std::move(selection);
 }
 
@@ -289,12 +288,11 @@ QString convertedUnit(const std::string& unit) {
 void DocumentActions::reportImport(const application::StepImportResult& result) {
     using application::StepImportStatus;
     if (result.status != StepImportStatus::imported) {
-        const QString reason =
-            result.status == StepImportStatus::noSolids
-                ? QObject::tr("Die Datei enthält keinen gültigen Volumenkörper.")
-            : result.status == StepImportStatus::unreadable
-                ? QObject::tr("Die Datei ist keine lesbare STEP-Datei.")
-                : QObject::tr("Die Volumenkörper lassen sich nicht übernehmen.");
+        const QString reason = result.status == StepImportStatus::noSolids
+                                   ? QObject::tr("Die Datei enthält keinen gültigen Volumenkörper.")
+                               : result.status == StepImportStatus::unreadable
+                                   ? QObject::tr("Die Datei ist keine lesbare STEP-Datei.")
+                                   : QObject::tr("Die Volumenkörper lassen sich nicht übernehmen.");
         QMessageBox::critical(&window_, QObject::tr("Import fehlgeschlagen"),
                               reason + QStringLiteral("\n\n") +
                                   QString::fromStdString(result.message));
@@ -313,9 +311,9 @@ void DocumentActions::reportImport(const application::StepImportResult& result) 
                              "Kurven.")
                      .arg(result.skippedShapes);
     if (result.invalidSolids > 0)
-        hints += QStringLiteral("\n") +
-                 QObject::tr("Nicht übernommen, weil ungültig: %1 Volumenkörper.")
-                     .arg(result.invalidSolids);
+        hints +=
+            QStringLiteral("\n") + QObject::tr("Nicht übernommen, weil ungültig: %1 Volumenkörper.")
+                                       .arg(result.invalidSolids);
     QMessageBox::information(&window_, QObject::tr("Import mit Hinweisen"), hints);
 }
 
@@ -350,10 +348,10 @@ void DocumentActions::exportStep() {
     const auto bodies = exportSelection_ ? exportSelection_() : std::vector<document::BodyId>{};
     QString suggestion = QStringLiteral("Teil.step");
     if (!session_.currentFile().empty())
-        suggestion =
-            nativeDisplayPath(std::filesystem::path(session_.currentFile()).replace_extension(".step"));
-    QString fileName = QFileDialog::getSaveFileName(
-        &window_, QObject::tr("Als STEP exportieren"), suggestion, stepFilter());
+        suggestion = nativeDisplayPath(
+            std::filesystem::path(session_.currentFile()).replace_extension(".step"));
+    QString fileName = QFileDialog::getSaveFileName(&window_, QObject::tr("Als STEP exportieren"),
+                                                    suggestion, stepFilter());
     if (fileName.isEmpty())
         return;
     if (!isStepFile(fileName))
@@ -369,12 +367,11 @@ void DocumentActions::exportStep() {
                 8000);
             return;
         }
-        const QString reason =
-            result.status == StepExportStatus::invalidRevision
-                ? QObject::tr("Das Modell hat Fehler.")
-            : result.status == StepExportStatus::noBodies
-                ? QObject::tr("Es ist kein Körper sichtbar.")
-                : QObject::tr("Die Datei konnte nicht geschrieben werden.");
+        const QString reason = result.status == StepExportStatus::invalidRevision
+                                   ? QObject::tr("Das Modell hat Fehler.")
+                               : result.status == StepExportStatus::noBodies
+                                   ? QObject::tr("Es ist kein Körper sichtbar.")
+                                   : QObject::tr("Die Datei konnte nicht geschrieben werden.");
         QMessageBox::critical(&window_, QObject::tr("Export fehlgeschlagen"),
                               reason + QStringLiteral("\n\n") +
                                   QString::fromStdString(result.message));

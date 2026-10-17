@@ -1,7 +1,7 @@
 #pragma once
+#include <voelund/features/SketchEvaluation.hpp>
 #include <voelund/kernel/Prism.hpp>
 #include <voelund/kernel/Revolution.hpp>
-#include <voelund/features/SketchEvaluation.hpp>
 
 namespace voelund::features {
 [[nodiscard]] std::vector<EdgeProvenance>

@@ -101,7 +101,9 @@ void HoleToolController::open() {
          {"y", QObject::tr("Y"), y_, -1'000'000.0, 1'000'000.0},
          {"diameter", QObject::tr("Durchmesser"), diameter_, 0.001, 1'000'000.0},
          {"depth", QObject::tr("Tiefe"), depth_, 0.001, 1'000'000.0}},
-        {{"end", QObject::tr("Ende"), {QObject::tr("Tiefe"), QObject::tr("Durchgehend")},
+        {{"end",
+          QObject::tr("Ende"),
+          {QObject::tr("Tiefe"), QObject::tr("Durchgehend")},
           through_ ? 1 : 0}},
         {},
         [this](const std::string& id, double value) {
@@ -192,12 +194,11 @@ void HoleToolController::showModel() {
 application::Action HoleToolController::action() const {
     if (editing_ && stored_)
         return application::EditHoleParametersAction{
-            *editing_,
-            document::HoleParameters{{stored_->face.body, *face_},
-                                     x_,
-                                     y_,
-                                     diameter_,
-                                     through_ ? std::nullopt : std::optional{depth_}}};
+            *editing_, document::HoleParameters{{stored_->face.body, *face_},
+                                                x_,
+                                                y_,
+                                                diameter_,
+                                                through_ ? std::nullopt : std::optional{depth_}}};
     return application::CreateHoleAction{support_,
                                          *face_,
                                          millimetres(x_),

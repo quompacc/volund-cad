@@ -26,8 +26,7 @@ bool near(double a, double b) { return std::abs(a - b) < 1e-6 * std::max(1.0, st
 document::FeatureId committed(const application::CommandResult& result) {
     for (const auto& issue : result.evaluation().features)
         if (!issue.message.empty())
-            std::cerr << "feature " << issue.feature.value() << ": " << issue.message
-                      << std::endl;
+            std::cerr << "feature " << issue.feature.value() << ": " << issue.message << std::endl;
     require(result.status() == CommandStatus::committed && result.feature().has_value(),
             "Command was not committed: " + result.diagnostic());
     return *result.feature();
@@ -46,7 +45,9 @@ features::SupportOrigin face(const application::CadSession& session, document::F
 features::SupportOrigin side(document::FeatureId box, kernel::PrimitiveRole role) {
     return {box, role};
 }
-features::SupportOrigin cap(document::FeatureId pushPull) { return {pushPull, std::nullopt, {}, true}; }
+features::SupportOrigin cap(document::FeatureId pushPull) {
+    return {pushPull, std::nullopt, {}, true};
+}
 
 void pushAndPull() {
     application::CadSession session;
@@ -54,14 +55,14 @@ void pushAndPull() {
     const auto box = committed(session.createBoxFeature({10, 10, 10}));
     require(near(volume(session), 1000), "box");
 
-    const auto pulled = committed(session.pushPullFace(box, face(session, box, side(box, kernel::PrimitiveRole::boxPositiveZ)), 5));
+    const auto pulled = committed(session.pushPullFace(
+        box, face(session, box, side(box, kernel::PrimitiveRole::boxPositiveZ)), 5));
     require(near(volume(session), 1500) && session.validBodies().size() == 1,
             "Pulling the top face joins 10 x 10 x 5");
     const auto end = face(session, pulled, cap(pulled)); // its own stable origin
     const auto again = committed(session.pushPullFace(pulled, end, 3));
     require(near(volume(session), 1800), "The end face can be pulled again");
-    require(session.features().back().name == "Ziehen 2",
-            "A pull is named after what it does");
+    require(session.features().back().name == "Ziehen 2", "A pull is named after what it does");
     // T05: no seams; every side is one face, named by the box; the second pull's sides are
     // named too (from the cap edges of the first), as second names of those faces.
     int faces = 0;
@@ -75,13 +76,16 @@ void pushAndPull() {
     require(boxSide != frames.end() && !boxSide->secondary &&
                 near(std::max(boxSide->maxX - boxSide->minX, boxSide->maxY - boxSide->minY), 18),
             "The box side spans all 18 mm");
-    require(std::ranges::count_if(frames, [&](const features::SupportFaceFrame& frame) {
-                return frame.origin.feature == again &&
-                       frame.origin.extrusionFace == document::ExtrusionFace::side &&
-                       frame.secondary;
-            }) == 4,
+    require(std::ranges::count_if(frames,
+                                  [&](const features::SupportFaceFrame& frame) {
+                                      return frame.origin.feature == again &&
+                                             frame.origin.extrusionFace ==
+                                                 document::ExtrusionFace::side &&
+                                             frame.secondary;
+                                  }) == 4,
             "The second pull's four sides are named");
-    const auto pushed = committed(session.pushPullFace(again, face(session, again, side(box, kernel::PrimitiveRole::boxNegativeX)), -2));
+    const auto pushed = committed(session.pushPullFace(
+        again, face(session, again, side(box, kernel::PrimitiveRole::boxNegativeX)), -2));
     // T05: the box side is the whole side now, 10 x 18.
     require(near(volume(session), 1800 - 2 * 10 * 18) && session.validBodies().size() == 1,
             "Pushing the box's side face into the body cuts 2 x 10 x 18");

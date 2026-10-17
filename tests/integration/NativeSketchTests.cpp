@@ -1,80 +1,90 @@
 #include "../../src/document/NativePrimitiveCodec.hpp"
 #include "../../src/document/NativeSketchGeometry.hpp"
-#include <voelund/document/SketchPlaneValidation.hpp>
-#include <voelund/features/FeatureGraph.hpp>
-#include <BinDrivers.hxx>
 #include <BRepCheck_Analyzer.hxx>
 #include <BRepGProp.hxx>
+#include <BinDrivers.hxx>
 #include <GProp_GProps.hxx>
+#include <PCDM_ReaderStatus.hxx>
+#include <PCDM_StoreStatus.hxx>
+#include <TDF_Reference.hxx>
 #include <TDataStd_AsciiString.hxx>
 #include <TDataStd_Integer.hxx>
 #include <TDataStd_RealArray.hxx>
-#include <TDF_Reference.hxx>
 #include <TDocStd_Application.hxx>
-#include <PCDM_ReaderStatus.hxx>
-#include <PCDM_StoreStatus.hxx>
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <limits>
 #include <sstream>
+#include <voelund/document/SketchPlaneValidation.hpp>
+#include <voelund/features/FeatureGraph.hpp>
 
 namespace {
 using namespace voelund;
 using namespace document;
 using detail::NativePrimitiveCodec;
 void require(bool value, const char* message) {
-    if (!value) throw std::runtime_error(message);
+    if (!value)
+        throw std::runtime_error(message);
 }
-template<class Action> void rejected(Action action) {
+template <class Action> void rejected(Action action) {
     bool failed = false;
-    try { action(); } catch (const std::invalid_argument&) { failed = true; }
+    try {
+        action();
+    } catch (const std::invalid_argument&) {
+        failed = true;
+    }
     require(failed, "Invalid native cylinder data accepted");
 }
-Handle(TDocStd_Document) fresh(const Handle(TDocStd_Application)& app) {
+Handle(TDocStd_Document) fresh(const Handle(TDocStd_Application) & app) {
     Handle(TDocStd_Document) doc;
     app->NewDocument("BinOcaf", doc);
     doc->ChangeStorageFormatVersion(TDocStd_FormatVersion_VERSION_12);
     return doc;
 }
-void save(const Handle(TDocStd_Application)& app, const Handle(TDocStd_Document)& doc,
+void save(const Handle(TDocStd_Application) & app, const Handle(TDocStd_Document) & doc,
           std::ostream& output) {
     require(app->SaveAs(doc, output) == PCDM_SS_OK && output.good(), "Native save failed");
 }
-Handle(TDocStd_Document) open(const Handle(TDocStd_Application)& app, std::istream& input) {
+Handle(TDocStd_Document) open(const Handle(TDocStd_Application) & app, std::istream& input) {
     Handle(TDocStd_Document) doc;
     require(app->Open(input, doc) == PCDM_RS_OK && !doc.IsNull(), "Native open failed");
     doc->ChangeStorageFormatVersion(TDocStd_FormatVersion_VERSION_12);
     return doc;
 }
 SketchParameters geometry() {
-    return {{1, 2, 20, 0, 0, 1, 1, 0, 0}, {{
-        {SketchElementId{9}, SketchLine{{0, 0}, {2, 3}}, true},
-        {SketchElementId{2}, SketchLine{{0, 4}, {2, 4}, SketchLineConstraint::horizontal}, true},
-        {SketchElementId{3}, SketchLine{{4, 0}, {4, 3}, SketchLineConstraint::vertical}, true},
-        {SketchElementId{4}, SketchRectangle{1, 1, 5, 6}},
-        {SketchElementId{5}, SketchCircle{{10, 10}, 2}, true},
-        {SketchElementId{6}, SketchArc{{15, 15}, 3, 0.2, 2.1}, true},
-        {SketchElementId{UINT64_MAX - 2}, SketchEllipse{{20, 20}, 4, 2, 0.3}, true}
-    }, UINT64_MAX - 1}, {{}, UINT64_MAX - 1}};
+    return {
+        {1, 2, 20, 0, 0, 1, 1, 0, 0},
+        {{{SketchElementId{9}, SketchLine{{0, 0}, {2, 3}}, true},
+          {SketchElementId{2}, SketchLine{{0, 4}, {2, 4}, SketchLineConstraint::horizontal}, true},
+          {SketchElementId{3}, SketchLine{{4, 0}, {4, 3}, SketchLineConstraint::vertical}, true},
+          {SketchElementId{4}, SketchRectangle{1, 1, 5, 6}},
+          {SketchElementId{5}, SketchCircle{{10, 10}, 2}, true},
+          {SketchElementId{6}, SketchArc{{15, 15}, 3, 0.2, 2.1}, true},
+          {SketchElementId{UINT64_MAX - 2}, SketchEllipse{{20, 20}, 4, 2, 0.3}, true}},
+         UINT64_MAX - 1},
+        {{}, UINT64_MAX - 1}};
 }
 IdentifiedDocumentSnapshot fixture(bool constrained = false) {
     auto model = ModelDocument::empty();
     const auto box = model.addBoxFeature("Körper Ω", {40, 30, 20});
     auto sketch = geometry();
-    if (constrained) sketch.constraints.values.emplace_back(SketchConstraintId{7},
-        SketchConstraintKind::radius, SketchGeometryReference{SketchElementId{5}}, std::nullopt, 2);
+    if (constrained)
+        sketch.constraints.values.emplace_back(SketchConstraintId{7}, SketchConstraintKind::radius,
+                                               SketchGeometryReference{SketchElementId{5}},
+                                               std::nullopt, 2);
     (void)model.addSketchFeature("Skizze Ω", box, sketch);
-    const auto cylinder = model.addCylinderFeature("Zylinder", box,
-        {2, 5, {}, CylinderResultMode::separate});
+    const auto cylinder =
+        model.addCylinderFeature("Zylinder", box, {2, 5, {}, CylinderResultMode::separate});
     (void)model.addSketchFeature("Skizze Ω", cylinder, geometry());
     return IdentifiedDocumentSnapshot::restore(DocumentId{UINT64_MAX, 0x0123456789abcdefULL},
                                                DocumentSnapshot::capture(model));
 }
-TDF_Label feature(const Handle(TDocStd_Document)& doc, int position) {
+TDF_Label feature(const Handle(TDocStd_Document) & doc, int position) {
     Handle(TDF_Reference) ref;
-    require(doc->Main().FindChild(20).FindChild(position).FindAttribute(TDF_Reference::GetID(), ref),
-            "Missing order reference");
+    require(
+        doc->Main().FindChild(20).FindChild(position).FindAttribute(TDF_Reference::GetID(), ref),
+        "Missing order reference");
     return ref->Get();
 }
 Handle(TDataStd_RealArray) array(const TDF_Label& label) {
@@ -82,17 +92,17 @@ Handle(TDataStd_RealArray) array(const TDF_Label& label) {
     require(label.FindAttribute(TDataStd_RealArray::GetID(), value), "Missing array");
     return value;
 }
-void check(const Handle(TDocStd_Document)& doc, const IdentifiedDocumentSnapshot& expected) {
+void check(const Handle(TDocStd_Document) & doc, const IdentifiedDocumentSnapshot& expected) {
     const auto actual = NativePrimitiveCodec::read(doc);
     require(actual == expected, "Sketch snapshot changed");
     const auto result = features::FeatureGraph{}.evaluate(actual.snapshot().toDocument());
     require(result.bodies.size() == 2 && result.features.size() == 4 &&
-        !result.features[1].bodyId && !result.features[3].bodyId,
-        "Sketch acquired a solid body output");
+                !result.features[1].bodyId && !result.features[3].bodyId,
+            "Sketch acquired a solid body output");
     for (const auto& body : result.bodies)
         require(BRepCheck_Analyzer(body.shape).IsValid(), "Invalid reconstructed body");
 }
-void regressions(const Handle(TDocStd_Application)& app) {
+void regressions(const Handle(TDocStd_Application) & app) {
     const auto expected = fixture();
     auto doc = fresh(app);
     // The D11j adapter also preserves active constraints.
@@ -153,8 +163,9 @@ void regressions(const Handle(TDocStd_Application)& app) {
     require(doc->CommitCommand(), "Edit did not commit");
     const auto edited = NativePrimitiveCodec::read(doc);
     require(edited != expected && edited.id() == expected.id() && doc->Undo() &&
-        NativePrimitiveCodec::read(doc) == expected && doc->Redo() &&
-        NativePrimitiveCodec::read(doc) == edited && doc->Undo(), "Undo/Redo changed identity");
+                NativePrimitiveCodec::read(doc) == expected && doc->Redo() &&
+                NativePrimitiveCodec::read(doc) == edited && doc->Undo(),
+            "Undo/Redo changed identity");
     // Legacy perpendicular axes retain their magnitude through native read/write.
     doc->NewCommand();
     array(payload)->SetValue(6, 2);
@@ -162,7 +173,8 @@ void regressions(const Handle(TDocStd_Application)& app) {
     const auto legacy = NativePrimitiveCodec::read(doc);
     auto preserved = fresh(app);
     NativePrimitiveCodec::write(preserved, legacy);
-    const auto preservedPlane = detail::readNativeSketchGeometry(feature(preserved, 2).FindChild(4), 7).plane;
+    const auto preservedPlane =
+        detail::readNativeSketchGeometry(feature(preserved, 2).FindChild(4), 7).plane;
     require(preservedPlane.normalZ == 2 && preservedPlane.xDirectionX == 3,
             "Legacy axes silently normalized");
     rejected([&] { validateCanonicalSketchPlane(preservedPlane); });
@@ -184,7 +196,8 @@ int main(int argc, char** argv) {
     try {
         Handle(TDocStd_Application) app = new TDocStd_Application;
         BinDrivers::DefineFormat(app);
-        if (argc == 1) regressions(app);
+        if (argc == 1)
+            regressions(app);
         else {
             require(argc == 3 || argc == 4, "Usage: create FILE | read FILE [REWRITE]");
             Handle(TDocStd_Document) doc;
@@ -206,7 +219,8 @@ int main(int argc, char** argv) {
             }
             app->Close(doc);
         }
-        std::cout << "PASS native sketch geometry: elements, planes, support, identity, validation, history\n";
+        std::cout << "PASS native sketch geometry: elements, planes, support, identity, "
+                     "validation, history\n";
         return 0;
     } catch (const Standard_Failure& error) {
         std::cerr << kernel::occtFailureDiagnostic(error) << '\n';

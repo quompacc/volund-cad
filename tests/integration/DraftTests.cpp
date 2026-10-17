@@ -58,9 +58,8 @@ void draft() {
                 session.features().back().name == "Formschräge 1",
             "Formschräge 1");
     const auto feature = session.features().back().id;
-    require(near(total(session), tapered(5)),
-            "The tapered box: " + std::to_string(total(session)) + " for " +
-                std::to_string(tapered(5)));
+    require(near(total(session), tapered(5)), "The tapered box: " + std::to_string(total(session)) +
+                                                  " for " + std::to_string(tapered(5)));
 
     require(session.supportFaces(feature).size() == 6, "All six faces stay named planar faces");
     auto parameters = session.identifiedSnapshot().snapshot().draftParameters(feature);
@@ -77,8 +76,8 @@ void draft() {
     const auto refused = session.editDraftParameters(feature, withTop);
     bool localized = false;
     for (const auto& issue : refused.evaluation().features)
-        localized = localized ||
-                    (issue.code == "draft-face-refused" && issue.elements == std::vector<std::uint64_t>{1});
+        localized = localized || (issue.code == "draft-face-refused" &&
+                                  issue.elements == std::vector<std::uint64_t>{1});
     require(refused.status() == CommandStatus::rejected && localized,
             "The top face cannot be tilted and is named");
 

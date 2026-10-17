@@ -36,8 +36,7 @@ void writeId(const TDF_Label& label, std::uint64_t id) {
 }
 std::uint64_t readId(const TDF_Label& label) {
     Handle(TDataStd_AsciiString) value;
-    require(label.NbChildren() == 0 &&
-            label.FindAttribute(TDataStd_AsciiString::GetID(), value) &&
+    require(label.NbChildren() == 0 && label.FindAttribute(TDataStd_AsciiString::GetID(), value) &&
             value->Get().Length() <= 20);
     const std::string text{value->Get().ToCString(),
                            static_cast<std::size_t>(value->Get().Length())};

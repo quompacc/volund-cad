@@ -1,12 +1,12 @@
 #include "ModelDocumentImpl.hpp"
 #include <voelund/document/LegacyBodyIdentity.hpp>
 
+#include "NativeBodyAttributes.hpp"
 #include <algorithm>
 #include <iterator>
-#include "NativeBodyAttributes.hpp"
-#include <voelund/document/IdCapacity.hpp>
 #include <limits>
 #include <stdexcept>
+#include <voelund/document/IdCapacity.hpp>
 
 namespace voelund::document {
 void ModelDocument::checkRevisionAvailable() const {
@@ -15,25 +15,30 @@ void ModelDocument::checkRevisionAvailable() const {
 }
 FeatureId ModelDocument::nextFeatureId() const {
     const auto next = impl_->view().nextFeatureId();
-    if (!hasIdCapacity(next, 1)) throw std::overflow_error("Feature IDs exhausted");
+    if (!hasIdCapacity(next, 1))
+        throw std::overflow_error("Feature IDs exhausted");
     return FeatureId{next};
 }
 ModelDocument::State ModelDocument::currentState() const {
     const auto& view = impl_->view();
     return {{view.features().begin(), view.features().end()},
-            {view.parameters().begin(), view.parameters().end()}, view.nextFeatureId(),
-            view.parameterTable(), view.bodyAttributes(), view.rollbackAfter()};
+            {view.parameters().begin(), view.parameters().end()},
+            view.nextFeatureId(),
+            view.parameterTable(),
+            view.bodyAttributes(),
+            view.rollbackAfter()};
 }
 namespace {
 // M14: features new in `state` stand at the rollback marker, which then follows the last of
 // them; a marker on a feature that is gone, or after the last one, means the end.
-template <class State> void placeAtRollback(State& state, std::span<const FeatureDescriptor> before) {
+template <class State>
+void placeAtRollback(State& state, std::span<const FeatureDescriptor> before) {
     const auto known = [&](FeatureId id) {
         return std::ranges::find(before, id, &FeatureDescriptor::id) != before.end();
     };
     if (state.rollbackAfter) {
-        const auto marker = std::ranges::find(state.features, *state.rollbackAfter,
-                                              &FeatureDescriptor::id);
+        const auto marker =
+            std::ranges::find(state.features, *state.rollbackAfter, &FeatureDescriptor::id);
         if (marker == state.features.end()) {
             state.rollbackAfter.reset();
         } else {
@@ -48,11 +53,11 @@ template <class State> void placeAtRollback(State& state, std::span<const Featur
                 values.push_back(std::move(state.parameters[index]));
             }
             if (!added.empty()) {
-                auto at = std::ranges::find(kept, *state.rollbackAfter,
-                                            &FeatureDescriptor::id) -
+                auto at = std::ranges::find(kept, *state.rollbackAfter, &FeatureDescriptor::id) -
                           kept.begin() + 1;
                 // M10/M17: never between a pattern and its copies or an import and its parts.
-                while (at < std::ssize(kept) && isCompanion(kept[static_cast<std::size_t>(at)].kind))
+                while (at < std::ssize(kept) &&
+                       isCompanion(kept[static_cast<std::size_t>(at)].kind))
                     ++at;
                 const auto count = static_cast<std::ptrdiff_t>(added.size());
                 state.rollbackAfter = added.back().id;
@@ -101,8 +106,8 @@ void ModelDocument::commitState(State state) {
     const DocumentSnapshot snapshot(std::move(state.features), std::move(state.parameters),
                                     state.nextFeatureId, std::move(state.parameterTable),
                                     std::move(state.bodyAttributes), state.rollbackAfter);
-    auto prepared = impl_->native.prepare(IdentifiedDocumentSnapshot::restore(documentId(), snapshot),
-                                          !impl_->transactionCandidate_);
+    auto prepared = impl_->native.prepare(
+        IdentifiedDocumentSnapshot::restore(documentId(), snapshot), !impl_->transactionCandidate_);
     (void)impl_->native.commit(std::move(prepared));
 }
 const ParameterTable& ModelDocument::parameterTable() const noexcept {

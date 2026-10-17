@@ -46,7 +46,8 @@ class TimelineBar final : public OverlayCard {
     void setSelectHandler(std::function<void(std::uint64_t)> handler);
     // M16: a step dragged into another gap asks to move after that step (none: to the front);
     // Delete on a step asks to delete it.
-    void setReorderHandler(std::function<void(std::uint64_t, std::optional<std::uint64_t>)> handler);
+    void
+    setReorderHandler(std::function<void(std::uint64_t, std::optional<std::uint64_t>)> handler);
     void setDeleteHandler(std::function<void(std::uint64_t)> handler);
     // M20/U14: `icons` overrides the kind's icon, e.g. revolve, sweep or the primitive's shape.
     using IconOverride = std::pair<document::FeatureId, ShellIcon>;

@@ -85,8 +85,9 @@ MirrorParameters readNativeMirror(const TDF_Label& label, std::size_t remainingR
         require(face.NbChildren() == 4 + nativeSubshapeOriginExtension(face));
         const auto faceBody = child(face, 1);
         require(faceBody.NbChildren() == 0);
-        result.plane.face = BodyFaceReference{
-            BodyId{readId(faceBody)}, readNativeSubshapeOrigin(face, remainingRecords, schemaVersion)};
+        result.plane.face =
+            BodyFaceReference{BodyId{readId(faceBody)},
+                              readNativeSubshapeOrigin(face, remainingRecords, schemaVersion)};
     }
     validateMirrorParameters(result);
     return result;

@@ -35,9 +35,9 @@ void DatumPresentation::show(const occ::handle<AIS_InteractiveContext>& context,
         } else {
             const gp_Dir x(datum.xDirection[0], datum.xDirection[1], datum.xDirection[2]);
             const double half = halfSize * 0.6;
-            shape = BRepBuilderAPI_MakeFace(gp_Pln(gp_Ax3(origin, normal, x)), -half, half, -half,
-                                            half)
-                        .Face();
+            shape =
+                BRepBuilderAPI_MakeFace(gp_Pln(gp_Ax3(origin, normal, x)), -half, half, -half, half)
+                    .Face();
         }
         occ::handle<AIS_Shape> presentation = new AIS_Shape(shape);
         presentation->SetColor(constructionColor());

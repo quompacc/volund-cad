@@ -122,8 +122,8 @@ void failedStepsChangeNothing(application::CadSession& session) {
     const auto beforeCentered = observe(centered);
     SketchCreationInput around{{20, 0}, {24, 3}};
     around.centered = true;
-    around.secondSnap = application::SketchSnap{application::SketchSnapKind::midpoint,
-                                                 SketchElementId{999}};
+    around.secondSnap =
+        application::SketchSnap{application::SketchSnapKind::midpoint, SketchElementId{999}};
     rejected = false;
     try {
         static_cast<void>(centered.create(around));
@@ -149,8 +149,7 @@ void undoRedoRestoreSelectionAndStatus(application::CadSession& session) {
             "Redo brings back the conflict with its selection");
     require(editor.undo() && editor.undo(), "undo to the first line");
     require(editor.selectedElement() == first && editor.elements().size() == 1 &&
-                editor.lastSolveResult().status == SketchSolveStatus::success &&
-                editor.canAccept(),
+                editor.lastSolveResult().status == SketchSolveStatus::success && editor.canAccept(),
             "Undo selects the element of its step");
 }
 

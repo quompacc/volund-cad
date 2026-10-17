@@ -1,10 +1,10 @@
 #pragma once
 
+#include "../TestPaths.hpp"
 #include <voelund/application/CadSession.hpp>
 #include <voelund/features/FeatureGraph.hpp>
 #include <voelund/features/SketchSupportResolver.hpp>
 #include <voelund/kernel/ShapeFactory.hpp>
-#include "../TestPaths.hpp"
 
 #include <BRepBndLib.hxx>
 #include <BRepGProp.hxx>

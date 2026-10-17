@@ -1,8 +1,8 @@
 #pragma once
 #include <voelund/application/CommandTransaction.hpp>
+#include <voelund/application/SceneStatus.hpp>
 #include <voelund/application/SketchCreation.hpp>
 #include <voelund/application/SketchCurveEdit.hpp>
-#include <voelund/application/SceneStatus.hpp>
 
 #include <voelund/document/ModelDocument.hpp>
 #include <voelund/features/SketchConstraintAnnotations.hpp>
@@ -12,8 +12,8 @@
 #include <TopoDS_Shape.hxx>
 
 #include <optional>
-#include <string>
 #include <span>
+#include <string>
 #include <vector>
 
 namespace voelund::application {
@@ -246,7 +246,8 @@ class SketchEditorSession final {
     // S18: a dimension between driving and reference, as one step. Throws std::invalid_argument
     // with the reason (a relation, a bound dimension, or a driving one would overdetermine).
     void toggleReference(document::SketchConstraintId constraintId);
-    [[nodiscard]] bool isReferenceDimension(document::SketchConstraintId constraintId) const noexcept;
+    [[nodiscard]] bool
+    isReferenceDimension(document::SketchConstraintId constraintId) const noexcept;
     // S18: conflicting plus redundant constraints of the last solve.
     [[nodiscard]] std::size_t overdetermination() const noexcept {
         return lastSolveResult_.conflictingConstraints.size() +
@@ -336,12 +337,12 @@ class SketchEditorSession final {
         std::vector<PreviewPoint> points;
         std::optional<SketchArcDirection> arcDirection;
     };
-    [[nodiscard]] SketchCreationResult
-    confirmRectangle(const document::SketchRectangle& rectangle);
+    [[nodiscard]] SketchCreationResult confirmRectangle(const document::SketchRectangle& rectangle);
     void snapTo(document::SketchGeometryReference created, const std::optional<SketchSnap>& snap,
                 document::SketchPoint point);
     [[nodiscard]] std::optional<SketchCreationResult> createStep(const SketchCreationInput& input);
-    [[nodiscard]] std::optional<SketchCreationResult> createCentered(const SketchCreationInput& input);
+    [[nodiscard]] std::optional<SketchCreationResult>
+    createCentered(const SketchCreationInput& input);
     // Adds the constraints from `firstConstraint` on that the result does not list yet.
     void record(SketchCreationResult& result, std::uint64_t firstConstraint,
                 SketchConstraintOrigin origin) const;
@@ -374,7 +375,7 @@ class SketchEditorSession final {
     std::optional<DocumentStamp> supportStamp_;
     document::SketchElements elements_;
     document::SketchConstraints constraints_;
-    document::SketchPatterns patterns_; // S12
+    document::SketchPatterns patterns_;                   // S12
     std::vector<document::SketchProjection> projections_; // S17
     std::optional<document::FeatureId> editingFeature_;
     // AI04c: the stored sketch when editing began; a change from outside (MCP) is not

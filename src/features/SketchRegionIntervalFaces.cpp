@@ -1,7 +1,7 @@
-#include "SketchConnection.hpp"
-#include "SketchRegionGeometry.hpp"
 #include "SketchRegionIntervalFaces.hpp"
 #include "SketchBSplineCurves.hpp"
+#include "SketchConnection.hpp"
+#include "SketchRegionGeometry.hpp"
 #include <voelund/features/GeometryEvaluationError.hpp>
 
 #include <BRepBuilderAPI_MakeEdge.hxx>
@@ -64,8 +64,8 @@ Handle(Geom_Curve) sourceCurve(Context& context, std::size_t piece) {
         const gp_Pnt start = worldPoint(plane, line->start);
         curve = new Geom_Line(gp_Ax1(start, gp_Dir(gp_Vec(start, worldPoint(plane, line->end)))));
     } else if (const auto* circle = std::get_if<document::SketchCircle>(&geometry)) {
-        curve = new Geom_Circle(gp_Ax2(worldPoint(plane, circle->center), normal, x),
-                                circle->radius);
+        curve =
+            new Geom_Circle(gp_Ax2(worldPoint(plane, circle->center), normal, x), circle->radius);
     } else if (const auto* arc = std::get_if<document::SketchArc>(&geometry)) {
         curve = new Geom_Circle(gp_Ax2(worldPoint(plane, arc->center), normal, x), arc->radius);
     } else if (const auto* spline = std::get_if<document::SketchBSpline>(&geometry)) {
@@ -117,9 +117,8 @@ double walkAngle(const Context& context, RegionHalfEdge half, bool atEnd) {
     const bool last = atEnd != half.reversed;
     gp_Pnt2d point;
     gp_Vec2d direction;
-    context.planar[interval.piece].curve->D1(last ? interval.lastParameter
-                                                  : interval.firstParameter,
-                                             point, direction);
+    context.planar[interval.piece].curve->D1(
+        last ? interval.lastParameter : interval.firstParameter, point, direction);
     if (half.reversed)
         direction.Reverse();
     return std::atan2(direction.Y(), direction.X());
@@ -129,8 +128,9 @@ std::set<std::uint64_t> walkElements(const Context& context,
                                      const std::vector<RegionHalfEdge>& walk) {
     std::set<std::uint64_t> ids;
     for (const RegionHalfEdge half : walk)
-        ids.insert(context.regions.split.pieces[context.regions.split.intervals[half.interval].piece]
-                       .element.value());
+        ids.insert(
+            context.regions.split.pieces[context.regions.split.intervals[half.interval].piece]
+                .element.value());
     return ids;
 }
 
@@ -256,8 +256,8 @@ TopoDS_Wire wire(Context& context, const std::vector<RegionHalfEdge>& walk,
                                           elementList(context, walk));
         const TopoDS_Edge edge = make.Edge();
         const auto& planar = context.planar[interval.piece];
-        edges.push_back({split.pieces[interval.piece].element, role(context, interval.piece),
-                         edge, interval.firstParameter, interval.lastParameter,
+        edges.push_back({split.pieces[interval.piece].element, role(context, interval.piece), edge,
+                         interval.firstParameter, interval.lastParameter,
                          std::pair{planar.first, planar.last}});
         builder.Add(result, half.reversed ? TopoDS::Edge(edge.Reversed()) : edge);
     }

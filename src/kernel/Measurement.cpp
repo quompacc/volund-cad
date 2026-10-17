@@ -18,9 +18,7 @@
 namespace voelund::kernel {
 namespace {
 
-bool hasSolid(const TopoDS_Shape& shape) {
-    return TopExp_Explorer(shape, TopAbs_SOLID).More();
-}
+bool hasSolid(const TopoDS_Shape& shape) { return TopExp_Explorer(shape, TopAbs_SOLID).More(); }
 
 // A line's direction or a plane's normal; a line and a plane are compared through the normal.
 struct Direction final {

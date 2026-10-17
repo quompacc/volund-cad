@@ -1,8 +1,8 @@
 #include <voelund/mcp/McpServer.hpp>
 
 #include <QHostAddress>
-#include <QRandomGenerator>
 #include <QJsonDocument>
+#include <QRandomGenerator>
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QUuid>
@@ -16,17 +16,28 @@ constexpr qsizetype maximumHeaderBytes = 16 * 1024;
 
 QByteArray reason(int status) {
     switch (status) {
-    case 200: return "OK";
-    case 202: return "Accepted";
-    case 400: return "Bad Request";
-    case 401: return "Unauthorized";
-    case 403: return "Forbidden";
-    case 404: return "Not Found";
-    case 405: return "Method Not Allowed";
-    case 413: return "Payload Too Large";
-    case 415: return "Unsupported Media Type";
-    case 431: return "Request Header Fields Too Large";
-    default: return "Not Implemented";
+    case 200:
+        return "OK";
+    case 202:
+        return "Accepted";
+    case 400:
+        return "Bad Request";
+    case 401:
+        return "Unauthorized";
+    case 403:
+        return "Forbidden";
+    case 404:
+        return "Not Found";
+    case 405:
+        return "Method Not Allowed";
+    case 413:
+        return "Payload Too Large";
+    case 415:
+        return "Unsupported Media Type";
+    case 431:
+        return "Request Header Fields Too Large";
+    default:
+        return "Not Implemented";
     }
 }
 QByteArray json(const QJsonObject& object) {
@@ -55,9 +66,7 @@ McpHttpServer::McpHttpServer(ToolHost& host, QByteArray token, QObject* parent)
 
 McpHttpServer::~McpHttpServer() = default;
 
-bool McpHttpServer::listen(quint16 port) {
-    return server_->listen(QHostAddress::LocalHost, port);
-}
+bool McpHttpServer::listen(quint16 port) { return server_->listen(QHostAddress::LocalHost, port); }
 void McpHttpServer::close() {
     server_->close();
     for (auto* socket : buffers_.keys())
@@ -82,9 +91,7 @@ void McpHttpServer::setToken(QByteArray token) {
     token_ = std::move(token);
     sessions_.clear();
 }
-QString McpHttpServer::url() const {
-    return QStringLiteral("http://127.0.0.1:%1/mcp").arg(port());
-}
+QString McpHttpServer::url() const { return QStringLiteral("http://127.0.0.1:%1/mcp").arg(port()); }
 
 void McpHttpServer::accept() {
     while (auto* socket = server_->nextPendingConnection()) {

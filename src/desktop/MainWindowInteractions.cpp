@@ -1,4 +1,3 @@
-#include <voelund/desktop/MainWindow.hpp>
 #include "AssistantPanel.hpp"
 #include "CommandFeedback.hpp"
 #include "DocumentActions.hpp"
@@ -7,8 +6,8 @@
 #include "MainWindowSupport.hpp"
 #include "MeasurementInput.hpp"
 #include "ModelTreePanel.hpp"
-#include "ShellHeader.hpp"
 #include "ShellActions.hpp"
+#include "ShellHeader.hpp"
 #include "ShellIcons.hpp"
 #include "SketchEditorToolController.hpp"
 #include "SketchExtrusionToolController.hpp"
@@ -16,11 +15,6 @@
 #include "Theme.hpp"
 #include "ToolPanelHost.hpp"
 #include "ViewCube.hpp"
-#include <voelund/application/CadSession.hpp>
-#include <voelund/kernel/ShapeFactory.hpp>
-#include <voelund/modules/solid/SolidWorkspaceModule.hpp>
-#include <voelund/viewport/CadViewport.hpp>
-#include <voelund/workspaces/CommandRegistry.hpp>
 #include <QAction>
 #include <QCloseEvent>
 #include <QDockWidget>
@@ -30,14 +24,20 @@
 #include <QSignalBlocker>
 #include <QStatusBar>
 #include <QVBoxLayout>
+#include <QWidget>
 #include <algorithm>
 #include <array>
 #include <cmath>
-#include <QWidget>
 #include <memory>
 #include <optional>
 #include <utility>
 #include <vector>
+#include <voelund/application/CadSession.hpp>
+#include <voelund/desktop/MainWindow.hpp>
+#include <voelund/kernel/ShapeFactory.hpp>
+#include <voelund/modules/solid/SolidWorkspaceModule.hpp>
+#include <voelund/viewport/CadViewport.hpp>
+#include <voelund/workspaces/CommandRegistry.hpp>
 
 // Viewport, tree and property-panel interactions of the main window.
 namespace voelund::desktop {
@@ -46,15 +46,14 @@ void MainWindow::connectInteractions() {
     impl_->propertyPanel->setBoxChangeHandler([this]() { applyBoxParameters(); });
     impl_->propertyPanel->setCylinderChangeHandler([this]() { applyCylinderParameters(); });
     impl_->propertyPanel->setExtrusionChangeHandler([this]() { applyExtrusionParameters(); });
-    impl_->modelTree->setHandlers({[this](std::uint64_t id) { selectFeature(id); },
-                                   [this](int plane) { selectBasePlane(plane); },
-                                   [this](ModelTreePanel::Kind kind, std::uint64_t id) {
-                                       toggleVisibility(static_cast<int>(kind), id);
-                                   },
-                                   [this](std::uint64_t id) { selectBody(id); },
-                                   [this](std::uint64_t id, const QString& name) {
-                                       renameBody(id, name);
-                                   }});
+    impl_->modelTree->setHandlers(
+        {[this](std::uint64_t id) { selectFeature(id); },
+         [this](int plane) { selectBasePlane(plane); },
+         [this](ModelTreePanel::Kind kind, std::uint64_t id) {
+             toggleVisibility(static_cast<int>(kind), id);
+         },
+         [this](std::uint64_t id) { selectBody(id); },
+         [this](std::uint64_t id, const QString& name) { renameBody(id, name); }});
     impl_->viewport->setBodySelectionHandler([this](std::uint64_t id) {
         if (!impl_->combineTool->isActive()) // M21: the panel takes clicks instead
             selectFeature(id);
@@ -161,20 +160,21 @@ void MainWindow::connectInteractions() {
         statusBar()->showMessage(tr("Skizzenbereich gewählt"), 2000);
     };
     // A click into the area of a visible sketch region picks it (user report 2026-10-05).
-    impl_->viewport->setAreaClickHandler([this, showSelectedProfiles](const viewport::ViewRay& ray) {
-        // M04: with the extrusion panel open, a click into a region of its sketch toggles it.
-        if (impl_->sketchExtrusionTool->regionSketch()) {
-            if (!impl_->sketchExtrusionTool->toggleRegionAt(ray))
+    impl_->viewport->setAreaClickHandler(
+        [this, showSelectedProfiles](const viewport::ViewRay& ray) {
+            // M04: with the extrusion panel open, a click into a region of its sketch toggles it.
+            if (impl_->sketchExtrusionTool->regionSketch()) {
+                if (!impl_->sketchExtrusionTool->toggleRegionAt(ray))
+                    return false;
+                syncSketchPresentation();
+                return true;
+            }
+            if (impl_->shell().toolBlocksCommands() ||
+                !pickSketchArea(impl_->session, ray, impl_->visibility.hiddenBodies))
                 return false;
-            syncSketchPresentation();
+            showSelectedProfiles();
             return true;
-        }
-        if (impl_->shell().toolBlocksCommands() ||
-            !pickSketchArea(impl_->session, ray, impl_->visibility.hiddenBodies))
-            return false;
-        showSelectedProfiles();
-        return true;
-    });
+        });
     impl_->viewport->setSketchElementSelectionHandler(
         [this, showSelectedProfiles](const viewport::SketchSelectionIntent& intent) {
             if (impl_->sketchEditorTool->isActive()) {
@@ -212,8 +212,8 @@ void MainWindow::connectInteractions() {
             const auto feature = *impl_->session.selectedFeature();
             applyParameterCommand(
                 [this, feature, deltaX, deltaY, deltaZ](application::ErrorDisposition disposition) {
-                    return impl_->session.moveBody(feature, {deltaX, deltaY, deltaZ},
-                                                   std::nullopt, 0.0, disposition);
+                    return impl_->session.moveBody(feature, {deltaX, deltaY, deltaZ}, std::nullopt,
+                                                   0.0, disposition);
                 });
         });
     impl_->viewport->setBodyMovePreviewHandler(
@@ -232,22 +232,21 @@ void MainWindow::connectInteractions() {
     connect(impl_->angularSnapInput, &QDoubleSpinBox::valueChanged, this,
             [updateSnapping](double) { updateSnapping(); });
     updateSnapping();
-    impl_->viewport->setBodyRotationHandler(
-        [this](std::uint64_t id, int axisIndex, double angleDegrees) {
-            if (!selectTransformFeatureForBody(impl_->session, document::FeatureId{id})) {
-                return;
-            }
-            if (axisIndex < 0 || axisIndex > 2) {
-                return;
-            }
-            const auto feature = *impl_->session.selectedFeature();
-            const double angle = kernel::toRadians(kernel::Degrees(angleDegrees)).value();
-            applyParameterCommand(
-                [this, feature, axisIndex, angle](application::ErrorDisposition disposition) {
-                    return impl_->session.moveBody(feature, {0.0, 0.0, 0.0}, axisIndex, angle,
-                                                   disposition);
-                });
+    impl_->viewport->setBodyRotationHandler([this](std::uint64_t id, int axisIndex,
+                                                   double angleDegrees) {
+        if (!selectTransformFeatureForBody(impl_->session, document::FeatureId{id})) {
+            return;
+        }
+        if (axisIndex < 0 || axisIndex > 2) {
+            return;
+        }
+        const auto feature = *impl_->session.selectedFeature();
+        const double angle = kernel::toRadians(kernel::Degrees(angleDegrees)).value();
+        applyParameterCommand([this, feature, axisIndex,
+                               angle](application::ErrorDisposition disposition) {
+            return impl_->session.moveBody(feature, {0.0, 0.0, 0.0}, axisIndex, angle, disposition);
         });
+    });
     impl_->viewport->setBodyRotationPreviewHandler(
         [this](std::uint64_t id, int axisIndex, double angleDegrees) {
             previewBodyRotation(id, axisIndex, angleDegrees);

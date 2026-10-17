@@ -19,7 +19,9 @@
 namespace {
 using namespace voelund;
 using test::press;
-void require(bool condition, const std::string& message) { test::require(condition, message.c_str()); }
+void require(bool condition, const std::string& message) {
+    test::require(condition, message.c_str());
+}
 
 struct Fixture final {
     application::CadSession session;

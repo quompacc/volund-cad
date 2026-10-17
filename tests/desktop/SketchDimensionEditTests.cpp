@@ -1,7 +1,7 @@
-#include "IsolatedSettings.hpp"
 #include "../../src/desktop/SketchEditorToolController.hpp"
 #include "../../src/desktop/ToolPanelHost.hpp"
 #include "../CommandResultAssertions.hpp"
+#include "IsolatedSettings.hpp"
 #include <QApplication>
 #include <QInputDialog>
 #include <QLabel>
@@ -48,7 +48,8 @@ void run() {
            SketchGeometryReference{SketchElementId{1}, SketchPointPosition::end},
            std::sqrt(125.0)}},
          5}};
-    const auto id = voelund::test::requireCommittedFeature(session.createSketchFeature(box, sketch));
+    const auto id =
+        voelund::test::requireCommittedFeature(session.createSketchFeature(box, sketch));
     QMainWindow window;
     auto* host = new desktop::ToolPanelHost(&window);
     viewport::CadViewport viewport;

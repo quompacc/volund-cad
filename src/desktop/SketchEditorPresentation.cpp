@@ -17,32 +17,58 @@ namespace {
 QString relationName(document::SketchConstraintKind kind) {
     using Kind = document::SketchConstraintKind;
     switch (kind) {
-    case Kind::horizontal: return QObject::tr("Waagrecht");
-    case Kind::vertical: return QObject::tr("Senkrecht");
-    case Kind::distance: return QObject::tr("Länge");
-    case Kind::radius: return QObject::tr("Radius");
-    case Kind::diameter: return QObject::tr("Durchmesser");
-    case Kind::coincident: return QObject::tr("Deckungsgleich");
-    case Kind::parallel: return QObject::tr("Parallel");
-    case Kind::perpendicular: return QObject::tr("Rechtwinklig");
-    case Kind::coordinateX: return QObject::tr("Koordinate X");
-    case Kind::coordinateY: return QObject::tr("Koordinate Y");
-    case Kind::pointOnObject: return QObject::tr("Punkt auf Objekt");
-    case Kind::equal: return QObject::tr("Gleich");
-    case Kind::tangent: return QObject::tr("Tangential");
-    case Kind::symmetric: return QObject::tr("Symmetrisch");
-    case Kind::pointDistance: return QObject::tr("Distanz");
-    case Kind::angle: return QObject::tr("Winkel");
-    case Kind::pointDistanceX: return QObject::tr("Abstand X");
-    case Kind::pointDistanceY: return QObject::tr("Abstand Y");
-    case Kind::midpoint: return QObject::tr("Mittelpunkt");
-    case Kind::perpendicularBisector: return QObject::tr("Halbierend");
-    case Kind::concentric: return QObject::tr("Konzentrisch");
-    case Kind::collinear: return QObject::tr("Kollinear");
-    case Kind::horizontalPoints: return QObject::tr("Waagrecht ausgerichtet");
-    case Kind::verticalPoints: return QObject::tr("Senkrecht ausgerichtet");
-    case Kind::fixed: return QObject::tr("Fixiert");
-    case Kind::pointLineDistance: return QObject::tr("Punkt–Linie");
+    case Kind::horizontal:
+        return QObject::tr("Waagrecht");
+    case Kind::vertical:
+        return QObject::tr("Senkrecht");
+    case Kind::distance:
+        return QObject::tr("Länge");
+    case Kind::radius:
+        return QObject::tr("Radius");
+    case Kind::diameter:
+        return QObject::tr("Durchmesser");
+    case Kind::coincident:
+        return QObject::tr("Deckungsgleich");
+    case Kind::parallel:
+        return QObject::tr("Parallel");
+    case Kind::perpendicular:
+        return QObject::tr("Rechtwinklig");
+    case Kind::coordinateX:
+        return QObject::tr("Koordinate X");
+    case Kind::coordinateY:
+        return QObject::tr("Koordinate Y");
+    case Kind::pointOnObject:
+        return QObject::tr("Punkt auf Objekt");
+    case Kind::equal:
+        return QObject::tr("Gleich");
+    case Kind::tangent:
+        return QObject::tr("Tangential");
+    case Kind::symmetric:
+        return QObject::tr("Symmetrisch");
+    case Kind::pointDistance:
+        return QObject::tr("Distanz");
+    case Kind::angle:
+        return QObject::tr("Winkel");
+    case Kind::pointDistanceX:
+        return QObject::tr("Abstand X");
+    case Kind::pointDistanceY:
+        return QObject::tr("Abstand Y");
+    case Kind::midpoint:
+        return QObject::tr("Mittelpunkt");
+    case Kind::perpendicularBisector:
+        return QObject::tr("Halbierend");
+    case Kind::concentric:
+        return QObject::tr("Konzentrisch");
+    case Kind::collinear:
+        return QObject::tr("Kollinear");
+    case Kind::horizontalPoints:
+        return QObject::tr("Waagrecht ausgerichtet");
+    case Kind::verticalPoints:
+        return QObject::tr("Senkrecht ausgerichtet");
+    case Kind::fixed:
+        return QObject::tr("Fixiert");
+    case Kind::pointLineDistance:
+        return QObject::tr("Punkt–Linie");
     }
     return {};
 }
@@ -145,11 +171,10 @@ void SketchEditorToolController::applyEditOperation(const std::string& id) {
     }
     if (id == "rotate" || id == "scale") { // S20
         applyCurveEdit([this, &id] {
-            return id == "rotate"
-                       ? editor_->rotateSelected(transformCenter_,
-                                                 kernel::toRadians(kernel::Degrees(rotateAngle_))
-                                                     .value())
-                       : editor_->scaleSelected(transformCenter_, scaleFactor_);
+            return id == "rotate" ? editor_->rotateSelected(
+                                        transformCenter_,
+                                        kernel::toRadians(kernel::Degrees(rotateAngle_)).value())
+                                  : editor_->scaleSelected(transformCenter_, scaleFactor_);
         });
         return;
     }
@@ -200,8 +225,8 @@ void SketchEditorToolController::syncSelectedDimensionInputs() {
                             selecting && editor_->selectedReferences().size() >= 2);
     panel_.setLengthVisible("offset_distance", selecting && hasSelection);
     // S20: the center starts at the middle of the selection.
-    for (const char* field : {"transform_center_x", "transform_center_y", "rotate_angle",
-                              "scale_factor"})
+    for (const char* field :
+         {"transform_center_x", "transform_center_y", "rotate_angle", "scale_factor"})
         panel_.setLengthVisible(field, selecting && hasSelection);
     if (const auto center = selecting ? editor_->selectionCenter() : std::nullopt) {
         transformCenter_ = *center;
@@ -242,10 +267,10 @@ void SketchEditorToolController::syncSelectedDimensionInputs() {
             parameter ? document::findParameter(session_.parameterTable(), *parameter) : nullptr;
         return entry ? std::optional{QString::fromStdString(entry->name)} : std::nullopt;
     };
-    panel_.setLengthBinding("line_length", length ? boundName(document::SketchConstraintKind::distance)
-                                                  : std::nullopt);
-    panel_.setLengthBinding("circle_radius", radius ? boundName(document::SketchConstraintKind::radius)
-                                                    : std::nullopt);
+    panel_.setLengthBinding(
+        "line_length", length ? boundName(document::SketchConstraintKind::distance) : std::nullopt);
+    panel_.setLengthBinding(
+        "circle_radius", radius ? boundName(document::SketchConstraintKind::radius) : std::nullopt);
     if (width.has_value())
         panel_.setLengthValue("rectangle_width", *width);
     if (height.has_value())
@@ -272,12 +297,11 @@ void SketchEditorToolController::refreshPresentation() {
     std::vector<viewport::SceneSketchElement> elements;
     elements.reserve(evaluated.size());
     for (const features::EvaluatedSketchElement& element : evaluated) {
-        auto presentation =
-            makeSceneSketchElement(element,
-                                   editor_->isElementConflicting(element.id) ||
-                                       std::ranges::find(problemElements_, element.id.value()) !=
-                                           problemElements_.end(),
-                                   editor_->isElementDetermined(element.id));
+        auto presentation = makeSceneSketchElement(
+            element,
+            editor_->isElementConflicting(element.id) ||
+                std::ranges::find(problemElements_, element.id.value()) != problemElements_.end(),
+            editor_->isElementDetermined(element.id));
         if (std::ranges::find(editor_->elements(), element.id, &document::SketchElement::id) ==
             editor_->elements().end())
             presentation.points.clear();
@@ -297,7 +321,8 @@ void SketchEditorToolController::refreshPresentation() {
     // S07: label, value and editability come from one projection (SketchConstraintAnnotations).
     for (const features::SketchConstraintAnnotation& annotation : annotations) {
         // S13: "Bemaßungen: Aus" hides the dimensions, relations stay.
-        if (!showDimensions_ && annotation.category == features::SketchAnnotationCategory::dimension)
+        if (!showDimensions_ &&
+            annotation.category == features::SketchAnnotationCategory::dimension)
             continue;
         // PAR02: a bound dimension shows its parameter, "A = 60.000 mm".
         std::string label = annotation.label;
@@ -307,8 +332,8 @@ void SketchEditorToolController::refreshPresentation() {
                 label = parameter->name + " = " + label;
         constraints.push_back({annotation.id.value(), label, annotation.position.X(),
                                annotation.position.Y(), annotation.position.Z(),
-                               editor_->isConstraintConflicting(annotation.id),
-                               annotation.editable, editor_->isConstraintRedundant(annotation.id),
+                               editor_->isConstraintConflicting(annotation.id), annotation.editable,
+                               editor_->isConstraintRedundant(annotation.id),
                                editor_->selectedConstraint() == annotation.id});
     }
     if (previewAutomatic_.has_value() && evaluated.size() > editor_->elements().size() &&
@@ -348,7 +373,6 @@ void SketchEditorToolController::setProjecting(bool on) {
 void SketchEditorToolController::projectEdge(std::uint64_t bodyResult, const TopoDS_Shape& edge) {
     if (!projecting())
         return;
-    applyCurveEdit(
-        [&] { return editor_->projectEdge(document::FeatureId{bodyResult}, edge); });
+    applyCurveEdit([&] { return editor_->projectEdge(document::FeatureId{bodyResult}, edge); });
 }
 } // namespace voelund::desktop

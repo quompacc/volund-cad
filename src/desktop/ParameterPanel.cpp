@@ -45,8 +45,7 @@ ParameterPanel::ParameterPanel(QWidget* parent) : QWidget(parent) {
     layout->addWidget(table_);
     auto* buttons = new QHBoxLayout;
     buttons->setSpacing(4);
-    const auto button = [this, buttons](const char* name, const QString& text,
-                                        const QString& tip) {
+    const auto button = [this, buttons](const char* name, const QString& text, const QString& tip) {
         auto* result = new QToolButton(this);
         result->setObjectName(QLatin1String(name));
         result->setText(text);
@@ -61,9 +60,8 @@ ParameterPanel::ParameterPanel(QWidget* parent) : QWidget(parent) {
     remove_ = button("parameterRemove", tr("Entfernen"), tr("Gewählten Parameter entfernen"));
     layout->addLayout(buttons);
 
-    connect(table_, &QTableWidget::itemChanged, this, [this](QTableWidgetItem* item) {
-        changed(item);
-    });
+    connect(table_, &QTableWidget::itemChanged, this,
+            [this](QTableWidgetItem* item) { changed(item); });
     connect(addLength_, &QToolButton::clicked, this, [this] {
         if (handlers_.added)
             handlers_.added(document::ParameterUnit::length);
@@ -103,12 +101,12 @@ void ParameterPanel::show(std::vector<Row> rows, bool editable) {
         value->setData(idRole, static_cast<qulonglong>(parameter.id.value()));
         value->setFlags(flags);
         value->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-        auto* used = new QTableWidgetItem(uses == 0 ? QStringLiteral("–")
-                                                    : QStringLiteral("%1×").arg(uses));
+        auto* used =
+            new QTableWidgetItem(uses == 0 ? QStringLiteral("–") : QStringLiteral("%1×").arg(uses));
         used->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
         used->setTextAlignment(Qt::AlignCenter);
-        used->setToolTip(tr("%n Verwendung(en) in Skizzen und Extrusionen", nullptr,
-                            static_cast<int>(uses)));
+        used->setToolTip(
+            tr("%n Verwendung(en) in Skizzen und Extrusionen", nullptr, static_cast<int>(uses)));
         table_->setItem(row, nameColumn, name);
         table_->setItem(row, valueColumn, value);
         table_->setItem(row, usesColumn, used);
@@ -117,7 +115,8 @@ void ParameterPanel::show(std::vector<Row> rows, bool editable) {
     addLength_->setEnabled(editable);
     addAngle_->setEnabled(editable);
     remove_->setEnabled(editable && !rows_.empty());
-    setToolTip(editable ? QString{} : tr("Während ein Werkzeug offen ist, bleibt die Tabelle fest"));
+    setToolTip(editable ? QString{}
+                        : tr("Während ein Werkzeug offen ist, bleibt die Tabelle fest"));
 }
 
 void ParameterPanel::editName(document::ParameterId id) {
@@ -141,9 +140,8 @@ void ParameterPanel::changed(QTableWidgetItem* item) {
     if (filling_ || item == nullptr)
         return;
     const document::ParameterId id{item->data(idRole).toULongLong()};
-    const auto row = std::ranges::find_if(rows_, [&](const Row& entry) {
-        return entry.parameter.id == id;
-    });
+    const auto row =
+        std::ranges::find_if(rows_, [&](const Row& entry) { return entry.parameter.id == id; });
     if (row == rows_.end())
         return;
     shown_ = false; // the next show() redraws, also when the shell refused the edit
@@ -180,9 +178,8 @@ void ParameterPanel::removeSelected() {
     const auto* item = table_->currentItem();
     if (item == nullptr)
         return;
-    handlers_.removed(document::ParameterId{table_->item(item->row(), nameColumn)
-                                                ->data(idRole)
-                                                .toULongLong()});
+    handlers_.removed(
+        document::ParameterId{table_->item(item->row(), nameColumn)->data(idRole).toULongLong()});
 }
 
 } // namespace voelund::desktop

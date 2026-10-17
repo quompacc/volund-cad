@@ -34,8 +34,8 @@ void SketchEditorSession::refreshProjectedGeometry() {
     for (const auto& projection : projections_) {
         const auto source = std::ranges::find(evaluated->elements.values, projection.element,
                                               &document::SketchElement::id);
-        const auto target = std::ranges::find(elements_.values, projection.element,
-                                              &document::SketchElement::id);
+        const auto target =
+            std::ranges::find(elements_.values, projection.element, &document::SketchElement::id);
         if (source != evaluated->elements.values.end() && target != elements_.values.end())
             target->geometry = source->geometry;
     }

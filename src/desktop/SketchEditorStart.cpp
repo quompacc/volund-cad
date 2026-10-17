@@ -20,24 +20,17 @@ document::SketchPlane sketchPlane(const viewport::PlanarFaceSelection& support) 
 // nearly horizontal face, so the editor shows the face the way the model stands.
 document::SketchPlane uprightSketchPlane(const viewport::PlanarFaceSelection& support) {
     const gp_Dir normal(support.normalX, support.normalY, support.normalZ);
-    const gp_Dir preferredUp = std::abs(normal.Z()) < 0.95 ? gp_Dir(0.0, 0.0, 1.0)
-                                                           : gp_Dir(0.0, 1.0, 0.0);
+    const gp_Dir preferredUp =
+        std::abs(normal.Z()) < 0.95 ? gp_Dir(0.0, 0.0, 1.0) : gp_Dir(0.0, 1.0, 0.0);
     const gp_Dir x = preferredUp.Crossed(normal); // y = normal x x lies along preferredUp
     return {support.originX, support.originY, support.originZ, normal.X(), normal.Y(),
             normal.Z(),      x.X(),           x.Y(),           x.Z()};
 }
 
-viewport::PlanarFaceSelection drawingFrame(std::uint64_t bodyId, const document::SketchPlane& plane) {
-    return {bodyId,
-            plane.originX,
-            plane.originY,
-            plane.originZ,
-            plane.normalX,
-            plane.normalY,
-            plane.normalZ,
-            plane.xDirectionX,
-            plane.xDirectionY,
-            plane.xDirectionZ};
+viewport::PlanarFaceSelection drawingFrame(std::uint64_t bodyId,
+                                           const document::SketchPlane& plane) {
+    return {bodyId,        plane.originX, plane.originY,     plane.originZ,     plane.normalX,
+            plane.normalY, plane.normalZ, plane.xDirectionX, plane.xDirectionY, plane.xDirectionZ};
 }
 
 // The drawing frame of a base plane; bodyId 0 because no body supports it.

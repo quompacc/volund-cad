@@ -1,10 +1,12 @@
-#include <voelund/platform/RandomBytes.hpp>
 #include <stdexcept>
+#include <voelund/platform/RandomBytes.hpp>
 #ifdef _WIN32
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
 #include <windows.h>
+
+// bcrypt.h needs the Windows types declared first.
 #include <bcrypt.h>
 #elif defined(__FreeBSD__)
 #include <cstdlib>
@@ -20,8 +22,8 @@ namespace voelund::platform {
 std::array<std::uint8_t, 16> randomBytes128() {
     std::array<std::uint8_t, 16> bytes{};
 #ifdef _WIN32
-    const auto status = BCryptGenRandom(nullptr, bytes.data(),
-        static_cast<ULONG>(bytes.size()), BCRYPT_USE_SYSTEM_PREFERRED_RNG);
+    const auto status = BCryptGenRandom(nullptr, bytes.data(), static_cast<ULONG>(bytes.size()),
+                                        BCRYPT_USE_SYSTEM_PREFERRED_RNG);
     if (status < 0)
         throw std::runtime_error("Operating-system random generator failed");
 #elif defined(__FreeBSD__)

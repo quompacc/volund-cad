@@ -14,7 +14,7 @@
 namespace voelund::mcp::detail {
 namespace {
 // Parallel to kernel::PrimitiveRole; box roles are in the box's own axes.
-constexpr const char* roleNames[] = {"-x",  "+x",  "-y",   "+y",     "-z",    "+z",
+constexpr const char* roleNames[] = {"-x",    "+x",  "-y",   "+y",     "-z",   "+z",
                                      "start", "end", "side", "sphere", "torus"};
 constexpr const char* capNames[] = {"end", "start"}; // parallel to ExtrusionFace
 // Parallel to document::ContourRole and ContourStage.

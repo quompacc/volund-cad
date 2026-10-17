@@ -61,8 +61,8 @@ void run() {
     menu->hide();
 
     const auto command_ = window.mcpConnectCommand();
-    const auto match = QRegularExpression(QStringLiteral(":(\\d+)/mcp .*Bearer ([0-9a-f]+)"))
-                           .match(command_);
+    const auto match =
+        QRegularExpression(QStringLiteral(":(\\d+)/mcp .*Bearer ([0-9a-f]+)")).match(command_);
     Client client(static_cast<quint16>(match.captured(1).toUInt()), match.captured(2).toLatin1());
     static_cast<void>(client.open());
     const auto context = structured(client.call("get_context", {}));
@@ -70,7 +70,8 @@ void run() {
                                 {"type", "rectangle"},
                                 {"first", QJsonArray{-40, -20}},
                                 {"second", QJsonArray{40, 20}}};
-    const QJsonObject bore{{"id", 2}, {"type", "circle"}, {"center", QJsonArray{0, 0}}, {"radius", 8}};
+    const QJsonObject bore{
+        {"id", 2}, {"type", "circle"}, {"center", QJsonArray{0, 0}}, {"radius", 8}};
     static_cast<void>(client.call(
         "create_sketch_extrusion",
         {{"requestId", "plate"},

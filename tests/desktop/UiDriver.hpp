@@ -64,8 +64,7 @@ inline void press(QWidget& widget) {
 inline QToolButton& commandButton(QWidget& root, const char* commandId) {
     for (auto* button : root.findChildren<QToolButton*>())
         if (button->isVisible() && button->defaultAction() != nullptr &&
-            button->defaultAction()->property("commandId").toString() ==
-                QLatin1String(commandId))
+            button->defaultAction()->property("commandId").toString() == QLatin1String(commandId))
             return *button;
     throw std::runtime_error(std::string("No visible button for ") + commandId);
 }
@@ -75,8 +74,7 @@ inline QToolButton& commandButton(QWidget& root, const char* commandId) {
 inline QToolButton& railButton(QWidget& rail, const char* commandId) {
     for (auto* button : rail.findChildren<QToolButton*>())
         if (!button->isVisible() && button->defaultAction() != nullptr &&
-            button->defaultAction()->property("commandId").toString() ==
-                QLatin1String(commandId))
+            button->defaultAction()->property("commandId").toString() == QLatin1String(commandId))
             for (auto* group : rail.findChildren<QToolButton*>(QStringLiteral("railGroupButton")))
                 if (group->isVisible() &&
                     group->property("railGroup") == button->property("railGroup")) {

@@ -143,8 +143,7 @@ void run() {
     // Clicks on the cylinder tops add them one after the other, over the preview.
     const auto toolsOnce = [&] {
         click(*viewport, 25, 15, 15);
-        require(accept(window).isEnabled() &&
-                    matches(shown(*viewport), box - first + secondBody),
+        require(accept(window).isEnabled() && matches(shown(*viewport), box - first + secondBody),
                 "The first cylinder is cut out");
         click(*viewport, 8, 8, 15);
         if (!matches(shown(*viewport), box - first - second))
@@ -163,8 +162,7 @@ void run() {
     };
     toolsOnce();
     clearTools(window);
-    require(!accept(window).isEnabled() &&
-                matches(shown(*viewport), box + firstBody + secondBody),
+    require(!accept(window).isEnabled() && matches(shown(*viewport), box + firstBody + secondBody),
             "Reset shows the model again");
     toolsOnce();
     accept(window).click();

@@ -71,9 +71,9 @@ void mirrorPart() {
             "Hole cylinder");
     require(application::executeAction(
                 session, application::prepareRequest(
-                             session, application::CreateCombineAction{
-                                          box, {cylinder}, document::CombineOperation::cut,
-                                          false}))
+                             session,
+                             application::CreateCombineAction{
+                                 box, {cylinder}, document::CombineOperation::cut, false}))
                     .command.status() == CommandStatus::committed,
             "Box with a hole at x = 30");
     const auto part = session.features().back().id;
@@ -87,10 +87,10 @@ void mirrorPart() {
     const auto apart = session.features().back().id;
 
     const auto created = application::executeAction(
-        session, application::prepareRequest(
-                     session, application::CreateMirrorAction{
-                                  part, document::DatumPlane::yz, std::nullopt, std::nullopt,
-                                  std::nullopt, document::MirrorMode::newBody}));
+        session, application::prepareRequest(session, application::CreateMirrorAction{
+                                                          part, document::DatumPlane::yz,
+                                                          std::nullopt, std::nullopt, std::nullopt,
+                                                          document::MirrorMode::newBody}));
     require(created.command.status() == CommandStatus::committed &&
                 session.features().back().name == "Spiegeln 1" &&
                 session.validBodies().size() == 2 && near(volume(session), 2 * single) &&

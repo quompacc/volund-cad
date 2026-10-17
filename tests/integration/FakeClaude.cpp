@@ -28,8 +28,7 @@ void init(const QString& session, const char* status) {
            {"mcp_servers", QJsonArray{QJsonObject{{"name", "volund"}, {"status", status}}}}});
 }
 QJsonObject message(const QString& type, const QJsonObject& block) {
-    return {{"type", type},
-            {"message", QJsonObject{{"content", QJsonArray{block}}}}};
+    return {{"type", type}, {"message", QJsonObject{{"content", QJsonArray{block}}}}};
 }
 void toolUse(const QString& id, const QString& tool) {
     print(message("assistant", {{"type", "tool_use"},
@@ -46,7 +45,9 @@ void toolResult(const QString& id, const QJsonObject& result, bool error) {
                            {"is_error", error},
                            {"content", QJsonArray{textBlock}}}));
 }
-void text(const QString& value) { print(message("assistant", {{"type", "text"}, {"text", value}})); }
+void text(const QString& value) {
+    print(message("assistant", {{"type", "text"}, {"text", value}}));
+}
 void finalResult(const QString& session, const QString& value, bool success) {
     print({{"type", "result"},
            {"subtype", success ? "success" : "error_during_execution"},
@@ -77,8 +78,8 @@ Server server(const QStringList& arguments) {
 
 // One tool call; a refused request (e.g. revoked token) becomes an error result.
 QJsonObject call(Client& client, const QString& tool, const QJsonObject& arguments, bool& error) {
-    const auto response = client.post(
-        client.request("tools/call", {{"name", tool}, {"arguments", arguments}}));
+    const auto response =
+        client.post(client.request("tools/call", {{"name", tool}, {"arguments", arguments}}));
     if (response.status != 200) {
         error = true;
         return {{"error", QStringLiteral("HTTP %1").arg(response.status)}};

@@ -1,7 +1,7 @@
-#include "IsolatedSettings.hpp"
 #include "../../src/desktop/SketchEditorToolController.hpp"
 #include "../../src/desktop/ToolPanelHost.hpp"
 #include "../CommandResultAssertions.hpp"
+#include "IsolatedSettings.hpp"
 #include <QApplication>
 #include <QDoubleSpinBox>
 #include <QLabel>
@@ -56,10 +56,10 @@ void run() {
     auto* panel = new desktop::ToolPanelHost(&window);
     window.setCentralWidget(new QLabel(QStringLiteral("Sketch drag")));
     viewport::CadViewport viewport; // No shown GL surface is needed for this contract.
-    desktop::SketchEditorToolController controller(session, viewport, *panel, [] {},
-                                                   [](const QString&) {});
-    auto editor = std::make_unique<application::SketchEditorSession>(session,
-                                                                     document::DatumPlane::xy);
+    desktop::SketchEditorToolController controller(
+        session, viewport, *panel, [] {}, [](const QString&) {});
+    auto editor =
+        std::make_unique<application::SketchEditorSession>(session, document::DatumPlane::xy);
     editor->setTool(application::SketchDrawingTool::line);
     require(editor->create({{0, 0}, {10, 3}}).has_value(), "line");
     editor->commitHistory();
@@ -101,7 +101,8 @@ void run() {
 
     // A typed translation: several value changes, one step when editing ends.
     QDoubleSpinBox* deltaX = nullptr;
-    for (auto* input : panel->findChildren<QDoubleSpinBox*>(QStringLiteral("toolLength_translation_x")))
+    for (auto* input :
+         panel->findChildren<QDoubleSpinBox*>(QStringLiteral("toolLength_translation_x")))
         deltaX = input;
     require(deltaX != nullptr, "translation input");
     require(controller.selectElement({line.value(), 5, 1.5, false}), "select line again");

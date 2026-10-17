@@ -1,10 +1,10 @@
-#include <voelund/desktop/MainWindow.hpp>
 #include "MainWindowState.hpp"
 #include "RecoveryDialog.hpp"
-#include <voelund/application/CadSession.hpp>
-#include <voelund/document/DocumentId.hpp>
 #include <QStatusBar>
 #include <set>
+#include <voelund/application/CadSession.hpp>
+#include <voelund/desktop/MainWindow.hpp>
+#include <voelund/document/DocumentId.hpp>
 
 // L05: autosave into the recovery directory and the offer of unsaved work at start.
 namespace voelund::desktop {

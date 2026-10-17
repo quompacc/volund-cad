@@ -1,15 +1,15 @@
 #include "../../src/features/SketchRegionIntervalFaces.hpp"
+#include <voelund/features/ContourProvenance.hpp>
 #include <voelund/features/GeometryEvaluationError.hpp>
 #include <voelund/features/SketchEvaluation.hpp>
-#include <voelund/features/ContourProvenance.hpp>
 #include <voelund/features/SketchRegionIdentity.hpp>
 
 #include <BRepCheck_Analyzer.hxx>
 #include <BRepGProp.hxx>
-#include <voelund/kernel/Prism.hpp>
 #include <GProp_GProps.hxx>
 #include <TopAbs_ShapeEnum.hxx>
 #include <TopExp_Explorer.hxx>
+#include <voelund/kernel/Prism.hpp>
 
 #include <algorithm>
 #include <cmath>

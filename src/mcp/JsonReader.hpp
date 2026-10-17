@@ -16,7 +16,8 @@ namespace voelund::mcp::detail {
 // Typed reads of one JSON object; every failure names its field path.
 class JsonReader final {
   public:
-    JsonReader(QJsonObject object, QString path) : object_(std::move(object)), path_(std::move(path)) {}
+    JsonReader(QJsonObject object, QString path)
+        : object_(std::move(object)), path_(std::move(path)) {}
 
     [[nodiscard]] QString field(const QString& key) const {
         return path_.isEmpty() ? key : path_ + QLatin1Char('.') + key;

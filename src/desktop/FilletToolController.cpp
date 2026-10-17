@@ -21,11 +21,12 @@
 
 namespace voelund::desktop {
 
-FilletToolController::FilletToolController(
-    application::CadSession& session, viewport::CadViewport& viewport, ToolPanelHost& panel,
-    std::function<void()> sceneChanged, std::function<void(const QString&)> statusChanged)
-    : session_(session), viewport_(viewport), panel_(panel),
-      sceneChanged_(std::move(sceneChanged)), statusChanged_(std::move(statusChanged)) {}
+FilletToolController::FilletToolController(application::CadSession& session,
+                                           viewport::CadViewport& viewport, ToolPanelHost& panel,
+                                           std::function<void()> sceneChanged,
+                                           std::function<void(const QString&)> statusChanged)
+    : session_(session), viewport_(viewport), panel_(panel), sceneChanged_(std::move(sceneChanged)),
+      statusChanged_(std::move(statusChanged)) {}
 
 void FilletToolController::setPreviewHandler(
     std::function<void(const std::vector<features::EvaluatedBody>*)> handler) {
@@ -79,28 +80,28 @@ void FilletToolController::open(document::FeatureId support,
     features::numberFilletEdges(edges_);
     value_ = value;
     stamp_ = session_.sceneStatus().document;
-    const QString title = chamfer ? (editing_ ? QObject::tr("Fase bearbeiten") : QObject::tr("Fase"))
-                                  : (editing_ ? QObject::tr("Verrundung bearbeiten")
-                                              : QObject::tr("Verrunden"));
+    const QString title =
+        chamfer ? (editing_ ? QObject::tr("Fase bearbeiten") : QObject::tr("Fase"))
+                : (editing_ ? QObject::tr("Verrundung bearbeiten") : QObject::tr("Verrunden"));
     const std::string field = chamfer ? "distance" : "radius";
-    panel_.begin(ToolPanelDefinition{
-        title,
-        guidance(),
-        {{field, chamfer ? QObject::tr("Abstand") : QObject::tr("Radius"), value_, 0.001,
-          1'000'000.0}},
-        {},
-        {},
-        [this, field](const std::string& id, double changed) {
-            if (id == field) {
-                value_ = changed;
-                preview();
-            }
-        },
-        {},
-        {},
-        [this]() { accept(); },
-        [this]() { cancel(); },
-        {}});
+    panel_.begin(
+        ToolPanelDefinition{title,
+                            guidance(),
+                            {{field, chamfer ? QObject::tr("Abstand") : QObject::tr("Radius"),
+                              value_, 0.001, 1'000'000.0}},
+                            {},
+                            {},
+                            [this, field](const std::string& id, double changed) {
+                                if (id == field) {
+                                    value_ = changed;
+                                    preview();
+                                }
+                            },
+                            {},
+                            {},
+                            [this]() { accept(); },
+                            [this]() { cancel(); },
+                            {}});
     viewport_.setEdgePicking(true);
     viewport_.setPushPullHandler([this](double to, bool finished) { dragged(to, finished); });
     gripEdge_.reset();
@@ -129,7 +130,8 @@ void FilletToolController::picked(std::uint64_t body, const TopoDS_Shape& edge) 
         // A chosen edge drawn over the preview: remove the named edge it belongs to.
         const auto chosen = std::ranges::find_if(edges_, [&](const auto& named) {
             const auto shapes = session_.filletEdgeShapes(support_, std::span(&named, 1));
-            return std::ranges::any_of(shapes, [&](const auto& shape) { return shape.IsSame(edge); });
+            return std::ranges::any_of(shapes,
+                                       [&](const auto& shape) { return shape.IsSame(edge); });
         });
         if (chosen != edges_.end())
             edges_.erase(chosen);
@@ -320,9 +322,9 @@ void FilletToolController::accept() {
     const bool edited = editing_.has_value();
     const bool chamfer = treatment_ == EdgeTreatment::chamfer;
     finish();
-    statusChanged_(chamfer ? (edited ? QObject::tr("Fase geändert") : QObject::tr("Kanten angefast"))
-                           : (edited ? QObject::tr("Verrundung geändert")
-                                     : QObject::tr("Kanten verrundet")));
+    statusChanged_(
+        chamfer ? (edited ? QObject::tr("Fase geändert") : QObject::tr("Kanten angefast"))
+                : (edited ? QObject::tr("Verrundung geändert") : QObject::tr("Kanten verrundet")));
 }
 
 void FilletToolController::cancel() {

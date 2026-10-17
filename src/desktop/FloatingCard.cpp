@@ -76,16 +76,15 @@ void FloatingCard::place() {
     // User report 2026-10-13: wrapped text (guidance, errors) is measured at the card's real
     // width; sizeHint() guessed a wider line, cut the text and hid the fields below a scroll.
     const auto heightAt = [](QLayout& layout, QWidget* owner, int width) {
-        return layout.hasHeightForWidth() ? layout.totalHeightForWidth(width)
-                                          : (owner != nullptr ? owner->sizeHint().height()
-                                                              : layout.sizeHint().height());
+        return layout.hasHeightForWidth()
+                   ? layout.totalHeightForWidth(width)
+                   : (owner != nullptr ? owner->sizeHint().height() : layout.sizeHint().height());
     };
     const int inner = cardWidth - 14 - 6;
     const int wanted = heightAt(*body_, content_, inner - 14) +
                        (title_->hasHeightForWidth() ? title_->heightForWidth(inner)
                                                     : title_->sizeHint().height()) +
-                       heightAt(*footer_, nullptr, inner - 8) +
-                       48;
+                       heightAt(*footer_, nullptr, inner - 8) + 48;
     setFixedHeight(std::min(available, wanted));
     move(host_.width() - cardWidth - margin, y);
     raise();

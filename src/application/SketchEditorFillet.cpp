@@ -67,8 +67,8 @@ SketchCurveEditResult SketchEditorSession::treatCorner(bool chamfer, double size
     std::vector<document::SketchLine> lines;
     bool construction = true;
     for (const auto& pick : picks) {
-        const auto match = std::ranges::find(elements_.values, pick.element,
-                                             &document::SketchElement::id);
+        const auto match =
+            std::ranges::find(elements_.values, pick.element, &document::SketchElement::id);
         const auto* line = match == elements_.values.end()
                                ? nullptr
                                : std::get_if<document::SketchLine>(&match->geometry);
@@ -89,10 +89,10 @@ SketchCurveEditResult SketchEditorSession::treatCorner(bool chamfer, double size
             refuse(std::string("Eine Kopie folgt ihrem Original; das Original ") +
                        (chamfer ? "fasen" : "verrunden") + " oder das Muster auflösen",
                    {pick.element});
-    const auto plan = detail::planCorner(
-        chamfer ? detail::SketchCornerKind::chamfer : detail::SketchCornerKind::fillet,
-        picks[0].element, lines[0], picks[0].point, picks[1].element, lines[1], picks[1].point,
-        size);
+    const auto plan = detail::planCorner(chamfer ? detail::SketchCornerKind::chamfer
+                                                 : detail::SketchCornerKind::fillet,
+                                         picks[0].element, lines[0], picks[0].point,
+                                         picks[1].element, lines[1], picks[1].point, size);
     const bool corner = plan.first.movedFromCorner || plan.second.movedFromCorner;
     if (!canAllocateIds(corner ? 3 : 1, corner ? 18 : 13))
         refuse("Die Skizze hat keine freien IDs mehr");
@@ -136,7 +136,8 @@ SketchCurveEditResult SketchEditorSession::treatCorner(bool chamfer, double size
         for (const Leg* leg : {&first, &second}) {
             const SketchElementId id = leg->plan.id;
             const Position keptEnd = other(leg->plan.moved);
-            if (constraint.kind == SketchConstraintKind::distance && constraint.first.element == id) {
+            if (constraint.kind == SketchConstraintKind::distance &&
+                constraint.first.element == id) {
                 if (!leg->keepsCorner()) {
                     drop = true;
                     continue;
@@ -194,8 +195,7 @@ SketchCurveEditResult SketchEditorSession::treatCorner(bool chamfer, double size
         constraints_.values.push_back({result.added.back(), kind, a, b, value});
     };
     // The chamfer line runs from the first line's joint to the second's.
-    const Position firstOnArc =
-        chamfer || plan.arcStartOnFirst ? Position::start : Position::end;
+    const Position firstOnArc = chamfer || plan.arcStartOnFirst ? Position::start : Position::end;
     relate(SketchConstraintKind::coincident, {plan.first.id, plan.first.moved}, {arc, firstOnArc});
     relate(SketchConstraintKind::coincident, {plan.second.id, plan.second.moved},
            {arc, other(firstOnArc)});
@@ -205,8 +205,11 @@ SketchCurveEditResult SketchEditorSession::treatCorner(bool chamfer, double size
         relate(SketchConstraintKind::tangent, {plan.second.id, Position::start},
                {arc, Position::start});
         result.added.push_back(document::SketchConstraintId{constraints_.nextId++});
-        constraints_.values.push_back({result.added.back(), SketchConstraintKind::radius,
-                                       {arc, Position::center}, std::nullopt, size});
+        constraints_.values.push_back({result.added.back(),
+                                       SketchConstraintKind::radius,
+                                       {arc, Position::center},
+                                       std::nullopt,
+                                       size});
     }
     if (corner) {
         for (const Leg* leg : {&first, &second}) {
@@ -217,8 +220,8 @@ SketchCurveEditResult SketchEditorSession::treatCorner(bool chamfer, double size
         }
         relate(SketchConstraintKind::coincident, first.corner(), second.corner());
         if (chamfer)
-            for (const auto& [end, leg] : {std::pair{Position::start, &first},
-                                           std::pair{Position::end, &second}})
+            for (const auto& [end, leg] :
+                 {std::pair{Position::start, &first}, std::pair{Position::end, &second}})
                 relate(SketchConstraintKind::pointDistance, {arc, end}, leg->corner(), size);
     }
 

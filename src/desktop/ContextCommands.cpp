@@ -108,7 +108,7 @@ ContextCommands contextCommands(const ShellState& state) {
         // M01 (user decision 2026-10-10): rename, show/hide, move where possible, and a
         // cylinder on this body.
         result.title = state.bodyName;
-        result.commands = {"body.rename", "body.visibility", "solid.modify.transform",
+        result.commands = {"body.rename",         "body.visibility",      "solid.modify.transform",
                            "solid.modify.fillet", "solid.modify.chamfer", "solid.modify.combine",
                            "solid.modify.mirror", "solid.create.cylinder"};
         break;
@@ -138,9 +138,9 @@ ContextCommands contextCommands(const ShellState& state) {
             }
             break;
         }
-        result.commands = {"solid.modify.transform", "solid.modify.fillet",
-                           "solid.modify.chamfer", "solid.create.cylinder", "history.suppress",
-                           "history.rollback_here", "history.delete"};
+        result.commands = {"solid.modify.transform", "solid.modify.fillet", "solid.modify.chamfer",
+                           "solid.create.cylinder",  "history.suppress",    "history.rollback_here",
+                           "history.delete"};
         if (state.extrusionEditable || state.filletEditable) {
             result.commands.insert(result.commands.begin(), "solid.modify.edit_sketch");
             result.primary = "solid.modify.edit_sketch";

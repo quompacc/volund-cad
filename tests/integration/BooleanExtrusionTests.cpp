@@ -56,8 +56,8 @@ struct Fixture final {
         return count;
     }
     application::CreateProfileExtrusionAction action(document::SketchGeometry geometry,
-                                                     ExtrusionOperation operation,
-                                                     double distance, double offset = 0) {
+                                                     ExtrusionOperation operation, double distance,
+                                                     double offset = 0) {
         document::SketchParameters sketch{
             document::datumSketchPlane(DatumPlane::xy),
             document::SketchElements{{{SketchElementId{1}, std::move(geometry)}}, 2}};
@@ -100,7 +100,8 @@ void cutsAndPocket() {
     Fixture f;
     const double box = 40 * 30 * 10;
     const auto hole = f.action(document::SketchCircle{{20, 15}, 3}, ExtrusionOperation::cut, 10);
-    const auto preview = application::previewAction(f.session, application::prepareRequest(f.session, hole));
+    const auto preview =
+        application::previewAction(f.session, application::prepareRequest(f.session, hole));
     double previewed = 0;
     for (const auto& body : preview.bodies)
         if (body.bodyId == f.a)

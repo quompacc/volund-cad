@@ -43,8 +43,8 @@ void volumes() {
     for (const auto& item : cases) {
         application::CadSession session;
         session.newDocument();
-        const auto created =
-            session.createPrimitive(item.shape, std::nullopt, document::CylinderResultMode::separate);
+        const auto created = session.createPrimitive(item.shape, std::nullopt,
+                                                     document::CylinderResultMode::separate);
         require(created.status() == CommandStatus::committed &&
                     session.features().back().name == item.name &&
                     session.validBodies().size() == 1,

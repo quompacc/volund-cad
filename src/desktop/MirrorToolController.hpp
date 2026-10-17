@@ -40,7 +40,8 @@ class MirrorToolController final {
     // A planar face picked while the panel is open: the mirror plane.
     void picked(const viewport::PlanarFaceSelection& face);
     void cancel();
-    void setPreviewHandler(std::function<void(const std::vector<features::EvaluatedBody>*)> handler);
+    void
+    setPreviewHandler(std::function<void(const std::vector<features::EvaluatedBody>*)> handler);
 
   private:
     struct PickedFace final {

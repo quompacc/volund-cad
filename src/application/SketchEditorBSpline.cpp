@@ -19,7 +19,8 @@ std::vector<std::pair<SketchGeometryReference, SketchPoint>>
 ends(const document::SketchElement& element) {
     const auto& geometry = element.geometry;
     if (const auto* line = std::get_if<document::SketchLine>(&geometry))
-        return {{{element.id, Position::start}, line->start}, {{element.id, Position::end}, line->end}};
+        return {{{element.id, Position::start}, line->start},
+                {{element.id, Position::end}, line->end}};
     if (const auto* arc = std::get_if<document::SketchArc>(&geometry))
         return {{{element.id, Position::start},
                  {arc->center.x + arc->radius * std::cos(arc->startAngle),
@@ -48,9 +49,8 @@ SketchEditorSession::addBSpline(std::span<const SketchPoint> poles, bool constru
     std::vector<std::pair<SketchGeometryReference, SketchGeometryReference>> joints;
     for (const auto& element : elements_.values)
         for (const auto& [reference, point] : ends(element))
-            for (const auto& [own, end] :
-                 {std::pair{Position::start, spline.poles.front()},
-                  std::pair{Position::end, spline.poles.back()}})
+            for (const auto& [own, end] : {std::pair{Position::start, spline.poles.front()},
+                                           std::pair{Position::end, spline.poles.back()}})
                 if (std::hypot(point.x - end.x, point.y - end.y) < 1e-9)
                     joints.push_back({{id, own}, reference});
     elements_.values.push_back({id, spline, construction});

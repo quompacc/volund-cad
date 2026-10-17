@@ -1,7 +1,7 @@
 #pragma once
 
-#include <voelund/document/IdCapacity.hpp>
 #include <stdexcept>
+#include <voelund/document/IdCapacity.hpp>
 
 namespace voelund::document {
 

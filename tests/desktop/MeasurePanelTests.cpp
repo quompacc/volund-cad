@@ -89,7 +89,8 @@ void run() {
     const QPoint corner = viewport::ViewportTestAccess::project(*viewport, 20, 20, 5);
     const QPointF away(corner - middle);
     const double length = std::max(1.0, std::hypot(away.x(), away.y()));
-    click(*viewport, 20, 20, 5, QPoint(qRound(2 * away.x() / length), qRound(2 * away.y() / length)));
+    click(*viewport, 20, 20, 5,
+          QPoint(qRound(2 * away.x() / length), qRound(2 * away.y() / length)));
     const QString edge = guidance(window);
     require(edge.contains(QStringLiteral("Länge ") + value(10, 3) + QStringLiteral(" mm")) &&
                 edge.contains(QStringLiteral("Körpervolumen ") + value(4000, 3)),
@@ -123,7 +124,8 @@ void run() {
             copied = true;
         }
     settle();
-    require(copied && QApplication::clipboard()->text().contains(QLocale().toString(400.0, 'g', 15)),
+    require(copied &&
+                QApplication::clipboard()->text().contains(QLocale().toString(400.0, 'g', 15)),
             "Werte kopieren copies the full values");
 
     accept(window).click();
@@ -132,7 +134,8 @@ void run() {
                 session.isModified() == modified,
             "Measuring leaves the document untouched");
     std::cout << "PASS M12 measure panel: edge length and volume, face area, distance, angle, "
-                 "start over, same in the top view, copy, no document change" << std::endl;
+                 "start over, same in the top view, copy, no document change"
+              << std::endl;
 }
 } // namespace
 

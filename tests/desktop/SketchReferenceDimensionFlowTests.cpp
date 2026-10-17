@@ -18,8 +18,8 @@
 // makes it a reference again; OK stores the reference.
 namespace {
 using namespace voelund;
-using viewport::ViewportTestAccess;
 using test::require;
+using viewport::ViewportTestAccess;
 
 QAction& command(QWidget& window, const char* id) {
     for (auto* action : window.findChildren<QAction*>())

@@ -72,8 +72,8 @@ viewport::SceneSketchElement makeSceneSketchElement(const features::EvaluatedSke
              (first.world.X() + second.world.X()) * 0.5, (first.world.Y() + second.world.Y()) * 0.5,
              (first.world.Z() + second.world.Z()) * 0.5});
     }
-    return {element.id.value(), element.shape, conflicting, element.construction,
-            std::move(points), determined};
+    return {element.id.value(),   element.shape,     conflicting,
+            element.construction, std::move(points), determined};
 }
 
 std::vector<viewport::SceneSketchElement>

@@ -29,7 +29,8 @@ CommandResult CadSession::finishCandidate(document::DocumentTransaction& transac
                                           std::optional<document::FeatureId> selection,
                                           CommandKind kind, ErrorDisposition disposition,
                                           bool clearSketchSelection) {
-    auto evaluation = featureGraph_.evaluateDetailed(document::DocumentSnapshot::capture(transaction.candidate()), evaluation_);
+    auto evaluation = featureGraph_.evaluateDetailed(
+        document::DocumentSnapshot::capture(transaction.candidate()), evaluation_);
     auto states = detail::runtimeStates(evaluation->report);
     auto report = evaluation->report;
     auto evaluated = evaluation->result;
@@ -37,9 +38,8 @@ CommandResult CadSession::finishCandidate(document::DocumentTransaction& transac
     std::vector<document::FeatureId> changed;
     const auto before = document::DocumentSnapshot::capture(document_);
     for (const auto& feature : transaction.candidate().features()) {
-        if (!document_.contains(feature.id) ||
-            evaluation->snapshot.featureParameters(feature.id) !=
-                before.featureParameters(feature.id))
+        if (!document_.contains(feature.id) || evaluation->snapshot.featureParameters(feature.id) !=
+                                                   before.featureParameters(feature.id))
             changed.push_back(feature.id);
     }
     const auto affected = evaluation->dependencies.affected(changed);
@@ -50,8 +50,9 @@ CommandResult CadSession::finishCandidate(document::DocumentTransaction& transac
     for (std::size_t i = 0; i < report.features.size(); ++i)
         if (kind != CommandKind::newFeature && !structural && !affected[i])
             report.features[i].status = features::EvaluationStatus::valid;
-    CommandResult published(evaluation->valid() ? CommandStatus::committed : CommandStatus::committedWithErrors,
-        RejectionReason::none, evaluation->report);
+    CommandResult published(evaluation->valid() ? CommandStatus::committed
+                                                : CommandStatus::committedWithErrors,
+                            RejectionReason::none, evaluation->report);
     CommandTransaction command(kind, std::make_unique<SessionDocumentBackend>(transaction));
     auto result = command.finish(std::move(report), disposition);
     if (result.status() == CommandStatus::rejected) {

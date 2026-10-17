@@ -1,3 +1,4 @@
+#include "../integration/CadSessionTestSupport.hpp"
 #include "IsolatedSettings.hpp"
 #include "ViewportLifecycleSupport.hpp"
 #include <BRepGProp.hxx>
@@ -16,7 +17,6 @@
 #include <voelund/application/CadSession.hpp>
 #include <voelund/desktop/MainWindow.hpp>
 #include <voelund/features/SketchRegionIdentity.hpp>
-#include "../integration/CadSessionTestSupport.hpp"
 
 // T02: the extrusion panel offers direction and result (ADR 0012 target, user decision
 // 2026-10-06). A face sketch defaults to join; choosing cut turns the direction into the
@@ -89,9 +89,10 @@ document::SketchParameters onXy(double x0, double y0, double x1, double y1) {
 }
 document::FeatureId plate(application::CadSession& session, double x0, double x1) {
     const auto result = application::executeAction(
-        session, application::prepareRequest(
-                     session, application::CreateSketchExtrusionAction{
-                                  onXy(x0, -20, x1, 20), {}, {10, application::QuantityUnit::millimetre}}));
+        session,
+        application::prepareRequest(
+            session, application::CreateSketchExtrusionAction{
+                         onXy(x0, -20, x1, 20), {}, {10, application::QuantityUnit::millimetre}}));
     require(result.createdFeatures.size() == 2, "Plate");
     return result.createdFeatures.back();
 }
@@ -254,9 +255,9 @@ document::FeatureId faceSketch(application::CadSession& session, document::Featu
     // A 20 x 10 rectangle in the middle of the face; the area is what counts.
     const double cx = (top->minX + top->maxX) / 2;
     const double cy = (top->minY + top->maxY) / 2;
-    sketch.elements = {
-        {{document::SketchElementId{1}, document::SketchRectangle{cx - 10, cy - 5, cx + 10, cy + 5}}},
-        2};
+    sketch.elements = {{{document::SketchElementId{1},
+                         document::SketchRectangle{cx - 10, cy - 5, cx + 10, cy + 5}}},
+                       2};
     const auto created = session.createSketchFeature(support, sketch);
     require(created.feature().has_value(), "Face sketch");
     return *created.feature();

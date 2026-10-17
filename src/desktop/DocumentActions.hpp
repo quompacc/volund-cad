@@ -14,7 +14,7 @@ class QMenu;
 namespace voelund::application {
 class CadSession;
 struct StepImportResult;
-}
+} // namespace voelund::application
 
 namespace voelund::desktop {
 

@@ -1,9 +1,9 @@
 #include "../../src/document/ModelDocumentImpl.hpp"
-#include <voelund/document/DocumentTransaction.hpp>
-#include <voelund/application/CadSession.hpp>
-#include <voelund/kernel/OcctCompatibility.hpp>
 #include <iostream>
 #include <stdexcept>
+#include <voelund/application/CadSession.hpp>
+#include <voelund/document/DocumentTransaction.hpp>
+#include <voelund/kernel/OcctCompatibility.hpp>
 
 namespace voelund::document {
 struct ModelDocumentBackendTestAccess {
@@ -11,16 +11,18 @@ struct ModelDocumentBackendTestAccess {
         return model.impl_->native.snapshot(); // Read attributes, not the derived query view.
     }
 };
-}
+} // namespace voelund::document
 namespace {
 using namespace voelund;
 using namespace document;
 void require(bool condition, const char* message) {
-    if (!condition) throw std::runtime_error(message);
+    if (!condition)
+        throw std::runtime_error(message);
 }
 void parity(const ModelDocument& model) {
     const auto native = ModelDocumentBackendTestAccess::native(model);
-    require(native.id() == model.documentId() && native.snapshot() == DocumentSnapshot::capture(model),
+    require(native.id() == model.documentId() &&
+                native.snapshot() == DocumentSnapshot::capture(model),
             "Product query view diverged from native OCAF attributes");
 }
 void productBackend() {
@@ -32,9 +34,10 @@ void productBackend() {
     DocumentTransaction change(model);
     auto& edit = change.edit();
     require(edit.documentId() == id, "Transaction candidate changed namespace");
-    const auto cylinder = edit.addCylinderFeature("Independent", box,
-        {2, 5, {}, CylinderResultMode::separate});
-    const auto sketch = edit.addSketchFeature("Sketch", box,
+    const auto cylinder =
+        edit.addCylinderFeature("Independent", box, {2, 5, {}, CylinderResultMode::separate});
+    const auto sketch = edit.addSketchFeature(
+        "Sketch", box,
         {{0, 0, 30, 0, 0, 1, 1, 0, 0},
          SketchElements{{{SketchElementId{1}, SketchRectangle{1, 1, 4, 4}}}, 2}});
     const auto extrusion = edit.addExtrusionFeature("Extrusion", sketch, {3, {}});
@@ -56,11 +59,13 @@ void productBackend() {
     parity(model);
     require(model.undo(), "Prepare branch");
     const auto replacement = model.addBoxFeature("Replacement", {2, 3, 4});
-    require(replacement.value() > extrusion.value() && !model.canRedo() && !model.contains(cylinder),
+    require(replacement.value() > extrusion.value() && !model.canRedo() &&
+                !model.contains(cylinder),
             "Native branch reused IDs or retained discarded history");
     parity(model);
     const auto imported = after.toDocument(id);
-    require(imported.documentId() == id && !imported.canUndo(), "Snapshot restore history/identity");
+    require(imported.documentId() == id && !imported.canUndo(),
+            "Snapshot restore history/identity");
     parity(imported);
 }
 void sessionIdentity() {
@@ -73,10 +78,11 @@ void sessionIdentity() {
             "Product box creation failed");
     const auto before = session.identifiedSnapshot();
     session.duplicateDocument();
-    require(session.documentId() != id && session.identifiedSnapshot().snapshot() == before.snapshot(),
+    require(session.documentId() != id &&
+                session.identifiedSnapshot().snapshot() == before.snapshot(),
             "Duplicate lost namespace/content separation");
 }
-}
+} // namespace
 int main() {
     try {
         productBackend();
@@ -85,6 +91,8 @@ int main() {
         return 0;
     } catch (const Standard_Failure& error) {
         std::cerr << kernel::occtFailureDiagnostic(error) << '\n';
-    } catch (const std::exception& error) { std::cerr << error.what() << '\n'; }
+    } catch (const std::exception& error) {
+        std::cerr << error.what() << '\n';
+    }
     return 1;
 }

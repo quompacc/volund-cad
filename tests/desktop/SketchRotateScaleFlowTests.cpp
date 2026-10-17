@@ -20,7 +20,9 @@
 // about the same center; OK stores x 0..20, y -15..25.
 namespace {
 using namespace voelund;
-void require(bool condition, const std::string& message) { test::require(condition, message.c_str()); }
+void require(bool condition, const std::string& message) {
+    test::require(condition, message.c_str());
+}
 
 QAction& command(QWidget& window, const char* id) {
     for (auto* action : window.findChildren<QAction*>())
@@ -37,18 +39,17 @@ void click(viewport::CadViewport& viewport, double x, double y,
     const QPoint point = viewport::ViewportTestAccess::project(viewport, x, y, 0);
     test::mouse(viewport, QEvent::MouseMove, point, Qt::NoButton, Qt::NoButton);
     for (const auto type : {QEvent::MouseButtonPress, QEvent::MouseButtonRelease}) {
-        QMouseEvent event(type, QPointF(point), QPointF(viewport.mapToGlobal(point)),
-                          Qt::LeftButton,
-                          type == QEvent::MouseButtonPress ? Qt::LeftButton : Qt::NoButton,
-                          modifiers);
+        QMouseEvent event(
+            type, QPointF(point), QPointF(viewport.mapToGlobal(point)), Qt::LeftButton,
+            type == QEvent::MouseButtonPress ? Qt::LeftButton : Qt::NoButton, modifiers);
         QApplication::sendEvent(&viewport, &event);
     }
     test::render(viewport);
     settle();
 }
 QDoubleSpinBox& field(QWidget& window, const char* id) {
-    auto* input = window.findChild<QDoubleSpinBox*>(QStringLiteral("toolLength_") +
-                                                    QLatin1String(id));
+    auto* input =
+        window.findChild<QDoubleSpinBox*>(QStringLiteral("toolLength_") + QLatin1String(id));
     require(input != nullptr, std::string("Field ") + id);
     return *input;
 }
@@ -115,11 +116,11 @@ void run() {
                 bottom = std::min(bottom, point.y);
                 top = std::max(top, point.y);
             }
-    require(std::abs(left) < 1e-6 && std::abs(right - 20) < 1e-6 &&
-                std::abs(bottom + 15) < 1e-6 && std::abs(top - 25) < 1e-6,
-            "Scaled by 2, then turned upright: x 0..20, y -15..25, got x " +
-                std::to_string(left) + ".." + std::to_string(right) + ", y " +
-                std::to_string(bottom) + ".." + std::to_string(top));
+    require(std::abs(left) < 1e-6 && std::abs(right - 20) < 1e-6 && std::abs(bottom + 15) < 1e-6 &&
+                std::abs(top - 25) < 1e-6,
+            "Scaled by 2, then turned upright: x 0..20, y -15..25, got x " + std::to_string(left) +
+                ".." + std::to_string(right) + ", y " + std::to_string(bottom) + ".." +
+                std::to_string(top));
     std::cout << "PASS S20 sketch rotate/scale flow: scale 2, rotate 90, OK\n";
 }
 } // namespace

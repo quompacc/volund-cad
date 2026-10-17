@@ -50,11 +50,11 @@ QIcon featureStatusIcon(application::FeatureRuntimeStatus status) {
 
 FeatureErrorCard::FeatureErrorCard(QWidget* parent) : QFrame(parent) {
     setObjectName(QStringLiteral("featureErrorCard"));
-    setStyleSheet(QStringLiteral(
-        "#featureErrorCard { border: 1px solid #b94a55; border-radius: 6px; "
-        "background: rgba(198, 40, 40, 0.08); }"
-        "#featureErrorCard[blocked=\"true\"] { border-color: #e08e0b; "
-        "background: rgba(224, 142, 11, 0.10); }"));
+    setStyleSheet(
+        QStringLiteral("#featureErrorCard { border: 1px solid #b94a55; border-radius: 6px; "
+                       "background: rgba(198, 40, 40, 0.08); }"
+                       "#featureErrorCard[blocked=\"true\"] { border-color: #e08e0b; "
+                       "background: rgba(224, 142, 11, 0.10); }"));
     auto* layout = new QVBoxLayout(this);
     layout->setContentsMargins(8, 6, 8, 6);
     title_ = new QLabel(this);
@@ -98,9 +98,8 @@ void FeatureErrorCard::showError(const Content& content) {
     setProperty("blocked", content.blocked);
     style()->unpolish(this);
     style()->polish(this);
-    title_->setText(content.blocked
-                        ? tr("Blockiert durch %1").arg(content.cause)
-                        : tr("Fehler in diesem Feature"));
+    title_->setText(content.blocked ? tr("Blockiert durch %1").arg(content.cause)
+                                    : tr("Fehler in diesem Feature"));
     message_->setText(content.message);
     cause_->setVisible(content.blocked && !content.cause.isEmpty());
     edit_->setVisible(content.canEdit);

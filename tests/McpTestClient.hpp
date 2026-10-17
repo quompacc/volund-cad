@@ -46,24 +46,26 @@ class Connection final {
         socket_.write(request);
         QByteArray buffer;
         HttpResponse response;
-        spinUntil([&] {
-            buffer += socket_.readAll();
-            const auto end = buffer.indexOf("\r\n\r\n");
-            if (end < 0)
-                return false;
-            const auto lines = buffer.left(end).split('\n');
-            response.status = lines.front().split(' ').value(1).toInt();
-            for (qsizetype i = 1; i < lines.size(); ++i) {
-                const auto colon = lines[i].indexOf(':');
-                response.headers.insert(lines[i].left(colon).trimmed().toLower(),
-                                        lines[i].mid(colon + 1).trimmed());
-            }
-            const auto length = response.headers.value("content-length").toLongLong();
-            if (buffer.size() < end + 4 + length)
-                return false;
-            response.body = buffer.mid(end + 4, length);
-            return true;
-        }, method + " response");
+        spinUntil(
+            [&] {
+                buffer += socket_.readAll();
+                const auto end = buffer.indexOf("\r\n\r\n");
+                if (end < 0)
+                    return false;
+                const auto lines = buffer.left(end).split('\n');
+                response.status = lines.front().split(' ').value(1).toInt();
+                for (qsizetype i = 1; i < lines.size(); ++i) {
+                    const auto colon = lines[i].indexOf(':');
+                    response.headers.insert(lines[i].left(colon).trimmed().toLower(),
+                                            lines[i].mid(colon + 1).trimmed());
+                }
+                const auto length = response.headers.value("content-length").toLongLong();
+                if (buffer.size() < end + 4 + length)
+                    return false;
+                response.body = buffer.mid(end + 4, length);
+                return true;
+            },
+            method + " response");
         return response;
     }
     [[nodiscard]] quint16 port() const { return port_; }
@@ -84,8 +86,7 @@ class Connection final {
 class Client final {
   public:
     Client(quint16 port, QByteArray token) : connection_(port), token_(std::move(token)) {}
-    HttpResponse post(const QJsonObject& message,
-                      QList<QPair<QByteArray, QByteArray>> extra = {}) {
+    HttpResponse post(const QJsonObject& message, QList<QPair<QByteArray, QByteArray>> extra = {}) {
         auto headers = base();
         headers.append(extra);
         return connection_.send("POST", QJsonDocument(message).toJson(QJsonDocument::Compact),
@@ -107,15 +108,15 @@ class Client final {
     }
     // initialize + notifications/initialized.
     QJsonObject open() {
-        const auto response = post(request("initialize", {{"protocolVersion", "2025-06-18"},
-                                                          {"capabilities", QJsonObject{}},
-                                                          {"clientInfo", QJsonObject{{"name", "test"},
-                                                                                     {"version", "1"}}}}));
+        const auto response = post(request(
+            "initialize", {{"protocolVersion", "2025-06-18"},
+                           {"capabilities", QJsonObject{}},
+                           {"clientInfo", QJsonObject{{"name", "test"}, {"version", "1"}}}}));
         check(response.status == 200 && response.headers.contains("mcp-session-id"),
-                "initialize opens a session");
+              "initialize opens a session");
         session = response.headers.value("mcp-session-id");
         check(post({{"jsonrpc", "2.0"}, {"method", "notifications/initialized"}}).status == 202,
-                "Notifications are accepted without a body");
+              "Notifications are accepted without a body");
         return response.json().value("result").toObject();
     }
     QJsonObject call(const QString& tool, const QJsonObject& arguments) {

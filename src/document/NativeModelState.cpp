@@ -29,8 +29,8 @@ void NativeModelState::checkRevisionAvailable() const {
     if (revision() == std::numeric_limits<std::uint64_t>::max())
         throw std::overflow_error("Native model revision exhausted");
 }
-NativeModelState::Prepared NativeModelState::prepare(
-        const IdentifiedDocumentSnapshot& replacement, bool recordHistory) const {
+NativeModelState::Prepared NativeModelState::prepare(const IdentifiedDocumentSnapshot& replacement,
+                                                     bool recordHistory) const {
     const auto& before = view();
     if (replacement.id() != before.id() ||
         replacement.snapshot().nextFeatureId() < before.snapshot().nextFeatureId())
@@ -40,8 +40,10 @@ NativeModelState::Prepared NativeModelState::prepare(
     checkRevisionAvailable();
     auto next = std::make_unique<State>(*state_);
     next->current = encode(replacement);
-    next->view = std::make_shared<const IdentifiedDocumentSnapshot>(NativePrimitiveCodec::read(next->current));
-    if (recordHistory) next->undo.push_back(state_->current);
+    next->view = std::make_shared<const IdentifiedDocumentSnapshot>(
+        NativePrimitiveCodec::read(next->current));
+    if (recordHistory)
+        next->undo.push_back(state_->current);
     next->redo.clear();
     ++next->revision;
     return Prepared(this, revision(), std::move(next));
@@ -97,7 +99,8 @@ NativeModelState::Prepared NativeModelState::prepareHistory(bool undo) const {
     const auto restored = IdentifiedDocumentSnapshot::restore(before.id(), std::move(content));
     auto next = std::make_unique<State>(*state_);
     next->current = encode(restored);
-    next->view = std::make_shared<const IdentifiedDocumentSnapshot>(NativePrimitiveCodec::read(next->current));
+    next->view = std::make_shared<const IdentifiedDocumentSnapshot>(
+        NativePrimitiveCodec::read(next->current));
     (undo ? next->redo : next->undo).push_back(state_->current);
     (undo ? next->undo : next->redo).pop_back();
     ++next->revision;
@@ -114,7 +117,8 @@ NativeModelState::prepareViewChange(const IdentifiedDocumentSnapshot& replacemen
     checkRevisionAvailable();
     auto next = std::make_unique<State>(*state_);
     next->current = encode(replacement);
-    next->view = std::make_shared<const IdentifiedDocumentSnapshot>(NativePrimitiveCodec::read(next->current));
+    next->view = std::make_shared<const IdentifiedDocumentSnapshot>(
+        NativePrimitiveCodec::read(next->current));
     ++next->revision;
     return Prepared(this, revision(), std::move(next));
 }
@@ -124,7 +128,8 @@ bool NativeModelState::commit(Prepared&& prepared) {
     if (prepared.consumed_ || prepared.owner_ != this || prepared.revision_ != revision())
         throw std::logic_error("Native model change is consumed, foreign or stale");
     const bool changed = static_cast<bool>(prepared.state_);
-    if (changed) state_.swap(prepared.state_);
+    if (changed)
+        state_.swap(prepared.state_);
     prepared.consumed_ = true;
     return changed;
 }

@@ -187,11 +187,10 @@ void AssistantPanel::present(const assistant::AssistantEvent& event) {
             break;
         const auto label = toolLabel(item->data(Qt::UserRole + 1).toString());
         const bool preview = event.toolResult.value("preview").toBool();
-        item->setText(event.toolError
-                          ? QStringLiteral("✗ %1 – %2").arg(label, refusal(event.toolResult,
-                                                                          event.text))
-                          : QStringLiteral("✓ %1%2").arg(label, preview ? tr(" (Vorschau)")
-                                                                        : QString()));
+        item->setText(
+            event.toolError
+                ? QStringLiteral("✗ %1 – %2").arg(label, refusal(event.toolResult, event.text))
+                : QStringLiteral("✓ %1%2").arg(label, preview ? tr(" (Vorschau)") : QString()));
         break;
     }
     case Kind::failed:
@@ -201,8 +200,7 @@ void AssistantPanel::present(const assistant::AssistantEvent& event) {
         addItem(event.text, "note");
         break;
     }
-    if (event.kind == Kind::finished || event.kind == Kind::failed ||
-        event.kind == Kind::cancelled)
+    if (event.kind == Kind::finished || event.kind == Kind::failed || event.kind == Kind::cancelled)
         tools_.clear();
 }
 

@@ -1,30 +1,36 @@
-#include <voelund/application/CadSession.hpp>
-#include <voelund/kernel/OcctCompatibility.hpp>
+#include "../../src/features/FeatureEvaluationDetail.hpp"
 #include "../CommandResultAssertions.hpp"
 #include "../TestPaths.hpp"
-#include "../../src/features/FeatureEvaluationDetail.hpp"
 #include <fstream>
 #include <iostream>
 #include <limits>
+#include <voelund/application/CadSession.hpp>
+#include <voelund/kernel/OcctCompatibility.hpp>
 
 namespace voelund::application {
 class CadSessionPersistenceTestAccess {
-public:
+  public:
     static void failSave(CadSession& session, const std::filesystem::path& path) {
-        session.saveDocumentUsing(path, [](const auto&, auto) { throw std::runtime_error("Injected store failure"); });
+        session.saveDocumentUsing(
+            path, [](const auto&, auto) { throw std::runtime_error("Injected store failure"); });
     }
     static void exhaust(CadSession& session) { session.generation_ = UINT64_MAX; }
 };
-}
+} // namespace voelund::application
 namespace {
 using namespace voelund;
 using application::CadSession;
 void require(bool value, const char* message) {
-    if (!value) throw std::runtime_error(message);
+    if (!value)
+        throw std::runtime_error(message);
 }
-template<class Action> void fails(Action action) {
+template <class Action> void fails(Action action) {
     bool caught = false;
-    try { action(); } catch (const std::exception&) { caught = true; }
+    try {
+        action();
+    } catch (const std::exception&) {
+        caught = true;
+    }
     require(caught, "Expected failure missing");
 }
 void lifecycle(const std::filesystem::path& root) {
@@ -36,25 +42,35 @@ void lifecycle(const std::filesystem::path& root) {
     const auto created = test::requireCommittedFeature(session.createBoxFeature());
     require(session.documentId() == original.id(), "Edit changed identity");
     require(session.undo().status() == application::CommandStatus::committed &&
-        session.documentId() == original.id(), "Undo changed identity");
+                session.documentId() == original.id(),
+            "Undo changed identity");
     require(session.redo().status() == application::CommandStatus::committed &&
-        session.documentId() == original.id(), "Redo changed identity");
+                session.documentId() == original.id(),
+            "Redo changed identity");
     const auto beforeSave = session.identifiedSnapshot();
     session.saveDocument(root / "one.volund");
     session.saveDocument(root / "two.volund");
-    require(session.identifiedSnapshot() == beforeSave && !session.isModified(), "Save-As changed namespace");
+    require(session.identifiedSnapshot() == beforeSave && !session.isModified(),
+            "Save-As changed namespace");
     const auto path = session.currentFile();
-    fails([&] { application::CadSessionPersistenceTestAccess::failSave(session, root / "failed.volund"); });
+    fails([&] {
+        application::CadSessionPersistenceTestAccess::failSave(session, root / "failed.volund");
+    });
     require(session.identifiedSnapshot() == beforeSave && session.currentFile() == path &&
-        !session.isModified(), "Failed save changed identity/state");
-    { std::ofstream malformed(root / "bad.volund"); malformed << "broken"; }
+                !session.isModified(),
+            "Failed save changed identity/state");
+    {
+        std::ofstream malformed(root / "bad.volund");
+        malformed << "broken";
+    }
     fails([&] { session.loadDocument(root / "bad.volund"); });
     require(session.identifiedSnapshot() == beforeSave && session.currentFile() == path &&
-        session.canUndo(), "Failed open changed identity/history");
+                session.canUndo(),
+            "Failed open changed identity/history");
     session.loadDocument(root / "one.volund");
     const auto imported = session.identifiedSnapshot();
     require(imported.id() == beforeSave.id() && imported.snapshot() == beforeSave.snapshot(),
-        "Native open did not preserve namespace with exact content");
+            "Native open did not preserve namespace with exact content");
     session.loadDocument(root / "one.volund");
     require(session.documentId() == imported.id(), "Repeated native open changed file identity");
     require(session.selectFeature(created), "Lost feature after import");
@@ -62,21 +78,25 @@ void lifecycle(const std::filesystem::path& root) {
     const auto shape = session.currentShape();
     const auto stamp = session.sceneStatus().document;
     session.duplicateDocument();
-    require(session.documentId() != prior.id() && session.identifiedSnapshot().snapshot() == prior.snapshot() &&
-        session.currentFile().empty() && session.isModified() && !session.canUndo() && !session.canRedo() &&
-        session.selectedFeature() == created && session.currentShape().IsSame(shape) &&
-        session.sceneStatus().document != stamp && session.sceneStatus().isCurrent() && !session.lastImportReport(),
-        "Duplicate did not publish coherent unsaved namespace");
+    require(session.documentId() != prior.id() &&
+                session.identifiedSnapshot().snapshot() == prior.snapshot() &&
+                session.currentFile().empty() && session.isModified() && !session.canUndo() &&
+                !session.canRedo() && session.selectedFeature() == created &&
+                session.currentShape().IsSame(shape) && session.sceneStatus().document != stamp &&
+                session.sceneStatus().isCurrent() && !session.lastImportReport(),
+            "Duplicate did not publish coherent unsaved namespace");
     const auto duplicateId = session.documentId();
     session.saveDocument(root / "duplicate.volund");
-    require(session.documentId() == duplicateId && !session.isModified(), "Saving duplicate changed identity");
+    require(session.documentId() == duplicateId && !session.isModified(),
+            "Saving duplicate changed identity");
     session.newDocument();
-    require(session.documentId() != duplicateId && session.features().empty() && !session.isModified() &&
-        session.currentFile().empty() && !session.canUndo(), "New document did not reset identity/state");
+    require(session.documentId() != duplicateId && session.features().empty() &&
+                !session.isModified() && session.currentFile().empty() && !session.canUndo(),
+            "New document did not reset identity/state");
     const auto emptyId = session.documentId();
     session.duplicateDocument();
     require(session.documentId() != emptyId && session.features().empty() && session.isModified(),
-        "Empty duplicate failed");
+            "Empty duplicate failed");
 }
 void failureBoundaries(const std::filesystem::path& root) {
     CadSession session;
@@ -98,31 +118,41 @@ void duplicateFailedGeometry() {
     auto dimensions = session.selectedBoxDimensions();
     dimensions.width += 1;
     try {
-        const auto result = session.editSelectedBoxDimensions(dimensions, application::ErrorDisposition::keepEditableErrors);
-        require(result.status() == application::CommandStatus::committedWithErrors, "Missing editable error");
-    } catch (...) { features::detail::beforeFeatureEvaluation = previousHook; throw; }
+        const auto result = session.editSelectedBoxDimensions(
+            dimensions, application::ErrorDisposition::keepEditableErrors);
+        require(result.status() == application::CommandStatus::committedWithErrors,
+                "Missing editable error");
+    } catch (...) {
+        features::detail::beforeFeatureEvaluation = previousHook;
+        throw;
+    }
     features::detail::beforeFeatureEvaluation = previousHook;
     const auto prior = session.identifiedSnapshot();
     require(!session.sceneStatus().isCurrent(), "Failed geometry marked current");
     session.duplicateDocument();
-    require(session.documentId() != prior.id() && session.identifiedSnapshot().snapshot() == prior.snapshot() &&
-        !session.sceneStatus().isCurrent() && session.isModified() && !session.canUndo(),
-        "Duplicate promoted stale geometry or lost failed parameters");
+    require(session.documentId() != prior.id() &&
+                session.identifiedSnapshot().snapshot() == prior.snapshot() &&
+                !session.sceneStatus().isCurrent() && session.isModified() && !session.canUndo(),
+            "Duplicate promoted stale geometry or lost failed parameters");
 }
-}
+} // namespace
 int main() {
-    const auto root = test::temporaryFilePath("identity-" + document::documentIdToHex(document::generateDocumentId()));
+    const auto root = test::temporaryFilePath(
+        "identity-" + document::documentIdToHex(document::generateDocumentId()));
     try {
         std::filesystem::create_directory(root);
         lifecycle(root);
         failureBoundaries(root);
         duplicateFailedGeometry();
         std::filesystem::remove_all(root);
-        std::cout << "PASS session identity: New, edit, history, Save-As, legacy Open, duplicate, failures\n";
+        std::cout << "PASS session identity: New, edit, history, Save-As, legacy Open, duplicate, "
+                     "failures\n";
         return 0;
     } catch (const Standard_Failure& error) {
         std::cerr << kernel::occtFailureDiagnostic(error) << '\n';
-    } catch (const std::exception& error) { std::cerr << error.what() << '\n'; }
+    } catch (const std::exception& error) {
+        std::cerr << error.what() << '\n';
+    }
     std::error_code cleanup;
     std::filesystem::remove_all(root, cleanup);
     return 1;

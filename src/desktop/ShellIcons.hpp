@@ -23,10 +23,10 @@ enum class ShellIcon {
     transform,
     editSketch,
     pushPull,
-    fillet, // M05
-    chamfer, // M07
-    hole,    // M08
-    combine, // M21
+    fillet,     // M05
+    chamfer,    // M07
+    hole,       // M08
+    combine,    // M21
     datumPlane, // M19
     datumAxis,  // M19
     revolve,    // M20
@@ -35,11 +35,11 @@ enum class ShellIcon {
     cone,
     torus,
     wedge,
-    sweep,      // M23
-    loft,       // M24
-    helix,      // M26
-    draft,      // M25
-    mirror,     // M09
+    sweep,         // M23
+    loft,          // M24
+    helix,         // M26
+    draft,         // M25
+    mirror,        // M09
     patternLinear, // M10
     patternCircular,
     measure,    // M12

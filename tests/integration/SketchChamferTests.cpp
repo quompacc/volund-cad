@@ -80,8 +80,8 @@ void chamfer() {
             "A chamfer line of length 3 * sqrt(2)");
     int distances = 0;
     for (const auto& constraint : editor.constraints())
-        distances += constraint.kind == SketchConstraintKind::pointDistance &&
-                     near(constraint.value, 3);
+        distances +=
+            constraint.kind == SketchConstraintKind::pointDistance && near(constraint.value, 3);
     require(distances == 2, "Both chamfer ends keep 3 from the virtual corner");
     require(features::identifySketchRegions(editor.elements()).ids.size() == 1,
             "Still one closed region");

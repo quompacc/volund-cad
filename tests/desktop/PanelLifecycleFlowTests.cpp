@@ -20,7 +20,9 @@
 namespace {
 using namespace voelund;
 using test::press;
-void require(bool condition, const std::string& message) { test::require(condition, message.c_str()); }
+void require(bool condition, const std::string& message) {
+    test::require(condition, message.c_str());
+}
 
 struct Snapshot final {
     application::DocumentStamp stamp;
@@ -31,9 +33,8 @@ struct Snapshot final {
 };
 std::string describe(const Snapshot& s) {
     return "generation " + std::to_string(s.stamp.generation) + ", revision " +
-           std::to_string(s.stamp.revision) + ", modified " +
-           std::to_string(s.modified) + ", undo " + std::to_string(s.canUndo) + ", features " +
-           std::to_string(s.features);
+           std::to_string(s.stamp.revision) + ", modified " + std::to_string(s.modified) +
+           ", undo " + std::to_string(s.canUndo) + ", features " + std::to_string(s.features);
 }
 Snapshot snapshot(const application::CadSession& session) {
     return {session.sceneStatus().document, session.isModified(), session.canUndo(),
@@ -79,8 +80,9 @@ struct Fixture final {
     }
     void type(const char* field, double value) {
         QDoubleSpinBox* input = nullptr;
-        for (auto* candidate : named("activeToolPanel").findChildren<QDoubleSpinBox*>(
-                 QStringLiteral("toolLength_") + QLatin1String(field)))
+        for (auto* candidate : named("activeToolPanel")
+                                   .findChildren<QDoubleSpinBox*>(QStringLiteral("toolLength_") +
+                                                                  QLatin1String(field)))
             if (candidate->isVisible())
                 input = candidate;
         require(input != nullptr, std::string("Field ") + field);
@@ -187,10 +189,10 @@ void sketchOnFace(Fixture& f) {
     f.click(12, 7, 8);
     const QString picked = f.window->findChild<QStatusBar*>()->currentMessage();
     press(f.context("solid.create.sketch"));
-    require(f.panelOpen(), "A sketch starts on the extrusion's top face (after: " +
-                               picked.toStdString() + ", now: " +
-                               f.window->findChild<QStatusBar*>()->currentMessage().toStdString() +
-                               ")");
+    require(f.panelOpen(),
+            "A sketch starts on the extrusion's top face (after: " + picked.toStdString() +
+                ", now: " + f.window->findChild<QStatusBar*>()->currentMessage().toStdString() +
+                ")");
     // The center rectangle, a variant behind the rectangle button's arrow (S14).
     test::chooseFromMenu(f.rail("sketch.tool.rectangle"), "sketch.tool.center_rectangle");
     f.click(11, 7, 8);

@@ -65,8 +65,9 @@ std::vector<TopoDS_Edge> filletEdgeShapes(std::span<const SupportProvenance> ori
         TopExp::MapShapes(face, TopAbs_EDGE, secondEdges);
         for (int item = 1; item <= secondEdges.Extent(); ++item) {
             const TopoDS_Edge shared = TopoDS::Edge(secondEdges(item));
-            if (firstEdges.Contains(shared) &&
-                std::ranges::none_of(result, [&](const auto& known) { return known.IsSame(shared); }))
+            if (firstEdges.Contains(shared) && std::ranges::none_of(result, [&](const auto& known) {
+                    return known.IsSame(shared);
+                }))
                 result.push_back(shared);
         }
     }
@@ -105,8 +106,7 @@ struct Treatment final {
     kernel::BooleanFailure failure;
     kernel::ShapeOperationResult (*apply)(const TopoDS_Shape&, std::span<const TopoDS_Edge>,
                                           double);
-    std::vector<std::size_t> (*failing)(const TopoDS_Shape&, std::span<const TopoDS_Edge>,
-                                        double);
+    std::vector<std::size_t> (*failing)(const TopoDS_Shape&, std::span<const TopoDS_Edge>, double);
 };
 constexpr Treatment rounding{"fillet", "rounded", kernel::BooleanFailure::filletFailed,
                              &kernel::ShapeOperations::filletWithHistory,
@@ -128,11 +128,10 @@ ResolvedEdges resolveEdges(std::span<const SupportProvenance> origins,
         const auto number = static_cast<std::uint64_t>(index + 1);
         const auto shapes = filletEdgeShapes(origins, edges[index]);
         if (shapes.empty())
-            throw GeometryEvaluationError(std::string("The faces of the ") + treatment.verb +
-                                              " edge are gone or no longer meet" +
-                                              edgeList({number}),
-                                          std::string(treatment.prefix) + "-edge-missing",
-                                          {number});
+            throw GeometryEvaluationError(
+                std::string("The faces of the ") + treatment.verb +
+                    " edge are gone or no longer meet" + edgeList({number}),
+                std::string(treatment.prefix) + "-edge-missing", {number});
         for (const auto& shared : shapes) {
             if (std::ranges::any_of(result.edges,
                                     [&](const auto& known) { return known.IsSame(shared); }))
@@ -194,9 +193,13 @@ void evaluateEdgeTreatment(const document::DocumentSnapshot& document,
         return origins;
     };
     outputs.push_back(EvaluatedFeature{
-        descriptor.id, evaluated.shape, reference.shape, body.bodyId,
-        named(continueSupportOrigins(owner.supportOrigins, evaluated, kernel::HistoryOperand::first),
-              resolved, evaluated),
+        descriptor.id,
+        evaluated.shape,
+        reference.shape,
+        body.bodyId,
+        named(
+            continueSupportOrigins(owner.supportOrigins, evaluated, kernel::HistoryOperand::first),
+            resolved, evaluated),
         {},
         named(continueSupportOrigins(owner.referenceSupportOrigins, reference,
                                      kernel::HistoryOperand::first),

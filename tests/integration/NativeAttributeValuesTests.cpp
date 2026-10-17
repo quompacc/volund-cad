@@ -14,24 +14,34 @@
 namespace {
 using namespace voelund::document;
 using namespace voelund::document::detail;
-void require(bool value, const char* message) { if (!value) throw std::runtime_error(message); }
-template<class Action> void rejected(Action action) {
+void require(bool value, const char* message) {
+    if (!value)
+        throw std::runtime_error(message);
+}
+template <class Action> void rejected(Action action) {
     bool failed = false;
-    try { action(); } catch (const std::invalid_argument&) { failed = true; }
+    try {
+        action();
+    } catch (const std::invalid_argument&) {
+        failed = true;
+    }
     require(failed, "Invalid native attribute accepted");
 }
 void put(std::string& bytes, std::size_t at, std::uint64_t value, unsigned width = 4) {
-    for (unsigned i = 0; i < width; ++i) bytes.at(at + i) = static_cast<char>((value >> (i * 8)) & 255);
+    for (unsigned i = 0; i < width; ++i)
+        bytes.at(at + i) = static_cast<char>((value >> (i * 8)) & 255);
 }
 std::uint64_t get(const std::string& bytes, std::size_t at, unsigned width = 4) {
     std::uint64_t value = 0;
     for (unsigned i = 0; i < width; ++i)
-        value |= static_cast<std::uint64_t>(static_cast<unsigned char>(bytes.at(at + i))) << (i * 8);
+        value |= static_cast<std::uint64_t>(static_cast<unsigned char>(bytes.at(at + i)))
+                 << (i * 8);
     return value;
 }
 void valueChecks() {
     using K = NativeAttributeKind;
-    require(validateNativeAttributeValue(K::ascii, std::string("Name\0", 5)) == 0, "ASCII rejected");
+    require(validateNativeAttributeValue(K::ascii, std::string("Name\0", 5)) == 0,
+            "ASCII rejected");
     rejected([&] { (void)validateNativeAttributeValue(K::ascii, "Name"); });
     rejected([&] { (void)validateNativeAttributeValue(K::ascii, std::string("a\0b\0", 4)); });
     rejected([&] { (void)validateNativeAttributeValue(K::ascii, std::string(4098, '\0')); });
@@ -42,24 +52,32 @@ void valueChecks() {
     put(real, 0, std::bit_cast<std::uint64_t>(std::numeric_limits<double>::infinity()), 8);
     rejected([&] { (void)validateNativeAttributeValue(K::real, real); });
     std::string array(17, '\0');
-    put(array, 0, 1); put(array, 4, 1);
+    put(array, 0, 1);
+    put(array, 4, 1);
     (void)validateNativeAttributeValue(K::realArray, array);
     for (const auto upper : {0U, 0xffffffffU, 0x7fffffffU, 2U}) {
-        auto changed = array; put(changed, 4, upper);
+        auto changed = array;
+        put(changed, 4, upper);
         rejected([&] { (void)validateNativeAttributeValue(K::realArray, changed); });
     }
     array.back() = 1;
     rejected([&] { (void)validateNativeAttributeValue(K::realArray, array); });
-    std::string ref(12, '\0'); put(ref, 0, 2); put(ref, 8, 1);
+    std::string ref(12, '\0');
+    put(ref, 0, 2);
+    put(ref, 8, 1);
     require(validateNativeAttributeValue(K::reference, ref) == 2, "Reference budget wrong");
     for (const auto count : {0U, 3U, 257U, 0xffffffffU}) {
-        auto changed = ref; put(changed, 0, count);
+        auto changed = ref;
+        put(changed, 0, count);
         rejected([&] { (void)validateNativeAttributeValue(K::reference, changed); });
     }
     put(ref, 8, 0xffffffff);
     rejected([&] { (void)validateNativeAttributeValue(K::reference, ref); });
 }
-struct Record { std::size_t header; std::size_t size; };
+struct Record {
+    std::size_t header;
+    std::size_t size;
+};
 void records(const std::string& bytes, std::size_t& at, std::vector<Record>& out) {
     at += 8;
     while (get(bytes, at) != 0xffffffff) {
@@ -68,16 +86,23 @@ void records(const std::string& bytes, std::size_t& at, std::vector<Record>& out
         at += 12 + size;
     }
     at += 4;
-    while (get(bytes, at) != 0xfffffffe) { at += 4; records(bytes, at, out); }
+    while (get(bytes, at) != 0xfffffffe) {
+        at += 4;
+        records(bytes, at, out);
+    }
     at += 4;
 }
 IdentifiedDocumentSnapshot fixture() {
     auto model = ModelDocument::empty();
     const auto box = model.addBoxFeature("Box Ω", {40, 30, 20});
-    const auto sketch = model.addSketchFeature("Profile", box,
-        {{0, 0, 20, 0, 0, 1, 1, 0, 0}, {{{SketchElementId{1}, SketchRectangle{1, 1, 5, 5}}}, 2}, {{}, 1}});
+    const auto sketch =
+        model.addSketchFeature("Profile", box,
+                               {{0, 0, 20, 0, 0, 1, 1, 0, 0},
+                                {{{SketchElementId{1}, SketchRectangle{1, 1, 5, 5}}}, 2},
+                                {{}, 1}});
     (void)model.addExtrusionFeature("Extrude", sketch, {3, {SketchProfileId{1}}});
-    return IdentifiedDocumentSnapshot::restore(model.documentId(), DocumentSnapshot::capture(model));
+    return IdentifiedDocumentSnapshot::restore(model.documentId(),
+                                               DocumentSnapshot::capture(model));
 }
 void typeTable(const std::string& bytes) {
     const auto ascii = bytes.find("TDataStd_AsciiString");
@@ -88,7 +113,8 @@ void typeTable(const std::string& bytes) {
     duplicate.replace(ascii, static_cast<std::size_t>(previousLength), replacement);
     put(duplicate, ascii - 4, replacement.size());
     const auto difference = previousLength - replacement.size();
-    for (const auto offset : {15U, 19U, 23U, 55U}) put(duplicate, offset, get(bytes, offset) - difference);
+    for (const auto offset : {15U, 19U, 23U, 55U})
+        put(duplicate, offset, get(bytes, offset) - difference);
     rejected([&] { (void)readNativeAttributeTypes(duplicate); });
     // Reordering the header changes numeric driver IDs, not the driver's meaning.
     const auto next = ascii + static_cast<std::size_t>(previousLength);
@@ -98,13 +124,15 @@ void typeTable(const std::string& bytes) {
     const auto second = bytes.substr(next, 4 + nextLength);
     reordered.replace(ascii - 4, first.size() + second.size(), second + first);
     const auto types = readNativeAttributeTypes(reordered);
-    require(types.values[0] == NativeAttributeKind::integer && types.values[1] == NativeAttributeKind::ascii,
-        "Driver mapping ignored header order");
+    require(types.values[0] == NativeAttributeKind::integer &&
+                types.values[1] == NativeAttributeKind::ascii,
+            "Driver mapping ignored header order");
 }
 void aggregateLimits(const std::string& bytes) {
     const auto types = readNativeAttributeTypes(bytes);
     std::size_t refType = 0;
-    while (types.values.at(refType) != NativeAttributeKind::reference) ++refType;
+    while (types.values.at(refType) != NativeAttributeKind::reference)
+        ++refType;
     const auto prefix = bytes.substr(0, validateNativeContainerHeader(bytes) + 32);
     auto makeReferences = [&](std::size_t count) {
         std::string result = prefix;
@@ -113,10 +141,14 @@ void aggregateLimits(const std::string& bytes) {
         put(result, root + 4, 16 + count * 24, 8);
         for (std::size_t i = 0; i < count; ++i) {
             const auto at = root + 12 + i * 24;
-            put(result, at, refType + 1); put(result, at + 4, i + 1);
-            put(result, at + 8, 12); put(result, at + 12, 2); put(result, at + 20, 1);
+            put(result, at, refType + 1);
+            put(result, at + 4, i + 1);
+            put(result, at + 8, 12);
+            put(result, at + 12, 2);
+            put(result, at + 20, 1);
         }
-        put(result, result.size() - 8, 0xffffffff); put(result, result.size() - 4, 0xfffffffe);
+        put(result, result.size() - 8, 0xffffffff);
+        put(result, result.size() - 4, 0xfffffffe);
         return result;
     };
     // 100,000 references with two tags each meet the independent reference budget.
@@ -157,20 +189,23 @@ void integration() {
     auto duplicate = bytes;
     put(duplicate, values[1].header + 4, get(bytes, values[0].header + 4));
     rejected([&] { (void)NativeDocumentStore::decode(duplicate); });
-    auto missing = bytes; put(missing, values[0].header, types.count + 1);
+    auto missing = bytes;
+    put(missing, values[0].header, types.count + 1);
     rejected([&] { (void)NativeDocumentStore::decode(missing); });
 }
 } // namespace
 int main(int argc, char** argv) {
     try {
-        valueChecks(); integration();
+        valueChecks();
+        integration();
         for (int i = 1; i < argc; ++i) {
             std::ifstream input(argv[i], std::ios::binary);
             require(input.good(), "Missing exchange fixture");
             const std::string bytes{std::istreambuf_iterator<char>(input), {}};
             (void)NativeDocumentStore::decode(bytes);
         }
-        std::cout << "PASS native attributes: drivers, values, array bounds, reference lengths, IDs, roundtrip\n";
+        std::cout << "PASS native attributes: drivers, values, array bounds, reference lengths, "
+                     "IDs, roundtrip\n";
         return 0;
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';

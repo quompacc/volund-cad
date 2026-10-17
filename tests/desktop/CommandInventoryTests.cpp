@@ -131,19 +131,32 @@ void emptyDocumentOffersOnlyApplicableCommands(application::CadSession& session,
     for (const auto* action : commands(window))
         if (action->isEnabled())
             enabled.insert(commandId(*action));
-    const std::set<std::string> expected{
-        "document.new",       "document.open",   "document.save", "document.save_as",
-        "document.duplicate", "document.import_step", // M18: export needs a body
-        "transform.snap",  "view.theme",    "view.command_search", "view.parameters",
-        "view.tool_rail",     "view.grid",       "solid.create.box",
-        "solid.create.cylinder", // M01: as a new body
-        "solid.create.sphere", "solid.create.cone", "solid.create.torus",
-        "solid.create.wedge", // M27: as new bodies
-        "solid.create.datum_plane", "solid.create.datum_axis", // M19: on XY or a base axis
-        "assistant.mcp",
-        "assistant.mcp_new_token",
-        "assistant.allow", "assistant.panel"};
-    require(enabled == expected, "Empty document enables only document commands, primitives and construction features");
+    const std::set<std::string> expected{"document.new",
+                                         "document.open",
+                                         "document.save",
+                                         "document.save_as",
+                                         "document.duplicate",
+                                         "document.import_step", // M18: export needs a body
+                                         "transform.snap",
+                                         "view.theme",
+                                         "view.command_search",
+                                         "view.parameters",
+                                         "view.tool_rail",
+                                         "view.grid",
+                                         "solid.create.box",
+                                         "solid.create.cylinder", // M01: as a new body
+                                         "solid.create.sphere",
+                                         "solid.create.cone",
+                                         "solid.create.torus",
+                                         "solid.create.wedge", // M27: as new bodies
+                                         "solid.create.datum_plane",
+                                         "solid.create.datum_axis", // M19: on XY or a base axis
+                                         "assistant.mcp",
+                                         "assistant.mcp_new_token",
+                                         "assistant.allow",
+                                         "assistant.panel"};
+    require(enabled == expected,
+            "Empty document enables only document commands, primitives and construction features");
     const auto before = session.sceneStatus().document;
     for (const std::string& id : commandTable) {
         if (enabled.contains(id))

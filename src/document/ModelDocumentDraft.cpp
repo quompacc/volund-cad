@@ -22,9 +22,12 @@ void validateDraftParameters(const DraftParameters& parameters) {
     for (std::size_t index = 0; index < parameters.faces.size(); ++index) {
         validateSubshapeOrigin(parameters.faces[index]);
         if (parameters.faces[index] == parameters.neutral ||
-            std::find(parameters.faces.begin(), parameters.faces.begin() + static_cast<std::ptrdiff_t>(index),
-                      parameters.faces[index]) != parameters.faces.begin() + static_cast<std::ptrdiff_t>(index))
-            throw std::invalid_argument("Each drafted face is named once, apart from the neutral face");
+            std::find(parameters.faces.begin(),
+                      parameters.faces.begin() + static_cast<std::ptrdiff_t>(index),
+                      parameters.faces[index]) !=
+                parameters.faces.begin() + static_cast<std::ptrdiff_t>(index))
+            throw std::invalid_argument(
+                "Each drafted face is named once, apart from the neutral face");
     }
 }
 

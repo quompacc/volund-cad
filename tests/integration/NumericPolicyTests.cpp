@@ -1,10 +1,3 @@
-#include <voelund/application/CadSession.hpp>
-#include <voelund/features/GeometryEvaluationError.hpp>
-#include <voelund/application/SketchEditorSession.hpp>
-#include <voelund/document/DocumentSerializer.hpp>
-#include <voelund/features/SketchEvaluation.hpp>
-#include <voelund/features/SketchProfiles.hpp>
-#include <voelund/kernel/NumericPolicy.hpp>
 #include <BRepCheck_Analyzer.hxx>
 #include <BRepGProp.hxx>
 #include <GProp_GProps.hxx>
@@ -14,14 +7,24 @@
 #include <numbers>
 #include <sstream>
 #include <type_traits>
+#include <voelund/application/CadSession.hpp>
+#include <voelund/application/SketchEditorSession.hpp>
+#include <voelund/document/DocumentSerializer.hpp>
+#include <voelund/features/GeometryEvaluationError.hpp>
+#include <voelund/features/SketchEvaluation.hpp>
+#include <voelund/features/SketchProfiles.hpp>
+#include <voelund/kernel/NumericPolicy.hpp>
 
 namespace {
 using namespace voelund;
 void require(bool value, const char* message) {
-    if (!value) throw std::runtime_error(message);
+    if (!value)
+        throw std::runtime_error(message);
 }
-template<class F> bool rejects(F action) {
-    try { action(); } catch (const std::exception& error) {
+template <class F> bool rejects(F action) {
+    try {
+        action();
+    } catch (const std::exception& error) {
         return std::string(error.what()).find("[0.001, 1000000]") != std::string::npos;
     }
     return false;
@@ -40,8 +43,8 @@ void ranges() {
             require(BRepCheck_Analyzer(shape).IsValid(), "Range boundary box invalid");
         });
         std::ostringstream bytes;
-        bytes << std::setprecision(17) << "VOLUND 1\nNEXT_ID 2\nFEATURES 1\nBOX 1 \"Box\" "
-              << size << ' ' << size << ' ' << size << " 0 0 0 0 0 0\n";
+        bytes << std::setprecision(17) << "VOLUND 1\nNEXT_ID 2\nFEATURES 1\nBOX 1 \"Box\" " << size
+              << ' ' << size << ' ' << size << " 0 0 0 0 0 0\n";
         const bool importRejected = rejects([&] {
             std::istringstream input(bytes.str());
             static_cast<void>(document::DocumentSerializer::read(input));
@@ -49,7 +52,8 @@ void ranges() {
         require(documentRejected == !valid && kernelRejected == !valid && importRejected == !valid,
                 "Document/import/kernel disagree on size range");
         if (!valid)
-            require(doc.revision() == revision && doc.boxDimensions(document::FeatureId{1}) == original,
+            require(doc.revision() == revision &&
+                        doc.boxDimensions(document::FeatureId{1}) == original,
                     "Invalid size mutated document");
     }
 }
@@ -67,7 +71,8 @@ void profiles() {
                 {{line(1, {offset, 0}, {offset + size, 0}),
                   line(2, {offset + size, gap}, {offset + size, size}),
                   line(3, {offset + size, size}, {offset, size}),
-                  line(4, {offset, size}, {offset, 0})}, 5}};
+                  line(4, {offset, size}, {offset, 0})},
+                 5}};
             // The gap shortens an edge: keep every edge within the input range.
             if (size == 0.001) {
                 std::get<document::SketchLine>(sketch.elements.values[1].geometry).end.y *= 2;
@@ -83,7 +88,8 @@ void profiles() {
                 const auto faces = features::evaluateSketchProfileFaces(sketch);
                 require(BRepCheck_Analyzer(faces).IsValid(), "Near-connected face is invalid");
                 std::size_t edgeCount = 0;
-                for (TopExp_Explorer edges(faces, TopAbs_EDGE); edges.More(); edges.Next()) ++edgeCount;
+                for (TopExp_Explorer edges(faces, TopAbs_EDGE); edges.More(); edges.Next())
+                    ++edgeCount;
                 require(edgeCount == 4, "Wire reconstruction added an edge");
                 GProp_GProps lengths;
                 BRepGProp::LinearProperties(faces, lengths);
@@ -91,7 +97,8 @@ void profiles() {
                 require(std::abs(lengths.Mass() - expected) < size * 1e-12,
                         "Wire changed original curve lengths by closing a gap");
                 built = true;
-            } catch (const features::GeometryEvaluationError&) {}
+            } catch (const features::GeometryEvaluationError&) {
+            }
             require(built == (factor < 1), "Classification and real face construction disagree");
             require(sketch.elements == original, "Profile evaluation moved stored endpoints");
         }
@@ -105,7 +112,8 @@ void curvedProfiles() {
                 {0, 0, 0, 0, 0, 1, 1, 0, 0},
                 {{{document::SketchElementId{1},
                    document::SketchArc{{0, 0}, size, 0, std::numbers::pi}},
-                  line(2, {-size, gap}, {size, gap})}, 3}};
+                  line(2, {-size, gap}, {size, gap})},
+                 3}};
             const auto detected = features::detectClosedProfiles(sketch.elements.values);
             require(detected.empty() == (factor > 1), "Arc profile classification mismatch");
             bool built = false;
@@ -117,7 +125,8 @@ void curvedProfiles() {
                 require(std::abs(lengths.Mass() - size * (2 + std::numbers::pi)) < size * 1e-12,
                         "Arc profile changed its original curves");
                 built = true;
-            } catch (const features::GeometryEvaluationError&) {}
+            } catch (const features::GeometryEvaluationError&) {
+            }
             require(built == (factor < 1), "Arc classification and construction disagree");
         }
     }
@@ -128,7 +137,8 @@ void editorRejectsRangesAtomically() {
                                             {0, 0, 20, 0, 0, 1, 1, 0, 0});
     require(editor.setPreview({0, 0}, {5, 0}) && editor.confirmPreview().has_value() &&
                 editor.selectElement(document::SketchElementId{1}) &&
-                editor.setSelectedLineLength(6), "Editor range fixture failed");
+                editor.setSelectedLineLength(6),
+            "Editor range fixture failed");
     const auto constraint = editor.constraints().front().id;
     const auto before = editor.draftParameters();
     for (double value : {0.000999, 1000000.1}) {
@@ -138,9 +148,10 @@ void editorRejectsRangesAtomically() {
                 "Rejected editor size changed the draft");
     }
     require(!editor.translateSelected(1000001, 0) && editor.draftParameters() == before &&
-                editor.canAccept(), "Rejected editor translation changed draft or solve status");
-    require(!editor.setPreview({0, 0}, {0.0005, 0}) &&
-                editor.draftParameters() == before, "Subminimum preview changed draft");
+                editor.canAccept(),
+            "Rejected editor translation changed draft or solve status");
+    require(!editor.setPreview({0, 0}, {0.0005, 0}) && editor.draftParameters() == before,
+            "Subminimum preview changed draft");
 }
 void directionalDistancesRejectSupportMetadata() {
     for (auto kind : {document::SketchConstraintKind::pointDistanceX,
@@ -149,10 +160,13 @@ void directionalDistancesRejectSupportMetadata() {
         document::SketchParameters sketch{
             {0, 0, 20, 0, 0, 1, 1, 0, 0},
             {{line(1, {0, 0}, {5, 5})}, 2},
-            {{{document::SketchConstraintId{1}, kind,
+            {{{document::SketchConstraintId{1},
+               kind,
                {document::SketchElementId{1}, document::SketchPointPosition::start},
                document::SketchGeometryReference{document::SketchElementId{1},
-                                                 document::SketchPointPosition::end}, 5}}, 2}};
+                                                 document::SketchPointPosition::end},
+               5}},
+             2}};
         const auto id = doc.addSketchFeature("Distance", document::FeatureId{1}, sketch);
         const auto revision = doc.revision();
         const auto original = doc.sketchParameters(id);

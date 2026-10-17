@@ -1,16 +1,16 @@
-#include "IsolatedSettings.hpp"
 #include "../BoundSketchFixture.hpp"
 #include "../CommandResultAssertions.hpp"
+#include "IsolatedSettings.hpp"
 #include "ModelTreeLookup.hpp"
 #include <QAction>
 #include <QApplication>
 #include <QDir>
+#include <QElapsedTimer>
 #include <QLabel>
 #include <QPushButton>
-#include <QToolButton>
-#include <QElapsedTimer>
 #include <QStatusBar>
 #include <QThread>
+#include <QToolButton>
 #include <QTreeWidget>
 #include <fstream>
 #include <iostream>
@@ -97,7 +97,8 @@ void inspectWindow(application::CadSession& session) {
     tree->setCurrentItem(row(3));
     QApplication::processEvents();
     require(card->isVisible() && label("featureErrorTitle").contains(QStringLiteral("Blockiert")) &&
-                button("featureErrorCause")->isVisible() && !button("featureErrorEdit")->isVisible(),
+                button("featureErrorCause")->isVisible() &&
+                !button("featureErrorEdit")->isVisible(),
             "A blocked feature names its cause");
     if (!directory.isEmpty())
         require(window.grab().save(directory + "/u10-blocked.png"), "capture blocked");
@@ -107,7 +108,8 @@ void inspectWindow(application::CadSession& session) {
     // so the card offers no extra button.
     require(session.selectedFeature() == session.features()[2].id && card->isVisible() &&
                 label("featureErrorTitle").contains(QStringLiteral("Fehler")) &&
-                !label("featureErrorMessage").isEmpty() && !button("featureErrorCause")->isVisible(),
+                !label("featureErrorMessage").isEmpty() &&
+                !button("featureErrorCause")->isVisible(),
             "The cause is the failed extrusion with its message");
     if (!directory.isEmpty())
         require(window.grab().save(directory + "/u10-failed.png"), "capture failed");

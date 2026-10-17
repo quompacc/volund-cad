@@ -103,7 +103,8 @@ ImportParameters readNativeImport(const TDF_Label& label, std::size_t remainingR
 
 void writeNativeImportPart(const TDF_Label& label, const ImportPartParameters& parameters) {
     TDataStd_Integer::Set(label, static_cast<int>(parameters.index));
-    TDataStd_AsciiString::Set(label.FindChild(1), std::to_string(parameters.import.value()).c_str());
+    TDataStd_AsciiString::Set(label.FindChild(1),
+                              std::to_string(parameters.import.value()).c_str());
 }
 
 ImportPartParameters readNativeImportPart(const TDF_Label& label, int schemaVersion) {

@@ -35,8 +35,9 @@ ActionResult ActionDispatcher::execute(const ActionRequest& request) {
         generation_ = generation;
     }
     // Checked before the stamp: a retry carries the stamp its first execution consumed.
-    const auto known = std::ranges::find(entries_, request.requestId,
-                                         [](const Entry& entry) -> const std::string& { return entry.request.requestId; });
+    const auto known = std::ranges::find(
+        entries_, request.requestId,
+        [](const Entry& entry) -> const std::string& { return entry.request.requestId; });
     if (known != entries_.end()) {
         if (!(known->request == request))
             return {CommandResult::invalidInput("The request ID was used for other content"),

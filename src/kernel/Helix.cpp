@@ -63,13 +63,12 @@ Helix::Helix(const TopoDS_Shape& profileFace, const std::array<double, 3>& axisO
         fail("the profile lies on the axis");
     try {
         const gp_Ax3 frame(origin.Translated(gp_Vec(axis) * along), axis, gp_Dir(radial));
-        const Handle(Geom_CylindricalSurface) cylinder =
-            new Geom_CylindricalSurface(frame, radius);
+        const Handle(Geom_CylindricalSurface) cylinder = new Geom_CylindricalSurface(frame, radius);
         // In the cylinder's (angle, height) parameters a helix is a line.
         const gp_Dir2d slope(leftHanded ? -2.0 * std::numbers::pi : 2.0 * std::numbers::pi, pitch);
         const Handle(Geom2d_Line) line = new Geom2d_Line(gp_Lin2d(gp_Pnt2d(0, 0), slope));
-        const double length = angle / (2.0 * std::numbers::pi) *
-                              std::hypot(2.0 * std::numbers::pi, pitch);
+        const double length =
+            angle / (2.0 * std::numbers::pi) * std::hypot(2.0 * std::numbers::pi, pitch);
         TopoDS_Edge edge = BRepBuilderAPI_MakeEdge(line, cylinder, 0.0, length);
         BRepLib::BuildCurves3d(edge);
         const TopoDS_Wire spine = BRepBuilderAPI_MakeWire(edge);

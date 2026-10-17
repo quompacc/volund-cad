@@ -4,8 +4,7 @@
 
 namespace voelund::desktop {
 
-QDoubleSpinBox* makeLengthInput(QWidget* parent, bool allowNegative)
-{
+QDoubleSpinBox* makeLengthInput(QWidget* parent, bool allowNegative) {
     auto* input = new QDoubleSpinBox(parent);
     input->setRange(allowNegative ? -1'000'000.0 : 0.01, 1'000'000.0);
     input->setDecimals(3);
@@ -15,8 +14,7 @@ QDoubleSpinBox* makeLengthInput(QWidget* parent, bool allowNegative)
     return input;
 }
 
-QDoubleSpinBox* makeAngleInput(QWidget* parent)
-{
+QDoubleSpinBox* makeAngleInput(QWidget* parent) {
     auto* input = new QDoubleSpinBox(parent);
     input->setRange(-360'000.0, 360'000.0);
     input->setDecimals(3);
@@ -26,8 +24,7 @@ QDoubleSpinBox* makeAngleInput(QWidget* parent)
     return input;
 }
 
-QDoubleSpinBox* makeFactorInput(QWidget* parent)
-{
+QDoubleSpinBox* makeFactorInput(QWidget* parent) {
     auto* input = new QDoubleSpinBox(parent);
     input->setDecimals(4);
     input->setSingleStep(0.1);
@@ -35,8 +32,7 @@ QDoubleSpinBox* makeFactorInput(QWidget* parent)
     return input;
 }
 
-QDoubleSpinBox* makeCountInput(QWidget* parent)
-{
+QDoubleSpinBox* makeCountInput(QWidget* parent) {
     auto* input = new QDoubleSpinBox(parent);
     input->setDecimals(0);
     input->setSingleStep(1.0);

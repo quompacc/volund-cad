@@ -1,6 +1,6 @@
-#include "IsolatedSettings.hpp"
 #include "../../src/desktop/ReferenceRepairDialog.hpp"
 #include "../BoundSketchFixture.hpp"
+#include "IsolatedSettings.hpp"
 #include <QAction>
 #include <QApplication>
 #include <QCheckBox>

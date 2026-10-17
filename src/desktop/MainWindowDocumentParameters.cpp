@@ -98,49 +98,49 @@ void MainWindow::createParameterCard() {
                                  result.status() == CommandStatus::committed ? 3000 : 0);
         return true;
     };
-    panel->setHandlers({
-        [this, run](document::ParameterId id, const QString& name) {
-            static_cast<void>(run(impl_->session.renameParameter(id, name.toStdString())));
-        },
-        [this, run](document::ParameterId id, double value) {
-            static_cast<void>(run(impl_->session.setParameterValue(id, value)));
-        },
-        [this, run](ParameterUnit unit) {
-            const auto name = freeName(impl_->session.parameterTable());
-            if (!run(impl_->session.createParameter(
-                    name, unit, unit == ParameterUnit::angle ? 90.0 : 10.0)))
-                return;
-            for (const auto& entry : impl_->session.parameterTable().values)
-                if (entry.name == name)
-                    impl_->parameterPanel->editName(entry.id);
-        },
-        [this, run](document::ParameterId id) {
-            const auto* parameter = document::findParameter(impl_->session.parameterTable(), id);
-            if (parameter == nullptr)
-                return;
-            const auto uses = impl_->session.parameterUseCount(id);
-            if (uses == 0) {
-                static_cast<void>(run(impl_->session.deleteParameter(id)));
-                return;
-            }
-            // Rule 6: a parameter in use is never deleted silently.
-            QMessageBox ask(QMessageBox::Question, tr("Parameter entfernen"),
-                            tr("„%1“ wird %n-mal verwendet. Diese Maße behalten ihren "
-                               "aktuellen Wert als feste Zahl.",
-                               nullptr, static_cast<int>(uses))
-                                .arg(QString::fromStdString(parameter->name)),
-                            QMessageBox::NoButton, this);
-            ask.setObjectName(QStringLiteral("deleteParameterQuestion"));
-            auto* unbind = ask.addButton(tr("Lösen und entfernen"), QMessageBox::AcceptRole);
-            ask.addButton(tr("Abbrechen"), QMessageBox::RejectRole);
-            ask.exec();
-            if (ask.clickedButton() == unbind)
-                static_cast<void>(run(impl_->session.deleteParameter(
-                    id, application::ParameterDeletion::unbindUses)));
-            else
-                syncParameters();
-        },
-        [this](const QString& message) { statusBar()->showMessage(message); }});
+    panel->setHandlers(
+        {[this, run](document::ParameterId id, const QString& name) {
+             static_cast<void>(run(impl_->session.renameParameter(id, name.toStdString())));
+         },
+         [this, run](document::ParameterId id, double value) {
+             static_cast<void>(run(impl_->session.setParameterValue(id, value)));
+         },
+         [this, run](ParameterUnit unit) {
+             const auto name = freeName(impl_->session.parameterTable());
+             if (!run(impl_->session.createParameter(name, unit,
+                                                     unit == ParameterUnit::angle ? 90.0 : 10.0)))
+                 return;
+             for (const auto& entry : impl_->session.parameterTable().values)
+                 if (entry.name == name)
+                     impl_->parameterPanel->editName(entry.id);
+         },
+         [this, run](document::ParameterId id) {
+             const auto* parameter = document::findParameter(impl_->session.parameterTable(), id);
+             if (parameter == nullptr)
+                 return;
+             const auto uses = impl_->session.parameterUseCount(id);
+             if (uses == 0) {
+                 static_cast<void>(run(impl_->session.deleteParameter(id)));
+                 return;
+             }
+             // Rule 6: a parameter in use is never deleted silently.
+             QMessageBox ask(QMessageBox::Question, tr("Parameter entfernen"),
+                             tr("„%1“ wird %n-mal verwendet. Diese Maße behalten ihren "
+                                "aktuellen Wert als feste Zahl.",
+                                nullptr, static_cast<int>(uses))
+                                 .arg(QString::fromStdString(parameter->name)),
+                             QMessageBox::NoButton, this);
+             ask.setObjectName(QStringLiteral("deleteParameterQuestion"));
+             auto* unbind = ask.addButton(tr("Lösen und entfernen"), QMessageBox::AcceptRole);
+             ask.addButton(tr("Abbrechen"), QMessageBox::RejectRole);
+             ask.exec();
+             if (ask.clickedButton() == unbind)
+                 static_cast<void>(run(impl_->session.deleteParameter(
+                     id, application::ParameterDeletion::unbindUses)));
+             else
+                 syncParameters();
+         },
+         [this](const QString& message) { statusBar()->showMessage(message); }});
 
     // "=Name" in the fields of the tools: names of the field's unit, a new one after a question.
     impl_->toolPanel->setParameterNames([this](ToolValueKind kind) {

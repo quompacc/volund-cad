@@ -1,9 +1,6 @@
 #include "SketchRegionGeometry.hpp"
 #include "SketchBSplineCurves.hpp"
 
-#include <algorithm>
-#include <cmath>
-#include <gp_Vec2d.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepBuilderAPI_MakeWire.hxx>
@@ -18,6 +15,7 @@
 #include <algorithm>
 #include <cmath>
 #include <gp_Pln.hxx>
+#include <gp_Vec2d.hxx>
 #include <stdexcept>
 #include <voelund/kernel/NumericPolicy.hpp>
 namespace voelund::features::detail {

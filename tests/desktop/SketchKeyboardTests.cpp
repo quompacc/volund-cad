@@ -18,7 +18,9 @@
 // Cancel asks before it discards changes.
 namespace {
 using namespace voelund;
-void require(bool condition, const std::string& message) { test::require(condition, message.c_str()); }
+void require(bool condition, const std::string& message) {
+    test::require(condition, message.c_str());
+}
 
 QAction& command(QWidget& window, const char* id) {
     for (auto* action : window.findChildren<QAction*>())
@@ -99,8 +101,7 @@ void run() {
 
     static_cast<void>(key(window, *viewport, Qt::Key_Return, Qt::ControlModifier));
     require(!editing(window) && session.features().size() == 1 &&
-                session.sketchParameters(session.features().front().id).elements.values.size() ==
-                    2,
+                session.sketchParameters(session.features().front().id).elements.values.size() == 2,
             "Ctrl+Enter accepts the two polyline segments");
     std::cout << "PASS sketch keyboard: Enter, Escape steps, Cancel question, Ctrl+Enter\n";
 }

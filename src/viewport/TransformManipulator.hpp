@@ -13,7 +13,7 @@
 namespace voelund::viewport {
 
 class TransformManipulator final {
-public:
+  public:
     using MoveHandler = std::function<void(std::uint64_t, double, double, double)>;
     using RotationHandler = std::function<void(std::uint64_t, int, double)>;
 
@@ -28,8 +28,8 @@ public:
     void attach(const occ::handle<AIS_Shape>& presentation, std::uint64_t bodyId);
     void detach();
     void resetPresentation();
-    [[nodiscard]] bool matches(
-        const occ::handle<AIS_InteractiveObject>& interactiveObject) const noexcept;
+    [[nodiscard]] bool
+    matches(const occ::handle<AIS_InteractiveObject>& interactiveObject) const noexcept;
     [[nodiscard]] bool hasActiveMode() const noexcept;
     void start(int x, int y, const occ::handle<V3d_View>& view);
     void update(int x, int y, const occ::handle<V3d_View>& view, bool bypassSnapping);
@@ -43,7 +43,7 @@ public:
     void setRotationPreviewHandler(RotationHandler handler);
     void setSnapping(bool enabled, double linearStep, double angularStep);
 
-private:
+  private:
     class Impl;
     std::unique_ptr<Impl> impl_;
 };

@@ -35,8 +35,7 @@ bool ShellState::canEditSketch() const noexcept {
 }
 
 bool ShellState::canEditFeature() const noexcept {
-    return canEditSketch() ||
-           ((extrusionEditable || filletEditable) && !toolBlocksCommands());
+    return canEditSketch() || ((extrusionEditable || filletEditable) && !toolBlocksCommands());
 }
 
 QString ShellState::windowTitle() const {
@@ -76,8 +75,10 @@ ShellState projectShell(const application::CadSession& session, const ShellInput
                            state.featureKind == document::FeatureKind::patternCopy ||
                            state.featureKind == document::FeatureKind::move;
     if (state.featureKind == document::FeatureKind::extrusion)
-        state.extrusionEditable =
-            !session.identifiedSnapshot().snapshot().extrusionParameters(*state.feature).faceProfile;
+        state.extrusionEditable = !session.identifiedSnapshot()
+                                       .snapshot()
+                                       .extrusionParameters(*state.feature)
+                                       .faceProfile;
     // View picks are more specific than the document selection they sit on.
     if (inputs.basePlane.has_value()) {
         state.selection = ShellSelection::basePlane;

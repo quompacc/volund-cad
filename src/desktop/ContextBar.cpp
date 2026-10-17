@@ -90,14 +90,14 @@ void ContextBar::place() {
     bool cardShown = false;
     for (const QObject* child : viewport_.children())
         if (const auto* widget = qobject_cast<const QWidget*>(child))
-            cardShown = cardShown || (widget->property("floatingCard").toBool() &&
-                                      widget->isVisible());
-    const int limit = cardShown ? viewport_.width() - overlay::margin -
-                                      overlay::rightColumnWidth - overlay::gap - width()
+            cardShown =
+                cardShown || (widget->property("floatingCard").toBool() && widget->isVisible());
+    const int limit = cardShown ? viewport_.width() - overlay::margin - overlay::rightColumnWidth -
+                                      overlay::gap - width()
                                 : viewport_.width();
     const int x = std::max(overlay::margin, std::min((viewport_.width() - width()) / 2, limit));
-    move(x, viewport_.height() - height() - overlay::margin - overlay::timelineHeight -
-                overlay::gap);
+    move(x,
+         viewport_.height() - height() - overlay::margin - overlay::timelineHeight - overlay::gap);
     raise();
 }
 

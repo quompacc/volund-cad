@@ -2,11 +2,10 @@
 
 #include "MeasurementInput.hpp"
 
+#include "ParameterInput.hpp"
 #include <QButtonGroup>
 #include <QComboBox>
-#include <QSignalBlocker>
 #include <QDoubleSpinBox>
-#include "ParameterInput.hpp"
 #include <QFormLayout>
 #include <QGridLayout>
 #include <QGroupBox>
@@ -15,9 +14,9 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QShortcut>
-#include <QStyle>
 #include <QSignalBlocker>
 #include <QSizePolicy>
+#include <QStyle>
 #include <QTabWidget>
 #include <QToolButton>
 #include <QVBoxLayout>
@@ -179,9 +178,8 @@ void ToolPanelHost::begin(ToolPanelDefinition definition) {
     guidance_->setText(definition_.guidance);
     setStatus({});
     for (const ToolLengthParameter& parameter : definition_.lengthParameters) {
-        const bool bindable =
-            parameter.bindable && (parameter.kind == ToolValueKind::length ||
-                                   parameter.kind == ToolValueKind::angle);
+        const bool bindable = parameter.bindable && (parameter.kind == ToolValueKind::length ||
+                                                     parameter.kind == ToolValueKind::angle);
         QDoubleSpinBox* input =
             bindable ? makeParameterInput(content_, parameter.kind == ToolValueKind::angle)
             : parameter.kind == ToolValueKind::angle  ? makeAngleInput(content_)
@@ -258,9 +256,8 @@ void ToolPanelHost::begin(ToolPanelDefinition definition) {
         input->setCurrentIndex(parameter.currentIndex);
         input->setObjectName(QString::fromStdString("toolChoice_" + parameter.id));
         const std::string parameterId = parameter.id;
-        connect(input, &QComboBox::currentIndexChanged, this, [this, parameterId](int index) {
-            chooseOption(parameterId, index);
-        });
+        connect(input, &QComboBox::currentIndexChanged, this,
+                [this, parameterId](int index) { chooseOption(parameterId, index); });
         parameterLayout_->addRow(parameter.label, input);
         choiceInputs_.emplace_back(parameter.id, input);
         choiceIndices_.emplace_back(parameter.id, parameter.currentIndex);
@@ -409,8 +406,7 @@ void ToolPanelHost::setLengthValue(const std::string& parameterId, double value)
     }
 }
 
-void ToolPanelHost::setLengthBinding(const std::string& parameterId,
-                                     std::optional<QString> name) {
+void ToolPanelHost::setLengthBinding(const std::string& parameterId, std::optional<QString> name) {
     for (const auto& [id, input] : lengthInputs_)
         if (auto* bound = dynamic_cast<ParameterSpinBox*>(input); bound && id == parameterId) {
             const QSignalBlocker blocker(input);
@@ -427,9 +423,8 @@ void ToolPanelHost::setParameterNames(std::function<QStringList(ToolValueKind)> 
     names_ = std::move(names);
 }
 
-std::optional<ResolvedParameter> ToolPanelHost::resolveParameter(const QString& name,
-                                                                 ToolValueKind kind,
-                                                                 double value) const {
+std::optional<ResolvedParameter>
+ToolPanelHost::resolveParameter(const QString& name, ToolValueKind kind, double value) const {
     return resolver_ ? resolver_(name, kind, value) : std::nullopt;
 }
 

@@ -13,7 +13,7 @@ class TopoDS_Shape;
 namespace voelund::application {
 class CadSession;
 struct ActionResult;
-}
+} // namespace voelund::application
 
 namespace voelund::desktop {
 

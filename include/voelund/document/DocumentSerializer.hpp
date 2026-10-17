@@ -17,7 +17,7 @@ struct DocumentReadResult final {
 };
 
 class DocumentSerializer final {
-public:
+  public:
     static void write(const ModelDocument& document, std::ostream& output);
     [[nodiscard]] static ModelDocument read(std::istream& input);
     [[nodiscard]] static DocumentReadResult readWithReport(std::istream& input);

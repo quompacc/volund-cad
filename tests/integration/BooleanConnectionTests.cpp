@@ -1,6 +1,3 @@
-#include <voelund/document/DocumentSerializer.hpp>
-#include <voelund/features/FeatureGraph.hpp>
-#include <voelund/kernel/NumericPolicy.hpp>
 #include <BRepBndLib.hxx>
 #include <BRepCheck_Analyzer.hxx>
 #include <BRepGProp.hxx>
@@ -9,16 +6,21 @@
 #include <TopExp_Explorer.hxx>
 #include <iostream>
 #include <sstream>
+#include <voelund/document/DocumentSerializer.hpp>
+#include <voelund/features/FeatureGraph.hpp>
+#include <voelund/kernel/NumericPolicy.hpp>
 
 namespace {
 using namespace voelund;
 void require(bool value, const char* message) {
-    if (!value) throw std::runtime_error(message);
+    if (!value)
+        throw std::runtime_error(message);
 }
 void check(const TopoDS_Shape& shape, double size, double height, double expectedVolume) {
     require(BRepCheck_Analyzer(shape).IsValid(), "Repeated join is invalid");
     int solids = 0;
-    for (TopExp_Explorer it(shape, TopAbs_SOLID); it.More(); it.Next()) ++solids;
+    for (TopExp_Explorer it(shape, TopAbs_SOLID); it.More(); it.Next())
+        ++solids;
     require(solids == 1, "Repeated join is disconnected");
     GProp_GProps properties;
     BRepGProp::VolumeProperties(shape, properties);
@@ -30,9 +32,9 @@ void check(const TopoDS_Shape& shape, double size, double height, double expecte
     double x0, y0, z0, x1, y1, z1;
     bounds.Get(x0, y0, z0, x1, y1, z1);
     const double tolerance = size * kernel::modelComparisonTolerance.relative;
-    require(std::abs(x0) <= tolerance && std::abs(y0) <= tolerance &&
-                std::abs(z0) <= tolerance && std::abs(x1 - size) <= tolerance &&
-                std::abs(y1 - size) <= tolerance && std::abs(z1 - height) <= tolerance,
+    require(std::abs(x0) <= tolerance && std::abs(y0) <= tolerance && std::abs(z0) <= tolerance &&
+                std::abs(x1 - size) <= tolerance && std::abs(y1 - size) <= tolerance &&
+                std::abs(z1 - height) <= tolerance,
             "Join changed requested bounds");
 }
 void repeatedJoins() {
@@ -47,7 +49,8 @@ void repeatedJoins() {
             const document::SketchParameters sketch{
                 {0, 0, height, 0, 0, 1, 1, 0, 0},
                 {{{document::SketchElementId{1},
-                   document::SketchRectangle{size / 4, size / 4, size * 3 / 4, size * 3 / 4}}}, 2}};
+                   document::SketchRectangle{size / 4, size / 4, size * 3 / 4, size * 3 / 4}}},
+                 2}};
             const auto sketchId = doc.addSketchFeature("Profile", support, sketch);
             support = doc.addExtrusionFeature("Join", sketchId, {distance, {}});
             height += distance;

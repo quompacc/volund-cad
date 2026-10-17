@@ -229,10 +229,10 @@ void draw(QPainter& painter, ShellIcon icon, const QColor& ink, const QColor& ac
         break;
     case ShellIcon::mirror: {
         // A body and its mirror image on both sides of a dashed plane line.
-        painter.drawPolyline(QPolygonF{QPointF(10, 19), QPointF(3, 19), QPointF(3, 5),
-                                       QPointF(10, 12)});
-        painter.drawPolyline(QPolygonF{QPointF(14, 19), QPointF(21, 19), QPointF(21, 5),
-                                       QPointF(14, 12)});
+        painter.drawPolyline(
+            QPolygonF{QPointF(10, 19), QPointF(3, 19), QPointF(3, 5), QPointF(10, 12)});
+        painter.drawPolyline(
+            QPolygonF{QPointF(14, 19), QPointF(21, 19), QPointF(21, 5), QPointF(14, 12)});
         QPen plane = painter.pen();
         plane.setColor(accent);
         plane.setStyle(Qt::DashLine);

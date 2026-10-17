@@ -15,8 +15,8 @@
 // refusals (radius, parallel, curves) name the lines and change nothing; one undo step.
 namespace {
 using namespace voelund;
-using application::SketchEditRefusal;
 using application::SketchEditorSession;
+using application::SketchEditRefusal;
 using document::SketchArc;
 using document::SketchCircle;
 using document::SketchConstraint;
@@ -73,8 +73,7 @@ struct Fixture final {
         editor->commitHistory();
         return result;
     }
-    void refused(double radius, const std::string& reason,
-                 std::vector<std::uint64_t> elements) {
+    void refused(double radius, const std::string& reason, std::vector<std::uint64_t> elements) {
         const auto before = editor->draftParameters();
         try {
             static_cast<void>(editor->filletCorner(radius));
@@ -133,8 +132,7 @@ void rightAngle() {
             "Construction lines meet at the virtual corner");
     const auto& solve = f.editor->lastSolveResult();
     require(solve.degreesOfFreedom == 0 && solve.redundantConstraints.empty(),
-            "Still determined, nothing redundant (" + std::to_string(solve.degreesOfFreedom) +
-                ")");
+            "Still determined, nothing redundant (" + std::to_string(solve.degreesOfFreedom) + ")");
 
     // The dimensions keep working: radius 3, then the width 12 measured to the corner.
     require(f.editor->editDimension(*f.find(Kind::radius), 3), "Radius 3");
@@ -143,7 +141,8 @@ void rightAngle() {
             "A larger radius keeps the corner");
     std::optional<SketchConstraintId> width;
     for (const auto& constraint : f.editor->constraints())
-        if (constraint.kind == Kind::pointDistance && constraint.first.element == SketchElementId{1})
+        if (constraint.kind == Kind::pointDistance &&
+            constraint.first.element == SketchElementId{1})
             width = constraint.id;
     require(width && f.editor->editDimension(*width, 12), "The length became the width");
     f.editor->commitHistory();
@@ -193,10 +192,10 @@ void crossingAndLostRelations() {
             "The cut-off end's coordinate and the equal length are removed and listed");
 
     // A fixed line keeps its far end and the corner as coordinates.
-    Fixture fixed({SketchLine{{0, 0}, {10, 0}}, SketchLine{{10, 0}, {10, 10}}},
-                  {{SketchConstraintId{1}, Kind::fixed, ref(1), std::nullopt, 0, std::nullopt,
-                    {0, 10, 0}},
-                   relation(2, Kind::coincident, ref(1, Position::end), ref(2))});
+    Fixture fixed(
+        {SketchLine{{0, 0}, {10, 0}}, SketchLine{{10, 0}, {10, 10}}},
+        {{SketchConstraintId{1}, Kind::fixed, ref(1), std::nullopt, 0, std::nullopt, {0, 10, 0}},
+         relation(2, Kind::coincident, ref(1, Position::end), ref(2))});
     fixed.select(1, {9, 0}, 2, {10, 1});
     const auto kept = fixed.fillet(2);
     require(kept.removed.empty(), "Nothing removed");

@@ -1,10 +1,10 @@
 #pragma once
-#include <voelund/document/DocumentId.hpp>
 #include <optional>
+#include <voelund/document/DocumentId.hpp>
 
 namespace voelund::document::detail {
 // Private seam for deterministic entropy-failure and collision tests.
-template<class NextBytes>
+template <class NextBytes>
 DocumentId generateDocumentIdUsing(NextBytes nextBytes,
                                    std::optional<DocumentId> excluded = std::nullopt) {
     for (unsigned attempt = 0; attempt < 16; ++attempt) {

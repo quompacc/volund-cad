@@ -8,7 +8,7 @@
 namespace voelund::application {
 
 SketchEditorSession::EditorState SketchEditorSession::snapshot() const {
-    return {elements_,       constraints_,        patterns_,       projections_,
+    return {elements_,        constraints_,        patterns_,       projections_,
             selectedElement_, selectedReferences_, selectionPoint_, lastSolveResult_};
 }
 

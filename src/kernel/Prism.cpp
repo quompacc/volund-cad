@@ -20,16 +20,16 @@ struct Prism::Impl final {
     TopoDS_Shape shape;
 };
 
-Prism::Prism(const TopoDS_Shape& profile, double directionX, double directionY,
-             double directionZ, double length)
+Prism::Prism(const TopoDS_Shape& profile, double directionX, double directionY, double directionZ,
+             double length)
     : impl_(std::make_unique<Impl>()) {
     const auto fail = [](const std::string& diagnostic) {
         throw KernelError(KernelOperation::makePrism, diagnostic);
     };
     if (profile.IsNull() || !TopExp_Explorer(profile, TopAbs_FACE).More())
         fail("the profile has no face");
-    const double norm = std::sqrt(directionX * directionX + directionY * directionY +
-                                  directionZ * directionZ);
+    const double norm =
+        std::sqrt(directionX * directionX + directionY * directionY + directionZ * directionZ);
     if (!std::isfinite(norm) || std::abs(norm - 1.0) > 1e-9)
         fail("the direction is not a unit vector");
     if (!std::isfinite(length) || !modelLength(length))

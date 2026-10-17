@@ -34,8 +34,9 @@ mapLegacyProfile(const document::SketchParameters& sketch, document::SketchProfi
 
 PreparedLoad prepareLoad(std::istream& input) {
     auto imported = document::DocumentSerializer::readWithReport(input);
-    imported.snapshot = imported.snapshot.markLegacySketchReferencesForRepair()
-                            .migrateLegacyExtrusionProfiles(mapLegacyProfile);
+    imported.snapshot =
+        imported.snapshot.markLegacySketchReferencesForRepair().migrateLegacyExtrusionProfiles(
+            mapLegacyProfile);
     auto document = imported.toDocument();
     auto evaluation =
         features::FeatureGraph{}.evaluateDetailed(document::DocumentSnapshot::capture(document));

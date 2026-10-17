@@ -1,5 +1,5 @@
-#include <voelund/kernel/NumericPolicy.hpp>
 #include "DocumentSerializationDetail.hpp"
+#include <voelund/kernel/NumericPolicy.hpp>
 #include <voelund/kernel/NumericValidation.hpp>
 
 #include <algorithm>

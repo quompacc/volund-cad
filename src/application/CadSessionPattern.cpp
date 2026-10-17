@@ -47,8 +47,8 @@ CommandResult CadSession::editPatternParameters(document::FeatureId featureId,
                                                 ErrorDisposition disposition) {
     document::DocumentTransaction transaction(document_);
     auto& candidate = transaction.edit();
-    const auto input = detail::prepareInput(
-        [&] { return candidate.setPatternParameters(featureId, parameters); });
+    const auto input =
+        detail::prepareInput([&] { return candidate.setPatternParameters(featureId, parameters); });
     if (!input.value)
         return CommandResult::invalidInput(input.diagnostic);
     if (!*input.value)

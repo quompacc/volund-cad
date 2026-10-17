@@ -1,6 +1,6 @@
-#include "IsolatedSettings.hpp"
 #include "../../src/desktop/CommandPalette.hpp"
 #include "../../src/desktop/ContextCommands.hpp"
+#include "IsolatedSettings.hpp"
 #include "ViewportLifecycleSupport.hpp"
 #include <QAction>
 #include <QApplication>
@@ -85,18 +85,30 @@ void surfaces() {
     for (auto* button : rail->findChildren<QToolButton*>())
         if (button->defaultAction() != nullptr)
             railIds.insert(id(button->defaultAction()));
-    const std::set<std::string> solid{"solid.create.box",       "solid.create.cylinder",
-                                      "solid.create.sphere",    "solid.create.cone",
-                                      "solid.create.torus",     "solid.create.wedge",
-                                      "solid.create.sketch",    "solid.create.extrude_profiles",
-                                      "solid.create.revolve", "solid.create.sweep",
-                                      "solid.create.loft",       "solid.create.helix",
-                                      "solid.modify.transform", "solid.modify.edit_sketch",
-                                      "solid.modify.push_pull", "solid.modify.fillet",
-                                      "solid.modify.chamfer", "solid.modify.hole",
-                                      "solid.modify.combine",   "solid.create.datum_plane",
-                                      "solid.modify.shell",     "solid.modify.draft",
-                                      "solid.create.datum_axis", "solid.modify.mirror",
+    const std::set<std::string> solid{"solid.create.box",
+                                      "solid.create.cylinder",
+                                      "solid.create.sphere",
+                                      "solid.create.cone",
+                                      "solid.create.torus",
+                                      "solid.create.wedge",
+                                      "solid.create.sketch",
+                                      "solid.create.extrude_profiles",
+                                      "solid.create.revolve",
+                                      "solid.create.sweep",
+                                      "solid.create.loft",
+                                      "solid.create.helix",
+                                      "solid.modify.transform",
+                                      "solid.modify.edit_sketch",
+                                      "solid.modify.push_pull",
+                                      "solid.modify.fillet",
+                                      "solid.modify.chamfer",
+                                      "solid.modify.hole",
+                                      "solid.modify.combine",
+                                      "solid.create.datum_plane",
+                                      "solid.modify.shell",
+                                      "solid.modify.draft",
+                                      "solid.create.datum_axis",
+                                      "solid.modify.mirror",
                                       "solid.modify.pattern_linear",
                                       "solid.modify.pattern_circular",
                                       "solid.inspect.measure"};
@@ -131,8 +143,7 @@ void surfaces() {
         afterBox.insert(id(action));
     require(afterBox == std::set<std::string>{"solid.modify.transform", "solid.modify.fillet",
                                               "solid.modify.chamfer", "solid.create.cylinder",
-                                              "history.suppress",
-                                              "history.rollback_here",
+                                              "history.suppress", "history.rollback_here",
                                               "history.delete"}, // M14, M16
             "Context bar follows the selection");
 

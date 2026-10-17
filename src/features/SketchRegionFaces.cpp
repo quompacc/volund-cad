@@ -151,11 +151,11 @@ evaluateRegionFaces(const document::SketchParameters& sketch,
             return loopElements == elements;
         });
     };
-    const bool wholeLoops =
-        detail::wholeLoopCells(identities.regions, selected) &&
-        std::ranges::all_of(selected, [&](std::size_t cell) {
-            return loopBacked(cells[cell].outer) && std::ranges::all_of(cells[cell].holes, loopBacked);
-        });
+    const bool wholeLoops = detail::wholeLoopCells(identities.regions, selected) &&
+                            std::ranges::all_of(selected, [&](std::size_t cell) {
+                                return loopBacked(cells[cell].outer) &&
+                                       std::ranges::all_of(cells[cell].holes, loopBacked);
+                            });
     if (!wholeLoops) {
         detail::requireCanonicalPlane(sketch.plane);
         return detail::intervalRegionFaces(sketch, identities.regions, selected);

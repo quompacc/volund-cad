@@ -124,7 +124,8 @@ void versions(const std::filesystem::path& root) {
         migration(document, version);
         const auto canonical = serialize(document);
         require(canonical.starts_with("BINFILE") &&
-                    DocumentSnapshot::capture(parse(canonical)) == DocumentSnapshot::capture(document) &&
+                    DocumentSnapshot::capture(parse(canonical)) ==
+                        DocumentSnapshot::capture(document) &&
                     parse(canonical).documentId() == document.documentId(),
                 "Current-format roundtrip unstable");
         migration(parse(canonical), version);
@@ -134,7 +135,8 @@ void versions(const std::filesystem::path& root) {
                 crlf += '\r';
             crlf += c;
         }
-        require(DocumentSnapshot::capture(parse(crlf)) == DocumentSnapshot::capture(document), "CRLF differs from LF");
+        require(DocumentSnapshot::capture(parse(crlf)) == DocumentSnapshot::capture(document),
+                "CRLF differs from LF");
         auto current = document;
         // Every missing required record must fail; a final LF itself is optional.
         for (std::size_t pos = 0; pos < text.size(); ++pos)

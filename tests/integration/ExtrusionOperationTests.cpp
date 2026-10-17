@@ -27,8 +27,7 @@ bool near(double a, double b) { return std::abs(a - b) < 1e-6 * std::max(1.0, st
 document::FeatureId committed(const application::CommandResult& result) {
     for (const auto& issue : result.evaluation().features)
         if (!issue.message.empty())
-            std::cerr << "feature " << issue.feature.value() << ": " << issue.message
-                      << std::endl;
+            std::cerr << "feature " << issue.feature.value() << ": " << issue.message << std::endl;
     require(result.status() == CommandStatus::committed && result.feature().has_value(),
             "Command was not committed (status " +
                 std::to_string(static_cast<int>(result.status())) + ", reason " +
@@ -36,7 +35,8 @@ document::FeatureId committed(const application::CommandResult& result) {
     return *result.feature();
 }
 void applied(const application::CommandResult& result) {
-    require(result.status() == CommandStatus::committed, "Edit was not applied: " + result.diagnostic());
+    require(result.status() == CommandStatus::committed,
+            "Edit was not applied: " + result.diagnostic());
 }
 document::SketchParameters onXy(double x0, double y0, double x1, double y1) {
     document::SketchParameters sketch{
@@ -92,8 +92,8 @@ document::FeatureId topSketch(application::CadSession& session, document::Featur
 }
 application::CommandResult extrude(application::CadSession& session, document::FeatureId sketch,
                                    double distance, ExtrusionMode mode) {
-    return session.createSketchProfileExtrusion(
-        sketch, regionsOf(session.sketchParameters(sketch)), distance, mode);
+    return session.createSketchProfileExtrusion(sketch, regionsOf(session.sketchParameters(sketch)),
+                                                distance, mode);
 }
 
 void faceOperations() {
@@ -158,7 +158,8 @@ void offsetAndEndFace() {
     require(near(volume(session), 32000 + 1.5 * column + 2000), "The column follows the box");
     placed.placement.translationZ = 5;
     const auto behind = session.editBoxParameters(box, placed);
-    require(behind.status() == CommandStatus::rejected && near(volume(session), 32000 + 1.5 * column + 2000),
+    require(behind.status() == CommandStatus::rejected &&
+                near(volume(session), 32000 + 1.5 * column + 2000),
             "A box below the start is rejected: " + behind.diagnostic());
 }
 
@@ -185,9 +186,8 @@ void namedTargets(const std::filesystem::path& work) {
                 near(volume(session), before),
             "A join that does not touch the body is rejected without change: " +
                 result.diagnostic());
-    result = session.createDatumSketchExtrusion(onXy(0, 0, 5, 5), {}, 10,
-                                                {ExtrusionOperation::cut, false,
-                                                 document::BodyId{999}});
+    result = session.createDatumSketchExtrusion(
+        onXy(0, 0, 5, 5), {}, 10, {ExtrusionOperation::cut, false, document::BodyId{999}});
     require(result.status() == CommandStatus::rejected && session.features().size() == features,
             "An unknown body is rejected");
     result = session.createDatumSketchExtrusion(onXy(0, 0, 5, 5), {}, 10,

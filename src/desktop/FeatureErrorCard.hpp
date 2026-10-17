@@ -26,8 +26,8 @@ class FeatureErrorCard final : public QFrame {
     struct Content final {
         bool blocked{false};
         QString message;
-        QString cause;        // Blocked: name of the failed feature that blocks this one.
-        bool canEdit{false};  // A failed sketch opens in the editor.
+        QString cause;         // Blocked: name of the failed feature that blocks this one.
+        bool canEdit{false};   // A failed sketch opens in the editor.
         bool canRepair{false}; // A failed sketch on a body face offers reference repair.
     };
     struct Handlers final {

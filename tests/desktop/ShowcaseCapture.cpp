@@ -26,7 +26,9 @@
 namespace {
 using namespace voelund;
 using test::press;
-void require(bool condition, const std::string& message) { test::require(condition, message.c_str()); }
+void require(bool condition, const std::string& message) {
+    test::require(condition, message.c_str());
+}
 
 struct Window final {
     application::CadSession session;
@@ -86,17 +88,18 @@ struct Window final {
         test::settleEvents();
     }
     void type(const char* field, double value) {
-        auto* input = child("activeToolPanel")
-                          .findChild<QDoubleSpinBox*>(QStringLiteral("toolLength_") +
-                                                      QLatin1String(field));
+        auto* input =
+            child("activeToolPanel")
+                .findChild<QDoubleSpinBox*>(QStringLiteral("toolLength_") + QLatin1String(field));
         require(input != nullptr && input->isVisible(), std::string("Field ") + field);
         input->setValue(value);
         emit input->editingFinished();
         test::settleEvents();
     }
     void choose(const char* field, int index) {
-        auto* box = child("activeToolPanel")
-                        .findChild<QComboBox*>(QStringLiteral("toolChoice_") + QLatin1String(field));
+        auto* box =
+            child("activeToolPanel")
+                .findChild<QComboBox*>(QStringLiteral("toolChoice_") + QLatin1String(field));
         require(box != nullptr && index < box->count(), std::string("Choice ") + field);
         box->setCurrentIndex(index);
         test::settleEvents();
@@ -113,7 +116,8 @@ struct Window final {
             test::render(*viewport);
             test::settleEvents();
         }
-        const QString file = directory + QLatin1Char('/') + QLatin1String(name) + QStringLiteral(".png");
+        const QString file =
+            directory + QLatin1Char('/') + QLatin1String(name) + QStringLiteral(".png");
         require(main->grab().save(file), "Saved " + file.toStdString());
         std::cout << "captured " << file.toStdString() << std::endl;
     }

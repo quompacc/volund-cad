@@ -91,13 +91,13 @@ void editorBinding() {
     for (const auto& constraint : stored.constraints.values)
         kept = kept || (constraint.id == *length && constraint.parameter == a);
     require(kept, "The stored sketch keeps the binding");
-    require(session.setParameterValue(a, 25).status() != CommandStatus::rejected,
-            "A = 25");
+    require(session.setParameterValue(a, 25).status() != CommandStatus::rejected, "A = 25");
     const auto storedAfter = session.sketchParameters(*accepted.feature());
     const auto moved = std::get<document::SketchLine>(storedAfter.elements.values.front().geometry);
-    require(near(std::hypot(moved.end.x - moved.start.x, moved.end.y - moved.start.y), 25),
-            "Changing A changes the stored line: " +
-                std::to_string(std::hypot(moved.end.x - moved.start.x, moved.end.y - moved.start.y)));
+    require(
+        near(std::hypot(moved.end.x - moved.start.x, moved.end.y - moved.start.y), 25),
+        "Changing A changes the stored line: " +
+            std::to_string(std::hypot(moved.end.x - moved.start.x, moved.end.y - moved.start.y)));
 }
 
 void extrusionBinding() {

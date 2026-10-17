@@ -4,16 +4,17 @@
 
 #include "BasePlanePresentation.hpp"
 #include "DatumPresentation.hpp"
+#include "PlanarFaceSelection.hpp"
+#include "PushPullHandle.hpp"
 #include "SketchBoxSelection.hpp"
 #include "SketchConstraintPresentation.hpp"
 #include "SketchEditorInteraction.hpp"
-#include "PlanarFaceSelection.hpp"
 #include "SketchPresentation.hpp"
 #include "SketchSnapOverlay.hpp"
-#include "PushPullHandle.hpp"
 #include "TransformManipulator.hpp"
 #include "ViewportHighlightStyle.hpp"
 
+#include "SelectionBand.hpp"
 #include <AIS_DisplayMode.hxx>
 #include <AIS_InteractiveContext.hxx>
 #include <AIS_SelectionScheme.hxx>
@@ -23,6 +24,7 @@
 #include <Aspect_Grid.hxx>
 #include <Aspect_GridDrawMode.hxx>
 #include <Aspect_GridType.hxx>
+#include <Aspect_PolygonOffsetMode.hxx>
 #include <Aspect_TypeOfTriedronPosition.hxx>
 #include <BRepBndLib.hxx>
 #include <Bnd_Box.hxx>
@@ -33,12 +35,10 @@
 #include <Prs3d_Drawer.hxx>
 #include <Prs3d_LineAspect.hxx>
 #include <Prs3d_ShadingAspect.hxx>
-#include <Aspect_PolygonOffsetMode.hxx>
 #include <QDebug>
 #include <QMetaObject>
 #include <QMouseEvent>
 #include <QOpenGLContext>
-#include "SelectionBand.hpp"
 #include <QWheelEvent>
 #include <Quantity_Color.hxx>
 #include <Quantity_TypeOfColor.hxx>
@@ -110,7 +110,8 @@ class CadViewportScene {
             context->Redisplay(presentation.shape, false);
         }
         refreshBasePlanes();
-        sketchPresentation.setColors(occtColor(theme.sketchFree), occtColor(theme.sketchDetermined));
+        sketchPresentation.setColors(occtColor(theme.sketchFree),
+                                     occtColor(theme.sketchDetermined));
         sketchPresentation.select(context, selectedSketchElements);
         sketchConstraintPresentation.setLabelColor(occtColor(theme.sketchLabel));
         sketchConstraintPresentation.setConstraints(context, pendingSketchConstraints);
@@ -340,7 +341,7 @@ class CadViewportScene {
     ViewportTheme theme;
     SketchSnapOverlay* snapOverlay{nullptr}; // S04a, child widget of the viewport
     std::array<bool, 3> planeVisibility{true, true, true};
-    DatumPresentation datums;               // M19
+    DatumPresentation datums;              // M19
     std::vector<SceneDatum> pendingDatums; // M19
     std::function<void(std::uint64_t)> datumSelectionHandler;
     bool gridVisible{true};

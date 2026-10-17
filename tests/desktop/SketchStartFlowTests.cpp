@@ -1,5 +1,5 @@
-#include "IsolatedSettings.hpp"
 #include "DiscardPrompt.hpp"
+#include "IsolatedSettings.hpp"
 #include "ViewportLifecycleSupport.hpp"
 #include <QAction>
 #include <QApplication>

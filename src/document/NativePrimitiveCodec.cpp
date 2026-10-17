@@ -1,13 +1,13 @@
 #include "NativePrimitiveCodec.hpp"
-#include "NativeBodyAttributes.hpp"
 #include "DocumentSerializationDetail.hpp"
+#include "NativeBodyAttributes.hpp"
 #include "NativeDocumentMetadata.hpp"
 #include "NativeExtrusion.hpp"
 #include "NativeFillet.hpp"
-#include "NativeSolidFeatures.hpp"
 #include "NativeParameters.hpp"
 #include "NativeSketchGeometry.hpp"
 #include "NativeSketchPatterns.hpp"
+#include "NativeSolidFeatures.hpp"
 #include <TDF_Reference.hxx>
 #include <TDF_Tool.hxx>
 #include <TDataStd_AsciiString.hxx>
@@ -249,9 +249,8 @@ struct Record {
 void NativePrimitiveCodec::write(const Handle(TDocStd_Document) & document,
                                  const IdentifiedDocumentSnapshot& identified) {
     const auto& snapshot = identified.snapshot();
-    const auto assignments =
-        validate(snapshot.features(), snapshot.parameters(), snapshot.nextFeatureId(),
-                 snapshot.parameterTable());
+    const auto assignments = validate(snapshot.features(), snapshot.parameters(),
+                                      snapshot.nextFeatureId(), snapshot.parameterTable());
     for (std::size_t i = 0; i < snapshot.parameters().size(); ++i)
         if (const auto* sketch = std::get_if<SketchParameters>(&snapshot.parameters()[i]); sketch) {
             if (sketch->supportBinding)
@@ -357,7 +356,8 @@ void NativePrimitiveCodec::write(const Handle(TDocStd_Document) & document,
                                           std::to_string(suppressed[index]).c_str());
         }
         if (const auto marker = snapshot.rollbackAfter())
-            TDataStd_AsciiString::Set(history.FindChild(2), std::to_string(marker->value()).c_str());
+            TDataStd_AsciiString::Set(history.FindChild(2),
+                                      std::to_string(marker->value()).c_str());
     }
 }
 
@@ -367,9 +367,9 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
     const auto parameterLabel = root.FindChild(nativeParameterSlot, false);
     const auto attributeLabel = root.FindChild(nativeBodyAttributeSlot, false);
     const auto historyLabel = root.FindChild(nativeHistoryStateSlot, false);
-    require(root.NbChildren() ==
-                6 + (parameterLabel.IsNull() ? 0 : 1) + (attributeLabel.IsNull() ? 0 : 1) +
-                        (historyLabel.IsNull() ? 0 : 1) &&
+    require(root.NbChildren() == 6 + (parameterLabel.IsNull() ? 0 : 1) +
+                                     (attributeLabel.IsNull() ? 0 : 1) +
+                                     (historyLabel.IsNull() ? 0 : 1) &&
             (historyLabel.IsNull() || metadata.schemaVersion >= 34) &&
             (parameterLabel.IsNull() || metadata.schemaVersion >= 7) &&
             (attributeLabel.IsNull() || metadata.schemaVersion >= 12));
@@ -427,24 +427,22 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
                                  standaloneSketch || standaloneExtrusion
                              ? 4
                          : (sketch || extrusion || standaloneCylinder || solidInput) ? 5
-                                                                                      : 6));
+                                                                                     : 6));
             labels.emplace(entry(native), records.size());
             FeatureParameters decoded =
-                sketch ? FeatureParameters{readNativeSketchGeometry(
-                             child(native, 4), remainingElements, metadata.schemaVersion)}
-                : extrusion
-                    ? FeatureParameters{readNativeExtrusion(child(native, 4), remainingElements,
-                                                            metadata.schemaVersion)}
-                : fillet ? FeatureParameters{readNativeFillet(child(native, 4), remainingElements,
-                                                              metadata.schemaVersion)}
-                : chamfer
-                    ? FeatureParameters{readNativeChamfer(child(native, 4), remainingElements,
-                                                          metadata.schemaVersion)}
-                : hole ? FeatureParameters{readNativeHole(child(native, 4), remainingElements,
-                                                          metadata.schemaVersion)}
-                : solid ? readNativeSolid(child(native, 4), *solid, remainingElements,
-                                          metadata.schemaVersion)
-                       : parameters(native, box);
+                sketch      ? FeatureParameters{readNativeSketchGeometry(
+                                  child(native, 4), remainingElements, metadata.schemaVersion)}
+                : extrusion ? FeatureParameters{readNativeExtrusion(
+                                  child(native, 4), remainingElements, metadata.schemaVersion)}
+                : fillet  ? FeatureParameters{readNativeFillet(child(native, 4), remainingElements,
+                                                               metadata.schemaVersion)}
+                : chamfer ? FeatureParameters{readNativeChamfer(child(native, 4), remainingElements,
+                                                                metadata.schemaVersion)}
+                : hole    ? FeatureParameters{readNativeHole(child(native, 4), remainingElements,
+                                                             metadata.schemaVersion)}
+                : solid   ? readNativeSolid(child(native, 4), *solid, remainingElements,
+                                            metadata.schemaVersion)
+                          : parameters(native, box);
             if (sketch) {
                 const auto& data = std::get<SketchParameters>(decoded);
                 remainingElements -= data.elements.values.size() + data.constraints.values.size();
@@ -527,8 +525,8 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
             for (int index = 1; index <= count->Get(); ++index) {
                 const auto item = child(list, index);
                 require(item.NbChildren() == 0);
-                const auto feature = std::ranges::find(features, FeatureId{id(item)},
-                                                       &FeatureDescriptor::id);
+                const auto feature =
+                    std::ranges::find(features, FeatureId{id(item)}, &FeatureDescriptor::id);
                 require(feature != features.end() && !feature->suppressed);
                 feature->suppressed = true;
             }
@@ -536,16 +534,16 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
         if (!marker.IsNull()) {
             require(marker.NbChildren() == 0);
             rollbackAfter = FeatureId{id(marker)};
-            const auto feature = std::ranges::find(features, *rollbackAfter, &FeatureDescriptor::id);
+            const auto feature =
+                std::ranges::find(features, *rollbackAfter, &FeatureDescriptor::id);
             require(feature != features.end() && feature + 1 != features.end());
         }
     }
-    auto attributes = attributeLabel.IsNull() ? BodyAttributeTable{}
-                                              : readNativeBodyAttributes(attributeLabel);
+    auto attributes =
+        attributeLabel.IsNull() ? BodyAttributeTable{} : readNativeBodyAttributes(attributeLabel);
     validateBodyAttributes(attributes, features, data);
     return IdentifiedDocumentSnapshot::restore(
-        metadata.id, DocumentSnapshot{std::move(features), std::move(data),
-                                      metadata.nextFeatureId, table, std::move(attributes),
-                                      rollbackAfter});
+        metadata.id, DocumentSnapshot{std::move(features), std::move(data), metadata.nextFeatureId,
+                                      table, std::move(attributes), rollbackAfter});
 }
 } // namespace voelund::document::detail

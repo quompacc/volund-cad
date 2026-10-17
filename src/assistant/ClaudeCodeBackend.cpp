@@ -68,11 +68,12 @@ bool ClaudeCodeBackend::send(const QString& message) {
         handle({Kind::failed, QStringLiteral("Die MCP-Konfiguration ließ sich nicht schreiben.")});
         return false;
     }
-    const QJsonObject server{{"type", "http"},
-                             {"url", access.url},
-                             {"headers", QJsonObject{{"Authorization",
-                                                      QString::fromLatin1("Bearer " + token_)}}}};
-    file.write(QJsonDocument(QJsonObject{{"mcpServers", QJsonObject{{"volund", server}}}}).toJson());
+    const QJsonObject server{
+        {"type", "http"},
+        {"url", access.url},
+        {"headers", QJsonObject{{"Authorization", QString::fromLatin1("Bearer " + token_)}}}};
+    file.write(
+        QJsonDocument(QJsonObject{{"mcpServers", QJsonObject{{"volund", server}}}}).toJson());
     file.close();
 
     process_ = std::make_unique<QProcess>();
@@ -84,16 +85,16 @@ bool ClaudeCodeBackend::send(const QString& message) {
     process_->setProgram(options_.program);
     process_->setArguments(arguments(message, config));
     process_->setStandardInputFile(QProcess::nullDevice());
-    QObject::connect(process_.get(), &QProcess::readyReadStandardOutput,
-                     [this] { readOutput(); });
+    QObject::connect(process_.get(), &QProcess::readyReadStandardOutput, [this] { readOutput(); });
     QObject::connect(process_.get(), &QProcess::finished,
                      [this](int code, QProcess::ExitStatus status) {
                          finish(code, status == QProcess::CrashExit);
                      });
-    QObject::connect(process_.get(), &QProcess::errorOccurred, [this](QProcess::ProcessError error) {
-        if (error == QProcess::FailedToStart)
-            finish(-1, false);
-    });
+    QObject::connect(process_.get(), &QProcess::errorOccurred,
+                     [this](QProcess::ProcessError error) {
+                         if (error == QProcess::FailedToStart)
+                             finish(-1, false);
+                     });
     buffer_.clear();
     ended_ = false;
     process_->start();
@@ -150,11 +151,9 @@ void ClaudeCodeBackend::finish(int exitCode, bool crashed) {
 }
 
 void ClaudeCodeBackend::handle(const AssistantEvent& event) {
-    if (!event.sessionId.isEmpty() &&
-        (event.kind == Kind::started || event.kind == Kind::finished))
+    if (!event.sessionId.isEmpty() && (event.kind == Kind::started || event.kind == Kind::finished))
         sessionId_ = event.sessionId;
-    if (event.kind == Kind::finished || event.kind == Kind::failed ||
-        event.kind == Kind::cancelled)
+    if (event.kind == Kind::finished || event.kind == Kind::failed || event.kind == Kind::cancelled)
         ended_ = true;
     // A run that failed early (e.g. Völund not reachable) does not continue without tools.
     if (event.kind == Kind::failed && isRunning()) {

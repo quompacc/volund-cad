@@ -1,84 +1,61 @@
-#include "../../src/document/NativePrimitiveCodec.hpp"
 #include "../../src/document/NativeExtrusion.hpp"
+#include "../../src/document/NativePrimitiveCodec.hpp"
 #include "../../src/document/NativeSketchGeometry.hpp"
-#include <voelund/features/FeatureGraph.hpp>
-#include <voelund/features/SketchEvaluation.hpp>
-#include <BinDrivers.hxx>
+#include "NativeCodecTestSupport.hpp"
 #include <BRepCheck_Analyzer.hxx>
 #include <BRepGProp.hxx>
+#include <BinDrivers.hxx>
 #include <GProp_GProps.hxx>
-#include <TDataStd_AsciiString.hxx>
-#include <TDataStd_Integer.hxx>
-#include <TDataStd_RealArray.hxx>
-#include <TDataStd_Real.hxx>
-#include <TDF_Reference.hxx>
-#include <TDocStd_Application.hxx>
 #include <PCDM_ReaderStatus.hxx>
 #include <PCDM_StoreStatus.hxx>
+#include <TDF_Reference.hxx>
+#include <TDataStd_AsciiString.hxx>
+#include <TDataStd_Integer.hxx>
+#include <TDataStd_Real.hxx>
+#include <TDataStd_RealArray.hxx>
+#include <TDocStd_Application.hxx>
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <limits>
 #include <numbers>
 #include <sstream>
+#include <voelund/features/FeatureGraph.hpp>
+#include <voelund/features/SketchEvaluation.hpp>
 
 namespace {
 using namespace voelund;
 using namespace document;
 using detail::NativePrimitiveCodec;
-void require(bool value, const char* message) {
-    if (!value) throw std::runtime_error(message);
-}
-template<class Action> void rejected(Action action) {
-    bool failed = false;
-    try { action(); } catch (const std::invalid_argument&) { failed = true; }
-    require(failed, "Invalid native cylinder data accepted");
-}
-Handle(TDocStd_Document) fresh(const Handle(TDocStd_Application)& app) {
-    Handle(TDocStd_Document) doc;
-    app->NewDocument("BinOcaf", doc);
-    doc->ChangeStorageFormatVersion(TDocStd_FormatVersion_VERSION_12);
-    return doc;
-}
-void save(const Handle(TDocStd_Application)& app, const Handle(TDocStd_Document)& doc,
-          std::ostream& output) {
-    require(app->SaveAs(doc, output) == PCDM_SS_OK && output.good(), "Native save failed");
-}
-Handle(TDocStd_Document) open(const Handle(TDocStd_Application)& app, std::istream& input) {
-    Handle(TDocStd_Document) doc;
-    require(app->Open(input, doc) == PCDM_RS_OK && !doc.IsNull(), "Native open failed");
-    doc->ChangeStorageFormatVersion(TDocStd_FormatVersion_VERSION_12);
-    return doc;
-}
+using namespace test::native_codec;
 IdentifiedDocumentSnapshot fixture() {
     auto model = ModelDocument::empty();
     for (int index = 0; index < 3; ++index) {
         auto support = model.addBoxFeature("Körper Ω", {40, 30, 20});
-        const auto sketch = model.addSketchFeature("Profile Ω", support,
-            {{0, 0, 20, 0, 0, 1, 1, 0, 0}, {{
-                {SketchElementId{9}, SketchRectangle{1, 1, 5, 5}},
-                {SketchElementId{2}, SketchRectangle{10, 10, 13, 14}}}, 10}});
+        const auto sketch =
+            model.addSketchFeature("Profile Ω", support,
+                                   {{0, 0, 20, 0, 0, 1, 1, 0, 0},
+                                    {{{SketchElementId{9}, SketchRectangle{1, 1, 5, 5}},
+                                      {SketchElementId{2}, SketchRectangle{10, 10, 13, 14}}},
+                                     10}});
         std::vector<SketchProfileId> profiles;
-        if (index > 0) profiles.emplace_back(9);
-        if (index > 1) profiles.emplace_back(2);
+        if (index > 0)
+            profiles.emplace_back(9);
+        if (index > 1)
+            profiles.emplace_back(2);
         support = model.addExtrusionFeature("Extrusion Ω", sketch, {3, profiles});
         if (index == 2) {
-            const auto next = model.addSketchFeature("Auf Extrusion", support,
-                {{0, 0, 23, 0, 0, 1, 1, 0, 0}, {{
-                    {SketchElementId{7}, SketchRectangle{2, 2, 4, 4}}}, 8}});
+            const auto next =
+                model.addSketchFeature("Auf Extrusion", support,
+                                       {{0, 0, 23, 0, 0, 1, 1, 0, 0},
+                                        {{{SketchElementId{7}, SketchRectangle{2, 2, 4, 4}}}, 8}});
             (void)model.addExtrusionFeature("Folgeextrusion", next, {2, {SketchProfileId{7}}});
         }
     }
     return IdentifiedDocumentSnapshot::restore(DocumentId{UINT64_MAX, 0x0123456789abcdefULL},
                                                DocumentSnapshot::capture(model));
 }
-TDF_Label feature(const Handle(TDocStd_Document)& doc, int position) {
-    Handle(TDF_Reference) ref;
-    require(doc->Main().FindChild(20).FindChild(position).FindAttribute(TDF_Reference::GetID(), ref),
-            "Missing order reference");
-    return ref->Get();
-}
-void check(const Handle(TDocStd_Document)& doc, const IdentifiedDocumentSnapshot& expected) {
+void check(const Handle(TDocStd_Document) & doc, const IdentifiedDocumentSnapshot& expected) {
     const auto actual = NativePrimitiveCodec::read(doc);
     require(actual == expected, "Extrusion snapshot changed");
     const auto result = features::FeatureGraph{}.evaluate(actual.snapshot().toDocument());
@@ -89,19 +66,24 @@ void check(const Handle(TDocStd_Document)& doc, const IdentifiedDocumentSnapshot
         const auto& body = result.bodies[index];
         GProp_GProps properties;
         BRepGProp::VolumeProperties(body.shape, properties);
-        require(body.bodyId.value() == bodies[index] && body.sourceFeature.value() == producers[index] &&
-            BRepCheck_Analyzer(body.shape).IsValid() && std::abs(properties.Mass() - volumes[index]) < 1e-7,
-            "Extrusion identity, BRep or analytical volume changed");
+        require(body.bodyId.value() == bodies[index] &&
+                    body.sourceFeature.value() == producers[index] &&
+                    BRepCheck_Analyzer(body.shape).IsValid() &&
+                    std::abs(properties.Mass() - volumes[index]) < 1e-7,
+                "Extrusion identity, BRep or analytical volume changed");
     }
     for (std::size_t index : {1U, 4U, 7U, 9U})
         require(!result.features[index].bodyId, "Sketch acquired a solid body output");
 }
-void historicalProfiles(const Handle(TDocStd_Application)& app) {
+void historicalProfiles(const Handle(TDocStd_Application) & app) {
     auto model = fixture().snapshot().toDocument();
     require(model.setExtrusionParameters(FeatureId{3},
-        {3, {SketchProfileId{UINT64_MAX}, SketchProfileId{UINT64_MAX - 1}, SketchProfileId{99}}}),
-        "Could not set historical selection");
-    const auto expected = IdentifiedDocumentSnapshot::restore(fixture().id(), DocumentSnapshot::capture(model));
+                                         {3,
+                                          {SketchProfileId{UINT64_MAX},
+                                           SketchProfileId{UINT64_MAX - 1}, SketchProfileId{99}}}),
+            "Could not set historical selection");
+    const auto expected =
+        IdentifiedDocumentSnapshot::restore(fixture().id(), DocumentSnapshot::capture(model));
     auto doc = fresh(app);
     NativePrimitiveCodec::write(doc, expected);
     std::stringstream bytes(std::ios::in | std::ios::out | std::ios::binary);
@@ -109,8 +91,12 @@ void historicalProfiles(const Handle(TDocStd_Application)& app) {
     auto loaded = open(app, bytes);
     require(NativePrimitiveCodec::read(loaded) == expected, "Historical profiles lost or repaired");
     bool failed = false;
-    try { (void)features::FeatureGraph{}.evaluate(NativePrimitiveCodec::read(loaded).snapshot().toDocument()); }
-    catch (const features::FeatureEvaluationError&) { failed = true; }
+    try {
+        (void)features::FeatureGraph{}.evaluate(
+            NativePrimitiveCodec::read(loaded).snapshot().toDocument());
+    } catch (const features::FeatureEvaluationError&) {
+        failed = true;
+    }
     require(failed, "Unknown profile selection unexpectedly evaluated");
     app->Close(loaded);
     app->Close(doc);
@@ -121,9 +107,10 @@ IdentifiedDocumentSnapshot regionFixture(std::vector<SketchProfileId> profiles,
     auto model = ModelDocument::empty();
     const auto support = model.addBoxFeature("Support", {40, 30, 20});
     const auto sketch = model.addSketchFeature("Ring", support,
-        {{0, 0, 20, 0, 0, 1, 1, 0, 0}, {{
-            {SketchElementId{1}, SketchRectangle{1, 1, 9, 7}},
-            {SketchElementId{2}, SketchCircle{{5, 4}, 1}}}, 3}});
+                                               {{0, 0, 20, 0, 0, 1, 1, 0, 0},
+                                                {{{SketchElementId{1}, SketchRectangle{1, 1, 9, 7}},
+                                                  {SketchElementId{2}, SketchCircle{{5, 4}, 1}}},
+                                                 3}});
     (void)model.addExtrusionFeature("Extrusion", sketch,
                                     {5, std::move(profiles), std::move(regions)});
     return IdentifiedDocumentSnapshot::restore(DocumentId{7, 9}, DocumentSnapshot::capture(model));
@@ -133,7 +120,7 @@ SketchRegionId region(const char* text) {
     require(id.has_value(), "Region fixture text");
     return *id;
 }
-void regionSelections(const Handle(TDocStd_Application)& app) {
+void regionSelections(const Handle(TDocStd_Application) & app) {
     const auto ring = region("o:1.0,1.1,1.2,1.3;h:2.0+");
     const auto expected = regionFixture({}, {ring, region("o:2.0+")});
     auto doc = fresh(app);
@@ -147,11 +134,11 @@ void regionSelections(const Handle(TDocStd_Application)& app) {
     GProp_GProps properties;
     BRepGProp::VolumeProperties(result.bodies.front().shape, properties);
     // The selected inner disc fills the ring's hole: one face, no touching second solid.
-    require(features::evaluateRegionFaces(expected.snapshot().sketchParameters(FeatureId{2}),
-                                          expected.snapshot().extrusionParameters(FeatureId{3})
-                                              .regions)
-                    .size() == 1,
-            "Selected inner region did not fill the hole");
+    require(
+        features::evaluateRegionFaces(expected.snapshot().sketchParameters(FeatureId{2}),
+                                      expected.snapshot().extrusionParameters(FeatureId{3}).regions)
+                .size() == 1,
+        "Selected inner region did not fill the hole");
     require(std::abs(properties.Mass() - (24000 + 48 * 5)) < 1e-6,
             "Ring and inner disc together fill the rectangle");
     const auto ringOnly = regionFixture({}, {ring});
@@ -185,8 +172,9 @@ void regionSelections(const Handle(TDocStd_Application)& app) {
     };
     for (const char* text : {"o:1.1,1.0", "o:2.0+ ", "o:", "o:2.0+;h:", "o:0.0"})
         corrupt([&] { TDataStd_AsciiString::Set(regions.FindChild(2).FindChild(1), text); });
-    corrupt([&] { TDataStd_AsciiString::Set(regions.FindChild(2).FindChild(1),
-                                            ring.text().c_str()); }); // duplicate
+    corrupt([&] {
+        TDataStd_AsciiString::Set(regions.FindChild(2).FindChild(1), ring.text().c_str());
+    }); // duplicate
     for (int count : {-1, 0, 1, 3})
         corrupt([&] { TDataStd_Integer::Set(regions, count); });
     corrupt([&] { TDataStd_Integer::Set(regions.FindChild(1), 2); });
@@ -209,7 +197,7 @@ void regionSelections(const Handle(TDocStd_Application)& app) {
     std::cout << "schema 5 regions, chunking, ring evaluation and schema-4 reading passed\n";
 }
 // V01a schema 6: a base-plane sketch has no input reference and opens its own body.
-void datumSketches(const Handle(TDocStd_Application)& app) {
+void datumSketches(const Handle(TDocStd_Application) & app) {
     auto model = ModelDocument::empty();
     SketchParameters sketch{datumSketchPlane(DatumPlane::xz),
                             {{{SketchElementId{1}, SketchRectangle{0, 0, 4, 3}}}, 2}};
@@ -246,7 +234,7 @@ void datumSketches(const Handle(TDocStd_Application)& app) {
 // T02, schema 8: operation, reversed direction and target body as optional children. A cut
 // from a second base-plane sketch into the first body round-trips, groups its sketch with
 // that body and is refused by a schema 7 reader.
-void extrusionModes(const Handle(TDocStd_Application)& app) {
+void extrusionModes(const Handle(TDocStd_Application) & app) {
     auto model = ModelDocument::empty();
     SketchParameters plate{datumSketchPlane(DatumPlane::xy),
                            {{{SketchElementId{1}, SketchRectangle{0, 0, 4, 3}}}, 2}};
@@ -306,9 +294,9 @@ void extrusionModes(const Handle(TDocStd_Application)& app) {
     require(model.setParameterTable(table), "Offset parameter");
     reversed.offset = -0.5;
     reversed.offsetParameter = ParameterId{1};
-    reversed.upToFace = BodyFaceReference{BodyId{plateSketch.value()},
-                                          {FeatureId{plateSketch.value() + 1}, std::nullopt,
-                                           {SketchElementId{1}}}};
+    reversed.upToFace =
+        BodyFaceReference{BodyId{plateSketch.value()},
+                          {FeatureId{plateSketch.value() + 1}, std::nullopt, {SketchElementId{1}}}};
     require(model.setExtrusionParameters(cutId, reversed), "Offset and end face set");
     auto foreign = reversed;
     foreign.upToFace->body = BodyId{99};
@@ -334,13 +322,13 @@ void extrusionModes(const Handle(TDocStd_Application)& app) {
 }
 // T04, schema 10: push/pull. A face extrusion has no input feature; its profile is a box
 // side, and the next one pulls the first one's end cap (role -2 in the file).
-void faceExtrusions(const Handle(TDocStd_Application)& app) {
+void faceExtrusions(const Handle(TDocStd_Application) & app) {
     auto model = ModelDocument::empty();
     const auto box = model.addBoxFeature("Box", {10, 10, 10});
     ExtrusionParameters pull{5, {}};
     pull.operation = ExtrusionOperation::join;
-    pull.faceProfile = BodyFaceReference{BodyId{box.value()},
-                                         {box, kernel::PrimitiveRole::boxPositiveZ}};
+    pull.faceProfile =
+        BodyFaceReference{BodyId{box.value()}, {box, kernel::PrimitiveRole::boxPositiveZ}};
     const auto first = model.addFaceExtrusionFeature("Pull", pull);
     auto again = pull;
     again.distance = 3;
@@ -388,7 +376,7 @@ void faceExtrusions(const Handle(TDocStd_Application)& app) {
 // M02, schema 13: a symmetric intersect of a second base-plane sketch with the first body
 // round-trips; a schema 12 reader refuses the symmetric child and operation 4; the model
 // refuses symmetric with a direction or an offset.
-void symmetricIntersect(const Handle(TDocStd_Application)& app) {
+void symmetricIntersect(const Handle(TDocStd_Application) & app) {
     auto model = ModelDocument::empty();
     SketchParameters plate{datumSketchPlane(DatumPlane::xy),
                            {{{SketchElementId{1}, SketchRectangle{0, 0, 4, 3}}}, 2}};
@@ -428,8 +416,8 @@ void symmetricIntersect(const Handle(TDocStd_Application)& app) {
     common.symmetric = false;
     require(model.setExtrusionParameters(commonId, common), "Plain intersect set");
     Handle(TDocStd_Document) plain = fresh(app);
-    NativePrimitiveCodec::write(
-        plain, IdentifiedDocumentSnapshot::restore(DocumentId{3, 8}, DocumentSnapshot::capture(model)));
+    NativePrimitiveCodec::write(plain, IdentifiedDocumentSnapshot::restore(
+                                           DocumentId{3, 8}, DocumentSnapshot::capture(model)));
     TDataStd_Integer::Set(plain->Main().FindChild(2), 12);
     rejected([&] { (void)NativePrimitiveCodec::read(plain); }); // operation 4
     app->Close(plain);
@@ -437,16 +425,15 @@ void symmetricIntersect(const Handle(TDocStd_Application)& app) {
 }
 // Schema 17 (user decision 2026-10-13): fillet edges carry ids and may name a rounding face; a
 // schema 16 file has none and Open numbers them 1..n; schema 17 data read as 16 is refused.
-void treatedEdgeIds(const Handle(TDocStd_Application)& app) {
+void treatedEdgeIds(const Handle(TDocStd_Application) & app) {
     ModelDocument model;
     const auto box = model.addBoxFeature("Box", {20, 20, 10});
     const auto side = [&](kernel::PrimitiveRole role) { return SubshapeOrigin{box, role}; };
-    FilletParameters fillet{BodyId{box.value()},
-                            {{side(kernel::PrimitiveRole::boxPositiveY),
-                              side(kernel::PrimitiveRole::boxPositiveZ), 4},
-                             {side(kernel::PrimitiveRole::boxNegativeY),
-                              side(kernel::PrimitiveRole::boxPositiveZ), 7}},
-                            1.0};
+    FilletParameters fillet{
+        BodyId{box.value()},
+        {{side(kernel::PrimitiveRole::boxPositiveY), side(kernel::PrimitiveRole::boxPositiveZ), 4},
+         {side(kernel::PrimitiveRole::boxNegativeY), side(kernel::PrimitiveRole::boxPositiveZ), 7}},
+        1.0};
     const auto rounded = model.addFilletFeature("Rounding", fillet);
     SubshapeOrigin roundFace{rounded, std::nullopt};
     roundFace.treatedEdge = 4;
@@ -461,7 +448,8 @@ void treatedEdgeIds(const Handle(TDocStd_Application)& app) {
     std::stringstream bytes(std::ios::in | std::ios::out | std::ios::binary);
     save(app, doc, bytes);
     Handle(TDocStd_Document) loaded = open(app, bytes);
-    require(NativePrimitiveCodec::read(loaded) == expected, "Edge ids and rounding faces round-trip");
+    require(NativePrimitiveCodec::read(loaded) == expected,
+            "Edge ids and rounding faces round-trip");
     app->Close(loaded);
     TDataStd_Integer::Set(doc->Main().FindChild(2), 16);
     rejected([&] { (void)NativePrimitiveCodec::read(doc); }); // ids need schema 17
@@ -477,8 +465,8 @@ void treatedEdgeIds(const Handle(TDocStd_Application)& app) {
     }
     static_cast<void>(older.addFilletFeature("Rounding", fillet));
     Handle(TDocStd_Document) legacy = fresh(app);
-    NativePrimitiveCodec::write(
-        legacy, IdentifiedDocumentSnapshot::restore(DocumentId{3, 10}, DocumentSnapshot::capture(older)));
+    NativePrimitiveCodec::write(legacy, IdentifiedDocumentSnapshot::restore(
+                                            DocumentId{3, 10}, DocumentSnapshot::capture(older)));
     const auto edges = feature(legacy, 2).FindChild(4).FindChild(2);
     legacy->OpenCommand();
     for (int index = 1; index <= 2; ++index)
@@ -494,7 +482,7 @@ void treatedEdgeIds(const Handle(TDocStd_Application)& app) {
     std::cout << "schema 17 edge ids, rounding faces and schema 16 numbering passed\n";
 }
 
-void regressions(const Handle(TDocStd_Application)& app) {
+void regressions(const Handle(TDocStd_Application) & app) {
     treatedEdgeIds(app);
     historicalProfiles(app);
     datumSketches(app);
@@ -525,7 +513,7 @@ void regressions(const Handle(TDocStd_Application)& app) {
         require(NativePrimitiveCodec::read(doc) == expected, "Rejected edit damaged document");
     };
     for (double distance : {0.0, -1.0, std::numeric_limits<double>::infinity(),
-                           std::numeric_limits<double>::quiet_NaN()})
+                            std::numeric_limits<double>::quiet_NaN()})
         corrupt([&] { TDataStd_Real::Set(payload, distance); });
     corrupt([&] { payload.ForgetAttribute(TDataStd_Real::GetID()); });
     for (int count : {-1, 0, 3, 1000001})
@@ -542,14 +530,16 @@ void regressions(const Handle(TDocStd_Application)& app) {
     rejected([&] { (void)detail::readNativeExtrusion(payload, 1, 5); });
     rejected([&] { detail::validateNativeExtrusion({0, {}}); });
     rejected([&] { detail::validateNativeExtrusion({1, {SketchProfileId{0}}}); });
-    rejected([&] { detail::validateNativeExtrusion({1, {SketchProfileId{2}, SketchProfileId{2}}}); });
+    rejected(
+        [&] { detail::validateNativeExtrusion({1, {SketchProfileId{2}, SketchProfileId{2}}}); });
     doc->NewCommand();
     TDataStd_Real::Set(payload, 4);
     require(doc->CommitCommand(), "Extrusion edit failed");
     const auto edited = NativePrimitiveCodec::read(doc);
     require(edited != expected && edited.id() == expected.id() && doc->Undo() &&
-        NativePrimitiveCodec::read(doc) == expected && doc->Redo() &&
-        NativePrimitiveCodec::read(doc) == edited && doc->Undo(), "Extrusion history lost identity");
+                NativePrimitiveCodec::read(doc) == expected && doc->Redo() &&
+                NativePrimitiveCodec::read(doc) == edited && doc->Undo(),
+            "Extrusion history lost identity");
     doc->NewCommand();
     extrusion.FindChild(5).ForgetAllAttributes();
     std::stringstream malformed(std::ios::in | std::ios::out | std::ios::binary);
@@ -566,7 +556,8 @@ int main(int argc, char** argv) {
     try {
         Handle(TDocStd_Application) app = new TDocStd_Application;
         BinDrivers::DefineFormat(app);
-        if (argc == 1) regressions(app);
+        if (argc == 1)
+            regressions(app);
         else {
             require(argc == 3 || argc == 4, "Usage: create FILE | read FILE [REWRITE]");
             Handle(TDocStd_Document) doc;
@@ -588,7 +579,8 @@ int main(int argc, char** argv) {
             }
             app->Close(doc);
         }
-        std::cout << "PASS native extrusions: profiles, distance, references, identities, BRep, history\n";
+        std::cout << "PASS native extrusions: profiles, distance, references, identities, BRep, "
+                     "history\n";
         return 0;
     } catch (const Standard_Failure& error) {
         std::cerr << kernel::occtFailureDiagnostic(error) << '\n';

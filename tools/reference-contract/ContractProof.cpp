@@ -30,13 +30,14 @@ void check(const char* id, const SubshapeRef& ref, const EvaluationScope& target
     ++checks;
     std::cout << id << " PASS\n";
 }
-void check(const char* id, Coverage coverage, std::vector<Candidate> candidates,
-           Status status, Reason reason, std::size_t count) {
+void check(const char* id, Coverage coverage, std::vector<Candidate> candidates, Status status,
+           Reason reason, std::size_t count) {
     check(id, top, scope, {top, scope, coverage, std::move(candidates)}, status, reason, count);
 }
 template <class F> void reject(const char* id, F action) {
-    try { action(); }
-    catch (const std::invalid_argument&) {
+    try {
+        action();
+    } catch (const std::invalid_argument&) {
         ++checks;
         std::cout << id << " PASS\n";
         return;
@@ -47,24 +48,25 @@ template <class F> void reject(const char* id, F action) {
 void topologyFixtures() {
     check("box-top", Coverage::complete, {faceA}, Status::resolved, Reason::unique, 1);
     // Coplanarity is irrelevant: only A has the requested provenance.
-    check("coplanar-known-origin", Coverage::complete, {faceA}, Status::resolved, Reason::unique, 1);
-    check("coplanar-legacy-tie", Coverage::unavailable, {faceB, faceA},
-          Status::ambiguous, Reason::historyUnavailable, 2);
+    check("coplanar-known-origin", Coverage::complete, {faceA}, Status::resolved, Reason::unique,
+          1);
+    check("coplanar-legacy-tie", Coverage::unavailable, {faceB, faceA}, Status::ambiguous,
+          Reason::historyUnavailable, 2);
     check("split", Coverage::complete, {faceA, faceB}, Status::ambiguous, Reason::split, 2);
     check("merge", Coverage::complete, {faceA}, Status::resolved, Reason::unique, 1);
-    check("split-then-merge", Coverage::complete, {faceA, faceA},
-          Status::resolved, Reason::unique, 1);
+    check("split-then-merge", Coverage::complete, {faceA, faceA}, Status::resolved, Reason::unique,
+          1);
     check("deleted", Coverage::deleted, {}, Status::missing, Reason::deleted, 0);
-    check("rotated-90", Coverage::complete, {{"rotated-A", Topology::face}},
-          Status::resolved, Reason::unique, 1);
-    check("boolean-modified", Coverage::complete, {{"cut-A", Topology::face}},
-          Status::resolved, Reason::unique, 1);
-    check("boolean-generated-is-not-continuation", Coverage::deleted, {},
-          Status::missing, Reason::deleted, 0);
-    check("boolean-history-gap", Coverage::unavailable, {},
-          Status::missing, Reason::historyUnavailable, 0);
-    check("single-geometric-suggestion", Coverage::unavailable, {faceA},
-          Status::missing, Reason::historyUnavailable, 1);
+    check("rotated-90", Coverage::complete, {{"rotated-A", Topology::face}}, Status::resolved,
+          Reason::unique, 1);
+    check("boolean-modified", Coverage::complete, {{"cut-A", Topology::face}}, Status::resolved,
+          Reason::unique, 1);
+    check("boolean-generated-is-not-continuation", Coverage::deleted, {}, Status::missing,
+          Reason::deleted, 0);
+    check("boolean-history-gap", Coverage::unavailable, {}, Status::missing,
+          Reason::historyUnavailable, 0);
+    check("single-geometric-suggestion", Coverage::unavailable, {faceA}, Status::missing,
+          Reason::historyUnavailable, 1);
 }
 void identityFixtures() {
     auto ref = top;
@@ -73,12 +75,12 @@ void identityFixtures() {
           Status::missing, Reason::wrongScope, 0);
     ref = top;
     ref.body = BodyId{2};
-    check("foreign-body", ref, scope, {ref, scope, Coverage::complete, {faceA}},
-          Status::missing, Reason::wrongScope, 0);
+    check("foreign-body", ref, scope, {ref, scope, Coverage::complete, {faceA}}, Status::missing,
+          Reason::wrongScope, 0);
     auto old = scope;
     --old.revision;
-    check("stale-revision", top, scope, {top, old, Coverage::complete, {faceA}},
-          Status::missing, Reason::wrongScope, 0);
+    check("stale-revision", top, scope, {top, old, Coverage::complete, {faceA}}, Status::missing,
+          Reason::wrongScope, 0);
     old = scope;
     old.outputFeature = FeatureId{8};
     check("wrong-output-producer", top, scope, {top, old, Coverage::complete, {faceA}},
@@ -109,12 +111,10 @@ void invalidFixtures() {
     reject("invalid-topology", [] {
         (void)classify(top, scope, {top, scope, Coverage::complete, {{"edge", Topology::edge}}});
     });
-    reject("contradictory-deletion", [] {
-        (void)classify(top, scope, {top, scope, Coverage::deleted, {faceA}});
-    });
-    reject("unexplained-empty-history", [] {
-        (void)classify(top, scope, {top, scope, Coverage::complete, {}});
-    });
+    reject("contradictory-deletion",
+           [] { (void)classify(top, scope, {top, scope, Coverage::deleted, {faceA}}); });
+    reject("unexplained-empty-history",
+           [] { (void)classify(top, scope, {top, scope, Coverage::complete, {}}); });
     reject("zero-origin-id", [] {
         auto ref = top;
         ref.originFeature = FeatureId{0};

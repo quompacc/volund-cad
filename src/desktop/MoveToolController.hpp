@@ -33,7 +33,8 @@ class MoveToolController final {
     void beginEdit(document::FeatureId move);
     [[nodiscard]] bool isActive() const noexcept { return active_; }
     void cancel();
-    void setPreviewHandler(std::function<void(const std::vector<features::EvaluatedBody>*)> handler);
+    void
+    setPreviewHandler(std::function<void(const std::vector<features::EvaluatedBody>*)> handler);
 
   private:
     [[nodiscard]] document::MoveParameters parameters() const;

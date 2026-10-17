@@ -58,10 +58,9 @@ void combineBodies() {
             "Two separate bodies");
 
     const auto cut = application::executeAction(
-        session,
-        application::prepareRequest(session, application::CreateCombineAction{
-                                                 box, {cylinder},
-                                                 document::CombineOperation::cut, false}));
+        session, application::prepareRequest(
+                     session, application::CreateCombineAction{
+                                  box, {cylinder}, document::CombineOperation::cut, false}));
     require(cut.command.status() == CommandStatus::committed &&
                 session.features().back().name == "Kombinieren 1" &&
                 session.validBodies().size() == 1 && near(volume(session), 12000 - 250 * pi) &&
@@ -137,8 +136,7 @@ void twoTools() {
                 "Cylinder placed");
         tools.push_back(created);
     }
-    const auto result =
-        session.createCombine(box, tools, document::CombineOperation::cut, false);
+    const auto result = session.createCombine(box, tools, document::CombineOperation::cut, false);
     if (result.status() != CommandStatus::committed) {
         std::cerr << result.diagnostic() << std::endl;
         for (const auto& issue : result.evaluation().features)

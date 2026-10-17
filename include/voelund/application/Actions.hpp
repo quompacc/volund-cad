@@ -330,28 +330,21 @@ struct SetPlacementAction final {
     bool operator==(const SetPlacementAction&) const = default;
 };
 
-using Action = std::variant<CreateParameterAction, SetParameterValueAction, RenameParameterAction,
-                            BindSketchDimensionAction, BindExtrusionDistanceAction,
-                            CreateDatumSketchAction, EditSketchAction,
-                            CreateProfileExtrusionAction, SetExtrusionDistanceAction,
-                            CreateBoxAction, SetBoxDimensionsAction, CreateCylinderAction,
-                            SetCylinderSizeAction, SetPlacementAction,
-                            CreateSketchExtrusionAction, CreateSketchAction,
-                            EditBoxParametersAction, EditCylinderParametersAction,
-                            EditExtrusionParametersAction, PushPullFaceAction,
-                            CreateFilletAction, EditFilletParametersAction,
-                            CreateChamferAction, EditChamferParametersAction,
-                            CreateHoleAction, EditHoleParametersAction,
-                            CreateCombineAction, EditCombineParametersAction,
-                            CreateDatumPlaneAction, EditDatumPlaneParametersAction,
-                            CreateDatumAxisAction, EditDatumAxisParametersAction,
-                            CreateShellAction, EditShellParametersAction,
-                            CreatePrimitiveAction, EditPrimitiveParametersAction,
-                            CreateDraftAction, EditDraftParametersAction,
-                            CreateMirrorAction, EditMirrorParametersAction,
-                            CreatePatternAction, EditPatternParametersAction,
-                            MoveBodyAction, EditMoveParametersAction,
-                            SetFeatureSuppressedAction>;
+using Action = std::variant<
+    CreateParameterAction, SetParameterValueAction, RenameParameterAction,
+    BindSketchDimensionAction, BindExtrusionDistanceAction, CreateDatumSketchAction,
+    EditSketchAction, CreateProfileExtrusionAction, SetExtrusionDistanceAction, CreateBoxAction,
+    SetBoxDimensionsAction, CreateCylinderAction, SetCylinderSizeAction, SetPlacementAction,
+    CreateSketchExtrusionAction, CreateSketchAction, EditBoxParametersAction,
+    EditCylinderParametersAction, EditExtrusionParametersAction, PushPullFaceAction,
+    CreateFilletAction, EditFilletParametersAction, CreateChamferAction,
+    EditChamferParametersAction, CreateHoleAction, EditHoleParametersAction, CreateCombineAction,
+    EditCombineParametersAction, CreateDatumPlaneAction, EditDatumPlaneParametersAction,
+    CreateDatumAxisAction, EditDatumAxisParametersAction, CreateShellAction,
+    EditShellParametersAction, CreatePrimitiveAction, EditPrimitiveParametersAction,
+    CreateDraftAction, EditDraftParametersAction, CreateMirrorAction, EditMirrorParametersAction,
+    CreatePatternAction, EditPatternParametersAction, MoveBodyAction, EditMoveParametersAction,
+    SetFeatureSuppressedAction>;
 // Parallel to the alternatives of Action.
 enum class ActionKind {
     createParameter,
@@ -414,9 +407,10 @@ struct ActionRequest final {
 };
 // AI02d: a request of a local caller (the shell) on the current stamp or on the stamp a
 // tool stored when it started. Local requests are not repeated, so they share one ID.
-[[nodiscard]] ActionRequest prepareRequest(const CadSession& session, Action action,
-                                           std::optional<DocumentStamp> stamp = std::nullopt,
-                                           std::optional<ErrorDisposition> disposition = std::nullopt);
+[[nodiscard]] ActionRequest
+prepareRequest(const CadSession& session, Action action,
+               std::optional<DocumentStamp> stamp = std::nullopt,
+               std::optional<ErrorDisposition> disposition = std::nullopt);
 
 // Checked before any transaction, in this order (AI01). `none` leaves the decision to the
 // command itself; see ActionResult::command.

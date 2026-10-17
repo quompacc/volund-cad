@@ -1,8 +1,8 @@
 #pragma once
-#include <voelund/document/ModelDocument.hpp>
 #include <TDF_Label.hxx>
 #include <optional>
 #include <string_view>
+#include <voelund/document/ModelDocument.hpp>
 namespace voelund::document::detail {
 // The feature kinds added on 2026-10-14 share one dispatch in the primitive codec: their
 // stored name (none for other kinds), the kind of a stored name in a schema, the records
@@ -61,4 +61,4 @@ ImportPartParameters readNativeImportPart(const TDF_Label& label, int schemaVers
 // M27 (NativePrimitiveSolid.cpp).
 void writeNativePrimitive(const TDF_Label& label, const PrimitiveParameters& parameters);
 PrimitiveParameters readNativePrimitive(const TDF_Label& label, int schemaVersion);
-}
+} // namespace voelund::document::detail

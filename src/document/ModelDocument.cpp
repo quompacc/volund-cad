@@ -147,9 +147,8 @@ SketchPlane datumSketchPlane(DatumPlane datum) {
 }
 
 void validateSketchParameters(const SketchParameters& parameters) {
-    if (parameters.datum &&
-        (parameters.supportBinding || parameters.repairReason ||
-         !(parameters.plane == datumSketchPlane(*parameters.datum))))
+    if (parameters.datum && (parameters.supportBinding || parameters.repairReason ||
+                             !(parameters.plane == datumSketchPlane(*parameters.datum))))
         throw std::invalid_argument("A datum sketch lies exactly on its unbound base plane");
     if (parameters.constructionPlane &&
         (parameters.datum || parameters.supportBinding || parameters.repairReason ||
@@ -211,8 +210,7 @@ FeatureId ModelDocument::addBoxFeature(std::string name, const kernel::BoxDimens
     return id;
 }
 
-FeatureId ModelDocument::addCylinderFeature(std::string name,
-                                            std::optional<FeatureId> inputFeature,
+FeatureId ModelDocument::addCylinderFeature(std::string name, std::optional<FeatureId> inputFeature,
                                             const CylinderParameters& parameters) {
     if (inputFeature && !contains(*inputFeature)) {
         throw std::invalid_argument("Cylinder input feature does not exist");
@@ -301,8 +299,7 @@ FeatureId ModelDocument::addFilletFeature(std::string name, const FilletParamete
     return id;
 }
 
-FeatureId ModelDocument::addChamferFeature(std::string name,
-                                           const ChamferParameters& parameters) {
+FeatureId ModelDocument::addChamferFeature(std::string name, const ChamferParameters& parameters) {
     validateChamferParameters(parameters);
     const FeatureId id = nextFeatureId();
     auto candidate = currentState();
@@ -504,8 +501,7 @@ const ChamferParameters& ModelDocument::chamferParameters(FeatureId featureId) c
     return *value;
 }
 
-bool ModelDocument::setChamferParameters(FeatureId featureId,
-                                         const ChamferParameters& parameters) {
+bool ModelDocument::setChamferParameters(FeatureId featureId, const ChamferParameters& parameters) {
     validateChamferParameters(parameters);
     const std::size_t index = featureIndex(featureId);
     auto* current = std::get_if<ChamferParameters>(&impl_->view().parameters()[index]);

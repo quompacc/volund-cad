@@ -14,9 +14,9 @@ using document::SketchPoint;
 // `reversed`: the picks run clockwise, so the stored (counterclockwise) arc starts at `last`.
 document::SketchArc threePointArc(SketchPoint first, SketchPoint middle, SketchPoint last,
                                   bool& reversed) {
-    const double determinant = 2.0 * (first.x * (middle.y - last.y) +
-                                      middle.x * (last.y - first.y) +
-                                      last.x * (first.y - middle.y));
+    const double determinant =
+        2.0 * (first.x * (middle.y - last.y) + middle.x * (last.y - first.y) +
+               last.x * (first.y - middle.y));
     if (std::abs(determinant) <= 1.0e-9)
         throw std::invalid_argument("Three-point arc needs non-collinear points");
     const double firstSquared = first.x * first.x + first.y * first.y;
@@ -60,8 +60,7 @@ std::vector<SketchGeometry> slotGeometry(SketchPoint first, SketchPoint second,
     const double uy = dy / length;
     const double nx = -uy;
     const double ny = ux;
-    const double radius = std::abs((widthPoint.x - first.x) * nx +
-                                   (widthPoint.y - first.y) * ny);
+    const double radius = std::abs((widthPoint.x - first.x) * nx + (widthPoint.y - first.y) * ny);
     const SketchPoint firstTop{first.x + nx * radius, first.y + ny * radius};
     const SketchPoint secondTop{second.x + nx * radius, second.y + ny * radius};
     const SketchPoint secondBottom{second.x - nx * radius, second.y - ny * radius};
@@ -85,7 +84,8 @@ std::vector<SketchGeometry> polygonGeometry(SketchPoint center, SketchPoint vert
         const double secondAngle = start + 2.0 * std::numbers::pi * (index + 1) / sides;
         result.push_back(document::SketchLine{
             {center.x + radius * std::cos(firstAngle), center.y + radius * std::sin(firstAngle)},
-            {center.x + radius * std::cos(secondAngle), center.y + radius * std::sin(secondAngle)}});
+            {center.x + radius * std::cos(secondAngle),
+             center.y + radius * std::sin(secondAngle)}});
     }
     return result;
 }
@@ -227,11 +227,12 @@ std::optional<SketchCreationResult> SketchEditorSession::confirmCreation() {
                                                              : SketchCreationRole::element;
         ids.push_back(document::SketchElementId{elements_.nextId++});
         // S06: the polygon's circle and the slot's axis are construction geometry.
-        elements_.values.push_back({ids.back(), std::move(preview_[index]),
-                                    role == SketchCreationRole::polygonCircle ||
-                                        role == SketchCreationRole::slotAxis});
+        elements_.values.push_back(
+            {ids.back(), std::move(preview_[index]),
+             role == SketchCreationRole::polygonCircle || role == SketchCreationRole::slotAxis});
     }
-    if ((tool_ == SketchDrawingTool::slot || tool_ == SketchDrawingTool::polygon) && ids.size() > 1) {
+    if ((tool_ == SketchDrawingTool::slot || tool_ == SketchDrawingTool::polygon) &&
+        ids.size() > 1) {
         // The contour: every item but the trailing construction circle or axis.
         const std::size_t contour = ids.size() - 1;
         for (std::size_t index = 0; index < contour; ++index) {
@@ -239,9 +240,9 @@ std::optional<SketchCreationResult> SketchEditorSession::confirmCreation() {
             const bool currentIsReversed = tool_ == SketchDrawingTool::slot && index % 2 == 1;
             const bool nextIsReversed = tool_ == SketchDrawingTool::slot && index % 2 == 0;
             const auto outgoing = currentIsReversed ? document::SketchPointPosition::start
-                                                   : document::SketchPointPosition::end;
+                                                    : document::SketchPointPosition::end;
             const auto incoming = nextIsReversed ? document::SketchPointPosition::end
-                                                : document::SketchPointPosition::start;
+                                                 : document::SketchPointPosition::start;
             constraints_.values.push_back(
                 {document::SketchConstraintId{constraints_.nextId++},
                  document::SketchConstraintKind::coincident,
@@ -250,11 +251,12 @@ std::optional<SketchCreationResult> SketchEditorSession::confirmCreation() {
         }
         using Position = document::SketchPointPosition;
         const auto addRelation = [this, &ids](document::SketchConstraintKind kind,
-                                             std::size_t first, std::size_t second,
-                                             Position firstPoint = Position::start,
-                                             Position secondPoint = Position::start) {
+                                              std::size_t first, std::size_t second,
+                                              Position firstPoint = Position::start,
+                                              Position secondPoint = Position::start) {
             constraints_.values.push_back(
-                {document::SketchConstraintId{constraints_.nextId++}, kind,
+                {document::SketchConstraintId{constraints_.nextId++},
+                 kind,
                  {ids[first], firstPoint},
                  document::SketchGeometryReference{ids[second], secondPoint}});
         };

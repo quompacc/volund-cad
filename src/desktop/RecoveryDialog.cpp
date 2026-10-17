@@ -11,13 +11,11 @@
 namespace voelund::desktop {
 
 QString RecoveryDialog::describe(const RecoveryEntry& entry) {
-    const QString name = entry.originalFile.isEmpty()
-                             ? QObject::tr("Unbenannt")
-                             : QFileInfo(entry.originalFile).fileName();
+    const QString name = entry.originalFile.isEmpty() ? QObject::tr("Unbenannt")
+                                                      : QFileInfo(entry.originalFile).fileName();
     if (entry.damaged)
         return QObject::tr("%1\nbeschädigt – kann nur verworfen werden").arg(name);
-    const QString time =
-        QLocale().toString(entry.savedAt.toLocalTime(), QLocale::ShortFormat);
+    const QString time = QLocale().toString(entry.savedAt.toLocalTime(), QLocale::ShortFormat);
     QString detail = entry.savedFeatures
                          ? QObject::tr("gespeichert: %1 Features → Sicherung: %2")
                                .arg(*entry.savedFeatures)
@@ -30,8 +28,8 @@ QString RecoveryDialog::describe(const RecoveryEntry& entry) {
     return QStringLiteral("%1    %2\n%3").arg(name, time, detail);
 }
 
-RecoveryDialog::RecoveryDialog(std::vector<RecoveryEntry> entries, Handler restore,
-                               Handler discard, QWidget* parent)
+RecoveryDialog::RecoveryDialog(std::vector<RecoveryEntry> entries, Handler restore, Handler discard,
+                               QWidget* parent)
     : QDialog(parent), entries_(std::move(entries)), restore_(std::move(restore)),
       discard_(std::move(discard)) {
     setObjectName(QStringLiteral("recoveryDialog"));

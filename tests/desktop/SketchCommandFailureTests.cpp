@@ -1,7 +1,7 @@
-#include "IsolatedSettings.hpp"
 #include "../../src/desktop/SketchExtrusionToolController.hpp"
 #include "../../src/desktop/ToolPanelHost.hpp"
 #include "../CommandResultAssertions.hpp"
+#include "IsolatedSettings.hpp"
 #include <QApplication>
 #include <QDir>
 #include <QLabel>

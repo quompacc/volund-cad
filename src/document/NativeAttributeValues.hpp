@@ -12,5 +12,6 @@ struct NativeAttributeTypes final {
 };
 [[nodiscard]] NativeAttributeTypes readNativeAttributeTypes(std::string_view bytes);
 // Returns the number of reference tags, for the document-wide allocation budget.
-[[nodiscard]] std::size_t validateNativeAttributeValue(NativeAttributeKind kind, std::string_view bytes);
+[[nodiscard]] std::size_t validateNativeAttributeValue(NativeAttributeKind kind,
+                                                       std::string_view bytes);
 } // namespace voelund::document::detail

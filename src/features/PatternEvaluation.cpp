@@ -73,7 +73,9 @@ Step stepOf(const AxisLine& axis, const document::PatternParameters& parameters,
                                           axis.direction.Z()};
     if (parameters.kind == document::PatternKind::linear) {
         const double distance = parameters.spacing * index;
-        return {origin, direction, 0.0,
+        return {origin,
+                direction,
+                0.0,
                 {direction[0] * distance, direction[1] * distance, direction[2] * distance}};
     }
     const double total = parameters.angle.value();
@@ -89,8 +91,8 @@ struct Copy final {
 };
 
 Copy copyOf(const TopoDS_Shape& body, std::span<const SupportProvenance> faces,
-            std::span<const EdgeProvenance> edges, const Step& step,
-            document::FeatureId pattern, std::uint32_t index) {
+            std::span<const EdgeProvenance> edges, const Step& step, document::FeatureId pattern,
+            std::uint32_t index) {
     Copy copy{kernel::ShapeFactory::copyWithHistory(body, step.origin, step.direction, step.angle,
                                                     step.translation),
               {},
@@ -125,8 +127,7 @@ Joined join(const TopoDS_Shape& body, std::span<const SupportProvenance> faces,
     for (std::uint32_t index = 1; index < parameters.count; ++index) {
         const auto copy =
             copyOf(body, faces, edges, stepOf(axis, parameters, index), pattern, index);
-        const auto fused =
-            kernel::ShapeOperations::fuseWithHistory(result.shape, copy.shape.shape);
+        const auto fused = kernel::ShapeOperations::fuseWithHistory(result.shape, copy.shape.shape);
         auto joinedFaces =
             continueSupportOrigins(result.faces, fused, kernel::HistoryOperand::first);
         const auto copied =
@@ -187,8 +188,7 @@ void evaluatePattern(const document::DocumentSnapshot& document,
 
 void evaluatePatternCopy(const document::DocumentSnapshot& document,
                          const document::FeatureDescriptor& descriptor,
-                         std::vector<EvaluatedFeature>& outputs,
-                         std::vector<EvaluatedBody>& bodies,
+                         std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
                          std::vector<EvaluatedBody>& referenceBodies) {
     const auto& values = document.patternCopyParameters(descriptor.id);
     const auto& parameters = document.patternParameters(values.pattern);

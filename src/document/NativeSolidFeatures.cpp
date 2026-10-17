@@ -78,9 +78,9 @@ DatumPlaneParameters readNativeDatumPlane(const TDF_Label& label, std::size_t re
     if (base != 0)
         result.basePlane = static_cast<DatumPlane>(base);
     else
-        result.face = BodyFaceReference{readBody(child(label, 2)),
-                                        readOrigin(child(label, 3), remainingRecords,
-                                                   schemaVersion)};
+        result.face =
+            BodyFaceReference{readBody(child(label, 2)),
+                              readOrigin(child(label, 3), remainingRecords, schemaVersion)};
     const int axis = integer(child(label, 4));
     require(axis >= 0 && axis <= 2);
     result.rotationAxis = static_cast<DatumRotationAxis>(axis);
@@ -97,8 +97,7 @@ std::size_t nativeDatumAxisRecords(const DatumAxisParameters& parameters) {
 
 void writeNativeDatumAxis(const TDF_Label& label, const DatumAxisParameters& parameters) {
     validateDatumAxisParameters(parameters);
-    TDataStd_Integer::Set(label,
-                          parameters.baseAxis ? static_cast<int>(*parameters.baseAxis) : 0);
+    TDataStd_Integer::Set(label, parameters.baseAxis ? static_cast<int>(*parameters.baseAxis) : 0);
     if (!parameters.edge)
         return;
     writeBody(label.FindChild(1), *parameters.body);
@@ -119,8 +118,8 @@ DatumAxisParameters readNativeDatumAxis(const TDF_Label& label, std::size_t rema
         result.body = readBody(child(label, 1));
         auto first = readOrigin(child(label, 2), remainingRecords, schemaVersion);
         auto second = readOrigin(child(label, 3), remainingRecords, schemaVersion);
-        result.edge = FilletEdge{std::move(first), std::move(second),
-                                 readBody(child(label, 4)).value()};
+        result.edge =
+            FilletEdge{std::move(first), std::move(second), readBody(child(label, 4)).value()};
     }
     validateDatumAxisParameters(result);
     return result;
@@ -146,8 +145,8 @@ CombineParameters readNativeCombine(const TDF_Label& label, std::size_t remainin
     require(schemaVersion >= 18 && label.NbChildren() == 3);
     const int operation = integer(label);
     require(operation >= 1 && operation <= 3);
-    CombineParameters result{readBody(child(label, 1)), {},
-                             static_cast<CombineOperation>(operation), false};
+    CombineParameters result{
+        readBody(child(label, 1)), {}, static_cast<CombineOperation>(operation), false};
     const auto tools = child(label, 2);
     const int count = integer(tools);
     require(count > 0 && static_cast<std::size_t>(count) <= maximumCombineTools &&
@@ -192,7 +191,8 @@ ShellParameters readNativeShell(const TDF_Label& label, std::size_t remainingRec
             static_cast<std::size_t>(count) <= remainingRecords && faces.NbChildren() == count);
     remainingRecords -= static_cast<std::size_t>(count);
     for (int index = 1; index <= count; ++index)
-        result.openFaces.push_back(readOrigin(child(faces, index), remainingRecords, schemaVersion));
+        result.openFaces.push_back(
+            readOrigin(child(faces, index), remainingRecords, schemaVersion));
     const int outward = integer(child(label, 3));
     require(outward == 0 || outward == 1);
     result.outward = outward == 1;

@@ -84,8 +84,7 @@ void references() {
     require(constraint(editor, again).reference && near(constraint(editor, again).value, 17) &&
                 editor.lastSolveResult().status == features::SketchSolveStatus::success,
             "The same distance again becomes a reference by itself");
-    require(editor.undo() && !editor.constraints().empty() &&
-                editor.constraints().back().id == y,
+    require(editor.undo() && !editor.constraints().empty() && editor.constraints().back().id == y,
             "Undo removes it");
 
     require(editor.tryAccept().status() == CommandStatus::committed, "Accepted");

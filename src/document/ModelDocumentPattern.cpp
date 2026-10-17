@@ -71,8 +71,7 @@ void validatePatternParameters(const PatternParameters& parameters) {
         throw std::invalid_argument("A pattern has 2 to 100 instances");
     const double angle = parameters.angle.value();
     if (!std::isfinite(parameters.spacing) || !std::isfinite(angle) ||
-        std::abs(parameters.spacing) > 1e6 || angle < 0.0 ||
-        angle > 2 * std::numbers::pi + 1e-12)
+        std::abs(parameters.spacing) > 1e6 || angle < 0.0 || angle > 2 * std::numbers::pi + 1e-12)
         throw std::invalid_argument("Pattern spacing or angle out of range");
     if (parameters.kind == PatternKind::linear && parameters.spacing <= 1e-9)
         throw std::invalid_argument("A linear pattern needs a positive spacing");
@@ -103,8 +102,7 @@ const PatternParameters& ModelDocument::patternParameters(FeatureId featureId) c
     return *value;
 }
 
-bool ModelDocument::setPatternParameters(FeatureId featureId,
-                                         const PatternParameters& parameters) {
+bool ModelDocument::setPatternParameters(FeatureId featureId, const PatternParameters& parameters) {
     validatePatternParameters(parameters);
     const std::size_t index = featureIndex(featureId);
     const auto* current = std::get_if<PatternParameters>(&impl_->view().parameters()[index]);
@@ -114,8 +112,8 @@ bool ModelDocument::setPatternParameters(FeatureId featureId,
         return false;
     auto candidate = currentState();
     *std::get_if<PatternParameters>(&candidate.parameters.at(index)) = parameters;
-    keepCopiesInStep(candidate.features, candidate.parameters, candidate.nextFeatureId,
-                     featureId, parameters);
+    keepCopiesInStep(candidate.features, candidate.parameters, candidate.nextFeatureId, featureId,
+                     parameters);
     static_cast<void>(featureBodyContexts(candidate.features, candidate.parameters));
     commitState(std::move(candidate));
     return true;

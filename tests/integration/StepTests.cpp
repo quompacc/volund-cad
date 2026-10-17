@@ -3,8 +3,8 @@
 #include <voelund/kernel/StepExchange.hpp>
 
 #include <BRepAdaptor_Curve.hxx>
-#include <BRepBuilderAPI_MakePolygon.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
+#include <BRepBuilderAPI_MakePolygon.hxx>
 #include <BRepPrimAPI_MakeBox.hxx>
 #include <STEPControl_Writer.hxx>
 #include <TopExp_Explorer.hxx>
@@ -136,7 +136,8 @@ void exportAndImport(const std::filesystem::path& directory) {
     require(imported.status == StepImportStatus::imported && imported.solids == 3 &&
                 imported.feature && imported.skippedShapes == 0,
             "Import reads three solids: " + imported.message);
-    require(lower(imported.sourceUnit).find("milli") != std::string::npos, "The source unit is mm: " + imported.sourceUnit);
+    require(lower(imported.sourceUnit).find("milli") != std::string::npos,
+            "The source unit is mm: " + imported.sourceUnit);
     require(count(target, document::FeatureKind::stepImport) == 1 &&
                 count(target, document::FeatureKind::importPart) == 2 &&
                 target.features().front().name == "Import 1",

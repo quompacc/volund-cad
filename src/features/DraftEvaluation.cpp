@@ -10,8 +10,8 @@
 
 // M25 (user decision 2026-10-14): tilts named faces of a body about the plane of the neutral
 // face, pulled into the body (against the face's outward normal): a positive angle tapers the
-// body away from the neutral face, as a mould needs. The faces are found by their names on the body before the
-// draft; they keep their names. A face the kernel cannot tilt is reported by its number.
+// body away from the neutral face, as a mould needs. The faces are found by their names on the body
+// before the draft; they keep their names. A face the kernel cannot tilt is reported by its number.
 namespace voelund::features::detail {
 namespace {
 

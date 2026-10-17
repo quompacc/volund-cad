@@ -69,8 +69,8 @@ std::vector<SketchPoint> meet(const Support& a, const Support& b, double toleran
     if (a.circle && !b.circle)
         return meet(b, a, tolerance);
     if (!a.circle) {
-        const double along = (b.origin.x - a.origin.x) * a.direction.x +
-                             (b.origin.y - a.origin.y) * a.direction.y;
+        const double along =
+            (b.origin.x - a.origin.x) * a.direction.x + (b.origin.y - a.origin.y) * a.direction.y;
         const SketchPoint foot{a.origin.x + a.direction.x * along,
                                a.origin.y + a.direction.y * along};
         const double offset = distance(foot, b.origin);
@@ -86,7 +86,8 @@ std::vector<SketchPoint> meet(const Support& a, const Support& b, double toleran
     if (centers <= tolerance || centers > a.radius + b.radius + tolerance ||
         centers < std::abs(a.radius - b.radius) - tolerance)
         return {};
-    const SketchPoint unit{(b.origin.x - a.origin.x) / centers, (b.origin.y - a.origin.y) / centers};
+    const SketchPoint unit{(b.origin.x - a.origin.x) / centers,
+                           (b.origin.y - a.origin.y) / centers};
     const double along =
         (centers * centers + a.radius * a.radius - b.radius * b.radius) / (2.0 * centers);
     const SketchPoint foot{a.origin.x + unit.x * along, a.origin.y + unit.y * along};
@@ -104,7 +105,7 @@ struct Hit final {
     SketchPoint point;
     SketchElementId cutter;
     std::optional<Position> cutterEnd;
-    bool onObject; // the cutter can carry a point-on-object relation
+    bool onObject;  // the cutter can carry a point-on-object relation
     double at{0.0}; // position along the edited element (arc length from its start)
 };
 
@@ -296,18 +297,19 @@ SketchCurveEditPlan trim(const Curve& curve, std::vector<Hit> cuts, SketchPoint 
         distinct.front().at + curve.length - distinct.back().at < nullSegment)
         distinct.pop_back();
     if (distinct.empty())
-        refuse(edit, "Das Element schneidet keine andere Geometrie; es gibt kein Stück zu entfernen");
+        refuse(edit,
+               "Das Element schneidet keine andere Geometrie; es gibt kein Stück zu entfernen");
     if (circle && distinct.size() < 2)
         refuse(edit, "Ein Kreis braucht mindestens zwei Schnittpunkte zum Stutzen");
     const double picked = pickedAt(curve, pick);
     for (const Hit& hit : distinct) {
         const double gap = std::abs(hit.at - picked);
         if (gap < nullSegment || (circle && curve.length - gap < nullSegment))
-            refuse(edit, "Die Pickstelle liegt auf einem Schnittpunkt; das Stück daneben anklicken");
+            refuse(edit,
+                   "Die Pickstelle liegt auf einem Schnittpunkt; das Stück daneben anklicken");
     }
-    const auto upper = std::ranges::find_if(distinct, [picked](const Hit& hit) {
-        return hit.at > picked;
-    });
+    const auto upper =
+        std::ranges::find_if(distinct, [picked](const Hit& hit) { return hit.at > picked; });
     const Hit* after = upper == distinct.end() ? nullptr : &*upper;
     const Hit* before = upper == distinct.begin() ? nullptr : &*std::prev(upper);
     SketchCurveEditPlan plan{curve.geometry, std::nullopt, false, std::nullopt, std::nullopt, {}};
@@ -371,7 +373,8 @@ SketchCurveEditPlan extend(const Curve& curve, const std::vector<Hit>& targets, 
     if (nearest == nullptr)
         refuse(SketchCurveEdit::extend, "In Verlängerungsrichtung liegt keine Geometrie");
     SketchCurveEditPlan plan{curve.geometry, std::nullopt, false, std::nullopt, std::nullopt, {}};
-    plan.edited = atStart ? curve.piece(-best, curve.length) : curve.piece(0.0, curve.length + best);
+    plan.edited =
+        atStart ? curve.piece(-best, curve.length) : curve.piece(0.0, curve.length + best);
     plan.movedEnd = atStart ? Position::start : Position::end;
     bind(plan, 0, *plan.movedEnd, *nearest);
     return plan;
@@ -382,8 +385,8 @@ SketchCurveEditPlan split(const Curve& curve, SketchPoint pick) {
     if (at < nullSegment || at > curve.length - nullSegment)
         refuse(SketchCurveEdit::split,
                "Die Stelle liegt an einem Endpunkt; es entstünde ein Nullsegment");
-    SketchCurveEditPlan plan{curve.piece(0.0, at), curve.piece(at, curve.length), true,
-                             std::nullopt, std::nullopt, {}};
+    SketchCurveEditPlan plan{
+        curve.piece(0.0, at), curve.piece(at, curve.length), true, std::nullopt, std::nullopt, {}};
     if (curve.line())
         plan.keptShare = at / curve.length;
     return plan;

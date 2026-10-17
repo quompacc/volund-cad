@@ -12,17 +12,16 @@
 #include <memory>
 #include <numbers>
 #include <optional>
+#include <set>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
 #include <variant>
-#include <set>
 #include <vector>
 
 namespace voelund::features {
 namespace {
 using namespace detail;
-
 
 GCS::Point& point(const document::SketchGeometryReference& reference, const LineMap& lines,
                   const CircleMap& circles, const ArcMap& arcs, const PointMap& centers) {
@@ -92,11 +91,11 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
         unknownStarts.emplace_back(element.id, unknowns.size());
         // S17: a projected edge is fixed; its parameters are constants for the solver.
         GCS::VEC_pD ignored;
-        auto& into = std::ranges::find(sketch.projections, element.id,
-                                       &document::SketchProjection::element) !=
-                             sketch.projections.end()
-                         ? ignored
-                         : unknowns;
+        auto& into =
+            std::ranges::find(sketch.projections, element.id,
+                              &document::SketchProjection::element) != sketch.projections.end()
+                ? ignored
+                : unknowns;
         if (std::holds_alternative<document::SketchLine>(element.geometry)) {
             auto& state = states.emplace_back(std::in_place_type<LineState>, element);
             auto& line = std::get<LineState>(state);
@@ -309,8 +308,8 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
                 const double current =
                     system.calculateAngleViaPoint(curve(firstId), curve(secondId), at);
                 jointAngles.push_back(std::cos(current) >= 0.0 ? 0.0 : std::numbers::pi);
-                static_cast<void>(system.addConstraintAngleViaPoint(
-                    curve(firstId), curve(secondId), at, &jointAngles.back(), tag));
+                static_cast<void>(system.addConstraintAngleViaPoint(curve(firstId), curve(secondId),
+                                                                    at, &jointAngles.back(), tag));
             } else if (lines.contains(firstId))
                 static_cast<void>(arcs.contains(secondId)
                                       ? system.addConstraintTangent(lines.at(firstId)->line,

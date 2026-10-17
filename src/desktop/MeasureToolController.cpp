@@ -26,8 +26,7 @@ QString number(double value, bool fullPrecision) {
 } // namespace
 
 MeasureToolController::MeasureToolController(application::CadSession& session,
-                                             viewport::CadViewport& viewport,
-                                             ToolPanelHost& panel,
+                                             viewport::CadViewport& viewport, ToolPanelHost& panel,
                                              std::function<void(const QString&)> statusChanged)
     : session_(session), viewport_(viewport), panel_(panel),
       statusChanged_(std::move(statusChanged)) {}
@@ -35,26 +34,26 @@ MeasureToolController::MeasureToolController(application::CadSession& session,
 void MeasureToolController::begin() {
     active_ = true;
     picks_.clear();
-    panel_.begin(ToolPanelDefinition{
-        QObject::tr("Messen"),
-        {},
-        {},
-        {},
-        {{"copy", QObject::tr("Werte kopieren"), QObject::tr("Messen")},
-         {"reset", QObject::tr("Neu beginnen"), QObject::tr("Messen")}},
-        [](const std::string&, double) {},
-        [](const std::string&, int) {},
-        [this](const std::string& id) {
-            if (id == "copy")
-                QApplication::clipboard()->setText(report(true));
-            if (id == "reset") {
-                picks_.clear();
-                show();
-            }
-        },
-        [this]() { finish(); },
-        [this]() { cancel(); },
-        {}});
+    panel_.begin(
+        ToolPanelDefinition{QObject::tr("Messen"),
+                            {},
+                            {},
+                            {},
+                            {{"copy", QObject::tr("Werte kopieren"), QObject::tr("Messen")},
+                             {"reset", QObject::tr("Neu beginnen"), QObject::tr("Messen")}},
+                            [](const std::string&, double) {},
+                            [](const std::string&, int) {},
+                            [this](const std::string& id) {
+                                if (id == "copy")
+                                    QApplication::clipboard()->setText(report(true));
+                                if (id == "reset") {
+                                    picks_.clear();
+                                    show();
+                                }
+                            },
+                            [this]() { finish(); },
+                            [this]() { cancel(); },
+                            {}});
     panel_.setAcceptEnabled(true);
     show();
     statusChanged_(QObject::tr("Messen: Kante oder ebene Fläche anklicken"));
@@ -90,14 +89,13 @@ QString MeasureToolController::report(bool fullPrecision) const {
     for (std::size_t index = 0; index < picks_.size(); ++index) {
         const auto& pick = picks_[index];
         const auto measure = kernel::measureShape(pick.shape);
-        const QString which = QObject::tr("%1. %2")
-                                  .arg(index + 1)
-                                  .arg(pick.shape.ShapeType() == TopAbs_EDGE ? QObject::tr("Kante")
-                                                                             : QObject::tr("Fläche"));
+        const QString which = QObject::tr("%1. %2").arg(index + 1).arg(
+            pick.shape.ShapeType() == TopAbs_EDGE ? QObject::tr("Kante") : QObject::tr("Fläche"));
         if (measure.length)
             lines << QObject::tr("%1: Länge %2").arg(which, mm(*measure.length));
         if (measure.area)
-            lines << QObject::tr("%1: Fläche %2 mm²").arg(which, number(*measure.area, fullPrecision));
+            lines << QObject::tr("%1: Fläche %2 mm²")
+                         .arg(which, number(*measure.area, fullPrecision));
         if (measure.radius)
             lines << QObject::tr("%1: Radius %2").arg(which, mm(*measure.radius));
         if (const auto shape = session_.featureShape(document::FeatureId{pick.body}))
@@ -112,8 +110,10 @@ QString MeasureToolController::report(bool fullPrecision) const {
             if (pair.angle)
                 lines << QObject::tr("Winkel %1°")
                              .arg(fullPrecision
-                                      ? QLocale().toString(*pair.angle * 180 / std::numbers::pi, 'g', 15)
-                                      : QLocale().toString(*pair.angle * 180 / std::numbers::pi, 'f', 2));
+                                      ? QLocale().toString(*pair.angle * 180 / std::numbers::pi,
+                                                           'g', 15)
+                                      : QLocale().toString(*pair.angle * 180 / std::numbers::pi,
+                                                           'f', 2));
         } catch (const std::exception&) {
             lines << QObject::tr("Abstand und Winkel lassen sich hier nicht messen.");
         }

@@ -1,7 +1,7 @@
-#include "IsolatedSettings.hpp"
 #include "../../src/desktop/AutosaveController.hpp"
 #include "../../src/desktop/RecoveryStore.hpp"
 #include "../CommandResultAssertions.hpp"
+#include "IsolatedSettings.hpp"
 #include <QAbstractButton>
 #include <QApplication>
 #include <QDialog>
@@ -255,7 +255,8 @@ void dialogAtStartRestores() {
         auto* list = dialog->findChild<QListWidget*>(QStringLiteral("recoveryList"));
         shown = list && list->count() == 1 ? list->item(0)->text() : QString();
         if (!capture.isEmpty() && QDir().mkpath(capture))
-            static_cast<void>(dialog->grab().save(capture + QStringLiteral("/recovery-dialog.png")));
+            static_cast<void>(
+                dialog->grab().save(capture + QStringLiteral("/recovery-dialog.png")));
         // Outside this timer slot, so a message the click opens is answered as well.
         QTimer::singleShot(0, dialog->findChild<QPushButton*>(QStringLiteral("recoveryRestore")),
                            &QPushButton::click);
@@ -263,13 +264,14 @@ void dialogAtStartRestores() {
     user.start(50);
     window.offerRecovery();
     user.stop();
-    require(messages.isEmpty(), "No error message: " + messages.join(QLatin1Char('|')).toStdString());
+    require(messages.isEmpty(),
+            "No error message: " + messages.join(QLatin1Char('|')).toStdString());
     require(dialogs == 1 && shown.contains(QString::fromUtf8("Halter äöü.volund")) &&
-                shown.contains(QStringLiteral("1 Features")) &&
-                shown.contains(QStringLiteral("2")),
+                shown.contains(QStringLiteral("1 Features")) && shown.contains(QStringLiteral("2")),
             "The dialog lists the file with its feature counts");
     require(session.isModified() && session.currentFile().empty() &&
-                session.features().size() == 2 && session.documentId() == fixture.session.documentId() &&
+                session.features().size() == 2 &&
+                session.documentId() == fixture.session.documentId() &&
                 window.windowTitle().contains(QLatin1Char('*')),
             "Restore opens B as an unsaved document");
     require(bytes(fixture.original) == fixture.stateA, "The original file is unchanged");
@@ -329,8 +331,8 @@ void draftRestoresIntoTheEditor(bool edits) {
     const auto draft = crashed.sketchDraftSnapshot(edited, std::nullopt, rectangles(2));
     {
         desktop::RecoveryStore store(recovery);
-        desktop::RecoverySnapshot snapshot{hex(crashed), crashed.recoverySnapshot(), {},
-                                           before, std::nullopt};
+        desktop::RecoverySnapshot snapshot{
+            hex(crashed), crashed.recoverySnapshot(), {}, before, std::nullopt};
         snapshot.draft = draft.bytes;
         snapshot.draftFeature = draft.feature.value();
         snapshot.draftEdits = edits;
@@ -358,8 +360,7 @@ void draftRestoresIntoTheEditor(bool edits) {
     user.stop();
     QApplication::processEvents();
     require(shown.contains(QStringLiteral("Skizzenentwurf")), "The dialog names the draft");
-    require(session.features().size() == before,
-            "The draft is not part of the restored document");
+    require(session.features().size() == before, "The draft is not part of the restored document");
     QPushButton* accept = nullptr;
     for (auto* button : window.findChildren<QPushButton*>())
         if (button->objectName() == QLatin1String("toolAcceptButton") && button->isVisible())
@@ -386,7 +387,8 @@ int main(int argc, char** argv) {
         draftIsWrittenApart();
         draftRestoresIntoTheEditor(false);
         draftRestoresIntoTheEditor(true);
-        std::cout << "PASS L05 A-RECOVERY-01 autosave and recovery (with sketch drafts) without loss of the original\n";
+        std::cout << "PASS L05 A-RECOVERY-01 autosave and recovery (with sketch drafts) without "
+                     "loss of the original\n";
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';
         return 1;

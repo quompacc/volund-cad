@@ -1,4 +1,3 @@
-#include <voelund/kernel/PlaneNormal.hpp>
 #include <BRepAdaptor_Surface.hxx>
 #include <BRepBndLib.hxx>
 #include <Bnd_Box.hxx>
@@ -15,6 +14,7 @@
 #include <voelund/features/GeometryEvaluationError.hpp>
 #include <voelund/features/SketchSupportBinding.hpp>
 #include <voelund/kernel/NumericPolicy.hpp>
+#include <voelund/kernel/PlaneNormal.hpp>
 
 namespace voelund::features {
 namespace {
@@ -102,8 +102,7 @@ std::vector<SupportFaceFrame> supportFaceFrames(const EvaluatedFeature& support)
         // orientation of its occurrence in the solid (T04). Stored bindings use frame(face)
         // and are unaffected.
         auto f = frame(face);
-        for (TopExp_Explorer explorer(support.shape, TopAbs_FACE); explorer.More();
-             explorer.Next())
+        for (TopExp_Explorer explorer(support.shape, TopAbs_FACE); explorer.More(); explorer.Next())
             if (explorer.Current().IsSame(face)) {
                 if (explorer.Current().Orientation() != face.Orientation()) {
                     f.z.Reverse();

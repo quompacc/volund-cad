@@ -1,14 +1,14 @@
 #include "Fixture.hpp"
-#include <voelund/document/DocumentId.hpp>
 #include <PCDM_ReaderStatus.hxx>
 #include <TDataStd_AsciiString.hxx>
 #include <fstream>
 #include <iostream>
+#include <voelund/document/DocumentId.hpp>
 
 namespace {
 using namespace voelund::document;
 constexpr DocumentId identity{0xffffffffffffffffULL, 0x0123456789abcdefULL};
-DocumentId readIdentity(const Handle(TDocStd_Document)& doc) {
+DocumentId readIdentity(const Handle(TDocStd_Document) & doc) {
     Handle(TDataStd_AsciiString) value;
     probe::require(doc->Main().FindAttribute(TDataStd_AsciiString::GetID(), value),
                    "Missing document identity");
@@ -16,10 +16,10 @@ DocumentId readIdentity(const Handle(TDocStd_Document)& doc) {
     return documentIdFromHex(
         std::string_view(text.ToCString(), static_cast<std::size_t>(text.Length())));
 }
-void setIdentity(const Handle(TDocStd_Document)& doc, DocumentId id) {
+void setIdentity(const Handle(TDocStd_Document) & doc, DocumentId id) {
     TDataStd_AsciiString::Set(doc->Main(), documentIdToHex(id).c_str());
 }
-void checkHistory(const Handle(TDocStd_Document)& doc) {
+void checkHistory(const Handle(TDocStd_Document) & doc) {
     probe::require(readIdentity(doc) == identity, "128-bit identity changed in native storage");
     doc->SetUndoLimit(5);
     doc->NewCommand();
@@ -28,9 +28,10 @@ void checkHistory(const Handle(TDocStd_Document)& doc) {
     probe::require(readIdentity(doc) == DocumentId{0, 1} && doc->Undo() &&
                        readIdentity(doc) == identity && doc->Redo() &&
                        readIdentity(doc) == DocumentId{0, 1} && doc->Undo() &&
-                       readIdentity(doc) == identity, "Native identity history failed");
+                       readIdentity(doc) == identity,
+                   "Native identity history failed");
 }
-Handle(TDocStd_Document) load(const Handle(TDocStd_Application)& app, const char* path) {
+Handle(TDocStd_Document) load(const Handle(TDocStd_Application) & app, const char* path) {
     std::ifstream input(path, std::ios::binary);
     Handle(TDocStd_Document) doc;
     probe::require(input.is_open() && app->Open(input, doc) == PCDM_RS_OK && !doc.IsNull(),
@@ -39,12 +40,15 @@ Handle(TDocStd_Document) load(const Handle(TDocStd_Application)& app, const char
     return doc;
 }
 void negative(const std::filesystem::path& directory) {
-    for (const auto& text : {std::string(32, '0'), std::string(31, '1'),
-                             std::string(33, '1'), std::string(32, 'F'),
-                             std::string(32, 'g'), std::string(32, ' '), std::string(32, '\0')}) {
+    for (const auto& text :
+         {std::string(32, '0'), std::string(31, '1'), std::string(33, '1'), std::string(32, 'F'),
+          std::string(32, 'g'), std::string(32, ' '), std::string(32, '\0')}) {
         bool rejected = false;
-        try { (void)documentIdFromHex(text); }
-        catch (const std::invalid_argument&) { rejected = true; }
+        try {
+            (void)documentIdFromHex(text);
+        } catch (const std::invalid_argument&) {
+            rejected = true;
+        }
         probe::require(rejected, "Invalid identity field accepted");
     }
     probe::require(documentIdToHex(DocumentId{0, 1}) == "00000000000000000000000000000001" &&
@@ -63,8 +67,11 @@ void negative(const std::filesystem::path& directory) {
         app->Close(doc);
         doc = load(app, path.string().c_str());
         bool rejected = false;
-        try { (void)readIdentity(doc); }
-        catch (const std::invalid_argument&) { rejected = true; }
+        try {
+            (void)readIdentity(doc);
+        } catch (const std::invalid_argument&) {
+            rejected = true;
+        }
         app->Close(doc);
         probe::require(rejected, "Malformed identity in a valid native file accepted");
     }

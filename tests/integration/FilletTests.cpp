@@ -3,13 +3,13 @@
 #include <voelund/application/Actions.hpp>
 
 #include <BRepCheck_Analyzer.hxx>
+#include <array>
 #include <cmath>
 #include <filesystem>
 #include <iostream>
 #include <numbers>
 #include <stdexcept>
 #include <string>
-#include <array>
 #include <vector>
 
 // M05 (A-FILLET-01, user decisions 2026-10-12): a fillet rounds edges of one body with one
@@ -72,8 +72,8 @@ void boxEdge() {
             "A radius the edge cannot take is refused; the box stays");
     bool explained = false;
     for (const auto& issue : tooLarge.evaluation().features)
-        explained = explained || (issue.code == "fillet-failed" && issue.elements ==
-                                                                       std::vector<std::uint64_t>{1});
+        explained = explained || (issue.code == "fillet-failed" &&
+                                  issue.elements == std::vector<std::uint64_t>{1});
     require(explained, "The refusal names fillet-failed and edge 1");
 
     const auto rounded = session.createFillet(box, std::span(&edge, 1), 1);
@@ -100,13 +100,11 @@ void boxEdge() {
     // A larger radius on the existing fillet; too large is refused and keeps radius 1.
     auto parameters = session.filletParameters(fillet);
     parameters.radius = 2;
-    require(session.editFilletParameters(fillet, parameters).status() ==
-                    CommandStatus::committed &&
+    require(session.editFilletParameters(fillet, parameters).status() == CommandStatus::committed &&
                 near(volume(session), 6000 - 10 * (4 - pi)),
             "Radius 2 removes 10 (4 - pi)");
     parameters.radius = 25;
-    require(session.editFilletParameters(fillet, parameters).status() ==
-                    CommandStatus::rejected &&
+    require(session.editFilletParameters(fillet, parameters).status() == CommandStatus::rejected &&
                 near(volume(session), 6000 - 10 * (4 - pi)),
             "Radius 25 is refused, radius 2 stays");
 
@@ -210,12 +208,14 @@ void adjacentEdges() {
                                document::SketchRectangle{-40, -20, 40, 20}}},
                              2}};
                         sketch.datum = document::DatumPlane::xy;
-                        body = application::executeAction(
-                                   session,
-                                   application::prepareRequest(
-                                       session, application::CreateSketchExtrusionAction{
-                                                    sketch, {}, {10, application::QuantityUnit::millimetre}}))
-                                   .createdFeatures.back();
+                        body =
+                            application::executeAction(
+                                session,
+                                application::prepareRequest(
+                                    session,
+                                    application::CreateSketchExtrusionAction{
+                                        sketch, {}, {10, application::QuantityUnit::millimetre}}))
+                                .createdFeatures.back();
                     } else {
                         body = *session.createBoxFeature({20, 20, 10}).feature();
                     }
@@ -227,14 +227,15 @@ void adjacentEdges() {
                     const auto support = session.features().back().id;
                     const auto vertical = corner(session, support);
                     const auto result =
-                        secondChamfer ? session.createChamfer(support, std::span(&vertical, 1), second)
-                                      : session.createFillet(support, std::span(&vertical, 1), second);
+                        secondChamfer
+                            ? session.createChamfer(support, std::span(&vertical, 1), second)
+                            : session.createFillet(support, std::span(&vertical, 1), second);
                     if (result.status() != CommandStatus::committed || !valid(session)) {
                         ++failures;
                         report += std::string(extrusionBody ? "extrusion" : "box") + ", top " +
                                   (firstChamfer ? "chamfer" : "fillet") + " 1, vertical " +
-                                  (secondChamfer ? "chamfer " : "fillet ") + std::to_string(second) +
-                                  ": " + result.diagnostic() + "\n";
+                                  (secondChamfer ? "chamfer " : "fillet ") +
+                                  std::to_string(second) + ": " + result.diagnostic() + "\n";
                         for (const auto& issue : result.evaluation().features)
                             report += "  " + issue.code + " " + issue.message + "\n";
                     }
@@ -260,61 +261,63 @@ void edgeLoops() {
         for (const int prior : {0, 1, 2, 3})
             for (const bool loopChamfer : {false, true})
                 for (const double size : {1.0, 2.0, 3.0}) {
-                application::CadSession session;
-                session.newDocument();
-                document::FeatureId body{1};
-                if (extrusionBody) {
-                    document::SketchParameters sketch{
-                        document::datumSketchPlane(document::DatumPlane::xy),
-                        {{{document::SketchElementId{1},
-                           document::SketchRectangle{-40, -20, 40, 20}}},
-                         2}};
-                    sketch.datum = document::DatumPlane::xy;
-                    body = application::executeAction(
-                               session, application::prepareRequest(
-                                            session, application::CreateSketchExtrusionAction{
-                                                         sketch,
-                                                         {},
-                                                         {10, application::QuantityUnit::millimetre}}))
-                               .createdFeatures.back();
-                } else {
-                    body = *session.createBoxFeature({40, 30, 10}).feature();
-                }
-                auto support = body;
-                // prior 1: two long top edges rounded; 2: and a vertical edge chamfered;
-                // 3: and that vertical edge rounded instead.
-                if (prior >= 1) {
-                    const std::vector<document::FilletEdge> tops{
-                        edgeOf(session, support, {0, 1, 0}, {0, 0, 1}),
-                        edgeOf(session, support, {0, -1, 0}, {0, 0, 1})};
-                    require(session.createFillet(support, tops, 2).status() ==
-                                CommandStatus::committed,
-                            "Top edges rounded");
-                    support = session.features().back().id;
-                }
-                if (prior >= 2) {
-                    const auto vertical = edgeOf(session, support, {1, 0, 0}, {0, 1, 0});
-                    const auto made =
-                        prior == 2 ? session.createChamfer(support, std::span(&vertical, 1), 3)
-                                   : session.createFillet(support, std::span(&vertical, 1), 3);
-                    require(made.status() == CommandStatus::committed, "Vertical edge treated");
-                    support = session.features().back().id;
-                }
-                const std::vector<document::FilletEdge> loop{
-                    edgeOf(session, support, {0, 1, 0}, {0, 0, -1}),
-                    edgeOf(session, support, {1, 0, 0}, {0, 0, -1}),
-                    edgeOf(session, support, {0, -1, 0}, {0, 0, -1}),
-                    edgeOf(session, support, {-1, 0, 0}, {0, 0, -1})};
-                const auto result = loopChamfer ? session.createChamfer(support, loop, size)
-                                                : session.createFillet(support, loop, size);
-                if (result.status() != CommandStatus::committed || !valid(session)) {
-                    ++failures;
-                    report += std::string(extrusionBody ? "extrusion" : "box") + ", prior " +
-                              std::to_string(prior) + ", bottom loop " +
-                              (loopChamfer ? "chamfer " : "fillet ") + std::to_string(size) + "\n";
-                    for (const auto& issue : result.evaluation().features)
-                        report += "  " + issue.code + " " + issue.message + "\n";
-                }
+                    application::CadSession session;
+                    session.newDocument();
+                    document::FeatureId body{1};
+                    if (extrusionBody) {
+                        document::SketchParameters sketch{
+                            document::datumSketchPlane(document::DatumPlane::xy),
+                            {{{document::SketchElementId{1},
+                               document::SketchRectangle{-40, -20, 40, 20}}},
+                             2}};
+                        sketch.datum = document::DatumPlane::xy;
+                        body =
+                            application::executeAction(
+                                session,
+                                application::prepareRequest(
+                                    session,
+                                    application::CreateSketchExtrusionAction{
+                                        sketch, {}, {10, application::QuantityUnit::millimetre}}))
+                                .createdFeatures.back();
+                    } else {
+                        body = *session.createBoxFeature({40, 30, 10}).feature();
+                    }
+                    auto support = body;
+                    // prior 1: two long top edges rounded; 2: and a vertical edge chamfered;
+                    // 3: and that vertical edge rounded instead.
+                    if (prior >= 1) {
+                        const std::vector<document::FilletEdge> tops{
+                            edgeOf(session, support, {0, 1, 0}, {0, 0, 1}),
+                            edgeOf(session, support, {0, -1, 0}, {0, 0, 1})};
+                        require(session.createFillet(support, tops, 2).status() ==
+                                    CommandStatus::committed,
+                                "Top edges rounded");
+                        support = session.features().back().id;
+                    }
+                    if (prior >= 2) {
+                        const auto vertical = edgeOf(session, support, {1, 0, 0}, {0, 1, 0});
+                        const auto made =
+                            prior == 2 ? session.createChamfer(support, std::span(&vertical, 1), 3)
+                                       : session.createFillet(support, std::span(&vertical, 1), 3);
+                        require(made.status() == CommandStatus::committed, "Vertical edge treated");
+                        support = session.features().back().id;
+                    }
+                    const std::vector<document::FilletEdge> loop{
+                        edgeOf(session, support, {0, 1, 0}, {0, 0, -1}),
+                        edgeOf(session, support, {1, 0, 0}, {0, 0, -1}),
+                        edgeOf(session, support, {0, -1, 0}, {0, 0, -1}),
+                        edgeOf(session, support, {-1, 0, 0}, {0, 0, -1})};
+                    const auto result = loopChamfer ? session.createChamfer(support, loop, size)
+                                                    : session.createFillet(support, loop, size);
+                    if (result.status() != CommandStatus::committed || !valid(session)) {
+                        ++failures;
+                        report += std::string(extrusionBody ? "extrusion" : "box") + ", prior " +
+                                  std::to_string(prior) + ", bottom loop " +
+                                  (loopChamfer ? "chamfer " : "fillet ") + std::to_string(size) +
+                                  "\n";
+                        for (const auto& issue : result.evaluation().features)
+                            report += "  " + issue.code + " " + issue.message + "\n";
+                    }
                 }
     if (failures != 0)
         std::cerr << report;
@@ -330,8 +333,7 @@ void treatedFaceEdges() {
     session.newDocument();
     const auto box = *session.createBoxFeature({20, 20, 10}).feature();
     const document::FilletEdge top{face(session, box, 0, 1, 0), face(session, box, 0, 0, 1)};
-    require(session.createChamfer(box, std::span(&top, 1), 2).status() ==
-                CommandStatus::committed,
+    require(session.createChamfer(box, std::span(&top, 1), 2).status() == CommandStatus::committed,
             "Top edge chamfered");
     const auto chamfer = session.features().back().id;
     require(session.chamferParameters(chamfer).edges.front().id == 1, "The edge got id 1");
@@ -412,7 +414,8 @@ int main() {
         edgeLoops();
         treatedFaceEdges();
         extrusionSideEdge();
-        std::cout << "PASS M05/M07 fillet and chamfer: box edge 10 (1 - pi/4) and 5, refused, base change, "
+        std::cout << "PASS M05/M07 fillet and chamfer: box edge 10 (1 - pi/4) and 5, refused, base "
+                     "change, "
                      "edit, save/open, extrusion side edge\n";
         return 0;
     } catch (const std::exception& error) {

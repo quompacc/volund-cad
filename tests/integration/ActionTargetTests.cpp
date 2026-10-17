@@ -69,8 +69,7 @@ void selectionDoesNotDecide() {
     const auto document = [&] { return session.identifiedSnapshot().snapshot(); };
     const auto selectedB = [&] { return session.selectedFeature() == b; };
 
-    changesOnly(committed(session,
-                          application::SetBoxDimensionsAction{a, mm(12), mm(20), mm(30)},
+    changesOnly(committed(session, application::SetBoxDimensionsAction{a, mm(12), mm(20), mm(30)},
                           "Resize A"),
                 a, "Resize A");
     require(document().boxDimensions(a) == kernel::BoxDimensions{12, 20, 30} &&
@@ -78,8 +77,8 @@ void selectionDoesNotDecide() {
             "Only A is resized; B stays selected");
 
     changesOnly(committed(session,
-                          application::SetPlacementAction{a, mm(100), mm(0), mm(0), rad(0),
-                                                          rad(0), rad(0.5)},
+                          application::SetPlacementAction{a, mm(100), mm(0), mm(0), rad(0), rad(0),
+                                                          rad(0.5)},
                           "Move A"),
                 a, "Move A");
     require(document().boxParameters(a).placement.translationX == 100 &&
@@ -88,12 +87,12 @@ void selectionDoesNotDecide() {
             "Only A moves; B stays selected");
 
     // B is both the last feature and selected; the cylinder still goes onto A.
-    const auto cylinder = created(
-        session, application::CreateCylinderAction{a, document::CylinderResultMode::join},
-        "Cylinder on A");
+    const auto cylinder =
+        created(session, application::CreateCylinderAction{a, document::CylinderResultMode::join},
+                "Cylinder on A");
     const auto features = session.features();
-    require(std::ranges::find(features, cylinder, &document::FeatureDescriptor::id)
-                    ->inputFeature == a,
+    require(std::ranges::find(features, cylinder, &document::FeatureDescriptor::id)->inputFeature ==
+                a,
             "The cylinder uses A as input");
     require(session.selectFeature(b), "Select B again");
     changesOnly(committed(session, application::SetCylinderSizeAction{cylinder, mm(3), mm(7)},
@@ -116,12 +115,12 @@ void selectionDoesNotDecide() {
              ActionRejection::unsupportedTarget, "Box dimensions on a cylinder");
     rejected(session, application::SetCylinderSizeAction{a, mm(1), mm(1)},
              ActionRejection::unsupportedTarget, "Cylinder size on a box");
-    rejected(session, application::CreateCylinderAction{FeatureId{999},
-                                                       document::CylinderResultMode::join},
+    rejected(session,
+             application::CreateCylinderAction{FeatureId{999}, document::CylinderResultMode::join},
              ActionRejection::unknownTarget, "Cylinder on a missing input");
     rejected(session,
-             application::SetPlacementAction{a, mm(0), mm(0), mm(0), rad(0), rad(0),
-                                             {30, QuantityUnit::degree}},
+             application::SetPlacementAction{
+                 a, mm(0), mm(0), mm(0), rad(0), rad(0), {30, QuantityUnit::degree}},
              ActionRejection::invalidUnit, "Placement rotation in degrees");
     rejected(session, application::CreateBoxAction{mm(1), mm(nan), mm(1)},
              ActionRejection::nonFinite, "Box with NaN depth");

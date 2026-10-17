@@ -18,8 +18,8 @@ CommandResult CadSession::moveBody(document::FeatureId feature,
                                    ErrorDisposition disposition) {
     if (rotationAxis && (*rotationAxis < 0 || *rotationAxis > 2))
         return CommandResult::invalidInput("A body turns about X, Y or Z");
-    const auto source = canTransformFeature(feature) ? transformBodyForFeature(feature)
-                                                     : std::nullopt;
+    const auto source =
+        canTransformFeature(feature) ? transformBodyForFeature(feature) : std::nullopt;
     if (!source)
         return CommandResult::invalidInput("Only a current body can be moved");
     const auto moved = [&](kernel::RigidTransform transform) {
@@ -29,8 +29,7 @@ CommandResult CadSession::moveBody(document::FeatureId feature,
         kernel::Radians* rotations[] = {&transform.rotationX, &transform.rotationY,
                                         &transform.rotationZ};
         if (rotationAxis)
-            *rotations[*rotationAxis] =
-                kernel::Radians{rotations[*rotationAxis]->value() + angle};
+            *rotations[*rotationAxis] = kernel::Radians{rotations[*rotationAxis]->value() + angle};
         return transform;
     };
     if (const auto owner = placementFeature(*source))
@@ -66,8 +65,7 @@ CommandResult CadSession::moveBody(document::FeatureId feature,
     });
     if (!idInput.value)
         return CommandResult::invalidInput(idInput.diagnostic);
-    return finishCandidate(transaction, *idInput.value, CommandKind::newFeature, disposition,
-                           true);
+    return finishCandidate(transaction, *idInput.value, CommandKind::newFeature, disposition, true);
 }
 
 CommandResult CadSession::editMoveParameters(document::FeatureId featureId,
@@ -75,8 +73,8 @@ CommandResult CadSession::editMoveParameters(document::FeatureId featureId,
                                              ErrorDisposition disposition) {
     document::DocumentTransaction transaction(document_);
     auto& candidate = transaction.edit();
-    const auto input = detail::prepareInput(
-        [&] { return candidate.setMoveParameters(featureId, parameters); });
+    const auto input =
+        detail::prepareInput([&] { return candidate.setMoveParameters(featureId, parameters); });
     if (!input.value)
         return CommandResult::invalidInput(input.diagnostic);
     if (!*input.value)
@@ -89,8 +87,8 @@ CommandResult CadSession::setFeatureSuppressed(document::FeatureId featureId, bo
                                                ErrorDisposition disposition) {
     document::DocumentTransaction transaction(document_);
     auto& candidate = transaction.edit();
-    const auto input = detail::prepareInput(
-        [&] { return candidate.setFeatureSuppressed(featureId, suppressed); });
+    const auto input =
+        detail::prepareInput([&] { return candidate.setFeatureSuppressed(featureId, suppressed); });
     if (!input.value)
         return CommandResult::invalidInput(input.diagnostic);
     if (!*input.value)

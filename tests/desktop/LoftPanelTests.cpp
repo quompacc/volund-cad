@@ -51,7 +51,8 @@ double shown(viewport::CadViewport& viewport) {
 }
 document::FeatureId square(application::CadSession& session, document::SketchParameters sketch,
                            double half) {
-    const document::SketchPoint corners[]{{-half, -half}, {half, -half}, {half, half}, {-half, half}};
+    const document::SketchPoint corners[]{
+        {-half, -half}, {half, -half}, {half, half}, {-half, half}};
     for (int index = 0; index < 4; ++index)
         sketch.elements.values.push_back(
             {document::SketchElementId{sketch.elements.nextId++},
@@ -94,7 +95,8 @@ void run() {
     settle();
     require(panel(window) != nullptr && matches(shown(*viewport), 7000),
             "The ruled frustum is previewed");
-    auto* transition = panel(window)->findChild<QComboBox*>(QStringLiteral("toolChoice_transition"));
+    auto* transition =
+        panel(window)->findChild<QComboBox*>(QStringLiteral("toolChoice_transition"));
     require(transition != nullptr, "Transition choice");
     transition->setCurrentIndex(1);
     settle();

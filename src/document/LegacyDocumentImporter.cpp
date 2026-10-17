@@ -1,10 +1,10 @@
-#include <voelund/kernel/NumericPolicy.hpp>
 #include "BoundedDocumentInput.hpp"
 #include "DocumentFormat.hpp"
 #include "DocumentSerializationDetail.hpp"
 #include "SketchConstraintSerialization.hpp"
 #include <voelund/document/LegacyDocumentImporter.hpp>
 #include <voelund/document/SketchPlaneValidation.hpp>
+#include <voelund/kernel/NumericPolicy.hpp>
 
 #include <voelund/document/ModelDocument.hpp>
 

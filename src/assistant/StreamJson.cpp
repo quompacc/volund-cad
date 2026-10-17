@@ -43,7 +43,11 @@ std::vector<AssistantEvent> parseStreamJsonLine(const QByteArray& line) {
                 events.push_back({Kind::failed,
                                   QStringLiteral("Völund ist für Claude Code nicht erreichbar (%1)")
                                       .arg(entry.value("status").toString()),
-                                  {}, {}, false, {}, session});
+                                  {},
+                                  {},
+                                  false,
+                                  {},
+                                  session});
         }
     } else if (type == QLatin1String("assistant")) {
         for (const auto& item : object.value("message").toObject().value("content").toArray()) {
@@ -52,7 +56,9 @@ std::vector<AssistantEvent> parseStreamJsonLine(const QByteArray& line) {
             if (kind == QLatin1String("text") && !block.value("text").toString().isEmpty())
                 events.push_back({Kind::text, block.value("text").toString()});
             else if (kind == QLatin1String("tool_use"))
-                events.push_back({Kind::toolStarted, {}, toolName(block.value("name").toString()),
+                events.push_back({Kind::toolStarted,
+                                  {},
+                                  toolName(block.value("name").toString()),
                                   block.value("id").toString()});
         }
     } else if (type == QLatin1String("user")) {
@@ -61,7 +67,10 @@ std::vector<AssistantEvent> parseStreamJsonLine(const QByteArray& line) {
             if (block.value("type") != QLatin1String("tool_result"))
                 continue;
             const auto text = resultText(block.value("content"));
-            events.push_back({Kind::toolFinished, text, {}, block.value("tool_use_id").toString(),
+            events.push_back({Kind::toolFinished,
+                              text,
+                              {},
+                              block.value("tool_use_id").toString(),
                               block.value("is_error").toBool(),
                               QJsonDocument::fromJson(text.toUtf8()).object()});
         }
@@ -71,8 +80,8 @@ std::vector<AssistantEvent> parseStreamJsonLine(const QByteArray& line) {
         auto text = object.value("result").toString();
         if (text.isEmpty() && !success)
             text = object.value("subtype").toString();
-        events.push_back({success ? Kind::finished : Kind::failed, text, {}, {}, false, {},
-                          session});
+        events.push_back(
+            {success ? Kind::finished : Kind::failed, text, {}, {}, false, {}, session});
     }
     return events;
 }

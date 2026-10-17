@@ -70,7 +70,8 @@ bool SketchEditorSession::lockSelectedReference() {
         return false;
     const auto reference = selectedReferences_.front();
     const std::uint64_t needed =
-        !hasCoordinate(constraints_.values, reference, document::SketchConstraintKind::coordinateX) +
+        !hasCoordinate(constraints_.values, reference,
+                       document::SketchConstraintKind::coordinateX) +
         !hasCoordinate(constraints_.values, reference, document::SketchConstraintKind::coordinateY);
     if (!canAllocateIds(0, needed))
         return false;

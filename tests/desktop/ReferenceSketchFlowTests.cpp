@@ -30,9 +30,11 @@
 namespace {
 using namespace voelund;
 using test::press;
-void require(bool condition, const std::string& message) { test::require(condition, message.c_str()); }
+void require(bool condition, const std::string& message) {
+    test::require(condition, message.c_str());
+}
 
-constexpr double top = 40.0;             // the default box: 20 x 20 x 40
+constexpr double top = 40.0; // the default box: 20 x 20 x 40
 constexpr double boxVolume = 20.0 * 20.0 * 40.0;
 constexpr double outerArea = 7.0 * 16.0; // rectangle (11,2)-(18,18)
 constexpr double pi = std::numbers::pi;
@@ -76,12 +78,12 @@ struct Window final {
         test::settleEvents();
     }
     void type(const char* field, double value) {
-        auto* input = child("activeToolPanel")
-                          .findChild<QDoubleSpinBox*>(QStringLiteral("toolLength_") +
-                                                      QLatin1String(field));
+        auto* input =
+            child("activeToolPanel")
+                .findChild<QDoubleSpinBox*>(QStringLiteral("toolLength_") + QLatin1String(field));
         require(input != nullptr && input->isVisible(),
-                std::string("Field ") + field + ", status: " +
-                    main->findChild<QStatusBar*>()->currentMessage().toStdString());
+                std::string("Field ") + field +
+                    ", status: " + main->findChild<QStatusBar*>()->currentMessage().toStdString());
         input->setValue(value);
         emit input->editingFinished();
         test::settleEvents();
@@ -98,8 +100,8 @@ struct Window final {
         click(x, y);
         const auto selected = session.selectedSketchProfiles();
         require(selected.size() == 1,
-                "One region at (" + std::to_string(x) + ", " + std::to_string(y) + "), status: " +
-                    main->findChild<QStatusBar*>()->currentMessage().toStdString());
+                "One region at (" + std::to_string(x) + ", " + std::to_string(y) +
+                    "), status: " + main->findChild<QStatusBar*>()->currentMessage().toStdString());
         return selected.front();
     }
     // With VOELUND_UI_FLOW_ARTIFACT_DIR: the window as the user sees it.
@@ -216,13 +218,11 @@ int run() {
         // x = 11, the ring breaks apart, and OK is refused with the elements named.
         w.type("circle_radius", 3);
         press(w.panelButton("toolAcceptButton"));
-        const QString refusal =
-            w.main->findChild<QLabel*>(QStringLiteral("toolGuidance"))->text();
+        const QString refusal = w.main->findChild<QLabel*>(QStringLiteral("toolGuidance"))->text();
         require(w.main->findChild<QWidget*>(QStringLiteral("activeToolPanel"))->isVisible() &&
                     refusal.contains(QStringLiteral("needs repair")) &&
                     refusal.contains(QStringLiteral("[elements 8 9]")),
-                "A touching circle is refused with the elements named: " +
-                    refusal.toStdString());
+                "A touching circle is refused with the elements named: " + refusal.toStdString());
         requireVolume(w, outerArea - 4.0 * pi, "Refused: nothing changed");
         w.type("circle_radius", 2.5);
         press(w.panelButton("toolAcceptButton"));

@@ -10,10 +10,10 @@
 #include <QDoubleSpinBox>
 #include <QElapsedTimer>
 #include <QLabel>
-#include <QStatusBar>
 #include <QPushButton>
 #include <QScrollArea>
 #include <QScrollBar>
+#include <QStatusBar>
 #include <QToolButton>
 #include <cmath>
 #include <filesystem>
@@ -99,8 +99,7 @@ Corner corner(const application::CadSession& session) {
 void click(viewport::CadViewport& viewport, const Corner& at,
            Qt::KeyboardModifiers modifiers = Qt::NoModifier, QPoint nudge = {}) {
     test::render(viewport);
-    const QPoint point =
-        viewport::ViewportTestAccess::project(viewport, at.x, at.y, at.z) + nudge;
+    const QPoint point = viewport::ViewportTestAccess::project(viewport, at.x, at.y, at.z) + nudge;
     test::mouse(viewport, QEvent::MouseMove, point, Qt::NoButton, Qt::NoButton);
     test::mouse(viewport, QEvent::MouseButtonPress, point, Qt::LeftButton, Qt::LeftButton,
                 modifiers);
@@ -205,8 +204,8 @@ void run() {
     openFillet(window, session, box);
     click(*viewport, edge);
     const double half = std::sqrt(0.5);
-    const QPoint base = viewport::ViewportTestAccess::project(*viewport, edge.x - half,
-                                                              edge.y - half, edge.z);
+    const QPoint base =
+        viewport::ViewportTestAccess::project(*viewport, edge.x - half, edge.y - half, edge.z);
     const QPoint inward = viewport::ViewportTestAccess::project(
         *viewport, edge.x - half - 15 * half, edge.y - half - 15 * half, edge.z);
     const QPointF direction =

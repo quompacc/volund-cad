@@ -1,6 +1,6 @@
+#include "../../src/desktop/ViewCube.hpp"
 #include "IsolatedSettings.hpp"
 #include "ViewportLifecycleSupport.hpp"
-#include "../../src/desktop/ViewCube.hpp"
 
 #include <QApplication>
 #include <QMouseEvent>

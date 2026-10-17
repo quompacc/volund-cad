@@ -2,8 +2,8 @@
 #include "MainWindowSupport.hpp"
 #include "MeasurementInput.hpp"
 
-#include <QComboBox>
 #include <QCheckBox>
+#include <QComboBox>
 #include <QDoubleSpinBox>
 #include <QFormLayout>
 #include <QLabel>
@@ -193,8 +193,8 @@ void FeaturePropertiesPanel::connectEditors() {
     }
     for (QDoubleSpinBox* input :
          {radiusInput_, cylinderHeightInput_, extraSizeInputs_[0], extraSizeInputs_[1],
-          translationInputs_[0], translationInputs_[1],
-          translationInputs_[2], rotationInputs_[0], rotationInputs_[1], rotationInputs_[2]}) {
+          translationInputs_[0], translationInputs_[1], translationInputs_[2], rotationInputs_[0],
+          rotationInputs_[1], rotationInputs_[2]}) {
         connect(input, &QDoubleSpinBox::editingFinished, this, [this]() {
             if (cylinderChangeHandler_) {
                 cylinderChangeHandler_();

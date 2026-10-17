@@ -243,8 +243,7 @@ void validateSketchConstraints(const SketchElements& elements,
             requireLine(constraint.first);
             if (constraint.second.has_value())
                 throw std::invalid_argument("Unary sketch constraint has a second reference");
-            if (constraint.kind == SketchConstraintKind::distance &&
-                !positive)
+            if (constraint.kind == SketchConstraintKind::distance && !positive)
                 throw std::invalid_argument("Sketch distance constraint must be positive");
         } else if (constraint.kind == SketchConstraintKind::radius ||
                    constraint.kind == SketchConstraintKind::diameter) {
@@ -269,8 +268,7 @@ void validateSketchConstraints(const SketchElements& elements,
             } else if (constraint.kind == SketchConstraintKind::pointLineDistance) {
                 requirePoint(constraint.first);
                 requireLine(*constraint.second);
-                if (constraint.first.element == constraint.second->element ||
-                    !positive)
+                if (constraint.first.element == constraint.second->element || !positive)
                     throw std::invalid_argument(
                         "Point-line distance constraint needs a point, a different line and a "
                         "positive value");

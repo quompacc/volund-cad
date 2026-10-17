@@ -126,10 +126,11 @@ void rectangleContour() {
     const auto evaluated = f.editor->evaluatedElements();
     for (std::size_t index = 0; index < 4; ++index) {
         const auto& points = evaluated[evaluated.size() - 4 + index].points;
-        require(points.size() == previewed[index].size() &&
-                    std::ranges::equal(points, previewed[index],
-                                       [](const auto& a, SketchPoint b) { return near(a.local, b); }),
-                "Preview and offset are geometrically identical");
+        require(
+            points.size() == previewed[index].size() &&
+                std::ranges::equal(points, previewed[index],
+                                   [](const auto& a, SketchPoint b) { return near(a.local, b); }),
+            "Preview and offset are geometrically identical");
     }
     std::vector<SketchPoint> corners;
     for (const auto& geometry : f.added(4))
@@ -181,8 +182,7 @@ void slotContour() {
 
 void ellipseUnsupported() {
     Fixture f;
-    const auto ellipse =
-        f.create(SketchDrawingTool::ellipse, {{0, 0}, {10, 0}, SketchPoint{0, 4}});
+    const auto ellipse = f.create(SketchDrawingTool::ellipse, {{0, 0}, {10, 0}, SketchPoint{0, 4}});
     f.select(ellipse);
     f.refused(1, "UnsupportedCurve");
     std::cout << "PASS ellipse offset is declared unsupported\n";

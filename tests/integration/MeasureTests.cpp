@@ -81,11 +81,11 @@ void measureBox() {
             "Opposite faces 10 apart and parallel");
     require(near(*kernel::measureBetween(bottom, side).angle, pi / 2),
             "90 degrees between neighbouring faces");
-    require(near(*kernel::measureBetween(x, bottom).angle, 0) &&
-                near(*kernel::measureBetween(x, side).angle, pi / 2) &&
-                near(*kernel::measureBetween(find(shape, TopAbs_EDGE, along(2)), bottom).angle,
-                     pi / 2),
-            "An edge against a face: along it 0, across it 90 degrees");
+    require(
+        near(*kernel::measureBetween(x, bottom).angle, 0) &&
+            near(*kernel::measureBetween(x, side).angle, pi / 2) &&
+            near(*kernel::measureBetween(find(shape, TopAbs_EDGE, along(2)), bottom).angle, pi / 2),
+        "An edge against a face: along it 0, across it 90 degrees");
     require(near(*kernel::measureShape(top).area, 200) &&
                 near(*kernel::measureShape(shape).volume, 2000),
             "Face area and body volume");
@@ -98,8 +98,10 @@ void measureRing() {
     session.newDocument();
     document::SketchParameters ring{document::datumSketchPlane(document::DatumPlane::xy), {}};
     ring.datum = document::DatumPlane::xy;
-    ring.elements.values.push_back({document::SketchElementId{1}, document::SketchCircle{{0, 0}, 20}});
-    ring.elements.values.push_back({document::SketchElementId{2}, document::SketchCircle{{0, 0}, 10}});
+    ring.elements.values.push_back(
+        {document::SketchElementId{1}, document::SketchCircle{{0, 0}, 20}});
+    ring.elements.values.push_back(
+        {document::SketchElementId{2}, document::SketchCircle{{0, 0}, 10}});
     ring.elements.nextId = 3;
     require(session.createDatumSketchExtrusion(ring, {}, 8).status() == CommandStatus::committed,
             "Ring extruded 8 (empty regions: the outer one with its hole)");

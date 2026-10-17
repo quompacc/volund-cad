@@ -13,8 +13,8 @@
 #include <TopoDS.hxx>
 #include <gp_Pln.hxx>
 
-#include <cmath>
 #include <NCollection_List.hxx>
+#include <cmath>
 #include <numbers>
 #include <string>
 
@@ -63,8 +63,7 @@ ShapeOperationResult ShapeOperations::draftWithHistory(const TopoDS_Shape& input
         fail("a draft needs a solid");
     if (faces.empty())
         fail("a draft tilts at least one face");
-    if (!std::isfinite(angle) || std::abs(angle) <= 1e-9 ||
-        std::abs(angle) >= std::numbers::pi / 2)
+    if (!std::isfinite(angle) || std::abs(angle) <= 1e-9 || std::abs(angle) >= std::numbers::pi / 2)
         fail("the angle lies between 0 and 90 degrees");
     const double norm = std::hypot(pullDirection[0], pullDirection[1], pullDirection[2]);
     if (!std::isfinite(norm) || norm < 1e-12)

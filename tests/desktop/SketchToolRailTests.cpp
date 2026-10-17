@@ -1,6 +1,6 @@
-#include "IsolatedSettings.hpp"
 #include "../../src/desktop/CommandPalette.hpp"
 #include "../../src/desktop/ModelTreePanel.hpp"
+#include "IsolatedSettings.hpp"
 #include "ViewportLifecycleSupport.hpp"
 #include <QAction>
 #include <QApplication>
@@ -66,8 +66,8 @@ void run() {
     for (const char* id :
          {"sketch.tool.select", "sketch.tool.line", "sketch.tool.rectangle", "sketch.tool.circle",
           "sketch.tool.polygon", "sketch.parallel", "sketch.coincident", "sketch.diameter",
-          "sketch.radius", "sketch.tool.point",
-          "sketch.trim", "sketch.linear_pattern", "sketch.delete"})
+          "sketch.radius", "sketch.tool.point", "sketch.trim", "sketch.linear_pattern",
+          "sketch.delete"})
         require(command(window, QString::fromLatin1(id)) != nullptr,
                 (std::string("Sketch command missing: ") + id).c_str());
 
@@ -82,11 +82,11 @@ void run() {
                     command(window, QStringLiteral("sketch.tool.center_rectangle"))))
                 family = button;
         }
-    require(family != nullptr && family->defaultAction() ==
-                                     command(window, QStringLiteral("sketch.tool.rectangle")),
+    require(family != nullptr &&
+                family->defaultAction() == command(window, QStringLiteral("sketch.tool.rectangle")),
             "Both rectangles share one button, the two-point rectangle first");
-    require(buttons <= 25, ("The rail groups its tools (" + std::to_string(buttons) +
-                            " buttons)").c_str());
+    require(buttons <= 25,
+            ("The rail groups its tools (" + std::to_string(buttons) + " buttons)").c_str());
     command(window, QStringLiteral("sketch.tool.center_rectangle"))->trigger();
     settle();
     require(family->defaultAction() ==

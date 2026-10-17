@@ -31,11 +31,11 @@ bool SketchEditorToolController::restoreDraft(const application::CadSession::Ske
         } else if (draft.support && sketch.supportBinding) {
             const auto& plane = sketch.plane;
             viewport::PlanarFaceSelection drawing{
-                draft.support->value(), plane.originX,     plane.originY,     plane.originZ,
-                plane.normalX,          plane.normalY,     plane.normalZ,     plane.xDirectionX,
+                draft.support->value(), plane.originX,    plane.originY, plane.originZ,
+                plane.normalX,          plane.normalY,    plane.normalZ, plane.xDirectionX,
                 plane.xDirectionY,      plane.xDirectionZ};
-            setSupportProjection(drawing,
-                                 session_.projectSketchSupport(*draft.support, *sketch.supportBinding));
+            setSupportProjection(
+                drawing, session_.projectSketchSupport(*draft.support, *sketch.supportBinding));
             startOnSupport(drawing, *draft.support, plane, *sketch.supportBinding);
         } else {
             return false;

@@ -27,9 +27,9 @@ StepImportResult CadSession::openStep(const std::filesystem::path& path) {
 }
 
 StepImportResult CadSession::addImport(const std::filesystem::path& path, kernel::StepImport read) {
-    StepImportResult result{StepImportStatus::imported, read.message, std::nullopt,
-                            read.solids.size(), read.skippedShapes, read.invalidSolids,
-                            read.sourceUnit};
+    StepImportResult result{
+        StepImportStatus::imported, read.message,       std::nullopt,   read.solids.size(),
+        read.skippedShapes,         read.invalidSolids, read.sourceUnit};
     if (read.error) {
         result.status = *read.error == kernel::StepImportError::noSolids
                             ? StepImportStatus::noSolids
@@ -97,9 +97,8 @@ StepExportResult CadSession::exportStep(const std::filesystem::path& path,
             return {StepExportStatus::unknownBody, "A body to export is not in the current model"};
         // As the browser names it: its own name, else "Körper N" by its place.
         const std::string name =
-            named->name.empty()
-                ? "Körper " + std::to_string(named - outline.bodies.begin() + 1)
-                : named->name;
+            named->name.empty() ? "Körper " + std::to_string(named - outline.bodies.begin() + 1)
+                                : named->name;
         std::size_t pieces = 0;
         for (TopExp_Explorer explorer(found->shape, TopAbs_SOLID); explorer.More();
              explorer.Next()) {

@@ -74,8 +74,8 @@ SketchFilletPlan planCorner(SketchCornerKind kind, SketchElementId firstId, cons
                                     : "Die Linien sind parallel; es gibt keine Ecke",
                {firstId, secondId});
     }
-    const double t = ((second.start.x - first.start.x) * by - (second.start.y - first.start.y) * bx) /
-                     cross;
+    const double t =
+        ((second.start.x - first.start.x) * by - (second.start.y - first.start.y) * bx) / cross;
     const SketchPoint corner{first.start.x + ax * t, first.start.y + ay * t};
 
     const Position firstKept = keptEnd(first, corner, firstSelected);
@@ -84,7 +84,8 @@ SketchFilletPlan planCorner(SketchCornerKind kind, SketchElementId firstId, cons
     const SketchPoint secondFar = point(second, secondKept);
     const double firstLength = distance(corner, firstFar);
     const double secondLength = distance(corner, secondFar);
-    const SketchPoint u{(firstFar.x - corner.x) / firstLength, (firstFar.y - corner.y) / firstLength};
+    const SketchPoint u{(firstFar.x - corner.x) / firstLength,
+                        (firstFar.y - corner.y) / firstLength};
     const SketchPoint v{(secondFar.x - corner.x) / secondLength,
                         (secondFar.y - corner.y) / secondLength};
     const double theta = std::acos(std::clamp(u.x * v.x + u.y * v.y, -1.0, 1.0));
@@ -106,8 +107,7 @@ SketchFilletPlan planCorner(SketchCornerKind kind, SketchElementId firstId, cons
                                (chamfer ? 1.0 : std::tan(theta / 2.0));
         // The reason first: argument order is unspecified, and the list is moved.
         const std::string reason =
-            sizeName + millimetres(size) + " ist zu groß; höchstens " +
-            millimetres(largest) +
+            sizeName + millimetres(size) + " ist zu groß; höchstens " + millimetres(largest) +
             (tooShort.size() == 2          ? " (beide Linien sind zu kurz)"
              : tooShort.front() == firstId ? " (die erste Linie ist zu kurz)"
                                            : " (die zweite Linie ist zu kurz)");
@@ -121,7 +121,8 @@ SketchFilletPlan planCorner(SketchCornerKind kind, SketchElementId firstId, cons
                              corner.y + (u.y + v.y) / bisector * centerDistance};
     double startAngle = std::atan2(firstTouch.y - center.y, firstTouch.x - center.x);
     double endAngle = std::atan2(secondTouch.y - center.y, secondTouch.x - center.x);
-    double sweep = std::fmod(endAngle - startAngle + 2.0 * std::numbers::pi, 2.0 * std::numbers::pi);
+    double sweep =
+        std::fmod(endAngle - startAngle + 2.0 * std::numbers::pi, 2.0 * std::numbers::pi);
     bool arcStartOnFirst = true;
     if (sweep > std::numbers::pi) {
         std::swap(startAngle, endAngle);

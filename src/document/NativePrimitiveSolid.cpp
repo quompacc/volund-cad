@@ -29,8 +29,8 @@ void writeNativePrimitive(const TDF_Label& label, const PrimitiveParameters& par
     const auto values = TDataStd_RealArray::Set(label.FindChild(1), 1, 10);
     const auto& p = parameters.placement;
     const double all[]{parameters.sizes[0], parameters.sizes[1], parameters.sizes[2],
-                       parameters.sizes[3], p.translationX,       p.translationY,
-                       p.translationZ,      p.rotationX.value(),  p.rotationY.value(),
+                       parameters.sizes[3], p.translationX,      p.translationY,
+                       p.translationZ,      p.rotationX.value(), p.rotationY.value(),
                        p.rotationZ.value()};
     for (int index = 0; index < 10; ++index)
         values->SetValue(index + 1, all[index]);

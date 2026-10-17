@@ -1,8 +1,8 @@
+#include "SketchBSplineCurves.hpp"
 #include "SketchConnection.hpp"
 #include "SketchPlaneGuard.hpp"
 #include <voelund/features/GeometryEvaluationError.hpp>
 #include <voelund/features/SketchEvaluation.hpp>
-#include "SketchBSplineCurves.hpp"
 
 #include <voelund/features/SketchContourGraph.hpp>
 #include <voelund/features/SketchProfiles.hpp>

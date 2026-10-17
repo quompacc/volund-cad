@@ -58,9 +58,8 @@ void pickFaceAfterRefresh(CadViewport& v) {
     const SceneBody body{42, BRepPrimAPI_MakeBox(20, 20, 20).Shape(), true};
     std::optional<std::uint64_t> face;
     v.setBodySelectionHandler([&](std::uint64_t) { v.setBodies(std::span(&body, 1)); });
-    v.setPlanarFaceSelectionHandler([&](const PlanarFaceSelection& selection) {
-        face = selection.bodyId;
-    });
+    v.setPlanarFaceSelectionHandler(
+        [&](const PlanarFaceSelection& selection) { face = selection.bodyId; });
     const QPoint point = ViewportTestAccess::project(v, 12, 12, 20);
     mouse(v, QEvent::MouseButtonPress, point, Qt::LeftButton, Qt::LeftButton);
     mouse(v, QEvent::MouseButtonRelease, point, Qt::LeftButton, Qt::NoButton);

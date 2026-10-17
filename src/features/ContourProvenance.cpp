@@ -35,7 +35,8 @@ EdgeProvenance provenance(ContourEdgeOrigin origin, const EvaluatedContourEdge& 
     TopLoc_Location location;
     double first = 0, last = 0;
     const auto shared = BRep_Tool::Curve(edge, location, first, last);
-    TopoDS_Edge whole = BRepBuilderAPI_MakeEdge(shared, source.domain->first, source.domain->second);
+    TopoDS_Edge whole =
+        BRepBuilderAPI_MakeEdge(shared, source.domain->first, source.domain->second);
     whole.Location(location);
     return {origin, whole, source.domain->first, source.domain->second, {edge}};
 }
@@ -57,9 +58,9 @@ std::vector<EdgeProvenance> sketchEdgeOrigins(document::FeatureId sketch,
 }
 namespace {
 template <class Sweep>
-std::vector<EdgeProvenance> sweptEdgeOrigins(document::FeatureId extrusion, document::FeatureId sketch,
-                                             std::span<const EvaluatedProfileFace> profiles,
-                                             const Sweep& prism) {
+std::vector<EdgeProvenance>
+sweptEdgeOrigins(document::FeatureId extrusion, document::FeatureId sketch,
+                 std::span<const EvaluatedProfileFace> profiles, const Sweep& prism) {
     std::vector<EdgeProvenance> result;
     for (const auto& profile : profiles)
         for (const auto& edge : profile.edges) {

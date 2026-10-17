@@ -37,7 +37,9 @@
 // with its bodies.
 namespace {
 using namespace voelund;
-void require(bool condition, const std::string& message) { test::require(condition, message.c_str()); }
+void require(bool condition, const std::string& message) {
+    test::require(condition, message.c_str());
+}
 
 struct Window final {
     application::CadSession session;
@@ -141,8 +143,9 @@ int run() {
     require(fillet.has_value(), "Fillet");
     auto radius = w.session.filletParameters(*fillet);
     radius.radius = 50;
-    require(w.session.editFilletParameters(*fillet, radius,
-                                           application::ErrorDisposition::keepEditableErrors)
+    require(w.session
+                    .editFilletParameters(*fillet, radius,
+                                          application::ErrorDisposition::keepEditableErrors)
                     .status() == application::CommandStatus::committedWithErrors,
             "Rounding with an error");
     w.refresh();
@@ -170,12 +173,13 @@ int run() {
     // A file in inches says so.
     const auto inches = folder + QStringLiteral("/zoll.step");
     const kernel::StepSolid cube{BRepPrimAPI_MakeBox(25.4, 25.4, 25.4).Solid(), "Würfel"};
-    require(!kernel::writeStep(path(inches), std::span{&cube, 1}, kernel::StepLengthUnit::inch)
-                 .error,
-            "Inch file");
+    require(
+        !kernel::writeStep(path(inches), std::span{&cube, 1}, kernel::StepLengthUnit::inch).error,
+        "Inch file");
     user.file = inches;
     w.file("document.import_step");
-    require(w.status().contains(QStringLiteral("Zoll")), "Inches named: " + w.status().toStdString());
+    require(w.status().contains(QStringLiteral("Zoll")),
+            "Inches named: " + w.status().toStdString());
 
     // A broken file: an error, nothing changes.
     const auto before = w.session.features();
@@ -194,8 +198,8 @@ int run() {
         BRep_Builder builder;
         builder.MakeCompound(compound);
         builder.Add(compound, BRepPrimAPI_MakeBox(gp_Pnt(100, 0, 0), 5, 5, 5).Solid());
-        BRepBuilderAPI_MakePolygon square(gp_Pnt(0, 100, 0), gp_Pnt(10, 100, 0),
-                                          gp_Pnt(10, 110, 0), gp_Pnt(0, 110, 0), true);
+        BRepBuilderAPI_MakePolygon square(gp_Pnt(0, 100, 0), gp_Pnt(10, 100, 0), gp_Pnt(10, 110, 0),
+                                          gp_Pnt(0, 110, 0), true);
         builder.Add(compound, BRepBuilderAPI_MakeFace(square.Wire()).Face());
         STEPControl_Writer writer;
         require(writer.Transfer(compound, STEPControl_AsIs) == IFSelect_RetDone &&

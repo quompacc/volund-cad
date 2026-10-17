@@ -126,9 +126,8 @@ SketchCurveEditResult SketchEditorSession::scaleSelected(document::SketchPoint c
     return transformSelection(true, center, factor);
 }
 
-SketchCurveEditResult SketchEditorSession::transformSelection(bool scale,
-                                                              document::SketchPoint center,
-                                                              double value) {
+SketchCurveEditResult
+SketchEditorSession::transformSelection(bool scale, document::SketchPoint center, double value) {
     const std::string name = scale ? "Skalieren: " : "Drehen: ";
     const auto refuse = [&name](const std::string& reason,
                                 std::vector<SketchElementId> elements = {}) {
@@ -160,10 +159,11 @@ SketchCurveEditResult SketchEditorSession::transformSelection(bool scale,
     const auto transform = scale ? detail::PlanarTransform::scaling(center, value)
                                  : detail::PlanarTransform::rotation(center, value);
     for (const auto& constraint : constraints_.values) {
-        const bool touches = selected(constraint.first) ||
-                             (constraint.second && selected(*constraint.second));
-        if (touches && (constraint.projectedEdge || (constraint.kind != SketchConstraintKind::fixed &&
-                                                     !constraint.auxiliaryValues.empty())))
+        const bool touches =
+            selected(constraint.first) || (constraint.second && selected(*constraint.second));
+        if (touches &&
+            (constraint.projectedEdge || (constraint.kind != SketchConstraintKind::fixed &&
+                                          !constraint.auxiliaryValues.empty())))
             refuse("Die Auswahl hängt an Kanten der Stützfläche", {constraint.first.element});
         if (touches && scale && constraint.parameter && length(constraint.kind))
             refuse("Ein an einen Parameter gebundenes Maß skaliert nicht mit; erst lösen",

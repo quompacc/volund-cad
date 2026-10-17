@@ -70,8 +70,7 @@ void run() {
     sphere.trigger();
     settle();
     require(session.features().back().kind == document::FeatureKind::primitive &&
-                session.features().back().name == "Kugel 1" &&
-                session.validBodies().size() == 1,
+                session.features().back().name == "Kugel 1" && session.validBodies().size() == 1,
             "A sphere joined to the box");
     const double joined = volume(session);
 

@@ -29,7 +29,8 @@ struct Plane final {
 };
 
 Plane mirrorPlane(const document::DocumentSnapshot& document, document::FeatureId mirror,
-                  const document::MirrorPlane& plane, const std::vector<EvaluatedFeature>& outputs) {
+                  const document::MirrorPlane& plane,
+                  const std::vector<EvaluatedFeature>& outputs) {
     const auto of = [](const document::SketchPlane& frame) {
         return Plane{{frame.originX, frame.originY, frame.originZ},
                      {frame.normalX, frame.normalY, frame.normalZ}};
@@ -97,14 +98,14 @@ void evaluateMirror(const document::DocumentSnapshot& document,
     const auto& owner = findFeature(outputs, *producer);
     EvaluatedBody& body = findBody(bodies, outputs, *producer);
     EvaluatedBody& referenceBody = findBody(referenceBodies, outputs, *producer);
-    auto image = mirrorImage(body.shape, owner.supportOrigins, owner.edgeOrigins, plane,
-                             descriptor.id);
+    auto image =
+        mirrorImage(body.shape, owner.supportOrigins, owner.edgeOrigins, plane, descriptor.id);
     if (parameters.mode == document::MirrorMode::newBody) {
         // A body of its own, placed where it is: its reference is the image itself.
         const document::BodyId bodyId{descriptor.id.value()};
-        EvaluatedFeature output{descriptor.id,  image.shape.shape, image.shape.shape,
-                                bodyId,         image.faces,       {},
-                                image.faces,    image.edges,       image.edges};
+        EvaluatedFeature output{descriptor.id, image.shape.shape, image.shape.shape,
+                                bodyId,        image.faces,       {},
+                                image.faces,   image.edges,       image.edges};
         bodies.push_back(EvaluatedBody{bodyId, descriptor.id, output.shape});
         referenceBodies.push_back(EvaluatedBody{bodyId, descriptor.id, output.referenceShape});
         outputs.push_back(std::move(output));
@@ -112,28 +113,29 @@ void evaluateMirror(const document::DocumentSnapshot& document,
     }
     const auto fused = kernel::ShapeOperations::fuseWithHistory(body.shape, image.shape.shape);
     auto faces = continueSupportOrigins(owner.supportOrigins, fused, kernel::HistoryOperand::first);
-    const auto mirrored = continueSupportOrigins(image.faces, fused, kernel::HistoryOperand::second);
+    const auto mirrored =
+        continueSupportOrigins(image.faces, fused, kernel::HistoryOperand::second);
     faces.insert(faces.end(), mirrored.begin(), mirrored.end());
-    EvaluatedFeature output{descriptor.id,
-                            fused.shape,
-                            referenceBody.shape,
-                            body.bodyId,
-                            std::move(faces),
-                            {},
-                            owner.referenceSupportOrigins,
-                            continueEdgeOrigins(owner.edgeOrigins, fused,
-                                                kernel::HistoryOperand::first),
-                            owner.referenceEdgeOrigins};
+    EvaluatedFeature output{
+        descriptor.id,
+        fused.shape,
+        referenceBody.shape,
+        body.bodyId,
+        std::move(faces),
+        {},
+        owner.referenceSupportOrigins,
+        continueEdgeOrigins(owner.edgeOrigins, fused, kernel::HistoryOperand::first),
+        owner.referenceEdgeOrigins};
     // The unplaced reference is joined with its own image; where it cannot be, it stays.
     try {
         auto referenceImage = mirrorImage(referenceBody.shape, owner.referenceSupportOrigins,
                                           owner.referenceEdgeOrigins, plane, descriptor.id);
-        const auto reference =
-            kernel::ShapeOperations::fuseWithHistory(referenceBody.shape, referenceImage.shape.shape);
+        const auto reference = kernel::ShapeOperations::fuseWithHistory(referenceBody.shape,
+                                                                        referenceImage.shape.shape);
         auto referenceFaces = continueSupportOrigins(owner.referenceSupportOrigins, reference,
                                                      kernel::HistoryOperand::first);
-        const auto referenceMirrored = continueSupportOrigins(referenceImage.faces, reference,
-                                                              kernel::HistoryOperand::second);
+        const auto referenceMirrored =
+            continueSupportOrigins(referenceImage.faces, reference, kernel::HistoryOperand::second);
         referenceFaces.insert(referenceFaces.end(), referenceMirrored.begin(),
                               referenceMirrored.end());
         output.referenceShape = reference.shape;

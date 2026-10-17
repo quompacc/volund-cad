@@ -9,8 +9,8 @@
 #include "MeasurementInput.hpp"
 #include "ModelTreePanel.hpp"
 #include "OverlayCard.hpp"
-#include "ShellHeader.hpp"
 #include "ShellActions.hpp"
+#include "ShellHeader.hpp"
 #include "ShellIcons.hpp"
 #include "SketchEditorToolController.hpp"
 #include "SketchExtrusionToolController.hpp"
@@ -35,10 +35,10 @@
 #include <QStatusBar>
 #include <QVBoxLayout>
 
+#include <QWidget>
 #include <algorithm>
 #include <array>
 #include <cmath>
-#include <QWidget>
 
 #include <memory>
 #include <optional>
@@ -81,9 +81,7 @@ MainWindow::MainWindow(application::CadSession& session, QWidget* parent)
 
 MainWindow::~MainWindow() = default;
 
-void MainWindow::openFile(const QString& fileName) {
-    impl_->documentActions->openFile(fileName);
-}
+void MainWindow::openFile(const QString& fileName) { impl_->documentActions->openFile(fileName); }
 
 void MainWindow::closeEvent(QCloseEvent* event) {
     event->setAccepted(impl_->documentActions->confirmClose());
@@ -121,9 +119,8 @@ void MainWindow::createModelTree() {
                      std::max(120, std::min(available, wanted)));
     });
     for (const auto signal : {&QTreeWidget::itemExpanded, &QTreeWidget::itemCollapsed})
-        connect(impl_->modelTree, signal, impl_->modelCard, [card = impl_->modelCard] {
-            card->place();
-        });
+        connect(impl_->modelTree, signal, impl_->modelCard,
+                [card = impl_->modelCard] { card->place(); });
     syncModelTree();
 }
 
@@ -321,9 +318,10 @@ void MainWindow::syncErrorCard(std::optional<document::FeatureId> selected) {
         return;
     }
     const auto features = impl_->session.features();
-    const auto descriptor = std::ranges::find(features, *selected, &document::FeatureDescriptor::id);
-    const bool sketch = descriptor != features.end() &&
-                        descriptor->kind == document::FeatureKind::sketch;
+    const auto descriptor =
+        std::ranges::find(features, *selected, &document::FeatureDescriptor::id);
+    const bool sketch =
+        descriptor != features.end() && descriptor->kind == document::FeatureKind::sketch;
     FeatureErrorCard::Content content;
     content.blocked = state->status == application::FeatureRuntimeStatus::blocked;
     content.message = QString::fromStdString(state->message);

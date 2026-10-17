@@ -10,9 +10,9 @@
 #include <BRepBuilderAPI_Transform.hxx>
 #include <BRepCheck_Analyzer.hxx>
 #include <BRepGProp.hxx>
-#include <GProp_GProps.hxx>
 #include <BRepPrimAPI_MakeBox.hxx>
 #include <BRepPrimAPI_MakeCylinder.hxx>
+#include <GProp_GProps.hxx>
 #include <gp_Ax1.hxx>
 #include <gp_Ax2.hxx>
 #include <gp_Dir.hxx>
@@ -74,8 +74,7 @@ ShapeOperationResult buildShape(KernelOperation operation, Build&& build) {
 
 } // namespace
 
-KernelError::KernelError(KernelOperation operation, std::string diagnostic,
-                         BooleanFailure failure)
+KernelError::KernelError(KernelOperation operation, std::string diagnostic, BooleanFailure failure)
     : std::runtime_error(std::string(kernelOperationName(operation)) + ": " + diagnostic),
       operation_(operation), diagnostic_(std::move(diagnostic)), failure_(failure) {}
 
@@ -263,8 +262,8 @@ ShapeOperationResult ShapeFactory::copyWithHistory(const TopoDS_Shape& source,
                                                    const std::array<double, 3>& translation) {
     if (source.IsNull())
         throw KernelError(KernelOperation::pattern, "source shape must not be null");
-    for (const double value : {origin[0], origin[1], origin[2], translation[0], translation[1],
-                               translation[2]})
+    for (const double value :
+         {origin[0], origin[1], origin[2], translation[0], translation[1], translation[2]})
         if (!modelCoordinate(value))
             throw KernelError(KernelOperation::pattern, modelRangeDiagnostic);
     const double length = std::hypot(direction[0], direction[1], direction[2]);

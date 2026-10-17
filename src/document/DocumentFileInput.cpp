@@ -10,7 +10,8 @@
 namespace voelund::document::detail {
 namespace {
 std::string capture(std::istream& source) {
-    if (!source.good()) invalidDocument("input is not readable");
+    if (!source.good())
+        invalidDocument("input is not readable");
     std::string bytes;
     std::array<char, 16384> block{};
     for (;;) {
@@ -19,7 +20,8 @@ std::string capture(std::istream& source) {
         try {
             source.read(block.data(), static_cast<std::streamsize>(count));
         } catch (const std::ios_base::failure&) {
-            if (source.bad() || !source.eof()) throw;
+            if (source.bad() || !source.eof())
+                throw;
         }
         if (source.bad() || (source.fail() && !source.eof()))
             invalidDocument("input read failure");
@@ -27,8 +29,10 @@ std::string capture(std::istream& source) {
         if (obtained > maximumDocumentBytes - bytes.size())
             invalidDocument("document byte limit exceeded");
         bytes.append(block.data(), obtained);
-        if (source.eof()) return bytes;
-        if (obtained != count) invalidDocument("incomplete input read");
+        if (source.eof())
+            return bytes;
+        if (obtained != count)
+            invalidDocument("incomplete input read");
     }
 }
 DocumentFileKind classify(const std::string& bytes) {
@@ -38,7 +42,8 @@ DocumentFileKind classify(const std::string& bytes) {
         return DocumentFileKind::nativeBinary;
     const auto end = bytes.find('\n');
     const auto length = end == std::string::npos ? bytes.size() : end;
-    if (length > maximumLineBytes) invalidDocument("file header byte limit exceeded");
+    if (length > maximumLineBytes)
+        invalidDocument("file header byte limit exceeded");
     std::istringstream header(bytes.substr(0, length));
     (void)readSourceFormat(header); // Exact historical versions, including existing CRLF rules.
     return DocumentFileKind::legacyText;

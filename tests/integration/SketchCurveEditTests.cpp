@@ -236,8 +236,7 @@ void extend() {
 
     Fixture arc({SketchArc{{0, 0}, 5, 0, pi / 2}, line({-3, -10}, {-3, 10})});
     arc.edit(SketchCurveEdit::extend, 1, {0.5, 5});
-    require(near(arc.arcOf(1).startAngle, 0) &&
-                near(arc.arcOf(1).endAngle, std::atan2(4.0, -3.0)),
+    require(near(arc.arcOf(1).startAngle, 0) && near(arc.arcOf(1).endAngle, std::atan2(4.0, -3.0)),
             "The arc end runs along its circle to the line");
     require(arc.has(Kind::pointOnObject, ref(1, Position::end), ref(2)), "Bound to the line");
 }

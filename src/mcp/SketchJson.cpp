@@ -18,14 +18,32 @@ using document::SketchConstraintKind;
 constexpr const char* planeNames[] = {"xy", "xz", "yz"};
 constexpr const char* pointNames[] = {"start", "end", "center"};
 // Parallel to document::SketchConstraintKind.
-constexpr const char* kindNames[] = {
-    "horizontal",     "vertical",       "distance",      "radius",
-    "coincident",     "parallel",       "perpendicular", "coordinateX",
-    "coordinateY",    "pointOnObject",  "equal",         "tangent",
-    "symmetric",      "pointDistance",  "angle",         "pointDistanceX",
-    "pointDistanceY", "midpoint",       "perpendicularBisector",
-    "concentric",     "diameter",       "collinear",     "horizontalPoints",
-    "verticalPoints", "fixed",          "pointLineDistance"};
+constexpr const char* kindNames[] = {"horizontal",
+                                     "vertical",
+                                     "distance",
+                                     "radius",
+                                     "coincident",
+                                     "parallel",
+                                     "perpendicular",
+                                     "coordinateX",
+                                     "coordinateY",
+                                     "pointOnObject",
+                                     "equal",
+                                     "tangent",
+                                     "symmetric",
+                                     "pointDistance",
+                                     "angle",
+                                     "pointDistanceX",
+                                     "pointDistanceY",
+                                     "midpoint",
+                                     "perpendicularBisector",
+                                     "concentric",
+                                     "diameter",
+                                     "collinear",
+                                     "horizontalPoints",
+                                     "verticalPoints",
+                                     "fixed",
+                                     "pointLineDistance"};
 // Accepted from clients in tool version 1: dimensions and simple relations.
 constexpr SketchConstraintKind acceptedKinds[] = {
     SketchConstraintKind::horizontal,     SketchConstraintKind::vertical,
@@ -55,49 +73,47 @@ QJsonObject encodeElement(const document::SketchElement& element) {
     QJsonObject json{{"id", static_cast<double>(element.id.value())}};
     if (element.construction)
         json.insert("construction", true);
-    std::visit(
-        detail::Overloaded{
-            [&](const document::SketchLine& line) {
-                json.insert("type", "line");
-                json.insert("start", point(line.start));
-                json.insert("end", point(line.end));
-            },
-            [&](const document::SketchRectangle& rectangle) {
-                json.insert("type", "rectangle");
-                json.insert("first", point(rectangle.first));
-                json.insert("second", point(rectangle.second));
-            },
-            [&](const document::SketchCircle& circle) {
-                json.insert("type", "circle");
-                json.insert("center", point(circle.center));
-                json.insert("radius", circle.radius);
-            },
-            [&](const document::SketchArc& arc) {
-                json.insert("type", "arc");
-                json.insert("center", point(arc.center));
-                json.insert("radius", arc.radius);
-                json.insert("startAngle", arc.startAngle);
-                json.insert("endAngle", arc.endAngle);
-            },
-            [&](const document::SketchEllipse& ellipse) {
-                json.insert("type", "ellipse");
-                json.insert("center", point(ellipse.center));
-                json.insert("majorRadius", ellipse.majorRadius);
-                json.insert("minorRadius", ellipse.minorRadius);
-                json.insert("rotation", ellipse.rotation);
-            },
-            [&](const document::SketchPointGeometry& value) { // S15
-                json.insert("type", "point");
-                json.insert("position", point(value.position));
-            },
-            [&](const document::SketchBSpline& spline) { // S21: output only
-                json.insert("type", "bspline");
-                QJsonArray poles;
-                for (const auto& pole : spline.poles)
-                    poles.append(point(pole));
-                json.insert("poles", poles);
-            }},
-        element.geometry);
+    std::visit(detail::Overloaded{[&](const document::SketchLine& line) {
+                                      json.insert("type", "line");
+                                      json.insert("start", point(line.start));
+                                      json.insert("end", point(line.end));
+                                  },
+                                  [&](const document::SketchRectangle& rectangle) {
+                                      json.insert("type", "rectangle");
+                                      json.insert("first", point(rectangle.first));
+                                      json.insert("second", point(rectangle.second));
+                                  },
+                                  [&](const document::SketchCircle& circle) {
+                                      json.insert("type", "circle");
+                                      json.insert("center", point(circle.center));
+                                      json.insert("radius", circle.radius);
+                                  },
+                                  [&](const document::SketchArc& arc) {
+                                      json.insert("type", "arc");
+                                      json.insert("center", point(arc.center));
+                                      json.insert("radius", arc.radius);
+                                      json.insert("startAngle", arc.startAngle);
+                                      json.insert("endAngle", arc.endAngle);
+                                  },
+                                  [&](const document::SketchEllipse& ellipse) {
+                                      json.insert("type", "ellipse");
+                                      json.insert("center", point(ellipse.center));
+                                      json.insert("majorRadius", ellipse.majorRadius);
+                                      json.insert("minorRadius", ellipse.minorRadius);
+                                      json.insert("rotation", ellipse.rotation);
+                                  },
+                                  [&](const document::SketchPointGeometry& value) { // S15
+                                      json.insert("type", "point");
+                                      json.insert("position", point(value.position));
+                                  },
+                                  [&](const document::SketchBSpline& spline) { // S21: output only
+                                      json.insert("type", "bspline");
+                                      QJsonArray poles;
+                                      for (const auto& pole : spline.poles)
+                                          poles.append(point(pole));
+                                      json.insert("poles", poles);
+                                  }},
+               element.geometry);
     return json;
 }
 
@@ -112,8 +128,7 @@ document::SketchElement decodeElement(const detail::JsonReader& reader) {
     case 1: {
         const auto first = point(reader, "first");
         const auto second = point(reader, "second");
-        return {id, document::SketchRectangle{first.x, first.y, second.x, second.y},
-                construction};
+        return {id, document::SketchRectangle{first.x, first.y, second.x, second.y}, construction};
     }
     case 2:
         return {id, document::SketchCircle{point(reader, "center"), reader.number("radius")},
@@ -203,10 +218,10 @@ document::SketchConstraint decodeConstraint(const detail::JsonReader& reader,
         value = 0.0;
     if (!value)
         throw ArgumentError(reader.field("value"), "A dimension needs a value or a parameter");
-    auto constraint = *unit == document::ParameterUnit::angle
-                          ? document::SketchConstraint{id, kind, first, second,
-                                                       kernel::Radians(*value)}
-                          : document::SketchConstraint{id, kind, first, second, *value};
+    auto constraint =
+        *unit == document::ParameterUnit::angle
+            ? document::SketchConstraint{id, kind, first, second, kernel::Radians(*value)}
+            : document::SketchConstraint{id, kind, first, second, *value};
     constraint.parameter = bound;
     constraint.reference = reference;
     return constraint;
@@ -234,14 +249,13 @@ QJsonObject encodeSketch(const document::SketchParameters& sketch) {
             return result;
         };
         for (const auto& pattern : sketch.patterns.values) {
-            QJsonObject entry{{"kind", pattern.kind == document::SketchPatternKind::linear
-                                           ? "linear"
-                                       : pattern.kind == document::SketchPatternKind::circular
-                                           ? "circular"
-                                           : "mirror"},
-                              {"count", static_cast<int>(pattern.count)},
-                              {"sources", ids(pattern.sources)},
-                              {"instances", ids(pattern.instances)}};
+            QJsonObject entry{
+                {"kind", pattern.kind == document::SketchPatternKind::linear     ? "linear"
+                         : pattern.kind == document::SketchPatternKind::circular ? "circular"
+                                                                                 : "mirror"},
+                {"count", static_cast<int>(pattern.count)},
+                {"sources", ids(pattern.sources)},
+                {"instances", ids(pattern.instances)}};
             if (pattern.kind == document::SketchPatternKind::linear)
                 entry.insert("step", point(pattern.step));
             if (pattern.kind == document::SketchPatternKind::circular) {
@@ -292,10 +306,10 @@ void decodeSketchContent(const JsonReader& reader, document::SketchParameters& s
         std::string conflicts;
         for (const auto& id : solved.conflictingConstraints)
             conflicts += (conflicts.empty() ? " " : ", ") + std::to_string(id.value());
-        throw ArgumentError(reader.field("constraints"),
-                            "The sketch does not solve" +
-                                (conflicts.empty() ? std::string{}
-                                                   : "; conflicting constraints:" + conflicts));
+        throw ArgumentError(
+            reader.field("constraints"),
+            "The sketch does not solve" +
+                (conflicts.empty() ? std::string{} : "; conflicting constraints:" + conflicts));
     }
 }
 } // namespace detail

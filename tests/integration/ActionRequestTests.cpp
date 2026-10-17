@@ -74,9 +74,9 @@ struct Model final {
 };
 
 Model build(application::CadSession& session) {
-    auto result = committed(session,
-                            application::CreateParameterAction{"A", ParameterUnit::length, mm(10), {}},
-                            "Create A");
+    auto result = committed(
+        session, application::CreateParameterAction{"A", ParameterUnit::length, mm(10), {}},
+        "Create A");
     require(result.createdParameters.size() == 1 && result.changedParameters.empty() &&
                 result.createdFeatures.empty(),
             "Creating A reports exactly one new parameter");
@@ -117,10 +117,10 @@ Model build(application::CadSession& session) {
                     sketchActions->actions.end(),
             "Context offers a profile extrusion on the sketch");
 
-    result = committed(session,
-                       application::CreateProfileExtrusionAction{
-                           sketch, {regions->regions.front().id}, mm(10)},
-                       "Extrude");
+    result = committed(
+        session,
+        application::CreateProfileExtrusionAction{sketch, {regions->regions.front().id}, mm(10)},
+        "Extrude");
     const auto extrusion = result.createdFeatures.front();
     result = committed(session, application::SetExtrusionDistanceAction{extrusion, mm(15)},
                        "Distance 15");
@@ -149,11 +149,14 @@ void rejections(application::CadSession& session, const Model& model) {
                     result.createdFeatures.empty() && result.changedFeatures.empty() &&
                     result.createdParameters.empty() && result.changedParameters.empty(),
                 name + ": rejection " + std::to_string(static_cast<int>(result.rejection)));
-        require(session.sceneStatus().document == stamp && session.identifiedSnapshot() == snapshot &&
-                    session.canUndo() == canUndo && session.canRedo() == canRedo,
+        require(session.sceneStatus().document == stamp &&
+                    session.identifiedSnapshot() == snapshot && session.canUndo() == canUndo &&
+                    session.canRedo() == canRedo,
                 name + ": state unchanged");
     };
-    const auto make = [&](application::Action action) { return request(session, std::move(action)); };
+    const auto make = [&](application::Action action) {
+        return request(session, std::move(action));
+    };
 
     auto foreign = make(application::SetParameterValueAction{model.length, mm(30)});
     foreign.document = document::generateDocumentId();
@@ -195,8 +198,8 @@ void rejections(application::CadSession& session, const Model& model) {
            ActionRejection::invalidUnit, "Radius bound to an angle");
     expect(make(application::BindExtrusionDistanceAction{model.extrusion, model.angle}),
            ActionRejection::invalidUnit, "Distance bound to an angle");
-    expect(make(application::CreateParameterAction{"B", ParameterUnit::length,
-                                                   {inf, QuantityUnit::radian}, {}}),
+    expect(make(application::CreateParameterAction{
+               "B", ParameterUnit::length, {inf, QuantityUnit::radian}, {}}),
            ActionRejection::invalidUnit, "Unit before finiteness");
 
     for (const double value : {nan, inf, -inf})
@@ -212,8 +215,8 @@ void rejections(application::CadSession& session, const Model& model) {
     // Accepted by the action layer, refused by the command: still no mutation.
     expect(make(application::RenameParameterAction{model.angle, "a"}), ActionRejection::none,
            "Duplicate name is a command rejection");
-    expect(make(application::SetParameterValueAction{model.length, mm(20)}),
-           ActionRejection::none, "Unchanged value");
+    expect(make(application::SetParameterValueAction{model.length, mm(20)}), ActionRejection::none,
+           "Unchanged value");
 
     application::CommandResult undone = session.undo();
     require(undone.status() == CommandStatus::committed &&
@@ -222,7 +225,8 @@ void rejections(application::CadSession& session, const Model& model) {
 }
 
 void staleAfterUndo(application::CadSession& session, const Model& model) {
-    const auto prepared = request(session, application::SetParameterValueAction{model.length, mm(40)});
+    const auto prepared =
+        request(session, application::SetParameterValueAction{model.length, mm(40)});
     require(session.redo().status() == CommandStatus::committed, "Redo A -> 20");
     const auto result = application::executeAction(session, prepared);
     require(result.rejection == ActionRejection::staleStamp &&

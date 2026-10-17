@@ -55,25 +55,24 @@ bool solidAt(const TopoDS_Shape& shape, double x, double y, double z) {
     return BRepClass3d_SolidClassifier(shape, gp_Pnt(x, y, z), 1e-7).State() == TopAbs_IN;
 }
 std::size_t moves(const application::CadSession& session) {
-    return static_cast<std::size_t>(std::ranges::count(session.features(),
-                                                       document::FeatureKind::move,
-                                                       &document::FeatureDescriptor::kind));
+    return static_cast<std::size_t>(std::ranges::count(
+        session.features(), document::FeatureKind::move, &document::FeatureDescriptor::kind));
 }
 application::CommandResult move(application::CadSession& session, document::FeatureId feature,
                                 double x, double y, double z) {
     return application::executeAction(
-               session, application::prepareRequest(
-                            session, application::MoveBodyAction{
-                                         feature,
-                                         {x, application::QuantityUnit::millimetre},
-                                         {y, application::QuantityUnit::millimetre},
-                                         {z, application::QuantityUnit::millimetre},
-                                         std::nullopt,
-                                         {0.0, application::QuantityUnit::radian}}))
+               session,
+               application::prepareRequest(
+                   session, application::MoveBodyAction{feature,
+                                                        {x, application::QuantityUnit::millimetre},
+                                                        {y, application::QuantityUnit::millimetre},
+                                                        {z, application::QuantityUnit::millimetre},
+                                                        std::nullopt,
+                                                        {0.0, application::QuantityUnit::radian}}))
         .command;
 }
-application::CommandResult turnAboutZ(application::CadSession& session,
-                                      document::FeatureId feature, double angle) {
+application::CommandResult turnAboutZ(application::CadSession& session, document::FeatureId feature,
+                                      double angle) {
     return session.moveBody(feature, {0, 0, 0}, 2, angle);
 }
 
@@ -81,8 +80,7 @@ void moveBodies() {
     application::CadSession session;
     session.newDocument();
     const auto box = *session.createBoxFeature({20, 10, 10}).feature();
-    document::SketchParameters rectangle{document::datumSketchPlane(document::DatumPlane::xy),
-                                         {}};
+    document::SketchParameters rectangle{document::datumSketchPlane(document::DatumPlane::xy), {}};
     rectangle.datum = document::DatumPlane::xy;
     rectangle.elements.values.push_back(
         {document::SketchElementId{1}, document::SketchRectangle{0, 0, 20, 10}});
@@ -131,10 +129,8 @@ void moveBodies() {
     const auto sketchId = session.features().back().id;
     const auto holes =
         features::identifySketchRegions(session.sketchParameters(sketchId).elements.values).ids;
-    require(session
-                    .createSketchProfileExtrusion(sketchId, holes, 5,
-                                                  ExtrusionMode{document::ExtrusionOperation::cut,
-                                                                true})
+    require(session.createSketchProfileExtrusion(
+                       sketchId, holes, 5, ExtrusionMode{document::ExtrusionOperation::cut, true})
                     .status() == CommandStatus::committed,
             "Cut from the moved face");
     const auto& cut = bodyOf(session, extrusionBody);
@@ -144,10 +140,9 @@ void moveBodies() {
             "The hole sits in the middle of the moved top face");
 
     // Once a fillet follows on the box, a drag adds a move rather than changing the box.
-    const document::FilletEdge edge{{box, kernel::PrimitiveRole::boxPositiveZ},
-                                    {box, kernel::PrimitiveRole::boxPositiveX}, 1};
-    require(session.createFillet(box, std::span{&edge, 1}, 1).status() ==
-                    CommandStatus::committed,
+    const document::FilletEdge edge{
+        {box, kernel::PrimitiveRole::boxPositiveZ}, {box, kernel::PrimitiveRole::boxPositiveX}, 1};
+    require(session.createFillet(box, std::span{&edge, 1}, 1).status() == CommandStatus::committed,
             "A fillet on the box");
     const auto before = bounds(bodyOf(session, boxBody));
     require(move(session, box, 0, 0, 10).status() == CommandStatus::committed &&
@@ -162,10 +157,11 @@ void moveBodies() {
     session.saveDocument(path);
     application::CadSession reopened;
     reopened.loadDocument(path);
-    require(reopened.moveParameters(moved) == session.moveParameters(moved) &&
-                same(bounds(bodyOf(reopened, extrusionBody)), bounds(bodyOf(session, extrusionBody))) &&
-                same(bounds(bodyOf(reopened, boxBody)), bounds(bodyOf(session, boxBody))),
-            "Open restores the moves");
+    require(
+        reopened.moveParameters(moved) == session.moveParameters(moved) &&
+            same(bounds(bodyOf(reopened, extrusionBody)), bounds(bodyOf(session, extrusionBody))) &&
+            same(bounds(bodyOf(reopened, boxBody)), bounds(bodyOf(session, boxBody))),
+        "Open restores the moves");
     std::filesystem::remove_all(directory);
 }
 

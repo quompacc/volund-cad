@@ -2,7 +2,6 @@
 #include "DocumentSerializationDetail.hpp"
 #include "NativeParameters.hpp"
 #include "NativeSketchSupport.hpp"
-#include <voelund/kernel/NumericPolicy.hpp>
 #include <TDataStd_AsciiString.hxx>
 #include <TDataStd_Integer.hxx>
 #include <TDataStd_Real.hxx>
@@ -10,11 +9,13 @@
 #include <cmath>
 #include <set>
 #include <string>
+#include <voelund/kernel/NumericPolicy.hpp>
 
 namespace voelund::document::detail {
 namespace {
 void require(bool value) {
-    if (!value) throw std::invalid_argument("Invalid native extrusion data");
+    if (!value)
+        throw std::invalid_argument("Invalid native extrusion data");
 }
 TDF_Label child(const TDF_Label& label, int tag) {
     const auto result = label.FindChild(tag, false);
@@ -33,7 +34,8 @@ void writeRegions(const TDF_Label& label, const std::vector<SketchRegionId>& reg
         const auto& text = regions[index].text();
         TDataStd_Integer::Set(region, static_cast<int>(chunkCount(regions[index])));
         for (std::size_t chunk = 0; chunk < chunkCount(regions[index]); ++chunk)
-            TDataStd_AsciiString::Set(region.FindChild(static_cast<int>(chunk + 1)),
+            TDataStd_AsciiString::Set(
+                region.FindChild(static_cast<int>(chunk + 1)),
                 text.substr(chunk * regionChunkBytes, regionChunkBytes).c_str());
     }
 }
@@ -42,7 +44,7 @@ std::vector<SketchRegionId> readRegions(const TDF_Label& label, std::size_t& rem
     require(label.FindAttribute(TDataStd_Integer::GetID(), size));
     const int count = size->Get();
     require(count >= 0 && count <= static_cast<int>(maximumExtrusionProfileCount) &&
-        static_cast<std::size_t>(count) <= remainingRecords && label.NbChildren() == count);
+            static_cast<std::size_t>(count) <= remainingRecords && label.NbChildren() == count);
     remainingRecords -= static_cast<std::size_t>(count);
     std::vector<SketchRegionId> regions;
     for (int index = 1; index <= count; ++index) {
@@ -51,18 +53,18 @@ std::vector<SketchRegionId> readRegions(const TDF_Label& label, std::size_t& rem
         require(region.FindAttribute(TDataStd_Integer::GetID(), chunks));
         const int pieces = chunks->Get();
         require(pieces >= 1 && static_cast<std::size_t>(pieces) <= remainingRecords &&
-            region.NbChildren() == pieces);
+                region.NbChildren() == pieces);
         remainingRecords -= static_cast<std::size_t>(pieces);
         std::string text;
         for (int chunk = 1; chunk <= pieces; ++chunk) {
             const auto part = child(region, chunk);
             Handle(TDataStd_AsciiString) value;
             require(part.NbChildren() == 0 &&
-                part.FindAttribute(TDataStd_AsciiString::GetID(), value));
+                    part.FindAttribute(TDataStd_AsciiString::GetID(), value));
             const auto length = static_cast<std::size_t>(value->Get().Length());
             // Every chunk but the last is full, so the split is canonical as well.
             require(length >= 1 && length <= regionChunkBytes &&
-                (chunk == pieces || length == regionChunkBytes));
+                    (chunk == pieces || length == regionChunkBytes));
             text.append(value->Get().ToCString(), length);
         }
         const auto id = SketchRegionId::parse(text);
@@ -75,12 +77,13 @@ std::vector<SketchRegionId> readRegions(const TDF_Label& label, std::size_t& rem
 std::uint64_t readDecimal(const TDF_Label& label) {
     Handle(TDataStd_AsciiString) value;
     require(label.NbChildren() == 0 && label.FindAttribute(TDataStd_AsciiString::GetID(), value) &&
-        value->Get().Length() <= 20);
-    const std::string text{value->Get().ToCString(), static_cast<std::size_t>(value->Get().Length())};
+            value->Get().Length() <= 20);
+    const std::string text{value->Get().ToCString(),
+                           static_cast<std::size_t>(value->Get().Length())};
     std::uint64_t id = 0;
     const auto parsed = std::from_chars(text.data(), text.data() + text.size(), id);
     require(parsed.ec == std::errc{} && parsed.ptr == text.data() + text.size() && id != 0 &&
-        text == std::to_string(id));
+            text == std::to_string(id));
     return id;
 }
 int readInteger(const TDF_Label& label) {
@@ -88,9 +91,10 @@ int readInteger(const TDF_Label& label) {
     require(label.NbChildren() == 0 && label.FindAttribute(TDataStd_Integer::GetID(), value));
     return value->Get();
 }
-}
+} // namespace
 std::size_t nativeExtrusionRecords(const ExtrusionParameters& parameters) {
-    std::size_t records = parameters.profiles.size() + parameters.regions.size() +
+    std::size_t records =
+        parameters.profiles.size() + parameters.regions.size() +
         (parameters.upToFace ? parameters.upToFace->origin.extrusionBoundary.size() : 0) +
         (parameters.faceProfile ? parameters.faceProfile->origin.extrusionBoundary.size() : 0);
     for (const auto& region : parameters.regions)
@@ -104,20 +108,20 @@ std::size_t nativeExtrusionRecords(const ExtrusionParameters& parameters) {
 }
 void validateNativeExtrusion(const ExtrusionParameters& parameters) {
     require(kernel::modelLength(parameters.distance) &&
-        parameters.profiles.size() <= maximumExtrusionProfileCount &&
-        (!parameters.mergeSeams || parameters.faceProfile)); // T05: only a push/pull merges
+            parameters.profiles.size() <= maximumExtrusionProfileCount &&
+            (!parameters.mergeSeams || parameters.faceProfile)); // T05: only a push/pull merges
     std::set<std::uint64_t> ids;
     for (const auto id : parameters.profiles)
         require(id.value() != 0 && ids.insert(id.value()).second);
     require(parameters.regions.size() <= maximumExtrusionProfileCount &&
-        (parameters.profiles.empty() || parameters.regions.empty()));
+            (parameters.profiles.empty() || parameters.regions.empty()));
     std::set<std::string> regions;
     for (const auto& region : parameters.regions)
         require(regions.insert(region.text()).second);
     require(!parameters.target || parameters.target->value() != 0);
     require(std::isfinite(parameters.offset) &&
-        (!parameters.upToFace || parameters.upToFace->body.value() != 0) &&
-        (!parameters.faceProfile || parameters.faceProfile->body.value() != 0));
+            (!parameters.upToFace || parameters.upToFace->body.value() != 0) &&
+            (!parameters.faceProfile || parameters.faceProfile->body.value() != 0));
 }
 void writeNativeExtrusion(const TDF_Label& label, const ExtrusionParameters& parameters) {
     TDataStd_Real::Set(label, parameters.distance);
@@ -125,7 +129,7 @@ void writeNativeExtrusion(const TDF_Label& label, const ExtrusionParameters& par
     TDataStd_Integer::Set(profiles, static_cast<int>(parameters.profiles.size()));
     for (std::size_t index = 0; index < parameters.profiles.size(); ++index)
         TDataStd_AsciiString::Set(profiles.FindChild(static_cast<int>(index + 1)),
-            std::to_string(parameters.profiles[index].value()).c_str());
+                                  std::to_string(parameters.profiles[index].value()).c_str());
     if (!parameters.regions.empty())
         writeRegions(label.FindChild(2), parameters.regions);
     if (parameters.distanceParameter)
@@ -136,7 +140,7 @@ void writeNativeExtrusion(const TDF_Label& label, const ExtrusionParameters& par
         TDataStd_Integer::Set(label.FindChild(5), 1);
     if (parameters.target)
         TDataStd_AsciiString::Set(label.FindChild(6),
-            std::to_string(parameters.target->value()).c_str());
+                                  std::to_string(parameters.target->value()).c_str());
     if (parameters.offset != 0.0)
         TDataStd_Real::Set(label.FindChild(7), parameters.offset);
     if (parameters.offsetParameter)
@@ -144,7 +148,7 @@ void writeNativeExtrusion(const TDF_Label& label, const ExtrusionParameters& par
     if (parameters.upToFace) {
         const auto face = label.FindChild(9);
         TDataStd_AsciiString::Set(face.FindChild(1),
-            std::to_string(parameters.upToFace->body.value()).c_str());
+                                  std::to_string(parameters.upToFace->body.value()).c_str());
         writeNativeSubshapeOrigin(face, parameters.upToFace->origin);
     }
     if (parameters.symmetric)
@@ -152,7 +156,7 @@ void writeNativeExtrusion(const TDF_Label& label, const ExtrusionParameters& par
     if (parameters.faceProfile) {
         const auto face = label.FindChild(10);
         TDataStd_AsciiString::Set(face.FindChild(1),
-            std::to_string(parameters.faceProfile->body.value()).c_str());
+                                  std::to_string(parameters.faceProfile->body.value()).c_str());
         writeNativeSubshapeOrigin(face, parameters.faceProfile->origin);
     }
     // M20 (schema 20): angle on child 12, its axis kind (1 line, 2 base, 3 construction) and
@@ -162,7 +166,7 @@ void writeNativeExtrusion(const TDF_Label& label, const ExtrusionParameters& par
         const auto& axis = parameters.revolve->axis;
         TDataStd_Real::Set(revolve, parameters.revolve->angle.value());
         TDataStd_Integer::Set(revolve.FindChild(1), axis.sketchLine ? 1 : axis.baseAxis ? 2 : 3);
-        const std::uint64_t value = axis.sketchLine   ? axis.sketchLine->value()
+        const std::uint64_t value = axis.sketchLine ? axis.sketchLine->value()
                                     : axis.baseAxis ? static_cast<std::uint64_t>(*axis.baseAxis)
                                                     : axis.datumAxis->value();
         TDataStd_AsciiString::Set(revolve.FindChild(2), std::to_string(value).c_str());
@@ -224,21 +228,21 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
     const auto loft = label.FindChild(14, false);
     // Schema 36 (T05) adds the seam merge of a push/pull (15).
     const auto seams = label.FindChild(15, false);
-    const int t02 = (operation.IsNull() ? 0 : 1) + (reversed.IsNull() ? 0 : 1) +
-        (target.IsNull() ? 0 : 1);
-    const int t03 = (offset.IsNull() ? 0 : 1) + (offsetBinding.IsNull() ? 0 : 1) +
-        (endFace.IsNull() ? 0 : 1);
+    const int t02 =
+        (operation.IsNull() ? 0 : 1) + (reversed.IsNull() ? 0 : 1) + (target.IsNull() ? 0 : 1);
+    const int t03 =
+        (offset.IsNull() ? 0 : 1) + (offsetBinding.IsNull() ? 0 : 1) + (endFace.IsNull() ? 0 : 1);
     require((regions.IsNull() || schemaVersion >= 5) && (binding.IsNull() || schemaVersion >= 7) &&
-        (t02 == 0 || schemaVersion >= 8) && (t03 == 0 || schemaVersion >= 9) &&
-        (profileFace.IsNull() || schemaVersion >= 10) &&
-        (symmetric.IsNull() || schemaVersion >= 13) && (revolve.IsNull() || schemaVersion >= 20) &&
-        (sweep.IsNull() || schemaVersion >= 26) && (loft.IsNull() || schemaVersion >= 27) &&
-        (seams.IsNull() || schemaVersion >= 36) &&
-        label.NbChildren() == 1 + (regions.IsNull() ? 0 : 1) + (binding.IsNull() ? 0 : 1) + t02 +
-                                  t03 + (profileFace.IsNull() ? 0 : 1) +
-                                  (symmetric.IsNull() ? 0 : 1) + (revolve.IsNull() ? 0 : 1) +
-                                  (sweep.IsNull() ? 0 : 1) + (loft.IsNull() ? 0 : 1) +
-                                  (seams.IsNull() ? 0 : 1));
+            (t02 == 0 || schemaVersion >= 8) && (t03 == 0 || schemaVersion >= 9) &&
+            (profileFace.IsNull() || schemaVersion >= 10) &&
+            (symmetric.IsNull() || schemaVersion >= 13) &&
+            (revolve.IsNull() || schemaVersion >= 20) && (sweep.IsNull() || schemaVersion >= 26) &&
+            (loft.IsNull() || schemaVersion >= 27) && (seams.IsNull() || schemaVersion >= 36) &&
+            label.NbChildren() == 1 + (regions.IsNull() ? 0 : 1) + (binding.IsNull() ? 0 : 1) +
+                                      t02 + t03 + (profileFace.IsNull() ? 0 : 1) +
+                                      (symmetric.IsNull() ? 0 : 1) + (revolve.IsNull() ? 0 : 1) +
+                                      (sweep.IsNull() ? 0 : 1) + (loft.IsNull() ? 0 : 1) +
+                                      (seams.IsNull() ? 0 : 1));
     Handle(TDataStd_Real) distance;
     require(label.FindAttribute(TDataStd_Real::GetID(), distance));
     const auto profiles = child(label, 1);
@@ -246,18 +250,20 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
     require(profiles.FindAttribute(TDataStd_Integer::GetID(), size));
     const int count = size->Get();
     require(count >= 0 && count <= static_cast<int>(maximumExtrusionProfileCount) &&
-        static_cast<std::size_t>(count) <= remainingRecords && profiles.NbChildren() == count);
+            static_cast<std::size_t>(count) <= remainingRecords && profiles.NbChildren() == count);
     ExtrusionParameters result{distance->Get(), {}};
     for (int index = 1; index <= count; ++index) {
         const auto profile = child(profiles, index);
         require(profile.NbChildren() == 0);
         Handle(TDataStd_AsciiString) value;
-        require(profile.FindAttribute(TDataStd_AsciiString::GetID(), value) && value->Get().Length() <= 20);
-        const std::string text{value->Get().ToCString(), static_cast<std::size_t>(value->Get().Length())};
+        require(profile.FindAttribute(TDataStd_AsciiString::GetID(), value) &&
+                value->Get().Length() <= 20);
+        const std::string text{value->Get().ToCString(),
+                               static_cast<std::size_t>(value->Get().Length())};
         std::uint64_t id = 0;
         const auto parsed = std::from_chars(text.data(), text.data() + text.size(), id);
-        require(parsed.ec == std::errc{} && parsed.ptr == text.data() + text.size() &&
-            id != 0 && text == std::to_string(id));
+        require(parsed.ec == std::errc{} && parsed.ptr == text.data() + text.size() && id != 0 &&
+                text == std::to_string(id));
         // Profile IDs are historical selections, not allocation counters or element references.
         result.profiles.emplace_back(id);
     }
@@ -271,8 +277,8 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
     if (!operation.IsNull()) {
         const int value = readInteger(operation);
         require(value >= static_cast<int>(ExtrusionOperation::newBody) &&
-            value <= static_cast<int>(schemaVersion >= 13 ? ExtrusionOperation::intersect
-                                                          : ExtrusionOperation::cut));
+                value <= static_cast<int>(schemaVersion >= 13 ? ExtrusionOperation::intersect
+                                                              : ExtrusionOperation::cut));
         result.operation = static_cast<ExtrusionOperation>(value);
     }
     if (!reversed.IsNull()) {
@@ -292,7 +298,7 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
     if (!offset.IsNull()) {
         Handle(TDataStd_Real) value;
         require(offset.NbChildren() == 0 && offset.FindAttribute(TDataStd_Real::GetID(), value) &&
-            value->Get() != 0.0); // Written only when set.
+                value->Get() != 0.0); // Written only when set.
         result.offset = value->Get();
     }
     if (!offsetBinding.IsNull())
@@ -328,8 +334,7 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
         result.revolve = RevolveParameters{axis, kernel::Radians{angle->Get()}};
         if (!pitch.IsNull()) {
             Handle(TDataStd_Real) stored;
-            require(pitch.NbChildren() == 0 &&
-                    pitch.FindAttribute(TDataStd_Real::GetID(), stored));
+            require(pitch.NbChildren() == 0 && pitch.FindAttribute(TDataStd_Real::GetID(), stored));
             result.revolve->pitch = stored->Get();
         }
         validateRevolveParameters(*result.revolve);
@@ -371,4 +376,4 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
     validateNativeExtrusion(result);
     return result;
 }
-}
+} // namespace voelund::document::detail

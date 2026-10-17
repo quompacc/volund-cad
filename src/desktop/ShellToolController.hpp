@@ -37,7 +37,8 @@ class ShellToolController final {
     // A planar face picked while the panel is open: opened (or closed again when opened).
     void picked(const viewport::PlanarFaceSelection& face);
     void cancel();
-    void setPreviewHandler(std::function<void(const std::vector<features::EvaluatedBody>*)> handler);
+    void
+    setPreviewHandler(std::function<void(const std::vector<features::EvaluatedBody>*)> handler);
 
   private:
     [[nodiscard]] std::optional<document::SubshapeOrigin>

@@ -17,9 +17,9 @@ using document::SketchGeometry;
 using document::SketchLine;
 using document::SketchPoint;
 
-std::vector<SketchElementId> selectedIds(
-    std::span<const document::SketchGeometryReference> references,
-    std::optional<SketchElementId> selected) {
+std::vector<SketchElementId>
+selectedIds(std::span<const document::SketchGeometryReference> references,
+            std::optional<SketchElementId> selected) {
     std::vector<SketchElementId> result;
     for (const auto& reference : references)
         if (std::ranges::find(result, reference.element) == result.end())
@@ -123,11 +123,11 @@ bool SketchEditorSession::offsetSelected(double distance) {
         elements_.values.push_back({ids.back(), std::move(geometry), construction});
     }
     for (const auto& joint : offset.joints)
-        constraints_.values.push_back({document::SketchConstraintId{constraints_.nextId++},
-                                       document::SketchConstraintKind::coincident,
-                                       {ids[joint.first], joint.firstPoint},
-                                       document::SketchGeometryReference{ids[joint.second],
-                                                                         joint.secondPoint}});
+        constraints_.values.push_back(
+            {document::SketchConstraintId{constraints_.nextId++},
+             document::SketchConstraintKind::coincident,
+             {ids[joint.first], joint.firstPoint},
+             document::SketchGeometryReference{ids[joint.second], joint.secondPoint}});
     selectedElement_ = ids.front();
     selectedReferences_.clear();
     return keepIfValid(rollback);
@@ -170,17 +170,17 @@ bool SketchEditorSession::copyLinear(int count, double spacing) {
         for (SketchElementId id : ids) {
             const auto source = std::ranges::find(original, id, &SketchElement::id);
             if (source != original.end())
-                elements_.values.push_back({SketchElementId{elements_.nextId++},
-                                            translatedGeometry(source->geometry, spacing * copy, 0.0),
-                                            source->construction});
+                elements_.values.push_back(
+                    {SketchElementId{elements_.nextId++},
+                     translatedGeometry(source->geometry, spacing * copy, 0.0),
+                     source->construction});
         }
     return keepIfValid(rollback);
 }
 
 bool SketchEditorSession::copyCircular(int count, double angleDegrees) {
     const auto ids = selectedIds(selectedReferences_, selectedElement_);
-    if (!active_ || ids.empty() || count < 2 || !std::isfinite(angleDegrees) ||
-        angleDegrees == 0.0)
+    if (!active_ || ids.empty() || count < 2 || !std::isfinite(angleDegrees) || angleDegrees == 0.0)
         return false;
     if (!document::hasRepeatedIdCapacity(elements_.nextId, ids.size(),
                                          static_cast<std::uint64_t>(count - 1)))

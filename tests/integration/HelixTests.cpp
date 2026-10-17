@@ -71,8 +71,8 @@ void spring() {
                     session.features().back().name == "Wendel 1",
                 "Wendel 1");
         require(std::abs(total(session) - expected) < 0.01 * expected,
-                std::string(left ? "Left" : "Right") + "-handed spring within 1 %: " +
-                    std::to_string(total(session)));
+                std::string(left ? "Left" : "Right") +
+                    "-handed spring within 1 %: " + std::to_string(total(session)));
         if (left)
             continue;
         const auto feature = session.features().back().id;
@@ -83,10 +83,11 @@ void spring() {
         session.saveDocument(file);
         application::CadSession reopened;
         reopened.loadDocument(file);
-        require(reopened.identifiedSnapshot().snapshot().extrusionParameters(feature).revolve ==
-                        session.identifiedSnapshot().snapshot().extrusionParameters(feature).revolve &&
-                    std::abs(total(reopened) - total(session)) < 1e-6 * expected,
-                "Open restores the helix");
+        require(
+            reopened.identifiedSnapshot().snapshot().extrusionParameters(feature).revolve ==
+                    session.identifiedSnapshot().snapshot().extrusionParameters(feature).revolve &&
+                std::abs(total(reopened) - total(session)) < 1e-6 * expected,
+            "Open restores the helix");
         std::filesystem::remove_all(directory);
         require(session.undo().status() == CommandStatus::committed &&
                     session.validBodies().empty(),

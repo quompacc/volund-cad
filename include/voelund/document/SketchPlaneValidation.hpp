@@ -1,7 +1,7 @@
 #pragma once
 #include <voelund/document/ModelDocument.hpp>
-#include <voelund/kernel/NumericValidation.hpp>
 #include <voelund/kernel/NumericPolicy.hpp>
+#include <voelund/kernel/NumericValidation.hpp>
 
 namespace voelund::document {
 // D10a preserves legacy thresholds and stored axis magnitudes. These are

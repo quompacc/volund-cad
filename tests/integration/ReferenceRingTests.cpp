@@ -73,9 +73,8 @@ void ringAndBox(const std::filesystem::path& directory) {
 
     const auto box = session.createBoxFeature({10, 10, 10}).feature();
     require(box.has_value(), "Box");
-    document::BoxParameters parameters{{10, 10, 10},
-                                       {60, 0, 0, kernel::Radians{0}, kernel::Radians{0},
-                                        kernel::Radians{0}}};
+    document::BoxParameters parameters{
+        {10, 10, 10}, {60, 0, 0, kernel::Radians{0}, kernel::Radians{0}, kernel::Radians{0}}};
     require(session.editBoxParameters(*box, parameters).status() == CommandStatus::committed,
             "Box placed at x 60");
     const document::BodyId boxBody{box->value()};

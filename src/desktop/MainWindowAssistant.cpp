@@ -72,8 +72,8 @@ void MainWindow::createAssistant() {
     setCommandId(*impl_->mcpCopyAction, "assistant.mcp_copy_command");
     connect(impl_->mcpCopyAction, &QAction::triggered, this, [this] {
         QApplication::clipboard()->setText(mcpConnectCommand());
-        statusBar()->showMessage(
-            tr("Befehl kopiert – in einem Terminal mit Claude Code ausführen"), 5000);
+        statusBar()->showMessage(tr("Befehl kopiert – in einem Terminal mit Claude Code ausführen"),
+                                 5000);
     });
     impl_->mcpTokenAction = new QAction(tr("Token neu erzeugen"), this);
     setCommandId(*impl_->mcpTokenAction, "assistant.mcp_new_token");
@@ -155,15 +155,16 @@ void MainWindow::syncAssistant() {
     impl_->mcpAction->setEnabled(allowed);
     impl_->mcpTokenAction->setEnabled(allowed);
     const bool running = impl_->mcp->isRunning();
-    const bool connected = running && impl_->mcpActivity.isValid() &&
-                           impl_->mcpActivity.elapsed() < connectedWindowMs;
-    impl_->header->showAssistant(!running   ? AssistantState::off
+    const bool connected =
+        running && impl_->mcpActivity.isValid() && impl_->mcpActivity.elapsed() < connectedWindowMs;
+    impl_->header->showAssistant(!running    ? AssistantState::off
                                  : connected ? AssistantState::connected
                                              : AssistantState::ready);
     impl_->mcpAction->setChecked(running);
     impl_->mcpCopyAction->setEnabled(running);
-    impl_->mcpAddress->setText(running ? impl_->mcp->url().replace(QStringLiteral("/mcp"), QString())
-                                       : tr("Aus – kein offener Port"));
+    impl_->mcpAddress->setText(running
+                                   ? impl_->mcp->url().replace(QStringLiteral("/mcp"), QString())
+                                   : tr("Aus – kein offener Port"));
 }
 
 void MainWindow::announceExternalChange(const application::ActionResult& result) {
@@ -177,19 +178,18 @@ void MainWindow::announceExternalChange(const application::ActionResult& result)
         subject = featureNames(impl_->session, result.changedFeatures);
         verb = tr("geändert");
     } else {
-        subject = tr("Parameter %1").arg(parameterNames(
-            impl_->session,
-            result.createdParameters.empty() ? result.changedParameters : result.createdParameters));
+        subject = tr("Parameter %1")
+                      .arg(parameterNames(impl_->session, result.createdParameters.empty()
+                                                              ? result.changedParameters
+                                                              : result.createdParameters));
         verb = result.createdParameters.empty() ? tr("geändert") : tr("angelegt");
     }
-    statusBar()->showMessage(
-        tr("Claude: %1 %2 – Strg+Z nimmt es zurück").arg(subject, verb), 8000);
+    statusBar()->showMessage(tr("Claude: %1 %2 – Strg+Z nimmt es zurück").arg(subject, verb), 8000);
     impl_->header->flashAssistant();
     std::vector<document::FeatureId> marked = result.createdFeatures;
     marked.insert(marked.end(), result.changedFeatures.begin(), result.changedFeatures.end());
     impl_->modelTree->flashFeatures(marked, themeTokens(impl_->themeMode).accent);
 }
-
 
 // AI03b: the Claude panel at the right. Claude Code runs per message against this window's
 // MCP server with a token per run; Stop and a document change revoke it.
@@ -228,16 +228,15 @@ void MainWindow::createAssistantPanel() {
                                           event.kind != assistant::AssistantEvent::Kind::failed &&
                                           event.kind != assistant::AssistantEvent::Kind::cancelled);
     });
-    impl_->assistantPanel->setHandlers(
-        {[this](const QString& message, bool withSelection) {
-             sendToAssistant(message, withSelection);
-         },
-         [this] { impl_->assistantBackend->cancel(); },
-         [this] {
-             impl_->assistantBackend->cancel();
-             impl_->assistantBackend->reset();
-             impl_->assistantPanel->clear();
-         }});
+    impl_->assistantPanel->setHandlers({[this](const QString& message, bool withSelection) {
+                                            sendToAssistant(message, withSelection);
+                                        },
+                                        [this] { impl_->assistantBackend->cancel(); },
+                                        [this] {
+                                            impl_->assistantBackend->cancel();
+                                            impl_->assistantBackend->reset();
+                                            impl_->assistantPanel->clear();
+                                        }});
     impl_->assistantGeneration = impl_->session.sceneStatus().document.generation;
 }
 

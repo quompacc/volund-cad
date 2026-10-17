@@ -65,9 +65,8 @@ SketchEditorSession::SketchEditorSession(CadSession& session, document::FeatureI
                                          document::SketchParameters parameters)
     : session_(session), supportFeature_(supportFeature), plane_(parameters.plane),
       supportBinding_(parameters.supportBinding), elements_(std::move(parameters.elements)),
-      constraints_(std::move(parameters.constraints)),
-      patterns_(std::move(parameters.patterns)), projections_(std::move(parameters.projections)),
-      editingFeature_(sketchFeature) {
+      constraints_(std::move(parameters.constraints)), patterns_(std::move(parameters.patterns)),
+      projections_(std::move(parameters.projections)), editingFeature_(sketchFeature) {
     refreshProjectedGeometry();
     if (parameters.repairReason)
         throw std::invalid_argument(
@@ -87,15 +86,16 @@ SketchEditorSession::SketchEditorSession(CadSession& session, document::DatumPla
 
 SketchEditorSession::SketchEditorSession(CadSession& session, document::SketchPlane plane,
                                          document::FeatureId constructionPlane)
-    : session_(session), constructionPlane_(constructionPlane), plane_(plane) { commitHistory(); }
+    : session_(session), constructionPlane_(constructionPlane), plane_(plane) {
+    commitHistory();
+}
 
 SketchEditorSession::SketchEditorSession(CadSession& session, document::FeatureId sketchFeature,
                                          document::SketchParameters parameters)
-    : session_(session), datum_(parameters.datum),
-      constructionPlane_(parameters.constructionPlane), plane_(parameters.plane),
-      elements_(std::move(parameters.elements)), constraints_(std::move(parameters.constraints)),
-      patterns_(std::move(parameters.patterns)), projections_(std::move(parameters.projections)),
-      editingFeature_(sketchFeature) {
+    : session_(session), datum_(parameters.datum), constructionPlane_(parameters.constructionPlane),
+      plane_(parameters.plane), elements_(std::move(parameters.elements)),
+      constraints_(std::move(parameters.constraints)), patterns_(std::move(parameters.patterns)),
+      projections_(std::move(parameters.projections)), editingFeature_(sketchFeature) {
     refreshProjectedGeometry();
     if (!datum_ && !constructionPlane_)
         throw std::invalid_argument("Only base-plane sketches are edited without a support");
@@ -488,7 +488,8 @@ bool SketchEditorSession::removeSelected() {
     });
     std::erase_if(elements_.values,
                   [&named](const document::SketchElement& element) { return named(element.id); });
-    std::erase_if(projections_, [&named](const auto& projection) { return named(projection.element); });
+    std::erase_if(projections_,
+                  [&named](const auto& projection) { return named(projection.element); });
     selectedElement_.reset();
     selectedReferences_.clear();
     clearPreview();

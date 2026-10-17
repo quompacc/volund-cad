@@ -14,8 +14,8 @@
 namespace voelund::features::detail {
 namespace {
 
-kernel::ShapeOperationResult apply(document::CombineOperation operation,
-                                   const TopoDS_Shape& target, const TopoDS_Shape& tool) {
+kernel::ShapeOperationResult apply(document::CombineOperation operation, const TopoDS_Shape& target,
+                                   const TopoDS_Shape& tool) {
     switch (operation) {
     case document::CombineOperation::join:
         return kernel::ShapeOperations::fuseWithHistory(target, tool);
@@ -43,7 +43,8 @@ void combine(Combined& result, document::CombineOperation operation, const TopoD
         continueSupportOrigins(toolFaces, evaluated, kernel::HistoryOperand::second);
     faces.insert(faces.end(), addedFaces.begin(), addedFaces.end());
     auto edges = continueEdgeOrigins(result.edges, evaluated, kernel::HistoryOperand::first);
-    const auto addedEdges = continueEdgeOrigins(toolEdges, evaluated, kernel::HistoryOperand::second);
+    const auto addedEdges =
+        continueEdgeOrigins(toolEdges, evaluated, kernel::HistoryOperand::second);
     edges.insert(edges.end(), addedEdges.begin(), addedEdges.end());
     result = {evaluated.shape, std::move(faces), std::move(edges)};
 }

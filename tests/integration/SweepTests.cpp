@@ -71,11 +71,12 @@ void straight() {
     session.newDocument();
     const auto profile =
         datumSketch(session, document::DatumPlane::xy, {document::SketchCircle{{0, 0}, 3}});
-    const auto path = datumSketch(session, document::DatumPlane::xz,
-                                  {document::SketchLine{{0, 0}, {0, 50}}});
+    const auto path =
+        datumSketch(session, document::DatumPlane::xz, {document::SketchLine{{0, 0}, {0, 50}}});
     const auto feature = sweep(session, profile, path, 1);
     require(session.features().back().name == "Folgen 1", "Named Folgen 1");
-    require(near(total(session), pi * 9 * 50), "A cylinder of 50: " + std::to_string(total(session)));
+    require(near(total(session), pi * 9 * 50),
+            "A cylinder of 50: " + std::to_string(total(session)));
 
     auto longer = session.sketchParameters(path);
     std::get<document::SketchLine>(longer.elements.values.front().geometry).end = {0, 80};
@@ -105,16 +106,15 @@ void lPath() {
     session.newDocument();
     const auto profile =
         datumSketch(session, document::DatumPlane::xy, {document::SketchCircle{{0, 0}, 3}});
-    const auto path = datumSketch(
-        session, document::DatumPlane::xz,
-        {document::SketchLine{{0, 0}, {0, 30}},
-         document::SketchArc{{10, 30}, 10, pi / 2, pi},
-         document::SketchLine{{10, 40}, {40, 40}}});
+    const auto path = datumSketch(session, document::DatumPlane::xz,
+                                  {document::SketchLine{{0, 0}, {0, 30}},
+                                   document::SketchArc{{10, 30}, 10, pi / 2, pi},
+                                   document::SketchLine{{10, 40}, {40, 40}}});
     static_cast<void>(sweep(session, profile, path, 3));
     // Pappus: the tube along a centre line of 30 + quarter circle + 30.
     const double centre = 30 + pi * 10 / 2 + 30;
-    require(near(total(session), pi * 9 * centre), "Along an L path with an arc: " +
-                                                       std::to_string(total(session)));
+    require(near(total(session), pi * 9 * centre),
+            "Along an L path with an arc: " + std::to_string(total(session)));
 }
 
 void groove() {
@@ -122,10 +122,10 @@ void groove() {
     session.newDocument();
     const auto box = *session.createBoxFeature({40, 20, 10}).feature();
     // A circle of radius 3 on YZ at the box top, swept along x through the box.
-    const auto profile = datumSketch(session, document::DatumPlane::yz,
-                                     {document::SketchCircle{{10, 10}, 3}});
-    const auto path = datumSketch(session, document::DatumPlane::xy,
-                                  {document::SketchLine{{0, 10}, {40, 10}}});
+    const auto profile =
+        datumSketch(session, document::DatumPlane::yz, {document::SketchCircle{{10, 10}, 3}});
+    const auto path =
+        datumSketch(session, document::DatumPlane::xy, {document::SketchLine{{0, 10}, {40, 10}}});
     const auto before = total(session);
     static_cast<void>(sweep(session, profile, path, 1, document::ExtrusionOperation::cut,
                             document::BodyId{box.value()}));
@@ -133,11 +133,10 @@ void groove() {
 
     // A path of two lines that do not touch is a localized error.
     auto broken = session.sketchParameters(path);
-    broken.elements.values.push_back(
-        {document::SketchElementId{broken.elements.nextId++},
-         document::SketchLine{{50, 10}, {60, 10}}});
-    auto parameters = session.identifiedSnapshot().snapshot().extrusionParameters(
-        session.features().back().id);
+    broken.elements.values.push_back({document::SketchElementId{broken.elements.nextId++},
+                                      document::SketchLine{{50, 10}, {60, 10}}});
+    auto parameters =
+        session.identifiedSnapshot().snapshot().extrusionParameters(session.features().back().id);
     parameters.sweep->elements.push_back(document::SketchElementId{2});
     require(session.editSketchParameters(path, broken).status() == CommandStatus::committed,
             "A second, separate line");

@@ -5,8 +5,8 @@
 #include <utility>
 #include <variant>
 #include <vector>
-#include <voelund/document/ParameterId.hpp>
 #include <voelund/document/EdgeReference.hpp>
+#include <voelund/document/ParameterId.hpp>
 #include <voelund/kernel/Angle.hpp>
 
 namespace voelund::document {

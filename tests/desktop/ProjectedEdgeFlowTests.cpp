@@ -1,8 +1,8 @@
-#include "IsolatedSettings.hpp"
 #include "../../src/desktop/SketchEditorToolController.hpp"
 #include "../../src/desktop/SketchViewAdapter.hpp"
 #include "../../src/desktop/ToolPanelHost.hpp"
 #include "../../src/viewport/PlanarFaceSelection.hpp"
+#include "IsolatedSettings.hpp"
 #include <QAction>
 #include <QApplication>
 #include <QDir>

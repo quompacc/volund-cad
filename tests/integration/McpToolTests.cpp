@@ -33,7 +33,8 @@ std::string text(const QJsonObject& object) {
 
 class Client final {
   public:
-    explicit Client(application::CadSession& session) : host(session, [this](const auto&) { ++changes; }) {}
+    explicit Client(application::CadSession& session)
+        : host(session, [this](const auto&) { ++changes; }) {}
     QJsonObject context() { return raw("get_context", {}); }
     // The request envelope on the current stamp.
     QJsonObject call(const QString& tool, QJsonObject arguments, QString requestId = {}) {
@@ -50,11 +51,11 @@ class Client final {
         const auto result = host.callTool(tool, arguments);
         const auto structured = result.value("structuredContent").toObject();
         const auto content = result.value("content").toArray();
-        require(content.size() == 1 &&
-                    QJsonDocument::fromJson(
-                        content.at(0).toObject().value("text").toString().toUtf8())
-                            .object() == structured,
-                "Text content mirrors the structured content");
+        require(
+            content.size() == 1 &&
+                QJsonDocument::fromJson(content.at(0).toObject().value("text").toString().toUtf8())
+                        .object() == structured,
+            "Text content mirrors the structured content");
         isError = result.value("isError").toBool();
         return structured;
     }
@@ -124,12 +125,15 @@ void plateWithBore() {
     Client client(session);
     const auto context = client.context();
     require(context.value("documentId").toString().size() == 32 &&
-                context.value("available").toObject().value("document").toArray().contains(
-                    QStringLiteral("create_sketch_extrusion")),
+                context.value("available")
+                    .toObject()
+                    .value("document")
+                    .toArray()
+                    .contains(QStringLiteral("create_sketch_extrusion")),
             "Context names the document and the tools on it");
 
-    auto result = client.committed(
-        "create_parameter", {{"name", "A"}, {"unit", "length"}, {"value", mm(8)}});
+    auto result =
+        client.committed("create_parameter", {{"name", "A"}, {"unit", "length"}, {"value", mm(8)}});
     const int a = result.value("createdParameters").toArray().at(0).toInt();
     result = client.committed("create_sketch_extrusion",
                               {{"sketch", plateSketch(a)}, {"distance", mm(10)}});
@@ -142,11 +146,16 @@ void plateWithBore() {
     require(near(test::volumeOf(session.currentShape()), plateVolume(10, 10)),
             "The bore follows A");
     const auto sketch = client.context().value("features").toArray().at(0).toObject();
-    const auto stored = session.sketchParameters(document::FeatureId{
-        static_cast<std::uint64_t>(sketch.value("id").toInteger())});
-    const auto& center = std::get<document::SketchCircle>(stored.elements.values[1].geometry).center;
-    const auto constraints =
-        sketch.value("parameters").toObject().value("sketch").toObject().value("constraints").toArray();
+    const auto stored = session.sketchParameters(
+        document::FeatureId{static_cast<std::uint64_t>(sketch.value("id").toInteger())});
+    const auto& center =
+        std::get<document::SketchCircle>(stored.elements.values[1].geometry).center;
+    const auto constraints = sketch.value("parameters")
+                                 .toObject()
+                                 .value("sketch")
+                                 .toObject()
+                                 .value("constraints")
+                                 .toArray();
     require(std::abs(center.x) < 1e-9 && std::abs(center.y) < 1e-9 && constraints.size() == 3 &&
                 constraints.at(1).toObject().value("value").toObject().value("value") == 0,
             "Coordinates fix the bore center and appear in the context with their value");
@@ -163,9 +172,8 @@ void plateWithBore() {
                 client.changes == 3,
             "A retried request does not change the document again");
     // Preview: evaluated on a copy only.
-    auto preview = client.call("set_parameter_value", {{"parameterId", a},
-                                                        {"value", mm(5)},
-                                                        {"preview", true}});
+    auto preview = client.call("set_parameter_value",
+                               {{"parameterId", a}, {"value", mm(5)}, {"preview", true}});
     require(preview.value("preview").toBool() &&
                 preview.value("status") == QLatin1String("committed") &&
                 session.sceneStatus().document == before && client.changes == 3 &&
@@ -245,18 +253,17 @@ void ribOnPlate() {
                                                               {"type", "rectangle"},
                                                               {"first", onFace(face, -30, 12)},
                                                               {"second", onFace(face, 30, 16)}}}}};
-    result = client.committed("create_sketch_on_face", {{"supportId", plateExtrusion},
-                                                        {"face", face.value("face")},
-                                                        {"sketch", rib}});
-    const int ribSketch = result.value("feature").toInt();
-    const auto ribRegions = client.context().value("features").toArray().at(2).toObject().value(
-        "regions").toArray();
-    require(ribRegions.size() == 1, "The rib sketch has one region");
     result = client.committed(
-        "create_profile_extrusion",
-        {{"sketchId", ribSketch},
-         {"regions", QJsonArray{ribRegions.at(0).toObject().value("id")}},
-         {"distance", mm(8)}});
+        "create_sketch_on_face",
+        {{"supportId", plateExtrusion}, {"face", face.value("face")}, {"sketch", rib}});
+    const int ribSketch = result.value("feature").toInt();
+    const auto ribRegions =
+        client.context().value("features").toArray().at(2).toObject().value("regions").toArray();
+    require(ribRegions.size() == 1, "The rib sketch has one region");
+    result = client.committed("create_profile_extrusion",
+                              {{"sketchId", ribSketch},
+                               {"regions", QJsonArray{ribRegions.at(0).toObject().value("id")}},
+                               {"distance", mm(8)}});
     const double plateVolume = (80.0 * 40.0 - std::numbers::pi * 64.0) * 10.0;
     require(session.validBodies().size() == 1 &&
                 near(test::volumeOf(session.currentShape()), plateVolume + 60.0 * 4.0 * 8.0) &&
@@ -278,21 +285,21 @@ void ribOnPlate() {
     // A role on an extrusion face, and a support that is no body's latest result.
     const auto before = session.sceneStatus().document;
     const auto changes = client.changes;
-    const auto support = client.context().value("bodies").toArray().at(0).toObject().value("supportId");
+    const auto support =
+        client.context().value("bodies").toArray().at(0).toObject().value("supportId");
     result = client.call("create_sketch_on_face",
                          {{"supportId", support},
                           {"face", QJsonObject{{"feature", plateExtrusion}, {"role", "+z"}}},
                           {"sketch", rib}});
     require(client.isError && result.value("field") == QLatin1String("face"),
             "An unknown face is an argument error: " + text(result));
-    result = client.call("create_sketch_on_face", {{"supportId", plateExtrusion},
-                                                   {"face", face.value("face")},
-                                                   {"sketch", rib}});
+    result =
+        client.call("create_sketch_on_face",
+                    {{"supportId", plateExtrusion}, {"face", face.value("face")}, {"sketch", rib}});
     require(client.isError && result.value("field") == QLatin1String("supportId"),
             "An earlier result offers no faces: " + text(result));
-    result = client.call("create_sketch_on_face", {{"supportId", 77},
-                                                   {"face", face.value("face")},
-                                                   {"sketch", rib}});
+    result = client.call("create_sketch_on_face",
+                         {{"supportId", 77}, {"face", face.value("face")}, {"sketch", rib}});
     require(result.value("rejection") == QLatin1String("unknownTarget"),
             "An unknown support is rejected: " + text(result));
     require(session.sceneStatus().document == before && client.changes == changes,
@@ -317,28 +324,32 @@ void extrusionOperations() {
     const int plateExtrusion = result.value("createdFeatures").toArray().at(1).toInt();
     auto context = client.context();
     const auto body = context.value("bodies").toArray().at(0).toObject().value("id");
-    auto parameters = context.value("features").toArray().at(1).toObject().value("parameters").toObject();
+    auto parameters =
+        context.value("features").toArray().at(1).toObject().value("parameters").toObject();
     require(parameters.value("operation") == QLatin1String("newBody") &&
                 parameters.value("direction") == QLatin1String("normal"),
             "An extrusion without a choice reports the earlier rule: " + text(parameters));
 
     const auto face = topFace(context);
-    const QJsonObject pocket{{"elements", QJsonArray{QJsonObject{{"id", 1},
-                                                                 {"type", "rectangle"},
-                                                                 {"first", onFace(face, -10, 5)},
-                                                                 {"second", onFace(face, 10, 15)}}}}};
-    result = client.committed("create_sketch_on_face", {{"supportId", plateExtrusion},
-                                                        {"face", face.value("face")},
-                                                        {"sketch", pocket}});
+    const QJsonObject pocket{
+        {"elements", QJsonArray{QJsonObject{{"id", 1},
+                                            {"type", "rectangle"},
+                                            {"first", onFace(face, -10, 5)},
+                                            {"second", onFace(face, 10, 15)}}}}};
+    result = client.committed(
+        "create_sketch_on_face",
+        {{"supportId", plateExtrusion}, {"face", face.value("face")}, {"sketch", pocket}});
     const int pocketSketch = result.value("feature").toInt();
-    const auto regions = client.context().value("features").toArray().at(2).toObject().value("regions").toArray();
+    const auto regions =
+        client.context().value("features").toArray().at(2).toObject().value("regions").toArray();
     client.committed("create_profile_extrusion",
                      {{"sketchId", pocketSketch},
                       {"regions", QJsonArray{regions.at(0).toObject().value("id")}},
                       {"distance", mm(4)},
                       {"operation", "cut"},
                       {"direction", "reversed"}});
-    require(session.validBodies().size() == 1 && near(test::volumeOf(session.currentShape()), 32000 - 800),
+    require(session.validBodies().size() == 1 &&
+                near(test::volumeOf(session.currentShape()), 32000 - 800),
             "A pocket cut from the top face");
     // T03: the join ends on the plate's top face instead of after a distance.
     context = client.context();
@@ -351,7 +362,8 @@ void extrusionOperations() {
                                                  {"targetBodyId", body},
                                                  {"upToFace", upToTop}});
     context = client.context();
-    parameters = context.value("features").toArray().at(5).toObject().value("parameters").toObject();
+    parameters =
+        context.value("features").toArray().at(5).toObject().value("parameters").toObject();
     require(session.validBodies().size() == 1 &&
                 near(test::volumeOf(session.currentShape()), 32000 - 800 + 2000) &&
                 parameters.value("operation") == QLatin1String("join") &&
@@ -359,9 +371,9 @@ void extrusionOperations() {
                 parameters.value("upToFace").toObject().value("face") == upToTop.value("face") &&
                 context.value("bodies").toArray().size() == 1,
             "A base-plane join into the named body, up to its top face: " + text(parameters));
-    client.committed("create_sketch_extrusion", {{"sketch", rectangle(100, 0, 110, 10)},
-                                                 {"distance", mm(5)},
-                                                 {"offset", mm(20)}});
+    client.committed(
+        "create_sketch_extrusion",
+        {{"sketch", rectangle(100, 0, 110, 10)}, {"distance", mm(5)}, {"offset", mm(20)}});
     require(session.validBodies().size() == 2 && near(topOf(session.currentShape()), 25),
             "An offset lifts a new body to z = 20..25");
     const auto changes = client.changes;
@@ -412,15 +424,14 @@ void pushPull() {
     };
     const auto pullUp = [&](double distance) {
         const auto [support, face] = faceFacing(1);
-        return client.committed("push_pull_face", {{"supportId", support},
-                                                   {"face", face.value("face")},
-                                                   {"distance", mm(distance)}});
+        return client.committed(
+            "push_pull_face",
+            {{"supportId", support}, {"face", face.value("face")}, {"distance", mm(distance)}});
     };
     const auto first = pullUp(5).value("feature").toInt();
     const auto [support, top] = faceFacing(1);
     require(near(test::volumeOf(session.currentShape()), 30 * 20 * 15) && support == first &&
-                top.value("face").toObject() ==
-                    QJsonObject{{"feature", first}, {"cap", "end"}},
+                top.value("face").toObject() == QJsonObject{{"feature", first}, {"cap", "end"}},
             "A pull joins and offers its end face as a cap: " + text(top));
     pullUp(2);
     // T04b: a side of a pull comes as {"side": edge} and can be pulled. T05: the pull merged
@@ -433,16 +444,16 @@ void pushPull() {
                 item.toObject().value("face").toObject().contains("side"))
                 side = item.toObject().value("face").toObject();
         require(!side.isEmpty(), "A pull offers its sides by edge: " + text(body));
-        client.committed("push_pull_face", {{"supportId", body.value("supportId")},
-                                            {"face", side},
-                                            {"distance", mm(1)}});
+        client.committed(
+            "push_pull_face",
+            {{"supportId", body.value("supportId")}, {"face", side}, {"distance", mm(1)}});
         require(near(test::volumeOf(session.currentShape()), 30 * 20 * 17 + 1 * 20 * 17),
                 "Pulling the side of the first pull adds 1 x 20 x 17");
     }
     const auto [current, bottom] = faceFacing(-1);
-    client.committed("push_pull_face", {{"supportId", current},
-                                        {"face", bottom.value("face")},
-                                        {"distance", mm(-3)}});
+    client.committed(
+        "push_pull_face",
+        {{"supportId", current}, {"face", bottom.value("face")}, {"distance", mm(-3)}});
     require(session.validBodies().size() == 1 &&
                 near(test::volumeOf(session.currentShape()), 31 * 20 * 14),
             "The bottom faces down; pushing it cuts 3 mm from the whole bottom (31 x 20)");
@@ -456,8 +467,8 @@ void rejections() {
     const auto stamp = session.sceneStatus().document;
     const auto snapshot = session.identifiedSnapshot();
     const auto unchanged = [&](const std::string& message) {
-        require(session.sceneStatus().document == stamp && session.identifiedSnapshot() == snapshot &&
-                    client.changes == 1,
+        require(session.sceneStatus().document == stamp &&
+                    session.identifiedSnapshot() == snapshot && client.changes == 1,
                 message + ": no change");
     };
     const auto argumentError = [&](const QJsonObject& result, const QString& field,
@@ -469,8 +480,9 @@ void rejections() {
     };
 
     // Action layer rejections, the same as a direct call.
-    auto result = client.call("set_parameter_value",
-                              {{"parameterId", 1}, {"value", QJsonObject{{"value", 9}, {"unit", "deg"}}}});
+    auto result =
+        client.call("set_parameter_value",
+                    {{"parameterId", 1}, {"value", QJsonObject{{"value", 9}, {"unit", "deg"}}}});
     require(client.isError && result.value("rejection") == QLatin1String("invalidUnit"),
             "Wrong unit: " + text(result));
     unchanged("Wrong unit");
@@ -492,9 +504,10 @@ void rejections() {
     argumentError(client.raw("set_box_dimensions", missing), "requestId", "Missing requestId");
     argumentError(client.call("create_box", {{"width", mm(1)}, {"depth", "x"}, {"height", mm(1)}}),
                   "depth", "Wrong type");
-    argumentError(client.call("create_profile_extrusion",
-                              {{"sketchId", 1}, {"regions", QJsonArray{"nonsense"}}, {"distance", mm(1)}}),
-                  "regions[0]", "Bad region id");
+    argumentError(
+        client.call("create_profile_extrusion",
+                    {{"sketchId", 1}, {"regions", QJsonArray{"nonsense"}}, {"distance", mm(1)}}),
+        "regions[0]", "Bad region id");
     QJsonObject triangle{{"plane", "xy"},
                          {"elements", QJsonArray{QJsonObject{{"id", 1}, {"type", "spline"}}}}};
     argumentError(client.call("create_sketch", {{"sketch", triangle}}), "sketch.elements[0].type",
@@ -505,8 +518,10 @@ void rejections() {
         {"plane", "xy"},
         {"elements", QJsonArray{circle(1, 0, 5)}},
         {"constraints",
-         QJsonArray{QJsonObject{{"id", 1}, {"kind", "radius"}, {"first", reference}, {"value", mm(5)}},
-                    QJsonObject{{"id", 2}, {"kind", "diameter"}, {"first", reference}, {"value", mm(20)}}}}};
+         QJsonArray{
+             QJsonObject{{"id", 1}, {"kind", "radius"}, {"first", reference}, {"value", mm(5)}},
+             QJsonObject{
+                 {"id", 2}, {"kind", "diameter"}, {"first", reference}, {"value", mm(20)}}}}};
     argumentError(client.call("create_sketch", {{"sketch", conflicting}}), "sketch.constraints",
                   "Unsolvable sketch");
     conflicting.insert("plane", "xz");
@@ -539,20 +554,20 @@ void referenceDimension() {
                       {"distance", mm(5)}});
     const auto sketch = session.features().front().id;
     const auto evaluated = session.evaluatedSketch(sketch);
-    require(session.sketchParameters(sketch).constraints.values.front().reference &&
-                evaluated && std::abs(evaluated->constraints.values.front().value - 20) < 1e-9,
+    require(session.sketchParameters(sketch).constraints.values.front().reference && evaluated &&
+                std::abs(evaluated->constraints.values.front().value - 20) < 1e-9,
             "The reference diameter measures 20");
     const auto bound = client.call(
         "create_sketch_extrusion",
         {{"sketch", QJsonObject{{"plane", "xy"},
                                 {"elements", QJsonArray{circle(1, 0, 10)}},
-                                {"constraints", QJsonArray{QJsonObject{
-                                                    {"id", 1},
-                                                    {"kind", "diameter"},
-                                                    {"first", QJsonObject{{"element", 1},
-                                                                          {"point", "center"}}},
-                                                    {"parameterId", 1},
-                                                    {"reference", true}}}}}},
+                                {"constraints",
+                                 QJsonArray{QJsonObject{
+                                     {"id", 1},
+                                     {"kind", "diameter"},
+                                     {"first", QJsonObject{{"element", 1}, {"point", "center"}}},
+                                     {"parameterId", 1},
+                                     {"reference", true}}}}}},
          {"distance", mm(5)}});
     require(client.isError, "A bound reference is refused: " + text(bound));
 }

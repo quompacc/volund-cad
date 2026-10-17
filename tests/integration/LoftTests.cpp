@@ -30,7 +30,8 @@ double total(const application::CadSession& session) {
 }
 
 std::vector<document::SketchGeometry> square(double half) {
-    const document::SketchPoint corners[]{{-half, -half}, {half, -half}, {half, half}, {-half, half}};
+    const document::SketchPoint corners[]{
+        {-half, -half}, {half, -half}, {half, half}, {-half, half}};
     std::vector<document::SketchGeometry> lines;
     for (int index = 0; index < 4; ++index)
         lines.push_back(document::SketchLine{corners[index], corners[(index + 1) % 4]});

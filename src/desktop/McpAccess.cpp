@@ -98,9 +98,8 @@ void McpAccess::regenerateToken() {
 }
 
 QString McpAccess::url() const {
-    return server_.isListening()
-               ? server_.url()
-               : QStringLiteral("http://127.0.0.1:%1/mcp").arg(settings_.port);
+    return server_.isListening() ? server_.url()
+                                 : QStringLiteral("http://127.0.0.1:%1/mcp").arg(settings_.port);
 }
 
 QString McpAccess::claudeCommand() const {

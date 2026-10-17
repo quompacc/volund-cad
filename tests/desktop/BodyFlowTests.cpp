@@ -30,7 +30,9 @@ namespace {
 using namespace voelund;
 using test::press;
 using Kind = int; // ModelTreePanel::Kind values: 0 origin, 1 plane, 2 grid, 3 body
-void require(bool condition, const std::string& message) { test::require(condition, message.c_str()); }
+void require(bool condition, const std::string& message) {
+    test::require(condition, message.c_str());
+}
 
 struct Window final {
     application::CadSession session;
@@ -60,7 +62,8 @@ struct Window final {
     QToolButton& rail(const char* id) { return test::railButton(child("toolRail"), id); }
     QToolButton& context(const char* id) { return test::commandButton(child("contextBar"), id); }
     void ok() {
-        auto* button = child("activeToolPanel").findChild<QPushButton*>(QStringLiteral("toolAcceptButton"));
+        auto* button =
+            child("activeToolPanel").findChild<QPushButton*>(QStringLiteral("toolAcceptButton"));
         require(button != nullptr, "OK");
         press(*button);
     }
@@ -76,16 +79,18 @@ struct Window final {
         test::settleEvents();
     }
     void type(const char* field, double value) {
-        auto* input = child("activeToolPanel").findChild<QDoubleSpinBox*>(
-            QStringLiteral("toolLength_") + QLatin1String(field));
+        auto* input =
+            child("activeToolPanel")
+                .findChild<QDoubleSpinBox*>(QStringLiteral("toolLength_") + QLatin1String(field));
         require(input != nullptr && input->isVisible(), std::string("Field ") + field);
         input->setValue(value);
         emit input->editingFinished();
         test::settleEvents();
     }
     void choose(const char* field, const QString& text) {
-        auto* box = child("activeToolPanel").findChild<QComboBox*>(QStringLiteral("toolChoice_") +
-                                                                   QLatin1String(field));
+        auto* box =
+            child("activeToolPanel")
+                .findChild<QComboBox*>(QStringLiteral("toolChoice_") + QLatin1String(field));
         require(box != nullptr && box->isVisible() && box->findText(text) >= 0,
                 std::string("Choice ") + field + " " + text.toStdString());
         box->setCurrentIndex(box->findText(text));

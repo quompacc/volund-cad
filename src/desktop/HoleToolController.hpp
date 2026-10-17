@@ -37,7 +37,8 @@ class HoleToolController final {
     // A planar face picked while the panel is open moves the hole to the click point.
     void place(const viewport::PlanarFaceSelection& face);
     void cancel();
-    void setPreviewHandler(std::function<void(const std::vector<features::EvaluatedBody>*)> handler);
+    void
+    setPreviewHandler(std::function<void(const std::vector<features::EvaluatedBody>*)> handler);
 
   private:
     // The face's frame coordinates of a model point on it; none for a face not offered.

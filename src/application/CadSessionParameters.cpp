@@ -104,8 +104,9 @@ bool CadSession::mirrorParameter(document::ModelDocument& candidate,
     return changed;
 }
 
-CommandResult CadSession::commitParameterEdit(
-    const std::function<bool(document::ModelDocument&)>& edit, ErrorDisposition disposition) {
+CommandResult
+CadSession::commitParameterEdit(const std::function<bool(document::ModelDocument&)>& edit,
+                                ErrorDisposition disposition) {
     document::DocumentTransaction transaction(document_);
     const auto input = detail::prepareInput([&] { return edit(transaction.edit()); });
     if (!input.value)
@@ -144,7 +145,9 @@ CommandResult CadSession::setParameterValue(document::ParameterId id, double val
 
 CommandResult CadSession::renameBody(document::BodyId body, std::string name) {
     return commitParameterEdit(
-        [&](document::ModelDocument& candidate) { return candidate.renameBody(body, std::move(name)); },
+        [&](document::ModelDocument& candidate) {
+            return candidate.renameBody(body, std::move(name));
+        },
         ErrorDisposition::reject);
 }
 

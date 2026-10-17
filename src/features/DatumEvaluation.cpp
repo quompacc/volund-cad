@@ -71,8 +71,7 @@ AxisLine datumAxisLine(const document::DocumentSnapshot& document, document::Fea
         return {curve.Value(curve.FirstParameter()), curve.Line().Direction()};
     if (curve.GetType() == GeomAbs_Circle)
         return {curve.Circle().Location(), curve.Circle().Axis().Direction()};
-    throw GeometryEvaluationError("An axis lies on a straight or circular edge",
-                                  "datum-axis-edge");
+    throw GeometryEvaluationError("An axis lies on a straight or circular edge", "datum-axis-edge");
 }
 
 void evaluateDatumPlane(const document::DocumentSnapshot& document,
@@ -104,8 +103,8 @@ void evaluateDatumPlane(const document::DocumentSnapshot& document,
 void evaluateDatumAxis(const document::DocumentSnapshot& document,
                        const document::FeatureDescriptor& descriptor,
                        std::vector<EvaluatedFeature>& outputs) {
-    const auto [origin, direction] =
-        datumAxisLine(document, descriptor.id, document.datumAxisParameters(descriptor.id), outputs);
+    const auto [origin, direction] = datumAxisLine(
+        document, descriptor.id, document.datumAxisParameters(descriptor.id), outputs);
     // Any direction across the axis completes the frame.
     const gp_Dir across = std::abs(direction.Z()) < 0.9 ? gp_Dir(0, 0, 1).Crossed(direction)
                                                         : gp_Dir(1, 0, 0).Crossed(direction);
