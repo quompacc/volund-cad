@@ -227,7 +227,7 @@
       ],
       "acceptance": "Eine absichtlich verletzende Mini-Fixture pro Regel wird erkannt; saubere Fixture besteht. Ausnahmen haben Pfad, Grund und Geltungsbereich. Entscheidung über Werkzeug mit Version und Lizenz ist dokumentiert.",
       "boundary": "Keine neue Dependency ohne die bestehende ADR-Regel; keine Automatik, die Code durch Umformatieren fachlich verändert.",
-      "status": "needs-design",
+      "status": "done",
       "gate": "G0",
       "chapter": "03-fundament.md",
       "kind": "design-and-proof",
@@ -235,7 +235,8 @@
         "evidence/A02.md",
         "evidence/review-A02-A05-A07.md"
       ],
-      "completedCommit": null
+      "completedCommit": "9004b1a",
+      "completedDate": "2026-10-17"
     },
     {
       "id": "A03",

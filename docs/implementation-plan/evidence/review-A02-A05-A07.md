@@ -4,7 +4,8 @@
 
 **Nachtrag:** A07/R4 ist inzwischen nach Korrektur, erweiterten Regressionen,
 frischem Windows-Build und CTest abgenommen; siehe [aktueller A07-Nachweis](A07.md).
-Die nachfolgende Gegenprüfung dokumentiert den damaligen Befund. A02 bleibt offen.
+Die nachfolgende Gegenprüfung dokumentiert den damaligen Befund. A02 ist seit 17.10.2026
+abgenommen ([A02](A02.md)); R3 liegt bei A04.
 
 ## Ergebnis
 
