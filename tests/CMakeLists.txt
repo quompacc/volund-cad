@@ -1338,6 +1338,17 @@ if(VOELUND_BUILD_DESKTOP)
     add_test(NAME unit.feature_issue_text COMMAND voelund_feature_issue_text_tests)
     set_tests_properties(unit.feature_issue_text PROPERTIES LABELS "unit;regression" TIMEOUT 30)
 endif()
+# L06 (A-PERF-01): load stages; the full series runs by hand (tools/run-perf.sh), CTest only
+# keeps the smallest stages working.
+add_executable(voelund_perf_bench perf/PerfBench.cpp)
+target_link_libraries(voelund_perf_bench PRIVATE voelund_project_options Voelund::Application)
+if(WIN32)
+    target_link_libraries(voelund_perf_bench PRIVATE psapi)
+endif()
+foreach(stage sketch-100 features-10 bodies-10)
+    add_test(NAME perf.smoke.${stage} COMMAND voelund_perf_bench ${stage} "${CMAKE_CURRENT_BINARY_DIR}")
+    set_tests_properties(perf.smoke.${stage} PROPERTIES LABELS "perf;smoke" TIMEOUT 300)
+endforeach()
 # Q01: NIST test parts as an outside reference for STEP import.
 add_executable(voelund_nist_step_tests differential/NistStepTests.cpp)
 target_link_libraries(voelund_nist_step_tests PRIVATE voelund_project_options Voelund::Kernel TKDESTEP)
