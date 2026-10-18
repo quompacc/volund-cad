@@ -120,6 +120,16 @@ void incremental() {
                 failed->report.features[5].status == features::EvaluationStatus::valid &&
                 failed->result.bodies.size() == 1,
             "Failure did not isolate actual dependent nodes/body");
+    // L06: an appended feature is the only one evaluated; the earlier ones keep their results
+    // and statuses, the failure included.
+    evaluations.clear();
+    const auto appended = model.addBoxFeature("Appended", {4, 4, 4});
+    const auto extended =
+        graph.evaluateDetailed(document::DocumentSnapshot::capture(model), failed);
+    require(evaluations == std::map<std::uint64_t, int>{{appended.value(), 1}} &&
+                extended->report.features[2].status == features::EvaluationStatus::failed &&
+                extended->report.features.back().status == features::EvaluationStatus::valid,
+            "Appending a feature reevaluated earlier ones");
 }
 void validB(const application::CadSession& session, double volume) {
     const auto bodies = session.validBodies();

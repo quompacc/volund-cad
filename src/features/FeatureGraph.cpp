@@ -427,13 +427,19 @@ std::vector<bool> dirtyNodes(const FeatureGraphEvaluation& next,
                              const std::shared_ptr<const FeatureGraphEvaluation>& previous) {
     const auto features = next.snapshot.features();
     // M14: a moved rollback marker changes which features are evaluated at all.
-    if (!previous ||
-        !std::ranges::equal(next.dependencies.nodes(), previous->dependencies.nodes()) ||
-        next.snapshot.rollbackAfter() != previous->snapshot.rollbackAfter())
+    if (!previous || next.snapshot.rollbackAfter() != previous->snapshot.rollbackAfter())
         return std::vector<bool>(features.size(), true);
+    // L06: appended features (a new one, its companions) leave the earlier ones at their
+    // indices, so those stay valid unless their own node or parameters changed. Inserting,
+    // deleting or reordering evaluates everything again.
+    const auto before = previous->dependencies.nodes();
+    const auto now = next.dependencies.nodes();
+    if (now.size() < before.size() || !std::ranges::equal(now.first(before.size()), before))
+        return std::vector<bool>(features.size(), true);
+    const auto earlier = previous->snapshot.features();
     std::vector<document::FeatureId> changed;
     for (std::size_t i = 0; i < features.size(); ++i)
-        if (features[i] != previous->snapshot.features()[i] ||
+        if (i >= earlier.size() || features[i] != earlier[i] ||
             next.snapshot.parameters()[i] != previous->snapshot.parameters()[i])
             changed.push_back(features[i].id);
     return next.dependencies.affected(changed);

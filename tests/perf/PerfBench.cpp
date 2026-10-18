@@ -2,7 +2,7 @@
 //
 //   voelund_perf_bench <stage> [<work directory>]
 //   stages: sketch-100 sketch-1000 features-10 features-100 features-500 bodies-1 bodies-10
-//           bodies-100
+//           bodies-100 part-100
 //
 // One stage per process, so peak memory belongs to it. Every result line reads
 //   stage=<stage> metric=<name> value=<number> unit=<unit>
@@ -11,6 +11,9 @@
 #include <voelund/application/CadSession.hpp>
 #include <voelund/features/SketchConstraintSolver.hpp>
 #include <voelund/features/SketchRegionIdentity.hpp>
+#include <voelund/features/SketchSupportBinding.hpp>
+
+#include <gp_Vec.hxx>
 
 #include <algorithm>
 #include <array>
@@ -277,6 +280,86 @@ void bodyStage(application::CadSession& session, std::size_t count) {
     reportSeries("edit_one_body_recompute", edits);
 }
 
+// The planar face of `support` whose outward normal is `normal`.
+features::SupportFaceFrame faceWithNormal(const application::CadSession& session,
+                                          document::FeatureId support,
+                                          const std::array<double, 3>& normal) {
+    for (const auto& candidate : session.supportFaces(support))
+        if (!candidate.secondary && std::abs(candidate.plane.normalX - normal[0]) < 1e-9 &&
+            std::abs(candidate.plane.normalY - normal[1]) < 1e-9 &&
+            std::abs(candidate.plane.normalZ - normal[2]) < 1e-9)
+            return candidate;
+    throw std::runtime_error("No face with this normal");
+}
+
+// A hole whose axis meets `face` at the world point `at`, in the face frame's coordinates.
+document::FeatureId holeAt(application::CadSession& session, document::FeatureId support,
+                           const std::array<double, 3>& normal, const std::array<double, 3>& at,
+                           std::optional<double> depth) {
+    const auto face = faceWithNormal(session, support, normal);
+    const auto& plane = face.plane;
+    const gp_Vec offset(at[0] - plane.originX, at[1] - plane.originY, at[2] - plane.originZ);
+    const gp_Vec xAxis(plane.xDirectionX, plane.xDirectionY, plane.xDirectionZ);
+    const gp_Vec yAxis = gp_Vec(plane.normalX, plane.normalY, plane.normalZ).Crossed(xAxis);
+    return committed(
+        session.createHole(support, face.origin, offset.Dot(xAxis), offset.Dot(yAxis), 6, depth),
+        "Hole");
+}
+
+// One body of a typical part: a 100 x 60 x 20 block, nine holes on top and nine in front
+// (through and blind in turn), the four vertical edges rounded: 20 features.
+std::pair<document::FeatureId, document::FeatureId>
+partBody(application::CadSession& session, double x, std::vector<double>& creates) {
+    const auto box = committed(session.createBoxFeature({100, 60, 20}), "Block");
+    document::BoxParameters placed{
+        {100, 60, 20}, {x, 0, 0, kernel::Radians{0}, kernel::Radians{0}, kernel::Radians{0}}};
+    const auto moved = session.editBoxParameters(box, placed);
+    if (moved.status() != CommandStatus::committed &&
+        moved.reason() != application::RejectionReason::noChange)
+        throw std::runtime_error("Block placement");
+    auto last = box;
+    for (int index = 0; index < 18; ++index) {
+        const bool top = index < 9;
+        const double along = x + 15 + static_cast<double>(index % 9) * 9;
+        const std::optional<double> depth =
+            index % 2 == 0 ? std::nullopt : std::optional<double>(8.0);
+        creates.push_back(milliseconds([&] {
+            last = top ? holeAt(session, last, {0, 0, 1}, {along, 30, 20}, depth)
+                       : holeAt(session, last, {0, -1, 0}, {along, 0, 10}, depth);
+        }));
+    }
+    std::vector<document::FilletEdge> corners;
+    for (const double sx : {1.0, -1.0})
+        for (const double sy : {1.0, -1.0})
+            corners.push_back({faceWithNormal(session, last, {sx, 0, 0}).origin,
+                               faceWithNormal(session, last, {0, sy, 0}).origin});
+    creates.push_back(
+        milliseconds([&] { last = committed(session.createFillet(last, corners, 3), "Fillet"); }));
+    return {box, last};
+}
+
+// L06: a typical part of 100 features on five independent bodies.
+void partStage(application::CadSession& session) {
+    std::vector<double> creates;
+    std::vector<std::pair<document::FeatureId, document::FeatureId>> bodies;
+    for (int index = 0; index < 5; ++index)
+        bodies.push_back(partBody(session, index * 150.0, creates));
+    report("features", static_cast<double>(session.features().size()), "count");
+    reportSeries("add_feature", creates);
+    std::vector<double> first;
+    for (int repeat = 0; repeat < 5; ++repeat) {
+        document::BoxParameters parameters{
+            {100, 60, 20.0 + (repeat % 2 == 0 ? 1 : 0)},
+            {0, 0, 0, kernel::Radians{0}, kernel::Radians{0}, kernel::Radians{0}}};
+        first.push_back(milliseconds([&] {
+            if (session.editBoxParameters(bodies.front().first, parameters).status() !=
+                CommandStatus::committed)
+                throw std::runtime_error("Block edit");
+        }));
+    }
+    reportSeries("edit_first_body_base_recompute", first);
+}
+
 void fileStage(application::CadSession& session, const std::filesystem::path& directory) {
     const auto file = directory / ("perf-" + stageName + ".volund");
     report("save", milliseconds([&] { session.saveDocument(file); }), "ms");
@@ -301,6 +384,7 @@ const std::map<std::string, std::function<void(application::CadSession&)>> stage
     {"bodies-1", [](auto& session) { bodyStage(session, 1); }},
     {"bodies-10", [](auto& session) { bodyStage(session, 10); }},
     {"bodies-100", [](auto& session) { bodyStage(session, 100); }},
+    {"part-100", [](auto& session) { partStage(session); }},
 };
 
 } // namespace

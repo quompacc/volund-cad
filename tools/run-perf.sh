@@ -26,7 +26,7 @@ trap 'rm -rf "$work"' EXIT
     echo "# os $(sed -n 's/^PRETTY_NAME=//p' /etc/os-release), load $(cut -d' ' -f1-3 /proc/loadavg)"
 } >"$report"
 for stage in sketch-100 sketch-1000 features-10 features-100 features-500 bodies-1 bodies-10 \
-    bodies-100; do
+    bodies-100 part-100; do
     echo "running $stage" >&2
     # A stage that does not finish within the limit is itself a result (e.g. features-500).
     if ! timeout "${VOELUND_PERF_STAGE_LIMIT:-900}" "$bench" "$stage" "$work" >"$work/out.txt" 2>&1; then

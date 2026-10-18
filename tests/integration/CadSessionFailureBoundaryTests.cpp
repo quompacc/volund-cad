@@ -35,10 +35,22 @@ void kernelFailure(document::FeatureId id) {
     if (id == document::ModelDocument::initialCylinderId())
         throw kernel::KernelError(kernel::KernelOperation::fuse, "injected geometry failure");
 }
-template <class Error, class Operation> void expectException(Operation operation) {
+// L06: an appended feature is evaluated alone, so a creation fails in the new feature itself.
+template <class Error> void injectNew(document::FeatureId id) {
+    if (id == document::ModelDocument::initialBoxId() ||
+        id == document::ModelDocument::initialCylinderId())
+        return;
+    if constexpr (std::is_same_v<Error, std::bad_alloc>)
+        throw Error{};
+    else
+        throw Error("injected evaluation failure");
+}
+template <class Error, class Operation>
+void expectException(Operation operation,
+                     void (*hookFunction)(document::FeatureId) = inject<Error>) {
     bool caught = false;
     try {
-        Hook hook(inject<Error>);
+        Hook hook(hookFunction);
         operation();
     } catch (const Error&) {
         caught = true;
@@ -65,7 +77,8 @@ template <class Error> void rollback() {
                 session.selectedFeature() == selection && session.currentShape().IsSame(shape) &&
                 session.selectedBoxParameters() == original,
             "failed parameter evaluation published state");
-    expectException<Error>([&] { static_cast<void>(session.createBoxFeature()); });
+    expectException<Error>([&] { static_cast<void>(session.createBoxFeature()); },
+                           injectNew<Error>);
     require(!session.isModified() && session.canRedo() && session.features().size() == 2,
             "failed creation published state");
     require(session.editSelectedBoxParameters(parameters).status() == CommandStatus::committed,
