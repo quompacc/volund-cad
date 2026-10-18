@@ -3052,12 +3052,15 @@
       ],
       "acceptance": "Version aus Paket und Laufzeit stimmt überein. Upgrade erhält Einstellungen/Dokumente; Uninstall löscht keine CAD-Dateien. Migration nicht nur im Testbinary bestanden.",
       "boundary": "Keine automatische Rückwärtskompatibilität behaupten, die D08/D14 nicht nachgewiesen haben.",
-      "status": "planned",
+      "status": "done",
       "gate": "G4",
       "chapter": "06-plattform-release.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/L03.md"
+      ],
+      "completedCommit": "c7fc933",
+      "completedDate": "2026-10-18"
     },
     {
       "id": "L04",
