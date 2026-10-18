@@ -1,4 +1,5 @@
 #include "OperationHistoryDetail.hpp"
+#include "ShapeValidity.hpp"
 #include <voelund/kernel/OcctCompatibility.hpp>
 #include <voelund/kernel/ShapeOperations.hpp>
 
@@ -60,7 +61,7 @@ std::optional<ShapeOperationResult> unified(const ShapeOperationResult& joined) 
     unify.Build();
     const TopoDS_Shape merged = unify.Shape();
     if (merged.IsNull() || merged.IsSame(joined.shape) || solids(merged) != 1 ||
-        !BRepCheck_Analyzer(merged).IsValid())
+        !detail::isValidShape(merged))
         return std::nullopt;
     const auto history = unify.History();
     if (history.IsNull())

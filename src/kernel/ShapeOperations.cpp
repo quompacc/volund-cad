@@ -1,4 +1,5 @@
 #include "OperationHistoryDetail.hpp"
+#include "ShapeValidity.hpp"
 #include <Standard_OutOfMemory.hxx>
 #include <Standard_ProgramError.hxx>
 #include <voelund/kernel/OcctCompatibility.hpp>
@@ -61,7 +62,7 @@ void requireValidResult(KernelOperation operation, const TopoDS_Shape& shape) {
     if (shape.IsNull()) {
         throw KernelError(operation, "operation produced a null shape");
     }
-    if (!BRepCheck_Analyzer(shape).IsValid()) {
+    if (!detail::isValidShape(shape)) {
         throw KernelError(operation, "operation produced an invalid shape");
     }
 }
@@ -86,7 +87,7 @@ ShapeOperationResult treatEdges(KernelOperation operation, BooleanFailure failur
         builder.Build();
         if (!builder.IsDone() || builder.Shape().IsNull() ||
             solidCountOf(builder.Shape()) != solidCountOf(input) ||
-            !BRepCheck_Analyzer(builder.Shape()).IsValid())
+            !detail::isValidShape(builder.Shape()))
             throw KernelError(operation, "the edges cannot take this radius or distance", failure);
         ShapeOperationResult result{builder.Shape(), {}, {}};
         detail::appendHistory(result, builder, true, input, HistoryOperand::first);
@@ -147,7 +148,7 @@ ShapeOperationResult treatEdgesOneByOne(KernelOperation operation, BooleanFailur
             builder.Build();
             if (!builder.IsDone() || builder.Shape().IsNull() ||
                 solidCountOf(builder.Shape()) != solidCountOf(input) ||
-                !BRepCheck_Analyzer(builder.Shape()).IsValid())
+                !detail::isValidShape(builder.Shape()))
                 throw KernelError(operation, "the edges cannot take this radius or distance",
                                   failure);
             NCollection_List<TopoDS_Shape> arguments;

@@ -1,4 +1,5 @@
 #include "OperationHistoryDetail.hpp"
+#include "ShapeValidity.hpp"
 
 #include <voelund/kernel/OcctCompatibility.hpp>
 #include <voelund/kernel/ShapeOperations.hpp>
@@ -82,7 +83,7 @@ ShapeOperationResult ShapeOperations::draftWithHistory(const TopoDS_Shape& input
         maker.Build();
         if (!maker.IsDone() || maker.Shape().IsNull() ||
             !TopExp_Explorer(maker.Shape(), TopAbs_SOLID).More() ||
-            !BRepCheck_Analyzer(maker.Shape()).IsValid())
+            !detail::isValidShape(maker.Shape()))
             fail("the faces cannot be tilted together");
         GProp_GProps properties;
         BRepGProp::VolumeProperties(maker.Shape(), properties);
