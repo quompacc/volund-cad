@@ -1,5 +1,6 @@
 #include <voelund/desktop/ProductShell.hpp>
 
+#include <voelund/BuildInfo.hpp>
 #include <voelund/application/CadSession.hpp>
 #include <voelund/desktop/MainWindow.hpp>
 
@@ -25,7 +26,7 @@ void configureProductApplication() {
     QSurfaceFormat::setDefaultFormat(surfaceFormat);
 #endif
     QCoreApplication::setApplicationName(QStringLiteral("Völund CAD"));
-    QCoreApplication::setApplicationVersion(QStringLiteral("0.1.0"));
+    QCoreApplication::setApplicationVersion(QString::fromLatin1(build::version)); // L03
     QCoreApplication::setOrganizationName(QStringLiteral("QuompaCC"));
     QCoreApplication::setOrganizationDomain(QStringLiteral("quompacc.github.io"));
     QGuiApplication::setDesktopFileName(QStringLiteral("io.github.quompacc.Voelund"));

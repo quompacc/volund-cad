@@ -1,5 +1,6 @@
 #include <voelund/desktop/MainWindow.hpp>
 
+#include "AboutDialog.hpp"
 #include "AssistantPanel.hpp"
 #include "CommandFeedback.hpp"
 #include "DocumentActions.hpp"
@@ -207,6 +208,7 @@ void MainWindow::createHeader() {
     });
     impl_->header = new ShellHeader(*impl_->viewport);
     impl_->header->setFileMenu(impl_->documentActions->menu());
+    addAboutAction(impl_->documentActions->menu(), *this);
     impl_->header->setActions(*impl_->undoAction, *impl_->redoAction, *impl_->themeAction);
     impl_->documentActions->setShellChangedHandler(
         [this] { impl_->header->display(impl_->shell()); });

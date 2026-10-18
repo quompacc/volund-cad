@@ -20,7 +20,8 @@ namespace {
 using namespace voelund;
 using test::require;
 
-const std::set<std::string> commandTable{"document.new",
+const std::set<std::string> commandTable{"app.about",
+                                         "document.new",
                                          "document.open",
                                          "document.save",
                                          "document.save_as",
@@ -131,7 +132,8 @@ void emptyDocumentOffersOnlyApplicableCommands(application::CadSession& session,
     for (const auto* action : commands(window))
         if (action->isEnabled())
             enabled.insert(commandId(*action));
-    const std::set<std::string> expected{"document.new",
+    const std::set<std::string> expected{"app.about", // L03: always
+                                         "document.new",
                                          "document.open",
                                          "document.save",
                                          "document.save_as",

@@ -3,6 +3,7 @@
 #include <TDataStd_Integer.hxx>
 #include <charconv>
 #include <limits>
+#include <voelund/document/DocumentSerializer.hpp>
 #include <voelund/document/IdCapacity.hpp>
 
 namespace voelund::document::detail {
@@ -61,3 +62,7 @@ NativeDocumentMetadata readNativeMetadata(const Handle(TDocStd_Document) & docum
     return {id, next, schema->Get()};
 }
 } // namespace voelund::document::detail
+
+namespace voelund::document {
+int nativeDocumentSchema() noexcept { return detail::nativeSchemaVersion; }
+} // namespace voelund::document

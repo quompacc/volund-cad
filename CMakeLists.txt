@@ -75,6 +75,20 @@ if(MSVC)
     target_link_options(voelund_project_options INTERFACE /INCREMENTAL:NO)
 endif()
 
+# L03: version, source revision and build type for the product and its diagnostics, written
+# on every build and changed only when they change (tools/cmake/WriteBuildInfo.cmake).
+set(VOELUND_GENERATED_DIR "${PROJECT_BINARY_DIR}/generated")
+add_custom_target(voelund_build_info ALL
+    COMMAND "${CMAKE_COMMAND}" "-DVOELUND_SOURCE_ROOT=${PROJECT_SOURCE_DIR}"
+        "-DVOELUND_OUTPUT=${VOELUND_GENERATED_DIR}/voelund/BuildInfo.hpp"
+        "-DVOELUND_VERSION=${PROJECT_VERSION}" "-DVOELUND_BUILD_TYPE=$<CONFIG>"
+        -P "${PROJECT_SOURCE_DIR}/tools/cmake/WriteBuildInfo.cmake"
+    BYPRODUCTS "${VOELUND_GENERATED_DIR}/voelund/BuildInfo.hpp"
+    VERBATIM)
+add_library(voelund_build_info_headers INTERFACE)
+target_include_directories(voelund_build_info_headers INTERFACE "${VOELUND_GENERATED_DIR}")
+add_dependencies(voelund_build_info_headers voelund_build_info)
+
 add_subdirectory(third_party/planegcs)
 add_subdirectory(src/kernel)
 add_subdirectory(src/document)

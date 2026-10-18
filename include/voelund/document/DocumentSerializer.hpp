@@ -23,4 +23,7 @@ class DocumentSerializer final {
     [[nodiscard]] static DocumentReadResult readWithReport(std::istream& input);
 };
 
+// L03: the native document schema this build writes and the newest it reads (About, diagnostics).
+[[nodiscard]] int nativeDocumentSchema() noexcept;
+
 } // namespace voelund::document

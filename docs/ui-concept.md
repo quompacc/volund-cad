@@ -153,6 +153,7 @@ in U04 an dieselben IDs.
 
 | Command-ID | Einstieg (seit U04) | Controller | Aktiv, wenn | Test |
 |---|---|---|---|---|
+| `app.about` | Hauptmenü „Über Völund…“ (nicht in der Suche, L03) | AboutDialog | immer | about_dialog |
 | `document.new` | Dateimenü, Strg+N, Suche | DocumentActions | immer | document_actions |
 | `document.open` | Dateimenü, Strg+O, Suche | DocumentActions | immer | document_actions |
 | `document.save` | Dateimenü, Strg+S, Suche | DocumentActions | immer | document_actions |

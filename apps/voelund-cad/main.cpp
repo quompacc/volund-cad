@@ -1,4 +1,5 @@
 #include "../SmokeSupport.hpp"
+#include "CommandLine.hpp"
 
 #include <voelund/application/CadSession.hpp>
 #include <voelund/desktop/MainWindow.hpp>
@@ -178,6 +179,9 @@ void startCadSmoke(MainWindow& mainWindow, CadSession& session) {
 } // namespace
 
 int main(int argc, char* argv[]) {
+    // L03: --version and --check-document need no window.
+    if (const auto code = voelund::apps::runCommandLine(argc, argv))
+        return *code;
     voelund::desktop::configureProductApplication();
     QApplication application(argc, argv);
     const auto arguments = QCoreApplication::arguments();

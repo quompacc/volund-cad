@@ -381,7 +381,8 @@ if(VOELUND_BUILD_DESKTOP)
             COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:Qt6::QWindowsIntegrationPlugin>"
                 "$<TARGET_FILE_DIR:voelund_sketch_solver_gate_tests>/platforms" VERBATIM)
     endif()
-    add_executable(voelund_document_actions_tests desktop/DocumentActionsTests.cpp ../src/desktop/DocumentActions.cpp ../src/desktop/ShellState.cpp)
+    add_executable(voelund_document_actions_tests desktop/DocumentActionsTests.cpp ../src/desktop/DocumentActions.cpp
+        ../src/desktop/DocumentErrorText.cpp ../src/desktop/ShellState.cpp)
     target_link_libraries(voelund_document_actions_tests PRIVATE voelund_project_options Voelund::Application Qt6::Widgets)
     add_test(NAME desktop.document_actions COMMAND voelund_document_actions_tests)
     set_tests_properties(desktop.document_actions PROPERTIES LABELS "desktop;document;regression" TIMEOUT 30 RUN_SERIAL TRUE)
@@ -623,6 +624,16 @@ if(VOELUND_BUILD_DESKTOP)
             LABELS "desktop;qt-opengl;acceptance" TIMEOUT 120 RUN_SERIAL TRUE)
         if(VOELUND_NATIVE_WAYLAND)
             set_tests_properties(desktop.body_flow PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
+        endif()
+        # L03: "Über Völund…" in the main menu (version, revision, schema, copy).
+        add_executable(voelund_about_dialog_tests desktop/AboutDialogTests.cpp)
+        target_link_libraries(voelund_about_dialog_tests PRIVATE voelund_project_options Voelund::Desktop
+            voelund_build_info_headers)
+        add_test(NAME desktop.about_dialog COMMAND voelund_about_dialog_tests)
+        set_tests_properties(desktop.about_dialog PROPERTIES
+            LABELS "desktop;qt-opengl;acceptance" TIMEOUT 60 RUN_SERIAL TRUE)
+        if(VOELUND_NATIVE_WAYLAND)
+            set_tests_properties(desktop.about_dialog PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
         endif()
         # L02: documents on the command line (first opens, umlaut/space path; further named).
         add_executable(voelund_product_arguments_tests desktop/ProductArgumentsTests.cpp)
@@ -1321,12 +1332,19 @@ add_executable(voelund_step_tests integration/StepTests.cpp)
 target_link_libraries(voelund_step_tests PRIVATE voelund_project_options Voelund::Application TKDESTEP)
 add_test(NAME application.step COMMAND voelund_step_tests)
 set_tests_properties(application.step PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
+# L03: the program reports its version without a window.
+if(VOELUND_BUILD_DESKTOP)
+    add_test(NAME platform.version COMMAND voelund-cad --version)
+    set_tests_properties(platform.version PROPERTIES LABELS "platform;package"
+        PASS_REGULAR_EXPRESSION "^Völund CAD ${PROJECT_VERSION} \\(" TIMEOUT 30)
+endif()
 # L02: the installed runtime is complete and self-contained; a missing library is named.
 if(VOELUND_BUILD_DESKTOP AND (WIN32 OR VOELUND_NATIVE_WAYLAND))
     add_test(NAME platform.package_runtime
         COMMAND "${CMAKE_COMMAND}" "-DVOELUND_SOURCE_ROOT=${PROJECT_SOURCE_DIR}"
             "-DVOELUND_BUILD_DIR=${PROJECT_BINARY_DIR}" "-DVOELUND_CONFIG=$<CONFIG>"
             "-DVOELUND_TEST_ROOT=${CMAKE_CURRENT_BINARY_DIR}/package-runtime"
+            "-DVOELUND_VERSION=${PROJECT_VERSION}"
             -P "${PROJECT_SOURCE_DIR}/tests/cmake/PackageRuntimeTests.cmake")
     set_tests_properties(platform.package_runtime PROPERTIES
         LABELS "platform;package;acceptance" TIMEOUT 300 RUN_SERIAL TRUE)

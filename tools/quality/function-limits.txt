@@ -221,7 +221,6 @@ cyclomatic | src/application/SketchEditorCreation.cpp | voelund::application::Sk
 cyclomatic | src/application/SketchEditorPatterns.cpp | voelund::application::(anonymous namespace)::applyRule | 11 | Altbestand vor A04
 cyclomatic | src/application/SketchEditorRelations.cpp | voelund::application::SketchEditorSession::addAutomaticRadialRelation | 11 | Altbestand vor A04
 cyclomatic | src/assistant/ClaudeCodeBackend.cpp | voelund::assistant::ClaudeCodeBackend::handle | 11 | Altbestand vor A04
-cyclomatic | src/desktop/CommandPalette.cpp | voelund::desktop::CommandPalette::refill | 11 | Altbestand vor A04
 cyclomatic | src/desktop/DocumentActions.cpp | voelund::desktop::DocumentActions::exportStep | 11 | Altbestand vor A04
 cyclomatic | src/desktop/FilletToolController.cpp | voelund::desktop::FilletToolController::preview | 11 | Altbestand vor A04
 cyclomatic | src/desktop/MainWindow.cpp | voelund::desktop::MainWindow::syncErrorCard | 11 | Altbestand vor A04

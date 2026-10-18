@@ -1,4 +1,5 @@
 #include "DocumentActions.hpp"
+#include "DocumentErrorText.hpp"
 #include "MainWindowSupport.hpp"
 #include "ShellState.hpp"
 
@@ -204,7 +205,9 @@ void DocumentActions::load(const QString& fileName) {
         refreshHandler_();
         window_.statusBar()->showMessage(QObject::tr("Dokument geladen"), 3000);
     } catch (const std::exception& error) {
-        showError(QObject::tr("Öffnen fehlgeschlagen"), error);
+        // L03: a newer or damaged file says so in the user's words.
+        QMessageBox::critical(&window_, QObject::tr("Öffnen fehlgeschlagen"),
+                              documentOpenErrorText(error.what()));
     }
 }
 

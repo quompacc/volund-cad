@@ -45,6 +45,34 @@ cd build/linux-desktop-release && cpack          # voelund-cad-0.1.0-Linux-x86_6
     zum Standardprogramm für `.volund`;
   - entfernen: `sh uninstall-user.sh`, wieder nur für diese Kopie.
 
+## Upgrade und Deinstallation (L03)
+
+- **Getrennte Ablage:** Programmordner und Nutzerdaten liegen getrennt.
+  - Einstellungen und Wiederherstellungsdaten liegen im Nutzerprofil
+    (`QSettings` bzw. `<AppLocalData>/recovery`, angezeigt in „Über Völund…“).
+  - Dokumente liegen dort, wo der Nutzer sie speichert, nie im Paketordner.
+- **Upgrade:** Neue Version entpacken; den alten Ordner ersetzen oder daneben behalten.
+  Einstellungen und Wiederherstellung bleiben. Danach das Zuordnungsskript aus dem neuen Ordner
+  ausführen, damit `.volund` die neue Version öffnet.
+- **Deinstallation:**
+  - zuerst `unregister-file-type.ps1` bzw. `sh uninstall-user.sh`;
+  - dann den Programmordner löschen.
+
+  Dokumente, Einstellungen und Wiederherstellungsdaten bleiben erhalten.
+- **Ältere Dokumente:**
+  - Völund liest das eigene Format bis zum aktuellen Schema (siehe „Über Völund…“) und die
+    älteren Textformate VOLUND 1–16;
+  - gespeichert wird immer im aktuellen Schema.
+- **Neuere Dokumente** einer späteren Version lehnt Völund ab, mit dem Hinweis, dass die Datei
+  aus einer neueren Version stammt. Eine automatische Rückwärtskompatibilität gibt es nicht.
+
+## Prüfen ohne Fenster
+
+```
+voelund-cad --version                                   # Völund CAD 0.1.0 (<revision>)
+voelund-cad --check-document <datei> [--resave <ziel>]   # 0 geöffnet, 2 abgelehnt, 3 Speichern fehlgeschlagen
+```
+
 ## Befehlszeile
 
 - Das erste Dokument wird geöffnet; der Pfad darf Umlaute und Leerzeichen enthalten.
@@ -59,6 +87,9 @@ cd build/linux-desktop-release && cpack          # voelund-cad-0.1.0-Linux-x86_6
 | `desktop.file_association` (Linux) | MIME-Typ und Standardprogramm über `xdg-mime`; das Programm aus der registrierten `Exec`-Zeile öffnet `Prüf Ordner/Teil mit Ä.volund` aus einem Paketordner `Völund Paket` |
 | `desktop.product_arguments` | erstes Dokument unter Umlaut-/Leerzeichenpfad offen, weitere in der Statuszeile genannt |
 | `desktop.installed_product` | installiertes Programm startet und öffnet ein Dokument |
+| `platform.package_runtime` (L03-Teil) | installiertes Programm: Version = Paketversion; VOLUND 1 und 16 öffnen, neu speichern, wieder öffnen; „VOLUND 99“ abgelehnt mit „neueren Völund-Version“; erneute Installation und Entfernen des Ordners ändern ein Nutzerdokument nicht |
+| `platform.version` | `voelund-cad --version` ohne Fenster |
+| `desktop.about_dialog` | „Über Völund…“ letzter Menüeintrag; Version, Revision, Schema, Bibliotheken; „Diagnose kopieren“ |
 
 Unter Windows prüft niemand automatisch, dass ein Doppelklick im Explorer das Dokument öffnet.
 Auf der Entwicklungsmaschine laufen keine GUI-Tests, und es gibt keinen Windows-Runner. Das bleibt

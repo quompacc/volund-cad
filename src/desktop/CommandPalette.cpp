@@ -23,6 +23,12 @@ QString plainText(const QAction& action) {
     return text;
 }
 
+// L03 (user decision 2026-10-18): "Über Völund" only in the main menu.
+bool listedInPalette(const QString& id) {
+    return !id.isEmpty() && id != QStringLiteral("view.command_search") &&
+           id != QStringLiteral("app.about");
+}
+
 } // namespace
 
 CommandPalette::CommandPalette(QWidget& window)
@@ -87,7 +93,7 @@ void CommandPalette::refill() {
     const QString query = query_->text().trimmed();
     for (QAction* action : window_.findChildren<QAction*>()) {
         const QString id = action->property(commandIdProperty).toString();
-        if (id.isEmpty() || id == QStringLiteral("view.command_search"))
+        if (!listedInPalette(id))
             continue;
         const QString text = plainText(*action);
         if (!query.isEmpty() && !text.contains(query, Qt::CaseInsensitive) &&

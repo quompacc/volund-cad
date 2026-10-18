@@ -1,4 +1,4 @@
-add_executable(voelund-cad WIN32 main.cpp)
+add_executable(voelund-cad WIN32 main.cpp CommandLine.cpp)
 
 target_link_libraries(
     voelund-cad
@@ -6,6 +6,7 @@ target_link_libraries(
         voelund_project_options
         Voelund::Application
         Voelund::Desktop
+        voelund_build_info_headers
 )
 
 if(WIN32)

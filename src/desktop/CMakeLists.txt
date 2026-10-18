@@ -1,5 +1,7 @@
 add_library(
     voelund_desktop STATIC
+    AboutDialog.cpp
+    DocumentErrorText.cpp
     FeatureErrorCard.cpp
     FeatureIssueText.cpp
     FeaturePropertiesPanel.cpp
@@ -90,6 +92,8 @@ target_link_libraries(
         Voelund::Mcp
         Voelund::Assistant
         Qt6::Widgets
+    PRIVATE
+        voelund_build_info_headers
 )
 
 # Fonts of ADR 0012 (OFL 1.1, docs/provenance/fonts.md).
