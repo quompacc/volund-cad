@@ -4,8 +4,8 @@
   "auditedCommit": "1b78229",
   "status": "implementation-started",
   "counts": {
-    "total": 155,
-    "throughG4": 125,
+    "total": 157,
+    "throughG4": 127,
     "g5": 30
   },
   "globalGates": [
@@ -145,6 +145,8 @@
     "L04",
     "L05",
     "L06",
+    "L06a",
+    "L06b",
     "L07",
     "L08",
     "L09",
@@ -3132,6 +3134,51 @@
       ],
       "acceptance": "A-PERF-01 liefert reproduzierbare Messwerte und vereinbarte Grenzwerte vor Release. Abbruch/Neueingabe lässt UI korrigierbar; Memorywachstum nach wiederholtem Open/Close wird gemessen. Kein willkürliches Hardwareversprechen.",
       "boundary": "Keine premature Threadpool-Architektur; einzelne nicht abbrechbare OCCT-Aufrufe als konkrete Grenze dokumentieren.",
+      "status": "planned",
+      "gate": "G4",
+      "chapter": "06-plattform-release.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "L06a",
+      "title": "Skizzenlöser in unabhängige Teile zerlegen",
+      "deps": [
+        "L06"
+      ],
+      "files": [
+        "src/features/SketchConstraintSolver.cpp"
+      ],
+      "steps": [
+        "Unabhängige Teile einer Skizze (über Bedingungen verbundene Elemente, Muster, Projektionen, Referenzmaße) erkennen und getrennt diagnostizieren und lösen.",
+        "Freiheitsgrade, Konflikte und Redundanzen je Teil zusammenführen; Ergebnis gleich dem heutigen Gesamtsystem."
+      ],
+      "acceptance": "sketch-1000 löst deutlich schneller und mit weniger Speicher als 4,0 s / 689 MB; alle Skizzentests unverändert grün.",
+      "boundary": "Nutzerentscheidung 2026-10-18: später; Arbeitsfall 200 Elemente ist mit 0,32 s im Budget.",
+      "status": "planned",
+      "gate": "G4",
+      "chapter": "06-plattform-release.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "L06b",
+      "title": "Auswertung im Hintergrund mit Abbruch",
+      "deps": [
+        "L06"
+      ],
+      "files": [
+        "src/application/CadSessionTransactions.cpp",
+        "src/features/FeatureGraph.cpp"
+      ],
+      "steps": [
+        "Snapshot-/Revisionsvertrag: eine Auswertung gehört zu genau einer Dokumentrevision; veraltete Ergebnisse werden verworfen.",
+        "Kooperative Abbruchpunkte zwischen Features; nicht abbrechbare OCCT-Aufrufe als Grenze dokumentieren; Oberfläche bleibt bedienbar."
+      ],
+      "acceptance": "Eine 7-s-Neuberechnung blockiert die Oberfläche nicht; neue Eingabe bricht ab oder überholt; kein veraltetes Ergebnis wird veröffentlicht.",
+      "boundary": "Nutzerentscheidung 2026-10-18: als eigenes Paket vormerken; keine vorzeitige Threadpool-Architektur.",
       "status": "planned",
       "gate": "G4",
       "chapter": "06-plattform-release.md",
