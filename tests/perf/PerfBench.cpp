@@ -1,7 +1,8 @@
 // L06 (A-PERF-01): load stages with representative content, measured on the application layer.
 //
 //   voelund_perf_bench <stage> [<work directory>]
-//   stages: sketch-100 sketch-1000 features-10 features-100 features-500 bodies-1 bodies-10
+//   stages: sketch-100 sketch-200 sketch-1000 features-10 features-100 features-500 bodies-1
+//   bodies-10
 //           bodies-100 part-100
 //
 // One stage per process, so peak memory belongs to it. Every result line reads
@@ -377,6 +378,7 @@ void fileStage(application::CadSession& session, const std::filesystem::path& di
 
 const std::map<std::string, std::function<void(application::CadSession&)>> stages{
     {"sketch-100", [](auto& session) { sketchStage(session, 100); }},
+    {"sketch-200", [](auto& session) { sketchStage(session, 200); }},
     {"sketch-1000", [](auto& session) { sketchStage(session, 1000); }},
     {"features-10", [](auto& session) { featureStage(session, 10); }},
     {"features-100", [](auto& session) { featureStage(session, 100); }},

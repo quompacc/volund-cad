@@ -25,7 +25,7 @@ trap 'rm -rf "$work"' EXIT
     echo "# memory $(awk '/MemTotal/ {printf "%.1f GiB", $2 / 1048576}' /proc/meminfo)"
     echo "# os $(sed -n 's/^PRETTY_NAME=//p' /etc/os-release), load $(cut -d' ' -f1-3 /proc/loadavg)"
 } >"$report"
-for stage in sketch-100 sketch-1000 features-10 features-100 features-500 bodies-1 bodies-10 \
+for stage in sketch-100 sketch-200 sketch-1000 features-10 features-100 features-500 bodies-1 bodies-10 \
     bodies-100 part-100; do
     echo "running $stage" >&2
     # A stage that does not finish within the limit is itself a result (e.g. features-500).
