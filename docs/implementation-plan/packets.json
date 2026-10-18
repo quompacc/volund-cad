@@ -3134,12 +3134,15 @@
       ],
       "acceptance": "A-PERF-01 liefert reproduzierbare Messwerte und vereinbarte Grenzwerte vor Release. Abbruch/Neueingabe lässt UI korrigierbar; Memorywachstum nach wiederholtem Open/Close wird gemessen. Kein willkürliches Hardwareversprechen.",
       "boundary": "Keine premature Threadpool-Architektur; einzelne nicht abbrechbare OCCT-Aufrufe als konkrete Grenze dokumentieren.",
-      "status": "planned",
+      "status": "done",
       "gate": "G4",
       "chapter": "06-plattform-release.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/L06.md"
+      ],
+      "completedCommit": "4d0e671",
+      "completedDate": "2026-10-18"
     },
     {
       "id": "L06a",
