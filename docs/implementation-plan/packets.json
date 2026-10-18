@@ -3081,12 +3081,15 @@
       ],
       "acceptance": "Jede ausgelieferte Bibliothek/Ressource hat zuordenbare Herkunft und vorgesehene Begleitmaterialien; fehlende Datei macht Paketprüfung rot. Keine Behauptung rechtlicher Freigabe allein aufgrund eines Toolchecks.",
       "boundary": "Neue Lizenz-/Verlinkungsfragen als fachliche Releaseentscheidung bearbeiten; keine eigene Rechtsberatung oder automatische Zustimmung erfinden.",
-      "status": "planned",
+      "status": "done",
       "gate": "G4",
       "chapter": "06-plattform-release.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/L04.md"
+      ],
+      "completedCommit": "7ea781f",
+      "completedDate": "2026-10-18"
     },
     {
       "id": "L05",
