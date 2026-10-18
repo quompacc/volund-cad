@@ -2991,12 +2991,15 @@
       ],
       "acceptance": "Installiertes voelund-cad öffnet per Dateizuordnung eine .volund-Datei mit Umlaut/Leerzeichen. Keine Abhängigkeit auf .tools oder Entwicklerarbeitsverzeichnis. Fehlende Runtime wird im Pakettest erkannt.",
       "boundary": "Installationsform je Plattform (Windows, Linux, FreeBSD) vorab konkret festlegen; keine ungeprüften DLL-/SO-Sammelkopien.",
-      "status": "planned",
+      "status": "done",
       "gate": "G4",
       "chapter": "06-plattform-release.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/L02.md"
+      ],
+      "completedCommit": "2102cbe",
+      "completedDate": "2026-10-18"
     },
     {
       "id": "U15",
@@ -3018,12 +3021,15 @@
       ],
       "acceptance": "Kein englischer Fehlertext ohne deutsche Erklärung in Fehlerkarte, Baum oder Befehlsrückmeldung; blockierte Schritte nennen ihre Ursache; die Statuszeile zeigt keine internen Revisionen.",
       "boundary": "Anlass: Nutzerprüfung von L02 am 17.10.2026 (englisches „Blocked by failed input“). Technische Meldungen bleiben unverändert.",
-      "status": "planned",
+      "status": "done",
       "gate": "G4",
       "chapter": "06-plattform-release.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/U15.md"
+      ],
+      "completedCommit": "98556c5",
+      "completedDate": "2026-10-18"
     },
     {
       "id": "L03",
