@@ -1,6 +1,7 @@
 # L02: installs the product into a fresh prefix and checks its runtime
 # (CheckPackageRuntime.cmake); then removes one OpenCASCADE library from that prefix, which
-# the check must report by name.
+# the check must report by name. L04: the notices and the manifest (CheckPackageNotices.cmake),
+# and a removed licence text is named.
 cmake_policy(SET CMP0007 NEW)
 foreach(required VOELUND_SOURCE_ROOT VOELUND_BUILD_DIR VOELUND_TEST_ROOT)
     if(NOT DEFINED ${required} OR "${${required}}" STREQUAL "")
@@ -35,6 +36,27 @@ endfunction()
 check(complete_result complete_text)
 if(NOT complete_result EQUAL 0)
     message(FATAL_ERROR "The installed runtime must be complete:\n${complete_text}")
+endif()
+
+# L04: every file belongs to a component with its notices, and MANIFEST.txt matches the package.
+function(check_notices out_result out_text)
+    execute_process(
+        COMMAND "${CMAKE_COMMAND}" "-DVOELUND_PREFIX=${prefix}"
+            "-DVOELUND_COMPONENTS=${VOELUND_COMPONENTS}"
+            "-DVOELUND_COMPONENT_VERSIONS=${VOELUND_COMPONENT_VERSIONS}"
+            -P "${VOELUND_SOURCE_ROOT}/tools/cmake/CheckPackageNotices.cmake"
+        RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error)
+    set(${out_result} "${result}" PARENT_SCOPE)
+    set(${out_text} "${output}\n${error}" PARENT_SCOPE)
+endfunction()
+check_notices(notices_result notices_text)
+if(NOT notices_result EQUAL 0)
+    message(FATAL_ERROR "The package must carry its notices and manifest:\n${notices_text}")
+endif()
+file(STRINGS "${prefix}/MANIFEST.txt" planegcs_lines ENCODING UTF-8
+    REGEX "\tplanegcs\t(bin/voelund_planegcs\\.dll|lib64/libvoelund_planegcs\\.so)$")
+if(NOT planegcs_lines)
+    message(FATAL_ERROR "PlaneGCS must ship as its own shared library (L04)")
 endif()
 
 # The per-user registration scripts at the top of the package register this copy and remove
@@ -160,5 +182,13 @@ check(missing_result missing_text)
 if(missing_result EQUAL 0 OR NOT missing_text MATCHES "missing:.*TKMath")
     message(FATAL_ERROR "A removed library must be reported missing:\n${missing_text}")
 endif()
+# L04: a removed notice and the removed library (now not matching the manifest) are named.
+file(REMOVE "${prefix}/licenses/opencascade/OCCT_LGPL_EXCEPTION.txt")
+check_notices(notice_result notice_text)
+if(notice_result EQUAL 0 OR
+   NOT notice_text MATCHES "notice missing for opencascade: licenses/opencascade/OCCT_LGPL_EXCEPTION\\.txt" OR
+   NOT notice_text MATCHES "in the manifest, not in the package: (bin/TKMath\\.dll|lib64/libTKMath)")
+    message(FATAL_ERROR "A missing notice and a changed package must be reported:\n${notice_text}")
+endif()
 file(REMOVE_RECURSE "${prefix}")
-message(STATUS "Package runtime complete; a missing library is reported by name")
+message(STATUS "Package runtime complete; a missing library and a missing notice are reported by name")

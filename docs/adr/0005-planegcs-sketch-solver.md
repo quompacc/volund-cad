@@ -47,3 +47,11 @@ manager for Boost.Graph are admitted; no Boost.Python component is used.
   Static development builds are not a release-distribution decision.
 - The dependency and binary-size impact is measured on Windows and FreeBSD before the
   first release; an excessive impact reopens this ADR.
+
+## Release linking (L04, user decision 18 October 2026)
+
+PlaneGCS ships as its own shared library `voelund_planegcs` (Windows DLL, Linux `.so`) in every
+build, so that a recipient can replace it. Its source (`third_party/planegcs`) and LGPL text are
+part of every package (`source/planegcs/`, `licenses/planegcs/`). Static linking with a relink
+kit was not chosen. This closes the release-linking question above; see
+[L04](../implementation-plan/evidence/L04.md).

@@ -8,6 +8,7 @@ target_link_libraries(
         Voelund::Desktop
         voelund_build_info_headers
 )
+voelund_deploy_planegcs(voelund-cad)
 
 if(WIN32)
     add_custom_command(
@@ -43,9 +44,10 @@ if(WIN32)
 endif()
 
 # U12: the installed product carries the runtime the tests use. On Linux the OpenCASCADE
-# libraries (project-local build) go beside it in the library directory; Qt and the rest
-# come from the system. On Windows it is exactly the set beside the build's executable: Qt,
-# OpenCASCADE, FreeType and their dependencies, and the platform plugin.
+# libraries (project-local build) and PlaneGCS (L04) go beside it in the library directory;
+# Qt and the rest come from the system. On Windows it is exactly the set beside the build's
+# executable: Qt, OpenCASCADE, FreeType and their dependencies, PlaneGCS, and the platform
+# plugin.
 if(UNIX AND NOT APPLE)
     set_target_properties(voelund-cad PROPERTIES
         INSTALL_RPATH "$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
@@ -76,6 +78,12 @@ elseif(WIN32)
 else()
     install(TARGETS voelund-cad RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
 endif()
+# L04: PlaneGCS is a target of this project, which dependency sets leave out; the import
+# library is not shipped.
+install(TARGETS voelund_planegcs
+    RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" EXCLUDE_FROM_ALL)
 
 if(UNIX AND NOT APPLE)
     install(

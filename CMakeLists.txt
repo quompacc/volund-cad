@@ -104,6 +104,8 @@ if(VOELUND_BUILD_DESKTOP)
     add_subdirectory(src/assistant)
     add_subdirectory(src/desktop)
     add_subdirectory(apps/voelund-cad)
+    # L04: notices, licence texts, PlaneGCS source and the manifest; installed last.
+    add_subdirectory(packaging)
 endif()
 
 # K01: link edges between the layer targets (VoelundLayers.cmake).

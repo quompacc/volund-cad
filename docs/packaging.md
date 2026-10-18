@@ -45,6 +45,24 @@ cd build/linux-desktop-release && cpack          # voelund-cad-0.1.0-Linux-x86_6
     zum Standardprogramm für `.volund`;
   - entfernen: `sh uninstall-user.sh`, wieder nur für diese Kopie.
 
+## Begleitmaterial (L04)
+
+Jedes Paket enthält neben dem Programm:
+
+- `THIRD-PARTY-NOTICES.md`: Bestandteile Dritter, Austausch der LGPL-Bibliotheken,
+  Quellenangebot;
+- `licenses/<komponente>/`: die vollständigen Lizenztexte (Herkunft in
+  `packaging/licenses/README.md`);
+- `source/planegcs/`: die Quelle der mitgelieferten PlaneGCS-Bibliothek
+  (`voelund_planegcs.dll` bzw. `lib64/libvoelund_planegcs.so`) mit Bauanleitung;
+- `MANIFEST.txt`: als letzter Installationsschritt aus den bereitgestellten Dateien
+  geschrieben. Es nennt jede Komponente mit Version und Lizenz und jede Datei mit SHA-256 und
+  Komponente.
+
+Welche Datei zu welcher Komponente gehört und welche Hinweise diese braucht, steht in
+`packaging/Components.cmake`. Eine neue Bibliothek im Paket ohne Eintrag dort macht
+`platform.package_runtime` rot.
+
 ## Upgrade und Deinstallation (L03)
 
 - **Getrennte Ablage:** Programmordner und Nutzerdaten liegen getrennt.
@@ -89,6 +107,7 @@ voelund-cad --check-document <datei> [--resave <ziel>]   # 0 geöffnet, 2 abgele
 | `desktop.installed_product` | installiertes Programm startet und öffnet ein Dokument |
 | `platform.package_runtime` (L03-Teil) | installiertes Programm: Version = Paketversion; VOLUND 1 und 16 öffnen, neu speichern, wieder öffnen; „VOLUND 99“ abgelehnt mit „neueren Völund-Version“; erneute Installation und Entfernen des Ordners ändern ein Nutzerdokument nicht |
 | `platform.version` | `voelund-cad --version` ohne Fenster |
+| `platform.package_runtime` (L04-Teil) | jede Datei gehört zu einer Komponente; jede ausgelieferte oder einkompilierte Komponente hat ihre Lizenztexte; `MANIFEST.txt` stimmt mit dem Paket überein (Dateien und SHA-256); PlaneGCS liegt als eigene Bibliothek vor; ein entfernter Lizenztext und eine entfernte Bibliothek werden mit Namen gemeldet |
 | `desktop.about_dialog` | „Über Völund…“ letzter Menüeintrag; Version, Revision, Schema, Bibliotheken; „Diagnose kopieren“ |
 
 Unter Windows prüft niemand automatisch, dass ein Doppelklick im Explorer das Dokument öffnet.

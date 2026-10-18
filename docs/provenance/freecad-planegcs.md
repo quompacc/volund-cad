@@ -17,3 +17,14 @@ needed to compile the solver independently.
 No FreeCAD GUI, application object model, Part module, Python binding or runtime
 binary is included. Future upstream refreshes must update this record and verify the
 vendor files against the pinned commit before integration.
+
+## Distribution (L04)
+
+PlaneGCS is built as the shared library `voelund_planegcs` (user decision 18 October 2026,
+ADR 0005). Every package carries:
+
+- this source tree under `source/planegcs/` with `README-Voelund.md` (how to build a
+  replacement);
+- `COPYING.LIB` under `licenses/planegcs/`.
+
+The test `platform.package_runtime` checks both and that the library is a separate file.

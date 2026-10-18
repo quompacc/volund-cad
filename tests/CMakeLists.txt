@@ -1345,6 +1345,8 @@ if(VOELUND_BUILD_DESKTOP AND (WIN32 OR VOELUND_NATIVE_WAYLAND))
             "-DVOELUND_BUILD_DIR=${PROJECT_BINARY_DIR}" "-DVOELUND_CONFIG=$<CONFIG>"
             "-DVOELUND_TEST_ROOT=${CMAKE_CURRENT_BINARY_DIR}/package-runtime"
             "-DVOELUND_VERSION=${PROJECT_VERSION}"
+            "-DVOELUND_COMPONENTS=${VOELUND_COMPONENTS}"
+            "-DVOELUND_COMPONENT_VERSIONS=${VOELUND_COMPONENT_VERSIONS}"
             -P "${PROJECT_SOURCE_DIR}/tests/cmake/PackageRuntimeTests.cmake")
     set_tests_properties(platform.package_runtime PROPERTIES
         LABELS "platform;package;acceptance" TIMEOUT 300 RUN_SERIAL TRUE)

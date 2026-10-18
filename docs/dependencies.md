@@ -14,6 +14,14 @@ Völund keeps its direct dependency surface deliberately small. A new direct or 
 
 The C++ standard library is used for general containers, strings, algorithms, errors, filesystem access, and concurrency. No separate convenience library is approved.
 
+## Shipped package (L04)
+
+What a package contains, with version, licence and the notices it needs, is listed in
+`packaging/Components.cmake`. Beyond the product runtime above it holds the FreeType support
+libraries on Windows (zlib, libpng, bzip2, Brotli) and the MSVC runtime, and on both platforms
+PlaneGCS as its own shared library. Each package's `MANIFEST.txt` names the exact versions; see
+[provenance](provenance/README.md).
+
 ## Bundled assets
 
 | Asset | Purpose | License |
