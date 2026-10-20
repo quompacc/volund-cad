@@ -6,7 +6,7 @@ Pflichtplattform offen ist, gibt es kein grünes Gesamtsignal, auch wenn das CI 
 | Plattform | Debug | Release | Ausführung | Stand |
 |---|---|---|---|---|
 | Linux (Fedora, GCC, OCCT 7.9.3, Wayland) | `linux-desktop` | `linux-desktop-release` | Pflicht-CI bei jedem Push (`ci / linux-desktop`) | **läuft** |
-| Windows 11 (MSVC, OCCT 8.0.1, Qt OpenGL) | `windows-msvc` | `windows-msvc-release` | lokal mit `tools/test-windows.ps1 -BuildDirectory build/<preset>` (ohne Desktop-Tests) | **offen**: kein CI-Runner; Release nur als Preset vorhanden |
+| Windows 11 (MSVC, OCCT 8.0.1, Qt OpenGL) | `windows-msvc` | `windows-msvc-release` | lokal mit `tools/test-windows.ps1 -BuildDirectory build/<preset>` (ohne Desktop-Tests); Release-ZIP und Oberflächenabläufe in Windows Sandbox mit `tools/release-acceptance/Start-WindowsSandboxCheck.ps1` (L08) | **offen**: kein CI-Runner; Release-ZIP lokal in `build\windows-msvc-release` |
 | FreeBSD (Clang, lean OCCT, Sway) | `freebsd-clang-lean-occt` | `freebsd-clang-lean-occt-release` | `sh tools/run-freebsd-integration.sh control <preset>` an Gate-Abnahmen | **offen**: kein CI-Runner |
 | GPU-/Display-Nachweis, Meridian | – | – | eigene Abnahme (L07) | **offen**: im CI nur headless `kwin_wayland --virtual`, kein Display-Nachweis |
 
@@ -41,5 +41,6 @@ Das Artefakt `linux-desktop-<sha>` enthält `artifacts/linux-desktop/` und
 - **Windows- und FreeBSD-Runner:** Der Nutzer entscheidet später, im Zusammenhang mit dem noch
   offenen Umzug des CI-Runners. Bis dahin sind beide Plattformen hier offen. Prüfungen gibt es
   nur lokal oder an Gate-Abnahmen.
-- **Windows-Release-Build:** Er ist als Preset definiert, aber noch nicht gebaut. Auf der
-  Entwicklungsmaschine wird ohne Freigabe kein weiterer Build-Ordner angelegt.
+- **Windows-Release-Build:** Seit L08 (Nutzerfreigabe 20.10.2026) gebaut in
+  `build\windows-msvc-release`. Ohne Codesignatur blockiert Smart App Control eines frisch
+  eingerichteten Windows 11 das Programm; die Signierung gehört zu L10.

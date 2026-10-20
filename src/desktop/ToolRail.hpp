@@ -3,13 +3,18 @@
 #include "SketchToolActions.hpp"
 #include "Theme.hpp"
 
+#include <QEvent>
 #include <QFrame>
 
 #include <utility>
 #include <vector>
 
+class QHBoxLayout;
+class QLayout;
+class QMenu;
 class QScrollArea;
 class QToolButton;
+class QWheelEvent;
 
 namespace voelund::viewport {
 class CadViewport;
@@ -43,6 +48,21 @@ class ToolRail final : public QFrame {
     void place();
     void openFlyout(int group);
     void buildSketchPage(const std::vector<SketchToolActions::Section>& sections);
+    // L08 (user decision 2026-10-20): a rail that does not fit first shows its group buttons
+    // as symbols, then puts the tools at its end into the » menu; no tool is ever clipped.
+    void setIconOnly(bool iconOnly);
+    // Shows the page's leading items that fit into `room`, hides the rest for the » menu and
+    // returns the width taken, the » button included.
+    int fitRow(QWidget& page, int room);
+    void showLeading(QLayout& layout, int shown);
+    void fillOverflow(QMenu& menu);
+    void createOverflow(QHBoxLayout& barLayout);
+    // The width of the page with every tool and text; the header hears of a change.
+    int announceWidth(QWidget& page, bool sketch);
+    // The flyout under its group button, united with the bar's `area`.
+    [[nodiscard]] QRect placeFlyout(QRect area);
+    [[nodiscard]] bool follows(const QObject* watched, QEvent::Type type) const;
+    bool scrollRow(const QWheelEvent& event);
     // The free stretch of the top row between the project card and the header card.
     [[nodiscard]] std::pair<int, int> freeRow();
 
@@ -52,6 +72,10 @@ class ToolRail final : public QFrame {
     QWidget* solidPage_{nullptr};
     QWidget* sketchPage_{nullptr};
     QFrame* flyout_{nullptr};
+    QToolButton* overflow_{nullptr};
+    std::vector<QWidget*> hidden_;
+    int solidTextWidth_{0};
+    bool iconOnly_{false};
     std::vector<QToolButton*> groupButtons_;
     std::vector<QWidget*> flyoutPages_;
     std::vector<QWidget*> watchedCards_;

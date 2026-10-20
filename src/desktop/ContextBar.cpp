@@ -47,6 +47,7 @@ void ContextBar::display(const ContextCommands& content) {
         button->deleteLater();
     }
     current_.clear();
+    compact_ = false; // new buttons carry their text
     setVisible(content.visible);
     if (!content.visible)
         return;
@@ -84,7 +85,19 @@ bool ContextBar::event(QEvent* event) {
     return result;
 }
 
+void ContextBar::setCompact(bool compact) {
+    if (compact == compact_)
+        return;
+    compact_ = compact;
+    for (QToolButton* button : current_)
+        button->setToolButtonStyle(compact ? Qt::ToolButtonIconOnly : Qt::ToolButtonTextBesideIcon);
+}
+
 void ContextBar::place() {
+    adjustSize();
+    if (!compact_)
+        fullWidth_ = width();
+    setCompact(fullWidth_ > viewport_.width() - 2 * overlay::margin);
     adjustSize();
     // U14: right above the timeline, centred but clear of an open tool panel card.
     bool cardShown = false;

@@ -598,6 +598,15 @@ if(VOELUND_BUILD_DESKTOP)
         if(VOELUND_NATIVE_WAYLAND)
             set_tests_properties(desktop.reference_part PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
         endif()
+        # L08: A-PART-02, the ring and an independent box through the shell.
+        add_executable(voelund_reference_ring_flow_tests desktop/ReferenceRingFlowTests.cpp)
+        target_link_libraries(voelund_reference_ring_flow_tests PRIVATE voelund_project_options Voelund::Desktop)
+        add_test(NAME desktop.reference_ring COMMAND voelund_reference_ring_flow_tests)
+        set_tests_properties(desktop.reference_ring PROPERTIES
+            LABELS "desktop;qt-opengl;acceptance" TIMEOUT 180 RUN_SERIAL TRUE)
+        if(VOELUND_NATIVE_WAYLAND)
+            set_tests_properties(desktop.reference_ring PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
+        endif()
         # PAR02: the parameter table and "=Name" in the fields (user flow of the packet).
         add_executable(voelund_parameter_flow_tests desktop/ParameterFlowTests.cpp)
         target_link_libraries(voelund_parameter_flow_tests PRIVATE voelund_project_options Voelund::Desktop)

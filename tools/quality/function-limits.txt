@@ -176,7 +176,6 @@ cyclomatic | src/desktop/SketchEditorToolController.cpp | voelund::desktop::(ano
 cyclomatic | src/desktop/SketchEditorToolController.cpp | voelund::desktop::(anonymous namespace)::viewportTool | 13 | Altbestand vor A04
 cyclomatic | src/desktop/SketchToolActions.cpp | voelund::desktop::SketchToolActions::sections | 13 | Altbestand vor A04
 cyclomatic | src/desktop/SketchViewAdapter.cpp | voelund::desktop::sketchSelectionSummary | 13 | Altbestand vor A04
-cyclomatic | src/desktop/ToolRail.cpp | voelund::desktop::ToolRail::eventFilter | 13 | Altbestand vor A04
 cyclomatic | src/document/EdgeReference.cpp | voelund::document::validateEdgeOrigin | 13 | Altbestand vor A04
 cyclomatic | src/document/NativeContainerStructure.cpp | voelund::document::detail::(anonymous namespace)::Structure::attributes | 13 | Altbestand vor A04
 cyclomatic | src/document/NativeSolidFeatures.cpp | voelund::document::detail::nativeSolidRecords | 13 | Altbestand vor A04
@@ -457,7 +456,6 @@ lines | src/application/SketchEditorGeometry.cpp | confirmCreation | 86 | Altbes
 lines | src/desktop/TimelineBar.cpp | eventFilter | 84 | Altbestand vor A04
 lines | src/application/SketchGeometryTransform.cpp | transformedCopy | 83 | Altbestand vor A04
 lines | src/desktop/ContextCommands.cpp | contextCommands | 83 | Altbestand vor A04
-lines | src/desktop/ShellHeader.cpp | ShellHeader | 82 | Altbestand vor A04
 lines | src/desktop/ViewCube.cpp | paintEvent | 82 | Altbestand vor A04
 lines | src/features/SketchRegionIntervalFaces.cpp | intervalRegionFaces | 81 | Altbestand vor A04
 lines | tests/desktop/FilletPanelTests.cpp | run | 215 | Altbestand vor A04

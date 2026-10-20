@@ -43,13 +43,18 @@ class ShellHeader final : public OverlayCard {
 
   private:
     void setCompact(bool compact);
+    [[nodiscard]] QRect projectPlace(const QWidget& area);
+    [[nodiscard]] QRect headerPlace(const QWidget& area);
     void showAssistantDot();
 
     bool compact_{false};
+    int fullWidth_{0}; // width without compacting, for the room check
     ThemeMode mode_{ThemeMode::light};
     AssistantState assistant_{AssistantState::off};
     OverlayCard* project_{nullptr};
     QLabel* brand_{nullptr};
+    QLabel* brandName_{nullptr};
+    QLabel* separator_{nullptr};
     QLabel* documentName_{nullptr};
     QLabel* saveState_{nullptr};
     QToolButton* fileButton_{nullptr};

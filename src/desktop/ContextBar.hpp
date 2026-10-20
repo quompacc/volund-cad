@@ -37,6 +37,9 @@ class ContextBar final : public QFrame {
 
   private:
     void place();
+    // L08 (A-VIS-01): a bar wider than the view shows its buttons as symbols, names in the
+    // tooltips, so no command is cut off at the window edge.
+    void setCompact(bool compact);
 
     viewport::CadViewport& viewport_;
     ActionLookup lookup_;
@@ -44,6 +47,8 @@ class ContextBar final : public QFrame {
     QLabel* title_{nullptr};
     QWidget* transformSettings_{nullptr};
     std::vector<QToolButton*> current_;
+    int fullWidth_{0};
+    bool compact_{false};
 };
 
 } // namespace voelund::desktop

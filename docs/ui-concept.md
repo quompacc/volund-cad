@@ -110,6 +110,17 @@ Vom Nutzer am 04.10.2026 freigegeben; verbindlich festgehalten in
 - 14.10.2026, neue Mockups: Viewport-first mit schwebenden Karten; Timeline als Symbole
   unten mittig; kein Modusschalter; gruppierte Werkzeugleiste mit Flyouts. Umsetzung in
   U14, Nachtrag zu ADR 0012.
+- 20.10.2026 (L08, Sichtprüfung bei 150 %): Kein Werkzeug wird abgeschnitten, keine Karte
+  überdeckt eine andere. Reicht die Breite nicht, gilt diese Reihenfolge:
+  1. Die Kopfkarte wird kompakt (Suche, Parameter und Claude nur als Symbol).
+  2. Die Gruppen der Werkzeugleiste zeigen nur ihr Symbol.
+  3. Die Werkzeuge am Ende wandern in ein »-Menü.
+  4. Erst wenn auch der »-Knopf sonst keinen Platz hätte, wird der Dokumentname mit „…“
+     gekürzt (ganz im Tooltip); danach weicht „Völund /“ dem Zeichen.
+  Die Skizzenwerkzeuge brauchen rund 1700 px; in kleineren Fenstern steht ihr Ende im
+  »-Menü. Die Kontextleiste zeigt nur Symbole, wenn sie sonst nicht ins Fenster passt. Das
+  Fenster ist mindestens 720 px breit. Das erste Fenster ist nie größer als der freie
+  Bildschirm und steht mittig.
 
 ### Ablauf im Zielbild
 

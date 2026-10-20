@@ -8,6 +8,7 @@ Es gibt genau diese Orte; neue Build-Ordner werden nicht angelegt:
 |---|---|
 | Startbares Programm (Windows) | `Installer\` im Projekt, `Installer\bin\voelund-cad.exe`, mit allen DLLs und Qt-Plugins |
 | Zwischendateien des Compilers (Windows) | `build\p02-qt-final` (Debug, MSVC, vcpkg); nur über `subst V:` bauen |
+| Windows-Releasepaket (L08, Nutzerentscheidung 20.10.2026) | `build\windows-msvc-release` (Preset `windows-msvc-release`, über `subst V:`); `cpack` legt dort das ZIP ab |
 | GCC-Prüfung und Desktop-Tests | Fedora `~/repro/par01/build/linux-desktop` |
 | Abnahme | CI auf dem Gitea-Runner |
 

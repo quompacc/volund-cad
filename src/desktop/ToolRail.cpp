@@ -9,6 +9,7 @@
 #include <voelund/viewport/CadViewport.hpp>
 
 #include <QAction>
+#include <QCoreApplication>
 #include <QEvent>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -21,6 +22,7 @@
 #include <QWheelEvent>
 
 #include <algorithm>
+#include <limits>
 #include <map>
 #include <optional>
 #include <vector>
@@ -105,6 +107,19 @@ const std::vector<RailGroup>& railGroups() {
     return groups;
 }
 
+// The row scrolls only by the wheel; a narrow rail moves its end into the » menu (L08).
+QScrollArea* railScroll(QWidget* parent) {
+    auto* scroll = new QScrollArea(parent);
+    scroll->setObjectName(QStringLiteral("railScroll"));
+    scroll->setFrameShape(QFrame::NoFrame);
+    scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scroll->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scroll->setWidgetResizable(true);
+    // Its own minimum width would push the » button out of a bar that shows only that button.
+    scroll->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+    return scroll;
+}
+
 QFrame* card(QWidget* parent, const char* name) {
     auto* frame = new QFrame(parent);
     frame->setObjectName(QLatin1String(name));
@@ -113,15 +128,63 @@ QFrame* card(QWidget* parent, const char* name) {
     return frame;
 }
 
-QFrame* divider(QWidget* parent) {
-    auto* line = new QFrame(parent);
+// L08: the line between two sketch sections with its space around, as one widget, so a
+// section cut into the » menu leaves no space behind.
+QWidget* divider(QWidget* parent) {
+    auto* section = new QWidget(parent);
+    section->setObjectName(QStringLiteral("railSection"));
+    section->setFixedSize(13, 22);
+    auto* layout = new QHBoxLayout(section);
+    layout->setContentsMargins(6, 0, 6, 0);
+    auto* line = new QFrame(section);
     line->setObjectName(QStringLiteral("railDivider"));
     line->setFixedSize(1, 22);
-    return line;
+    layout->addWidget(line);
+    return section;
 }
 
 constexpr int barPadding = 7;
 constexpr int pillHeight = 34;
+
+// A widget's width whether it is shown or not, bounded like a layout bounds it.
+int boundedWidth(const QWidget& widget) {
+    return widget.sizeHint()
+        .expandedTo(widget.minimumSize())
+        .boundedTo(widget.maximumSize())
+        .width();
+}
+
+int itemWidth(QLayoutItem& item) {
+    return item.widget() != nullptr ? boundedWidth(*item.widget()) : item.sizeHint().width();
+}
+
+int rowWidth(QWidget& page) {
+    QLayout& layout = *page.layout();
+    int width = 0;
+    for (int index = 0; index < layout.count(); ++index)
+        width += itemWidth(*layout.itemAt(index)) + (index > 0 ? layout.spacing() : 0);
+    return width;
+}
+
+// The leading widgets within `limit` and the width they take; a divider never ends the row.
+std::pair<int, int> leadingRow(QLayout& layout, int limit) {
+    int used = 0;
+    int shown = 0;
+    while (shown < layout.count()) {
+        const int next =
+            used + (shown > 0 ? layout.spacing() : 0) + itemWidth(*layout.itemAt(shown));
+        if (next > limit)
+            break;
+        used = next;
+        ++shown;
+    }
+    if (shown > 0 && shown < layout.count() &&
+        layout.itemAt(shown - 1)->widget()->objectName() == QStringLiteral("railSection")) {
+        used -= itemWidth(*layout.itemAt(shown - 1)) + (shown > 1 ? layout.spacing() : 0);
+        --shown;
+    }
+    return {shown, used};
+}
 
 } // namespace
 
@@ -132,12 +195,7 @@ ToolRail::ToolRail(viewport::CadViewport& viewport, const CommandActions& comman
     auto* barLayout = new QHBoxLayout(bar_);
     barLayout->setContentsMargins(barPadding, 0, barPadding, 0);
     barLayout->setSpacing(0);
-    scroll_ = new QScrollArea(bar_);
-    scroll_->setObjectName(QStringLiteral("railScroll"));
-    scroll_->setFrameShape(QFrame::NoFrame);
-    scroll_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    scroll_->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    scroll_->setWidgetResizable(true);
+    scroll_ = railScroll(bar_);
     auto* content = new QWidget(scroll_);
     content->setObjectName(QStringLiteral("railContent"));
     auto* pages = new QHBoxLayout(content);
@@ -150,6 +208,7 @@ ToolRail::ToolRail(viewport::CadViewport& viewport, const CommandActions& comman
     pages->addWidget(solidPage_);
     scroll_->setWidget(content);
     barLayout->addWidget(scroll_);
+    createOverflow(*barLayout);
     // The wheel scrolls a bar that does not fit sideways.
     scroll_->viewport()->installEventFilter(this);
     flyout_ = card(this, "railFlyout");
@@ -224,20 +283,48 @@ ToolRail::ToolRail(viewport::CadViewport& viewport, const CommandActions& comman
         flyoutPages_.back() = page;
     }
     viewport.installEventFilter(this);
+    solidPage_->installEventFilter(this);
     place();
 }
 
-bool ToolRail::eventFilter(QObject* watched, QEvent* event) {
-    if (scroll_ != nullptr && watched == scroll_->viewport() && event->type() == QEvent::Wheel) {
-        const QPoint delta = static_cast<QWheelEvent*>(event)->angleDelta();
-        QScrollBar* bar = scroll_->horizontalScrollBar();
-        bar->setValue(bar->value() - (delta.y() != 0 ? delta.y() : delta.x()) / 3);
+void ToolRail::createOverflow(QHBoxLayout& barLayout) {
+    overflow_ = new QToolButton(bar_); // no PillButton: that draws a chevron beside a menu
+    overflow_->setProperty("railPill", true);
+    overflow_->setObjectName(QStringLiteral("railOverflowButton"));
+    overflow_->setText(QStringLiteral("»"));
+    overflow_->setToolTip(tr("Weitere Werkzeuge"));
+    overflow_->setAccessibleName(tr("Weitere Werkzeuge"));
+    overflow_->setToolButtonStyle(Qt::ToolButtonTextOnly);
+    overflow_->setFixedSize(pillHeight, pillHeight);
+    overflow_->setPopupMode(QToolButton::InstantPopup);
+    auto* menu = new QMenu(overflow_);
+    connect(menu, &QMenu::aboutToShow, this, [this, menu] { fillOverflow(*menu); });
+    overflow_->setMenu(menu);
+    barLayout.addWidget(overflow_);
+    overflow_->hide();
+}
+
+bool ToolRail::scrollRow(const QWheelEvent& event) {
+    const QPoint delta = event.angleDelta();
+    QScrollBar* bar = scroll_->horizontalScrollBar();
+    bar->setValue(bar->value() - (delta.y() != 0 ? delta.y() : delta.x()) / 3);
+    return true;
+}
+
+// The bar follows the viewport and the two cards it sits between; a page measured before its
+// buttons were styled is measured again (L08).
+bool ToolRail::follows(const QObject* watched, QEvent::Type type) const {
+    if (watched == &viewport_)
+        return type == QEvent::Resize;
+    if ((watched == solidPage_ || watched == sketchPage_) && type == QEvent::LayoutRequest)
         return true;
-    }
-    // The bar follows the viewport and the two cards it sits between.
-    if ((watched == &viewport_ && event->type() == QEvent::Resize) ||
-        (watched != &viewport_ &&
-         (event->type() == QEvent::Resize || event->type() == QEvent::Move)))
+    return type == QEvent::Resize || type == QEvent::Move;
+}
+
+bool ToolRail::eventFilter(QObject* watched, QEvent* event) {
+    if (scroll_ != nullptr && watched == scroll_->viewport() && event->type() == QEvent::Wheel)
+        return scrollRow(*static_cast<QWheelEvent*>(event));
+    if (follows(watched, event->type()))
         place();
     // A click into the view closes an open flyout, like a menu.
     if (watched == &viewport_ && event->type() == QEvent::MouseButtonPress && openGroup_ >= 0)
@@ -277,20 +364,21 @@ void ToolRail::place() {
         return;
     placing_ = true;
     const auto [left, right] = freeRow();
-    QWidget* page = sketchShown_ && sketchPage_ != nullptr ? sketchPage_ : solidPage_;
-    const int wanted = page->sizeHint().width() + 2 * barPadding + 2;
-    const int width = std::max(120, std::min(wanted, right - left));
+    const bool sketch = sketchShown_ && sketchPage_ != nullptr;
+    QWidget* page = sketch ? sketchPage_ : solidPage_;
+    const int frame = 2 * barPadding + 2;
+    const int room = right - left - frame;
+    const int wanted = announceWidth(*page, sketch);
+    if (!sketch)
+        setIconOnly(wanted > room);
+    // At least the » button, which then holds every tool.
+    const int least = boundedWidth(*overflow_) + frame;
+    setProperty("leastWidth", least);
+    const int width = std::max(least, std::min(fitRow(*page, room) + frame, right - left));
     // Centred in the window when it fits there, else in the free stretch.
     const int x = std::clamp((viewport_.width() - width) / 2, left, std::max(left, right - width));
     bar_->setGeometry(0, 0, width, overlay::barHeight);
-    QRect area(0, 0, width, overlay::barHeight);
-    if (flyout_->isVisible() && openGroup_ >= 0 && groupButtons_[openGroup_] != nullptr) {
-        flyout_->adjustSize();
-        const int below = std::max(0, groupButtons_[openGroup_]->mapTo(bar_, QPoint(0, 0)).x() - 6);
-        flyout_->setGeometry(below, overlay::barHeight + 6, flyout_->sizeHint().width(),
-                             flyout_->sizeHint().height());
-        area = area.united(flyout_->geometry());
-    }
+    const QRect area = placeFlyout(QRect(0, 0, width, overlay::barHeight));
     setGeometry(x, overlay::margin, area.width(), area.height());
     // Only the cards take clicks; the space beside a narrow flyout belongs to the view.
     QRegion cards(bar_->geometry());
@@ -299,6 +387,86 @@ void ToolRail::place() {
     setMask(cards);
     raise();
     placing_ = false;
+}
+
+void ToolRail::setIconOnly(bool iconOnly) {
+    if (iconOnly == iconOnly_)
+        return;
+    iconOnly_ = iconOnly;
+    for (auto* pill : solidPage_->findChildren<QToolButton*>(Qt::FindDirectChildrenOnly))
+        if (pill->property("railPill").toBool())
+            pill->setToolButtonStyle(iconOnly ? Qt::ToolButtonIconOnly
+                                              : Qt::ToolButtonTextBesideIcon);
+}
+
+int ToolRail::announceWidth(QWidget& page, bool sketch) {
+    // The width with every tool and every text, as the header and project card see it.
+    if (!sketch && !iconOnly_)
+        solidTextWidth_ = rowWidth(page);
+    const int wanted = sketch ? rowWidth(page) : solidTextWidth_;
+    // L08: the header compacts when this width does not fit beside its full size.
+    const int withFrame = wanted + 2 * barPadding + 2;
+    if (property("wantedWidth").toInt() != withFrame) {
+        setProperty("wantedWidth", withFrame);
+        if (auto* header = viewport_.findChild<QWidget*>(QStringLiteral("shellHeader"),
+                                                         Qt::FindDirectChildrenOnly))
+            QCoreApplication::postEvent(header, new QEvent(QEvent::LayoutRequest));
+    }
+    return wanted;
+}
+
+QRect ToolRail::placeFlyout(QRect area) {
+    if (!flyout_->isVisible() || openGroup_ < 0 || groupButtons_[openGroup_] == nullptr)
+        return area;
+    flyout_->adjustSize();
+    const int below = std::max(0, groupButtons_[openGroup_]->mapTo(bar_, QPoint(0, 0)).x() - 6);
+    flyout_->setGeometry(below, overlay::barHeight + 6, flyout_->sizeHint().width(),
+                         flyout_->sizeHint().height());
+    return area.united(flyout_->geometry());
+}
+
+int ToolRail::fitRow(QWidget& page, int room) {
+    QLayout& layout = *page.layout();
+    const bool cut = rowWidth(page) > room;
+    const int menuWidth = cut ? boundedWidth(*overflow_) : 0;
+    const auto [shown, used] =
+        leadingRow(layout, cut ? room - menuWidth : std::numeric_limits<int>::max());
+    showLeading(layout, shown);
+    if (overflow_->isHidden() == cut)
+        overflow_->setVisible(cut);
+    return used + menuWidth;
+}
+
+void ToolRail::showLeading(QLayout& layout, int shown) {
+    hidden_.clear();
+    for (int index = 0; index < layout.count(); ++index) {
+        QWidget* widget = layout.itemAt(index)->widget();
+        if (index >= shown)
+            hidden_.push_back(widget);
+        if (widget->isHidden() == (index < shown)) // only changes, no layout loop
+            widget->setVisible(index < shown);
+    }
+}
+
+void ToolRail::fillOverflow(QMenu& menu) {
+    menu.clear();
+    for (QWidget* widget : hidden_) {
+        auto* button = qobject_cast<QToolButton*>(widget);
+        if (button == nullptr)
+            continue;
+        if (button->objectName() == QStringLiteral("railGroupButton")) {
+            QMenu* group = menu.addMenu(button->icon(), button->toolTip());
+            const int index = button->property("railGroup").toInt();
+            for (auto* command : flyoutPages_[index]->findChildren<QToolButton*>())
+                group->addAction(command->defaultAction());
+        } else if (button->menu() != nullptr && button->defaultAction() != nullptr) {
+            QMenu* family =
+                menu.addMenu(button->defaultAction()->icon(), button->defaultAction()->text());
+            family->addActions(button->menu()->actions());
+        } else if (button->defaultAction() != nullptr) {
+            menu.addAction(button->defaultAction());
+        }
+    }
 }
 
 void ToolRail::openFlyout(int group) {
@@ -358,11 +526,8 @@ void ToolRail::buildSketchPage(const std::vector<SketchToolActions::Section>& se
     for (const SketchToolActions::Section& section : sections) {
         // U14: the sections follow each other in one row, parted by a line; the section's
         // name stays as the buttons' accessible description.
-        if (!first) {
-            layout->addSpacing(6);
+        if (!first)
             layout->addWidget(divider(sketchPage_));
-            layout->addSpacing(6);
-        }
         first = false;
         // User decision 2026-10-05: symbols only, name and shortcut in the tooltip.
         // S14 (2026-10-10): one button per family; the chevron opens the other variants and
@@ -398,6 +563,7 @@ void ToolRail::buildSketchPage(const std::vector<SketchToolActions::Section>& se
     }
     static_cast<QHBoxLayout*>(content->layout())->addWidget(sketchPage_);
     sketchPage_->hide();
+    sketchPage_->installEventFilter(this);
 }
 
 void applyCommandIcons(QWidget& window, ThemeMode mode) {

@@ -110,6 +110,16 @@ inline void chooseFromMenu(QToolButton& menuButton, const char* commandId) {
                 chosen = true;
                 return;
             }
+        // A submenu (a group or family in the rail's » menu): its entry is chosen there.
+        for (QAction* entry : menu->actions())
+            if (entry->menu() != nullptr)
+                for (QAction* action : entry->menu()->actions())
+                    if (action->property("commandId").toString() == id) {
+                        menu->close();
+                        action->trigger();
+                        chosen = true;
+                        return;
+                    }
         menu->close();
     };
     QTimer::singleShot(0, *attempt);
@@ -133,6 +143,31 @@ inline void chooseFromMenu(QToolButton& menuButton, const char* commandId) {
     settleEvents();
     if (!chosen)
         throw std::runtime_error(std::string("Menu entry missing: ") + commandId);
+}
+
+// L08: uses a rail tool by its button in the row or in its group, or through the » menu when
+// a narrow rail moved it there (user decision 2026-10-20).
+inline bool inRowOrGroup(QWidget& rail, const QToolButton& button) {
+    if (button.isVisible())
+        return true;
+    for (auto* group : rail.findChildren<QToolButton*>(QStringLiteral("railGroupButton")))
+        if (group->isVisible() && button.property("railGroup").isValid() &&
+            group->property("railGroup") == button.property("railGroup"))
+            return true;
+    return false;
+}
+
+inline void useRailTool(QWidget& rail, const char* commandId) {
+    bool reachable = false;
+    for (auto* button : rail.findChildren<QToolButton*>())
+        if (button->defaultAction() != nullptr &&
+            button->defaultAction()->property("commandId").toString() == QLatin1String(commandId))
+            reachable = reachable || inRowOrGroup(rail, *button);
+    auto* more = rail.findChild<QToolButton*>(QStringLiteral("railOverflowButton"));
+    if (!reachable && more != nullptr && more->isVisible())
+        chooseFromMenu(*more, commandId);
+    else
+        press(railButton(rail, commandId));
 }
 
 // Answers file dialogs with `file` (or cancels them when empty) and the save prompt with

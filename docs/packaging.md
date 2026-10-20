@@ -113,3 +113,26 @@ voelund-cad --check-document <datei> [--resave <ziel>]   # 0 geöffnet, 2 abgele
 Unter Windows prüft niemand automatisch, dass ein Doppelklick im Explorer das Dokument öffnet.
 Auf der Entwicklungsmaschine laufen keine GUI-Tests, und es gibt keinen Windows-Runner. Das bleibt
 eine Nutzerprüfung.
+
+## Prüfung auf einem sauberen System (L08)
+
+- **Windows:** `tools/release-acceptance/Start-WindowsSandboxCheck.ps1 -Stage <leerer Ordner>`
+  prüft das Release-ZIP in Windows Sandbox: frisches Windows 11 ohne Visual Studio und ohne
+  Entwickler-PATH. Das Skript entpackt nach `Desktop\Völund Prüfung` und prüft dann:
+  - Version, Start und Öffnen eines Umlaut-Dokuments;
+  - `--check-document` und `--resave`;
+  - Dateizuordnung setzen und entfernen;
+  - die Oberflächenabläufe A-PART-01, A-PART-02 und U11;
+  - Aufnahmen bei 100, 150 und 200 %;
+  - ein Bildschirmfoto des laufenden Programms.
+
+  Die Sandbox startet minimiert; auf dem Desktop des Hosts öffnet sich kein Programmfenster.
+- **Smart App Control:** Ein frisch eingerichtetes Windows 11 blockiert das unsignierte Programm
+  („Eine Anwendungssteuerungsrichtlinie hat diese Datei blockiert“). Die Prüfung hält das
+  zuerst fest. Danach schaltet sie Smart App Control nur in der Wegwerf-Sandbox ab
+  (Nutzerentscheidung 20.10.2026). Für Nutzer mit Smart App Control braucht das Paket eine
+  Codesignatur (L10).
+- **Linux:** `tools/release-acceptance/linux-clean-user-check.sh [<Release-Build> [<Ausgabe>]]`
+  installiert den Tarball für einen frischen Nutzer (leeres `HOME`, eigene XDG-Ordner, PATH nur
+  `/usr/bin:/bin`). Unter einer eigenen virtuellen KWin-Wayland-Sitzung prüft es dieselben Fälle
+  und am Ende das Deinstallieren ohne Reste.

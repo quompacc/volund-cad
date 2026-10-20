@@ -13,7 +13,10 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QLabel>
+#include <QMenu>
 #include <QPushButton>
+#include <QScrollArea>
+#include <QScrollBar>
 #include <QStatusBar>
 #include <QTemporaryDir>
 #include <QTreeWidget>
@@ -223,7 +226,7 @@ void extrusionPath(Window& w, test::DialogAnswers& user) {
     w.click(12, 7, 10);
     press(w.context("solid.create.sketch"));
     require(w.editing(), "The top face opens the sketch editor");
-    press(w.rail("sketch.tool.rectangle"));
+    test::useRailTool(w.child("toolRail"), "sketch.tool.rectangle");
     w.click(7, 4, 10);
     w.click(17, 9, 10);
     press(w.panelButton("toolAcceptButton"));
@@ -258,12 +261,12 @@ void productPath(const QString& path) {
     require(w.editing(), "The context bar opens the sketch editor");
 
     // Away from the origin, so the corner is bound by the lock alone (nothing redundant).
-    press(w.rail("sketch.tool.rectangle"));
+    test::useRailTool(w.child("toolRail"), "sketch.tool.rectangle");
     w.click(2, 2);
     w.click(20, 11);
-    press(w.rail("sketch.tool.select"));
+    test::useRailTool(w.child("toolRail"), "sketch.tool.select");
     w.click(2.2, 2.2); // the first corner, locked before the sides get their lengths
-    press(w.rail("sketch.lock_point"));
+    test::useRailTool(w.child("toolRail"), "sketch.lock_point");
     w.click(11, 2); // bottom side
     w.type("line_length", 20);
     w.click(2, 6.5); // left side
@@ -362,11 +365,11 @@ void captures(const QString& path) {
             press(w.timelineStep(0));
             w.capture((prefix + "sketch-labels").c_str());
             // An error: a fillet radius larger than the sides allow (reason, red sides).
-            press(w.rail("sketch.tool.select"));
+            test::useRailTool(w.child("toolRail"), "sketch.tool.select");
             w.click(12, 2);
             w.addClick(2, 7);
             w.type("fillet_radius", 50);
-            press(w.rail("sketch.fillet"));
+            test::useRailTool(w.child("toolRail"), "sketch.fillet");
             w.capture((prefix + "error").c_str());
             test::answerDiscardQuestion(QStringLiteral("Verwerfen"));
             press(w.panelButton("toolCancelButton"));
@@ -395,10 +398,69 @@ void captures(const QString& path) {
     }
 }
 
+// L08 (A-VIS-01 of the release in a clean Windows at 150 %): the project card, the tool rail
+// and the header card never overlap, and no tool is clipped. A narrow rail shows its groups as
+// symbols, then the tools at its end in the » menu (user decision 2026-10-20); solid and
+// sketch mode.
+void cardsFit() {
+    test::DialogAnswers user;
+    user.answer = QMessageBox::Discard;
+    Window w;
+    const auto check = [&w](const std::string& state) {
+        test::render(*w.viewport);
+        test::settleEvents();
+        const QRect project = w.child("projectCard").geometry();
+        const QRect header = w.child("shellHeader").geometry();
+        auto& rail = w.child("toolRail");
+        const QRect bar = rail.geometry();
+        auto* scroll = rail.findChild<QScrollArea*>(QStringLiteral("railScroll"));
+        require(project.right() < header.left(), state + ": project card beside the header");
+        require(!bar.intersects(project) && !bar.intersects(header),
+                state + ": tool rail between the cards, " + std::to_string(project.right()) +
+                    " < " + std::to_string(bar.left()) + ".." + std::to_string(bar.right()) +
+                    " < " + std::to_string(header.left()));
+        auto* context = w.main->findChild<QWidget*>(QStringLiteral("contextBar"));
+        require(context == nullptr || !context->isVisible() ||
+                    (context->x() >= 0 && context->geometry().right() < w.viewport->width()),
+                state + ": context bar inside the view");
+        require(scroll != nullptr && scroll->horizontalScrollBar()->maximum() == 0,
+                state + ": no tool clipped, " +
+                    std::to_string(scroll->horizontalScrollBar()->maximum()) + " px beyond " +
+                    std::to_string(bar.width()) + " wanted " +
+                    std::to_string(rail.property("wantedWidth").toInt()));
+        auto* more = rail.findChild<QToolButton*>(QStringLiteral("railOverflowButton"));
+        if (more != nullptr && more->isVisible()) {
+            require(more->mapTo(&rail, QPoint(more->width(), 0)).x() <= bar.width(),
+                    state + ": the » button whole inside its card");
+            emit more->menu()->aboutToShow();
+            require(!more->menu()->actions().isEmpty(), state + ": the » menu has the rest");
+        }
+        return more != nullptr && more->isVisible();
+    };
+    const auto sizes = [&](const std::string& mode) {
+        w.main->resize(1300, 860);
+        // The solid groups fit a 1300 px window; the sketch tools need about 1700 px.
+        require(!check(mode + " 1300") || mode == "sketch", mode + " 1300: every tool in the row");
+        w.main->resize(1100, 760);
+        check(mode + " 1100");
+        w.main->resize(w.main->minimumSizeHint());
+        check(mode + " smallest");
+        w.main->resize(1300, 860);
+    };
+    sizes("solid");
+    w.click(35, 35);
+    sizes("plane picked"); // with the context bar
+    press(w.context("solid.create.sketch"));
+    sizes("sketch");
+    press(w.panelButton("toolCancelButton"));
+    require(w.main->close(), "Close");
+}
+
 int run() {
     QTemporaryDir directory;
     require(directory.isValid(), "temporary directory");
     const QString path = directory.path() + QStringLiteral("/U11 Ablauf.volund");
+    cardsFit();
     productPath(path);
     captures(directory.path() + QStringLiteral("/U11 Skizze.volund"));
     std::cout << "PASS U11/M04 product path through the real UI (A-UI-01)\n";

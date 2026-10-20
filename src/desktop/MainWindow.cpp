@@ -31,8 +31,10 @@
 #include <QCloseEvent>
 #include <QDockWidget>
 #include <QDoubleSpinBox>
+#include <QGuiApplication>
 #include <QKeySequence>
 #include <QLabel>
+#include <QScreen>
 #include <QSignalBlocker>
 #include <QStatusBar>
 #include <QVBoxLayout>
@@ -78,7 +80,12 @@ MainWindow::MainWindow(application::CadSession& session, QWidget* parent)
     syncProperties();
     syncTreeStatus();
     syncSketchPresentation();
-    resize(1200, 800);
+    // L08 (A-VIS-01): the first size never exceeds the screen's free area, at any scaling.
+    const QRect free = QGuiApplication::primaryScreen()->availableGeometry();
+    // The narrowest window still holds project card, » button and compact header side by side.
+    setMinimumWidth(720);
+    resize(std::min(1200, free.width() * 9 / 10), std::min(800, free.height() * 9 / 10));
+    move(free.center() - rect().center());
 }
 
 MainWindow::~MainWindow() = default;

@@ -113,8 +113,10 @@ void FeaturePropertiesPanel::createBoxPanel() {
     lengthInput_->setObjectName(QStringLiteral("boxLengthInput"));
     widthInput_->setObjectName(QStringLiteral("boxWidthInput"));
     boxHeightInput_->setObjectName(QStringLiteral("boxHeightInput"));
-    for (QDoubleSpinBox*& input : boxTranslationInputs_) {
-        input = makeLengthInput(boxPanel_, true);
+    for (int index = 0; index < 3; ++index) {
+        boxTranslationInputs_[index] = makeLengthInput(boxPanel_, true);
+        boxTranslationInputs_[index]->setObjectName(
+            QStringLiteral("boxTranslation%1Input").arg(index));
     }
     for (int index = 0; index < 3; ++index) {
         boxRotationInputs_[index] = makeAngleInput(boxPanel_);

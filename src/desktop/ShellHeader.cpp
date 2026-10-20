@@ -20,6 +20,36 @@ namespace {
 // symbols sit in the middle and the row lines up.
 constexpr int controlSize = 32;
 
+// L08 (A-VIS-01): a document name that does not fit ends in an ellipsis and shows whole in its
+// tooltip; the card still asks for the whole name.
+class ElidedLabel final : public QLabel {
+  public:
+    using QLabel::QLabel;
+    void setFullText(const QString& text) {
+        full_ = text;
+        setToolTip(text);
+        updateGeometry();
+        elide();
+    }
+    [[nodiscard]] QSize sizeHint() const override {
+        return {fontMetrics().horizontalAdvance(full_) + 2, QLabel::sizeHint().height()};
+    }
+    [[nodiscard]] QSize minimumSizeHint() const override {
+        return {fontMetrics().horizontalAdvance(QStringLiteral("…")) + 2,
+                QLabel::minimumSizeHint().height()};
+    }
+
+  protected:
+    void resizeEvent(QResizeEvent* event) override {
+        QLabel::resizeEvent(event);
+        elide();
+    }
+
+  private:
+    void elide() { setText(fontMetrics().elidedText(full_, Qt::ElideRight, width())); }
+    QString full_;
+};
+
 QToolButton* iconButton(QWidget* parent, const char* name) {
     auto* button = new QToolButton(parent);
     button->setObjectName(QLatin1String(name));
@@ -53,10 +83,8 @@ QIcon statusDot(const QColor& color, bool filled) {
 } // namespace
 
 ShellHeader::ShellHeader(QWidget& host) : OverlayCard(host, QStringLiteral("shellHeader")) {
-    project_ = new OverlayCard(host, QStringLiteral("projectCard"), [this](const QWidget& area) {
-        const int width = std::min(project_->sizeHint().width(), area.width() / 2 - 40);
-        return QRect(overlay::margin, overlay::margin, std::max(120, width), overlay::barHeight);
-    });
+    project_ = new OverlayCard(host, QStringLiteral("projectCard"),
+                               [this](const QWidget& area) { return projectPlace(area); });
     auto* projectLayout = new QHBoxLayout(project_);
     projectLayout->setContentsMargins(8, 6, 12, 6);
     projectLayout->setSpacing(8);
@@ -74,13 +102,13 @@ ShellHeader::ShellHeader(QWidget& host) : OverlayCard(host, QStringLiteral("shel
     brand_ = new QLabel(card);
     brand_->setObjectName(QStringLiteral("brandMark"));
     projectLayout->addWidget(brand_);
-    auto* brandName = new QLabel(QStringLiteral("Völund"), card);
-    brandName->setObjectName(QStringLiteral("brandName"));
-    projectLayout->addWidget(brandName);
-    auto* separator = new QLabel(QStringLiteral("/"), card);
-    separator->setObjectName(QStringLiteral("pathSeparator"));
-    projectLayout->addWidget(separator);
-    documentName_ = new QLabel(card);
+    brandName_ = new QLabel(QStringLiteral("Völund"), card);
+    brandName_->setObjectName(QStringLiteral("brandName"));
+    projectLayout->addWidget(brandName_);
+    separator_ = new QLabel(QStringLiteral("/"), card);
+    separator_->setObjectName(QStringLiteral("pathSeparator"));
+    projectLayout->addWidget(separator_);
+    documentName_ = new ElidedLabel(card);
     documentName_->setObjectName(QStringLiteral("documentName"));
     documentName_->setMaximumWidth(260);
     projectLayout->addWidget(documentName_, 1);
@@ -128,12 +156,55 @@ ShellHeader::ShellHeader(QWidget& host) : OverlayCard(host, QStringLiteral("shel
     layout->addWidget(assistantButton_);
     showAssistant(AssistantState::off);
     setTheme(ThemeMode::light);
-    setPlacement([this](const QWidget& area) {
-        setCompact(area.width() < 1100);
-        const int width = sizeHint().width();
-        return QRect(area.width() - width - overlay::margin, overlay::margin, width,
-                     overlay::barHeight);
-    });
+    setPlacement([this](const QWidget& area) { return headerPlace(area); });
+}
+
+namespace {
+
+// A width of the tool rail ("wantedWidth": every tool with its text, "leastWidth": only its
+// » button), 0 while it is switched off.
+int railWidth(const QWidget& area, const char* which) {
+    const auto* rail =
+        area.findChild<QWidget*>(QStringLiteral("toolRail"), Qt::FindDirectChildrenOnly);
+    return rail != nullptr && rail->isVisible() ? rail->property(which).toInt() : 0;
+}
+
+} // namespace
+
+// L08 (A-VIS-01): never under the header card or the tool rail's » button; the document name
+// gives way, and when tight the name "Völund /" gives way to the mark. Never narrower than its
+// content.
+QRect ShellHeader::projectPlace(const QWidget& area) {
+    // The rail keeps at least its » button; its groups show symbols before the name gives way
+    // (user decision 2026-10-20).
+    const int rail = railWidth(area, "leastWidth");
+    const int beside = area.width() - 2 * overlay::margin - overlay::gap - sizeHint().width() -
+                       (rail > 0 ? rail + overlay::gap : 0);
+    const int width = std::min({project_->sizeHint().width(), area.width() / 2 - 40, beside});
+    const int brand = brandName_->sizeHint().width() + separator_->sizeHint().width() +
+                      2 * project_->layout()->spacing();
+    const int least = project_->minimumSizeHint().width() + (brandName_->isHidden() ? brand : 0);
+    const bool roomy = width >= least;
+    if (brandName_->isHidden() == roomy) { // only changes, no layout loop
+        brandName_->setVisible(roomy);
+        separator_->setVisible(roomy);
+    }
+    return {overlay::margin, overlay::margin, std::max(roomy ? least : least - brand, width),
+            overlay::barHeight};
+}
+
+// L08 (A-VIS-01): also compact when the full header would clip the tool rail between the
+// project card and this card.
+QRect ShellHeader::headerPlace(const QWidget& area) {
+    if (!compact_)
+        fullWidth_ = sizeHint().width();
+    const int projectWidth = std::min(project_->sizeHint().width(), area.width() / 2 - 40);
+    const int needed = 2 * overlay::margin + 2 * overlay::gap + projectWidth +
+                       railWidth(area, "wantedWidth") + fullWidth_;
+    setCompact(area.width() < 1100 || area.width() < needed);
+    const int width = sizeHint().width();
+    project_->place(); // the project card makes room for this card's new width
+    return {area.width() - width - overlay::margin, overlay::margin, width, overlay::barHeight};
 }
 
 void ShellHeader::setFileMenu(QMenu& menu) { fileButton_->setMenu(&menu); }
@@ -151,6 +222,9 @@ void ShellHeader::setCompact(bool compact) {
     searchButton_->setProperty("compact", compact); // no side padding around the symbol
     parametersButton_->setToolButtonStyle(compact ? Qt::ToolButtonIconOnly
                                                   : Qt::ToolButtonTextBesideIcon);
+    // L08: the assistant chip keeps its status dot and menu, without its name.
+    assistantButton_->setToolButtonStyle(compact ? Qt::ToolButtonIconOnly
+                                                 : Qt::ToolButtonTextBesideIcon);
     searchButton_->style()->unpolish(searchButton_);
     searchButton_->style()->polish(searchButton_);
 }
@@ -172,7 +246,7 @@ void ShellHeader::setParametersAction(QAction& parameters) {
 }
 
 void ShellHeader::display(const ShellState& state) {
-    documentName_->setText(state.documentName);
+    static_cast<ElidedLabel*>(documentName_)->setFullText(state.documentName);
     saveState_->setText(state.modified ? tr("Ungespeichert") : tr("Gespeichert"));
     saveState_->setProperty("modified", state.modified);
     // Re-polish so the [modified="true"] style rule follows the property.

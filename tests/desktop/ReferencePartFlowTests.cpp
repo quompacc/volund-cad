@@ -8,6 +8,7 @@
 #include <GProp_GProps.hxx>
 #include <QApplication>
 #include <QComboBox>
+#include <QDir>
 #include <QDoubleSpinBox>
 #include <QMenu>
 #include <QPushButton>
@@ -32,6 +33,8 @@
 // timeline to 12 carries hole, pocket and fillet; Undo/Redo in the header. The pocket
 // suppressed and reactivated from the timeline menu. File > Export and, in a new document,
 // File > Import give the same volume and bounding box.
+// L08: saved and exported under a folder and names with umlauts; the base sketch's bottom side
+// 60 -> 70 carries the chain (A-PART-01 step 5), the fillet edited from the timeline to 2.
 namespace {
 using namespace voelund;
 using test::press;
@@ -159,6 +162,45 @@ bool closeTo(double value, double expected) {
     return std::abs(value - expected) < 1e-6 * std::max(1.0, std::abs(expected));
 }
 
+// A-PART-01 step 5 and A-HISTORY-01: early edits carried through hole, pocket and fillet,
+// each undone again.
+void editThroughTheChain(Window& w, double rounded, double pocketed) {
+    // 6. The extrusion reopened from the timeline: 12 high carries the whole chain.
+    const double twelve = 28800 - 192 * pi - 1120 - 12 * (1 - pi / 4);
+    press(w.step(1));
+    w.type("distance", 12);
+    w.ok();
+    require(closeTo(w.volume(), twelve),
+            "Height 12 through the chain: " + std::to_string(w.volume()));
+    press(w.header("history.undo"));
+    require(closeTo(w.volume(), rounded), "Undo");
+    press(w.header("history.redo"));
+    require(closeTo(w.volume(), twelve), "Redo");
+    press(w.header("history.undo"));
+
+    // 6b. The plate 70 wide (L08, A-PART-01 step 5): the bottom side of the reopened base
+    // sketch; hole, pocket and fillet stay on the plate.
+    w.view(viewport::CameraView::top);
+    press(w.step(0));
+    press(w.rail("sketch.tool.select"));
+    w.click(0, -20, 0);
+    w.type("line_length", 70);
+    w.ok();
+    require(closeTo(w.volume(), rounded + 4000) && w.steps() == 6,
+            "Width 70 through the chain: " + std::to_string(w.volume()));
+    press(w.header("history.undo"));
+    require(closeTo(w.volume(), rounded), "Undo width");
+
+    // 6c. The fillet edited from the timeline: radius 2.
+    press(w.step(5));
+    w.type("radius", 2);
+    w.ok();
+    require(closeTo(w.volume(), pocketed - 40 * (1 - pi / 4)) && w.steps() == 6,
+            "Fillet edited to 2: " + std::to_string(w.volume()));
+    press(w.header("history.undo"));
+    require(closeTo(w.volume(), rounded), "Undo fillet edit");
+}
+
 int run() {
     QTemporaryDir directory;
     require(directory.isValid(), "temporary directory");
@@ -219,8 +261,10 @@ int run() {
     require(closeTo(w.volume(), rounded) && w.steps() == 6,
             "Rounded edge: " + std::to_string(w.volume()));
 
-    // 5. Save, New, Open.
-    user.file = directory.path() + QStringLiteral("/Referenzplatte.volund");
+    // 5. Save, New, Open, under a folder and a name with umlauts (L08).
+    require(QDir(directory.path()).mkdir(QStringLiteral("Prüf Ordner äöü")), "Unicode folder");
+    const QString folder = directory.path() + QStringLiteral("/Prüf Ordner äöü");
+    user.file = folder + QStringLiteral("/Referenzplatte Ä.volund");
     w.file("document.save_as");
     w.file("document.new");
     require(w.session.features().empty(), "New");
@@ -228,18 +272,7 @@ int run() {
     require(closeTo(w.volume(), rounded) && w.steps() == 6 && user.errors == 0,
             "Opened with all six steps");
 
-    // 6. The extrusion reopened from the timeline: 12 high carries the whole chain.
-    const double twelve = 28800 - 192 * pi - 1120 - 12 * (1 - pi / 4);
-    press(w.step(1));
-    w.type("distance", 12);
-    w.ok();
-    require(closeTo(w.volume(), twelve),
-            "Height 12 through the chain: " + std::to_string(w.volume()));
-    press(w.header("history.undo"));
-    require(closeTo(w.volume(), rounded), "Undo");
-    press(w.header("history.redo"));
-    require(closeTo(w.volume(), twelve), "Redo");
-    press(w.header("history.undo"));
+    editThroughTheChain(w, rounded, pocketed);
 
     // 7. The pocket suppressed and reactivated from the timeline menu.
     w.stepMenu(4, QStringLiteral("Unterdrücken"));
@@ -249,7 +282,7 @@ int run() {
 
     // 8. STEP out and back in.
     const auto box = w.bounds();
-    user.file = directory.path() + QStringLiteral("/Referenzplatte.step");
+    user.file = folder + QStringLiteral("/Referenzplatte Ä.step");
     w.file("document.export_step");
     user.answer = QMessageBox::Discard;
     w.file("document.new");
@@ -266,13 +299,16 @@ int run() {
 } // namespace
 
 int main(int argc, char** argv) {
+    // The file dialogs are answered as widgets (test::DialogAnswers), also on Windows.
+    QApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
     QApplication application(argc, argv);
     voelund::test::isolateSettings();
     try {
         const int result = run();
         std::cout << "PASS M18 A-PART-01 through the shell: plate, through hole, pocket, rounded "
-                     "edge, save/new/open, height 12 through the chain, undo/redo, pocket "
-                     "suppressed and reactivated, STEP round trip"
+                     "edge, save/new/open under umlauts, height 12 and width 70 through the chain, "
+                     "undo/redo, fillet edited, pocket suppressed and reactivated, STEP round "
+                     "trip"
                   << std::endl;
         return result;
     } catch (const std::exception& error) {
