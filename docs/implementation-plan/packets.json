@@ -3242,12 +3242,15 @@
       ],
       "acceptance": "Windows A-PART-01/02 und Unicode-Dateifälle bestanden; Linux-Desktop A-PART-01/02 unter nativem Wayland bestanden. Native-Windows nicht als Produktvoraussetzung ausgeben, wenn ADR nur Diagnose verlangt. Fehlende Plattform bleibt offen. Eigenständige optische Prüfung des Windows-Produkts nach A-VIS-01; keine generelle Bitte an den Nutzer, die Anwendung durchzutesten.",
       "boundary": "Keine Windows-Grafikfreigabe aus Headless-Coretests ableiten.",
-      "status": "planned",
+      "status": "done",
       "gate": "G4",
       "chapter": "06-plattform-release.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/L08.md"
+      ],
+      "completedCommit": "5080616",
+      "completedDate": "2026-10-20"
     },
     {
       "id": "L09",
