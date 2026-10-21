@@ -3214,8 +3214,8 @@
         "A-PART-01 samt Save/Open/STEP auf Meridian durchführen; Sway nur zur Ursachenabgrenzung heranziehen."
       ],
       "acceptance": "Alle in A-PLAT-01 vorgeschriebenen Checks besitzen pass/fail und Evidenz. QPA ist nativ Wayland; kein übersehener X-Fallback. Fehler werden mit reproduzierbarem Unterpaket behoben und nachgeprüft. Der Agent bedient und prüft die verfügbare Zielumgebung selbst einschließlich Bildkontrolle; nur unbeobachtbare Restwirkungen werden gemäß Kapitel 10 gebündelt an den Nutzer gegeben.",
-      "boundary": "Initiales P04 allein reicht nach großen Backend-/Dependencyänderungen nicht als Releasefreigabe.",
-      "status": "planned",
+      "boundary": "Initiales P04 allein reicht nach großen Backend-/Dependencyänderungen nicht als Releasefreigabe. Nutzerentscheidung 2026-10-21: FreeBSD/Meridian zurückgestellt; die v1 wird für Windows und Linux abgenommen, L07 folgt, wenn die FreeBSD-Umgebung wieder aufgenommen wird.",
+      "status": "deferred",
       "gate": "G4",
       "chapter": "06-plattform-release.md",
       "kind": "implementation-or-acceptance",
@@ -3258,7 +3258,6 @@
       "deps": [
         "L03",
         "L04",
-        "L07",
         "L08"
       ],
       "files": [

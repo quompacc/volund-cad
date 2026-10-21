@@ -116,6 +116,9 @@ P01–P04 sichern die frühe FreeBSD/Sway-Entwicklungsbasis. Gemäß Nutzerentsc
 
 ## L07 – Vollständige Meridian-Produktabnahme wiederholen
 
+- **Zurückgestellt (Nutzerentscheidung 21.10.2026):** FreeBSD/Meridian ruht. Die v1 wird für
+  Windows und Linux abgenommen; L07 folgt, wenn die FreeBSD-Umgebung wieder aufgenommen wird.
+  L09 hängt deshalb nicht mehr an L07.
 - **Voraussetzungen:** P04, L02, L05, L06.
 - **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08; `docs/freebsd-meridian.md`, `tools/run-freebsd-integration.sh`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
 - **Auftrag:**
@@ -138,7 +141,7 @@ P01–P04 sichern die frühe FreeBSD/Sway-Entwicklungsbasis. Gemäß Nutzerentsc
 
 ## L09 – Benutzerdokumentation und ausführbare Tutorials
 
-- **Voraussetzungen:** L03, L04, L07, L08.
+- **Voraussetzungen:** L03, L04, L08 (L07 zurückgestellt, 21.10.2026).
 - **Pflichtlektüre/Einstieg:** Kapitel 01 betreffende F-Befunde, Kapitel 02 K01–K08; `README.md`, `docs/development-status.md`, `docs/sketch-data-model.md`. Nach A03 ggf. ausgegliederte Nachfolgesymbole lesen.
 - **Auftrag:**
   1. Installation, erstes Teil, Skizzenzustände, Timeline, Reparatur, Save/Recovery und STEP verständlich dokumentieren.

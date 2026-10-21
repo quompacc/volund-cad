@@ -7,7 +7,7 @@ Pflichtplattform offen ist, gibt es kein grünes Gesamtsignal, auch wenn das CI 
 |---|---|---|---|---|
 | Linux (Fedora, GCC, OCCT 7.9.3, Wayland) | `linux-desktop` | `linux-desktop-release` | Pflicht-CI bei jedem Push (`ci / linux-desktop`) | **läuft** |
 | Windows 11 (MSVC, OCCT 8.0.1, Qt OpenGL) | `windows-msvc` | `windows-msvc-release` | lokal mit `tools/test-windows.ps1 -BuildDirectory build/<preset>` (ohne Desktop-Tests); Release-ZIP und Oberflächenabläufe in Windows Sandbox mit `tools/release-acceptance/Start-WindowsSandboxCheck.ps1` (L08) | **offen**: kein CI-Runner; Release-ZIP lokal in `build\windows-msvc-release` |
-| FreeBSD (Clang, lean OCCT, Sway) | `freebsd-clang-lean-occt` | `freebsd-clang-lean-occt-release` | `sh tools/run-freebsd-integration.sh control <preset>` an Gate-Abnahmen | **offen**: kein CI-Runner |
+| FreeBSD (Clang, lean OCCT, Sway) | `freebsd-clang-lean-occt` | `freebsd-clang-lean-occt-release` | `sh tools/run-freebsd-integration.sh control <preset>` an Gate-Abnahmen | **zurückgestellt** (Nutzerentscheidung 21.10.2026, L07); nicht Teil der v1-Abnahme |
 | GPU-/Display-Nachweis, Meridian | – | – | eigene Abnahme (L07) | **offen**: im CI nur headless `kwin_wayland --virtual`, kein Display-Nachweis |
 
 ## Was der Pflichtlauf prüft
