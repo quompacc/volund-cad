@@ -4,8 +4,8 @@
   "auditedCommit": "1b78229",
   "status": "implementation-started",
   "counts": {
-    "total": 157,
-    "throughG4": 127,
+    "total": 173,
+    "throughG4": 143,
     "g5": 30
   },
   "globalGates": [
@@ -149,6 +149,22 @@
     "L06b",
     "L07",
     "L08",
+    "N01",
+    "N02",
+    "N03",
+    "N04",
+    "N05",
+    "N06",
+    "N07",
+    "N08",
+    "N09",
+    "N10",
+    "N11",
+    "N12",
+    "N13",
+    "N14",
+    "N15",
+    "N16",
     "L09",
     "L10",
     "X01",
@@ -3253,12 +3269,409 @@
       "completedDate": "2026-10-20"
     },
     {
+      "id": "N01",
+      "title": "Ausdrücke und Parameter in allen Maßfeldern",
+      "deps": [
+        "PAR02"
+      ],
+      "files": [
+        "include/voelund/document/ParameterTable.hpp",
+        "src/document/ParameterExpression.cpp",
+        "src/desktop/MeasurementInput.cpp"
+      ],
+      "steps": [
+        "Ausdrücke mit + − × ÷, Klammern, Einheiten und Parameternamen (=A*2, =B/2+3 mm) als eigener, getesteter Auswerter ohne Fremdskript; Zyklen und unbekannte Namen werden erklärt abgewiesen.",
+        "Bindung in allen Maßfeldern: Bohrung, Verrundung, Fase, Muster, Grundkörper, Drehen, Wandstärke, Formschräge; Tabelle zeigt Ausdruck und Wert."
+      ],
+      "acceptance": "Parameter A ändern ändert alle gebundenen Features; Ausdruck mit Zyklus abgelehnt; Speichern/Öffnen behält Ausdrücke; Undo stellt Ausdruck und Wert her.",
+      "boundary": "Keine Funktionen wie sin() in der ersten Stufe, wenn nicht entschieden; keine bedingten Ausdrücke. Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
+      "status": "planned",
+      "gate": "G4",
+      "chapter": "12-v1-abrundung.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "N02",
+      "title": "Bedien-Grundlagen: zuletzt geöffnet, Kopieren/Einfügen, Mehrfachauswahl",
+      "deps": [
+        "L08"
+      ],
+      "files": [
+        "src/desktop/DocumentActions.cpp",
+        "src/desktop/MainWindowBodies.cpp",
+        "src/application/CadSession.cpp"
+      ],
+      "steps": [
+        "Liste „Zuletzt geöffnet“ im Dateimenü (Nutzereinstellung, fehlende Dateien erklärt entfernt).",
+        "Körper kopieren und einfügen als unabhängige Kopie; Mehrfachauswahl von Körpern und Zeitleistenschritten mit Strg/Umschalt; gemeinsames Löschen, Ausblenden, Bewegen."
+      ],
+      "acceptance": "Fünf Dateien öffnen: Liste in richtiger Reihenfolge; Kopie eines Körpers hat eigenes Volumen und ändert sich nicht mit dem Original; drei Körper zusammen bewegt und gelöscht, ein Undo stellt alle her.",
+      "boundary": "Kein Einfügen zwischen Dokumenten in der ersten Stufe, wenn nicht entschieden. Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
+      "status": "planned",
+      "gate": "G4",
+      "chapter": "12-v1-abrundung.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "N03",
+      "title": "STL- und 3MF-Export für den 3D-Druck",
+      "deps": [
+        "M17"
+      ],
+      "files": [
+        "src/kernel/MeshExport.cpp",
+        "src/desktop/DocumentActions.cpp"
+      ],
+      "steps": [
+        "Export gewählter oder sichtbarer Körper als STL (binär) und 3MF mit Auflösung grob/mittel/fein bzw. Sehnenfehler und Winkel.",
+        "Nur aus gültigem, aktuellem Modell; geschlossene, orientierte Netze."
+      ],
+      "acceptance": "Würfel 10³ und Referenzplatte exportiert: Netz geschlossen, Volumen innerhalb der Auflösungstoleranz, Einheit mm; ungültiges Modell verweigert.",
+      "boundary": "Kein Mesh-Import (X07). Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
+      "status": "planned",
+      "gate": "G4",
+      "chapter": "12-v1-abrundung.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "N04",
+      "title": "IGES-Export und DXF-Export aus Skizzen",
+      "deps": [
+        "M17",
+        "S21"
+      ],
+      "files": [
+        "src/kernel/IgesExchange.cpp",
+        "src/kernel/DxfExport.cpp"
+      ],
+      "steps": [
+        "IGES-Export von Körpern wie STEP.",
+        "DXF-Export einer Skizze (Linien, Bögen, Kreise, Ellipsen, Splines) in mm."
+      ],
+      "acceptance": "IGES-Rundreise mit gleichem Volumen/BBox; DXF einer Skizze von einem zweiten Leser (oder eigenem Prüfer) mit gleichen Elementen und Maßen gelesen.",
+      "boundary": "DXF-Import ist N15. Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
+      "status": "planned",
+      "gate": "G4",
+      "chapter": "12-v1-abrundung.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "N05",
+      "title": "Schnittansicht",
+      "deps": [
+        "L08"
+      ],
+      "files": [
+        "src/viewport/CadViewportScene.cpp",
+        "src/desktop/MainWindowView.cpp"
+      ],
+      "steps": [
+        "Schnitt an Grundebene, Bezugsebene oder ebener Fläche; verschiebbar mit Pfeil und Feld; Schnittfläche gefüllt.",
+        "Reine Ansicht: kein Dirty, kein Undo-Schritt; Auswahl und Messen bleiben am geschnittenen Modell."
+      ],
+      "acceptance": "Referenzplatte an XZ geschnitten: Bohrung und Tasche sichtbar; Verschieben ändert den Schnitt; Schließen zeigt das ganze Modell; Dokument unverändert.",
+      "boundary": "Keine Schnitte in Zeichnungen (X04). Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
+      "status": "planned",
+      "gate": "G4",
+      "chapter": "12-v1-abrundung.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "N06",
+      "title": "Darstellungsstile und Farben pro Körper",
+      "deps": [
+        "M01"
+      ],
+      "files": [
+        "src/viewport/CadViewportScene.cpp",
+        "include/voelund/document/ModelDocument.hpp"
+      ],
+      "steps": [
+        "Darstellung schattiert, schattiert mit Kanten, Drahtgitter, verdeckte Kanten als Ansichtseinstellung.",
+        "Farbe pro Körper im Dokument (Schemaänderung), im Eigenschaftenpanel wählbar, im STEP-Export als Farbe."
+      ],
+      "acceptance": "Jeder Stil zeigt die Referenzplatte richtig (Bildprüfung); Farbe speichern/öffnen/Undo; STEP-Export trägt die Farbe.",
+      "boundary": "Keine Texturen und Renderings. Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
+      "status": "planned",
+      "gate": "G4",
+      "chapter": "12-v1-abrundung.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "N07",
+      "title": "Material, Masse und Schwerpunkt",
+      "deps": [
+        "N06"
+      ],
+      "files": [
+        "include/voelund/document/ModelDocument.hpp",
+        "src/kernel/MassProperties.cpp"
+      ],
+      "steps": [
+        "Material pro Körper aus einer kleinen, erweiterbaren Liste (Stahl, Aluminium, Messing, PLA, ABS …) mit Dichte; eigene Dichte möglich.",
+        "Masse, Volumen, Oberfläche, Schwerpunkt und Trägheitsmomente pro Körper und gesamt im Messen-/Eigenschaftenpanel."
+      ],
+      "acceptance": "Quader 10³ Stahl 7,85 g; Schwerpunkt der Referenzplatte gegen analytischen Wert; Material speichern/öffnen.",
+      "boundary": "Keine Materialbibliothek mit Festigkeiten (FEM01). Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
+      "status": "planned",
+      "gate": "G4",
+      "chapter": "12-v1-abrundung.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "N08",
+      "title": "Kollisionsprüfung und Messen an Punkten",
+      "deps": [
+        "M12"
+      ],
+      "files": [
+        "src/desktop/MeasureToolController.cpp",
+        "src/kernel/ShapeOperations.cpp"
+      ],
+      "steps": [
+        "Überschneidung zwischen gewählten oder allen Körpern mit Volumen und Hervorhebung.",
+        "Messen an Eckpunkten, Kantenmitten und Kreiszentren; Abstand Punkt–Punkt/Kante/Fläche."
+      ],
+      "acceptance": "Zwei überlappende Quader: Überschneidungsvolumen exakt; getrennte Körper: keine; Punktabstände an der Referenzplatte exakt.",
+      "boundary": "Keine Toleranzanalyse. Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
+      "status": "planned",
+      "gate": "G4",
+      "chapter": "12-v1-abrundung.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "N09",
+      "title": "Bohrungsvarianten, Gewinde und Bohrungen an Skizzenpunkten",
+      "deps": [
+        "M08",
+        "S15",
+        "N01"
+      ],
+      "files": [
+        "include/voelund/document/ModelDocument.hpp",
+        "src/features/HoleFeature.cpp",
+        "src/desktop/HoleToolController.cpp"
+      ],
+      "steps": [
+        "Einfach, Senkung, Flachsenkung, Gewindebohrung (metrisch ISO, kosmetisch: Kerndurchmesser modelliert, Gewinde als Attribut und Darstellung), Bohrspitze 118°.",
+        "Mehrere Bohrungen an Skizzenpunkten in einem Feature; Lage über Abstand zu zwei Kanten."
+      ],
+      "acceptance": "Volumen jeder Variante analytisch; M6-Gewindebohrung mit Kernloch 5,0 und Gewindeangabe; Bohrungen folgen verschobenen Skizzenpunkten; Speichern/Öffnen.",
+      "boundary": "Kein modelliertes Schraubengewinde (Helix) in der ersten Stufe, wenn nicht entschieden; kein Normteilkatalog. Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
+      "status": "planned",
+      "gate": "G4",
+      "chapter": "12-v1-abrundung.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "N10",
+      "title": "Fase- und Extrusionsvarianten",
+      "deps": [
+        "M07",
+        "M20",
+        "N01"
+      ],
+      "files": [
+        "src/features/FeatureGraph.cpp",
+        "src/desktop/ChamferToolController.cpp"
+      ],
+      "steps": [
+        "Fase mit Abstand+Winkel und mit zwei Abständen (Richtung umkehrbar).",
+        "Extrusion mit Verjüngungswinkel; Drehen bis Fläche."
+      ],
+      "acceptance": "Volumen je Variante analytisch; ungültiger Winkel erklärt abgewiesen; Speichern/Öffnen/Undo.",
+      "boundary": "Keine variable Verrundung, wenn nicht entschieden. Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
+      "status": "planned",
+      "gate": "G4",
+      "chapter": "12-v1-abrundung.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "N11",
+      "title": "Feature-Muster, Rastermuster und Muster entlang Kurve",
+      "deps": [
+        "M10",
+        "M09"
+      ],
+      "files": [
+        "include/voelund/document/ModelDocument.hpp",
+        "src/features/PatternFeature.cpp"
+      ],
+      "steps": [
+        "Muster und Spiegeln von Features (Bohrung, Tasche, Extrusion) statt ganzer Körper.",
+        "Rastermuster (zwei Richtungen) und Muster entlang einer Skizzenkurve; einzelne Kopien überspringen."
+      ],
+      "acceptance": "Bohrung 3×4 im Raster: Volumen exakt; Quellbohrung ändern ändert alle Kopien; übersprungene Kopie fehlt; Speichern/Öffnen.",
+      "boundary": "Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
+      "status": "planned",
+      "gate": "G4",
+      "chapter": "12-v1-abrundung.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "N12",
+      "title": "Körper teilen und Rippe",
+      "deps": [
+        "M21"
+      ],
+      "files": [
+        "src/features/FeatureGraph.cpp",
+        "src/kernel/ShapeOperations.cpp"
+      ],
+      "steps": [
+        "Körper an Ebene oder ebener Fläche in zwei Körper teilen (beide oder eine Seite behalten).",
+        "Rippe aus offener Skizzenlinie mit Dicke bis zu den angrenzenden Flächen."
+      ],
+      "acceptance": "Quader geteilt: zwei Körper mit Summe gleich Ausgangsvolumen; Rippe in einer Schale mit analytischem Volumen; Speichern/Öffnen/Undo.",
+      "boundary": "Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
+      "status": "planned",
+      "gate": "G4",
+      "chapter": "12-v1-abrundung.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "N13",
+      "title": "Direktbearbeitung und erweiterte Bezugsgeometrie",
+      "deps": [
+        "M19",
+        "T04"
+      ],
+      "files": [
+        "src/features/FeatureGraph.cpp",
+        "src/desktop/DatumToolController.cpp"
+      ],
+      "steps": [
+        "Fläche verschieben/versetzen und Fläche löschen (heilen) als Zeitleistenschritte.",
+        "Bezugsebene durch drei Punkte, Mittelebene zweier Flächen, Bezugspunkt; Bezugselemente einzeln ausblenden."
+      ],
+      "acceptance": "Fläche um 5 versetzt: Volumen exakt; gelöschte Fase heilt zur Kante; Mittelebene zwischen zwei Flächen genau mittig; Speichern/Öffnen.",
+      "boundary": "Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
+      "status": "planned",
+      "gate": "G4",
+      "chapter": "12-v1-abrundung.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "N14",
+      "title": "Skizzenkurven vervollständigen",
+      "deps": [
+        "S21",
+        "S10",
+        "S11"
+      ],
+      "files": [
+        "src/features/SketchTrim.cpp",
+        "src/features/SketchOffset.cpp",
+        "src/application/SketchFilletPlan.cpp"
+      ],
+      "steps": [
+        "Ellipsen und B-Splines trimmen, verlängern (wo sinnvoll), teilen und versetzen; interpolierende Splines durch Punkte.",
+        "Skizzenverrundung und -fase zwischen beliebigen Kurven; Muster mit frei gewählter Richtung und frei gewähltem Zentrum."
+      ],
+      "acceptance": "Werkzeug×Kurvenart-Matrix (A-SKETCH-01) für die neuen Fälle grün; Offset einer Ellipse mit exaktem Abstand an Prüfpunkten.",
+      "boundary": "Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
+      "status": "planned",
+      "gate": "G4",
+      "chapter": "12-v1-abrundung.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "N15",
+      "title": "Text in Skizzen, DXF-Import und Schnittkurven",
+      "deps": [
+        "S17",
+        "N14"
+      ],
+      "files": [
+        "src/document/SketchGeometry.cpp",
+        "src/kernel/DxfImport.cpp"
+      ],
+      "steps": [
+        "Textelement in Skizzen (Schrift, Höhe, Lage) als Profil für Gravur/Prägung.",
+        "DXF-Import in eine Skizze (Linien, Bögen, Kreise, Polylinien, Splines); Schnittkurven eines Körpers mit der Skizzenebene."
+      ],
+      "acceptance": "Text „Völund“ 10 mm hoch 1 mm tief graviert: gültiger Körper; DXF-Referenzdatei mit bekannten Elementen und Maßen; Schnittkurve eines Zylinders als Kreis.",
+      "boundary": "Keine Schriftbibliothek; mitgelieferte freie Schrift plus Systemschriften. Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
+      "status": "planned",
+      "gate": "G4",
+      "chapter": "12-v1-abrundung.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "N16",
+      "title": "Programmsymbol",
+      "deps": [
+        "L02"
+      ],
+      "files": [
+        "packaging/",
+        "apps/voelund-cad/CMakeLists.txt"
+      ],
+      "steps": [
+        "Eigenes Programmsymbol (Windows ICO in der EXE, Linux PNG/SVG im Desktop-Eintrag), Fenster- und Taskleistensymbol."
+      ],
+      "acceptance": "Symbol in Explorer/Taskleiste (Sandbox-Bildschirmfoto) und Linux-Desktop-Eintrag sichtbar; Paketprüfung enthält die Symboldateien.",
+      "boundary": "Codesignatur bleibt L10. Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
+      "status": "planned",
+      "gate": "G4",
+      "chapter": "12-v1-abrundung.md",
+      "kind": "implementation-or-acceptance",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
       "id": "L09",
       "title": "Benutzerdokumentation und ausführbare Tutorials",
       "deps": [
         "L03",
         "L04",
-        "L08"
+        "L08",
+        "N01",
+        "N02",
+        "N03",
+        "N04",
+        "N05",
+        "N06",
+        "N07",
+        "N08",
+        "N09",
+        "N10",
+        "N11",
+        "N12",
+        "N13",
+        "N14",
+        "N15",
+        "N16"
       ],
       "files": [
         "README.md",
@@ -4977,5 +5390,5 @@
     "statusSource": "packets.json ist die einzige Statusquelle; README und Statusseiten verweisen nur darauf und nennen keine Testzahlen.",
     "frozen": "G5 einschließlich AI02 beginnt erst nach G3-Abnahme."
   },
-  "updatedDate": "2026-10-17"
+  "updatedDate": "2026-10-21"
 }

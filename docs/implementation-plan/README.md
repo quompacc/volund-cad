@@ -135,7 +135,10 @@ Die Untersuchung erlaubt keine belastbare Aussage, dass ein bestimmtes Modell da
 8. [08 – Abnahmekatalog](08-abnahme.md): Konkrete positive und negative Szenarien.
 9. [09 – Arbeitsauftrag für Terra](09-terra-arbeitsauftrag.md): Direkt verwendbarer Ausführungsauftrag.
 10. [10 – Selbstständige Umsetzung und optische Prüfung](10-autonome-umsetzung.md): Eigenständige Paketfolge, Testverantwortung und minimale Benutzerbeteiligung.
-11. [11 – Native KI, FEM und Optimierung](11-ki-fem-optimierung.md): frühe Aktionsgrenze und getrennte spätere Lieferstufen.(packets.json): IDs, Abhängigkeiten, Prüfpunkte und Status.
+11. [11 – Native KI, FEM und Optimierung](11-ki-fem-optimierung.md): frühe Aktionsgrenze und getrennte spätere Lieferstufen.
+12. [12 – v1-Abrundung](12-v1-abrundung.md): N01–N16 vor L09/L10 (Nutzerentscheidung 21.10.2026).
+
+[packets.json](packets.json): IDs, Abhängigkeiten, Prüfpunkte und Status.
 
 Nachweise: [Windows-Audit mit Reproduktionsbefehlen](evidence/windows-audit-20260913.md)
 und [Inventar der 220 versionierten Ausgangsdateien](evidence/inventory.json).
