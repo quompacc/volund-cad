@@ -34,6 +34,7 @@ add_library(voelund_document STATIC
     ModelDocument.cpp
     ModelDocumentParameters.cpp
     DocumentParameters.cpp
+    ParameterExpression.cpp
     NativeParameters.cpp
     NativeBodyAttributes.cpp
     ModelDocumentHistory.cpp

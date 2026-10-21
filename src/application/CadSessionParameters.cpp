@@ -63,6 +63,19 @@ std::size_t CadSession::parameterUseCount(document::ParameterId id) const {
     return uses;
 }
 
+namespace {
+// N01: a parameter other expressions use cannot go.
+void refuseWhenInExpressions(const document::ParameterTable& table, const std::string& name) {
+    const auto dependents = document::parameterDependents(table, name);
+    if (dependents.empty())
+        return;
+    std::string names;
+    for (const auto id : dependents)
+        names += (names.empty() ? "" : ", ") + document::findParameter(table, id)->name;
+    throw std::invalid_argument("Parameter is used in the expressions of: " + names);
+}
+} // namespace
+
 bool CadSession::mirrorParameter(document::ModelDocument& candidate,
                                  document::ParameterId id) const {
     const auto* parameter = document::findParameter(candidate.parameterTable(), id);
@@ -117,16 +130,32 @@ CadSession::commitParameterEdit(const std::function<bool(document::ModelDocument
                            false);
 }
 
+// N01: the table with every expression worked out; each parameter whose value changed is
+// mirrored into what is bound to it.
+bool CadSession::applyParameterTable(document::ModelDocument& candidate,
+                                     document::ParameterTable table) const {
+    document::resolveParameterTable(table);
+    const auto before = candidate.parameterTable();
+    bool changed = candidate.setParameterTable(table);
+    for (const auto& parameter : table.values) {
+        const auto* old = document::findParameter(before, parameter.id);
+        if (old == nullptr || old->value != parameter.value)
+            changed = mirrorParameter(candidate, parameter.id) || changed;
+    }
+    return changed;
+}
+
 CommandResult CadSession::createParameter(std::string name, document::ParameterUnit unit,
-                                          double value, std::string comment) {
+                                          double value, std::string comment,
+                                          std::string expression) {
     return commitParameterEdit(
         [&](document::ModelDocument& candidate) {
             auto table = candidate.parameterTable();
             if (!document::hasIdCapacity(table.nextId, 1))
                 throw std::overflow_error("Parameter IDs exhausted");
-            table.values.push_back(
-                {ParameterId{table.nextId++}, std::move(name), unit, value, std::move(comment)});
-            return candidate.setParameterTable(table);
+            table.values.push_back({ParameterId{table.nextId++}, std::move(name), unit, value,
+                                    std::move(comment), std::move(expression)});
+            return applyParameterTable(candidate, std::move(table));
         },
         ErrorDisposition::reject);
 }
@@ -136,9 +165,21 @@ CommandResult CadSession::setParameterValue(document::ParameterId id, double val
     return commitParameterEdit(
         [&](document::ModelDocument& candidate) {
             auto table = candidate.parameterTable();
-            parameterIn(table, id).value = value;
-            const bool changed = candidate.setParameterTable(table);
-            return mirrorParameter(candidate, id) || changed;
+            auto& parameter = parameterIn(table, id);
+            parameter.value = value;
+            parameter.expression.clear(); // N01: a typed value replaces an expression
+            return applyParameterTable(candidate, std::move(table));
+        },
+        disposition);
+}
+
+CommandResult CadSession::setParameterExpression(document::ParameterId id, std::string expression,
+                                                 ErrorDisposition disposition) {
+    return commitParameterEdit(
+        [&](document::ModelDocument& candidate) {
+            auto table = candidate.parameterTable();
+            parameterIn(table, id).expression = std::move(expression);
+            return applyParameterTable(candidate, std::move(table));
         },
         disposition);
 }
@@ -176,7 +217,13 @@ CommandResult CadSession::renameParameter(document::ParameterId id, std::string 
     return commitParameterEdit(
         [&](document::ModelDocument& candidate) {
             auto table = candidate.parameterTable();
-            parameterIn(table, id).name = std::move(name);
+            auto& parameter = parameterIn(table, id);
+            // N01: expressions follow the new name.
+            for (auto& other : table.values)
+                if (!other.expression.empty())
+                    other.expression =
+                        document::renameInExpression(other.expression, parameter.name, name);
+            parameter.name = std::move(name);
             return candidate.setParameterTable(table);
         },
         ErrorDisposition::reject);
@@ -197,6 +244,7 @@ CommandResult CadSession::deleteParameter(document::ParameterId id, ParameterDel
         [&](document::ModelDocument& candidate) {
             auto table = candidate.parameterTable();
             const auto name = parameterIn(table, id).name;
+            refuseWhenInExpressions(table, name); // N01
             const std::vector<document::FeatureDescriptor> features(candidate.features().begin(),
                                                                     candidate.features().end());
             for (const auto& feature : features) {

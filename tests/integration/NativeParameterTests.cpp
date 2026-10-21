@@ -95,6 +95,33 @@ void roundTripAndGates(const Handle(TDocStd_Application) & app) {
     std::cout << "schema 7 parameter table and bindings round-trip; schema 6 gate passed\n";
 }
 
+// N01 schema 37: an expression parameter and a plain number round-trip; schema 36 refuses them.
+void expressionsAndNumbers(const Handle(TDocStd_Application) & app) {
+    auto model = ModelDocument::empty();
+    ParameterTable table;
+    table.values = {{ParameterId{1}, "A", ParameterUnit::length, 10, "", ""},
+                    {ParameterId{2}, "B", ParameterUnit::length, 25, "", "A*2 + 5"},
+                    {ParameterId{3}, "N", ParameterUnit::number, 6, "", ""}};
+    table.nextId = 4;
+    require(model.setParameterTable(table), "Expression table set");
+    const auto expected =
+        IdentifiedDocumentSnapshot::restore(DocumentId{9, 10}, DocumentSnapshot::capture(model));
+    auto doc = fresh(app);
+    NativePrimitiveCodec::write(doc, expected);
+    require(NativePrimitiveCodec::read(doc) == expected, "Expression round trip");
+    TDataStd_Integer::Set(doc->Main().FindChild(2), 36);
+    rejected([&] { (void)NativePrimitiveCodec::read(doc); }, "Schema 36 accepted an expression");
+    app->Close(doc);
+    rejected(
+        [&] {
+            auto wrong = table;
+            wrong.values[1].value = 99; // not what A*2 + 5 gives
+            static_cast<void>(model.setParameterTable(wrong));
+        },
+        "A stored value that differs from its expression was accepted");
+    std::cout << "schema 37 expressions and plain numbers round-trip; schema 36 gate passed\n";
+}
+
 void corruptions(const Handle(TDocStd_Application) & app) {
     const auto expected = fixture(true, true);
     const auto corrupt = [&](auto change, const char* message) {
@@ -151,6 +178,7 @@ int main() {
         Handle(TDocStd_Application) app = new TDocStd_Application;
         BinDrivers::DefineFormat(app);
         roundTripAndGates(app);
+        expressionsAndNumbers(app);
         corruptions(app);
         return 0;
     } catch (const std::exception& error) {

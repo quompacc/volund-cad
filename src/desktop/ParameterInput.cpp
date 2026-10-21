@@ -2,7 +2,7 @@
 
 #include <QCompleter>
 #include <QLineEdit>
-#include <QRegularExpression>
+
 #include <QStringListModel>
 
 #include <utility>
@@ -34,7 +34,7 @@ void ParameterSpinBox::setBound(std::optional<QString> name) {
     lineEdit()->setText(textFromValue(value()) + suffix());
     setToolTip(bound_
                    ? tr("Gebunden an den Parameter „%1“; eine Zahl löst die Bindung").arg(*bound_)
-                   : tr("Zahl oder =Name eines Parameters"));
+                   : tr("Zahl, =Name eines Parameters oder =Ausdruck wie =A*2"));
 }
 
 void ParameterSpinBox::setBindingRequested(std::function<void(std::optional<QString>)> requested) {
@@ -51,9 +51,7 @@ QString ParameterSpinBox::plainText() const {
 QValidator::State ParameterSpinBox::validate(QString& text, int& position) const {
     const QString trimmed = text.trimmed();
     if (trimmed.startsWith(QLatin1Char('='))) {
-        static const QRegularExpression partial(QStringLiteral("^=\\s*([A-Za-z][A-Za-z0-9_]*)?$"));
-        if (!partial.match(trimmed).hasMatch())
-            return QValidator::Invalid;
+        // N01: a name binds, any other text is an expression the shell checks.
         return trimmed.size() > 1 ? QValidator::Acceptable : QValidator::Intermediate;
     }
     if (bound_ && trimmed.startsWith(*bound_ + QStringLiteral(" =")))
@@ -109,7 +107,7 @@ ParameterSpinBox* makeParameterInput(QWidget* parent, bool angle) {
         input->setSingleStep(1.0);
         input->setSuffix(QStringLiteral(" mm"));
     }
-    input->setToolTip(QObject::tr("Zahl oder =Name eines Parameters"));
+    input->setToolTip(QObject::tr("Zahl, =Name eines Parameters oder =Ausdruck wie =A*2"));
     return input;
 }
 

@@ -58,10 +58,13 @@ void writeNativeParameterTable(const TDF_Label& label, const ParameterTable& tab
         TDataStd_Integer::Set(native.FindChild(3), static_cast<int>(parameter.unit));
         TDataStd_Real::Set(native.FindChild(4), parameter.value);
         TDataStd_AsciiString::Set(native.FindChild(5), parameter.comment.c_str());
+        if (!parameter.expression.empty()) // N01: only when set, so older files stay as they are
+            TDataStd_AsciiString::Set(native.FindChild(6), parameter.expression.c_str());
     }
 }
 
-ParameterTable readNativeParameterTable(const TDF_Label& label, std::size_t remainingRecords) {
+ParameterTable readNativeParameterTable(const TDF_Label& label, std::size_t remainingRecords,
+                                        int schemaVersion) {
     require(label.NbChildren() == 2 && label.NbAttributes() == 0);
     ParameterTable table;
     table.nextId = decimal(child(label, 1), 0);
@@ -71,15 +74,19 @@ ParameterTable readNativeParameterTable(const TDF_Label& label, std::size_t rema
             static_cast<std::size_t>(count) <= remainingRecords && values.NbChildren() == count);
     for (int index = 1; index <= count; ++index) {
         const auto native = child(values, index);
-        require(native.NbChildren() == 5);
+        const bool expression = native.NbChildren() == 6;
+        require(native.NbChildren() == 5 || (expression && schemaVersion >= 37));
         const int unit = integer(child(native, 3));
         require(unit == static_cast<int>(ParameterUnit::length) ||
-                unit == static_cast<int>(ParameterUnit::angle));
+                unit == static_cast<int>(ParameterUnit::angle) ||
+                (unit == static_cast<int>(ParameterUnit::number) && schemaVersion >= 37));
         Handle(TDataStd_Real) value;
         require(child(native, 4).FindAttribute(TDataStd_Real::GetID(), value));
         table.values.push_back({ParameterId{decimal(child(native, 1), 1)}, text(child(native, 2)),
                                 static_cast<ParameterUnit>(unit), value->Get(),
-                                text(child(native, 5))});
+                                text(child(native, 5)),
+                                expression ? text(child(native, 6)) : std::string{}});
+        require(!expression || !table.values.back().expression.empty());
     }
     // A stored table is never the default one; that is encoded by its absence.
     require(!(table == ParameterTable{}));

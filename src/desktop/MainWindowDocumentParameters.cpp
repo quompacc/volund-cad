@@ -12,10 +12,13 @@
 #include <QLocale>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QRegularExpression>
 #include <QStatusBar>
 #include <QVBoxLayout>
 
 #include <algorithm>
+#include <functional>
+#include <optional>
 #include <string>
 
 // PAR02 (docs/parameter-table.md, user decision 2026-10-16): the parameter card under the model
@@ -26,9 +29,10 @@ using application::CommandStatus;
 using document::ParameterUnit;
 
 // "P1", "P2", ...: the first name the table does not have yet (case-insensitive).
-std::string freeName(const document::ParameterTable& table) {
+std::string freeName(const document::ParameterTable& table,
+                     const QString& prefix = QStringLiteral("P")) {
     for (int number = 1;; ++number) {
-        const QString name = QStringLiteral("P%1").arg(number);
+        const QString name = prefix + QString::number(number);
         if (std::ranges::none_of(table.values, [&](const document::DocumentParameter& entry) {
                 return QString::fromStdString(entry.name).compare(name, Qt::CaseInsensitive) == 0;
             }))
@@ -43,6 +47,67 @@ ParameterUnit unitOf(ToolValueKind kind) {
 QString withUnit(double value, ParameterUnit unit) {
     return QLocale().toString(value, 'f', 3) +
            (unit == ParameterUnit::angle ? QStringLiteral("°") : QStringLiteral(" mm"));
+}
+
+using Report = std::function<void(const QString&)>;
+
+std::optional<ResolvedParameter> created(const application::CadSession& session,
+                                         const std::string& name) {
+    for (const auto& entry : session.parameterTable().values)
+        if (entry.name == name)
+            return ResolvedParameter{entry.id, true};
+    return std::nullopt;
+}
+
+// An existing parameter of the field's unit, or a new one after a question.
+std::optional<ResolvedParameter> namedParameter(application::CadSession& session, QWidget& parent,
+                                                const QString& name, ParameterUnit unit,
+                                                double value, const Report& report) {
+    for (const auto& entry : session.parameterTable().values)
+        if (QString::fromStdString(entry.name).compare(name, Qt::CaseInsensitive) == 0) {
+            if (entry.unit == unit)
+                return ResolvedParameter{entry.id, false};
+            report(
+                entry.unit == ParameterUnit::angle
+                    ? QObject::tr("„%1“ ist ein Winkel, hier wird eine Länge gebraucht").arg(name)
+                    : QObject::tr("„%1“ ist eine Länge, hier wird ein Winkel gebraucht").arg(name));
+            return std::nullopt;
+        }
+    QMessageBox ask(
+        QMessageBox::Question, QObject::tr("Parameter anlegen"),
+        QObject::tr("Den Parameter „%1“ = %2 anlegen?").arg(name, withUnit(value, unit)),
+        QMessageBox::Yes | QMessageBox::No, &parent);
+    ask.setObjectName(QStringLiteral("createParameterQuestion"));
+    ask.setDefaultButton(QMessageBox::Yes);
+    if (ask.exec() != QMessageBox::Yes)
+        return std::nullopt;
+    const auto result = session.createParameter(name.toStdString(), unit, value);
+    if (result.status() != CommandStatus::committed) {
+        report(commandFeedbackMessage(result));
+        return std::nullopt;
+    }
+    return created(session, name.toStdString());
+}
+
+// N01: "=A*2" in a field: a new parameter "AusdruckN" holding the expression, after a question.
+std::optional<ResolvedParameter> expressionParameter(application::CadSession& session,
+                                                     QWidget& parent, const QString& expression,
+                                                     ParameterUnit unit, const Report& report) {
+    const auto name = freeName(session.parameterTable(), QStringLiteral("Ausdruck"));
+    QMessageBox ask(QMessageBox::Question, QObject::tr("Parameter anlegen"),
+                    QObject::tr("Für den Ausdruck „%1“ den Parameter „%2“ anlegen?")
+                        .arg(expression, QString::fromStdString(name)),
+                    QMessageBox::Yes | QMessageBox::No, &parent);
+    ask.setObjectName(QStringLiteral("createParameterQuestion"));
+    ask.setDefaultButton(QMessageBox::Yes);
+    if (ask.exec() != QMessageBox::Yes)
+        return std::nullopt;
+    const auto result = session.createParameter(name, unit, 0, {}, expression.toStdString());
+    if (result.status() != CommandStatus::committed) {
+        report(commandFeedbackMessage(result));
+        return std::nullopt;
+    }
+    return created(session, name);
 }
 } // namespace
 
@@ -141,6 +206,10 @@ void MainWindow::createParameterCard() {
                  syncParameters();
          },
          [this](const QString& message) { statusBar()->showMessage(message); }});
+    // N01: "=A*2" in a value cell sets the parameter's expression.
+    panel->setExpressionHandler([run, this](document::ParameterId id, const QString& expression) {
+        static_cast<void>(run(impl_->session.setParameterExpression(id, expression.toStdString())));
+    });
 
     // "=Name" in the fields of the tools: names of the field's unit, a new one after a question.
     impl_->toolPanel->setParameterNames([this](ToolValueKind kind) {
@@ -150,38 +219,19 @@ void MainWindow::createParameterCard() {
                 names.append(QString::fromStdString(entry.name));
         return names;
     });
-    impl_->toolPanel->setParameterResolver(
-        [this](const QString& name, ToolValueKind kind,
-               double value) -> std::optional<ResolvedParameter> {
-            const auto unit = unitOf(kind);
-            for (const auto& entry : impl_->session.parameterTable().values)
-                if (QString::fromStdString(entry.name).compare(name, Qt::CaseInsensitive) == 0) {
-                    if (entry.unit == unit)
-                        return ResolvedParameter{entry.id, false};
-                    statusBar()->showMessage(
-                        entry.unit == ParameterUnit::angle
-                            ? tr("„%1“ ist ein Winkel, hier wird eine Länge gebraucht").arg(name)
-                            : tr("„%1“ ist eine Länge, hier wird ein Winkel gebraucht").arg(name));
-                    return std::nullopt;
-                }
-            QMessageBox ask(QMessageBox::Question, tr("Parameter anlegen"),
-                            tr("Den Parameter „%1“ = %2 anlegen?").arg(name, withUnit(value, unit)),
-                            QMessageBox::Yes | QMessageBox::No, this);
-            ask.setObjectName(QStringLiteral("createParameterQuestion"));
-            ask.setDefaultButton(QMessageBox::Yes);
-            if (ask.exec() != QMessageBox::Yes)
-                return std::nullopt;
-            const auto result = impl_->session.createParameter(name.toStdString(), unit, value);
-            if (result.status() != CommandStatus::committed) {
-                statusBar()->showMessage(commandFeedbackMessage(result));
-                return std::nullopt;
-            }
+    impl_->toolPanel->setParameterResolver([this](
+                                               const QString& text, ToolValueKind kind,
+                                               double value) -> std::optional<ResolvedParameter> {
+        const Report report = [this](const QString& message) { statusBar()->showMessage(message); };
+        static const QRegularExpression plainName(QStringLiteral("^[A-Za-z][A-Za-z0-9_]*$"));
+        const auto resolved =
+            plainName.match(text).hasMatch()
+                ? namedParameter(impl_->session, *this, text, unitOf(kind), value, report)
+                : expressionParameter(impl_->session, *this, text, unitOf(kind), report);
+        if (resolved && resolved->created)
             syncParameters();
-            for (const auto& entry : impl_->session.parameterTable().values)
-                if (entry.name == name.toStdString())
-                    return ResolvedParameter{entry.id, true};
-            return std::nullopt;
-        });
+        return resolved;
+    });
     syncParameters();
 }
 

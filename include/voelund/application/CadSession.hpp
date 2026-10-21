@@ -482,16 +482,19 @@ class CadSession final {
     [[nodiscard]] std::span<const FeatureRuntimeState> featureStates() const noexcept;
     // U10: for a blocked feature, the failed feature among its (indirect) inputs.
     [[nodiscard]] std::optional<document::FeatureId> errorCause(document::FeatureId feature) const;
-    // PAR01 document parameters. Every command is one transaction and one undo step.
+    // PAR01 parameters, each command one undo step. A value or expression (N01) is mirrored into
+    // every binding (bound sketches re-solved); an unsolvable result stays an editable error.
     [[nodiscard]] const document::ParameterTable& parameterTable() const noexcept;
     [[nodiscard]] std::size_t parameterUseCount(document::ParameterId id) const;
     [[nodiscard]] CommandResult createParameter(std::string name, document::ParameterUnit unit,
-                                                double value, std::string comment = {});
-    // Mirrors the value into every binding, re-solves bound sketches and recomputes; an
-    // unsolvable result is kept as an editable error by default.
+                                                double value, std::string comment = {},
+                                                std::string expression = {});
     [[nodiscard]] CommandResult
     setParameterValue(document::ParameterId id, double value,
                       ErrorDisposition disposition = ErrorDisposition::keepEditableErrors);
+    [[nodiscard]] CommandResult
+    setParameterExpression(document::ParameterId id, std::string expression,
+                           ErrorDisposition disposition = ErrorDisposition::keepEditableErrors);
     [[nodiscard]] CommandResult renameParameter(document::ParameterId id, std::string name);
     // M01: renames a body (one undo step; an empty name returns to the numbered default).
     [[nodiscard]] CommandResult renameBody(document::BodyId body, std::string name);
@@ -567,6 +570,8 @@ class CadSession final {
     [[nodiscard]] CommandResult
     commitParameterEdit(const std::function<bool(document::ModelDocument&)>& edit,
                         ErrorDisposition disposition);
+    [[nodiscard]] bool applyParameterTable(document::ModelDocument& candidate,
+                                           document::ParameterTable table) const;
     [[nodiscard]] bool mirrorParameter(document::ModelDocument& candidate,
                                        document::ParameterId id) const;
     [[nodiscard]] bool recompute();

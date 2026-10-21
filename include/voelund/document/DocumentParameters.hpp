@@ -1,5 +1,6 @@
 #pragma once
 
+#include <voelund/document/ParameterExpression.hpp>
 #include <voelund/document/ParameterId.hpp>
 #include <voelund/document/SketchGeometry.hpp>
 
@@ -13,7 +14,8 @@ namespace voelund::document {
 
 // PAR01 (docs/parameter-table.md): one table of named values per document.
 // Lengths are stored in millimetres, angles in degrees, as the user enters them.
-enum class ParameterUnit { length = 1, angle = 2 };
+// N01 (schema 37): plain numbers, e.g. a pattern's count.
+enum class ParameterUnit { length = 1, angle = 2, number = 3 };
 
 struct DocumentParameter final {
     ParameterId id;
@@ -21,6 +23,9 @@ struct DocumentParameter final {
     ParameterUnit unit;
     double value;
     std::string comment{};
+    // N01 (user decision 2026-10-21, schema 37): "A*2" etc.; empty for a plain value. `value`
+    // holds what it gives (resolveParameterTable).
+    std::string expression{};
 
     [[nodiscard]] bool operator==(const DocumentParameter&) const = default;
 };
@@ -45,6 +50,15 @@ void validateParameterTable(const ParameterTable& table);
                                                      ParameterId id) noexcept;
 [[nodiscard]] const DocumentParameter* findParameter(const ParameterTable& table,
                                                      std::string_view name) noexcept;
+inline constexpr std::size_t maximumParameterExpressionBytes = 1024;
+// N01: the dimension values of `unit` carry in expressions.
+[[nodiscard]] ExpressionDimension parameterDimension(ParameterUnit unit) noexcept;
+// N01: sets the value of every parameter with an expression, others first. Throws
+// std::invalid_argument naming a cycle ("A → B → A"), an unknown name or a wrong unit.
+void resolveParameterTable(ParameterTable& table);
+// N01: the parameters whose expressions use the parameter `name`.
+[[nodiscard]] std::vector<ParameterId> parameterDependents(const ParameterTable& table,
+                                                           std::string_view name);
 // The unit a dimensional constraint kind accepts; nullopt for kinds without a value.
 [[nodiscard]] std::optional<ParameterUnit> dimensionUnit(SketchConstraintKind kind) noexcept;
 

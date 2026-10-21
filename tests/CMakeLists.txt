@@ -192,6 +192,11 @@ target_link_libraries(voelund_document_parser_tests PRIVATE Voelund::Document)
 add_test(NAME document.parser_limits_and_versions COMMAND voelund_document_parser_tests
     "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/documents")
 set_tests_properties(document.parser_limits_and_versions PROPERTIES LABELS "unit;document;regression" TIMEOUT 60)
+# N01: expressions in parameters and measure fields.
+add_executable(voelund_parameter_expression_tests unit/ParameterExpressionTests.cpp)
+target_link_libraries(voelund_parameter_expression_tests PRIVATE voelund_project_options Voelund::Document)
+add_test(NAME document.parameter_expressions COMMAND voelund_parameter_expression_tests)
+set_tests_properties(document.parameter_expressions PROPERTIES LABELS "unit;document" TIMEOUT 30)
 add_executable(voelund_atomic_file_tests unit/AtomicFileStoreTests.cpp)
 target_link_libraries(voelund_atomic_file_tests PRIVATE Voelund::Platform Threads::Threads)
 add_test(NAME platform.atomic_file_store
@@ -633,6 +638,15 @@ if(VOELUND_BUILD_DESKTOP)
             LABELS "desktop;qt-opengl;document" TIMEOUT 120 RUN_SERIAL TRUE)
         if(VOELUND_NATIVE_WAYLAND)
             set_tests_properties(desktop.recent_files PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
+        endif()
+        # N01: expressions in the fields and the parameter table.
+        add_executable(voelund_expression_flow_tests desktop/ExpressionFlowTests.cpp)
+        target_link_libraries(voelund_expression_flow_tests PRIVATE voelund_project_options Voelund::Desktop)
+        add_test(NAME desktop.expression_flow COMMAND voelund_expression_flow_tests)
+        set_tests_properties(desktop.expression_flow PROPERTIES
+            LABELS "desktop;qt-opengl" TIMEOUT 120 RUN_SERIAL TRUE)
+        if(VOELUND_NATIVE_WAYLAND)
+            set_tests_properties(desktop.expression_flow PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
         endif()
         # PAR02: the parameter table and "=Name" in the fields (user flow of the packet).
         add_executable(voelund_parameter_flow_tests desktop/ParameterFlowTests.cpp)
@@ -1354,6 +1368,11 @@ target_link_libraries(voelund_move_tests PRIVATE voelund_project_options Voelund
 add_test(NAME application.move COMMAND voelund_move_tests)
 set_tests_properties(application.move PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
 # PAR02: binding parameters in the sketch editor and in a new extrusion.
+# N01: parameters as expressions in the session.
+add_executable(voelund_parameter_expression_session_tests integration/ParameterExpressionSessionTests.cpp)
+target_link_libraries(voelund_parameter_expression_session_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.parameter_expressions COMMAND voelund_parameter_expression_session_tests)
+set_tests_properties(application.parameter_expressions PROPERTIES LABELS "integration;application" TIMEOUT 120)
 add_executable(voelund_parameter_binding_tests integration/ParameterBindingTests.cpp)
 target_link_libraries(voelund_parameter_binding_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME application.parameter_binding COMMAND voelund_parameter_binding_tests)

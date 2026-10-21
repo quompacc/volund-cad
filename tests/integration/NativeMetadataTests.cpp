@@ -83,7 +83,7 @@ void regressions(const Handle(TDocStd_Application) & app) {
         rejected([&] { (void)readNativeMetadata(doc); });
         doc->AbortCommand();
     }
-    for (int version : {0, 37, -1}) {
+    for (int version : {0, 38, -1}) {
         doc->NewCommand();
         TDataStd_Integer::Set(doc->Main().FindChild(2), version);
         rejected([&] { (void)readNativeMetadata(doc); });
@@ -133,7 +133,7 @@ int main(int argc, char** argv) {
             }
             app->Close(doc);
         }
-        std::cout << "PASS native document metadata, application schema 36, container 12\n";
+        std::cout << "PASS native document metadata, application schema 37, container 12\n";
         return 0;
     } catch (const Standard_Failure& error) {
         std::cerr << voelund::kernel::occtFailureDiagnostic(error) << '\n';

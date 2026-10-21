@@ -6,6 +6,7 @@
 #include <array>
 #include <cmath>
 #include <stdexcept>
+#include <string>
 
 namespace voelund::document {
 namespace {
@@ -16,7 +17,18 @@ bool digit(char value) noexcept { return value >= '0' && value <= '9'; }
 char lower(char value) noexcept {
     return value >= 'A' && value <= 'Z' ? static_cast<char>(value - 'A' + 'a') : value;
 }
-// Units and words later expressions (v2) will need.
+bool validValue(const DocumentParameter& parameter) {
+    switch (parameter.unit) {
+    case ParameterUnit::length:
+        return kernel::modelCoordinate(parameter.value);
+    case ParameterUnit::angle:
+        return std::isfinite(parameter.value) && std::abs(parameter.value) <= 360.0;
+    case ParameterUnit::number:
+        return std::isfinite(parameter.value) && std::abs(parameter.value) <= 1e9;
+    }
+    return false; // an unknown unit
+}
+// Units and words of expressions (N01).
 constexpr std::array<std::string_view, 12> reservedNames{"mm",  "cm",  "m",  "um", "in",  "ft",
                                                          "deg", "rad", "pi", "e",  "inf", "nan"};
 } // namespace
@@ -43,12 +55,11 @@ void validateParameterTable(const ParameterTable& table) {
             throw std::invalid_argument("Parameter ID is outside the allocated range");
         if (!isValidParameterName(parameter.name))
             throw std::invalid_argument("Invalid parameter name: " + parameter.name);
-        if (parameter.unit != ParameterUnit::length && parameter.unit != ParameterUnit::angle)
-            throw std::invalid_argument("Unknown parameter unit");
-        if (parameter.unit == ParameterUnit::length
-                ? !kernel::modelCoordinate(parameter.value)
-                : !std::isfinite(parameter.value) || std::abs(parameter.value) > 360.0)
+        if (!validValue(parameter))
             throw std::invalid_argument("Parameter value is out of range: " + parameter.name);
+        if (parameter.expression.size() > maximumParameterExpressionBytes ||
+            parameter.expression.find('\0') != std::string::npos)
+            throw std::invalid_argument("Invalid parameter expression: " + parameter.name);
         if (parameter.comment.size() > 4096 || parameter.comment.find('\0') != std::string::npos)
             throw std::invalid_argument("Invalid parameter comment");
         for (std::size_t prior = 0; prior < index; ++prior) {
@@ -58,6 +69,103 @@ void validateParameterTable(const ParameterTable& table) {
                 throw std::invalid_argument("Parameter name already exists: " + parameter.name);
         }
     }
+    // N01: stored values are what the expressions give.
+    ParameterTable resolved = table;
+    resolveParameterTable(resolved);
+    for (std::size_t index = 0; index < table.values.size(); ++index)
+        if (std::abs(resolved.values[index].value - table.values[index].value) >
+            1e-9 * std::max(1.0, std::abs(table.values[index].value)))
+            throw std::invalid_argument("Parameter value differs from its expression: " +
+                                        table.values[index].name);
+}
+
+ExpressionDimension parameterDimension(ParameterUnit unit) noexcept {
+    return unit == ParameterUnit::length  ? lengthDimension
+           : unit == ParameterUnit::angle ? angleDimension
+                                          : numberDimension;
+}
+
+namespace {
+
+// Resolves one parameter, its inputs first; `path` holds the parameters being resolved.
+class Resolver final {
+  public:
+    explicit Resolver(ParameterTable& table)
+        : table_(table), state_(table.values.size(), State::open) {}
+
+    void resolve(std::size_t index) {
+        if (state_[index] == State::done)
+            return;
+        auto& parameter = table_.values[index];
+        if (state_[index] == State::busy)
+            throw std::invalid_argument("Zyklus: " + cycle(index));
+        state_[index] = State::busy;
+        path_.push_back(index);
+        if (!parameter.expression.empty())
+            parameter.value = evaluate(parameter);
+        path_.pop_back();
+        state_[index] = State::done;
+    }
+
+  private:
+    enum class State { open, busy, done };
+
+    double evaluate(const DocumentParameter& parameter) {
+        try {
+            const auto result =
+                evaluateExpression(parameter.expression,
+                                   [this](std::string_view name) -> std::optional<ExpressionValue> {
+                                       const auto* used = findParameter(table_, name);
+                                       if (used == nullptr)
+                                           return std::nullopt;
+                                       const auto index =
+                                           static_cast<std::size_t>(used - table_.values.data());
+                                       resolve(index);
+                                       return ExpressionValue{table_.values[index].value,
+                                                              parameterDimension(used->unit)};
+                                   });
+            return fieldValue(result, parameterDimension(parameter.unit), 0);
+        } catch (const ExpressionError& error) {
+            throw std::invalid_argument(parameter.name + ": " + error.what());
+        }
+    }
+
+    std::string cycle(std::size_t index) const {
+        std::string text;
+        const auto start = std::ranges::find(path_, index);
+        for (auto it = start; it != path_.end(); ++it)
+            text += table_.values[*it].name + " → ";
+        return text + table_.values[index].name;
+    }
+
+    ParameterTable& table_;
+    std::vector<State> state_;
+    std::vector<std::size_t> path_;
+};
+
+} // namespace
+
+void resolveParameterTable(ParameterTable& table) {
+    Resolver resolver(table);
+    for (std::size_t index = 0; index < table.values.size(); ++index)
+        resolver.resolve(index);
+}
+
+std::vector<ParameterId> parameterDependents(const ParameterTable& table, std::string_view name) {
+    std::vector<ParameterId> dependents;
+    for (const auto& parameter : table.values) {
+        if (parameter.expression.empty())
+            continue;
+        try {
+            const auto names = expressionNames(parameter.expression);
+            if (std::ranges::any_of(
+                    names, [&](const std::string& used) { return sameParameterName(used, name); }))
+                dependents.push_back(parameter.id);
+        } catch (const ExpressionError&) {
+            continue; // an expression that does not parse uses nothing
+        }
+    }
+    return dependents;
 }
 
 const DocumentParameter* findParameter(const ParameterTable& table, ParameterId id) noexcept {

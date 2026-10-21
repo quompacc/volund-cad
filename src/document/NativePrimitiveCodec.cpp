@@ -378,9 +378,10 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
     require(text(bodies) == "Primitives.v1");
     const int bodyCount = count(bodies), featureCount = count(order);
     std::size_t remainingElements = maximumDocumentRecords - static_cast<std::size_t>(featureCount);
-    const auto table = parameterLabel.IsNull()
-                           ? ParameterTable{}
-                           : readNativeParameterTable(parameterLabel, remainingElements);
+    const auto table =
+        parameterLabel.IsNull()
+            ? ParameterTable{}
+            : readNativeParameterTable(parameterLabel, remainingElements, metadata.schemaVersion);
     remainingElements -= nativeParameterRecords(table);
     std::vector<Record> records;
     std::map<std::string, std::size_t> labels;

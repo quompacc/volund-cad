@@ -21,7 +21,12 @@ QString unitText(document::ParameterUnit unit) {
     return unit == document::ParameterUnit::angle ? QStringLiteral("°") : QStringLiteral(" mm");
 }
 QString valueText(const document::DocumentParameter& parameter) {
-    return QLocale().toString(parameter.value, 'f', 3) + unitText(parameter.unit);
+    const QString value = QLocale().toString(parameter.value, 'f', 3) + unitText(parameter.unit);
+    if (parameter.expression.empty())
+        return value;
+    // N01: the expression and what it gives.
+    return QStringLiteral("=") + QString::fromStdString(parameter.expression) +
+           QStringLiteral(" \u2192 ") + value;
 }
 } // namespace
 
@@ -153,6 +158,14 @@ void ParameterPanel::changed(QTableWidgetItem* item) {
     if (item->column() != valueColumn)
         return;
     QString text = item->text().trimmed();
+    if (text.startsWith(QLatin1Char('=')) && expressionChanged_) {
+        // N01: what follows '=', without the shown result.
+        QString expression = text.mid(1);
+        if (const auto arrow = expression.indexOf(QStringLiteral(" \u2192 ")); arrow >= 0)
+            expression.truncate(arrow);
+        expressionChanged_(id, expression.trimmed());
+        return;
+    }
     for (const QString& unit : {QStringLiteral("mm"), QStringLiteral("°")})
         if (text.endsWith(unit))
             text = text.chopped(unit.size()).trimmed();

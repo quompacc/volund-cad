@@ -36,6 +36,10 @@ class ParameterPanel final : public QWidget {
     explicit ParameterPanel(QWidget* parent = nullptr);
 
     void setHandlers(Handlers handlers);
+    // N01: "=A*2" typed into a value cell.
+    void setExpressionHandler(std::function<void(document::ParameterId, const QString&)> handler) {
+        expressionChanged_ = std::move(handler);
+    }
     // Shows the rows; `editable` is off while a tool is open. Unchanged contents keep an edit
     // in progress.
     void show(std::vector<Row> rows, bool editable);
@@ -45,6 +49,7 @@ class ParameterPanel final : public QWidget {
     [[nodiscard]] QTableWidget& table() const noexcept { return *table_; }
 
   private:
+    std::function<void(document::ParameterId, const QString&)> expressionChanged_;
     void changed(QTableWidgetItem* item);
     void removeSelected();
 
