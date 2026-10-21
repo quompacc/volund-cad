@@ -1,5 +1,6 @@
 #pragma once
 
+#include <voelund/document/FeatureId.hpp>
 #include <voelund/document/ParameterExpression.hpp>
 #include <voelund/document/ParameterId.hpp>
 #include <voelund/document/SketchGeometry.hpp>
@@ -30,9 +31,23 @@ struct DocumentParameter final {
     [[nodiscard]] bool operator==(const DocumentParameter&) const = default;
 };
 
+// N01b (user decision 2026-10-21, schema 37): a measure field of a feature ("radius",
+// "diameter", ...; see featureField) that follows a parameter.
+struct FieldBinding final {
+    FeatureId feature;
+    std::string field;
+    ParameterId parameter;
+
+    [[nodiscard]] bool operator==(const FieldBinding&) const = default;
+};
+inline constexpr std::size_t maximumFieldBindings = 10'000;
+
 struct ParameterTable final {
     std::vector<DocumentParameter> values;
     std::uint64_t nextId{1};
+    // N01b: one list for the fields of every feature; sketch dimensions and extrusion distances
+    // keep their own bindings (PAR01).
+    std::vector<FieldBinding> bindings{};
 
     [[nodiscard]] bool operator==(const ParameterTable&) const = default;
 };
@@ -44,7 +59,8 @@ inline constexpr std::size_t maximumParameterCount = 10'000;
 [[nodiscard]] bool isValidParameterName(std::string_view name) noexcept;
 // Names are unique without regard to case.
 [[nodiscard]] bool sameParameterName(std::string_view left, std::string_view right) noexcept;
-// Throws std::invalid_argument for invalid names, duplicates, values, IDs or comments.
+// Throws std::invalid_argument for invalid names, duplicates, values, IDs or comments, and for
+// field bindings to unknown parameters or bound twice.
 void validateParameterTable(const ParameterTable& table);
 [[nodiscard]] const DocumentParameter* findParameter(const ParameterTable& table,
                                                      ParameterId id) noexcept;

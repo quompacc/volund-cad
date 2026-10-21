@@ -80,34 +80,37 @@ void ShellToolController::beginEdit(document::FeatureId shell) {
 void ShellToolController::open() {
     active_ = true;
     stamp_ = session_.sceneStatus().document;
-    panel_.begin(ToolPanelDefinition{
-        editing_ ? QObject::tr("Wandstärke bearbeiten") : QObject::tr("Wandstärke"),
-        guidance(),
-        {{"thickness", QObject::tr("Dicke"), thickness_, 0.001, 1'000'000.0}},
-        {{"direction",
-          QObject::tr("Wände"),
-          {QObject::tr("Nach innen"), QObject::tr("Nach außen")},
-          outward_ ? 1 : 0}},
-        {{"reset_faces", QObject::tr("Offene Flächen zurücksetzen"), QObject::tr("Wandstärke")}},
-        [this](const std::string& id, double value) {
-            if (id == "thickness")
-                thickness_ = value;
-            preview();
-        },
-        [this](const std::string& id, int index) {
-            if (id == "direction")
-                outward_ = index == 1;
-            preview();
-        },
-        [this](const std::string& id) {
-            if (id != "reset_faces")
-                return;
-            faces_.clear();
-            preview();
-        },
-        [this]() { accept(); },
-        [this]() { cancel(); },
-        {}});
+    panel_.begin(withFieldBindings(
+        ToolPanelDefinition{editing_ ? QObject::tr("Wandstärke bearbeiten")
+                                     : QObject::tr("Wandstärke"),
+                            guidance(),
+                            {{"thickness", QObject::tr("Dicke"), thickness_, 0.001, 1'000'000.0}},
+                            {{"direction",
+                              QObject::tr("Wände"),
+                              {QObject::tr("Nach innen"), QObject::tr("Nach außen")},
+                              outward_ ? 1 : 0}},
+                            {{"reset_faces", QObject::tr("Offene Flächen zurücksetzen"),
+                              QObject::tr("Wandstärke")}},
+                            [this](const std::string& id, double value) {
+                                if (id == "thickness")
+                                    thickness_ = value;
+                                preview();
+                            },
+                            [this](const std::string& id, int index) {
+                                if (id == "direction")
+                                    outward_ = index == 1;
+                                preview();
+                            },
+                            [this](const std::string& id) {
+                                if (id != "reset_faces")
+                                    return;
+                                faces_.clear();
+                                preview();
+                            },
+                            [this]() { accept(); },
+                            [this]() { cancel(); },
+                            {}},
+        editing_, [this] { stamp_ = session_.sceneStatus().document; }));
     preview();
     statusChanged_(QObject::tr("Wandstärke: weitere offene Flächen anklicken"));
 }

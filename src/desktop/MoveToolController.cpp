@@ -44,28 +44,30 @@ void MoveToolController::beginEdit(document::FeatureId move) {
     active_ = true;
     stamp_ = session_.sceneStatus().document;
     constexpr double range = 1'000'000.0;
-    panel_.begin(ToolPanelDefinition{
-        QObject::tr("Bewegen bearbeiten"),
-        QObject::tr("Verschiebung und Drehung um die Mitte des Körpers."),
-        {{"x", QObject::tr("X"), values_[0], -range, range},
-         {"y", QObject::tr("Y"), values_[1], -range, range},
-         {"z", QObject::tr("Z"), values_[2], -range, range},
-         {"rx", QObject::tr("Drehung X"), values_[3], -360.0, 360.0, ToolValueKind::angle},
-         {"ry", QObject::tr("Drehung Y"), values_[4], -360.0, 360.0, ToolValueKind::angle},
-         {"rz", QObject::tr("Drehung Z"), values_[5], -360.0, 360.0, ToolValueKind::angle}},
-        {},
-        {},
-        [this](const std::string& id, double value) {
-            for (std::size_t index = 0; index < values_.size(); ++index)
-                if (id == fieldIds[index])
-                    values_[index] = value;
-            preview();
-        },
-        [](const std::string&, int) {},
-        [](const std::string&) {},
-        [this]() { accept(); },
-        [this]() { cancel(); },
-        {}});
+    panel_.begin(withFieldBindings(
+        ToolPanelDefinition{
+            QObject::tr("Bewegen bearbeiten"),
+            QObject::tr("Verschiebung und Drehung um die Mitte des Körpers."),
+            {{"x", QObject::tr("X"), values_[0], -range, range},
+             {"y", QObject::tr("Y"), values_[1], -range, range},
+             {"z", QObject::tr("Z"), values_[2], -range, range},
+             {"rx", QObject::tr("Drehung X"), values_[3], -360.0, 360.0, ToolValueKind::angle},
+             {"ry", QObject::tr("Drehung Y"), values_[4], -360.0, 360.0, ToolValueKind::angle},
+             {"rz", QObject::tr("Drehung Z"), values_[5], -360.0, 360.0, ToolValueKind::angle}},
+            {},
+            {},
+            [this](const std::string& id, double value) {
+                for (std::size_t index = 0; index < values_.size(); ++index)
+                    if (id == fieldIds[index])
+                        values_[index] = value;
+                preview();
+            },
+            [](const std::string&, int) {},
+            [](const std::string&) {},
+            [this]() { accept(); },
+            [this]() { cancel(); },
+            {}},
+        editing_, [this] { stamp_ = session_.sceneStatus().document; }));
     statusChanged_(QObject::tr("Bewegen: Werte ändern"));
 }
 

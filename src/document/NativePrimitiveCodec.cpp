@@ -13,9 +13,11 @@
 #include <TDataStd_AsciiString.hxx>
 #include <TDataStd_Integer.hxx>
 #include <TDataStd_RealArray.hxx>
+#include <algorithm>
 #include <charconv>
 #include <map>
 #include <set>
+#include <voelund/document/FeatureFields.hpp>
 #include <voelund/document/LegacyBodyIdentity.hpp>
 #include <voelund/kernel/NumericPolicy.hpp>
 
@@ -112,13 +114,30 @@ std::vector<double> values(const FeatureParameters& parameters) {
                              placement->rotationY.value(), placement->rotationZ.value()});
     return data;
 }
+// PAR01 bindings; N01b: bound fields are present and hold their parameters' values.
+void validateBindings(std::span<const FeatureDescriptor> features,
+                      std::span<const FeatureParameters> parameters, const ParameterTable& table) {
+    validateParameterBindings(parameters, table);
+    if (table.bindings.empty())
+        return;
+    auto bound = table;
+    std::vector<FeatureParameters> fields(parameters.begin(), parameters.end());
+    applyFieldBindings(bound, features, fields);
+    require(bound == table && std::ranges::equal(fields, parameters));
+}
+// The stored parameter table; none is the empty one.
+ParameterTable parameterTable(const TDF_Label& label, std::size_t remainingRecords,
+                              int schemaVersion) {
+    return label.IsNull() ? ParameterTable{}
+                          : readNativeParameterTable(label, remainingRecords, schemaVersion);
+}
 std::vector<FeatureBodyIdentity> validate(std::span<const FeatureDescriptor> features,
                                           std::span<const FeatureParameters> parameters,
                                           std::uint64_t next, const ParameterTable& table) {
     require(features.size() == parameters.size() && features.size() <= maximumFeatureCount &&
             hasIdCapacity(next, 0) &&
             nativeParameterRecords(table) <= maximumDocumentRecords - features.size());
-    validateParameterBindings(parameters, table);
+    validateBindings(features, parameters, table);
     std::size_t remainingElements =
         maximumDocumentRecords - features.size() - nativeParameterRecords(table);
     for (std::size_t index = 0; index < features.size(); ++index) {
@@ -378,10 +397,7 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
     require(text(bodies) == "Primitives.v1");
     const int bodyCount = count(bodies), featureCount = count(order);
     std::size_t remainingElements = maximumDocumentRecords - static_cast<std::size_t>(featureCount);
-    const auto table =
-        parameterLabel.IsNull()
-            ? ParameterTable{}
-            : readNativeParameterTable(parameterLabel, remainingElements, metadata.schemaVersion);
+    const auto table = parameterTable(parameterLabel, remainingElements, metadata.schemaVersion);
     remainingElements -= nativeParameterRecords(table);
     std::vector<Record> records;
     std::map<std::string, std::size_t> labels;

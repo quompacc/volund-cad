@@ -2,6 +2,7 @@
 
 #include "FloatingCard.hpp"
 
+#include <voelund/application/FieldBindingRequest.hpp>
 #include <voelund/document/DocumentParameters.hpp>
 
 #include <QString>
@@ -36,7 +37,7 @@ struct ToolLengthParameter final {
     double minimum;
     double maximum;
     ToolValueKind kind{ToolValueKind::length};
-    // PAR02: the field also takes "=Name" of a document parameter (lengths and angles only);
+    // PAR02: the field also takes "=Name" of a document parameter (N01b: counts too);
     // `boundName` shows an existing binding.
     bool bindable{false};
     std::optional<QString> boundName{};
@@ -82,6 +83,31 @@ struct ToolPanelDefinition final {
     std::function<void(const std::string&)> parameterFinished{};
     // PAR02: a bindable field was bound to a parameter, or (nullopt) unbound by a number.
     std::function<void(const std::string&, std::optional<ResolvedParameter>)> parameterBound{};
+    // N01b: without `parameterBound`, bindable fields bind through the document's field list,
+    // named by their IDs; `editedFeature` is the feature the tool changes (none: it creates
+    // one). A parameter created on the way changed only the table: `parameterTableChanged`.
+    std::optional<document::FeatureId> editedFeature{};
+    std::function<void()> parameterTableChanged{};
+};
+
+// N01b: the definition of a feature tool whose number fields take "=Name": they bind through
+// the document's field list to `edited` (none: the feature the tool creates); `tableChanged`
+// runs when a parameter was created on the way.
+[[nodiscard]] ToolPanelDefinition withFieldBindings(ToolPanelDefinition definition,
+                                                    std::optional<document::FeatureId> edited,
+                                                    std::function<void()> tableChanged);
+
+// N01b: what the shell tells the panel about field bindings, and is told by it.
+struct FieldBindingHooks final {
+    // The parameter a field of a feature is bound to.
+    std::function<std::optional<QString>(document::FeatureId, const std::string&)> boundName;
+    // Name and value of a parameter.
+    std::function<std::optional<std::pair<QString, double>>(document::ParameterId)> parameter;
+    // The bindings asked for in this tool session (empty when it ends).
+    std::function<void(const std::vector<application::FieldBindingRequest>&)> requested;
+    // OK ended the tool session with these bindings; those its command did not take yet (e.g.
+    // when only a binding changed) are the shell's to make.
+    std::function<void(const std::vector<application::FieldBindingRequest>&)> accepted;
 };
 
 // U05: the floating tool panel of ADR 0012; it owns at most one active tool session.
@@ -107,6 +133,10 @@ class ToolPanelHost final : public FloatingCard {
         const QString& name, ToolValueKind kind, double value)>;
     void setParameterResolver(ParameterResolver resolver);
     void setParameterNames(std::function<QStringList(ToolValueKind)> names);
+    void setFieldBindingHooks(FieldBindingHooks hooks);
+    // N01b: binds a field through the document's field list (nullopt: unbinds it), for tools
+    // that bind some fields themselves.
+    void bindThroughDocument(const std::string& id, std::optional<ResolvedParameter> resolved);
     [[nodiscard]] std::optional<ResolvedParameter>
     resolveParameter(const QString& name, ToolValueKind kind, double value) const;
     void setLengthEnabled(const std::string& parameterId, bool enabled);
@@ -130,6 +160,11 @@ class ToolPanelHost final : public FloatingCard {
   private:
     void clearParameters();
     void syncParameterGroup();
+    void addLengthInput(const ToolLengthParameter& parameter);
+    void bindField(const std::string& id, ToolValueKind kind, std::optional<QString> name);
+    void requestFields();
+    void showBinding(const std::string& id, std::optional<document::ParameterId> bound);
+    void acceptPressed();
 
     QWidget* content_{nullptr};
     QLabel* guidance_{nullptr};
@@ -158,6 +193,8 @@ class ToolPanelHost final : public FloatingCard {
     ToolPanelDefinition definition_;
     ParameterResolver resolver_;
     std::function<QStringList(ToolValueKind)> names_;
+    FieldBindingHooks fieldHooks_;
+    std::vector<application::FieldBindingRequest> fieldRequests_;
 };
 
 } // namespace voelund::desktop

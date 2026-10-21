@@ -6,6 +6,7 @@
 #include <iterator>
 #include <limits>
 #include <stdexcept>
+#include <voelund/document/FeatureFields.hpp>
 #include <voelund/document/IdCapacity.hpp>
 
 namespace voelund::document {
@@ -102,6 +103,19 @@ void placeAtRollback(State& state, std::span<const FeatureDescriptor> before) {
 } // namespace
 void ModelDocument::commitState(State state) {
     placeAtRollback(state, impl_->view().features());
+    // N01b: bound fields follow their parameters; bindings of what is gone go with it.
+    applyFieldBindings(state.parameterTable, state.features, state.parameters,
+                       &impl_->view().parameterTable());
+    for (const auto& binding : state.parameterTable.bindings) // a bound count changes the copies
+        for (std::size_t index = 0; index < state.features.size(); ++index)
+            if (const auto* pattern = std::get_if<PatternParameters>(&state.parameters[index]);
+                pattern != nullptr && binding.field == "count" &&
+                state.features[index].id == binding.feature) {
+                const auto values = *pattern;
+                keepCopiesInStep(state.features, state.parameters, state.nextFeatureId,
+                                 binding.feature, values);
+                break;
+            }
     validateBodyAttributes(state.bodyAttributes, state.features, state.parameters);
     const DocumentSnapshot snapshot(std::move(state.features), std::move(state.parameters),
                                     state.nextFeatureId, std::move(state.parameterTable),

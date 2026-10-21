@@ -115,53 +115,56 @@ void PatternToolController::open() {
     for (const auto& feature : datumAxes_)
         axes.push_back(QString::fromStdString(feature.name));
     axes.push_back(QObject::tr("Kante (anklicken)"));
-    panel_.begin(ToolPanelDefinition{
-        editing_ ? QObject::tr("Muster bearbeiten") : QObject::tr("Muster"),
-        guidance(),
-        {{"count", QObject::tr("Anzahl"), count_, 2.0, 100.0, ToolValueKind::count},
-         {"spacing", QObject::tr("Abstand"), spacing_, 0.001, 1'000'000.0},
-         {"angle", QObject::tr("Winkel"), angleDegrees_, 0.001, 360.0, ToolValueKind::angle}},
-        {{"kind",
-          QObject::tr("Art"),
-          {QObject::tr("Linear"), QObject::tr("Kreisförmig")},
-          kind_ == document::PatternKind::circular ? 1 : 0},
-         {"axis", QObject::tr("Richtung/Achse"), axes, axisIndex_},
-         {"direction",
-          QObject::tr("Richtung"),
-          {QObject::tr("Normal"), QObject::tr("Umgekehrt")},
-          reversed_ ? 1 : 0},
-         {"mode",
-          QObject::tr("Ergebnis"),
-          {QObject::tr("Neue Körper"), QObject::tr("Vereinigen")},
-          mode_ == document::PatternMode::join ? 1 : 0}},
-        {},
-        [this](const std::string& id, double value) {
-            if (id == "count")
-                count_ = std::round(value);
-            if (id == "spacing")
-                spacing_ = value;
-            if (id == "angle")
-                angleDegrees_ = value;
-            preview();
-        },
-        [this](const std::string& id, int index) {
-            if (id == "kind")
-                kind_ =
-                    index == 1 ? document::PatternKind::circular : document::PatternKind::linear;
-            if (id == "axis")
-                axisIndex_ = index;
-            if (id == "direction")
-                reversed_ = index == 1;
-            if (id == "mode")
-                mode_ = index == 1 ? document::PatternMode::join : document::PatternMode::newBodies;
-            syncFields();
-            preview();
-            highlightEdge();
-        },
-        [](const std::string&) {},
-        [this]() { accept(); },
-        [this]() { cancel(); },
-        {}});
+    panel_.begin(withFieldBindings(
+        ToolPanelDefinition{
+            editing_ ? QObject::tr("Muster bearbeiten") : QObject::tr("Muster"),
+            guidance(),
+            {{"count", QObject::tr("Anzahl"), count_, 2.0, 100.0, ToolValueKind::count},
+             {"spacing", QObject::tr("Abstand"), spacing_, 0.001, 1'000'000.0},
+             {"angle", QObject::tr("Winkel"), angleDegrees_, 0.001, 360.0, ToolValueKind::angle}},
+            {{"kind",
+              QObject::tr("Art"),
+              {QObject::tr("Linear"), QObject::tr("Kreisförmig")},
+              kind_ == document::PatternKind::circular ? 1 : 0},
+             {"axis", QObject::tr("Richtung/Achse"), axes, axisIndex_},
+             {"direction",
+              QObject::tr("Richtung"),
+              {QObject::tr("Normal"), QObject::tr("Umgekehrt")},
+              reversed_ ? 1 : 0},
+             {"mode",
+              QObject::tr("Ergebnis"),
+              {QObject::tr("Neue Körper"), QObject::tr("Vereinigen")},
+              mode_ == document::PatternMode::join ? 1 : 0}},
+            {},
+            [this](const std::string& id, double value) {
+                if (id == "count")
+                    count_ = std::round(value);
+                if (id == "spacing")
+                    spacing_ = value;
+                if (id == "angle")
+                    angleDegrees_ = value;
+                preview();
+            },
+            [this](const std::string& id, int index) {
+                if (id == "kind")
+                    kind_ = index == 1 ? document::PatternKind::circular
+                                       : document::PatternKind::linear;
+                if (id == "axis")
+                    axisIndex_ = index;
+                if (id == "direction")
+                    reversed_ = index == 1;
+                if (id == "mode")
+                    mode_ =
+                        index == 1 ? document::PatternMode::join : document::PatternMode::newBodies;
+                syncFields();
+                preview();
+                highlightEdge();
+            },
+            [](const std::string&) {},
+            [this]() { accept(); },
+            [this]() { cancel(); },
+            {}},
+        editing_, [this] { stamp_ = session_.sceneStatus().document; }));
     syncFields();
     viewport_.setEdgePicking(true);
     preview();

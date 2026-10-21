@@ -1,4 +1,5 @@
 #include "CommandFeedback.hpp"
+#include "FeaturePropertiesPanel.hpp"
 #include "MainWindowState.hpp"
 #include "MainWindowSupport.hpp"
 #include "OverlayCard.hpp"
@@ -40,16 +41,117 @@ std::string freeName(const document::ParameterTable& table,
     }
 }
 
+using Report = std::function<void(const QString&)>;
+
 ParameterUnit unitOf(ToolValueKind kind) {
-    return kind == ToolValueKind::angle ? ParameterUnit::angle : ParameterUnit::length;
+    return kind == ToolValueKind::angle   ? ParameterUnit::angle
+           : kind == ToolValueKind::count ? ParameterUnit::number
+                                          : ParameterUnit::length;
 }
 
 QString withUnit(double value, ParameterUnit unit) {
+    if (unit == ParameterUnit::number) // N01b
+        return QLocale().toString(value, 'g', 12);
     return QLocale().toString(value, 'f', 3) +
            (unit == ParameterUnit::angle ? QStringLiteral("°") : QStringLiteral(" mm"));
 }
 
-using Report = std::function<void(const QString&)>;
+QString unitName(ParameterUnit unit) {
+    return unit == ParameterUnit::angle    ? QObject::tr("ein Winkel")
+           : unit == ParameterUnit::number ? QObject::tr("eine Zahl")
+                                           : QObject::tr("eine Länge");
+}
+
+// N01b: the parameter a field of `feature` follows (an extrusion's distance and offset too).
+std::optional<document::ParameterId> boundParameter(const application::CadSession& session,
+                                                    document::FeatureId feature,
+                                                    const std::string& field) {
+    for (const auto& binding : session.parameterTable().bindings)
+        if (binding.feature == feature && binding.field == field)
+            return binding.parameter;
+    const auto features = session.features();
+    const auto found = std::ranges::find(features, feature, &document::FeatureDescriptor::id);
+    if (found == features.end() || found->kind != document::FeatureKind::extrusion ||
+        (field != "distance" && field != "offset"))
+        return std::nullopt;
+    const auto extrusion = session.extrusionParameters(feature);
+    return field == "distance" ? extrusion.distanceParameter : extrusion.offsetParameter;
+}
+
+// N01b: the panel's field bindings go to the session; after OK the shell makes those the tool's
+// command did not take (a binding alone changes no value, so the tool may commit nothing).
+FieldBindingHooks fieldBindingHooks(application::CadSession& session,
+                                    std::function<void()> changed) {
+    FieldBindingHooks hooks;
+    hooks.boundName = [&session](document::FeatureId feature, const std::string& field) {
+        const auto id = boundParameter(session, feature, field);
+        const auto* parameter =
+            id ? document::findParameter(session.parameterTable(), *id) : nullptr;
+        return parameter ? std::optional{QString::fromStdString(parameter->name)} : std::nullopt;
+    };
+    hooks.parameter = [&session](document::ParameterId id) {
+        const auto* parameter = document::findParameter(session.parameterTable(), id);
+        return parameter ? std::optional{std::pair{QString::fromStdString(parameter->name),
+                                                   parameter->value}}
+                         : std::nullopt;
+    };
+    hooks.requested = [&session](const std::vector<application::FieldBindingRequest>& requests) {
+        session.pendingFieldBindings() = requests;
+    };
+    hooks.accepted = [&session, changed = std::move(changed)](
+                         const std::vector<application::FieldBindingRequest>& requests) {
+        session.pendingFieldBindings().clear();
+        bool any = false;
+        for (const auto& request : requests)
+            if (request.feature &&
+                boundParameter(session, *request.feature, request.field) != request.parameter)
+                any = session.bindFeatureField(*request.feature, request.field, request.parameter)
+                              .status() != CommandStatus::rejected ||
+                      any;
+        if (any)
+            changed();
+    };
+    return hooks;
+}
+
+// N01b: "=Name" in the property fields of the selected feature binds at once (one undo step).
+PropertyBindingHandlers propertyBindings(application::CadSession& session, ToolPanelHost& panel,
+                                         Report report, std::function<void()> changed) {
+    PropertyBindingHandlers handlers;
+    handlers.boundName = [&session](const std::string& field) -> std::optional<QString> {
+        const auto feature = session.selectedFeature();
+        const auto id = feature ? boundParameter(session, *feature, field) : std::nullopt;
+        const auto* parameter =
+            id ? document::findParameter(session.parameterTable(), *id) : nullptr;
+        return parameter ? std::optional{QString::fromStdString(parameter->name)} : std::nullopt;
+    };
+    handlers.requested = [&session, &panel, report, changed = std::move(changed)](
+                             const std::string& field, std::optional<QString> name, double value) {
+        const auto feature = session.selectedFeature();
+        if (!feature)
+            return;
+        std::optional<document::ParameterId> id;
+        if (name) {
+            const auto resolved = panel.resolveParameter(*name, ToolValueKind::length, value);
+            if (!resolved)
+                return;
+            id = resolved->id;
+        }
+        const auto result = session.bindFeatureField(*feature, field, id);
+        if (result.status() == CommandStatus::rejected &&
+            result.reason() != application::RejectionReason::noChange)
+            report(commandFeedbackMessage(result));
+        changed();
+    };
+    handlers.lengthNames = [&session] {
+        QStringList names;
+        for (const auto& entry : session.parameterTable().values)
+            if (entry.unit == ParameterUnit::length)
+                names.append(QString::fromStdString(entry.name));
+        return names;
+    };
+    return handlers;
+}
 
 std::optional<ResolvedParameter> created(const application::CadSession& session,
                                          const std::string& name) {
@@ -59,55 +161,56 @@ std::optional<ResolvedParameter> created(const application::CadSession& session,
     return std::nullopt;
 }
 
+// Where a new parameter is asked for and a refusal is told.
+struct Asking final {
+    application::CadSession& session;
+    QWidget& parent;
+    Report report;
+};
+
+// "Den Parameter ... anlegen?" answered with Yes; then the parameter is created.
+std::optional<ResolvedParameter> createAfterQuestion(const Asking& asking, const QString& question,
+                                                     const document::DocumentParameter& draft) {
+    QMessageBox ask(QMessageBox::Question, QObject::tr("Parameter anlegen"), question,
+                    QMessageBox::Yes | QMessageBox::No, &asking.parent);
+    ask.setObjectName(QStringLiteral("createParameterQuestion"));
+    ask.setDefaultButton(QMessageBox::Yes);
+    if (ask.exec() != QMessageBox::Yes)
+        return std::nullopt;
+    const auto result =
+        asking.session.createParameter(draft.name, draft.unit, draft.value, {}, draft.expression);
+    if (result.status() != CommandStatus::committed) {
+        asking.report(commandFeedbackMessage(result));
+        return std::nullopt;
+    }
+    return created(asking.session, draft.name);
+}
+
 // An existing parameter of the field's unit, or a new one after a question.
-std::optional<ResolvedParameter> namedParameter(application::CadSession& session, QWidget& parent,
-                                                const QString& name, ParameterUnit unit,
-                                                double value, const Report& report) {
-    for (const auto& entry : session.parameterTable().values)
+std::optional<ResolvedParameter> namedParameter(const Asking& asking, const QString& name,
+                                                ParameterUnit unit, double value) {
+    for (const auto& entry : asking.session.parameterTable().values)
         if (QString::fromStdString(entry.name).compare(name, Qt::CaseInsensitive) == 0) {
             if (entry.unit == unit)
                 return ResolvedParameter{entry.id, false};
-            report(
-                entry.unit == ParameterUnit::angle
-                    ? QObject::tr("„%1“ ist ein Winkel, hier wird eine Länge gebraucht").arg(name)
-                    : QObject::tr("„%1“ ist eine Länge, hier wird ein Winkel gebraucht").arg(name));
+            asking.report(QObject::tr("„%1“ ist %2, hier wird %3 gebraucht")
+                              .arg(name, unitName(entry.unit), unitName(unit)));
             return std::nullopt;
         }
-    QMessageBox ask(
-        QMessageBox::Question, QObject::tr("Parameter anlegen"),
-        QObject::tr("Den Parameter „%1“ = %2 anlegen?").arg(name, withUnit(value, unit)),
-        QMessageBox::Yes | QMessageBox::No, &parent);
-    ask.setObjectName(QStringLiteral("createParameterQuestion"));
-    ask.setDefaultButton(QMessageBox::Yes);
-    if (ask.exec() != QMessageBox::Yes)
-        return std::nullopt;
-    const auto result = session.createParameter(name.toStdString(), unit, value);
-    if (result.status() != CommandStatus::committed) {
-        report(commandFeedbackMessage(result));
-        return std::nullopt;
-    }
-    return created(session, name.toStdString());
+    return createAfterQuestion(
+        asking, QObject::tr("Den Parameter „%1“ = %2 anlegen?").arg(name, withUnit(value, unit)),
+        {document::ParameterId{0}, name.toStdString(), unit, value});
 }
 
 // N01: "=A*2" in a field: a new parameter "AusdruckN" holding the expression, after a question.
-std::optional<ResolvedParameter> expressionParameter(application::CadSession& session,
-                                                     QWidget& parent, const QString& expression,
-                                                     ParameterUnit unit, const Report& report) {
-    const auto name = freeName(session.parameterTable(), QStringLiteral("Ausdruck"));
-    QMessageBox ask(QMessageBox::Question, QObject::tr("Parameter anlegen"),
-                    QObject::tr("Für den Ausdruck „%1“ den Parameter „%2“ anlegen?")
-                        .arg(expression, QString::fromStdString(name)),
-                    QMessageBox::Yes | QMessageBox::No, &parent);
-    ask.setObjectName(QStringLiteral("createParameterQuestion"));
-    ask.setDefaultButton(QMessageBox::Yes);
-    if (ask.exec() != QMessageBox::Yes)
-        return std::nullopt;
-    const auto result = session.createParameter(name, unit, 0, {}, expression.toStdString());
-    if (result.status() != CommandStatus::committed) {
-        report(commandFeedbackMessage(result));
-        return std::nullopt;
-    }
-    return created(session, name);
+std::optional<ResolvedParameter>
+expressionParameter(const Asking& asking, const QString& expression, ParameterUnit unit) {
+    const auto name = freeName(asking.session.parameterTable(), QStringLiteral("Ausdruck"));
+    return createAfterQuestion(
+        asking,
+        QObject::tr("Für den Ausdruck „%1“ den Parameter „%2“ anlegen?")
+            .arg(expression, QString::fromStdString(name)),
+        {document::ParameterId{0}, name, unit, 0, {}, expression.toStdString()});
 }
 } // namespace
 
@@ -226,12 +329,20 @@ void MainWindow::createParameterCard() {
         static const QRegularExpression plainName(QStringLiteral("^[A-Za-z][A-Za-z0-9_]*$"));
         const auto resolved =
             plainName.match(text).hasMatch()
-                ? namedParameter(impl_->session, *this, text, unitOf(kind), value, report)
-                : expressionParameter(impl_->session, *this, text, unitOf(kind), report);
+                ? namedParameter({impl_->session, *this, report}, text, unitOf(kind), value)
+                : expressionParameter({impl_->session, *this, report}, text, unitOf(kind));
         if (resolved && resolved->created)
             syncParameters();
         return resolved;
     });
+    const auto changed = [this] {
+        refreshScene();
+        syncParameters();
+    };
+    impl_->toolPanel->setFieldBindingHooks(fieldBindingHooks(impl_->session, changed));
+    impl_->propertyPanel->setBindingHandlers(propertyBindings(
+        impl_->session, *impl_->toolPanel,
+        [this](const QString& message) { statusBar()->showMessage(message); }, changed));
     syncParameters();
 }
 

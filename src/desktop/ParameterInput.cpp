@@ -95,10 +95,13 @@ void ParameterSpinBox::finished() {
         requested_(std::nullopt);
 }
 
-ParameterSpinBox* makeParameterInput(QWidget* parent, bool angle) {
+ParameterSpinBox* makeParameterInput(QWidget* parent, bool angle, bool count) {
     auto* input = new ParameterSpinBox(parent);
-    input->setDecimals(3);
-    if (angle) {
+    input->setDecimals(count ? 0 : 3);
+    if (count) {
+        input->setRange(0, 1'000'000.0);
+        input->setSingleStep(1.0);
+    } else if (angle) {
         input->setRange(-360'000.0, 360'000.0);
         input->setSingleStep(5.0);
         input->setSuffix(QStringLiteral("°"));

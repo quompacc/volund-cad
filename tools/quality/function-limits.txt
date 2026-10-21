@@ -190,7 +190,6 @@ cyclomatic | src/viewport/SketchEditorInteraction.cpp | voelund::viewport::Sketc
 cyclomatic | apps/voelund-cad/main.cpp | (anonymous namespace)::verifyCadControls | 12 | Altbestand vor A04
 cyclomatic | src/application/CadSessionMove.cpp | voelund::application::CadSession::moveBody | 12 | Altbestand vor A04
 cyclomatic | src/application/CadSessionPrimitives.cpp | voelund::application::CadSession::editPrimitiveParameters | 12 | Altbestand vor A04
-cyclomatic | src/application/CadSessionTransactions.cpp | voelund::application::CadSession::finishCandidate | 12 | Altbestand vor A04
 cyclomatic | src/application/SketchEditorCreation.cpp | voelund::application::(anonymous namespace)::checkSnapTarget | 12 | Altbestand vor A04
 cyclomatic | src/application/SketchEditorPointConstraints.cpp | voelund::application::(anonymous namespace)::referencePoint | 12 | Altbestand vor A04
 cyclomatic | src/application/SketchEditorRelations.cpp | voelund::application::SketchEditorSession::addAutomaticLineRelation | 12 | Altbestand vor A04
@@ -232,7 +231,7 @@ cyclomatic | src/document/DocumentFileInput.cpp | voelund::document::detail::(an
 cyclomatic | src/document/LegacyBodyIdentity.cpp | voelund::document::featureBodyContexts::(lambda) | 11 | Altbestand vor A04
 cyclomatic | src/document/LegacyDocumentImporter.cpp | voelund::document::(anonymous namespace)::readExtrusionFeature | 11 | Altbestand vor A04
 cyclomatic | src/document/ModelDocument.cpp | voelund::document::validateSketchParameters | 11 | Altbestand vor A04
-cyclomatic | src/document/ModelDocumentPattern.cpp | voelund::document::(anonymous namespace)::keepCopiesInStep | 11 | Altbestand vor A04
+cyclomatic | src/document/ModelDocumentPattern.cpp | voelund::document::keepCopiesInStep | 11 | Altbestand vor A04
 cyclomatic | src/document/NativeBodyAttributes.cpp | voelund::document::validateBodyAttributes | 11 | Altbestand vor A04
 cyclomatic | src/document/SketchGeometry.cpp | voelund::document::validateSketchConstraints::(lambda) | 11 | Altbestand vor A04
 cyclomatic | src/features/SketchConstraintAnnotations.cpp | voelund::features::sketchAnnotationCategory | 11 | Altbestand vor A04
@@ -515,7 +514,6 @@ nesting | src/application/SketchOffset.cpp | chain | 1 | Altbestand vor A04
 nesting | src/desktop/ReferenceRepairDialog.cpp | populate | 1 | Altbestand vor A04
 nesting | src/desktop/SketchEditorCommand.cpp | accept | 1 | Altbestand vor A04
 nesting | src/desktop/TimelineBar.cpp | eventFilter | 1 | Altbestand vor A04
-nesting | src/desktop/ToolPanelHost.cpp | begin | 1 | Altbestand vor A04
 nesting | src/desktop/ToolRail.cpp | buildSketchPage | 1 | Altbestand vor A04
 nesting | src/document/ModelDocumentHistory.cpp | placeAtRollback | 1 | Altbestand vor A04
 nesting | src/features/SketchRegionGeometry.cpp | boundaryArea | 1 | Altbestand vor A04

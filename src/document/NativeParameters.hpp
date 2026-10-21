@@ -9,7 +9,8 @@ inline constexpr int nativeParameterSlot = 30;
 // Records the table consumes from the document budget.
 [[nodiscard]] std::size_t nativeParameterRecords(const ParameterTable& table) noexcept;
 void writeNativeParameterTable(const TDF_Label& label, const ParameterTable& table);
-// N01 (schema 37): record child 6 holds an expression, unit 3 is a plain number.
+// N01 (schema 37): record child 6 holds an expression, unit 3 is a plain number; child 3 of the
+// table lists the field bindings (N01b).
 [[nodiscard]] ParameterTable
 readNativeParameterTable(const TDF_Label& label, std::size_t remainingRecords, int schemaVersion);
 // Optional binding child of a constraint or extrusion payload: the decimal parameter ID.

@@ -60,7 +60,9 @@ std::size_t CadSession::parameterUseCount(document::ParameterId id) const {
         else if (usesParameter(feature, id))
             ++uses;
     }
-    return uses;
+    // N01b: bound fields of other features.
+    return uses + static_cast<std::size_t>(std::ranges::count(parameterTable().bindings, id,
+                                                              &document::FieldBinding::parameter));
 }
 
 namespace {
@@ -73,6 +75,17 @@ void refuseWhenInExpressions(const document::ParameterTable& table, const std::s
     for (const auto id : dependents)
         names += (names.empty() ? "" : ", ") + document::findParameter(table, id)->name;
     throw std::invalid_argument("Parameter is used in the expressions of: " + names);
+}
+
+// The table without the parameter; its field bindings (N01b) go too, the fields keep their values.
+document::ParameterTable withoutParameter(document::ParameterTable table, document::ParameterId id,
+                                          ParameterDeletion mode, const std::string& name) {
+    if (mode == ParameterDeletion::refuseWhenUsed &&
+        std::ranges::count(table.bindings, id, &document::FieldBinding::parameter) > 0)
+        throw std::invalid_argument("Parameter is still in use: " + name);
+    std::erase_if(table.bindings, [&](const auto& b) { return b.parameter == id; });
+    std::erase_if(table.values, [&](const auto& p) { return p.id == id; });
+    return table;
 }
 } // namespace
 
@@ -271,7 +284,7 @@ CommandResult CadSession::deleteParameter(document::ParameterId id, ParameterDel
                     static_cast<void>(candidate.setExtrusionParameters(feature.id, extrusion));
                 }
             }
-            std::erase_if(table.values, [&](const auto& p) { return p.id == id; });
+            table = withoutParameter(candidate.parameterTable(), id, mode, name);
             return candidate.setParameterTable(table);
         },
         ErrorDisposition::reject);

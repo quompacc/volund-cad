@@ -10,6 +10,7 @@
 #include <QVBoxLayout>
 
 #include <algorithm>
+#include <optional>
 #include <utility>
 
 namespace voelund::desktop {
@@ -27,6 +28,28 @@ QString valueText(const document::DocumentParameter& parameter) {
     // N01: the expression and what it gives.
     return QStringLiteral("=") + QString::fromStdString(parameter.expression) +
            QStringLiteral(" \u2192 ") + value;
+}
+
+// N01: what follows '=' in a value cell, without the shown result.
+std::optional<QString> expressionIn(const QString& text) {
+    if (!text.startsWith(QLatin1Char('=')))
+        return std::nullopt;
+    QString expression = text.mid(1);
+    if (const auto arrow = expression.indexOf(QStringLiteral(" \u2192 ")); arrow >= 0)
+        expression.truncate(arrow);
+    return expression.trimmed();
+}
+
+// A number in a value cell, with or without its unit, in the user's or the C locale.
+std::optional<double> numberIn(QString text) {
+    for (const QString& unit : {QStringLiteral("mm"), QStringLiteral("°")})
+        if (text.endsWith(unit))
+            text = text.chopped(unit.size()).trimmed();
+    bool ok = false;
+    double value = QLocale().toDouble(text, &ok);
+    if (!ok)
+        value = QLocale::c().toDouble(text, &ok);
+    return ok ? std::optional{value} : std::nullopt;
 }
 } // namespace
 
@@ -157,23 +180,13 @@ void ParameterPanel::changed(QTableWidgetItem* item) {
     }
     if (item->column() != valueColumn)
         return;
-    QString text = item->text().trimmed();
-    if (text.startsWith(QLatin1Char('=')) && expressionChanged_) {
-        // N01: what follows '=', without the shown result.
-        QString expression = text.mid(1);
-        if (const auto arrow = expression.indexOf(QStringLiteral(" \u2192 ")); arrow >= 0)
-            expression.truncate(arrow);
-        expressionChanged_(id, expression.trimmed());
+    const QString text = item->text().trimmed();
+    if (const auto expression = expressionIn(text); expression && expressionChanged_) {
+        expressionChanged_(id, *expression);
         return;
     }
-    for (const QString& unit : {QStringLiteral("mm"), QStringLiteral("°")})
-        if (text.endsWith(unit))
-            text = text.chopped(unit.size()).trimmed();
-    bool ok = false;
-    double value = QLocale().toDouble(text, &ok);
-    if (!ok)
-        value = QLocale::c().toDouble(text, &ok);
-    if (!ok) {
+    const auto value = numberIn(text);
+    if (!value) {
         // Back to the stored value; the shell says why.
         const QSignalBlocker blocker(table_);
         item->setText(valueText(row->parameter));
@@ -182,7 +195,7 @@ void ParameterPanel::changed(QTableWidgetItem* item) {
         return;
     }
     if (handlers_.valueChanged)
-        handlers_.valueChanged(id, value);
+        handlers_.valueChanged(id, *value);
 }
 
 void ParameterPanel::removeSelected() {

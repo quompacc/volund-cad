@@ -78,12 +78,24 @@ void SketchExtrusionToolController::collectSections() {
     }
 }
 
+// PAR02: the fields take "=Name"; N01b: the other ones bind through the document's field list.
+void SketchExtrusionToolController::takeParameters(ToolPanelDefinition& definition) {
+    definition.parameterBound = [this](const std::string& id,
+                                       std::optional<ResolvedParameter> bound) {
+        bindLength(id, bound);
+    };
+    definition.editedFeature = editing_;
+    definition.parameterTableChanged = [this] { supportStamp_ = session_.sceneStatus().document; };
+}
+
 // PAR02: "=Name" in the distance or offset field binds it to a length parameter; a number
 // there (nullopt) unbinds it.
 void SketchExtrusionToolController::bindLength(const std::string& id,
                                                std::optional<ResolvedParameter> bound) {
-    if (id != "distance" && id != "offset")
+    if (id != "distance" && id != "offset") { // N01b: a revolve's angle, a helix's pitch
+        panel_.bindThroughDocument(id, bound);
         return;
+    }
     auto& member = id == "distance" ? distanceParameter_ : offsetParameter_;
     if (!bound) {
         member.reset();

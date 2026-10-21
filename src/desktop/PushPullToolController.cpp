@@ -46,21 +46,23 @@ void PushPullToolController::begin(const viewport::PlanarFaceSelection& face) {
     viewport_.setPushPullHandler(
         [this](double distance, bool finished) { dragged(distance, finished); });
     distance_ = 10.0;
-    panel_.begin(ToolPanelDefinition{
-        QObject::tr("Drücken/Ziehen"),
-        guidance(),
-        {{"distance", QObject::tr("Strecke"), distance_, -1'000'000.0, 1'000'000.0}},
-        {},
-        {},
-        [this](const std::string& id, double value) {
-            if (id == "distance")
-                typed(value);
-        },
-        {},
-        {},
-        [this]() { accept(); },
-        [this]() { cancel(); },
-        {}});
+    panel_.begin(withFieldBindings(ToolPanelDefinition{QObject::tr("Drücken/Ziehen"),
+                                                       guidance(),
+                                                       {{"distance", QObject::tr("Strecke"),
+                                                         distance_, -1'000'000.0, 1'000'000.0}},
+                                                       {},
+                                                       {},
+                                                       [this](const std::string& id, double value) {
+                                                           if (id == "distance")
+                                                               typed(value);
+                                                       },
+                                                       {},
+                                                       {},
+                                                       [this]() { accept(); },
+                                                       [this]() { cancel(); },
+                                                       {}},
+                                   std::nullopt,
+                                   [this] { stamp_ = session_.sceneStatus().document; }));
     viewport_.beginPushPull(face);
     viewport_.setPushPullDistance(distance_);
     preview();

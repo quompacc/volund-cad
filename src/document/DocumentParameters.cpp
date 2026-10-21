@@ -46,6 +46,34 @@ bool isValidParameterName(std::string_view name) noexcept {
         reservedNames, [&](std::string_view word) { return sameParameterName(word, name); });
 }
 
+namespace {
+// N01b: each field once, to a parameter of the table; the field names are checked against
+// the features by the document.
+bool wellFormed(const FieldBinding& binding) {
+    return binding.feature.value() != 0 && !binding.field.empty() &&
+           binding.field.size() <= maximumParameterNameBytes &&
+           binding.field.find('\0') == std::string::npos;
+}
+
+void validateFieldBindings(const ParameterTable& table) {
+    if (table.bindings.size() > maximumFieldBindings)
+        throw std::invalid_argument("Too many field bindings");
+    for (std::size_t index = 0; index < table.bindings.size(); ++index) {
+        const auto& binding = table.bindings[index];
+        if (!wellFormed(binding))
+            throw std::invalid_argument("Invalid field binding");
+        if (findParameter(table, binding.parameter) == nullptr)
+            throw std::invalid_argument("Field binding to an unknown parameter");
+        if (std::any_of(table.bindings.begin(),
+                        table.bindings.begin() + static_cast<std::ptrdiff_t>(index),
+                        [&](const FieldBinding& prior) {
+                            return prior.feature == binding.feature && prior.field == binding.field;
+                        }))
+            throw std::invalid_argument("Field bound twice: " + binding.field);
+    }
+}
+} // namespace
+
 void validateParameterTable(const ParameterTable& table) {
     if (table.values.size() > maximumParameterCount || !hasIdCapacity(table.nextId, 0))
         throw std::invalid_argument("Parameter table exceeds its limits");
@@ -69,6 +97,7 @@ void validateParameterTable(const ParameterTable& table) {
                 throw std::invalid_argument("Parameter name already exists: " + parameter.name);
         }
     }
+    validateFieldBindings(table);
     // N01: stored values are what the expressions give.
     ParameterTable resolved = table;
     resolveParameterTable(resolved);

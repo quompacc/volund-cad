@@ -7,6 +7,7 @@
 
 #include <functional>
 #include <optional>
+#include <string>
 #include <vector>
 
 class QComboBox;
@@ -17,6 +18,18 @@ class QPushButton;
 
 namespace voelund::desktop {
 
+class ParameterSpinBox;
+
+// N01b: "=Name" in the size and position fields of boxes, cylinders and primitives and in an
+// extrusion's distance, named as document::featureField names them.
+struct PropertyBindingHandlers final {
+    std::function<std::optional<QString>(const std::string& field)> boundName;
+    // "=Name" (the name) or a number typed into a bound field (nullopt), with the field's value.
+    std::function<void(const std::string& field, std::optional<QString> name, double value)>
+        requested;
+    std::function<QStringList()> lengthNames;
+};
+
 class FeaturePropertiesPanel final : public QStackedWidget {
   public:
     explicit FeaturePropertiesPanel(QWidget* parent = nullptr);
@@ -24,6 +37,7 @@ class FeaturePropertiesPanel final : public QStackedWidget {
     void setBoxChangeHandler(std::function<void()> handler);
     void setCylinderChangeHandler(std::function<void()> handler);
     void setExtrusionChangeHandler(std::function<void()> handler);
+    void setBindingHandlers(PropertyBindingHandlers handlers);
     void showNone();
     void showCommandError(const QString& message);
     void setErrorCommitHandler(std::function<void()> handler);
@@ -48,6 +62,9 @@ class FeaturePropertiesPanel final : public QStackedWidget {
     void createExtrusionPanel();
     void connectEditors();
     void showPlacement(const kernel::RigidTransform& placement, const QString& errorText);
+    [[nodiscard]] QDoubleSpinBox* bindableInput(QWidget* parent, bool allowNegative = false);
+    [[nodiscard]] std::string fieldOf(const QDoubleSpinBox* input) const;
+    void syncBindings();
 
     QWidget* boxPanel_{nullptr};
     QWidget* cylinderPanel_{nullptr};
@@ -76,6 +93,8 @@ class FeaturePropertiesPanel final : public QStackedWidget {
     std::function<void()> boxChangeHandler_;
     std::function<void()> cylinderChangeHandler_;
     std::function<void()> extrusionChangeHandler_;
+    std::vector<ParameterSpinBox*> bindable_;
+    PropertyBindingHandlers bindingHandlers_;
 };
 
 } // namespace voelund::desktop

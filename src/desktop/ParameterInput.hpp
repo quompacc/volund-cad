@@ -43,7 +43,8 @@ class ParameterSpinBox final : public QDoubleSpinBox {
     QCompleter* completer_{nullptr};
 };
 
-// A length (mm) or angle (degrees) field that takes parameters, set up like the plain ones.
-[[nodiscard]] ParameterSpinBox* makeParameterInput(QWidget* parent, bool angle);
+// A length (mm), angle (degrees) or (N01b) count field that takes parameters, set up like the
+// plain ones.
+[[nodiscard]] ParameterSpinBox* makeParameterInput(QWidget* parent, bool angle, bool count = false);
 
 } // namespace voelund::desktop

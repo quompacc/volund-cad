@@ -648,6 +648,15 @@ if(VOELUND_BUILD_DESKTOP)
         if(VOELUND_NATIVE_WAYLAND)
             set_tests_properties(desktop.expression_flow PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
         endif()
+        # N01b: measure fields of the tools and the properties bound to parameters.
+        add_executable(voelund_field_binding_flow_tests desktop/FieldBindingFlowTests.cpp)
+        target_link_libraries(voelund_field_binding_flow_tests PRIVATE voelund_project_options Voelund::Desktop)
+        add_test(NAME desktop.field_binding_flow COMMAND voelund_field_binding_flow_tests)
+        set_tests_properties(desktop.field_binding_flow PROPERTIES
+            LABELS "desktop;qt-opengl" TIMEOUT 120 RUN_SERIAL TRUE)
+        if(VOELUND_NATIVE_WAYLAND)
+            set_tests_properties(desktop.field_binding_flow PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
+        endif()
         # PAR02: the parameter table and "=Name" in the fields (user flow of the packet).
         add_executable(voelund_parameter_flow_tests desktop/ParameterFlowTests.cpp)
         target_link_libraries(voelund_parameter_flow_tests PRIVATE voelund_project_options Voelund::Desktop)
@@ -1368,6 +1377,11 @@ target_link_libraries(voelund_move_tests PRIVATE voelund_project_options Voelund
 add_test(NAME application.move COMMAND voelund_move_tests)
 set_tests_properties(application.move PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
 # PAR02: binding parameters in the sketch editor and in a new extrusion.
+# N01b: measure fields of every feature bound to parameters.
+add_executable(voelund_field_binding_tests integration/FieldBindingSessionTests.cpp)
+target_link_libraries(voelund_field_binding_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.field_bindings COMMAND voelund_field_binding_tests)
+set_tests_properties(application.field_bindings PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
 # N01: parameters as expressions in the session.
 add_executable(voelund_parameter_expression_session_tests integration/ParameterExpressionSessionTests.cpp)
 target_link_libraries(voelund_parameter_expression_session_tests PRIVATE voelund_project_options Voelund::Application)

@@ -114,43 +114,48 @@ void DatumToolController::open() {
         preview();
     };
     if (axis_)
-        panel_.begin(ToolPanelDefinition{
-            editing_ ? QObject::tr("Bezugsachse bearbeiten") : QObject::tr("Bezugsachse"),
-            QObject::tr("Wähle eine Grundachse. Eine vorher angeklickte Kante wird sofort zur "
-                        "Achse."),
-            {},
-            {{"axis",
-              QObject::tr("Achse"),
-              {QObject::tr("X"), QObject::tr("Y"), QObject::tr("Z")},
-              static_cast<int>(baseAxis_) - 1}},
-            {},
-            changed,
-            chosen,
-            {},
-            [this]() { accept(); },
-            [this]() { cancel(); },
-            {}});
+        panel_.begin(withFieldBindings(
+            ToolPanelDefinition{
+                editing_ ? QObject::tr("Bezugsachse bearbeiten") : QObject::tr("Bezugsachse"),
+                QObject::tr("Wähle eine Grundachse. Eine vorher angeklickte Kante wird sofort zur "
+                            "Achse."),
+                {},
+                {{"axis",
+                  QObject::tr("Achse"),
+                  {QObject::tr("X"), QObject::tr("Y"), QObject::tr("Z")},
+                  static_cast<int>(baseAxis_) - 1}},
+                {},
+                changed,
+                chosen,
+                {},
+                [this]() { accept(); },
+                [this]() { cancel(); },
+                {}},
+            editing_, [this] { stamp_ = session_.sceneStatus().document; }));
     else
-        panel_.begin(ToolPanelDefinition{
-            editing_ ? QObject::tr("Bezugsebene bearbeiten") : QObject::tr("Bezugsebene"),
-            face_ ? QObject::tr("Ebene parallel zur gewählten Fläche, um den Abstand entlang "
-                                "ihrer Normalen versetzt.")
-                  : QObject::tr("Ebene parallel zur gewählten Grundebene, um den Abstand "
-                                "versetzt."),
-            {{"offset", QObject::tr("Abstand"), offset_, -1'000'000.0, 1'000'000.0},
-             {"angle", QObject::tr("Winkel"), angleDegrees_, -180.0, 180.0, ToolValueKind::angle}},
-            {{"rotation",
-              QObject::tr("Drehen um"),
-              {QObject::tr("Nicht drehen"), QObject::tr("X-Achse der Ebene"),
-               QObject::tr("Y-Achse der Ebene")},
-              static_cast<int>(rotationAxis_)}},
-            {},
-            changed,
-            chosen,
-            {},
-            [this]() { accept(); },
-            [this]() { cancel(); },
-            {}});
+        panel_.begin(withFieldBindings(
+            ToolPanelDefinition{
+                editing_ ? QObject::tr("Bezugsebene bearbeiten") : QObject::tr("Bezugsebene"),
+                face_ ? QObject::tr("Ebene parallel zur gewählten Fläche, um den Abstand entlang "
+                                    "ihrer Normalen versetzt.")
+                      : QObject::tr("Ebene parallel zur gewählten Grundebene, um den Abstand "
+                                    "versetzt."),
+                {{"offset", QObject::tr("Abstand"), offset_, -1'000'000.0, 1'000'000.0},
+                 {"angle", QObject::tr("Winkel"), angleDegrees_, -180.0, 180.0,
+                  ToolValueKind::angle}},
+                {{"rotation",
+                  QObject::tr("Drehen um"),
+                  {QObject::tr("Nicht drehen"), QObject::tr("X-Achse der Ebene"),
+                   QObject::tr("Y-Achse der Ebene")},
+                  static_cast<int>(rotationAxis_)}},
+                {},
+                changed,
+                chosen,
+                {},
+                [this]() { accept(); },
+                [this]() { cancel(); },
+                {}},
+            editing_, [this] { stamp_ = session_.sceneStatus().document; }));
     if (!axis_)
         panel_.setLengthEnabled("angle", rotationAxis_ != document::DatumRotationAxis::none);
     preview();

@@ -90,7 +90,14 @@ MainWindow::MainWindow(application::CadSession& session, QWidget* parent)
     move(free.center() - rect().center());
 }
 
-MainWindow::~MainWindow() = default;
+MainWindow::~MainWindow() {
+    // Closing moves the focus out of a property field, which ends its input; by then the shell's
+    // state is gone, so the fields no longer edit anything.
+    impl_->propertyPanel->setBoxChangeHandler({});
+    impl_->propertyPanel->setCylinderChangeHandler({});
+    impl_->propertyPanel->setExtrusionChangeHandler({});
+    impl_->propertyPanel->setBindingHandlers({});
+}
 
 void MainWindow::openFile(const QString& fileName) { impl_->documentActions->openFile(fileName); }
 

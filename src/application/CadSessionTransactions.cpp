@@ -1,5 +1,6 @@
 #include "CadSessionEvaluationDetail.hpp"
 #include "CommandInput.hpp"
+#include "FieldBindingDetail.hpp"
 #include <utility>
 #include <voelund/application/CadSession.hpp>
 
@@ -23,25 +24,35 @@ class SessionDocumentBackend final : public CommandTransactionBackend {
   private:
     document::DocumentTransaction& transaction_;
 };
+// The features that are new or whose parameters changed.
+std::vector<document::FeatureId> changedFeatures(const document::ModelDocument& document,
+                                                 const document::ModelDocument& candidate,
+                                                 const document::DocumentSnapshot& evaluated) {
+    std::vector<document::FeatureId> changed;
+    const auto before = document::DocumentSnapshot::capture(document);
+    for (const auto& feature : candidate.features())
+        if (!document.contains(feature.id) ||
+            evaluated.featureParameters(feature.id) != before.featureParameters(feature.id))
+            changed.push_back(feature.id);
+    return changed;
+}
 } // namespace
 
 CommandResult CadSession::finishCandidate(document::DocumentTransaction& transaction,
                                           std::optional<document::FeatureId> selection,
                                           CommandKind kind, ErrorDisposition disposition,
                                           bool clearSketchSelection) {
+    // N01b: the shell's field bindings join the undo step of the command.
+    if (const auto problem =
+            detail::takePendingFields(transaction.edit(), document_, pendingFields_))
+        return CommandResult::invalidInput(*problem);
     auto evaluation = featureGraph_.evaluateDetailed(
         document::DocumentSnapshot::capture(transaction.candidate()), evaluation_);
     auto states = detail::runtimeStates(evaluation->report);
     auto report = evaluation->report;
     auto evaluated = evaluation->result;
     // Unchanged errors in unrelated branches do not require another error-acceptance action.
-    std::vector<document::FeatureId> changed;
-    const auto before = document::DocumentSnapshot::capture(document_);
-    for (const auto& feature : transaction.candidate().features()) {
-        if (!document_.contains(feature.id) || evaluation->snapshot.featureParameters(feature.id) !=
-                                                   before.featureParameters(feature.id))
-            changed.push_back(feature.id);
-    }
+    const auto changed = changedFeatures(document_, transaction.candidate(), evaluation->snapshot);
     const auto affected = evaluation->dependencies.affected(changed);
     // M16: a deletion or a new order changes which features there are and what they take in;
     // then every error counts, not only those behind changed parameters.

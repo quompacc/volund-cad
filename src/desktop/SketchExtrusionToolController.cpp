@@ -30,8 +30,7 @@ void SketchExtrusionToolController::beginSelectedProfiles(bool revolve, bool hel
     editing_.reset();
     stored_.reset();
     const auto selected = session_.selectedSketchProfiles();
-    // T02 defaults (operation unset): a face sketch joins its body, a base-plane sketch makes
-    // a new one.
+    // T02 defaults (operation unset): a face sketch joins its body, a base sketch a new one.
     document::ExtrusionParameters values{10.0, {}};
     if (revolve) {
         // M20: a full turn about the sketch's first construction line, else about a base axis
@@ -214,13 +213,14 @@ void SketchExtrusionToolController::open(document::FeatureId sketchId,
         for (const auto& axis : axes_)
             axisNames.push_back(axis.first);
         choices.insert(choices.begin(), {"axis", QObject::tr("Achse"), axisNames, axisIndex()});
-        lengths = {
-            {"angle", QObject::tr("Winkel"), angleDegrees_, 0.001, 360.0, ToolValueKind::angle}};
+        lengths = {{"angle", QObject::tr("Winkel"), angleDegrees_, 0.001, 360.0,
+                    ToolValueKind::angle, true}}; // N01b: bound through the document's field list
         if (revolve_->pitch) {
             // M26: pitch and height instead of the angle; the direction is the hand.
             const double height =
                 *revolve_->pitch * revolve_->angle.value() / (2 * std::numbers::pi);
-            lengths = {{"pitch", QObject::tr("Steigung"), *revolve_->pitch, 0.001, 1'000'000.0},
+            lengths = {{"pitch", QObject::tr("Steigung"), *revolve_->pitch, 0.001, 1'000'000.0,
+                        ToolValueKind::length, true},
                        {"height", QObject::tr("Höhe"), height, 0.001, 1'000'000.0}};
             for (auto& choice : choices)
                 if (choice.id == "direction") {
@@ -302,10 +302,7 @@ void SketchExtrusionToolController::open(document::FeatureId sketchId,
         [this]() { accept(); },
         [this]() { cancel(); },
         {}};
-    definition.parameterBound = [this](const std::string& id,
-                                       std::optional<ResolvedParameter> bound) {
-        bindLength(id, bound);
-    };
+    takeParameters(definition);
     panel_.begin(std::move(definition));
     panel_.setAcceptEnabled(true);
     panel_.setLengthEnabled("distance", !upToFace_);
@@ -324,8 +321,7 @@ void SketchExtrusionToolController::setPreviewHandler(
 application::Action SketchExtrusionToolController::extrusion() const {
     const bool named = baseSketch_ && operation_ != document::ExtrusionOperation::newBody;
     if (editing_ && stored_) {
-        // M04: the stored extrusion with the panel's values; a changed length leaves its
-        // parameter binding.
+        // M04: the stored extrusion with the panel's values; a changed length leaves its binding.
         auto values = *stored_;
         values.distanceParameter = distanceParameter_; // PAR02
         values.offsetParameter = offsetParameter_;
@@ -420,9 +416,8 @@ void SketchExtrusionToolController::choose(const std::string& choice, int index)
         loft_->ruled = index == 0;
     } else if (choice == "operation") {
         operation_ = static_cast<document::ExtrusionOperation>(index + 1);
-        // A cut goes into the material; the panel shows the changed direction and turns it
-        // back when the cut is left again (M04), unless the user chose it. A revolve's
-        // direction is the turning sense, which a cut does not change.
+        // A cut goes into the material; the panel shows the changed direction and turns it back
+        // after the cut (M04) unless chosen. A revolve's direction (turning sense) stays.
         if (!revolve_ && !sweep_ && !loft_ && operation_ == document::ExtrusionOperation::cut &&
             !reversed_ && !symmetric_) {
             panel_.chooseOption("direction", 1);

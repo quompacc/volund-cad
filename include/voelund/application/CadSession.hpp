@@ -1,5 +1,6 @@
 #pragma once
 #include <voelund/application/CommandTransaction.hpp>
+#include <voelund/application/FieldBindingRequest.hpp>
 #include <voelund/application/SceneStatus.hpp>
 #include <voelund/application/SketchReferenceInspection.hpp>
 #include <voelund/application/SketchSupportProjection.hpp>
@@ -101,9 +102,8 @@ struct PatternInput final {
     bool operator==(const PatternInput&) const = default;
 };
 
-// M16: what deleting a feature takes along. `dependents` lists the features that need it or
-// would fail without it; `cascade` is it with its copies and all of them. Without dependents, or
-// when they can stay with errors (onlyThisPossible), the feature alone can go.
+// M16: what deleting a feature takes along: `dependents` need it, `cascade` adds its copies and
+// them. Without dependents, or when they may keep errors (onlyThisPossible), it can go alone.
 struct DeletionPlan final {
     std::vector<document::FeatureId> dependents;
     std::vector<document::FeatureId> cascade;
@@ -141,8 +141,7 @@ class CadSession final {
     void clearSelection() noexcept;
     [[nodiscard]] std::optional<document::SketchElementId> selectedSketchElement() const noexcept;
     [[nodiscard]] bool selectSketchElement(document::SketchElementId elementId) noexcept;
-    // Sketch "profiles" are R09 regions: picking an element selects the one region whose
-    // outer boundary uses it; ambiguous picks select nothing.
+    // Profiles are R09 regions: an element picks the one region its outer boundary uses.
     [[nodiscard]] std::span<const document::SketchRegionId> selectedSketchProfiles() const noexcept;
     [[nodiscard]] bool selectSketchProfileByElement(document::SketchElementId elementId,
                                                     bool additive);
@@ -167,9 +166,8 @@ class CadSession final {
     [[nodiscard]] document::SketchSupportBinding
     bindSelectedSupport(document::FeatureId support, const TopoDS_Shape& face,
                         const document::SketchPlane& plane) const;
-    // T01: faces a sketch can name on the current result of `support` (empty when that
-    // result is not current), and a sketch bound to one of them in the face's own frame,
-    // as a pick of that face would bind it. Throws std::invalid_argument for another face.
+    // T01: faces a sketch can name on `support`'s current result (none when stale), and a sketch
+    // bound to one in the face's frame as a pick would bind it; invalid_argument otherwise.
     [[nodiscard]] std::vector<features::SupportFaceFrame>
     supportFaces(document::FeatureId support) const;
     [[nodiscard]] document::SketchParameters
@@ -232,9 +230,8 @@ class CadSession final {
     createSketchProfileExtrusion(document::FeatureId sketchFeature,
                                  std::span<const document::SketchRegionId> profileIds,
                                  double distance = 10.0, const ExtrusionMode& mode = {});
-    // AI02c: a base-plane sketch and its extrusion as one transaction and one undo step.
-    // The regions resolve against the new sketch. Empty fills nested contours alternately:
-    // the outer region, not the inside of its holes, again islands inside those.
+    // AI02c: a base-plane sketch and its extrusion in one undo step; regions resolve against
+    // the new sketch, none fills nested contours alternately (outer, not holes, islands).
     [[nodiscard]] CommandResult
     createDatumSketchExtrusion(const document::SketchParameters& sketch,
                                std::span<const document::SketchRegionId> regions, double distance,
@@ -282,9 +279,8 @@ class CadSession final {
                           ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] document::CombineParameters
     combineParameters(document::FeatureId featureId) const;
-    // M19: a construction plane ("Bezugsebene N") on a base plane or a planar face of
-    // `support`'s current result, and a construction axis ("Bezugsachse N") on a base axis or
-    // an edge of `support`'s current result. One undo step each.
+    // M19: a construction plane on a base plane or a planar face, and a construction axis on a
+    // base axis or an edge, of `support`'s current result. One undo step each.
     [[nodiscard]] CommandResult createDatumPlane(std::optional<document::DatumPlane> basePlane,
                                                  std::optional<document::FeatureId> support,
                                                  std::optional<document::SubshapeOrigin> face,
@@ -320,9 +316,8 @@ class CadSession final {
     editDraftParameters(document::FeatureId featureId, const document::DraftParameters& parameters,
                         ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] document::DraftParameters draftParameters(document::FeatureId featureId) const;
-    // M09 (CadSessionMirror.cpp): the mirror image of `support`'s current body ("Spiegeln N")
-    // about a base plane, an existing construction plane or a planar face of `faceSupport`'s
-    // current result; a body of its own or joined to the original. One undo step.
+    // M09 (CadSessionMirror.cpp): mirrors `support`'s body about a base or construction plane or
+    // a planar face of `faceSupport`'s result; a new body or joined. One undo step.
     [[nodiscard]] CommandResult createMirror(document::FeatureId support,
                                              std::optional<document::DatumPlane> basePlane,
                                              std::optional<document::FeatureId> constructionPlane,
@@ -344,9 +339,8 @@ class CadSession final {
                           ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] document::PatternParameters
     patternParameters(document::FeatureId featureId) const;
-    // M11 (CadSessionMove.cpp): moves the body of `feature` by `translation`, turns it by `angle`
-    // (radians) about X, Y or Z (`rotationAxis` 0..2) through its middle. A last primitive
-    // changes its placement, a last move that move, else a new "Bewegen N". One undo step.
+    // M11 (CadSessionMove.cpp): moves `feature`'s body, turns it by `angle` (radians) about axis
+    // 0..2 through its middle: a last primitive or move changes, else "Bewegen N". One undo step.
     [[nodiscard]] CommandResult moveBody(document::FeatureId feature,
                                          const std::array<double, 3>& translation,
                                          std::optional<int> rotationAxis, double angle,
@@ -514,6 +508,11 @@ class CadSession final {
                           std::optional<document::ParameterId> parameter,
                           ErrorDisposition disposition = ErrorDisposition::keepEditableErrors,
                           bool offset = false); // T03: the start offset instead
+    // N01b: binds (nullopt: unbinds) a field of document::featureField or an extrusion's
+    // "distance"/"offset". Pending ones join the next feature command's undo step if it has them.
+    [[nodiscard]] CommandResult bindFeatureField(document::FeatureId feature, std::string field,
+                                                 std::optional<document::ParameterId> parameter);
+    std::vector<FieldBindingRequest>& pendingFieldBindings() noexcept { return pendingFields_; }
     [[nodiscard]] bool canUndo() const noexcept;
     [[nodiscard]] bool canRedo() const noexcept;
     [[nodiscard]] CommandResult undo();
@@ -595,6 +594,7 @@ class CadSession final {
     std::optional<document::MigrationReport> importReport_;
     std::uint64_t generation_{0};
     std::optional<DocumentStamp> geometryStamp_;
+    std::vector<FieldBindingRequest> pendingFields_; // N01b
 };
 
 } // namespace voelund::application

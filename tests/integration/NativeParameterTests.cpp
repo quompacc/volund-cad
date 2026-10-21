@@ -122,6 +122,34 @@ void expressionsAndNumbers(const Handle(TDocStd_Application) & app) {
     std::cout << "schema 37 expressions and plain numbers round-trip; schema 36 gate passed\n";
 }
 
+// N01b schema 37: a box's width bound to W follows it and round-trips; schema 36 refuses the
+// list; a stored binding to a field the feature lacks is refused.
+void fieldBindings(const Handle(TDocStd_Application) & app) {
+    auto model = ModelDocument::empty();
+    const auto box = model.addBoxFeature("Quader", {10, 10, 10});
+    ParameterTable table;
+    table.values = {{ParameterId{1}, "W", ParameterUnit::length, 25, "", ""}};
+    table.nextId = 2;
+    table.bindings = {{box, "width", ParameterId{1}}};
+    require(model.setParameterTable(table), "Binding set");
+    const auto snapshot = DocumentSnapshot::capture(model);
+    require(std::get<BoxParameters>(snapshot.featureParameters(box)).dimensions.width == 25,
+            "The bound width follows W");
+    const auto expected = IdentifiedDocumentSnapshot::restore(DocumentId{11, 12}, snapshot);
+    auto doc = fresh(app);
+    NativePrimitiveCodec::write(doc, expected);
+    require(NativePrimitiveCodec::read(doc) == expected, "Binding round trip");
+    const auto binding =
+        doc->Main().FindChild(detail::nativeParameterSlot).FindChild(3).FindChild(1);
+    TDataStd_AsciiString::Set(binding.FindChild(2), "colour");
+    rejected([&] { (void)NativePrimitiveCodec::read(doc); }, "A binding to no field was accepted");
+    TDataStd_AsciiString::Set(binding.FindChild(2), "width");
+    TDataStd_Integer::Set(doc->Main().FindChild(2), 36);
+    rejected([&] { (void)NativePrimitiveCodec::read(doc); }, "Schema 36 accepted field bindings");
+    app->Close(doc);
+    std::cout << "schema 37 field bindings round-trip; schema 36 gate and unknown field passed\n";
+}
+
 void corruptions(const Handle(TDocStd_Application) & app) {
     const auto expected = fixture(true, true);
     const auto corrupt = [&](auto change, const char* message) {
@@ -179,6 +207,7 @@ int main() {
         BinDrivers::DefineFormat(app);
         roundTripAndGates(app);
         expressionsAndNumbers(app);
+        fieldBindings(app);
         corruptions(app);
         return 0;
     } catch (const std::exception& error) {

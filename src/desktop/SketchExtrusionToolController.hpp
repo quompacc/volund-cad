@@ -20,6 +20,7 @@ class CadSession;
 
 namespace voelund::desktop {
 struct ResolvedParameter;
+struct ToolPanelDefinition;
 
 class ToolPanelHost;
 
@@ -58,6 +59,7 @@ class SketchExtrusionToolController final {
 
   private:
     void bindLength(const std::string& id, std::optional<ResolvedParameter> bound);
+    void takeParameters(ToolPanelDefinition& definition);
     void setDistance(double distance);
     void regionsToggled();
     void open(document::FeatureId sketch, std::vector<document::SketchRegionId> regions,

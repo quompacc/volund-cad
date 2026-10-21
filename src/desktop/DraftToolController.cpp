@@ -83,29 +83,33 @@ void DraftToolController::beginEdit(document::FeatureId draft) {
 void DraftToolController::open() {
     active_ = true;
     stamp_ = session_.sceneStatus().document;
-    panel_.begin(ToolPanelDefinition{
-        editing_ ? QObject::tr("Formschräge bearbeiten") : QObject::tr("Formschräge"),
-        guidance(),
-        {{"angle", QObject::tr("Winkel"), angleDegrees_, -89.0, 89.0, ToolValueKind::angle}},
-        {},
-        {{"reset_faces", QObject::tr("Geneigte Flächen zurücksetzen"), QObject::tr("Formschräge")},
-         {"pick_neutral", QObject::tr("Neutrale Fläche neu wählen"), QObject::tr("Formschräge")}},
-        [this](const std::string& id, double value) {
-            if (id == "angle")
-                angleDegrees_ = value;
-            preview();
-        },
-        {},
-        [this](const std::string& id) {
-            if (id == "reset_faces")
-                faces_.clear();
-            else if (id == "pick_neutral")
-                pickNeutral_ = true;
-            preview();
-        },
-        [this]() { accept(); },
-        [this]() { cancel(); },
-        {}});
+    panel_.begin(withFieldBindings(
+        ToolPanelDefinition{
+            editing_ ? QObject::tr("Formschräge bearbeiten") : QObject::tr("Formschräge"),
+            guidance(),
+            {{"angle", QObject::tr("Winkel"), angleDegrees_, -89.0, 89.0, ToolValueKind::angle}},
+            {},
+            {{"reset_faces", QObject::tr("Geneigte Flächen zurücksetzen"),
+              QObject::tr("Formschräge")},
+             {"pick_neutral", QObject::tr("Neutrale Fläche neu wählen"),
+              QObject::tr("Formschräge")}},
+            [this](const std::string& id, double value) {
+                if (id == "angle")
+                    angleDegrees_ = value;
+                preview();
+            },
+            {},
+            [this](const std::string& id) {
+                if (id == "reset_faces")
+                    faces_.clear();
+                else if (id == "pick_neutral")
+                    pickNeutral_ = true;
+                preview();
+            },
+            [this]() { accept(); },
+            [this]() { cancel(); },
+            {}},
+        editing_, [this] { stamp_ = session_.sceneStatus().document; }));
     preview();
     statusChanged_(QObject::tr("Formschräge: zu neigende Flächen anklicken"));
 }

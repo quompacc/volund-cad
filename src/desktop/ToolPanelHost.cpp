@@ -26,6 +26,18 @@
 #include <utility>
 
 namespace voelund::desktop {
+namespace {
+// A number field of a tool; bindable ones (PAR02, N01b) take "=Name" too.
+QDoubleSpinBox* makeToolInput(QWidget* parent, const ToolLengthParameter& parameter) {
+    if (parameter.bindable && parameter.kind != ToolValueKind::factor)
+        return makeParameterInput(parent, parameter.kind == ToolValueKind::angle,
+                                  parameter.kind == ToolValueKind::count);
+    return parameter.kind == ToolValueKind::angle    ? makeAngleInput(parent)
+           : parameter.kind == ToolValueKind::count  ? makeCountInput(parent)
+           : parameter.kind == ToolValueKind::factor ? makeFactorInput(parent)
+                                                     : makeLengthInput(parent);
+}
+} // namespace
 QString compactActionLabel(const std::string& id, const QString& fallback) {
     static const std::vector<std::pair<std::string, QString>> labels{
         {"horizontal", QObject::tr("Waagrecht")},
@@ -158,11 +170,7 @@ ToolPanelHost::ToolPanelHost(QWidget* host)
     footer().addLayout(buttons);
     footer().addWidget(errorCommitButton_);
     body().addWidget(content_);
-    connect(acceptButton_, &QPushButton::clicked, this, [this]() {
-        if (definition_.accept) {
-            definition_.accept();
-        }
-    });
+    connect(acceptButton_, &QPushButton::clicked, this, &ToolPanelHost::acceptPressed);
     connect(cancelButton_, &QPushButton::clicked, this, [this]() {
         if (definition_.cancel) {
             definition_.cancel();
@@ -177,47 +185,9 @@ void ToolPanelHost::begin(ToolPanelDefinition definition) {
     setTitle(definition_.title);
     guidance_->setText(definition_.guidance);
     setStatus({});
-    for (const ToolLengthParameter& parameter : definition_.lengthParameters) {
-        const bool bindable = parameter.bindable && (parameter.kind == ToolValueKind::length ||
-                                                     parameter.kind == ToolValueKind::angle);
-        QDoubleSpinBox* input =
-            bindable ? makeParameterInput(content_, parameter.kind == ToolValueKind::angle)
-            : parameter.kind == ToolValueKind::angle  ? makeAngleInput(content_)
-            : parameter.kind == ToolValueKind::count  ? makeCountInput(content_)
-            : parameter.kind == ToolValueKind::factor ? makeFactorInput(content_)
-                                                      : makeLengthInput(content_);
-        input->setRange(parameter.minimum, parameter.maximum);
-        input->setValue(parameter.value);
-        const std::string parameterId = parameter.id;
-        connect(input, &QDoubleSpinBox::valueChanged, this, [this, parameterId](double value) {
-            if (definition_.parameterChanged) {
-                definition_.parameterChanged(parameterId, value);
-            }
-        });
-        connect(input, &QDoubleSpinBox::editingFinished, this, [this, parameterId] {
-            if (definition_.parameterFinished)
-                definition_.parameterFinished(parameterId);
-        });
-        if (auto* bound = dynamic_cast<ParameterSpinBox*>(input)) {
-            const auto kind = parameter.kind;
-            bound->setNamesProvider([this, kind] { return names_ ? names_(kind) : QStringList{}; });
-            bound->setBound(parameter.boundName);
-            bound->setBindingRequested(
-                [this, parameterId, kind, bound](std::optional<QString> name) {
-                    if (!definition_.parameterBound)
-                        return;
-                    if (!name) {
-                        definition_.parameterBound(parameterId, std::nullopt);
-                        return;
-                    }
-                    if (const auto resolved = resolveParameter(*name, kind, bound->value()))
-                        definition_.parameterBound(parameterId, resolved);
-                });
-        }
-        input->setObjectName(QString::fromStdString("toolLength_" + parameter.id));
-        parameterLayout_->addRow(parameter.label, input);
-        lengthInputs_.emplace_back(parameter.id, input);
-    }
+    fieldRequests_.clear();
+    for (const ToolLengthParameter& parameter : definition_.lengthParameters)
+        addLengthInput(parameter);
     for (const ToolChoiceParameter& parameter : definition_.choiceParameters) {
         if (parameter.id == "tool") {
             auto* choices = new QWidget(parameterContainer_);
@@ -304,7 +274,110 @@ void ToolPanelHost::begin(ToolPanelDefinition definition) {
         activityHandler_();
 }
 
+void ToolPanelHost::acceptPressed() {
+    if (!definition_.accept)
+        return;
+    const auto requests = fieldRequests_;
+    definition_.accept();
+    if (!active_ && !requests.empty() && fieldHooks_.accepted)
+        fieldHooks_.accepted(requests);
+}
+
+void ToolPanelHost::addLengthInput(const ToolLengthParameter& parameter) {
+    QDoubleSpinBox* input = makeToolInput(content_, parameter);
+    input->setRange(parameter.minimum, parameter.maximum);
+    input->setValue(parameter.value);
+    const std::string parameterId = parameter.id;
+    connect(input, &QDoubleSpinBox::valueChanged, this, [this, parameterId](double value) {
+        if (definition_.parameterChanged)
+            definition_.parameterChanged(parameterId, value);
+    });
+    connect(input, &QDoubleSpinBox::editingFinished, this, [this, parameterId] {
+        if (definition_.parameterFinished)
+            definition_.parameterFinished(parameterId);
+    });
+    if (auto* bound = dynamic_cast<ParameterSpinBox*>(input)) {
+        const auto kind = parameter.kind;
+        bound->setNamesProvider([this, kind] { return names_ ? names_(kind) : QStringList{}; });
+        auto boundName = parameter.boundName;
+        if (!boundName && definition_.editedFeature && fieldHooks_.boundName &&
+            !definition_.parameterBound)
+            boundName = fieldHooks_.boundName(*definition_.editedFeature, parameterId);
+        bound->setBound(boundName);
+        bound->setBindingRequested([this, parameterId, kind](std::optional<QString> name) {
+            bindField(parameterId, kind, std::move(name));
+        });
+    }
+    input->setObjectName(QString::fromStdString("toolLength_" + parameter.id));
+    parameterLayout_->addRow(parameter.label, input);
+    lengthInputs_.emplace_back(parameter.id, input);
+}
+
+// "=Name" in a bindable field (nullopt: a number typed into a bound one).
+void ToolPanelHost::bindField(const std::string& id, ToolValueKind kind,
+                              std::optional<QString> name) {
+    double current = 0.0;
+    for (const auto& [field, input] : lengthInputs_)
+        if (field == id)
+            current = input->value();
+    std::optional<ResolvedParameter> resolved;
+    if (name) {
+        resolved = resolveParameter(*name, kind, current);
+        if (!resolved)
+            return;
+    }
+    if (definition_.parameterBound) // PAR02: the tool binds itself
+        definition_.parameterBound(id, resolved);
+    else
+        bindThroughDocument(id, resolved);
+}
+
+void ToolPanelHost::bindThroughDocument(const std::string& id,
+                                        std::optional<ResolvedParameter> resolved) {
+    if (resolved && resolved->created && definition_.parameterTableChanged)
+        definition_.parameterTableChanged();
+    std::erase_if(fieldRequests_, [&](const auto& request) { return request.field == id; });
+    const auto parameter =
+        resolved ? std::optional{resolved->id} : std::optional<document::ParameterId>{};
+    fieldRequests_.push_back({definition_.editedFeature, id, parameter});
+    showBinding(id, parameter);
+    requestFields();
+}
+
+// The field shows the parameter's name and value; the tool previews the value.
+void ToolPanelHost::showBinding(const std::string& id, std::optional<document::ParameterId> bound) {
+    const auto parameter =
+        bound && fieldHooks_.parameter ? fieldHooks_.parameter(*bound) : std::nullopt;
+    setLengthBinding(id, parameter ? std::optional{parameter->first} : std::nullopt);
+    if (!parameter)
+        return;
+    setLengthValue(id, parameter->second);
+    if (definition_.parameterChanged)
+        definition_.parameterChanged(id, parameter->second);
+}
+
+void ToolPanelHost::requestFields() {
+    if (fieldHooks_.requested)
+        fieldHooks_.requested(fieldRequests_);
+}
+
+void ToolPanelHost::setFieldBindingHooks(FieldBindingHooks hooks) {
+    fieldHooks_ = std::move(hooks);
+}
+
+ToolPanelDefinition withFieldBindings(ToolPanelDefinition definition,
+                                      std::optional<document::FeatureId> edited,
+                                      std::function<void()> tableChanged) {
+    for (auto& parameter : definition.lengthParameters)
+        parameter.bindable = parameter.kind != ToolValueKind::factor;
+    definition.editedFeature = edited;
+    definition.parameterTableChanged = std::move(tableChanged);
+    return definition;
+}
+
 void ToolPanelHost::end() {
+    fieldRequests_.clear();
+    requestFields();
     setErrorCommitHandler({});
     hide();
     clearParameters();

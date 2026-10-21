@@ -3309,12 +3309,15 @@
       ],
       "acceptance": "Fünf Dateien öffnen: Liste in richtiger Reihenfolge; Kopie eines Körpers hat eigenes Volumen und ändert sich nicht mit dem Original; drei Körper zusammen bewegt und gelöscht, ein Undo stellt alle her.",
       "boundary": "Kein Einfügen zwischen Dokumenten in der ersten Stufe, wenn nicht entschieden. Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
-      "status": "planned",
+      "status": "done",
       "gate": "G4",
       "chapter": "12-v1-abrundung.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/N02.md"
+      ],
+      "completedCommit": "7dbc40d",
+      "completedDate": "2026-10-21"
     },
     {
       "id": "N03",

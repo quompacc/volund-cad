@@ -84,7 +84,7 @@ void FilletToolController::open(document::FeatureId support,
         chamfer ? (editing_ ? QObject::tr("Fase bearbeiten") : QObject::tr("Fase"))
                 : (editing_ ? QObject::tr("Verrundung bearbeiten") : QObject::tr("Verrunden"));
     const std::string field = chamfer ? "distance" : "radius";
-    panel_.begin(
+    panel_.begin(withFieldBindings(
         ToolPanelDefinition{title,
                             guidance(),
                             {{field, chamfer ? QObject::tr("Abstand") : QObject::tr("Radius"),
@@ -101,7 +101,8 @@ void FilletToolController::open(document::FeatureId support,
                             {},
                             [this]() { accept(); },
                             [this]() { cancel(); },
-                            {}});
+                            {}},
+        editing_, [this] { stamp_ = session_.sceneStatus().document; }));
     viewport_.setEdgePicking(true);
     viewport_.setPushPullHandler([this](double to, bool finished) { dragged(to, finished); });
     gripEdge_.reset();

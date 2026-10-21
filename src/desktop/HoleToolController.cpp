@@ -94,40 +94,42 @@ void HoleToolController::beginEdit(document::FeatureId hole) {
 void HoleToolController::open() {
     active_ = true;
     stamp_ = session_.sceneStatus().document;
-    panel_.begin(ToolPanelDefinition{
-        editing_ ? QObject::tr("Bohrung bearbeiten") : QObject::tr("Bohrung"),
-        guidance(),
-        {{"x", QObject::tr("X"), x_, -1'000'000.0, 1'000'000.0},
-         {"y", QObject::tr("Y"), y_, -1'000'000.0, 1'000'000.0},
-         {"diameter", QObject::tr("Durchmesser"), diameter_, 0.001, 1'000'000.0},
-         {"depth", QObject::tr("Tiefe"), depth_, 0.001, 1'000'000.0}},
-        {{"end",
-          QObject::tr("Ende"),
-          {QObject::tr("Tiefe"), QObject::tr("Durchgehend")},
-          through_ ? 1 : 0}},
-        {},
-        [this](const std::string& id, double value) {
-            if (id == "x")
-                x_ = value;
-            else if (id == "y")
-                y_ = value;
-            else if (id == "diameter")
-                diameter_ = value;
-            else if (id == "depth")
-                depth_ = value;
-            preview();
-        },
-        [this](const std::string& id, int index) {
-            if (id != "end")
-                return;
-            through_ = index == 1;
-            panel_.setLengthEnabled("depth", !through_);
-            preview();
-        },
-        {},
-        [this]() { accept(); },
-        [this]() { cancel(); },
-        {}});
+    panel_.begin(withFieldBindings(
+        ToolPanelDefinition{
+            editing_ ? QObject::tr("Bohrung bearbeiten") : QObject::tr("Bohrung"),
+            guidance(),
+            {{"x", QObject::tr("X"), x_, -1'000'000.0, 1'000'000.0},
+             {"y", QObject::tr("Y"), y_, -1'000'000.0, 1'000'000.0},
+             {"diameter", QObject::tr("Durchmesser"), diameter_, 0.001, 1'000'000.0},
+             {"depth", QObject::tr("Tiefe"), depth_, 0.001, 1'000'000.0}},
+            {{"end",
+              QObject::tr("Ende"),
+              {QObject::tr("Tiefe"), QObject::tr("Durchgehend")},
+              through_ ? 1 : 0}},
+            {},
+            [this](const std::string& id, double value) {
+                if (id == "x")
+                    x_ = value;
+                else if (id == "y")
+                    y_ = value;
+                else if (id == "diameter")
+                    diameter_ = value;
+                else if (id == "depth")
+                    depth_ = value;
+                preview();
+            },
+            [this](const std::string& id, int index) {
+                if (id != "end")
+                    return;
+                through_ = index == 1;
+                panel_.setLengthEnabled("depth", !through_);
+                preview();
+            },
+            {},
+            [this]() { accept(); },
+            [this]() { cancel(); },
+            {}},
+        editing_, [this] { stamp_ = session_.sceneStatus().document; }));
     panel_.setLengthEnabled("depth", !through_);
     preview();
     statusChanged_(QObject::tr("Bohrung: Lage und Maße eingeben oder auf eine Fläche klicken"));

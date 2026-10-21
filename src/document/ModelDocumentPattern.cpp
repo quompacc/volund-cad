@@ -10,10 +10,7 @@
 // M10: linear and circular patterns of a body ("Muster"); as new bodies with one copy
 // feature per copy, which the document keeps in step with the pattern.
 namespace voelund::document {
-namespace {
 
-// The copies of `pattern` follow it directly; as new bodies there is one per index 1..count-1,
-// joined there is none. Copies that stay keep their ids (and so their bodies).
 void keepCopiesInStep(std::vector<FeatureDescriptor>& features,
                       std::vector<FeatureParameters>& parameters, std::uint64_t& next,
                       FeatureId pattern, const PatternParameters& values) {
@@ -46,8 +43,6 @@ void keepCopiesInStep(std::vector<FeatureDescriptor>& features,
                           PatternCopyParameters{pattern, copy});
     }
 }
-
-} // namespace
 
 void validatePatternParameters(const PatternParameters& parameters) {
     if (parameters.body.value() == 0)

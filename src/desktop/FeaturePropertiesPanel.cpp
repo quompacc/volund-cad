@@ -1,6 +1,7 @@
 #include "FeaturePropertiesPanel.hpp"
 #include "MainWindowSupport.hpp"
 #include "MeasurementInput.hpp"
+#include "ParameterInput.hpp"
 
 #include <QCheckBox>
 #include <QComboBox>
@@ -9,6 +10,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QSignalBlocker>
+#include <QTimer>
 #include <QWidget>
 
 #include <utility>
@@ -86,7 +88,7 @@ FeaturePropertiesPanel::FeaturePropertiesPanel(QWidget* parent) : QStackedWidget
 void FeaturePropertiesPanel::createExtrusionPanel() {
     extrusionPanel_ = new QWidget(this);
     auto* layout = new QFormLayout(extrusionPanel_);
-    extrusionDistanceInput_ = makeLengthInput(extrusionPanel_);
+    extrusionDistanceInput_ = bindableInput(extrusionPanel_);
     extrusionDistanceInput_->setObjectName(QStringLiteral("extrusionDistanceInput"));
     extrusionDistanceInput_->setMinimum(0.001);
     extrusionErrorLabel_ = new QLabel(extrusionPanel_);
@@ -107,14 +109,14 @@ void FeaturePropertiesPanel::createExtrusionPanel() {
 void FeaturePropertiesPanel::createBoxPanel() {
     boxPanel_ = new QWidget(this);
     auto* boxLayout = new QFormLayout(boxPanel_);
-    lengthInput_ = makeLengthInput(boxPanel_);
-    widthInput_ = makeLengthInput(boxPanel_);
-    boxHeightInput_ = makeLengthInput(boxPanel_);
+    lengthInput_ = bindableInput(boxPanel_);
+    widthInput_ = bindableInput(boxPanel_);
+    boxHeightInput_ = bindableInput(boxPanel_);
     lengthInput_->setObjectName(QStringLiteral("boxLengthInput"));
     widthInput_->setObjectName(QStringLiteral("boxWidthInput"));
     boxHeightInput_->setObjectName(QStringLiteral("boxHeightInput"));
     for (int index = 0; index < 3; ++index) {
-        boxTranslationInputs_[index] = makeLengthInput(boxPanel_, true);
+        boxTranslationInputs_[index] = bindableInput(boxPanel_, true);
         boxTranslationInputs_[index]->setObjectName(
             QStringLiteral("boxTranslation%1Input").arg(index));
     }
@@ -139,8 +141,8 @@ void FeaturePropertiesPanel::createBoxPanel() {
 void FeaturePropertiesPanel::createCylinderPanel() {
     cylinderPanel_ = new QWidget(this);
     auto* cylinderLayout = new QFormLayout(cylinderPanel_);
-    radiusInput_ = makeLengthInput(cylinderPanel_);
-    cylinderHeightInput_ = makeLengthInput(cylinderPanel_);
+    radiusInput_ = bindableInput(cylinderPanel_);
+    cylinderHeightInput_ = bindableInput(cylinderPanel_);
     radiusInput_->setObjectName(QStringLiteral("cylinderRadiusInput"));
     cylinderHeightInput_->setObjectName(QStringLiteral("cylinderHeightInput"));
     // The connection belongs to the selected cylinder, not to a global toolbar (U01).
@@ -149,7 +151,7 @@ void FeaturePropertiesPanel::createCylinderPanel() {
     cylinderResultModeInput_->addItems(
         {tr("Vereinigen"), tr("Abziehen"), tr("Schneiden"), tr("Getrennt")});
     for (int index = 0; index < 3; ++index) {
-        translationInputs_[index] = makeLengthInput(cylinderPanel_, true);
+        translationInputs_[index] = bindableInput(cylinderPanel_, true);
         translationInputs_[index]->setObjectName(
             QStringLiteral("cylinderTranslation%1Input").arg(index));
     }
@@ -166,7 +168,7 @@ void FeaturePropertiesPanel::createCylinderPanel() {
     cylinderLayout->addRow(tr("Radius"), radiusInput_);
     cylinderLayout->addRow(tr("Höhe"), cylinderHeightInput_);
     for (int index = 0; index < 2; ++index) {
-        extraSizeInputs_[index] = makeLengthInput(cylinderPanel_);
+        extraSizeInputs_[index] = bindableInput(cylinderPanel_);
         extraSizeInputs_[index]->setObjectName(
             QStringLiteral("primitiveSize%1Input").arg(index + 2));
         cylinderLayout->addRow(QStringLiteral("-"), extraSizeInputs_[index]);
@@ -217,6 +219,66 @@ void FeaturePropertiesPanel::connectEditors() {
         if (extrusionChangeHandler_)
             extrusionChangeHandler_();
     });
+}
+
+// N01b: a length field that also takes "=Name"; a number typed into a bound one unbinds it
+// after its edit (the document unbinds a changed field itself, the same value needs this).
+QDoubleSpinBox* FeaturePropertiesPanel::bindableInput(QWidget* parent, bool allowNegative) {
+    auto* input = makeParameterInput(parent, false);
+    input->setRange(allowNegative ? -1'000'000.0 : 0.01, 1'000'000.0);
+    input->setNamesProvider([this] {
+        return bindingHandlers_.lengthNames ? bindingHandlers_.lengthNames() : QStringList{};
+    });
+    input->setBindingRequested([this, input](std::optional<QString> name) {
+        if (!bindingHandlers_.requested)
+            return;
+        const auto field = fieldOf(input);
+        if (name) {
+            bindingHandlers_.requested(field, name, input->value());
+            return;
+        }
+        QTimer::singleShot(0, this, [this, field, value = input->value()] {
+            bindingHandlers_.requested(field, std::nullopt, value);
+        });
+    });
+    bindable_.push_back(input);
+    return input;
+}
+
+std::string FeaturePropertiesPanel::fieldOf(const QDoubleSpinBox* input) const {
+    const bool primitive = primitiveShape_.has_value();
+    const std::pair<const QDoubleSpinBox*, const char*> fields[] = {
+        {lengthInput_, "width"},
+        {widthInput_, "depth"},
+        {boxHeightInput_, "height"},
+        {boxTranslationInputs_[0], "x"},
+        {boxTranslationInputs_[1], "y"},
+        {boxTranslationInputs_[2], "z"},
+        {translationInputs_[0], "x"},
+        {translationInputs_[1], "y"},
+        {translationInputs_[2], "z"},
+        {radiusInput_, primitive ? "size1" : "radius"},
+        {cylinderHeightInput_, primitive ? "size2" : "height"},
+        {extraSizeInputs_[0], "size3"},
+        {extraSizeInputs_[1], "size4"},
+        {extrusionDistanceInput_, "distance"}};
+    for (const auto& [candidate, name] : fields)
+        if (candidate == input)
+            return name;
+    return {};
+}
+
+void FeaturePropertiesPanel::setBindingHandlers(PropertyBindingHandlers handlers) {
+    bindingHandlers_ = std::move(handlers);
+}
+
+// The fields of the shown page show what they are bound to.
+void FeaturePropertiesPanel::syncBindings() {
+    for (auto* input : bindable_) {
+        const QSignalBlocker blocker(input);
+        input->setBound(bindingHandlers_.boundName ? bindingHandlers_.boundName(fieldOf(input))
+                                                   : std::nullopt);
+    }
 }
 
 void FeaturePropertiesPanel::setBoxChangeHandler(std::function<void()> handler) {
@@ -291,6 +353,7 @@ void FeaturePropertiesPanel::showBox(const document::BoxParameters& parameters) 
         boxRotationInputs_[index]->setValue(rotations[index]);
     }
     static_cast<void>(blockers);
+    syncBindings();
 }
 
 void FeaturePropertiesPanel::showCylinder(const document::CylinderParameters& parameters,
@@ -304,6 +367,7 @@ void FeaturePropertiesPanel::showCylinder(const document::CylinderParameters& pa
     radiusInput_->setValue(parameters.radius);
     cylinderHeightInput_->setValue(parameters.height);
     static_cast<void>(blockers);
+    syncBindings();
 }
 
 void FeaturePropertiesPanel::showPrimitive(const document::PrimitiveParameters& parameters,
@@ -319,6 +383,7 @@ void FeaturePropertiesPanel::showPrimitive(const document::PrimitiveParameters& 
     for (int index = 0; index < 4; ++index)
         sizes[index]->setValue(parameters.sizes[static_cast<std::size_t>(index)]);
     static_cast<void>(blockers);
+    syncBindings();
 }
 
 void FeaturePropertiesPanel::showPlacement(const kernel::RigidTransform& placement,
@@ -375,6 +440,7 @@ void FeaturePropertiesPanel::showExtrusion(const document::ExtrusionParameters& 
                                      parameters.operation == document::ExtrusionOperation::join);
     extrusionErrorLabel_->setText(errorText);
     extrusionErrorLabel_->setVisible(!errorText.isEmpty());
+    syncBindings();
 }
 
 document::BoxParameters FeaturePropertiesPanel::boxParameters() const {

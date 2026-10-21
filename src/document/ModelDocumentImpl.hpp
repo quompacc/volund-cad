@@ -13,6 +13,11 @@ struct ModelDocument::State final {
     std::optional<FeatureId> rollbackAfter{}; // M14
     [[nodiscard]] bool operator==(const State&) const = default;
 };
+// M10: the copies of `pattern` follow it directly; as new bodies there is one per index
+// 1..count-1, joined there is none. Copies that stay keep their ids (and so their bodies).
+void keepCopiesInStep(std::vector<FeatureDescriptor>& features,
+                      std::vector<FeatureParameters>& parameters, std::uint64_t& next,
+                      FeatureId pattern, const PatternParameters& values);
 struct ModelDocument::Impl final {
     explicit Impl(const IdentifiedDocumentSnapshot& snapshot) : native(snapshot) {}
     [[nodiscard]] const DocumentSnapshot& view() const noexcept { return native.view().snapshot(); }
