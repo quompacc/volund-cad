@@ -1,4 +1,8 @@
 add_executable(voelund-cad WIN32 main.cpp CommandLine.cpp)
+if(WIN32)
+    # N16: the programme symbol in the executable (Explorer, task bar, default window icon).
+    target_sources(voelund-cad PRIVATE voelund-cad.rc)
+endif()
 
 target_link_libraries(
     voelund-cad
@@ -93,6 +97,17 @@ if(UNIX AND NOT APPLE)
     install(
         FILES "${PROJECT_SOURCE_DIR}/packaging/unix/io.github.quompacc.Voelund.xml"
         DESTINATION "${CMAKE_INSTALL_DATADIR}/mime/packages"
+    )
+    # N16: the programme symbol under the desktop entry's name.
+    install(
+        FILES "${PROJECT_SOURCE_DIR}/packaging/icons/voelund-cad.svg"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps"
+        RENAME io.github.quompacc.Voelund.svg
+    )
+    install(
+        FILES "${PROJECT_SOURCE_DIR}/packaging/icons/voelund-cad-256.png"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/icons/hicolor/256x256/apps"
+        RENAME io.github.quompacc.Voelund.png
     )
     # L02: per-user registration of the unpacked tarball (desktop entry and MIME type).
     install(

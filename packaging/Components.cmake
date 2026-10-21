@@ -12,6 +12,7 @@ voelund_component(voelund
     LICENSE "LicenseRef-Voelund-undecided"
     PATHS [[^bin/voelund-cad(\.exe)?$]] [[^(register|unregister)-file-type\.ps1$]]
         [[^(install|uninstall)-user\.sh$]] [[^share/applications/]] [[^share/mime/]]
+        [[^share/icons/]]
         [[^THIRD-PARTY-NOTICES\.md$]] [[^MANIFEST\.txt$]])
 
 voelund_component(fonts

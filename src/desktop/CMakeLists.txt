@@ -107,4 +107,13 @@ qt_add_resources(
         "${PROJECT_SOURCE_DIR}/resources/fonts/JetBrainsMono-Variable.ttf"
 )
 
+# N16: the programme symbol for the window and task bar (packaging/icons).
+qt_add_resources(
+    voelund_desktop
+    "voelund_icons"
+    PREFIX "/voelund/icons"
+    BASE "${PROJECT_SOURCE_DIR}/packaging/icons"
+    FILES "${PROJECT_SOURCE_DIR}/packaging/icons/voelund-cad-256.png"
+)
+
 add_library(Voelund::Desktop ALIAS voelund_desktop)

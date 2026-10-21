@@ -10,6 +10,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QGuiApplication>
+#include <QIcon>
 #include <QStandardPaths>
 #include <QStatusBar>
 #include <QSurfaceFormat>
@@ -52,6 +53,7 @@ ProductOptions productOptions(const QStringList& arguments) {
 std::unique_ptr<MainWindow> startProduct(application::CadSession& session,
                                          const ProductOptions& options) {
     session.newDocument();
+    QGuiApplication::setWindowIcon(QIcon(QStringLiteral(":/voelund/icons/voelund-cad-256.png")));
     auto window = std::make_unique<MainWindow>(session);
     window->show();
     // The connect command also goes to the log and to mcp-connect.txt in the configuration

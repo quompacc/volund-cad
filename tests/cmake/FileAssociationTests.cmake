@@ -51,6 +51,24 @@ set(program "${CMAKE_MATCH_1}")
 run("Opening through the association" "${CMAKE_COMMAND}" -E env --unset=DISPLAY
     QT_QPA_PLATFORM=wayland "VOELUND_RECOVERY_DIR=${root}/recovery"
     "${program}" --smoke-test-open "${document}")
+# N16: the programme symbol under the desktop entry's name, and gone after uninstalling.
+file(STRINGS "${xdg}/applications/io.github.quompacc.Voelund.desktop" icon ENCODING UTF-8
+    REGEX "^Icon=")
+set(symbols "${xdg}/icons/hicolor/scalable/apps/io.github.quompacc.Voelund.svg"
+    "${xdg}/icons/hicolor/256x256/apps/io.github.quompacc.Voelund.png")
+foreach(symbol IN LISTS symbols)
+    if(NOT EXISTS "${symbol}")
+        message(FATAL_ERROR "The programme symbol is not installed: ${symbol}")
+    endif()
+endforeach()
+if(NOT icon STREQUAL "Icon=io.github.quompacc.Voelund")
+    message(FATAL_ERROR "Unexpected Icon line: ${icon}")
+endif()
 run("User uninstallation" ${user_env} sh "${prefix}/uninstall-user.sh")
+foreach(symbol IN LISTS symbols)
+    if(EXISTS "${symbol}")
+        message(FATAL_ERROR "The programme symbol stayed after uninstalling: ${symbol}")
+    endif()
+endforeach()
 file(REMOVE_RECURSE "${root}")
 message(STATUS "The registered package opened a document under a path with umlauts and spaces")

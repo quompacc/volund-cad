@@ -54,6 +54,10 @@ void opening(const QString& fixture) {
     application::CadSession session;
     const auto window = desktop::startProduct(session, options);
     test::settleEvents();
+    // N16: the programme symbol for window and task bar.
+    require(!QGuiApplication::windowIcon().isNull() &&
+                QGuiApplication::windowIcon().availableSizes().contains(QSize(256, 256)),
+            "The programme symbol is the window icon");
     require(!session.features().empty() &&
                 QFileInfo(QString::fromStdU16String(session.currentFile().u16string()))
                         .canonicalFilePath() == QFileInfo(document).canonicalFilePath(),

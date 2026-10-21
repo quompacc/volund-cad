@@ -21,6 +21,14 @@ case "$product" in
 esac
 
 mkdir -p "$data/applications" "$data/mime/packages"
+# N16: the programme symbol, in the sizes the package carries.
+for size in scalable 256x256; do
+    for icon in "$here/share/icons/hicolor/$size/apps/io.github.quompacc.Voelund".*; do
+        [ -f "$icon" ] || continue
+        mkdir -p "$data/icons/hicolor/$size/apps"
+        cp "$icon" "$data/icons/hicolor/$size/apps/"
+    done
+done
 sed "s|^Exec=.*|Exec=\"$product\" %F|" "$here/share/applications/$entry" \
     >"$data/applications/$entry"
 cp "$here/share/mime/packages/io.github.quompacc.Voelund.xml" "$data/mime/packages/"
@@ -29,6 +37,9 @@ if command -v update-mime-database >/dev/null 2>&1; then
 fi
 if command -v update-desktop-database >/dev/null 2>&1; then
     update-desktop-database "$data/applications"
+fi
+if command -v gtk-update-icon-cache >/dev/null 2>&1 && [ -f "$data/icons/hicolor/index.theme" ]; then
+    gtk-update-icon-cache -q "$data/icons/hicolor" || true
 fi
 if command -v xdg-mime >/dev/null 2>&1; then
     XDG_DATA_HOME="$data" xdg-mime default "$entry" application/x-voelund

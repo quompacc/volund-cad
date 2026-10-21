@@ -16,7 +16,9 @@ if ! grep -qF "Exec=\"$product\" %F" "$entry"; then
     echo "The .volund registration belongs to another copy; left unchanged"
     exit 0
 fi
-rm -f "$entry" "$data/mime/packages/io.github.quompacc.Voelund.xml"
+rm -f "$entry" "$data/mime/packages/io.github.quompacc.Voelund.xml" \
+    "$data/icons/hicolor/scalable/apps/io.github.quompacc.Voelund.svg" \
+    "$data/icons/hicolor/256x256/apps/io.github.quompacc.Voelund.png"
 if command -v update-mime-database >/dev/null 2>&1; then
     update-mime-database "$data/mime"
 fi
