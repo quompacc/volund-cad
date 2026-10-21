@@ -455,7 +455,6 @@ lines | src/mcp/ResultEncoding.cpp | encodeContext | 87 | Altbestand vor A04
 lines | src/application/SketchEditorGeometry.cpp | confirmCreation | 86 | Altbestand vor A04
 lines | src/desktop/TimelineBar.cpp | eventFilter | 84 | Altbestand vor A04
 lines | src/application/SketchGeometryTransform.cpp | transformedCopy | 83 | Altbestand vor A04
-lines | src/desktop/ContextCommands.cpp | contextCommands | 83 | Altbestand vor A04
 lines | src/desktop/ViewCube.cpp | paintEvent | 82 | Altbestand vor A04
 lines | src/features/SketchRegionIntervalFaces.cpp | intervalRegionFaces | 81 | Altbestand vor A04
 lines | tests/desktop/FilletPanelTests.cpp | run | 215 | Altbestand vor A04

@@ -140,7 +140,11 @@ class MainWindow::Impl final {
     std::optional<document::BodyId> selectedBody;
     QAction* renameBodyAction{nullptr};
     QAction* bodyVisibilityAction{nullptr};
-    ViewVisibility visibility; // U06: model tree eyes (view state)
+    QAction* copyAction{nullptr};                  // N02
+    QAction* pasteAction{nullptr};                 // N02
+    std::vector<document::BodyId> bodyGroup;       // N02b: more than one when grouped
+    std::vector<document::FeatureId> featureGroup; // N02b
+    ViewVisibility visibility;                     // U06: model tree eyes (view state)
     TimelineBar* timeline{nullptr};
     std::unique_ptr<SketchToolActions> sketchActions; // U13
     workspaces::CommandRegistry commandRegistry;

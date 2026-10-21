@@ -16,6 +16,7 @@
 class QHBoxLayout;
 class QLabel;
 class QScrollArea;
+class QMouseEvent;
 class QToolButton;
 
 namespace voelund::application {
@@ -49,6 +50,15 @@ class TimelineBar final : public OverlayCard {
     void
     setReorderHandler(std::function<void(std::uint64_t, std::optional<std::uint64_t>)> handler);
     void setDeleteHandler(std::function<void(std::uint64_t)> handler);
+    // N02b: Strg-click adds or removes a step, Umschalt-click adds the steps up to it; the
+    // grouped steps are marked.
+    void setGroupHandler(std::function<void(std::uint64_t, bool range)> handler);
+    void markGroup(std::span<const document::FeatureId> features);
+
+  private:
+    void stepPressed(QToolButton& step, const QMouseEvent& event, std::uint64_t id);
+
+  public:
     // M20/U14: `icons` overrides the kind's icon, e.g. revolve, sweep or the primitive's shape.
     using IconOverride = std::pair<document::FeatureId, ShellIcon>;
     void showFeatures(std::span<const document::FeatureDescriptor> features,
@@ -76,6 +86,8 @@ class TimelineBar final : public OverlayCard {
     std::function<void(std::uint64_t)> select_;
     std::function<void(std::uint64_t, std::optional<std::uint64_t>)> reorder_;
     std::function<void(std::uint64_t)> delete_;
+    std::function<void(std::uint64_t, bool)> group_;
+    Qt::KeyboardModifiers pressModifiers_; // N02b: of the last press on a step
     // M16: a step being dragged, from where it was pressed (content coordinates).
     std::optional<std::uint64_t> pressedStep_;
     QPoint pressedAt_;

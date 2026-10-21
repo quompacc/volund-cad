@@ -4,6 +4,7 @@
 
 #include <QBrush>
 #include <QHeaderView>
+#include <QMouseEvent>
 #include <QSignalBlocker>
 #include <QTimer>
 #include <QTreeWidgetItem>
@@ -40,9 +41,16 @@ ModelTreePanel::ModelTreePanel(QWidget* parent) : QTreeWidget(parent) {
     header()->resizeSection(eyeColumn, 34);
     setRootIsDecorated(false);
     setIndentation(16);
+    setSelectionMode(QAbstractItemView::ExtendedSelection); // N02b: groups of bodies
     connect(this, &QTreeWidget::itemClicked, this, [this](QTreeWidgetItem* item, int column) {
         const auto kind = static_cast<Kind>(item->data(0, kindRole).toInt());
         const auto id = item->data(0, idRole).toULongLong();
+        const auto modifiers = pressModifiers_;
+        if (kind == Kind::body && column != eyeColumn &&
+            (modifiers & (Qt::ControlModifier | Qt::ShiftModifier)) && bodyGrouped_) {
+            bodyGrouped_(id, (modifiers & Qt::ShiftModifier) != 0);
+            return;
+        }
         if (column == eyeColumn && item->data(eyeColumn, Qt::UserRole).isValid()) {
             if (handlers_.visibilityToggled)
                 handlers_.visibilityToggled(kind, id);
@@ -53,8 +61,9 @@ ModelTreePanel::ModelTreePanel(QWidget* parent) : QTreeWidget(parent) {
     });
     connect(this, &QTreeWidget::currentItemChanged, this,
             [this](QTreeWidgetItem* current, QTreeWidgetItem*) {
-                if (current == nullptr)
-                    return;
+                if (current == nullptr ||
+                    (pressModifiers_ & (Qt::ControlModifier | Qt::ShiftModifier)))
+                    return; // N02b: a group click
                 const auto kind = static_cast<Kind>(current->data(0, kindRole).toInt());
                 const auto id = current->data(0, idRole).toULongLong();
                 if (kind == Kind::feature && handlers_.featureSelected)
@@ -170,6 +179,30 @@ void ModelTreePanel::selectBody(document::BodyId body) {
             setCurrentItem(*it);
             return;
         }
+}
+
+void ModelTreePanel::mousePressEvent(QMouseEvent* event) {
+    pressModifiers_ = event->modifiers();
+    QTreeWidget::mousePressEvent(event);
+    pressModifiers_ = event->modifiers(); // the click that follows the release reads it
+}
+
+void ModelTreePanel::markBodies(std::span<const document::BodyId> bodies) {
+    const QSignalBlocker blocker(this);
+    for (QTreeWidgetItemIterator it(this); *it != nullptr; ++it)
+        if (static_cast<Kind>((*it)->data(0, kindRole).toInt()) == Kind::body)
+            (*it)->setSelected(
+                std::ranges::find(bodies, document::BodyId{(*it)->data(0, idRole).toULongLong()}) !=
+                    bodies.end() ||
+                *it == currentItem());
+}
+
+std::vector<document::BodyId> ModelTreePanel::bodyOrder() const {
+    std::vector<document::BodyId> order;
+    for (QTreeWidgetItemIterator it(const_cast<ModelTreePanel*>(this)); *it != nullptr; ++it)
+        if (static_cast<Kind>((*it)->data(0, kindRole).toInt()) == Kind::body)
+            order.push_back(document::BodyId{(*it)->data(0, idRole).toULongLong()});
+    return order;
 }
 
 void ModelTreePanel::editBody(document::BodyId body) {

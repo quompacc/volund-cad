@@ -145,7 +145,7 @@ QGroupBox::title { subcontrol-origin: margin; left: 0; color: @muted; font-size:
 QToolButton#timelineStep { background: @panel; border: 1px solid @line; border-radius: 15px;
     padding: 0; min-height: 0; }
 QToolButton#timelineStep:hover { background: @soft; }
-QToolButton#timelineStep:checked { border-color: @accent; background: @accentSoft; }
+QToolButton#timelineStep:checked, QToolButton#timelineStep[grouped="true"] { border-color: @accent; background: @accentSoft; }
 QToolButton#timelineStep[featureState="error"] { border-color: @error; background: @errorSoft; }
 QToolButton#timelineStep[featureState="blocked"] { border-color: @faint; }
 QToolButton#timelineStep[featureState="suppressed"] { border-style: dashed; border-color: @faint; background: transparent; }

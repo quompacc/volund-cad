@@ -42,6 +42,57 @@
 // Viewport, tree and property-panel interactions of the main window.
 namespace voelund::desktop {
 
+// A running tool takes a clicked planar face; true when one did.
+bool MainWindow::toolTakesFace(const viewport::PlanarFaceSelection& selection) {
+    if (impl_->pushPullTool->isActive() || impl_->combineTool->isActive())
+        return true; // T04c: the face of a running push/pull stays.
+    if (impl_->holeTool->isActive())
+        impl_->holeTool->place(selection); // M08: moves the hole there
+    else if (impl_->shellTool->isActive())
+        impl_->shellTool->picked(selection); // M22: opens or closes the face
+    else if (impl_->draftTool->isActive())
+        impl_->draftTool->picked(selection); // M25: tilts the face or not
+    else if (impl_->mirrorTool->isActive())
+        impl_->mirrorTool->picked(selection); // M09: the mirror plane
+    else if (impl_->measureTool->isActive())
+        impl_->measureTool->pickedFace(selection); // M12: measured only
+    else
+        return false;
+    return true;
+}
+
+// N02b: Strg-click on a face adds or removes its body from the group; true when it did.
+bool MainWindow::groupTakesFace(const viewport::PlanarFaceSelection& selection) {
+    if (!(impl_->viewport->pressModifiers() & Qt::ControlModifier) ||
+        impl_->shell().toolBlocksCommands())
+        return false;
+    if (const auto body = impl_->session.resultBody(document::FeatureId{selection.bodyId}))
+        groupBody(*body, false);
+    return true;
+}
+
+void MainWindow::pickPlanarFace(const viewport::PlanarFaceSelection& selection) {
+    if (toolTakesFace(selection) || groupTakesFace(selection))
+        return;
+    clearEdgeSelection();
+    // T03: while the extrusion waits for its end face, the pick goes to the tool.
+    if (impl_->sketchExtrusionTool->awaitsEndFace()) {
+        impl_->sketchExtrusionTool->pickEndFace(document::FeatureId{selection.bodyId},
+                                                selection.selectedFace);
+        return;
+    }
+    impl_->selectedDatum.reset();
+    impl_->selectedBody.reset();
+    if (impl_->session.sceneStatus().isCurrent()) {
+        impl_->selectedPlanarFace = selection;
+        statusBar()->showMessage(tr("Ebene Fläche gewählt"), 2000);
+    } else {
+        impl_->selectedPlanarFace.reset();
+        statusBar()->showMessage(tr("Repariere das Modell, bevor du Geometrie wählst"), 3000);
+    }
+    syncShell();
+}
+
 void MainWindow::connectInteractions() {
     impl_->propertyPanel->setBoxChangeHandler([this]() { applyBoxParameters(); });
     impl_->propertyPanel->setCylinderChangeHandler([this]() { applyCylinderParameters(); });
@@ -63,38 +114,7 @@ void MainWindow::connectInteractions() {
             impl_->combineTool->picked(document::FeatureId{id});
     });
     impl_->viewport->setPlanarFaceSelectionHandler(
-        [this](const viewport::PlanarFaceSelection& selection) {
-            if (impl_->pushPullTool->isActive() || impl_->combineTool->isActive())
-                return; // T04c: the face of a running push/pull stays.
-            if (impl_->holeTool->isActive())
-                return impl_->holeTool->place(selection); // M08: moves the hole there
-            if (impl_->shellTool->isActive())
-                return impl_->shellTool->picked(selection); // M22: opens or closes the face
-            if (impl_->draftTool->isActive())
-                return impl_->draftTool->picked(selection); // M25: tilts the face or not
-            if (impl_->mirrorTool->isActive())
-                return impl_->mirrorTool->picked(selection); // M09: the mirror plane
-            if (impl_->measureTool->isActive())
-                return impl_->measureTool->pickedFace(selection); // M12: measured only
-            clearEdgeSelection();
-            // T03: while the extrusion waits for its end face, the pick goes to the tool.
-            if (impl_->sketchExtrusionTool->awaitsEndFace()) {
-                impl_->sketchExtrusionTool->pickEndFace(document::FeatureId{selection.bodyId},
-                                                        selection.selectedFace);
-                return;
-            }
-            impl_->selectedDatum.reset();
-            impl_->selectedBody.reset();
-            if (impl_->session.sceneStatus().isCurrent()) {
-                impl_->selectedPlanarFace = selection;
-                statusBar()->showMessage(tr("Ebene Fläche gewählt"), 2000);
-            } else {
-                impl_->selectedPlanarFace.reset();
-                statusBar()->showMessage(tr("Repariere das Modell, bevor du Geometrie wählst"),
-                                         3000);
-            }
-            syncShell();
-        });
+        [this](const viewport::PlanarFaceSelection& selection) { pickPlanarFace(selection); });
     impl_->viewport->setBasePlaneSelectionHandler(
         [this](viewport::BasePlane plane) { selectBasePlane(static_cast<int>(plane)); });
     impl_->viewport->setDatumSelectionHandler([this](std::uint64_t id) { // M19
@@ -115,6 +135,7 @@ void MainWindow::connectInteractions() {
         if (impl_->shell().toolBlocksCommands())
             return;
         clearEdgeSelection();
+        clearGroups();
         impl_->selectedDatum.reset();
         impl_->selectedBody.reset();
         impl_->selectedPlanarFace.reset();
@@ -206,6 +227,8 @@ void MainWindow::connectInteractions() {
     // body's last move or a new one); one drag is one undo step.
     impl_->viewport->setBodyMoveHandler(
         [this](std::uint64_t id, double deltaX, double deltaY, double deltaZ) {
+            if (moveBodyGroup(deltaX, deltaY, deltaZ)) // N02b: the group moves together
+                return;
             if (!selectTransformFeatureForBody(impl_->session, document::FeatureId{id})) {
                 return;
             }

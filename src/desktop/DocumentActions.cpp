@@ -1,6 +1,7 @@
 #include "DocumentActions.hpp"
 #include "DocumentErrorText.hpp"
 #include "MainWindowSupport.hpp"
+#include "RecentFiles.hpp"
 #include "ShellState.hpp"
 
 #include <voelund/application/CadSession.hpp>
@@ -58,6 +59,8 @@ DocumentActions::DocumentActions(QMainWindow& window, application::CadSession& s
     openAction->setShortcut(QKeySequence::Open);
     QAction* saveAction = fileMenu->addAction(QObject::tr("&Speichern"));
     saveAction->setShortcut(QKeySequence::Save);
+    recent_ = std::make_unique<RecentFiles>(*fileMenu, saveAction, window_,
+                                            [this](const QString& file) { openFile(file); });
     QAction* saveAsAction = fileMenu->addAction(QObject::tr("Speichern &unter…"));
     saveAsAction->setShortcut(QKeySequence::SaveAs);
     QAction* duplicateAction = fileMenu->addAction(QObject::tr("&Duplizieren"));
@@ -96,12 +99,20 @@ DocumentActions::DocumentActions(QMainWindow& window, application::CadSession& s
     syncWindowTitle();
 }
 
+DocumentActions::~DocumentActions() = default;
+
 bool DocumentActions::confirmClose() { return confirmSaveChanges(); }
 
 QMenu& DocumentActions::menu() const { return *fileMenu_; }
 
 void DocumentActions::syncWindowTitle() {
     window_.setWindowTitle(projectShell(session_, {}).windowTitle());
+    // N02: an opened or saved document goes to the top of "Zuletzt geöffnet".
+    const QString file = nativeDisplayPath(session_.currentFile());
+    if (!file.isEmpty() && file != remembered_ && recent_) {
+        recent_->remember(file);
+        remembered_ = file;
+    }
     if (shellChanged_)
         shellChanged_();
 }

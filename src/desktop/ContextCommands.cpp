@@ -5,6 +5,20 @@
 namespace voelund::desktop {
 namespace {
 
+// M01 (user decision 2026-10-10): rename, show/hide, move where possible, and a cylinder on this
+// body; N02: copy.
+std::vector<std::string> bodyCommands() {
+    return {"body.rename",
+            "body.visibility",
+            "edit.copy",
+            "solid.modify.transform",
+            "solid.modify.fillet",
+            "solid.modify.chamfer",
+            "solid.modify.combine",
+            "solid.modify.mirror",
+            "solid.create.cylinder"};
+}
+
 QString planeName(document::DatumPlane plane) {
     switch (plane) {
     case document::DatumPlane::xy:
@@ -105,12 +119,8 @@ ContextCommands contextCommands(const ShellState& state) {
         result.primary = "solid.modify.fillet";
         break;
     case ShellSelection::body:
-        // M01 (user decision 2026-10-10): rename, show/hide, move where possible, and a
-        // cylinder on this body.
         result.title = state.bodyName;
-        result.commands = {"body.rename",         "body.visibility",      "solid.modify.transform",
-                           "solid.modify.fillet", "solid.modify.chamfer", "solid.modify.combine",
-                           "solid.modify.mirror", "solid.create.cylinder"};
+        result.commands = bodyCommands();
         break;
     case ShellSelection::sketchRegion:
         result.title = QObject::tr("Skizzenbereich");

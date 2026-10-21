@@ -9,12 +9,15 @@ add_library(
     OverlayCard.cpp
     PillButton.cpp
     DocumentActions.cpp
+    RecentFiles.cpp
     CommandActions.cpp
     CommandPalette.cpp
     ContextBar.cpp
     ContextCommands.cpp
     MainWindow.cpp
     MainWindowBodies.cpp
+    MainWindowClipboard.cpp
+    MainWindowGroups.cpp
     ProductShell.cpp
     AssistantPanel.cpp
     MainWindowAssistant.cpp

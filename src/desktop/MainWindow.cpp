@@ -63,6 +63,7 @@ MainWindow::MainWindow(application::CadSession& session, QWidget* parent)
     createHistoryActions();
     createCommands();
     createBodyCommands();
+    createClipboardCommands();
     impl_->documentActions =
         std::make_unique<DocumentActions>(*this, impl_->session, [this]() { refreshScene(); });
     createHeader();
@@ -76,6 +77,7 @@ MainWindow::MainWindow(application::CadSession& session, QWidget* parent)
         dock->setFeatures(QDockWidget::NoDockWidgetFeatures);
     applyTheme(storedThemeMode());
     connectInteractions();
+    createGroupSelection();
     syncVisibility(); // Origin, planes and grid follow the model tree from the start (U06).
     syncProperties();
     syncTreeStatus();
@@ -388,6 +390,7 @@ void MainWindow::syncTransformTool() {
 }
 
 void MainWindow::refreshScene() {
+    clearGroups();
     clearEdgeSelection();
     if (impl_->sketchEditorTool->isActive()) {
         impl_->sketchEditorTool->cancel();
@@ -436,7 +439,9 @@ void MainWindow::previewBodyRotation(std::uint64_t id, int axisIndex, double ang
                                           angleDegrees);
 }
 
-void MainWindow::selectFeature(std::uint64_t rawId) {
+void MainWindow::selectFeature(std::uint64_t rawId, bool keepGroup) {
+    if (!keepGroup)
+        clearGroups();
     const document::FeatureId id{rawId};
     // Another feature replaces picked edges; the tree echoing this one's selection does not.
     if (impl_->edgeSupport != id)

@@ -197,6 +197,16 @@ void CadViewport::setTransformTarget(std::optional<std::uint64_t> bodyId) {
     });
 }
 
+Qt::KeyboardModifiers CadViewport::pressModifiers() const noexcept { return impl_->pressModifiers; }
+
+void CadViewport::setTransformCompanions(std::vector<std::uint64_t> bodyIds) {
+    performViewportOperation(*this, impl_->ready, [&] {
+        impl_->transformCompanions = std::move(bodyIds);
+        impl_->attachTransformTarget();
+        update();
+    });
+}
+
 void CadViewport::beginSketchEditor(const PlanarFaceSelection& support, SketchElementTool tool) {
     performViewportOperation(*this, impl_->ready, [&] {
         impl_->manipulator.setEnabled(false);

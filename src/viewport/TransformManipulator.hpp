@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <vector>
 
 namespace voelund::viewport {
 
@@ -26,6 +27,8 @@ class TransformManipulator final {
     void setEnabled(bool enabled);
     [[nodiscard]] bool isEnabled() const noexcept;
     void attach(const occ::handle<AIS_Shape>& presentation, std::uint64_t bodyId);
+    // N02b: the target first, then the bodies that move with it; a group only moves.
+    void attach(const std::vector<occ::handle<AIS_Shape>>& presentations, std::uint64_t bodyId);
     void detach();
     void resetPresentation();
     [[nodiscard]] bool

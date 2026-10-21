@@ -85,6 +85,19 @@ inline QToolButton& railButton(QWidget& rail, const char* commandId) {
     return commandButton(rail, commandId);
 }
 
+// The entry carrying `commandId` in a submenu of `menu`, filled as when the pointer rests on it.
+inline QAction* submenuEntry(QMenu& menu, const QString& commandId) {
+    for (QAction* entry : menu.actions()) {
+        if (entry->menu() == nullptr)
+            continue;
+        emit entry->menu()->aboutToShow();
+        for (QAction* action : entry->menu()->actions())
+            if (action->property("commandId").toString() == commandId)
+                return action;
+    }
+    return nullptr;
+}
+
 // Opens `menuButton`'s popup and clicks the entry carrying `commandId` there.
 inline void chooseFromMenu(QToolButton& menuButton, const char* commandId) {
     // The popup may appear later (Wayland), so the entry is looked for until it is there.
@@ -111,15 +124,12 @@ inline void chooseFromMenu(QToolButton& menuButton, const char* commandId) {
                 return;
             }
         // A submenu (a group or family in the rail's » menu): its entry is chosen there.
-        for (QAction* entry : menu->actions())
-            if (entry->menu() != nullptr)
-                for (QAction* action : entry->menu()->actions())
-                    if (action->property("commandId").toString() == id) {
-                        menu->close();
-                        action->trigger();
-                        chosen = true;
-                        return;
-                    }
+        if (QAction* action = submenuEntry(*menu, id)) {
+            menu->close();
+            action->trigger();
+            chosen = true;
+            return;
+        }
         menu->close();
     };
     QTimer::singleShot(0, *attempt);

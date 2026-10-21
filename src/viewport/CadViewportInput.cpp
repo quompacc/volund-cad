@@ -72,8 +72,8 @@ void CadViewport::mousePressEvent(QMouseEvent* event) {
         if (!impl_->ready) {
             return;
         }
-
         impl_->gestureOrigin = framebufferPoint(*this, event->position());
+        impl_->pressModifiers = event->modifiers(); // N02b
         if (event->button() == Qt::RightButton) {
             impl_->gesture = Impl::Gesture::rotate;
             impl_->view->StartRotation(impl_->gestureOrigin.x(), impl_->gestureOrigin.y());

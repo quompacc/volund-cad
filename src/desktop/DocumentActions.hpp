@@ -6,6 +6,7 @@
 
 #include <exception>
 #include <functional>
+#include <memory>
 #include <vector>
 
 class QAction;
@@ -18,10 +19,15 @@ struct StepImportResult;
 
 namespace voelund::desktop {
 
+class RecentFiles;
+
 class DocumentActions final {
   public:
     DocumentActions(QMainWindow& window, application::CadSession& session,
                     std::function<void()> refreshHandler);
+    ~DocumentActions();
+    DocumentActions(const DocumentActions&) = delete;
+    DocumentActions& operator=(const DocumentActions&) = delete;
     [[nodiscard]] bool confirmClose();
     // U07: opens a file as File > Open does, without the dialog (a file argument). Unsaved
     // changes are asked for first; a failure keeps the active document.
@@ -62,6 +68,8 @@ class DocumentActions final {
     QAction* exportAction_{nullptr};
     std::function<void()> shellChanged_;
     std::function<std::vector<document::BodyId>()> exportSelection_;
+    std::unique_ptr<RecentFiles> recent_;
+    QString remembered_; // the file last put on the recent list
 };
 
 } // namespace voelund::desktop

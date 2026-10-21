@@ -344,25 +344,36 @@ class CadSession final {
                           ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] document::PatternParameters
     patternParameters(document::FeatureId featureId) const;
-    // M11 (CadSessionMove.cpp): moves the body of `feature` by `translation` and turns it by
-    // `angle` (radians) about X, Y or Z (`rotationAxis` 0..2) through its middle. A primitive
-    // that is the last feature of its body changes its own placement, a body whose last feature
-    // is a move changes that move, any other gets a new "Bewegen N". One undo step.
+    // M11 (CadSessionMove.cpp): moves the body of `feature` by `translation`, turns it by `angle`
+    // (radians) about X, Y or Z (`rotationAxis` 0..2) through its middle. A last primitive
+    // changes its placement, a last move that move, else a new "Bewegen N". One undo step.
     [[nodiscard]] CommandResult moveBody(document::FeatureId feature,
                                          const std::array<double, 3>& translation,
                                          std::optional<int> rotationAxis, double angle,
                                          ErrorDisposition disposition = ErrorDisposition::reject);
+    // N02b (CadSessionGroupEdits.cpp): bodies moved (not turned) or steps suppressed together.
+    [[nodiscard]] CommandResult moveBodies(std::span<const document::FeatureId> features,
+                                           const std::array<double, 3>& translation,
+                                           ErrorDisposition disposition = ErrorDisposition::reject);
+    [[nodiscard]] CommandResult
+    setFeaturesSuppressed(std::span<const document::FeatureId> features, bool suppressed,
+                          ErrorDisposition disposition = ErrorDisposition::keepEditableErrors);
     [[nodiscard]] CommandResult
     editMoveParameters(document::FeatureId featureId, const document::MoveParameters& parameters,
                        ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] document::MoveParameters moveParameters(document::FeatureId featureId) const;
-    // M17 (CadSessionStep.cpp): reads a STEP file into one import feature at the end of the
-    // history (or at the rollback marker), one undo step; a file that gives no solid changes
-    // nothing.
+    // M17 (CadSessionStep.cpp): a STEP file as one import feature at the end of the history (or
+    // at the rollback marker), one undo step; a file that gives no solid changes nothing.
     [[nodiscard]] StepImportResult importStep(const std::filesystem::path& path);
     // M18 (user decision 2026-10-16): a STEP file opened as a new document holding its import.
     // The file is read first; when it gives no solid the open document stays.
     [[nodiscard]] StepImportResult openStep(const std::filesystem::path& path);
+    // N02 (CadSessionClipboard.cpp): bodies' current solids for the clipboard (invalid_argument
+    // without one); a paste adds them as one fixed copy "Kopie N", one undo step.
+    [[nodiscard]] std::vector<document::ImportedSolid>
+    copyBodies(std::span<const document::BodyId> bodies) const;
+    [[nodiscard]] CommandResult pasteBodies(std::vector<document::ImportedSolid> solids);
+    static constexpr const char* pasteSource = "Zwischenablage"; // the import's file name
     // M17: writes `bodies` (none given: every visible body) as STEP in mm, each named as the
     // browser names it. Refused while the current revision has errors.
     [[nodiscard]] StepExportResult exportStep(const std::filesystem::path& path,
@@ -386,9 +397,8 @@ class CadSession final {
     [[nodiscard]] CommandResult
     deleteFeatures(std::span<const document::FeatureId> featureIds,
                    ErrorDisposition disposition = ErrorDisposition::reject);
-    // M27 (CadSessionPrimitives.cpp): a sphere, cone, torus or wedge ("Kugel N" ...), added as
-    // a cylinder is: on `input` (join, cut, intersect, or separate beside it) or as a new body
-    // at the origin; one undo step.
+    // M27 (CadSessionPrimitives.cpp): sphere, cone, torus or wedge ("Kugel N" ...) as a cylinder:
+    // on `input` (join, cut, intersect, separate) or a new body at the origin; one undo step.
     [[nodiscard]] CommandResult createPrimitive(kernel::PrimitiveShape shape,
                                                 std::optional<document::FeatureId> input,
                                                 document::CylinderResultMode mode);
@@ -513,13 +523,11 @@ class CadSession final {
     [[nodiscard]] std::string recoverySnapshot() const { return serializedDocument(); }
     // L05: features of the last saved state; nullopt for a document never saved.
     [[nodiscard]] std::optional<std::size_t> savedFeatureCount() const;
-    // L05: opens a recovery snapshot as an unsaved document without a file, so only a
-    // confirmed Save As writes it; the original file is never touched. A snapshot of another
-    // document than `expected` is rejected before anything changes.
+    // L05: a recovery snapshot as an unsaved document without a file (only Save As writes it,
+    // the original stays); a snapshot of another document than `expected` is rejected.
     void restoreDocument(std::string_view bytes, document::DocumentId expected);
-    // L05b: an open sketch draft for its own recovery file: this document with the draft
-    // replacing the edited sketch, or added as a new sketch on its base plane or support.
-    // Nothing in the session changes.
+    // L05b: an open sketch draft for its own recovery file: this document with the draft as the
+    // edited sketch or as a new sketch on its plane or support. The session stays unchanged.
     struct SketchDraftSnapshot final {
         std::string bytes;
         document::FeatureId feature;
@@ -542,6 +550,10 @@ class CadSession final {
     [[nodiscard]] const std::filesystem::path& currentFile() const noexcept { return currentFile_; }
 
   private:
+    [[nodiscard]] std::size_t pasteCount() const; // N02: pastes so far, for "Kopie N"
+    // N02b: one body of a group move applied to `candidate`; true when it changed.
+    bool addGroupMove(document::ModelDocument& candidate, document::FeatureId source,
+                      const std::array<double, 3>& translation, std::size_t& sequence);
     [[nodiscard]] StepImportResult addImport(const std::filesystem::path& path,
                                              kernel::StepImport read);
     friend class CadSessionPersistenceTestAccess;

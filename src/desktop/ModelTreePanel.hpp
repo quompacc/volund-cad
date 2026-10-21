@@ -33,6 +33,9 @@ class ModelTreePanel final : public QTreeWidget {
     explicit ModelTreePanel(QWidget* parent = nullptr);
 
     void setHandlers(Handlers handlers);
+    void setBodyGroupHandler(std::function<void(std::uint64_t, bool)> handler) {
+        bodyGrouped_ = std::move(handler);
+    }
     // Icons and the text color of hidden entries follow the theme; existing entries are
     // recolored, so a theme switch never leaves text in the old theme's color.
     void setEyeIcons(const QIcon& shown, const QIcon& hidden, const QColor& hiddenText);
@@ -45,6 +48,10 @@ class ModelTreePanel final : public QTreeWidget {
     // M01: marks a body row as the current one, and opens its name for editing.
     void selectBody(document::BodyId body);
     void editBody(document::BodyId body);
+    // N02b: marks the rows of a group of bodies (empty: none besides the current row).
+    void markBodies(std::span<const document::BodyId> bodies);
+    // N02b: the body IDs in the order of their rows.
+    [[nodiscard]] std::vector<document::BodyId> bodyOrder() const;
     [[nodiscard]] QTreeWidgetItem* featureItem(document::FeatureId featureId) const;
     // AI04c: briefly marks features changed from outside the shell (MCP) with bold text in
     // the given color; the style sheet paints item backgrounds itself.
@@ -56,6 +63,9 @@ class ModelTreePanel final : public QTreeWidget {
     static constexpr int nameRole = Qt::UserRole + 1;
     static constexpr int kindRole = Qt::UserRole + 2;
 
+  protected:
+    void mousePressEvent(QMouseEvent* event) override;
+
   private:
     QTreeWidgetItem* addItem(QTreeWidgetItem* parent, Kind kind, std::uint64_t id,
                              const QString& text, std::optional<bool> eye);
@@ -63,6 +73,9 @@ class ModelTreePanel final : public QTreeWidget {
     void paintFlash(bool on);
 
     Handlers handlers_;
+    // N02b: Strg-click adds or removes a body, Umschalt-click adds the bodies up to it.
+    std::function<void(std::uint64_t, bool range)> bodyGrouped_;
+    Qt::KeyboardModifiers pressModifiers_; // N02b: of the press that leads to a click
     std::vector<document::FeatureId> flashed_;
     QColor flashColor_;
     QIcon shownIcon_;

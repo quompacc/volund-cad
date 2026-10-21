@@ -23,9 +23,9 @@ void MainWindow::createBodyCommands() {
     setCommandId(*impl_->bodyVisibilityAction, "body.visibility");
     addAction(impl_->bodyVisibilityAction);
     connect(impl_->bodyVisibilityAction, &QAction::triggered, this, [this] {
-        if (impl_->selectedBody)
-            toggleVisibility(static_cast<int>(ModelTreePanel::Kind::body),
-                             impl_->selectedBody->value());
+        // N02b: a group shows or hides all its bodies.
+        for (const auto body : selectedBodies())
+            toggleVisibility(static_cast<int>(ModelTreePanel::Kind::body), body.value());
     });
     syncBodyCommands();
 }
@@ -35,14 +35,17 @@ void MainWindow::syncBodyCommands() {
         return;
     const ShellState shell = impl_->shell();
     const bool body = shell.selection == ShellSelection::body && !shell.toolBlocksCommands();
-    impl_->renameBodyAction->setEnabled(body);
+    impl_->renameBodyAction->setEnabled(body && impl_->bodyGroup.size() < 2); // N02b
     impl_->bodyVisibilityAction->setEnabled(body);
     impl_->bodyVisibilityAction->setText(shell.bodyHidden ? tr("Einblenden") : tr("Ausblenden"));
+    syncClipboardCommands();
 }
 
-void MainWindow::selectBody(std::uint64_t id) {
+void MainWindow::selectBody(std::uint64_t id, bool keepGroup) {
     if (impl_->shell().toolBlocksCommands())
         return;
+    if (!keepGroup)
+        clearGroups();
     impl_->selectedDatum.reset();
     impl_->selectedPlanarFace.reset();
     // The creator feature stands for the body in the document selection, so a cylinder or a

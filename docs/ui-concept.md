@@ -121,6 +121,12 @@ Vom Nutzer am 04.10.2026 freigegeben; verbindlich festgehalten in
   »-Menü. Die Kontextleiste zeigt nur Symbole, wenn sie sonst nicht ins Fenster passt. Das
   Fenster ist mindestens 720 px breit. Das erste Fenster ist nie größer als der freie
   Bildschirm und steht mittig.
+- 21.10.2026 (N02): „Zuletzt geöffnet“ im Dateimenü (zehn Dokumente). Strg+C/Strg+V kopieren
+  Körper als feste Kopie „Kopie N“ (auch in ein anderes Dokument). Mehrfachauswahl: Strg-Klick
+  nimmt hinzu oder heraus, Umschalt-Klick einen Bereich – im Modellbaum, in der Zeitleiste und
+  im Viewport (Fläche eines Körpers, ohne offenes Werkzeug). Löschen, Unterdrücken, Ausblenden,
+  Kopieren und Bewegen wirken auf die ganze Gruppe als ein Rückgängig-Schritt; eine Gruppe
+  wird nur verschoben, nicht gedreht.
 
 ### Ablauf im Zielbild
 
@@ -180,6 +186,9 @@ in U04 an dieselben IDs.
 | `transform.snap` | Kontextleiste (Verschieben/Drehen), Suche | Viewport | immer | command_surfaces |
 | `view.theme` | Kopfzeile (Sonne/Mond), Suche | MainWindow | immer | command_inventory |
 | `body.rename` | Kontextleiste (Körper), Doppelklick/F2 auf die Körperzeile, Suche | CadSession::renameBody | Körperzeile im Baum gewählt (M01); ein Rückgängig-Schritt | body_flow |
+| `edit.copy` | Kontextleiste (Körper), Strg+C, Suche | CadSession::copyBodies | Körper gewählt, kein Werkzeug offen; kopiert die aktuelle Form in die Zwischenablage (N02, Nutzerentscheidung 21.10.2026) | clipboard, clipboard_flow |
+| `edit.paste` | Strg+V, Suche | CadSession::pasteBodies | Völund-Körper in der Zwischenablage, kein Werkzeug offen; feste Kopie „Kopie N“ als ein Rückgängig-Schritt, auch in einem anderen Dokument (N02) | clipboard, clipboard_flow |
+| `document.open_recent`, `.clear_recent` | Dateimenü „Zuletzt geöffnet“ | DocumentActions/RecentFiles | die letzten zehn geöffneten oder gespeicherten Dokumente; eine fehlende Datei wird genannt und entfernt (N02) | recent_files |
 | `body.visibility` | Kontextleiste (Körper), Auge im Baum, Suche | CadSession::setBodyHidden | Körperzeile im Baum gewählt (M01); gespeichert, „geändert“, kein Rückgängig-Schritt | body_flow |
 | `view.command_search` | Kopfzeile (Suchfeld), Strg+K | CommandPalette | immer | command_surfaces |
 | `view.tool_rail` | Kopfzeile (Werkzeugleiste), Suche | MainWindow | immer | command_surfaces |

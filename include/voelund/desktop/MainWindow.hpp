@@ -6,6 +6,8 @@
 
 #include <cstdint>
 #include <memory>
+#include <vector>
+#include <voelund/document/BodyId.hpp>
 
 class QCloseEvent;
 class TopoDS_Shape;
@@ -13,7 +15,12 @@ class TopoDS_Shape;
 namespace voelund::application {
 class CadSession;
 struct ActionResult;
+struct DeletionPlan;
 } // namespace voelund::application
+
+namespace voelund::viewport {
+struct PlanarFaceSelection;
+} // namespace voelund::viewport
 
 namespace voelund::desktop {
 
@@ -58,14 +65,37 @@ class MainWindow final : public QMainWindow {
     // M01: bodies as a whole (MainWindowBodies.cpp).
     void createBodyCommands();
     void syncBodyCommands();
-    void selectBody(std::uint64_t id);
+    void selectBody(std::uint64_t id, bool keepGroup = false);
     void renameBody(std::uint64_t id, const QString& name);
+    // N02: copy and paste of bodies (MainWindowClipboard.cpp); the bodies a command acts on.
+    void createClipboardCommands();
+    void syncClipboardCommands();
+    void copyBodies();
+    void pasteBodies();
+    [[nodiscard]] std::vector<document::BodyId> selectedBodies() const;
+    // N02b: groups of bodies and timeline steps (MainWindowGroups.cpp).
+    void createGroupSelection();
+    void groupBody(document::BodyId body, bool range);
+    void groupStep(document::FeatureId step, bool range);
+    void clearGroups();
+    void syncGroups();
+    [[nodiscard]] std::vector<document::FeatureId> chosenSteps() const;
+    bool moveBodyGroup(double deltaX, double deltaY, double deltaZ);
+    void suppressGroup();
+    void deleteGroup();
+    enum class DeletionChoice { cancel, cascade, alone };
+    DeletionChoice askDeletion(const QString& subject, const application::DeletionPlan& plan);
+    void deleteSteps(const std::vector<document::FeatureId>& chosen,
+                     const application::DeletionPlan& plan, const QString& subject);
     void syncViewSwitches();
     void syncShell();
     void createHeader();
     void applyTheme(ThemeMode mode);
     void createCommands();
     void connectInteractions();
+    void pickPlanarFace(const viewport::PlanarFaceSelection& selection);
+    bool toolTakesFace(const viewport::PlanarFaceSelection& selection);
+    bool groupTakesFace(const viewport::PlanarFaceSelection& selection);
     void syncModelTree();
     // PAR02: the parameter card under the model tree (MainWindowDocumentParameters.cpp).
     void createParameterCard();
@@ -94,7 +124,7 @@ class MainWindow final : public QMainWindow {
     void applyExtrusionParameters();
     void previewBodyMove(std::uint64_t id, double deltaX, double deltaY, double deltaZ);
     void previewBodyRotation(std::uint64_t id, int axisIndex, double angleDegrees);
-    void selectFeature(std::uint64_t rawId);
+    void selectFeature(std::uint64_t rawId, bool keepGroup = false);
     // User request 2026-10-13: edges picked before a fillet or chamfer.
     void pickEdge(std::uint64_t body, const TopoDS_Shape& edge, bool additive);
     void clearEdgeSelection();

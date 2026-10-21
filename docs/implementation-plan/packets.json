@@ -3642,12 +3642,15 @@
       ],
       "acceptance": "Symbol in Explorer/Taskleiste (Sandbox-Bildschirmfoto) und Linux-Desktop-Eintrag sichtbar; Paketprüfung enthält die Symboldateien.",
       "boundary": "Codesignatur bleibt L10. Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
-      "status": "planned",
+      "status": "done",
       "gate": "G4",
       "chapter": "12-v1-abrundung.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/N16.md"
+      ],
+      "completedCommit": "c4bd5eb",
+      "completedDate": "2026-10-21"
     },
     {
       "id": "L09",

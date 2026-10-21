@@ -3,6 +3,7 @@
 #include <voelund/kernel/Angle.hpp>
 
 #include <AIS_Manipulator.hxx>
+#include <Standard_Version.hxx>
 #include <gp_Ax1.hxx>
 #include <gp_Dir.hxx>
 #include <gp_Pnt.hxx>
@@ -123,6 +124,30 @@ void TransformManipulator::attach(const occ::handle<AIS_Shape>& presentation,
     impl_->manipulator->EnableMode(AIS_MM_Translation);
     impl_->manipulator->EnableMode(AIS_MM_TranslationPlane);
     impl_->manipulator->EnableMode(AIS_MM_Rotation);
+    impl_->bodyId = bodyId;
+}
+
+void TransformManipulator::attach(const std::vector<occ::handle<AIS_Shape>>& presentations,
+                                  std::uint64_t bodyId) {
+    if (presentations.size() == 1)
+        attach(presentations.front(), bodyId);
+    if (!impl_->enabled || presentations.size() < 2)
+        return;
+    detach();
+#if OCC_VERSION_MAJOR < 8
+    using Objects = AIS_ManipulatorObjectSequence;
+#else
+    using Objects = NCollection_HSequence<occ::handle<AIS_InteractiveObject>>;
+#endif
+    occ::handle<Objects> objects = new Objects();
+    for (const auto& presentation : presentations)
+        objects->Append(presentation);
+    impl_->manipulator->SetPart(AIS_MM_Translation, true);
+    impl_->manipulator->SetPart(AIS_MM_TranslationPlane, true);
+    impl_->manipulator->SetPart(AIS_MM_Rotation, false);
+    impl_->manipulator->Attach(objects);
+    impl_->manipulator->EnableMode(AIS_MM_Translation);
+    impl_->manipulator->EnableMode(AIS_MM_TranslationPlane);
     impl_->bodyId = bodyId;
 }
 

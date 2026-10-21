@@ -381,7 +381,7 @@ if(VOELUND_BUILD_DESKTOP)
             COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:Qt6::QWindowsIntegrationPlugin>"
                 "$<TARGET_FILE_DIR:voelund_sketch_solver_gate_tests>/platforms" VERBATIM)
     endif()
-    add_executable(voelund_document_actions_tests desktop/DocumentActionsTests.cpp ../src/desktop/DocumentActions.cpp
+    add_executable(voelund_document_actions_tests desktop/DocumentActionsTests.cpp ../src/desktop/DocumentActions.cpp ../src/desktop/RecentFiles.cpp
         ../src/desktop/DocumentErrorText.cpp ../src/desktop/ShellState.cpp)
     target_link_libraries(voelund_document_actions_tests PRIVATE voelund_project_options Voelund::Application Qt6::Widgets)
     add_test(NAME desktop.document_actions COMMAND voelund_document_actions_tests)
@@ -606,6 +606,33 @@ if(VOELUND_BUILD_DESKTOP)
             LABELS "desktop;qt-opengl;acceptance" TIMEOUT 180 RUN_SERIAL TRUE)
         if(VOELUND_NATIVE_WAYLAND)
             set_tests_properties(desktop.reference_ring PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
+        endif()
+        # N02b: groups of bodies and steps through the shell.
+        add_executable(voelund_group_flow_tests desktop/GroupFlowTests.cpp)
+        target_link_libraries(voelund_group_flow_tests PRIVATE voelund_project_options Voelund::Desktop)
+        add_test(NAME desktop.group_flow COMMAND voelund_group_flow_tests)
+        set_tests_properties(desktop.group_flow PROPERTIES
+            LABELS "desktop;qt-opengl" TIMEOUT 180 RUN_SERIAL TRUE)
+        if(VOELUND_NATIVE_WAYLAND)
+            set_tests_properties(desktop.group_flow PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
+        endif()
+        # N02: copy and paste of bodies through the shell.
+        add_executable(voelund_clipboard_flow_tests desktop/ClipboardFlowTests.cpp)
+        target_link_libraries(voelund_clipboard_flow_tests PRIVATE voelund_project_options Voelund::Desktop)
+        add_test(NAME desktop.clipboard_flow COMMAND voelund_clipboard_flow_tests)
+        set_tests_properties(desktop.clipboard_flow PROPERTIES
+            LABELS "desktop;qt-opengl" TIMEOUT 120 RUN_SERIAL TRUE)
+        if(VOELUND_NATIVE_WAYLAND)
+            set_tests_properties(desktop.clipboard_flow PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
+        endif()
+        # N02: "Zuletzt geöffnet" in the file menu.
+        add_executable(voelund_recent_files_tests desktop/RecentFilesTests.cpp)
+        target_link_libraries(voelund_recent_files_tests PRIVATE voelund_project_options Voelund::Desktop)
+        add_test(NAME desktop.recent_files COMMAND voelund_recent_files_tests)
+        set_tests_properties(desktop.recent_files PROPERTIES
+            LABELS "desktop;qt-opengl;document" TIMEOUT 120 RUN_SERIAL TRUE)
+        if(VOELUND_NATIVE_WAYLAND)
+            set_tests_properties(desktop.recent_files PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
         endif()
         # PAR02: the parameter table and "=Name" in the fields (user flow of the packet).
         add_executable(voelund_parameter_flow_tests desktop/ParameterFlowTests.cpp)
@@ -1336,6 +1363,16 @@ add_executable(voelund_reference_ring_tests integration/ReferenceRingTests.cpp)
 target_link_libraries(voelund_reference_ring_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME application.reference_ring COMMAND voelund_reference_ring_tests)
 set_tests_properties(application.reference_ring PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
+# N02b: several bodies moved or steps suppressed as one undo step.
+add_executable(voelund_group_edit_tests integration/GroupEditTests.cpp)
+target_link_libraries(voelund_group_edit_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.group_edits COMMAND voelund_group_edit_tests)
+set_tests_properties(application.group_edits PROPERTIES LABELS "integration;application" TIMEOUT 120)
+# N02: copied bodies pasted as fixed copies.
+add_executable(voelund_clipboard_tests integration/ClipboardTests.cpp)
+target_link_libraries(voelund_clipboard_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.clipboard COMMAND voelund_clipboard_tests)
+set_tests_properties(application.clipboard PROPERTIES LABELS "integration;application" TIMEOUT 120)
 # M17: STEP import and export.
 add_executable(voelund_step_tests integration/StepTests.cpp)
 target_link_libraries(voelund_step_tests PRIVATE voelund_project_options Voelund::Application TKDESTEP)

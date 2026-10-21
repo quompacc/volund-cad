@@ -213,12 +213,17 @@ class CadViewportScene {
         if (!manipulator.isEnabled() || !transformTarget.has_value()) {
             return;
         }
-        for (const BodyPresentation& presentation : presentations) {
-            if (presentation.transformable && presentation.id == *transformTarget) {
-                manipulator.attach(presentation.shape, presentation.id);
-                break;
-            }
-        }
+        // N02b: the target first, then the bodies chosen with it.
+        std::vector<occ::handle<AIS_Shape>> group;
+        for (const BodyPresentation& presentation : presentations)
+            if (presentation.transformable && presentation.id == *transformTarget)
+                group.insert(group.begin(), presentation.shape);
+            else if (presentation.transformable &&
+                     std::ranges::find(transformCompanions, presentation.id) !=
+                         transformCompanions.end())
+                group.push_back(presentation.shape);
+        if (!group.empty())
+            manipulator.attach(group, *transformTarget);
     }
 
     void applyGrid() {
@@ -333,6 +338,8 @@ class CadViewportScene {
     std::function<void(std::uint64_t, const TopoDS_Shape&, bool)> edgeSelectionHandler;
     std::array<occ::handle<AIS_Shape>, 2> edgeHighlights;
     std::optional<std::uint64_t> transformTarget;
+    std::vector<std::uint64_t> transformCompanions; // N02b
+    Qt::KeyboardModifiers pressModifiers;           // N02b
     QPoint gestureOrigin;
     Gesture gesture{Gesture::none};
     bool sketchElementPressed{false};

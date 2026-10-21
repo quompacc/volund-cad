@@ -223,6 +223,8 @@ void MainWindow::toggleSuppression() {
     const auto selected = impl_->session.selectedFeature();
     if (!selected || impl_->shell().toolBlocksCommands())
         return;
+    if (impl_->featureGroup.size() > 1) // N02b: the whole group, one undo step
+        return suppressGroup();
     const auto states = impl_->session.featureStates();
     const auto state = std::ranges::find(states, *selected, &application::FeatureRuntimeState::id);
     const bool suppress =
@@ -252,42 +254,62 @@ void MainWindow::moveRollback(std::optional<document::FeatureId> after) {
 // M16 (user decision 2026-10-16): without dependents the feature goes at once; otherwise a
 // question names them and offers the cascade, the feature alone (they stay with errors) or
 // nothing. One undo step either way.
+// M16: asks what deleting `subject` takes along; cancel, the dependents too, or it alone.
+MainWindow::DeletionChoice MainWindow::askDeletion(const QString& subject,
+                                                   const application::DeletionPlan& plan) {
+    const auto features = impl_->session.features();
+    QStringList names;
+    for (const auto id : plan.dependents) {
+        const auto found = std::ranges::find(features, id, &document::FeatureDescriptor::id);
+        names << QStringLiteral("• ") +
+                     (found == features.end() ? QString{} : QString::fromStdString(found->name));
+    }
+    QMessageBox question(QMessageBox::Question, tr("Feature löschen"),
+                         tr("%1 wird von diesen Features gebraucht, oder sie schlagen ohne "
+                            "es fehl:\n%2")
+                             .arg(subject, names.join(QLatin1Char('\n'))),
+                         QMessageBox::NoButton, this);
+    question.setObjectName(QStringLiteral("deleteFeatureQuestion"));
+    auto* cascade = question.addButton(tr("Mit Abhängigen löschen"), QMessageBox::AcceptRole);
+    auto* alone = question.addButton(tr("Nur dieses löschen"), QMessageBox::DestructiveRole);
+    alone->setEnabled(plan.onlyThisPossible);
+    if (!plan.onlyThisPossible)
+        alone->setToolTip(tr("Die Abhängigen können ohne dieses Feature nicht bestehen."));
+    question.addButton(tr("Abbrechen"), QMessageBox::RejectRole);
+    question.exec();
+    if (question.clickedButton() == cascade)
+        return DeletionChoice::cascade;
+    if (question.clickedButton() == alone && plan.onlyThisPossible)
+        return DeletionChoice::alone;
+    return DeletionChoice::cancel;
+}
+
 void MainWindow::deleteSelectedFeature() {
     const auto selected = impl_->session.selectedFeature();
     if (!selected || impl_->shell().toolBlocksCommands())
         return;
-    const auto features = impl_->session.features();
-    const auto nameOf = [&](document::FeatureId id) {
-        const auto found = std::ranges::find(features, id, &document::FeatureDescriptor::id);
-        return found == features.end() ? QString{} : QString::fromStdString(found->name);
-    };
+    if (chosenSteps().size() > 1) // N02b: a group of steps or bodies
+        return deleteGroup();
     const auto plan = impl_->session.deletionPlan(*selected);
-    std::vector<document::FeatureId> doomed{*selected};
+    const auto features = impl_->session.features();
+    const auto named = std::ranges::find(features, *selected, &document::FeatureDescriptor::id);
+    deleteSteps({*selected}, plan,
+                QStringLiteral("„%1“").arg(
+                    named == features.end() ? QString{} : QString::fromStdString(named->name)));
+}
+
+void MainWindow::deleteSteps(const std::vector<document::FeatureId>& chosen,
+                             const application::DeletionPlan& plan, const QString& subject) {
+    std::vector<document::FeatureId> doomed = chosen;
     auto disposition = application::ErrorDisposition::reject;
     if (!plan.dependents.empty()) {
-        QStringList names;
-        for (const auto id : plan.dependents)
-            names << QStringLiteral("• ") + nameOf(id);
-        QMessageBox question(QMessageBox::Question, tr("Feature löschen"),
-                             tr("„%1“ wird von diesen Features gebraucht, oder sie schlagen ohne "
-                                "es fehl:\n%2")
-                                 .arg(nameOf(*selected), names.join(QLatin1Char('\n'))),
-                             QMessageBox::NoButton, this);
-        question.setObjectName(QStringLiteral("deleteFeatureQuestion"));
-        auto* cascade = question.addButton(tr("Mit Abhängigen löschen"), QMessageBox::AcceptRole);
-        auto* alone = question.addButton(tr("Nur dieses löschen"), QMessageBox::DestructiveRole);
-        alone->setEnabled(plan.onlyThisPossible);
-        if (!plan.onlyThisPossible)
-            alone->setToolTip(tr("Die Abhängigen können ohne dieses Feature nicht bestehen."));
-        question.addButton(tr("Abbrechen"), QMessageBox::RejectRole);
-        question.exec();
-        if (question.clickedButton() == cascade) {
-            doomed = plan.cascade;
-        } else if (question.clickedButton() == alone && plan.onlyThisPossible) {
-            disposition = application::ErrorDisposition::keepEditableErrors;
-        } else {
+        const auto choice = askDeletion(subject, plan);
+        if (choice == DeletionChoice::cancel)
             return;
-        }
+        if (choice == DeletionChoice::cascade)
+            doomed = plan.cascade;
+        else
+            disposition = application::ErrorDisposition::keepEditableErrors;
     }
     if (!runCommand([&] { return impl_->session.deleteFeatures(doomed, disposition); },
                     [this](const QString& message) { statusBar()->showMessage(message); }))

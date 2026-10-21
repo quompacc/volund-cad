@@ -273,10 +273,7 @@ bool TimelineBar::eventFilter(QObject* watched, QEvent* event) {
         const auto id = (*step)->property("featureId").toULongLong();
         if (event->type() == QEvent::MouseButtonPress &&
             static_cast<QMouseEvent*>(event)->button() == Qt::LeftButton) {
-            pressedStep_ = id;
-            pressedAt_ =
-                (*step)->mapTo(content_, static_cast<QMouseEvent*>(event)->position().toPoint());
-            draggingStep_ = false;
+            stepPressed(**step, *static_cast<QMouseEvent*>(event), id);
         } else if (event->type() == QEvent::MouseMove && pressedStep_ == id &&
                    (static_cast<QMouseEvent*>(event)->buttons() & Qt::LeftButton)) {
             const QPoint at =
@@ -377,6 +374,30 @@ void TimelineBar::setDeleteHandler(std::function<void(std::uint64_t)> handler) {
     delete_ = std::move(handler);
 }
 
+// M16: a pressed step may become a drag; N02b: its modifiers decide a group click.
+void TimelineBar::stepPressed(QToolButton& step, const QMouseEvent& event, std::uint64_t id) {
+    pressedStep_ = id;
+    pressedAt_ = step.mapTo(content_, event.position().toPoint());
+    draggingStep_ = false;
+    pressModifiers_ = event.modifiers();
+}
+
+void TimelineBar::setGroupHandler(std::function<void(std::uint64_t, bool)> handler) {
+    group_ = std::move(handler);
+}
+
+void TimelineBar::markGroup(std::span<const document::FeatureId> features) {
+    for (QToolButton* button : buttons_) {
+        const document::FeatureId id{button->property("featureId").toULongLong()};
+        const bool grouped = std::ranges::find(features, id) != features.end();
+        if (button->property("grouped").toBool() == grouped)
+            continue;
+        button->setProperty("grouped", grouped);
+        button->style()->unpolish(button);
+        button->style()->polish(button);
+    }
+}
+
 // M15: steps before the gap; all of them means the end.
 void TimelineBar::markerDropped(std::size_t stepsBefore) {
     if (!rollback_ || buttons_.empty())
@@ -424,7 +445,11 @@ void TimelineBar::showFeatures(std::span<const document::FeatureDescriptor> feat
                                 : tr("Feature wählen und bearbeiten")));
         const std::uint64_t id = feature.id.value();
         connect(button, &QToolButton::clicked, this, [this, id] {
-            if (open_)
+            const auto modifiers = pressModifiers_;
+            pressModifiers_ = {};
+            if ((modifiers & (Qt::ControlModifier | Qt::ShiftModifier)) && group_)
+                group_(id, (modifiers & Qt::ShiftModifier) != 0);
+            else if (open_)
                 open_(id);
         });
         button->setFocusPolicy(Qt::StrongFocus);
