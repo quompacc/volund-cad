@@ -1,6 +1,6 @@
 #include "CadSessionTestSupport.hpp"
 
-#include <voelund/application/MeshExchange.hpp>
+#include <voelund/application/ModelExport.hpp>
 
 #include <BRepAdaptor_Curve.hxx>
 #include <TopExp_Explorer.hxx>
@@ -19,7 +19,8 @@
 // N03 (user decisions 2026-10-22): a plate "Platte" 40 x 20 x 10 and a cylinder of its own.
 // STL of the visible bodies holds both in one file with their volume within the resolution; 3MF
 // of the picked plate holds one object "Platte" in millimetres. With every body hidden nothing
-// is written; a revision with an error is refused and writes no file.
+// is written; a revision with an error is refused and writes no file. N04: IGES of both bodies
+// with the plate's name; DXF of a sketch, refused for a body.
 namespace {
 using namespace voelund;
 using application::CommandStatus;
@@ -94,6 +95,36 @@ void written(application::CadSession& session, document::FeatureId plate,
             "3MF of the picked plate: one object named Platte, in mm");
 }
 
+// N04: IGES of the visible bodies; DXF of a sketch with a rectangle and a circle, refused for
+// the plate, which is no sketch.
+void igesAndDxf(application::CadSession& session, document::FeatureId plate,
+                const std::filesystem::path& directory) {
+    const auto iges = application::exportIges(session, directory / "teil.igs");
+    const auto igesText = bytesOf(directory / "teil.igs");
+    require(iges.status == StepExportStatus::written && iges.solids == 2 &&
+                igesText.find("Platte") != std::string::npos,
+            "IGES of both visible bodies with the plate's name: " + iges.message);
+    document::SketchParameters drawing{document::datumSketchPlane(document::DatumPlane::xy), {}};
+    drawing.datum = document::DatumPlane::xy;
+    drawing.elements.values.push_back(
+        {document::SketchElementId{1}, document::SketchRectangle{0, 0, 30, 20}});
+    drawing.elements.values.push_back(
+        {document::SketchElementId{2}, document::SketchCircle{{15, 10}, 4}});
+    drawing.elements.nextId = 3;
+    const auto sketch = session.createDatumSketchFeature(drawing).feature();
+    require(sketch.has_value(), "A sketch");
+    const auto dxf = application::exportSketchDxf(session, directory / "skizze.dxf", *sketch);
+    const auto dxfText = bytesOf(directory / "skizze.dxf");
+    require(dxf.status == StepExportStatus::written && dxf.solids == 2 &&
+                count(dxfText, "\nLINE\n") == 4 && count(dxfText, "\nCIRCLE\n") == 1,
+            "DXF of the sketch: four lines and a circle");
+    require(application::exportSketchDxf(session, directory / "platte.dxf", plate).status ==
+                    StepExportStatus::notASketch &&
+                !std::filesystem::exists(directory / "platte.dxf"),
+            "The plate is no sketch");
+    require(session.undo().status() == CommandStatus::committed, "Sketch undone");
+}
+
 void refused(application::CadSession& session, document::FeatureId plate,
              const std::filesystem::path& directory) {
     std::optional<document::FilletEdge> edge;
@@ -135,6 +166,7 @@ int main() {
         application::CadSession session;
         const auto plate = buildPart(session);
         written(session, plate, directory);
+        igesAndDxf(session, plate, directory);
         refused(session, plate, directory);
         std::filesystem::remove_all(directory);
         std::cout << "PASS N03 mesh export from the session: STL of the visible bodies, 3MF of "

@@ -50,6 +50,11 @@ struct StepExport final {
                                    std::span<const StepSolid> solids,
                                    StepLengthUnit unit = StepLengthUnit::millimetre);
 
+// N04: writes the solids as IGES in mm (BRep mode: manifold solids, entity 186) with their
+// names; refused and reported like a STEP export.
+[[nodiscard]] StepExport writeIges(const std::filesystem::path& path,
+                                   std::span<const StepSolid> solids);
+
 // M17: an imported solid embedded in a document, as OCCT binary BRep. readShapeBytes returns a
 // null shape for data that is no valid solid.
 [[nodiscard]] std::string writeShapeBytes(const TopoDS_Shape& shape);

@@ -27,7 +27,8 @@ enum class StepExportStatus {
     noBodies,        // nothing visible, or nothing given
     unknownBody,     // a body that is no current valid body
     notASolid,
-    writeFailed
+    writeFailed,
+    notASketch // N04: a DXF export of a feature that is no sketch
 };
 struct StepExportResult final {
     StepExportStatus status;

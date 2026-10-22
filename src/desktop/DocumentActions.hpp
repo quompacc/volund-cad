@@ -58,6 +58,7 @@ class DocumentActions final {
     // M18 (user decision 2026-10-16): STEP import into the open document and export.
     void importStep();
     void exportStep();
+    [[nodiscard]] QString askExportFile();
     void reportImport(const application::StepImportResult& result);
 
     QMainWindow& window_;

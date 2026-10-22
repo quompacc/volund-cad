@@ -23,7 +23,8 @@
 // N03 (user decisions 2026-10-22): File > Export with "teil.stl" asks the resolution (medium
 // offered), writes both visible bodies into one binary STL and says so. "platte.3mf" with the
 // plate picked in the tree offers the last choice (fine) and writes one object "Platte". A
-// cancelled resolution question writes nothing.
+// cancelled resolution question writes nothing. N04: the picked plate as IGES; DXF asks for a
+// sketch first, then writes the selected one.
 namespace {
 using namespace voelund;
 void require(bool condition, const std::string& message) {
@@ -89,6 +90,37 @@ struct Window final {
     }
 };
 
+// N04: IGES of the picked plate; DXF without a selected sketch asks for one, with the sketch
+// selected it writes its four lines.
+void exchange(Window& w, test::DialogAnswers& user, const QString& folder) {
+    user.file = folder + QStringLiteral("/platte.igs");
+    w.exportFile();
+    require(std::filesystem::exists(std::filesystem::path(user.file.toStdWString())) &&
+                w.status().contains(QStringLiteral("IGES")),
+            "IGES of the picked plate: " + w.status().toStdString());
+    const int errors = user.errors;
+    user.file = folder + QStringLiteral("/ohne.dxf");
+    w.exportFile();
+    require(user.errors == errors + 1 &&
+                !std::filesystem::exists(std::filesystem::path(user.file.toStdWString())),
+            "DXF without a selected sketch asks for one and writes nothing");
+    document::SketchParameters drawing{document::datumSketchPlane(document::DatumPlane::xy), {}};
+    drawing.datum = document::DatumPlane::xy;
+    drawing.elements.values.push_back(
+        {document::SketchElementId{1}, document::SketchRectangle{0, 0, 30, 20}});
+    drawing.elements.nextId = 2;
+    const auto sketch = w.session.createDatumSketchFeature(drawing).feature();
+    require(sketch && w.session.selectFeature(*sketch), "A sketch selected");
+    w.main->refreshAfterExternalChange();
+    test::settleEvents();
+    user.file = folder + QStringLiteral("/skizze.dxf");
+    w.exportFile();
+    const auto dxf = bytesOf(user.file);
+    require(dxf.find("LINE") != std::string::npos &&
+                w.status().contains(QStringLiteral("Skizze als DXF")),
+            "DXF of the selected sketch: " + w.status().toStdString());
+}
+
 int run() {
     QTemporaryDir directory;
     require(directory.isValid(), "temporary directory");
@@ -130,6 +162,7 @@ int run() {
     require(resolution.asked == 3 &&
                 !std::filesystem::exists(std::filesystem::path(user.file.toStdWString())),
             "A cancelled question writes nothing");
+    exchange(w, user, directory.path());
     return 0;
 }
 } // namespace

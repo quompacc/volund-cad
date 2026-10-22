@@ -5,7 +5,7 @@
 #include "ShellState.hpp"
 
 #include <voelund/application/CadSession.hpp>
-#include <voelund/application/MeshExchange.hpp>
+#include <voelund/application/ModelExport.hpp>
 
 #include <QAbstractButton>
 #include <QAction>
@@ -18,12 +18,14 @@
 #include <QSettings>
 #include <QStatusBar>
 #include <QString>
+#include <QStringList>
 
 #include <algorithm>
 #include <exception>
 #include <filesystem>
 #include <optional>
 #include <utility>
+#include <vector>
 
 namespace voelund::desktop {
 namespace {
@@ -35,34 +37,77 @@ QString openFilter() {
     return QObject::tr("Völund-CAD-Dokument oder STEP (*.volund *.step *.stp)") +
            QStringLiteral(";;") + documentFilter() + QStringLiteral(";;") + stepFilter();
 }
-// N03 (user decision 2026-10-22): the export writes STEP, STL or 3MF by the file type.
-enum class ExportFormat { step, stl, threeMf };
+// N03/N04 (user decisions 2026-10-22): the export writes by the file type: bodies as STEP, STL,
+// 3MF or IGES, the selected sketch as DXF.
+enum class ExportFormat { step, stl, threeMf, iges, dxf };
+struct ExportType final {
+    ExportFormat format;
+    QString name;
+    QStringList suffixes;
+    QString filter;
+};
+const std::vector<ExportType>& exportTypes() {
+    static const std::vector<ExportType> types{
+        {ExportFormat::step, QStringLiteral("STEP"), {".step", ".stp"}, stepFilter()},
+        {ExportFormat::stl,
+         QStringLiteral("STL"),
+         {".stl"},
+         QObject::tr("STL für den 3D-Druck (*.stl)")},
+        {ExportFormat::threeMf,
+         QStringLiteral("3MF"),
+         {".3mf"},
+         QObject::tr("3MF für den 3D-Druck (*.3mf)")},
+        {ExportFormat::iges,
+         QStringLiteral("IGES"),
+         {".igs", ".iges"},
+         QObject::tr("IGES-Datei (*.igs *.iges)")},
+        {ExportFormat::dxf,
+         QStringLiteral("DXF"),
+         {".dxf"},
+         QObject::tr("DXF der gewählten Skizze (*.dxf)")}};
+    return types;
+}
 QString exportFilter() {
-    return stepFilter() + QStringLiteral(";;") + QObject::tr("STL für den 3D-Druck (*.stl)") +
-           QStringLiteral(";;") + QObject::tr("3MF für den 3D-Druck (*.3mf)");
+    QStringList filters;
+    for (const auto& type : exportTypes())
+        filters.append(type.filter);
+    return filters.join(QStringLiteral(";;"));
 }
-std::optional<ExportFormat> formatOf(const QString& fileName) {
-    if (fileName.endsWith(QStringLiteral(".stl"), Qt::CaseInsensitive))
-        return ExportFormat::stl;
-    if (fileName.endsWith(QStringLiteral(".3mf"), Qt::CaseInsensitive))
-        return ExportFormat::threeMf;
-    if (fileName.endsWith(QStringLiteral(".step"), Qt::CaseInsensitive) ||
-        fileName.endsWith(QStringLiteral(".stp"), Qt::CaseInsensitive))
-        return ExportFormat::step;
-    return std::nullopt;
-}
-QString formatName(ExportFormat format) {
-    return format == ExportFormat::stl       ? QStringLiteral("STL")
-           : format == ExportFormat::threeMf ? QStringLiteral("3MF")
-                                             : QStringLiteral("STEP");
+const ExportType* typeOf(const QString& fileName) {
+    for (const auto& type : exportTypes())
+        for (const auto& suffix : type.suffixes)
+            if (fileName.endsWith(suffix, Qt::CaseInsensitive))
+                return &type;
+    return nullptr;
 }
 // A name without a known ending gets the one of the chosen file type.
 QString withSuffix(const QString& fileName, const QString& filter) {
-    if (formatOf(fileName))
+    if (typeOf(fileName) != nullptr)
         return fileName;
-    return fileName + (filter.contains(QStringLiteral("*.stl"))   ? QStringLiteral(".stl")
-                       : filter.contains(QStringLiteral("*.3mf")) ? QStringLiteral(".3mf")
-                                                                  : QStringLiteral(".step"));
+    for (const auto& type : exportTypes())
+        if (type.filter == filter)
+            return fileName + type.suffixes.front();
+    return fileName + QStringLiteral(".step");
+}
+
+// The selected feature when it is a sketch.
+std::optional<document::FeatureId> selectedSketch(const application::CadSession& session) {
+    const auto selected = session.selectedFeature();
+    if (!selected)
+        return std::nullopt;
+    const auto features = session.features();
+    const auto found = std::ranges::find(features, *selected, &document::FeatureDescriptor::id);
+    return found != features.end() && found->kind == document::FeatureKind::sketch ? selected
+                                                                                   : std::nullopt;
+}
+
+// A-ERR-01: a model with errors is not exported, not even from its last valid display.
+bool modelHasErrors(const application::CadSession& session) {
+    const auto states = session.featureStates();
+    return std::ranges::any_of(states, [](const application::FeatureRuntimeState& state) {
+        return state.status == application::FeatureRuntimeStatus::error ||
+               state.status == application::FeatureRuntimeStatus::blocked;
+    });
 }
 
 // Coarse, medium or fine; the last choice is offered again.
@@ -91,20 +136,67 @@ void reportExport(QMainWindow& window, const application::StepExportResult& resu
     using application::StepExportStatus;
     if (result.status == StepExportStatus::written) {
         window.statusBar()->showMessage(
-            (visible ? QObject::tr("Als %1 (mm) exportiert: %2 sichtbare(r) Körper")
-                     : QObject::tr("Als %1 (mm) exportiert: %2 gewählte(r) Körper"))
+            (format == QStringLiteral("DXF")
+                 ? QObject::tr("Skizze als %1 (mm) exportiert: %2 Element(e)")
+             : visible ? QObject::tr("Als %1 (mm) exportiert: %2 sichtbare(r) Körper")
+                       : QObject::tr("Als %1 (mm) exportiert: %2 gewählte(r) Körper"))
                 .arg(format)
                 .arg(result.solids),
             8000);
         return;
     }
-    const QString reason = result.status == StepExportStatus::invalidRevision
-                               ? QObject::tr("Das Modell hat Fehler.")
-                           : result.status == StepExportStatus::noBodies
-                               ? QObject::tr("Es ist kein Körper sichtbar.")
-                               : QObject::tr("Die Datei konnte nicht geschrieben werden.");
+    const QString reason =
+        result.status == StepExportStatus::invalidRevision ? QObject::tr("Das Modell hat Fehler.")
+        : result.status == StepExportStatus::noBodies ? QObject::tr("Es ist kein Körper sichtbar.")
+        : result.status == StepExportStatus::notASketch
+            ? QObject::tr("Gewählt ist keine Skizze.")
+            : QObject::tr("Die Datei konnte nicht geschrieben werden.");
     QMessageBox::critical(&window, QObject::tr("Export fehlgeschlagen"),
                           reason + QStringLiteral("\n\n") + QString::fromStdString(result.message));
+}
+
+// Writes the file of the chosen type.
+// What an export writes, and where.
+struct ExportRequest final {
+    std::filesystem::path path;
+    ExportFormat format;
+    std::vector<document::BodyId> bodies;
+    std::optional<document::FeatureId> sketch;
+    std::optional<kernel::MeshResolution> resolution{};
+};
+
+// DXF needs a selected sketch, STL and 3MF a resolution; false when the export stops here.
+bool completed(QWidget& parent, ExportRequest& request) {
+    if (request.format == ExportFormat::dxf && !request.sketch) {
+        QMessageBox::information(&parent, QObject::tr("Keine Skizze gewählt"),
+                                 QObject::tr("DXF schreibt eine Skizze. Wählen Sie zuerst die "
+                                             "Skizze in der Zeitleiste oder im Baum."));
+        return false;
+    }
+    if (request.format == ExportFormat::stl || request.format == ExportFormat::threeMf)
+        request.resolution = askResolution(parent);
+    return request.resolution.has_value() ||
+           (request.format != ExportFormat::stl && request.format != ExportFormat::threeMf);
+}
+
+application::StepExportResult writeExport(application::CadSession& session,
+                                          const ExportRequest& request) {
+    switch (request.format) {
+    case ExportFormat::stl:
+    case ExportFormat::threeMf:
+        return application::exportMesh(session, request.path,
+                                       request.format == ExportFormat::stl
+                                           ? kernel::MeshFormat::stl
+                                           : kernel::MeshFormat::threeMf,
+                                       *request.resolution, request.bodies);
+    case ExportFormat::iges:
+        return application::exportIges(session, request.path, request.bodies);
+    case ExportFormat::dxf:
+        return application::exportSketchDxf(session, request.path, *request.sketch);
+    case ExportFormat::step:
+        break;
+    }
+    return session.exportStep(request.path, request.bodies);
 }
 
 bool isStepFile(const QString& fileName) {
@@ -147,11 +239,11 @@ DocumentActions::DocumentActions(QMainWindow& window, application::CadSession& s
     QAction* importAction = fileMenu->addAction(QObject::tr("&Importieren (STEP)…"));
     importAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_I));
     importAction->setToolTip(QObject::tr("Volumenkörper einer STEP-Datei ins Dokument übernehmen"));
-    QAction* exportAction = fileMenu->addAction(QObject::tr("&Exportieren (STEP, STL, 3MF)…"));
+    QAction* exportAction = fileMenu->addAction(QObject::tr("&Exportieren…"));
     exportAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_E));
     exportAction->setToolTip(
-        QObject::tr("Gewählten Körper, sonst alle sichtbaren Körper als STEP, STL oder 3MF (mm) "
-                    "schreiben"));
+        QObject::tr("Gewählten Körper, sonst alle sichtbaren Körper als STEP, STL, 3MF oder IGES "
+                    "schreiben, eine gewählte Skizze als DXF (mm)"));
     setCommandId(*importAction, "document.import_step");
     setCommandId(*exportAction, "document.export_step");
     importAction_ = importAction;
@@ -424,12 +516,8 @@ void DocumentActions::importStep() {
 }
 
 void DocumentActions::exportStep() {
-    // A-ERR-01: a model with errors is not exported, not even from its last valid display.
-    const auto states = session_.featureStates();
-    if (std::ranges::any_of(states, [](const application::FeatureRuntimeState& state) {
-            return state.status == application::FeatureRuntimeStatus::error ||
-                   state.status == application::FeatureRuntimeStatus::blocked;
-        })) {
+    const auto sketch = selectedSketch(session_);
+    if (!sketch && modelHasErrors(session_)) {
         QMessageBox::critical(&window_, QObject::tr("Export nicht möglich"),
                               QObject::tr("Das Modell hat Fehler. Beheben Sie sie vor dem "
                                           "Export; die angezeigte ältere Form wird nicht "
@@ -437,33 +525,30 @@ void DocumentActions::exportStep() {
         return;
     }
     const auto bodies = exportSelection_ ? exportSelection_() : std::vector<document::BodyId>{};
+    const QString fileName = askExportFile();
+    if (fileName.isEmpty())
+        return;
+    const auto& type = *typeOf(fileName);
+    ExportRequest request{nativePath(fileName), type.format, bodies, sketch};
+    if (!completed(window_, request))
+        return;
+    try {
+        reportExport(window_, writeExport(session_, request), bodies.empty(), type.name);
+    } catch (const std::exception& error) {
+        showError(QObject::tr("Export fehlgeschlagen"), error);
+    }
+}
+
+// The file to export to, with the ending of its type; empty when cancelled.
+QString DocumentActions::askExportFile() {
     QString suggestion = QStringLiteral("Teil.step");
     if (!session_.currentFile().empty())
         suggestion = nativeDisplayPath(
             std::filesystem::path(session_.currentFile()).replace_extension(".step"));
     QString filter = stepFilter();
-    QString fileName = QFileDialog::getSaveFileName(&window_, QObject::tr("Exportieren"),
-                                                    suggestion, exportFilter(), &filter);
-    if (fileName.isEmpty())
-        return;
-    fileName = withSuffix(fileName, filter);
-    const auto format = formatOf(fileName).value_or(ExportFormat::step);
-    std::optional<kernel::MeshResolution> resolution;
-    if (format != ExportFormat::step && !(resolution = askResolution(window_)))
-        return;
-    try {
-        const auto path = nativePath(fileName);
-        const auto result =
-            format == ExportFormat::step
-                ? session_.exportStep(path, bodies)
-                : application::exportMesh(session_, path,
-                                          format == ExportFormat::stl ? kernel::MeshFormat::stl
-                                                                      : kernel::MeshFormat::threeMf,
-                                          *resolution, bodies);
-        reportExport(window_, result, bodies.empty(), formatName(format));
-    } catch (const std::exception& error) {
-        showError(QObject::tr("Export fehlgeschlagen"), error);
-    }
+    const QString fileName = QFileDialog::getSaveFileName(&window_, QObject::tr("Exportieren"),
+                                                          suggestion, exportFilter(), &filter);
+    return fileName.isEmpty() ? fileName : withSuffix(fileName, filter);
 }
 
 } // namespace voelund::desktop

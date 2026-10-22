@@ -7,6 +7,9 @@
 #include <DESTEP_Parameters.hxx>
 #include <GProp_GProps.hxx>
 #include <IFSelect_ReturnStatus.hxx>
+#include <IGESCAFControl_Writer.hxx>
+#include <IGESControl_Controller.hxx>
+#include <Interface_Static.hxx>
 #include <NCollection_Sequence.hxx>
 #include <STEPCAFControl_Reader.hxx>
 #include <STEPCAFControl_Writer.hxx>
@@ -195,6 +198,29 @@ StepImport readStep(const std::filesystem::path& path) {
     return result;
 }
 
+namespace {
+// Why the solids cannot be written, if so.
+std::optional<StepExport> refusal(std::span<const StepSolid> solids) {
+    if (solids.empty())
+        return StepExport{StepExportError::nothingToWrite, "No solid to export"};
+    for (const auto& item : solids)
+        if (item.solid.IsNull() || item.solid.ShapeType() != TopAbs_SOLID ||
+            !BRepCheck_Analyzer(item.solid).IsValid())
+            return StepExport{StepExportError::notASolid,
+                              "\"" + item.name + "\" is no valid solid"};
+    return std::nullopt;
+}
+
+StepExport writeBytes(const std::filesystem::path& path, const std::string& bytes) {
+    std::ofstream file(path, std::ios::binary | std::ios::trunc);
+    file << bytes;
+    file.close();
+    if (!file)
+        return {StepExportError::writeFailed, "The file cannot be written"};
+    return {};
+}
+} // namespace
+
 StepExport writeStep(const std::filesystem::path& path, std::span<const StepSolid> solids,
                      StepLengthUnit unit) {
     StepExport result;
@@ -203,12 +229,8 @@ StepExport writeStep(const std::filesystem::path& path, std::span<const StepSoli
         result.message = std::move(message);
         return result;
     };
-    if (solids.empty())
-        return fail(StepExportError::nothingToWrite, "No solid to export");
-    for (const auto& item : solids)
-        if (item.solid.IsNull() || item.solid.ShapeType() != TopAbs_SOLID ||
-            !BRepCheck_Analyzer(item.solid).IsValid())
-            return fail(StepExportError::notASolid, "\"" + item.name + "\" is no valid solid");
+    if (auto refused = refusal(solids))
+        return *refused;
     std::ostringstream buffer;
     {
         const std::scoped_lock lock(stepMutex());
@@ -238,12 +260,38 @@ StepExport writeStep(const std::filesystem::path& path, std::span<const StepSoli
                                                           occtFailureDiagnostic(failure));
         }
     }
-    std::ofstream file(path, std::ios::binary | std::ios::trunc);
-    file << buffer.str();
-    file.close();
-    if (!file)
-        return fail(StepExportError::writeFailed, "The file cannot be written");
-    return result;
+    return writeBytes(path, buffer.str());
+}
+
+StepExport writeIges(const std::filesystem::path& path, std::span<const StepSolid> solids) {
+    if (auto refused = refusal(solids))
+        return *refused;
+    std::ostringstream buffer;
+    {
+        const std::scoped_lock lock(stepMutex());
+        try {
+            IGESControl_Controller::Init();
+            Interface_Static::SetCVal("write.iges.unit", "MM");
+            Interface_Static::SetIVal("write.iges.brep.mode", 1);
+            XcafDocument document;
+            const auto shapes = document.shapes();
+            for (const auto& item : solids) {
+                const TDF_Label label = shapes->AddShape(item.solid, false);
+                if (!item.name.empty())
+                    TDataStd_Name::Set(label, TCollection_ExtendedString(item.name.c_str(), true));
+            }
+            IGESCAFControl_Writer writer;
+            writer.SetNameMode(true);
+            writer.SetColorMode(false);
+            writer.SetLayerMode(false);
+            if (!writer.Transfer(document.get()) || !writer.Write(buffer))
+                return {StepExportError::writeFailed, "The solids cannot be translated to IGES"};
+        } catch (const Standard_Failure& failure) {
+            return {StepExportError::writeFailed,
+                    "The solids cannot be translated to IGES: " + occtFailureDiagnostic(failure)};
+        }
+    }
+    return writeBytes(path, buffer.str());
 }
 
 std::string writeShapeBytes(const TopoDS_Shape& shape) {

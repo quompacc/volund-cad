@@ -184,7 +184,6 @@ cyclomatic | src/features/SketchConstraintAnnotations.cpp | voelund::features::(
 cyclomatic | src/features/SketchIntersectionCurves.cpp | voelund::features::detail::domainParameter | 13 | Altbestand vor A04
 cyclomatic | src/features/SketchRegionFaces.cpp | voelund::features::evaluateRegionFaces | 13 | Altbestand vor A04
 cyclomatic | src/kernel/ShapeOperations.cpp | voelund::kernel::(anonymous namespace)::withBridges | 13 | Altbestand vor A04
-cyclomatic | src/kernel/StepExchange.cpp | voelund::kernel::writeStep | 13 | Altbestand vor A04
 cyclomatic | src/viewport/SketchEditorInteraction.cpp | voelund::viewport::SketchEditorInteraction::relatedLineEnd | 13 | Altbestand vor A04
 cyclomatic | apps/voelund-cad/main.cpp | (anonymous namespace)::verifyCadControls | 12 | Altbestand vor A04
 cyclomatic | src/application/CadSessionMove.cpp | voelund::application::CadSession::moveBody | 12 | Altbestand vor A04

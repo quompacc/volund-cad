@@ -23,6 +23,7 @@ target_link_libraries(
         TKMesh # N03: meshes for STL and 3MF
         # M17: STEP with names and units through an XCAF document.
         TKDESTEP
+        TKDEIGES # N04
         TKXCAF
         TKDE
         TKXSBase
