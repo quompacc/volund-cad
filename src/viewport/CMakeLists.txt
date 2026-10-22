@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 if(VOELUND_VIEWPORT_BACKEND STREQUAL "native" AND WIN32)
     set(voelund_viewport_sources
         CadViewport.cpp

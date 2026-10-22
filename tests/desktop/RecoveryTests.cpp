@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Eduard Hart
+
 #include "../../src/desktop/AutosaveController.hpp"
 #include "../../src/desktop/RecoveryStore.hpp"
 #include "../CommandResultAssertions.hpp"

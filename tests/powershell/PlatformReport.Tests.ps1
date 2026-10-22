@@ -1,4 +1,7 @@
 #Requires -Version 7.5
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '../..')).Path
 Import-Module (Join-Path $root 'tools/PlatformReportSupport.psm1') -Force

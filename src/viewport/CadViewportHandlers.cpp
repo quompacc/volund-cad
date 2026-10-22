@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Eduard Hart
+
 #if defined(VOELUND_VIEWPORT_QT_OPENGL)
 #include "CadViewportQtOpenGlBackend.hpp"
 #else

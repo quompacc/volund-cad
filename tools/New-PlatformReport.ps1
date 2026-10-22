@@ -1,4 +1,7 @@
 #Requires -Version 7.5
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)][ValidateSet('windows-qt-opengl','windows-native-diagnostic')][string]$Configuration,

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 # L04: writes MANIFEST.txt into an installed package from what was actually staged: every
 # component with version and licence, then every file with its SHA-256 and component. Runs as
 # the last install step; CheckPackageNotices.cmake compares it with the package.

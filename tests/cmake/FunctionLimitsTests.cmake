@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 # Fixtures for CheckFunctionLimits.cmake on a synthetic clang-tidy report: the listed state
 # passes; a new violation, a rise, a stale entry, an analysis error, a missing report and an
 # empty analysis each fail.

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 # Mandatory format check: every owned C++ file is formatted as .clang-format says.
 #
 #   cmake -DVOELUND_SOURCE_ROOT=<repository> -DVOELUND_CLANG_FORMAT=<clang-format> -P CheckFormat.cmake

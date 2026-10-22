@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 # AI04: MCP access to the action layer (docs/implementation-plan/AI04-plan.md).
 add_library(voelund_mcp STATIC
     ActionDecoding.cpp

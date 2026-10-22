@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 # U12: installs the product into an empty prefix and starts the installed executable, not the
 # one in the build tree: the startup smoke test (shell, viewport, commands) and opening a
 # document given on the command line.

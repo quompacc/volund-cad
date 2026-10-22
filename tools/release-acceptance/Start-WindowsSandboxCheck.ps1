@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 # L08: checks the Windows release ZIP in Windows Sandbox, a clean Windows without Visual Studio and
 # without a developer PATH. Stages the ZIP, the UI flow tests and two format fixtures into a
 # folder, starts the sandbox minimized and waits until windows-sandbox-check.ps1 wrote DONE.

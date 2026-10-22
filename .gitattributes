@@ -3,3 +3,6 @@ docs/implementation-plan/evidence/** -whitespace
 
 # Q01: outside reference parts stay byte-exact (no line-ending conversion, see docs/provenance/nist-pmi-step.md).
 tests/differential/nist/*.stp -text -diff -whitespace
+
+# The GPL text stays byte-exact as published by the FSF.
+LICENSE -text -whitespace

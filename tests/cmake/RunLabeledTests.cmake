@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 if(NOT DEFINED VOELUND_CTEST_COMMAND OR VOELUND_CTEST_COMMAND STREQUAL "")
     message(FATAL_ERROR "VOELUND_CTEST_COMMAND is required")
 endif()

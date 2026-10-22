@@ -46,6 +46,7 @@ set(VOELUND_COMPONENTS "${CMAKE_CURRENT_SOURCE_DIR}/Components.cmake"
 
 set(licenses "${CMAKE_CURRENT_SOURCE_DIR}/licenses")
 install(FILES THIRD-PARTY-NOTICES.md DESTINATION .)
+install(FILES "${PROJECT_SOURCE_DIR}/LICENSE" DESTINATION licenses/voelund) # GPL-3.0-or-later
 install(DIRECTORY "${licenses}/opencascade" "${licenses}/eigen" "${licenses}/boost"
     "${licenses}/occt-samples-qt"
     DESTINATION licenses)

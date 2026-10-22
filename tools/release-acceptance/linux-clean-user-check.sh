@@ -1,4 +1,7 @@
 #!/bin/sh
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 # L08 Linux: the release tarball for a fresh user (empty HOME, private XDG dirs, minimal PATH),
 # run under a private virtual KWin Wayland session (native Wayland QPA, no DISPLAY), 3200 x 2000
 # so that the 1300 x 860 test window also fits at scale 2.

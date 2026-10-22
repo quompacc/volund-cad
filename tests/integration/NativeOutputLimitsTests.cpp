@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Eduard Hart
+
 #include "../../src/document/BoundedNativeOutput.hpp"
 #include "../../src/document/NativeDocumentStore.hpp"
 #include "../../src/document/NativePrimitiveCodec.hpp"

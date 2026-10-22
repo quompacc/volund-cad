@@ -48,4 +48,10 @@ than the cost of copying. Ask the publishers of Völund CAD.
 
 ## Völund CAD
 
-Die Lizenz von Völund CAD selbst ist noch nicht festgelegt.
+Völund CAD selbst steht unter der GNU General Public License, Version 3 oder (nach Ihrer Wahl)
+jeder späteren Version (GPL-3.0-or-later), ohne jede Gewährleistung. Den Lizenztext enthält
+`licenses/voelund/LICENSE`.
+
+Völund CAD itself is licensed under the GNU General Public License, version 3 or (at your option)
+any later version (GPL-3.0-or-later), without any warranty. The licence text is in
+`licenses/voelund/LICENSE`.

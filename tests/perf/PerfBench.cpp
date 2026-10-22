@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Eduard Hart
+
 // L06 (A-PERF-01): load stages with representative content, measured on the application layer.
 //
 //   voelund_perf_bench <stage> [<work directory>]

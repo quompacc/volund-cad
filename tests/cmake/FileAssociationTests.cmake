@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 # L02 (Linux): the installed package, registered for a private user by install-user.sh, opens a
 # .volund document with umlauts and spaces in its path the way the desktop does: the type comes
 # from the user's MIME database, the program from the registered desktop entry's Exec line.

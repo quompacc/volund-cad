@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Eduard Hart
+
 #include "AtomicFileStoreDetail.hpp"
 #include <utility>
 #ifdef _WIN32

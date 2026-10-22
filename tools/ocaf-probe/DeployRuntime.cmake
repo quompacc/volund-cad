@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 if(NOT DEFINED PROBE_EXE OR NOT DEFINED OCCT_BIN)
     message(FATAL_ERROR "PROBE_EXE and OCCT_BIN are required")
 endif()

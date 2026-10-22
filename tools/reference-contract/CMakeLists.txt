@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 cmake_minimum_required(VERSION 3.24)
 project(VoelundReferenceContract LANGUAGES CXX)
 enable_testing()

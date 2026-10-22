@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 if(NOT DEFINED VOELUND_SMOKE_EXECUTABLE OR NOT EXISTS "${VOELUND_SMOKE_EXECUTABLE}")
     message(FATAL_ERROR "Smoke executable missing")
 endif()

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Eduard Hart
+
 #include "ViewportLifecycleSupport.hpp"
 #include <BRepPrimAPI_MakeBox.hxx>
 #include <QDir>

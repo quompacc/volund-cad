@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 # Machine-readable scope for the project's own quality checks.
 #
 # Every exception needs a literal repository-relative path, a reason and the

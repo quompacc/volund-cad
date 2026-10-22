@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 # L04: checks an installed package against packaging/Components.cmake and its MANIFEST.txt.
 #
 #   cmake -DVOELUND_PREFIX=<prefix> -DVOELUND_COMPONENTS=<Components.cmake>

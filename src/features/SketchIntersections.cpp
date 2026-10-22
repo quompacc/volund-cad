@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Eduard Hart
+
 #include "SketchContourGeometry.hpp"
 #include "SketchIntersectionCurves.hpp"
 #include <Geom2dAPI_InterCurveCurve.hxx>

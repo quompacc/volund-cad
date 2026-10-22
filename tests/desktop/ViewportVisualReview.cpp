@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Eduard Hart
+
 #include "../CommandResultAssertions.hpp"
 #if !defined(VOELUND_VIEWPORT_QT_OPENGL)
 // Include GDI before OCCT's lean Windows declarations suppress this API surface.

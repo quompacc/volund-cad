@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 # AI03: the assistant behind the Claude panel (docs/implementation-plan/AI03-plan.md).
 add_library(voelund_assistant STATIC
     ClaudeCodeBackend.cpp

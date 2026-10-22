@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 add_executable(voelund-cad WIN32 main.cpp CommandLine.cpp)
 if(WIN32)
     # N16: the programme symbol in the executable (Explorer, task bar, default window icon).

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 # L02: installs the product into a fresh prefix and checks its runtime
 # (CheckPackageRuntime.cmake); then removes one OpenCASCADE library from that prefix, which
 # the check must report by name. L04: the notices and the manifest (CheckPackageNotices.cmake),
@@ -52,6 +55,17 @@ endfunction()
 check_notices(notices_result notices_text)
 if(NOT notices_result EQUAL 0)
     message(FATAL_ERROR "The package must carry its notices and manifest:\n${notices_text}")
+endif()
+# LIZENZ: Völund's own licence (GPL-3.0-or-later) lies in the package, byte for byte as in the
+# repository.
+set(packaged_licence "${prefix}/licenses/voelund/LICENSE")
+if(NOT EXISTS "${packaged_licence}")
+    message(FATAL_ERROR "The package lacks licenses/voelund/LICENSE")
+endif()
+file(SHA256 "${VOELUND_SOURCE_ROOT}/LICENSE" source_licence_hash)
+file(SHA256 "${packaged_licence}" packaged_licence_hash)
+if(NOT source_licence_hash STREQUAL packaged_licence_hash)
+    message(FATAL_ERROR "licenses/voelund/LICENSE differs from the repository's LICENSE")
 endif()
 file(STRINGS "${prefix}/MANIFEST.txt" planegcs_lines ENCODING UTF-8
     REGEX "\tplanegcs\t(bin/voelund_planegcs\\.dll|lib64/libvoelund_planegcs\\.so)$")

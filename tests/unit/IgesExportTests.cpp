@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Eduard Hart
+
 #include <voelund/kernel/StepExchange.hpp>
 
 #include <BRepBndLib.hxx>
@@ -28,6 +31,12 @@ void require(bool condition, const std::string& message) {
         throw std::runtime_error(message);
 }
 
+// OCCT takes file names as UTF-8 on every platform.
+std::string utf8(const std::filesystem::path& path) {
+    const auto text = path.u8string();
+    return {text.begin(), text.end()};
+}
+
 double volumeOf(const TopoDS_Shape& shape) {
     GProp_GProps properties;
     BRepGProp::VolumeProperties(shape, properties);
@@ -48,7 +57,7 @@ int main() {
         require(!written.error, "IGES written: " + written.message);
 
         IGESControl_Reader reader;
-        require(reader.ReadFile(file.string().c_str()) == IFSelect_RetDone, "IGES readable");
+        require(reader.ReadFile(utf8(file).c_str()) == IFSelect_RetDone, "IGES readable");
         reader.TransferRoots();
         const TopoDS_Shape back = reader.OneShape();
         int count = 0;

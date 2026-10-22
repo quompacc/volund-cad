@@ -14,6 +14,17 @@ Völund keeps its direct dependency surface deliberately small. A new direct or 
 
 The C++ standard library is used for general containers, strings, algorithms, errors, filesystem access, and concurrency. No separate convenience library is approved.
 
+## Product licence
+
+Völund itself is licensed under **GPL-3.0-or-later** (decision of the project owners,
+2026-10-22); the text is in `LICENSE` at the repository root and in every package under
+`licenses/voelund/`. Every own source, header, CMake and script file carries the line
+`SPDX-License-Identifier: GPL-3.0-or-later` (checked by `architecture.source_licenses`).
+Bundled third-party code keeps its own licence: PlaneGCS in `third_party/planegcs` stays
+LGPL-2.1-or-later, the parts adapted from occt-samples-qt in
+`src/viewport/QtOcctGlContext.cpp` keep their MIT notice. The licences of all shipped
+components are listed below and in `packaging/Components.cmake`.
+
 ## Shipped package (L04)
 
 What a package contains, with version, licence and the notices it needs, is listed in

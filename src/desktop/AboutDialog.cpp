@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Eduard Hart
+
 #include "AboutDialog.hpp"
 
 #include "MainWindowSupport.hpp"
@@ -8,8 +11,11 @@
 
 #include <QAction>
 #include <QClipboard>
+#include <QCoreApplication>
 #include <QDialog>
 #include <QDialogButtonBox>
+#include <QDir>
+#include <QFileInfo>
 #include <QGuiApplication>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -18,6 +24,7 @@
 #include <QPushButton>
 #include <QSettings>
 #include <QSysInfo>
+#include <QUrl>
 #include <QVBoxLayout>
 #include <Standard_Version.hxx>
 
@@ -30,6 +37,7 @@ QString diagnosticsText() {
     QString text =
         QStringLiteral("Völund CAD ") + QString::fromLatin1(build::version) + QLatin1Char('\n');
     text += line(QObject::tr("Revision"), QString::fromLatin1(build::revision));
+    text += line(QObject::tr("Lizenz"), QStringLiteral("GPL-3.0-or-later"));
     text += line(QObject::tr("Build"), QString::fromLatin1(build::buildType));
     text += line(QObject::tr("Dokumentformat"),
                  QObject::tr("Schema %1; liest ältere Schemata und VOLUND 1–16")
@@ -50,6 +58,24 @@ QString diagnosticsText() {
 
 namespace {
 
+// LIZENZ (2026-10-22): the product licence, the missing warranty, and where the texts are: in
+// the package next to bin/ (Windows and the Linux tarball alike).
+QString licenceText() {
+    const QDir root(QCoreApplication::applicationDirPath() + QStringLiteral("/.."));
+    const auto link = [&root](const QString& path, const QString& label) {
+        const QString file = root.absoluteFilePath(path);
+        return QFileInfo::exists(file) ? QStringLiteral("<a href=\"%1\">%2</a>")
+                                             .arg(QUrl::fromLocalFile(file).toString(), label)
+                                       : label + QStringLiteral(" (") + path + QLatin1Char(')');
+    };
+    return QObject::tr("Lizenz: GNU General Public License, Version 3 oder später "
+                       "(GPL-3.0-or-later).<br>Völund CAD wird ohne jede Gewährleistung "
+                       "bereitgestellt.<br>%1 · %2")
+        .arg(link(QStringLiteral("licenses/voelund/LICENSE"), QObject::tr("Lizenztext")),
+             link(QStringLiteral("THIRD-PARTY-NOTICES.md"),
+                  QObject::tr("Lizenzen der Komponenten")));
+}
+
 void showAbout(QWidget& parent) {
     QDialog dialog(&parent);
     dialog.setObjectName(QStringLiteral("aboutDialog"));
@@ -59,6 +85,12 @@ void showAbout(QWidget& parent) {
         new QLabel(QStringLiteral("Völund CAD ") + QString::fromLatin1(build::version), &dialog);
     heading->setObjectName(QStringLiteral("aboutHeading"));
     layout->addWidget(heading);
+    auto* licence = new QLabel(licenceText(), &dialog);
+    licence->setObjectName(QStringLiteral("aboutLicence"));
+    licence->setTextFormat(Qt::RichText);
+    licence->setOpenExternalLinks(true);
+    licence->setWordWrap(true);
+    layout->addWidget(licence);
     auto* details = new QPlainTextEdit(diagnosticsText(), &dialog);
     details->setObjectName(QStringLiteral("aboutDiagnostics"));
     details->setReadOnly(true);

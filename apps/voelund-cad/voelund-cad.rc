@@ -1,2 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Eduard Hart
+
 // N16: the programme symbol (packaging/icons, rendered from voelund-cad.svg).
 IDI_ICON1 ICON "../../packaging/icons/voelund-cad.ico"

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 # K01 layer rules (docs/architecture-and-code-contract.md section 4), shared by the include
 # check (CheckLayerIncludes.cmake) and the link check (voelund_check_layer_links).
 #

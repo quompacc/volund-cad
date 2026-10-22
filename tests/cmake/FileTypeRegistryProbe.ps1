@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 # L02 test helper for PackageRuntimeTests.cmake: reads or removes a test copy of the .volund
 # registration under -Root (a key of the test's own, never the user's classes).
 param(

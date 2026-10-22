@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Eduard Hart
+
 #pragma once
 #include <voelund/application/CommandTransaction.hpp>
 #include <voelund/application/FieldBindingRequest.hpp>
@@ -298,8 +301,7 @@ class CadSession final {
     editDatumAxisParameters(document::FeatureId featureId,
                             const document::DatumAxisParameters& parameters,
                             ErrorDisposition disposition = ErrorDisposition::reject);
-    // M22: walls of `support`'s current body ("Wandstärke N"), with the named faces opened;
-    // one undo step.
+    // M22: walls of `support`'s body ("Wandstärke N"), named faces opened; one undo step.
     [[nodiscard]] CommandResult createShell(document::FeatureId support,
                                             std::span<const document::SubshapeOrigin> faces,
                                             double thickness, bool outward);
@@ -307,8 +309,7 @@ class CadSession final {
     editShellParameters(document::FeatureId featureId, const document::ShellParameters& parameters,
                         ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] document::ShellParameters shellParameters(document::FeatureId featureId) const;
-    // M25: tilts the named faces of `support`'s current body by `angle` (radians) about the
-    // plane of the neutral face ("Formschräge N"); one undo step.
+    // M25: tilts faces by `angle` (radians) about the neutral face's plane; one undo step.
     [[nodiscard]] CommandResult createDraft(document::FeatureId support,
                                             std::span<const document::SubshapeOrigin> faces,
                                             const document::SubshapeOrigin& neutral, double angle);
@@ -329,8 +330,7 @@ class CadSession final {
                          const document::MirrorParameters& parameters,
                          ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] document::MirrorParameters mirrorParameters(document::FeatureId featureId) const;
-    // M10 (CadSessionPattern.cpp): copies of `support`'s current body ("Muster N"); as new
-    // bodies with one copy feature each. One undo step.
+    // M10 (CadSessionPattern.cpp): copies of `support`'s body ("Muster N"); one undo step.
     [[nodiscard]] CommandResult createPattern(document::FeatureId support,
                                               const PatternInput& input);
     [[nodiscard]] CommandResult

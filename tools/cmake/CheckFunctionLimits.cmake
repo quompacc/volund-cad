@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 # Compares a clang-tidy report (readability-function-size and voelund-cyclomatic-complexity)
 # with the visible exception list (user decision 2026-10-17, A04):
 #   - a function over a limit that the list does not name fails ("new");

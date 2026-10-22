@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Eduard Hart
+
 #include <voelund/kernel/NumericPolicy.hpp>
 #include <voelund/kernel/OcctCompatibility.hpp>
 #include <voelund/kernel/SolidPrimitives.hpp>

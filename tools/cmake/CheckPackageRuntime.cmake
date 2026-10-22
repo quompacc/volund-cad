@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 # L02: checks an installed Völund prefix for a complete, self-contained runtime.
 #
 #   cmake -DVOELUND_PREFIX=<installed prefix> -P tools/cmake/CheckPackageRuntime.cmake

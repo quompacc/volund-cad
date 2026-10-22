@@ -1,4 +1,7 @@
 #!/bin/sh
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 set -eu
 
 # L06 (A-PERF-01): runs every load stage of voelund_perf_bench, each in its own process, and

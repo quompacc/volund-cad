@@ -2,7 +2,7 @@
 
 Eigene Gestaltung des Projekts: das Ambosszeichen der Kopfleiste
 (`src/desktop/ShellIcons.cpp`) auf der Tintenfarbe des Themes. Es gehört zur Komponente
-`voelund` (packaging/Components.cmake) und hat dieselbe, noch offene Lizenz.
+`voelund` (packaging/Components.cmake) und steht wie Völund unter GPL-3.0-or-later.
 
 - `voelund-cad.svg`: Quelle.
 - `voelund-cad-256.png`: Linux `hicolor/256x256` und Fenstersymbol (Qt-Ressource).

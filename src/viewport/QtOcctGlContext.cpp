@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Eduard Hart
+
 // Portions adapted from occt-samples-qt, Copyright (c) 2023 Kirill Gavrilov.
 // Used under the MIT License; see docs/provenance/occt-samples-qt.md.
 

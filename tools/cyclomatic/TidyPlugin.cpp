@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Eduard Hart
+
 // clang-tidy plugin with the check voelund-cyclomatic-complexity: the same McCabe measurement
 // as voelund-cyclomatic, so CI parses every translation unit once for both the function-size
 // rules and the cyclomatic limit (A04):

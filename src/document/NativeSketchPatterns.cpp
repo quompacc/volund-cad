@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Eduard Hart
+
 #include "NativeSketchPatterns.hpp"
 #include "DocumentSerializationDetail.hpp"
 #include <TDataStd_AsciiString.hxx>

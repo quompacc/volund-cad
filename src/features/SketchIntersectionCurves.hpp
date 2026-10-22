@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Eduard Hart
+
 #pragma once
 #include <Geom2d_Curve.hxx>
 #include <voelund/features/SketchContourGraph.hpp>

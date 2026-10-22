@@ -1,4 +1,7 @@
 #Requires -Version 7.5
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 Set-StrictMode -Version Latest
 Import-Module (Join-Path $PSScriptRoot 'PlatformReportSupport.psm1')
 

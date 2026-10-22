@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Eduard Hart
+
 #include "PrimitivePlacement.hpp"
 #include <voelund/features/CylinderFeature.hpp>
 #include <voelund/features/GeometryEvaluationError.hpp>

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 # Fixtures for the A04 checks: a forbidden layer include (a UI header in document), a
 # forbidden upward include, a misformatted file and a missing clang-format each fail; the
 # clean trees pass.

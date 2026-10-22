@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Eduard Hart
+
 // voelund-cyclomatic: measures McCabe's cyclomatic complexity of every own function on
 // Clang's CFG and fails when one exceeds the limit (docs/quality-tooling.md).
 //

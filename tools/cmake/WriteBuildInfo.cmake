@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 # L03: writes voelund/BuildInfo.hpp with the product version, the source revision and the build
 # type. Runs on every build; the file is rewritten only when its content changes, so an
 # unchanged revision rebuilds nothing.

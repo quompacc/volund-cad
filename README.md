@@ -79,6 +79,13 @@ recorded in [`docs/dependencies.md`](docs/dependencies.md).
 The earlier FreeCAD/Python feasibility work is frozen under
 [`spikes/phase-0-freecad/`](spikes/phase-0-freecad/). It is not part of the product build.
 
+## Licence
+
+Völund CAD is free software under the GNU General Public License, version 3 or any later
+version (GPL-3.0-or-later), without any warranty; see [LICENSE](LICENSE). The components it
+uses and ships keep their own licences, listed in [docs/dependencies.md](docs/dependencies.md)
+and, in every package, in `THIRD-PARTY-NOTICES.md`.
+
 ## Prerequisites
 
 - Windows: Visual Studio with the Desktop development with C++ workload

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Eduard Hart
+
 // Q01: the FreeCAD reference parts (tools/reference-freecad/make_references.py) rebuilt with
 // Völund's own features. Same volume, area, centroid and face count as FreeCAD's result shows
 // that fillet, chamfer, hole and mirror land where they should and remove what they should.

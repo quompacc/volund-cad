@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 set -euo pipefail
 
 # Usage: tools/setup-linux.sh [desktop|core]

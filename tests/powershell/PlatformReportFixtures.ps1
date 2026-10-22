@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 function Get-FixtureRuntimeArtifacts([string]$Work) {
     foreach ($app in 'voelund-cad') {
         foreach ($suffix in '.json','-widgets.png','-framebuffer.png') {

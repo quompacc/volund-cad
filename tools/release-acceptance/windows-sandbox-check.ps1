@@ -1,4 +1,7 @@
-﻿# L08: runs inside Windows Sandbox (clean Windows, no Visual Studio, no dev PATH); started by
+﻿# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
+# L08: runs inside Windows Sandbox (clean Windows, no Visual Studio, no dev PATH); started by
 # Start-WindowsSandboxCheck.ps1. C:\l08 is the mapped host folder: package ZIP, test
 # executables, fixtures; results go to C:\l08\out.
 # Smart App Control is on in a fresh Windows 11 and blocks the unsigned program; that is

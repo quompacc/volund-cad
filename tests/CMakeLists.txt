@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 add_executable(voelund_native_product_tests integration/NativeProductPersistenceTests.cpp)
 add_executable(voelund_feature_dag_tests integration/FeatureDagTests.cpp)
 target_link_libraries(voelund_feature_dag_tests PRIVATE voelund_project_options Voelund::Application)
@@ -1158,9 +1161,27 @@ add_test(
         -P "${PROJECT_SOURCE_DIR}/tests/cmake/CheckSourceLimitsTests.cmake"
 )
 
+# LIZENZ: every own source file names its licence (SPDX), with failing fixtures.
+add_test(
+    NAME architecture.source_licenses
+    COMMAND
+        "${CMAKE_COMMAND}"
+        "-DVOELUND_SOURCE_ROOT=${PROJECT_SOURCE_DIR}"
+        -P "${PROJECT_SOURCE_DIR}/tools/cmake/CheckLicenseHeaders.cmake"
+)
+add_test(
+    NAME architecture.source_licenses_regression
+    COMMAND
+        "${CMAKE_COMMAND}"
+        "-DVOELUND_TEST_ROOT=${CMAKE_CURRENT_BINARY_DIR}/license-header-fixtures"
+        -P "${PROJECT_SOURCE_DIR}/tests/cmake/CheckLicenseHeadersTests.cmake"
+)
+
 set_tests_properties(
     architecture.source_limits
     architecture.source_limits_regression
+    architecture.source_licenses
+    architecture.source_licenses_regression
     PROPERTIES LABELS "architecture;regression"
 )
 

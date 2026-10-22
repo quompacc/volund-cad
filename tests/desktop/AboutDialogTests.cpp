@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Eduard Hart
+
 #include "IsolatedSettings.hpp"
 #include "UiDriver.hpp"
 #include "ViewportLifecycleSupport.hpp"
@@ -6,6 +9,7 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QDialog>
+#include <QLabel>
 #include <QMenu>
 #include <QPlainTextEdit>
 #include <QPushButton>
@@ -26,6 +30,16 @@ void require(bool condition, const std::string& message) {
     test::require(condition, message.c_str());
 }
 
+// LIZENZ: licence name, no warranty, the licence text and the components' licences.
+void licenceShown(const QString& licence, const QString& diagnostics) {
+    for (const auto* part :
+         {"GPL-3.0-or-later", "ohne jede Gewährleistung", "Lizenztext", "Lizenzen der Komponenten"})
+        require(licence.contains(QString::fromUtf8(part)),
+                "The licence block names \"" + std::string(part) + "\": " + licence.toStdString());
+    require(diagnostics.contains(QStringLiteral("Lizenz: GPL-3.0-or-later")),
+            "The diagnostics name the licence");
+}
+
 int run() {
     application::CadSession session;
     desktop::ProductOptions options;
@@ -38,12 +52,14 @@ int run() {
             "\"Über Völund…\" is the last entry of the main menu");
     QString shown;
     QString copied;
+    QString licence;
     QTimer::singleShot(0, [&] {
         auto* dialog = qobject_cast<QDialog*>(QApplication::activeModalWidget());
         require(dialog != nullptr && dialog->objectName() == QStringLiteral("aboutDialog"),
                 "The about dialog opens");
         shown =
             dialog->findChild<QPlainTextEdit*>(QStringLiteral("aboutDiagnostics"))->toPlainText();
+        licence = dialog->findChild<QLabel*>(QStringLiteral("aboutLicence"))->text();
         dialog->findChild<QPushButton*>(QStringLiteral("aboutCopyDiagnostics"))->click();
         copied = QGuiApplication::clipboard()->text();
         dialog->reject();
@@ -57,6 +73,7 @@ int run() {
                 shown.contains(QStringLiteral("Qt")),
             "The dialog names version, revision, schema and libraries");
     require(copied == shown, "\"Diagnose kopieren\" copies the whole text");
+    licenceShown(licence, shown);
     require(QCoreApplication::applicationVersion() == version,
             "The application reports the build's version");
     std::cout << "PASS about dialog: version " << build::version << ", revision " << build::revision

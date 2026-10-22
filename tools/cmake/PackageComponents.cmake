@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 # L04: reads packaging/Components.cmake for the manifest writer and the notice check.
 #
 #   include(PackageComponents.cmake)   # with VOELUND_COMPONENTS (Components.cmake) and

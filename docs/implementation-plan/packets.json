@@ -3365,12 +3365,15 @@
       ],
       "acceptance": "IGES-Rundreise mit gleichem Volumen/BBox; DXF einer Skizze von einem zweiten Leser (oder eigenem Prüfer) mit gleichen Elementen und Maßen gelesen.",
       "boundary": "DXF-Import ist N15. Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
-      "status": "planned",
+      "status": "done",
       "gate": "G4",
       "chapter": "12-v1-abrundung.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/N04.md"
+      ],
+      "completedCommit": "e0a545a",
+      "completedDate": "2026-10-22"
     },
     {
       "id": "N05",

@@ -1,4 +1,7 @@
 #Requires -Version 7.5
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 Import-Module (Join-Path $PSScriptRoot 'PlatformReportSupport.psm1')
 
 function Read-PlatformCache([string]$Build) {

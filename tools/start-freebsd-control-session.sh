@@ -1,4 +1,7 @@
 #!/bin/sh
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 set -eu
 
 if [ "$(uname -s)" != "FreeBSD" ]; then

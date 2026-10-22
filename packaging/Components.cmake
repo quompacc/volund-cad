@@ -8,12 +8,13 @@
 
 voelund_component(voelund
     VERSION "${VOELUND_VERSION}"
-    # User decision 2026-10-18: Völund's own licence is still open; decided before L10.
-    LICENSE "LicenseRef-Voelund-undecided"
+    # Decision of the project owners 2026-10-22: GPL-3.0-or-later (LICENSE).
+    LICENSE "GPL-3.0-or-later"
     PATHS [[^bin/voelund-cad(\.exe)?$]] [[^(register|unregister)-file-type\.ps1$]]
         [[^(install|uninstall)-user\.sh$]] [[^share/applications/]] [[^share/mime/]]
-        [[^share/icons/]]
-        [[^THIRD-PARTY-NOTICES\.md$]] [[^MANIFEST\.txt$]])
+        [[^share/icons/]] [[^licenses/voelund/]]
+        [[^THIRD-PARTY-NOTICES\.md$]] [[^MANIFEST\.txt$]]
+    NOTICES licenses/voelund/LICENSE)
 
 voelund_component(fonts
     VERSION "Albert Sans fffdadf0, JetBrains Mono 6e4b84c9 (google/fonts)"

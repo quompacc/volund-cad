@@ -1,4 +1,7 @@
 #!/bin/sh
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 set -eu
 
 # C01: one-time setup of the Gitea runner on the Fedora test host. Run as root:

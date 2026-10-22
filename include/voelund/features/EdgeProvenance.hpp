@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Eduard Hart
+
 #pragma once
 #include <TopoDS_Edge.hxx>
 #include <gp_Pnt.hxx>

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Eduard Hart
+
 #include "../../src/features/SketchRegionIntervalFaces.hpp"
 #include <voelund/features/ContourProvenance.hpp>
 #include <voelund/features/GeometryEvaluationError.hpp>

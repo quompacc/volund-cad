@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Eduard Hart
+
 // Q01: NIST MBE PMI test parts (CTC/FTC/STC) as an outside reference for STEP import. The
 // AP242 files carry geometric validation properties (volume, wetted area, centroid) computed
 // by the CAD system that wrote them; Völund's import must reproduce them.

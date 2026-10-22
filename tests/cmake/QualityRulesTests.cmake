@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 cmake_policy(SET CMP0007 NEW)
 
 if(NOT DEFINED VOELUND_SOURCE_ROOT OR VOELUND_SOURCE_ROOT STREQUAL "")

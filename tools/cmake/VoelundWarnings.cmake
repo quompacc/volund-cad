@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 function(voelund_enable_warnings target_name)
     if(MSVC)
         target_compile_options(

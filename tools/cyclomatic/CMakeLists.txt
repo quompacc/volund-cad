@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 # Build-only quality tool: McCabe cyclomatic complexity on Clang's CFG (A02).
 # Not part of the CAD product; built on its own against the distribution's Clang:
 #   cmake -S tools/cyclomatic -B <dir> -G Ninja && cmake --build <dir> && ctest --test-dir <dir>

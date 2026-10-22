@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 # K01 include check: every #include of src/<layer> and include/voelund/<layer> stays within
 # the layers allowed by VoelundLayers.cmake, and layers below the UI include no Qt header.
 #

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 # Q01: reference parts built in FreeCAD (outside the product build). Run with FreeCAD's own
 # interpreter; it writes the table that tests/differential/FreecadReferenceTests.cpp checks:
 #

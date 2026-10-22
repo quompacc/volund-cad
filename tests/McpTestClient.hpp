@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Eduard Hart
+
 #pragma once
 // Minimal HTTP/MCP client for tests of the local MCP server (AI04b/c). The server runs in
 // the test's thread, so every wait spins the event loop.

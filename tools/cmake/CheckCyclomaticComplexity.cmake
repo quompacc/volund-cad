@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 # Mandatory McCabe cyclomatic-complexity check (limit 10) through the build-only
 # voelund-cyclomatic tool (tools/cyclomatic), which measures on Clang's CFG.
 #

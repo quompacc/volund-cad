@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 # Fixtures for the McCabe check (A02.3): exact values fixed beforehand for representative
 # control flow, the 10/11 limit through the mandatory check script, an analysis error kept
 # apart from a limit violation, and the missing tool as its own failure.

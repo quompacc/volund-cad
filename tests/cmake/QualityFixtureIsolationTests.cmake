@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Eduard Hart
+
 cmake_minimum_required(VERSION 3.28)
 
 foreach(required IN ITEMS VOELUND_SOURCE_ROOT VOELUND_TEST_ROOT VOELUND_CLANG_TIDY)
