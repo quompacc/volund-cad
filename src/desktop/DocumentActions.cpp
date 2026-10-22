@@ -5,20 +5,24 @@
 #include "ShellState.hpp"
 
 #include <voelund/application/CadSession.hpp>
+#include <voelund/application/MeshExchange.hpp>
 
 #include <QAbstractButton>
 #include <QAction>
 #include <QFileDialog>
+#include <QInputDialog>
 #include <QKeySequence>
 #include <QMainWindow>
 #include <QMenu>
 #include <QMessageBox>
+#include <QSettings>
 #include <QStatusBar>
 #include <QString>
 
 #include <algorithm>
 #include <exception>
 #include <filesystem>
+#include <optional>
 #include <utility>
 
 namespace voelund::desktop {
@@ -31,6 +35,78 @@ QString openFilter() {
     return QObject::tr("Völund-CAD-Dokument oder STEP (*.volund *.step *.stp)") +
            QStringLiteral(";;") + documentFilter() + QStringLiteral(";;") + stepFilter();
 }
+// N03 (user decision 2026-10-22): the export writes STEP, STL or 3MF by the file type.
+enum class ExportFormat { step, stl, threeMf };
+QString exportFilter() {
+    return stepFilter() + QStringLiteral(";;") + QObject::tr("STL für den 3D-Druck (*.stl)") +
+           QStringLiteral(";;") + QObject::tr("3MF für den 3D-Druck (*.3mf)");
+}
+std::optional<ExportFormat> formatOf(const QString& fileName) {
+    if (fileName.endsWith(QStringLiteral(".stl"), Qt::CaseInsensitive))
+        return ExportFormat::stl;
+    if (fileName.endsWith(QStringLiteral(".3mf"), Qt::CaseInsensitive))
+        return ExportFormat::threeMf;
+    if (fileName.endsWith(QStringLiteral(".step"), Qt::CaseInsensitive) ||
+        fileName.endsWith(QStringLiteral(".stp"), Qt::CaseInsensitive))
+        return ExportFormat::step;
+    return std::nullopt;
+}
+QString formatName(ExportFormat format) {
+    return format == ExportFormat::stl       ? QStringLiteral("STL")
+           : format == ExportFormat::threeMf ? QStringLiteral("3MF")
+                                             : QStringLiteral("STEP");
+}
+// A name without a known ending gets the one of the chosen file type.
+QString withSuffix(const QString& fileName, const QString& filter) {
+    if (formatOf(fileName))
+        return fileName;
+    return fileName + (filter.contains(QStringLiteral("*.stl"))   ? QStringLiteral(".stl")
+                       : filter.contains(QStringLiteral("*.3mf")) ? QStringLiteral(".3mf")
+                                                                  : QStringLiteral(".step"));
+}
+
+// Coarse, medium or fine; the last choice is offered again.
+std::optional<kernel::MeshResolution> askResolution(QWidget& parent) {
+    QSettings settings;
+    const QStringList items{QObject::tr("Grob (0,1 mm)"), QObject::tr("Mittel (0,025 mm)"),
+                            QObject::tr("Fein (0,005 mm)")};
+    const int last =
+        std::clamp(settings.value(QStringLiteral("export/meshResolution"), 1).toInt(), 0, 2);
+    QInputDialog ask(&parent);
+    ask.setObjectName(QStringLiteral("meshResolutionQuestion"));
+    ask.setWindowTitle(QObject::tr("Auflösung des Netzes"));
+    ask.setLabelText(QObject::tr("Wie fein soll das Dreiecksnetz sein (größte Abweichung)?"));
+    ask.setComboBoxItems(items);
+    ask.setComboBoxEditable(false);
+    ask.setTextValue(items[last]);
+    if (ask.exec() != QDialog::Accepted)
+        return std::nullopt;
+    const int chosen = std::max(0, static_cast<int>(items.indexOf(ask.textValue())));
+    settings.setValue(QStringLiteral("export/meshResolution"), chosen);
+    return static_cast<kernel::MeshResolution>(chosen);
+}
+
+void reportExport(QMainWindow& window, const application::StepExportResult& result, bool visible,
+                  const QString& format) {
+    using application::StepExportStatus;
+    if (result.status == StepExportStatus::written) {
+        window.statusBar()->showMessage(
+            (visible ? QObject::tr("Als %1 (mm) exportiert: %2 sichtbare(r) Körper")
+                     : QObject::tr("Als %1 (mm) exportiert: %2 gewählte(r) Körper"))
+                .arg(format)
+                .arg(result.solids),
+            8000);
+        return;
+    }
+    const QString reason = result.status == StepExportStatus::invalidRevision
+                               ? QObject::tr("Das Modell hat Fehler.")
+                           : result.status == StepExportStatus::noBodies
+                               ? QObject::tr("Es ist kein Körper sichtbar.")
+                               : QObject::tr("Die Datei konnte nicht geschrieben werden.");
+    QMessageBox::critical(&window, QObject::tr("Export fehlgeschlagen"),
+                          reason + QStringLiteral("\n\n") + QString::fromStdString(result.message));
+}
+
 bool isStepFile(const QString& fileName) {
     return fileName.endsWith(QStringLiteral(".step"), Qt::CaseInsensitive) ||
            fileName.endsWith(QStringLiteral(".stp"), Qt::CaseInsensitive);
@@ -71,10 +147,11 @@ DocumentActions::DocumentActions(QMainWindow& window, application::CadSession& s
     QAction* importAction = fileMenu->addAction(QObject::tr("&Importieren (STEP)…"));
     importAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_I));
     importAction->setToolTip(QObject::tr("Volumenkörper einer STEP-Datei ins Dokument übernehmen"));
-    QAction* exportAction = fileMenu->addAction(QObject::tr("&Exportieren (STEP)…"));
+    QAction* exportAction = fileMenu->addAction(QObject::tr("&Exportieren (STEP, STL, 3MF)…"));
     exportAction->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_E));
     exportAction->setToolTip(
-        QObject::tr("Gewählten Körper, sonst alle sichtbaren Körper als STEP (mm) schreiben"));
+        QObject::tr("Gewählten Körper, sonst alle sichtbaren Körper als STEP, STL oder 3MF (mm) "
+                    "schreiben"));
     setCommandId(*importAction, "document.import_step");
     setCommandId(*exportAction, "document.export_step");
     importAction_ = importAction;
@@ -364,31 +441,26 @@ void DocumentActions::exportStep() {
     if (!session_.currentFile().empty())
         suggestion = nativeDisplayPath(
             std::filesystem::path(session_.currentFile()).replace_extension(".step"));
-    QString fileName = QFileDialog::getSaveFileName(&window_, QObject::tr("Als STEP exportieren"),
-                                                    suggestion, stepFilter());
+    QString filter = stepFilter();
+    QString fileName = QFileDialog::getSaveFileName(&window_, QObject::tr("Exportieren"),
+                                                    suggestion, exportFilter(), &filter);
     if (fileName.isEmpty())
         return;
-    if (!isStepFile(fileName))
-        fileName += QStringLiteral(".step");
+    fileName = withSuffix(fileName, filter);
+    const auto format = formatOf(fileName).value_or(ExportFormat::step);
+    std::optional<kernel::MeshResolution> resolution;
+    if (format != ExportFormat::step && !(resolution = askResolution(window_)))
+        return;
     try {
-        const auto result = session_.exportStep(nativePath(fileName), bodies);
-        using application::StepExportStatus;
-        if (result.status == StepExportStatus::written) {
-            window_.statusBar()->showMessage(
-                (bodies.empty() ? QObject::tr("Als STEP (mm) exportiert: %1 sichtbare(r) Körper")
-                                : QObject::tr("Als STEP (mm) exportiert: %1 gewählte(r) Körper"))
-                    .arg(result.solids),
-                8000);
-            return;
-        }
-        const QString reason = result.status == StepExportStatus::invalidRevision
-                                   ? QObject::tr("Das Modell hat Fehler.")
-                               : result.status == StepExportStatus::noBodies
-                                   ? QObject::tr("Es ist kein Körper sichtbar.")
-                                   : QObject::tr("Die Datei konnte nicht geschrieben werden.");
-        QMessageBox::critical(&window_, QObject::tr("Export fehlgeschlagen"),
-                              reason + QStringLiteral("\n\n") +
-                                  QString::fromStdString(result.message));
+        const auto path = nativePath(fileName);
+        const auto result =
+            format == ExportFormat::step
+                ? session_.exportStep(path, bodies)
+                : application::exportMesh(session_, path,
+                                          format == ExportFormat::stl ? kernel::MeshFormat::stl
+                                                                      : kernel::MeshFormat::threeMf,
+                                          *resolution, bodies);
+        reportExport(window_, result, bodies.empty(), formatName(format));
     } catch (const std::exception& error) {
         showError(QObject::tr("Export fehlgeschlagen"), error);
     }

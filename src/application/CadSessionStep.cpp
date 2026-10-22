@@ -1,5 +1,6 @@
 #include "CadSessionGeometryDetail.hpp"
 #include "CommandInput.hpp"
+#include "ExportSelection.hpp"
 
 #include <voelund/kernel/StepExchange.hpp>
 
@@ -79,39 +80,12 @@ StepExportResult CadSession::exportStep(const std::filesystem::path& path,
     if (!evaluation_ || !evaluation_->valid())
         return {StepExportStatus::invalidRevision,
                 "The current model has errors; repair them before exporting"};
-    const auto outline = modelOutline();
-    std::vector<document::BodyId> chosen(bodies.begin(), bodies.end());
-    if (chosen.empty())
-        for (const auto& body : outline.bodies)
-            if (!body.hidden &&
-                std::ranges::find(validBodies(), body.id, &features::EvaluatedBody::bodyId) !=
-                    validBodies().end())
-                chosen.push_back(body.id);
-    if (chosen.empty())
-        return {StepExportStatus::noBodies, "No visible body to export"};
-    std::vector<kernel::StepSolid> solids;
-    for (const auto body : chosen) {
-        const auto found = std::ranges::find(validBodies(), body, &features::EvaluatedBody::bodyId);
-        const auto named = std::ranges::find(outline.bodies, body, &OutlineBody::id);
-        if (found == validBodies().end() || named == outline.bodies.end())
-            return {StepExportStatus::unknownBody, "A body to export is not in the current model"};
-        // As the browser names it: its own name, else "Körper N" by its place.
-        const std::string name =
-            named->name.empty() ? "Körper " + std::to_string(named - outline.bodies.begin() + 1)
-                                : named->name;
-        std::size_t pieces = 0;
-        for (TopExp_Explorer explorer(found->shape, TopAbs_SOLID); explorer.More();
-             explorer.Next()) {
-            ++pieces;
-            solids.push_back(
-                {explorer.Current(), pieces == 1 ? name : name + " " + std::to_string(pieces)});
-        }
-        if (pieces == 0)
-            return {StepExportStatus::notASolid, "\"" + name + "\" holds no solid"};
-    }
-    const auto written = kernel::writeStep(path, solids);
+    const auto chosen = exportSolids(*this, bodies);
+    if (chosen.refusal)
+        return *chosen.refusal;
+    const auto written = kernel::writeStep(path, chosen.solids);
     if (!written.error)
-        return {StepExportStatus::written, {}, solids.size()};
+        return {StepExportStatus::written, {}, chosen.solids.size()};
     return {*written.error == kernel::StepExportError::notASolid ? StepExportStatus::notASolid
                                                                  : StepExportStatus::writeFailed,
             written.message};

@@ -106,7 +106,6 @@ cyclomatic | src/kernel/Revolution.cpp | voelund::kernel::Revolution::Revolution
 cyclomatic | src/kernel/SolidPrimitives.cpp | voelund::kernel::makeSolidPrimitiveWithHistory | 18 | Altbestand vor A04
 cyclomatic | src/mcp/McpProtocol.cpp | voelund::mcp::McpProtocol::handle | 18 | Altbestand vor A04
 cyclomatic | src/mcp/ResultEncoding.cpp | voelund::mcp::encodeContext | 18 | Altbestand vor A04
-cyclomatic | src/application/CadSessionStep.cpp | voelund::application::CadSession::exportStep | 17 | Altbestand vor A04
 cyclomatic | src/application/SketchFilletPlan.cpp | voelund::application::detail::planCorner | 17 | Altbestand vor A04
 cyclomatic | src/desktop/MainWindow.cpp | voelund::desktop::MainWindow::syncProperties | 17 | Altbestand vor A04
 cyclomatic | src/desktop/MainWindowCommands.cpp | voelund::desktop::MainWindow::createCommands::(lambda) | 17 | Altbestand vor A04
@@ -219,7 +218,6 @@ cyclomatic | src/application/SketchEditorCreation.cpp | voelund::application::Sk
 cyclomatic | src/application/SketchEditorPatterns.cpp | voelund::application::(anonymous namespace)::applyRule | 11 | Altbestand vor A04
 cyclomatic | src/application/SketchEditorRelations.cpp | voelund::application::SketchEditorSession::addAutomaticRadialRelation | 11 | Altbestand vor A04
 cyclomatic | src/assistant/ClaudeCodeBackend.cpp | voelund::assistant::ClaudeCodeBackend::handle | 11 | Altbestand vor A04
-cyclomatic | src/desktop/DocumentActions.cpp | voelund::desktop::DocumentActions::exportStep | 11 | Altbestand vor A04
 cyclomatic | src/desktop/FilletToolController.cpp | voelund::desktop::FilletToolController::preview | 11 | Altbestand vor A04
 cyclomatic | src/desktop/MainWindow.cpp | voelund::desktop::MainWindow::syncErrorCard | 11 | Altbestand vor A04
 cyclomatic | src/desktop/MainWindowView.cpp | voelund::desktop::MainWindow::syncTimeline | 11 | Altbestand vor A04

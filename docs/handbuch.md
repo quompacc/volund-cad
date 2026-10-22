@@ -128,9 +128,16 @@ umgesetzte Funktionen. Was hier nicht steht, gibt es noch nicht.
   gebraucht.
 - Flächen, Schalen oder Kurven ohne Volumen und ungültige Volumenkörper werden nicht übernommen;
   ein Hinweis nennt ihre Zahl. Eine unlesbare Datei meldet einen Fehler und ändert nichts.
-- **Exportieren (STEP)…** (Strg+E) schreibt den im Baum gewählten Körper, sonst alle sichtbaren
-  Körper, in mm mit ihren Namen. Hat das Modell Fehler, wird der Export abgelehnt – auch wenn
-  noch eine ältere gültige Form angezeigt wird.
+- **Exportieren (STEP, STL, 3MF)…** (Strg+E) schreibt den im Baum gewählten Körper, sonst alle
+  sichtbaren Körper, in mm mit ihren Namen. Das Format folgt dem gewählten Dateityp.
+  - STEP schreibt die exakten Körper.
+  - STL und 3MF schreiben Dreiecksnetze für den 3D-Druck. Vorher fragt Völund die Auflösung ab:
+    grob (0,1 mm), mittel (0,025 mm) oder fein (0,005 mm) als größte Abweichung von der Fläche.
+    Die letzte Wahl wird gemerkt.
+  - Mehrere Körper kommen in eine Datei und bleiben getrennt. STL enthält alle Dreiecke, 3MF ein
+    Objekt je Körper mit seinem Namen.
+  - Hat das Modell Fehler, wird der Export abgelehnt – auch wenn noch eine ältere gültige Form
+    angezeigt wird.
 - **Grenzen:** Aus STEP entsteht keine parametrische Historie. Baugruppenstruktur, Farben,
   Ebenen und PMI werden nicht übernommen. Kanten importierter Körper lassen sich nicht in Skizzen
   projizieren oder als Achse nutzen (Verrunden und Fasen gehen). Ein Import darf höchstens 48 MiB

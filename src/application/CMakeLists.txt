@@ -15,6 +15,7 @@ add_library(voelund_application STATIC
     CadSessionStep.cpp
     CadSessionClipboard.cpp
     CadSessionFieldBindings.cpp
+    MeshExchange.cpp
     CadSessionGroupEdits.cpp
     CadSessionHistoryEdit.cpp
     SketchEditorProjections.cpp
