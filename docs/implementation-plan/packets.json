@@ -3338,12 +3338,15 @@
       ],
       "acceptance": "Würfel 10³ und Referenzplatte exportiert: Netz geschlossen, Volumen innerhalb der Auflösungstoleranz, Einheit mm; ungültiges Modell verweigert.",
       "boundary": "Kein Mesh-Import (X07). Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
-      "status": "planned",
+      "status": "done",
       "gate": "G4",
       "chapter": "12-v1-abrundung.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/N03.md"
+      ],
+      "completedCommit": "e50b687",
+      "completedDate": "2026-10-22"
     },
     {
       "id": "N04",
