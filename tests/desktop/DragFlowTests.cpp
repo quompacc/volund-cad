@@ -11,6 +11,7 @@
 #include <QAction>
 #include <QApplication>
 #include <QKeyEvent>
+#include <QLineEdit>
 #include <QPushButton>
 #include <QStatusBar>
 #include <algorithm>
@@ -200,6 +201,23 @@ void bodyDrag(Window& w) {
     require(w.session.sceneStatus().document == afterMove &&
                 std::hypot(kept.first - moved.first, kept.second - moved.second) < 1e-9,
             "Escape during a body drag changes nothing and adds no step");
+
+    // W06: after a drag the dragged distance stands in a field at the pointer; "25" and Enter
+    // make the move exactly 25 mm along the dragged axis.
+    const auto handleThird = viewport::ViewportTestAccess::translationHandle(*w.viewport);
+    require(handleThird.has_value(), "The move handle is shown a third time");
+    w.drag(*handleThird,
+           viewport::ViewportTestAccess::translationDestination(*w.viewport, *handleThird), false);
+    auto* field = w.viewport->findChild<QLineEdit*>(QStringLiteral("moveValueEdit"));
+    require(field != nullptr && field->isVisible() && field->text().toDouble() > 0,
+            "The dragged distance waits in a field");
+    field->setText(QStringLiteral("25"));
+    QKeyEvent enter(QEvent::KeyPress, Qt::Key_Return, Qt::NoModifier);
+    QApplication::sendEvent(field, &enter);
+    test::settleEvents();
+    const auto exact = w.bodyCenter();
+    require(std::abs(std::hypot(exact.first - kept.first, exact.second - kept.second) - 25) < 1e-6,
+            "Typed 25 makes the drag exactly 25 mm");
 }
 
 void extrusionDrag(Window& w) {

@@ -170,6 +170,7 @@ class MainWindow::Impl final {
     ParameterPanel* parameterPanel{nullptr};
     QAction* parametersAction{nullptr};
     class SectionController* section{nullptr};     // N05: bottom of the left column
+    class InlineValueEdit* moveValueEdit{nullptr}; // W06
     class BodyColorCard* bodyCard{nullptr};        // N06: a selected body's colour
     class DisplayStyleMenu* displayStyle{nullptr}; // N06: beside the view cube
     class AssistantPanel* assistantPanel{nullptr};

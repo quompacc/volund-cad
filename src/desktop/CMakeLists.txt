@@ -49,6 +49,7 @@ add_library(
     InlineValueEdit.cpp
     SketchDimensionTool.cpp
     SketchExtrusionArrow.cpp
+    MainWindowMoveValues.cpp
     SketchEditorDrag.cpp
     SketchEditorPresentation.cpp
     SketchEditorDimensionEdit.cpp

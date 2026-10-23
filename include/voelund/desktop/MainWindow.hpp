@@ -7,6 +7,7 @@
 #include <functional>
 #include <voelund/application/CommandTransaction.hpp>
 
+#include <array>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -68,6 +69,10 @@ class MainWindow final : public QMainWindow {
     void createViewSwitches();
     void createSectionView();                                 // N05 (MainWindowView.cpp)
     void showTreeMenu(int kind, std::uint64_t id, QPoint at); // W09 (MainWindowView.cpp)
+    // W06 (MainWindowMoveValues.cpp): the dragged distance (or, with an axis, the angle in
+    // delta[0]) in a field at the pointer; a typed value makes it exact.
+    void offerMoveValue(document::FeatureId feature, std::array<double, 3> delta,
+                        std::optional<int> axis);
     // M01: bodies as a whole (MainWindowBodies.cpp).
     void createBodyCommands();
     void createBodyAppearance(); // N06: colour card and display style (MainWindowBodies.cpp)

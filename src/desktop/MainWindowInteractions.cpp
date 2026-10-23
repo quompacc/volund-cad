@@ -241,6 +241,7 @@ void MainWindow::connectInteractions() {
                     return impl_->session.moveBody(feature, {deltaX, deltaY, deltaZ}, std::nullopt,
                                                    0.0, disposition);
                 });
+            offerMoveValue(feature, {deltaX, deltaY, deltaZ}, std::nullopt); // W06
         });
     impl_->viewport->setBodyMovePreviewHandler(
         [this](std::uint64_t id, double deltaX, double deltaY, double deltaZ) {
@@ -272,6 +273,7 @@ void MainWindow::connectInteractions() {
                                angle](application::ErrorDisposition disposition) {
             return impl_->session.moveBody(feature, {0.0, 0.0, 0.0}, axisIndex, angle, disposition);
         });
+        offerMoveValue(feature, {angleDegrees, 0.0, 0.0}, axisIndex); // W06
     });
     impl_->viewport->setBodyRotationPreviewHandler(
         [this](std::uint64_t id, int axisIndex, double angleDegrees) {

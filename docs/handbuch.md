@@ -75,6 +75,9 @@ umgesetzte Funktionen. Was hier nicht steht, gibt es noch nicht.
 
 ## Körper ändern
 
+- **Bewegen (M):** Nach dem Ziehen an Pfeil oder Ring steht die Strecke oder der Winkel im Feld an der Maus;
+  eine Zahl und Enter machen den Zug genau, Esc behält ihn.
+
 - **Verrunden** und **Fasen** (symmetrischer Abstand) von Kanten. Kanten werden angeklickt,
   Strg fügt weitere hinzu. Auch Kanten an früheren Rundungen und Fasen lassen sich bearbeiten.
 - **Bohrung** auf einer ebenen Fläche: Lage per Klick und X/Y im Flächenrahmen, Durchmesser,
