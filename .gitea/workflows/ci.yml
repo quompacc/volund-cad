@@ -4,6 +4,12 @@ on:
   push:
   pull_request:
 
+# A newer push to the same branch replaces a run that is still queued or running: each run
+# builds and tests the whole tree, so the newest one covers the older commits too.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   linux-desktop:
     runs-on: linux-desktop

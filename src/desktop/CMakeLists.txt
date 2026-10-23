@@ -46,6 +46,8 @@ add_library(
     SketchEditorCommand.cpp
     SketchEditorCreation.cpp
     SketchTypedDimensions.cpp
+    InlineValueEdit.cpp
+    SketchDimensionTool.cpp
     SketchEditorDrag.cpp
     SketchEditorPresentation.cpp
     SketchEditorDimensionEdit.cpp

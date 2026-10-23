@@ -12,6 +12,8 @@
 #include <QDoubleSpinBox>
 #include <QElapsedTimer>
 #include <QInputDialog>
+#include <QKeyEvent>
+#include <QLineEdit>
 #include <QPushButton>
 #include <QThread>
 #include <QTimer>
@@ -157,24 +159,25 @@ void dimensionDialog() {
     window.resize(1000, 800);
     window.show();
     QApplication::processEvents();
-    bool displayedDegrees = false;
-    bool captured = true;
-    QTimer::singleShot(0, [&] {
-        auto* dialog = qobject_cast<QInputDialog*>(QApplication::activeModalWidget());
-        if (!dialog)
-            return;
-        displayedDegrees = std::abs(dialog->textValue().toDouble() + 60) < 1e-10 &&
-                           dialog->labelText().contains("Grad");
-        dialog->setTextValue(QStringLiteral("60"));
+    // D02: the angle opens in degrees in the value field at the pointer.
+    controller.editConstraint(2);
+    auto* field = viewport.findChild<QLineEdit*>(QStringLiteral("dimensionValueEdit"));
+    const bool displayedDegrees = field != nullptr && !field->isHidden() &&
+                                  std::abs(field->text().toDouble() + 60) < 1e-10 &&
+                                  field->toolTip().contains("Grad");
+    bool captured = field != nullptr;
+    if (field != nullptr) {
         const auto directory = qEnvironmentVariable("VOELUND_ANGLE_ARTIFACT_DIR");
         if (!directory.isEmpty())
             captured = QDir().mkpath(directory) &&
-                       dialog->grab().save(directory + "/angle-dimension-degrees.png");
-        dialog->accept();
-    });
-    controller.editConstraint(2);
-    require(displayedDegrees && captured, "dimension dialog displayed radians or capture failed");
-    require(session.sketchParameters(id) == sketch, "dimension dialog committed without OK");
+                       viewport.grab().save(directory + "/angle-dimension-degrees.png");
+        field->setText(QStringLiteral("60"));
+        QKeyEvent press(QEvent::KeyPress, Qt::Key_Return, Qt::NoModifier);
+        QApplication::sendEvent(field, &press);
+        QApplication::processEvents();
+    }
+    require(displayedDegrees && captured, "the value field displayed radians or capture failed");
+    require(session.sketchParameters(id) == sketch, "the value field committed without OK");
     QPushButton* accept = nullptr;
     for (auto* button : host->findChildren<QPushButton*>())
         if (button->objectName() == "toolAcceptButton")

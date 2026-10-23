@@ -19,10 +19,12 @@ namespace voelund::desktop {
 
 // Index of "Rechteck (Mitte)" in the tool choice (S04a).
 inline constexpr int centerRectangleTool = 10;
-inline constexpr int pointTool = 11;   // S15
-inline constexpr int bsplineTool = 12; // S21
+inline constexpr int pointTool = 11;     // S15
+inline constexpr int bsplineTool = 12;   // S21
+inline constexpr int dimensionTool = 13; // W02
 
 class ToolPanelHost;
+class InlineValueEdit;
 struct ResolvedParameter;
 
 class SketchEditorToolController final {
@@ -78,6 +80,16 @@ class SketchEditorToolController final {
     void cancel();
 
   private:
+    // D02 (SketchEditorDimensionEdit.cpp): the value field at the pointer and what it applies;
+    // a refused text comes back with its reason.
+    void openDimensionEdit(std::uint64_t constraintId, const QString& text);
+    [[nodiscard]] std::optional<QString> applyDimensionText(std::uint64_t constraintId,
+                                                            const QString& text);
+    InlineValueEdit* valueEdit_{nullptr};
+    // W02 (SketchDimensionTool.cpp): a click of the dimension tool; the single dimension of the
+    // first pick, while nothing is typed, gives way to one with the second pick.
+    bool pickForDimension(const viewport::SketchSelectionIntent& intent);
+    std::optional<std::uint64_t> dimensionAnchor_;
     // D01 (SketchTypedDimensions.cpp): typed values as dimensions of the new element; the
     // fields at the pointer evaluate "=Name*2" with the document's parameters.
     void applyTypedDimensions(const application::SketchCreationResult& created,

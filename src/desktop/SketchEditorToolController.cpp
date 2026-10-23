@@ -124,10 +124,10 @@ void SketchEditorToolController::showPanel() {
            QObject::tr("Rechteck"), QObject::tr("Kreis"), QObject::tr("Bogen (Mitte)"),
            QObject::tr("Dreipunktbogen"), QObject::tr("Ellipse"), QObject::tr("Langloch"),
            QObject::tr("Polygon"), QObject::tr("Rechteck (Mitte)"), QObject::tr("Punkt"),
-           QObject::tr("B-Spline")},
+           QObject::tr("B-Spline"), QObject::tr("Bemaßung")},
           1,
           {"select", "line", "polyline", "rectangle", "circle", "center_arc", "three_point_arc",
-           "ellipse", "slot", "polygon", "center_rectangle", "point", "bspline"}},
+           "ellipse", "slot", "polygon", "center_rectangle", "point", "bspline", "dimension"}},
          // S04: snapped points and suggested relations become constraints, or nothing does.
          {"relations",
           QObject::tr("Beziehungen"),
@@ -346,6 +346,7 @@ void SketchEditorToolController::setTool(int index) {
         return;
     editor_->setTool(applicationTool(index));
     toolIndex_ = index;
+    dimensionAnchor_.reset();
     bsplinePoles_.clear();
     setProjecting(false);
     problemElements_.clear(); // S13: red marks belong to the last refused edit
@@ -393,6 +394,8 @@ void SketchEditorToolController::updatePreview(
 }
 
 bool SketchEditorToolController::selectElement(const viewport::SketchSelectionIntent& intent) {
+    if (editor_ && toolIndex_ == dimensionTool)
+        return pickForDimension(intent);
     if (!editor_ ||
         !editor_->selectNearestReference(document::SketchElementId{intent.elementId},
                                          {intent.localX, intent.localY}, intent.additive))
@@ -416,6 +419,7 @@ bool SketchEditorToolController::selectElement(const viewport::SketchSelectionIn
 }
 
 void SketchEditorToolController::clearSelection() {
+    dimensionAnchor_.reset();
     if (!editor_)
         return;
     editor_->clearSelection();

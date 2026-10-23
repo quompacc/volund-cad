@@ -6,8 +6,9 @@
 #include "../CommandResultAssertions.hpp"
 #include "IsolatedSettings.hpp"
 #include <QApplication>
-#include <QInputDialog>
+#include <QKeyEvent>
 #include <QLabel>
+#include <QLineEdit>
 #include <QMainWindow>
 #include <QPushButton>
 #include <QTimer>
@@ -64,33 +65,24 @@ void run() {
     window.show();
     QApplication::processEvents();
 
-    // First 30 (L2 cannot reach), then 7 after the reason came back.
-    int dialogs = 0;
-    QString secondPrompt;
-    double secondValue = 0.0;
-    std::function<void()> answer = [&] {
-        auto* dialog = qobject_cast<QInputDialog*>(QApplication::activeModalWidget());
-        if (!dialog) {
-            QTimer::singleShot(10, answer);
-            return;
-        }
-        ++dialogs;
-        if (dialogs == 1) {
-            dialog->setTextValue(QStringLiteral("30"));
-            QTimer::singleShot(0, answer);
-        } else {
-            secondPrompt = dialog->labelText();
-            secondValue = dialog->textValue().toDouble();
-            dialog->setTextValue(QStringLiteral("7"));
-        }
-        dialog->accept();
-    };
-    QTimer::singleShot(0, answer);
+    // D02: the value field opens at the pointer. First 30 (L2 cannot reach), then 7 after the
+    // reason came back.
     controller.editConstraint(3);
-    require(dialogs == 2, "The refused value reopened the dialog");
-    require(secondPrompt.contains("nicht lösen") && std::abs(secondValue - 30) < 1e-9,
-            "The dialog shows the reason and keeps the entered value, got " +
-                secondPrompt.toStdString());
+    auto* field = viewport.findChild<QLineEdit*>(QStringLiteral("dimensionValueEdit"));
+    require(field != nullptr && !field->isHidden(), "The value field opens in the viewport");
+    const auto enter = [&](const QString& text) {
+        field->setText(text);
+        QKeyEvent press(QEvent::KeyPress, Qt::Key_Return, Qt::NoModifier);
+        QApplication::sendEvent(field, &press);
+        QApplication::processEvents();
+    };
+    enter(QStringLiteral("30"));
+    require(!field->isHidden() && field->text() == QStringLiteral("30") &&
+                status.contains("nicht lösen"),
+            "A refused value keeps the field open with the value and the reason, got " +
+                status.toStdString());
+    enter(QStringLiteral("7"));
+    require(field->isHidden(), "The applied value closes the field");
     require(status.contains("7.000"), "The corrected value was applied: " + status.toStdString());
 
     QPushButton* accept = nullptr;

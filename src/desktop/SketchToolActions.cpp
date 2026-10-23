@@ -38,7 +38,8 @@ QString toolShortcut(const std::string& id) {
         {"polygon", QStringLiteral("G")},
         {"center_rectangle", QStringLiteral("Shift+R")},
         {"point", QStringLiteral("O")},
-        {"bspline", QStringLiteral("B")}};
+        {"bspline", QStringLiteral("B")},
+        {"dimension", QStringLiteral("D")}}; // W02, as in Fusion
     const auto match = keys.find(id);
     return match == keys.end() ? QString{} : match->second;
 }
@@ -68,7 +69,8 @@ const std::vector<RailSection>& railSections() {
            "sketch.perpendicular_bisector"},
           {"sketch.fixed", "sketch.equal", "sketch.tangent", "sketch.concentric"}}},
         {QT_TR_NOOP("Bemaßungen"),
-         {{"sketch.point_distance", "sketch.point_distance_x", "sketch.point_distance_y",
+         {{"sketch.tool.dimension"},
+          {"sketch.point_distance", "sketch.point_distance_x", "sketch.point_distance_y",
            "sketch.point_line_distance"},
           {"sketch.diameter", "sketch.radius"},
           {"sketch.angle"},

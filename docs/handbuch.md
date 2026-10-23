@@ -33,6 +33,10 @@ umgesetzte Funktionen. Was hier nicht steht, gibt es noch nicht.
   wechselt das Feld, **Enter** setzt das Element. Ein getippter Wert ist fest, die anderen folgen
   der Maus. Getippte Längen werden Maße der Skizze (mit dem Element ein Rückgängig-Schritt);
   „=Name“ bindet das Maß an einen Parameter, „=B*2“ rechnet einen Wert aus.
+- **Bemaßen (D):** Linie anklicken zeigt ihre Länge, Kreis den Durchmesser, Bogen den Radius,
+  markiert in einem Feld an der Maus: Wert tippen, Enter. Ein zweites Element vor dem Tippen
+  macht daraus Winkel (zwei Linien) oder Abstand. Esc behält den gemessenen Wert. Ein Doppelklick
+  auf ein Maß ändert es im selben Feld.
 - **Beziehungen und Maße:** Deckungsgleich, horizontal, vertikal, parallel, senkrecht,
   tangential, gleich, konzentrisch, fixiert; Länge, Abstand, Radius, Durchmesser, Winkel.
   Maße sind treibend oder Referenzmaße (in Klammern).

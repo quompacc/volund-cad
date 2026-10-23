@@ -237,7 +237,8 @@ Der Dreipunktbogen nimmt Anfang, Ende und dann einen Punkt auf dem Bogen.
 
 | Gruppe | Command-IDs | Kürzel |
 |---|---|---|
-| Zeichnen | `sketch.tool.select`, `.line`, `.polyline`, `.rectangle`, `.circle`, `.center_arc`, `.three_point_arc`, `.ellipse`, `.slot`, `.polygon`, `.center_rectangle`, `.point` | S, L, P, R, C, A, T, E, N, G, Umschalt+R, O |
+| Zeichnen | `sketch.tool.select`, `.line`, `.polyline`, `.rectangle`, `.circle`, `.center_arc`, `.three_point_arc`, `.ellipse`, `.slot`, `.polygon`, `.center_rectangle`, `.point`, `.bspline` | S, L, P, R, C, A, T, E, N, G, Umschalt+R, O, B |
+| Bemaßung (W02) | `sketch.tool.dimension`: Element anklicken, Wert im Feld an der Maus tippen, Enter; zweites Element vor dem Tippen ergibt Winkel oder Abstand; Esc behält den gemessenen Wert | D |
 | Linien | `sketch.horizontal`, `.vertical`, `.free`, `.parallel`, `.perpendicular`, `.collinear` | – |
 | Punkte | `sketch.coincident`, `.horizontal_points`, `.vertical_points`, `.symmetric`, `.midpoint`, `.perpendicular_bisector`, `.point_on_object` | – |
 | Beziehungen | `sketch.fixed`, `.equal`, `.tangent`, `.concentric` | – |
