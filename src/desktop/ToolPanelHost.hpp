@@ -128,6 +128,8 @@ class ToolPanelHost final : public FloatingCard {
     void setStatus(const QString& status, bool good = false);
     void setErrorCommitHandler(std::function<void()> handler);
     void setLengthValue(const std::string& parameterId, double value);
+    // W03: the field takes the keyboard with its text selected, so typing replaces the value.
+    void focusLength(const std::string& parameterId);
     // PAR02: shows a bindable field as bound to `name`, or (nullopt) as a plain number.
     void setLengthBinding(const std::string& parameterId, std::optional<QString> name);
     // PAR02: finds the parameter of that name and unit or offers to create it with `value`;

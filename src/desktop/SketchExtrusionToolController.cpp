@@ -307,6 +307,7 @@ void SketchExtrusionToolController::open(document::FeatureId sketchId,
         {}};
     takeParameters(definition);
     panel_.begin(std::move(definition));
+    panel_.focusLength("distance"); // W03: a number typed right away is the distance
     panel_.setAcceptEnabled(true);
     panel_.setLengthEnabled("distance", !upToFace_);
     syncFields();
@@ -391,6 +392,7 @@ void SketchExtrusionToolController::preview() {
     panel_.setGuidance(guidance());
     previewChanged_(&candidate.bodies);
     previewShown_ = true;
+    syncArrow(); // W03
 }
 
 void SketchExtrusionToolController::choose(const std::string& choice, int index) {
@@ -491,6 +493,7 @@ void SketchExtrusionToolController::accept() {
                         statusChanged_(message);
                     }))
         return;
+    hideArrow();
     panel_.end();
     profileSketch_.reset();
     profileIds_.clear();
@@ -519,6 +522,7 @@ void SketchExtrusionToolController::cancel() {
         static_cast<void>(session_.selectFeature(*editing_));
     editing_.reset();
     stored_.reset();
+    hideArrow();
     panel_.end();
     profileSketch_.reset();
     profileIds_.clear();
@@ -540,16 +544,6 @@ std::optional<document::FeatureId> SketchExtrusionToolController::regionSketch()
 
 const std::vector<std::uint64_t>& SketchExtrusionToolController::problemElements() const noexcept {
     return problemElements_;
-}
-
-// The preview body in front of the sketch does not hide its regions.
-bool SketchExtrusionToolController::toggleRegionAt(const viewport::ViewRay& ray) {
-    const auto sketch = regionSketch();
-    const auto crossing = sketch ? sketchPlaneCrossing(session_, *sketch, ray) : std::nullopt;
-    if (!crossing || !session_.selectSketchProfileAt(*sketch, crossing->point, true))
-        return false;
-    regionsToggled();
-    return true;
 }
 
 bool SketchExtrusionToolController::toggleRegionByElement(document::SketchElementId element) {

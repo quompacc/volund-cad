@@ -48,6 +48,11 @@ umgesetzte Funktionen. Was hier nicht steht, gibt es noch nicht.
 
 ## Körper erstellen
 
+- **Tasten wie in Fusion:** E Extrudieren, Q Drücken/Ziehen (bei Kanten Verrunden, bei einem Skizzenbereich
+  Extrudieren), F Verrunden, H Bohrung, M Bewegen, I Messen; in der Skizze D Bemaßung, X Hilfsgeometrie, T Stutzen.
+- **Extrudieren:** Die Länge kann sofort getippt werden (das Feld hat den Fokus), Enter übernimmt. Ein
+  Pfeil auf dem Profil lässt sich ziehen.
+
 - **Extrusion** von Skizzenbereichen. Ergebnis als neuer Körper, vereinigt, abgezogen (Tasche)
   oder geschnitten. Richtung umkehrbar, symmetrisch (Länge = Gesamtlänge), Startversatz, bis
   zu einer ebenen, parallelen Fläche. Bereiche werden durch Anklicken an- und abgewählt.

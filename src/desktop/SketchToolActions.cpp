@@ -32,7 +32,7 @@ QString toolShortcut(const std::string& id) {
         {"rectangle", QStringLiteral("R")},
         {"circle", QStringLiteral("C")},
         {"center_arc", QStringLiteral("A")},
-        {"three_point_arc", QStringLiteral("T")},
+        {"three_point_arc", QStringLiteral("Shift+A")}, // W04: T trims, as in Fusion
         {"ellipse", QStringLiteral("E")},
         {"slot", QStringLiteral("N")},
         {"polygon", QStringLiteral("G")},
@@ -130,6 +130,10 @@ void SketchToolActions::build() {
         auto* action = new QAction(compactActionLabel(tool.id, tool.label), &window_);
         action->setToolTip(tool.label);
         setCommandId(*action, ("sketch." + tool.id).c_str());
+        // W04: the Fusion keys of the editing commands.
+        if (tool.id == "construction" || tool.id == "trim")
+            action->setShortcut(
+                QKeySequence(tool.id == "trim" ? QStringLiteral("T") : QStringLiteral("X")));
         const std::string id = tool.id;
         QObject::connect(action, &QAction::triggered, &window_,
                          [this, id] { host_.triggerAction(id); });

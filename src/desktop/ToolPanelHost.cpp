@@ -482,6 +482,15 @@ void ToolPanelHost::setLengthValue(const std::string& parameterId, double value)
     }
 }
 
+void ToolPanelHost::focusLength(const std::string& parameterId) {
+    for (const auto& [id, input] : lengthInputs_)
+        if (id == parameterId && input->isEnabled()) {
+            input->setFocus(Qt::OtherFocusReason);
+            input->selectAll();
+            return;
+        }
+}
+
 void ToolPanelHost::setLengthBinding(const std::string& parameterId, std::optional<QString> name) {
     for (const auto& [id, input] : lengthInputs_)
         if (auto* bound = dynamic_cast<ParameterSpinBox*>(input); bound && id == parameterId) {

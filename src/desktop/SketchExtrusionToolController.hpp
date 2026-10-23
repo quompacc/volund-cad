@@ -52,6 +52,8 @@ class SketchExtrusionToolController final {
     // sketch toggles that region; the session's region selection mirrors the panel's.
     [[nodiscard]] std::optional<document::FeatureId> regionSketch() const noexcept;
     [[nodiscard]] bool toggleRegionAt(const viewport::ViewRay& ray);
+    // W03: the view the extrusion arrow is shown in.
+    void setViewport(viewport::CadViewport& viewport) noexcept { viewport_ = &viewport; }
     [[nodiscard]] bool toggleRegionByElement(document::SketchElementId element);
     // M04: elements of the contour an invalid region fails on, marked red in the sketch.
     [[nodiscard]] const std::vector<std::uint64_t>& problemElements() const noexcept;
@@ -69,6 +71,13 @@ class SketchExtrusionToolController final {
               const document::ExtrusionParameters& values);
     [[nodiscard]] application::Action extrusion() const;
     void preview();
+    // W03 (SketchExtrusionArrow.cpp): the arrow on the profile; dragging sets the distance.
+    void syncArrow();
+    void hideArrow();
+    void arrowDragged(double distance, bool finished);
+    std::string arrowKey_; // what the shown arrow stands on; empty while none is shown
+    viewport::CadViewport* viewport_{nullptr};
+    bool arrowPreviewPending_{false};
     void choose(const std::string& choice, int index);
     // M04: fields that do not apply to the current choices are disabled or hidden.
     void syncFields();

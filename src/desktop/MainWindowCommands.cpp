@@ -216,18 +216,6 @@ void MainWindow::createCommands() {
             impl_->sketchExtrusionTool->cancel();
         impl_->sketchExtrusionTool->beginSelectedSweep();
     };
-    // T04c: push/pull of the picked planar face.
-    services.pushPull = [this]() {
-        if (!impl_->selectedPlanarFace)
-            return;
-        if (impl_->sketchExtrusionTool->isActive())
-            impl_->sketchExtrusionTool->cancel();
-        impl_->pushPullTool->begin(*impl_->selectedPlanarFace);
-        syncShell();
-    };
-    services.canPushPull = [this]() {
-        return impl_->selectedPlanarFace.has_value() && impl_->shell().canSketch();
-    };
     // M06: rounds edges of the selected body's current result.
     const auto treatEdges = [this](EdgeTreatment treatment) {
         // Edges picked before (user request 2026-10-13) are taken over.
@@ -244,6 +232,30 @@ void MainWindow::createCommands() {
     };
     services.fillet = [treatEdges]() { treatEdges(EdgeTreatment::fillet); };
     services.chamfer = [treatEdges]() { treatEdges(EdgeTreatment::chamfer); }; // M07
+    // T04c: push/pull of the picked planar face. W04 (Q, as in Fusion's Press Pull): picked
+    // edges are rounded and a selected sketch region is extruded instead.
+    services.pushPull = [this, treatEdges, extrude = services.extrudeProfiles]() {
+        if (!impl_->selectedEdges.empty()) {
+            treatEdges(EdgeTreatment::fillet);
+            return;
+        }
+        if (impl_->shell().canExtrude()) {
+            extrude();
+            return;
+        }
+        if (!impl_->selectedPlanarFace)
+            return;
+        if (impl_->sketchExtrusionTool->isActive())
+            impl_->sketchExtrusionTool->cancel();
+        impl_->pushPullTool->begin(*impl_->selectedPlanarFace);
+        syncShell();
+    };
+    services.canPushPull = [this]() {
+        const auto shell = impl_->shell();
+        return !shell.toolBlocksCommands() &&
+               (!impl_->selectedEdges.empty() || shell.canExtrude() ||
+                (impl_->selectedPlanarFace.has_value() && shell.canSketch()));
+    };
     // M08: a hole at the clicked point of the picked planar face.
     services.hole = [this]() {
         if (!impl_->selectedPlanarFace)

@@ -68,15 +68,10 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                          false,
                          simpleCommand(std::move(services.sketchEditor)),
                          std::move(services.canEditSketch)});
-    commands_.push_back({"solid.create.extrude_profiles",
-                         "Extrudieren",
-                         "Gewählte Skizzenbereiche extrudieren",
-                         {},
-                         workspaces::CommandGroup::create,
-                         true,
-                         false,
-                         simpleCommand(std::move(services.extrudeProfiles)),
-                         services.canExtrudeProfiles});
+    commands_.push_back(
+        {"solid.create.extrude_profiles", "Extrudieren", "Gewählte Skizzenbereiche extrudieren",
+         "E", workspaces::CommandGroup::create, true, false,
+         simpleCommand(std::move(services.extrudeProfiles)), services.canExtrudeProfiles});
     if (services.helix)
         commands_.push_back(
             {"solid.create.helix",
@@ -139,27 +134,16 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
          std::move(services.canEditExistingSketch),
          "Bearbeiten"});
     if (services.pushPull)
-        commands_.push_back({"solid.modify.push_pull",
-                             "Drücken/Ziehen",
-                             "Gewählte ebene Fläche herausziehen oder in den Körper drücken",
-                             {},
-                             workspaces::CommandGroup::modify,
-                             true,
-                             false,
+        commands_.push_back({"solid.modify.push_pull", "Drücken/Ziehen",
+                             "Gewählte ebene Fläche herausziehen oder in den Körper drücken", "Q",
+                             workspaces::CommandGroup::modify, true, false,
                              simpleCommand(std::move(services.pushPull)),
-                             std::move(services.canPushPull),
-                             "Ziehen"});
+                             std::move(services.canPushPull), "Ziehen"});
     if (services.fillet)
-        commands_.push_back({"solid.modify.fillet",
-                             "Verrunden",
-                             "Kanten des gewählten Körpers verrunden",
-                             {},
-                             workspaces::CommandGroup::modify,
-                             true,
-                             false,
-                             simpleCommand(std::move(services.fillet)),
-                             services.canFillet,
-                             "Verrunden"});
+        commands_.push_back(
+            {"solid.modify.fillet", "Verrunden", "Kanten des gewählten Körpers verrunden", "F",
+             workspaces::CommandGroup::modify, true, false,
+             simpleCommand(std::move(services.fillet)), services.canFillet, "Verrunden"});
     if (services.chamfer)
         commands_.push_back({"solid.modify.chamfer",
                              "Fase",
@@ -246,16 +230,10 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                              services.canPattern,
                              "Kreismuster"});
     if (services.hole)
-        commands_.push_back({"solid.modify.hole",
-                             "Bohrung",
-                             "Bohrung an der angeklickten Stelle der gewählten Fläche",
-                             {},
-                             workspaces::CommandGroup::modify,
-                             true,
-                             false,
-                             simpleCommand(std::move(services.hole)),
-                             services.canHole,
-                             "Bohrung"});
+        commands_.push_back({"solid.modify.hole", "Bohrung",
+                             "Bohrung an der angeklickten Stelle der gewählten Fläche", "H",
+                             workspaces::CommandGroup::modify, true, false,
+                             simpleCommand(std::move(services.hole)), services.canHole, "Bohrung"});
     if (services.draft)
         commands_.push_back({"solid.modify.draft",
                              "Formschräge",

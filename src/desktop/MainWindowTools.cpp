@@ -29,6 +29,7 @@ void MainWindow::createToolPanel() {
     impl_->sketchExtrusionTool = std::make_unique<SketchExtrusionToolController>(
         impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
         [this](const QString& message) { statusBar()->showMessage(message); });
+    impl_->sketchExtrusionTool->setViewport(*impl_->viewport); // W03: its arrow
     const auto showPreview = [this](const std::vector<features::EvaluatedBody>* bodies) {
         if (bodies == nullptr) {
             syncVisibility(); // the model's bodies again
