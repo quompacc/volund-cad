@@ -6,6 +6,7 @@
 #include <voelund/viewport/CadViewport.hpp>
 
 #include "BasePlanePresentation.hpp"
+#include "BodyStyle.hpp"
 #include "DatumPresentation.hpp"
 #include "PlanarFaceSelection.hpp"
 #include "PushPullHandle.hpp"
@@ -74,6 +75,7 @@ class CadViewportScene {
         std::uint64_t id;
         occ::handle<AIS_Shape> shape;
         bool transformable;
+        std::optional<std::uint32_t> color; // N06
     };
 
     void configureScene() {
@@ -94,10 +96,21 @@ class CadViewportScene {
     }
 
     // Thin edges keep faces apart on the light theme (ADR 0012 prototype).
+    // N06: edges and display mode after the display style.
     void showEdges(const occ::handle<AIS_Shape>& shape) const {
-        shape->Attributes()->SetFaceBoundaryDraw(true);
-        shape->Attributes()->SetFaceBoundaryAspect(
-            new Prs3d_LineAspect(occtColor(theme.edge), Aspect_TOL_SOLID, 1.0));
+        styleBody(shape, displayStyle, occtColor(theme.edge));
+    }
+    [[nodiscard]] Quantity_Color bodyColor(const std::optional<std::uint32_t>& color) const {
+        return color ? rgbColor(*color) : occtColor(theme.body);
+    }
+    // N06: every body after the display style; hidden edges need the view's hidden-line mode.
+    void applyDisplayStyle() {
+        view->SetComputedMode(displayStyle == DisplayStyle::hiddenEdges);
+        for (const BodyPresentation& presentation : presentations) {
+            showEdges(presentation.shape);
+            context->SetDisplayMode(presentation.shape, bodyDisplayMode(displayStyle), false);
+            context->Redisplay(presentation.shape, false);
+        }
     }
 
     // Colors of the current theme for background, grid, bodies, highlights and planes.
@@ -105,11 +118,12 @@ class CadViewportScene {
         configureHighlightStyles(context, theme);
         view->SetBgGradientStyle(Aspect_GradientFillMethod_None, false);
         view->SetBackgroundColor(occtColor(theme.background));
+        view->SetComputedMode(displayStyle == DisplayStyle::hiddenEdges); // N06
         viewer->Grid()->SetColors(occtColor(theme.gridMinor), occtColor(theme.gridMajor));
         view->TriedronDisplay(Aspect_TOTP_LEFT_LOWER, occtColor(theme.axisLabel), 0.075,
                               V3d_ZBUFFER);
         for (const BodyPresentation& presentation : presentations) {
-            presentation.shape->SetColor(occtColor(theme.body));
+            presentation.shape->SetColor(bodyColor(presentation.color));
             showEdges(presentation.shape);
             context->Redisplay(presentation.shape, false);
         }
@@ -146,10 +160,7 @@ class CadViewportScene {
         return extent;
     }
     void showSection(const std::optional<SectionPlane>& plane) {
-        section.set(context, plane, bodyExtent(), occtColor(theme.body),
-                    occtColor(theme.selection));
-        for (const BodyPresentation& presentation : presentations)
-            section.clip(presentation.shape);
+        section.set(context, plane, bodyExtent(), occtColor(theme.selection));
     }
     // After a new GL context the section patch is shown again.
     void restoreSection() {
@@ -186,10 +197,11 @@ class CadViewportScene {
             context->Remove(presentation.shape, false);
         }
         presentations.clear();
+        section.forgetBodies();
 
         for (const SceneBody& body : pendingBodies) {
             occ::handle<AIS_Shape> presentation = new AIS_Shape(body.shape);
-            presentation->SetColor(occtColor(theme.body));
+            presentation->SetColor(bodyColor(body.color));
             if (body.stale)
                 presentation->SetTransparency(0.6);
             // S14: the shaded faces lie a little behind what is drawn exactly on them (the
@@ -200,9 +212,10 @@ class CadViewportScene {
             presentation->Attributes()->ShadingAspect()->Aspect()->SetPolygonOffsets(
                 Aspect_POM_Fill, 1.0F, 2.0F);
             showEdges(presentation);
-            section.clip(presentation); // N05
+            section.clip(presentation, bodyColor(body.color)); // N05
             context->Display(presentation, false);
-            presentations.push_back(BodyPresentation{body.id, presentation, body.transformable});
+            presentations.push_back(
+                BodyPresentation{body.id, presentation, body.transformable, body.color});
         }
         restoreSection();
         setBodiesPickable(!sketchEditor.isActive() || edgePicking);
@@ -350,8 +363,9 @@ class CadViewportScene {
     occ::handle<AIS_InteractiveContext> context;
     occ::handle<V3d_View> view;
     TransformManipulator manipulator;
-    PushPullHandle pushPull; // T04c
-    SectionView section;     // N05
+    PushPullHandle pushPull;                                  // T04c
+    DisplayStyle displayStyle{DisplayStyle::shadedWithEdges}; // N06
+    SectionView section;                                      // N05
     SketchEditorInteraction sketchEditor;
     SketchPresentation sketchPresentation;
     SketchConstraintPresentation sketchConstraintPresentation;

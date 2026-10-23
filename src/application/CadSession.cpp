@@ -154,6 +154,7 @@ ModelOutline CadSession::modelOutline() const {
             document::bodyAttributes(snapshot.bodyAttributes(), body.id.value());
         body.name = attributes.name;
         body.hidden = attributes.hidden;
+        body.color = attributes.color; // N06
     }
     for (std::size_t index = 0; index < contexts.size(); ++index)
         if (const auto* combine =

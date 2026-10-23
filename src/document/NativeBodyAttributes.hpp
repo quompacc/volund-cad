@@ -22,7 +22,8 @@ void validateBodyAttributes(const BodyAttributeTable& table,
 namespace detail {
 // Schema 12, optional child 31 of the main label, written only when the table is not empty.
 // Layout: integer = entry count; child i = entry with children 1 body ID (decimal text),
-// 2 name (UTF-8 text), 3 hidden (integer 0/1).
+// 2 name (UTF-8 text), 3 hidden (integer 0/1); N06 (schema 38): 4 colour (integer 0xRRGGBB),
+// only when set.
 inline constexpr int nativeBodyAttributeSlot = 31;
 void writeNativeBodyAttributes(const TDF_Label& label, const BodyAttributeTable& table);
 // M14 (schema 34), optional child 32 of the main label, written only when a feature is
@@ -30,7 +31,8 @@ void writeNativeBodyAttributes(const TDF_Label& label, const BodyAttributeTable&
 // count, child i = a suppressed feature's ID (decimal text); child 2 (when set): the ID of the
 // feature the rollback marker follows.
 inline constexpr int nativeHistoryStateSlot = 32;
-[[nodiscard]] BodyAttributeTable readNativeBodyAttributes(const TDF_Label& label);
+[[nodiscard]] BodyAttributeTable readNativeBodyAttributes(const TDF_Label& label,
+                                                          int schemaVersion);
 } // namespace detail
 
 } // namespace voelund::document

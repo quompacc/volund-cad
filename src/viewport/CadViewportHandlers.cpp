@@ -24,6 +24,20 @@ void CadViewport::setSection(const std::optional<SectionPlane>& plane) {
     });
 }
 
+void CadViewport::setDisplayStyle(DisplayStyle style) {
+    performViewportOperation(*this, impl_->ready, [&] {
+        if (impl_->displayStyle == style)
+            return;
+        impl_->displayStyle = style;
+        if (!impl_->ready)
+            return;
+        impl_->applyDisplayStyle();
+        update();
+    });
+}
+
+DisplayStyle CadViewport::displayStyle() const noexcept { return impl_->displayStyle; }
+
 void CadViewport::setSectionHandler(
     std::function<void(const SectionPlane&, bool finished)> handler) {
     impl_->section.setHandler(std::move(handler));

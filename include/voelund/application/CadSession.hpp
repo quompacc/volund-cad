@@ -30,7 +30,6 @@
 #include <vector>
 
 namespace voelund::application {
-
 // M14: suppressed is no error; the feature is skipped on purpose.
 enum class FeatureRuntimeStatus { current, error, blocked, suppressed, rolledBack };
 
@@ -56,11 +55,11 @@ struct ExtrusionSelectionState final {
 struct OutlineBody final {
     document::BodyId id;
     std::vector<document::FeatureId> features;
-    // M01: the user's name (empty: the shell numbers it) and the stored visibility.
+    // M01: the user's name (empty: the shell numbers it), the stored visibility; N06: colour.
     std::string name{};
     bool hidden{false};
-    // M21: a combination took this body into another one (its tools are not kept).
-    bool consumed{false};
+    std::optional<std::uint32_t> color{};
+    bool consumed{false}; // M21: combined into another body (its tools are not kept)
 };
 struct ModelOutline final {
     std::vector<OutlineBody> bodies;
@@ -490,10 +489,11 @@ class CadSession final {
     setParameterExpression(document::ParameterId id, std::string expression,
                            ErrorDisposition disposition = ErrorDisposition::keepEditableErrors);
     [[nodiscard]] CommandResult renameParameter(document::ParameterId id, std::string name);
-    // M01: renames a body (one undo step; an empty name returns to the numbered default).
+    // M01: rename (one undo step; empty: numbered default), show or hide (stored, no undo step).
+    // N06: the colour 0xRRGGBB, none for the theme's (one undo step).
     [[nodiscard]] CommandResult renameBody(document::BodyId body, std::string name);
-    // M01: shows or hides a body; stored and modified, but no undo step.
     [[nodiscard]] bool setBodyHidden(document::BodyId body, bool hidden);
+    [[nodiscard]] CommandResult setBodyColor(document::BodyId body, std::optional<std::uint32_t>);
     [[nodiscard]] CommandResult setParameterComment(document::ParameterId id, std::string comment);
     [[nodiscard]] CommandResult
     deleteParameter(document::ParameterId id,

@@ -126,6 +126,16 @@ umgesetzte Funktionen. Was hier nicht steht, gibt es noch nicht.
 - Der Schnitt bleibt beim Arbeiten mit anderen Werkzeugen stehen. ✕ oder ein zweiter Klick auf
   „Schnitt“ zeigt wieder das ganze Modell. Der Schnitt ändert das Dokument nicht.
 
+## Darstellung und Farben
+
+- Der Knopf **◐** neben dem Ansichtswürfel (auch in der Befehlssuche) wählt die Darstellung:
+  schattiert, schattiert mit Kanten, Drahtgitter oder verdeckte Kanten (gestrichelt). Die Wahl
+  gilt für diesen Rechner und ändert das Dokument nicht.
+- Ist eine Körperzeile im Modellbaum gewählt, zeigt rechts eine Karte die **Farbe** des Körpers:
+  zehn Felder, „Eigene…“ oder „Standard“. Die Farbe wird mit dem Dokument gespeichert und ist ein
+  Rückgängig-Schritt. STEP und IGES schreiben sie mit; ein STEP-Import übernimmt die Farben der
+  Datei.
+
 ## Austausch (STEP)
 
 - **Importieren (STEP)…** (Datei-Menü, Strg+I) fügt die Volumenkörper einer STEP-Datei als

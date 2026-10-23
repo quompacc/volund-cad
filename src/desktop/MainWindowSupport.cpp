@@ -3,6 +3,7 @@
 
 #include "MainWindowSupport.hpp"
 
+#include <algorithm>
 #include <voelund/application/CadSession.hpp>
 
 namespace voelund::desktop {
@@ -22,12 +23,16 @@ std::vector<viewport::SceneBody> makeSceneBodies(const application::CadSession& 
                                                  const std::set<std::uint64_t>& hiddenBodies) {
     std::vector<viewport::SceneBody> bodies;
     bodies.reserve(session.displayBodies().size());
+    const auto outline = session.modelOutline(); // N06: the body colours
     for (const features::EvaluatedBody& body : session.displayBodies()) {
         if (hiddenBodies.contains(body.bodyId.value()))
             continue;
+        const auto named =
+            std::ranges::find(outline.bodies, body.bodyId, &application::OutlineBody::id);
         bodies.push_back({body.sourceFeature.value(), body.shape,
                           session.canTransformFeature(body.sourceFeature),
-                          !session.sceneStatus().isCurrent()});
+                          !session.sceneStatus().isCurrent(),
+                          named != outline.bodies.end() ? named->color : std::nullopt});
     }
     return bodies;
 }

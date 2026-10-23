@@ -559,8 +559,9 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
             require(feature != features.end() && feature + 1 != features.end());
         }
     }
-    auto attributes =
-        attributeLabel.IsNull() ? BodyAttributeTable{} : readNativeBodyAttributes(attributeLabel);
+    auto attributes = attributeLabel.IsNull()
+                          ? BodyAttributeTable{}
+                          : readNativeBodyAttributes(attributeLabel, metadata.schemaVersion);
     validateBodyAttributes(attributes, features, data);
     return IdentifiedDocumentSnapshot::restore(
         metadata.id, DocumentSnapshot{std::move(features), std::move(data), metadata.nextFeatureId,

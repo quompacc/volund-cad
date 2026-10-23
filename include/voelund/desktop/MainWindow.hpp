@@ -9,6 +9,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <vector>
 #include <voelund/document/BodyId.hpp>
 
@@ -68,6 +69,9 @@ class MainWindow final : public QMainWindow {
     void createSectionView(); // N05 (MainWindowView.cpp)
     // M01: bodies as a whole (MainWindowBodies.cpp).
     void createBodyCommands();
+    void createBodyAppearance(); // N06: colour card and display style (MainWindowBodies.cpp)
+    void colorBodies(std::optional<std::uint32_t> color);
+    void syncBodyCard(bool shown);
     void syncBodyCommands();
     void selectBody(std::uint64_t id, bool keepGroup = false);
     void renameBody(std::uint64_t id, const QString& name);

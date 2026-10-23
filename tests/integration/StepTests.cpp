@@ -270,6 +270,37 @@ void inchesAndErrors(const std::filesystem::path& directory) {
             "Nothing visible to export");
 }
 
+// N06: a body's colour goes out as the colour of its faces and comes back on import, also from
+// a file written by the kernel directly; bodies without one stay without.
+void colors(const std::filesystem::path& directory) {
+    application::CadSession source;
+    source.newDocument();
+    require(source.createBoxFeature({10, 10, 10}).status() == CommandStatus::committed, "Red box");
+    const document::BodyId red{source.features().back().id.value()};
+    require(source.createBoxFeature({5, 5, 5}).status() == CommandStatus::committed, "Plain box");
+    require(source.setBodyColor(red, 0xC0392B).status() == CommandStatus::committed, "Red");
+    const auto path = directory / "farbe.step";
+    require(source.exportStep(path).status == StepExportStatus::written, "Coloured STEP written");
+    application::CadSession target;
+    target.newDocument();
+    require(target.importStep(path).status == StepImportStatus::imported, "Coloured STEP read");
+    const auto outline = target.modelOutline();
+    const auto colored = std::ranges::count_if(outline.bodies, [](const auto& body) {
+        return body.color == std::optional<std::uint32_t>{0xC0392B};
+    });
+    const auto plain = std::ranges::count_if(
+        outline.bodies, [](const auto& body) { return !body.color.has_value(); });
+    require(colored == 1 && plain == 1, "The red body comes back red, the other without colour");
+
+    const kernel::StepSolid blue{BRepPrimAPI_MakeBox(3, 3, 3).Solid(), "Blau", 0x2E86C1};
+    const auto direct = directory / "blau.step";
+    require(!kernel::writeStep(direct, std::span{&blue, 1}).error, "Kernel writes the colour");
+    const auto read = kernel::readStep(direct);
+    require(read.solids.size() == 1 &&
+                read.solids[0].color == std::optional<std::uint32_t>{0x2E86C1},
+            "Kernel reads the colour back");
+}
+
 } // namespace
 
 int main() {
@@ -279,12 +310,13 @@ int main() {
         std::filesystem::create_directories(directory);
         exportAndImport(directory);
         inchesAndErrors(directory);
+        colors(directory);
         std::filesystem::remove_all(directory);
         std::cout << "PASS M17 STEP: three bodies exported and imported with names, volumes and "
                      "bounds, one undo step, imported edge rounded, save/open without the file, "
                      "faulty revision not exported, inches in mm, broken/missing/solid-less files "
                      "change nothing, import parts deleted and suppressed with the import, "
-                     "marker after a pattern keeps its copy\n";
+                     "marker after a pattern keeps its copy, colours out and back (N06)\n";
         return 0;
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';

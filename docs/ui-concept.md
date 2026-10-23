@@ -193,6 +193,7 @@ in U04 an dieselben IDs.
 | `view.command_search` | Kopfzeile (Suchfeld), Strg+K | CommandPalette | immer | command_surfaces |
 | `view.tool_rail` | Kopfzeile (Werkzeugleiste), Suche | MainWindow | immer | command_surfaces |
 | `view.section` | Kopfzeile (Schnitt-Symbol), Suche; Karte „Schnitt“ unten in der linken Spalte | MainWindow/SectionController | immer; Ebene XY/XZ/YZ, Bezugsebene oder gewählte ebene Fläche, Versatz mit Feld und Pfeil, Seite umkehren; Ansichtszustand ohne Undo und ohne „geändert“, bleibt bei offenen Werkzeugen (N05, Nutzerentscheidung 23.10.2026) | section_view |
+| `view.style.shaded`, `.shaded_edges`, `.wireframe`, `.hidden_edges` | Knopf ◐ links neben dem Ansichtswürfel, Suche | DisplayStyleMenu | immer; Ansichtseinstellung pro Rechner, nicht im Dokument, kein Undo, nicht „geändert“ (N06) | body_appearance |
 | `view.grid` | Suche, Skizzenpanel (Raster), Modellbaum (Auge) | MainWindow | immer; Ansichtszustand ohne Undo und ohne „geändert“ | sketch_view_switches |
 | `solid.create.box` | Werkzeugleiste, Kontextleiste (leer), Suche | CadSession | immer | command_inventory, command_surfaces |
 | `solid.create.cylinder` | Werkzeugleiste, Kontextleiste (leer, Feature), Suche | CadSession | Geometrie aktuell; verbindet sich mit dem gewählten Körper, ohne Auswahl ein neuer Körper im Ursprung (M01, Nutzerentscheidung 10.10.2026) | command_inventory |

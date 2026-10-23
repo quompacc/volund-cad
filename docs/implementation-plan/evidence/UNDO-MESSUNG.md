@@ -1,7 +1,8 @@
 # UNDO-MESSUNG – Speicher und Zeit des Undo-Stapels
 
-**Status:** Messung vom 23.10.2026 (Stand `4eaf1d0`); Abnahme nach grünem CI-Lauf. Es gibt kein
-Delta-Undo und keine Änderung am Produktverhalten.
+**Status:** abgenommen am 23.10.2026. Messung am Stand `4eaf1d0`, Code `fdf2a99`; CI-Lauf 723
+grün; `main` auf Gitea und GitHub. Es gibt kein Delta-Undo und keine Änderung am
+Produktverhalten.
 
 ## Auftrag
 

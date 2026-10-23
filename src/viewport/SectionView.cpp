@@ -36,19 +36,13 @@ gp_Pln clippingPlane(const SectionPlane& plane) {
 
 void SectionView::set(const occ::handle<AIS_InteractiveContext>& context,
                       const std::optional<SectionPlane>& plane, const Bnd_Box& extent,
-                      const Quantity_Color& bodyColor, const Quantity_Color& gripColor) {
+                      const Quantity_Color& gripColor) {
     if (!plane) {
         plane_.reset();
         grip_.hide();
-        if (!clipPlane_.IsNull())
-            clipPlane_->SetOn(false);
+        applyPlane();
         return;
     }
-    if (clipPlane_.IsNull()) {
-        clipPlane_ = new Graphic3d_ClipPlane();
-        clipPlane_->SetCapping(true);
-    }
-    clipPlane_->SetCappingColor(darker(bodyColor));
     // Only shifted along the shown normal: the grip moves, as with a typed push/pull distance.
     const gp_Dir normal = direction(plane->normal);
     const gp_Vec shift(point(base_.origin), point(plane->origin));
@@ -57,8 +51,7 @@ void SectionView::set(const occ::handle<AIS_InteractiveContext>& context,
                              normal.IsEqual(direction(base_.normal), 1e-9) &&
                              (shift - gp_Vec(normal) * along).Magnitude() < 1e-9;
     plane_ = plane;
-    clipPlane_->SetEquation(clippingPlane(*plane));
-    clipPlane_->SetOn(true);
+    applyPlane();
     if (shiftedOnly) {
         grip_.setDistance(-along);
         return;
@@ -67,14 +60,28 @@ void SectionView::set(const occ::handle<AIS_InteractiveContext>& context,
     showGrip(context, extent, gripColor);
 }
 
-void SectionView::clip(const occ::handle<AIS_Shape>& body) {
-    if (!clipPlane_.IsNull())
-        body->AddClipPlane(clipPlane_);
+void SectionView::clip(const occ::handle<AIS_Shape>& body, const Quantity_Color& color) {
+    occ::handle<Graphic3d_ClipPlane> plane = new Graphic3d_ClipPlane();
+    plane->SetCapping(true);
+    plane->SetCappingColor(darker(color));
+    planes_.push_back(plane);
+    body->AddClipPlane(plane);
+    if (plane_)
+        plane->SetEquation(clippingPlane(*plane_));
+    plane->SetOn(plane_.has_value());
+}
+
+void SectionView::applyPlane() {
+    for (const auto& plane : planes_) {
+        if (plane_)
+            plane->SetEquation(clippingPlane(*plane_));
+        plane->SetOn(plane_.has_value());
+    }
 }
 
 void SectionView::reset() {
     grip_.reset();
-    clipPlane_.Nullify();
+    planes_.clear();
 }
 
 void SectionView::setHandler(Handler handler) {
@@ -109,7 +116,7 @@ void SectionView::moved(double distance, bool finished) {
     if (!plane_)
         return;
     plane_ = shifted(distance);
-    clipPlane_->SetEquation(clippingPlane(*plane_));
+    applyPlane();
     if (handler_)
         handler_(*plane_, finished);
 }

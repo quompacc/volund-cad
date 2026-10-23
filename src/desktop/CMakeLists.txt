@@ -72,6 +72,8 @@ add_library(
     ShellHeader.cpp
     ShellIcons.cpp
     SectionController.cpp
+    BodyColorCard.cpp
+    DisplayStyleMenu.cpp
     ShellState.cpp
     SketchToolActions.cpp
     SketchViewAdapter.cpp

@@ -86,15 +86,50 @@ void run() {
                 !body(loaded, a).hidden && loaded.validBodies().size() == 2 && !loaded.isModified(),
             "Save/Open keeps the name, the visibility and both bodies");
 }
+// N06 (schema 38): the colour is one undo step, refused for no body or out of range, and kept by
+// Save/Open; none returns to the theme's colour.
+void colors() {
+    application::CadSession session;
+    session.newDocument();
+    require(session.createBoxFeature({10, 10, 10}).status() == CommandStatus::committed, "Box");
+    const BodyId box{session.features().back().id.value()};
+    require(session.setBodyColor(box, 0x1F6FEB).status() == CommandStatus::committed &&
+                body(session, box).color == std::optional<std::uint32_t>{0x1F6FEB} &&
+                session.isModified(),
+            "Coloured blue");
+    require(session.setBodyColor(box, 0x1F6FEB).status() != CommandStatus::committed,
+            "The same colour is no change");
+    require(session.undo().status() == CommandStatus::committed && !body(session, box).color,
+            "Undo restores the theme colour");
+    require(session.redo().status() == CommandStatus::committed &&
+                body(session, box).color == std::optional<std::uint32_t>{0x1F6FEB},
+            "Redo colours again");
+    require(session.setBodyColor(box, 0x1000000).status() != CommandStatus::committed,
+            "A colour beyond 0xFFFFFF is refused");
+    require(session.setBodyColor(BodyId{999}, 0xFF0000).status() != CommandStatus::committed,
+            "A body the document does not have gets no colour");
+    const auto path = test::temporaryFilePath("voelund-n06-colour.volund");
+    session.saveDocument(path);
+    application::CadSession loaded;
+    loaded.loadDocument(path);
+    std::error_code ignored;
+    std::filesystem::remove(path, ignored);
+    require(body(loaded, box).color == std::optional<std::uint32_t>{0x1F6FEB},
+            "Save/Open keeps the colour");
+    require(loaded.setBodyColor(box, std::nullopt).status() == CommandStatus::committed &&
+                !body(loaded, box).color,
+            "None returns to the theme colour");
+}
 } // namespace
 
 int main() {
     try {
         run();
+        colors();
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';
         return 1;
     }
-    std::cout << "PASS M01 body names and visibility\n";
+    std::cout << "PASS M01 body names and visibility, N06 body colour\n";
     return 0;
 }

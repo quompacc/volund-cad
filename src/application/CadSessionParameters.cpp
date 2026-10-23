@@ -208,6 +208,12 @@ CommandResult CadSession::renameBody(document::BodyId body, std::string name) {
         ErrorDisposition::reject);
 }
 
+CommandResult CadSession::setBodyColor(document::BodyId body, std::optional<std::uint32_t> color) {
+    return commitParameterEdit(
+        [&](document::ModelDocument& candidate) { return candidate.setBodyColor(body, color); },
+        ErrorDisposition::reject);
+}
+
 bool CadSession::setBodyHidden(document::BodyId body, bool hidden) {
     if (!document_.setBodyHidden(body, hidden))
         return false;

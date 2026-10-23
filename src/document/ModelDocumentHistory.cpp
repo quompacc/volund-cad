@@ -153,6 +153,16 @@ bool ModelDocument::renameBody(BodyId body, std::string name) {
     commitState(std::move(candidate));
     return true;
 }
+bool ModelDocument::setBodyColor(BodyId body, std::optional<std::uint32_t> color) {
+    auto candidate = currentState();
+    auto attributes = document::bodyAttributes(candidate.bodyAttributes, body.value());
+    if (attributes.color == color)
+        return false;
+    attributes.color = color;
+    setBodyAttributes(candidate.bodyAttributes, body.value(), std::move(attributes));
+    commitState(std::move(candidate));
+    return true;
+}
 bool ModelDocument::setBodyHidden(BodyId body, bool hidden) {
     auto candidate = currentState();
     auto attributes = document::bodyAttributes(candidate.bodyAttributes, body.value());

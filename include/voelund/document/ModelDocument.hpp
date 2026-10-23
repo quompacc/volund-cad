@@ -563,7 +563,9 @@ class ModelDocument final {
     [[nodiscard]] bool setMoveParameters(FeatureId featureId, const MoveParameters& parameters);
     // M17 (ModelDocumentImport.cpp): the import and its parts in one step; every body is named
     // after its solid, else "<name>.<n>".
-    [[nodiscard]] FeatureId addImportFeature(std::string name, ImportParameters parameters);
+    // N06: `colors` are the solids' colours from the file, in the order of the solids.
+    [[nodiscard]] FeatureId addImportFeature(std::string name, ImportParameters parameters,
+                                             std::vector<std::optional<std::uint32_t>> colors = {});
     [[nodiscard]] const ImportParameters& importParameters(FeatureId featureId) const;
     [[nodiscard]] bool setPrimitiveParameters(FeatureId featureId,
                                               const PrimitiveParameters& parameters);
@@ -624,6 +626,8 @@ class ModelDocument final {
     [[nodiscard]] const BodyAttributeTable& bodyAttributes() const noexcept;
     [[nodiscard]] bool renameBody(BodyId body, std::string name);
     [[nodiscard]] bool setBodyHidden(BodyId body, bool hidden);
+    // N06: none restores the theme's colour; one undo step.
+    [[nodiscard]] bool setBodyColor(BodyId body, std::optional<std::uint32_t> color);
     [[nodiscard]] bool canUndo() const noexcept;
     [[nodiscard]] bool canRedo() const noexcept;
     [[nodiscard]] bool undo();

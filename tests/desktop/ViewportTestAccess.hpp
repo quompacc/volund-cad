@@ -92,6 +92,10 @@ class ViewportTestAccess {
         }
         return all;
     }
+    // N06: the colour a body presentation was given (none: the theme's).
+    static std::optional<std::uint32_t> bodyColor(CadViewport& v, std::size_t index) {
+        return v.impl_->presentations.at(index).color;
+    }
     static bool sectionArrowHovered(CadViewport& v) {
         const auto& context = v.impl_->context;
         auto& grip = v.impl_->section.grip();

@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -13,10 +14,12 @@ namespace voelund::document {
 
 // M01 (user decision 2026-10-10): what the user sets for a body as a whole. The name is
 // document content (renaming is one undo step); `hidden` is stored with the document and
-// marks it modified, but undo and redo keep the current visibility.
+// marks it modified, but undo and redo keep the current visibility. N06 (schema 38, user
+// decision 2026-10-23): the colour is document content too (one undo step).
 struct BodyAttributes final {
     std::string name{}; // empty: the shell shows "Körper N"
     bool hidden{false};
+    std::optional<std::uint32_t> color{}; // 0xRRGGBB; none: the theme's body colour
     [[nodiscard]] bool operator==(const BodyAttributes&) const = default;
 };
 
@@ -31,6 +34,7 @@ struct BodyAttributeEntry final {
 using BodyAttributeTable = std::vector<BodyAttributeEntry>;
 
 inline constexpr std::size_t maximumBodyNameBytes = 256;
+inline constexpr std::uint32_t maximumBodyColor = 0xFFFFFF;
 
 [[nodiscard]] inline BodyAttributes bodyAttributes(const BodyAttributeTable& table,
                                                    std::uint64_t body) {

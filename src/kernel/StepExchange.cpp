@@ -14,6 +14,8 @@
 #include <IGESControl_Controller.hxx>
 #include <Interface_Static.hxx>
 #include <NCollection_Sequence.hxx>
+#include <Quantity_Color.hxx>
+#include <Quantity_TypeOfColor.hxx>
 #include <STEPCAFControl_Reader.hxx>
 #include <STEPCAFControl_Writer.hxx>
 #include <STEPControl_Reader.hxx>
@@ -28,9 +30,13 @@
 #include <TopLoc_Location.hxx>
 #include <UnitsMethods_LengthUnit.hxx>
 #include <XCAFApp_Application.hxx>
+#include <XCAFDoc_ColorTool.hxx>
+#include <XCAFDoc_ColorType.hxx>
 #include <XCAFDoc_DocumentTool.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
 
+#include <algorithm>
+#include <cmath>
 #include <fstream>
 #include <mutex>
 #include <sstream>
@@ -63,11 +69,58 @@ class XcafDocument final {
     [[nodiscard]] occ::handle<XCAFDoc_ShapeTool> shapes() const {
         return XCAFDoc_DocumentTool::ShapeTool(document_->Main());
     }
+    [[nodiscard]] occ::handle<XCAFDoc_ColorTool> colors() const {
+        return XCAFDoc_DocumentTool::ColorTool(document_->Main());
+    }
+    // The solids as free shapes with their names and (N06) the colour of their faces.
+    void add(std::span<const StepSolid> solids) const {
+        const auto shapeTool = shapes();
+        const auto colorTool = colors();
+        for (const auto& item : solids) {
+            const TDF_Label label = shapeTool->AddShape(item.solid, false);
+            if (!item.name.empty())
+                TDataStd_Name::Set(label, TCollection_ExtendedString(item.name.c_str(), true));
+            if (item.color)
+                colorTool->SetColor(label, toColor(*item.color), XCAFDoc_ColorSurf);
+        }
+    }
+
+    static Quantity_Color toColor(std::uint32_t rgb) {
+        const auto channel = [rgb](int shift) { return ((rgb >> shift) & 0xFFU) / 255.0; };
+        return {channel(16), channel(8), channel(0), Quantity_TOC_sRGB};
+    }
 
   private:
     occ::handle<XCAFApp_Application> application_;
     occ::handle<TDocStd_Document> document_;
 };
+
+std::uint32_t toRgb(const Quantity_Color& color) {
+    double red = 0, green = 0, blue = 0;
+    color.Values(red, green, blue, Quantity_TOC_sRGB);
+    const auto channel = [](double value) {
+        return static_cast<std::uint32_t>(std::lround(std::clamp(value, 0.0, 1.0) * 255.0));
+    };
+    return channel(red) << 16 | channel(green) << 8 | channel(blue);
+}
+
+// N06: the colour a file gives a label or shape: surface colour first, then the generic one.
+std::optional<std::uint32_t> labelColor(const occ::handle<XCAFDoc_ColorTool>& colors,
+                                        const TDF_Label& label) {
+    Quantity_Color color;
+    for (const auto type : {XCAFDoc_ColorSurf, XCAFDoc_ColorGen})
+        if (colors->GetColor(label, type, color))
+            return toRgb(color);
+    return std::nullopt;
+}
+std::optional<std::uint32_t> shapeColor(const occ::handle<XCAFDoc_ColorTool>& colors,
+                                        const TopoDS_Shape& shape) {
+    Quantity_Color color;
+    for (const auto type : {XCAFDoc_ColorSurf, XCAFDoc_ColorGen})
+        if (colors->GetColor(shape, type, color))
+            return toRgb(color);
+    return std::nullopt;
+}
 
 std::string labelName(const TDF_Label& label) {
     occ::handle<TDataStd_Name> name;
@@ -105,7 +158,8 @@ TopoDS_Shape healed(const TopoDS_Shape& solid) {
 // solids under its name. Anything that is no solid is counted, not taken.
 class Collector final {
   public:
-    explicit Collector(StepImport& result) : result_(result) {}
+    Collector(StepImport& result, occ::handle<XCAFDoc_ColorTool> colors)
+        : result_(result), colors_(std::move(colors)) {}
 
     void product(const TDF_Label& label, const TopLoc_Location& location, const std::string& name,
                  int depth) {
@@ -125,24 +179,28 @@ class Collector final {
             }
             return;
         }
-        part(XCAFDoc_ShapeTool::GetShape(label).Moved(location), name);
+        part(XCAFDoc_ShapeTool::GetShape(label), location, name, labelColor(colors_, label));
     }
 
   private:
-    void part(const TopoDS_Shape& shape, const std::string& name) {
-        if (shape.IsNull())
+    void part(const TopoDS_Shape& placed, const TopLoc_Location& location, const std::string& name,
+              std::optional<std::uint32_t> color) {
+        if (placed.IsNull())
             return;
+        const TopoDS_Shape shape = placed.Moved(location);
         std::size_t taken = 0;
-        for (TopExp_Explorer solids(shape, TopAbs_SOLID); solids.More(); solids.Next()) {
-            const auto solid = healed(solids.Current());
+        for (TopExp_Explorer solids(placed, TopAbs_SOLID); solids.More(); solids.Next()) {
+            const auto solid = healed(solids.Current().Moved(location));
             if (solid.IsNull()) {
                 ++result_.invalidSolids;
                 continue;
             }
             // Further solids of one product are numbered after it.
             ++taken;
+            const auto own = shapeColor(colors_, solids.Current());
             result_.solids.push_back(
-                {solid, taken == 1 || name.empty() ? name : name + " " + std::to_string(taken)});
+                {solid, taken == 1 || name.empty() ? name : name + " " + std::to_string(taken),
+                 own ? own : color});
         }
         for (TopExp_Explorer loose(shape, TopAbs_SHELL, TopAbs_SOLID); loose.More(); loose.Next())
             ++result_.skippedShapes;
@@ -153,6 +211,7 @@ class Collector final {
     }
 
     StepImport& result_;
+    occ::handle<XCAFDoc_ColorTool> colors_;
 };
 
 } // namespace
@@ -173,7 +232,7 @@ StepImport readStep(const std::filesystem::path& path) {
         XcafDocument document;
         STEPCAFControl_Reader reader;
         reader.SetNameMode(true);
-        reader.SetColorMode(false);
+        reader.SetColorMode(true); // N06
         reader.SetLayerMode(false);
         if (reader.ReadStream("step", stream) != IFSelect_RetDone)
             return fail(StepImportError::unreadable, "The file holds no STEP data OCCT can read");
@@ -185,7 +244,7 @@ StepImport readStep(const std::filesystem::path& path) {
             return fail(StepImportError::unreadable, "The STEP data cannot be translated");
         NCollection_Sequence<TDF_Label> roots;
         document.shapes()->GetFreeShapes(roots);
-        Collector collector(result);
+        Collector collector(result, document.colors());
         for (int index = 1; index <= roots.Length(); ++index)
             collector.product(roots.Value(index), TopLoc_Location(), labelName(roots.Value(index)),
                               0);
@@ -239,12 +298,7 @@ StepExport writeStep(const std::filesystem::path& path, std::span<const StepSoli
         const std::scoped_lock lock(stepMutex());
         try {
             XcafDocument document;
-            const auto shapes = document.shapes();
-            for (const auto& item : solids) {
-                const TDF_Label label = shapes->AddShape(item.solid, false);
-                if (!item.name.empty())
-                    TDataStd_Name::Set(label, TCollection_ExtendedString(item.name.c_str(), true));
-            }
+            document.add(solids);
             DESTEP_Parameters parameters;
             parameters.InitFromStatic();
             parameters.WriteUnit = unit == StepLengthUnit::inch
@@ -252,7 +306,7 @@ StepExport writeStep(const std::filesystem::path& path, std::span<const StepSoli
                                        : UnitsMethods_LengthUnit_Millimeter;
             STEPCAFControl_Writer writer;
             writer.SetNameMode(true);
-            writer.SetColorMode(false);
+            writer.SetColorMode(true); // N06
             writer.SetLayerMode(false);
             if (!writer.Transfer(document.get(), parameters, STEPControl_AsIs) ||
                 writer.WriteStream(buffer) != IFSelect_RetDone)
@@ -277,15 +331,10 @@ StepExport writeIges(const std::filesystem::path& path, std::span<const StepSoli
             Interface_Static::SetCVal("write.iges.unit", "MM");
             Interface_Static::SetIVal("write.iges.brep.mode", 1);
             XcafDocument document;
-            const auto shapes = document.shapes();
-            for (const auto& item : solids) {
-                const TDF_Label label = shapes->AddShape(item.solid, false);
-                if (!item.name.empty())
-                    TDataStd_Name::Set(label, TCollection_ExtendedString(item.name.c_str(), true));
-            }
+            document.add(solids);
             IGESCAFControl_Writer writer;
             writer.SetNameMode(true);
-            writer.SetColorMode(false);
+            writer.SetColorMode(true); // N06
             writer.SetLayerMode(false);
             if (!writer.Transfer(document.get()) || !writer.Write(buffer))
                 return {StepExportError::writeFailed, "The solids cannot be translated to IGES"};

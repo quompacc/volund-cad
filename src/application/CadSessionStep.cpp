@@ -44,10 +44,13 @@ StepImportResult CadSession::addImport(const std::filesystem::path& path, kernel
     const auto fileName = path.filename().u8string();
     parameters.fileName.assign(fileName.begin(), fileName.end());
     parameters.sourceUnit = std::move(read.sourceUnit);
+    std::vector<std::optional<std::uint32_t>> colors; // N06
     try {
-        for (auto& solid : read.solids)
+        for (auto& solid : read.solids) {
+            colors.push_back(solid.color);
             parameters.solids.push_back(
                 document::importedSolid(solid.solid, std::move(solid.name)));
+        }
     } catch (const std::invalid_argument& error) {
         result.status = StepImportStatus::rejected;
         result.message = error.what();
@@ -59,7 +62,7 @@ StepImportResult CadSession::addImport(const std::filesystem::path& path, kernel
     auto& candidate = transaction.edit();
     const auto idInput = detail::prepareInput([&] {
         return candidate.addImportFeature("Import " + std::to_string(sequence),
-                                          std::move(parameters));
+                                          std::move(parameters), std::move(colors));
     });
     if (!idInput.value) {
         result.status = StepImportStatus::rejected;

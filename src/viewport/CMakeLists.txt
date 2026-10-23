@@ -38,6 +38,7 @@ list(APPEND voelund_viewport_sources
     TransformManipulator.cpp
     PushPullHandle.cpp
     SectionView.cpp
+    BodyStyle.cpp
     ViewportHighlightStyle.cpp
 )
 

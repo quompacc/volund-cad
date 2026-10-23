@@ -169,7 +169,9 @@ class MainWindow::Impl final {
     OverlayCard* parameterCard{nullptr}; // PAR02: under the model tree
     ParameterPanel* parameterPanel{nullptr};
     QAction* parametersAction{nullptr};
-    class SectionController* section{nullptr}; // N05: bottom of the left column
+    class SectionController* section{nullptr};     // N05: bottom of the left column
+    class BodyColorCard* bodyCard{nullptr};        // N06: a selected body's colour
+    class DisplayStyleMenu* displayStyle{nullptr}; // N06: beside the view cube
     class AssistantPanel* assistantPanel{nullptr};
     std::unique_ptr<assistant::ClaudeCodeBackend> assistantBackend;
     std::uint64_t assistantGeneration{0};

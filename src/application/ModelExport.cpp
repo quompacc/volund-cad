@@ -52,8 +52,9 @@ ExportSolids exportSolids(const CadSession& session, std::span<const document::B
                                 : named->name;
         std::size_t pieces = 0;
         for (TopExp_Explorer explorer(found->shape, TopAbs_SOLID); explorer.More(); explorer.Next())
-            result.solids.push_back(
-                {explorer.Current(), ++pieces == 1 ? name : name + " " + std::to_string(pieces)});
+            result.solids.push_back({explorer.Current(),
+                                     ++pieces == 1 ? name : name + " " + std::to_string(pieces),
+                                     named->color});
         if (pieces == 0)
             return {
                 {},

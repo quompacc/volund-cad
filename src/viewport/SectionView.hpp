@@ -15,6 +15,7 @@
 
 #include <functional>
 #include <optional>
+#include <vector>
 
 namespace voelund::viewport {
 
@@ -31,9 +32,12 @@ class SectionView final {
     // normal moves the patch; any other plane shows it anew, sized from `extent`.
     void set(const occ::handle<AIS_InteractiveContext>& context,
              const std::optional<SectionPlane>& plane, const Bnd_Box& extent,
-             const Quantity_Color& bodyColor, const Quantity_Color& gripColor);
-    // Adds the clipping plane to a body presentation (off while no section is shown).
-    void clip(const occ::handle<AIS_Shape>& body);
+             const Quantity_Color& gripColor);
+    // Gives a body presentation its clipping plane (off while no section is shown), its cut
+    // filled in a darker shade of `color` (N06: each body its own colour).
+    void clip(const occ::handle<AIS_Shape>& body, const Quantity_Color& color);
+    // The body presentations were removed.
+    void forgetBodies() noexcept { planes_.clear(); }
     // The GL context was recreated: presentations are gone without removal.
     void reset();
     [[nodiscard]] bool isShown() const noexcept { return plane_.has_value(); }
@@ -45,9 +49,10 @@ class SectionView final {
     void showGrip(const occ::handle<AIS_InteractiveContext>& context, const Bnd_Box& extent,
                   const Quantity_Color& gripColor);
     void moved(double distance, bool finished);
+    void applyPlane();
     [[nodiscard]] SectionPlane shifted(double distance) const;
 
-    occ::handle<Graphic3d_ClipPlane> clipPlane_;
+    std::vector<occ::handle<Graphic3d_ClipPlane>> planes_; // one per body presentation
     PushPullHandle grip_;
     std::optional<SectionPlane> plane_;
     // Where the grip was shown; its distance counts from here against the normal.

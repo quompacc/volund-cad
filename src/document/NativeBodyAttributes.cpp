@@ -36,6 +36,8 @@ void validateBodyAttributes(const BodyAttributeTable& table,
         if (attributes.name.size() > maximumBodyNameBytes ||
             attributes.name.find('\0') != std::string::npos)
             throw std::invalid_argument("Invalid body name");
+        if (attributes.color && *attributes.color > maximumBodyColor)
+            throw std::invalid_argument("Invalid body colour");
     }
 }
 
@@ -72,16 +74,27 @@ void writeNativeBodyAttributes(const TDF_Label& label, const BodyAttributeTable&
         TDataStd_AsciiString::Set(entry.FindChild(1), std::to_string(body).c_str());
         TDataStd_AsciiString::Set(entry.FindChild(2), attributes.name.c_str());
         TDataStd_Integer::Set(entry.FindChild(3), attributes.hidden ? 1 : 0);
+        if (attributes.color)
+            TDataStd_Integer::Set(entry.FindChild(4), static_cast<int>(*attributes.color));
     }
 }
 
-BodyAttributeTable readNativeBodyAttributes(const TDF_Label& label) {
+// N06: the colour of an entry, when it has one (schema 38).
+std::optional<std::uint32_t> color(const TDF_Label& entry, int schemaVersion) {
+    if (entry.NbChildren() == 3)
+        return std::nullopt;
+    require(entry.NbChildren() == 4 && schemaVersion >= 38);
+    const int value = integer(child(entry, 4));
+    require(value >= 0 && static_cast<std::uint32_t>(value) <= maximumBodyColor);
+    return static_cast<std::uint32_t>(value);
+}
+
+BodyAttributeTable readNativeBodyAttributes(const TDF_Label& label, int schemaVersion) {
     const int count = integer(label);
     require(count > 0 && label.NbChildren() == count && label.NbAttributes() == 1);
     BodyAttributeTable table;
     for (int index = 1; index <= count; ++index) {
         const auto entry = child(label, index);
-        require(entry.NbChildren() == 3);
         const auto encoded = text(child(entry, 1));
         std::uint64_t body = 0;
         const auto parsed = std::from_chars(encoded.data(), encoded.data() + encoded.size(), body);
@@ -90,7 +103,8 @@ BodyAttributeTable readNativeBodyAttributes(const TDF_Label& label) {
         const int hidden = integer(child(entry, 3));
         require(hidden == 0 || hidden == 1);
         require(table.empty() || table.back().body < body);
-        table.push_back({body, BodyAttributes{text(child(entry, 2)), hidden == 1}});
+        table.push_back({body, BodyAttributes{text(child(entry, 2)), hidden == 1,
+                                              color(entry, schemaVersion)}});
     }
     return table;
 }

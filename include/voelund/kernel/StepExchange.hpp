@@ -6,6 +6,7 @@
 #include <TopoDS_Shape.hxx>
 
 #include <cstddef>
+#include <cstdint>
 #include <filesystem>
 #include <optional>
 #include <span>
@@ -20,7 +21,8 @@ namespace voelund::kernel {
 
 struct StepSolid final {
     TopoDS_Shape solid;
-    std::string name; // UTF-8; empty when the file names none
+    std::string name;                     // UTF-8; empty when the file names none
+    std::optional<std::uint32_t> color{}; // N06: 0xRRGGBB of its faces; none when unset
 };
 
 enum class StepImportError {

@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Eduard Hart
 
+#include "BodyColorCard.hpp"
 #include "CommandFeedback.hpp"
+#include "DisplayStyleMenu.hpp"
 #include "MainWindowState.hpp"
 #include "MainWindowSupport.hpp"
 #include "ModelTreePanel.hpp"
+
+#include <voelund/application/CadSession.hpp>
 
 #include <QAction>
 #include <QStatusBar>
@@ -33,11 +37,35 @@ void MainWindow::createBodyCommands() {
     syncBodyCommands();
 }
 
+// N06 (decision 2026-10-23): a selected body shows its colour card in the slot of the feature
+// properties; the display style sits beside the view cube.
+void MainWindow::createBodyAppearance() {
+    impl_->bodyCard = new BodyColorCard(*impl_->viewport);
+    impl_->bodyCard->setChoiceHandler(
+        [this](std::optional<std::uint32_t> color) { colorBodies(color); });
+    impl_->displayStyle = new DisplayStyleMenu(*this, *impl_->viewport);
+}
+
+// One undo step per body; a group (N02b) takes the colour on each of its bodies.
+void MainWindow::colorBodies(std::optional<std::uint32_t> color) {
+    const auto bodies = selectedBodies();
+    for (const auto body : bodies)
+        if (!runCommand([&] { return impl_->session.setBodyColor(body, color); },
+                        [this](const QString& message) { statusBar()->showMessage(message); },
+                        true))
+            break;
+    refreshScene();
+    if (!bodies.empty())
+        selectBody(bodies.front().value(), true);
+    statusBar()->showMessage(tr("Körperfarbe geändert"), 2000);
+}
+
 void MainWindow::syncBodyCommands() {
     if (impl_->renameBodyAction == nullptr)
         return;
     const ShellState shell = impl_->shell();
     const bool body = shell.selection == ShellSelection::body && !shell.toolBlocksCommands();
+    syncBodyCard(body);
     impl_->renameBodyAction->setEnabled(body && impl_->bodyGroup.size() < 2); // N02b
     impl_->bodyVisibilityAction->setEnabled(body);
     impl_->bodyVisibilityAction->setText(shell.bodyHidden ? tr("Einblenden") : tr("Ausblenden"));
@@ -74,6 +102,17 @@ void MainWindow::renameBody(std::uint64_t id, const QString& name) {
     refreshScene();
     selectBody(id);
     statusBar()->showMessage(tr("Körper umbenannt"), 2000);
+}
+
+void MainWindow::syncBodyCard(bool shown) {
+    if (impl_->bodyCard == nullptr)
+        return;
+    std::optional<std::uint32_t> color;
+    for (const auto& item : impl_->session.modelOutline().bodies)
+        if (impl_->selectedBody && item.id == *impl_->selectedBody)
+            color = item.color;
+    impl_->bodyCard->display(impl_->shell().bodyName, color);
+    impl_->bodyCard->setVisible(shown && impl_->selectedBody.has_value());
 }
 
 } // namespace voelund::desktop

@@ -41,6 +41,7 @@ struct SceneBody final {
     TopoDS_Shape shape;
     bool transformable;
     bool stale{false}; // U10: last valid geometry of a model with errors, drawn faded
+    std::optional<std::uint32_t> color{}; // N06: 0xRRGGBB; none: the theme's body colour
 };
 
 // M19: a construction plane (origin, normal, x direction) or axis (a point, its direction as
@@ -229,6 +230,8 @@ struct ViewportTheme final {
 };
 // Base planes offered in the viewport (V01b); values match document::DatumPlane.
 enum class BasePlane { xy = 1, xz = 2, yz = 3 };
+// N06 (user decision 2026-10-23): how bodies are drawn; a view setting, not in the document.
+enum class DisplayStyle { shaded, shadedWithEdges, wireframe, hiddenEdges };
 // N05: a section plane; the side its normal points to stays visible.
 struct SectionPlane final {
     std::array<double, 3> origin;
@@ -347,6 +350,8 @@ class CadViewport final : public CadViewportBase {
     // U06: view state from the model tree; no document change. Index 0 = XY, 1 = XZ, 2 = YZ.
     void setBasePlaneVisibility(std::array<bool, 3> visible);
     void setGridVisible(bool visible);
+    void setDisplayStyle(DisplayStyle style); // N06
+    [[nodiscard]] DisplayStyle displayStyle() const noexcept;
     [[nodiscard]] bool isGridVisible() const noexcept;
     // N05: a section through the bodies, a pure view state; nullopt shows the whole model.
     // Dragging its arrow moves the plane and reports it, `finished` on release.

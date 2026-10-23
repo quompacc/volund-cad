@@ -73,6 +73,7 @@ MainWindow::MainWindow(application::CadSession& session, QWidget* parent)
     createHeader();
     createParameterCard();
     createSectionView();
+    createBodyAppearance();
     createCommandSurfaces();
     createTimeline();
     createAssistant();
