@@ -229,6 +229,12 @@ struct ViewportTheme final {
 };
 // Base planes offered in the viewport (V01b); values match document::DatumPlane.
 enum class BasePlane { xy = 1, xz = 2, yz = 3 };
+// N05: a section plane; the side its normal points to stays visible.
+struct SectionPlane final {
+    std::array<double, 3> origin;
+    std::array<double, 3> normal;
+    bool operator==(const SectionPlane&) const = default;
+};
 
 struct SketchElementIntent final {
     double firstX;
@@ -342,6 +348,10 @@ class CadViewport final : public CadViewportBase {
     void setBasePlaneVisibility(std::array<bool, 3> visible);
     void setGridVisible(bool visible);
     [[nodiscard]] bool isGridVisible() const noexcept;
+    // N05: a section through the bodies, a pure view state; nullopt shows the whole model.
+    // Dragging its arrow moves the plane and reports it, `finished` on release.
+    void setSection(const std::optional<SectionPlane>& plane);
+    void setSectionHandler(std::function<void(const SectionPlane&, bool finished)> handler);
     void setCameraView(CameraView view);
     // View cube: read and set any direction (center and zoom stay), orbit and roll.
     [[nodiscard]] CameraFrame cameraFrame() const;

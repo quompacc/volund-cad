@@ -6,6 +6,8 @@
 #include "MainWindowState.hpp"
 #include "MainWindowSupport.hpp"
 #include "ModelTreePanel.hpp"
+#include "OverlayCard.hpp"
+#include "SectionController.hpp"
 
 #include <voelund/application/CadSession.hpp>
 #include <voelund/viewport/CadViewport.hpp>
@@ -74,6 +76,52 @@ void MainWindow::createViewSwitches() {
     }
     impl_->sketchEditorTool->setSwitchHandler([this] { syncViewSwitches(); });
     syncViewSwitches();
+}
+
+namespace {
+viewport::SectionPlane sectionPlane(const document::SketchPlane& frame) {
+    return {{frame.originX, frame.originY, frame.originZ},
+            {frame.normalX, frame.normalY, frame.normalZ}};
+}
+} // namespace
+
+// N05: the section view; its plane comes from the base planes, the construction planes or the
+// selection. View state only.
+void MainWindow::createSectionView() {
+    SectionController::Hooks hooks;
+    hooks.constructionPlanes = [this] {
+        std::vector<SectionController::Choice> planes;
+        for (const auto& feature : impl_->session.features())
+            if (feature.kind == document::FeatureKind::datumPlane)
+                if (const auto frame = impl_->session.datumFrame(feature.id))
+                    planes.push_back({QString::fromStdString(feature.name), sectionPlane(*frame)});
+        return planes;
+    };
+    hooks.selectedPlane = [this]() -> std::optional<SectionController::Choice> {
+        if (const auto& face = impl_->selectedPlanarFace)
+            return SectionController::Choice{tr("Gewählte Fläche"),
+                                             {{face->originX, face->originY, face->originZ},
+                                              {face->normalX, face->normalY, face->normalZ}}};
+        if (impl_->selectedDatum)
+            return SectionController::Choice{
+                tr("Gewählte Ebene"),
+                sectionPlane(document::datumSketchPlane(*impl_->selectedDatum))};
+        const auto selected = impl_->session.selectedFeature();
+        for (const auto& feature : impl_->session.features())
+            if (feature.id == selected && feature.kind == document::FeatureKind::datumPlane)
+                if (const auto frame = impl_->session.datumFrame(feature.id))
+                    return SectionController::Choice{QString::fromStdString(feature.name),
+                                                     sectionPlane(*frame)};
+        return std::nullopt;
+    };
+    hooks.placed = [this] {
+        impl_->modelCard->place();
+        if (impl_->parameterCard != nullptr)
+            impl_->parameterCard->place();
+        impl_->section->card().place();
+    };
+    impl_->section = new SectionController(*this, *impl_->viewport, std::move(hooks));
+    impl_->header->setSectionAction(impl_->section->action());
 }
 
 void MainWindow::syncViewSwitches() {

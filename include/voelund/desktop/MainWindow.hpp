@@ -65,6 +65,7 @@ class MainWindow final : public QMainWindow {
     void createHistoryActions();
     void createCommandSurfaces();
     void createViewSwitches();
+    void createSectionView(); // N05 (MainWindowView.cpp)
     // M01: bodies as a whole (MainWindowBodies.cpp).
     void createBodyCommands();
     void syncBodyCommands();

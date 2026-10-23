@@ -116,6 +116,16 @@ umgesetzte Funktionen. Was hier nicht steht, gibt es noch nicht.
   voller Genauigkeit. Messen verändert das Dokument nicht.
 - **Grenzen:** Keine Eckpunkte, keine Toleranzprüfung, keine Zeichnungsbemaßung.
 
+## Schnittansicht
+
+- **Schnitt** (Symbol in der Kopfzeile, Befehlssuche) schneidet die Körper an einer Ebene auf.
+  Die Karte unten links wählt XY, XZ, YZ, eine Bezugsebene oder mit „Auswahl“ die gewählte ebene
+  Fläche. Der Versatz verschiebt den Schnitt, im Feld oder mit dem Pfeil im Ansichtsfenster.
+  „Seite umkehren“ zeigt die andere Hälfte.
+- Die Schnittfläche ist dunkler gefüllt. Auswahl und Messen arbeiten am geschnittenen Modell.
+- Der Schnitt bleibt beim Arbeiten mit anderen Werkzeugen stehen. ✕ oder ein zweiter Klick auf
+  „Schnitt“ zeigt wieder das ganze Modell. Der Schnitt ändert das Dokument nicht.
+
 ## Austausch (STEP)
 
 - **Importieren (STEP)…** (Datei-Menü, Strg+I) fügt die Volumenkörper einer STEP-Datei als

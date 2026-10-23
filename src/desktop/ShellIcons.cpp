@@ -8,6 +8,7 @@
 #include <QPixmap>
 
 #include <cmath>
+#include <functional>
 #include <numbers>
 
 namespace voelund::desktop {
@@ -332,27 +333,52 @@ void draw(QPainter& painter, ShellIcon icon, const QColor& ink, const QColor& ac
     }
 }
 
-QPixmap render(ShellIcon icon, const QColor& ink, const QColor& accent, int size) {
+// N05: a block cut through, the cut in the accent colour.
+void drawSection(QPainter& painter, const QColor& ink, const QColor& accent) {
+    painter.setPen(QPen(ink, 1.8, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    painter.setBrush(Qt::NoBrush);
+    painter.drawPolyline(
+        QPolygonF{QPointF(12, 4.5), QPointF(3.5, 4.5), QPointF(3.5, 19.5), QPointF(12, 19.5)});
+    painter.setPen(QPen(accent, 1.8, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    painter.setBrush(QColor(accent.red(), accent.green(), accent.blue(), 90));
+    painter.drawRect(QRectF(12, 4.5, 4, 15));
+    painter.setBrush(Qt::NoBrush);
+    painter.drawLine(QPointF(19, 3), QPointF(19, 21));
+}
+
+using Painting = std::function<void(QPainter&, const QColor&, const QColor&)>;
+
+QPixmap render(const Painting& paint, const QColor& ink, const QColor& accent, int size) {
     QPixmap pixmap(size, size);
     pixmap.fill(Qt::transparent);
     QPainter painter(&pixmap);
     painter.setRenderHint(QPainter::Antialiasing);
     painter.scale(size / 24.0, size / 24.0);
-    draw(painter, icon, ink, accent);
+    paint(painter, ink, accent);
     return pixmap;
+}
+
+QIcon paintedIcon(const Painting& paint, const QColor& ink, const QColor& accent) {
+    QIcon result;
+    for (const int size : {18, 20, 24, 36, 40, 48})
+        result.addPixmap(render(paint, ink, accent, size));
+    QColor disabled = ink;
+    disabled.setAlphaF(0.35F);
+    for (const int size : {18, 20, 24, 36, 40, 48})
+        result.addPixmap(render(paint, disabled, disabled, size), QIcon::Disabled);
+    return result;
 }
 
 } // namespace
 
 QIcon shellIcon(ShellIcon icon, const QColor& ink, const QColor& accent) {
-    QIcon result;
-    for (const int size : {18, 20, 24, 36, 40, 48})
-        result.addPixmap(render(icon, ink, accent, size));
-    QColor disabled = ink;
-    disabled.setAlphaF(0.35F);
-    for (const int size : {18, 20, 24, 36, 40, 48})
-        result.addPixmap(render(icon, disabled, disabled, size), QIcon::Disabled);
-    return result;
+    return paintedIcon([icon](QPainter& painter, const QColor& pen,
+                              const QColor& highlight) { draw(painter, icon, pen, highlight); },
+                       ink, accent);
+}
+
+QIcon sectionIcon(const QColor& ink, const QColor& accent) {
+    return paintedIcon(drawSection, ink, accent);
 }
 
 } // namespace voelund::desktop

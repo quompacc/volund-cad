@@ -9,6 +9,7 @@
 #include "DatumPresentation.hpp"
 #include "PlanarFaceSelection.hpp"
 #include "PushPullHandle.hpp"
+#include "SectionView.hpp"
 #include "SketchBoxSelection.hpp"
 #include "SketchConstraintPresentation.hpp"
 #include "SketchEditorInteraction.hpp"
@@ -67,7 +68,7 @@ namespace voelund::viewport {
 class CadViewportScene {
   public:
     // cancelled: a body drag ended with Escape; the button's release is no click (S14).
-    enum class Gesture { none, pan, rotate, moveAxis, pushPull, selectBox, cancelled };
+    enum class Gesture { none, pan, rotate, moveAxis, pushPull, section, selectBox, cancelled };
 
     struct BodyPresentation final {
         std::uint64_t id;
@@ -137,6 +138,42 @@ class CadViewportScene {
             }
         }
     }
+    // N05: the box around the shown bodies sizes the section patch.
+    [[nodiscard]] Bnd_Box bodyExtent() const {
+        Bnd_Box extent;
+        for (const BodyPresentation& presentation : presentations)
+            BRepBndLib::Add(presentation.shape->Shape(), extent);
+        return extent;
+    }
+    void showSection(const std::optional<SectionPlane>& plane) {
+        section.set(context, plane, bodyExtent(), occtColor(theme.body),
+                    occtColor(theme.selection));
+        for (const BodyPresentation& presentation : presentations)
+            section.clip(presentation.shape);
+    }
+    // After a new GL context the section patch is shown again.
+    void restoreSection() {
+        if (section.isShown() && !section.grip().isShown())
+            showSection(std::optional<SectionPlane>(section.plane()));
+    }
+    // T04c, N05: a press on the push/pull or the section arrow starts dragging it.
+    bool startGrip(const occ::handle<AIS_InteractiveObject>& detected, int x, int y) {
+        for (const auto& [grip, kind] : {std::pair{&pushPull, Gesture::pushPull},
+                                         std::pair{&section.grip(), Gesture::section}}) {
+            if (grip->matches(detected) && grip->hasActiveMode()) {
+                gesture = kind;
+                grip->start(x, y, view);
+                return true;
+            }
+        }
+        return false;
+    }
+    [[nodiscard]] PushPullHandle* activeGrip() noexcept {
+        if (gesture == Gesture::pushPull)
+            return &pushPull;
+        return gesture == Gesture::section ? &section.grip() : nullptr;
+    }
+
     void displayPendingBodies() {
         if (!ready) {
             return;
@@ -163,9 +200,11 @@ class CadViewportScene {
             presentation->Attributes()->ShadingAspect()->Aspect()->SetPolygonOffsets(
                 Aspect_POM_Fill, 1.0F, 2.0F);
             showEdges(presentation);
+            section.clip(presentation); // N05
             context->Display(presentation, false);
             presentations.push_back(BodyPresentation{body.id, presentation, body.transformable});
         }
+        restoreSection();
         setBodiesPickable(!sketchEditor.isActive() || edgePicking);
         sketchPresentation.setElements(context, pendingSketchElements, selectedSketchElements,
                                        sketchEditor.isActive());
@@ -312,6 +351,7 @@ class CadViewportScene {
     occ::handle<V3d_View> view;
     TransformManipulator manipulator;
     PushPullHandle pushPull; // T04c
+    SectionView section;     // N05
     SketchEditorInteraction sketchEditor;
     SketchPresentation sketchPresentation;
     SketchConstraintPresentation sketchConstraintPresentation;

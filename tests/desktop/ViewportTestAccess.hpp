@@ -7,6 +7,7 @@
 #include <Aspect_Window.hxx>
 #include <BRepGProp.hxx>
 #include <GProp_GProps.hxx>
+#include <Graphic3d_SequenceOfHClipPlane.hxx>
 #include <StdSelect_BRepOwner.hxx>
 #include <TopAbs_ShapeEnum.hxx>
 #include <algorithm>
@@ -78,6 +79,25 @@ class ViewportTestAccess {
         return total;
     }
     static double pushPullArrowZ(CadViewport& v) { return v.impl_->pushPull.arrowDirection().Z(); }
+    // N05: the section shown, whether every body is clipped and the pointer on its arrow.
+    static std::optional<SectionPlane> section(CadViewport& v) { return v.impl_->section.plane(); }
+    static bool bodiesClipped(CadViewport& v) {
+        bool all = !v.impl_->presentations.empty();
+        for (const auto& presentation : v.impl_->presentations) {
+            bool on = false;
+            if (const auto& planes = presentation.shape->ClipPlanes(); !planes.IsNull())
+                for (Graphic3d_SequenceOfHClipPlane::Iterator it(*planes); it.More(); it.Next())
+                    on = on || it.Value()->IsOn();
+            all = all && on;
+        }
+        return all;
+    }
+    static bool sectionArrowHovered(CadViewport& v) {
+        const auto& context = v.impl_->context;
+        auto& grip = v.impl_->section.grip();
+        return context->HasDetected() && grip.matches(context->DetectedInteractive()) &&
+               grip.hasActiveMode();
+    }
     static QPoint project(CadViewport& v, double x, double y, double z) {
         int px = 0, py = 0;
         v.impl_->view->Convert(x, y, z, px, py);

@@ -54,5 +54,7 @@ enum class ShellIcon {
 };
 
 [[nodiscard]] QIcon shellIcon(ShellIcon icon, const QColor& ink, const QColor& accent);
+// N05: the section view switch.
+[[nodiscard]] QIcon sectionIcon(const QColor& ink, const QColor& accent);
 
 } // namespace voelund::desktop

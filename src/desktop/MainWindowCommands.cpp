@@ -7,6 +7,7 @@
 #include "MainWindowState.hpp"
 #include "MainWindowSupport.hpp"
 #include "MeasurementInput.hpp"
+#include "SectionController.hpp"
 
 #include "ShellActions.hpp"
 
@@ -481,11 +482,19 @@ void MainWindow::createCommandSurfaces() {
     });
 }
 
+namespace {
+void syncSection(SectionController* section) {
+    if (section != nullptr)
+        section->sync();
+}
+} // namespace
+
 void MainWindow::syncShell() {
     impl_->commandActions->refreshEnabled();
     syncParameters(); // PAR02: the table stays fixed while a tool is open
     syncBodyCommands();
     syncViewSwitches();
+    syncSection(impl_->section); // N05: new construction planes, a selected face
     const ShellState shell = impl_->shell();
     // U13: the rail shows the tools of the active function.
     if (impl_->sketchActions != nullptr && impl_->toolRail != nullptr) {

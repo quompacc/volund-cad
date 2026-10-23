@@ -33,6 +33,8 @@ class ShellHeader final : public OverlayCard {
     void setViewActions(QAction& search, QAction& toolRail);
     // PAR02: the switch of the parameter card, beside the search.
     void setParametersAction(QAction& parameters);
+    // N05: the section view switch, a symbol beside the parameters.
+    void setSectionAction(QAction& section);
     void display(const ShellState& state);
     // AI04c: the Claude chip right of the theme switch and its menu.
     void setAssistantMenu(QMenu& menu);
@@ -66,6 +68,7 @@ class ShellHeader final : public OverlayCard {
     QToolButton* themeButton_{nullptr};
     QToolButton* searchButton_{nullptr};
     QToolButton* parametersButton_{nullptr};
+    QToolButton* sectionButton_{nullptr};
     QToolButton* railButton_{nullptr};
     QToolButton* assistantButton_{nullptr};
 };

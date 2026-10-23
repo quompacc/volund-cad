@@ -14,6 +14,7 @@
 #include "MeasurementInput.hpp"
 #include "ModelTreePanel.hpp"
 #include "OverlayCard.hpp"
+#include "SectionController.hpp"
 #include "ShellActions.hpp"
 #include "ShellHeader.hpp"
 #include "ShellIcons.hpp"
@@ -71,6 +72,7 @@ MainWindow::MainWindow(application::CadSession& session, QWidget* parent)
         std::make_unique<DocumentActions>(*this, impl_->session, [this]() { refreshScene(); });
     createHeader();
     createParameterCard();
+    createSectionView();
     createCommandSurfaces();
     createTimeline();
     createAssistant();
@@ -135,6 +137,8 @@ void MainWindow::createModelTree() {
         // PAR02: the parameter card below it takes up to half of the column.
         if (impl_->parameterCard != nullptr && impl_->parameterCard->isVisible())
             available -= parameterCardHeight(available) + overlay::gap;
+        if (impl_->section != nullptr && impl_->section->card().isVisible()) // N05
+            available -= SectionController::cardHeight() + overlay::gap;
         const int wanted = tree->contentHeight() + 40;
         return QRect(overlay::margin, overlay::columnTop, overlay::treeWidth,
                      std::max(120, std::min(available, wanted)));

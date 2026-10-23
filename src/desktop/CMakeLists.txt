@@ -71,6 +71,7 @@ add_library(
     MainWindowInteractions.cpp
     ShellHeader.cpp
     ShellIcons.cpp
+    SectionController.cpp
     ShellState.cpp
     SketchToolActions.cpp
     SketchViewAdapter.cpp

@@ -403,6 +403,7 @@ void CadViewport::setTransformSnapping(bool enabled, double linearStep, double a
     performViewportOperation(*this, impl_->ready, [&] {
         impl_->manipulator.setSnapping(enabled, linearStep, angularStep);
         impl_->pushPull.setSnapping(enabled, linearStep);
+        impl_->section.grip().setSnapping(enabled, linearStep);
         impl_->sketchEditor.setSnapping(enabled, linearStep);
     });
 }

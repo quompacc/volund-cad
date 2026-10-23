@@ -192,6 +192,7 @@ in U04 an dieselben IDs.
 | `body.visibility` | Kontextleiste (Körper), Auge im Baum, Suche | CadSession::setBodyHidden | Körperzeile im Baum gewählt (M01); gespeichert, „geändert“, kein Rückgängig-Schritt | body_flow |
 | `view.command_search` | Kopfzeile (Suchfeld), Strg+K | CommandPalette | immer | command_surfaces |
 | `view.tool_rail` | Kopfzeile (Werkzeugleiste), Suche | MainWindow | immer | command_surfaces |
+| `view.section` | Kopfzeile (Schnitt-Symbol), Suche; Karte „Schnitt“ unten in der linken Spalte | MainWindow/SectionController | immer; Ebene XY/XZ/YZ, Bezugsebene oder gewählte ebene Fläche, Versatz mit Feld und Pfeil, Seite umkehren; Ansichtszustand ohne Undo und ohne „geändert“, bleibt bei offenen Werkzeugen (N05, Nutzerentscheidung 23.10.2026) | section_view |
 | `view.grid` | Suche, Skizzenpanel (Raster), Modellbaum (Auge) | MainWindow | immer; Ansichtszustand ohne Undo und ohne „geändert“ | sketch_view_switches |
 | `solid.create.box` | Werkzeugleiste, Kontextleiste (leer), Suche | CadSession | immer | command_inventory, command_surfaces |
 | `solid.create.cylinder` | Werkzeugleiste, Kontextleiste (leer, Feature), Suche | CadSession | Geometrie aktuell; verbindet sich mit dem gewählten Körper, ohne Auswahl ein neuer Körper im Ursprung (M01, Nutzerentscheidung 10.10.2026) | command_inventory |

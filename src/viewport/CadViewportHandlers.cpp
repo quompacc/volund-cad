@@ -13,6 +13,22 @@
 #include <TopoDS_Compound.hxx>
 
 namespace voelund::viewport {
+void CadViewport::setSection(const std::optional<SectionPlane>& plane) {
+    performViewportOperation(*this, impl_->ready, [&] {
+        if (!impl_->ready)
+            return;
+        if (impl_->gesture == Impl::Gesture::section && !plane)
+            impl_->gesture = Impl::Gesture::none;
+        impl_->showSection(plane);
+        update();
+    });
+}
+
+void CadViewport::setSectionHandler(
+    std::function<void(const SectionPlane&, bool finished)> handler) {
+    impl_->section.setHandler(std::move(handler));
+}
+
 void CadViewport::setEdgePicking(bool enabled) {
     performViewportOperation(*this, impl_->ready, [&] {
         impl_->edgePicking = enabled;

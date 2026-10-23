@@ -142,6 +142,8 @@ ShellHeader::ShellHeader(QWidget& host) : OverlayCard(host, QStringLiteral("shel
     parametersButton_->setFixedHeight(controlSize);
     parametersButton_->setAutoRaise(true);
     layout->addWidget(parametersButton_);
+    sectionButton_ = iconButton(this, "sectionButton");
+    layout->addWidget(sectionButton_);
     layout->addSpacing(4);
     layout->addWidget(divider(this));
     layout->addSpacing(4);
@@ -248,6 +250,11 @@ void ShellHeader::setParametersAction(QAction& parameters) {
     setTheme(mode_);
 }
 
+void ShellHeader::setSectionAction(QAction& section) {
+    sectionButton_->setDefaultAction(&section);
+    setTheme(mode_);
+}
+
 void ShellHeader::display(const ShellState& state) {
     static_cast<ElidedLabel*>(documentName_)->setFullText(state.documentName);
     saveState_->setText(state.modified ? tr("Ungespeichert") : tr("Gespeichert"));
@@ -313,6 +320,8 @@ void ShellHeader::setTheme(ThemeMode mode) {
         action->setIcon(icon(ShellIcon::redo));
     if (auto* action = parametersButton_->defaultAction())
         action->setIcon(icon(ShellIcon::parameters));
+    if (auto* action = sectionButton_->defaultAction())
+        action->setIcon(sectionIcon(tokens.ink, tokens.accent));
     // The switch shows the theme it leads to.
     if (auto* action = themeButton_->defaultAction())
         action->setIcon(icon(mode == ThemeMode::dark ? ShellIcon::sun : ShellIcon::moon));

@@ -37,6 +37,7 @@ list(APPEND voelund_viewport_sources
     SketchPresentation.cpp
     TransformManipulator.cpp
     PushPullHandle.cpp
+    SectionView.cpp
     ViewportHighlightStyle.cpp
 )
 
