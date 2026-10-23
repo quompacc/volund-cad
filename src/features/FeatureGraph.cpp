@@ -459,7 +459,8 @@ void runChecked(const document::DocumentSnapshot& document,
         failure(error.what(), error.code());
         issue.elements = error.elements();
     } catch (const kernel::KernelError& error) {
-        if (error.operation() == kernel::KernelOperation::evaluation)
+        if (error.operation() == kernel::KernelOperation::evaluation ||
+            error.operation() == kernel::KernelOperation::sketchGeometry)
             failure(error.diagnostic());
         else
             failure(error.what(), kernel::booleanFailureCode(error.failure()));

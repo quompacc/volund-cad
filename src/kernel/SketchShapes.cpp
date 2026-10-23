@@ -116,17 +116,21 @@ TopoDS_Vertex pointVertex(const gp_Pnt& point) {
 }
 
 TopoDS_Vertex junctionVertex(const gp_Pnt& point, double tolerance) {
-    TopoDS_Vertex vertex;
-    BRep_Builder().MakeVertex(vertex, point, tolerance);
-    return vertex;
+    return detail::guarded(operation, [&] {
+        TopoDS_Vertex vertex;
+        BRep_Builder().MakeVertex(vertex, point, tolerance);
+        return vertex;
+    });
 }
 
 double confusionTolerance() noexcept { return Precision::Confusion(); }
 
 void widenVertexTolerance(const TopoDS_Shape& shape, double tolerance) {
-    BRep_Builder builder;
-    for (TopExp_Explorer vertex(shape, TopAbs_VERTEX); vertex.More(); vertex.Next())
-        builder.UpdateVertex(TopoDS::Vertex(vertex.Current()), tolerance);
+    detail::guarded(operation, [&] {
+        BRep_Builder builder;
+        for (TopExp_Explorer vertex(shape, TopAbs_VERTEX); vertex.More(); vertex.Next())
+            builder.UpdateVertex(TopoDS::Vertex(vertex.Current()), tolerance);
+    });
 }
 
 WireBuilder::WireBuilder() : builder_(std::make_shared<BRepBuilderAPI_MakeWire>()) {}
@@ -151,13 +155,15 @@ TopoDS_Wire WireBuilder::wire() const {
 }
 
 TopoDS_Wire closedWire(std::span<const TopoDS_Edge> edges) {
-    BRep_Builder builder;
-    TopoDS_Wire wire;
-    builder.MakeWire(wire);
-    for (const auto& edge : edges)
-        builder.Add(wire, edge);
-    wire.Closed(true);
-    return wire;
+    return detail::guarded(operation, [&] {
+        BRep_Builder builder;
+        TopoDS_Wire wire;
+        builder.MakeWire(wire);
+        for (const auto& edge : edges)
+            builder.Add(wire, edge);
+        wire.Closed(true);
+        return wire;
+    });
 }
 
 namespace {
@@ -248,9 +254,11 @@ bool isValidShape(const TopoDS_Shape& shape) {
 }
 
 double faceArea(const TopoDS_Face& face) {
-    GProp_GProps properties;
-    BRepGProp::SurfaceProperties(face, properties);
-    return properties.Mass();
+    return detail::guarded(operation, [&] {
+        GProp_GProps properties;
+        BRepGProp::SurfaceProperties(face, properties);
+        return properties.Mass();
+    });
 }
 
 bool sameEdgeCurve(const TopoDS_Edge& source, const TopoDS_Edge& actual) {

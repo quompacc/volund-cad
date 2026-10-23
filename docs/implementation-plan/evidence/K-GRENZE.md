@@ -81,6 +81,22 @@ außerhalb von `kernel` und `viewport`:
 - `BRepBuilderAPI_MakeEdge` in features, `Geom2d_Circle` in application und ein
   `catch (const Standard_Failure&)` in desktop werden rot.
 
+## Nachbesserung nach CI-Lauf 724 (23.10.2026)
+
+- Lauf 724 (`0103831`) brach `desktop.parameter_failures` ab („Subprocess aborted“).
+- Ursache: Die neuen Kernel-Hüllen ließen `Standard_ProgramError` und `Standard_OutOfMemory`
+  durch, und `guardCommand` fing nur noch übersetzte Fehler. Vorher fingen die Stellen in den
+  Features und die Desktop-Grenze jeden `Standard_Failure`. Ein solcher Fehler verließ so eine
+  Qt-Ereignisbehandlung und beendete das Programm.
+- Korrektur, damit das Verhalten wie vorher ist:
+  - `detail::guarded` übersetzt jeden OCCT-Fehler.
+  - `guardCommand` nutzt `translateEveryOcctFailure`.
+  - Die Abfragen in `ShapeQueries` und `EdgeQueries` und die restlichen Funktionen in
+    `SketchShapes` sind ebenfalls geschützt. Abfragen melden `KernelOperation::evaluation`,
+    also dieselbe Meldung wie vorher.
+  - `runChecked` zeigt bei `sketchGeometry` wie früher nur die OCCT-Meldung.
+- `desktop.sketch_keyboard` im selben Lauf ist der bekannte zeitabhängige Ausfall.
+
 ## Prüfungen
 
 | Szenario | Nachweis |

@@ -13,8 +13,9 @@ namespace voelund::desktop {
 template <class Execute, class Report> bool guardCommand(Execute execute, Report report) {
     try {
         bool done = false;
-        kernel::translateOcctFailures(kernel::KernelOperation::evaluation,
-                                      [&] { done = execute(); });
+        // Every OCCT failure, as before K-GRENZE: none may leave a Qt callback.
+        kernel::translateEveryOcctFailure(kernel::KernelOperation::evaluation,
+                                          [&] { done = execute(); });
         return done;
     } catch (const kernel::KernelError& error) {
         report(

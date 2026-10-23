@@ -1,0 +1,343 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<!-- Copyright (C) 2026 Eduard Hart -->
+<!-- The project page on GitHub Pages (main, /docs). Static, no scripts, no external requests. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Völund CAD</title>
+<meta name="description" content="Völund CAD – a native parametric CAD application for mechanical parts. C++20, Qt 6 and OpenCASCADE. Free software under the GPL-3.0-or-later.">
+<link rel="icon" href="images/logo.svg" type="image/svg+xml">
+<meta property="og:title" content="Völund CAD">
+<meta property="og:description" content="A native parametric CAD application for mechanical parts – C++20, Qt 6 and OpenCASCADE.">
+<meta property="og:image" content="images/01-modell-hell.png">
+<style>
+:root {
+  --ink: #1E2328;
+  --ink-soft: #4A5562;
+  --paper: #F6F7F9;
+  --card: #FFFFFF;
+  --line: #DDE1E6;
+  --ember: #EF7A3E;
+  --ember-deep: #C95A22;
+  --steel: #2E86C1;
+  --hero-from: #1E2328;
+  --hero-to: #2B323A;
+  --hero-ink: #F6F7F9;
+  --shadow: 0 10px 30px rgba(30, 35, 40, 0.12);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #E8EBEF;
+    --ink-soft: #A9B3BE;
+    --paper: #15191D;
+    --card: #1E2328;
+    --line: #2F363E;
+    --hero-from: #0F1215;
+    --hero-to: #1E2328;
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 17px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+}
+a { color: var(--ember-deep); }
+@media (prefers-color-scheme: dark) { a { color: var(--ember); } }
+img { max-width: 100%; display: block; }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+
+/* Navigation */
+nav {
+  position: sticky; top: 0; z-index: 10;
+  background: color-mix(in srgb, var(--hero-from) 92%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+nav .wrap { display: flex; align-items: center; gap: 22px; height: 58px; }
+nav .brand { display: flex; align-items: center; gap: 10px; color: var(--hero-ink); text-decoration: none; font-weight: 700; letter-spacing: 0.2px; }
+nav .brand img { width: 30px; height: 30px; }
+nav .links { margin-left: auto; display: flex; gap: 20px; flex-wrap: wrap; }
+nav .links a { color: #C9D1DA; text-decoration: none; font-size: 15px; }
+nav .links a:hover { color: var(--ember); }
+@media (max-width: 680px) {
+  nav .links a.optional { display: none; }
+  nav .links { gap: 14px; }
+  .hero { padding-top: 44px; }
+}
+body { overflow-x: hidden; }
+.hero .wrap, section .wrap { min-width: 0; }
+.hero h1, .hero p.lead, section p { overflow-wrap: anywhere; }
+
+/* Hero */
+.hero {
+  background: radial-gradient(1200px 500px at 85% -10%, rgba(239, 122, 62, 0.22), transparent 60%),
+              linear-gradient(160deg, var(--hero-from), var(--hero-to));
+  color: var(--hero-ink);
+  padding: 72px 0 0;
+  overflow: hidden;
+}
+.hero h1 { font-size: clamp(36px, 6vw, 60px); line-height: 1.05; margin: 0 0 18px; letter-spacing: -1px; }
+.hero h1 .spark { color: var(--ember); }
+.hero p.lead { font-size: clamp(18px, 2.2vw, 21px); color: #C9D1DA; max-width: 720px; margin: 0 0 28px; }
+.badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 30px; }
+.badge { border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 999px; padding: 4px 12px; font-size: 14px; color: #DCE2E8; }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 48px; }
+.button {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 11px 20px; border-radius: 10px; font-weight: 600; text-decoration: none;
+  border: 1px solid transparent;
+}
+.button.primary { background: var(--ember); color: #1E2328; }
+.button.primary:hover { background: #F58F59; }
+.button.ghost { border-color: rgba(255, 255, 255, 0.28); color: var(--hero-ink); }
+.button.ghost:hover { border-color: var(--ember); color: var(--ember); }
+.hero .shot {
+  border-radius: 14px 14px 0 0;
+  box-shadow: 0 -10px 60px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 0;
+}
+
+/* Sections */
+section { padding: 72px 0; }
+section h2 { font-size: clamp(26px, 3.4vw, 36px); margin: 0 0 10px; letter-spacing: -0.4px; }
+section p.intro { color: var(--ink-soft); max-width: 760px; margin: 0 0 36px; }
+.eyebrow { color: var(--ember-deep); font-weight: 700; text-transform: uppercase; letter-spacing: 1.4px; font-size: 13px; margin-bottom: 8px; }
+@media (prefers-color-scheme: dark) { .eyebrow { color: var(--ember); } }
+
+/* Feature rows */
+.feature { display: grid; grid-template-columns: 1.25fr 1fr; gap: 40px; align-items: center; margin-bottom: 56px; }
+.feature:nth-child(even) .media { order: 2; }
+.feature .media img { border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--line); }
+.feature h3 { font-size: 23px; margin: 0 0 8px; }
+.feature p { margin: 0; color: var(--ink-soft); }
+@media (max-width: 820px) {
+  .feature { grid-template-columns: 1fr; gap: 18px; }
+  .feature:nth-child(even) .media { order: 0; }
+}
+
+/* Cards */
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; }
+.card {
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  padding: 22px; box-shadow: var(--shadow);
+}
+.card h3 { margin: 0 0 6px; font-size: 18px; }
+.card p { margin: 0; color: var(--ink-soft); font-size: 15.5px; }
+.card .icon { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; margin-bottom: 12px; background: rgba(239, 122, 62, 0.14); color: var(--ember-deep); font-weight: 800; }
+@media (prefers-color-scheme: dark) { .card .icon { color: var(--ember); } }
+.alt { background: var(--card); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.alt .card { background: var(--paper); box-shadow: none; }
+
+/* Formats */
+.formats { display: flex; flex-wrap: wrap; gap: 10px; }
+.format { border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 10px 14px; font-weight: 600; }
+.format small { display: block; font-weight: 400; color: var(--ink-soft); font-size: 13px; }
+
+/* Status and code */
+.status { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+@media (max-width: 820px) { .status { grid-template-columns: 1fr; } }
+pre {
+  background: #1E2328; color: #E8EBEF; border-radius: 10px; padding: 16px 18px;
+  overflow-x: auto; font-size: 14px; line-height: 1.5; margin: 0;
+}
+code { font-family: ui-monospace, "Cascadia Code", "SFMono-Regular", Menlo, Consolas, monospace; }
+ul.check { list-style: none; padding: 0; margin: 0; }
+ul.check li { padding-left: 28px; position: relative; margin: 6px 0; }
+ul.check li::before { content: ""; position: absolute; left: 4px; top: 10px; width: 9px; height: 9px; border-radius: 50%; background: var(--ember); }
+
+footer { padding: 40px 0 56px; color: var(--ink-soft); font-size: 15px; border-top: 1px solid var(--line); }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: center; }
+footer img { width: 26px; height: 26px; }
+</style>
+</head>
+<body>
+
+<nav aria-label="Main">
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="images/logo.svg" alt="">Völund CAD</a>
+    <div class="links">
+      <a href="#features">Features</a>
+      <a class="optional" href="#principles">Principles</a>
+      <a class="optional" href="#status">Status</a>
+      <a href="https://github.com/quompacc/volund-cad">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <h1>Forge solid parts.<br>Keep every step <span class="spark">editable.</span></h1>
+    <p class="lead">Völund CAD is a native parametric CAD application for mechanical parts. Sketch, extrude,
+      fillet and drill – and change any step of the history later. Built in C++20 with Qt&nbsp;6 and
+      OpenCASCADE: no Python, no web view.</p>
+    <div class="badges">
+      <span class="badge">C++20 · Qt 6 · OpenCASCADE</span>
+      <span class="badge">Windows &amp; Linux</span>
+      <span class="badge">Wayland first</span>
+      <span class="badge">GPL-3.0-or-later</span>
+    </div>
+    <div class="actions">
+      <a class="button primary" href="https://github.com/quompacc/volund-cad">View the source</a>
+      <a class="button ghost" href="https://github.com/quompacc/volund-cad/blob/main/docs/handbuch.md">Handbook (German)</a>
+      <a class="button ghost" href="#build">Build it</a>
+    </div>
+    <img class="shot" src="images/01-modell-hell.png"
+         alt="Völund CAD: a plate with through hole, pocket and rounded edge beside a ring – model tree, grouped tool bar, view cube and feature timeline">
+  </div>
+</header>
+
+<main>
+<section id="features">
+  <div class="wrap">
+    <div class="eyebrow">What it does</div>
+    <h2>From a sketch to a finished part</h2>
+    <p class="intro">Every screenshot here was made by a program that drives the real application with clicks and
+      typed values – the same way its acceptance tests do. The user interface is German.</p>
+
+    <div class="feature">
+      <div class="media"><img src="images/03-skizze.png" alt="Sketch editor with a rectangle, its relations and the panel showing the degrees of freedom" loading="lazy"></div>
+      <div>
+        <h3>Sketches with a real solver</h3>
+        <p>Lines, rectangles, polygons, circles, arcs, ellipses, slots and B-splines on base planes, construction
+          planes or body faces. Relations and dimensions are solved by PlaneGCS; free geometry stays blue until it is
+          fully determined. Trim, extend, offset, mirror and pattern right in the sketch.</p>
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="media"><img src="images/04-bohrung.png" alt="Hole panel: an 8 mm through hole previewed in the plate" loading="lazy"></div>
+      <div>
+        <h3>Features with live preview</h3>
+        <p>Extrude, push/pull, revolve, sweep, loft, helix, holes, shell, draft, mirror, patterns, primitives,
+          combine and move. Every tool opens one panel: OK is one undo step, Cancel leaves the document untouched.</p>
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="media"><img src="images/05-verrundung.png" alt="Fillet panel with a 4 mm rounded edge and a drag grip" loading="lazy"></div>
+      <div>
+        <h3>Fillets and chamfers that survive changes</h3>
+        <p>Pick edges in the view, drag the radius with a grip. Edges are named by the faces they join, so the
+          fillet finds its edge again when earlier features change.</p>
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="media"><img src="images/06-messen.png" alt="Measure panel: area, volume, distance and angle of two faces" loading="lazy"></div>
+      <div>
+        <h3>Measure without changing anything</h3>
+        <p>Two clicks give length, radius, area, volume, distance and angle. Values copy at full precision.</p>
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="media"><img src="images/07-fehler-erklaert.png" alt="A fillet radius too large: the change is refused, the edge marked red and the reason explained" loading="lazy"></div>
+      <div>
+        <h3>Errors are explained, never hidden</h3>
+        <p>An impossible change keeps the panel open, marks the cause in red and says why. Nothing is ever
+          repaired by guessing or deleted silently.</p>
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="media"><img src="images/02-modell-dunkel.png" alt="The same model in the dark theme" loading="lazy"></div>
+      <div>
+        <h3>A history you can work with</h3>
+        <p>The timeline reopens any step, suppresses it, rolls the model back, reorders steps by dragging and shows
+          what depends on a step before it goes. Parameters and expressions drive any dimension. Light and dark
+          themes, command search (Ctrl+K), autosave and crash recovery.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap">
+    <div class="eyebrow">Exchange</div>
+    <h2>Talks to the rest of your workshop</h2>
+    <p class="intro">Imported solids are embedded in the document and stay editable – fillet them, drill them,
+      move them. Exports take the selected bodies or everything visible.</p>
+    <div class="formats">
+      <div class="format">STEP<small>import &amp; export, units and names</small></div>
+      <div class="format">STL<small>export for printing</small></div>
+      <div class="format">3MF<small>export, bodies kept apart</small></div>
+      <div class="format">IGES<small>export</small></div>
+      <div class="format">DXF<small>export of a sketch</small></div>
+    </div>
+  </div>
+</section>
+
+<section id="principles">
+  <div class="wrap">
+    <div class="eyebrow">The DNA</div>
+    <h2>Rules every change has to follow</h2>
+    <p class="intro">Völund is planned and built in the open: bounded work packages, each with acceptance scenarios
+      and recorded evidence.</p>
+    <div class="grid">
+      <div class="card"><div class="icon">⚙</div><h3>Native all the way down</h3>
+        <p>C++20, Qt 6 Widgets, OpenCASCADE for geometry and OCAF for documents. No Python, no Electron, no web view.</p></div>
+      <div class="card"><div class="icon">◎</div><h3>Stable names, not indices</h3>
+        <p>Faces and edges are named by where they came from, so later features find them again after earlier ones change.</p></div>
+      <div class="card"><div class="icon">↶</div><h3>One step per intent</h3>
+        <p>Every command is one document transaction and one undo step. Previews never touch the document.</p></div>
+      <div class="card"><div class="icon">!</div><h3>Explicit over clever</h3>
+        <p>No guessed repairs and no silent deletion. When something breaks, Völund shows where and lets you decide.</p></div>
+      <div class="card"><div class="icon">▣</div><h3>Wayland first</h3>
+        <p>A native Wayland client on Linux; Qt owns the window and the OpenGL context. Windows is a full platform too.</p></div>
+      <div class="card"><div class="icon">✓</div><h3>Tested through the real product</h3>
+        <p>End-to-end tests click the real buttons and type into the real fields on a virtual desktop in CI.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="status" class="alt">
+  <div class="wrap status">
+    <div>
+      <div class="eyebrow">Status</div>
+      <h2>Version 0.1 – on the way to v1</h2>
+      <p>The mechanical core is complete. The current round adds what v1 still needs before the first release
+        packages for Windows and Linux:</p>
+      <ul class="check">
+        <li>Section view, display styles and body colours</li>
+        <li>Material, mass and centre of gravity</li>
+        <li>More hole, chamfer and pattern variants</li>
+        <li>Text in sketches, DXF import</li>
+      </ul>
+      <p>Progress is tracked in the <a href="https://github.com/quompacc/volund-cad/blob/main/docs/implementation-plan/README.md">implementation plan</a>
+        and the <a href="https://github.com/quompacc/volund-cad/blob/main/CHANGELOG.md">changelog</a>.</p>
+    </div>
+    <div id="build">
+      <div class="eyebrow">Build it</div>
+      <h2>From source</h2>
+      <p>Windows, from a Developer PowerShell:</p>
+<pre><code>./tools/setup-windows.ps1
+cmake --build --preset windows-msvc
+./tools/test-windows.ps1</code></pre>
+      <p>Linux: <code>tools/setup-linux.sh</code> builds the pinned OpenCASCADE profile, then
+        <code>cmake --build --preset linux-desktop</code>. Details are in the
+        <a href="https://github.com/quompacc/volund-cad#configure-build-and-test">README</a>.</p>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <img src="images/logo.svg" alt="">
+    <span>Völund CAD · Copyright © 2026 Eduard Hart</span>
+    <span>Free software under the <a href="https://github.com/quompacc/volund-cad/blob/main/LICENSE">GPL-3.0-or-later</a>, without any warranty.
+      Components keep their own <a href="https://github.com/quompacc/volund-cad/blob/main/docs/dependencies.md">licences</a>.</span>
+  </div>
+</footer>
+
+</body>
+</html>

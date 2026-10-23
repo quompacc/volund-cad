@@ -5,6 +5,8 @@
 #include <voelund/kernel/PlaneNormal.hpp>
 #include <voelund/kernel/ShapeQueries.hpp>
 
+#include "OcctGuard.hpp"
+
 #include <BRepAdaptor_Surface.hxx>
 #include <BRepBndLib.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
@@ -18,6 +20,8 @@
 
 namespace voelund::kernel {
 namespace {
+constexpr auto operation = KernelOperation::evaluation;
+
 std::optional<BoundingBox> boxOf(const Bnd_Box& box) {
     if (box.IsVoid())
         return std::nullopt;
@@ -38,9 +42,11 @@ double BoundingBox::diagonal() const noexcept {
 }
 
 std::optional<BoundingBox> boundingBox(const TopoDS_Shape& shape) {
-    Bnd_Box box;
-    BRepBndLib::Add(shape, box);
-    return boxOf(box);
+    return detail::guarded(operation, [&] {
+        Bnd_Box box;
+        BRepBndLib::Add(shape, box);
+        return boxOf(box);
+    });
 }
 
 gp_Pnt boundingBoxCentre(const TopoDS_Shape& shape) {
@@ -51,13 +57,17 @@ gp_Pnt boundingBoxCentre(const TopoDS_Shape& shape) {
 }
 
 std::optional<BoundingBox> tightBoundingBox(const TopoDS_Shape& shape) {
-    Bnd_Box box;
-    BRepBndLib::AddOptimal(shape, box, false, false);
-    return boxOf(box);
+    return detail::guarded(operation, [&] {
+        Bnd_Box box;
+        BRepBndLib::AddOptimal(shape, box, false, false);
+        return boxOf(box);
+    });
 }
 
 FacePoint classifyOnFace(const TopoDS_Face& face, const gp_Pnt& point, double tolerance) {
-    switch (BRepClass_FaceClassifier(face, point, tolerance).State()) {
+    const auto state = detail::guarded(
+        operation, [&] { return BRepClass_FaceClassifier(face, point, tolerance).State(); });
+    switch (state) {
     case TopAbs_IN:
         return FacePoint::inside;
     case TopAbs_ON:
@@ -70,30 +80,37 @@ FacePoint classifyOnFace(const TopoDS_Face& face, const gp_Pnt& point, double to
 }
 
 std::optional<gp_Pln> facePlane(const TopoDS_Shape& face) {
-    const BRepAdaptor_Surface surface(TopoDS::Face(face));
-    if (surface.GetType() != GeomAbs_Plane)
-        return std::nullopt;
-    return surface.Plane();
+    return detail::guarded(operation, [&]() -> std::optional<gp_Pln> {
+        const BRepAdaptor_Surface surface(TopoDS::Face(face));
+        if (surface.GetType() != GeomAbs_Plane)
+            return std::nullopt;
+        return surface.Plane();
+    });
 }
 
 std::optional<gp_Dir> planarFaceNormal(const TopoDS_Shape& face) {
-    const BRepAdaptor_Surface surface(TopoDS::Face(face));
-    if (surface.GetType() != GeomAbs_Plane)
-        return std::nullopt;
-    return planeNormal(surface.Plane(), face.Orientation());
+    return detail::guarded(operation, [&]() -> std::optional<gp_Dir> {
+        const BRepAdaptor_Surface surface(TopoDS::Face(face));
+        if (surface.GetType() != GeomAbs_Plane)
+            return std::nullopt;
+        return planeNormal(surface.Plane(), face.Orientation());
+    });
 }
 
 TopoDS_Shape transformedCopy(const TopoDS_Shape& shape, const gp_Trsf& transform) {
-    return BRepBuilderAPI_Transform(shape, transform, true).Shape();
+    return detail::guarded(
+        operation, [&] { return BRepBuilderAPI_Transform(shape, transform, true).Shape(); });
 }
 
 TopoDS_Shape collect(std::span<const TopoDS_Shape> shapes) {
-    TopoDS_Compound compound;
-    BRep_Builder builder;
-    builder.MakeCompound(compound);
-    for (const auto& shape : shapes)
-        builder.Add(compound, shape);
-    return compound;
+    return detail::guarded(operation, [&] {
+        TopoDS_Compound compound;
+        BRep_Builder builder;
+        builder.MakeCompound(compound);
+        for (const auto& shape : shapes)
+            builder.Add(compound, shape);
+        return compound;
+    });
 }
 
 } // namespace voelund::kernel
