@@ -381,6 +381,7 @@ void ToolRail::place() {
     // Centred in the window when it fits there, else in the free stretch.
     const int x = std::clamp((viewport_.width() - width) / 2, left, std::max(left, right - width));
     bar_->setGeometry(0, 0, width, overlay::barHeight);
+    followRow();
     const QRect area = placeFlyout(QRect(0, 0, width, overlay::barHeight));
     setGeometry(x, overlay::margin, area.width(), area.height());
     // Only the cards take clicks; the space beside a narrow flyout belongs to the view.
@@ -390,6 +391,17 @@ void ToolRail::place() {
     setMask(cards);
     raise();
     placing_ = false;
+}
+
+// User report 2026-10-23 (Windows, maximised window, sketch opened): the scroll area kept its
+// row at an older, narrower width, so the wider sketch row overlapped. The row now follows the
+// bar at once and is never narrower than it needs.
+void ToolRail::followRow() {
+    bar_->layout()->activate();
+    QWidget* content = scroll_->widget();
+    content->layout()->activate();
+    const QSize room = scroll_->viewport()->size();
+    content->resize(std::max(room.width(), content->minimumSizeHint().width()), room.height());
 }
 
 void ToolRail::setIconOnly(bool iconOnly) {

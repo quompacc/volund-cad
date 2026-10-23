@@ -1,7 +1,8 @@
 # K-GRENZE – OCCT-Algorithmen nur im Kernel
 
-**Status:** Code und Prüfungen vom 22.10.2026; Abnahme nach grünem CI-Lauf. Das
-Produktverhalten bleibt gleich.
+**Status:** abgenommen am 23.10.2026. Code `0103831` mit Korrektur `e629d6d`; CI-Lauf 727 grün
+(242 Tests, Debug und Release); `main` auf Gitea und GitHub (`1185207`). Das Produktverhalten
+bleibt gleich.
 
 ## Auftrag und Entscheidung (22.10.2026)
 

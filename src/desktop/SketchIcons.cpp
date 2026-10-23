@@ -329,6 +329,15 @@ const QHash<QString, Drawing>& drawings() {
              p.line(20, 14, 20, 20);
              p.dimension(5, 8, 19, 8);
          }},
+        // W02: the dimension tool D, a measured line with its value.
+        {"tool.dimension",
+         [](const Pens& p) {
+             p.line(4, 19, 20, 19);
+             p.dimension(4, 13, 20, 13);
+             p.line(4, 10, 4, 16);
+             p.line(20, 10, 20, 16);
+             p.dot(12, 6, 1.6);
+         }},
         {"point_distance",
          [](const Pens& p) {
              p.dot(5, 18);

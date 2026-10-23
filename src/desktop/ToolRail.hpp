@@ -54,6 +54,7 @@ class ToolRail final : public QFrame {
     // L08 (user decision 2026-10-20): a rail that does not fit first shows its group buttons
     // as symbols, then puts the tools at its end into the » menu; no tool is ever clipped.
     void setIconOnly(bool iconOnly);
+    void followRow();
     // Shows the page's leading items that fit into `room`, hides the rest for the » menu and
     // returns the width taken, the » button included.
     int fitRow(QWidget& page, int room);
