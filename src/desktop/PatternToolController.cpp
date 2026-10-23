@@ -168,6 +168,7 @@ void PatternToolController::open() {
             [this]() { cancel(); },
             {}},
         editing_, [this] { stamp_ = session_.sceneStatus().document; }));
+    panel_.focusLength("count"); // W05: the main value takes the keyboard
     syncFields();
     viewport_.setEdgePicking(true);
     preview();

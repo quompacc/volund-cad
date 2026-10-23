@@ -113,6 +113,7 @@ void DraftToolController::open() {
             [this]() { cancel(); },
             {}},
         editing_, [this] { stamp_ = session_.sceneStatus().document; }));
+    panel_.focusLength("angle"); // W05: the main value takes the keyboard
     preview();
     statusChanged_(QObject::tr("Formschräge: zu neigende Flächen anklicken"));
 }

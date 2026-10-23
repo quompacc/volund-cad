@@ -66,6 +66,7 @@ void PushPullToolController::begin(const viewport::PlanarFaceSelection& face) {
                                                        {}},
                                    std::nullopt,
                                    [this] { stamp_ = session_.sceneStatus().document; }));
+    panel_.focusLength("distance"); // W05: the main value takes the keyboard
     viewport_.beginPushPull(face);
     viewport_.setPushPullDistance(distance_);
     preview();

@@ -106,6 +106,7 @@ void FilletToolController::open(document::FeatureId support,
                             [this]() { cancel(); },
                             {}},
         editing_, [this] { stamp_ = session_.sceneStatus().document; }));
+    panel_.focusLength(field); // W05: the main value takes the keyboard
     viewport_.setEdgePicking(true);
     viewport_.setPushPullHandler([this](double to, bool finished) { dragged(to, finished); });
     gripEdge_.reset();

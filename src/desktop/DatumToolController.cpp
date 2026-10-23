@@ -161,6 +161,7 @@ void DatumToolController::open() {
             editing_, [this] { stamp_ = session_.sceneStatus().document; }));
     if (!axis_)
         panel_.setLengthEnabled("angle", rotationAxis_ != document::DatumRotationAxis::none);
+    panel_.focusLength("offset"); // W05: the main value takes the keyboard (planes only)
     preview();
 }
 
