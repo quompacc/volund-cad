@@ -31,6 +31,7 @@ list(APPEND voelund_viewport_sources
     PlanarFaceSelection.cpp
     SketchSnapOverlay.cpp
     SketchDynamicInput.cpp
+    SketchEditorInference.cpp
     CadViewportKeys.cpp
     SketchViewOrientation.cpp
     SketchConstraintPresentation.cpp

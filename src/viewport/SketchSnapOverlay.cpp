@@ -100,12 +100,18 @@ QString fieldLabel(DynamicField field) {
         return QObject::tr("Höhe");
     case DynamicField::diameter:
         return QObject::tr("Durchmesser");
+    case DynamicField::radius:
+        return QObject::tr("Radius");
+    case DynamicField::sweep:
+        return QObject::tr("Öffnungswinkel");
+    case DynamicField::minorRadius:
+        return QObject::tr("Kleiner Radius");
     }
     return {};
 }
 
 QString fieldValue(const SketchDynamicInput::Field& field, bool current) {
-    const bool angle = field.kind == DynamicField::angle;
+    const bool angle = field.kind == DynamicField::angle || field.kind == DynamicField::sweep;
     if (!field.text.empty())
         return QString::fromStdString(field.text) + (current ? QStringLiteral("|") : QString{});
     return QLocale().toString(field.live, 'f', angle ? 1 : 2) +

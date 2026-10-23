@@ -70,7 +70,7 @@ void rectangleAndCircle() {
     require(near(corner.first, 0) && near(corner.second, -8),
             "Diameter 16: radius 8 to the pointer");
     SketchDynamicInput none;
-    none.begin(SketchElementTool::arc);
+    none.begin(SketchElementTool::threePointArc);
     require(!none.active() && !none.type('5'), "Tools without fields take no keys");
 }
 
@@ -97,6 +97,41 @@ void textRules() {
             "The shell resolves =B*2 to 24");
     require(input.typedDimensions().front().text == "=B*2", "The typed text is kept");
 }
+// W11: the fields of the second and third point of an arc, a slot and an ellipse; a polygon's
+// radius.
+void threePointTools() {
+    SketchDynamicInput arc;
+    arc.begin(SketchElementTool::arc);
+    require(arc.fields().size() == 1 && arc.fields()[0].kind == DynamicField::radius,
+            "An arc starts with its radius");
+    type(arc, "10");
+    auto radiusPoint = arc.constrain({0, 0}, {0, 3});
+    require(near(radiusPoint.first, 0) && near(radiusPoint.second, 10), "Radius 10 to the pointer");
+    arc.beginThird(SketchElementTool::arc);
+    require(arc.third() && arc.fields()[0].kind == DynamicField::sweep && !arc.hasTyped(),
+            "Then its sweep, empty");
+    arc.updateLiveThird({0, 0}, {10, 0}, {0, 5});
+    require(near(arc.fields()[0].live, 90), "The live sweep follows the pointer");
+    type(arc, "-90");
+    auto end = arc.constrainThird({0, 0}, {10, 0}, {3, 3});
+    require(near(end.first, 0) && near(end.second, -10), "A negative sweep turns clockwise");
+
+    SketchDynamicInput slot;
+    slot.beginThird(SketchElementTool::slot);
+    type(slot, "6");
+    end = slot.constrainThird({0, 0}, {20, 0}, {12, -9});
+    require(near(end.first, 20) && near(end.second, -3), "A slot 6 wide on the pointer's side");
+    SketchDynamicInput ellipse;
+    ellipse.beginThird(SketchElementTool::ellipse);
+    type(ellipse, "4");
+    end = ellipse.constrainThird({0, 0}, {0, 10}, {-5, 5});
+    require(near(end.first, -4) && near(end.second, 0), "Minor radius 4 across the major axis");
+    SketchDynamicInput polygon;
+    polygon.begin(SketchElementTool::polygon);
+    type(polygon, "12");
+    end = polygon.constrain({0, 0}, {1, 0});
+    require(near(end.first, 12), "A polygon's radius");
+}
 } // namespace
 
 int main() {
@@ -104,6 +139,7 @@ int main() {
         line();
         rectangleAndCircle();
         textRules();
+        threePointTools();
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';
         return 1;

@@ -289,131 +289,6 @@ SketchEditorInteraction::SnapFeedback SketchEditorInteraction::snapFeedback(int 
     return feedback;
 }
 
-std::pair<std::pair<double, double>, std::optional<SketchAutomaticConstraint>>
-SketchEditorInteraction::relatedLineEnd(std::pair<double, double> first,
-                                        std::pair<double, double> second) const {
-    if (tool_ != SketchElementTool::line && tool_ != SketchElementTool::polyline)
-        return {second, std::nullopt};
-    const double rawX = second.first - first.first;
-    const double rawY = second.second - first.second;
-    const double length = std::hypot(rawX, rawY);
-    double best = 0.08;
-    std::pair<double, double> adjusted = second;
-    std::optional<SketchAutomaticConstraint> relation;
-    for (const SceneSketchPoint& start : snapPoints_) {
-        if (start.elementId == 0 || start.kind != SketchPointKind::start)
-            continue;
-        const auto end = std::ranges::find_if(snapPoints_, [&](const auto& candidate) {
-            return candidate.elementId == start.elementId && candidate.kind == SketchPointKind::end;
-        });
-        if (end == snapPoints_.end())
-            continue;
-        const double targetX = end->localX - start.localX;
-        const double targetY = end->localY - start.localY;
-        const double targetLength = std::hypot(targetX, targetY);
-        if (length <= 1.0e-9 || targetLength <= 1.0e-9)
-            continue;
-        const double ux = targetX / targetLength;
-        const double uy = targetY / targetLength;
-        const double parallelError = std::abs(rawX * uy - rawY * ux) / length;
-        if (parallelError < best) {
-            best = parallelError;
-            const double sign = rawX * ux + rawY * uy >= 0.0 ? 1.0 : -1.0;
-            adjusted = {first.first + sign * ux * length, first.second + sign * uy * length};
-            relation = SketchAutomaticConstraint::parallel;
-        }
-        const double perpendicularError = std::abs(rawX * ux + rawY * uy) / length;
-        if (perpendicularError < best) {
-            best = perpendicularError;
-            const double nx = -uy;
-            const double ny = ux;
-            const double sign = rawX * nx + rawY * ny >= 0.0 ? 1.0 : -1.0;
-            adjusted = {first.first + sign * nx * length, first.second + sign * ny * length};
-            relation = SketchAutomaticConstraint::perpendicular;
-        }
-    }
-    return {adjusted, relation};
-}
-
-bool SketchEditorInteraction::tangentToReferencedLine(
-    std::pair<double, double> center, std::pair<double, double> radialPoint,
-    const std::optional<SketchPointReferenceIntent>& reference) const {
-    if (!reference.has_value() || reference->point != SketchPointKind::onObject)
-        return false;
-    const auto start = std::ranges::find_if(snapPoints_, [&](const auto& candidate) {
-        return candidate.elementId == reference->elementId &&
-               candidate.kind == SketchPointKind::start;
-    });
-    const auto end = std::ranges::find_if(snapPoints_, [&](const auto& candidate) {
-        return candidate.elementId == reference->elementId &&
-               candidate.kind == SketchPointKind::end;
-    });
-    if (start == snapPoints_.end() || end == snapPoints_.end())
-        return false;
-    const double radiusX = radialPoint.first - center.first;
-    const double radiusY = radialPoint.second - center.second;
-    const double lineX = end->localX - start->localX;
-    const double lineY = end->localY - start->localY;
-    const double scale = std::hypot(radiusX, radiusY) * std::hypot(lineX, lineY);
-    return scale > 1.0e-9 && std::abs(radiusX * lineX + radiusY * lineY) / scale <= 0.08;
-}
-
-std::tuple<std::pair<double, double>, std::optional<SketchAutomaticConstraint>,
-           std::optional<std::uint64_t>>
-SketchEditorInteraction::relatedRadialPoint(std::pair<double, double> center,
-                                            std::pair<double, double> radialPoint) const {
-    const double dx = radialPoint.first - center.first;
-    const double dy = radialPoint.second - center.second;
-    const double radius = std::hypot(dx, dy);
-    if (radius <= 1.0e-9)
-        return {radialPoint, std::nullopt, std::nullopt};
-    double bestError = 0.08;
-    double bestRadius = radius;
-    std::optional<SketchAutomaticConstraint> relation;
-    std::optional<std::uint64_t> targetId;
-    for (const SceneSketchPoint& target : snapPoints_) {
-        if (target.kind != SketchPointKind::center || target.elementId == 0 ||
-            target.radialRadius <= 1.0e-9)
-            continue;
-        const double centerDistance =
-            std::hypot(center.first - target.localX, center.second - target.localY);
-        const auto consider = [&](double candidateRadius, SketchAutomaticConstraint candidate) {
-            if (candidateRadius <= 1.0e-9)
-                return;
-            const double error =
-                std::abs(radius - candidateRadius) / std::max(radius, candidateRadius);
-            if (error < bestError ||
-                (candidate == SketchAutomaticConstraint::tangent && error <= bestError + 1.0e-12)) {
-                bestError = error;
-                bestRadius = candidateRadius;
-                relation = candidate;
-                targetId = target.elementId;
-            }
-        };
-        consider(target.radialRadius, SketchAutomaticConstraint::equal);
-        consider(centerDistance - target.radialRadius, SketchAutomaticConstraint::tangent);
-        consider(std::abs(target.radialRadius - centerDistance),
-                 SketchAutomaticConstraint::tangent);
-        consider(centerDistance + target.radialRadius, SketchAutomaticConstraint::tangent);
-    }
-    if (!relation.has_value())
-        return {radialPoint, std::nullopt, std::nullopt};
-    return {{center.first + dx * bestRadius / radius, center.second + dy * bestRadius / radius},
-            relation,
-            targetId};
-}
-
-bool SketchEditorInteraction::isRadialCenterReference(
-    const std::optional<SketchPointReferenceIntent>& reference) const {
-    if (!reference.has_value() || reference->elementId == 0 ||
-        reference->point != SketchPointKind::center)
-        return false;
-    return std::ranges::any_of(snapPoints_, [&](const SceneSketchPoint& point) {
-        return point.elementId == reference->elementId && point.kind == SketchPointKind::center &&
-               point.radialRadius > 1.0e-9;
-    });
-}
-
 bool SketchEditorInteraction::valid(const SketchElementIntent& intent) const noexcept {
     constexpr double minimumSize = 1.0e-6;
     const double deltaX = intent.secondX - intent.firstX;
@@ -442,25 +317,36 @@ std::optional<SketchElementIntent> SketchEditorInteraction::move(int x, int y) c
         return std::nullopt;
     lastPointer_ = resolved->position;
     auto intent = finalIntent(resolved->position, resolved->reference);
-    // D01: the fields show the element as it would be placed now.
-    if (intent && dynamic_.active())
+    // D01: the fields show the element as it would be placed now (W11: its third point).
+    if (intent && dynamic_.active() && intent->third)
+        dynamic_.updateLiveThird(*firstPoint_, {intent->secondX, intent->secondY}, *intent->third);
+    else if (intent && dynamic_.active())
         dynamic_.updateLive(*firstPoint_, {intent->secondX, intent->secondY});
     return intent;
 }
 
 // The element ended at `point`: automatic relations as the pointer suggests them, or (D01) the
 // typed values, which fix the end and suggest no relation.
+// D01/W11: the typed values fix the end (and the third point); no relation is suggested.
+std::optional<SketchElementIntent>
+SketchEditorInteraction::typedIntent(std::pair<double, double> point) const {
+    const bool third = secondPoint_.has_value();
+    const auto end = third ? *secondPoint_ : dynamic_.constrain(*firstPoint_, point);
+    const auto thirdPoint =
+        third ? std::optional{dynamic_.constrainThird(*firstPoint_, *secondPoint_, point)}
+              : std::nullopt;
+    SketchElementIntent intent{firstPoint_->first, firstPoint_->second, end.first,    end.second,
+                               thirdPoint,         firstReference_,     std::nullopt, std::nullopt,
+                               std::nullopt,       std::nullopt};
+    intent.typed = dynamic_.typedDimensions();
+    return valid(intent) ? std::optional{related(intent)} : std::nullopt;
+}
+
 std::optional<SketchElementIntent>
 SketchEditorInteraction::finalIntent(std::pair<double, double> point,
                                      std::optional<SketchPointReferenceIntent> reference) const {
-    if (dynamic_.hasTyped() && !secondPoint_.has_value()) {
-        const auto end = dynamic_.constrain(*firstPoint_, point);
-        SketchElementIntent intent{
-            firstPoint_->first, firstPoint_->second, end.first,    end.second,   std::nullopt,
-            firstReference_,    std::nullopt,        std::nullopt, std::nullopt, std::nullopt};
-        intent.typed = dynamic_.typedDimensions();
-        return valid(intent) ? std::optional{related(intent)} : std::nullopt;
-    }
+    if (dynamic_.hasTyped())
+        return typedIntent(point);
     auto [adjustedPoint, automaticConstraint] = constrainedLineEnd(tool_, *firstPoint_, point);
     std::optional<std::uint64_t> automaticTargetId;
     if (!automaticConstraint.has_value())
@@ -525,8 +411,7 @@ std::optional<SketchElementIntent> SketchEditorInteraction::click(int x, int y) 
             std::nullopt,       std::nullopt,        std::nullopt, std::nullopt, std::nullopt};
         if (!valid(radiusIntent))
             return std::nullopt;
-        secondPoint_ = point;
-        secondReference_ = reference;
+        placeSecond(point, reference);
         return std::nullopt;
     }
     auto intent = finalIntent(point, reference);
@@ -534,6 +419,16 @@ std::optional<SketchElementIntent> SketchEditorInteraction::click(int x, int y) 
         return std::nullopt;
     finishElement();
     return intent;
+}
+
+// The second point of a tool of three points; typed values (W11) fix it and start the fields
+// of the third point.
+void SketchEditorInteraction::placeSecond(std::pair<double, double> point,
+                                          std::optional<SketchPointReferenceIntent> reference) {
+    const bool typed = dynamic_.hasTyped();
+    secondPoint_ = typed ? dynamic_.constrain(*firstPoint_, point) : point;
+    secondReference_ = typed ? std::nullopt : reference;
+    dynamic_.beginThird(tool_);
 }
 
 void SketchEditorInteraction::finishElement() noexcept {
@@ -544,12 +439,17 @@ void SketchEditorInteraction::finishElement() noexcept {
     dynamic_.reset();
 }
 
-// D01: Enter places the element with the typed values at the last pointer position.
+// D01: Enter places the element with the typed values at the last pointer position; for a
+// tool of three points (W11) the first Enter places the second point.
 std::optional<SketchElementIntent> SketchEditorInteraction::commitTyped() {
-    if (!firstPoint_.has_value() || secondPoint_.has_value() || !dynamic_.hasTyped() ||
-        dynamic_.hasInvalidText())
+    if (!firstPoint_.has_value() || !dynamic_.hasTyped() || dynamic_.hasInvalidText())
         return std::nullopt;
-    auto intent = finalIntent(lastPointer_.value_or(*firstPoint_), std::nullopt);
+    const auto pointer = lastPointer_.value_or(*firstPoint_);
+    if (needsThirdPoint(tool_) && !secondPoint_.has_value()) {
+        placeSecond(pointer, std::nullopt);
+        return std::nullopt;
+    }
+    auto intent = finalIntent(pointer, std::nullopt);
     if (intent)
         finishElement();
     return intent;
@@ -579,6 +479,7 @@ bool SketchEditorInteraction::cancelStep() noexcept {
     if (secondPoint_.has_value()) {
         secondPoint_.reset();
         secondReference_.reset();
+        dynamic_.begin(tool_); // W11: back to the fields of the second point
         return true;
     }
     if (firstPoint_.has_value()) {

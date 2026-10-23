@@ -18,8 +18,10 @@ enum class SketchElementTool;
 // D01 (user report 2026-10-23, as in common CAD tools): values typed while drawing. After the
 // first point, fields follow the pointer (line: length and angle; rectangle: width and height;
 // circle: diameter). Typing goes into the current field, Tab moves to the next, a typed value
-// is fixed while the pointer still sets the others, Enter places the element.
-enum class DynamicField { length, angle, width, height, diameter };
+// is fixed while the pointer still sets the others, Enter places the element. W11: tools of
+// three points have fields per step (arc: radius, then sweep; slot: length, then width;
+// ellipse: radius, then minor radius; polygon: radius).
+enum class DynamicField { length, angle, width, height, diameter, radius, sweep, minorRadius };
 
 // A value the user typed for an element: the shell turns it into a dimension. `text` is what
 // was typed ("25", "=Breite*2"); `value` its value in mm or degrees.
@@ -42,6 +44,9 @@ class SketchDynamicInput final {
 
     // The fields of `tool` once its first point is set; tools without fields get none.
     void begin(SketchElementTool tool);
+    // W11: the fields of the third point of an arc, a slot or an ellipse.
+    void beginThird(SketchElementTool tool);
+    [[nodiscard]] bool third() const noexcept { return third_; }
     void reset() noexcept;
     [[nodiscard]] bool active() const noexcept { return !fields_.empty(); }
     [[nodiscard]] std::span<const Field> fields() const noexcept { return fields_; }
@@ -64,6 +69,9 @@ class SketchDynamicInput final {
     [[nodiscard]] Point constrain(Point first, Point pointer) const;
     // The live values shown for the element from `first` to `second`.
     void updateLive(Point first, Point second);
+    // W11: the third point, typed values fixed, from the first two and the pointer.
+    [[nodiscard]] Point constrainThird(Point first, Point second, Point pointer) const;
+    void updateLiveThird(Point first, Point second, Point third);
     [[nodiscard]] std::vector<SketchTypedDimension> typedDimensions() const;
 
   private:
@@ -73,6 +81,7 @@ class SketchDynamicInput final {
     std::vector<Field> fields_;
     std::size_t current_{0};
     bool centered_{false}; // a center rectangle: width and height are twice the offset
+    bool third_{false};    // W11: the fields of the third point
     Evaluator evaluator_;
 };
 

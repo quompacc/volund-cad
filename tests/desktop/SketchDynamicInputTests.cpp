@@ -143,6 +143,18 @@ void drawCircleAndPolyline(Sketcher& s) {
     s.type(QStringLiteral("90"));
     s.key(Qt::Key_Return);
     s.key(Qt::Key_Return); // nothing typed: Enter ends the polyline as before
+
+    // W11: an arc of radius 10 and sweep 90, each value followed by Enter.
+    command(s.window, "sketch.tool.center_arc").trigger();
+    s.click(0, -60);
+    s.moveTo(4, -58);
+    s.type(QStringLiteral("10"));
+    s.key(Qt::Key_Return);
+    s.moveTo(-3, -50);
+    require(s.fields().size() == 1 && s.fields()[0].startsWith(QStringLiteral("Öffnungswinkel")),
+            "After the radius the arc asks for its sweep");
+    s.type(QStringLiteral("90"));
+    s.key(Qt::Key_Return);
 }
 
 void run() {
@@ -175,8 +187,13 @@ void run() {
                          std::abs(segment->end.x - 40 * std::cos(std::numbers::pi / 6)) < 1e-6 &&
                          std::abs(segment->end.y - 20) < 1e-6);
     require(line, "The line runs 40 mm at 30 degrees from the first point");
-    require(sketch.elements.values.size() == 8,
-            "Line, rectangle (once, after Undo), circle and two segments: " +
+    bool arc = false;
+    for (const auto& element : sketch.elements.values)
+        if (const auto* curve = std::get_if<document::SketchArc>(&element.geometry))
+            arc = std::abs(curve->radius - 10) < 1e-6;
+    require(arc, "The arc has the typed radius 10");
+    require(sketch.elements.values.size() == 9,
+            "Line, rectangle (once, after Undo), circle, two segments and the arc: " +
                 std::to_string(sketch.elements.values.size()));
     require(dimensioned(sketch, SketchConstraintKind::distance, 40) &&
                 dimensioned(sketch, SketchConstraintKind::distance, 50) &&

@@ -74,15 +74,37 @@ void SketchDynamicInput::begin(SketchElementTool tool) {
     case SketchElementTool::circle:
         fields_ = {{DynamicField::diameter}};
         break;
+    case SketchElementTool::arc:
+    case SketchElementTool::ellipse:
+    case SketchElementTool::polygon:
+        fields_ = {{DynamicField::radius}};
+        break;
+    case SketchElementTool::slot:
+        fields_ = {{DynamicField::length}};
+        break;
     default:
         break;
     }
+}
+
+void SketchDynamicInput::beginThird(SketchElementTool tool) {
+    reset();
+    third_ = true;
+    if (tool == SketchElementTool::arc)
+        fields_ = {{DynamicField::sweep}};
+    else if (tool == SketchElementTool::slot)
+        fields_ = {{DynamicField::width}};
+    else if (tool == SketchElementTool::ellipse)
+        fields_ = {{DynamicField::minorRadius}};
+    else
+        third_ = false;
 }
 
 void SketchDynamicInput::reset() noexcept {
     fields_.clear();
     current_ = 0;
     centered_ = false;
+    third_ = false;
 }
 
 bool SketchDynamicInput::type(char character) {
@@ -116,7 +138,8 @@ std::optional<double> SketchDynamicInput::parsed(const Field& field) const {
     const auto value = field.text.front() == '='
                            ? (evaluator_ ? evaluator_(field.text) : std::optional<double>{})
                            : number(field.text);
-    if (!value || (field.kind != DynamicField::angle && *value <= 0.0))
+    const bool signedValue = field.kind == DynamicField::angle || field.kind == DynamicField::sweep;
+    if (!value || (!signedValue && *value <= 0.0))
         return std::nullopt;
     return value;
 }
@@ -149,6 +172,8 @@ SketchDynamicInput::Point SketchDynamicInput::constrain(Point first, Point point
         return linePoint(first, dx, dy);
     if (const auto diameter = value(DynamicField::diameter))
         return radialPoint(first, dx, dy, *diameter / 2.0);
+    if (const auto radius = value(DynamicField::radius))
+        return radialPoint(first, dx, dy, *radius);
     const double scale = centered_ ? 0.5 : 1.0;
     const auto width = value(DynamicField::width);
     const auto height = value(DynamicField::height);
@@ -185,7 +210,58 @@ void SketchDynamicInput::updateLive(Point first, Point second) {
         case DynamicField::diameter:
             field.live = 2.0 * std::hypot(dx, dy);
             break;
+        case DynamicField::radius:
+            field.live = std::hypot(dx, dy);
+            break;
+        default: // the fields of the third point (updateLiveThird)
+            break;
         }
+    }
+}
+
+SketchDynamicInput::Point SketchDynamicInput::constrainThird(Point first, Point second,
+                                                             Point pointer) const {
+    const double ax = second.first - first.first;
+    const double ay = second.second - first.second;
+    const double length = std::hypot(ax, ay);
+    if (length == 0.0)
+        return pointer;
+    // The side of the first two points the pointer is on.
+    const double side =
+        ax * (pointer.second - first.second) - ay * (pointer.first - first.first) < 0.0 ? -1.0
+                                                                                        : 1.0;
+    if (const auto sweep = value(DynamicField::sweep)) {
+        // The end of the arc: the radius point turned by the sweep about the centre.
+        const double turned = direction(ax, ay) + *sweep / degrees;
+        return {first.first + length * std::cos(turned), first.second + length * std::sin(turned)};
+    }
+    const double nx = -ay / length * side;
+    const double ny = ax / length * side;
+    if (const auto width = value(DynamicField::width))
+        return {second.first + nx * *width / 2.0, second.second + ny * *width / 2.0};
+    if (const auto minor = value(DynamicField::minorRadius))
+        return {first.first + nx * *minor, first.second + ny * *minor};
+    return pointer;
+}
+
+void SketchDynamicInput::updateLiveThird(Point first, Point second, Point third) {
+    const double ax = second.first - first.first;
+    const double ay = second.second - first.second;
+    const double length = std::hypot(ax, ay);
+    const double bx = third.first - first.first;
+    const double by = third.second - first.second;
+    // Distance of the third point from the line through the first two.
+    const double offset = length == 0.0 ? 0.0 : std::abs(ax * by - ay * bx) / length;
+    for (auto& field : fields_) {
+        if (field.kind == DynamicField::sweep) {
+            double sweep = (direction(bx, by) - direction(ax, ay)) * degrees;
+            if (sweep <= -180.0)
+                sweep += 360.0;
+            field.live = sweep > 180.0 ? sweep - 360.0 : sweep;
+        } else if (field.kind == DynamicField::width)
+            field.live = 2.0 * offset;
+        else if (field.kind == DynamicField::minorRadius)
+            field.live = offset;
     }
 }
 

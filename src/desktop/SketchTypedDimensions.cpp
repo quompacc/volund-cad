@@ -62,6 +62,9 @@ dimensionTarget(const application::SketchCreationResult& created,
     case viewport::DynamicField::height:
         return rectangleSide(created, editor, false);
     case viewport::DynamicField::angle:
+    case viewport::DynamicField::radius: // W11: arc, polygon and ellipse are only placed
+    case viewport::DynamicField::sweep:
+    case viewport::DynamicField::minorRadius:
         break;
     }
     return std::nullopt;

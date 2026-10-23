@@ -67,7 +67,11 @@ class SketchEditorInteraction final {
     [[nodiscard]] std::optional<SketchElementIntent>
     finalIntent(std::pair<double, double> point,
                 std::optional<SketchPointReferenceIntent> reference) const;
+    [[nodiscard]] std::optional<SketchElementIntent>
+    typedIntent(std::pair<double, double> point) const;
     void finishElement() noexcept;
+    void placeSecond(std::pair<double, double> point,
+                     std::optional<SketchPointReferenceIntent> reference);
     [[nodiscard]] std::optional<InteractionPoint> interactionPoint(int x, int y) const;
     [[nodiscard]] std::pair<std::pair<double, double>, std::optional<SketchAutomaticConstraint>>
     relatedLineEnd(std::pair<double, double> first, std::pair<double, double> second) const;
