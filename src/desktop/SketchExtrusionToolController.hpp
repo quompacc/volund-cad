@@ -75,6 +75,8 @@ class SketchExtrusionToolController final {
     void syncArrow();
     void hideArrow();
     void arrowDragged(double distance, bool finished);
+    void turnAround(double length);
+    bool smartCut_{false}; // W03: the arrow turned a join into a cut
     std::string arrowKey_; // what the shown arrow stands on; empty while none is shown
     viewport::CadViewport* viewport_{nullptr};
     bool arrowPreviewPending_{false};

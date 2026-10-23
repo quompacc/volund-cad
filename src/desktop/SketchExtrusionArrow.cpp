@@ -77,7 +77,12 @@ void SketchExtrusionToolController::hideArrow() {
 void SketchExtrusionToolController::arrowDragged(double distance, bool finished) {
     if (!active_)
         return;
-    // The arrow measures along the way the solid grows; through the profile it stops short.
+    // Let go behind the profile (as in Fusion): the extrusion turns round, and a join that now
+    // goes into the material becomes a cut (and back). During the drag it stops at the profile.
+    if (finished && distance < -0.001 && !symmetric_) {
+        turnAround(-distance);
+        return;
+    }
     const double length = std::max(0.001, distance);
     distanceParameter_.reset(); // PAR02: a dragged value leaves the parameter
     panel_.setLengthBinding("distance", std::nullopt);
@@ -95,6 +100,24 @@ void SketchExtrusionToolController::arrowDragged(double distance, bool finished)
         arrowPreviewPending_ = false;
         preview();
     });
+}
+
+void SketchExtrusionToolController::turnAround(double length) {
+    hideArrow(); // shown again, turned, by the preview
+    panel_.chooseOption("direction", reversed_ ? 0 : 1);
+    if (operation_ == document::ExtrusionOperation::join && reversed_) {
+        panel_.chooseOption("operation", static_cast<int>(document::ExtrusionOperation::cut) - 1);
+        smartCut_ = true;
+        autoReversed_ = false; // the user turned it; a later operation change keeps it
+    } else if (operation_ == document::ExtrusionOperation::cut && smartCut_ && !reversed_) {
+        panel_.chooseOption("operation", static_cast<int>(document::ExtrusionOperation::join) - 1);
+        smartCut_ = false;
+    }
+    distanceParameter_.reset();
+    panel_.setLengthBinding("distance", std::nullopt);
+    panel_.setLengthValue("distance", length);
+    setDistance(length);
+    preview();
 }
 
 // Moved here from SketchExtrusionToolController.cpp (source size).

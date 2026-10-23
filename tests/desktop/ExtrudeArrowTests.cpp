@@ -9,6 +9,7 @@
 #include <GProp_GProps.hxx>
 #include <QAction>
 #include <QApplication>
+#include <QComboBox>
 #include <QDoubleSpinBox>
 #include <QKeyEvent>
 #include <QPushButton>
@@ -101,6 +102,31 @@ void dragArrow(QWidget& window, viewport::CadViewport& viewport, application::Ca
     const double dragged = distanceField(window)->value();
     require(dragged > before && std::abs(dragged - std::round(dragged)) < 1e-9,
             "Dragging the arrow lengthens the extrusion in snapped steps");
+    // Let go behind the profile: the extrusion turns round and keeps a positive length.
+    test::render(viewport);
+    std::optional<QPoint> again;
+    const QPoint top = viewport::ViewportTestAccess::project(viewport, 20, 10, dragged);
+    for (int step = -60; step <= 60 && !again; step += 3) {
+        const QPoint candidate = top + (direction * step).toPoint();
+        test::mouse(viewport, QEvent::MouseMove, candidate, Qt::NoButton, Qt::NoButton);
+        if (viewport::ViewportTestAccess::pushPullArrowHovered(viewport))
+            again = candidate;
+    }
+    require(again.has_value(), "The arrow is found at its new length");
+    const QPoint below = viewport::ViewportTestAccess::project(viewport, 20, 10, -2 * dragged);
+    test::mouse(viewport, QEvent::MouseButtonPress, *again, Qt::LeftButton, Qt::LeftButton);
+    for (int step = 1; step <= 10; ++step)
+        test::mouse(viewport, QEvent::MouseMove, *again + (below - *again) * step / 10,
+                    Qt::NoButton, Qt::LeftButton);
+    test::mouse(viewport, QEvent::MouseButtonRelease, below, Qt::LeftButton, Qt::NoButton);
+    settle();
+    QComboBox* directionChoice = nullptr;
+    for (auto* box : window.findChildren<QComboBox*>(QStringLiteral("toolChoice_direction")))
+        if (box->isVisible())
+            directionChoice = box;
+    require(directionChoice != nullptr && directionChoice->currentIndex() == 1 &&
+                distanceField(window)->value() > 0,
+            "Through the profile the extrusion turns round with a positive length");
     auto* cancel = window.findChild<QPushButton*>(QStringLiteral("toolCancelButton"));
     require(cancel != nullptr, "Cancel");
     cancel->click();
