@@ -4,6 +4,7 @@
 #pragma once
 
 #include <voelund/viewport/CadViewport.hpp>
+#include <voelund/viewport/SketchDynamicInput.hpp>
 
 #include <V3d_View.hxx>
 
@@ -29,7 +30,7 @@ class SketchEditorInteraction final {
     void cancel() noexcept;
     void rebindView(const occ::handle<V3d_View>& view) { view_ = view; }
     void setTool(SketchElementTool tool) noexcept;
-    void continuePolyline(double x, double y, std::uint64_t elementId) noexcept;
+    void continuePolyline(double x, double y, std::uint64_t elementId);
     void setSnapping(bool enabled, double linearStep) noexcept;
     void setSnapPoints(std::span<const SceneSketchPoint> points);
     // Ctrl held: no point, axis or object snapping for this pointer position.
@@ -46,6 +47,10 @@ class SketchEditorInteraction final {
     [[nodiscard]] std::optional<std::pair<double, double>> projectPoint(int x, int y) const;
     [[nodiscard]] std::optional<SketchElementIntent> move(int x, int y) const;
     [[nodiscard]] std::optional<SketchElementIntent> click(int x, int y);
+    // D01: the fields typed into while drawing; Enter places the element with them.
+    [[nodiscard]] SketchDynamicInput& dynamicInput() noexcept { return dynamic_; }
+    [[nodiscard]] const SketchDynamicInput& dynamicInput() const noexcept { return dynamic_; }
+    [[nodiscard]] std::optional<SketchElementIntent> commitTyped();
     [[nodiscard]] bool beginElementDrag(int x, int y);
     [[nodiscard]] std::optional<std::pair<double, double>> dragElement(int x, int y);
     void finishElementDrag() noexcept;
@@ -59,6 +64,10 @@ class SketchEditorInteraction final {
     };
 
     [[nodiscard]] bool valid(const SketchElementIntent& intent) const noexcept;
+    [[nodiscard]] std::optional<SketchElementIntent>
+    finalIntent(std::pair<double, double> point,
+                std::optional<SketchPointReferenceIntent> reference) const;
+    void finishElement() noexcept;
     [[nodiscard]] std::optional<InteractionPoint> interactionPoint(int x, int y) const;
     [[nodiscard]] std::pair<std::pair<double, double>, std::optional<SketchAutomaticConstraint>>
     relatedLineEnd(std::pair<double, double> first, std::pair<double, double> second) const;
@@ -102,6 +111,8 @@ class SketchEditorInteraction final {
     bool automaticRelations_{true};
     bool projectedVisible_{true};
     std::optional<std::uint64_t> continued_; // the polyline segment the next one continues
+    mutable SketchDynamicInput dynamic_;     // D01; its live values follow the preview
+    mutable std::optional<std::pair<double, double>> lastPointer_;
 };
 
 } // namespace voelund::viewport

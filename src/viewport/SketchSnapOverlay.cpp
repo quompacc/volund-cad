@@ -4,8 +4,10 @@
 #include "SketchSnapOverlay.hpp"
 
 #include <QEvent>
+#include <QLocale>
 #include <QPainter>
 #include <QPainterPath>
+#include <QStringList>
 
 namespace voelund::viewport {
 
@@ -79,15 +81,84 @@ void SketchSnapOverlay::display(const SketchEditorInteraction::SnapFeedback& fee
     // Test hooks: what the user sees, without reading pixels.
     setProperty("activeSnap", active_.has_value());
     setProperty("snapLabel", label_);
-    setVisible(!candidates_.empty() || active_.has_value() || !label_.isEmpty());
+    setVisible(!candidates_.empty() || active_.has_value() || !label_.isEmpty() ||
+               !fields_.empty());
     raise();
     update();
+}
+
+namespace {
+QString fieldLabel(DynamicField field) {
+    switch (field) {
+    case DynamicField::length:
+        return QObject::tr("Länge");
+    case DynamicField::angle:
+        return QObject::tr("Winkel");
+    case DynamicField::width:
+        return QObject::tr("Breite");
+    case DynamicField::height:
+        return QObject::tr("Höhe");
+    case DynamicField::diameter:
+        return QObject::tr("Durchmesser");
+    }
+    return {};
+}
+
+QString fieldValue(const SketchDynamicInput::Field& field, bool current) {
+    const bool angle = field.kind == DynamicField::angle;
+    if (!field.text.empty())
+        return QString::fromStdString(field.text) + (current ? QStringLiteral("|") : QString{});
+    return QLocale().toString(field.live, 'f', angle ? 1 : 2) +
+           (angle ? QStringLiteral("°") : QStringLiteral(" mm"));
+}
+} // namespace
+
+void SketchSnapOverlay::showFields(const SketchDynamicInput& input, QPointF cursor) {
+    fields_.clear();
+    for (std::size_t index = 0; index < input.fields().size(); ++index) {
+        const auto& field = input.fields()[index];
+        const bool current = index == input.current();
+        fields_.push_back(
+            {fieldLabel(field.kind), fieldValue(field, current), current, !field.text.empty()});
+    }
+    fieldCursor_ = cursor;
+    // Test hook: the field texts as shown, "Länge: 25|" and so on.
+    QStringList shown;
+    for (const auto& field : fields_)
+        shown << field.label + QStringLiteral(": ") + field.value;
+    setProperty("dynamicFields", shown);
+    if (!fields_.empty())
+        show();
+    raise();
+    update();
+}
+
+void SketchSnapOverlay::paintFields(QPainter& painter) const {
+    QFont font = painter.font();
+    font.setPixelSize(12);
+    painter.setFont(font);
+    QPointF corner = fieldCursor_ + QPointF(18, 34);
+    for (const auto& field : fields_) {
+        const QString text = field.label + QStringLiteral("  ") + field.value;
+        const QRectF size = painter.fontMetrics().boundingRect(text).adjusted(-9, -5, 9, 5);
+        const QRectF box(corner, size.size());
+        QPainterPath path;
+        path.addRoundedRect(box, 6, 6);
+        painter.setPen(QPen(field.current ? accent_ : muted_, field.current ? 2.0 : 1.0));
+        painter.setBrush(panel_);
+        painter.drawPath(path);
+        painter.setPen(field.typed ? accent_ : muted_.darker(160));
+        painter.drawText(box, Qt::AlignCenter, text);
+        corner += QPointF(box.width() + 6, 0);
+    }
 }
 
 void SketchSnapOverlay::clear() {
     candidates_.clear();
     active_.reset();
     label_.clear();
+    fields_.clear();
+    setProperty("dynamicFields", QStringList{});
     setProperty("activeSnap", false);
     setProperty("snapLabel", QString{});
     hide();
@@ -111,6 +182,7 @@ void SketchSnapOverlay::paintEvent(QPaintEvent*) {
         painter.setBrush(accent_);
         painter.drawEllipse(*active_, 6.0, 6.0);
     }
+    paintFields(painter);
     if (label_.isEmpty())
         return;
     QFont font = painter.font();

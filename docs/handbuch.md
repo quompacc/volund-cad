@@ -28,6 +28,11 @@ umgesetzte Funktionen. Was hier nicht steht, gibt es noch nicht.
 - **Elemente:** Linie, Polylinie, Rechteck (Ecke oder Mitte), Vieleck, Kreis, Bogen
   (Mittelpunkt oder drei Punkte), Ellipse, Langloch, Punkt, B-Spline über Kontrollpunkte,
   projizierte Körperkanten.
+- **Werte direkt eingeben:** Nach dem ersten Punkt hängen Felder an der Maus (Linie: Länge und
+  Winkel; Rechteck: Breite und Höhe; Kreis: Durchmesser). Einfach tippen, ohne zu klicken; **Tab**
+  wechselt das Feld, **Enter** setzt das Element. Ein getippter Wert ist fest, die anderen folgen
+  der Maus. Getippte Längen werden Maße der Skizze (mit dem Element ein Rückgängig-Schritt);
+  „=Name“ bindet das Maß an einen Parameter, „=B*2“ rechnet einen Wert aus.
 - **Beziehungen und Maße:** Deckungsgleich, horizontal, vertikal, parallel, senkrecht,
   tangential, gleich, konzentrisch, fixiert; Länge, Abstand, Radius, Durchmesser, Winkel.
   Maße sind treibend oder Referenzmaße (in Klammern).

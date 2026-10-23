@@ -84,7 +84,9 @@ SketchEditorToolController::SketchEditorToolController(
     application::CadSession& session, viewport::CadViewport& viewport, ToolPanelHost& panel,
     std::function<void()> sceneChanged, std::function<void(const QString&)> statusChanged)
     : session_(session), viewport_(viewport), panel_(panel), sceneChanged_(std::move(sceneChanged)),
-      statusChanged_(std::move(statusChanged)) {}
+      statusChanged_(std::move(statusChanged)) {
+    installDynamicInputEvaluator();
+}
 
 void SketchEditorToolController::showPanel() {
     toolIndex_ = 1;

@@ -411,6 +411,12 @@ class CadViewportScene {
     bool gridVisible{true};
     occ::handle<Graphic3d_Camera> savedCamera;
     std::optional<PlanarFaceSelection> activeSketchSupport;
+    // D01: where the pointer was while drawing (framebuffer pixels) and its logical position.
+    QPoint sketchPointer;
+    void showDynamicFields(QPointF logical) {
+        if (snapOverlay != nullptr)
+            snapOverlay->showFields(sketchEditor.dynamicInput(), logical);
+    }
     // S03: the view before the sketch editor oriented it; restored when the editor ends.
     occ::handle<Graphic3d_Camera> sketchReturnCamera;
 };

@@ -407,6 +407,12 @@ if(VOELUND_BUILD_DESKTOP)
         target_link_libraries(voelund_viewport_visual_review PRIVATE
             voelund_project_options Voelund::Application Voelund::Desktop opengl32)
     endif()
+    add_executable(voelund_sketch_dynamic_input_tests viewport/SketchDynamicInputUnitTests.cpp)
+    target_link_libraries(voelund_sketch_dynamic_input_tests PRIVATE
+        voelund_project_options Voelund::Viewport)
+    add_test(NAME viewport.sketch_dynamic_input COMMAND voelund_sketch_dynamic_input_tests)
+    set_tests_properties(viewport.sketch_dynamic_input PROPERTIES
+        LABELS "viewport;sketch;regression" TIMEOUT 30)
     if(VOELUND_VIEWPORT_BACKEND STREQUAL "qt-opengl")
         add_executable(voelund_viewport_lifecycle_tests
             desktop/ViewportLifecycleTests.cpp)
@@ -940,6 +946,14 @@ if(VOELUND_BUILD_DESKTOP)
             LABELS "desktop;qt-opengl;regression" TIMEOUT 60 RUN_SERIAL TRUE)
         if(VOELUND_NATIVE_WAYLAND)
             set_tests_properties(desktop.body_appearance PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
+        endif()
+        add_executable(voelund_sketch_dynamic_input_flow_tests desktop/SketchDynamicInputTests.cpp)
+        target_link_libraries(voelund_sketch_dynamic_input_flow_tests PRIVATE voelund_project_options Voelund::Desktop)
+        add_test(NAME desktop.sketch_dynamic_input COMMAND voelund_sketch_dynamic_input_flow_tests)
+        set_tests_properties(desktop.sketch_dynamic_input PROPERTIES
+            LABELS "desktop;qt-opengl;sketch;regression" TIMEOUT 60 RUN_SERIAL TRUE)
+        if(VOELUND_NATIVE_WAYLAND)
+            set_tests_properties(desktop.sketch_dynamic_input PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
         endif()
         add_executable(voelund_history_edit_tests desktop/HistoryEditTests.cpp)
         target_link_libraries(voelund_history_edit_tests PRIVATE voelund_project_options Voelund::Desktop)

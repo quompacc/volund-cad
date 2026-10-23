@@ -97,6 +97,8 @@ void SketchEditorToolController::confirmElement(const viewport::SketchElementInt
         statusChanged_(QString::fromUtf8(error.what()));
         return;
     }
+    if (created && !intent.typed.empty())
+        applyTypedDimensions(*created, intent.typed); // D01: one undo step with the element
     panel_.setAcceptEnabled(editor_->canAccept());
     resetTranslationInputs();
     syncSelectedDimensionInputs();

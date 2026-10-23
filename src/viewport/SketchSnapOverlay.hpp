@@ -8,6 +8,8 @@
 #include <QColor>
 #include <QWidget>
 
+class QPainter;
+
 namespace voelund::viewport {
 
 // S04a: snap markers over the viewport while sketching. Nearby snap points show as small
@@ -20,6 +22,8 @@ class SketchSnapOverlay final : public QWidget {
     void display(const SketchEditorInteraction::SnapFeedback& feedback, QPointF cursor,
                  double devicePixelRatio);
     void clear();
+    // D01: the fields at the pointer while drawing; none hides them.
+    void showFields(const SketchDynamicInput& input, QPointF cursor);
     void setColors(const QColor& accent, const QColor& muted, const QColor& panel);
 
   protected:
@@ -31,6 +35,15 @@ class SketchSnapOverlay final : public QWidget {
     std::vector<QPointF> candidates_;
     std::optional<QPointF> active_;
     QString label_;
+    struct FieldView final {
+        QString label;
+        QString value;
+        bool current;
+        bool typed;
+    };
+    std::vector<FieldView> fields_;
+    QPointF fieldCursor_;
+    void paintFields(QPainter& painter) const;
     QPointF cursor_;
     QColor accent_{0xD9, 0x62, 0x2B};
     QColor muted_{0x5F, 0x68, 0x73};

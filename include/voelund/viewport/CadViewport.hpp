@@ -5,6 +5,7 @@
 #include <voelund/document/EdgeReference.hpp>
 
 #include <voelund/kernel/OcctCompatibility.hpp>
+#include <voelund/viewport/SketchDynamicInput.hpp>
 
 #include <QColor>
 
@@ -250,6 +251,7 @@ struct SketchElementIntent final {
     std::optional<SketchPointReferenceIntent> thirdReference;
     std::optional<SketchAutomaticConstraint> automaticConstraint;
     std::optional<std::uint64_t> automaticTargetId;
+    std::vector<SketchTypedDimension> typed{}; // D01: values typed while drawing
 };
 
 #if defined(VOELUND_VIEWPORT_QT_OPENGL)
@@ -304,6 +306,8 @@ class CadViewport final : public CadViewportBase {
     // U09: pointer-up after dragging sketch elements; cancelSketchElementDrag ends a running
     // drag without that notification (Escape).
     void setSketchEditorDragEndHandler(std::function<void()> handler);
+    // D01: resolves "=Name*2" typed into a field at the pointer (N01 expressions).
+    void setSketchDynamicInputEvaluator(SketchDynamicInput::Evaluator evaluator);
     [[nodiscard]] bool cancelSketchElementDrag();
     void beginSketchEditor(const PlanarFaceSelection& support, SketchElementTool tool);
     void setSketchEditorTool(SketchElementTool tool);
@@ -387,10 +391,14 @@ class CadViewport final : public CadViewportBase {
     void mousePressEvent(QMouseEvent* event) override;
     void mouseReleaseEvent(QMouseEvent* event) override;
     void keyPressEvent(QKeyEvent* event) override;
+    // D01: Tab and the keys of the fields at the pointer go to the fields while drawing.
+    bool event(QEvent* event) override;
     void wheelEvent(QWheelEvent* event) override;
 
   private:
     friend class ViewportTestAccess;
+    [[nodiscard]] bool takesDynamicKey(const QKeyEvent& event) const;
+    bool handleDynamicKey(const QKeyEvent& event);
 #if defined(VOELUND_VIEWPORT_QT_OPENGL)
     void cleanupGlResources() noexcept;
 #endif

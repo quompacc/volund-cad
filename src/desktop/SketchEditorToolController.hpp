@@ -78,6 +78,11 @@ class SketchEditorToolController final {
     void cancel();
 
   private:
+    // D01 (SketchTypedDimensions.cpp): typed values as dimensions of the new element; the
+    // fields at the pointer evaluate "=Name*2" with the document's parameters.
+    void applyTypedDimensions(const application::SketchCreationResult& created,
+                              const std::vector<viewport::SketchTypedDimension>& typed);
+    void installDynamicInputEvaluator();
     friend class SketchSolverGateTestAccess;
     void setTool(int index);
     void applyTranslation(const std::string& id, double value);

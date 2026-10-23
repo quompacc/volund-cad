@@ -45,6 +45,7 @@ add_library(
     SketchEditorConstraintState.cpp
     SketchEditorCommand.cpp
     SketchEditorCreation.cpp
+    SketchTypedDimensions.cpp
     SketchEditorDrag.cpp
     SketchEditorPresentation.cpp
     SketchEditorDimensionEdit.cpp

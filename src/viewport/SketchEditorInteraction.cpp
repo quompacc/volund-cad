@@ -64,6 +64,7 @@ void SketchEditorInteraction::cancel() noexcept {
     secondReference_.reset();
     snapPoints_.clear();
     dragPoint_.reset();
+    dynamic_.reset();
     active_ = false;
 }
 
@@ -75,14 +76,15 @@ void SketchEditorInteraction::setTool(SketchElementTool tool) noexcept {
     firstReference_.reset();
     secondReference_.reset();
     dragPoint_.reset();
+    dynamic_.reset();
 }
 
-void SketchEditorInteraction::continuePolyline(double x, double y,
-                                               std::uint64_t elementId) noexcept {
+void SketchEditorInteraction::continuePolyline(double x, double y, std::uint64_t elementId) {
     if (active_ && tool_ == SketchElementTool::polyline) {
         firstPoint_ = std::pair{x, y};
         firstReference_ = SketchPointReferenceIntent{elementId, SketchPointKind::end};
         continued_ = elementId;
+        dynamic_.begin(tool_); // D01: the next segment's fields
     }
 }
 
@@ -438,7 +440,27 @@ std::optional<SketchElementIntent> SketchEditorInteraction::move(int x, int y) c
     const auto resolved = interactionPoint(x, y);
     if (!resolved.has_value())
         return std::nullopt;
-    auto [point, reference] = *resolved;
+    lastPointer_ = resolved->position;
+    auto intent = finalIntent(resolved->position, resolved->reference);
+    // D01: the fields show the element as it would be placed now.
+    if (intent && dynamic_.active())
+        dynamic_.updateLive(*firstPoint_, {intent->secondX, intent->secondY});
+    return intent;
+}
+
+// The element ended at `point`: automatic relations as the pointer suggests them, or (D01) the
+// typed values, which fix the end and suggest no relation.
+std::optional<SketchElementIntent>
+SketchEditorInteraction::finalIntent(std::pair<double, double> point,
+                                     std::optional<SketchPointReferenceIntent> reference) const {
+    if (dynamic_.hasTyped() && !secondPoint_.has_value()) {
+        const auto end = dynamic_.constrain(*firstPoint_, point);
+        SketchElementIntent intent{
+            firstPoint_->first, firstPoint_->second, end.first,    end.second,   std::nullopt,
+            firstReference_,    std::nullopt,        std::nullopt, std::nullopt, std::nullopt};
+        intent.typed = dynamic_.typedDimensions();
+        return valid(intent) ? std::optional{related(intent)} : std::nullopt;
+    }
     auto [adjustedPoint, automaticConstraint] = constrainedLineEnd(tool_, *firstPoint_, point);
     std::optional<std::uint64_t> automaticTargetId;
     if (!automaticConstraint.has_value())
@@ -494,6 +516,7 @@ std::optional<SketchElementIntent> SketchEditorInteraction::click(int x, int y) 
     if (!firstPoint_.has_value()) {
         firstPoint_ = point;
         firstReference_ = reference;
+        dynamic_.begin(tool_);
         return std::nullopt;
     }
     if (needsThirdPoint(tool_) && !secondPoint_.has_value()) {
@@ -506,53 +529,30 @@ std::optional<SketchElementIntent> SketchEditorInteraction::click(int x, int y) 
         secondReference_ = reference;
         return std::nullopt;
     }
-    auto [adjustedPoint, automaticConstraint] = constrainedLineEnd(tool_, *firstPoint_, point);
-    std::optional<std::uint64_t> automaticTargetId;
-    if (!automaticConstraint.has_value())
-        std::tie(adjustedPoint, automaticConstraint) = relatedLineEnd(*firstPoint_, point);
-    if (!automaticConstraint.has_value() && reference.has_value() &&
-        reference->point == SketchPointKind::onObject)
-        automaticConstraint = SketchAutomaticConstraint::pointOnObject;
-    if (tool_ == SketchElementTool::circle &&
-        tangentToReferencedLine(*firstPoint_, point, reference))
-        automaticConstraint = SketchAutomaticConstraint::tangent;
-    else if (tool_ == SketchElementTool::circle && isRadialCenterReference(firstReference_)) {
-        automaticConstraint = SketchAutomaticConstraint::concentric;
-        automaticTargetId = firstReference_->elementId;
-    } else if (tool_ == SketchElementTool::circle)
-        std::tie(adjustedPoint, automaticConstraint, automaticTargetId) =
-            relatedRadialPoint(*firstPoint_, point);
-    std::pair<double, double> intentSecond =
-        secondPoint_.has_value() ? *secondPoint_ : adjustedPoint;
-    // S05: an arc ending on a line is not announced tangent; the solver adapter has no
-    // tangency at an end point (end on the line plus tangency is redundant there).
-    if (tool_ == SketchElementTool::arc && secondPoint_.has_value()) {
-        if (isRadialCenterReference(firstReference_)) {
-            automaticConstraint = SketchAutomaticConstraint::concentric;
-            automaticTargetId = firstReference_->elementId;
-        } else
-            std::tie(intentSecond, automaticConstraint, automaticTargetId) =
-                relatedRadialPoint(*firstPoint_, *secondPoint_);
-    }
-    point = adjustedPoint;
-    const SketchElementIntent intent{firstPoint_->first,
-                                     firstPoint_->second,
-                                     intentSecond.first,
-                                     intentSecond.second,
-                                     secondPoint_.has_value() ? std::optional{point} : std::nullopt,
-                                     firstReference_,
-                                     secondPoint_.has_value() ? secondReference_ : reference,
-                                     secondPoint_.has_value() ? reference : std::nullopt,
-                                     automaticConstraint,
-                                     automaticTargetId};
-    if (!valid(intent)) {
+    auto intent = finalIntent(point, reference);
+    if (!intent)
         return std::nullopt;
-    }
+    finishElement();
+    return intent;
+}
+
+void SketchEditorInteraction::finishElement() noexcept {
     firstPoint_.reset();
     secondPoint_.reset();
     firstReference_.reset();
     secondReference_.reset();
-    return related(intent);
+    dynamic_.reset();
+}
+
+// D01: Enter places the element with the typed values at the last pointer position.
+std::optional<SketchElementIntent> SketchEditorInteraction::commitTyped() {
+    if (!firstPoint_.has_value() || secondPoint_.has_value() || !dynamic_.hasTyped() ||
+        dynamic_.hasInvalidText())
+        return std::nullopt;
+    auto intent = finalIntent(lastPointer_.value_or(*firstPoint_), std::nullopt);
+    if (intent)
+        finishElement();
+    return intent;
 }
 
 bool SketchEditorInteraction::beginElementDrag(int x, int y) {
@@ -585,6 +585,7 @@ bool SketchEditorInteraction::cancelStep() noexcept {
         firstPoint_.reset();
         firstReference_.reset();
         continued_.reset();
+        dynamic_.reset();
         return true;
     }
     return false;

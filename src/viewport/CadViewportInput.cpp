@@ -40,6 +40,7 @@ void CadViewport::mouseMoveEvent(QMouseEvent* event) {
             return;
         }
         if (impl_->sketchEditor.isActive() && event->buttons() == Qt::NoButton) {
+            impl_->sketchPointer = position; // D01: typed values are previewed here
             impl_->sketchEditor.setSnapBypass(event->modifiers().testFlag(Qt::ControlModifier));
             if (impl_->snapOverlay != nullptr)
                 impl_->snapOverlay->display(
@@ -49,6 +50,7 @@ void CadViewport::mouseMoveEvent(QMouseEvent* event) {
                 impl_->sketchEditorPreviewHandler(
                     impl_->sketchEditor.move(position.x(), position.y()));
             }
+            impl_->showDynamicFields(event->position());
             update();
             return;
         }
@@ -423,6 +425,10 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
 // S14 (A-TXN-03): Escape during a body drag ends it without a move: no document change and no
 // undo step. Other keys (and Escape otherwise) go on to the window's shortcuts.
 void CadViewport::keyPressEvent(QKeyEvent* event) {
+    if (handleDynamicKey(*event)) {
+        event->accept();
+        return;
+    }
     if (event->key() == Qt::Key_Escape && impl_->gesture == Impl::Gesture::moveAxis) {
         performViewportOperation(*this, impl_->ready, [&] {
             impl_->manipulator.cancel();

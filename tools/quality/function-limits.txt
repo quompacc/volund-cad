@@ -64,7 +64,7 @@ cyclomatic | src/application/SketchEditorPatterns.cpp | voelund::application::Sk
 cyclomatic | src/document/ModelDocumentPattern.cpp | voelund::document::validatePatternParameters | 24 | Altbestand vor A04
 cyclomatic | src/document/NativeExtrusion.cpp | voelund::document::detail::writeNativeExtrusion | 24 | Altbestand vor A04
 cyclomatic | src/features/SketchReferenceReview.cpp | voelund::features::reviewSketchReferences | 24 | Altbestand vor A04
-cyclomatic | src/viewport/SketchEditorInteraction.cpp | voelund::viewport::SketchEditorInteraction::click | 24 | Altbestand vor A04
+cyclomatic | src/viewport/SketchEditorInteraction.cpp | voelund::viewport::SketchEditorInteraction::finalIntent | 24 | Altbestand vor A04
 cyclomatic | src/application/SketchEditorSession.cpp | voelund::application::SketchEditorSession::selectNearestReference | 23 | Altbestand vor A04
 cyclomatic | src/desktop/ShellState.cpp | voelund::desktop::projectShell | 23 | Altbestand vor A04
 cyclomatic | src/desktop/SketchEditorPresentation.cpp | voelund::desktop::SketchEditorToolController::syncSelectedDimensionInputs | 23 | Altbestand vor A04
@@ -89,7 +89,6 @@ cyclomatic | src/assistant/StreamJson.cpp | voelund::assistant::parseStreamJsonL
 cyclomatic | src/desktop/ContextCommands.cpp | voelund::desktop::(anonymous namespace)::featureName | 20 | Altbestand vor A04
 cyclomatic | src/document/LegacyDocumentImporter.cpp | voelund::document::(anonymous namespace)::readSketchElement | 20 | Altbestand vor A04
 cyclomatic | src/features/FeatureGraph.cpp | voelund::features::(anonymous namespace)::runFeature | 20 | Altbestand vor A04
-cyclomatic | src/viewport/SketchEditorInteraction.cpp | voelund::viewport::SketchEditorInteraction::move | 20 | Altbestand vor A04
 cyclomatic | src/desktop/TimelineBar.cpp | voelund::desktop::(anonymous namespace)::iconFor | 19 | Altbestand vor A04
 cyclomatic | src/document/ModelDocumentSolidFeatures.cpp | voelund::document::validateSweepExtrusion | 19 | Altbestand vor A04
 cyclomatic | src/document/NativeSketchGeometry.cpp | voelund::document::detail::validateNativeSketchGeometry | 19 | Altbestand vor A04
