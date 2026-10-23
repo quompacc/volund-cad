@@ -108,6 +108,8 @@ class MainWindow final : public QMainWindow {
     void createHeader();
     void applyTheme(ThemeMode mode);
     void createCommands();
+    [[nodiscard]] bool canCombineBody() const;
+    [[nodiscard]] bool canTreatEdges() const;
     void connectInteractions();
     void pickPlanarFace(const viewport::PlanarFaceSelection& selection);
     bool toolTakesFace(const viewport::PlanarFaceSelection& selection);

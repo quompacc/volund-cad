@@ -82,7 +82,7 @@ void colors(QWidget& window, viewport::CadViewport& viewport, application::CadSe
         if ((*it)->data(0, Qt::UserRole + 2).toInt() == 3)
             bodyRow = *it;
     require(bodyRow != nullptr, "Body row");
-    emit tree.itemClicked(bodyRow, 0);
+    tree.setCurrentItem(bodyRow); // a click on the row makes it current, which selects the body
     test::settleEvents();
     auto& card = child<QWidget>(window, "bodyCard");
     require(card.isVisible(), "A body row shows the colour card");

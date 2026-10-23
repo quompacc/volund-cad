@@ -29,6 +29,23 @@
 namespace voelund::desktop {
 namespace {
 
+// W04: Entf deletes the selected feature everywhere; on a focused step it belongs to the step
+// (M16), so the step claims the key before the window's shortcut.
+class DeleteKeyClaim final : public QObject {
+  public:
+    using QObject::QObject;
+
+  protected:
+    bool eventFilter(QObject* watched, QEvent* event) override {
+        if (event->type() == QEvent::ShortcutOverride &&
+            static_cast<QKeyEvent*>(event)->key() == Qt::Key_Delete) {
+            event->accept();
+            return true;
+        }
+        return QObject::eventFilter(watched, event);
+    }
+};
+
 ShellIcon iconFor(document::FeatureKind kind) {
     switch (kind) {
     case document::FeatureKind::box:
@@ -457,6 +474,7 @@ void TimelineBar::showFeatures(std::span<const document::FeatureDescriptor> feat
         });
         button->setFocusPolicy(Qt::StrongFocus);
         button->installEventFilter(this); // M15: keyboard
+        button->installEventFilter(new DeleteKeyClaim(button));
         button->setContextMenuPolicy(Qt::CustomContextMenu);
         connect(button, &QWidget::customContextMenuRequested, this,
                 [this, id, button](const QPoint& at) {

@@ -37,8 +37,9 @@ struct SolidCommandServices final {
     std::function<bool()> canHole{};
     // M22: walls with the picked planar face opened; enabled like the hole.
     std::function<void()> shell{};
-    // M21: combines the selected body with clicked tool bodies; enabled like the fillet.
+    // M21: combines the selected body with clicked tool bodies; needs a selected body.
     std::function<void()> combine{};
+    std::function<bool()> canCombine{};
     // M09: mirrors the selected body (about the picked planar face, if any).
     std::function<void()> mirror{};
     std::function<bool()> canMirror{};

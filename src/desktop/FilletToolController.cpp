@@ -143,6 +143,9 @@ void FilletToolController::picked(std::uint64_t body, const TopoDS_Shape& edge) 
         preview();
         return;
     }
+    // Opened with nothing selected: the first edge clicked chooses the body (as in Fusion).
+    if (edges_.empty() && !editing_ && body != support_.value())
+        support_ = document::FeatureId{body};
     auto named = session_.filletEdge(support_, edge);
     if (!named && previewSession_ && previewFeature_)
         named = previewSession_->filletEdge(*previewFeature_, edge);

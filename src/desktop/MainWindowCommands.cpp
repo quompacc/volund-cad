@@ -220,8 +220,9 @@ void MainWindow::createCommands() {
     const auto treatEdges = [this](EdgeTreatment treatment) {
         // Edges picked before (user request 2026-10-13) are taken over.
         auto edges = impl_->selectedEdges;
-        const auto producer =
-            edges.empty() ? impl_->session.selectedBodyProducer() : impl_->edgeSupport;
+        auto producer = edges.empty() ? impl_->session.selectedBodyProducer() : impl_->edgeSupport;
+        if (!producer && !impl_->session.validBodies().empty()) // nothing selected: the newest
+            producer = impl_->session.validBodies().back().sourceFeature; // until an edge is hit
         if (!producer)
             return;
         if (impl_->sketchExtrusionTool->isActive())
@@ -393,13 +394,8 @@ void MainWindow::createCommands() {
     services.canHole = [this]() {
         return impl_->selectedPlanarFace.has_value() && impl_->shell().canSketch();
     };
-    services.canFillet = [this]() {
-        const auto selected = impl_->session.selectedFeature();
-        return selected &&
-               impl_->session.selectedFeatureDescriptor().kind != document::FeatureKind::sketch &&
-               impl_->session.selectedBodyProducer().has_value() &&
-               impl_->session.sceneStatus().isCurrent() && !impl_->shell().toolBlocksCommands();
-    };
+    services.canCombine = [this]() { return canCombineBody(); };
+    services.canFillet = [this]() { return canTreatEdges(); };
     services.canTransform = [this]() {
         const auto selected = impl_->session.selectedFeature();
         return selected.has_value() && impl_->session.canTransformFeature(*selected) &&
@@ -418,6 +414,22 @@ void MainWindow::createCommands() {
         ->setObjectName(QStringLiteral("sketchEditorAction"));
     impl_->transformAction = impl_->commandActions->action("solid.modify.transform");
     impl_->transformAction->setObjectName(QStringLiteral("transformAction"));
+}
+
+// M21: the selected body takes the result.
+bool MainWindow::canCombineBody() const {
+    const auto selected = impl_->session.selectedFeature();
+    return selected &&
+           impl_->session.selectedFeatureDescriptor().kind != document::FeatureKind::sketch &&
+           impl_->session.selectedBodyProducer().has_value() &&
+           impl_->session.sceneStatus().isCurrent() && !impl_->shell().toolBlocksCommands();
+}
+
+// User report 2026-10-23 (as in Fusion): Verrunden and Fase stay offered while there is a body;
+// with nothing selected the panel opens and the first edge clicked picks the body.
+bool MainWindow::canTreatEdges() const {
+    return !impl_->session.validBodies().empty() && impl_->session.sceneStatus().isCurrent() &&
+           !impl_->shell().toolBlocksCommands();
 }
 
 void MainWindow::createCommandSurfaces() {
