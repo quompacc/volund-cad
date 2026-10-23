@@ -91,8 +91,8 @@ void run() {
     require(deselected == QStringLiteral("Auswahl aufgehoben"),
             "Escape then clears the selection: " + deselected.toStdString());
     const QString hint = key(window, *viewport, Qt::Key_Escape);
-    require(hint.contains(QStringLiteral("Strg+Enter")) && editing(window),
-            "Escape never leaves the sketch: " + hint.toStdString());
+    require(hint.contains(QStringLiteral("Noch einmal Esc")) && editing(window),
+            "One Escape with nothing to step back leaves the sketch open: " + hint.toStdString());
 
     bool asked = false;
     test::answerDiscardQuestion(QStringLiteral("Weiter bearbeiten"), &asked);
@@ -102,11 +102,13 @@ void run() {
     settle();
     require(asked && editing(window), "Cancel asks; \"Weiter bearbeiten\" keeps the sketch");
 
-    static_cast<void>(key(window, *viewport, Qt::Key_Return, Qt::ControlModifier));
+    // W10: two quick Escapes with nothing left to step back finish the sketch, like OK.
+    static_cast<void>(key(window, *viewport, Qt::Key_Escape));
+    static_cast<void>(key(window, *viewport, Qt::Key_Escape));
     require(!editing(window) && session.features().size() == 1 &&
                 session.sketchParameters(session.features().front().id).elements.values.size() == 2,
-            "Ctrl+Enter accepts the two polyline segments");
-    std::cout << "PASS sketch keyboard: Enter, Escape steps, Cancel question, Ctrl+Enter\n";
+            "Two quick Escapes accept the two polyline segments");
+    std::cout << "PASS sketch keyboard: Enter, Escape steps, Cancel question, double Escape\n";
 }
 } // namespace
 

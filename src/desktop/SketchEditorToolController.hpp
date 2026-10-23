@@ -7,6 +7,8 @@
 #include <voelund/application/SketchEditorSession.hpp>
 #include <voelund/viewport/CadViewport.hpp>
 
+#include <QElapsedTimer>
+
 #include <functional>
 #include <memory>
 #include <optional>
@@ -86,6 +88,7 @@ class SketchEditorToolController final {
     [[nodiscard]] std::optional<QString> applyDimensionText(std::uint64_t constraintId,
                                                             const QString& text);
     InlineValueEdit* valueEdit_{nullptr};
+    QElapsedTimer lastIdleEscape_; // W10: two quick Escapes with nothing to step back finish
     // W02 (SketchDimensionTool.cpp): a click of the dimension tool; the single dimension of the
     // first pick, while nothing is typed, gives way to one with the second pick.
     bool pickForDimension(const viewport::SketchSelectionIntent& intent);

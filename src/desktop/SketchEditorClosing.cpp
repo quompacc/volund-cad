@@ -11,7 +11,8 @@
 
 // S13: how the sketch editor is left (user decision 2026-10-09). Escape steps back (drag,
 // preview points, drawing tool, selection) and never discards the sketch; Cancel asks before
-// it discards changes; Enter ends a polyline, Ctrl+Enter or OK accepts.
+// it discards changes; Enter ends a polyline, Ctrl+Enter or OK accepts. W10: with nothing left
+// to step back, two quick Escapes accept the sketch (SolidCraft); Escape still never discards it.
 namespace voelund::desktop {
 
 void SketchEditorToolController::stepBack() {
@@ -47,8 +48,15 @@ void SketchEditorToolController::stepBack() {
         statusChanged_(QObject::tr("Auswahl aufgehoben"));
         return;
     }
-    statusChanged_(QObject::tr("Skizze mit OK (Strg+Enter) übernehmen oder mit Abbrechen "
-                               "verwerfen"));
+    // W10 (as in SolidCraft): a second Escape right after this one finishes the sketch, like OK.
+    if (lastIdleEscape_.isValid() && lastIdleEscape_.elapsed() < 600) {
+        lastIdleEscape_.invalidate();
+        accept();
+        return;
+    }
+    lastIdleEscape_.start();
+    statusChanged_(
+        QObject::tr("Noch einmal Esc beendet die Skizze (wie OK); Abbrechen verwirft sie"));
 }
 
 void SketchEditorToolController::requestCancel() {
