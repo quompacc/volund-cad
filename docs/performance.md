@@ -42,3 +42,32 @@ sh tools/run-perf.sh build/linux-desktop-release        # alle Stufen, 15 min je
 - Vor jedem Release wird die Messung wiederholt; jede Überschreitung eines Budgets muss geklärt
   werden.
 - CTest hält nur die kleinen Stufen lauffähig (`perf.smoke.*`) und misst keine Zeiten.
+
+## Undo-Stapel (UNDO-MESSUNG, 23.10.2026)
+
+Die Historie hält je Schritt einen vollständigen OCAF-Dokumentstand (D12c). Gemessen ohne
+Änderung daran: jeder Schritt ist eine übernommene Änderung des ersten Quaders, danach alle
+Schritte zurück und wieder vor. Messung: Release-Build, ruhiger Referenzrechner, kein CI-Lauf
+(`sh tools/run-undo-bench.sh`). Rohwerte: `docs/implementation-plan/evidence/UNDO-artifacts/`.
+
+| Modell | Features | Datei | Ändern (Median) | Undo (Median) | Speicher nach 10 / 100 / 500 Schritten |
+|---|---:|---:|---:|---:|---:|
+| klein: ein Quader | 1 | 1 KiB | 2,2 ms | 2,1 ms | 0 / 0 / 5,4 MiB |
+| mittel: 25 Körper aus Quader und Zylinder | 49 | 20 KiB | 20 ms | 20 ms | 0 / 2,1 / 32 MiB |
+| groß: mittel + eingebettetes STEP-Teil (NIST STC 08) | 50 | 300 KiB | 0,60 s | 0,34 s | 0,6 / 29 / 170 MiB |
+
+- **Speicher:** Je Schritt etwa die Größe des gespeicherten Dokuments (rund 1,1-fach), linear in
+  der Zahl der Schritte. Die Historie hat keine Obergrenze. Kleine Werte unter 1 MiB gehen in
+  der Seitengröße des Prozessspeichers unter.
+- **Zeit:** Undo und Redo kodieren den ganzen Stand neu und werten neu aus. Das kostet rund
+  1 ms je KiB Dokument und hängt nicht von der Länge der Historie ab (gleich bei 10 und 500
+  Schritten).
+- **Einschätzung:**
+  - Bis etwa 1 MiB Dokument (typische Bauteile, auch mit kleinem Import) ist der Stapel
+    unkritisch: unter 1 s je Undo und unter 0,6 GiB nach 500 Schritten.
+  - Ab etwa 2 MiB Dokument wird Undo spürbar (über 2 s, über dem Budget für Änderungen), und
+    500 Schritte belegen über 1 GiB.
+  - Kritisch sind große eingebettete STEP-Importe (10 MiB und mehr): rund 10 s je Undo und
+    über 5 GiB nach 500 Schritten. Dafür bräuchte es eine Obergrenze der Historie oder
+    Delta-Undo.
+  - Delta-Undo ist nicht Teil dieser Messung (D12d-Grenzen bleiben).

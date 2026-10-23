@@ -1,6 +1,6 @@
 # LIZENZ – Völund unter GPL-3.0-or-later
 
-**Status:** Code und Prüfungen vom 22.10.2026; Abnahme nach grünem CI-Lauf.
+**Status:** abgenommen am 23.10.2026. Code `4eaf1d0`; CI-Lauf 719 grün; `main` auf Gitea und GitHub.
 
 ## Entscheidung (Projektinhaber, 22.10.2026)
 

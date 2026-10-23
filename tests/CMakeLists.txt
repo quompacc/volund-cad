@@ -1496,6 +1496,15 @@ foreach(stage sketch-100 features-10 bodies-10)
     add_test(NAME perf.smoke.${stage} COMMAND voelund_perf_bench ${stage} "${CMAKE_CURRENT_BINARY_DIR}")
     set_tests_properties(perf.smoke.${stage} PROPERTIES LABELS "perf;smoke" TIMEOUT 300)
 endforeach()
+# UNDO-MESSUNG: memory and time of the undo history (full OCAF states); the series runs by
+# hand (tools/run-undo-bench.sh), CTest only keeps the smallest run working.
+add_executable(voelund_undo_bench perf/UndoBench.cpp)
+target_link_libraries(voelund_undo_bench PRIVATE voelund_project_options Voelund::Application)
+if(WIN32)
+    target_link_libraries(voelund_undo_bench PRIVATE psapi)
+endif()
+add_test(NAME perf.smoke.undo-small-10 COMMAND voelund_undo_bench small 10)
+set_tests_properties(perf.smoke.undo-small-10 PROPERTIES LABELS "perf;smoke" TIMEOUT 300)
 # Q01: NIST test parts as an outside reference for STEP import.
 add_executable(voelund_nist_step_tests differential/NistStepTests.cpp)
 target_link_libraries(voelund_nist_step_tests PRIVATE voelund_project_options Voelund::Kernel TKDESTEP)
