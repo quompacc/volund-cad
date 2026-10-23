@@ -96,6 +96,14 @@ void run() {
     command(window, "sketch.tool.select").trigger();
     settle();
 
+    // User report 2026-10-23: a line lights up under the pointer, nothing off it.
+    send(*viewport, QEvent::MouseMove, at(*viewport, 20, 0), Qt::NoButton);
+    require(viewport::ViewportTestAccess::hoveredSketchElement(*viewport).has_value(),
+            "The right side lights up under the pointer");
+    send(*viewport, QEvent::MouseMove, at(*viewport, 40, 30), Qt::NoButton);
+    require(!viewport::ViewportTestAccess::hoveredSketchElement(*viewport).has_value(),
+            "Nothing lights up away from the curves");
+
     box(*viewport, -26, -16, 26, 16);
     require(selectedCount(*viewport) == 4, "Window: the four sides, not the circle (" +
                                                std::to_string(selectedCount(*viewport)) + ")");

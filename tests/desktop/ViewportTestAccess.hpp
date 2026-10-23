@@ -96,6 +96,10 @@ class ViewportTestAccess {
     static std::optional<std::uint32_t> bodyColor(CadViewport& v, std::size_t index) {
         return v.impl_->presentations.at(index).color;
     }
+    // The sketch element under the pointer after a MouseMove (its hover highlight).
+    static std::optional<std::uint64_t> hoveredSketchElement(CadViewport& v) {
+        return v.impl_->detectedSketchElement();
+    }
     static bool sectionArrowHovered(CadViewport& v) {
         const auto& context = v.impl_->context;
         auto& grip = v.impl_->section.grip();
