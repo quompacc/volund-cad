@@ -39,6 +39,11 @@ class ModelTreePanel final : public QTreeWidget {
     void setBodyGroupHandler(std::function<void(std::uint64_t, bool)> handler) {
         bodyGrouped_ = std::move(handler);
     }
+    // W09 (as in Fusion and SolidCraft): a right click on a row asks for its menu at a screen
+    // position.
+    void setMenuHandler(std::function<void(Kind, std::uint64_t, QPoint)> handler) {
+        menuRequested_ = std::move(handler);
+    }
     // Icons and the text color of hidden entries follow the theme; existing entries are
     // recolored, so a theme switch never leaves text in the old theme's color.
     void setEyeIcons(const QIcon& shown, const QIcon& hidden, const QColor& hiddenText);
@@ -78,6 +83,7 @@ class ModelTreePanel final : public QTreeWidget {
     Handlers handlers_;
     // N02b: Strg-click adds or removes a body, Umschalt-click adds the bodies up to it.
     std::function<void(std::uint64_t, bool range)> bodyGrouped_;
+    std::function<void(Kind, std::uint64_t, QPoint)> menuRequested_; // W09
     Qt::KeyboardModifiers pressModifiers_; // N02b: of the press that leads to a click
     std::vector<document::FeatureId> flashed_;
     QColor flashColor_;

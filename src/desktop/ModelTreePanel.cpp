@@ -45,6 +45,14 @@ ModelTreePanel::ModelTreePanel(QWidget* parent) : QTreeWidget(parent) {
     setRootIsDecorated(false);
     setIndentation(16);
     setSelectionMode(QAbstractItemView::ExtendedSelection); // N02b: groups of bodies
+    setContextMenuPolicy(Qt::CustomContextMenu);            // W09
+    connect(this, &QTreeWidget::customContextMenuRequested, this, [this](const QPoint& at) {
+        auto* item = itemAt(at);
+        if (item == nullptr || !menuRequested_)
+            return;
+        menuRequested_(static_cast<Kind>(item->data(0, kindRole).toInt()),
+                       item->data(0, idRole).toULongLong(), viewport()->mapToGlobal(at));
+    });
     connect(this, &QTreeWidget::itemClicked, this, [this](QTreeWidgetItem* item, int column) {
         const auto kind = static_cast<Kind>(item->data(0, kindRole).toInt());
         const auto id = item->data(0, idRole).toULongLong();

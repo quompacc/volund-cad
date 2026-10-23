@@ -269,6 +269,46 @@ void MainWindow::showTimelineMenu(std::uint64_t featureId, QPoint at) {
     menu.exec(at);
 }
 
+// W09 (as in Fusion and SolidCraft): a tree row's menu. The row is selected first, like a click,
+// so the menu offers the same commands (and keys) the bar and the search show for it.
+void MainWindow::showTreeMenu(int kind, std::uint64_t id, QPoint at) {
+    if (impl_->shell().toolBlocksCommands())
+        return;
+    std::vector<const char*> commands;
+    switch (static_cast<ModelTreePanel::Kind>(kind)) {
+    case ModelTreePanel::Kind::body:
+        selectBody(id);
+        commands = {"body.rename",         "body.visibility",
+                    "edit.copy",           "solid.modify.transform",
+                    "solid.modify.fillet", "solid.modify.mirror",
+                    "document.export_step"};
+        break;
+    case ModelTreePanel::Kind::feature:
+        selectFeature(id);
+        commands = {"solid.modify.edit_sketch", "history.suppress", "history.rollback_here",
+                    "history.delete"};
+        break;
+    case ModelTreePanel::Kind::plane:
+        selectBasePlane(static_cast<int>(id));
+        commands = {"solid.create.sketch", "solid.create.datum_plane"};
+        break;
+    default:
+        return;
+    }
+    syncShell();
+    QMenu menu(this);
+    menu.setObjectName(QStringLiteral("treeMenu"));
+    const auto actions = findChildren<QAction*>();
+    for (const char* command : commands)
+        for (auto* action : actions)
+            if (action->property("commandId").toString() == QLatin1String(command)) {
+                menu.addAction(action);
+                break;
+            }
+    if (!menu.isEmpty())
+        menu.exec(at);
+}
+
 // M14: suppresses the selected feature, or reactivates it; one undo step.
 void MainWindow::toggleSuppression() {
     const auto selected = impl_->session.selectedFeature();

@@ -49,6 +49,9 @@ umgesetzte Funktionen. Was hier nicht steht, gibt es noch nicht.
 
 ## Körper erstellen
 
+- **Rechtsklick im Modellbaum:** Körper (Umbenennen, Ausblenden, Kopieren, Bewegen, Verrunden, Spiegeln,
+  Exportieren), Feature (Bearbeiten, Unterdrücken, Zurückrollen, Löschen), Ebene (Skizze, Bezugsebene).
+
 - **Tasten wie in Fusion:** E Extrudieren, Q Drücken/Ziehen (bei Kanten Verrunden, bei einem Skizzenbereich
   Extrudieren), F Verrunden, H Bohrung, M Bewegen, I Messen; in der Skizze D Bemaßung, X Hilfsgeometrie, T Stutzen.
 - **Extrudieren:** Die Länge kann sofort getippt werden (das Feld hat den Fokus), Enter übernimmt. Ein

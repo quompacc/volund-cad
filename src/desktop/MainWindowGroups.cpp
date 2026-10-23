@@ -56,6 +56,10 @@ void toggleOrRange(std::vector<Id>& group, Id id, bool range, const std::vector<
 } // namespace
 
 void MainWindow::createGroupSelection() {
+    impl_->modelTree->setMenuHandler( // W09
+        [this](ModelTreePanel::Kind kind, std::uint64_t id, QPoint at) {
+            showTreeMenu(static_cast<int>(kind), id, at);
+        });
     impl_->modelTree->setBodyGroupHandler(
         [this](std::uint64_t id, bool range) { groupBody(document::BodyId{id}, range); });
     impl_->timeline->setGroupHandler(

@@ -66,7 +66,8 @@ class MainWindow final : public QMainWindow {
     void createHistoryActions();
     void createCommandSurfaces();
     void createViewSwitches();
-    void createSectionView(); // N05 (MainWindowView.cpp)
+    void createSectionView();                                 // N05 (MainWindowView.cpp)
+    void showTreeMenu(int kind, std::uint64_t id, QPoint at); // W09 (MainWindowView.cpp)
     // M01: bodies as a whole (MainWindowBodies.cpp).
     void createBodyCommands();
     void createBodyAppearance(); // N06: colour card and display style (MainWindowBodies.cpp)
