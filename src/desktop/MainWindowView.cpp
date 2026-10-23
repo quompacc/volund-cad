@@ -261,6 +261,13 @@ void MainWindow::showTimelineMenu(std::uint64_t featureId, QPoint at) {
     syncShell();
     QMenu menu(this);
     menu.setObjectName(QStringLiteral("timelineMenu"));
+    // W08 (as in Fusion): the menu starts with editing the step.
+    for (auto* action : findChildren<QAction*>())
+        if (action->property("commandId").toString() == QLatin1String("solid.modify.edit_sketch")) {
+            menu.addAction(action);
+            menu.addSeparator();
+            break;
+        }
     menu.addAction(impl_->suppressAction);
     menu.addAction(impl_->rollbackAction);
     menu.addAction(impl_->rollForwardAction);
