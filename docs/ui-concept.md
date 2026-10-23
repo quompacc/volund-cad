@@ -239,6 +239,7 @@ Der Dreipunktbogen nimmt Anfang, Ende und dann einen Punkt auf dem Bogen.
 |---|---|---|
 | Zeichnen | `sketch.tool.select`, `.line`, `.polyline`, `.rectangle`, `.circle`, `.center_arc`, `.three_point_arc`, `.ellipse`, `.slot`, `.polygon`, `.center_rectangle`, `.point`, `.bspline` | S, L, P, R, C, A, Umschalt+A, E, N, G, Umschalt+R, O, B |
 | Tasten wie Fusion (W04) | `solid.create.extrude_profiles` E, `solid.modify.push_pull` Q (Kanten → Verrunden, Skizzenbereich → Extrudieren, sonst ebene Fläche), `solid.modify.fillet` F, `solid.modify.hole` H, `solid.modify.transform` M, `solid.inspect.measure` I; in der Skizze `sketch.construction` X, `sketch.trim` T | E, Q, F, H, M, I, X, T |
+| Allgemein (W04) | `body.visibility` V, `history.delete` Entf, `view.fit` F6 (Alles einpassen), `command.repeat` Umschalt+R (letzten Werkzeugbefehl wiederholen; in der Skizze ist Umschalt+R das Mittenrechteck) | V, Entf, F6, Umschalt+R |
 | Bemaßung (W02) | `sketch.tool.dimension`: Element anklicken, Wert im Feld an der Maus tippen, Enter; zweites Element vor dem Tippen ergibt Winkel oder Abstand; Esc behält den gemessenen Wert | D |
 | Linien | `sketch.horizontal`, `.vertical`, `.free`, `.parallel`, `.perpendicular`, `.collinear` | – |
 | Punkte | `sketch.coincident`, `.horizontal_points`, `.vertical_points`, `.symmetric`, `.midpoint`, `.perpendicular_bisector`, `.point_on_object` | – |

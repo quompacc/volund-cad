@@ -75,6 +75,20 @@ void MainWindow::createViewSwitches() {
         impl_->sketchSwitchActions.emplace_back(id, action);
     }
     impl_->sketchEditorTool->setSwitchHandler([this] { syncViewSwitches(); });
+    // W04 (as in Fusion): F6 fits the view, Shift+R repeats the command used last.
+    impl_->fitAction = new QAction(tr("Alles einpassen"), this);
+    impl_->fitAction->setShortcut(QKeySequence(Qt::Key_F6));
+    setCommandId(*impl_->fitAction, "view.fit");
+    addAction(impl_->fitAction);
+    connect(impl_->fitAction, &QAction::triggered, this, [this] { impl_->viewport->fitView(); });
+    impl_->repeatAction = new QAction(tr("Letzten Befehl wiederholen"), this);
+    impl_->repeatAction->setShortcut(QKeySequence(QStringLiteral("Shift+R")));
+    setCommandId(*impl_->repeatAction, "command.repeat");
+    addAction(impl_->repeatAction);
+    connect(impl_->repeatAction, &QAction::triggered, this, [this] {
+        if (auto* last = impl_->commandActions->lastTriggered(); last && last->isEnabled())
+            last->trigger();
+    });
     syncViewSwitches();
 }
 
@@ -133,6 +147,10 @@ void MainWindow::syncViewSwitches() {
     }
     impl_->sketchEditorTool->syncGridChoice();
     const bool sketching = impl_->sketchEditorTool->isActive();
+    // W04: Shift+R is the centre rectangle while sketching; there it does not repeat.
+    if (impl_->repeatAction != nullptr)
+        impl_->repeatAction->setEnabled(impl_->commandActions->lastTriggered() != nullptr &&
+                                        !impl_->shell().toolBlocksCommands());
     for (const auto& [id, action] : impl_->sketchSwitchActions) {
         const QSignalBlocker blocker(action);
         action->setEnabled(sketching);

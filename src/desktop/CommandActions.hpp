@@ -26,11 +26,14 @@ class CommandActions final {
     [[nodiscard]] const std::vector<QAction*>& ordered() const noexcept { return ordered_; }
     [[nodiscard]] workspaces::CommandGroup group(const QAction& action) const;
     void refreshEnabled();
+    // W04 (Shift+R, as in Fusion): the workspace command triggered last, if any.
+    [[nodiscard]] QAction* lastTriggered() const noexcept { return last_; }
 
   private:
     const workspaces::WorkspaceModule& module_;
     std::map<std::string, QAction*, std::less<>> actions_;
     std::vector<QAction*> ordered_;
+    QAction* last_{nullptr};
 };
 
 } // namespace voelund::desktop

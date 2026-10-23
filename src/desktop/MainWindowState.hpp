@@ -134,6 +134,8 @@ class MainWindow::Impl final {
     QAction* snapAction{nullptr};
     // S13: view switches as commands (grid everywhere, the others in the sketch editor).
     QAction* gridAction{nullptr};
+    QAction* repeatAction{nullptr}; // W04: Shift+R
+    QAction* fitAction{nullptr};    // W04: F6
     std::vector<std::pair<std::string, QAction*>> sketchSwitchActions;
     QDoubleSpinBox* linearSnapInput{nullptr};
     QDoubleSpinBox* angularSnapInput{nullptr};

@@ -28,6 +28,7 @@ void MainWindow::createBodyCommands() {
     });
     impl_->bodyVisibilityAction = new QAction(tr("Ausblenden"), this);
     setCommandId(*impl_->bodyVisibilityAction, "body.visibility");
+    impl_->bodyVisibilityAction->setShortcut(QKeySequence(QStringLiteral("V"))); // W04
     addAction(impl_->bodyVisibilityAction);
     connect(impl_->bodyVisibilityAction, &QAction::triggered, this, [this] {
         // N02b: a group shows or hides all its bodies.

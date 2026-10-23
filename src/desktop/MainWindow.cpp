@@ -208,6 +208,7 @@ void MainWindow::createHistoryActions() {
     impl_->deleteAction = new QAction(tr("Löschen"), this);
     impl_->deleteAction->setToolTip(tr("Gewähltes Feature löschen"));
     setCommandId(*impl_->deleteAction, "history.delete");
+    impl_->deleteAction->setShortcut(QKeySequence::Delete); // W04: Entf, as in Fusion
     connect(impl_->deleteAction, &QAction::triggered, this, [this] { deleteSelectedFeature(); });
     // Undo/Redo sit in the shell header. Repair is offered by the context bar and the command
     // search until U10 moves it to the feature.

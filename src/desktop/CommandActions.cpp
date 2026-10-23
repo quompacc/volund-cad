@@ -26,7 +26,10 @@ CommandActions::CommandActions(QWidget& window, const workspaces::WorkspaceModul
             action->setShortcut(QKeySequence(QString::fromStdString(command.shortcut)));
         const std::function<void(bool)> trigger = command.trigger;
         QObject::connect(action, &QAction::triggered, &window,
-                         [trigger](bool checked) { trigger(checked); });
+                         [this, action, trigger](bool checked) {
+                             last_ = action;
+                             trigger(checked);
+                         });
         window.addAction(action);
         actions_.emplace(command.id, action);
         ordered_.push_back(action);
