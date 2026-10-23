@@ -4,8 +4,7 @@
 #include "CadSessionGeometryDetail.hpp"
 #include "CommandInput.hpp"
 
-#include <BRepBndLib.hxx>
-#include <Bnd_Box.hxx>
+#include <voelund/kernel/ShapeQueries.hpp>
 
 #include <string>
 
@@ -50,15 +49,12 @@ CommandResult CadSession::moveBody(document::FeatureId feature,
     if (!body || !shape)
         return CommandResult::invalidInput("Only a current body can be moved");
     // The pivot is the middle of the body now; later moves of this feature turn about it too.
-    Bnd_Box bounds;
-    BRepBndLib::Add(*shape, bounds);
-    double x0 = 0, y0 = 0, z0 = 0, x1 = 0, y1 = 0, z1 = 0;
-    bounds.Get(x0, y0, z0, x1, y1, z1);
+    const auto pivot = kernel::boundingBoxCentre(*shape);
     const document::MoveParameters parameters{
         *body,
         moved(kernel::RigidTransform{0, 0, 0, kernel::Radians{0}, kernel::Radians{0},
                                      kernel::Radians{0}}),
-        {(x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2}};
+        {pivot.X(), pivot.Y(), pivot.Z()}};
     const std::size_t sequence =
         featureCount(document_.features(), document::FeatureKind::move) + 1;
     document::DocumentTransaction transaction(document_);

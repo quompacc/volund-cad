@@ -2,19 +2,8 @@
 // Copyright (C) 2026 Eduard Hart
 
 #include "SketchRegionGeometry.hpp"
-#include "SketchBSplineCurves.hpp"
+#include <voelund/kernel/ShapeQueries.hpp>
 
-#include <BRepBuilderAPI_MakeEdge.hxx>
-#include <BRepBuilderAPI_MakeFace.hxx>
-#include <BRepBuilderAPI_MakeWire.hxx>
-#include <BRepCheck_Analyzer.hxx>
-#include <BRepClass_FaceClassifier.hxx>
-#include <BRepGProp.hxx>
-#include <BRep_Builder.hxx>
-#include <GProp_GProps.hxx>
-#include <GeomAPI.hxx>
-#include <TopExp_Explorer.hxx>
-#include <TopoDS.hxx>
 #include <algorithm>
 #include <cmath>
 #include <gp_Pln.hxx>
@@ -36,7 +25,7 @@ double boundaryArea(const SketchIntersectionResult& split,
             contribution = x * v - y * u;
         } else if (const auto* spline = std::get_if<document::SketchBSpline>(&geometry)) {
             // S21: Gauss-Legendre over each knot span the interval touches.
-            const auto curve = bsplineCurve2d(*spline);
+            const PlanarCurve curve(curveDefinition(*spline));
             constexpr double nodes[] = {-0.9061798459386640, -0.5384693101056831, 0.0,
                                         0.5384693101056831, 0.9061798459386640};
             constexpr double weights[] = {0.2369268850561891, 0.4786286704993665,
@@ -51,7 +40,7 @@ double boundaryArea(const SketchIntersectionResult& split,
                     const double u = (a + b) / 2 + (b - a) / 2 * nodes[k];
                     gp_Pnt2d p;
                     gp_Vec2d d;
-                    curve->D1(u, p, d);
+                    curve.d1(u, p, d);
                     contribution += static_cast<long double>(weights[k] * (b - a) / 2) *
                                     ((p.X() - anchor.x) * d.Y() - (p.Y() - anchor.y) * d.X());
                 }
@@ -84,32 +73,17 @@ double boundaryArea(const SketchIntersectionResult& split,
 namespace {
 TopoDS_Face face(const SketchRegionResult& result, const SketchRegionBoundary& boundary,
                  const std::vector<PlanarCurve>& curves) {
-    const gp_Pln plane(gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1));
-    BRepBuilderAPI_MakeWire wire;
+    std::vector<kernel::LoopPiece> loop;
     for (auto h : boundary.edges) {
         const auto& interval = result.split.intervals[h.interval];
         const auto& c = curves[interval.piece];
-        auto edge = BRepBuilderAPI_MakeEdge(GeomAPI::To3d(c.curve, plane), interval.firstParameter,
-                                            interval.lastParameter)
-                        .Edge();
-        if (h.reversed)
-            edge.Reverse();
-        BRep_Builder builder;
-        for (TopExp_Explorer v(edge, TopAbs_VERTEX); v.More(); v.Next())
-            builder.UpdateVertex(TopoDS::Vertex(v.Current()),
-                                 kernel::connectionTolerance(c.scale).millimetres);
-        wire.Add(edge);
-        if (!wire.IsDone())
-            throw std::runtime_error("Region wire failed");
+        loop.push_back({&c, interval.firstParameter, interval.lastParameter, h.reversed,
+                        kernel::connectionTolerance(c.scale).millimetres});
     }
-    BRepBuilderAPI_MakeFace builder(plane, wire.Wire(), true);
-    if (!builder.IsDone() || !BRepCheck_Analyzer(builder.Face()).IsValid())
-        throw std::runtime_error("Region classifier face invalid");
-    GProp_GProps properties;
-    BRepGProp::SurfaceProperties(builder.Face(), properties);
-    if (std::abs(properties.Mass() - boundary.area) > 1e-8 * std::max(1., boundary.area))
+    const auto built = kernel::planarLoopFace(loop);
+    if (std::abs(built.area - boundary.area) > 1e-8 * std::max(1., boundary.area))
         throw std::runtime_error("Analytic region area disagrees with classifier face");
-    return builder.Face();
+    return built.face;
 }
 bool contains(const SketchRegionResult& r, std::size_t inner, const TopoDS_Face& outer,
               const std::vector<PlanarCurve>& curves) {
@@ -118,14 +92,14 @@ bool contains(const SketchRegionResult& r, std::size_t inner, const TopoDS_Face&
         const auto& i = r.split.intervals[h.interval];
         const auto& c = curves[i.piece];
         // Boundaries in this arrangement cannot cross between split vertices.
-        const auto p = c.curve->Value((i.firstParameter + i.lastParameter) / 2);
-        BRepClass_FaceClassifier classifier(outer, gp_Pnt(p.X(), p.Y(), 0),
-                                            kernel::connectionTolerance(c.scale).millimetres);
-        if (classifier.State() == TopAbs_OUT)
+        const auto p = c.value((i.firstParameter + i.lastParameter) / 2);
+        const auto state = kernel::classifyOnFace(outer, gp_Pnt(p.X(), p.Y(), 0),
+                                                  kernel::connectionTolerance(c.scale).millimetres);
+        if (state == kernel::FacePoint::outside)
             return false;
-        if (classifier.State() == TopAbs_IN)
+        if (state == kernel::FacePoint::inside)
             inside = true;
-        else if (classifier.State() != TopAbs_ON)
+        else if (state != kernel::FacePoint::on)
             throw std::runtime_error("Unknown containment");
     }
     return inside;

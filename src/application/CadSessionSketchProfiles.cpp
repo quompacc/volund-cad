@@ -8,8 +8,8 @@
 #include <voelund/features/SketchEvaluation.hpp>
 #include <voelund/features/SketchRegionIdentity.hpp>
 
-#include <BRepClass_FaceClassifier.hxx>
 #include <gp_Pnt.hxx>
+#include <voelund/kernel/ShapeQueries.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -123,7 +123,7 @@ bool CadSession::selectSketchProfileAt(document::FeatureId sketch,
             continue; // A region that cannot become a face cannot be picked by area.
         }
         const bool inside = std::ranges::any_of(faces, [&](const auto& face) {
-            return BRepClass_FaceClassifier(face.face, location, 1e-6).State() == TopAbs_IN;
+            return kernel::classifyOnFace(face.face, location, 1e-6) == kernel::FacePoint::inside;
         });
         // Cells do not overlap; the smallest wins should faces of nested regions both claim it.
         if (inside && (!found || identities.regions.regions[index].area <

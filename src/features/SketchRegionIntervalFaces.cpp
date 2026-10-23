@@ -6,19 +6,10 @@
 #include "SketchConnection.hpp"
 #include "SketchRegionGeometry.hpp"
 #include <voelund/features/GeometryEvaluationError.hpp>
+#include <voelund/kernel/KernelError.hpp>
+#include <voelund/kernel/ShapeQueries.hpp>
+#include <voelund/kernel/SketchShapes.hpp>
 
-#include <BRepBuilderAPI_MakeEdge.hxx>
-#include <BRepBuilderAPI_MakeFace.hxx>
-#include <BRepCheck_Analyzer.hxx>
-#include <BRepClass_FaceClassifier.hxx>
-#include <BRepGProp.hxx>
-#include <BRep_Builder.hxx>
-#include <GProp_GProps.hxx>
-#include <Geom_Circle.hxx>
-#include <Geom_Ellipse.hxx>
-#include <Geom_Line.hxx>
-#include <Precision.hxx>
-#include <Standard_Failure.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
 #include <TopoDS_Vertex.hxx>
@@ -42,7 +33,7 @@ struct Context final {
     const document::SketchParameters& sketch;
     const SketchRegionResult& regions;
     std::vector<PlanarCurve> planar;
-    std::map<std::size_t, Handle(Geom_Curve)> curves; // Shared per piece: one source curve.
+    std::map<std::size_t, kernel::SpaceCurve> curves; // Shared per piece: one source curve.
 };
 
 gp_Pnt worldPoint(const document::SketchPlane& plane, document::SketchPoint point) {
@@ -55,32 +46,32 @@ gp_Pnt worldPoint(const document::SketchPlane& plane, document::SketchPoint poin
 
 // The 3D source curve carries the same parameters as the R08b planar curve: line lengths
 // from the start point, conic angles from the sketch x axis (ellipse: from its major axis).
-Handle(Geom_Curve) sourceCurve(Context& context, std::size_t piece) {
+kernel::SpaceCurve sourceCurve(Context& context, std::size_t piece) {
     if (const auto found = context.curves.find(piece); found != context.curves.end())
         return found->second;
     const auto& plane = context.sketch.plane;
     const auto& geometry = context.regions.split.pieces[piece].geometry;
     const gp_Dir normal(plane.normalX, plane.normalY, plane.normalZ);
     const gp_Dir x(plane.xDirectionX, plane.xDirectionY, plane.xDirectionZ);
-    Handle(Geom_Curve) curve;
-    if (const auto* line = std::get_if<document::SketchLine>(&geometry)) {
-        const gp_Pnt start = worldPoint(plane, line->start);
-        curve = new Geom_Line(gp_Ax1(start, gp_Dir(gp_Vec(start, worldPoint(plane, line->end)))));
-    } else if (const auto* circle = std::get_if<document::SketchCircle>(&geometry)) {
-        curve =
-            new Geom_Circle(gp_Ax2(worldPoint(plane, circle->center), normal, x), circle->radius);
-    } else if (const auto* arc = std::get_if<document::SketchArc>(&geometry)) {
-        curve = new Geom_Circle(gp_Ax2(worldPoint(plane, arc->center), normal, x), arc->radius);
-    } else if (const auto* spline = std::get_if<document::SketchBSpline>(&geometry)) {
-        curve = bsplineCurve3d(*spline, plane); // S21: same parameters as the planar curve
-    } else {
+    const auto curve = [&] {
+        if (const auto* line = std::get_if<document::SketchLine>(&geometry))
+            return kernel::SpaceCurve::line(worldPoint(plane, line->start),
+                                            worldPoint(plane, line->end));
+        if (const auto* circle = std::get_if<document::SketchCircle>(&geometry))
+            return kernel::SpaceCurve::circle(gp_Ax2(worldPoint(plane, circle->center), normal, x),
+                                              circle->radius);
+        if (const auto* arc = std::get_if<document::SketchArc>(&geometry))
+            return kernel::SpaceCurve::circle(gp_Ax2(worldPoint(plane, arc->center), normal, x),
+                                              arc->radius);
+        if (const auto* spline = std::get_if<document::SketchBSpline>(&geometry))
+            return bsplineCurve3d(*spline, plane); // S21: same parameters as the planar curve
         const auto& ellipse = std::get<document::SketchEllipse>(geometry);
         const gp_Dir y = normal.Crossed(x);
         const gp_Dir major(gp_Vec(x) * std::cos(ellipse.rotation) +
                            gp_Vec(y) * std::sin(ellipse.rotation));
-        curve = new Geom_Ellipse(gp_Ax2(worldPoint(plane, ellipse.center), normal, major),
-                                 ellipse.majorRadius, ellipse.minorRadius);
-    }
+        return kernel::SpaceCurve::ellipse(gp_Ax2(worldPoint(plane, ellipse.center), normal, major),
+                                           ellipse.majorRadius, ellipse.minorRadius);
+    }();
     context.curves.emplace(piece, curve);
     return curve;
 }
@@ -120,8 +111,8 @@ double walkAngle(const Context& context, RegionHalfEdge half, bool atEnd) {
     const bool last = atEnd != half.reversed;
     gp_Pnt2d point;
     gp_Vec2d direction;
-    context.planar[interval.piece].curve->D1(
-        last ? interval.lastParameter : interval.firstParameter, point, direction);
+    context.planar[interval.piece].d1(last ? interval.lastParameter : interval.firstParameter,
+                                      point, direction);
     if (half.reversed)
         direction.Reverse();
     return std::atan2(direction.Y(), direction.X());
@@ -232,51 +223,42 @@ TopoDS_Wire wire(Context& context, const std::vector<RegionHalfEdge>& walk,
         const auto& interval = split.intervals[half.interval];
         const bool last = atEnd != half.reversed;
         return sourceCurve(context, interval.piece)
-            ->Value(last ? interval.lastParameter : interval.firstParameter);
+            .value(last ? interval.lastParameter : interval.firstParameter);
     };
     // One shared vertex per junction, wide enough for both computed curve ends.
-    BRep_Builder builder;
     std::vector<TopoDS_Vertex> junctions(walk.size());
     for (std::size_t k = 0; k < walk.size(); ++k) {
         const gp_Pnt arriving = point(walk[(k + walk.size() - 1) % walk.size()], true);
         const gp_Pnt leaving = point(walk[k], false);
         const gp_Pnt middle((arriving.XYZ() + leaving.XYZ()) / 2);
-        builder.MakeVertex(junctions[k], middle,
-                           std::max(Precision::Confusion(), arriving.Distance(leaving)));
+        junctions[k] = kernel::junctionVertex(
+            middle, std::max(kernel::confusionTolerance(), arriving.Distance(leaving)));
     }
-    TopoDS_Wire result;
-    builder.MakeWire(result);
+    std::vector<TopoDS_Edge> oriented;
     for (std::size_t k = 0; k < walk.size(); ++k) {
         const RegionHalfEdge half = walk[k];
         const auto& interval = split.intervals[half.interval];
         const auto& start = junctions[k];
         const auto& end = junctions[(k + 1) % walk.size()];
-        BRepBuilderAPI_MakeEdge make(sourceCurve(context, interval.piece),
-                                     half.reversed ? end : start, half.reversed ? start : end,
-                                     interval.firstParameter, interval.lastParameter);
-        if (!make.IsDone())
+        const auto made = sourceCurve(context, interval.piece)
+                              .edge(half.reversed ? end : start, half.reversed ? start : end,
+                                    interval.firstParameter, interval.lastParameter);
+        if (!made)
             throw GeometryEvaluationError("Region boundary interval did not form an edge" +
                                           elementList(context, walk));
-        const TopoDS_Edge edge = make.Edge();
+        const TopoDS_Edge edge = *made;
         const auto& planar = context.planar[interval.piece];
         edges.push_back({split.pieces[interval.piece].element, role(context, interval.piece), edge,
                          interval.firstParameter, interval.lastParameter,
                          std::pair{planar.first, planar.last}});
-        builder.Add(result, half.reversed ? TopoDS::Edge(edge.Reversed()) : edge);
+        oriented.push_back(half.reversed ? TopoDS::Edge(edge.Reversed()) : edge);
     }
-    result.Closed(true);
-    return result;
-}
-
-double faceArea(const TopoDS_Face& face) {
-    GProp_GProps properties;
-    BRepGProp::SurfaceProperties(face, properties);
-    return properties.Mass();
+    return kernel::closedWire(oriented);
 }
 
 document::SketchPoint sample(const Context& context, const std::vector<RegionHalfEdge>& walk) {
     const auto& interval = context.regions.split.intervals[walk.front().interval];
-    const auto value = context.planar[interval.piece].curve->Value(
+    const auto value = context.planar[interval.piece].value(
         (interval.firstParameter + interval.lastParameter) / 2);
     return {value.X(), value.Y()};
 }
@@ -320,20 +302,19 @@ std::vector<EvaluatedProfileFace> intervalRegionFaces(const document::SketchPara
         std::vector<Built> built;
         for (const auto& walk : outers) {
             std::vector<EvaluatedContourEdge> edges;
-            const auto outerWire = wire(context, walk, edges);
-            BRepBuilderAPI_MakeFace face(plane, outerWire);
-            if (!face.IsDone())
+            const auto face = kernel::faceFromWire(plane, wire(context, walk, edges));
+            if (!face)
                 throw GeometryEvaluationError("Region did not produce a valid face" +
                                               elementList(context, walk));
-            built.push_back({face.Face(), boundaryArea(regions.split, walk), std::move(edges), {}});
+            built.push_back({*face, boundaryArea(regions.split, walk), std::move(edges), {}});
         }
         // Each hole belongs to the smallest outer loop around it.
         for (auto& walk : holes) {
             const gp_Pnt probe = worldPoint(sketch.plane, sample(context, walk));
             Built* owner = nullptr;
             for (Built& candidate : built)
-                if (BRepClass_FaceClassifier(candidate.face, probe, Precision::Confusion())
-                            .State() != TopAbs_OUT &&
+                if (kernel::classifyOnFace(candidate.face, probe, kernel::confusionTolerance()) !=
+                        kernel::FacePoint::outside &&
                     (owner == nullptr || candidate.area < owner->area))
                     owner = &candidate;
             if (owner == nullptr)
@@ -346,18 +327,19 @@ std::vector<EvaluatedProfileFace> intervalRegionFaces(const document::SketchPara
             double expected = item.area;
             TopoDS_Face result = item.face;
             if (!item.holes.empty()) {
-                BRepBuilderAPI_MakeFace face(item.face);
+                std::vector<TopoDS_Wire> wires;
                 for (const auto& walk : item.holes) {
-                    face.Add(wire(context, walk, item.edges));
+                    wires.push_back(wire(context, walk, item.edges));
                     expected += boundaryArea(regions.split, walk);
                 }
-                if (!face.IsDone())
+                const auto face = kernel::faceWithHoles(item.face, wires);
+                if (!face)
                     throw GeometryEvaluationError("Region holes could not be added to the face");
-                result = face.Face();
+                result = *face;
             }
-            if (!BRepCheck_Analyzer(result).IsValid())
+            if (!kernel::isValidShape(result))
                 throw GeometryEvaluationError("Region face is not valid");
-            const double actual = faceArea(result);
+            const double actual = kernel::faceArea(result);
             if (std::abs(actual - expected) > 1e-7 * std::max(1.0, std::abs(expected)))
                 throw GeometryEvaluationError("Region face area " + std::to_string(actual) +
                                               " differs from its boundary area " +
@@ -377,8 +359,8 @@ std::vector<EvaluatedProfileFace> intervalRegionFaces(const document::SketchPara
             faces.push_back({std::move(ids), result, std::move(item.edges)});
         }
         return faces;
-    } catch (const Standard_Failure&) {
-        // Message accessors differ between OCCT 7.9 and 8; the caller names the elements.
+    } catch (const kernel::KernelError&) {
+        // The caller names the elements.
         throw GeometryEvaluationError("Region face construction failed in the kernel");
     }
 }

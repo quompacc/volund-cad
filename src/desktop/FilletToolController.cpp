@@ -15,8 +15,8 @@
 #include <QObject>
 #include <QTimer>
 
-#include <BRep_Builder.hxx>
-#include <TopoDS_Compound.hxx>
+#include <voelund/kernel/ShapeQueries.hpp>
+
 #include <cmath>
 
 #include <algorithm>
@@ -191,12 +191,7 @@ void FilletToolController::placeGrip() {
     gripEdge_.reset();
     if (found != 2 || length < 1e-9 || shapes.empty())
         return; // a curved face: the value is typed only
-    TopoDS_Compound compound;
-    BRep_Builder builder;
-    builder.MakeCompound(compound);
-    for (const auto& shape : shapes)
-        builder.Add(compound, shape);
-    viewport_.beginEdgeGrip(compound,
+    viewport_.beginEdgeGrip(kernel::collect(shapes),
                             {direction[0] / length, direction[1] / length, direction[2] / length});
     viewport_.setPushPullDistance(value_);
     gripEdge_ = edges_.front();

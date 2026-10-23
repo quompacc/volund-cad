@@ -8,8 +8,7 @@
 #include <voelund/document/DocumentSnapshot.hpp>
 #include <voelund/kernel/ShapeFactory.hpp>
 
-#include <BRepBndLib.hxx>
-#include <Bnd_Box.hxx>
+#include <voelund/kernel/ShapeQueries.hpp>
 
 #include <algorithm>
 #include <stdexcept>
@@ -49,22 +48,14 @@ CylinderFeature::evaluateToolWithHistory(const document::DocumentSnapshot& docum
 gp_Pnt CylinderFeature::attachmentOrigin(const TopoDS_Shape& inputShape, double cylinderHeight) {
     if (inputShape.IsNull())
         return gp_Pnt(0.0, 0.0, 0.0); // M01: a new body without input stands at the origin.
-    Bnd_Box bounds;
-    BRepBndLib::AddOptimal(inputShape, bounds, false, false);
-    if (bounds.IsVoid()) {
+    const auto bounds = kernel::tightBoundingBox(inputShape);
+    if (!bounds) {
         throw GeometryEvaluationError("Cylinder input feature has no geometry");
     }
-    double minimumX = 0.0;
-    double minimumY = 0.0;
-    [[maybe_unused]] double minimumZ = 0.0;
-    double maximumX = 0.0;
-    double maximumY = 0.0;
-    double maximumZ = 0.0;
-    bounds.Get(minimumX, minimumY, minimumZ, maximumX, maximumY, maximumZ);
     const double overlap = std::min(2.0, cylinderHeight * 0.25);
-    const double originX = (minimumX + maximumX) * 0.5;
-    const double originY = (minimumY + maximumY) * 0.5;
-    const double originZ = maximumZ - overlap;
+    const double originX = (bounds->minimum[0] + bounds->maximum[0]) * 0.5;
+    const double originY = (bounds->minimum[1] + bounds->maximum[1]) * 0.5;
+    const double originZ = bounds->maximum[2] - overlap;
     return gp_Pnt(originX, originY, originZ);
 }
 

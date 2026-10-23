@@ -23,6 +23,9 @@
 #include <gp_Trsf.hxx>
 
 #include <cmath>
+#include <cstddef>
+#include <functional>
+#include <iterator>
 #include <numbers>
 #include <string>
 #include <utility>
@@ -86,55 +89,16 @@ KernelOperation KernelError::operation() const noexcept { return operation_; }
 const std::string& KernelError::diagnostic() const noexcept { return diagnostic_; }
 
 const char* kernelOperationName(KernelOperation operation) noexcept {
-    switch (operation) {
-    case KernelOperation::makeBox:
-        return "makeBox";
-    case KernelOperation::makeCylinder:
-        return "makeCylinder";
-    case KernelOperation::applyTransform:
-        return "applyTransform";
-    case KernelOperation::fuse:
-        return "fuse";
-    case KernelOperation::cut:
-        return "cut";
-    case KernelOperation::intersect:
-        return "intersect";
-    case KernelOperation::compound:
-        return "compound";
-    case KernelOperation::makePrism:
-        return "makePrism";
-    case KernelOperation::fillet:
-        return "fillet";
-    case KernelOperation::chamfer:
-        return "chamfer";
-    case KernelOperation::makeRevolution:
-        return "makeRevolution";
-    case KernelOperation::shell:
-        return "shell";
-    case KernelOperation::makeSphere:
-        return "makeSphere";
-    case KernelOperation::makeCone:
-        return "makeCone";
-    case KernelOperation::makeTorus:
-        return "makeTorus";
-    case KernelOperation::makeWedge:
-        return "makeWedge";
-    case KernelOperation::makePipe:
-        return "makePipe";
-    case KernelOperation::loft:
-        return "loft";
-    case KernelOperation::helix:
-        return "helix";
-    case KernelOperation::draft:
-        return "draft";
-    case KernelOperation::mirror:
-        return "mirror";
-    case KernelOperation::pattern:
-        return "pattern";
-    case KernelOperation::measure:
-        return "measure";
-    }
-    return "unknown";
+    // In the order of KernelOperation.
+    static constexpr const char* names[] = {
+        "makeBox",        "makeCylinder", "applyTransform", "fuse",           "cut",
+        "intersect",      "compound",     "makePrism",      "fillet",         "chamfer",
+        "makeRevolution", "shell",        "makeSphere",     "makeCone",       "makeTorus",
+        "makeWedge",      "makePipe",     "loft",           "helix",          "draft",
+        "mirror",         "pattern",      "measure",        "sketchGeometry", "nativeDocument",
+        "evaluation"};
+    const auto index = static_cast<std::size_t>(operation);
+    return index < std::size(names) ? names[index] : "unknown";
 }
 
 std::string occtFailureDiagnostic(const Standard_Failure& failure) {
@@ -145,6 +109,26 @@ std::string occtFailureDiagnostic(const Standard_Failure& failure) {
 #endif
     return message != nullptr && message[0] != '\0' ? message
                                                     : "OCCT failure without diagnostic message";
+}
+
+void translateOcctFailures(KernelOperation operation, const std::function<void()>& action) {
+    try {
+        action();
+    } catch (const Standard_OutOfMemory&) {
+        throw;
+    } catch (const Standard_ProgramError&) {
+        throw;
+    } catch (const Standard_Failure& failure) {
+        throw KernelError(operation, occtFailureDiagnostic(failure));
+    }
+}
+
+void translateEveryOcctFailure(KernelOperation operation, const std::function<void()>& action) {
+    try {
+        action();
+    } catch (const Standard_Failure& failure) {
+        throw KernelError(operation, occtFailureDiagnostic(failure));
+    }
 }
 
 ShapeOperationResult ShapeFactory::makeBoxWithHistory(const BoxDimensions& dimensions) {

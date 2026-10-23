@@ -10,9 +10,11 @@
 #include <PCDM_ReaderStatus.hxx>
 #include <PCDM_StoreStatus.hxx>
 #include <TDocStd_Application.hxx>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
-#include <voelund/kernel/OcctCompatibility.hpp>
+#include <string>
+#include <voelund/kernel/KernelError.hpp>
 
 namespace voelund::document::detail {
 namespace {
@@ -23,33 +25,36 @@ struct NativeSession final {
     ~NativeSession() {
         if (!document.IsNull()) {
             try {
-                application->Close(document);
-            } catch (
-                const Standard_Failure&) { /* Never mask the original failure during cleanup. */
+                kernel::translateEveryOcctFailure(kernel::KernelOperation::nativeDocument,
+                                                  [this] { application->Close(document); });
+            } catch (const kernel::KernelError&) { /* Never mask the original failure. */
             }
         }
     }
 };
 } // namespace
 std::string NativeDocumentStore::encode(const IdentifiedDocumentSnapshot& snapshot) {
+    std::string bytes;
     try {
-        NativeSession session;
-        session.application->NewDocument("BinOcaf", session.document);
-        session.document->ChangeStorageFormatVersion(TDocStd_FormatVersion_VERSION_12);
-        NativePrimitiveCodec::write(session.document, snapshot);
-        BoundedNativeOutput buffer;
-        std::ostream output(&buffer);
-        if (session.application->SaveAs(session.document, output) != PCDM_SS_OK || !output.good())
-            throw std::runtime_error("Native document serialization failed");
-        auto bytes = buffer.release();
-        if (bytes.size() > maximumDocumentBytes)
-            throw std::invalid_argument("Native document byte limit exceeded");
-        validateNativeContainerStructure(bytes, true);
-        return bytes;
-    } catch (const Standard_Failure& error) {
-        throw std::runtime_error("Native document serialization: " +
-                                 kernel::occtFailureDiagnostic(error));
+        kernel::translateEveryOcctFailure(kernel::KernelOperation::nativeDocument, [&] {
+            NativeSession session;
+            session.application->NewDocument("BinOcaf", session.document);
+            session.document->ChangeStorageFormatVersion(TDocStd_FormatVersion_VERSION_12);
+            NativePrimitiveCodec::write(session.document, snapshot);
+            BoundedNativeOutput buffer;
+            std::ostream output(&buffer);
+            if (session.application->SaveAs(session.document, output) != PCDM_SS_OK ||
+                !output.good())
+                throw std::runtime_error("Native document serialization failed");
+            bytes = buffer.release();
+        });
+    } catch (const kernel::KernelError& error) {
+        throw std::runtime_error("Native document serialization: " + error.diagnostic());
     }
+    if (bytes.size() > maximumDocumentBytes)
+        throw std::invalid_argument("Native document byte limit exceeded");
+    validateNativeContainerStructure(bytes, true);
+    return bytes;
 }
 IdentifiedDocumentSnapshot NativeDocumentStore::decode(std::string_view bytes) {
     // Check transport size before OCCT opens or copies the payload. This does not
@@ -57,18 +62,21 @@ IdentifiedDocumentSnapshot NativeDocumentStore::decode(std::string_view bytes) {
     if (bytes.empty() || bytes.size() > maximumDocumentBytes)
         throw std::invalid_argument("Invalid native document byte count");
     validateNativeContainerStructure(bytes, true);
+    std::optional<IdentifiedDocumentSnapshot> snapshot;
     try {
-        NativeSession session;
-        std::istringstream input(std::string(bytes), std::ios::binary);
-        if (session.application->Open(input, session.document) != PCDM_RS_OK ||
-            session.document.IsNull())
-            throw std::invalid_argument("Native document container could not be read");
-        // Application marker/schema, identities and all model fields are validated
-        // before returning a value. No partially loaded ModelDocument is published.
-        return NativePrimitiveCodec::read(session.document);
-    } catch (const Standard_Failure& error) {
-        throw std::invalid_argument("Native document read: " +
-                                    kernel::occtFailureDiagnostic(error));
+        kernel::translateEveryOcctFailure(kernel::KernelOperation::nativeDocument, [&] {
+            NativeSession session;
+            std::istringstream input(std::string(bytes), std::ios::binary);
+            if (session.application->Open(input, session.document) != PCDM_RS_OK ||
+                session.document.IsNull())
+                throw std::invalid_argument("Native document container could not be read");
+            // Application marker/schema, identities and all model fields are validated
+            // before returning a value. No partially loaded ModelDocument is published.
+            snapshot = NativePrimitiveCodec::read(session.document);
+        });
+    } catch (const kernel::KernelError& error) {
+        throw std::invalid_argument("Native document read: " + error.diagnostic());
     }
+    return std::move(*snapshot);
 }
 } // namespace voelund::document::detail

@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Eduard Hart
 
-#include <BRepAdaptor_Curve.hxx>
-#include <BRep_Tool.hxx>
 #include <TopExp.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
@@ -11,6 +9,7 @@
 #include <optional>
 #include <stdexcept>
 #include <voelund/features/EdgeProvenance.hpp>
+#include <voelund/kernel/EdgeQueries.hpp>
 
 namespace voelund::features {
 namespace {
@@ -27,11 +26,7 @@ void appendUnique(std::vector<TopoDS_Edge>& edges, const TopoDS_Shape& edge) {
         edges.push_back(TopoDS::Edge(edge.Oriented(TopAbs_FORWARD)));
 }
 bool sameCurve(const TopoDS_Edge& a, const TopoDS_Edge& b) {
-    TopLoc_Location al, bl;
-    double af, az, bf, bz;
-    const auto& ac = BRep_Tool::Curve(a, al, af, az);
-    const auto& bc = BRep_Tool::Curve(b, bl, bf, bz);
-    return !ac.IsNull() && ac == bc && al.IsEqual(bl);
+    return kernel::sameUnderlyingCurve(a, b);
 }
 double normalized(const EdgeProvenance& origin, double parameter) {
     return (parameter - origin.startParameter) / (origin.endParameter - origin.startParameter);
@@ -62,8 +57,8 @@ std::vector<EdgeProvenance> primitiveEdgeOrigins(document::FeatureId feature,
             if (common.size() != 1)
                 throw std::logic_error("Primitive face pair has multiple edges");
             const auto& edge = common.front();
-            const BRepAdaptor_Curve curve(edge);
-            double start = curve.FirstParameter(), end = curve.LastParameter();
+            const auto range = kernel::curveRange(edge);
+            double start = range.first, end = range.last;
             if (!std::isfinite(start) || !std::isfinite(end) || start >= end)
                 throw std::logic_error("Primitive edge has invalid parameter domain");
             // Box direction comes from its free local axis's negative endpoint face.
@@ -136,12 +131,12 @@ EdgePointResolution resolveEdgePoint(std::span<const EdgeProvenance> origins,
             continue;
         }
         const double u = item.startParameter + t * (item.endParameter - item.startParameter);
-        const BRepAdaptor_Curve current(item.edges.front());
-        if (u < current.FirstParameter() || u > current.LastParameter()) {
+        const auto current = kernel::curveRange(item.edges.front());
+        if (u < current.first || u > current.last) {
             failure = failure.value_or(EdgeResolutionStatus::parameterOutside);
             continue;
         }
-        return {EdgeResolutionStatus::resolved, BRepAdaptor_Curve(item.source).Value(u)};
+        return {EdgeResolutionStatus::resolved, kernel::pointOnEdge(item.source, u)};
     }
     return {failure.value_or(EdgeResolutionStatus::missing)};
 }
@@ -150,11 +145,10 @@ std::vector<EdgeDisplaySegment> tessellateEdge(const EdgeProvenance& origin, uns
         throw std::invalid_argument("Invalid edge display density");
     if (status(origin) != EdgeResolutionStatus::resolved)
         return {};
-    const BRepAdaptor_Curve curve(origin.edges.front());
-    const double low =
-        std::max(std::min(origin.startParameter, origin.endParameter), curve.FirstParameter());
-    const double high =
-        std::min(std::max(origin.startParameter, origin.endParameter), curve.LastParameter());
+    const auto& edge = origin.edges.front();
+    const auto range = kernel::curveRange(edge);
+    const double low = std::max(std::min(origin.startParameter, origin.endParameter), range.first);
+    const double high = std::min(std::max(origin.startParameter, origin.endParameter), range.last);
     if (low >= high)
         return {};
     const double start = origin.startParameter < origin.endParameter ? low : high;
@@ -164,7 +158,7 @@ std::vector<EdgeDisplaySegment> tessellateEdge(const EdgeProvenance& origin, uns
         const double a = start + (end - start) * i / divisions,
                      b = start + (end - start) * (i + 1) / divisions;
         result.push_back({origin.origin, normalized(origin, a), normalized(origin, b),
-                          curve.Value(a), curve.Value(b)});
+                          kernel::pointOnEdge(edge, a), kernel::pointOnEdge(edge, b)});
     }
     return result;
 }

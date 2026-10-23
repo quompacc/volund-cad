@@ -8,12 +8,8 @@
 #include <voelund/features/SketchEvaluation.hpp>
 #include <voelund/features/SketchProfiles.hpp>
 #include <voelund/features/SketchRegionIdentity.hpp>
+#include <voelund/kernel/SketchShapes.hpp>
 
-#include <BRepBuilderAPI_MakeFace.hxx>
-#include <BRepCheck_Analyzer.hxx>
-#include <BRepGProp.hxx>
-#include <BRepTools.hxx>
-#include <GProp_GProps.hxx>
 #include <TopoDS.hxx>
 #include <TopoDS_Wire.hxx>
 
@@ -79,29 +75,11 @@ std::set<std::uint64_t> boundaryElements(const SketchRegionResult& regions, std:
     return elements;
 }
 
-double area(const TopoDS_Face& face) {
-    GProp_GProps properties;
-    BRepGProp::SurfaceProperties(face, properties);
-    return properties.Mass();
-}
-
 // Adds the hole loop as an inner wire. The orientation is chosen geometrically: only a
-// valid face whose area is exactly outer minus hole is accepted.
+// valid face whose area is exactly outer minus hole is accepted (kernel::faceWithHoleFace).
 TopoDS_Face withHole(const TopoDS_Face& outer, const TopoDS_Face& hole) {
-    const double expected = area(outer) - area(hole);
-    const TopoDS_Wire wire = BRepTools::OuterWire(hole);
-    for (const bool reversed : {true, false}) {
-        BRepBuilderAPI_MakeFace face(outer);
-        face.Add(reversed ? TopoDS::Wire(wire.Reversed()) : wire);
-        if (!face.IsDone())
-            continue;
-        // MakeFace rebuilds a FORWARD face; keep the loop face's orientation for the prism.
-        TopoDS_Face result = face.Face();
-        result.Orientation(outer.Orientation());
-        if (BRepCheck_Analyzer(result).IsValid() &&
-            std::abs(area(result) - expected) <= 1e-9 * std::max(1.0, area(outer)))
-            return result;
-    }
+    if (auto face = kernel::faceWithHoleFace(outer, hole))
+        return *face;
     throw GeometryEvaluationError("Region did not produce a valid face", "profile-invalid");
 }
 

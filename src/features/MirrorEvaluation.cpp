@@ -10,10 +10,10 @@
 #include <voelund/kernel/ShapeFactory.hpp>
 #include <voelund/kernel/ShapeOperations.hpp>
 
-#include <BRepBuilderAPI_Transform.hxx>
 #include <TopoDS.hxx>
 #include <gp_Ax2.hxx>
 #include <gp_Trsf.hxx>
+#include <voelund/kernel/ShapeQueries.hpp>
 
 #include <algorithm>
 #include <array>
@@ -72,7 +72,7 @@ Image mirrorImage(const TopoDS_Shape& body, std::span<const SupportProvenance> f
     reflection.SetMirror(gp_Ax2(gp_Pnt(plane.origin[0], plane.origin[1], plane.origin[2]),
                                 gp_Dir(plane.normal[0], plane.normal[1], plane.normal[2])));
     const auto reflect = [&](const auto& shape) {
-        return BRepBuilderAPI_Transform(shape, reflection, true).Shape();
+        return kernel::transformedCopy(shape, reflection);
     };
     image.faces = continueSupportOrigins(faces, image.shape, kernel::HistoryOperand::first);
     for (auto& face : image.faces) {

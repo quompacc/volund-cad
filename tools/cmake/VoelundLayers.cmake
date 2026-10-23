@@ -22,6 +22,11 @@ set(VOELUND_LAYER_ALLOWED_assistant assistant application features document kern
 set(VOELUND_LAYER_ALLOWED_desktop ${VOELUND_LAYERS})
 
 # Layers below the user interface know no Qt at all (no widgets, dialogs or event loop).
+# K-GRENZE (2026-10-22): OCCT algorithms (BRep*, Geom*, GC_*, gce_*) and OCCT exceptions stay in
+# the kernel; the viewport keeps AIS/V3d. TopoDS_*, TopExp, TopTools and gp_* are plain data.
+set(VOELUND_LAYERS_WITH_OCCT_ALGORITHMS kernel viewport)
+set(VOELUND_OCCT_ALGORITHM_HEADER
+    "^(BRep[A-Za-z0-9_]*|Geom[A-Za-z0-9_]*|GC_[A-Za-z0-9_]*|GCE2d_[A-Za-z0-9_]*|GCPnts_[A-Za-z0-9_]*|gce_[A-Za-z0-9_]*|Standard_Failure|Standard_OutOfMemory|Standard_ProgramError)\\.hxx$")
 set(VOELUND_LAYERS_WITHOUT_QT kernel platform document features application workspaces modules)
 
 # Link targets of each layer and the CMake aliases other targets use for it.

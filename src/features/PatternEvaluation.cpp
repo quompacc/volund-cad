@@ -9,11 +9,11 @@
 #include <voelund/kernel/ShapeFactory.hpp>
 #include <voelund/kernel/ShapeOperations.hpp>
 
-#include <BRepBuilderAPI_Transform.hxx>
 #include <TopoDS.hxx>
 #include <gp_Ax1.hxx>
 #include <gp_Trsf.hxx>
 #include <gp_Vec.hxx>
+#include <voelund/kernel/ShapeQueries.hpp>
 
 #include <array>
 #include <cmath>
@@ -101,9 +101,7 @@ Copy copyOf(const TopoDS_Shape& body, std::span<const SupportProvenance> faces,
               {},
               {}};
     const auto transform = step.transform();
-    const auto moved = [&](const auto& shape) {
-        return BRepBuilderAPI_Transform(shape, transform, true).Shape();
-    };
+    const auto moved = [&](const auto& shape) { return kernel::transformedCopy(shape, transform); };
     copy.faces = continueSupportOrigins(faces, copy.shape, kernel::HistoryOperand::first);
     for (auto& face : copy.faces) {
         face.origin.instances.push_back({pattern, index});

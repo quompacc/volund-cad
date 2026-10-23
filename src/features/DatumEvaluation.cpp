@@ -9,13 +9,11 @@
 #include <voelund/features/GeometryEvaluationError.hpp>
 #include <voelund/features/SketchSupportBinding.hpp>
 
-#include <BRepAdaptor_Curve.hxx>
-#include <BRepBuilderAPI_MakeEdge.hxx>
-#include <BRepBuilderAPI_MakeFace.hxx>
 #include <TopoDS_Edge.hxx>
 #include <TopoDS_Face.hxx>
 #include <gp_Ax3.hxx>
 #include <gp_Pln.hxx>
+#include <voelund/kernel/EdgeQueries.hpp>
 
 #include <algorithm>
 
@@ -69,11 +67,11 @@ AxisLine datumAxisLine(const document::DocumentSnapshot& document, document::Fea
         filletEdgeShapes(findFeature(outputs, *producer).supportOrigins, *parameters.edge);
     if (edges.size() != 1)
         throw GeometryEvaluationError("The edge of the axis is gone", "datum-reference-missing");
-    const BRepAdaptor_Curve curve(edges.front());
-    if (curve.GetType() == GeomAbs_Line)
-        return {curve.Value(curve.FirstParameter()), curve.Line().Direction()};
-    if (curve.GetType() == GeomAbs_Circle)
-        return {curve.Circle().Location(), curve.Circle().Axis().Direction()};
+    const auto curve = kernel::describeEdge(edges.front());
+    if (curve.kind == kernel::EdgeCurve::Kind::line)
+        return {curve.start, curve.line.Direction()};
+    if (curve.kind == kernel::EdgeCurve::Kind::circle)
+        return {curve.circle.Location(), curve.circle.Axis().Direction()};
     throw GeometryEvaluationError("An axis lies on a straight or circular edge", "datum-axis-edge");
 }
 
@@ -95,9 +93,7 @@ void evaluateDatumPlane(const document::DocumentSnapshot& document,
     }
     const gp_Pnt placed = origin.Translated(gp_Vec(normal) * parameters.offset);
     const auto frame = frameOf(placed, normal, x);
-    const auto face = BRepBuilderAPI_MakeFace(gp_Pln(gp_Ax3(placed, normal, x)), -shownHalfSize,
-                                              shownHalfSize, -shownHalfSize, shownHalfSize)
-                          .Face();
+    const auto face = kernel::planePatch(gp_Ax3(placed, normal, x), shownHalfSize);
     EvaluatedFeature output{descriptor.id, face, face, std::nullopt};
     output.datumFrame = frame;
     outputs.push_back(std::move(output));
@@ -111,9 +107,8 @@ void evaluateDatumAxis(const document::DocumentSnapshot& document,
     // Any direction across the axis completes the frame.
     const gp_Dir across = std::abs(direction.Z()) < 0.9 ? gp_Dir(0, 0, 1).Crossed(direction)
                                                         : gp_Dir(1, 0, 0).Crossed(direction);
-    const auto edge = BRepBuilderAPI_MakeEdge(origin.Translated(gp_Vec(direction) * -shownHalfSize),
-                                              origin.Translated(gp_Vec(direction) * shownHalfSize))
-                          .Edge();
+    const auto edge = kernel::segmentEdge(origin.Translated(gp_Vec(direction) * -shownHalfSize),
+                                          origin.Translated(gp_Vec(direction) * shownHalfSize));
     EvaluatedFeature output{descriptor.id, edge, edge, std::nullopt};
     output.datumFrame = frameOf(origin, direction, across);
     outputs.push_back(std::move(output));

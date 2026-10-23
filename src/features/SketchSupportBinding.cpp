@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Eduard Hart
 
-#include <BRepAdaptor_Surface.hxx>
-#include <BRepBndLib.hxx>
-#include <Bnd_Box.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopLoc_Location.hxx>
 #include <TopoDS.hxx>
@@ -18,6 +15,7 @@
 #include <voelund/features/SketchSupportBinding.hpp>
 #include <voelund/kernel/NumericPolicy.hpp>
 #include <voelund/kernel/PlaneNormal.hpp>
+#include <voelund/kernel/ShapeQueries.hpp>
 
 namespace voelund::features {
 namespace {
@@ -28,10 +26,10 @@ struct Frame {
 Frame frame(const TopoDS_Shape& face) {
     if (face.IsNull() || face.ShapeType() != TopAbs_FACE)
         throw GeometryEvaluationError("Support frame is missing");
-    const BRepAdaptor_Surface surface(TopoDS::Face(face));
-    if (surface.GetType() != GeomAbs_Plane)
+    const auto planar = kernel::facePlane(face);
+    if (!planar)
         throw GeometryEvaluationError("Sketch support must be planar");
-    const auto plane = surface.Plane();
+    const auto& plane = *planar;
     const gp_Vec z(kernel::planeNormal(plane, face.Orientation()));
     const gp_Vec x(plane.XAxis().Direction());
     return {plane.Location(), x, z.Crossed(x), z};
@@ -91,7 +89,7 @@ std::vector<SupportFaceFrame> supportFaceFrames(const EvaluatedFeature& support)
     std::vector<SupportFaceFrame> result;
     for (const auto& item : support.supportOrigins) {
         if (item.coverage != kernel::HistoryCoverage::complete || item.faces.size() != 1 ||
-            BRepAdaptor_Surface(TopoDS::Face(item.faces.front())).GetType() != GeomAbs_Plane)
+            !kernel::facePlane(item.faces.front()))
             continue;
         const auto& face = item.faces.front();
         // T05: second names of a merged face do not make it ambiguous.
@@ -115,10 +113,11 @@ std::vector<SupportFaceFrame> supportFaceFrames(const EvaluatedFeature& support)
             }
         gp_Trsf toFrame;
         toFrame.SetTransformation(gp_Ax3(f.origin, gp_Dir(f.z), gp_Dir(f.x)));
-        Bnd_Box bounds;
-        BRepBndLib::AddOptimal(face.Moved(TopLoc_Location(toFrame)), bounds, false, false);
-        double xMin = 0, yMin = 0, zMin = 0, xMax = 0, yMax = 0, zMax = 0;
-        bounds.Get(xMin, yMin, zMin, xMax, yMax, zMax);
+        const auto bounds = kernel::tightBoundingBox(face.Moved(TopLoc_Location(toFrame)));
+        if (!bounds)
+            continue;
+        const double xMin = bounds->minimum[0], yMin = bounds->minimum[1];
+        const double xMax = bounds->maximum[0], yMax = bounds->maximum[1];
         result.push_back({item.origin,
                           face,
                           {f.origin.X(), f.origin.Y(), f.origin.Z(), f.z.X(), f.z.Y(), f.z.Z(),

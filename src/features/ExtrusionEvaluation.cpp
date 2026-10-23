@@ -12,13 +12,11 @@
 #include <voelund/features/SketchSupportBinding.hpp>
 #include <voelund/kernel/NumericPolicy.hpp>
 #include <voelund/kernel/ShapeOperations.hpp>
+#include <voelund/kernel/ShapeQueries.hpp>
+#include <voelund/kernel/SketchShapes.hpp>
 
-#include <BRepBuilderAPI_MakeWire.hxx>
-#include <BRepTools.hxx>
-#include <BRep_Builder.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
-#include <TopoDS_Compound.hxx>
 #include <algorithm>
 #include <cmath>
 #include <gp_Ax1.hxx>
@@ -35,6 +33,13 @@
 
 namespace voelund::features::detail {
 namespace {
+// The profile faces as one compound for the kernel's sweeps.
+TopoDS_Shape facesOf(const std::vector<EvaluatedProfileFace>& profiles) {
+    std::vector<TopoDS_Shape> faces;
+    for (const auto& profile : profiles)
+        faces.push_back(profile.face);
+    return kernel::collect(faces);
+}
 
 // U15: a coded evaluation failure in one line.
 [[noreturn]] void fail(const char* message, const char* code) {
@@ -89,11 +94,7 @@ Prism makePrism(document::FeatureId extrusion, document::FeatureId sketchId,
                 const document::SketchParameters& sketch,
                 const document::ExtrusionParameters& parameters, double length) {
     const auto profiles = evaluateExtrusionFaces(sketch, parameters);
-    TopoDS_Compound faces;
-    BRep_Builder builder;
-    builder.MakeCompound(faces);
-    for (const auto& profile : profiles)
-        builder.Add(faces, profile.face);
+    const TopoDS_Shape faces = facesOf(profiles);
     // Exact support-plane contact: preserve both the start plane and the requested
     // end plane. OCCT's Boolean classifies the coincident faces; no length padding.
     // M02: the kernel's prism checks the sweep and its solid before anything uses it.
@@ -217,11 +218,7 @@ Prism makeRevolution(document::FeatureId extrusion, document::FeatureId sketchId
                  normal.Z(), x.X(),      x.Y(),      x.Z()};
     }
     const auto profiles = evaluateExtrusionFaces(sketch, parameters);
-    TopoDS_Compound faces;
-    BRep_Builder builder;
-    builder.MakeCompound(faces);
-    for (const auto& profile : profiles)
-        builder.Add(faces, profile.face);
+    const TopoDS_Shape faces = facesOf(profiles);
     const auto& location = axis.Location();
     const auto& direction = axis.Direction();
     const kernel::Revolution revolution(faces, {location.X(), location.Y(), location.Z()},
@@ -271,30 +268,13 @@ Prism makeSweep(document::FeatureId extrusion, const document::SketchParameters&
             edges.push_back(TopoDS::Edge(it.Current()));
     }
     // The chain in any order: each pass adds the edges that touch the wire so far.
-    BRepBuilderAPI_MakeWire wire;
-    std::vector<bool> used(edges.size(), false);
-    for (bool added = true; added;) {
-        added = false;
-        for (std::size_t index = 0; index < edges.size(); ++index) {
-            if (used[index])
-                continue;
-            wire.Add(edges[index]);
-            if (wire.Error() == BRepBuilderAPI_WireDone) {
-                used[index] = true;
-                added = true;
-            }
-        }
-    }
-    if (std::ranges::find(used, false) != used.end() || !wire.IsDone())
+    const auto wire = kernel::chainedWire(edges);
+    if (!wire)
         throw GeometryEvaluationError("The sweep path is not one connected chain",
                                       "sweep-path-disconnected");
     const auto profiles = evaluateExtrusionFaces(sketch, parameters);
-    TopoDS_Compound faces;
-    BRep_Builder builder;
-    builder.MakeCompound(faces);
-    for (const auto& profile : profiles)
-        builder.Add(faces, profile.face);
-    const kernel::Sweep swept(faces, wire.Wire());
+    const TopoDS_Shape faces = facesOf(profiles);
+    const kernel::Sweep swept(faces, *wire);
     Prism result{swept.shape(), {}, {}};
     for (const auto& profile : profiles) {
         if (const auto cap = swept.endOf(profile.face); !cap.IsNull()) {
@@ -332,7 +312,7 @@ Prism makeLoft(document::FeatureId extrusion, const document::SketchParameters& 
             ++wires;
         if (wires != 1)
             throw GeometryEvaluationError("A loft section has no holes", "loft-section-hole");
-        return TopoDS_Shape(BRepTools::OuterWire(face));
+        return TopoDS_Shape(kernel::outerWire(face));
     };
     const auto inOnePlane = [](const document::SketchPlane& a, const document::SketchPlane& b) {
         const gp_Vec normal(a.normalX, a.normalY, a.normalZ);

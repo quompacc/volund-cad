@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Eduard Hart
 
-#include <BRepAdaptor_Curve.hxx>
-#include <BRepBuilderAPI_MakeEdge.hxx>
-#include <BRep_Tool.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
 #include <voelund/features/ContourProvenance.hpp>
 #include <voelund/features/GeometryEvaluationError.hpp>
+#include <voelund/kernel/EdgeQueries.hpp>
 
 namespace voelund::features {
 namespace {
@@ -24,23 +22,18 @@ EdgeProvenance provenance(ContourEdgeOrigin origin, const EvaluatedContourEdge& 
     const auto edge = TopoDS::Edge(mapped.Oriented(TopAbs_FORWARD));
     if (!contains(owner, edge))
         throw GeometryEvaluationError("Named contour is absent from its result");
-    const BRepAdaptor_Curve curve(edge);
+    const auto curve = kernel::curveRange(edge);
     // A prism translates the original contour without reparameterization.
     // Seed the current source from that explicit generation result, not from a
     // geometrically similar edge or an explorer position.
-    if (curve.FirstParameter() != source.startParameter ||
-        curve.LastParameter() != source.endParameter)
+    if (curve.first != source.startParameter || curve.last != source.endParameter)
         throw GeometryEvaluationError("Prism changed the contour parameter domain");
     if (!source.domain)
         return {origin, edge, source.startParameter, source.endParameter, {edge}};
     // R10b: a fragment refers to its whole element. The source spans the full oriented
     // domain on the same curve, so continued history keeps proving the parameter mapping.
-    TopLoc_Location location;
-    double first = 0, last = 0;
-    const auto shared = BRep_Tool::Curve(edge, location, first, last);
-    TopoDS_Edge whole =
-        BRepBuilderAPI_MakeEdge(shared, source.domain->first, source.domain->second);
-    whole.Location(location);
+    const TopoDS_Edge whole =
+        kernel::edgeOnSameCurve(edge, source.domain->first, source.domain->second);
     return {origin, whole, source.domain->first, source.domain->second, {edge}};
 }
 } // namespace

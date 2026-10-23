@@ -9,9 +9,9 @@
 #include <voelund/features/GeometryEvaluationError.hpp>
 #include <voelund/features/SketchProjection.hpp>
 
-#include <BRepAdaptor_Curve.hxx>
 #include <TopoDS.hxx>
 #include <gp_Vec.hxx>
+#include <voelund/kernel/EdgeQueries.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -45,18 +45,18 @@ std::optional<document::SketchGeometry> projectSketchEdge(const document::Sketch
     if (edge.IsNull() || edge.ShapeType() != TopAbs_EDGE)
         return std::nullopt;
     const Frame frame = frameOf(plane);
-    const BRepAdaptor_Curve curve(TopoDS::Edge(edge));
-    const double first = curve.FirstParameter(), last = curve.LastParameter();
-    if (curve.GetType() == GeomAbs_Line) {
-        const auto start = local(frame, curve.Value(first));
-        const auto end = local(frame, curve.Value(last));
+    const auto curve = kernel::describeEdge(TopoDS::Edge(edge));
+    const double first = curve.range.first, last = curve.range.last;
+    if (curve.kind == kernel::EdgeCurve::Kind::line) {
+        const auto start = local(frame, curve.start);
+        const auto end = local(frame, curve.end);
         if (std::hypot(end.x - start.x, end.y - start.y) < tolerance)
             return std::nullopt; // the edge stands across the plane
         return document::SketchLine{start, end};
     }
-    if (curve.GetType() != GeomAbs_Circle)
+    if (curve.kind != kernel::EdgeCurve::Kind::circle)
         return std::nullopt;
-    const gp_Circ circle = curve.Circle();
+    const gp_Circ circle = curve.circle;
     const double along = gp_Vec(circle.Axis().Direction()).Dot(frame.normal);
     if (std::abs(std::abs(along) - 1.0) > 1e-9)
         return std::nullopt; // an ellipse in the sketch, which this projection does not make
@@ -64,8 +64,8 @@ std::optional<document::SketchGeometry> projectSketchEdge(const document::Sketch
     if (last - first >= 2.0 * std::numbers::pi - 1e-9)
         return document::SketchCircle{center, circle.Radius()};
     // The arc runs counterclockwise in the sketch: against it when the circle faces away.
-    auto from = local(frame, curve.Value(first));
-    auto to = local(frame, curve.Value(last));
+    auto from = local(frame, curve.start);
+    auto to = local(frame, curve.end);
     if (along < 0.0)
         std::swap(from, to);
     const double start = std::atan2(from.y - center.y, from.x - center.x);

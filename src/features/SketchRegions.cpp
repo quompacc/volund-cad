@@ -3,7 +3,6 @@
 
 #include "SketchConnection.hpp"
 #include "SketchRegionGeometry.hpp"
-#include <Standard_Failure.hxx>
 #include <algorithm>
 #include <cmath>
 #include <gp_Vec2d.hxx>
@@ -101,7 +100,7 @@ SketchRegionResult buildSketchRegions(std::span<const document::SketchElement> e
             const auto& i = r.split.intervals[h / 2];
             gp_Pnt2d p;
             gp_Vec2d d;
-            curves[i.piece].curve->D1(h % 2 ? i.lastParameter : i.firstParameter, p, d);
+            curves[i.piece].d1(h % 2 ? i.lastParameter : i.firstParameter, p, d);
             if (h % 2)
                 d.Reverse();
             angle[h] = std::atan2(d.Y(), d.X());
@@ -174,9 +173,7 @@ SketchRegionResult buildSketchRegions(std::span<const document::SketchElement> e
         }
         if (r.valid())
             detail::classifyRegionContainment(r, curves);
-    } catch (const Standard_Failure&) {
-        diagnose(SketchRegionIssue::kernelFailure, {});
-    } catch (const std::runtime_error&) {
+    } catch (const std::runtime_error&) { // KernelError too
         diagnose(SketchRegionIssue::kernelFailure, {});
     }
     if (!r.valid()) {

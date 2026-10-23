@@ -3,8 +3,6 @@
 
 #include "SketchContourGeometry.hpp"
 #include "SketchIntersectionCurves.hpp"
-#include <Geom2dAPI_InterCurveCurve.hxx>
-#include <Standard_Failure.hxx>
 #include <algorithm>
 #include <cmath>
 #include <gp_Vec2d.hxx>
@@ -12,11 +10,12 @@
 #include <numbers>
 #include <tuple>
 #include <voelund/features/SketchIntersections.hpp>
+#include <voelund/kernel/KernelError.hpp>
 #include <voelund/kernel/NumericPolicy.hpp>
 namespace voelund::features {
 namespace {
 document::SketchPoint point(const detail::PlanarCurve& c, double u) {
-    const auto p = c.curve->Value(u);
+    const auto p = c.value(u);
     return {p.X(), p.Y()};
 }
 bool endpoint(const detail::PlanarCurve& c, double u) {
@@ -43,7 +42,7 @@ splitSketchIntersections(std::span<const document::SketchElement> elements) {
         try {
             curves.push_back(detail::planarCurve(result.pieces[i]));
             cuts.push_back({curves.back().first, curves.back().last});
-        } catch (const Standard_Failure&) {
+        } catch (const kernel::KernelError&) {
             diagnostic(SketchIntersectionIssue::calculationFailed, i, i);
             return result;
         }
@@ -83,7 +82,7 @@ splitSketchIntersections(std::span<const document::SketchElement> elements) {
                 }
                 for (double a : {curves[i].first, curves[i].last})
                     for (double b : {curves[j].first, curves[j].last}) {
-                        const auto pa = curves[i].curve->Value(a), pb = curves[j].curve->Value(b);
+                        const auto pa = curves[i].value(a), pb = curves[j].value(b);
                         if (pa.Distance(pb) <= eps)
                             result.intersections.push_back(
                                 {i, j, a, b, {pa.X(), pa.Y()}, SketchIntersectionKind::tangent});
@@ -91,24 +90,23 @@ splitSketchIntersections(std::span<const document::SketchElement> elements) {
                 continue;
             }
             try {
-                Geom2dAPI_InterCurveCurve intersection(curves[i].curve, curves[j].curve, eps);
-                if (!intersection.Intersector().IsDone()) {
+                const auto intersection = kernel::intersectCurves(curves[i], curves[j], eps);
+                if (!intersection.done) {
                     diagnostic(SketchIntersectionIssue::calculationFailed, i, j);
                     continue;
                 }
-                if (intersection.NbSegments()) {
+                if (intersection.segments) {
                     // Near-coincident intervals have no unique split topology at this tolerance.
                     diagnostic(SketchIntersectionIssue::unresolvedInterval, i, j);
                     continue;
                 }
-                for (int k = 1; k <= intersection.NbPoints(); ++k) {
-                    const auto& hit = intersection.Intersector().Point(k);
-                    const double a = detail::domainParameter(curves[i], hit.ParamOnFirst(), eps);
-                    const double b = detail::domainParameter(curves[j], hit.ParamOnSecond(), eps);
+                for (const auto& hit : intersection.points) {
+                    const double a = detail::domainParameter(curves[i], hit.first, eps);
+                    const double b = detail::domainParameter(curves[j], hit.second, eps);
                     gp_Pnt2d pa, pb;
                     gp_Vec2d da, db;
-                    curves[i].curve->D1(a, pa, da);
-                    curves[j].curve->D1(b, pb, db);
+                    curves[i].d1(a, pa, da);
+                    curves[j].d1(b, pb, db);
                     if (pa.Distance(pb) > eps) {
                         diagnostic(SketchIntersectionIssue::calculationFailed, i, j);
                         continue;
@@ -133,9 +131,7 @@ splitSketchIntersections(std::span<const document::SketchElement> elements) {
                     cuts[i].push_back(a);
                     cuts[j].push_back(b);
                 }
-            } catch (const Standard_Failure&) {
-                diagnostic(SketchIntersectionIssue::calculationFailed, i, j);
-            } catch (const std::runtime_error&) {
+            } catch (const std::runtime_error&) { // KernelError too
                 diagnostic(SketchIntersectionIssue::calculationFailed, i, j);
             }
         }

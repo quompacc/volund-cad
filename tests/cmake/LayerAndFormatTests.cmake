@@ -2,8 +2,8 @@
 # Copyright (C) 2026 Eduard Hart
 
 # Fixtures for the A04 checks: a forbidden layer include (a UI header in document), a
-# forbidden upward include, a misformatted file and a missing clang-format each fail; the
-# clean trees pass.
+# forbidden upward include, an OCCT algorithm or exception outside the kernel (K-GRENZE), a
+# misformatted file and a missing clang-format each fail; the clean trees pass.
 cmake_policy(SET CMP0007 NEW)
 foreach(required VOELUND_SOURCE_ROOT VOELUND_TEST_ROOT)
     if(NOT DEFINED ${required} OR "${${required}}" STREQUAL "")
@@ -53,6 +53,22 @@ file(WRITE "${root}/upward/src/kernel/Shape.cpp" "\n")
 expect_failure(CheckLayerIncludes.cmake "${root}/upward"
     "kernel/Shape.hpp \\(kernel\\) includes voelund/desktop/MainWindow.hpp" "An upward include")
 file(WRITE "${root}/relative/src/features/Graph.cpp" "#include \"../desktop/Window.hpp\"\n")
+# K-GRENZE: TopoDS and gp are data everywhere; algorithms only in kernel and viewport.
+file(WRITE "${root}/occt-clean/src/features/Graph.cpp" "#include <TopoDS_Shape.hxx>\n#include <gp_Pnt.hxx>\n")
+file(WRITE "${root}/occt-clean/src/kernel/Prism.cpp" "#include <BRepPrimAPI_MakePrism.hxx>\n")
+file(WRITE "${root}/occt-clean/src/viewport/View.cpp" "#include <BRep_Tool.hxx>\n")
+file(WRITE "${root}/occt-clean/src/features/Solver.cpp" "#include <GCS.h>\n")
+expect_success(CheckLayerIncludes.cmake "${root}/occt-clean" "OCCT data types outside the kernel")
+file(WRITE "${root}/occt-algorithm/src/features/Graph.cpp" "#include <BRepBuilderAPI_MakeEdge.hxx>\n")
+expect_failure(CheckLayerIncludes.cmake "${root}/occt-algorithm"
+    "src/features/Graph.cpp \\(features\\) includes OCCT algorithm header BRepBuilderAPI_MakeEdge.hxx"
+    "An OCCT algorithm in features")
+file(WRITE "${root}/occt-geometry/src/application/Session.cpp" "#include <Geom2d_Circle.hxx>\n")
+expect_failure(CheckLayerIncludes.cmake "${root}/occt-geometry" "includes OCCT algorithm header Geom2d_Circle.hxx"
+    "An OCCT curve in application")
+file(WRITE "${root}/occt-catch/src/desktop/Feedback.hpp" "void f() {\n    try {\n    } catch (const Standard_Failure& error) {\n    }\n}\n")
+expect_failure(CheckLayerIncludes.cmake "${root}/occt-catch"
+    "src/desktop/Feedback.hpp \\(desktop\\) catches an OCCT exception" "An OCCT catch in desktop")
 expect_failure(CheckLayerIncludes.cmake "${root}/relative" "by a relative path" "A relative include out of the layer")
 
 # Link edges: a document target linking the desktop fails at configure time.

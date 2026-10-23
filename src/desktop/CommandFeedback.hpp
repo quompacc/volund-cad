@@ -7,15 +7,21 @@
 #include <QString>
 #include <exception>
 #include <voelund/application/CommandResult.hpp>
-#include <voelund/kernel/OcctCompatibility.hpp>
+#include <voelund/kernel/KernelError.hpp>
 
 namespace voelund::desktop {
 template <class Execute, class Report> bool guardCommand(Execute execute, Report report) {
     try {
-        return execute();
-    } catch (const Standard_Failure& error) {
-        report(QObject::tr("Vorgang fehlgeschlagen: %1")
-                   .arg(QString::fromStdString(kernel::occtFailureDiagnostic(error))));
+        bool done = false;
+        kernel::translateOcctFailures(kernel::KernelOperation::evaluation,
+                                      [&] { done = execute(); });
+        return done;
+    } catch (const kernel::KernelError& error) {
+        report(
+            QObject::tr("Vorgang fehlgeschlagen: %1")
+                .arg(QString::fromStdString(error.operation() == kernel::KernelOperation::evaluation
+                                                ? error.diagnostic()
+                                                : std::string(error.what()))));
     } catch (const std::exception& error) {
         report(QObject::tr("Vorgang fehlgeschlagen: %1").arg(QString::fromUtf8(error.what())));
     }

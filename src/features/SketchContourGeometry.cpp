@@ -2,8 +2,8 @@
 // Copyright (C) 2026 Eduard Hart
 
 #include "SketchContourGeometry.hpp"
-#include "SketchBSplineCurves.hpp"
 #include "SketchConnection.hpp"
+#include "SketchIntersectionCurves.hpp"
 #include <algorithm>
 #include <cmath>
 #include <numbers>
@@ -91,7 +91,7 @@ SketchPoint contourMiddle(const ContourPiece& p) {
     if (auto* a = std::get_if<SketchArc>(&p.geometry))
         return radial(a->center, a->radius, (a->startAngle + a->endAngle) / 2);
     if (auto* s = std::get_if<document::SketchBSpline>(&p.geometry)) {
-        const auto middle = bsplineCurve2d(*s)->Value(bsplineLastParameter(*s) / 2);
+        const auto middle = planarCurve(p).value(kernel::bsplineLastParameter(s->poles.size()) / 2);
         return {middle.X(), middle.Y()};
     }
     return {(p.start.x + p.end.x) / 2, (p.start.y + p.end.y) / 2};

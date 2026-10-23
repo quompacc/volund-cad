@@ -3,11 +3,9 @@
 
 #include "FeatureEvaluationDetail.hpp"
 #include "PrimitivePlacement.hpp"
-#include <Standard_OutOfMemory.hxx>
-#include <Standard_ProgramError.hxx>
 #include <voelund/features/FeatureGraph.hpp>
 #include <voelund/features/GeometryEvaluationError.hpp>
-#include <voelund/kernel/OcctCompatibility.hpp>
+#include <voelund/kernel/KernelError.hpp>
 
 #include <voelund/document/DocumentSnapshot.hpp>
 #include <voelund/document/LegacyBodyIdentity.hpp>
@@ -22,15 +20,13 @@
 #include <voelund/kernel/ShapeOperations.hpp>
 #include <voelund/kernel/SolidPrimitives.hpp>
 
-#include <BRepBuilderAPI_Transform.hxx>
-#include <BRep_Builder.hxx>
-#include <TopoDS_Compound.hxx>
 #include <algorithm>
 #include <functional>
 #include <gp_Trsf.hxx>
 #include <stdexcept>
 #include <utility>
 #include <vector>
+#include <voelund/kernel/ShapeQueries.hpp>
 
 namespace voelund::features {
 namespace detail {
@@ -303,13 +299,11 @@ void evaluateSketch(const document::DocumentSnapshot& document,
         document::regenerateSketchPatterns(parameters.elements, parameters.patterns);
         measureReferenceDimensions(parameters); // S18
     }
-    TopoDS_Compound geometry;
-    BRep_Builder builder;
-    builder.MakeCompound(geometry);
     const auto elements = evaluateSketchElements(parameters);
-    for (const EvaluatedSketchElement& element : elements) {
-        builder.Add(geometry, element.shape);
-    }
+    std::vector<TopoDS_Shape> shapes;
+    for (const EvaluatedSketchElement& element : elements)
+        shapes.push_back(element.shape);
+    const TopoDS_Shape geometry = kernel::collect(shapes);
     outputs.push_back(EvaluatedFeature{descriptor.id,
                                        geometry,
                                        geometry,
@@ -457,18 +451,18 @@ void runChecked(const document::DocumentSnapshot& document,
         issue.message = message;
     };
     try {
-        runFeature(document, descriptor, outputs, bodies, references);
+        // K-GRENZE: an OCCT failure the kernel did not name arrives as KernelError(evaluation).
+        kernel::translateOcctFailures(kernel::KernelOperation::evaluation, [&] {
+            runFeature(document, descriptor, outputs, bodies, references);
+        });
     } catch (const GeometryEvaluationError& error) {
         failure(error.what(), error.code());
         issue.elements = error.elements();
     } catch (const kernel::KernelError& error) {
-        failure(error.what(), kernel::booleanFailureCode(error.failure()));
-    } catch (const Standard_OutOfMemory&) {
-        throw;
-    } catch (const Standard_ProgramError&) {
-        throw;
-    } catch (const Standard_Failure& error) {
-        failure(kernel::occtFailureDiagnostic(error));
+        if (error.operation() == kernel::KernelOperation::evaluation)
+            failure(error.diagnostic());
+        else
+            failure(error.what(), kernel::booleanFailureCode(error.failure()));
     }
 }
 } // namespace

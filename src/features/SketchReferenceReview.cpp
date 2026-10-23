@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Eduard Hart
 
-#include <BRepAdaptor_Surface.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
 #include <algorithm>
@@ -15,6 +14,7 @@
 #include <voelund/features/SketchSupportBinding.hpp>
 #include <voelund/kernel/NumericPolicy.hpp>
 #include <voelund/kernel/PlaneNormal.hpp>
+#include <voelund/kernel/ShapeQueries.hpp>
 
 namespace voelund::features {
 namespace {
@@ -92,10 +92,10 @@ SketchReferenceReview reviewSketchReferences(document::DocumentId document,
             ++result.unresolvedOrigins;
             continue;
         }
-        const BRepAdaptor_Surface surface(TopoDS::Face(origin.faces.front()));
-        if (surface.GetType() != GeomAbs_Plane)
+        const auto planar = kernel::facePlane(origin.faces.front());
+        if (!planar)
             continue;
-        const auto p = surface.Plane();
+        const auto& p = *planar;
         const gp_Vec normal(kernel::planeNormal(p, origin.faces.front().Orientation()));
         auto position = p.Location();
         gp_Vec x(p.XAxis().Direction());

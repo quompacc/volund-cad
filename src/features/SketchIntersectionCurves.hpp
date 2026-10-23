@@ -2,18 +2,19 @@
 // Copyright (C) 2026 Eduard Hart
 
 #pragma once
-#include <Geom2d_Curve.hxx>
 #include <voelund/features/SketchContourGraph.hpp>
+#include <voelund/kernel/PlanarCurve.hpp>
 namespace voelund::features::detail {
-struct PlanarCurve final {
-    Handle(Geom2d_Curve) curve;
-    double first;
-    double last;
-    bool periodic;
-    double scale;
-};
+// K-GRENZE: the curves themselves live in the kernel.
+using PlanarCurve = kernel::PlanarCurve;
+[[nodiscard]] kernel::CurveDefinition2d curveDefinition(const document::SketchGeometry& geometry);
 [[nodiscard]] PlanarCurve planarCurve(const ContourPiece& piece);
-[[nodiscard]] double parameterTolerance(const PlanarCurve& curve, double parameter,
-                                        double distance);
-[[nodiscard]] double domainParameter(const PlanarCurve& curve, double parameter, double distance);
+[[nodiscard]] inline double parameterTolerance(const PlanarCurve& curve, double parameter,
+                                               double distance) {
+    return curve.parameterTolerance(parameter, distance);
+}
+[[nodiscard]] inline double domainParameter(const PlanarCurve& curve, double parameter,
+                                            double distance) {
+    return curve.domainParameter(parameter, distance);
+}
 } // namespace voelund::features::detail

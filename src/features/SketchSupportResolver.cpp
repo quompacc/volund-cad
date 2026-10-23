@@ -5,15 +5,13 @@
 #include <voelund/features/SketchSupportResolver.hpp>
 #include <voelund/kernel/PlaneNormal.hpp>
 
-#include <BRepAdaptor_Curve.hxx>
-#include <BRepAdaptor_Surface.hxx>
-#include <GeomAbs_CurveType.hxx>
-#include <GeomAbs_SurfaceType.hxx>
 #include <TopAbs_Orientation.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
 #include <gp_Pln.hxx>
 #include <gp_Vec.hxx>
+#include <voelund/kernel/EdgeQueries.hpp>
+#include <voelund/kernel/ShapeQueries.hpp>
 
 #include <cmath>
 #include <cstdint>
@@ -44,10 +42,10 @@ std::optional<ResolvedFace> resolveSupportFace(const document::SketchPlane& prev
     const gp_Pnt previousOrigin(previous.originX, previous.originY, previous.originZ);
     for (TopExp_Explorer explorer(supportShape, TopAbs_FACE); explorer.More(); explorer.Next()) {
         const TopoDS_Face face = TopoDS::Face(explorer.Current());
-        const BRepAdaptor_Surface surface(face);
-        if (surface.GetType() != GeomAbs_Plane)
+        const auto planar = kernel::facePlane(face);
+        if (!planar)
             continue;
-        const gp_Pln candidate = surface.Plane();
+        const gp_Pln candidate = *planar;
         const gp_Dir normal = kernel::planeNormal(candidate, face.Orientation());
         if (previousNormal.Dot(gp_Vec(normal)) < 0.999)
             continue;
@@ -74,14 +72,15 @@ std::vector<ReferenceSegment> referenceSegments(const ResolvedFace& support) {
     const gp_Vec yDirection = normal.Crossed(xDirection);
     std::vector<ReferenceSegment> result;
     for (TopExp_Explorer explorer(support.face, TopAbs_EDGE); explorer.More(); explorer.Next()) {
-        const BRepAdaptor_Curve curve(TopoDS::Edge(explorer.Current()));
-        const int divisions = curve.GetType() == GeomAbs_Line ? 1 : 12;
-        const double firstParameter = curve.FirstParameter();
-        const double lastParameter = curve.LastParameter();
-        gp_Pnt first = curve.Value(firstParameter);
+        const TopoDS_Edge edge = TopoDS::Edge(explorer.Current());
+        const auto curve = kernel::describeEdge(edge);
+        const int divisions = curve.kind == kernel::EdgeCurve::Kind::line ? 1 : 12;
+        const double firstParameter = curve.range.first;
+        const double lastParameter = curve.range.last;
+        gp_Pnt first = curve.start;
         for (int index = 1; index <= divisions; ++index) {
-            const gp_Pnt second =
-                curve.Value(firstParameter + (lastParameter - firstParameter) * index / divisions);
+            const gp_Pnt second = kernel::pointOnEdge(
+                edge, firstParameter + (lastParameter - firstParameter) * index / divisions);
             const gp_Vec firstOffset(origin, first);
             const gp_Vec secondOffset(origin, second);
             result.push_back({firstOffset.Dot(xDirection), firstOffset.Dot(yDirection),

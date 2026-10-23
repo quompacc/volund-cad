@@ -10,21 +10,13 @@
 
 #include <voelund/features/SketchContourGraph.hpp>
 #include <voelund/features/SketchProfiles.hpp>
+#include <voelund/kernel/EdgeQueries.hpp>
+#include <voelund/kernel/KernelError.hpp>
+#include <voelund/kernel/ShapeQueries.hpp>
+#include <voelund/kernel/SketchShapes.hpp>
 
-#include <BRepAdaptor_Curve.hxx>
-#include <BRepBuilderAPI_MakeEdge.hxx>
-#include <BRepBuilderAPI_MakeFace.hxx>
-#include <BRepBuilderAPI_MakePolygon.hxx>
-#include <BRepBuilderAPI_MakeVertex.hxx>
-#include <BRepBuilderAPI_MakeWire.hxx>
-#include <BRepCheck_Analyzer.hxx>
-#include <BRep_Builder.hxx>
-#include <BRep_Tool.hxx>
-#include <Geom_Circle.hxx>
-#include <Geom_Ellipse.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
-#include <TopoDS_Compound.hxx>
 #include <gp_Circ.hxx>
 #include <gp_Dir.hxx>
 #include <gp_Pnt.hxx>
@@ -103,15 +95,21 @@ void recordEdge(std::vector<EvaluatedContourEdge>& edges, document::SketchElemen
                 ContourRole role, const TopoDS_Edge& source, const TopoDS_Edge& actual) {
     // MakeWire may copy the edge to share vertices. Its Edge() result is the
     // authoritative topology; a shared analytic curve proves parameter continuity.
-    TopLoc_Location sourceLocation, actualLocation;
-    double first, last, actualFirst, actualLast;
-    const auto& curve = BRep_Tool::Curve(source, sourceLocation, first, last);
-    const auto& mapped = BRep_Tool::Curve(actual, actualLocation, actualFirst, actualLast);
-    if (curve.IsNull() || curve != mapped || !sourceLocation.IsEqual(actualLocation) ||
-        first != actualFirst || last != actualLast)
+    if (!kernel::sameEdgeCurve(source, actual))
         throw GeometryEvaluationError(
             "Contour builder did not preserve its analytic parameter domain");
-    edges.push_back({id, role, TopoDS::Edge(actual.Oriented(TopAbs_FORWARD)), first, last});
+    const auto range = kernel::storedRange(source);
+    edges.push_back(
+        {id, role, TopoDS::Edge(actual.Oriented(TopAbs_FORWARD)), range.first, range.last});
+}
+
+// The face inside a closed wire; a face OCCT cannot make is a kernel failure.
+TopoDS_Face requiredFace(const TopoDS_Wire& wire) {
+    const auto face = kernel::faceFromWire(wire);
+    if (!face)
+        throw kernel::KernelError(kernel::KernelOperation::sketchGeometry,
+                                  "The face of a closed wire could not be made");
+    return *face;
 }
 
 TopoDS_Wire rectangleWire(const document::SketchParameters& sketch,
@@ -123,17 +121,15 @@ TopoDS_Wire rectangleWire(const document::SketchParameters& sketch,
                                             {rectangle.first.x, rectangle.second.y}};
     const ContourRole roles[] = {ContourRole::rectangleFirst, ContourRole::rectangleSecond,
                                  ContourRole::rectangleThird, ContourRole::rectangleFourth};
-    BRepBuilderAPI_MakeWire wire;
+    kernel::WireBuilder wire;
     for (int i = 0; i < 4; ++i) {
-        const auto edge = BRepBuilderAPI_MakeEdge(worldPoint(sketch.plane, points[i]),
-                                                  worldPoint(sketch.plane, points[(i + 1) % 4]))
-                              .Edge();
-        wire.Add(edge);
-        if (!wire.IsDone())
+        const auto edge = kernel::segmentEdge(worldPoint(sketch.plane, points[i]),
+                                              worldPoint(sketch.plane, points[(i + 1) % 4]));
+        if (!wire.add(edge))
             throw GeometryEvaluationError("Rectangle wire could not be connected");
-        recordEdge(edges, id, roles[i], edge, wire.Edge());
+        recordEdge(edges, id, roles[i], edge, wire.lastEdge());
     }
-    return wire.Wire();
+    return wire.wire();
 }
 
 TopoDS_Edge circleEdge(const document::SketchParameters& sketch,
@@ -142,8 +138,7 @@ TopoDS_Edge circleEdge(const document::SketchParameters& sketch,
     const gp_Dir normal(sketch.plane.normalX, sketch.plane.normalY, sketch.plane.normalZ);
     const gp_Dir xDirection(sketch.plane.xDirectionX, sketch.plane.xDirectionY,
                             sketch.plane.xDirectionZ);
-    const gp_Circ curve(gp_Ax2(center, normal, xDirection), circle.radius);
-    return BRepBuilderAPI_MakeEdge(curve).Edge();
+    return kernel::circleEdge(gp_Ax2(center, normal, xDirection), circle.radius);
 }
 
 TopoDS_Edge arcEdge(const document::SketchParameters& sketch, const document::SketchArc& arc) {
@@ -151,9 +146,8 @@ TopoDS_Edge arcEdge(const document::SketchParameters& sketch, const document::Sk
     const gp_Dir normal(sketch.plane.normalX, sketch.plane.normalY, sketch.plane.normalZ);
     const gp_Dir xDirection(sketch.plane.xDirectionX, sketch.plane.xDirectionY,
                             sketch.plane.xDirectionZ);
-    const Handle(Geom_Circle) curve =
-        new Geom_Circle(gp_Ax2(center, normal, xDirection), arc.radius);
-    return BRepBuilderAPI_MakeEdge(curve, arc.startAngle, arc.endAngle).Edge();
+    return kernel::SpaceCurve::circle(gp_Ax2(center, normal, xDirection), arc.radius)
+        .edge(arc.startAngle, arc.endAngle);
 }
 
 TopoDS_Edge ellipseEdge(const document::SketchParameters& sketch,
@@ -165,9 +159,9 @@ TopoDS_Edge ellipseEdge(const document::SketchParameters& sketch,
     const gp_Dir planeY = normal.Crossed(planeX);
     const gp_Dir majorDirection(gp_Vec(planeX) * std::cos(ellipse.rotation) +
                                 gp_Vec(planeY) * std::sin(ellipse.rotation));
-    const Handle(Geom_Ellipse) curve = new Geom_Ellipse(gp_Ax2(center, normal, majorDirection),
-                                                        ellipse.majorRadius, ellipse.minorRadius);
-    return BRepBuilderAPI_MakeEdge(curve).Edge();
+    return kernel::SpaceCurve::ellipse(gp_Ax2(center, normal, majorDirection), ellipse.majorRadius,
+                                       ellipse.minorRadius)
+        .edge();
 }
 
 const document::SketchElement& findElement(const document::SketchParameters& sketch,
@@ -194,46 +188,40 @@ curveEndpoints(const document::SketchGeometry& geometry) {
 
 TopoDS_Face curveProfileFace(const document::SketchParameters& sketch, const SketchProfile& profile,
                              std::vector<EvaluatedContourEdge>& edges) {
-    BRepBuilderAPI_MakeWire wire;
+    kernel::WireBuilder wire;
     std::size_t contourIndex = 0;
     for (document::SketchElementId id : profile.elementIds) {
         const auto& geometry = findElement(sketch, id).geometry;
         auto points = curveEndpoints(geometry);
         const auto* spline = std::get_if<document::SketchBSpline>(&geometry);
-        TopoDS_Edge edge =
-            std::holds_alternative<document::SketchLine>(geometry)
-                ? BRepBuilderAPI_MakeEdge(worldPoint(sketch.plane, points.first),
-                                          worldPoint(sketch.plane, points.second))
-                      .Edge()
-            : spline != nullptr
-                ? BRepBuilderAPI_MakeEdge(detail::bsplineCurve3d(*spline, sketch.plane)).Edge()
-                : arcEdge(sketch, std::get<document::SketchArc>(geometry));
+        TopoDS_Edge edge = std::holds_alternative<document::SketchLine>(geometry)
+                               ? kernel::segmentEdge(worldPoint(sketch.plane, points.first),
+                                                     worldPoint(sketch.plane, points.second))
+                           : spline != nullptr
+                               ? detail::bsplineCurve3d(*spline, sketch.plane).edge()
+                               : arcEdge(sketch, std::get<document::SketchArc>(geometry));
         if (profile.reversed.at(contourIndex++)) {
             edge.Reverse();
             std::swap(points.first, points.second);
         }
         // Preserve the original curves. OCCT may share vertices within this
         // explicit tolerance; no polygon reconstruction or endpoint snapping.
-        BRep_Builder builder;
-        const double tolerance =
-            detail::connectionTolerance(points.first, points.second).millimetres;
-        for (TopExp_Explorer vertex(edge, TopAbs_VERTEX); vertex.More(); vertex.Next())
-            builder.UpdateVertex(TopoDS::Vertex(vertex.Current()), tolerance);
-        wire.Add(edge);
-        if (!wire.IsDone())
+        kernel::widenVertexTolerance(
+            edge, detail::connectionTolerance(points.first, points.second).millimetres);
+        if (!wire.add(edge))
             throw GeometryEvaluationError("Sketch profile wire could not be connected",
                                           "profile-invalid");
         recordEdge(edges, id,
                    std::holds_alternative<document::SketchLine>(geometry) ? ContourRole::line
                    : spline != nullptr                                    ? ContourRole::bspline
                                                                           : ContourRole::arc,
-                   edge, wire.Edge());
+                   edge, wire.lastEdge());
     }
-    BRepBuilderAPI_MakeFace face(wire.Wire());
-    if (!face.IsDone() || !BRepCheck_Analyzer(face.Face()).IsValid())
+    const auto face = kernel::faceFromWire(wire.wire());
+    if (!face || !kernel::isValidShape(*face))
         throw GeometryEvaluationError("Sketch profile did not produce a valid face",
                                       "profile-invalid");
-    return face.Face();
+    return *face;
 }
 
 TopoDS_Face profileFace(const document::SketchParameters& sketch, const SketchProfile& profile,
@@ -241,21 +229,19 @@ TopoDS_Face profileFace(const document::SketchParameters& sketch, const SketchPr
     const document::SketchGeometry& first =
         findElement(sketch, profile.elementIds.front()).geometry;
     if (const auto* rectangle = std::get_if<document::SketchRectangle>(&first)) {
-        return BRepBuilderAPI_MakeFace(
-                   rectangleWire(sketch, *rectangle, profile.elementIds.front(), edges))
-            .Face();
+        return requiredFace(rectangleWire(sketch, *rectangle, profile.elementIds.front(), edges));
     }
     if (const auto* circle = std::get_if<document::SketchCircle>(&first)) {
         const auto edge = circleEdge(sketch, *circle);
-        BRepBuilderAPI_MakeWire wire(edge);
-        recordEdge(edges, profile.elementIds.front(), ContourRole::circle, edge, wire.Edge());
-        return BRepBuilderAPI_MakeFace(wire.Wire()).Face();
+        const kernel::WireBuilder wire(edge);
+        recordEdge(edges, profile.elementIds.front(), ContourRole::circle, edge, wire.lastEdge());
+        return requiredFace(wire.wire());
     }
     if (const auto* ellipse = std::get_if<document::SketchEllipse>(&first)) {
         const auto edge = ellipseEdge(sketch, *ellipse);
-        BRepBuilderAPI_MakeWire wire(edge);
-        recordEdge(edges, profile.elementIds.front(), ContourRole::ellipse, edge, wire.Edge());
-        return BRepBuilderAPI_MakeFace(wire.Wire()).Face();
+        const kernel::WireBuilder wire(edge);
+        recordEdge(edges, profile.elementIds.front(), ContourRole::ellipse, edge, wire.lastEdge());
+        return requiredFace(wire.wire());
     }
     return curveProfileFace(sketch, profile, edges);
 }
@@ -268,18 +254,17 @@ TopoDS_Shape elementShape(const document::SketchParameters& sketch,
         return rectangleWire(sketch, *rectangle, element.id, edges);
     // S15: a point is a vertex; it has no contour edge.
     if (const auto* point = std::get_if<document::SketchPointGeometry>(&geometry))
-        return BRepBuilderAPI_MakeVertex(worldPoint(sketch.plane, point->position)).Vertex();
+        return kernel::pointVertex(worldPoint(sketch.plane, point->position));
     TopoDS_Edge edge;
     if (const auto* line = std::get_if<document::SketchLine>(&geometry)) {
-        edge = BRepBuilderAPI_MakeEdge(worldPoint(sketch.plane, line->start),
-                                       worldPoint(sketch.plane, line->end))
-                   .Edge();
+        edge = kernel::segmentEdge(worldPoint(sketch.plane, line->start),
+                                   worldPoint(sketch.plane, line->end));
     } else if (const auto* circle = std::get_if<document::SketchCircle>(&geometry))
         edge = circleEdge(sketch, *circle);
     else if (const auto* arc = std::get_if<document::SketchArc>(&geometry))
         edge = arcEdge(sketch, *arc);
     else if (const auto* spline = std::get_if<document::SketchBSpline>(&geometry))
-        edge = BRepBuilderAPI_MakeEdge(detail::bsplineCurve3d(*spline, sketch.plane)).Edge(); // S21
+        edge = detail::bsplineCurve3d(*spline, sketch.plane).edge(); // S21
     else
         edge = ellipseEdge(sketch, std::get<document::SketchEllipse>(geometry));
     const auto role =
@@ -319,12 +304,10 @@ TopoDS_Shape evaluateSketchProfileFaces(const document::SketchParameters& sketch
 TopoDS_Shape
 evaluateSketchProfileFaces(const document::SketchParameters& sketch,
                            std::span<const document::SketchProfileId> selectedProfiles) {
-    TopoDS_Compound faces;
-    BRep_Builder builder;
-    builder.MakeCompound(faces);
+    std::vector<TopoDS_Shape> faces;
     for (const auto& profile : evaluateNamedProfileFaces(sketch, selectedProfiles))
-        builder.Add(faces, profile.face);
-    return faces;
+        faces.push_back(profile.face);
+    return kernel::collect(faces);
 }
 
 EvaluatedProfileFace detail::profileFaceOf(const document::SketchParameters& sketch,

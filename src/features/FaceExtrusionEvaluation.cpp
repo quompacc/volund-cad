@@ -8,12 +8,11 @@
 #include <voelund/features/FeatureDependencies.hpp>
 #include <voelund/features/GeometryEvaluationError.hpp>
 #include <voelund/features/SketchSupportBinding.hpp>
+#include <voelund/kernel/EdgeQueries.hpp>
 #include <voelund/kernel/NumericPolicy.hpp>
 #include <voelund/kernel/ShapeOperations.hpp>
+#include <voelund/kernel/ShapeQueries.hpp>
 
-#include <BRepAdaptor_Surface.hxx>
-#include <BRepBuilderAPI_Transform.hxx>
-#include <BRep_Tool.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
 #include <TopoDS_Edge.hxx>
@@ -81,7 +80,9 @@ void nameCapEdges(std::vector<EdgeProvenance>& edges, const FacePrism& prism,
         if (images.empty())
             continue;
         item->source = TopoDS::Edge(cap);
-        BRep_Tool::Range(item->source, item->startParameter, item->endParameter);
+        const auto range = kernel::storedRange(item->source);
+        item->startParameter = range.first;
+        item->endParameter = range.last;
         item->edges = std::move(images);
         item->parameterMapping = true;
     }
@@ -103,8 +104,10 @@ gp_Vec sweep(const TopoDS_Shape& body, const SupportFaceFrame& face,
     for (TopExp_Explorer explorer(body, TopAbs_FACE); explorer.More(); explorer.Next()) {
         if (!explorer.Current().IsSame(face.face))
             continue;
-        const BRepAdaptor_Surface surface(TopoDS::Face(explorer.Current()));
-        const gp_Vec normal(kernel::planeNormal(surface.Plane(), explorer.Current().Orientation()));
+        const auto outward = kernel::planarFaceNormal(explorer.Current());
+        if (!outward)
+            break;
+        const gp_Vec normal(*outward);
         return parameters.reversed ? -normal : normal;
     }
     throw GeometryEvaluationError("Profile face is not a face of its body");
@@ -147,12 +150,12 @@ FacePrism makePrism(document::FeatureId extrusion, const TopoDS_Shape& body,
     const gp_Vec along = sweep(body, face, parameters);
     TopoDS_Shape start = face.face;
     gp_Pnt origin(face.plane.originX, face.plane.originY, face.plane.originZ);
-    std::unique_ptr<BRepBuilderAPI_Transform> shifted;
+    std::optional<kernel::MovedCopy> shifted;
     if (parameters.offset != 0.0) {
         gp_Trsf shift;
         shift.SetTranslation(along * parameters.offset);
-        shifted = std::make_unique<BRepBuilderAPI_Transform>(face.face, shift, true);
-        start = shifted->Shape();
+        shifted.emplace(face.face, shift);
+        start = shifted->shape();
         origin.Translate(along * parameters.offset);
     }
     const double length = endFace ? lengthToFace(origin, along, *endFace) : parameters.distance;
@@ -172,7 +175,7 @@ FacePrism makePrism(document::FeatureId extrusion, const TopoDS_Shape& body,
         side.extrusionFace = document::ExtrusionFace::side;
         side.sweptEdge = *name;
         const TopoDS_Shape swept =
-            shifted ? shifted->ModifiedShape(explorer.Current()) : explorer.Current();
+            shifted ? shifted->image(explorer.Current()) : explorer.Current();
         for (const auto& generated : prism.generated(swept))
             addSupportFace(result.caps, side, generated);
         if (const auto capEdge = prism.endOf(swept); !capEdge.IsNull())

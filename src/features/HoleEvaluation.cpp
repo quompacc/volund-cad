@@ -11,13 +11,11 @@
 #include <voelund/kernel/ShapeFactory.hpp>
 #include <voelund/kernel/ShapeOperations.hpp>
 
-#include <BRepAdaptor_Surface.hxx>
-#include <BRepBndLib.hxx>
-#include <Bnd_Box.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
 #include <gp_Pnt.hxx>
 #include <gp_Vec.hxx>
+#include <voelund/kernel/ShapeQueries.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -60,8 +58,8 @@ kernel::ShapeOperationResult holeTool(const EvaluatedFeature& owner, const TopoD
     for (TopExp_Explorer explorer(body, TopAbs_FACE); explorer.More(); explorer.Next()) {
         if (!explorer.Current().IsSame(frame->face))
             continue;
-        const BRepAdaptor_Surface surface(TopoDS::Face(explorer.Current()));
-        inward = -gp_Vec(kernel::planeNormal(surface.Plane(), explorer.Current().Orientation()));
+        if (const auto outward = kernel::planarFaceNormal(explorer.Current()))
+            inward = -gp_Vec(*outward);
         break;
     }
     if (inward.Magnitude() < 0.5)
@@ -70,11 +68,8 @@ kernel::ShapeOperationResult holeTool(const EvaluatedFeature& owner, const TopoD
     double length = parameters.depth.value_or(0.0);
     if (!parameters.depth) {
         // Through all: longer than the body could ever be measured from this face.
-        Bnd_Box box;
-        BRepBndLib::Add(body, box);
-        double x0 = 0, y0 = 0, z0 = 0, x1 = 0, y1 = 0, z1 = 0;
-        box.Get(x0, y0, z0, x1, y1, z1);
-        length = 2.0 * std::hypot(x1 - x0, y1 - y0, z1 - z0) + 1.0;
+        const auto box = kernel::boundingBox(body);
+        length = 2.0 * (box ? box->diagonal() : 0.0) + 1.0;
     }
     return kernel::ShapeFactory::makeCylinderWithHistory({parameters.diameter / 2.0, length,
                                                           centre.X(), centre.Y(), centre.Z(),

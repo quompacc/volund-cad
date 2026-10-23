@@ -4,8 +4,7 @@
 #include "CadSessionGeometryDetail.hpp"
 #include "CommandInput.hpp"
 
-#include <BRepBndLib.hxx>
-#include <Bnd_Box.hxx>
+#include <voelund/kernel/ShapeQueries.hpp>
 
 #include <algorithm>
 #include <string>
@@ -44,14 +43,11 @@ bool CadSession::addGroupMove(document::ModelDocument& candidate, document::Feat
     const auto shape = featureShape(source);
     if (!body || !shape)
         throw std::invalid_argument("Only current bodies can be moved");
-    Bnd_Box bounds;
-    BRepBndLib::Add(*shape, bounds);
-    double x0 = 0, y0 = 0, z0 = 0, x1 = 0, y1 = 0, z1 = 0;
-    bounds.Get(x0, y0, z0, x1, y1, z1);
+    const auto pivot = kernel::boundingBoxCentre(*shape);
     const document::MoveParameters parameters{
         *body,
         shifted({0, 0, 0, kernel::Radians{0}, kernel::Radians{0}, kernel::Radians{0}}, translation),
-        {(x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2}};
+        {pivot.X(), pivot.Y(), pivot.Z()}};
     static_cast<void>(
         candidate.addMoveFeature("Bewegen " + std::to_string(sequence++), parameters));
     return true;

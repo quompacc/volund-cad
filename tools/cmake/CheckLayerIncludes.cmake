@@ -3,6 +3,8 @@
 
 # K01 include check: every #include of src/<layer> and include/voelund/<layer> stays within
 # the layers allowed by VoelundLayers.cmake, and layers below the UI include no Qt header.
+# K-GRENZE: outside the kernel (and the viewport) no OCCT algorithm header and no catch of an
+# OCCT exception.
 #
 #   cmake -DVOELUND_SOURCE_ROOT=<repository> -P tools/cmake/CheckLayerIncludes.cmake
 #
@@ -28,6 +30,12 @@ foreach(layer IN LISTS VOELUND_LAYERS)
         math(EXPR checked "${checked} + 1")
         file(STRINGS "${file}" lines REGEX "^[ \t]*#[ \t]*include[ \t]*[<\"]")
         file(RELATIVE_PATH shown "${VOELUND_SOURCE_ROOT}" "${file}")
+        if(NOT layer IN_LIST VOELUND_LAYERS_WITH_OCCT_ALGORITHMS)
+            file(STRINGS "${file}" catches REGEX "catch[ \t]*\\([^)]*Standard_")
+            if(catches)
+                list(APPEND violations "${shown} (${layer}) catches an OCCT exception (K-GRENZE)")
+            endif()
+        endif()
         foreach(line IN LISTS lines)
             if(NOT line MATCHES "#[ \t]*include[ \t]*[<\"]([^>\"]+)[>\"]")
                 continue()
@@ -37,6 +45,9 @@ foreach(layer IN LISTS VOELUND_LAYERS)
                 list(APPEND violations "${shown} (${layer}) includes ${header}")
             elseif(header MATCHES "^(Q[A-Za-z]*|Qt[A-Za-z]*/.*)$" AND layer IN_LIST VOELUND_LAYERS_WITHOUT_QT)
                 list(APPEND violations "${shown} (${layer}) includes Qt header ${header}")
+            elseif(header MATCHES "${VOELUND_OCCT_ALGORITHM_HEADER}" AND
+                   NOT layer IN_LIST VOELUND_LAYERS_WITH_OCCT_ALGORITHMS)
+                list(APPEND violations "${shown} (${layer}) includes OCCT algorithm header ${header} (K-GRENZE)")
             elseif(header MATCHES "(^|/)\\.\\./")
                 list(APPEND violations "${shown} (${layer}) includes ${header} by a relative path out of its directory")
             endif()
