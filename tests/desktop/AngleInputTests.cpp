@@ -163,7 +163,7 @@ void dimensionDialog() {
     controller.editConstraint(2);
     auto* field = viewport.findChild<QLineEdit*>(QStringLiteral("dimensionValueEdit"));
     const bool displayedDegrees = field != nullptr && !field->isHidden() &&
-                                  std::abs(field->text().toDouble() + 60) < 1e-10 &&
+                                  std::abs(field->text().toDouble() - 60) < 1e-10 &&
                                   field->toolTip().contains("Grad");
     bool captured = field != nullptr;
     if (field != nullptr) {
@@ -171,7 +171,7 @@ void dimensionDialog() {
         if (!directory.isEmpty())
             captured = QDir().mkpath(directory) &&
                        viewport.grab().save(directory + "/angle-dimension-degrees.png");
-        field->setText(QStringLiteral("60"));
+        field->setText(QStringLiteral("-60")); // a leading minus turns the angle round
         QKeyEvent press(QEvent::KeyPress, Qt::Key_Return, Qt::NoModifier);
         QApplication::sendEvent(field, &press);
         QApplication::processEvents();

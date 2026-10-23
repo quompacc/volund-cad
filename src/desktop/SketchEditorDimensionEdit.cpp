@@ -12,6 +12,7 @@
 #include <QObject>
 
 #include <algorithm>
+#include <cmath>
 #include <stdexcept>
 
 // S07: editing a dimension from its label. Relations are selected by a click; a dimension opens
@@ -44,7 +45,7 @@ void SketchEditorToolController::editConstraint(std::uint64_t constraintId) {
         bound ? document::findParameter(session_.parameterTable(), *bound) : nullptr;
     openDimensionEdit(constraintId, boundParameter ? QStringLiteral("=") + QString::fromStdString(
                                                                                boundParameter->name)
-                                                   : QString::number(*current, 'g', 12));
+                                                   : QString::number(std::abs(*current), 'g', 12));
 }
 
 // D02 (as in Fusion and SolidCraft): the value is typed in a field at the pointer, not in a
@@ -115,6 +116,10 @@ std::optional<QString> SketchEditorToolController::applyDimensionText(std::uint6
                 value = QLocale().toDouble(number, &ok);
             if (!ok)
                 return QObject::tr("„%1“ ist weder eine Zahl noch =Name").arg(text);
+            // W02: angles show as their size, as in Fusion; a typed size keeps the turning sense,
+            // a leading minus turns it round.
+            if (angle && current < 0.0)
+                value = -value;
             if (!editor_->editDimension(
                     id, angle ? kernel::toRadians(kernel::Degrees(value)).value() : value))
                 return std::nullopt;

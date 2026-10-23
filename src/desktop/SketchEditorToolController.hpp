@@ -93,6 +93,9 @@ class SketchEditorToolController final {
     // first pick, while nothing is typed, gives way to one with the second pick.
     bool pickForDimension(const viewport::SketchSelectionIntent& intent);
     std::optional<std::uint64_t> dimensionAnchor_;
+    std::optional<std::pair<document::SketchElementId, document::SketchPoint>> dimensionFirst_;
+    std::optional<document::SketchConstraintId>
+    singleDimensionFor(document::SketchElementId element);
     // D01 (SketchTypedDimensions.cpp): typed values as dimensions of the new element; the
     // fields at the pointer evaluate "=Name*2" with the document's parameters.
     void applyTypedDimensions(const application::SketchCreationResult& created,

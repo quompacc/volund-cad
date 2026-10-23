@@ -32,6 +32,9 @@ void SketchEditorToolController::finishDrag() {
 }
 
 void SketchEditorToolController::translateFromViewport(double deltaX, double deltaY) {
+    // W02: a click of the dimension tool picks; a small move while it is pressed moves nothing.
+    if (toolIndex_ == dimensionTool)
+        return;
     if (!editor_ || !dragTo(translationX_ + deltaX, translationY_ + deltaY))
         return;
     panel_.setLengthValue("translation_x", translationX_);

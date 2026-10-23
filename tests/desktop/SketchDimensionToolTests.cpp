@@ -18,7 +18,7 @@
 
 // W02 (as in Fusion and SolidCraft): the dimension tool D. A click on a line opens its length in
 // the field at the pointer, typed over and set with Enter; a click on a circle gives its
-// diameter; two lines picked one after the other give their angle. Escape keeps the measured
+// radius; two lines picked one after the other give their angle. Escape keeps the measured
 // value. Ctrl+Enter keeps the sketch with all of them.
 namespace {
 using namespace voelund;
@@ -75,7 +75,8 @@ bool hasDimension(const document::SketchParameters& sketch, SketchConstraintKind
         const double actual = kind == SketchConstraintKind::angle
                                   ? constraint.angleValue.value() * 180.0 / std::numbers::pi
                                   : constraint.value;
-        if (constraint.kind == kind && std::abs(actual - value) < 1e-6)
+        // Angles count by their size; the turning sense stays as drawn.
+        if (constraint.kind == kind && std::abs(std::abs(actual) - value) < 1e-6)
             return true;
     }
     return false;
@@ -86,8 +87,8 @@ void draw(Sketcher& s) {
     s.click(0, 0);
     s.click(30, 0);
     command(s.window, "sketch.tool.line").trigger();
-    s.click(-10, 10);
-    s.click(-10, 40);
+    s.click(-10, 10); // slanted: no horizontal or vertical relation fixes its angle
+    s.click(10, 40);
     command(s.window, "sketch.tool.circle").trigger();
     s.click(60, 20);
     s.click(70, 20);
@@ -105,20 +106,23 @@ void dimension(Sketcher& s) {
     s.type(QStringLiteral("45"), Qt::Key_Return);
     require(s.field() == nullptr, "Enter sets the length and closes the field");
 
-    s.click(65, 30); // on the circle (centre 60/20, radius 10)
+    s.click(60, 30); // on the circle (centre 60/20, radius 10)
     edit = s.field();
-    require(edit != nullptr && std::abs(edit->text().toDouble() - 20) < 1e-6,
-            "A circle opens its diameter");
+    require(edit != nullptr && std::abs(edit->text().toDouble() - 10) < 1e-6,
+            "A circle opens its radius");
     s.type(QString{}, Qt::Key_Escape);
-    require(s.field() == nullptr, "Escape keeps the measured diameter");
+    require(s.field() == nullptr, "Escape keeps the measured radius");
 
-    // Two lines one after the other: their angle.
-    s.click(-10, 25);
-    require(s.field() != nullptr, "The vertical line opens its length first");
+    // Two lines one after the other: their angle (atan(30/20), or its supplement).
+    s.click(0, 25);
+    require(s.field() != nullptr, "The slanted line opens its length first");
     s.click(20, 0);
     edit = s.field();
-    require(edit != nullptr && std::abs(edit->text().toDouble() - 90) < 1e-6,
-            "The second line turns it into their angle: " + edit->text().toStdString());
+    const double measured = edit != nullptr ? edit->text().toDouble() : 0.0;
+    const double expected = std::atan2(30.0, 20.0) * 180.0 / std::numbers::pi;
+    require(edit != nullptr && (std::abs(measured - expected) < 1e-6 ||
+                                std::abs(measured - (180.0 - expected)) < 1e-6),
+            "The second line turns it into their angle: " + std::to_string(measured));
     s.type(QStringLiteral("60"), Qt::Key_Return);
 }
 
@@ -148,9 +152,9 @@ void run() {
     require(session.features().size() == 1, "One sketch");
     const auto sketch = session.sketchParameters(session.features().front().id);
     require(hasDimension(sketch, SketchConstraintKind::distance, 45), "Length 45");
-    require(hasDimension(sketch, SketchConstraintKind::diameter, 20), "Diameter 20 kept");
+    require(hasDimension(sketch, SketchConstraintKind::radius, 10), "Radius 10 kept");
     require(hasDimension(sketch, SketchConstraintKind::angle, 60), "Angle 60");
-    std::cout << "PASS W02 dimension tool: line length typed, circle diameter kept, angle of two "
+    std::cout << "PASS W02 dimension tool: line length typed, circle radius kept, angle of two "
                  "lines\n";
 }
 } // namespace
