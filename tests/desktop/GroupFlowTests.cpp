@@ -132,6 +132,35 @@ void threeBoxes(Window& w) {
     require(w.session.validBodies().size() == 3, "Three boxes");
 }
 
+// W07 (as in Fusion): a drag from empty space selects bodies; left to right those wholly inside,
+// right to left those it touches.
+void boxSelect(Window& w) {
+    const auto frame = w.viewport->cameraFrame();
+    w.viewport->setCameraView(viewport::CameraView::top);
+    test::render(*w.viewport);
+    const auto drag = [&w](QPoint from, QPoint to) {
+        test::mouse(*w.viewport, QEvent::MouseMove, from, Qt::NoButton, Qt::NoButton);
+        test::mouse(*w.viewport, QEvent::MouseButtonPress, from, Qt::LeftButton, Qt::LeftButton);
+        for (int step = 1; step <= 10; ++step)
+            test::mouse(*w.viewport, QEvent::MouseMove, from + (to - from) * step / 10,
+                        Qt::NoButton, Qt::LeftButton);
+        test::mouse(*w.viewport, QEvent::MouseButtonRelease, to, Qt::LeftButton, Qt::NoButton);
+        test::render(*w.viewport);
+        test::settleEvents();
+    };
+    const auto at = [&w](double x, double y) {
+        return viewport::ViewportTestAccess::project(*w.viewport, x, y, 40);
+    };
+    drag(at(-5, -5), at(55, 25));
+    require(w.status() == QStringLiteral("2 Körper gewählt"),
+            "A window box takes the two boxes wholly inside: " + w.status().toStdString());
+    drag(at(65, 30), at(45, 10));
+    require(w.status() == QStringLiteral("2 Körper gewählt"),
+            "A crossing box takes the two boxes it touches: " + w.status().toStdString());
+    w.viewport->setCameraFrame(frame);
+    test::render(*w.viewport);
+}
+
 void moveTogether(Window& w) {
     w.clickBodyRow(0, Qt::NoModifier);
     w.clickBodyRow(1, Qt::ControlModifier);
@@ -212,6 +241,7 @@ int run() {
     Window w;
     test::activate(*w.main); // keys reach only the active window
     threeBoxes(w);
+    boxSelect(w);
     moveTogether(w);
     copyThree(w);
     suppressSteps(w);

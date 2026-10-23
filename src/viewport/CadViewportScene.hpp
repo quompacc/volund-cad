@@ -390,6 +390,9 @@ class CadViewportScene {
     std::function<void(std::uint64_t)> sketchConstraintEditHandler;
     std::function<void(std::uint64_t)> sketchConstraintSelectionHandler;
     std::function<void(const std::vector<std::uint64_t>&, bool)> sketchBoxSelectionHandler;
+    // W07: a box over bodies outside a sketch.
+    bool bodyBox{false};
+    std::function<void(const std::vector<std::uint64_t>&, bool)> bodyBoxSelectionHandler;
     // M06: edge picking of an open fillet and the highlighted edges.
     bool edgePicking{false};
     std::function<void(std::uint64_t, const TopoDS_Shape&, bool)> edgeSelectionHandler;

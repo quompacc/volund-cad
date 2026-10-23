@@ -9,7 +9,12 @@
 
 #include "ViewportContextGuard.hpp"
 
+#include "ViewportPixels.hpp"
+
+#include <BRepBndLib.hxx>
+#include <Bnd_Box.hxx>
 #include <QKeyEvent>
+#include <QMouseEvent>
 
 // D01 (user report 2026-10-23, as in Fusion and Shapr3D): while drawing, the fields at the
 // pointer take the keyboard. Digits and a sign or decimal point go into the current field
@@ -66,7 +71,70 @@ bool CadViewport::handleDynamicKey(const QKeyEvent& event) {
     return true;
 }
 
+void CadViewport::setBodyBoxSelectionHandler(
+    std::function<void(const std::vector<std::uint64_t>&, bool additive)> handler) {
+    impl_->bodyBoxSelectionHandler = std::move(handler);
+}
+
+// W07: a press on empty space outside a sketch starts a body box (after the press handling
+// found nothing under the pointer); a click without a drag stays a click on nothing.
+void CadViewport::startBodyBox(const QMouseEvent& event) {
+    if (!impl_->ready || event.button() != Qt::LeftButton || impl_->sketchEditor.isActive() ||
+        impl_->gesture != Impl::Gesture::none || impl_->context->HasDetected() ||
+        !impl_->bodyBoxSelectionHandler)
+        return;
+    impl_->gesture = Impl::Gesture::selectBox;
+    impl_->bodyBox = true;
+    impl_->gestureOrigin = framebufferPoint(*this, event.position());
+    impl_->selectionBand->setCrossing(false);
+    impl_->selectionBand->setGeometry(QRect(event.position().toPoint(), QSize{}));
+    impl_->selectionBand->show();
+}
+
+bool CadViewport::finishBodyBox(const QMouseEvent& event) {
+    if (!impl_->bodyBox || event.button() != Qt::LeftButton)
+        return false;
+    impl_->bodyBox = false;
+    impl_->gesture = Impl::Gesture::none;
+    impl_->selectionBand->hide();
+    const QPoint position = framebufferPoint(*this, event.position());
+    const QRect rectangle = QRect(impl_->gestureOrigin, position).normalized();
+    if (rectangle.width() < 4 && rectangle.height() < 4)
+        return false; // a click: handled as one
+    const bool crossing = position.x() < impl_->gestureOrigin.x();
+    std::vector<std::uint64_t> ids;
+    for (const auto& presentation : impl_->presentations) {
+        Bnd_Box box;
+        BRepBndLib::Add(presentation.shape->Shape(), box);
+        if (box.IsVoid())
+            continue;
+        double x0 = 0, y0 = 0, z0 = 0, x1 = 0, y1 = 0, z1 = 0;
+        box.Get(x0, y0, z0, x1, y1, z1);
+        QRect onScreen;
+        for (const double x : {x0, x1})
+            for (const double y : {y0, y1})
+                for (const double z : {z0, z1}) {
+                    int px = 0, py = 0;
+                    impl_->view->Convert(x, y, z, px, py);
+                    onScreen = onScreen.united(QRect(px, py, 1, 1));
+                }
+        if (crossing ? rectangle.intersects(onScreen) : rectangle.contains(onScreen))
+            ids.push_back(presentation.id);
+    }
+    impl_->bodyBoxSelectionHandler(ids, event.modifiers().testFlag(Qt::ControlModifier));
+    update();
+    return true;
+}
+
 bool CadViewport::event(QEvent* event) {
+    if (event->type() == QEvent::MouseButtonRelease &&
+        finishBodyBox(*static_cast<QMouseEvent*>(event)))
+        return true;
+    if (event->type() == QEvent::MouseButtonPress) {
+        const bool handled = CadViewportBase::event(event);
+        startBodyBox(*static_cast<QMouseEvent*>(event));
+        return handled;
+    }
     // Tab would move the focus and the window's shortcuts (Return ends a polyline) would take
     // the keys before keyPressEvent; while the fields are open they get them.
     if (event->type() == QEvent::ShortcutOverride &&

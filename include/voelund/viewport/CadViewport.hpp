@@ -285,6 +285,11 @@ class CadViewport final : public CadViewportBase {
     void setSketchBoxSelectionHandler(
         std::function<void(const std::vector<std::uint64_t>&, bool additive)> handler);
     void setBodySelectionHandler(std::function<void(std::uint64_t)> handler);
+    // W07 (as in Fusion): a drag from empty space outside a sketch selects bodies; left to
+    // right those wholly inside, right to left those it touches. Reports the bodies' ids (as
+    // SceneBody::id) and whether Ctrl was held.
+    void setBodyBoxSelectionHandler(
+        std::function<void(const std::vector<std::uint64_t>&, bool additive)> handler);
     // M21: a completed click on a body (on release, once per click); the selection handler
     // above also runs on press so that a drag can start.
     void setBodyClickHandler(std::function<void(std::uint64_t)> handler);
@@ -399,6 +404,8 @@ class CadViewport final : public CadViewportBase {
     friend class ViewportTestAccess;
     [[nodiscard]] bool takesDynamicKey(const QKeyEvent& event) const;
     bool handleDynamicKey(const QKeyEvent& event);
+    void startBodyBox(const QMouseEvent& event);
+    bool finishBodyBox(const QMouseEvent& event);
 #if defined(VOELUND_VIEWPORT_QT_OPENGL)
     void cleanupGlResources() noexcept;
 #endif

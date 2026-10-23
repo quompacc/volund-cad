@@ -56,6 +56,10 @@ void toggleOrRange(std::vector<Id>& group, Id id, bool range, const std::vector<
 } // namespace
 
 void MainWindow::createGroupSelection() {
+    impl_->viewport->setBodyBoxSelectionHandler( // W07
+        [this](const std::vector<std::uint64_t>& shown, bool additive) {
+            selectBodiesInBox(shown, additive);
+        });
     impl_->modelTree->setMenuHandler( // W09
         [this](ModelTreePanel::Kind kind, std::uint64_t id, QPoint at) {
             showTreeMenu(static_cast<int>(kind), id, at);
@@ -77,6 +81,46 @@ void MainWindow::groupBody(document::BodyId body, bool range) {
     // The last added body leads: the transform tool sits on it.
     selectBody(impl_->bodyGroup.back().value(), true);
     syncGroups();
+}
+
+// W07 (as in Fusion): a box over bodies outside a sketch selects them; several make a group
+// (N02b), Ctrl adds to the selection, an empty box clears it.
+void MainWindow::selectBodiesInBox(const std::vector<std::uint64_t>& shown, bool additive) {
+    if (impl_->shell().toolBlocksCommands())
+        return;
+    std::vector<document::BodyId> bodies;
+    for (const auto& body : impl_->session.displayBodies())
+        if (std::ranges::find(shown, body.sourceFeature.value()) != shown.end() &&
+            std::ranges::find(bodies, body.bodyId) == bodies.end())
+            bodies.push_back(body.bodyId);
+    if (!additive)
+        clearGroups();
+    if (bodies.empty()) {
+        if (!additive)
+            clearSelectionEverywhere();
+        return;
+    }
+    if (bodies.size() == 1 && !additive)
+        return selectBody(bodies.front().value());
+    impl_->featureGroup.clear();
+    if (additive && impl_->bodyGroup.empty() && impl_->selectedBody)
+        impl_->bodyGroup.push_back(*impl_->selectedBody);
+    for (const auto body : bodies)
+        if (std::ranges::find(impl_->bodyGroup, body) == impl_->bodyGroup.end())
+            impl_->bodyGroup.push_back(body);
+    selectBody(impl_->bodyGroup.back().value(), true);
+    syncGroups();
+}
+
+void MainWindow::clearSelectionEverywhere() {
+    impl_->selectedDatum.reset();
+    impl_->selectedBody.reset();
+    impl_->selectedPlanarFace.reset();
+    impl_->session.clearSelection();
+    syncModelTree();
+    syncTimeline();
+    syncProperties();
+    syncShell();
 }
 
 void MainWindow::groupStep(document::FeatureId step, bool range) {

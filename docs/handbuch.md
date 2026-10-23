@@ -49,6 +49,9 @@ umgesetzte Funktionen. Was hier nicht steht, gibt es noch nicht.
 
 ## Körper erstellen
 
+- **Boxauswahl:** Aus dem Leeren ziehen wählt Körper: nach rechts die ganz umschlossenen, nach links alle
+  berührten. Strg nimmt hinzu.
+
 - **Rechtsklick im Modellbaum:** Körper (Umbenennen, Ausblenden, Kopieren, Bewegen, Verrunden, Spiegeln,
   Exportieren), Feature (Bearbeiten, Unterdrücken, Zurückrollen, Löschen), Ebene (Skizze, Bezugsebene).
 

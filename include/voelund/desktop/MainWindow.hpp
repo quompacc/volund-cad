@@ -91,6 +91,8 @@ class MainWindow final : public QMainWindow {
     void createGroupSelection();
     void groupBody(document::BodyId body, bool range);
     void groupStep(document::FeatureId step, bool range);
+    void selectBodiesInBox(const std::vector<std::uint64_t>& shown, bool additive); // W07
+    void clearSelectionEverywhere();
     void clearGroups();
     void syncGroups();
     [[nodiscard]] std::vector<document::FeatureId> chosenSteps() const;
