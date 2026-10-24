@@ -100,6 +100,13 @@ void run() {
     send(*viewport, QEvent::MouseMove, at(*viewport, 20, 0), Qt::NoButton);
     require(viewport::ViewportTestAccess::hoveredSketchElement(*viewport).has_value(),
             "The right side lights up under the pointer");
+    // As in Fusion, a few pixels beside a thin line still catch it; well away nothing does.
+    send(*viewport, QEvent::MouseMove, at(*viewport, 20, 0) + QPoint(4, 0), Qt::NoButton);
+    require(viewport::ViewportTestAccess::hoveredSketchElement(*viewport).has_value(),
+            "4 pixels beside the line still catch it");
+    send(*viewport, QEvent::MouseMove, at(*viewport, 20, 0) + QPoint(14, 0), Qt::NoButton);
+    require(!viewport::ViewportTestAccess::hoveredSketchElement(*viewport).has_value(),
+            "14 pixels beside the line catch nothing");
     send(*viewport, QEvent::MouseMove, at(*viewport, 40, 30), Qt::NoButton);
     require(!viewport::ViewportTestAccess::hoveredSketchElement(*viewport).has_value(),
             "Nothing lights up away from the curves");

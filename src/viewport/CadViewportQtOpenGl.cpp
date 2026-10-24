@@ -81,6 +81,9 @@ void CadViewport::initializeGL() {
             qRound(height() * devicePixelRatioF()), devicePixelRatioF());
         if (!impl_->ready)
             throw std::runtime_error("OCCT context attachment rejected");
+        // User report 2026-10-23: thin sketch lines were hard to hit with OCCT's 2 framebuffer
+        // pixels (1 on a 200 % screen). As in Fusion, a pick catches about 5 screen pixels away.
+        impl_->context->SetPixelTolerance(qRound(5 * devicePixelRatioF()));
         ++impl_->contextGeneration;
         impl_->lastError.clear();
         impl_->displayPendingBodies();
