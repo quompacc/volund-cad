@@ -9,6 +9,7 @@
 #include <QApplication>
 #include <QKeyEvent>
 #include <QStringList>
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <numbers>
@@ -157,6 +158,25 @@ void drawCircleAndPolyline(Sketcher& s) {
     s.key(Qt::Key_Return);
 }
 
+// The line typed as 40 mm at 30 degrees from the origin.
+bool hasTypedLine(const document::SketchParameters& sketch) {
+    return std::ranges::any_of(sketch.elements.values, [](const auto& element) {
+        const auto* segment = std::get_if<document::SketchLine>(&element.geometry);
+        return segment != nullptr && std::abs(segment->start.x) < 1e-6 &&
+               std::abs(segment->start.y) < 1e-6 &&
+               std::abs(segment->end.x - 40 * std::cos(std::numbers::pi / 6)) < 1e-6 &&
+               std::abs(segment->end.y - 20) < 1e-6;
+    });
+}
+
+// The arc typed with radius 10.
+bool hasTypedArc(const document::SketchParameters& sketch) {
+    return std::ranges::any_of(sketch.elements.values, [](const auto& element) {
+        const auto* curve = std::get_if<document::SketchArc>(&element.geometry);
+        return curve != nullptr && std::abs(curve->radius - 10) < 1e-6;
+    });
+}
+
 void run() {
     application::CadSession session;
     session.newDocument();
@@ -179,19 +199,8 @@ void run() {
 
     require(session.features().size() == 1, "One sketch");
     const auto sketch = session.sketchParameters(session.features().front().id);
-    bool line = false;
-    for (const auto& element : sketch.elements.values)
-        if (const auto* segment = std::get_if<document::SketchLine>(&element.geometry))
-            line =
-                line || (std::abs(segment->start.x) < 1e-6 && std::abs(segment->start.y) < 1e-6 &&
-                         std::abs(segment->end.x - 40 * std::cos(std::numbers::pi / 6)) < 1e-6 &&
-                         std::abs(segment->end.y - 20) < 1e-6);
-    require(line, "The line runs 40 mm at 30 degrees from the first point");
-    bool arc = false;
-    for (const auto& element : sketch.elements.values)
-        if (const auto* curve = std::get_if<document::SketchArc>(&element.geometry))
-            arc = std::abs(curve->radius - 10) < 1e-6;
-    require(arc, "The arc has the typed radius 10");
+    require(hasTypedLine(sketch), "The line runs 40 mm at 30 degrees from the first point");
+    require(hasTypedArc(sketch), "The arc has the typed radius 10");
     require(sketch.elements.values.size() == 9,
             "Line, rectangle (once, after Undo), circle, two segments and the arc: " +
                 std::to_string(sketch.elements.values.size()));

@@ -17,6 +17,28 @@
 // over with one item.
 namespace voelund::desktop {
 namespace {
+// W07: the bodies (once each) whose shown results are among `shown`.
+template <typename Bodies>
+std::vector<document::BodyId> bodiesShown(const Bodies& displayed,
+                                          const std::vector<std::uint64_t>& shown) {
+    std::vector<document::BodyId> bodies;
+    for (const auto& body : displayed)
+        if (std::ranges::find(shown, body.sourceFeature.value()) != shown.end() &&
+            std::ranges::find(bodies, body.bodyId) == bodies.end())
+            bodies.push_back(body.bodyId);
+    return bodies;
+}
+
+// W07: a box adds its bodies to the group; with Ctrl the body selected before stays in it.
+template <typename Selected>
+void extendGroup(std::vector<document::BodyId>& group, const Selected& selected,
+                 const std::vector<document::BodyId>& bodies, bool additive) {
+    if (additive && group.empty() && selected)
+        group.push_back(*selected);
+    for (const auto body : bodies)
+        if (std::ranges::find(group, body) == group.end())
+            group.push_back(body);
+}
 
 template <class Id> void toggle(std::vector<Id>& group, Id id) {
     if (const auto found = std::ranges::find(group, id); found != group.end())
@@ -88,11 +110,7 @@ void MainWindow::groupBody(document::BodyId body, bool range) {
 void MainWindow::selectBodiesInBox(const std::vector<std::uint64_t>& shown, bool additive) {
     if (impl_->shell().toolBlocksCommands())
         return;
-    std::vector<document::BodyId> bodies;
-    for (const auto& body : impl_->session.displayBodies())
-        if (std::ranges::find(shown, body.sourceFeature.value()) != shown.end() &&
-            std::ranges::find(bodies, body.bodyId) == bodies.end())
-            bodies.push_back(body.bodyId);
+    const auto bodies = bodiesShown(impl_->session.displayBodies(), shown);
     if (!additive)
         clearGroups();
     if (bodies.empty()) {
@@ -103,11 +121,7 @@ void MainWindow::selectBodiesInBox(const std::vector<std::uint64_t>& shown, bool
     if (bodies.size() == 1 && !additive)
         return selectBody(bodies.front().value());
     impl_->featureGroup.clear();
-    if (additive && impl_->bodyGroup.empty() && impl_->selectedBody)
-        impl_->bodyGroup.push_back(*impl_->selectedBody);
-    for (const auto body : bodies)
-        if (std::ranges::find(impl_->bodyGroup, body) == impl_->bodyGroup.end())
-            impl_->bodyGroup.push_back(body);
+    extendGroup(impl_->bodyGroup, impl_->selectedBody, bodies, additive);
     selectBody(impl_->bodyGroup.back().value(), true);
     syncGroups();
 }

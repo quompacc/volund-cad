@@ -131,21 +131,9 @@ QString FilletToolController::guidance() const {
 void FilletToolController::picked(std::uint64_t body, const TopoDS_Shape& edge) {
     if (!active_)
         return;
-    if (body == 0) {
-        // A chosen edge drawn over the preview: remove the named edge it belongs to.
-        const auto chosen = std::ranges::find_if(edges_, [&](const auto& named) {
-            const auto shapes = session_.filletEdgeShapes(support_, std::span(&named, 1));
-            return std::ranges::any_of(shapes,
-                                       [&](const auto& shape) { return shape.IsSame(edge); });
-        });
-        if (chosen != edges_.end())
-            edges_.erase(chosen);
-        preview();
-        return;
-    }
-    // Opened with nothing selected: the first edge clicked chooses the body (as in Fusion).
-    if (edges_.empty() && !editing_ && body != support_.value())
-        support_ = document::FeatureId{body};
+    if (body == 0) // a chosen edge drawn over the preview
+        return removeChosen(edge);
+    followBody(body);
     auto named = session_.filletEdge(support_, edge);
     if (!named && previewSession_ && previewFeature_)
         named = previewSession_->filletEdge(*previewFeature_, edge);
@@ -164,6 +152,23 @@ void FilletToolController::picked(std::uint64_t body, const TopoDS_Shape& edge) 
     else
         edges_.push_back(*named);
     features::numberFilletEdges(edges_); // a new edge gets the next free id
+    preview();
+}
+
+// Opened with nothing selected: the first edge clicked chooses the body (as in Fusion).
+void FilletToolController::followBody(std::uint64_t body) {
+    if (edges_.empty() && !editing_ && body != support_.value())
+        support_ = document::FeatureId{body};
+}
+
+// Removes the named edge a chosen edge drawn over the preview belongs to.
+void FilletToolController::removeChosen(const TopoDS_Shape& edge) {
+    const auto chosen = std::ranges::find_if(edges_, [&](const auto& named) {
+        const auto shapes = session_.filletEdgeShapes(support_, std::span(&named, 1));
+        return std::ranges::any_of(shapes, [&](const auto& shape) { return shape.IsSame(edge); });
+    });
+    if (chosen != edges_.end())
+        edges_.erase(chosen);
     preview();
 }
 

@@ -307,7 +307,7 @@ void SketchExtrusionToolController::open(document::FeatureId sketchId,
         {}};
     takeParameters(definition);
     panel_.begin(std::move(definition));
-    panel_.focusLength(revolve_ ? "angle" : "distance"); // W03/W05: typed right away
+    focusMainField(); // W03/W05: typed right away
     panel_.setAcceptEnabled(true);
     panel_.setLengthEnabled("distance", !upToFace_);
     syncFields();

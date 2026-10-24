@@ -81,23 +81,31 @@ SketchEditorToolController::singleDimensionFor(document::SketchElementId element
     return editor_->selectedDimension(SketchConstraintKind::radius);
 }
 
+// The single dimension of the first pick gives way to one between both picks.
+std::optional<document::SketchConstraintId>
+SketchEditorToolController::pairWithFirst(document::SketchElementId element,
+                                          document::SketchPoint at) {
+    static_cast<void>(editor_->removeConstraint(document::SketchConstraintId{*dimensionAnchor_}));
+    dimensionAnchor_.reset();
+    const auto first = *dimensionFirst_;
+    dimensionFirst_.reset();
+    if (!editor_->selectNearestReference(first.first, first.second, false) ||
+        !editor_->selectNearestReference(element, at, true))
+        return std::nullopt;
+    const auto kind = pairDimension(*editor_);
+    if (!kind || !editor_->addSelectedRelation(*kind))
+        return std::nullopt;
+    return newestConstraint(*editor_);
+}
+
 bool SketchEditorToolController::pickForDimension(const viewport::SketchSelectionIntent& intent) {
     const document::SketchElementId element{intent.elementId};
     const document::SketchPoint at{intent.localX, intent.localY};
     std::optional<document::SketchConstraintId> created;
     bool pair = false;
     if (dimensionAnchor_ && dimensionFirst_ && dimensionFirst_->first != element) {
-        // The single dimension of the first pick gives way to one between both picks.
-        static_cast<void>(
-            editor_->removeConstraint(document::SketchConstraintId{*dimensionAnchor_}));
-        dimensionAnchor_.reset();
-        pair = editor_->selectNearestReference(dimensionFirst_->first, dimensionFirst_->second,
-                                               false) &&
-               editor_->selectNearestReference(element, at, true);
-        const auto kind = pair ? pairDimension(*editor_) : std::nullopt;
-        if (kind && editor_->addSelectedRelation(*kind))
-            created = newestConstraint(*editor_);
-        dimensionFirst_.reset();
+        pair = true;
+        created = pairWithFirst(element, at);
     } else {
         created = singleDimensionFor(element);
         dimensionFirst_ = std::pair{element, at};

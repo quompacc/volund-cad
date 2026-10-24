@@ -46,6 +46,15 @@ class ShapeOperations final {
     // the edges cannot take throws KernelError with BooleanFailure::filletFailed.
     [[nodiscard]] static ShapeOperationResult
     filletWithHistory(const TopoDS_Shape& input, std::span<const TopoDS_Edge> edges, double radius);
+    // User report 2026-10-24: earlier roundings (chamfers) and a new one built in one step,
+    // each edge with its own value, so their corners blend; one after the other OCCT fails
+    // where a new edge runs into an earlier rounding of about its radius.
+    [[nodiscard]] static ShapeOperationResult
+    filletEachWithHistory(const TopoDS_Shape& input, std::span<const TopoDS_Edge> edges,
+                          std::span<const double> radii);
+    [[nodiscard]] static ShapeOperationResult
+    chamferEachWithHistory(const TopoDS_Shape& input, std::span<const TopoDS_Edge> edges,
+                           std::span<const double> distances);
     // M05: after a failed fillet, the edges that fail on their own (indices into `edges`);
     // all of them when only the combination fails.
     [[nodiscard]] static std::vector<std::size_t>

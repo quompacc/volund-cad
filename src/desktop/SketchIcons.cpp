@@ -78,6 +78,21 @@ struct Pens final {
 
 using Drawing = std::function<void(const Pens&)>;
 
+// W02: the dimension tool D, a measured line with its value.
+void dimensionTool(const Pens& p) {
+    p.line(4, 19, 20, 19);
+    p.dimension(4, 13, 20, 13);
+    p.line(4, 10, 4, 16);
+    p.line(20, 10, 20, 16);
+    p.dot(12, 6, 1.6);
+}
+
+void pointDistance(const Pens& p) {
+    p.dot(5, 18);
+    p.dot(19, 6);
+    p.dimension(7, 16, 17, 8);
+}
+
 const QHash<QString, Drawing>& drawings() {
     static const QHash<QString, Drawing> table{
         // Drawing tools.
@@ -329,21 +344,8 @@ const QHash<QString, Drawing>& drawings() {
              p.line(20, 14, 20, 20);
              p.dimension(5, 8, 19, 8);
          }},
-        // W02: the dimension tool D, a measured line with its value.
-        {"tool.dimension",
-         [](const Pens& p) {
-             p.line(4, 19, 20, 19);
-             p.dimension(4, 13, 20, 13);
-             p.line(4, 10, 4, 16);
-             p.line(20, 10, 20, 16);
-             p.dot(12, 6, 1.6);
-         }},
-        {"point_distance",
-         [](const Pens& p) {
-             p.dot(5, 18);
-             p.dot(19, 6);
-             p.dimension(7, 16, 17, 8);
-         }},
+        {"tool.dimension", dimensionTool},
+        {"point_distance", pointDistance},
         {"point_distance_x",
          [](const Pens& p) {
              p.dot(5, 18);

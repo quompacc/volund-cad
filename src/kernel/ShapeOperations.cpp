@@ -73,20 +73,26 @@ void requireValidResult(KernelOperation operation, const TopoDS_Shape& shape) {
 } // namespace
 
 namespace {
-// M05/M07: rounds or chamfers edges with one value; the builder's history names the result.
-template <class Builder>
-ShapeOperationResult treatEdges(KernelOperation operation, BooleanFailure failure,
-                                const TopoDS_Shape& input, std::span<const TopoDS_Edge> edges,
-                                double value) {
+void requireEdgeValues(KernelOperation operation, const TopoDS_Shape& input,
+                       std::span<const TopoDS_Edge> edges, std::span<const double> values) {
     requireInput(operation, input, "input");
-    if (edges.empty())
-        throw KernelError(operation, "the operation needs at least one edge");
-    if (!(value > 0.0))
+    if (edges.empty() || values.size() != edges.size())
+        throw KernelError(operation, "the operation needs at least one edge, each with a value");
+    if (!std::ranges::all_of(values, [](double value) { return value > 0.0; }))
         throw KernelError(operation, "the radius or distance must be positive");
+}
+
+// M05/M07: rounds or chamfers each edge with its own value; the builder's history names the
+// result.
+template <class Builder>
+ShapeOperationResult treatEdgesEach(KernelOperation operation, BooleanFailure failure,
+                                    const TopoDS_Shape& input, std::span<const TopoDS_Edge> edges,
+                                    std::span<const double> values) {
+    requireEdgeValues(operation, input, edges, values);
     try {
         Builder builder(input);
-        for (const TopoDS_Edge& edge : edges)
-            builder.Add(value, edge);
+        for (std::size_t index = 0; index < edges.size(); ++index)
+            builder.Add(values[index], edges[index]);
         builder.Build();
         if (!builder.IsDone() || builder.Shape().IsNull() ||
             solidCountOf(builder.Shape()) != solidCountOf(input) ||
@@ -126,6 +132,15 @@ std::vector<TopoDS_Edge> piecesOf(const TopoDS_Shape& shape, const TopoDS_Edge& 
             pieces.push_back(candidate);
     }
     return pieces;
+}
+
+// M05/M07: all edges with one value.
+template <class Builder>
+ShapeOperationResult treatEdges(KernelOperation operation, BooleanFailure failure,
+                                const TopoDS_Shape& input, std::span<const TopoDS_Edge> edges,
+                                double value) {
+    const std::vector<double> values(edges.size(), value);
+    return treatEdgesEach<Builder>(operation, failure, input, edges, values);
 }
 
 // User report 2026-10-13: OCCT refuses several edges at once where their corners meet other
@@ -283,6 +298,20 @@ ShapeOperationResult ShapeOperations::filletWithHistory(const TopoDS_Shape& inpu
                                                         double radius) {
     return treatEdgesRobustly<BRepFilletAPI_MakeFillet>(
         KernelOperation::fillet, BooleanFailure::filletFailed, input, edges, radius);
+}
+
+ShapeOperationResult ShapeOperations::filletEachWithHistory(const TopoDS_Shape& input,
+                                                            std::span<const TopoDS_Edge> edges,
+                                                            std::span<const double> radii) {
+    return treatEdgesEach<BRepFilletAPI_MakeFillet>(
+        KernelOperation::fillet, BooleanFailure::filletFailed, input, edges, radii);
+}
+
+ShapeOperationResult ShapeOperations::chamferEachWithHistory(const TopoDS_Shape& input,
+                                                             std::span<const TopoDS_Edge> edges,
+                                                             std::span<const double> distances) {
+    return treatEdgesEach<BRepFilletAPI_MakeChamfer>(
+        KernelOperation::chamfer, BooleanFailure::chamferFailed, input, edges, distances);
 }
 
 std::vector<std::size_t> ShapeOperations::failingFilletEdges(const TopoDS_Shape& input,

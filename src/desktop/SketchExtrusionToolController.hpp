@@ -73,6 +73,8 @@ class SketchExtrusionToolController final {
     void preview();
     // W03 (SketchExtrusionArrow.cpp): the arrow on the profile; dragging sets the distance.
     void syncArrow();
+    [[nodiscard]] bool showsArrow() const;
+    void focusMainField();
     void hideArrow();
     void arrowDragged(double distance, bool finished);
     void turnAround(double length);

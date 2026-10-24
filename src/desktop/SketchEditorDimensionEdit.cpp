@@ -18,6 +18,20 @@
 // S07: editing a dimension from its label. Relations are selected by a click; a dimension opens
 // a value field at the pointer (D02) that keeps a refused value with its reason for correction.
 namespace voelund::desktop {
+namespace {
+// A typed number with or without its unit, in C or the user's locale.
+std::optional<double> parseDimensionNumber(QString number) {
+    for (const QString& unit : {QStringLiteral("mm"), QStringLiteral("°")})
+        if (number.endsWith(unit))
+            number = number.chopped(unit.size()).trimmed();
+    bool ok = false;
+    const double value = QLocale::c().toDouble(number, &ok);
+    if (ok)
+        return value;
+    const double local = QLocale().toDouble(number, &ok);
+    return ok ? std::optional{local} : std::nullopt;
+}
+} // namespace
 
 void SketchEditorToolController::editConstraint(std::uint64_t constraintId) {
     if (!editor_)
@@ -92,48 +106,55 @@ std::optional<QString> SketchEditorToolController::applyDimensionText(std::uint6
     const bool angle = currentAngle.has_value();
     const double current = angle ? kernel::toDegrees(*currentAngle).value()
                                  : editor_->constraintValue(id).value_or(0.0);
-    QString applied;
+    std::optional<QString> applied;
     try {
         if (text.startsWith(QLatin1Char('='))) {
-            const QString name = text.mid(1).trimmed();
-            const auto resolved = panel_.resolveParameter(
-                name, angle ? ToolValueKind::angle : ToolValueKind::length, current);
-            if (!resolved)
-                return std::nullopt; // declined, or the reason is in the status line
-            if (resolved->created)
-                editor_->acceptParameterTableChange(); // only the table changed
-            if (!editor_->bindDimension(id, resolved->id))
-                return std::nullopt;
-            applied = QObject::tr("Skizzenmaß an den Parameter „%1“ gebunden").arg(name);
+            applied = bindDimensionText(id, text.mid(1).trimmed(), angle, current);
         } else {
-            QString number = text;
-            for (const QString& unit : {QStringLiteral("mm"), QStringLiteral("°")})
-                if (number.endsWith(unit))
-                    number = number.chopped(unit.size()).trimmed();
-            bool ok = false;
-            double value = QLocale::c().toDouble(number, &ok);
-            if (!ok)
-                value = QLocale().toDouble(number, &ok);
-            if (!ok)
+            const auto value = parseDimensionNumber(text);
+            if (!value)
                 return QObject::tr("„%1“ ist weder eine Zahl noch =Name").arg(text);
-            // W02: angles show as their size, as in Fusion; a typed size keeps the turning sense,
-            // a leading minus turns it round.
-            if (angle && current < 0.0)
-                value = -value;
-            if (!editor_->editDimension(
-                    id, angle ? kernel::toRadians(kernel::Degrees(value)).value() : value))
-                return std::nullopt;
-            applied = angle ? QObject::tr("Skizzenwinkel auf %1° gesetzt").arg(value, 0, 'f', 3)
-                            : QObject::tr("Skizzenmaß auf %1 mm gesetzt").arg(value, 0, 'f', 3);
+            applied = setDimensionNumber(id, *value, angle, current);
         }
     } catch (const std::invalid_argument& error) {
         return QString::fromStdString(error.what());
     }
+    if (!applied)
+        return std::nullopt; // declined, or the reason is in the status line
     syncSelectedDimensionInputs();
     syncConstraintState();
     refreshPresentation();
-    statusChanged_(applied);
+    statusChanged_(*applied);
     return std::nullopt;
+}
+
+// PAR02: "=Name" binds the dimension; the status text, none when declined.
+std::optional<QString>
+SketchEditorToolController::bindDimensionText(document::SketchConstraintId id, const QString& name,
+                                              bool angle, double current) {
+    const auto resolved = panel_.resolveParameter(
+        name, angle ? ToolValueKind::angle : ToolValueKind::length, current);
+    if (!resolved)
+        return std::nullopt;
+    if (resolved->created)
+        editor_->acceptParameterTableChange(); // only the table changed
+    if (!editor_->bindDimension(id, resolved->id))
+        return std::nullopt;
+    return QObject::tr("Skizzenmaß an den Parameter „%1“ gebunden").arg(name);
+}
+
+// W02: angles show as their size, as in Fusion; a typed size keeps the turning sense, a leading
+// minus turns it round.
+std::optional<QString>
+SketchEditorToolController::setDimensionNumber(document::SketchConstraintId id, double value,
+                                               bool angle, double current) {
+    if (angle && current < 0.0)
+        value = -value;
+    if (!editor_->editDimension(id,
+                                angle ? kernel::toRadians(kernel::Degrees(value)).value() : value))
+        return std::nullopt;
+    return angle ? QObject::tr("Skizzenwinkel auf %1° gesetzt").arg(value, 0, 'f', 3)
+                 : QObject::tr("Skizzenmaß auf %1 mm gesetzt").arg(value, 0, 'f', 3);
 }
 
 // PAR02: "=Name" in the length or radius field of the selected element binds its dimension

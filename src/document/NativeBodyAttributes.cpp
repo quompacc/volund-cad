@@ -15,6 +15,16 @@
 #include <string>
 
 namespace voelund::document {
+namespace {
+// A stored name and colour (N06) within their limits.
+void validateValues(const BodyAttributes& attributes) {
+    if (attributes.name.size() > maximumBodyNameBytes ||
+        attributes.name.find('\0') != std::string::npos)
+        throw std::invalid_argument("Invalid body name");
+    if (attributes.color && *attributes.color > maximumBodyColor)
+        throw std::invalid_argument("Invalid body colour");
+}
+} // namespace
 
 void validateBodyAttributes(const BodyAttributeTable& table,
                             std::span<const FeatureDescriptor> features,
@@ -33,11 +43,7 @@ void validateBodyAttributes(const BodyAttributeTable& table,
             throw std::invalid_argument("Body attributes name a body the document does not have");
         if (attributes == BodyAttributes{})
             throw std::invalid_argument("Body attributes hold only defaults");
-        if (attributes.name.size() > maximumBodyNameBytes ||
-            attributes.name.find('\0') != std::string::npos)
-            throw std::invalid_argument("Invalid body name");
-        if (attributes.color && *attributes.color > maximumBodyColor)
-            throw std::invalid_argument("Invalid body colour");
+        validateValues(attributes);
     }
 }
 

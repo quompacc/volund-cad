@@ -23,6 +23,25 @@
 namespace voelund::viewport {
 namespace {
 bool isReturn(int key) { return key == Qt::Key_Return || key == Qt::Key_Enter; }
+
+// W07: a shape's bounding box on screen (framebuffer pixels); empty for an empty shape.
+QRect screenBounds(const TopoDS_Shape& shape, const occ::handle<V3d_View>& view) {
+    Bnd_Box box;
+    BRepBndLib::Add(shape, box);
+    if (box.IsVoid())
+        return {};
+    double x0 = 0, y0 = 0, z0 = 0, x1 = 0, y1 = 0, z1 = 0;
+    box.Get(x0, y0, z0, x1, y1, z1);
+    QRect onScreen;
+    for (const double x : {x0, x1})
+        for (const double y : {y0, y1})
+            for (const double z : {z0, z1}) {
+                int px = 0, py = 0;
+                view->Convert(x, y, z, px, py);
+                onScreen = onScreen.united(QRect(px, py, 1, 1));
+            }
+    return onScreen;
+}
 } // namespace
 
 bool CadViewport::takesDynamicKey(const QKeyEvent& event) const {
@@ -104,21 +123,9 @@ bool CadViewport::finishBodyBox(const QMouseEvent& event) {
     const bool crossing = position.x() < impl_->gestureOrigin.x();
     std::vector<std::uint64_t> ids;
     for (const auto& presentation : impl_->presentations) {
-        Bnd_Box box;
-        BRepBndLib::Add(presentation.shape->Shape(), box);
-        if (box.IsVoid())
-            continue;
-        double x0 = 0, y0 = 0, z0 = 0, x1 = 0, y1 = 0, z1 = 0;
-        box.Get(x0, y0, z0, x1, y1, z1);
-        QRect onScreen;
-        for (const double x : {x0, x1})
-            for (const double y : {y0, y1})
-                for (const double z : {z0, z1}) {
-                    int px = 0, py = 0;
-                    impl_->view->Convert(x, y, z, px, py);
-                    onScreen = onScreen.united(QRect(px, py, 1, 1));
-                }
-        if (crossing ? rectangle.intersects(onScreen) : rectangle.contains(onScreen))
+        const QRect onScreen = screenBounds(presentation.shape->Shape(), impl_->view);
+        if (!onScreen.isNull() &&
+            (crossing ? rectangle.intersects(onScreen) : rectangle.contains(onScreen)))
             ids.push_back(presentation.id);
     }
     impl_->bodyBoxSelectionHandler(ids, event.modifiers().testFlag(Qt::ControlModifier));

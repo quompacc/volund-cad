@@ -82,6 +82,18 @@ void typeRightAway(QWidget& window, application::CadSession& session, document::
             ("\"25\" and Enter extrude 25 mm: " + std::to_string(volume(session))).c_str());
 }
 
+// The first point along `direction` from `from` where the pointer is over the arrow.
+std::optional<QPoint> findArrow(viewport::CadViewport& viewport, QPoint from, QPointF direction,
+                                int first, int last) {
+    for (int step = first; step <= last; step += 3) {
+        const QPoint candidate = from + (direction * step).toPoint();
+        test::mouse(viewport, QEvent::MouseMove, candidate, Qt::NoButton, Qt::NoButton);
+        if (viewport::ViewportTestAccess::pushPullArrowHovered(viewport))
+            return candidate;
+    }
+    return std::nullopt;
+}
+
 void dragArrow(QWidget& window, viewport::CadViewport& viewport, application::CadSession& session,
                document::FeatureId sketch) {
     open(window, session, sketch);
@@ -90,13 +102,7 @@ void dragArrow(QWidget& window, viewport::CadViewport& viewport, application::Ca
     const QPoint base = viewport::ViewportTestAccess::project(viewport, 20, 10, 0);
     const QPoint up = viewport::ViewportTestAccess::project(viewport, 20, 10, 30);
     const QPointF direction = QPointF(up - base) / std::hypot(up.x() - base.x(), up.y() - base.y());
-    std::optional<QPoint> grip;
-    for (int step = 0; step <= 150 && !grip; step += 3) {
-        const QPoint candidate = base + (direction * step).toPoint();
-        test::mouse(viewport, QEvent::MouseMove, candidate, Qt::NoButton, Qt::NoButton);
-        if (viewport::ViewportTestAccess::pushPullArrowHovered(viewport))
-            grip = candidate;
-    }
+    const auto grip = findArrow(viewport, base, direction, 0, 150);
     require(grip.has_value(), "The extrusion arrow stands on the profile");
     test::mouse(viewport, QEvent::MouseButtonPress, *grip, Qt::LeftButton, Qt::LeftButton);
     test::mouse(viewport, QEvent::MouseMove, *grip + (direction * 40).toPoint(), Qt::NoButton,
@@ -109,14 +115,8 @@ void dragArrow(QWidget& window, viewport::CadViewport& viewport, application::Ca
             "Dragging the arrow lengthens the extrusion in snapped steps");
     // Let go behind the profile: the extrusion turns round and keeps a positive length.
     test::render(viewport);
-    std::optional<QPoint> again;
     const QPoint top = viewport::ViewportTestAccess::project(viewport, 20, 10, dragged);
-    for (int step = -60; step <= 60 && !again; step += 3) {
-        const QPoint candidate = top + (direction * step).toPoint();
-        test::mouse(viewport, QEvent::MouseMove, candidate, Qt::NoButton, Qt::NoButton);
-        if (viewport::ViewportTestAccess::pushPullArrowHovered(viewport))
-            again = candidate;
-    }
+    const auto again = findArrow(viewport, top, direction, -60, 60);
     require(again.has_value(), "The arrow is found at its new length");
     const QPoint below = viewport::ViewportTestAccess::project(viewport, 20, 10, -2 * dragged);
     test::mouse(viewport, QEvent::MouseButtonPress, *again, Qt::LeftButton, Qt::LeftButton);

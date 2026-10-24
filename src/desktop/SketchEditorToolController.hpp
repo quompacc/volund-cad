@@ -54,6 +54,7 @@ class SketchEditorToolController final {
                                     std::optional<document::FeatureId> edited);
     void updatePreview(const std::optional<viewport::SketchElementIntent>& intent);
     void confirmElement(const viewport::SketchElementIntent& intent);
+    void continuePolyline(const application::SketchCreationResult& created);
     void translateFromViewport(double deltaX, double deltaY);
     // U09: pointer-up or the end of a typed translation records the move as one step.
     void finishDrag();
@@ -87,11 +88,17 @@ class SketchEditorToolController final {
     void openDimensionEdit(std::uint64_t constraintId, const QString& text);
     [[nodiscard]] std::optional<QString> applyDimensionText(std::uint64_t constraintId,
                                                             const QString& text);
+    std::optional<QString> bindDimensionText(document::SketchConstraintId id, const QString& name,
+                                             bool angle, double current);
+    std::optional<QString> setDimensionNumber(document::SketchConstraintId id, double value,
+                                              bool angle, double current);
     InlineValueEdit* valueEdit_{nullptr};
     QElapsedTimer lastIdleEscape_; // W10: two quick Escapes with nothing to step back finish
     // W02 (SketchDimensionTool.cpp): a click of the dimension tool; the single dimension of the
     // first pick, while nothing is typed, gives way to one with the second pick.
     bool pickForDimension(const viewport::SketchSelectionIntent& intent);
+    std::optional<document::SketchConstraintId> pairWithFirst(document::SketchElementId element,
+                                                              document::SketchPoint at);
     std::optional<std::uint64_t> dimensionAnchor_;
     std::optional<std::pair<document::SketchElementId, document::SketchPoint>> dimensionFirst_;
     std::optional<document::SketchConstraintId>

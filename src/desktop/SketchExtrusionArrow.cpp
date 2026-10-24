@@ -19,10 +19,54 @@
 // grows; dragging the arrow sets the distance, a typed distance moves the arrow. The distance
 // field takes the keyboard when the tool opens, so a number typed right away is the distance.
 namespace voelund::desktop {
+namespace {
+// The faces of the chosen regions; none when the sketch fails (the preview names the problem).
+template <typename Sketch, typename Ids>
+std::vector<TopoDS_Shape> regionFaces(const Sketch& sketch, const Ids& ids) {
+    std::vector<TopoDS_Shape> faces;
+    try {
+        if (sketch)
+            for (const auto& profile : features::evaluateRegionFaces(*sketch, ids))
+                faces.push_back(profile.face);
+    } catch (const std::exception&) {
+        faces.clear();
+    }
+    return faces;
+}
+
+// The arrow's base: the profile on its plane, the normal the way the solid grows.
+template <typename Plane>
+viewport::PlanarFaceSelection arrowBase(const Plane& plane, double side,
+                                        const std::vector<TopoDS_Shape>& faces) {
+    viewport::PlanarFaceSelection profile{};
+    profile.originX = plane.originX;
+    profile.originY = plane.originY;
+    profile.originZ = plane.originZ;
+    profile.normalX = plane.normalX * side;
+    profile.normalY = plane.normalY * side;
+    profile.normalZ = plane.normalZ * side;
+    profile.xDirectionX = plane.xDirectionX;
+    profile.xDirectionY = plane.xDirectionY;
+    profile.xDirectionZ = plane.xDirectionZ;
+    profile.selectedFace = kernel::collect(faces);
+    return profile;
+}
+} // namespace
+
+// W03/W05: the distance (a revolve's angle) takes the keyboard, so a number typed right away
+// is the value.
+void SketchExtrusionToolController::focusMainField() {
+    panel_.focusLength(revolve_ ? "angle" : "distance");
+}
+
+// Only a straight extrusion of chosen regions has the arrow.
+bool SketchExtrusionToolController::showsArrow() const {
+    return active_ && profileSketch_ && !revolve_ && !sweep_ && !loft_ && !upToFace_ &&
+           !profileIds_.empty() && viewport_ != nullptr;
+}
 
 void SketchExtrusionToolController::syncArrow() {
-    const bool straight = active_ && profileSketch_ && !revolve_ && !sweep_ && !loft_ && !upToFace_;
-    if (!straight || profileIds_.empty() || viewport_ == nullptr) {
+    if (!showsArrow()) {
         hideArrow();
         return;
     }
@@ -36,30 +80,11 @@ void SketchExtrusionToolController::syncArrow() {
         return;
     }
     hideArrow();
-    std::vector<TopoDS_Shape> faces;
     const auto sketch = session_.evaluatedSketch(*profileSketch_);
-    try {
-        if (sketch)
-            for (const auto& profile : features::evaluateRegionFaces(*sketch, profileIds_))
-                faces.push_back(profile.face);
-    } catch (const std::exception&) {
-        faces.clear(); // the preview names the problem; no arrow then
-    }
+    const auto faces = regionFaces(sketch, profileIds_);
     if (faces.empty())
         return;
-    const auto& plane = sketch->plane;
-    const double side = reversed_ ? -1.0 : 1.0;
-    viewport::PlanarFaceSelection profile{};
-    profile.originX = plane.originX;
-    profile.originY = plane.originY;
-    profile.originZ = plane.originZ;
-    profile.normalX = plane.normalX * side;
-    profile.normalY = plane.normalY * side;
-    profile.normalZ = plane.normalZ * side;
-    profile.xDirectionX = plane.xDirectionX;
-    profile.xDirectionY = plane.xDirectionY;
-    profile.xDirectionZ = plane.xDirectionZ;
-    profile.selectedFace = kernel::collect(faces);
+    const auto profile = arrowBase(sketch->plane, reversed_ ? -1.0 : 1.0, faces);
     viewport_->setPushPullHandler(
         [this](double distance, bool finished) { arrowDragged(distance, finished); });
     viewport_->beginPushPull(profile);

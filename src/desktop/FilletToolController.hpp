@@ -62,6 +62,8 @@ class FilletToolController final {
     // User request 2026-10-13: a grip on the first edge, dragged into the corner, sets the
     // radius or distance.
     void placeGrip();
+    void removeChosen(const TopoDS_Shape& edge);
+    void followBody(std::uint64_t body);
     void dragged(double value, bool finished);
     [[nodiscard]] application::Action action() const;
     [[nodiscard]] bool unchanged() const;

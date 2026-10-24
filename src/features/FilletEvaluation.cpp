@@ -15,7 +15,9 @@
 #include <TopoDS.hxx>
 
 #include <algorithm>
+#include <optional>
 #include <string>
+#include <utility>
 
 // M05 (user decisions 2026-10-12): a fillet rounds edges of one body with one radius. Each
 // edge is named by its two adjacent faces; their names follow the faces through the body's
@@ -102,47 +104,100 @@ std::string edgeList(const std::vector<std::uint64_t>& edges) {
     return text + "]";
 }
 
+// One rounding (chamfer) step of a body: its feature, edges and value.
+struct Step final {
+    document::FeatureId feature;
+    std::vector<document::FilletEdge> edges;
+    double value;
+};
+
+std::optional<Step> filletStep(const document::DocumentSnapshot& document, document::FeatureId id,
+                               document::BodyId body) {
+    const auto& parameters = document.filletParameters(id);
+    if (parameters.body != body)
+        return std::nullopt;
+    return Step{id, parameters.edges, parameters.radius};
+}
+
+std::optional<Step> chamferStep(const document::DocumentSnapshot& document, document::FeatureId id,
+                                document::BodyId body) {
+    const auto& parameters = document.chamferParameters(id);
+    if (parameters.body != body)
+        return std::nullopt;
+    return Step{id, parameters.edges, parameters.distance};
+}
+
+using EdgeOperation = kernel::ShapeOperationResult (*)(const TopoDS_Shape&,
+                                                       std::span<const TopoDS_Edge>, double);
+using EachEdgeOperation = kernel::ShapeOperationResult (*)(const TopoDS_Shape&,
+                                                           std::span<const TopoDS_Edge>,
+                                                           std::span<const double>);
+
 // M05/M07: what treats the edges and how its failures are named.
 struct Treatment final {
     const char* prefix; // code prefix: fillet / chamfer
     const char* verb;   // for the technical message
     kernel::BooleanFailure failure;
-    kernel::ShapeOperationResult (*apply)(const TopoDS_Shape&, std::span<const TopoDS_Edge>,
-                                          double);
+    document::FeatureKind kind;
+    EdgeOperation apply;
     std::vector<std::size_t> (*failing)(const TopoDS_Shape&, std::span<const TopoDS_Edge>, double);
+    EachEdgeOperation applyEach; // earlier steps and this one together
+    std::optional<Step> (*step)(const document::DocumentSnapshot&, document::FeatureId,
+                                document::BodyId);
 };
-constexpr Treatment rounding{"fillet", "rounded", kernel::BooleanFailure::filletFailed,
+constexpr Treatment rounding{"fillet",
+                             "rounded",
+                             kernel::BooleanFailure::filletFailed,
+                             document::FeatureKind::fillet,
                              &kernel::ShapeOperations::filletWithHistory,
-                             &kernel::ShapeOperations::failingFilletEdges};
-constexpr Treatment chamfering{"chamfer", "chamfered", kernel::BooleanFailure::chamferFailed,
+                             &kernel::ShapeOperations::failingFilletEdges,
+                             &kernel::ShapeOperations::filletEachWithHistory,
+                             &filletStep};
+constexpr Treatment chamfering{"chamfer",
+                               "chamfered",
+                               kernel::BooleanFailure::chamferFailed,
+                               document::FeatureKind::chamfer,
                                &kernel::ShapeOperations::chamferWithHistory,
-                               &kernel::ShapeOperations::failingChamferEdges};
+                               &kernel::ShapeOperations::failingChamferEdges,
+                               &kernel::ShapeOperations::chamferEachWithHistory,
+                               &chamferStep};
 
-// The body edges where the two named faces meet (a split face may meet in several pieces).
+// The body edges where the two named faces meet (a split face may meet in several pieces),
+// each with its value and the name of the face it generates (schema 17: {feature, edge id}).
 struct ResolvedEdges final {
     std::vector<TopoDS_Edge> edges;
     std::vector<std::uint64_t> owners; // 1-based FilletEdge number of each kernel edge
+    std::vector<double> values;
+    std::vector<document::SubshapeOrigin> names;
 };
-ResolvedEdges resolveEdges(std::span<const SupportProvenance> origins,
-                           const std::vector<document::FilletEdge>& edges,
-                           const Treatment& treatment) {
-    ResolvedEdges result;
-    for (std::size_t index = 0; index < edges.size(); ++index) {
+void resolveStep(std::span<const SupportProvenance> origins, const Step& step,
+                 const Treatment& treatment, ResolvedEdges& result) {
+    for (std::size_t index = 0; index < step.edges.size(); ++index) {
         const auto number = static_cast<std::uint64_t>(index + 1);
-        const auto shapes = filletEdgeShapes(origins, edges[index]);
+        const auto shapes = filletEdgeShapes(origins, step.edges[index]);
         if (shapes.empty())
             throw GeometryEvaluationError(
                 std::string("The faces of the ") + treatment.verb +
                     " edge are gone or no longer meet" + edgeList({number}),
                 std::string(treatment.prefix) + "-edge-missing", {number});
+        document::SubshapeOrigin name{step.feature, std::nullopt};
+        name.treatedEdge = step.edges[index].id;
         for (const auto& shared : shapes) {
             if (std::ranges::any_of(result.edges,
                                     [&](const auto& known) { return known.IsSame(shared); }))
                 continue;
             result.edges.push_back(shared);
             result.owners.push_back(number);
+            result.values.push_back(step.value);
+            result.names.push_back(name);
         }
     }
+}
+ResolvedEdges resolveEdges(std::span<const SupportProvenance> origins, std::span<const Step> steps,
+                           const Treatment& treatment) {
+    ResolvedEdges result;
+    for (const auto& step : steps)
+        resolveStep(origins, step, treatment, result);
     return result;
 }
 
@@ -164,6 +219,83 @@ kernel::ShapeOperationResult treat(const TopoDS_Shape& body, const ResolvedEdges
     }
 }
 
+// The result of a treatment on the shapes of `base` (the body before the treated steps).
+struct Treated final {
+    document::FeatureId base;
+    ResolvedEdges resolved;
+    ResolvedEdges referenceResolved;
+    kernel::ShapeOperationResult evaluated;
+    kernel::ShapeOperationResult reference;
+};
+
+// User report 2026-10-24 (as in Fusion): a rounding that runs into an earlier rounding of
+// about its radius fails in OCCT one after the other (FreeCAD has the same limit). The earlier
+// roundings directly before it on the body are then built again together with it in one step
+// on the shape before them, each edge with its own radius, so the corners blend. The earlier
+// features keep their own results; only this one's result is the combined shape.
+std::optional<Treated> treatWithEarlier(const document::DocumentSnapshot& document, const Step& own,
+                                        document::BodyId target, const Treatment& treatment,
+                                        const std::vector<EvaluatedFeature>& outputs) {
+    constexpr std::size_t deepest = 8;
+    std::vector<Step> steps{own};
+    auto before = bodyProducerBefore(document, own.feature, target);
+    while (before && steps.size() <= deepest) {
+        const auto descriptor =
+            std::ranges::find(document.features(), *before, &document::FeatureDescriptor::id);
+        if (descriptor == document.features().end() || descriptor->kind != treatment.kind)
+            return std::nullopt;
+        const auto earlier = treatment.step(document, *before, target);
+        if (!earlier)
+            return std::nullopt;
+        steps.push_back(*earlier);
+        before = bodyProducerBefore(document, *before, target);
+        if (!before)
+            return std::nullopt;
+        const auto& base = findFeature(outputs, *before);
+        try {
+            auto resolved = resolveEdges(base.supportOrigins, steps, treatment);
+            auto referenceResolved = resolveEdges(base.referenceSupportOrigins, steps, treatment);
+            auto evaluated = treatment.applyEach(base.shape, resolved.edges, resolved.values);
+            auto reference = treatment.applyEach(base.referenceShape, referenceResolved.edges,
+                                                 referenceResolved.values);
+            return Treated{*before, std::move(resolved), std::move(referenceResolved),
+                           std::move(evaluated), std::move(reference)};
+        } catch (const GeometryEvaluationError&) {
+        } catch (const kernel::KernelError&) {
+        }
+    }
+    return std::nullopt;
+}
+
+// The body's current shape and its reference shape.
+using BodyShapes = std::pair<const TopoDS_Shape&, const TopoDS_Shape&>;
+
+Treated treatAlone(const Step& own, document::FeatureId producer, const Treatment& treatment,
+                   const std::vector<EvaluatedFeature>& outputs, BodyShapes shapes) {
+    const auto& owner = findFeature(outputs, producer);
+    auto resolved = resolveEdges(owner.supportOrigins, std::span(&own, 1), treatment);
+    auto referenceResolved =
+        resolveEdges(owner.referenceSupportOrigins, std::span(&own, 1), treatment);
+    auto evaluated = treat(shapes.first, resolved, own.value, treatment);
+    auto reference = treat(shapes.second, referenceResolved, own.value, treatment);
+    return Treated{producer, std::move(resolved), std::move(referenceResolved),
+                   std::move(evaluated), std::move(reference)};
+}
+
+// The other faces and edges of the body keep their names; schema 17 (user decision
+// 2026-10-13): each face an edge generates is named {feature, edge id}.
+std::vector<SupportProvenance> namedFaces(std::vector<SupportProvenance> origins,
+                                          const ResolvedEdges& from,
+                                          const kernel::ShapeOperationResult& result) {
+    for (std::size_t index = 0; index < from.edges.size(); ++index)
+        for (const auto& entry : result.history)
+            if (entry.source.IsSame(from.edges[index]))
+                for (const auto& face : entry.generated)
+                    if (face.ShapeType() == TopAbs_FACE)
+                        addSupportFace(origins, from.names[index], face);
+    return origins;
+}
+
 void evaluateEdgeTreatment(const document::DocumentSnapshot& document,
                            const document::FeatureDescriptor& descriptor, document::BodyId target,
                            const std::vector<document::FilletEdge>& edges, double value,
@@ -173,46 +305,41 @@ void evaluateEdgeTreatment(const document::DocumentSnapshot& document,
     const auto producer = bodyProducerBefore(document, descriptor.id, target);
     if (!producer)
         throw GeometryEvaluationError("The body has no solid before this feature", "body-missing");
-    const auto& owner = findFeature(outputs, *producer);
     EvaluatedBody& body = findBody(bodies, outputs, *producer);
     EvaluatedBody& referenceBody = findBody(referenceBodies, outputs, *producer);
-    const auto resolved = resolveEdges(owner.supportOrigins, edges, treatment);
-    const auto referenceResolved = resolveEdges(owner.referenceSupportOrigins, edges, treatment);
-    const auto evaluated = treat(body.shape, resolved, value, treatment);
-    const auto reference = treat(referenceBody.shape, referenceResolved, value, treatment);
-    // The other faces and edges of the body keep their names; schema 17 (user decision
-    // 2026-10-13): each face an edge generates is named {feature, edge id}.
-    const auto named = [&](std::vector<SupportProvenance> origins, const ResolvedEdges& from,
-                           const kernel::ShapeOperationResult& result) {
-        for (std::size_t index = 0; index < from.edges.size(); ++index) {
-            document::SubshapeOrigin origin{descriptor.id, std::nullopt};
-            origin.treatedEdge = edges[from.owners[index] - 1].id;
-            for (const auto& entry : result.history)
-                if (entry.source.IsSame(from.edges[index]))
-                    for (const auto& face : entry.generated)
-                        if (face.ShapeType() == TopAbs_FACE)
-                            addSupportFace(origins, origin, face);
-        }
-        return origins;
-    };
-    outputs.push_back(EvaluatedFeature{
+    const Step own{descriptor.id, edges, value};
+    std::optional<Treated> treated;
+    try {
+        treated = treatAlone(own, *producer, treatment, outputs,
+                             BodyShapes{body.shape, referenceBody.shape});
+    } catch (const GeometryEvaluationError& error) {
+        if (error.code() != std::string(treatment.prefix) + "-failed")
+            throw;
+        treated = treatWithEarlier(document, own, target, treatment, outputs);
+        if (!treated)
+            throw;
+    }
+    const auto& base = findFeature(outputs, treated->base);
+    EvaluatedFeature output{
         descriptor.id,
-        evaluated.shape,
-        reference.shape,
+        treated->evaluated.shape,
+        treated->reference.shape,
         body.bodyId,
-        named(
-            continueSupportOrigins(owner.supportOrigins, evaluated, kernel::HistoryOperand::first),
-            resolved, evaluated),
+        namedFaces(continueSupportOrigins(base.supportOrigins, treated->evaluated,
+                                          kernel::HistoryOperand::first),
+                   treated->resolved, treated->evaluated),
         {},
-        named(continueSupportOrigins(owner.referenceSupportOrigins, reference,
-                                     kernel::HistoryOperand::first),
-              referenceResolved, reference),
-        continueEdgeOrigins(owner.edgeOrigins, evaluated, kernel::HistoryOperand::first),
-        continueEdgeOrigins(owner.referenceEdgeOrigins, reference, kernel::HistoryOperand::first)});
+        namedFaces(continueSupportOrigins(base.referenceSupportOrigins, treated->reference,
+                                          kernel::HistoryOperand::first),
+                   treated->referenceResolved, treated->reference),
+        continueEdgeOrigins(base.edgeOrigins, treated->evaluated, kernel::HistoryOperand::first),
+        continueEdgeOrigins(base.referenceEdgeOrigins, treated->reference,
+                            kernel::HistoryOperand::first)};
+    outputs.push_back(std::move(output));
     body.sourceFeature = descriptor.id;
-    body.shape = evaluated.shape;
+    body.shape = treated->evaluated.shape;
     referenceBody.sourceFeature = descriptor.id;
-    referenceBody.shape = reference.shape;
+    referenceBody.shape = treated->reference.shape;
 }
 
 } // namespace

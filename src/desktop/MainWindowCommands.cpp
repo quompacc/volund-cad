@@ -236,27 +236,13 @@ void MainWindow::createCommands() {
     // T04c: push/pull of the picked planar face. W04 (Q, as in Fusion's Press Pull): picked
     // edges are rounded and a selected sketch region is extruded instead.
     services.pushPull = [this, treatEdges, extrude = services.extrudeProfiles]() {
-        if (!impl_->selectedEdges.empty()) {
-            treatEdges(EdgeTreatment::fillet);
-            return;
-        }
-        if (impl_->shell().canExtrude()) {
-            extrude();
-            return;
-        }
-        if (!impl_->selectedPlanarFace)
-            return;
-        if (impl_->sketchExtrusionTool->isActive())
-            impl_->sketchExtrusionTool->cancel();
-        impl_->pushPullTool->begin(*impl_->selectedPlanarFace);
-        syncShell();
+        if (!impl_->selectedEdges.empty())
+            return treatEdges(EdgeTreatment::fillet);
+        if (impl_->shell().canExtrude())
+            return extrude();
+        pushPullPickedFace();
     };
-    services.canPushPull = [this]() {
-        const auto shell = impl_->shell();
-        return !shell.toolBlocksCommands() &&
-               (!impl_->selectedEdges.empty() || shell.canExtrude() ||
-                (impl_->selectedPlanarFace.has_value() && shell.canSketch()));
-    };
+    services.canPushPull = [this]() { return canPushPullNow(); };
     // M08: a hole at the clicked point of the picked planar face.
     services.hole = [this]() {
         if (!impl_->selectedPlanarFace)
@@ -414,6 +400,22 @@ void MainWindow::createCommands() {
         ->setObjectName(QStringLiteral("sketchEditorAction"));
     impl_->transformAction = impl_->commandActions->action("solid.modify.transform");
     impl_->transformAction->setObjectName(QStringLiteral("transformAction"));
+}
+
+void MainWindow::pushPullPickedFace() {
+    if (!impl_->selectedPlanarFace)
+        return;
+    if (impl_->sketchExtrusionTool->isActive())
+        impl_->sketchExtrusionTool->cancel();
+    impl_->pushPullTool->begin(*impl_->selectedPlanarFace);
+    syncShell();
+}
+
+bool MainWindow::canPushPullNow() const {
+    const auto shell = impl_->shell();
+    return !shell.toolBlocksCommands() &&
+           (!impl_->selectedEdges.empty() || shell.canExtrude() ||
+            (impl_->selectedPlanarFace.has_value() && shell.canSketch()));
 }
 
 // M21: the selected body takes the result.

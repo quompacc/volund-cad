@@ -106,17 +106,22 @@ void SketchEditorToolController::confirmElement(const viewport::SketchElementInt
     refreshPresentation();
     if (!created)
         return;
-    const auto id = created->primary();
-    const auto end = created->point(application::SketchCreationPoint::lineEnd);
-    if (editor_->tool() == application::SketchDrawingTool::polyline && end) {
-        const auto match =
-            std::ranges::find(editor_->elements(), end->element, &document::SketchElement::id);
-        if (match != editor_->elements().end()) {
-            const auto& line = std::get<document::SketchLine>(match->geometry);
-            viewport_.continueSketchPolyline(line.end.x, line.end.y, end->element.value());
-        }
-    }
-    statusChanged_(QObject::tr("Skizzenelement #%1 hinzugefügt").arg(id.value()));
+    continuePolyline(*created);
+    statusChanged_(QObject::tr("Skizzenelement #%1 hinzugefügt").arg(created->primary().value()));
+}
+
+// The polyline goes on from the end of the line just placed.
+void SketchEditorToolController::continuePolyline(
+    const application::SketchCreationResult& created) {
+    const auto end = created.point(application::SketchCreationPoint::lineEnd);
+    if (editor_->tool() != application::SketchDrawingTool::polyline || !end)
+        return;
+    const auto match =
+        std::ranges::find(editor_->elements(), end->element, &document::SketchElement::id);
+    if (match == editor_->elements().end())
+        return;
+    const auto& line = std::get<document::SketchLine>(match->geometry);
+    viewport_.continueSketchPolyline(line.end.x, line.end.y, end->element.value());
 }
 
 } // namespace voelund::desktop

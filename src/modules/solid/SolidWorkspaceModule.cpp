@@ -194,7 +194,7 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                              true,
                              false,
                              simpleCommand(std::move(services.combine)),
-                             services.canCombine ? services.canCombine : services.canFillet,
+                             services.canCombine,
                              "Kombinieren"});
     if (services.mirror)
         commands_.push_back({"solid.modify.mirror",

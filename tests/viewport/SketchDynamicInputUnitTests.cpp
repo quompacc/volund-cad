@@ -25,6 +25,20 @@ void type(SketchDynamicInput& input, const std::string& text) {
         require(input.type(character), std::string("typed ") + character);
 }
 
+// The angle after a typed length, then Backspace and Tab.
+void lineAngle(SketchDynamicInput& input) {
+    require(input.next() && input.current() == 1, "Tab moves to the angle");
+    type(input, "30");
+    const auto end = input.constrain({0, 0}, {-9, -9});
+    require(near(end.first, 40 * std::cos(std::numbers::pi / 6)) && near(end.second, 20),
+            "Length and angle fixed: the pointer no longer matters");
+    const auto typed = input.typedDimensions();
+    require(typed.size() == 2 && typed[0].field == DynamicField::length && near(typed[0].value, 40),
+            "Both typed values are reported");
+    require(input.erase() && input.erase() && !input.erase(), "Backspace empties the angle");
+    require(input.next() && input.current() == 0, "Tab wraps to the length");
+}
+
 void line() {
     SketchDynamicInput input;
     input.begin(SketchElementTool::line);
@@ -36,18 +50,9 @@ void line() {
             "Live values follow the pointer");
     type(input, "40");
     // Length fixed, the angle follows the pointer.
-    auto end = input.constrain({0, 0}, {0, 7});
+    const auto end = input.constrain({0, 0}, {0, 7});
     require(near(end.first, 0) && near(end.second, 40), "Length 40 along the pointer");
-    require(input.next() && input.current() == 1, "Tab moves to the angle");
-    type(input, "30");
-    end = input.constrain({0, 0}, {-9, -9});
-    require(near(end.first, 40 * std::cos(std::numbers::pi / 6)) && near(end.second, 20),
-            "Length and angle fixed: the pointer no longer matters");
-    const auto typed = input.typedDimensions();
-    require(typed.size() == 2 && typed[0].field == DynamicField::length && near(typed[0].value, 40),
-            "Both typed values are reported");
-    require(input.erase() && input.erase() && !input.erase(), "Backspace empties the angle");
-    require(input.next() && input.current() == 0, "Tab wraps to the length");
+    lineAngle(input);
 }
 
 void rectangleAndCircle() {

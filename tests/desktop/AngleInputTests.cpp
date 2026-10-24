@@ -18,6 +18,7 @@
 #include <QThread>
 #include <QTimer>
 #include <iostream>
+#include <utility>
 #include <voelund/application/CadSession.hpp>
 #include <voelund/desktop/MainWindow.hpp>
 #include <voelund/viewport/CadViewport.hpp>
@@ -128,6 +129,26 @@ void window() {
         }
     }
 }
+// D02: whether the field at the pointer shows the angle in degrees and was captured; then
+// "-60" and Enter turn the angle round.
+std::pair<bool, bool> turnAngleInField(viewport::CadViewport& viewport) {
+    auto* field = viewport.findChild<QLineEdit*>(QStringLiteral("dimensionValueEdit"));
+    if (field == nullptr)
+        return {false, false};
+    const bool displayedDegrees = !field->isHidden() &&
+                                  std::abs(field->text().toDouble() - 60) < 1e-10 &&
+                                  field->toolTip().contains("Grad");
+    const auto directory = qEnvironmentVariable("VOELUND_ANGLE_ARTIFACT_DIR");
+    const bool captured =
+        directory.isEmpty() || (QDir().mkpath(directory) &&
+                                viewport.grab().save(directory + "/angle-dimension-degrees.png"));
+    field->setText(QStringLiteral("-60")); // a leading minus turns the angle round
+    QKeyEvent press(QEvent::KeyPress, Qt::Key_Return, Qt::NoModifier);
+    QApplication::sendEvent(field, &press);
+    QApplication::processEvents();
+    return {displayedDegrees, captured};
+}
+
 void dimensionDialog() {
     using namespace document;
     application::CadSession session;
@@ -161,21 +182,7 @@ void dimensionDialog() {
     QApplication::processEvents();
     // D02: the angle opens in degrees in the value field at the pointer.
     controller.editConstraint(2);
-    auto* field = viewport.findChild<QLineEdit*>(QStringLiteral("dimensionValueEdit"));
-    const bool displayedDegrees = field != nullptr && !field->isHidden() &&
-                                  std::abs(field->text().toDouble() - 60) < 1e-10 &&
-                                  field->toolTip().contains("Grad");
-    bool captured = field != nullptr;
-    if (field != nullptr) {
-        const auto directory = qEnvironmentVariable("VOELUND_ANGLE_ARTIFACT_DIR");
-        if (!directory.isEmpty())
-            captured = QDir().mkpath(directory) &&
-                       viewport.grab().save(directory + "/angle-dimension-degrees.png");
-        field->setText(QStringLiteral("-60")); // a leading minus turns the angle round
-        QKeyEvent press(QEvent::KeyPress, Qt::Key_Return, Qt::NoModifier);
-        QApplication::sendEvent(field, &press);
-        QApplication::processEvents();
-    }
+    const auto [displayedDegrees, captured] = turnAngleInField(viewport);
     require(displayedDegrees && captured, "the value field displayed radians or capture failed");
     require(session.sketchParameters(id) == sketch, "the value field committed without OK");
     QPushButton* accept = nullptr;

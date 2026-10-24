@@ -407,6 +407,54 @@ void extrusionSideEdge() {
             "A vertical side edge of the extrusion is rounded");
 }
 
+// User report 2026-10-24: the top edges rounded with 3 mm, then the vertical edges with
+// 3 mm (or more) failed, 2.99 mm too; as in Fusion the corners now blend. Chamfers likewise.
+// A third step on the combined result still finds its edges by their faces.
+void roundingIntoRounding() {
+    const auto edgeOf = [](const application::CadSession& session, document::FeatureId support,
+                           std::array<double, 3> a, std::array<double, 3> b) {
+        return document::FilletEdge{face(session, support, a[0], a[1], a[2]),
+                                    face(session, support, b[0], b[1], b[2])};
+    };
+    for (const bool chamfer : {false, true})
+        for (const double second : {3.0, 2.99, 3.5}) {
+            application::CadSession session;
+            session.newDocument();
+            auto support = *session.createBoxFeature({40, 20, 10}).feature();
+            const auto label = std::string(chamfer ? "chamfer" : "fillet") + " 3 then " +
+                               std::to_string(second) + ": ";
+            const auto treat = [&](std::span<const document::FilletEdge> edges, double value) {
+                return chamfer ? session.createChamfer(support, edges, value)
+                               : session.createFillet(support, edges, value);
+            };
+            const std::vector<document::FilletEdge> tops{
+                edgeOf(session, support, {1, 0, 0}, {0, 0, 1}),
+                edgeOf(session, support, {-1, 0, 0}, {0, 0, 1}),
+                edgeOf(session, support, {0, 1, 0}, {0, 0, 1}),
+                edgeOf(session, support, {0, -1, 0}, {0, 0, 1})};
+            require(treat(tops, 3).status() == CommandStatus::committed, label + "top edges");
+            support = session.features().back().id;
+            const std::vector<document::FilletEdge> verticals{
+                edgeOf(session, support, {1, 0, 0}, {0, 1, 0}),
+                edgeOf(session, support, {1, 0, 0}, {0, -1, 0}),
+                edgeOf(session, support, {-1, 0, 0}, {0, 1, 0}),
+                edgeOf(session, support, {-1, 0, 0}, {0, -1, 0})};
+            const auto made = treat(verticals, second);
+            std::string issues;
+            for (const auto& issue : made.evaluation().features)
+                issues += " " + issue.code + " " + issue.message;
+            require(made.status() == CommandStatus::committed && valid(session),
+                    label + "the vertical edges run into the top ones" + issues);
+            support = session.features().back().id;
+            const std::vector<document::FilletEdge> bottom{
+                edgeOf(session, support, {0, 1, 0}, {0, 0, -1}),
+                edgeOf(session, support, {0, -1, 0}, {0, 0, -1})};
+            require(session.createFillet(support, bottom, 1).status() == CommandStatus::committed &&
+                        valid(session),
+                    label + "a later step finds its edges on the combined result");
+        }
+}
+
 } // namespace
 
 int main() {
@@ -417,6 +465,7 @@ int main() {
         edgeLoops();
         treatedFaceEdges();
         extrusionSideEdge();
+        roundingIntoRounding();
         std::cout << "PASS M05/M07 fillet and chamfer: box edge 10 (1 - pi/4) and 5, refused, base "
                      "change, "
                      "edit, save/open, extrusion side edge\n";

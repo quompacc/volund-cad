@@ -14,7 +14,7 @@
 # State 2026-10-17: the existing code when the checks became mandatory.
 cyclomatic | src/document/SketchGeometry.cpp | voelund::document::validateSketchConstraints | 138 | Altbestand vor A04
 cyclomatic | src/document/LegacyBodyIdentity.cpp | voelund::document::featureBodyContexts | 115 | Altbestand vor A04
-cyclomatic | src/document/NativePrimitiveCodec.cpp | voelund::document::detail::NativePrimitiveCodec::read | 90 | Altbestand vor A04
+cyclomatic | src/document/NativePrimitiveCodec.cpp | voelund::document::detail::NativePrimitiveCodec::read | 89 | Altbestand vor A04
 cyclomatic | src/features/SketchConstraintSolver.cpp | voelund::features::solveSketchConstraints | 84 | Altbestand vor A04
 cyclomatic | src/document/NativeExtrusion.cpp | voelund::document::detail::readNativeExtrusion | 81 | Altbestand vor A04
 cyclomatic | src/application/SketchEditorRelations.cpp | voelund::application::SketchEditorSession::canAddSelectedRelation | 61 | Altbestand vor A04
@@ -23,7 +23,7 @@ cyclomatic | src/viewport/CadViewportInput.cpp | voelund::viewport::CadViewport:
 cyclomatic | src/application/SketchEditorFillet.cpp | voelund::application::SketchEditorSession::treatCorner | 55 | Altbestand vor A04
 cyclomatic | src/application/SketchEditorTransform.cpp | voelund::application::SketchEditorSession::transformSelection | 55 | Altbestand vor A04
 cyclomatic | src/desktop/SketchEditorToolController.cpp | voelund::desktop::SketchEditorToolController::showPanel::(lambda) | 49 | Altbestand vor A04
-cyclomatic | src/features/SketchRegions.cpp | voelund::features::buildSketchRegions | 48 | Altbestand vor A04
+cyclomatic | src/features/SketchRegions.cpp | voelund::features::buildSketchRegions | 47 | Altbestand vor A04
 cyclomatic | src/desktop/ShellIcons.cpp | voelund::desktop::(anonymous namespace)::draw | 47 | Altbestand vor A04
 cyclomatic | src/document/LegacyBodyIdentity.cpp | voelund::document::(anonymous namespace)::validateKind | 45 | Altbestand vor A04
 cyclomatic | src/application/SketchOffset.cpp | voelund::application::detail::offsetGeometry | 42 | Altbestand vor A04
@@ -38,18 +38,17 @@ cyclomatic | src/document/NativePrimitiveCodec.cpp | voelund::document::detail::
 cyclomatic | src/document/NativeSketchGeometry.cpp | voelund::document::detail::readNativeSketchGeometry | 36 | Altbestand vor A04
 cyclomatic | src/features/SketchContourGraph.cpp | voelund::features::buildSketchContourGraph | 36 | Altbestand vor A04
 cyclomatic | src/desktop/TimelineBar.cpp | voelund::desktop::TimelineBar::eventFilter | 35 | Altbestand vor A04
-cyclomatic | src/features/SketchIntersections.cpp | voelund::features::splitSketchIntersections | 33 | Altbestand vor A04
+cyclomatic | src/features/SketchIntersections.cpp | voelund::features::splitSketchIntersections | 32 | Altbestand vor A04
 cyclomatic | src/desktop/MainWindowState.hpp | voelund::desktop::MainWindow::Impl::shell | 32 | Altbestand vor A04
 cyclomatic | src/desktop/SketchExtrusionToolController.cpp | voelund::desktop::SketchExtrusionToolController::choose | 31 | Altbestand vor A04
 cyclomatic | src/document/NativeAttributeValues.cpp | voelund::document::detail::validateNativeAttributeValue | 31 | Altbestand vor A04
 cyclomatic | src/document/NativeSketchSupport.cpp | voelund::document::detail::readNativeSubshapeOrigin | 30 | Altbestand vor A04
 cyclomatic | src/document/SubshapeReference.cpp | voelund::document::validateSubshapeOrigin | 30 | Altbestand vor A04
-cyclomatic | src/viewport/CadViewportInput.cpp | voelund::viewport::CadViewport::mousePressEvent::(lambda) | 30 | Altbestand vor A04
+cyclomatic | src/viewport/CadViewportInput.cpp | voelund::viewport::CadViewport::mousePressEvent::(lambda) | 29 | Altbestand vor A04
 cyclomatic | src/application/SketchEditorSession.cpp | voelund::application::SketchEditorSession::translateSelected | 29 | Altbestand vor A04
 cyclomatic | src/application/ActionContext.cpp | voelund::application::detail::availableActions | 28 | Altbestand vor A04
 cyclomatic | src/application/SketchEditorGeometry.cpp | voelund::application::SketchEditorSession::confirmCreation | 28 | Altbestand vor A04
 cyclomatic | src/application/SketchEditorSession.cpp | voelund::application::SketchEditorSession::setSelectedLineConstraint | 28 | Altbestand vor A04
-cyclomatic | src/desktop/SketchEditorDimensionEdit.cpp | voelund::desktop::SketchEditorToolController::editConstraint | 28 | Altbestand vor A04
 cyclomatic | src/document/SketchConstraintSerialization.cpp | voelund::document::readSketchConstraintKind | 28 | Altbestand vor A04
 cyclomatic | src/desktop/SketchEditorPresentation.cpp | voelund::desktop::(anonymous namespace)::relationName | 26 | Altbestand vor A04
 cyclomatic | src/document/SketchConstraintSerialization.cpp | voelund::document::sketchConstraintKindName | 26 | Altbestand vor A04
@@ -64,7 +63,7 @@ cyclomatic | src/application/SketchEditorPatterns.cpp | voelund::application::Sk
 cyclomatic | src/document/ModelDocumentPattern.cpp | voelund::document::validatePatternParameters | 24 | Altbestand vor A04
 cyclomatic | src/document/NativeExtrusion.cpp | voelund::document::detail::writeNativeExtrusion | 24 | Altbestand vor A04
 cyclomatic | src/features/SketchReferenceReview.cpp | voelund::features::reviewSketchReferences | 24 | Altbestand vor A04
-cyclomatic | src/viewport/SketchEditorInteraction.cpp | voelund::viewport::SketchEditorInteraction::finalIntent | 24 | Altbestand vor A04
+cyclomatic | src/viewport/SketchEditorInteraction.cpp | voelund::viewport::SketchEditorInteraction::finalIntent | 19 | Altbestand vor A04
 cyclomatic | src/application/SketchEditorSession.cpp | voelund::application::SketchEditorSession::selectNearestReference | 23 | Altbestand vor A04
 cyclomatic | src/desktop/ShellState.cpp | voelund::desktop::projectShell | 23 | Altbestand vor A04
 cyclomatic | src/desktop/SketchEditorPresentation.cpp | voelund::desktop::SketchEditorToolController::syncSelectedDimensionInputs | 23 | Altbestand vor A04
@@ -97,7 +96,7 @@ cyclomatic | src/features/FeatureGraph.cpp | voelund::features::FeatureGraph::ev
 cyclomatic | src/features/SketchConstraintAnnotations.cpp | voelund::features::(anonymous namespace)::annotationPoint | 19 | Altbestand vor A04
 cyclomatic | src/viewport/CadViewportQtOpenGl.cpp | voelund::viewport::CadViewport::cleanupGlResources | 19 | Altbestand vor A04
 cyclomatic | src/desktop/ContextCommands.cpp | voelund::desktop::contextCommands | 18 | Altbestand vor A04
-cyclomatic | src/desktop/ToolPanelHost.cpp | voelund::desktop::ToolPanelHost::begin | 18 | Altbestand vor A04
+cyclomatic | src/desktop/ToolPanelHost.cpp | voelund::desktop::ToolPanelHost::begin | 11 | Altbestand vor A04
 cyclomatic | src/document/ModelDocumentReorder.cpp | voelund::document::ModelDocument::deleteFeatures | 18 | Altbestand vor A04
 cyclomatic | src/kernel/MergingFuse.cpp | voelund::kernel::(anonymous namespace)::unified | 18 | Altbestand vor A04
 cyclomatic | src/kernel/Revolution.cpp | voelund::kernel::Revolution::Revolution | 18 | Altbestand vor A04
@@ -164,8 +163,8 @@ cyclomatic | src/application/SketchConstraintRoles.hpp | voelund::application::d
 cyclomatic | src/application/SketchEditorRelations.cpp | voelund::application::SketchEditorSession::addAxisReference | 13 | Altbestand vor A04
 cyclomatic | src/application/SketchEditorSession.cpp | voelund::application::SketchEditorSession::setSelectedCircleRadius | 13 | Altbestand vor A04
 cyclomatic | src/desktop/AssistantPanel.cpp | voelund::desktop::AssistantPanel::present | 13 | Altbestand vor A04
-cyclomatic | src/desktop/FilletToolController.cpp | voelund::desktop::FilletToolController::placeGrip | 13 | Altbestand vor A04
-cyclomatic | src/desktop/ParameterPanel.cpp | voelund::desktop::ParameterPanel::changed | 13 | Altbestand vor A04
+cyclomatic | src/desktop/FilletToolController.cpp | voelund::desktop::FilletToolController::placeGrip | 12 | Altbestand vor A04
+cyclomatic | src/desktop/ParameterPanel.cpp | voelund::desktop::ParameterPanel::changed | 12 | Altbestand vor A04
 cyclomatic | src/desktop/ReferenceRepairDialog.cpp | voelund::desktop::ReferenceRepairDialog::reload | 13 | Altbestand vor A04
 cyclomatic | src/desktop/SketchEditorDimensionEdit.cpp | voelund::desktop::SketchEditorToolController::bindElementDimension | 13 | Altbestand vor A04
 cyclomatic | src/desktop/SketchEditorToolController.cpp | voelund::desktop::(anonymous namespace)::applicationTool | 13 | Altbestand vor A04
@@ -204,7 +203,6 @@ cyclomatic | src/features/SketchRegionGeometry.cpp | voelund::features::detail::
 cyclomatic | src/features/SketchRegionIdentity.cpp | voelund::features::legacyProfileRegions | 12 | Altbestand vor A04
 cyclomatic | src/features/SketchRegionIntervalFaces.cpp | voelund::features::detail::(anonymous namespace)::loops | 12 | Altbestand vor A04
 cyclomatic | src/features/SketchRegionIntervalFaces.cpp | voelund::features::detail::(anonymous namespace)::unionBoundary | 12 | Altbestand vor A04
-cyclomatic | src/kernel/ShapeOperations.cpp | voelund::kernel::(anonymous namespace)::treatEdges | 12 | Altbestand vor A04
 cyclomatic | apps/SmokeSupport.cpp | voelund::apps::verifyDesktopSmoke | 11 | Altbestand vor A04
 cyclomatic | src/application/CadSessionBatchRepair.cpp | voelund::application::CadSession::suggestSketchSupportRepairs | 11 | Altbestand vor A04
 cyclomatic | src/application/CadSessionPrimitives.cpp | voelund::application::CadSession::createPrimitive | 11 | Altbestand vor A04
@@ -226,7 +224,6 @@ cyclomatic | src/document/LegacyBodyIdentity.cpp | voelund::document::featureBod
 cyclomatic | src/document/LegacyDocumentImporter.cpp | voelund::document::(anonymous namespace)::readExtrusionFeature | 11 | Altbestand vor A04
 cyclomatic | src/document/ModelDocument.cpp | voelund::document::validateSketchParameters | 11 | Altbestand vor A04
 cyclomatic | src/document/ModelDocumentPattern.cpp | voelund::document::keepCopiesInStep | 11 | Altbestand vor A04
-cyclomatic | src/document/NativeBodyAttributes.cpp | voelund::document::validateBodyAttributes | 11 | Altbestand vor A04
 cyclomatic | src/document/SketchGeometry.cpp | voelund::document::validateSketchConstraints::(lambda) | 11 | Altbestand vor A04
 cyclomatic | src/features/SketchConstraintAnnotations.cpp | voelund::features::sketchAnnotationCategory | 11 | Altbestand vor A04
 cyclomatic | src/features/SketchEvaluation.cpp | voelund::features::(anonymous namespace)::elementShape | 11 | Altbestand vor A04
@@ -400,42 +397,41 @@ cyclomatic | tests/integration/SketchFixDistanceTests.cpp | (anonymous namespace
 cyclomatic | tests/integration/SketchIdCapacityTests.cpp | (anonymous namespace)::documentAndImport | 11 | Altbestand vor A04
 cyclomatic | tests/integration/SketchOffsetTests.cpp | (anonymous namespace)::rectangleContour | 11 | Altbestand vor A04
 cyclomatic | tests/integration/StepTests.cpp | (anonymous namespace)::inchesAndErrors | 11 | Altbestand vor A04
-lines | src/desktop/SketchIcons.cpp | drawings | 460 | Altbestand vor A04
-lines | src/desktop/MainWindowCommands.cpp | createCommands | 377 | Altbestand vor A04
+lines | src/desktop/SketchIcons.cpp | drawings | 456 | Altbestand vor A04
+lines | src/desktop/MainWindowCommands.cpp | createCommands | 371 | Altbestand vor A04
 lines | src/features/SketchConstraintSolver.cpp | solveSketchConstraints | 341 | Altbestand vor A04
 lines | src/desktop/ShellIcons.cpp | draw | 317 | Altbestand vor A04
 lines | src/document/SketchGeometry.cpp | validateSketchConstraints | 268 | Altbestand vor A04
-lines | src/modules/solid/SolidWorkspaceModule.cpp | SolidWorkspaceModule | 260 | Altbestand vor A04
+lines | src/modules/solid/SolidWorkspaceModule.cpp | SolidWorkspaceModule | 238 | Altbestand vor A04
 lines | src/document/LegacyBodyIdentity.cpp | featureBodyContexts | 258 | Altbestand vor A04
 lines | src/desktop/SketchEditorToolController.cpp | showPanel | 251 | Altbestand vor A04
-lines | src/viewport/CadViewportInput.cpp | mouseReleaseEvent | 228 | Altbestand vor A04
-lines | src/desktop/MainWindowInteractions.cpp | connectInteractions | 211 | Altbestand vor A04
-lines | src/desktop/SketchExtrusionToolController.cpp | open | 191 | Altbestand vor A04
+lines | src/viewport/CadViewportInput.cpp | mouseReleaseEvent | 227 | Altbestand vor A04
+lines | src/desktop/MainWindowInteractions.cpp | connectInteractions | 185 | Altbestand vor A04
+lines | src/desktop/SketchExtrusionToolController.cpp | open | 190 | Altbestand vor A04
 lines | src/application/SketchEditorFillet.cpp | treatCorner | 184 | Altbestand vor A04
-lines | src/document/NativePrimitiveCodec.cpp | read | 184 | Altbestand vor A04
+lines | src/document/NativePrimitiveCodec.cpp | read | 183 | Altbestand vor A04
 lines | src/desktop/Theme.cpp | themeStyleSheet | 179 | Altbestand vor A04
 lines | src/document/NativeExtrusion.cpp | readNativeExtrusion | 173 | Altbestand vor A04
 lines | src/application/ActionExecution.cpp | run | 162 | Altbestand vor A04
 lines | src/mcp/ResultEncoding.cpp | featureParameters | 158 | Altbestand vor A04
 lines | src/features/ExtrusionEvaluation.cpp | evaluateExtrusion | 156 | Altbestand vor A04
-lines | src/features/SketchRegions.cpp | buildSketchRegions | 155 | Altbestand vor A04
-lines | src/features/SketchIntersections.cpp | splitSketchIntersections | 144 | Altbestand vor A04
+lines | src/features/SketchRegions.cpp | buildSketchRegions | 153 | Altbestand vor A04
+lines | src/features/SketchIntersections.cpp | splitSketchIntersections | 141 | Altbestand vor A04
 lines | src/application/SketchEditorCreation.cpp | createStep | 134 | Altbestand vor A04
-lines | src/desktop/MainWindowDocumentParameters.cpp | createParameterCard | 133 | Altbestand vor A04
-lines | src/desktop/ToolPanelHost.cpp | begin | 132 | Altbestand vor A04
+lines | src/desktop/MainWindowDocumentParameters.cpp | createParameterCard | 126 | Altbestand vor A04
+lines | src/desktop/ToolPanelHost.cpp | begin | 94 | Altbestand vor A04
 lines | src/features/FeatureDependencies.cpp | from | 130 | Altbestand vor A04
 lines | src/mcp/ToolCatalog.cpp | makeCatalog | 125 | Altbestand vor A04
 lines | src/features/SketchContourGraph.cpp | buildSketchContourGraph | 118 | Altbestand vor A04
 lines | src/document/NativePrimitiveCodec.cpp | write | 112 | Altbestand vor A04
-lines | src/viewport/CadViewportInput.cpp | mousePressEvent | 108 | Altbestand vor A04
+lines | src/viewport/CadViewportInput.cpp | mousePressEvent | 106 | Altbestand vor A04
 lines | src/document/NativePrimitiveCodec.cpp | validate | 107 | Altbestand vor A04
 lines | src/application/SketchEditorCurveEdit.cpp | editCurve | 104 | Altbestand vor A04
 lines | src/application/ActionContext.cpp | availableActions | 99 | Altbestand vor A04
-lines | src/desktop/ToolRail.cpp | ToolRail | 99 | Altbestand vor A04
+lines | src/desktop/ToolRail.cpp | ToolRail | 96 | Altbestand vor A04
 lines | src/application/SketchOffset.cpp | offsetGeometry | 97 | Altbestand vor A04
-lines | src/desktop/SketchEditorDimensionEdit.cpp | editConstraint | 96 | Altbestand vor A04
 lines | src/application/SketchEditorRelations.cpp | canAddSelectedRelation | 95 | Altbestand vor A04
-lines | src/desktop/ToolPanelHost.cpp | ToolPanelHost | 94 | Altbestand vor A04
+lines | src/desktop/ToolPanelHost.cpp | ToolPanelHost | 92 | Altbestand vor A04
 lines | src/document/LegacyBodyIdentity.cpp | validateKind | 94 | Altbestand vor A04
 lines | src/viewport/SketchEditorInteraction.cpp | interactionPoint | 94 | Altbestand vor A04
 lines | src/application/SketchFilletPlan.cpp | planCorner | 93 | Altbestand vor A04
@@ -445,7 +441,7 @@ lines | src/desktop/SketchEditorConstraintState.cpp | syncConstraintState | 88 |
 lines | src/features/SketchReferenceReview.cpp | reviewSketchReferences | 88 | Altbestand vor A04
 lines | src/mcp/ResultEncoding.cpp | encodeContext | 87 | Altbestand vor A04
 lines | src/application/SketchEditorGeometry.cpp | confirmCreation | 86 | Altbestand vor A04
-lines | src/desktop/TimelineBar.cpp | eventFilter | 84 | Altbestand vor A04
+lines | src/desktop/TimelineBar.cpp | eventFilter | 81 | Altbestand vor A04
 lines | src/application/SketchGeometryTransform.cpp | transformedCopy | 83 | Altbestand vor A04
 lines | src/desktop/ViewCube.cpp | paintEvent | 82 | Altbestand vor A04
 lines | src/features/SketchRegionIntervalFaces.cpp | intervalRegionFaces | 81 | Altbestand vor A04
@@ -462,7 +458,7 @@ lines | tests/desktop/PushPullPanelTests.cpp | run | 116 | Altbestand vor A04
 lines | tests/desktop/ParameterFailureTests.cpp | run | 112 | Altbestand vor A04
 lines | tests/desktop/ProjectedEdgeFlowTests.cpp | flow | 104 | Altbestand vor A04
 lines | tests/integration/MirrorTests.cpp | mirrorPart | 104 | Altbestand vor A04
-lines | tests/desktop/ReferencePartFlowTests.cpp | run | 103 | Altbestand vor A04
+lines | tests/desktop/ReferencePartFlowTests.cpp | run | 94 | Altbestand vor A04
 lines | tests/integration/AssistantBackendTests.cpp | runs | 103 | Altbestand vor A04
 lines | tests/desktop/V01FlowTests.cpp | run | 101 | Altbestand vor A04
 lines | tests/desktop/PatternPanelTests.cpp | run | 100 | Altbestand vor A04
