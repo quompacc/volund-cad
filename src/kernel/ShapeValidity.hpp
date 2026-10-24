@@ -8,11 +8,12 @@
 
 namespace voelund::kernel::detail {
 
-// L06: the full validity check (topology and geometry) of a result body, run in parallel over
-// its subshapes. Same checks as the default sequential analyzer; on a body with many faces it
-// was a third of a join's time (A-PERF-01).
+// The full validity check (topology and geometry) of a result body. Sequential again
+// (2026-10-24): L06 ran it in parallel over the subshapes, but OCCT's parallel analyzer
+// corrupts the heap now and then (BRepCheck_Vertex::InContext; application.fillet aborted in 4
+// of 20 Release runs, CI 725 and 750; 0 of 20 sequential).
 [[nodiscard]] inline bool isValidShape(const TopoDS_Shape& shape) {
-    return BRepCheck_Analyzer(shape, /*GeomControls=*/true, /*theIsParallel=*/true).IsValid();
+    return BRepCheck_Analyzer(shape, /*GeomControls=*/true, /*theIsParallel=*/false).IsValid();
 }
 
 } // namespace voelund::kernel::detail
