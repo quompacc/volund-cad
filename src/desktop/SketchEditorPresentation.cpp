@@ -76,6 +76,21 @@ QString relationName(document::SketchConstraintKind kind) {
     return {};
 }
 
+// W12: a dimension's drawing for the view; a bound one keeps its parameter's name in front
+// ("Breite = 80 mm").
+std::optional<viewport::SceneDimension>
+sceneDimension(const features::SketchConstraintAnnotation& annotation, const std::string& label) {
+    if (!annotation.dimension)
+        return std::nullopt;
+    const auto& shape = *annotation.dimension;
+    std::string text = shape.text;
+    if (const auto named = label.find(" = "); annotation.parameter && named != std::string::npos)
+        text = label.substr(0, named) + " = " + text;
+    const auto style = static_cast<viewport::SceneDimensionStyle>(static_cast<int>(shape.style));
+    return viewport::SceneDimension{style,           shape.first,     shape.second, shape.vertex,
+                                    shape.along,     shape.outward,   shape.normal, shape.offset,
+                                    std::move(text), shape.textBeside};
+}
 } // namespace
 
 // S10/S11: the reason when the edit cannot run, with the elements causing it shown in red;
@@ -333,11 +348,11 @@ void SketchEditorToolController::refreshPresentation() {
             if (const auto* parameter =
                     document::findParameter(session_.parameterTable(), *annotation.parameter))
                 label = parameter->name + " = " + label;
-        constraints.push_back({annotation.id.value(), label, annotation.position.X(),
-                               annotation.position.Y(), annotation.position.Z(),
-                               editor_->isConstraintConflicting(annotation.id), annotation.editable,
-                               editor_->isConstraintRedundant(annotation.id),
-                               editor_->selectedConstraint() == annotation.id});
+        constraints.push_back(
+            {annotation.id.value(), label, annotation.position.X(), annotation.position.Y(),
+             annotation.position.Z(), editor_->isConstraintConflicting(annotation.id),
+             annotation.editable, editor_->isConstraintRedundant(annotation.id),
+             editor_->selectedConstraint() == annotation.id, sceneDimension(annotation, label)});
     }
     if (previewAutomatic_.has_value() && evaluated.size() > editor_->elements().size() &&
         !evaluated.back().points.empty()) {

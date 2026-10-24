@@ -7,6 +7,7 @@
 
 #include <QAction>
 #include <QApplication>
+#include <QDir>
 #include <QKeyEvent>
 #include <QStringList>
 #include <algorithm>
@@ -75,6 +76,11 @@ struct Sketcher final {
         return overlay != nullptr ? overlay->property("dynamicFields").toStringList()
                                   : QStringList{};
     }
+    // W12b: how many fields sit on dimension lines of the preview.
+    int onLines() const {
+        auto* overlay = viewport.findChild<QWidget*>(QStringLiteral("sketchSnapOverlay"));
+        return overlay != nullptr ? overlay->property("fieldsOnLines").toInt() : -1;
+    }
 };
 
 // The dimension of `kind` on the element with the given geometry.
@@ -95,6 +101,7 @@ void drawLineAndRectangle(Sketcher& s) {
     require(open.size() == 2 && open[0].startsWith(QStringLiteral("Länge")) &&
                 open[1].startsWith(QStringLiteral("Winkel")),
             "After the first point the line shows length and angle at the pointer");
+    require(s.onLines() == 1, "W12b: the length sits on a dimension line along the line");
     s.type(QStringLiteral("40"));
     require(s.fields()[0] == QStringLiteral("Länge: 40|"),
             "Digits go into the length without a click: " + s.fields()[0].toStdString());
@@ -104,6 +111,16 @@ void drawLineAndRectangle(Sketcher& s) {
     require(s.fields().isEmpty(), "Enter places the line and closes the fields");
 
     command(s.window, "sketch.tool.rectangle").trigger();
+    // W12b: width below and height left on dimension lines; a picture where the view shows it.
+    s.click(-50, -30);
+    s.moveTo(-15, -10);
+    require(s.onLines() == 2, "W12b: width below and height left on dimension lines");
+    if (const auto directory = qEnvironmentVariable("VOELUND_DIMENSION_ARTIFACT_DIR");
+        !directory.isEmpty())
+        require(QDir().mkpath(directory) &&
+                    s.viewport.grab().save(directory + "/rectangle-input.png"),
+                "capture");
+    s.key(Qt::Key_Escape); // back to the first corner
     s.click(60, 0);
     s.moveTo(70, 5);
     s.type(QStringLiteral("50"));
@@ -127,6 +144,7 @@ void drawCircleAndPolyline(Sketcher& s) {
     s.moveTo(5, 62);
     require(s.fields().size() == 1 && s.fields()[0].startsWith(QStringLiteral("Durchmesser")),
             "A circle shows its diameter");
+    require(s.onLines() == 1, "W12b: the diameter sits on a line across the circle");
     s.type(QStringLiteral("16"));
     s.key(Qt::Key_Return);
 

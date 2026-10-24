@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Eduard Hart
 
+#include "../../src/viewport/SketchDimensionDrawing.hpp"
 #include "IsolatedSettings.hpp"
 #include "ViewportLifecycleSupport.hpp"
 
@@ -84,12 +85,14 @@ void run() {
     QAction& toggle = command(window, "sketch.toggle_reference");
     auto label = lengthLabel(*viewport);
     require(label.has_value() && label->label.front() != '(', "A driving length label");
-    // Into the text of the label, above the line it measures (an element wins over a label);
-    // labels on one anchor stack downwards, so the rows are tried until the length is chosen.
+    // W12: into the value on the dimension line, which stands off the line it measures.
     test::render(*viewport);
-    const QPoint anchor = ViewportTestAccess::project(*viewport, label->x, label->y, label->z);
+    require(label->dimension.has_value(), "The length is drawn as a dimension");
+    const auto onLine = viewport::drawDimension(*label->dimension).text;
+    const QPoint anchor =
+        ViewportTestAccess::project(*viewport, onLine.X(), onLine.Y(), onLine.Z());
     for (int row = 0; row < 4 && !toggle.isEnabled(); ++row) {
-        const QPoint text = anchor + QPoint(40, -10 + 18 * row);
+        const QPoint text = anchor + QPoint(0, -10 - 2 * row);
         test::mouse(*viewport, QEvent::MouseMove, text, Qt::NoButton, Qt::NoButton);
         test::mouse(*viewport, QEvent::MouseButtonPress, text, Qt::LeftButton, Qt::LeftButton);
         test::mouse(*viewport, QEvent::MouseButtonRelease, text, Qt::LeftButton, Qt::NoButton);

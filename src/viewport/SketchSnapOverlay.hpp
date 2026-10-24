@@ -22,8 +22,10 @@ class SketchSnapOverlay final : public QWidget {
     void display(const SketchEditorInteraction::SnapFeedback& feedback, QPointF cursor,
                  double devicePixelRatio);
     void clear();
-    // D01: the fields at the pointer while drawing; none hides them.
-    void showFields(const SketchDynamicInput& input, QPointF cursor);
+    // D01: the fields at the pointer while drawing; none hides them. W12b: a field with a
+    // dimension line (framebuffer pixels) sits on it instead.
+    void showFields(const SketchDynamicInput& input, QPointF cursor,
+                    const std::vector<std::optional<SketchEditorInteraction::FieldLine>>& lines);
     void setColors(const QColor& accent, const QColor& muted, const QColor& panel);
 
   protected:
@@ -40,10 +42,14 @@ class SketchSnapOverlay final : public QWidget {
         QString value;
         bool current;
         bool typed;
+        std::optional<SketchEditorInteraction::FieldLine> line; // logical pixels
     };
     std::vector<FieldView> fields_;
     QPointF fieldCursor_;
     void paintFields(QPainter& painter) const;
+    void paintFieldBox(QPainter& painter, const FieldView& field, QPointF centre) const;
+    // W12b: extension lines, dimension line and arrows; returns where the field box sits.
+    QPointF paintFieldLine(QPainter& painter, const SketchEditorInteraction::FieldLine& line) const;
     QPointF cursor_;
     QColor accent_{0xD9, 0x62, 0x2B};
     QColor muted_{0x5F, 0x68, 0x73};

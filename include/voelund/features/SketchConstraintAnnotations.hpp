@@ -5,6 +5,7 @@
 
 #include <voelund/document/ModelDocument.hpp>
 
+#include <gp_Dir.hxx>
 #include <gp_Pnt.hxx>
 
 #include <optional>
@@ -15,6 +16,27 @@ namespace voelund::features {
 
 // S07: a geometric relation shows a symbol, a dimension its value.
 enum class SketchAnnotationCategory { relation, dimension };
+
+// W12 (as in Fusion and FreeCAD): a dimension drawn as in a technical drawing, in world
+// coordinates. Linear: extension lines from `first` and `second`, the dimension line along
+// `along`, `offset` beyond the farther point on the `outward` side. Radius: from the centre
+// `first` to `second` on the curve. Diameter: across from `first` to `second`. Angle: an arc of
+// radius `offset` about `vertex` from the leg through `first` to the leg through `second`.
+enum class SketchDimensionStyle { linear, radius, diameter, angle };
+struct SketchDimensionShape final {
+    SketchDimensionStyle style;
+    gp_Pnt first;
+    gp_Pnt second;
+    gp_Pnt vertex;
+    gp_Dir along;
+    gp_Dir outward;
+    gp_Dir normal; // the sketch plane's
+    double offset;
+    std::string text; // "80 mm", "R 5 mm", "Ø 10 mm", "60°"; a reference in parentheses
+    // An upright dimension line (along the sketch's Y) has its value beside it: +1 right,
+    // -1 left (the outer side); 0 above the line.
+    int textBeside{0};
+};
 
 struct SketchConstraintAnnotation final {
     document::SketchConstraintId id;
@@ -28,7 +50,8 @@ struct SketchConstraintAnnotation final {
     // projected or support edges and parameter-bound dimensions are not.
     bool editable{false};
     std::optional<document::ParameterId> parameter{};
-    std::string label{}; // sketchConstraintLabel(kind, value)
+    std::string label{};                             // sketchConstraintLabel(kind, value)
+    std::optional<SketchDimensionShape> dimension{}; // W12: dimensions only
 };
 
 [[nodiscard]] SketchAnnotationCategory

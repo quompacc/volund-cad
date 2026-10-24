@@ -7,7 +7,12 @@
 #include <QLocale>
 #include <QPainter>
 #include <QPainterPath>
+#include <QPolygonF>
 #include <QStringList>
+
+#include <algorithm>
+#include <cmath>
+#include <utility>
 
 namespace voelund::viewport {
 
@@ -119,13 +124,22 @@ QString fieldValue(const SketchDynamicInput::Field& field, bool current) {
 }
 } // namespace
 
-void SketchSnapOverlay::showFields(const SketchDynamicInput& input, QPointF cursor) {
+void SketchSnapOverlay::showFields(
+    const SketchDynamicInput& input, QPointF cursor,
+    const std::vector<std::optional<SketchEditorInteraction::FieldLine>>& lines) {
     fields_.clear();
+    const double ratio = viewport_.devicePixelRatioF();
     for (std::size_t index = 0; index < input.fields().size(); ++index) {
         const auto& field = input.fields()[index];
         const bool current = index == input.current();
-        fields_.push_back(
-            {fieldLabel(field.kind), fieldValue(field, current), current, !field.text.empty()});
+        std::optional<SketchEditorInteraction::FieldLine> line;
+        if (index < lines.size() && lines[index]) {
+            line = *lines[index];
+            line->from = {line->from.first / ratio, line->from.second / ratio};
+            line->to = {line->to.first / ratio, line->to.second / ratio};
+        }
+        fields_.push_back({fieldLabel(field.kind), fieldValue(field, current), current,
+                           !field.text.empty(), line});
     }
     fieldCursor_ = cursor;
     // Test hook: the field texts as shown, "Länge: 25|" and so on.
@@ -133,6 +147,10 @@ void SketchSnapOverlay::showFields(const SketchDynamicInput& input, QPointF curs
     for (const auto& field : fields_)
         shown << field.label + QStringLiteral(": ") + field.value;
     setProperty("dynamicFields", shown);
+    // W12b test hook: how many fields sit on dimension lines.
+    setProperty("fieldsOnLines",
+                static_cast<int>(std::ranges::count_if(
+                    fields_, [](const auto& field) { return field.line.has_value(); })));
     if (!fields_.empty())
         show();
     raise();
@@ -145,18 +163,61 @@ void SketchSnapOverlay::paintFields(QPainter& painter) const {
     painter.setFont(font);
     QPointF corner = fieldCursor_ + QPointF(18, 34);
     for (const auto& field : fields_) {
+        if (field.line) {
+            paintFieldBox(painter, field, paintFieldLine(painter, *field.line));
+            continue;
+        }
         const QString text = field.label + QStringLiteral("  ") + field.value;
         const QRectF size = painter.fontMetrics().boundingRect(text).adjusted(-9, -5, 9, 5);
-        const QRectF box(corner, size.size());
-        QPainterPath path;
-        path.addRoundedRect(box, 6, 6);
-        painter.setPen(QPen(field.current ? accent_ : muted_, field.current ? 2.0 : 1.0));
-        painter.setBrush(panel_);
-        painter.drawPath(path);
-        painter.setPen(field.typed ? accent_ : muted_.darker(160));
-        painter.drawText(box, Qt::AlignCenter, text);
-        corner += QPointF(box.width() + 6, 0);
+        paintFieldBox(painter, field, corner + QPointF(size.width() / 2, size.height() / 2));
+        corner += QPointF(size.width() + 6, 0);
     }
+}
+
+// A field's box centred on `centre`: the current one framed in the accent colour, a typed
+// value in the accent colour. On a dimension line only the value shows, as on a drawing.
+void SketchSnapOverlay::paintFieldBox(QPainter& painter, const FieldView& field,
+                                      QPointF centre) const {
+    const QString text =
+        field.line ? field.value : field.label + QStringLiteral("  ") + field.value;
+    const QRectF size = painter.fontMetrics().boundingRect(text).adjusted(-9, -5, 9, 5);
+    const QRectF box(centre - QPointF(size.width() / 2, size.height() / 2), size.size());
+    QPainterPath path;
+    path.addRoundedRect(box, 6, 6);
+    painter.setPen(QPen(field.current ? accent_ : muted_, field.current ? 2.0 : 1.0));
+    painter.setBrush(panel_);
+    painter.drawPath(path);
+    painter.setPen(field.typed ? accent_ : muted_.darker(160));
+    painter.drawText(box, Qt::AlignCenter, text);
+}
+
+QPointF SketchSnapOverlay::paintFieldLine(QPainter& painter,
+                                          const SketchEditorInteraction::FieldLine& line) const {
+    constexpr double standOff = 28.0, gap = 4.0, beyond = 6.0, arrow = 9.0;
+    const QPointF out(line.outward.first, line.outward.second);
+    const QPointF from(line.from.first, line.from.second);
+    const QPointF to(line.to.first, line.to.second);
+    const QPointF a = from + out * standOff;
+    const QPointF b = to + out * standOff;
+    painter.setPen(QPen(muted_, 1.0));
+    if (!out.isNull()) {
+        painter.drawLine(from + out * gap, a + out * beyond);
+        painter.drawLine(to + out * gap, b + out * beyond);
+    }
+    painter.drawLine(a, b);
+    const QPointF span = b - a;
+    const double length = std::hypot(span.x(), span.y());
+    if (length > 2.5 * arrow) {
+        const QPointF unit = span / length;
+        const QPointF side(-unit.y(), unit.x());
+        painter.setBrush(muted_);
+        for (const auto& [tip, direction] : {std::pair{a, -unit}, std::pair{b, unit}}) {
+            const QPointF base = tip - direction * arrow;
+            painter.drawPolygon(
+                QPolygonF{tip, base + side * (arrow * 0.35), base - side * (arrow * 0.35)});
+        }
+    }
+    return (a + b) / 2;
 }
 
 void SketchSnapOverlay::clear() {

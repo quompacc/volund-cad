@@ -35,6 +35,8 @@ list(APPEND voelund_viewport_sources
     CadViewportKeys.cpp
     SketchViewOrientation.cpp
     SketchConstraintPresentation.cpp
+    SketchDimensionDrawing.cpp
+    SketchFieldLines.cpp
     SketchBoxSelection.cpp
     SelectionBand.cpp
     SketchPresentation.cpp

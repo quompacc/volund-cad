@@ -420,7 +420,8 @@ class CadViewportScene {
     QPoint sketchPointer;
     void showDynamicFields(QPointF logical) {
         if (snapOverlay != nullptr)
-            snapOverlay->showFields(sketchEditor.dynamicInput(), logical);
+            snapOverlay->showFields(sketchEditor.dynamicInput(), logical,
+                                    sketchEditor.fieldLines(sketchPointer.x(), sketchPointer.y()));
     }
     // S03: the view before the sketch editor oriented it; restored when the editor ends.
     occ::handle<Graphic3d_Camera> sketchReturnCamera;

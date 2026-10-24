@@ -16,6 +16,8 @@
 #endif
 
 #include <TopoDS_Shape.hxx>
+#include <gp_Dir.hxx>
+#include <gp_Pnt.hxx>
 
 #include <array>
 #include <cstddef>
@@ -117,6 +119,22 @@ struct SketchSelectionIntent final {
     bool additive;
 };
 
+// W12 (as in Fusion and FreeCAD): a dimension drawn as in a technical drawing, in world
+// coordinates (features::SketchDimensionShape describes the parts).
+enum class SceneDimensionStyle { linear, radius, diameter, angle };
+struct SceneDimension final {
+    SceneDimensionStyle style;
+    gp_Pnt first;
+    gp_Pnt second;
+    gp_Pnt vertex;
+    gp_Dir along;
+    gp_Dir outward;
+    gp_Dir normal;
+    double offset;
+    std::string text;
+    int textBeside{0}; // +1 right of an upright dimension line, -1 left, 0 above
+};
+
 struct SceneSketchConstraint final {
     std::uint64_t id;
     std::string label;
@@ -125,8 +143,9 @@ struct SceneSketchConstraint final {
     double z;
     bool conflicting;
     bool editable;
-    bool redundant{false}; // S07: implied by other relations
-    bool selected{false};  // S13: picked at its label
+    bool redundant{false};                     // S07: implied by other relations
+    bool selected{false};                      // S13: picked at its label
+    std::optional<SceneDimension> dimension{}; // W12: lines and arrows; the label sits on it
 };
 
 struct PlanarReferenceSegment final {

@@ -3,6 +3,8 @@
 
 #include "SketchConstraintPresentation.hpp"
 
+#include "SketchDimensionDrawing.hpp"
+
 #include <Font_NameOfFont.hxx>
 #include <Graphic3d_Group.hxx>
 #include <Graphic3d_TransformPers.hxx>
@@ -55,6 +57,24 @@ class OffsetLabel final : public AIS_TextLabel {
 
 } // namespace
 
+// W12: draws a dimension's lines and arrows; its value centred above the dimension line, or
+// beside an upright one on its outer side.
+SketchConstraintPresentation::Placement SketchConstraintPresentation::placeDimension(
+    const occ::handle<AIS_InteractiveContext>& context, const SceneDimension& dimension,
+    const Quantity_Color& color, double height, int characters) {
+    const auto lines = drawDimension(dimension);
+    occ::handle<AIS_InteractiveObject> drawing =
+        makeDimensionGraphic(lines, dimension.normal, color);
+    context->Display(drawing, 0, -1, false);
+    const double width = 0.6 * height * characters;
+    const int beside = dimension.textBeside;
+    return {lines.text,
+            beside > 0   ? 6.0
+            : beside < 0 ? -width - 6.0
+                         : -width / 2,
+            beside != 0 ? -0.35 * height : 4.0, drawing};
+}
+
 void SketchConstraintPresentation::setLabelColor(const Quantity_Color& color) {
     labelColor_ = color;
 }
@@ -73,31 +93,42 @@ void SketchConstraintPresentation::setConstraints(
         return std::tuple{round(constraint.x), round(constraint.y), round(constraint.z)};
     };
     for (const SceneSketchConstraint& constraint : constraints) {
-        const int row = stacked[key(constraint)]++;
-        const double offsetX = 12.0, offsetY = -6.0 - 18.0 * row;
+        const Quantity_Color color = constraint.selected      ? selectedColor
+                                     : constraint.conflicting ? conflictingColor
+                                     : constraint.redundant   ? redundantColor
+                                                              : labelColor_;
         const double height = constraint.selected ? 17.0 : 15.0;
+        // W12: a dimension draws its lines and arrows; its value sits on the dimension line.
+        // Relations keep their symbols beside the point, stacked.
+        const std::string& shown =
+            constraint.dimension ? constraint.dimension->text : constraint.label;
+        const TCollection_ExtendedString text(shown.c_str(), true);
+        Placement place{gp_Pnt(constraint.x, constraint.y, constraint.z), 12.0, 0.0, {}};
+        if (constraint.dimension)
+            place = placeDimension(context, *constraint.dimension, color, height, text.Length());
+        else
+            place.offsetY = -6.0 - 18.0 * stacked[key(constraint)]++;
+        const auto& [anchor, offsetX, offsetY, drawing] = place;
         occ::handle<AIS_TextLabel> label = new OffsetLabel(offsetX, offsetY);
-        label->SetText(TCollection_ExtendedString(constraint.label.c_str(), true));
-        label->SetPosition(gp_Pnt(constraint.x, constraint.y, constraint.z));
-        label->SetColor(constraint.selected      ? selectedColor
-                        : constraint.conflicting ? conflictingColor
-                        : constraint.redundant   ? redundantColor
-                                                 : labelColor_);
+        label->SetText(text);
+        label->SetPosition(anchor);
+        label->SetColor(color);
         label->SetFont(Font_NOF_SANS_SERIF);
         label->SetHeight(height);
         label->SetZoomable(false);
         context->Display(label, false);
-        const TCollection_ExtendedString text(constraint.label.c_str(), true);
-        constraints_.push_back({constraint.id, label, constraint.editable,
-                                gp_Pnt(constraint.x, constraint.y, constraint.z), offsetX, offsetY,
-                                height, text.Length()});
+        constraints_.push_back({constraint.id, label, drawing, constraint.editable, anchor, offsetX,
+                                offsetY, height, text.Length()});
     }
 }
 
 void SketchConstraintPresentation::clear(const occ::handle<AIS_InteractiveContext>& context) {
     if (!context.IsNull()) {
-        for (const ConstraintPresentation& constraint : constraints_)
+        for (const ConstraintPresentation& constraint : constraints_) {
             context->Remove(constraint.label, false);
+            if (!constraint.drawing.IsNull())
+                context->Remove(constraint.drawing, false);
+        }
     }
     constraints_.clear();
 }

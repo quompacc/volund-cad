@@ -34,9 +34,19 @@ class SketchConstraintPresentation final {
                                                             int x, int y) const;
 
   private:
+    struct Placement final {
+        gp_Pnt anchor;
+        double offsetX;
+        double offsetY;
+        occ::handle<AIS_InteractiveObject> drawing;
+    };
+    static Placement placeDimension(const occ::handle<AIS_InteractiveContext>& context,
+                                    const SceneDimension& dimension, const Quantity_Color& color,
+                                    double height, int characters);
     struct ConstraintPresentation final {
         std::uint64_t id;
         occ::handle<AIS_TextLabel> label;
+        occ::handle<AIS_InteractiveObject> drawing; // W12: lines and arrows of a dimension
         bool editable;
         gp_Pnt anchor;
         double offsetX;

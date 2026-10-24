@@ -50,6 +50,22 @@ class SketchEditorInteraction final {
     // D01: the fields typed into while drawing; Enter places the element with them.
     [[nodiscard]] SketchDynamicInput& dynamicInput() noexcept { return dynamic_; }
     [[nodiscard]] const SketchDynamicInput& dynamicInput() const noexcept { return dynamic_; }
+    // W12b (SketchFieldLines.cpp): a sketch point in framebuffer pixels, and for each
+    // dynamic field the dimension line it sits on (framebuffer pixels; `outward` the screen
+    // direction it stands off to, zero for a line across); none for a field at the pointer.
+    struct FieldLine final {
+        std::pair<double, double> from;
+        std::pair<double, double> to;
+        std::pair<double, double> outward;
+    };
+    [[nodiscard]] std::optional<std::pair<double, double>> screenPoint(double x, double y) const;
+    [[nodiscard]] std::vector<std::optional<FieldLine>> fieldLines(int x, int y) const;
+    [[nodiscard]] std::optional<FieldLine> screenLine(std::pair<double, double> from,
+                                                      std::pair<double, double> to,
+                                                      std::pair<double, double> outward) const;
+    [[nodiscard]] std::optional<FieldLine> fieldLine(DynamicField kind,
+                                                     std::pair<double, double> first,
+                                                     std::pair<double, double> second) const;
     [[nodiscard]] std::optional<SketchElementIntent> commitTyped();
     [[nodiscard]] bool beginElementDrag(int x, int y);
     [[nodiscard]] std::optional<std::pair<double, double>> dragElement(int x, int y);

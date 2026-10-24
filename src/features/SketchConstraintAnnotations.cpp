@@ -8,6 +8,7 @@
 #include <cmath>
 #include <iomanip>
 #include <numbers>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 
@@ -242,6 +243,249 @@ const char* symbol(SketchConstraintKind kind) {
     return "?";
 }
 
+// W12: a dimension's value as a drafter writes it: up to two decimals, no trailing zeros.
+std::string compactNumber(double value) {
+    std::ostringstream text;
+    text << std::fixed << std::setprecision(2) << value;
+    std::string result = text.str();
+    while (result.ends_with('0'))
+        result.pop_back();
+    if (result.ends_with('.'))
+        result.pop_back();
+    return result == "-0" ? "0" : result;
+}
+
+// W12: how far the dimension lines stand off the geometry: a share of the sketch's size.
+double dimensionOffset(const document::SketchParameters& sketch) {
+    double low[2] = {0.0, 0.0}, high[2] = {0.0, 0.0};
+    for (const auto& element : sketch.elements.values) {
+        for (const auto position : {Position::start, Position::end, Position::center}) {
+            const SketchPoint point = referencePoint(sketch, {element.id, position});
+            low[0] = std::min(low[0], point.x), high[0] = std::max(high[0], point.x);
+            low[1] = std::min(low[1], point.y), high[1] = std::max(high[1], point.y);
+        }
+    }
+    return std::clamp(0.08 * std::hypot(high[0] - low[0], high[1] - low[1]), 1.5, 12.0);
+}
+
+// The middle of the sketch's geometry; dimensions stand off away from it.
+SketchPoint sketchMiddle(const document::SketchParameters& sketch) {
+    SketchPoint sum{0.0, 0.0};
+    int count = 0;
+    for (const auto& element : sketch.elements.values) {
+        const SketchPoint point = elementPoint(sketch, element.id);
+        sum.x += point.x, sum.y += point.y;
+        ++count;
+    }
+    return count == 0 ? sum : SketchPoint{sum.x / count, sum.y / count};
+}
+
+gp_Dir worldDirection(const document::SketchPlane& plane, double x, double y) {
+    const gp_Dir normal(plane.normalX, plane.normalY, plane.normalZ);
+    const gp_Dir xDirection(plane.xDirectionX, plane.xDirectionY, plane.xDirectionZ);
+    const gp_Dir yDirection = normal.Crossed(xDirection);
+    return gp_Dir(gp_Vec(xDirection) * x + gp_Vec(yDirection) * y);
+}
+
+struct Measured final {
+    SketchPoint first;
+    SketchPoint second;
+    std::optional<SketchPoint> axis; // measured along this direction; else first to second
+};
+
+std::optional<Measured> lineMeasure(const document::SketchParameters& sketch,
+                                    const document::SketchConstraint& constraint) {
+    const auto& geometry = findElement(sketch, constraint.first.element).geometry;
+    if (const auto* line = std::get_if<document::SketchLine>(&geometry))
+        return Measured{line->start, line->end, std::nullopt};
+    return std::nullopt;
+}
+
+// Two points apart along the sketch's X (true) or Y.
+Measured axisMeasure(const document::SketchParameters& sketch,
+                     const document::SketchConstraint& constraint, bool x) {
+    return Measured{referencePoint(sketch, constraint.first),
+                    referencePoint(sketch, *constraint.second),
+                    x ? SketchPoint{1.0, 0.0} : SketchPoint{0.0, 1.0}};
+}
+
+Measured footMeasure(const document::SketchParameters& sketch,
+                     const document::SketchConstraint& constraint) {
+    const SketchPoint point = referencePoint(sketch, constraint.first);
+    const auto& line =
+        std::get<document::SketchLine>(findElement(sketch, constraint.second->element).geometry);
+    return Measured{point, foot(line, point), std::nullopt};
+}
+
+// A coordinate: from the axis to the point, along X (true) or Y.
+Measured coordinateMeasure(const document::SketchParameters& sketch,
+                           const document::SketchConstraint& constraint, bool x) {
+    const SketchPoint point = referencePoint(sketch, constraint.first);
+    return Measured{x ? SketchPoint{0.0, point.y} : SketchPoint{point.x, 0.0}, point,
+                    x ? SketchPoint{1.0, 0.0} : SketchPoint{0.0, 1.0}};
+}
+
+// The two points a linear dimension measures between.
+std::optional<Measured> measuredPoints(const document::SketchParameters& sketch,
+                                       const document::SketchConstraint& constraint) {
+    switch (constraint.kind) {
+    case SketchConstraintKind::distance:
+        return lineMeasure(sketch, constraint);
+    case SketchConstraintKind::pointDistance:
+        return Measured{referencePoint(sketch, constraint.first),
+                        referencePoint(sketch, *constraint.second), std::nullopt};
+    case SketchConstraintKind::pointDistanceX:
+    case SketchConstraintKind::pointDistanceY:
+        return axisMeasure(sketch, constraint,
+                           constraint.kind == SketchConstraintKind::pointDistanceX);
+    case SketchConstraintKind::pointLineDistance:
+        return footMeasure(sketch, constraint);
+    case SketchConstraintKind::coordinateX:
+    case SketchConstraintKind::coordinateY:
+        return coordinateMeasure(sketch, constraint,
+                                 constraint.kind == SketchConstraintKind::coordinateX);
+    default:
+        return std::nullopt;
+    }
+}
+
+std::optional<SketchDimensionShape> linearShape(const document::SketchParameters& sketch,
+                                                const Measured& measured, double offset) {
+    SketchPoint along = measured.axis.value_or(
+        SketchPoint{measured.second.x - measured.first.x, measured.second.y - measured.first.y});
+    const double length = std::hypot(along.x, along.y);
+    if (length < 1e-9)
+        return std::nullopt;
+    along = {along.x / length, along.y / length};
+    SketchPoint outward{-along.y, along.x};
+    const SketchPoint centre = middle(measured.first, measured.second);
+    const SketchPoint inside = sketchMiddle(sketch);
+    if ((centre.x - inside.x) * outward.x + (centre.y - inside.y) * outward.y < 0.0)
+        outward = {-outward.x, -outward.y};
+    const auto& plane = sketch.plane;
+    const int beside = std::abs(along.y) > std::abs(along.x) ? (outward.x < 0 ? -1 : 1) : 0;
+    return SketchDimensionShape{SketchDimensionStyle::linear,
+                                worldPoint(plane, measured.first),
+                                worldPoint(plane, measured.second),
+                                worldPoint(plane, centre),
+                                worldDirection(plane, along.x, along.y),
+                                worldDirection(plane, outward.x, outward.y),
+                                gp_Dir(plane.normalX, plane.normalY, plane.normalZ),
+                                offset,
+                                {},
+                                beside};
+}
+
+std::optional<SketchDimensionShape> radialShape(const document::SketchParameters& sketch,
+                                                const document::SketchConstraint& constraint,
+                                                double offset) {
+    const auto& geometry = findElement(sketch, constraint.first.element).geometry;
+    const auto centre = centerOf(geometry);
+    if (!centre)
+        return std::nullopt;
+    const SketchPoint onCurve = elementPoint(sketch, constraint.first.element);
+    const auto& plane = sketch.plane;
+    const bool diameter = constraint.kind == SketchConstraintKind::diameter;
+    const SketchPoint across{2 * centre->x - onCurve.x, 2 * centre->y - onCurve.y};
+    const double dx = onCurve.x - centre->x, dy = onCurve.y - centre->y;
+    const double radius = std::max(std::hypot(dx, dy), 1e-9);
+    return SketchDimensionShape{diameter ? SketchDimensionStyle::diameter
+                                         : SketchDimensionStyle::radius,
+                                worldPoint(plane, diameter ? across : *centre),
+                                worldPoint(plane, onCurve),
+                                worldPoint(plane, *centre),
+                                worldDirection(plane, dx / radius, dy / radius),
+                                worldDirection(plane, dx / radius, dy / radius),
+                                gp_Dir(plane.normalX, plane.normalY, plane.normalZ),
+                                offset,
+                                {}};
+}
+
+// The legs of an angle: where the two lines meet and a point on each, away from the meeting.
+std::optional<SketchDimensionShape> angleShape(const document::SketchParameters& sketch,
+                                               const document::SketchConstraint& constraint,
+                                               double offset) {
+    const auto* a =
+        std::get_if<document::SketchLine>(&findElement(sketch, constraint.first.element).geometry);
+    const auto* b = std::get_if<document::SketchLine>(
+        &findElement(sketch, constraint.second->element).geometry);
+    if (a == nullptr || b == nullptr)
+        return std::nullopt;
+    const double ax = a->end.x - a->start.x, ay = a->end.y - a->start.y;
+    const double bx = b->end.x - b->start.x, by = b->end.y - b->start.y;
+    const double cross = ax * by - ay * bx;
+    if (std::abs(cross) < 1e-12)
+        return std::nullopt;
+    const double t = ((b->start.x - a->start.x) * by - (b->start.y - a->start.y) * bx) / cross;
+    const SketchPoint vertex{a->start.x + ax * t, a->start.y + ay * t};
+    // Each leg points from the meeting to the line's farther end.
+    const auto leg = [&](const document::SketchLine& line) {
+        const SketchPoint far = std::hypot(line.start.x - vertex.x, line.start.y - vertex.y) >
+                                        std::hypot(line.end.x - vertex.x, line.end.y - vertex.y)
+                                    ? line.start
+                                    : line.end;
+        const double length = std::max(std::hypot(far.x - vertex.x, far.y - vertex.y), 1e-9);
+        const double radius = 2.5 * offset;
+        return SketchPoint{vertex.x + (far.x - vertex.x) / length * radius,
+                           vertex.y + (far.y - vertex.y) / length * radius};
+    };
+    const auto& plane = sketch.plane;
+    return SketchDimensionShape{SketchDimensionStyle::angle,
+                                worldPoint(plane, leg(*a)),
+                                worldPoint(plane, leg(*b)),
+                                worldPoint(plane, vertex),
+                                worldDirection(plane, 1.0, 0.0),
+                                worldDirection(plane, 0.0, 1.0),
+                                gp_Dir(plane.normalX, plane.normalY, plane.normalZ),
+                                2.5 * offset,
+                                {}};
+}
+
+std::string dimensionText(SketchConstraintKind kind, double value) {
+    switch (kind) {
+    case SketchConstraintKind::angle:
+        return compactNumber(std::abs(kernel::toDegrees(kernel::Radians(value)).value())) + "°";
+    case SketchConstraintKind::radius:
+        return "R " + compactNumber(value) + " mm";
+    case SketchConstraintKind::diameter:
+        return "Ø " + compactNumber(value) + " mm";
+    default:
+        return compactNumber(std::abs(value)) + " mm";
+    }
+}
+
+// A point on an axis keeps its short label; a dimension line of length zero shows nothing.
+bool onAxis(const document::SketchConstraint& constraint, double value) {
+    return (constraint.kind == SketchConstraintKind::coordinateX ||
+            constraint.kind == SketchConstraintKind::coordinateY) &&
+           std::abs(value) < 1e-9;
+}
+
+// W12: how the dimension is drawn; none for a relation or one without a drawing.
+std::optional<SketchDimensionShape>
+sketchDimensionShape(const document::SketchParameters& sketch,
+                     const document::SketchConstraint& constraint, double value) {
+    if (sketchAnnotationCategory(constraint.kind) != SketchAnnotationCategory::dimension)
+        return std::nullopt;
+    if (onAxis(constraint, value))
+        return std::nullopt;
+    const double offset = dimensionOffset(sketch);
+    std::optional<SketchDimensionShape> shape;
+    if (constraint.kind == SketchConstraintKind::angle)
+        shape = angleShape(sketch, constraint, offset);
+    else if (constraint.kind == SketchConstraintKind::radius ||
+             constraint.kind == SketchConstraintKind::diameter)
+        shape = radialShape(sketch, constraint, offset);
+    else if (const auto measured = measuredPoints(sketch, constraint))
+        shape = linearShape(sketch, *measured, offset);
+    if (shape) {
+        shape->text = dimensionText(constraint.kind, value);
+        if (constraint.reference)
+            shape->text = "(" + shape->text + ")";
+    }
+    return shape;
+}
+
 } // namespace
 
 SketchAnnotationCategory sketchAnnotationCategory(SketchConstraintKind kind) noexcept {
@@ -296,7 +540,8 @@ evaluateSketchConstraintAnnotations(const document::SketchParameters& sketch) {
                           category, isEditableDimension(constraint), constraint.parameter,
                           constraint.reference // S18: a reference in parentheses
                               ? "(" + sketchConstraintLabel(constraint.kind, value) + ")"
-                              : sketchConstraintLabel(constraint.kind, value)});
+                              : sketchConstraintLabel(constraint.kind, value),
+                          sketchDimensionShape(sketch, constraint, value)});
     }
     return result;
 }
