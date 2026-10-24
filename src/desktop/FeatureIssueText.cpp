@@ -4,6 +4,8 @@
 #include "FeatureIssueText.hpp"
 
 #include <QCoreApplication>
+#include <QLocale>
+#include <QRegularExpression>
 
 #include <algorithm>
 #include <array>
@@ -196,8 +198,23 @@ QString issueText(const std::string& code) {
                                      : QCoreApplication::translate("FeatureIssue", found->text);
 }
 
+namespace {
+// User report 2026-10-24: the largest radius or distance the edges take, from the technical
+// text ("; largest value about 9.99"), in the user's words.
+QString largestValueHint(const QString& technical) {
+    static const QRegularExpression pattern(QStringLiteral("largest value about ([0-9.]+)"));
+    const auto match = pattern.match(technical);
+    if (!match.hasMatch())
+        return {};
+    return QStringLiteral(" ") +
+           QCoreApplication::translate("FeatureIssue", "Höchstens etwa %1 mm sind möglich.")
+               .arg(QLocale().toString(match.captured(1).toDouble(), 'f', 2));
+}
+
+} // namespace
+
 QString issueExplanation(const std::string& code, const std::string& technical) {
-    const QString explained = issueText(code);
+    const QString explained = issueText(code) + largestValueHint(QString::fromStdString(technical));
     const QString details = QString::fromStdString(technical);
     if (details.isEmpty())
         return explained;

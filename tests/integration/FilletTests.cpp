@@ -455,6 +455,28 @@ void roundingIntoRounding() {
         }
 }
 
+// User report 2026-10-24: a radius the edge cannot take names the largest one it can.
+void largestRadiusNamed() {
+    application::CadSession session;
+    session.newDocument();
+    const auto box = *session.createBoxFeature({40, 20, 10}).feature();
+    const auto edge = corner(session, box);
+    const auto refused = session.createFillet(box, std::span(&edge, 1), 30);
+    const auto& issues = refused.evaluation().features;
+    const auto issue =
+        std::ranges::find(issues, std::string("fillet-failed"), &features::EvaluationIssue::code);
+    require(refused.status() != CommandStatus::committed && issue != issues.end(),
+            "R30 on a 20 mm side is refused");
+    const auto& message = issue->message;
+    const auto at = message.find("largest value about ");
+    require(at != std::string::npos, "The refusal names the largest radius: " + message);
+    const double largest = std::stod(message.substr(at + 20));
+    require(largest > 5 && largest <= 20, "The largest radius is plausible: " + message);
+    require(session.createFillet(box, std::span(&edge, 1), largest).status() ==
+                CommandStatus::committed,
+            "The named radius works: " + message);
+}
+
 } // namespace
 
 int main() {
@@ -466,6 +488,7 @@ int main() {
         treatedFaceEdges();
         extrusionSideEdge();
         roundingIntoRounding();
+        largestRadiusNamed();
         std::cout << "PASS M05/M07 fillet and chamfer: box edge 10 (1 - pi/4) and 5, refused, base "
                      "change, "
                      "edit, save/open, extrusion side edge\n";

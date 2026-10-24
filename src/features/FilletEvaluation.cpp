@@ -15,7 +15,9 @@
 #include <TopoDS.hxx>
 
 #include <algorithm>
+#include <cmath>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <utility>
 
@@ -201,6 +203,29 @@ ResolvedEdges resolveEdges(std::span<const SupportProvenance> origins, std::span
     return result;
 }
 
+// User report 2026-10-24: a radius equal to the height of a face beside the edge consumes the
+// face, which OCCT cannot build; the message names the largest value the edges at fault take
+// (to about 0.01 mm of a 10 mm try, rounded down), so nobody has to guess.
+double largestValue(const TopoDS_Shape& body, const ResolvedEdges& resolved,
+                    const std::vector<std::size_t>& failing, double value,
+                    const Treatment& treatment) {
+    std::vector<TopoDS_Edge> edges;
+    for (const auto index : failing)
+        edges.push_back(resolved.edges[index]);
+    double works = 0.0;
+    double fails = value;
+    for (int step = 0; step < 10; ++step) {
+        const double middle = (works + fails) / 2;
+        try {
+            static_cast<void>(treatment.apply(body, edges, middle));
+            works = middle;
+        } catch (const kernel::KernelError&) {
+            fails = middle;
+        }
+    }
+    return std::floor(works * 100) / 100;
+}
+
 kernel::ShapeOperationResult treat(const TopoDS_Shape& body, const ResolvedEdges& resolved,
                                    double value, const Treatment& treatment) {
     try {
@@ -208,14 +233,19 @@ kernel::ShapeOperationResult treat(const TopoDS_Shape& body, const ResolvedEdges
     } catch (const kernel::KernelError& error) {
         if (error.failure() != treatment.failure)
             throw;
+        const auto indices = treatment.failing(body, resolved.edges, value);
         std::vector<std::uint64_t> failing;
-        for (const auto index : treatment.failing(body, resolved.edges, value))
+        for (const auto index : indices)
             if (std::ranges::find(failing, resolved.owners[index]) == failing.end())
                 failing.push_back(resolved.owners[index]);
         std::ranges::sort(failing);
-        throw GeometryEvaluationError(std::string("The edges cannot be ") + treatment.verb +
-                                          " with " + std::to_string(value) + edgeList(failing),
-                                      std::string(treatment.prefix) + "-failed", failing);
+        const double largest = largestValue(body, resolved, indices, value, treatment);
+        std::ostringstream text;
+        text << "The edges cannot be " << treatment.verb << " with " << value << edgeList(failing);
+        if (largest > 0.0)
+            text << "; largest value about " << largest; // FeatureIssueText reads this
+        throw GeometryEvaluationError(text.str(), std::string(treatment.prefix) + "-failed",
+                                      failing);
     }
 }
 

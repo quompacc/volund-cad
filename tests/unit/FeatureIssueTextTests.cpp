@@ -51,6 +51,11 @@ int main(int argc, char** argv) {
         require(unknown == QStringLiteral("Dieser Schritt lässt sich nicht berechnen. "
                                           "(Contour builder)"),
                 "An unknown code: the general sentence");
+        require(voelund::desktop::issueExplanation(
+                    "fillet-failed",
+                    "The edges cannot be rounded with 10 [edges 1]; largest value about 9.99")
+                    .contains(QStringLiteral("Höchstens etwa")),
+                "A refused radius names the largest that works");
         require(voelund::desktop::issueExplanation("sketch-unsolved", "").startsWith("Skizze:"),
                 "Without a technical message only the explanation");
         std::cout << "PASS feature issue texts: " << codes.size() << " codes in German\n";
