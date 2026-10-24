@@ -256,9 +256,9 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
                 if (intent.has_value() && impl_->sketchEditorElementHandler) {
                     impl_->sketchEditorElementHandler(*intent);
                 }
-                if (impl_->sketchEditorPreviewHandler) {
+                if (impl_->sketchEditorPreviewHandler)
                     impl_->sketchEditorPreviewHandler(std::nullopt);
-                }
+                impl_->showDynamicFields(event->position()); // W13: none once the element is placed
                 update();
                 return;
             }

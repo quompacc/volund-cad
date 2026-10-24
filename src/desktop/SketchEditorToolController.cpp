@@ -145,7 +145,16 @@ void SketchEditorToolController::showPanel() {
          {"show_projected",
           QObject::tr("Projizierte Geometrie"),
           {QObject::tr("Ein"), QObject::tr("Aus")},
-          showProjected_ ? 0 : 1}},
+          showProjected_ ? 0 : 1},
+         // W13 (as in FreeCAD): rectangle options, shown while a rectangle tool is on.
+         {"rounded_corners",
+          QObject::tr("Abgerundete Ecken (U)"),
+          {QObject::tr("Aus"), QObject::tr("Ein")},
+          rectangleOptions_.rounded ? 1 : 0},
+         {"frame",
+          QObject::tr("Rahmen (J)"),
+          {QObject::tr("Aus"), QObject::tr("Ein")},
+          rectangleOptions_.frame ? 1 : 0}},
         {{"horizontal", QObject::tr("Linie waagrecht festlegen"), QObject::tr("Linien")},
          {"vertical", QObject::tr("Linie senkrecht festlegen"), QObject::tr("Linien")},
          {"free", QObject::tr("Richtungsbedingung der Linie entfernen"), QObject::tr("Linien")},
@@ -239,93 +248,8 @@ void SketchEditorToolController::showPanel() {
          {"delete", QObject::tr("Gewählte Elemente oder Bedingung löschen (Entf)"),
           QObject::tr("Bearbeiten")}},
         [this](const std::string& id, double value) { applyParameter(id, value); },
-        [this](const std::string& id, int index) {
-            if (id == "tool")
-                setTool(index);
-            else
-                applyViewSwitch(id, index == 0);
-        },
-        [this](const std::string& id) {
-            if (id == "horizontal") {
-                applyLineConstraint(document::SketchLineConstraint::horizontal);
-            } else if (id == "vertical") {
-                applyLineConstraint(document::SketchLineConstraint::vertical);
-            } else if (id == "free") {
-                applyLineConstraint(document::SketchLineConstraint::none);
-            } else if (id == "coincident") {
-                applyRelation(document::SketchConstraintKind::coincident);
-            } else if (id == "parallel") {
-                applyRelation(document::SketchConstraintKind::parallel);
-            } else if (id == "perpendicular") {
-                applyRelation(document::SketchConstraintKind::perpendicular);
-            } else if (id == "collinear") {
-                applyRelation(document::SketchConstraintKind::collinear);
-            } else if (id == "horizontal_points") {
-                applyRelation(document::SketchConstraintKind::horizontalPoints);
-            } else if (id == "vertical_points") {
-                applyRelation(document::SketchConstraintKind::verticalPoints);
-            } else if (id == "fixed") {
-                applyRelation(document::SketchConstraintKind::fixed);
-            } else if (id == "equal") {
-                applyRelation(document::SketchConstraintKind::equal);
-            } else if (id == "tangent") {
-                applyRelation(document::SketchConstraintKind::tangent);
-            } else if (id == "symmetric") {
-                applyRelation(document::SketchConstraintKind::symmetric);
-            } else if (id == "midpoint") {
-                applyRelation(document::SketchConstraintKind::midpoint);
-            } else if (id == "perpendicular_bisector") {
-                applyRelation(document::SketchConstraintKind::perpendicularBisector);
-            } else if (id == "concentric") {
-                applyRelation(document::SketchConstraintKind::concentric);
-            } else if (id == "diameter") {
-                applyRelation(document::SketchConstraintKind::diameter);
-            } else if (id == "radius") {
-                applyRelation(document::SketchConstraintKind::radius);
-            } else if (id == "point_distance") {
-                applyRelation(document::SketchConstraintKind::pointDistance);
-            } else if (id == "point_line_distance") {
-                applyRelation(document::SketchConstraintKind::pointLineDistance);
-            } else if (id == "point_distance_x") {
-                applyRelation(document::SketchConstraintKind::pointDistanceX);
-            } else if (id == "point_distance_y") {
-                applyRelation(document::SketchConstraintKind::pointDistanceY);
-            } else if (id == "angle") {
-                applyRelation(document::SketchConstraintKind::angle);
-            } else if (id == "construction") {
-                toggleConstruction();
-            } else if (id == "point_on_object") {
-                applyRelation(document::SketchConstraintKind::pointOnObject);
-            } else if (id == "lock_point") {
-                lockSelectedReference();
-            } else if (id == "unlock_point") {
-                unlockSelectedReference();
-            } else if (id == "remove_constraint") {
-                removeLastConstraint();
-            } else if (id == "undo_sketch") {
-                if (editor_->undo()) {
-                    // S02: selection and solve status come back with the step.
-                    syncSelectedDimensionInputs();
-                    syncConstraintState();
-                    refreshPresentation();
-                }
-            } else if (id == "redo_sketch") {
-                if (editor_->redo()) {
-                    // S02: selection and solve status come back with the step.
-                    syncSelectedDimensionInputs();
-                    syncConstraintState();
-                    refreshPresentation();
-                }
-            } else if (id == "trim" || id == "extend" || id == "split" || id == "fillet" ||
-                       id == "chamfer" || id == "rotate" || id == "scale" || id == "offset" ||
-                       id == "mirror" || id == "linear_pattern" || id == "circular_pattern" ||
-                       id == "edit_pattern" || id == "dissolve_pattern" || id == "project") {
-                applyEditOperation(id);
-            } else if (id == "toggle_reference")
-                toggleReference();
-            else if (id == "delete")
-                removeSelected();
-        },
+        [this](const std::string& id, int index) { chooseOption(id, index); },
+        [this](const std::string& id) { runAction(id); },
         [this]() { accept(); },
         [this]() { requestCancel(); },
         [this]() { stepBack(); },

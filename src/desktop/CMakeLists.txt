@@ -58,6 +58,7 @@ add_library(
     DraftToolController.cpp
     SketchEditorClosing.cpp
     SketchEditorRecovery.cpp
+    SketchEditorActions.cpp
     SketchEditorToolController.cpp
     SketchIcons.cpp
     SketchEditorStart.cpp

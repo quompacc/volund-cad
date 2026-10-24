@@ -19,6 +19,7 @@ class CadSession;
 
 namespace voelund::desktop {
 
+inline constexpr int rectangleTool = 3; // W13
 // Index of "Rechteck (Mitte)" in the tool choice (S04a).
 inline constexpr int centerRectangleTool = 10;
 inline constexpr int pointTool = 11;     // S15
@@ -136,6 +137,14 @@ class SketchEditorToolController final {
     void requestCancel();
     bool removeSelectedConstraint();
     void applyViewSwitch(const std::string& id, bool on);
+    // SketchEditorActions.cpp: the editor's commands by their panel and shortcut IDs.
+    void runAction(const std::string& id);
+    void stepHistory(bool back);
+    void chooseOption(const std::string& id, int index);
+    void applyRectangleOptions(const application::SketchCreationResult& created);
+    void syncRectangleOptions();
+    [[nodiscard]] bool
+    hiddenAnnotation(const features::SketchConstraintAnnotation& annotation) const;
     void finishStep();
     void open(std::unique_ptr<application::SketchEditorSession> editor,
               const viewport::PlanarFaceSelection& drawing,
@@ -168,7 +177,8 @@ class SketchEditorToolController final {
     int toolIndex_{1};
     bool editing_{false};
     bool automaticRelations_{true}; // S04: kept for the next sketch
-    bool showDimensions_{true};     // S13: view switches, kept for the next sketch
+    application::SketchEditorSession::RectangleOptions rectangleOptions_{}; // W13
+    bool showDimensions_{true}; // S13: view switches, kept for the next sketch
     bool showProjected_{true};
     bool projecting_{false}; // S17
     std::function<bool()> gridShown_;

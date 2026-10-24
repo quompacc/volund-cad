@@ -763,6 +763,14 @@ if(VOELUND_BUILD_DESKTOP)
         if(VOELUND_NATIVE_WAYLAND)
             set_tests_properties(desktop.sketch_dimension_edit PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
         endif()
+        add_executable(voelund_sketch_rectangle_options_flow_tests desktop/SketchRectangleOptionsFlowTests.cpp)
+        target_link_libraries(voelund_sketch_rectangle_options_flow_tests PRIVATE voelund_project_options Voelund::Desktop)
+        add_test(NAME desktop.sketch_rectangle_options COMMAND voelund_sketch_rectangle_options_flow_tests)
+        set_tests_properties(desktop.sketch_rectangle_options PROPERTIES
+            LABELS "desktop;qt-opengl;sketch;regression" TIMEOUT 60 RUN_SERIAL TRUE)
+        if(VOELUND_NATIVE_WAYLAND)
+            set_tests_properties(desktop.sketch_rectangle_options PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
+        endif()
         add_executable(voelund_sketch_dimension_display_tests desktop/SketchDimensionDisplayTests.cpp)
         target_link_libraries(voelund_sketch_dimension_display_tests PRIVATE voelund_project_options Voelund::Desktop)
         add_test(NAME desktop.sketch_dimension_display COMMAND voelund_sketch_dimension_display_tests)
@@ -1158,6 +1166,10 @@ target_link_libraries(
 )
 
 add_test(NAME application.sketch_basic_tools COMMAND voelund_sketch_basic_tools_tests)
+
+add_executable(voelund_sketch_rectangle_options_tests integration/SketchRectangleOptionsTests.cpp)
+target_link_libraries(voelund_sketch_rectangle_options_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.sketch_rectangle_options COMMAND voelund_sketch_rectangle_options_tests)
 
 add_executable(voelund_sketch_creation_tests integration/SketchCreationTests.cpp)
 target_link_libraries(voelund_sketch_creation_tests PRIVATE voelund_project_options Voelund::Application)

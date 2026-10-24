@@ -237,6 +237,7 @@ void SketchEditorToolController::syncSelectedDimensionInputs() {
     panel_.setLengthVisible("rectangle_height", height.has_value());
     panel_.setLengthVisible("circle_radius", radius.has_value());
     panel_.setLengthVisible("polygon_sides", toolIndex_ == 9);
+    syncRectangleOptions(); // W13
     panel_.setLengthVisible("fillet_radius",
                             selecting && editor_->selectedReferences().size() >= 2);
     panel_.setLengthVisible("chamfer_distance",
@@ -339,8 +340,7 @@ void SketchEditorToolController::refreshPresentation() {
     // S07: label, value and editability come from one projection (SketchConstraintAnnotations).
     for (const features::SketchConstraintAnnotation& annotation : annotations) {
         // S13: "Bemaßungen: Aus" hides the dimensions, relations stay.
-        if (!showDimensions_ &&
-            annotation.category == features::SketchAnnotationCategory::dimension)
+        if (hiddenAnnotation(annotation))
             continue;
         // PAR02: a bound dimension shows its parameter, "A = 60.000 mm".
         std::string label = annotation.label;

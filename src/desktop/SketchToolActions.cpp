@@ -140,6 +140,19 @@ void SketchToolActions::build() {
         window_.addAction(action);
         group->actions.push_back(action);
     }
+    // W13 (as in FreeCAD): U and J switch the rectangle options; they live in the panel, not in
+    // the rail.
+    for (const auto& [id, key] : {std::pair{"rounded_corners", "U"}, std::pair{"frame", "J"}}) {
+        auto* action = new QAction(&window_);
+        action->setShortcut(QKeySequence(QString::fromLatin1(key)));
+        setCommandId(*action, (std::string("sketch.") + id).c_str());
+        const std::string option = id;
+        QObject::connect(action, &QAction::triggered, &window_, [this, option] {
+            if (const int index = host_.choiceIndex(option); index >= 0)
+                host_.chooseOption(option, index == 0 ? 1 : 0);
+        });
+        window_.addAction(action);
+    }
 }
 
 std::vector<SketchToolActions::Section> SketchToolActions::sections() const {

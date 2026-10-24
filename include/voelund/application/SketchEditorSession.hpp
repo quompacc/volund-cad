@@ -14,6 +14,7 @@
 
 #include <TopoDS_Shape.hxx>
 
+#include <array>
 #include <optional>
 #include <span>
 #include <string>
@@ -140,6 +141,17 @@ class SketchEditorSession final {
     // keep its meaning is removed and listed. Throws SketchEditRefusal naming the lines (parallel,
     // radius too large) and changes nothing.
     [[nodiscard]] SketchCurveEditResult filletCorner(double radius);
+    // W13 (as in FreeCAD, SketchEditorRectangleOptions.cpp): a rectangle just created gets
+    // rounded corners and/or a frame. Width, height, the corner radius and the frame width
+    // become dimensions and the corners share one radius, so all but the position is fixed.
+    // Part of the creation's step; throws std::invalid_argument and changes nothing when the
+    // rectangle is too small.
+    struct RectangleOptions final {
+        bool rounded{false};
+        bool frame{false};
+    };
+    void finishRectangle(const SketchCreationResult& created, RectangleOptions options);
+    using RectangleSides = std::array<document::SketchElementId, 4>; // in contour order
     [[nodiscard]] bool filletSelected(double radius);
     // S19: cuts the corner of the two selected lines with a line `distance` from it on each,
     // relations kept as for a fillet; refusals as for filletCorner, named "Fasen".
@@ -341,6 +353,13 @@ class SketchEditorSession final {
         std::optional<SketchArcDirection> arcDirection;
     };
     [[nodiscard]] SketchCreationResult confirmRectangle(const document::SketchRectangle& rectangle);
+    // W13 (SketchEditorRectangleOptions.cpp): the parts of finishRectangle.
+    [[nodiscard]] document::SketchLine lineOf(document::SketchElementId id) const;
+    void addRelation(document::SketchConstraintKind kind, document::SketchGeometryReference first,
+                     std::optional<document::SketchGeometryReference> second, double value);
+    void dimensionSides(const RectangleSides& sides);
+    [[nodiscard]] RectangleSides addFrame(const RectangleSides& outer, double width);
+    void roundCorners(const RectangleSides& sides, double radius);
     void snapTo(document::SketchGeometryReference created, const std::optional<SketchSnap>& snap,
                 document::SketchPoint point);
     [[nodiscard]] std::optional<SketchCreationResult> createStep(const SketchCreationInput& input);

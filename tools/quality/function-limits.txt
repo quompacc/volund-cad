@@ -22,7 +22,7 @@ cyclomatic | src/features/FeatureDependencies.cpp | voelund::features::FeatureDe
 cyclomatic | src/viewport/CadViewportInput.cpp | voelund::viewport::CadViewport::mouseReleaseEvent::(lambda) | 59 | Altbestand vor A04
 cyclomatic | src/application/SketchEditorFillet.cpp | voelund::application::SketchEditorSession::treatCorner | 55 | Altbestand vor A04
 cyclomatic | src/application/SketchEditorTransform.cpp | voelund::application::SketchEditorSession::transformSelection | 55 | Altbestand vor A04
-cyclomatic | src/desktop/SketchEditorToolController.cpp | voelund::desktop::SketchEditorToolController::showPanel::(lambda) | 49 | Altbestand vor A04
+cyclomatic | src/desktop/SketchEditorActions.cpp | voelund::desktop::SketchEditorToolController::runAction | 14 | Altbestand vor A04 (Lambda aus showPanel, W13 von 49 gesenkt)
 cyclomatic | src/features/SketchRegions.cpp | voelund::features::buildSketchRegions | 47 | Altbestand vor A04
 cyclomatic | src/desktop/ShellIcons.cpp | voelund::desktop::(anonymous namespace)::draw | 47 | Altbestand vor A04
 cyclomatic | src/document/LegacyBodyIdentity.cpp | voelund::document::(anonymous namespace)::validateKind | 45 | Altbestand vor A04

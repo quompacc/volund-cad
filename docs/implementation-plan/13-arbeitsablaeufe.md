@@ -36,7 +36,7 @@ beschrieben. Lücken, die die Bestandsaufnahme vom 23.10.2026 fand:
 | W10 | Skizze: zweimal Esc beendet sie, eine leere Skizze wird verworfen. Rechtsklick beendet das Werkzeug. X schaltet Hilfsgeometrie auch mitten im Werkzeug um. Fang mit Mitte, parallel, senkrecht, Verlängerung und Tangente samt Hilfslinien. | teilweise |
 | W11 | Direkteingabe für Bogen, Langloch, Vieleck und Ellipse. Felder neben dem Element. Ein getippter Winkel wird Winkelmaß. | gebaut (`77e4e76`) |
 | W12 | Normbemaßung wie in FreeCAD und Fusion: Maßhilfslinien, Maßlinie mit Pfeilen neben der Geometrie, kompakter Wert darauf. Die Felder der Direkteingabe sitzen beim Zeichnen auf solchen Maßlinien. | in Arbeit |
-| W13 | Rechteck mit den Optionen „Abgerundete Ecken“ (U) und „Rahmen“ (J) wie in FreeCAD. Alle Beziehungen und Maße werden gesetzt, das Rechteck ist sofort voll bestimmt. | geplant |
+| W13 | Rechteck mit den Optionen „Abgerundete Ecken“ (U) und „Rahmen“ (J) wie in FreeCAD. Alle Beziehungen und Maße werden gesetzt, das Rechteck ist sofort voll bestimmt. | in Arbeit |
 
 **Arbeitsregeln:**
 
