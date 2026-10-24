@@ -2,12 +2,14 @@
 // Copyright (C) 2026 Eduard Hart
 
 #include "ToolRail.hpp"
+
 #include "CommandActions.hpp"
 #include "MainWindowSupport.hpp"
 #include "OverlayCard.hpp"
 #include "PillButton.hpp"
 #include "ShellIcons.hpp"
 #include "SketchIcons.hpp"
+#include "ToolRailRow.hpp"
 
 #include <voelund/viewport/CadViewport.hpp>
 
@@ -146,48 +148,13 @@ QWidget* divider(QWidget* parent) {
     return section;
 }
 
+using rail::boundedWidth;
+using rail::leadingRow;
+using rail::rowWidth;
+using rail::shownWidth;
+
 constexpr int barPadding = 7;
 constexpr int pillHeight = 34;
-
-// A widget's width whether it is shown or not, bounded like a layout bounds it.
-int boundedWidth(const QWidget& widget) {
-    return widget.sizeHint()
-        .expandedTo(widget.minimumSize())
-        .boundedTo(widget.maximumSize())
-        .width();
-}
-
-int itemWidth(QLayoutItem& item) {
-    return item.widget() != nullptr ? boundedWidth(*item.widget()) : item.sizeHint().width();
-}
-
-int rowWidth(QWidget& page) {
-    QLayout& layout = *page.layout();
-    int width = 0;
-    for (int index = 0; index < layout.count(); ++index)
-        width += itemWidth(*layout.itemAt(index)) + (index > 0 ? layout.spacing() : 0);
-    return width;
-}
-
-// The leading widgets within `limit` and the width they take; a divider never ends the row.
-std::pair<int, int> leadingRow(QLayout& layout, int limit) {
-    int used = 0;
-    int shown = 0;
-    while (shown < layout.count()) {
-        const int next =
-            used + (shown > 0 ? layout.spacing() : 0) + itemWidth(*layout.itemAt(shown));
-        if (next > limit)
-            break;
-        used = next;
-        ++shown;
-    }
-    if (shown > 0 && shown < layout.count() &&
-        layout.itemAt(shown - 1)->widget()->objectName() == QStringLiteral("railSection")) {
-        used -= itemWidth(*layout.itemAt(shown - 1)) + (shown > 1 ? layout.spacing() : 0);
-        --shown;
-    }
-    return {shown, used};
-}
 
 } // namespace
 
@@ -393,15 +360,19 @@ void ToolRail::place() {
     placing_ = false;
 }
 
-// User report 2026-10-23 (Windows, maximised window, sketch opened): the scroll area kept its
-// row at an older, narrower width, so the wider sketch row overlapped. The row now follows the
-// bar at once and is never narrower than it needs.
+// User reports 2026-10-23/24 (Windows, sketch opened): the scroll area sized its row by Qt's
+// minimum size hint, which could still be the narrower page's, so the fixed-size sketch tools
+// lay on top of each other. The row's least width is now the shown tools' own width, which
+// the scroll area keeps whenever it resizes the row.
 void ToolRail::followRow() {
     bar_->layout()->activate();
     QWidget* content = scroll_->widget();
+    const bool sketch = sketchShown_ && sketchPage_ != nullptr;
+    const int needed = shownWidth(sketch ? *sketchPage_ : *solidPage_);
+    content->setMinimumWidth(needed);
     content->layout()->activate();
     const QSize room = scroll_->viewport()->size();
-    content->resize(std::max(room.width(), content->minimumSizeHint().width()), room.height());
+    content->resize(std::max(room.width(), needed), room.height());
 }
 
 void ToolRail::setIconOnly(bool iconOnly) {

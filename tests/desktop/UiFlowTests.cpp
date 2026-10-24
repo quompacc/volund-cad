@@ -22,12 +22,16 @@
 #include <QScrollBar>
 #include <QStatusBar>
 #include <QTemporaryDir>
+#include <QToolButton>
 #include <QTreeWidget>
+#include <algorithm>
 #include <cmath>
 #include <filesystem>
 #include <iostream>
+#include <limits>
 #include <memory>
 #include <string>
+#include <vector>
 #include <voelund/application/CadSession.hpp>
 #include <voelund/desktop/MainWindow.hpp>
 #include <voelund/desktop/ProductShell.hpp>
@@ -401,6 +405,30 @@ void captures(const QString& path) {
     }
 }
 
+// The first shown tool of the rail's row narrower than it wants or overlapping the one before;
+// empty when every tool has its room.
+std::string squeezedTool(QScrollArea& scroll) {
+    std::vector<QToolButton*> shown;
+    for (auto* button : scroll.widget()->findChildren<QToolButton*>())
+        if (button->isVisibleTo(scroll.widget()) && button->parentWidget()->isVisible())
+            shown.push_back(button);
+    std::ranges::sort(shown, {}, [&](QToolButton* button) {
+        return button->mapTo(scroll.widget(), QPoint(0, 0)).x();
+    });
+    int end = std::numeric_limits<int>::min();
+    for (auto* button : shown) {
+        const int left = button->mapTo(scroll.widget(), QPoint(0, 0)).x();
+        const QString name = button->toolTip().isEmpty() ? button->text() : button->toolTip();
+        if (button->width() < button->sizeHint().width())
+            return name.toStdString() + " squeezed to " + std::to_string(button->width()) + " of " +
+                   std::to_string(button->sizeHint().width()) + " px";
+        if (left < end)
+            return name.toStdString() + " overlaps the tool before it";
+        end = left + button->width();
+    }
+    return {};
+}
+
 // L08 (A-VIS-01 of the release in a clean Windows at 150 %): the project card, the tool rail
 // and the header card never overlap, and no tool is clipped. A narrow rail shows its groups as
 // symbols, then the tools at its end in the » menu (user decision 2026-10-20); solid and
@@ -431,6 +459,9 @@ void cardsFit() {
                     std::to_string(scroll->horizontalScrollBar()->maximum()) + " px beyond " +
                     std::to_string(bar.width()) + " wanted " +
                     std::to_string(rail.property("wantedWidth").toInt()));
+        // User report 2026-10-24: the sketch tools were squeezed into each other.
+        const std::string squeezed = squeezedTool(*scroll);
+        require(squeezed.empty(), state + ": " + squeezed);
         auto* more = rail.findChild<QToolButton*>(QStringLiteral("railOverflowButton"));
         if (more != nullptr && more->isVisible()) {
             require(more->mapTo(&rail, QPoint(more->width(), 0)).x() <= bar.width(),
@@ -443,9 +474,12 @@ void cardsFit() {
     const auto sizes = [&](const std::string& mode) {
         w.main->resize(1300, 860);
         // The solid groups fit a 1300 px window; the sketch tools need about 1700 px.
-        require(!check(mode + " 1300") || mode == "sketch", mode + " 1300: every tool in the row");
-        w.main->resize(1100, 760);
-        check(mode + " 1100");
+        require(!check(mode + " 1300") || mode.starts_with("sketch"),
+                mode + " 1300: every tool in the row");
+        for (const int width : {1900, 1700, 1600, 1500, 1400, 1100}) {
+            w.main->resize(width, 860);
+            check(mode + " " + std::to_string(width));
+        }
         w.main->resize(w.main->minimumSizeHint());
         check(mode + " smallest");
         w.main->resize(1300, 860);
@@ -455,6 +489,9 @@ void cardsFit() {
     sizes("plane picked"); // with the context bar
     press(w.context("solid.create.sketch"));
     sizes("sketch");
+    // User report 2026-10-24: with the line tool active the row was squeezed.
+    press(test::railButton(w.child("toolRail"), "sketch.tool.line"));
+    sizes("sketch, line tool");
     press(w.panelButton("toolCancelButton"));
     require(w.main->close(), "Close");
 }

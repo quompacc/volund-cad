@@ -87,6 +87,7 @@ add_library(
     ToolPanelHost.cpp
     TimelineBar.cpp
     ToolRail.cpp
+    ToolRailRow.cpp
     ViewCube.cpp
 )
 
