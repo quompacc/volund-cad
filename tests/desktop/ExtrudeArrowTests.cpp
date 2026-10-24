@@ -62,9 +62,14 @@ void open(QWidget& window, application::CadSession& session, document::FeatureId
 void typeRightAway(QWidget& window, application::CadSession& session, document::FeatureId sketch) {
     open(window, session, sketch);
     auto* field = distanceField(window);
-    require(field != nullptr && QApplication::focusWidget() != nullptr &&
-                QApplication::focusWidget()->parentWidget() == field,
-            "The distance takes the keyboard when Extrude opens");
+    auto* focused = QApplication::focusWidget();
+    require(field != nullptr && focused != nullptr &&
+                (focused == field || focused->parentWidget() == field),
+            ("The distance takes the keyboard when Extrude opens; focus on " +
+             (focused != nullptr ? focused->objectName() + "/" + focused->metaObject()->className()
+                                 : QStringLiteral("nothing")))
+                .toStdString()
+                .c_str());
     for (const char* digit : {"2", "5"}) {
         QKeyEvent press(QEvent::KeyPress, Qt::Key_0 + (digit[0] - '0'), Qt::NoModifier,
                         QString::fromLatin1(digit));

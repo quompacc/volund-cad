@@ -305,6 +305,8 @@ class CadViewportScene {
     // V01: the topmost sketch element, or one behind a base plane (planes never steal a
     // click from the sketch); a body in front keeps the click.
     [[nodiscard]] std::optional<std::uint64_t> detectedSketchElement() const {
+        if (!context->HasDetected()) // DetectedInteractive() needs a detected owner
+            return std::nullopt;
         const auto topmost = context->DetectedInteractive();
         if (const auto id = sketchPresentation.detectedElement(topmost))
             return id;

@@ -6,6 +6,8 @@
 #include "MeasurementInput.hpp"
 
 #include "ParameterInput.hpp"
+#include <QAbstractSpinBox>
+#include <QApplication>
 #include <QButtonGroup>
 #include <QComboBox>
 #include <QDoubleSpinBox>
@@ -30,6 +32,12 @@
 
 namespace voelund::desktop {
 namespace {
+// Enter's shortcut fires before the focused spin box sees it: typed text is taken first.
+void applyTypedValue() {
+    for (QWidget* at = QApplication::focusWidget(); at != nullptr; at = at->parentWidget())
+        if (auto* spin = qobject_cast<QAbstractSpinBox*>(at))
+            return spin->interpretText();
+}
 // A number field of a tool; bindable ones (PAR02, N01b) take "=Name" too.
 QDoubleSpinBox* makeToolInput(QWidget* parent, const ToolLengthParameter& parameter) {
     if (parameter.bindable && parameter.kind != ToolValueKind::factor)
@@ -128,10 +136,12 @@ ToolPanelHost::ToolPanelHost(QWidget* host)
     // Enter confirms like OK when the tool allows it (K04); a spin box first applies its value.
     // S13: a tool with its own Enter step (sketch: end the polyline) confirms with Ctrl+Enter.
     const auto accept = [this]() {
+        applyTypedValue();
         if (acceptButton_->isEnabled())
             acceptButton_->click();
     };
     const auto enter = [this, accept]() {
+        applyTypedValue();
         if (definition_.returnPressed)
             definition_.returnPressed();
         else

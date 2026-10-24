@@ -30,19 +30,36 @@ QTreeWidgetItem* row(QTreeWidget& tree, int kind) {
     return nullptr;
 }
 
-// The menu's command IDs, read while it is open; it is closed again right away.
-QStringList menuFor(QTreeWidget& tree, QTreeWidgetItem* item) {
+// Reads a tree menu's command IDs when it is shown and closes it again. Under Wayland the
+// compositor may refuse a popup without a real input event and exec() returns at once, so the
+// IDs are taken at the Show event, before that.
+class MenuReader final : public QObject {
+  public:
     QStringList ids;
-    QTimer::singleShot(50, [&ids] {
-        auto* menu = qobject_cast<QMenu*>(QApplication::activePopupWidget());
-        if (menu == nullptr || menu->objectName() != QStringLiteral("treeMenu"))
-            return;
-        for (auto* action : menu->actions())
-            ids << action->property("commandId").toString();
-        menu->close();
-    });
+    bool eventFilter(QObject* watched, QEvent* event) override {
+        auto* menu = qobject_cast<QMenu*>(watched);
+        if (event->type() == QEvent::Show && menu != nullptr &&
+            menu->objectName() == QStringLiteral("treeMenu")) {
+            for (auto* action : menu->actions())
+                ids << action->property("commandId").toString();
+            QTimer::singleShot(0, menu, &QMenu::close);
+        }
+        return false;
+    }
+};
+
+// The row is unfolded and scrolled into view first, as a user sees it before a right click.
+QStringList menuFor(QTreeWidget& tree, QTreeWidgetItem* item) {
+    require(item != nullptr, "The tree has the row");
+    for (auto* parent = item->parent(); parent != nullptr; parent = parent->parent())
+        parent->setExpanded(true);
+    tree.scrollToItem(item);
+    QApplication::processEvents();
+    MenuReader reader;
+    QApplication::instance()->installEventFilter(&reader);
     emit tree.customContextMenuRequested(tree.visualItemRect(item).center());
-    return ids;
+    QApplication::instance()->removeEventFilter(&reader);
+    return reader.ids;
 }
 
 void run() {
