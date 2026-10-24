@@ -76,6 +76,9 @@ void SketchEditorInteraction::setTool(SketchElementTool tool) noexcept {
     firstReference_.reset();
     secondReference_.reset();
     dragPoint_.reset();
+    stage_ = RectangleStage::corners; // W13b
+    cornerTyped_.clear();
+    cornerRadius_.reset();
     dynamic_.reset();
 }
 
@@ -316,6 +319,8 @@ std::optional<SketchElementIntent> SketchEditorInteraction::move(int x, int y) c
     if (!resolved.has_value())
         return std::nullopt;
     lastPointer_ = resolved->position;
+    if (rectangleStaged() && secondPoint_.has_value())
+        return stageIntent(resolved->position);
     auto intent = finalIntent(resolved->position, resolved->reference);
     // D01: the fields show the element as it would be placed now (W11: its third point).
     if (intent && dynamic_.active() && intent->third)
@@ -405,6 +410,8 @@ std::optional<SketchElementIntent> SketchEditorInteraction::click(int x, int y) 
         dynamic_.begin(tool_);
         return std::nullopt;
     }
+    if (rectangleStaged())
+        return stageClick(point, reference);
     if (needsThirdPoint(tool_) && !secondPoint_.has_value()) {
         const SketchElementIntent radiusIntent{
             firstPoint_->first, firstPoint_->second, point.first,  point.second, std::nullopt,
@@ -432,6 +439,9 @@ void SketchEditorInteraction::placeSecond(std::pair<double, double> point,
 }
 
 void SketchEditorInteraction::finishElement() noexcept {
+    stage_ = RectangleStage::corners;
+    cornerTyped_.clear();
+    cornerRadius_.reset();
     firstPoint_.reset();
     secondPoint_.reset();
     firstReference_.reset();
@@ -445,6 +455,8 @@ std::optional<SketchElementIntent> SketchEditorInteraction::commitTyped() {
     if (!firstPoint_.has_value() || !dynamic_.hasTyped() || dynamic_.hasInvalidText())
         return std::nullopt;
     const auto pointer = lastPointer_.value_or(*firstPoint_);
+    if (rectangleStaged())
+        return stageClick(pointer, std::nullopt); // W13b: the step's typed value
     if (needsThirdPoint(tool_) && !secondPoint_.has_value()) {
         placeSecond(pointer, std::nullopt);
         return std::nullopt;
@@ -476,6 +488,8 @@ std::optional<std::pair<double, double>> SketchEditorInteraction::dragElement(in
 void SketchEditorInteraction::finishElementDrag() noexcept { dragPoint_.reset(); }
 
 bool SketchEditorInteraction::cancelStep() noexcept {
+    if (rectangleStaged() && stageBack())
+        return true;
     if (secondPoint_.has_value()) {
         secondPoint_.reset();
         secondReference_.reset();

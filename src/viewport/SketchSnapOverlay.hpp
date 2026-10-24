@@ -6,6 +6,7 @@
 #include "SketchEditorInteraction.hpp"
 
 #include <QColor>
+#include <QPolygonF>
 #include <QWidget>
 
 class QPainter;
@@ -27,6 +28,8 @@ class SketchSnapOverlay final : public QWidget {
     void showFields(const SketchDynamicInput& input, QPointF cursor,
                     const std::vector<std::optional<SketchEditorInteraction::FieldLine>>& lines);
     void setColors(const QColor& accent, const QColor& muted, const QColor& panel);
+    // W13b: the rounded outline and the frame of a rectangle's later steps (framebuffer pixels).
+    void showOutlines(const std::vector<std::vector<std::pair<double, double>>>& outlines);
 
   protected:
     void paintEvent(QPaintEvent* event) override;
@@ -45,6 +48,7 @@ class SketchSnapOverlay final : public QWidget {
         std::optional<SketchEditorInteraction::FieldLine> line; // logical pixels
     };
     std::vector<FieldView> fields_;
+    std::vector<QPolygonF> outlines_;
     QPointF fieldCursor_;
     void paintFields(QPainter& painter) const;
     void paintFieldBox(QPainter& painter, const FieldView& field, QPointF centre) const;

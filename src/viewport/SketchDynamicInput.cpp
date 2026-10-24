@@ -100,6 +100,18 @@ void SketchDynamicInput::beginThird(SketchElementTool tool) {
         third_ = false;
 }
 
+void SketchDynamicInput::beginStage(DynamicField kind) {
+    fields_ = {Field{kind}};
+    current_ = 0;
+    centered_ = false;
+    third_ = false;
+}
+
+void SketchDynamicInput::updateLiveValue(double value) {
+    if (!fields_.empty())
+        fields_.front().live = value;
+}
+
 void SketchDynamicInput::reset() noexcept {
     fields_.clear();
     current_ = 0;

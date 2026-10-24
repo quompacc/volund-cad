@@ -141,7 +141,8 @@ class SketchEditorToolController final {
     void runAction(const std::string& id);
     void stepHistory(bool back);
     void chooseOption(const std::string& id, int index);
-    void applyRectangleOptions(const application::SketchCreationResult& created);
+    void applyRectangleOptions(const application::SketchCreationResult& created,
+                               const viewport::SketchElementIntent& intent);
     void syncRectangleOptions();
     [[nodiscard]] bool
     hiddenAnnotation(const features::SketchConstraintAnnotation& annotation) const;

@@ -429,6 +429,22 @@ void CadViewport::setDatums(std::span<const SceneDatum> datums) {
     });
 }
 
+void CadViewport::setShownSketches(std::span<const TopoDS_Shape> sketches) {
+    impl_->pendingShownSketches.assign(sketches.begin(), sketches.end());
+    performViewportOperation(*this, impl_->ready, [&] {
+        if (!impl_->ready)
+            return;
+        impl_->showSketchCurves();
+        update();
+    });
+}
+
+void CadViewport::setSketchRectangleOptions(bool rounded, bool frame) {
+    impl_->sketchEditor.setRectangleOptions(rounded, frame);
+}
+
+std::size_t CadViewport::shownSketchCount() const noexcept { return impl_->shownSketches.size(); }
+
 std::size_t CadViewport::displayedDatumCount() const noexcept {
     return impl_->datums.displayedCount();
 }

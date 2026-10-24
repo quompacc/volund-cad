@@ -109,6 +109,8 @@ QString fieldLabel(DynamicField field) {
         return QObject::tr("Radius");
     case DynamicField::sweep:
         return QObject::tr("Öffnungswinkel");
+    case DynamicField::thickness:
+        return QObject::tr("Dicke");
     case DynamicField::minorRadius:
         return QObject::tr("Kleiner Radius");
     }
@@ -157,7 +159,27 @@ void SketchSnapOverlay::showFields(
     update();
 }
 
+void SketchSnapOverlay::showOutlines(
+    const std::vector<std::vector<std::pair<double, double>>>& outlines) {
+    outlines_.clear();
+    const double ratio = viewport_.devicePixelRatioF();
+    for (const auto& outline : outlines) {
+        QPolygonF polygon;
+        for (const auto& [x, y] : outline)
+            polygon << QPointF(x / ratio, y / ratio);
+        outlines_.push_back(polygon);
+    }
+    setProperty("stageOutlines", static_cast<int>(outlines_.size())); // test hook
+    if (!outlines_.empty())
+        show();
+    update();
+}
+
 void SketchSnapOverlay::paintFields(QPainter& painter) const {
+    painter.setPen(QPen(accent_, 1.5));
+    painter.setBrush(Qt::NoBrush);
+    for (const auto& outline : outlines_)
+        painter.drawPolyline(outline);
     QFont font = painter.font();
     font.setPixelSize(12);
     painter.setFont(font);
@@ -225,6 +247,7 @@ void SketchSnapOverlay::clear() {
     active_.reset();
     label_.clear();
     fields_.clear();
+    outlines_.clear();
     setProperty("dynamicFields", QStringList{});
     setProperty("activeSnap", false);
     setProperty("snapLabel", QString{});

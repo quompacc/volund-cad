@@ -228,7 +228,7 @@ class CadViewportScene {
         attachTransformTarget();
         refreshBasePlanes();
         if (isFirstShape && (!presentations.empty() || !basePlanesFitted)) {
-            view->FitAll(0.08, false);
+            view->FitAll(firstFitMargin(), false);
             view->ZFitAll();
             basePlanesFitted = true;
         }
@@ -256,6 +256,28 @@ class CadViewportScene {
         }
         basePlanes.show(context, presentations.empty(), halfSize, theme, planeVisibility);
         datums.show(context, pendingDatums, halfSize, theme); // M19
+        showSketchCurves();
+    }
+
+    // User report 2026-10-24: the base planes alone fill only part of the first view.
+    [[nodiscard]] double firstFitMargin() const { return presentations.empty() ? 0.45 : 0.08; }
+
+    // Sketches shown besides the selected one: plain lines, no clicks.
+    std::vector<TopoDS_Shape> pendingShownSketches;
+    std::vector<occ::handle<AIS_Shape>> shownSketches;
+    void showSketchCurves() {
+        if (context.IsNull())
+            return;
+        for (const auto& curves : shownSketches)
+            context->Remove(curves, false);
+        shownSketches.clear();
+        for (const TopoDS_Shape& shape : pendingShownSketches) {
+            occ::handle<AIS_Shape> curves = new AIS_Shape(shape);
+            curves->SetColor(occtColor(theme.sketchDetermined));
+            curves->SetWidth(1.5);
+            context->Display(curves, AIS_WireFrame, -1, false);
+            shownSketches.push_back(curves);
+        }
     }
 
     void setTransformToolEnabled(bool enabled) {
@@ -419,9 +441,11 @@ class CadViewportScene {
     // D01: where the pointer was while drawing (framebuffer pixels) and its logical position.
     QPoint sketchPointer;
     void showDynamicFields(QPointF logical) {
-        if (snapOverlay != nullptr)
-            snapOverlay->showFields(sketchEditor.dynamicInput(), logical,
-                                    sketchEditor.fieldLines(sketchPointer.x(), sketchPointer.y()));
+        if (snapOverlay == nullptr)
+            return;
+        snapOverlay->showFields(sketchEditor.dynamicInput(), logical,
+                                sketchEditor.fieldLines(sketchPointer.x(), sketchPointer.y()));
+        snapOverlay->showOutlines(sketchEditor.stageOutline(sketchPointer.x(), sketchPointer.y()));
     }
     // S03: the view before the sketch editor oriented it; restored when the editor ends.
     occ::handle<Graphic3d_Camera> sketchReturnCamera;

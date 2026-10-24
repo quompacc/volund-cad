@@ -102,7 +102,7 @@ void dragArrow(QWidget& window, viewport::CadViewport& viewport, application::Ca
     const QPoint base = viewport::ViewportTestAccess::project(viewport, 20, 10, 0);
     const QPoint up = viewport::ViewportTestAccess::project(viewport, 20, 10, 30);
     const QPointF direction = QPointF(up - base) / std::hypot(up.x() - base.x(), up.y() - base.y());
-    const auto grip = findArrow(viewport, base, direction, 0, 150);
+    const auto grip = findArrow(viewport, base, direction, 0, 600);
     require(grip.has_value(), "The extrusion arrow stands on the profile");
     test::mouse(viewport, QEvent::MouseButtonPress, *grip, Qt::LeftButton, Qt::LeftButton);
     test::mouse(viewport, QEvent::MouseMove, *grip + (direction * 40).toPoint(), Qt::NoButton,
@@ -156,6 +156,7 @@ void run() {
     require(created.feature().has_value(), "Sketch");
     const auto sketch = *created.feature();
     window.refreshAfterExternalChange();
+    viewport->fitView(); // the sketch fills the view, as where it was drawn
     test::render(*viewport);
     test::activate(window);
     typeRightAway(window, session, sketch);

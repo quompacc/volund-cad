@@ -100,7 +100,7 @@ void SketchEditorToolController::confirmElement(const viewport::SketchElementInt
     if (created && !intent.typed.empty())
         applyTypedDimensions(*created, intent.typed); // D01: one undo step with the element
     if (created)
-        applyRectangleOptions(*created); // W13: in the same step
+        applyRectangleOptions(*created, intent); // W13: in the same step
     panel_.setAcceptEnabled(editor_->canAccept());
     resetTranslationInputs();
     syncSelectedDimensionInputs();

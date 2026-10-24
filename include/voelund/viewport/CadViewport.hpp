@@ -271,6 +271,10 @@ struct SketchElementIntent final {
     std::optional<SketchAutomaticConstraint> automaticConstraint;
     std::optional<std::uint64_t> automaticTargetId;
     std::vector<SketchTypedDimension> typed{}; // D01: values typed while drawing
+    // W13b: a rectangle's corner radius and frame thickness from their steps (thickness > 0
+    // inwards, < 0 outwards); none when that option is off.
+    std::optional<double> cornerRadius{};
+    std::optional<double> frameWidth{};
 };
 
 #if defined(VOELUND_VIEWPORT_QT_OPENGL)
@@ -316,6 +320,12 @@ class CadViewport final : public CadViewportBase {
     void setBasePlaneSelectionHandler(std::function<void(BasePlane)> handler);
     // M19: construction planes and axes; a click reports the feature.
     void setDatums(std::span<const SceneDatum> datums);
+    // User report 2026-10-24 (as in Fusion): sketches shown besides the selected one, as plain
+    // lines that take no clicks (one shape per sketch).
+    void setShownSketches(std::span<const TopoDS_Shape> sketches);
+    // W13b: the rectangle tool's options; with them a rectangle is drawn in further steps.
+    void setSketchRectangleOptions(bool rounded, bool frame);
+    [[nodiscard]] std::size_t shownSketchCount() const noexcept;
     void setDatumSelectionHandler(std::function<void(std::uint64_t)> handler);
     [[nodiscard]] std::size_t displayedDatumCount() const noexcept;
     // A click outside the sketch editor that hits nothing.

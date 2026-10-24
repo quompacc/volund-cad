@@ -7,6 +7,8 @@
 #include <voelund/application/CadSession.hpp>
 
 #include <voelund/features/SketchConstraintSolver.hpp>
+#include <voelund/features/SketchEvaluation.hpp>
+#include <voelund/kernel/ShapeQueries.hpp>
 
 #include <QObject>
 
@@ -109,6 +111,18 @@ makeSceneSketchElements(const application::CadSession& session) {
         result.push_back(makeSceneSketchElement(element, false, determined));
     }
     return result;
+}
+
+TopoDS_Shape sketchCurves(const document::SketchParameters& sketch) {
+    std::vector<TopoDS_Shape> curves;
+    try {
+        for (const auto& element : features::evaluateSketchElements(sketch))
+            if (!element.construction && !element.shape.IsNull())
+                curves.push_back(element.shape);
+    } catch (const std::exception&) {
+        // A sketch that does not evaluate shows nothing; the tree names its problem.
+    }
+    return kernel::collect(curves);
 }
 
 QString sketchSelectionSummary(const application::CadSession& session) {

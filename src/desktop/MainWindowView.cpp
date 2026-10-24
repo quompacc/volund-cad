@@ -8,6 +8,7 @@
 #include "ModelTreePanel.hpp"
 #include "OverlayCard.hpp"
 #include "SectionController.hpp"
+#include "SketchViewAdapter.hpp"
 
 #include <voelund/application/CadSession.hpp>
 #include <voelund/viewport/CadViewport.hpp>
@@ -27,7 +28,9 @@
 namespace voelund::desktop {
 
 void MainWindow::syncVisibility() {
-    const bool hasBodies = !impl_->session.displayBodies().empty();
+    // User report 2026-10-24: as in the tree, the origin goes once a body exists, also one that
+    // has only a sketch so far.
+    const bool hasBodies = !impl_->session.modelOutline().bodies.empty();
     // M01: body visibility is stored with the document.
     impl_->visibility.hiddenBodies.clear();
     for (const auto& body : impl_->session.modelOutline().bodies)
@@ -38,6 +41,29 @@ void MainWindow::syncVisibility() {
     impl_->viewport->setBasePlaneVisibility(impl_->visibility.visiblePlanes(hasBodies));
     impl_->viewport->setGridVisible(impl_->visibility.grid);
     syncViewSwitches();
+}
+
+// User report 2026-10-24 (as in Fusion): every sketch shows until a later step uses it (an
+// extrusion, a revolve ...), then it hides itself; the tree's eye overrides that. The selected
+// sketch is drawn by the sketch view already.
+void MainWindow::syncShownSketches() {
+    ViewVisibility& visibility = impl_->visibility;
+    visibility.shownSketches.clear();
+    std::vector<TopoDS_Shape> curves;
+    const auto selected = impl_->session.selectedFeature();
+    for (const auto& feature : impl_->session.features()) {
+        if (feature.kind != document::FeatureKind::sketch)
+            continue;
+        const bool used = !impl_->session.deletionPlan(feature.id).dependents.empty();
+        if (!visibility.sketchShown(feature.id.value(), used))
+            continue;
+        visibility.shownSketches.insert(feature.id.value());
+        if (selected == feature.id)
+            continue;
+        if (const auto sketch = impl_->session.evaluatedSketch(feature.id))
+            curves.push_back(sketchCurves(*sketch));
+    }
+    impl_->viewport->setShownSketches(curves);
 }
 
 // S13: four view switches as commands; none of them touches the document (no undo, no
@@ -160,7 +186,7 @@ void MainWindow::syncViewSwitches() {
 
 void MainWindow::toggleVisibility(int kind, std::uint64_t id) {
     ViewVisibility& visibility = impl_->visibility;
-    const bool hasBodies = !impl_->session.displayBodies().empty();
+    const bool hasBodies = !impl_->session.modelOutline().bodies.empty();
     const auto toggle = [](std::set<std::uint64_t>& set, std::uint64_t value) {
         if (!set.erase(value))
             set.insert(value);
@@ -188,8 +214,9 @@ void MainWindow::toggleVisibility(int kind, std::uint64_t id) {
     case ModelTreePanel::Kind::bodyOrigin:
         toggle(visibility.shownBodyOrigins, id);
         break;
-    case ModelTreePanel::Kind::feature:
-        return;
+    case ModelTreePanel::Kind::feature: // a sketch's eye; other steps have none
+        visibility.sketchEyes[id] = !visibility.shownSketches.contains(id);
+        break;
     }
     // View state only: no undo step and no change to the saved state.
     syncVisibility();

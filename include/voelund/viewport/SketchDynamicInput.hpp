@@ -21,7 +21,17 @@ enum class SketchElementTool;
 // is fixed while the pointer still sets the others, Enter places the element. W11: tools of
 // three points have fields per step (arc: radius, then sweep; slot: length, then width;
 // ellipse: radius, then minor radius; polygon: radius).
-enum class DynamicField { length, angle, width, height, diameter, radius, sweep, minorRadius };
+enum class DynamicField {
+    length,
+    angle,
+    width,
+    height,
+    diameter,
+    radius,
+    sweep,
+    minorRadius,
+    thickness // W13b: a rectangle's frame
+};
 
 // A value the user typed for an element: the shell turns it into a dimension. `text` is what
 // was typed ("25", "=Breite*2"); `value` its value in mm or degrees.
@@ -47,6 +57,10 @@ class SketchDynamicInput final {
     // W11: the fields of the third point of an arc, a slot or an ellipse.
     void beginThird(SketchElementTool tool);
     [[nodiscard]] bool third() const noexcept { return third_; }
+    // W13b: one field of a later step of a rectangle (corner radius, frame thickness); its live
+    // value comes from the pointer.
+    void beginStage(DynamicField kind);
+    void updateLiveValue(double value);
     void reset() noexcept;
     [[nodiscard]] bool active() const noexcept { return !fields_.empty(); }
     [[nodiscard]] std::span<const Field> fields() const noexcept { return fields_; }

@@ -65,6 +65,7 @@ dimensionTarget(const application::SketchCreationResult& created,
     case viewport::DynamicField::radius: // W11: arc, polygon and ellipse are only placed
     case viewport::DynamicField::sweep:
     case viewport::DynamicField::minorRadius:
+    case viewport::DynamicField::thickness: // W13b: the frame step dimensions itself
         break;
     }
     return std::nullopt;

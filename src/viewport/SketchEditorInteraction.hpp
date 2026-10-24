@@ -38,6 +38,13 @@ class SketchEditorInteraction final {
     // S04: off, a step still lands on the snapped points but binds none of them and suggests
     // no relation; a continued polyline stays joined to its previous segment.
     void setAutomaticRelations(bool enabled) noexcept { automaticRelations_ = enabled; }
+    // W13b: a rectangle's later steps (corner radius, frame thickness).
+    void setRectangleOptions(bool rounded, bool frame) noexcept {
+        rectangleRounded_ = rounded;
+        rectangleFrame_ = frame;
+    }
+    [[nodiscard]] std::vector<std::vector<std::pair<double, double>>> stageOutline(int x,
+                                                                                   int y) const;
     // S13: hidden projected geometry is not snapped to either.
     void setProjectedVisible(bool visible) noexcept { projectedVisible_ = visible; }
     [[nodiscard]] bool projectedVisible() const noexcept { return projectedVisible_; }
@@ -116,6 +123,23 @@ class SketchEditorInteraction final {
     }
 
     PlanarFaceSelection support_{};
+    // W13b (SketchRectangleStages.cpp): the steps of a rectangle with options.
+    enum class RectangleStage { corners, radius, frame };
+    bool rectangleRounded_{false};
+    bool rectangleFrame_{false};
+    RectangleStage stage_{RectangleStage::corners};
+    std::vector<SketchTypedDimension> cornerTyped_;
+    std::optional<double> cornerRadius_;
+    [[nodiscard]] bool rectangleStaged() const noexcept;
+    [[nodiscard]] double stageValue(std::pair<double, double> pointer) const;
+    [[nodiscard]] std::optional<SketchElementIntent>
+    stageIntent(std::pair<double, double> pointer) const;
+    [[nodiscard]] std::optional<SketchElementIntent>
+    stageClick(std::pair<double, double> pointer,
+               std::optional<SketchPointReferenceIntent> reference);
+    [[nodiscard]] bool stageBack();
+    [[nodiscard]] std::vector<std::pair<double, double>>
+    onScreen(const std::vector<std::pair<double, double>>& sketch) const;
     SketchElementTool tool_{SketchElementTool::line};
     occ::handle<V3d_View> view_;
     std::optional<std::pair<double, double>> firstPoint_;

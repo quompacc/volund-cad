@@ -28,6 +28,8 @@ makeSceneSketchElement(const features::EvaluatedSketchElement& element, bool con
                        bool determined = false);
 [[nodiscard]] std::vector<viewport::SceneSketchElement>
 makeSceneSketchElements(const application::CadSession& session);
+// The curves of a sketch without its construction geometry, as one shape (shown sketches).
+[[nodiscard]] TopoDS_Shape sketchCurves(const document::SketchParameters& sketch);
 [[nodiscard]] QString sketchSelectionSummary(const application::CadSession& session);
 
 // Where a view ray crosses a sketch's plane: the distance along the ray and the point; none

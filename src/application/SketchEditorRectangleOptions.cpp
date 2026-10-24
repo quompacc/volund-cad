@@ -46,6 +46,22 @@ Sides sidesOf(const SketchCreationResult& created) {
 // A value as a drafter picks it: whole half millimetres, at least half a millimetre.
 double roundHalf(double value) { return std::max(0.5, std::round(value * 2) / 2); }
 
+struct Sizes final {
+    double radius;
+    double frame;
+};
+
+// The corner radius and frame width from the steps, else a share of the shorter side; both
+// must fit the rectangle.
+Sizes sizesFor(const SketchEditorSession::RectangleOptions& options, double shorter) {
+    const double frame = options.frameWidth.value_or(roundHalf(0.1 * shorter));
+    const double least = options.frame && frame > 0 ? frame + 0.5 : 0.0;
+    const double radius = options.radius.value_or(std::max(roundHalf(0.15 * shorter), least));
+    if (2 * frame >= shorter || 2 * radius >= shorter || radius <= 0.0 || frame == 0.0)
+        throw std::invalid_argument("Rechteck: Für Rahmen oder Rundung zu klein");
+    return {radius, frame};
+}
+
 } // namespace
 
 document::SketchLine SketchEditorSession::lineOf(SketchElementId id) const {
@@ -79,7 +95,8 @@ void SketchEditorSession::dimensionSides(const Sides& sides) {
     }
 }
 
-// The inner rectangle, each side `width` off its outer side; its sides in contour order.
+// The frame rectangle, each side `width` off the drawn one (inwards above zero, outwards
+// below); its sides in contour order.
 Sides SketchEditorSession::addFrame(const Sides& outer, double width) {
     const auto first = lineOf(outer[0]).start;  // the first corner
     const auto second = lineOf(outer[2]).start; // the opposite one
@@ -90,7 +107,7 @@ Sides SketchEditorSession::addFrame(const Sides& outer, double width) {
     const Sides sides = sidesOf(inner);
     for (std::size_t index = 0; index < sides.size(); ++index)
         addRelation(SketchConstraintKind::pointLineDistance, {sides[index], Position::start},
-                    SketchGeometryReference{outer[index], Position::start}, width);
+                    SketchGeometryReference{outer[index], Position::start}, std::abs(width));
     return sides;
 }
 
@@ -130,17 +147,15 @@ void SketchEditorSession::finishRectangle(const SketchCreationResult& created,
     const double shorter =
         std::min(std::hypot(width.end.x - width.start.x, width.end.y - width.start.y),
                  std::hypot(height.end.x - height.start.x, height.end.y - height.start.y));
-    const double frame = roundHalf(0.1 * shorter);
-    const double radius = std::max(roundHalf(0.15 * shorter), options.frame ? frame + 0.5 : 0.0);
-    if (2 * frame >= shorter || 2 * radius >= shorter)
-        throw std::invalid_argument("Rechteck: Für Rahmen oder Rundung zu klein");
+    const auto [radius, frame] = sizesFor(options, shorter);
     dimensionSides(outer);
     std::optional<Sides> inner;
     if (options.frame)
         inner = addFrame(outer, frame);
     if (options.rounded) {
         roundCorners(outer, radius);
-        if (inner)
+        // The frame keeps one thickness: its corners are concentric with the drawn ones.
+        if (inner && radius - frame > 1e-6)
             roundCorners(*inner, radius - frame);
     }
     clearSelection();

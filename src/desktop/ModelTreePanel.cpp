@@ -154,8 +154,11 @@ void ModelTreePanel::showModel(const application::ModelOutline& outline,
         const auto match = byId.find(id.value());
         if (match == byId.end())
             return;
-        auto* item = addItem(parent, Kind::feature, id.value(),
-                             QString::fromStdString(match->second->name), std::nullopt);
+        // A sketch has an eye (user report 2026-10-24); other steps show through their body.
+        const bool sketch = match->second->kind == document::FeatureKind::sketch;
+        auto* item = addItem(
+            parent, Kind::feature, id.value(), QString::fromStdString(match->second->name),
+            sketch ? std::optional{visibility.shownSketches.contains(id.value())} : std::nullopt);
         if (selectedFeature == id)
             setCurrentItem(item);
     };

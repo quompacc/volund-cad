@@ -91,11 +91,14 @@ void SketchEditorToolController::stepHistory(bool back) {
 // W13: a rectangle just drawn gets its rounded corners and frame; a refusal (too small) keeps
 // the plain rectangle and says why.
 void SketchEditorToolController::applyRectangleOptions(
-    const application::SketchCreationResult& created) {
+    const application::SketchCreationResult& created, const viewport::SketchElementIntent& intent) {
     if (toolIndex_ != rectangleTool && toolIndex_ != centerRectangleTool)
         return;
+    auto options = rectangleOptions_;
+    options.radius = intent.cornerRadius; // W13b: from their steps
+    options.frameWidth = intent.frameWidth;
     try {
-        editor_->finishRectangle(created, rectangleOptions_);
+        editor_->finishRectangle(created, options);
     } catch (const std::invalid_argument& error) {
         statusChanged_(QString::fromUtf8(error.what()));
     }
@@ -123,11 +126,10 @@ void SketchEditorToolController::syncRectangleOptions() {
 void SketchEditorToolController::chooseOption(const std::string& id, int index) {
     if (id == "tool")
         setTool(index);
-    else if (id == "rounded_corners")
-        rectangleOptions_.rounded = index == 1;
-    else if (id == "frame")
-        rectangleOptions_.frame = index == 1;
-    else
+    else if (id == "rounded_corners" || id == "frame") {
+        (id == "frame" ? rectangleOptions_.frame : rectangleOptions_.rounded) = index == 1;
+        viewport_.setSketchRectangleOptions(rectangleOptions_.rounded, rectangleOptions_.frame);
+    } else
         applyViewSwitch(id, index == 0);
 }
 

@@ -72,6 +72,7 @@ bool allNear(const std::vector<double>& values, double wanted, std::size_t count
 }
 
 void both();
+void outwards();
 
 void run() {
     const auto rounded = draw({true, false});
@@ -89,6 +90,7 @@ void run() {
             "Frame from the origin: nothing left free, " + std::to_string(framed.freedom));
 
     both();
+    outwards();
     bool refused = false;
     try {
         static_cast<void>(draw({true, true}, {1, 1}));
@@ -97,6 +99,15 @@ void run() {
     }
     require(refused, "A rectangle too small for its frame is refused");
     std::cout << "PASS W13 rectangle options: rounded corners, frame, fully constrained\n";
+}
+
+// W13b: a frame outwards; the drawn rectangle is the inner one, the outer corners concentric.
+void outwards() {
+    const auto shape = draw({true, true, 2.0, -1.5});
+    require(shape.arcs == 8 && allNear(shape.radii, 2.0, 4) && allNear(shape.radii, 3.5, 4),
+            "Outwards: drawn corners R 2, frame corners R 3.5");
+    require(shape.freedom == 0,
+            "Outwards from the origin: nothing left free, " + std::to_string(shape.freedom));
 }
 
 void both() {

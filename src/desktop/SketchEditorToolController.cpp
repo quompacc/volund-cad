@@ -93,6 +93,7 @@ void SketchEditorToolController::showPanel() {
     translationX_ = 0.0;
     translationY_ = 0.0;
     viewport_.setSketchAutomaticRelations(automaticRelations_);
+    viewport_.setSketchRectangleOptions(rectangleOptions_.rounded, rectangleOptions_.frame);
     panel_.begin(ToolPanelDefinition{
         QObject::tr("Skizzeneditor"),
         QObject::tr("Wähle ein Werkzeug und setze seine Punkte. Füge beliebig viele Elemente hinzu "

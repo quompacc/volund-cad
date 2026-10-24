@@ -37,6 +37,7 @@ list(APPEND voelund_viewport_sources
     SketchConstraintPresentation.cpp
     SketchDimensionDrawing.cpp
     SketchFieldLines.cpp
+    SketchRectangleStages.cpp
     SketchBoxSelection.cpp
     SelectionBand.cpp
     SketchPresentation.cpp

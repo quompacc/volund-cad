@@ -149,6 +149,10 @@ class SketchEditorSession final {
     struct RectangleOptions final {
         bool rounded{false};
         bool frame{false};
+        // W13b: from the drawing steps; none takes a share of the shorter side. A frame width
+        // above zero goes inwards, below zero outwards (the drawn rectangle is then the inner).
+        std::optional<double> radius{};
+        std::optional<double> frameWidth{};
     };
     void finishRectangle(const SketchCreationResult& created, RectangleOptions options);
     using RectangleSides = std::array<document::SketchElementId, 4>; // in contour order

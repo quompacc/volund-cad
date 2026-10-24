@@ -262,6 +262,7 @@ void MainWindow::applyTheme(ThemeMode mode) {
 }
 
 void MainWindow::syncModelTree() {
+    syncShownSketches(); // the tree's sketch eyes and the view agree
     const auto features = impl_->session.features();
     impl_->modelTree->showModel(impl_->session.modelOutline(), features,
                                 impl_->session.selectedFeature(), impl_->visibility);
