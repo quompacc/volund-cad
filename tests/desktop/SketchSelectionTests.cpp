@@ -9,7 +9,9 @@
 #include <QKeyEvent>
 #include <QMouseEvent>
 #include <QStatusBar>
+#include <cmath>
 #include <iostream>
+#include <optional>
 #include <string>
 #include <voelund/application/CadSession.hpp>
 #include <voelund/desktop/MainWindow.hpp>
@@ -43,6 +45,36 @@ void send(viewport::CadViewport& viewport, QEvent::Type type, QPoint point,
                       buttons, modifiers);
     QApplication::sendEvent(&viewport, &event);
 }
+// W18: the centre of the relation symbol box nearest to a point (logical pixels).
+QPoint nearestGlyph(viewport::CadViewport& viewport, QPoint near) {
+    auto* overlay = viewport.findChild<QWidget*>(QStringLiteral("sketchGlyphOverlay"));
+    require(overlay != nullptr, "Symbol overlay");
+    std::optional<QPointF> best;
+    for (const QVariant& value : overlay->property("glyphBoxes").toList()) {
+        const QPointF centre = value.toRectF().center();
+        const auto distance = [&](QPointF p) {
+            return std::hypot(p.x() - near.x(), p.y() - near.y());
+        };
+        if (!best || distance(centre) < distance(*best))
+            best = centre;
+    }
+    require(best.has_value(), "Relation symbols shown");
+    return best->toPoint();
+}
+
+// W18: the symbol boxes do not lie on top of each other.
+void symbolsApart(viewport::CadViewport& viewport) {
+    const auto boxes = viewport.findChild<QWidget*>(QStringLiteral("sketchGlyphOverlay"))
+                           ->property("glyphBoxes")
+                           .toList();
+    require(boxes.size() >= 4, "A symbol for each side's direction");
+    for (int first = 0; first < boxes.size(); ++first)
+        for (int second = first + 1; second < boxes.size(); ++second)
+            require(
+                !boxes[first].toRectF().adjusted(1, 1, -1, -1).intersects(boxes[second].toRectF()),
+                "Symbol boxes lie apart");
+}
+
 void click(viewport::CadViewport& viewport, double x, double y) {
     send(viewport, QEvent::MouseMove, at(viewport, x, y), Qt::NoButton);
     send(viewport, QEvent::MouseButtonPress, at(viewport, x, y), Qt::LeftButton);
@@ -70,6 +102,32 @@ int selectedCount(viewport::CadViewport& viewport) {
     return count;
 }
 QString status(QWidget& window) { return window.findChild<QStatusBar*>()->currentMessage(); }
+
+// W18 (as SolidCraft): a click on a relation's symbol box selects the relation; Delete
+// removes it.
+void symbolSelection(QWidget& window, application::CadSession& session,
+                     viewport::CadViewport& view) {
+    auto* viewport = &view;
+    const QPoint symbol = nearestGlyph(*viewport, at(*viewport, 0, -10));
+    send(*viewport, QEvent::MouseMove, symbol, Qt::NoButton);
+    symbolsApart(*viewport);
+    require(viewport->findChild<QWidget*>(QStringLiteral("sketchGlyphOverlay"))
+                ->property("hoveredGlyph")
+                .isValid(),
+            "The symbol under the pointer lights up");
+    send(*viewport, QEvent::MouseButtonPress, symbol, Qt::LeftButton);
+    send(*viewport, QEvent::MouseButtonRelease, symbol, Qt::NoButton);
+    settle();
+    require(status(window).startsWith(QStringLiteral("Bedingung gewählt")),
+            "A click on a relation's symbol selects it, got " + status(window).toStdString());
+    const auto before = session.features().size();
+    QKeyEvent remove(QEvent::KeyPress, Qt::Key_Delete, Qt::NoModifier);
+    QApplication::sendEvent(viewport, &remove);
+    settle();
+    require(status(window) == QStringLiteral("Skizzenbedingung entfernt") &&
+                session.features().size() == before,
+            "Delete removes the selected relation, got " + status(window).toStdString());
+}
 
 void run() {
     application::CadSession session;
@@ -124,8 +182,7 @@ void run() {
     box(*viewport, 90, 30, 100, 40);
     require(selectedCount(*viewport) == 0, "An empty box clears the selection");
 
-    // The bottom side's [H] label sits 12 px right of its middle (U11), over the side; a click
-    // where both are selects the side.
+    // A click on the bottom side selects the side; its H symbol sits beside it (W18).
     const QPoint middle = at(*viewport, 0, -10) + QPoint(20, 0);
     send(*viewport, QEvent::MouseMove, middle, Qt::NoButton);
     send(*viewport, QEvent::MouseButtonPress, middle, Qt::LeftButton);
@@ -134,20 +191,7 @@ void run() {
     settle();
     require(selectedCount(*viewport) == 1 && status(window).startsWith(QStringLiteral("Skizze")),
             "An element wins over its label, got " + status(window).toStdString());
-    send(*viewport, QEvent::MouseButtonPress, middle, Qt::LeftButton);
-    send(*viewport, QEvent::MouseButtonRelease, middle, Qt::NoButton);
-    send(*viewport, QEvent::MouseButtonDblClick, middle, Qt::LeftButton);
-    send(*viewport, QEvent::MouseButtonRelease, middle, Qt::NoButton);
-    settle();
-    require(status(window).startsWith(QStringLiteral("Bedingung gewählt")),
-            "A double click on a relation selects it, got " + status(window).toStdString());
-    const auto before = session.features().size();
-    QKeyEvent remove(QEvent::KeyPress, Qt::Key_Delete, Qt::NoModifier);
-    QApplication::sendEvent(viewport, &remove);
-    settle();
-    require(status(window) == QStringLiteral("Skizzenbedingung entfernt") &&
-                session.features().size() == before,
-            "Delete removes the selected relation, got " + status(window).toStdString());
+    symbolSelection(window, session, *viewport);
     std::cout << "PASS sketch selection: window, crossing, Ctrl, labels, Delete\n";
 }
 } // namespace

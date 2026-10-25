@@ -31,6 +31,9 @@ class SketchPresentation final {
     [[nodiscard]] std::optional<std::uint64_t>
     detectedElement(const occ::handle<AIS_InteractiveObject>& detected) const noexcept;
     [[nodiscard]] std::size_t size() const noexcept;
+    // W18: the elements a hovered relation symbol binds light up (none: the light goes).
+    void hover(const occ::handle<AIS_InteractiveContext>& context,
+               std::span<const std::uint64_t> ids);
     // Colors of free and fully determined geometry (theme); call select() to recolor.
     void setColors(const Quantity_Color& free, const Quantity_Color& determined);
     // For tests: whether the element is drawn dashed, and its color.
@@ -49,6 +52,7 @@ class SketchPresentation final {
     };
 
     std::vector<ElementPresentation> elements_;
+    bool hovering_{false}; // W18
     std::vector<occ::handle<AIS_Shape>> referenceAxes_;
     std::vector<occ::handle<AIS_Shape>> projectedEdges_;
     occ::handle<AIS_Point> origin_;

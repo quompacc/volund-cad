@@ -785,6 +785,12 @@ if(VOELUND_BUILD_DESKTOP)
         if(VOELUND_NATIVE_WAYLAND)
             set_tests_properties(desktop.tool_value_field PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
         endif()
+        # User report 2026-10-25: the sketch as seen on a scaled screen, by hand (capture-manual).
+        add_executable(voelund_sketch_capture desktop/SketchCapture.cpp)
+        target_link_libraries(voelund_sketch_capture PRIVATE voelund_project_options Voelund::Desktop)
+        add_test(NAME capture.sketch COMMAND voelund_sketch_capture)
+        set_tests_properties(capture.sketch PROPERTIES LABELS "capture-manual" TIMEOUT 120
+            ENVIRONMENT "QT_QPA_PLATFORM=wayland")
         # User report 2026-10-25: where the time goes in the window, by hand (perf-manual).
         add_executable(voelund_desktop_model_probe perf/DesktopModelProbe.cpp)
         target_link_libraries(voelund_desktop_model_probe PRIVATE voelund_project_options Voelund::Desktop)

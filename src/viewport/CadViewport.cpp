@@ -80,6 +80,27 @@ CadViewport::CadViewport(QWidget* parent)
     setFocusPolicy(Qt::StrongFocus);
     setMouseTracking(true);
     impl_->snapOverlay = new SketchSnapOverlay(*this);
+    // W18: relation symbols, placed from the current camera on every frame.
+    impl_->glyphOverlay = new SketchGlyphOverlay(*this);
+    impl_->glyphOverlay->setProjector(
+        [this](double x, double y, double z) -> std::optional<QPointF> {
+            if (!impl_->ready || impl_->view.IsNull())
+                return std::nullopt;
+            int pixelX = 0, pixelY = 0;
+            impl_->view->Convert(x, y, z, pixelX, pixelY);
+            return QPointF(pixelX, pixelY) / devicePixelRatioF();
+        });
+    impl_->glyphOverlay->setObstacles([this] {
+        std::vector<QRectF> result;
+        if (!impl_->ready) // no window to project into yet
+            return result;
+        const double ratio = devicePixelRatioF();
+        for (const auto& [left, top, right, bottom] :
+             impl_->sketchConstraintPresentation.labelBoxes(impl_->view))
+            result.emplace_back(QPointF(left, top) / ratio, QPointF(right, bottom) / ratio);
+        return result;
+    });
+    impl_->sketchConstraintPresentation.setGlyphOverlay(impl_->glyphOverlay);
     setMinimumSize(640, 480);
     impl_->selectionBand = new SelectionBand(this);
 }
@@ -411,6 +432,7 @@ void CadViewport::setTransformSnapping(bool enabled, double linearStep, double a
 void CadViewport::setTheme(const ViewportTheme& theme) {
     impl_->theme = theme;
     impl_->snapOverlay->setColors(theme.selection, theme.axisLabel, theme.background);
+    impl_->glyphOverlay->setColors(theme.constraintGlyph, theme.selection, theme.background);
     performViewportOperation(*this, impl_->ready, [&] {
         if (!impl_->ready)
             return;

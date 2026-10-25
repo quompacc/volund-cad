@@ -185,6 +185,19 @@ std::optional<std::uint64_t> SketchPresentation::detectedElement(
 
 std::size_t SketchPresentation::size() const noexcept { return elements_.size(); }
 
+void SketchPresentation::hover(const occ::handle<AIS_InteractiveContext>& context,
+                               std::span<const std::uint64_t> ids) {
+    if (context.IsNull() || (ids.empty() && !hovering_))
+        return;
+    for (const ElementPresentation& element : elements_)
+        if (std::ranges::find(ids, element.id) != ids.end())
+            context->HilightWithColor(
+                element.shape, context->HighlightStyle(Prs3d_TypeOfHighlight_Dynamic), false);
+        else if (hovering_)
+            context->Unhilight(element.shape, false);
+    hovering_ = !ids.empty();
+}
+
 void SketchPresentation::setColors(const Quantity_Color& free, const Quantity_Color& determined) {
     free_ = free;
     determined_ = determined;

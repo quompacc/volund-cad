@@ -31,9 +31,10 @@ struct DimensionDrawing final {
 
 [[nodiscard]] DimensionDrawing drawDimension(const SceneDimension& dimension);
 
-// The drawing as one display object; never picked (the value label is).
+// The drawing as one display object; never picked (the value label is). Arrowheads are
+// `pixelScale` times their size on a 100 % screen.
 [[nodiscard]] occ::handle<AIS_InteractiveObject>
 makeDimensionGraphic(const DimensionDrawing& drawing, const gp_Dir& normal,
-                     const Quantity_Color& color);
+                     const Quantity_Color& color, double pixelScale = 1.0);
 
 } // namespace voelund::viewport

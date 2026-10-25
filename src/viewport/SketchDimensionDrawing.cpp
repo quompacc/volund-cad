@@ -109,8 +109,9 @@ DimensionDrawing angular(const SceneDimension& d) {
 
 class DimensionGraphic final : public AIS_InteractiveObject {
   public:
-    DimensionGraphic(DimensionDrawing drawing, const gp_Dir& normal, const Quantity_Color& color)
-        : drawing_(std::move(drawing)), normal_(normal), color_(color) {}
+    DimensionGraphic(DimensionDrawing drawing, const gp_Dir& normal, const Quantity_Color& color,
+                     double pixelScale)
+        : drawing_(std::move(drawing)), normal_(normal), color_(color), pixelScale_(pixelScale) {}
 
   protected:
     void Compute(const occ::handle<PrsMgr_PresentationManager>&,
@@ -135,7 +136,7 @@ class DimensionGraphic final : public AIS_InteractiveObject {
         fill->SetFaceCulling(Graphic3d_TypeOfBackfacingModel_DoubleSided);
         // As in Fusion, arrowheads keep their size on screen at every zoom: each is drawn in
         // pixels about its tip (zoom persistent), unless the dimension line is too short.
-        constexpr double pixels = 11.0;
+        const double pixels = 11.0 * pixelScale_;
         for (const auto& arrow : drawing_.arrows) {
             const occ::handle<Graphic3d_Group> head = presentation->NewGroup();
             head->SetTransformPersistence(
@@ -157,6 +158,7 @@ class DimensionGraphic final : public AIS_InteractiveObject {
     DimensionDrawing drawing_;
     gp_Dir normal_;
     Quantity_Color color_;
+    double pixelScale_;
 };
 
 } // namespace
@@ -176,8 +178,9 @@ DimensionDrawing drawDimension(const SceneDimension& dimension) {
 
 occ::handle<AIS_InteractiveObject> makeDimensionGraphic(const DimensionDrawing& drawing,
                                                         const gp_Dir& normal,
-                                                        const Quantity_Color& color) {
-    return new DimensionGraphic(drawing, normal, color);
+                                                        const Quantity_Color& color,
+                                                        double pixelScale) {
+    return new DimensionGraphic(drawing, normal, color, pixelScale);
 }
 
 } // namespace voelund::viewport

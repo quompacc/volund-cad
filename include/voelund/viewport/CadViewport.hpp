@@ -144,6 +144,16 @@ struct SceneDimension final {
     int textBeside{0}; // +1 right of an upright dimension line, -1 left, 0 above
 };
 
+// W18: where a relation's symbol sits (world) and the direction along its curve there.
+struct SceneGlyph final {
+    double x;
+    double y;
+    double z;
+    double alongX;
+    double alongY;
+    double alongZ;
+};
+
 struct SceneSketchConstraint final {
     std::uint64_t id;
     std::string label;
@@ -155,6 +165,11 @@ struct SceneSketchConstraint final {
     bool redundant{false};                     // S07: implied by other relations
     bool selected{false};                      // S13: picked at its label
     std::optional<SceneDimension> dimension{}; // W12: lines and arrows; the label sits on it
+    // W18: a relation drawn as symbol boxes at these anchors instead of its text label; `glyph`
+    // names the symbol ("H", "V", "C", "||", "90", "=", "T" ...).
+    std::vector<SceneGlyph> glyphs{};
+    std::string glyph{};
+    std::vector<std::uint64_t> elements{}; // W18: lit while the symbol is hovered
 };
 
 struct PlanarReferenceSegment final {
@@ -256,6 +271,7 @@ struct ViewportTheme final {
     QColor sketchDetermined{0x1B, 0x20, 0x26};
     // U11: constraint labels, readable on the background.
     QColor sketchLabel{0x0B, 0x4F, 0x9C};
+    QColor constraintGlyph{0xCA, 0x47, 0x3D}; // W18: relation symbols (SolidCraft's red)
 };
 // Base planes offered in the viewport (V01b); values match document::DatumPlane.
 enum class BasePlane { xy = 1, xz = 2, yz = 3 };

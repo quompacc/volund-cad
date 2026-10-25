@@ -38,6 +38,15 @@ struct SketchDimensionShape final {
     int textBeside{0};
 };
 
+// W18 (as SolidCraft): where a relation's symbol sits on the geometry, the direction along the
+// curve there (world), and the elements it binds (highlighted when the symbol is hovered).
+// Relations between two curves have one anchor on each.
+struct SketchGlyphAnchor final {
+    gp_Pnt at;
+    gp_Dir along;
+    std::vector<document::SketchElementId> elements;
+};
+
 struct SketchConstraintAnnotation final {
     document::SketchConstraintId id;
     document::SketchConstraintKind kind;
@@ -52,6 +61,7 @@ struct SketchConstraintAnnotation final {
     std::optional<document::ParameterId> parameter{};
     std::string label{};                             // sketchConstraintLabel(kind, value)
     std::optional<SketchDimensionShape> dimension{}; // W12: dimensions only
+    std::vector<SketchGlyphAnchor> glyphs{};         // W18: relations only
 };
 
 [[nodiscard]] SketchAnnotationCategory
@@ -67,5 +77,10 @@ sketchAnnotationCategory(document::SketchConstraintKind kind) noexcept;
 // geometry.
 [[nodiscard]] std::vector<SketchConstraintAnnotation>
 evaluateSketchConstraintAnnotations(const document::SketchParameters& sketch);
+// W18: the symbol anchors of a relation (none for a dimension); `annotationPosition` is where a
+// relation of points sits.
+[[nodiscard]] std::vector<SketchGlyphAnchor>
+sketchGlyphAnchors(const document::SketchParameters& sketch,
+                   const document::SketchConstraint& constraint, const gp_Pnt& annotationPosition);
 
 } // namespace voelund::features

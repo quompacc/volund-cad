@@ -542,6 +542,7 @@ evaluateSketchConstraintAnnotations(const document::SketchParameters& sketch) {
                               ? "(" + sketchConstraintLabel(constraint.kind, value) + ")"
                               : sketchConstraintLabel(constraint.kind, value),
                           sketchDimensionShape(sketch, constraint, value)});
+        result.back().glyphs = sketchGlyphAnchors(sketch, constraint, result.back().position);
     }
     return result;
 }

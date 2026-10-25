@@ -53,6 +53,8 @@ void CadViewport::mouseMoveEvent(QMouseEvent* event) {
             impl_->showDynamicFields(event->position());
             // User report 2026-10-23: lines light up under the pointer in a sketch too.
             impl_->context->MoveTo(position.x(), position.y(), impl_->view, false);
+            impl_->glyphOverlay->hover(event->position()); // W18: the symbol names itself
+            impl_->sketchPresentation.hover(impl_->context, impl_->glyphOverlay->hoveredElements());
             update();
             return;
         }

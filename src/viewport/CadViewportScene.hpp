@@ -14,6 +14,7 @@
 #include "SketchBoxSelection.hpp"
 #include "SketchConstraintPresentation.hpp"
 #include "SketchEditorInteraction.hpp"
+#include "SketchGlyphOverlay.hpp"
 #include "SketchPresentation.hpp"
 #include "SketchRegionPresentation.hpp"
 #include "SketchSnapOverlay.hpp"
@@ -59,6 +60,7 @@
 #include <V3d_Viewer.hxx>
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <functional>
 #include <optional>
@@ -112,6 +114,19 @@ class CadViewportScene {
             context->SetDisplayMode(presentation.shape, bodyDisplayMode(displayStyle), false);
             context->Redisplay(presentation.shape, false);
         }
+    }
+
+    // User report 2026-10-25: on a scaled screen (200 %) OCCT drew text, markers and lines at
+    // half their size. The view's resolution scales them; the sketch labels' own pixel offsets
+    // follow the same ratio.
+    void applyPixelScale(double ratio) {
+        const auto resolution = static_cast<unsigned int>(std::lround(72.0 * ratio));
+        if (view->RenderingParams().Resolution == resolution &&
+            sketchConstraintPresentation.pixelScale() == ratio)
+            return;
+        view->ChangeRenderingParams().Resolution = resolution;
+        sketchConstraintPresentation.setPixelScale(ratio);
+        sketchConstraintPresentation.setConstraints(context, pendingSketchConstraints);
     }
 
     // Colors of the current theme for background, grid, bodies, highlights and planes.
@@ -438,7 +453,8 @@ class CadViewportScene {
     SelectionBand* selectionBand{nullptr};
     bool ready{false};
     ViewportTheme theme;
-    SketchSnapOverlay* snapOverlay{nullptr}; // S04a, child widget of the viewport
+    SketchSnapOverlay* snapOverlay{nullptr};   // S04a, child widget of the viewport
+    SketchGlyphOverlay* glyphOverlay{nullptr}; // W18, child widget of the viewport
     std::array<bool, 3> planeVisibility{true, true, true};
     DatumPresentation datums;              // M19
     std::vector<SceneDatum> pendingDatums; // M19

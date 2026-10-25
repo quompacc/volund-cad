@@ -91,6 +91,24 @@ sceneDimension(const features::SketchConstraintAnnotation& annotation, const std
                                     shape.along,     shape.outward,   shape.normal, shape.offset,
                                     std::move(text), shape.textBeside};
 }
+
+// W18 (as SolidCraft): a relation shows symbol boxes on its geometry instead of "[H]" beside a
+// point; the symbol is its label without the brackets.
+void setGlyphs(viewport::SceneSketchConstraint& scene,
+               const features::SketchConstraintAnnotation& annotation) {
+    if (annotation.glyphs.empty())
+        return;
+    for (const auto& anchor : annotation.glyphs)
+        scene.glyphs.push_back({anchor.at.X(), anchor.at.Y(), anchor.at.Z(), anchor.along.X(),
+                                anchor.along.Y(), anchor.along.Z()});
+    for (const auto element : annotation.glyphs.front().elements)
+        scene.elements.push_back(element.value());
+    std::string key = annotation.label;
+    std::erase_if(key, [](char character) {
+        return character == '[' || character == ']' || character == '(' || character == ')';
+    });
+    scene.glyph = key;
+}
 } // namespace
 
 // S10/S11: the reason when the edit cannot run, with the elements causing it shown in red;
@@ -353,6 +371,7 @@ void SketchEditorToolController::refreshPresentation() {
              annotation.position.Z(), editor_->isConstraintConflicting(annotation.id),
              annotation.editable, editor_->isConstraintRedundant(annotation.id),
              editor_->selectedConstraint() == annotation.id, sceneDimension(annotation, label)});
+        setGlyphs(constraints.back(), annotation); // W18
     }
     if (previewAutomatic_.has_value() && evaluated.size() > editor_->elements().size() &&
         !evaluated.back().points.empty()) {

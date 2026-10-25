@@ -84,6 +84,7 @@ void CadViewport::initializeGL() {
         // User report 2026-10-23: thin sketch lines were hard to hit with OCCT's 2 framebuffer
         // pixels (1 on a 200 % screen). As in Fusion, a pick catches about 5 screen pixels away.
         impl_->context->SetPixelTolerance(qRound(5 * devicePixelRatioF()));
+        impl_->applyPixelScale(devicePixelRatioF());
         ++impl_->contextGeneration;
         impl_->lastError.clear();
         impl_->displayPendingBodies();
@@ -116,9 +117,12 @@ void CadViewport::paintGL() {
         context()->functions()->glViewport(0, 0, pixels.width(), pixels.height());
         if (!qtgl::bindCurrentFramebuffer(impl_->view, devicePixelRatioF()))
             throw std::runtime_error("Viewport framebuffer/context unavailable");
+        impl_->applyPixelScale(devicePixelRatioF()); // the window moved to another screen
         qtgl::resetStateBeforeOcct(impl_->view);
         impl_->view->Redraw();
         qtgl::resetStateAfterOcct(impl_->view);
+        if (impl_->glyphOverlay != nullptr && impl_->glyphOverlay->isVisible())
+            impl_->glyphOverlay->update(); // W18: the symbols follow the camera
         ++impl_->renderedFrames;
     } catch (const Standard_Failure& error) {
         impl_->ready = false;
