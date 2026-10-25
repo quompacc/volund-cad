@@ -86,7 +86,7 @@ void regressions(const Handle(TDocStd_Application) & app) {
         rejected([&] { (void)readNativeMetadata(doc); });
         doc->AbortCommand();
     }
-    for (int version : {0, 39, -1}) {
+    for (int version : {0, voelund::document::detail::nativeSchemaVersion + 1, -1}) {
         doc->NewCommand();
         TDataStd_Integer::Set(doc->Main().FindChild(2), version);
         rejected([&] { (void)readNativeMetadata(doc); });

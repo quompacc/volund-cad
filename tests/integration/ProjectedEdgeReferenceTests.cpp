@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Eduard Hart
 
+#include "../../src/document/NativeDocumentMetadata.hpp"
 #include "../../src/document/NativePrimitiveCodec.hpp"
 #include "../../src/document/NativeProjectedEdge.hpp"
 #include <BinDrivers.hxx>
@@ -180,7 +181,7 @@ void codecNegatives() {
     const auto identified =
         IdentifiedDocumentSnapshot::restore(m.documentId(), DocumentSnapshot::capture(m));
     detail::NativePrimitiveCodec::write(doc, identified);
-    for (int old : {1, 2, 39}) {
+    for (int old : {1, 2, voelund::document::detail::nativeSchemaVersion + 1}) {
         TDataStd_Integer::Set(doc->Main().FindChild(2), old);
         rejected([&] { (void)detail::NativePrimitiveCodec::read(doc); });
     }

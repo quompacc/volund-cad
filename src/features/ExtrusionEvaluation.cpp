@@ -364,15 +364,19 @@ Prism makeLoft(document::FeatureId extrusion, const document::SketchParameters& 
     return result;
 }
 
+// Schema 39 (user report 2026-10-24): a join made so leaves no seam where the new solid
+// continues a face of the body (two extrusions joined into one plate); older ones keep theirs.
 kernel::ShapeOperationResult combine(document::ExtrusionOperation operation,
-                                     const TopoDS_Shape& body, const TopoDS_Shape& tool) {
+                                     const TopoDS_Shape& body, const TopoDS_Shape& tool,
+                                     bool mergeSeams) {
     switch (operation) {
     case document::ExtrusionOperation::cut:
         return kernel::ShapeOperations::cutWithHistory(body, tool);
     case document::ExtrusionOperation::intersect:
         return kernel::ShapeOperations::intersectWithHistory(body, tool);
     default:
-        return kernel::ShapeOperations::fuseWithHistory(body, tool);
+        return mergeSeams ? kernel::ShapeOperations::fuseMergingWithHistory(body, tool)
+                          : kernel::ShapeOperations::fuseWithHistory(body, tool);
     }
 }
 
@@ -435,8 +439,7 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
     };
     const auto prism = sweep(start);
 
-    // The reference evaluation resolves a bound face sketch on the support's reference
-    // result; a base-plane sketch is its own reference.
+    // The reference resolves a face sketch on the support's reference; a base-plane one is its own.
     auto referenceSketch = sketch;
     if (support && sketch.supportBinding) {
         const auto& supportOutput = findFeature(outputs, *support);
@@ -470,8 +473,7 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
     }();
 
     if (operation == document::ExtrusionOperation::newBody) {
-        // V01: a base-plane sketch opened its own body (BodyId = sketch FeatureId); T02: a
-        // new body on a face is the extrusion's own. Nothing is fused and nothing is guessed.
+        // V01/T02: the base-plane sketch's body (its FeatureId) or the face extrusion's; no fuse.
         const document::BodyId bodyId{support ? descriptor.id.value() : sketchId.value()};
         if (std::ranges::find(bodies, bodyId, &EvaluatedBody::bodyId) != bodies.end())
             fail("Base-plane body already has a solid", "base-body-exists");
@@ -516,9 +518,11 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
                 kernel::booleanFailureCode(error.failure()));
         }
     };
-    const auto evaluated = named([&] { return combine(operation, body.shape, prism.shape); });
+    const bool merge = parameters.mergeSeams;
+    const auto evaluated =
+        named([&] { return combine(operation, body.shape, prism.shape, merge); });
     const auto reference =
-        named([&] { return combine(operation, referenceBody.shape, referencePrism.shape); });
+        named([&] { return combine(operation, referenceBody.shape, referencePrism.shape, merge); });
     const auto& inputOutput = findFeature(outputs, *input);
     const auto supportOrigins = [](const auto& previous, const auto& result, auto operand) {
         return continueSupportOrigins(previous, result, operand);

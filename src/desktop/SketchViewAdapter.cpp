@@ -186,9 +186,15 @@ std::optional<SketchPlaneCrossing> sketchPlaneCrossing(const application::CadSes
 }
 
 bool pickSketchArea(application::CadSession& session, const viewport::ViewRay& ray,
-                    const std::set<std::uint64_t>& hiddenBodies) {
+                    const ViewVisibility& visibility) {
+    const auto& hiddenBodies = visibility.hiddenBodies;
+    const auto& shownSketches = visibility.shownSketches;
     const auto outline = session.modelOutline();
+    const auto selected = session.selectedFeature();
     const auto hidden = [&](document::FeatureId feature) {
+        // User report 2026-10-24: a hidden sketch takes no clicks (the selected one does).
+        if (!shownSketches.contains(feature.value()) && selected != feature)
+            return true;
         for (const auto& body : outline.bodies)
             if (std::ranges::find(body.features, feature) != body.features.end())
                 return hiddenBodies.contains(body.id.value());

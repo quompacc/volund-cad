@@ -194,7 +194,7 @@ void MainWindow::connectInteractions() {
                 return true;
             }
             if (impl_->shell().toolBlocksCommands() ||
-                !pickSketchArea(impl_->session, ray, impl_->visibility.hiddenBodies))
+                !pickSketchArea(impl_->session, ray, impl_->visibility))
                 return false;
             showSelectedProfiles();
             return true;

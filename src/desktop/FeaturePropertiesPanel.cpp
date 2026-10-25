@@ -439,8 +439,7 @@ void FeaturePropertiesPanel::showExtrusion(const document::ExtrusionParameters& 
         const QSignalBlocker seams(extrusionSeamsInput_);
         extrusionSeamsInput_->setChecked(parameters.mergeSeams);
     }
-    extrusionSeamsInput_->setVisible(parameters.faceProfile.has_value() &&
-                                     parameters.operation == document::ExtrusionOperation::join);
+    extrusionSeamsInput_->setVisible(parameters.operation == document::ExtrusionOperation::join);
     extrusionErrorLabel_->setText(errorText);
     extrusionErrorLabel_->setVisible(!errorText.isEmpty());
     syncBindings();

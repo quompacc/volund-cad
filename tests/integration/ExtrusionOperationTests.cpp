@@ -5,6 +5,8 @@
 
 #include <voelund/features/SketchRegionIdentity.hpp>
 
+#include <TopExp_Explorer.hxx>
+
 #include <algorithm>
 #include <cmath>
 #include <filesystem>
@@ -208,6 +210,29 @@ void namedTargets(const std::filesystem::path& work) {
                 near(volume(session), 33000),
             "Save and open keep operations and targets");
 }
+// Schema 39 (user report 2026-10-24): two extrusions joined into one plate leave no seam; the
+// plate continued by a block is one box of six faces, also after Save and Open.
+void seamlessJoin(const std::filesystem::path& work) {
+    application::CadSession session;
+    const auto base = plate(session);
+    const document::BodyId plateBody{base.sketch.value()};
+    committed(session.createDatumSketchExtrusion(onXy(40, -20, 60, 20), {}, 10,
+                                                 {ExtrusionOperation::join, false, plateBody}));
+    const auto faces = [&] {
+        int count = 0;
+        for (TopExp_Explorer explorer(session.validBodies().front().shape, TopAbs_FACE);
+             explorer.More(); explorer.Next())
+            ++count;
+        return count;
+    };
+    require(session.validBodies().size() == 1 && faces() == 6 && near(volume(session), 40000),
+            "Joined without a seam: one box of six faces, " + std::to_string(faces()));
+    const auto path = work / "seams.volund";
+    session.saveDocument(path);
+    session.newDocument();
+    session.loadDocument(path);
+    require(faces() == 6, "Save and Open keep the seamless join");
+}
 } // namespace
 
 int main() {
@@ -217,6 +242,7 @@ int main() {
         faceOperations();
         offsetAndEndFace();
         namedTargets(work);
+        seamlessJoin(work);
         std::filesystem::remove_all(work);
         std::cout << "PASS T02/T03 extrusion operations\n";
         return EXIT_SUCCESS;

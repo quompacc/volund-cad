@@ -109,10 +109,12 @@ std::size_t nativeExtrusionRecords(const ExtrusionParameters& parameters) {
             records += 1 + chunkCount(section.region);
     return records;
 }
-void validateNativeExtrusion(const ExtrusionParameters& parameters) {
+void validateNativeExtrusion(const ExtrusionParameters& parameters, int schemaVersion) {
     require(kernel::modelLength(parameters.distance) &&
-            parameters.profiles.size() <= maximumExtrusionProfileCount &&
-            (!parameters.mergeSeams || parameters.faceProfile)); // T05: only a push/pull merges
+            parameters.profiles.size() <= maximumExtrusionProfileCount);
+    // T05 (schema 36): a push/pull may merge its seams; schema 39 (user report 2026-10-24): a
+    // sketch extrusion too.
+    require(!parameters.mergeSeams || parameters.faceProfile || schemaVersion >= 39);
     std::set<std::uint64_t> ids;
     for (const auto id : parameters.profiles)
         require(id.value() != 0 && ids.insert(id.value()).second);
@@ -189,7 +191,8 @@ void writeNativeExtrusion(const TDF_Label& label, const ExtrusionParameters& par
             writeRegions(node.FindChild(2), {section.region});
         }
     }
-    // T05 (schema 36): child 15 is 1 when a push/pull merges its seams; absent otherwise.
+    // T05 (schema 36): child 15 is 1 when a push/pull (schema 39: any extrusion) merges its
+    // seams; absent otherwise.
     if (parameters.mergeSeams)
         TDataStd_Integer::Set(label.FindChild(15), 1);
     // M23 (schema 26): child 13 holds the path sketch (1) and the path elements (children of 2).
@@ -376,7 +379,7 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
         validateLoftParameters(parameters);
         result.loft = std::move(parameters);
     }
-    validateNativeExtrusion(result);
+    validateNativeExtrusion(result, schemaVersion);
     return result;
 }
 } // namespace voelund::document::detail

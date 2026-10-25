@@ -99,10 +99,20 @@ void run() {
     require(viewport->shownSketchCount() == 0 && !sketchRow(*tree)->data(1, Qt::UserRole).toBool(),
             "The extrusion uses the sketch: it hides itself");
 
+    // From below the hidden sketch takes no click; shown again, it does.
+    viewport->setCameraView(viewport::CameraView::bottom);
+    test::render(*viewport);
+    click(*viewport, 5, 3);
+    require(session.selectedFeatureDescriptor().kind != document::FeatureKind::sketch,
+            "A hidden sketch takes no click");
+
     emit tree->itemClicked(sketchRow(*tree), 1);
     settle();
     require(viewport->shownSketchCount() == 1 && sketchRow(*tree)->data(1, Qt::UserRole).toBool(),
             "Its eye brings the used sketch back");
+    click(*viewport, 5, 3);
+    require(session.selectedFeatureDescriptor().kind == document::FeatureKind::sketch,
+            "Shown again, its area is clicked from below");
     std::cout << "PASS sketch visibility: small planes, gone after the first sketch, used "
                  "sketch hidden, eye in the tree\n";
 }

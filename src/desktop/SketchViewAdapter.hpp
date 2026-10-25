@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "ViewVisibility.hpp"
 #include <voelund/features/SketchEvaluation.hpp>
 #include <voelund/viewport/CadViewport.hpp>
 
@@ -44,6 +45,6 @@ sketchPlaneCrossing(const application::CadSession& session, document::FeatureId 
 // A click into the area of a visible sketch region picks it (user report 2026-10-05); a
 // sketch behind the clicked face stays hidden (S14).
 [[nodiscard]] bool pickSketchArea(application::CadSession& session, const viewport::ViewRay& ray,
-                                  const std::set<std::uint64_t>& hiddenBodies);
+                                  const ViewVisibility& visibility);
 
 } // namespace voelund::desktop

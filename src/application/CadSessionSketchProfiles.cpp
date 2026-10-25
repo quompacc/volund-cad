@@ -218,6 +218,7 @@ document::ExtrusionParameters newExtrusionParameters(double distance,
     parameters.offset = bound(mode.offsetParameter, mode.offset);
     parameters.upToFace = mode.upToFace;
     parameters.symmetric = mode.symmetric;
+    parameters.mergeSeams = true; // schema 39: new extrusions leave no seam
     parameters.revolve = mode.revolve;
     parameters.sweep = mode.sweep;
     parameters.loft = mode.loft;
