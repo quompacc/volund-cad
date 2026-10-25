@@ -41,10 +41,10 @@ beschrieben. Lücken, die die Bestandsaufnahme vom 23.10.2026 fand:
 | W15 | Flächen der gewählten Skizze schwach gefüllt, die unter der Maus hervorgehoben; ein Klick wählt, was extrudiert wird (Inneres, Wand …), wie die Vorschau in FreeCAD. | in Arbeit |
 | W16 | Schrägungswinkel beim Extrudieren wie in FreeCAD: positiv breiter, negativ schmaler zum Ende hin (Schema 40). | in Arbeit |
 | W17 | Skizze lesbar auf jedem Bildschirm: Schrift, Pfeile, Abstände wachsen mit der Bildschirmskalierung ([W17-plan](W17-plan.md)). | in Arbeit |
-| W18 | Beziehungen als Symbole an der Geometrie wie SolidCraft; Hervorhebung, Tooltip, Löschen. | geplant |
-| W19 | Skizzen-Karte wie die SolidCraft-Palette: Status mit Freiheitsgraden, offene Enden, Werkzeug-Varianten, Linientyp, Schalter; Listen der Beziehungen und Elemente. | geplant |
-| W20 | Werkzeugauswahl der Skizze vollständig: Gruppen, Familien, Tasten, Hinweise, Rechtsklick-Menü mit passenden Beziehungen. | geplant |
-| W21 | Maße wie SolidCraft: Kästchen, getriebene Maße, fx-Ausdrücke, Maßzahl ziehen. | geplant |
+| W18 | Beziehungen als Symbole an der Geometrie wie SolidCraft; Hervorhebung, Tooltip, Löschen. | in Arbeit |
+| W19 | Skizzen-Karte wie die SolidCraft-Palette: Status mit Freiheitsgraden, offene Enden, Werkzeug-Varianten, Linientyp, Schalter; Listen der Beziehungen und Elemente. | in Arbeit |
+| W20 | Werkzeugauswahl der Skizze vollständig: Gruppen, Familien, Tasten, Hinweise, Rechtsklick-Menü mit passenden Beziehungen. | teilweise |
+| W21 | Maße wie SolidCraft: Kästchen, getriebene Maße, fx-Ausdrücke, Maßzahl ziehen. | teilweise |
 
 **Arbeitsregeln:**
 

@@ -133,9 +133,27 @@ bool CadViewport::finishBodyBox(const QMouseEvent& event) {
     return true;
 }
 
+void CadViewport::setSketchContextHandler(std::function<void(QPoint)> handler) {
+    impl_->sketchContextHandler = std::move(handler);
+}
+
+bool CadViewport::sketchRightClick(const QMouseEvent& event) {
+    if (event.button() != Qt::RightButton || !impl_->ready || !impl_->sketchEditor.isActive() ||
+        !impl_->sketchContextHandler)
+        return false;
+    const QPoint moved = framebufferPoint(*this, event.position()) - impl_->gestureOrigin;
+    if (moved.manhattanLength() > qRound(4 * devicePixelRatioF()))
+        return false; // a drag turned the view
+    impl_->gesture = Impl::Gesture::none;
+    unsetCursor();
+    impl_->sketchContextHandler(event.globalPosition().toPoint());
+    return true;
+}
+
 bool CadViewport::event(QEvent* event) {
     if (event->type() == QEvent::MouseButtonRelease &&
-        finishBodyBox(*static_cast<QMouseEvent*>(event)))
+        (finishBodyBox(*static_cast<QMouseEvent*>(event)) ||
+         sketchRightClick(*static_cast<QMouseEvent*>(event))))
         return true;
     if (event->type() == QEvent::MouseButtonPress) {
         const bool handled = CadViewportBase::event(event);

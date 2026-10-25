@@ -436,6 +436,7 @@ class CadViewportScene {
     std::function<void(const SketchSelectionIntent&)> sketchElementSelectionHandler;
     std::function<void(std::uint64_t)> sketchConstraintEditHandler;
     std::function<void(std::uint64_t)> sketchConstraintSelectionHandler;
+    std::function<void(QPoint)> sketchContextHandler; // W20
     std::function<void(const std::vector<std::uint64_t>&, bool)> sketchBoxSelectionHandler;
     // W07: a box over bodies outside a sketch.
     bool bodyBox{false};

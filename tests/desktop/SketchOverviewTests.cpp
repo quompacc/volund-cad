@@ -1,0 +1,174 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 Eduard Hart
+
+#include "IsolatedSettings.hpp"
+#include "ViewportLifecycleSupport.hpp"
+
+#include <QAction>
+#include <QApplication>
+#include <QComboBox>
+#include <QKeyEvent>
+#include <QLabel>
+#include <QListWidget>
+#include <QMenu>
+#include <QProgressBar>
+#include <QPushButton>
+#include <QStatusBar>
+#include <QTimer>
+#include <QToolButton>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <voelund/application/CadSession.hpp>
+#include <voelund/desktop/MainWindow.hpp>
+
+// W19 (user report 2026-10-25, after SolidCraft's palette and FreeCAD's lists): the sketch
+// card shows how much is determined, names loose ends and ties corners lying on each other,
+// and lists relations and elements; a click in a list selects in the sketch.
+namespace {
+using namespace voelund;
+void require(bool condition, const std::string& message) {
+    if (!condition)
+        throw std::runtime_error(message);
+}
+QAction& command(QWidget& window, const char* id) {
+    for (auto* action : window.findChildren<QAction*>())
+        if (action->property("commandId").toString() == QLatin1String(id))
+            return *action;
+    throw std::runtime_error(std::string("Command is missing: ") + id);
+}
+void settle() {
+    for (int i = 0; i < 6; ++i)
+        QApplication::processEvents();
+}
+void click(viewport::CadViewport& viewport, double x, double y) {
+    const QPoint point = viewport::ViewportTestAccess::project(viewport, x, y, 0);
+    test::mouse(viewport, QEvent::MouseMove, point, Qt::NoButton, Qt::NoButton);
+    test::mouse(viewport, QEvent::MouseButtonPress, point, Qt::LeftButton, Qt::LeftButton);
+    test::mouse(viewport, QEvent::MouseButtonRelease, point, Qt::LeftButton, Qt::NoButton);
+    test::render(viewport);
+    settle();
+}
+template <class Widget> Widget& part(QWidget& window, const char* name) {
+    auto* found = window.findChild<Widget*>(QLatin1String(name));
+    require(found != nullptr, std::string("Overview part missing: ") + name);
+    return *found;
+}
+QString status(QWidget& window) { return window.findChild<QStatusBar*>()->currentMessage(); }
+
+void lists(QWidget& window) {
+    auto& relations = part<QToolButton>(window, "sketchRelationsToggle");
+    auto& elements = part<QToolButton>(window, "sketchElementsToggle");
+    require(relations.text().startsWith(QStringLiteral("Beziehungen (")) &&
+                elements.text() == QStringLiteral("Elemente (4)"),
+            "The lists name their counts: " + relations.text().toStdString() + ", " +
+                elements.text().toStdString());
+    relations.setChecked(true);
+    auto& relationList = part<QListWidget>(window, "sketchRelationList");
+    require(relationList.isVisible() && relationList.count() >= 4, "The relations unfold");
+    emit relationList.itemClicked(relationList.item(0));
+    settle();
+    require(status(window).startsWith(QStringLiteral("Bedingung gewählt")),
+            "A relation in the list is selected in the sketch, got " +
+                status(window).toStdString());
+    elements.setChecked(true);
+    auto& elementList = part<QListWidget>(window, "sketchElementList");
+    require(elementList.item(0)->text().startsWith(QStringLiteral("Linie")),
+            "The rectangle's sides are named as lines");
+    emit elementList.itemClicked(elementList.item(0));
+    settle();
+    require(elementList.item(0)->isSelected(), "The element in the list is selected");
+}
+
+// Two lines drawn without automatic relations meet at (40, 0) by position only.
+void looseEnds(QWidget& window, viewport::CadViewport& viewport) {
+    part<QComboBox>(window, "toolChoice_relations").setCurrentIndex(1); // Keine
+    for (const double start : {20.0, 40.0}) {
+        command(window, "sketch.tool.line").trigger();
+        settle();
+        click(viewport, start, 0);
+        click(viewport, start + 20, 0);
+        QKeyEvent escape(QEvent::KeyPress, Qt::Key_Escape, Qt::NoModifier);
+        QApplication::sendEvent(&viewport, &escape);
+        settle();
+    }
+    auto& ends = part<QLabel>(window, "sketchLooseEnds");
+    auto& tie = part<QPushButton>(window, "sketchTieButton");
+    require(ends.isVisible() && ends.text().contains(QStringLiteral("offene")) &&
+                ends.text().contains(QStringLiteral("aufeinandergelegt")) && tie.isVisible(),
+            "Loose ends are named and can be tied: " + ends.text().toStdString());
+    tie.click();
+    settle();
+    require(!tie.isVisible() && !ends.text().contains(QStringLiteral("aufeinandergelegt")),
+            "Tied, no corner is left lying loose: " + ends.text().toStdString());
+}
+
+// W20: a right click ends a drawing tool; in selection it opens the sketch's menu with the
+// relations that fit the selection.
+void rightClick(viewport::CadViewport& viewport, QPoint at) {
+    test::mouse(viewport, QEvent::MouseButtonPress, at, Qt::RightButton, Qt::RightButton);
+    test::mouse(viewport, QEvent::MouseButtonRelease, at, Qt::RightButton, Qt::NoButton);
+    settle();
+}
+void contextMenu(QWidget& window, viewport::CadViewport& viewport) {
+    command(window, "sketch.tool.line").trigger();
+    settle();
+    const QPoint empty = viewport::ViewportTestAccess::project(viewport, 60, 40, 0);
+    rightClick(viewport, empty);
+    require(command(window, "sketch.tool.select").isChecked(),
+            "A right click ends the drawing tool");
+    click(viewport, -30, 0); // the rectangle's left side
+    QTimer::singleShot(200, [] {
+        if (auto* menu = qobject_cast<QMenu*>(QApplication::activePopupWidget()))
+            menu->close();
+    });
+    rightClick(viewport, empty);
+    const QStringList offered = viewport.property("sketchMenuEntries").toStringList();
+    require(offered.contains(QStringLiteral("Skizze beenden")) &&
+                offered.contains(QStringLiteral("Linie\tL")),
+            "The menu offers tools and finishing: " + offered.join(',').toStdString());
+    require(offered.contains(QStringLiteral("Horizontal")) ||
+                offered.contains(QStringLiteral("Vertikal")),
+            "A selected line is offered its direction");
+}
+
+void run() {
+    application::CadSession session;
+    session.newDocument();
+    desktop::MainWindow window(session);
+    window.resize(1500, 950);
+    window.show();
+    auto* viewport = dynamic_cast<viewport::CadViewport*>(window.centralWidget());
+    require(viewport != nullptr, "viewport");
+    test::render(*viewport);
+    viewport->setCameraView(viewport::CameraView::top);
+    test::render(*viewport);
+    click(*viewport, 30, 30);
+    command(window, "solid.create.sketch").trigger();
+    settle();
+    command(window, "sketch.tool.rectangle").trigger();
+    click(*viewport, -30, -15);
+    click(*viewport, 10, 15);
+    command(window, "sketch.tool.select").trigger();
+    settle();
+    auto& progress = part<QProgressBar>(window, "sketchProgress");
+    require(progress.isVisible() && progress.value() > 0 && progress.value() < 100,
+            "The bar shows a partly determined sketch: " + std::to_string(progress.value()));
+    lists(window);
+    contextMenu(window, *viewport);
+    looseEnds(window, *viewport);
+    std::cout << "PASS sketch overview: progress, lists, selection, loose ends, tie\n";
+}
+} // namespace
+
+int main(int argc, char** argv) {
+    QApplication application(argc, argv);
+    voelund::test::isolateSettings();
+    try {
+        run();
+    } catch (const std::exception& error) {
+        std::cerr << error.what() << '\n';
+        return 1;
+    }
+    return 0;
+}

@@ -64,6 +64,8 @@ add_library(
     SketchEditorStart.cpp
     SketchExtrusionToolController.cpp
     SketchExtrusionToolValues.cpp
+    SketchOverview.cpp
+    SketchEditorContextMenu.cpp
     PushPullToolController.cpp
     FilletToolController.cpp
     HoleToolController.cpp

@@ -334,6 +334,9 @@ class CadViewport final : public CadViewportBase {
     void setSketchBoxSelectionHandler(
         std::function<void(const std::vector<std::uint64_t>&, bool additive)> handler);
     void setBodySelectionHandler(std::function<void(std::uint64_t)> handler);
+    // W20 (as SolidCraft and Fusion): a right click without dragging in an open sketch ends the
+    // drawing tool or opens the sketch's menu; dragging still turns the view.
+    void setSketchContextHandler(std::function<void(QPoint globalPosition)> handler);
     // W07 (as in Fusion): a drag from empty space outside a sketch selects bodies; left to
     // right those wholly inside, right to left those it touches. Reports the bodies' ids (as
     // SceneBody::id) and whether Ctrl was held.
@@ -466,6 +469,8 @@ class CadViewport final : public CadViewportBase {
     bool handleDynamicKey(const QKeyEvent& event);
     void startBodyBox(const QMouseEvent& event);
     bool finishBodyBox(const QMouseEvent& event);
+    // W20: a right click without dragging in an open sketch (screen position to the handler).
+    bool sketchRightClick(const QMouseEvent& event);
 #if defined(VOELUND_VIEWPORT_QT_OPENGL)
     void cleanupGlResources() noexcept;
 #endif

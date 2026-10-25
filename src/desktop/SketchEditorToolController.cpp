@@ -15,6 +15,7 @@
 #include <QObject>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <utility>
 #include <vector>
@@ -78,6 +79,31 @@ viewport::SketchElementTool viewportTool(int index) {
     return viewport::SketchElementTool::select;
 }
 
+// W20 (as SolidCraft): what to do with each tool, in the status line when it starts; in the
+// order of the panel's tool choice.
+QString toolHint(int index) {
+    static const std::array<const char*, 14> hints{
+        QT_TR_NOOP("Auswählen: Element oder Symbol anklicken, ziehen wählt im Rahmen; Entf löscht"),
+        QT_TR_NOOP("Linie: Punkte klicken, Werte tippen (Tab wechselt); Rechtsklick oder Esc "
+                   "beendet"),
+        QT_TR_NOOP("Polylinie: Punkte klicken; Enter oder Esc beendet"),
+        QT_TR_NOOP("Rechteck: zwei gegenüberliegende Ecken klicken; U abgerundet, J Rahmen"),
+        QT_TR_NOOP("Kreis: Mittelpunkt, dann Durchmesser klicken oder tippen"),
+        QT_TR_NOOP("Mittelpunktbogen: Mittelpunkt, Radiuspunkt, Endpunkt"),
+        QT_TR_NOOP("Dreipunktbogen: Anfang, Ende, Punkt auf dem Bogen"),
+        QT_TR_NOOP("Ellipse: Mittelpunkt, großer Radius, kleiner Radius"),
+        QT_TR_NOOP("Langloch: Mittellinie Anfang, Mittellinie Ende, Breite"),
+        QT_TR_NOOP("Polygon: Mittelpunkt und erste Ecke"),
+        QT_TR_NOOP("Rechteck aus dem Mittelpunkt: Mittelpunkt, dann eine Ecke"),
+        QT_TR_NOOP("Punkt: ein Klick setzt ihn"),
+        QT_TR_NOOP("B-Spline: Kontrollpunkte anklicken (mindestens 4), Enter beendet"),
+        QT_TR_NOOP("Bemaßung: ein oder zwei Elemente wählen und den Wert tippen; Enter setzt "
+                   "ihn")};
+    return index >= 0 && index < static_cast<int>(hints.size())
+               ? QObject::tr(hints[static_cast<std::size_t>(index)])
+               : QObject::tr("Skizzenwerkzeug gewechselt");
+}
+
 } // namespace
 
 SketchEditorToolController::SketchEditorToolController(
@@ -86,6 +112,7 @@ SketchEditorToolController::SketchEditorToolController(
     : session_(session), viewport_(viewport), panel_(panel), sceneChanged_(std::move(sceneChanged)),
       statusChanged_(std::move(statusChanged)) {
     installDynamicInputEvaluator();
+    viewport_.setSketchContextHandler([this](QPoint at) { contextRequested(at); }); // W20
 }
 
 void SketchEditorToolController::showPanel() {
@@ -278,19 +305,7 @@ void SketchEditorToolController::setTool(int index) {
     viewport_.setSketchEditorTool(viewportTool(index));
     syncSelectedDimensionInputs();
     refreshPresentation();
-    const QString guidance =
-        index == 5   ? QObject::tr("Mittelpunktbogen: Mittelpunkt, Radiuspunkt, Endpunkt")
-        : index == 6 ? QObject::tr("Dreipunktbogen: Anfang, Ende, Punkt auf dem Bogen")
-        : index == 7 ? QObject::tr("Ellipse: Mittelpunkt, großer Radius, kleiner Radius")
-        : index == 8 ? QObject::tr("Langloch: Mittellinie Anfang, Mittellinie Ende, Breite")
-        : index == 9 ? QObject::tr("Polygon: Mittelpunkt und erste Ecke")
-        : index == centerRectangleTool
-            ? QObject::tr("Rechteck aus dem Mittelpunkt: Mittelpunkt, dann eine Ecke")
-        : index == pointTool ? QObject::tr("Punkt: ein Klick setzt ihn")
-        : index == bsplineTool
-            ? QObject::tr("B-Spline: Kontrollpunkte anklicken (mindestens 4), Enter beendet")
-            : QObject::tr("Skizzenwerkzeug gewechselt");
-    statusChanged_(guidance);
+    statusChanged_(toolHint(index)); // W20
 }
 
 void SketchEditorToolController::updatePreview(

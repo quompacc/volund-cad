@@ -388,7 +388,18 @@ ToolPanelDefinition withFieldBindings(ToolPanelDefinition definition,
     return definition;
 }
 
+void ToolPanelHost::setSection(QWidget* section) {
+    delete section_;
+    section_ = section;
+    if (section == nullptr)
+        return;
+    section->setParent(content_);
+    static_cast<QVBoxLayout*>(content_->layout())->insertWidget(2, section); // under guidance
+    section->show();
+}
+
 void ToolPanelHost::end() {
+    setSection(nullptr);
     fieldRequests_.clear();
     requestFields();
     setErrorCommitHandler({});

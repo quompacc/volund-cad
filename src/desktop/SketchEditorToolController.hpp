@@ -7,7 +7,10 @@
 #include <voelund/application/SketchEditorSession.hpp>
 #include <voelund/viewport/CadViewport.hpp>
 
+#include "SketchOverview.hpp"
+
 #include <QElapsedTimer>
+#include <QPointer>
 
 #include <functional>
 #include <memory>
@@ -191,6 +194,11 @@ class SketchEditorToolController final {
     std::optional<viewport::SketchAutomaticConstraint> previewAutomatic_;
     // S11: elements a refused edit points at; red until the selection changes.
     std::vector<std::uint64_t> problemElements_;
+    QPointer<SketchOverview> overview_; // W19: owned by the panel while the sketch is open
+    void syncOverview();
+    void tieLooseEnds();
+    // W20: a right click in the sketch ends the drawing tool or opens the sketch's menu there.
+    void contextRequested(QPoint globalPosition);
 };
 
 } // namespace voelund::desktop

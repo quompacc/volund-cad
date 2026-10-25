@@ -3,7 +3,7 @@
 
 add_library(
     voelund_features STATIC
-    BoxFeature.cpp CylinderFeature.cpp FeatureDependencies.cpp FeatureGraph.cpp SupportProvenance.cpp EdgeProvenance.cpp SketchConstraintAnnotations.cpp SketchConstraintGlyphs.cpp
+    BoxFeature.cpp CylinderFeature.cpp FeatureDependencies.cpp FeatureGraph.cpp SupportProvenance.cpp EdgeProvenance.cpp SketchConstraintAnnotations.cpp SketchConstraintGlyphs.cpp SketchLooseEnds.cpp
     SketchConstraintSolver.cpp SketchEvaluation.cpp SketchProfiles.cpp SketchContourGraph.cpp SketchIntersections.cpp SketchRegions.cpp SketchRegionGeometry.cpp SketchRegionIdentity.cpp SketchRegionFaces.cpp SketchRegionIntervalFaces.cpp SketchIntersectionCurves.cpp SketchContourGeometry.cpp SketchSupportResolver.cpp SketchSupportBinding.cpp ExtrusionEvaluation.cpp FaceExtrusionEvaluation.cpp FilletEvaluation.cpp HoleEvaluation.cpp CombineEvaluation.cpp MirrorEvaluation.cpp PatternEvaluation.cpp MoveEvaluation.cpp ImportEvaluation.cpp DatumEvaluation.cpp ShellEvaluation.cpp DraftEvaluation.cpp SketchProjection.cpp SketchReferenceDimensions.cpp ContourProvenance.cpp SketchReferenceReview.cpp)
 
 target_include_directories(

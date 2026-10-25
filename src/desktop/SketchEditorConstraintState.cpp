@@ -9,6 +9,46 @@
 
 namespace voelund::desktop {
 
+// W19: the overview under the status line, made when the sketch's panel first needs it.
+void SketchEditorToolController::syncOverview() {
+    if (!editor_ || !panel_.isActive())
+        return;
+    if (overview_.isNull()) {
+        // A pick in a list selects as a click in the view does.
+        overview_ = new SketchOverview(
+            {[this](document::SketchConstraintId id) { selectConstraint(id.value()); },
+             [this](document::SketchElementId id) { selectElements({id.value()}, false); },
+             [this] { tieLooseEnds(); }});
+        panel_.setSection(overview_);
+    }
+    const auto relations = editor_->evaluatedConstraints();
+    const auto& solved = editor_->lastSolveResult();
+    std::vector<document::SketchElementId> selected;
+    for (const auto& reference : editor_->selectedReferences())
+        selected.push_back(reference.element);
+    if (const auto element = editor_->selectedElement())
+        selected.push_back(*element);
+    overview_->display(
+        {editor_->elements(), relations,
+         solved.status == features::SketchSolveStatus::success ? solved.degreesOfFreedom : -1,
+         features::sketchLooseEnds(editor_->elements(), editor_->constraints()),
+         editor_->selectedConstraint(), selected});
+}
+
+// W19 (SolidCraft's "Tie"): ends lying on each other by position only become coincident.
+void SketchEditorToolController::tieLooseEnds() {
+    if (!editor_)
+        return;
+    const auto untied =
+        features::sketchLooseEnds(editor_->elements(), editor_->constraints()).untied;
+    int tied = 0;
+    for (const auto& [first, second] : untied)
+        tied += editor_->addCoincidentReferences(first, second) ? 1 : 0;
+    statusChanged_(QObject::tr("%n Ecke(n) verbunden", nullptr, tied));
+    syncConstraintState();
+    refreshPresentation();
+}
+
 void SketchEditorToolController::syncConstraintState() {
     panel_.setErrorCommitHandler({});
     if (!editor_)
@@ -41,7 +81,6 @@ void SketchEditorToolController::syncConstraintState() {
     panel_.setActionEnabled("unlock_point", editor_->isSelectedReferenceLocked());
     panel_.setActionEnabled("construction", editor_->selectedElement().has_value());
     const bool hasSelection = editor_->selectedElement().has_value();
-    // S10: only for the curve types each edit supports (SketchCurveEdit.hpp).
     panel_.setActionEnabled("trim", editor_->canEditCurve(application::SketchCurveEdit::trim));
     panel_.setActionEnabled("extend", editor_->canEditCurve(application::SketchCurveEdit::extend));
     panel_.setActionEnabled("split", editor_->canEditCurve(application::SketchCurveEdit::split));
@@ -97,6 +136,7 @@ void SketchEditorToolController::syncConstraintState() {
                                        "Beziehungen legen sie fest; Strg-Klick wählt mehrere "
                                        "Bezüge."));
     }
+    syncOverview();
 }
 
 } // namespace voelund::desktop

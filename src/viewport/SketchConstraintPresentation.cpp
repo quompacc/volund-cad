@@ -30,6 +30,7 @@ const Quantity_Color conflictingColor(1.0, 0.15, 0.12, Quantity_TOC_RGB);
 // S13: yellow, so a redundant label differs from a selected (orange) one.
 const Quantity_Color redundantColor(0.95, 0.85, 0.1, Quantity_TOC_RGB);
 const Quantity_Color selectedColor(1.0, 0.55, 0.05, Quantity_TOC_RGB);
+const Quantity_Color drivenColor(0.5, 0.53, 0.58, Quantity_TOC_RGB);
 
 // U11 (A-VIS-01): a label drawn a few screen pixels beside its anchor. Labels on one point
 // (a corner's coincidence and coordinates, a side's direction and length) are stacked below
@@ -83,9 +84,11 @@ void SketchConstraintPresentation::setLabelColor(const Quantity_Color& color) {
 
 Quantity_Color
 SketchConstraintPresentation::colorOf(const SceneSketchConstraint& constraint) const {
+    const bool driven = constraint.dimension && constraint.dimension->text.starts_with('(');
     return constraint.selected      ? selectedColor
            : constraint.conflicting ? conflictingColor
            : constraint.redundant   ? redundantColor
+           : driven                 ? drivenColor // W21: a reference measures, grey as SolidCraft
                                     : labelColor_;
 }
 

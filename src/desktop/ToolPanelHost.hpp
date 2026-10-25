@@ -126,6 +126,9 @@ class ToolPanelHost final : public FloatingCard {
     void setGuidance(const QString& guidance);
     // A fixed line above the guidance, e.g. the sketch's degrees of freedom; empty hides it.
     void setStatus(const QString& status, bool good = false);
+    // W19: a tool's own section under the guidance (the sketch's overview); the panel owns it
+    // and drops it when the tool ends or another section comes.
+    void setSection(QWidget* section);
     void setErrorCommitHandler(std::function<void()> handler);
     void setLengthValue(const std::string& parameterId, double value);
     // W03: the field takes the keyboard with its text selected, so typing replaces the value.
@@ -176,6 +179,7 @@ class ToolPanelHost final : public FloatingCard {
     void acceptPressed();
 
     QWidget* content_{nullptr};
+    QWidget* section_{nullptr};
     QLabel* guidance_{nullptr};
     QLabel* status_{nullptr};
     QWidget* parameterContainer_{nullptr};
