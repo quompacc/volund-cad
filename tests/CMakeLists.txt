@@ -785,6 +785,12 @@ if(VOELUND_BUILD_DESKTOP)
         if(VOELUND_NATIVE_WAYLAND)
             set_tests_properties(desktop.tool_value_field PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
         endif()
+        # User report 2026-10-25: where the time goes in the window, by hand (perf-manual).
+        add_executable(voelund_desktop_model_probe perf/DesktopModelProbe.cpp)
+        target_link_libraries(voelund_desktop_model_probe PRIVATE voelund_project_options Voelund::Desktop)
+        add_test(NAME perfprobe.desktop_model COMMAND voelund_desktop_model_probe)
+        set_tests_properties(perfprobe.desktop_model PROPERTIES LABELS "perf-manual" TIMEOUT 300
+            ENVIRONMENT "QT_QPA_PLATFORM=wayland")
         add_executable(voelund_sketch_region_flow_tests desktop/SketchRegionFlowTests.cpp)
         target_link_libraries(voelund_sketch_region_flow_tests PRIVATE voelund_project_options Voelund::Desktop)
         add_test(NAME desktop.sketch_regions COMMAND voelund_sketch_region_flow_tests)
@@ -1618,6 +1624,9 @@ foreach(stage sketch-100 features-10 bodies-10)
 endforeach()
 # UNDO-MESSUNG: memory and time of the undo history (full OCAF states); the series runs by
 # hand (tools/run-undo-bench.sh), CTest only keeps the smallest run working.
+# User report 2026-10-25: the cost of each step of a saved model, by hand.
+add_executable(voelund_model_probe perf/ModelProbe.cpp)
+target_link_libraries(voelund_model_probe PRIVATE voelund_project_options Voelund::Application)
 add_executable(voelund_undo_bench perf/UndoBench.cpp)
 target_link_libraries(voelund_undo_bench PRIVATE voelund_project_options Voelund::Application)
 if(WIN32)

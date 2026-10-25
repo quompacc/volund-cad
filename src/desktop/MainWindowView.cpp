@@ -22,10 +22,31 @@
 #include <QSignalBlocker>
 #include <QStatusBar>
 #include <QStringList>
+#include <set>
 
 // U06: view state from the model tree (origins, planes, grid, body visibility) and picks of
 // base planes from the tree or the viewport.
 namespace voelund::desktop {
+namespace {
+// The features some step builds on (its sketch, path, sections, faces ...), from the stored
+// references. User report 2026-10-25: asking deletionPlan per sketch evaluated the whole model
+// once per sketch on every change; this reads the references only.
+std::set<std::uint64_t> referencedFeatures(const application::CadSession& session) {
+    std::set<std::uint64_t> result;
+    const auto identified = session.identifiedSnapshot();
+    const auto& snapshot = identified.snapshot();
+    const auto features = snapshot.features();
+    for (std::size_t index = 0; index < features.size(); ++index) {
+        const auto references =
+            document::featureReferences(features[index], snapshot.parameters()[index]);
+        for (const auto id : references.structural)
+            result.insert(id.value());
+        for (const auto id : references.geometric)
+            result.insert(id.value());
+    }
+    return result;
+}
+} // namespace
 
 void MainWindow::syncVisibility() {
     // User report 2026-10-24: as in the tree, the origin goes once a body exists, also one that
@@ -51,10 +72,11 @@ void MainWindow::syncShownSketches() {
     visibility.shownSketches.clear();
     std::vector<TopoDS_Shape> curves;
     const auto selected = impl_->session.selectedFeature();
+    const auto referenced = referencedFeatures(impl_->session);
     for (const auto& feature : impl_->session.features()) {
         if (feature.kind != document::FeatureKind::sketch)
             continue;
-        const bool used = !impl_->session.deletionPlan(feature.id).dependents.empty();
+        const bool used = referenced.contains(feature.id.value());
         if (!visibility.sketchShown(feature.id.value(), used))
             continue;
         visibility.shownSketches.insert(feature.id.value());
