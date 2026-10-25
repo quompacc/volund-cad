@@ -11,12 +11,21 @@
 #include <BRepBndLib.hxx>
 #include <BRepBuilderAPI_Transform.hxx>
 #include <BRepClass_FaceClassifier.hxx>
+#include <BRepLProp_SLProps.hxx>
 #include <BRep_Builder.hxx>
+#include <BRep_Tool.hxx>
 #include <Bnd_Box.hxx>
+#include <Geom2d_Curve.hxx>
+#include <NCollection_IndexedDataMap.hxx>
+#include <NCollection_List.hxx>
+#include <TopExp.hxx>
+#include <TopTools_ShapeMapHasher.hxx>
 #include <TopoDS.hxx>
 #include <TopoDS_Compound.hxx>
 
+#include <algorithm>
 #include <cmath>
+#include <vector>
 
 namespace voelund::kernel {
 namespace {
@@ -110,6 +119,52 @@ TopoDS_Shape collect(std::span<const TopoDS_Shape> shapes) {
         for (const auto& shape : shapes)
             builder.Add(compound, shape);
         return compound;
+    });
+}
+
+namespace {
+// The outward normal of `face` where the edge's middle lies on it.
+std::optional<gp_Vec> normalAtEdge(const TopoDS_Face& face, const TopoDS_Edge& edge) {
+    double first = 0.0, last = 0.0;
+    const Handle(Geom2d_Curve) onFace = BRep_Tool::CurveOnSurface(edge, face, first, last);
+    if (onFace.IsNull())
+        return std::nullopt;
+    const gp_Pnt2d uv = onFace->Value((first + last) / 2);
+    const BRepAdaptor_Surface surface(face);
+    BRepLProp_SLProps properties(surface, uv.X(), uv.Y(), 1, 1e-7);
+    if (!properties.IsNormalDefined())
+        return std::nullopt;
+    gp_Vec normal(properties.Normal());
+    if (face.Orientation() == TopAbs_REVERSED)
+        normal.Reverse();
+    return normal;
+}
+} // namespace
+
+std::optional<gp_Dir> intoEdgeCorner(const TopoDS_Shape& body, const TopoDS_Shape& edge) {
+    return detail::guarded(operation, [&]() -> std::optional<gp_Dir> {
+        NCollection_IndexedDataMap<TopoDS_Shape, NCollection_List<TopoDS_Shape>,
+                                   TopTools_ShapeMapHasher>
+            faces;
+        TopExp::MapShapesAndAncestors(body, TopAbs_EDGE, TopAbs_FACE, faces);
+        if (edge.ShapeType() != TopAbs_EDGE || !faces.Contains(edge))
+            return std::nullopt;
+        gp_Vec sum(0, 0, 0);
+        int count = 0;
+        std::vector<TopoDS_Shape> seen;
+        for (const auto& face : faces.FindFromKey(edge)) {
+            if (std::ranges::any_of(seen, [&](const auto& known) { return known.IsSame(face); }))
+                continue;
+            seen.push_back(face);
+            const auto normal = normalAtEdge(TopoDS::Face(face), TopoDS::Edge(edge));
+            if (!normal)
+                return std::nullopt;
+            sum += *normal;
+            ++count;
+        }
+        if (count != 2 || sum.Magnitude() < 1e-9)
+            return std::nullopt;
+        return gp_Dir(sum.Reversed());
     });
 }
 

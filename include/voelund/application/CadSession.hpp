@@ -66,8 +66,7 @@ struct ModelOutline final {
     std::vector<document::FeatureId> loose;
 };
 
-// T02: operation, direction and target body of a new extrusion. The default keeps the
-// earlier rule (document::effectiveOperation).
+// T02: operation, direction and target body of a new extrusion (default: the earlier rule).
 struct ExtrusionMode final {
     std::optional<document::ExtrusionOperation> operation{};
     bool reversed{false};
@@ -81,6 +80,7 @@ struct ExtrusionMode final {
     // PAR02: distance and start offset bound to length parameters; their values follow them.
     std::optional<document::ParameterId> distanceParameter{};
     std::optional<document::ParameterId> offsetParameter{};
+    double taperAngle{0.0}; // W16: degrees, positive wider towards the end
     bool operator==(const ExtrusionMode&) const = default;
 };
 

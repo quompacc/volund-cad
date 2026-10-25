@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <numbers>
 #include <variant>
 
 namespace voelund::mcp {
@@ -295,6 +296,12 @@ void insertSketchFace(QJsonObject& json, const application::CadSession& session,
 }
 
 // T02: the operation in effect, also for extrusions that predate the choice.
+// W16: the taper of an extrusion, only when it leans.
+void insertTaper(QJsonObject& parameters, const document::ExtrusionParameters& extrusion) {
+    if (extrusion.taperAngle != 0.0)
+        parameters.insert("taperAngle",
+                          detail::quantity(extrusion.taperAngle * std::numbers::pi / 180, "rad"));
+}
 void insertExtrusionMode(QJsonObject& json, const document::DocumentSnapshot& snapshot,
                          const document::FeatureDescriptor& feature) {
     const auto& extrusion = snapshot.extrusionParameters(feature.id);
@@ -315,6 +322,7 @@ void insertExtrusionMode(QJsonObject& json, const document::DocumentSnapshot& sn
     if (extrusion.mergeSeams)
         parameters.insert("mergeSeams", true); // T05
     parameters.insert("offset", detail::quantity(extrusion.offset, "mm"));
+    insertTaper(parameters, extrusion); // W16
     if (extrusion.offsetParameter)
         parameters.insert("offsetParameterId", id(extrusion.offsetParameter->value()));
     if (extrusion.upToFace)

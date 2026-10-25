@@ -140,6 +140,15 @@ void validateSweepExtrusion(const ExtrusionParameters& parameters) {
         throw std::invalid_argument("A sweep or loft follows its path or sections only");
 }
 
+void validateTaperExtrusion(const ExtrusionParameters& parameters) {
+    if (!std::isfinite(parameters.taperAngle) || std::abs(parameters.taperAngle) >= 89.0)
+        throw std::invalid_argument("The taper angle lies between -89 and 89 degrees");
+    if (parameters.taperAngle != 0.0 &&
+        (parameters.revolve || parameters.sweep || parameters.loft || parameters.faceProfile ||
+         parameters.symmetric))
+        throw std::invalid_argument("Only a one-sided prism from a sketch tapers");
+}
+
 void validateRevolveParameters(const RevolveParameters& parameters) {
     const auto& axis = parameters.axis;
     if (axis.sketchLine.has_value() + axis.baseAxis.has_value() + axis.datumAxis.has_value() != 1)

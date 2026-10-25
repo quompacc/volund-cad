@@ -15,6 +15,7 @@
 #include <QWidget>
 #endif
 
+#include <TopoDS_Face.hxx>
 #include <TopoDS_Shape.hxx>
 #include <gp_Dir.hxx>
 #include <gp_Pnt.hxx>
@@ -87,6 +88,14 @@ struct SceneSketchPoint final {
     double supportReferenceParameter{0.0};
     double radialRadius{0.0};
     std::optional<document::ProjectedEdgeReference> projectedEdge{};
+};
+
+// W15: a closed area of the selected sketch, shown lightly filled so it can be seen and picked
+// (a click into it goes the usual way, areaClickHandler). `key` names the region.
+struct SceneSketchRegion final {
+    std::string key;
+    TopoDS_Face face;
+    bool selected{false};
 };
 
 struct SceneSketchElement final {
@@ -290,6 +299,7 @@ class CadViewport final : public CadViewportBase {
 
     void setShape(const TopoDS_Shape& shape);
     void setBodies(std::span<const SceneBody> bodies);
+    void setSketchRegions(std::span<const SceneSketchRegion> regions); // W15
     void setSketchElements(std::span<const SceneSketchElement> elements,
                            std::optional<std::uint64_t> selectedId = std::nullopt);
     void
@@ -407,6 +417,8 @@ class CadViewport final : public CadViewportBase {
     void fitView();
     [[nodiscard]] bool isRenderingReady() const noexcept;
     [[nodiscard]] std::size_t displayedSketchElementCount() const noexcept;
+    [[nodiscard]] std::size_t displayedSketchRegionCount() const noexcept;
+    [[nodiscard]] std::optional<std::string> hoveredSketchRegion() const;
     [[nodiscard]] std::size_t displayedSketchConstraintCount() const noexcept;
     [[nodiscard]] std::size_t displayedBasePlaneCount() const noexcept;
     [[nodiscard]] std::pair<int, int> renderingPixelSize() const noexcept;

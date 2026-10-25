@@ -142,6 +142,7 @@ void SketchExtrusionToolController::open(document::FeatureId sketchId,
     symmetric_ = values.symmetric;
     autoReversed_ = false;
     offset_ = values.offset;
+    taper_ = values.taperAngle; // W16
     upToFace_ = values.upToFace.has_value();
     endFace_ = values.upToFace;
     sweep_ = values.sweep;
@@ -157,26 +158,8 @@ void SketchExtrusionToolController::open(document::FeatureId sketchId,
         const auto& axis = revolve_->axis;
         axisPick_ = !axis.sketchLine && !axis.baseAxis && !axis.datumAxis;
     }
-    // A base-plane sketch joins or cuts a named body; the field shows when there is a choice.
-    targets_.clear();
     std::vector<QString> targetNames;
-    const auto outline = session_.modelOutline();
-    for (const auto& body : outline.bodies) {
-        if (!baseSketch_ ||
-            std::ranges::find(session_.validBodies(), body.id, &features::EvaluatedBody::bodyId) ==
-                session_.validBodies().end())
-            continue;
-        targets_.push_back(body.id);
-        targetNames.push_back(bodyLabel(outline, body.id)); // M01: named as in the tree
-    }
-    target_ = targets_.empty() ? std::nullopt : std::optional{targets_.front()};
-    int targetIndex = 0;
-    if (values.target)
-        for (std::size_t index = 0; index < targets_.size(); ++index)
-            if (targets_[index] == *values.target) {
-                target_ = targets_[index];
-                targetIndex = static_cast<int>(index);
-            }
+    const int targetIndex = collectTargets(values.target, targetNames);
     std::vector<ToolChoiceParameter> choices{
         {"end",
          QObject::tr("Ende"),
@@ -208,7 +191,8 @@ void SketchExtrusionToolController::open(document::FeatureId sketchId,
         {"distance", QObject::tr("Distanz"), distance_, 0.001, 1'000'000.0, ToolValueKind::length,
          true, boundName(distanceParameter_)},
         {"offset", QObject::tr("Versatz"), offset_, -1'000'000.0, 1'000'000.0,
-         ToolValueKind::length, true, boundName(offsetParameter_)}};
+         ToolValueKind::length, true, boundName(offsetParameter_)},
+        {"taper", QObject::tr("Schrägungswinkel"), taper_, -88.9, 88.9, ToolValueKind::angle}};
     if (revolve_) {
         // M20: angle and axis instead of length, offset and end face.
         choices.erase(choices.begin());
@@ -280,11 +264,8 @@ void SketchExtrusionToolController::open(document::FeatureId sketchId,
                 (id == "distance" ? distanceParameter_ : offsetParameter_).reset();
                 panel_.setLengthBinding(id, std::nullopt);
             }
-            if (id == "distance")
-                setDistance(value);
-            else if (id == "offset")
-                offset_ = value;
-            else if (id == "angle" && revolve_) {
+            if (setLength(id, value)) {
+            } else if (id == "angle" && revolve_) {
                 angleDegrees_ = value;
                 revolve_->angle = kernel::Radians{value * std::numbers::pi / 180.0};
             } else if (revolve_ && revolve_->pitch && (id == "pitch" || id == "height")) {
@@ -324,6 +305,7 @@ void SketchExtrusionToolController::setPreviewHandler(
 
 application::Action SketchExtrusionToolController::extrusion() const {
     const bool named = baseSketch_ && operation_ != document::ExtrusionOperation::newBody;
+    const double taper = symmetric_ ? 0.0 : taper_; // W16: a taper is one-sided
     if (editing_ && stored_) {
         // M04: the stored extrusion with the panel's values; a changed length leaves its binding.
         auto values = *stored_;
@@ -335,6 +317,7 @@ application::Action SketchExtrusionToolController::extrusion() const {
         values.operation = operation_;
         values.reversed = reversed_;
         values.symmetric = symmetric_;
+        values.taperAngle = taper; // W16
         values.target = named ? target_ : std::nullopt;
         values.upToFace = upToFace_ ? endFace_ : std::nullopt;
         values.revolve = revolve_;
@@ -348,7 +331,7 @@ application::Action SketchExtrusionToolController::extrusion() const {
         millimetres(distance_),
         {operation_, reversed_, named ? target_ : std::nullopt, offset_,
          upToFace_ ? endFace_ : std::nullopt, symmetric_, revolve_, sweep_, loft_,
-         distanceParameter_, offsetParameter_}};
+         distanceParameter_, offsetParameter_, taper}};
 }
 
 // U11 (A-UI-02, A-VIS-01): the extrusion the values would give, on an isolated copy; the
@@ -441,6 +424,7 @@ void SketchExtrusionToolController::choose(const std::string& choice, int index)
 void SketchExtrusionToolController::syncFields() {
     // Symmetric (M02): the distance is the total length; no start offset and no end face.
     panel_.setLengthEnabled("offset", !symmetric_);
+    panel_.setLengthEnabled("taper", !symmetric_); // W16
     if (symmetric_ && (offset_ != 0.0 || offsetParameter_)) {
         offset_ = 0.0;
         offsetParameter_.reset(); // PAR02: no offset, no binding

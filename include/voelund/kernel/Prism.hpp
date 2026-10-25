@@ -6,6 +6,7 @@
 #include <voelund/kernel/OcctCompatibility.hpp>
 
 #include <TopoDS_Shape.hxx>
+#include <gp_Vec.hxx>
 
 #include <memory>
 #include <vector>
@@ -17,10 +18,15 @@ namespace voelund::kernel {
 // padding. Throws KernelError for an empty profile, a direction that is not a unit vector, a
 // length outside the model range, a failed sweep, or a result that is invalid or has no
 // solid. The sweep keeps its history: caps per profile face, generated faces per edge.
+// W16 (user request 2026-10-25, as FreeCAD's "Schrägungswinkel"): a nonzero taper (radians,
+// |taper| < 89 degrees) leans the sides: positive widens the profile towards the end, negative
+// narrows it; each profile face then becomes its own solid with sharp corners.
 class Prism final {
   public:
     Prism(const TopoDS_Shape& profile, double directionX, double directionY, double directionZ,
           double length);
+    // The sweep vector is direction times length; `taper` as above (W16).
+    Prism(const TopoDS_Shape& profile, const gp_Vec& sweep, double taper);
     ~Prism();
     Prism(Prism&&) noexcept;
     Prism& operator=(Prism&&) noexcept;
@@ -28,6 +34,7 @@ class Prism final {
     Prism& operator=(const Prism&) = delete;
 
     [[nodiscard]] const TopoDS_Shape& shape() const noexcept;
+    [[nodiscard]] bool tapered() const noexcept; // W16
     // The copy of a profile face (or edge) at the start / end of the sweep.
     [[nodiscard]] TopoDS_Shape startOf(const TopoDS_Shape& profileShape) const;
     [[nodiscard]] TopoDS_Shape endOf(const TopoDS_Shape& profileShape) const;

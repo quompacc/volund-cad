@@ -38,6 +38,8 @@ beschrieben. Lücken, die die Bestandsaufnahme vom 23.10.2026 fand:
 | W12 | Normbemaßung wie in FreeCAD und Fusion: Maßhilfslinien, Maßlinie mit Pfeilen neben der Geometrie, kompakter Wert darauf. Die Felder der Direkteingabe sitzen beim Zeichnen auf solchen Maßlinien. | in Arbeit |
 | W13 | Rechteck mit den Optionen „Abgerundete Ecken“ (U) und „Rahmen“ (J) wie in FreeCAD. Alle Beziehungen und Maße werden gesetzt, das Rechteck ist sofort voll bestimmt. Eingabe in drei Schritten (Ecken, Radius, Rahmen nach innen oder außen). | in Arbeit |
 | W14 | Ebenen klein und weg mit der ersten Skizze; Skizzen bleiben sichtbar, bis ein Schritt sie verwendet, und haben ein Auge im Modellbaum (wie in Fusion). | in Arbeit |
+| W15 | Flächen der gewählten Skizze schwach gefüllt, die unter der Maus hervorgehoben; ein Klick wählt, was extrudiert wird (Inneres, Wand …), wie die Vorschau in FreeCAD. | in Arbeit |
+| W16 | Schrägungswinkel beim Extrudieren wie in FreeCAD: positiv breiter, negativ schmaler zum Ende hin (Schema 40). | in Arbeit |
 
 **Arbeitsregeln:**
 

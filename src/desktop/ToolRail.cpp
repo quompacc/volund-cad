@@ -119,7 +119,9 @@ QScrollArea* railScroll(QWidget* parent) {
     scroll->setFrameShape(QFrame::NoFrame);
     scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     scroll->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    scroll->setWidgetResizable(true);
+    // User reports 2026-10-23/25 (Windows): a resizable widget was sized by the scroll area from
+    // a stale minimum and squeezed the tools; the rail alone sizes its row (followRow).
+    scroll->setWidgetResizable(false);
     // Its own minimum width would push the » button out of a bar that shows only that button.
     scroll->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
     return scroll;
@@ -292,8 +294,12 @@ bool ToolRail::follows(const QObject* watched, QEvent::Type type) const {
 }
 
 bool ToolRail::eventFilter(QObject* watched, QEvent* event) {
-    if (scroll_ != nullptr && watched == scroll_->viewport() && event->type() == QEvent::Wheel)
-        return scrollRow(*static_cast<QWheelEvent*>(event));
+    if (scroll_ != nullptr && watched == scroll_->viewport()) {
+        if (event->type() == QEvent::Wheel)
+            return scrollRow(*static_cast<QWheelEvent*>(event));
+        if (event->type() == QEvent::Resize)
+            followRow();
+    }
     if (follows(watched, event->type()))
         place();
     // A click into the view closes an open flyout, like a menu.
@@ -303,10 +309,19 @@ bool ToolRail::eventFilter(QObject* watched, QEvent* event) {
 }
 
 bool ToolRail::event(QEvent* event) {
-    // Sizes depend on the style sheet, which arrives after construction.
+    // Sizes depend on the style sheet, which arrives after construction, and on the screen's
+    // scale and font (user report 2026-10-25: moving the window to another screen mended it).
     const bool result = QFrame::event(event);
-    if (event->type() == QEvent::StyleChange || event->type() == QEvent::LayoutRequest)
+    switch (event->type()) {
+    case QEvent::StyleChange:
+    case QEvent::LayoutRequest:
+    case QEvent::FontChange:
+    case QEvent::DevicePixelRatioChange:
         place();
+        break;
+    default:
+        break;
+    }
     return result;
 }
 
@@ -364,15 +379,21 @@ void ToolRail::place() {
 // minimum size hint, which could still be the narrower page's, so the fixed-size sketch tools
 // lay on top of each other. The row's least width is now the shown tools' own width, which
 // the scroll area keeps whenever it resizes the row.
+// User report 2026-10-25 (Windows): the tools still lay on top of each other until the window
+// moved to another screen, which lays out everything anew. The shown page now never gets less
+// than its tools' width, and the row is laid out here every time, not only when Qt asks.
 void ToolRail::followRow() {
     bar_->layout()->activate();
     QWidget* content = scroll_->widget();
     const bool sketch = sketchShown_ && sketchPage_ != nullptr;
-    const int needed = shownWidth(sketch ? *sketchPage_ : *solidPage_);
+    QWidget& page = sketch ? *sketchPage_ : *solidPage_;
+    const int needed = shownWidth(page);
+    page.setMinimumWidth(needed);
     content->setMinimumWidth(needed);
-    content->layout()->activate();
     const QSize room = scroll_->viewport()->size();
     content->resize(std::max(room.width(), needed), room.height());
+    content->layout()->invalidate();
+    content->layout()->activate();
 }
 
 void ToolRail::setIconOnly(bool iconOnly) {

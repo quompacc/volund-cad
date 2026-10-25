@@ -183,25 +183,21 @@ void FilletToolController::placeGrip() {
         viewport_.setPushPullDistance(value_);
         return;
     }
-    // Into the corner: against the sum of the two faces' outward normals.
-    std::array<double, 3> direction{0, 0, 0};
-    int found = 0;
-    for (const auto& face : session_.supportFaces(support_))
-        if (face.origin == edges_.front().first || face.origin == edges_.front().second) {
-            direction[0] -= face.plane.normalX;
-            direction[1] -= face.plane.normalY;
-            direction[2] -= face.plane.normalZ;
-            ++found;
-        }
-    const double length = std::hypot(direction[0], direction[1], direction[2]);
+    // Into the corner: against the sum of the two faces' outward normals, at the edge's middle
+    // (user report 2026-10-25: curved faces too, a round edge has its arrow).
     const auto shapes = session_.filletEdgeShapes(support_, std::span(&edges_.front(), 1));
     if (gripEdge_)
         viewport_.endPushPull();
     gripEdge_.reset();
-    if (found != 2 || length < 1e-9 || shapes.empty())
-        return; // a curved face: the value is typed only
+    const auto body = std::ranges::find(session_.validBodies(), support_,
+                                        &features::EvaluatedBody::sourceFeature);
+    const auto direction = shapes.empty() || body == session_.validBodies().end()
+                               ? std::nullopt
+                               : kernel::intoEdgeCorner(body->shape, shapes.front());
+    if (!direction)
+        return; // the value is typed only
     viewport_.beginEdgeGrip(kernel::collect(shapes),
-                            {direction[0] / length, direction[1] / length, direction[2] / length});
+                            {direction->X(), direction->Y(), direction->Z()});
     viewport_.setPushPullDistance(value_);
     gripEdge_ = edges_.front();
 }

@@ -63,6 +63,7 @@ add_library(
     SketchIcons.cpp
     SketchEditorStart.cpp
     SketchExtrusionToolController.cpp
+    SketchExtrusionToolValues.cpp
     PushPullToolController.cpp
     FilletToolController.cpp
     HoleToolController.cpp

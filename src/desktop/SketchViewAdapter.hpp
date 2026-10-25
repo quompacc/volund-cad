@@ -29,6 +29,11 @@ makeSceneSketchElement(const features::EvaluatedSketchElement& element, bool con
                        bool determined = false);
 [[nodiscard]] std::vector<viewport::SceneSketchElement>
 makeSceneSketchElements(const application::CadSession& session);
+// W15: the closed areas of the selected sketch as faces, the chosen ones marked; none for
+// another feature, a sketch that does not evaluate, nothing of it drawn or while it is edited.
+[[nodiscard]] std::vector<viewport::SceneSketchRegion>
+makeSceneSketchRegions(const application::CadSession& session,
+                       std::span<const viewport::SceneSketchElement> drawn, bool editing);
 // The curves of a sketch without its construction geometry, as one shape (shown sketches).
 [[nodiscard]] TopoDS_Shape sketchCurves(const document::SketchParameters& sketch);
 [[nodiscard]] QString sketchSelectionSummary(const application::CadSession& session);

@@ -388,6 +388,9 @@ void MainWindow::syncSketchPresentation() {
                 element.conflicting = true;
     }
     impl_->viewport->setSketchElements(elements);
+    // W15 (user report 2026-10-25): the areas of the sketch shown filled, as in FreeCAD.
+    impl_->viewport->setSketchRegions(
+        makeSceneSketchRegions(impl_->session, elements, impl_->sketchEditorTool->isActive()));
     const auto profileElements = impl_->session.selectedSketchProfileElements();
     std::vector<std::uint64_t> selectedIds;
     selectedIds.reserve(profileElements.size());

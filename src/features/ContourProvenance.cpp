@@ -69,11 +69,30 @@ sweptEdgeOrigins(document::FeatureId extrusion, document::FeatureId sketch,
         }
     return result;
 }
+// W16: a tapered prism's end edges are offset copies, not translations, and its start edges
+// may be rebuilt; only those that still are the contour on its own parameters are named.
+std::vector<EdgeProvenance> taperedEdgeOrigins(document::FeatureId extrusion,
+                                               document::FeatureId sketch,
+                                               std::span<const EvaluatedProfileFace> profiles,
+                                               const kernel::Prism& prism) {
+    std::vector<EdgeProvenance> result;
+    for (const auto& profile : profiles)
+        for (const auto& edge : profile.edges)
+            try {
+                result.push_back(provenance(
+                    {sketch, edge.element, edge.role, extrusion, ContourStage::extrusionStart},
+                    edge, prism.startOf(edge.edge), prism.shape()));
+            } catch (const GeometryEvaluationError&) {
+            }
+    return result;
+}
 } // namespace
 std::vector<EdgeProvenance> extrusionEdgeOrigins(document::FeatureId extrusion,
                                                  document::FeatureId sketch,
                                                  std::span<const EvaluatedProfileFace> profiles,
                                                  const kernel::Prism& prism) {
+    if (prism.tapered())
+        return taperedEdgeOrigins(extrusion, sketch, profiles, prism);
     return sweptEdgeOrigins(extrusion, sketch, profiles, prism);
 }
 std::vector<EdgeProvenance> extrusionEdgeOrigins(document::FeatureId extrusion,

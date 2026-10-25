@@ -44,6 +44,12 @@ enum class FacePoint { inside, outside, on, unknown };
 // a face that is not planar.
 [[nodiscard]] std::optional<gp_Dir> planarFaceNormal(const TopoDS_Shape& face);
 
+// User report 2026-10-25: the way into the corner at an edge of `body` - against the sum of
+// its two faces' outward normals at the edge's middle, planar or curved; none when the edge
+// does not lie between two faces or the normals cancel out.
+[[nodiscard]] std::optional<gp_Dir> intoEdgeCorner(const TopoDS_Shape& body,
+                                                   const TopoDS_Shape& edge);
+
 // A copy of the shape moved by the transformation (geometry copied).
 [[nodiscard]] TopoDS_Shape transformedCopy(const TopoDS_Shape& shape, const gp_Trsf& transform);
 

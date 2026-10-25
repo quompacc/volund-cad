@@ -23,6 +23,7 @@
 #include <gp_Dir.hxx>
 #include <gp_Pnt.hxx>
 #include <gp_Vec.hxx>
+#include <numbers>
 #include <utility>
 #include <vector>
 #include <voelund/kernel/Helix.hpp>
@@ -99,7 +100,8 @@ Prism makePrism(document::FeatureId extrusion, document::FeatureId sketchId,
     // end plane. OCCT's Boolean classifies the coincident faces; no length padding.
     // M02: the kernel's prism checks the sweep and its solid before anything uses it.
     const gp_Vec along = direction(sketch, parameters);
-    const kernel::Prism prism(faces, along.X(), along.Y(), along.Z(), length);
+    const kernel::Prism prism(faces, along * length,
+                              parameters.taperAngle * std::numbers::pi / 180.0); // W16
     Prism result{prism.shape(), {}, extrusionEdgeOrigins(extrusion, sketchId, profiles, prism)};
     for (const auto& profile : profiles) {
         const auto cap = prism.endOf(profile.face);

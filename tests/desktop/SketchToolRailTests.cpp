@@ -14,6 +14,7 @@
 #include <QTreeWidgetItemIterator>
 #include <iostream>
 #include <string>
+#include <vector>
 #include <voelund/application/CadSession.hpp>
 #include <voelund/desktop/MainWindow.hpp>
 
@@ -36,6 +37,22 @@ void settle() {
         QApplication::processEvents();
 }
 
+// User reports 2026-10-23/25 (Windows): the sketch tools lay on top of each other until the
+// window moved to another screen. Shown tools sit side by side inside their page.
+void toolsApart(QWidget& page) {
+    std::vector<QRect> placed;
+    for (auto* button : page.findChildren<QToolButton*>(Qt::FindDirectChildrenOnly)) {
+        if (!button->isVisible())
+            continue;
+        const QRect box = button->geometry();
+        require(page.rect().contains(box), "A sketch tool lies inside its page");
+        for (const QRect& other : placed)
+            require(!box.intersects(other), "Sketch tools lie side by side, not on top");
+        placed.push_back(box);
+    }
+    require(!placed.empty(), "The sketch tools are shown");
+}
+
 void run() {
     application::CadSession session;
     session.newDocument();
@@ -48,7 +65,6 @@ void run() {
     require(command(window, QStringLiteral("sketch.tool.line")) == nullptr ||
                 !command(window, QStringLiteral("sketch.tool.line"))->isEnabled(),
             "No sketch tools outside a sketch");
-
     // Pick XY in the tree and start a sketch.
     auto* tree = window.findChild<QTreeWidget*>(QStringLiteral("modelTree"));
     for (QTreeWidgetItemIterator it(tree); *it != nullptr; ++it)
@@ -59,6 +75,7 @@ void run() {
 
     auto* sketchPage = rail->findChild<QWidget*>(QStringLiteral("sketchToolPage"));
     require(sketchPage != nullptr && sketchPage->isVisible(), "The rail shows the sketch tools");
+    toolsApart(*sketchPage);
     for (auto* button : rail->findChildren<QToolButton*>())
         if (button->isVisible() && button->defaultAction() != nullptr)
             require(button->defaultAction()

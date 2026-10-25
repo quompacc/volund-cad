@@ -89,6 +89,24 @@ std::uint64_t readDecimal(const TDF_Label& label) {
             text == std::to_string(id));
     return id;
 }
+// W16 (schema 40): child 16 holds the taper in degrees, written only when not 0.
+void writeTaper(const TDF_Label& label, const ExtrusionParameters& parameters) {
+    if (parameters.taperAngle != 0.0)
+        TDataStd_Real::Set(label.FindChild(16), parameters.taperAngle);
+}
+bool validTaper(const ExtrusionParameters& parameters, int schemaVersion) {
+    return parameters.taperAngle == 0.0 || schemaVersion >= 40;
+}
+void readTaper(const TDF_Label& label, int schemaVersion, ExtrusionParameters& result) {
+    const auto taper = label.FindChild(16, false);
+    if (taper.IsNull())
+        return;
+    Handle(TDataStd_Real) value;
+    require(schemaVersion >= 40 && taper.NbChildren() == 0 &&
+            taper.FindAttribute(TDataStd_Real::GetID(), value) && value->Get() != 0.0 &&
+            std::isfinite(value->Get()));
+    result.taperAngle = value->Get();
+}
 int readInteger(const TDF_Label& label) {
     Handle(TDataStd_Integer) value;
     require(label.NbChildren() == 0 && label.FindAttribute(TDataStd_Integer::GetID(), value));
@@ -115,6 +133,7 @@ void validateNativeExtrusion(const ExtrusionParameters& parameters, int schemaVe
     // T05 (schema 36): a push/pull may merge its seams; schema 39 (user report 2026-10-24): a
     // sketch extrusion too.
     require(!parameters.mergeSeams || parameters.faceProfile || schemaVersion >= 39);
+    require(validTaper(parameters, schemaVersion));
     std::set<std::uint64_t> ids;
     for (const auto id : parameters.profiles)
         require(id.value() != 0 && ids.insert(id.value()).second);
@@ -195,6 +214,7 @@ void writeNativeExtrusion(const TDF_Label& label, const ExtrusionParameters& par
     // seams; absent otherwise.
     if (parameters.mergeSeams)
         TDataStd_Integer::Set(label.FindChild(15), 1);
+    writeTaper(label, parameters);
     // M23 (schema 26): child 13 holds the path sketch (1) and the path elements (children of 2).
     if (parameters.sweep) {
         const auto sweep = label.FindChild(13);
@@ -226,13 +246,11 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
     const auto profileFace = label.FindChild(10, false);
     // Schema 13 (M02) adds the symmetric extent (11) and the intersect operation (4 = 4).
     const auto symmetric = label.FindChild(11, false);
-    // Schema 20 (M20) adds the revolve (12).
-    const auto revolve = label.FindChild(12, false);
-    // Schema 26 (M23) adds the sweep path (13).
+    const auto revolve = label.FindChild(12, false); // Schema 20 (M20): the revolve.
+    // Schema 26 (M23) adds the sweep path (13), schema 27 (M24) the loft (14).
     const auto sweep = label.FindChild(13, false);
-    // Schema 27 (M24) adds the loft (14).
     const auto loft = label.FindChild(14, false);
-    // Schema 36 (T05) adds the seam merge of a push/pull (15).
+    // Schema 36 (T05) adds the seam merge (15), schema 40 (W16) the taper (16, readTaper).
     const auto seams = label.FindChild(15, false);
     const int t02 =
         (operation.IsNull() ? 0 : 1) + (reversed.IsNull() ? 0 : 1) + (target.IsNull() ? 0 : 1);
@@ -248,7 +266,8 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
                                       t02 + t03 + (profileFace.IsNull() ? 0 : 1) +
                                       (symmetric.IsNull() ? 0 : 1) + (revolve.IsNull() ? 0 : 1) +
                                       (sweep.IsNull() ? 0 : 1) + (loft.IsNull() ? 0 : 1) +
-                                      (seams.IsNull() ? 0 : 1));
+                                      (seams.IsNull() ? 0 : 1) +
+                                      static_cast<int>(!label.FindChild(16, false).IsNull()));
     Handle(TDataStd_Real) distance;
     require(label.FindAttribute(TDataStd_Real::GetID(), distance));
     const auto profiles = child(label, 1);
@@ -258,6 +277,7 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
     require(count >= 0 && count <= static_cast<int>(maximumExtrusionProfileCount) &&
             static_cast<std::size_t>(count) <= remainingRecords && profiles.NbChildren() == count);
     ExtrusionParameters result{distance->Get(), {}};
+    readTaper(label, schemaVersion, result); // W16
     for (int index = 1; index <= count; ++index) {
         const auto profile = child(profiles, index);
         require(profile.NbChildren() == 0);

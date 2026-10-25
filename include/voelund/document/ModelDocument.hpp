@@ -225,6 +225,9 @@ struct ExtrusionParameters;
 // The sweep (M23) or loft (M24) part of an extrusion: valid, alone, and nothing else a prism
 // uses.
 void validateSweepExtrusion(const ExtrusionParameters& parameters);
+// W16: a taper only leans a plain prism: below 89 degrees, no revolve, sweep, loft, face
+// profile or symmetric extent.
+void validateTaperExtrusion(const ExtrusionParameters& parameters);
 
 struct ExtrusionParameters final {
     double distance;
@@ -271,6 +274,9 @@ struct ExtrusionParameters final {
     // continues a face of its body. New push/pulls set it; older ones read without it and stay
     // as they were.
     bool mergeSeams{false};
+    // W16 (schema 40, user request 2026-10-25 as FreeCAD's "Schrägungswinkel"): degrees the
+    // sides lean, positive wider towards the end, negative narrower; 0 is a straight prism.
+    double taperAngle{0.0};
 
     [[nodiscard]] bool operator==(const ExtrusionParameters&) const = default;
 };

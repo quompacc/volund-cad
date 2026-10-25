@@ -69,6 +69,8 @@ void CadViewport::mouseMoveEvent(QMouseEvent* event) {
                          event->modifiers().testFlag(Qt::ControlModifier));
         } else if (impl_->gesture != Impl::Gesture::selectBox) {
             impl_->context->MoveTo(position.x(), position.y(), impl_->view, false);
+            impl_->sketchRegions.hover(impl_->context, impl_->view, position.x(),
+                                       position.y()); // W15
         }
         update();
     });

@@ -93,6 +93,8 @@ class SketchExtrusionToolController final {
     void collectPaths();    // M23: earlier sketches with drawn elements
     void collectSections(); // M24: other sketches with a region (SketchExtrusionModes.cpp)
     [[nodiscard]] int axisIndex() const;
+    bool setLength(const std::string& id, double value);
+    int collectTargets(const std::optional<document::BodyId>& stored, std::vector<QString>& names);
     [[nodiscard]] bool pickAxisLine(document::SketchElementId element);
 
     application::CadSession& session_;
@@ -120,6 +122,7 @@ class SketchExtrusionToolController final {
     std::vector<document::BodyId> targets_;
     std::optional<document::BodyId> target_;
     double offset_{0.0};
+    double taper_{0.0}; // W16: degrees
     // PAR02: distance and offset bound to document parameters.
     std::optional<document::ParameterId> distanceParameter_;
     std::optional<document::ParameterId> offsetParameter_;

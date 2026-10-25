@@ -8,6 +8,7 @@
 
 #include <voelund/features/SketchConstraintSolver.hpp>
 #include <voelund/features/SketchEvaluation.hpp>
+#include <voelund/features/SketchRegionIdentity.hpp>
 #include <voelund/kernel/ShapeQueries.hpp>
 
 #include <QObject>
@@ -109,6 +110,31 @@ makeSceneSketchElements(const application::CadSession& session) {
             solved.status == features::SketchSolveStatus::success &&
             std::ranges::find(solved.freeElements, element.id) == solved.freeElements.end();
         result.push_back(makeSceneSketchElement(element, false, determined));
+    }
+    return result;
+}
+
+std::vector<viewport::SceneSketchRegion>
+makeSceneSketchRegions(const application::CadSession& session,
+                       std::span<const viewport::SceneSketchElement> drawn, bool editing) {
+    std::vector<viewport::SceneSketchRegion> result;
+    if (drawn.empty() || editing || !session.selectedFeature() ||
+        session.selectedFeatureDescriptor().kind != document::FeatureKind::sketch)
+        return result;
+    try {
+        const auto parameters = session.selectedSketchParameters();
+        const auto identities = features::identifySketchRegions(parameters.elements.values);
+        const auto chosen = session.selectedSketchProfiles();
+        for (std::size_t index = 0; index < identities.ids.size(); ++index) {
+            if (identities.ambiguous(index))
+                continue;
+            const auto& id = identities.ids[index];
+            const bool selected = std::ranges::find(chosen, id) != chosen.end();
+            for (const auto& face : features::evaluateRegionFaces(parameters, std::span(&id, 1)))
+                result.push_back({id.text(), face.face, selected});
+        }
+    } catch (const std::exception&) {
+        result.clear(); // The tree names the problem of a sketch that does not evaluate.
     }
     return result;
 }

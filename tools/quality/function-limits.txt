@@ -163,7 +163,6 @@ cyclomatic | src/application/SketchConstraintRoles.hpp | voelund::application::d
 cyclomatic | src/application/SketchEditorRelations.cpp | voelund::application::SketchEditorSession::addAxisReference | 13 | Altbestand vor A04
 cyclomatic | src/application/SketchEditorSession.cpp | voelund::application::SketchEditorSession::setSelectedCircleRadius | 13 | Altbestand vor A04
 cyclomatic | src/desktop/AssistantPanel.cpp | voelund::desktop::AssistantPanel::present | 13 | Altbestand vor A04
-cyclomatic | src/desktop/FilletToolController.cpp | voelund::desktop::FilletToolController::placeGrip | 12 | Altbestand vor A04
 cyclomatic | src/desktop/ParameterPanel.cpp | voelund::desktop::ParameterPanel::changed | 12 | Altbestand vor A04
 cyclomatic | src/desktop/ReferenceRepairDialog.cpp | voelund::desktop::ReferenceRepairDialog::reload | 13 | Altbestand vor A04
 cyclomatic | src/desktop/SketchEditorDimensionEdit.cpp | voelund::desktop::SketchEditorToolController::bindElementDimension | 13 | Altbestand vor A04

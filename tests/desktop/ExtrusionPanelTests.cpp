@@ -15,6 +15,7 @@
 #include <QPushButton>
 #include <cmath>
 #include <iostream>
+#include <numbers>
 #include <string>
 #include <voelund/application/Actions.hpp>
 #include <voelund/application/CadSession.hpp>
@@ -330,6 +331,27 @@ void symmetricIntersect(desktop::MainWindow& window, application::CadSession& se
             "OK keeps the 600 mm^3 the symmetric prism shares with the plate");
 }
 
+// W16 (user request 2026-10-25): the taper angle leans the sides; symmetric locks it.
+void taperAngle(desktop::MainWindow& window, application::CadSession& session) {
+    session.newDocument();
+    const auto created = session.createDatumSketchFeature(onXy(-10, -10, 10, 10));
+    require(created.feature().has_value(), "Base-plane sketch");
+    openExtrusion(window, session, *created.feature());
+    auto* taper = field<QDoubleSpinBox>(window, QStringLiteral("toolLength_taper"));
+    require(taper != nullptr && taper->isEnabled(), "The panel offers the taper angle");
+    choice(window, "direction").setCurrentIndex(2);
+    require(!taper->isEnabled(), "Symmetric locks the taper");
+    choice(window, "direction").setCurrentIndex(0);
+    setDistance(window, 10);
+    setLength(window, "taper", -10);
+    acceptPanel(window);
+    settle();
+    const double top = 20 - 20 * std::tan(10 * std::numbers::pi / 180);
+    require(
+        std::abs(volume(session) - 10.0 / 3 * (400 + top * top + 20 * top)) < 1e-3,
+        (std::string("OK keeps the narrowing prism: ") + std::to_string(volume(session))).c_str());
+}
+
 // M03: a join that does not touch its target says so in the panel and keeps OK disabled.
 void separateJoinExplained(desktop::MainWindow& window, application::CadSession& session) {
     session.newDocument();
@@ -413,6 +435,7 @@ void run() {
     pocketFromFace(window, session);
     joinFromBasePlane(window, session);
     symmetricIntersect(window, session);
+    taperAngle(window, session);
     separateJoinExplained(window, session);
     fieldRules(window, session);
     viewport->setCameraView(viewport::CameraView::isometric);

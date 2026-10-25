@@ -15,6 +15,7 @@
 #include "SketchConstraintPresentation.hpp"
 #include "SketchEditorInteraction.hpp"
 #include "SketchPresentation.hpp"
+#include "SketchRegionPresentation.hpp"
 #include "SketchSnapOverlay.hpp"
 #include "TransformManipulator.hpp"
 #include "ViewportHighlightStyle.hpp"
@@ -133,6 +134,7 @@ class CadViewportScene {
         sketchPresentation.select(context, selectedSketchElements);
         sketchConstraintPresentation.setLabelColor(occtColor(theme.sketchLabel));
         sketchConstraintPresentation.setConstraints(context, pendingSketchConstraints);
+        sketchRegions.show(context, pendingSketchRegions, theme); // W15
     }
 
     // S14: while the sketch editor is open only sketch geometry is picked; a later feature's
@@ -222,6 +224,7 @@ class CadViewportScene {
         sketchPresentation.setElements(context, pendingSketchElements, selectedSketchElements,
                                        sketchEditor.isActive());
         sketchConstraintPresentation.setConstraints(context, pendingSketchConstraints);
+        sketchRegions.show(context, pendingSketchRegions, theme); // W15
         if (activeSketchSupport)
             sketchPresentation.setReferences(context, *activeSketchSupport,
                                              sketchEditor.isActive());
@@ -399,6 +402,8 @@ class CadViewportScene {
     std::vector<BodyPresentation> presentations;
     std::vector<SceneBody> pendingBodies;
     std::vector<SceneSketchElement> pendingSketchElements;
+    SketchRegionPresentation sketchRegions; // W15
+    std::vector<SceneSketchRegion> pendingSketchRegions;
     std::vector<SceneSketchConstraint> pendingSketchConstraints;
     std::vector<std::uint64_t> selectedSketchElements;
     std::function<void(std::uint64_t)> bodySelectionHandler;
