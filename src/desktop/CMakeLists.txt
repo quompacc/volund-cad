@@ -87,6 +87,8 @@ add_library(
     Theme.cpp
     ToolPanelHost.cpp
     TimelineBar.cpp
+    ToolPanelHostAccess.cpp
+    ToolValueField.cpp
     ToolRail.cpp
     ToolRailRow.cpp
     ViewCube.cpp

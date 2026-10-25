@@ -190,10 +190,9 @@ bool pickSketchArea(application::CadSession& session, const viewport::ViewRay& r
     const auto& hiddenBodies = visibility.hiddenBodies;
     const auto& shownSketches = visibility.shownSketches;
     const auto outline = session.modelOutline();
-    const auto selected = session.selectedFeature();
     const auto hidden = [&](document::FeatureId feature) {
-        // User report 2026-10-24: a hidden sketch takes no clicks (the selected one does).
-        if (!shownSketches.contains(feature.value()) && selected != feature)
+        // User reports 2026-10-24/25: a hidden sketch takes no clicks, also when selected.
+        if (!shownSketches.contains(feature.value()))
             return true;
         for (const auto& body : outline.bodies)
             if (std::ranges::find(body.features, feature) != body.features.end())

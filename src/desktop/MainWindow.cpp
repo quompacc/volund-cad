@@ -369,9 +369,19 @@ void MainWindow::syncTreeStatus() {
     impl_->modelTree->showStatuses(impl_->session.featureStates());
 }
 
+bool MainWindow::selectedSketchHidden() const {
+    const auto selected = impl_->session.selectedFeature();
+    return selected && !impl_->visibility.shownSketches.contains(selected->value());
+}
+
 void MainWindow::syncSketchPresentation() {
     std::vector<viewport::SceneSketchElement> elements = makeSceneSketchElements(impl_->session);
-    if (impl_->sketchExtrusionTool && impl_->sketchExtrusionTool->isActive()) {
+    // User report 2026-10-25: a hidden sketch stays hidden while selected (an open extrusion
+    // still shows the regions it works on).
+    const bool extruding = impl_->sketchExtrusionTool && impl_->sketchExtrusionTool->isActive();
+    if (!extruding && selectedSketchHidden())
+        elements.clear();
+    if (extruding) {
         const auto& problems = impl_->sketchExtrusionTool->problemElements();
         for (auto& element : elements)
             if (std::ranges::find(problems, element.id) != problems.end())

@@ -8,6 +8,7 @@
 #include "SketchEditorToolController.hpp"
 #include "SketchExtrusionToolController.hpp"
 #include "ToolPanelHost.hpp"
+#include "ToolValueField.hpp"
 
 #include <voelund/application/CadSession.hpp>
 #include <voelund/features/FilletEdges.hpp>
@@ -23,6 +24,11 @@ namespace voelund::desktop {
 
 void MainWindow::createToolPanel() {
     impl_->toolPanel = new ToolPanelHost(impl_->viewport);
+    // User report 2026-10-25 (as in Fusion): the main value is typed beside the tool's arrow.
+    impl_->toolValueField = new ToolValueField(*impl_->viewport);
+    impl_->toolPanel->setMainFieldHandler([this](QDoubleSpinBox* field) {
+        impl_->toolValueField->attach(field, [this] { impl_->toolPanel->requestAccept(); });
+    });
     impl_->sketchEditorTool = std::make_unique<SketchEditorToolController>(
         impl_->session, *impl_->viewport, *impl_->toolPanel, [this]() { refreshScene(); },
         [this](const QString& message) { statusBar()->showMessage(message); });

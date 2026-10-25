@@ -422,20 +422,6 @@ void ToolPanelHost::setStateHandler(std::function<void()> handler) {
     stateHandler_ = std::move(handler);
 }
 
-bool ToolPanelHost::isActionEnabled(const std::string& actionId) const {
-    for (const auto& [id, input] : actionInputs_)
-        if (id == actionId)
-            return input->isEnabled();
-    return false;
-}
-
-int ToolPanelHost::choiceIndex(const std::string& choiceId) const {
-    for (const auto& [id, index] : choiceIndices_)
-        if (id == choiceId)
-            return index;
-    return -1;
-}
-
 void ToolPanelHost::chooseOption(const std::string& choiceId, int index) {
     for (auto& [id, current] : choiceIndices_)
         if (id == choiceId)
@@ -453,12 +439,6 @@ void ToolPanelHost::chooseOption(const std::string& choiceId, int index) {
         definition_.choiceChanged(choiceId, index);
     if (stateHandler_)
         stateHandler_();
-}
-
-void ToolPanelHost::triggerAction(const std::string& actionId) {
-    if (!isActionEnabled(actionId) || !definition_.actionTriggered)
-        return;
-    definition_.actionTriggered(actionId);
 }
 
 void ToolPanelHost::setActivityHandler(std::function<void()> handler) {
@@ -497,6 +477,7 @@ void ToolPanelHost::focusLength(const std::string& parameterId) {
         if (id == parameterId && input->isEnabled()) {
             input->setFocus(Qt::OtherFocusReason);
             input->selectAll();
+            announceMainField(input);
             return;
         }
 }
@@ -576,6 +557,7 @@ void ToolPanelHost::setActionEnabled(const std::string& actionId, bool enabled) 
 }
 
 void ToolPanelHost::clearParameters() {
+    announceMainField(nullptr); // until the next tool names its main value
     while (QLayoutItem* item = parameterLayout_->takeAt(0)) {
         // Hidden at once: the deferred deletion may come after the next session's fields.
         if (QWidget* itemWidget = item->widget()) {

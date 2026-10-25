@@ -439,6 +439,16 @@ void CadViewport::setShownSketches(std::span<const TopoDS_Shape> sketches) {
     });
 }
 
+std::optional<QPoint> CadViewport::toolGripPoint() const {
+    if (!impl_->ready || impl_->view.IsNull() || !impl_->pushPull.isShown())
+        return std::nullopt;
+    const gp_Pnt grip = impl_->pushPull.gripPoint();
+    int x = 0, y = 0;
+    impl_->view->Convert(grip.X(), grip.Y(), grip.Z(), x, y);
+    const double ratio = devicePixelRatioF();
+    return QPoint(qRound(x / ratio), qRound(y / ratio));
+}
+
 void CadViewport::setSketchRectangleOptions(bool rounded, bool frame) {
     impl_->sketchEditor.setRectangleOptions(rounded, frame);
 }
@@ -546,7 +556,7 @@ void CadViewport::fitView() {
     performViewportOperation(*this, impl_->ready, [&] {
         if (!impl_->ready)
             return;
-        impl_->view->FitAll(0.08, false);
+        impl_->view->FitAll(impl_->firstFitMargin(), false);
         impl_->view->ZFitAll();
         update();
     });

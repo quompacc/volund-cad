@@ -40,6 +40,8 @@ class PushPullHandle final {
     void setDistance(double distance);
     // The way the arrow points: out of the body for a pull, into it for a push.
     [[nodiscard]] gp_Dir arrowDirection() const;
+    // Where the arrow stands now (its base at the moved face), in model coordinates.
+    [[nodiscard]] gp_Pnt gripPoint() const;
     [[nodiscard]] bool matches(const occ::handle<AIS_InteractiveObject>& object) const noexcept;
     [[nodiscard]] bool hasActiveMode() const noexcept;
     void start(int x, int y, const occ::handle<V3d_View>& view);

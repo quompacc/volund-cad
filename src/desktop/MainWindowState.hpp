@@ -173,6 +173,7 @@ class MainWindow::Impl final {
     QAction* parametersAction{nullptr};
     class SectionController* section{nullptr};     // N05: bottom of the left column
     class InlineValueEdit* moveValueEdit{nullptr}; // W06
+    class ToolValueField* toolValueField{nullptr}; // a tool's main value beside its arrow
     class BodyColorCard* bodyCard{nullptr};        // N06: a selected body's colour
     class DisplayStyleMenu* displayStyle{nullptr}; // N06: beside the view cube
     class AssistantPanel* assistantPanel{nullptr};

@@ -68,8 +68,9 @@ class MainWindow final : public QMainWindow {
     void createCommandSurfaces();
     void createViewSwitches();
     void createSectionView();
-    void syncShownSketches(); // MainWindowView.cpp                                 // N05
-                              // (MainWindowView.cpp)
+    void syncShownSketches();                                 // MainWindowView.cpp
+    [[nodiscard]] bool selectedSketchHidden() const;          // N05
+                                                              // (MainWindowView.cpp)
     void showTreeMenu(int kind, std::uint64_t id, QPoint at); // W09 (MainWindowView.cpp)
     // W06 (MainWindowMoveValues.cpp): the dragged distance (or, with an axis, the angle in
     // delta[0]) in a field at the pointer; a typed value makes it exact.

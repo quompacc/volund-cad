@@ -144,9 +144,11 @@ void ModelTreePanel::showModel(const application::ModelOutline& outline,
     const bool hasBodies = !outline.bodies.empty();
     auto* origin =
         addItem(nullptr, Kind::origin, 0, tr("Ursprung"), visibility.originShown(hasBodies));
+    // User report 2026-10-25: a plane's eye shows whether it is drawn (its origin on, too).
+    const auto drawn = visibility.visiblePlanes(hasBodies);
     for (int index = 0; index < 3; ++index)
         addItem(origin, Kind::plane, static_cast<std::uint64_t>(index + 1), planeName(index),
-                visibility.planes[static_cast<std::size_t>(index)]);
+                drawn[static_cast<std::size_t>(index)]);
     addItem(origin, Kind::grid, 0, tr("Raster auf XY"), visibility.grid);
     origin->setExpanded(true);
 

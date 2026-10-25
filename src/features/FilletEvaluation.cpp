@@ -40,17 +40,23 @@ const SupportProvenance* named(std::span<const SupportProvenance> origins,
 
 std::optional<document::FilletEdge> filletEdgeAt(std::span<const SupportProvenance> origins,
                                                  const TopoDS_Shape& edge) {
+    // User report 2026-10-25: a face merged from several (a seamless join) carries each of
+    // their names; the edge is named by one name per face, the first.
     std::vector<const SupportProvenance*> adjacent;
+    std::vector<TopoDS_Shape> faces;
     for (const auto& origin : origins) {
         if (origin.coverage != kernel::HistoryCoverage::complete)
             continue;
-        const bool contains = std::ranges::any_of(origin.faces, [&](const auto& face) {
+        const auto face = std::ranges::find_if(origin.faces, [&](const auto& candidate) {
             EdgeMap edges;
-            TopExp::MapShapes(face, TopAbs_EDGE, edges);
+            TopExp::MapShapes(candidate, TopAbs_EDGE, edges);
             return edges.Contains(edge);
         });
-        if (contains)
-            adjacent.push_back(&origin);
+        if (face == origin.faces.end() ||
+            std::ranges::any_of(faces, [&](const auto& known) { return known.IsSame(*face); }))
+            continue;
+        faces.push_back(*face);
+        adjacent.push_back(&origin);
     }
     if (adjacent.size() != 2 || adjacent[0]->origin == adjacent[1]->origin)
         return std::nullopt;

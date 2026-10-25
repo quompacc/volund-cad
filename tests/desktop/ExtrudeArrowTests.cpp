@@ -63,9 +63,10 @@ void typeRightAway(QWidget& window, application::CadSession& session, document::
     open(window, session, sketch);
     auto* field = distanceField(window);
     auto* focused = QApplication::focusWidget();
+    // User report 2026-10-25: the field beside the arrow takes the keyboard.
     require(field != nullptr && focused != nullptr &&
-                (focused == field || focused->parentWidget() == field),
-            ("The distance takes the keyboard when Extrude opens; focus on " +
+                focused->objectName() == QStringLiteral("toolValueField") && focused->isVisible(),
+            ("The distance takes the keyboard beside the arrow when Extrude opens; focus on " +
              (focused != nullptr ? focused->objectName() + "/" + focused->metaObject()->className()
                                  : QStringLiteral("nothing")))
                 .toStdString()

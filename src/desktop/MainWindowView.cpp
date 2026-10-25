@@ -196,8 +196,16 @@ void MainWindow::toggleVisibility(int kind, std::uint64_t id) {
         visibility.origin = !visibility.originShown(hasBodies);
         break;
     case ModelTreePanel::Kind::plane:
-        if (id >= 1 && id <= 3)
-            visibility.planes[id - 1] = !visibility.planes[id - 1];
+        if (id < 1 || id > 3)
+            break;
+        // A plane shown while its origin is off brings the origin with this plane alone.
+        if (!visibility.visiblePlanes(hasBodies)[id - 1] && !visibility.originShown(hasBodies)) {
+            visibility.origin = true;
+            visibility.planes = {false, false, false};
+            visibility.planes[id - 1] = true;
+            break;
+        }
+        visibility.planes[id - 1] = !visibility.planes[id - 1];
         break;
     case ModelTreePanel::Kind::grid:
         visibility.grid = !visibility.grid;
@@ -216,7 +224,10 @@ void MainWindow::toggleVisibility(int kind, std::uint64_t id) {
         break;
     case ModelTreePanel::Kind::feature: // a sketch's eye; other steps have none
         visibility.sketchEyes[id] = !visibility.shownSketches.contains(id);
-        break;
+        syncModelTree();
+        syncSketchPresentation(); // the selected sketch follows its eye at once
+        syncVisibility();
+        return;
     }
     // View state only: no undo step and no change to the saved state.
     syncVisibility();

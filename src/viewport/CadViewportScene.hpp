@@ -259,8 +259,11 @@ class CadViewportScene {
         showSketchCurves();
     }
 
-    // User report 2026-10-24: the base planes alone fill only part of the first view.
-    [[nodiscard]] double firstFitMargin() const { return presentations.empty() ? 0.45 : 0.08; }
+    // User reports 2026-10-24/25: the base planes alone fill only part of the view, at the
+    // start and on every fit (view cube, Home, F6).
+    [[nodiscard]] double firstFitMargin() const {
+        return presentations.empty() && basePlanes.displayedCount() > 0 ? 0.45 : 0.08;
+    }
 
     // Sketches shown besides the selected one: plain lines, no clicks.
     std::vector<TopoDS_Shape> pendingShownSketches;

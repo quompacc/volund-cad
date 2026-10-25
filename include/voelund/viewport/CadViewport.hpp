@@ -325,6 +325,9 @@ class CadViewport final : public CadViewportBase {
     void setShownSketches(std::span<const TopoDS_Shape> sketches);
     // W13b: the rectangle tool's options; with them a rectangle is drawn in further steps.
     void setSketchRectangleOptions(bool rounded, bool frame);
+    // User report 2026-10-25: where a tool's arrow stands on screen (logical pixels), for the
+    // value field beside it; none without an arrow.
+    [[nodiscard]] std::optional<QPoint> toolGripPoint() const;
     [[nodiscard]] std::size_t shownSketchCount() const noexcept;
     void setDatumSelectionHandler(std::function<void(std::uint64_t)> handler);
     [[nodiscard]] std::size_t displayedDatumCount() const noexcept;

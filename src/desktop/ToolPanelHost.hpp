@@ -161,6 +161,10 @@ class ToolPanelHost final : public FloatingCard {
     [[nodiscard]] int choiceIndex(const std::string& choiceId) const;
     void chooseOption(const std::string& choiceId, int index);
     void triggerAction(const std::string& actionId);
+    // User report 2026-10-25 (ToolPanelHostAccess.cpp): the field a tool focuses first
+    // (focusLength), nullptr when none or the tool ended; Enter in the view's field.
+    void setMainFieldHandler(std::function<void(QDoubleSpinBox*)> handler);
+    void requestAccept();
 
   private:
     void clearParameters();
@@ -182,6 +186,8 @@ class ToolPanelHost final : public FloatingCard {
     QPushButton* errorCommitButton_{nullptr};
     std::function<void()> errorCommitHandler_;
     std::function<void()> activityHandler_;
+    std::function<void(QDoubleSpinBox*)> mainFieldHandler_;
+    void announceMainField(QDoubleSpinBox* field);
     std::function<void()> stateHandler_;
     std::vector<std::pair<std::string, int>> choiceIndices_;
     QButtonGroup* toolGroup_{nullptr};

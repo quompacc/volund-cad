@@ -49,6 +49,10 @@ class PushPullHandle::Impl final {
 
 PushPullHandle::PushPullHandle() : impl_(std::make_unique<Impl>()) {}
 
+gp_Pnt PushPullHandle::gripPoint() const {
+    return impl_->center.Translated(gp_Vec(impl_->normal) * impl_->distance);
+}
+
 PushPullHandle::~PushPullHandle() = default;
 
 void PushPullHandle::show(const occ::handle<AIS_InteractiveContext>& context,
