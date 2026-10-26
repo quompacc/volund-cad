@@ -4,6 +4,7 @@
 #include <voelund/features/SketchConstraintAnnotations.hpp>
 
 #include <algorithm>
+#include <cmath>
 
 namespace voelund::features {
 
@@ -33,9 +34,11 @@ std::optional<double> sketchDimensionPositionAt(document::SketchParameters sketc
         return fromVertex.Dot(gp_Vec(shape.outward)); // the vertex is the measured middle
     case SketchDimensionStyle::angle:
         return std::max(fromVertex.Magnitude(), 1e-3);
-    default:
-        return std::nullopt; // radius and diameter keep their place
+    case SketchDimensionStyle::radius:
+    case SketchDimensionStyle::diameter: // the angle about the centre (the vertex)
+        return std::atan2(fromVertex.Dot(gp_Vec(normal.Crossed(x))), fromVertex.Dot(gp_Vec(x)));
     }
+    return std::nullopt;
 }
 
 } // namespace voelund::features

@@ -397,7 +397,10 @@ std::optional<SketchDimensionShape> radialShape(const document::SketchParameters
     const auto centre = centerOf(geometry);
     if (!centre)
         return std::nullopt;
-    const SketchPoint onCurve = elementPoint(sketch, constraint.first.element);
+    SketchPoint onCurve = elementPoint(sketch, constraint.first.element);
+    if (constraint.dimensionPosition) // W21: dragged round the circle; the angle of its line
+        onCurve = onCircle(*centre, std::hypot(onCurve.x - centre->x, onCurve.y - centre->y),
+                           *constraint.dimensionPosition);
     const auto& plane = sketch.plane;
     const bool diameter = constraint.kind == SketchConstraintKind::diameter;
     const SketchPoint across{2 * centre->x - onCurve.x, 2 * centre->y - onCurve.y};

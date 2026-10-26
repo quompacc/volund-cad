@@ -77,8 +77,8 @@ sketchAnnotationCategory(document::SketchConstraintKind kind) noexcept;
 // geometry.
 [[nodiscard]] std::vector<SketchConstraintAnnotation>
 evaluateSketchConstraintAnnotations(const document::SketchParameters& sketch);
-// W21 (SketchDimensionPlacement.cpp): the dimensionPosition that puts a linear dimension's line
-// (or an angle's arc) through the pointer, from the automatic place; none for other kinds.
+// W21 (SketchDimensionPlacement.cpp): the dimensionPosition that puts a dimension's line through
+// the pointer: across a linear one, the arc of an angle, the direction of a radius or diameter.
 [[nodiscard]] std::optional<double> sketchDimensionPositionAt(document::SketchParameters sketch,
                                                               document::SketchConstraintId id,
                                                               const document::SketchPoint& pointer);

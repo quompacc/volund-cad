@@ -8,6 +8,7 @@
 #include <cmath>
 #include <filesystem>
 #include <iostream>
+#include <numbers>
 #include <stdexcept>
 #include <string>
 
@@ -60,6 +61,29 @@ void placement() {
     require(at && near(*at, 9.0), "The pointer 9 mm off the line gives the place 9");
 }
 
+// A circle's radius dimension dragged round to 90 degrees points straight up.
+void radius() {
+    document::SketchParameters sketch{document::datumSketchPlane(document::DatumPlane::xy), {}};
+    sketch.datum = document::DatumPlane::xy;
+    sketch.elements.values.push_back(
+        {document::SketchElementId{1}, document::SketchCircle{{0, 0}, 10}});
+    sketch.elements.nextId = 2;
+    sketch.constraints.values.push_back({document::SketchConstraintId{1},
+                                         document::SketchConstraintKind::radius,
+                                         {document::SketchElementId{1}},
+                                         std::nullopt,
+                                         10.0});
+    sketch.constraints.nextId = 2;
+    const auto at =
+        features::sketchDimensionPositionAt(sketch, document::SketchConstraintId{1}, {0.0, 25.0});
+    require(at && near(*at, std::numbers::pi / 2), "Dragged above the centre: 90 degrees");
+    sketch.constraints.values.front().dimensionPosition = at;
+    const auto annotations = features::evaluateSketchConstraintAnnotations(sketch);
+    const auto& shape = *annotations.front().dimension;
+    require(near(shape.second.X(), 0.0) && near(shape.second.Y(), 10.0),
+            "The radius line meets the circle at the top");
+}
+
 void savedAndOpened(const std::filesystem::path& work) {
     application::CadSession session;
     session.newDocument();
@@ -81,6 +105,7 @@ int main() {
         const auto work = std::filesystem::temp_directory_path() / "voelund-w21";
         std::filesystem::create_directories(work);
         placement();
+        radius();
         savedAndOpened(work);
         std::filesystem::remove_all(work);
         std::cout << "PASS W21 dimension position: either side, pointer, Save and Open\n";
