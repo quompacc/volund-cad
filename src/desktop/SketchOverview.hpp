@@ -35,11 +35,13 @@ class SketchOverview final : public QWidget {
         features::SketchLooseEnds looseEnds;
         std::optional<document::SketchConstraintId> selectedRelation;
         std::vector<document::SketchElementId> selectedElements;
+        bool construction{false}; // W20: the selection's line type, else the drawing mode
     };
     struct Handlers final {
         std::function<void(document::SketchConstraintId)> relationPicked;
         std::function<void(document::SketchElementId)> elementPicked;
         std::function<void()> tie;
+        std::function<void(bool construction)> lineType; // W20
     };
 
     SketchOverview(Handlers handlers, QWidget* parent = nullptr);
@@ -54,6 +56,8 @@ class SketchOverview final : public QWidget {
     QWidget* endsRow_{nullptr};
     QLabel* ends_{nullptr};
     QPushButton* tie_{nullptr};
+    QPushButton* normal_{nullptr};       // W20: line type
+    QPushButton* construction_{nullptr}; // W20
     QToolButton* relationsToggle_{nullptr};
     QListWidget* relations_{nullptr};
     QToolButton* elementsToggle_{nullptr};

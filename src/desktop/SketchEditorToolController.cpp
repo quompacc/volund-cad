@@ -478,6 +478,11 @@ void SketchEditorToolController::applyRelation(document::SketchConstraintKind ki
 }
 
 void SketchEditorToolController::toggleConstruction() {
+    // W20 (as SolidCraft): without a selection, or while drawing, X switches the drawing mode.
+    if (editor_ && (toolIndex_ != 0 || !editor_->selectedElement())) {
+        setDrawingConstruction(!drawConstruction_);
+        return;
+    }
     if (!editor_ || !editor_->toggleSelectedConstruction())
         return;
     syncConstraintState();

@@ -121,12 +121,30 @@ SketchOverview::SketchOverview(Handlers handlers, QWidget* parent)
     tie_->setToolTip(tr("Enden, die nur aufeinander liegen, koinzident verbinden"));
     endsRow->addWidget(ends_, 1);
     endsRow->addWidget(tie_);
+    // W20 (as SolidCraft): the line type of the selection, or of what is drawn next.
+    auto* typeRow = new QHBoxLayout();
+    typeRow->addWidget(new QLabel(tr("Linientyp"), this));
+    normal_ = new QPushButton(tr("Normal"), this);
+    normal_->setObjectName(QStringLiteral("sketchLineTypeNormal"));
+    construction_ = new QPushButton(tr("Hilfsgeometrie"), this);
+    construction_->setObjectName(QStringLiteral("sketchLineTypeConstruction"));
+    for (auto* button : {normal_, construction_}) {
+        button->setCheckable(true);
+        typeRow->addWidget(button);
+        connect(button, &QPushButton::clicked, this, [this, button] {
+            if (!filling_ && handlers_.lineType)
+                QTimer::singleShot(0, this, [this, construction = button == construction_] {
+                    handlers_.lineType(construction);
+                });
+        });
+    }
     relationsToggle_ = foldButton(this, "sketchRelationsToggle");
     relations_ = list(this, "sketchRelationList", relationsToggle_);
     elementsToggle_ = foldButton(this, "sketchElementsToggle");
     elements_ = list(this, "sketchElementList", elementsToggle_);
     layout->addWidget(progress_);
     layout->addWidget(endsRow_);
+    layout->addLayout(typeRow);
     layout->addWidget(relationsToggle_);
     layout->addWidget(relations_);
     layout->addWidget(elementsToggle_);
@@ -166,6 +184,8 @@ void SketchOverview::display(const State& state) {
     endsRow_->setVisible(!parts.isEmpty()); // no empty gap above the lists
     tie_->setVisible(untied > 0);
     filling_ = true;
+    normal_->setChecked(!state.construction);
+    construction_->setChecked(state.construction);
     fillRelations(state);
     fillElements(state);
     filling_ = false;

@@ -157,6 +157,33 @@ void circleVariants(QWidget& window, application::CadSession& session,
     static_cast<void>(session);
 }
 
+// W20 (as SolidCraft): without a selection X switches the drawing mode; a line drawn then is
+// construction geometry, shown by the card's line type row.
+void constructionMode(QWidget& window, viewport::CadViewport& viewport) {
+    click(viewport, 90, 70); // empty space: nothing selected
+    command(window, "sketch.construction").trigger();
+    settle();
+    require(part<QPushButton>(window, "sketchLineTypeConstruction").isChecked(),
+            "X without a selection switches to construction drawing");
+    command(window, "sketch.tool.line").trigger();
+    settle();
+    click(viewport, 70, -60);
+    click(viewport, 90, -60);
+    QKeyEvent escape(QEvent::KeyPress, Qt::Key_Escape, Qt::NoModifier);
+    QApplication::sendEvent(&viewport, &escape);
+    settle();
+    command(window, "sketch.tool.select").trigger();
+    settle();
+    auto& list = part<QListWidget>(window, "sketchElementList");
+    require(list.item(list.count() - 1)->text().endsWith(QStringLiteral("(Hilfsgeometrie)")),
+            "The new line is construction: " + list.item(list.count() - 1)->text().toStdString());
+    click(viewport, 90, 70); // nothing selected: the button sets the drawing mode
+    part<QPushButton>(window, "sketchLineTypeNormal").click();
+    settle();
+    require(!part<QPushButton>(window, "sketchLineTypeConstruction").isChecked(),
+            "Normal switches back");
+}
+
 void run() {
     application::CadSession session;
     session.newDocument();
@@ -182,6 +209,7 @@ void run() {
     lists(window);
     contextMenu(window, *viewport);
     circleVariants(window, session, *viewport);
+    constructionMode(window, *viewport);
     looseEnds(window, *viewport);
     std::cout << "PASS sketch overview: progress, lists, selection, loose ends, tie\n";
 }

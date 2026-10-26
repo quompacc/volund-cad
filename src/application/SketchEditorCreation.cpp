@@ -210,12 +210,25 @@ SketchEditorSession::createCentered(const SketchCreationInput& input) {
     return result;
 }
 
+// W20: the elements a step made become construction geometry; the step's history entry takes
+// the change, so it stays one undo step.
+void SketchEditorSession::markConstruction(const SketchCreationResult& result) {
+    for (const auto& created : result.elements)
+        for (auto& element : elements_.values)
+            if (element.id == created.id)
+                element.construction = true;
+    if (!history_.empty())
+        history_[historyIndex_] = snapshot();
+}
+
 std::optional<SketchCreationResult> SketchEditorSession::create(const SketchCreationInput& in) {
     // S02: a rejected snap leaves the editor as before the step, tool included.
     const SketchDrawingTool tool = tool_;
     Rollback rollback(*this);
     try {
         auto result = createStep(in);
+        if (result && in.construction)
+            markConstruction(*result);
         rollback.keep();
         return result;
     } catch (...) {

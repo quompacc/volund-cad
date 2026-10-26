@@ -61,6 +61,9 @@ struct SketchCreationInput final {
     // S04: false adds no relation of its own (no suggested and no inferred parallel or
     // perpendicular); snaps the caller passes still bind.
     bool automaticRelations{true};
+    // W20 (SolidCraft's construction mode): the new elements are construction geometry, in
+    // the same undo step.
+    bool construction{false};
 };
 
 enum class SketchCreationRole {

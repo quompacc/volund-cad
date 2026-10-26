@@ -18,7 +18,8 @@ void SketchEditorToolController::syncOverview() {
         overview_ = new SketchOverview(
             {[this](document::SketchConstraintId id) { selectConstraint(id.value()); },
              [this](document::SketchElementId id) { selectElements({id.value()}, false); },
-             [this] { tieLooseEnds(); }});
+             [this] { tieLooseEnds(); },
+             [this](bool construction) { chooseLineType(construction); }});
         panel_.setSection(overview_);
     }
     const auto relations = editor_->evaluatedConstraints();
@@ -32,7 +33,30 @@ void SketchEditorToolController::syncOverview() {
         {editor_->elements(), relations,
          solved.status == features::SketchSolveStatus::success ? solved.degreesOfFreedom : -1,
          features::sketchLooseEnds(editor_->elements(), editor_->constraints()),
-         editor_->selectedConstraint(), selected});
+         editor_->selectedConstraint(), selected,
+         selected.empty() ? drawConstruction_ : editor_->isSelectedConstruction()});
+}
+
+// W20: the drawing mode for new elements, shown in the card's line type row.
+void SketchEditorToolController::setDrawingConstruction(bool construction) {
+    drawConstruction_ = construction;
+    syncOverview();
+    statusChanged_(construction
+                       ? QObject::tr("Hilfsgeometrie-Modus: neue Elemente sind Hilfsgeometrie (X)")
+                       : QObject::tr("Normaler Modus: neue Elemente sind Geometrie (X)"));
+}
+
+// W20 (SolidCraft's line type row): with a selection it converts the selection, else it sets the
+// drawing mode.
+void SketchEditorToolController::chooseLineType(bool construction) {
+    if (!editor_)
+        return;
+    if (!editor_->selectedElement()) {
+        setDrawingConstruction(construction);
+        return;
+    }
+    if (editor_->isSelectedConstruction() != construction)
+        toggleConstruction();
 }
 
 // W19 (SolidCraft's "Tie"): ends lying on each other by position only become coincident.
@@ -79,7 +103,7 @@ void SketchEditorToolController::syncConstraintState() {
     enable("point_on_object", document::SketchConstraintKind::pointOnObject);
     panel_.setActionEnabled("lock_point", editor_->canLockSelectedReference());
     panel_.setActionEnabled("unlock_point", editor_->isSelectedReferenceLocked());
-    panel_.setActionEnabled("construction", editor_->selectedElement().has_value());
+    panel_.setActionEnabled("construction", true); // W20: X also switches the drawing mode
     const bool hasSelection = editor_->selectedElement().has_value();
     panel_.setActionEnabled("trim", editor_->canEditCurve(application::SketchCurveEdit::trim));
     panel_.setActionEnabled("extend", editor_->canEditCurve(application::SketchCurveEdit::extend));

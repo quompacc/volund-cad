@@ -381,6 +381,7 @@ class SketchEditorSession final {
     geometry(document::SketchPoint first, document::SketchPoint second,
              std::optional<document::SketchPoint> third, PreviewShape& shape) const;
     [[nodiscard]] document::SketchParameters parameters(bool includePreview) const;
+    void markConstruction(const SketchCreationResult& result); // W20
     // Solves the current state and records the result; on success the solved geometry is
     // kept. An exception or a changed support counts as failed, never as the last success.
     [[nodiscard]] bool solveConstraints();

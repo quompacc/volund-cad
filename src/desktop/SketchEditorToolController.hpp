@@ -199,6 +199,9 @@ class SketchEditorToolController final {
     std::vector<std::uint64_t> problemElements_;
     QPointer<SketchOverview> overview_; // W19: owned by the panel while the sketch is open
     void syncOverview();
+    bool drawConstruction_{false}; // W20: new elements as construction geometry
+    void setDrawingConstruction(bool construction);
+    void chooseLineType(bool construction);
     void tieLooseEnds();
     [[nodiscard]] std::optional<viewport::SketchElementIntent>
     drawn(const viewport::SketchElementIntent& clicks) const;
