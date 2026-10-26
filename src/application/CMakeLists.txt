@@ -57,6 +57,7 @@ add_library(voelund_application STATIC
     SketchEditorPointConstraints.cpp
     SketchEditorRelations.cpp
     SketchEditorRectangle.cpp
+    SketchEditorTangentArc.cpp
     SketchEditorSession.cpp
 )
 

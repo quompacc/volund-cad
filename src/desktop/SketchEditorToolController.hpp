@@ -25,12 +25,14 @@ namespace voelund::desktop {
 inline constexpr int rectangleTool = 3; // W13
 // Index of "Rechteck (Mitte)" in the tool choice (S04a).
 inline constexpr int centerRectangleTool = 10;
-inline constexpr int pointTool = 11;            // S15
-inline constexpr int bsplineTool = 12;          // S21
-inline constexpr int dimensionTool = 13;        // W02
-inline constexpr int circleTwoPointTool = 14;   // W20
-inline constexpr int circleThreePointTool = 15; // W20
-inline constexpr int toolCount = 16;
+inline constexpr int pointTool = 11;               // S15
+inline constexpr int bsplineTool = 12;             // S21
+inline constexpr int dimensionTool = 13;           // W02
+inline constexpr int circleTwoPointTool = 14;      // W20
+inline constexpr int circleThreePointTool = 15;    // W20
+inline constexpr int threePointRectangleTool = 16; // W20
+inline constexpr int tangentArcTool = 17;          // W20
+inline constexpr int toolCount = 18;
 
 class ToolPanelHost;
 class InlineValueEdit;
@@ -212,6 +214,10 @@ class SketchEditorToolController final {
     void contextRequested(QPoint globalPosition);
     // W21: a dimension's line follows its dragged value; the release is one undo step.
     void dragDimension(std::uint64_t id, double x, double y, bool finished);
+    void confirmThreePointRectangle(const viewport::SketchElementIntent& clicks);
+    void confirmTangentArc(const viewport::SketchElementIntent& clicks);
+    bool confirmOwnTool(const viewport::SketchElementIntent& clicks);
+    void collectBsplinePole(const viewport::SketchElementIntent& clicks);
 };
 
 } // namespace voelund::desktop

@@ -184,6 +184,53 @@ void constructionMode(QWidget& window, viewport::CadViewport& viewport) {
             "Normal switches back");
 }
 
+// W20 (as SolidCraft): a rectangle at an angle from three clicks, kept square by relations.
+void threePointRectangle(QWidget& window, viewport::CadViewport& viewport) {
+    auto& elements = part<QListWidget>(window, "sketchElementList");
+    const int before = elements.count();
+    command(window, "sketch.tool.three_point_rectangle").trigger();
+    settle();
+    click(viewport, 100, 0);
+    click(viewport, 120, 12);
+    click(viewport, 112, 26);
+    command(window, "sketch.tool.select").trigger();
+    settle();
+    require(elements.count() == before + 4,
+            "Four sides: " + std::to_string(elements.count() - before));
+    auto& relations = part<QListWidget>(window, "sketchRelationList");
+    bool perpendicular = false, parallel = false;
+    for (int row = 0; row < relations.count(); ++row) {
+        perpendicular = perpendicular || relations.item(row)->text() == QStringLiteral("Senkrecht");
+        parallel = parallel || relations.item(row)->text() == QStringLiteral("Parallel");
+    }
+    require(perpendicular && parallel, "Kept square by perpendicular and parallel relations");
+}
+
+// W20 (as Fusion): an arc that goes on from the end of a line without a kink.
+void tangentArc(QWidget& window, viewport::CadViewport& viewport) {
+    command(window, "sketch.tool.line").trigger();
+    settle();
+    click(viewport, 20, 80);
+    click(viewport, 40, 80);
+    QKeyEvent escape(QEvent::KeyPress, Qt::Key_Escape, Qt::NoModifier);
+    QApplication::sendEvent(&viewport, &escape);
+    settle();
+    command(window, "sketch.tool.tangent_arc").trigger();
+    settle();
+    click(viewport, 40, 80); // the line's end
+    click(viewport, 50, 90);
+    command(window, "sketch.tool.select").trigger();
+    settle();
+    auto& elements = part<QListWidget>(window, "sketchElementList");
+    require(elements.item(elements.count() - 1)->text().startsWith(QStringLiteral("Bogen")),
+            "An arc was added: " + elements.item(elements.count() - 1)->text().toStdString());
+    auto& relations = part<QListWidget>(window, "sketchRelationList");
+    bool tangent = false;
+    for (int row = 0; row < relations.count(); ++row)
+        tangent = tangent || relations.item(row)->text() == QStringLiteral("Tangential");
+    require(tangent, "The arc is tangent to the line");
+}
+
 void run() {
     application::CadSession session;
     session.newDocument();
@@ -210,6 +257,8 @@ void run() {
     contextMenu(window, *viewport);
     circleVariants(window, session, *viewport);
     constructionMode(window, *viewport);
+    threePointRectangle(window, *viewport);
+    tangentArc(window, *viewport);
     looseEnds(window, *viewport);
     std::cout << "PASS sketch overview: progress, lists, selection, loose ends, tie\n";
 }

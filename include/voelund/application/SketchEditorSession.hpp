@@ -270,6 +270,18 @@ class SketchEditorSession final {
     [[nodiscard]] bool moveDimension(document::SketchConstraintId constraintId,
                                      document::SketchPoint pointer);
     void finishDimensionMove() { commitHistory(); }
+    // W20 (as SolidCraft's three-point rectangle): the first edge from `first` to `second`, the
+    // width to the line through `third`; four lines kept square by perpendicular and parallel
+    // relations, so it may lie at any angle. One undo step; refused (with the reason) when the
+    // points give no area.
+    // W20 (as Fusion's tangent arc): an arc from the end of a line to `end`, going on from the
+    // line without a kink; coincident and tangent there (a tangent joint), one undo step.
+    // Refused when `lineEnd` is no end of a line or `end` lies on the line's extension.
+    SketchCreationResult createTangentArc(document::SketchGeometryReference lineEnd,
+                                          document::SketchPoint end);
+    SketchCreationResult createThreePointRectangle(document::SketchPoint first,
+                                                   document::SketchPoint second,
+                                                   document::SketchPoint third);
     [[nodiscard]] bool
     isReferenceDimension(document::SketchConstraintId constraintId) const noexcept;
     // S18: conflicting plus redundant constraints of the last solve.

@@ -30,10 +30,10 @@ namespace {
 application::SketchDrawingTool applicationTool(int index) {
     using Tool = application::SketchDrawingTool;
     static constexpr std::array<Tool, toolCount> tools{
-        Tool::select, Tool::line,    Tool::polyline,      Tool::rectangle,
-        Tool::circle, Tool::arc,     Tool::threePointArc, Tool::ellipse,
-        Tool::slot,   Tool::polygon, Tool::rectangle,     Tool::point,
-        Tool::line,   Tool::select,  Tool::circle,        Tool::circle};
+        Tool::select,    Tool::line,          Tool::polyline, Tool::rectangle, Tool::circle,
+        Tool::arc,       Tool::threePointArc, Tool::ellipse,  Tool::slot,      Tool::polygon,
+        Tool::rectangle, Tool::point,         Tool::line,     Tool::select,    Tool::circle,
+        Tool::circle,    Tool::line,          Tool::line};
     return index >= 0 && index < toolCount ? tools[static_cast<std::size_t>(index)] : Tool::select;
 }
 
@@ -54,7 +54,9 @@ viewport::SketchElementTool viewportTool(int index) {
                                                        Tool::polyline,
                                                        Tool::select,
                                                        Tool::line,
-                                                       Tool::threePointArc};
+                                                       Tool::threePointArc,
+                                                       Tool::threePointArc,
+                                                       Tool::line};
     return index >= 0 && index < toolCount ? tools[static_cast<std::size_t>(index)] : Tool::select;
 }
 
@@ -75,13 +77,29 @@ std::vector<QString> toolNames() {
             QObject::tr("B-Spline"),
             QObject::tr("Bemaßung"),
             QObject::tr("Kreis (2 Punkte)"),
-            QObject::tr("Kreis (3 Punkte)")};
+            QObject::tr("Kreis (3 Punkte)"),
+            QObject::tr("Rechteck (3 Punkte)"),
+            QObject::tr("Tangentialbogen")};
 }
 std::vector<std::string> toolIds() {
-    return {"select",  "line",       "polyline",         "rectangle",
-            "circle",  "center_arc", "three_point_arc",  "ellipse",
-            "slot",    "polygon",    "center_rectangle", "point",
-            "bspline", "dimension",  "circle_two_point", "circle_three_point"};
+    return {"select",
+            "line",
+            "polyline",
+            "rectangle",
+            "circle",
+            "center_arc",
+            "three_point_arc",
+            "ellipse",
+            "slot",
+            "polygon",
+            "center_rectangle",
+            "point",
+            "bspline",
+            "dimension",
+            "circle_two_point",
+            "circle_three_point",
+            "three_point_rectangle",
+            "tangent_arc"};
 }
 
 // W20 (as SolidCraft): what to do with each tool, in the status line when it starts; in the
@@ -105,7 +123,9 @@ QString toolHint(int index) {
         QT_TR_NOOP("Bemaßung: ein oder zwei Elemente wählen und den Wert tippen; Enter setzt "
                    "ihn"),
         QT_TR_NOOP("Kreis aus 2 Punkten: die Enden eines Durchmessers klicken"),
-        QT_TR_NOOP("Kreis aus 3 Punkten: drei Punkte auf dem Kreis klicken")};
+        QT_TR_NOOP("Kreis aus 3 Punkten: drei Punkte auf dem Kreis klicken"),
+        QT_TR_NOOP("Rechteck aus 3 Punkten: zwei Ecken einer Kante, dann die Breite klicken"),
+        QT_TR_NOOP("Tangentialbogen: am Ende einer Linie beginnen, dann das Bogenende klicken")};
     return index >= 0 && index < static_cast<int>(hints.size())
                ? QObject::tr(hints[static_cast<std::size_t>(index)])
                : QObject::tr("Skizzenwerkzeug gewechselt");

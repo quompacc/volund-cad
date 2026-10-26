@@ -86,7 +86,7 @@ SketchEditorToolController::drawn(const viewport::SketchElementIntent& clicks) c
 
 void SketchEditorToolController::confirmElement(const viewport::SketchElementIntent& clicks) {
     previewAutomatic_.reset();
-    if (!editor_)
+    if (!editor_ || confirmOwnTool(clicks))
         return;
     const auto circle = drawn(clicks);
     if (!circle) {
@@ -94,15 +94,6 @@ void SketchEditorToolController::confirmElement(const viewport::SketchElementInt
         return;
     }
     const viewport::SketchElementIntent& intent = *circle;
-    if (toolIndex_ == bsplineTool) { // S21: each click adds a control point
-        if (bsplinePoles_.empty())
-            bsplinePoles_.push_back({intent.firstX, intent.firstY});
-        bsplinePoles_.push_back({intent.secondX, intent.secondY});
-        viewport_.continueSketchPolyline(intent.secondX, intent.secondY, 0);
-        statusChanged_(
-            QObject::tr("B-Spline: %1 Kontrollpunkte; Enter beendet").arg(bsplinePoles_.size()));
-        return;
-    }
     std::optional<application::SketchCreationResult> created;
     try {
         // A rejected step leaves the editor unchanged (S02).
@@ -127,6 +118,72 @@ void SketchEditorToolController::confirmElement(const viewport::SketchElementInt
         return;
     continuePolyline(*created);
     statusChanged_(QObject::tr("Skizzenelement #%1 hinzugefügt").arg(created->primary().value()));
+}
+
+// The tools that make their elements themselves; false for the others.
+bool SketchEditorToolController::confirmOwnTool(const viewport::SketchElementIntent& clicks) {
+    if (toolIndex_ == bsplineTool)
+        collectBsplinePole(clicks);
+    else if (toolIndex_ == threePointRectangleTool)
+        confirmThreePointRectangle(clicks); // W20
+    else if (toolIndex_ == tangentArcTool)
+        confirmTangentArc(clicks); // W20
+    else
+        return false;
+    return true;
+}
+
+// S21: each click adds a control point; Enter makes the spline.
+void SketchEditorToolController::collectBsplinePole(const viewport::SketchElementIntent& clicks) {
+    if (bsplinePoles_.empty())
+        bsplinePoles_.push_back({clicks.firstX, clicks.firstY});
+    bsplinePoles_.push_back({clicks.secondX, clicks.secondY});
+    viewport_.continueSketchPolyline(clicks.secondX, clicks.secondY, 0);
+    statusChanged_(
+        QObject::tr("B-Spline: %1 Kontrollpunkte; Enter beendet").arg(bsplinePoles_.size()));
+}
+
+// W20: the rectangle on the first two clicks' edge, as wide as the third click lies off it.
+void SketchEditorToolController::confirmThreePointRectangle(
+    const viewport::SketchElementIntent& clicks) {
+    if (!clicks.third)
+        return;
+    try {
+        static_cast<void>(editor_->createThreePointRectangle(
+            {clicks.firstX, clicks.firstY}, {clicks.secondX, clicks.secondY},
+            {clicks.third->first, clicks.third->second}));
+    } catch (const std::invalid_argument& error) {
+        statusChanged_(QString::fromUtf8(error.what()));
+        return;
+    }
+    panel_.setAcceptEnabled(editor_->canAccept());
+    syncConstraintState();
+    refreshPresentation();
+    statusChanged_(QObject::tr("Rechteck aus 3 Punkten hinzugefügt"));
+}
+
+// W20 (as Fusion): the first click took the end of a line, the arc goes on from it without a kink.
+void SketchEditorToolController::confirmTangentArc(const viewport::SketchElementIntent& clicks) {
+    const auto& start = clicks.firstReference;
+    const bool lineEnd = start && (start->point == viewport::SketchPointKind::start ||
+                                   start->point == viewport::SketchPointKind::end);
+    try {
+        if (!lineEnd)
+            throw std::invalid_argument("Tangentialbogen: zuerst auf das Ende einer Linie klicken");
+        static_cast<void>(editor_->createTangentArc(
+            {document::SketchElementId{start->elementId},
+             start->point == viewport::SketchPointKind::start ? document::SketchPointPosition::start
+                                                              : document::SketchPointPosition::end},
+            {clicks.secondX, clicks.secondY}));
+    } catch (const std::invalid_argument& error) {
+        refreshPresentation();
+        statusChanged_(QString::fromUtf8(error.what()));
+        return;
+    }
+    panel_.setAcceptEnabled(editor_->canAccept());
+    syncConstraintState();
+    refreshPresentation();
+    statusChanged_(QObject::tr("Tangentialbogen hinzugefügt"));
 }
 
 // The polyline goes on from the end of the line just placed.
