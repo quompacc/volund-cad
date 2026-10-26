@@ -84,7 +84,7 @@ class SketchGlyphOverlay final : public QWidget {
     };
     void place();
     void paintBox(QPainter& painter, const Glyph& glyph, const Box& box) const;
-    void paintValues(QPainter& painter) const;
+    [[nodiscard]] std::vector<QRectF> paintValues(QPainter& painter) const;
     void showWhenUsed();
 
     QWidget& viewport_;

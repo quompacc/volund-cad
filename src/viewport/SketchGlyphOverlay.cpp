@@ -203,9 +203,10 @@ void SketchGlyphOverlay::showWhenUsed() {
     update();
 }
 
-void SketchGlyphOverlay::paintValues(QPainter& painter) const {
+std::vector<QRectF> SketchGlyphOverlay::paintValues(QPainter& painter) const {
+    std::vector<QRectF> painted;
     if (!projector_)
-        return;
+        return painted;
     const double ratio = devicePixelRatioF();
     for (const Value& value : values_) {
         const auto anchor = projector_(value.x, value.y, value.z);
@@ -224,7 +225,9 @@ void SketchGlyphOverlay::paintValues(QPainter& painter) const {
         painter.drawRoundedRect(text.adjusted(-3, -1, 3, 1), 2, 2);
         painter.setPen(value.color);
         painter.drawText(baseline, value.text);
+        painted.push_back(text);
     }
+    return painted;
 }
 
 void SketchGlyphOverlay::setColors(const QColor& text, const QColor& accent, const QColor& panel) {
@@ -308,7 +311,10 @@ void SketchGlyphOverlay::paintEvent(QPaintEvent*) {
     place(); // the camera may have moved since the last frame
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
-    paintValues(painter);
+    QVariantList values; // test hook: where the dimension values were drawn
+    for (const QRectF& drawn : paintValues(painter))
+        values.push_back(drawn);
+    setProperty("valueBoxes", values);
     for (const Box& placed : boxes_)
         paintBox(painter, glyphs_[placed.glyph], placed);
 }

@@ -188,6 +188,12 @@ void SketchConstraintPresentation::clear(const occ::handle<AIS_InteractiveContex
     }
 }
 
+bool SketchConstraintPresentation::hasDimension(std::uint64_t id) const {
+    return std::ranges::any_of(constraints_, [id](const ConstraintPresentation& constraint) {
+        return constraint.id == id && !constraint.drawing.IsNull();
+    });
+}
+
 std::size_t SketchConstraintPresentation::size() const noexcept {
     return constraints_.size() + glyphCount_;
 }

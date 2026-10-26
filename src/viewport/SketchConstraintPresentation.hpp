@@ -36,6 +36,8 @@ class SketchConstraintPresentation final {
     void setPixelScale(double scale) noexcept { pixelScale_ = scale; }
     [[nodiscard]] double pixelScale() const noexcept { return pixelScale_; }
     [[nodiscard]] std::size_t size() const noexcept;
+    // W21: the constraint is a dimension drawn with its lines (its value can be dragged).
+    [[nodiscard]] bool hasDimension(std::uint64_t id) const;
     // U11: the label under a framebuffer pixel. Labels are drawn a few pixels beside their
     // anchor; OCCT picking of such pixel-frame text is unreliable, so the hit test compares
     // the pixel with the projected text box itself.

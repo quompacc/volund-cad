@@ -185,6 +185,10 @@ struct SketchConstraint final {
     // S18 (schema 24): a reference dimension determines nothing; the solve stores what the
     // geometry measures. Dimensions only, never bound to a parameter.
     bool reference{false};
+    // W21 (schema 41, as SolidCraft): where the user dragged the dimension line, the signed
+    // distance from the middle of what it measures across it (linear) or its radius about the
+    // vertex (angle), mm; unset keeps the automatic place. Display only, the solve ignores it.
+    std::optional<double> dimensionPosition{};
 
     SketchConstraint(SketchConstraintId constraintId, SketchConstraintKind constraintKind,
                      SketchGeometryReference firstReference,

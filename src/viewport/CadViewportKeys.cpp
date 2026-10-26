@@ -151,6 +151,8 @@ bool CadViewport::sketchRightClick(const QMouseEvent& event) {
 }
 
 bool CadViewport::event(QEvent* event) {
+    if (sketchDimensionDrag(*event)) // W21: before the press, move and release handling
+        return true;
     if (event->type() == QEvent::MouseButtonRelease &&
         (finishBodyBox(*static_cast<QMouseEvent*>(event)) ||
          sketchRightClick(*static_cast<QMouseEvent*>(event))))

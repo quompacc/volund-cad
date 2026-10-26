@@ -120,6 +120,10 @@ SketchEditorToolController::SketchEditorToolController(
       statusChanged_(std::move(statusChanged)) {
     installDynamicInputEvaluator();
     viewport_.setSketchContextHandler([this](QPoint at) { contextRequested(at); }); // W20
+    viewport_.setSketchDimensionDragHandler(                                        // W21
+        [this](std::uint64_t id, double x, double y, bool finished) {
+            dragDimension(id, x, y, finished);
+        });
 }
 
 void SketchEditorToolController::showPanel() {

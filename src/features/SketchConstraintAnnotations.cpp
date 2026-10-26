@@ -349,8 +349,20 @@ std::optional<Measured> measuredPoints(const document::SketchParameters& sketch,
     }
 }
 
+// W21: the offset beyond the farther measured point that puts the dimension line `position`
+// from the centre along `outward` (negative: the other side, which `outward` then turns to).
+double placedOffset(const Measured& measured, const SketchPoint& centre, SketchPoint& outward,
+                    double position) {
+    const double far = std::abs((measured.first.x - centre.x) * outward.x +
+                                (measured.first.y - centre.y) * outward.y);
+    if (position < 0.0)
+        outward = {-outward.x, -outward.y};
+    return std::max(std::abs(position) - far, 0.0);
+}
+
 std::optional<SketchDimensionShape> linearShape(const document::SketchParameters& sketch,
-                                                const Measured& measured, double offset) {
+                                                const Measured& measured, double offset,
+                                                std::optional<double> position) {
     SketchPoint along = measured.axis.value_or(
         SketchPoint{measured.second.x - measured.first.x, measured.second.y - measured.first.y});
     const double length = std::hypot(along.x, along.y);
@@ -362,6 +374,8 @@ std::optional<SketchDimensionShape> linearShape(const document::SketchParameters
     const SketchPoint inside = sketchMiddle(sketch);
     if ((centre.x - inside.x) * outward.x + (centre.y - inside.y) * outward.y < 0.0)
         outward = {-outward.x, -outward.y};
+    if (position) // W21: dragged; beyond the farther point, on the side it was dragged to
+        offset = placedOffset(measured, centre, outward, *position);
     const auto& plane = sketch.plane;
     const int beside = std::abs(along.y) > std::abs(along.x) ? (outward.x < 0 ? -1 : 1) : 0;
     return SketchDimensionShape{SketchDimensionStyle::linear,
@@ -425,7 +439,7 @@ std::optional<SketchDimensionShape> angleShape(const document::SketchParameters&
                                     ? line.start
                                     : line.end;
         const double length = std::max(std::hypot(far.x - vertex.x, far.y - vertex.y), 1e-9);
-        const double radius = 2.5 * offset;
+        const double radius = constraint.dimensionPosition.value_or(2.5 * offset); // W21
         return SketchPoint{vertex.x + (far.x - vertex.x) / length * radius,
                            vertex.y + (far.y - vertex.y) / length * radius};
     };
@@ -437,7 +451,7 @@ std::optional<SketchDimensionShape> angleShape(const document::SketchParameters&
                                 worldDirection(plane, 1.0, 0.0),
                                 worldDirection(plane, 0.0, 1.0),
                                 gp_Dir(plane.normalX, plane.normalY, plane.normalZ),
-                                2.5 * offset,
+                                constraint.dimensionPosition.value_or(2.5 * offset),
                                 {}};
 }
 
@@ -477,7 +491,7 @@ sketchDimensionShape(const document::SketchParameters& sketch,
              constraint.kind == SketchConstraintKind::diameter)
         shape = radialShape(sketch, constraint, offset);
     else if (const auto measured = measuredPoints(sketch, constraint))
-        shape = linearShape(sketch, *measured, offset);
+        shape = linearShape(sketch, *measured, offset, constraint.dimensionPosition);
     if (shape) {
         shape->text = dimensionText(constraint.kind, value);
         if (constraint.reference)

@@ -265,6 +265,11 @@ class SketchEditorSession final {
     // S18: a dimension between driving and reference, as one step. Throws std::invalid_argument
     // with the reason (a relation, a bound dimension, or a driving one would overdetermine).
     void toggleReference(document::SketchConstraintId constraintId);
+    // W21 (as SolidCraft): a dragged dimension line follows the pointer (sketch coordinates);
+    // nothing is recorded until finishDimensionMove, which makes the drag one undo step.
+    [[nodiscard]] bool moveDimension(document::SketchConstraintId constraintId,
+                                     document::SketchPoint pointer);
+    void finishDimensionMove() { commitHistory(); }
     [[nodiscard]] bool
     isReferenceDimension(document::SketchConstraintId constraintId) const noexcept;
     // S18: conflicting plus redundant constraints of the last solve.

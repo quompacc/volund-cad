@@ -3,6 +3,7 @@
 
 #include <voelund/application/CadSession.hpp>
 #include <voelund/application/SketchEditorSession.hpp>
+#include <voelund/features/SketchConstraintAnnotations.hpp>
 #include <voelund/features/SketchConstraintSolver.hpp>
 #include <voelund/kernel/Angle.hpp>
 #include <voelund/kernel/NumericPolicy.hpp>
@@ -103,6 +104,20 @@ void SketchEditorSession::toggleReference(document::SketchConstraintId constrain
         refuse("Treibend würde es die Skizze überbestimmen; nichts geändert");
     rollback.keep();
     commitHistory();
+}
+
+bool SketchEditorSession::moveDimension(document::SketchConstraintId constraintId,
+                                        document::SketchPoint pointer) {
+    const auto match =
+        std::ranges::find(constraints_.values, constraintId, &document::SketchConstraint::id);
+    if (!active_ || match == constraints_.values.end())
+        return false;
+    const auto position =
+        features::sketchDimensionPositionAt(parameters(false), constraintId, pointer);
+    if (!position || match->dimensionPosition == position)
+        return false;
+    match->dimensionPosition = position; // display only: no solve
+    return true;
 }
 
 bool SketchEditorSession::editDimension(document::SketchConstraintId constraintId, double value) {

@@ -207,6 +207,8 @@ class SketchEditorToolController final {
     }
     // W20: a right click in the sketch ends the drawing tool or opens the sketch's menu there.
     void contextRequested(QPoint globalPosition);
+    // W21: a dimension's line follows its dragged value; the release is one undo step.
+    void dragDimension(std::uint64_t id, double x, double y, bool finished);
 };
 
 } // namespace voelund::desktop

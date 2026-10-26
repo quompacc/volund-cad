@@ -337,6 +337,9 @@ class CadViewport final : public CadViewportBase {
     // W20 (as SolidCraft and Fusion): a right click without dragging in an open sketch ends the
     // drawing tool or opens the sketch's menu; dragging still turns the view.
     void setSketchContextHandler(std::function<void(QPoint globalPosition)> handler);
+    // W21: a dimension's value dragged to a sketch point (finished on release).
+    void setSketchDimensionDragHandler(
+        std::function<void(std::uint64_t id, double localX, double localY, bool finished)> handler);
     // W07 (as in Fusion): a drag from empty space outside a sketch selects bodies; left to
     // right those wholly inside, right to left those it touches. Reports the bodies' ids (as
     // SceneBody::id) and whether Ctrl was held.
@@ -471,6 +474,9 @@ class CadViewport final : public CadViewportBase {
     bool finishBodyBox(const QMouseEvent& event);
     // W20: a right click without dragging in an open sketch (screen position to the handler).
     bool sketchRightClick(const QMouseEvent& event);
+    // W21 (CadViewportDimensionDrag.cpp): dragging a dimension's value moves its line.
+    bool sketchDimensionDrag(QEvent& event);
+    void noteDimensionPress(const QMouseEvent& mouse, QPoint position);
 #if defined(VOELUND_VIEWPORT_QT_OPENGL)
     void cleanupGlResources() noexcept;
 #endif

@@ -44,6 +44,7 @@ list(APPEND voelund_viewport_sources
     SketchPresentation.cpp
     SketchRegionPresentation.cpp
     CadViewportRegions.cpp
+    CadViewportDimensionDrag.cpp
     TransformManipulator.cpp
     PushPullHandle.cpp
     SectionView.cpp

@@ -74,6 +74,19 @@ void addEdits(QMenu& menu, ToolPanelHost& panel) {
 
 } // namespace
 
+void SketchEditorToolController::dragDimension(std::uint64_t id, double x, double y,
+                                               bool finished) {
+    if (!editor_)
+        return;
+    if (editor_->moveDimension(document::SketchConstraintId{id}, {x, y}))
+        refreshPresentation();
+    if (!finished)
+        return;
+    editor_->finishDimensionMove();
+    syncConstraintState();
+    statusChanged_(QObject::tr("Maß verschoben"));
+}
+
 void SketchEditorToolController::contextRequested(QPoint globalPosition) {
     if (!editor_ || !panel_.isActive())
         return;

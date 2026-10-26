@@ -800,6 +800,14 @@ if(VOELUND_BUILD_DESKTOP)
         add_test(NAME perfprobe.desktop_model COMMAND voelund_desktop_model_probe)
         set_tests_properties(perfprobe.desktop_model PROPERTIES LABELS "perf-manual" TIMEOUT 300
             ENVIRONMENT "QT_QPA_PLATFORM=wayland")
+        add_executable(voelund_sketch_dimension_drag_tests desktop/SketchDimensionDragTests.cpp)
+        target_link_libraries(voelund_sketch_dimension_drag_tests PRIVATE voelund_project_options Voelund::Desktop)
+        add_test(NAME desktop.sketch_dimension_drag COMMAND voelund_sketch_dimension_drag_tests)
+        set_tests_properties(desktop.sketch_dimension_drag PROPERTIES
+            LABELS "desktop;qt-opengl;sketch;regression" TIMEOUT 60 RUN_SERIAL TRUE)
+        if(VOELUND_NATIVE_WAYLAND)
+            set_tests_properties(desktop.sketch_dimension_drag PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=wayland")
+        endif()
         add_executable(voelund_sketch_overview_tests desktop/SketchOverviewTests.cpp)
         target_link_libraries(voelund_sketch_overview_tests PRIVATE voelund_project_options Voelund::Desktop)
         add_test(NAME desktop.sketch_overview COMMAND voelund_sketch_overview_tests)
@@ -1698,6 +1706,11 @@ target_link_libraries(voelund_combine_tests PRIVATE voelund_project_options Voel
 add_test(NAME application.combine COMMAND voelund_combine_tests)
 set_tests_properties(application.combine PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
 # M05: A-FILLET-01 fillet of a box edge and an extrusion side edge.
+add_executable(voelund_dimension_position_tests integration/DimensionPositionTests.cpp)
+target_link_libraries(voelund_dimension_position_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.dimension_position COMMAND voelund_dimension_position_tests)
+set_tests_properties(application.dimension_position PROPERTIES LABELS "integration;application" TIMEOUT 120)
+
 add_executable(voelund_taper_extrusion_tests integration/TaperExtrusionTests.cpp)
 target_link_libraries(voelund_taper_extrusion_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME application.taper_extrusion COMMAND voelund_taper_extrusion_tests)

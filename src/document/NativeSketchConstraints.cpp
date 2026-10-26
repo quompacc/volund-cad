@@ -9,9 +9,11 @@
 #include <TDF_Tool.hxx>
 #include <TDataStd_AsciiString.hxx>
 #include <TDataStd_Integer.hxx>
+#include <TDataStd_Real.hxx>
 #include <TDataStd_RealArray.hxx>
 #include <array>
 #include <charconv>
+#include <cmath>
 #include <map>
 #include <string_view>
 #include <voelund/document/IdCapacity.hpp>
@@ -147,6 +149,21 @@ Handle(TDataStd_RealArray) reals(const TDF_Label& label, int size) {
     require(result->Lower() == 1 && result->Upper() == size);
     return result;
 }
+// W21 (schema 41): child 11 holds a dragged dimension line's place, written only when set.
+void writeDimensionPosition(const TDF_Label& native, const SketchConstraint& constraint) {
+    if (constraint.dimensionPosition)
+        TDataStd_Real::Set(native.FindChild(11), *constraint.dimensionPosition);
+}
+void readDimensionPosition(const TDF_Label& native, int schemaVersion,
+                           SketchConstraint& constraint) {
+    const auto position = native.FindChild(11, false);
+    if (position.IsNull())
+        return;
+    Handle(TDataStd_Real) value;
+    require(schemaVersion >= 41 && position.NbChildren() == 0 &&
+            position.FindAttribute(TDataStd_Real::GetID(), value) && std::isfinite(value->Get()));
+    constraint.dimensionPosition = value->Get();
+}
 } // namespace
 void validateNativeSketchConstraints(const SketchParameters& sketch) {
     require(sketch.constraints.values.size() <= maximumSketchConstraintCount);
@@ -176,6 +193,7 @@ void writeNativeSketchConstraints(const TDF_Label& label, const TDF_Label& eleme
             writeNativeParameterBinding(native.FindChild(9), *constraint.parameter);
         if (constraint.reference) // S18
             TDataStd_Integer::Set(native.FindChild(10), 1);
+        writeDimensionPosition(native, constraint);
         TDataStd_AsciiString::Set(native.FindChild(1),
                                   std::to_string(constraint.id.value()).c_str());
         TDataStd_AsciiString::Set(native.FindChild(2), name(constraint.kind).data());
@@ -214,8 +232,9 @@ SketchConstraints readNativeSketchConstraints(const TDF_Label& label, const TDF_
         const bool projected = !native.FindChild(8, false).IsNull();
         const bool bound = !native.FindChild(9, false).IsNull();
         const bool reference = !native.FindChild(10, false).IsNull();
+        const int placed = static_cast<int>(!native.FindChild(11, false).IsNull()); // schema 41
         require(native.NbChildren() ==
-                    7 + (projected ? 1 : 0) + (bound ? 1 : 0) + (reference ? 1 : 0) &&
+                    7 + (projected ? 1 : 0) + (bound ? 1 : 0) + (reference ? 1 : 0) + placed &&
                 (!projected || schemaVersion >= 3) && (!bound || schemaVersion >= 7) &&
                 (!reference || (schemaVersion >= 24 && integer(child(native, 10)) == 1)));
         const auto first = readReference(child(native, 3), elements, labels);
@@ -248,6 +267,7 @@ SketchConstraints readNativeSketchConstraints(const TDF_Label& label, const TDF_
         if (bound)
             constraint.parameter = readNativeParameterBinding(child(native, 9));
         constraint.reference = reference;
+        readDimensionPosition(native, schemaVersion, constraint);
         result.values.push_back(std::move(constraint));
     }
     return result;

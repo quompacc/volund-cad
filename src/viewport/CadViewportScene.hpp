@@ -436,7 +436,13 @@ class CadViewportScene {
     std::function<void(const SketchSelectionIntent&)> sketchElementSelectionHandler;
     std::function<void(std::uint64_t)> sketchConstraintEditHandler;
     std::function<void(std::uint64_t)> sketchConstraintSelectionHandler;
-    std::function<void(QPoint)> sketchContextHandler; // W20
+    std::function<void(QPoint)> sketchContextHandler;                                    // W20
+    std::function<void(std::uint64_t, double, double, bool)> sketchDimensionDragHandler; // W21
+    struct DimensionDrag final {
+        std::uint64_t id{0};
+        QPoint origin{};
+        bool moving{false};
+    } dimensionDrag; // W21
     std::function<void(const std::vector<std::uint64_t>&, bool)> sketchBoxSelectionHandler;
     // W07: a box over bodies outside a sketch.
     bool bodyBox{false};
