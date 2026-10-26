@@ -166,8 +166,6 @@ cyclomatic | src/desktop/AssistantPanel.cpp | voelund::desktop::AssistantPanel::
 cyclomatic | src/desktop/ParameterPanel.cpp | voelund::desktop::ParameterPanel::changed | 12 | Altbestand vor A04
 cyclomatic | src/desktop/ReferenceRepairDialog.cpp | voelund::desktop::ReferenceRepairDialog::reload | 13 | Altbestand vor A04
 cyclomatic | src/desktop/SketchEditorDimensionEdit.cpp | voelund::desktop::SketchEditorToolController::bindElementDimension | 13 | Altbestand vor A04
-cyclomatic | src/desktop/SketchEditorToolController.cpp | voelund::desktop::(anonymous namespace)::applicationTool | 13 | Altbestand vor A04
-cyclomatic | src/desktop/SketchEditorToolController.cpp | voelund::desktop::(anonymous namespace)::viewportTool | 13 | Altbestand vor A04
 cyclomatic | src/desktop/SketchToolActions.cpp | voelund::desktop::SketchToolActions::sections | 13 | Altbestand vor A04
 cyclomatic | src/desktop/SketchViewAdapter.cpp | voelund::desktop::sketchSelectionSummary | 13 | Altbestand vor A04
 cyclomatic | src/document/EdgeReference.cpp | voelund::document::validateEdgeOrigin | 13 | Altbestand vor A04

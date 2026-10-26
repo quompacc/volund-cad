@@ -6,6 +6,8 @@
 #include <voelund/kernel/OcctCompatibility.hpp>
 #include <voelund/viewport/CadViewport.hpp>
 
+#include "SketchGlyphOverlay.hpp"
+
 #include <AIS_InteractiveContext.hxx>
 #include <AIS_InteractiveObject.hxx>
 #include <AIS_TextLabel.hxx>
@@ -19,8 +21,6 @@
 #include <vector>
 
 namespace voelund::viewport {
-
-class SketchGlyphOverlay;
 
 class SketchConstraintPresentation final {
   public:
@@ -58,6 +58,13 @@ class SketchConstraintPresentation final {
                                            int characters) const;
     [[nodiscard]] Quantity_Color colorOf(const SceneSketchConstraint& constraint) const;
     [[nodiscard]] bool asSymbol(const SceneSketchConstraint& constraint) const;
+    // The OCCT label of a relation without symbol; none for a dimension, whose value the
+    // overlay draws in a box (W21).
+    occ::handle<AIS_TextLabel> showText(const occ::handle<AIS_InteractiveContext>& context,
+                                        const SceneSketchConstraint& constraint,
+                                        const Placement& place, const Quantity_Color& color,
+                                        double textHeight);
+    std::vector<SketchGlyphOverlay::Value> values_;
     struct ConstraintPresentation final {
         std::uint64_t id;
         occ::handle<AIS_TextLabel> label;

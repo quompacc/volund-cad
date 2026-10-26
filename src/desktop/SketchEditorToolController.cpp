@@ -5,6 +5,7 @@
 #include "CommandFeedback.hpp"
 #include <voelund/document/SketchPlaneValidation.hpp>
 
+#include "SketchCircleVariants.hpp"
 #include "SketchViewAdapter.hpp"
 #include "ToolPanelHost.hpp"
 
@@ -23,66 +24,70 @@
 namespace voelund::desktop {
 namespace {
 
+// The application's and the view's tool for each entry of the panel's tool choice (in its
+// order). S21: a B-spline collects its points from line clicks; W20: the two- and three-point
+// circles are drawn with the line's and the three-point arc's clicks.
 application::SketchDrawingTool applicationTool(int index) {
-    if (index == 1)
-        return application::SketchDrawingTool::line;
-    if (index == 2)
-        return application::SketchDrawingTool::polyline;
-    if (index == 3)
-        return application::SketchDrawingTool::rectangle;
-    if (index == 4)
-        return application::SketchDrawingTool::circle;
-    if (index == 5)
-        return application::SketchDrawingTool::arc;
-    if (index == 6)
-        return application::SketchDrawingTool::threePointArc;
-    if (index == 7)
-        return application::SketchDrawingTool::ellipse;
-    if (index == 8)
-        return application::SketchDrawingTool::slot;
-    if (index == 9)
-        return application::SketchDrawingTool::polygon;
-    if (index == centerRectangleTool)
-        return application::SketchDrawingTool::rectangle;
-    if (index == pointTool)
-        return application::SketchDrawingTool::point;
-    if (index == bsplineTool)
-        return application::SketchDrawingTool::line; // S21: the controller collects points
-    return application::SketchDrawingTool::select;
+    using Tool = application::SketchDrawingTool;
+    static constexpr std::array<Tool, toolCount> tools{
+        Tool::select, Tool::line,    Tool::polyline,      Tool::rectangle,
+        Tool::circle, Tool::arc,     Tool::threePointArc, Tool::ellipse,
+        Tool::slot,   Tool::polygon, Tool::rectangle,     Tool::point,
+        Tool::line,   Tool::select,  Tool::circle,        Tool::circle};
+    return index >= 0 && index < toolCount ? tools[static_cast<std::size_t>(index)] : Tool::select;
 }
 
 viewport::SketchElementTool viewportTool(int index) {
-    if (index == 1)
-        return viewport::SketchElementTool::line;
-    if (index == 2)
-        return viewport::SketchElementTool::polyline;
-    if (index == 3)
-        return viewport::SketchElementTool::rectangle;
-    if (index == 4)
-        return viewport::SketchElementTool::circle;
-    if (index == 5)
-        return viewport::SketchElementTool::arc;
-    if (index == 6)
-        return viewport::SketchElementTool::threePointArc;
-    if (index == 7)
-        return viewport::SketchElementTool::ellipse;
-    if (index == 8)
-        return viewport::SketchElementTool::slot;
-    if (index == 9)
-        return viewport::SketchElementTool::polygon;
-    if (index == centerRectangleTool)
-        return viewport::SketchElementTool::centerRectangle;
-    if (index == pointTool)
-        return viewport::SketchElementTool::point;
-    if (index == bsplineTool)
-        return viewport::SketchElementTool::polyline; // S21: a click per control point
-    return viewport::SketchElementTool::select;
+    using Tool = viewport::SketchElementTool;
+    static constexpr std::array<Tool, toolCount> tools{Tool::select,
+                                                       Tool::line,
+                                                       Tool::polyline,
+                                                       Tool::rectangle,
+                                                       Tool::circle,
+                                                       Tool::arc,
+                                                       Tool::threePointArc,
+                                                       Tool::ellipse,
+                                                       Tool::slot,
+                                                       Tool::polygon,
+                                                       Tool::centerRectangle,
+                                                       Tool::point,
+                                                       Tool::polyline,
+                                                       Tool::select,
+                                                       Tool::line,
+                                                       Tool::threePointArc};
+    return index >= 0 && index < toolCount ? tools[static_cast<std::size_t>(index)] : Tool::select;
+}
+
+// The panel's tool choice, in the order of the tool indices.
+std::vector<QString> toolNames() {
+    return {QObject::tr("Auswählen"),
+            QObject::tr("Linie"),
+            QObject::tr("Polylinie"),
+            QObject::tr("Rechteck"),
+            QObject::tr("Kreis"),
+            QObject::tr("Bogen (Mitte)"),
+            QObject::tr("Dreipunktbogen"),
+            QObject::tr("Ellipse"),
+            QObject::tr("Langloch"),
+            QObject::tr("Polygon"),
+            QObject::tr("Rechteck (Mitte)"),
+            QObject::tr("Punkt"),
+            QObject::tr("B-Spline"),
+            QObject::tr("Bemaßung"),
+            QObject::tr("Kreis (2 Punkte)"),
+            QObject::tr("Kreis (3 Punkte)")};
+}
+std::vector<std::string> toolIds() {
+    return {"select",  "line",       "polyline",         "rectangle",
+            "circle",  "center_arc", "three_point_arc",  "ellipse",
+            "slot",    "polygon",    "center_rectangle", "point",
+            "bspline", "dimension",  "circle_two_point", "circle_three_point"};
 }
 
 // W20 (as SolidCraft): what to do with each tool, in the status line when it starts; in the
 // order of the panel's tool choice.
 QString toolHint(int index) {
-    static const std::array<const char*, 14> hints{
+    static const std::array<const char*, toolCount> hints{
         QT_TR_NOOP("Auswählen: Element oder Symbol anklicken, ziehen wählt im Rahmen; Entf löscht"),
         QT_TR_NOOP("Linie: Punkte klicken, Werte tippen (Tab wechselt); Rechtsklick oder Esc "
                    "beendet"),
@@ -98,7 +103,9 @@ QString toolHint(int index) {
         QT_TR_NOOP("Punkt: ein Klick setzt ihn"),
         QT_TR_NOOP("B-Spline: Kontrollpunkte anklicken (mindestens 4), Enter beendet"),
         QT_TR_NOOP("Bemaßung: ein oder zwei Elemente wählen und den Wert tippen; Enter setzt "
-                   "ihn")};
+                   "ihn"),
+        QT_TR_NOOP("Kreis aus 2 Punkten: die Enden eines Durchmessers klicken"),
+        QT_TR_NOOP("Kreis aus 3 Punkten: drei Punkte auf dem Kreis klicken")};
     return index >= 0 && index < static_cast<int>(hints.size())
                ? QObject::tr(hints[static_cast<std::size_t>(index)])
                : QObject::tr("Skizzenwerkzeug gewechselt");
@@ -146,16 +153,7 @@ void SketchEditorToolController::showPanel() {
          {"pattern_spacing", QObject::tr("Linearer Abstand"), 10.0, -1'000'000.0, 1'000'000.0},
          {"pattern_angle", QObject::tr("Kreiswinkel"), 360.0, -3600.0, 3600.0,
           ToolValueKind::angle}},
-        {{"tool",
-          QObject::tr("Werkzeug"),
-          {QObject::tr("Auswählen"), QObject::tr("Linie"), QObject::tr("Polylinie"),
-           QObject::tr("Rechteck"), QObject::tr("Kreis"), QObject::tr("Bogen (Mitte)"),
-           QObject::tr("Dreipunktbogen"), QObject::tr("Ellipse"), QObject::tr("Langloch"),
-           QObject::tr("Polygon"), QObject::tr("Rechteck (Mitte)"), QObject::tr("Punkt"),
-           QObject::tr("B-Spline"), QObject::tr("Bemaßung")},
-          1,
-          {"select", "line", "polyline", "rectangle", "circle", "center_arc", "three_point_arc",
-           "ellipse", "slot", "polygon", "center_rectangle", "point", "bspline", "dimension"}},
+        {{"tool", QObject::tr("Werkzeug"), toolNames(), 1, toolIds()},
          // S04: snapped points and suggested relations become constraints, or nothing does.
          {"relations",
           QObject::tr("Beziehungen"),
@@ -312,6 +310,14 @@ void SketchEditorToolController::updatePreview(
     const std::optional<viewport::SketchElementIntent>& intent) {
     if (!editor_)
         return;
+    if (intent && circleVariant()) { // W20: the circle through the clicks
+        const auto circle = circleThrough(*intent, toolIndex_ == circleThreePointTool);
+        if (circle)
+            static_cast<void>(editor_->setPreview({circle->firstX, circle->firstY},
+                                                  {circle->secondX, circle->secondY}));
+        refreshPresentation();
+        return;
+    }
     if (intent.has_value() && toolIndex_ == centerRectangleTool) {
         // Preview the full rectangle around the picked center (S04a).
         previewAutomatic_ = intent->automaticConstraint;

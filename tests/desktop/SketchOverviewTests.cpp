@@ -132,6 +132,31 @@ void contextMenu(QWidget& window, viewport::CadViewport& viewport) {
             "A selected line is offered its direction");
 }
 
+// W20 (as SolidCraft's circle family): a circle through three clicked points and one across
+// two clicked ends of a diameter.
+void circleVariants(QWidget& window, application::CadSession& session,
+                    viewport::CadViewport& viewport) {
+    auto& elements = part<QToolButton>(window, "sketchElementsToggle");
+    const QString before = elements.text();
+    command(window, "sketch.tool.circle_three_point").trigger();
+    settle();
+    click(viewport, 60, 50);
+    click(viewport, 50, 60);
+    click(viewport, 40, 50);
+    command(window, "sketch.tool.circle_two_point").trigger();
+    settle();
+    click(viewport, 80, -40);
+    click(viewport, 100, -40);
+    command(window, "sketch.tool.select").trigger();
+    settle();
+    require(elements.text() != before, "Two circles were added: " + elements.text().toStdString());
+    auto& list = part<QListWidget>(window, "sketchElementList");
+    require(list.count() >= 2 && list.item(list.count() - 1)->text().startsWith("Kreis") &&
+                list.item(list.count() - 2)->text().startsWith("Kreis"),
+            "Both are circles");
+    static_cast<void>(session);
+}
+
 void run() {
     application::CadSession session;
     session.newDocument();
@@ -156,6 +181,7 @@ void run() {
             "The bar shows a partly determined sketch: " + std::to_string(progress.value()));
     lists(window);
     contextMenu(window, *viewport);
+    circleVariants(window, session, *viewport);
     looseEnds(window, *viewport);
     std::cout << "PASS sketch overview: progress, lists, selection, loose ends, tie\n";
 }

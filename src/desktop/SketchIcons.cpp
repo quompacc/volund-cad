@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Eduard Hart
 
 #include "SketchIcons.hpp"
+#include "SketchIconPens.hpp"
 
 #include <QHash>
 #include <QPainter>
@@ -17,66 +18,8 @@
 namespace voelund::desktop {
 namespace {
 
-struct Pens final {
-    QPainter& painter;
-    QColor ink;
-    QColor accent;
-
-    void line(double x1, double y1, double x2, double y2) const {
-        painter.drawLine(QPointF(x1, y1), QPointF(x2, y2));
-    }
-    void dot(double x, double y, double radius = 1.9) const {
-        painter.save();
-        painter.setPen(Qt::NoPen);
-        painter.setBrush(accent);
-        painter.drawEllipse(QPointF(x, y), radius, radius);
-        painter.restore();
-    }
-    void dashed(const std::function<void()>& draw) const {
-        painter.save();
-        auto pen = painter.pen();
-        pen.setDashPattern({2.0, 2.0});
-        pen.setWidthF(1.4);
-        painter.setPen(pen);
-        draw();
-        painter.restore();
-    }
-    void accented(const std::function<void()>& draw) const {
-        painter.save();
-        auto pen = painter.pen();
-        pen.setColor(accent);
-        painter.setPen(pen);
-        draw();
-        painter.restore();
-    }
-    void arrowHead(double x, double y, double angle) const {
-        const double spread = 0.5;
-        line(x, y, x - 3.2 * std::cos(angle - spread), y - 3.2 * std::sin(angle - spread));
-        line(x, y, x - 3.2 * std::cos(angle + spread), y - 3.2 * std::sin(angle + spread));
-    }
-    // A dimension with ticks and arrows between two points, offset along its normal.
-    void dimension(double x1, double y1, double x2, double y2) const {
-        accented([&] {
-            const double angle = std::atan2(y2 - y1, x2 - x1);
-            line(x1, y1, x2, y2);
-            arrowHead(x2, y2, angle);
-            arrowHead(x1, y1, angle + std::numbers::pi);
-        });
-    }
-    void lock(double x, double y, bool open) const {
-        painter.drawRoundedRect(QRectF(x - 5, y, 10, 8), 1.5, 1.5);
-        QPainterPath shackle;
-        shackle.moveTo(x - 3, y);
-        shackle.lineTo(x - 3, y - 3);
-        shackle.arcTo(QRectF(x - 3, y - 6, 6, 6), 180, -180);
-        if (!open)
-            shackle.lineTo(x + 3, y);
-        painter.drawPath(shackle);
-        dot(x, y + 4, 1.3);
-    }
-};
-
-using Drawing = std::function<void(const Pens&)>;
+using detail::Pens;
+using Drawing = detail::IconDrawing;
 
 // W02: the dimension tool D, a measured line with its value.
 void dimensionTool(const Pens& p) {
@@ -551,6 +494,14 @@ const QHash<QString, Drawing>& drawings() {
     return table;
 }
 
+// The sketch symbol of a command key, or of a circle variant (W20: SketchIconVariants.cpp).
+const Drawing* drawingFor(const QString& key) {
+    for (const auto* table : {&drawings(), &detail::variantDrawings()})
+        if (const auto found = table->find(key); found != table->end())
+            return &found.value();
+    return nullptr;
+}
+
 QPixmap render(const Drawing& drawing, const QColor& ink, const QColor& accent, int size) {
     QPixmap pixmap(size, size);
     pixmap.fill(Qt::transparent);
@@ -572,15 +523,15 @@ std::optional<QIcon> sketchIcon(const QString& commandId, const QColor& ink, con
     const bool redo = key == QLatin1String("redo_sketch");
     if (redo)
         key = QStringLiteral("undo_sketch");
-    const auto found = drawings().find(key);
-    if (found == drawings().end())
+    const Drawing* own = drawingFor(key);
+    if (own == nullptr)
         return std::nullopt;
     const Drawing drawing = redo ? Drawing([&](const Pens& p) {
         p.painter.translate(24, 0);
         p.painter.scale(-1, 1);
-        found.value()(p);
+        (*own)(p);
     })
-                                 : found.value();
+                                 : *own;
     QIcon icon;
     QColor disabled = ink;
     disabled.setAlphaF(0.35F);

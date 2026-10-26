@@ -3,6 +3,7 @@
 
 #include "SketchEditorToolController.hpp"
 
+#include "SketchCircleVariants.hpp"
 #include "ToolPanelHost.hpp"
 
 #include <QObject>
@@ -73,10 +74,24 @@ application::SketchCreationInput creationInput(const viewport::SketchElementInte
 
 } // namespace
 
-void SketchEditorToolController::confirmElement(const viewport::SketchElementIntent& intent) {
+// W20: a two- or three-point circle is made as the circle through the clicks.
+std::optional<viewport::SketchElementIntent>
+SketchEditorToolController::drawn(const viewport::SketchElementIntent& clicks) const {
+    if (!circleVariant())
+        return clicks;
+    return circleThrough(clicks, toolIndex_ == circleThreePointTool);
+}
+
+void SketchEditorToolController::confirmElement(const viewport::SketchElementIntent& clicks) {
     previewAutomatic_.reset();
     if (!editor_)
         return;
+    const auto circle = drawn(clicks);
+    if (!circle) {
+        statusChanged_(QObject::tr("Die drei Punkte liegen auf einer Linie"));
+        return;
+    }
+    const viewport::SketchElementIntent& intent = *circle;
     if (toolIndex_ == bsplineTool) { // S21: each click adds a control point
         if (bsplinePoles_.empty())
             bsplinePoles_.push_back({intent.firstX, intent.firstY});

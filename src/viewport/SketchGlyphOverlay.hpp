@@ -35,12 +35,26 @@ class SketchGlyphOverlay final : public QWidget {
         bool selected{false};
         std::vector<std::uint64_t> elements{};
     };
+    // W21 (as SolidCraft): a dimension's value in a box of the panel colour, so lines behind
+    // it do not cross it. The baseline starts `offset` framebuffer pixels from the projected
+    // anchor (x right, y up), as OCCT placed its text.
+    struct Value final {
+        QString text;
+        double x;
+        double y;
+        double z;
+        QPointF offset;
+        QColor color;
+        double height; // logical pixels
+    };
     // World point to logical viewport pixels; none while the view is not ready.
     using Projector = std::function<std::optional<QPointF>(double, double, double)>;
 
     explicit SketchGlyphOverlay(QWidget& viewport);
 
     void setGlyphs(std::vector<Glyph> glyphs);
+    void setValues(std::vector<Value> values);
+    [[nodiscard]] std::size_t valueCount() const noexcept { return values_.size(); }
     void setProjector(Projector projector) { projector_ = std::move(projector); }
     // The label text boxes the symbols keep clear of (logical pixels), read at each placing.
     void setObstacles(std::function<std::vector<QRectF>()> obstacles) {
@@ -70,9 +84,12 @@ class SketchGlyphOverlay final : public QWidget {
     };
     void place();
     void paintBox(QPainter& painter, const Glyph& glyph, const Box& box) const;
+    void paintValues(QPainter& painter) const;
+    void showWhenUsed();
 
     QWidget& viewport_;
     std::vector<Glyph> glyphs_;
+    std::vector<Value> values_;
     std::vector<Box> boxes_;
     Projector projector_;
     std::function<std::vector<QRectF>()> obstacles_;

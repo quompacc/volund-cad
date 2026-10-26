@@ -189,9 +189,42 @@ void SketchGlyphOverlay::setGlyphs(std::vector<Glyph> glyphs) {
     if (hovered_ && std::ranges::find(glyphs_, *hovered_, &Glyph::id) == glyphs_.end())
         hovered_.reset();
     place();
-    setVisible(!glyphs_.empty());
+    showWhenUsed();
+}
+
+void SketchGlyphOverlay::setValues(std::vector<Value> values) {
+    values_ = std::move(values);
+    showWhenUsed();
+}
+
+void SketchGlyphOverlay::showWhenUsed() {
+    setVisible(!glyphs_.empty() || !values_.empty());
     lower(); // over the view, under its cards (tree, panels, timeline)
     update();
+}
+
+void SketchGlyphOverlay::paintValues(QPainter& painter) const {
+    if (!projector_)
+        return;
+    const double ratio = devicePixelRatioF();
+    for (const Value& value : values_) {
+        const auto anchor = projector_(value.x, value.y, value.z);
+        if (!anchor)
+            continue;
+        QFont font = painter.font();
+        font.setPixelSize(static_cast<int>(value.height));
+        painter.setFont(font);
+        const QPointF baseline = *anchor + QPointF(value.offset.x(), -value.offset.y()) / ratio;
+        const QRectF text =
+            painter.fontMetrics().boundingRect(value.text).toRectF().translated(baseline);
+        QColor fill = panel_;
+        fill.setAlphaF(0.85F);
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(fill);
+        painter.drawRoundedRect(text.adjusted(-3, -1, 3, 1), 2, 2);
+        painter.setPen(value.color);
+        painter.drawText(baseline, value.text);
+    }
 }
 
 void SketchGlyphOverlay::setColors(const QColor& text, const QColor& accent, const QColor& panel) {
@@ -275,6 +308,7 @@ void SketchGlyphOverlay::paintEvent(QPaintEvent*) {
     place(); // the camera may have moved since the last frame
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
+    paintValues(painter);
     for (const Box& placed : boxes_)
         paintBox(painter, glyphs_[placed.glyph], placed);
 }

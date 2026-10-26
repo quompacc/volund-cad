@@ -135,34 +135,57 @@ void SketchConstraintPresentation::setConstraints(
         else
             place.offsetY = (-6.0 - 18.0 * stacked[key(constraint)]++) * pixelScale_;
         const auto& [anchor, offsetX, offsetY, drawing] = place;
-        occ::handle<AIS_TextLabel> label = new OffsetLabel(offsetX, offsetY);
-        label->SetText(text);
-        label->SetPosition(anchor);
-        label->SetColor(color);
-        label->SetFont(Font_NOF_SANS_SERIF);
-        label->SetHeight(textHeight);
-        label->SetZoomable(false);
-        context->Display(label, false);
+        const auto label = showText(context, constraint, place, color, textHeight);
         constraints_.push_back({constraint.id, label, drawing, constraint.editable, anchor, offsetX,
                                 offsetY, height, text.Length()});
     }
     glyphCount_ = glyphs.size();
-    if (glyphs_ != nullptr)
+    if (glyphs_ != nullptr) {
         glyphs_->setGlyphs(std::move(glyphs));
+        glyphs_->setValues(std::move(values_));
+    }
+    values_.clear();
+}
+
+occ::handle<AIS_TextLabel> SketchConstraintPresentation::showText(
+    const occ::handle<AIS_InteractiveContext>& context, const SceneSketchConstraint& constraint,
+    const Placement& place, const Quantity_Color& color, double textHeight) {
+    const std::string& shown = constraint.dimension ? constraint.dimension->text : constraint.label;
+    if (constraint.dimension && glyphs_ != nullptr) {
+        values_.push_back(
+            {QString::fromStdString(shown), place.anchor.X(), place.anchor.Y(), place.anchor.Z(),
+             QPointF(place.offsetX, place.offsetY),
+             QColor::fromRgbF(static_cast<float>(color.Red()), static_cast<float>(color.Green()),
+                              static_cast<float>(color.Blue())),
+             textHeight});
+        return {};
+    }
+    occ::handle<AIS_TextLabel> label = new OffsetLabel(place.offsetX, place.offsetY);
+    label->SetText(TCollection_ExtendedString(shown.c_str(), true));
+    label->SetPosition(place.anchor);
+    label->SetColor(color);
+    label->SetFont(Font_NOF_SANS_SERIF);
+    label->SetHeight(textHeight);
+    label->SetZoomable(false);
+    context->Display(label, false);
+    return label;
 }
 
 void SketchConstraintPresentation::clear(const occ::handle<AIS_InteractiveContext>& context) {
     if (!context.IsNull()) {
         for (const ConstraintPresentation& constraint : constraints_) {
-            context->Remove(constraint.label, false);
+            if (!constraint.label.IsNull())
+                context->Remove(constraint.label, false);
             if (!constraint.drawing.IsNull())
                 context->Remove(constraint.drawing, false);
         }
     }
     constraints_.clear();
     glyphCount_ = 0;
-    if (glyphs_ != nullptr)
+    if (glyphs_ != nullptr) {
         glyphs_->setGlyphs({});
+        glyphs_->setValues({});
+    }
 }
 
 std::size_t SketchConstraintPresentation::size() const noexcept {

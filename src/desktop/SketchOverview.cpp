@@ -69,6 +69,7 @@ QToolButton* foldButton(QWidget* parent, const char* name) {
     button->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     button->setArrowType(Qt::RightArrow);
     button->setAutoRaise(true);
+    button->setFixedHeight(24); // compact rows, no gap between the folded lists
     QObject::connect(button, &QToolButton::toggled, button, [button](bool open) {
         button->setArrowType(open ? Qt::DownArrow : Qt::RightArrow);
     });

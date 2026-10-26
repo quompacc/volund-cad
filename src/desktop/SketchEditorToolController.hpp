@@ -25,9 +25,12 @@ namespace voelund::desktop {
 inline constexpr int rectangleTool = 3; // W13
 // Index of "Rechteck (Mitte)" in the tool choice (S04a).
 inline constexpr int centerRectangleTool = 10;
-inline constexpr int pointTool = 11;     // S15
-inline constexpr int bsplineTool = 12;   // S21
-inline constexpr int dimensionTool = 13; // W02
+inline constexpr int pointTool = 11;            // S15
+inline constexpr int bsplineTool = 12;          // S21
+inline constexpr int dimensionTool = 13;        // W02
+inline constexpr int circleTwoPointTool = 14;   // W20
+inline constexpr int circleThreePointTool = 15; // W20
+inline constexpr int toolCount = 16;
 
 class ToolPanelHost;
 class InlineValueEdit;
@@ -197,6 +200,11 @@ class SketchEditorToolController final {
     QPointer<SketchOverview> overview_; // W19: owned by the panel while the sketch is open
     void syncOverview();
     void tieLooseEnds();
+    [[nodiscard]] std::optional<viewport::SketchElementIntent>
+    drawn(const viewport::SketchElementIntent& clicks) const;
+    [[nodiscard]] bool circleVariant() const noexcept {
+        return toolIndex_ == circleTwoPointTool || toolIndex_ == circleThreePointTool;
+    }
     // W20: a right click in the sketch ends the drawing tool or opens the sketch's menu there.
     void contextRequested(QPoint globalPosition);
 };
