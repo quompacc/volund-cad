@@ -13,6 +13,7 @@
 #include <gp_Trsf.hxx>
 
 #include <memory>
+#include <vector>
 
 class BRepBuilderAPI_Transform;
 
@@ -46,6 +47,11 @@ struct EdgeCurve final {
     gp_Pnt end{};
 };
 [[nodiscard]] EdgeCurve describeEdge(const TopoDS_Edge& edge);
+
+// W07 (as Fusion's tangent chain, TangentChain.cpp): the edges of `body` joined to `edge` without
+// a kink, edge to edge over shared vertices, the edge itself first; none for a non-edge.
+[[nodiscard]] std::vector<TopoDS_Shape> tangentChain(const TopoDS_Shape& body,
+                                                     const TopoDS_Shape& edge);
 
 // Display shapes of construction geometry: a square patch of a plane and a straight segment.
 [[nodiscard]] TopoDS_Face planePatch(const gp_Ax3& frame, double halfSize);

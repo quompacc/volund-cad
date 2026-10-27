@@ -65,6 +65,16 @@ void BasePlanePresentation::show(const occ::handle<AIS_InteractiveContext>& cont
     }
 }
 
+void BasePlanePresentation::setPickable(const occ::handle<AIS_InteractiveContext>& context,
+                                        bool pickable) {
+    for (const auto& plane : planes_)
+        if (!plane.IsNull()) {
+            context->Deactivate(plane);
+            if (pickable)
+                context->Activate(plane, AIS_Shape::SelectionMode(TopAbs_FACE));
+        }
+}
+
 void BasePlanePresentation::hide(const occ::handle<AIS_InteractiveContext>& context) {
     for (auto& plane : planes_)
         if (!plane.IsNull()) {

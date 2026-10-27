@@ -157,6 +157,7 @@ void CadViewport::setShape(const TopoDS_Shape& shape) {
 }
 
 void CadViewport::setBodies(std::span<const SceneBody> bodies) {
+    ++impl_->sceneChanges; // W07: a click cycle starts over
     performViewportOperation(*this, impl_->ready, [&] {
         impl_->pendingBodies.assign(bodies.begin(), bodies.end());
         impl_->displayPendingBodies();
@@ -442,6 +443,7 @@ void CadViewport::setTheme(const ViewportTheme& theme) {
 }
 
 void CadViewport::setDatums(std::span<const SceneDatum> datums) {
+    ++impl_->sceneChanges;
     impl_->pendingDatums.assign(datums.begin(), datums.end());
     performViewportOperation(*this, impl_->ready, [&] {
         if (!impl_->ready)
@@ -452,6 +454,7 @@ void CadViewport::setDatums(std::span<const SceneDatum> datums) {
 }
 
 void CadViewport::setShownSketches(std::span<const TopoDS_Shape> sketches) {
+    ++impl_->sceneChanges;
     impl_->pendingShownSketches.assign(sketches.begin(), sketches.end());
     performViewportOperation(*this, impl_->ready, [&] {
         if (!impl_->ready)

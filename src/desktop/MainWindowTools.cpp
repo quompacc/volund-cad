@@ -12,6 +12,7 @@
 
 #include <voelund/application/CadSession.hpp>
 #include <voelund/features/FilletEdges.hpp>
+#include <voelund/kernel/EdgeQueries.hpp>
 #include <voelund/viewport/CadViewport.hpp>
 
 #include <QStatusBar>
@@ -94,9 +95,23 @@ void MainWindow::createToolPanel() {
     impl_->datumTool->setPreviewHandler([this](const application::CadSession* candidate) {
         impl_->viewport->setDatums(makeSceneDatums(candidate ? *candidate : impl_->session));
     });
+    connectEdgePicking();
+}
+
+// Edges picked in the view: a click, a double click (W07: tangent chain), a box in the fillet
+// or chamfer panel (W07); the click cycle (W07) only without an open tool.
+void MainWindow::connectEdgePicking() {
     impl_->viewport->setEdgeSelectionHandler(
         [this](std::uint64_t body, const TopoDS_Shape& edge, bool additive) {
             pickEdge(body, edge, additive);
+        });
+    impl_->viewport->setEdgeChainHandler(
+        [this](std::uint64_t body, const TopoDS_Shape& edge) { pickEdgeChain(body, edge); });
+    impl_->viewport->setClickCycleCheck([this] { return !impl_->toolPanel->isActive(); });
+    impl_->viewport->setEdgeBoxSelectionHandler(
+        [this](std::uint64_t body, const std::vector<TopoDS_Shape>& edges) {
+            if (impl_->filletTool->isActive())
+                impl_->filletTool->pickedEdges(body, edges);
         });
 }
 
@@ -145,6 +160,34 @@ void MainWindow::pickEdge(std::uint64_t body, const TopoDS_Shape& edge, bool add
     impl_->selectedEdges = std::move(edges);
     const auto shapes = impl_->session.filletEdgeShapes(support, impl_->selectedEdges);
     impl_->viewport->setHighlightedEdges(shapes);
+    syncShell();
+    statusBar()->showMessage(tr("%1 Kante(n) gewählt").arg(impl_->selectedEdges.size()), 2000);
+}
+
+// W07 (as Fusion): a double click on an edge also takes the edges joined to it without a kink;
+// edges already chosen stay chosen. In the fillet or chamfer panel they go to the tool.
+void MainWindow::pickEdgeChain(std::uint64_t body, const TopoDS_Shape& edge) {
+    if (impl_->filletTool->isActive()) { // its preview body: the tool finds the original edge
+        impl_->filletTool->pickedChain(body, edge);
+        return;
+    }
+    const auto bodies = impl_->session.validBodies();
+    const auto owner = std::ranges::find(bodies, document::FeatureId{body},
+                                         &features::EvaluatedBody::sourceFeature);
+    if (owner == bodies.end())
+        return;
+    const auto chain = kernel::tangentChain(owner->shape, edge);
+    const document::FeatureId support{body};
+    if (impl_->shell().toolBlocksCommands() || impl_->edgeSupport != support)
+        return;
+    for (const auto& link : chain)
+        if (const auto named = impl_->session.filletEdge(support, link);
+            named && std::ranges::none_of(impl_->selectedEdges, [&](const auto& chosen) {
+                return features::sameFilletEdge(chosen, *named);
+            }))
+            impl_->selectedEdges.push_back(*named);
+    impl_->viewport->setHighlightedEdges(
+        impl_->session.filletEdgeShapes(support, impl_->selectedEdges));
     syncShell();
     statusBar()->showMessage(tr("%1 Kante(n) gewählt").arg(impl_->selectedEdges.size()), 2000);
 }

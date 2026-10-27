@@ -8,6 +8,8 @@
 #include "MainWindowSupport.hpp"
 #include "MeasurementInput.hpp"
 #include "SectionController.hpp"
+#include "SelectionFilterMenu.hpp"
+#include "ToolPanelHost.hpp"
 
 #include "ShellActions.hpp"
 
@@ -535,6 +537,8 @@ void MainWindow::syncShell() {
     }
     // Undo/Redo follow the document history, not the selection (U01), and wait for an open
     // tool (U05).
+    // W07: the selection filter rests while a tool says what it takes.
+    impl_->selectionFilter->sync(impl_->toolOpen(shell));
     impl_->undoAction->setEnabled(shell.canUndo);
     impl_->redoAction->setEnabled(shell.canRedo);
     // One card slot (U05): the active tool's panel, otherwise the selected feature.

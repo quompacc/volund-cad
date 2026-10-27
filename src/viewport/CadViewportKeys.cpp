@@ -16,6 +16,8 @@
 #include <QKeyEvent>
 #include <QMouseEvent>
 
+#include <utility>
+
 // D01 (user report 2026-10-23, as in Fusion and Shapr3D): while drawing, the fields at the
 // pointer take the keyboard. Digits and a sign or decimal point go into the current field
 // without a click, Tab moves to the next, Backspace erases, Enter places the element with the
@@ -100,7 +102,7 @@ void CadViewport::setBodyBoxSelectionHandler(
 void CadViewport::startBodyBox(const QMouseEvent& event) {
     if (!impl_->ready || event.button() != Qt::LeftButton || impl_->sketchEditor.isActive() ||
         impl_->gesture != Impl::Gesture::none || impl_->context->HasDetected() ||
-        !impl_->bodyBoxSelectionHandler)
+        !impl_->boxAllowed())
         return;
     impl_->gesture = Impl::Gesture::selectBox;
     impl_->bodyBox = true;
@@ -121,6 +123,11 @@ bool CadViewport::finishBodyBox(const QMouseEvent& event) {
     if (rectangle.width() < 4 && rectangle.height() < 4)
         return false; // a click: handled as one
     const bool crossing = position.x() < impl_->gestureOrigin.x();
+    if (impl_->edgePicking) { // W07: the tool's input, edges
+        reportBoxedEdges(rectangle, crossing);
+        update();
+        return true;
+    }
     std::vector<std::uint64_t> ids;
     for (const auto& presentation : impl_->presentations) {
         const QRect onScreen = screenBounds(presentation.shape->Shape(), impl_->view);
@@ -150,14 +157,34 @@ bool CadViewport::sketchRightClick(const QMouseEvent& event) {
     return true;
 }
 
+// The releases handled apart: after a double click that took a tangent chain (W07; it would
+// pick the clicked edge again and drop it), a body box, a right click in a sketch.
+bool CadViewport::releaseHandled(const QMouseEvent& event) {
+    if (event.button() == Qt::LeftButton)
+        ++impl_->releases; // W07: the click cycle counts on the release just before
+    if (std::exchange(impl_->swallowRelease, false))
+        return true;
+    return finishBodyBox(event) || sketchRightClick(event);
+}
+
+// A left or right release: handled apart, or by mouseReleaseEvent. W07: then notes the scene
+// the click left, as a click cycle continues only on that scene.
+bool CadViewport::handleRelease(QEvent* event) {
+    if (releaseHandled(*static_cast<QMouseEvent*>(event)))
+        return true;
+    const bool handled = CadViewportBase::event(event);
+    if (impl_->clickCycle.release == impl_->releases)
+        impl_->clickCycle.scene = impl_->sceneChanges;
+    return handled;
+}
+
 bool CadViewport::event(QEvent* event) {
     if (sketchDimensionDrag(*event)) // W21: before the press, move and release handling
         return true;
-    if (event->type() == QEvent::MouseButtonRelease &&
-        (finishBodyBox(*static_cast<QMouseEvent*>(event)) ||
-         sketchRightClick(*static_cast<QMouseEvent*>(event))))
-        return true;
+    if (event->type() == QEvent::MouseButtonRelease)
+        return handleRelease(event);
     if (event->type() == QEvent::MouseButtonPress) {
+        impl_->lastPickedEdge = {}; // W07: a double click chains only the edge this press takes
         const bool handled = CadViewportBase::event(event);
         startBodyBox(*static_cast<QMouseEvent*>(event));
         return handled;

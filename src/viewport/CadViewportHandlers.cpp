@@ -38,12 +38,26 @@ void CadViewport::setDisplayStyle(DisplayStyle style) {
 
 DisplayStyle CadViewport::displayStyle() const noexcept { return impl_->displayStyle; }
 
+void CadViewport::setSelectionFilter(SelectionFilter filter) {
+    performViewportOperation(*this, impl_->ready, [&] {
+        if (impl_->selectionFilter == filter)
+            return;
+        impl_->selectionFilter = filter;
+        impl_->context->ClearDetected(false);
+        impl_->applySelectionFilter();
+        update();
+    });
+}
+
+SelectionFilter CadViewport::selectionFilter() const noexcept { return impl_->selectionFilter; }
+
 void CadViewport::setSectionHandler(
     std::function<void(const SectionPlane&, bool finished)> handler) {
     impl_->section.setHandler(std::move(handler));
 }
 
 void CadViewport::setEdgePicking(bool enabled) {
+    ++impl_->sceneChanges; // W07: a click cycle starts over
     performViewportOperation(*this, impl_->ready, [&] {
         impl_->edgePicking = enabled;
         if (!impl_->ready)
@@ -61,7 +75,18 @@ void CadViewport::setEdgePicking(bool enabled) {
 
 void CadViewport::setEdgeSelectionHandler(
     std::function<void(std::uint64_t, const TopoDS_Shape&, bool)> handler) {
-    impl_->edgeSelectionHandler = std::move(handler);
+    // W07: the edge a click took, for a double click that follows to take its tangent chain.
+    impl_->edgeSelectionHandler = [this, handler = std::move(handler)](
+                                      std::uint64_t body, const TopoDS_Shape& edge, bool additive) {
+        impl_->lastPickedEdge = {body, edge};
+        if (handler)
+            handler(body, edge, additive);
+    };
+}
+
+void CadViewport::setEdgeChainHandler(
+    std::function<void(std::uint64_t, const TopoDS_Shape&)> handler) {
+    impl_->edgeChainHandler = std::move(handler);
 }
 
 void CadViewport::setHighlightedEdges(std::span<const TopoDS_Shape> chosen,

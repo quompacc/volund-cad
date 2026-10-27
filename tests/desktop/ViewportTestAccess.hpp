@@ -35,6 +35,15 @@ class ViewportTestAccess {
             ++count;
         return count;
     }
+    // W07: the selected sub-shape (null when nothing or a whole body is selected).
+    static TopoDS_Shape selectedShape(CadViewport& v) {
+        const auto& context = v.impl_->context;
+        context->InitSelected();
+        if (!context->MoreSelected())
+            return {};
+        const auto owner = occ::handle<StdSelect_BRepOwner>::DownCast(context->SelectedOwner());
+        return owner.IsNull() ? TopoDS_Shape() : owner->Shape();
+    }
     // Shape type of the selected owner: a face pick must not select the whole body.
     static std::optional<TopAbs_ShapeEnum> selectedShapeType(CadViewport& v) {
         const auto& context = v.impl_->context;

@@ -16,6 +16,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <span>
 #include <vector>
 
 namespace voelund::application {
@@ -46,6 +47,12 @@ class FilletToolController final {
                std::vector<document::FilletEdge> edges = {});
     // An edge clicked while the panel is open (body 0: a chosen edge over the preview).
     void picked(std::uint64_t body, const TopoDS_Shape& edge);
+    // W07: the edges joined to the double-clicked edge without a kink join the chosen ones (none
+    // is dropped); found on the body before the fillet, as the preview already rounds; one
+    // preview.
+    void pickedChain(std::uint64_t body, const TopoDS_Shape& edge);
+    // W07: the edges in a box drawn while the panel is open join the chosen ones.
+    void pickedEdges(std::uint64_t body, std::span<const TopoDS_Shape> edges);
     // Reopens a fillet or chamfer with its edges and value; OK is one undo step.
     void beginEdit(document::FeatureId feature);
     [[nodiscard]] bool isActive() const noexcept { return active_; }
@@ -64,6 +71,9 @@ class FilletToolController final {
     void placeGrip();
     void removeChosen(const TopoDS_Shape& edge);
     void followBody(std::uint64_t body);
+    [[nodiscard]] TopoDS_Shape originalEdge(const TopoDS_Shape& edge) const; // W07
+    [[nodiscard]] std::optional<document::FilletEdge> namedEdge(const TopoDS_Shape& edge) const;
+    void addEdge(const document::FilletEdge& named);
     void dragged(double value, bool finished);
     [[nodiscard]] application::Action action() const;
     [[nodiscard]] bool unchanged() const;

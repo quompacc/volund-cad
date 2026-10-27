@@ -277,6 +277,17 @@ struct ViewportTheme final {
 enum class BasePlane { xy = 1, xz = 2, yz = 3 };
 // N06 (user decision 2026-10-23): how bodies are drawn; a view setting, not in the document.
 enum class DisplayStyle { shaded, shadedWithEdges, wireframe, hiddenEdges };
+// W07 (as Fusion's selection filter): what a click or box picks outside a tool; a view
+// setting, not in the document. Whole bodies (and the body box), faces, edges, base and
+// construction planes and axes, sketch regions.
+struct SelectionFilter final {
+    bool bodies{true};
+    bool faces{true};
+    bool edges{true};
+    bool planes{true};
+    bool sketches{true};
+    bool operator==(const SelectionFilter&) const = default;
+};
 // N05: a section plane; the side its normal points to stays visible.
 struct SectionPlane final {
     std::array<double, 3> origin;
@@ -417,13 +428,23 @@ class CadViewport final : public CadViewportBase {
     void setEdgePicking(bool enabled);
     void setEdgeSelectionHandler(
         std::function<void(std::uint64_t, const TopoDS_Shape&, bool additive)> handler);
+    // W07 (as Fusion): a double click on a body edge reports it to take its tangent chain.
+    void setEdgeChainHandler(std::function<void(std::uint64_t body, const TopoDS_Shape&)> handler);
+    // W07: while edges are picked, a box from empty space reports the edges in it per body
+    // (left to right wholly inside, right to left touched).
+    // W07: whether a click again at the same place may take the next candidate (no open tool).
+    void setClickCycleCheck(std::function<bool()> allowed);
+    void setEdgeBoxSelectionHandler(
+        std::function<void(std::uint64_t body, const std::vector<TopoDS_Shape>&)> handler);
     void setHighlightedEdges(std::span<const TopoDS_Shape> chosen,
                              std::span<const TopoDS_Shape> failing = {});
     void setTheme(const ViewportTheme& theme);
     // U06: view state from the model tree; no document change. Index 0 = XY, 1 = XZ, 2 = YZ.
     void setBasePlaneVisibility(std::array<bool, 3> visible);
     void setGridVisible(bool visible);
-    void setDisplayStyle(DisplayStyle style); // N06
+    void setDisplayStyle(DisplayStyle style);        // N06
+    void setSelectionFilter(SelectionFilter filter); // W07
+    [[nodiscard]] SelectionFilter selectionFilter() const noexcept;
     [[nodiscard]] DisplayStyle displayStyle() const noexcept;
     [[nodiscard]] bool isGridVisible() const noexcept;
     // N05: a section through the bodies, a pure view state; nullopt shows the whole model.
@@ -472,8 +493,13 @@ class CadViewport final : public CadViewportBase {
     bool handleDynamicKey(const QKeyEvent& event);
     void startBodyBox(const QMouseEvent& event);
     bool finishBodyBox(const QMouseEvent& event);
+    void reportBoxedEdges(QRect rectangle, bool crossing); // W07 (CadViewportEdgeBox.cpp)
     // W20: a right click without dragging in an open sketch (screen position to the handler).
     bool sketchRightClick(const QMouseEvent& event);
+    bool releaseHandled(const QMouseEvent& event);
+    bool handleRelease(QEvent* event);
+    // W07 (CadViewportClickCycle.cpp): a click again at the same place takes the next candidate.
+    bool cycleClick(const QMouseEvent& event, QPoint position);
     // W21 (CadViewportDimensionDrag.cpp): dragging a dimension's value moves its line.
     bool sketchDimensionDrag(QEvent& event);
     void noteDimensionPress(const QMouseEvent& mouse, QPoint position);

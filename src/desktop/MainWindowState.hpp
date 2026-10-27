@@ -56,6 +56,10 @@ class MainWindow::Impl final {
     explicit Impl(application::CadSession& cadSession) : session(cadSession) {}
 
     // The single projection all shell widgets read (U02, docs/desktop-shell.md).
+    // W07: a tool (sketch, transform or any tool panel) is open.
+    [[nodiscard]] bool toolOpen(const ShellState& state) const {
+        return state.tool != ShellTool::none || toolPanel->isActive();
+    }
     [[nodiscard]] ShellState shell() const {
         ShellInputs inputs;
         inputs.basePlane = selectedDatum;
@@ -171,11 +175,12 @@ class MainWindow::Impl final {
     OverlayCard* parameterCard{nullptr}; // PAR02: under the model tree
     ParameterPanel* parameterPanel{nullptr};
     QAction* parametersAction{nullptr};
-    class SectionController* section{nullptr};     // N05: bottom of the left column
-    class InlineValueEdit* moveValueEdit{nullptr}; // W06
-    class ToolValueField* toolValueField{nullptr}; // a tool's main value beside its arrow
-    class BodyColorCard* bodyCard{nullptr};        // N06: a selected body's colour
-    class DisplayStyleMenu* displayStyle{nullptr}; // N06: beside the view cube
+    class SectionController* section{nullptr};           // N05: bottom of the left column
+    class InlineValueEdit* moveValueEdit{nullptr};       // W06
+    class ToolValueField* toolValueField{nullptr};       // a tool's main value beside its arrow
+    class BodyColorCard* bodyCard{nullptr};              // N06: a selected body's colour
+    class DisplayStyleMenu* displayStyle{nullptr};       // N06: beside the view cube
+    class SelectionFilterMenu* selectionFilter{nullptr}; // W07: beside the display style
     class AssistantPanel* assistantPanel{nullptr};
     std::unique_ptr<assistant::ClaudeCodeBackend> assistantBackend;
     std::uint64_t assistantGeneration{0};

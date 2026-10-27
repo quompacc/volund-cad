@@ -7,6 +7,7 @@
 #include "MainWindowState.hpp"
 #include "MainWindowSupport.hpp"
 #include "ModelTreePanel.hpp"
+#include "SelectionFilterMenu.hpp"
 
 #include <voelund/application/CadSession.hpp>
 
@@ -45,6 +46,7 @@ void MainWindow::createBodyAppearance() {
     impl_->bodyCard->setChoiceHandler(
         [this](std::optional<std::uint32_t> color) { colorBodies(color); });
     impl_->displayStyle = new DisplayStyleMenu(*this, *impl_->viewport);
+    impl_->selectionFilter = new SelectionFilterMenu(*this, *impl_->viewport); // W07
 }
 
 // One undo step per body; a group (N02b) takes the colour on each of its bodies.

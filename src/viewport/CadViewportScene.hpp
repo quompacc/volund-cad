@@ -63,6 +63,7 @@
 #include <cmath>
 #include <cstdint>
 #include <functional>
+#include <gp_Pnt.hxx>
 #include <optional>
 #include <utility>
 #include <vector>
@@ -163,11 +164,30 @@ class CadViewportScene {
                 // M06: only edges while a fillet is open.
                 context->Activate(presentation.shape, AIS_Shape::SelectionMode(TopAbs_EDGE));
             } else if (pickable) {
-                context->Activate(presentation.shape, presentation.shape->GlobalSelectionMode());
-                context->Activate(presentation.shape, AIS_Shape::SelectionMode(TopAbs_FACE));
-                context->Activate(presentation.shape, AIS_Shape::SelectionMode(TopAbs_EDGE));
+                activateBodyModes(presentation.shape); // W07: as the selection filter allows
             }
         }
+    }
+    void activateBodyModes(const occ::handle<AIS_Shape>& shape) {
+        if (selectionFilter.bodies)
+            context->Activate(shape, shape->GlobalSelectionMode());
+        if (selectionFilter.faces)
+            context->Activate(shape, AIS_Shape::SelectionMode(TopAbs_FACE));
+        if (selectionFilter.edges)
+            context->Activate(shape, AIS_Shape::SelectionMode(TopAbs_EDGE));
+    }
+    // W07: the selection filter on what is shown now.
+    void applySelectionFilter() {
+        if (context.IsNull())
+            return;
+        setBodiesPickable(!sketchEditor.isActive() || edgePicking);
+        basePlanes.setPickable(context, selectionFilter.planes);
+        datums.setPickable(context, selectionFilter.planes);
+    }
+    // W07: a box from empty space - edges for a tool that takes them, else bodies if allowed.
+    [[nodiscard]] bool boxAllowed() const {
+        return edgePicking ? static_cast<bool>(edgeBoxHandler)
+                           : bodyBoxSelectionHandler && selectionFilter.bodies;
     }
     // N05: the box around the shown bodies sizes the section patch.
     [[nodiscard]] Bnd_Box bodyExtent() const {
@@ -273,7 +293,9 @@ class CadViewportScene {
             }
         }
         basePlanes.show(context, presentations.empty(), halfSize, theme, planeVisibility);
-        datums.show(context, pendingDatums, halfSize, theme); // M19
+        datums.show(context, pendingDatums, halfSize, theme);    // M19
+        basePlanes.setPickable(context, selectionFilter.planes); // W07
+        datums.setPickable(context, selectionFilter.planes);
         showSketchCurves();
     }
 
@@ -366,6 +388,37 @@ class CadViewportScene {
         return std::nullopt;
     }
 
+    // W07: the body owners under the pointer, front to back (an edge before its face).
+    [[nodiscard]] std::vector<occ::handle<SelectMgr_EntityOwner>> detectedBodyOwners() const {
+        std::vector<occ::handle<SelectMgr_EntityOwner>> owners;
+        for (context->InitDetected(); context->MoreDetected(); context->NextDetected()) {
+            const auto owner = context->DetectedCurrentOwner();
+            if (owner.IsNull())
+                continue;
+            const auto object = occ::handle<AIS_InteractiveObject>::DownCast(owner->Selectable());
+            if (std::ranges::any_of(presentations, [&](const BodyPresentation& presentation) {
+                    return presentation.shape == object;
+                }))
+                owners.push_back(owner);
+        }
+        return owners;
+    }
+
+    // A body edge picked without a tool (user request 2026-10-13), as in any CAD.
+    bool pickBodyEdge(const occ::handle<SelectMgr_EntityOwner>& detected, bool additive) {
+        const auto edge = occ::handle<StdSelect_BRepOwner>::DownCast(detected);
+        if (edge.IsNull() || edge->Shape().ShapeType() != TopAbs_EDGE || !edgeSelectionHandler)
+            return false;
+        for (const auto& presentation : presentations)
+            if (presentation.shape == edge->Selectable()) {
+                context->ClearSelected(false);
+                const auto handler = edgeSelectionHandler;
+                handler(presentation.id, edge->Shape(), additive);
+                return true;
+            }
+        return false;
+    }
+
     void notifyDetectedBody(bool includeFace) {
         notifyBodyOwner(context->DetectedOwner(), includeFace);
     }
@@ -450,6 +503,29 @@ class CadViewportScene {
     // M06: edge picking of an open fillet and the highlighted edges.
     bool edgePicking{false};
     std::function<void(std::uint64_t, const TopoDS_Shape&, bool)> edgeSelectionHandler;
+    std::function<void(std::uint64_t, const TopoDS_Shape&)> edgeChainHandler;            // W07
+    std::function<void(std::uint64_t, const std::vector<TopoDS_Shape>&)> edgeBoxHandler; // W07
+    std::pair<std::uint64_t, TopoDS_Shape> lastPickedEdge{0, {}};                        // W07
+    bool swallowRelease{false}; // W07: the release after a chaining double click
+    // W07: the left releases so far and where the last click chose a body candidate.
+    std::uint64_t releases{0};
+    struct ClickCycle final {
+        QPoint at{};
+        gp_Pnt eye{};
+        std::size_t index{0};
+        std::uint64_t release{0};
+        std::uint64_t scene{0}; // the scene the click left (bodies, sketches, planes, picking)
+    } clickCycle;
+    std::uint64_t sceneChanges{0};
+    SelectionFilter selectionFilter; // W07
+    std::function<bool()> clickCycleAllowed;
+    // The click right after the last one, at its place, with the view unchanged.
+    [[nodiscard]] bool repeatsClick(QPoint position, const gp_Pnt& eye) const {
+        return clickCycle.release != 0 && clickCycle.release + 1 == releases &&
+               clickCycle.scene == sceneChanges &&
+               (position - clickCycle.at).manhattanLength() <= 3 &&
+               eye.Distance(clickCycle.eye) < 1e-9 && (!clickCycleAllowed || clickCycleAllowed());
+    }
     std::array<occ::handle<AIS_Shape>, 2> edgeHighlights;
     std::optional<std::uint64_t> transformTarget;
     std::vector<std::uint64_t> transformCompanions; // N02b

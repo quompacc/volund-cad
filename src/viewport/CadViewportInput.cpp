@@ -190,6 +190,16 @@ void CadViewport::mouseDoubleClickEvent(QMouseEvent* event) {
     performViewportOperation(*this, impl_->ready, [&] {
         if (!impl_->ready || event->button() != Qt::LeftButton)
             return;
+        impl_->clickCycle = {}; // W07: a double click is no second click at the same place
+        // W07: the press just took an edge; the double click takes its tangent chain.
+        if (const auto& [body, edge] = impl_->lastPickedEdge; !impl_->sketchEditor.isActive() &&
+                                                              body != 0 && !edge.IsNull() &&
+                                                              impl_->edgeChainHandler) {
+            impl_->edgeChainHandler(body, edge);
+            impl_->swallowRelease = true;
+            update();
+            return;
+        }
         const QPoint position = framebufferPoint(*this, event->position());
         // S13: a label anywhere under the pointer, also over its element.
         const auto id = impl_->sketchConstraintPresentation.constraintAt(impl_->view, position.x(),
@@ -276,7 +286,7 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
                     {x, y, z}, {-ex, -ey, -ez}, event->modifiers().testFlag(Qt::ControlModifier)};
             };
             const auto areaClick = [&](std::optional<gp_Pnt> surface = std::nullopt) {
-                if (!impl_->areaClickHandler)
+                if (!impl_->areaClickHandler || !impl_->selectionFilter.sketches) // W07
                     return false;
                 ViewRay ray = clickRay();
                 if (surface)
@@ -352,22 +362,13 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
                     update();
                     return;
                 }
-                // User request 2026-10-13: a body edge is picked without a tool, as in any CAD.
-                if (const auto edge =
-                        occ::handle<StdSelect_BRepOwner>::DownCast(impl_->context->DetectedOwner());
-                    !edge.IsNull() && edge->Shape().ShapeType() == TopAbs_EDGE &&
-                    impl_->edgeSelectionHandler) {
-                    for (const auto& presentation : impl_->presentations)
-                        if (presentation.shape == edge->Selectable()) {
-                            impl_->context->ClearSelected(false);
-                            const auto handler = impl_->edgeSelectionHandler;
-                            handler(presentation.id, edge->Shape(),
-                                    event->modifiers().testFlag(Qt::ControlModifier));
-                            impl_->gesture = Impl::Gesture::none;
-                            unsetCursor();
-                            update();
-                            return;
-                        }
+                if (cycleClick(*event, position) ||
+                    impl_->pickBodyEdge(impl_->context->DetectedOwner(),
+                                        event->modifiers().testFlag(Qt::ControlModifier))) {
+                    impl_->gesture = Impl::Gesture::none;
+                    unsetCursor();
+                    update();
+                    return;
                 }
                 // U06: a body behind a translucent base plane wins the click.
                 if (impl_->basePlanes.plane(detected).has_value()) {
@@ -403,6 +404,7 @@ void CadViewport::mouseReleaseEvent(QMouseEvent* event) {
                 if (!impl_->detectedBodyOwner().IsNull() &&
                     impl_->context->MainSelector()->NbPicked() > 0 &&
                     areaClick(impl_->context->MainSelector()->PickedPoint(1))) {
+                    impl_->clickCycle = {}; // a region took the click; no cycle from here
                     impl_->gesture = Impl::Gesture::none;
                     unsetCursor();
                     return;

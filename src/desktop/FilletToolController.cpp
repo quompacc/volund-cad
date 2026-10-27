@@ -15,6 +15,7 @@
 #include <QObject>
 #include <QTimer>
 
+#include <voelund/kernel/EdgeQueries.hpp>
 #include <voelund/kernel/ShapeQueries.hpp>
 
 #include <cmath>
@@ -134,9 +135,7 @@ void FilletToolController::picked(std::uint64_t body, const TopoDS_Shape& edge) 
     if (body == 0) // a chosen edge drawn over the preview
         return removeChosen(edge);
     followBody(body);
-    auto named = session_.filletEdge(support_, edge);
-    if (!named && previewSession_ && previewFeature_)
-        named = previewSession_->filletEdge(*previewFeature_, edge);
+    const auto named = namedEdge(edge);
     if (!named) {
         const auto message = QObject::tr("Diese Kante lässt sich nicht wählen: Sie gehört nicht "
                                          "zum gewählten Körper oder grenzt an eine neue "
@@ -153,6 +152,61 @@ void FilletToolController::picked(std::uint64_t body, const TopoDS_Shape& edge) 
         edges_.push_back(*named);
     features::numberFilletEdges(edges_); // a new edge gets the next free id
     preview();
+}
+
+void FilletToolController::pickedChain(std::uint64_t body, const TopoDS_Shape& edge) {
+    if (!active_ || body == 0)
+        return;
+    followBody(body);
+    const auto original = originalEdge(edge);
+    const auto bodies = session_.validBodies();
+    const auto owner = std::ranges::find(bodies, support_, &features::EvaluatedBody::sourceFeature);
+    if (owner == bodies.end() || original.IsNull())
+        return;
+    for (const auto& link : kernel::tangentChain(owner->shape, original))
+        if (const auto named = session_.filletEdge(support_, link))
+            addEdge(*named);
+    features::numberFilletEdges(edges_);
+    preview();
+}
+
+// W07: the named edges among a box's edges join the chosen ones (none is dropped).
+void FilletToolController::pickedEdges(std::uint64_t body, std::span<const TopoDS_Shape> edges) {
+    if (!active_ || body == 0)
+        return;
+    followBody(body);
+    // Only edges found on the body before the rounding (not those of a new round in the preview).
+    for (const auto& edge : edges)
+        if (const auto original = originalEdge(edge); !original.IsNull())
+            if (const auto named = session_.filletEdge(support_, original))
+                addEdge(*named);
+    features::numberFilletEdges(edges_);
+    preview();
+}
+
+void FilletToolController::addEdge(const document::FilletEdge& named) {
+    if (std::ranges::none_of(
+            edges_, [&](const auto& chosen) { return features::sameFilletEdge(chosen, named); }))
+        edges_.push_back(named);
+}
+
+// A clicked edge's name on the support, also for an edge of the preview body.
+std::optional<document::FilletEdge>
+FilletToolController::namedEdge(const TopoDS_Shape& edge) const {
+    auto named = session_.filletEdge(support_, edge);
+    if (!named && previewSession_ && previewFeature_)
+        named = previewSession_->filletEdge(*previewFeature_, edge);
+    return named;
+}
+
+// The body's edge before the rounding where a clicked edge lies (also one of the preview, which
+// rounds the chosen edges already); null when the edge has no name.
+TopoDS_Shape FilletToolController::originalEdge(const TopoDS_Shape& edge) const {
+    const auto clicked = namedEdge(edge);
+    if (!clicked)
+        return {};
+    const auto shapes = session_.filletEdgeShapes(support_, std::span(&*clicked, 1));
+    return shapes.empty() ? TopoDS_Shape() : shapes.front();
 }
 
 // Opened with nothing selected: the first edge clicked chooses the body (as in Fusion).

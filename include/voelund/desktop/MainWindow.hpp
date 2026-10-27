@@ -150,6 +150,8 @@ class MainWindow final : public QMainWindow {
     void selectFeature(std::uint64_t rawId, bool keepGroup = false);
     // User request 2026-10-13: edges picked before a fillet or chamfer.
     void pickEdge(std::uint64_t body, const TopoDS_Shape& edge, bool additive);
+    void pickEdgeChain(std::uint64_t body, const TopoDS_Shape& edge); // W07
+    void connectEdgePicking();
     void clearEdgeSelection();
     void createAssistant();
     void createAssistantPanel();

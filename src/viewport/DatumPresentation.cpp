@@ -65,6 +65,17 @@ void DatumPresentation::show(const occ::handle<AIS_InteractiveContext>& context,
     }
 }
 
+void DatumPresentation::setPickable(const occ::handle<AIS_InteractiveContext>& context,
+                                    bool pickable) {
+    for (const auto& [id, shape] : shapes_) {
+        context->Deactivate(shape);
+        if (pickable)
+            context->Activate(
+                shape, AIS_Shape::SelectionMode(
+                           shape->Shape().ShapeType() == TopAbs_EDGE ? TopAbs_EDGE : TopAbs_FACE));
+    }
+}
+
 void DatumPresentation::hide(const occ::handle<AIS_InteractiveContext>& context) {
     for (auto& [id, shape] : shapes_)
         context->Remove(shape, false);

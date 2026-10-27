@@ -20,6 +20,8 @@ class DatumPresentation final {
     void show(const occ::handle<AIS_InteractiveContext>& context,
               std::span<const SceneDatum> datums, double halfSize, const ViewportTheme& theme);
     void hide(const occ::handle<AIS_InteractiveContext>& context);
+    // W07: the selection filter takes them out of picking (they stay shown).
+    void setPickable(const occ::handle<AIS_InteractiveContext>& context, bool pickable);
     [[nodiscard]] std::optional<std::uint64_t>
     datum(const occ::handle<AIS_InteractiveObject>& object) const;
     [[nodiscard]] std::size_t displayedCount() const noexcept { return shapes_.size(); }

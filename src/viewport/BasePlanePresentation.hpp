@@ -19,6 +19,8 @@ class BasePlanePresentation final {
     void show(const occ::handle<AIS_InteractiveContext>& context, bool emphasized, double halfSize,
               const ViewportTheme& theme, std::array<bool, 3> visible);
     void hide(const occ::handle<AIS_InteractiveContext>& context);
+    // W07: the selection filter takes the planes out of picking (they stay shown).
+    void setPickable(const occ::handle<AIS_InteractiveContext>& context, bool pickable);
     [[nodiscard]] std::optional<BasePlane>
     plane(const occ::handle<AIS_InteractiveObject>& object) const;
     [[nodiscard]] std::size_t displayedCount() const noexcept;
