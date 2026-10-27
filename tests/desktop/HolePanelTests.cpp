@@ -103,6 +103,31 @@ double shown(viewport::CadViewport& viewport) {
     return viewport::ViewportTestAccess::displayedVolume(viewport);
 }
 
+// N09: the reopened hole (Ø6 through the 10 mm plate) becomes an M6 tapped hole - its core
+// drill 5.0, the diameter locked - with a 90° countersink, Ø10 by default (2 d).
+void variant(desktop::MainWindow& window, application::CadSession& session) {
+    timelineStep(window, 1).click();
+    settle();
+    require(panel(window) != nullptr, "The timeline reopens the hole");
+    field<QComboBox>(window, QStringLiteral("toolChoice_thread"))->setCurrentIndex(7); // M6
+    settle();
+    auto* diameter = field<QDoubleSpinBox>(window, QStringLiteral("toolLength_diameter"));
+    require(std::abs(diameter->value() - 5.0) < 1e-9 && !diameter->isEnabled(),
+            "M6 takes the 5.0 core drill");
+    field<QComboBox>(window, QStringLiteral("toolChoice_kind"))->setCurrentIndex(2); // Senkung
+    settle();
+    require(std::abs(length(window, "headDiameter") - 10.0) < 1e-9, "Countersink Ø10 by default");
+    button(window, "toolAcceptButton").click();
+    settle();
+    const auto hole = session.features().back().id;
+    const auto stored = session.holeParameters(hole).variant;
+    // Through 10 mm: the cone from Ø10 to Ø5 is 2.5 high, then the core drill.
+    const double removed = pi * 2.5 * (25 + 12.5 + 6.25) / 3 + pi * 6.25 * 7.5;
+    require(stored.thread == "M6" && stored.kind == document::HoleKind::countersink &&
+                matches(volume(session), 12000 - removed),
+            "M6 with a countersink: thread stated, volume exact");
+}
+
 void run() {
     application::CadSession session;
     desktop::MainWindow window(session);
@@ -158,7 +183,6 @@ void run() {
                 session.redo().status() == application::CommandStatus::committed,
             "One undo step");
     window.refreshAfterExternalChange();
-
     // The timeline reopens the hole; a new diameter is one more step.
     timelineStep(window, 1).click();
     settle();
@@ -182,8 +206,9 @@ void run() {
     require(session.features().size() == 2 && matches(volume(session), 12000 - 90 * pi),
             "Open restores the hole");
     std::filesystem::remove_all(directory);
+    variant(window, session);
     std::cout << "PASS M08 hole panel: place by click, move by clicks over the preview, depth, "
-                 "through, OK, undo, edit, open\n";
+                 "through, OK, undo, edit, open; N09 tapped M6 with countersink\n";
 }
 } // namespace
 

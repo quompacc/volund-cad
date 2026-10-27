@@ -300,12 +300,30 @@ void validateChamferParameters(const ChamferParameters& parameters);
 // M08 (schema 16, user decision 2026-10-13): a cylindrical hole into a planar body face. It
 // sits at (x, y) in the face's frame (the frame a sketch on that face gets) and runs along
 // the inward normal, `depth` deep with a flat bottom, or through the whole body without one.
+// N09 (schema 43): a counterbore (a wider cylinder of `headDepth` at the entrance) or a
+// countersink (a cone from `headDiameter` with `countersinkAngle` degrees); a blind hole can
+// end in a 118° drill point (depth to the shoulder). `thread` ("M6", HoleThreads.hpp) marks a
+// tapped hole: `diameter` is then its core drill, the thread is an attribute only.
+enum class HoleKind { simple = 0, counterbore = 1, countersink = 2 };
+inline constexpr double drillPointAngle = 118.0; // degrees
+struct HoleVariant final {
+    HoleKind kind{HoleKind::simple};
+    double headDiameter{0.0};
+    double headDepth{0.0};
+    double countersinkAngle{90.0};
+    bool drillPoint{false};
+    std::string thread{};
+    [[nodiscard]] bool operator==(const HoleVariant&) const = default;
+    // A hole whose shape is M08's plain cylinder (its faces keep their names).
+    [[nodiscard]] bool plain() const noexcept { return kind == HoleKind::simple && !drillPoint; }
+};
 struct HoleParameters final {
     BodyFaceReference face;
     double x;
     double y;
     double diameter;
     std::optional<double> depth{};
+    HoleVariant variant{}; // N09
     [[nodiscard]] bool operator==(const HoleParameters&) const = default;
 };
 void validateHoleParameters(const HoleParameters& parameters);

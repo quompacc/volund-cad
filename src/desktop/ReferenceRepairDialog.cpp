@@ -14,6 +14,7 @@
 #include <QSignalBlocker>
 #include <QVBoxLayout>
 #include <algorithm>
+#include <array>
 
 namespace voelund::desktop {
 namespace {
@@ -34,32 +35,25 @@ class RepairPreview final : public QGraphicsView {
 QString role(const document::SubshapeOrigin& origin) {
     if (!origin.role)
         return QObject::tr("Endfläche der Extrusion");
-    using kernel::PrimitiveRole;
-    switch (*origin.role) {
-    case PrimitiveRole::boxNegativeX:
-        return QObject::tr("Links (−X)");
-    case PrimitiveRole::boxPositiveX:
-        return QObject::tr("Rechts (+X)");
-    case PrimitiveRole::boxNegativeY:
-        return QObject::tr("Vorne (−Y)");
-    case PrimitiveRole::boxPositiveY:
-        return QObject::tr("Hinten (+Y)");
-    case PrimitiveRole::boxNegativeZ:
-        return QObject::tr("Unten (−Z)");
-    case PrimitiveRole::boxPositiveZ:
-        return QObject::tr("Oben (+Z)");
-    case PrimitiveRole::cylinderStart:
-        return QObject::tr("Zylinderanfang");
-    case PrimitiveRole::cylinderEnd:
-        return QObject::tr("Zylinderende");
-    case PrimitiveRole::cylinderSide:
-        return QObject::tr("Zylindermantel");
-    case PrimitiveRole::sphereSurface: // M27
-        return QObject::tr("Kugelfläche");
-    case PrimitiveRole::torusSurface:
-        return QObject::tr("Torusfläche");
-    }
-    return {};
+    // In the order of kernel::PrimitiveRole.
+    static constexpr std::array<const char*, 15> names{
+        QT_TRANSLATE_NOOP("QObject", "Links (−X)"),
+        QT_TRANSLATE_NOOP("QObject", "Rechts (+X)"),
+        QT_TRANSLATE_NOOP("QObject", "Vorne (−Y)"),
+        QT_TRANSLATE_NOOP("QObject", "Hinten (+Y)"),
+        QT_TRANSLATE_NOOP("QObject", "Unten (−Z)"),
+        QT_TRANSLATE_NOOP("QObject", "Oben (+Z)"),
+        QT_TRANSLATE_NOOP("QObject", "Zylinderanfang"),
+        QT_TRANSLATE_NOOP("QObject", "Zylinderende"),
+        QT_TRANSLATE_NOOP("QObject", "Zylindermantel"),
+        QT_TRANSLATE_NOOP("QObject", "Kugelfläche"), // M27
+        QT_TRANSLATE_NOOP("QObject", "Torusfläche"),
+        QT_TRANSLATE_NOOP("QObject", "Flachsenkung, Wand"), // N09
+        QT_TRANSLATE_NOOP("QObject", "Flachsenkung, Boden"),
+        QT_TRANSLATE_NOOP("QObject", "Senkung"),
+        QT_TRANSLATE_NOOP("QObject", "Bohrspitze")};
+    const auto index = static_cast<std::size_t>(*origin.role);
+    return index < names.size() ? QObject::tr(names[index]) : QString();
 }
 bool attachment(const document::SketchConstraint& c) {
     return c.projectedEdge.has_value() ||

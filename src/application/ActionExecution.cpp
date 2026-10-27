@@ -15,6 +15,15 @@
 
 namespace voelund::application {
 namespace {
+// N09: the hole an action creates, its face given apart.
+document::HoleParameters holeOf(const CreateHoleAction& action) {
+    return {{document::BodyId{action.support.value()}, action.face},
+            action.x.value,
+            action.y.value,
+            action.diameter.value,
+            action.depth ? std::optional{action.depth->value} : std::nullopt,
+            action.variant};
+}
 using document::DocumentSnapshot;
 using document::FeatureId;
 using document::ParameterId;
@@ -444,8 +453,7 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot,
                 return session.editChamferParameters(a.chamfer, a.parameters, reject);
             },
             [&](const CreateHoleAction& a) {
-                return session.createHole(a.support, a.face, a.x.value, a.y.value, a.diameter.value,
-                                          a.depth ? std::optional{a.depth->value} : std::nullopt);
+                return session.createHole(a.support, a.face, holeOf(a));
             },
             [&](const EditHoleParametersAction& a) {
                 return session.editHoleParameters(a.hole, a.parameters, reject);

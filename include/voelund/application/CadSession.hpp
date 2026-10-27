@@ -249,6 +249,10 @@ class CadSession final {
     [[nodiscard]] CommandResult createHole(document::FeatureId support,
                                            const document::SubshapeOrigin& face, double x, double y,
                                            double diameter, std::optional<double> depth);
+    // N09: as above with the hole's size, depth and variant; its face is `face`.
+    [[nodiscard]] CommandResult createHole(document::FeatureId support,
+                                           const document::SubshapeOrigin& face,
+                                           const document::HoleParameters& hole);
     [[nodiscard]] CommandResult
     editHoleParameters(document::FeatureId featureId, const document::HoleParameters& parameters,
                        ErrorDisposition disposition = ErrorDisposition::reject);

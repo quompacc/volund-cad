@@ -8,6 +8,8 @@
 #include <voelund/features/FeatureDependencies.hpp>
 #include <voelund/features/GeometryEvaluationError.hpp>
 #include <voelund/features/SketchSupportBinding.hpp>
+#include <voelund/kernel/HoleTool.hpp>
+#include <voelund/kernel/KernelError.hpp>
 #include <voelund/kernel/ShapeFactory.hpp>
 #include <voelund/kernel/ShapeOperations.hpp>
 
@@ -19,6 +21,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numbers>
 
 // M08 (user decision 2026-10-13): a hole into a planar body face, at (x, y) in the face's
 // frame, along the inward normal. The face is named by its origin and followed through the
@@ -36,6 +39,32 @@ EvaluatedFeature referenceOf(const EvaluatedFeature& output) {
             {},
             {},
             output.referenceEdgeOrigins};
+}
+
+// N09: the turned profile of a counterbore, countersink or drill point (a plain hole keeps
+// M08's cylinder, so its faces keep their names).
+kernel::ShapeOperationResult variantTool(const document::HoleParameters& parameters,
+                                         const gp_Pnt& centre, const gp_Vec& inward,
+                                         double length) {
+    const auto& variant = parameters.variant;
+    const double degrees = std::numbers::pi / 180.0;
+    kernel::HoleProfile profile{parameters.diameter / 2.0, length};
+    if (variant.kind != document::HoleKind::simple)
+        profile.headRadius = variant.headDiameter / 2.0;
+    if (variant.kind == document::HoleKind::counterbore)
+        profile.headDepth = variant.headDepth;
+    profile.countersinkAngle = variant.countersinkAngle * degrees;
+    if (variant.drillPoint)
+        profile.tipAngle = document::drillPointAngle * degrees;
+    profile.origin = {centre.X(), centre.Y(), centre.Z()};
+    const gp_Dir direction(inward);
+    profile.direction = {direction.X(), direction.Y(), direction.Z()};
+    try {
+        return kernel::makeHoleToolWithHistory(profile);
+    } catch (const kernel::KernelError&) {
+        throw GeometryEvaluationError("The head of the hole is deeper than the hole",
+                                      "hole-head-too-deep");
+    }
 }
 
 // The cylinder the hole removes from `body`, whose current faces `owner` names.
@@ -71,6 +100,8 @@ kernel::ShapeOperationResult holeTool(const EvaluatedFeature& owner, const TopoD
         const auto box = kernel::boundingBox(body);
         length = 2.0 * (box ? box->diagonal() : 0.0) + 1.0;
     }
+    if (!parameters.variant.plain())
+        return variantTool(parameters, centre, inward, length);
     return kernel::ShapeFactory::makeCylinderWithHistory({parameters.diameter / 2.0, length,
                                                           centre.X(), centre.Y(), centre.Z(),
                                                           inward.X(), inward.Y(), inward.Z()});

@@ -145,6 +145,14 @@ document::ChamferParameters CadSession::chamferParameters(document::FeatureId fe
 CommandResult CadSession::createHole(document::FeatureId support,
                                      const document::SubshapeOrigin& face, double x, double y,
                                      double diameter, std::optional<double> depth) {
+    return createHole(
+        support, face,
+        document::HoleParameters{{document::BodyId{support.value()}, face}, x, y, diameter, depth});
+}
+
+CommandResult CadSession::createHole(document::FeatureId support,
+                                     const document::SubshapeOrigin& face,
+                                     const document::HoleParameters& hole) {
     std::optional<document::BodyFaceReference> reference;
     try {
         reference = faceReference(support, face);
@@ -156,9 +164,10 @@ CommandResult CadSession::createHole(document::FeatureId support,
     document::DocumentTransaction transaction(document_);
     auto& candidate = transaction.edit();
     const auto idInput = detail::prepareInput([&] {
-        return candidate.addHoleFeature(
-            "Bohrung " + std::to_string(sequence),
-            document::HoleParameters{*reference, x, y, diameter, depth});
+        return candidate.addHoleFeature("Bohrung " + std::to_string(sequence),
+                                        document::HoleParameters{*reference, hole.x, hole.y,
+                                                                 hole.diameter, hole.depth,
+                                                                 hole.variant});
     });
     if (!idInput.value)
         return CommandResult::invalidInput(idInput.diagnostic);

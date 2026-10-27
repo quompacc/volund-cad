@@ -139,6 +139,45 @@ ChamferParameters readNativeChamfer(const TDF_Label& label, std::size_t remainin
     validateChamferParameters(result);
     return result;
 }
+namespace {
+// N09 (schema 43): kind, head (diameter, depth, countersink angle), drill point and thread,
+// written only for a hole that is not a plain one (older files stay as they were).
+void writeHoleVariant(const TDF_Label& label, const HoleParameters& parameters) {
+    const auto& variant = parameters.variant;
+    if (variant == HoleVariant{})
+        return;
+    TDataStd_Integer::Set(label.FindChild(5), static_cast<int>(variant.kind));
+    auto head = TDataStd_RealArray::Set(label.FindChild(6), 1, 3);
+    head->SetValue(1, variant.headDiameter);
+    head->SetValue(2, variant.headDepth);
+    head->SetValue(3, variant.countersinkAngle);
+    TDataStd_Integer::Set(label.FindChild(7), variant.drillPoint ? 1 : 0);
+    TDataStd_AsciiString::Set(label.FindChild(8), variant.thread.c_str());
+}
+void readHoleVariant(const TDF_Label& label, int schemaVersion, HoleVariant& result) {
+    if (label.FindChild(5, false).IsNull())
+        return;
+    require(schemaVersion >= 43);
+    Handle(TDataStd_Integer) kind;
+    require(child(label, 5).FindAttribute(TDataStd_Integer::GetID(), kind));
+    result.kind = static_cast<HoleKind>(kind->Get());
+    Handle(TDataStd_RealArray) head;
+    require(child(label, 6).FindAttribute(TDataStd_RealArray::GetID(), head) &&
+            head->Lower() == 1 && head->Upper() == 3);
+    result.headDiameter = head->Value(1);
+    result.headDepth = head->Value(2);
+    result.countersinkAngle = head->Value(3);
+    Handle(TDataStd_Integer) point;
+    require(child(label, 7).FindAttribute(TDataStd_Integer::GetID(), point) &&
+            (point->Get() == 0 || point->Get() == 1));
+    result.drillPoint = point->Get() == 1;
+    Handle(TDataStd_AsciiString) thread;
+    require(child(label, 8).FindAttribute(TDataStd_AsciiString::GetID(), thread) &&
+            thread->Get().Length() <= 16);
+    result.thread = thread->Get().ToCString();
+}
+} // namespace
+
 std::size_t nativeHoleRecords(const HoleParameters& parameters) {
     return parameters.face.origin.extrusionBoundary.size();
 }
@@ -154,12 +193,14 @@ void writeNativeHole(const TDF_Label& label, const HoleParameters& parameters) {
     position->SetValue(2, parameters.y);
     if (parameters.depth)
         TDataStd_Real::Set(label.FindChild(4), *parameters.depth);
+    writeHoleVariant(label, parameters);
 }
 
 HoleParameters readNativeHole(const TDF_Label& label, std::size_t remainingRecords,
                               int schemaVersion) {
     const auto depth = label.FindChild(4, false);
-    require(schemaVersion >= 16 && label.NbChildren() == (depth.IsNull() ? 3 : 4));
+    const int extended = label.FindChild(5, false).IsNull() ? 0 : 4;
+    require(schemaVersion >= 16 && label.NbChildren() == (depth.IsNull() ? 3 : 4) + extended);
     Handle(TDataStd_Real) diameter;
     require(label.FindAttribute(TDataStd_Real::GetID(), diameter));
     const BodyId body{readDecimal(child(label, 1))};
@@ -175,6 +216,7 @@ HoleParameters readNativeHole(const TDF_Label& label, std::size_t remainingRecor
         require(depth.NbChildren() == 0 && depth.FindAttribute(TDataStd_Real::GetID(), value));
         result.depth = value->Get();
     }
+    readHoleVariant(label, schemaVersion, result.variant);
     validateHoleParameters(result);
     return result;
 }

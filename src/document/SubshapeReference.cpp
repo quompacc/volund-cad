@@ -25,7 +25,7 @@ void validateSubshapeOrigin(const SubshapeOrigin& origin) {
         throw std::invalid_argument("Invalid imported face origin");
     if (origin.role) {
         const auto role = static_cast<int>(*origin.role);
-        if (role < 0 || role > static_cast<int>(kernel::PrimitiveRole::torusSurface))
+        if (role < 0 || role > static_cast<int>(kernel::PrimitiveRole::holeTip))
             throw std::invalid_argument("Unknown support face role");
     }
     if (origin.instances.size() > maximumSubshapeInstances)

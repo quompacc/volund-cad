@@ -19,7 +19,11 @@ enum class PrimitiveRole {
     cylinderEnd,
     cylinderSide,
     sphereSurface, // M27 (schema 25)
-    torusSurface
+    torusSurface,
+    holeCounterboreSide, // N09 (schema 43)
+    holeCounterboreFloor,
+    holeCountersink,
+    holeTip
 };
 struct PrimitiveOrigin final {
     PrimitiveRole role;

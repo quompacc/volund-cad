@@ -183,7 +183,6 @@ cyclomatic | src/application/SketchEditorCreation.cpp | voelund::application::(a
 cyclomatic | src/application/SketchEditorPointConstraints.cpp | voelund::application::(anonymous namespace)::referencePoint | 12 | Altbestand vor A04
 cyclomatic | src/application/SketchEditorRelations.cpp | voelund::application::SketchEditorSession::addAutomaticLineRelation | 12 | Altbestand vor A04
 cyclomatic | src/desktop/MainWindowCommands.cpp | voelund::desktop::MainWindow::syncShell | 12 | Altbestand vor A04
-cyclomatic | src/desktop/ReferenceRepairDialog.cpp | voelund::desktop::(anonymous namespace)::role | 12 | Altbestand vor A04
 cyclomatic | src/desktop/SketchEditorPresentation.cpp | voelund::desktop::SketchEditorToolController::applyPatternOperation | 12 | Altbestand vor A04
 cyclomatic | src/desktop/SketchExtrusionToolController.cpp | voelund::desktop::SketchExtrusionToolController::guidance | 12 | Altbestand vor A04
 cyclomatic | src/document/ModelDocumentReorder.cpp | voelund::document::ModelDocument::moveFeature | 12 | Altbestand vor A04

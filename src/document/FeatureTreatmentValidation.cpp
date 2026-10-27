@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Eduard Hart
 
+#include <voelund/document/HoleThreads.hpp>
 #include <voelund/document/ModelDocument.hpp>
 #include <voelund/kernel/NumericPolicy.hpp>
 
+#include <cmath>
 #include <stdexcept>
 
 // M05/M07/M08: validation of the fillet, chamfer and hole parameters.
@@ -43,7 +45,48 @@ void validateChamferParameters(const ChamferParameters& parameters) {
     validateEdgeTreatment(parameters.body, parameters.edges, parameters.distance);
 }
 
+namespace {
+// N09: the head of a counterbore or countersink, the drill point and the thread.
+void validateHoleHead(const HoleParameters& parameters);
+// A counterbore has a depth and ends above the bottom of a blind hole.
+void validateCounterbore(const HoleParameters& parameters) {
+    const double depth = parameters.variant.headDepth;
+    if (!kernel::modelLength(depth) || (parameters.depth && depth >= *parameters.depth))
+        throw std::invalid_argument("A counterbore is shallower than its hole");
+}
+void validateHoleThread(const HoleParameters& parameters) {
+    const auto& variant = parameters.variant;
+    if (variant.drillPoint && !parameters.depth)
+        throw std::invalid_argument("Only a blind hole ends in a drill point");
+    if (variant.thread.empty())
+        return;
+    const auto thread = metricThread(variant.thread);
+    if (!thread || std::abs(thread->coreDrill - parameters.diameter) > 1e-9)
+        throw std::invalid_argument("A tapped hole has a known thread and its core drill");
+}
+void validateHoleVariant(const HoleParameters& parameters) {
+    const auto kind = static_cast<int>(parameters.variant.kind);
+    if (kind < 0 || kind > static_cast<int>(HoleKind::countersink))
+        throw std::invalid_argument("Unknown hole kind");
+    validateHoleHead(parameters);
+    validateHoleThread(parameters);
+}
+// The head of a counterbore or countersink: wider than the hole, shallower than it.
+void validateHoleHead(const HoleParameters& parameters) {
+    const auto& variant = parameters.variant;
+    if (variant.kind != HoleKind::simple &&
+        (!kernel::modelLength(variant.headDiameter) || variant.headDiameter <= parameters.diameter))
+        throw std::invalid_argument("The head of a hole is wider than the hole");
+    if (variant.kind == HoleKind::counterbore)
+        validateCounterbore(parameters);
+    const bool angleFits = variant.countersinkAngle >= 30.0 && variant.countersinkAngle <= 150.0;
+    if (variant.kind == HoleKind::countersink && !angleFits)
+        throw std::invalid_argument("A countersink angle lies between 30 and 150 degrees");
+}
+} // namespace
+
 void validateHoleParameters(const HoleParameters& parameters) {
+    validateHoleVariant(parameters);
     if (!kernel::modelLength(parameters.diameter) ||
         (parameters.depth && !kernel::modelLength(*parameters.depth)) ||
         !kernel::modelCoordinate(parameters.x) || !kernel::modelCoordinate(parameters.y))

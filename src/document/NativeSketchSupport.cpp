@@ -82,6 +82,14 @@ void writeNativeSubshapeOrigin(const TDF_Label& label, const SubshapeOrigin& ori
         }
     }
 }
+// The last primitive role a schema knows: M27 sphere and torus (25), N09 hole faces (43).
+int lastRole(int schemaVersion) {
+    using kernel::PrimitiveRole;
+    const auto last = schemaVersion >= 43   ? PrimitiveRole::holeTip
+                      : schemaVersion >= 25 ? PrimitiveRole::torusSurface
+                                            : PrimitiveRole::cylinderSide;
+    return static_cast<int>(last);
+}
 int nativeSubshapeOriginExtension(const TDF_Label& label) {
     return (label.FindChild(6, false).IsNull() ? 0 : 1) +
            (label.FindChild(7, false).IsNull() ? 0 : 1);
@@ -93,9 +101,7 @@ SubshapeOrigin readNativeSubshapeOrigin(const TDF_Label& label, std::size_t& rem
     require((role >= -1 || (role == faceExtrusionRole && schemaVersion >= 10) ||
              (role == treatedEdgeRole && schemaVersion >= 17) ||
              (role == importedFaceRole && schemaVersion >= 35)) &&
-            (role <= static_cast<int>(kernel::PrimitiveRole::cylinderSide) ||
-             (role <= static_cast<int>(kernel::PrimitiveRole::torusSurface) &&
-              schemaVersion >= 25))); // M27: sphere and torus surfaces
+            role <= lastRole(schemaVersion));
     if (role >= 0)
         origin.role = static_cast<kernel::PrimitiveRole>(role);
     origin.faceExtrusion = role == faceExtrusionRole;

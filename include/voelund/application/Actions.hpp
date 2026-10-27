@@ -199,6 +199,7 @@ struct CreateHoleAction final {
     Quantity y;
     Quantity diameter;
     std::optional<Quantity> depth;
+    document::HoleVariant variant{}; // N09: counterbore, countersink, drill point, thread
     bool operator==(const CreateHoleAction&) const = default;
 };
 struct EditHoleParametersAction final {
