@@ -87,6 +87,8 @@ add_library(
     DisplayStyleMenu.cpp
     SelectionFilterMenu.cpp
     BodyMaterialSection.cpp
+    InterferenceToolController.cpp
+    MainWindowInspect.cpp
     ShellState.cpp
     SketchToolActions.cpp
     SketchViewAdapter.cpp

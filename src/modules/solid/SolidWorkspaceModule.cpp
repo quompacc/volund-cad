@@ -18,6 +18,26 @@ std::function<bool()> alwaysEnabled() {
 
 } // namespace
 
+void SolidWorkspaceModule::addInspectCommands(SolidCommandServices& services) {
+    if (services.measure)
+        commands_.push_back({"solid.inspect.measure", "Messen",
+                             "Längen, Flächen, Volumen, Abstände, Winkel und Punkte messen", "I",
+                             workspaces::CommandGroup::construct, true, false,
+                             simpleCommand(std::move(services.measure)), services.canMeasure,
+                             "Messen"});
+    if (services.interference)
+        commands_.push_back({"solid.inspect.interference",
+                             "Überschneidungen",
+                             "Gewählte oder alle sichtbaren Körper auf Überschneidungen prüfen",
+                             {},
+                             workspaces::CommandGroup::construct,
+                             true,
+                             false,
+                             simpleCommand(std::move(services.interference)),
+                             services.canInterference,
+                             "Überschneidungen"});
+}
+
 SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
     commands_.push_back({"solid.create.box",
                          "Quader",
@@ -178,12 +198,7 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                              simpleCommand(std::move(services.datumAxis)),
                              services.canDatum,
                              "Bezugsachse"});
-    if (services.measure)
-        commands_.push_back({"solid.inspect.measure", "Messen",
-                             "Längen, Flächen, Volumen, Abstände und Winkel messen", "I",
-                             workspaces::CommandGroup::construct, true, false,
-                             simpleCommand(std::move(services.measure)), services.canMeasure,
-                             "Messen"});
+    addInspectCommands(services);
     if (services.combine)
         commands_.push_back({"solid.modify.combine",
                              "Kombinieren",

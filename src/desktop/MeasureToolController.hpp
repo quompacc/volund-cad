@@ -6,6 +6,7 @@
 #include <voelund/viewport/CadViewport.hpp>
 
 #include <QString>
+#include <QStringList>
 
 #include <TopoDS_Shape.hxx>
 
@@ -25,7 +26,8 @@ class ToolPanelHost;
 // edge or a planar face shows its length, radius or area and the volume of its body; a second
 // click adds the distance and the angle between both; a third starts over. Values show with
 // three decimals and their unit; "Werte kopieren" copies them in full. While the model is not
-// current, measuring is locked.
+// current, measuring is locked. N08: corners can be clicked too, and an edge click can measure
+// from the edge's middle or its circle's centre; two points also show the difference per axis.
 class MeasureToolController final {
   public:
     MeasureToolController(application::CadSession& session, viewport::CadViewport& viewport,
@@ -45,6 +47,8 @@ class MeasureToolController final {
         TopoDS_Shape shape;
     };
     void picked(Pick pick);
+    [[nodiscard]] QStringList describe(std::size_t index, bool fullPrecision) const;
+    [[nodiscard]] QStringList between(bool fullPrecision) const;
     void show();
     void finish();
 
@@ -54,6 +58,7 @@ class MeasureToolController final {
     std::function<void(const QString&)> statusChanged_;
     std::vector<Pick> picks_;
     bool active_{false};
+    int edgeAs_{0}; // N08: 0 the edge, 1 its middle, 2 its circle's centre
 };
 
 } // namespace voelund::desktop

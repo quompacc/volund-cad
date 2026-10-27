@@ -7,8 +7,11 @@
 
 #include <BRepAdaptor_Curve.hxx>
 #include <BRepAdaptor_Surface.hxx>
+#include <BRepBuilderAPI_MakeVertex.hxx>
 #include <BRepExtrema_DistShapeShape.hxx>
 #include <BRepGProp.hxx>
+#include <BRep_Tool.hxx>
+#include <GCPnts_AbscissaPoint.hxx>
 #include <GProp_GProps.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopoDS.hxx>
@@ -67,6 +70,11 @@ ShapeMeasure measureShape(const TopoDS_Shape& shape) {
             result.radius = surface.Sphere().Radius();
         break;
     }
+    case TopAbs_VERTEX: {
+        const gp_Pnt point = BRep_Tool::Pnt(TopoDS::Vertex(shape));
+        result.point = std::array<double, 3>{point.X(), point.Y(), point.Z()};
+        break;
+    }
     default:
         if (hasSolid(shape)) {
             BRepGProp::VolumeProperties(shape, properties);
@@ -92,7 +100,30 @@ PairMeasure measureBetween(const TopoDS_Shape& first, const TopoDS_Shape& second
             angle = std::numbers::pi / 2 - angle;
         result.angle = angle;
     }
+    if (first.ShapeType() == TopAbs_VERTEX && second.ShapeType() == TopAbs_VERTEX) {
+        const gp_Pnt from = BRep_Tool::Pnt(TopoDS::Vertex(first));
+        const gp_Pnt to = BRep_Tool::Pnt(TopoDS::Vertex(second));
+        result.delta =
+            std::array<double, 3>{to.X() - from.X(), to.Y() - from.Y(), to.Z() - from.Z()};
+    }
     return result;
+}
+
+TopoDS_Shape edgePoint(const TopoDS_Shape& edge, EdgePoint which) {
+    if (edge.IsNull() || edge.ShapeType() != TopAbs_EDGE)
+        return {};
+    const BRepAdaptor_Curve curve(TopoDS::Edge(edge));
+    if (which == EdgePoint::center) {
+        if (curve.GetType() != GeomAbs_Circle)
+            return {};
+        return BRepBuilderAPI_MakeVertex(curve.Circle().Location()).Vertex();
+    }
+    // Half the length along the curve, not the parameter middle (a B-spline is not uniform).
+    const double length = GCPnts_AbscissaPoint::Length(curve);
+    const GCPnts_AbscissaPoint half(curve, length / 2, curve.FirstParameter());
+    const double parameter =
+        half.IsDone() ? half.Parameter() : (curve.FirstParameter() + curve.LastParameter()) / 2;
+    return BRepBuilderAPI_MakeVertex(curve.Value(parameter)).Vertex();
 }
 
 } // namespace voelund::kernel

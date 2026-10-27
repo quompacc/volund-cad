@@ -444,6 +444,8 @@ class CadViewport final : public CadViewportBase {
     void setGridVisible(bool visible);
     void setDisplayStyle(DisplayStyle style);        // N06
     void setSelectionFilter(SelectionFilter filter); // W07
+    // N08: body corners take clicks too (measuring); reported like an edge.
+    void setVertexPicking(bool enabled);
     [[nodiscard]] SelectionFilter selectionFilter() const noexcept;
     [[nodiscard]] DisplayStyle displayStyle() const noexcept;
     [[nodiscard]] bool isGridVisible() const noexcept;

@@ -51,6 +51,16 @@ void CadViewport::setSelectionFilter(SelectionFilter filter) {
 
 SelectionFilter CadViewport::selectionFilter() const noexcept { return impl_->selectionFilter; }
 
+void CadViewport::setVertexPicking(bool enabled) {
+    performViewportOperation(*this, impl_->ready, [&] {
+        if (impl_->vertexPicking == enabled)
+            return;
+        impl_->vertexPicking = enabled;
+        impl_->applySelectionFilter();
+        update();
+    });
+}
+
 void CadViewport::setSectionHandler(
     std::function<void(const SectionPlane&, bool finished)> handler) {
     impl_->section.setHandler(std::move(handler));

@@ -114,11 +114,11 @@ void surfaces() {
                                       "solid.modify.mirror",
                                       "solid.modify.pattern_linear",
                                       "solid.modify.pattern_circular",
-                                      "solid.inspect.measure"};
+                                      "solid.inspect.measure",
+                                      "solid.inspect.interference"}; // N08
     require(railIds == solid, "The rail shows every solid command");
     require(!command(window, "solid.create.sketch")->isEnabled(),
             "Unfitting commands stay visible but disabled");
-
     // The context bar uses the window's own actions, and each is reachable elsewhere.
     const auto contextActions = buttons(*bar);
     require(contextActions.size() == 3, "Empty document context bar");

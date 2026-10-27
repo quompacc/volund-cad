@@ -39,7 +39,6 @@ cyclomatic | src/document/NativeSketchGeometry.cpp | voelund::document::detail::
 cyclomatic | src/features/SketchContourGraph.cpp | voelund::features::buildSketchContourGraph | 36 | Altbestand vor A04
 cyclomatic | src/desktop/TimelineBar.cpp | voelund::desktop::TimelineBar::eventFilter | 35 | Altbestand vor A04
 cyclomatic | src/features/SketchIntersections.cpp | voelund::features::splitSketchIntersections | 32 | Altbestand vor A04
-cyclomatic | src/desktop/MainWindowState.hpp | voelund::desktop::MainWindow::Impl::shell | 32 | Altbestand vor A04
 cyclomatic | src/desktop/SketchExtrusionToolController.cpp | voelund::desktop::SketchExtrusionToolController::choose | 31 | Altbestand vor A04
 cyclomatic | src/document/NativeAttributeValues.cpp | voelund::document::detail::validateNativeAttributeValue | 31 | Altbestand vor A04
 cyclomatic | src/document/NativeSketchSupport.cpp | voelund::document::detail::readNativeSubshapeOrigin | 30 | Altbestand vor A04
@@ -138,7 +137,6 @@ cyclomatic | src/application/CadSessionSketchProfiles.cpp | voelund::application
 cyclomatic | src/application/CadSessionSketchProfiles.cpp | voelund::application::CadSession::selectSketchProfileAt | 14 | Altbestand vor A04
 cyclomatic | src/application/SketchEditorAcceptance.cpp | voelund::application::SketchEditorSession::tryAccept | 14 | Altbestand vor A04
 cyclomatic | src/desktop/AutosaveController.cpp | voelund::desktop::AutosaveController::poll | 14 | Altbestand vor A04
-cyclomatic | src/desktop/MeasureToolController.cpp | voelund::desktop::MeasureToolController::report | 14 | Altbestand vor A04
 cyclomatic | src/desktop/ReferenceRepairDialog.cpp | voelund::desktop::ReferenceRepairDialog::populate | 14 | Altbestand vor A04
 cyclomatic | src/desktop/SketchEditorParameters.cpp | voelund::desktop::SketchEditorToolController::applyParameter | 14 | Altbestand vor A04
 cyclomatic | src/desktop/SketchEditorStart.cpp | voelund::desktop::SketchEditorToolController::beginSelectedSketch | 14 | Altbestand vor A04

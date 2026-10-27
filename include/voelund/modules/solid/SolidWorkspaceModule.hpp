@@ -50,6 +50,9 @@ struct SolidCommandServices final {
     // M12: measures picked edges and faces; enabled while the model is current.
     std::function<void()> measure{};
     std::function<bool()> canMeasure{};
+    // N08: checks bodies for overlaps; enabled like measuring.
+    std::function<void()> interference{};
+    std::function<bool()> canInterference{};
     // M20: turns the selected sketch regions about an axis; enabled like the extrusion.
     std::function<void()> revolve{};
     // M23: sweeps the selected sketch regions along an earlier sketch; enabled like the extrusion.
@@ -77,6 +80,8 @@ class SolidWorkspaceModule final : public workspaces::WorkspaceModule {
     [[nodiscard]] std::span<const workspaces::CommandDescriptor> commands() const override;
 
   private:
+    void addInspectCommands(SolidCommandServices& services); // M12 measure, N08 interference
+
     std::vector<workspaces::CommandDescriptor> commands_;
 };
 

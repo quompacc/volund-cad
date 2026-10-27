@@ -175,6 +175,8 @@ class CadViewportScene {
             context->Activate(shape, AIS_Shape::SelectionMode(TopAbs_FACE));
         if (selectionFilter.edges)
             context->Activate(shape, AIS_Shape::SelectionMode(TopAbs_EDGE));
+        if (vertexPicking) // N08
+            context->Activate(shape, AIS_Shape::SelectionMode(TopAbs_VERTEX));
     }
     // W07: the selection filter on what is shown now.
     void applySelectionFilter() {
@@ -407,7 +409,9 @@ class CadViewportScene {
     // A body edge picked without a tool (user request 2026-10-13), as in any CAD.
     bool pickBodyEdge(const occ::handle<SelectMgr_EntityOwner>& detected, bool additive) {
         const auto edge = occ::handle<StdSelect_BRepOwner>::DownCast(detected);
-        if (edge.IsNull() || edge->Shape().ShapeType() != TopAbs_EDGE || !edgeSelectionHandler)
+        if (edge.IsNull() || !edgeSelectionHandler ||
+            (edge->Shape().ShapeType() != TopAbs_EDGE &&
+             edge->Shape().ShapeType() != TopAbs_VERTEX)) // N08: a corner while measuring
             return false;
         for (const auto& presentation : presentations)
             if (presentation.shape == edge->Selectable()) {
@@ -518,6 +522,7 @@ class CadViewportScene {
     } clickCycle;
     std::uint64_t sceneChanges{0};
     SelectionFilter selectionFilter; // W07
+    bool vertexPicking{false};       // N08
     std::function<bool()> clickCycleAllowed;
     // The click right after the last one, at its place, with the view unchanged.
     [[nodiscard]] bool repeatsClick(QPoint position, const gp_Pnt& eye) const {

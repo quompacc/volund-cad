@@ -87,6 +87,7 @@ const std::set<std::string> commandTable{"app.about",
                                          "solid.modify.pattern_linear",
                                          "solid.modify.pattern_circular",
                                          "solid.inspect.measure",
+                                         "solid.inspect.interference", // N08
                                          "solid.modify.shell",
                                          "solid.modify.draft",
                                          "solid.create.datum_plane",

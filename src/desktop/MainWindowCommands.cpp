@@ -278,18 +278,7 @@ void MainWindow::createCommands() {
         impl_->mirrorTool->begin(*producer, face);
         syncShell();
     };
-    // M12: measuring changes nothing; it needs a current model with a body.
-    services.measure = [this]() {
-        if (impl_->sketchExtrusionTool->isActive())
-            impl_->sketchExtrusionTool->cancel();
-        clearEdgeSelection();
-        impl_->measureTool->begin();
-        syncShell();
-    };
-    services.canMeasure = [this]() {
-        return impl_->session.sceneStatus().isCurrent() && !impl_->session.validBodies().empty() &&
-               !impl_->shell().toolBlocksCommands();
-    };
+    addInspectServices(services); // M12, N08
     services.canPattern = [this]() {
         return (impl_->selectedPlanarFace.has_value() && impl_->shell().canSketch()) ||
                ((impl_->session.selectedBodyProducer().has_value() || impl_->edgeSupport) &&

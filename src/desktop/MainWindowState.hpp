@@ -15,6 +15,7 @@
 #include "FilletToolController.hpp"
 #include "FloatingCard.hpp"
 #include "HoleToolController.hpp"
+#include "InterferenceToolController.hpp"
 #include "MainWindowSupport.hpp"
 #include "MeasureToolController.hpp"
 #include "MirrorToolController.hpp"
@@ -37,6 +38,8 @@
 #include "ViewVisibility.hpp"
 #include <QAction>
 #include <QElapsedTimer>
+#include <algorithm>
+#include <array>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -61,6 +64,18 @@ class MainWindow::Impl final {
     [[nodiscard]] bool toolOpen(const ShellState& state) const {
         return state.tool != ShellTool::none || toolPanel->isActive();
     }
+    // A tool with its own panel is open (each flips its flag around the panel calls).
+    template <class Tool> static bool on(const std::unique_ptr<Tool>& tool) {
+        return tool && tool->isActive();
+    }
+    [[nodiscard]] bool panelToolActive() const {
+        const std::array open{
+            on(sketchExtrusionTool), on(pushPullTool), on(filletTool), on(holeTool),
+            on(combineTool),         on(datumTool),    on(shellTool),  on(draftTool),
+            on(mirrorTool),          on(patternTool),  on(moveTool),   on(measureTool),
+            on(interferenceTool)};
+        return std::ranges::any_of(open, [](bool active) { return active; });
+    }
     [[nodiscard]] ShellState shell() const {
         ShellInputs inputs;
         inputs.basePlane = selectedDatum;
@@ -76,14 +91,7 @@ class MainWindow::Impl final {
         }
         if (sketchEditorTool && sketchEditorTool->isActive())
             inputs.tool = ShellTool::sketchEditor;
-        else if ((sketchExtrusionTool && sketchExtrusionTool->isActive()) ||
-                 (pushPullTool && pushPullTool->isActive()) ||
-                 (filletTool && filletTool->isActive()) || (holeTool && holeTool->isActive()) ||
-                 (combineTool && combineTool->isActive()) || (datumTool && datumTool->isActive()) ||
-                 (shellTool && shellTool->isActive()) || (draftTool && draftTool->isActive()) ||
-                 (mirrorTool && mirrorTool->isActive()) ||
-                 (patternTool && patternTool->isActive()) || (moveTool && moveTool->isActive()) ||
-                 (measureTool && measureTool->isActive()))
+        else if (panelToolActive())
             inputs.tool = ShellTool::extrusion; // Its panel carries the controls (T04c).
         else if (transformAction && transformAction->isChecked())
             inputs.tool = ShellTool::transform;
@@ -104,17 +112,18 @@ class MainWindow::Impl final {
     ToolPanelHost* toolPanel{nullptr};
     std::unique_ptr<SketchEditorToolController> sketchEditorTool;
     std::unique_ptr<SketchExtrusionToolController> sketchExtrusionTool;
-    std::unique_ptr<PushPullToolController> pushPullTool; // T04c
-    std::unique_ptr<FilletToolController> filletTool;     // M06
-    std::unique_ptr<HoleToolController> holeTool;         // M08
-    std::unique_ptr<CombineToolController> combineTool;   // M21
-    std::unique_ptr<DatumToolController> datumTool;       // M19
-    std::unique_ptr<ShellToolController> shellTool;       // M22
-    std::unique_ptr<DraftToolController> draftTool;       // M25
-    std::unique_ptr<MirrorToolController> mirrorTool;     // M09
-    std::unique_ptr<PatternToolController> patternTool;   // M10
-    std::unique_ptr<MoveToolController> moveTool;         // M11
-    std::unique_ptr<MeasureToolController> measureTool;   // M12
+    std::unique_ptr<PushPullToolController> pushPullTool;         // T04c
+    std::unique_ptr<FilletToolController> filletTool;             // M06
+    std::unique_ptr<HoleToolController> holeTool;                 // M08
+    std::unique_ptr<CombineToolController> combineTool;           // M21
+    std::unique_ptr<DatumToolController> datumTool;               // M19
+    std::unique_ptr<ShellToolController> shellTool;               // M22
+    std::unique_ptr<DraftToolController> draftTool;               // M25
+    std::unique_ptr<MirrorToolController> mirrorTool;             // M09
+    std::unique_ptr<PatternToolController> patternTool;           // M10
+    std::unique_ptr<MoveToolController> moveTool;                 // M11
+    std::unique_ptr<MeasureToolController> measureTool;           // M12
+    std::unique_ptr<InterferenceToolController> interferenceTool; // N08
     // User request 2026-10-13: edges picked before a tool, on the body `edgeSupport` names.
     std::optional<document::FeatureId> edgeSupport;
     std::vector<document::FilletEdge> selectedEdges;

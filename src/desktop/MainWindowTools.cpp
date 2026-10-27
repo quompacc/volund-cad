@@ -86,9 +86,7 @@ void MainWindow::createToolPanel() {
         impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
         [this](const QString& message) { statusBar()->showMessage(message); });
     impl_->moveTool->setPreviewHandler(showPreview);
-    impl_->measureTool = std::make_unique<MeasureToolController>( // M12
-        impl_->session, *impl_->viewport, *impl_->toolPanel,
-        [this](const QString& message) { statusBar()->showMessage(message); });
+    createInspectTools();                                     // M12, N08
     impl_->datumTool = std::make_unique<DatumToolController>( // M19
         impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
         [this](const QString& message) { statusBar()->showMessage(message); });
