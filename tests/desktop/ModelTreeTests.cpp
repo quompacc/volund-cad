@@ -57,7 +57,7 @@ void timeline(application::CadSession& session, desktop::MainWindow& window) {
                 step(*bar, 1).text().endsWith(QStringLiteral("Extrusion 1")) &&
                 step(*bar, 2).text().endsWith(QStringLiteral("Quader 1")),
             "Steps follow the document order");
-    const auto stamp = session.sceneStatus().document;
+    const auto stamp = session.identifiedSnapshot().snapshot(); // W08: content, not stamp
     // M04 (user decision 2026-10-12): a sketch extrusion's step reopens its panel; Cancel
     // returns to the selected extrusion and its properties.
     step(*bar, 1).click();
@@ -69,7 +69,7 @@ void timeline(application::CadSession& session, desktop::MainWindow& window) {
     QApplication::processEvents();
     auto* properties = window.findChild<QWidget*>(QStringLiteral("featurePropertiesCard"));
     require(!panel->isVisible() && session.selectedFeature() == features[1].id &&
-                properties->isVisible() && session.sceneStatus().document == stamp,
+                properties->isVisible() && session.identifiedSnapshot().snapshot() == stamp,
             "Cancel selects the extrusion, shows its properties, keeps the document");
     step(*bar, 2).click();
     QApplication::processEvents();
@@ -82,7 +82,7 @@ void timeline(application::CadSession& session, desktop::MainWindow& window) {
             "A sketch step opens the sketch editor");
     panel->findChild<QPushButton*>(QStringLiteral("toolCancelButton"))->click();
     QApplication::processEvents();
-    require(!panel->isVisible() && session.sceneStatus().document == stamp,
+    require(!panel->isVisible() && session.identifiedSnapshot().snapshot() == stamp,
             "Cancel leaves the document unchanged");
 }
 

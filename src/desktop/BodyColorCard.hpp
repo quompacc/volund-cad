@@ -14,6 +14,7 @@
 class QToolButton;
 
 namespace voelund::desktop {
+class BodyMaterialSection;
 
 // N06 (user decision 2026-10-23): the properties of a selected body: its colour from ten
 // swatches, "Eigene…" (a colour dialog) or "Standard" (the theme's colour). The card shows the
@@ -28,6 +29,7 @@ class BodyColorCard final : public FloatingCard {
     [[nodiscard]] static const std::array<std::uint32_t, 10>& palette() noexcept;
     void setChoiceHandler(Choice handler) { choice_ = std::move(handler); }
     void display(const QString& bodyName, std::optional<std::uint32_t> color);
+    [[nodiscard]] BodyMaterialSection& material() const noexcept { return *material_; } // N07
 
   private:
     void chooseCustom();
@@ -35,6 +37,7 @@ class BodyColorCard final : public FloatingCard {
     std::vector<QToolButton*> swatches_;
     QToolButton* custom_{nullptr};
     QToolButton* standard_{nullptr};
+    BodyMaterialSection* material_{nullptr};
     std::optional<std::uint32_t> color_;
     Choice choice_;
 };

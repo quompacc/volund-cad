@@ -86,6 +86,7 @@ add_library(
     BodyColorCard.cpp
     DisplayStyleMenu.cpp
     SelectionFilterMenu.cpp
+    BodyMaterialSection.cpp
     ShellState.cpp
     SketchToolActions.cpp
     SketchViewAdapter.cpp

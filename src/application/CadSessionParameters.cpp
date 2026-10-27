@@ -214,6 +214,16 @@ CommandResult CadSession::setBodyColor(document::BodyId body, std::optional<std:
         ErrorDisposition::reject);
 }
 
+// N07: one undo step; the geometry stays, only the mass changes.
+CommandResult CadSession::setBodyMaterial(document::BodyId body,
+                                          std::optional<document::BodyMaterial> material) {
+    return commitParameterEdit(
+        [&](document::ModelDocument& candidate) {
+            return candidate.setBodyMaterial(body, std::move(material));
+        },
+        ErrorDisposition::reject);
+}
+
 bool CadSession::setBodyHidden(document::BodyId body, bool hidden) {
     if (!document_.setBodyHidden(body, hidden))
         return false;

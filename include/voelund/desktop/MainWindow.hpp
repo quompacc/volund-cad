@@ -12,6 +12,7 @@
 #include <memory>
 #include <optional>
 #include <vector>
+#include <voelund/document/BodyAttributes.hpp>
 #include <voelund/document/BodyId.hpp>
 
 class QCloseEvent;
@@ -80,6 +81,8 @@ class MainWindow final : public QMainWindow {
     void createBodyCommands();
     void createBodyAppearance(); // N06: colour card and display style (MainWindowBodies.cpp)
     void colorBodies(std::optional<std::uint32_t> color);
+    void giveMaterial(std::optional<document::BodyMaterial> material); // N07
+    void showMassProperties();                                         // N07
     void syncBodyCard(bool shown);
     void syncBodyCommands();
     void selectBody(std::uint64_t id, bool keepGroup = false);
@@ -152,6 +155,8 @@ class MainWindow final : public QMainWindow {
     void pickEdge(std::uint64_t body, const TopoDS_Shape& edge, bool additive);
     void pickEdgeChain(std::uint64_t body, const TopoDS_Shape& edge); // W07
     void connectEdgePicking();
+    void rollToEdited();        // W08
+    void restoreEditRollback(); // W08
     void clearEdgeSelection();
     void createAssistant();
     void createAssistantPanel();

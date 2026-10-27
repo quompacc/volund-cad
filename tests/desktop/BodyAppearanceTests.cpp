@@ -7,7 +7,10 @@
 
 #include <QAction>
 #include <QApplication>
+#include <QComboBox>
 #include <QDir>
+#include <QDoubleSpinBox>
+#include <QLabel>
 #include <QSettings>
 #include <QToolButton>
 #include <QTreeWidget>
@@ -106,6 +109,39 @@ void colors(QWidget& window, viewport::CadViewport& viewport, application::CadSe
     require(bodyColor() == std::optional<std::uint32_t>{0xC0392B}, "Undo brings the red back");
 }
 
+// N07: the body card gives the 40 x 20 x 10 plate steel: 62.8 g, centroid (20, 10, 5); a
+// density of its own weighs it again; the choice is one undo step.
+void materials(QWidget& window, application::CadSession& session) {
+    auto& tree = child<QTreeWidget>(window, "modelTree");
+    for (QTreeWidgetItemIterator it(&tree); *it != nullptr; ++it)
+        if ((*it)->data(0, Qt::UserRole + 2).toInt() == 3)
+            tree.setCurrentItem(*it);
+    test::settleEvents();
+    auto& material = child<QComboBox>(window, "bodyMaterial");
+    auto& properties = child<QLabel>(window, "bodyMassProperties");
+    require(material.isVisible() && properties.text().contains(QStringLiteral("ohne Material")) &&
+                properties.text().contains(QStringLiteral("Volumen: 8.000,000 mm³")),
+            "Without material: volume, no mass");
+    material.setCurrentIndex(1);
+    emit material.activated(1); // Stahl
+    test::settleEvents();
+    const auto given = session.modelOutline().bodies.front().material;
+    require(given && given->key == "steel" && session.canUndo(), "Steel in the document");
+    require(properties.text().contains(QStringLiteral("Masse: 62,800 g")) &&
+                properties.text().contains(QStringLiteral("Schwerpunkt: 20,000; 10,000; 5,000")),
+            "Steel plate: 62.8 g at its centre");
+    const int custom = material.count() - 1;
+    material.setCurrentIndex(custom);
+    emit material.activated(custom);
+    auto& density = child<QDoubleSpinBox>(window, "bodyDensity");
+    density.setValue(2.0);
+    emit density.editingFinished();
+    test::settleEvents();
+    require(properties.text().contains(QStringLiteral("Masse: 16,000 g")),
+            "Own density 2 g/cm³: 16 g");
+    capture(window, "n07-body-material.png");
+}
+
 void run() {
     application::CadSession session;
     desktop::MainWindow window(session);
@@ -121,7 +157,9 @@ void run() {
     test::render(*viewport);
     styles(window, *viewport, session);
     colors(window, *viewport, session);
-    std::cout << "PASS N06 display styles and body colour through the shell" << std::endl;
+    materials(window, session);
+    std::cout << "PASS N06 display styles and body colour, N07 material and mass through the shell"
+              << std::endl;
 }
 } // namespace
 

@@ -110,7 +110,7 @@ void run() {
             "Top edge rounded by 4");
     require(matches(volume(session), plateVolume(10)), "Plate with its fillet");
     window.refreshAfterExternalChange();
-    const auto revision = session.sceneStatus().document;
+    const auto before = session.identifiedSnapshot().snapshot(); // W08: content, not stamp
 
     const auto reopen = [&] {
         timelineStep(window, 1).click();
@@ -125,7 +125,7 @@ void run() {
             "3 high the fillet no longer fits: OK waits, keeping with errors is offered");
     button(window, "toolCancelButton").click();
     settle();
-    require(panel(window) == nullptr && session.sceneStatus().document == revision &&
+    require(panel(window) == nullptr && session.identifiedSnapshot().snapshot() == before &&
                 matches(volume(session), plateVolume(10)),
             "Cancel leaves the whole chain as it was");
 

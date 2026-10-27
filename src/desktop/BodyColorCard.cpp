@@ -3,6 +3,8 @@
 
 #include "BodyColorCard.hpp"
 
+#include "BodyMaterialSection.hpp"
+
 #include <QColor>
 #include <QColorDialog>
 #include <QGridLayout>
@@ -62,6 +64,8 @@ BodyColorCard::BodyColorCard(QWidget& host) : FloatingCard(host, QStringLiteral(
     row->addWidget(standard_);
     row->addStretch(1);
     body().addLayout(row);
+    material_ = new BodyMaterialSection(this); // N07
+    body().addWidget(material_);
 }
 
 const std::array<std::uint32_t, 10>& BodyColorCard::palette() noexcept {

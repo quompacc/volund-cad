@@ -99,7 +99,7 @@ FeatureId ModelDocument::addImportFeature(std::string name, ImportParameters par
         FeatureDescriptor{id, FeatureKind::stepImport, std::move(name), std::nullopt});
     candidate.parameters.emplace_back(std::move(parameters));
     setBodyAttributes(candidate.bodyAttributes, id.value(),
-                      BodyAttributes{names[0], false, colors[0]});
+                      BodyAttributes{names[0], false, colors[0], {}});
     for (std::size_t index = 1; index <= parts; ++index) {
         const FeatureId part{id.value() + index};
         candidate.features.push_back(
@@ -107,7 +107,7 @@ FeatureId ModelDocument::addImportFeature(std::string name, ImportParameters par
         candidate.parameters.emplace_back(
             ImportPartParameters{id, static_cast<std::uint32_t>(index)});
         setBodyAttributes(candidate.bodyAttributes, part.value(),
-                          BodyAttributes{names[index], false, colors[index]});
+                          BodyAttributes{names[index], false, colors[index], {}});
     }
     static_cast<void>(featureBodyContexts(candidate.features, candidate.parameters));
     validateBodyAttributes(candidate.bodyAttributes, candidate.features, candidate.parameters);

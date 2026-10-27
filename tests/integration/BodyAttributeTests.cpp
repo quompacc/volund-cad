@@ -4,9 +4,12 @@
 #include "../TestPaths.hpp"
 
 #include <voelund/application/CadSession.hpp>
+#include <voelund/kernel/MassProperties.hpp>
 
+#include <cmath>
 #include <filesystem>
 #include <iostream>
+#include <span>
 #include <stdexcept>
 #include <string>
 
@@ -120,16 +123,57 @@ void colors() {
                 !body(loaded, box).color,
             "None returns to the theme colour");
 }
+// N07 (schema 42): the material is one undo step with its density, refused out of range, kept
+// by Save/Open; the 10 mm steel cube weighs 7.85 g.
+void materials() {
+    application::CadSession session;
+    session.newDocument();
+    require(session.createBoxFeature({10, 10, 10}).status() == CommandStatus::committed, "Box");
+    const BodyId box{session.features().back().id.value()};
+    const document::BodyMaterial steel{"steel", 7.85};
+    require(session.setBodyMaterial(box, steel).status() == CommandStatus::committed &&
+                body(session, box).material == steel && session.isModified(),
+            "Steel given");
+    const auto cube = kernel::massProperties(session.validBodies().front().shape);
+    const kernel::WeightedBody weighed{cube, body(session, box).material->density};
+    require(std::abs(kernel::combineMasses(std::span(&weighed, 1)).mass - 7.85) < 1e-9,
+            "The 10 mm steel cube weighs 7.85 g");
+    require(session.undo().status() == CommandStatus::committed && !body(session, box).material,
+            "Undo takes the material away");
+    require(session.redo().status() == CommandStatus::committed &&
+                body(session, box).material == steel,
+            "Redo gives it again");
+    require(session.setBodyMaterial(box, document::BodyMaterial{"custom", 50}).status() !=
+                CommandStatus::committed,
+            "A density beyond 30 g/cm³ is refused");
+    require(session.setBodyMaterial(box, document::BodyMaterial{"", 2}).status() !=
+                CommandStatus::committed,
+            "A material without key is refused");
+    const document::BodyMaterial own{"custom", 1.5};
+    require(session.setBodyColor(box, 0x1F6FEB).status() == CommandStatus::committed &&
+                session.setBodyMaterial(box, own).status() == CommandStatus::committed,
+            "Colour and a density of its own");
+    const auto path = test::temporaryFilePath("voelund-n07-material.volund");
+    session.saveDocument(path);
+    application::CadSession loaded;
+    loaded.loadDocument(path);
+    std::error_code ignored;
+    std::filesystem::remove(path, ignored);
+    require(body(loaded, box).material == own &&
+                body(loaded, box).color == std::optional<std::uint32_t>{0x1F6FEB},
+            "Save/Open keeps material and colour");
+}
 } // namespace
 
 int main() {
     try {
         run();
         colors();
+        materials();
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';
         return 1;
     }
-    std::cout << "PASS M01 body names and visibility, N06 body colour\n";
+    std::cout << "PASS M01 body names and visibility, N06 body colour, N07 material\n";
     return 0;
 }

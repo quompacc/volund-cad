@@ -31,6 +31,12 @@ class DocumentSnapshot final {
     // M14: the rollback marker stands after this feature; later ones are not evaluated. None
     // when the whole history is evaluated. Stored, but no model content (see matchesContent).
     [[nodiscard]] std::optional<FeatureId> rollbackAfter() const noexcept { return rollbackAfter_; }
+    // W08: the same content with the marker elsewhere (none: the whole history).
+    [[nodiscard]] DocumentSnapshot withRollback(std::optional<FeatureId> marker) const {
+        auto moved = *this;
+        moved.rollbackAfter_ = marker;
+        return moved;
+    }
     // Borrowed read-only views remain valid while this snapshot is alive and unchanged.
     [[nodiscard]] const FeatureParameters& featureParameters(FeatureId id) const;
     [[nodiscard]] const BoxParameters& boxParameters(FeatureId id) const;

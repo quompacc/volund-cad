@@ -18,11 +18,13 @@
 #include <QAction>
 #include <QMenu>
 #include <QMessageBox>
+#include <QMetaObject>
 #include <QPushButton>
 #include <QSignalBlocker>
 #include <QStatusBar>
 #include <QStringList>
 #include <set>
+#include <utility>
 
 // U06: view state from the model tree (origins, planes, grid, body visibility) and picks of
 // base planes from the tree or the viewport.
@@ -425,6 +427,36 @@ void MainWindow::moveRollback(std::optional<document::FeatureId> after) {
     refreshScene();
     statusBar()->showMessage(after ? tr("Zurückgerollt") : tr("Historie bis zum Ende berechnet"),
                              2000);
+}
+
+// W08 (as Fusion): a step opened in its tool rolls the model back to just after it while the
+// tool is open, so later steps neither show nor get in the way; OK or Cancel puts the marker
+// back where it was. Like the marker itself no undo step and no unsaved change. Not for a
+// sketch: its commit carries the later extrusions' regions along, which needs them evaluated.
+void MainWindow::rollToEdited() {
+    const auto selected = impl_->session.selectedFeature();
+    if (!selected || impl_->editRollback ||
+        impl_->session.selectedFeatureDescriptor().kind == document::FeatureKind::sketch)
+        return;
+    const auto marker = impl_->session.rollbackAfter();
+    const auto features = impl_->session.features();
+    const bool last = !features.empty() && features.back().id == *selected;
+    if (marker == selected || (!marker && last) || !impl_->session.setRollback(*selected))
+        return;
+    impl_->editRollback = marker;
+    impl_->session.setEditCheck(marker);
+    refreshScene();
+    // A tool that did not open (refused) leaves nothing rolled back.
+    QMetaObject::invokeMethod(this, [this] { restoreEditRollback(); }, Qt::QueuedConnection);
+}
+
+void MainWindow::restoreEditRollback() {
+    if (!impl_->editRollback || impl_->toolOpen(impl_->shell()))
+        return;
+    const auto marker = *std::exchange(impl_->editRollback, std::nullopt);
+    impl_->session.setEditCheck(std::nullopt);
+    if (impl_->session.setRollback(marker))
+        refreshScene();
 }
 
 // M16 (user decision 2026-10-16): without dependents the feature goes at once; otherwise a

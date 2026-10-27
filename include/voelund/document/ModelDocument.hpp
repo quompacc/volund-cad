@@ -634,6 +634,8 @@ class ModelDocument final {
     [[nodiscard]] bool setBodyHidden(BodyId body, bool hidden);
     // N06: none restores the theme's colour; one undo step.
     [[nodiscard]] bool setBodyColor(BodyId body, std::optional<std::uint32_t> color);
+    // N07: none takes the material away; one undo step.
+    [[nodiscard]] bool setBodyMaterial(BodyId body, std::optional<BodyMaterial> material);
     [[nodiscard]] bool canUndo() const noexcept;
     [[nodiscard]] bool canRedo() const noexcept;
     [[nodiscard]] bool undo();

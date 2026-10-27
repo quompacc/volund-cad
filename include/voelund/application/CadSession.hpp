@@ -3,6 +3,8 @@
 
 #pragma once
 #include <voelund/application/CommandTransaction.hpp>
+#include <voelund/application/ExtrusionSelectionState.hpp>
+#include <voelund/application/FeatureRuntimeState.hpp>
 #include <voelund/application/FieldBindingRequest.hpp>
 #include <voelund/application/SceneStatus.hpp>
 #include <voelund/application/SketchReferenceInspection.hpp>
@@ -30,26 +32,6 @@
 #include <vector>
 
 namespace voelund::application {
-// M14: suppressed is no error; the feature is skipped on purpose.
-enum class FeatureRuntimeStatus { current, error, blocked, suppressed, rolledBack };
-
-struct FeatureRuntimeState final {
-    document::FeatureId id;
-    FeatureRuntimeStatus status;
-    std::string message;
-    std::string code{}; // U15: features::EvaluationIssue::code, for the shell's own wording
-};
-
-struct ExtrusionRegionState final {
-    document::SketchRegionId region;
-    features::SketchRegionReferenceStatus status;
-};
-struct ExtrusionSelectionState final {
-    std::vector<document::SketchProfileId> legacyProfiles; // Evaluated as before; needs repair.
-    std::vector<ExtrusionRegionState> regions;
-    [[nodiscard]] bool needsRepair() const noexcept;
-};
-
 // U06: features grouped by the body they work on, both in document order. Features that
 // belong to no body (invalid documents) stay loose.
 struct OutlineBody final {
@@ -59,6 +41,7 @@ struct OutlineBody final {
     std::string name{};
     bool hidden{false};
     std::optional<std::uint32_t> color{};
+    std::optional<document::BodyMaterial> material{}; // N07
     bool consumed{false}; // M21: combined into another body (its tools are not kept)
 };
 struct ModelOutline final {
@@ -380,6 +363,9 @@ class CadSession final {
     // unsaved change; the model shows the state at the marker.
     [[nodiscard]] bool setRollback(std::optional<document::FeatureId> featureId);
     [[nodiscard]] std::optional<document::FeatureId> rollbackAfter() const noexcept;
+    // W08: while a tool edits an earlier step (rolled back to it), commits and previews check
+    // the history up to `marker` for errors, as without the rollback; nullopt ends it.
+    void setEditCheck(std::optional<std::optional<document::FeatureId>> marker);
     // M16 (CadSessionHistoryEdit.cpp): moves a feature after `after` (or to the front); refused
     // when it would stand before what it needs or when a feature would fail. One undo step.
     [[nodiscard]] CommandResult moveFeature(document::FeatureId featureId,
@@ -494,6 +480,8 @@ class CadSession final {
     [[nodiscard]] CommandResult renameBody(document::BodyId body, std::string name);
     [[nodiscard]] bool setBodyHidden(document::BodyId body, bool hidden);
     [[nodiscard]] CommandResult setBodyColor(document::BodyId body, std::optional<std::uint32_t>);
+    [[nodiscard]] CommandResult setBodyMaterial(document::BodyId body,
+                                                std::optional<document::BodyMaterial> material);
     [[nodiscard]] CommandResult setParameterComment(document::ParameterId id, std::string comment);
     [[nodiscard]] CommandResult
     deleteParameter(document::ParameterId id,
@@ -574,6 +562,9 @@ class CadSession final {
     [[nodiscard]] bool mirrorParameter(document::ModelDocument& candidate,
                                        document::ParameterId id) const;
     [[nodiscard]] bool recompute();
+    [[nodiscard]] std::shared_ptr<const features::FeatureGraphEvaluation>
+    checkedEvaluation(const document::DocumentSnapshot& snapshot,
+                      std::shared_ptr<const features::FeatureGraphEvaluation> shown);
     void normalizeSelection() noexcept;
     [[nodiscard]] std::string serializedDocument() const;
     void loadFrom(std::istream& input, std::filesystem::path file, bool keepCleanState,
@@ -582,6 +573,8 @@ class CadSession final {
     document::ModelDocument document_;
     features::FeatureGraph featureGraph_;
     std::shared_ptr<const features::FeatureGraphEvaluation> evaluation_;
+    std::optional<std::optional<document::FeatureId>> editCheck_; // W08
+    std::shared_ptr<const features::FeatureGraphEvaluation> editCheckEvaluation_;
     TopoDS_Shape currentShape_;
     std::vector<features::EvaluatedBody> currentBodies_;
     std::vector<features::EvaluatedFeature> currentFeatures_;

@@ -41,6 +41,24 @@ std::vector<document::FeatureId> changedFeatures(const document::ModelDocument& 
 }
 } // namespace
 
+// W08: what a command is checked against - the shown evaluation, or while an earlier step is
+// edited in its tool the history up to the marker the user had (cached apart, so only what
+// the edit affects is evaluated again).
+std::shared_ptr<const features::FeatureGraphEvaluation>
+CadSession::checkedEvaluation(const document::DocumentSnapshot& snapshot,
+                              std::shared_ptr<const features::FeatureGraphEvaluation> shown) {
+    if (!editCheck_)
+        return shown;
+    editCheckEvaluation_ =
+        featureGraph_.evaluateDetailed(snapshot.withRollback(*editCheck_), editCheckEvaluation_);
+    return editCheckEvaluation_;
+}
+
+void CadSession::setEditCheck(std::optional<std::optional<document::FeatureId>> marker) {
+    editCheck_ = marker;
+    editCheckEvaluation_.reset();
+}
+
 CommandResult CadSession::finishCandidate(document::DocumentTransaction& transaction,
                                           std::optional<document::FeatureId> selection,
                                           CommandKind kind, ErrorDisposition disposition,
@@ -49,10 +67,11 @@ CommandResult CadSession::finishCandidate(document::DocumentTransaction& transac
     if (const auto problem =
             detail::takePendingFields(transaction.edit(), document_, pendingFields_))
         return CommandResult::invalidInput(*problem);
-    auto evaluation = featureGraph_.evaluateDetailed(
-        document::DocumentSnapshot::capture(transaction.candidate()), evaluation_);
+    const auto snapshot = document::DocumentSnapshot::capture(transaction.candidate());
+    auto evaluation = featureGraph_.evaluateDetailed(snapshot, evaluation_);
+    const auto checked = checkedEvaluation(snapshot, evaluation); // W08
     auto states = detail::runtimeStates(evaluation->report);
-    auto report = evaluation->report;
+    auto report = checked->report;
     auto evaluated = evaluation->result;
     // Unchanged errors in unrelated branches do not require another error-acceptance action.
     const auto changed = changedFeatures(document_, transaction.candidate(), evaluation->snapshot);
@@ -64,9 +83,9 @@ CommandResult CadSession::finishCandidate(document::DocumentTransaction& transac
     for (std::size_t i = 0; i < report.features.size(); ++i)
         if (kind != CommandKind::newFeature && !structural && !affected[i])
             report.features[i].status = features::EvaluationStatus::valid;
-    CommandResult published(evaluation->valid() ? CommandStatus::committed
-                                                : CommandStatus::committedWithErrors,
-                            RejectionReason::none, evaluation->report);
+    CommandResult published(checked->valid() ? CommandStatus::committed
+                                             : CommandStatus::committedWithErrors,
+                            RejectionReason::none, checked->report);
     CommandTransaction command(kind, std::make_unique<SessionDocumentBackend>(transaction));
     auto result = command.finish(std::move(report), disposition);
     if (result.status() == CommandStatus::rejected) {

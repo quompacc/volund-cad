@@ -105,9 +105,9 @@ void MainWindow::createCommands() {
         }
     };
     services.editSketch = [this]() {
-        if (impl_->sketchExtrusionTool->isActive()) {
+        if (impl_->sketchExtrusionTool->isActive())
             impl_->sketchExtrusionTool->cancel();
-        }
+        rollToEdited(); // W08
         // M04: an extrusion reopens its panel; M06: a fillet its panel; a sketch its editor.
         const auto selected = impl_->session.selectedFeature();
         const auto kind = selected ? std::optional{impl_->session.selectedFeatureDescriptor().kind}
@@ -499,6 +499,7 @@ void MainWindow::createCommandSurfaces() {
                 // M04: an extrusion panel shows its sketch while open; afterwards tree,
                 // timeline, properties and view follow the selection again (an edited
                 // extrusion).
+                restoreEditRollback(); // W08: the tool that rolled back has ended
                 const auto selected = impl_->session.selectedFeature();
                 if (!impl_->shell().toolBlocksCommands() && selected)
                     selectFeature(selected->value());

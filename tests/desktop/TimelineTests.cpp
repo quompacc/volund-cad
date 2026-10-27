@@ -113,6 +113,41 @@ void dragMarker(QWidget& track, QPoint from, QPoint to) {
     settle();
 }
 
+void cancelPanel(QWidget& window) {
+    panel(window)->findChild<QPushButton*>(QStringLiteral("toolCancelButton"))->click();
+    settle();
+}
+
+// W08: a step edited in its tool rolls the model back to it; Cancel puts the marker back. A
+// sketch keeps the whole model (its commit follows the later extrusions' regions).
+void editRollback(desktop::MainWindow& window, application::CadSession& session,
+                  const std::vector<document::FeatureDescriptor>& features) {
+    key(*steps(window)[1], Qt::Key_Return);
+    require(panel(window) != nullptr, "Enter opens the extrusion's panel");
+    require(session.rollbackAfter() == features[1].id &&
+                steps(window)[2]->property("featureState") == QStringLiteral("rolledBack"),
+            "W08: while the extrusion is edited the model is rolled back to it");
+    cancelPanel(window);
+    require(!session.rollbackAfter() &&
+                steps(window)[2]->property("featureState").toString().isEmpty(),
+            "W08: Cancel puts the marker back at the end");
+    require(session.setRollback(features[0].id), "Rolled back before the extrusion");
+    window.refreshAfterExternalChange();
+    key(*steps(window)[1], Qt::Key_Return);
+    require(panel(window) != nullptr && session.rollbackAfter() == features[1].id,
+            "W08: a rolled back step opened shows up to it");
+    cancelPanel(window);
+    require(session.rollbackAfter() == features[0].id,
+            "W08: Cancel puts the marker back where it was");
+    require(session.setRollback(std::nullopt), "At the end again");
+    window.refreshAfterExternalChange();
+    settle();
+    key(*steps(window)[0], Qt::Key_Return);
+    require(panel(window) != nullptr && !session.rollbackAfter(),
+            "W08: the sketch editor keeps the whole model");
+    cancelPanel(window);
+}
+
 void run() {
     const auto directory = std::filesystem::temp_directory_path() / "voelund-m15-timeline";
     std::filesystem::remove_all(directory);
@@ -172,12 +207,7 @@ void run() {
     require(session.selectedFeature() == features.back().id, "End selects the last step");
     key(*steps(window).back(), Qt::Key_Home);
     require(session.selectedFeature() == features.front().id, "Home selects the first step");
-    key(*steps(window)[1], Qt::Key_Return);
-    require(panel(window) != nullptr, "Enter opens the extrusion's panel");
-    auto* cancel = panel(window)->findChild<QPushButton*>(QStringLiteral("toolCancelButton"));
-    require(cancel != nullptr, "Cancel button");
-    cancel->click();
-    settle();
+    editRollback(window, session, features);
 
     const bool undo = session.canUndo();
     auto* track = window.findChild<QWidget*>(QStringLiteral("timelineContent"));

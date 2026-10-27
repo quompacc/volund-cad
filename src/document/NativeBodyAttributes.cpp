@@ -8,21 +8,31 @@
 
 #include <TDataStd_AsciiString.hxx>
 #include <TDataStd_Integer.hxx>
+#include <TDataStd_Real.hxx>
 
 #include <charconv>
+#include <cmath>
 #include <set>
 #include <stdexcept>
 #include <string>
 
 namespace voelund::document {
 namespace {
-// A stored name and colour (N06) within their limits.
+// N07: a key within its length and a density within its range.
+bool validMaterial(const BodyMaterial& material) {
+    return !material.key.empty() && material.key.size() <= maximumMaterialKeyBytes &&
+           material.key.find('\0') == std::string::npos && std::isfinite(material.density) &&
+           material.density >= minimumDensity && material.density <= maximumDensity;
+}
+// A stored name, colour (N06) and material (N07) within their limits.
 void validateValues(const BodyAttributes& attributes) {
     if (attributes.name.size() > maximumBodyNameBytes ||
         attributes.name.find('\0') != std::string::npos)
         throw std::invalid_argument("Invalid body name");
     if (attributes.color && *attributes.color > maximumBodyColor)
         throw std::invalid_argument("Invalid body colour");
+    if (attributes.material && !validMaterial(*attributes.material))
+        throw std::invalid_argument("Invalid body material");
 }
 } // namespace
 
@@ -82,17 +92,40 @@ void writeNativeBodyAttributes(const TDF_Label& label, const BodyAttributeTable&
         TDataStd_Integer::Set(entry.FindChild(3), attributes.hidden ? 1 : 0);
         if (attributes.color)
             TDataStd_Integer::Set(entry.FindChild(4), static_cast<int>(*attributes.color));
+        if (attributes.material) { // N07 (schema 42)
+            TDataStd_AsciiString::Set(entry.FindChild(5), attributes.material->key.c_str());
+            TDataStd_Real::Set(entry.FindChild(6), attributes.material->density);
+        }
     }
 }
 
 // N06: the colour of an entry, when it has one (schema 38).
 std::optional<std::uint32_t> color(const TDF_Label& entry, int schemaVersion) {
-    if (entry.NbChildren() == 3)
+    if (entry.FindChild(4, false).IsNull())
         return std::nullopt;
-    require(entry.NbChildren() == 4 && schemaVersion >= 38);
+    require(schemaVersion >= 38);
     const int value = integer(child(entry, 4));
     require(value >= 0 && static_cast<std::uint32_t>(value) <= maximumBodyColor);
     return static_cast<std::uint32_t>(value);
+}
+
+// N07: the material of an entry, when it has one (schema 42): key and density.
+std::optional<BodyMaterial> material(const TDF_Label& entry, int schemaVersion) {
+    if (entry.FindChild(5, false).IsNull())
+        return std::nullopt;
+    require(schemaVersion >= 42);
+    Handle(TDataStd_Real) density;
+    require(child(entry, 6).FindAttribute(TDataStd_Real::GetID(), density));
+    BodyMaterial result{text(child(entry, 5)), density->Get()};
+    require(validMaterial(result));
+    return result;
+}
+
+// Children 1-3 always, 4 with a colour, 5 and 6 with a material; nothing else.
+void requireEntryShape(const TDF_Label& entry) {
+    const int expected = 3 + (entry.FindChild(4, false).IsNull() ? 0 : 1) +
+                         (entry.FindChild(5, false).IsNull() ? 0 : 2);
+    require(entry.NbChildren() == expected);
 }
 
 BodyAttributeTable readNativeBodyAttributes(const TDF_Label& label, int schemaVersion) {
@@ -101,6 +134,7 @@ BodyAttributeTable readNativeBodyAttributes(const TDF_Label& label, int schemaVe
     BodyAttributeTable table;
     for (int index = 1; index <= count; ++index) {
         const auto entry = child(label, index);
+        requireEntryShape(entry);
         const auto encoded = text(child(entry, 1));
         std::uint64_t body = 0;
         const auto parsed = std::from_chars(encoded.data(), encoded.data() + encoded.size(), body);
@@ -109,8 +143,9 @@ BodyAttributeTable readNativeBodyAttributes(const TDF_Label& label, int schemaVe
         const int hidden = integer(child(entry, 3));
         require(hidden == 0 || hidden == 1);
         require(table.empty() || table.back().body < body);
-        table.push_back({body, BodyAttributes{text(child(entry, 2)), hidden == 1,
-                                              color(entry, schemaVersion)}});
+        table.push_back(
+            {body, BodyAttributes{text(child(entry, 2)), hidden == 1, color(entry, schemaVersion),
+                                  material(entry, schemaVersion)}});
     }
     return table;
 }

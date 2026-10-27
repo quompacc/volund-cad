@@ -15,11 +15,18 @@ namespace voelund::document {
 // M01 (user decision 2026-10-10): what the user sets for a body as a whole. The name is
 // document content (renaming is one undo step); `hidden` is stored with the document and
 // marks it modified, but undo and redo keep the current visibility. N06 (schema 38, user
-// decision 2026-10-23): the colour is document content too (one undo step).
+// decision 2026-10-23): the colour is document content too (one undo step). N07 (schema 42):
+// so is the material - a key from the list in Materials.hpp, or "custom", with its density.
+struct BodyMaterial final {
+    std::string key; // Materials.hpp, or "custom"
+    double density;  // g/cm³, stored so a file needs no list to weigh its bodies
+    [[nodiscard]] bool operator==(const BodyMaterial&) const = default;
+};
 struct BodyAttributes final {
     std::string name{}; // empty: the shell shows "Körper N"
     bool hidden{false};
-    std::optional<std::uint32_t> color{}; // 0xRRGGBB; none: the theme's body colour
+    std::optional<std::uint32_t> color{};   // 0xRRGGBB; none: the theme's body colour
+    std::optional<BodyMaterial> material{}; // N07; none: no mass shown
     [[nodiscard]] bool operator==(const BodyAttributes&) const = default;
 };
 
@@ -35,6 +42,9 @@ using BodyAttributeTable = std::vector<BodyAttributeEntry>;
 
 inline constexpr std::size_t maximumBodyNameBytes = 256;
 inline constexpr std::uint32_t maximumBodyColor = 0xFFFFFF;
+inline constexpr std::size_t maximumMaterialKeyBytes = 32;
+inline constexpr double minimumDensity = 0.001; // g/cm³
+inline constexpr double maximumDensity = 30.0;  // g/cm³ (osmium: 22.6)
 
 [[nodiscard]] inline BodyAttributes bodyAttributes(const BodyAttributeTable& table,
                                                    std::uint64_t body) {

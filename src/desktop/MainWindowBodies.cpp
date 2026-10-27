@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Eduard Hart
 
 #include "BodyColorCard.hpp"
+#include "BodyMaterialSection.hpp"
 #include "CommandFeedback.hpp"
 #include "DisplayStyleMenu.hpp"
 #include "MainWindowState.hpp"
@@ -45,6 +46,8 @@ void MainWindow::createBodyAppearance() {
     impl_->bodyCard = new BodyColorCard(*impl_->viewport);
     impl_->bodyCard->setChoiceHandler(
         [this](std::optional<std::uint32_t> color) { colorBodies(color); });
+    impl_->bodyCard->material().setChoiceHandler(
+        [this](std::optional<document::BodyMaterial> material) { giveMaterial(material); });
     impl_->displayStyle = new DisplayStyleMenu(*this, *impl_->viewport);
     impl_->selectionFilter = new SelectionFilterMenu(*this, *impl_->viewport); // W07
 }
@@ -61,6 +64,20 @@ void MainWindow::colorBodies(std::optional<std::uint32_t> color) {
     if (!bodies.empty())
         selectBody(bodies.front().value(), true);
     statusBar()->showMessage(tr("Körperfarbe geändert"), 2000);
+}
+
+// N07: one undo step per body, like the colour; a group takes the material on each body.
+void MainWindow::giveMaterial(std::optional<document::BodyMaterial> material) {
+    const auto bodies = selectedBodies();
+    for (const auto body : bodies)
+        if (!runCommand([&] { return impl_->session.setBodyMaterial(body, material); },
+                        [this](const QString& message) { statusBar()->showMessage(message); },
+                        true))
+            break;
+    refreshScene();
+    if (!bodies.empty())
+        selectBody(bodies.front().value(), true);
+    statusBar()->showMessage(material ? tr("Material zugewiesen") : tr("Material entfernt"), 2000);
 }
 
 void MainWindow::syncBodyCommands() {
@@ -116,6 +133,44 @@ void MainWindow::syncBodyCard(bool shown) {
             color = item.color;
     impl_->bodyCard->display(impl_->shell().bodyName, color);
     impl_->bodyCard->setVisible(shown && impl_->selectedBody.has_value());
+    if (impl_->bodyCard->isVisible())
+        showMassProperties();
+}
+
+namespace {
+using MassCache = std::vector<std::pair<TopoDS_Shape, kernel::MassProperties>>;
+kernel::MassProperties measured(MassCache& cache, const TopoDS_Shape& shape) {
+    for (const auto& [cached, properties] : cache)
+        if (cached.IsSame(shape))
+            return properties;
+    if (cache.size() >= 64) // bounded; old shapes are not shown any more
+        cache.clear();
+    return cache.emplace_back(shape, kernel::massProperties(shape)).second;
+}
+} // namespace
+
+// N07: the selected bodies weighed together; a body without material counts for its geometry
+// only (the mass is then not shown).
+void MainWindow::showMassProperties() {
+    const auto outline = impl_->session.modelOutline().bodies;
+    const auto shapes = impl_->session.validBodies();
+    std::vector<kernel::WeightedBody> weighed;
+    std::optional<document::BodyMaterial> shown;
+    bool everyMaterial = true;
+    for (const auto body : selectedBodies()) {
+        const auto item = std::ranges::find(outline, body, &application::OutlineBody::id);
+        const auto shape = std::ranges::find(shapes, body, &features::EvaluatedBody::bodyId);
+        if (shape == shapes.end())
+            continue;
+        const auto material = item != outline.end() ? item->material : std::nullopt;
+        if (weighed.empty())
+            shown = material;
+        everyMaterial = everyMaterial && material.has_value();
+        weighed.push_back(
+            {measured(impl_->massCache, shape->shape), material ? material->density : 1.0});
+    }
+    impl_->bodyCard->material().display(shown, kernel::combineMasses(weighed),
+                                        everyMaterial && !weighed.empty());
 }
 
 } // namespace voelund::desktop

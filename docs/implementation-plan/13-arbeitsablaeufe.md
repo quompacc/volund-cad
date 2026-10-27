@@ -31,7 +31,7 @@ beschrieben. Lücken, die die Bestandsaufnahme vom 23.10.2026 fand:
 | W05 | Werte an jedem Griff tippen (Verrunden, Fase, Schale, Bezugsebene, Drücken/Ziehen). Nach einer Auswahl nimmt das Wertfeld sofort die Tastatur. | teilweise (`4fb575c`) |
 | W06 | Bewegen/Kopieren als Werkzeug mit X/Y/Z und Winkeln zum Tippen, Griffen, Rasterung und „Kopie erzeugen“. | teilweise (`c79917d`) |
 | W07 | Auswahl: Kante vor Fläche, Doppelklick wählt die Tangentialkette, gleicher Ort erneut geklickt wählt den nächsten Kandidaten, 3D-Boxauswahl (Körper, im Werkzeug dessen Eingabe), Auswahlfilter. | gebaut |
-| W08 | Zeitleiste: Doppelklick bearbeitet mit vorübergehendem Zurückrollen. Abbrechen stellt die Marke wieder her. Kontextmenü mit Bearbeiten, Umbenennen, Fehler kopieren. | geplant |
+| W08 | Zeitleiste: Doppelklick bearbeitet mit vorübergehendem Zurückrollen. Abbrechen stellt die Marke wieder her. Kontextmenü mit Bearbeiten, Umbenennen, Fehler kopieren. | gebaut |
 | W09 | Kontextmenüs im Modellbaum für Körper, Skizze und Ebene, wie bei SolidCraft. | gebaut (`2d6db2d`) |
 | W10 | Skizze: zweimal Esc beendet sie, eine leere Skizze wird verworfen. Rechtsklick beendet das Werkzeug. X schaltet Hilfsgeometrie auch mitten im Werkzeug um. Fang mit Mitte, parallel, senkrecht, Verlängerung und Tangente samt Hilfslinien. | teilweise |
 | W11 | Direkteingabe für Bogen, Langloch, Vieleck und Ellipse. Felder neben dem Element. Ein getippter Winkel wird Winkelmaß. | gebaut (`77e4e76`) |
