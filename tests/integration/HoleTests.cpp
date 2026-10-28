@@ -6,8 +6,11 @@
 
 #include <voelund/application/Actions.hpp>
 
+#include <BRepAdaptor_Curve.hxx>
 #include <BRepCheck_Analyzer.hxx>
 #include <BRepClass3d_SolidClassifier.hxx>
+#include <TopExp_Explorer.hxx>
+#include <TopoDS.hxx>
 #include <cmath>
 #include <filesystem>
 #include <iostream>
@@ -263,11 +266,61 @@ void sketchHoles() {
             "A sketch without points gives no holes");
 }
 
+// N09c (schema 45): a hole 15 from the right and 10 from the back top edge of a 40 x 30 x 10
+// box sits at (25, 20); the box grows to 60 x 50 and the hole follows to (45, 40); Save/Open
+// keeps the placement; parallel edges are refused.
+document::FilletEdge topEdge(application::CadSession& session, document::FeatureId box, double x,
+                             double y) {
+    for (TopExp_Explorer explorer(session.validBodies().front().shape, TopAbs_EDGE);
+         explorer.More(); explorer.Next()) {
+        const BRepAdaptor_Curve curve(TopoDS::Edge(explorer.Current()));
+        const gp_Pnt middle = curve.Value((curve.FirstParameter() + curve.LastParameter()) / 2);
+        if (near(middle.X(), x) && near(middle.Y(), y) && middle.Z() > 5)
+            if (const auto named = session.filletEdge(box, explorer.Current()))
+                return *named;
+    }
+    throw std::runtime_error("Top edge missing");
+}
+void edgePlacement() {
+    application::CadSession session;
+    session.newDocument();
+    const auto box = *session.createBoxFeature({40, 30, 10}).feature();
+    const auto face = top(session, box);
+    const auto right = topEdge(session, box, 40, 15);
+    const auto back = topEdge(session, box, 20, 30);
+    auto placed = hole(face, 0, 6, 4, {});
+    placed.offsets = {{right, 15}, {back, 10}};
+    require(session.createHole(box, face.origin, placed).status() == CommandStatus::committed &&
+                !solidAt(session, 25, 20, 8) && solidAt(session, 20, 20, 8),
+            "15 from the right, 10 from the back: at (25, 20)");
+    const auto placedHole = session.features().back().id;
+    auto larger = session.identifiedSnapshot().snapshot().boxParameters(box);
+    larger.dimensions.width = 60;
+    larger.dimensions.depth = 50;
+    require(session.editBoxParameters(box, larger).status() == CommandStatus::committed &&
+                !solidAt(session, 45, 40, 8) && solidAt(session, 25, 20, 8),
+            "The box grows: the hole follows its edges to (45, 40)");
+    const auto path = test::temporaryFilePath("voelund-n09c-edges.volund");
+    session.saveDocument(path);
+    application::CadSession loaded;
+    loaded.loadDocument(path);
+    std::error_code ignored;
+    std::filesystem::remove(path, ignored);
+    require(loaded.holeParameters(placedHole) == session.holeParameters(placedHole) &&
+                near(volume(loaded), volume(session)),
+            "Save/Open keeps the edges and distances");
+    auto parallel = placed;
+    parallel.offsets = {{back, 10}, {topEdge(session, box, 30, 0), 10}};
+    require(session.createHole(box, face.origin, parallel).status() != CommandStatus::committed,
+            "Two parallel edges are refused");
+}
+
 int main() {
     try {
         throughAndBlind();
         variants();
         sketchHoles();
+        edgePlacement();
         std::cout << "PASS M08 hole: through 90 pi, blind 36 pi, thicker box, follows its face, "
                      "refused, undo, save/open\n";
         return 0;

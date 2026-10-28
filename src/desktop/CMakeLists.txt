@@ -90,6 +90,7 @@ add_library(
     InterferenceToolController.cpp
     MainWindowInspect.cpp
     MainWindowHoles.cpp
+    HoleEdgePlacement.cpp
     ShellState.cpp
     SketchToolActions.cpp
     SketchViewAdapter.cpp

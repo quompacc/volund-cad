@@ -204,6 +204,8 @@ struct CreateHoleAction final {
     // `support` and `face` are then taken from the sketch. No points: all of its points.
     std::optional<document::FeatureId> sketch{};
     std::vector<document::SketchElementId> points{};
+    // N09c: placed by two edges at these distances instead of (x, y).
+    std::vector<document::HoleEdgeOffset> offsets{};
     bool operator==(const CreateHoleAction&) const = default;
 };
 struct EditHoleParametersAction final {

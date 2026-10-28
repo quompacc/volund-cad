@@ -163,9 +163,41 @@ void sketchHoles(desktop::MainWindow& window, application::CadSession& session) 
             "OK drills three holes in one step");
 }
 
-void variantAndSketchHoles(desktop::MainWindow& window, application::CadSession& session) {
+// N09c: "An zwei Kanten" in the panel - two clicked top edges (right, back) keep the hole where
+// it is; 15 and 10 typed into the fields put it at (25, 20).
+void edgePlacement(desktop::MainWindow& window, viewport::CadViewport& viewport,
+                   application::CadSession& session) {
+    session.newDocument();
+    require(session.createBoxFeature({40, 30, 10}).feature().has_value(), "Box");
+    window.refreshAfterExternalChange();
+    viewport.setCameraView(viewport::CameraView::top);
+    test::render(viewport);
+    click(viewport, 20, 15, 10);
+    command(window, "solid.modify.hole").trigger();
+    settle();
+    field<QComboBox>(window, QStringLiteral("toolChoice_place"))->setCurrentIndex(1);
+    settle();
+    click(viewport, 40, 15, 10); // the right top edge
+    click(viewport, 20, 30, 10); // the back top edge
+    require(std::abs(length(window, "offset1") - 20) < 1e-6 &&
+                std::abs(length(window, "offset2") - 15) < 1e-6,
+            "The hole at the face centre: 20 from the right, 15 from the back");
+    setLength(window, "offset1", 15);
+    setLength(window, "offset2", 10);
+    setLength(window, "depth", 4);
+    button(window, "toolAcceptButton").click();
+    settle();
+    const auto& shape = session.validBodies().front().shape;
+    require(session.holeParameters(session.features().back().id).offsets.size() == 2 &&
+                !solidAt(shape, 25, 20, 8) && solidAt(shape, 20, 15, 8),
+            "OK drills 15 from the right and 10 from the back");
+}
+
+void variantAndSketchHoles(desktop::MainWindow& window, viewport::CadViewport& viewport,
+                           application::CadSession& session) {
     variant(window, session);
     sketchHoles(window, session);
+    edgePlacement(window, viewport, session);
 }
 
 void run() {
@@ -245,7 +277,7 @@ void run() {
     require(session.features().size() == 2 && matches(volume(session), 12000 - 90 * pi),
             "Open restores the hole");
     std::filesystem::remove_all(directory);
-    variantAndSketchHoles(window, session);
+    variantAndSketchHoles(window, *viewport, session);
     std::cout << "PASS M08 hole panel: place by click, move by clicks over the preview, depth, "
                  "through, OK, undo, edit, open; N09 tapped M6 with countersink, holes at sketch "
                  "points\n";

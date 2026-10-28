@@ -42,6 +42,9 @@ class HoleToolController final {
     [[nodiscard]] bool isActive() const noexcept { return active_; }
     // A planar face picked while the panel is open moves the hole to the click point.
     void place(const viewport::PlanarFaceSelection& face);
+    // N09c (HoleEdgePlacement.cpp): with "An zwei Kanten" a clicked straight edge becomes one
+    // of the two the hole is placed by, at its present distance from the hole.
+    void pickedEdge(std::uint64_t body, const TopoDS_Shape& edge);
     void cancel();
     void
     setPreviewHandler(std::function<void(const std::vector<features::EvaluatedBody>*)> handler);
@@ -55,6 +58,12 @@ class HoleToolController final {
     void changed(const std::string& id, double value);
     void chosen(const std::string& id, int index);
     void showVariantFields();
+    void chooseKind(document::HoleKind kind);
+    void chooseThread(int index);
+    [[nodiscard]] std::optional<document::FilletEdge> edgeName(const TopoDS_Shape& edge) const;
+    void placeByEdges(bool byEdges);
+    [[nodiscard]] std::optional<double> distanceFrom(const TopoDS_Shape& edge) const;
+    [[nodiscard]] std::vector<document::HoleEdgeOffset> edgeOffsets() const;
     void preview();
     void showModel();
     [[nodiscard]] application::Action action() const;
@@ -75,8 +84,10 @@ class HoleToolController final {
     double diameter_{6.0};
     double depth_{10.0};
     bool through_{false};
-    document::HoleVariant variant_{};           // N09
-    std::optional<document::FeatureId> sketch_; // N09b: holes at its points
+    document::HoleVariant variant_{};               // N09
+    std::optional<document::FeatureId> sketch_;     // N09b: holes at its points
+    std::vector<document::HoleEdgeOffset> offsets_; // N09c: up to two edges
+    bool byEdges_{false};
     std::optional<document::FeatureId> editing_;
     // M13: set while an edit is kept with errors at later features.
     std::optional<application::ErrorDisposition> keep_;

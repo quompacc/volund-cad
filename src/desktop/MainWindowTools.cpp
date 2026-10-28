@@ -116,23 +116,26 @@ void MainWindow::connectEdgePicking() {
 // User request 2026-10-13: edges are picked before a tool, as in any CAD. A click picks one
 // edge of a body, Ctrl+click adds or removes one; "Verrunden"/"Fase" take them over. While a
 // fillet or chamfer panel is open its own edge picking runs instead.
-void MainWindow::pickEdge(std::uint64_t body, const TopoDS_Shape& edge, bool additive) {
-    if (impl_->sketchEditorTool->projecting()) { // S17
+// An open tool that takes a clicked edge; false when none is open.
+bool MainWindow::toolTakesEdge(std::uint64_t body, const TopoDS_Shape& edge) {
+    if (impl_->sketchEditorTool->projecting()) // S17
         impl_->sketchEditorTool->projectEdge(body, edge);
-        return;
-    }
-    if (impl_->filletTool->isActive()) {
+    else if (impl_->filletTool->isActive())
         impl_->filletTool->picked(body, edge);
-        return;
-    }
-    if (impl_->patternTool->isActive()) { // M10: the direction or axis
+    else if (impl_->patternTool->isActive()) // M10: the direction or axis
         impl_->patternTool->picked(body, edge);
-        return;
-    }
-    if (impl_->measureTool->isActive()) { // M12: measured, nothing selected
+    else if (impl_->measureTool->isActive()) // M12: measured, nothing selected
         impl_->measureTool->pickedEdge(body, edge);
+    else if (impl_->holeTool->isActive()) // N09c: an edge the hole is placed by
+        impl_->holeTool->pickedEdge(body, edge);
+    else
+        return false;
+    return true;
+}
+
+void MainWindow::pickEdge(std::uint64_t body, const TopoDS_Shape& edge, bool additive) {
+    if (toolTakesEdge(body, edge))
         return;
-    }
     if (impl_->shell().toolBlocksCommands())
         return;
     const document::FeatureId support{body};

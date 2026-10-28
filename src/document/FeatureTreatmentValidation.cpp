@@ -50,6 +50,16 @@ void validateChamferParameters(const ChamferParameters& parameters) {
 namespace {
 // N09: the head of a counterbore or countersink, the drill point and the thread.
 void validateHoleHead(const HoleParameters& parameters);
+// N09c: none or two edges with distances in the model range, not with sketch points.
+void validateHoleOffsets(const HoleParameters& parameters) {
+    const auto& offsets = parameters.offsets;
+    if (offsets.empty())
+        return;
+    if (offsets.size() != 2 || !parameters.points.empty() ||
+        !kernel::modelCoordinate(offsets[0].distance) ||
+        !kernel::modelCoordinate(offsets[1].distance))
+        throw std::invalid_argument("A hole is placed by two edges and their distances");
+}
 // A counterbore has a depth and ends above the bottom of a blind hole.
 void validateCounterbore(const HoleParameters& parameters) {
     const double depth = parameters.variant.headDepth;
@@ -94,6 +104,7 @@ void validateHoleParameters(const HoleParameters& parameters) {
         !std::ranges::is_sorted(parameters.points, {}, &SketchElementId::value) ||
         std::ranges::adjacent_find(parameters.points) != parameters.points.end())
         throw std::invalid_argument("Hole points are distinct, sorted and at most 100");
+    validateHoleOffsets(parameters);
     if (!kernel::modelLength(parameters.diameter) ||
         (parameters.depth && !kernel::modelLength(*parameters.depth)) ||
         !kernel::modelCoordinate(parameters.x) || !kernel::modelCoordinate(parameters.y))

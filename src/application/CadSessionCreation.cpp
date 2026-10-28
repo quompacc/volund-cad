@@ -168,9 +168,14 @@ CommandResult CadSession::createHole(document::FeatureId support,
     auto& candidate = transaction.edit();
     const auto idInput = detail::prepareInput([&] {
         return candidate.addHoleFeature("Bohrung " + std::to_string(sequence),
-                                        document::HoleParameters{*reference, hole.x, hole.y,
-                                                                 hole.diameter, hole.depth,
-                                                                 hole.variant});
+                                        document::HoleParameters{*reference,
+                                                                 hole.x,
+                                                                 hole.y,
+                                                                 hole.diameter,
+                                                                 hole.depth,
+                                                                 hole.variant,
+                                                                 {},
+                                                                 hole.offsets});
     });
     if (!idInput.value)
         return CommandResult::invalidInput(idInput.diagnostic);

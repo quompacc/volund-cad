@@ -157,6 +157,38 @@ void writeHoleVariant(const TDF_Label& label, const HoleParameters& parameters) 
     TDataStd_AsciiString::Set(label.FindChild(8), variant.thread.c_str());
 }
 // N09b (schema 44): the sketch point elements, as decimal IDs separated by spaces.
+// N09c (schema 45): the two edges (their faces in 1 and 2) and their distances.
+void writeHoleOffsets(const TDF_Label& label, const HoleParameters& parameters) {
+    if (parameters.offsets.empty())
+        return;
+    const auto offsets = label.FindChild(10);
+    auto distances = TDataStd_RealArray::Set(offsets, 1, 2);
+    for (int index = 1; index <= 2; ++index) {
+        const auto& offset = parameters.offsets[static_cast<std::size_t>(index - 1)];
+        distances->SetValue(index, offset.distance);
+        const auto edge = offsets.FindChild(index);
+        writeNativeSubshapeOrigin(edge.FindChild(1), offset.edge.first);
+        writeNativeSubshapeOrigin(edge.FindChild(2), offset.edge.second);
+    }
+}
+void readHoleOffsets(const TDF_Label& label, std::size_t& remainingRecords, int schemaVersion,
+                     HoleParameters& result) {
+    if (label.FindChild(10, false).IsNull())
+        return;
+    require(schemaVersion >= 45 && remainingRecords >= 2);
+    const auto offsets = child(label, 10);
+    Handle(TDataStd_RealArray) distances;
+    require(offsets.NbChildren() == 2 &&
+            offsets.FindAttribute(TDataStd_RealArray::GetID(), distances) &&
+            distances->Lower() == 1 && distances->Upper() == 2);
+    for (int index = 1; index <= 2; ++index) {
+        const auto edge = child(offsets, index);
+        require(edge.NbChildren() == 2);
+        auto first = readFace(child(edge, 1), remainingRecords, schemaVersion);
+        auto second = readFace(child(edge, 2), remainingRecords, schemaVersion);
+        result.offsets.push_back({{std::move(first), std::move(second)}, distances->Value(index)});
+    }
+}
 void writeHolePoints(const TDF_Label& label, const HoleParameters& parameters) {
     if (parameters.points.empty())
         return;
@@ -203,8 +235,21 @@ void readHoleVariant(const TDF_Label& label, int schemaVersion, HoleVariant& res
 }
 } // namespace
 
+// N09-N09c: variant (5-8), points (9) and edge offsets (10), each written only when used.
+int optionalHoleChildren(const TDF_Label& label) {
+    int count = 0;
+    for (const auto& [tag, children] : {std::pair{5, 4}, std::pair{9, 1}, std::pair{10, 1}})
+        if (!label.FindChild(tag, false).IsNull())
+            count += children;
+    return count;
+}
+
 std::size_t nativeHoleRecords(const HoleParameters& parameters) {
-    return parameters.face.origin.extrusionBoundary.size();
+    std::size_t records = parameters.face.origin.extrusionBoundary.size();
+    for (const auto& offset : parameters.offsets) // N09c
+        records += 1 + offset.edge.first.extrusionBoundary.size() +
+                   offset.edge.second.extrusionBoundary.size();
+    return records;
 }
 
 void writeNativeHole(const TDF_Label& label, const HoleParameters& parameters) {
@@ -220,13 +265,13 @@ void writeNativeHole(const TDF_Label& label, const HoleParameters& parameters) {
         TDataStd_Real::Set(label.FindChild(4), *parameters.depth);
     writeHoleVariant(label, parameters);
     writeHolePoints(label, parameters);
+    writeHoleOffsets(label, parameters);
 }
 
 HoleParameters readNativeHole(const TDF_Label& label, std::size_t remainingRecords,
                               int schemaVersion) {
     const auto depth = label.FindChild(4, false);
-    const int extended =
-        (label.FindChild(5, false).IsNull() ? 0 : 4) + (label.FindChild(9, false).IsNull() ? 0 : 1);
+    const int extended = optionalHoleChildren(label);
     require(schemaVersion >= 16 && label.NbChildren() == (depth.IsNull() ? 3 : 4) + extended);
     Handle(TDataStd_Real) diameter;
     require(label.FindAttribute(TDataStd_Real::GetID(), diameter));
@@ -245,6 +290,7 @@ HoleParameters readNativeHole(const TDF_Label& label, std::size_t remainingRecor
     }
     readHoleVariant(label, schemaVersion, result.variant);
     readHolePoints(label, schemaVersion, result);
+    readHoleOffsets(label, remainingRecords, schemaVersion, result);
     validateHoleParameters(result);
     return result;
 }

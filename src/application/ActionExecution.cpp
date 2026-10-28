@@ -23,7 +23,8 @@ document::HoleParameters holeOf(const CreateHoleAction& action) {
             action.diameter.value,
             action.depth ? std::optional{action.depth->value} : std::nullopt,
             action.variant,
-            action.points};
+            action.points,
+            action.offsets};
 }
 using document::DocumentSnapshot;
 using document::FeatureId;

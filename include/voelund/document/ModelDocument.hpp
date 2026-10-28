@@ -320,6 +320,13 @@ struct HoleVariant final {
 // N09b (schema 44): holes at points of the feature's input sketch (a sketch on `face`), one per
 // point, all alike; x and y are then unused. Without points one hole at (x, y).
 inline constexpr std::size_t maximumHolePoints = 100;
+// N09c (schema 45): the hole's centre at `distance` from a straight edge of its body, measured
+// in the plane of its face (with a second such edge it is fixed); x and y are then unused.
+struct HoleEdgeOffset final {
+    FilletEdge edge;
+    double distance;
+    [[nodiscard]] bool operator==(const HoleEdgeOffset&) const = default;
+};
 struct HoleParameters final {
     BodyFaceReference face;
     double x;
@@ -328,6 +335,7 @@ struct HoleParameters final {
     std::optional<double> depth{};
     HoleVariant variant{}; // N09
     std::vector<SketchElementId> points{};
+    std::vector<HoleEdgeOffset> offsets{}; // N09c: none or two
     [[nodiscard]] bool operator==(const HoleParameters&) const = default;
 };
 void validateHoleParameters(const HoleParameters& parameters);

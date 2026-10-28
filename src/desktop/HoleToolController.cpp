@@ -15,7 +15,9 @@
 #include <QObject>
 
 #include <algorithm>
+#include <array>
 #include <exception>
+#include <string_view>
 #include <utility>
 
 namespace voelund::desktop {
@@ -96,6 +98,8 @@ void HoleToolController::begin(const viewport::PlanarFaceSelection& face) {
     through_ = false;
     variant_ = {};
     sketch_.reset();
+    offsets_.clear();
+    byEdges_ = false;
     editing_.reset();
     stored_.reset();
     open();
@@ -115,6 +119,8 @@ void HoleToolController::beginEdit(document::FeatureId hole) {
     through_ = !values.depth.has_value();
     depth_ = values.depth.value_or(10.0);
     variant_ = values.variant;
+    offsets_ = values.offsets;
+    byEdges_ = !offsets_.empty();
     // N09b: holes at sketch points keep their sketch (the feature's input).
     const auto features = snapshot.features();
     const auto descriptor = std::ranges::find(features, hole, &document::FeatureDescriptor::id);
@@ -129,6 +135,8 @@ void HoleToolController::beginAtSketch(document::FeatureId sketch) {
     sketch_ = sketch;
     support_ = sketch;
     face_ = document::SubshapeOrigin{sketch, std::nullopt}; // taken from the sketch
+    offsets_.clear();
+    byEdges_ = false;
     x_ = 0.0;
     y_ = 0.0;
     diameter_ = 6.0;
@@ -154,8 +162,16 @@ void HoleToolController::open() {
              {"headDiameter", QObject::tr("Kopf-Ø"), variant_.headDiameter, 0.0, 1'000'000.0},
              {"headDepth", QObject::tr("Senktiefe"), variant_.headDepth, 0.0, 1'000'000.0},
              {"angle", QObject::tr("Senkwinkel"), variant_.countersinkAngle, 30.0, 150.0,
-              ToolValueKind::angle}},
-            {{"end",
+              ToolValueKind::angle},
+             {"offset1", QObject::tr("Abstand Kante 1"),
+              offsets_.empty() ? 0.0 : offsets_[0].distance, -1'000'000.0, 1'000'000.0},
+             {"offset2", QObject::tr("Abstand Kante 2"),
+              offsets_.size() < 2 ? 0.0 : offsets_[1].distance, -1'000'000.0, 1'000'000.0}},
+            {{"place",
+              QObject::tr("Lage"),
+              {QObject::tr("Frei (X/Y)"), QObject::tr("An zwei Kanten")},
+              byEdges_ ? 1 : 0},
+             {"end",
               QObject::tr("Ende"),
               {QObject::tr("Tiefe"), QObject::tr("Durchgehend")},
               through_ ? 1 : 0},
@@ -184,58 +200,69 @@ void HoleToolController::open() {
 }
 
 void HoleToolController::changed(const std::string& id, double value) {
-    if (id == "x")
-        x_ = value;
-    else if (id == "y")
-        y_ = value;
-    else if (id == "diameter")
-        diameter_ = value;
-    else if (id == "depth")
-        depth_ = value;
-    else if (id == "headDiameter")
-        variant_.headDiameter = value;
-    else if (id == "headDepth")
-        variant_.headDepth = value;
-    else if (id == "angle")
-        variant_.countersinkAngle = value;
+    const std::array<std::pair<std::string_view, double*>, 7> fields{{
+        {"x", &x_},
+        {"y", &y_},
+        {"diameter", &diameter_},
+        {"depth", &depth_},
+        {"headDiameter", &variant_.headDiameter},
+        {"headDepth", &variant_.headDepth},
+        {"angle", &variant_.countersinkAngle},
+    }};
+    for (const auto& [name, target] : fields)
+        if (id == name)
+            *target = value;
+    if (offsets_.size() == 2 && (id == "offset1" || id == "offset2")) // N09c
+        offsets_[id == "offset1" ? 0 : 1].distance = value;
     preview();
 }
 
 // N09: a new kind brings a head that fits the hole (Ø 1.8 x 0.6 d, or Ø 2 d at 90°); a
 // thread sets the core drill.
 void HoleToolController::chosen(const std::string& id, int index) {
+    if (id == "place")
+        return placeByEdges(index == 1);
     if (id == "end") {
         through_ = index == 1;
         if (through_)
             variant_.drillPoint = false;
     } else if (id == "kind") {
-        variant_.kind = static_cast<document::HoleKind>(index);
-        variant_.headDiameter =
-            diameter_ * (variant_.kind == document::HoleKind::countersink ? 2.0 : 1.8);
-        variant_.headDepth =
-            variant_.kind == document::HoleKind::counterbore ? diameter_ * 0.6 : 0.0;
-        panel_.setLengthValue("headDiameter", variant_.headDiameter);
-        panel_.setLengthValue("headDepth", variant_.headDepth);
+        chooseKind(static_cast<document::HoleKind>(index));
     } else if (id == "tip") {
         variant_.drillPoint = index == 1;
     } else if (id == "thread") {
-        variant_.thread =
-            index == 0
-                ? std::string()
-                : std::string(
-                      document::metricThreads[static_cast<std::size_t>(index - 1)].designation);
-        if (index > 0) {
-            diameter_ = document::metricThreads[static_cast<std::size_t>(index - 1)].coreDrill;
-            panel_.setLengthValue("diameter", diameter_);
-        }
+        chooseThread(index);
     }
     showVariantFields();
     preview();
 }
 
+void HoleToolController::chooseKind(document::HoleKind kind) {
+    variant_.kind = kind;
+    variant_.headDiameter = diameter_ * (kind == document::HoleKind::countersink ? 2.0 : 1.8);
+    variant_.headDepth = kind == document::HoleKind::counterbore ? diameter_ * 0.6 : 0.0;
+    panel_.setLengthValue("headDiameter", variant_.headDiameter);
+    panel_.setLengthValue("headDepth", variant_.headDepth);
+}
+
+// Index 0: no thread; else the thread of that row and its core drill.
+void HoleToolController::chooseThread(int index) {
+    if (index == 0) {
+        variant_.thread.clear();
+        return;
+    }
+    const auto& thread = document::metricThreads[static_cast<std::size_t>(index - 1)];
+    variant_.thread = std::string(thread.designation);
+    diameter_ = thread.coreDrill;
+    panel_.setLengthValue("diameter", diameter_);
+}
+
 void HoleToolController::showVariantFields() {
-    panel_.setLengthVisible("x", !sketch_); // N09b: the points place the holes
-    panel_.setLengthVisible("y", !sketch_);
+    panel_.setLengthVisible("x", !sketch_ && !byEdges_); // N09b: the points place the holes
+    panel_.setLengthVisible("y", !sketch_ && !byEdges_);
+    panel_.setChoiceVisible("place", !sketch_);
+    panel_.setLengthVisible("offset1", byEdges_ && offsets_.size() == 2); // N09c
+    panel_.setLengthVisible("offset2", byEdges_ && offsets_.size() == 2);
     panel_.setLengthEnabled("depth", !through_);
     panel_.setChoiceEnabled("tip", !through_);
     panel_.setLengthEnabled("diameter", variant_.thread.empty());
@@ -314,7 +341,8 @@ application::Action HoleToolController::action() const {
                                                 diameter_,
                                                 through_ ? std::nullopt : std::optional{depth_},
                                                 variant_,
-                                                stored_->points}};
+                                                stored_->points,
+                                                edgeOffsets()}};
     return application::CreateHoleAction{support_,
                                          *face_,
                                          millimetres(x_),
@@ -323,14 +351,16 @@ application::Action HoleToolController::action() const {
                                          through_ ? std::nullopt
                                                   : std::optional{millimetres(depth_)},
                                          variant_,
-                                         sketch_};
+                                         sketch_,
+                                         {},
+                                         edgeOffsets()};
 }
 
 bool HoleToolController::unchanged() const {
     return stored_ && stored_->face.origin == *face_ && stored_->x == x_ && stored_->y == y_ &&
            stored_->diameter == diameter_ &&
            stored_->depth == (through_ ? std::nullopt : std::optional{depth_}) &&
-           stored_->variant == variant_;
+           stored_->variant == variant_ && stored_->offsets == edgeOffsets();
 }
 
 void HoleToolController::preview() {

@@ -17,6 +17,8 @@
 #include <TopoDS.hxx>
 #include <gp_Pnt.hxx>
 #include <gp_Vec.hxx>
+#include <voelund/features/FilletEdges.hpp>
+#include <voelund/kernel/EdgeQueries.hpp>
 #include <voelund/kernel/ShapeQueries.hpp>
 
 #include <algorithm>
@@ -75,6 +77,7 @@ struct HoleAxis final {
     gp_Vec normal;
     gp_Vec inward;
     double length;
+    gp_Pnt faceCentre{}; // N09c: which side of an edge is the face's
 };
 HoleAxis holeAxis(const EvaluatedFeature& owner, const TopoDS_Shape& body,
                   const document::HoleParameters& parameters) {
@@ -103,6 +106,7 @@ HoleAxis holeAxis(const EvaluatedFeature& owner, const TopoDS_Shape& body,
     if (axis.inward.Magnitude() < 0.5)
         throw GeometryEvaluationError("The face of the hole is not a face of its body",
                                       "hole-face-missing");
+    axis.faceCentre = kernel::boundingBoxCentre(frame->face);
     if (!parameters.depth) {
         // Through all: longer than the body could ever be measured from this face.
         const auto box = kernel::boundingBox(body);
@@ -111,9 +115,61 @@ HoleAxis holeAxis(const EvaluatedFeature& owner, const TopoDS_Shape& body,
     return axis;
 }
 
-// N09b: the points of the input sketch, laid onto the face; without points (x, y) of the face.
+// One edge of the face as a line in its frame: a point and the unit normal into the face.
+struct EdgeLine final {
+    double u, v;   // a point of the edge
+    double nu, nv; // towards the face
+};
+EdgeLine edgeLine(const HoleAxis& axis, std::span<const SupportProvenance> origins,
+                  const document::FilletEdge& named) {
+    const auto shapes = filletEdgeShapes(origins, named);
+    if (shapes.empty())
+        throw GeometryEvaluationError("An edge the hole is placed by is gone", "hole-edge-missing");
+    const auto curve = kernel::describeEdge(shapes.front());
+    if (curve.kind != kernel::EdgeCurve::Kind::line)
+        throw GeometryEvaluationError("A hole is placed by straight edges",
+                                      "hole-edge-not-straight");
+    const auto inFrame = [&](const gp_Vec& vector) {
+        return std::pair{vector.Dot(axis.xAxis), vector.Dot(axis.yAxis)};
+    };
+    const auto [u, v] = inFrame(gp_Vec(axis.origin, curve.line.Location()));
+    const auto [tu, tv] = inFrame(gp_Vec(curve.line.Direction()));
+    const double length = std::hypot(tu, tv);
+    if (length < 1e-9)
+        throw GeometryEvaluationError("An edge the hole is placed by stands upright on its face",
+                                      "hole-edge-not-straight");
+    EdgeLine line{u, v, -tv / length, tu / length};
+    const auto [cu, cv] = inFrame(gp_Vec(axis.origin, axis.faceCentre));
+    if (line.nu * (cu - u) + line.nv * (cv - v) < 0) {
+        line.nu = -line.nu;
+        line.nv = -line.nv;
+    }
+    return line;
+}
+
+// N09c: the point at the two distances from the two edges, inside the face.
+gp_Pnt offsetCentre(const HoleAxis& axis, const document::HoleParameters& parameters,
+                    std::span<const SupportProvenance> origins) {
+    const auto a = edgeLine(axis, origins, parameters.offsets[0].edge);
+    const auto b = edgeLine(axis, origins, parameters.offsets[1].edge);
+    const double det = a.nu * b.nv - a.nv * b.nu;
+    if (std::abs(det) < 1e-9)
+        throw GeometryEvaluationError("The edges a hole is placed by are parallel",
+                                      "hole-edges-parallel");
+    const double ra = parameters.offsets[0].distance + a.nu * a.u + a.nv * a.v;
+    const double rb = parameters.offsets[1].distance + b.nu * b.u + b.nv * b.v;
+    const double u = (ra * b.nv - rb * a.nv) / det;
+    const double v = (a.nu * rb - b.nu * ra) / det;
+    return axis.origin.Translated(axis.xAxis * u + axis.yAxis * v);
+}
+
+// N09b: the points of the input sketch, laid onto the face; N09c: at distances from two edges;
+// otherwise (x, y) of the face.
 std::vector<gp_Pnt> holeCentres(const HoleAxis& axis, const document::HoleParameters& parameters,
-                                const document::SketchParameters* sketch) {
+                                const document::SketchParameters* sketch,
+                                std::span<const SupportProvenance> origins) {
+    if (!parameters.offsets.empty())
+        return {offsetCentre(axis, parameters, origins)};
     if (parameters.points.empty())
         return {axis.origin.Translated(axis.xAxis * parameters.x + axis.yAxis * parameters.y)};
     if (sketch == nullptr)
@@ -194,7 +250,7 @@ std::vector<kernel::ShapeOperationResult> holeTools(const EvaluatedFeature& owne
                                                     const document::SketchParameters* sketch) {
     const auto axis = holeAxis(owner, body, parameters);
     std::vector<kernel::ShapeOperationResult> tools;
-    for (const auto& centre : holeCentres(axis, parameters, sketch))
+    for (const auto& centre : holeCentres(axis, parameters, sketch, owner.supportOrigins))
         tools.push_back(holeToolAt(parameters, axis, centre));
     return tools;
 }

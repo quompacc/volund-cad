@@ -7,7 +7,7 @@
 
 namespace voelund::document::detail {
 // Candidate native application schema. Not the OCAF container version or VOLUND 17.
-inline constexpr int nativeSchemaVersion = 44;
+inline constexpr int nativeSchemaVersion = 45;
 struct NativeDocumentMetadata final {
     DocumentId id;
     std::uint64_t nextFeatureId;

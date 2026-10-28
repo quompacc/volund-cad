@@ -158,6 +158,7 @@ class MainWindow final : public QMainWindow {
     // User request 2026-10-13: edges picked before a fillet or chamfer.
     void pickEdge(std::uint64_t body, const TopoDS_Shape& edge, bool additive);
     void pickEdgeChain(std::uint64_t body, const TopoDS_Shape& edge); // W07
+    bool toolTakesEdge(std::uint64_t body, const TopoDS_Shape& edge);
     void connectEdgePicking();
     void createInspectTools();                                               // M12, N08
     void addInspectServices(modules::solid::SolidCommandServices& services); // M12, N08
