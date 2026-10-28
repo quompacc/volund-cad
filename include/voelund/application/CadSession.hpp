@@ -253,6 +253,9 @@ class CadSession final {
     [[nodiscard]] CommandResult createHole(document::FeatureId support,
                                            const document::SubshapeOrigin& face,
                                            const document::HoleParameters& hole);
+    // N09b: like `hole` at the points of a sketch on a body face (none given: all of them).
+    [[nodiscard]] CommandResult createSketchHoles(document::FeatureId sketch,
+                                                  const document::HoleParameters& hole);
     [[nodiscard]] CommandResult
     editHoleParameters(document::FeatureId featureId, const document::HoleParameters& parameters,
                        ErrorDisposition disposition = ErrorDisposition::reject);

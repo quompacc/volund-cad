@@ -316,19 +316,6 @@ FeatureId ModelDocument::addChamferFeature(std::string name, const ChamferParame
     return id;
 }
 
-FeatureId ModelDocument::addHoleFeature(std::string name, const HoleParameters& parameters) {
-    validateHoleParameters(parameters);
-    const FeatureId id = nextFeatureId();
-    auto candidate = currentState();
-    ++candidate.nextFeatureId;
-    candidate.features.push_back(
-        FeatureDescriptor{id, FeatureKind::hole, std::move(name), std::nullopt});
-    candidate.parameters.emplace_back(parameters);
-    static_cast<void>(featureBodyContexts(candidate.features, candidate.parameters));
-    commitState(std::move(candidate));
-    return id;
-}
-
 FeatureId ModelDocument::addExtrusionFeature(std::string name, FeatureId sketchFeature,
                                              const ExtrusionParameters& parameters) {
     if (!contains(sketchFeature))

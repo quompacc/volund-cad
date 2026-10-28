@@ -67,9 +67,17 @@ kernel::ShapeOperationResult variantTool(const document::HoleParameters& paramet
     }
 }
 
-// The cylinder the hole removes from `body`, whose current faces `owner` names.
-kernel::ShapeOperationResult holeTool(const EvaluatedFeature& owner, const TopoDS_Shape& body,
-                                      const document::HoleParameters& parameters) {
+// Where the holes enter `body` through the face `owner` names, and how far they reach.
+struct HoleAxis final {
+    gp_Pnt origin; // of the face's frame
+    gp_Vec xAxis;
+    gp_Vec yAxis;
+    gp_Vec normal;
+    gp_Vec inward;
+    double length;
+};
+HoleAxis holeAxis(const EvaluatedFeature& owner, const TopoDS_Shape& body,
+                  const document::HoleParameters& parameters) {
     const auto frames = supportFaceFrames(owner);
     const auto frame = std::ranges::find(frames, parameters.face.origin, &SupportFaceFrame::origin);
     if (frame == frames.end())
@@ -77,34 +85,68 @@ kernel::ShapeOperationResult holeTool(const EvaluatedFeature& owner, const TopoD
             "The face of the hole is no longer a unique planar face of its body",
             "hole-face-missing");
     const auto& plane = frame->plane;
-    const gp_Vec normal(plane.normalX, plane.normalY, plane.normalZ);
-    const gp_Vec xAxis(plane.xDirectionX, plane.xDirectionY, plane.xDirectionZ);
-    const gp_Vec yAxis = normal.Crossed(xAxis);
-    gp_Pnt centre(plane.originX, plane.originY, plane.originZ);
-    centre.Translate(xAxis * parameters.x + yAxis * parameters.y);
+    HoleAxis axis{gp_Pnt(plane.originX, plane.originY, plane.originZ),
+                  gp_Vec(plane.xDirectionX, plane.xDirectionY, plane.xDirectionZ),
+                  {},
+                  gp_Vec(plane.normalX, plane.normalY, plane.normalZ),
+                  {},
+                  parameters.depth.value_or(0.0)};
+    axis.yAxis = axis.normal.Crossed(axis.xAxis);
     // Into the body: against the outward normal of the face as it lies in the solid.
-    gp_Vec inward;
     for (TopExp_Explorer explorer(body, TopAbs_FACE); explorer.More(); explorer.Next()) {
         if (!explorer.Current().IsSame(frame->face))
             continue;
         if (const auto outward = kernel::planarFaceNormal(explorer.Current()))
-            inward = -gp_Vec(*outward);
+            axis.inward = -gp_Vec(*outward);
         break;
     }
-    if (inward.Magnitude() < 0.5)
+    if (axis.inward.Magnitude() < 0.5)
         throw GeometryEvaluationError("The face of the hole is not a face of its body",
                                       "hole-face-missing");
-    double length = parameters.depth.value_or(0.0);
     if (!parameters.depth) {
         // Through all: longer than the body could ever be measured from this face.
         const auto box = kernel::boundingBox(body);
-        length = 2.0 * (box ? box->diagonal() : 0.0) + 1.0;
+        axis.length = 2.0 * (box ? box->diagonal() : 0.0) + 1.0;
     }
+    return axis;
+}
+
+// N09b: the points of the input sketch, laid onto the face; without points (x, y) of the face.
+std::vector<gp_Pnt> holeCentres(const HoleAxis& axis, const document::HoleParameters& parameters,
+                                const document::SketchParameters* sketch) {
+    if (parameters.points.empty())
+        return {axis.origin.Translated(axis.xAxis * parameters.x + axis.yAxis * parameters.y)};
+    if (sketch == nullptr)
+        throw GeometryEvaluationError("The sketch of the holes is missing", "hole-sketch-missing");
+    const auto& plane = sketch->plane;
+    const gp_Pnt origin(plane.originX, plane.originY, plane.originZ);
+    const gp_Vec x(plane.xDirectionX, plane.xDirectionY, plane.xDirectionZ);
+    const gp_Vec y = gp_Vec(plane.normalX, plane.normalY, plane.normalZ).Crossed(x);
+    std::vector<gp_Pnt> centres;
+    for (const auto id : parameters.points) {
+        const auto element =
+            std::ranges::find(sketch->elements.values, id, &document::SketchElement::id);
+        const auto* point = element == sketch->elements.values.end()
+                                ? nullptr
+                                : std::get_if<document::SketchPointGeometry>(&element->geometry);
+        if (point == nullptr)
+            throw GeometryEvaluationError("A point of the holes is gone from its sketch",
+                                          "hole-point-missing");
+        const gp_Pnt at = origin.Translated(x * point->position.x + y * point->position.y);
+        const double above = gp_Vec(axis.origin, at).Dot(axis.normal) / axis.normal.Magnitude();
+        centres.push_back(at.Translated(axis.normal.Normalized() * -above));
+    }
+    return centres;
+}
+
+// The solid one hole removes at `centre`: M08's cylinder, or the turned profile of a variant.
+kernel::ShapeOperationResult holeToolAt(const document::HoleParameters& parameters,
+                                        const HoleAxis& axis, const gp_Pnt& centre) {
     if (!parameters.variant.plain())
-        return variantTool(parameters, centre, inward, length);
-    return kernel::ShapeFactory::makeCylinderWithHistory({parameters.diameter / 2.0, length,
-                                                          centre.X(), centre.Y(), centre.Z(),
-                                                          inward.X(), inward.Y(), inward.Z()});
+        return variantTool(parameters, centre, axis.inward, axis.length);
+    return kernel::ShapeFactory::makeCylinderWithHistory(
+        {parameters.diameter / 2.0, axis.length, centre.X(), centre.Y(), centre.Z(),
+         axis.inward.X(), axis.inward.Y(), axis.inward.Z()});
 }
 
 std::vector<SupportProvenance> joined(std::span<const SupportProvenance> previous,
@@ -124,6 +166,39 @@ std::vector<EdgeProvenance> joinedEdges(std::span<const EdgeProvenance> previous
     return edges;
 }
 
+// One body cut by every hole in turn. N09b: the faces of the second and later holes carry
+// the instance {hole, i} (as pattern copies do); their edges stay unnamed.
+struct Drilled final {
+    TopoDS_Shape shape;
+    std::vector<SupportProvenance> faces;
+    std::vector<EdgeProvenance> edges;
+};
+Drilled drill(Drilled body, std::span<const kernel::ShapeOperationResult> tools,
+              document::FeatureId hole) {
+    for (std::size_t index = 0; index < tools.size(); ++index) {
+        auto faces = primitiveSupportOrigins(hole, tools[index]);
+        if (index > 0)
+            for (auto& face : faces)
+                face.origin.instances.push_back({hole, static_cast<std::uint32_t>(index)});
+        const auto edges =
+            index == 0 ? primitiveEdgeOrigins(hole, tools[index]) : std::vector<EdgeProvenance>{};
+        const auto cut = kernel::ShapeOperations::cutWithHistory(body.shape, tools[index].shape);
+        body = {cut.shape, joined(body.faces, faces, cut), joinedEdges(body.edges, edges, cut)};
+    }
+    return body;
+}
+
+std::vector<kernel::ShapeOperationResult> holeTools(const EvaluatedFeature& owner,
+                                                    const TopoDS_Shape& body,
+                                                    const document::HoleParameters& parameters,
+                                                    const document::SketchParameters* sketch) {
+    const auto axis = holeAxis(owner, body, parameters);
+    std::vector<kernel::ShapeOperationResult> tools;
+    for (const auto& centre : holeCentres(axis, parameters, sketch))
+        tools.push_back(holeToolAt(parameters, axis, centre));
+    return tools;
+}
+
 } // namespace
 
 void evaluateHole(const document::DocumentSnapshot& document,
@@ -135,27 +210,28 @@ void evaluateHole(const document::DocumentSnapshot& document,
     if (!producer)
         throw GeometryEvaluationError("The body of the hole has no solid before it",
                                       "body-missing");
+    const document::SketchParameters* sketch = nullptr;
+    if (descriptor.inputFeature)
+        if (const auto& resolved = findFeature(outputs, *descriptor.inputFeature).resolvedSketch)
+            sketch = &*resolved;
     const auto& owner = findFeature(outputs, *producer);
     EvaluatedBody& body = findBody(bodies, outputs, *producer);
     EvaluatedBody& referenceBody = findBody(referenceBodies, outputs, *producer);
-    const auto tool = holeTool(owner, body.shape, parameters);
     const auto referenceOwner = referenceOf(owner);
-    const auto referenceTool = holeTool(referenceOwner, referenceBody.shape, parameters);
-    const auto evaluated = kernel::ShapeOperations::cutWithHistory(body.shape, tool.shape);
+    const auto evaluated = drill({body.shape, owner.supportOrigins, owner.edgeOrigins},
+                                 holeTools(owner, body.shape, parameters, sketch), descriptor.id);
     const auto reference =
-        kernel::ShapeOperations::cutWithHistory(referenceBody.shape, referenceTool.shape);
-    outputs.push_back(EvaluatedFeature{
-        descriptor.id,
-        evaluated.shape,
-        reference.shape,
-        body.bodyId,
-        joined(owner.supportOrigins, primitiveSupportOrigins(descriptor.id, tool), evaluated),
-        {},
-        joined(owner.referenceSupportOrigins, primitiveSupportOrigins(descriptor.id, referenceTool),
-               reference),
-        joinedEdges(owner.edgeOrigins, primitiveEdgeOrigins(descriptor.id, tool), evaluated),
-        joinedEdges(owner.referenceEdgeOrigins, primitiveEdgeOrigins(descriptor.id, referenceTool),
-                    reference)});
+        drill({referenceBody.shape, owner.referenceSupportOrigins, owner.referenceEdgeOrigins},
+              holeTools(referenceOwner, referenceBody.shape, parameters, sketch), descriptor.id);
+    outputs.push_back(EvaluatedFeature{descriptor.id,
+                                       evaluated.shape,
+                                       reference.shape,
+                                       body.bodyId,
+                                       evaluated.faces,
+                                       {},
+                                       reference.faces,
+                                       evaluated.edges,
+                                       reference.edges});
     body.sourceFeature = descriptor.id;
     body.shape = evaluated.shape;
     referenceBody.sourceFeature = descriptor.id;

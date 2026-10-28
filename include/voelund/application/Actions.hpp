@@ -200,6 +200,10 @@ struct CreateHoleAction final {
     Quantity diameter;
     std::optional<Quantity> depth;
     document::HoleVariant variant{}; // N09: counterbore, countersink, drill point, thread
+    // N09b: holes at these points of `sketch` (a sketch on a body face) instead of (x, y);
+    // `support` and `face` are then taken from the sketch. No points: all of its points.
+    std::optional<document::FeatureId> sketch{};
+    std::vector<document::SketchElementId> points{};
     bool operator==(const CreateHoleAction&) const = default;
 };
 struct EditHoleParametersAction final {

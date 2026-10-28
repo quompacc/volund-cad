@@ -95,6 +95,7 @@ void HoleToolController::begin(const viewport::PlanarFaceSelection& face) {
     depth_ = 10.0;
     through_ = false;
     variant_ = {};
+    sketch_.reset();
     editing_.reset();
     stored_.reset();
     open();
@@ -114,8 +115,28 @@ void HoleToolController::beginEdit(document::FeatureId hole) {
     through_ = !values.depth.has_value();
     depth_ = values.depth.value_or(10.0);
     variant_ = values.variant;
+    // N09b: holes at sketch points keep their sketch (the feature's input).
+    const auto features = snapshot.features();
+    const auto descriptor = std::ranges::find(features, hole, &document::FeatureDescriptor::id);
+    sketch_ = values.points.empty() || descriptor == features.end() ? std::nullopt
+                                                                    : descriptor->inputFeature;
     editing_ = hole;
     stored_ = values;
+    open();
+}
+
+void HoleToolController::beginAtSketch(document::FeatureId sketch) {
+    sketch_ = sketch;
+    support_ = sketch;
+    face_ = document::SubshapeOrigin{sketch, std::nullopt}; // taken from the sketch
+    x_ = 0.0;
+    y_ = 0.0;
+    diameter_ = 6.0;
+    depth_ = 10.0;
+    through_ = false;
+    variant_ = {};
+    editing_.reset();
+    stored_.reset();
     open();
 }
 
@@ -213,6 +234,8 @@ void HoleToolController::chosen(const std::string& id, int index) {
 }
 
 void HoleToolController::showVariantFields() {
+    panel_.setLengthVisible("x", !sketch_); // N09b: the points place the holes
+    panel_.setLengthVisible("y", !sketch_);
     panel_.setLengthEnabled("depth", !through_);
     panel_.setChoiceEnabled("tip", !through_);
     panel_.setLengthEnabled("diameter", variant_.thread.empty());
@@ -290,7 +313,8 @@ application::Action HoleToolController::action() const {
                                                 y_,
                                                 diameter_,
                                                 through_ ? std::nullopt : std::optional{depth_},
-                                                variant_}};
+                                                variant_,
+                                                stored_->points}};
     return application::CreateHoleAction{support_,
                                          *face_,
                                          millimetres(x_),
@@ -298,7 +322,8 @@ application::Action HoleToolController::action() const {
                                          millimetres(diameter_),
                                          through_ ? std::nullopt
                                                   : std::optional{millimetres(depth_)},
-                                         variant_};
+                                         variant_,
+                                         sketch_};
 }
 
 bool HoleToolController::unchanged() const {

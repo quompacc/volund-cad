@@ -317,6 +317,9 @@ struct HoleVariant final {
     // A hole whose shape is M08's plain cylinder (its faces keep their names).
     [[nodiscard]] bool plain() const noexcept { return kind == HoleKind::simple && !drillPoint; }
 };
+// N09b (schema 44): holes at points of the feature's input sketch (a sketch on `face`), one per
+// point, all alike; x and y are then unused. Without points one hole at (x, y).
+inline constexpr std::size_t maximumHolePoints = 100;
 struct HoleParameters final {
     BodyFaceReference face;
     double x;
@@ -324,6 +327,7 @@ struct HoleParameters final {
     double diameter;
     std::optional<double> depth{};
     HoleVariant variant{}; // N09
+    std::vector<SketchElementId> points{};
     [[nodiscard]] bool operator==(const HoleParameters&) const = default;
 };
 void validateHoleParameters(const HoleParameters& parameters);
@@ -553,7 +557,9 @@ class ModelDocument final {
     [[nodiscard]] FeatureId addFilletFeature(std::string name, const FilletParameters& parameters);
     [[nodiscard]] FeatureId addChamferFeature(std::string name,
                                               const ChamferParameters& parameters);
-    [[nodiscard]] FeatureId addHoleFeature(std::string name, const HoleParameters& parameters);
+    // N09b: a hole with points takes `sketch` as its input (the sketch the points belong to).
+    [[nodiscard]] FeatureId addHoleFeature(std::string name, const HoleParameters& parameters,
+                                           std::optional<FeatureId> sketch = std::nullopt);
     [[nodiscard]] FeatureId addCombineFeature(std::string name,
                                               const CombineParameters& parameters);
     [[nodiscard]] FeatureId addDatumPlaneFeature(std::string name,

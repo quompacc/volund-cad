@@ -3,8 +3,11 @@
 
 #include "CadSessionGeometryDetail.hpp"
 #include "CommandInput.hpp"
+#include <algorithm>
 #include <cmath>
+#include <functional>
 #include <string>
+#include <variant>
 #include <voelund/features/FilletEdges.hpp>
 
 namespace voelund::application {
@@ -168,6 +171,39 @@ CommandResult CadSession::createHole(document::FeatureId support,
                                         document::HoleParameters{*reference, hole.x, hole.y,
                                                                  hole.diameter, hole.depth,
                                                                  hole.variant});
+    });
+    if (!idInput.value)
+        return CommandResult::invalidInput(idInput.diagnostic);
+    return finishCandidate(transaction, *idInput.value, CommandKind::newFeature,
+                           ErrorDisposition::reject, true);
+}
+
+CommandResult CadSession::createSketchHoles(document::FeatureId sketch,
+                                            const document::HoleParameters& hole) {
+    const auto features = document_.features();
+    const auto found = std::ranges::find(features, sketch, &document::FeatureDescriptor::id);
+    if (found == features.end() || found->kind != document::FeatureKind::sketch)
+        return CommandResult::invalidInput("Holes at sketch points need a sketch");
+    const auto& parameters = document_.sketchParameters(sketch);
+    if (!parameters.supportBinding)
+        return CommandResult::invalidInput(
+            "Holes at sketch points need a sketch on a planar body face");
+    auto holes = hole;
+    holes.face = {parameters.supportBinding->reference.body,
+                  parameters.supportBinding->reference.origin};
+    if (holes.points.empty())
+        for (const auto& element : parameters.elements.values)
+            if (std::holds_alternative<document::SketchPointGeometry>(element.geometry))
+                holes.points.push_back(element.id);
+    std::ranges::sort(holes.points, {}, &document::SketchElementId::value);
+    if (holes.points.empty())
+        return CommandResult::invalidInput("The sketch has no points");
+    const std::size_t sequence =
+        featureCount(document_.features(), document::FeatureKind::hole) + 1;
+    document::DocumentTransaction transaction(document_);
+    auto& candidate = transaction.edit();
+    const auto idInput = detail::prepareInput([&] {
+        return candidate.addHoleFeature("Bohrung " + std::to_string(sequence), holes, sketch);
     });
     if (!idInput.value)
         return CommandResult::invalidInput(idInput.diagnostic);

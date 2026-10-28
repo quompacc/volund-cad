@@ -22,7 +22,8 @@ document::HoleParameters holeOf(const CreateHoleAction& action) {
             action.y.value,
             action.diameter.value,
             action.depth ? std::optional{action.depth->value} : std::nullopt,
-            action.variant};
+            action.variant,
+            action.points};
 }
 using document::DocumentSnapshot;
 using document::FeatureId;
@@ -238,7 +239,8 @@ class Validation final {
         finite({action.parameters.distance});
     }
     void operator()(const CreateHoleAction& action) {
-        static_cast<void>(target(action.support, ActionKind::createHole));
+        static_cast<void>(
+            target(action.sketch ? *action.sketch : action.support, ActionKind::createHole));
         lengths({action.x, action.y, action.diameter});
         if (action.depth)
             lengths({*action.depth});
@@ -453,7 +455,8 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot,
                 return session.editChamferParameters(a.chamfer, a.parameters, reject);
             },
             [&](const CreateHoleAction& a) {
-                return session.createHole(a.support, a.face, holeOf(a));
+                return a.sketch ? session.createSketchHoles(*a.sketch, holeOf(a))
+                                : session.createHole(a.support, a.face, holeOf(a));
             },
             [&](const EditHoleParametersAction& a) {
                 return session.editHoleParameters(a.hole, a.parameters, reject);

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Eduard Hart
 
+#include "../BoundSketchFixture.hpp"
 #include "CadSessionTestSupport.hpp"
 
 #include <voelund/application/Actions.hpp>
@@ -214,10 +215,59 @@ void variants() {
             "Save/Open keeps the variant");
 }
 
+// N09b (schema 44): three points of a sketch on the top face of a 40 x 30 x 10 box give three
+// Ø6 holes 4 deep in one feature; a moved point takes its hole along; Save/Open keeps them; a
+// sketch without points is refused.
+document::SketchElement point(std::uint64_t id, double x, double y) {
+    return {document::SketchElementId{id}, document::SketchPointGeometry{{x, y}}};
+}
+void sketchHoles() {
+    application::CadSession session;
+    session.newDocument();
+    const auto box = *session.createBoxFeature({40, 30, 10}).feature();
+    const auto face = top(session, box);
+    const document::SketchPlane plane{0, 0, 10, 0, 0, 1, 1, 0, 0};
+    document::SketchParameters points{plane,
+                                      {{point(1, 10, 10), point(2, 20, 15), point(3, 30, 20)}, 4}};
+    const auto sketch = *session.createSketchFeature(box, points).feature();
+    test::bindTop(session, sketch);
+    const document::HoleParameters size{{document::BodyId{box.value()}, face.origin}, 0, 0, 6, 4};
+    const auto made = session.createSketchHoles(sketch, size);
+    require(made.status() == CommandStatus::committed && valid(session) &&
+                near(volume(session), 12000 - 3 * 36 * pi),
+            "Three points: three holes, 3 x 36 pi: " + made.diagnostic());
+    const auto holes = session.features().back().id;
+    require(session.holeParameters(holes).points.size() == 3 && !solidAt(session, 20, 15, 8) &&
+                solidAt(session, 25, 15, 8),
+            "The holes sit at the points");
+    auto moved = session.identifiedSnapshot().snapshot().sketchParameters(sketch);
+    std::get<document::SketchPointGeometry>(moved.elements.values[1].geometry).position = {25, 15};
+    require(session.editSketchParameters(sketch, moved).status() == CommandStatus::committed &&
+                near(volume(session), 12000 - 3 * 36 * pi) && solidAt(session, 20, 15, 8) &&
+                !solidAt(session, 25, 15, 8),
+            "A moved point takes its hole along");
+    const auto path = test::temporaryFilePath("voelund-n09b-holes.volund");
+    session.saveDocument(path);
+    application::CadSession loaded;
+    loaded.loadDocument(path);
+    std::error_code ignored;
+    std::filesystem::remove(path, ignored);
+    require(loaded.holeParameters(holes) == session.holeParameters(holes) &&
+                near(volume(loaded), 12000 - 3 * 36 * pi),
+            "Save/Open keeps the holes at their points");
+    document::SketchParameters empty{
+        plane, {{{document::SketchElementId{1}, document::SketchLine{{1, 1}, {5, 5}}}}, 2}};
+    const auto lines = *session.createSketchFeature(box, empty).feature();
+    test::bindTop(session, lines);
+    require(session.createSketchHoles(lines, size).status() != CommandStatus::committed,
+            "A sketch without points gives no holes");
+}
+
 int main() {
     try {
         throughAndBlind();
         variants();
+        sketchHoles();
         std::cout << "PASS M08 hole: through 90 pi, blind 36 pi, thicker box, follows its face, "
                      "refused, undo, save/open\n";
         return 0;

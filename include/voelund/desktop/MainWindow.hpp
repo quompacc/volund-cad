@@ -162,6 +162,8 @@ class MainWindow final : public QMainWindow {
     void createInspectTools();                                               // M12, N08
     void addInspectServices(modules::solid::SolidCommandServices& services); // M12, N08
     void checkInterference();                                                // N08
+    void addHoleServices(modules::solid::SolidCommandServices& services);    // M08, N09b
+    [[nodiscard]] std::optional<document::FeatureId> sketchForHoles() const; // N09b
     void rollToEdited();                                                     // W08
     void restoreEditRollback();                                              // W08
     void clearEdgeSelection();

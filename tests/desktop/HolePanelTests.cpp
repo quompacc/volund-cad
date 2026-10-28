@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Eduard Hart
 
+#include "../BoundSketchFixture.hpp"
 #include "IsolatedSettings.hpp"
 #include "ViewportLifecycleSupport.hpp"
 #include <BRepBndLib.hxx>
@@ -128,6 +129,45 @@ void variant(desktop::MainWindow& window, application::CadSession& session) {
             "M6 with a countersink: thread stated, volume exact");
 }
 
+// N09b: a sketch with three points on the top face, selected: "Bohrung" opens without X/Y,
+// and OK drills three Ø6 holes 4 deep in one step.
+void sketchHoles(desktop::MainWindow& window, application::CadSession& session) {
+    session.newDocument();
+    const auto box = *session.createBoxFeature({40, 30, 10}).feature();
+    const auto point = [](std::uint64_t id, double x, double y) {
+        return document::SketchElement{document::SketchElementId{id},
+                                       document::SketchPointGeometry{{x, y}}};
+    };
+    const document::SketchParameters points{
+        {0, 0, 10, 0, 0, 1, 1, 0, 0}, {{point(1, 10, 10), point(2, 20, 15), point(3, 30, 20)}, 4}};
+    const auto sketch = *session.createSketchFeature(box, points).feature();
+    test::bindTop(session, sketch);
+    require(session.selectFeature(sketch), "Sketch selected");
+    window.refreshAfterExternalChange();
+    settle();
+    QAction& hole = command(window, "solid.modify.hole");
+    require(hole.isEnabled(), "Bohrung offered for a face sketch with points");
+    hole.trigger();
+    settle();
+    require(panel(window) != nullptr &&
+                panel(window)
+                        ->findChild<QDoubleSpinBox*>(QStringLiteral("toolLength_x"))
+                        ->isVisible() == false,
+            "The panel opens without X/Y");
+    setLength(window, "depth", 4);
+    button(window, "toolAcceptButton").click();
+    settle();
+    require(session.features().back().kind == document::FeatureKind::hole &&
+                session.holeParameters(session.features().back().id).points.size() == 3 &&
+                matches(volume(session), 12000 - 3 * 36 * pi),
+            "OK drills three holes in one step");
+}
+
+void variantAndSketchHoles(desktop::MainWindow& window, application::CadSession& session) {
+    variant(window, session);
+    sketchHoles(window, session);
+}
+
 void run() {
     application::CadSession session;
     desktop::MainWindow window(session);
@@ -195,7 +235,6 @@ void run() {
     require(session.undo().status() == application::CommandStatus::committed &&
                 matches(volume(session), 12000 - 90 * pi),
             "Undo returns to diameter 6");
-
     const auto directory = std::filesystem::temp_directory_path() / "voelund-m08-hole-panel";
     std::filesystem::remove_all(directory);
     std::filesystem::create_directories(directory);
@@ -206,9 +245,10 @@ void run() {
     require(session.features().size() == 2 && matches(volume(session), 12000 - 90 * pi),
             "Open restores the hole");
     std::filesystem::remove_all(directory);
-    variant(window, session);
+    variantAndSketchHoles(window, session);
     std::cout << "PASS M08 hole panel: place by click, move by clicks over the preview, depth, "
-                 "through, OK, undo, edit, open; N09 tapped M6 with countersink\n";
+                 "through, OK, undo, edit, open; N09 tapped M6 with countersink, holes at sketch "
+                 "points\n";
 }
 } // namespace
 

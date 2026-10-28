@@ -383,6 +383,14 @@ void NativePrimitiveCodec::write(const Handle(TDocStd_Document) & document,
     }
 }
 
+// M27: a primitive joined to (or placed by) an input names it in child 5; N09b (schema 44):
+// so do holes at the points of a sketch.
+namespace {
+bool namesInput(bool solid, bool hole, const TDF_Label& native, int schemaVersion) {
+    return (solid || (hole && schemaVersion >= 44)) && !native.FindChild(5, false).IsNull();
+}
+} // namespace
+
 IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Document) & document) {
     const auto metadata = readNativeMetadata(document);
     const auto root = document->Main();
@@ -438,16 +446,16 @@ IdentifiedDocumentSnapshot NativePrimitiveCodec::read(const Handle(TDocStd_Docum
             const bool standaloneCylinder = kind == "cylinder" &&
                                             native.FindChild(5, false).IsNull() &&
                                             metadata.schemaVersion >= 12;
-            // M27: a primitive joined to (or placed by) an input names it in child 5.
-            const bool solidInput = solid && !native.FindChild(5, false).IsNull();
+            const bool withInput =
+                namesInput(solid.has_value(), hole, native, metadata.schemaVersion);
             require((box || sketch || extrusion || fillet || chamfer || hole || solid ||
                      kind == "cylinder") &&
                     native.NbChildren() ==
-                        (box || fillet || chamfer || hole || (solid && !solidInput) ||
+                        (box || fillet || chamfer || ((hole || solid) && !withInput) ||
                                  standaloneSketch || standaloneExtrusion
                              ? 4
-                         : (sketch || extrusion || standaloneCylinder || solidInput) ? 5
-                                                                                     : 6));
+                         : (sketch || extrusion || standaloneCylinder || withInput) ? 5
+                                                                                    : 6));
             labels.emplace(entry(native), records.size());
             FeatureParameters decoded =
                 sketch      ? FeatureParameters{readNativeSketchGeometry(

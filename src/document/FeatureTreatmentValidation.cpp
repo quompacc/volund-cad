@@ -5,7 +5,9 @@
 #include <voelund/document/ModelDocument.hpp>
 #include <voelund/kernel/NumericPolicy.hpp>
 
+#include <algorithm>
 #include <cmath>
+#include <functional>
 #include <stdexcept>
 
 // M05/M07/M08: validation of the fillet, chamfer and hole parameters.
@@ -87,6 +89,11 @@ void validateHoleHead(const HoleParameters& parameters) {
 
 void validateHoleParameters(const HoleParameters& parameters) {
     validateHoleVariant(parameters);
+    // N09b: distinct point elements, in order, at most 100.
+    if (parameters.points.size() > maximumHolePoints ||
+        !std::ranges::is_sorted(parameters.points, {}, &SketchElementId::value) ||
+        std::ranges::adjacent_find(parameters.points) != parameters.points.end())
+        throw std::invalid_argument("Hole points are distinct, sorted and at most 100");
     if (!kernel::modelLength(parameters.diameter) ||
         (parameters.depth && !kernel::modelLength(*parameters.depth)) ||
         !kernel::modelCoordinate(parameters.x) || !kernel::modelCoordinate(parameters.y))

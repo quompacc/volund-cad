@@ -4,6 +4,7 @@
 #include <voelund/document/LegacyBodyIdentity.hpp>
 
 #include <algorithm>
+#include <array>
 #include <map>
 #include <stdexcept>
 #include <utility>
@@ -18,6 +19,32 @@ bool separatePrimitive(const FeatureDescriptor& feature, const FeatureParameters
         return std::get<CylinderParameters>(parameters).resultMode == CylinderResultMode::separate;
     return feature.kind == FeatureKind::primitive &&
            std::get<PrimitiveParameters>(parameters).resultMode == CylinderResultMode::separate;
+}
+
+// Boxes, base-plane (datum) and construction-plane sketches, face extrusions (T04), fillets
+// (M05) and the other body operations stand alone; every other feature has an input. N09b:
+// holes at sketch points take their sketch as input.
+// The features whose input is a sketch: extrusions, and N09b holes at sketch points.
+bool takesSketch(FeatureKind kind) {
+    return kind == FeatureKind::extrusion || kind == FeatureKind::hole;
+}
+bool standsAlone(const FeatureDescriptor& feature, const FeatureParameters& parameters) {
+    static constexpr std::array alone{
+        FeatureKind::box,        FeatureKind::fillet,      FeatureKind::chamfer,
+        FeatureKind::combine,    FeatureKind::datumPlane,  FeatureKind::datumAxis,
+        FeatureKind::shell,      FeatureKind::draft,       FeatureKind::mirror,
+        FeatureKind::pattern,    FeatureKind::patternCopy, FeatureKind::move,
+        FeatureKind::stepImport, FeatureKind::importPart};
+    if (std::ranges::find(alone, feature.kind) != alone.end())
+        return true;
+    if (feature.kind == FeatureKind::hole)
+        return std::get<HoleParameters>(parameters).points.empty();
+    if (feature.kind == FeatureKind::sketch) {
+        const auto& sketch = std::get<SketchParameters>(parameters);
+        return sketch.datum || sketch.constructionPlane;
+    }
+    return feature.kind == FeatureKind::extrusion &&
+           std::get<ExtrusionParameters>(parameters).faceProfile;
 }
 
 void validateKind(const FeatureDescriptor& feature, const FeatureParameters& parameters) {
@@ -93,22 +120,7 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
     }
     if (!matches)
         throw std::invalid_argument("Legacy body identity: feature parameter kind mismatch");
-    // Boxes, base-plane (datum) sketches, face extrusions (T04) and fillets (M05) stand
-    // alone; every other feature has an input.
-    const bool standalone =
-        feature.kind == FeatureKind::box || feature.kind == FeatureKind::fillet ||
-        feature.kind == FeatureKind::chamfer || feature.kind == FeatureKind::hole ||
-        feature.kind == FeatureKind::combine || feature.kind == FeatureKind::datumPlane ||
-        feature.kind == FeatureKind::datumAxis || feature.kind == FeatureKind::shell ||
-        feature.kind == FeatureKind::draft || feature.kind == FeatureKind::mirror ||
-        feature.kind == FeatureKind::pattern || feature.kind == FeatureKind::patternCopy ||
-        feature.kind == FeatureKind::move || feature.kind == FeatureKind::stepImport ||
-        feature.kind == FeatureKind::importPart ||
-        (feature.kind == FeatureKind::sketch &&
-         (std::get<SketchParameters>(parameters).datum ||
-          std::get<SketchParameters>(parameters).constructionPlane)) ||
-        (feature.kind == FeatureKind::extrusion &&
-         std::get<ExtrusionParameters>(parameters).faceProfile);
+    const bool standalone = standsAlone(feature, parameters);
     // M01: a separate cylinder may also stand alone, as a new body at the origin.
     // M27: so may a separate primitive.
     const bool optionalInput = separatePrimitive(feature, parameters);
@@ -140,7 +152,7 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
             throw std::invalid_argument("Legacy body identity: missing input feature");
         inputs[index] = input->second;
         const bool sketchInput = features[input->second].kind == FeatureKind::sketch;
-        if ((features[index].kind == FeatureKind::extrusion) != sketchInput)
+        if (takesSketch(features[index].kind) != sketchInput)
             throw std::invalid_argument("Legacy body identity: incompatible input kind");
     }
     const auto extrusion = [&](std::size_t index) -> const ExtrusionParameters* {

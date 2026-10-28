@@ -163,6 +163,22 @@ bool ModelDocument::setBodyColor(BodyId body, std::optional<std::uint32_t> color
     commitState(std::move(candidate));
     return true;
 }
+FeatureId ModelDocument::addHoleFeature(std::string name, const HoleParameters& parameters,
+                                        std::optional<FeatureId> sketch) {
+    validateHoleParameters(parameters);
+    if (parameters.points.empty() != !sketch.has_value() ||
+        (sketch && features()[featureIndex(*sketch)].kind != FeatureKind::sketch))
+        throw std::invalid_argument("Holes at sketch points name their sketch");
+    const FeatureId id = nextFeatureId();
+    auto candidate = currentState();
+    ++candidate.nextFeatureId;
+    candidate.features.push_back(FeatureDescriptor{id, FeatureKind::hole, std::move(name), sketch});
+    candidate.parameters.emplace_back(parameters);
+    static_cast<void>(featureBodyContexts(candidate.features, candidate.parameters));
+    commitState(std::move(candidate));
+    return id;
+}
+
 bool ModelDocument::setBodyMaterial(BodyId body, std::optional<BodyMaterial> material) {
     auto candidate = currentState();
     auto attributes = document::bodyAttributes(candidate.bodyAttributes, body.value());

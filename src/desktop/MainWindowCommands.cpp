@@ -246,14 +246,7 @@ void MainWindow::createCommands() {
     };
     services.canPushPull = [this]() { return canPushPullNow(); };
     // M08: a hole at the clicked point of the picked planar face.
-    services.hole = [this]() {
-        if (!impl_->selectedPlanarFace)
-            return;
-        if (impl_->sketchExtrusionTool->isActive())
-            impl_->sketchExtrusionTool->cancel();
-        impl_->holeTool->begin(*impl_->selectedPlanarFace);
-        syncShell();
-    };
+    addHoleServices(services); // M08, N09b
     // M21: the selected body takes the result; other bodies are clicked as tools.
     services.combine = [this]() {
         const auto producer = impl_->session.selectedBodyProducer();
@@ -367,9 +360,6 @@ void MainWindow::createCommands() {
             impl_->sketchExtrusionTool->cancel();
         impl_->draftTool->begin(*impl_->selectedPlanarFace);
         syncShell();
-    };
-    services.canHole = [this]() {
-        return impl_->selectedPlanarFace.has_value() && impl_->shell().canSketch();
     };
     services.canCombine = [this]() { return canCombineBody(); };
     services.canFillet = [this]() { return canTreatEdges(); };

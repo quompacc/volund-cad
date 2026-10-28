@@ -426,7 +426,6 @@ lines | src/desktop/ToolRail.cpp | ToolRail | 96 | Altbestand vor A04
 lines | src/application/SketchOffset.cpp | offsetGeometry | 97 | Altbestand vor A04
 lines | src/application/SketchEditorRelations.cpp | canAddSelectedRelation | 95 | Altbestand vor A04
 lines | src/desktop/ToolPanelHost.cpp | ToolPanelHost | 92 | Altbestand vor A04
-lines | src/document/LegacyBodyIdentity.cpp | validateKind | 94 | Altbestand vor A04
 lines | src/viewport/SketchEditorInteraction.cpp | interactionPoint | 94 | Altbestand vor A04
 lines | src/application/SketchFilletPlan.cpp | planCorner | 93 | Altbestand vor A04
 lines | src/application/SketchEditorTransform.cpp | transformSelection | 92 | Altbestand vor A04

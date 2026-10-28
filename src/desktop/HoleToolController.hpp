@@ -37,6 +37,8 @@ class HoleToolController final {
 
     void begin(const viewport::PlanarFaceSelection& face);
     void beginEdit(document::FeatureId hole);
+    // N09b: holes at all points of a sketch on a body face; the panel has no X/Y then.
+    void beginAtSketch(document::FeatureId sketch);
     [[nodiscard]] bool isActive() const noexcept { return active_; }
     // A planar face picked while the panel is open moves the hole to the click point.
     void place(const viewport::PlanarFaceSelection& face);
@@ -73,7 +75,8 @@ class HoleToolController final {
     double diameter_{6.0};
     double depth_{10.0};
     bool through_{false};
-    document::HoleVariant variant_{}; // N09
+    document::HoleVariant variant_{};           // N09
+    std::optional<document::FeatureId> sketch_; // N09b: holes at its points
     std::optional<document::FeatureId> editing_;
     // M13: set while an edit is kept with errors at later features.
     std::optional<application::ErrorDisposition> keep_;

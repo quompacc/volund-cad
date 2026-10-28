@@ -89,6 +89,7 @@ add_library(
     BodyMaterialSection.cpp
     InterferenceToolController.cpp
     MainWindowInspect.cpp
+    MainWindowHoles.cpp
     ShellState.cpp
     SketchToolActions.cpp
     SketchViewAdapter.cpp

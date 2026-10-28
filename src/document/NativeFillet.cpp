@@ -8,6 +8,8 @@
 #include <TDataStd_Real.hxx>
 #include <TDataStd_RealArray.hxx>
 #include <charconv>
+#include <cstdint>
+#include <sstream>
 #include <string>
 
 namespace voelund::document::detail {
@@ -154,6 +156,29 @@ void writeHoleVariant(const TDF_Label& label, const HoleParameters& parameters) 
     TDataStd_Integer::Set(label.FindChild(7), variant.drillPoint ? 1 : 0);
     TDataStd_AsciiString::Set(label.FindChild(8), variant.thread.c_str());
 }
+// N09b (schema 44): the sketch point elements, as decimal IDs separated by spaces.
+void writeHolePoints(const TDF_Label& label, const HoleParameters& parameters) {
+    if (parameters.points.empty())
+        return;
+    std::string text;
+    for (const auto point : parameters.points)
+        text += (text.empty() ? "" : " ") + std::to_string(point.value());
+    TDataStd_AsciiString::Set(label.FindChild(9), text.c_str());
+}
+void readHolePoints(const TDF_Label& label, int schemaVersion, HoleParameters& result) {
+    if (label.FindChild(9, false).IsNull())
+        return;
+    require(schemaVersion >= 44);
+    Handle(TDataStd_AsciiString) text;
+    require(child(label, 9).FindAttribute(TDataStd_AsciiString::GetID(), text));
+    std::istringstream input(text->Get().ToCString());
+    std::uint64_t value = 0;
+    while (input >> value) {
+        require(value != 0 && result.points.size() < maximumHolePoints);
+        result.points.push_back(SketchElementId{value});
+    }
+    require(input.eof() && !result.points.empty());
+}
 void readHoleVariant(const TDF_Label& label, int schemaVersion, HoleVariant& result) {
     if (label.FindChild(5, false).IsNull())
         return;
@@ -194,12 +219,14 @@ void writeNativeHole(const TDF_Label& label, const HoleParameters& parameters) {
     if (parameters.depth)
         TDataStd_Real::Set(label.FindChild(4), *parameters.depth);
     writeHoleVariant(label, parameters);
+    writeHolePoints(label, parameters);
 }
 
 HoleParameters readNativeHole(const TDF_Label& label, std::size_t remainingRecords,
                               int schemaVersion) {
     const auto depth = label.FindChild(4, false);
-    const int extended = label.FindChild(5, false).IsNull() ? 0 : 4;
+    const int extended =
+        (label.FindChild(5, false).IsNull() ? 0 : 4) + (label.FindChild(9, false).IsNull() ? 0 : 1);
     require(schemaVersion >= 16 && label.NbChildren() == (depth.IsNull() ? 3 : 4) + extended);
     Handle(TDataStd_Real) diameter;
     require(label.FindAttribute(TDataStd_Real::GetID(), diameter));
@@ -217,6 +244,7 @@ HoleParameters readNativeHole(const TDF_Label& label, std::size_t remainingRecor
         result.depth = value->Get();
     }
     readHoleVariant(label, schemaVersion, result.variant);
+    readHolePoints(label, schemaVersion, result);
     validateHoleParameters(result);
     return result;
 }

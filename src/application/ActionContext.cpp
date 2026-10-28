@@ -53,8 +53,8 @@ std::vector<ActionKind> availableActions(const CadSession& session,
         actions = {ActionKind::setCylinderSize, ActionKind::editCylinderParameters};
         break;
     case FeatureKind::sketch:
-        actions = {ActionKind::editSketch, ActionKind::bindSketchDimension,
-                   ActionKind::createProfileExtrusion};
+        actions = {ActionKind::editSketch, ActionKind::bindSketchDimension, // N09b: holes
+                   ActionKind::createProfileExtrusion, ActionKind::createHole};
         break;
     case FeatureKind::extrusion:
         actions = {ActionKind::bindExtrusionDistance, ActionKind::editExtrusionParameters};
