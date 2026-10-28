@@ -359,6 +359,13 @@ void draw(QPainter& painter, ShellIcon icon, const QColor& ink, const QColor& ac
         painter.drawPath(outer.subtracted(bite));
         break;
     }
+    case ShellIcon::rib:
+        // N12b: an open tray with a thin wall standing across it, the wall in the accent colour.
+        painter.drawPolyline(QPolygonF{QPointF(3.5, 6.5), QPointF(3.5, 20.5), QPointF(20.5, 20.5),
+                                       QPointF(20.5, 6.5)});
+        painter.setPen(QPen(accent, 1.8, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        painter.drawRect(QRectF(10.5, 6.5, 3, 14));
+        break;
     default:
         drawLater(painter, icon, accent);
     }

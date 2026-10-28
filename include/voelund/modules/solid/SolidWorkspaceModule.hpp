@@ -46,6 +46,9 @@ struct SolidCommandServices final {
     // N12a: splits the selected body at a plane or a picked planar face.
     std::function<void()> split{};
     std::function<bool()> canSplit{};
+    // N12b: a rib from the selected sketch's line.
+    std::function<void()> rib{};
+    std::function<bool()> canRib{};
     // M10: linear and circular patterns of the selected body.
     std::function<void()> patternLinear{};
     std::function<void()> patternCircular{};

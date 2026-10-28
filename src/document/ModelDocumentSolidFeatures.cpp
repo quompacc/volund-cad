@@ -122,9 +122,28 @@ void validateLoftParameters(const LoftParameters& parameters) {
     }
 }
 
+// Regions, profiles and the parts of the other kinds of extrusion.
+bool usesProfileParts(const ExtrusionParameters& parameters) {
+    return !parameters.regions.empty() || !parameters.profiles.empty() || parameters.revolve ||
+           parameters.sweep || parameters.loft || parameters.symmetric || parameters.upToFace ||
+           parameters.faceProfile || parameters.taperAngle != 0.0;
+}
+
+// N12b: a rib joins its target body from its sketch's line; nothing else a prism uses.
+void validateRib(const ExtrusionParameters& parameters) {
+    if (!parameters.rib)
+        return;
+    if (!kernel::modelLength(parameters.rib->thickness))
+        throw std::invalid_argument(kernel::modelRangeDiagnostic);
+    if (!parameters.target || parameters.operation != ExtrusionOperation::join ||
+        usesProfileParts(parameters))
+        throw std::invalid_argument("A rib joins its target body from its sketch line only");
+}
+
 void validateSweepExtrusion(const ExtrusionParameters& parameters) {
     if (parameters.revolve && parameters.revolve->pitch && parameters.symmetric)
         throw std::invalid_argument("A helix is not symmetric"); // M26
+    validateRib(parameters);
     if (!parameters.sweep && !parameters.loft)
         return;
     if (parameters.sweep)

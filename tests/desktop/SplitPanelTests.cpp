@@ -10,6 +10,7 @@
 #include <QComboBox>
 #include <QPushButton>
 #include <QToolButton>
+#include <array>
 #include <cmath>
 #include <iostream>
 #include <string>
@@ -77,6 +78,43 @@ double shown(viewport::CadViewport& viewport) {
     return viewport::ViewportTestAccess::displayedVolume(viewport);
 }
 
+// N12b: an open shell 40 x 30 x 20 (wall 2) and a line across its top on y = 15. "Rippe" on
+// the selected sketch: upwards it meets nothing and OK waits; "Umgekehrt" previews the rib down
+// to the floor (7152 + 1296); OK joins it.
+void ribFlow(desktop::MainWindow& window, application::CadSession& session,
+             viewport::CadViewport& viewport) {
+    session.newDocument();
+    const auto box = *session.createBoxFeature({40, 30, 20}).feature();
+    for (const auto& face : session.supportFaces(box))
+        if (face.plane.normalZ > 0.5) {
+            const std::array top{face.origin};
+            require(session.createShell(box, top, 2, false).feature().has_value(), "Shell");
+        }
+    const auto plane = *session
+                            .createDatumPlane(document::DatumPlane::xz, std::nullopt, std::nullopt,
+                                              -15, document::DatumRotationAxis::none, 0)
+                            .feature();
+    document::SketchParameters sketch{*session.datumFrame(plane), {}};
+    sketch.constructionPlane = plane;
+    sketch.elements.values.push_back(
+        {document::SketchElementId{1}, document::SketchLine{{0, 20}, {40, 20}}});
+    sketch.elements.nextId = 2;
+    require(session.createDatumSketchFeature(sketch).feature().has_value() &&
+                session.selectFeature(session.features().back().id),
+            "Line sketch chosen");
+    window.refreshAfterExternalChange();
+    command(window, "solid.create.rib").trigger();
+    settle();
+    require(panel(window) != nullptr && !button(window, "toolAcceptButton").isEnabled(),
+            "Upwards the rib meets nothing, OK waits");
+    choose(window, "toolChoice_direction", 1);
+    require(button(window, "toolAcceptButton").isEnabled() && matches(shown(viewport), 7152 + 1296),
+            "Umgekehrt: the rib down to the floor");
+    button(window, "toolAcceptButton").click();
+    settle();
+    require(panel(window) == nullptr && matches(volume(session), 7152 + 1296), "OK joins the rib");
+}
+
 void run() {
     application::CadSession session;
     desktop::MainWindow window(session);
@@ -125,8 +163,9 @@ void run() {
     require(panel(window) != nullptr, "Its part reopens the split too");
     button(window, "toolCancelButton").click();
     settle();
+    ribFlow(window, session, *viewport);
     std::cout << "PASS N12a split panel: construction plane, both/front/back preview, OK, "
-                 "timeline reopens split and part"
+                 "timeline reopens split and part; N12b rib panel"
               << std::endl;
 }
 } // namespace

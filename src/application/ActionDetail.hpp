@@ -5,6 +5,9 @@
 #include <voelund/application/Actions.hpp>
 #include <voelund/document/DocumentSnapshot.hpp>
 
+#include <optional>
+#include <string>
+#include <utility>
 #include <vector>
 
 namespace voelund::application::detail {
@@ -13,4 +16,29 @@ namespace voelund::application::detail {
 [[nodiscard]] std::vector<ActionKind> availableActions(const CadSession& session,
                                                        const document::DocumentSnapshot& snapshot,
                                                        const ActionTarget& target);
+// First finding of every check category; the AI01 order decides between categories.
+struct Findings final {
+    std::optional<std::string> unknownTarget;
+    std::optional<std::string> unsupportedTarget;
+    std::optional<std::string> invalidUnit;
+    std::optional<std::string> nonFinite;
+    std::optional<std::string> unresolvedReference;
+
+    static void note(std::optional<std::string>& category, std::string message) {
+        if (!category)
+            category = std::move(message);
+    }
+    [[nodiscard]] std::optional<std::pair<ActionRejection, std::string>> first() const {
+        const std::pair<ActionRejection, const std::optional<std::string>*> ordered[] = {
+            {ActionRejection::unknownTarget, &unknownTarget},
+            {ActionRejection::unsupportedTarget, &unsupportedTarget},
+            {ActionRejection::invalidUnit, &invalidUnit},
+            {ActionRejection::nonFinite, &nonFinite},
+            {ActionRejection::unresolvedReference, &unresolvedReference}};
+        for (const auto& [rejection, finding] : ordered)
+            if (*finding)
+                return std::pair{rejection, **finding};
+        return std::nullopt;
+    }
+};
 } // namespace voelund::application::detail

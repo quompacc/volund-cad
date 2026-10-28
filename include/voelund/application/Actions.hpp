@@ -303,6 +303,13 @@ struct CreateSplitAction final {
     document::SplitKeep keep{document::SplitKeep::both};
     bool operator==(const CreateSplitAction&) const = default;
 };
+// N12b: a rib from `sketch`'s one straight line into `target`'s body.
+struct CreateRibAction final {
+    document::FeatureId sketch;
+    document::BodyId target;
+    document::RibParameters rib;
+    bool operator==(const CreateRibAction&) const = default;
+};
 struct EditSplitParametersAction final {
     document::FeatureId split;
     document::SplitParameters parameters;
@@ -371,7 +378,7 @@ using Action = std::variant<
     EditShellParametersAction, CreatePrimitiveAction, EditPrimitiveParametersAction,
     CreateDraftAction, EditDraftParametersAction, CreateMirrorAction, EditMirrorParametersAction,
     CreatePatternAction, EditPatternParametersAction, MoveBodyAction, EditMoveParametersAction,
-    SetFeatureSuppressedAction, CreateSplitAction, EditSplitParametersAction>;
+    SetFeatureSuppressedAction, CreateSplitAction, EditSplitParametersAction, CreateRibAction>;
 // Parallel to the alternatives of Action.
 enum class ActionKind {
     createParameter,
@@ -420,7 +427,8 @@ enum class ActionKind {
     editMoveParameters,
     setFeatureSuppressed, // M14
     createSplit,          // N12a
-    editSplitParameters
+    editSplitParameters,
+    createRib // N12b
 };
 [[nodiscard]] ActionKind actionKind(const Action& action) noexcept;
 

@@ -13,6 +13,7 @@ add_library(voelund_application STATIC
     CadSessionPrimitives.cpp
     CadSessionSolidFeatures.cpp
     CadSessionMirror.cpp
+    CadSessionRib.cpp
     CadSessionPattern.cpp
     CadSessionMove.cpp
     CadSessionStep.cpp

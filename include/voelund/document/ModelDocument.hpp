@@ -223,6 +223,15 @@ struct LoftParameters final {
 };
 inline constexpr std::size_t maximumLoftSections = 15;
 void validateLoftParameters(const LoftParameters& parameters);
+// N12b (schema 51, agent decision 2026-10-28, as Fusion's "Rib"): a rib from the one straight
+// line of the extrusion's sketch: `thickness` thick, symmetric about the sketch plane, reaching
+// in the plane from the line (extended) to the side its normal turns towards (the other way
+// when `flipped`) until it meets faces of its target body, which it joins.
+struct RibParameters final {
+    double thickness{2.0};
+    bool flipped{false};
+    [[nodiscard]] bool operator==(const RibParameters&) const = default;
+};
 struct ExtrusionParameters;
 // The sweep (M23) or loft (M24) part of an extrusion: valid, alone, and nothing else a prism
 // uses.
@@ -279,6 +288,7 @@ struct ExtrusionParameters final {
     // W16 (schema 40, user request 2026-10-25 as FreeCAD's "Schrägungswinkel"): degrees the
     // sides lean, positive wider towards the end, negative narrower; 0 is a straight prism.
     double taperAngle{0.0};
+    std::optional<RibParameters> rib{}; // N12b
 
     [[nodiscard]] bool operator==(const ExtrusionParameters&) const = default;
 };

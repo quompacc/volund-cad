@@ -63,7 +63,8 @@ constexpr const char* toolNames[] = {"create_parameter",
                                      nullptr, // M11: no tools yet
                                      nullptr, // M14: no tool yet
                                      nullptr, // N12a: no tools yet
-                                     nullptr};
+                                     nullptr,
+                                     nullptr}; // N12b: no tool yet
 static_assert(std::size(toolNames) == std::variant_size_v<application::Action>,
               "One tool name (or none) per action kind");
 constexpr const char* statusNames[] = {"rejected", "committed", "committedWithErrors"};

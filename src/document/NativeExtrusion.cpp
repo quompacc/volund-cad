@@ -89,15 +89,41 @@ std::uint64_t readDecimal(const TDF_Label& label) {
             text == std::to_string(id));
     return id;
 }
-// W16 (schema 40): child 16 holds the taper in degrees, written only when not 0.
+// W16 (schema 40): child 16 holds the taper in degrees, written only when not 0. N12b (schema
+// 51): child 17 holds a rib's thickness, and on its child 1 whether it is flipped.
 void writeTaper(const TDF_Label& label, const ExtrusionParameters& parameters) {
     if (parameters.taperAngle != 0.0)
         TDataStd_Real::Set(label.FindChild(16), parameters.taperAngle);
+    if (parameters.rib) {
+        const auto rib = label.FindChild(17);
+        TDataStd_Real::Set(rib, parameters.rib->thickness);
+        TDataStd_Integer::Set(rib.FindChild(1), parameters.rib->flipped ? 1 : 0);
+    }
 }
 bool validTaper(const ExtrusionParameters& parameters, int schemaVersion) {
-    return parameters.taperAngle == 0.0 || schemaVersion >= 40;
+    return (parameters.taperAngle == 0.0 || schemaVersion >= 40) &&
+           (!parameters.rib || schemaVersion >= 51);
+}
+// The children after the loft: the taper (16) and the rib (17).
+int laterChildren(const TDF_Label& label) {
+    return static_cast<int>(!label.FindChild(16, false).IsNull()) +
+           static_cast<int>(!label.FindChild(17, false).IsNull());
+}
+void readRib(const TDF_Label& label, int schemaVersion, ExtrusionParameters& result) {
+    const auto rib = label.FindChild(17, false);
+    if (rib.IsNull())
+        return;
+    Handle(TDataStd_Real) thickness;
+    Handle(TDataStd_Integer) flipped;
+    const auto flip = rib.FindChild(1, false);
+    require(schemaVersion >= 51 && rib.NbChildren() == 1 &&
+            rib.FindAttribute(TDataStd_Real::GetID(), thickness) && !flip.IsNull() &&
+            flip.FindAttribute(TDataStd_Integer::GetID(), flipped) &&
+            (flipped->Get() == 0 || flipped->Get() == 1));
+    result.rib = RibParameters{thickness->Get(), flipped->Get() == 1};
 }
 void readTaper(const TDF_Label& label, int schemaVersion, ExtrusionParameters& result) {
+    readRib(label, schemaVersion, result); // N12b
     const auto taper = label.FindChild(16, false);
     if (taper.IsNull())
         return;
@@ -266,8 +292,7 @@ ExtrusionParameters readNativeExtrusion(const TDF_Label& label, std::size_t rema
                                       t02 + t03 + (profileFace.IsNull() ? 0 : 1) +
                                       (symmetric.IsNull() ? 0 : 1) + (revolve.IsNull() ? 0 : 1) +
                                       (sweep.IsNull() ? 0 : 1) + (loft.IsNull() ? 0 : 1) +
-                                      (seams.IsNull() ? 0 : 1) +
-                                      static_cast<int>(!label.FindChild(16, false).IsNull()));
+                                      (seams.IsNull() ? 0 : 1) + laterChildren(label));
     Handle(TDataStd_Real) distance;
     require(label.FindAttribute(TDataStd_Real::GetID(), distance));
     const auto profiles = child(label, 1);

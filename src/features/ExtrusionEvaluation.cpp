@@ -409,14 +409,27 @@ Origins continued(const Origins& input, const Origins& tool,
 }
 } // namespace
 
+namespace {
+// T04: a push/pull of a face; N12b: a rib. Both work on a body, not on sketch regions.
+bool evaluatedApart(const document::DocumentSnapshot& document,
+                    const document::FeatureDescriptor& descriptor,
+                    std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
+                    std::vector<EvaluatedBody>& referenceBodies) {
+    const auto& own = document.extrusionParameters(descriptor.id);
+    if (own.faceProfile)
+        evaluateFaceExtrusion(document, descriptor, own, outputs, bodies, referenceBodies);
+    else if (own.rib)
+        evaluateRib(document, descriptor, outputs, bodies, referenceBodies);
+    return own.faceProfile || own.rib;
+}
+} // namespace
+
 void evaluateExtrusion(const document::DocumentSnapshot& document,
                        const document::FeatureDescriptor& descriptor,
                        std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
                        std::vector<EvaluatedBody>& referenceBodies) {
-    if (const auto& own = document.extrusionParameters(descriptor.id); own.faceProfile) {
-        evaluateFaceExtrusion(document, descriptor, own, outputs, bodies, referenceBodies);
+    if (evaluatedApart(document, descriptor, outputs, bodies, referenceBodies))
         return;
-    }
     if (!descriptor.inputFeature.has_value()) {
         throw GeometryEvaluationError("Extrusion requires a sketch input");
     }

@@ -112,7 +112,7 @@ void MainWindow::createCommands() {
         const auto selected = impl_->session.selectedFeature();
         const auto kind = selected ? std::optional{impl_->session.selectedFeatureDescriptor().kind}
                                    : std::nullopt;
-        if (kind == document::FeatureKind::extrusion) {
+        if (kind == document::FeatureKind::extrusion && !isRib(*selected)) {
             impl_->sketchExtrusionTool->beginEdit(*selected);
             syncSketchPresentation();
             syncShell();
@@ -248,6 +248,22 @@ void MainWindow::createCommands() {
                 impl_->session.sceneStatus().isCurrent() && !impl_->shell().toolBlocksCommands());
     };
     services.canSplit = services.canMirror; // N12a
+    // N12b: a rib from the selected sketch's one line.
+    services.rib = [this]() {
+        if (const auto sketch = impl_->session.selectedFeature();
+            sketch &&
+            impl_->session.selectedFeatureDescriptor().kind == document::FeatureKind::sketch) {
+            if (impl_->sketchExtrusionTool->isActive())
+                impl_->sketchExtrusionTool->cancel();
+            impl_->ribTool->begin(*sketch);
+            syncShell();
+        }
+    };
+    services.canRib = [this]() {
+        return impl_->session.selectedFeature() &&
+               impl_->session.selectedFeatureDescriptor().kind == document::FeatureKind::sketch &&
+               impl_->session.sceneStatus().isCurrent() && !impl_->shell().toolBlocksCommands();
+    };
     // M10: copies of the selected body; one edge picked before is the direction or axis.
     const auto pattern = [this](document::PatternKind kind) {
         const auto face = impl_->selectedPlanarFace;
@@ -385,7 +401,8 @@ bool MainWindow::beginToolEdit(document::FeatureId selected, document::FeatureKi
          }},
         {Kind::datumPlane, datum},
         {Kind::datumAxis, datum},
-        {Kind::split, [this](auto id) { impl_->splitTool->beginEdit(id); }}, // N12a
+        {Kind::split, [this](auto id) { impl_->splitTool->beginEdit(id); }},   // N12a
+        {Kind::extrusion, [this](auto id) { impl_->ribTool->beginEdit(id); }}, // N12b: a rib
         {Kind::splitPart,
          [&](auto id) { impl_->splitTool->beginEdit(snapshot.splitPartParameters(id).split); }}};
     using Editor = std::pair<Kind, std::function<void(document::FeatureId)>>;
@@ -395,6 +412,13 @@ bool MainWindow::beginToolEdit(document::FeatureId selected, document::FeatureKi
     editor->second(selected);
     syncShell();
     return true;
+}
+
+bool MainWindow::isRib(document::FeatureId feature) const {
+    return impl_->session.identifiedSnapshot()
+        .snapshot()
+        .extrusionParameters(feature)
+        .rib.has_value();
 }
 
 bool MainWindow::canPushPullNow() const {

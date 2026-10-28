@@ -76,6 +76,7 @@ add_library(
     ShellToolController.cpp
     MirrorToolController.cpp
     SplitToolController.cpp
+    RibToolController.cpp
     PatternToolController.cpp
     MoveToolController.cpp
     MeasureToolController.cpp

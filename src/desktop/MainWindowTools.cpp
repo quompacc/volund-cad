@@ -82,6 +82,10 @@ void MainWindow::createToolPanel() {
         impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
         [this](const QString& message) { statusBar()->showMessage(message); });
     impl_->splitTool->setPreviewHandler(showPreview);
+    impl_->ribTool = std::make_unique<RibToolController>( // N12b
+        impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
+        [this](const QString& message) { statusBar()->showMessage(message); });
+    impl_->ribTool->setPreviewHandler(showPreview);
     impl_->patternTool = std::make_unique<PatternToolController>( // M10
         impl_->session, *impl_->viewport, *impl_->toolPanel, [this]() { refreshScene(); },
         [this](const QString& message) { statusBar()->showMessage(message); });

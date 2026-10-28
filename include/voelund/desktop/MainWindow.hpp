@@ -173,6 +173,7 @@ class MainWindow final : public QMainWindow {
     void restoreEditRollback();                                              // W08
     void clearEdgeSelection();
     bool beginToolEdit(document::FeatureId selected, document::FeatureKind kind); // N12a
+    [[nodiscard]] bool isRib(document::FeatureId feature) const;                  // N12b
     [[nodiscard]] std::vector<document::FeatureId> repeatableSteps() const;       // N11b
     void createAssistant();
     void createAssistantPanel();

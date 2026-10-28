@@ -1628,6 +1628,11 @@ add_executable(voelund_split_tests integration/SplitTests.cpp)
 target_link_libraries(voelund_split_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME application.split COMMAND voelund_split_tests)
 set_tests_properties(application.split PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
+# N12b: ribs.
+add_executable(voelund_rib_tests integration/RibTests.cpp)
+target_link_libraries(voelund_rib_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.rib COMMAND voelund_rib_tests)
+set_tests_properties(application.rib PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
 # M11: moving any body.
 add_executable(voelund_move_tests integration/MoveTests.cpp)
 target_link_libraries(voelund_move_tests PRIVATE voelund_project_options Voelund::Application)

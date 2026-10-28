@@ -49,6 +49,7 @@ std::optional<ShellIcon> iconFor(const QString& id) {
         {QStringLiteral("solid.create.sweep"), ShellIcon::sweep}, // M23
         {QStringLiteral("solid.create.loft"), ShellIcon::loft},   // M24
         {QStringLiteral("solid.create.helix"), ShellIcon::helix}, // M26
+        {QStringLiteral("solid.create.rib"), ShellIcon::rib},     // N12b
         {QStringLiteral("solid.modify.transform"), ShellIcon::transform},
         {QStringLiteral("solid.modify.edit_sketch"), ShellIcon::editSketch},
         {QStringLiteral("solid.modify.push_pull"), ShellIcon::pushPull},
@@ -95,7 +96,7 @@ const std::vector<RailGroup>& railGroups() {
          {QStringLiteral("solid.create.sketch"), QStringLiteral("solid.modify.edit_sketch"),
           QStringLiteral("solid.create.extrude_profiles"), QStringLiteral("solid.create.revolve"),
           QStringLiteral("solid.create.sweep"), QStringLiteral("solid.create.loft"),
-          QStringLiteral("solid.create.helix")}},
+          QStringLiteral("solid.create.helix"), QStringLiteral("solid.create.rib")}},
         {QT_TRANSLATE_NOOP("ToolRail", "Bearbeiten"),
          ShellIcon::fillet,
          {QStringLiteral("solid.modify.push_pull"), QStringLiteral("solid.modify.fillet"),

@@ -34,12 +34,13 @@ int main(int argc, char** argv) {
             "loft-section-hole", "loft-coplanar", "sweep-path-missing", "sweep-path-disconnected",
             "import-part-missing", "pattern-path-missing", "pattern-path-disconnected",
             "pattern-path-short", "repeated-step-missing", "repeated-step-kind", "split-misses",
-            "split-body-missing", "split-plane-missing", "region-needs-repair", "region-open",
-            "region-overlap", "profile-invalid", "sketch-unsolved", "sketch-support-missing",
-            "sketch-support-unsolved", "sketch-plane-missing", "sketch-needs-repair",
-            "end-face-missing", "end-face-not-parallel", "end-face-behind", "profile-face-missing",
-            "body-missing", "base-body-exists", "needs-target", "blocked-by-dependency",
-            "rolled-back", "stale-input"};
+            "rib-line", "rib-open", "split-body-missing", "split-plane-missing",
+            "region-needs-repair", "region-open", "region-overlap", "profile-invalid",
+            "sketch-unsolved", "sketch-support-missing", "sketch-support-unsolved",
+            "sketch-plane-missing", "sketch-needs-repair", "end-face-missing",
+            "end-face-not-parallel", "end-face-behind", "profile-face-missing", "body-missing",
+            "base-body-exists", "needs-target", "blocked-by-dependency", "rolled-back",
+            "stale-input"};
         for (const auto& code : codes)
             require(!voelund::desktop::issueText(code).isEmpty(), "German text for " + code);
 

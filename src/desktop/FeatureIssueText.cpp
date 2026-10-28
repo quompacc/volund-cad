@@ -121,6 +121,13 @@ constexpr std::array issueTexts{
     IssueText{"sweep-path-disconnected",
               QT_TRANSLATE_NOOP("FeatureIssue", "Folgen: Die Pfadelemente bilden keine "
                                                 "zusammenhängende Kette.")},
+    IssueText{"rib-line",
+              QT_TRANSLATE_NOOP("FeatureIssue", "Rippe: Die Skizze braucht genau eine gerade "
+                                                "Linie.")},
+    IssueText{"rib-open",
+              QT_TRANSLATE_NOOP("FeatureIssue", "Rippe: Auf dieser Seite der Linie trifft die "
+                                                "Rippe auf keine Flächen. Kehre die Richtung "
+                                                "um.")},
     IssueText{"split-misses",
               QT_TRANSLATE_NOOP("FeatureIssue", "Teilen: Die Ebene schneidet den Körper nicht; "
                                                 "auf einer Seite bliebe nichts.")},

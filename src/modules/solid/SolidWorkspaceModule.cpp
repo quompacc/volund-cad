@@ -18,8 +18,20 @@ std::function<bool()> alwaysEnabled() {
 
 } // namespace
 
-// M09 mirror, N12a split, M10 patterns.
+// M09 mirror, N12a split, M10 patterns; N12b rib.
 void SolidWorkspaceModule::addCopyCommands(SolidCommandServices& services) {
+    if (services.rib)
+        commands_.push_back({"solid.create.rib",
+                             "Rippe",
+                             "Aus der Linie der gewählten Skizze eine Rippe bis zu den Flächen "
+                             "des Körpers",
+                             {},
+                             workspaces::CommandGroup::create,
+                             true,
+                             false,
+                             simpleCommand(std::move(services.rib)),
+                             services.canRib,
+                             "Rippe"});
     if (services.mirror)
         commands_.push_back({"solid.modify.mirror",
                              "Spiegeln",

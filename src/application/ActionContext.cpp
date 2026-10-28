@@ -55,9 +55,9 @@ std::vector<ActionKind> editActions(const document::DocumentSnapshot& snapshot,
         return {ActionKind::setBoxDimensions, ActionKind::editBoxParameters};
     case FeatureKind::cylinder:
         return {ActionKind::setCylinderSize, ActionKind::editCylinderParameters};
-    case FeatureKind::sketch: // N09b: holes at its points
+    case FeatureKind::sketch: // N09b: holes at its points; N12b: a rib from its line
         return {ActionKind::editSketch, ActionKind::bindSketchDimension,
-                ActionKind::createProfileExtrusion, ActionKind::createHole};
+                ActionKind::createProfileExtrusion, ActionKind::createHole, ActionKind::createRib};
     case FeatureKind::extrusion: {
         std::vector<ActionKind> actions{ActionKind::bindExtrusionDistance,
                                         ActionKind::editExtrusionParameters};

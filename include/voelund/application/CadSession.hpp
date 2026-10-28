@@ -225,8 +225,7 @@ class CadSession final {
     createDatumSketchExtrusion(const document::SketchParameters& sketch,
                                std::span<const document::SketchRegionId> regions, double distance,
                                const ExtrusionMode& mode = {});
-    // T04: push/pull of a planar face of `support`'s current result as one extrusion feature
-    // (positive distance joins outward, negative cuts inward).
+    // T04: push/pull of a planar face of `support`'s result (positive joins, negative cuts).
     [[nodiscard]] CommandResult pushPullFace(document::FeatureId support,
                                              const features::SupportOrigin& face, double distance);
     // M05: rounds edges of `support`'s current body ("Verrundung N"), one undo step.
@@ -314,6 +313,9 @@ class CadSession final {
     // a planar face of `faceSupport`'s result; a new body or joined (N11b: or the chosen steps).
     [[nodiscard]] CommandResult createMirror(const CreateMirrorAction& action);
     [[nodiscard]] CommandResult createSplit(const CreateSplitAction& action); // N12a
+    // N12b (CadSessionRib.cpp): a rib ("Rippe N") from `sketch`'s line into `target`'s body.
+    [[nodiscard]] CommandResult createRib(document::FeatureId sketch, document::BodyId target,
+                                          const document::RibParameters& rib);
     [[nodiscard]] CommandResult editSplitParameters(const EditSplitParametersAction& action);
     [[nodiscard]] CommandResult
     editMirrorParameters(document::FeatureId featureId,
@@ -349,8 +351,7 @@ class CadSession final {
     // M17 (CadSessionStep.cpp): a STEP file as one import feature at the end of the history (or
     // at the rollback marker), one undo step; a file that gives no solid changes nothing.
     [[nodiscard]] StepImportResult importStep(const std::filesystem::path& path);
-    // M18 (user decision 2026-10-16): a STEP file opened as a new document holding its import.
-    // The file is read first; when it gives no solid the open document stays.
+    // M18: a STEP file opened as a new document with its import; without a solid nothing.
     [[nodiscard]] StepImportResult openStep(const std::filesystem::path& path);
     // N02 (CadSessionClipboard.cpp): bodies' current solids for the clipboard (invalid_argument
     // without one); a paste adds them as one fixed copy "Kopie N", one undo step.
@@ -366,8 +367,7 @@ class CadSession final {
     [[nodiscard]] CommandResult
     setFeatureSuppressed(document::FeatureId featureId, bool suppressed,
                          ErrorDisposition disposition = ErrorDisposition::keepEditableErrors);
-    // M14: the rollback marker after `featureId` (nullopt: at the end). No undo step and no
-    // unsaved change; the model shows the state at the marker.
+    // M14: the rollback marker after `featureId` (nullopt: the end); no undo step, not dirty.
     [[nodiscard]] bool setRollback(std::optional<document::FeatureId> featureId);
     [[nodiscard]] std::optional<document::FeatureId> rollbackAfter() const noexcept;
     // W08: while a tool edits an earlier step (rolled back to it), commits and previews check

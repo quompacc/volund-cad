@@ -23,6 +23,7 @@
 #include "PatternToolController.hpp"
 #include "PushPullToolController.hpp"
 #include "RecoveryStore.hpp"
+#include "RibToolController.hpp"
 #include "ShellHeader.hpp"
 #include "ShellState.hpp"
 #include "ShellToolController.hpp"
@@ -74,7 +75,7 @@ class MainWindow::Impl final {
             on(sketchExtrusionTool), on(pushPullTool), on(filletTool), on(holeTool),
             on(combineTool),         on(datumTool),    on(shellTool),  on(draftTool),
             on(mirrorTool),          on(patternTool),  on(moveTool),   on(measureTool),
-            on(interferenceTool),    on(splitTool)};
+            on(interferenceTool),    on(splitTool),    on(ribTool)};
         return std::ranges::any_of(open, [](bool active) { return active; });
     }
     [[nodiscard]] ShellState shell() const {
@@ -122,6 +123,7 @@ class MainWindow::Impl final {
     std::unique_ptr<DraftToolController> draftTool;               // M25
     std::unique_ptr<MirrorToolController> mirrorTool;             // M09
     std::unique_ptr<SplitToolController> splitTool;               // N12a
+    std::unique_ptr<RibToolController> ribTool;                   // N12b
     std::unique_ptr<PatternToolController> patternTool;           // M10
     std::unique_ptr<MoveToolController> moveTool;                 // M11
     std::unique_ptr<MeasureToolController> measureTool;           // M12

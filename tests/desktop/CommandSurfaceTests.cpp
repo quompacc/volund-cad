@@ -84,6 +84,7 @@ std::set<std::string> solidRailCommands() {
             "solid.create.sweep",
             "solid.create.loft",
             "solid.create.helix",
+            "solid.create.rib",
             "solid.modify.transform",
             "solid.modify.edit_sketch",
             "solid.modify.push_pull",

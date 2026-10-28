@@ -39,31 +39,7 @@ QuantityUnit parameterUnit(document::ParameterUnit unit) noexcept {
                                                    : QuantityUnit::degree;
 }
 
-// First finding of every check category; the AI01 order decides between categories.
-struct Findings final {
-    std::optional<std::string> unknownTarget;
-    std::optional<std::string> unsupportedTarget;
-    std::optional<std::string> invalidUnit;
-    std::optional<std::string> nonFinite;
-    std::optional<std::string> unresolvedReference;
-
-    static void note(std::optional<std::string>& category, std::string message) {
-        if (!category)
-            category = std::move(message);
-    }
-    [[nodiscard]] std::optional<std::pair<ActionRejection, std::string>> first() const {
-        const std::pair<ActionRejection, const std::optional<std::string>*> ordered[] = {
-            {ActionRejection::unknownTarget, &unknownTarget},
-            {ActionRejection::unsupportedTarget, &unsupportedTarget},
-            {ActionRejection::invalidUnit, &invalidUnit},
-            {ActionRejection::nonFinite, &nonFinite},
-            {ActionRejection::unresolvedReference, &unresolvedReference}};
-        for (const auto& [rejection, finding] : ordered)
-            if (*finding)
-                return std::pair{rejection, **finding};
-        return std::nullopt;
-    }
-};
+using detail::Findings;
 
 class Validation final {
   public:
@@ -305,6 +281,10 @@ class Validation final {
     }
     void operator()(const CreateMirrorAction& a) { onPlane(a, ActionKind::createMirror); }
     void operator()(const CreateSplitAction& a) { onPlane(a, ActionKind::createSplit); }
+    void operator()(const CreateRibAction& action) { // N12b
+        static_cast<void>(target(action.sketch, ActionKind::createRib));
+        finite({action.rib.thickness});
+    }
     void operator()(const EditSplitParametersAction& action) {
         static_cast<void>(target(action.split, ActionKind::editSplitParameters));
     }
@@ -501,6 +481,7 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot,
             [&](const CreateMirrorAction& a) { return session.createMirror(a); },
             [&](const CreateSplitAction& a) { return session.createSplit(a); }, // N12a
             [&](const EditSplitParametersAction& a) { return session.editSplitParameters(a); },
+            [&](const CreateRibAction& a) { return session.createRib(a.sketch, a.target, a.rib); },
             [&](const EditMirrorParametersAction& a) {
                 return session.editMirrorParameters(a.mirror, a.parameters, reject);
             },
