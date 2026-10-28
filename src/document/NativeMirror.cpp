@@ -10,7 +10,8 @@
 #include <string>
 
 // M09 (schema 31): mode on the label, body (1), base plane code (2, 0 for none), and else the
-// construction plane (3) or the face (4: its body on child 1 and its origin).
+// construction plane (3) or the face (4: its body on child 1 and its origin). N11b (schema 48):
+// the repeated steps (5).
 namespace voelund::document::detail {
 namespace {
 void require(bool value) {
@@ -42,6 +43,30 @@ std::uint64_t readId(const TDF_Label& label) {
             text == std::to_string(id));
     return id;
 }
+// N11b: the mirrored steps (5), since schema 48.
+std::vector<FeatureId> readMirroredSteps(const TDF_Label& label, int schemaVersion) {
+    const auto steps = label.FindChild(5, false);
+    if (steps.IsNull())
+        return {};
+    require(schemaVersion >= 48);
+    return readNativeSteps(steps);
+}
+
+// A construction plane (3) or a body face (4).
+void readPlane(const TDF_Label& label, MirrorPlane& result, std::size_t remainingRecords,
+               int schemaVersion) {
+    if (const auto plane = label.FindChild(3, false); !plane.IsNull()) {
+        require(plane.NbChildren() == 0);
+        result.constructionPlane = FeatureId{readId(plane)};
+        return;
+    }
+    const auto face = child(label, 4);
+    require(face.NbChildren() == 4 + nativeSubshapeOriginExtension(face));
+    const auto faceBody = child(face, 1);
+    require(faceBody.NbChildren() == 0);
+    result.face = BodyFaceReference{
+        BodyId{readId(faceBody)}, readNativeSubshapeOrigin(face, remainingRecords, schemaVersion)};
+}
 } // namespace
 
 std::size_t nativeMirrorRecords(const MirrorParameters& parameters) {
@@ -62,6 +87,8 @@ void writeNativeMirror(const TDF_Label& label, const MirrorParameters& parameter
         writeId(face.FindChild(1), plane.face->body.value());
         writeNativeSubshapeOrigin(face, plane.face->origin);
     }
+    if (!parameters.features.empty())
+        writeNativeSteps(label.FindChild(5), parameters.features);
 }
 
 MirrorParameters readNativeMirror(const TDF_Label& label, std::size_t remainingRecords,
@@ -76,22 +103,14 @@ MirrorParameters readNativeMirror(const TDF_Label& label, std::size_t remainingR
     const auto base = child(label, 2);
     const int code = integer(base);
     // A base plane needs no third child; a construction plane or a face is one.
+    const int extra = label.FindChild(5, false).IsNull() ? 0 : 1;
     require(base.NbChildren() == 0 && code >= 0 && code <= 3 &&
-            label.NbChildren() == (code != 0 ? 2 : 3));
-    if (code != 0) {
+            label.NbChildren() == (code != 0 ? 2 : 3) + extra);
+    result.features = readMirroredSteps(label, schemaVersion);
+    if (code != 0)
         result.plane.basePlane = static_cast<DatumPlane>(code);
-    } else if (const auto plane = label.FindChild(3, false); !plane.IsNull()) {
-        require(plane.NbChildren() == 0);
-        result.plane.constructionPlane = FeatureId{readId(plane)};
-    } else {
-        const auto face = child(label, 4);
-        require(face.NbChildren() == 4 + nativeSubshapeOriginExtension(face));
-        const auto faceBody = child(face, 1);
-        require(faceBody.NbChildren() == 0);
-        result.plane.face =
-            BodyFaceReference{BodyId{readId(faceBody)},
-                              readNativeSubshapeOrigin(face, remainingRecords, schemaVersion)};
-    }
+    else
+        readPlane(label, result.plane, remainingRecords, schemaVersion);
     validateMirrorParameters(result);
     return result;
 }

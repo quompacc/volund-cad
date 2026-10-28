@@ -62,11 +62,13 @@ MirrorToolController::faceOf(const viewport::PlanarFaceSelection& face) const {
 }
 
 void MirrorToolController::begin(document::FeatureId support,
-                                 const std::optional<viewport::PlanarFaceSelection>& face) {
+                                 const std::optional<viewport::PlanarFaceSelection>& face,
+                                 std::vector<document::FeatureId> steps) {
     support_ = support;
     editing_.reset();
     stored_.reset();
-    mode_ = document::MirrorMode::newBody;
+    steps_ = std::move(steps);
+    mode_ = steps_.empty() ? document::MirrorMode::newBody : document::MirrorMode::join;
     constructionPlanes_.clear();
     const auto snapshot = session_.identifiedSnapshot().snapshot();
     for (const auto& feature : snapshot.features())
@@ -87,6 +89,7 @@ void MirrorToolController::beginEdit(document::FeatureId mirror) {
     editing_ = mirror;
     stored_ = values;
     mode_ = values.mode;
+    steps_ = values.features;
     constructionPlanes_.clear();
     for (const auto& feature : snapshot.features()) {
         if (feature.id == mirror)
@@ -142,6 +145,7 @@ void MirrorToolController::open() {
         [this]() { accept(); },
         [this]() { cancel(); },
         {}});
+    panel_.setChoiceVisible("mode", steps_.empty()); // N11b: mirrored steps always join
     preview();
     statusChanged_(QObject::tr("Spiegeln: Ebene wählen oder eine ebene Fläche anklicken"));
 }
@@ -179,6 +183,9 @@ std::optional<document::MirrorPlane> MirrorToolController::plane() const {
 QString MirrorToolController::guidance() const {
     if (!plane())
         return QObject::tr("Klicke eine ebene Fläche an, an der gespiegelt wird.");
+    if (!steps_.empty())
+        return QObject::tr("%n Schritt(e) werden gespiegelt.", nullptr,
+                           static_cast<int>(steps_.size()));
     return mode_ == document::MirrorMode::join
                ? QObject::tr("Das Spiegelbild wird mit dem Körper vereinigt.")
                : QObject::tr("Das Spiegelbild wird ein eigener Körper; das Original bleibt.");
@@ -196,20 +203,21 @@ application::Action MirrorToolController::action() const {
     const auto chosen = *plane();
     if (editing_ && stored_)
         return application::EditMirrorParametersAction{
-            *editing_, document::MirrorParameters{stored_->body, chosen, mode_}};
+            *editing_, document::MirrorParameters{stored_->body, chosen, mode_, steps_}};
     return application::CreateMirrorAction{
         support_,
         chosen.basePlane,
         chosen.constructionPlane,
         chosen.face ? std::optional{face_->support} : std::nullopt,
         chosen.face ? std::optional{chosen.face->origin} : std::nullopt,
-        mode_};
+        mode_,
+        steps_};
 }
 
 bool MirrorToolController::unchanged() const {
     const auto chosen = plane();
     return stored_ && chosen &&
-           *stored_ == document::MirrorParameters{stored_->body, *chosen, mode_};
+           *stored_ == document::MirrorParameters{stored_->body, *chosen, mode_, steps_};
 }
 
 void MirrorToolController::preview() {

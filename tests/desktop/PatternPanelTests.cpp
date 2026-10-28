@@ -16,6 +16,8 @@
 #include <cmath>
 #include <filesystem>
 #include <iostream>
+#include <numbers>
+#include <optional>
 #include <string>
 #include <vector>
 #include <voelund/application/CadSession.hpp>
@@ -30,6 +32,7 @@
 namespace {
 using namespace voelund;
 using test::require;
+constexpr double pi = std::numbers::pi;
 
 double volume(const application::CadSession& session) {
     double total = 0;
@@ -105,6 +108,72 @@ bool solidAt(const application::CadSession& session, double x, double y, double 
     return false;
 }
 
+// N11b: a hole 20 left of the middle chosen in the timeline, then "Spiegeln" about the
+// construction plane x = 40: its twin in the same body, no "Ergebnis" choice.
+void mirrorFlow(desktop::MainWindow& window, application::CadSession& session,
+                viewport::CadViewport& viewport) {
+    session.newDocument();
+    const auto box = *session.createBoxFeature({80, 20, 10}).feature();
+    require(session
+                .createDatumPlane(document::DatumPlane::yz, std::nullopt, std::nullopt, 40,
+                                  document::DatumRotationAxis::none, 0)
+                .feature()
+                .has_value(),
+            "Construction plane x = 40");
+    std::optional<document::FeatureId> hole;
+    for (const auto& face : session.supportFaces(box))
+        if (face.plane.normalZ > 0.5)
+            hole = session
+                       .createHole(box, face.origin, (face.minX + face.maxX) / 2 - 20,
+                                   (face.minY + face.maxY) / 2, 4.0, std::nullopt)
+                       .feature();
+    require(hole.has_value() && session.selectFeature(*hole), "Hole chosen for the mirror");
+    window.refreshAfterExternalChange();
+    command(window, "solid.modify.mirror").trigger();
+    settle();
+    choose(window, "toolChoice_plane", 3);
+    auto* mode = panel(window)->findChild<QComboBox*>(QStringLiteral("toolChoice_mode"));
+    require(accept(window).isEnabled() && mode != nullptr && !mode->isVisible() &&
+                matches(shown(viewport), 16000 - 2 * 40 * pi),
+            "The hole and its twin in the preview, no result choice");
+    accept(window).click();
+    settle();
+    require(session.validBodies().size() == 1 && matches(volume(session), 16000 - 2 * 40 * pi) &&
+                session.mirrorParameters(session.features().back().id).features ==
+                    std::vector<document::FeatureId>{*hole},
+            "OK mirrors the hole in its body");
+}
+
+// N11b: a hole chosen in the timeline, then "Lineares Muster": three holes along X in the same
+// body, no "Ergebnis" choice; OK makes a feature pattern of the hole.
+void featureFlow(desktop::MainWindow& window, application::CadSession& session,
+                 viewport::CadViewport& viewport) {
+    session.newDocument();
+    const auto box = *session.createBoxFeature({80, 20, 10}).feature();
+    std::optional<document::FeatureId> hole;
+    for (const auto& face : session.supportFaces(box))
+        if (face.plane.normalZ > 0.5)
+            hole = session
+                       .createHole(box, face.origin, (face.minX + face.maxX) / 2 - 20,
+                                   (face.minY + face.maxY) / 2, 4.0, std::nullopt)
+                       .feature();
+    require(hole.has_value() && session.selectFeature(*hole), "Hole chosen in the timeline");
+    window.refreshAfterExternalChange();
+    command(window, "solid.modify.pattern_linear").trigger();
+    settle();
+    auto* mode = panel(window)->findChild<QComboBox*>(QStringLiteral("toolChoice_mode"));
+    require(accept(window).isEnabled() && mode != nullptr && !mode->isVisible() &&
+                matches(shown(viewport), 16000 - 3 * 40 * pi),
+            "Three holes along X in the preview, no result choice");
+    accept(window).click();
+    settle();
+    require(session.validBodies().size() == 1 &&
+                session.patternParameters(session.features().back().id).features ==
+                    std::vector<document::FeatureId>{*hole},
+            "OK repeats the hole in its body");
+    mirrorFlow(window, session, viewport);
+}
+
 // N11a: "Art: Raster" adds 2 rows along Y (6 boxes); copy 4 skipped leaves 5; OK keeps the gap.
 void gridFlow(desktop::MainWindow& window, application::CadSession& session,
               viewport::CadViewport& viewport, const std::filesystem::path& directory) {
@@ -133,6 +202,7 @@ void gridFlow(desktop::MainWindow& window, application::CadSession& session,
                 session.patternParameters(session.features()[1].id).skipped ==
                     std::vector<std::uint32_t>{4},
             "OK keeps the grid without copy 4");
+    featureFlow(window, session, viewport);
 }
 
 void run() {
@@ -233,7 +303,7 @@ void run() {
     gridFlow(window, session, *viewport, directory);
     std::cout << "PASS M10 pattern panel: linear count and spacing, joined refused and "
                  "overlapping, copy edge refused, corner edge, circular, joined, OK, undo, "
-                 "timeline, copy reopens, open; N11a grid with a skipped copy"
+                 "timeline, copy reopens, open; N11a grid, skip; N11b hole pattern, mirror"
               << std::endl;
 }
 } // namespace

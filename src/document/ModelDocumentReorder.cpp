@@ -35,6 +35,11 @@ void addAxisReferences(FeatureReferences& references, const DatumAxisParameters&
         addEdge(references.geometric, *axis.edge);
 }
 
+// N11b: the steps a pattern or mirror repeats.
+void addSteps(FeatureReferences& references, const std::vector<FeatureId>& steps) {
+    references.structural.insert(references.structural.end(), steps.begin(), steps.end());
+}
+
 void addFace(FeatureReferences& references, const BodyFaceReference& face) {
     references.structural.push_back(FeatureId{face.body.value()});
     addOrigin(references.geometric, face.origin);
@@ -177,11 +182,13 @@ FeatureReferences featureReferences(const FeatureDescriptor& feature,
                     structural.push_back(*values.plane.constructionPlane);
                 if (values.plane.face)
                     addFace(references, *values.plane.face);
+                addSteps(references, values.features); // N11b
             } else if constexpr (std::is_same_v<Type, PatternParameters>) {
                 body(values.body);
                 addAxisReferences(references, values.axis, values.datumAxis);
                 if (values.second) // N11a
                     addAxisReferences(references, values.second->axis, values.second->datumAxis);
+                addSteps(references, values.features); // N11b
             } else if constexpr (std::is_same_v<Type, PatternCopyParameters>) {
                 structural.push_back(values.pattern);
             } else if constexpr (std::is_same_v<Type, ImportPartParameters>) {

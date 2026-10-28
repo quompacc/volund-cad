@@ -35,9 +35,11 @@ class MirrorToolController final {
                          std::function<void()> sceneChanged,
                          std::function<void(const QString&)> statusChanged);
 
-    // `support` is the body's current result; a picked planar face becomes the plane.
+    // `support` is the body's current result; a picked planar face becomes the plane. N11b:
+    // `steps` (holes, joins, cuts of the body) are mirrored instead of the whole body.
     void begin(document::FeatureId support,
-               const std::optional<viewport::PlanarFaceSelection>& face);
+               const std::optional<viewport::PlanarFaceSelection>& face,
+               std::vector<document::FeatureId> steps = {});
     void beginEdit(document::FeatureId mirror);
     [[nodiscard]] bool isActive() const noexcept { return active_; }
     // A planar face picked while the panel is open: the mirror plane.
@@ -78,6 +80,7 @@ class MirrorToolController final {
     // M13: set while an edit is kept with errors at later features.
     std::optional<application::ErrorDisposition> keep_;
     std::optional<document::MirrorParameters> stored_;
+    std::vector<document::FeatureId> steps_; // N11b: steps mirrored instead of the body
     std::optional<application::DocumentStamp> stamp_;
     bool active_{false};
     bool previewShown_{false};

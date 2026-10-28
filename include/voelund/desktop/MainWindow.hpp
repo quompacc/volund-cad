@@ -168,6 +168,7 @@ class MainWindow final : public QMainWindow {
     void rollToEdited();                                                     // W08
     void restoreEditRollback();                                              // W08
     void clearEdgeSelection();
+    [[nodiscard]] std::vector<document::FeatureId> repeatableSteps() const; // N11b
     void createAssistant();
     void createAssistantPanel();
     void syncAssistant();

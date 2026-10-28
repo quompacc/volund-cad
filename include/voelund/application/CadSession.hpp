@@ -32,6 +32,7 @@
 #include <vector>
 
 namespace voelund::application {
+struct CreateMirrorAction;
 // U06: features grouped by the body they work on, both in document order. Features that
 // belong to no body (invalid documents) stay loose.
 struct OutlineBody final {
@@ -85,6 +86,7 @@ struct PatternInput final {
     document::PatternMode mode{document::PatternMode::newBodies};
     std::optional<document::PatternDirection> second{}; // N11a: a grid's rows, skipped copies
     std::vector<std::uint32_t> skipped{};
+    std::vector<document::FeatureId> features{}; // N11b: steps repeated instead of the body
     bool operator==(const PatternInput&) const = default;
 };
 
@@ -307,13 +309,8 @@ class CadSession final {
                         ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] document::DraftParameters draftParameters(document::FeatureId featureId) const;
     // M09 (CadSessionMirror.cpp): mirrors `support`'s body about a base or construction plane or
-    // a planar face of `faceSupport`'s result; a new body or joined. One undo step.
-    [[nodiscard]] CommandResult createMirror(document::FeatureId support,
-                                             std::optional<document::DatumPlane> basePlane,
-                                             std::optional<document::FeatureId> constructionPlane,
-                                             std::optional<document::FeatureId> faceSupport,
-                                             std::optional<document::SubshapeOrigin> face,
-                                             document::MirrorMode mode);
+    // a planar face of `faceSupport`'s result; a new body or joined (N11b: or the chosen steps).
+    [[nodiscard]] CommandResult createMirror(const CreateMirrorAction& action);
     [[nodiscard]] CommandResult
     editMirrorParameters(document::FeatureId featureId,
                          const document::MirrorParameters& parameters,

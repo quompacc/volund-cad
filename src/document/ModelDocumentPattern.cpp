@@ -63,6 +63,17 @@ void keepCopiesInStep(std::vector<FeatureDescriptor>& features,
     }
 }
 
+void validateRepeatedSteps(std::span<const FeatureId> steps, bool joined) {
+    if (steps.empty())
+        return;
+    if (!joined || steps.size() > maximumPatternFeatures ||
+        std::ranges::any_of(steps, [](FeatureId id) { return id.value() == 0; }))
+        throw std::invalid_argument("Repeated steps (1 to 20) are joined to their body");
+    for (std::size_t index = 1; index < steps.size(); ++index)
+        if (std::ranges::find(steps.first(index), steps[index]) != steps.first(index).end())
+            throw std::invalid_argument("Each step is repeated once");
+}
+
 std::uint32_t patternInstances(const PatternParameters& parameters) noexcept {
     return parameters.count * (parameters.second ? parameters.second->count : 1);
 }
@@ -102,6 +113,7 @@ void validateSecond(const PatternParameters& parameters) {
 // N11a: skipped instances are distinct copies of the pattern; one copy stays.
 void validateGrid(const PatternParameters& parameters) {
     validateSecond(parameters);
+    validateRepeatedSteps(parameters.features, parameters.mode == PatternMode::join);
     const auto& skipped = parameters.skipped;
     if (!std::ranges::is_sorted(skipped) || std::ranges::adjacent_find(skipped) != skipped.end() ||
         (!skipped.empty() &&

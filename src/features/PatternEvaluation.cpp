@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Eduard Hart
 
 #include "FeatureEvaluationDetail.hpp"
+#include "StepEffects.hpp"
 
 #include <voelund/document/DocumentSnapshot.hpp>
 #include <voelund/features/FeatureDependencies.hpp>
@@ -15,6 +16,7 @@
 #include <gp_Vec.hxx>
 #include <voelund/kernel/ShapeQueries.hpp>
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <numbers>
@@ -148,11 +150,7 @@ Copy copyOf(const TopoDS_Shape& body, std::span<const SupportProvenance> faces,
 }
 
 // The body joined with its copies 1..count-1 in turn; edges of the copies stay unnamed.
-struct Joined final {
-    TopoDS_Shape shape;
-    std::vector<SupportProvenance> faces;
-    std::vector<EdgeProvenance> edges;
-};
+using Joined = NamedBody;
 
 Joined join(const TopoDS_Shape& body, std::span<const SupportProvenance> faces,
             std::span<const EdgeProvenance> edges, const Directions& axis,
@@ -173,6 +171,29 @@ Joined join(const TopoDS_Shape& body, std::span<const SupportProvenance> faces,
                   continueEdgeOrigins(result.edges, fused, kernel::HistoryOperand::first)};
     }
     return result;
+}
+
+struct PatternContext final {
+    const document::DocumentSnapshot& document;
+    const document::PatternParameters& parameters;
+    document::FeatureId pattern;
+    const Directions& axes;
+    const std::vector<EvaluatedFeature>& outputs;
+};
+
+// The body with its copies joined (M10), or with the steps repeated (N11b).
+Joined joinedBody(const PatternContext& context, const Joined& start, bool reference) {
+    const auto& parameters = context.parameters;
+    if (parameters.features.empty())
+        return join(start.shape, start.faces, start.edges, context.axes, parameters,
+                    context.pattern);
+    std::vector<gp_Trsf> transforms;
+    for (std::uint32_t index = 1; index < document::patternInstances(parameters); ++index)
+        if (!document::patternSkips(parameters, index))
+            transforms.push_back(stepOf(context.axes, parameters, index).transform());
+    const auto effects = stepEffects(context.document, parameters.features, parameters.body,
+                                     context.outputs, reference);
+    return repeatEffects(start, effects, transforms);
 }
 
 } // namespace
@@ -200,15 +221,18 @@ void evaluatePattern(const document::DocumentSnapshot& document,
                             owner.edgeOrigins,
                             owner.referenceEdgeOrigins};
     if (parameters.mode == document::PatternMode::join) {
-        auto joined = join(body.shape, owner.supportOrigins, owner.edgeOrigins, axis, parameters,
-                           descriptor.id);
+        const PatternContext context{document, parameters, descriptor.id, axis, outputs};
+        auto joined =
+            joinedBody(context, {body.shape, owner.supportOrigins, owner.edgeOrigins}, false);
         output.shape = joined.shape;
         output.supportOrigins = std::move(joined.faces);
         output.edgeOrigins = std::move(joined.edges);
         // The unplaced reference joins its own copies; where it cannot, it stays.
         try {
-            auto reference = join(referenceBody.shape, owner.referenceSupportOrigins,
-                                  owner.referenceEdgeOrigins, axis, parameters, descriptor.id);
+            auto reference = joinedBody(
+                context,
+                {referenceBody.shape, owner.referenceSupportOrigins, owner.referenceEdgeOrigins},
+                true);
             output.referenceShape = reference.shape;
             output.referenceSupportOrigins = std::move(reference.faces);
             output.referenceEdgeOrigins = std::move(reference.edges);

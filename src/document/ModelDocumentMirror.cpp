@@ -30,6 +30,7 @@ void validateMirrorParameters(const MirrorParameters& parameters) {
     }
     if (parameters.mode != MirrorMode::newBody && parameters.mode != MirrorMode::join)
         throw std::invalid_argument("Unknown mirror mode");
+    validateRepeatedSteps(parameters.features, parameters.mode == MirrorMode::join); // N11b
 }
 
 FeatureId ModelDocument::addMirrorFeature(std::string name, const MirrorParameters& parameters) {

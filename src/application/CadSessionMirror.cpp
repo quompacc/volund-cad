@@ -4,28 +4,28 @@
 #include "CadSessionGeometryDetail.hpp"
 #include "CommandInput.hpp"
 
+#include <voelund/application/Actions.hpp>
+
 #include <string>
 
 // M09: mirror a body ("Spiegeln N").
 namespace voelund::application {
 using namespace detail;
 
-CommandResult CadSession::createMirror(document::FeatureId support,
-                                       std::optional<document::DatumPlane> basePlane,
-                                       std::optional<document::FeatureId> constructionPlane,
-                                       std::optional<document::FeatureId> faceSupport,
-                                       std::optional<document::SubshapeOrigin> face,
-                                       document::MirrorMode mode) {
-    const auto body = resultBody(support);
+CommandResult CadSession::createMirror(const CreateMirrorAction& action) {
+    const auto body = resultBody(action.support);
     if (!body)
         return CommandResult::invalidInput("A mirror needs a current body");
     document::MirrorParameters parameters{
-        *body, {basePlane, constructionPlane, std::nullopt}, mode};
-    if (faceSupport || face) {
-        if (!faceSupport || !face)
+        *body,
+        {action.basePlane, action.constructionPlane, std::nullopt},
+        action.mode,
+        action.features};
+    if (action.faceSupport || action.face) {
+        if (!action.faceSupport || !action.face)
             return CommandResult::invalidInput("A mirror face names its result and face");
         try {
-            parameters.plane.face = faceReference(*faceSupport, *face);
+            parameters.plane.face = faceReference(*action.faceSupport, *action.face);
         } catch (const std::invalid_argument& error) {
             return CommandResult::invalidInput(error.what());
         }

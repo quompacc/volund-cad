@@ -422,9 +422,14 @@ struct MirrorParameters final {
     BodyId body;
     MirrorPlane plane;
     MirrorMode mode{MirrorMode::newBody};
+    // N11b (schema 48): when set, the mirror repeats what these earlier holes and extrusions did
+    // to `body`, mirrored, instead of the whole body; it is always joined.
+    std::vector<FeatureId> features{};
     [[nodiscard]] bool operator==(const MirrorParameters&) const = default;
 };
 void validateMirrorParameters(const MirrorParameters& parameters);
+// N11b: the steps a pattern or mirror repeats: 1 to 20 distinct ones, the result joined.
+void validateRepeatedSteps(std::span<const FeatureId> steps, bool joined);
 // M10 (schema 32, user decision 2026-10-15): copies of a body along a direction (linear) or
 // about an axis (circular). The direction or axis is a base axis or a body edge (as for a
 // construction axis) or an earlier construction axis (exactly one). `count` includes the
@@ -435,6 +440,7 @@ void validateMirrorParameters(const MirrorParameters& parameters);
 enum class PatternKind { linear = 1, circular = 2 };
 enum class PatternMode { newBodies = 1, join = 2 };
 inline constexpr std::uint32_t maximumPatternCount = 100;
+inline constexpr std::size_t maximumPatternFeatures = 20; // N11b
 // N11a (schema 47): the second direction of a grid ("Rastermuster"), along an axis as above;
 // `count` rows `spacing` apart, including the first.
 struct PatternDirection final {
@@ -459,6 +465,9 @@ struct PatternParameters final {
     // the first and j along the second. Skipped instances (ascending, never 0) are left out.
     std::optional<PatternDirection> second{};
     std::vector<std::uint32_t> skipped{};
+    // N11b (schema 48): when set, the pattern repeats what these earlier holes and extrusions
+    // (join or cut) did to `body` instead of copying the whole body; it is always joined.
+    std::vector<FeatureId> features{};
     [[nodiscard]] bool operator==(const PatternParameters&) const = default;
 };
 void validatePatternParameters(const PatternParameters& parameters);

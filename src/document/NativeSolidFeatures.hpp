@@ -49,6 +49,8 @@ void writeNativePattern(const TDF_Label& label, const PatternParameters& paramet
 PatternParameters readNativePattern(const TDF_Label& label, std::size_t remainingRecords,
                                     int schemaVersion);
 std::size_t nativePatternRecords(const PatternParameters& parameters);
+void writeNativeSteps(const TDF_Label& label, const std::vector<FeatureId>& steps); // N11b
+[[nodiscard]] std::vector<FeatureId> readNativeSteps(const TDF_Label& label);
 void writeNativePatternCopy(const TDF_Label& label, const PatternCopyParameters& parameters);
 PatternCopyParameters readNativePatternCopy(const TDF_Label& label, int schemaVersion);
 // M11 (NativeMove.cpp).

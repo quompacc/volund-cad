@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Eduard Hart
 
 #include "FeatureEvaluationDetail.hpp"
+#include "StepEffects.hpp"
 
 #include <voelund/document/DocumentSnapshot.hpp>
 #include <voelund/features/FeatureDependencies.hpp>
@@ -64,13 +65,18 @@ struct Image final {
     std::vector<EdgeProvenance> edges;
 };
 
+gp_Trsf reflectionOf(const Plane& plane) {
+    gp_Trsf reflection;
+    reflection.SetMirror(gp_Ax2(gp_Pnt(plane.origin[0], plane.origin[1], plane.origin[2]),
+                                gp_Dir(plane.normal[0], plane.normal[1], plane.normal[2])));
+    return reflection;
+}
+
 Image mirrorImage(const TopoDS_Shape& body, std::span<const SupportProvenance> faces,
                   std::span<const EdgeProvenance> edges, const Plane& plane,
                   document::FeatureId mirror) {
     Image image{kernel::ShapeFactory::mirrorWithHistory(body, plane.origin, plane.normal), {}, {}};
-    gp_Trsf reflection;
-    reflection.SetMirror(gp_Ax2(gp_Pnt(plane.origin[0], plane.origin[1], plane.origin[2]),
-                                gp_Dir(plane.normal[0], plane.normal[1], plane.normal[2])));
+    const gp_Trsf reflection = reflectionOf(plane);
     const auto reflect = [&](const auto& shape) {
         return kernel::transformedCopy(shape, reflection);
     };
@@ -84,6 +90,55 @@ Image mirrorImage(const TopoDS_Shape& body, std::span<const SupportProvenance> f
     for (auto& edge : image.edges)
         edge.source = TopoDS::Edge(reflect(edge.source));
     return image;
+}
+
+// The body a mirror changes, current and unplaced, and the feature that made it.
+struct MirrorTarget final {
+    EvaluatedBody& body;
+    EvaluatedBody& reference;
+    const EvaluatedFeature& owner;
+};
+
+// N11b: the chosen steps mirrored into the body; the unplaced reference likewise where it can.
+EvaluatedFeature mirroredSteps(const document::DocumentSnapshot& document,
+                               document::FeatureId mirror, const Plane& plane,
+                               const MirrorTarget& target,
+                               const std::vector<EvaluatedFeature>& outputs) {
+    const auto& parameters = document.mirrorParameters(mirror);
+    const std::array reflections{reflectionOf(plane)};
+    const auto& owner = target.owner;
+    const auto current = repeatEffects(
+        {target.body.shape, owner.supportOrigins, owner.edgeOrigins},
+        stepEffects(document, parameters.features, parameters.body, outputs, false), reflections);
+    EvaluatedFeature output{mirror,
+                            current.shape,
+                            target.reference.shape,
+                            target.body.bodyId,
+                            current.faces,
+                            {},
+                            owner.referenceSupportOrigins,
+                            current.edges,
+                            owner.referenceEdgeOrigins};
+    try {
+        auto reference = repeatEffects(
+            {target.reference.shape, owner.referenceSupportOrigins, owner.referenceEdgeOrigins},
+            stepEffects(document, parameters.features, parameters.body, outputs, true),
+            reflections);
+        output.referenceShape = reference.shape;
+        output.referenceSupportOrigins = std::move(reference.faces);
+        output.referenceEdgeOrigins = std::move(reference.edges);
+    } catch (const kernel::KernelError&) {
+    }
+    return output;
+}
+
+void publishMirror(EvaluatedFeature output, const MirrorTarget& target,
+                   std::vector<EvaluatedFeature>& outputs) {
+    target.body.sourceFeature = output.id;
+    target.body.shape = output.shape;
+    target.reference.sourceFeature = output.id;
+    target.reference.shape = output.referenceShape;
+    outputs.push_back(std::move(output));
 }
 
 } // namespace
@@ -101,6 +156,10 @@ void evaluateMirror(const document::DocumentSnapshot& document,
     const auto& owner = findFeature(outputs, *producer);
     EvaluatedBody& body = findBody(bodies, outputs, *producer);
     EvaluatedBody& referenceBody = findBody(referenceBodies, outputs, *producer);
+    if (!parameters.features.empty()) // N11b
+        return publishMirror(
+            mirroredSteps(document, descriptor.id, plane, {body, referenceBody, owner}, outputs),
+            {body, referenceBody, owner}, outputs);
     auto image =
         mirrorImage(body.shape, owner.supportOrigins, owner.edgeOrigins, plane, descriptor.id);
     if (parameters.mode == document::MirrorMode::newBody) {
@@ -147,11 +206,7 @@ void evaluateMirror(const document::DocumentSnapshot& document,
                                                           kernel::HistoryOperand::first);
     } catch (const kernel::KernelError&) {
     }
-    body.sourceFeature = descriptor.id;
-    body.shape = output.shape;
-    referenceBody.sourceFeature = descriptor.id;
-    referenceBody.shape = output.referenceShape;
-    outputs.push_back(std::move(output));
+    publishMirror(std::move(output), {body, referenceBody, owner}, outputs);
 }
 
 } // namespace voelund::features::detail

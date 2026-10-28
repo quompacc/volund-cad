@@ -150,6 +150,17 @@ void checkPatternAxis(const DatumAxisParameters& axis, const std::optional<Featu
         throw std::invalid_argument("Pattern axis is not an earlier construction axis");
 }
 
+// N11b: a feature pattern or mirror repeats earlier holes and extrusions.
+void checkPatternSources(std::span<const FeatureId> sources, const HistoryPosition& at) {
+    for (const auto source : sources) {
+        const auto found = at.indices.find(source.value());
+        if (found == at.indices.end() || found->second >= at.index ||
+            (at.features[found->second].kind != FeatureKind::hole &&
+             at.features[found->second].kind != FeatureKind::extrusion))
+            throw std::invalid_argument("A feature pattern repeats earlier holes and extrusions");
+    }
+}
+
 } // namespace
 
 std::vector<std::optional<BodyId>>
@@ -303,6 +314,7 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
             continue;
         if (!isBody(mirror->body) || (mirror->plane.face && !isBody(mirror->plane.face->body)))
             throw std::invalid_argument("Mirror body is not a body of this document");
+        checkPatternSources(mirror->features, {features, indices, index}); // N11b
         if (mirror->plane.constructionPlane) {
             const auto found = indices.find(mirror->plane.constructionPlane->value());
             if (found == indices.end() || found->second >= index ||
@@ -321,6 +333,7 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
             if (const auto& second = pattern->second) // N11a
                 checkPatternAxis(second->axis, second->datumAxis, {features, indices, index},
                                  isBody);
+            checkPatternSources(pattern->features, {features, indices, index});
         }
         const auto* copy = std::get_if<PatternCopyParameters>(&parameters[index]);
         if (copy == nullptr)

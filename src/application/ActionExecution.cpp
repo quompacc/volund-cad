@@ -493,10 +493,7 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot,
             [&](const EditDraftParametersAction& a) {
                 return session.editDraftParameters(a.draft, a.parameters, reject);
             },
-            [&](const CreateMirrorAction& a) {
-                return session.createMirror(a.support, a.basePlane, a.constructionPlane,
-                                            a.faceSupport, a.face, a.mode);
-            },
+            [&](const CreateMirrorAction& a) { return session.createMirror(a); },
             [&](const EditMirrorParametersAction& a) {
                 return session.editMirrorParameters(a.mirror, a.parameters, reject);
             },

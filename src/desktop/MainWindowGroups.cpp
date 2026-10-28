@@ -204,6 +204,34 @@ std::vector<document::FeatureId> MainWindow::chosenSteps() const {
     return {};
 }
 
+// N11b: the chosen timeline steps a pattern repeats instead of the body: holes, and joins or cuts
+// into an existing body (a face sketch's extrusion joins unless told otherwise).
+std::vector<document::FeatureId> MainWindow::repeatableSteps() const {
+    std::vector<document::FeatureId> steps = impl_->featureGroup;
+    if (const auto selected = impl_->session.selectedFeature(); steps.empty() && selected)
+        steps.push_back(*selected);
+    const auto snapshot = impl_->session.identifiedSnapshot().snapshot();
+    const auto descriptors = snapshot.features();
+    const auto find = [&](std::optional<document::FeatureId> id) {
+        return id ? std::ranges::find(descriptors, *id, &document::FeatureDescriptor::id)
+                  : descriptors.end();
+    };
+    const auto repeatable = [&](document::FeatureId id) {
+        const auto step = find(id);
+        if (step == descriptors.end() || step->kind == document::FeatureKind::hole)
+            return step != descriptors.end();
+        if (step->kind != document::FeatureKind::extrusion)
+            return false;
+        const auto sketch = find(step->inputFeature);
+        const bool onFace = sketch != descriptors.end() && sketch->inputFeature.has_value();
+        const auto operation = snapshot.extrusionParameters(id).operation.value_or(
+            onFace ? document::ExtrusionOperation::join : document::ExtrusionOperation::newBody);
+        return operation == document::ExtrusionOperation::join ||
+               operation == document::ExtrusionOperation::cut;
+    };
+    return std::ranges::all_of(steps, repeatable) ? steps : std::vector<document::FeatureId>{};
+}
+
 // N02b: a group of bodies is moved together (no turning; CadSession::moveBodies).
 bool MainWindow::moveBodyGroup(double deltaX, double deltaY, double deltaZ) {
     if (impl_->bodyGroup.size() < 2)

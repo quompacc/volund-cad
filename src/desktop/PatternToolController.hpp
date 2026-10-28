@@ -40,9 +40,11 @@ class PatternToolController final {
                           std::function<void(const QString&)> statusChanged);
 
     // `support` is the body's current result; `edge` an edge picked on `edgeSupport` before.
+    // N11b: `steps` (holes, joins, cuts of the body) are repeated instead of the whole body.
     void begin(document::FeatureId support, document::PatternKind kind,
                std::optional<document::FeatureId> edgeSupport,
-               std::optional<document::FilletEdge> edge);
+               std::optional<document::FilletEdge> edge,
+               std::vector<document::FeatureId> steps = {});
     void beginEdit(document::FeatureId pattern);
     [[nodiscard]] bool isActive() const noexcept { return active_; }
     // An edge clicked while the panel is open: the direction or axis.
@@ -104,6 +106,7 @@ class PatternToolController final {
     bool rowsReversed_{false};
     double skipIndex_{1};
     std::vector<std::uint32_t> skipped_;
+    std::vector<document::FeatureId> steps_; // N11b
     std::optional<document::FeatureId> editing_;
     // M13: set while an edit is kept with errors at later features.
     std::optional<application::ErrorDisposition> keep_;

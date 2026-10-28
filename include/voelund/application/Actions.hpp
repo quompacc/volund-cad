@@ -290,6 +290,7 @@ struct CreateMirrorAction final {
     std::optional<document::FeatureId> faceSupport;
     std::optional<document::SubshapeOrigin> face;
     document::MirrorMode mode{document::MirrorMode::newBody};
+    std::vector<document::FeatureId> features{}; // N11b: steps mirrored instead of the body
     bool operator==(const CreateMirrorAction&) const = default;
 };
 struct EditMirrorParametersAction final {

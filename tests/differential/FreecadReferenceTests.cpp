@@ -7,6 +7,7 @@
 //
 //   voelund_freecad_reference_tests <table> <known differences>
 
+#include <voelund/application/Actions.hpp>
 #include <voelund/application/CadSession.hpp>
 #include <voelund/features/SketchRegionIdentity.hpp>
 #include <voelund/features/SketchSupportBinding.hpp>
@@ -106,8 +107,9 @@ void mirrored(application::CadSession& session) {
     const auto box = committed(session.createBoxFeature({30, 20, 10}), "Box");
     const auto corner = edge(session, box, {1, 0, 0}, {0, 1, 0});
     const auto rounded = committed(session.createFillet(box, std::span(&corner, 1), 4), "Fillet");
-    (void)committed(session.createMirror(rounded, document::DatumPlane::yz, std::nullopt,
-                                         std::nullopt, std::nullopt, document::MirrorMode::join),
+    (void)committed(session.createMirror(application::CreateMirrorAction{
+                        rounded, document::DatumPlane::yz, std::nullopt, std::nullopt, std::nullopt,
+                        document::MirrorMode::join}),
                     "Mirror");
 }
 

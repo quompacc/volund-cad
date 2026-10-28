@@ -16,6 +16,7 @@
 // stores it (7) or a construction axis (8). A copy keeps its index on the label and its
 // pattern (1). N11a (schema 47): a grid's second direction (9) keeps its spacing on its label,
 // count (1), reversed (2) and its axis (3, or 4 for a construction axis); skipped copies (10).
+// N11b (schema 48): the repeated steps (11), one ID per child 1..n.
 namespace voelund::document::detail {
 namespace {
 void require(bool value) {
@@ -53,6 +54,21 @@ std::uint64_t readId(const TDF_Label& label) {
     return id;
 }
 } // namespace
+
+// N11b: repeated steps, one ID per child 1..n.
+void writeNativeSteps(const TDF_Label& label, const std::vector<FeatureId>& steps) {
+    for (std::size_t index = 0; index < steps.size(); ++index)
+        writeId(label.FindChild(static_cast<int>(index) + 1), steps[index].value());
+}
+
+std::vector<FeatureId> readNativeSteps(const TDF_Label& label) {
+    const int count = label.NbChildren();
+    require(count >= 1 && static_cast<std::size_t>(count) <= maximumPatternFeatures);
+    std::vector<FeatureId> result;
+    for (int index = 1; index <= count; ++index)
+        result.push_back(FeatureId{readId(child(label, index))});
+    return result;
+}
 
 std::size_t nativePatternRecords(const PatternParameters& parameters) {
     return nativeDatumAxisRecords(parameters.axis) +
@@ -108,12 +124,14 @@ std::vector<std::uint32_t> readSkipped(const TDF_Label& label) {
     return result;
 }
 
-// Children 1 to 6 and the axis (7 or 8); since schema 47 a grid (9) and skipped copies (10).
+// Children 1 to 6 and the axis (7 or 8); since schema 47 a grid (9) and skipped copies (10),
+// since 48 the repeated steps (11).
 void requireLayout(const TDF_Label& label, int schemaVersion) {
     const int grid = label.FindChild(9, false).IsNull() ? 0 : 1;
     const int skipped = label.FindChild(10, false).IsNull() ? 0 : 1;
-    require(schemaVersion >= 32 && label.NbChildren() == 7 + grid + skipped &&
-            (schemaVersion >= 47 || grid + skipped == 0));
+    const int sources = label.FindChild(11, false).IsNull() ? 0 : 1;
+    require(schemaVersion >= 32 && label.NbChildren() == 7 + grid + skipped + sources &&
+            (schemaVersion >= 47 || grid + skipped == 0) && (schemaVersion >= 48 || sources == 0));
 }
 
 void readGrid(const TDF_Label& label, PatternParameters& result, std::size_t remainingRecords,
@@ -122,6 +140,8 @@ void readGrid(const TDF_Label& label, PatternParameters& result, std::size_t rem
         result.second = readSecond(second, remainingRecords, schemaVersion);
     if (const auto skipped = label.FindChild(10, false); !skipped.IsNull())
         result.skipped = readSkipped(skipped);
+    if (const auto sources = label.FindChild(11, false); !sources.IsNull())
+        result.features = readNativeSteps(sources);
 }
 } // namespace
 
@@ -142,6 +162,8 @@ void writeNativePattern(const TDF_Label& label, const PatternParameters& paramet
         writeSecond(label.FindChild(9), *parameters.second);
     if (!parameters.skipped.empty())
         writeSkipped(label.FindChild(10), parameters.skipped);
+    if (!parameters.features.empty())
+        writeNativeSteps(label.FindChild(11), parameters.features);
 }
 
 PatternParameters readNativePattern(const TDF_Label& label, std::size_t remainingRecords,

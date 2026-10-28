@@ -510,7 +510,6 @@ parameters | include/voelund/document/SketchGeometry.hpp | SketchConstraint | 7 
 parameters | include/voelund/document/DocumentSnapshot.hpp | DocumentSnapshot | 6 | Altbestand vor A04
 parameters | include/voelund/viewport/CadViewport.hpp | SceneSketchElement | 6 | Altbestand vor A04
 parameters | src/application/CadSessionCreation.cpp | createHole | 6 | Altbestand vor A04
-parameters | src/application/CadSessionMirror.cpp | createMirror | 6 | Altbestand vor A04
 parameters | src/application/CadSessionSolidFeatures.cpp | createDatumPlane | 6 | Altbestand vor A04
 parameters | src/document/NativeSketchConstraints.cpp | readNativeSketchConstraints | 6 | Altbestand vor A04
 parameters | src/features/FaceExtrusionEvaluation.cpp | evaluateFaceExtrusion | 6 | Altbestand vor A04

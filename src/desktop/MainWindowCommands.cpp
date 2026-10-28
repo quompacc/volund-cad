@@ -268,7 +268,8 @@ void MainWindow::createCommands() {
         if (impl_->sketchExtrusionTool->isActive())
             impl_->sketchExtrusionTool->cancel();
         clearEdgeSelection();
-        impl_->mirrorTool->begin(*producer, face);
+        impl_->mirrorTool->begin(
+            *producer, face, face ? std::vector<document::FeatureId>{} : repeatableSteps()); // N11b
         syncShell();
     };
     addInspectServices(services); // M12, N08
@@ -296,7 +297,7 @@ void MainWindow::createCommands() {
         const auto edge = oneEdge ? std::optional{impl_->selectedEdges.front()} : std::nullopt;
         const auto edgeSupport = oneEdge ? impl_->edgeSupport : std::nullopt;
         clearEdgeSelection();
-        impl_->patternTool->begin(*producer, kind, edgeSupport, edge);
+        impl_->patternTool->begin(*producer, kind, edgeSupport, edge, repeatableSteps());
         syncShell();
     };
     services.patternLinear = [pattern]() { pattern(document::PatternKind::linear); };

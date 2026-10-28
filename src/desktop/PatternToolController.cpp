@@ -40,13 +40,15 @@ void PatternToolController::setPreviewHandler(
 
 void PatternToolController::begin(document::FeatureId support, document::PatternKind kind,
                                   std::optional<document::FeatureId> edgeSupport,
-                                  std::optional<document::FilletEdge> edge) {
+                                  std::optional<document::FilletEdge> edge,
+                                  std::vector<document::FeatureId> steps) {
     support_ = support;
     kind_ = kind;
     editing_.reset();
     stored_.reset();
     reversed_ = false;
-    mode_ = document::PatternMode::newBodies;
+    steps_ = std::move(steps);
+    mode_ = steps_.empty() ? document::PatternMode::newBodies : document::PatternMode::join;
     count_ = kind == document::PatternKind::linear ? 3 : 4;
     spacing_ = 20.0;
     angleDegrees_ = 360.0;
@@ -86,6 +88,7 @@ void PatternToolController::beginEdit(document::FeatureId pattern) {
     spacing_ = values.spacing;
     angleDegrees_ = values.angle.value() / degree;
     skipped_ = values.skipped;
+    steps_ = values.features;
     datumAxes_.clear();
     for (const auto& feature : snapshot.features()) {
         if (feature.id == pattern)
@@ -269,6 +272,7 @@ void PatternToolController::syncFields() {
     panel_.setLengthVisible("rowSpacing", grid_);
     panel_.setChoiceVisible("rowAxis", grid_);
     panel_.setChoiceVisible("rowDirection", grid_);
+    panel_.setChoiceVisible("mode", steps_.empty()); // N11b: repeated steps always join
 }
 
 void PatternToolController::picked(std::uint64_t body, const TopoDS_Shape& edge) {
@@ -318,6 +322,7 @@ document::PatternParameters PatternToolController::parameters(document::BodyId b
     }
     result.second = second();
     result.skipped = skipped_;
+    result.features = steps_;
     return result;
 }
 
@@ -351,6 +356,9 @@ QString PatternToolController::guidance() const {
             numbers.push_back(QString::number(index));
         copies += QObject::tr(" (ohne Kopie %1)").arg(numbers.join(QStringLiteral(", ")));
     }
+    if (!steps_.empty())
+        return QObject::tr("%1 von %n Schritt(en).", nullptr, static_cast<int>(steps_.size()))
+            .arg(copies);
     return mode_ == document::PatternMode::join
                ? QObject::tr("%1, mit dem Körper vereinigt.").arg(copies)
                : QObject::tr("%1, jede Kopie ein eigener Körper.").arg(copies);
@@ -376,6 +384,7 @@ application::Action PatternToolController::action() const {
     input.mode = mode_;
     input.second = second();
     input.skipped = skipped_;
+    input.features = steps_;
     if (axisIndex_ < baseAxisCount) {
         input.baseAxis = static_cast<document::BaseAxis>(axisIndex_ + 1);
     } else if (axisIndex_ < edgeChoice()) {
