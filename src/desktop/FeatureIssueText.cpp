@@ -121,6 +121,15 @@ constexpr std::array issueTexts{
     IssueText{"sweep-path-disconnected",
               QT_TRANSLATE_NOOP("FeatureIssue", "Folgen: Die Pfadelemente bilden keine "
                                                 "zusammenhängende Kette.")},
+    IssueText{"split-misses",
+              QT_TRANSLATE_NOOP("FeatureIssue", "Teilen: Die Ebene schneidet den Körper nicht; "
+                                                "auf einer Seite bliebe nichts.")},
+    IssueText{"split-body-missing",
+              QT_TRANSLATE_NOOP("FeatureIssue", "Teilen: Der Körper hat vor diesem Schritt "
+                                                "keinen Volumenkörper.")},
+    IssueText{"split-plane-missing",
+              QT_TRANSLATE_NOOP("FeatureIssue", "Teilen: Die Trennebene oder -fläche gibt es so "
+                                                "nicht mehr. Wähle sie neu.")},
     IssueText{"pattern-path-missing",
               QT_TRANSLATE_NOOP("FeatureIssue", "Muster: Der Pfad fehlt oder hat keine "
                                                 "Elemente mehr.")},

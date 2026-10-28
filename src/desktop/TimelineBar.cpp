@@ -22,6 +22,7 @@
 #include <QWheelEvent>
 
 #include <cmath>
+#include <iterator>
 #include <optional>
 #include <utility>
 #include <vector>
@@ -47,44 +48,20 @@ class DeleteKeyClaim final : public QObject {
 };
 
 ShellIcon iconFor(document::FeatureKind kind) {
-    switch (kind) {
-    case document::FeatureKind::box:
-        return ShellIcon::box;
-    case document::FeatureKind::cylinder:
-        return ShellIcon::cylinder;
-    case document::FeatureKind::sketch:
-        return ShellIcon::sketch;
-    case document::FeatureKind::extrusion:
-        return ShellIcon::extrude;
-    case document::FeatureKind::fillet:
-        return ShellIcon::fillet;
-    case document::FeatureKind::chamfer:
-        return ShellIcon::chamfer;
-    case document::FeatureKind::hole:
-        return ShellIcon::hole;
-    case document::FeatureKind::combine:
-        return ShellIcon::combine;
-    case document::FeatureKind::datumPlane:
-        return ShellIcon::datumPlane;
-    case document::FeatureKind::datumAxis:
-        return ShellIcon::datumAxis;
-    case document::FeatureKind::shell:
-        return ShellIcon::shell;
-    case document::FeatureKind::primitive:
-        return ShellIcon::sphere; // M27
-    case document::FeatureKind::draft:
-        return ShellIcon::draft; // M25
-    case document::FeatureKind::mirror:
-        return ShellIcon::mirror; // M09
-    case document::FeatureKind::pattern:
-    case document::FeatureKind::patternCopy:
-        return ShellIcon::patternLinear; // M10
-    case document::FeatureKind::move:
-        return ShellIcon::transform; // M11
-    case document::FeatureKind::stepImport:
-    case document::FeatureKind::importPart:
-        return ShellIcon::importFile; // M17/M18
-    }
+    // In FeatureKind order (N12a: a table instead of a switch).
+    static constexpr ShellIcon icons[]{
+        ShellIcon::box,           ShellIcon::cylinder,  ShellIcon::sketch,
+        ShellIcon::extrude,       ShellIcon::fillet,    ShellIcon::chamfer,
+        ShellIcon::hole,          ShellIcon::combine,   ShellIcon::datumPlane,
+        ShellIcon::datumAxis,     ShellIcon::shell,     ShellIcon::sphere,
+        ShellIcon::draft,         ShellIcon::mirror,    ShellIcon::patternLinear,
+        ShellIcon::patternLinear, ShellIcon::transform, ShellIcon::importFile,
+        ShellIcon::importFile,    ShellIcon::split,     ShellIcon::split};
+    static_assert(std::size(icons) ==
+                  static_cast<std::size_t>(document::FeatureKind::splitPart) + 1);
+    const auto index = static_cast<std::size_t>(kind);
+    if (index < std::size(icons))
+        return icons[index];
     return ShellIcon::box;
 }
 

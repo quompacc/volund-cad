@@ -59,6 +59,7 @@ std::optional<ShellIcon> iconFor(const QString& id) {
         {QStringLiteral("solid.modify.shell"), ShellIcon::shell},
         {QStringLiteral("solid.modify.draft"), ShellIcon::draft},                  // M25
         {QStringLiteral("solid.modify.mirror"), ShellIcon::mirror},                // M09
+        {QStringLiteral("solid.modify.split"), ShellIcon::split},                  // N12a
         {QStringLiteral("solid.modify.pattern_linear"), ShellIcon::patternLinear}, // M10
         {QStringLiteral("solid.modify.pattern_circular"), ShellIcon::patternCircular},
         {QStringLiteral("solid.inspect.measure"), ShellIcon::measure},      // M12
@@ -101,7 +102,7 @@ const std::vector<RailGroup>& railGroups() {
           QStringLiteral("solid.modify.chamfer"), QStringLiteral("solid.modify.hole"),
           QStringLiteral("solid.modify.shell"), QStringLiteral("solid.modify.draft"),
           QStringLiteral("solid.modify.combine"), QStringLiteral("solid.modify.mirror"),
-          QStringLiteral("solid.modify.pattern_linear"),
+          QStringLiteral("solid.modify.split"), QStringLiteral("solid.modify.pattern_linear"),
           QStringLiteral("solid.modify.pattern_circular")}},
         {QT_TRANSLATE_NOOP("ToolRail", "Bewegen"),
          ShellIcon::transform,

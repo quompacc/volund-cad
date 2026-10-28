@@ -18,6 +18,11 @@ struct ModelDocument::State final {
 };
 // M10: the copies of `pattern` follow it directly; as new bodies there is one per index
 // 1..count-1, joined there is none. Copies that stay keep their ids (and so their bodies).
+void validateMirrorPlane(const MirrorPlane& plane); // M09/N12a
+// N12a: a split keeping both sides is followed by its part; otherwise it has none.
+void keepSplitPartInStep(std::vector<FeatureDescriptor>& features,
+                         std::vector<FeatureParameters>& parameters, std::uint64_t& next,
+                         FeatureId split, const SplitParameters& values);
 void keepCopiesInStep(std::vector<FeatureDescriptor>& features,
                       std::vector<FeatureParameters>& parameters, std::uint64_t& next,
                       FeatureId pattern, const PatternParameters& values);

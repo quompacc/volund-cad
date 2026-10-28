@@ -5,6 +5,8 @@
 
 #include <QObject>
 
+#include <iterator>
+
 namespace voelund::desktop {
 namespace {
 
@@ -34,50 +36,26 @@ QString planeName(document::DatumPlane plane) {
     return QObject::tr("Ebene");
 }
 
+// The name of each feature kind, in FeatureKind order (N12a: a table instead of a switch).
+constexpr const char* featureNames[]{
+    QT_TRANSLATE_NOOP("QObject", "Quader"),        QT_TRANSLATE_NOOP("QObject", "Zylinder"),
+    QT_TRANSLATE_NOOP("QObject", "Skizze"),        QT_TRANSLATE_NOOP("QObject", "Extrusion"),
+    QT_TRANSLATE_NOOP("QObject", "Verrundung"),    QT_TRANSLATE_NOOP("QObject", "Fase"),
+    QT_TRANSLATE_NOOP("QObject", "Bohrung"),       QT_TRANSLATE_NOOP("QObject", "Kombinieren"),
+    QT_TRANSLATE_NOOP("QObject", "Bezugsebene"),   QT_TRANSLATE_NOOP("QObject", "Bezugsachse"),
+    QT_TRANSLATE_NOOP("QObject", "Wandstärke"),    QT_TRANSLATE_NOOP("QObject", "Grundkörper"),
+    QT_TRANSLATE_NOOP("QObject", "Formschräge"),   QT_TRANSLATE_NOOP("QObject", "Spiegeln"),
+    QT_TRANSLATE_NOOP("QObject", "Muster"),        QT_TRANSLATE_NOOP("QObject", "Musterkopie"),
+    QT_TRANSLATE_NOOP("QObject", "Bewegen"),       QT_TRANSLATE_NOOP("QObject", "Import"),
+    QT_TRANSLATE_NOOP("QObject", "Importteil"),    QT_TRANSLATE_NOOP("QObject", "Teilen"),
+    QT_TRANSLATE_NOOP("QObject", "Geteilter Teil")};
+static_assert(std::size(featureNames) ==
+              static_cast<std::size_t>(document::FeatureKind::splitPart) + 1);
+
 QString featureName(const ShellState& state) {
     if (!state.featureKind.has_value())
         return QObject::tr("Feature");
-    switch (*state.featureKind) {
-    case document::FeatureKind::box:
-        return QObject::tr("Quader");
-    case document::FeatureKind::cylinder:
-        return QObject::tr("Zylinder");
-    case document::FeatureKind::extrusion:
-        return QObject::tr("Extrusion");
-    case document::FeatureKind::sketch:
-        return QObject::tr("Skizze");
-    case document::FeatureKind::fillet:
-        return QObject::tr("Verrundung");
-    case document::FeatureKind::chamfer:
-        return QObject::tr("Fase");
-    case document::FeatureKind::hole:
-        return QObject::tr("Bohrung");
-    case document::FeatureKind::combine:
-        return QObject::tr("Kombinieren");
-    case document::FeatureKind::datumPlane:
-        return QObject::tr("Bezugsebene");
-    case document::FeatureKind::datumAxis:
-        return QObject::tr("Bezugsachse");
-    case document::FeatureKind::shell:
-        return QObject::tr("Wandstärke");
-    case document::FeatureKind::primitive:
-        return QObject::tr("Grundkörper"); // M27
-    case document::FeatureKind::draft:
-        return QObject::tr("Formschräge"); // M25
-    case document::FeatureKind::mirror:
-        return QObject::tr("Spiegeln"); // M09
-    case document::FeatureKind::pattern:
-        return QObject::tr("Muster"); // M10
-    case document::FeatureKind::patternCopy:
-        return QObject::tr("Musterkopie");
-    case document::FeatureKind::move:
-        return QObject::tr("Bewegen"); // M11
-    case document::FeatureKind::stepImport:
-        return QObject::tr("Import"); // M17
-    case document::FeatureKind::importPart:
-        return QObject::tr("Importteil");
-    }
-    return QObject::tr("Feature");
+    return QObject::tr(featureNames[static_cast<std::size_t>(*state.featureKind)]);
 }
 
 } // namespace

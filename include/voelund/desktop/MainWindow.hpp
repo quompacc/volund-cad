@@ -24,6 +24,10 @@ struct ActionResult;
 struct DeletionPlan;
 } // namespace voelund::application
 
+namespace voelund::document {
+enum class FeatureKind;
+} // namespace voelund::document
+
 namespace voelund::modules::solid {
 struct SolidCommandServices;
 }
@@ -168,7 +172,8 @@ class MainWindow final : public QMainWindow {
     void rollToEdited();                                                     // W08
     void restoreEditRollback();                                              // W08
     void clearEdgeSelection();
-    [[nodiscard]] std::vector<document::FeatureId> repeatableSteps() const; // N11b
+    bool beginToolEdit(document::FeatureId selected, document::FeatureKind kind); // N12a
+    [[nodiscard]] std::vector<document::FeatureId> repeatableSteps() const;       // N11b
     void createAssistant();
     void createAssistantPanel();
     void syncAssistant();

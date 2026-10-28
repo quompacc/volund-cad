@@ -60,8 +60,10 @@ constexpr const char* toolNames[] = {"create_parameter",
                                      nullptr,
                                      nullptr, // M10: no tools yet
                                      nullptr,
-                                     nullptr,  // M11: no tools yet
-                                     nullptr}; // M14: no tool yet
+                                     nullptr, // M11: no tools yet
+                                     nullptr, // M14: no tool yet
+                                     nullptr, // N12a: no tools yet
+                                     nullptr};
 static_assert(std::size(toolNames) == std::variant_size_v<application::Action>,
               "One tool name (or none) per action kind");
 constexpr const char* statusNames[] = {"rejected", "committed", "committedWithErrors"};
@@ -76,9 +78,9 @@ constexpr const char* reasonNames[] = {"none",           "cancelled",        "no
 constexpr const char* evaluationNames[] = {
     "valid", "dirty", "failed", "blockedByDependency", "suppressed", "rolledBack"};
 constexpr const char* featureKinds[] = {
-    "box",     "cylinder",    "sketch",    "extrusion",  "fillet",    "chamfer", "hole",
-    "combine", "datumPlane",  "datumAxis", "shell",      "primitive", "draft",   "mirror",
-    "pattern", "patternCopy", "move",      "stepImport", "importPart"};
+    "box",     "cylinder",    "sketch",    "extrusion",  "fillet",     "chamfer", "hole",
+    "combine", "datumPlane",  "datumAxis", "shell",      "primitive",  "draft",   "mirror",
+    "pattern", "patternCopy", "move",      "stepImport", "importPart", "split",   "splitPart"};
 static_assert(std::size(featureKinds) == std::variant_size_v<document::FeatureParameters>,
               "One name per feature kind");
 constexpr const char* primitiveShapes[] = {"sphere", "cone", "torus", "wedge"};
@@ -117,6 +119,14 @@ QJsonObject placement(const kernel::RigidTransform& value) {
             {"rotationX", detail::quantity(value.rotationX.value(), "rad")},
             {"rotationY", detail::quantity(value.rotationY.value(), "rad")},
             {"rotationZ", detail::quantity(value.rotationZ.value(), "rad")}};
+}
+
+constexpr const char* splitKeeps[] = {"", "both", "front", "back"};
+QJsonObject splitJson(const document::SplitParameters& split) { // N12a
+    return {{"bodyId", id(split.body.value())}, {"keep", name(splitKeeps, split.keep)}};
+}
+QJsonObject splitJson(const document::SplitPartParameters& part) {
+    return {{"splitId", id(part.split.value())}};
 }
 
 // M10: what a pattern runs along; N11c: or its path sketch.
@@ -197,6 +207,8 @@ QJsonObject featureParameters(const document::FeatureParameters& parameters) {
                 return {{"importId", id(part.import.value())},
                         {"index", static_cast<int>(part.index)}};
             },
+            [](const document::SplitParameters& split) { return splitJson(split); }, // N12a
+            [](const document::SplitPartParameters& part) { return splitJson(part); },
             [](const document::PrimitiveParameters& primitive) -> QJsonObject { // M27
                 QJsonArray sizes;
                 for (const double size : primitive.sizes)

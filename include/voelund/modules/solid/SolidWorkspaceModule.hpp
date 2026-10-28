@@ -43,6 +43,9 @@ struct SolidCommandServices final {
     // M09: mirrors the selected body (about the picked planar face, if any).
     std::function<void()> mirror{};
     std::function<bool()> canMirror{};
+    // N12a: splits the selected body at a plane or a picked planar face.
+    std::function<void()> split{};
+    std::function<bool()> canSplit{};
     // M10: linear and circular patterns of the selected body.
     std::function<void()> patternLinear{};
     std::function<void()> patternCircular{};
@@ -81,6 +84,7 @@ class SolidWorkspaceModule final : public workspaces::WorkspaceModule {
 
   private:
     void addInspectCommands(SolidCommandServices& services); // M12 measure, N08 interference
+    void addCopyCommands(SolidCommandServices& services);    // M09, N12a, M10
 
     std::vector<workspaces::CommandDescriptor> commands_;
 };

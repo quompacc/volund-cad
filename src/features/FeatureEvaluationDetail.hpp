@@ -9,6 +9,7 @@
 #include <gp_Dir.hxx>
 #include <gp_Pnt.hxx>
 
+#include <array>
 #include <string>
 #include <vector>
 
@@ -87,6 +88,15 @@ void evaluateImport(const document::DocumentSnapshot& document,
                     const document::FeatureDescriptor& descriptor,
                     std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
                     std::vector<EvaluatedBody>& referenceBodies);
+// N12a (SplitEvaluation.cpp): a body cut at a plane; with both sides kept, its part.
+void evaluateSplit(const document::DocumentSnapshot& document,
+                   const document::FeatureDescriptor& descriptor,
+                   std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
+                   std::vector<EvaluatedBody>& referenceBodies);
+void evaluateSplitPart(const document::DocumentSnapshot& document,
+                       const document::FeatureDescriptor& descriptor,
+                       std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
+                       std::vector<EvaluatedBody>& referenceBodies);
 void evaluateImportPart(const document::DocumentSnapshot& document,
                         const document::FeatureDescriptor& descriptor,
                         std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
@@ -121,5 +131,17 @@ void evaluateHole(const document::DocumentSnapshot& document,
 [[nodiscard]] TopoDS_Wire sketchPathWire(const document::SweepPath& path,
                                          const std::vector<EvaluatedFeature>& outputs,
                                          const std::string& prefix);
+
+// M09/N12a (MirrorEvaluation.cpp): the plane of a mirror or split: a base plane, a construction
+// plane or a planar face of a body before `feature`; errors carry "<prefix>-plane-missing".
+struct CuttingPlane final {
+    std::array<double, 3> origin;
+    std::array<double, 3> normal;
+};
+[[nodiscard]] CuttingPlane cuttingPlane(const document::DocumentSnapshot& document,
+                                        document::FeatureId feature,
+                                        const document::MirrorPlane& plane,
+                                        const std::vector<EvaluatedFeature>& outputs,
+                                        const std::string& prefix);
 
 } // namespace voelund::features::detail

@@ -33,8 +33,9 @@
 
 namespace voelund::application {
 struct CreateMirrorAction;
-// U06: features grouped by the body they work on, both in document order. Features that
-// belong to no body (invalid documents) stay loose.
+struct CreateSplitAction;
+struct EditSplitParametersAction;
+// U06: features grouped by their body, in document order; features of no body stay loose.
 struct OutlineBody final {
     document::BodyId id;
     std::vector<document::FeatureId> features;
@@ -68,8 +69,7 @@ struct ExtrusionMode final {
     bool operator==(const ExtrusionMode&) const = default;
 };
 
-// PAR01: deleting a parameter that is still bound is refused unless its uses are first
-// switched to their current fixed values (docs/parameter-table.md, rule 6).
+// PAR01: deleting a bound parameter is refused unless its uses switch to fixed values first.
 enum class ParameterDeletion { refuseWhenUsed, unbindUses };
 
 // M10: a new pattern's axis: a base axis, a construction axis or an edge of `edgeSupport`.
@@ -313,6 +313,8 @@ class CadSession final {
     // M09 (CadSessionMirror.cpp): mirrors `support`'s body about a base or construction plane or
     // a planar face of `faceSupport`'s result; a new body or joined (N11b: or the chosen steps).
     [[nodiscard]] CommandResult createMirror(const CreateMirrorAction& action);
+    [[nodiscard]] CommandResult createSplit(const CreateSplitAction& action); // N12a
+    [[nodiscard]] CommandResult editSplitParameters(const EditSplitParametersAction& action);
     [[nodiscard]] CommandResult
     editMirrorParameters(document::FeatureId featureId,
                          const document::MirrorParameters& parameters,
@@ -356,8 +358,7 @@ class CadSession final {
     copyBodies(std::span<const document::BodyId> bodies) const;
     [[nodiscard]] CommandResult pasteBodies(std::vector<document::ImportedSolid> solids);
     static constexpr const char* pasteSource = "Zwischenablage"; // the import's file name
-    // M17: writes `bodies` (none given: every visible body) as STEP in mm, each named as the
-    // browser names it. Refused while the current revision has errors.
+    // M17: `bodies` (default: the visible ones) as STEP in mm, named as shown; refused on errors.
     [[nodiscard]] StepExportResult exportStep(const std::filesystem::path& path,
                                               std::span<const document::BodyId> bodies = {});
     // M14 (user decision 2026-10-16): suppresses or reactivates a feature, one undo step. Later

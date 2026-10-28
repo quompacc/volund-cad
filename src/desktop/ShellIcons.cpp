@@ -14,6 +14,116 @@
 namespace voelund::desktop {
 namespace {
 
+// The window's own icons: import, measure, repair, eyes (N12a: split off).
+void drawWindowIcon(QPainter& painter, ShellIcon icon, const QColor& accent) {
+    switch (icon) {
+    case ShellIcon::importFile:
+        // An open tray with an arrow coming down into it, the arrow in the accent colour.
+        painter.drawPolyline(QPolygonF{QPointF(3.5, 13.5), QPointF(3.5, 20.5), QPointF(20.5, 20.5),
+                                       QPointF(20.5, 13.5)});
+        painter.setPen(QPen(accent, 1.8, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        painter.drawLine(QPointF(12, 3), QPointF(12, 15));
+        painter.drawPolyline(QPolygonF{QPointF(7.5, 10.5), QPointF(12, 15), QPointF(16.5, 10.5)});
+        break;
+    case ShellIcon::measure:
+        // A ruler with marks.
+        painter.drawRect(QRectF(2.5, 8.5, 19, 7));
+        for (const double x : {6.0, 10.0, 14.0, 18.0})
+            painter.drawLine(QPointF(x, 8.5), QPointF(x, x == 10.0 || x == 18.0 ? 13 : 11));
+        break;
+    case ShellIcon::repair:
+        painter.drawLine(QPointF(5, 19), QPointF(13, 11));
+        painter.drawEllipse(QPointF(16, 8), 4, 4);
+        break;
+    case ShellIcon::eye:
+    case ShellIcon::eyeOff: {
+        QPainterPath lid;
+        lid.moveTo(2.5, 12);
+        lid.quadTo(12, 3, 21.5, 12);
+        lid.quadTo(12, 21, 2.5, 12);
+        painter.drawPath(lid);
+        painter.drawEllipse(QPointF(12, 12), 3, 3);
+        if (icon == ShellIcon::eyeOff)
+            painter.drawLine(QPointF(4, 4), QPointF(20, 20));
+        break;
+    }
+    default:
+        break;
+    }
+}
+
+// The icons added from M09 on (N12a: split from draw for its size).
+void drawLater(QPainter& painter, ShellIcon icon, const QColor& accent) {
+    switch (icon) {
+    case ShellIcon::split: {
+        // N12a: a block cut in two by a dashed plane, the halves pulled apart.
+        painter.drawPolyline(
+            QPolygonF{QPointF(10, 5), QPointF(3, 5), QPointF(3, 19), QPointF(10, 19)});
+        painter.drawPolyline(
+            QPolygonF{QPointF(14, 5), QPointF(21, 5), QPointF(21, 19), QPointF(14, 19)});
+        QPen plane = painter.pen();
+        plane.setColor(accent);
+        plane.setStyle(Qt::DashLine);
+        painter.setPen(plane);
+        painter.drawLine(QPointF(12, 2), QPointF(12, 22));
+        break;
+    }
+    case ShellIcon::mirror: {
+        // A body and its mirror image on both sides of a dashed plane line.
+        painter.drawPolyline(
+            QPolygonF{QPointF(10, 19), QPointF(3, 19), QPointF(3, 5), QPointF(10, 12)});
+        painter.drawPolyline(
+            QPolygonF{QPointF(14, 19), QPointF(21, 19), QPointF(21, 5), QPointF(14, 12)});
+        QPen plane = painter.pen();
+        plane.setColor(accent);
+        plane.setStyle(Qt::DashLine);
+        painter.setPen(plane);
+        painter.drawLine(QPointF(12, 2), QPointF(12, 22));
+        break;
+    }
+    case ShellIcon::patternLinear:
+        // Three blocks in a row, the copies drawn in the accent colour.
+        painter.drawRect(QRectF(2.5, 8.5, 5, 7));
+        painter.setPen(QPen(accent, 1.8, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        painter.drawRect(QRectF(9.5, 8.5, 5, 7));
+        painter.drawRect(QRectF(16.5, 8.5, 5, 7));
+        break;
+    case ShellIcon::patternCircular:
+        // Blocks around a centre point, the copies in the accent colour.
+        painter.drawPoint(QPointF(12, 12));
+        painter.drawRect(QRectF(9.5, 2.5, 5, 5));
+        painter.setPen(QPen(accent, 1.8, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        painter.drawRect(QRectF(16.5, 9.5, 5, 5));
+        painter.drawRect(QRectF(9.5, 16.5, 5, 5));
+        painter.drawRect(QRectF(2.5, 9.5, 5, 5));
+        break;
+    case ShellIcon::loft:
+        // A wide section below, a small one above, joined by straight sides.
+        painter.drawEllipse(QRectF(3, 15, 18, 6));
+        painter.drawEllipse(QRectF(8, 3, 8, 3.5));
+        painter.drawLine(QPointF(3, 18), QPointF(8, 4.75));
+        painter.drawLine(QPointF(21, 18), QPointF(16, 4.75));
+        break;
+    case ShellIcon::datumAxis:
+        // A long axis through a small ring.
+        painter.drawLine(QPointF(4, 20), QPointF(20, 4));
+        painter.drawEllipse(QPointF(12, 12), 4, 4);
+        break;
+    case ShellIcon::combine:
+        // Two overlapping bodies, the second one dashed: a Boolean of whole bodies.
+        painter.drawRect(QRectF(3.5, 9.5, 11, 11));
+        painter.drawRect(QRectF(9.5, 3.5, 11, 11));
+        break;
+    case ShellIcon::editSketch:
+        painter.drawRect(QRectF(3.5, 6.5, 12, 12));
+        painter.drawLine(QPointF(11, 15), QPointF(20, 6));
+        painter.drawLine(QPointF(18, 4), QPointF(22, 8));
+        break;
+    default:
+        drawWindowIcon(painter, icon, accent);
+    }
+}
+
 void draw(QPainter& painter, ShellIcon icon, const QColor& ink, const QColor& accent) {
     QPen pen(ink, 1.8, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
     painter.setPen(pen);
@@ -231,19 +341,6 @@ void draw(QPainter& painter, ShellIcon icon, const QColor& ink, const QColor& ac
         painter.drawLine(QPointF(18, 20), QPointF(15, 5));
         painter.drawLine(QPointF(9, 5), QPointF(15, 5));
         break;
-    case ShellIcon::mirror: {
-        // A body and its mirror image on both sides of a dashed plane line.
-        painter.drawPolyline(
-            QPolygonF{QPointF(10, 19), QPointF(3, 19), QPointF(3, 5), QPointF(10, 12)});
-        painter.drawPolyline(
-            QPolygonF{QPointF(14, 19), QPointF(21, 19), QPointF(21, 5), QPointF(14, 12)});
-        QPen plane = painter.pen();
-        plane.setColor(accent);
-        plane.setStyle(Qt::DashLine);
-        painter.setPen(plane);
-        painter.drawLine(QPointF(12, 2), QPointF(12, 22));
-        break;
-    }
     case ShellIcon::parameters: {
         // A small table: a name column and two rows, the "=" in the accent colour.
         painter.drawRoundedRect(QRectF(3.5, 4.5, 17, 15), 2, 2);
@@ -254,74 +351,6 @@ void draw(QPainter& painter, ShellIcon icon, const QColor& ink, const QColor& ac
         painter.drawLine(QPointF(13.5, 16), QPointF(17.5, 16));
         break;
     }
-    case ShellIcon::importFile:
-        // An open tray with an arrow coming down into it, the arrow in the accent colour.
-        painter.drawPolyline(QPolygonF{QPointF(3.5, 13.5), QPointF(3.5, 20.5), QPointF(20.5, 20.5),
-                                       QPointF(20.5, 13.5)});
-        painter.setPen(QPen(accent, 1.8, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
-        painter.drawLine(QPointF(12, 3), QPointF(12, 15));
-        painter.drawPolyline(QPolygonF{QPointF(7.5, 10.5), QPointF(12, 15), QPointF(16.5, 10.5)});
-        break;
-    case ShellIcon::measure:
-        // A ruler with marks.
-        painter.drawRect(QRectF(2.5, 8.5, 19, 7));
-        for (const double x : {6.0, 10.0, 14.0, 18.0})
-            painter.drawLine(QPointF(x, 8.5), QPointF(x, x == 10.0 || x == 18.0 ? 13 : 11));
-        break;
-    case ShellIcon::patternLinear:
-        // Three blocks in a row, the copies drawn in the accent colour.
-        painter.drawRect(QRectF(2.5, 8.5, 5, 7));
-        painter.setPen(QPen(accent, 1.8, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
-        painter.drawRect(QRectF(9.5, 8.5, 5, 7));
-        painter.drawRect(QRectF(16.5, 8.5, 5, 7));
-        break;
-    case ShellIcon::patternCircular:
-        // Blocks around a centre point, the copies in the accent colour.
-        painter.drawPoint(QPointF(12, 12));
-        painter.drawRect(QRectF(9.5, 2.5, 5, 5));
-        painter.setPen(QPen(accent, 1.8, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
-        painter.drawRect(QRectF(16.5, 9.5, 5, 5));
-        painter.drawRect(QRectF(9.5, 16.5, 5, 5));
-        painter.drawRect(QRectF(2.5, 9.5, 5, 5));
-        break;
-    case ShellIcon::loft:
-        // A wide section below, a small one above, joined by straight sides.
-        painter.drawEllipse(QRectF(3, 15, 18, 6));
-        painter.drawEllipse(QRectF(8, 3, 8, 3.5));
-        painter.drawLine(QPointF(3, 18), QPointF(8, 4.75));
-        painter.drawLine(QPointF(21, 18), QPointF(16, 4.75));
-        break;
-    case ShellIcon::datumAxis:
-        // A long axis through a small ring.
-        painter.drawLine(QPointF(4, 20), QPointF(20, 4));
-        painter.drawEllipse(QPointF(12, 12), 4, 4);
-        break;
-    case ShellIcon::combine:
-        // Two overlapping bodies, the second one dashed: a Boolean of whole bodies.
-        painter.drawRect(QRectF(3.5, 9.5, 11, 11));
-        painter.drawRect(QRectF(9.5, 3.5, 11, 11));
-        break;
-    case ShellIcon::editSketch:
-        painter.drawRect(QRectF(3.5, 6.5, 12, 12));
-        painter.drawLine(QPointF(11, 15), QPointF(20, 6));
-        painter.drawLine(QPointF(18, 4), QPointF(22, 8));
-        break;
-    case ShellIcon::repair:
-        painter.drawLine(QPointF(5, 19), QPointF(13, 11));
-        painter.drawEllipse(QPointF(16, 8), 4, 4);
-        break;
-    case ShellIcon::eye:
-    case ShellIcon::eyeOff: {
-        QPainterPath lid;
-        lid.moveTo(2.5, 12);
-        lid.quadTo(12, 3, 21.5, 12);
-        lid.quadTo(12, 21, 2.5, 12);
-        painter.drawPath(lid);
-        painter.drawEllipse(QPointF(12, 12), 3, 3);
-        if (icon == ShellIcon::eyeOff)
-            painter.drawLine(QPointF(4, 4), QPointF(20, 20));
-        break;
-    }
     case ShellIcon::moon: {
         QPainterPath outer;
         outer.addEllipse(QPointF(12, 12), 8, 8);
@@ -330,6 +359,8 @@ void draw(QPainter& painter, ShellIcon icon, const QColor& ink, const QColor& ac
         painter.drawPath(outer.subtracted(bite));
         break;
     }
+    default:
+        drawLater(painter, icon, accent);
     }
 }
 

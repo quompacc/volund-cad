@@ -49,6 +49,8 @@ class DocumentSnapshot final {
     [[nodiscard]] const MoveParameters& moveParameters(FeatureId id) const;     // M11
     [[nodiscard]] const ImportParameters& importParameters(FeatureId id) const; // M17
     [[nodiscard]] const ImportPartParameters& importPartParameters(FeatureId id) const;
+    [[nodiscard]] const SplitParameters& splitParameters(FeatureId id) const; // N12a
+    [[nodiscard]] const SplitPartParameters& splitPartParameters(FeatureId id) const;
     [[nodiscard]] const SketchParameters& sketchParameters(FeatureId id) const;
     [[nodiscard]] const ExtrusionParameters& extrusionParameters(FeatureId id) const;
     [[nodiscard]] const FilletParameters& filletParameters(FeatureId id) const;

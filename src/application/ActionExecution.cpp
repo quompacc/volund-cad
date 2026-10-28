@@ -297,11 +297,16 @@ class Validation final {
         static_cast<void>(target(action.draft, ActionKind::editDraftParameters));
         finite({action.parameters.angle.value()});
     }
-    // M09: the face of the plane lies on a current result too.
-    void operator()(const CreateMirrorAction& action) {
-        static_cast<void>(target(action.support, ActionKind::createMirror));
+    // M09/N12a: the face of the plane lies on a current result too.
+    template <class PlaneAction> void onPlane(const PlaneAction& action, ActionKind kind) {
+        static_cast<void>(target(action.support, kind));
         if (action.faceSupport)
-            static_cast<void>(target(*action.faceSupport, ActionKind::createMirror));
+            static_cast<void>(target(*action.faceSupport, kind));
+    }
+    void operator()(const CreateMirrorAction& a) { onPlane(a, ActionKind::createMirror); }
+    void operator()(const CreateSplitAction& a) { onPlane(a, ActionKind::createSplit); }
+    void operator()(const EditSplitParametersAction& action) {
+        static_cast<void>(target(action.split, ActionKind::editSplitParameters));
     }
     void operator()(const EditMirrorParametersAction& action) {
         static_cast<void>(target(action.mirror, ActionKind::editMirrorParameters));
@@ -494,6 +499,8 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot,
                 return session.editDraftParameters(a.draft, a.parameters, reject);
             },
             [&](const CreateMirrorAction& a) { return session.createMirror(a); },
+            [&](const CreateSplitAction& a) { return session.createSplit(a); }, // N12a
+            [&](const EditSplitParametersAction& a) { return session.editSplitParameters(a); },
             [&](const EditMirrorParametersAction& a) {
                 return session.editMirrorParameters(a.mirror, a.parameters, reject);
             },

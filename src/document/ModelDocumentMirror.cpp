@@ -10,10 +10,21 @@
 // M09: a mirror ("Spiegeln") of a body about a base plane, a construction plane or a face.
 namespace voelund::document {
 
-void validateMirrorParameters(const MirrorParameters& parameters) {
-    if (parameters.body.value() == 0)
-        throw std::invalid_argument("A mirror names its body");
-    const auto& plane = parameters.plane;
+namespace {
+// The construction plane or face a plane names.
+void validatePlaneTarget(const MirrorPlane& plane) {
+    if (plane.constructionPlane && plane.constructionPlane->value() == 0)
+        throw std::invalid_argument("A mirror names its construction plane");
+    if (!plane.face)
+        return;
+    if (plane.face->body.value() == 0)
+        throw std::invalid_argument("A mirror face names its body");
+    validateSubshapeOrigin(plane.face->origin);
+}
+} // namespace
+
+// M09/N12a: exactly one of a base plane, a construction plane or a body face.
+void validateMirrorPlane(const MirrorPlane& plane) {
     const int references =
         (plane.basePlane ? 1 : 0) + (plane.constructionPlane ? 1 : 0) + (plane.face ? 1 : 0);
     if (references != 1)
@@ -21,13 +32,13 @@ void validateMirrorParameters(const MirrorParameters& parameters) {
             "A mirror plane is a base plane, a construction plane or a body face");
     if (plane.basePlane && (*plane.basePlane < DatumPlane::xy || *plane.basePlane > DatumPlane::yz))
         throw std::invalid_argument("Unknown base plane");
-    if (plane.constructionPlane && plane.constructionPlane->value() == 0)
-        throw std::invalid_argument("A mirror names its construction plane");
-    if (plane.face) {
-        if (plane.face->body.value() == 0)
-            throw std::invalid_argument("A mirror face names its body");
-        validateSubshapeOrigin(plane.face->origin);
-    }
+    validatePlaneTarget(plane);
+}
+
+void validateMirrorParameters(const MirrorParameters& parameters) {
+    if (parameters.body.value() == 0)
+        throw std::invalid_argument("A mirror names its body");
+    validateMirrorPlane(parameters.plane);
     if (parameters.mode != MirrorMode::newBody && parameters.mode != MirrorMode::join)
         throw std::invalid_argument("Unknown mirror mode");
     validateRepeatedSteps(parameters.features, parameters.mode == MirrorMode::join); // N11b

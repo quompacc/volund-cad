@@ -48,6 +48,7 @@ add_library(voelund_document STATIC
     NativePrimitiveSolid.cpp
     ModelDocumentDraft.cpp
     ModelDocumentMirror.cpp
+    ModelDocumentSplit.cpp
     ModelDocumentPattern.cpp
     ModelDocumentMove.cpp
     ModelDocumentImport.cpp

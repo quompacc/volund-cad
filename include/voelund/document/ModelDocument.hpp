@@ -51,7 +51,9 @@ enum class FeatureKind {
     patternCopy,
     move,       // M11
     stepImport, // M17
-    importPart
+    importPart,
+    split, // N12a
+    splitPart
 };
 enum class CylinderResultMode { join, cut, intersect, separate };
 
@@ -428,6 +430,21 @@ struct MirrorParameters final {
     [[nodiscard]] bool operator==(const MirrorParameters&) const = default;
 };
 void validateMirrorParameters(const MirrorParameters& parameters);
+// N12a (schema 50, agent decision 2026-10-28, as Fusion's "Split Body"): a body cut in two at a
+// base or construction plane or a planar face. It keeps the front (where the plane's normal
+// points), the back or both; with both, the back is a splitPart feature of its own body.
+enum class SplitKeep { both = 1, front = 2, back = 3 };
+struct SplitParameters final {
+    BodyId body;
+    MirrorPlane plane;
+    SplitKeep keep{SplitKeep::both};
+    [[nodiscard]] bool operator==(const SplitParameters&) const = default;
+};
+void validateSplitParameters(const SplitParameters& parameters);
+struct SplitPartParameters final {
+    FeatureId split;
+    [[nodiscard]] bool operator==(const SplitPartParameters&) const = default;
+};
 // N11b: the steps a pattern or mirror repeats: 1 to 20 distinct ones, the result joined.
 void validateRepeatedSteps(std::span<const FeatureId> steps, bool joined);
 // M10 (schema 32, user decision 2026-10-15): copies of a body along a direction (linear) or
@@ -547,12 +564,14 @@ using FeatureParameters =
                  FilletParameters, ChamferParameters, HoleParameters, CombineParameters,
                  DatumPlaneParameters, DatumAxisParameters, ShellParameters, PrimitiveParameters,
                  DraftParameters, MirrorParameters, PatternParameters, PatternCopyParameters,
-                 MoveParameters, ImportParameters, ImportPartParameters>;
+                 MoveParameters, ImportParameters, ImportPartParameters, SplitParameters,
+                 SplitPartParameters>;
 // M10/M17: the feature a companion belongs to (a pattern copy's pattern, an import part's
 // import); it moves, is deleted and is shown with that feature.
 [[nodiscard]] std::optional<FeatureId> companionOwner(const FeatureParameters& parameters) noexcept;
 [[nodiscard]] constexpr bool isCompanion(FeatureKind kind) noexcept {
-    return kind == FeatureKind::patternCopy || kind == FeatureKind::importPart;
+    return kind == FeatureKind::patternCopy || kind == FeatureKind::importPart ||
+           kind == FeatureKind::splitPart;
 }
 
 // M16: what a feature refers to. Structural references must stand earlier and exist (its input,
@@ -630,6 +649,10 @@ class ModelDocument final {
     [[nodiscard]] FeatureId addMirrorFeature(std::string name, const MirrorParameters& parameters);
     [[nodiscard]] const MirrorParameters& mirrorParameters(FeatureId featureId) const;
     [[nodiscard]] bool setMirrorParameters(FeatureId featureId, const MirrorParameters& parameters);
+    // N12a (ModelDocumentSplit.cpp): with both sides kept, its part follows it.
+    [[nodiscard]] FeatureId addSplitFeature(std::string name, const SplitParameters& parameters);
+    [[nodiscard]] const SplitParameters& splitParameters(FeatureId featureId) const;
+    [[nodiscard]] bool setSplitParameters(FeatureId featureId, const SplitParameters& parameters);
     // M10 (ModelDocumentPattern.cpp): adding or changing a pattern adds or removes its copy
     // features in the same step.
     [[nodiscard]] FeatureId addPatternFeature(std::string name,

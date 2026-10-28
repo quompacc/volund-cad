@@ -18,6 +18,54 @@ std::function<bool()> alwaysEnabled() {
 
 } // namespace
 
+// M09 mirror, N12a split, M10 patterns.
+void SolidWorkspaceModule::addCopyCommands(SolidCommandServices& services) {
+    if (services.mirror)
+        commands_.push_back({"solid.modify.mirror",
+                             "Spiegeln",
+                             "Gewählten Körper an einer Ebene oder Fläche spiegeln",
+                             {},
+                             workspaces::CommandGroup::modify,
+                             true,
+                             false,
+                             simpleCommand(std::move(services.mirror)),
+                             services.canMirror,
+                             "Spiegeln"});
+    if (services.split)
+        commands_.push_back({"solid.modify.split",
+                             "Teilen",
+                             "Gewählten Körper an einer Ebene oder Fläche in zwei Körper teilen",
+                             {},
+                             workspaces::CommandGroup::modify,
+                             true,
+                             false,
+                             simpleCommand(std::move(services.split)),
+                             services.canSplit,
+                             "Teilen"});
+    if (services.patternLinear)
+        commands_.push_back({"solid.modify.pattern_linear",
+                             "Lineares Muster",
+                             "Gewählten Körper entlang einer Richtung vervielfältigen",
+                             {},
+                             workspaces::CommandGroup::modify,
+                             true,
+                             false,
+                             simpleCommand(std::move(services.patternLinear)),
+                             services.canPattern,
+                             "Muster"});
+    if (services.patternCircular)
+        commands_.push_back({"solid.modify.pattern_circular",
+                             "Kreismuster",
+                             "Gewählten Körper um eine Achse vervielfältigen",
+                             {},
+                             workspaces::CommandGroup::modify,
+                             true,
+                             false,
+                             simpleCommand(std::move(services.patternCircular)),
+                             services.canPattern,
+                             "Kreismuster"});
+}
+
 void SolidWorkspaceModule::addInspectCommands(SolidCommandServices& services) {
     if (services.measure)
         commands_.push_back({"solid.inspect.measure", "Messen",
@@ -211,39 +259,7 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                              simpleCommand(std::move(services.combine)),
                              services.canCombine,
                              "Kombinieren"});
-    if (services.mirror)
-        commands_.push_back({"solid.modify.mirror",
-                             "Spiegeln",
-                             "Gewählten Körper an einer Ebene oder Fläche spiegeln",
-                             {},
-                             workspaces::CommandGroup::modify,
-                             true,
-                             false,
-                             simpleCommand(std::move(services.mirror)),
-                             services.canMirror,
-                             "Spiegeln"});
-    if (services.patternLinear)
-        commands_.push_back({"solid.modify.pattern_linear",
-                             "Lineares Muster",
-                             "Gewählten Körper entlang einer Richtung vervielfältigen",
-                             {},
-                             workspaces::CommandGroup::modify,
-                             true,
-                             false,
-                             simpleCommand(std::move(services.patternLinear)),
-                             services.canPattern,
-                             "Muster"});
-    if (services.patternCircular)
-        commands_.push_back({"solid.modify.pattern_circular",
-                             "Kreismuster",
-                             "Gewählten Körper um eine Achse vervielfältigen",
-                             {},
-                             workspaces::CommandGroup::modify,
-                             true,
-                             false,
-                             simpleCommand(std::move(services.patternCircular)),
-                             services.canPattern,
-                             "Kreismuster"});
+    addCopyCommands(services);
     if (services.hole)
         commands_.push_back({"solid.modify.hole", "Bohrung",
                              "Bohrung an der angeklickten Stelle der gewählten Fläche", "H",

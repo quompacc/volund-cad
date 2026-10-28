@@ -101,6 +101,45 @@ std::optional<document::FeatureId> inputProducer(const document::DocumentSnapsho
             return features[index].id;
     return std::nullopt;
 }
+// The producers of `bodies` as they were before the node's feature, each once.
+void addProducers(FeatureInputs& node, const document::DocumentSnapshot& snapshot,
+                  std::span<const document::BodyId> bodies) {
+    for (const auto body : bodies)
+        if (const auto producer = inputProducer(snapshot, node.feature, body);
+            producer && std::ranges::find(node.inputs, *producer) == node.inputs.end())
+            node.inputs.push_back(*producer);
+}
+
+// M09/N12a: a mirror or split reads its body, and the body of its face or its construction
+// plane, as they were before it.
+void addPlaneUser(FeatureInputs& node, const document::DocumentSnapshot& snapshot,
+                  document::BodyId body, const document::MirrorPlane& plane) {
+    std::vector<document::BodyId> bodies{body};
+    if (plane.face)
+        bodies.push_back(plane.face->body);
+    addProducers(node, snapshot, bodies);
+    if (plane.constructionPlane)
+        node.inputs.push_back(*plane.constructionPlane);
+}
+
+// M10: a pattern reads its body, the body of its edge or its construction axis as they were
+// before it; N11a: and its rows' axis; N11c: its path sketch.
+void addPattern(FeatureInputs& node, const document::DocumentSnapshot& snapshot) {
+    const auto& parameters = snapshot.patternParameters(node.feature);
+    std::vector<document::BodyId> bodies{parameters.body};
+    for (const auto* axis :
+         {&parameters.axis, parameters.second ? &parameters.second->axis : nullptr})
+        if (axis != nullptr && axis->body)
+            bodies.push_back(*axis->body);
+    addProducers(node, snapshot, bodies);
+    for (const auto& datumAxis :
+         {parameters.datumAxis,
+          parameters.second ? parameters.second->datumAxis : std::optional<document::FeatureId>{}})
+        if (datumAxis)
+            node.inputs.push_back(*datumAxis);
+    if (parameters.path)
+        node.inputs.push_back(parameters.path->sketch);
+}
 } // namespace
 FeatureDependencies FeatureDependencies::from(const document::DocumentSnapshot& snapshot) {
     std::vector<FeatureInputs> nodes;
@@ -156,39 +195,17 @@ FeatureDependencies FeatureDependencies::from(const document::DocumentSnapshot& 
                     producer && std::ranges::find(node.inputs, *producer) == node.inputs.end())
                     node.inputs.push_back(*producer);
         }
-        // M09: a mirror reads its body, and the body of its face or its construction plane,
-        // as they were before it.
-        if (feature.kind == document::FeatureKind::mirror) {
-            const auto& parameters = snapshot.mirrorParameters(feature.id);
-            std::vector<document::BodyId> bodies{parameters.body};
-            if (parameters.plane.face)
-                bodies.push_back(parameters.plane.face->body);
-            for (const auto body : bodies)
-                if (const auto producer = inputProducer(snapshot, feature.id, body);
-                    producer && std::ranges::find(node.inputs, *producer) == node.inputs.end())
-                    node.inputs.push_back(*producer);
-            if (parameters.plane.constructionPlane)
-                node.inputs.push_back(*parameters.plane.constructionPlane);
-        }
-        // M10: a pattern reads its body, the body of its edge or its construction axis as
-        // they were before it; a copy follows its pattern.
-        if (feature.kind == document::FeatureKind::pattern) {
-            const auto& parameters = snapshot.patternParameters(feature.id);
-            std::vector<document::BodyId> bodies{parameters.body};
-            if (parameters.axis.body)
-                bodies.push_back(*parameters.axis.body);
-            for (const auto body : bodies)
-                if (const auto producer = inputProducer(snapshot, feature.id, body);
-                    producer && std::ranges::find(node.inputs, *producer) == node.inputs.end())
-                    node.inputs.push_back(*producer);
-            if (parameters.datumAxis)
-                node.inputs.push_back(*parameters.datumAxis);
-        }
-        if (feature.kind == document::FeatureKind::patternCopy)
-            node.inputs.push_back(snapshot.patternCopyParameters(feature.id).pattern);
-        // M17: a part belongs to its import.
-        if (feature.kind == document::FeatureKind::importPart)
-            node.inputs.push_back(snapshot.importPartParameters(feature.id).import);
+        if (const auto* mirror =
+                std::get_if<document::MirrorParameters>(&snapshot.featureParameters(feature.id)))
+            addPlaneUser(node, snapshot, mirror->body, mirror->plane);
+        if (const auto* split = std::get_if<document::SplitParameters>(
+                &snapshot.featureParameters(feature.id))) // N12a
+            addPlaneUser(node, snapshot, split->body, split->plane);
+        if (feature.kind == document::FeatureKind::pattern)
+            addPattern(node, snapshot);
+        // M10/M17/N12a: a pattern copy, import part or split part follows its owner.
+        if (const auto owner = document::companionOwner(snapshot.featureParameters(feature.id)))
+            node.inputs.push_back(*owner);
         // M21: a combination works on its target and tool bodies as they were before it.
         if (feature.kind == document::FeatureKind::combine) {
             const auto& parameters = snapshot.combineParameters(feature.id);

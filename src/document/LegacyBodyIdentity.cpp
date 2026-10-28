@@ -34,7 +34,8 @@ bool standsAlone(const FeatureDescriptor& feature, const FeatureParameters& para
         FeatureKind::combine,    FeatureKind::datumPlane,  FeatureKind::datumAxis,
         FeatureKind::shell,      FeatureKind::draft,       FeatureKind::mirror,
         FeatureKind::pattern,    FeatureKind::patternCopy, FeatureKind::move,
-        FeatureKind::stepImport, FeatureKind::importPart};
+        FeatureKind::stepImport, FeatureKind::importPart,  FeatureKind::split,
+        FeatureKind::splitPart};
     if (std::ranges::find(alone, feature.kind) != alone.end())
         return true;
     if (feature.kind == FeatureKind::hole)
@@ -47,77 +48,19 @@ bool standsAlone(const FeatureDescriptor& feature, const FeatureParameters& para
            std::get<ExtrusionParameters>(parameters).faceProfile;
 }
 
+// FeatureKind and FeatureParameters list the kinds in the same order (N12a).
+static_assert(std::variant_size_v<FeatureParameters> ==
+              static_cast<std::size_t>(FeatureKind::splitPart) + 1);
+static_assert(
+    std::is_same_v<std::variant_alternative_t<static_cast<std::size_t>(FeatureKind::importPart),
+                                              FeatureParameters>,
+                   ImportPartParameters>);
+
 void validateKind(const FeatureDescriptor& feature, const FeatureParameters& parameters) {
-    bool matches = false;
-    switch (feature.kind) {
-    case FeatureKind::box:
-        matches = std::holds_alternative<BoxParameters>(parameters);
-        break;
-    case FeatureKind::cylinder:
-        matches = std::holds_alternative<CylinderParameters>(parameters);
-        if (matches)
-            switch (std::get<CylinderParameters>(parameters).resultMode) {
-            case CylinderResultMode::join:
-            case CylinderResultMode::cut:
-            case CylinderResultMode::intersect:
-            case CylinderResultMode::separate:
-                break;
-            default:
-                matches = false;
-            }
-        break;
-    case FeatureKind::sketch:
-        matches = std::holds_alternative<SketchParameters>(parameters);
-        break;
-    case FeatureKind::extrusion:
-        matches = std::holds_alternative<ExtrusionParameters>(parameters);
-        break;
-    case FeatureKind::fillet:
-        matches = std::holds_alternative<FilletParameters>(parameters);
-        break;
-    case FeatureKind::chamfer:
-        matches = std::holds_alternative<ChamferParameters>(parameters);
-        break;
-    case FeatureKind::hole:
-        matches = std::holds_alternative<HoleParameters>(parameters);
-        break;
-    case FeatureKind::combine:
-        matches = std::holds_alternative<CombineParameters>(parameters);
-        break;
-    case FeatureKind::datumPlane:
-        matches = std::holds_alternative<DatumPlaneParameters>(parameters);
-        break;
-    case FeatureKind::datumAxis:
-        matches = std::holds_alternative<DatumAxisParameters>(parameters);
-        break;
-    case FeatureKind::shell:
-        matches = std::holds_alternative<ShellParameters>(parameters);
-        break;
-    case FeatureKind::primitive: // M27
-        matches = std::holds_alternative<PrimitiveParameters>(parameters);
-        break;
-    case FeatureKind::draft: // M25
-        matches = std::holds_alternative<DraftParameters>(parameters);
-        break;
-    case FeatureKind::mirror: // M09
-        matches = std::holds_alternative<MirrorParameters>(parameters);
-        break;
-    case FeatureKind::pattern: // M10
-        matches = std::holds_alternative<PatternParameters>(parameters);
-        break;
-    case FeatureKind::patternCopy:
-        matches = std::holds_alternative<PatternCopyParameters>(parameters);
-        break;
-    case FeatureKind::move: // M11
-        matches = std::holds_alternative<MoveParameters>(parameters);
-        break;
-    case FeatureKind::stepImport: // M17
-        matches = std::holds_alternative<ImportParameters>(parameters);
-        break;
-    case FeatureKind::importPart:
-        matches = std::holds_alternative<ImportPartParameters>(parameters);
-        break;
-    }
+    bool matches = parameters.index() == static_cast<std::size_t>(feature.kind);
+    if (const auto* cylinder = std::get_if<CylinderParameters>(&parameters))
+        matches = matches && cylinder->resultMode >= CylinderResultMode::join &&
+                  cylinder->resultMode <= CylinderResultMode::separate;
     if (!matches)
         throw std::invalid_argument("Legacy body identity: feature parameter kind mismatch");
     const bool standalone = standsAlone(feature, parameters);
@@ -148,6 +91,45 @@ void checkPatternAxis(const DatumAxisParameters& axis, const std::optional<Featu
     if (found == at.indices.end() || found->second >= at.index ||
         at.features[found->second].kind != FeatureKind::datumAxis)
         throw std::invalid_argument("Pattern axis is not an earlier construction axis");
+}
+
+// M09/N12a: a mirror or split works on a body of the document, about a face of one or an
+// earlier construction plane.
+template <class IsBody>
+void checkPlaneUser(BodyId body, const MirrorPlane& plane, const HistoryPosition& at,
+                    const IsBody& isBody) {
+    if (!isBody(body) || (plane.face && !isBody(plane.face->body)))
+        throw std::invalid_argument("Mirror or split body is not a body of this document");
+    if (!plane.constructionPlane)
+        return;
+    const auto found = at.indices.find(plane.constructionPlane->value());
+    if (found == at.indices.end() || found->second >= at.index ||
+        at.features[found->second].kind != FeatureKind::datumPlane)
+        throw std::invalid_argument("Mirror or split plane is not an earlier construction plane");
+}
+
+// M11: a move moves its body; M10: a pattern passes it on or joins the copies into it;
+// N12a: a split cuts it.
+std::optional<BodyId> wholeBodyStep(const FeatureParameters& parameters) {
+    if (const auto* move = std::get_if<MoveParameters>(&parameters))
+        return move->body;
+    if (const auto* pattern = std::get_if<PatternParameters>(&parameters))
+        return pattern->body;
+    if (const auto* split = std::get_if<SplitParameters>(&parameters))
+        return split->body;
+    return std::nullopt;
+}
+
+// N12a: a split part directly follows its split, which keeps both sides.
+void checkSplitPart(std::span<const FeatureParameters> parameters, const HistoryPosition& at) {
+    const auto* part = std::get_if<SplitPartParameters>(&parameters[at.index]);
+    if (part == nullptr)
+        return;
+    const auto* split =
+        at.index == 0 ? nullptr : std::get_if<SplitParameters>(&parameters[at.index - 1]);
+    if (split == nullptr || at.features[at.index - 1].id != part->split ||
+        split->keep != SplitKeep::both)
+        throw std::invalid_argument("Split part does not follow its split");
 }
 
 // N11c: a pattern along a curve follows an earlier sketch.
@@ -219,10 +201,8 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
         // M09: so does a mirror image of its own; M10: and every copy of a pattern.
         if (const auto* mirror = std::get_if<MirrorParameters>(&parameters[index]))
             return mirror->mode == MirrorMode::newBody;
-        if (feature.kind == FeatureKind::patternCopy)
-            return true;
-        // M17: every imported solid is a body.
-        if (feature.kind == FeatureKind::stepImport || feature.kind == FeatureKind::importPart)
+        // M10/M17/N12a: every pattern copy, imported solid and split part is a body.
+        if (isCompanion(feature.kind) || feature.kind == FeatureKind::stepImport)
             return true;
         return feature.kind == FeatureKind::box ||
                (feature.kind == FeatureKind::sketch && !inputs[index]) ||
@@ -264,12 +244,9 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
         // M25: a draft tilts faces of its body.
         if (features[index].kind == FeatureKind::draft)
             return std::get<DraftParameters>(parameters[index]).body;
-        // M11: a move moves its body.
-        if (const auto* move = std::get_if<MoveParameters>(&parameters[index]))
-            return move->body;
-        // M10: a pattern passes its body on, or joins the copies into it.
-        if (const auto* pattern = std::get_if<PatternParameters>(&parameters[index]))
-            return pattern->body;
+        // M11/M10/N12a: a move, pattern or split works on its body.
+        if (const auto body = wholeBodyStep(parameters[index]))
+            return body;
         // M09: a mirror joined to its body changes that body.
         if (const auto* mirror = std::get_if<MirrorParameters>(&parameters[index]);
             mirror && mirror->mode == MirrorMode::join)
@@ -323,21 +300,18 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
                 throw std::invalid_argument("Sketch construction plane is not an earlier plane");
         }
     }
-    // M09: a mirror reads a body of the document, about a face of one or an earlier
-    // construction plane.
+    // M09: a mirror (N12a: or a split) reads a body of the document, about a face of one or an
+    // earlier construction plane; a split part names the split before it.
     for (std::size_t index = 0; index < features.size(); ++index) {
+        const HistoryPosition at{features, indices, index};
+        if (const auto* split = std::get_if<SplitParameters>(&parameters[index]))
+            checkPlaneUser(split->body, split->plane, at, isBody);
+        checkSplitPart(parameters, at);
         const auto* mirror = std::get_if<MirrorParameters>(&parameters[index]);
         if (mirror == nullptr)
             continue;
-        if (!isBody(mirror->body) || (mirror->plane.face && !isBody(mirror->plane.face->body)))
-            throw std::invalid_argument("Mirror body is not a body of this document");
-        checkPatternSources(mirror->features, {features, indices, index}); // N11b
-        if (mirror->plane.constructionPlane) {
-            const auto found = indices.find(mirror->plane.constructionPlane->value());
-            if (found == indices.end() || found->second >= index ||
-                features[found->second].kind != FeatureKind::datumPlane)
-                throw std::invalid_argument("Mirror plane is not an earlier construction plane");
-        }
+        checkPlaneUser(mirror->body, mirror->plane, at, isBody);
+        checkPatternSources(mirror->features, at); // N11b
     }
     // M10: a pattern copies a body of the document along an edge of one or an earlier
     // construction axis; each copy names an earlier new-body pattern and one index of it.

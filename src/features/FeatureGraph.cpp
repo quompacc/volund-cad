@@ -21,6 +21,7 @@
 #include <voelund/kernel/SolidPrimitives.hpp>
 
 #include <algorithm>
+#include <array>
 #include <functional>
 #include <gp_Trsf.hxx>
 #include <stdexcept>
@@ -335,71 +336,52 @@ bool FeatureGraphEvaluation::valid() const noexcept {
 }
 
 namespace {
+using Evaluator = void (*)(const document::DocumentSnapshot&, const document::FeatureDescriptor&,
+                           std::vector<EvaluatedFeature>&, std::vector<EvaluatedBody>&,
+                           std::vector<EvaluatedBody>&);
+
+// A feature that makes no body (a sketch, a construction plane or axis).
+template <void (*Run)(const document::DocumentSnapshot&, const document::FeatureDescriptor&,
+                      std::vector<EvaluatedFeature>&)>
+void withoutBodies(const document::DocumentSnapshot& document,
+                   const document::FeatureDescriptor& descriptor,
+                   std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>&,
+                   std::vector<EvaluatedBody>&) {
+    Run(document, descriptor, outputs);
+}
+
+// Every feature kind's evaluation, in FeatureKind order (N12a: a table instead of a switch).
+constexpr std::array<Evaluator, static_cast<std::size_t>(document::FeatureKind::splitPart) + 1>
+    evaluators{&evaluateBox,
+               &evaluateCylinder,
+               &withoutBodies<&evaluateSketch>,
+               &detail::evaluateExtrusion,
+               &detail::evaluateFillet,
+               &detail::evaluateChamfer,
+               &detail::evaluateHole,
+               &detail::evaluateCombine,
+               &withoutBodies<&detail::evaluateDatumPlane>,
+               &withoutBodies<&detail::evaluateDatumAxis>,
+               &detail::evaluateShell,
+               &evaluatePrimitive,
+               &detail::evaluateDraft,
+               &detail::evaluateMirror,
+               &detail::evaluatePattern,
+               &detail::evaluatePatternCopy,
+               &detail::evaluateMove,
+               &detail::evaluateImport,
+               &detail::evaluateImportPart,
+               &detail::evaluateSplit,
+               &detail::evaluateSplitPart};
+
 void runFeature(const document::DocumentSnapshot& document,
                 const document::FeatureDescriptor& descriptor,
                 std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
                 std::vector<EvaluatedBody>& references) {
     if (detail::beforeFeatureEvaluation)
         detail::beforeFeatureEvaluation(descriptor.id);
-    switch (descriptor.kind) {
-    case document::FeatureKind::box:
-        evaluateBox(document, descriptor, outputs, bodies, references);
-        break;
-    case document::FeatureKind::cylinder:
-        evaluateCylinder(document, descriptor, outputs, bodies, references);
-        break;
-    case document::FeatureKind::sketch:
-        evaluateSketch(document, descriptor, outputs);
-        break;
-    case document::FeatureKind::extrusion:
-        detail::evaluateExtrusion(document, descriptor, outputs, bodies, references);
-        break;
-    case document::FeatureKind::fillet:
-        detail::evaluateFillet(document, descriptor, outputs, bodies, references);
-        break;
-    case document::FeatureKind::chamfer:
-        detail::evaluateChamfer(document, descriptor, outputs, bodies, references);
-        break;
-    case document::FeatureKind::hole:
-        detail::evaluateHole(document, descriptor, outputs, bodies, references);
-        break;
-    case document::FeatureKind::combine:
-        detail::evaluateCombine(document, descriptor, outputs, bodies, references);
-        break;
-    case document::FeatureKind::datumPlane:
-        detail::evaluateDatumPlane(document, descriptor, outputs);
-        break;
-    case document::FeatureKind::datumAxis:
-        detail::evaluateDatumAxis(document, descriptor, outputs);
-        break;
-    case document::FeatureKind::shell:
-        detail::evaluateShell(document, descriptor, outputs, bodies, references);
-        break;
-    case document::FeatureKind::primitive:
-        evaluatePrimitive(document, descriptor, outputs, bodies, references);
-        break;
-    case document::FeatureKind::draft:
-        detail::evaluateDraft(document, descriptor, outputs, bodies, references);
-        break;
-    case document::FeatureKind::mirror:
-        detail::evaluateMirror(document, descriptor, outputs, bodies, references);
-        break;
-    case document::FeatureKind::pattern:
-        detail::evaluatePattern(document, descriptor, outputs, bodies, references);
-        break;
-    case document::FeatureKind::patternCopy:
-        detail::evaluatePatternCopy(document, descriptor, outputs, bodies, references);
-        break;
-    case document::FeatureKind::move:
-        detail::evaluateMove(document, descriptor, outputs, bodies, references);
-        break;
-    case document::FeatureKind::stepImport:
-        detail::evaluateImport(document, descriptor, outputs, bodies, references);
-        break;
-    case document::FeatureKind::importPart:
-        detail::evaluateImportPart(document, descriptor, outputs, bodies, references);
-        break;
-    }
+    evaluators.at(static_cast<std::size_t>(descriptor.kind))(document, descriptor, outputs, bodies,
+                                                             references);
 }
 void restoreOutput(const EvaluatedFeature& output, std::vector<EvaluatedFeature>& outputs,
                    std::vector<EvaluatedBody>& bodies, std::vector<EvaluatedBody>& references) {

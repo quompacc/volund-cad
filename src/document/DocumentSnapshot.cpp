@@ -104,6 +104,14 @@ const ImportParameters& DocumentSnapshot::importParameters(FeatureId id) const {
 const ImportPartParameters& DocumentSnapshot::importPartParameters(FeatureId id) const {
     return std::get<ImportPartParameters>(featureParameters(id));
 }
+
+const SplitParameters& DocumentSnapshot::splitParameters(FeatureId id) const {
+    return std::get<SplitParameters>(featureParameters(id));
+}
+
+const SplitPartParameters& DocumentSnapshot::splitPartParameters(FeatureId id) const {
+    return std::get<SplitPartParameters>(featureParameters(id));
+}
 const SketchParameters& DocumentSnapshot::sketchParameters(FeatureId id) const {
     return std::get<SketchParameters>(featureParameters(id));
 }

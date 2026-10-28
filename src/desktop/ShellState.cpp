@@ -7,6 +7,9 @@
 
 #include <QFileInfo>
 
+#include <algorithm>
+#include <array>
+
 namespace voelund::desktop {
 
 QString nativeDisplayPath(const std::filesystem::path& path) {
@@ -51,6 +54,18 @@ QString documentDisplayName(const application::CadSession& session) {
     return currentFile.isEmpty() ? QObject::tr("Unbenannt") : QFileInfo(currentFile).fileName();
 }
 
+namespace {
+// The kinds a tool panel edits (N12a: a list instead of a chain of comparisons).
+bool panelEditable(std::optional<document::FeatureKind> kind) {
+    using Kind = document::FeatureKind;
+    static constexpr std::array kinds{
+        Kind::fillet,      Kind::chamfer, Kind::hole,  Kind::combine,  Kind::datumPlane,
+        Kind::datumAxis,   Kind::shell,   Kind::draft, Kind::mirror,   Kind::pattern,
+        Kind::patternCopy, Kind::move,    Kind::split, Kind::splitPart};
+    return kind && std::ranges::find(kinds, *kind) != kinds.end();
+}
+} // namespace
+
 ShellState projectShell(const application::CadSession& session, const ShellInputs& inputs) {
     ShellState state;
     state.documentName = documentDisplayName(session);
@@ -65,18 +80,7 @@ ShellState projectShell(const application::CadSession& session, const ShellInput
     if (state.feature.has_value())
         state.featureKind = session.selectedFeatureDescriptor().kind;
     state.regionExtrudable = session.canExtrudeSelectedSketchProfiles();
-    state.filletEditable = state.featureKind == document::FeatureKind::fillet ||
-                           state.featureKind == document::FeatureKind::chamfer ||
-                           state.featureKind == document::FeatureKind::hole ||
-                           state.featureKind == document::FeatureKind::combine ||
-                           state.featureKind == document::FeatureKind::datumPlane ||
-                           state.featureKind == document::FeatureKind::datumAxis ||
-                           state.featureKind == document::FeatureKind::shell ||
-                           state.featureKind == document::FeatureKind::draft ||
-                           state.featureKind == document::FeatureKind::mirror ||
-                           state.featureKind == document::FeatureKind::pattern ||
-                           state.featureKind == document::FeatureKind::patternCopy ||
-                           state.featureKind == document::FeatureKind::move;
+    state.filletEditable = panelEditable(state.featureKind);
     if (state.featureKind == document::FeatureKind::extrusion)
         state.extrusionEditable = !session.identifiedSnapshot()
                                        .snapshot()

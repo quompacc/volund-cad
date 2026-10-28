@@ -70,6 +70,39 @@ void contextRules() {
             "Move/Rotate shows its snap settings");
 }
 
+// U14: every solid command the rail offers (N08 interference, N12a split).
+std::set<std::string> solidRailCommands() {
+    return {"solid.create.box",
+            "solid.create.cylinder",
+            "solid.create.sphere",
+            "solid.create.cone",
+            "solid.create.torus",
+            "solid.create.wedge",
+            "solid.create.sketch",
+            "solid.create.extrude_profiles",
+            "solid.create.revolve",
+            "solid.create.sweep",
+            "solid.create.loft",
+            "solid.create.helix",
+            "solid.modify.transform",
+            "solid.modify.edit_sketch",
+            "solid.modify.push_pull",
+            "solid.modify.fillet",
+            "solid.modify.chamfer",
+            "solid.modify.hole",
+            "solid.modify.combine",
+            "solid.create.datum_plane",
+            "solid.modify.shell",
+            "solid.modify.draft",
+            "solid.create.datum_axis",
+            "solid.modify.mirror",
+            "solid.modify.split",
+            "solid.modify.pattern_linear",
+            "solid.modify.pattern_circular",
+            "solid.inspect.measure",
+            "solid.inspect.interference"};
+}
+
 void surfaces() {
     application::CadSession session;
     session.newDocument();
@@ -88,34 +121,7 @@ void surfaces() {
     for (auto* button : rail->findChildren<QToolButton*>())
         if (button->defaultAction() != nullptr)
             railIds.insert(id(button->defaultAction()));
-    const std::set<std::string> solid{"solid.create.box",
-                                      "solid.create.cylinder",
-                                      "solid.create.sphere",
-                                      "solid.create.cone",
-                                      "solid.create.torus",
-                                      "solid.create.wedge",
-                                      "solid.create.sketch",
-                                      "solid.create.extrude_profiles",
-                                      "solid.create.revolve",
-                                      "solid.create.sweep",
-                                      "solid.create.loft",
-                                      "solid.create.helix",
-                                      "solid.modify.transform",
-                                      "solid.modify.edit_sketch",
-                                      "solid.modify.push_pull",
-                                      "solid.modify.fillet",
-                                      "solid.modify.chamfer",
-                                      "solid.modify.hole",
-                                      "solid.modify.combine",
-                                      "solid.create.datum_plane",
-                                      "solid.modify.shell",
-                                      "solid.modify.draft",
-                                      "solid.create.datum_axis",
-                                      "solid.modify.mirror",
-                                      "solid.modify.pattern_linear",
-                                      "solid.modify.pattern_circular",
-                                      "solid.inspect.measure",
-                                      "solid.inspect.interference"}; // N08
+    const auto solid = solidRailCommands();
     require(railIds == solid, "The rail shows every solid command");
     require(!command(window, "solid.create.sketch")->isEnabled(),
             "Unfitting commands stay visible but disabled");

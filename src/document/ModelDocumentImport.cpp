@@ -77,6 +77,8 @@ std::optional<FeatureId> companionOwner(const FeatureParameters& parameters) noe
         return copy->pattern;
     if (const auto* part = std::get_if<ImportPartParameters>(&parameters))
         return part->import;
+    if (const auto* half = std::get_if<SplitPartParameters>(&parameters)) // N12a
+        return half->split;
     return std::nullopt;
 }
 

@@ -57,6 +57,12 @@ class ShapeFactory final {
     [[nodiscard]] static ShapeOperationResult
     mirrorWithHistory(const TopoDS_Shape& shape, const std::array<double, 3>& origin,
                       const std::array<double, 3>& normal);
+    // N12a (SplitBlock.cpp): a block that holds all of `around` on one side of the plane through
+    // `origin` with `normal` (the front: where the normal points) and ends at the plane; its
+    // common part with `around` is that side of it.
+    [[nodiscard]] static TopoDS_Shape sideBlock(const TopoDS_Shape& around,
+                                                const std::array<double, 3>& origin,
+                                                const std::array<double, 3>& normal, bool front);
     // M10: a copy of `shape` turned by `angle` (radians) about the axis through `origin` along
     // `direction`, then moved by `translation`, with history (HistoryOperand::first).
     [[nodiscard]] static ShapeOperationResult

@@ -57,6 +57,8 @@ bool MainWindow::toolTakesFace(const viewport::PlanarFaceSelection& selection) {
         impl_->draftTool->picked(selection); // M25: tilts the face or not
     else if (impl_->mirrorTool->isActive())
         impl_->mirrorTool->picked(selection); // M09: the mirror plane
+    else if (impl_->splitTool->isActive())
+        impl_->splitTool->picked(selection); // N12a: the cutting plane
     else if (impl_->measureTool->isActive())
         impl_->measureTool->pickedFace(selection); // M12: measured only
     else

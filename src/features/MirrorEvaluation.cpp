@@ -27,36 +27,7 @@
 namespace voelund::features::detail {
 namespace {
 
-struct Plane final {
-    std::array<double, 3> origin;
-    std::array<double, 3> normal;
-};
-
-Plane mirrorPlane(const document::DocumentSnapshot& document, document::FeatureId mirror,
-                  const document::MirrorPlane& plane,
-                  const std::vector<EvaluatedFeature>& outputs) {
-    const auto of = [](const document::SketchPlane& frame) {
-        return Plane{{frame.originX, frame.originY, frame.originZ},
-                     {frame.normalX, frame.normalY, frame.normalZ}};
-    };
-    if (plane.basePlane)
-        return of(document::datumSketchPlane(*plane.basePlane));
-    if (plane.constructionPlane) {
-        const auto& frame = findFeature(outputs, *plane.constructionPlane).datumFrame;
-        if (!frame)
-            throw GeometryEvaluationError("The mirror plane is missing", "mirror-plane-missing");
-        return of(*frame);
-    }
-    const auto producer = bodyProducerBefore(document, mirror, plane.face->body);
-    if (!producer)
-        throw GeometryEvaluationError("The mirror face has no body", "mirror-plane-missing");
-    const auto frames = supportFaceFrames(findFeature(outputs, *producer));
-    const auto found = std::ranges::find(frames, plane.face->origin, &SupportFaceFrame::origin);
-    if (found == frames.end())
-        throw GeometryEvaluationError("The mirror face is no longer a unique planar face",
-                                      "mirror-plane-missing");
-    return of(found->plane);
-}
+using Plane = CuttingPlane;
 
 // The image of a body's names: the same faces mirrored, each one copy further.
 struct Image final {
@@ -143,6 +114,32 @@ void publishMirror(EvaluatedFeature output, const MirrorTarget& target,
 
 } // namespace
 
+CuttingPlane cuttingPlane(const document::DocumentSnapshot& document, document::FeatureId feature,
+                          const document::MirrorPlane& plane,
+                          const std::vector<EvaluatedFeature>& outputs, const std::string& prefix) {
+    const auto of = [](const document::SketchPlane& frame) {
+        return CuttingPlane{{frame.originX, frame.originY, frame.originZ},
+                            {frame.normalX, frame.normalY, frame.normalZ}};
+    };
+    if (plane.basePlane)
+        return of(document::datumSketchPlane(*plane.basePlane));
+    if (plane.constructionPlane) {
+        const auto& frame = findFeature(outputs, *plane.constructionPlane).datumFrame;
+        if (!frame)
+            throw GeometryEvaluationError("The plane is missing", prefix + "-plane-missing");
+        return of(*frame);
+    }
+    const auto producer = bodyProducerBefore(document, feature, plane.face->body);
+    if (!producer)
+        throw GeometryEvaluationError("The plane's face has no body", prefix + "-plane-missing");
+    const auto frames = supportFaceFrames(findFeature(outputs, *producer));
+    const auto found = std::ranges::find(frames, plane.face->origin, &SupportFaceFrame::origin);
+    if (found == frames.end())
+        throw GeometryEvaluationError("The plane's face is no longer a unique planar face",
+                                      prefix + "-plane-missing");
+    return of(found->plane);
+}
+
 void evaluateMirror(const document::DocumentSnapshot& document,
                     const document::FeatureDescriptor& descriptor,
                     std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
@@ -152,7 +149,7 @@ void evaluateMirror(const document::DocumentSnapshot& document,
     if (!producer)
         throw GeometryEvaluationError("The body of the mirror has no solid before it",
                                       "mirror-body-missing");
-    const auto plane = mirrorPlane(document, descriptor.id, parameters.plane, outputs);
+    const auto plane = cuttingPlane(document, descriptor.id, parameters.plane, outputs, "mirror");
     const auto& owner = findFeature(outputs, *producer);
     EvaluatedBody& body = findBody(bodies, outputs, *producer);
     EvaluatedBody& referenceBody = findBody(referenceBodies, outputs, *producer);

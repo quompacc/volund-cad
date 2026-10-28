@@ -118,57 +118,8 @@ void MainWindow::createCommands() {
             syncShell();
             return;
         }
-        if (kind == document::FeatureKind::fillet || kind == document::FeatureKind::chamfer) {
-            impl_->filletTool->beginEdit(*selected);
-            syncShell();
+        if (kind && beginToolEdit(*selected, *kind))
             return;
-        }
-        if (kind == document::FeatureKind::hole) {
-            impl_->holeTool->beginEdit(*selected);
-            syncShell();
-            return;
-        }
-        if (kind == document::FeatureKind::combine) {
-            impl_->combineTool->beginEdit(*selected);
-            syncShell();
-            return;
-        }
-        if (kind == document::FeatureKind::shell) {
-            impl_->shellTool->beginEdit(*selected);
-            syncShell();
-            return;
-        }
-        if (kind == document::FeatureKind::draft) { // M25
-            impl_->draftTool->beginEdit(*selected);
-            syncShell();
-            return;
-        }
-        if (kind == document::FeatureKind::mirror) { // M09
-            impl_->mirrorTool->beginEdit(*selected);
-            syncShell();
-            return;
-        }
-        if (kind == document::FeatureKind::move) { // M11
-            impl_->moveTool->beginEdit(*selected);
-            syncShell();
-            return;
-        }
-        // M10: a pattern, also through one of its copies.
-        if (kind == document::FeatureKind::pattern || kind == document::FeatureKind::patternCopy) {
-            impl_->patternTool->beginEdit(kind == document::FeatureKind::pattern
-                                              ? *selected
-                                              : impl_->session.identifiedSnapshot()
-                                                    .snapshot()
-                                                    .patternCopyParameters(*selected)
-                                                    .pattern);
-            syncShell();
-            return;
-        }
-        if (kind == document::FeatureKind::datumPlane || kind == document::FeatureKind::datumAxis) {
-            impl_->datumTool->beginEdit(*selected);
-            syncShell();
-            return;
-        }
         static_cast<void>(impl_->sketchEditorTool->beginSelectedSketch());
     };
     services.extrudeProfiles = [this]() {
@@ -278,11 +229,25 @@ void MainWindow::createCommands() {
                ((impl_->session.selectedBodyProducer().has_value() || impl_->edgeSupport) &&
                 impl_->session.sceneStatus().isCurrent() && !impl_->shell().toolBlocksCommands());
     };
+    // N12a: splits the selected body; a picked planar face is its body and the plane.
+    services.split = [this]() {
+        const auto face = impl_->selectedPlanarFace;
+        const auto producer = face ? std::optional{document::FeatureId{face->bodyId}}
+                                   : impl_->session.selectedBodyProducer();
+        if (!producer)
+            return;
+        if (impl_->sketchExtrusionTool->isActive())
+            impl_->sketchExtrusionTool->cancel();
+        clearEdgeSelection();
+        impl_->splitTool->begin(*producer, face);
+        syncShell();
+    };
     services.canMirror = [this]() {
         return (impl_->selectedPlanarFace.has_value() && impl_->shell().canSketch()) ||
                (impl_->session.selectedBodyProducer().has_value() &&
                 impl_->session.sceneStatus().isCurrent() && !impl_->shell().toolBlocksCommands());
     };
+    services.canSplit = services.canMirror; // N12a
     // M10: copies of the selected body; one edge picked before is the direction or axis.
     const auto pattern = [this](document::PatternKind kind) {
         const auto face = impl_->selectedPlanarFace;
@@ -391,6 +356,45 @@ void MainWindow::pushPullPickedFace() {
         impl_->sketchExtrusionTool->cancel();
     impl_->pushPullTool->begin(*impl_->selectedPlanarFace);
     syncShell();
+}
+
+// The panel that edits a step of this kind, opened on it (N12a: a table instead of a chain of
+// ifs); a pattern copy or split part opens its owner. False for kinds without one.
+bool MainWindow::beginToolEdit(document::FeatureId selected, document::FeatureKind kind) {
+    using Kind = document::FeatureKind;
+    const auto snapshot = impl_->session.identifiedSnapshot().snapshot();
+    const std::function<void(document::FeatureId)> fillet = [this](auto id) {
+        impl_->filletTool->beginEdit(id);
+    };
+    const std::function<void(document::FeatureId)> datum = [this](auto id) {
+        impl_->datumTool->beginEdit(id);
+    };
+    const std::pair<Kind, std::function<void(document::FeatureId)>> editors[]{
+        {Kind::fillet, fillet},
+        {Kind::chamfer, fillet},
+        {Kind::hole, [this](auto id) { impl_->holeTool->beginEdit(id); }},
+        {Kind::combine, [this](auto id) { impl_->combineTool->beginEdit(id); }},
+        {Kind::shell, [this](auto id) { impl_->shellTool->beginEdit(id); }},
+        {Kind::draft, [this](auto id) { impl_->draftTool->beginEdit(id); }},     // M25
+        {Kind::mirror, [this](auto id) { impl_->mirrorTool->beginEdit(id); }},   // M09
+        {Kind::move, [this](auto id) { impl_->moveTool->beginEdit(id); }},       // M11
+        {Kind::pattern, [this](auto id) { impl_->patternTool->beginEdit(id); }}, // M10
+        {Kind::patternCopy,
+         [&](auto id) {
+             impl_->patternTool->beginEdit(snapshot.patternCopyParameters(id).pattern);
+         }},
+        {Kind::datumPlane, datum},
+        {Kind::datumAxis, datum},
+        {Kind::split, [this](auto id) { impl_->splitTool->beginEdit(id); }}, // N12a
+        {Kind::splitPart,
+         [&](auto id) { impl_->splitTool->beginEdit(snapshot.splitPartParameters(id).split); }}};
+    using Editor = std::pair<Kind, std::function<void(document::FeatureId)>>;
+    const auto editor = std::ranges::find(editors, kind, &Editor::first);
+    if (editor == std::end(editors))
+        return false;
+    editor->second(selected);
+    syncShell();
+    return true;
 }
 
 bool MainWindow::canPushPullNow() const {

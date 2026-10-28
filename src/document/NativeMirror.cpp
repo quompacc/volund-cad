@@ -67,6 +67,35 @@ void readPlane(const TDF_Label& label, MirrorPlane& result, std::size_t remainin
     result.face = BodyFaceReference{
         BodyId{readId(faceBody)}, readNativeSubshapeOrigin(face, remainingRecords, schemaVersion)};
 }
+// The plane of a mirror or split: base plane code (2, 0 for none), construction plane (3) or
+// face (4: its body on child 1 and its origin).
+void writePlane(const TDF_Label& label, const MirrorPlane& plane) {
+    TDataStd_Integer::Set(label.FindChild(2),
+                          plane.basePlane ? static_cast<int>(*plane.basePlane) : 0);
+    if (plane.constructionPlane)
+        writeId(label.FindChild(3), plane.constructionPlane->value());
+    if (plane.face) {
+        const auto face = label.FindChild(4);
+        writeId(face.FindChild(1), plane.face->body.value());
+        writeNativeSubshapeOrigin(face, plane.face->origin);
+    }
+}
+
+// The plane; `children` counts the label's further children (body, steps).
+MirrorPlane readMirrorPlane(const TDF_Label& label, int children, std::size_t remainingRecords,
+                            int schemaVersion) {
+    const auto base = child(label, 2);
+    const int code = integer(base);
+    // A base plane needs no third child; a construction plane or a face is one.
+    require(base.NbChildren() == 0 && code >= 0 && code <= 3 &&
+            label.NbChildren() == children + (code != 0 ? 1 : 2));
+    MirrorPlane result;
+    if (code != 0)
+        result.basePlane = static_cast<DatumPlane>(code);
+    else
+        readPlane(label, result, remainingRecords, schemaVersion);
+    return result;
+}
 } // namespace
 
 std::size_t nativeMirrorRecords(const MirrorParameters& parameters) {
@@ -77,16 +106,7 @@ void writeNativeMirror(const TDF_Label& label, const MirrorParameters& parameter
     validateMirrorParameters(parameters);
     TDataStd_Integer::Set(label, static_cast<int>(parameters.mode));
     writeId(label.FindChild(1), parameters.body.value());
-    const auto& plane = parameters.plane;
-    TDataStd_Integer::Set(label.FindChild(2),
-                          plane.basePlane ? static_cast<int>(*plane.basePlane) : 0);
-    if (plane.constructionPlane)
-        writeId(label.FindChild(3), plane.constructionPlane->value());
-    if (plane.face) {
-        const auto face = label.FindChild(4);
-        writeId(face.FindChild(1), plane.face->body.value());
-        writeNativeSubshapeOrigin(face, plane.face->origin);
-    }
+    writePlane(label, parameters.plane);
     if (!parameters.features.empty())
         writeNativeSteps(label.FindChild(5), parameters.features);
 }
@@ -100,19 +120,49 @@ MirrorParameters readNativeMirror(const TDF_Label& label, std::size_t remainingR
     const auto body = child(label, 1);
     require(body.NbChildren() == 0);
     MirrorParameters result{BodyId{readId(body)}, {}, static_cast<MirrorMode>(mode)};
-    const auto base = child(label, 2);
-    const int code = integer(base);
-    // A base plane needs no third child; a construction plane or a face is one.
     const int extra = label.FindChild(5, false).IsNull() ? 0 : 1;
-    require(base.NbChildren() == 0 && code >= 0 && code <= 3 &&
-            label.NbChildren() == (code != 0 ? 2 : 3) + extra);
+    result.plane = readMirrorPlane(label, 1 + extra, remainingRecords, schemaVersion);
     result.features = readMirroredSteps(label, schemaVersion);
-    if (code != 0)
-        result.plane.basePlane = static_cast<DatumPlane>(code);
-    else
-        readPlane(label, result.plane, remainingRecords, schemaVersion);
     validateMirrorParameters(result);
     return result;
+}
+
+// N12a (schema 50): a split keeps its side on the label, its body (1) and its plane as a
+// mirror's; a split part names its split (1).
+std::size_t nativeSplitRecords(const SplitParameters& parameters) {
+    return parameters.plane.face ? parameters.plane.face->origin.extrusionBoundary.size() : 0;
+}
+
+void writeNativeSplit(const TDF_Label& label, const SplitParameters& parameters) {
+    validateSplitParameters(parameters);
+    TDataStd_Integer::Set(label, static_cast<int>(parameters.keep));
+    writeId(label.FindChild(1), parameters.body.value());
+    writePlane(label, parameters.plane);
+}
+
+SplitParameters readNativeSplit(const TDF_Label& label, std::size_t remainingRecords,
+                                int schemaVersion) {
+    require(schemaVersion >= 50);
+    const int keep = integer(label);
+    require(keep >= static_cast<int>(SplitKeep::both) && keep <= static_cast<int>(SplitKeep::back));
+    const auto body = child(label, 1);
+    require(body.NbChildren() == 0);
+    SplitParameters result{BodyId{readId(body)},
+                           readMirrorPlane(label, 1, remainingRecords, schemaVersion),
+                           static_cast<SplitKeep>(keep)};
+    validateSplitParameters(result);
+    return result;
+}
+
+void writeNativeSplitPart(const TDF_Label& label, const SplitPartParameters& parameters) {
+    writeId(label.FindChild(1), parameters.split.value());
+}
+
+SplitPartParameters readNativeSplitPart(const TDF_Label& label, int schemaVersion) {
+    require(schemaVersion >= 50 && label.NbChildren() == 1);
+    const auto split = child(label, 1);
+    require(split.NbChildren() == 0);
+    return {FeatureId{readId(split)}};
 }
 
 } // namespace voelund::document::detail

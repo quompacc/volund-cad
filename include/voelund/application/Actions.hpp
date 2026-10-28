@@ -293,6 +293,21 @@ struct CreateMirrorAction final {
     std::vector<document::FeatureId> features{}; // N11b: steps mirrored instead of the body
     bool operator==(const CreateMirrorAction&) const = default;
 };
+// N12a: splits `support`'s body at a base or construction plane or a face of `faceSupport`.
+struct CreateSplitAction final {
+    document::FeatureId support;
+    std::optional<document::DatumPlane> basePlane;
+    std::optional<document::FeatureId> constructionPlane;
+    std::optional<document::FeatureId> faceSupport;
+    std::optional<document::SubshapeOrigin> face;
+    document::SplitKeep keep{document::SplitKeep::both};
+    bool operator==(const CreateSplitAction&) const = default;
+};
+struct EditSplitParametersAction final {
+    document::FeatureId split;
+    document::SplitParameters parameters;
+    bool operator==(const EditSplitParametersAction&) const = default;
+};
 struct EditMirrorParametersAction final {
     document::FeatureId mirror;
     document::MirrorParameters parameters;
@@ -356,7 +371,7 @@ using Action = std::variant<
     EditShellParametersAction, CreatePrimitiveAction, EditPrimitiveParametersAction,
     CreateDraftAction, EditDraftParametersAction, CreateMirrorAction, EditMirrorParametersAction,
     CreatePatternAction, EditPatternParametersAction, MoveBodyAction, EditMoveParametersAction,
-    SetFeatureSuppressedAction>;
+    SetFeatureSuppressedAction, CreateSplitAction, EditSplitParametersAction>;
 // Parallel to the alternatives of Action.
 enum class ActionKind {
     createParameter,
@@ -403,7 +418,9 @@ enum class ActionKind {
     editPatternParameters,
     moveBody, // M11
     editMoveParameters,
-    setFeatureSuppressed // M14
+    setFeatureSuppressed, // M14
+    createSplit,          // N12a
+    editSplitParameters
 };
 [[nodiscard]] ActionKind actionKind(const Action& action) noexcept;
 

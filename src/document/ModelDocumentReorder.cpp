@@ -35,6 +35,27 @@ void addAxisReferences(FeatureReferences& references, const DatumAxisParameters&
         addEdge(references.geometric, *axis.edge);
 }
 
+void addFace(FeatureReferences& references, const BodyFaceReference& face);
+
+// M09/N12a: a mirror's or split's body and its plane; N11b: a mirror's steps.
+template <class Type>
+constexpr bool planeUser =
+    std::is_same_v<Type, MirrorParameters> || std::is_same_v<Type, SplitParameters>;
+template <class Type>
+constexpr bool ownedPart =
+    std::is_same_v<Type, ImportPartParameters> || std::is_same_v<Type, SplitPartParameters>;
+void addSteps(FeatureReferences& references, const std::vector<FeatureId>& steps,
+              const std::optional<SweepPath>& path);
+template <class Values> void addPlaneUser(FeatureReferences& references, const Values& values) {
+    references.structural.push_back(FeatureId{values.body.value()});
+    if (values.plane.constructionPlane)
+        references.structural.push_back(*values.plane.constructionPlane);
+    if (values.plane.face)
+        addFace(references, *values.plane.face);
+    if constexpr (std::is_same_v<Values, MirrorParameters>)
+        addSteps(references, values.features, std::nullopt);
+}
+
 // N11b: the steps a pattern or mirror repeats; N11c: a pattern's path sketch.
 void addSteps(FeatureReferences& references, const std::vector<FeatureId>& steps,
               const std::optional<SweepPath>& path = std::nullopt) {
@@ -179,13 +200,8 @@ FeatureReferences featureReferences(const FeatureDescriptor& feature,
                 for (const auto& face : values.faces)
                     addOrigin(geometric, face);
                 addOrigin(geometric, values.neutral);
-            } else if constexpr (std::is_same_v<Type, MirrorParameters>) {
-                body(values.body);
-                if (values.plane.constructionPlane)
-                    structural.push_back(*values.plane.constructionPlane);
-                if (values.plane.face)
-                    addFace(references, *values.plane.face);
-                addSteps(references, values.features); // N11b
+            } else if constexpr (planeUser<Type>) { // M09, N12a
+                addPlaneUser(references, values);
             } else if constexpr (std::is_same_v<Type, PatternParameters>) {
                 body(values.body);
                 addAxisReferences(references, values.axis, values.datumAxis);
@@ -194,8 +210,8 @@ FeatureReferences featureReferences(const FeatureDescriptor& feature,
                 addSteps(references, values.features, values.path); // N11b, N11c
             } else if constexpr (std::is_same_v<Type, PatternCopyParameters>) {
                 structural.push_back(values.pattern);
-            } else if constexpr (std::is_same_v<Type, ImportPartParameters>) {
-                structural.push_back(values.import);
+            } else if constexpr (ownedPart<Type>) {
+                structural.push_back(*companionOwner(values));
             } else if constexpr (std::is_same_v<Type, MoveParameters>) {
                 body(values.body);
             }

@@ -6,6 +6,7 @@
 #include <voelund/features/SketchRegionIdentity.hpp>
 
 #include <algorithm>
+#include <utility>
 
 namespace voelund::application {
 namespace {
@@ -27,6 +28,50 @@ ActionKind actionKind(const Action& action) noexcept {
 }
 
 namespace detail {
+namespace {
+// The actions that edit a feature of its kind (N12a: a table for the kinds with one). A pattern
+// copy, an import and its parts and a split part have none of their own.
+std::vector<ActionKind> editActions(const document::DocumentSnapshot& snapshot,
+                                    const document::FeatureDescriptor& feature) {
+    static constexpr std::pair<FeatureKind, ActionKind> single[]{
+        {FeatureKind::fillet, ActionKind::editFilletParameters},
+        {FeatureKind::chamfer, ActionKind::editChamferParameters},
+        {FeatureKind::hole, ActionKind::editHoleParameters},
+        {FeatureKind::combine, ActionKind::editCombineParameters},
+        {FeatureKind::datumPlane, ActionKind::editDatumPlaneParameters},
+        {FeatureKind::datumAxis, ActionKind::editDatumAxisParameters},
+        {FeatureKind::shell, ActionKind::editShellParameters},
+        {FeatureKind::primitive, ActionKind::editPrimitiveParameters},
+        {FeatureKind::draft, ActionKind::editDraftParameters},
+        {FeatureKind::mirror, ActionKind::editMirrorParameters},
+        {FeatureKind::pattern, ActionKind::editPatternParameters},
+        {FeatureKind::move, ActionKind::editMoveParameters},
+        {FeatureKind::split, ActionKind::editSplitParameters}};
+    for (const auto& [kind, action] : single)
+        if (kind == feature.kind)
+            return {action};
+    switch (feature.kind) {
+    case FeatureKind::box:
+        return {ActionKind::setBoxDimensions, ActionKind::editBoxParameters};
+    case FeatureKind::cylinder:
+        return {ActionKind::setCylinderSize, ActionKind::editCylinderParameters};
+    case FeatureKind::sketch: // N09b: holes at its points
+        return {ActionKind::editSketch, ActionKind::bindSketchDimension,
+                ActionKind::createProfileExtrusion, ActionKind::createHole};
+    case FeatureKind::extrusion: {
+        std::vector<ActionKind> actions{ActionKind::bindExtrusionDistance,
+                                        ActionKind::editExtrusionParameters};
+        // A bound distance follows its parameter; it is changed there or after unbinding.
+        if (!snapshot.extrusionParameters(feature.id).distanceParameter)
+            actions.push_back(ActionKind::setExtrusionDistance);
+        return actions;
+    }
+    default:
+        return {};
+    }
+}
+} // namespace
+
 std::vector<ActionKind> availableActions(const CadSession& session,
                                          const document::DocumentSnapshot& snapshot,
                                          const ActionTarget& target) {
@@ -44,64 +89,10 @@ std::vector<ActionKind> availableActions(const CadSession& session,
     const auto descriptor = std::ranges::find(features, feature, &document::FeatureDescriptor::id);
     if (descriptor == features.end())
         return {};
-    std::vector<ActionKind> actions;
-    switch (descriptor->kind) {
-    case FeatureKind::box:
-        actions = {ActionKind::setBoxDimensions, ActionKind::editBoxParameters};
-        break;
-    case FeatureKind::cylinder:
-        actions = {ActionKind::setCylinderSize, ActionKind::editCylinderParameters};
-        break;
-    case FeatureKind::sketch:
-        actions = {ActionKind::editSketch, ActionKind::bindSketchDimension, // N09b: holes
-                   ActionKind::createProfileExtrusion, ActionKind::createHole};
-        break;
-    case FeatureKind::extrusion:
-        actions = {ActionKind::bindExtrusionDistance, ActionKind::editExtrusionParameters};
-        // A bound distance follows its parameter; it is changed there or after unbinding.
-        if (!snapshot.extrusionParameters(feature).distanceParameter)
-            actions.push_back(ActionKind::setExtrusionDistance);
-        break;
-    case FeatureKind::fillet:
-        actions = {ActionKind::editFilletParameters};
-        break;
-    case FeatureKind::chamfer:
-        actions = {ActionKind::editChamferParameters};
-        break;
-    case FeatureKind::hole:
-        actions = {ActionKind::editHoleParameters};
-        break;
-    case FeatureKind::combine:
-        actions = {ActionKind::editCombineParameters};
-        break;
-    case FeatureKind::datumPlane:
-        return {ActionKind::editDatumPlaneParameters, ActionKind::setFeatureSuppressed};
-    case FeatureKind::datumAxis:
-        return {ActionKind::editDatumAxisParameters, ActionKind::setFeatureSuppressed};
-    case FeatureKind::shell:
-        actions = {ActionKind::editShellParameters};
-        break;
-    case FeatureKind::primitive:
-        actions = {ActionKind::editPrimitiveParameters};
-        break;
-    case FeatureKind::draft:
-        actions = {ActionKind::editDraftParameters};
-        break;
-    case FeatureKind::mirror:
-        actions = {ActionKind::editMirrorParameters};
-        break;
-    case FeatureKind::pattern:
-        actions = {ActionKind::editPatternParameters};
-        break;
-    case FeatureKind::patternCopy: // edited through its pattern
-        break;
-    case FeatureKind::move:
-        actions = {ActionKind::editMoveParameters};
-        break;
-    case FeatureKind::stepImport: // M17: the stored solids are not edited
-    case FeatureKind::importPart:
-        break;
-    }
+    // M19: a construction plane or axis offers its edit and suppression only.
+    if (descriptor->kind == FeatureKind::datumPlane || descriptor->kind == FeatureKind::datumAxis)
+        return {editActions(snapshot, *descriptor).front(), ActionKind::setFeatureSuppressed};
+    std::vector<ActionKind> actions = editActions(snapshot, *descriptor);
     if (session.placementFeature(feature))
         actions.push_back(ActionKind::setPlacement);
     actions.push_back(ActionKind::setFeatureSuppressed); // M14: every feature
@@ -125,6 +116,7 @@ std::vector<ActionKind> availableActions(const CadSession& session,
             actions.push_back(ActionKind::createDraft);
             actions.push_back(ActionKind::createMirror);
             actions.push_back(ActionKind::createPattern);
+            actions.push_back(ActionKind::createSplit); // N12a
         }
     }
     return actions;

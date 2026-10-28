@@ -9,6 +9,7 @@
 #include <charconv>
 #include <stdexcept>
 #include <string>
+#include <variant>
 
 // Native encodings of the features added on 2026-10-14 (M19-M27).
 namespace voelund::document::detail {
@@ -220,7 +221,9 @@ constexpr SolidKind solidKinds[]{{FeatureKind::combine, "combine", 18},
                                  {FeatureKind::patternCopy, "pattern_copy", 32},
                                  {FeatureKind::move, "move", 33},
                                  {FeatureKind::stepImport, "step_import", 35},
-                                 {FeatureKind::importPart, "import_part", 35}};
+                                 {FeatureKind::importPart, "import_part", 35},
+                                 {FeatureKind::split, "split", 50},
+                                 {FeatureKind::splitPart, "split_part", 50}};
 } // namespace
 
 const char* nativeSolidKindName(FeatureKind kind) noexcept {
@@ -237,117 +240,186 @@ std::optional<FeatureKind> nativeSolidKind(std::string_view name, int schemaVers
     return std::nullopt;
 }
 
-std::size_t nativeSolidRecords(FeatureKind kind, const FeatureParameters& parameters) {
-    switch (kind) {
-    case FeatureKind::combine:
-        require(std::holds_alternative<CombineParameters>(parameters));
-        validateCombineParameters(std::get<CombineParameters>(parameters));
-        return nativeCombineRecords(std::get<CombineParameters>(parameters));
-    case FeatureKind::datumPlane:
-        require(std::holds_alternative<DatumPlaneParameters>(parameters));
-        validateDatumPlaneParameters(std::get<DatumPlaneParameters>(parameters));
-        return nativeDatumPlaneRecords(std::get<DatumPlaneParameters>(parameters));
-    case FeatureKind::datumAxis:
-        require(std::holds_alternative<DatumAxisParameters>(parameters));
-        validateDatumAxisParameters(std::get<DatumAxisParameters>(parameters));
-        return nativeDatumAxisRecords(std::get<DatumAxisParameters>(parameters));
-    case FeatureKind::shell:
-        require(std::holds_alternative<ShellParameters>(parameters));
-        validateShellParameters(std::get<ShellParameters>(parameters));
-        return nativeShellRecords(std::get<ShellParameters>(parameters));
-    case FeatureKind::draft: // M25
-        require(std::holds_alternative<DraftParameters>(parameters));
-        validateDraftParameters(std::get<DraftParameters>(parameters));
-        return nativeDraftRecords(std::get<DraftParameters>(parameters));
-    case FeatureKind::mirror: // M09
-        require(std::holds_alternative<MirrorParameters>(parameters));
-        validateMirrorParameters(std::get<MirrorParameters>(parameters));
-        return nativeMirrorRecords(std::get<MirrorParameters>(parameters));
-    case FeatureKind::pattern: // M10
-        require(std::holds_alternative<PatternParameters>(parameters));
-        validatePatternParameters(std::get<PatternParameters>(parameters));
-        return nativePatternRecords(std::get<PatternParameters>(parameters));
-    case FeatureKind::patternCopy:
-        require(std::holds_alternative<PatternCopyParameters>(parameters));
-        return 0;
-    case FeatureKind::move: // M11: no records beyond the feature
-        require(std::holds_alternative<MoveParameters>(parameters));
-        validateMoveParameters(std::get<MoveParameters>(parameters));
-        return 0;
-    case FeatureKind::stepImport: // M17
-        require(std::holds_alternative<ImportParameters>(parameters));
-        validateImportParameters(std::get<ImportParameters>(parameters));
-        return nativeImportRecords(std::get<ImportParameters>(parameters));
-    case FeatureKind::importPart:
-        require(std::holds_alternative<ImportPartParameters>(parameters));
-        return 0;
-    case FeatureKind::primitive: // M27: no records beyond the feature
-        require(std::holds_alternative<PrimitiveParameters>(parameters));
-        validatePrimitiveParameters(std::get<PrimitiveParameters>(parameters));
-        return 0;
-    default:
-        break;
-    }
+namespace {
+// Records beyond the feature, after checking its parameters (N12a: by type, not by a switch).
+std::size_t solidRecords(const CombineParameters& values) {
+    validateCombineParameters(values);
+    return nativeCombineRecords(values);
+}
+std::size_t solidRecords(const DatumPlaneParameters& values) {
+    validateDatumPlaneParameters(values);
+    return nativeDatumPlaneRecords(values);
+}
+std::size_t solidRecords(const DatumAxisParameters& values) {
+    validateDatumAxisParameters(values);
+    return nativeDatumAxisRecords(values);
+}
+std::size_t solidRecords(const ShellParameters& values) {
+    validateShellParameters(values);
+    return nativeShellRecords(values);
+}
+std::size_t solidRecords(const DraftParameters& values) { // M25
+    validateDraftParameters(values);
+    return nativeDraftRecords(values);
+}
+std::size_t solidRecords(const MirrorParameters& values) { // M09
+    validateMirrorParameters(values);
+    return nativeMirrorRecords(values);
+}
+std::size_t solidRecords(const PatternParameters& values) { // M10
+    validatePatternParameters(values);
+    return nativePatternRecords(values);
+}
+std::size_t solidRecords(const ImportParameters& values) { // M17
+    validateImportParameters(values);
+    return nativeImportRecords(values);
+}
+std::size_t solidRecords(const SplitParameters& values) { // N12a
+    validateSplitParameters(values);
+    return nativeSplitRecords(values);
+}
+std::size_t solidRecords(const MoveParameters& values) { // M11: no records beyond the feature
+    validateMoveParameters(values);
+    return 0;
+}
+std::size_t solidRecords(const PrimitiveParameters& values) { // M27: none either
+    validatePrimitiveParameters(values);
+    return 0;
+}
+std::size_t solidRecords(const PatternCopyParameters&) { return 0; }
+std::size_t solidRecords(const ImportPartParameters&) { return 0; }
+std::size_t solidRecords(const SplitPartParameters&) { return 0; }
+template <class Other> std::size_t solidRecords(const Other&) {
     throw std::invalid_argument("Not a natively stored solid feature");
 }
 
+void writeSolid(const TDF_Label& label, const CombineParameters& values) {
+    writeNativeCombine(label, values);
+}
+void writeSolid(const TDF_Label& label, const DatumPlaneParameters& values) {
+    writeNativeDatumPlane(label, values);
+}
+void writeSolid(const TDF_Label& label, const DatumAxisParameters& values) {
+    writeNativeDatumAxis(label, values);
+}
+void writeSolid(const TDF_Label& label, const ShellParameters& values) {
+    writeNativeShell(label, values);
+}
+void writeSolid(const TDF_Label& label, const PrimitiveParameters& values) {
+    writeNativePrimitive(label, values);
+}
+void writeSolid(const TDF_Label& label, const DraftParameters& values) {
+    writeNativeDraft(label, values);
+}
+void writeSolid(const TDF_Label& label, const MirrorParameters& values) {
+    writeNativeMirror(label, values);
+}
+void writeSolid(const TDF_Label& label, const PatternParameters& values) {
+    writeNativePattern(label, values);
+}
+void writeSolid(const TDF_Label& label, const PatternCopyParameters& values) {
+    writeNativePatternCopy(label, values);
+}
+void writeSolid(const TDF_Label& label, const MoveParameters& values) {
+    writeNativeMove(label, values);
+}
+void writeSolid(const TDF_Label& label, const ImportParameters& values) {
+    writeNativeImport(label, values);
+}
+void writeSolid(const TDF_Label& label, const ImportPartParameters& values) {
+    writeNativeImportPart(label, values);
+}
+void writeSolid(const TDF_Label& label, const SplitParameters& values) {
+    writeNativeSplit(label, values);
+}
+void writeSolid(const TDF_Label& label, const SplitPartParameters& values) {
+    writeNativeSplitPart(label, values);
+}
+template <class Other> void writeSolid(const TDF_Label&, const Other&) {
+    throw std::invalid_argument("Not a natively stored solid feature");
+}
+
+using Reader = FeatureParameters (*)(const TDF_Label&, std::size_t, int);
+struct SolidReader final {
+    FeatureKind kind;
+    Reader read;
+};
+constexpr SolidReader readers[]{
+    {FeatureKind::combine,
+     [](const TDF_Label& label, std::size_t records, int schema) -> FeatureParameters {
+         return readNativeCombine(label, records, schema);
+     }},
+    {FeatureKind::datumPlane,
+     [](const TDF_Label& label, std::size_t records, int schema) -> FeatureParameters {
+         return readNativeDatumPlane(label, records, schema);
+     }},
+    {FeatureKind::datumAxis,
+     [](const TDF_Label& label, std::size_t records, int schema) -> FeatureParameters {
+         return readNativeDatumAxis(label, records, schema);
+     }},
+    {FeatureKind::shell,
+     [](const TDF_Label& label, std::size_t records, int schema) -> FeatureParameters {
+         return readNativeShell(label, records, schema);
+     }},
+    {FeatureKind::primitive,
+     [](const TDF_Label& label, std::size_t, int schema) -> FeatureParameters {
+         return readNativePrimitive(label, schema);
+     }},
+    {FeatureKind::draft,
+     [](const TDF_Label& label, std::size_t records, int schema) -> FeatureParameters {
+         return readNativeDraft(label, records, schema);
+     }},
+    {FeatureKind::mirror,
+     [](const TDF_Label& label, std::size_t records, int schema) -> FeatureParameters {
+         return readNativeMirror(label, records, schema);
+     }},
+    {FeatureKind::pattern,
+     [](const TDF_Label& label, std::size_t records, int schema) -> FeatureParameters {
+         return readNativePattern(label, records, schema);
+     }},
+    {FeatureKind::patternCopy,
+     [](const TDF_Label& label, std::size_t, int schema) -> FeatureParameters {
+         return readNativePatternCopy(label, schema);
+     }},
+    {FeatureKind::move,
+     [](const TDF_Label& label, std::size_t, int schema) -> FeatureParameters {
+         return readNativeMove(label, schema);
+     }},
+    {FeatureKind::stepImport,
+     [](const TDF_Label& label, std::size_t records, int schema) -> FeatureParameters {
+         return readNativeImport(label, records, schema);
+     }},
+    {FeatureKind::importPart,
+     [](const TDF_Label& label, std::size_t, int schema) -> FeatureParameters {
+         return readNativeImportPart(label, schema);
+     }},
+    {FeatureKind::split,
+     [](const TDF_Label& label, std::size_t records, int schema) -> FeatureParameters {
+         return readNativeSplit(label, records, schema);
+     }},
+    {FeatureKind::splitPart,
+     [](const TDF_Label& label, std::size_t, int schema) -> FeatureParameters {
+         return readNativeSplitPart(label, schema);
+     }},
+};
+} // namespace
+
+std::size_t nativeSolidRecords(FeatureKind kind, const FeatureParameters& parameters) {
+    if (nativeSolidKindName(kind) == nullptr)
+        throw std::invalid_argument("Not a natively stored solid feature");
+    require(parameters.index() == static_cast<std::size_t>(kind));
+    return std::visit([](const auto& values) { return solidRecords(values); }, parameters);
+}
+
 void writeNativeSolid(const TDF_Label& label, const FeatureParameters& parameters) {
-    if (const auto* combine = std::get_if<CombineParameters>(&parameters))
-        writeNativeCombine(label, *combine);
-    else if (const auto* plane = std::get_if<DatumPlaneParameters>(&parameters))
-        writeNativeDatumPlane(label, *plane);
-    else if (const auto* shell = std::get_if<ShellParameters>(&parameters))
-        writeNativeShell(label, *shell);
-    else if (const auto* primitive = std::get_if<PrimitiveParameters>(&parameters))
-        writeNativePrimitive(label, *primitive);
-    else if (const auto* draft = std::get_if<DraftParameters>(&parameters))
-        writeNativeDraft(label, *draft);
-    else if (const auto* mirror = std::get_if<MirrorParameters>(&parameters))
-        writeNativeMirror(label, *mirror);
-    else if (const auto* pattern = std::get_if<PatternParameters>(&parameters))
-        writeNativePattern(label, *pattern);
-    else if (const auto* copy = std::get_if<PatternCopyParameters>(&parameters))
-        writeNativePatternCopy(label, *copy);
-    else if (const auto* move = std::get_if<MoveParameters>(&parameters))
-        writeNativeMove(label, *move);
-    else if (const auto* import = std::get_if<ImportParameters>(&parameters))
-        writeNativeImport(label, *import);
-    else if (const auto* part = std::get_if<ImportPartParameters>(&parameters))
-        writeNativeImportPart(label, *part);
-    else
-        writeNativeDatumAxis(label, std::get<DatumAxisParameters>(parameters));
+    std::visit([&](const auto& values) { writeSolid(label, values); }, parameters);
 }
 
 FeatureParameters readNativeSolid(const TDF_Label& label, FeatureKind kind,
                                   std::size_t remainingRecords, int schemaVersion) {
-    switch (kind) {
-    case FeatureKind::combine:
-        return readNativeCombine(label, remainingRecords, schemaVersion);
-    case FeatureKind::datumPlane:
-        return readNativeDatumPlane(label, remainingRecords, schemaVersion);
-    case FeatureKind::datumAxis:
-        return readNativeDatumAxis(label, remainingRecords, schemaVersion);
-    case FeatureKind::shell:
-        return readNativeShell(label, remainingRecords, schemaVersion);
-    case FeatureKind::primitive:
-        return readNativePrimitive(label, schemaVersion);
-    case FeatureKind::draft:
-        return readNativeDraft(label, remainingRecords, schemaVersion);
-    case FeatureKind::mirror:
-        return readNativeMirror(label, remainingRecords, schemaVersion);
-    case FeatureKind::pattern:
-        return readNativePattern(label, remainingRecords, schemaVersion);
-    case FeatureKind::patternCopy:
-        return readNativePatternCopy(label, schemaVersion);
-    case FeatureKind::move:
-        return readNativeMove(label, schemaVersion);
-    case FeatureKind::stepImport:
-        return readNativeImport(label, remainingRecords, schemaVersion);
-    case FeatureKind::importPart:
-        return readNativeImportPart(label, schemaVersion);
-    default:
-        break;
-    }
+    for (const auto& reader : readers)
+        if (reader.kind == kind)
+            return reader.read(label, remainingRecords, schemaVersion);
     throw std::invalid_argument("Not a natively stored solid feature");
 }
 
