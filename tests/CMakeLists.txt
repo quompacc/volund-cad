@@ -1610,6 +1610,11 @@ add_executable(voelund_pattern_feature_tests integration/PatternFeatureTests.cpp
 target_link_libraries(voelund_pattern_feature_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME application.pattern_features COMMAND voelund_pattern_feature_tests)
 set_tests_properties(application.pattern_features PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
+# N11c: patterns along a curve.
+add_executable(voelund_pattern_path_tests integration/PatternPathTests.cpp)
+target_link_libraries(voelund_pattern_path_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.pattern_path COMMAND voelund_pattern_path_tests)
+set_tests_properties(application.pattern_path PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
 # M11: moving any body.
 add_executable(voelund_move_tests integration/MoveTests.cpp)
 target_link_libraries(voelund_move_tests PRIVATE voelund_project_options Voelund::Application)

@@ -108,6 +108,35 @@ bool solidAt(const application::CadSession& session, double x, double y, double 
     return false;
 }
 
+// N11c: "Art: Entlang Kurve" on a box 10 with a line of 50 drawn on XY: the path is the
+// sketch, the axis choices hide; three cubes 20 apart along the line; OK.
+void pathFlow(desktop::MainWindow& window, application::CadSession& session,
+              viewport::CadViewport& viewport) {
+    session.newDocument();
+    const auto box = *session.createBoxFeature({10, 10, 10}).feature();
+    document::SketchParameters line{document::datumSketchPlane(document::DatumPlane::xy), {}};
+    line.datum = document::DatumPlane::xy;
+    line.elements.values.push_back(
+        {document::SketchElementId{line.elements.nextId++}, document::SketchLine{{0, 0}, {50, 0}}});
+    require(session.createDatumSketchFeature(line).status() ==
+                    application::CommandStatus::committed &&
+                session.selectFeature(box),
+            "Line sketch, box chosen");
+    window.refreshAfterExternalChange();
+    command(window, "solid.modify.pattern_linear").trigger();
+    settle();
+    choose(window, "toolChoice_kind", 3);
+    auto* axis = panel(window)->findChild<QComboBox*>(QStringLiteral("toolChoice_axis"));
+    require(accept(window).isEnabled() && axis != nullptr && !axis->isVisible() &&
+                matches(shown(viewport), 3 * 1000),
+            "Entlang Kurve: three cubes along the line, no axis choice");
+    accept(window).click();
+    settle();
+    require(session.validBodies().size() == 3 && solidAt(session, 45, 5, 5) &&
+                session.patternParameters(session.features()[2].id).path.has_value(),
+            "OK patterns the box along the line");
+}
+
 // N11b: a hole 20 left of the middle chosen in the timeline, then "Spiegeln" about the
 // construction plane x = 40: its twin in the same body, no "Ergebnis" choice.
 void mirrorFlow(desktop::MainWindow& window, application::CadSession& session,
@@ -142,6 +171,7 @@ void mirrorFlow(desktop::MainWindow& window, application::CadSession& session,
                 session.mirrorParameters(session.features().back().id).features ==
                     std::vector<document::FeatureId>{*hole},
             "OK mirrors the hole in its body");
+    pathFlow(window, session, viewport);
 }
 
 // N11b: a hole chosen in the timeline, then "Lineares Muster": three holes along X in the same
@@ -303,7 +333,7 @@ void run() {
     gridFlow(window, session, *viewport, directory);
     std::cout << "PASS M10 pattern panel: linear count and spacing, joined refused and "
                  "overlapping, copy edge refused, corner edge, circular, joined, OK, undo, "
-                 "timeline, copy reopens, open; N11a grid, skip; N11b hole pattern, mirror"
+                 "timeline, copy reopens, open; N11a/b/c grid, skip, steps, path"
               << std::endl;
 }
 } // namespace

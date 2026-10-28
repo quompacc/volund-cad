@@ -32,12 +32,14 @@ int main(int argc, char** argv) {
             "pattern-axis-missing", "pattern-body-missing", "draft-face-missing",
             "draft-neutral-missing", "draft-face-refused", "loft-section-missing",
             "loft-section-hole", "loft-coplanar", "sweep-path-missing", "sweep-path-disconnected",
-            "import-part-missing", "region-needs-repair", "region-open", "region-overlap",
-            "profile-invalid", "sketch-unsolved", "sketch-support-missing",
-            "sketch-support-unsolved", "sketch-plane-missing", "sketch-needs-repair",
-            "end-face-missing", "end-face-not-parallel", "end-face-behind", "profile-face-missing",
-            "body-missing", "base-body-exists", "needs-target", "blocked-by-dependency",
-            "rolled-back", "stale-input"};
+            "import-part-missing", "pattern-path-missing", "pattern-path-disconnected",
+            "pattern-path-short", "repeated-step-missing", "repeated-step-kind",
+            "region-needs-repair", "region-open", "region-overlap", "profile-invalid",
+            "sketch-unsolved", "sketch-support-missing", "sketch-support-unsolved",
+            "sketch-plane-missing", "sketch-needs-repair", "end-face-missing",
+            "end-face-not-parallel", "end-face-behind", "profile-face-missing", "body-missing",
+            "base-body-exists", "needs-target", "blocked-by-dependency", "rolled-back",
+            "stale-input"};
         for (const auto& code : codes)
             require(!voelund::desktop::issueText(code).isEmpty(), "German text for " + code);
 

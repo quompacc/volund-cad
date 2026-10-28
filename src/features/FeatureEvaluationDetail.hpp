@@ -5,9 +5,11 @@
 #include <voelund/document/FeatureId.hpp>
 #include <voelund/features/FeatureGraph.hpp>
 
+#include <TopoDS_Wire.hxx>
 #include <gp_Dir.hxx>
 #include <gp_Pnt.hxx>
 
+#include <string>
 #include <vector>
 
 namespace voelund::features::detail {
@@ -114,4 +116,10 @@ void evaluateHole(const document::DocumentSnapshot& document,
                   const document::FeatureDescriptor& descriptor,
                   std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
                   std::vector<EvaluatedBody>& referenceBodies);
+// M23/N11c (SketchPath.cpp): the elements of an earlier sketch as one connected wire; errors
+// carry the codes "<prefix>-path-missing" and "<prefix>-path-disconnected".
+[[nodiscard]] TopoDS_Wire sketchPathWire(const document::SweepPath& path,
+                                         const std::vector<EvaluatedFeature>& outputs,
+                                         const std::string& prefix);
+
 } // namespace voelund::features::detail

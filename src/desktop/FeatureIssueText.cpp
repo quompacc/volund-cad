@@ -121,6 +121,22 @@ constexpr std::array issueTexts{
     IssueText{"sweep-path-disconnected",
               QT_TRANSLATE_NOOP("FeatureIssue", "Folgen: Die Pfadelemente bilden keine "
                                                 "zusammenhängende Kette.")},
+    IssueText{"pattern-path-missing",
+              QT_TRANSLATE_NOOP("FeatureIssue", "Muster: Der Pfad fehlt oder hat keine "
+                                                "Elemente mehr.")},
+    IssueText{"pattern-path-disconnected",
+              QT_TRANSLATE_NOOP("FeatureIssue", "Muster: Die Pfadelemente bilden keine "
+                                                "zusammenhängende Kette.")},
+    IssueText{"pattern-path-short",
+              QT_TRANSLATE_NOOP("FeatureIssue", "Muster: Die Kopien reichen über das Ende des "
+                                                "Pfads hinaus. Verkleinere Anzahl oder Abstand.")},
+    IssueText{"repeated-step-missing",
+              QT_TRANSLATE_NOOP("FeatureIssue", "Muster/Spiegeln: Ein wiederholter Schritt "
+                                                "ändert den Körper nicht mehr.")},
+    IssueText{"repeated-step-kind",
+              QT_TRANSLATE_NOOP("FeatureIssue", "Muster/Spiegeln: Nur Bohrungen sowie "
+                                                "vereinigende und ausschneidende Extrusionen "
+                                                "lassen sich wiederholen.")},
     IssueText{"import-part-missing",
               QT_TRANSLATE_NOOP("FeatureIssue", "Import: Ein importierter Körper fehlt im "
                                                 "Dokument.")},

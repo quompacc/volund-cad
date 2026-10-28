@@ -16,7 +16,9 @@
 // stores it (7) or a construction axis (8). A copy keeps its index on the label and its
 // pattern (1). N11a (schema 47): a grid's second direction (9) keeps its spacing on its label,
 // count (1), reversed (2) and its axis (3, or 4 for a construction axis); skipped copies (10).
-// N11b (schema 48): the repeated steps (11), one ID per child 1..n.
+// N11b (schema 48): the repeated steps (11), one ID per child 1..n. N11c (schema 49): a pattern
+// along a curve has its path (12) instead of an axis: following on its label, the sketch (1)
+// and its elements (children of 2).
 namespace voelund::document::detail {
 namespace {
 void require(bool value) {
@@ -72,7 +74,8 @@ std::vector<FeatureId> readNativeSteps(const TDF_Label& label) {
 
 std::size_t nativePatternRecords(const PatternParameters& parameters) {
     return nativeDatumAxisRecords(parameters.axis) +
-           (parameters.second ? nativeDatumAxisRecords(parameters.second->axis) : 0);
+           (parameters.second ? nativeDatumAxisRecords(parameters.second->axis) : 0) +
+           (parameters.path ? parameters.path->elements.size() : 0);
 }
 
 namespace {
@@ -124,14 +127,46 @@ std::vector<std::uint32_t> readSkipped(const TDF_Label& label) {
     return result;
 }
 
-// Children 1 to 6 and the axis (7 or 8); since schema 47 a grid (9) and skipped copies (10),
-// since 48 the repeated steps (11).
+// Children 1 to 6 and the axis (7 or 8, or the path 12 since schema 49); since schema 47 a
+// grid (9) and skipped copies (10), since 48 the repeated steps (11).
 void requireLayout(const TDF_Label& label, int schemaVersion) {
-    const int grid = label.FindChild(9, false).IsNull() ? 0 : 1;
-    const int skipped = label.FindChild(10, false).IsNull() ? 0 : 1;
-    const int sources = label.FindChild(11, false).IsNull() ? 0 : 1;
-    require(schemaVersion >= 32 && label.NbChildren() == 7 + grid + skipped + sources &&
-            (schemaVersion >= 47 || grid + skipped == 0) && (schemaVersion >= 48 || sources == 0));
+    const auto has = [&](int tag) { return label.FindChild(tag, false).IsNull() ? 0 : 1; };
+    const int placements = has(7) + has(8) + has(12);
+    const int extras = has(9) + has(10) + has(11);
+    const int since = has(12) != 0 ? 49 : has(11) != 0 ? 48 : extras != 0 ? 47 : 32;
+    require(schemaVersion >= since && placements == 1 &&
+            label.NbChildren() == 6 + placements + extras);
+}
+
+void writePath(const TDF_Label& label, const SweepPath& path, bool follow) {
+    TDataStd_Integer::Set(label, follow ? 1 : 0);
+    writeId(label.FindChild(1), path.sketch.value());
+    const auto elements = label.FindChild(2);
+    for (std::size_t index = 0; index < path.elements.size(); ++index)
+        writeId(elements.FindChild(static_cast<int>(index) + 1), path.elements[index].value());
+}
+
+void readPath(const TDF_Label& label, PatternParameters& result) {
+    const auto elements = child(label, 2);
+    const int follow = integer(label);
+    require(label.NbChildren() == 2 && (follow == 0 || follow == 1) && elements.NbChildren() >= 1 &&
+            static_cast<std::size_t>(elements.NbChildren()) <= maximumSweepPathElements);
+    SweepPath path{FeatureId{readId(child(label, 1))}, {}};
+    for (int index = 1; index <= elements.NbChildren(); ++index)
+        path.elements.push_back(SketchElementId{readId(child(elements, index))});
+    result.path = std::move(path);
+    result.followPath = follow == 1;
+}
+
+// The axis: a construction axis (8), a path (12) or a base axis or edge (7).
+void readPlacement(const TDF_Label& label, PatternParameters& result, std::size_t remainingRecords,
+                   int schemaVersion) {
+    if (const auto axis = label.FindChild(8, false); !axis.IsNull())
+        result.datumAxis = FeatureId{readId(axis)};
+    else if (const auto path = label.FindChild(12, false); !path.IsNull())
+        readPath(path, result);
+    else
+        result.axis = readNativeDatumAxis(child(label, 7), remainingRecords, schemaVersion);
 }
 
 void readGrid(const TDF_Label& label, PatternParameters& result, std::size_t remainingRecords,
@@ -156,6 +191,8 @@ void writeNativePattern(const TDF_Label& label, const PatternParameters& paramet
     TDataStd_Real::Set(label.FindChild(6), parameters.angle.value());
     if (parameters.datumAxis)
         writeId(label.FindChild(8), parameters.datumAxis->value());
+    else if (parameters.path)
+        writePath(label.FindChild(12), *parameters.path, parameters.followPath);
     else
         writeNativeDatumAxis(label.FindChild(7), parameters.axis);
     if (parameters.second)
@@ -182,7 +219,7 @@ PatternParameters readNativePattern(const TDF_Label& label, std::size_t remainin
     const int count = integer(child(label, 3));
     const int mode = integer(child(label, 4));
     const int reversed = integer(child(label, 5));
-    require((kind == 1 || kind == 2) && (mode == 1 || mode == 2) &&
+    require(kind >= 1 && kind <= 3 && (mode == 1 || mode == 2) &&
             (reversed == 0 || reversed == 1) && count >= 2 &&
             static_cast<std::uint32_t>(count) <= maximumPatternCount);
     result.kind = static_cast<PatternKind>(kind);
@@ -191,10 +228,7 @@ PatternParameters readNativePattern(const TDF_Label& label, std::size_t remainin
     result.reversed = reversed == 1;
     result.spacing = real(label);
     result.angle = kernel::Radians{real(child(label, 6))};
-    if (const auto axis = label.FindChild(8, false); !axis.IsNull())
-        result.datumAxis = FeatureId{readId(axis)};
-    else
-        result.axis = readNativeDatumAxis(child(label, 7), remainingRecords, schemaVersion);
+    readPlacement(label, result, remainingRecords, schemaVersion);
     readGrid(label, result, remainingRecords, schemaVersion);
     validatePatternParameters(result);
     return result;

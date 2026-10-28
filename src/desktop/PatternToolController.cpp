@@ -52,12 +52,7 @@ void PatternToolController::begin(document::FeatureId support, document::Pattern
     count_ = kind == document::PatternKind::linear ? 3 : 4;
     spacing_ = 20.0;
     angleDegrees_ = 360.0;
-    grid_ = false;
-    rows_ = 2;
-    rowSpacing_ = 20.0;
-    rowAxis_ = 1;
-    rowsReversed_ = false;
-    skipped_.clear();
+    resetGridAndPath();
     datumAxes_.clear();
     const auto snapshot = session_.identifiedSnapshot().snapshot();
     for (const auto& feature : snapshot.features())
@@ -97,7 +92,10 @@ void PatternToolController::beginEdit(document::FeatureId pattern) {
             datumAxes_.push_back(feature);
     }
     edge_.reset();
-    if (values.axis.baseAxis) {
+    collectPaths(pattern);
+    if (values.path) {
+        takePath(values);
+    } else if (values.axis.baseAxis) {
         axisIndex_ = static_cast<int>(*values.axis.baseAxis) - 1;
     } else if (values.datumAxis) {
         const auto found =
@@ -111,6 +109,19 @@ void PatternToolController::beginEdit(document::FeatureId pattern) {
     }
     takeGrid(values);
     open();
+}
+
+// N11a/N11c: a new pattern has no rows and no skipped copies; its path is the latest sketch.
+void PatternToolController::resetGridAndPath() {
+    grid_ = false;
+    rows_ = 2;
+    rowSpacing_ = 20.0;
+    rowAxis_ = 1;
+    rowsReversed_ = false;
+    skipped_.clear();
+    followPath_ = false;
+    collectPaths(std::nullopt);
+    pathIndex_ = paths_.empty() ? 0 : static_cast<int>(paths_.size()) - 1;
 }
 
 // N11a: a grid's rows along a base or construction axis.
@@ -130,11 +141,40 @@ void PatternToolController::takeGrid(const document::PatternParameters& values) 
             rowAxis_ = baseAxisCount + static_cast<int>(found - datumAxes_.begin());
 }
 
+// N11c: every earlier sketch with drawn elements is a path, all its elements as one chain.
+void PatternToolController::collectPaths(std::optional<document::FeatureId> before) {
+    paths_.clear();
+    for (const auto& feature : session_.features()) {
+        if (before && feature.id == *before)
+            break;
+        if (feature.kind != document::FeatureKind::sketch)
+            continue;
+        document::SweepPath path{feature.id, {}};
+        for (const auto& element : session_.sketchParameters(feature.id).elements.values)
+            if (!element.construction)
+                path.elements.push_back(element.id);
+        if (!path.elements.empty())
+            paths_.push_back({QString::fromStdString(feature.name), std::move(path)});
+    }
+}
+
+void PatternToolController::takePath(const document::PatternParameters& values) {
+    followPath_ = values.followPath;
+    paths_.erase(
+        std::remove_if(paths_.begin(), paths_.end(),
+                       [&](const auto& path) { return path.second.sketch == values.path->sketch; }),
+        paths_.end());
+    paths_.push_back({QObject::tr("Gespeicherter Pfad"), *values.path});
+    pathIndex_ = static_cast<int>(paths_.size()) - 1;
+}
+
 int PatternToolController::edgeChoice() const noexcept {
     return baseAxisCount + static_cast<int>(datumAxes_.size());
 }
 
 bool PatternToolController::hasAxis() const noexcept {
+    if (kind_ == document::PatternKind::path)
+        return !paths_.empty();
     return axisIndex_ < edgeChoice() || edge_.has_value();
 }
 
@@ -160,7 +200,9 @@ ToolPanelDefinition PatternToolController::definition() {
     const std::vector<QString> rowAxes = axes;
     axes.push_back(QObject::tr("Kante (anklicken)"));
     const std::vector<QString> sides{QObject::tr("Normal"), QObject::tr("Umgekehrt")};
-    const int kind = grid_ ? 2 : kind_ == document::PatternKind::circular ? 1 : 0;
+    std::vector<QString> pathNames;
+    for (const auto& path : paths_)
+        pathNames.push_back(path.first);
     return ToolPanelDefinition{
         editing_ ? QObject::tr("Muster bearbeiten") : QObject::tr("Muster"),
         guidance(),
@@ -172,8 +214,14 @@ ToolPanelDefinition PatternToolController::definition() {
          {"skip", QObject::tr("Kopie Nr."), 1.0, 1.0, 99.0, ToolValueKind::count}},
         {{"kind",
           QObject::tr("Art"),
-          {QObject::tr("Linear"), QObject::tr("Kreisförmig"), QObject::tr("Raster")},
-          kind},
+          {QObject::tr("Linear"), QObject::tr("Kreisförmig"), QObject::tr("Raster"),
+           QObject::tr("Entlang Kurve")},
+          kindChoice()},
+         {"path", QObject::tr("Pfad"), pathNames, pathIndex_},
+         {"orientation",
+          QObject::tr("Ausrichtung"),
+          {QObject::tr("Gleich"), QObject::tr("Am Pfad")},
+          followPath_ ? 1 : 0},
          {"axis", QObject::tr("Richtung/Achse"), axes, axisIndex_},
          {"direction", QObject::tr("Richtung"), sides, reversed_ ? 1 : 0},
          {"rowAxis", QObject::tr("Reihenrichtung"), rowAxes, rowAxis_},
@@ -215,23 +263,44 @@ void PatternToolController::changedValue(const std::string& id, double value) {
 
 void PatternToolController::chooseOption(const std::string& id, int index) {
     if (id == "kind") {
-        kind_ = index == 1 ? document::PatternKind::circular : document::PatternKind::linear;
+        kind_ = index == 1   ? document::PatternKind::circular
+                : index == 3 ? document::PatternKind::path
+                             : document::PatternKind::linear;
         grid_ = index == 2;
         dropSkippedBeyond();
+    } else {
+        chooseSetting(id, index);
     }
-    if (id == "axis")
-        axisIndex_ = index;
-    if (id == "direction")
-        reversed_ = index == 1;
-    if (id == "rowAxis")
-        rowAxis_ = index;
-    if (id == "rowDirection")
-        rowsReversed_ = index == 1;
-    if (id == "mode")
-        mode_ = index == 1 ? document::PatternMode::join : document::PatternMode::newBodies;
     syncFields();
     preview();
     highlightEdge();
+}
+
+void PatternToolController::chooseSetting(const std::string& id, int index) {
+    const bool second = index == 1;
+    if (id == "axis")
+        axisIndex_ = index;
+    else if (id == "direction")
+        reversed_ = second;
+    else if (id == "rowAxis")
+        rowAxis_ = index;
+    else if (id == "rowDirection")
+        rowsReversed_ = second;
+    else if (id == "path")
+        pathIndex_ = index;
+    else if (id == "orientation")
+        followPath_ = second;
+    else if (id == "mode")
+        mode_ = second ? document::PatternMode::join : document::PatternMode::newBodies;
+}
+
+// "Art": Linear, Kreisförmig, Raster (N11a), Entlang Kurve (N11c).
+int PatternToolController::kindChoice() const noexcept {
+    if (grid_)
+        return 2;
+    if (kind_ == document::PatternKind::path)
+        return 3;
+    return kind_ == document::PatternKind::circular ? 1 : 0;
 }
 
 std::uint32_t PatternToolController::instances() const noexcept {
@@ -266,7 +335,12 @@ void PatternToolController::highlightEdge() {
 
 // A linear pattern has a spacing, a circular one an angle; a grid its rows too.
 void PatternToolController::syncFields() {
-    panel_.setLengthVisible("spacing", kind_ == document::PatternKind::linear);
+    const bool along = kind_ == document::PatternKind::path; // N11c
+    panel_.setLengthVisible("spacing", kind_ != document::PatternKind::circular);
+    panel_.setChoiceVisible("axis", !along);
+    panel_.setChoiceVisible("direction", !along);
+    panel_.setChoiceVisible("path", along);
+    panel_.setChoiceVisible("orientation", along);
     panel_.setLengthVisible("angle", kind_ == document::PatternKind::circular);
     panel_.setLengthVisible("rows", grid_);
     panel_.setLengthVisible("rowSpacing", grid_);
@@ -311,7 +385,10 @@ document::PatternParameters PatternToolController::parameters(document::BodyId b
                                        reversed_, static_cast<std::uint32_t>(count_),
                                        spacing_,  kernel::Radians{angleDegrees_ * degree},
                                        mode_};
-    if (axisIndex_ < baseAxisCount) {
+    if (kind_ == document::PatternKind::path) {
+        result.path = paths_.at(static_cast<std::size_t>(pathIndex_)).second;
+        result.followPath = followPath_;
+    } else if (axisIndex_ < baseAxisCount) {
         result.axis.baseAxis = static_cast<document::BaseAxis>(axisIndex_ + 1);
     } else if (axisIndex_ < edgeChoice()) {
         result.datumAxis = datumAxes_[static_cast<std::size_t>(axisIndex_ - baseAxisCount)].id;
@@ -342,10 +419,12 @@ std::optional<document::PatternDirection> PatternToolController::second() const 
 
 QString PatternToolController::guidance() const {
     if (!hasAxis())
-        return QObject::tr("Klicke eine gerade oder kreisförmige Kante an.");
+        return kind_ == document::PatternKind::path
+                   ? QObject::tr("Ein Muster entlang einer Kurve braucht eine frühere Skizze.")
+                   : QObject::tr("Klicke eine gerade oder kreisförmige Kante an.");
     QString copies =
         grid_ ? QObject::tr("%1 × %2 Exemplare").arg(static_cast<int>(count_)).arg(rows_)
-        : kind_ == document::PatternKind::linear
+        : kind_ != document::PatternKind::circular
             ? QObject::tr("%1 Exemplare im Abstand von %2 mm")
                   .arg(static_cast<int>(count_))
                   .arg(spacing_)
@@ -385,7 +464,10 @@ application::Action PatternToolController::action() const {
     input.second = second();
     input.skipped = skipped_;
     input.features = steps_;
-    if (axisIndex_ < baseAxisCount) {
+    if (kind_ == document::PatternKind::path) { // N11c
+        input.path = paths_.at(static_cast<std::size_t>(pathIndex_)).second;
+        input.followPath = followPath_;
+    } else if (axisIndex_ < baseAxisCount) {
         input.baseAxis = static_cast<document::BaseAxis>(axisIndex_ + 1);
     } else if (axisIndex_ < edgeChoice()) {
         input.datumAxis = datumAxes_[static_cast<std::size_t>(axisIndex_ - baseAxisCount)].id;

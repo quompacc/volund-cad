@@ -94,7 +94,7 @@ struct SlotCollector final {
     }
     void operator()(PatternParameters& pattern) const {
         slots.push_back({"count", ParameterUnit::number, nullptr, nullptr, &pattern.count});
-        if (pattern.kind == PatternKind::linear)
+        if (pattern.kind != PatternKind::circular)
             slots.push_back({"spacing", ParameterUnit::length, &pattern.spacing});
         else
             slots.push_back({"angle", ParameterUnit::angle, nullptr, &pattern.angle});

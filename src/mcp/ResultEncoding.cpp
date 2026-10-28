@@ -94,7 +94,7 @@ constexpr const char* operationNames[] = {"", "newBody", "join", "cut", "interse
 // Indexed by MirrorMode (newBody = 1).
 constexpr const char* mirrorModes[] = {"", "newBody", "join"};
 // Indexed by PatternKind and PatternMode (linear and newBodies = 1).
-constexpr const char* patternKinds[] = {"", "linear", "circular"};
+constexpr const char* patternKinds[] = {"", "linear", "circular", "path"};
 constexpr const char* patternModes[] = {"", "newBodies", "join"};
 
 template <class Enum, std::size_t N> const char* name(const char* const (&names)[N], Enum value) {
@@ -117,6 +117,18 @@ QJsonObject placement(const kernel::RigidTransform& value) {
             {"rotationX", detail::quantity(value.rotationX.value(), "rad")},
             {"rotationY", detail::quantity(value.rotationY.value(), "rad")},
             {"rotationZ", detail::quantity(value.rotationZ.value(), "rad")}};
+}
+
+// M10: what a pattern runs along; N11c: or its path sketch.
+void insertPatternAxis(QJsonObject& json, const document::PatternParameters& pattern) {
+    if (pattern.datumAxis)
+        json.insert("constructionAxisId", id(pattern.datumAxis->value()));
+    else if (pattern.axis.baseAxis)
+        json.insert("baseAxis", name(baseAxisNames, *pattern.axis.baseAxis));
+    else if (pattern.axis.body)
+        json.insert("edgeBodyId", id(pattern.axis.body->value()));
+    else if (pattern.path)
+        json.insert("pathSketchId", id(pattern.path->sketch.value()));
 }
 
 QJsonObject featureParameters(const document::FeatureParameters& parameters) {
@@ -158,12 +170,7 @@ QJsonObject featureParameters(const document::FeatureParameters& parameters) {
                                  {"angle", detail::quantity(pattern.angle.value(), "rad")},
                                  {"reversed", pattern.reversed},
                                  {"mode", name(patternModes, pattern.mode)}};
-                if (pattern.datumAxis)
-                    json.insert("constructionAxisId", id(pattern.datumAxis->value()));
-                else if (pattern.axis.baseAxis)
-                    json.insert("baseAxis", name(baseAxisNames, *pattern.axis.baseAxis));
-                else
-                    json.insert("edgeBodyId", id(pattern.axis.body->value()));
+                insertPatternAxis(json, pattern);
                 return json;
             },
             [](const document::MoveParameters& move) -> QJsonObject { // M11

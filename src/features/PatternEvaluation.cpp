@@ -14,6 +14,7 @@
 #include <gp_Ax1.hxx>
 #include <gp_Trsf.hxx>
 #include <gp_Vec.hxx>
+#include <voelund/kernel/PathFrames.hpp>
 #include <voelund/kernel/ShapeQueries.hpp>
 
 #include <algorithm>
@@ -78,15 +79,48 @@ AxisLine lineOf(const document::DocumentSnapshot& document, document::FeatureId 
     return line;
 }
 
-// N11a: the first direction, and a grid's second one.
+// N11a: the first direction, and a grid's second one; N11c: or each copy's step along a path.
 struct Directions final {
     AxisLine first;
     std::optional<AxisLine> second;
+    std::vector<Step> along{};
 };
+
+// N11c: copy k stands k spacings along the path from its start (round a closed path), turned
+// about the sketch normal as the path's direction turns when it follows the path.
+std::vector<Step> pathSteps(const document::PatternParameters& parameters,
+                            const std::vector<EvaluatedFeature>& outputs) {
+    const auto wire = sketchPathWire(*parameters.path, outputs, "pattern");
+    const double length = kernel::wireLength(wire);
+    const bool closed = kernel::isClosedWire(wire);
+    const auto start = kernel::wireFrameAt(wire, 0.0);
+    const auto& plane = findFeature(outputs, parameters.path->sketch).resolvedSketch->plane;
+    const gp_Dir normal(plane.normalX, plane.normalY, plane.normalZ);
+    std::vector<Step> steps(document::patternInstances(parameters));
+    for (std::uint32_t index = 1; index < steps.size(); ++index) {
+        double distance = parameters.spacing * index;
+        if (closed)
+            distance = std::fmod(distance, length);
+        else if (distance > length + 1e-7)
+            throw GeometryEvaluationError("The pattern runs past the end of its path",
+                                          "pattern-path-short");
+        const auto at = kernel::wireFrameAt(wire, std::min(distance, length));
+        const gp_Vec shift(start.point, at.point);
+        const double angle =
+            parameters.followPath ? gp_Vec(start.tangent).AngleWithRef(at.tangent, normal) : 0.0;
+        steps[index] = {{start.point.X(), start.point.Y(), start.point.Z()},
+                        {normal.X(), normal.Y(), normal.Z()},
+                        angle,
+                        {shift.X(), shift.Y(), shift.Z()}};
+    }
+    return steps;
+}
 
 Directions axisOf(const document::DocumentSnapshot& document, document::FeatureId pattern,
                   const document::PatternParameters& parameters,
                   const std::vector<EvaluatedFeature>& outputs) {
+    if (parameters.path)
+        return {{gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1)}, std::nullopt, pathSteps(parameters, outputs)};
     Directions result{lineOf(document, pattern,
                              {parameters.axis, parameters.datumAxis, parameters.reversed}, outputs),
                       std::nullopt};
@@ -114,6 +148,8 @@ Step stepOf(const Directions& axes, const document::PatternParameters& parameter
     const std::array<double, 3> origin{axis.origin.X(), axis.origin.Y(), axis.origin.Z()};
     const std::array<double, 3> direction{axis.direction.X(), axis.direction.Y(),
                                           axis.direction.Z()};
+    if (parameters.kind == document::PatternKind::path)
+        return axes.along.at(index);
     if (parameters.kind == document::PatternKind::linear)
         return {origin, direction, 0.0, shiftOf(axes, parameters, index)};
     const double total = parameters.angle.value();

@@ -16,6 +16,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <utility>
 #include <vector>
 
 namespace voelund::application {
@@ -63,10 +64,15 @@ class PatternToolController final {
     [[nodiscard]] ToolPanelDefinition definition();
     void changedValue(const std::string& id, double value);
     void chooseOption(const std::string& id, int index);
+    void chooseSetting(const std::string& id, int index);
+    void resetGridAndPath();
     void takeGrid(const document::PatternParameters& values);
+    void collectPaths(std::optional<document::FeatureId> before);
+    void takePath(const document::PatternParameters& values);
     void toggleSkipped();
     void dropSkippedBeyond();
     [[nodiscard]] std::uint32_t instances() const noexcept;
+    [[nodiscard]] int kindChoice() const noexcept;
     [[nodiscard]] std::optional<document::PatternDirection> second() const;
     void syncFields();
     void preview();
@@ -107,6 +113,10 @@ class PatternToolController final {
     double skipIndex_{1};
     std::vector<std::uint32_t> skipped_;
     std::vector<document::FeatureId> steps_; // N11b
+    // N11c: earlier sketches a pattern along a curve can follow, the chosen one, its orientation.
+    std::vector<std::pair<QString, document::SweepPath>> paths_;
+    int pathIndex_{0};
+    bool followPath_{false};
     std::optional<document::FeatureId> editing_;
     // M13: set while an edit is kept with errors at later features.
     std::optional<application::ErrorDisposition> keep_;

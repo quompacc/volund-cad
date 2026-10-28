@@ -87,6 +87,8 @@ struct PatternInput final {
     std::optional<document::PatternDirection> second{}; // N11a: a grid's rows, skipped copies
     std::vector<std::uint32_t> skipped{};
     std::vector<document::FeatureId> features{}; // N11b: steps repeated instead of the body
+    std::optional<document::SweepPath> path{};   // N11c: along a curve instead of an axis
+    bool followPath{false};
     bool operator==(const PatternInput&) const = default;
 };
 

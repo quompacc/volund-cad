@@ -27,6 +27,8 @@ CommandResult CadSession::createPattern(document::FeatureId support, const Patte
     parameters.second = input.second; // N11a
     parameters.skipped = input.skipped;
     parameters.features = input.features; // N11b
+    parameters.path = input.path;         // N11c
+    parameters.followPath = input.followPath;
     if (input.edgeSupport || input.edge) {
         const auto edgeBody = input.edgeSupport ? resultBody(*input.edgeSupport) : std::nullopt;
         if (!edgeBody || !input.edge)

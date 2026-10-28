@@ -437,7 +437,7 @@ void validateRepeatedSteps(std::span<const FeatureId> steps, bool joined);
 // evenly without a doubled end, a part with both ends included. As new bodies every copy is
 // a patternCopy feature of its own body, kept in step with the pattern by the document; joined
 // they fuse with the original. Copied faces carry {pattern, index}.
-enum class PatternKind { linear = 1, circular = 2 };
+enum class PatternKind { linear = 1, circular = 2, path = 3 };
 enum class PatternMode { newBodies = 1, join = 2 };
 inline constexpr std::uint32_t maximumPatternCount = 100;
 inline constexpr std::size_t maximumPatternFeatures = 20; // N11b
@@ -468,6 +468,11 @@ struct PatternParameters final {
     // N11b (schema 48): when set, the pattern repeats what these earlier holes and extrusions
     // (join or cut) did to `body` instead of copying the whole body; it is always joined.
     std::vector<FeatureId> features{};
+    // N11c (schema 49): a pattern along a curve runs along the elements of an earlier sketch
+    // instead of an axis; copy k stands k * spacing along it from its start (round a closed
+    // one), turned with its direction when `followPath`.
+    std::optional<SweepPath> path{};
+    bool followPath{false};
     [[nodiscard]] bool operator==(const PatternParameters&) const = default;
 };
 void validatePatternParameters(const PatternParameters& parameters);

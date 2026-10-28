@@ -290,28 +290,10 @@ Prism makeRevolution(document::FeatureId extrusion, document::FeatureId sketchId
 Prism makeSweep(document::FeatureId extrusion, const document::SketchParameters& sketch,
                 const document::ExtrusionParameters& parameters,
                 const std::vector<EvaluatedFeature>& outputs, document::FeatureId sketchId) {
-    const auto& path = *parameters.sweep;
-    const auto& pathOutput = findFeature(outputs, path.sketch);
-    if (!pathOutput.resolvedSketch)
-        throw GeometryEvaluationError("The sweep path sketch has no geometry");
-    const auto elements = evaluateSketchElements(*pathOutput.resolvedSketch);
-    std::vector<TopoDS_Edge> edges;
-    for (const auto id : path.elements) {
-        const auto element = std::ranges::find(elements, id, &EvaluatedSketchElement::id);
-        if (element == elements.end())
-            throw GeometryEvaluationError("A sweep path element is missing", "sweep-path-missing",
-                                          {id.value()});
-        for (TopExp_Explorer it(element->shape, TopAbs_EDGE); it.More(); it.Next())
-            edges.push_back(TopoDS::Edge(it.Current()));
-    }
-    // The chain in any order: each pass adds the edges that touch the wire so far.
-    const auto wire = kernel::chainedWire(edges);
-    if (!wire)
-        throw GeometryEvaluationError("The sweep path is not one connected chain",
-                                      "sweep-path-disconnected");
+    const auto wire = sketchPathWire(*parameters.sweep, outputs, "sweep");
     const auto profiles = evaluateExtrusionFaces(sketch, parameters);
     const TopoDS_Shape faces = facesOf(profiles);
-    const kernel::Sweep swept(faces, *wire);
+    const kernel::Sweep swept(faces, wire);
     Prism result{swept.shape(), {}, {}};
     for (const auto& profile : profiles) {
         if (const auto cap = swept.endOf(profile.face); !cap.IsNull()) {

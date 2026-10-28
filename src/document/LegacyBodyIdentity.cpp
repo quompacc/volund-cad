@@ -150,6 +150,23 @@ void checkPatternAxis(const DatumAxisParameters& axis, const std::optional<Featu
         throw std::invalid_argument("Pattern axis is not an earlier construction axis");
 }
 
+// N11c: a pattern along a curve follows an earlier sketch.
+void checkPatternPath(const std::optional<SweepPath>& path, const HistoryPosition& at) {
+    if (!path)
+        return;
+    const auto found = at.indices.find(path->sketch.value());
+    if (found == at.indices.end() || found->second >= at.index ||
+        at.features[found->second].kind != FeatureKind::sketch)
+        throw std::invalid_argument("A pattern path is an earlier sketch");
+}
+
+void checkPatternSources(std::span<const FeatureId> sources, const HistoryPosition& at);
+
+void checkPatternInputs(const PatternParameters& pattern, const HistoryPosition& at) {
+    checkPatternSources(pattern.features, at);
+    checkPatternPath(pattern.path, at);
+}
+
 // N11b: a feature pattern or mirror repeats earlier holes and extrusions.
 void checkPatternSources(std::span<const FeatureId> sources, const HistoryPosition& at) {
     for (const auto source : sources) {
@@ -333,7 +350,7 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
             if (const auto& second = pattern->second) // N11a
                 checkPatternAxis(second->axis, second->datumAxis, {features, indices, index},
                                  isBody);
-            checkPatternSources(pattern->features, {features, indices, index});
+            checkPatternInputs(*pattern, {features, indices, index}); // N11b, N11c
         }
         const auto* copy = std::get_if<PatternCopyParameters>(&parameters[index]);
         if (copy == nullptr)

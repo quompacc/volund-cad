@@ -32,8 +32,9 @@ inline void settleEvents() {
 
 // Window shortcuts (Escape, Enter of a tool panel) fire only in the active window, as when a
 // user presses the key. Another window of the desktop may hold the activation; take it back.
+// A loaded compositor (CI 2026-10-28) may take more than two seconds; wait up to about six.
 inline void activate(QWidget& window) {
-    for (int attempt = 0; attempt < 200 && QApplication::activeWindow() != &window; ++attempt) {
+    for (int attempt = 0; attempt < 600 && QApplication::activeWindow() != &window; ++attempt) {
         window.raise();
         window.activateWindow();
         QThread::msleep(10);

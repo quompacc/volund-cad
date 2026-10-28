@@ -123,12 +123,26 @@ void validateGrid(const PatternParameters& parameters) {
 }
 } // namespace
 
+// N11c: a pattern along a curve has its path instead of an axis, and only it follows one.
+void validatePath(const PatternParameters& parameters) {
+    const bool along = parameters.kind == PatternKind::path;
+    if (along != parameters.path.has_value() || (!along && parameters.followPath))
+        throw std::invalid_argument("A pattern along a curve names its path sketch");
+    if (!along) {
+        validateAxisReference(parameters.axis, parameters.datumAxis);
+        return;
+    }
+    validateSweepPath(*parameters.path);
+    if (parameters.datumAxis || parameters.axis != DatumAxisParameters{} || parameters.second)
+        throw std::invalid_argument("A pattern along a curve has no axis and no rows");
+}
+
 void validatePatternParameters(const PatternParameters& parameters) {
     if (parameters.body.value() == 0)
         throw std::invalid_argument("A pattern names its body");
-    validateAxisReference(parameters.axis, parameters.datumAxis);
-    if (parameters.kind != PatternKind::linear && parameters.kind != PatternKind::circular)
+    if (parameters.kind < PatternKind::linear || parameters.kind > PatternKind::path)
         throw std::invalid_argument("Unknown pattern kind");
+    validatePath(parameters);
     if (parameters.mode != PatternMode::newBodies && parameters.mode != PatternMode::join)
         throw std::invalid_argument("Unknown pattern result");
     if (parameters.count < 2 || parameters.count > maximumPatternCount)
@@ -137,7 +151,7 @@ void validatePatternParameters(const PatternParameters& parameters) {
     if (!std::isfinite(parameters.spacing) || !std::isfinite(angle) ||
         std::abs(parameters.spacing) > 1e6 || angle < 0.0 || angle > 2 * std::numbers::pi + 1e-12)
         throw std::invalid_argument("Pattern spacing or angle out of range");
-    if (parameters.kind == PatternKind::linear && parameters.spacing <= 1e-9)
+    if (parameters.kind != PatternKind::circular && parameters.spacing <= 1e-9)
         throw std::invalid_argument("A linear pattern needs a positive spacing");
     if (parameters.kind == PatternKind::circular && angle <= 1e-9)
         throw std::invalid_argument("A circular pattern needs a positive angle");
