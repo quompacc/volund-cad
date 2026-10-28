@@ -50,6 +50,12 @@ void PatternToolController::begin(document::FeatureId support, document::Pattern
     count_ = kind == document::PatternKind::linear ? 3 : 4;
     spacing_ = 20.0;
     angleDegrees_ = 360.0;
+    grid_ = false;
+    rows_ = 2;
+    rowSpacing_ = 20.0;
+    rowAxis_ = 1;
+    rowsReversed_ = false;
+    skipped_.clear();
     datumAxes_.clear();
     const auto snapshot = session_.identifiedSnapshot().snapshot();
     for (const auto& feature : snapshot.features())
@@ -79,6 +85,7 @@ void PatternToolController::beginEdit(document::FeatureId pattern) {
     count_ = values.count;
     spacing_ = values.spacing;
     angleDegrees_ = values.angle.value() / degree;
+    skipped_ = values.skipped;
     datumAxes_.clear();
     for (const auto& feature : snapshot.features()) {
         if (feature.id == pattern)
@@ -99,7 +106,25 @@ void PatternToolController::beginEdit(document::FeatureId pattern) {
         edge_ = PickedEdge{edgeProducer.value_or(*producer), *values.axis.body, *values.axis.edge};
         axisIndex_ = edgeChoice();
     }
+    takeGrid(values);
     open();
+}
+
+// N11a: a grid's rows along a base or construction axis.
+void PatternToolController::takeGrid(const document::PatternParameters& values) {
+    grid_ = values.second.has_value();
+    if (!grid_)
+        return;
+    const auto& second = *values.second;
+    rows_ = second.count;
+    rowSpacing_ = second.spacing;
+    rowsReversed_ = second.reversed;
+    rowAxis_ = second.axis.baseAxis ? static_cast<int>(*second.axis.baseAxis) - 1 : 0;
+    if (second.datumAxis)
+        if (const auto found =
+                std::ranges::find(datumAxes_, *second.datumAxis, &document::FeatureDescriptor::id);
+            found != datumAxes_.end())
+            rowAxis_ = baseAxisCount + static_cast<int>(found - datumAxes_.begin());
 }
 
 int PatternToolController::edgeChoice() const noexcept {
@@ -113,67 +138,117 @@ bool PatternToolController::hasAxis() const noexcept {
 void PatternToolController::open() {
     active_ = true;
     stamp_ = session_.sceneStatus().document;
-    std::vector<QString> axes{QObject::tr("X-Achse"), QObject::tr("Y-Achse"),
-                              QObject::tr("Z-Achse")};
-    for (const auto& feature : datumAxes_)
-        axes.push_back(QString::fromStdString(feature.name));
-    axes.push_back(QObject::tr("Kante (anklicken)"));
-    panel_.begin(withFieldBindings(
-        ToolPanelDefinition{
-            editing_ ? QObject::tr("Muster bearbeiten") : QObject::tr("Muster"),
-            guidance(),
-            {{"count", QObject::tr("Anzahl"), count_, 2.0, 100.0, ToolValueKind::count},
-             {"spacing", QObject::tr("Abstand"), spacing_, 0.001, 1'000'000.0},
-             {"angle", QObject::tr("Winkel"), angleDegrees_, 0.001, 360.0, ToolValueKind::angle}},
-            {{"kind",
-              QObject::tr("Art"),
-              {QObject::tr("Linear"), QObject::tr("Kreisförmig")},
-              kind_ == document::PatternKind::circular ? 1 : 0},
-             {"axis", QObject::tr("Richtung/Achse"), axes, axisIndex_},
-             {"direction",
-              QObject::tr("Richtung"),
-              {QObject::tr("Normal"), QObject::tr("Umgekehrt")},
-              reversed_ ? 1 : 0},
-             {"mode",
-              QObject::tr("Ergebnis"),
-              {QObject::tr("Neue Körper"), QObject::tr("Vereinigen")},
-              mode_ == document::PatternMode::join ? 1 : 0}},
-            {},
-            [this](const std::string& id, double value) {
-                if (id == "count")
-                    count_ = std::round(value);
-                if (id == "spacing")
-                    spacing_ = value;
-                if (id == "angle")
-                    angleDegrees_ = value;
-                preview();
-            },
-            [this](const std::string& id, int index) {
-                if (id == "kind")
-                    kind_ = index == 1 ? document::PatternKind::circular
-                                       : document::PatternKind::linear;
-                if (id == "axis")
-                    axisIndex_ = index;
-                if (id == "direction")
-                    reversed_ = index == 1;
-                if (id == "mode")
-                    mode_ =
-                        index == 1 ? document::PatternMode::join : document::PatternMode::newBodies;
-                syncFields();
-                preview();
-                highlightEdge();
-            },
-            [](const std::string&) {},
-            [this]() { accept(); },
-            [this]() { cancel(); },
-            {}},
-        editing_, [this] { stamp_ = session_.sceneStatus().document; }));
+    panel_.begin(withFieldBindings(definition(), editing_,
+                                   [this] { stamp_ = session_.sceneStatus().document; }));
     panel_.focusLength("count"); // W05: the main value takes the keyboard
     syncFields();
     viewport_.setEdgePicking(true);
     preview();
     highlightEdge();
     statusChanged_(QObject::tr("Muster: Achse wählen oder eine Kante anklicken"));
+}
+
+// The panel. N11a: "Raster" adds rows along a second axis; any copy can be skipped.
+ToolPanelDefinition PatternToolController::definition() {
+    std::vector<QString> axes{QObject::tr("X-Achse"), QObject::tr("Y-Achse"),
+                              QObject::tr("Z-Achse")};
+    for (const auto& feature : datumAxes_)
+        axes.push_back(QString::fromStdString(feature.name));
+    const std::vector<QString> rowAxes = axes;
+    axes.push_back(QObject::tr("Kante (anklicken)"));
+    const std::vector<QString> sides{QObject::tr("Normal"), QObject::tr("Umgekehrt")};
+    const int kind = grid_ ? 2 : kind_ == document::PatternKind::circular ? 1 : 0;
+    return ToolPanelDefinition{
+        editing_ ? QObject::tr("Muster bearbeiten") : QObject::tr("Muster"),
+        guidance(),
+        {{"count", QObject::tr("Anzahl"), count_, 2.0, 100.0, ToolValueKind::count},
+         {"spacing", QObject::tr("Abstand"), spacing_, 0.001, 1'000'000.0},
+         {"angle", QObject::tr("Winkel"), angleDegrees_, 0.001, 360.0, ToolValueKind::angle},
+         {"rows", QObject::tr("Reihen"), rows_, 2.0, 50.0, ToolValueKind::count},
+         {"rowSpacing", QObject::tr("Reihenabstand"), rowSpacing_, 0.001, 1'000'000.0},
+         {"skip", QObject::tr("Kopie Nr."), 1.0, 1.0, 99.0, ToolValueKind::count}},
+        {{"kind",
+          QObject::tr("Art"),
+          {QObject::tr("Linear"), QObject::tr("Kreisförmig"), QObject::tr("Raster")},
+          kind},
+         {"axis", QObject::tr("Richtung/Achse"), axes, axisIndex_},
+         {"direction", QObject::tr("Richtung"), sides, reversed_ ? 1 : 0},
+         {"rowAxis", QObject::tr("Reihenrichtung"), rowAxes, rowAxis_},
+         {"rowDirection", QObject::tr("Reihen"), sides, rowsReversed_ ? 1 : 0},
+         {"mode",
+          QObject::tr("Ergebnis"),
+          {QObject::tr("Neue Körper"), QObject::tr("Vereinigen")},
+          mode_ == document::PatternMode::join ? 1 : 0}},
+        {{"skip", QObject::tr("Überspringen"), QObject::tr("Muster")}},
+        [this](const std::string& id, double value) { changedValue(id, value); },
+        [this](const std::string& id, int index) { chooseOption(id, index); },
+        [this](const std::string& id) {
+            if (id == "skip")
+                toggleSkipped();
+        },
+        [this]() { accept(); },
+        [this]() { cancel(); },
+        {}};
+}
+
+void PatternToolController::changedValue(const std::string& id, double value) {
+    if (id == "count")
+        count_ = std::round(value);
+    else if (id == "spacing")
+        spacing_ = value;
+    else if (id == "angle")
+        angleDegrees_ = value;
+    else if (id == "rows")
+        rows_ = std::round(value);
+    else if (id == "rowSpacing")
+        rowSpacing_ = value;
+    else if (id == "skip")
+        skipIndex_ = std::round(value);
+    else
+        return;
+    dropSkippedBeyond();
+    preview();
+}
+
+void PatternToolController::chooseOption(const std::string& id, int index) {
+    if (id == "kind") {
+        kind_ = index == 1 ? document::PatternKind::circular : document::PatternKind::linear;
+        grid_ = index == 2;
+        dropSkippedBeyond();
+    }
+    if (id == "axis")
+        axisIndex_ = index;
+    if (id == "direction")
+        reversed_ = index == 1;
+    if (id == "rowAxis")
+        rowAxis_ = index;
+    if (id == "rowDirection")
+        rowsReversed_ = index == 1;
+    if (id == "mode")
+        mode_ = index == 1 ? document::PatternMode::join : document::PatternMode::newBodies;
+    syncFields();
+    preview();
+    highlightEdge();
+}
+
+std::uint32_t PatternToolController::instances() const noexcept {
+    return static_cast<std::uint32_t>(count_) * (grid_ ? static_cast<std::uint32_t>(rows_) : 1U);
+}
+
+// N11a: "Überspringen" leaves copy "Kopie Nr." out, or brings it back.
+void PatternToolController::toggleSkipped() {
+    const auto index = static_cast<std::uint32_t>(skipIndex_);
+    if (index == 0 || index >= instances())
+        return;
+    if (const auto found = std::ranges::find(skipped_, index); found != skipped_.end())
+        skipped_.erase(found);
+    else
+        skipped_.insert(std::ranges::upper_bound(skipped_, index), index);
+    preview();
+}
+
+void PatternToolController::dropSkippedBeyond() {
+    std::erase_if(skipped_, [&](std::uint32_t index) { return index >= instances(); });
 }
 
 // The clicked edge, while it is the axis.
@@ -186,10 +261,14 @@ void PatternToolController::highlightEdge() {
         session_.filletEdgeShapes(edge_->support, std::span{&edge_->edge, 1}));
 }
 
-// A linear pattern has a spacing, a circular one an angle.
+// A linear pattern has a spacing, a circular one an angle; a grid its rows too.
 void PatternToolController::syncFields() {
     panel_.setLengthVisible("spacing", kind_ == document::PatternKind::linear);
     panel_.setLengthVisible("angle", kind_ == document::PatternKind::circular);
+    panel_.setLengthVisible("rows", grid_);
+    panel_.setLengthVisible("rowSpacing", grid_);
+    panel_.setChoiceVisible("rowAxis", grid_);
+    panel_.setChoiceVisible("rowDirection", grid_);
 }
 
 void PatternToolController::picked(std::uint64_t body, const TopoDS_Shape& edge) {
@@ -237,18 +316,41 @@ document::PatternParameters PatternToolController::parameters(document::BodyId b
         result.axis.edge = edge_->edge;
         result.axis.edge->id = 1;
     }
+    result.second = second();
+    result.skipped = skipped_;
+    return result;
+}
+
+std::optional<document::PatternDirection> PatternToolController::second() const {
+    if (!grid_)
+        return std::nullopt;
+    document::PatternDirection result;
+    result.count = static_cast<std::uint32_t>(rows_);
+    result.spacing = rowSpacing_;
+    result.reversed = rowsReversed_;
+    if (rowAxis_ < baseAxisCount)
+        result.axis.baseAxis = static_cast<document::BaseAxis>(rowAxis_ + 1);
+    else
+        result.datumAxis = datumAxes_[static_cast<std::size_t>(rowAxis_ - baseAxisCount)].id;
     return result;
 }
 
 QString PatternToolController::guidance() const {
     if (!hasAxis())
         return QObject::tr("Klicke eine gerade oder kreisförmige Kante an.");
-    const QString copies =
-        kind_ == document::PatternKind::linear
+    QString copies =
+        grid_ ? QObject::tr("%1 × %2 Exemplare").arg(static_cast<int>(count_)).arg(rows_)
+        : kind_ == document::PatternKind::linear
             ? QObject::tr("%1 Exemplare im Abstand von %2 mm")
                   .arg(static_cast<int>(count_))
                   .arg(spacing_)
             : QObject::tr("%1 Exemplare über %2°").arg(static_cast<int>(count_)).arg(angleDegrees_);
+    if (!skipped_.empty()) {
+        QStringList numbers;
+        for (const auto index : skipped_)
+            numbers.push_back(QString::number(index));
+        copies += QObject::tr(" (ohne Kopie %1)").arg(numbers.join(QStringLiteral(", ")));
+    }
     return mode_ == document::PatternMode::join
                ? QObject::tr("%1, mit dem Körper vereinigt.").arg(copies)
                : QObject::tr("%1, jede Kopie ein eigener Körper.").arg(copies);
@@ -272,6 +374,8 @@ application::Action PatternToolController::action() const {
     input.spacing = spacing_;
     input.angle = angleDegrees_ * degree;
     input.mode = mode_;
+    input.second = second();
+    input.skipped = skipped_;
     if (axisIndex_ < baseAxisCount) {
         input.baseAxis = static_cast<document::BaseAxis>(axisIndex_ + 1);
     } else if (axisIndex_ < edgeChoice()) {

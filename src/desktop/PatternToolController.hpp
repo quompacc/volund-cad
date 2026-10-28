@@ -25,6 +25,7 @@ class CadSession;
 namespace voelund::desktop {
 
 class ToolPanelHost;
+struct ToolPanelDefinition;
 
 // M10 (user decision 2026-10-15): copies of the selected body, linear (count and spacing) or
 // circular (count and total angle). The axis is a base axis, a construction axis or a clicked
@@ -57,6 +58,14 @@ class PatternToolController final {
         document::FilletEdge edge;
     };
     void open();
+    [[nodiscard]] ToolPanelDefinition definition();
+    void changedValue(const std::string& id, double value);
+    void chooseOption(const std::string& id, int index);
+    void takeGrid(const document::PatternParameters& values);
+    void toggleSkipped();
+    void dropSkippedBeyond();
+    [[nodiscard]] std::uint32_t instances() const noexcept;
+    [[nodiscard]] std::optional<document::PatternDirection> second() const;
     void syncFields();
     void preview();
     void showModel();
@@ -87,6 +96,14 @@ class PatternToolController final {
     double spacing_{20.0};
     double angleDegrees_{360.0};
     document::PatternMode mode_{document::PatternMode::newBodies};
+    // N11a: a grid's rows (base axes, then the construction axes) and the skipped copies.
+    bool grid_{false};
+    double rows_{2};
+    double rowSpacing_{20.0};
+    int rowAxis_{1};
+    bool rowsReversed_{false};
+    double skipIndex_{1};
+    std::vector<std::uint32_t> skipped_;
     std::optional<document::FeatureId> editing_;
     // M13: set while an edit is kept with errors at later features.
     std::optional<application::ErrorDisposition> keep_;

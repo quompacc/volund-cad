@@ -24,6 +24,8 @@ CommandResult CadSession::createPattern(document::FeatureId support, const Patte
                                            kernel::Radians{input.angle},
                                            input.mode};
     parameters.axis.baseAxis = input.baseAxis;
+    parameters.second = input.second; // N11a
+    parameters.skipped = input.skipped;
     if (input.edgeSupport || input.edge) {
         const auto edgeBody = input.edgeSupport ? resultBody(*input.edgeSupport) : std::nullopt;
         if (!edgeBody || !input.edge)

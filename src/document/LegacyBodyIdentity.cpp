@@ -128,6 +128,28 @@ void validateKind(const FeatureDescriptor& feature, const FeatureParameters& par
         throw std::invalid_argument("Legacy body identity: invalid input presence");
 }
 
+// Where a feature stands: the history, every feature's index by ID, and its own index.
+struct HistoryPosition final {
+    std::span<const FeatureDescriptor> features;
+    const std::map<std::uint64_t, std::size_t>& indices;
+    std::size_t index;
+};
+
+// M10/N11a: a pattern's direction is an earlier construction axis or an edge of a body of the
+// document.
+template <class IsBody>
+void checkPatternAxis(const DatumAxisParameters& axis, const std::optional<FeatureId>& datumAxis,
+                      const HistoryPosition& at, const IsBody& isBody) {
+    if (axis.body && !isBody(*axis.body))
+        throw std::invalid_argument("Pattern body is not a body of this document");
+    if (!datumAxis)
+        return;
+    const auto found = at.indices.find(datumAxis->value());
+    if (found == at.indices.end() || found->second >= at.index ||
+        at.features[found->second].kind != FeatureKind::datumAxis)
+        throw std::invalid_argument("Pattern axis is not an earlier construction axis");
+}
+
 } // namespace
 
 std::vector<std::optional<BodyId>>
@@ -293,14 +315,12 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
     std::vector<std::pair<std::uint64_t, std::uint32_t>> copies;
     for (std::size_t index = 0; index < features.size(); ++index) {
         if (const auto* pattern = std::get_if<PatternParameters>(&parameters[index])) {
-            if (!isBody(pattern->body) || (pattern->axis.body && !isBody(*pattern->axis.body)))
+            if (!isBody(pattern->body))
                 throw std::invalid_argument("Pattern body is not a body of this document");
-            if (pattern->datumAxis) {
-                const auto found = indices.find(pattern->datumAxis->value());
-                if (found == indices.end() || found->second >= index ||
-                    features[found->second].kind != FeatureKind::datumAxis)
-                    throw std::invalid_argument("Pattern axis is not an earlier construction axis");
-            }
+            checkPatternAxis(pattern->axis, pattern->datumAxis, {features, indices, index}, isBody);
+            if (const auto& second = pattern->second) // N11a
+                checkPatternAxis(second->axis, second->datumAxis, {features, indices, index},
+                                 isBody);
         }
         const auto* copy = std::get_if<PatternCopyParameters>(&parameters[index]);
         if (copy == nullptr)
@@ -310,7 +330,7 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
                                   ? nullptr
                                   : std::get_if<PatternParameters>(&parameters[found->second]);
         if (pattern == nullptr || pattern->mode != PatternMode::newBodies || copy->index == 0 ||
-            copy->index >= pattern->count ||
+            copy->index >= patternInstances(*pattern) || patternSkips(*pattern, copy->index) ||
             std::ranges::find(copies, std::pair{copy->pattern.value(), copy->index}) !=
                 copies.end())
             throw std::invalid_argument("Pattern copy does not belong to an earlier pattern");

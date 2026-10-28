@@ -71,8 +71,7 @@ struct ExtrusionMode final {
 // switched to their current fixed values (docs/parameter-table.md, rule 6).
 enum class ParameterDeletion { refuseWhenUsed, unbindUses };
 
-// M10: what a new pattern is given; the axis is a base axis, an existing construction axis or
-// an edge of `edgeSupport`'s current result (exactly one).
+// M10: a new pattern's axis: a base axis, a construction axis or an edge of `edgeSupport`.
 struct PatternInput final {
     document::PatternKind kind{document::PatternKind::linear};
     std::optional<document::BaseAxis> baseAxis{};
@@ -84,6 +83,8 @@ struct PatternInput final {
     double spacing{10.0};
     double angle{0.0};
     document::PatternMode mode{document::PatternMode::newBodies};
+    std::optional<document::PatternDirection> second{}; // N11a: a grid's rows, skipped copies
+    std::vector<std::uint32_t> skipped{};
     bool operator==(const PatternInput&) const = default;
 };
 
@@ -134,8 +135,7 @@ class CadSession final {
     // contains the point (model coordinates, on the sketch plane). Selects the sketch.
     [[nodiscard]] bool selectSketchProfileAt(document::FeatureId sketch,
                                              const std::array<double, 3>& point, bool additive);
-    // M04: selects `sketch` with exactly these regions (the open extrusion panel's); view
-    // state only.
+    // M04: selects `sketch` with exactly these regions (the open extrusion panel's); view only.
     [[nodiscard]] bool selectSketchRegions(document::FeatureId sketch,
                                            std::span<const document::SketchRegionId> regions);
     [[nodiscard]] std::vector<document::SketchElementId> selectedSketchProfileElements() const;

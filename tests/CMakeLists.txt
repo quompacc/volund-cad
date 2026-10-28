@@ -1600,6 +1600,11 @@ add_executable(voelund_pattern_tests integration/PatternTests.cpp)
 target_link_libraries(voelund_pattern_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME application.pattern COMMAND voelund_pattern_tests)
 set_tests_properties(application.pattern PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
+# N11a: grid patterns and skipped copies.
+add_executable(voelund_pattern_grid_tests integration/PatternGridTests.cpp)
+target_link_libraries(voelund_pattern_grid_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.pattern_grid COMMAND voelund_pattern_grid_tests)
+set_tests_properties(application.pattern_grid PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
 # M11: moving any body.
 add_executable(voelund_move_tests integration/MoveTests.cpp)
 target_link_libraries(voelund_move_tests PRIVATE voelund_project_options Voelund::Application)

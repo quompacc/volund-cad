@@ -4,6 +4,7 @@
 #include "ModelDocumentImpl.hpp"
 #include <voelund/document/LegacyBodyIdentity.hpp>
 
+#include <algorithm>
 #include <cmath>
 #include <numbers>
 #include <stdexcept>
@@ -14,6 +15,22 @@
 // feature per copy, which the document keeps in step with the pattern.
 namespace voelund::document {
 
+namespace {
+// The copies the pattern no longer has: beyond its instances, skipped (N11a) or all when joined.
+void dropCopies(std::vector<FeatureDescriptor>& features,
+                std::vector<FeatureParameters>& parameters, FeatureId pattern, std::uint32_t wanted,
+                const PatternParameters& values) {
+    for (std::size_t index = features.size(); index-- > 0;) {
+        const auto* copy = std::get_if<PatternCopyParameters>(&parameters[index]);
+        if (copy == nullptr || copy->pattern != pattern ||
+            (copy->index <= wanted && !patternSkips(values, copy->index)))
+            continue;
+        features.erase(features.begin() + static_cast<std::ptrdiff_t>(index));
+        parameters.erase(parameters.begin() + static_cast<std::ptrdiff_t>(index));
+    }
+}
+} // namespace
+
 void keepCopiesInStep(std::vector<FeatureDescriptor>& features,
                       std::vector<FeatureParameters>& parameters, std::uint64_t& next,
                       FeatureId pattern, const PatternParameters& values) {
@@ -21,17 +38,16 @@ void keepCopiesInStep(std::vector<FeatureDescriptor>& features,
         const auto* copy = std::get_if<PatternCopyParameters>(&parameters[index]);
         return copy != nullptr && copy->pattern == pattern ? copy : nullptr;
     };
-    const std::uint32_t wanted = values.mode == PatternMode::newBodies ? values.count - 1 : 0;
-    for (std::size_t index = features.size(); index-- > 0;)
-        if (const auto* copy = copyOf(index); copy != nullptr && copy->index > wanted) {
-            features.erase(features.begin() + static_cast<std::ptrdiff_t>(index));
-            parameters.erase(parameters.begin() + static_cast<std::ptrdiff_t>(index));
-        }
+    const std::uint32_t wanted =
+        values.mode == PatternMode::newBodies ? patternInstances(values) - 1 : 0;
+    dropCopies(features, parameters, pattern, wanted, values);
     std::size_t position = 0;
     while (features[position].id != pattern)
         ++position;
     const std::string name = features[position].name;
     for (std::uint32_t copy = 1; copy <= wanted; ++copy) {
+        if (patternSkips(values, copy))
+            continue;
         ++position;
         if (position < features.size() && copyOf(position) != nullptr &&
             copyOf(position)->index == copy)
@@ -47,20 +63,58 @@ void keepCopiesInStep(std::vector<FeatureDescriptor>& features,
     }
 }
 
-void validatePatternParameters(const PatternParameters& parameters) {
-    if (parameters.body.value() == 0)
-        throw std::invalid_argument("A pattern names its body");
-    const int references = (parameters.axis.baseAxis ? 1 : 0) + (parameters.axis.edge ? 1 : 0) +
-                           (parameters.datumAxis ? 1 : 0);
+std::uint32_t patternInstances(const PatternParameters& parameters) noexcept {
+    return parameters.count * (parameters.second ? parameters.second->count : 1);
+}
+
+bool patternSkips(const PatternParameters& parameters, std::uint32_t index) {
+    return std::ranges::binary_search(parameters.skipped, index);
+}
+
+namespace {
+void validateAxisReference(const DatumAxisParameters& axis,
+                           const std::optional<FeatureId>& datumAxis) {
+    const int references = (axis.baseAxis ? 1 : 0) + (axis.edge ? 1 : 0) + (datumAxis ? 1 : 0);
     if (references != 1)
         throw std::invalid_argument(
             "A pattern runs along a base axis, a body edge or a construction axis");
-    if (parameters.datumAxis) {
-        if (parameters.datumAxis->value() == 0 || parameters.axis != DatumAxisParameters{})
+    if (datumAxis) {
+        if (datumAxis->value() == 0 || axis != DatumAxisParameters{})
             throw std::invalid_argument("A pattern names its construction axis");
     } else {
-        validateDatumAxisParameters(parameters.axis);
+        validateDatumAxisParameters(axis);
     }
+}
+
+// N11a: a grid is linear, both counts at least 2 and together at most 100 instances.
+void validateSecond(const PatternParameters& parameters) {
+    if (!parameters.second)
+        return;
+    const auto& second = *parameters.second;
+    validateAxisReference(second.axis, second.datumAxis);
+    if (parameters.kind != PatternKind::linear || second.count < 2 ||
+        patternInstances(parameters) > maximumPatternCount)
+        throw std::invalid_argument("A grid is linear with 2 to 100 instances");
+    if (!std::isfinite(second.spacing) || second.spacing <= 1e-9 || second.spacing > 1e6)
+        throw std::invalid_argument("A grid needs a positive second spacing");
+}
+
+// N11a: skipped instances are distinct copies of the pattern; one copy stays.
+void validateGrid(const PatternParameters& parameters) {
+    validateSecond(parameters);
+    const auto& skipped = parameters.skipped;
+    if (!std::ranges::is_sorted(skipped) || std::ranges::adjacent_find(skipped) != skipped.end() ||
+        (!skipped.empty() &&
+         (skipped.front() == 0 || skipped.back() >= patternInstances(parameters))) ||
+        skipped.size() + 2 > patternInstances(parameters))
+        throw std::invalid_argument("Only copies of the pattern are skipped, at least one stays");
+}
+} // namespace
+
+void validatePatternParameters(const PatternParameters& parameters) {
+    if (parameters.body.value() == 0)
+        throw std::invalid_argument("A pattern names its body");
+    validateAxisReference(parameters.axis, parameters.datumAxis);
     if (parameters.kind != PatternKind::linear && parameters.kind != PatternKind::circular)
         throw std::invalid_argument("Unknown pattern kind");
     if (parameters.mode != PatternMode::newBodies && parameters.mode != PatternMode::join)
@@ -75,6 +129,7 @@ void validatePatternParameters(const PatternParameters& parameters) {
         throw std::invalid_argument("A linear pattern needs a positive spacing");
     if (parameters.kind == PatternKind::circular && angle <= 1e-9)
         throw std::invalid_argument("A circular pattern needs a positive angle");
+    validateGrid(parameters);
 }
 
 FeatureId ModelDocument::addPatternFeature(std::string name, const PatternParameters& parameters) {

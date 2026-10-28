@@ -98,6 +98,11 @@ struct SlotCollector final {
             slots.push_back({"spacing", ParameterUnit::length, &pattern.spacing});
         else
             slots.push_back({"angle", ParameterUnit::angle, nullptr, &pattern.angle});
+        if (pattern.second) { // N11a: the grid's rows
+            slots.push_back(
+                {"rows", ParameterUnit::number, nullptr, nullptr, &pattern.second->count});
+            slots.push_back({"rowSpacing", ParameterUnit::length, &pattern.second->spacing});
+        }
     }
     void operator()(MoveParameters& move) const {
         addPlacement(slots, move.transform);

@@ -217,7 +217,6 @@ cyclomatic | src/document/DocumentFileInput.cpp | voelund::document::detail::(an
 cyclomatic | src/document/LegacyBodyIdentity.cpp | voelund::document::featureBodyContexts::(lambda) | 11 | Altbestand vor A04
 cyclomatic | src/document/LegacyDocumentImporter.cpp | voelund::document::(anonymous namespace)::readExtrusionFeature | 11 | Altbestand vor A04
 cyclomatic | src/document/ModelDocument.cpp | voelund::document::validateSketchParameters | 11 | Altbestand vor A04
-cyclomatic | src/document/ModelDocumentPattern.cpp | voelund::document::keepCopiesInStep | 11 | Altbestand vor A04
 cyclomatic | src/document/SketchGeometry.cpp | voelund::document::validateSketchConstraints::(lambda) | 11 | Altbestand vor A04
 cyclomatic | src/features/SketchConstraintAnnotations.cpp | voelund::features::sketchAnnotationCategory | 11 | Altbestand vor A04
 cyclomatic | src/features/SketchEvaluation.cpp | voelund::features::(anonymous namespace)::elementShape | 11 | Altbestand vor A04

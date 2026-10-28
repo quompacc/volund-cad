@@ -435,6 +435,16 @@ void validateMirrorParameters(const MirrorParameters& parameters);
 enum class PatternKind { linear = 1, circular = 2 };
 enum class PatternMode { newBodies = 1, join = 2 };
 inline constexpr std::uint32_t maximumPatternCount = 100;
+// N11a (schema 47): the second direction of a grid ("Rastermuster"), along an axis as above;
+// `count` rows `spacing` apart, including the first.
+struct PatternDirection final {
+    DatumAxisParameters axis{};
+    std::optional<FeatureId> datumAxis{};
+    bool reversed{false};
+    std::uint32_t count{2};
+    double spacing{10.0};
+    [[nodiscard]] bool operator==(const PatternDirection&) const = default;
+};
 struct PatternParameters final {
     BodyId body;
     PatternKind kind{PatternKind::linear};
@@ -445,9 +455,16 @@ struct PatternParameters final {
     double spacing{10.0};
     kernel::Radians angle{0.0};
     PatternMode mode{PatternMode::newBodies};
+    // N11a: a linear pattern's second direction; instance i + count * j stands i steps along
+    // the first and j along the second. Skipped instances (ascending, never 0) are left out.
+    std::optional<PatternDirection> second{};
+    std::vector<std::uint32_t> skipped{};
     [[nodiscard]] bool operator==(const PatternParameters&) const = default;
 };
 void validatePatternParameters(const PatternParameters& parameters);
+// All instances of the pattern, the original and the skipped ones included.
+[[nodiscard]] std::uint32_t patternInstances(const PatternParameters& parameters) noexcept;
+[[nodiscard]] bool patternSkips(const PatternParameters& parameters, std::uint32_t index);
 // M11 (schema 33, user decision 2026-10-15): moves and turns a body where it stands in the
 // history ("Bewegen"): turned about `pivot` like a primitive's placement (about X, then Y, then
 // Z), then shifted. The pivot is the middle of the body when the move was made.

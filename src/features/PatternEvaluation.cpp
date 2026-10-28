@@ -27,6 +27,7 @@
 // fuse into the body one after the other.
 namespace voelund::features::detail {
 namespace {
+constexpr std::uint32_t maximumColumns = document::maximumPatternCount + 1;
 
 struct Step final {
     std::array<double, 3> origin;
@@ -46,12 +47,18 @@ struct Step final {
     }
 };
 
-AxisLine axisOf(const document::DocumentSnapshot& document, document::FeatureId pattern,
-                const document::PatternParameters& parameters,
-                const std::vector<EvaluatedFeature>& outputs) {
+// The pattern's direction or axis: an earlier construction axis or one as it describes.
+struct AxisChoice final {
+    const document::DatumAxisParameters& axis;
+    const std::optional<document::FeatureId>& datumAxis;
+    bool reversed;
+};
+
+AxisLine lineOf(const document::DocumentSnapshot& document, document::FeatureId pattern,
+                const AxisChoice& choice, const std::vector<EvaluatedFeature>& outputs) {
     AxisLine line{gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1)};
-    if (parameters.datumAxis) {
-        const auto& frame = findFeature(outputs, *parameters.datumAxis).datumFrame;
+    if (choice.datumAxis) {
+        const auto& frame = findFeature(outputs, *choice.datumAxis).datumFrame;
         if (!frame)
             throw GeometryEvaluationError("The axis of the pattern is missing",
                                           "pattern-axis-missing");
@@ -59,28 +66,54 @@ AxisLine axisOf(const document::DocumentSnapshot& document, document::FeatureId 
                 gp_Dir(frame->normalX, frame->normalY, frame->normalZ)};
     } else {
         try {
-            line = datumAxisLine(document, pattern, parameters.axis, outputs);
+            line = datumAxisLine(document, pattern, choice.axis, outputs);
         } catch (const GeometryEvaluationError& error) {
             throw GeometryEvaluationError(error.what(), "pattern-axis-missing");
         }
     }
-    if (parameters.reversed)
+    if (choice.reversed)
         line.direction.Reverse();
     return line;
 }
 
-Step stepOf(const AxisLine& axis, const document::PatternParameters& parameters,
+// N11a: the first direction, and a grid's second one.
+struct Directions final {
+    AxisLine first;
+    std::optional<AxisLine> second;
+};
+
+Directions axisOf(const document::DocumentSnapshot& document, document::FeatureId pattern,
+                  const document::PatternParameters& parameters,
+                  const std::vector<EvaluatedFeature>& outputs) {
+    Directions result{lineOf(document, pattern,
+                             {parameters.axis, parameters.datumAxis, parameters.reversed}, outputs),
+                      std::nullopt};
+    if (const auto& second = parameters.second)
+        result.second =
+            lineOf(document, pattern, {second->axis, second->datumAxis, second->reversed}, outputs);
+    return result;
+}
+
+// Instance i + count * j of a grid stands i spacings along the first direction and j along the
+// second.
+std::array<double, 3> shiftOf(const Directions& axes, const document::PatternParameters& parameters,
+                              std::uint32_t index) {
+    const auto columns = parameters.second ? parameters.count : maximumColumns;
+    const gp_Vec along = gp_Vec(axes.first.direction) * (parameters.spacing * (index % columns));
+    gp_Vec shift = along;
+    if (axes.second)
+        shift += gp_Vec(axes.second->direction) * (parameters.second->spacing * (index / columns));
+    return {shift.X(), shift.Y(), shift.Z()};
+}
+
+Step stepOf(const Directions& axes, const document::PatternParameters& parameters,
             std::uint32_t index) {
+    const AxisLine& axis = axes.first;
     const std::array<double, 3> origin{axis.origin.X(), axis.origin.Y(), axis.origin.Z()};
     const std::array<double, 3> direction{axis.direction.X(), axis.direction.Y(),
                                           axis.direction.Z()};
-    if (parameters.kind == document::PatternKind::linear) {
-        const double distance = parameters.spacing * index;
-        return {origin,
-                direction,
-                0.0,
-                {direction[0] * distance, direction[1] * distance, direction[2] * distance}};
-    }
+    if (parameters.kind == document::PatternKind::linear)
+        return {origin, direction, 0.0, shiftOf(axes, parameters, index)};
     const double total = parameters.angle.value();
     const bool fullTurn = std::abs(total - 2 * std::numbers::pi) < 1e-9;
     const double share = total / (fullTurn ? parameters.count : parameters.count - 1);
@@ -122,10 +155,12 @@ struct Joined final {
 };
 
 Joined join(const TopoDS_Shape& body, std::span<const SupportProvenance> faces,
-            std::span<const EdgeProvenance> edges, const AxisLine& axis,
+            std::span<const EdgeProvenance> edges, const Directions& axis,
             const document::PatternParameters& parameters, document::FeatureId pattern) {
     Joined result{body, {faces.begin(), faces.end()}, {edges.begin(), edges.end()}};
-    for (std::uint32_t index = 1; index < parameters.count; ++index) {
+    for (std::uint32_t index = 1; index < document::patternInstances(parameters); ++index) {
+        if (document::patternSkips(parameters, index))
+            continue; // N11a
         const auto copy =
             copyOf(body, faces, edges, stepOf(axis, parameters, index), pattern, index);
         const auto fused = kernel::ShapeOperations::fuseWithHistory(result.shape, copy.shape.shape);

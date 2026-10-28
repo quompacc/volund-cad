@@ -112,7 +112,7 @@ void ModelDocument::commitState(State state) {
     for (const auto& binding : state.parameterTable.bindings) // a bound count changes the copies
         for (std::size_t index = 0; index < state.features.size(); ++index)
             if (const auto* pattern = std::get_if<PatternParameters>(&state.parameters[index]);
-                pattern != nullptr && binding.field == "count" &&
+                pattern != nullptr && (binding.field == "count" || binding.field == "rows") &&
                 state.features[index].id == binding.feature) {
                 const auto values = *pattern;
                 keepCopiesInStep(state.features, state.parameters, state.nextFeatureId,

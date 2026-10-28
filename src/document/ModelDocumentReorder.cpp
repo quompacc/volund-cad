@@ -24,6 +24,17 @@ void addEdge(std::vector<FeatureId>& ids, const FilletEdge& edge) {
     addOrigin(ids, edge.first);
     addOrigin(ids, edge.second);
 }
+// M10: a pattern's direction: a construction axis, or a body and its edge.
+void addAxisReferences(FeatureReferences& references, const DatumAxisParameters& axis,
+                       const std::optional<FeatureId>& datumAxis) {
+    if (datumAxis)
+        references.structural.push_back(*datumAxis);
+    if (axis.body)
+        references.structural.push_back(FeatureId{axis.body->value()});
+    if (axis.edge)
+        addEdge(references.geometric, *axis.edge);
+}
+
 void addFace(FeatureReferences& references, const BodyFaceReference& face) {
     references.structural.push_back(FeatureId{face.body.value()});
     addOrigin(references.geometric, face.origin);
@@ -168,12 +179,9 @@ FeatureReferences featureReferences(const FeatureDescriptor& feature,
                     addFace(references, *values.plane.face);
             } else if constexpr (std::is_same_v<Type, PatternParameters>) {
                 body(values.body);
-                if (values.datumAxis)
-                    structural.push_back(*values.datumAxis);
-                if (values.axis.body)
-                    body(*values.axis.body);
-                if (values.axis.edge)
-                    addEdge(geometric, *values.axis.edge);
+                addAxisReferences(references, values.axis, values.datumAxis);
+                if (values.second) // N11a
+                    addAxisReferences(references, values.second->axis, values.second->datumAxis);
             } else if constexpr (std::is_same_v<Type, PatternCopyParameters>) {
                 structural.push_back(values.pattern);
             } else if constexpr (std::is_same_v<Type, ImportPartParameters>) {

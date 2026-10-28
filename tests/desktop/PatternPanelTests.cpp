@@ -17,6 +17,7 @@
 #include <filesystem>
 #include <iostream>
 #include <string>
+#include <vector>
 #include <voelund/application/CadSession.hpp>
 #include <voelund/desktop/MainWindow.hpp>
 
@@ -102,6 +103,36 @@ bool solidAt(const application::CadSession& session, double x, double y, double 
         if (BRepClass3d_SolidClassifier(body.shape, gp_Pnt(x, y, z), 1e-7).State() == TopAbs_IN)
             return true;
     return false;
+}
+
+// N11a: "Art: Raster" adds 2 rows along Y (6 boxes); copy 4 skipped leaves 5; OK keeps the gap.
+void gridFlow(desktop::MainWindow& window, application::CadSession& session,
+              viewport::CadViewport& viewport, const std::filesystem::path& directory) {
+    std::filesystem::remove_all(directory);
+    session.newDocument();
+    const auto box = *session.createBoxFeature({20, 20, 10}).feature();
+    require(session.selectFeature(box), "Box selected for the grid");
+    window.refreshAfterExternalChange();
+    command(window, "solid.modify.pattern_linear").trigger();
+    settle();
+    choose(window, "toolChoice_kind", 2);
+    require(accept(window).isEnabled() && matches(shown(viewport), 6 * 4000),
+            "Raster: 3 x 2 boxes");
+    setValue(window, "toolLength_skip", 4);
+    QPushButton* skip = nullptr;
+    for (auto* candidate : panel(window)->findChildren<QPushButton*>())
+        if (candidate->toolTip() == QStringLiteral("Überspringen"))
+            skip = candidate;
+    require(skip != nullptr, "Überspringen offered");
+    skip->click();
+    settle();
+    require(matches(shown(viewport), 5 * 4000), "Copy 4 skipped in the preview");
+    accept(window).click();
+    settle();
+    require(session.validBodies().size() == 5 && !solidAt(session, 30, 30, 5) &&
+                session.patternParameters(session.features()[1].id).skipped ==
+                    std::vector<std::uint32_t>{4},
+            "OK keeps the grid without copy 4");
 }
 
 void run() {
@@ -199,10 +230,10 @@ void run() {
     require(session.features().size() == 5 && session.validBodies().size() == 4 &&
                 matches(volume(session), 4 * 4000),
             "Open restores the pattern and its copies");
-    std::filesystem::remove_all(directory);
+    gridFlow(window, session, *viewport, directory);
     std::cout << "PASS M10 pattern panel: linear count and spacing, joined refused and "
                  "overlapping, copy edge refused, corner edge, circular, joined, OK, undo, "
-                 "timeline, copy reopens, open"
+                 "timeline, copy reopens, open; N11a grid with a skipped copy"
               << std::endl;
 }
 } // namespace
