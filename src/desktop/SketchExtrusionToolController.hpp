@@ -24,6 +24,7 @@ class CadSession;
 namespace voelund::desktop {
 struct ResolvedParameter;
 struct ToolPanelDefinition;
+struct ToolChoiceParameter;
 
 class ToolPanelHost;
 
@@ -85,6 +86,7 @@ class SketchExtrusionToolController final {
     void choose(const std::string& choice, int index);
     // M04: fields that do not apply to the current choices are disabled or hidden.
     void syncFields();
+    void endForRevolve(std::vector<ToolChoiceParameter>& choices) const; // N10
     // M04: what the extrusion does and on which body, or what it waits for.
     [[nodiscard]] QString guidance() const;
     void accept();

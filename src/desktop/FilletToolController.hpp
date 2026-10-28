@@ -26,6 +26,7 @@ class CadSession;
 namespace voelund::desktop {
 
 class ToolPanelHost;
+struct ToolPanelDefinition;
 
 // M07: the same panel rounds (fillet) or chamfers the edges.
 enum class EdgeTreatment { fillet, chamfer };
@@ -75,6 +76,10 @@ class FilletToolController final {
     [[nodiscard]] std::optional<document::FilletEdge> namedEdge(const TopoDS_Shape& edge) const;
     void addEdge(const document::FilletEdge& named);
     void dragged(double value, bool finished);
+    [[nodiscard]] ToolPanelDefinition definition(const QString& title, const std::string& field);
+    void changedValue(const std::string& field, const std::string& id, double value);
+    void chooseChamferKind(int index);
+    void showChamferFields();
     [[nodiscard]] application::Action action() const;
     [[nodiscard]] bool unchanged() const;
     void accept();
@@ -93,6 +98,7 @@ class FilletToolController final {
         document::BodyId body;
         std::vector<document::FilletEdge> edges;
         double value;
+        document::ChamferShape shape{}; // N10
     };
     EdgeTreatment treatment_{EdgeTreatment::fillet};
     std::optional<document::FeatureId> editing_;
@@ -100,7 +106,8 @@ class FilletToolController final {
     std::optional<application::ErrorDisposition> keep_;
     std::optional<Stored> stored_;
     std::vector<document::FilletEdge> edges_;
-    double value_{1.0}; // radius or distance
+    double value_{1.0};              // radius or distance
+    document::ChamferShape shape_{}; // N10: a chamfer's kind, second value and side
     std::optional<application::DocumentStamp> stamp_;
     bool active_{false};
     bool previewShown_{false};

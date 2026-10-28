@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 Eduard Hart
 
-add_library(voelund_kernel STATIC ShapeFactory.cpp ShapeOperations.cpp Prism.cpp TaperedPrism.cpp Revolution.cpp ShellOperation.cpp SolidPrimitives.cpp Sweep.cpp Loft.cpp Helix.cpp DraftOperation.cpp Measurement.cpp MassProperties.cpp Interference.cpp HoleTool.cpp StepExchange.cpp MergingFuse.cpp MeshExport.cpp ZipStore.cpp ShapeQueries.cpp EdgeQueries.cpp TangentChain.cpp PlanarCurve.cpp SketchShapes.cpp)
+add_library(voelund_kernel STATIC ShapeFactory.cpp ShapeOperations.cpp Prism.cpp TaperedPrism.cpp Revolution.cpp ShellOperation.cpp SolidPrimitives.cpp Sweep.cpp Loft.cpp Helix.cpp DraftOperation.cpp Measurement.cpp MassProperties.cpp Interference.cpp HoleTool.cpp ChamferVariants.cpp StepExchange.cpp MergingFuse.cpp MeshExport.cpp ZipStore.cpp ShapeQueries.cpp EdgeQueries.cpp TangentChain.cpp PlanarCurve.cpp SketchShapes.cpp)
 
 target_include_directories(
     voelund_kernel

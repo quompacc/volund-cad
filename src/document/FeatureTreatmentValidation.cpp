@@ -45,6 +45,16 @@ void validateFilletParameters(const FilletParameters& parameters) {
 
 void validateChamferParameters(const ChamferParameters& parameters) {
     validateEdgeTreatment(parameters.body, parameters.edges, parameters.distance);
+    // N10: the second distance a model length, the angle strictly between 0 and 90 degrees.
+    const auto mode = static_cast<int>(parameters.shape.mode);
+    if (mode < 0 || mode > static_cast<int>(ChamferMode::distanceAngle))
+        throw std::invalid_argument("Unknown chamfer kind");
+    if (parameters.shape.mode == ChamferMode::twoDistances &&
+        !kernel::modelLength(parameters.shape.second))
+        throw std::invalid_argument(kernel::modelRangeDiagnostic);
+    const bool angleFits = parameters.shape.second > 0.0 && parameters.shape.second < 90.0;
+    if (parameters.shape.mode == ChamferMode::distanceAngle && !angleFits)
+        throw std::invalid_argument("A chamfer angle lies between 0 and 90 degrees");
 }
 
 namespace {

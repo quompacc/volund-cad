@@ -104,7 +104,7 @@ document::FilletParameters CadSession::filletParameters(document::FeatureId feat
 
 CommandResult CadSession::createChamfer(document::FeatureId support,
                                         std::span<const document::FilletEdge> edges,
-                                        double distance) {
+                                        double distance, const document::ChamferShape& shape) {
     if (!canAddCylinder(support))
         return CommandResult::invalidInput("A chamfer requires a body with a current result");
     const auto body = evaluatedFeature(evaluation_->result.features, support).bodyId;
@@ -117,8 +117,9 @@ CommandResult CadSession::createChamfer(document::FeatureId support,
     document::DocumentTransaction transaction(document_);
     auto& candidate = transaction.edit();
     const auto idInput = detail::prepareInput([&] {
-        return candidate.addChamferFeature("Fase " + std::to_string(sequence),
-                                           document::ChamferParameters{*body, numbered, distance});
+        return candidate.addChamferFeature(
+            "Fase " + std::to_string(sequence),
+            document::ChamferParameters{*body, numbered, distance, shape});
     });
     if (!idInput.value)
         return CommandResult::invalidInput(idInput.diagnostic);

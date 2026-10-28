@@ -60,7 +60,7 @@ void FilletToolController::beginEdit(document::FeatureId feature) {
         treatment_ = EdgeTreatment::fillet;
     } else if (descriptor->kind == document::FeatureKind::chamfer) {
         const auto& chamfer = snapshot.chamferParameters(feature);
-        found = Stored{chamfer.body, chamfer.edges, chamfer.distance};
+        found = Stored{chamfer.body, chamfer.edges, chamfer.distance, chamfer.shape};
         treatment_ = EdgeTreatment::chamfer;
     } else {
         return;
@@ -83,37 +83,97 @@ void FilletToolController::open(document::FeatureId support,
     edges_ = std::move(edges);
     features::numberFilletEdges(edges_);
     value_ = value;
+    shape_ = stored_ ? stored_->shape : document::ChamferShape{};
     stamp_ = session_.sceneStatus().document;
     const QString title =
         chamfer ? (editing_ ? QObject::tr("Fase bearbeiten") : QObject::tr("Fase"))
                 : (editing_ ? QObject::tr("Verrundung bearbeiten") : QObject::tr("Verrunden"));
     const std::string field = chamfer ? "distance" : "radius";
-    panel_.begin(withFieldBindings(
-        ToolPanelDefinition{title,
-                            guidance(),
-                            {{field, chamfer ? QObject::tr("Abstand") : QObject::tr("Radius"),
-                              value_, 0.001, 1'000'000.0}},
-                            {},
-                            {},
-                            [this, field](const std::string& id, double changed) {
-                                if (id == field) {
-                                    value_ = changed;
-                                    preview();
-                                }
-                            },
-                            {},
-                            {},
-                            [this]() { accept(); },
-                            [this]() { cancel(); },
-                            {}},
-        editing_, [this] { stamp_ = session_.sceneStatus().document; }));
+    panel_.begin(withFieldBindings(definition(title, field), editing_,
+                                   [this] { stamp_ = session_.sceneStatus().document; }));
     panel_.focusLength(field); // W05: the main value takes the keyboard
+    showChamferFields();
     viewport_.setEdgePicking(true);
     viewport_.setPushPullHandler([this](double to, bool finished) { dragged(to, finished); });
     gripEdge_.reset();
     preview();
     statusChanged_(chamfer ? QObject::tr("Fase: Kanten anklicken, Abstand eingeben")
                            : QObject::tr("Verrunden: Kanten anklicken, Radius eingeben"));
+}
+
+// The panel: the radius or distance; N10: a chamfer's kind, its second distance or angle and
+// "Richtung umkehren" (the first distance on the other face of each edge).
+ToolPanelDefinition FilletToolController::definition(const QString& title,
+                                                     const std::string& field) {
+    const bool chamfer = treatment_ == EdgeTreatment::chamfer;
+    ToolPanelDefinition result{
+        title,
+        guidance(),
+        {{field, chamfer ? QObject::tr("Abstand") : QObject::tr("Radius"), value_, 0.001,
+          1'000'000.0}},
+        {},
+        {},
+        [this, field](const std::string& id, double changed) { changedValue(field, id, changed); },
+        [this](const std::string& id, int index) {
+            if (id == "chamferKind")
+                chooseChamferKind(index);
+        },
+        [this](const std::string& id) {
+            if (id == "flip") {
+                shape_.flipped = !shape_.flipped;
+                preview();
+            }
+        },
+        [this]() { accept(); },
+        [this]() { cancel(); },
+        {}};
+    if (!chamfer)
+        return result;
+    const double second = shape_.second > 0.0 ? shape_.second : value_;
+    result.lengthParameters.push_back(
+        {"second", QObject::tr("Zweiter Abstand"), second, 0.001, 1'000'000.0});
+    result.lengthParameters.push_back({"angle", QObject::tr("Winkel"),
+                                       shape_.second > 0.0 ? shape_.second : 45.0, 0.1, 89.9,
+                                       ToolValueKind::angle});
+    result.choiceParameters.push_back(
+        {"chamferKind",
+         QObject::tr("Art"),
+         {QObject::tr("Gleiche Abstände"), QObject::tr("Zwei Abstände"),
+          QObject::tr("Abstand und Winkel")},
+         static_cast<int>(shape_.mode)});
+    result.actions.push_back({"flip", QObject::tr("Richtung umkehren"), QObject::tr("Fase")});
+    return result;
+}
+
+void FilletToolController::changedValue(const std::string& field, const std::string& id,
+                                        double value) {
+    if (id == field)
+        value_ = value;
+    else if (id == "second" || id == "angle")
+        shape_.second = value;
+    else
+        return;
+    preview();
+}
+
+// N10: a new kind starts from the shown values (the same second distance, 45 degrees).
+void FilletToolController::chooseChamferKind(int index) {
+    shape_.mode = static_cast<document::ChamferMode>(index);
+    shape_.second = shape_.mode == document::ChamferMode::distanceAngle  ? 45.0
+                    : shape_.mode == document::ChamferMode::twoDistances ? value_
+                                                                         : 0.0;
+    panel_.setLengthValue(shape_.mode == document::ChamferMode::distanceAngle ? "angle" : "second",
+                          shape_.second);
+    showChamferFields();
+    preview();
+}
+
+void FilletToolController::showChamferFields() {
+    if (treatment_ != EdgeTreatment::chamfer)
+        return;
+    panel_.setLengthVisible("second", shape_.mode == document::ChamferMode::twoDistances);
+    panel_.setLengthVisible("angle", shape_.mode == document::ChamferMode::distanceAngle);
+    panel_.setActionEnabled("flip", shape_.mode != document::ChamferMode::equal);
 }
 
 QString FilletToolController::guidance() const {
@@ -351,8 +411,8 @@ application::Action FilletToolController::action() const {
     if (treatment_ == EdgeTreatment::chamfer) {
         if (editing_ && stored_)
             return application::EditChamferParametersAction{
-                *editing_, document::ChamferParameters{stored_->body, edges_, value_}};
-        return application::CreateChamferAction{support_, edges_, millimetres(value_)};
+                *editing_, document::ChamferParameters{stored_->body, edges_, value_, shape_}};
+        return application::CreateChamferAction{support_, edges_, millimetres(value_), shape_};
     }
     if (editing_ && stored_)
         return application::EditFilletParametersAction{
@@ -361,7 +421,8 @@ application::Action FilletToolController::action() const {
 }
 
 bool FilletToolController::unchanged() const {
-    return stored_ && stored_->edges == edges_ && stored_->value == value_;
+    return stored_ && stored_->edges == edges_ && stored_->value == value_ &&
+           stored_->shape == shape_;
 }
 
 void FilletToolController::accept() {

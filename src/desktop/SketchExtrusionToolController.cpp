@@ -194,8 +194,8 @@ void SketchExtrusionToolController::open(document::FeatureId sketchId,
          ToolValueKind::length, true, boundName(offsetParameter_)},
         {"taper", QObject::tr("Schrägungswinkel"), taper_, -88.9, 88.9, ToolValueKind::angle}};
     if (revolve_) {
-        // M20: angle and axis instead of length, offset and end face.
-        choices.erase(choices.begin());
+        // M20: angle and axis instead of length and offset; N10: or up to a face.
+        endForRevolve(choices);
         std::vector<QString> axisNames;
         for (const auto& axis : axes_)
             axisNames.push_back(axis.first);
@@ -298,6 +298,15 @@ void SketchExtrusionToolController::open(document::FeatureId sketchId,
 
 void SketchExtrusionToolController::setDistance(double distance) { distance_ = distance; }
 
+// N10: a revolve ends at its angle or at a face through its axis; a helix only at its turns.
+void SketchExtrusionToolController::endForRevolve(std::vector<ToolChoiceParameter>& choices) const {
+    if (revolve_ && revolve_->pitch) {
+        choices.erase(choices.begin());
+        return;
+    }
+    choices.front().choices = {QObject::tr("Winkel"), QObject::tr("Bis Fläche")};
+}
+
 void SketchExtrusionToolController::setPreviewHandler(
     std::function<void(const std::vector<features::EvaluatedBody>*)> handler) {
     previewChanged_ = std::move(handler);
@@ -382,6 +391,7 @@ void SketchExtrusionToolController::choose(const std::string& choice, int index)
     if (choice == "end") {
         upToFace_ = index == 1;
         panel_.setLengthEnabled("distance", !upToFace_);
+        panel_.setLengthEnabled("angle", !upToFace_); // N10
         panel_.setAcceptEnabled(!upToFace_ || endFace_.has_value());
         panel_.setGuidance(guidance());
     } else if (choice == "direction") {
@@ -432,6 +442,7 @@ void SketchExtrusionToolController::syncFields() {
         panel_.setLengthBinding("offset", std::nullopt);
     }
     panel_.setChoiceEnabled("end", !symmetric_);
+    panel_.setLengthEnabled("angle", !upToFace_); // N10: a revolve up to a face
     // A new body has no target.
     panel_.setChoiceVisible("target", operation_ != document::ExtrusionOperation::newBody);
 }

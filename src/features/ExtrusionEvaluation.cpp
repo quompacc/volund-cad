@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Eduard Hart
 
 #include "FeatureEvaluationDetail.hpp"
+#include "RevolveToFace.hpp"
 
 #include <voelund/document/DocumentSnapshot.hpp>
 #include <voelund/features/ContourProvenance.hpp>
@@ -90,6 +91,40 @@ double lengthToFace(const document::SketchParameters& start,
                                       "end-face-behind");
     return length;
 }
+// The prism's length: up to its end face (T03), else its distance; a revolve has its angle.
+double extentTo(const document::SketchParameters& start,
+                const document::ExtrusionParameters& parameters, const EvaluatedFeature* endFace) {
+    if (endFace == nullptr || parameters.revolve)
+        return parameters.distance;
+    return lengthToFace(start, parameters, *endFace, parameters.upToFace->origin);
+}
+
+gp_Ax1 revolveAxis(const document::SketchParameters& sketch, const document::RevolveAxis& axis,
+                   const std::vector<EvaluatedFeature>& outputs);
+
+// N10: a revolve up to a face turns by the angle that brings its profile there.
+document::ExtrusionParameters turnedTo(const document::SketchParameters& sketch,
+                                       const document::ExtrusionParameters& parameters,
+                                       const EvaluatedFeature* endFace,
+                                       const std::vector<EvaluatedFeature>& outputs) {
+    if (endFace == nullptr || !parameters.revolve)
+        return parameters;
+    const auto faces = supportFaceFrames(*endFace);
+    const auto face =
+        std::ranges::find(faces, parameters.upToFace->origin, &SupportFaceFrame::origin);
+    if (face == faces.end())
+        throw GeometryEvaluationError("End face is no longer a unique planar face of its body",
+                                      "end-face-missing");
+    gp_Ax1 axis = revolveAxis(sketch, parameters.revolve->axis, outputs);
+    if (parameters.reversed)
+        axis.Reverse();
+    const auto centre =
+        kernel::boundingBoxCentre(facesOf(evaluateExtrusionFaces(sketch, parameters)));
+    auto turned = parameters;
+    turned.revolve->angle = kernel::Radians(revolveAngleToFace(axis, centre, *face));
+    return turned;
+}
+
 // The selected regions swept along the sketch normal, against it when reversed.
 Prism makePrism(document::FeatureId extrusion, document::FeatureId sketchId,
                 const document::SketchParameters& sketch,
@@ -429,12 +464,11 @@ void evaluateExtrusion(const document::DocumentSnapshot& document,
                            : startSketch(sketch, parameters);
     // The reference prism keeps this length: reference results are unplaced primitives, so
     // the end face's reference position says nothing about the current extent.
-    const double length = faceOwner
-                              ? lengthToFace(start, parameters, findFeature(outputs, *faceOwner),
-                                             parameters.upToFace->origin)
-                              : parameters.distance;
+    const EvaluatedFeature* endFaceOwner = faceOwner ? &findFeature(outputs, *faceOwner) : nullptr;
+    const double length = extentTo(start, parameters, endFaceOwner);
+    const auto turned = turnedTo(start, parameters, endFaceOwner, outputs); // N10
     const auto sweep = [&](const document::SketchParameters& at) {
-        return parameters.revolve ? makeRevolution(descriptor.id, sketchId, at, parameters, outputs)
+        return parameters.revolve ? makeRevolution(descriptor.id, sketchId, at, turned, outputs)
                : parameters.sweep ? makeSweep(descriptor.id, at, parameters, outputs, sketchId)
                : parameters.loft  ? makeLoft(descriptor.id, at, parameters, outputs, sketchId)
                                   : makePrism(descriptor.id, sketchId, at, parameters, length);

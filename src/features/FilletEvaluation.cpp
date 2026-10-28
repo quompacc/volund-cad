@@ -332,6 +332,114 @@ std::vector<SupportProvenance> namedFaces(std::vector<SupportProvenance> origins
     return origins;
 }
 
+// The treated body as the feature's output; its faces and edges keep their names.
+void publish(document::FeatureId feature, const Treated& treated, EvaluatedBody& body,
+             EvaluatedBody& referenceBody, std::vector<EvaluatedFeature>& outputs) {
+    const auto& base = findFeature(outputs, treated.base);
+    EvaluatedFeature output{
+        feature,
+        treated.evaluated.shape,
+        treated.reference.shape,
+        body.bodyId,
+        namedFaces(continueSupportOrigins(base.supportOrigins, treated.evaluated,
+                                          kernel::HistoryOperand::first),
+                   treated.resolved, treated.evaluated),
+        {},
+        namedFaces(continueSupportOrigins(base.referenceSupportOrigins, treated.reference,
+                                          kernel::HistoryOperand::first),
+                   treated.referenceResolved, treated.reference),
+        continueEdgeOrigins(base.edgeOrigins, treated.evaluated, kernel::HistoryOperand::first),
+        continueEdgeOrigins(base.referenceEdgeOrigins, treated.reference,
+                            kernel::HistoryOperand::first)};
+    outputs.push_back(std::move(output));
+    body.sourceFeature = feature;
+    body.shape = treated.evaluated.shape;
+    referenceBody.sourceFeature = feature;
+    referenceBody.shape = treated.reference.shape;
+}
+
+// N10: the face beside `edge` that `origin` names (the face an unequal chamfer is measured on).
+std::optional<TopoDS_Face> faceBeside(std::span<const SupportProvenance> origins,
+                                      const document::SubshapeOrigin& origin,
+                                      const TopoDS_Edge& edge) {
+    const auto* face = named(origins, origin);
+    if (face == nullptr)
+        return std::nullopt;
+    for (const auto& candidate : face->faces) {
+        EdgeMap edges;
+        TopExp::MapShapes(candidate, TopAbs_EDGE, edges);
+        if (edges.Contains(edge))
+            return TopoDS::Face(candidate);
+    }
+    return std::nullopt;
+}
+
+std::vector<TopoDS_Face> measuredFaces(std::span<const SupportProvenance> origins,
+                                       const document::ChamferParameters& parameters,
+                                       const ResolvedEdges& resolved) {
+    std::vector<TopoDS_Face> faces;
+    for (std::size_t index = 0; index < resolved.edges.size(); ++index) {
+        const auto owner = resolved.owners[index];
+        const auto& named = parameters.edges[owner - 1];
+        const auto face = faceBeside(origins, parameters.shape.flipped ? named.second : named.first,
+                                     resolved.edges[index]);
+        if (!face)
+            throw GeometryEvaluationError("The face a chamfer is measured from is gone" +
+                                              edgeList({owner}),
+                                          "chamfer-edge-missing", {owner});
+        faces.push_back(*face);
+    }
+    return faces;
+}
+
+kernel::ShapeOperationResult treatUnequal(const TopoDS_Shape& body, const ResolvedEdges& resolved,
+                                          std::span<const TopoDS_Face> faces,
+                                          const document::ChamferParameters& parameters) {
+    try {
+        return kernel::ShapeOperations::chamferUnequalWithHistory(
+            body, resolved.edges, faces,
+            {parameters.distance, parameters.shape.second,
+             parameters.shape.mode == document::ChamferMode::distanceAngle});
+    } catch (const kernel::KernelError& error) {
+        if (error.failure() != kernel::BooleanFailure::chamferFailed)
+            throw;
+        std::vector<std::uint64_t> owners(resolved.owners.begin(), resolved.owners.end());
+        owners.erase(std::ranges::unique(owners).begin(), owners.end());
+        throw GeometryEvaluationError("The edges cannot be chamfered with these values" +
+                                          edgeList(owners),
+                                      "chamfer-failed", owners);
+    }
+}
+
+// N10: a chamfer with two distances or a distance and an angle, on the body before it.
+void evaluateUnequalChamfer(const document::DocumentSnapshot& document,
+                            const document::FeatureDescriptor& descriptor,
+                            std::vector<EvaluatedFeature>& outputs,
+                            std::vector<EvaluatedBody>& bodies,
+                            std::vector<EvaluatedBody>& referenceBodies) {
+    const auto& parameters = document.chamferParameters(descriptor.id);
+    const auto producer = bodyProducerBefore(document, descriptor.id, parameters.body);
+    if (!producer)
+        throw GeometryEvaluationError("The body has no solid before this feature", "body-missing");
+    EvaluatedBody& body = findBody(bodies, outputs, *producer);
+    EvaluatedBody& referenceBody = findBody(referenceBodies, outputs, *producer);
+    const auto& owner = findFeature(outputs, *producer);
+    const Step own{descriptor.id, parameters.edges, parameters.distance};
+    auto resolved = resolveEdges(owner.supportOrigins, std::span(&own, 1), chamfering);
+    auto referenceResolved =
+        resolveEdges(owner.referenceSupportOrigins, std::span(&own, 1), chamfering);
+    auto evaluated =
+        treatUnequal(body.shape, resolved,
+                     measuredFaces(owner.supportOrigins, parameters, resolved), parameters);
+    auto reference = treatUnequal(
+        referenceBody.shape, referenceResolved,
+        measuredFaces(owner.referenceSupportOrigins, parameters, referenceResolved), parameters);
+    publish(descriptor.id,
+            Treated{*producer, std::move(resolved), std::move(referenceResolved),
+                    std::move(evaluated), std::move(reference)},
+            body, referenceBody, outputs);
+}
+
 void evaluateEdgeTreatment(const document::DocumentSnapshot& document,
                            const document::FeatureDescriptor& descriptor, document::BodyId target,
                            const std::vector<document::FilletEdge>& edges, double value,
@@ -355,27 +463,7 @@ void evaluateEdgeTreatment(const document::DocumentSnapshot& document,
         if (!treated)
             throw;
     }
-    const auto& base = findFeature(outputs, treated->base);
-    EvaluatedFeature output{
-        descriptor.id,
-        treated->evaluated.shape,
-        treated->reference.shape,
-        body.bodyId,
-        namedFaces(continueSupportOrigins(base.supportOrigins, treated->evaluated,
-                                          kernel::HistoryOperand::first),
-                   treated->resolved, treated->evaluated),
-        {},
-        namedFaces(continueSupportOrigins(base.referenceSupportOrigins, treated->reference,
-                                          kernel::HistoryOperand::first),
-                   treated->referenceResolved, treated->reference),
-        continueEdgeOrigins(base.edgeOrigins, treated->evaluated, kernel::HistoryOperand::first),
-        continueEdgeOrigins(base.referenceEdgeOrigins, treated->reference,
-                            kernel::HistoryOperand::first)};
-    outputs.push_back(std::move(output));
-    body.sourceFeature = descriptor.id;
-    body.shape = treated->evaluated.shape;
-    referenceBody.sourceFeature = descriptor.id;
-    referenceBody.shape = treated->reference.shape;
+    publish(descriptor.id, *treated, body, referenceBody, outputs);
 }
 
 } // namespace
@@ -394,6 +482,8 @@ void evaluateChamfer(const document::DocumentSnapshot& document,
                      std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
                      std::vector<EvaluatedBody>& referenceBodies) {
     const auto& parameters = document.chamferParameters(descriptor.id);
+    if (parameters.shape.mode != document::ChamferMode::equal) // N10
+        return evaluateUnequalChamfer(document, descriptor, outputs, bodies, referenceBodies);
     evaluateEdgeTreatment(document, descriptor, parameters.body, parameters.edges,
                           parameters.distance, chamfering, outputs, bodies, referenceBodies);
 }

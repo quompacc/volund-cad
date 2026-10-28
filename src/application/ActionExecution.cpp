@@ -450,7 +450,7 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot,
                 return session.editFilletParameters(a.fillet, a.parameters, reject);
             },
             [&](const CreateChamferAction& a) {
-                return session.createChamfer(a.support, a.edges, a.distance.value);
+                return session.createChamfer(a.support, a.edges, a.distance.value, a.shape);
             },
             [&](const EditChamferParametersAction& a) {
                 return session.editChamferParameters(a.chamfer, a.parameters, reject);

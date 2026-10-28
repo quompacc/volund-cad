@@ -183,6 +183,7 @@ struct CreateChamferAction final {
     document::FeatureId support;
     std::vector<document::FilletEdge> edges;
     Quantity distance;
+    document::ChamferShape shape{}; // N10: two distances, or distance and angle
     bool operator==(const CreateChamferAction&) const = default;
 };
 struct EditChamferParametersAction final {

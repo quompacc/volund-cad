@@ -7,6 +7,7 @@
 #include <voelund/kernel/OperationHistory.hpp>
 
 #include <TopoDS_Edge.hxx>
+#include <TopoDS_Face.hxx>
 #include <TopoDS_Shape.hxx>
 
 #include <array>
@@ -65,6 +66,17 @@ class ShapeOperations final {
     [[nodiscard]] static ShapeOperationResult chamferWithHistory(const TopoDS_Shape& input,
                                                                  std::span<const TopoDS_Edge> edges,
                                                                  double distance);
+    // N10 (ChamferVariants.cpp): `first` on faces[i] beside edges[i] and `second` on the other
+    // face, or (`angle`) `first` on faces[i] at `second` degrees from it. One OCCT step,
+    // BooleanFailure::chamferFailed when the edges cannot take it.
+    struct UnequalChamfer final {
+        double first{0.0};
+        double second{0.0};
+        bool angle{false};
+    };
+    [[nodiscard]] static ShapeOperationResult
+    chamferUnequalWithHistory(const TopoDS_Shape& input, std::span<const TopoDS_Edge> edges,
+                              std::span<const TopoDS_Face> faces, const UnequalChamfer& chamfer);
     [[nodiscard]] static std::vector<std::size_t>
     failingChamferEdges(const TopoDS_Shape& input, std::span<const TopoDS_Edge> edges,
                         double distance);

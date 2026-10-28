@@ -78,8 +78,10 @@ struct DecodedEdges final {
     std::vector<FilletEdge> edges;
     double value;
 };
-DecodedEdges readEdges(const TDF_Label& label, std::size_t remainingRecords, int schemaVersion) {
-    require(label.NbChildren() == 2);
+// `extra`: children beyond body and edges (N10: a chamfer's variant in 3).
+DecodedEdges readEdges(const TDF_Label& label, std::size_t remainingRecords, int schemaVersion,
+                       int extra = 0) {
+    require(label.NbChildren() == 2 + extra);
     Handle(TDataStd_Real) value;
     require(label.FindAttribute(TDataStd_Real::GetID(), value));
     DecodedEdges result{BodyId{readDecimal(child(label, 1))}, {}, value->Get()};
@@ -124,20 +126,46 @@ FilletParameters readNativeFillet(const TDF_Label& label, std::size_t remainingR
     return result;
 }
 
+namespace {
+void readChamferVariant(const TDF_Label& label, int schemaVersion, ChamferParameters& result) {
+    if (label.FindChild(3, false).IsNull())
+        return;
+    require(schemaVersion >= 46);
+    Handle(TDataStd_RealArray) variant;
+    require(child(label, 3).FindAttribute(TDataStd_RealArray::GetID(), variant) &&
+            variant->Lower() == 1 && variant->Upper() == 3);
+    const double mode = variant->Value(1);
+    require(mode == 1.0 || mode == 2.0);
+    result.shape.mode = static_cast<ChamferMode>(static_cast<int>(mode));
+    result.shape.second = variant->Value(2);
+    require(variant->Value(3) == 0.0 || variant->Value(3) == 1.0);
+    result.shape.flipped = variant->Value(3) == 1.0;
+}
+} // namespace
+
 std::size_t nativeChamferRecords(const ChamferParameters& parameters) {
     return edgeRecords(parameters.edges);
 }
 
 void writeNativeChamfer(const TDF_Label& label, const ChamferParameters& parameters) {
     validateChamferParameters(parameters);
+    // N10 (schema 46): kind, second value and side, only for an unequal chamfer.
+    if (parameters.shape.mode != ChamferMode::equal) {
+        auto variant = TDataStd_RealArray::Set(label.FindChild(3), 1, 3);
+        variant->SetValue(1, static_cast<double>(parameters.shape.mode));
+        variant->SetValue(2, parameters.shape.second);
+        variant->SetValue(3, parameters.shape.flipped ? 1.0 : 0.0);
+    }
     writeEdges(label, parameters.body, parameters.edges, parameters.distance);
 }
 
 ChamferParameters readNativeChamfer(const TDF_Label& label, std::size_t remainingRecords,
                                     int schemaVersion) {
     require(schemaVersion >= 15);
-    auto decoded = readEdges(label, remainingRecords, schemaVersion);
+    auto decoded = readEdges(label, remainingRecords, schemaVersion,
+                             label.FindChild(3, false).IsNull() ? 0 : 1);
     ChamferParameters result{decoded.body, std::move(decoded.edges), decoded.value};
+    readChamferVariant(label, schemaVersion, result);
     validateChamferParameters(result);
     return result;
 }

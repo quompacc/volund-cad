@@ -65,6 +65,17 @@ template <typename Parameters> auto* placementOf(Parameters& parameters) {
         parameters);
 }
 
+void validateRevolveExtrusion(const ExtrusionParameters& parameters) {
+    if (!parameters.revolve)
+        return;
+    validateRevolveParameters(*parameters.revolve);
+    // N10 (schema 46): a revolve may turn up to a face, one way only and no helix.
+    if (parameters.offset != 0.0 || parameters.offsetParameter || parameters.faceProfile ||
+        parameters.distanceParameter ||
+        (parameters.upToFace && (parameters.revolve->pitch || parameters.symmetric)))
+        throw std::invalid_argument("A revolve has no offset or face profile");
+}
+
 void validateExtrusion(const ExtrusionParameters& parameters) {
     if (!kernel::modelLength(parameters.distance))
         throw std::invalid_argument(kernel::modelRangeDiagnostic);
@@ -98,12 +109,7 @@ void validateExtrusion(const ExtrusionParameters& parameters) {
             "A symmetric extrusion has no direction, start offset or end face");
     validateSweepExtrusion(parameters); // M23
     validateTaperExtrusion(parameters); // W16
-    if (parameters.revolve) {
-        validateRevolveParameters(*parameters.revolve);
-        if (parameters.offset != 0.0 || parameters.offsetParameter || parameters.upToFace ||
-            parameters.faceProfile || parameters.distanceParameter)
-            throw std::invalid_argument("A revolve has no offset, end face or face profile");
-    }
+    validateRevolveExtrusion(parameters);
     if (!kernel::modelCoordinate(parameters.offset))
         throw std::invalid_argument(kernel::modelRangeDiagnostic);
     if (parameters.upToFace)

@@ -184,11 +184,40 @@ void groove() {
 
 } // namespace
 
+// N10: a box 20 x 20 x 20 at the origin; its face x = 0 holds the Z axis. The profile at +X
+// turns about +Z up to that face (+Y side): a quarter (1000 pi), the other way three quarters
+// (3000 pi). A face off the axis (y = 20) is refused; the box face moved stays the end.
+void upToFace() {
+    application::CadSession session;
+    session.newDocument();
+    const auto box = *session.createBoxFeature({20, 20, 20}).feature();
+    application::ExtrusionMode mode;
+    mode.revolve = about({std::nullopt, document::BaseAxis::z, std::nullopt});
+    mode.upToFace = document::BodyFaceReference{document::BodyId{box.value()},
+                                                {box, kernel::PrimitiveRole::boxNegativeX}};
+    mode.operation = document::ExtrusionOperation::newBody;
+    const auto turned = revolve(session, rectangle(5, 0, 15, 20), mode);
+    require(turned && near(volume(session), 8000 + 1000 * pi),
+            "Up to the face x = 0: a quarter turn");
+    auto parameters = session.identifiedSnapshot().snapshot().extrusionParameters(*turned);
+    parameters.reversed = true;
+    require(session.editExtrusionParameters(*turned, parameters).status() ==
+                    CommandStatus::committed &&
+                near(volume(session), 8000 + 3000 * pi),
+            "The other way: three quarters");
+    parameters.upToFace = document::BodyFaceReference{document::BodyId{box.value()},
+                                                      {box, kernel::PrimitiveRole::boxPositiveY}};
+    const auto refused = session.editExtrusionParameters(*turned, parameters);
+    require(refused.status() != CommandStatus::committed,
+            "A face off the axis is refused: " + refused.diagnostic());
+}
+
 int main() {
     try {
         tube();
         otherAxes();
         groove();
+        upToFace();
         std::cout << "PASS M20 revolve: tube 4000 pi, quarter, symmetric, profile follows, "
                      "line/construction axis, across the axis refused, groove, save/open\n";
         return 0;

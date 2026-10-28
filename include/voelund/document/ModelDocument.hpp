@@ -290,10 +290,21 @@ struct FilletParameters final {
 void validateFilletParameters(const FilletParameters& parameters);
 // M07 (schema 15, user decision 2026-10-12): a symmetric chamfer, `distance` on both faces of
 // each edge; edges named as for the fillet.
+// N10 (schema 46): equal distances, two distances (`distance` on the first face of each edge,
+// `second` on the other) or a distance and an angle (`second` in degrees, between 0 and 90,
+// from the first face); `flipped` measures from each edge's second face instead.
+enum class ChamferMode { equal = 0, twoDistances = 1, distanceAngle = 2 };
+struct ChamferShape final {
+    ChamferMode mode{ChamferMode::equal};
+    double second{0.0};
+    bool flipped{false};
+    [[nodiscard]] bool operator==(const ChamferShape&) const = default;
+};
 struct ChamferParameters final {
     BodyId body;
     std::vector<FilletEdge> edges;
     double distance;
+    ChamferShape shape{}; // N10
     [[nodiscard]] bool operator==(const ChamferParameters&) const = default;
 };
 void validateChamferParameters(const ChamferParameters& parameters);

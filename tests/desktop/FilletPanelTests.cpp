@@ -9,6 +9,7 @@
 #include <GProp_GProps.hxx>
 #include <QAction>
 #include <QApplication>
+#include <QComboBox>
 #include <QDir>
 #include <QDoubleSpinBox>
 #include <QElapsedTimer>
@@ -124,6 +125,43 @@ void openFillet(desktop::MainWindow& window, application::CadSession& session,
     fillet.trigger();
     settle();
     require(panel(window) != nullptr, "The fillet panel opens");
+}
+
+// N10: the chamfer reopened from the timeline becomes "Zwei Abstände" 1 and 2: the 10 mm edge
+// loses 1/2 * 1 * 2 * 10 = 10 mm³ instead of 5; "Richtung umkehren" is offered.
+void chamferKinds(desktop::MainWindow& window, application::CadSession& session, double before) {
+    button(window, "toolAcceptButton").click();
+    settle();
+    require(session.features().size() == 3 &&
+                session.features().back().kind == document::FeatureKind::chamfer &&
+                matches(volume(session), before - 5),
+            "OK chamfers the edge as a chamfer feature");
+    timelineStep(window, 2).click();
+    settle();
+    require(panel(window) != nullptr, "The timeline reopens the chamfer");
+    auto* kind = panel(window)->findChild<QComboBox*>(QStringLiteral("toolChoice_chamferKind"));
+    require(kind != nullptr, "Fase: Art");
+    kind->setCurrentIndex(1);
+    settle();
+    QDoubleSpinBox* second = nullptr;
+    for (auto* candidate :
+         panel(window)->findChildren<QDoubleSpinBox*>(QStringLiteral("toolLength_second")))
+        if (candidate->isVisible())
+            second = candidate;
+    QPushButton* flip = nullptr;
+    for (auto* candidate : panel(window)->findChildren<QPushButton*>())
+        if (candidate->toolTip() == QStringLiteral("Richtung umkehren"))
+            flip = candidate;
+    require(second != nullptr, "Zwei Abstände shows the second distance");
+    require(flip != nullptr && flip->isEnabled(), "Zwei Abstände offers the flip");
+    second->setValue(2);
+    settle();
+    button(window, "toolAcceptButton").click();
+    settle();
+    const auto chamfer = session.chamferParameters(session.features().back().id);
+    require(chamfer.shape.mode == document::ChamferMode::twoDistances &&
+                matches(volume(session), before - 10),
+            "Two distances 1 and 2 remove 10 mm³");
 }
 
 void run() {
@@ -333,12 +371,7 @@ void run() {
     click(*viewport, {edge.x, edge.y - 20, edge.z});
     require(guidance(window).contains(QStringLiteral("Abstand 1 mm")),
             "A clicked edge is chamfered with distance 1");
-    button(window, "toolAcceptButton").click();
-    settle();
-    require(session.features().size() == 3 &&
-                session.features().back().kind == document::FeatureKind::chamfer &&
-                matches(volume(session), 4000 - one - 5),
-            "OK chamfers the edge as a chamfer feature");
+    chamferKinds(window, session, 4000 - one);
     std::cout << "PASS M06 fillet panel: edge pick, preview, radius, refusal, cancel, OK, "
                  "undo, edit, remove edge, open\n";
 }

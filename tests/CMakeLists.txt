@@ -1577,6 +1577,10 @@ target_link_libraries(voelund_boolean_extrusion_tests PRIVATE voelund_project_op
 add_test(NAME application.boolean_extrusions COMMAND voelund_boolean_extrusion_tests)
 set_tests_properties(application.boolean_extrusions PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
 # M08: A-HOLE-01 holes into a box face.
+add_executable(voelund_chamfer_variant_tests integration/ChamferVariantTests.cpp)
+target_link_libraries(voelund_chamfer_variant_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.chamfer_variants COMMAND voelund_chamfer_variant_tests)
+set_tests_properties(application.chamfer_variants PROPERTIES LABELS "integration;application;regression" TIMEOUT 90)
 add_executable(voelund_hole_tests integration/HoleTests.cpp)
 target_link_libraries(voelund_hole_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME application.hole COMMAND voelund_hole_tests)

@@ -234,18 +234,18 @@ class CadSession final {
                          const document::FilletParameters& parameters,
                          ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] document::FilletParameters filletParameters(document::FeatureId featureId) const;
-    // M07: a symmetric chamfer ("Fase N"), one undo step, on the same named edges.
+    // M07: a chamfer ("Fase N"), one undo step; N10: `shape` for two distances or an angle.
     [[nodiscard]] CommandResult createChamfer(document::FeatureId support,
                                               std::span<const document::FilletEdge> edges,
-                                              double distance);
+                                              double distance,
+                                              const document::ChamferShape& shape = {});
     [[nodiscard]] CommandResult
     editChamferParameters(document::FeatureId featureId,
                           const document::ChamferParameters& parameters,
                           ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] document::ChamferParameters
     chamferParameters(document::FeatureId featureId) const;
-    // M08: a hole into a planar face of `support`'s current result ("Bohrung N"), at (x, y)
-    // of the face's frame; no depth means through all. One undo step.
+    // M08: a hole ("Bohrung N", one undo step) at (x, y) of a face of `support`; no depth: through.
     [[nodiscard]] CommandResult createHole(document::FeatureId support,
                                            const document::SubshapeOrigin& face, double x, double y,
                                            double diameter, std::optional<double> depth);
