@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Eduard Hart
 
+#include "BSplineKnots.hpp"
 #include "OcctGuard.hpp"
 
 #include <voelund/kernel/PlanarCurve.hpp>
@@ -13,6 +14,7 @@
 #include <BRep_Builder.hxx>
 #include <GProp_GProps.hxx>
 #include <Geom2dAPI_InterCurveCurve.hxx>
+#include <Geom2dAPI_ProjectPointOnCurve.hxx>
 #include <Geom2d_BSplineCurve.hxx>
 #include <Geom2d_Circle.hxx>
 #include <Geom2d_Ellipse.hxx>
@@ -45,15 +47,9 @@ Handle(Geom2d_BSplineCurve) bsplineCurve(const BSpline2d& spline) {
     NCollection_Array1<gp_Pnt2d> poles(1, count);
     for (int index = 0; index < count; ++index)
         poles.SetValue(index + 1, spline.poles[static_cast<std::size_t>(index)]);
-    const int spans = static_cast<int>(bsplineLastParameter(spline.poles.size()));
-    NCollection_Array1<double> knots(1, spans + 1);
-    NCollection_Array1<int> multiplicities(1, spans + 1);
-    for (int index = knots.Lower(); index <= knots.Upper(); ++index) {
-        knots.SetValue(index, index - knots.Lower());
-        multiplicities.SetValue(index,
-                                index == knots.Lower() || index == knots.Upper() ? degree + 1 : 1);
-    }
-    return new Geom2d_BSplineCurve(poles, knots, multiplicities, degree);
+    const auto knots =
+        detail::occtKnots(detail::flatKnots(spline.poles.size(), degree, spline.knots));
+    return new Geom2d_BSplineCurve(poles, knots.values, knots.multiplicities, degree);
 }
 
 struct Builder final {
@@ -107,8 +103,9 @@ struct Builder final {
     }
     void operator()(const BSpline2d& spline) const {
         handle = bsplineCurve(spline);
-        curve.first = 0;
-        curve.last = bsplineLastParameter(spline.poles.size());
+        curve.first = spline.knots.empty() ? 0.0 : spline.knots.front();
+        curve.last =
+            spline.knots.empty() ? bsplineLastParameter(spline.poles.size()) : spline.knots.back();
         double extent = 0;
         for (const auto& pole : spline.poles)
             extent = std::max(extent, scaleOf(pole));
@@ -127,6 +124,35 @@ PlanarCurve::PlanarCurve(const CurveDefinition2d& definition) {
 
 gp_Pnt2d PlanarCurve::value(double parameter) const {
     return detail::guarded(operation, [&] { return impl_->curve->Value(parameter); });
+}
+
+double PlanarCurve::nearestParameter(const gp_Pnt2d& point) const {
+    return detail::guarded(operation, [&] {
+        Geom2dAPI_ProjectPointOnCurve projection(point, impl_->curve, first, last);
+        if (projection.NbPoints() == 0) // only the ends are near: the nearer one
+            return point.Distance(value(first)) <= point.Distance(value(last)) ? first : last;
+        double parameter = projection.LowerDistanceParameter();
+        if (point.Distance(value(first)) < projection.LowerDistance())
+            parameter = first;
+        if (point.Distance(value(last)) < point.Distance(value(parameter)))
+            parameter = last;
+        return parameter;
+    });
+}
+
+BSpline2d bsplinePiece(const BSpline2d& spline, double from, double to) {
+    return detail::guarded(operation, [&] {
+        const Handle(Geom2d_BSplineCurve) curve = bsplineCurve(spline);
+        curve->Segment(from, to);
+        BSpline2d piece;
+        for (int index = 1; index <= curve->NbPoles(); ++index)
+            piece.poles.push_back(curve->Pole(index));
+        for (int index = 1; index <= curve->NbKnots(); ++index)
+            piece.knots.insert(piece.knots.end(),
+                               static_cast<std::size_t>(curve->Multiplicity(index)),
+                               curve->Knot(index) - curve->Knot(1));
+        return piece;
+    });
 }
 
 void PlanarCurve::d1(double parameter, gp_Pnt2d& point, gp_Vec2d& derivative) const {

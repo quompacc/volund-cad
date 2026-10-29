@@ -58,19 +58,19 @@ void line(DxfWriter& dxf, const std::string& layer, SketchPoint start, SketchPoi
 // Knots of the sketch's clamped uniform B-spline: 0 and n - degree with degree + 1 each.
 void spline(DxfWriter& dxf, const std::string& layer, const SketchBSpline& curve) {
     const int count = static_cast<int>(curve.poles.size());
-    const int degree = std::min(3, count - 1);
-    const int spans = count - degree;
+    const int degree = 3;
+    const auto knots = bsplineKnots(curve); // N14c2: also a trimmed spline's own
     dxf.entity("SPLINE", "AcDbSpline", layer);
     dxf.group(210, 0.0);
     dxf.group(220, 0.0);
     dxf.group(230, 1.0);
     dxf.group(70, 8); // planar
     dxf.group(71, degree);
-    dxf.group(72, count + degree + 1);
+    dxf.group(72, static_cast<int>(knots.size()));
     dxf.group(73, count);
     dxf.group(74, 0);
-    for (int knot = 0; knot < count + degree + 1; ++knot)
-        dxf.group(40, static_cast<double>(std::clamp(knot - degree, 0, spans)));
+    for (const double knot : knots)
+        dxf.group(40, knot);
     for (const auto& pole : curve.poles)
         dxf.point(10, pole.x, pole.y);
 }

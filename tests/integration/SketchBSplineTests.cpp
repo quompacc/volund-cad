@@ -16,6 +16,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 // S21 (user decision 2026-10-14): an open cubic B-spline over control points. With a line back
 // to its start it bounds one region, which extrudes to the volume of its area; a moved control
@@ -72,14 +73,15 @@ void bspline() {
     editor.commitHistory();
     require(features::identifySketchRegions(editor.elements()).ids.size() == 1, "One region");
 
-    require(editor.selectNearestReference(*spline, {20, 15}, false), "Pick the curve");
+    require(editor.selectNearestReference(*spline, {38, 2}, false), "Pick the curve");
     bool refused = false;
     try {
-        static_cast<void>(editor.editCurve(application::SketchCurveEdit::split));
+        static_cast<void>(editor.editCurve(application::SketchCurveEdit::extend));
     } catch (const std::invalid_argument& refusal) {
-        refused = std::string(refusal.what()).find("B-Spline") != std::string::npos;
+        refused = std::string(refusal.what()).find("nicht verlängert") != std::string::npos;
     }
-    require(refused, "Splitting a B-spline is refused");
+    require(refused, "Extending a B-spline is refused (N14c2)");
+    editor.commitHistory();
 
     require(editor.tryAccept().status() == CommandStatus::committed, "Accepted");
     const auto sketch = session.features().back().id;
@@ -158,9 +160,78 @@ void throughPoints() {
     require(editor.addSplineThroughPoints(two).has_value(), "Two points make a straight spline");
 }
 
+// N14c2: split exactly at its middle (t = 0.5 of the Bezier curve): two joined splines that
+// still bound the region with the line back to the start.
+void split() {
+    application::CadSession session;
+    session.newDocument();
+    application::SketchEditorSession editor(session, document::DatumPlane::xy);
+    std::array<SketchPoint, 4> poles{SketchPoint{0, 0}, {10, 20}, {30, 20}, {40, 0}};
+    const auto spline = editor.addBSpline(poles);
+    editor.setTool(application::SketchDrawingTool::line);
+    require(spline && editor.setPreview({40, 0}, {0, 0}) && editor.confirmPreview().has_value(),
+            "A spline and the line back");
+    editor.commitHistory();
+    require(editor.selectNearestReference(*spline, {20, 15}, false), "Pick the middle");
+    const auto split = editor.editCurve(application::SketchCurveEdit::split);
+    require(split.created.has_value() &&
+                editor.lastSolveResult().status == features::SketchSolveStatus::success,
+            "Split into two B-splines");
+    editor.commitHistory();
+    const auto& halves = editor.elements();
+    const auto& first = std::get<document::SketchBSpline>(halves.front().geometry);
+    require(!first.knots.empty() && std::abs(first.poles.back().x - 20) < 1e-9 &&
+                std::abs(first.poles.back().y - 15) < 1e-9,
+            "The first half ends at (20; 15) with its own knots");
+    require(features::identifySketchRegions(editor.elements()).ids.size() == 1, "Still one region");
+}
+
+// N14c2: a B-spline trimmed at a line keeps the exact curve up to the cut.
+void trimmed() {
+    application::CadSession session;
+    session.newDocument();
+    application::SketchEditorSession editor(session, document::DatumPlane::xy);
+    std::array<SketchPoint, 4> poles{SketchPoint{0, 0}, {10, 20}, {30, 20}, {40, 0}};
+    const auto spline = editor.addBSpline(poles);
+    editor.setTool(application::SketchDrawingTool::line);
+    require(spline && editor.setPreview({20, -5}, {20, 30}) && editor.confirmPreview().has_value(),
+            "A spline and a line across it");
+    editor.commitHistory();
+    require(editor.selectNearestReference(*spline, {35, 9}, false), "Pick the right part");
+    const auto result = editor.editCurve(application::SketchCurveEdit::trim);
+    require(editor.lastSolveResult().status == features::SketchSolveStatus::success &&
+                result.added.size() == 1,
+            "Trimmed; the new end lies on the line");
+    const auto& kept = std::get<document::SketchBSpline>(editor.elements().front().geometry);
+    std::vector<gp_Pnt> points;
+    for (const auto& pole : kept.poles)
+        points.emplace_back(pole.x, pole.y, 0);
+    const auto curve = kernel::SpaceCurve::bspline(points, kept.knots);
+    const auto end = curve.value(kept.knots.back());
+    const auto quarter = curve.value(0.25);
+    require(std::abs(end.X() - 20) < 1e-7 && std::abs(end.Y() - 15) < 1e-7,
+            "The spline ends at the line, (20; 15)");
+    require(std::abs(quarter.X() - 9.0625) < 1e-9 && std::abs(quarter.Y() - 11.25) < 1e-9,
+            "The kept part is the same curve: B(0.25) = (9.0625; 11.25)");
+
+    require(editor.tryAccept().status() == CommandStatus::committed, "Accepted");
+    const auto sketch = session.features().back().id;
+    const auto directory = std::filesystem::temp_directory_path() / "voelund-n14c2-bspline";
+    std::filesystem::remove_all(directory);
+    std::filesystem::create_directories(directory);
+    session.saveDocument(directory / "trimmed.volund");
+    application::CadSession reopened;
+    reopened.loadDocument(directory / "trimmed.volund");
+    require(reopened.sketchParameters(sketch) == session.sketchParameters(sketch),
+            "Open restores the trimmed spline with its knots");
+    std::filesystem::remove_all(directory);
+}
+
 int main() {
     try {
         bspline();
+        split();
+        trimmed();
         throughPoints();
     } catch (const std::exception& error) {
         std::cerr << error.what() << std::endl;

@@ -104,9 +104,15 @@ inline constexpr std::size_t minimumBSplinePoles = 4;
 inline constexpr std::size_t maximumBSplinePoles = 64;
 struct SketchBSpline final {
     std::vector<SketchPoint> poles;
+    // N14c2 (schema 55): flat, clamped knots (each repeated by its multiplicity, poles + 4 of
+    // them) of a trimmed or split spline; empty for the uniform knots above.
+    std::vector<double> knots;
 
     [[nodiscard]] bool operator==(const SketchBSpline&) const = default;
 };
+// N14c2: the spline's flat knots, the stored ones or the uniform 0 (four times), 1, ...,
+// poles - 3 (four times).
+[[nodiscard]] std::vector<double> bsplineKnots(const SketchBSpline& spline);
 
 // N14c (schema 54, agent decision 2026-10-29): a piece of an ellipse, made by trimming or
 // splitting one. The parameters are eccentric anomalies from the major axis (the point is

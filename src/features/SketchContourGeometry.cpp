@@ -108,7 +108,8 @@ SketchPoint contourMiddle(const ContourPiece& p) {
     if (auto* a = std::get_if<SketchArc>(&p.geometry))
         return radial(a->center, a->radius, (a->startAngle + a->endAngle) / 2);
     if (auto* s = std::get_if<document::SketchBSpline>(&p.geometry)) {
-        const auto middle = planarCurve(p).value(kernel::bsplineLastParameter(s->poles.size()) / 2);
+        const auto knots = document::bsplineKnots(*s); // N14c2
+        const auto middle = planarCurve(p).value((knots.front() + knots.back()) / 2);
         return {middle.X(), middle.Y()};
     }
     if (auto* e = std::get_if<document::SketchEllipticArc>(&p.geometry))

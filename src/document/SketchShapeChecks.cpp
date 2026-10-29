@@ -10,12 +10,14 @@
 #include <numbers>
 #include <stdexcept>
 #include <variant>
+#include <vector>
 
 namespace voelund::document::detail {
 namespace {
 
 constexpr double minimumLength = 1.0e-9;
 
+bool isFinite(double value) { return std::isfinite(value); }
 bool finite(const SketchPoint& point) { return std::isfinite(point.x) && std::isfinite(point.y); }
 double squaredDistance(const SketchPoint& first, const SketchPoint& second) {
     const double x = second.x - first.x;
@@ -72,6 +74,26 @@ bool inRange(const SketchEllipticArc& s) { // N14c
            kernel::modelLength(s.minorRadius * (s.endParameter - s.startParameter));
 }
 
+// N14c2: no stored knots, or poles + 4 finite ones, clamped (the first and last four equal),
+// increasing, inner knots at most three times.
+bool knotsValid(const SketchBSpline& spline) {
+    const auto& knots = spline.knots;
+    if (knots.empty())
+        return true;
+    if (knots.size() != spline.poles.size() + 4 || !std::ranges::all_of(knots, isFinite) ||
+        !std::ranges::is_sorted(knots) || !(knots.front() < knots.back()))
+        return false;
+    std::vector<std::size_t> runs{1};
+    for (std::size_t index = 1; index < knots.size(); ++index) {
+        if (knots[index] == knots[index - 1])
+            ++runs.back();
+        else
+            runs.push_back(1);
+    }
+    return runs.front() == 4 && runs.back() == 4 &&
+           std::all_of(runs.begin() + 1, runs.end() - 1, [](std::size_t run) { return run <= 3; });
+}
+
 // Finite and not degenerate.
 void check(const SketchLine& line) {
     require(finite(line.start) && finite(line.end) &&
@@ -110,6 +132,7 @@ void check(const SketchBSpline& spline) { // S21
                 std::ranges::all_of(poles, finite) &&
                 squaredDistance(poles.front(), poles.back()) > minimumLength * minimumLength,
             "Sketch B-spline needs 4 to 64 finite control points and two distinct ends");
+    require(knotsValid(spline), "Sketch B-spline knots must be clamped and increasing");
 }
 void check(const SketchEllipticArc& arc) { // N14c
     check(arc.ellipse());
@@ -176,6 +199,17 @@ std::optional<SketchPoint> pointOf(const SketchEllipticArc& s, Position p) { // 
 std::optional<SketchPoint> pointOf(const SketchRectangle&, Position) { return std::nullopt; }
 
 } // namespace
+
+std::vector<double> bsplineKnots(const SketchBSpline& spline) {
+    if (!spline.knots.empty())
+        return spline.knots;
+    const auto last = static_cast<double>(spline.poles.size()) - 3.0;
+    std::vector<double> knots(4, 0.0);
+    for (double knot = 1.0; knot < last; knot += 1.0)
+        knots.push_back(knot);
+    knots.insert(knots.end(), 4, last);
+    return knots;
+}
 
 std::optional<SketchPoint> sketchReferencePoint(const SketchGeometry& geometry,
                                                 SketchPointPosition point) {

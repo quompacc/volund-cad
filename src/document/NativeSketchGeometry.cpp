@@ -81,6 +81,13 @@ SketchLineConstraint lineMode(int code) {
         throw std::invalid_argument("Unknown native line direction mode");
     }
 }
+// N14c2 (schema 55): child 5 holds a B-spline's own knots.
+void writeSplineKnots(const TDF_Label& label, const SketchGeometry& geometry) {
+    const auto* spline = std::get_if<SketchBSpline>(&geometry);
+    if (spline != nullptr && !spline->knots.empty())
+        writeReals(label.FindChild(5), spline->knots);
+}
+
 void writeElement(const TDF_Label& label, const SketchElement& element) {
     writeNumber(label.FindChild(1), element.id.value());
     TDataStd_Integer::Set(label.FindChild(3), element.construction ? 1 : 0);
@@ -119,6 +126,7 @@ void writeElement(const TDF_Label& label, const SketchElement& element) {
     }
     TDataStd_AsciiString::Set(label.FindChild(2), kind);
     writeReals(label.FindChild(4), values);
+    writeSplineKnots(label, element.geometry);
 }
 // Kinds added after the first schema: a point (schema 22) and an elliptic arc (N14c, 54).
 std::optional<SketchGeometry> readLaterKind(const std::string& kind, const TDF_Label& data,
@@ -140,10 +148,32 @@ std::optional<SketchGeometry> readLaterKind(const std::string& kind, const TDF_L
                              values->Value(7)};
 }
 
+// S21 (schema 30): x, y of each control point; N14c2 (schema 55): child 5 holds its flat
+// knots when it has its own.
+SketchBSpline readBSpline(const TDF_Label& label, int schemaVersion) {
+    require(schemaVersion >= 30);
+    Handle(TDataStd_RealArray) data;
+    require(child(label, 4).FindAttribute(TDataStd_RealArray::GetID(), data) &&
+            data->Lower() == 1 && data->Upper() % 2 == 0 &&
+            data->Upper() >= 2 * static_cast<int>(minimumBSplinePoles) &&
+            data->Upper() <= 2 * static_cast<int>(maximumBSplinePoles));
+    SketchBSpline spline;
+    for (int index = 1; index < data->Upper(); index += 2)
+        spline.poles.push_back({data->Value(index), data->Value(index + 1)});
+    if (label.NbChildren() == 5) {
+        require(schemaVersion >= 55);
+        const int count = static_cast<int>(spline.poles.size()) + 4;
+        const auto knots = reals(child(label, 5), count);
+        for (int index = 1; index <= count; ++index)
+            spline.knots.push_back(knots->Value(index));
+    }
+    return spline;
+}
+
 SketchElement readElement(const TDF_Label& label, int schemaVersion) {
     const auto kind = text(child(label, 2));
     const bool line = kind == "line";
-    require(label.NbChildren() == (line ? 5 : 4));
+    require(label.NbChildren() == (line ? 5 : 4) || (kind == "bspline" && label.NbChildren() == 5));
     const int construction = integer(child(label, 3));
     require(construction == 0 || construction == 1);
     const auto geometry = [&]() -> SketchGeometry {
@@ -159,18 +189,8 @@ SketchElement readElement(const TDF_Label& label, int schemaVersion) {
             const auto data = reals(child(label, 4), 3);
             return SketchCircle{{data->Value(1), data->Value(2)}, data->Value(3)};
         }
-        if (kind == "bspline") {
-            require(schemaVersion >= 30);
-            Handle(TDataStd_RealArray) data;
-            require(child(label, 4).FindAttribute(TDataStd_RealArray::GetID(), data) &&
-                    data->Lower() == 1 && data->Upper() % 2 == 0 &&
-                    data->Upper() >= 2 * static_cast<int>(minimumBSplinePoles) &&
-                    data->Upper() <= 2 * static_cast<int>(maximumBSplinePoles));
-            SketchBSpline spline;
-            for (int index = 1; index < data->Upper(); index += 2)
-                spline.poles.push_back({data->Value(index), data->Value(index + 1)});
-            return spline;
-        }
+        if (kind == "bspline")
+            return readBSpline(label, schemaVersion);
         if (const auto later = readLaterKind(kind, child(label, 4), schemaVersion))
             return *later;
         require(kind == "arc" || kind == "ellipse");

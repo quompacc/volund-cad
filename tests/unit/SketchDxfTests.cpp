@@ -84,7 +84,7 @@ SketchElements everyKind() {
     add(SketchArc{{0, 0}, 10, 0, std::numbers::pi / 2});
     add(SketchEllipse{{100, 0}, 20, 10, std::numbers::pi / 6});
     add(SketchPointGeometry{{7, 8}});
-    add(SketchBSpline{{{0, 0}, {10, 10}, {20, 0}, {30, 10}, {40, 0}}});
+    add(SketchBSpline{{{0, 0}, {10, 10}, {20, 0}, {30, 10}, {40, 0}}, {}});
     add(SketchLine{{0, -5}, {40, -5}}, true);
     elements.nextId = id;
     return elements;

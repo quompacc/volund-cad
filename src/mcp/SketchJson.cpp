@@ -115,6 +115,12 @@ QJsonObject encodeElement(const document::SketchElement& element) {
                                       for (const auto& pole : spline.poles)
                                           poles.append(point(pole));
                                       json.insert("poles", poles);
+                                      if (!spline.knots.empty()) { // N14c2
+                                          QJsonArray knots;
+                                          for (const double knot : spline.knots)
+                                              knots.append(knot);
+                                          json.insert("knots", knots);
+                                      }
                                   },
                                   [&](const document::SketchEllipticArc& arc) { // N14c: output
                                       json.insert("type", "elliptic_arc");

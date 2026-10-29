@@ -20,6 +20,10 @@ struct CurveCut final {
     bool onObject; // the cutter can carry a point-on-object relation (a line or circle)
 };
 
+// N14c2: the sketch B-spline as the kernel's planar one, and back.
+[[nodiscard]] kernel::BSpline2d planarSpline(const document::SketchBSpline& spline);
+[[nodiscard]] document::SketchBSpline sketchSpline(const kernel::BSpline2d& spline);
+
 // Whether cuts with this element need the kernel (an ellipse, elliptic arc or B-spline).
 [[nodiscard]] bool needsCurveCuts(const document::SketchGeometry& geometry) noexcept;
 

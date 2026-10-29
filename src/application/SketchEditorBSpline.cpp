@@ -48,7 +48,7 @@ SketchEditorSession::addBSpline(std::span<const SketchPoint> poles, bool constru
     Rollback rollback(*this);
     clearPreview();
     const document::SketchElementId id{elements_.nextId++};
-    const document::SketchBSpline spline{{poles.begin(), poles.end()}};
+    const document::SketchBSpline spline{{poles.begin(), poles.end()}, {}};
     // Joints with ends that the new ends were snapped onto.
     std::vector<std::pair<SketchGeometryReference, SketchGeometryReference>> joints;
     for (const auto& element : elements_.values)

@@ -135,7 +135,6 @@ cyclomatic | src/desktop/SketchExtrusionToolController.cpp | voelund::desktop::S
 cyclomatic | src/document/FeatureTreatmentValidation.cpp | voelund::document::(anonymous namespace)::validateEdgeTreatment | 14 | Altbestand vor A04
 cyclomatic | src/document/NativeExtrusion.cpp | voelund::document::detail::validateNativeExtrusion | 14 | Altbestand vor A04
 cyclomatic | src/document/NativeModelState.cpp | voelund::document::detail::NativeModelState::prepareHistory | 14 | Altbestand vor A04
-cyclomatic | src/document/NativeSketchGeometry.cpp | voelund::document::detail::(anonymous namespace)::readElement::(lambda) | 14 | Altbestand vor A04
 cyclomatic | src/document/NativeSketchPatterns.cpp | voelund::document::detail::readNativeSketchPatterns | 14 | Altbestand vor A04
 cyclomatic | src/features/EdgeProvenance.cpp | voelund::features::resolveEdgePoint | 14 | Altbestand vor A04
 cyclomatic | src/kernel/ShapeOperations.cpp | voelund::kernel::(anonymous namespace)::treatEdgesOneByOne | 14 | Altbestand vor A04

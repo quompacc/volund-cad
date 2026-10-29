@@ -54,10 +54,7 @@ std::vector<Piece> pieces(const document::SketchEllipticArc& arc) {
              false}};
 }
 std::vector<Piece> pieces(const document::SketchBSpline& spline) {
-    kernel::BSpline2d curve;
-    for (const auto& pole : spline.poles)
-        curve.poles.push_back(point(pole));
-    return {{curve, std::pair{spline.poles.front(), spline.poles.back()}, false}};
+    return {{planarSpline(spline), std::pair{spline.poles.front(), spline.poles.back()}, false}};
 }
 std::vector<Piece> pieces(const document::SketchRectangle& rectangle) {
     const SketchPoint corners[] = {rectangle.first,
@@ -83,6 +80,22 @@ std::optional<Position> endAt(const Ends& ends, SketchPoint at, double nullSegme
 }
 
 } // namespace
+
+kernel::BSpline2d planarSpline(const document::SketchBSpline& spline) {
+    kernel::BSpline2d curve;
+    for (const auto& pole : spline.poles)
+        curve.poles.push_back(point(pole));
+    curve.knots = spline.knots;
+    return curve;
+}
+
+document::SketchBSpline sketchSpline(const kernel::BSpline2d& spline) {
+    document::SketchBSpline curve;
+    for (const auto& pole : spline.poles)
+        curve.poles.push_back({pole.X(), pole.Y()});
+    curve.knots = spline.knots;
+    return curve;
+}
 
 bool needsCurveCuts(const document::SketchGeometry& geometry) noexcept {
     return std::holds_alternative<document::SketchEllipse>(geometry) ||

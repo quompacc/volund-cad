@@ -45,9 +45,11 @@ double boundaryArea(const SketchIntersectionResult& split,
             constexpr double weights[] = {0.2369268850561891, 0.4786286704993665,
                                           0.5688888888888889, 0.4786286704993665,
                                           0.2369268850561891};
+            // N14c2: the spans between the spline's own knots (uniform ones are 0, 1, ...).
+            const auto knots = document::bsplineKnots(*spline);
             const double first = interval.firstParameter, last = interval.lastParameter;
-            for (double low = std::floor(first); low < last; low += 1) {
-                const double a = std::max(low, first), b = std::min(low + 1, last);
+            for (std::size_t span = 0; span + 1 < knots.size(); ++span) {
+                const double a = std::max(knots[span], first), b = std::min(knots[span + 1], last);
                 if (b <= a)
                     continue;
                 for (int k = 0; k < 5; ++k) {

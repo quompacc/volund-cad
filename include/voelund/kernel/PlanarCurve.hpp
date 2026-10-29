@@ -46,8 +46,11 @@ struct Ellipse2d final {
 };
 // S21: an open, clamped, uniform B-spline over its poles: cubic (lower for fewer poles), knots
 // 0, 1, ..., n - degree.
+// N14c2: `knots` flat and clamped (each repeated by its multiplicity, poles + degree + 1 of
+// them); none means the uniform knots above.
 struct BSpline2d final {
     std::vector<gp_Pnt2d> poles;
+    std::vector<double> knots;
 };
 // N14c: a piece of an ellipse, counter-clockwise between two eccentric anomalies (radians, the
 // source domain kept as given).
@@ -66,6 +69,10 @@ using CurveDefinition2d =
     return static_cast<double>(poles) - bsplineDegree(poles);
 }
 
+// N14c2: the exact piece of a B-spline between two of its parameters (from < to), with its
+// knots moved to start at 0.
+[[nodiscard]] BSpline2d bsplinePiece(const BSpline2d& spline, double from, double to);
+
 class PlanarCurve final {
   public:
     explicit PlanarCurve(const CurveDefinition2d& definition);
@@ -76,6 +83,8 @@ class PlanarCurve final {
     double scale{0}; // size of the curve's coordinates, for tolerances
 
     [[nodiscard]] gp_Pnt2d value(double parameter) const;
+    // N14c2: the parameter in [first, last] of the curve point nearest `point`.
+    [[nodiscard]] double nearestParameter(const gp_Pnt2d& point) const;
     void d1(double parameter, gp_Pnt2d& point, gp_Vec2d& derivative) const;
     // The parameter distance that corresponds to `distance` along the curve at `parameter`.
     [[nodiscard]] double parameterTolerance(double parameter, double distance) const;

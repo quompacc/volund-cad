@@ -30,7 +30,9 @@ class SpaceCurve final {
     [[nodiscard]] static SpaceCurve circle(const gp_Ax2& frame, double radius);
     [[nodiscard]] static SpaceCurve ellipse(const gp_Ax2& frame, double majorRadius,
                                             double minorRadius);
-    [[nodiscard]] static SpaceCurve bspline(std::span<const gp_Pnt> poles);
+    // S21: clamped, cubic; N14c2: over flat `knots`, none for uniform ones.
+    [[nodiscard]] static SpaceCurve bspline(std::span<const gp_Pnt> poles,
+                                            std::span<const double> knots = {});
 
     [[nodiscard]] gp_Pnt value(double parameter) const;
     [[nodiscard]] TopoDS_Edge edge() const; // the whole curve

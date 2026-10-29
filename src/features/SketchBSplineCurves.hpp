@@ -24,7 +24,7 @@ inline kernel::SpaceCurve bsplineCurve3d(const document::SketchBSpline& spline,
     std::vector<gp_Pnt> poles;
     for (const auto& pole : spline.poles)
         poles.push_back(origin.Translated(x * pole.x + y * pole.y));
-    return kernel::SpaceCurve::bspline(poles);
+    return kernel::SpaceCurve::bspline(poles, spline.knots);
 }
 
 } // namespace voelund::features::detail

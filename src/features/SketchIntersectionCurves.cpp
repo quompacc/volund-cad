@@ -30,6 +30,7 @@ struct Definition final {
         kernel::BSpline2d spline;
         for (const auto& pole : s.poles)
             spline.poles.push_back(point(pole));
+        spline.knots = s.knots; // N14c2
         return spline;
     }
     kernel::CurveDefinition2d operator()(const document::SketchRectangle&) const {

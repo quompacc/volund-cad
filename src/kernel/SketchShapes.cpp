@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Eduard Hart
 
+#include "BSplineKnots.hpp"
 #include "OcctGuard.hpp"
 
 #include <voelund/kernel/PlanarCurve.hpp>
@@ -64,22 +65,16 @@ SpaceCurve SpaceCurve::ellipse(const gp_Ax2& frame, double majorRadius, double m
     });
 }
 
-SpaceCurve SpaceCurve::bspline(std::span<const gp_Pnt> poles) {
+SpaceCurve SpaceCurve::bspline(std::span<const gp_Pnt> poles, std::span<const double> knots) {
     return detail::guarded(operation, [&] {
         const int count = static_cast<int>(poles.size());
         const int degree = bsplineDegree(poles.size());
         NCollection_Array1<gp_Pnt> points(1, count);
         for (int index = 0; index < count; ++index)
             points.SetValue(index + 1, poles[static_cast<std::size_t>(index)]);
-        const int spans = static_cast<int>(bsplineLastParameter(poles.size()));
-        NCollection_Array1<double> knots(1, spans + 1);
-        NCollection_Array1<int> multiplicities(1, spans + 1);
-        for (int index = knots.Lower(); index <= knots.Upper(); ++index) {
-            knots.SetValue(index, index - knots.Lower());
-            multiplicities.SetValue(
-                index, index == knots.Lower() || index == knots.Upper() ? degree + 1 : 1);
-        }
-        return SpaceCurve(holding(new Geom_BSplineCurve(points, knots, multiplicities, degree)));
+        const auto occt = detail::occtKnots(detail::flatKnots(poles.size(), degree, knots));
+        return SpaceCurve(
+            holding(new Geom_BSplineCurve(points, occt.values, occt.multiplicities, degree)));
     });
 }
 

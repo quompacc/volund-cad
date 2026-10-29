@@ -54,7 +54,8 @@ pieceRelations(const detail::SketchCurveEditPlan& plan, SketchElementId target,
         relations.emplace_back(SketchConstraintKind::coincident,
                                SketchGeometryReference{target, Position::end},
                                SketchGeometryReference{piece, Position::start});
-    if (std::holds_alternative<document::SketchEllipticArc>(plan.edited))
+    if (std::holds_alternative<document::SketchEllipticArc>(plan.edited) ||
+        std::holds_alternative<document::SketchBSpline>(plan.edited)) // N14c2
         return relations;
     if (std::holds_alternative<document::SketchLine>(plan.edited)) {
         relations.emplace_back(plan.joined ? SketchConstraintKind::parallel

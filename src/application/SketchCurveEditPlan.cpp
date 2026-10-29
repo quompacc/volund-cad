@@ -202,6 +202,9 @@ struct Curve final {
     Support support;
     double length;                               // a circle: its circumference
     std::optional<document::SketchEllipse> oval; // N14c: the ellipse it lies on
+    // N14c2: a B-spline's curve; positions are its parameter times `speed` from its start.
+    std::optional<kernel::PlanarCurve> spline;
+    double speed;
 
     [[nodiscard]] const SketchLine* line() const { return std::get_if<SketchLine>(&geometry); }
     [[nodiscard]] const SketchArc* arc() const { return std::get_if<SketchArc>(&geometry); }
@@ -209,7 +212,9 @@ struct Curve final {
         return std::get_if<document::SketchEllipticArc>(&geometry);
     }
     [[nodiscard]] bool bounded() const { return arc() || ellipticArc(); } // an arc of any kind
-    [[nodiscard]] bool closed() const { return !line() && !bounded(); }
+    [[nodiscard]] bool closed() const { return !line() && !bounded() && !spline; }
+    // Lines, arcs and circles cut each other without the kernel.
+    [[nodiscard]] bool analytic() const { return !oval && !spline; }
     [[nodiscard]] double start() const {
         return arc() ? arc()->startAngle : ellipticArc() ? ellipticArc()->startParameter : 0.0;
     }
@@ -218,6 +223,8 @@ struct Curve final {
     }
     // Unbounded along a line; on a circle in [0, circumference) from the start.
     [[nodiscard]] double at(SketchPoint point) const {
+        if (spline)
+            return (spline->nearestParameter({point.x, point.y}) - spline->first) * speed;
         if (line())
             return (point.x - support.origin.x) * support.direction.x +
                    (point.y - support.origin.y) * support.direction.y;
@@ -226,6 +233,10 @@ struct Curve final {
         return normalized(angle - start()) * support.radius;
     }
     [[nodiscard]] SketchPoint point(double at) const {
+        if (spline) {
+            const auto value = spline->value(spline->first + at / speed);
+            return {value.X(), value.Y()};
+        }
         if (const auto* value = line())
             return at == 0.0      ? value->start
                    : at == length ? value->end
@@ -240,6 +251,8 @@ struct Curve final {
     [[nodiscard]] SketchGeometry piece(double from, double to) const {
         if (const auto* value = line())
             return SketchLine{point(from), point(to), value->constraint};
+        if (spline)
+            return splinePiece(from, to);
         const double radius = support.radius;
         const double first = start() + from / radius;
         double last = bounded() && to == length ? end() : start() + to / radius;
@@ -250,9 +263,18 @@ struct Curve final {
                 oval->center, oval->majorRadius, oval->minorRadius, oval->rotation, first, last};
         return SketchArc{support.origin, radius, first, last};
     }
+    // N14c2: the exact piece of the B-spline; the ends stay where they are.
+    [[nodiscard]] SketchGeometry splinePiece(double from, double to) const {
+        const double first = from <= 0.0 ? spline->first : spline->first + from / speed;
+        const double last = to >= length ? spline->last : spline->first + to / speed;
+        return sketchSpline(kernel::bsplinePiece(
+            planarSpline(std::get<document::SketchBSpline>(geometry)), first, last));
+    }
     // N14c: the whole line, circle or ellipse the curve lies on, for the kernel's cuts; a line
-    // reaches `reach` beyond its start and end.
+    // reaches `reach` beyond its start and end; a B-spline is itself.
     [[nodiscard]] kernel::CurveDefinition2d definition(double reach) const {
+        if (const auto* value = std::get_if<document::SketchBSpline>(&geometry))
+            return planarSpline(*value);
         const gp_Pnt2d centre(support.origin.x, support.origin.y);
         if (oval)
             return kernel::Ellipse2d{centre, oval->majorRadius, oval->minorRadius, oval->rotation};
@@ -270,25 +292,52 @@ Curve ovalCurve(const SketchGeometry& geometry, const document::SketchEllipse& e
     return {geometry,
             {true, ellipse.center, {}, ellipse.majorRadius},
             sweep * ellipse.majorRadius,
-            ellipse};
+            ellipse,
+            std::nullopt,
+            1.0};
+}
+
+// N14c2: positions along a B-spline scale its parameter by the control polygon's length per
+// parameter, so the null-segment distance is about a length on the curve.
+Curve splineCurve(const SketchGeometry& geometry, const document::SketchBSpline& spline) {
+    double polygon = 0.0;
+    for (std::size_t index = 1; index < spline.poles.size(); ++index)
+        polygon += distance(spline.poles[index - 1], spline.poles[index]);
+    Curve curve{geometry, {}, 0.0, std::nullopt, std::nullopt, 1.0};
+    curve.spline.emplace(planarSpline(spline));
+    curve.speed = polygon / (curve.spline->last - curve.spline->first);
+    curve.length = (curve.spline->last - curve.spline->first) * curve.speed;
+    return curve;
 }
 
 Curve curveOf(const SketchGeometry& geometry) {
     if (const auto* line = std::get_if<SketchLine>(&geometry))
-        return {geometry, lineSupport(line->start, line->end), distance(line->start, line->end),
-                std::nullopt};
+        return {geometry,
+                lineSupport(line->start, line->end),
+                distance(line->start, line->end),
+                std::nullopt,
+                std::nullopt,
+                1.0};
     if (const auto* arc = std::get_if<SketchArc>(&geometry))
         return {geometry,
                 {true, arc->center, {}, arc->radius},
                 (arc->endAngle - arc->startAngle) * arc->radius,
-                std::nullopt};
+                std::nullopt,
+                std::nullopt,
+                1.0};
     if (const auto* ellipse = std::get_if<document::SketchEllipse>(&geometry))
         return ovalCurve(geometry, *ellipse, twoPi);
     if (const auto* arc = std::get_if<document::SketchEllipticArc>(&geometry))
         return ovalCurve(geometry, arc->ellipse(), arc->endParameter - arc->startParameter);
+    if (const auto* spline = std::get_if<document::SketchBSpline>(&geometry))
+        return splineCurve(geometry, *spline);
     const auto& circle = std::get<SketchCircle>(geometry);
-    return {
-        geometry, {true, circle.center, {}, circle.radius}, twoPi * circle.radius, std::nullopt};
+    return {geometry,
+            {true, circle.center, {}, circle.radius},
+            twoPi * circle.radius,
+            std::nullopt,
+            std::nullopt,
+            1.0};
 }
 
 // Lines, arcs and circles meeting a line or circle: exact, without the kernel.
@@ -318,7 +367,7 @@ std::vector<Hit> hits(const Curve& curve, std::span<const SketchElement> element
     for (const SketchElement& element : elements) {
         if (element.id == target)
             continue;
-        if (!curve.oval && !needsCurveCuts(element.geometry)) {
+        if (curve.analytic() && !needsCurveCuts(element.geometry)) {
             analyticHits(curve, element, tolerance, result);
             continue;
         }
@@ -470,8 +519,9 @@ const char* unsupported(SketchCurveEdit edit, const SketchGeometry& geometry) {
         return "Alt-Rechtecke werden nicht unterstützt (UnsupportedCurve)";
     if (std::holds_alternative<document::SketchPointGeometry>(geometry))
         return "Ein Punkt ist keine Kurve (UnsupportedCurve)";
-    if (std::holds_alternative<document::SketchBSpline>(geometry)) // S21
-        return "B-Splines werden nicht gestutzt, verlängert oder geteilt (UnsupportedCurve)";
+    if (std::holds_alternative<document::SketchBSpline>(geometry)) // S21/N14c2
+        return "B-Splines werden nicht verlängert; ihr Verlauf über das Ende hinaus ist offen "
+               "(UnsupportedCurve)";
     return edit == SketchCurveEdit::extend
                ? "Kreise sind geschlossen und lassen sich nicht verlängern (UnsupportedCurve)"
                : "Kreise haben keinen Endpunkt zum Teilen; zuerst stutzen (UnsupportedCurve)";
@@ -490,6 +540,8 @@ bool supportsCurveEdit(SketchCurveEdit edit, const SketchGeometry& geometry) noe
         std::holds_alternative<SketchArc>(geometry) ||
         std::holds_alternative<document::SketchEllipticArc>(geometry)) // N14c
         return true;
+    if (std::holds_alternative<document::SketchBSpline>(geometry)) // N14c2: an open end
+        return edit != SketchCurveEdit::extend;
     return edit == SketchCurveEdit::trim &&
            (std::holds_alternative<SketchCircle>(geometry) ||
             std::holds_alternative<document::SketchEllipse>(geometry));
