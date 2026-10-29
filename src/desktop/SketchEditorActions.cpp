@@ -126,6 +126,8 @@ void SketchEditorToolController::syncRectangleOptions() {
 void SketchEditorToolController::chooseOption(const std::string& id, int index) {
     if (id == "tool")
         setTool(index);
+    else if (id == "pattern_reference") // N14a
+        patternFromLast_ = index == 1;
     else if (id == "rounded_corners" || id == "frame") {
         (id == "frame" ? rectangleOptions_.frame : rectangleOptions_.rounded) = index == 1;
         viewport_.setSketchRectangleOptions(rectangleOptions_.rounded, rectangleOptions_.frame);

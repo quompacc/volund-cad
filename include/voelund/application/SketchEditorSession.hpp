@@ -184,11 +184,14 @@ class SketchEditorSession final {
     bool previewOffset(double distance);
     // S12: an associative pattern of the selection (SketchPattern.hpp): linear along +x with
     // `spacing`, circular about the origin over `totalAngleDegrees` in `count` steps, or mirrored
-    // at the last selected line. Returns its ID; nullopt when the selection holds a legacy
-    // rectangle, which is copied once instead (no pattern). Throws SketchEditRefusal with the
-    // reason (count 2..1000, a copy as source, ...) and changes nothing.
+    // at the last selected line. N14a: with `lastIsReference` the last selected element gives a
+    // linear pattern's direction (a line) or a circular one's centre (point, circle, arc). Returns
+    // its ID; nullopt when the selection holds a legacy rectangle, which is copied once instead (no
+    // pattern). Throws SketchEditRefusal with the reason (count 2..1000, a copy as source, ...) and
+    // changes nothing.
     std::optional<std::uint64_t> createPattern(document::SketchPatternKind kind, int count,
-                                               double spacing, double totalAngleDegrees);
+                                               double spacing, double totalAngleDegrees,
+                                               bool lastIsReference = false);
     // The pattern the selected element belongs to (as source or instance).
     [[nodiscard]] std::optional<document::SketchPattern> selectedPattern() const;
     // Changes count, spacing or total angle (as for createPattern) as one step; throws like it.
@@ -337,6 +340,8 @@ class SketchEditorSession final {
     void refreshProjectedGeometry();
     // S11/S19: the shared fillet and chamfer step.
     SketchCurveEditResult treatCorner(bool chamfer, double size);
+    SketchCurveEditResult treatCurveCorner(bool chamfer, double size, // N14a: with arcs
+                                           const std::vector<document::SketchGeometryReference>&);
     SketchCurveEditResult transformSelection(bool scale, document::SketchPoint center,
                                              double value);
     [[nodiscard]] std::vector<document::SketchElementId> selectionIds() const;

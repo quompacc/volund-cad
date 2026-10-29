@@ -65,7 +65,15 @@ SketchCurveEditResult SketchEditorSession::treatCorner(bool chamfer, double size
             picks.end())
             picks.push_back(reference);
     if (picks.size() != 2)
-        refuse("Zwei Linien wählen (Strg-Klick)");
+        refuse("Zwei Linien oder Bögen wählen (Strg-Klick)");
+    for (const auto& pick : picks)
+        if (isProjected(pick.element)) // S17
+            refuse("Eine projizierte Kante folgt ihrem Körper", {pick.element});
+    for (const auto& pick : picks)
+        if (isPatternInstance(pick.element))
+            refuse(std::string("Eine Kopie folgt ihrem Original; das Original ") +
+                       (chamfer ? "fasen" : "verrunden") + " oder das Muster auflösen",
+                   {pick.element});
     std::vector<SketchElementId> notLines;
     std::vector<document::SketchLine> lines;
     bool construction = true;
@@ -82,16 +90,8 @@ SketchCurveEditResult SketchEditorSession::treatCorner(bool chamfer, double size
             construction = construction && match->construction;
         }
     }
-    if (!notLines.empty())
-        refuse("Nur zwischen zwei Linien (UnsupportedCurve)", notLines);
-    for (const auto& pick : picks)
-        if (isProjected(pick.element)) // S17
-            refuse("Eine projizierte Kante folgt ihrem Körper", {pick.element});
-    for (const auto& pick : picks)
-        if (isPatternInstance(pick.element))
-            refuse(std::string("Eine Kopie folgt ihrem Original; das Original ") +
-                       (chamfer ? "fasen" : "verrunden") + " oder das Muster auflösen",
-                   {pick.element});
+    if (!notLines.empty()) // N14a: line and arc, or two arcs
+        return treatCurveCorner(chamfer, size, picks);
     const auto plan = detail::planCorner(chamfer ? detail::SketchCornerKind::chamfer
                                                  : detail::SketchCornerKind::fillet,
                                          picks[0].element, lines[0], picks[0].point,

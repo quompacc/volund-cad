@@ -162,6 +162,34 @@ void circularAndMirror() {
     require(near(f.get<SketchArc>(7).center, {40, 0}), "The mirror follows its axis");
 }
 
+// N14a: the last selected element as the reference: a line gives a linear pattern's direction,
+// a circle a circular pattern's centre; the reference itself is not copied.
+void reference() {
+    Fixture f({SketchLine{{0, 0}, {2, 0}}, SketchLine{{5, 5}, {8, 9}}});
+    f.select(1, 2);
+    require(f.editor->createPattern(SketchPatternKind::linear, 3, 10, 0, true).has_value(),
+            "Pattern along the reference line");
+    require(f.editor->elements().size() == 4 && near(f.get<SketchLine>(3).start, {6, 8}) &&
+                near(f.get<SketchLine>(4).end, {14, 16}),
+            "Copies 10 apart along (3; 4) / 5");
+
+    Fixture c({SketchLine{{6, 5}, {8, 5}}, document::SketchCircle{{5, 5}, 1}});
+    c.select(1, 2);
+    require(c.editor->createPattern(SketchPatternKind::circular, 4, 0, 360, true).has_value(),
+            "Pattern about the circle's centre");
+    require(c.editor->elements().size() == 5 && near(c.get<SketchLine>(3).start, {5, 6}) &&
+                near(c.get<SketchLine>(3).end, {5, 8}),
+            "Quarter turn about (5; 5)");
+
+    Fixture r({SketchLine{{6, 5}, {8, 5}}, document::SketchCircle{{5, 5}, 1}});
+    r.select(1);
+    r.refused([&] { (void)r.editor->createPattern(SketchPatternKind::linear, 3, 5, 0, true); },
+              "zuletzt den Bezug");
+    r.select(1, 2);
+    r.refused([&] { (void)r.editor->createPattern(SketchPatternKind::linear, 3, 5, 0, true); },
+              "Die Richtung gibt eine zuletzt gewählte Linie");
+}
+
 void persisted() {
     Fixture f({SketchLine{{0, 0}, {4, 0}}});
     f.select(1);
@@ -198,6 +226,7 @@ int main() {
     try {
         linear();
         circularAndMirror();
+        reference();
         persisted();
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';

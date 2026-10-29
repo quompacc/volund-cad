@@ -54,6 +54,8 @@ add_library(voelund_application STATIC
     SketchEditorCurveEdit.cpp
     SketchFilletPlan.cpp
     SketchEditorFillet.cpp
+    SketchEditorCurveCorner.cpp
+    SketchCurveCornerPlan.cpp
     SketchEditorRectangleOptions.cpp
     SketchEditorPatterns.cpp
     SketchEditorSelection.cpp

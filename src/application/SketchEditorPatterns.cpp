@@ -54,6 +54,65 @@ void applyRule(SketchPattern& pattern, int count, double spacing, double totalAn
     pattern.angle = step;
 }
 
+const char* selectionHint(bool mirror, bool lastIsReference) {
+    if (mirror)
+        return "Elemente und zuletzt die Spiegelachse wählen";
+    return lastIsReference ? "Elemente und zuletzt den Bezug wählen" : "Elemente wählen";
+}
+
+// The last selected element as the pattern's reference: a mirror's axis, or (N14a, when asked
+// for) a linear pattern's direction line or a circular pattern's centre. Taken out of `ids`.
+std::optional<SketchElementId> takeReference(const document::SketchElements& elements,
+                                             SketchPatternKind kind,
+                                             std::vector<SketchElementId>& ids,
+                                             bool lastIsReference) {
+    const bool mirror = kind == SketchPatternKind::mirror;
+    if (ids.size() < (mirror || lastIsReference ? 2U : 1U))
+        refuse(selectionHint(mirror, lastIsReference));
+    if (!mirror && !lastIsReference)
+        return std::nullopt;
+    const SketchElementId reference = ids.back();
+    ids.pop_back();
+    const auto match = std::ranges::find(elements.values, reference, &document::SketchElement::id);
+    if (mirror && (match == elements.values.end() ||
+                   !std::holds_alternative<document::SketchLine>(match->geometry)))
+        refuse("Die zuletzt gewählte Achse muss eine Linie sein", {reference});
+    return reference;
+}
+
+// N14a: the centre a circular pattern turns about: a point's position or a curve's centre.
+std::optional<document::SketchPoint> centreOf(const document::SketchGeometry& geometry) {
+    if (const auto* point = std::get_if<document::SketchPointGeometry>(&geometry))
+        return point->position;
+    if (const auto* circle = std::get_if<document::SketchCircle>(&geometry))
+        return circle->center;
+    if (const auto* arc = std::get_if<document::SketchArc>(&geometry))
+        return arc->center;
+    if (const auto* ellipse = std::get_if<document::SketchEllipse>(&geometry))
+        return ellipse->center;
+    return std::nullopt;
+}
+
+// N14a: a linear pattern runs along the reference line (start to end), a circular one turns
+// about the reference's centre. Taken once; the pattern does not follow the reference later.
+void orient(SketchPattern& pattern, const document::SketchElement& reference) {
+    if (pattern.kind == SketchPatternKind::linear) {
+        const auto* line = std::get_if<document::SketchLine>(&reference.geometry);
+        const double length =
+            line ? std::hypot(line->end.x - line->start.x, line->end.y - line->start.y) : 0.0;
+        if (!(length > 1e-9))
+            refuse("Die Richtung gibt eine zuletzt gewählte Linie vor", {reference.id});
+        pattern.step = {(line->end.x - line->start.x) / length,
+                        (line->end.y - line->start.y) / length};
+        return;
+    }
+    const auto centre = centreOf(reference.geometry);
+    if (!centre)
+        refuse("Das Zentrum gibt ein zuletzt gewählter Punkt, Kreis, Bogen oder eine Ellipse vor",
+               {reference.id});
+    pattern.center = *centre;
+}
+
 } // namespace
 
 std::vector<SketchElementId> SketchEditorSession::selectedElementIds() const {
@@ -100,22 +159,14 @@ std::optional<SketchPattern> SketchEditorSession::selectedPattern() const {
 
 std::optional<std::uint64_t> SketchEditorSession::createPattern(SketchPatternKind kind, int count,
                                                                 double spacing,
-                                                                double totalAngleDegrees) {
+                                                                double totalAngleDegrees,
+                                                                bool lastIsReference) {
     if (!active_)
         refuse("Der Skizzeneditor ist nicht aktiv");
     auto ids = selectedElementIds();
     const bool mirror = kind == SketchPatternKind::mirror;
-    if (ids.size() < (mirror ? 2U : 1U))
-        refuse(mirror ? "Elemente und zuletzt die Spiegelachse wählen" : "Elemente wählen");
-    std::optional<SketchElementId> axis;
-    if (mirror) {
-        axis = ids.back();
-        ids.pop_back();
-        const auto match = std::ranges::find(elements_.values, *axis, &document::SketchElement::id);
-        if (match == elements_.values.end() ||
-            !std::holds_alternative<document::SketchLine>(match->geometry))
-            refuse("Die zuletzt gewählte Achse muss eine Linie sein", {*axis});
-    }
+    const auto reference = takeReference(elements_, kind, ids, lastIsReference);
+    const std::optional<SketchElementId> axis = mirror ? reference : std::nullopt;
     std::vector<SketchElementId> copies;
     bool legacyRectangle = false;
     for (const SketchElementId id : ids) {
@@ -126,8 +177,8 @@ std::optional<std::uint64_t> SketchEditorSession::createPattern(SketchPatternKin
             legacyRectangle || (match != elements_.values.end() &&
                                 std::holds_alternative<document::SketchRectangle>(match->geometry));
     }
-    if (axis && isPatternInstance(*axis))
-        copies.push_back(*axis);
+    if (reference && isPatternInstance(*reference))
+        copies.push_back(*reference);
     if (!copies.empty())
         refuse("Eine Kopie kann kein Original und keine Achse sein; zuerst ihr Muster auflösen",
                copies);
@@ -142,6 +193,9 @@ std::optional<std::uint64_t> SketchEditorSession::createPattern(SketchPatternKin
         return std::nullopt;
     }
     SketchPattern pattern{patterns_.nextId, kind, ids, 2, {}, {}, 0.0, axis, {}};
+    if (reference && !mirror)
+        orient(pattern,
+               *std::ranges::find(elements_.values, *reference, &document::SketchElement::id));
     applyRule(pattern, count, spacing, totalAngleDegrees);
     if (!document::hasRepeatedIdCapacity(elements_.nextId, ids.size(), pattern.count - 1) ||
         !document::hasIdCapacity(patterns_.nextId, 1))

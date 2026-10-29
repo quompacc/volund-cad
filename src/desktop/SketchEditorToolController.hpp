@@ -183,6 +183,7 @@ class SketchEditorToolController final {
     double patternCount_{3.0};
     double patternSpacing_{10.0};
     double patternAngle_{360.0};
+    bool patternFromLast_{false}; // N14a: the last selected element gives direction or centre
     int toolIndex_{1};
     bool editing_{false};
     bool automaticRelations_{true}; // S04: kept for the next sketch

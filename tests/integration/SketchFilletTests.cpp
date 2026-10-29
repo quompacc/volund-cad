@@ -212,6 +212,56 @@ void crossingAndLostRelations() {
             "Far end and corner stay where they were fixed");
 }
 
+// N14a: a line ending where an arc (centre (15; 0), radius 5) starts its quarter: the corner at
+// (10; 0) is square. The fillet circle lies outside the arc, 1 from both.
+Fixture lineAndArc(std::vector<SketchConstraint> constraints = {}) {
+    return Fixture({SketchLine{{0, 0}, {10, 0}}, SketchArc{{15, 0}, 5, pi / 2, pi}},
+                   std::move(constraints));
+}
+
+void curveCorners() {
+    auto f =
+        lineAndArc({relation(1, Kind::coincident, ref(1, Position::end), ref(2, Position::end)),
+                    relation(2, Kind::radius, ref(2, Position::center), std::nullopt, 5)});
+    f.select(1, {5, 0}, 2, {15, 5});
+    const auto result = f.fillet(1);
+    const double x = 15 - std::sqrt(35.0);
+    require(near(f.get<SketchLine>(1).end, {x, 0}), "The line ends where the fillet touches it");
+    const auto fillet = f.get<SketchArc>(3);
+    require(near(fillet.center, {x, 1}) && near(fillet.radius, 1), "Fillet centre 1 from both");
+    const auto arc = f.get<SketchArc>(2);
+    require(near(arc.endAngle, std::atan2(1.0, -std::sqrt(35.0))) && near(arc.radius, 5),
+            "The arc is cut back to the joint, its radius kept");
+    require(result.removed.size() == 1 && result.removed[0].kind == Kind::coincident,
+            "The corner's coincidence is removed and listed, the radius kept");
+
+    // Two arcs meeting square at (0; 10); the fillet lies inside both.
+    Fixture arcs({SketchArc{{0, 0}, 10, 0, pi / 2}, SketchArc{{10, 10}, 10, pi, 5 * pi / 4}});
+    arcs.select(1, {7.07, 7.07}, 2, {1, 6});
+    static_cast<void>(arcs.fillet(1));
+    const double h = std::sqrt(15.5);
+    require(near(arcs.get<SketchArc>(3).center, {5 - h, 5 + h}), "Centre 9 from both centres");
+    require(near(arcs.get<SketchArc>(1).endAngle, std::atan2(5 + h, 5 - h)),
+            "The first arc ends at the joint");
+
+    // A chamfer 2 (straight) from the corner on both.
+    auto c = lineAndArc();
+    c.select(1, {5, 0}, 2, {15, 5});
+    static_cast<void>(c.editor->chamferCorner(2));
+    require(c.editor->lastSolveResult().status == features::SketchSolveStatus::success,
+            "Solved after the chamfer");
+    const auto line = c.get<SketchLine>(3);
+    require(near(line.start, {8, 0}) && near(std::hypot(line.end.x - 10, line.end.y), 2),
+            "Chamfer line between the two points 2 from the corner");
+
+    auto big = lineAndArc();
+    big.select(1, {5, 0}, 2, {15, 5});
+    big.refused(50, "passt nicht", {1, 2});
+    Fixture apart({SketchLine{{0, 0}, {9, 0}}, SketchArc{{15, 0}, 5, pi / 2, pi}});
+    apart.select(1, {5, 0}, 2, {15, 5});
+    apart.refused(1, "Endpunkt", {1, 2});
+}
+
 } // namespace
 
 int main() {
@@ -219,6 +269,7 @@ int main() {
         rightAngle();
         refusals();
         crossingAndLostRelations();
+        curveCorners();
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';
         return 1;

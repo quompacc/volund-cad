@@ -204,7 +204,12 @@ void SketchEditorToolController::showPanel() {
          {"frame",
           QObject::tr("Rahmen (J)"),
           {QObject::tr("Aus"), QObject::tr("Ein")},
-          rectangleOptions_.frame ? 1 : 0}},
+          rectangleOptions_.frame ? 1 : 0},
+         // N14a: a pattern along +x / about the origin, or by the last selected element.
+         {"pattern_reference",
+          QObject::tr("Musterbezug"),
+          {QObject::tr("X-Richtung / Ursprung"), QObject::tr("Zuletzt gewähltes Element")},
+          patternFromLast_ ? 1 : 0}},
         {{"horizontal", QObject::tr("Linie waagrecht festlegen"), QObject::tr("Linien")},
          {"vertical", QObject::tr("Linie senkrecht festlegen"), QObject::tr("Linien")},
          {"free", QObject::tr("Richtungsbedingung der Linie entfernen"), QObject::tr("Linien")},

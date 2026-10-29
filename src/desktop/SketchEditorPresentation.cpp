@@ -169,7 +169,8 @@ void SketchEditorToolController::applyPatternOperation(const std::string& id) {
             const auto kind = id == "mirror"           ? document::SketchPatternKind::mirror
                               : id == "linear_pattern" ? document::SketchPatternKind::linear
                                                        : document::SketchPatternKind::circular;
-            done = editor_->createPattern(kind, count, patternSpacing_, patternAngle_)
+            done = editor_->createPattern(kind, count, patternSpacing_, patternAngle_,
+                                          patternFromLast_)
                        ? QObject::tr("Muster angelegt; die Kopien folgen dem Original")
                        : QObject::tr("Alt-Rechteck einmalig kopiert (kein Muster)");
         }
@@ -270,9 +271,9 @@ void SketchEditorToolController::syncSelectedDimensionInputs() {
         panel_.setLengthValue("transform_center_x", center->x);
         panel_.setLengthValue("transform_center_y", center->y);
     }
-    panel_.setLengthVisible("pattern_count", selecting && hasSelection);
-    panel_.setLengthVisible("pattern_spacing", selecting && hasSelection);
-    panel_.setLengthVisible("pattern_angle", selecting && hasSelection);
+    for (const char* field : {"pattern_count", "pattern_spacing", "pattern_angle"})
+        panel_.setLengthVisible(field, selecting && hasSelection);
+    panel_.setChoiceVisible("pattern_reference", selecting && hasSelection); // N14a
     // S12: a selected source or copy shows its pattern's values for "Muster ändern".
     if (const auto pattern = editor_->selectedPattern();
         pattern && pattern->kind != document::SketchPatternKind::mirror) {
