@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <span>
 #include <variant>
 #include <vector>
@@ -68,6 +69,12 @@ using CurveDefinition2d =
 [[nodiscard]] inline double bsplineLastParameter(std::size_t poles) noexcept {
     return static_cast<double>(poles) - bsplineDegree(poles);
 }
+
+// N15b: a non-rational B-spline of any degree from 1 to 3 over flat `knots` (as a DXF file
+// stores it, clamped or not) as the sketch's cubic, clamped one over its whole defined range;
+// none when the input is no valid B-spline.
+[[nodiscard]] std::optional<BSpline2d>
+clampedCubicBSpline(std::span<const gp_Pnt2d> poles, std::span<const double> knots, int degree);
 
 // N14c2: the exact piece of a B-spline between two of its parameters (from < to), with its
 // knots moved to start at 0.

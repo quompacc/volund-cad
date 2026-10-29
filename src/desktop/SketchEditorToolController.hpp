@@ -92,6 +92,7 @@ class SketchEditorToolController final {
     void toggleProjecting() { setProjecting(!projecting_); }
     void projectEdge(std::uint64_t bodyResult, const TopoDS_Shape& edge);
     void addSectionCurves(); // N15a
+    void importDxf();        // N15b
     void cancel();
 
   private:

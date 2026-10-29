@@ -61,6 +61,7 @@ add_library(voelund_application STATIC
     SketchCurveEditCuts.cpp
     SketchOffsetCurves.cpp
     SketchEditorSection.cpp
+    SketchDxfImport.cpp
     SketchEditorRectangleOptions.cpp
     SketchEditorPatterns.cpp
     SketchEditorSelection.cpp

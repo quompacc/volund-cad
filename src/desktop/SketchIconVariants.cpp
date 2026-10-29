@@ -22,6 +22,16 @@ const QHash<QString, IconDrawing>& variantDrawings() {
              p.dot(13, 6);
              p.dot(20, 13);
          }},
+        {"import_dxf", // N15b: a drawing sheet with an arrow into the sketch
+         [](const Pens& p) {
+             p.painter.drawRect(QRectF(3, 3, 11, 14));
+             p.accented([&] {
+                 p.line(10, 15, 20, 15);
+                 p.line(16, 11, 20, 15);
+                 p.line(16, 19, 20, 15);
+                 p.line(4, 21, 21, 21);
+             });
+         }},
         {"section", // N15a: a body cut by the sketch plane, its outline drawn
          [](const Pens& p) {
              p.painter.drawRect(QRectF(6, 3, 12, 18));

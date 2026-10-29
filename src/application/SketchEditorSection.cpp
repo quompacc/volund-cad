@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Eduard Hart
 
+#include "SketchDxfImport.hpp"
 #include <voelund/application/CadSession.hpp>
 #include <voelund/application/SketchEditorSession.hpp>
 #include <voelund/features/GeometryEvaluationError.hpp>
@@ -11,10 +12,11 @@
 #include <cmath>
 #include <string>
 
-// N15a (agent decision 2026-10-29): section curves, as Fusion's "Intersect" with every visible
-// body at once. Where the bodies meet the sketch plane, ordinary sketch curves are added in one
-// step (no link to the body; they change when edited like any curve). Curves that meet end to
-// end are joined so they move together.
+// Curves from outside the sketch, added in one step as ordinary sketch curves; curves that meet
+// end to end are joined so they move together (agent decisions 2026-10-29).
+// - N15a: section curves, as Fusion's "Intersect" with every visible body at once, where the
+//   bodies meet the sketch plane (no link to the body).
+// - N15b: the drawing of a DXF file (SketchDxfImport.hpp); what it cannot take is counted.
 namespace voelund::application {
 namespace {
 
@@ -68,21 +70,69 @@ sharedEnds(const std::vector<document::SketchElement>& added) {
     return joints;
 }
 
+// Whether the curve on its own is valid sketch geometry (a DXF file can hold degenerate ones).
+bool validCurve(const document::SketchGeometry& geometry, bool construction) {
+    try {
+        document::validateSketchElements(
+            {{{document::SketchElementId{1}, geometry, construction}}, 2});
+        return true;
+    } catch (const std::invalid_argument&) {
+        return false;
+    }
+}
+
 } // namespace
 
 std::size_t SketchEditorSession::addSectionCurves() {
     if (!active_)
         refuse("Der Skizzeneditor ist nicht aktiv");
-    auto curves = sectionCurves(session_, plane_);
+    std::vector<std::pair<document::SketchGeometry, bool>> curves;
+    for (auto& curve : sectionCurves(session_, plane_))
+        curves.emplace_back(std::move(curve), false);
     if (curves.empty())
         refuse("Kein sichtbarer Körper schneidet die Skizzenebene");
+    const std::size_t count = curves.size();
+    addCurvesInOneStep(std::move(curves), "Schnittkurve: ");
+    return count;
+}
+
+SketchDxfImportResult SketchEditorSession::importDxf(std::string_view text) {
+    const auto refuseImport = [](const std::string& reason) {
+        throw SketchEditRefusal("DXF importieren: " + reason, {});
+    };
+    if (!active_)
+        refuseImport("Der Skizzeneditor ist nicht aktiv");
+    detail::DxfDrawing drawing;
+    try {
+        drawing = detail::readDxfDrawing(text);
+    } catch (const std::invalid_argument& error) {
+        refuseImport(error.what());
+    }
+    SketchDxfImportResult result{0, std::move(drawing.skipped)};
+    std::vector<std::pair<document::SketchGeometry, bool>> curves;
+    for (auto& curve : drawing.curves) {
+        if (validCurve(curve.geometry, curve.construction))
+            curves.emplace_back(std::move(curve.geometry), curve.construction);
+        else
+            ++result.skipped["ungültig"];
+    }
+    if (curves.empty())
+        refuseImport("Die Datei enthält keine übernehmbaren Kurven");
+    result.added = curves.size();
+    addCurvesInOneStep(std::move(curves), "DXF importieren: ");
+    return result;
+}
+
+// Adds the curves as one undo step, joined where they share ends; refuses with `name`.
+void SketchEditorSession::addCurvesInOneStep(
+    std::vector<std::pair<document::SketchGeometry, bool>> curves, const std::string& name) {
     std::vector<document::SketchElement> added;
     std::uint64_t next = elements_.nextId;
-    for (auto& curve : curves)
-        added.push_back({document::SketchElementId{next++}, std::move(curve), false});
+    for (auto& [geometry, construction] : curves)
+        added.push_back({document::SketchElementId{next++}, std::move(geometry), construction});
     const auto joints = sharedEnds(added);
     if (!canAllocateIds(added.size(), joints.size()))
-        refuse("Die Skizze hat keine freien IDs mehr");
+        throw SketchEditRefusal(name + "Die Skizze hat keine freien IDs mehr", {});
     Rollback rollback(*this);
     clearPreview();
     elements_.nextId = next;
@@ -95,9 +145,8 @@ std::size_t SketchEditorSession::addSectionCurves() {
     selectedReferences_.clear();
     selectionPoint_.reset();
     if (!keepIfValid(rollback))
-        refuse("Das Ergebnis lässt sich nicht lösen; nichts geändert");
+        throw SketchEditRefusal(name + "Das Ergebnis lässt sich nicht lösen; nichts geändert", {});
     commitHistory();
-    return added.size();
 }
 
 } // namespace voelund::application

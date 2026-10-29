@@ -15,9 +15,12 @@
 #include <TopoDS_Shape.hxx>
 
 #include <array>
+#include <map>
 #include <optional>
 #include <span>
 #include <string>
+#include <string_view>
+#include <utility>
 #include <vector>
 
 namespace voelund::application {
@@ -38,6 +41,12 @@ enum class SketchDrawingTool {
     point // S15
 };
 enum class SketchAxisReference { origin, xAxis, yAxis };
+
+// N15b: what a DXF import took: the number of curves and, by entity type, what it skipped.
+struct SketchDxfImportResult final {
+    std::size_t added;
+    std::map<std::string, std::size_t> skipped;
+};
 
 class SketchEditorSession final {
   public:
@@ -316,6 +325,9 @@ class SketchEditorSession final {
     // N15a (SketchEditorSection.cpp): the curves where the visible bodies meet the sketch plane,
     // as ordinary sketch curves in one step; how many. SketchEditRefusal names why not.
     std::size_t addSectionCurves();
+    // N15b: the curves of an ASCII DXF file's drawing, in one step; how many came and which
+    // entity types were skipped. SketchEditRefusal names why nothing could be taken.
+    SketchDxfImportResult importDxf(std::string_view text);
     [[nodiscard]] bool isProjected(document::SketchElementId element) const noexcept;
     [[nodiscard]] std::span<const document::SketchProjection> projections() const noexcept;
     [[nodiscard]] CommandResult tryAccept(ErrorDisposition disposition = ErrorDisposition::reject);
@@ -348,6 +360,8 @@ class SketchEditorSession final {
     void refreshProjectedGeometry();
     // S11/S19: the shared fillet and chamfer step.
     SketchCurveEditResult treatCorner(bool chamfer, double size);
+    void addCurvesInOneStep(std::vector<std::pair<document::SketchGeometry, bool>> curves,
+                            const std::string& name);                 // N15a/N15b
     SketchCurveEditResult treatCurveCorner(bool chamfer, double size, // N14a: with arcs
                                            const std::vector<document::SketchGeometryReference>&);
     SketchCurveEditResult transformSelection(bool scale, document::SketchPoint center,

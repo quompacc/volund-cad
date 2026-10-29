@@ -6,6 +6,8 @@
 #include "SketchViewAdapter.hpp"
 #include "ToolPanelHost.hpp"
 
+#include <QFile>
+#include <QFileDialog>
 #include <QObject>
 #include <QStringList>
 
@@ -219,7 +221,8 @@ void SketchEditorToolController::applyEditOperation(const std::string& id) {
     // Operations without a selection: S17 projecting on/off, N15a section curves.
     static const std::map<std::string, void (SketchEditorToolController::*)()> plain{
         {"project", &SketchEditorToolController::toggleProjecting},
-        {"section", &SketchEditorToolController::addSectionCurves}};
+        {"section", &SketchEditorToolController::addSectionCurves},
+        {"import_dxf", &SketchEditorToolController::importDxf}};
     if (const auto operation = plain.find(id); operation != plain.end()) {
         (this->*operation->second)();
         return;
@@ -411,6 +414,39 @@ void SketchEditorToolController::setProjecting(bool on) {
     viewport_.setEdgePicking(on);
     statusChanged_(on ? QObject::tr("Projizieren: Körperkante anklicken; erneut wählen beendet")
                       : QObject::tr("Projizieren beendet"));
+}
+
+// N15b: a DXF file chosen in a dialog comes in as one step; the status line says how many
+// curves came and which entity types were skipped.
+void SketchEditorToolController::importDxf() {
+    const QString path = QFileDialog::getOpenFileName(&viewport_, QObject::tr("DXF importieren"),
+                                                      {}, QObject::tr("DXF-Zeichnung (*.dxf)"));
+    if (path.isEmpty())
+        return;
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly)) {
+        statusChanged_(QObject::tr("DXF importieren: Die Datei lässt sich nicht lesen"));
+        return;
+    }
+    const QByteArray bytes = file.readAll();
+    try {
+        const auto result = editor_->importDxf(
+            std::string_view(bytes.constData(), static_cast<std::size_t>(bytes.size())));
+        QStringList skipped;
+        for (const auto& [type, count] : result.skipped)
+            skipped << QStringLiteral("%1 × %2").arg(count).arg(QString::fromStdString(type));
+        statusChanged_(QObject::tr("%n Kurve(n) aus der DXF-Datei übernommen", "",
+                                   static_cast<int>(result.added)) +
+                       (skipped.isEmpty()
+                            ? QString{}
+                            : QObject::tr("; übersprungen: %1").arg(skipped.join(", "))));
+    } catch (const std::invalid_argument& error) {
+        statusChanged_(QString::fromUtf8(error.what()));
+        return;
+    }
+    panel_.setAcceptEnabled(editor_->canAccept());
+    syncConstraintState();
+    refreshPresentation();
 }
 
 // N15a: one step; the status line says how many curves came or why none.

@@ -140,6 +140,41 @@ double PlanarCurve::nearestParameter(const gp_Pnt2d& point) const {
     });
 }
 
+std::optional<BSpline2d> clampedCubicBSpline(std::span<const gp_Pnt2d> poles,
+                                             std::span<const double> knots, int degree) {
+    if (degree < 1 || degree > 3 || poles.size() < static_cast<std::size_t>(degree) + 1 ||
+        knots.size() != poles.size() + static_cast<std::size_t>(degree) + 1)
+        return std::nullopt;
+    try {
+        return detail::guarded(operation, [&]() -> std::optional<BSpline2d> {
+            NCollection_Array1<gp_Pnt2d> points(1, static_cast<int>(poles.size()));
+            for (std::size_t index = 0; index < poles.size(); ++index)
+                points.SetValue(static_cast<int>(index) + 1, poles[index]);
+            const auto occt = detail::occtKnots(knots);
+            Handle(Geom2d_BSplineCurve) curve =
+                new Geom2d_BSplineCurve(points, occt.values, occt.multiplicities, degree);
+            if (degree < 3)
+                curve->IncreaseDegree(3);
+            // The defined range runs from knot `degree` to knot `poles` (0-based).
+            const double first = knots[static_cast<std::size_t>(degree)];
+            const double last = knots[poles.size()];
+            if (!(first < last))
+                return std::nullopt;
+            curve->Segment(first, last);
+            BSpline2d result;
+            for (int index = 1; index <= curve->NbPoles(); ++index)
+                result.poles.push_back(curve->Pole(index));
+            for (int index = 1; index <= curve->NbKnots(); ++index)
+                result.knots.insert(result.knots.end(),
+                                    static_cast<std::size_t>(curve->Multiplicity(index)),
+                                    curve->Knot(index) - curve->Knot(1));
+            return result;
+        });
+    } catch (const KernelError&) {
+        return std::nullopt;
+    }
+}
+
 BSpline2d bsplinePiece(const BSpline2d& spline, double from, double to) {
     return detail::guarded(operation, [&] {
         const Handle(Geom2d_BSplineCurve) curve = bsplineCurve(spline);

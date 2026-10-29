@@ -295,6 +295,10 @@ void SketchEditorToolController::showPanel() {
           QObject::tr("Schnittkurven: wo sichtbare Körper die Skizzenebene schneiden, Kurven "
                       "anlegen"),
           QObject::tr("Bearbeiten")},
+         {"import_dxf",
+          QObject::tr("Linien, Bögen, Kreise, Polylinien, Ellipsen und Splines aus einer "
+                      "DXF-Datei in die Skizze übernehmen"),
+          QObject::tr("Bearbeiten")},
          {"rotate", QObject::tr("Auswahl um den Bezugspunkt drehen"), QObject::tr("Bearbeiten")},
          {"scale", QObject::tr("Auswahl um den Bezugspunkt skalieren"), QObject::tr("Bearbeiten")},
          {"mirror", QObject::tr("Auswahl an der zuletzt gewählten Linie spiegeln (assoziativ)"),

@@ -1908,3 +1908,8 @@ add_executable(voelund_sketch_section_tests integration/SketchSectionTests.cpp)
 target_link_libraries(voelund_sketch_section_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME application.sketch_section COMMAND voelund_sketch_section_tests)
 set_tests_properties(application.sketch_section PROPERTIES LABELS "integration;application;sketch" TIMEOUT 120)
+
+add_executable(voelund_sketch_dxf_import_tests integration/SketchDxfImportTests.cpp)
+target_link_libraries(voelund_sketch_dxf_import_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.sketch_dxf_import COMMAND voelund_sketch_dxf_import_tests)
+set_tests_properties(application.sketch_dxf_import PROPERTIES LABELS "integration;application;sketch" TIMEOUT 120)

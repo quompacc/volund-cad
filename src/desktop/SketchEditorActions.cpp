@@ -43,9 +43,10 @@ const std::map<std::string, SketchConstraintKind>& relationCommands() {
 }
 
 bool isEditOperation(const std::string& id) {
-    for (const char* operation : {"trim", "extend", "split", "fillet", "chamfer", "rotate", "scale",
-                                  "offset", "mirror", "linear_pattern", "circular_pattern",
-                                  "edit_pattern", "dissolve_pattern", "project", "section"})
+    for (const char* operation :
+         {"trim", "extend", "split", "fillet", "chamfer", "rotate", "scale", "offset", "mirror",
+          "linear_pattern", "circular_pattern", "edit_pattern", "dissolve_pattern", "project",
+          "section", "import_dxf"})
         if (id == operation)
             return true;
     return false;
