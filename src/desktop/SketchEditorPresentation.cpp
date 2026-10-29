@@ -222,7 +222,8 @@ void SketchEditorToolController::applyEditOperation(const std::string& id) {
     static const std::map<std::string, void (SketchEditorToolController::*)()> plain{
         {"project", &SketchEditorToolController::toggleProjecting},
         {"section", &SketchEditorToolController::addSectionCurves},
-        {"import_dxf", &SketchEditorToolController::importDxf}};
+        {"import_dxf", &SketchEditorToolController::importDxf},
+        {"text", &SketchEditorToolController::placeText}};
     if (const auto operation = plain.find(id); operation != plain.end()) {
         (this->*operation->second)();
         return;

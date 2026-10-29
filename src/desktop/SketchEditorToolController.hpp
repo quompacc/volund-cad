@@ -93,6 +93,7 @@ class SketchEditorToolController final {
     void projectEdge(std::uint64_t bodyResult, const TopoDS_Shape& edge);
     void addSectionCurves(); // N15a
     void importDxf();        // N15b
+    void placeText();        // N15c (SketchEditorText.cpp)
     void cancel();
 
   private:

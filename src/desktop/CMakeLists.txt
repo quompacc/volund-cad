@@ -53,6 +53,8 @@ add_library(
     MainWindowMoveValues.cpp
     SketchEditorDrag.cpp
     SketchEditorPresentation.cpp
+    SketchEditorText.cpp
+    SketchText.cpp
     SketchEditorDimensionEdit.cpp
     SketchEditorParameters.cpp
     SketchExtrusionModes.cpp

@@ -328,6 +328,9 @@ class SketchEditorSession final {
     // N15b: the curves of an ASCII DXF file's drawing, in one step; how many came and which
     // entity types were skipped. SketchEditRefusal names why nothing could be taken.
     SketchDxfImportResult importDxf(std::string_view text);
+    // N15c: the outline of a text (the desktop makes it from the font) as sketch curves in one
+    // step; how many. SketchEditRefusal names why not.
+    std::size_t addTextOutline(std::vector<document::SketchGeometry> curves);
     [[nodiscard]] bool isProjected(document::SketchElementId element) const noexcept;
     [[nodiscard]] std::span<const document::SketchProjection> projections() const noexcept;
     [[nodiscard]] CommandResult tryAccept(ErrorDisposition disposition = ErrorDisposition::reject);

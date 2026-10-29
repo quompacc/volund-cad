@@ -46,7 +46,7 @@ bool isEditOperation(const std::string& id) {
     for (const char* operation :
          {"trim", "extend", "split", "fillet", "chamfer", "rotate", "scale", "offset", "mirror",
           "linear_pattern", "circular_pattern", "edit_pattern", "dissolve_pattern", "project",
-          "section", "import_dxf"})
+          "section", "import_dxf", "text"})
         if (id == operation)
             return true;
     return false;

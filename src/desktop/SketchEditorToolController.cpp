@@ -295,6 +295,10 @@ void SketchEditorToolController::showPanel() {
           QObject::tr("Schnittkurven: wo sichtbare Körper die Skizzenebene schneiden, Kurven "
                       "anlegen"),
           QObject::tr("Bearbeiten")},
+         {"text",
+          QObject::tr("Text als Umriss in die Skizze setzen (am gewählten Punkt, sonst am "
+                      "Ursprung); zum Gravieren oder Prägen extrudieren"),
+          QObject::tr("Zeichnen")},
          {"import_dxf",
           QObject::tr("Linien, Bögen, Kreise, Polylinien, Ellipsen und Splines aus einer "
                       "DXF-Datei in die Skizze übernehmen"),

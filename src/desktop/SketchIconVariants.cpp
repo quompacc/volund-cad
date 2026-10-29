@@ -22,6 +22,14 @@ const QHash<QString, IconDrawing>& variantDrawings() {
              p.dot(13, 6);
              p.dot(20, 13);
          }},
+        {"text", // N15c: a capital T with its baseline
+         [](const Pens& p) {
+             p.line(5, 5, 19, 5);
+             p.line(12, 5, 12, 18);
+             p.line(5, 5, 5, 8);
+             p.line(19, 5, 19, 8);
+             p.accented([&] { p.line(3, 21, 21, 21); });
+         }},
         {"import_dxf", // N15b: a drawing sheet with an arrow into the sketch
          [](const Pens& p) {
              p.painter.drawRect(QRectF(3, 3, 11, 14));

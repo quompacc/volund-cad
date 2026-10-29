@@ -17,6 +17,7 @@
 // - N15a: section curves, as Fusion's "Intersect" with every visible body at once, where the
 //   bodies meet the sketch plane (no link to the body).
 // - N15b: the drawing of a DXF file (SketchDxfImport.hpp); what it cannot take is counted.
+// - N15c: the outline of a text, made by the desktop from the font (SketchText.hpp).
 namespace voelund::application {
 namespace {
 
@@ -121,6 +122,19 @@ SketchDxfImportResult SketchEditorSession::importDxf(std::string_view text) {
     result.added = curves.size();
     addCurvesInOneStep(std::move(curves), "DXF importieren: ");
     return result;
+}
+
+std::size_t SketchEditorSession::addTextOutline(std::vector<document::SketchGeometry> curves) {
+    if (!active_)
+        refuse("Der Skizzeneditor ist nicht aktiv");
+    if (curves.empty())
+        throw SketchEditRefusal("Text: Der Text hat keine Umrisse (leer oder Schrift ohne Kurven)",
+                                {});
+    std::vector<std::pair<document::SketchGeometry, bool>> outline;
+    for (auto& curve : curves)
+        outline.emplace_back(std::move(curve), false);
+    addCurvesInOneStep(std::move(outline), "Text: ");
+    return curves.size();
 }
 
 // Adds the curves as one undo step, joined where they share ends; refuses with `name`.
