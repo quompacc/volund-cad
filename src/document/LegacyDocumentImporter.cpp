@@ -75,6 +75,62 @@ ParsedFeature readCylinderFeature(FeatureId id, std::string name, std::istringst
     return {{id, FeatureKind::cylinder, std::move(name), inputId}, cylinder};
 }
 
+// The readers of each legacy sketch element kind; each returns its geometry whole (N14c2: a
+// default variant assigned in branches made GCC -O3 see the B-spline knots as maybe
+// uninitialised).
+SketchGeometry readLegacyLine(std::istringstream& line, std::uint64_t version) {
+    SketchLine value{};
+    if (!(line >> value.start.x >> value.start.y >> value.end.x >> value.end.y))
+        invalidDocument("malformed sketch line");
+    if (version >= 3)
+        value.constraint = readLineConstraint(line);
+    return value;
+}
+SketchGeometry readLegacyRectangle(std::istringstream& line, std::uint64_t) {
+    SketchRectangle value{};
+    if (!(line >> value.first.x >> value.first.y >> value.second.x >> value.second.y))
+        invalidDocument("malformed sketch rectangle");
+    return value;
+}
+SketchGeometry readLegacyCircle(std::istringstream& line, std::uint64_t) {
+    SketchCircle value{};
+    if (!(line >> value.center.x >> value.center.y >> value.radius))
+        invalidDocument("malformed sketch circle");
+    return value;
+}
+SketchGeometry readLegacyArc(std::istringstream& line, std::uint64_t) {
+    SketchArc value{};
+    if (!(line >> value.center.x >> value.center.y >> value.radius >> value.startAngle >>
+          value.endAngle))
+        invalidDocument("malformed sketch arc");
+    return value;
+}
+SketchGeometry readLegacyEllipse(std::istringstream& line, std::uint64_t) {
+    SketchEllipse value{};
+    if (!(line >> value.center.x >> value.center.y >> value.majorRadius >> value.minorRadius >>
+          value.rotation))
+        invalidDocument("malformed sketch ellipse");
+    return value;
+}
+
+SketchGeometry legacyGeometry(const std::string& kind, std::istringstream& elementLine,
+                              std::uint64_t version) {
+    struct Reader final {
+        const char* kind;
+        std::uint64_t since; // the format version that added the kind
+        SketchGeometry (*read)(std::istringstream&, std::uint64_t);
+    };
+    static constexpr Reader readers[] = {{"LINE", 0, readLegacyLine},
+                                         {"RECTANGLE", 0, readLegacyRectangle},
+                                         {"CIRCLE", 0, readLegacyCircle},
+                                         {"ARC", 15, readLegacyArc},
+                                         {"ELLIPSE", 16, readLegacyEllipse}};
+    for (const auto& reader : readers)
+        if (kind == reader.kind && version >= reader.since)
+            return reader.read(elementLine, version);
+    invalidDocument("unknown sketch element kind");
+}
+
 SketchElement readSketchElement(std::istream& input, std::uint64_t version) {
     std::istringstream elementLine(requiredLine(input, "sketch element"));
     elementLine.imbue(std::locale::classic());
@@ -84,41 +140,7 @@ SketchElement readSketchElement(std::istream& input, std::uint64_t version) {
     if (!(elementLine >> marker >> kind >> unsignedValue(rawId)) || marker != "ELEMENT") {
         invalidDocument("malformed sketch element identity");
     }
-    SketchGeometry geometry;
-    if (kind == "LINE") {
-        SketchLine value{};
-        if (!(elementLine >> value.start.x >> value.start.y >> value.end.x >> value.end.y))
-            invalidDocument("malformed sketch line");
-        if (version >= 3)
-            value.constraint = readLineConstraint(elementLine);
-        geometry = value;
-    } else if (kind == "RECTANGLE") {
-        SketchRectangle value{};
-        if (!(elementLine >> value.first.x >> value.first.y >> value.second.x >> value.second.y)) {
-            invalidDocument("malformed sketch rectangle");
-        }
-        geometry = value;
-    } else if (kind == "CIRCLE") {
-        SketchCircle value{};
-        if (!(elementLine >> value.center.x >> value.center.y >> value.radius)) {
-            invalidDocument("malformed sketch circle");
-        }
-        geometry = value;
-    } else if (kind == "ARC" && version >= 15) {
-        SketchArc value{};
-        if (!(elementLine >> value.center.x >> value.center.y >> value.radius >> value.startAngle >>
-              value.endAngle))
-            invalidDocument("malformed sketch arc");
-        geometry = value;
-    } else if (kind == "ELLIPSE" && version >= 16) {
-        SketchEllipse value{};
-        if (!(elementLine >> value.center.x >> value.center.y >> value.majorRadius >>
-              value.minorRadius >> value.rotation))
-            invalidDocument("malformed sketch ellipse");
-        geometry = value;
-    } else {
-        invalidDocument("unknown sketch element kind");
-    }
+    const SketchGeometry geometry = legacyGeometry(kind, elementLine, version);
     bool construction = false;
     if (version >= 10) {
         int rawConstruction = 0;
