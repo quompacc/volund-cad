@@ -366,6 +366,13 @@ void draw(QPainter& painter, ShellIcon icon, const QColor& ink, const QColor& ac
         painter.setPen(QPen(accent, 1.8, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
         painter.drawRect(QRectF(10.5, 6.5, 3, 14));
         break;
+    case ShellIcon::datumPoint:
+        // N13b: a construction point, a small cross in a ring in the accent colour.
+        painter.drawEllipse(QPointF(12, 12), 7, 7);
+        painter.setPen(QPen(accent, 1.8, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        painter.drawLine(QPointF(12, 8), QPointF(12, 16));
+        painter.drawLine(QPointF(8, 12), QPointF(16, 12));
+        break;
     default:
         drawLater(painter, icon, accent);
     }

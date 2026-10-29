@@ -96,6 +96,9 @@ const std::set<std::string> commandTable{"app.about",
                                          "solid.modify.draft",
                                          "solid.create.datum_plane",
                                          "solid.create.datum_axis",
+                                         "solid.create.midplane",
+                                         "solid.create.plane_points",
+                                         "solid.create.datum_point",
                                          "assistant.mcp",
                                          "assistant.mcp_copy_command",
                                          "assistant.mcp_new_token",
@@ -185,7 +188,8 @@ void emptyDocumentOffersOnlyApplicableCommands(application::CadSession& session,
                                          "solid.create.torus",
                                          "solid.create.wedge", // M27: as new bodies
                                          "solid.create.datum_plane",
-                                         "solid.create.datum_axis", // M19: on XY or a base axis
+                                         "solid.create.datum_axis",  // M19: on XY or a base axis
+                                         "solid.create.datum_point", // N13b: at coordinates
                                          "assistant.mcp",
                                          "assistant.mcp_new_token",
                                          "assistant.allow",

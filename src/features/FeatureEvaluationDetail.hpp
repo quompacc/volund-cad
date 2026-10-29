@@ -88,6 +88,10 @@ void evaluateImport(const document::DocumentSnapshot& document,
                     const document::FeatureDescriptor& descriptor,
                     std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
                     std::vector<EvaluatedBody>& referenceBodies);
+// N13b (DatumEvaluation.cpp): a construction point.
+void evaluateDatumPoint(const document::DocumentSnapshot& document,
+                        const document::FeatureDescriptor& descriptor,
+                        std::vector<EvaluatedFeature>& outputs);
 // N13a (FaceEditEvaluation.cpp): faces of a body moved or removed.
 void evaluateFaceEdit(const document::DocumentSnapshot& document,
                       const document::FeatureDescriptor& descriptor,

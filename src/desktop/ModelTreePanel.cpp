@@ -156,11 +156,17 @@ void ModelTreePanel::showModel(const application::ModelOutline& outline,
         const auto match = byId.find(id.value());
         if (match == byId.end())
             return;
-        // A sketch has an eye (user report 2026-10-24); other steps show through their body.
-        const bool sketch = match->second->kind == document::FeatureKind::sketch;
-        auto* item = addItem(
-            parent, Kind::feature, id.value(), QString::fromStdString(match->second->name),
-            sketch ? std::optional{visibility.shownSketches.contains(id.value())} : std::nullopt);
+        // A sketch has an eye (user report 2026-10-24), and (N13b) so has a construction
+        // element; other steps show through their body.
+        const auto kind = match->second->kind;
+        const bool sketch = kind == document::FeatureKind::sketch;
+        const bool construction = document::isConstruction(kind);
+        const auto eye = sketch ? std::optional{visibility.shownSketches.contains(id.value())}
+                         : construction
+                             ? std::optional{!visibility.hiddenDatums.contains(id.value())}
+                             : std::nullopt;
+        auto* item = addItem(parent, Kind::feature, id.value(),
+                             QString::fromStdString(match->second->name), eye);
         if (selectedFeature == id)
             setCurrentItem(item);
     };

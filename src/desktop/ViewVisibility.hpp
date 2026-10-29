@@ -24,6 +24,8 @@ struct ViewVisibility final {
     // in the tree overrides that (feature ID -> shown).
     std::map<std::uint64_t, bool> sketchEyes;
     std::set<std::uint64_t> shownSketches; // the result, kept for the tree
+    // N13b: construction planes, axes and points hidden by their eye (view state, as sketches).
+    std::set<std::uint64_t> hiddenDatums;
 
     [[nodiscard]] bool sketchShown(std::uint64_t sketch, bool used) const {
         const auto eye = sketchEyes.find(sketch);

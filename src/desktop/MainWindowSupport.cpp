@@ -37,18 +37,23 @@ std::vector<viewport::SceneBody> makeSceneBodies(const application::CadSession& 
     return bodies;
 }
 
-std::vector<viewport::SceneDatum> makeSceneDatums(const application::CadSession& session) {
+// M19: construction planes and axes; N13b: points, all but the hidden ones.
+std::vector<viewport::SceneDatum> makeSceneDatums(const application::CadSession& session,
+                                                  const std::set<std::uint64_t>& hidden) {
     std::vector<viewport::SceneDatum> datums;
     for (const auto& feature : session.features()) {
         const bool axis = feature.kind == document::FeatureKind::datumAxis;
-        if (!axis && feature.kind != document::FeatureKind::datumPlane)
+        const bool point = feature.kind == document::FeatureKind::datumPoint;
+        if ((!axis && !point && feature.kind != document::FeatureKind::datumPlane) ||
+            hidden.contains(feature.id.value()))
             continue;
         if (const auto frame = session.datumFrame(feature.id))
             datums.push_back({feature.id.value(),
                               axis,
                               {frame->originX, frame->originY, frame->originZ},
                               {frame->normalX, frame->normalY, frame->normalZ},
-                              {frame->xDirectionX, frame->xDirectionY, frame->xDirectionZ}});
+                              {frame->xDirectionX, frame->xDirectionY, frame->xDirectionZ},
+                              point});
     }
     return datums;
 }

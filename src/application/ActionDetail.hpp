@@ -52,6 +52,15 @@ inline CommandResult runWhole(CadSession& session, const CreateSplitAction& a) {
 inline CommandResult runWhole(CadSession& session, const EditSplitParametersAction& a) {
     return session.editSplitParameters(a);
 }
+inline CommandResult runWhole(CadSession& session, const CreateDatumPlaneAction& a) {
+    return session.createDatumPlane(a);
+}
+inline CommandResult runWhole(CadSession& session, const CreateDatumPointAction& a) {
+    return session.createDatumPoint(a);
+}
+inline CommandResult runWhole(CadSession& session, const EditDatumPointParametersAction& a) {
+    return session.editDatumPoint(a);
+}
 inline CommandResult runWhole(CadSession& session, const CreateFaceEditAction& a) {
     return session.createFaceEdit(a);
 }

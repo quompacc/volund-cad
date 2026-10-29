@@ -56,6 +56,19 @@ template <class Values> void addPlaneUser(FeatureReferences& references, const V
         addSteps(references, values.features, std::nullopt);
 }
 
+// M19/N13b: a construction plane's faces, or its points.
+void addFace(FeatureReferences& references, const BodyFaceReference& face);
+void addPlaneReferences(FeatureReferences& references, const DatumPlaneParameters& plane) {
+    for (const auto* face : {&plane.face, &plane.secondFace})
+        if (*face)
+            addFace(references, **face);
+    references.structural.insert(references.structural.end(), plane.points.begin(),
+                                 plane.points.end());
+}
+template <class Type>
+constexpr bool edgeDatum =
+    std::is_same_v<Type, DatumAxisParameters> || std::is_same_v<Type, DatumPointParameters>;
+
 // M22/N13a: the faces a shell opens or a face edit moves or removes.
 template <class Type>
 constexpr bool faceUser =
@@ -193,9 +206,8 @@ FeatureReferences featureReferences(const FeatureDescriptor& feature,
                 for (const auto tool : values.tools)
                     body(tool);
             } else if constexpr (std::is_same_v<Type, DatumPlaneParameters>) {
-                if (values.face)
-                    addFace(references, *values.face);
-            } else if constexpr (std::is_same_v<Type, DatumAxisParameters>) {
+                addPlaneReferences(references, values);
+            } else if constexpr (edgeDatum<Type>) { // M19 axis, N13b point
                 if (values.body)
                     body(*values.body);
                 if (values.edge)

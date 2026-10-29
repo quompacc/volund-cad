@@ -82,9 +82,15 @@ void MainWindow::createToolPanel() {
     impl_->datumTool = std::make_unique<DatumToolController>( // M19
         impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
         [this](const QString& message) { statusBar()->showMessage(message); });
-    impl_->datumTool->setPreviewHandler([this](const application::CadSession* candidate) {
-        impl_->viewport->setDatums(makeSceneDatums(candidate ? *candidate : impl_->session));
-    });
+    const auto showDatums = [this](const application::CadSession* candidate) {
+        impl_->viewport->setDatums(makeSceneDatums(candidate ? *candidate : impl_->session,
+                                                   impl_->visibility.hiddenDatums));
+    };
+    impl_->datumTool->setPreviewHandler(showDatums);
+    impl_->constructionTool = std::make_unique<ConstructionToolController>( // N13b
+        impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
+        [this](const QString& message) { statusBar()->showMessage(message); });
+    impl_->constructionTool->setPreviewHandler(showDatums);
     connectEdgePicking();
 }
 

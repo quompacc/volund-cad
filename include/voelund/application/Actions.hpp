@@ -236,6 +236,10 @@ struct CreateDatumPlaneAction final {
     Quantity offset;
     document::DatumRotationAxis rotationAxis{document::DatumRotationAxis::none};
     Quantity angle{0.0, QuantityUnit::radian};
+    // N13b: a midplane's second face on `secondSupport`'s result, or three construction points.
+    std::optional<document::FeatureId> secondSupport{};
+    std::optional<document::SubshapeOrigin> secondFace{};
+    std::vector<document::FeatureId> points{};
     bool operator==(const CreateDatumPlaneAction&) const = default;
 };
 struct EditDatumPlaneParametersAction final {
@@ -249,6 +253,19 @@ struct CreateDatumAxisAction final {
     std::optional<document::FeatureId> support;
     std::optional<document::FilletEdge> edge;
     bool operator==(const CreateDatumAxisAction&) const = default;
+};
+// N13b: a construction point at coordinates, or at a place on an edge of `support`'s result.
+struct CreateDatumPointAction final {
+    std::optional<std::array<double, 3>> position{};
+    std::optional<document::FeatureId> support{};
+    std::optional<document::FilletEdge> edge{};
+    document::EdgeSpot spot{document::EdgeSpot::start};
+    bool operator==(const CreateDatumPointAction&) const = default;
+};
+struct EditDatumPointParametersAction final {
+    document::FeatureId point;
+    document::DatumPointParameters parameters;
+    bool operator==(const EditDatumPointParametersAction&) const = default;
 };
 struct EditDatumAxisParametersAction final {
     document::FeatureId axis;
@@ -392,7 +409,8 @@ using Action = std::variant<
     CreateDraftAction, EditDraftParametersAction, CreateMirrorAction, EditMirrorParametersAction,
     CreatePatternAction, EditPatternParametersAction, MoveBodyAction, EditMoveParametersAction,
     SetFeatureSuppressedAction, CreateSplitAction, EditSplitParametersAction, CreateRibAction,
-    CreateFaceEditAction, EditFaceEditParametersAction>;
+    CreateFaceEditAction, EditFaceEditParametersAction, CreateDatumPointAction,
+    EditDatumPointParametersAction>;
 // Parallel to the alternatives of Action.
 enum class ActionKind {
     createParameter,
@@ -444,7 +462,9 @@ enum class ActionKind {
     editSplitParameters,
     createRib,      // N12b
     createFaceEdit, // N13a
-    editFaceEditParameters
+    editFaceEditParameters,
+    createDatumPoint, // N13b
+    editDatumPointParameters
 };
 [[nodiscard]] ActionKind actionKind(const Action& action) noexcept;
 

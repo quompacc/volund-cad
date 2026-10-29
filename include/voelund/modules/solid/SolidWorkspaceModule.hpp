@@ -76,6 +76,13 @@ struct SolidCommandServices final {
     std::function<void()> datumPlane{};
     std::function<void()> datumAxis{};
     std::function<bool()> canDatum{};
+    // N13b: a midplane of the picked face and a second one, a plane through three construction
+    // points, a construction point.
+    std::function<void()> midplane{};
+    std::function<bool()> canMidplane{};
+    std::function<void()> planeThroughPoints{};
+    std::function<bool()> canPlaneThroughPoints{};
+    std::function<void()> datumPoint{};
     // M27: sphere (0), cone (1), torus (2) and wedge (3), enabled like the cylinder.
     std::function<void(int)> primitive{};
     std::function<bool()> canPrimitive{};
@@ -89,8 +96,9 @@ class SolidWorkspaceModule final : public workspaces::WorkspaceModule {
     [[nodiscard]] std::span<const workspaces::CommandDescriptor> commands() const override;
 
   private:
-    void addInspectCommands(SolidCommandServices& services); // M12 measure, N08 interference
-    void addCopyCommands(SolidCommandServices& services);    // M09, N12a, M10
+    void addInspectCommands(SolidCommandServices& services);      // M12 measure, N08 interference
+    void addCopyCommands(SolidCommandServices& services);         // M09, N12a, M10
+    void addConstructionCommands(SolidCommandServices& services); // N13b
 
     std::vector<workspaces::CommandDescriptor> commands_;
 };

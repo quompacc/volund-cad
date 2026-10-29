@@ -48,9 +48,10 @@ constexpr const char* featureNames[]{
     QT_TRANSLATE_NOOP("QObject", "Muster"),         QT_TRANSLATE_NOOP("QObject", "Musterkopie"),
     QT_TRANSLATE_NOOP("QObject", "Bewegen"),        QT_TRANSLATE_NOOP("QObject", "Import"),
     QT_TRANSLATE_NOOP("QObject", "Importteil"),     QT_TRANSLATE_NOOP("QObject", "Teilen"),
-    QT_TRANSLATE_NOOP("QObject", "Geteilter Teil"), QT_TRANSLATE_NOOP("QObject", "Flächen")};
+    QT_TRANSLATE_NOOP("QObject", "Geteilter Teil"), QT_TRANSLATE_NOOP("QObject", "Flächen"),
+    QT_TRANSLATE_NOOP("QObject", "Bezugspunkt")};
 static_assert(std::size(featureNames) ==
-              static_cast<std::size_t>(document::FeatureKind::faceEdit) + 1);
+              static_cast<std::size_t>(document::FeatureKind::datumPoint) + 1);
 
 QString featureName(const ShellState& state) {
     if (!state.featureKind.has_value())
@@ -119,8 +120,7 @@ ContextCommands contextCommands(const ShellState& state) {
     case ShellSelection::feature:
         result.title = featureName(state);
         // M19: a construction plane carries sketches; both kinds reopen their panel.
-        if (state.featureKind == document::FeatureKind::datumPlane ||
-            state.featureKind == document::FeatureKind::datumAxis) {
+        if (state.featureKind && document::isConstruction(*state.featureKind)) {
             result.commands = {"solid.modify.edit_sketch", "history.suppress",
                                "history.rollback_here", "history.delete"};
             if (state.featureKind == document::FeatureKind::datumPlane) {

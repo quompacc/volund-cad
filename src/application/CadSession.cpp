@@ -139,8 +139,7 @@ ModelOutline CadSession::modelOutline() const {
         const document::FeatureId feature = snapshot.features()[index].id;
         // M19: construction features belong to no body.
         const auto kind = snapshot.features()[index].kind;
-        if (!contexts[index] || kind == document::FeatureKind::datumPlane ||
-            kind == document::FeatureKind::datumAxis) {
+        if (!contexts[index] || document::isConstruction(kind)) {
             outline.loose.push_back(feature);
             continue;
         }
@@ -236,9 +235,7 @@ bool CadSession::canTransformFeature(document::FeatureId featureId) const noexce
         return false;
     }
     // M11: every body moves; sketches and construction features have none.
-    if (feature->kind == document::FeatureKind::sketch ||
-        feature->kind == document::FeatureKind::datumPlane ||
-        feature->kind == document::FeatureKind::datumAxis) {
+    if (feature->kind == document::FeatureKind::sketch || document::isConstruction(feature->kind)) {
         return false;
     }
     if (!transformBodyForFeature(featureId).has_value()) {

@@ -35,7 +35,7 @@ bool standsAlone(const FeatureDescriptor& feature, const FeatureParameters& para
         FeatureKind::shell,      FeatureKind::draft,       FeatureKind::mirror,
         FeatureKind::pattern,    FeatureKind::patternCopy, FeatureKind::move,
         FeatureKind::stepImport, FeatureKind::importPart,  FeatureKind::split,
-        FeatureKind::splitPart,  FeatureKind::faceEdit};
+        FeatureKind::splitPart,  FeatureKind::faceEdit,    FeatureKind::datumPoint};
     if (std::ranges::find(alone, feature.kind) != alone.end())
         return true;
     if (feature.kind == FeatureKind::hole)
@@ -50,7 +50,7 @@ bool standsAlone(const FeatureDescriptor& feature, const FeatureParameters& para
 
 // FeatureKind and FeatureParameters list the kinds in the same order (N12a).
 static_assert(std::variant_size_v<FeatureParameters> ==
-              static_cast<std::size_t>(FeatureKind::faceEdit) + 1);
+              static_cast<std::size_t>(FeatureKind::datumPoint) + 1);
 static_assert(
     std::is_same_v<std::variant_alternative_t<static_cast<std::size_t>(FeatureKind::importPart),
                                               FeatureParameters>,
@@ -120,6 +120,40 @@ std::optional<BodyId> wholeBodyStep(const FeatureParameters& parameters) {
     if (const auto* edit = std::get_if<FaceEditParameters>(&parameters)) // N13a
         return edit->body;
     return std::nullopt;
+}
+
+// M19/N13b: construction features refer to bodies of the document; a plane through points
+// names three earlier construction points.
+// The bodies a construction feature reads: its edge's, its face's or faces'.
+std::vector<BodyId> datumBodies(const FeatureParameters& parameters) {
+    std::vector<BodyId> bodies;
+    if (const auto* axis = std::get_if<DatumAxisParameters>(&parameters); axis && axis->body)
+        bodies.push_back(*axis->body);
+    if (const auto* point = std::get_if<DatumPointParameters>(&parameters); point && point->body)
+        bodies.push_back(*point->body);
+    if (const auto* plane = std::get_if<DatumPlaneParameters>(&parameters))
+        for (const auto* face : {&plane->face, &plane->secondFace})
+            if (*face)
+                bodies.push_back((*face)->body);
+    return bodies;
+}
+
+void checkDatumPoints(const FeatureParameters& parameters, const HistoryPosition& at) {
+    const auto* plane = std::get_if<DatumPlaneParameters>(&parameters);
+    for (const auto point : plane ? plane->points : std::vector<FeatureId>{}) {
+        const auto found = at.indices.find(point.value());
+        if (found == at.indices.end() || found->second >= at.index ||
+            at.features[found->second].kind != FeatureKind::datumPoint)
+            throw std::invalid_argument("A plane's point is not an earlier construction point");
+    }
+}
+
+template <class IsBody>
+void checkDatumReferences(const FeatureParameters& parameters, const HistoryPosition& at,
+                          const IsBody& isBody) {
+    if (!std::ranges::all_of(datumBodies(parameters), isBody))
+        throw std::invalid_argument("Construction reference is not a body of this document");
+    checkDatumPoints(parameters, at);
 }
 
 // N12a: a split part directly follows its split, which keeps both sides.
@@ -261,11 +295,7 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
     // M19: construction features refer to bodies of the document; a sketch names an earlier
     // construction plane.
     for (std::size_t index = 0; index < features.size(); ++index) {
-        const auto* plane = std::get_if<DatumPlaneParameters>(&parameters[index]);
-        const auto* axis = std::get_if<DatumAxisParameters>(&parameters[index]);
-        if ((plane && plane->face && !isBody(plane->face->body)) ||
-            (axis && axis->body && !isBody(*axis->body)))
-            throw std::invalid_argument("Construction reference is not a body of this document");
+        checkDatumReferences(parameters[index], {features, indices, index}, isBody);
         // M20: a revolve names an earlier construction axis.
         const auto* prism = std::get_if<ExtrusionParameters>(&parameters[index]);
         if (prism && prism->revolve && prism->revolve->axis.datumAxis) {
@@ -386,8 +416,7 @@ featureBodyContexts(std::span<const FeatureDescriptor> features,
                 context[index] = BodyId{feature.id.value()};
             // M19: a construction feature belongs to no body; it is stored in a group of its
             // own, under its own id (the shell lists it apart from the bodies).
-            else if (feature.kind == FeatureKind::datumPlane ||
-                     feature.kind == FeatureKind::datumAxis)
+            else if (isConstruction(feature.kind))
                 context[index] = BodyId{feature.id.value()};
             else if (const auto* prism = extrusion(index); prism && prism->faceProfile)
                 context[index] = prism->faceProfile->body;

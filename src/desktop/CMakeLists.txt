@@ -21,6 +21,7 @@ add_library(
     MainWindowBodies.cpp
     MainWindowClipboard.cpp
     MainWindowGroups.cpp
+    MainWindowEditing.cpp
     ProductShell.cpp
     AssistantPanel.cpp
     MainWindowAssistant.cpp
@@ -78,6 +79,7 @@ add_library(
     SplitToolController.cpp
     RibToolController.cpp
     FaceEditToolController.cpp
+    ConstructionToolController.cpp
     PatternToolController.cpp
     MoveToolController.cpp
     MeasureToolController.cpp

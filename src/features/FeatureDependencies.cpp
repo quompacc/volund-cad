@@ -122,6 +122,26 @@ void addPlaneUser(FeatureInputs& node, const document::DocumentSnapshot& snapsho
         node.inputs.push_back(*plane.constructionPlane);
 }
 
+// M19/N13b: a construction plane or axis or point reads the bodies of its face, faces or edge
+// as they were before it; a plane through points follows them.
+void addDatumInputs(FeatureInputs& node, const document::DocumentSnapshot& snapshot) {
+    const auto& parameters = snapshot.featureParameters(node.feature);
+    std::vector<document::BodyId> bodies;
+    if (const auto* plane = std::get_if<document::DatumPlaneParameters>(&parameters)) {
+        for (const auto* face : {&plane->face, &plane->secondFace})
+            if (*face)
+                bodies.push_back((*face)->body);
+        node.inputs.insert(node.inputs.end(), plane->points.begin(), plane->points.end());
+    }
+    if (const auto* axis = std::get_if<document::DatumAxisParameters>(&parameters);
+        axis && axis->body)
+        bodies.push_back(*axis->body);
+    if (const auto* point = std::get_if<document::DatumPointParameters>(&parameters);
+        point && point->body)
+        bodies.push_back(*point->body);
+    addProducers(node, snapshot, bodies);
+}
+
 // M10: a pattern reads its body, the body of its edge or its construction axis as they were
 // before it; N11a: and its rows' axis; N11c: its path sketch.
 void addPattern(FeatureInputs& node, const document::DocumentSnapshot& snapshot) {
@@ -177,15 +197,7 @@ FeatureDependencies FeatureDependencies::from(const document::DocumentSnapshot& 
         }
         // M19: a construction plane or axis on a body reads it as it was before; a sketch
         // on a construction plane follows the plane.
-        std::optional<document::BodyId> datumBody;
-        if (feature.kind == document::FeatureKind::datumPlane &&
-            snapshot.datumPlaneParameters(feature.id).face)
-            datumBody = snapshot.datumPlaneParameters(feature.id).face->body;
-        if (feature.kind == document::FeatureKind::datumAxis)
-            datumBody = snapshot.datumAxisParameters(feature.id).body;
-        if (datumBody)
-            if (const auto producer = inputProducer(snapshot, feature.id, *datumBody))
-                node.inputs.push_back(*producer);
+        addDatumInputs(node, snapshot);
         if (feature.kind == document::FeatureKind::sketch) {
             if (const auto plane = snapshot.sketchParameters(feature.id).constructionPlane)
                 node.inputs.push_back(*plane);

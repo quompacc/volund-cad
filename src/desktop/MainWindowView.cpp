@@ -30,6 +30,14 @@
 // base planes from the tree or the viewport.
 namespace voelund::desktop {
 namespace {
+// N13b: a construction plane, axis or point (they have an eye in the tree).
+bool isConstructionFeature(const application::CadSession& session, std::uint64_t id) {
+    const auto features = session.features();
+    const auto found =
+        std::ranges::find(features, document::FeatureId{id}, &document::FeatureDescriptor::id);
+    return found != features.end() && document::isConstruction(found->kind);
+}
+
 // The features some step builds on (its sketch, path, sections, faces ...), from the stored
 // references. User report 2026-10-25: asking deletionPlan per sketch evaluated the whole model
 // once per sketch on every change; this reads the references only.
@@ -60,7 +68,7 @@ void MainWindow::syncVisibility() {
         if (body.hidden)
             impl_->visibility.hiddenBodies.insert(body.id.value());
     impl_->viewport->setBodies(makeSceneBodies(impl_->session, impl_->visibility.hiddenBodies));
-    impl_->viewport->setDatums(makeSceneDatums(impl_->session)); // M19
+    impl_->viewport->setDatums(makeSceneDatums(impl_->session, impl_->visibility.hiddenDatums));
     impl_->viewport->setBasePlaneVisibility(impl_->visibility.visiblePlanes(hasBodies));
     impl_->viewport->setGridVisible(impl_->visibility.grid);
     syncViewSwitches();
@@ -246,16 +254,25 @@ void MainWindow::toggleVisibility(int kind, std::uint64_t id) {
     case ModelTreePanel::Kind::bodyOrigin:
         toggle(visibility.shownBodyOrigins, id);
         break;
-    case ModelTreePanel::Kind::feature: // a sketch's eye; other steps have none
-        visibility.sketchEyes[id] = !visibility.shownSketches.contains(id);
-        syncModelTree();
-        syncSketchPresentation(); // the selected sketch follows its eye at once
-        syncVisibility();
+    case ModelTreePanel::Kind::feature:
+        toggleFeatureEye(id);
         return;
     }
     // View state only: no undo step and no change to the saved state.
     syncVisibility();
     syncModelTree();
+}
+
+// A sketch's eye; N13b: a construction element's (view state only, as every eye).
+void MainWindow::toggleFeatureEye(std::uint64_t id) {
+    ViewVisibility& visibility = impl_->visibility;
+    if (!isConstructionFeature(impl_->session, id))
+        visibility.sketchEyes[id] = !visibility.shownSketches.contains(id);
+    else if (!visibility.hiddenDatums.erase(id))
+        visibility.hiddenDatums.insert(id);
+    syncModelTree();
+    syncSketchPresentation(); // the selected sketch follows its eye at once
+    syncVisibility();
 }
 
 void MainWindow::selectBasePlane(int plane) {

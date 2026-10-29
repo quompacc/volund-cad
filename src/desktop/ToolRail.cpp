@@ -69,6 +69,9 @@ std::optional<ShellIcon> iconFor(const QString& id) {
         {QStringLiteral("solid.inspect.interference"), ShellIcon::combine}, // N08
         {QStringLiteral("solid.create.datum_plane"), ShellIcon::datumPlane},
         {QStringLiteral("solid.create.datum_axis"), ShellIcon::datumAxis},
+        {QStringLiteral("solid.create.midplane"), ShellIcon::datumPlane},     // N13b
+        {QStringLiteral("solid.create.plane_points"), ShellIcon::datumPlane}, // N13b
+        {QStringLiteral("solid.create.datum_point"), ShellIcon::datumPoint},  // N13b
         {QStringLiteral("repair.references"), ShellIcon::repair},
         {QStringLiteral("repair.all"), ShellIcon::repair},
         {QStringLiteral("view.command_search"), ShellIcon::search},
@@ -114,7 +117,9 @@ const std::vector<RailGroup>& railGroups() {
         {QT_TRANSLATE_NOOP("ToolRail", "Mehr"),
          ShellIcon::datumPlane,
          {QStringLiteral("solid.create.datum_plane"), QStringLiteral("solid.create.datum_axis"),
-          QStringLiteral("solid.inspect.measure"), QStringLiteral("solid.inspect.interference")}}};
+          QStringLiteral("solid.create.midplane"), QStringLiteral("solid.create.plane_points"),
+          QStringLiteral("solid.create.datum_point"), QStringLiteral("solid.inspect.measure"),
+          QStringLiteral("solid.inspect.interference")}}};
     return groups;
 }
 
@@ -141,8 +146,7 @@ QFrame* card(QWidget* parent, const char* name) {
     return frame;
 }
 
-// L08: the line between two sketch sections with its space around, as one widget, so a
-// section cut into the » menu leaves no space behind.
+// L08: a section line with its space as one widget; a section in the » menu leaves none.
 QWidget* divider(QWidget* parent) {
     auto* section = new QWidget(parent);
     section->setObjectName(QStringLiteral("railSection"));
@@ -289,8 +293,7 @@ bool ToolRail::scrollRow(const QWheelEvent& event) {
     return true;
 }
 
-// The bar follows the viewport and the two cards it sits between; a page measured before its
-// buttons were styled is measured again (L08).
+// The bar follows the viewport and its two cards; a page measured too early is measured again.
 bool ToolRail::follows(const QObject* watched, QEvent::Type type) const {
     if (watched == &viewport_)
         return type == QEvent::Resize;

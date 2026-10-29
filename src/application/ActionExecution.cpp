@@ -283,6 +283,13 @@ class Validation final {
     }
     void operator()(const CreateMirrorAction& a) { onPlane(a, ActionKind::createMirror); }
     void operator()(const CreateSplitAction& a) { onPlane(a, ActionKind::createSplit); }
+    void operator()(const CreateDatumPointAction& action) { // N13b
+        static_cast<void>(action.support ? target(*action.support, ActionKind::createDatumPoint)
+                                         : target(std::monostate{}, ActionKind::createDatumPoint));
+    }
+    void operator()(const EditDatumPointParametersAction& action) {
+        static_cast<void>(target(action.point, ActionKind::editDatumPointParameters));
+    }
     void operator()(const CreateFaceEditAction& action) { // N13a
         static_cast<void>(target(action.support, ActionKind::createFaceEdit));
         finite({action.distance});
@@ -463,10 +470,7 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot,
             [&](const EditCombineParametersAction& a) {
                 return session.editCombineParameters(a.combine, a.parameters, reject);
             },
-            [&](const CreateDatumPlaneAction& a) {
-                return session.createDatumPlane(a.basePlane, a.support, a.face, a.offset.value,
-                                                a.rotationAxis, a.angle.value);
-            },
+
             [&](const EditDatumPlaneParametersAction& a) {
                 return session.editDatumPlaneParameters(a.plane, a.parameters, reject);
             },

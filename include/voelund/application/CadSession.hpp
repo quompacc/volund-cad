@@ -35,6 +35,9 @@ namespace voelund::application {
 struct CreateMirrorAction;
 struct CreateSplitAction;
 struct CreateFaceEditAction;
+struct CreateDatumPlaneAction;
+struct CreateDatumPointAction;
+struct EditDatumPointParametersAction;
 struct EditFaceEditParametersAction;
 struct EditSplitParametersAction;
 // U06: features grouped by their body, in document order; features of no body stay loose.
@@ -94,8 +97,7 @@ struct PatternInput final {
     bool operator==(const PatternInput&) const = default;
 };
 
-// M16: what deleting a feature takes along: `dependents` need it, `cascade` adds its copies and
-// them. Without dependents, or when they may keep errors (onlyThisPossible), it can go alone.
+// M16: what deleting takes along: `dependents` need it, `cascade` adds its copies and them.
 struct DeletionPlan final {
     std::vector<document::FeatureId> dependents;
     std::vector<document::FeatureId> cascade;
@@ -137,8 +139,7 @@ class CadSession final {
     [[nodiscard]] std::span<const document::SketchRegionId> selectedSketchProfiles() const noexcept;
     [[nodiscard]] bool selectSketchProfileByElement(document::SketchElementId elementId,
                                                     bool additive);
-    // Picking the area (user report 2026-10-05): the unambiguous region of `sketch` whose face
-    // contains the point (model coordinates, on the sketch plane). Selects the sketch.
+    // The unambiguous region of `sketch` containing the point (model coordinates); selects it.
     [[nodiscard]] bool selectSketchProfileAt(document::FeatureId sketch,
                                              const std::array<double, 3>& point, bool additive);
     // M04: selects `sketch` with exactly these regions (the open extrusion panel's); view only.
@@ -263,8 +264,7 @@ class CadSession final {
     editHoleParameters(document::FeatureId featureId, const document::HoleParameters& parameters,
                        ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] document::HoleParameters holeParameters(document::FeatureId featureId) const;
-    // M21: a Boolean of whole bodies ("Kombinieren N"), each body named by its current
-    // result; one undo step. Unless kept, the tools are no separate bodies afterwards.
+    // M21: a Boolean of whole bodies ("Kombinieren N"); unless kept, the tools are consumed.
     [[nodiscard]] CommandResult createCombine(document::FeatureId target,
                                               std::span<const document::FeatureId> tools,
                                               document::CombineOperation operation, bool keepTools);
@@ -274,8 +274,7 @@ class CadSession final {
                           ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] document::CombineParameters
     combineParameters(document::FeatureId featureId) const;
-    // M19: a construction plane on a base plane or a planar face, and a construction axis on a
-    // base axis or an edge, of `support`'s current result. One undo step each.
+    // M19: a construction plane on a base plane or face, an axis on a base axis or an edge.
     [[nodiscard]] CommandResult createDatumPlane(std::optional<document::DatumPlane> basePlane,
                                                  std::optional<document::FeatureId> support,
                                                  std::optional<document::SubshapeOrigin> face,
@@ -316,6 +315,10 @@ class CadSession final {
     // N13a (CadSessionFaceEdit.cpp): faces moved or removed ("Flächen N"), one undo step.
     [[nodiscard]] CommandResult createFaceEdit(const CreateFaceEditAction& action);
     [[nodiscard]] CommandResult editFaceEdit(const EditFaceEditParametersAction& action);
+    // N13b (CadSessionDatums.cpp): planes of every kind, construction points ("Bezugspunkt N").
+    [[nodiscard]] CommandResult createDatumPlane(const CreateDatumPlaneAction& action);
+    [[nodiscard]] CommandResult createDatumPoint(const CreateDatumPointAction& action);
+    [[nodiscard]] CommandResult editDatumPoint(const EditDatumPointParametersAction& action);
     // N12b (CadSessionRib.cpp): a rib ("Rippe N") from `sketch`'s line into `target`'s body.
     [[nodiscard]] CommandResult createRib(document::FeatureId sketch, document::BodyId target,
                                           const document::RibParameters& rib);
@@ -351,13 +354,11 @@ class CadSession final {
     editMoveParameters(document::FeatureId featureId, const document::MoveParameters& parameters,
                        ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] document::MoveParameters moveParameters(document::FeatureId featureId) const;
-    // M17 (CadSessionStep.cpp): a STEP file as one import feature at the end of the history (or
-    // at the rollback marker), one undo step; a file that gives no solid changes nothing.
+    // M17 (CadSessionStep.cpp): a STEP file as one import feature, one undo step.
     [[nodiscard]] StepImportResult importStep(const std::filesystem::path& path);
     // M18: a STEP file opened as a new document with its import; without a solid nothing.
     [[nodiscard]] StepImportResult openStep(const std::filesystem::path& path);
-    // N02 (CadSessionClipboard.cpp): bodies' current solids for the clipboard (invalid_argument
-    // without one); a paste adds them as one fixed copy "Kopie N", one undo step.
+    // N02: bodies' solids for the clipboard; a paste adds a fixed copy "Kopie N" (one step).
     [[nodiscard]] std::vector<document::ImportedSolid>
     copyBodies(std::span<const document::BodyId> bodies) const;
     [[nodiscard]] CommandResult pasteBodies(std::vector<document::ImportedSolid> solids);
@@ -365,8 +366,7 @@ class CadSession final {
     // M17: `bodies` (default: the visible ones) as STEP in mm, named as shown; refused on errors.
     [[nodiscard]] StepExportResult exportStep(const std::filesystem::path& path,
                                               std::span<const document::BodyId> bodies = {});
-    // M14 (user decision 2026-10-16): suppresses or reactivates a feature, one undo step. Later
-    // features that need what it made show their error; by default that is kept.
+    // M14: suppresses or reactivates a feature, one undo step; dependents show their errors.
     [[nodiscard]] CommandResult
     setFeatureSuppressed(document::FeatureId featureId, bool suppressed,
                          ErrorDisposition disposition = ErrorDisposition::keepEditableErrors);

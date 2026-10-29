@@ -7,8 +7,10 @@
 #include <AIS_DisplayMode.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
+#include <BRep_Builder.hxx>
 #include <Prs3d_Drawer.hxx>
 #include <Prs3d_LineAspect.hxx>
+#include <TopoDS_Compound.hxx>
 #include <TopoDS_Edge.hxx>
 #include <TopoDS_Face.hxx>
 #include <gp_Ax3.hxx>
@@ -21,6 +23,17 @@ const Quantity_Color& constructionColor() {
     static const Quantity_Color color = occtColor(QColor(0xC9, 0x8A, 0x1B));
     return color;
 }
+// N13b: a construction point as a small three-armed cross.
+TopoDS_Shape pointCross(const gp_Pnt& at, double arm) {
+    TopoDS_Compound cross;
+    BRep_Builder builder;
+    builder.MakeCompound(cross);
+    for (const gp_Vec direction : {gp_Vec(1, 0, 0), gp_Vec(0, 1, 0), gp_Vec(0, 0, 1)})
+        builder.Add(cross, BRepBuilderAPI_MakeEdge(at.Translated(direction * -arm),
+                                                   at.Translated(direction * arm))
+                               .Edge());
+    return cross;
+}
 } // namespace
 
 void DatumPresentation::show(const occ::handle<AIS_InteractiveContext>& context,
@@ -31,7 +44,9 @@ void DatumPresentation::show(const occ::handle<AIS_InteractiveContext>& context,
         const gp_Pnt origin(datum.origin[0], datum.origin[1], datum.origin[2]);
         const gp_Dir normal(datum.normal[0], datum.normal[1], datum.normal[2]);
         TopoDS_Shape shape;
-        if (datum.axis) {
+        if (datum.point) {
+            shape = pointCross(origin, halfSize * 0.06);
+        } else if (datum.axis) {
             shape = BRepBuilderAPI_MakeEdge(origin.Translated(gp_Vec(normal) * -halfSize),
                                             origin.Translated(gp_Vec(normal) * halfSize))
                         .Edge();
@@ -44,8 +59,9 @@ void DatumPresentation::show(const occ::handle<AIS_InteractiveContext>& context,
         }
         occ::handle<AIS_Shape> presentation = new AIS_Shape(shape);
         presentation->SetColor(constructionColor());
-        presentation->SetTransparency(datum.axis ? 0.0 : 0.85);
-        presentation->SetWidth(datum.axis ? 2.0 : 1.0);
+        const bool line = datum.axis || datum.point;
+        presentation->SetTransparency(line ? 0.0 : 0.85);
+        presentation->SetWidth(line ? 2.0 : 1.0);
         presentation->Attributes()->SetFaceBoundaryDraw(true);
         presentation->Attributes()->SetFaceBoundaryAspect(
             new Prs3d_LineAspect(constructionColor(), Aspect_TOL_DASH, 1.2));
@@ -60,7 +76,7 @@ void DatumPresentation::show(const occ::handle<AIS_InteractiveContext>& context,
         presentation->SetDynamicHilightAttributes(highlight(occtColor(theme.hover), 0.55F));
         presentation->SetHilightAttributes(highlight(occtColor(theme.selection), 0.45F));
         context->Display(presentation, AIS_Shaded,
-                         AIS_Shape::SelectionMode(datum.axis ? TopAbs_EDGE : TopAbs_FACE), false);
+                         AIS_Shape::SelectionMode(line ? TopAbs_EDGE : TopAbs_FACE), false);
         shapes_.emplace_back(datum.id, presentation);
     }
 }

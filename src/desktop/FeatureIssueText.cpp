@@ -121,6 +121,15 @@ constexpr std::array issueTexts{
     IssueText{"sweep-path-disconnected",
               QT_TRANSLATE_NOOP("FeatureIssue", "Folgen: Die Pfadelemente bilden keine "
                                                 "zusammenhängende Kette.")},
+    IssueText{"datum-midplane-not-parallel",
+              QT_TRANSLATE_NOOP("FeatureIssue", "Mittelebene: Die beiden Flächen sind nicht "
+                                                "parallel.")},
+    IssueText{"datum-points-collinear",
+              QT_TRANSLATE_NOOP("FeatureIssue", "Ebene durch Punkte: Die drei Punkte liegen auf "
+                                                "einer Linie.")},
+    IssueText{"datum-point-centre",
+              QT_TRANSLATE_NOOP("FeatureIssue", "Bezugspunkt: Nur eine Kreiskante hat einen "
+                                                "Mittelpunkt.")},
     IssueText{"face-edit-face-missing",
               QT_TRANSLATE_NOOP("FeatureIssue", "Flächen: Eine bearbeitete Fläche gibt es so "
                                                 "nicht mehr. Wähle sie neu.")},

@@ -351,7 +351,7 @@ void withoutBodies(const document::DocumentSnapshot& document,
 }
 
 // Every feature kind's evaluation, in FeatureKind order (N12a: a table instead of a switch).
-constexpr std::array<Evaluator, static_cast<std::size_t>(document::FeatureKind::faceEdit) + 1>
+constexpr std::array<Evaluator, static_cast<std::size_t>(document::FeatureKind::datumPoint) + 1>
     evaluators{&evaluateBox,
                &evaluateCylinder,
                &withoutBodies<&evaluateSketch>,
@@ -373,7 +373,8 @@ constexpr std::array<Evaluator, static_cast<std::size_t>(document::FeatureKind::
                &detail::evaluateImportPart,
                &detail::evaluateSplit,
                &detail::evaluateSplitPart,
-               &detail::evaluateFaceEdit};
+               &detail::evaluateFaceEdit,
+               &withoutBodies<&detail::evaluateDatumPoint>};
 
 void runFeature(const document::DocumentSnapshot& document,
                 const document::FeatureDescriptor& descriptor,

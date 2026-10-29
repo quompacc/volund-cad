@@ -174,6 +174,8 @@ class MainWindow final : public QMainWindow {
     void clearEdgeSelection();
     bool beginToolEdit(document::FeatureId selected, document::FeatureKind kind); // N12a
     [[nodiscard]] bool isRib(document::FeatureId feature) const;                  // N12b
+    void toggleFeatureEye(std::uint64_t id);                                      // N13b
+    void addConstructionServices(modules::solid::SolidCommandServices& services); // N13b
     [[nodiscard]] std::vector<document::FeatureId> repeatableSteps() const;       // N11b
     void createAssistant();
     void createAssistantPanel();

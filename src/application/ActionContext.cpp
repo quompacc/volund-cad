@@ -47,7 +47,8 @@ std::vector<ActionKind> editActions(const document::DocumentSnapshot& snapshot,
         {FeatureKind::pattern, ActionKind::editPatternParameters},
         {FeatureKind::move, ActionKind::editMoveParameters},
         {FeatureKind::split, ActionKind::editSplitParameters},
-        {FeatureKind::faceEdit, ActionKind::editFaceEditParameters}};
+        {FeatureKind::faceEdit, ActionKind::editFaceEditParameters},
+        {FeatureKind::datumPoint, ActionKind::editDatumPointParameters}};
     for (const auto& [kind, action] : single)
         if (kind == feature.kind)
             return {action};
@@ -79,7 +80,8 @@ std::vector<ActionKind> availableActions(const CadSession& session,
     if (std::holds_alternative<std::monostate>(target))
         return {ActionKind::createParameter,  ActionKind::createDatumSketch,
                 ActionKind::createBox,        ActionKind::createSketchExtrusion,
-                ActionKind::createDatumPlane, ActionKind::createDatumAxis};
+                ActionKind::createDatumPlane, ActionKind::createDatumAxis,
+                ActionKind::createDatumPoint};
     if (const auto* parameter = std::get_if<document::ParameterId>(&target)) {
         if (document::findParameter(snapshot.parameterTable(), *parameter) == nullptr)
             return {};
@@ -90,8 +92,8 @@ std::vector<ActionKind> availableActions(const CadSession& session,
     const auto descriptor = std::ranges::find(features, feature, &document::FeatureDescriptor::id);
     if (descriptor == features.end())
         return {};
-    // M19: a construction plane or axis offers its edit and suppression only.
-    if (descriptor->kind == FeatureKind::datumPlane || descriptor->kind == FeatureKind::datumAxis)
+    // M19/N13b: a construction plane, axis or point offers its edit and suppression only.
+    if (document::isConstruction(descriptor->kind))
         return {editActions(snapshot, *descriptor).front(), ActionKind::setFeatureSuppressed};
     std::vector<ActionKind> actions = editActions(snapshot, *descriptor);
     if (session.placementFeature(feature))
@@ -119,6 +121,7 @@ std::vector<ActionKind> availableActions(const CadSession& session,
             actions.push_back(ActionKind::createPattern);
             actions.push_back(ActionKind::createSplit);    // N12a
             actions.push_back(ActionKind::createFaceEdit); // N13a
+            actions.push_back(ActionKind::createDatumPoint);
         }
     }
     return actions;

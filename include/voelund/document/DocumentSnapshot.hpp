@@ -60,7 +60,8 @@ class DocumentSnapshot final {
     [[nodiscard]] const DatumPlaneParameters& datumPlaneParameters(FeatureId id) const;
     [[nodiscard]] const DatumAxisParameters& datumAxisParameters(FeatureId id) const;
     [[nodiscard]] const ShellParameters& shellParameters(FeatureId id) const;
-    [[nodiscard]] const FaceEditParameters& faceEditParameters(FeatureId id) const; // N13a
+    [[nodiscard]] const FaceEditParameters& faceEditParameters(FeatureId id) const;     // N13a
+    [[nodiscard]] const DatumPointParameters& datumPointParameters(FeatureId id) const; // N13b
     [[nodiscard]] const kernel::BoxDimensions& boxDimensions(FeatureId id) const;
     [[nodiscard]] ModelDocument toDocument() const;
     [[nodiscard]] ModelDocument toDocument(DocumentId id) const;

@@ -1638,6 +1638,11 @@ add_executable(voelund_face_edit_tests integration/FaceEditTests.cpp)
 target_link_libraries(voelund_face_edit_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME application.face_edit COMMAND voelund_face_edit_tests)
 set_tests_properties(application.face_edit PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
+# N13b: construction points, midplanes and planes through points.
+add_executable(voelund_construction_tests integration/ConstructionTests.cpp)
+target_link_libraries(voelund_construction_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.construction COMMAND voelund_construction_tests)
+set_tests_properties(application.construction PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
 # M11: moving any body.
 add_executable(voelund_move_tests integration/MoveTests.cpp)
 target_link_libraries(voelund_move_tests PRIVATE voelund_project_options Voelund::Application)

@@ -188,17 +188,44 @@ void validateRevolveParameters(const RevolveParameters& parameters) {
         throw std::invalid_argument("A revolve turns by more than 0 and at most 360 degrees");
 }
 
-void validateDatumPlaneParameters(const DatumPlaneParameters& parameters) {
-    if (parameters.basePlane.has_value() == parameters.face.has_value())
+namespace {
+void validatePlaneFace(const std::optional<BodyFaceReference>& face) {
+    if (!face)
+        return;
+    if (face->body.value() == 0)
+        throw std::invalid_argument("A construction plane names the body of its face");
+    validateSubshapeOrigin(face->origin);
+}
+
+// N13b: three distinct construction points and no other reference.
+void validatePlanePoints(const DatumPlaneParameters& parameters) {
+    const auto& points = parameters.points;
+    const bool distinct = points.size() == 3 && points[0] != points[1] && points[1] != points[2] &&
+                          points[0] != points[2];
+    if (!distinct || parameters.basePlane || parameters.face || parameters.secondFace ||
+        std::ranges::any_of(points, [](FeatureId id) { return id.value() == 0; }))
+        throw std::invalid_argument("A plane through points names three construction points");
+}
+
+// A base plane, a face (N13b: and a second face for a midplane), or three construction points.
+void validatePlaneReference(const DatumPlaneParameters& parameters) {
+    if (!parameters.points.empty()) {
+        validatePlanePoints(parameters);
+        return;
+    }
+    if (parameters.basePlane.has_value() == parameters.face.has_value() ||
+        (parameters.secondFace && !parameters.face))
         throw std::invalid_argument("A construction plane has one reference");
     if (parameters.basePlane && (static_cast<int>(*parameters.basePlane) < 1 ||
                                  static_cast<int>(*parameters.basePlane) > 3))
         throw std::invalid_argument("Unknown base plane");
-    if (parameters.face) {
-        if (parameters.face->body.value() == 0)
-            throw std::invalid_argument("A construction plane names the body of its face");
-        validateSubshapeOrigin(parameters.face->origin);
-    }
+    validatePlaneFace(parameters.face);
+    validatePlaneFace(parameters.secondFace);
+}
+} // namespace
+
+void validateDatumPlaneParameters(const DatumPlaneParameters& parameters) {
+    validatePlaneReference(parameters);
     if (!kernel::modelCoordinate(parameters.offset))
         throw std::invalid_argument(kernel::modelRangeDiagnostic);
     switch (parameters.rotationAxis) {

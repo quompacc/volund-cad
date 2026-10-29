@@ -35,6 +35,7 @@ int main(int argc, char** argv) {
             "import-part-missing", "pattern-path-missing", "pattern-path-disconnected",
             "pattern-path-short", "repeated-step-missing", "repeated-step-kind", "split-misses",
             "rib-line", "rib-open", "face-edit-face-missing", "face-edit-failed",
+            "datum-midplane-not-parallel", "datum-points-collinear", "datum-point-centre",
             "split-body-missing", "split-plane-missing", "region-needs-repair", "region-open",
             "region-overlap", "profile-invalid", "sketch-unsolved", "sketch-support-missing",
             "sketch-support-unsolved", "sketch-plane-missing", "sketch-needs-repair",

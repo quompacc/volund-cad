@@ -31,7 +31,7 @@ makeSceneBodies(const application::CadSession& session,
                 const std::set<std::uint64_t>& hiddenBodies = {});
 // M19: the session's current construction planes and axes.
 [[nodiscard]] std::vector<viewport::SceneDatum>
-makeSceneDatums(const application::CadSession& session);
+makeSceneDatums(const application::CadSession& session, const std::set<std::uint64_t>& hidden = {});
 [[nodiscard]] int resultModeIndex(document::CylinderResultMode mode);
 [[nodiscard]] document::CylinderResultMode resultModeFromIndex(int index);
 // Every user-visible action carries a stable command ID (U01 command table in

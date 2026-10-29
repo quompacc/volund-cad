@@ -6,6 +6,7 @@
 #include <TDataStd_AsciiString.hxx>
 #include <TDataStd_Integer.hxx>
 #include <TDataStd_Real.hxx>
+#include <TDataStd_RealArray.hxx>
 #include <charconv>
 #include <stdexcept>
 #include <string>
@@ -56,8 +57,54 @@ SubshapeOrigin readOrigin(const TDF_Label& label, std::size_t& remainingRecords,
 } // namespace
 
 std::size_t nativeDatumPlaneRecords(const DatumPlaneParameters& parameters) {
-    return parameters.face ? parameters.face->origin.extrusionBoundary.size() : 0;
+    return (parameters.face ? parameters.face->origin.extrusionBoundary.size() : 0) +
+           (parameters.secondFace ? parameters.secondFace->origin.extrusionBoundary.size() : 0) +
+           parameters.points.size();
 }
+
+namespace {
+// N13b (schema 53): a midplane's second face (6: its body on 1, its origin on 2) and a plane's
+// three points (7: their IDs on 1 to 3).
+void writePlaneExtras(const TDF_Label& label, const DatumPlaneParameters& parameters) {
+    if (parameters.secondFace) {
+        const auto second = label.FindChild(6);
+        writeBody(second.FindChild(1), parameters.secondFace->body);
+        writeNativeSubshapeOrigin(second.FindChild(2), parameters.secondFace->origin);
+    }
+    if (parameters.points.empty())
+        return;
+    const auto points = label.FindChild(7);
+    for (std::size_t index = 0; index < parameters.points.size(); ++index)
+        writeBody(points.FindChild(static_cast<int>(index) + 1),
+                  BodyId{parameters.points[index].value()});
+}
+
+void readPlaneExtras(const TDF_Label& label, DatumPlaneParameters& result,
+                     std::size_t remainingRecords, int schemaVersion) {
+    if (const auto second = label.FindChild(6, false); !second.IsNull()) {
+        require(second.NbChildren() == 2);
+        result.secondFace =
+            BodyFaceReference{readBody(child(second, 1)),
+                              readOrigin(child(second, 2), remainingRecords, schemaVersion)};
+    }
+    if (const auto points = label.FindChild(7, false); !points.IsNull()) {
+        require(points.NbChildren() == 3);
+        for (int index = 1; index <= 3; ++index)
+            result.points.push_back(FeatureId{readBody(child(points, index)).value()});
+    }
+}
+
+// Children: base plane (1), face body and origin (2, 3), rotation (4, 5), N13b extras (6, 7).
+void requirePlaneLayout(const TDF_Label& label, int base, int schemaVersion) {
+    const auto has = [&](int tag) {
+        return static_cast<int>(!label.FindChild(tag, false).IsNull());
+    };
+    const int face = 2 * has(2);
+    const int extras = has(6) + has(7);
+    require(schemaVersion >= 19 && base >= 0 && base <= 3 && (schemaVersion >= 53 || extras == 0) &&
+            (base == 0 || face == 0) && label.NbChildren() == 3 + face + extras);
+}
+} // namespace
 
 void writeNativeDatumPlane(const TDF_Label& label, const DatumPlaneParameters& parameters) {
     validateDatumPlaneParameters(parameters);
@@ -70,21 +117,22 @@ void writeNativeDatumPlane(const TDF_Label& label, const DatumPlaneParameters& p
     }
     TDataStd_Integer::Set(label.FindChild(4), static_cast<int>(parameters.rotationAxis));
     TDataStd_Real::Set(label.FindChild(5), parameters.angle.value());
+    writePlaneExtras(label, parameters);
 }
 
 DatumPlaneParameters readNativeDatumPlane(const TDF_Label& label, std::size_t remainingRecords,
                                           int schemaVersion) {
     const int base = integer(child(label, 1));
-    require(schemaVersion >= 19 && base >= 0 && base <= 3 &&
-            label.NbChildren() == (base == 0 ? 5 : 3));
+    requirePlaneLayout(label, base, schemaVersion);
     DatumPlaneParameters result;
     result.offset = real(label);
     if (base != 0)
         result.basePlane = static_cast<DatumPlane>(base);
-    else
+    else if (!label.FindChild(2, false).IsNull())
         result.face =
             BodyFaceReference{readBody(child(label, 2)),
                               readOrigin(child(label, 3), remainingRecords, schemaVersion)};
+    readPlaneExtras(label, result, remainingRecords, schemaVersion);
     const int axis = integer(child(label, 4));
     require(axis >= 0 && axis <= 2);
     result.rotationAxis = static_cast<DatumRotationAxis>(axis);
@@ -126,6 +174,52 @@ DatumAxisParameters readNativeDatumAxis(const TDF_Label& label, std::size_t rema
             FilletEdge{std::move(first), std::move(second), readBody(child(label, 4)).value()};
     }
     validateDatumAxisParameters(result);
+    return result;
+}
+
+// N13b (schema 53): the place on the edge on the label; coordinates (1) or the edge's body
+// (2), its faces (3, 4) and ID (5).
+std::size_t nativeDatumPointRecords(const DatumPointParameters& parameters) {
+    return parameters.edge ? parameters.edge->first.extrusionBoundary.size() +
+                                 parameters.edge->second.extrusionBoundary.size()
+                           : 0;
+}
+
+void writeNativeDatumPoint(const TDF_Label& label, const DatumPointParameters& parameters) {
+    validateDatumPointParameters(parameters);
+    TDataStd_Integer::Set(label, static_cast<int>(parameters.spot));
+    if (parameters.position) {
+        const auto position = TDataStd_RealArray::Set(label.FindChild(1), 1, 3);
+        for (int index = 0; index < 3; ++index)
+            position->SetValue(index + 1, (*parameters.position)[static_cast<std::size_t>(index)]);
+        return;
+    }
+    writeBody(label.FindChild(2), *parameters.body);
+    writeNativeSubshapeOrigin(label.FindChild(3), parameters.edge->first);
+    writeNativeSubshapeOrigin(label.FindChild(4), parameters.edge->second);
+    TDataStd_AsciiString::Set(label.FindChild(5), std::to_string(parameters.edge->id).c_str());
+}
+
+DatumPointParameters readNativeDatumPoint(const TDF_Label& label, std::size_t remainingRecords,
+                                          int schemaVersion) {
+    const int spot = integer(label);
+    const bool atCoordinates = !label.FindChild(1, false).IsNull();
+    require(schemaVersion >= 53 && spot >= 1 && spot <= 4 &&
+            label.NbChildren() == (atCoordinates ? 1 : 4));
+    DatumPointParameters result{{}, {}, {}, static_cast<EdgeSpot>(spot)};
+    if (atCoordinates) {
+        Handle(TDataStd_RealArray) position;
+        require(child(label, 1).FindAttribute(TDataStd_RealArray::GetID(), position) &&
+                position->Lower() == 1 && position->Upper() == 3);
+        result.position = std::array{position->Value(1), position->Value(2), position->Value(3)};
+    } else {
+        result.body = readBody(child(label, 2));
+        auto first = readOrigin(child(label, 3), remainingRecords, schemaVersion);
+        auto second = readOrigin(child(label, 4), remainingRecords, schemaVersion);
+        result.edge =
+            FilletEdge{std::move(first), std::move(second), readBody(child(label, 5)).value()};
+    }
+    validateDatumPointParameters(result);
     return result;
 }
 
@@ -262,7 +356,8 @@ constexpr SolidKind solidKinds[]{{FeatureKind::combine, "combine", 18},
                                  {FeatureKind::importPart, "import_part", 35},
                                  {FeatureKind::split, "split", 50},
                                  {FeatureKind::splitPart, "split_part", 50},
-                                 {FeatureKind::faceEdit, "face_edit", 52}};
+                                 {FeatureKind::faceEdit, "face_edit", 52},
+                                 {FeatureKind::datumPoint, "datum_point", 53}};
 } // namespace
 
 const char* nativeSolidKindName(FeatureKind kind) noexcept {
@@ -328,6 +423,10 @@ std::size_t solidRecords(const PrimitiveParameters& values) { // M27: none eithe
 std::size_t solidRecords(const PatternCopyParameters&) { return 0; }
 std::size_t solidRecords(const ImportPartParameters&) { return 0; }
 std::size_t solidRecords(const SplitPartParameters&) { return 0; }
+std::size_t solidRecords(const DatumPointParameters& values) { // N13b
+    validateDatumPointParameters(values);
+    return nativeDatumPointRecords(values);
+}
 std::size_t solidRecords(const FaceEditParameters& values) { // N13a
     validateFaceEditParameters(values);
     return nativeFaceEditRecords(values);
@@ -377,6 +476,9 @@ void writeSolid(const TDF_Label& label, const SplitParameters& values) {
 }
 void writeSolid(const TDF_Label& label, const SplitPartParameters& values) {
     writeNativeSplitPart(label, values);
+}
+void writeSolid(const TDF_Label& label, const DatumPointParameters& values) {
+    writeNativeDatumPoint(label, values);
 }
 void writeSolid(const TDF_Label& label, const FaceEditParameters& values) {
     writeNativeFaceEdit(label, values);
@@ -446,6 +548,10 @@ constexpr SolidReader readers[]{
     {FeatureKind::splitPart,
      [](const TDF_Label& label, std::size_t, int schema) -> FeatureParameters {
          return readNativeSplitPart(label, schema);
+     }},
+    {FeatureKind::datumPoint,
+     [](const TDF_Label& label, std::size_t records, int schema) -> FeatureParameters {
+         return readNativeDatumPoint(label, records, schema);
      }},
     {FeatureKind::faceEdit,
      [](const TDF_Label& label, std::size_t records, int schema) -> FeatureParameters {

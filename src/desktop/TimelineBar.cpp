@@ -57,9 +57,9 @@ ShellIcon iconFor(document::FeatureKind kind) {
         ShellIcon::draft,         ShellIcon::mirror,    ShellIcon::patternLinear,
         ShellIcon::patternLinear, ShellIcon::transform, ShellIcon::importFile,
         ShellIcon::importFile,    ShellIcon::split,     ShellIcon::split,
-        ShellIcon::pushPull};
+        ShellIcon::pushPull,      ShellIcon::datumPoint};
     static_assert(std::size(icons) ==
-                  static_cast<std::size_t>(document::FeatureKind::faceEdit) + 1);
+                  static_cast<std::size_t>(document::FeatureKind::datumPoint) + 1);
     const auto index = static_cast<std::size_t>(kind);
     if (index < std::size(icons))
         return icons[index];

@@ -6,6 +6,7 @@
 #include "CombineToolController.hpp"
 #include "CommandActions.hpp"
 #include "CommandPalette.hpp"
+#include "ConstructionToolController.hpp"
 #include "ContextBar.hpp"
 #include "DatumToolController.hpp"
 #include "DocumentActions.hpp"
@@ -76,7 +77,8 @@ class MainWindow::Impl final {
             on(sketchExtrusionTool), on(pushPullTool), on(filletTool), on(holeTool),
             on(combineTool),         on(datumTool),    on(shellTool),  on(draftTool),
             on(mirrorTool),          on(patternTool),  on(moveTool),   on(measureTool),
-            on(interferenceTool),    on(splitTool),    on(ribTool),    on(faceEditTool)};
+            on(interferenceTool),    on(splitTool),    on(ribTool),    on(faceEditTool),
+            on(constructionTool)};
         return std::ranges::any_of(open, [](bool active) { return active; });
     }
     [[nodiscard]] ShellState shell() const {
@@ -126,6 +128,7 @@ class MainWindow::Impl final {
     std::unique_ptr<SplitToolController> splitTool;               // N12a
     std::unique_ptr<RibToolController> ribTool;                   // N12b
     std::unique_ptr<FaceEditToolController> faceEditTool;         // N13a
+    std::unique_ptr<ConstructionToolController> constructionTool; // N13b
     std::unique_ptr<PatternToolController> patternTool;           // M10
     std::unique_ptr<MoveToolController> moveTool;                 // M11
     std::unique_ptr<MeasureToolController> measureTool;           // M12

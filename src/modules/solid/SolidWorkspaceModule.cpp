@@ -18,6 +18,44 @@ std::function<bool()> alwaysEnabled() {
 
 } // namespace
 
+// N13b: the further construction elements.
+void SolidWorkspaceModule::addConstructionCommands(SolidCommandServices& services) {
+    if (services.midplane)
+        commands_.push_back({"solid.create.midplane",
+                             "Mittelebene",
+                             "Ebene mittig zwischen der gewählten und einer zweiten parallelen "
+                             "Fläche",
+                             {},
+                             workspaces::CommandGroup::create,
+                             true,
+                             false,
+                             simpleCommand(std::move(services.midplane)),
+                             services.canMidplane,
+                             "Mittelebene"});
+    if (services.planeThroughPoints)
+        commands_.push_back({"solid.create.plane_points",
+                             "Ebene durch drei Punkte",
+                             "Ebene durch drei Bezugspunkte",
+                             {},
+                             workspaces::CommandGroup::create,
+                             true,
+                             false,
+                             simpleCommand(std::move(services.planeThroughPoints)),
+                             services.canPlaneThroughPoints,
+                             "Ebene durch Punkte"});
+    if (services.datumPoint)
+        commands_.push_back({"solid.create.datum_point",
+                             "Bezugspunkt",
+                             "Punkt an Koordinaten oder auf der gewählten Kante",
+                             {},
+                             workspaces::CommandGroup::create,
+                             true,
+                             false,
+                             simpleCommand(std::move(services.datumPoint)),
+                             services.canDatum,
+                             "Bezugspunkt"});
+}
+
 // M09 mirror, N12a split, M10 patterns; N12b rib.
 void SolidWorkspaceModule::addCopyCommands(SolidCommandServices& services) {
     if (services.rib)
@@ -258,6 +296,7 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                              simpleCommand(std::move(services.datumAxis)),
                              services.canDatum,
                              "Bezugsachse"});
+    addConstructionCommands(services);
     addInspectCommands(services);
     if (services.combine)
         commands_.push_back({"solid.modify.combine",

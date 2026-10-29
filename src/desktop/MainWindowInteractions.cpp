@@ -31,6 +31,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <utility>
@@ -49,23 +50,23 @@ namespace voelund::desktop {
 bool MainWindow::toolTakesFace(const viewport::PlanarFaceSelection& selection) {
     if (impl_->pushPullTool->isActive() || impl_->combineTool->isActive())
         return true; // T04c: the face of a running push/pull stays.
-    if (impl_->holeTool->isActive())
-        impl_->holeTool->place(selection); // M08: moves the hole there
-    else if (impl_->shellTool->isActive())
-        impl_->shellTool->picked(selection); // M22: opens or closes the face
-    else if (impl_->faceEditTool->isActive())
-        impl_->faceEditTool->picked(selection); // N13a: chooses the face or not
-    else if (impl_->draftTool->isActive())
-        impl_->draftTool->picked(selection); // M25: tilts the face or not
-    else if (impl_->mirrorTool->isActive())
-        impl_->mirrorTool->picked(selection); // M09: the mirror plane
-    else if (impl_->splitTool->isActive())
-        impl_->splitTool->picked(selection); // N12a: the cutting plane
-    else if (impl_->measureTool->isActive())
-        impl_->measureTool->pickedFace(selection); // M12: measured only
-    else
-        return false;
-    return true;
+    // The open tool that takes the face (N13b: a table instead of a chain).
+    const std::pair<bool, std::function<void()>> pickers[]{
+        {impl_->holeTool->isActive(), [&] { impl_->holeTool->place(selection); }},    // M08
+        {impl_->shellTool->isActive(), [&] { impl_->shellTool->picked(selection); }}, // M22
+        {impl_->faceEditTool->isActive(), [&] { impl_->faceEditTool->picked(selection); }},
+        {impl_->constructionTool->isActive(),
+         [&] { impl_->constructionTool->picked(selection); }}, // N13b: a midplane's face
+        {impl_->draftTool->isActive(), [&] { impl_->draftTool->picked(selection); }},   // M25
+        {impl_->mirrorTool->isActive(), [&] { impl_->mirrorTool->picked(selection); }}, // M09
+        {impl_->splitTool->isActive(), [&] { impl_->splitTool->picked(selection); }},   // N12a
+        {impl_->measureTool->isActive(), [&] { impl_->measureTool->pickedFace(selection); }}};
+    for (const auto& [active, pick] : pickers)
+        if (active) {
+            pick();
+            return true;
+        }
+    return false;
 }
 
 // N02b: Strg-click on a face adds or removes its body from the group; true when it did.

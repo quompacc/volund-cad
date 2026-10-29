@@ -51,8 +51,9 @@ enum class ShellIcon {
     repair,
     eye,
     eyeOff,
-    split, // N12a
-    rib,   // N12b
+    split,      // N12a
+    rib,        // N12b
+    datumPoint, // N13b
 };
 
 [[nodiscard]] QIcon shellIcon(ShellIcon icon, const QColor& ink, const QColor& accent);

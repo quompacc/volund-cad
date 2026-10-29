@@ -44,7 +44,6 @@ cyclomatic | src/document/NativeSketchSupport.cpp | voelund::document::detail::r
 cyclomatic | src/document/SubshapeReference.cpp | voelund::document::validateSubshapeOrigin | 30 | Altbestand vor A04
 cyclomatic | src/viewport/CadViewportInput.cpp | voelund::viewport::CadViewport::mousePressEvent::(lambda) | 29 | Altbestand vor A04
 cyclomatic | src/application/SketchEditorSession.cpp | voelund::application::SketchEditorSession::translateSelected | 29 | Altbestand vor A04
-cyclomatic | src/application/ActionContext.cpp | voelund::application::detail::availableActions | 28 | Altbestand vor A04
 cyclomatic | src/application/SketchEditorGeometry.cpp | voelund::application::SketchEditorSession::confirmCreation | 28 | Altbestand vor A04
 cyclomatic | src/application/SketchEditorSession.cpp | voelund::application::SketchEditorSession::setSelectedLineConstraint | 28 | Altbestand vor A04
 cyclomatic | src/document/SketchConstraintSerialization.cpp | voelund::document::readSketchConstraintKind | 28 | Altbestand vor A04
@@ -178,7 +177,6 @@ cyclomatic | src/desktop/MainWindowCommands.cpp | voelund::desktop::MainWindow::
 cyclomatic | src/desktop/SketchEditorPresentation.cpp | voelund::desktop::SketchEditorToolController::applyPatternOperation | 12 | Altbestand vor A04
 cyclomatic | src/desktop/SketchExtrusionToolController.cpp | voelund::desktop::SketchExtrusionToolController::guidance | 12 | Altbestand vor A04
 cyclomatic | src/document/ModelDocumentReorder.cpp | voelund::document::ModelDocument::moveFeature | 12 | Altbestand vor A04
-cyclomatic | src/document/ModelDocumentSolidFeatures.cpp | voelund::document::validateDatumPlaneParameters | 12 | Altbestand vor A04
 cyclomatic | src/document/ModelDocumentSolidFeatures.cpp | voelund::document::validateSketchProjections | 12 | Altbestand vor A04
 cyclomatic | src/document/NativeDraft.cpp | voelund::document::detail::readNativeDraft | 12 | Altbestand vor A04
 cyclomatic | src/document/NativeExtrusion.cpp | voelund::document::detail::(anonymous namespace)::readRegions | 12 | Altbestand vor A04

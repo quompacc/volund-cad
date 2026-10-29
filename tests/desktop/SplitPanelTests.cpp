@@ -15,6 +15,7 @@
 #include <cmath>
 #include <iostream>
 #include <string>
+#include <voelund/application/Actions.hpp>
 #include <voelund/application/CadSession.hpp>
 #include <voelund/desktop/MainWindow.hpp>
 
@@ -122,6 +123,37 @@ void faceEditFlow(desktop::MainWindow& window, application::CadSession& session,
     require(panel(window) == nullptr && matches(volume(session), 6000), "OK moves the face");
 }
 
+// N13b: "Bezugspunkt" without a picked edge offers X/Y/Z; X = 5 makes a point at (5; 0; 0).
+// With two more points, "Ebene durch drei Punkte" is offered and OK makes the plane.
+void constructionFlow(desktop::MainWindow& window, application::CadSession& session) {
+    session.newDocument();
+    window.refreshAfterExternalChange();
+    command(window, "solid.create.datum_point").trigger();
+    settle();
+    require(panel(window) != nullptr, "Bezugspunkt opens its panel");
+    setLength(window, "toolLength_x", 5);
+    button(window, "toolAcceptButton").click();
+    settle();
+    require(panel(window) == nullptr && session.features().size() == 1 &&
+                std::abs(session.datumFrame(session.features().back().id)->originX - 5) < 1e-9,
+            "OK makes a construction point at x = 5");
+    for (const auto& at : {std::array{0.0, 10.0, 0.0}, std::array{0.0, 0.0, 10.0}})
+        require(session.createDatumPoint(application::CreateDatumPointAction{at, {}, {}})
+                    .feature()
+                    .has_value(),
+                "Two more points");
+    window.refreshAfterExternalChange();
+    QAction& plane = command(window, "solid.create.plane_points");
+    require(plane.isEnabled(), "Three points offer a plane through them");
+    plane.trigger();
+    settle();
+    require(button(window, "toolAcceptButton").isEnabled(), "The plane previews");
+    button(window, "toolAcceptButton").click();
+    settle();
+    require(session.features().back().kind == document::FeatureKind::datumPlane,
+            "OK makes the plane through the points");
+}
+
 // N12b: an open shell 40 x 30 x 20 (wall 2) and a line across its top on y = 15. "Rippe" on
 // the selected sketch: upwards it meets nothing and OK waits; "Umgekehrt" previews the rib down
 // to the floor (7152 + 1296); OK joins it.
@@ -209,8 +241,9 @@ void run() {
     settle();
     ribFlow(window, session, *viewport);
     faceEditFlow(window, session, *viewport);
+    constructionFlow(window, session);
     std::cout << "PASS N12a split panel: construction plane, both/front/back preview, OK, "
-                 "timeline reopens split and part; N12b rib; N13a face edit"
+                 "timeline reopens split and part; N12b rib; N13a face edit; N13b points, plane"
               << std::endl;
 }
 } // namespace

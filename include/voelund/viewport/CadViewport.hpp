@@ -56,6 +56,7 @@ struct SceneDatum final {
     std::array<double, 3> origin;
     std::array<double, 3> normal;
     std::array<double, 3> xDirection;
+    bool point{false}; // N13b: a construction point at `origin`
 };
 
 /** Read-only lifecycle counters for diagnostics and native desktop tests. */

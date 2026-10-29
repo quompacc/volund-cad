@@ -15,6 +15,7 @@ add_library(voelund_application STATIC
     CadSessionMirror.cpp
     CadSessionRib.cpp
     CadSessionFaceEdit.cpp
+    CadSessionDatums.cpp
     CadSessionPattern.cpp
     CadSessionMove.cpp
     CadSessionStep.cpp

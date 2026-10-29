@@ -54,7 +54,8 @@ enum class FeatureKind {
     importPart,
     split, // N12a
     splitPart,
-    faceEdit // N13a
+    faceEdit,  // N13a
+    datumPoint // N13b
 };
 enum class CylinderResultMode { join, cut, intersect, separate };
 
@@ -386,6 +387,11 @@ struct DatumPlaneParameters final {
     double offset{0.0};
     DatumRotationAxis rotationAxis{DatumRotationAxis::none};
     kernel::Radians angle{};
+    // N13b (schema 53): the midplane between `face` and this parallel face, or (instead of a
+    // base plane or face) the plane through three earlier construction points, the first its
+    // origin, towards the second its x direction.
+    std::optional<BodyFaceReference> secondFace{};
+    std::vector<FeatureId> points{};
     [[nodiscard]] bool operator==(const DatumPlaneParameters&) const = default;
 };
 void validateDatumPlaneParameters(const DatumPlaneParameters& parameters);
@@ -398,6 +404,18 @@ struct DatumAxisParameters final {
     [[nodiscard]] bool operator==(const DatumAxisParameters&) const = default;
 };
 void validateDatumAxisParameters(const DatumAxisParameters& parameters);
+// N13b (schema 53, agent decision 2026-10-29, as Fusion's construction points): a point at
+// model coordinates, or on an edge of a body: its start, end, middle or (circle) centre. It
+// belongs to no body.
+enum class EdgeSpot { start = 1, end = 2, middle = 3, centre = 4 };
+struct DatumPointParameters final {
+    std::optional<std::array<double, 3>> position{};
+    std::optional<BodyId> body{};
+    std::optional<FilletEdge> edge{};
+    EdgeSpot spot{EdgeSpot::start};
+    [[nodiscard]] bool operator==(const DatumPointParameters&) const = default;
+};
+void validateDatumPointParameters(const DatumPointParameters& parameters);
 // M22 (schema 21, user decision 2026-10-14): hollows a body to walls `thickness` thick and
 // opens the named faces (at least one). Inward keeps the outer size, outward grows the body.
 inline constexpr std::size_t maximumShellFaces = 256;
@@ -589,10 +607,15 @@ using FeatureParameters =
                  DatumPlaneParameters, DatumAxisParameters, ShellParameters, PrimitiveParameters,
                  DraftParameters, MirrorParameters, PatternParameters, PatternCopyParameters,
                  MoveParameters, ImportParameters, ImportPartParameters, SplitParameters,
-                 SplitPartParameters, FaceEditParameters>;
+                 SplitPartParameters, FaceEditParameters, DatumPointParameters>;
 // M10/M17: the feature a companion belongs to (a pattern copy's pattern, an import part's
 // import); it moves, is deleted and is shown with that feature.
 [[nodiscard]] std::optional<FeatureId> companionOwner(const FeatureParameters& parameters) noexcept;
+// M19/N13b: construction planes, axes and points belong to no body.
+[[nodiscard]] constexpr bool isConstruction(FeatureKind kind) noexcept {
+    return kind == FeatureKind::datumPlane || kind == FeatureKind::datumAxis ||
+           kind == FeatureKind::datumPoint;
+}
 [[nodiscard]] constexpr bool isCompanion(FeatureKind kind) noexcept {
     return kind == FeatureKind::patternCopy || kind == FeatureKind::importPart ||
            kind == FeatureKind::splitPart;
@@ -728,6 +751,12 @@ class ModelDocument final {
                                               const DatumAxisParameters& parameters);
     [[nodiscard]] const ShellParameters& shellParameters(FeatureId featureId) const;
     [[nodiscard]] bool setShellParameters(FeatureId featureId, const ShellParameters& parameters);
+    // N13b (ModelDocumentDatumPoint.cpp).
+    [[nodiscard]] FeatureId addDatumPointFeature(std::string name,
+                                                 const DatumPointParameters& parameters);
+    [[nodiscard]] const DatumPointParameters& datumPointParameters(FeatureId featureId) const;
+    [[nodiscard]] bool setDatumPointParameters(FeatureId featureId,
+                                               const DatumPointParameters& parameters);
     // N13a (ModelDocumentFaceEdit.cpp).
     [[nodiscard]] FeatureId addFaceEditFeature(std::string name,
                                                const FaceEditParameters& parameters);

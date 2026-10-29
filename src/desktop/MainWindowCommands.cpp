@@ -325,6 +325,7 @@ void MainWindow::createCommands() {
         syncShell();
     };
     services.canDatum = [this]() { return !impl_->shell().toolBlocksCommands(); };
+    addConstructionServices(services); // N13b
     // M22: walls with the picked planar face opened.
     services.shell = [this]() {
         if (!impl_->selectedPlanarFace)
@@ -383,54 +384,6 @@ void MainWindow::pushPullPickedFace() {
         impl_->sketchExtrusionTool->cancel();
     impl_->pushPullTool->begin(*impl_->selectedPlanarFace);
     syncShell();
-}
-
-// The panel that edits a step of this kind, opened on it (N12a: a table instead of a chain of
-// ifs); a pattern copy or split part opens its owner. False for kinds without one.
-bool MainWindow::beginToolEdit(document::FeatureId selected, document::FeatureKind kind) {
-    using Kind = document::FeatureKind;
-    const auto snapshot = impl_->session.identifiedSnapshot().snapshot();
-    const std::function<void(document::FeatureId)> fillet = [this](auto id) {
-        impl_->filletTool->beginEdit(id);
-    };
-    const std::function<void(document::FeatureId)> datum = [this](auto id) {
-        impl_->datumTool->beginEdit(id);
-    };
-    const std::pair<Kind, std::function<void(document::FeatureId)>> editors[]{
-        {Kind::fillet, fillet},
-        {Kind::chamfer, fillet},
-        {Kind::hole, [this](auto id) { impl_->holeTool->beginEdit(id); }},
-        {Kind::combine, [this](auto id) { impl_->combineTool->beginEdit(id); }},
-        {Kind::shell, [this](auto id) { impl_->shellTool->beginEdit(id); }},
-        {Kind::draft, [this](auto id) { impl_->draftTool->beginEdit(id); }},     // M25
-        {Kind::mirror, [this](auto id) { impl_->mirrorTool->beginEdit(id); }},   // M09
-        {Kind::move, [this](auto id) { impl_->moveTool->beginEdit(id); }},       // M11
-        {Kind::pattern, [this](auto id) { impl_->patternTool->beginEdit(id); }}, // M10
-        {Kind::patternCopy,
-         [&](auto id) {
-             impl_->patternTool->beginEdit(snapshot.patternCopyParameters(id).pattern);
-         }},
-        {Kind::datumPlane, datum},
-        {Kind::datumAxis, datum},
-        {Kind::split, [this](auto id) { impl_->splitTool->beginEdit(id); }},       // N12a
-        {Kind::extrusion, [this](auto id) { impl_->ribTool->beginEdit(id); }},     // N12b: a rib
-        {Kind::faceEdit, [this](auto id) { impl_->faceEditTool->beginEdit(id); }}, // N13a
-        {Kind::splitPart,
-         [&](auto id) { impl_->splitTool->beginEdit(snapshot.splitPartParameters(id).split); }}};
-    using Editor = std::pair<Kind, std::function<void(document::FeatureId)>>;
-    const auto editor = std::ranges::find(editors, kind, &Editor::first);
-    if (editor == std::end(editors))
-        return false;
-    editor->second(selected);
-    syncShell();
-    return true;
-}
-
-bool MainWindow::isRib(document::FeatureId feature) const {
-    return impl_->session.identifiedSnapshot()
-        .snapshot()
-        .extrusionParameters(feature)
-        .rib.has_value();
 }
 
 bool MainWindow::canPushPullNow() const {
