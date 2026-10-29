@@ -59,9 +59,11 @@ note "QPA check: $(grep -il xcb "$out"/smoke-start.err.txt >/dev/null && echo 'x
 
 # The UI flows through the real shell against the package's libraries.
 lib="$pkg/lib64"
-for flow in voelund_reference_part_flow_tests voelund_reference_ring_flow_tests voelund_ui_flow_tests; do
+for flow in voelund_reference_part_flow_tests voelund_reference_ring_flow_tests voelund_ui_flow_tests voelund_tutorial_flow_tests; do
   run "$flow" env LD_LIBRARY_PATH="$lib" $build/tests/$flow
 done
+# L09: the tutorial's pictures, taken from its tested flow against the package.
+run tutorial-captures env LD_LIBRARY_PATH="$lib" VOELUND_TUTORIAL_DIR="$out/tutorial" $build/tests/voelund_tutorial_flow_tests
 for scale in 1 1.5 2; do
   mkdir -p "$out/ui-flow-scale-$scale"
   run "ui-flow-captures-$scale" env LD_LIBRARY_PATH="$lib" VOELUND_UI_FLOW_ARTIFACT_DIR="$out/ui-flow-scale-$scale" QT_SCALE_FACTOR=$scale $build/tests/voelund_ui_flow_tests

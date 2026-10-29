@@ -25,11 +25,14 @@ The user interface is German; the code and its documentation are in English and 
 | ![The same model in the dark theme](docs/images/02-modell-dunkel.png) | **A history you can work with.** The timeline at the bottom reopens any step, suppresses it, rolls the model back to it (drag the marker), reorders steps by dragging and deletes with a list of what depends on them. Light and dark themes, command search (Ctrl+K), autosave and crash recovery. |
 
 **Exchange:** STEP import and export (File menu, Ctrl+I / Ctrl+E) with units and product names;
-imported solids are embedded in the document and stay editable. **Assistant:** optional Claude
-access over MCP, working through the same commands as the user.
+imported solids are embedded in the document and stay editable. IGES, STL and 3MF export; DXF
+export of a sketch and DXF import into a sketch. **Assistant:** optional Claude access over MCP,
+working through the same commands as the user.
 
 The complete list of implemented variants and their limits is in the
-[handbook (German)](docs/handbuch.md).
+[handbook (German)](docs/handbuch.md). New users start with the
+[tutorial "Referenzplatte" (German)](docs/tutorial-referenzplatte.md): a plate with a hole, a
+pocket and a rounded edge in about 15 minutes, every step of it replayed by a UI test.
 
 ## The DNA
 

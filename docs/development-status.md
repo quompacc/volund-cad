@@ -1,6 +1,16 @@
 # Entwicklungsstand – 12. September 2026
 
-## Aktueller Stand – 17. Oktober 2026
+## Aktueller Stand – 30. Oktober 2026
+
+Die v1-Abrundung N01–N16 ist abgeschlossen (Nachweise unter
+[implementation-plan/evidence](implementation-plan/evidence/), Status in `packets.json`). L09
+(Benutzerdokumentation) bringt das [Handbuch](handbuch.md) auf diesen Stand und führt das
+[Tutorial „Referenzplatte“](tutorial-referenzplatte.md) ein, das ein Oberflächentest Schritt für
+Schritt nachspielt. Als Nächstes steht L10 an: den v1-Releasekandidaten zusammenstellen und
+prüfen. Die Veröffentlichung braucht die Freigabe des Projektinhabers. FreeBSD (L07) ist
+zurückgestellt; v1 ist Windows und Linux.
+
+## Stand – 17. Oktober 2026
 
 **Einstieg:** [Fortsetzungsnotiz](session-checkpoint-2026-10-16.md). G3 (mechanisches CAD v1)
 ist seit T05 (Nähte nach Drücken/Ziehen, 17.10.2026) formal geschlossen

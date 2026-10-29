@@ -3662,12 +3662,15 @@
       ],
       "acceptance": "Text „Völund“ 10 mm hoch 1 mm tief graviert: gültiger Körper; DXF-Referenzdatei mit bekannten Elementen und Maßen; Schnittkurve eines Zylinders als Kreis.",
       "boundary": "Keine Schriftbibliothek; mitgelieferte freie Schrift plus Systemschriften. Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
-      "status": "planned",
+      "status": "done",
       "gate": "G4",
       "chapter": "12-v1-abrundung.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/N15.md"
+      ],
+      "completedCommit": "33f4d48",
+      "completedDate": "2026-10-30"
     },
     {
       "id": "N16",
