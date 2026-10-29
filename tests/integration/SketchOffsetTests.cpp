@@ -3,11 +3,15 @@
 
 #include <voelund/application/CadSession.hpp>
 #include <voelund/application/SketchEditorSession.hpp>
+#include <voelund/kernel/SketchShapes.hpp>
+
+#include <gp_Pnt.hxx>
 
 #include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <memory>
+#include <numbers>
 #include <stdexcept>
 #include <string>
 #include <variant>
@@ -15,8 +19,9 @@
 
 // S09: exact offsets. A line keeps the normal distance d, a circle becomes r +/- d, a closed
 // rectangle and a slot grow outwards and shrink inwards with their joints kept closed, a
-// collapsing inner offset is refused with its reason and changes nothing, an ellipse is
-// declared unsupported, and the preview is the geometry the offset adds.
+// collapsing inner offset is refused with its reason and changes nothing, an ellipse or a
+// spline (N14d) becomes a spline at the distance, and the preview is the geometry the offset
+// adds.
 namespace {
 using namespace voelund;
 using application::SketchCreationInput;
@@ -183,12 +188,61 @@ void slotContour() {
     std::cout << "PASS slot offset with tangent joints\n";
 }
 
-void ellipseUnsupported() {
+// N14d: the distance from a spline's points (on the kernel's curve of its poles and knots) to
+// a densely sampled curve; every one must be `distance` within the offset tolerance.
+double worstDeviation(const document::SketchBSpline& spline, const std::vector<SketchPoint>& curve,
+                      double distance) {
+    std::vector<gp_Pnt> poles;
+    for (const auto& pole : spline.poles)
+        poles.emplace_back(pole.x, pole.y, 0);
+    const auto offset = kernel::SpaceCurve::bspline(poles, spline.knots);
+    const double last = static_cast<double>(spline.poles.size()) - 3.0;
+    double worst = 0.0;
+    for (int step = 0; step <= 400; ++step) {
+        const auto at = offset.value(last * step / 400.0);
+        double nearest = 1e300;
+        for (const auto& point : curve)
+            nearest = std::min(nearest, std::hypot(at.X() - point.x, at.Y() - point.y));
+        worst = std::max(worst, std::abs(nearest - distance));
+    }
+    return worst;
+}
+
+void ellipseAndSpline() {
     Fixture f;
     const auto ellipse = f.create(SketchDrawingTool::ellipse, {{0, 0}, {10, 0}, SketchPoint{0, 4}});
+    std::vector<SketchPoint> outline;
+    for (int step = 0; step < 40000; ++step) {
+        const double t = 2 * std::numbers::pi * step / 40000;
+        outline.push_back({10 * std::cos(t), 4 * std::sin(t)});
+    }
     f.select(ellipse);
-    f.refused(1, "UnsupportedCurve");
-    std::cout << "PASS ellipse offset is declared unsupported\n";
+    require(f.editor->offsetSelected(1),
+            "Offset the ellipse outwards by 1: " + f.editor->offsetProblem(1).value_or("solve"));
+    const auto halves = f.added(2);
+    for (const auto& half : halves)
+        require(worstDeviation(std::get<document::SketchBSpline>(half), outline, 1) < 2e-3,
+                "Each half lies 1 from the ellipse");
+    require(f.editor->closedProfileCount() == 2, "The two halves close around the ellipse");
+    f.select(ellipse);
+    // The tightest radius of curvature is 4^2 / 10 = 1.6.
+    f.refused(-2, "Krümmung");
+
+    Fixture s;
+    const std::vector<SketchPoint> poles{{0, 0}, {10, 20}, {30, 20}, {40, 0}};
+    const auto spline = s.editor->addBSpline(poles);
+    require(spline.has_value() && s.editor->selectElement(*spline), "A Bezier spline");
+    require(s.editor->offsetSelected(2), "Offset the spline by 2 to its left");
+    std::vector<SketchPoint> bezier;
+    for (int step = 0; step <= 40000; ++step) {
+        const double t = step / 40000.0, u = 1 - t;
+        bezier.push_back({3 * u * u * t * 10 + 3 * u * t * t * 30 + t * t * t * 40,
+                          3 * u * u * t * 20 + 3 * u * t * t * 20});
+    }
+    const auto offset = std::get<document::SketchBSpline>(s.added(1).front());
+    require(worstDeviation(offset, bezier, 2) < 2e-3, "Every point lies 2 from the spline");
+    require(offset.poles.front().y > 0, "To the left of its direction: above the start");
+    std::cout << "PASS ellipse and spline offsets keep their distance\n";
 }
 } // namespace
 
@@ -198,7 +252,7 @@ int main() {
         circleAndArc();
         rectangleContour();
         slotContour();
-        ellipseUnsupported();
+        ellipseAndSpline();
         std::cout << "PASS S09 sketch offset\n";
         return EXIT_SUCCESS;
     } catch (const std::exception& error) {

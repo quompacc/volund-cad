@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Eduard Hart
 
 #include "SketchOffset.hpp"
+#include "SketchOffsetCurves.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -66,7 +67,7 @@ std::vector<Segment> chain(std::span<const document::SketchGeometry> selected, b
     for (const auto& geometry : selected) {
         if (!std::holds_alternative<SketchLine>(geometry) &&
             !std::holds_alternative<SketchArc>(geometry))
-            refuse("Kreise und Rechtecke nur einzeln, Ellipsen gar nicht");
+            refuse("Kreise und Rechtecke nur einzeln");
         pending.push_back({geometry, false});
     }
     std::vector<Segment> ordered{pending.front()};
@@ -156,12 +157,6 @@ SketchOffsetResult single(const document::SketchGeometry& geometry, double offse
     return {{document::SketchRectangle{left, bottom, right, top}}, {}};
 }
 
-// An ellipse or (N14c) a piece of one.
-bool oval(const document::SketchGeometry& geometry) {
-    return std::holds_alternative<document::SketchEllipse>(geometry) ||
-           std::holds_alternative<document::SketchEllipticArc>(geometry);
-}
-
 } // namespace
 
 SketchOffsetResult offsetGeometry(std::span<const document::SketchGeometry> selected,
@@ -174,13 +169,11 @@ SketchOffsetResult offsetGeometry(std::span<const document::SketchGeometry> sele
             return std::holds_alternative<document::SketchPointGeometry>(geometry);
         }))
         refuse("Ein Punkt lässt sich nicht versetzen");
-    if (std::ranges::any_of(selected, [](const auto& geometry) {
-            return std::holds_alternative<document::SketchBSpline>(geometry);
-        }))
-        refuse("B-Splines lassen sich nicht versetzen (UnsupportedCurve)"); // S21
-    if (std::ranges::any_of(selected, oval))
-        refuse("Ellipsen werden nicht unterstützt (UnsupportedCurve); ihr Versatz ist keine "
-               "Ellipse");
+    if (std::ranges::any_of(selected, offsetsAsSpline)) { // N14d: as a spline, one at a time
+        if (selected.size() != 1)
+            refuse("Ellipsen und Splines lassen sich nur einzeln versetzen (UnsupportedCurve)");
+        return offsetAsSpline(selected.front(), offset);
+    }
     if (selected.size() == 1 && !std::holds_alternative<SketchLine>(selected.front()) &&
         !std::holds_alternative<SketchArc>(selected.front()))
         return single(selected.front(), offset);

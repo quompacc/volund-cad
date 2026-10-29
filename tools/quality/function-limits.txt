@@ -81,7 +81,6 @@ cyclomatic | src/mcp/FaceJson.cpp | voelund::mcp::detail::decodeFaceOrigin | 21 
 cyclomatic | src/viewport/SketchEditorInteraction.cpp | voelund::viewport::SketchEditorInteraction::interactionPoint | 21 | Altbestand vor A04
 cyclomatic | src/application/CadSessionHistoryEdit.cpp | voelund::application::CadSession::deletionPlan | 20 | Altbestand vor A04
 cyclomatic | src/assistant/StreamJson.cpp | voelund::assistant::parseStreamJsonLine | 20 | Altbestand vor A04
-cyclomatic | src/document/LegacyDocumentImporter.cpp | voelund::document::(anonymous namespace)::readSketchElement | 20 | Altbestand vor A04
 cyclomatic | src/document/ModelDocumentSolidFeatures.cpp | voelund::document::validateSweepExtrusion | 19 | Altbestand vor A04
 cyclomatic | src/document/NativeSketchGeometry.cpp | voelund::document::detail::validateNativeSketchGeometry | 19 | Altbestand vor A04
 cyclomatic | src/features/FeatureGraph.cpp | voelund::features::FeatureGraph::evaluateDetailed | 19 | Altbestand vor A04

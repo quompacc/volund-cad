@@ -18,6 +18,12 @@ namespace voelund::application::detail {
 [[nodiscard]] std::vector<document::SketchPoint>
 splineThroughPoints(std::span<const document::SketchPoint> fit);
 
+// N14d: the same through `fit`, but with the given first derivatives (by the spline's own
+// parameter) at its start and end instead of natural ends.
+[[nodiscard]] std::vector<document::SketchPoint>
+splineThroughPoints(std::span<const document::SketchPoint> fit,
+                    document::SketchPoint startDerivative, document::SketchPoint endDerivative);
+
 // The spline's point (derivative 0) at `parameter` in [0, poles - 3].
 [[nodiscard]] document::SketchPoint splinePoint(std::span<const document::SketchPoint> poles,
                                                 double parameter);

@@ -78,9 +78,9 @@ std::vector<SketchPoint> solve(std::vector<std::vector<double>> rows,
     return x;
 }
 
-} // namespace
-
-std::vector<SketchPoint> splineThroughPoints(std::span<const SketchPoint> fit) {
+// The spline through `fit` whose `derivative`-th derivatives at both ends are `ends`.
+std::vector<SketchPoint> fitted(std::span<const SketchPoint> fit, int derivative,
+                                std::pair<SketchPoint, SketchPoint> ends) {
     const std::size_t poles = fit.size() + 2;
     if (fit.size() < 2 || poles > document::maximumBSplinePoles)
         return {};
@@ -90,19 +90,31 @@ std::vector<SketchPoint> splineThroughPoints(std::span<const SketchPoint> fit) {
     const auto u = knotsFor(poles);
     std::vector<std::vector<double>> rows;
     std::vector<SketchPoint> right(fit.begin(), fit.end());
-    const auto row = [&](double t, int derivative) {
+    const auto row = [&](double t, int order) {
         std::vector<double> values(poles);
         for (std::size_t j = 0; j < poles; ++j)
-            values[j] = basis(u, j, degree, t, derivative);
+            values[j] = basis(u, j, degree, t, order);
         rows.push_back(std::move(values));
     };
     for (std::size_t index = 0; index < fit.size(); ++index)
         row(static_cast<double>(index), 0);
-    for (const double end : {0.0, u.back()}) { // natural ends
-        row(end, 2);
-        right.push_back({0.0, 0.0});
-    }
+    row(0.0, derivative);
+    right.push_back(ends.first);
+    row(u.back(), derivative);
+    right.push_back(ends.second);
     return solve(std::move(rows), std::move(right));
+}
+
+} // namespace
+
+std::vector<SketchPoint> splineThroughPoints(std::span<const SketchPoint> fit) {
+    return fitted(fit, 2, {{0.0, 0.0}, {0.0, 0.0}}); // natural ends
+}
+
+std::vector<SketchPoint> splineThroughPoints(std::span<const SketchPoint> fit,
+                                             SketchPoint startDerivative,
+                                             SketchPoint endDerivative) {
+    return fitted(fit, 1, {startDerivative, endDerivative});
 }
 
 SketchPoint splinePoint(std::span<const SketchPoint> poles, double parameter) {
