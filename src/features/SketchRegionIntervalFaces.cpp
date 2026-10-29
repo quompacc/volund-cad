@@ -65,7 +65,8 @@ kernel::SpaceCurve sourceCurve(Context& context, std::size_t piece) {
                                               arc->radius);
         if (const auto* spline = std::get_if<document::SketchBSpline>(&geometry))
             return bsplineCurve3d(*spline, plane); // S21: same parameters as the planar curve
-        const auto& ellipse = std::get<document::SketchEllipse>(geometry);
+        const auto* arc = std::get_if<document::SketchEllipticArc>(&geometry); // N14c
+        const auto ellipse = arc ? arc->ellipse() : std::get<document::SketchEllipse>(geometry);
         const gp_Dir y = normal.Crossed(x);
         const gp_Dir major(gp_Vec(x) * std::cos(ellipse.rotation) +
                            gp_Vec(y) * std::sin(ellipse.rotation));

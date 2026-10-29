@@ -160,6 +160,61 @@ struct EllipseState final {
     }
 };
 
+// N14c: a piece of an ellipse; its ends follow the ellipse at the two parameters (PlaneGCS
+// arc-of-ellipse rules), they are referenced as start and end, the center as center.
+struct EllipticArcState final {
+    document::SketchElement* element;
+    double centerX, centerY, focusX, focusY, minorRadius;
+    double startX, startY, endX, endY, startParameter, endParameter;
+    GCS::ArcOfEllipse arc;
+
+    explicit EllipticArcState(document::SketchElement& source) : element(&source) {
+        const auto& value = std::get<document::SketchEllipticArc>(source.geometry);
+        const double focalDistance = std::sqrt(value.majorRadius * value.majorRadius -
+                                               value.minorRadius * value.minorRadius);
+        centerX = value.center.x;
+        centerY = value.center.y;
+        focusX = centerX + focalDistance * std::cos(value.rotation);
+        focusY = centerY + focalDistance * std::sin(value.rotation);
+        minorRadius = value.minorRadius;
+        startParameter = value.startParameter;
+        endParameter = value.endParameter;
+        const auto start = document::ellipsePoint(value.ellipse(), startParameter);
+        const auto end = document::ellipsePoint(value.ellipse(), endParameter);
+        startX = start.x;
+        startY = start.y;
+        endX = end.x;
+        endY = end.y;
+        arc.center = {&centerX, &centerY};
+        arc.focus1 = {&focusX, &focusY};
+        arc.radmin = &minorRadius;
+        arc.start = {&startX, &startY};
+        arc.end = {&endX, &endY};
+        arc.startAngle = &startParameter;
+        arc.endAngle = &endParameter;
+    }
+
+    void appendUnknowns(GCS::VEC_pD& unknowns) {
+        unknowns.insert(unknowns.end(),
+                        {&centerX, &centerY, &focusX, &focusY, &minorRadius, &startX, &startY,
+                         &endX, &endY, &startParameter, &endParameter});
+    }
+
+    void writeBack() const {
+        auto& target = std::get<document::SketchEllipticArc>(element->geometry);
+        target.center = {centerX, centerY};
+        target.minorRadius = std::abs(minorRadius);
+        target.majorRadius =
+            std::hypot(std::hypot(focusX - centerX, focusY - centerY), target.minorRadius);
+        target.rotation = std::atan2(focusY - centerY, focusX - centerX);
+        target.startParameter = std::remainder(startParameter, 2.0 * std::numbers::pi);
+        double sweep = std::fmod(endParameter - startParameter, 2.0 * std::numbers::pi);
+        if (sweep <= 1.0e-9)
+            sweep += 2.0 * std::numbers::pi;
+        target.endParameter = target.startParameter + sweep;
+    }
+};
+
 // S15: a single point; it is referenced as its center.
 struct PointState final {
     document::SketchElement* element;
@@ -203,14 +258,15 @@ struct BSplineState final {
             target.poles[index] = {coordinates[2 * index], coordinates[2 * index + 1]};
     }
 };
-// The key of a B-spline end in the point map (element IDs stay far below these bits).
+// The key of a B-spline or elliptic arc end in the point map (element IDs stay far below these
+// bits).
 inline std::uint64_t bsplineEndKey(std::uint64_t element, bool start) {
     return element | (start ? (std::uint64_t{1} << 62) : (std::uint64_t{1} << 63));
 }
 // PlaneGCS orders unknowns by their addresses. All states share one storage in element order so
 // an underdetermined sketch solves the same way in every run, independent of heap layout.
-using ElementState =
-    std::variant<LineState, CircleState, ArcState, EllipseState, PointState, BSplineState>;
+using ElementState = std::variant<LineState, CircleState, ArcState, EllipseState, PointState,
+                                  BSplineState, EllipticArcState>;
 
 using LineMap = std::unordered_map<std::uint64_t, LineState*>;
 using CircleMap = std::unordered_map<std::uint64_t, CircleState*>;

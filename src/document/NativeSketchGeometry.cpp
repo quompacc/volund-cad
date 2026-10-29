@@ -106,6 +106,11 @@ void writeElement(const TDF_Label& label, const SketchElement& element) {
         kind = "bspline"; // S21 (schema 30): x, y of each control point
         for (const auto& pole : spline->poles)
             values.insert(values.end(), {pole.x, pole.y});
+    } else if (const auto* elliptic = std::get_if<SketchEllipticArc>(&element.geometry)) {
+        kind = "elliptic_arc"; // N14c (schema 54)
+        values = {elliptic->center.x,    elliptic->center.y, elliptic->majorRadius,
+                  elliptic->minorRadius, elliptic->rotation, elliptic->startParameter,
+                  elliptic->endParameter};
     } else {
         const auto& ellipse = std::get<SketchEllipse>(element.geometry);
         kind = "ellipse";
@@ -115,6 +120,26 @@ void writeElement(const TDF_Label& label, const SketchElement& element) {
     TDataStd_AsciiString::Set(label.FindChild(2), kind);
     writeReals(label.FindChild(4), values);
 }
+// Kinds added after the first schema: a point (schema 22) and an elliptic arc (N14c, 54).
+std::optional<SketchGeometry> readLaterKind(const std::string& kind, const TDF_Label& data,
+                                            int schemaVersion) {
+    if (kind == "point") {
+        require(schemaVersion >= 22);
+        const auto values = reals(data, 2);
+        return SketchPointGeometry{{values->Value(1), values->Value(2)}};
+    }
+    if (kind != "elliptic_arc")
+        return std::nullopt;
+    require(schemaVersion >= 54);
+    const auto values = reals(data, 7);
+    return SketchEllipticArc{{values->Value(1), values->Value(2)},
+                             values->Value(3),
+                             values->Value(4),
+                             values->Value(5),
+                             values->Value(6),
+                             values->Value(7)};
+}
+
 SketchElement readElement(const TDF_Label& label, int schemaVersion) {
     const auto kind = text(child(label, 2));
     const bool line = kind == "line";
@@ -146,11 +171,8 @@ SketchElement readElement(const TDF_Label& label, int schemaVersion) {
                 spline.poles.push_back({data->Value(index), data->Value(index + 1)});
             return spline;
         }
-        if (kind == "point") {
-            require(schemaVersion >= 22);
-            const auto data = reals(child(label, 4), 2);
-            return SketchPointGeometry{{data->Value(1), data->Value(2)}};
-        }
+        if (const auto later = readLaterKind(kind, child(label, 4), schemaVersion))
+            return *later;
         require(kind == "arc" || kind == "ellipse");
         const auto data = reals(child(label, 4), 5);
         if (kind == "arc")

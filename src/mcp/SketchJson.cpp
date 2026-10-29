@@ -115,6 +115,15 @@ QJsonObject encodeElement(const document::SketchElement& element) {
                                       for (const auto& pole : spline.poles)
                                           poles.append(point(pole));
                                       json.insert("poles", poles);
+                                  },
+                                  [&](const document::SketchEllipticArc& arc) { // N14c: output
+                                      json.insert("type", "elliptic_arc");
+                                      json.insert("center", point(arc.center));
+                                      json.insert("majorRadius", arc.majorRadius);
+                                      json.insert("minorRadius", arc.minorRadius);
+                                      json.insert("rotation", arc.rotation);
+                                      json.insert("startParameter", arc.startParameter);
+                                      json.insert("endParameter", arc.endParameter);
                                   }},
                element.geometry);
     return json;

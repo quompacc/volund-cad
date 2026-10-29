@@ -48,6 +48,28 @@ std::optional<Round> round(const SketchGeometry& g) {
         return Round{c->center, c->majorRadius, 0, tau};
     return std::nullopt;
 }
+// N14c: an ellipse or a piece of one, with its parameter range.
+struct Oval {
+    SketchEllipse ellipse;
+    double start;
+    double sweep;
+};
+std::optional<Oval> oval(const SketchGeometry& g) {
+    if (auto* e = std::get_if<SketchEllipse>(&g))
+        return Oval{*e, 0, tau};
+    if (auto* e = std::get_if<document::SketchEllipticArc>(&g))
+        return Oval{e->ellipse(), e->startParameter, e->endParameter - e->startParameter};
+    return std::nullopt;
+}
+// The ends of an open curve: a line, arc, B-spline (S21: its end poles) or elliptic arc.
+std::optional<std::pair<SketchPoint, SketchPoint>> openEnds(const SketchGeometry& g) {
+    if (std::holds_alternative<SketchLine>(g) || std::holds_alternative<SketchArc>(g) ||
+        std::holds_alternative<document::SketchBSpline>(g) ||
+        std::holds_alternative<document::SketchEllipticArc>(g))
+        return std::pair{*document::sketchReferencePoint(g, document::SketchPointPosition::start),
+                         *document::sketchReferencePoint(g, document::SketchPointPosition::end)};
+    return std::nullopt;
+}
 double angle(double a) {
     a = std::fmod(a, tau);
     return a < 0 ? a + tau : a;
@@ -62,11 +84,8 @@ std::vector<ContourPiece> contourPieces(std::span<const SketchElement> elements)
                        bool periodic = false) {
             result.push_back({e.id, part, std::move(g), a, b, periodic});
         };
-        if (auto* l = std::get_if<SketchLine>(&e.geometry))
-            add(*l, l->start, l->end);
-        else if (auto* a = std::get_if<SketchArc>(&e.geometry))
-            add(*a, radial(a->center, a->radius, a->startAngle),
-                radial(a->center, a->radius, a->endAngle));
+        if (const auto ends = openEnds(e.geometry)) // lines, arcs, B-splines, elliptic arcs
+            add(e.geometry, ends->first, ends->second);
         else if (auto* r = std::get_if<SketchRectangle>(&e.geometry)) {
             const SketchPoint p[] = {
                 r->first, {r->second.x, r->first.y}, r->second, {r->first.x, r->second.y}};
@@ -75,8 +94,6 @@ std::vector<ContourPiece> contourPieces(std::span<const SketchElement> elements)
         } else if (auto* c = std::get_if<SketchCircle>(&e.geometry)) {
             const auto p = radial(c->center, c->radius, 0);
             add(*c, p, p, 0, true);
-        } else if (auto* s = std::get_if<document::SketchBSpline>(&e.geometry)) {
-            add(*s, s->poles.front(), s->poles.back()); // S21: open, ends at its end poles
         } else if (std::holds_alternative<document::SketchPointGeometry>(e.geometry)) {
             continue; // construction anyway
         } else {
@@ -94,6 +111,8 @@ SketchPoint contourMiddle(const ContourPiece& p) {
         const auto middle = planarCurve(p).value(kernel::bsplineLastParameter(s->poles.size()) / 2);
         return {middle.X(), middle.Y()};
     }
+    if (auto* e = std::get_if<document::SketchEllipticArc>(&p.geometry))
+        return document::ellipsePoint(e->ellipse(), (e->startParameter + e->endParameter) / 2);
     return {(p.start.x + p.end.x) / 2, (p.start.y + p.end.y) / 2};
 }
 bool contourInterior(const ContourPiece& p, SketchPoint q) {
@@ -114,6 +133,31 @@ bool contourInterior(const ContourPiece& p, SketchPoint q) {
     }
     return false;
 }
+namespace {
+// N14c: two ellipses or pieces of one overlap on the same ellipse.
+bool ovalOverlap(const ContourPiece& a, const ContourPiece& b) {
+    const auto oa = oval(a.geometry), ob = oval(b.geometry);
+    if (!oa || !ob)
+        return false;
+    const auto &ea = oa->ellipse, &eb = ob->ellipse;
+    const double eps = connectionTolerance(ea.center, eb.center).millimetres;
+    const double turn = std::remainder(eb.rotation - ea.rotation, std::numbers::pi);
+    if (!connected(ea.center, eb.center) || std::abs(ea.majorRadius - eb.majorRadius) > eps ||
+        std::abs(ea.minorRadius - eb.minorRadius) > eps ||
+        std::abs(turn) > kernel::angularTolerance.radians)
+        return false;
+    // The parameters of b on a's ellipse: shifted by pi where its major axis points back.
+    const double shift = std::remainder(eb.rotation - ea.rotation, tau) - turn;
+    const double start = angle(oa->start), other = angle(ob->start + shift);
+    for (int step = -1; step <= 1; ++step) {
+        const double t = other + step * tau;
+        if (std::min(start + oa->sweep, t + ob->sweep) - std::max(start, t) >
+            kernel::angularTolerance.radians)
+            return true;
+    }
+    return false;
+}
+} // namespace
 bool contourOverlap(const ContourPiece& a, const ContourPiece& b) {
     if (auto* l = std::get_if<SketchLine>(&a.geometry)) {
         auto* other = std::get_if<SketchLine>(&b.geometry);
@@ -133,15 +177,6 @@ bool contourOverlap(const ContourPiece& a, const ContourPiece& b) {
         }
         return false;
     }
-    auto* ea = std::get_if<SketchEllipse>(&a.geometry);
-    auto* eb = std::get_if<SketchEllipse>(&b.geometry);
-    if (!ea || !eb)
-        return false;
-    const double eps = connectionTolerance(ea->center, eb->center).millimetres;
-    return connected(ea->center, eb->center) &&
-           std::abs(ea->majorRadius - eb->majorRadius) <= eps &&
-           std::abs(ea->minorRadius - eb->minorRadius) <= eps &&
-           std::abs(std::remainder(ea->rotation - eb->rotation, std::numbers::pi)) <=
-               kernel::angularTolerance.radians;
+    return ovalOverlap(a, b);
 }
 } // namespace voelund::features::detail

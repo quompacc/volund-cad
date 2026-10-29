@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <stdexcept>
 #include <string>
+#include <tuple>
+#include <vector>
 
 // S10: trim, extend and split as one undo step. Relations follow these rules:
 // - A relation on a moved end point no longer holds and is removed.
@@ -38,6 +40,40 @@ bool SketchEditorSession::canEditCurve(SketchCurveEdit edit) const noexcept {
         std::ranges::find(elements_.values, *selectedElement_, &document::SketchElement::id);
     return match != elements_.values.end() && detail::supportsCurveEdit(edit, match->geometry);
 }
+
+namespace {
+
+// The pieces stay on one line or circle: joined at the split point, or apart. Pieces of an
+// ellipse (N14c) are only joined; no relation keeps them on one ellipse.
+std::vector<std::tuple<SketchConstraintKind, SketchGeometryReference, SketchGeometryReference>>
+pieceRelations(const detail::SketchCurveEditPlan& plan, SketchElementId target,
+               SketchElementId piece) {
+    std::vector<std::tuple<SketchConstraintKind, SketchGeometryReference, SketchGeometryReference>>
+        relations;
+    if (plan.joined)
+        relations.emplace_back(SketchConstraintKind::coincident,
+                               SketchGeometryReference{target, Position::end},
+                               SketchGeometryReference{piece, Position::start});
+    if (std::holds_alternative<document::SketchEllipticArc>(plan.edited))
+        return relations;
+    if (std::holds_alternative<document::SketchLine>(plan.edited)) {
+        relations.emplace_back(plan.joined ? SketchConstraintKind::parallel
+                                           : SketchConstraintKind::collinear,
+                               SketchGeometryReference{piece, Position::start},
+                               SketchGeometryReference{target, Position::start});
+        return relations;
+    }
+    relations.emplace_back(SketchConstraintKind::concentric,
+                           SketchGeometryReference{piece, Position::center},
+                           SketchGeometryReference{target, Position::center});
+    if (!plan.joined)
+        relations.emplace_back(SketchConstraintKind::equal,
+                               SketchGeometryReference{piece, Position::start},
+                               SketchGeometryReference{target, Position::start});
+    return relations;
+}
+
+} // namespace
 
 SketchCurveEditResult SketchEditorSession::editCurve(SketchCurveEdit edit) {
     const std::string name = detail::curveEditName(edit);
@@ -106,22 +142,9 @@ SketchCurveEditResult SketchEditorSession::editCurve(SketchCurveEdit edit) {
         result.added.push_back(document::SketchConstraintId{constraints_.nextId++});
         constraints_.values.push_back({result.added.back(), kind, first, second});
     };
-    if (piece) {
-        // The pieces stay on one line or circle: joined at the split point, or apart.
-        if (plan.joined)
-            relate(SketchConstraintKind::coincident, {target, Position::end},
-                   {*piece, Position::start});
-        if (line)
-            relate(plan.joined ? SketchConstraintKind::parallel : SketchConstraintKind::collinear,
-                   {*piece, Position::start}, {target, Position::start});
-        else {
-            relate(SketchConstraintKind::concentric, {*piece, Position::center},
-                   {target, Position::center});
-            if (!plan.joined)
-                relate(SketchConstraintKind::equal, {*piece, Position::start},
-                       {target, Position::start});
-        }
-    }
+    if (piece)
+        for (const auto& [kind, first, second] : pieceRelations(plan, target, *piece))
+            relate(kind, first, second);
     for (const auto& binding : plan.bindings) {
         if (isPatternInstance(binding.cutter)) // S12: copies carry no relations
             continue;

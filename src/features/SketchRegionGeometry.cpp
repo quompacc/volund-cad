@@ -9,8 +9,22 @@
 #include <gp_Pln.hxx>
 #include <gp_Vec2d.hxx>
 #include <stdexcept>
+#include <utility>
 #include <voelund/kernel/NumericPolicy.hpp>
 namespace voelund::features::detail {
+namespace {
+// The center and the product of the radii of a circle, arc, ellipse or (N14c) elliptic arc:
+// over the parameter (angle or eccentric anomaly) the area term grows by that product.
+std::pair<document::SketchPoint, double> roundTerms(const document::SketchGeometry& geometry) {
+    if (const auto* c = std::get_if<document::SketchCircle>(&geometry))
+        return {c->center, c->radius * c->radius};
+    if (const auto* a = std::get_if<document::SketchArc>(&geometry))
+        return {a->center, a->radius * a->radius};
+    const auto* arc = std::get_if<document::SketchEllipticArc>(&geometry);
+    const auto e = arc ? arc->ellipse() : std::get<document::SketchEllipse>(geometry);
+    return {e.center, e.majorRadius * e.minorRadius};
+}
+} // namespace
 double boundaryArea(const SketchIntersectionResult& split,
                     const std::vector<RegionHalfEdge>& boundary) {
     const auto anchor = split.intervals[boundary.front().interval].start;
@@ -46,19 +60,7 @@ double boundaryArea(const SketchIntersectionResult& split,
                 }
             }
         } else {
-            document::SketchPoint center;
-            double product;
-            if (auto* c = std::get_if<document::SketchCircle>(&geometry)) {
-                center = c->center;
-                product = c->radius * c->radius;
-            } else if (auto* a = std::get_if<document::SketchArc>(&geometry)) {
-                center = a->center;
-                product = a->radius * a->radius;
-            } else {
-                const auto& e = std::get<document::SketchEllipse>(geometry);
-                center = e.center;
-                product = e.majorRadius * e.minorRadius;
-            }
+            const auto [center, product] = roundTerms(geometry);
             contribution = static_cast<long double>(center.x - anchor.x) *
                                (interval.end.y - interval.start.y) -
                            static_cast<long double>(center.y - anchor.y) *

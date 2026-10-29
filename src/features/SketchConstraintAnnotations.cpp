@@ -38,26 +38,18 @@ SketchPoint middle(SketchPoint a, SketchPoint b) { return {(a.x + b.x) * 0.5, (a
 SketchPoint referencePoint(const document::SketchParameters& sketch,
                            const document::SketchGeometryReference& reference) {
     const auto& geometry = findElement(sketch, reference.element).geometry;
-    if (const auto* line = std::get_if<document::SketchLine>(&geometry))
-        return reference.point == Position::end ? line->end : line->start;
-    if (const auto* circle = std::get_if<document::SketchCircle>(&geometry))
-        return circle->center;
-    if (const auto* arc = std::get_if<document::SketchArc>(&geometry)) {
+    if (const auto* rectangle = std::get_if<document::SketchRectangle>(&geometry)) {
         if (reference.point == Position::center)
-            return arc->center;
-        return onCircle(arc->center, arc->radius,
-                        reference.point == Position::start ? arc->startAngle : arc->endAngle);
+            return middle(rectangle->first, rectangle->second);
+        return reference.point == Position::end ? rectangle->second : rectangle->first;
     }
-    if (const auto* ellipse = std::get_if<document::SketchEllipse>(&geometry))
-        return ellipse->center;
-    if (const auto* point = std::get_if<document::SketchPointGeometry>(&geometry))
-        return point->position;                                               // S15
-    if (const auto* spline = std::get_if<document::SketchBSpline>(&geometry)) // S21
-        return reference.point == Position::end ? spline->poles.back() : spline->poles.front();
-    const auto& rectangle = std::get<document::SketchRectangle>(geometry);
-    if (reference.point == Position::center)
-        return middle(rectangle.first, rectangle.second);
-    return reference.point == Position::end ? rectangle.second : rectangle.first;
+    // N14c: one rule for every curve; a whole-element reference stands for the center, or the
+    // start of a line or B-spline.
+    if (const auto point = document::sketchReferencePoint(geometry, reference.point))
+        return *point;
+    return document::sketchReferencePoint(geometry, Position::center)
+        .value_or(
+            document::sketchReferencePoint(geometry, Position::start).value_or(SketchPoint{}));
 }
 
 // Where a label for the element as a whole sits: on its curve, not at an end point.
@@ -75,6 +67,9 @@ SketchPoint elementPoint(const document::SketchParameters& sketch, document::Ske
         return point->position;
     if (const auto* spline = std::get_if<document::SketchBSpline>(&geometry))
         return spline->poles[spline->poles.size() / 2];
+    if (const auto* arc = std::get_if<document::SketchEllipticArc>(&geometry)) // N14c
+        return document::ellipsePoint(arc->ellipse(),
+                                      (arc->startParameter + arc->endParameter) / 2);
     const auto& rectangle = std::get<document::SketchRectangle>(geometry);
     return middle(rectangle.first, rectangle.second);
 }

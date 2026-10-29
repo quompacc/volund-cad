@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Eduard Hart
 
 #include "SketchGeometryTransform.hpp"
+#include "SketchReferencePoints.hpp"
 #include <voelund/application/SketchEditorSession.hpp>
 #include <voelund/document/SketchPlaneValidation.hpp>
 #include <voelund/kernel/NumericPolicy.hpp>
@@ -134,41 +135,12 @@ bool SketchEditorSession::selectNearestReference(document::SketchElementId eleme
         return false;
     selectionPoint_ = position;
     selectedConstraint_.reset();
-    document::SketchGeometryReference reference{elementId, document::SketchPointPosition::start};
-    if (const auto* line = std::get_if<document::SketchLine>(&match->geometry)) {
-        const double startDistance =
-            std::hypot(position.x - line->start.x, position.y - line->start.y);
-        const double endDistance = std::hypot(position.x - line->end.x, position.y - line->end.y);
-        reference.point = startDistance <= endDistance ? document::SketchPointPosition::start
-                                                       : document::SketchPointPosition::end;
-    } else if (const auto* spline = std::get_if<document::SketchBSpline>(&match->geometry)) {
-        // S21: the nearer end.
-        const auto& first = spline->poles.front();
-        const auto& last = spline->poles.back();
-        reference.point = std::hypot(position.x - first.x, position.y - first.y) <=
-                                  std::hypot(position.x - last.x, position.y - last.y)
-                              ? document::SketchPointPosition::start
-                              : document::SketchPointPosition::end;
-    } else if (std::holds_alternative<document::SketchCircle>(match->geometry) ||
-               std::holds_alternative<document::SketchEllipse>(match->geometry) ||
-               std::holds_alternative<document::SketchPointGeometry>(match->geometry)) {
-        reference.point = document::SketchPointPosition::center;
-    } else if (const auto* arc = std::get_if<document::SketchArc>(&match->geometry)) {
-        const document::SketchPoint start{arc->center.x + arc->radius * std::cos(arc->startAngle),
-                                          arc->center.y + arc->radius * std::sin(arc->startAngle)};
-        const document::SketchPoint end{arc->center.x + arc->radius * std::cos(arc->endAngle),
-                                        arc->center.y + arc->radius * std::sin(arc->endAngle)};
-        const double centerDistance =
-            std::hypot(position.x - arc->center.x, position.y - arc->center.y);
-        const double startDistance = std::hypot(position.x - start.x, position.y - start.y);
-        const double endDistance = std::hypot(position.x - end.x, position.y - end.y);
-        reference.point = centerDistance <= startDistance && centerDistance <= endDistance
-                              ? document::SketchPointPosition::center
-                          : startDistance <= endDistance ? document::SketchPointPosition::start
-                                                         : document::SketchPointPosition::end;
-    } else if (!additive) {
+    const auto nearest = detail::nearestReferencePoint(match->geometry, position);
+    if (!nearest && !additive)
         return selectElement(elementId);
-    } // S08: a rectangle joins a multiple selection as a whole element.
+    // S08: a rectangle joins a multiple selection as a whole element.
+    const document::SketchGeometryReference reference{
+        elementId, nearest.value_or(document::SketchPointPosition::start)};
 
     if (!additive)
         selectedReferences_.clear();
@@ -204,48 +176,8 @@ bool SketchEditorSession::translateSelected(double deltaX, double deltaY) {
     if (pointSelection) {
         // S08: every variant a point reference can name moves; anything else is refused.
         const auto reference = selectedReferences_.front();
-        if (auto* line = std::get_if<document::SketchLine>(&match->geometry)) {
-            document::SketchPoint& point =
-                reference.point == document::SketchPointPosition::start ? line->start : line->end;
-            point.x += deltaX;
-            point.y += deltaY;
-        } else if (auto* circle = std::get_if<document::SketchCircle>(&match->geometry)) {
-            circle->center.x += deltaX;
-            circle->center.y += deltaY;
-        } else if (auto* arc = std::get_if<document::SketchArc>(&match->geometry)) {
-            if (reference.point == document::SketchPointPosition::center) {
-                arc->center.x += deltaX;
-                arc->center.y += deltaY;
-            } else {
-                double& angle = reference.point == document::SketchPointPosition::start
-                                    ? arc->startAngle
-                                    : arc->endAngle;
-                const double x = arc->center.x + arc->radius * std::cos(angle) + deltaX;
-                const double y = arc->center.y + arc->radius * std::sin(angle) + deltaY;
-                angle = std::atan2(y - arc->center.y, x - arc->center.x);
-                if (reference.point == document::SketchPointPosition::end) {
-                    while (angle <= arc->startAngle)
-                        angle += 2.0 * std::numbers::pi;
-                } else {
-                    while (arc->endAngle <= angle)
-                        angle -= 2.0 * std::numbers::pi;
-                }
-            }
-        } else if (auto* ellipse = std::get_if<document::SketchEllipse>(&match->geometry)) {
-            ellipse->center.x += deltaX;
-            ellipse->center.y += deltaY;
-        } else if (auto* spline = std::get_if<document::SketchBSpline>(&match->geometry)) {
-            auto& end = reference.point == document::SketchPointPosition::end
-                            ? spline->poles.back()
-                            : spline->poles.front(); // S21: an end control point
-            end.x += deltaX;
-            end.y += deltaY;
-        } else if (auto* point = std::get_if<document::SketchPointGeometry>(&match->geometry)) {
-            point->position.x += deltaX; // S15
-            point->position.y += deltaY;
-        } else {
+        if (!detail::moveReferencePoint(match->geometry, reference.point, deltaX, deltaY))
             return false;
-        }
     } else {
         // S08: a selection over several elements moves all of them as a whole.
         std::vector<document::SketchElementId> ids{*selectedElement_};

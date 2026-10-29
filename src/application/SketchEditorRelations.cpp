@@ -43,26 +43,9 @@ std::optional<document::SketchPoint>
 referencePoint(const document::SketchElements& elements,
                const document::SketchGeometryReference& reference) {
     const document::SketchElement* element = findElement(elements, reference.element);
-    if (line(element)) {
-        const auto& geometry = std::get<document::SketchLine>(element->geometry);
-        return reference.point == document::SketchPointPosition::end ? geometry.end
-                                                                     : geometry.start;
-    }
-    if (circle(element) && reference.point == document::SketchPointPosition::center)
-        return std::get<document::SketchCircle>(element->geometry).center;
-    if (sketchPoint(element) && reference.point == document::SketchPointPosition::center)
-        return std::get<document::SketchPointGeometry>(element->geometry).position;
-    if (arc(element)) {
-        const auto& geometry = std::get<document::SketchArc>(element->geometry);
-        if (reference.point == document::SketchPointPosition::center)
-            return geometry.center;
-        const double angle = reference.point == document::SketchPointPosition::start
-                                 ? geometry.startAngle
-                                 : geometry.endAngle;
-        return document::SketchPoint{geometry.center.x + geometry.radius * std::cos(angle),
-                                     geometry.center.y + geometry.radius * std::sin(angle)};
-    }
-    return std::nullopt;
+    if (element == nullptr)
+        return std::nullopt;
+    return document::sketchReferencePoint(element->geometry, reference.point); // N14c
 }
 
 kernel::Radians lineAngleRadians(const document::SketchLine& first,

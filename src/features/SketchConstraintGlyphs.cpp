@@ -56,6 +56,12 @@ Spot elementSpot(const document::SketchGeometry& geometry) {
         return {{(rectangle->first.x + rectangle->second.x) / 2, rectangle->first.y}, 1, 0};
     if (const auto* point = std::get_if<document::SketchPointGeometry>(&geometry))
         return {point->position, 1, 0};
+    if (const auto* arc = std::get_if<document::SketchEllipticArc>(&geometry)) { // N14c
+        const double middle = (arc->startParameter + arc->endParameter) / 2;
+        const auto a = document::ellipsePoint(arc->ellipse(), middle - 1e-3);
+        const auto b = document::ellipsePoint(arc->ellipse(), middle + 1e-3);
+        return {document::ellipsePoint(arc->ellipse(), middle), b.x - a.x, b.y - a.y};
+    }
     const auto& poles = std::get<document::SketchBSpline>(geometry).poles;
     return {poles.empty() ? SketchPoint{0, 0} : poles[poles.size() / 2], 1, 0};
 }

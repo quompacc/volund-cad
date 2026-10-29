@@ -21,6 +21,8 @@ auto pieceKey(const ContourPiece& p) {
         shape = {c->center.x, c->center.y, c->radius, 0, 0};
     if (auto* e = std::get_if<document::SketchEllipse>(&p.geometry))
         shape = {e->center.x, e->center.y, e->majorRadius, e->minorRadius, e->rotation};
+    if (auto* e = std::get_if<document::SketchEllipticArc>(&p.geometry)) // N14c
+        shape = {e->center.x, e->center.y, e->majorRadius, e->minorRadius, e->rotation};
     return std::tuple{a, b, pointKey(middle), p.geometry.index(), shape};
 }
 struct Sets {

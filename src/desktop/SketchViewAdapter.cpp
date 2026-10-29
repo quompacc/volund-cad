@@ -14,6 +14,7 @@
 #include <QObject>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <gp_Vec.hxx>
 
@@ -174,20 +175,12 @@ QString sketchSelectionSummary(const application::CadSession& session) {
         if (element.id != *selectedId) {
             continue;
         }
-        QString kind = QObject::tr("Kreis");
-        if (std::holds_alternative<document::SketchLine>(element.geometry)) {
-            kind = QObject::tr("Linie");
-        } else if (std::holds_alternative<document::SketchRectangle>(element.geometry)) {
-            kind = QObject::tr("Rechteck");
-        } else if (std::holds_alternative<document::SketchArc>(element.geometry)) {
-            kind = QObject::tr("Bogen");
-        } else if (std::holds_alternative<document::SketchEllipse>(element.geometry)) {
-            kind = QObject::tr("Ellipse");
-        } else if (std::holds_alternative<document::SketchPointGeometry>(element.geometry)) {
-            kind = QObject::tr("Punkt");
-        } else if (std::holds_alternative<document::SketchBSpline>(element.geometry)) {
-            kind = QObject::tr("B-Spline");
-        }
+        // In the order of document::SketchGeometry's alternatives.
+        static const std::array<const char*, std::variant_size_v<document::SketchGeometry>> kinds{
+            QT_TR_NOOP("Linie"),    QT_TR_NOOP("Rechteck"),     QT_TR_NOOP("Kreis"),
+            QT_TR_NOOP("Bogen"),    QT_TR_NOOP("Ellipse"),      QT_TR_NOOP("Punkt"),
+            QT_TR_NOOP("B-Spline"), QT_TR_NOOP("Ellipsenbogen")};
+        const QString kind = QObject::tr(kinds.at(element.geometry.index()));
         return summary + QObject::tr("\n\nGewählt: %1 #%2").arg(kind).arg(element.id.value());
     }
     return summary;

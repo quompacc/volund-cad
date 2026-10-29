@@ -49,34 +49,55 @@ struct Motion final {
     }
 };
 
+// The image of each kind of element under the motion.
+SketchGeometry image(const SketchLine& line, const Motion& motion, bool translationOnly) {
+    return SketchLine{motion.apply(line.start), motion.apply(line.end),
+                      translationOnly ? line.constraint : SketchLineConstraint::none};
+}
+SketchGeometry image(const SketchCircle& circle, const Motion& motion, bool) {
+    return SketchCircle{motion.apply(circle.center), circle.radius};
+}
+SketchGeometry image(const SketchArc& arc, const Motion& motion, bool) {
+    const SketchPoint center = motion.apply(arc.center);
+    const double sweep = arc.endAngle - arc.startAngle;
+    if (!motion.reflects)
+        return SketchArc{center, arc.radius, arc.startAngle + motion.turn,
+                         arc.startAngle + motion.turn + sweep};
+    // A reflected arc runs the other way: it starts at the image of the old end.
+    const double start = motion.turn - arc.endAngle;
+    return SketchArc{center, arc.radius, start, start + sweep};
+}
+SketchGeometry image(const SketchPointGeometry& point, const Motion& motion, bool) {
+    return SketchPointGeometry{motion.apply(point.position)};
+}
+SketchGeometry image(const SketchBSpline& spline, const Motion& motion, bool) { // S21
+    SketchBSpline result;
+    for (const auto& pole : spline.poles)
+        result.poles.push_back(motion.apply(pole));
+    return result;
+}
+SketchEllipse ellipseImage(const SketchEllipse& ellipse, const Motion& motion) {
+    return {motion.apply(ellipse.center), ellipse.majorRadius, ellipse.minorRadius,
+            motion.reflects ? motion.turn - ellipse.rotation : ellipse.rotation + motion.turn};
+}
+SketchGeometry image(const SketchEllipse& ellipse, const Motion& motion, bool) {
+    return ellipseImage(ellipse, motion);
+}
+SketchGeometry image(const SketchEllipticArc& arc, const Motion& motion, bool) { // N14c
+    // A reflection turns the minor axis over: the parameters change sign.
+    const auto ellipse = ellipseImage(arc.ellipse(), motion);
+    return SketchEllipticArc{ellipse.center,
+                             ellipse.majorRadius,
+                             ellipse.minorRadius,
+                             ellipse.rotation,
+                             motion.reflects ? -arc.endParameter : arc.startParameter,
+                             motion.reflects ? -arc.startParameter : arc.endParameter};
+}
+SketchGeometry image(const SketchRectangle& rectangle, const Motion&, bool) { return rectangle; }
+
 SketchGeometry moved(const SketchGeometry& geometry, const Motion& motion, bool translationOnly) {
-    if (const auto* line = std::get_if<SketchLine>(&geometry))
-        return SketchLine{motion.apply(line->start), motion.apply(line->end),
-                          translationOnly ? line->constraint : SketchLineConstraint::none};
-    if (const auto* circle = std::get_if<SketchCircle>(&geometry))
-        return SketchCircle{motion.apply(circle->center), circle->radius};
-    if (const auto* arc = std::get_if<SketchArc>(&geometry)) {
-        const SketchPoint center = motion.apply(arc->center);
-        const double sweep = arc->endAngle - arc->startAngle;
-        if (!motion.reflects)
-            return SketchArc{center, arc->radius, arc->startAngle + motion.turn,
-                             arc->startAngle + motion.turn + sweep};
-        // A reflected arc runs the other way: it starts at the image of the old end.
-        const double start = motion.turn - arc->endAngle;
-        return SketchArc{center, arc->radius, start, start + sweep};
-    }
-    if (const auto* point = std::get_if<SketchPointGeometry>(&geometry))
-        return SketchPointGeometry{motion.apply(point->position)};
-    if (const auto* spline = std::get_if<SketchBSpline>(&geometry)) { // S21
-        SketchBSpline image;
-        for (const auto& pole : spline->poles)
-            image.poles.push_back(motion.apply(pole));
-        return image;
-    }
-    const auto& ellipse = std::get<SketchEllipse>(geometry);
-    return SketchEllipse{motion.apply(ellipse.center), ellipse.majorRadius, ellipse.minorRadius,
-                         motion.reflects ? motion.turn - ellipse.rotation
-                                         : ellipse.rotation + motion.turn};
+    return std::visit([&](const auto& shape) { return image(shape, motion, translationOnly); },
+                      geometry);
 }
 
 } // namespace

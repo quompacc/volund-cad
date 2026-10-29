@@ -54,6 +54,10 @@ rectangle with an ordered collection of independently identified elements:
 - `SketchCircle` stores a planar center and radius;
 - `SketchArc` stores a planar center, radius and counter-clockwise start/end angles;
 - `SketchEllipse` stores its center, major/minor radii and major-axis rotation;
+- `SketchEllipticArc` (N14c, native schema 54, kind `elliptic_arc` with seven reals) stores
+  the same plus counter-clockwise start/end parameters (eccentric anomalies from the major
+  axis, as in OCCT, PlaneGCS and DXF); it comes from trimming or splitting an ellipse; its
+  ends and center take point relations;
 - every `SketchElement` owns a non-zero, sketch-local `SketchElementId`;
 - `SketchElements::nextId` preserves deterministic ID allocation through edits,
   Undo/Redo and Save/Load.
@@ -387,11 +391,11 @@ names the test per cell.
 
 | Operation | Supported | Refused (UI text) |
 |---|---|---|
-| Trim | lines, arcs, circles | ellipses: "Ellipsen werden nicht unterstützt (UnsupportedCurve)"; legacy rectangles: "Alt-Rechtecke werden nicht unterstützt (UnsupportedCurve)" |
-| Extend | lines, arcs | circles: "Kreise sind geschlossen und lassen sich nicht verlängern (UnsupportedCurve)"; ellipses as for trim |
-| Split | lines, arcs | circles: "Kreise haben keinen Endpunkt zum Teilen; zuerst stutzen (UnsupportedCurve)"; ellipses as for trim |
+| Trim | lines, arcs, circles; N14c: ellipses (become elliptic arcs, at least two cuts) and elliptic arcs; ellipses, elliptic arcs and B-splines also cut (kernel intersection) | legacy rectangles: "Alt-Rechtecke werden nicht unterstützt (UnsupportedCurve)" |
+| Extend | lines, arcs, elliptic arcs (along their ellipse) | circles and ellipses: "… sind geschlossen und lassen sich nicht verlängern (UnsupportedCurve)" |
+| Split | lines, arcs, elliptic arcs (the pieces are joined; nothing keeps them on one ellipse) | circles and ellipses: "… haben keinen Endpunkt zum Teilen; zuerst stutzen (UnsupportedCurve)" |
 | Fillet | the corner of two lines; N14a: a line and an arc or two arcs meeting at a common end (both cut back to the tangent joints; relations of the old corner end, a cut line's length and an arc's fixing are removed and listed) | circles, ellipses, B-splines: "Nur zwischen Linien und Bögen (UnsupportedCurve)"; curves without a common end; pattern copies |
-| Offset | lines, arcs, circles, connected contours of lines and arcs | ellipses: "Ellipsen werden nicht unterstützt (UnsupportedCurve)"; a line–arc kink: "Ein Knick zwischen Linie und Bogen wird nicht unterstützt"; circles and rectangles only alone: "Kreise und Rechtecke nur einzeln, Ellipsen gar nicht" |
+| Offset | lines, arcs, circles, connected contours of lines and arcs | ellipses and elliptic arcs: "Ellipsen werden nicht unterstützt (UnsupportedCurve)"; a line–arc kink: "Ein Knick zwischen Linie und Bogen wird nicht unterstützt"; circles and rectangles only alone: "Kreise und Rechtecke nur einzeln, Ellipsen gar nicht" |
 | Mirror | every element type; the axis is the last selected line | an axis that is no line; a copy as source or axis; a legacy rectangle is copied once ("Alt-Rechteck einmalig kopiert (kein Muster)") |
 | Linear pattern | along +X of the sketch, 2–1000 positions; N14a: or along the last selected line ("Musterbezug") | a reference that is no line; a copy as source |
 | Circular pattern | about the sketch origin, 2–1000 positions; N14a: or about the last selected point, circle, arc or ellipse centre | a reference without a centre; a copy as source |

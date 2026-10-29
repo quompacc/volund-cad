@@ -85,14 +85,25 @@ struct Builder final {
         curve.last = arc.end;
         curve.scale = scaleOf(arc.centre) + arc.radius;
     }
+    static Handle(Geom2d_Ellipse) ellipseCurve(const Ellipse2d& ellipse) {
+        return new Geom2d_Ellipse(gp_Ax2d(ellipse.centre, gp_Dir2d(std::cos(ellipse.rotation),
+                                                                   std::sin(ellipse.rotation))),
+                                  ellipse.majorRadius, ellipse.minorRadius);
+    }
     void operator()(const Ellipse2d& ellipse) const {
-        handle = new Geom2d_Ellipse(gp_Ax2d(ellipse.centre, gp_Dir2d(std::cos(ellipse.rotation),
-                                                                     std::sin(ellipse.rotation))),
-                                    ellipse.majorRadius, ellipse.minorRadius);
+        handle = ellipseCurve(ellipse);
         curve.first = 0;
         curve.last = 2 * std::numbers::pi;
         curve.periodic = true;
         curve.scale = scaleOf(ellipse.centre) + ellipse.majorRadius;
+    }
+    void operator()(const EllipticArc2d& arc) const {
+        // As an arc: the source domain stays, also across the seam.
+        handle =
+            new Geom2d_TrimmedCurve(ellipseCurve(arc.ellipse), arc.start, arc.end, true, false);
+        curve.first = arc.start;
+        curve.last = arc.end;
+        curve.scale = scaleOf(arc.ellipse.centre) + arc.ellipse.majorRadius;
     }
     void operator()(const BSpline2d& spline) const {
         handle = bsplineCurve(spline);

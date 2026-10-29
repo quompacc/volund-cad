@@ -49,7 +49,15 @@ struct Ellipse2d final {
 struct BSpline2d final {
     std::vector<gp_Pnt2d> poles;
 };
-using CurveDefinition2d = std::variant<Line2d, Circle2d, Arc2d, Ellipse2d, BSpline2d>;
+// N14c: a piece of an ellipse, counter-clockwise between two eccentric anomalies (radians, the
+// source domain kept as given).
+struct EllipticArc2d final {
+    Ellipse2d ellipse;
+    double start;
+    double end;
+};
+using CurveDefinition2d =
+    std::variant<Line2d, Circle2d, Arc2d, Ellipse2d, BSpline2d, EllipticArc2d>;
 
 [[nodiscard]] inline int bsplineDegree(std::size_t poles) noexcept {
     return std::min(3, static_cast<int>(poles) - 1);

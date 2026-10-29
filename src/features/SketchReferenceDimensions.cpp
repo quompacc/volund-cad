@@ -27,25 +27,10 @@ std::optional<SketchPoint> pointOf(const document::SketchElements& elements,
     const auto* element = find(elements, reference.element);
     if (element == nullptr)
         return std::nullopt;
-    const bool start = reference.point == document::SketchPointPosition::start;
-    if (const auto* line = std::get_if<document::SketchLine>(&element->geometry))
-        return start ? line->start : line->end;
-    if (const auto* circle = std::get_if<document::SketchCircle>(&element->geometry))
-        return circle->center;
-    if (const auto* ellipse = std::get_if<document::SketchEllipse>(&element->geometry))
-        return ellipse->center;
-    if (const auto* point = std::get_if<document::SketchPointGeometry>(&element->geometry))
-        return point->position;
-    if (const auto* spline = std::get_if<document::SketchBSpline>(&element->geometry))
-        return start ? spline->poles.front() : spline->poles.back(); // S21
-    if (const auto* arc = std::get_if<document::SketchArc>(&element->geometry)) {
-        if (reference.point == document::SketchPointPosition::center)
-            return arc->center;
-        const double angle = start ? arc->startAngle : arc->endAngle;
-        return SketchPoint{arc->center.x + arc->radius * std::cos(angle),
-                           arc->center.y + arc->radius * std::sin(angle)};
-    }
-    return std::nullopt;
+    // A whole-element reference of a circle, ellipse or point stands for its center (N14c).
+    if (const auto point = document::sketchReferencePoint(element->geometry, reference.point))
+        return point;
+    return document::sketchReferencePoint(element->geometry, document::SketchPointPosition::center);
 }
 
 const document::SketchLine* lineOf(const document::SketchElements& elements,

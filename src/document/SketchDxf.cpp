@@ -101,14 +101,18 @@ struct EntityWriter final {
         dxf.group(50, degrees(value.startAngle));
         dxf.group(51, degrees(value.endAngle));
     }
-    void operator()(const SketchEllipse& value) const {
+    void operator()(const SketchEllipse& value) const { ellipse(value, 0.0, 2 * std::numbers::pi); }
+    void operator()(const SketchEllipticArc& value) const { // N14c: same parameters as DXF
+        ellipse(value.ellipse(), value.startParameter, value.endParameter);
+    }
+    void ellipse(const SketchEllipse& value, double start, double end) const {
         dxf.entity("ELLIPSE", "AcDbEllipse", layer);
         dxf.point(10, value.center.x, value.center.y);
         dxf.point(11, value.majorRadius * std::cos(value.rotation),
                   value.majorRadius * std::sin(value.rotation));
         dxf.group(40, value.minorRadius / value.majorRadius);
-        dxf.group(41, 0.0);
-        dxf.group(42, 2 * std::numbers::pi);
+        dxf.group(41, start);
+        dxf.group(42, end);
     }
     void operator()(const SketchPointGeometry& value) const {
         dxf.entity("POINT", "AcDbPoint", layer);

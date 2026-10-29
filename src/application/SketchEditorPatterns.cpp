@@ -90,6 +90,8 @@ std::optional<document::SketchPoint> centreOf(const document::SketchGeometry& ge
         return arc->center;
     if (const auto* ellipse = std::get_if<document::SketchEllipse>(&geometry))
         return ellipse->center;
+    if (const auto* elliptic = std::get_if<document::SketchEllipticArc>(&geometry))
+        return elliptic->center;
     return std::nullopt;
 }
 

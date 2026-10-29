@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Eduard Hart
 
-#include "SketchGeometryRange.hpp"
+#include "SketchShapeChecks.hpp"
 #include <voelund/document/IdCapacity.hpp>
 #include <voelund/document/SketchGeometry.hpp>
+#include <voelund/kernel/NumericPolicy.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -16,76 +17,21 @@ namespace {
 
 constexpr double minimumLength = 1.0e-9;
 
-bool finite(const SketchPoint& point) { return std::isfinite(point.x) && std::isfinite(point.y); }
-
-double squaredDistance(const SketchPoint& first, const SketchPoint& second) {
-    const double x = second.x - first.x;
-    const double y = second.y - first.y;
-    return x * x + y * y;
-}
-
-void validateGeometry(const SketchGeometry& geometry) {
-    detail::validateGeometryRange(geometry);
-    if (const auto* line = std::get_if<SketchLine>(&geometry)) {
-        if (!finite(line->start) || !finite(line->end) ||
-            squaredDistance(line->start, line->end) <= minimumLength * minimumLength) {
-            throw std::invalid_argument("Sketch line must have finite, distinct endpoints");
-        }
-        if (line->constraint == SketchLineConstraint::horizontal &&
-            std::abs(line->end.y - line->start.y) > minimumLength) {
-            throw std::invalid_argument("Horizontal sketch line constraint is not satisfied");
-        }
-        if (line->constraint == SketchLineConstraint::vertical &&
-            std::abs(line->end.x - line->start.x) > minimumLength) {
-            throw std::invalid_argument("Vertical sketch line constraint is not satisfied");
-        }
-        return;
-    }
-    if (const auto* rectangle = std::get_if<SketchRectangle>(&geometry)) {
-        if (!finite(rectangle->first) || !finite(rectangle->second) ||
-            std::abs(rectangle->second.x - rectangle->first.x) <= minimumLength ||
-            std::abs(rectangle->second.y - rectangle->first.y) <= minimumLength) {
-            throw std::invalid_argument("Sketch rectangle must have a finite positive area");
-        }
-        return;
-    }
-    if (const auto* circle = std::get_if<SketchCircle>(&geometry)) {
-        if (!finite(circle->center) || !std::isfinite(circle->radius) ||
-            circle->radius <= minimumLength)
-            throw std::invalid_argument("Sketch circle must have a finite positive radius");
-        return;
-    }
-    if (const auto* ellipse = std::get_if<SketchEllipse>(&geometry)) {
-        if (!finite(ellipse->center) || !std::isfinite(ellipse->majorRadius) ||
-            !std::isfinite(ellipse->minorRadius) || !std::isfinite(ellipse->rotation) ||
-            ellipse->majorRadius <= minimumLength || ellipse->minorRadius <= minimumLength ||
-            ellipse->minorRadius > ellipse->majorRadius)
-            throw std::invalid_argument("Sketch ellipse must have finite positive radii");
-        return;
-    }
-    if (const auto* point = std::get_if<SketchPointGeometry>(&geometry)) {
-        if (!finite(point->position))
-            throw std::invalid_argument("Sketch point must be finite");
-        return;
-    }
-    if (const auto* spline = std::get_if<SketchBSpline>(&geometry)) { // S21
-        const auto& poles = spline->poles;
-        if (poles.size() < minimumBSplinePoles || poles.size() > maximumBSplinePoles ||
-            !std::ranges::all_of(poles, [](const SketchPoint& pole) { return finite(pole); }) ||
-            squaredDistance(poles.front(), poles.back()) <= minimumLength * minimumLength)
-            throw std::invalid_argument(
-                "Sketch B-spline needs 4 to 64 finite control points and two distinct ends");
-        return;
-    }
-    const SketchArc& arc = std::get<SketchArc>(geometry);
-    const double sweep = arc.endAngle - arc.startAngle;
-    if (!finite(arc.center) || !std::isfinite(arc.radius) || arc.radius <= minimumLength ||
-        !std::isfinite(arc.startAngle) || !std::isfinite(arc.endAngle) ||
-        sweep <= kernel::angularTolerance.radians || sweep >= 2.0 * std::numbers::pi)
-        throw std::invalid_argument("Sketch arc must have a finite center, radius and sweep");
-}
-
 } // namespace
+
+SketchPoint ellipsePoint(const SketchEllipse& ellipse, double parameter) noexcept {
+    const double c = std::cos(ellipse.rotation), s = std::sin(ellipse.rotation);
+    const double u = ellipse.majorRadius * std::cos(parameter);
+    const double v = ellipse.minorRadius * std::sin(parameter);
+    return {ellipse.center.x + u * c - v * s, ellipse.center.y + u * s + v * c};
+}
+
+double ellipseParameter(const SketchEllipse& ellipse, SketchPoint point) noexcept {
+    const double c = std::cos(ellipse.rotation), s = std::sin(ellipse.rotation);
+    const double dx = point.x - ellipse.center.x, dy = point.y - ellipse.center.y;
+    return std::atan2((-dx * s + dy * c) / ellipse.minorRadius,
+                      (dx * c + dy * s) / ellipse.majorRadius);
+}
 
 void validateSketchElements(const SketchElements& elements) {
     if (!hasIdCapacity(elements.nextId, 0))
@@ -100,7 +46,7 @@ void validateSketchElements(const SketchElements& elements) {
         if (element.id.value() == 0) {
             throw std::invalid_argument("Sketch element ID must not be zero");
         }
-        validateGeometry(element.geometry);
+        detail::validateShape(element.geometry);
         if (std::holds_alternative<SketchPointGeometry>(element.geometry) && !element.construction)
             throw std::invalid_argument("A sketch point is construction geometry");
         maximumId = std::max(maximumId, element.id.value());
@@ -136,25 +82,8 @@ void validateSketchConstraints(const SketchElements& elements,
             throw std::invalid_argument("Sketch constraint requires a line");
     };
     const auto requirePoint = [&findElement](const SketchGeometryReference& reference) {
-        const SketchGeometry& geometry = findElement(reference.element).geometry;
-        if (std::holds_alternative<SketchLine>(geometry)) {
-            if (reference.point == SketchPointPosition::center)
-                throw std::invalid_argument("Sketch line has no center point");
-            return;
-        }
-        if (std::holds_alternative<SketchCircle>(geometry) &&
-            reference.point == SketchPointPosition::center)
-            return;
-        if ((std::holds_alternative<SketchEllipse>(geometry) ||
-             std::holds_alternative<SketchPointGeometry>(geometry)) &&
-            reference.point == SketchPointPosition::center)
-            return;
-        if (std::holds_alternative<SketchArc>(geometry))
-            return;
-        if (std::holds_alternative<SketchBSpline>(geometry) && // S21: its two ends
-            reference.point != SketchPointPosition::center)
-            return;
-        throw std::invalid_argument("Sketch constraint reference is not a supported point");
+        if (!sketchReferencePoint(findElement(reference.element).geometry, reference.point))
+            throw std::invalid_argument("Sketch constraint reference is not a supported point");
     };
 
     for (const SketchConstraint& constraint : constraints.values) {
@@ -224,12 +153,13 @@ void validateSketchConstraints(const SketchElements& elements,
                 throw std::invalid_argument(
                     "Fixed constraint needs one line or circle and its complete coordinates");
             if (line)
-                validateGeometry(
+                detail::validateShape(
                     SketchLine{{constraint.value, constraint.auxiliaryValues[0]},
                                {constraint.auxiliaryValues[1], constraint.auxiliaryValues[2]}});
             else
-                validateGeometry(SketchCircle{{constraint.value, constraint.auxiliaryValues[0]},
-                                              constraint.auxiliaryValues[1]});
+                detail::validateShape(
+                    SketchCircle{{constraint.value, constraint.auxiliaryValues[0]},
+                                 constraint.auxiliaryValues[1]});
         } else if (constraint.kind == SketchConstraintKind::coordinateX ||
                    constraint.kind == SketchConstraintKind::coordinateY) {
             requirePoint(constraint.first);

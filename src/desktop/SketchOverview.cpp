@@ -90,9 +90,10 @@ QListWidget* list(QWidget* parent, const char* name, QToolButton* toggle) {
 
 QString sketchElementName(const document::SketchElement& element) {
     // In the order of document::SketchGeometry's alternatives.
-    static const std::array<QString, 7> kinds{
-        QObject::tr("Linie"),   QObject::tr("Rechteck"), QObject::tr("Kreis"), QObject::tr("Bogen"),
-        QObject::tr("Ellipse"), QObject::tr("Punkt"),    QObject::tr("Spline")};
+    static const std::array<QString, std::variant_size_v<document::SketchGeometry>> kinds{
+        QObject::tr("Linie"),  QObject::tr("Rechteck"),     QObject::tr("Kreis"),
+        QObject::tr("Bogen"),  QObject::tr("Ellipse"),      QObject::tr("Punkt"),
+        QObject::tr("Spline"), QObject::tr("Ellipsenbogen")};
     const QString name =
         kinds.at(element.geometry.index()) + QLatin1Char(' ') + QString::number(element.id.value());
     const bool point = std::holds_alternative<document::SketchPointGeometry>(element.geometry);

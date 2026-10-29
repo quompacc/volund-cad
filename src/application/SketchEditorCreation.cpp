@@ -48,10 +48,11 @@ void checkSnapTarget(std::span<const document::SketchElement> elements, const Sk
         return;
     }
     const bool center = snap.kind == SketchSnapKind::center;
-    const bool fits = std::holds_alternative<document::SketchArc>(geometry) || (line && !center) ||
-                      (center && (std::holds_alternative<document::SketchCircle>(geometry) ||
-                                  std::holds_alternative<document::SketchEllipse>(geometry) ||
-                                  std::holds_alternative<document::SketchPointGeometry>(geometry)));
+    // N14c: the element has the point the snap names (center, or an end).
+    const bool fits =
+        document::sketchReferencePoint(geometry, center ? document::SketchPointPosition::center
+                                                        : document::SketchPointPosition::start)
+            .has_value();
     if (!fits)
         rejectSnap(snap.element, "das Element hat keinen solchen Punkt");
 }

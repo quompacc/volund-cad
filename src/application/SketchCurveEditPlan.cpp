@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Eduard Hart
 
 #include "SketchCurveEditPlan.hpp"
+#include "SketchCurveEditCuts.hpp"
 
 #include <voelund/kernel/NumericPolicy.hpp>
 
@@ -176,7 +177,8 @@ double scaleOf(std::span<const SketchElement> elements) {
                 } else if constexpr (std::is_same_v<Geometry, document::SketchRectangle>) {
                     grow(value.first);
                     grow(value.second);
-                } else if constexpr (std::is_same_v<Geometry, document::SketchEllipse>) {
+                } else if constexpr (std::is_same_v<Geometry, document::SketchEllipse> ||
+                                     std::is_same_v<Geometry, document::SketchEllipticArc>) {
                     grow(value.center);
                     scale = std::max(scale, value.majorRadius);
                 } else if constexpr (std::is_same_v<Geometry, document::SketchPointGeometry>) {
@@ -193,21 +195,35 @@ double scaleOf(std::span<const SketchElement> elements) {
     return scale;
 }
 
-// The edited element as a curve parametrized by arc length from its start.
+// The edited element as a curve parametrized by arc length from its start; an ellipse or
+// elliptic arc (N14c) by its eccentric anomaly times the major radius (`support.radius`).
 struct Curve final {
     SketchGeometry geometry;
     Support support;
-    double length; // a circle: its circumference
+    double length;                               // a circle: its circumference
+    std::optional<document::SketchEllipse> oval; // N14c: the ellipse it lies on
 
     [[nodiscard]] const SketchLine* line() const { return std::get_if<SketchLine>(&geometry); }
     [[nodiscard]] const SketchArc* arc() const { return std::get_if<SketchArc>(&geometry); }
-    [[nodiscard]] double start() const { return arc() ? arc()->startAngle : 0.0; }
+    [[nodiscard]] const document::SketchEllipticArc* ellipticArc() const {
+        return std::get_if<document::SketchEllipticArc>(&geometry);
+    }
+    [[nodiscard]] bool bounded() const { return arc() || ellipticArc(); } // an arc of any kind
+    [[nodiscard]] bool closed() const { return !line() && !bounded(); }
+    [[nodiscard]] double start() const {
+        return arc() ? arc()->startAngle : ellipticArc() ? ellipticArc()->startParameter : 0.0;
+    }
+    [[nodiscard]] double end() const {
+        return arc() ? arc()->endAngle : ellipticArc()->endParameter;
+    }
     // Unbounded along a line; on a circle in [0, circumference) from the start.
     [[nodiscard]] double at(SketchPoint point) const {
         if (line())
             return (point.x - support.origin.x) * support.direction.x +
                    (point.y - support.origin.y) * support.direction.y;
-        return normalized(angleOf(support.origin, point) - start()) * support.radius;
+        const double angle =
+            oval ? document::ellipseParameter(*oval, point) : angleOf(support.origin, point);
+        return normalized(angle - start()) * support.radius;
     }
     [[nodiscard]] SketchPoint point(double at) const {
         if (const auto* value = line())
@@ -215,50 +231,101 @@ struct Curve final {
                    : at == length ? value->end
                                   : SketchPoint{value->start.x + support.direction.x * at,
                                                 value->start.y + support.direction.y * at};
+        if (oval)
+            return document::ellipsePoint(*oval, start() + at / support.radius);
         return onCircle(support.origin, support.radius, start() + at / support.radius);
     }
-    // The piece between two positions; positions beyond the ends extend it.
+    // The piece between two positions; positions beyond the ends extend it. Positions on a
+    // closed curve wrap: the piece runs counter-clockwise from `from` to `to`.
     [[nodiscard]] SketchGeometry piece(double from, double to) const {
         if (const auto* value = line())
             return SketchLine{point(from), point(to), value->constraint};
         const double radius = support.radius;
-        return SketchArc{support.origin, radius, start() + from / radius,
-                         arc() && to == length ? arc()->endAngle : start() + to / radius};
+        const double first = start() + from / radius;
+        double last = bounded() && to == length ? end() : start() + to / radius;
+        if (closed() && last <= first)
+            last += twoPi;
+        if (oval)
+            return document::SketchEllipticArc{
+                oval->center, oval->majorRadius, oval->minorRadius, oval->rotation, first, last};
+        return SketchArc{support.origin, radius, first, last};
+    }
+    // N14c: the whole line, circle or ellipse the curve lies on, for the kernel's cuts; a line
+    // reaches `reach` beyond its start and end.
+    [[nodiscard]] kernel::CurveDefinition2d definition(double reach) const {
+        const gp_Pnt2d centre(support.origin.x, support.origin.y);
+        if (oval)
+            return kernel::Ellipse2d{centre, oval->majorRadius, oval->minorRadius, oval->rotation};
+        if (!line())
+            return kernel::Circle2d{centre, support.radius};
+        const auto d = support.direction;
+        return kernel::Line2d{
+            {support.origin.x - d.x * reach, support.origin.y - d.y * reach},
+            {support.origin.x + d.x * (length + reach), support.origin.y + d.y * (length + reach)}};
     }
 };
 
+Curve ovalCurve(const SketchGeometry& geometry, const document::SketchEllipse& ellipse,
+                double sweep) {
+    return {geometry,
+            {true, ellipse.center, {}, ellipse.majorRadius},
+            sweep * ellipse.majorRadius,
+            ellipse};
+}
+
 Curve curveOf(const SketchGeometry& geometry) {
     if (const auto* line = std::get_if<SketchLine>(&geometry))
-        return {geometry, lineSupport(line->start, line->end), distance(line->start, line->end)};
+        return {geometry, lineSupport(line->start, line->end), distance(line->start, line->end),
+                std::nullopt};
     if (const auto* arc = std::get_if<SketchArc>(&geometry))
         return {geometry,
                 {true, arc->center, {}, arc->radius},
-                (arc->endAngle - arc->startAngle) * arc->radius};
+                (arc->endAngle - arc->startAngle) * arc->radius,
+                std::nullopt};
+    if (const auto* ellipse = std::get_if<document::SketchEllipse>(&geometry))
+        return ovalCurve(geometry, *ellipse, twoPi);
+    if (const auto* arc = std::get_if<document::SketchEllipticArc>(&geometry))
+        return ovalCurve(geometry, arc->ellipse(), arc->endParameter - arc->startParameter);
     const auto& circle = std::get<SketchCircle>(geometry);
-    return {geometry, {true, circle.center, {}, circle.radius}, twoPi * circle.radius};
+    return {
+        geometry, {true, circle.center, {}, circle.radius}, twoPi * circle.radius, std::nullopt};
 }
 
-// Every point where the edited curve's support meets another element, sorted along it.
+// Lines, arcs and circles meeting a line or circle: exact, without the kernel.
+void analyticHits(const Curve& curve, const SketchElement& element, double tolerance,
+                  std::vector<Hit>& result) {
+    for (const Edge& edge : edges(element.geometry))
+        for (SketchPoint point : meet(curve.support, edge.support, tolerance)) {
+            if (!within(edge, point, tolerance))
+                continue;
+            Hit hit{point, element.id, std::nullopt, edge.onObject, 0.0};
+            if (edge.ends.has_value()) {
+                if (distance(point, edge.ends->first) <= nullSegment)
+                    hit.cutterEnd = Position::start;
+                else if (distance(point, edge.ends->second) <= nullSegment)
+                    hit.cutterEnd = Position::end;
+            }
+            hit.at = curve.at(point);
+            result.push_back(hit);
+        }
+}
+
+// Every point where the edited curve's support meets another element, sorted along it; with
+// an ellipse, elliptic arc or B-spline on either side (N14c) by the kernel's intersection.
 std::vector<Hit> hits(const Curve& curve, std::span<const SketchElement> elements,
-                      SketchElementId target, double tolerance) {
+                      SketchElementId target, double tolerance, double reach) {
     std::vector<Hit> result;
     for (const SketchElement& element : elements) {
         if (element.id == target)
             continue;
-        for (const Edge& edge : edges(element.geometry))
-            for (SketchPoint point : meet(curve.support, edge.support, tolerance)) {
-                if (!within(edge, point, tolerance))
-                    continue;
-                Hit hit{point, element.id, std::nullopt, edge.onObject, 0.0};
-                if (edge.ends.has_value()) {
-                    if (distance(point, edge.ends->first) <= nullSegment)
-                        hit.cutterEnd = Position::start;
-                    else if (distance(point, edge.ends->second) <= nullSegment)
-                        hit.cutterEnd = Position::end;
-                }
-                hit.at = curve.at(point);
-                result.push_back(hit);
-            }
+        if (!curve.oval && !needsCurveCuts(element.geometry)) {
+            analyticHits(curve, element, tolerance, result);
+            continue;
+        }
+        for (const auto& cut :
+             curveCuts(curve.definition(reach), element.geometry, tolerance, nullSegment))
+            result.push_back(
+                {cut.point, element.id, cut.cutterEnd, cut.onObject, curve.at(cut.point)});
     }
     std::ranges::sort(result, {}, &Hit::at);
     return result;
@@ -280,14 +347,14 @@ double pickedAt(const Curve& curve, SketchPoint pick) {
     const double at = curve.at(pick);
     if (curve.line())
         return std::clamp(at, 0.0, curve.length);
-    if (curve.arc() && at > curve.length)
+    if (curve.bounded() && at > curve.length)
         return at - curve.length < curve.support.radius * twoPi - at ? curve.length : 0.0;
     return at;
 }
 
 SketchCurveEditPlan trim(const Curve& curve, std::vector<Hit> cuts, SketchPoint pick) {
     constexpr auto edit = SketchCurveEdit::trim;
-    const bool circle = !curve.line() && !curve.arc();
+    const bool circle = curve.closed();
     // Cuts at the ends would leave null segments; close cuts are one cut.
     std::erase_if(cuts, [&](const Hit& hit) {
         return !circle && (hit.at < nullSegment || hit.at > curve.length - nullSegment);
@@ -303,7 +370,8 @@ SketchCurveEditPlan trim(const Curve& curve, std::vector<Hit> cuts, SketchPoint 
         refuse(edit,
                "Das Element schneidet keine andere Geometrie; es gibt kein Stück zu entfernen");
     if (circle && distinct.size() < 2)
-        refuse(edit, "Ein Kreis braucht mindestens zwei Schnittpunkte zum Stutzen");
+        refuse(edit, curve.oval ? "Eine Ellipse braucht mindestens zwei Schnittpunkte zum Stutzen"
+                                : "Ein Kreis braucht mindestens zwei Schnittpunkte zum Stutzen");
     const double picked = pickedAt(curve, pick);
     for (const Hit& hit : distinct) {
         const double gap = std::abs(hit.at - picked);
@@ -320,11 +388,7 @@ SketchCurveEditPlan trim(const Curve& curve, std::vector<Hit> cuts, SketchPoint 
         // The arc that remains runs from the cut after the pick round to the cut before it.
         after = after ? after : &distinct.front();
         before = before ? before : &distinct.back();
-        const double start = curve.start() + after->at / curve.support.radius;
-        double end = curve.start() + before->at / curve.support.radius;
-        if (end <= start)
-            end += twoPi;
-        plan.edited = SketchArc{curve.support.origin, curve.support.radius, start, end};
+        plan.edited = curve.piece(after->at, before->at);
         bind(plan, 0, Position::start, *after);
         bind(plan, 0, Position::end, *before);
     } else if (before && after) {
@@ -362,7 +426,7 @@ SketchCurveEditPlan extend(const Curve& curve, const std::vector<Hit>& targets, 
             return std::nullopt;
         // An arc must not grow into itself.
         if (step < nullSegment ||
-            (curve.arc() && curve.length + step > twoPi * radius - nullSegment))
+            (curve.bounded() && curve.length + step > twoPi * radius - nullSegment))
             return std::nullopt;
         return step;
     };
@@ -397,7 +461,11 @@ SketchCurveEditPlan split(const Curve& curve, SketchPoint pick) {
 
 const char* unsupported(SketchCurveEdit edit, const SketchGeometry& geometry) {
     if (std::holds_alternative<document::SketchEllipse>(geometry))
-        return "Ellipsen werden nicht unterstützt (UnsupportedCurve)";
+        return edit == SketchCurveEdit::extend
+                   ? "Ellipsen sind geschlossen und lassen sich nicht verlängern "
+                     "(UnsupportedCurve)"
+                   : "Ellipsen haben keinen Endpunkt zum Teilen; zuerst stutzen "
+                     "(UnsupportedCurve)";
     if (std::holds_alternative<document::SketchRectangle>(geometry))
         return "Alt-Rechtecke werden nicht unterstützt (UnsupportedCurve)";
     if (std::holds_alternative<document::SketchPointGeometry>(geometry))
@@ -418,9 +486,13 @@ const char* curveEditName(SketchCurveEdit edit) noexcept {
 }
 
 bool supportsCurveEdit(SketchCurveEdit edit, const SketchGeometry& geometry) noexcept {
-    if (std::holds_alternative<SketchLine>(geometry) || std::holds_alternative<SketchArc>(geometry))
+    if (std::holds_alternative<SketchLine>(geometry) ||
+        std::holds_alternative<SketchArc>(geometry) ||
+        std::holds_alternative<document::SketchEllipticArc>(geometry)) // N14c
         return true;
-    return edit == SketchCurveEdit::trim && std::holds_alternative<SketchCircle>(geometry);
+    return edit == SketchCurveEdit::trim &&
+           (std::holds_alternative<SketchCircle>(geometry) ||
+            std::holds_alternative<document::SketchEllipse>(geometry));
 }
 
 SketchCurveEditPlan planCurveEdit(SketchCurveEdit edit, std::span<const SketchElement> elements,
@@ -433,8 +505,9 @@ SketchCurveEditPlan planCurveEdit(SketchCurveEdit edit, std::span<const SketchEl
     const Curve curve = curveOf(match->geometry);
     if (edit == SketchCurveEdit::split)
         return split(curve, pick);
-    const double tolerance = kernel::connectionTolerance(scaleOf(elements)).millimetres;
-    auto found = hits(curve, elements, target, tolerance);
+    const double scale = scaleOf(elements);
+    const double tolerance = kernel::connectionTolerance(scale).millimetres;
+    auto found = hits(curve, elements, target, tolerance, 4.0 * scale);
     return edit == SketchCurveEdit::trim ? trim(curve, std::move(found), pick)
                                          : extend(curve, found, pick);
 }

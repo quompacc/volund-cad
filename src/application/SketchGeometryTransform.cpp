@@ -97,6 +97,25 @@ bool PlanarTransform::translatesOnly() const noexcept {
     return xx == 1.0 && yy == 1.0 && xy == 0.0 && yx == 0.0;
 }
 
+// N14c: the image of an elliptic arc; a reflection turns the minor axis over, so the
+// parameters change sign (the old end becomes the start).
+document::SketchEllipticArc ellipticArcImage(const document::SketchEllipticArc& value,
+                                             const PlanarTransform& t) {
+    document::SketchEllipticArc arc = value;
+    arc.center = t.apply(value.center);
+    arc.majorRadius = value.majorRadius * t.scale;
+    arc.minorRadius = value.minorRadius * t.scale;
+    if (t.translatesOnly())
+        return arc;
+    const SketchPoint major{std::cos(value.rotation), std::sin(value.rotation)};
+    arc.rotation = std::atan2(t.yx * major.x + t.yy * major.y, t.xx * major.x + t.xy * major.y);
+    if (t.mirrors()) {
+        arc.startParameter = -value.endParameter;
+        arc.endParameter = -value.startParameter;
+    }
+    return arc;
+}
+
 TransformedCopy transformedCopy(const document::SketchGeometry& geometry,
                                 const PlanarTransform& t) {
     const AxisImage image = axisImage(t);
@@ -155,18 +174,12 @@ TransformedCopy transformedCopy(const document::SketchGeometry& geometry,
             } else if constexpr (std::is_same_v<Geometry, document::SketchPointGeometry>) {
                 result.elements.push_back(document::SketchPointGeometry{t.apply(value.position)});
             } else if constexpr (std::is_same_v<Geometry, document::SketchEllipse>) {
-                document::SketchEllipse ellipse = value;
-                ellipse.center = t.apply(value.center);
-                ellipse.majorRadius = value.majorRadius * t.scale;
-                ellipse.minorRadius = value.minorRadius * t.scale;
-                if (t.translatesOnly()) {
-                    result.elements.push_back(ellipse);
-                    return;
-                }
-                const SketchPoint major{std::cos(value.rotation), std::sin(value.rotation)};
-                ellipse.rotation =
-                    std::atan2(t.yx * major.x + t.yy * major.y, t.xx * major.x + t.xy * major.y);
-                result.elements.push_back(ellipse);
+                // The ellipse an arc of it is mapped onto (its parameters do not matter).
+                const document::SketchEllipticArc arc{
+                    value.center, value.majorRadius, value.minorRadius, value.rotation, 0, 1};
+                result.elements.push_back(ellipticArcImage(arc, t).ellipse());
+            } else if constexpr (std::is_same_v<Geometry, document::SketchEllipticArc>) {
+                result.elements.push_back(ellipticArcImage(value, t)); // N14c
             } else if constexpr (std::is_same_v<Geometry, document::SketchBSpline>) {
                 document::SketchBSpline spline; // S21: the image of each control point
                 for (const auto& pole : value.poles)

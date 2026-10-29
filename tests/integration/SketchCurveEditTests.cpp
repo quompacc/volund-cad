@@ -184,8 +184,12 @@ void trimChoosesCuts() {
     require(result.created == id(3) && near(rectangle.lineOf(1).end, {3, 0}) &&
                 near(rectangle.lineOf(3).start, {7, 0}) && result.added.size() == 1,
             "Rectangle edges cut; the pieces only stay collinear (no point on a rectangle)");
+    // N14c: an ellipse cuts as well; no relation binds the new ends to it.
     Fixture ellipse({line({0, 0}, {10, 0}), document::SketchEllipse{{5, 0}, 2, 1, 0}});
-    ellipse.refused(SketchCurveEdit::trim, 1, {5, 0}, "schneidet keine andere Geometrie");
+    const auto cut = ellipse.edit(SketchCurveEdit::trim, 1, {5, 0});
+    require(cut.created == id(3) && near(ellipse.lineOf(1).end, {3, 0}) &&
+                near(ellipse.lineOf(3).start, {7, 0}),
+            "The ellipse cuts the line at x = 3 and x = 7");
 }
 
 void trimAtTangent() {
@@ -287,10 +291,12 @@ void unsupported() {
             "A circle can only be trimmed");
     f.refused(SketchCurveEdit::extend, 1, {0, 5}, "UnsupportedCurve");
     f.refused(SketchCurveEdit::split, 1, {0, 5}, "UnsupportedCurve");
+    // N14c: an ellipse is trimmed like a circle; it has no end to extend or split.
     require(f.editor->selectNearestReference(id(2), {20, 2}, false) &&
-                !f.editor->canEditCurve(SketchCurveEdit::trim),
-            "An ellipse cannot be trimmed");
-    f.refused(SketchCurveEdit::trim, 2, {20, 2}, "Ellipsen werden nicht unterstützt");
+                f.editor->canEditCurve(SketchCurveEdit::trim) &&
+                !f.editor->canEditCurve(SketchCurveEdit::split),
+            "An ellipse can only be trimmed");
+    f.refused(SketchCurveEdit::split, 2, {20, 2}, "Ellipsen haben keinen Endpunkt");
 }
 
 } // namespace

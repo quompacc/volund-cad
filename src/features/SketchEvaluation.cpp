@@ -23,6 +23,7 @@
 #include <gp_Vec.hxx>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <optional>
 #include <stdexcept>
@@ -59,6 +60,12 @@ std::vector<EvaluatedSketchPoint> elementPoints(const document::SketchParameters
     } else if (const auto* spline = std::get_if<document::SketchBSpline>(&geometry)) {
         points = {{document::SketchPointPosition::start, spline->poles.front()}, // S21
                   {document::SketchPointPosition::end, spline->poles.back()}};
+    } else if (const auto* elliptic = std::get_if<document::SketchEllipticArc>(&geometry)) {
+        points = {{document::SketchPointPosition::center, elliptic->center}, // N14c
+                  {document::SketchPointPosition::start,
+                   document::ellipsePoint(elliptic->ellipse(), elliptic->startParameter)},
+                  {document::SketchPointPosition::end,
+                   document::ellipsePoint(elliptic->ellipse(), elliptic->endParameter)}};
     } else {
         const auto& arc = std::get<document::SketchArc>(geometry);
         points = {{document::SketchPointPosition::center, arc.center},
@@ -150,8 +157,8 @@ TopoDS_Edge arcEdge(const document::SketchParameters& sketch, const document::Sk
         .edge(arc.startAngle, arc.endAngle);
 }
 
-TopoDS_Edge ellipseEdge(const document::SketchParameters& sketch,
-                        const document::SketchEllipse& ellipse) {
+kernel::SpaceCurve ellipseCurve(const document::SketchParameters& sketch,
+                                const document::SketchEllipse& ellipse) {
     const gp_Pnt center = worldPoint(sketch.plane, ellipse.center);
     const gp_Dir normal(sketch.plane.normalX, sketch.plane.normalY, sketch.plane.normalZ);
     const gp_Dir planeX(sketch.plane.xDirectionX, sketch.plane.xDirectionY,
@@ -160,8 +167,16 @@ TopoDS_Edge ellipseEdge(const document::SketchParameters& sketch,
     const gp_Dir majorDirection(gp_Vec(planeX) * std::cos(ellipse.rotation) +
                                 gp_Vec(planeY) * std::sin(ellipse.rotation));
     return kernel::SpaceCurve::ellipse(gp_Ax2(center, normal, majorDirection), ellipse.majorRadius,
-                                       ellipse.minorRadius)
-        .edge();
+                                       ellipse.minorRadius);
+}
+TopoDS_Edge ellipseEdge(const document::SketchParameters& sketch,
+                        const document::SketchEllipse& ellipse) {
+    return ellipseCurve(sketch, ellipse).edge();
+}
+// N14c: the piece of the ellipse curve between the arc's parameters.
+TopoDS_Edge ellipticArcEdge(const document::SketchParameters& sketch,
+                            const document::SketchEllipticArc& arc) {
+    return ellipseCurve(sketch, arc.ellipse()).edge(arc.startParameter, arc.endParameter);
 }
 
 const document::SketchElement& findElement(const document::SketchParameters& sketch,
@@ -179,11 +194,36 @@ curveEndpoints(const document::SketchGeometry& geometry) {
         return {line->start, line->end};
     if (const auto* spline = std::get_if<document::SketchBSpline>(&geometry))
         return {spline->poles.front(), spline->poles.back()}; // S21
+    if (const auto* elliptic = std::get_if<document::SketchEllipticArc>(&geometry))
+        return {document::ellipsePoint(elliptic->ellipse(), elliptic->startParameter), // N14c
+                document::ellipsePoint(elliptic->ellipse(), elliptic->endParameter)};
     const auto& arc = std::get<document::SketchArc>(geometry);
     return {{arc.center.x + arc.radius * std::cos(arc.startAngle),
              arc.center.y + arc.radius * std::sin(arc.startAngle)},
             {arc.center.x + arc.radius * std::cos(arc.endAngle),
              arc.center.y + arc.radius * std::sin(arc.endAngle)}};
+}
+
+// The role a curve's edge plays; an elliptic arc (N14c) is a piece of an ellipse.
+ContourRole contourRole(const document::SketchGeometry& geometry) {
+    static constexpr std::array<ContourRole, std::variant_size_v<document::SketchGeometry>> roles{
+        ContourRole::line,    ContourRole::rectangleFirst, ContourRole::circle,
+        ContourRole::arc,     ContourRole::ellipse,        ContourRole::line,
+        ContourRole::bspline, ContourRole::ellipse};
+    return roles[geometry.index()];
+}
+
+// The edge of an open curve: line, arc, B-spline or elliptic arc.
+TopoDS_Edge openCurveEdge(const document::SketchParameters& sketch,
+                          const document::SketchGeometry& geometry) {
+    if (const auto* line = std::get_if<document::SketchLine>(&geometry))
+        return kernel::segmentEdge(worldPoint(sketch.plane, line->start),
+                                   worldPoint(sketch.plane, line->end));
+    if (const auto* spline = std::get_if<document::SketchBSpline>(&geometry))
+        return detail::bsplineCurve3d(*spline, sketch.plane).edge();
+    if (const auto* elliptic = std::get_if<document::SketchEllipticArc>(&geometry))
+        return ellipticArcEdge(sketch, *elliptic);
+    return arcEdge(sketch, std::get<document::SketchArc>(geometry));
 }
 
 TopoDS_Face curveProfileFace(const document::SketchParameters& sketch, const SketchProfile& profile,
@@ -193,13 +233,7 @@ TopoDS_Face curveProfileFace(const document::SketchParameters& sketch, const Ske
     for (document::SketchElementId id : profile.elementIds) {
         const auto& geometry = findElement(sketch, id).geometry;
         auto points = curveEndpoints(geometry);
-        const auto* spline = std::get_if<document::SketchBSpline>(&geometry);
-        TopoDS_Edge edge = std::holds_alternative<document::SketchLine>(geometry)
-                               ? kernel::segmentEdge(worldPoint(sketch.plane, points.first),
-                                                     worldPoint(sketch.plane, points.second))
-                           : spline != nullptr
-                               ? detail::bsplineCurve3d(*spline, sketch.plane).edge()
-                               : arcEdge(sketch, std::get<document::SketchArc>(geometry));
+        TopoDS_Edge edge = openCurveEdge(sketch, geometry);
         if (profile.reversed.at(contourIndex++)) {
             edge.Reverse();
             std::swap(points.first, points.second);
@@ -211,11 +245,7 @@ TopoDS_Face curveProfileFace(const document::SketchParameters& sketch, const Ske
         if (!wire.add(edge))
             throw GeometryEvaluationError("Sketch profile wire could not be connected",
                                           "profile-invalid");
-        recordEdge(edges, id,
-                   std::holds_alternative<document::SketchLine>(geometry) ? ContourRole::line
-                   : spline != nullptr                                    ? ContourRole::bspline
-                                                                          : ContourRole::arc,
-                   edge, wire.lastEdge());
+        recordEdge(edges, id, contourRole(geometry), edge, wire.lastEdge());
     }
     const auto face = kernel::faceFromWire(wire.wire());
     if (!face || !kernel::isValidShape(*face))
@@ -256,24 +286,13 @@ TopoDS_Shape elementShape(const document::SketchParameters& sketch,
     if (const auto* point = std::get_if<document::SketchPointGeometry>(&geometry))
         return kernel::pointVertex(worldPoint(sketch.plane, point->position));
     TopoDS_Edge edge;
-    if (const auto* line = std::get_if<document::SketchLine>(&geometry)) {
-        edge = kernel::segmentEdge(worldPoint(sketch.plane, line->start),
-                                   worldPoint(sketch.plane, line->end));
-    } else if (const auto* circle = std::get_if<document::SketchCircle>(&geometry))
+    if (const auto* circle = std::get_if<document::SketchCircle>(&geometry))
         edge = circleEdge(sketch, *circle);
-    else if (const auto* arc = std::get_if<document::SketchArc>(&geometry))
-        edge = arcEdge(sketch, *arc);
-    else if (const auto* spline = std::get_if<document::SketchBSpline>(&geometry))
-        edge = detail::bsplineCurve3d(*spline, sketch.plane).edge(); // S21
+    else if (const auto* ellipse = std::get_if<document::SketchEllipse>(&geometry))
+        edge = ellipseEdge(sketch, *ellipse);
     else
-        edge = ellipseEdge(sketch, std::get<document::SketchEllipse>(geometry));
-    const auto role =
-        std::holds_alternative<document::SketchLine>(geometry)      ? ContourRole::line
-        : std::holds_alternative<document::SketchCircle>(geometry)  ? ContourRole::circle
-        : std::holds_alternative<document::SketchArc>(geometry)     ? ContourRole::arc
-        : std::holds_alternative<document::SketchBSpline>(geometry) ? ContourRole::bspline
-                                                                    : ContourRole::ellipse;
-    recordEdge(edges, element.id, role, edge, edge);
+        edge = openCurveEdge(sketch, geometry); // S21/N14c
+    recordEdge(edges, element.id, contourRole(geometry), edge, edge);
     return edge;
 }
 

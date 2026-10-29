@@ -156,6 +156,12 @@ SketchOffsetResult single(const document::SketchGeometry& geometry, double offse
     return {{document::SketchRectangle{left, bottom, right, top}}, {}};
 }
 
+// An ellipse or (N14c) a piece of one.
+bool oval(const document::SketchGeometry& geometry) {
+    return std::holds_alternative<document::SketchEllipse>(geometry) ||
+           std::holds_alternative<document::SketchEllipticArc>(geometry);
+}
+
 } // namespace
 
 SketchOffsetResult offsetGeometry(std::span<const document::SketchGeometry> selected,
@@ -172,9 +178,7 @@ SketchOffsetResult offsetGeometry(std::span<const document::SketchGeometry> sele
             return std::holds_alternative<document::SketchBSpline>(geometry);
         }))
         refuse("B-Splines lassen sich nicht versetzen (UnsupportedCurve)"); // S21
-    if (std::ranges::any_of(selected, [](const auto& geometry) {
-            return std::holds_alternative<document::SketchEllipse>(geometry);
-        }))
+    if (std::ranges::any_of(selected, oval))
         refuse("Ellipsen werden nicht unterstützt (UnsupportedCurve); ihr Versatz ist keine "
                "Ellipse");
     if (selected.size() == 1 && !std::holds_alternative<SketchLine>(selected.front()) &&

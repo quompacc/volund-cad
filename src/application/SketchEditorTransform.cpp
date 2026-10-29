@@ -101,7 +101,8 @@ std::optional<document::SketchPoint> SketchEditorSession::selectionCenter() cons
                 } else if constexpr (std::is_same_v<Geometry, document::SketchRectangle>) {
                     add(geometry.first);
                     add(geometry.second);
-                } else if constexpr (std::is_same_v<Geometry, document::SketchEllipse>) {
+                } else if constexpr (std::is_same_v<Geometry, document::SketchEllipse> ||
+                                     std::is_same_v<Geometry, document::SketchEllipticArc>) {
                     add(geometry.center, geometry.majorRadius);
                 } else if constexpr (std::is_same_v<Geometry, document::SketchPointGeometry>) {
                     add(geometry.position);

@@ -21,6 +21,11 @@ struct Definition final {
     kernel::CurveDefinition2d operator()(const document::SketchEllipse& e) const {
         return kernel::Ellipse2d{point(e.center), e.majorRadius, e.minorRadius, e.rotation};
     }
+    kernel::CurveDefinition2d operator()(const document::SketchEllipticArc& a) const { // N14c
+        return kernel::EllipticArc2d{{point(a.center), a.majorRadius, a.minorRadius, a.rotation},
+                                     a.startParameter,
+                                     a.endParameter};
+    }
     kernel::CurveDefinition2d operator()(const document::SketchBSpline& s) const { // S21
         kernel::BSpline2d spline;
         for (const auto& pole : s.poles)

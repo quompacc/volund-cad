@@ -108,8 +108,33 @@ struct SketchBSpline final {
     [[nodiscard]] bool operator==(const SketchBSpline&) const = default;
 };
 
-using SketchGeometry = std::variant<SketchLine, SketchRectangle, SketchCircle, SketchArc,
-                                    SketchEllipse, SketchPointGeometry, SketchBSpline>;
+// N14c (schema 54, agent decision 2026-10-29): a piece of an ellipse, made by trimming or
+// splitting one. The parameters are eccentric anomalies from the major axis (the point is
+// center + a (cos t) major + b (sin t) minor, as in OCCT and PlaneGCS), counterclockwise from
+// start to end; 0 < end - start < 2 pi.
+struct SketchEllipticArc final {
+    SketchPoint center;
+    double majorRadius;
+    double minorRadius;
+    double rotation; // radians
+    double startParameter;
+    double endParameter;
+
+    [[nodiscard]] SketchEllipse ellipse() const noexcept {
+        return {center, majorRadius, minorRadius, rotation};
+    }
+    [[nodiscard]] bool operator==(const SketchEllipticArc&) const = default;
+};
+
+// The point of an ellipse at the eccentric anomaly `parameter`.
+[[nodiscard]] SketchPoint ellipsePoint(const SketchEllipse& ellipse, double parameter) noexcept;
+// The eccentric anomaly in (-pi, pi] of the ellipse point on the ray from the center through
+// `point` scaled to the ellipse (exact for points on it).
+[[nodiscard]] double ellipseParameter(const SketchEllipse& ellipse, SketchPoint point) noexcept;
+
+using SketchGeometry =
+    std::variant<SketchLine, SketchRectangle, SketchCircle, SketchArc, SketchEllipse,
+                 SketchPointGeometry, SketchBSpline, SketchEllipticArc>;
 
 struct SketchElement final {
     SketchElementId id;
@@ -133,6 +158,12 @@ struct SketchElements final {
 };
 
 enum class SketchPointPosition { start, end, center };
+
+// The point a relation names on an element: the ends of a line or B-spline, the center of a
+// circle, ellipse or point, center and ends of an arc or elliptic arc; none for any other
+// position and for a legacy rectangle (N14c: one place for every curve kind).
+[[nodiscard]] std::optional<SketchPoint> sketchReferencePoint(const SketchGeometry& geometry,
+                                                              SketchPointPosition point);
 enum class SketchConstraintKind {
     horizontal,
     vertical,

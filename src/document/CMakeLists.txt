@@ -59,6 +59,7 @@ add_library(voelund_document STATIC
     DocumentTransaction.cpp
     SketchConstraintSerialization.cpp
     SketchGeometry.cpp
+    SketchShapeChecks.cpp
     SketchPattern.cpp
     SketchRegionId.cpp
 )

@@ -16,29 +16,7 @@ referencePoint(std::span<const document::SketchElement> elements,
     const auto match = std::ranges::find(elements, reference.element, &document::SketchElement::id);
     if (match == elements.end())
         return std::nullopt;
-    if (const auto* line = std::get_if<document::SketchLine>(&match->geometry)) {
-        if (reference.point == document::SketchPointPosition::center)
-            return std::nullopt;
-        return reference.point == document::SketchPointPosition::end ? line->end : line->start;
-    }
-    if (const auto* circle = std::get_if<document::SketchCircle>(&match->geometry)) {
-        if (reference.point == document::SketchPointPosition::center)
-            return circle->center;
-    }
-    if (const auto* point = std::get_if<document::SketchPointGeometry>(&match->geometry)) {
-        if (reference.point == document::SketchPointPosition::center)
-            return point->position; // S15
-    }
-    if (const auto* arc = std::get_if<document::SketchArc>(&match->geometry)) {
-        if (reference.point == document::SketchPointPosition::center)
-            return arc->center;
-        const double angle = reference.point == document::SketchPointPosition::start
-                                 ? arc->startAngle
-                                 : arc->endAngle;
-        return document::SketchPoint{arc->center.x + arc->radius * std::cos(angle),
-                                     arc->center.y + arc->radius * std::sin(angle)};
-    }
-    return std::nullopt;
+    return document::sketchReferencePoint(match->geometry, reference.point); // N14c
 }
 
 bool hasCoordinate(std::span<const document::SketchConstraint> constraints,

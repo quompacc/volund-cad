@@ -71,6 +71,68 @@ sharedEnd(const document::SketchConstraints& constraints, std::uint64_t first,
     return std::nullopt;
 }
 
+// Where the solver keeps each element's state, by kind.
+struct SolverMaps final {
+    std::vector<ElementState>& states;
+    LineMap& lines;
+    CircleMap& circles;
+    ArcMap& arcs;
+    PointMap& centers;
+    std::vector<ArcState*>& arcStates;
+    std::vector<EllipticArcState*>& ellipticArcs; // N14c
+};
+
+// The element's state with its unknowns in `into`; `free` when they are the solver's unknowns
+// (not a fixed projected edge), so arcs get their rules.
+void registerElement(SolverMaps& maps, document::SketchElement& element, GCS::VEC_pD& into,
+                     bool free) {
+    if (std::holds_alternative<document::SketchLine>(element.geometry)) {
+        auto& state = maps.states.emplace_back(std::in_place_type<LineState>, element);
+        auto& line = std::get<LineState>(state);
+        line.appendUnknowns(into);
+        maps.lines.emplace(element.id.value(), &line);
+    } else if (std::holds_alternative<document::SketchCircle>(element.geometry)) {
+        auto& state = maps.states.emplace_back(std::in_place_type<CircleState>, element);
+        auto& circle = std::get<CircleState>(state);
+        circle.appendUnknowns(into);
+        maps.circles.emplace(element.id.value(), &circle);
+        maps.centers.emplace(element.id.value(), &circle.circle.center);
+    } else if (std::holds_alternative<document::SketchArc>(element.geometry)) {
+        auto& state = maps.states.emplace_back(std::in_place_type<ArcState>, element);
+        auto& arc = std::get<ArcState>(state);
+        arc.appendUnknowns(into);
+        maps.arcs.emplace(element.id.value(), &arc);
+        maps.centers.emplace(element.id.value(), &arc.arc.center);
+        if (free)
+            maps.arcStates.push_back(&arc); // a fixed arc already keeps its rules
+    } else if (std::holds_alternative<document::SketchEllipse>(element.geometry)) {
+        auto& state = maps.states.emplace_back(std::in_place_type<EllipseState>, element);
+        auto& ellipse = std::get<EllipseState>(state);
+        ellipse.appendUnknowns(into);
+        maps.centers.emplace(element.id.value(), &ellipse.ellipse.center);
+    } else if (std::holds_alternative<document::SketchBSpline>(element.geometry)) {
+        auto& state = maps.states.emplace_back(std::in_place_type<BSplineState>, element);
+        auto& spline = std::get<BSplineState>(state);
+        spline.appendUnknowns(into);
+        maps.centers.emplace(bsplineEndKey(element.id.value(), true), &spline.poles.front());
+        maps.centers.emplace(bsplineEndKey(element.id.value(), false), &spline.poles.back());
+    } else if (std::holds_alternative<document::SketchEllipticArc>(element.geometry)) {
+        auto& state = maps.states.emplace_back(std::in_place_type<EllipticArcState>, element);
+        auto& arc = std::get<EllipticArcState>(state); // N14c
+        arc.appendUnknowns(into);
+        maps.centers.emplace(element.id.value(), &arc.arc.center);
+        maps.centers.emplace(bsplineEndKey(element.id.value(), true), &arc.arc.start);
+        maps.centers.emplace(bsplineEndKey(element.id.value(), false), &arc.arc.end);
+        if (free)
+            maps.ellipticArcs.push_back(&arc);
+    } else if (std::holds_alternative<document::SketchPointGeometry>(element.geometry)) {
+        auto& state = maps.states.emplace_back(std::in_place_type<PointState>, element);
+        auto& point = std::get<PointState>(state);
+        point.appendUnknowns(into);
+        maps.centers.emplace(element.id.value(), &point.point);
+    }
+}
+
 } // namespace
 
 SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
@@ -80,11 +142,13 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
     std::vector<ElementState> states;
     states.reserve(sketch.elements.values.size());
     std::vector<ArcState*> arcStates;
+    std::vector<EllipticArcState*> ellipticArcs; // N14c
     LineMap lines;
     CircleMap circles;
     ArcMap arcs;
     PointMap centers;
     GCS::VEC_pD unknowns;
+    SolverMaps maps{states, lines, circles, arcs, centers, arcStates, ellipticArcs};
     // Unknowns of each element, to tell free from fully determined elements.
     std::vector<std::pair<document::SketchElementId, std::size_t>> unknownStarts;
     for (document::SketchElement& element : sketch.elements.values) {
@@ -99,47 +163,14 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
                               &document::SketchProjection::element) != sketch.projections.end()
                 ? ignored
                 : unknowns;
-        if (std::holds_alternative<document::SketchLine>(element.geometry)) {
-            auto& state = states.emplace_back(std::in_place_type<LineState>, element);
-            auto& line = std::get<LineState>(state);
-            line.appendUnknowns(into);
-            lines.emplace(element.id.value(), &line);
-        } else if (std::holds_alternative<document::SketchCircle>(element.geometry)) {
-            auto& state = states.emplace_back(std::in_place_type<CircleState>, element);
-            auto& circle = std::get<CircleState>(state);
-            circle.appendUnknowns(into);
-            circles.emplace(element.id.value(), &circle);
-            centers.emplace(element.id.value(), &circle.circle.center);
-        } else if (std::holds_alternative<document::SketchArc>(element.geometry)) {
-            auto& state = states.emplace_back(std::in_place_type<ArcState>, element);
-            auto& arc = std::get<ArcState>(state);
-            arc.appendUnknowns(into);
-            arcs.emplace(element.id.value(), &arc);
-            centers.emplace(element.id.value(), &arc.arc.center);
-            if (&into == &unknowns)
-                arcStates.push_back(&arc); // a fixed arc already keeps its rules
-        } else if (std::holds_alternative<document::SketchEllipse>(element.geometry)) {
-            auto& state = states.emplace_back(std::in_place_type<EllipseState>, element);
-            auto& ellipse = std::get<EllipseState>(state);
-            ellipse.appendUnknowns(into);
-            centers.emplace(element.id.value(), &ellipse.ellipse.center);
-        } else if (std::holds_alternative<document::SketchBSpline>(element.geometry)) {
-            auto& state = states.emplace_back(std::in_place_type<BSplineState>, element);
-            auto& spline = std::get<BSplineState>(state);
-            spline.appendUnknowns(into);
-            centers.emplace(bsplineEndKey(element.id.value(), true), &spline.poles.front());
-            centers.emplace(bsplineEndKey(element.id.value(), false), &spline.poles.back());
-        } else if (std::holds_alternative<document::SketchPointGeometry>(element.geometry)) {
-            auto& state = states.emplace_back(std::in_place_type<PointState>, element);
-            auto& point = std::get<PointState>(state);
-            point.appendUnknowns(into);
-            centers.emplace(element.id.value(), &point.point);
-        }
+        registerElement(maps, element, into, &into == &unknowns);
     }
 
     GCS::System system;
     for (const auto& arc : arcStates)
         static_cast<void>(system.addConstraintArcRules(arc->arc));
+    for (const auto& arc : ellipticArcs)
+        static_cast<void>(system.addConstraintArcOfEllipseRules(arc->arc));
     std::vector<double> values;
     values.reserve(sketch.constraints.values.size());
     std::vector<std::array<double, 4>> fixedValues;

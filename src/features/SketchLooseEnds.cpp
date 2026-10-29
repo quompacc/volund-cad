@@ -34,6 +34,11 @@ std::vector<End> endsOf(const document::SketchElement& element) {
         return {{{element.id, Position::start}, on(arc->startAngle)},
                 {{element.id, Position::end}, on(arc->endAngle)}};
     }
+    if (const auto* arc = std::get_if<document::SketchEllipticArc>(&element.geometry)) // N14c
+        return {{{element.id, Position::start},
+                 document::ellipsePoint(arc->ellipse(), arc->startParameter)},
+                {{element.id, Position::end},
+                 document::ellipsePoint(arc->ellipse(), arc->endParameter)}};
     return {};
 }
 
@@ -108,6 +113,8 @@ int sketchFreedomWithoutRelations(std::span<const document::SketchElement> eleme
             total += 5;
         else if (std::holds_alternative<document::SketchPointGeometry>(geometry))
             total += 2;
+        else if (std::holds_alternative<document::SketchEllipticArc>(geometry))
+            total += 7; // N14c: the ellipse's five and the two end parameters
         else if (const auto* spline = std::get_if<document::SketchBSpline>(&geometry))
             total += 2 * static_cast<int>(spline->poles.size());
         else
