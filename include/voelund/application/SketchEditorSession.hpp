@@ -174,6 +174,11 @@ class SketchEditorSession final {
     // points make no valid curve.
     [[nodiscard]] std::optional<document::SketchElementId>
     addBSpline(std::span<const document::SketchPoint> poles, bool construction = false);
+    // N14b: a spline through 2 to 62 points (SketchSplineFit.hpp), stored as the B-spline above
+    // with two more poles; joined like it. None for fewer, more or repeated points.
+    [[nodiscard]] std::optional<document::SketchElementId>
+    addSplineThroughPoints(std::span<const document::SketchPoint> points,
+                           bool construction = false);
     // S21: moves one control point as one step; false when it cannot be solved.
     [[nodiscard]] bool moveBSplinePole(document::SketchElementId element, std::size_t pole,
                                        document::SketchPoint position);

@@ -22,6 +22,17 @@ const QHash<QString, IconDrawing>& variantDrawings() {
              p.dot(13, 6);
              p.dot(20, 13);
          }},
+        {"tool.spline_fit", // N14b: a smooth curve through its points
+         [](const Pens& p) {
+             QPainterPath curve;
+             curve.moveTo(3, 18);
+             curve.cubicTo(6, 4, 12, 4, 13, 12);
+             curve.cubicTo(14, 20, 19, 20, 21, 7);
+             p.painter.drawPath(curve);
+             p.dot(3, 18);
+             p.dot(13, 12);
+             p.dot(21, 7);
+         }},
         {"tool.tangent_arc",
          [](const Pens& p) {
              p.line(3, 18, 11, 18);

@@ -74,22 +74,32 @@ void SketchEditorToolController::requestCancel() {
     cancel();
 }
 
+void SketchEditorToolController::finishSpline() {
+    static_cast<void>(viewport_.cancelSketchEditorStep());
+    editor_->clearPreview();
+    const auto points = std::move(bsplinePoles_);
+    bsplinePoles_.clear();
+    const bool fit = toolIndex_ == fitSplineTool;
+    std::optional<document::SketchElementId> created;
+    if (fit)
+        created = editor_->addSplineThroughPoints(points);
+    else if (points.size() >= document::minimumBSplinePoles)
+        created = editor_->addBSpline(points);
+    panel_.setAcceptEnabled(editor_->canAccept());
+    syncConstraintState();
+    refreshPresentation();
+    if (created)
+        statusChanged_(QObject::tr("B-Spline #%1 hinzugefügt").arg(created->value()));
+    else
+        statusChanged_(fit ? QObject::tr("Ein Spline braucht 2 bis 62 verschiedene Punkte")
+                           : QObject::tr("Ein B-Spline braucht 4 bis 64 Kontrollpunkte"));
+}
+
 void SketchEditorToolController::finishStep() {
     if (!editor_)
         return;
-    if (toolIndex_ == bsplineTool) { // S21: Enter makes the curve of the clicked points
-        static_cast<void>(viewport_.cancelSketchEditorStep());
-        editor_->clearPreview();
-        const auto poles = std::move(bsplinePoles_);
-        bsplinePoles_.clear();
-        const auto created = poles.size() >= document::minimumBSplinePoles
-                                 ? editor_->addBSpline(poles)
-                                 : std::nullopt;
-        panel_.setAcceptEnabled(editor_->canAccept());
-        syncConstraintState();
-        refreshPresentation();
-        statusChanged_(created ? QObject::tr("B-Spline #%1 hinzugefügt").arg(created->value())
-                               : QObject::tr("Ein B-Spline braucht 4 bis 64 Kontrollpunkte"));
+    if (toolIndex_ == bsplineTool || toolIndex_ == fitSplineTool) {
+        finishSpline(); // S21/N14b: Enter makes the curve of the clicked points
         return;
     }
     if (toolIndex_ == 2 && viewport_.cancelSketchEditorStep()) {

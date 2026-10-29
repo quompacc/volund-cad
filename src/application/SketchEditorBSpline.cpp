@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Eduard Hart
 
+#include "SketchSplineFit.hpp"
 #include <voelund/application/SketchEditorSession.hpp>
 
 #include <algorithm>
@@ -68,6 +69,15 @@ SketchEditorSession::addBSpline(std::span<const SketchPoint> poles, bool constru
         return std::nullopt;
     commitHistory();
     return id;
+}
+
+std::optional<document::SketchElementId>
+SketchEditorSession::addSplineThroughPoints(std::span<const SketchPoint> points,
+                                            bool construction) {
+    const auto poles = detail::splineThroughPoints(points);
+    if (poles.empty())
+        return std::nullopt;
+    return addBSpline(poles, construction);
 }
 
 bool SketchEditorSession::moveBSplinePole(document::SketchElementId element, std::size_t pole,

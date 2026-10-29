@@ -32,7 +32,8 @@ inline constexpr int circleTwoPointTool = 14;      // W20
 inline constexpr int circleThreePointTool = 15;    // W20
 inline constexpr int threePointRectangleTool = 16; // W20
 inline constexpr int tangentArcTool = 17;          // W20
-inline constexpr int toolCount = 18;
+inline constexpr int fitSplineTool = 18;           // N14b
+inline constexpr int toolCount = 19;
 
 class ToolPanelHost;
 class InlineValueEdit;
@@ -155,6 +156,7 @@ class SketchEditorToolController final {
     [[nodiscard]] bool
     hiddenAnnotation(const features::SketchConstraintAnnotation& annotation) const;
     void finishStep();
+    void finishSpline(); // S21/N14b
     void open(std::unique_ptr<application::SketchEditorSession> editor,
               const viewport::PlanarFaceSelection& drawing,
               std::optional<document::FeatureId> edited,
@@ -175,7 +177,7 @@ class SketchEditorToolController final {
     double translationY_{0.0};
     double filletRadius_{2.0};
     double chamferDistance_{2.0};                     // S19
-    std::vector<document::SketchPoint> bsplinePoles_; // S21: clicked so far
+    std::vector<document::SketchPoint> bsplinePoles_; // S21: clicked so far (N14b: fit points)
     document::SketchPoint transformCenter_{};         // S20
     double rotateAngle_{90.0};
     double scaleFactor_{2.0};

@@ -93,6 +93,20 @@ void run() {
     enter(window, *viewport);
     require(viewport->displayedSketchElementCount() == 2, "A second one right after");
 
+    // N14b: the spline through points in the same family; three clicks, Enter.
+    command(window, "sketch.tool.spline_fit").trigger();
+    settle();
+    click(*viewport, 0, 20);
+    enter(window, *viewport);
+    require(viewport->displayedSketchElementCount() == 2 &&
+                status(window).contains(QStringLiteral("2 bis 62")),
+            "One point is refused");
+    click(*viewport, 0, 20);
+    click(*viewport, 10, 30);
+    click(*viewport, 20, 20);
+    enter(window, *viewport);
+    require(viewport->displayedSketchElementCount() == 3, "Three points make a spline");
+
     auto* panel = window.findChild<QWidget*>(QStringLiteral("activeToolPanel"));
     panel->findChild<QPushButton*>(QStringLiteral("toolAcceptButton"))->click();
     settle();
@@ -104,8 +118,9 @@ void run() {
             ++splines;
             poles += spline->poles.size();
         }
-    require(splines == 2 && poles == 9, "OK stores two B-splines with 4 and 5 control points");
-    std::cout << "PASS S21 B-spline flow: refused, four, five, OK\n";
+    require(splines == 3 && poles == 14,
+            "OK stores the B-splines with 4 and 5 control points and the one through 3 points");
+    std::cout << "PASS S21/N14b B-spline flow: refused, four, five, through points, OK\n";
 }
 } // namespace
 

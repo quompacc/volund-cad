@@ -122,7 +122,7 @@ void SketchEditorToolController::confirmElement(const viewport::SketchElementInt
 
 // The tools that make their elements themselves; false for the others.
 bool SketchEditorToolController::confirmOwnTool(const viewport::SketchElementIntent& clicks) {
-    if (toolIndex_ == bsplineTool)
+    if (toolIndex_ == bsplineTool || toolIndex_ == fitSplineTool)
         collectBsplinePole(clicks);
     else if (toolIndex_ == threePointRectangleTool)
         confirmThreePointRectangle(clicks); // W20
@@ -139,8 +139,10 @@ void SketchEditorToolController::collectBsplinePole(const viewport::SketchElemen
         bsplinePoles_.push_back({clicks.firstX, clicks.firstY});
     bsplinePoles_.push_back({clicks.secondX, clicks.secondY});
     viewport_.continueSketchPolyline(clicks.secondX, clicks.secondY, 0);
-    statusChanged_(
-        QObject::tr("B-Spline: %1 Kontrollpunkte; Enter beendet").arg(bsplinePoles_.size()));
+    statusChanged_((toolIndex_ == fitSplineTool
+                        ? QObject::tr("Spline: %1 Punkte; Enter beendet")
+                        : QObject::tr("B-Spline: %1 Kontrollpunkte; Enter beendet"))
+                       .arg(bsplinePoles_.size()));
 }
 
 // W20: the rectangle on the first two clicks' edge, as wide as the third click lies off it.

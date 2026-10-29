@@ -6,6 +6,9 @@
 #include <voelund/application/CadSession.hpp>
 #include <voelund/application/SketchEditorSession.hpp>
 #include <voelund/features/SketchRegionIdentity.hpp>
+#include <voelund/kernel/SketchShapes.hpp>
+
+#include <gp_Pnt.hxx>
 
 #include <array>
 #include <cmath>
@@ -110,9 +113,55 @@ void bspline() {
 
 } // namespace
 
+// N14b: a spline through points passes through each at parameter 0, 1, ... (checked on the
+// kernel's own curve of the stored poles), runs out straight at both ends, joins a line end it
+// starts on; one point and repeated neighbours are refused.
+void throughPoints() {
+    application::CadSession session;
+    session.newDocument();
+    application::SketchEditorSession editor(session, document::DatumPlane::xy);
+    editor.setTool(application::SketchDrawingTool::line);
+    require(editor.setPreview({-10, 0}, {0, 0}) && editor.confirmPreview().has_value(), "A line");
+    const std::array<SketchPoint, 5> fit{SketchPoint{0, 0}, {10, 10}, {20, 0}, {30, 15}, {45, 5}};
+    const auto spline = editor.addSplineThroughPoints(fit);
+    require(spline.has_value(), "A spline through five points");
+    const auto& element = editor.elements().back();
+    const auto& poles = std::get<document::SketchBSpline>(element.geometry).poles;
+    require(poles.size() == 7, "Seven poles");
+    std::vector<gp_Pnt> points;
+    for (const auto& pole : poles)
+        points.emplace_back(pole.x, pole.y, 0);
+    const auto curve = kernel::SpaceCurve::bspline(points);
+    for (std::size_t index = 0; index < fit.size(); ++index) {
+        const auto at = curve.value(static_cast<double>(index));
+        require(std::abs(at.X() - fit[index].x) < 1e-9 && std::abs(at.Y() - fit[index].y) < 1e-9,
+                "Through point " + std::to_string(index));
+    }
+    for (const auto& [end, step] : {std::pair{0.0, 1e-3}, std::pair{4.0, -1e-3}}) {
+        const auto a = curve.value(end), b = curve.value(end + step),
+                   c = curve.value(end + 2 * step);
+        require(std::abs(a.X() - 2 * b.X() + c.X()) < 1e-7 &&
+                    std::abs(a.Y() - 2 * b.Y() + c.Y()) < 1e-7,
+                "No curvature at the ends");
+    }
+    int joints = 0;
+    for (const auto& constraint : editor.constraints())
+        joints += constraint.kind == document::SketchConstraintKind::coincident &&
+                  constraint.first.element == *spline;
+    require(joints == 1, "Joined to the line's end");
+
+    const std::array<SketchPoint, 1> one{SketchPoint{0, 0}};
+    const std::array<SketchPoint, 3> repeated{SketchPoint{0, 0}, {5, 5}, {5, 5}};
+    require(!editor.addSplineThroughPoints(one) && !editor.addSplineThroughPoints(repeated),
+            "One point and repeated neighbours are refused");
+    const std::array<SketchPoint, 2> two{SketchPoint{0, 20}, {10, 30}};
+    require(editor.addSplineThroughPoints(two).has_value(), "Two points make a straight spline");
+}
+
 int main() {
     try {
         bspline();
+        throughPoints();
     } catch (const std::exception& error) {
         std::cerr << error.what() << std::endl;
         return 1;

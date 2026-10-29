@@ -54,7 +54,8 @@ const std::vector<RailSection>& railSections() {
     static const std::vector<RailSection> sections{
         {QT_TR_NOOP("Zeichnen"),
          {{"sketch.tool.select"},
-          {"sketch.tool.line", "sketch.tool.polyline", "sketch.tool.bspline"},
+          {"sketch.tool.line", "sketch.tool.polyline", "sketch.tool.spline_fit",
+           "sketch.tool.bspline"},
           {"sketch.tool.rectangle", "sketch.tool.center_rectangle",
            "sketch.tool.three_point_rectangle"},
           {"sketch.tool.circle", "sketch.tool.circle_two_point", "sketch.tool.circle_three_point",
