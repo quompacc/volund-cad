@@ -88,6 +88,11 @@ void evaluateImport(const document::DocumentSnapshot& document,
                     const document::FeatureDescriptor& descriptor,
                     std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
                     std::vector<EvaluatedBody>& referenceBodies);
+// N13a (FaceEditEvaluation.cpp): faces of a body moved or removed.
+void evaluateFaceEdit(const document::DocumentSnapshot& document,
+                      const document::FeatureDescriptor& descriptor,
+                      std::vector<EvaluatedFeature>& outputs, std::vector<EvaluatedBody>& bodies,
+                      std::vector<EvaluatedBody>& referenceBodies);
 // N12b (RibEvaluation.cpp): a rib from its sketch's line into its target body.
 void evaluateRib(const document::DocumentSnapshot& document,
                  const document::FeatureDescriptor& descriptor,

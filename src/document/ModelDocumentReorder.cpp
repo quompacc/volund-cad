@@ -56,6 +56,15 @@ template <class Values> void addPlaneUser(FeatureReferences& references, const V
         addSteps(references, values.features, std::nullopt);
 }
 
+// M22/N13a: the faces a shell opens or a face edit moves or removes.
+template <class Type>
+constexpr bool faceUser =
+    std::is_same_v<Type, ShellParameters> || std::is_same_v<Type, FaceEditParameters>;
+const std::vector<SubshapeOrigin>& namedFaces(const ShellParameters& shell) {
+    return shell.openFaces;
+}
+const std::vector<SubshapeOrigin>& namedFaces(const FaceEditParameters& edit) { return edit.faces; }
+
 // N11b: the steps a pattern or mirror repeats; N11c: a pattern's path sketch.
 void addSteps(FeatureReferences& references, const std::vector<FeatureId>& steps,
               const std::optional<SweepPath>& path = std::nullopt) {
@@ -191,9 +200,9 @@ FeatureReferences featureReferences(const FeatureDescriptor& feature,
                     body(*values.body);
                 if (values.edge)
                     addEdge(geometric, *values.edge);
-            } else if constexpr (std::is_same_v<Type, ShellParameters>) {
+            } else if constexpr (faceUser<Type>) { // M22, N13a
                 body(values.body);
-                for (const auto& face : values.openFaces)
+                for (const auto& face : namedFaces(values))
                     addOrigin(geometric, face);
             } else if constexpr (std::is_same_v<Type, DraftParameters>) {
                 body(values.body);

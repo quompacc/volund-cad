@@ -34,6 +34,8 @@
 namespace voelund::application {
 struct CreateMirrorAction;
 struct CreateSplitAction;
+struct CreateFaceEditAction;
+struct EditFaceEditParametersAction;
 struct EditSplitParametersAction;
 // U06: features grouped by their body, in document order; features of no body stay loose.
 struct OutlineBody final {
@@ -144,8 +146,7 @@ class CadSession final {
                                            std::span<const document::SketchRegionId> regions);
     [[nodiscard]] std::vector<document::SketchElementId> selectedSketchProfileElements() const;
     [[nodiscard]] bool canExtrudeSelectedSketchProfiles() const noexcept;
-    // R09 projection of an extrusion's selection: unmigrated legacy profiles and the
-    // current resolution of every region, so the UI can offer repair instead of guessing.
+    // R09: an extrusion's legacy profiles and the resolution of every region (for repair).
     [[nodiscard]] ExtrusionSelectionState
     inspectExtrusionSelection(document::FeatureId extrusion) const;
     [[nodiscard]] document::SketchParameters selectedSketchParameters() const;
@@ -194,8 +195,7 @@ class CadSession final {
                          ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] std::vector<features::EvaluatedSketchElement> selectedSketchElements() const;
     [[nodiscard]] CommandResult createBoxFeature();
-    // AI02: commands with explicit targets; they keep the selection. The legacy variants
-    // above and the Selected ones below delegate to them.
+    // AI02: commands with explicit targets; they keep the selection (the others delegate).
     [[nodiscard]] CommandResult createBoxFeature(const kernel::BoxDimensions& dimensions);
     // On the last feature.
     [[nodiscard]] CommandResult createCylinderFeature(
@@ -313,6 +313,9 @@ class CadSession final {
     // a planar face of `faceSupport`'s result; a new body or joined (N11b: or the chosen steps).
     [[nodiscard]] CommandResult createMirror(const CreateMirrorAction& action);
     [[nodiscard]] CommandResult createSplit(const CreateSplitAction& action); // N12a
+    // N13a (CadSessionFaceEdit.cpp): faces moved or removed ("Flächen N"), one undo step.
+    [[nodiscard]] CommandResult createFaceEdit(const CreateFaceEditAction& action);
+    [[nodiscard]] CommandResult editFaceEdit(const EditFaceEditParametersAction& action);
     // N12b (CadSessionRib.cpp): a rib ("Rippe N") from `sketch`'s line into `target`'s body.
     [[nodiscard]] CommandResult createRib(document::FeatureId sketch, document::BodyId target,
                                           const document::RibParameters& rib);
@@ -370,16 +373,13 @@ class CadSession final {
     // M14: the rollback marker after `featureId` (nullopt: the end); no undo step, not dirty.
     [[nodiscard]] bool setRollback(std::optional<document::FeatureId> featureId);
     [[nodiscard]] std::optional<document::FeatureId> rollbackAfter() const noexcept;
-    // W08: while a tool edits an earlier step (rolled back to it), commits and previews check
-    // the history up to `marker` for errors, as without the rollback; nullopt ends it.
+    // W08: commits and previews check the history up to `marker` (rolled back); nullopt ends.
     void setEditCheck(std::optional<std::optional<document::FeatureId>> marker);
-    // M16 (CadSessionHistoryEdit.cpp): moves a feature after `after` (or to the front); refused
-    // when it would stand before what it needs or when a feature would fail. One undo step.
+    // M16: moves a feature after `after` (or first), unless a feature would fail; one undo step.
     [[nodiscard]] CommandResult moveFeature(document::FeatureId featureId,
                                             std::optional<document::FeatureId> after);
     [[nodiscard]] DeletionPlan deletionPlan(document::FeatureId featureId) const;
-    // Deletes the features (a pattern's copies too); one undo step. Kept dependents fail and
-    // stay editable when `disposition` keeps errors.
+    // Deletes the features (and their companions); one undo step; kept dependents may fail.
     [[nodiscard]] CommandResult
     deleteFeatures(std::span<const document::FeatureId> featureIds,
                    ErrorDisposition disposition = ErrorDisposition::reject);

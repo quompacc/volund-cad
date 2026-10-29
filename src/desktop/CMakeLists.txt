@@ -77,6 +77,7 @@ add_library(
     MirrorToolController.cpp
     SplitToolController.cpp
     RibToolController.cpp
+    FaceEditToolController.cpp
     PatternToolController.cpp
     MoveToolController.cpp
     MeasureToolController.cpp

@@ -64,7 +64,9 @@ constexpr const char* toolNames[] = {"create_parameter",
                                      nullptr, // M14: no tool yet
                                      nullptr, // N12a: no tools yet
                                      nullptr,
-                                     nullptr}; // N12b: no tool yet
+                                     nullptr, // N12b: no tool yet
+                                     nullptr, // N13a: no tools yet
+                                     nullptr};
 static_assert(std::size(toolNames) == std::variant_size_v<application::Action>,
               "One tool name (or none) per action kind");
 constexpr const char* statusNames[] = {"rejected", "committed", "committedWithErrors"};
@@ -79,9 +81,10 @@ constexpr const char* reasonNames[] = {"none",           "cancelled",        "no
 constexpr const char* evaluationNames[] = {
     "valid", "dirty", "failed", "blockedByDependency", "suppressed", "rolledBack"};
 constexpr const char* featureKinds[] = {
-    "box",     "cylinder",    "sketch",    "extrusion",  "fillet",     "chamfer", "hole",
-    "combine", "datumPlane",  "datumAxis", "shell",      "primitive",  "draft",   "mirror",
-    "pattern", "patternCopy", "move",      "stepImport", "importPart", "split",   "splitPart"};
+    "box",        "cylinder", "sketch",     "extrusion",   "fillet", "chamfer",
+    "hole",       "combine",  "datumPlane", "datumAxis",   "shell",  "primitive",
+    "draft",      "mirror",   "pattern",    "patternCopy", "move",   "stepImport",
+    "importPart", "split",    "splitPart",  "faceEdit"};
 static_assert(std::size(featureKinds) == std::variant_size_v<document::FeatureParameters>,
               "One name per feature kind");
 constexpr const char* primitiveShapes[] = {"sphere", "cone", "torus", "wedge"};
@@ -128,6 +131,12 @@ QJsonObject splitJson(const document::SplitParameters& split) { // N12a
 }
 QJsonObject splitJson(const document::SplitPartParameters& part) {
     return {{"splitId", id(part.split.value())}};
+}
+QJsonObject faceEditJson(const document::FaceEditParameters& edit) { // N13a
+    return {{"bodyId", id(edit.body.value())},
+            {"mode", edit.mode == document::FaceEditMode::offset ? "offset" : "remove"},
+            {"faces", static_cast<int>(edit.faces.size())},
+            {"distance", detail::quantity(edit.distance, "mm")}};
 }
 
 // M10: what a pattern runs along; N11c: or its path sketch.
@@ -210,6 +219,7 @@ QJsonObject featureParameters(const document::FeatureParameters& parameters) {
             },
             [](const document::SplitParameters& split) { return splitJson(split); }, // N12a
             [](const document::SplitPartParameters& part) { return splitJson(part); },
+            [](const document::FaceEditParameters& edit) { return faceEditJson(edit); },
             [](const document::PrimitiveParameters& primitive) -> QJsonObject { // M27
                 QJsonArray sizes;
                 for (const double size : primitive.sizes)

@@ -8,6 +8,7 @@
 #include <QAction>
 #include <QApplication>
 #include <QComboBox>
+#include <QDoubleSpinBox>
 #include <QPushButton>
 #include <QToolButton>
 #include <array>
@@ -76,6 +77,49 @@ QToolButton& timelineStep(QWidget& window, int index) {
 double shown(viewport::CadViewport& viewport) {
     test::render(viewport);
     return viewport::ViewportTestAccess::displayedVolume(viewport);
+}
+
+void click(viewport::CadViewport& viewport, double x, double y, double z) {
+    test::render(viewport);
+    const QPoint point = viewport::ViewportTestAccess::project(viewport, x, y, z);
+    test::mouse(viewport, QEvent::MouseMove, point, Qt::NoButton, Qt::NoButton);
+    test::mouse(viewport, QEvent::MouseButtonPress, point, Qt::LeftButton, Qt::LeftButton);
+    test::mouse(viewport, QEvent::MouseButtonRelease, point, Qt::LeftButton, Qt::NoButton);
+    test::render(viewport);
+    settle();
+}
+void setLength(QWidget& window, const char* name, double value) {
+    QDoubleSpinBox* found = nullptr;
+    for (auto* candidate : panel(window)->findChildren<QDoubleSpinBox*>(QLatin1String(name)))
+        if (candidate->isVisible())
+            found = candidate;
+    require(found != nullptr, name);
+    found->setValue(value);
+    settle();
+}
+
+// N13a: a click on the top face of a box 20 x 20 x 10, then "Fläche versetzen": 5 previews
+// 6000; "Löschen" of the top face cannot heal and OK waits; back to 5 and OK.
+void faceEditFlow(desktop::MainWindow& window, application::CadSession& session,
+                  viewport::CadViewport& viewport) {
+    session.newDocument();
+    static_cast<void>(session.createBoxFeature({20, 20, 10}));
+    window.refreshAfterExternalChange();
+    viewport.setCameraView(viewport::CameraView::isometric);
+    click(viewport, 10, 10, 10);
+    command(window, "solid.modify.offset_face").trigger();
+    settle();
+    require(panel(window) != nullptr, "Fläche versetzen opens on the clicked top face");
+    setLength(window, "toolLength_distance", 5);
+    require(button(window, "toolAcceptButton").isEnabled() && matches(shown(viewport), 6000),
+            "5 up previews 6000");
+    choose(window, "toolChoice_mode", 1);
+    require(!button(window, "toolAcceptButton").isEnabled(),
+            "The top face of a box cannot be deleted and healed; OK waits");
+    choose(window, "toolChoice_mode", 0);
+    button(window, "toolAcceptButton").click();
+    settle();
+    require(panel(window) == nullptr && matches(volume(session), 6000), "OK moves the face");
 }
 
 // N12b: an open shell 40 x 30 x 20 (wall 2) and a line across its top on y = 15. "Rippe" on
@@ -164,8 +208,9 @@ void run() {
     button(window, "toolCancelButton").click();
     settle();
     ribFlow(window, session, *viewport);
+    faceEditFlow(window, session, *viewport);
     std::cout << "PASS N12a split panel: construction plane, both/front/back preview, OK, "
-                 "timeline reopens split and part; N12b rib panel"
+                 "timeline reopens split and part; N12b rib; N13a face edit"
               << std::endl;
 }
 } // namespace

@@ -89,6 +89,10 @@ struct SlotCollector final {
     void operator()(ShellParameters& shell) const {
         slots.push_back({"thickness", ParameterUnit::length, &shell.thickness});
     }
+    void operator()(FaceEditParameters& edit) const { // N13a
+        if (edit.mode == FaceEditMode::offset)
+            slots.push_back({"distance", ParameterUnit::length, &edit.distance});
+    }
     void operator()(DraftParameters& draft) const {
         slots.push_back({"angle", ParameterUnit::angle, nullptr, &draft.angle});
     }
@@ -156,6 +160,7 @@ struct Validator final {
         validateDatumPlaneParameters(value);
     }
     void operator()(const ShellParameters& value) const { validateShellParameters(value); }
+    void operator()(const FaceEditParameters& value) const { validateFaceEditParameters(value); }
     void operator()(const DraftParameters& value) const { validateDraftParameters(value); }
     void operator()(const PatternParameters& value) const { validatePatternParameters(value); }
     void operator()(const MoveParameters& value) const { validateMoveParameters(value); }

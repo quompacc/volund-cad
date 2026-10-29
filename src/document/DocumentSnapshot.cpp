@@ -136,6 +136,10 @@ const DatumPlaneParameters& DocumentSnapshot::datumPlaneParameters(FeatureId id)
 const DatumAxisParameters& DocumentSnapshot::datumAxisParameters(FeatureId id) const {
     return std::get<DatumAxisParameters>(featureParameters(id));
 }
+const FaceEditParameters& DocumentSnapshot::faceEditParameters(FeatureId id) const {
+    return std::get<FaceEditParameters>(featureParameters(id));
+}
+
 const ShellParameters& DocumentSnapshot::shellParameters(FeatureId id) const {
     return std::get<ShellParameters>(featureParameters(id));
 }

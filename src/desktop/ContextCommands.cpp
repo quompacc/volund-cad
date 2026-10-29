@@ -38,19 +38,19 @@ QString planeName(document::DatumPlane plane) {
 
 // The name of each feature kind, in FeatureKind order (N12a: a table instead of a switch).
 constexpr const char* featureNames[]{
-    QT_TRANSLATE_NOOP("QObject", "Quader"),        QT_TRANSLATE_NOOP("QObject", "Zylinder"),
-    QT_TRANSLATE_NOOP("QObject", "Skizze"),        QT_TRANSLATE_NOOP("QObject", "Extrusion"),
-    QT_TRANSLATE_NOOP("QObject", "Verrundung"),    QT_TRANSLATE_NOOP("QObject", "Fase"),
-    QT_TRANSLATE_NOOP("QObject", "Bohrung"),       QT_TRANSLATE_NOOP("QObject", "Kombinieren"),
-    QT_TRANSLATE_NOOP("QObject", "Bezugsebene"),   QT_TRANSLATE_NOOP("QObject", "Bezugsachse"),
-    QT_TRANSLATE_NOOP("QObject", "Wandstärke"),    QT_TRANSLATE_NOOP("QObject", "Grundkörper"),
-    QT_TRANSLATE_NOOP("QObject", "Formschräge"),   QT_TRANSLATE_NOOP("QObject", "Spiegeln"),
-    QT_TRANSLATE_NOOP("QObject", "Muster"),        QT_TRANSLATE_NOOP("QObject", "Musterkopie"),
-    QT_TRANSLATE_NOOP("QObject", "Bewegen"),       QT_TRANSLATE_NOOP("QObject", "Import"),
-    QT_TRANSLATE_NOOP("QObject", "Importteil"),    QT_TRANSLATE_NOOP("QObject", "Teilen"),
-    QT_TRANSLATE_NOOP("QObject", "Geteilter Teil")};
+    QT_TRANSLATE_NOOP("QObject", "Quader"),         QT_TRANSLATE_NOOP("QObject", "Zylinder"),
+    QT_TRANSLATE_NOOP("QObject", "Skizze"),         QT_TRANSLATE_NOOP("QObject", "Extrusion"),
+    QT_TRANSLATE_NOOP("QObject", "Verrundung"),     QT_TRANSLATE_NOOP("QObject", "Fase"),
+    QT_TRANSLATE_NOOP("QObject", "Bohrung"),        QT_TRANSLATE_NOOP("QObject", "Kombinieren"),
+    QT_TRANSLATE_NOOP("QObject", "Bezugsebene"),    QT_TRANSLATE_NOOP("QObject", "Bezugsachse"),
+    QT_TRANSLATE_NOOP("QObject", "Wandstärke"),     QT_TRANSLATE_NOOP("QObject", "Grundkörper"),
+    QT_TRANSLATE_NOOP("QObject", "Formschräge"),    QT_TRANSLATE_NOOP("QObject", "Spiegeln"),
+    QT_TRANSLATE_NOOP("QObject", "Muster"),         QT_TRANSLATE_NOOP("QObject", "Musterkopie"),
+    QT_TRANSLATE_NOOP("QObject", "Bewegen"),        QT_TRANSLATE_NOOP("QObject", "Import"),
+    QT_TRANSLATE_NOOP("QObject", "Importteil"),     QT_TRANSLATE_NOOP("QObject", "Teilen"),
+    QT_TRANSLATE_NOOP("QObject", "Geteilter Teil"), QT_TRANSLATE_NOOP("QObject", "Flächen")};
 static_assert(std::size(featureNames) ==
-              static_cast<std::size_t>(document::FeatureKind::splitPart) + 1);
+              static_cast<std::size_t>(document::FeatureKind::faceEdit) + 1);
 
 QString featureName(const ShellState& state) {
     if (!state.featureKind.has_value())

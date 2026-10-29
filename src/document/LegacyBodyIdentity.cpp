@@ -35,7 +35,7 @@ bool standsAlone(const FeatureDescriptor& feature, const FeatureParameters& para
         FeatureKind::shell,      FeatureKind::draft,       FeatureKind::mirror,
         FeatureKind::pattern,    FeatureKind::patternCopy, FeatureKind::move,
         FeatureKind::stepImport, FeatureKind::importPart,  FeatureKind::split,
-        FeatureKind::splitPart};
+        FeatureKind::splitPart,  FeatureKind::faceEdit};
     if (std::ranges::find(alone, feature.kind) != alone.end())
         return true;
     if (feature.kind == FeatureKind::hole)
@@ -50,7 +50,7 @@ bool standsAlone(const FeatureDescriptor& feature, const FeatureParameters& para
 
 // FeatureKind and FeatureParameters list the kinds in the same order (N12a).
 static_assert(std::variant_size_v<FeatureParameters> ==
-              static_cast<std::size_t>(FeatureKind::splitPart) + 1);
+              static_cast<std::size_t>(FeatureKind::faceEdit) + 1);
 static_assert(
     std::is_same_v<std::variant_alternative_t<static_cast<std::size_t>(FeatureKind::importPart),
                                               FeatureParameters>,
@@ -117,6 +117,8 @@ std::optional<BodyId> wholeBodyStep(const FeatureParameters& parameters) {
         return pattern->body;
     if (const auto* split = std::get_if<SplitParameters>(&parameters))
         return split->body;
+    if (const auto* edit = std::get_if<FaceEditParameters>(&parameters)) // N13a
+        return edit->body;
     return std::nullopt;
 }
 

@@ -201,6 +201,9 @@ FeatureDependencies FeatureDependencies::from(const document::DocumentSnapshot& 
         if (const auto* split = std::get_if<document::SplitParameters>(
                 &snapshot.featureParameters(feature.id))) // N12a
             addPlaneUser(node, snapshot, split->body, split->plane);
+        if (const auto* edit = std::get_if<document::FaceEditParameters>(
+                &snapshot.featureParameters(feature.id))) // N13a: its body before it
+            addProducers(node, snapshot, std::span(&edit->body, 1));
         if (feature.kind == document::FeatureKind::pattern)
             addPattern(node, snapshot);
         // M10/M17/N12a: a pattern copy, import part or split part follows its owner.

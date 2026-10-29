@@ -299,6 +299,28 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                              simpleCommand(std::move(services.shell)),
                              services.canHole,
                              "Wandstärke"});
+    if (services.offsetFace)
+        commands_.push_back({"solid.modify.offset_face",
+                             "Fläche versetzen",
+                             "Gewählte Fläche entlang ihrer Normalen verschieben",
+                             {},
+                             workspaces::CommandGroup::modify,
+                             true,
+                             false,
+                             simpleCommand(std::move(services.offsetFace)),
+                             services.canHole,
+                             "Fläche versetzen"});
+    if (services.deleteFace)
+        commands_.push_back({"solid.modify.delete_face",
+                             "Fläche löschen",
+                             "Gewählte Fläche entfernen; die Flächen daneben schließen die Lücke",
+                             {},
+                             workspaces::CommandGroup::modify,
+                             true,
+                             false,
+                             simpleCommand(std::move(services.deleteFace)),
+                             services.canHole,
+                             "Fläche löschen"});
 }
 
 std::string SolidWorkspaceModule::id() const { return "solid"; }

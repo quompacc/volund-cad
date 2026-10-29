@@ -51,6 +51,11 @@ PatternParameters readNativePattern(const TDF_Label& label, std::size_t remainin
 std::size_t nativePatternRecords(const PatternParameters& parameters);
 void writeNativeSteps(const TDF_Label& label, const std::vector<FeatureId>& steps); // N11b
 [[nodiscard]] std::vector<FeatureId> readNativeSteps(const TDF_Label& label);
+// N13a.
+void writeNativeFaceEdit(const TDF_Label& label, const FaceEditParameters& parameters);
+FaceEditParameters readNativeFaceEdit(const TDF_Label& label, std::size_t remainingRecords,
+                                      int schemaVersion);
+std::size_t nativeFaceEditRecords(const FaceEditParameters& parameters);
 // N12a (NativeMirror.cpp).
 void writeNativeSplit(const TDF_Label& label, const SplitParameters& parameters);
 SplitParameters readNativeSplit(const TDF_Label& label, std::size_t remainingRecords,

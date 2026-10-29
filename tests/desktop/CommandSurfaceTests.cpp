@@ -94,6 +94,8 @@ std::set<std::string> solidRailCommands() {
             "solid.modify.combine",
             "solid.create.datum_plane",
             "solid.modify.shell",
+            "solid.modify.offset_face",
+            "solid.modify.delete_face",
             "solid.modify.draft",
             "solid.create.datum_axis",
             "solid.modify.mirror",

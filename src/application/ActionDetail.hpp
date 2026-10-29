@@ -3,6 +3,7 @@
 
 #pragma once
 #include <voelund/application/Actions.hpp>
+#include <voelund/application/CadSession.hpp>
 #include <voelund/document/DocumentSnapshot.hpp>
 
 #include <optional>
@@ -41,4 +42,22 @@ struct Findings final {
         return std::nullopt;
     }
 };
+// The actions the session takes as they are.
+inline CommandResult runWhole(CadSession& session, const CreateMirrorAction& a) {
+    return session.createMirror(a);
+}
+inline CommandResult runWhole(CadSession& session, const CreateSplitAction& a) {
+    return session.createSplit(a);
+}
+inline CommandResult runWhole(CadSession& session, const EditSplitParametersAction& a) {
+    return session.editSplitParameters(a);
+}
+inline CommandResult runWhole(CadSession& session, const CreateFaceEditAction& a) {
+    return session.createFaceEdit(a);
+}
+inline CommandResult runWhole(CadSession& session, const EditFaceEditParametersAction& a) {
+    return session.editFaceEdit(a);
+}
+template <class A>
+concept WholeAction = requires(CadSession& session, const A& action) { runWhole(session, action); };
 } // namespace voelund::application::detail

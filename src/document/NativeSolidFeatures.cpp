@@ -204,6 +204,44 @@ ShellParameters readNativeShell(const TDF_Label& label, std::size_t remainingRec
     return result;
 }
 
+// N13a (schema 52): distance on the label, body (1), faces (2), mode (3).
+std::size_t nativeFaceEditRecords(const FaceEditParameters& parameters) {
+    std::size_t records = parameters.faces.size();
+    for (const auto& face : parameters.faces)
+        records += face.extrusionBoundary.size();
+    return records;
+}
+
+void writeNativeFaceEdit(const TDF_Label& label, const FaceEditParameters& parameters) {
+    validateFaceEditParameters(parameters);
+    TDataStd_Real::Set(label, parameters.distance);
+    writeBody(label.FindChild(1), parameters.body);
+    const auto faces = label.FindChild(2);
+    TDataStd_Integer::Set(faces, static_cast<int>(parameters.faces.size()));
+    for (std::size_t index = 0; index < parameters.faces.size(); ++index)
+        writeNativeSubshapeOrigin(faces.FindChild(static_cast<int>(index + 1)),
+                                  parameters.faces[index]);
+    TDataStd_Integer::Set(label.FindChild(3), static_cast<int>(parameters.mode));
+}
+
+FaceEditParameters readNativeFaceEdit(const TDF_Label& label, std::size_t remainingRecords,
+                                      int schemaVersion) {
+    require(schemaVersion >= 52 && label.NbChildren() == 3);
+    FaceEditParameters result{readBody(child(label, 1)), {}, FaceEditMode::offset, real(label)};
+    const auto faces = child(label, 2);
+    const int count = integer(faces);
+    require(count > 0 && static_cast<std::size_t>(count) <= maximumEditedFaces &&
+            static_cast<std::size_t>(count) <= remainingRecords && faces.NbChildren() == count);
+    remainingRecords -= static_cast<std::size_t>(count);
+    for (int index = 1; index <= count; ++index)
+        result.faces.push_back(readOrigin(child(faces, index), remainingRecords, schemaVersion));
+    const int mode = integer(child(label, 3));
+    require(mode == 1 || mode == 2);
+    result.mode = static_cast<FaceEditMode>(mode);
+    validateFaceEditParameters(result);
+    return result;
+}
+
 namespace {
 struct SolidKind final {
     FeatureKind kind;
@@ -223,7 +261,8 @@ constexpr SolidKind solidKinds[]{{FeatureKind::combine, "combine", 18},
                                  {FeatureKind::stepImport, "step_import", 35},
                                  {FeatureKind::importPart, "import_part", 35},
                                  {FeatureKind::split, "split", 50},
-                                 {FeatureKind::splitPart, "split_part", 50}};
+                                 {FeatureKind::splitPart, "split_part", 50},
+                                 {FeatureKind::faceEdit, "face_edit", 52}};
 } // namespace
 
 const char* nativeSolidKindName(FeatureKind kind) noexcept {
@@ -289,6 +328,10 @@ std::size_t solidRecords(const PrimitiveParameters& values) { // M27: none eithe
 std::size_t solidRecords(const PatternCopyParameters&) { return 0; }
 std::size_t solidRecords(const ImportPartParameters&) { return 0; }
 std::size_t solidRecords(const SplitPartParameters&) { return 0; }
+std::size_t solidRecords(const FaceEditParameters& values) { // N13a
+    validateFaceEditParameters(values);
+    return nativeFaceEditRecords(values);
+}
 template <class Other> std::size_t solidRecords(const Other&) {
     throw std::invalid_argument("Not a natively stored solid feature");
 }
@@ -334,6 +377,9 @@ void writeSolid(const TDF_Label& label, const SplitParameters& values) {
 }
 void writeSolid(const TDF_Label& label, const SplitPartParameters& values) {
     writeNativeSplitPart(label, values);
+}
+void writeSolid(const TDF_Label& label, const FaceEditParameters& values) {
+    writeNativeFaceEdit(label, values);
 }
 template <class Other> void writeSolid(const TDF_Label&, const Other&) {
     throw std::invalid_argument("Not a natively stored solid feature");
@@ -400,6 +446,10 @@ constexpr SolidReader readers[]{
     {FeatureKind::splitPart,
      [](const TDF_Label& label, std::size_t, int schema) -> FeatureParameters {
          return readNativeSplitPart(label, schema);
+     }},
+    {FeatureKind::faceEdit,
+     [](const TDF_Label& label, std::size_t records, int schema) -> FeatureParameters {
+         return readNativeFaceEdit(label, records, schema);
      }},
 };
 } // namespace

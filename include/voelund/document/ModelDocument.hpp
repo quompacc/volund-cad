@@ -53,7 +53,8 @@ enum class FeatureKind {
     stepImport, // M17
     importPart,
     split, // N12a
-    splitPart
+    splitPart,
+    faceEdit // N13a
 };
 enum class CylinderResultMode { join, cut, intersect, separate };
 
@@ -408,6 +409,19 @@ struct ShellParameters final {
     [[nodiscard]] bool operator==(const ShellParameters&) const = default;
 };
 void validateShellParameters(const ShellParameters& parameters);
+// N13a (schema 52, agent decision 2026-10-29, as Fusion's "Offset Face" and "Delete"): named
+// faces of a body moved `distance` along their outward normals (negative: inwards), the faces
+// around following; or removed, the faces around closing the gap.
+enum class FaceEditMode { offset = 1, remove = 2 };
+inline constexpr std::size_t maximumEditedFaces = 256;
+struct FaceEditParameters final {
+    BodyId body;
+    std::vector<SubshapeOrigin> faces;
+    FaceEditMode mode{FaceEditMode::offset};
+    double distance{1.0};
+    [[nodiscard]] bool operator==(const FaceEditParameters&) const = default;
+};
+void validateFaceEditParameters(const FaceEditParameters& parameters);
 // M25 (schema 29, user decision 2026-10-14): a draft ("Formschräge") tilts the named faces of a
 // body by `angle` about their line on the plane of the neutral face, pulled along its normal.
 inline constexpr std::size_t maximumDraftFaces = 256;
@@ -575,7 +589,7 @@ using FeatureParameters =
                  DatumPlaneParameters, DatumAxisParameters, ShellParameters, PrimitiveParameters,
                  DraftParameters, MirrorParameters, PatternParameters, PatternCopyParameters,
                  MoveParameters, ImportParameters, ImportPartParameters, SplitParameters,
-                 SplitPartParameters>;
+                 SplitPartParameters, FaceEditParameters>;
 // M10/M17: the feature a companion belongs to (a pattern copy's pattern, an import part's
 // import); it moves, is deleted and is shown with that feature.
 [[nodiscard]] std::optional<FeatureId> companionOwner(const FeatureParameters& parameters) noexcept;
@@ -714,6 +728,12 @@ class ModelDocument final {
                                               const DatumAxisParameters& parameters);
     [[nodiscard]] const ShellParameters& shellParameters(FeatureId featureId) const;
     [[nodiscard]] bool setShellParameters(FeatureId featureId, const ShellParameters& parameters);
+    // N13a (ModelDocumentFaceEdit.cpp).
+    [[nodiscard]] FeatureId addFaceEditFeature(std::string name,
+                                               const FaceEditParameters& parameters);
+    [[nodiscard]] const FaceEditParameters& faceEditParameters(FeatureId featureId) const;
+    [[nodiscard]] bool setFaceEditParameters(FeatureId featureId,
+                                             const FaceEditParameters& parameters);
     [[nodiscard]] const kernel::RigidTransform& featurePlacement(FeatureId featureId) const;
     [[nodiscard]] bool setFeaturePlacement(FeatureId featureId,
                                            const kernel::RigidTransform& placement);

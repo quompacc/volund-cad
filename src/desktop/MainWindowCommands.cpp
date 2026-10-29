@@ -334,6 +334,17 @@ void MainWindow::createCommands() {
         impl_->shellTool->begin(*impl_->selectedPlanarFace);
         syncShell();
     };
+    // N13a: the picked planar face moved or deleted.
+    const auto faceEdit = [this](document::FaceEditMode mode) {
+        if (!impl_->selectedPlanarFace)
+            return;
+        if (impl_->sketchExtrusionTool->isActive())
+            impl_->sketchExtrusionTool->cancel();
+        impl_->faceEditTool->begin(*impl_->selectedPlanarFace, mode);
+        syncShell();
+    };
+    services.offsetFace = [faceEdit]() { faceEdit(document::FaceEditMode::offset); };
+    services.deleteFace = [faceEdit]() { faceEdit(document::FaceEditMode::remove); };
     // M25: a draft about the picked planar face as the neutral face.
     services.draft = [this]() {
         if (!impl_->selectedPlanarFace)
@@ -401,8 +412,9 @@ bool MainWindow::beginToolEdit(document::FeatureId selected, document::FeatureKi
          }},
         {Kind::datumPlane, datum},
         {Kind::datumAxis, datum},
-        {Kind::split, [this](auto id) { impl_->splitTool->beginEdit(id); }},   // N12a
-        {Kind::extrusion, [this](auto id) { impl_->ribTool->beginEdit(id); }}, // N12b: a rib
+        {Kind::split, [this](auto id) { impl_->splitTool->beginEdit(id); }},       // N12a
+        {Kind::extrusion, [this](auto id) { impl_->ribTool->beginEdit(id); }},     // N12b: a rib
+        {Kind::faceEdit, [this](auto id) { impl_->faceEditTool->beginEdit(id); }}, // N13a
         {Kind::splitPart,
          [&](auto id) { impl_->splitTool->beginEdit(snapshot.splitPartParameters(id).split); }}};
     using Editor = std::pair<Kind, std::function<void(document::FeatureId)>>;

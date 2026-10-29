@@ -59,9 +59,9 @@ namespace {
 bool panelEditable(std::optional<document::FeatureKind> kind) {
     using Kind = document::FeatureKind;
     static constexpr std::array kinds{
-        Kind::fillet,      Kind::chamfer, Kind::hole,  Kind::combine,  Kind::datumPlane,
-        Kind::datumAxis,   Kind::shell,   Kind::draft, Kind::mirror,   Kind::pattern,
-        Kind::patternCopy, Kind::move,    Kind::split, Kind::splitPart};
+        Kind::fillet,      Kind::chamfer, Kind::hole,  Kind::combine,   Kind::datumPlane,
+        Kind::datumAxis,   Kind::shell,   Kind::draft, Kind::mirror,    Kind::pattern,
+        Kind::patternCopy, Kind::move,    Kind::split, Kind::splitPart, Kind::faceEdit};
     return kind && std::ranges::find(kinds, *kind) != kinds.end();
 }
 } // namespace

@@ -310,6 +310,19 @@ struct CreateRibAction final {
     document::RibParameters rib;
     bool operator==(const CreateRibAction&) const = default;
 };
+// N13a: faces of `support`'s current result moved or removed.
+struct CreateFaceEditAction final {
+    document::FeatureId support;
+    std::vector<document::SubshapeOrigin> faces;
+    document::FaceEditMode mode{document::FaceEditMode::offset};
+    double distance{1.0};
+    bool operator==(const CreateFaceEditAction&) const = default;
+};
+struct EditFaceEditParametersAction final {
+    document::FeatureId edit;
+    document::FaceEditParameters parameters;
+    bool operator==(const EditFaceEditParametersAction&) const = default;
+};
 struct EditSplitParametersAction final {
     document::FeatureId split;
     document::SplitParameters parameters;
@@ -378,7 +391,8 @@ using Action = std::variant<
     EditShellParametersAction, CreatePrimitiveAction, EditPrimitiveParametersAction,
     CreateDraftAction, EditDraftParametersAction, CreateMirrorAction, EditMirrorParametersAction,
     CreatePatternAction, EditPatternParametersAction, MoveBodyAction, EditMoveParametersAction,
-    SetFeatureSuppressedAction, CreateSplitAction, EditSplitParametersAction, CreateRibAction>;
+    SetFeatureSuppressedAction, CreateSplitAction, EditSplitParametersAction, CreateRibAction,
+    CreateFaceEditAction, EditFaceEditParametersAction>;
 // Parallel to the alternatives of Action.
 enum class ActionKind {
     createParameter,
@@ -428,7 +442,9 @@ enum class ActionKind {
     setFeatureSuppressed, // M14
     createSplit,          // N12a
     editSplitParameters,
-    createRib // N12b
+    createRib,      // N12b
+    createFaceEdit, // N13a
+    editFaceEditParameters
 };
 [[nodiscard]] ActionKind actionKind(const Action& action) noexcept;
 

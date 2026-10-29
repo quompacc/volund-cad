@@ -91,6 +91,8 @@ const std::set<std::string> commandTable{"app.about",
                                          "solid.inspect.measure",
                                          "solid.inspect.interference", // N08
                                          "solid.modify.shell",
+                                         "solid.modify.offset_face",
+                                         "solid.modify.delete_face",
                                          "solid.modify.draft",
                                          "solid.create.datum_plane",
                                          "solid.create.datum_axis",

@@ -58,42 +58,26 @@ void MainWindow::createToolPanel() {
         impl_->session, *impl_->viewport, *impl_->toolPanel, [this]() { refreshScene(); },
         [this](const QString& message) { statusBar()->showMessage(message); });
     impl_->filletTool->setPreviewHandler(showPreview);
-    impl_->holeTool = std::make_unique<HoleToolController>( // M08
-        impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
-        [this](const QString& message) { statusBar()->showMessage(message); });
-    impl_->holeTool->setPreviewHandler(showPreview);
-    impl_->combineTool = std::make_unique<CombineToolController>( // M21
-        impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
-        [this](const QString& message) { statusBar()->showMessage(message); });
-    impl_->combineTool->setPreviewHandler(showPreview);
-    impl_->shellTool = std::make_unique<ShellToolController>( // M22
-        impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
-        [this](const QString& message) { statusBar()->showMessage(message); });
-    impl_->shellTool->setPreviewHandler(showPreview);
-    impl_->draftTool = std::make_unique<DraftToolController>( // M25
-        impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
-        [this](const QString& message) { statusBar()->showMessage(message); });
-    impl_->draftTool->setPreviewHandler(showPreview);
-    impl_->mirrorTool = std::make_unique<MirrorToolController>( // M09
-        impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
-        [this](const QString& message) { statusBar()->showMessage(message); });
-    impl_->mirrorTool->setPreviewHandler(showPreview);
-    impl_->splitTool = std::make_unique<SplitToolController>( // N12a
-        impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
-        [this](const QString& message) { statusBar()->showMessage(message); });
-    impl_->splitTool->setPreviewHandler(showPreview);
-    impl_->ribTool = std::make_unique<RibToolController>( // N12b
-        impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
-        [this](const QString& message) { statusBar()->showMessage(message); });
-    impl_->ribTool->setPreviewHandler(showPreview);
+    // The tools that take the session, the panel, a scene refresh and a status line.
+    const auto panelTool = [&]<class Tool>(std::unique_ptr<Tool>& slot) {
+        slot = std::make_unique<Tool>(
+            impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
+            [this](const QString& message) { statusBar()->showMessage(message); });
+        slot->setPreviewHandler(showPreview);
+    };
+    panelTool(impl_->holeTool);                                   // M08
+    panelTool(impl_->combineTool);                                // M21
+    panelTool(impl_->shellTool);                                  // M22
+    panelTool(impl_->draftTool);                                  // M25
+    panelTool(impl_->mirrorTool);                                 // M09
+    panelTool(impl_->splitTool);                                  // N12a
+    panelTool(impl_->ribTool);                                    // N12b
+    panelTool(impl_->faceEditTool);                               // N13a
     impl_->patternTool = std::make_unique<PatternToolController>( // M10
         impl_->session, *impl_->viewport, *impl_->toolPanel, [this]() { refreshScene(); },
         [this](const QString& message) { statusBar()->showMessage(message); });
     impl_->patternTool->setPreviewHandler(showPreview);
-    impl_->moveTool = std::make_unique<MoveToolController>( // M11
-        impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },
-        [this](const QString& message) { statusBar()->showMessage(message); });
-    impl_->moveTool->setPreviewHandler(showPreview);
+    panelTool(impl_->moveTool);                               // M11
     createInspectTools();                                     // M12, N08
     impl_->datumTool = std::make_unique<DatumToolController>( // M19
         impl_->session, *impl_->toolPanel, [this]() { refreshScene(); },

@@ -46,7 +46,8 @@ std::vector<ActionKind> editActions(const document::DocumentSnapshot& snapshot,
         {FeatureKind::mirror, ActionKind::editMirrorParameters},
         {FeatureKind::pattern, ActionKind::editPatternParameters},
         {FeatureKind::move, ActionKind::editMoveParameters},
-        {FeatureKind::split, ActionKind::editSplitParameters}};
+        {FeatureKind::split, ActionKind::editSplitParameters},
+        {FeatureKind::faceEdit, ActionKind::editFaceEditParameters}};
     for (const auto& [kind, action] : single)
         if (kind == feature.kind)
             return {action};
@@ -116,7 +117,8 @@ std::vector<ActionKind> availableActions(const CadSession& session,
             actions.push_back(ActionKind::createDraft);
             actions.push_back(ActionKind::createMirror);
             actions.push_back(ActionKind::createPattern);
-            actions.push_back(ActionKind::createSplit); // N12a
+            actions.push_back(ActionKind::createSplit);    // N12a
+            actions.push_back(ActionKind::createFaceEdit); // N13a
         }
     }
     return actions;

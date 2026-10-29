@@ -49,6 +49,7 @@ add_library(voelund_document STATIC
     ModelDocumentDraft.cpp
     ModelDocumentMirror.cpp
     ModelDocumentSplit.cpp
+    ModelDocumentFaceEdit.cpp
     ModelDocumentPattern.cpp
     ModelDocumentMove.cpp
     ModelDocumentImport.cpp

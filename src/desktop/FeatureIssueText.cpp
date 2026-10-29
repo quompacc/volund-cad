@@ -121,6 +121,13 @@ constexpr std::array issueTexts{
     IssueText{"sweep-path-disconnected",
               QT_TRANSLATE_NOOP("FeatureIssue", "Folgen: Die Pfadelemente bilden keine "
                                                 "zusammenhängende Kette.")},
+    IssueText{"face-edit-face-missing",
+              QT_TRANSLATE_NOOP("FeatureIssue", "Flächen: Eine bearbeitete Fläche gibt es so "
+                                                "nicht mehr. Wähle sie neu.")},
+    IssueText{"face-edit-failed",
+              QT_TRANSLATE_NOOP("FeatureIssue", "Flächen: Die Flächen lassen sich so nicht "
+                                                "versetzen oder löschen; die Nachbarflächen "
+                                                "schließen die Lücke nicht.")},
     IssueText{"rib-line",
               QT_TRANSLATE_NOOP("FeatureIssue", "Rippe: Die Skizze braucht genau eine gerade "
                                                 "Linie.")},

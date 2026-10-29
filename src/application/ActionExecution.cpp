@@ -40,6 +40,8 @@ QuantityUnit parameterUnit(document::ParameterUnit unit) noexcept {
 }
 
 using detail::Findings;
+using detail::runWhole;
+using detail::WholeAction;
 
 class Validation final {
   public:
@@ -281,6 +283,14 @@ class Validation final {
     }
     void operator()(const CreateMirrorAction& a) { onPlane(a, ActionKind::createMirror); }
     void operator()(const CreateSplitAction& a) { onPlane(a, ActionKind::createSplit); }
+    void operator()(const CreateFaceEditAction& action) { // N13a
+        static_cast<void>(target(action.support, ActionKind::createFaceEdit));
+        finite({action.distance});
+    }
+    void operator()(const EditFaceEditParametersAction& action) {
+        static_cast<void>(target(action.edit, ActionKind::editFaceEditParameters));
+        finite({action.parameters.distance});
+    }
     void operator()(const CreateRibAction& action) { // N12b
         static_cast<void>(target(action.sketch, ActionKind::createRib));
         finite({action.rib.thickness});
@@ -478,10 +488,9 @@ CommandResult run(CadSession& session, const DocumentSnapshot& snapshot,
             [&](const EditDraftParametersAction& a) {
                 return session.editDraftParameters(a.draft, a.parameters, reject);
             },
-            [&](const CreateMirrorAction& a) { return session.createMirror(a); },
-            [&](const CreateSplitAction& a) { return session.createSplit(a); }, // N12a
-            [&](const EditSplitParametersAction& a) { return session.editSplitParameters(a); },
+            [&]<WholeAction A>(const A& a) { return runWhole(session, a); }, // M09, N12a, N13a
             [&](const CreateRibAction& a) { return session.createRib(a.sketch, a.target, a.rib); },
+
             [&](const EditMirrorParametersAction& a) {
                 return session.editMirrorParameters(a.mirror, a.parameters, reject);
             },

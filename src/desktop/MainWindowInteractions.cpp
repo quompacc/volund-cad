@@ -53,6 +53,8 @@ bool MainWindow::toolTakesFace(const viewport::PlanarFaceSelection& selection) {
         impl_->holeTool->place(selection); // M08: moves the hole there
     else if (impl_->shellTool->isActive())
         impl_->shellTool->picked(selection); // M22: opens or closes the face
+    else if (impl_->faceEditTool->isActive())
+        impl_->faceEditTool->picked(selection); // N13a: chooses the face or not
     else if (impl_->draftTool->isActive())
         impl_->draftTool->picked(selection); // M25: tilts the face or not
     else if (impl_->mirrorTool->isActive())
