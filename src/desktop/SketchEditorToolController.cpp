@@ -277,19 +277,23 @@ void SketchEditorToolController::showPanel() {
          {"split", QObject::tr("Linie oder Bogen an der angeklickten Stelle teilen"),
           QObject::tr("Bearbeiten")},
          {"fillet",
-          QObject::tr("Ecke zweier gewählter Linien verrunden (nur Linien); Maße der Ecke "
-                      "bleiben an einer virtuellen Ecke"),
+          QObject::tr("Ecke zweier gewählter Linien oder Bögen verrunden; Maße einer Ecke "
+                      "zweier Linien bleiben an einer virtuellen Ecke"),
           QObject::tr("Bearbeiten")},
          {"chamfer",
-          QObject::tr("Ecke zweier gewählter Linien fasen (gleicher Abstand, nur Linien); Maße "
-                      "der Ecke bleiben an einer virtuellen Ecke"),
+          QObject::tr("Ecke zweier gewählter Linien oder Bögen fasen (gleicher Abstand); Maße "
+                      "einer Ecke zweier Linien bleiben an einer virtuellen Ecke"),
           QObject::tr("Bearbeiten")},
          {"offset",
-          QObject::tr("Gewählte Linien, Bögen, Kreise oder Konturen versetzen (keine Ellipsen; "
-                      "Kreise und Rechtecke einzeln)"),
+          QObject::tr("Gewählte Linien, Bögen, Kreise oder Konturen versetzen (Kreise, "
+                      "Rechtecke, Ellipsen und Splines einzeln)"),
           QObject::tr("Bearbeiten")},
          {"project",
           QObject::tr("Körperkanten in die Skizze projizieren (an/aus; Kante anklicken)"),
+          QObject::tr("Bearbeiten")},
+         {"section",
+          QObject::tr("Schnittkurven: wo sichtbare Körper die Skizzenebene schneiden, Kurven "
+                      "anlegen"),
           QObject::tr("Bearbeiten")},
          {"rotate", QObject::tr("Auswahl um den Bezugspunkt drehen"), QObject::tr("Bearbeiten")},
          {"scale", QObject::tr("Auswahl um den Bezugspunkt skalieren"), QObject::tr("Bearbeiten")},

@@ -3391,12 +3391,15 @@
       ],
       "acceptance": "Referenzplatte an XZ geschnitten: Bohrung und Tasche sichtbar; Verschieben ändert den Schnitt; Schließen zeigt das ganze Modell; Dokument unverändert.",
       "boundary": "Keine Schnitte in Zeichnungen (X04). Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
-      "status": "planned",
+      "status": "done",
       "gate": "G4",
       "chapter": "12-v1-abrundung.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/N05.md"
+      ],
+      "completedCommit": "964bf83",
+      "completedDate": "2026-10-23"
     },
     {
       "id": "N06",
@@ -3414,12 +3417,15 @@
       ],
       "acceptance": "Jeder Stil zeigt die Referenzplatte richtig (Bildprüfung); Farbe speichern/öffnen/Undo; STEP-Export trägt die Farbe.",
       "boundary": "Keine Texturen und Renderings. Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
-      "status": "planned",
+      "status": "done",
       "gate": "G4",
       "chapter": "12-v1-abrundung.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/N06.md"
+      ],
+      "completedCommit": "b1e2b85",
+      "completedDate": "2026-10-23"
     },
     {
       "id": "N07",
@@ -3437,12 +3443,15 @@
       ],
       "acceptance": "Quader 10³ Stahl 7,85 g; Schwerpunkt der Referenzplatte gegen analytischen Wert; Material speichern/öffnen.",
       "boundary": "Keine Materialbibliothek mit Festigkeiten (FEM01). Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
-      "status": "planned",
+      "status": "done",
       "gate": "G4",
       "chapter": "12-v1-abrundung.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/N07.md"
+      ],
+      "completedCommit": "efabbfa",
+      "completedDate": "2026-10-27"
     },
     {
       "id": "N08",
@@ -3460,12 +3469,15 @@
       ],
       "acceptance": "Zwei überlappende Quader: Überschneidungsvolumen exakt; getrennte Körper: keine; Punktabstände an der Referenzplatte exakt.",
       "boundary": "Keine Toleranzanalyse. Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
-      "status": "planned",
+      "status": "done",
       "gate": "G4",
       "chapter": "12-v1-abrundung.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/N08.md"
+      ],
+      "completedCommit": "dcd8def",
+      "completedDate": "2026-10-27"
     },
     {
       "id": "N09",
@@ -3486,12 +3498,15 @@
       ],
       "acceptance": "Volumen jeder Variante analytisch; M6-Gewindebohrung mit Kernloch 5,0 und Gewindeangabe; Bohrungen folgen verschobenen Skizzenpunkten; Speichern/Öffnen.",
       "boundary": "Kein modelliertes Schraubengewinde (Helix) in der ersten Stufe, wenn nicht entschieden; kein Normteilkatalog. Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
-      "status": "planned",
+      "status": "done",
       "gate": "G4",
       "chapter": "12-v1-abrundung.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/N09.md"
+      ],
+      "completedCommit": "b088e22",
+      "completedDate": "2026-10-28"
     },
     {
       "id": "N10",
@@ -3511,12 +3526,15 @@
       ],
       "acceptance": "Volumen je Variante analytisch; ungültiger Winkel erklärt abgewiesen; Speichern/Öffnen/Undo.",
       "boundary": "Keine variable Verrundung, wenn nicht entschieden. Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
-      "status": "planned",
+      "status": "done",
       "gate": "G4",
       "chapter": "12-v1-abrundung.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/N10.md"
+      ],
+      "completedCommit": "a459c92",
+      "completedDate": "2026-10-28"
     },
     {
       "id": "N11",
@@ -3535,12 +3553,15 @@
       ],
       "acceptance": "Bohrung 3×4 im Raster: Volumen exakt; Quellbohrung ändern ändert alle Kopien; übersprungene Kopie fehlt; Speichern/Öffnen.",
       "boundary": "Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
-      "status": "planned",
+      "status": "done",
       "gate": "G4",
       "chapter": "12-v1-abrundung.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/N11.md"
+      ],
+      "completedCommit": "e5a5553",
+      "completedDate": "2026-10-28"
     },
     {
       "id": "N12",
@@ -3558,12 +3579,15 @@
       ],
       "acceptance": "Quader geteilt: zwei Körper mit Summe gleich Ausgangsvolumen; Rippe in einer Schale mit analytischem Volumen; Speichern/Öffnen/Undo.",
       "boundary": "Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
-      "status": "planned",
+      "status": "done",
       "gate": "G4",
       "chapter": "12-v1-abrundung.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/N12.md"
+      ],
+      "completedCommit": "c98c2cd",
+      "completedDate": "2026-10-28"
     },
     {
       "id": "N13",
@@ -3582,12 +3606,15 @@
       ],
       "acceptance": "Fläche um 5 versetzt: Volumen exakt; gelöschte Fase heilt zur Kante; Mittelebene zwischen zwei Flächen genau mittig; Speichern/Öffnen.",
       "boundary": "Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
-      "status": "planned",
+      "status": "done",
       "gate": "G4",
       "chapter": "12-v1-abrundung.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/N13.md"
+      ],
+      "completedCommit": "2b3c260",
+      "completedDate": "2026-10-29"
     },
     {
       "id": "N14",
@@ -3608,12 +3635,15 @@
       ],
       "acceptance": "Werkzeug×Kurvenart-Matrix (A-SKETCH-01) für die neuen Fälle grün; Offset einer Ellipse mit exaktem Abstand an Prüfpunkten.",
       "boundary": "Nutzerentscheidung 2026-10-21: Teil der v1-Abrundung vor L09/L10.",
-      "status": "planned",
+      "status": "done",
       "gate": "G4",
       "chapter": "12-v1-abrundung.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/N14.md"
+      ],
+      "completedCommit": "ba27a98",
+      "completedDate": "2026-10-29"
     },
     {
       "id": "N15",

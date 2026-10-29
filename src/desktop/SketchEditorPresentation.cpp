@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <map>
 #include <stdexcept>
 #include <vector>
 
@@ -215,8 +216,12 @@ void SketchEditorToolController::applyEditOperation(const std::string& id) {
         });
         return;
     }
-    if (id == "project") {
-        setProjecting(!projecting_);
+    // Operations without a selection: S17 projecting on/off, N15a section curves.
+    static const std::map<std::string, void (SketchEditorToolController::*)()> plain{
+        {"project", &SketchEditorToolController::toggleProjecting},
+        {"section", &SketchEditorToolController::addSectionCurves}};
+    if (const auto operation = plain.find(id); operation != plain.end()) {
+        (this->*operation->second)();
         return;
     }
     if (id == "mirror" || id == "linear_pattern" || id == "circular_pattern" ||
@@ -406,6 +411,20 @@ void SketchEditorToolController::setProjecting(bool on) {
     viewport_.setEdgePicking(on);
     statusChanged_(on ? QObject::tr("Projizieren: Körperkante anklicken; erneut wählen beendet")
                       : QObject::tr("Projizieren beendet"));
+}
+
+// N15a: one step; the status line says how many curves came or why none.
+void SketchEditorToolController::addSectionCurves() {
+    try {
+        const auto count = editor_->addSectionCurves();
+        statusChanged_(QObject::tr("%n Schnittkurve(n) hinzugefügt", "", static_cast<int>(count)));
+    } catch (const std::invalid_argument& error) {
+        statusChanged_(QString::fromUtf8(error.what()));
+        return;
+    }
+    panel_.setAcceptEnabled(editor_->canAccept());
+    syncConstraintState();
+    refreshPresentation();
 }
 
 void SketchEditorToolController::projectEdge(std::uint64_t bodyResult, const TopoDS_Shape& edge) {

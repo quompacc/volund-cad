@@ -313,6 +313,9 @@ class SketchEditorSession final {
     // S17: projects the body edge `edge` of the current result `bodyResult` into the sketch as
     // a fixed construction element; SketchEditRefusal names why not.
     SketchCurveEditResult projectEdge(document::FeatureId bodyResult, const TopoDS_Shape& edge);
+    // N15a (SketchEditorSection.cpp): the curves where the visible bodies meet the sketch plane,
+    // as ordinary sketch curves in one step; how many. SketchEditRefusal names why not.
+    std::size_t addSectionCurves();
     [[nodiscard]] bool isProjected(document::SketchElementId element) const noexcept;
     [[nodiscard]] std::span<const document::SketchProjection> projections() const noexcept;
     [[nodiscard]] CommandResult tryAccept(ErrorDisposition disposition = ErrorDisposition::reject);

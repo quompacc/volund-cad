@@ -89,7 +89,9 @@ class SketchEditorToolController final {
     // S17: while on, a body edge clicked in the viewport is projected into the sketch.
     [[nodiscard]] bool projecting() const noexcept { return editor_ && projecting_; }
     void setProjecting(bool on);
+    void toggleProjecting() { setProjecting(!projecting_); }
     void projectEdge(std::uint64_t bodyResult, const TopoDS_Shape& edge);
+    void addSectionCurves(); // N15a
     void cancel();
 
   private:

@@ -1903,3 +1903,8 @@ add_executable(voelund_sketch_elliptic_arc_tests integration/SketchEllipticArcTe
 target_link_libraries(voelund_sketch_elliptic_arc_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME application.sketch_elliptic_arc COMMAND voelund_sketch_elliptic_arc_tests)
 set_tests_properties(application.sketch_elliptic_arc PROPERTIES LABELS "integration;application;sketch" TIMEOUT 120)
+
+add_executable(voelund_sketch_section_tests integration/SketchSectionTests.cpp)
+target_link_libraries(voelund_sketch_section_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.sketch_section COMMAND voelund_sketch_section_tests)
+set_tests_properties(application.sketch_section PROPERTIES LABELS "integration;application;sketch" TIMEOUT 120)

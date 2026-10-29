@@ -22,6 +22,14 @@ const QHash<QString, IconDrawing>& variantDrawings() {
              p.dot(13, 6);
              p.dot(20, 13);
          }},
+        {"section", // N15a: a body cut by the sketch plane, its outline drawn
+         [](const Pens& p) {
+             p.painter.drawRect(QRectF(6, 3, 12, 18));
+             p.accented([&] {
+                 p.line(2, 12, 22, 12);
+                 p.painter.drawEllipse(QPointF(12, 12), 2.5, 2.5);
+             });
+         }},
         {"tool.spline_fit", // N14b: a smooth curve through its points
          [](const Pens& p) {
              QPainterPath curve;

@@ -12,6 +12,7 @@
 #include <TopoDS.hxx>
 #include <gp_Vec.hxx>
 #include <voelund/kernel/EdgeQueries.hpp>
+#include <voelund/kernel/PlaneSection.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -38,7 +39,67 @@ document::SketchPoint local(const Frame& frame, const gp_Pnt& point) {
     return {offset.Dot(frame.x), offset.Dot(frame.y)};
 }
 
+// N15a: an ellipse in the plane; seen from the other side its minor axis turns over, so the
+// parameters change sign.
+document::SketchGeometry sketchEllipse(const Frame& frame, const kernel::EdgeEllipse& curve) {
+    const gp_Elips& e = curve.ellipse;
+    const gp_Vec major(e.XAxis().Direction());
+    const double rotation = std::atan2(major.Dot(frame.y), major.Dot(frame.x));
+    const bool facing = gp_Vec(e.Axis().Direction()).Dot(frame.normal) > 0.0;
+    const document::SketchEllipse ellipse{local(frame, e.Location()), e.MajorRadius(),
+                                          e.MinorRadius(), rotation};
+    if (curve.last - curve.first >= 2.0 * std::numbers::pi - 1e-9)
+        return ellipse;
+    const double start = facing ? curve.first : -curve.last;
+    const double end = facing ? curve.last : -curve.first;
+    return document::SketchEllipticArc{
+        ellipse.center, ellipse.majorRadius, ellipse.minorRadius, ellipse.rotation, start, end};
+}
+
+// N15a: any other section curve as cubic B-splines in the plane; a closed one in two halves,
+// since a sketch spline has two distinct ends.
+void appendSplines(const Frame& frame, const TopoDS_Edge& edge,
+                   std::vector<document::SketchGeometry>& curves) {
+    const auto range = kernel::storedRange(edge);
+    const bool closed =
+        kernel::pointOnEdge(edge, range.first).Distance(kernel::pointOnEdge(edge, range.last)) <
+        tolerance;
+    const double middle = (range.first + range.last) / 2.0;
+    const std::vector<TopoDS_Edge> pieces =
+        closed ? std::vector{kernel::edgeOnSameCurve(edge, range.first, middle),
+                             kernel::edgeOnSameCurve(edge, middle, range.last)}
+               : std::vector{edge};
+    for (const auto& piece : pieces) {
+        const auto spline =
+            kernel::cubicSplineOfEdge(piece, 1e-4, static_cast<int>(document::maximumBSplinePoles));
+        if (!spline)
+            throw GeometryEvaluationError("A section curve is too complex for a sketch spline",
+                                          "section-unsupported");
+        document::SketchBSpline curve;
+        for (const auto& pole : spline->poles)
+            curve.poles.push_back(local(frame, pole));
+        curve.knots = spline->knots;
+        curves.emplace_back(std::move(curve));
+    }
+}
+
 } // namespace
+
+std::vector<document::SketchGeometry> sectionSketchCurves(const document::SketchPlane& plane,
+                                                          const TopoDS_Shape& body) {
+    const Frame frame = frameOf(plane);
+    std::vector<document::SketchGeometry> curves;
+    const gp_Pln cut(frame.origin, gp_Dir(frame.normal));
+    for (const auto& edge : kernel::planeSectionEdges(body, cut)) {
+        if (auto projected = projectSketchEdge(plane, edge))
+            curves.push_back(std::move(*projected));
+        else if (const auto ellipse = kernel::edgeEllipse(edge))
+            curves.push_back(sketchEllipse(frame, *ellipse));
+        else
+            appendSplines(frame, edge, curves);
+    }
+    return curves;
+}
 
 std::optional<document::SketchGeometry> projectSketchEdge(const document::SketchPlane& plane,
                                                           const TopoDS_Shape& edge) {
