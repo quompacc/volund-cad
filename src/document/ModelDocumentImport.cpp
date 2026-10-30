@@ -38,7 +38,7 @@ std::string bodyName(std::string name) {
 
 void validateImportParameters(const ImportParameters& parameters) {
     if (parameters.solids.empty() || parameters.solids.size() > maximumImportedSolids)
-        throw std::invalid_argument("An import holds 1 to 1000 solids");
+        throw std::invalid_argument("An import holds 1 to 10000 solids");
     for (const auto& solid : parameters.solids)
         if (solid.solid.IsNull() || solid.solid.ShapeType() != TopAbs_SOLID || !solid.brep ||
             solid.brep->empty() || solid.name.find('\0') != std::string::npos)

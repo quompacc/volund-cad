@@ -12,6 +12,7 @@ add_library(
     OverlayCard.cpp
     PillButton.cpp
     DocumentActions.cpp
+    StepReadDialog.cpp
     RecentFiles.cpp
     CommandActions.cpp
     CommandPalette.cpp

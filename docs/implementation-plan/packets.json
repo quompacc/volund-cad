@@ -4,9 +4,9 @@
   "auditedCommit": "1b78229",
   "status": "implementation-started",
   "counts": {
-    "total": 173,
+    "total": 193,
     "throughG4": 143,
-    "g5": 30
+    "g5": 50
   },
   "globalGates": [
     {
@@ -193,7 +193,27 @@
     "OPT01",
     "OPT02",
     "OPT03",
-    "OPT04"
+    "OPT04",
+    "I01",
+    "I02",
+    "I03",
+    "I04",
+    "I05",
+    "I06",
+    "I07",
+    "I08",
+    "B01",
+    "B02",
+    "B03",
+    "B04",
+    "B05",
+    "B06",
+    "B07",
+    "B08",
+    "B09",
+    "B10",
+    "B11",
+    "B12"
   ],
   "packets": [
     {
@@ -3785,12 +3805,13 @@
       ],
       "acceptance": "Entwurf besitzt konkrete Header, Dateischema, Einheiten-/Transformregeln, Missing-Part-Verhalten und native Fixture. Jede folgende Implementation hat höchstens eine Verantwortlichkeit.",
       "boundary": "Kein Aufweichen der Body-/Feature-ID-Semantik, um Instanzen wie neue Körper zu behandeln.",
-      "status": "planned",
+      "status": "superseded",
       "gate": "G5",
       "chapter": "07-produktbreite.md",
       "kind": "design-and-proof",
       "evidence": [],
-      "completedCommit": null
+      "completedCommit": null,
+      "supersededBy": "Kapitel 14 (B01-B07), Nutzerentscheidung 30.10.2026"
     },
     {
       "id": "X02",
@@ -3810,12 +3831,13 @@
       ],
       "acceptance": "Referenzbaugruppe hat zwei unterscheidbare Bolzeninstanzen desselben Teils. Save/Open, Teilverschiebung, Quelle umbenennen und Missing-Part-Reparatur geprüft.",
       "boundary": "Noch keine allgemeine Montage-Zwangslösung.",
-      "status": "planned",
+      "status": "superseded",
       "gate": "G5",
       "chapter": "07-produktbreite.md",
       "kind": "implementation-or-acceptance",
       "evidence": [],
-      "completedCommit": null
+      "completedCommit": null,
+      "supersededBy": "Kapitel 14 (B01-B07), Nutzerentscheidung 30.10.2026"
     },
     {
       "id": "X03",
@@ -3834,18 +3856,19 @@
       ],
       "acceptance": "Lasche auf Bolzen besitzt erwartete verbleibende Beweglichkeit; widersprüchliches Mate erzeugt verständlichen Konflikt ohne Positionssprung anderer Teile. Fixture samt numerischen Grenzen dokumentiert.",
       "boundary": "Volle kinematische Simulation und beliebige 3D-Constraints sind weitere Spezifikationspakete.",
-      "status": "planned",
+      "status": "superseded",
       "gate": "G5",
       "chapter": "07-produktbreite.md",
       "kind": "implementation-or-acceptance",
       "evidence": [],
-      "completedCommit": null
+      "completedCommit": null,
+      "supersededBy": "Kapitel 14 (B01-B07), Nutzerentscheidung 30.10.2026"
     },
     {
       "id": "X04",
       "title": "Erste assoziative technische Zeichnung liefern",
       "deps": [
-        "X01",
+        "B01",
         "L10"
       ],
       "files": [
@@ -4241,7 +4264,7 @@
       "id": "X20",
       "title": "Jedes weitere Modul als Produkt separat abnehmen",
       "deps": [
-        "X03",
+        "B07",
         "X04",
         "X06",
         "X08",
@@ -5390,6 +5413,456 @@
       ],
       "completedCommit": "62ee17c",
       "completedDate": "2026-10-14"
+    },
+    {
+      "id": "I01",
+      "title": "Bestandsprüfung auf echten STEP-Dateien",
+      "deps": [
+        "L10"
+      ],
+      "files": [
+        "tests/perf/StepProbe.cpp"
+      ],
+      "steps": [
+        "Alle vorhandenen Werkzeuge automatisch über die NIST-Dateien und die Dateien des Nutzers laufen lassen.",
+        "Abstürze, Ablehnungen und falsche Ergebnisse zählen; daraus die Korrekturen ableiten."
+      ],
+      "acceptance": "Prüfwerkzeug läuft über alle Dateien ohne Absturz; Ergebnisliste im Nachweis.",
+      "boundary": "Nutzerdateien bleiben außerhalb des Repositorys.",
+      "status": "in-progress",
+      "gate": "G5",
+      "chapter": "14-step-und-baugruppen.md",
+      "kind": "design-and-proof",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "I02",
+      "title": "Einfacher STEP-Import auch großer Dateien",
+      "deps": [
+        "I01"
+      ],
+      "files": [
+        "src/kernel/StepExchange.cpp",
+        "src/document/ModelDocumentImport.cpp"
+      ],
+      "steps": [
+        "Drag & Drop.",
+        "Fortschritt und Abbrechen.",
+        "Ergebnis mit Gründen.",
+        "Importgrenzen neu festlegen, die Druckerdatei (1667 Solids, 136 MiB BRep) muss hineinpassen.",
+        "Farben je Fläche."
+      ],
+      "acceptance": "VORON2.4 lässt sich ohne Hängen und Absturz importieren, speichern und öffnen; Messwerte im Nachweis.",
+      "boundary": "Keine stille Auslassung: Was nicht ankommt, wird genannt.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "14-step-und-baugruppen.md",
+      "kind": "implementation",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "I03",
+      "title": "Flächenmodelle vernähen",
+      "deps": [
+        "I01"
+      ],
+      "files": [
+        "src/kernel/StepExchange.cpp"
+      ],
+      "steps": [
+        "Offene Schalen vernähen und zu Solids schließen, sonst klare Meldung."
+      ],
+      "acceptance": "Eine geschlossene Schale wird ein Körper, eine offene wird mit Grund gemeldet.",
+      "boundary": "Keine freien Flächen als Körper.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "14-step-und-baugruppen.md",
+      "kind": "implementation",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "I04",
+      "title": "Jede Fläche und Kante wählbar",
+      "deps": [
+        "I01"
+      ],
+      "files": [
+        "src/viewport/PlanarFaceSelection.cpp",
+        "src/features/ImportEvaluation.cpp"
+      ],
+      "steps": [
+        "Allgemeine Flächenauswahl statt nur ebener Flächen.",
+        "Werkzeuge, die eine Ebene brauchen, bleiben gesperrt.",
+        "Kantennamen auf Importkörpern, Projizieren und Achsen darauf."
+      ],
+      "acceptance": "Klick auf Bohrungswand und Verrundung wählt die Fläche; UI-Test mit mehreren Klicks in Folge.",
+      "boundary": "Referenzen bleiben ADR 0009 treu.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "14-step-und-baugruppen.md",
+      "kind": "implementation",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "I05",
+      "title": "Ziehen wie in Shapr3D und Fusion",
+      "deps": [
+        "I04"
+      ],
+      "files": [
+        "src/kernel/FaceReplacement.cpp",
+        "src/kernel/FaceEdit.cpp",
+        "src/desktop/FaceEditToolController.cpp"
+      ],
+      "steps": [
+        "Flächen auf neue Geometrie setzen, Topologie bleibt, Kanten werden neu geschnitten.",
+        "Taste Q auf jeder Fläche mit Pfeil und Wert.",
+        "Bohrung zeigt Durchmesser, Verrundung Radius, Fase Abstand."
+      ],
+      "acceptance": "Fremdes Teil: Bohrung, Deckfläche mit mitrollender Verrundung und Radius ändern, Volumen analytisch geprüft; Speichern/Öffnen; zu weit wird abgelehnt.",
+      "boundary": "Ein Zeitleistenschritt je Änderung, kein Direktmodus.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "14-step-und-baugruppen.md",
+      "kind": "implementation",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "I06",
+      "title": "Ganze Formen wählen und löschen",
+      "deps": [
+        "I04"
+      ],
+      "files": [
+        "src/kernel/FaceEdit.cpp"
+      ],
+      "steps": [
+        "Klick auf Bohrung, Tasche oder Absatz wählt alle ihre Flächen.",
+        "Löschen in einem Schritt, auch gekrümmte Flächen."
+      ],
+      "acceptance": "Bohrung mit Senkung verschwindet in einem Schritt.",
+      "boundary": "Grenzen stehen im Nachweis.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "14-step-und-baugruppen.md",
+      "kind": "implementation",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "I07",
+      "title": "Fläche verschieben und drehen",
+      "deps": [
+        "I05"
+      ],
+      "files": [
+        "src/kernel/FaceReplacement.cpp"
+      ],
+      "steps": [
+        "Griff wie beim Bewegen, auch für ganze Formen."
+      ],
+      "acceptance": "Bohrung und Absatz wandern, Nachbarflächen folgen; zu weit wird abgelehnt.",
+      "boundary": "Topologie bleibt; was sie ändern müsste, wird abgelehnt.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "14-step-und-baugruppen.md",
+      "kind": "implementation",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "I08",
+      "title": "Import aktualisieren",
+      "deps": [
+        "I05"
+      ],
+      "files": [
+        "src/application/CadSessionStep.cpp"
+      ],
+      "steps": [
+        "Neue Fassung der Datei einlesen.",
+        "Passt eine Referenz nicht mehr, wird sie als kaputt gezeigt."
+      ],
+      "acceptance": "Geänderte Datei ersetzt den Import; Folgeschritte laufen oder zeigen ihren Fehler.",
+      "boundary": "Referenzen werden nicht geraten (ADR 0009).",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "14-step-und-baugruppen.md",
+      "kind": "implementation",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "B01",
+      "title": "Baugruppenvertrag",
+      "deps": [
+        "I05"
+      ],
+      "files": [
+        "docs/adr",
+        "include/voelund/document/FeatureId.hpp"
+      ],
+      "steps": [
+        "ADR zu B-E1 bis B-E8, Schema, Header.",
+        "Referenzbaugruppe (Grundplatte, zwei gleiche Bolzen, bewegliche Lasche).",
+        "Spike Instanzdarstellung in OCCT."
+      ],
+      "acceptance": "ADR und Fixture liegen vor; Messwert Instanzdarstellung mit der Druckerdatei.",
+      "boundary": "Keine Aufweichung der Body-/Feature-ID-Semantik.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "14-step-und-baugruppen.md",
+      "kind": "design-and-proof",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "B02",
+      "title": "Komponenten im Dokument",
+      "deps": [
+        "B01"
+      ],
+      "files": [
+        "src/document/ModelDocument.cpp",
+        "src/desktop/ModelTreePanel.hpp"
+      ],
+      "steps": [
+        "Anlegen, umbenennen, aktivieren.",
+        "Komponenten aus Körpern.",
+        "Modellbaum, Speichern und Öffnen."
+      ],
+      "acceptance": "Mehrkörpermodell wird zu Komponenten; bestehende Dateien bleiben unverändert.",
+      "boundary": "Noch eine Instanz je Komponente.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "14-step-und-baugruppen.md",
+      "kind": "implementation",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "B03",
+      "title": "Platzierte Körper",
+      "deps": [
+        "B02"
+      ],
+      "files": [
+        "src/viewport/CadViewportQtOpenGl.cpp",
+        "src/application/CadSession.cpp"
+      ],
+      "steps": [
+        "Baustein aus B-E3.",
+        "Anzeige, Auswahl über Instanzpfad, Messen, Schnitt, Kollision, Masse, Export und MCP stellen um."
+      ],
+      "acceptance": "Alle bestehenden Tests unverändert grün; jedes Werkzeug mit gedrehter Instanz geprüft.",
+      "boundary": "Eigene Typen für lokal und platziert.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "14-step-und-baugruppen.md",
+      "kind": "implementation",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "B04",
+      "title": "Mehrere Instanzen",
+      "deps": [
+        "B03"
+      ],
+      "files": [
+        "src/application/CadSession.cpp"
+      ],
+      "steps": [
+        "Einfügen ergibt verknüpfte Instanz, als Neu einfügen eine unabhängige Kopie."
+      ],
+      "acceptance": "Zwei Bolzen, einer geändert, beide folgen.",
+      "boundary": "Keine doppelte Parameterwahrheit.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "14-step-und-baugruppen.md",
+      "kind": "implementation",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "B05",
+      "title": "Teile platzieren",
+      "deps": [
+        "B04"
+      ],
+      "files": [
+        "src/viewport/TransformManipulator.cpp"
+      ],
+      "steps": [
+        "Griff und Mauszug, Fixieren, Ein-/Ausblenden und Isolieren je Instanz."
+      ],
+      "acceptance": "Teil bewegen ist ein Rückgängig-Schritt, kein Zeitleistenschritt.",
+      "boundary": "Keine Position erfassen.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "14-step-und-baugruppen.md",
+      "kind": "implementation",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "B06",
+      "title": "Gelenke",
+      "deps": [
+        "B05"
+      ],
+      "files": [
+        "src/desktop"
+      ],
+      "steps": [
+        "Taste J, Fangpunkte, zwei Klicks.",
+        "Starr, Drehen, Schieben, Zylinder, Stift-Schlitz, Planar, Kugel.",
+        "Versatz, Winkel, Vorführen."
+      ],
+      "acceptance": "Scharnier der Referenzbaugruppe mit J, zwei Klicks und OK.",
+      "boundary": "Offene Ketten; keine neue Bibliothek.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "14-step-und-baugruppen.md",
+      "kind": "implementation",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "B07",
+      "title": "Bewegen mit Gelenken",
+      "deps": [
+        "B06"
+      ],
+      "files": [
+        "src/application"
+      ],
+      "steps": [
+        "Ziehen folgt den Freiheitsgraden.",
+        "Grenzen, Gelenk wie gebaut, Fehler am Gelenk."
+      ],
+      "acceptance": "Grenzen greifen; widersprüchliches Gelenk meldet, andere Teile bleiben stehen.",
+      "boundary": "Keine geschlossenen Schleifen.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "14-step-und-baugruppen.md",
+      "kind": "implementation",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "B08",
+      "title": "STEP-Baugruppen",
+      "deps": [
+        "B07",
+        "I02"
+      ],
+      "files": [
+        "src/kernel/StepExchange.cpp"
+      ],
+      "steps": [
+        "Import als Komponenten und Instanzen.",
+        "Export mit Struktur.",
+        "Importgrenzen prüfen."
+      ],
+      "acceptance": "VORON2.4 kommt als Baum an, Änderung und Export mit Struktur funktionieren.",
+      "boundary": "Gleiche Teile nur einmal, wo die Datei sie teilt.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "14-step-und-baugruppen.md",
+      "kind": "implementation",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "B09",
+      "title": "Andere Dateien einfügen",
+      "deps": [
+        "B08"
+      ],
+      "files": [
+        "src/document"
+      ],
+      "steps": [
+        "Verknüpfte .volund-Datei, Aktualisieren, Reparieren, Zyklen ablehnen, Lösen."
+      ],
+      "acceptance": "Baugruppe aus eigenen Dateien; fehlende Datei wird sichtbar repariert.",
+      "boundary": "Schreibgeschützt in der Baugruppe.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "14-step-und-baugruppen.md",
+      "kind": "implementation",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "B10",
+      "title": "Stückliste",
+      "deps": [
+        "B08"
+      ],
+      "files": [
+        "src/application"
+      ],
+      "steps": [
+        "Teile, Anzahl, Material, Masse, CSV.",
+        "Kollision über alle Instanzen."
+      ],
+      "acceptance": "Stückliste der Referenzbaugruppe stimmt.",
+      "boundary": "Keine Zeichnungsstückliste.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "14-step-und-baugruppen.md",
+      "kind": "implementation",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "B11",
+      "title": "Im Kontext konstruieren",
+      "deps": [
+        "B09"
+      ],
+      "files": [
+        "src/features"
+      ],
+      "steps": [
+        "Skizze oder Feature in A nutzt Geometrie von B."
+      ],
+      "acceptance": "Nach eigener Regel im ADR.",
+      "boundary": "Nach Bedarf.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "14-step-und-baugruppen.md",
+      "kind": "design-and-proof",
+      "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "B12",
+      "title": "Geschlossene Schleifen",
+      "deps": [
+        "B07"
+      ],
+      "files": [
+        "src/application"
+      ],
+      "steps": [
+        "Numerischer Löser, Getriebe und Kopplungen."
+      ],
+      "acceptance": "Nach Bedarf des Nutzers.",
+      "boundary": "Nach Bedarf.",
+      "status": "planned",
+      "gate": "G5",
+      "chapter": "14-step-und-baugruppen.md",
+      "kind": "implementation",
+      "evidence": [],
+      "completedCommit": null
     }
   ],
   "executionPolicy": {

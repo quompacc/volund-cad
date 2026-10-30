@@ -335,14 +335,22 @@ void MainWindow::createCommands() {
         impl_->shellTool->begin(*impl_->selectedPlanarFace);
         syncShell();
     };
-    // N13a: the picked planar face moved or deleted.
+    // N13a, I04: the picked face, planar or not, moved or deleted.
     const auto faceEdit = [this](document::FaceEditMode mode) {
-        if (!impl_->selectedPlanarFace)
+        const auto& planar = impl_->selectedPlanarFace;
+        const auto& curved = impl_->selectedCurvedFace;
+        if (!planar && !curved)
             return;
         if (impl_->sketchExtrusionTool->isActive())
             impl_->sketchExtrusionTool->cancel();
-        impl_->faceEditTool->begin(*impl_->selectedPlanarFace, mode);
+        impl_->faceEditTool->begin(planar ? planar->bodyId : curved->bodyId,
+                                   planar ? planar->selectedFace : curved->face, mode);
         syncShell();
+    };
+    services.canFaceEdit = [this]() {
+        const auto shell = impl_->shell();
+        return !shell.toolBlocksCommands() && impl_->session.sceneStatus().isCurrent() &&
+               (impl_->selectedPlanarFace.has_value() || impl_->selectedCurvedFace.has_value());
     };
     services.offsetFace = [faceEdit]() { faceEdit(document::FaceEditMode::offset); };
     services.deleteFace = [faceEdit]() { faceEdit(document::FaceEditMode::remove); };

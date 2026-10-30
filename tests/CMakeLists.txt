@@ -410,7 +410,7 @@ if(VOELUND_BUILD_DESKTOP)
             COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:Qt6::QWindowsIntegrationPlugin>"
                 "$<TARGET_FILE_DIR:voelund_sketch_solver_gate_tests>/platforms" VERBATIM)
     endif()
-    add_executable(voelund_document_actions_tests desktop/DocumentActionsTests.cpp ../src/desktop/DocumentActions.cpp ../src/desktop/RecentFiles.cpp
+    add_executable(voelund_document_actions_tests desktop/DocumentActionsTests.cpp ../src/desktop/DocumentActions.cpp ../src/desktop/StepReadDialog.cpp ../src/desktop/RecentFiles.cpp
         ../src/desktop/DocumentErrorText.cpp ../src/desktop/ShellState.cpp)
     target_link_libraries(voelund_document_actions_tests PRIVATE voelund_project_options Voelund::Application Qt6::Widgets)
     add_test(NAME desktop.document_actions COMMAND voelund_document_actions_tests)
@@ -1654,6 +1654,11 @@ add_executable(voelund_rib_tests integration/RibTests.cpp)
 target_link_libraries(voelund_rib_tests PRIVATE voelund_project_options Voelund::Application)
 add_test(NAME application.rib COMMAND voelund_rib_tests)
 set_tests_properties(application.rib PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
+# I05: editing a foreign part.
+add_executable(voelund_step_edit_tests integration/StepEditTests.cpp)
+target_link_libraries(voelund_step_edit_tests PRIVATE voelund_project_options Voelund::Application)
+add_test(NAME application.step_edit COMMAND voelund_step_edit_tests)
+set_tests_properties(application.step_edit PROPERTIES LABELS "integration;application;acceptance" TIMEOUT 120)
 # N13a: face edits.
 add_executable(voelund_face_edit_tests integration/FaceEditTests.cpp)
 target_link_libraries(voelund_face_edit_tests PRIVATE voelund_project_options Voelund::Application)
@@ -1764,6 +1769,12 @@ endforeach()
 # User report 2026-10-25: the cost of each step of a saved model, by hand.
 add_executable(voelund_model_probe perf/ModelProbe.cpp)
 target_link_libraries(voelund_model_probe PRIVATE voelund_project_options Voelund::Application)
+# I01: real STEP files through every tool, by hand.
+add_executable(voelund_step_probe perf/StepProbe.cpp)
+target_link_libraries(voelund_step_probe PRIVATE voelund_project_options Voelund::Application)
+if(WIN32)
+    target_link_libraries(voelund_step_probe PRIVATE psapi)
+endif()
 add_executable(voelund_undo_bench perf/UndoBench.cpp)
 target_link_libraries(voelund_undo_bench PRIVATE voelund_project_options Voelund::Application)
 if(WIN32)

@@ -427,6 +427,27 @@ class CadViewportScene {
         notifyBodyOwner(context->DetectedOwner(), includeFace);
     }
 
+    struct FacePick final {
+        std::optional<PlanarFaceSelection> planar{};
+        std::optional<CurvedFaceSelection> curved{};
+    };
+    // The face under the mouse: a plane for sketches and tools, or (I04) any other surface.
+    [[nodiscard]] FacePick facePick(const occ::handle<SelectMgr_EntityOwner>& detectedOwner,
+                                    std::uint64_t bodyId) const {
+        FacePick pick;
+        const auto owner = occ::handle<StdSelect_BRepOwner>::DownCast(detectedOwner);
+        if (owner.IsNull())
+            return pick;
+        pick.planar = planarFaceSelection(bodyId, owner->Shape());
+        if (!pick.planar && owner->Shape().ShapeType() == TopAbs_FACE)
+            pick.curved = CurvedFaceSelection{bodyId, owner->Shape()};
+        if (pick.planar && context->MainSelector()->NbPicked() > 0) {
+            const gp_Pnt point = context->MainSelector()->PickedPoint(1);
+            pick.planar->pickedPoint = std::array<double, 3>{point.X(), point.Y(), point.Z()};
+        }
+        return pick;
+    }
+
     void notifyBodyOwner(const occ::handle<SelectMgr_EntityOwner>& detectedOwner,
                          bool includeFace) {
         if (detectedOwner.IsNull())
@@ -439,21 +460,16 @@ class CadViewportScene {
             const auto bodyId = presentation.id;
             const auto bodyHandler = bodySelectionHandler;
             const auto faceHandler = planarFaceSelectionHandler;
+            const auto curvedHandler = curvedFaceSelectionHandler;
             const auto clickHandler = includeFace ? bodyClickHandler : nullptr;
-            std::optional<PlanarFaceSelection> selection;
-            if (includeFace && faceHandler) {
-                const auto owner = occ::handle<StdSelect_BRepOwner>::DownCast(detectedOwner);
-                if (!owner.IsNull())
-                    selection = planarFaceSelection(bodyId, owner->Shape());
-                if (selection && context->MainSelector()->NbPicked() > 0) {
-                    const gp_Pnt point = context->MainSelector()->PickedPoint(1);
-                    selection->pickedPoint = std::array<double, 3>{point.X(), point.Y(), point.Z()};
-                }
-            }
+            const auto [selection, curved] =
+                includeFace && faceHandler ? facePick(detectedOwner, bodyId) : FacePick{};
             // The application callback may rebuild presentations; retain no vector reference.
             bodyHandler(bodyId);
             if (selection && faceHandler)
                 faceHandler(*selection);
+            if (curved && curvedHandler)
+                curvedHandler(*curved);
             if (clickHandler)
                 clickHandler(bodyId);
             return;
@@ -481,6 +497,7 @@ class CadViewportScene {
     std::function<void(std::uint64_t)> bodySelectionHandler;
     std::function<void(std::uint64_t)> bodyClickHandler; // M21
     std::function<void(const PlanarFaceSelection&)> planarFaceSelectionHandler;
+    std::function<void(const CurvedFaceSelection&)> curvedFaceSelectionHandler;
     std::function<void(BasePlane)> basePlaneSelectionHandler;
     std::function<void()> emptySelectionHandler;
     std::function<bool(const ViewRay&)> areaClickHandler;

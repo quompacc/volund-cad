@@ -21,6 +21,7 @@
 #include "SketchEditorToolController.hpp"
 #include "SketchExtrusionToolController.hpp"
 #include "SketchViewAdapter.hpp"
+#include "StepReadDialog.hpp"
 #include "Theme.hpp"
 #include "ToolPanelHost.hpp"
 #include "ViewCube.hpp"
@@ -35,9 +36,12 @@
 #include <QCloseEvent>
 #include <QDockWidget>
 #include <QDoubleSpinBox>
+#include <QDragEnterEvent>
+#include <QDropEvent>
 #include <QGuiApplication>
 #include <QKeySequence>
 #include <QLabel>
+#include <QMimeData>
 #include <QScreen>
 #include <QSignalBlocker>
 #include <QStatusBar>
@@ -70,6 +74,7 @@ MainWindow::MainWindow(application::CadSession& session, QWidget* parent)
     createClipboardCommands();
     impl_->documentActions =
         std::make_unique<DocumentActions>(*this, impl_->session, [this]() { refreshScene(); });
+    setAcceptDrops(true); // I02
     createHeader();
     createParameterCard();
     createSectionView();
@@ -103,6 +108,20 @@ MainWindow::~MainWindow() {
     impl_->propertyPanel->setCylinderChangeHandler({});
     impl_->propertyPanel->setExtrusionChangeHandler({});
     impl_->propertyPanel->setBindingHandlers({});
+}
+
+// I02: STEP and Völund files can be dropped anywhere on the window.
+void MainWindow::dragEnterEvent(QDragEnterEvent* event) {
+    if (!droppedFile(*event->mimeData()).isEmpty())
+        event->acceptProposedAction();
+}
+
+void MainWindow::dropEvent(QDropEvent* event) {
+    const QString file = droppedFile(*event->mimeData());
+    if (file.isEmpty())
+        return;
+    event->acceptProposedAction();
+    impl_->documentActions->dropFile(file);
 }
 
 void MainWindow::openFile(const QString& fileName) { impl_->documentActions->openFile(fileName); }
@@ -430,6 +449,7 @@ void MainWindow::refreshScene() {
         impl_->sketchEditorTool->cancel();
     }
     impl_->selectedPlanarFace.reset();
+    impl_->selectedCurvedFace.reset();
     impl_->selectedDatum.reset();
     impl_->selectedBody.reset();
     impl_->viewport->cancelSketch();

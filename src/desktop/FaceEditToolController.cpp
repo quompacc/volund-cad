@@ -32,31 +32,25 @@ void FaceEditToolController::setPreviewHandler(
 
 // A face of the edited body: on its result before the edit, the edit itself or the preview.
 std::optional<document::SubshapeOrigin>
-FaceEditToolController::faceOrigin(const viewport::PlanarFaceSelection& face) const {
-    const document::FeatureId support{face.bodyId};
+FaceEditToolController::faceOrigin(std::uint64_t body, const TopoDS_Shape& face) const {
+    const document::FeatureId support{body};
     if (active_ && support != support_ && support != editing_ && support != previewFeature_)
         return std::nullopt;
-    try {
-        return session_.faceReference(support, face.selectedFace).origin;
-    } catch (const std::exception&) {
-    }
-    if (previewSession_ && previewFeature_ && support == *previewFeature_) {
-        try {
-            return previewSession_->faceReference(support, face.selectedFace).origin;
-        } catch (const std::exception&) {
-        }
-    }
+    if (auto origin = session_.faceOrigin(support, face))
+        return origin;
+    if (previewSession_ && previewFeature_ && support == *previewFeature_)
+        return previewSession_->faceOrigin(support, face);
     return std::nullopt;
 }
 
-void FaceEditToolController::begin(const viewport::PlanarFaceSelection& face,
+void FaceEditToolController::begin(std::uint64_t body, const TopoDS_Shape& face,
                                    document::FaceEditMode mode) {
-    const auto origin = faceOrigin(face);
+    const auto origin = faceOrigin(body, face);
     if (!origin) {
-        statusChanged_(QObject::tr("Wähle eine ebene Fläche eines Körpers."));
+        statusChanged_(QObject::tr("Wähle eine Fläche eines Körpers."));
         return;
     }
-    support_ = document::FeatureId{face.bodyId};
+    support_ = document::FeatureId{body};
     faces_ = {*origin};
     mode_ = mode;
     distance_ = 1.0;
@@ -116,10 +110,10 @@ void FaceEditToolController::open() {
     statusChanged_(QObject::tr("Flächen: weitere Flächen anklicken"));
 }
 
-void FaceEditToolController::picked(const viewport::PlanarFaceSelection& face) {
+void FaceEditToolController::picked(std::uint64_t body, const TopoDS_Shape& face) {
     if (!active_)
         return;
-    const auto origin = faceOrigin(face);
+    const auto origin = faceOrigin(body, face);
     if (!origin) {
         const auto message = QObject::tr("Diese Fläche gehört nicht zum bearbeiteten Körper.");
         panel_.setGuidance(message);

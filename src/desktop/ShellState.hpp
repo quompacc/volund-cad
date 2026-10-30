@@ -24,8 +24,9 @@ enum class ShellSelection {
     nothing,
     basePlane,
     planarFace,
-    edges, // user request 2026-10-13: body edges picked before a fillet or chamfer
-    body,  // M01: a whole body, picked by its row in the model tree
+    curvedFace, // I04: a hole wall or a rounding
+    edges,      // user request 2026-10-13: body edges picked before a fillet or chamfer
+    body,       // M01: a whole body, picked by its row in the model tree
     sketchRegion,
     sketchElement,
     sketch,
@@ -44,7 +45,8 @@ struct ShellInputs final {
     std::optional<document::BodyId> body{};
     QString bodyName{};
     bool bodyHidden{false};
-    std::size_t edges{0}; // user request 2026-10-13: picked body edges
+    std::size_t edges{0};   // user request 2026-10-13: picked body edges
+    bool curvedFace{false}; // I04: a hole wall or a rounding
 };
 
 struct ShellState final {

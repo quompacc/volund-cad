@@ -17,9 +17,11 @@ inline constexpr std::size_t maximumFeatureCount = 10'000;
 inline constexpr std::size_t maximumSketchElementCount = 1'000'000;
 inline constexpr std::size_t maximumSketchConstraintCount = 2'000'000;
 inline constexpr std::size_t maximumExtrusionProfileCount = 1'000'000;
-inline constexpr std::size_t maximumDocumentBytes = 64 * 1024 * 1024;
+// I02: a native document with a whole imported machine (VORON2.4: 136 MiB of solids) must fit.
+inline constexpr std::size_t maximumDocumentBytes = std::size_t{1024} * 1024 * 1024;
+inline constexpr std::size_t maximumTextDocumentBytes = 64 * 1024 * 1024; // old text format
 // M17: the stored BRep of all solids of one import; the document must still fit.
-inline constexpr std::size_t maximumImportedBytes = 48 * 1024 * 1024;
+inline constexpr std::size_t maximumImportedBytes = std::size_t{960} * 1024 * 1024;
 inline constexpr std::size_t maximumLineBytes = 64 * 1024;
 inline constexpr std::size_t maximumNameBytes = 4096;
 inline constexpr std::size_t maximumDocumentRecords = 200'000;

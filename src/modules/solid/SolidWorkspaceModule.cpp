@@ -347,7 +347,7 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                              true,
                              false,
                              simpleCommand(std::move(services.offsetFace)),
-                             services.canHole,
+                             services.canFaceEdit,
                              "Fläche versetzen"});
     if (services.deleteFace)
         commands_.push_back({"solid.modify.delete_face",
@@ -358,7 +358,7 @@ SolidWorkspaceModule::SolidWorkspaceModule(SolidCommandServices services) {
                              true,
                              false,
                              simpleCommand(std::move(services.deleteFace)),
-                             services.canHole,
+                             services.canFaceEdit,
                              "Fläche löschen"});
 }
 

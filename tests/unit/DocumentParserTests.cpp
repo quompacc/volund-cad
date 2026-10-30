@@ -226,7 +226,7 @@ class PaddingBuffer final : public std::streambuf {
 void resourceLimits() {
     for (const auto& [size, newlineEvery] :
          {std::pair{detail::maximumLineBytes + 100, std::size_t{0}},
-          std::pair{detail::maximumDocumentBytes + 100, std::size_t{1024}},
+          std::pair{detail::maximumTextDocumentBytes + 100, std::size_t{1024}},
           std::pair{detail::maximumDocumentRecords + 100, std::size_t{1}}}) {
         PaddingBuffer buffer(size, newlineEvery);
         std::istream input(&buffer);
@@ -236,7 +236,8 @@ void resourceLimits() {
         } catch (const std::runtime_error& error) {
             rejected = std::string(error.what()).find("limit") != std::string::npos;
         }
-        require(rejected && (size <= detail::maximumDocumentBytes || buffer.consumed < size),
+        require(rejected, "Resource limit not reported");
+        require(size <= detail::maximumDocumentBytes || buffer.consumed < size,
                 "Resource limit consumed entire oversized source");
     }
     std::istringstream failed("VOLUND 16\nNEXT_ID 1\nFEATURES 0\n");

@@ -99,6 +99,7 @@ void MainWindow::selectBody(std::uint64_t id, bool keepGroup) {
         clearGroups();
     impl_->selectedDatum.reset();
     impl_->selectedPlanarFace.reset();
+    impl_->selectedCurvedFace.reset();
     // The creator feature stands for the body in the document selection, so a cylinder or a
     // move targets this body (CadSession::selectedBodyProducer).
     static_cast<void>(impl_->session.selectFeature(document::FeatureId{id}));

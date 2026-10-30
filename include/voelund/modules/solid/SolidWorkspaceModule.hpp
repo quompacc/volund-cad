@@ -40,6 +40,7 @@ struct SolidCommandServices final {
     // N13a: the picked planar face moved along its normal, or deleted and healed.
     std::function<void()> offsetFace{};
     std::function<void()> deleteFace{};
+    std::function<bool()> canFaceEdit{};
     // M21: combines the selected body with clicked tool bodies; needs a selected body.
     std::function<void()> combine{};
     std::function<bool()> canCombine{};

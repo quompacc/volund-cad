@@ -6,6 +6,7 @@
 #include "MainWindowSupport.hpp"
 #include "RecentFiles.hpp"
 #include "ShellState.hpp"
+#include "StepReadDialog.hpp"
 
 #include <voelund/application/CadSession.hpp>
 #include <voelund/application/ModelExport.hpp>
@@ -372,7 +373,8 @@ bool DocumentActions::restore(const std::function<void()>& apply) {
 void DocumentActions::load(const QString& fileName) {
     if (isStepFile(fileName)) {
         try {
-            const auto result = session_.openStep(nativePath(fileName));
+            const auto result = session_.openStep(nativePath(fileName),
+                                                  readStepFile(window_, nativePath(fileName)));
             if (result.status == application::StepImportStatus::imported) {
                 refreshHandler_();
                 syncWindowTitle();
@@ -473,6 +475,10 @@ QString convertedUnit(const std::string& unit) {
 
 void DocumentActions::reportImport(const application::StepImportResult& result) {
     using application::StepImportStatus;
+    if (result.status == StepImportStatus::cancelled) {
+        window_.statusBar()->showMessage(QObject::tr("Import abgebrochen"), 3000);
+        return;
+    }
     if (result.status != StepImportStatus::imported) {
         const QString reason = result.status == StepImportStatus::noSolids
                                    ? QObject::tr("Die Datei enthält keinen gültigen Volumenkörper.")
@@ -506,10 +512,23 @@ void DocumentActions::reportImport(const application::StepImportResult& result) 
 void DocumentActions::importStep() {
     const QString fileName = QFileDialog::getOpenFileName(
         &window_, QObject::tr("STEP-Datei importieren"), {}, stepFilter());
-    if (fileName.isEmpty())
-        return;
+    if (!fileName.isEmpty())
+        importStepFile(fileName);
+}
+
+// I02: a file dropped on the window. STEP joins the document as Ctrl+I does (M18), a Völund file
+// opens as a double click would.
+void DocumentActions::dropFile(const QString& fileName) {
+    if (isStepFile(fileName))
+        importStepFile(fileName);
+    else
+        openFile(fileName);
+}
+
+void DocumentActions::importStepFile(const QString& fileName) {
     try {
-        const auto result = session_.importStep(nativePath(fileName));
+        const auto result =
+            session_.importStep(nativePath(fileName), readStepFile(window_, nativePath(fileName)));
         if (result.status == application::StepImportStatus::imported)
             refreshHandler_();
         reportImport(result);

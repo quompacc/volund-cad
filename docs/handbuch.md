@@ -167,9 +167,10 @@ Neu bei Völund? Das [Tutorial „Referenzplatte“](tutorial-referenzplatte.md)
   - Ist eine Skizze mit Punkten auf einer Körperfläche gewählt, setzt „Bohrung“ an jedem Punkt
     eine gleiche Bohrung (höchstens 100) in einem Schritt.
 - **Wandstärke** (Schale) mit offenen Flächen. **Formschräge** an ebenen Flächen.
-- **Fläche versetzen** und **Fläche löschen** (Bearbeiten): ebene Flächen um einen Abstand
-  verschieben oder entfernen; beim Löschen schließen die Nachbarflächen die Lücke (eine Fase
-  heilt zur Kante, eine Bohrung verschwindet).
+- **Fläche versetzen** und **Fläche löschen** (Bearbeiten): Flächen um einen Abstand verschieben
+  oder entfernen, auch gekrümmte. Eine Bohrungswand ändert so den Durchmesser, eine Ebene nimmt
+  tangentiale Verrundungen mit. Beim Löschen schließen die Nachbarflächen die Lücke (eine Fase heilt
+  zur Kante, eine Bohrung verschwindet). Geht das nicht, wird es mit Begründung abgelehnt.
 - **Teilen** an einer Grundebene, Konstruktionsebene oder ebenen Fläche; beide Seiten oder nur
   eine behalten.
 - **Spiegeln** an einer Ebene oder ebenen Fläche, **Muster** linear, kreisförmig, als **Raster**
@@ -267,6 +268,7 @@ Neu bei Völund? Das [Tutorial „Referenzplatte“](tutorial-referenzplatte.md)
 
 ## Austausch
 
+- Eine STEP-Datei lässt sich auch einfach ins Fenster ziehen; sie kommt ins aktuelle Dokument. Große Dateien zeigen ihren Fortschritt und lassen sich abbrechen.
 - **Importieren (STEP)…** (Datei-Menü, Strg+I) fügt die Volumenkörper einer STEP-Datei als
   einen Schritt „Import N“ ins offene Dokument ein, ein Rückgängig-Schritt.
   - Jeder Volumenkörper wird ein eigener Körper mit dem Namen und der Farbe aus der Datei.
@@ -291,7 +293,8 @@ Neu bei Völund? Das [Tutorial „Referenzplatte“](tutorial-referenzplatte.md)
 - **Grenzen:** Aus STEP entsteht keine parametrische Historie. Baugruppenstruktur, Ebenen und
   PMI werden nicht übernommen. Kanten importierter Körper lassen sich nicht in Skizzen
   projizieren oder als Achse nutzen (Verrunden und Fasen gehen). Ein Import darf höchstens
-  48 MiB Geometrie enthalten. Kein IGES- und kein Netz-Import. Ein streng prüfendes AutoCAD kann
+  10.000 Volumenkörper und 960 MiB Geometrie enthalten; bei sehr vielen Körpern dauert jede Änderung aber lange
+  (gemessen mit 1667 Körpern: rund drei Minuten). Kein IGES- und kein Netz-Import. Ein streng prüfendes AutoCAD kann
   die DXF-Datei des Exports ablehnen.
 
 ## Weitere Grenzen von v1

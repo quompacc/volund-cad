@@ -13,7 +13,7 @@ namespace voelund::application {
 
 // M17 (user decision 2026-10-16): a STEP import becomes one feature "Import N" whose solids are
 // bodies named after their products; nothing changes unless it is imported.
-enum class StepImportStatus { imported, unreadable, noSolids, rejected };
+enum class StepImportStatus { imported, unreadable, noSolids, rejected, cancelled };
 struct StepImportResult final {
     StepImportStatus status;
     std::string message{};

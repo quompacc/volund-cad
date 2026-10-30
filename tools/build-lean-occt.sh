@@ -59,9 +59,12 @@ if { [ -f "$build_dir/CMakeCache.txt" ] &&
     rm -rf "$build_dir"
 fi
 
+# -O2: built with -O3 under GCC 16, OCCT's solid classifier crashes on real parts (I01: VORON2.4,
+# NIST files; a garbage line adaptor in BRepClass3d_BndBoxTreeSelectorLine::Accept).
 cmake -S "$source_dir" -B "$build_dir" -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
     "-DCMAKE_CXX_FLAGS=$occt_cxx_flags" \
+    "-DCMAKE_CXX_FLAGS_RELEASE=-O2 -DNDEBUG" \
     -DINSTALL_DIR="$install_dir" \
     -DBUILD_MODULE_FoundationClasses=OFF \
     -DBUILD_MODULE_ModelingData=OFF \

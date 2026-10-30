@@ -571,7 +571,7 @@ struct ImportedSolid final {
 // will after saving. Throws std::invalid_argument for data that is no valid solid.
 [[nodiscard]] ImportedSolid importedSolid(const TopoDS_Shape& solid, std::string name);
 [[nodiscard]] ImportedSolid importedSolid(std::string brep, std::string name);
-inline constexpr std::size_t maximumImportedSolids = 1000;
+inline constexpr std::size_t maximumImportedSolids = 10'000;
 struct ImportParameters final {
     std::string fileName{};   // where it came from, for information only
     std::string sourceUnit{}; // the file's length unit as it names it

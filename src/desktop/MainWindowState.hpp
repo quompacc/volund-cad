@@ -81,10 +81,15 @@ class MainWindow::Impl final {
             on(constructionTool)};
         return std::ranges::any_of(open, [](bool active) { return active; });
     }
+    void clearFacePicks() {
+        selectedPlanarFace.reset();
+        selectedCurvedFace.reset();
+    }
     [[nodiscard]] ShellState shell() const {
         ShellInputs inputs;
         inputs.basePlane = selectedDatum;
         inputs.planarFace = selectedPlanarFace.has_value();
+        inputs.curvedFace = selectedCurvedFace.has_value();
         inputs.edges = selectedEdges.size();
         if (selectedBody) {
             inputs.body = selectedBody;
@@ -163,6 +168,7 @@ class MainWindow::Impl final {
     QDoubleSpinBox* linearSnapInput{nullptr};
     QDoubleSpinBox* angularSnapInput{nullptr};
     std::optional<viewport::PlanarFaceSelection> selectedPlanarFace;
+    std::optional<viewport::CurvedFaceSelection> selectedCurvedFace; // I04
     std::optional<document::DatumPlane> selectedDatum; // V01b: base plane picked in viewport.
     // M01: a whole body picked in the model tree (view state, like a base plane).
     std::optional<document::BodyId> selectedBody;

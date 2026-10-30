@@ -19,15 +19,17 @@
 namespace voelund::application {
 using namespace detail;
 
-StepImportResult CadSession::importStep(const std::filesystem::path& path) {
-    return addImport(path, kernel::readStep(path));
+StepImportResult CadSession::importStep(const std::filesystem::path& path,
+                                        std::optional<kernel::StepImport> read) {
+    return addImport(path, read ? std::move(*read) : kernel::readStep(path));
 }
 
-StepImportResult CadSession::openStep(const std::filesystem::path& path) {
-    auto read = kernel::readStep(path);
-    if (!read.error)
+StepImportResult CadSession::openStep(const std::filesystem::path& path,
+                                      std::optional<kernel::StepImport> read) {
+    auto file = read ? std::move(*read) : kernel::readStep(path);
+    if (!file.error)
         newDocument();
-    return addImport(path, std::move(read));
+    return addImport(path, std::move(file));
 }
 
 StepImportResult CadSession::addImport(const std::filesystem::path& path, kernel::StepImport read) {
@@ -35,9 +37,10 @@ StepImportResult CadSession::addImport(const std::filesystem::path& path, kernel
         StepImportStatus::imported, read.message,       std::nullopt,   read.solids.size(),
         read.skippedShapes,         read.invalidSolids, read.sourceUnit};
     if (read.error) {
-        result.status = *read.error == kernel::StepImportError::noSolids
-                            ? StepImportStatus::noSolids
-                            : StepImportStatus::unreadable;
+        result.status =
+            *read.error == kernel::StepImportError::noSolids    ? StepImportStatus::noSolids
+            : *read.error == kernel::StepImportError::cancelled ? StepImportStatus::cancelled
+                                                                : StepImportStatus::unreadable;
         return result;
     }
     document::ImportParameters parameters;

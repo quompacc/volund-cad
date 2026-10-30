@@ -4,20 +4,28 @@
 #include "IsolatedSettings.hpp"
 #include "ViewportLifecycleSupport.hpp"
 #include <BRepGProp.hxx>
+#include <BRepPrimAPI_MakeBox.hxx>
 #include <GProp_GProps.hxx>
 #include <QAction>
 #include <QApplication>
 #include <QComboBox>
 #include <QDoubleSpinBox>
+#include <QDragEnterEvent>
+#include <QDropEvent>
+#include <QMimeData>
 #include <QPushButton>
 #include <QToolButton>
+#include <QUrl>
 #include <array>
 #include <cmath>
+#include <filesystem>
 #include <iostream>
 #include <string>
+#include <vector>
 #include <voelund/application/Actions.hpp>
 #include <voelund/application/CadSession.hpp>
 #include <voelund/desktop/MainWindow.hpp>
+#include <voelund/kernel/StepExchange.hpp>
 
 // N12a: a box 20 x 20 x 10 with the construction plane x = 8. "Teilen" on the selected box
 // cuts at that plane: both sides preview as 4000, the front only as 2400, the back only as
@@ -121,6 +129,75 @@ void faceEditFlow(desktop::MainWindow& window, application::CadSession& session,
     button(window, "toolAcceptButton").click();
     settle();
     require(panel(window) == nullptr && matches(volume(session), 6000), "OK moves the face");
+}
+
+// I04: a curved face takes the face tools and only those: the side of a cylinder (radius 8, height
+// 25) clicked, 1 outwards previews and commits radius 9. Done twice in a row, as a user would.
+void curvedFaceFlow(desktop::MainWindow& window, application::CadSession& session,
+                    viewport::CadViewport& viewport) {
+    session.newDocument();
+    static_cast<void>(session.createNewBodyCylinder());
+    window.refreshAfterExternalChange();
+    viewport.setCameraView(viewport::CameraView::isometric);
+    const double pi = std::acos(-1.0);
+    for (const double radius : {8.0, 9.0}) {
+        // One of the sides faces the camera, whichever way the isometric view looks.
+        const double side = radius * std::sqrt(0.5);
+        for (const auto& [x, y] : {std::array{side, side}, std::array{-side, -side},
+                                   std::array{side, -side}, std::array{-side, side}}) {
+            click(viewport, x, y, 12);
+            if (command(window, "solid.modify.offset_face").isEnabled())
+                break;
+        }
+        require(command(window, "solid.modify.offset_face").isEnabled(),
+                "A click on the side of the cylinder selects a curved face");
+        require(!command(window, "solid.modify.hole").isEnabled(),
+                "A hole needs a plane: it stays locked on a curved face");
+        command(window, "solid.modify.offset_face").trigger();
+        settle();
+        require(panel(window) != nullptr, "Fläche versetzen opens on the curved face");
+        setLength(window, "toolLength_distance", 1);
+        const double expected = pi * (radius + 1) * (radius + 1) * 25;
+        require(button(window, "toolAcceptButton").isEnabled() &&
+                    std::abs(shown(viewport) - expected) < 1e-3 * expected,
+                "1 outwards previews the larger radius");
+        button(window, "toolAcceptButton").click();
+        settle();
+        require(panel(window) == nullptr && std::abs(volume(session) - expected) < 1e-3 * expected,
+                "OK moves the curved face");
+    }
+}
+
+// I02: a STEP file dropped on the window joins the document, however often. Reading happens on
+// another thread, so the drop returns with the bodies there.
+void stepDropFlow(desktop::MainWindow& window, application::CadSession& session) {
+    session.newDocument();
+    window.refreshAfterExternalChange();
+    const auto file = std::filesystem::temp_directory_path() / "voelund-drop-test.step";
+    const TopoDS_Shape box = BRepPrimAPI_MakeBox(10, 20, 30).Shape();
+    const std::vector<kernel::StepSolid> solids{{box, "Fremdteil"}};
+    require(!kernel::writeStep(file, solids).error, "Test file written");
+    QMimeData data;
+    data.setUrls({QUrl::fromLocalFile(QString::fromStdString(file.string()))});
+    for (const std::size_t bodies : {std::size_t{1}, std::size_t{2}}) {
+        QDragEnterEvent enter(QPoint(50, 50), Qt::CopyAction, &data, Qt::LeftButton,
+                              Qt::NoModifier);
+        QApplication::sendEvent(&window, &enter);
+        require(enter.isAccepted(), "A STEP file may be dropped");
+        QDropEvent drop(QPointF(50, 50), Qt::CopyAction, &data, Qt::LeftButton, Qt::NoModifier);
+        QApplication::sendEvent(&window, &drop);
+        settle();
+        require(session.validBodies().size() == bodies &&
+                    matches(volume(session), static_cast<double>(bodies) * 6000.0),
+                "The dropped file's body joins the document");
+    }
+    std::filesystem::remove(file);
+    QMimeData other;
+    other.setUrls({QUrl::fromLocalFile(QStringLiteral("/tmp/bild.png"))});
+    QDragEnterEvent enter(QPoint(50, 50), Qt::CopyAction, &other, Qt::LeftButton, Qt::NoModifier);
+    enter.ignore();
+    QApplication::sendEvent(&window, &enter);
+    require(!enter.isAccepted(), "Other files are not taken");
 }
 
 // N13b: "Bezugspunkt" without a picked edge offers X/Y/Z; X = 5 makes a point at (5; 0; 0).
@@ -241,6 +318,8 @@ void run() {
     settle();
     ribFlow(window, session, *viewport);
     faceEditFlow(window, session, *viewport);
+    curvedFaceFlow(window, session, *viewport);
+    stepDropFlow(window, session);
     constructionFlow(window, session);
     std::cout << "PASS N12a split panel: construction plane, both/front/back preview, OK, "
                  "timeline reopens split and part; N12b rib; N13a face edit; N13b points, plane"

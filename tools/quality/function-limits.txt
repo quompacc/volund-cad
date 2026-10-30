@@ -499,3 +499,7 @@ parameters | tests/integration/EdgeProvenanceTests.cpp | tool | 6 | Altbestand v
 parameters | tests/integration/OperationHistoryTests.cpp | tool | 6 | Altbestand vor A04
 parameters | tests/integration/PushPullTests.cpp | facing | 6 | Altbestand vor A04
 parameters | tests/integration/SweepTests.cpp | sweep | 6 | Altbestand vor A04
+# I05: overrides of BRepTools_Modification; OCCT fixes these parameter lists.
+parameters | src/kernel/FaceReplacement.cpp | Continuity | 6 | OCCT-Schnittstelle
+parameters | src/kernel/FaceReplacement.cpp | NewCurve2d | 6 | OCCT-Schnittstelle
+parameters | src/kernel/FaceReplacement.cpp | NewSurface | 6 | OCCT-Schnittstelle

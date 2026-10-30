@@ -61,23 +61,53 @@ QString featureName(const ShellState& state) {
 
 } // namespace
 
-ContextCommands contextCommands(const ShellState& state) {
-    ContextCommands result;
-    switch (state.tool) {
+// A picked plane offers what starts from a plane; I04: any other face only the face tools. False
+// when no face is picked.
+static bool faceCommands(ShellSelection selection, ContextCommands& result) {
+    if (selection == ShellSelection::planarFace) {
+        result.title = QObject::tr("Ebene Fläche");
+        result.commands = {"solid.create.sketch", "solid.modify.push_pull", "solid.modify.hole",
+                           "solid.modify.shell", "solid.create.datum_plane"};
+        result.primary = "solid.create.sketch";
+        return true;
+    }
+    if (selection != ShellSelection::curvedFace)
+        return false;
+    result.title = QObject::tr("Gekrümmte Fläche");
+    result.commands = {"solid.modify.offset_face", "solid.modify.delete_face"};
+    result.primary = "solid.modify.offset_face";
+    return true;
+}
+
+// What a running tool shows instead of the selection's commands; false when none runs.
+static bool toolCommands(ShellTool tool, ContextCommands& result) {
+    switch (tool) {
     case ShellTool::sketchEditor:
     case ShellTool::extrusion:
         // The active tool's panel carries its own controls and OK/Cancel.
         result.visible = false;
-        return result;
+        return true;
     case ShellTool::transform:
         result.title = QObject::tr("Verschieben/Drehen");
         result.commands = {"transform.snap", "solid.modify.transform"};
         result.transformSettings = true;
-        return result;
+        return true;
     case ShellTool::none:
         break;
     }
+    return false;
+}
+
+ContextCommands contextCommands(const ShellState& state) {
+    ContextCommands result;
+    if (toolCommands(state.tool, result))
+        return result;
+    if (faceCommands(state.selection, result))
+        return result;
     switch (state.selection) {
+    case ShellSelection::planarFace:
+    case ShellSelection::curvedFace:
+        break; // above
     case ShellSelection::nothing:
         result.title = QObject::tr("Ebene oder Fläche anklicken");
         result.commands = {"solid.create.sketch", "solid.create.box", "solid.create.cylinder"};
@@ -85,12 +115,6 @@ ContextCommands contextCommands(const ShellState& state) {
     case ShellSelection::basePlane:
         result.title = planeName(*state.basePlane);
         result.commands = {"solid.create.sketch", "solid.create.datum_plane"};
-        result.primary = "solid.create.sketch";
-        break;
-    case ShellSelection::planarFace:
-        result.title = QObject::tr("Ebene Fläche");
-        result.commands = {"solid.create.sketch", "solid.modify.push_pull", "solid.modify.hole",
-                           "solid.modify.shell", "solid.create.datum_plane"};
         result.primary = "solid.create.sketch";
         break;
     case ShellSelection::edges:

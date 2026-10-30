@@ -16,6 +16,8 @@
 #include <voelund/document/BodyId.hpp>
 
 class QCloseEvent;
+class QDragEnterEvent;
+class QDropEvent;
 class TopoDS_Shape;
 
 namespace voelund::application {
@@ -33,6 +35,7 @@ struct SolidCommandServices;
 }
 
 namespace voelund::viewport {
+struct CurvedFaceSelection;
 struct PlanarFaceSelection;
 } // namespace voelund::viewport
 
@@ -58,6 +61,8 @@ class MainWindow final : public QMainWindow {
 
   protected:
     void closeEvent(QCloseEvent* event) override;
+    void dragEnterEvent(QDragEnterEvent* event) override;
+    void dropEvent(QDropEvent* event) override;
 
   private:
     void createRecovery();
@@ -128,6 +133,8 @@ class MainWindow final : public QMainWindow {
     [[nodiscard]] bool canPushPullNow() const;
     void connectInteractions();
     void pickPlanarFace(const viewport::PlanarFaceSelection& selection);
+    void pickCurvedFace(const viewport::CurvedFaceSelection& selection); // I04
+    void connectFacePicks();
     bool toolTakesFace(const viewport::PlanarFaceSelection& selection);
     bool groupTakesFace(const viewport::PlanarFaceSelection& selection);
     void syncModelTree();

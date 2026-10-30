@@ -28,7 +28,7 @@ class DocumentInputBuffer final : public std::streambuf {
                 invalidDocument("input read failure");
             return traits_type::eof();
         }
-        if (++bytes_ > maximumDocumentBytes)
+        if (++bytes_ > maximumTextDocumentBytes)
             invalidDocument("document byte limit exceeded");
         character_ = traits_type::to_char_type(value);
         if (character_ == '\0')

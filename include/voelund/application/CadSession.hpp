@@ -2,25 +2,6 @@
 // Copyright (C) 2026 Eduard Hart
 
 #pragma once
-#include <voelund/application/CommandTransaction.hpp>
-#include <voelund/application/ExtrusionSelectionState.hpp>
-#include <voelund/application/FeatureRuntimeState.hpp>
-#include <voelund/application/FieldBindingRequest.hpp>
-#include <voelund/application/SceneStatus.hpp>
-#include <voelund/application/SketchReferenceInspection.hpp>
-#include <voelund/application/SketchSupportProjection.hpp>
-#include <voelund/application/StepExchangeResult.hpp>
-
-#include <voelund/document/DocumentTransaction.hpp>
-#include <voelund/document/IdentifiedDocumentSnapshot.hpp>
-#include <voelund/document/LegacyDocumentImporter.hpp>
-#include <voelund/document/ModelDocument.hpp>
-#include <voelund/features/FeatureGraph.hpp>
-#include <voelund/features/SketchEvaluation.hpp>
-#include <voelund/features/SketchRegionIdentity.hpp>
-#include <voelund/features/SketchSupportBinding.hpp>
-#include <voelund/kernel/StepExchange.hpp>
-
 #include <array>
 #include <filesystem>
 #include <functional>
@@ -30,7 +11,23 @@
 #include <string>
 #include <string_view>
 #include <vector>
-
+#include <voelund/application/CommandTransaction.hpp>
+#include <voelund/application/ExtrusionSelectionState.hpp>
+#include <voelund/application/FeatureRuntimeState.hpp>
+#include <voelund/application/FieldBindingRequest.hpp>
+#include <voelund/application/SceneStatus.hpp>
+#include <voelund/application/SketchReferenceInspection.hpp>
+#include <voelund/application/SketchSupportProjection.hpp>
+#include <voelund/application/StepExchangeResult.hpp>
+#include <voelund/document/DocumentTransaction.hpp>
+#include <voelund/document/IdentifiedDocumentSnapshot.hpp>
+#include <voelund/document/LegacyDocumentImporter.hpp>
+#include <voelund/document/ModelDocument.hpp>
+#include <voelund/features/FeatureGraph.hpp>
+#include <voelund/features/SketchEvaluation.hpp>
+#include <voelund/features/SketchRegionIdentity.hpp>
+#include <voelund/features/SketchSupportBinding.hpp>
+#include <voelund/kernel/StepExchange.hpp>
 namespace voelund::application {
 struct CreateMirrorAction;
 struct CreateSplitAction;
@@ -163,8 +160,10 @@ class CadSession final {
     supportFaces(document::FeatureId support) const;
     [[nodiscard]] document::SketchParameters
     sketchOnFace(document::FeatureId support, const features::SupportOrigin& face) const;
-    // T03: a face of `support`'s current result as a stable reference (e.g. an extrusion's
-    // end face), from a named origin or from a picked face. Throws std::invalid_argument.
+    // T03: a face of `support`'s result as a stable reference, from a name or a pick. Throws
+    // I04: the stable name of any current face, planar or not.
+    [[nodiscard]] std::optional<document::SubshapeOrigin>
+    faceOrigin(document::FeatureId support, const TopoDS_Shape& face) const;
     [[nodiscard]] document::BodyFaceReference
     faceReference(document::FeatureId support, const features::SupportOrigin& face) const;
     [[nodiscard]] document::BodyFaceReference faceReference(document::FeatureId support,
@@ -354,10 +353,12 @@ class CadSession final {
     editMoveParameters(document::FeatureId featureId, const document::MoveParameters& parameters,
                        ErrorDisposition disposition = ErrorDisposition::reject);
     [[nodiscard]] document::MoveParameters moveParameters(document::FeatureId featureId) const;
-    // M17 (CadSessionStep.cpp): a STEP file as one import feature, one undo step.
-    [[nodiscard]] StepImportResult importStep(const std::filesystem::path& path);
-    // M18: a STEP file opened as a new document with its import; without a solid nothing.
-    [[nodiscard]] StepImportResult openStep(const std::filesystem::path& path);
+    // M17 (CadSessionStep.cpp): a STEP file as one import feature, one undo step; M18: opened as a
+    // new document, without a solid nothing. I02: `read` when it was read elsewhere (a thread).
+    [[nodiscard]] StepImportResult importStep(const std::filesystem::path& path,
+                                              std::optional<kernel::StepImport> read = {});
+    [[nodiscard]] StepImportResult openStep(const std::filesystem::path& path,
+                                            std::optional<kernel::StepImport> read = {});
     // N02: bodies' solids for the clipboard; a paste adds a fixed copy "Kopie N" (one step).
     [[nodiscard]] std::vector<document::ImportedSolid>
     copyBodies(std::span<const document::BodyId> bodies) const;
@@ -576,7 +577,6 @@ class CadSession final {
     [[nodiscard]] std::string serializedDocument() const;
     void loadFrom(std::istream& input, std::filesystem::path file, bool keepCleanState,
                   std::optional<document::DocumentId> expected = std::nullopt);
-
     document::ModelDocument document_;
     features::FeatureGraph featureGraph_;
     std::shared_ptr<const features::FeatureGraphEvaluation> evaluation_;

@@ -6,6 +6,17 @@ Versionsregeln: [Versionierung und Releases](docs/versioning.md).
 
 ## [Unreleased]
 
+### Hinzugefügt
+
+- **STEP:** Dateien lassen sich ins Fenster ziehen. Große Dateien werden im Hintergrund gelesen, mit Fortschritt und Abbrechen. Bis zu 10.000 Volumenkörper je Import.
+- **Fläche versetzen und löschen** nehmen jetzt auch gekrümmte Flächen an: Eine Bohrungswand ändert den Durchmesser, eine Ebene nimmt tangentiale Verrundungen mit.
+
+### Behoben
+
+- Linux: Abstürze in OCCT bei Import, Flächenlöschen und Booleschen Operationen auf echten Teilen (OCCT wird jetzt mit `-O2` gebaut).
+- Fläche versetzen scheiterte auf echten Teilen fast immer.
+- Fläche löschen meldete manchmal Erfolg, ohne etwas zu ändern; das wird jetzt abgelehnt.
+
 ## [1.0.0-rc.1] – Releasekandidat, 30. Oktober 2026 (noch nicht veröffentlicht)
 
 Erster Kandidat der v1 für **Windows (x64) und Linux (x86_64)**. FreeBSD/Meridian ist

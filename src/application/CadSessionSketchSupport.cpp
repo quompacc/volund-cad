@@ -56,6 +56,23 @@ document::BodyFaceReference CadSession::faceReference(document::FeatureId suppor
         throw std::invalid_argument("Pick a planar face with a stable origin");
     return faceReference(support, found->origin);
 }
+std::optional<document::SubshapeOrigin> CadSession::faceOrigin(document::FeatureId support,
+                                                               const TopoDS_Shape& face) const {
+    if (!featureShape(support))
+        return std::nullopt;
+    const auto& outputs = evaluation_->result.features;
+    const auto output = std::ranges::find(outputs, support, &features::EvaluatedFeature::id);
+    std::optional<document::SubshapeOrigin> origin;
+    for (const auto& item : output->supportOrigins) {
+        if (item.secondary || item.coverage != kernel::HistoryCoverage::complete ||
+            std::ranges::none_of(item.faces, [&](const auto& each) { return each.IsSame(face); }))
+            continue;
+        if (origin)
+            return std::nullopt; // two names claim it: a binding would be ambiguous
+        origin = item.origin;
+    }
+    return origin;
+}
 document::SketchParameters CadSession::sketchOnFace(document::FeatureId support,
                                                     const features::SupportOrigin& face) const {
     const auto faces = supportFaces(support);

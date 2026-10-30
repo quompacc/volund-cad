@@ -13,6 +13,8 @@
 #include <IGESCAFControl_Writer.hxx>
 #include <IGESControl_Controller.hxx>
 #include <Interface_Static.hxx>
+#include <Message_ProgressIndicator.hxx>
+#include <Message_ProgressScope.hxx>
 #include <NCollection_Sequence.hxx>
 #include <Quantity_Color.hxx>
 #include <Quantity_TypeOfColor.hxx>
@@ -216,7 +218,26 @@ class Collector final {
 
 } // namespace
 
-StepImport readStep(const std::filesystem::path& path) {
+namespace {
+// I02: OCCT's translation progress for the caller. The parsing before it reports nothing, so the
+// translation counts for the last three quarters.
+class TranslationProgress final : public Message_ProgressIndicator {
+  public:
+    explicit TranslationProgress(const StepProgress& progress) : progress_(progress) {}
+    [[nodiscard]] bool stopped() const { return stopped_; }
+    bool UserBreak() override { return stopped_; }
+    void Show(const Message_ProgressScope&, bool) override {
+        if (progress_ && !progress_(0.25 + 0.75 * GetPosition()))
+            stopped_ = true;
+    }
+
+  private:
+    const StepProgress& progress_;
+    bool stopped_{false};
+};
+} // namespace
+
+StepImport readStep(const std::filesystem::path& path, const StepProgress& progress) {
     StepImport result;
     const auto fail = [&](StepImportError error, std::string message) {
         result.solids.clear();
@@ -228,6 +249,7 @@ StepImport readStep(const std::filesystem::path& path) {
     if (!stream)
         return fail(StepImportError::unreadable, "The file cannot be opened");
     const std::scoped_lock lock(stepMutex());
+    const occ::handle<TranslationProgress> translation = new TranslationProgress(progress);
     try {
         XcafDocument document;
         STEPCAFControl_Reader reader;
@@ -240,7 +262,10 @@ StepImport readStep(const std::filesystem::path& path) {
         reader.ChangeReader().FileUnits(lengths, angles, solidAngles);
         if (!lengths.IsEmpty())
             result.sourceUnit = lengths.First().ToCString();
-        if (!reader.Transfer(document.get()))
+        const bool translated = reader.Transfer(document.get(), translation->Start());
+        if (translation->stopped())
+            return fail(StepImportError::cancelled, "The import was cancelled");
+        if (!translated)
             return fail(StepImportError::unreadable, "The STEP data cannot be translated");
         NCollection_Sequence<TDF_Label> roots;
         document.shapes()->GetFreeShapes(roots);

@@ -180,6 +180,11 @@ void CadViewport::setPlanarFaceSelectionHandler(
     impl_->planarFaceSelectionHandler = std::move(handler);
 }
 
+void CadViewport::setCurvedFaceSelectionHandler(
+    std::function<void(const CurvedFaceSelection&)> handler) {
+    impl_->curvedFaceSelectionHandler = std::move(handler);
+}
+
 void CadViewport::setSketchEditorPreviewHandler(
     std::function<void(const std::optional<SketchElementIntent>&)> handler) {
     impl_->sketchEditorPreviewHandler = std::move(handler);

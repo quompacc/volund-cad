@@ -54,7 +54,8 @@ bool MainWindow::toolTakesFace(const viewport::PlanarFaceSelection& selection) {
     const std::pair<bool, std::function<void()>> pickers[]{
         {impl_->holeTool->isActive(), [&] { impl_->holeTool->place(selection); }},    // M08
         {impl_->shellTool->isActive(), [&] { impl_->shellTool->picked(selection); }}, // M22
-        {impl_->faceEditTool->isActive(), [&] { impl_->faceEditTool->picked(selection); }},
+        {impl_->faceEditTool->isActive(),
+         [&] { impl_->faceEditTool->picked(selection.bodyId, selection.selectedFace); }},
         {impl_->constructionTool->isActive(),
          [&] { impl_->constructionTool->picked(selection); }}, // N13b: a midplane's face
         {impl_->draftTool->isActive(), [&] { impl_->draftTool->picked(selection); }},   // M25
@@ -91,14 +92,42 @@ void MainWindow::pickPlanarFace(const viewport::PlanarFaceSelection& selection) 
     }
     impl_->selectedDatum.reset();
     impl_->selectedBody.reset();
+    impl_->selectedCurvedFace.reset();
     if (impl_->session.sceneStatus().isCurrent()) {
         impl_->selectedPlanarFace = selection;
         statusBar()->showMessage(tr("Ebene Fläche gewählt"), 2000);
     } else {
-        impl_->selectedPlanarFace.reset();
+        impl_->clearFacePicks();
         statusBar()->showMessage(tr("Repariere das Modell, bevor du Geometrie wählst"), 3000);
     }
     syncShell();
+}
+
+// I04: a hole wall or rounding: only the face tool works on it, the others want a plane.
+void MainWindow::pickCurvedFace(const viewport::CurvedFaceSelection& selection) {
+    if (impl_->faceEditTool->isActive()) {
+        impl_->faceEditTool->picked(selection.bodyId, selection.face);
+        return;
+    }
+    if (impl_->shell().toolBlocksCommands() ||
+        (impl_->viewport->pressModifiers() & Qt::ControlModifier))
+        return;
+    clearEdgeSelection();
+    impl_->selectedDatum.reset();
+    impl_->selectedBody.reset();
+    impl_->selectedPlanarFace.reset();
+    if (impl_->session.sceneStatus().isCurrent()) {
+        impl_->selectedCurvedFace = selection;
+        statusBar()->showMessage(tr("Gekrümmte Fläche gewählt"), 2000);
+    }
+    syncShell();
+}
+
+void MainWindow::connectFacePicks() {
+    impl_->viewport->setPlanarFaceSelectionHandler(
+        [this](const viewport::PlanarFaceSelection& selection) { pickPlanarFace(selection); });
+    impl_->viewport->setCurvedFaceSelectionHandler(
+        [this](const viewport::CurvedFaceSelection& selection) { pickCurvedFace(selection); });
 }
 
 void MainWindow::connectInteractions() {
@@ -121,8 +150,7 @@ void MainWindow::connectInteractions() {
         if (impl_->combineTool->isActive()) // M21: a click adds or removes a tool body
             impl_->combineTool->picked(document::FeatureId{id});
     });
-    impl_->viewport->setPlanarFaceSelectionHandler(
-        [this](const viewport::PlanarFaceSelection& selection) { pickPlanarFace(selection); });
+    connectFacePicks();
     impl_->viewport->setBasePlaneSelectionHandler(
         [this](viewport::BasePlane plane) { selectBasePlane(static_cast<int>(plane)); });
     impl_->viewport->setDatumSelectionHandler([this](std::uint64_t id) { // M19
@@ -130,7 +158,7 @@ void MainWindow::connectInteractions() {
             return;
         impl_->selectedDatum.reset();
         impl_->selectedBody.reset();
-        impl_->selectedPlanarFace.reset();
+        impl_->clearFacePicks();
         selectFeature(id);
         syncShell();
     });
@@ -146,7 +174,7 @@ void MainWindow::connectInteractions() {
         clearGroups();
         impl_->selectedDatum.reset();
         impl_->selectedBody.reset();
-        impl_->selectedPlanarFace.reset();
+        impl_->clearFacePicks();
         impl_->session.clearSelection();
         syncModelTree();
         syncTimeline();
@@ -181,7 +209,7 @@ void MainWindow::connectInteractions() {
         syncSketchPresentation();
         impl_->selectedDatum.reset();
         impl_->selectedBody.reset();
-        impl_->selectedPlanarFace.reset();
+        impl_->clearFacePicks();
         impl_->modelTree->selectFeature(*impl_->session.selectedFeature());
         syncTimeline();
         syncProperties();

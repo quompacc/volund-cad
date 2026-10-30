@@ -24,28 +24,28 @@ namespace voelund::desktop {
 
 class ToolPanelHost;
 
-// N13a (agent decision 2026-10-29, as Fusion's "Offset Face" and "Delete"): the picked planar
-// face, and further faces of the body clicked while the panel is open, are moved by "Abstand"
-// along their normals or removed with the gap healed ("Art"). A click on a chosen face takes it
-// out again. Bearbeiten and the timeline reopen it.
+// N13a (agent decision 2026-10-29, as Fusion's "Offset Face" and "Delete"), I04 any face: the
+// picked face, and further faces of the body clicked while the panel is open, are moved by
+// "Abstand" along their normals or removed with the gap healed ("Art"). A click on a chosen face
+// takes it out again. Bearbeiten and the timeline reopen it.
 class FaceEditToolController final {
   public:
     FaceEditToolController(application::CadSession& session, ToolPanelHost& panel,
                            std::function<void()> sceneChanged,
                            std::function<void(const QString&)> statusChanged);
 
-    void begin(const viewport::PlanarFaceSelection& face, document::FaceEditMode mode);
+    void begin(std::uint64_t body, const TopoDS_Shape& face, document::FaceEditMode mode);
     void beginEdit(document::FeatureId edit);
     [[nodiscard]] bool isActive() const noexcept { return active_; }
-    // A planar face picked while the panel is open: chosen, or taken out again.
-    void picked(const viewport::PlanarFaceSelection& face);
+    // A face picked while the panel is open: chosen, or taken out again.
+    void picked(std::uint64_t body, const TopoDS_Shape& face);
     void cancel();
     void
     setPreviewHandler(std::function<void(const std::vector<features::EvaluatedBody>*)> handler);
 
   private:
     [[nodiscard]] std::optional<document::SubshapeOrigin>
-    faceOrigin(const viewport::PlanarFaceSelection& face) const;
+    faceOrigin(std::uint64_t body, const TopoDS_Shape& face) const;
     void open();
     void preview();
     void showModel();

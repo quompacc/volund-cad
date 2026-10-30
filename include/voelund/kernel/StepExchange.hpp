@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
+#include <functional>
 #include <optional>
 #include <span>
 #include <string>
@@ -27,7 +28,8 @@ struct StepSolid final {
 
 enum class StepImportError {
     unreadable, // no STEP file, or one OCCT cannot parse or transfer
-    noSolids    // read, but nothing in it is a valid solid
+    noSolids,   // read, but nothing in it is a valid solid
+    cancelled   // I02: the progress callback asked to stop
 };
 struct StepImport final {
     std::vector<StepSolid> solids;
@@ -37,7 +39,11 @@ struct StepImport final {
     std::optional<StepImportError> error{};
     std::string message{};
 };
-[[nodiscard]] StepImport readStep(const std::filesystem::path& path);
+// I02: told how far the read is (0..1) from time to time, on the reading thread; false stops it.
+// Parsing the text cannot stop, the translation after it can.
+using StepProgress = std::function<bool(double)>;
+[[nodiscard]] StepImport readStep(const std::filesystem::path& path,
+                                  const StepProgress& progress = {});
 
 enum class StepLengthUnit { millimetre, inch };
 enum class StepExportError {

@@ -187,6 +187,11 @@ struct PlanarReferenceSegment final {
     std::uint64_t referenceId{0};
 };
 
+// I04: a picked face that is not planar (a hole wall, a rounding).
+struct CurvedFaceSelection final {
+    std::uint64_t bodyId;
+    TopoDS_Shape face;
+};
 struct PlanarFaceSelection final {
     std::uint64_t bodyId;
     double originX;
@@ -361,6 +366,7 @@ class CadViewport final : public CadViewportBase {
     // above also runs on press so that a drag can start.
     void setBodyClickHandler(std::function<void(std::uint64_t)> handler);
     void setPlanarFaceSelectionHandler(std::function<void(const PlanarFaceSelection&)> handler);
+    void setCurvedFaceSelectionHandler(std::function<void(const CurvedFaceSelection&)> handler);
     void setBasePlaneSelectionHandler(std::function<void(BasePlane)> handler);
     // M19: construction planes and axes; a click reports the feature.
     void setDatums(std::span<const SceneDatum> datums);

@@ -9,7 +9,9 @@ path and dirty state remains D03.
 
 | Bound | Current limit |
 |---|---:|
-| Source bytes, including whitespace and line endings | 64 MiB |
+| Source bytes of the old text format, including whitespace and line endings | 64 MiB |
+| Bytes of a native document (I02; the imported solids up to 960 MiB) | 1 GiB |
+| Solids per import (I02) | 10,000 |
 | Bytes per line, excluding LF, including optional CR | 64 KiB |
 | Decoded feature-name bytes | 4096 |
 | Feature count | 10,000 |
