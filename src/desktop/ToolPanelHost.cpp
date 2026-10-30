@@ -110,7 +110,7 @@ ToolPanelHost::ToolPanelHost(QWidget* host)
     guidance_ = new QLabel(content_);
     guidance_->setWordWrap(true);
     guidance_->setObjectName(QStringLiteral("toolGuidance"));
-    parameterContainer_ = new QGroupBox(tr("Aktive Werte"), content_);
+    parameterContainer_ = new QGroupBox(tr("Einstellungen"), content_);
     parameterLayout_ = new QFormLayout(parameterContainer_);
     parameterLayout_->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
     actionTabs_ = new QTabWidget(content_);
@@ -420,11 +420,12 @@ void ToolPanelHost::setToolsInRail(bool inRail) {
 }
 
 void ToolPanelHost::syncParameterGroup() {
-    // Hide "Aktive Werte" when none of its rows is shown, so the card stays compact.
+    // Hide the group when none of its rows is shown, so the card stays compact.
     bool any = toolChoices_ != nullptr && !toolsInRail_;
     for (const auto& [id, input] : lengthInputs_)
         any = any || !input->isHidden();
-    any = any || !choiceInputs_.empty();
+    for (const auto& [id, input] : choiceInputs_)
+        any = any || !input->isHidden();
     parameterContainer_->setVisible(any);
     refit();
 }

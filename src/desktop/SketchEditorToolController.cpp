@@ -342,6 +342,7 @@ void SketchEditorToolController::setTool(int index) {
     editor_->setTool(applicationTool(index));
     toolIndex_ = index;
     dimensionAnchor_.reset();
+    dimensionFirst_.reset();
     bsplinePoles_.clear();
     setProjecting(false);
     problemElements_.clear(); // S13: red marks belong to the last refused edit
@@ -387,9 +388,14 @@ void SketchEditorToolController::updatePreview(
 bool SketchEditorToolController::selectElement(const viewport::SketchSelectionIntent& intent) {
     if (editor_ && toolIndex_ == dimensionTool)
         return pickForDimension(intent);
-    if (!editor_ ||
-        !editor_->selectNearestReference(document::SketchElementId{intent.elementId},
-                                         {intent.localX, intent.localY}, intent.additive))
+    if (!editor_)
+        return false;
+    const auto point =
+        intent.point
+            ? std::optional{document::SketchPoint{intent.point->first, intent.point->second}}
+            : std::nullopt;
+    if (!editor_->selectPick(document::SketchElementId{intent.elementId},
+                             {intent.localX, intent.localY}, point, intent.additive))
         return false;
     editor_->clearPreview(); // S09: an offset preview belongs to the previous selection
     problemElements_.clear();
@@ -398,19 +404,19 @@ bool SketchEditorToolController::selectElement(const viewport::SketchSelectionIn
     syncConstraintState();
     refreshPresentation();
     const auto references = editor_->selectedReferences();
-    const char* pointName =
-        references.empty()                                                ? "element"
-        : references.back().point == document::SketchPointPosition::start ? "start point"
-        : references.back().point == document::SketchPointPosition::end   ? "end point"
-                                                                          : "center point";
-    statusChanged_(QObject::tr("Skizze %1 gewählt (%2 Referenz(en))")
-                       .arg(QObject::tr(pointName))
-                       .arg(references.size()));
+    if (references.size() > 1)
+        statusChanged_(
+            QObject::tr("%n Bezüge gewählt", nullptr, static_cast<int>(references.size())));
+    else
+        statusChanged_(editor_->pickedPoints().empty()
+                           ? QObject::tr("Element gewählt: ziehen verschiebt es")
+                           : QObject::tr("Punkt gewählt: ziehen verschiebt ihn"));
     return true;
 }
 
 void SketchEditorToolController::clearSelection() {
     dimensionAnchor_.reset();
+    dimensionFirst_.reset();
     if (!editor_)
         return;
     editor_->clearSelection();

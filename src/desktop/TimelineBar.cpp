@@ -137,7 +137,7 @@ class TimelineTrack final : public QWidget {
         painter.setPen(QPen(endColor, 3, Qt::SolidLine, Qt::RoundCap));
         painter.drawLine(QPointF(endX, y - 9), QPointF(endX, y + 9));
         QFont small = font();
-        small.setPixelSize(10);
+        small.setPixelSize(12);
         painter.setFont(small);
         painter.setPen(number_);
         for (std::size_t index = 0; index < chips.size(); ++index) {

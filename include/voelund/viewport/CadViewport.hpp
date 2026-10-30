@@ -127,6 +127,8 @@ struct SketchSelectionIntent final {
     double localX;
     double localY;
     bool additive;
+    // VP02: the corner or center the click means (judged in pixels), in sketch coordinates.
+    std::optional<std::pair<double, double>> point{};
 };
 
 // W12 (as in Fusion and FreeCAD): a dimension drawn as in a technical drawing, in world
@@ -333,6 +335,8 @@ class CadViewport final : public CadViewportBase {
     void setShape(const TopoDS_Shape& shape);
     void setBodies(std::span<const SceneBody> bodies);
     void setSketchRegions(std::span<const SceneSketchRegion> regions); // W15
+    // VP02: points picked as points, marked on the view (world coordinates).
+    void setMarkedSketchPoints(std::vector<SceneSketchPoint> points);
     void setSketchElements(std::span<const SceneSketchElement> elements,
                            std::optional<std::uint64_t> selectedId = std::nullopt);
     void

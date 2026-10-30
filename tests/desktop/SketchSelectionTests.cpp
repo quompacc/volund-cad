@@ -189,7 +189,8 @@ void run() {
     send(*viewport, QEvent::MouseButtonRelease, middle, Qt::NoButton);
     test::render(*viewport);
     settle();
-    require(selectedCount(*viewport) == 1 && status(window).startsWith(QStringLiteral("Skizze")),
+    require(selectedCount(*viewport) == 1 &&
+                status(window).startsWith(QStringLiteral("Element gewählt")),
             "An element wins over its label, got " + status(window).toStdString());
     symbolSelection(window, session, *viewport);
     std::cout << "PASS sketch selection: window, crossing, Ctrl, labels, Delete\n";

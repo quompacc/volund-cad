@@ -166,7 +166,7 @@ using rail::rowWidth;
 using rail::shownWidth;
 
 constexpr int barPadding = 7;
-constexpr int pillHeight = 34;
+constexpr int pillHeight = 38, sketchButton = 46; // VP04
 
 } // namespace
 
@@ -217,7 +217,7 @@ ToolRail::ToolRail(viewport::CadViewport& viewport, const CommandActions& comman
         auto* button = new PillButton(solidPage_);
         button->setProperty("railPill", true);
         button->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-        button->setIconSize(QSize(18, 18));
+        button->setIconSize(QSize(22, 22));
         button->setFixedHeight(pillHeight);
         layout->addWidget(button);
         if (members[group].size() == 1) { // a group of one is its command
@@ -251,7 +251,7 @@ ToolRail::ToolRail(viewport::CadViewport& viewport, const CommandActions& comman
             auto* command = new QToolButton(page);
             command->setDefaultAction(action);
             command->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-            command->setIconSize(QSize(20, 20));
+            command->setIconSize(QSize(24, 24));
             command->setMinimumWidth(184);
             command->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
             command->setAutoRaise(true);
@@ -554,8 +554,8 @@ void ToolRail::buildSketchPage(const std::vector<SketchToolActions::Section>& se
             button->setAccessibleDescription(section.title);
             button->setDefaultAction(family.front());
             button->setToolButtonStyle(Qt::ToolButtonIconOnly);
-            button->setIconSize(QSize(20, 20));
-            button->setFixedSize(family.size() > 1 ? 46 : pillHeight, pillHeight);
+            button->setIconSize(QSize(30, 30));
+            button->setFixedSize(family.size() > 1 ? 62 : sketchButton, sketchButton);
             button->setChevronInset(7); // middle of the 14 px menu part
             if (family.size() > 1) {
                 auto* menu = new QMenu(button);

@@ -254,7 +254,7 @@ void ViewCube::paintEvent(QPaintEvent*) {
     painter.drawPath(house);
     buttonFrame(fitBox, Button::fit);
     QFont buttonFont(uiFontFamily());
-    buttonFont.setPixelSize(11);
+    buttonFont.setPixelSize(13);
     buttonFont.setWeight(QFont::DemiBold);
     painter.setFont(buttonFont);
     painter.drawText(fitBox, Qt::AlignCenter, tr("Alles"));

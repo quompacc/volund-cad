@@ -135,6 +135,7 @@ bool SketchEditorSession::selectNearestReference(document::SketchElementId eleme
         return false;
     selectionPoint_ = position;
     selectedConstraint_.reset();
+    wholePick_ = false;
     const auto nearest = detail::nearestReferencePoint(match->geometry, position);
     if (!nearest && !additive)
         return selectElement(elementId);
@@ -171,13 +172,31 @@ bool SketchEditorSession::translateSelected(double deltaX, double deltaY) {
     if (match == elements_.values.end())
         return false;
     Rollback rollback(*this);
-    const bool pointSelection =
-        selectedReferences_.size() == 1 && selectedReferences_.front().element == *selectedElement_;
+    const bool pointSelection = selectedReferences_.size() == 1 &&
+                                selectedReferences_.front().element == *selectedElement_ &&
+                                !wholePick_;
+    if (deltaX == 0.0 && deltaY == 0.0)
+        return false;
+    // VP01: what is dragged is held where it went; else the relations pull it straight back.
+    std::vector<features::SketchDragHold> holds;
+    const auto hold = [&](const document::SketchGeometryReference& reference,
+                          const document::SketchGeometry& geometry) {
+        if (document::isSketchPatternInstance(patterns_, reference.element) ||
+            std::ranges::find(projections_, reference.element,
+                              &document::SketchProjection::element) != projections_.end())
+            return;
+        if (const auto at = document::sketchReferencePoint(geometry, reference.point))
+            holds.push_back({reference, at->x, at->y});
+    };
     if (pointSelection) {
         // S08: every variant a point reference can name moves; anything else is refused.
+        // VP01: the solver takes the point there. Moved here, a line bound to stay horizontal
+        // would already be invalid, and the corner of a rectangle could never be dragged.
         const auto reference = selectedReferences_.front();
-        if (!detail::moveReferencePoint(match->geometry, reference.point, deltaX, deltaY))
+        auto moved = match->geometry;
+        if (!detail::moveReferencePoint(moved, reference.point, deltaX, deltaY))
             return false;
+        hold(reference, moved);
     } else {
         // S08: a selection over several elements moves all of them as a whole.
         std::vector<document::SketchElementId> ids{*selectedElement_};
@@ -194,9 +213,11 @@ bool SketchEditorSession::translateSelected(double deltaX, double deltaY) {
                 detail::transformedCopy(element->geometry,
                                         detail::PlanarTransform::translation(deltaX, deltaY))
                     .elements.front();
+            for (const auto point : detail::dragPoints(element->geometry))
+                hold({id, point}, element->geometry);
         }
     }
-    if ((deltaX == 0.0 && deltaY == 0.0) || !solveConstraints())
+    if (!solveConstraints(holds))
         return false;
     rollback.keep();
     return true;

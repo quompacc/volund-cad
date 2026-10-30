@@ -240,6 +240,10 @@ class CadViewportScene {
 
         for (const SceneBody& body : pendingBodies) {
             occ::handle<AIS_Shape> presentation = new AIS_Shape(body.shape);
+            // VP05: no shine, else a flat face looking at the camera burns out white.
+            Graphic3d_MaterialAspect material(Graphic3d_NameOfMaterial_Brass); // the default
+            material.SetSpecularColor(Quantity_Color(0.04, 0.04, 0.04, Quantity_TOC_RGB));
+            presentation->SetMaterial(material);
             presentation->SetColor(bodyColor(body.color));
             if (body.stale)
                 presentation->SetTransparency(0.6);
@@ -368,6 +372,15 @@ class CadViewportScene {
         }
         return {};
     }
+
+    // VP02 (CadViewportInput.cpp): the corner or center within 12 logical pixels of a framebuffer
+    // point, with its logical pixel; lighting it up; the element a press takes; its pick.
+    [[nodiscard]] std::optional<std::pair<SceneSketchPoint, QPointF>>
+    sketchPointNear(QPoint framebuffer, double ratio) const;
+    void hoverSketchPoint(QPoint framebuffer, double ratio);
+    [[nodiscard]] std::optional<std::uint64_t>
+    pressedSketchElement(std::optional<std::uint64_t> detected, QPoint framebuffer, double ratio);
+    void notifySketchPick(std::uint64_t element, QPoint framebuffer, bool additive, double ratio);
 
     // V01: the topmost sketch element, or one behind a base plane (planes never steal a
     // click from the sketch); a body in front keeps the click.

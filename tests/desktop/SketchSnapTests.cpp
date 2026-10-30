@@ -11,6 +11,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QStatusBar>
+#include <QToolButton>
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -175,6 +176,9 @@ void relationsSwitch() {
     test::render(*viewport);
     auto* overlay = viewport->findChild<QWidget*>(QStringLiteral("sketchSnapOverlay"));
     auto* panel = window.findChild<QWidget*>(QStringLiteral("activeToolPanel"));
+    // VP03: the view switches wait behind the details.
+    window.findChild<QToolButton*>(QStringLiteral("sketchDetailsToggle"))->setChecked(true);
+    settle();
     QComboBox* relations = nullptr;
     for (auto* box : panel->findChildren<QComboBox*>(QStringLiteral("toolChoice_relations")))
         if (box->isVisible())

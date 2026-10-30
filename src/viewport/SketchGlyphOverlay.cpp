@@ -197,8 +197,22 @@ void SketchGlyphOverlay::setValues(std::vector<Value> values) {
     showWhenUsed();
 }
 
+void SketchGlyphOverlay::setHoveredPoint(std::optional<QPointF> point) {
+    if (hoveredPoint_ == point)
+        return;
+    hoveredPoint_ = point;
+    setProperty("hoveredPoint", point ? QVariant(*point) : QVariant());
+    showWhenUsed();
+}
+
+void SketchGlyphOverlay::setMarkedPoints(std::vector<std::array<double, 3>> points) {
+    markedPoints_ = std::move(points);
+    setProperty("markedPoints", static_cast<int>(markedPoints_.size()));
+    showWhenUsed();
+}
+
 void SketchGlyphOverlay::showWhenUsed() {
-    setVisible(!glyphs_.empty() || !values_.empty());
+    setVisible(!glyphs_.empty() || !values_.empty() || hoveredPoint_ || !markedPoints_.empty());
     lower(); // over the view, under its cards (tree, panels, timeline)
     update();
 }
@@ -317,6 +331,18 @@ void SketchGlyphOverlay::paintEvent(QPaintEvent*) {
     setProperty("valueBoxes", values);
     for (const Box& placed : boxes_)
         paintBox(painter, glyphs_[placed.glyph], placed);
+    // VP02: filled dots, big enough to see which corner a click will take.
+    const auto dot = [&](QPointF at, double radius) {
+        painter.setPen(QPen(panel_, 2.0));
+        painter.setBrush(accent_);
+        painter.drawEllipse(at, radius, radius);
+    };
+    if (projector_)
+        for (const auto& point : markedPoints_)
+            if (const auto at = projector_(point[0], point[1], point[2]))
+                dot(*at, 7.0);
+    if (hoveredPoint_)
+        dot(*hoveredPoint_, 8.0);
 }
 
 void SketchGlyphOverlay::paintBox(QPainter& painter, const Glyph& glyph, const Box& placed) const {

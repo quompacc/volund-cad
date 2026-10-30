@@ -8,8 +8,24 @@
 #include <QObject>
 
 namespace voelund::desktop {
+namespace {
+
+// VP03: what is missing, in words; blue shows where, dragging shows how it can move.
+QString missingGuidance(const application::SketchEditorSession& editor) {
+    return editor.onlyPositionMissing()
+               ? QObject::tr("Größe und Form stehen, es fehlt nur noch die Lage. Klicke einen "
+                             "Eckpunkt an und fixiere ihn mit dem Schloss oben.")
+               : QObject::tr("Blau ist noch nicht festgelegt. Zieh daran, dann siehst du, was sich "
+                             "noch bewegen kann. Festlegen mit Maß (D) oder Beziehung.");
+}
+
+} // namespace
 
 // W19: the overview under the status line, made when the sketch's panel first needs it.
+std::vector<document::SketchGeometryReference> SketchEditorToolController::pickedPoints() const {
+    return editor_ ? editor_->pickedPoints() : std::vector<document::SketchGeometryReference>{};
+}
+
 void SketchEditorToolController::syncOverview() {
     if (!editor_ || !panel_.isActive())
         return;
@@ -19,22 +35,38 @@ void SketchEditorToolController::syncOverview() {
             {[this](document::SketchConstraintId id) { selectConstraint(id.value()); },
              [this](document::SketchElementId id) { selectElements({id.value()}, false); },
              [this] { tieLooseEnds(); },
-             [this](bool construction) { chooseLineType(construction); }});
+             [this](bool construction) { chooseLineType(construction); },
+             [this](bool open) { showDetails(open); }});
         panel_.setSection(overview_);
+        showDetails(false);
     }
     const auto relations = editor_->evaluatedConstraints();
-    const auto& solved = editor_->lastSolveResult();
     std::vector<document::SketchElementId> selected;
     for (const auto& reference : editor_->selectedReferences())
         selected.push_back(reference.element);
     if (const auto element = editor_->selectedElement())
         selected.push_back(*element);
-    overview_->display(
-        {editor_->elements(), relations,
-         solved.status == features::SketchSolveStatus::success ? solved.degreesOfFreedom : -1,
-         features::sketchLooseEnds(editor_->elements(), editor_->constraints()),
-         editor_->selectedConstraint(), selected,
-         selected.empty() ? drawConstruction_ : editor_->isSelectedConstruction()});
+    overview_->display({editor_->elements(), relations,
+                        features::sketchLooseEnds(editor_->elements(), editor_->constraints()),
+                        editor_->selectedConstraint(), selected,
+                        selected.empty() ? drawConstruction_ : editor_->isSelectedConstruction()});
+}
+
+// VP03 (user review 2026-10-30): the card shows the state and what is missing; lists and view
+// switches wait behind "Details".
+void SketchEditorToolController::showDetails(bool open) {
+    detailsOpen_ = open;
+    syncSelectedDimensionInputs();
+    for (const char* id : {"relations", "show_grid", "show_dimensions", "show_projected"})
+        panel_.setChoiceVisible(id, open);
+}
+
+// VP03: an operation with values shows them, so they can be seen and changed.
+void SketchEditorToolController::openValuesOf(const std::string& operation) {
+    for (const char* withValues :
+         {"rotate", "scale", "offset", "linear_pattern", "circular_pattern", "edit_pattern"})
+        if (operation == withValues && !overview_.isNull())
+            overview_->openDetails();
 }
 
 // W20: the drawing mode for new elements, shown in the card's line type row.
@@ -156,9 +188,7 @@ void SketchEditorToolController::syncConstraintState() {
         panel_.setGuidance(QObject::tr("Alle Elemente sind festgelegt (dunkel)."));
     } else {
         panel_.setStatus(QObject::tr("Freiheitsgrade: %1").arg(result.degreesOfFreedom));
-        panel_.setGuidance(QObject::tr("Blaue Elemente sind noch frei. Bemaßungen und "
-                                       "Beziehungen legen sie fest; Strg-Klick wählt mehrere "
-                                       "Bezüge."));
+        panel_.setGuidance(missingGuidance(*editor_));
     }
     syncOverview();
 }

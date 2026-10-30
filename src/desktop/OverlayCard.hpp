@@ -24,7 +24,7 @@ inline constexpr int columnTop = margin + barHeight + gap;
 inline constexpr int cubeTop = margin + barHeight + 2;
 inline constexpr int cubeHeight = 178;
 inline constexpr int rightColumnTop = cubeTop + cubeHeight + 2;
-inline constexpr int rightColumnWidth = 344; // tool panel card
+inline constexpr int rightColumnWidth = 390; // tool panel card (VP04: room for its text)
 inline constexpr int timelineHeight = 60;
 // Kept free at the bottom of the left column: timeline, context bar and their gaps.
 inline constexpr int bottomBand = margin + timelineHeight + gap + 56 + gap;

@@ -16,22 +16,20 @@
 
 class QLabel;
 class QListWidget;
-class QProgressBar;
 class QPushButton;
 class QToolButton;
 
 namespace voelund::desktop {
 
 // W19 (user report 2026-10-25, after SolidCraft's palette and FreeCAD's lists): the sketch
-// card's overview under its status line. A bar shows how much of the sketch is determined;
-// loose ends are named, and ends lying on each other by position only are tied with one
-// button; the relations and elements are listed (folded), a click selects one in the sketch.
+// card's overview under its status line. Loose ends are named, and ends lying on each other by
+// position only are tied with one button. VP03 (user review 2026-10-30): relations, elements and
+// view switches are details, folded away; a click in a list selects in the sketch.
 class SketchOverview final : public QWidget {
   public:
     struct State final {
         std::span<const document::SketchElement> elements;
         std::span<const features::SketchConstraintAnnotation> relations;
-        int degreesOfFreedom; // -1 while the sketch does not solve
         features::SketchLooseEnds looseEnds;
         std::optional<document::SketchConstraintId> selectedRelation;
         std::vector<document::SketchElementId> selectedElements;
@@ -42,22 +40,23 @@ class SketchOverview final : public QWidget {
         std::function<void(document::SketchElementId)> elementPicked;
         std::function<void()> tie;
         std::function<void(bool construction)> lineType; // W20
+        std::function<void(bool open)> details;          // VP03: the card's view switches
     };
 
     SketchOverview(Handlers handlers, QWidget* parent = nullptr);
     void display(const State& state);
+    void openDetails();
 
   private:
     void fillRelations(const State& state);
     void fillElements(const State& state);
 
     Handlers handlers_;
-    QProgressBar* progress_{nullptr};
     QWidget* endsRow_{nullptr};
     QLabel* ends_{nullptr};
     QPushButton* tie_{nullptr};
-    QPushButton* normal_{nullptr};       // W20: line type
     QPushButton* construction_{nullptr}; // W20
+    QToolButton* detailsToggle_{nullptr};
     QToolButton* relationsToggle_{nullptr};
     QListWidget* relations_{nullptr};
     QToolButton* elementsToggle_{nullptr};

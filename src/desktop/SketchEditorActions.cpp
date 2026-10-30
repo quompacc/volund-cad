@@ -56,8 +56,10 @@ bool isEditOperation(const std::string& id) {
 void SketchEditorToolController::runAction(const std::string& id) {
     if (const auto relation = relationCommands().find(id); relation != relationCommands().end())
         return applyRelation(relation->second);
-    if (isEditOperation(id))
+    if (isEditOperation(id)) {
+        openValuesOf(id);
         return applyEditOperation(id);
+    }
     if (id == "horizontal")
         applyLineConstraint(document::SketchLineConstraint::horizontal);
     else if (id == "vertical")

@@ -206,6 +206,14 @@ void CadViewport::setSelectedSketchElement(std::optional<std::uint64_t> elementI
     });
 }
 
+void CadViewport::setMarkedSketchPoints(std::vector<SceneSketchPoint> points) {
+    std::vector<std::array<double, 3>> world;
+    world.reserve(points.size());
+    for (const SceneSketchPoint& point : points)
+        world.push_back({point.worldX, point.worldY, point.worldZ});
+    impl_->glyphOverlay->setMarkedPoints(std::move(world));
+}
+
 void CadViewport::setSelectedSketchElements(std::span<const std::uint64_t> elementIds) {
     performViewportOperation(*this, impl_->ready, [&] {
         impl_->selectedSketchElements.assign(elementIds.begin(), elementIds.end());

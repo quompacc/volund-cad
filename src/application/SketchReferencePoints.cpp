@@ -131,6 +131,14 @@ nearestReferencePoint(const document::SketchGeometry& geometry, document::Sketch
     return nearest;
 }
 
+std::vector<document::SketchPointPosition> dragPoints(const document::SketchGeometry& geometry) {
+    std::vector<Position> result;
+    for (const auto& [kind, point] :
+         std::visit([](const auto& value) { return candidates(value); }, geometry))
+        result.push_back(kind);
+    return result;
+}
+
 bool moveReferencePoint(document::SketchGeometry& geometry, document::SketchPointPosition point,
                         double dx, double dy) {
     return std::visit([&](auto& value) { return move(value, point, dx, dy); }, geometry);

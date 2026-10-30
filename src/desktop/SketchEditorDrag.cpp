@@ -28,6 +28,7 @@ void SketchEditorToolController::finishDrag() {
     if (!editor_ || !editor_->isDragging())
         return;
     editor_->endDrag();
+    syncConstraintState(); // OK is locked while a drag runs
     refreshPresentation();
 }
 
@@ -41,6 +42,11 @@ void SketchEditorToolController::translateFromViewport(double deltaX, double del
     panel_.setLengthValue("translation_y", translationY_);
     syncConstraintState();
     refreshPresentation();
+    if (editor_->lastSolveResult().degreesOfFreedom == 0) {
+        statusChanged_(QObject::tr("Alles ist festgelegt: Maß ändern oder Bedingung entfernen, "
+                                   "um es zu verschieben"));
+        return;
+    }
     statusChanged_(QObject::tr("Skizzenelement verschoben: ΔX %1 mm, ΔY %2 mm")
                        .arg(translationX_, 0, 'f', 3)
                        .arg(translationY_, 0, 'f', 3));

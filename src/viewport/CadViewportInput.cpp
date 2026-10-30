@@ -6,6 +6,8 @@
 #include <QDebug>
 #include <QKeyEvent>
 #include <StdSelect_ViewerSelector3d.hxx>
+#include <algorithm>
+#include <cmath>
 #include <gp_Pnt.hxx>
 #include <gp_Vec.hxx>
 #include <optional>
@@ -17,6 +19,71 @@
 #endif
 
 namespace voelund::viewport {
+
+std::optional<std::pair<SceneSketchPoint, QPointF>>
+CadViewportScene::sketchPointNear(QPoint framebuffer, double ratio) const {
+    std::optional<std::pair<SceneSketchPoint, QPointF>> nearest;
+    double best = 12.0 * ratio;
+    for (const SceneSketchElement& element : pendingSketchElements)
+        for (const SceneSketchPoint& point : element.points) {
+            // Midpoints are no reference of their own.
+            if (point.kind != SketchPointKind::start && point.kind != SketchPointKind::end &&
+                point.kind != SketchPointKind::center)
+                continue;
+            int x = 0, y = 0;
+            view->Convert(point.worldX, point.worldY, point.worldZ, x, y);
+            const double distance = std::hypot(x - framebuffer.x(), y - framebuffer.y());
+            if (distance <= best) {
+                best = distance;
+                nearest = std::pair{point, QPointF(x, y) / ratio};
+            }
+        }
+    return nearest;
+}
+
+void CadViewportScene::hoverSketchPoint(QPoint framebuffer, double ratio) {
+    const auto nearby =
+        sketchEditor.isDrawing() ? std::nullopt : sketchPointNear(framebuffer, ratio);
+    glyphOverlay->setHoveredPoint(nearby ? std::optional{nearby->second} : std::nullopt);
+}
+
+// A lit corner is taken even when the pointer is just off its lines; the light goes out, as
+// the point may move with the press.
+std::optional<std::uint64_t>
+CadViewportScene::pressedSketchElement(std::optional<std::uint64_t> detected, QPoint framebuffer,
+                                       double ratio) {
+    glyphOverlay->setHoveredPoint(std::nullopt);
+    if (detected)
+        return detected;
+    const auto nearby = sketchPointNear(framebuffer, ratio);
+    return nearby ? std::optional{nearby->first.elementId} : std::nullopt;
+}
+
+// The click stays where it was (trimming asks which side of it goes); the point it means is
+// judged in pixels, as the pointer's position is rounded to the grid. At a shared corner the
+// element under the pointer keeps the pick.
+void CadViewportScene::notifySketchPick(std::uint64_t element, QPoint framebuffer, bool additive,
+                                        double ratio) {
+    const auto local = sketchEditor.projectPoint(framebuffer.x(), framebuffer.y());
+    if (!sketchElementSelectionHandler || !local)
+        return;
+    SketchSelectionIntent intent{element, local->first, local->second, additive};
+    if (const auto nearby = sketchPointNear(framebuffer, ratio)) {
+        const SceneSketchPoint& point = nearby->first;
+        const auto own = std::ranges::find_if(pendingSketchElements, [&](const auto& candidate) {
+            return candidate.id == element &&
+                   std::ranges::any_of(candidate.points, [&](const SceneSketchPoint& other) {
+                       return other.kind != SketchPointKind::midpoint &&
+                              std::hypot(other.localX - point.localX, other.localY - point.localY) <
+                                  1.0e-9;
+                   });
+        });
+        if (own == pendingSketchElements.end())
+            intent.elementId = point.elementId;
+        intent.point = std::pair{point.localX, point.localY};
+    }
+    sketchElementSelectionHandler(intent);
+}
 
 void CadViewport::mouseMoveEvent(QMouseEvent* event) {
     performViewportOperation(*this, impl_->ready, [&] {
@@ -55,6 +122,7 @@ void CadViewport::mouseMoveEvent(QMouseEvent* event) {
             impl_->context->MoveTo(position.x(), position.y(), impl_->view, false);
             impl_->glyphOverlay->hover(event->position()); // W18: the symbol names itself
             impl_->sketchPresentation.hover(impl_->context, impl_->glyphOverlay->hoveredElements());
+            impl_->hoverSketchPoint(position, devicePixelRatioF()); // VP02
             update();
             return;
         }
@@ -124,6 +192,7 @@ void CadViewport::mousePressEvent(QMouseEvent* event) {
                     if (!element)
                         element = impl_->sketchPresentation.detectedElement(object);
                 }
+                element = impl_->pressedSketchElement(element, position, devicePixelRatioF());
                 const auto constraint = impl_->sketchConstraintPresentation.constraintAt(
                     impl_->view, position.x(), position.y());
                 if (!element && constraint && *constraint != 0) {
@@ -135,13 +204,7 @@ void CadViewport::mousePressEvent(QMouseEvent* event) {
                 if (element) {
                     const bool additive = event->modifiers().testFlag(Qt::ControlModifier);
                     impl_->sketchElementPressed = !additive;
-                    if (impl_->sketchElementSelectionHandler) {
-                        const auto local =
-                            impl_->sketchEditor.projectPoint(position.x(), position.y());
-                        if (local.has_value())
-                            impl_->sketchElementSelectionHandler(
-                                {*element, local->first, local->second, additive});
-                    }
+                    impl_->notifySketchPick(*element, position, additive, devicePixelRatioF());
                     // S14: after the selection, whose refresh resets the tool state; started
                     // before it, the drag point was lost and the element did not follow.
                     if (!additive)

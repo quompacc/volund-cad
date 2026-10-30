@@ -23,16 +23,16 @@ QString registeredFamily(const QString& resource, const QString& fallback) {
 
 const ThemeTokens& themeTokens(ThemeMode mode) {
     static const ThemeTokens light{
-        QColor(0xE9, 0xEC, 0xEF), QColor(0xFF, 0xFF, 0xFF), QColor(0x1E, 0x23, 0x28),
-        QColor(0x5F, 0x68, 0x73), QColor(0xA3, 0xAB, 0xB4), QColor(0xDA, 0xDF, 0xE4),
+        QColor(0xE9, 0xEC, 0xEF), QColor(0xFF, 0xFF, 0xFF), QColor(0x14, 0x18, 0x1C),
+        QColor(0x44, 0x4C, 0x55), QColor(0x7D, 0x86, 0x90), QColor(0xDA, 0xDF, 0xE4),
         QColor(0xEE, 0xF1, 0xF4), QColor(0xF6, 0xF7, 0xF9), QColor(0xD9, 0x62, 0x2B),
         QColor(0xC0, 0x53, 0x1F), QColor(0xFB, 0xE9, 0xDF), QColor(0x8F, 0x3C, 0x14),
         QColor(0xFF, 0xFF, 0xFF), QColor(0xB4, 0x2E, 0x2E), QColor(0xFB, 0xE4, 0xE2),
         QColor(0xFF, 0xFF, 0xFF), QColor(0xF1, 0xF3, 0xF5), QColor(0xE4, 0xE8, 0xEC),
         QColor(0xB9, 0xC1, 0xCA)};
     static const ThemeTokens dark{
-        QColor(0x14, 0x18, 0x1C), QColor(0x1D, 0x22, 0x27), QColor(0xE7, 0xEA, 0xED),
-        QColor(0xA0, 0xAA, 0xB4), QColor(0x5D, 0x67, 0x72), QColor(0x2E, 0x35, 0x3C),
+        QColor(0x14, 0x18, 0x1C), QColor(0x1D, 0x22, 0x27), QColor(0xF3, 0xF5, 0xF7),
+        QColor(0xC2, 0xCA, 0xD2), QColor(0x82, 0x8D, 0x98), QColor(0x2E, 0x35, 0x3C),
         QColor(0x27, 0x2D, 0x33), QColor(0x22, 0x28, 0x2E), QColor(0xEF, 0x7A, 0x3E),
         QColor(0xF6, 0x8B, 0x54), QColor(0x3B, 0x25, 0x19), QColor(0xF7, 0xB8, 0x93),
         QColor(0x1A, 0x0F, 0x08), QColor(0xF0, 0x8A, 0x84), QColor(0x3D, 0x1F, 0x1E),
@@ -77,19 +77,19 @@ void storeThemeMode(ThemeMode mode) {
 QString themeStyleSheet(const ThemeTokens& t) {
     QString sheet = QStringLiteral(R"(
 QMainWindow, QDialog { background: @bg; color: @ink; }
-QWidget { color: @ink; font-family: "@ui"; font-size: 13px; }
+QWidget { color: @ink; font-family: "@ui"; font-size: 15px; font-weight: 500; }
 QMainWindow::separator { background: @line; width: 1px; height: 1px; }
 QToolTip { background: @ink; color: @panel; border: 0; padding: 4px 8px; }
 
 /* U14: the shell floats over the viewport as rounded cards. */
 QFrame[overlayCard="true"] { background: @panel; border: 1px solid @line; border-radius: 14px; }
-#overlayTitle { color: @muted; font-size: 11px; font-weight: 600; letter-spacing: 1px;
+#overlayTitle { color: @muted; font-size: 13px; font-weight: 600; letter-spacing: 1px;
     padding: 0 6px; }
-#projectCard QLabel#brandName { font-weight: 700; font-size: 15px; }
+#projectCard QLabel#brandName { font-weight: 700; font-size: 17px; }
 #projectCard QLabel#documentName { font-weight: 600; }
 #projectCard QLabel#pathSeparator { color: @faint; }
 #projectCard QLabel#saveState { color: @muted; background: @soft; border-radius: 9px;
-    padding: 2px 10px; font-size: 12px; }
+    padding: 2px 10px; font-size: 14px; }
 #projectCard QLabel#saveState[modified="true"] { color: @accentInk; background: @accentSoft; }
 QLabel#toolStatus { font-weight: 600; color: @ink; }
 QLabel#toolStatus[good="true"] { color: @accentInk; }
@@ -106,7 +106,7 @@ QToolButton:focus { border-color: @accent; }
 /* AI04c: Claude access chip; it lights up once for every change made over MCP. */
 #shellHeader QToolButton#assistantChip { color: @muted; background: transparent;
     border: 1px solid @line; border-radius: 16px; padding: 0 26px 0 6px; min-height: 0;
-    font-size: 12px; font-weight: 600; }
+    font-size: 14px; font-weight: 600; }
 #shellHeader QToolButton#assistantChip:hover { background: @soft; }
 #shellHeader QToolButton#assistantChip::menu-button { border: 0; width: 22px; }
 #shellHeader QToolButton#assistantChip[state="ready"] { color: @ink; }
@@ -120,7 +120,7 @@ QToolButton[cardIcon="true"] { padding: 0; min-height: 0; border: 1px solid @lin
     border-radius: 16px; }
 QToolButton[cardIcon="true"]:checked { background: @accentSoft; border-color: @accent; }
 QToolButton[railPill="true"] { border: 1px solid @line; border-radius: 17px;
-    padding: 0 14px 0 10px; min-height: 0; font-size: 12px; font-weight: 600; }
+    padding: 0 14px 0 10px; min-height: 0; font-size: 14px; font-weight: 600; }
 QToolButton[railPill="true"][chevron="true"] { padding-right: 28px; }
 QToolButton[railPill="true"]:checked { background: @accentSoft; border-color: @accent;
     color: @accentInk; }
@@ -136,12 +136,12 @@ QToolButton[sketchTool="true"]::menu-button { border: 0; width: 14px; }
 
 QFrame[floatingCard="true"] { background: @panel; border: 1px solid @line; border-radius: 14px; }
 QFrame[floatingCard="true"] QScrollArea, #cardContent { background: transparent; border: 0; }
-#cardTitle { font-weight: 700; font-size: 15px; }
+#cardTitle { font-weight: 700; font-size: 17px; }
 QGroupBox { border: 0; margin-top: 18px; padding: 0; }
 QFrame[floatingCard="true"] QTabBar::tab { padding: 6px 8px; }
 QFrame[floatingCard="true"] QPushButton { padding: 6px 14px; }
 QFrame[floatingCard="true"] QToolButton { padding: 5px 4px; }
-QGroupBox::title { subcontrol-origin: margin; left: 0; color: @muted; font-size: 12px; }
+QGroupBox::title { subcontrol-origin: margin; left: 0; color: @muted; font-size: 14px; }
 #toolGuidance { color: @muted; }
 #timelineScroll, #timelineContent { background: transparent; border: 0; }
 #timelineEmpty { color: @muted; padding: 0 8px; }
@@ -158,10 +158,10 @@ QToolButton#timelineStep[featureState="rolledBack"] { border-color: @faint; back
 #contextBar, #commandSearch { background: @panel; border: 1px solid @line;
     border-radius: 14px; }
 #railScroll, #railContent, #sketchToolPage { background: transparent; border: 0; }
-#railFlyout QToolButton { font-size: 13px; padding: 5px 10px; text-align: left;
+#railFlyout QToolButton { font-size: 15px; padding: 5px 10px; text-align: left;
     border-radius: 16px; }
 #toolRailSeparator, #contextDivider { background: @line; }
-#railGroupTitle { color: @muted; font-size: 11px; padding: 6px 4px 0 4px; }
+#railGroupTitle { color: @muted; font-size: 13px; padding: 6px 4px 0 4px; }
 #contextTitle { font-weight: 600; padding: 0 8px; }
 QToolButton[primary="true"] { background: @accent; color: @onAccent; border-color: @accent; }
 QToolButton[primary="true"]:hover { background: @accentHover; }
@@ -185,9 +185,9 @@ QPushButton:focus { border-color: @accent; }
 QToolBar { background: @panel; border: 0; border-bottom: 1px solid @line; spacing: 2px;
     padding: 3px 8px; }
 QToolBar::separator { background: @line; width: 1px; margin: 6px 6px; }
-QToolBar QLabel { color: @muted; font-size: 12px; letter-spacing: 1px; }
+QToolBar QLabel { color: @muted; font-size: 14px; letter-spacing: 1px; }
 
-QDockWidget { color: @muted; font-size: 12px; }
+QDockWidget { color: @muted; font-size: 14px; }
 QDockWidget::title { background: @panel; padding: 10px 12px 6px 12px; text-align: left; }
 QDockWidget > QWidget { background: @panel; }
 QTabBar { qproperty-drawBase: 0; background: @panel; }

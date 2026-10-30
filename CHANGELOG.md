@@ -11,8 +11,17 @@ Versionsregeln: [Versionierung und Releases](docs/versioning.md).
 - **STEP:** Dateien lassen sich ins Fenster ziehen. Große Dateien werden im Hintergrund gelesen, mit Fortschritt und Abbrechen. Bis zu 10.000 Volumenkörper je Import.
 - **Fläche versetzen und löschen** nehmen jetzt auch gekrümmte Flächen an: Eine Bohrungswand ändert den Durchmesser, eine Ebene nimmt tangentiale Verrundungen mit.
 
+### Geändert
+
+- **Lesbarkeit:** Schrift größer und kräftiger (Grundschrift 15 px), mehr Kontrast, Symbole der Skizzenleiste 30 statt 20 px.
+- **Skizzenfenster:** Es zeigt den Zustand, was noch fehlt, „Hilfslinie“ und die Werte der Auswahl. Listen, Ansichtsschalter und die Werte für Drehen, Skalieren, Versatz und Muster liegen unter „Details und Ansicht“. Der unbeschriftete Balken ist entfernt.
+- **Auswählen in der Skizze:** Ein Klick nahe einer Ecke wählt den Punkt, der vorher aufleuchtet; ein Klick auf die Linie wählt die Linie.
+
 ### Behoben
 
+- **Ziehen in der Skizze:** Elemente mit Maßen und Beziehungen lassen sich jetzt ziehen; ein bemaßtes Rechteck bewegt sich als Ganzes. Bisher blieb es einfach stehen.
+- **Maß zwischen zwei Ecken** ist möglich. Bisher bot das Werkzeug einen Winkel an. Bei diagonaler Lage fragt es: waagerecht, senkrecht oder direkt.
+- Eine Körperfläche, die genau zur Kamera zeigt, wird nicht mehr weiß überstrahlt.
 - Linux: Abstürze in OCCT bei Import, Flächenlöschen und Booleschen Operationen auf echten Teilen (OCCT wird jetzt mit `-O2` gebaut).
 - Fläche versetzen scheiterte auf echten Teilen fast immer.
 - Fläche löschen meldete manchmal Erfolg, ohne etwas zu ändern; das wird jetzt abgelehnt.

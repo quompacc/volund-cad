@@ -44,8 +44,8 @@ bool verifyCadControls(MainWindow& mainWindow) {
         return false;
     }
     // U05: both float in the viewport and share one compact slot.
-    if (properties->parentWidget() != activeTool->parentWidget() || properties->width() > 360 ||
-        activeTool->width() > 360) {
+    if (properties->parentWidget() != activeTool->parentWidget() || properties->width() > 400 ||
+        activeTool->width() > 400) {
         qCritical() << "Properties and tool panel do not share the floating slot";
         return false;
     }

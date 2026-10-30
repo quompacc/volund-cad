@@ -4,9 +4,9 @@
   "auditedCommit": "1b78229",
   "status": "implementation-started",
   "counts": {
-    "total": 193,
+    "total": 198,
     "throughG4": 143,
-    "g5": 50
+    "g5": 55
   },
   "globalGates": [
     {
@@ -213,7 +213,12 @@
     "B09",
     "B10",
     "B11",
-    "B12"
+    "B12",
+    "VP01",
+    "VP02",
+    "VP03",
+    "VP04",
+    "VP05"
   ],
   "packets": [
     {
@@ -5862,6 +5867,118 @@
       "chapter": "14-step-und-baugruppen.md",
       "kind": "implementation",
       "evidence": [],
+      "completedCommit": null
+    },
+    {
+      "id": "VP01",
+      "title": "Ziehen unter Bedingungen",
+      "deps": [
+        "L10"
+      ],
+      "files": [
+        "src/features/SketchConstraintSolver.cpp",
+        "src/application/SketchEditorSession.cpp"
+      ],
+      "steps": [
+        "Gezogene Punkte als temporäre Bedingungen halten; Geometrie erst der Löser bewegen lassen."
+      ],
+      "acceptance": "Rechteck mit Maßen folgt beim Ziehen an Linie und Ecke; Maße bleiben.",
+      "boundary": "Abnahme durch den Nutzer steht aus.",
+      "status": "in-progress",
+      "gate": "G5",
+      "chapter": "15-v1-pruefung.md",
+      "kind": "implementation",
+      "evidence": "evidence/VP.md",
+      "completedCommit": null
+    },
+    {
+      "id": "VP02",
+      "title": "Punkte auswählen, Maß zwischen Punkten",
+      "deps": [
+        "L10"
+      ],
+      "files": [
+        "src/viewport/CadViewportInput.cpp",
+        "src/desktop/SketchDimensionTool.cpp",
+        "src/application/SketchEditorSelection.cpp"
+      ],
+      "steps": [
+        "Nähe in Pixeln bewerten, Punkt vorab anzeigen, Maßart nach Auswahl bestimmen, bei diagonaler Lage nachfragen."
+      ],
+      "acceptance": "Zwei Ecken ergeben einen Abstand, nie einen Winkel; auch zu projizierten Körperkanten.",
+      "boundary": "Abnahme durch den Nutzer steht aus.",
+      "status": "in-progress",
+      "gate": "G5",
+      "chapter": "15-v1-pruefung.md",
+      "kind": "implementation",
+      "evidence": "evidence/VP.md",
+      "completedCommit": null
+    },
+    {
+      "id": "VP03",
+      "title": "Skizzenfenster",
+      "deps": [
+        "L10"
+      ],
+      "files": [
+        "src/desktop/SketchOverview.cpp",
+        "src/desktop/SketchEditorConstraintState.cpp",
+        "src/desktop/SketchEditorPresentation.cpp"
+      ],
+      "steps": [
+        "Zustand und Fehlendes in Worten; Listen, Schalter und Werte der Bearbeitungen unter Details."
+      ],
+      "acceptance": "Vom Nutzer zu bewerten; Bilder bei 150 % angesehen.",
+      "boundary": "Abnahme durch den Nutzer steht aus.",
+      "status": "in-progress",
+      "gate": "G5",
+      "chapter": "15-v1-pruefung.md",
+      "kind": "implementation",
+      "evidence": "evidence/VP.md",
+      "completedCommit": null
+    },
+    {
+      "id": "VP04",
+      "title": "Schrift und Symbole",
+      "deps": [
+        "L10"
+      ],
+      "files": [
+        "src/desktop/Theme.cpp",
+        "src/desktop/ToolRail.cpp",
+        "src/desktop/OverlayCard.hpp"
+      ],
+      "steps": [
+        "Schrift +2 px und Stärke 500, mehr Kontrast, Skizzensymbole 30 px, Karte 390 px."
+      ],
+      "acceptance": "Vom Nutzer zu bewerten; Bilder bei 150 % angesehen.",
+      "boundary": "Abnahme durch den Nutzer steht aus.",
+      "status": "in-progress",
+      "gate": "G5",
+      "chapter": "15-v1-pruefung.md",
+      "kind": "implementation",
+      "evidence": "evidence/VP.md",
+      "completedCommit": null
+    },
+    {
+      "id": "VP05",
+      "title": "Überstrahlte Körperfläche",
+      "deps": [
+        "L10"
+      ],
+      "files": [
+        "src/viewport/CadViewportScene.hpp"
+      ],
+      "steps": [
+        "Glanzanteil des Körpermaterials entfernen."
+      ],
+      "acceptance": "Flache Fläche zur Kamera bleibt in Körperfarbe.",
+      "boundary": "Abnahme durch den Nutzer steht aus.",
+      "status": "in-progress",
+      "gate": "G5",
+      "chapter": "15-v1-pruefung.md",
+      "kind": "implementation",
+      "evidence": "evidence/VP.md",
       "completedCommit": null
     }
   ],

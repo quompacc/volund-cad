@@ -51,6 +51,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <iterator>
 
 #include <memory>
 #include <optional>
@@ -397,6 +398,28 @@ bool MainWindow::selectedSketchHidden() const {
     return selected && !impl_->visibility.shownSketches.contains(selected->value());
 }
 
+// VP02: a corner picked as a point lights up itself, not the line it belongs to.
+static void markPickedPoints(const SketchEditorToolController& tool, viewport::CadViewport& view,
+                             const std::vector<viewport::SceneSketchElement>& elements,
+                             std::vector<std::uint64_t>& selectedIds) {
+    const auto kindOf = [](document::SketchPointPosition position) {
+        return position == document::SketchPointPosition::end ? viewport::SketchPointKind::end
+               : position == document::SketchPointPosition::center
+                   ? viewport::SketchPointKind::center
+                   : viewport::SketchPointKind::start;
+    };
+    std::vector<viewport::SceneSketchPoint> marked;
+    for (const auto& picked : tool.pickedPoints()) {
+        std::erase(selectedIds, picked.element.value());
+        for (const auto& element : elements)
+            if (element.id == picked.element.value())
+                std::ranges::copy_if(
+                    element.points, std::back_inserter(marked),
+                    [&](const auto& point) { return point.kind == kindOf(picked.point); });
+    }
+    view.setMarkedSketchPoints(std::move(marked));
+}
+
 void MainWindow::syncSketchPresentation() {
     std::vector<viewport::SceneSketchElement> elements = makeSceneSketchElements(impl_->session);
     // User report 2026-10-25: a hidden sketch stays hidden while selected (an open extrusion
@@ -424,6 +447,7 @@ void MainWindow::syncSketchPresentation() {
         if (selected.has_value())
             selectedIds.push_back(selected->value());
     }
+    markPickedPoints(*impl_->sketchEditorTool, *impl_->viewport, elements, selectedIds);
     impl_->viewport->setSelectedSketchElements(selectedIds);
 }
 

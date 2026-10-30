@@ -87,6 +87,21 @@ class SketchEditorSession final {
     [[nodiscard]] bool selectNearestReference(document::SketchElementId elementId,
                                               document::SketchPoint position,
                                               bool additive) noexcept;
+    // VP02 (user review 2026-10-30): the named point of the element at `position`, if any.
+    [[nodiscard]] std::optional<document::SketchGeometryReference>
+    pointAt(document::SketchElementId elementId, document::SketchPoint position) const noexcept;
+    // VP02: a click takes a point close to it, else the element, which then moves as a whole.
+    // Either way the nearest point stays the reference relations use (S08).
+    [[nodiscard]] bool selectPick(document::SketchElementId elementId, document::SketchPoint click,
+                                  std::optional<document::SketchPoint> point, bool additive);
+    // VP02: the selected points that were picked as points, to mark them instead of their lines.
+    [[nodiscard]] std::vector<document::SketchGeometryReference> pickedPoints() const;
+    [[nodiscard]] std::optional<document::SketchPoint>
+    referencePosition(const document::SketchGeometryReference& reference) const noexcept;
+    // VP03: two degrees of freedom that fixing one point takes away: only the position is open.
+    [[nodiscard]] bool onlyPositionMissing() const;
+    [[nodiscard]] bool
+    fixingPointDetermines(const document::SketchGeometryReference& reference) const;
     [[nodiscard]] bool translateSelected(double deltaX, double deltaY);
     [[nodiscard]] std::optional<double> selectedLineLength() const noexcept;
     [[nodiscard]] std::optional<double> selectedRectangleWidth() const noexcept;
@@ -426,7 +441,7 @@ class SketchEditorSession final {
     void markConstruction(const SketchCreationResult& result); // W20
     // Solves the current state and records the result; on success the solved geometry is
     // kept. An exception or a changed support counts as failed, never as the last success.
-    [[nodiscard]] bool solveConstraints();
+    [[nodiscard]] bool solveConstraints(std::span<const features::SketchDragHold> holds = {});
     // The solve result of the current state without changing its geometry (undo, reopen).
     void refreshSolve();
     // Ends an operation that added geometry: keeps it if it is valid and solves.
@@ -463,7 +478,9 @@ class SketchEditorSession final {
     bool previewConfirmable_{false};
     std::optional<document::SketchElementId> selectedElement_;
     std::vector<document::SketchGeometryReference> selectedReferences_;
+    bool wholePick_{false}; // VP02: a pick on the element itself: it moves as a whole
     std::optional<document::SketchPoint> selectionPoint_;
+    std::vector<document::SketchGeometryReference> pickedPoints_;    // VP02: view state
     std::optional<document::SketchConstraintId> selectedConstraint_; // S13: view state
     features::SketchSolveResult lastSolveResult_{features::SketchSolveStatus::success, 0, {}};
     int polygonSides_{6};

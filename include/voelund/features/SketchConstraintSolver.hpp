@@ -5,6 +5,7 @@
 
 #include <voelund/document/ModelDocument.hpp>
 
+#include <span>
 #include <vector>
 
 namespace voelund::features {
@@ -23,7 +24,17 @@ struct SketchSolveResult final {
     std::vector<document::SketchElementId> freeElements{};
 };
 
-[[nodiscard]] SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch);
+// VP01 (user review 2026-10-30): a point the pointer drags. The relations stay binding and the
+// point follows as far as they allow, so a dimensioned rectangle moves as a whole; a hold is
+// no relation and changes neither the degrees of freedom nor the conflicts.
+struct SketchDragHold final {
+    document::SketchGeometryReference point;
+    double x;
+    double y;
+};
+
+[[nodiscard]] SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch,
+                                                       std::span<const SketchDragHold> holds = {});
 
 // S18 (SketchReferenceDimensions.cpp): dimensions that can be references, and the measured
 // values of the reference dimensions of `sketch` (called after each successful solve).

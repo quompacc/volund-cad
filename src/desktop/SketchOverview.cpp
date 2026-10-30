@@ -6,7 +6,6 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QListWidget>
-#include <QProgressBar>
 #include <QPushButton>
 #include <QTimer>
 #include <QToolButton>
@@ -69,7 +68,7 @@ QToolButton* foldButton(QWidget* parent, const char* name) {
     button->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     button->setArrowType(Qt::RightArrow);
     button->setAutoRaise(true);
-    button->setFixedHeight(24); // compact rows, no gap between the folded lists
+    button->setFixedHeight(30); // compact rows, no gap between the folded lists
     QObject::connect(button, &QToolButton::toggled, button, [button](bool open) {
         button->setArrowType(open ? Qt::DownArrow : Qt::RightArrow);
     });
@@ -106,11 +105,6 @@ SketchOverview::SketchOverview(Handlers handlers, QWidget* parent)
     auto* layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(4);
-    progress_ = new QProgressBar(this);
-    progress_->setObjectName(QStringLiteral("sketchProgress"));
-    progress_->setRange(0, 100);
-    progress_->setTextVisible(false);
-    progress_->setFixedHeight(6);
     endsRow_ = new QWidget(this);
     auto* endsRow = new QHBoxLayout(endsRow_);
     endsRow->setContentsMargins(0, 0, 0, 0);
@@ -122,34 +116,40 @@ SketchOverview::SketchOverview(Handlers handlers, QWidget* parent)
     tie_->setToolTip(tr("Enden, die nur aufeinander liegen, koinzident verbinden"));
     endsRow->addWidget(ends_, 1);
     endsRow->addWidget(tie_);
-    // W20 (as SolidCraft): the line type of the selection, or of what is drawn next.
-    auto* typeRow = new QHBoxLayout();
-    typeRow->addWidget(new QLabel(tr("Linientyp"), this));
-    normal_ = new QPushButton(tr("Normal"), this);
-    normal_->setObjectName(QStringLiteral("sketchLineTypeNormal"));
-    construction_ = new QPushButton(tr("Hilfsgeometrie"), this);
+    // W20: the selection, or what is drawn next, as construction geometry.
+    construction_ = new QPushButton(tr("Hilfslinie"), this);
     construction_->setObjectName(QStringLiteral("sketchLineTypeConstruction"));
-    for (auto* button : {normal_, construction_}) {
-        button->setCheckable(true);
-        typeRow->addWidget(button);
-        connect(button, &QPushButton::clicked, this, [this, button] {
-            if (!filling_ && handlers_.lineType)
-                QTimer::singleShot(0, this, [this, construction = button == construction_] {
-                    handlers_.lineType(construction);
-                });
-        });
-    }
-    relationsToggle_ = foldButton(this, "sketchRelationsToggle");
-    relations_ = list(this, "sketchRelationList", relationsToggle_);
-    elementsToggle_ = foldButton(this, "sketchElementsToggle");
-    elements_ = list(this, "sketchElementList", elementsToggle_);
-    layout->addWidget(progress_);
+    construction_->setCheckable(true);
+    construction_->setToolTip(
+        tr("Hilfslinien helfen beim Konstruieren und werden kein Teil des Profils (X)"));
+    connect(construction_, &QPushButton::clicked, this, [this](bool on) {
+        if (!filling_ && handlers_.lineType)
+            QTimer::singleShot(0, this, [this, on] { handlers_.lineType(on); });
+    });
+    detailsToggle_ = foldButton(this, "sketchDetailsToggle");
+    detailsToggle_->setText(tr("Details und Ansicht"));
+    auto* details = new QWidget(this);
+    auto* detailsLayout = new QVBoxLayout(details);
+    detailsLayout->setContentsMargins(0, 0, 0, 0);
+    detailsLayout->setSpacing(4);
+    details->hide();
+    connect(detailsToggle_, &QToolButton::toggled, this, [this, details](bool open) {
+        details->setVisible(open);
+        if (handlers_.details)
+            handlers_.details(open);
+    });
+    relationsToggle_ = foldButton(details, "sketchRelationsToggle");
+    relations_ = list(details, "sketchRelationList", relationsToggle_);
+    elementsToggle_ = foldButton(details, "sketchElementsToggle");
+    elements_ = list(details, "sketchElementList", elementsToggle_);
+    detailsLayout->addWidget(relationsToggle_);
+    detailsLayout->addWidget(relations_);
+    detailsLayout->addWidget(elementsToggle_);
+    detailsLayout->addWidget(elements_);
     layout->addWidget(endsRow_);
-    layout->addLayout(typeRow);
-    layout->addWidget(relationsToggle_);
-    layout->addWidget(relations_);
-    layout->addWidget(elementsToggle_);
-    layout->addWidget(elements_);
+    layout->addWidget(construction_);
+    layout->addWidget(detailsToggle_);
+    layout->addWidget(details);
     connect(tie_, &QPushButton::clicked, this, [this] {
         if (handlers_.tie)
             handlers_.tie();
@@ -167,12 +167,9 @@ SketchOverview::SketchOverview(Handlers handlers, QWidget* parent)
     });
 }
 
+void SketchOverview::openDetails() { detailsToggle_->setChecked(true); }
+
 void SketchOverview::display(const State& state) {
-    // As SolidCraft: the determined part of the parameters the elements have without relations.
-    const int total = features::sketchFreedomWithoutRelations(state.elements);
-    const int free = std::max(0, state.degreesOfFreedom);
-    progress_->setValue(total > 0 ? 100 * (total - std::min(free, total)) / total : 0);
-    progress_->setVisible(total > 0 && state.degreesOfFreedom >= 0);
     const auto open = state.looseEnds.open.size();
     const auto untied = state.looseEnds.untied.size();
     QStringList parts;
@@ -185,7 +182,6 @@ void SketchOverview::display(const State& state) {
     endsRow_->setVisible(!parts.isEmpty()); // no empty gap above the lists
     tie_->setVisible(untied > 0);
     filling_ = true;
-    normal_->setChecked(!state.construction);
     construction_->setChecked(state.construction);
     fillRelations(state);
     fillElements(state);

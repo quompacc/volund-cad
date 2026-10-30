@@ -11,7 +11,6 @@
 #include <QLabel>
 #include <QListWidget>
 #include <QMenu>
-#include <QProgressBar>
 #include <QPushButton>
 #include <QStatusBar>
 #include <QTimer>
@@ -57,6 +56,9 @@ template <class Widget> Widget& part(QWidget& window, const char* name) {
 QString status(QWidget& window) { return window.findChild<QStatusBar*>()->currentMessage(); }
 
 void lists(QWidget& window) {
+    // VP03: the lists wait behind "Details und Ansicht", as do the view switches.
+    part<QToolButton>(window, "sketchDetailsToggle").setChecked(true);
+    settle();
     auto& relations = part<QToolButton>(window, "sketchRelationsToggle");
     auto& elements = part<QToolButton>(window, "sketchElementsToggle");
     require(relations.text().startsWith(QStringLiteral("Beziehungen (")) &&
@@ -178,7 +180,7 @@ void constructionMode(QWidget& window, viewport::CadViewport& viewport) {
     require(list.item(list.count() - 1)->text().endsWith(QStringLiteral("(Hilfsgeometrie)")),
             "The new line is construction: " + list.item(list.count() - 1)->text().toStdString());
     click(viewport, 90, 70); // nothing selected: the button sets the drawing mode
-    part<QPushButton>(window, "sketchLineTypeNormal").click();
+    part<QPushButton>(window, "sketchLineTypeConstruction").click();
     settle();
     require(!part<QPushButton>(window, "sketchLineTypeConstruction").isChecked(),
             "Normal switches back");
@@ -250,9 +252,6 @@ void run() {
     click(*viewport, 10, 15);
     command(window, "sketch.tool.select").trigger();
     settle();
-    auto& progress = part<QProgressBar>(window, "sketchProgress");
-    require(progress.isVisible() && progress.value() > 0 && progress.value() < 100,
-            "The bar shows a partly determined sketch: " + std::to_string(progress.value()));
     lists(window);
     contextMenu(window, *viewport);
     circleVariants(window, session, *viewport);
@@ -260,7 +259,7 @@ void run() {
     threePointRectangle(window, *viewport);
     tangentArc(window, *viewport);
     looseEnds(window, *viewport);
-    std::cout << "PASS sketch overview: progress, lists, selection, loose ends, tie\n";
+    std::cout << "PASS sketch overview: lists, selection, loose ends, tie\n";
 }
 } // namespace
 

@@ -258,8 +258,10 @@ void SketchEditorToolController::syncSelectedDimensionInputs() {
     const auto radius = editor_->selectedCircleRadius();
     const bool selecting = toolIndex_ == 0;
     const bool hasSelection = editor_->selectedElement().has_value();
-    panel_.setLengthVisible("translation_x", selecting && hasSelection);
-    panel_.setLengthVisible("translation_y", selecting && hasSelection);
+    // VP03: only what the selection is; the values of edit operations are details.
+    const bool details = selecting && hasSelection && detailsOpen_;
+    panel_.setLengthVisible("translation_x", details);
+    panel_.setLengthVisible("translation_y", details);
     panel_.setLengthVisible("line_length", length.has_value());
     panel_.setLengthVisible("rectangle_width", width.has_value());
     panel_.setLengthVisible("rectangle_height", height.has_value());
@@ -270,19 +272,19 @@ void SketchEditorToolController::syncSelectedDimensionInputs() {
                             selecting && editor_->selectedReferences().size() >= 2);
     panel_.setLengthVisible("chamfer_distance",
                             selecting && editor_->selectedReferences().size() >= 2);
-    panel_.setLengthVisible("offset_distance", selecting && hasSelection);
+    panel_.setLengthVisible("offset_distance", details);
     // S20: the center starts at the middle of the selection.
     for (const char* field :
          {"transform_center_x", "transform_center_y", "rotate_angle", "scale_factor"})
-        panel_.setLengthVisible(field, selecting && hasSelection);
+        panel_.setLengthVisible(field, details);
     if (const auto center = selecting ? editor_->selectionCenter() : std::nullopt) {
         transformCenter_ = *center;
         panel_.setLengthValue("transform_center_x", center->x);
         panel_.setLengthValue("transform_center_y", center->y);
     }
     for (const char* field : {"pattern_count", "pattern_spacing", "pattern_angle"})
-        panel_.setLengthVisible(field, selecting && hasSelection);
-    panel_.setChoiceVisible("pattern_reference", selecting && hasSelection); // N14a
+        panel_.setLengthVisible(field, details);
+    panel_.setChoiceVisible("pattern_reference", details); // N14a
     // S12: a selected source or copy shows its pattern's values for "Muster ändern".
     if (const auto pattern = editor_->selectedPattern();
         pattern && pattern->kind != document::SketchPatternKind::mirror) {

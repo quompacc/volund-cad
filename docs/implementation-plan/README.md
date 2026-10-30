@@ -138,6 +138,7 @@ Die Untersuchung erlaubt keine belastbare Aussage, dass ein bestimmtes Modell da
 11. [11 – Native KI, FEM und Optimierung](11-ki-fem-optimierung.md): frühe Aktionsgrenze und getrennte spätere Lieferstufen.
 12. [12 – v1-Abrundung](12-v1-abrundung.md): N01–N16 vor L09/L10 (Nutzerentscheidung 21.10.2026).
 13. [14 – STEP bearbeiten und Baugruppen](14-step-und-baugruppen.md): Reihen I und B nach v1 (Nutzerauftrag vom 30.10.2026).
+14. [15 – Befunde der Nutzerprüfung der v1](15-v1-pruefung.md): Serie VP, geht vor Kapitel 14 (30.10.2026).
 
 [packets.json](packets.json): IDs, Abhängigkeiten, Prüfpunkte und Status.
 

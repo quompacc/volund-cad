@@ -135,7 +135,8 @@ void registerElement(SolverMaps& maps, document::SketchElement& element, GCS::VE
 
 } // namespace
 
-SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
+SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch,
+                                         std::span<const SketchDragHold> holds) {
     document::validateSketchParameters(sketch);
     const document::SketchElements originalElements = sketch.elements;
     // Reserved once: states point into themselves and must never be relocated.
@@ -427,6 +428,19 @@ SketchSolveResult solveSketchConstraints(document::SketchParameters& sketch) {
         return result;
     }
 
+    // VP01: added after the diagnosis, as the solver's temporary constraints: it satisfies the
+    // relations first and these as far as it can.
+    std::vector<double> held;
+    held.reserve(holds.size() * 2);
+    for (const SketchDragHold& hold : holds) {
+        GCS::Point& dragged = point(hold.point, lines, circles, arcs, centers);
+        held.push_back(hold.x);
+        static_cast<void>(system.addConstraintCoordinateX(dragged, &held.back(),
+                                                          GCS::DefaultTemporaryConstraint));
+        held.push_back(hold.y);
+        static_cast<void>(system.addConstraintCoordinateY(dragged, &held.back(),
+                                                          GCS::DefaultTemporaryConstraint));
+    }
     const int status = system.solve(unknowns);
     if (status != GCS::Success && status != GCS::Converged)
         return result;

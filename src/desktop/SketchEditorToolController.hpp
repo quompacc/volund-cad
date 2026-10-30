@@ -86,6 +86,8 @@ class SketchEditorToolController final {
     // PAR02: "=Name" (or a number, nullopt) in the length or radius field of an element.
     void bindElementDimension(const std::string& id, std::optional<ResolvedParameter> bound);
     [[nodiscard]] bool isActive() const noexcept;
+    // VP02: the points picked as points, marked on the view.
+    [[nodiscard]] std::vector<document::SketchGeometryReference> pickedPoints() const;
     // S17: while on, a body edge clicked in the viewport is projected into the sketch.
     [[nodiscard]] bool projecting() const noexcept { return editor_ && projecting_; }
     void setProjecting(bool on);
@@ -111,10 +113,21 @@ class SketchEditorToolController final {
     // W02 (SketchDimensionTool.cpp): a click of the dimension tool; the single dimension of the
     // first pick, while nothing is typed, gives way to one with the second pick.
     bool pickForDimension(const viewport::SketchSelectionIntent& intent);
-    std::optional<document::SketchConstraintId> pairWithFirst(document::SketchElementId element,
-                                                              document::SketchPoint at);
+    // VP02: a pick of the dimension tool; `point` when it took a corner or center.
+    struct DimensionPick final {
+        document::SketchElementId element;
+        document::SketchPoint at;
+        bool point;
+    };
+    bool selectPair(const DimensionPick& first, const DimensionPick& second);
+    [[nodiscard]] bool pairsWithFirst(const DimensionPick& pick) const;
+    bool askedForDistance(const DimensionPick& pick);
+    std::optional<document::SketchConstraintId> pairWithFirst(const DimensionPick& second);
+    void addPointDimension(document::SketchConstraintKind kind);
+    void askPointDimension(document::SketchPoint first, document::SketchPoint second);
+    void finishPick(std::optional<document::SketchConstraintId> created, bool pair);
     std::optional<std::uint64_t> dimensionAnchor_;
-    std::optional<std::pair<document::SketchElementId, document::SketchPoint>> dimensionFirst_;
+    std::optional<DimensionPick> dimensionFirst_;
     std::optional<document::SketchConstraintId>
     singleDimensionFor(document::SketchElementId element);
     // D01 (SketchTypedDimensions.cpp): typed values as dimensions of the new element; the
@@ -211,6 +224,9 @@ class SketchEditorToolController final {
     bool drawConstruction_{false}; // W20: new elements as construction geometry
     void setDrawingConstruction(bool construction);
     void chooseLineType(bool construction);
+    void showDetails(bool open); // VP03
+    bool detailsOpen_{false};
+    void openValuesOf(const std::string& operation);
     void tieLooseEnds();
     [[nodiscard]] std::optional<viewport::SketchElementIntent>
     drawn(const viewport::SketchElementIntent& clicks) const;

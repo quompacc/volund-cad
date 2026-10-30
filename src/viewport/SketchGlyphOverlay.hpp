@@ -10,6 +10,7 @@
 #include <QString>
 #include <QWidget>
 
+#include <array>
 #include <cstdint>
 #include <functional>
 #include <optional>
@@ -69,6 +70,9 @@ class SketchGlyphOverlay final : public QWidget {
     // The elements the hovered relation binds; none while no box is hovered.
     [[nodiscard]] std::vector<std::uint64_t> hoveredElements() const;
     [[nodiscard]] std::size_t boxCount() const noexcept { return boxes_.size(); }
+    // VP02: the point under the pointer lights up before it is clicked; picked points stay lit.
+    void setHoveredPoint(std::optional<QPointF> point);
+    void setMarkedPoints(std::vector<std::array<double, 3>> points);
     // The boxes as last painted (logical pixels), for tests.
     [[nodiscard]] std::vector<QRectF> boxes() const;
 
@@ -94,6 +98,8 @@ class SketchGlyphOverlay final : public QWidget {
     Projector projector_;
     std::function<std::vector<QRectF>()> obstacles_;
     std::optional<std::uint64_t> hovered_;
+    std::optional<QPointF> hoveredPoint_;
+    std::vector<std::array<double, 3>> markedPoints_;
     QColor text_{0xCA, 0x47, 0x3D};
     QColor accent_{0xD9, 0x62, 0x2B};
     QColor panel_{0xFF, 0xFF, 0xFF};

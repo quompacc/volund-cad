@@ -43,7 +43,7 @@ void SketchEditorSession::restoreSelection(const EditorState& state) {
             selectedReferences_.push_back(reference);
 }
 
-bool SketchEditorSession::solveConstraints() {
+bool SketchEditorSession::solveConstraints(std::span<const features::SketchDragHold> holds) {
     auto sketch = parameters(false);
     try {
         if (supportBinding_) {
@@ -51,7 +51,7 @@ bool SketchEditorSession::solveConstraints() {
                 throw std::invalid_argument("the support changed");
             session_.resolveSketchSupport(*supportFeature_, sketch);
         }
-        lastSolveResult_ = features::solveSketchConstraints(sketch);
+        lastSolveResult_ = features::solveSketchConstraints(sketch, holds);
     } catch (const std::invalid_argument&) {
         lastSolveResult_ = {features::SketchSolveStatus::failed, -1, {}};
         return false;

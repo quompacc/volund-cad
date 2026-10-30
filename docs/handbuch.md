@@ -81,6 +81,10 @@ Neu bei Völund? Das [Tutorial „Referenzplatte“](tutorial-referenzplatte.md)
   Maße der Skizze (mit dem Element ein Rückgängig-Schritt); Werte der zweiten Stufe (z. B. der
   Öffnungswinkel) legen nur die Form fest. „=Name“ bindet das Maß an einen Parameter, „=B*2“
   rechnet.
+- **Maß zwischen Punkten (D):** Zwei Ecken nacheinander anklicken. Liegen sie in beiden Richtungen
+  auseinander, fragt das Werkzeug: waagerecht, senkrecht oder direkt. Ecke und Linie ergeben ihren
+  Abstand, zwei Linien ihren Winkel. Kanten eines Körpers erst mit **Projizieren** in die Skizze
+  holen; ein direktes Maß zum Ursprung gibt es noch nicht, die Lage legt „Punkt fixieren“ fest.
 - **Bemaßen (D):** Linie anklicken zeigt ihre Länge, Kreis den Durchmesser, Bogen den Radius, in
   einem Feld an der Maus: Wert tippen, Enter. Ein zweites Element vor dem Tippen macht daraus
   Winkel oder Abstand. Esc behält den gemessenen Wert.
@@ -92,9 +96,16 @@ Neu bei Völund? Das [Tutorial „Referenzplatte“](tutorial-referenzplatte.md)
 - **Beziehungen:** Deckungsgleich, horizontal, vertikal, parallel, senkrecht, tangential,
   gleich, konzentrisch, fixiert, Mittelpunkt, symmetrisch, Punkt auf Objekt. Sie erscheinen als
   Symbolkästchen; ein Klick wählt, Entf löscht.
-- **Skizzen-Karte:** Ein Balken zeigt, wie weit die Skizze bestimmt ist. Die Karte nennt offene
-  Enden und nur aufeinandergelegte Ecken („Verbinden“ verbindet sie) und listet Beziehungen und
-  Elemente.
+- **Skizzen-Karte:** Sie zeigt den Zustand und sagt in Worten, was noch fehlt. Blau ist noch nicht
+  festgelegt: Zieh daran, dann siehst du, was sich noch bewegen kann. Stehen Größe und Form schon,
+  nennt sie die fehlende Lage. Die Karte nennt auch offene Enden; „Verbinden“ koppelt Ecken, die nur
+  aufeinanderliegen. „Hilfslinie“ macht die Auswahl oder das, was du als Nächstes zeichnest, zu
+  Hilfsgeometrie (X). Unter **Details und Ansicht** liegen die Listen der Beziehungen und Elemente,
+  die Ansichtsschalter und die Werte für Drehen, Skalieren, Versatz und Muster.
+- **Auswählen und Ziehen:** Ein Klick nahe einer Ecke oder eines Mittelpunkts wählt den Punkt; er
+  leuchtet schon vorher auf. Ein Klick auf die Linie wählt die Linie. Beides lässt sich ziehen: Was
+  die Beziehungen erlauben, folgt, und ein bemaßtes Rechteck bewegt sich als Ganzes. Ist alles
+  festgelegt, sagt die Statuszeile, was zu tun ist.
 - **Bearbeiten:**
   - **Stutzen, Verlängern, Teilen** von Linien, Bögen, Kreisen (nur Stutzen), Ellipsen (nur
     Stutzen, sie werden zu Ellipsenbögen), Ellipsenbögen und Splines (Stutzen und Teilen,
