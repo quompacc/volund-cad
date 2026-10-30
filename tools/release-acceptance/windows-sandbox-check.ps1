@@ -94,7 +94,7 @@ Note "cmd assoc: $(cmd /c assoc .volund 2>&1)"
 # The UI flows through the real shell, run from the package's bin folder with its DLLs.
 $tests = Join-Path $root 'tests'
 foreach ($test in Get-ChildItem $tests -Filter '*.exe') { Copy-Item $test.FullName $bin }
-$flows = @('voelund_reference_part_flow_tests', 'voelund_reference_ring_flow_tests', 'voelund_ui_flow_tests')
+$flows = @('voelund_reference_part_flow_tests', 'voelund_reference_ring_flow_tests', 'voelund_ui_flow_tests', 'voelund_tutorial_flow_tests')
 foreach ($flow in $flows) {
     if (Test-Path (Join-Path $bin "$flow.exe")) { Run $flow (Join-Path $bin "$flow.exe") }
 }

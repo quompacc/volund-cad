@@ -803,15 +803,20 @@ if(VOELUND_BUILD_DESKTOP)
         # User report 2026-10-25: the sketch as seen on a scaled screen, by hand (capture-manual).
         add_executable(voelund_sketch_capture desktop/SketchCapture.cpp)
         target_link_libraries(voelund_sketch_capture PRIVATE voelund_project_options Voelund::Desktop)
-        add_test(NAME capture.sketch COMMAND voelund_sketch_capture)
-        set_tests_properties(capture.sketch PROPERTIES LABELS "capture-manual" TIMEOUT 120
-            ENVIRONMENT "QT_QPA_PLATFORM=wayland")
+        # Wayland only: on Windows it would open a window on the desktop (L10).
+        if(VOELUND_NATIVE_WAYLAND)
+            add_test(NAME capture.sketch COMMAND voelund_sketch_capture)
+            set_tests_properties(capture.sketch PROPERTIES LABELS "capture-manual" TIMEOUT 120
+                ENVIRONMENT "QT_QPA_PLATFORM=wayland")
+        endif()
         # User report 2026-10-25: where the time goes in the window, by hand (perf-manual).
         add_executable(voelund_desktop_model_probe perf/DesktopModelProbe.cpp)
         target_link_libraries(voelund_desktop_model_probe PRIVATE voelund_project_options Voelund::Desktop)
-        add_test(NAME perfprobe.desktop_model COMMAND voelund_desktop_model_probe)
-        set_tests_properties(perfprobe.desktop_model PROPERTIES LABELS "perf-manual" TIMEOUT 300
-            ENVIRONMENT "QT_QPA_PLATFORM=wayland")
+        if(VOELUND_NATIVE_WAYLAND)
+            add_test(NAME perfprobe.desktop_model COMMAND voelund_desktop_model_probe)
+            set_tests_properties(perfprobe.desktop_model PROPERTIES LABELS "perf-manual"
+                TIMEOUT 300 ENVIRONMENT "QT_QPA_PLATFORM=wayland")
+        endif()
         add_executable(voelund_sketch_dimension_drag_tests desktop/SketchDimensionDragTests.cpp)
         target_link_libraries(voelund_sketch_dimension_drag_tests PRIVATE voelund_project_options Voelund::Desktop)
         add_test(NAME desktop.sketch_dimension_drag COMMAND voelund_sketch_dimension_drag_tests)
@@ -1721,7 +1726,7 @@ set_tests_properties(document.sketch_dxf PROPERTIES LABELS "unit;document;accept
 if(VOELUND_BUILD_DESKTOP)
     add_test(NAME platform.version COMMAND voelund-cad --version)
     set_tests_properties(platform.version PROPERTIES LABELS "platform;package"
-        PASS_REGULAR_EXPRESSION "^Völund CAD ${PROJECT_VERSION} \\(" TIMEOUT 30)
+        PASS_REGULAR_EXPRESSION "^Völund CAD ${VOELUND_FULL_VERSION} \\(" TIMEOUT 30)
 endif()
 # L02: the installed runtime is complete and self-contained; a missing library is named.
 if(VOELUND_BUILD_DESKTOP AND (WIN32 OR VOELUND_NATIVE_WAYLAND))
@@ -1729,7 +1734,7 @@ if(VOELUND_BUILD_DESKTOP AND (WIN32 OR VOELUND_NATIVE_WAYLAND))
         COMMAND "${CMAKE_COMMAND}" "-DVOELUND_SOURCE_ROOT=${PROJECT_SOURCE_DIR}"
             "-DVOELUND_BUILD_DIR=${PROJECT_BINARY_DIR}" "-DVOELUND_CONFIG=$<CONFIG>"
             "-DVOELUND_TEST_ROOT=${CMAKE_CURRENT_BINARY_DIR}/package-runtime"
-            "-DVOELUND_VERSION=${PROJECT_VERSION}"
+            "-DVOELUND_VERSION=${VOELUND_FULL_VERSION}"
             "-DVOELUND_COMPONENTS=${VOELUND_COMPONENTS}"
             "-DVOELUND_COMPONENT_VERSIONS=${VOELUND_COMPONENT_VERSIONS}"
             -P "${PROJECT_SOURCE_DIR}/tests/cmake/PackageRuntimeTests.cmake")

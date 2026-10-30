@@ -9,6 +9,7 @@
 #include <functional>
 
 class QDoubleSpinBox;
+class QTimer;
 
 namespace voelund::viewport {
 class CadViewport;
@@ -35,11 +36,13 @@ class ToolValueField final : public QLineEdit {
     void typed(const QString& text);
     void follow();
     void place();
+    void followArrow();
 
     viewport::CadViewport& viewport_;
     QPointer<QDoubleSpinBox> field_;
     std::function<void()> accept_;
     bool typing_{false};
+    QTimer* arrow_{nullptr}; // L10: keeps the field beside the arrow as the view turns or zooms
 };
 
 } // namespace voelund::desktop

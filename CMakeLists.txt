@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.28)
 
 project(
     VoelundCAD
-    VERSION 0.1.0
+    VERSION 1.0.0
     DESCRIPTION "Native parametric CAD application"
     LANGUAGES CXX
 )
@@ -75,13 +75,21 @@ if(MSVC)
     target_link_options(voelund_project_options INTERFACE /INCREMENTAL:NO)
 endif()
 
+# L10: the product version with its pre-release label (SemVer: 1.0.0-rc.1); empty for a release.
+set(VOELUND_PRERELEASE "rc.1" CACHE STRING "Pre-release label of the product version, empty for a release")
+if(VOELUND_PRERELEASE STREQUAL "")
+    set(VOELUND_FULL_VERSION "${PROJECT_VERSION}")
+else()
+    set(VOELUND_FULL_VERSION "${PROJECT_VERSION}-${VOELUND_PRERELEASE}")
+endif()
+
 # L03: version, source revision and build type for the product and its diagnostics, written
 # on every build and changed only when they change (tools/cmake/WriteBuildInfo.cmake).
 set(VOELUND_GENERATED_DIR "${PROJECT_BINARY_DIR}/generated")
 add_custom_target(voelund_build_info ALL
     COMMAND "${CMAKE_COMMAND}" "-DVOELUND_SOURCE_ROOT=${PROJECT_SOURCE_DIR}"
         "-DVOELUND_OUTPUT=${VOELUND_GENERATED_DIR}/voelund/BuildInfo.hpp"
-        "-DVOELUND_VERSION=${PROJECT_VERSION}" "-DVOELUND_BUILD_TYPE=$<CONFIG>"
+        "-DVOELUND_VERSION=${VOELUND_FULL_VERSION}" "-DVOELUND_BUILD_TYPE=$<CONFIG>"
         -P "${PROJECT_SOURCE_DIR}/tools/cmake/WriteBuildInfo.cmake"
     BYPRODUCTS "${VOELUND_GENERATED_DIR}/voelund/BuildInfo.hpp"
     VERBATIM)
@@ -148,16 +156,16 @@ add_custom_target(
 if(VOELUND_BUILD_DESKTOP)
     set(CPACK_PACKAGE_NAME "voelund-cad")
     set(CPACK_PACKAGE_VENDOR "QuompaCC")
-    set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+    set(CPACK_PACKAGE_VERSION "${VOELUND_FULL_VERSION}")
     set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${PROJECT_DESCRIPTION}")
     set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY ON)
     if(WIN32)
         set(CPACK_GENERATOR ZIP)
-        set(CPACK_PACKAGE_FILE_NAME "voelund-cad-${PROJECT_VERSION}-windows-x64")
+        set(CPACK_PACKAGE_FILE_NAME "voelund-cad-${VOELUND_FULL_VERSION}-windows-x64")
     else()
         set(CPACK_GENERATOR TGZ)
         set(CPACK_PACKAGE_FILE_NAME
-            "voelund-cad-${PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
+            "voelund-cad-${VOELUND_FULL_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
     endif()
     include(CPack)
 endif()

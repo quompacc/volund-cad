@@ -9,6 +9,7 @@
 #include <QDoubleSpinBox>
 #include <QKeyEvent>
 #include <QLocale>
+#include <QTimer>
 
 #include <cmath>
 
@@ -34,6 +35,8 @@ ToolValueField::ToolValueField(viewport::CadViewport& viewport)
     setFixedWidth(110);
     hide();
     connect(this, &QLineEdit::textEdited, this, [this](const QString& text) { typed(text); });
+    arrow_ = new QTimer(this);
+    connect(arrow_, &QTimer::timeout, this, [this] { followArrow(); });
 }
 
 void ToolValueField::attach(QDoubleSpinBox* field, std::function<void()> accept) {
@@ -42,6 +45,7 @@ void ToolValueField::attach(QDoubleSpinBox* field, std::function<void()> accept)
     field_ = field;
     accept_ = std::move(accept);
     if (!field_) {
+        arrow_->stop();
         hide();
         return;
     }
@@ -52,6 +56,13 @@ void ToolValueField::attach(QDoubleSpinBox* field, std::function<void()> accept)
     raise();
     setFocus(Qt::OtherFocusReason);
     selectAll();
+    arrow_->start(40);
+}
+
+// Only a tool with an arrow moves the field; one placed at the pointer stays where it is.
+void ToolValueField::followArrow() {
+    if (isVisible() && viewport_.toolGripPoint())
+        place();
 }
 
 // A typed number goes into the panel's field at once; the preview follows.

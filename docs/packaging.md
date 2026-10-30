@@ -8,7 +8,7 @@ CMakes `install` und CPack.
 ```
 cmake --preset windows-msvc-release
 cmake --build --preset windows-msvc-release
-cd build/windows-msvc-release && cpack           # voelund-cad-0.1.0-windows-x64.zip
+cd build/windows-msvc-release && cpack           # voelund-cad-1.0.0-rc.1-windows-x64.zip
 ```
 
 - **Inhalt:**
@@ -30,7 +30,7 @@ cd build/windows-msvc-release && cpack           # voelund-cad-0.1.0-windows-x64
 ```
 cmake --preset linux-desktop-release
 cmake --build --preset linux-desktop-release
-cd build/linux-desktop-release && cpack          # voelund-cad-0.1.0-Linux-x86_64.tar.gz
+cd build/linux-desktop-release && cpack          # voelund-cad-1.0.0-rc.1-Linux-x86_64.tar.gz
 ```
 
 - **Inhalt:**
@@ -87,7 +87,7 @@ Welche Datei zu welcher Komponente gehört und welche Hinweise diese braucht, st
 ## Prüfen ohne Fenster
 
 ```
-voelund-cad --version                                   # Völund CAD 0.1.0 (<revision>)
+voelund-cad --version                                   # Völund CAD 1.0.0-rc.1 (<revision>)
 voelund-cad --check-document <datei> [--resave <ziel>]   # 0 geöffnet, 2 abgelehnt, 3 Speichern fehlgeschlagen
 ```
 

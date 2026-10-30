@@ -1,8 +1,31 @@
 # Versionierung und Releases
 
-## Jetzt beginnen
+## Stand (L10, 30.10.2026)
 
-Die Basisversion in `CMakeLists.txt` ist `0.1.0`. Sie bezeichnet den bisherigen
+Die Produktversion ist **`1.0.0-rc.1`**: Basisversion `1.0.0` in `CMakeLists.txt` und das
+Vorabkennzeichen `VOELUND_PRERELEASE` (Cache-Variable, Vorgabe `rc.1`, leer für den Release).
+Beides zusammen steht in `--version`, in den Diagnoseinformationen und im Paketnamen
+(`voelund-cad-1.0.0-rc.1-…`). Der Releasekandidat ist noch nicht veröffentlicht; Tag und
+Veröffentlichung sind ein eigener, vom Projektinhaber freigegebener Auftrag.
+
+### Zugesicherte Schnittstellen ab 1.0.0
+
+Inkompatible Änderungen daran erhöhen die Major-Version:
+
+1. **Dokumentformat:** Völund 1.x öffnet jede `.volund`-Datei, die eine frühere 1.x-Version
+   geschrieben hat, und alle historischen Formate (VOLUND 1–16, native Schemata ab 1). Eine
+   Datei einer neueren Version wird mit klarer Meldung abgelehnt, nie halb geladen.
+2. **Kommandozeile:** `--version`, `--check-document <Datei> [--resave <Ziel>]` und das Öffnen
+   einer als Argument übergebenen Datei.
+3. **Austausch:** STEP-Import und -Export in mm sowie die Exportformate IGES, STL, 3MF und DXF
+   (Skizze) behalten ihre Bedeutung.
+
+Nicht zugesichert sind die C++-Bibliotheken, die MCP-Schnittstelle des Assistenten und die
+Bedienoberfläche im Einzelnen.
+
+## Frühere Fassung (bis 0.1.0)
+
+Die Basisversion in `CMakeLists.txt` war `0.1.0`. Sie bezeichnete den bisherigen
 Entwicklungsstand, keinen bereits veröffentlichten Release. Wir führen ab jetzt
 ein [Changelog](../CHANGELOG.md) und dokumentieren Änderungen unter `Unreleased`.
 Ein Commit benötigt keine neue Produktversionsnummer. D10, D11 usw. bleiben
@@ -47,7 +70,7 @@ Lesekompatibilität und Migrationen werden pro Dateiformat dokumentiert.
 2. CMake-Basisversion als zentrale Quelle beibehalten und die derzeit noch
    fest codierte Qt-Anwendungsversion in `apps/voelund-cad/main.cpp` daraus ableiten.
    Vorab-Kennung, Commit-SHA und Dirty-Status in Build-/Diagnoseinformationen ergänzen.
-   Diese Build-Integration ist noch offen; die vorliegende Änderung betrifft die Doku.
+   Seit L03 (Build-Informationen) und L10 (Vorabkennzeichen) erledigt.
 3. Den konkreten Release-Stand auf den angegebenen Plattformen bauen und prüfen.
    FreeBSD/Sway ist kein Ersatz für die noch offene Meridian-Abnahme.
 4. `Unreleased` in eine datierte Release-Sektion überführen, neuen leeren Abschnitt

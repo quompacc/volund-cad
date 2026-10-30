@@ -6,6 +6,42 @@ Versionsregeln: [Versionierung und Releases](docs/versioning.md).
 
 ## [Unreleased]
 
+## [1.0.0-rc.1] – Releasekandidat, 30. Oktober 2026 (noch nicht veröffentlicht)
+
+Erster Kandidat der v1 für **Windows (x64) und Linux (x86_64)**. FreeBSD/Meridian ist
+zurückgestellt (Nutzerentscheidung 21.10.2026). Umfang und Grenzen für Anwender: das
+[Handbuch](docs/handbuch.md); Einstieg: das [Tutorial „Referenzplatte“](docs/tutorial-referenzplatte.md);
+Prüfprotokoll: [L10-Nachweis](docs/implementation-plan/evidence/L10.md).
+
+### Hinzugefügt (seit dem Stand vom 17. September, gebündelt)
+
+- **Skizzen:** Linie, Polylinie, Rechtecke (Ecke, Mitte, drei Punkte, abgerundet, Rahmen), Kreise,
+  Bögen, Ellipse und Ellipsenbogen, Langloch, Vieleck, Punkt, Splines über Kontrollpunkte oder
+  durch Punkte, Text; Werte direkt an der Maus; Beziehungen, Normbemaßung mit Parametern und
+  Ausdrücken; Stutzen, Verlängern, Teilen, Versetzen, Verrunden/Fasen, Spiegeln und Muster;
+  Projizieren, Schnittkurven, DXF-Import.
+- **Körper:** Extrudieren (auch mit Schrägungswinkel, bis Fläche, symmetrisch), Drücken/Ziehen,
+  Drehen, Folgen, Ausformung, Wendel, Rippe, Grundkörper, Bezugsebenen, -achsen und -punkte.
+- **Ändern:** Verrunden, Fasen (drei Arten), Bohrungen (Senkung, Flachsenkung, Spitze,
+  ISO-Gewinde als Angabe, an Skizzenpunkten, über zwei Kanten), Wandstärke, Formschräge, Fläche
+  versetzen/löschen, Teilen, Spiegeln, Muster (linear, kreisförmig, Raster, entlang Kurve,
+  Feature-Muster), Kombinieren, Bewegen, Kopieren/Einfügen.
+- **Historie:** Timeline mit Bearbeiten, Unterdrücken, Zurückrollen, Umordnen, Löschen mit
+  Abhängigen und Reparatur; Parametertabelle mit Ausdrücken.
+- **Prüfen:** Messen (auch an Punkten), Überschneidungen, Material, Masse und Schwerpunkt,
+  Schnittansicht, Darstellungsstile und Körperfarben.
+- **Austausch:** STEP-Import und -Export mit Farben, IGES, STL, 3MF, DXF.
+- **Plattform:** portables ZIP für Windows, Tarball mit Benutzerinstallation für Linux,
+  Dateizuordnung, Wiederherstellung nach Absturz, Programmsymbol.
+
+### Bekannte Grenzen
+
+- Keine Baugruppen, Zeichnungen, Blechfunktionen oder Freiformflächen.
+- Das Programm ist unsigniert; Windows (Smart App Control) kann es blockieren.
+- Siehe „Grenzen“ in jedem Abschnitt des Handbuchs.
+
+## [0.1.0-Entwicklungsstand] – 17. September 2026
+
 Entwicklungsstand vom 17. September 2026. Basisversion: `0.1.0`; noch kein
 versionierter Release-Tag. Dieser erste Eintrag fasst den jüngsten D10-/D11-Block
 zusammen; frühere Änderungen stehen in Git und den Paketnachweisen.

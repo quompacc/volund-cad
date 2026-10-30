@@ -43,7 +43,7 @@ QString guidance(QWidget& window) {
         panel != nullptr ? panel->findChild<QLabel*>(QStringLiteral("toolGuidance")) : nullptr;
     return label != nullptr ? label->text() : QString();
 }
-bool near(double a, double b) { return std::abs(a - b) < 1e-6; }
+bool closeTo(double a, double b) { return std::abs(a - b) < 1e-6; }
 
 // Rounds the upright edge at x = 20, y = 0 of a 20 x 20 x 10 box; returns the fillet.
 document::FeatureId roundedBox(application::CadSession& session) {
@@ -53,7 +53,7 @@ document::FeatureId roundedBox(application::CadSession& session) {
          explorer.More(); explorer.Next()) {
         const BRepAdaptor_Curve curve(TopoDS::Edge(explorer.Current()));
         const gp_Pnt middle = curve.Value((curve.FirstParameter() + curve.LastParameter()) / 2);
-        if (!near(middle.X(), 20) || !near(middle.Y(), 0))
+        if (!closeTo(middle.X(), 20) || !closeTo(middle.Y(), 0))
             continue;
         const auto named = session.filletEdge(box, explorer.Current());
         require(named.has_value(), "Upright edge named");

@@ -46,14 +46,14 @@ void send(viewport::CadViewport& viewport, QEvent::Type type, QPoint point,
     QApplication::sendEvent(&viewport, &event);
 }
 // W18: the centre of the relation symbol box nearest to a point (logical pixels).
-QPoint nearestGlyph(viewport::CadViewport& viewport, QPoint near) {
+QPoint nearestGlyph(viewport::CadViewport& viewport, QPoint nearPoint) {
     auto* overlay = viewport.findChild<QWidget*>(QStringLiteral("sketchGlyphOverlay"));
     require(overlay != nullptr, "Symbol overlay");
     std::optional<QPointF> best;
     for (const QVariant& value : overlay->property("glyphBoxes").toList()) {
         const QPointF centre = value.toRectF().center();
         const auto distance = [&](QPointF p) {
-            return std::hypot(p.x() - near.x(), p.y() - near.y());
+            return std::hypot(p.x() - nearPoint.x(), p.y() - nearPoint.y());
         };
         if (!best || distance(centre) < distance(*best))
             best = centre;

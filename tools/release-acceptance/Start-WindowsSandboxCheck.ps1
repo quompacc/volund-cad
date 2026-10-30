@@ -21,7 +21,7 @@ if ($null -eq $zip) { throw "No release ZIP in $Build (cmake --build --preset wi
 New-Item -ItemType Directory -Force $Stage, "$Stage\tests", "$Stage\fixtures" | Out-Null
 if (Test-Path "$Stage\out") { throw "$Stage\out exists; use an empty stage folder" }
 Copy-Item $zip.FullName $Stage
-foreach ($test in 'voelund_reference_part_flow_tests', 'voelund_reference_ring_flow_tests', 'voelund_ui_flow_tests') {
+foreach ($test in 'voelund_reference_part_flow_tests', 'voelund_reference_ring_flow_tests', 'voelund_ui_flow_tests', 'voelund_tutorial_flow_tests') {
     Copy-Item (Join-Path $Build "tests\$test.exe") "$Stage\tests\"
 }
 Copy-Item (Join-Path $root 'tests\fixtures\documents\v09.volund'), (Join-Path $root 'tests\fixtures\documents\v16.volund') "$Stage\fixtures\"

@@ -3733,12 +3733,15 @@
       ],
       "acceptance": "Der Agent arbeitet A-PART-01 ausschließlich anhand des Tutorials gegen das installierte Produkt ab, dokumentiert Lücken und korrigiert sie. Eine zusätzliche Erstnutzerprobe ist optional; die Eigenprüfung wird nicht als unabhängiger Usability-Test ausgegeben. Kein Screenshot/Schritt benutzt deaktivierten Befehl. Architektur- und Userdoku widersprechen sich nicht.",
       "boundary": "Keine pauschale Behauptung 'FreeCAD-Ersatz' ohne Funktionsabdeckung.",
-      "status": "planned",
+      "status": "done",
       "gate": "G4",
       "chapter": "06-plattform-release.md",
       "kind": "implementation-or-acceptance",
-      "evidence": [],
-      "completedCommit": null
+      "evidence": [
+        "evidence/L09.md"
+      ],
+      "completedCommit": "707e3db",
+      "completedDate": "2026-10-30"
     },
     {
       "id": "L10",

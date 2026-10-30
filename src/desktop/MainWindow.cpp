@@ -324,9 +324,13 @@ void MainWindow::syncProperties() {
     } else if (feature.kind == document::FeatureKind::extrusion) {
         impl_->propertyPanel->showExtrusion(impl_->session.selectedExtrusionParameters(), {});
     } else {
-        const QString title = feature.kind == document::FeatureKind::sketch
-                                  ? sketchSelectionSummary(impl_->session)
-                                  : tr("Feature");
+        // L10: a feature whose values live in its tool panel names itself and that panel.
+        const QString title =
+            feature.kind == document::FeatureKind::sketch
+                ? sketchSelectionSummary(impl_->session)
+                : tr("%1\n\nSeine Werte stehen in seinem Panel: „Bearbeiten“ in der "
+                     "Kontextleiste, Klick in der Timeline oder Enter.")
+                      .arg(QString::fromStdString(feature.name));
         impl_->propertyPanel->showFeatureInfo(title, {});
     }
     impl_->propertyCard->refit(); // The error card changes the height (U10).
